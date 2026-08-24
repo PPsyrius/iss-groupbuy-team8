@@ -1,41 +1,40 @@
-# RabbitMQ、事务一致性与幂等
+# RabbitMQ, Transactional Consistency, and Idempotency
 
-涉及事件发布、消费、定时补偿、跨资源一致性或回调时读取。
+Read this when working with event publishing, consumption, scheduled compensation, cross-resource consistency, or callbacks.
 
-## 消息契约
+## Message Contracts
 
-- 事件名表示已发生事实，例如 `OrderCreatedV1`；命令表示期望动作。契约包含 `eventId`、`eventType`、`version`、`occurredAt`、`producer`、`traceId`、业务聚合 ID 和最小 payload。
-- 契约向后兼容演进；新增字段可选并有默认语义，破坏性变更升级版本/路由。不要把内部聚合或 DO 直接序列化为消息。
-- 消息不携带口令、token、完整支付敏感数据；大 payload 存对象存储并传受控引用。
+- Event names state facts that have happened, e.g. `OrderCreatedV1`; commands state desired actions. Contracts carry `eventId`, `eventType`, `version`, `occurredAt`, `producer`, `traceId`, the business aggregate ID, and a minimal payload.
+- Contracts evolve backward-compatibly; new fields are optional with default semantics, and breaking changes bump the version/routing. Never serialize internal aggregates or DOs directly as messages.
+- Messages carry no passwords, tokens, or full payment-sensitive data; large payloads go to object storage with a controlled reference passed instead.
 
-## 发布可靠性
+## Publishing Reliability
 
-- exchange/queue 持久化、消息 persistent；声明 DLQ/DLX、过期和队列容量策略。
-- 开启 publisher confirms 和 returns/mandatory，区分 broker 未确认与不可路由；记录 correlation/eventId 并处理 nack/return。
-- 业务数据库写入与消息发布采用 Transactional Outbox：同一 PostgreSQL 本地事务写业务数据和 outbox；独立发布器发送并在确认后标记。禁止“提交 DB 后直接 send，失败就算了”。
-- Outbox 发布允许重复，因此消费者必须幂等。发布器使用有界退避、状态/锁租约、失败告警和可重放机制；清理已发布记录需保留审计窗口。
-- 不宣称 Rabbit 事务与数据库事务组成 XA；若选择 best-effort，必须明确丢失/重复窗口和补偿。
+- Exchanges/queues are durable and messages persistent; declare DLQ/DLX, expiry, and queue capacity policies.
+- Enable publisher confirms and returns/mandatory; distinguish broker-unconfirmed from unroutable; record correlation/eventId and handle nack/return.
+- Business database writes and message publishing use a Transactional Outbox: the same PostgreSQL local transaction writes business data and the outbox; a separate publisher sends and marks on confirmation. "Commit the DB then fire-and-forget the send" is forbidden.
+- Outbox publishing may duplicate, so consumers must be idempotent. The publisher uses bounded backoff, state/lock leases, failure alerting, and replay; cleaning published records preserves an audit window.
+- Do not claim RabbitMQ transactions plus database transactions form XA; if you choose best-effort, the loss/duplication window and compensation must be explicit.
 
-## 消费可靠性
+## Consumption Reliability
 
-- 默认至少一次语义。消费者先完成幂等检查和业务事务，再 ack；失败按类型 nack/reject。不得先 ack 后处理。
-- 以 `eventId + consumerName` 建 inbox/消费记录唯一约束，或以天然业务唯一键实现幂等；“先查再插”必须由唯一约束兜底。
-- 可恢复瞬时错误进入有限次数、指数退避的重试队列；不可恢复格式/业务错误直接 DLQ 并告警。禁止无限 immediate requeue 形成热循环。
-- 每次重试必须安全；外部副作用使用对方幂等键。重试耗尽后提供人工检查、修复与重放流程。
-- 同一聚合要求顺序时使用一致路由/单活处理或业务版本拒绝乱序；不要假设跨队列全局顺序。
-- Consumer 设置合理 prefetch、并发、处理超时和优雅停机；在途消息完成或重新入队。背压优先于无界内存积压。
+- Default to at-least-once semantics. Consumers complete the idempotency check and business transaction before ack; failures nack/reject by type. Never ack before processing.
+- Build an inbox/consumption-record unique constraint on `eventId + consumerName`, or achieve idempotency with a natural business unique key; "check-then-insert" must be backstopped by a unique constraint.
+- Recoverable transient errors go to a retry queue with bounded attempts and exponential backoff; unrecoverable format/business errors go straight to DLQ with an alert. Infinite immediate requeue hot-loops are forbidden.
+- Every retry must be safe; external side effects use the counterparty's idempotency key. After retries are exhausted, provide manual inspection, repair, and replay processes.
+- When one aggregate requires ordering, use consistent routing/single-active consumption or business-version rejection of out-of-order messages; do not assume global ordering across queues.
+- Consumers set sensible prefetch, concurrency, processing timeout, and graceful shutdown; in-flight messages finish or requeue. Prefer backpressure over unbounded memory buildup.
 
-## BlocBuy 一致性规则
+## BlocBuy Consistency Rules
 
-- 下单请求以业务请求号幂等；订单、库存预占、支付单各自有数据库唯一/状态约束。
-- 库存扣减使用原子条件更新（例如 `available >= quantity`）或版本控制；MQ 重复消费不得重复扣减。
-- 支付/退款回调以渠道事件 ID、渠道流水号和业务单号去重，状态机只允许合法单向迁移；金额与币种不匹配必须拒绝并告警。
-- 团购成团、超时关闭、库存释放、退款都需可重复执行；定时扫描与消息可能并发，最终结果由数据库状态条件决定。
-- Saga/补偿用于跨聚合长流程时，记录步骤、幂等键、重试状态和人工处置点。补偿不是数据库 rollback，必须定义业务含义。
+- Order placement is idempotent by business request number; orders, inventory reservations, and payment orders each have database unique/state constraints.
+- Inventory deduction uses atomic conditional updates (e.g. `available >= quantity`) or version control; duplicate MQ consumption must not deduct twice.
+- Payment/refund callbacks deduplicate on channel event ID, channel transaction number, and business order number; the state machine only allows legal one-way transitions; amount/currency mismatches must be rejected and alerted.
+- Group completion, timeout closing, inventory release, and refund are all re-executable; scheduled scans and messages may run concurrently, and the database state condition decides the final outcome.
+- Sagas/compensation for long cross-aggregate flows record steps, idempotency keys, retry state, and manual intervention points. Compensation is not a database rollback - its business meaning must be defined.
 
-## 定时任务
+## Scheduled Jobs
 
-- 多实例任务使用数据库抢占、分片或成熟调度机制，保证幂等；Redis 锁只能作为协调，数据库状态/唯一约束仍作兜底。
-- 扫描采用 keyset/分片批处理，固定批大小和超时；不要一次加载全表。记录扫描水位、成功/失败数和重试。
-- 任何补偿任务都要有停止条件、最大重试、告警和人工恢复入口。
-
+- Multi-instance jobs use database preemption, sharding, or a mature scheduler, and stay idempotent; Redis locks coordinate only, with database state/unique constraints still backstopping.
+- Scans use keyset/sharded batching with a fixed batch size and timeout; never load a whole table at once. Record the scan watermark, success/failure counts, and retries.
+- Every compensation job has a stop condition, maximum retries, alerting, and a manual recovery entry point.

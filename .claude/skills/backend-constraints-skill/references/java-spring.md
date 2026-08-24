@@ -1,51 +1,50 @@
-# Java 21、面向对象、Spring Boot 与 Maven
+# Java 21, OOP, Spring Boot, and Maven
 
-编写 Java/Spring 代码、配置 Bean、事务或构建文件时读取。
+Read this when writing Java/Spring code, configuring beans, transactions, or build files.
 
-## Java 与面向对象
+## Java and OOP
 
-- 类和方法保持单一、清晰职责；优先组合而非继承。继承只表达稳定的 is-a 与可替换关系，禁止为复用几行代码制造层级。
-- 用领域类型代替基本类型迷恋，例如 `OrderId`、`Money`、`PhoneNumber`；在构造时校验并保持不可变。
-- 聚合/实体不使用 Lombok `@Data`；谨慎生成 `equals/hashCode/toString`，避免包含懒加载、敏感字段、可变集合或递归关联。
-- 对外暴露集合使用不可变副本；不泄漏内部可变状态。`record` 适合不可变 DTO/值载体，但承载复杂不变量时使用明确类型与工厂。
-- `Optional` 仅用于可能缺失的返回值；不用作实体字段、DTO 字段或方法参数，不返回 null Optional。
-- 金额用 `BigDecimal` 并显式 scale/rounding/currency；比较用 `compareTo`。标识符禁止用浮点；计数考虑溢出。
-- 时间点用 `Instant`，用户/门店日历规则用 `LocalDate`/`ZonedDateTime` 并显式 `ZoneId`；禁止依赖服务器默认时区和裸 `new Date()`。
-- 资源使用 try-with-resources；捕获具体异常并保留 cause。禁止空 catch、`printStackTrace`、吞异常或无界重试。
-- `switch` 应穷尽业务枚举；未知状态快速失败。不要使用 enum ordinal 持久化或对外传输。
-- 并发共享状态尽量消除；使用线程安全组件和有界执行器。Java 21 虚拟线程适合大量阻塞 I/O，但上线前验证连接池、ThreadLocal、限流和监控；CPU 密集任务不因虚拟线程变快。除非项目明确接受，禁用 preview API。
-- 方法参数和返回契约明确空值语义；入口校验，内部保持不变量。不要散布重复 null 判断掩盖模型缺陷。
-- 注释解释原因、约束和取舍，不复述代码；公共契约和复杂算法写 Javadoc。TODO 必须关联责任或工单，不留模糊占位。
+- Keep classes and methods to a single, clear responsibility; prefer composition over inheritance. Inheritance expresses only a stable, substitutable is-a relationship; never build hierarchies to reuse a few lines of code.
+- Replace primitive obsession with domain types such as `OrderId`, `Money`, `PhoneNumber`; validate in constructors and keep them immutable.
+- Aggregates/entities do not use Lombok `@Data`; generate `equals/hashCode/toString` carefully, avoiding lazy fields, sensitive fields, mutable collections, or recursive associations.
+- Expose immutable copies of collections; do not leak internal mutable state. `record` suits immutable DTO/value carriers, but types carrying complex invariants deserve an explicit class with factories.
+- `Optional` is only for possibly-absent return values; do not use it as an entity field, DTO field, or method parameter, and never return a null Optional.
+- Monetary amounts use `BigDecimal` with explicit scale/rounding/currency; compare with `compareTo`. Identifiers are never floating point; account for counter overflow.
+- Instants use `Instant`; user/store calendar rules use `LocalDate`/`ZonedDateTime` with an explicit `ZoneId`; relying on the server default timezone or bare `new Date()` is forbidden.
+- Resources use try-with-resources; catch specific exceptions and preserve the cause. Empty catch blocks, `printStackTrace`, swallowed exceptions, and unbounded retries are forbidden.
+- `switch` must be exhaustive over business enums; fail fast on unknown states. Never persist or transmit enum ordinals.
+- Eliminate shared mutable state where possible; use thread-safe components and bounded executors. Java 21 virtual threads suit high volumes of blocking I/O, but validate connection pools, ThreadLocals, rate limiting, and monitoring before rollout; CPU-bound tasks do not get faster on virtual threads. Preview APIs are disabled unless the project explicitly accepts them.
+- Method parameters and return contracts state null semantics explicitly; validate at entry, preserve invariants inside. Do not scatter repetitive null checks that paper over model flaws.
+- Comments explain reasons, constraints, and trade-offs rather than restating code; public contracts and complex algorithms get Javadoc. TODOs must reference an owner or ticket; vague placeholders are not allowed.
 
-## Spring Bean 与配置
+## Spring Beans and Configuration
 
-- Spring Bean 使用 `@RequiredArgsConstructor` + `private final` 构造器注入。只有框架强制时允许其他注入方式并写明原因。
-- 选择准确 stereotype：Controller、Service/ApplicationService、Repository/Adapter。不要让每个对象都成为 Spring Bean；领域对象由业务代码创建。
-- 配置用类型安全 `@ConfigurationProperties` + `@Validated`，集中默认值和单位；禁止在业务代码散落 `@Value`。配置类不承载业务逻辑。
-- `@SpringBootApplication` 放在顶层包；显式限制扫描边界，避免误扫测试/其他域。Bean 名冲突不靠允许覆盖解决。
-- 外部客户端必须配置连接/读取/响应超时、连接池、请求大小、重试边界和优雅关闭；禁止无超时调用。
-- 只有幂等、瞬时失败操作可重试；使用指数退避、抖动和最大次数。不要叠加多层重试造成放大。
-- `@Async` 使用命名、有界执行器并传播必要的 trace/security context；不得依赖调用方事务延伸到异步线程。禁止默认无界线程池。
+- Spring beans use `@RequiredArgsConstructor` + `private final` constructor injection. Other injection styles are allowed only when the framework forces them, with the reason documented.
+- Choose accurate stereotypes: Controller, Service/ApplicationService, Repository/Adapter. Not every object becomes a Spring bean; domain objects are created by business code.
+- Configuration uses type-safe `@ConfigurationProperties` + `@Validated`, centralizing defaults and units; scattered `@Value` in business code is forbidden. Configuration classes carry no business logic.
+- `@SpringBootApplication` sits in the top-level package; explicitly limit scanning boundaries to avoid accidentally scanning tests or other domains. Bean name conflicts are not solved by allowing overrides.
+- External clients must configure connect/read/response timeouts, connection pools, request size limits, retry bounds, and graceful shutdown; calls without timeouts are forbidden.
+- Retry only idempotent, transiently-failing operations, using exponential backoff, jitter, and a maximum count. Do not stack multiple retry layers that amplify each other.
+- `@Async` uses a named, bounded executor and propagates necessary trace/security context; never rely on the caller's transaction extending into the async thread. Default unbounded thread pools are forbidden.
 
-## 事务
+## Transactions
 
-- `@Transactional` 通常放应用层公开命令方法；查询使用 `readOnly = true`。事务保持短小，不在事务中做慢网络调用、等待或大文件处理。
-- 明确 Spring 代理限制：同类自调用不会经过事务代理；非公开方法/手工 new 的对象也不会生效。不要靠增大事务范围掩盖设计问题。
-- 默认只对未检查异常回滚；若使用受检异常必须明确 `rollbackFor`。不要捕获异常后返回成功导致事务提交。
-- 选择隔离级别前先写明要防止的并发异常；使用数据库唯一约束、条件更新、行锁或乐观锁维护不变量。死锁/序列化失败的重试必须有界且重跑完整事务。
-- 事务提交后才能触发依赖已提交数据的副作用；跨 DB/MQ 使用 Outbox，见消息参考。
+- `@Transactional` usually sits on the application layer's public command methods; queries use `readOnly = true`. Keep transactions short - no slow network calls, waiting, or large file processing inside a transaction.
+- Understand Spring proxy limits: same-class self-invocation bypasses the transaction proxy; non-public methods and manually `new`-ed objects do not get proxied either. Do not paper over design problems by widening transaction scope.
+- By default only unchecked exceptions roll back; if checked exceptions are used, `rollbackFor` must be explicit. Never catch an exception and return success, causing the transaction to commit.
+- Before choosing an isolation level, state which concurrency anomaly you are preventing; use database unique constraints, conditional updates, row locks, or optimistic locking to maintain invariants. Deadlock/serialization-failure retries must be bounded and rerun the whole transaction.
+- Side effects that depend on committed data fire only after commit; cross-DB/MQ uses an Outbox - see the messaging reference.
 
-## Web 与序列化
+## Web and Serialization
 
-- Controller 参数显式使用 `@PathVariable`、`@RequestParam`、`@RequestBody`，请求体加 `@Valid`；禁止实体直接绑定。
-- Jackson 对未知/敏感字段、时间和枚举的策略要一致；禁止启用危险多态反序列化。向后兼容地演进 DTO。
-- 上传限制类型、大小、数量并使用服务端生成的存储名；不信任文件名/Content-Type，防路径穿越和恶意内容。
+- Controller parameters explicitly use `@PathVariable`, `@RequestParam`, `@RequestBody`; request bodies get `@Valid`; binding entities directly is forbidden.
+- Jackson policies for unknown/sensitive fields, times, and enums stay consistent; enabling dangerous polymorphic deserialization is forbidden. Evolve DTOs backward-compatibly.
+- Uploads restrict type, size, and count and use server-generated storage names; never trust filenames/Content-Type; guard against path traversal and malicious content.
 
 ## Maven
 
-- 父 POM 使用 `dependencyManagement`/Spring Boot BOM 集中版本；子模块不随意覆盖。提交 Maven Wrapper，构建固定 Java 21 toolchain/release。
-- Maven Enforcer 至少约束 Java/Maven 版本、依赖收敛和禁止重复类；锁定插件版本，保证 CI 可复现。
-- 依赖最小化，优先官方 starter/client；禁止同时引入功能重叠日志、JSON、HTTP 客户端。定期扫描 CVE 和许可证，升级前跑兼容测试。
-- 构建建议包含格式化、静态分析、单元测试、集成测试与架构测试；质量门禁失败不得通过 profile 默认跳过。
-- 生产构件不包含测试密钥、开发配置、未使用样例或本地绝对路径。
-
+- The parent POM centralizes versions via `dependencyManagement`/Spring Boot BOM; child modules do not override casually. Commit the Maven Wrapper; builds pin the Java 21 toolchain/release.
+- Maven Enforcer constrains at least Java/Maven versions, dependency convergence, and banned duplicate classes; pin plugin versions so CI is reproducible.
+- Minimize dependencies and prefer official starters/clients; do not simultaneously pull overlapping logging, JSON, or HTTP client libraries. Scan CVEs and licenses periodically; run compatibility tests before upgrading.
+- Builds should include formatting, static analysis, unit tests, integration tests, and architecture tests; quality-gate failures must not be skipped by default profiles.
+- Production artifacts contain no test secrets, dev configuration, unused samples, or local absolute paths.

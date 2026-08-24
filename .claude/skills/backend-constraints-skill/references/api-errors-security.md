@@ -1,24 +1,24 @@
-# REST、异常状态码与 Sa-Token
+# REST, Error Codes, and Sa-Token
 
-处理 HTTP 接口、异常、鉴权、权限或外部输入时读取。
+Read this when handling HTTP interfaces, exceptions, authentication, permissions, or external input.
 
 ## REST API
 
-- 基础路径使用 `/api/v1`；资源使用小写复数名词和必要的层级，例如 `GET /api/v1/orders/{orderId}`、`POST /api/v1/group-deals/{dealId}/participants`。
-- HTTP 方法语义：GET 查询且无副作用；POST 创建/非幂等动作；PUT 完整替换且幂等；PATCH 局部变更；DELETE 幂等删除。确属业务动作可用子资源或动作端点，如 `POST /orders/{id}/cancellations`，避免 `/cancelOrder`。
-- 创建成功返回 `201 Created` 和 `Location`；异步受理返回 `202 Accepted`；无响应体成功返回 `204 No Content`；校验错误 400；未认证 401；无权限 403；不存在 404；状态冲突/重复 409；并发前置条件失败 412；限流 429。
-- 不以 HTTP 200 包装所有失败。错误使用统一 Problem Details 风格结构；成功响应可直接返回 DTO，若项目已有统一成功 envelope 则保持一致但不改变 HTTP 状态语义。
-- Path 标识资源，Query 用于筛选、排序和分页。字段、排序键、include/expand 必须白名单化。
-- 列表必须分页并设最大页大小；深分页优先稳定排序 + cursor/keyset，响应说明 `nextCursor`。不得提供无界全量查询。
-- 时间使用 ISO-8601 并包含时区/偏移；服务端内部用 `Instant` 表示时间点。金额以字符串小数或最小货币单位传输，并明确币种，禁止 JSON 浮点误差。
-- DTO 与领域/DO 隔离；请求 DTO 使用 Bean Validation。区分字段格式校验、跨字段校验和领域不变量。
-- 写接口定义幂等性。下单、支付、退款、回调等使用 `Idempotency-Key` 或稳定业务请求号，持久化请求指纹与结果；同键不同请求体返回冲突。
-- 支持并发修改的资源使用版本号/ETag 或业务版本；不要静默覆盖并发更新。
-- OpenAPI 描述路径、状态码、鉴权、分页、幂等、字段约束和示例；契约变更必须向后兼容或升级版本。
+- Base paths use `/api/v1`; resources use lowercase plural nouns with necessary hierarchy, e.g. `GET /api/v1/orders/{orderId}`, `POST /api/v1/group-deals/{dealId}/participants`.
+- HTTP method semantics: GET queries without side effects; POST creates / non-idempotent actions; PUT fully replaces and is idempotent; PATCH applies partial changes; DELETE idempotently deletes. Genuine business actions may use sub-resources or action endpoints, such as `POST /orders/{id}/cancellations`; avoid `/cancelOrder`.
+- Create success returns `201 Created` with `Location`; asynchronous acceptance returns `202 Accepted`; successful no-body responses return `204 No Content`; validation errors 400; unauthenticated 401; forbidden 403; not found 404; state conflict/duplicate 409; failed concurrency precondition 412; rate limited 429.
+- Do not wrap every failure in HTTP 200. Errors use a unified Problem Details style structure; success responses may return DTOs directly - if the project already has a unified success envelope, keep it consistent but do not change HTTP status semantics.
+- Path identifies resources; Query is for filtering, sorting, and pagination. Fields, sort keys, and include/expand must be whitelisted.
+- Lists must be paginated with a maximum page size; for deep pagination prefer stable sorting + cursor/keyset, with the response indicating `nextCursor`. Unbounded full-list queries must not be offered.
+- Times use ISO-8601 including timezone/offset; internally the server represents instants with `Instant`. Monetary amounts travel as decimal strings or smallest currency units with an explicit currency; JSON floating-point error is forbidden.
+- DTOs are isolated from domain objects/DOs; request DTOs use Bean Validation. Distinguish field-format validation, cross-field validation, and domain invariants.
+- Write interfaces define idempotency. Order placement, payment, refund, and callbacks use an `Idempotency-Key` or a stable business request number; persist the request fingerprint and result; the same key with a different request body returns a conflict.
+- Resources that support concurrent modification use a version number/ETag or business version; never silently overwrite concurrent updates.
+- OpenAPI documents paths, status codes, authentication, pagination, idempotency, field constraints, and examples; contract changes must be backward compatible or version-bumped.
 
-## 状态码与业务异常基线
+## Error Code and Business Exception Baseline
 
-状态码必须稳定、可搜索、可观测，禁止把动态文本当作机器码。推荐最小抽象：
+Error codes must be stable, searchable, and observable; dynamic text must never serve as a machine code. Recommended minimal abstraction:
 
 ```java
 public interface ErrorCode {
@@ -28,34 +28,34 @@ public interface ErrorCode {
 }
 
 public enum OrderErrorCode implements ErrorCode {
-    ORDER_NOT_FOUND("ORDER_404_001", HttpStatus.NOT_FOUND, "订单不存在"),
-    ORDER_STATE_CONFLICT("ORDER_409_001", HttpStatus.CONFLICT, "订单状态不允许当前操作");
+    ORDER_NOT_FOUND("ORDER_404_001", HttpStatus.NOT_FOUND, "Order not found"),
+    ORDER_STATE_CONFLICT("ORDER_409_001", HttpStatus.CONFLICT, "Order state does not allow this operation");
     // fields + constructor + interface methods
 }
 
 public final class BizException extends RuntimeException {
     private final ErrorCode errorCode;
     private final Map<String, Object> details;
-    // 只允许 ErrorCode（及安全的结构化 details）构造
+    // constructible only from an ErrorCode (plus safe structured details)
 }
 ```
 
-- 每个业务域维护自己的枚举；代码一经对外发布不复用、不改义。文案可本地化，机器码不可本地化。
-- `BizException` 只表示可预期业务拒绝；数据库不可用、序列化失败、空指针等是系统异常。
-- 如果仓库没有上述等价体系，必须先提示“缺少状态码枚举体系”，推荐优先实现，再新增业务异常。禁止临时 `throw new BizException("库存不足")`。
-- 不用异常替代正常分支；批量接口需明确全成全败或逐项结果语义。
+- Every business domain maintains its own enum; once published, codes are never reused or redefined. Messages may be localized; machine codes may not.
+- `BizException` represents only expected business rejections; database unavailability, serialization failures, and null pointers are system exceptions.
+- If the repository lacks an equivalent system, you must first report "missing error-code enum system", recommend building it as the top priority, and only then add business exceptions. A temporary `throw new BizException("insufficient stock")` is forbidden.
+- Do not use exceptions to replace normal branches; batch interfaces must define all-or-nothing or per-item result semantics explicitly.
 
-## 全局异常处理基线
+## Global Exception Handling Baseline
 
-必须有唯一主入口 `@RestControllerAdvice`，至少处理：
+There must be a single main entry point `@RestControllerAdvice` handling at least:
 
-- `BizException`：取枚举的 HTTP 状态与业务码；
-- `MethodArgumentNotValidException`、`ConstraintViolationException`、参数解析异常：400，返回安全字段错误；
-- Sa-Token 未登录/无权限异常：401/403；
-- 资源不存在、冲突、限流等项目异常；
-- 未知 `Exception`：记录一次带 traceId 的 ERROR，客户端只得到通用 500。
+- `BizException`: use the enum's HTTP status and business code;
+- `MethodArgumentNotValidException`, `ConstraintViolationException`, argument resolution exceptions: 400 with safe field errors;
+- Sa-Token not-logged-in / no-permission exceptions: 401/403;
+- Project exceptions for not-found, conflict, and rate limiting;
+- Unknown `Exception`: log one ERROR with traceId; clients only receive a generic 500.
 
-建议错误体：
+Suggested error body:
 
 ```json
 {
@@ -63,26 +63,25 @@ public final class BizException extends RuntimeException {
   "title": "Order state conflict",
   "status": 409,
   "code": "ORDER_409_001",
-  "detail": "订单状态不允许当前操作",
+  "detail": "Order state does not allow this operation",
   "instance": "/api/v1/orders/123/cancellations",
   "traceId": "...",
   "errors": []
 }
 ```
 
-- `detail/errors` 不包含 SQL、堆栈、内部路径、第三方原始响应或敏感信息。
-- 预期 4xx 通常不打印 ERROR 堆栈；未知 5xx 只在边界打印一次。不要 Repository、Service、Controller 多层重复记录同一异常。
-- 若没有全局处理器，必须提示“缺少全局异常处理”，推荐优先实现；不得在每个 Controller 临时捕获兜底。
+- `detail`/`errors` must not contain SQL, stack traces, internal paths, raw third-party responses, or sensitive information.
+- Expected 4xx usually does not log an ERROR stack; unknown 5xx is logged exactly once at the boundary. Repository, Service, and Controller must not repeatedly log the same exception at multiple layers.
+- If there is no global handler, you must report "missing global exception handling" and recommend building it first; ad-hoc catch-all handling in each Controller is not allowed.
 
-## Sa-Token 统一鉴权
+## Unified Sa-Token Authentication
 
-- 使用 Sa-Token 完成登录、注销、会话、角色和权限校验；统一配置 token 名称、有效期、并发登录、续期、Cookie/header 策略和排除路径。
-- Controller/路由入口可用 `@SaCheckLogin`、`@SaCheckPermission` 等声明粗粒度权限；应用服务必须继续校验资源归属、商家租户、订单所有者等对象级权限，防止 IDOR。
-- 权限标识采用稳定命名，如 `order:read`、`order:cancel`、`merchant:product:write`；拒绝模糊 `admin` 分支散落业务代码。
-- 登录态中的用户/租户 ID 由可信上下文获取，禁止相信请求体传入的 ownerId/merchantId。跨租户查询必须强制带租户条件。
-- 管理端与用户端明确 token 域、账号类型或登录体系，避免 token 混用；高风险操作实施二次校验和审计。
-- Token 只通过 TLS；Cookie 模式配置 Secure、HttpOnly、SameSite 并处理 CSRF；header 模式配置严格 CORS。绝不在日志、URL 或异常体输出 token。
-- 登录、短信验证码、密码重置、支付回调、搜索等端点配置分层限流与防重放。验证码一次性、短 TTL、失败次数限制。
-- 密码使用经审查的自适应哈希（如 Argon2id/bcrypt），每用户随机盐；禁止可逆加密或通用快速哈希。密钥来自密钥管理/环境注入并支持轮换。
-- 所有支付回调先验签，再核对商户号、订单号、金额、币种、时间窗；用唯一约束保证幂等，响应前完成必要的持久化。
-
+- Use Sa-Token for login, logout, sessions, roles, and permission checks; centrally configure token name, validity, concurrent login, renewal, Cookie/header policy, and excluded paths.
+- Controller/route entry points may declare coarse-grained permissions with `@SaCheckLogin`, `@SaCheckPermission`, etc.; application services must still verify object-level permissions such as resource ownership, merchant tenant, and order owner, to prevent IDOR.
+- Permission identifiers use stable naming such as `order:read`, `order:cancel`, `merchant:product:write`; vague `admin` branches scattered through business code are forbidden.
+- User/tenant IDs in the login state come from the trusted context; trusting an ownerId/merchantId passed in the request body is forbidden. Cross-tenant queries must always carry an enforced tenant condition.
+- Clearly separate admin-side and user-side token domains, account types, or login systems to avoid token cross-use; high-risk operations require secondary verification and auditing.
+- Tokens travel only over TLS; Cookie mode configures Secure, HttpOnly, SameSite and handles CSRF; header mode configures strict CORS. Never output tokens in logs, URLs, or exception bodies.
+- Configure layered rate limiting and anti-replay for login, SMS verification codes, password reset, payment callbacks, search, and similar endpoints. Verification codes are single-use, short-TTL, and failure-count limited.
+- Passwords use a reviewed adaptive hash (e.g. Argon2id/bcrypt) with a per-user random salt; reversible encryption or generic fast hashes are forbidden. Secrets come from secret management/environment injection and support rotation.
+- All payment callbacks verify the signature first, then match merchant number, order number, amount, currency, and time window; use unique constraints for idempotency and complete the necessary persistence before responding.

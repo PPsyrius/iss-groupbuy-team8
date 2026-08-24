@@ -1,22 +1,22 @@
-# 模块化单体、DDD 与 COLA
+# Modular Monolith, DDD, and COLA
 
-仅在新增模块、移动代码、设计领域模型或审查依赖边界时读取。
+Read this only when adding modules, moving code, designing domain models, or reviewing dependency boundaries.
 
-## 标准结构
+## Standard Structure
 
-BlocBuy 是单进程、单部署单元的模块化单体。建议 Maven 聚合结构如下；`client` 与 `bootstrap` 是契约/装配模块，不计入四个业务层：
+BlocBuy is a single-process, single-deployment-unit modular monolith. The recommended Maven aggregate structure is shown below; `client` and `bootstrap` are contract/assembly modules and do not count as one of the four business layers:
 
 ```text
 blocbuy-parent/
-├── blocbuy-client/          # 对外 DTO、API/事件契约；不放业务实现
-├── blocbuy-adapter/         # Web、RPC、MQ consumer、scheduler 等入站适配
-├── blocbuy-application/     # command/query、用例服务、事务编排、assembler
-├── blocbuy-domain/          # 聚合、实体、值对象、领域服务/事件、端口
-├── blocbuy-infrastructure/  # MyBatis、PG、Redis、ES、MQ producer、第三方实现
-└── blocbuy-bootstrap/       # Spring Boot 启动、配置与最终装配
+├── blocbuy-client/          # External DTOs, API/event contracts; no business implementation
+├── blocbuy-adapter/         # Inbound adapters: Web, RPC, MQ consumers, schedulers
+├── blocbuy-application/     # command/query, use-case services, transaction orchestration, assemblers
+├── blocbuy-domain/          # Aggregates, entities, value objects, domain services/events, ports
+├── blocbuy-infrastructure/  # MyBatis, PostgreSQL, Redis, ES, MQ producers, third-party implementations
+└── blocbuy-bootstrap/       # Spring Boot startup, configuration, and final assembly
 ```
 
-每个模块必须先按业务域分包，禁止全局 `controller/service/mapper/entity` 大杂烩：
+Every module must be organized first by business domain. A global `controller/service/mapper/entity` grab-bag is forbidden:
 
 ```text
 com.blocbuy
@@ -33,69 +33,68 @@ com.blocbuy
 └── notification
 ```
 
-示例：`blocbuy-domain/.../groupbuy/model/aggregate/GroupDeal.java`、`blocbuy-application/.../groupbuy/command/CreateGroupDealCommand.java`。具体业务域由领域建模决定，不因列表存在就提前建空模块。
+Example: `blocbuy-domain/.../groupbuy/model/aggregate/GroupDeal.java`, `blocbuy-application/.../groupbuy/command/CreateGroupDealCommand.java`. The actual business domains are decided by domain modeling; do not create empty modules in advance just because they appear in this list.
 
-## 依赖方向
+## Dependency Direction
 
-允许的核心依赖：
+Allowed core dependencies:
 
 ```text
 adapter -> application -> domain
 infrastructure ---------> domain
 bootstrap -> adapter + application + infrastructure
-client <- adapter/application（仅契约）
-domain -> JDK + 极少量无框架通用类型
+client <- adapter/application (contracts only)
+domain -> JDK + a minimal amount of framework-free generic types
 ```
 
-- 外层依赖内层；领域层不能反向依赖外层。
-- 应用层不得直接依赖 MyBatis Mapper、RedisTemplate、ElasticsearchClient 或 RabbitTemplate，只依赖领域端口/应用端口。
-- 基础设施层实现端口并完成 DO/PO 与领域对象转换；不得把持久化注解和表结构泄漏进聚合。
-- 跨域调用使用对方公开的应用接口、查询门面或领域事件；禁止跨域 join/Mapper 调用来复用“方便的数据”。读模型确需跨域汇总时，建立显式查询模型并记录所有权。
-- 用 Maven 模块依赖和 ArchUnit 同时守住边界；禁止靠口头约定。
+- Outer layers depend on inner layers; the domain layer must never depend back on outer layers.
+- The application layer must not depend directly on MyBatis Mappers, `RedisTemplate`, `ElasticsearchClient`, or `RabbitTemplate`; it depends only on domain ports / application ports.
+- The infrastructure layer implements ports and converts DOs/POs to domain objects; persistence annotations and table structures must not leak into aggregates.
+- Cross-domain calls use the other domain's public application interface, query facade, or domain events; cross-domain joins/Mapper calls to reuse "convenient data" are forbidden. When a read model genuinely needs cross-domain aggregation, build an explicit query model and record its ownership.
+- Enforce boundaries with both Maven module dependencies and ArchUnit; verbal agreements are not enough.
 
-## 四层职责
+## Four-Layer Responsibilities
 
 ### Adapter
 
-- Controller 将 HTTP 请求转为 Command/Query；Consumer 将消息转为应用命令。
-- 做协议级校验、Sa-Token 鉴权入口、header/path/query 解析和 DTO 转换。
-- 不开启业务事务，不写核心业务规则，不调用 Mapper，不拼 SQL，不直接操作缓存。
+- Controllers convert HTTP requests into Commands/Queries; Consumers convert messages into application commands.
+- Perform protocol-level validation, Sa-Token authentication entry points, header/path/query parsing, and DTO conversion.
+- Do not start business transactions, write core business rules, call Mappers, assemble SQL, or manipulate caches directly.
 
 ### Application
 
-- 每个公开方法对应清晰用例；命令与查询可分离建模，不强制引入复杂 CQRS 框架。
-- 编排聚合、领域服务、仓储、事件和外部端口；事务边界通常放在命令用例服务公开方法。
-- 不承载可归属于单个聚合的规则；不返回持久化 DO。
+- Every public method corresponds to a clear use case; commands and queries may be modeled separately without forcing a heavyweight CQRS framework.
+- Orchestrate aggregates, domain services, repositories, events, and external ports; the transaction boundary is usually the public method of a command use-case service.
+- Do not carry rules that belong to a single aggregate; do not return persistence DOs.
 
 ### Domain
 
-- 聚合根是修改聚合内部状态的唯一入口；构造/工厂方法确保对象从出生起有效。
-- 实体以稳定身份判等；值对象按值判等且尽量不可变；金额用 `BigDecimal`/Money 值对象，禁止 `double`。
-- 规则放入聚合；跨实体且无自然归属的规则放领域服务；外部依赖用 Gateway/Repository 端口。
-- 领域事件使用已经发生的过去式语义，例如 `OrderCreated`；事件只携带稳定、最小的业务事实。
-- 聚合边界以一致性约束决定，不把完整订单、商品、商家、会员对象塞进一个巨型聚合；跨聚合只持有 ID/值对象。
+- The aggregate root is the only entry point for modifying internal aggregate state; constructors/factory methods ensure objects are valid from birth.
+- Entities compare by stable identity; value objects compare by value and are immutable where possible; monetary amounts use `BigDecimal`/a Money value object — `double` is forbidden.
+- Rules go into aggregates; rules that span entities with no natural single home go into domain services; external dependencies use Gateway/Repository ports.
+- Domain events use past-tense semantics for what has already happened, e.g. `OrderCreated`; events carry only stable, minimal business facts.
+- Aggregate boundaries are decided by consistency constraints; do not cram entire orders, products, merchants, and memberships into one giant aggregate; across aggregates hold only IDs/value objects.
 
 ### Infrastructure
 
-- 实现仓储、查询、缓存、搜索、消息发布、第三方客户端和技术配置。
-- `Mapper + DO/PO + RepositoryImpl + Converter` 同属基础设施；Mapper 不越层暴露。
-- 处理超时、重试、熔断、协议错误转换和资源关闭；把技术异常转换为项目定义的系统异常，不伪装成业务失败。
+- Implements repositories, queries, caching, search, message publishing, third-party clients, and technical configuration.
+- `Mapper + DO/PO + RepositoryImpl + Converter` all belong to infrastructure; Mappers must not be exposed across layers.
+- Handle timeouts, retries, circuit breaking, protocol error conversion, and resource cleanup; convert technical exceptions into project-defined system exceptions instead of disguising them as business failures.
 
-## 领域建模约束
+## Domain Modeling Constraints
 
-- 先定义术语和不变量，再定义表和接口；一个概念在同一业务域内只使用一个名称。
-- 命令表达意图（`ConfirmOrderCommand`），查询表达所需视图（`OrderDetailQuery`），禁止万能 `save/update/process`。
-- 状态迁移通过行为方法完成并校验当前状态；Controller/Application 不允许直接 `setStatus`。
-- 领域对象避免公共 setter；为必要变化提供语义化方法。不要使用 Lombok `@Data` 破坏封装或让聚合生成错误的 `equals/hashCode/toString`。
-- Repository 按聚合根设计，不为每张表机械创建仓储。查询读模型可以使用专用 QueryGateway。
-- `common` 只放真正稳定、无业务归属的最小共享内核；禁止把不知放哪里的代码塞进 `common/utils`。
-- 域间一致性优先使用本地事务内的清晰应用调用；只有解耦、耗时或最终一致性确有价值时才使用事件，避免“为了事件而事件”。
+- Define terms and invariants first, then tables and interfaces; one concept uses exactly one name within a business domain.
+- Commands express intent (`ConfirmOrderCommand`); queries express the required view (`OrderDetailQuery`); catch-all `save/update/process` names are forbidden.
+- State transitions go through behavioral methods that validate the current state; Controllers/Application code must not call `setStatus` directly.
+- Domain objects avoid public setters; provide semantic methods for necessary changes. Do not use Lombok `@Data` to break encapsulation or generate incorrect `equals/hashCode/toString` on aggregates.
+- Design repositories per aggregate root; do not mechanically create one repository per table. Query read models may use a dedicated QueryGateway.
+- `common` holds only a truly stable, business-free minimal shared kernel; do not dump code with no clear home into `common/utils`.
+- Prefer clear in-process application calls within a local transaction for cross-domain consistency; use events only when decoupling, long-running work, or eventual consistency genuinely pay off — avoid "events for events' sake".
 
-## BlocBuy 关键边界
+## BlocBuy Key Boundaries
 
-- 下单：价格快照、促销结果、收货信息快照必须可追溯，不能只引用会变化的当前值。
-- 库存：扣减必须由数据库条件更新/版本约束等原子机制保护，禁止“先查库存再无条件更新”。
-- 支付/退款：以支付渠道流水号和业务单号建立唯一约束；回调必须验签、核对金额/币种/商户并幂等处理。
-- 团购成团：定义人数计算、占位、超时、取消、退款的单一状态机；重复事件不得导致重复成团或退款。
-- 搜索与推荐是派生视图；价格、库存、可售状态在关键交易步骤回源事实源确认。
-
+- Order placement: price snapshots, promotion results, and shipping-info snapshots must be traceable; referencing only current values that can change is not allowed.
+- Inventory: deductions must be protected by atomic mechanisms such as database conditional updates/version constraints; "read stock first, then update unconditionally" is forbidden.
+- Payment/refund: establish uniqueness on the payment channel transaction number and the business order number; callbacks must verify signatures, match amount/currency/merchant, and be idempotent.
+- Group-buy completion: define a single state machine for headcount calculation, seat reservation, timeout, cancellation, and refund; duplicate events must not cause duplicate group completion or refunds.
+- Search and recommendation are derived views; price, inventory, and sellable status are re-verified against the source of truth at critical transaction steps.
