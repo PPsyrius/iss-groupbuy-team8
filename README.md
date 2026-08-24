@@ -1,3 +1,122 @@
-# NUS-ISS Team 8 GroupBuy Project
+# BlocBuy
 
-Add more text here
+> Bringing people together to buy better, one community at a time.
+
+BlocBuy is a community group-buying platform developed by NUS-ISS Team 8 as part of the SWE5006 Practice Module project. It helps people combine their purchasing needs, reach better group deals, and coordinate the entire group-buying journey in one shared space.
+
+This README currently focuses on the product vision and project scope. Technical architecture and implementation decisions will be documented as the project progresses.
+
+## The Problem
+
+Group buying can make products more affordable and give small or local sellers access to a larger pool of customers. In practice, however, many group buys are coordinated through scattered chat messages, spreadsheets, and manual follow-ups.
+
+This often creates problems such as:
+
+- difficulty discovering relevant group buys;
+- unclear order deadlines, minimum quantities, and deal progress;
+- repeated manual work for organisers;
+- fragmented communication between organisers and participants;
+- limited visibility into order, payment, and collection status; and
+- misunderstandings that reduce trust within the group.
+
+## Our Vision
+
+BlocBuy aims to make group buying simple, transparent, and community-driven. We envision a platform where neighbours, colleagues, friends, and other communities can organise shared purchases with less administrative effort and greater confidence.
+
+By keeping the key information and activities for each group buy in one place, BlocBuy allows participants to understand what they are joining, while giving organisers a clearer way to coordinate the group from launch to completion.
+
+## Who BlocBuy Is For
+
+### Buyers
+
+People who want to discover relevant deals, join a group buy, track its progress, and receive clear updates about their orders.
+
+### Group-buy Organisers
+
+Community members who initiate and coordinate group buys, manage participant orders, share updates, and arrange fulfilment or collection.
+
+### Sellers and Suppliers
+
+Businesses or individuals who want to offer products to communities through consolidated demand and clearly defined group-buy terms.
+
+## Product Goals
+
+BlocBuy is intended to:
+
+- reduce the effort needed to create and manage a group buy;
+- make deal terms, deadlines, and progress easy to understand;
+- help buyers discover group buys relevant to their communities;
+- provide a consistent journey from joining a deal to receiving an order;
+- improve coordination among buyers, organisers, and sellers; and
+- build trust through timely updates and transparent order information.
+
+## Core User Journeys
+
+### Discover and Join a Group Buy
+
+A buyer can explore available group buys, review the product and deal conditions, indicate the desired quantity, and join before the stated deadline.
+
+### Create and Manage a Group Buy
+
+An organiser can publish a group buy with its product details, pricing, target or minimum quantity, closing date, and fulfilment arrangements. The organiser can then monitor participation and keep the group informed.
+
+### Track Deal Progress
+
+Participants can see whether a group buy is open, has reached its target, is confirmed, or has moved to fulfilment and completion.
+
+### Coordinate Orders and Fulfilment
+
+Organisers can manage consolidated orders and communicate payment, delivery, or collection arrangements. Buyers can follow the status of their own participation without relying on scattered messages.
+
+### Complete the Experience
+
+After fulfilment, participants can confirm completion and provide feedback that helps strengthen accountability and trust in future group buys.
+
+## Initial Project Scope
+
+The initial version of BlocBuy will focus on the essential group-buying experience:
+
+- user profiles and participation roles;
+- creation and publication of group buys;
+- browsing, searching, and viewing group-buy details;
+- joining a group buy and managing requested quantities;
+- progress, deadline, and status visibility;
+- organiser updates and participant notifications;
+- order consolidation and fulfilment coordination; and
+- completion records and participant feedback.
+
+The project will prioritise a coherent end-to-end experience over the breadth of a full commercial marketplace.
+
+## Out of Scope for the Initial Version
+
+To keep the project achievable within the course timeline, the initial version does not aim to provide:
+
+- nationwide logistics or warehousing operations;
+- a full seller inventory and enterprise commerce suite;
+- advanced recommendation or advertising services;
+- cross-border purchasing and customs management; or
+- every payment, delivery, or third-party marketplace integration.
+
+These areas may be considered as future extensions after the core group-buying journey has been validated.
+
+## What Success Looks Like
+
+BlocBuy will be considered successful when it can demonstrate that:
+
+- an organiser can set up and coordinate a group buy from start to completion;
+- a buyer can understand a deal and join it without offline clarification;
+- participants can easily see the latest deal and order status;
+- key information remains consistent throughout the group-buying journey; and
+- the platform meaningfully reduces reliance on manual spreadsheets and fragmented chat messages.
+
+## Course Project Context
+
+BlocBuy is the group project of **NUS-ISS Team 8** for the **SWE5006 Designing Modern Software Systems Practice Module**. The project provides a realistic product context in which the team can practise agile delivery, software analysis and design, reusable design approaches, and delivery automation during later stages of the module.
+
+This repository will evolve alongside the project. Product decisions, project artefacts, and technical documentation will be added as they are developed and validated by the team.
+
+## Team
+
+**NUS-ISS Team 8**
+
+Team member details and responsibilities will be added once confirmed.
