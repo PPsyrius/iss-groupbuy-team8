@@ -1,0 +1,58 @@
+# People marked here will be automatically requested for a review.
+#
+# For more information on CODEOWNERS, see:
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# ---------------------------------------------------------
+# Global Default Reviewers
+# ---------------------------------------------------------
+# Catch-all for files that don't fall into specific categories (e.g., READMEs, generic docs)
+
+# ---------------------------------------------------------
+# DevSecOps & Infrastructure
+# ---------------------------------------------------------
+# CI/CD Workflows, Actions, and Issue Templates
+.github/ @PPsyrius
+
+# Git configuration files (The .git folder itself isn't tracked, but these are)
+.gitignore @PPsyrius
+.gitattributes @PPsyrius
+
+# Common Infrastructure/Deployment files (Uncomment if you use Docker/K8s)
+# Dockerfile @PPsyrius
+# docker-compose.yml @PPsyrius
+# /kubernetes/ @PPsyrius
+
+# ---------------------------------------------------------
+# BackEnd: Java Spring Boot
+# ---------------------------------------------------------
+# Assuming backend code is isolated in a 'backend' or 'api' directory
+/backend/ @l0sgAi
+
+# Catch-all for Java and build files in case they exist outside the backend folder
+*.java @l0sgAi
+pom.xml @l0sgAi
+build.gradle @l0sgAi
+settings.gradle @l0sgAi
+
+# ---------------------------------------------------------
+# FrontEnd: React
+# ---------------------------------------------------------
+# Assuming frontend code is isolated in a 'frontend', 'ui', or 'web' directory
+/frontend/ @limjiechao
+
+# Catch-all for React/Node ecosystem files anywhere in the repo
+package.json @limjiechao
+package-lock.json @limjiechao
+yarn.lock @limjiechao
+pnpm-lock.yaml @limjiechao
+*.js @limjiechao
+*.jsx @limjiechao
+*.ts @limjiechao
+*.tsx @limjiechao
+*.css @limjiechao
+
+# ---------------------------------------------------------
+# Unassigned, To Be Decided Later
+# ---------------------------------------------------------
+# @EricWang1358 @Yorick-Yu
