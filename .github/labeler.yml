@@ -1,0 +1,61 @@
+# .github/labeler.yml
+
+# ---------------------------------------------------------
+# BackEnd
+# ---------------------------------------------------------
+backend:
+  - changed-files:
+    - any-glob-to-any-file: 
+      - 'backend/**'
+      - '**/*.java'
+      - 'pom.xml'
+      - 'build.gradle'
+      - 'settings.gradle'
+
+# ---------------------------------------------------------
+# FrontEnd
+# ---------------------------------------------------------
+frontend:
+  - changed-files:
+    - any-glob-to-any-file: 
+      - 'frontend/**'
+      - '**/*.js'
+      - '**/*.jsx'
+      - '**/*.ts'
+      - '**/*.tsx'
+      - '**/*.css'
+      - '**/*.scss'
+
+# ---------------------------------------------------------
+# DevSecOps & Infrastructure
+# ---------------------------------------------------------
+devsecops:
+  - changed-files:
+    - any-glob-to-any-file: 
+      - '.github/**'
+      - '.gitignore'
+      - '.gitattributes'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+
+# ---------------------------------------------------------
+# Dependencies (Helpful for Dependabot/Renovate PRs)
+# ---------------------------------------------------------
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file: 
+      - 'package.json'
+      - 'package-lock.json'
+      - 'yarn.lock'
+      - 'pnpm-lock.yaml'
+      - 'pom.xml'
+      - 'build.gradle'
+
+# ---------------------------------------------------------
+# Documentation
+# ---------------------------------------------------------
+documentation:
+  - changed-files:
+    - any-glob-to-any-file: 
+      - '**/*.md'
+      - '**/*.txt'
