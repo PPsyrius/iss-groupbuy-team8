@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="Recommended deployment">
+    <mxGraphModel dx="1300" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="2" value="GitHub Actions + Container Registry&#xa;Build once, promote the same image digest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="30" width="360" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="3" value="Development VM" style="swimlane;startSize=36;html=1;pointerEvents=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="150" width="500" height="470" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="Nginx / TLS&#xa;dev.example.com" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="3">
+          <mxGeometry x="150" y="60" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="React Frontend" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="3">
+          <mxGeometry x="40" y="170" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6" value="Spring Boot Backend&#xa;Monolith" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="3">
+          <mxGeometry x="290" y="170" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7" value="PostgreSQL Dev&#xa;Required" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="3">
+          <mxGeometry x="70" y="310" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="8" value="Redis Dev&#xa;Optional" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="3">
+          <mxGeometry x="280" y="310" width="150" height="85" as="geometry" />
+        </mxCell>
+
+        <mxCell id="9" value="Production VM" style="swimlane;startSize=36;html=1;pointerEvents=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="690" y="150" width="500" height="470" as="geometry" />
+        </mxCell>
+        <mxCell id="10" value="Nginx / TLS&#xa;app.example.com" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="9">
+          <mxGeometry x="150" y="60" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="11" value="React Frontend" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="9">
+          <mxGeometry x="40" y="170" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="12" value="Spring Boot Backend&#xa;Monolith" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="9">
+          <mxGeometry x="290" y="170" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="13" value="PostgreSQL Prod&#xa;Required + Backup" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="9">
+          <mxGeometry x="70" y="310" width="150" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="14" value="Redis Prod&#xa;Optional" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="9">
+          <mxGeometry x="280" y="310" width="150" height="85" as="geometry" />
+        </mxCell>
+
+        <mxCell id="15" value="Team / Testers" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="10" y="270" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="16" value="Users" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1230" y="270" width="110" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="17" value="Do not install by default&#xa;Nacos · Elasticsearch · RabbitMQ" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="670" width="360" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="20" value="deploy dev" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;exitX=0.25;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="2" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="21" value="approve + deploy same digest" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;exitX=0.75;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="2" target="10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="22" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="15" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="23" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="16" target="10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="24" value="static assets" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;" edge="1" parent="3" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="25" value="/api" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;" edge="1" parent="3" source="4" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="26" value="REST/JSON" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;" edge="1" parent="3" source="5" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="27" value="transactions" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;exitX=0.35;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="3" source="6" target="7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="28" value="cache / TTL" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;dashed=1;exitX=0.7;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="3" source="6" target="8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="29" value="static assets" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;" edge="1" parent="9" source="10" target="11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="30" value="/api" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;" edge="1" parent="9" source="10" target="12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="31" value="REST/JSON" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;" edge="1" parent="9" source="11" target="12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="32" value="transactions" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;exitX=0.35;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="9" source="12" target="13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="33" value="cache / TTL" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;dashed=1;exitX=0.7;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="9" source="12" target="14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
