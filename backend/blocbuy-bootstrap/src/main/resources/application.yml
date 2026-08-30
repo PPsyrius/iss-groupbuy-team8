@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: blocbuy-backend
+  profiles:
+    active: local
+  jackson:
+    # ISO-8601 with explicit offset; never JSON floating-point for money/times (D10)
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    default-schema: domain
+
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+      connection-timeout: 3000
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+  mapper-locations: classpath*:mapper/**/*.xml
+
+sa-token:
+  token-name: blocbuy-token
+  timeout: 86400
+  is-concurrent: true
+  is-share: false
+  token-style: uuid
+  is-log: false
+
+server:
+  port: 8080
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
