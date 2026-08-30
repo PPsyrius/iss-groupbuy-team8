@@ -23,10 +23,17 @@ blocbuy/
 │   └── CODEOWNERS
 ├── contracts/
 │   └── openapi.json                # committed; single source of truth for the API
-├── backend/                        # Spring Boot service (Maven)
-│   ├── src/main/java/...
-│   ├── src/test/java/...           # unit tests colocated with the code they test
-│   └── pom.xml
+├── backend/                        # Spring Boot service (Maven, COLA multi-module)
+│   ├── pom.xml                     # blocbuy-parent: aggregate + dependencyManagement + gates
+│   ├── .mvn/wrapper/ + mvnw        # committed Maven Wrapper (Maven 3.9.x)
+│   ├── checkstyle.xml              # Google checks, line length 120
+│   ├── blocbuy-client/             # external DTOs, API contracts; no business code
+│   ├── blocbuy-domain/             # aggregates, VOs, domain services, ports; JDK-only deps
+│   ├── blocbuy-application/        # command/query, use-case services, assemblers; tx boundary
+│   ├── blocbuy-adapter/            # controllers; protocol adaptation only
+│   ├── blocbuy-infrastructure/     # Mapper+DO+RepositoryImpl+Converter, Redis, Sa-Token impl
+│   ├── blocbuy-bootstrap/          # @SpringBootApplication, application*.yml, assembly
+│   └── docs/design/                # backend-local design notes (skeleton plan, etc.)
 ├── frontend/                       # React SPA
 │   ├── src/
 │   │   └── api/generated/          # gitignored; regenerated from contracts/
@@ -90,7 +97,19 @@ See ADR-0003 for the rationale and trade-offs.
 
 ### `backend/` — Spring Boot Service
 
-The monolithic Java 21 + Spring Boot backend with a PostgreSQL database. Unit tests are colocated under `src/test/java` mirroring the main source tree — "well structured source code with unit test cases for classes with more complex behaviours" is a named module deliverable, and colocated tests keep that evidence next to the code it covers.
+The monolithic Java 21 + Spring Boot 3.5.15 backend with PostgreSQL 18 and Redis 8.10 — no message broker and no search engine in the initial stack (decision D5, 2026-08-30). It is a **COLA multi-module Maven aggregate** (`blocbuy-parent` + `client` / `domain` / `application` / `adapter` / `infrastructure` / `bootstrap`), self-contained under `backend/` with no repo-root POM. Layer dependencies are machine-enforced twice: by Maven module dependencies and by ArchUnit tests.
+
+Within each module, code is organized **first by business domain** — the confirmed v1 domains are `identity`, `groupbuy`, `order`, `catalog`, `notification` (root package `com.blocbuy`). A global `controller/service/mapper/entity` grab-bag is forbidden. Unit tests are colocated under each module's `src/test/java` mirroring the main source tree — "well structured source code with unit test cases for classes with more complex behaviours" is a named module deliverable, and colocated tests keep that evidence next to the code it covers.
+
+Key conventions:
+
+- API base path `/api/v1`; errors use RFC 9457 Problem Details + stable `code` + `traceId`; no unified success envelope.
+- Auth: Sa-Token with a single token domain, Redis-backed sessions, RBAC roles/permissions loaded from the identity SQL tables.
+- Persistence: MyBatis (Mappers never leave the infrastructure layer), Flyway migrations, hand-written DO↔domain converters.
+- Datasource: database `Blocbuy`, PostgreSQL schema `domain`; secrets arrive via environment variables, never committed.
+- Build gates: Maven Enforcer (Java 21 / Maven ≥3.9 / dependency convergence), Checkstyle (Google checks, 120 columns), ArchUnit, JUnit 5 + Testcontainers.
+
+The full locked decision set and execution order live in `backend/docs/design/backend-skeleton-plan.md`.
 
 ### `frontend/` — React SPA
 
@@ -229,7 +248,7 @@ Two mechanics to be aware of:
 1. **Routing**: the frontend container's nginx proxies `/api` to `BACKEND_URL`, which in this mode is overridden to `host.docker.internal:8080` so the container reaches the natively-running backend on the host. `extra_hosts: ["host.docker.internal:host-gateway"]` in compose makes this work on Linux too (harmless on Docker Desktop).
 2. **Stale frontend build**: the frontend container serves whatever was baked at its last image build. The `--build` flag in the target rebuilds it on every start, so after pulling `main` you always see the current UI — this removes an entire class of "it's broken for me" confusion.
 
-Datasource note: the backend uses Spring profiles to switch its database URL — `local` profile → `localhost:5432` (backend on host), `docker` profile → `postgres:5432` (backend in the compose network).
+Datasource note: the backend uses Spring profiles to switch its database URL — `local` profile → `jdbc:postgresql://localhost:5432/Blocbuy?currentSchema=domain` (backend on host), `docker` profile → host `postgres` (backend in the compose network). Redis follows the same pattern (`localhost:6379` vs host `redis`). Credentials come from environment variables (`DB_USERNAME`, `DB_PASSWORD`, `REDIS_PASSWORD`) in both profiles.
 
 #### Everyone — cross-stack verbs
 

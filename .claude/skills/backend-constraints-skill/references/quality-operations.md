@@ -7,8 +7,8 @@ Read this when writing tests, reviewing quality, adding logs or metrics, or prep
 - Domain layer: pure JUnit unit tests covering invariants, state machines, boundary values, and failure paths - no Spring startup.
 - Application layer: mock the ports and verify use-case orchestration, transaction preconditions, permissions, and events; do not mock behavior inside value objects/entities.
 - Adapter: `@WebMvcTest`/contract tests covering serialization, validation, HTTP statuses, error bodies, and Sa-Token authentication.
-- Infrastructure: use Testcontainers for PostgreSQL/MyBatis SQL, unique constraints, lock/concurrency behavior, Redis serialization, and RabbitMQ publish/consume; test ES mappings/queries against a truly compatible container or a dedicated integration environment.
-- End-to-end critical journeys: open/join a group deal, place an order, inventory races, payment callbacks, group completion, cancellation, refund, duplicate messages, and recovery flows.
+- Infrastructure: use Testcontainers for PostgreSQL/MyBatis SQL, unique constraints, lock/concurrency behavior, and Redis serialization. (MQ/ES container tests apply only if those are later introduced.)
+- End-to-end critical journeys: open/join a group deal, place an order, participation-count races, group completion, cancellation, refund, duplicate requests, and recovery flows.
 - Concurrency tests must verify final database invariants, not just API success counts; include duplicate requests, out-of-order events, timeouts, and partial failures.
 - Test data is independent, deterministic, and repeatable; dependence on execution order, real production accounts, or shared-environment leftovers is forbidden. Time, IDs, and randomness are injected through controllable ports.
 - Fix a defect by first adding a test that reproduces the behavior; tests assert externally observable behavior, not private implementation details.
@@ -32,8 +32,8 @@ Read this when writing tests, reviewing quality, adding logs or metrics, or prep
 ## Metrics, Tracing, and Health Checks
 
 - Use Spring Boot Actuator/Micrometer; correlate logs, metrics, and traces via traceId/business ID.
-- RED: request/message Rate, Errors, Duration; add resources - connection pools, threads/virtual threads, GC, heap, Rabbit backlog, Redis/ES/PG latency.
-- Business metrics include order placement, payment success rate, inventory rejections, group-completion latency, refund backlog, outbox backlog, consumer retries/DLQ, and ES sync lag.
+- RED: request Rate, Errors, Duration; add resources - connection pools, threads/virtual threads, GC, heap, Redis/PG latency. (RabbitMQ backlog / ES lag metrics apply only if those are later introduced.)
+- Business metrics include order placement, payment success rate, group-completion latency, refund backlog, and scheduled-job success/failure counts.
 - Metric labels use only low-cardinality dimensions; userId/orderId/eventId as metric tags are forbidden.
 - Liveness only reflects whether the process is alive; readiness reflects whether it can take traffic. Do not let transient downstream failures trigger liveness restart storms.
 - Create spans for external calls and key use cases; record safe summaries, not full payloads. Alerts must be actionable and have runbooks.

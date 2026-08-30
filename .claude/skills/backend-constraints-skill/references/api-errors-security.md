@@ -76,7 +76,7 @@ Suggested error body:
 
 ## Unified Sa-Token Authentication
 
-- Use Sa-Token for login, logout, sessions, roles, and permission checks; centrally configure token name, validity, concurrent login, renewal, Cookie/header policy, and excluded paths.
+- Use Sa-Token for login, logout, sessions, roles, and permission checks; centrally configure token name, validity, concurrent login, renewal, Cookie/header policy, and excluded paths. Project setup (2026-08-30): one token domain, sessions stored in Redis (`sa-token-redis-jackson`), RBAC roles/permissions loaded from the identity SQL tables via a `StpInterface` implementation in the infrastructure layer.
 - Controller/route entry points may declare coarse-grained permissions with `@SaCheckLogin`, `@SaCheckPermission`, etc.; application services must still verify object-level permissions such as resource ownership, merchant tenant, and order owner, to prevent IDOR.
 - Permission identifiers use stable naming such as `order:read`, `order:cancel`, `merchant:product:write`; vague `admin` branches scattered through business code are forbidden.
 - User/tenant IDs in the login state come from the trusted context; trusting an ownerId/merchantId passed in the request body is forbidden. Cross-tenant queries must always carry an enforced tenant condition.

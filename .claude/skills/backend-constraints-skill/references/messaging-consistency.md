@@ -1,4 +1,6 @@
-# RabbitMQ, Transactional Consistency, and Idempotency
+# RabbitMQ, Transactional Consistency, and Idempotency — DEFERRED
+
+> **No message broker is in the v1 stack (user decision 2026-08-30).** Read this file only if the user explicitly approves introducing RabbitMQ. Until then: no MQ producers/consumers, no Outbox tables for messaging, no event contracts. Cross-aggregate consistency uses in-process calls within local transactions; deferred/compensation work uses idempotent scheduled jobs with database state as the backstop. The idempotency, state-machine, and scheduled-job sections below still apply to HTTP write endpoints, future payment callbacks, and batch jobs — adapt "duplicate message" to "duplicate request/job run".
 
 Read this when working with event publishing, consumption, scheduled compensation, cross-resource consistency, or callbacks.
 
