@@ -1,6 +1,8 @@
-# MyBatis, PostgreSQL, Redis, and Elasticsearch
+# MyBatis, PostgreSQL, and Redis
 
-Read this when working with databases, caching, search, query performance, or data migration.
+Read this when working with databases, caching, query performance, or data migration.
+
+Environment facts (user decision 2026-08-30): PostgreSQL 18, database `Blocbuy`, schema `domain` (set via JDBC `currentSchema=domain` / Flyway `defaultSchema`); Redis 8.10, keys prefixed `blocbuy:{env}:...`. Credentials come from environment variables — never commit them. Elasticsearch is NOT in the stack; the ES section at the bottom is kept for future reference only.
 
 ## Queries in Loops Are Forbidden; Batch Pattern
 
@@ -51,7 +53,9 @@ orders.forEach(order -> order.attachProduct(products.get(order.productId())));
 - Distributed locks require a unique owner token, atomic acquisition and atomic validated release, a bounded lease with timeout; the database still backstops the business. A Redis lock is never proof of absolute correctness.
 - Rate-limiter failure policy is fail-open or fail-closed by risk; login, payment, and inventory endpoints prioritize safety and record metrics.
 
-## Elasticsearch
+## Elasticsearch — DEFERRED (not in the stack)
+
+> Elasticsearch was removed from the v1 stack on 2026-08-30. The rules below apply only if the user explicitly approves introducing ES later; until then, do not add ES clients, ports, or sync plumbing.
 
 - Use the official strongly-typed Java API Client aligned with the server's major/minor version compatibility policy; building new code on the deprecated TransportClient/old High Level REST Client is forbidden.
 - PostgreSQL is the source of truth; ES is a rebuildable read model. Sync asynchronously via Outbox/CDC/reliable events; documents carry a business version, and consumers reject older versions overwriting newer ones.
