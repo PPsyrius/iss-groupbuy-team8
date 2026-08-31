@@ -5,6 +5,13 @@
 <!--
   BlocBuy checks: Google Java Style, line length relaxed to 120 (decision D13).
   Based on checkstyle's google_checks.xml with minimal relaxations for a skeleton codebase.
+
+  Decision (2026-08-31): Spotless + google-java-format AOSP style is the single source of
+  truth for formatting (see docs/ci/devsecops-pipeline-plan.md). Checkstyle no longer
+  enforces anything a formatter owns: Indentation below uses AOSP values (4-space indent,
+  8-space continuation) instead of Google's 2-space, and everything else here is
+  non-formatting semantics (naming, import order, Javadoc, block/brace structure).
+  google-java-format wraps at 100 columns, a subset of the 120 allowed here — no conflict.
 -->
 <module name="Checker">
   <property name="charset" value="UTF-8"/>
@@ -219,12 +226,13 @@
                value="GenericWhitespace ''{0}'' is not preceded with whitespace."/>
     </module>
     <module name="Indentation">
-      <property name="basicOffset" value="2"/>
-      <property name="braceAdjustment" value="2"/>
-      <property name="caseIndent" value="2"/>
-      <property name="throwsIndent" value="4"/>
-      <property name="lineWrappingIndentation" value="4"/>
-      <property name="arrayInitIndent" value="2"/>
+      <!-- AOSP style (4-space indent, 8-space continuation) — matches Spotless googleJavaFormat AOSP -->
+      <property name="basicOffset" value="4"/>
+      <property name="braceAdjustment" value="0"/>
+      <property name="caseIndent" value="4"/>
+      <property name="throwsIndent" value="8"/>
+      <property name="lineWrappingIndentation" value="8"/>
+      <property name="arrayInitIndent" value="4"/>
     </module>
     <module name="AbbreviationAsWordInName">
       <property name="ignoreFinal" value="false"/>

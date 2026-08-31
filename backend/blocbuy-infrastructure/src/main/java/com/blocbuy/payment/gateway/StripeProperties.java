@@ -14,8 +14,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "blocbuy.payment.stripe")
 public record StripeProperties(String apiKey, String webhookSecret) {
 
-  /** True when the minimum configuration for live calls is present. */
-  public boolean configured() {
-    return apiKey != null && !apiKey.isBlank();
-  }
+    /** True when the minimum configuration for live calls is present. */
+    public boolean configured() {
+        return apiKey != null && !apiKey.isBlank();
+    }
 }

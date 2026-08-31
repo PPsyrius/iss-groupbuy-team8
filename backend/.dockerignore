@@ -1,0 +1,5 @@
+target/
+**/target/
+docs/
+*.md
+.mvn/wrapper/maven-wrapper.jar.sha512

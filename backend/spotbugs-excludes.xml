@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SpotBugs exclusions for BlocBuy. Keep this list SHORT — each entry needs a reason.
+  Threshold (Medium, effort Max) is set in blocbuy-parent/pom.xml.
+-->
+<FindBugsFilter>
+
+  <!-- Spring entry point: framework-instantiated, not a bug surface -->
+  <Match>
+    <Class name="com.blocbuy.bootstrap.BlocBuyApplication"/>
+  </Match>
+
+  <!-- Lombok generates constructors/builders SpotBugs cannot see pre-delombok -->
+  <Match>
+    <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
+  </Match>
+
+  <!-- Command/query DTOs, persistence DOs and exception detail carriers intentionally
+       expose mutable state through Lombok accessors; defensive copies would be noise -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    <Class name="~.*\.(command|query|persistence|exception)\..*"/>
+  </Match>
+
+</FindBugsFilter>

@@ -6,15 +6,15 @@ import java.util.Optional;
 import org.springframework.stereotype.Repository;
 
 /**
- * Repository implementation for Product. Placeholder until the ProductMapper + DO land with the first
- * catalog migration. Batch reads via {@code findByIds}; queries inside loops are forbidden.
+ * Repository implementation for Product. Placeholder until the ProductMapper + DO land with the
+ * first catalog migration. Batch reads via {@code findByIds}; queries inside loops are forbidden.
  */
 @Repository
 public class ProductRepositoryImpl implements ProductRepository {
 
-  @Override
-  public Optional<Product> findById(String id) {
-    // TODO(TEAM8-catalog): select via ProductMapper once the table exists
-    return Optional.empty();
-  }
+    @Override
+    public Optional<Product> findById(String id) {
+        // TODO(TEAM8-catalog): select via ProductMapper once the table exists
+        return Optional.empty();
+    }
 }

@@ -1,0 +1,18 @@
+# Gitleaks config: default ruleset + BlocBuy allowlists.
+# Real secrets must NEVER be committed regardless of allowlist — these only silence
+# placeholders (${VAR} in yml), docs examples, and lockfiles.
+[extend]
+useDefault = true
+
+[allowlist]
+  description = "BlocBuy global allowlist"
+  paths = [
+    '''^docs/''',
+    '''^backend/docs/''',
+    '''^contracts/''',
+    '''\.gitleaks\.toml$''',
+    '''(package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$''',
+  ]
+  regexes = [
+    '''\$\{[A-Z_]+(:[^}]*)?\}''', # ${DB_PASSWORD} / ${STRIPE_API_KEY:} env placeholders
+  ]

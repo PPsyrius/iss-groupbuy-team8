@@ -12,21 +12,27 @@ The repository is a **polyglot monorepo**: a Java Spring Boot backend, a React S
 blocbuy/
 ├── .github/
 │   ├── workflows/
-│   │   ├── ci-backend.yml          # mvn verify → regenerates openapi.json → fails if contracts/ dirty
-│   │   ├── ci-frontend.yml         # generate types from contracts/ → typecheck → test → build
-│   │   ├── security.yml            # SonarCloud, OWASP Dep-Check, Trivy, Gitleaks
-│   │   ├── terraform.yml           # plan on PR, gated apply
-│   │   ├── agile-metrics.yml       # cron: GitHub GraphQL → docs/agile/metrics/
-│   │   └── _reusable-*.yml
+│   │   ├── ci-backend.yml          # spotless → checkstyle → mvn verify → contract drift → sonar → docker+Trivy
+│   │   ├── security.yml            # Gitleaks (secrets) + Trivy fs (dep CVEs); weekly cron
+│   │   ├── pr-labeler.yml          # applies labeler.yml to PRs
+│   │   ├── ci-frontend.yml         # planned: generate types from contracts/ → typecheck → test → build
+│   │   ├── terraform.yml           # planned: plan on PR, gated apply
+│   │   └── agile-metrics.yml       # planned, cron: GitHub GraphQL → docs/agile/metrics/
+│   ├── dependabot.yml              # weekly grouped updates: maven, github-actions, docker
 │   ├── ISSUE_TEMPLATE/             # user-story.yml, bug.yml, task.yml
 │   ├── PULL_REQUEST_TEMPLATE.md
+│   ├── labeler.yml
 │   └── CODEOWNERS
+├── .gitleaks.toml                  # secret-scan allowlists (placeholders, docs)
 ├── contracts/
 │   └── openapi.json                # committed; single source of truth for the API
 ├── backend/                        # Spring Boot service (Maven, COLA multi-module)
 │   ├── pom.xml                     # blocbuy-parent: aggregate + dependencyManagement + gates
 │   ├── .mvn/wrapper/ + mvnw        # committed Maven Wrapper (Maven 3.9.x)
-│   ├── checkstyle.xml              # Google checks, line length 120
+│   ├── checkstyle.xml              # Google checks, 120 cols, AOSP indentation values
+│   ├── spotbugs-excludes.xml       # SpotBugs filter (each exclusion carries a reason)
+│   ├── Dockerfile                  # multi-stage image (maven build → temurin 21 JRE, non-root)
+│   ├── .dockerignore
 │   ├── blocbuy-client/             # external DTOs, API contracts; no business code
 │   ├── blocbuy-domain/             # aggregates, VOs, domain services, ports; JDK-only deps
 │   ├── blocbuy-application/        # command/query, use-case services, assemblers; tx boundary
@@ -49,6 +55,8 @@ blocbuy/
 ├── e2e/                            # cross-stack end-to-end tests
 ├── docs/
 │   ├── proposal/                   # project proposal
+│   ├── ci/                         # devsecops-pipeline-plan.md, backend-pipeline.md (runbook)
+│   ├── quality/                    # quality-gates.md (thresholds + exception process)
 │   ├── design/
 │   │   ├── adr/                    # Architecture Decision Records (numbered)
 │   │   ├── analysis/               # use cases, domain model, state machines (Mermaid)
@@ -76,11 +84,13 @@ The DevSecOps pipeline lives here — GitHub Actions can only execute workflows 
 
 | File | Purpose |
 |---|---|
-| `ci-backend.yml` | Builds and tests the backend (`mvn verify`), regenerates `openapi.json` from the compiled code, and **fails the build if `contracts/` has uncommitted drift**. This guarantees the committed contract never lies. |
-| `ci-frontend.yml` | Regenerates TypeScript types from `contracts/openapi.json`, then typechecks, tests, and builds the SPA. |
-| `security.yml` | Static analysis and supply-chain scanning: SonarCloud (code quality), OWASP Dependency-Check (CVEs in dependencies), Trivy (container image scan), Gitleaks (secret detection). |
-| `terraform.yml` | Runs `terraform plan` on every PR touching `infra/`; `apply` is gated behind environment-specific approvals. |
-| `agile-metrics.yml` | Scheduled workflow that queries the GitHub Projects GraphQL API and commits sprint metrics into `docs/agile/metrics/`. Our Agile evidence collection is itself automated — a DevSecOps deliverable. |
+| `ci-backend.yml` | Builds and tests the backend (`mvn verify`: Spotless + Checkstyle + SpotBugs + JaCoCo + ArchUnit), regenerates `openapi.json` from the compiled code, and **fails the build if `contracts/` has uncommitted drift**. On pushes it also builds the Docker image and Trivy-scans it. Optional `sonar` job activates when the `SONAR_HOST_URL` repo variable is set. |
+| `security.yml` | Supply-chain scanning: Gitleaks (full-history secret detection) and Trivy filesystem scan (dependency CVEs + config misconfig), on PRs touching `backend/` plus a weekly cron for newly published CVEs. |
+| `pr-labeler.yml` | Applies `labeler.yml` path rules to every PR automatically. |
+| `dependabot.yml` | Weekly grouped update PRs for Maven, GitHub Actions, and Docker base images. |
+| `ci-frontend.yml` *(planned)* | Regenerates TypeScript types from `contracts/openapi.json`, then typechecks, tests, and builds the SPA. |
+| `terraform.yml` *(planned)* | Runs `terraform plan` on every PR touching `infra/`; `apply` is gated behind environment-specific approvals. |
+| `agile-metrics.yml` *(planned)* | Scheduled workflow that queries the GitHub Projects GraphQL API and commits sprint metrics into `docs/agile/metrics/`. Our Agile evidence collection is itself automated — a DevSecOps deliverable. |
 | `ISSUE_TEMPLATE/` | Structured templates. The user-story template enforces acceptance criteria on every story — an Agile process artifact in its own right. |
 | `PULL_REQUEST_TEMPLATE.md` | Checklist linking PRs back to issues, keeping the issue → PR → pipeline traceability chain intact. |
 | `CODEOWNERS` | Routes review requests automatically (e.g. `infra/` changes ping the infra owner). |
@@ -107,7 +117,7 @@ Key conventions:
 - Auth: Sa-Token with a single token domain, Redis-backed sessions, RBAC roles/permissions loaded from the identity SQL tables.
 - Persistence: MyBatis (Mappers never leave the infrastructure layer), Flyway migrations, hand-written DO↔domain converters.
 - Datasource: database `Blocbuy`, PostgreSQL schema `domain`; secrets arrive via environment variables, never committed.
-- Build gates: Maven Enforcer (Java 21 / Maven ≥3.9 / dependency convergence), Checkstyle (Google checks, 120 columns), ArchUnit, JUnit 5 + Testcontainers.
+- Build gates: Maven Enforcer (Java 21 / Maven ≥3.9 / dependency convergence), Spotless (google-java-format AOSP formatting, checked at `validate`), Checkstyle (Google checks, 120 columns), SpotBugs (static bug analysis, threshold Medium), JaCoCo (coverage, gated via SonarQube quality gate), ArchUnit, JUnit 5 + Testcontainers. Thresholds: `docs/quality/quality-gates.md`.
 
 The full locked decision set and execution order live in `backend/docs/design/backend-skeleton-plan.md`.
 
@@ -141,6 +151,8 @@ Everything gradeable-in-writing lives here, versioned alongside the code it desc
 | Subdirectory | Contents |
 |---|---|
 | `proposal/` | The project proposal (title, overview, architecture, scope, effort estimates). |
+| `ci/` | Pipeline docs: `devsecops-pipeline-plan.md` (DecSecOps rollout plan) and `backend-pipeline.md` (CI runbook — what runs when, how to run gates locally, how to fix a red check). |
+| `quality/` | `quality-gates.md`: the enforced threshold table (formatting, style, bugs, coverage, CVEs, secrets) and the exception process. |
 | `design/adr/` | Numbered Architecture Decision Records (`0001-monolith.md`, `0002-java-stack.md`, `0003-contract-in-repo.md`, …). Written *when decisions are made*, not reconstructed later — these feed the report's "key architectural decisions" section directly. |
 | `design/analysis/` | OOAD analysis artifacts: use case specifications, domain model, state machines — all diagrams in Mermaid so they diff and review like code. |
 | `design/architecture/` | High-level design: logical and deployment views, and the analysis→design transition strategy. |

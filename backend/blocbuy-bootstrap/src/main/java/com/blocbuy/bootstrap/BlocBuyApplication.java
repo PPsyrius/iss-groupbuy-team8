@@ -12,7 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication(scanBasePackages = "com.blocbuy")
 public class BlocBuyApplication {
 
-  public static void main(String[] args) {
-    SpringApplication.run(BlocBuyApplication.class, args);
-  }
+    public static void main(String[] args) {
+        SpringApplication.run(BlocBuyApplication.class, args);
+    }
 }

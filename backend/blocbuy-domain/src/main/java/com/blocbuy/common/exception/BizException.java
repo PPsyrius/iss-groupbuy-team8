@@ -13,36 +13,36 @@ import java.util.Map;
  */
 public final class BizException extends RuntimeException {
 
-  @java.io.Serial private static final long serialVersionUID = 1L;
+    @java.io.Serial private static final long serialVersionUID = 1L;
 
-  // transient: ErrorCode/Map implementations are not guaranteed Serializable, and exceptions are
-  // not persisted or remoted in this codebase — identity matters only within the request
-  private final transient ErrorCode errorCode;
-  private final transient Map<String, Object> details;
+    // transient: ErrorCode/Map implementations are not guaranteed Serializable, and exceptions are
+    // not persisted or remoted in this codebase — identity matters only within the request
+    private final transient ErrorCode errorCode;
+    private final transient Map<String, Object> details;
 
-  public BizException(ErrorCode errorCode) {
-    this(errorCode, Map.of());
-  }
-
-  public BizException(ErrorCode errorCode, Map<String, Object> details) {
-    super(toMessage(errorCode));
-    this.errorCode = errorCode;
-    this.details = details == null ? Map.of() : Collections.unmodifiableMap(details);
-  }
-
-  private static String toMessage(ErrorCode errorCode) {
-    if (errorCode == null) {
-      throw new IllegalArgumentException("errorCode must not be null");
+    public BizException(ErrorCode errorCode) {
+        this(errorCode, Map.of());
     }
-    return errorCode.code() + ": " + errorCode.defaultMessage();
-  }
 
-  public ErrorCode errorCode() {
-    return errorCode;
-  }
+    public BizException(ErrorCode errorCode, Map<String, Object> details) {
+        super(toMessage(errorCode));
+        this.errorCode = errorCode;
+        this.details = details == null ? Map.of() : Collections.unmodifiableMap(details);
+    }
 
-  /** Safe structured details for the error body; must never contain sensitive data. */
-  public Map<String, Object> details() {
-    return details;
-  }
+    private static String toMessage(ErrorCode errorCode) {
+        if (errorCode == null) {
+            throw new IllegalArgumentException("errorCode must not be null");
+        }
+        return errorCode.code() + ": " + errorCode.defaultMessage();
+    }
+
+    public ErrorCode errorCode() {
+        return errorCode;
+    }
+
+    /** Safe structured details for the error body; must never contain sensitive data. */
+    public Map<String, Object> details() {
+        return details;
+    }
 }

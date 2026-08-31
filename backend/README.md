@@ -25,9 +25,11 @@ Domains (v1): `identity`, `groupbuy`, `order`, `catalog`, `notification`, `payme
 ## Common commands
 
 ```bash
-./mvnw verify                                  # compile + unit tests + ArchUnit + checkstyle + ITs
+./mvnw spotless:apply                          # auto-format (google-java-format AOSP) — run before commit
+./mvnw verify                                  # format check + compile + unit tests + ArchUnit + checkstyle + SpotBugs + JaCoCo + ITs
 ./mvnw spring-boot:run                         # run app (root-safe; only bootstrap executes)
 ./mvnw verify -Popenapi-export                 # regenerate ../contracts/openapi.json
+docker build -t blocbuy-backend .              # production image (Dockerfile at backend/)
 ```
 
 Profiles: `local` (default; localhost PG/Redis) · `docker` (compose service names) ·
@@ -41,10 +43,20 @@ database name is case-sensitive if created quoted; verify `Blocbuy` vs `blocbuy`
 ## Build gates
 
 - Maven Enforcer: Java [21,22), Maven [3.9,), dependency convergence.
-- Checkstyle: Google checks, 120-column line length (`checkstyle.xml`).
+- Spotless (`spotless-maven-plugin`): google-java-format **AOSP** (4-space indent) — the single source
+  of truth for formatting; checked at `validate`, fixed with `./mvnw spotless:apply`.
+- Checkstyle: Google checks, 120-column line length, AOSP indentation values (`checkstyle.xml`);
+  enforces only what the formatter does not own (naming, imports, Javadoc, blocks).
+- SpotBugs: effort Max, threshold Medium, exclusions with written reasons in `spotbugs-excludes.xml`.
+- JaCoCo: per-module reports + aggregate at `blocbuy-bootstrap/target/site/jacoco-aggregate/`;
+  coverage gate (≥80% on new code) lives in the SonarQube quality gate, not Maven.
 - ArchUnit (`blocbuy-bootstrap/src/test/.../architecture/`): layer direction, framework-free domain,
   no controller→mapper, persistence internals stay internal, no field injection.
 - Tests: JUnit 5; `PgSmokeIT` spins a real PostgreSQL 18 via Testcontainers.
+
+CI: `.github/workflows/ci-backend.yml` (build-quality → contract-check → sonar → docker) and
+`security.yml` (Gitleaks + Trivy). Runbook: [../docs/ci/backend-pipeline.md](../docs/ci/backend-pipeline.md);
+thresholds: [../docs/quality/quality-gates.md](../docs/quality/quality-gates.md).
 
 ## API conventions
 
