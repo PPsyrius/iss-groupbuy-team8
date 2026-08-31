@@ -12,10 +12,10 @@ Locked decisions and rationale: [docs/design/backend-skeleton-plan.md](docs/desi
 | `blocbuy-domain` | Aggregates, VOs, domain services, repository ports, error-code enums — JDK + Lombok only |
 | `blocbuy-application` | Commands/queries, use-case services (transaction boundary), assemblers |
 | `blocbuy-adapter` | Web controllers, global exception handler; protocol adaptation only |
-| `blocbuy-infrastructure` | MyBatis mappers/DOs, repository impls, hand-written converters, Redis, Sa-Token RBAC |
+| `blocbuy-infrastructure` | MyBatis mappers/DOs, repository impls, hand-written converters, Redis, Sa-Token RBAC, Stripe gateway (only module referencing `com.stripe`) |
 | `blocbuy-bootstrap` | `BlocBuyApplication`, `application*.yml`, final assembly |
 
-Domains (v1): `identity`, `groupbuy`, `order`, `catalog`, `notification`.
+Domains (v1): `identity`, `groupbuy`, `order`, `catalog`, `notification`, `payment` (Stripe; added 2026-08-31).
 
 ## Prerequisites
 
@@ -33,7 +33,8 @@ Domains (v1): `identity`, `groupbuy`, `order`, `catalog`, `notification`.
 Profiles: `local` (default; localhost PG/Redis) · `docker` (compose service names) ·
 `openapi-export` (build-only, no live infra).
 
-Secrets come from the environment, never from git: `DB_USERNAME`, `DB_PASSWORD`, `REDIS_PASSWORD`.
+Secrets come from the environment, never from git: `DB_USERNAME`, `DB_PASSWORD`, `REDIS_PASSWORD`,
+`STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`.
 Local datasource: `jdbc:postgresql://localhost:5432/Blocbuy?currentSchema=domain` — note the
 database name is case-sensitive if created quoted; verify `Blocbuy` vs `blocbuy` on first connect.
 
@@ -49,5 +50,7 @@ database name is case-sensitive if created quoted; verify `Blocbuy` vs `blocbuy`
 
 - Base path `/api/v1`; errors are RFC 9457 Problem Details + stable `code` + `traceId`.
 - Auth: Sa-Token, one token domain, Redis-backed sessions, RBAC from identity tables.
+  Exception: `POST /api/v1/webhooks/stripe` is a public path; authenticity comes from Stripe
+  signature verification in the gateway, not session auth.
 - Write endpoints define idempotency via the `Idempotency-Key` header.
 - Lists paginate with a 100-item page cap; cursor field reserved for keyset pagination.

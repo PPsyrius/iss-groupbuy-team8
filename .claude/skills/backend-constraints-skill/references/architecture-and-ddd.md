@@ -24,10 +24,11 @@ com.blocbuy
 ├── groupbuy
 ├── order
 ├── catalog
-└── notification
+├── notification
+└── payment        (added 2026-08-31; Stripe-backed)
 ```
 
-Do not create packages for payment, inventory, merchant, marketing, fulfillment, or search — they are out of scope for v1 and there is no MQ/ES in the stack to back them. New domains require explicit user approval.
+Do not create packages for inventory, merchant, marketing, fulfillment, or search — they are out of scope for v1 and there is no MQ/ES in the stack to back them. New domains require explicit user approval.
 
 Example: `blocbuy-domain/.../groupbuy/model/aggregate/GroupDeal.java`, `blocbuy-application/.../groupbuy/command/CreateGroupDealCommand.java`. The actual business domains are decided by domain modeling; do not create empty modules in advance just because they appear in this list.
 
@@ -45,6 +46,7 @@ domain -> JDK + a minimal amount of framework-free generic types
 
 - Outer layers depend on inner layers; the domain layer must never depend back on outer layers.
 - The application layer must not depend directly on MyBatis Mappers or `RedisTemplate`; it depends only on domain ports / application ports.
+- External-capability ports (e.g. payment `PaymentGateway`) are defined on the domain side (`com.blocbuy.{domain}.gateway`), because the infrastructure module must not depend on the application module. Port signatures use only provider-free types; SDK classes (e.g. `com.stripe.*`) appear exclusively in the infrastructure implementation.
 - The infrastructure layer implements ports and converts DOs/POs to domain objects; persistence annotations and table structures must not leak into aggregates.
 - Cross-domain calls use the other domain's public application interface, query facade, or domain events; cross-domain joins/Mapper calls to reuse "convenient data" are forbidden. When a read model genuinely needs cross-domain aggregation, build an explicit query model and record its ownership.
 - Enforce boundaries with both Maven module dependencies and ArchUnit; verbal agreements are not enough.
@@ -92,5 +94,5 @@ domain -> JDK + a minimal amount of framework-free generic types
 - Order placement: price snapshots, promotion results, and shipping-info snapshots must be traceable; referencing only current values that can change is not allowed.
 - Group-buy participation counts: updates must be protected by atomic mechanisms such as database conditional updates/version constraints; "read count first, then update unconditionally" is forbidden.
 - Group-buy completion: define a single state machine for headcount calculation, seat reservation, timeout, cancellation, and refund; duplicate triggers (schedulers, retries) must not cause duplicate group completion or refunds.
-- If payments are introduced later: establish uniqueness on the payment channel transaction number and the business order number; callbacks must verify signatures, match amount/currency/merchant, and be idempotent.
+- Payments (domain added 2026-08-31, Stripe): uniqueness on the provider intent id and the business payment number (`uq_biz_payment_provider_intent`, `uq_biz_payment_payment_no`); callbacks verify the signature first (raw body forwarded untouched), deduplicate on the provider event id (`log_payment_webhook_event`), match amount/currency against the persisted row, and are idempotent; the payment row is persisted before the provider call so callbacks always find local state.
 - Any future search/recommendation feature is a derived view; price, availability, and sellable status are re-verified against the source of truth at critical transaction steps.

@@ -16,7 +16,7 @@ Init `backend/` skeleton. Spring Boot 3.5.15 + JDK 21 + Maven COLA multi-module 
 | D1 | COLA multi-module: client / adapter / application / domain / infrastructure / bootstrap |
 | D2 | groupId `com.blocbuy`, artifact prefix `blocbuy-` |
 | D3 | Backend self-contained under `backend/`; no repo-root pom |
-| D4 | Domains: `identity`, `groupbuy`, `order`, `catalog`, `notification` |
+| D4 | Domains: `identity`, `groupbuy`, `order`, `catalog`, `notification`; amended 2026-08-31: + `payment` (Stripe) |
 | D5 | Middleware: PostgreSQL 18 + Redis 8.10.0 only. No MQ, no ES |
 | D6 | Sa-Token session Redis-backed (`sa-token-redis-jackson`) |
 | D7 | One token domain; RBAC roles/permissions loaded from user SQL tables via `StpInterface` |
@@ -51,6 +51,7 @@ Init `backend/` skeleton. Spring Boot 3.5.15 + JDK 21 + Maven COLA multi-module 
 | spring-boot-starter-data-redis | Boot BOM | managed |
 | Lombok | Boot BOM | `@RequiredArgsConstructor`/`@Slf4j` only |
 | ArchUnit JUnit5 | 1.4.2 | explicit |
+| stripe-java | 33.4.0 | explicit; payment domain only, confined to infrastructure (added 2026-08-31) |
 | Testcontainers (postgresql) | Boot BOM | managed |
 | maven-checkstyle-plugin | 3.6.0 | explicit |
 | maven-enforcer-plugin | Boot BOM | Java 21, Maven ≥3.9, dependencyConvergence |
@@ -88,10 +89,13 @@ domain → JDK + Lombok only
 Root: `com.blocbuy`
 
 ```text
-per module × per domain (identity | groupbuy | order | catalog | notification):
+per module × per domain (identity | groupbuy | order | catalog | notification | payment):
 
 blocbuy-domain/com/blocbuy/{domain}/model/        # aggregate root, entity, VO — skeleton
 blocbuy-domain/com/blocbuy/{domain}/repository/   # port interface per aggregate root
+blocbuy-domain/com/blocbuy/{domain}/gateway/      # external-capability ports (e.g. payment
+                                                  # PaymentGateway) — domain-side because
+                                                  # infrastructure must not depend on application
 blocbuy-domain/com/blocbuy/{domain}/event/        # past-tense events (placeholder)
 blocbuy-domain/com/blocbuy/{domain}/exception/    # {Domain}ErrorCode enum
 blocbuy-application/com/blocbuy/{domain}/command/ # intent commands
@@ -129,7 +133,9 @@ blocbuy-infrastructure .../common/config/ MyBatis, Redis, Sa-Token (StpInterface
 
 ## 7. Per-Domain Skeleton Content
 
-Each of 5 domains gets, per layer:
+Each of 5 domains gets, per layer (payment, added 2026-08-31, additionally carries a domain-side
+`PaymentGateway` port, an infrastructure `StripePaymentGateway` impl, a public
+`/api/v1/webhooks/stripe` controller, and `V2__payment.sql`):
 
 | Layer | Skeleton artifact |
 |---|---|
