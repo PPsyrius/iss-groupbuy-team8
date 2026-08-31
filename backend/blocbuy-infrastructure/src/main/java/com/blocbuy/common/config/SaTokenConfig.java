@@ -20,6 +20,8 @@ public class SaTokenConfig implements WebMvcConfigurer {
   private static final String[] PUBLIC_PATHS = {
     ApiConstants.API_V1 + "/auth/login",
     ApiConstants.API_V1 + "/auth/register",
+    // provider callbacks authenticate by signature verification, not by session
+    ApiConstants.API_V1 + "/webhooks/**",
     "/v3/api-docs/**",
     "/swagger-ui/**",
     "/swagger-ui.html",
