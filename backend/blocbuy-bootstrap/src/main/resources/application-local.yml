@@ -1,0 +1,18 @@
+# local: backend on host, PG/Redis on localhost (see docs/deploy/dev). Secrets via env only (D17).
+# NOTE (D8): database name is case-sensitive if created quoted; "Blocbuy" vs "blocbuy" — verify on
+# first connection and fix here if PostgreSQL reports the database does not exist.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/Blocbuy?currentSchema=domain
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_PASSWORD}
+      timeout: 3s
+
+logging:
+  level:
+    com.blocbuy: debug

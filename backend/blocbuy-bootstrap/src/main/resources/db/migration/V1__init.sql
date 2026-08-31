@@ -1,0 +1,5 @@
+-- V1__init.sql — schema bootstrap placeholder.
+-- Rules: all schema changes go through versioned migrations; table/column names are lowercase
+-- snake_case; instants are timestamptz (UTC); money is numeric(precision, scale); invariants
+-- (NOT NULL, UNIQUE, CHECK, FK) are pushed down to the database.
+-- First real migration arrives with the first aggregate (identity user tables).

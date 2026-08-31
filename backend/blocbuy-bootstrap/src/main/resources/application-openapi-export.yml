@@ -1,0 +1,16 @@
+# openapi-export: used ONLY by the springdoc-openapi-maven-plugin (make contract-check).
+# Boots the app without touching live PG/Redis: Flyway off, and nothing ever opens a connection —
+# so no credentials exist here at all (no placeholder secrets to leak).
+server:
+  port: 18080
+
+spring:
+  flyway:
+    enabled: false
+  datasource:
+    url: jdbc:postgresql://localhost:5432/blocbuy_export_placeholder?currentSchema=domain
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 1s

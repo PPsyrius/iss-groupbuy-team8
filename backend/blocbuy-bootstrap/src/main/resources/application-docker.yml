@@ -1,0 +1,12 @@
+# docker: backend inside the compose network; PG/Redis reached by service name.
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/Blocbuy?currentSchema=domain
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: ${REDIS_PASSWORD}
+      timeout: 3s
