@@ -5,10 +5,20 @@ name: ci-backend
 on:
   push:
     branches: [dev]
-    paths: ['backend/**', 'contracts/**', '.github/workflows/ci-backend.yml']
+    paths:
+      - "backend/**"
+      - "contracts/**"
+      - "docker-compose.yaml"
+      - ".gha-ignore"
+      - ".github/workflows/ci-backend.yml"
   pull_request:
     branches: [dev]
-    paths: ['backend/**', 'contracts/**', '.github/workflows/ci-backend.yml']
+    paths:
+      - "backend/**"
+      - "contracts/**"
+      - "docker-compose.yaml"
+      - ".gha-ignore"
+      - ".github/workflows/ci-backend.yml"
 
 concurrency:
   group: ci-backend-${{ github.ref }}
@@ -158,7 +168,7 @@ jobs:
           if [ "$ok" != "1" ]; then echo '--- smoke-app logs ---'; docker logs smoke-app; exit 1; fi
 
       - name: Trivy image scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.28.0
         with:
           image-ref: blocbuy-backend:ci-${{ github.sha }}
           severity: HIGH,CRITICAL
@@ -172,3 +182,79 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-image.sarif
+  deploy-ec2:
+    name: deploy-ec2
+    needs:
+      - build-quality
+      - contract-check
+      - sonar
+      - docker
+    if: >-
+      always() &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/dev' &&
+      needs.build-quality.result == 'success' &&
+      needs.contract-check.result == 'success' &&
+      needs.docker.result == 'success' &&
+      (needs.sonar.result == 'success' || needs.sonar.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      id-token: write
+    environment:
+      name: backend-dev
+      url: ${{ steps.deploy.outputs.vm_url }}
+    steps:
+      - id: aws-credentials
+        name: Assume AWS deployment role with GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v6.2.3
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          allowed-account-ids: "402178232802"
+          role-session-name: BlocBuy-${{ github.run_id }}
+          output-credentials: true
+
+      - id: deploy
+        name: Provision EC2 and deploy Docker Compose
+        uses: bitovi/github-actions-deploy-docker-to-ec2@v1.0.3
+        with:
+          aws_access_key_id: ${{ steps.aws-credentials.outputs.aws-access-key-id }}
+          aws_secret_access_key: ${{ steps.aws-credentials.outputs.aws-secret-access-key }}
+          aws_session_token: ${{ steps.aws-credentials.outputs.aws-session-token }}
+          aws_default_region: ${{ vars.AWS_REGION }}
+
+          aws_resource_identifier: ppsyrius-iss-groupbuy-team8-backend-dev
+          tf_state_file_name: ppsyrius-iss-groupbuy-team8-backend-dev
+          aws_additional_tags: '{"Project":"blocbuy","Environment":"dev","ManagedBy":"github-actions"}'
+
+          aws_ec2_instance_type: t3.medium
+          aws_ec2_instance_root_vol_size: 30
+          aws_ec2_instance_root_vol_preserve: true
+          aws_ec2_instance_public_ip: true
+          aws_ec2_iam_instance_profile: BlocBuyEc2InstanceRole
+
+          aws_vpc_create: true
+          aws_vpc_cidr_block: 10.20.0.0/16
+          aws_vpc_public_subnets: 10.20.10.0/24
+          aws_vpc_availability_zones: ${{ vars.AWS_AVAILABILITY_ZONE }}
+
+          aws_elb_create: true
+          aws_elb_app_port: 8589
+          aws_elb_app_protocol: HTTP
+          aws_elb_listen_port: 80
+          aws_elb_listen_protocol: HTTP
+          aws_elb_healthcheck: HTTP:8589/actuator/health
+
+          docker_repo_app_directory: /
+          docker_repo_app_directory_cleanup: true
+          docker_backup_retention: 5
+          docker_remove_orphans: true
+          docker_full_cleanup: false
+          ansible_start_docker_timeout: 900
+
+          env_ghs: ${{ secrets.BACKEND_DOT_ENV }}
+
+          docker_cloudwatch_enable: true
+          docker_cloudwatch_retention_days: 14

@@ -101,25 +101,121 @@ ID、Secret Access Key，以及可选 Session Token，因此必须使用专用�
 
 EC2、EBS、Classic Load Balancer、S3、CloudWatch 和流量都可能收费。
 
-### 3.3 创建部署身份
+### 3.3 PowerUserAccess 的限制
 
-推荐由 AWS 管理员提供专用部署身份。它需要管理本工作流启用的 EC2、VPC、子网、安全组、ELB、
-IAM Instance Profile、S3 Terraform 状态/日志及 CloudWatch 资源。
+当前操作者通过 IAM Identity Center 使用账户 `402178232802` 的 `PowerUserAccess`。该 AWS 托管
+策略允许管理大部分业务资源，但明确排除绝大多数 `iam:*`；仅凭此权限通常不能：
 
-若这是隔离、短期、无其他工作负载的课程账户，可按下面方式快速验证：
+- 创建 GitHub OIDC Identity Provider；
+- 创建或修改 GitHub Actions 部署 Role 及其 trust policy；
+- 创建 EC2 Instance Role/Instance Profile；
+- 授予 `iam:PassRole`；
+- 修改自己的 IAM Identity Center Permission Set。
 
-1. **IAM -> Users -> Create user**；
-2. 用户名 `github-actions-blocbuy-dev`，不启用 Console 登录；
-3. 首次实验可附加经团队批准的广权限策略；
-4. **Security credentials -> Create access key -> Third-party service**；
-5. 立即保存 Access Key ID 和 Secret Access Key；Secret 只显示一次；
-6. 部署验证后根据 CloudTrail 和 Terraform 行为收窄权限并设置轮换日期。
+因此不要尝试从 PowerUserAccess 会话导出短期凭证并长期保存到 GitHub。它会过期，也没有解决
+Action 创建/传递 IAM Role 所需的权限。需要 AWS 账户管理员执行一次 IAM 引导配置。
 
-不要在共享或生产账户中长期保留 `AdministratorAccess`。无法判断权限时，应由 AWS 管理员审核，
-不要反复增加未知权限。
+### 3.4 请管理员创建 GitHub OIDC Provider
 
-若使用 AWS Academy，通常还有 `AWS_SESSION_TOKEN`。临时凭证过期后必须同步更新 GitHub 中的
-三项 Secret，否则自动部署会认证失败。
+如果账户中尚不存在，管理员创建：
+
+```text
+Provider URL: https://token.actions.githubusercontent.com
+Audience:     sts.amazonaws.com
+```
+
+OIDC Provider 是账户级资源；已经存在时复用，不能重复创建。
+
+### 3.5 请管理员创建 EC2 运行 Role/Profile
+
+建议名称均使用 `BlocBuyEc2InstanceRole`：
+
+- Role trust principal：`ec2.amazonaws.com`；
+- Instance Profile：`BlocBuyEc2InstanceRole`，包含同名 Role；
+- 附加 `AmazonSSMManagedInstanceCore`，用于 Session Manager；
+- 附加 `CloudWatchAgentServerPolicy`，供实例写入 CloudWatch 日志。
+
+这样部署 Action 可以使用现有 Instance Profile，不需要动态创建 IAM Role。
+
+### 3.6 请管理员创建 GitHub 部署 Role
+
+建议名称：`GitHubActionsBlocBuyBackendDev`。
+
+其 OIDC trust policy 必须限制为本仓库和 GitHub Environment `backend-dev`。该私有仓库创建于
+2026-08-24，GitHub API 返回 Owner ID `19505219`、Repository ID `1344446887`，因此使用新的
+不可变 subject：
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::402178232802:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+          "token.actions.githubusercontent.com:sub": "repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:environment:backend-dev"
+        }
+      }
+    }
+  ]
+}
+```
+
+可用已登录 GitHub CLI 复核这些值：
+
+```bash
+gh api repos/PPsyrius/iss-groupbuy-team8 \
+  --jq '{repository_id: .id, owner_id: .owner.id, created_at: .created_at}'
+```
+
+不要使用 `repo:*` 或只限制组织的通配信任。因为 job 引用了 Environment，OIDC subject 使用
+`environment:backend-dev`，不是 `ref:refs/heads/dev`；同时必须在 GitHub Environment 中把允许部署
+分支限制为 `dev`。
+
+部署 Role 可附加 `PowerUserAccess` 管理 EC2/VPC/ELB/S3/CloudWatch 等资源，并额外增加仅针对预建
+EC2 Role/Profile 的 IAM 读取和 PassRole 权限：
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PassBlocBuyEc2Role",
+      "Effect": "Allow",
+      "Action": ["iam:GetRole", "iam:PassRole"],
+      "Resource": "arn:aws:iam::402178232802:role/BlocBuyEc2InstanceRole"
+    },
+    {
+      "Sid": "ReadBlocBuyInstanceProfile",
+      "Effect": "Allow",
+      "Action": "iam:GetInstanceProfile",
+      "Resource": "arn:aws:iam::402178232802:instance-profile/BlocBuyEc2InstanceRole"
+    },
+    {
+      "Sid": "ListInstanceProfiles",
+      "Effect": "Allow",
+      "Action": [
+        "iam:ListInstanceProfiles",
+        "iam:ListInstanceProfilesForRole",
+        "iam:ListAttachedRolePolicies"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+管理员最终返回给你以下两个非秘密值即可，不需要 Access Key：
+
+```text
+Deploy Role ARN: arn:aws:iam::402178232802:role/GitHubActionsBlocBuyBackendDev
+Instance Profile: BlocBuyEc2InstanceRole
+```
 
 ## 4. 准备仓库文件
 
@@ -314,17 +410,30 @@ on:
       (needs.sonar.result == 'success' || needs.sonar.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
+      id-token: write
     environment:
       name: backend-dev
       url: ${{ steps.deploy.outputs.vm_url }}
     steps:
+      - id: aws-credentials
+        name: Assume AWS deployment role with GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v6.2.3
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          allowed-account-ids: "402178232802"
+          role-session-name: BlocBuy-${{ github.run_id }}
+          output-credentials: true
+
       - id: deploy
         name: Provision EC2 and deploy Docker Compose
         uses: bitovi/github-actions-deploy-docker-to-ec2@v1
         with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws_access_key_id: ${{ steps.aws-credentials.outputs.aws-access-key-id }}
+          aws_secret_access_key: ${{ steps.aws-credentials.outputs.aws-secret-access-key }}
+          aws_session_token: ${{ steps.aws-credentials.outputs.aws-session-token }}
           aws_default_region: ${{ vars.AWS_REGION }}
 
           aws_resource_identifier: ppsyrius-iss-groupbuy-team8-backend-dev
@@ -335,6 +444,7 @@ on:
           aws_ec2_instance_root_vol_size: 30
           aws_ec2_instance_root_vol_preserve: true
           aws_ec2_instance_public_ip: true
+          aws_ec2_iam_instance_profile: BlocBuyEc2InstanceRole
 
           aws_vpc_create: true
           aws_vpc_cidr_block: 10.20.0.0/16
@@ -362,9 +472,11 @@ on:
 ```
 
 其行为是：PR 时跳过；只有 push 到 `dev` 才部署；三个必需门禁必须成功；Sonar 未配置时允许
-skipped，配置后必须成功。
+skipped，配置后必须成功；OIDC step 为本次 job 换取短期 AWS 凭证，再通过 step output 传给
+Bitovi，因此 GitHub 不保存长期 AWS Key。
 
-`@v1` 与当前 Bitovi 文档一致。开发验证稳定后，建议固定到团队审查过的完整 commit SHA。
+`configure-aws-credentials@v6.2.3` 和 Bitovi `@v1` 与本文核对时的上游文档一致。开发验证稳定后，
+建议把两个第三方 Action 都固定到团队审查过的完整 commit SHA。
 
 ### 5.3 扩充 `security.yml` 路径
 
@@ -408,18 +520,15 @@ skipped，配置后必须成功。
 |---|---|
 | `AWS_REGION` | `ap-southeast-1` |
 | `AWS_AVAILABILITY_ZONE` | `ap-southeast-1a` |
+| `AWS_DEPLOY_ROLE_ARN` | `arn:aws:iam::402178232802:role/GitHubActionsBlocBuyBackendDev` |
 
-选择其他区域时必须同时修改二者。
+选择其他区域时必须同时修改 `AWS_REGION` 和 `AWS_AVAILABILITY_ZONE`。
 
-### 7.2 AWS Secrets
+### 7.2 AWS 凭证
 
-| Name | Value |
-|---|---|
-| `AWS_ACCESS_KEY_ID` | 部署身份的 Access Key ID |
-| `AWS_SECRET_ACCESS_KEY` | 对应 Secret Access Key |
-| `AWS_SESSION_TOKEN` | 仅临时凭证需要 |
-
-长期 IAM User 凭证不创建 `AWS_SESSION_TOKEN`。不要把 Secret 放入 Variable、代码、Issue 或 PR。
+OIDC 方案不创建 `AWS_ACCESS_KEY_ID`、`AWS_SECRET_ACCESS_KEY` 或 `AWS_SESSION_TOKEN` GitHub
+Secrets。Role ARN 不是秘密，保存在上述 Environment Variable 即可。每次 job 由 GitHub OIDC
+获取短期凭证，job 结束后自然失效。
 
 ### 7.3 应用 Secret
 
@@ -455,6 +564,7 @@ Bitovi 会把 `env_ghs` 合并为 EC2 上的 `.env`。不要提交真实 `repo_e
 进入 **Settings -> Actions -> General**。确认 Actions 已启用。若只允许选定 Action，至少允许：
 
 - `actions/checkout`、`actions/setup-java`、`actions/cache`、`actions/upload-artifact`；
+- `aws-actions/configure-aws-credentials`；
 - `aquasecurity/trivy-action`；
 - `github/codeql-action`；
 - `gitleaks/gitleaks-action`；
@@ -533,7 +643,8 @@ PR 创建后应看到：
 
 - Budget 已创建；
 - `backend-dev` Environment 存在；
-- Secrets/Variables 已保存且临时凭证未过期；
+- `AWS_DEPLOY_ROLE_ARN`、Region/AZ Variables 和 `BACKEND_DOT_ENV` 已保存；
+- OIDC Provider、部署 Role、EC2 Instance Profile 已由管理员完成；
 - PR 必需检查全部成功；
 - 没有另一条部署在执行。
 
@@ -577,7 +688,7 @@ curl --fail --show-error --head "http://<ELB_HOST>/swagger-ui.html"
 
 | 现象 | 处理 |
 |---|---|
-| `ExpiredToken`/`InvalidClientTokenId` | 更新实验室三项临时凭证，或检查 IAM Key 是否 Active |
+| `Not authorized to perform sts:AssumeRoleWithWebIdentity` | 核对 OIDC Provider、aud、实际 sub 格式、Environment 名称和 Role trust policy |
 | `AccessDenied` | 记录被拒绝 API/ARN，请管理员补最小权限；不要改资源名绕过 |
 | 可用区失败 | 确认 Region/AZ 匹配且支持 `t3.medium` |
 | Compose 找不到 | 确认文件在根目录、`docker_repo_app_directory: /`、未被 `.gha-ignore` 排除 |
@@ -669,18 +780,18 @@ Bitovi 用 `tf_stack_destroy: true` 销毁，销毁工作流必须使用与部�
 
 ## 18. 最终完成清单
 
-- [ ] 根用户 MFA、专用部署身份、AWS Budget 已完成；
+- [ ] 根用户 MFA、GitHub OIDC Provider、两个专用 IAM Role、AWS Budget 已完成；
 - [ ] `docker-compose.yaml` 本地构建和健康检查通过；
 - [ ] `.env`、AWS Key、数据库密码、Stripe Key 未进入 Git；
 - [ ] `ci-backend.yml` 已加入 Compose 路径和 `deploy-ec2`；
 - [ ] `security.yml` 已覆盖部署配置变更；
-- [ ] `backend-dev` Environment、AWS Secrets、`BACKEND_DOT_ENV`、Region/AZ 已配置；
+- [ ] `backend-dev` Environment、Role ARN、`BACKEND_DOT_ENV`、Region/AZ 已配置；
 - [ ] `dev` 分支保护及五个必需检查已配置；
 - [ ] PR 阶段 `deploy-ec2` 正确 skipped；
 - [ ] 合并后 `deploy-ec2` 自动运行成功；
 - [ ] ELB healthy，公网健康接口返回 `UP`；
 - [ ] 5432/6379 未暴露，CloudWatch 无秘密；
-- [ ] 首次部署证据、密钥轮换、数据库备份和回滚责任已记录。
+- [ ] 首次部署证据、OIDC Role 权限复审、数据库备份和回滚责任已记录。
 
 ## 参考资料
 
