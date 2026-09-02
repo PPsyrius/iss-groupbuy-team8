@@ -1,0 +1,9 @@
+.git/**
+.codegraph/**
+.idea/**
+.agents/**
+frontend/**
+docs/**
+contracts/**
+backend/**/target/**
+**/.DS_Store
