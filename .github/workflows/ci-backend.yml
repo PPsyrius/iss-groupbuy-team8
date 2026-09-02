@@ -1,4 +1,4 @@
-# Backend pipeline: format → lint → tests+ArchUnit → SpotBugs+JaCoCo → contract drift → Sonar → image.
+# Backend pipeline: format → lint → tests+ArchUnit → SpotBugs+JaCoCo → contract drift/breaking → Sonar → image+smoke+Trivy.
 # Gates and thresholds: docs/quality/quality-gates.md. Plan: docs/ci/devsecops-pipeline-plan.md.
 name: ci-backend
 
@@ -31,12 +31,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: m2-${{ runner.os }}-${{ hashFiles('backend/**/pom.xml') }}
-          restore-keys: m2-${{ runner.os }}-
+          cache: maven # picks up backend/**/pom.xml
 
       - name: Formatting + style gates (fail fast)
         run: ./mvnw -B spotless:check checkstyle:check
@@ -65,18 +60,28 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: m2-${{ runner.os }}-${{ hashFiles('backend/**/pom.xml') }}
-          restore-keys: m2-${{ runner.os }}-
+          cache: maven
 
       - name: Regenerate contracts/openapi.json from code
         run: ./mvnw -B verify -Popenapi-export -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true
 
+      # Pathspec must resolve from the repo root: `contracts/` under backend/ matches nothing
+      # and git diff exits 0 — the drift check would silently never fail.
       - name: Fail if committed contract drifted
+        working-directory: ${{ github.workspace }}
         run: git diff --exit-code -- contracts/
+
+      # Drift check above catches "forgot to commit"; this catches "broke consumers".
+      # Old spec = base branch committed contract; new spec = regenerated from PR code.
+      - name: Fail on backward-incompatible API change (PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --depth=1 origin "${{ github.base_ref }}"
+          git show FETCH_HEAD:contracts/openapi.json > /tmp/openapi-base.json
+          curl -sSfL -o /tmp/openapi-diff.jar \
+            https://repo1.maven.org/maven2/org/openapitools/openapidiff/openapi-diff-cli/2.1.7/openapi-diff-cli-2.1.7-all.jar
+          java -jar /tmp/openapi-diff.jar --fail-on-incompatible \
+            /tmp/openapi-base.json ../contracts/openapi.json
 
   sonar:
     # Activated by setting repo variable SONAR_HOST_URL (+ secret SONAR_TOKEN).
@@ -93,12 +98,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: m2-${{ runner.os }}-${{ hashFiles('backend/**/pom.xml') }}
-          restore-keys: m2-${{ runner.os }}-
+          cache: maven
 
       - uses: actions/cache@v4
         with:
@@ -119,7 +119,7 @@ jobs:
           -Dsonar.qualitygate.wait=true
 
   docker:
-    if: github.event_name == 'push'
+    # Runs on PR too: image build + smoke + scan must gate before merge, not after push.
     needs: build-quality
     runs-on: ubuntu-latest
     permissions:
@@ -131,16 +131,44 @@ jobs:
       - name: Build image
         run: docker build -t blocbuy-backend:ci-${{ github.sha }} backend/
 
+      # Boot the real image against real PG 18 + Redis 8 and probe the health endpoint.
+      # Container names match application-docker.yml hostnames (postgres/redis).
+      - name: Smoke test (boot + /actuator/health)
+        run: |
+          set -e
+          docker network create smoke-net
+          docker run -d --network smoke-net --name postgres \
+            -e POSTGRES_USER=blocbuy -e POSTGRES_PASSWORD=blocbuy -e POSTGRES_DB=Blocbuy \
+            postgres:18
+          docker run -d --network smoke-net --name redis \
+            redis:8.1 redis-server --requirepass blocbuy
+          for i in $(seq 1 30); do
+            docker exec postgres pg_isready -U blocbuy -d Blocbuy && break || sleep 2
+          done
+          docker run -d --network smoke-net --name smoke-app -p 8589:8589 \
+            -e SPRING_PROFILES_ACTIVE=docker \
+            -e DB_USERNAME=blocbuy -e DB_PASSWORD=blocbuy \
+            -e REDIS_PASSWORD=blocbuy \
+            blocbuy-backend:ci-${{ github.sha }}
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8589/actuator/health | grep -q '"status":"UP"'; then ok=1; break; fi
+            sleep 2
+          done
+          if [ "$ok" != "1" ]; then echo '--- smoke-app logs ---'; docker logs smoke-app; exit 1; fi
+
       - name: Trivy image scan
         uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: blocbuy-backend:ci-${{ github.sha }}
           severity: HIGH,CRITICAL
+          ignore-unfixed: true # gate wording is "0 unfixed"; unfixed-pending CVEs don't fail
+          exit-code: '1'       # actually fail the job — default 0 only reports
           format: sarif
           output: trivy-image.sarif
 
       - name: Upload image scan SARIF
-        continue-on-error: true # requires GHAS on private repos; console scan above still gates
+        continue-on-error: true # requires GHAS on private repos; job already gated by exit-code above
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-image.sarif

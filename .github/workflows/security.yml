@@ -1,4 +1,4 @@
-# Security scans: secrets (Gitleaks) + dependency/config CVEs (Trivy fs).
+# Security scans: secrets (Gitleaks) + dependency/config CVEs (Trivy fs) + optional SAST (CodeQL).
 # Image scanning lives in ci-backend.yml `docker` job (needs a built image).
 # Plan: docs/ci/devsecops-pipeline-plan.md Step 4.
 name: security
@@ -35,22 +35,47 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-
       - name: Trivy filesystem scan (Maven deps + config misconfig)
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: fs
           scan-ref: backend/
           severity: HIGH,CRITICAL
+          ignore-unfixed: true # gate wording is "0 unfixed"; unfixed-pending CVEs don't fail
+          exit-code: '1'       # actually fail the job — default 0 only reports
           format: sarif
           output: trivy-fs.sarif
 
       - name: Upload dependency scan SARIF
-        continue-on-error: true # requires GHAS on private repos; console scan above still gates
+        continue-on-error: true # requires GHAS on private repos; job already gated by exit-code above
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-fs.sarif
+
+  codeql:
+    # SAST for Java. Opt-in: enable with repo variable ENABLE_CODEQL=true.
+    # Requires GitHub Advanced Security on private repos (free on public repos).
+    # See docs/ci/devsecops-pipeline-plan.md Step 5.
+    if: vars.ENABLE_CODEQL == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read # only for private repos
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: java-kotlin
+          build-mode: none # CodeQL traces compiled code itself; no Maven build needed
+
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:java-kotlin

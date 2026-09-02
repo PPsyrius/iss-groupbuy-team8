@@ -20,7 +20,7 @@ These are settled; do not reopen them without explicit user approval. Full ratio
 - **API**: base path `/api/v1`; errors = RFC 9457 Problem Details + `code` + `traceId`; success = bare DTO (no envelope); messages English-first with an i18n message-key seam in `ErrorCode`.
 - **Conversions**: hand-written DO↔domain converters — no MapStruct.
 - **Pinned versions**: Spring Boot 3.5.15 (exact), mybatis-spring-boot-starter 3.0.5, sa-token 1.46.0 (boot3 starter + redis-jackson), springdoc-openapi 2.9.0 (2.x line only — 3.x targets Boot 4), ArchUnit 1.4.2, stripe-java 33.4.0 (payment domain; infrastructure module only). Everything else from the Spring Boot BOM; versions centralized in the parent POM.
-- **Gates**: Maven Enforcer, Checkstyle (Google checks, 120 columns), ArchUnit layer rules, JUnit 5 + Testcontainers. No formatter plugin.
+- **Gates**: Maven Enforcer, Spotless + google-java-format AOSP (amended 2026-08-31 — supersedes the original "no formatter plugin" decision; Checkstyle Indentation moved to AOSP values, formatting owned solely by Spotless), Checkstyle (Google checks, 120 columns), SpotBugs, ArchUnit layer rules, JUnit 5 + Testcontainers.
 
 ## How to Work
 

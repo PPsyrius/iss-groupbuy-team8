@@ -11,10 +11,13 @@ The numbers the pipeline enforces. Change to any row = team decision, recorded h
 | Build gates | Maven Enforcer | Java [21,22), Maven ≥3.9, dependency convergence | `validate` phase |
 | Coverage | JaCoCo 0.8.15 → SonarQube | ≥ 80% on new code (server quality gate) | `sonar` CI job |
 | Code quality | SonarQube | quality gate green: no new blocker/critical, A ratings on new code | `sonar` CI job (`sonar.qualitygate.wait`) |
-| Dependency CVEs | Trivy fs | 0 unfixed HIGH/CRITICAL | `security.yml` + weekly cron |
-| Image CVEs | Trivy image | 0 unfixed HIGH/CRITICAL | `ci-backend.yml` `docker` job |
+| Dependency CVEs | Trivy fs | 0 unfixed HIGH/CRITICAL (`exit-code: 1`, `ignore-unfixed`) | `security.yml` + weekly cron |
+| Image CVEs | Trivy image | 0 unfixed HIGH/CRITICAL (`exit-code: 1`, `ignore-unfixed`) | `ci-backend.yml` `docker` job |
 | Secrets | Gitleaks | 0 leaks in full git history | `security.yml` |
+| SAST | CodeQL (java-kotlin, build-mode none) | 0 alerts; opt-in via `ENABLE_CODEQL` repo variable | `security.yml` `codeql` job |
 | API contract | springdoc export | committed `contracts/openapi.json` identical to generated | `contract-check` job |
+| API compatibility | openapi-diff 2.1.7 (`--fail-on-incompatible`) | no backward-incompatible change vs base branch | `contract-check` job (PR only) |
+| Boot smoke | container boot vs PG 18 + Redis 8 | `/actuator/health` = UP within 60s | `ci-backend.yml` `docker` job |
 
 ## Deliberate Non-Gates
 
