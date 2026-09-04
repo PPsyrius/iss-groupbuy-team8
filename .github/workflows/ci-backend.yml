@@ -198,6 +198,7 @@ jobs:
           version: v0.74.0
           image-ref: blocbuy-backend:ci-${{ github.sha }}
           severity: HIGH,CRITICAL
+          limit-severities-for-sarif: 'true' # otherwise entrypoint drops the severity filter and LOW findings trip exit-code
           ignore-unfixed: true # gate wording is "0 unfixed"; unfixed-pending CVEs don't fail
           exit-code: '1'       # actually fail the job — default 0 only reports
           format: sarif
