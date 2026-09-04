@@ -126,7 +126,8 @@ jobs:
       - name: Populate local Maven repository
         # Trivy resolves pom.xml dependencies against ~/.m2 first; resolving here
         # lets the scan run offline and avoids repo.maven.apache.org 429 blocks.
-        run: ./mvnw -B -q -f backend/pom.xml dependency:go-offline -DskipTests
+        run: ./mvnw -B -q -f pom.xml dependency:go-offline -DskipTests
+        working-directory: backend
 
       - name: Trivy filesystem scan (Maven dependencies)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
