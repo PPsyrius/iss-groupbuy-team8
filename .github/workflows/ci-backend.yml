@@ -184,6 +184,12 @@ jobs:
           sarif_file: trivy-image.sarif
   deploy-ec2:
     name: deploy-ec2
+    # Workflow-level concurrency cancels in-progress runs, which would kill a
+    # deploy mid-Terraform-apply and risk a stale S3 state lock. A job-level
+    # group overrides the workflow-level one: deploys queue, never get cancelled.
+    concurrency:
+      group: deploy-ec2-backend-dev
+      cancel-in-progress: false
     needs:
       - build-quality
       - contract-check
