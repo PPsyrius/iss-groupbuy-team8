@@ -24,7 +24,10 @@ RUN mvn -B -q package -pl blocbuy-bootstrap -am \
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-RUN groupadd --system blocbuy && useradd --system --gid blocbuy blocbuy
+# Base image ships pebble (Let's Encrypt's ACME test server) at /usr/bin/pebble —
+# a Go test tool the app never runs, and its stdlib CVEs trip the Trivy image gate.
+RUN rm -f /usr/bin/pebble \
+ && groupadd --system blocbuy && useradd --system --gid blocbuy blocbuy
 USER blocbuy
 
 COPY --from=build /build/blocbuy-bootstrap/target/blocbuy-bootstrap-*.jar app.jar
