@@ -121,6 +121,7 @@ jobs:
           scan-type: fs
           scan-ref: backend/
           severity: HIGH,CRITICAL
+          limit-severities-for-sarif: 'true' # otherwise entrypoint drops the severity filter and LOW findings trip exit-code
           ignore-unfixed: true # gate wording is "0 unfixed"; unfixed-pending CVEs don't fail
           exit-code: '1'       # actually fail the job — default 0 only reports
           format: sarif
@@ -148,6 +149,7 @@ jobs:
           scan-type: config
           scan-ref: .
           severity: HIGH,CRITICAL
+          limit-severities-for-sarif: 'true' # otherwise entrypoint drops the severity filter and LOW findings trip exit-code
           exit-code: '1'
           format: sarif
           output: trivy-config.sarif
