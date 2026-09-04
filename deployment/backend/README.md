@@ -98,7 +98,15 @@ returns a failure so the deployment pipeline stays red.
 
 ## Manual rollback
 
-Roll back to the recorded previous image:
+Preferred remote operation: dispatch the `rollback-backend` GitHub Actions workflow from the `dev`
+branch, provide an incident/change reason, select the confirmation checkbox, and leave
+`target_image` empty to use the host's recorded previous image. The workflow uses the protected
+`backend-dev` environment and the same non-cancellable concurrency lock as normal deployment.
+
+An explicitly reviewed immutable digest may be supplied as `target_image`. The workflow rejects
+tags and images outside the configured AWS account, Region, and ECR repository.
+
+For host-local recovery, roll back to the recorded previous image:
 
 ```bash
 sudo /opt/blocbuy/backend/bin/rollback.sh
