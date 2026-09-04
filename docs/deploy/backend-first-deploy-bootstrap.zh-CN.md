@@ -342,7 +342,7 @@ Settings → Environments → New environment → `backend-dev`。
 |---|---|---|
 | `AWS_ACCOUNT_ID` | 第 0 节的 Account ID | 是 |
 | `AWS_REGION` | 第 0 节的 Region | 是 |
-| `ECR_REPOSITORY` | `dev/blocbuy` | 是 |
+| `ECR_REPOSITORY_DEV` | `dev/blocbuy` | 是 |
 | `AWS_ECR_PUSH_ROLE_ARN` | 3.2 节输出的 Role ARN | 是 |
 | `ENABLE_EC2_DEPLOY` | 验证完成前 `false` | 是 |
 
@@ -350,11 +350,11 @@ Settings → Environments → New environment → `backend-dev`。
 
 - [ ] 以下变量已创建
 
-| Variable | 值 | 必需 |
-|---|---|---|
-| `AWS_DEPLOY_ROLE_ARN` | 3.3 节输出的 Role ARN | 是 |
-| `BACKEND_EC2_INSTANCE_ID` | 第 0 节的 Instance ID | 是 |
-| `BACKEND_URL` | 后端公网地址，如 `https://api-dev.example.com` | 否 |
+| Variable                      | 值 | 必需 |
+|-------------------------------|---|---|
+| `AWS_DEPLOY_ROLE_ARN_DEV`     | 3.3 节输出的 Role ARN | 是 |
+| `BACKEND_EC2_INSTANCE_ID_DEV` | 第 0 节的 Instance ID | 是 |
+| `BACKEND_URL_DEV`             | 后端公网地址，如 `https://api-dev.example.com` | 否 |
 
 GitHub 上不需要任何长期 AWS Access Key，也不需要 `BACKEND_DOT_ENV`。真实密钥只存在于 EC2 的
 `/etc/blocbuy/backend.env`。
