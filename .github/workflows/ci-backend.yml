@@ -149,8 +149,10 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
+      # defaults.working-directory is backend/, and the build context IS backend/ — "." is correct.
+      # Writing backend/ here would resolve to backend/backend/ and fail with "path not found".
       - name: Build image
-        run: docker build -t blocbuy-backend:ci-${{ github.sha }} backend/
+        run: docker build -t blocbuy-backend:ci-${{ github.sha }} .
 
       # Match the existing EC2 runtime: PG/Redis are host-local and the backend uses host networking.
       - name: Smoke test EC2 profile (boot + /actuator/health)
