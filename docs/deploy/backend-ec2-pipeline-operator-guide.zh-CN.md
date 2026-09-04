@@ -27,7 +27,7 @@
   - `build-quality`：格式、Checkstyle、测试、ArchUnit、SpotBugs、JaCoCo；
   - `contract-check`：OpenAPI 漂移和破坏性变更检查；
   - `sonar`：仅配置 `SONAR_HOST_URL` 后执行；
-  - `docker`：构建镜像，以 PostgreSQL 18、Redis 8.1 冒烟测试，并进行 Trivy 镜像扫描。
+  - `docker`：构建镜像，以 PostgreSQL 18、Redis 8.10 冒烟测试，并进行 Trivy 镜像扫描。
 - `.github/workflows/security.yml`：Gitleaks、Trivy 依赖扫描、可选 CodeQL。
 - `backend/Dockerfile`：Java 21、多阶段构建、非 root 用户、端口 `8589`。
 - Docker Spring Profile：连接 `postgres:5432` 和 `redis:6379`。
@@ -72,7 +72,7 @@ security.yml
 | 公有子网 | `10.20.10.0/24` |
 | EC2 | `t3.medium`、30 GiB 根卷 |
 | 数据库 | PostgreSQL 18，数据库名 `Blocbuy` |
-| Redis | Redis 8.1 |
+| Redis | Redis 8.10 |
 | 后端端口 | `8589` |
 
 必须确认可用区属于所选区域、公有子网属于 VPC CIDR。PostgreSQL 必须为 18，因为当前迁移使用
@@ -244,7 +244,7 @@ services:
       POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME is required}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 10s
@@ -254,7 +254,7 @@ services:
     networks: [data]
 
   redis:
-    image: redis:8.1
+    image: redis:8.10
     restart: unless-stopped
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}

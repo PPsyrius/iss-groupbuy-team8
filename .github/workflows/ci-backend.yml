@@ -151,7 +151,7 @@ jobs:
             -e POSTGRES_USER=blocbuy -e POSTGRES_PASSWORD=blocbuy -e POSTGRES_DB=Blocbuy \
             postgres:18
           docker run -d --network smoke-net --name redis \
-            redis:8.1 redis-server --requirepass blocbuy
+            redis:8.10 redis-server --requirepass blocbuy
           for i in $(seq 1 30); do
             docker exec postgres pg_isready -U blocbuy -d Blocbuy && break || sleep 2
           done

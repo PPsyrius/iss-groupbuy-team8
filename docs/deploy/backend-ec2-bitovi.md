@@ -11,7 +11,7 @@ here runs three containers on one EC2 host:
 ```text
 Internet -> Classic Load Balancer :80 -> EC2 :8589 -> blocbuy-backend
                                                      |-> PostgreSQL 18
-                                                     `-> Redis 8.1
+                                                     `-> Redis 8.10
 ```
 
 > **Scope:** This is a practical single-VM deployment suitable for development, demonstrations, and
@@ -78,7 +78,7 @@ services:
       POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME is required}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 10s
@@ -89,7 +89,7 @@ services:
       - data
 
   redis:
-    image: redis:8.1
+    image: redis:8.10
     restart: unless-stopped
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}

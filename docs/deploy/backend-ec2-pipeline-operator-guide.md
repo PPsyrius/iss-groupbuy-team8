@@ -29,7 +29,7 @@ Already available:
   - `build-quality`: formatting, Checkstyle, tests, ArchUnit, SpotBugs, and JaCoCo;
   - `contract-check`: OpenAPI drift and breaking-change checks;
   - `sonar`: runs only when `SONAR_HOST_URL` is configured;
-  - `docker`: builds the image, performs smoke tests with PostgreSQL 18 and Redis 8.1, and scans the image
+  - `docker`: builds the image, performs smoke tests with PostgreSQL 18 and Redis 8.10, and scans the image
     with Trivy.
 - `.github/workflows/security.yml`: Gitleaks, Trivy dependency scanning, and optional CodeQL.
 - `backend/Dockerfile`: Java 21, multi-stage build, non-root user, port `8589`.
@@ -76,7 +76,7 @@ names casually after they have been used.
 | Public subnet | `10.20.10.0/24` |
 | EC2 | `t3.medium`, 30 GiB root volume |
 | Database | PostgreSQL 18, database name `Blocbuy` |
-| Redis | Redis 8.1 |
+| Redis | Redis 8.10 |
 | Backend port | `8589` |
 
 You must confirm that the Availability Zone belongs to the selected Region and that the public subnet is
@@ -159,7 +159,7 @@ services:
       POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME is required}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 10s
@@ -169,7 +169,7 @@ services:
     networks: [data]
 
   redis:
-    image: redis:8.1
+    image: redis:8.10
     restart: unless-stopped
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
