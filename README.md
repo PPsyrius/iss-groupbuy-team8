@@ -120,6 +120,7 @@ This repository will evolve alongside the project. Product decisions, project ar
 - [Backend CI/CD runbook](docs/ci/backend-pipeline.md)
 - [Existing EC2 backend deployment operator guide](docs/deploy/backend-ec2-pipeline-operator-guide.md)
 - [中文：现有 EC2 后端部署运维指南](docs/deploy/backend-ec2-pipeline-operator-guide.zh-CN.md)
+- [中文：首次部署一次性配置清单](docs/deploy/backend-first-deploy-bootstrap.zh-CN.md)
 - [EC2 backend runtime bundle](deployment/backend/README.md)
 
 The current backend pipeline builds and scans one immutable image, publishes it to Amazon ECR, and

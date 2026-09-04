@@ -11,6 +11,9 @@
 本文是 BlocBuy 后端部署的中文标准操作手册。EC2、PostgreSQL 和 Redis 已由团队提前创建；流水线
 只更新后端容器，不创建、修改或删除 VPC、EC2、EBS、安全组、负载均衡、数据库、Redis 或数据卷。
 
+首次从零配置环境时，按[首次部署一次性配置清单](backend-first-deploy-bootstrap.zh-CN.md)逐步执行；
+本文保持为策略与权威参考。
+
 ## 1. 架构与边界
 
 ```text

@@ -12,6 +12,10 @@ This is the canonical runbook for the BlocBuy backend deployment. It configures 
 instance that already exists and already hosts PostgreSQL and Redis. It does not create, update, or
 destroy EC2, VPC, subnet, security group, load balancer, PostgreSQL, Redis, or storage resources.
 
+For first-time environment setup, follow the step-by-step
+[first-deploy bootstrap checklist](backend-first-deploy-bootstrap.zh-CN.md) (Chinese); this guide
+remains the authoritative policy reference.
+
 ## 1. Architecture and responsibility boundary
 
 ```text
