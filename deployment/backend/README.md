@@ -3,8 +3,9 @@
 This bundle operates only the BlocBuy backend container on an existing Linux EC2 instance. It never
 creates, starts, stops, or removes PostgreSQL, Redis, their Compose projects, or their volumes.
 
-The GitHub Actions/ECR/SSM integration is intentionally not part of this first-stage change. The
-scripts are the host-side contract that the later pipeline will call.
+The backend CI workflow packages this non-secret deployment bundle, publishes the verified image to
+ECR, and invokes `bin/deploy.sh` on the existing EC2 host through AWS Systems Manager. Runtime
+secrets remain in `/etc/blocbuy/backend.env` on the host and are never included in the bundle.
 
 ## Runtime model
 
@@ -52,7 +53,7 @@ export BLOCBUY_EXPECTED_AWS_REGION=ap-southeast-1
 export BLOCBUY_EXPECTED_ECR_REPOSITORY=blocbuy-backend
 ```
 
-The later pipeline must set all three constraints before invoking the script.
+The deployment job sets all three constraints before invoking the script.
 
 ## Preflight
 
