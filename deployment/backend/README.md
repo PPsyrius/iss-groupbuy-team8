@@ -3,6 +3,9 @@
 This bundle operates only the BlocBuy backend container on an existing Linux EC2 instance. It never
 creates, starts, stops, or removes PostgreSQL, Redis, their Compose projects, or their volumes.
 
+AWS, IAM, GitHub environment and first-deployment setup are documented in the
+[existing EC2 operator guide](../../docs/deploy/backend-ec2-pipeline-operator-guide.md).
+
 The backend CI workflow packages this non-secret deployment bundle, publishes the verified image to
 ECR, and invokes `bin/deploy.sh` on the existing EC2 host through AWS Systems Manager. Runtime
 secrets remain in `/etc/blocbuy/backend.env` on the host and are never included in the bundle.

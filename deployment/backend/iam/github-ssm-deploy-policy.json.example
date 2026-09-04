@@ -1,0 +1,20 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "RunOnlyAwsShellDocumentOnBackendInstance",
+      "Effect": "Allow",
+      "Action": "ssm:SendCommand",
+      "Resource": [
+        "arn:aws:ssm:AWS_REGION::document/AWS-RunShellScript",
+        "arn:aws:ec2:AWS_REGION:AWS_ACCOUNT_ID:instance/BACKEND_EC2_INSTANCE_ID"
+      ]
+    },
+    {
+      "Sid": "ReadCommandResult",
+      "Effect": "Allow",
+      "Action": "ssm:GetCommandInvocation",
+      "Resource": "*"
+    }
+  ]
+}

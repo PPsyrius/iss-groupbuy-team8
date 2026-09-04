@@ -1,7 +1,7 @@
 # DevSecOps Pipeline Plan — BlocBuy Backend
 
-Status: approved. Steps 1–4 implemented 2026-08-31; Step 5 (hardening) implemented 2026-09-02.
-Scope: backend quality gates, CI, code-quality platform, and security scanning.
+Status: approved. Quality/security Steps 1–5 and existing-EC2 delivery Step 6 are implemented.
+Scope: backend quality gates, CI, code-quality platform, security scanning, and application delivery.
 Out of scope here: frontend pipeline, Terraform pipeline, agile-metrics automation (see `docs/design/repository-structure.md`).
 
 ## Goals
@@ -16,6 +16,7 @@ Out of scope here: frontend pipeline, Terraform pipeline, agile-metrics automati
 | Code quality gate | SonarQube / SonarCloud | CI job + server-side quality gate |
 | Architecture enforcement | ArchUnit (COLA/DDD layering) | unit test phase |
 | Secret / vulnerability / image scanning | Gitleaks, Trivy, Dependabot | CI + weekly cron |
+| Immutable application delivery | ECR digest + GitHub OIDC + SSM | green push to protected `dev` |
 
 ## Current State → Target State
 
@@ -30,6 +31,7 @@ Out of scope here: frontend pipeline, Terraform pipeline, agile-metrics automati
 | Dependabot | ❌ | `.github/dependabot.yml` (maven, github-actions, docker) |
 | Docker image | ❌ (only `application-docker.yml`) | `backend/Dockerfile` multi-stage, non-root |
 | Secret scanning | ❌ | Gitleaks in `security.yml` + `.gitleaks.toml` |
+| Existing EC2 delivery | ❌ | backend-only bundle, ECR digest, SSM deploy, health and rollback |
 
 ## Step 1 — Local Quality Tooling (POM + format)
 
@@ -60,7 +62,8 @@ Triggers: PRs and pushes to `dev` touching `backend/**` or `contracts/**`. Concu
   3. Upload `jacoco.xml` + SpotBugs XML + checkstyle results as artifacts (7-day retention)
 - **Job `contract-check`** — `./mvnw -B verify -Popenapi-export` then `git diff --exit-code -- contracts/`; fails the PR if the committed `openapi.json` drifts from the code. On PRs (Step 5) it also runs `openapi-diff --fail-on-incompatible` against the base branch's committed contract, failing on backward-incompatible API changes.
 - **Job `sonar`** — see Step 3. Skipped unless configured.
-- **Job `docker`** — PRs and pushes to `dev` (Step 5: was push-only): build image, smoke test (boot against PG 18 + Redis 8, probe `/actuator/health`), Trivy image scan with `exit-code: 1`, SARIF to the Security tab.
+- **Job `docker`** — PRs and pushes to `dev`: build image, smoke test with the EC2 profile against PG 18 + Redis 8, and Trivy image scan. On an enabled green `dev` push, publish that exact image to ECR and emit its immutable digest.
+- **Job `deploy-existing-ec2`** — enabled green `dev` pushes only: protected environment, GitHub OIDC, exact SSM bundle allowlist, single-instance deployment, health check and automatic application rollback.
 
 ### `.github/workflows/pr-labeler.yml`
 
@@ -89,9 +92,11 @@ Options: **SonarCloud** (zero infra; private repos need a paid plan) or **self-h
 ## Step 4 — Security Tooling
 
 - **`backend/Dockerfile`** — multi-stage: `maven:3.9-eclipse-temurin-21` builds `blocbuy-bootstrap` (`-am`, tests skipped — they ran in `build-quality`); runtime `eclipse-temurin:21-jre`, non-root user, port 8589, `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0`. No in-image HEALTHCHECK (JRE image has no curl); orchestrator probes hit `/actuator/health` (already exposed). Profile `docker` selected by compose via `SPRING_PROFILES_ACTIVE`, not baked in.
-- **`.github/workflows/security.yml`** — PRs touching `backend/**` + weekly cron:
-  - **Gitleaks** full-history secret scan (`security-gitleaks` job). `.gitleaks.toml` extends defaults, allowlists `${VAR}` placeholders in YAML and docs.
-  - **Trivy fs scan** (`security-deps` job): Maven dependency CVEs + config misconfig, HIGH/CRITICAL, SARIF upload + table output. OWASP Dependency-Check deliberately not used — Trivy covers the same ground with zero NVD API key friction.
+- **`.github/workflows/security.yml`** — PR/push changes to backend, deployment or workflows plus weekly cron:
+  - **Gitleaks** full-history secret scan. `.gitleaks.toml` extends defaults and allowlists reviewed placeholders.
+  - **Trivy** separates Maven vulnerability and deployment-configuration gates at HIGH/CRITICAL.
+  - **Actionlint/ShellCheck** validates workflows, embedded shell and EC2 lifecycle scripts.
+  - **Deployment policy** enforces one backend service and an exact non-secret SSM archive allowlist.
 - **Dependabot** (Step 2) closes the loop on remediation.
 
 SARIF upload to the Security tab requires GitHub Advanced Security on private repos (free on public). Upload steps are `continue-on-error` so private-repo forks still gate on the console scan itself.
@@ -108,6 +113,28 @@ Fixes found during a pipeline review; all landed in-repo:
 6. **`setup-java cache: maven`** replaces the three hand-rolled `actions/cache` blocks for `~/.m2/repository` (it resolves `backend/**/pom.xml` itself).
 7. **Fixed a silent no-op in the drift check (pre-existing bug).** `git diff --exit-code -- contracts/` ran under `working-directory: backend`, where the pathspec matches nothing and `git diff` exits 0 — the drift gate could never fail (verified locally: modifying `contracts/openapi.json` still exited 0). The step now runs from `${{ github.workspace }}`.
 
+## Step 6 — Existing EC2 application delivery (implemented 2026-09-04)
+
+The selected first deployment phase deliberately reuses one existing EC2 host and its existing
+PostgreSQL and Redis services. Terraform and Bitovi are not executed.
+
+1. `application-ec2.yml` uses host-loopback PostgreSQL/Redis settings; the backend-only Compose model
+   uses Linux host networking and declares no database, cache or volume.
+2. The runtime bundle provides preflight, health, locked deploy, automatic rollback and manual
+   rollback scripts. Runtime secrets remain `/etc/blocbuy/backend.env` with `0600` permissions.
+3. A green `dev` push uses a branch-scoped OIDC role to push the smoke-tested image to one private ECR
+   repository. Docker's pushed digest is cross-checked with ECR and only the digest is deployed.
+4. A separate environment-scoped OIDC role can send `AWS-RunShellScript` only to the configured EC2
+   instance. SSM transfers only the allowlisted non-secret bundle.
+5. `rollback-backend.yml` requires `dev`, a reason, explicit confirmation and the protected
+   `backend-dev` environment. It uses the recorded previous digest unless an operator supplies a
+   reviewed digest from the configured repository.
+6. Deployment and rollback share a non-cancellable concurrency group. Neither operation reverses
+   Flyway migrations or manages PostgreSQL/Redis.
+
+Canonical setup and incident procedures:
+[`docs/deploy/backend-ec2-pipeline-operator-guide.md`](../deploy/backend-ec2-pipeline-operator-guide.md).
+
 ## Off-Repo TODO (cannot be done from the codebase)
 
 These need GitHub repo settings / external accounts; do them once, then the matching CI jobs activate automatically:
@@ -116,9 +143,10 @@ These need GitHub repo settings / external accounts; do them once, then the matc
 |---|---|---|---|
 | 1 | Set repo **variable** `SONAR_HOST_URL` (+ **secret** `SONAR_TOKEN`; + variable `SONAR_ORGANIZATION` if SonarCloud) | Repo Settings → Secrets and variables → Actions | `sonar` job — the ≥80% new-code coverage gate and quality gate are dead until this is set. Host choice: SonarCloud (private repos need paid plan) or self-hosted Community on the AWS dev box |
 | 2 | Set repo **variable** `ENABLE_CODEQL=true` | same page | `codeql` SAST job. Requires **GitHub Advanced Security** if the repo is private (free for public repos) — enable GHAS first or the job fails |
-| 3 | **Branch protection** on `dev`: require PR, require checks `build-quality` + `contract-check` + `docker` (+ `sonar`/`codeql` once enabled), require CODEOWNERS review, no force-push | Repo Settings → Branches | Without this, every green check above is advisory only |
+| 3 | **Branch protection** on `dev`: require PR, backend checks plus `workflow-lint`, `deployment-bundle`, `gitleaks`, `trivy-deps`, `trivy-config`, CODEOWNERS review, no force-push | Repo Settings → Branches | Prevents bypass of delivery/security policy |
 | 4 | **Gitleaks license**: `gitleaks-action` needs a free `GITLEAKS_LICENSE` secret for organization-owned repos | gitleaks.io → add as repo secret | `gitleaks` job on org repos |
 | 5 | Confirm **GHAS** availability or accept `continue-on-error` SARIF uploads (scans still gate via exit codes; only the Security-tab view is lost) | Repo Settings → Advanced Security | SARIF dashboards for Trivy/CodeQL |
+| 6 | Configure ECR, two OIDC roles, EC2 SSM/ECR role, `backend-dev` protections and deployment variables from the operator guide | AWS + Repo Settings | Immutable deploy and controlled rollback |
 
 ## Quality Gates Summary
 
@@ -135,6 +163,9 @@ These need GitHub repo settings / external accounts; do them once, then the matc
 | Contract compatibility | no backward-incompatible change vs base | `contract-check` job (PR only, openapi-diff) |
 | Boot smoke | `/actuator/health` = UP in 60s vs PG 18 + Redis 8 | `docker` job |
 | SAST | 0 CodeQL alerts | `security.yml` `codeql` job (opt-in) |
+| Deployment bundle | exactly one backend service and six allowlisted archive entries | `security.yml` and `ci-backend.yml` |
+| Release identity | tested ECR image pinned by SHA-256 digest | `ci-backend.yml` |
+| Deployment health | Actuator reports `UP`; otherwise application rollback | EC2 lifecycle scripts |
 
 ## Local Developer Loop
 
@@ -151,4 +182,4 @@ Pre-push hook optional; CI is the backstop. Full runbook: `docs/ci/backend-pipel
 - **One-time formatting churn**: `spotless:apply` touches nearly every file. Land it alone, record in `.git-blame-ignore-revs`.
 - **JDK 26 on dev machines**: Enforcer rejects `[21,22)`-outside JDKs; set `JAVA_HOME` to a JDK 21 (`/usr/libexec/java_home -v 21` on macOS).
 - **Sonar host undecided**: job ships disabled; flipping on = one repo variable + one secret.
-- **docker-compose.yml does not exist yet** at repo root (described in `repository-structure.md` as target state); the Dockerfile is independently usable.
+- **Infrastructure IaC is deferred**: application delivery is versioned, but EC2/VPC/IAM drift remains an operational risk until a later import/migration phase is approved.

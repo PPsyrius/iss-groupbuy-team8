@@ -1,739 +1,360 @@
-# BlocBuy Backend CI/CD to AWS EC2: Complete Operator Guide
+# Existing EC2 Backend Deployment Operator Guide
 
-This is an implementation guide intended to be followed step by step by an operator. Starting from the
-repository's current state, the goal is to implement the following automated flow:
+**Status:** current implementation
 
-```text
-Open a PR from a feature branch to dev
-  -> Quality, contract, image, and security gates
-  -> Review and merge the PR
-  -> Run the backend gates again on the dev branch
-  -> All gates pass
-  -> Bitovi Action creates or updates AWS resources
-  -> Copy the repository to EC2 and run Docker Compose
-  -> ELB checks /actuator/health
-  -> Automated deployment completes
-```
+**Environment:** `backend-dev`
 
-This guide deploys the `backend-dev` development environment. PostgreSQL, Redis, and the backend run on
-the same EC2 instance. This setup is suitable for a course project, development, and demonstrations; it
-is not a highly available production architecture.
+**Provisioning model:** reuse one existing EC2 instance; no Terraform or Bitovi execution
 
-## 1. Current Baseline and Remaining Work
+**Application delivery:** GitHub Actions -> Amazon ECR -> AWS Systems Manager Run Command
 
-The remote repository is `PPsyrius/iss-groupbuy-team8`, and the backend integration branch is `dev`.
+This is the canonical runbook for the BlocBuy backend deployment. It configures delivery to an EC2
+instance that already exists and already hosts PostgreSQL and Redis. It does not create, update, or
+destroy EC2, VPC, subnet, security group, load balancer, PostgreSQL, Redis, or storage resources.
 
-Already available:
-
-- `.github/workflows/ci-backend.yml`
-  - `build-quality`: formatting, Checkstyle, tests, ArchUnit, SpotBugs, and JaCoCo;
-  - `contract-check`: OpenAPI drift and breaking-change checks;
-  - `sonar`: runs only when `SONAR_HOST_URL` is configured;
-  - `docker`: builds the image, performs smoke tests with PostgreSQL 18 and Redis 8.10, and scans the image
-    with Trivy.
-- `.github/workflows/security.yml`: Gitleaks, Trivy dependency scanning, and optional CodeQL.
-- `backend/Dockerfile`: Java 21, multi-stage build, non-root user, port `8589`.
-- Docker Spring profile: connects to `postgres:5432` and `redis:6379`.
-- Health check: `GET /actuator/health`.
-
-You still need to:
-
-- Create `docker-compose.yaml` and `.gha-ignore` in the repository root;
-- Add the EC2 deployment job to the existing `ci-backend.yml`;
-- Create the AWS deployment identity, budget, and credentials;
-- Create the GitHub Environment, Secrets, and Variables;
-- Configure branch protection for `dev`;
-- Submit and merge a PR, observe the automated deployment, and verify it.
-
-Final dependency graph:
+## 1. Architecture and responsibility boundary
 
 ```text
-ci-backend.yml
-├── build-quality ─────┬── docker ──────────────┐
-├── contract-check ────┼────────────────────────┤
-└── sonar (success or skipped) ─────────────────┤
-                                                └── deploy-ec2 (push to dev only)
+Pull request
+  ├── ci-backend: build, test, contract, smoke test, Trivy image scan
+  └── security: secrets, dependencies, config, workflow and shell policy
 
-security.yml
-├── gitleaks       ── required PR check
-└── trivy-deps     ── required PR check
+push to dev (all gates green and ENABLE_EC2_DEPLOY=true)
+  -> GitHub OIDC assumes ECR publisher role
+  -> tested image is pushed and resolved to sha256 digest
+  -> protected backend-dev environment
+  -> GitHub OIDC assumes single-instance SSM deploy role
+  -> SSM installs the non-secret bundle under /opt/blocbuy/backend
+  -> deploy.sh pulls and starts only blocbuy-backend
+  -> health check; automatic application rollback on failure
+
+existing EC2
+  ├── PostgreSQL       127.0.0.1:5432 (pre-existing, not pipeline-managed)
+  ├── Redis            127.0.0.1:6379 (pre-existing, not pipeline-managed)
+  ├── backend          host network, port 8589
+  └── runtime secrets  /etc/blocbuy/backend.env, root:root 0600
 ```
 
-## 2. Fixed Deployment Parameters
-
-Record the following values before proceeding. Do not change resource identifiers or Terraform state
-names casually after they have been used.
-
-| Parameter | Recommended value |
+| Pipeline manages | Pipeline does not manage |
 |---|---|
-| GitHub Environment | `backend-dev` |
-| Automatic deployment branch | `dev` |
+| Backend image build, scan, ECR publication and digest | EC2 lifecycle, AMI, EBS, VPC or security groups |
+| Backend Compose file and lifecycle scripts | PostgreSQL/Redis containers, services, data or volumes |
+| Backend container replacement and health check | Database backup, restore or Flyway reversal |
+| Automatic and operator-approved application rollback | DNS, TLS, load balancer or reverse proxy |
+
+The database and Redis boundary is also enforced in CI: the deployment Compose model must contain
+exactly one `backend` service and the SSM archive has an exact file allowlist.
+
+## 2. Repository components
+
+| Path | Purpose |
+|---|---|
+| [`.github/workflows/ci-backend.yml`](../../.github/workflows/ci-backend.yml) | Quality gates, image publication and automatic deployment |
+| [`.github/workflows/security.yml`](../../.github/workflows/security.yml) | Secret, dependency, config, workflow and script checks |
+| [`.github/workflows/rollback-backend.yml`](../../.github/workflows/rollback-backend.yml) | Controlled manual application rollback |
+| [`deployment/backend/compose.yml`](../../deployment/backend/compose.yml) | Backend-only EC2 runtime definition |
+| [`deployment/backend/bin/`](../../deployment/backend/bin/) | Preflight, deploy, health and rollback scripts |
+| [`deployment/backend/backend.env.example`](../../deployment/backend/backend.env.example) | Non-secret host environment template |
+| [`deployment/backend/iam/`](../../deployment/backend/iam/) | Replace-before-use least-privilege IAM examples |
+
+## 3. Values to collect
+
+Record these values in the team password manager or operations record before configuring anything:
+
+| Value | Example |
+|---|---|
+| AWS account ID | `123456789012` |
 | AWS Region | `ap-southeast-1` |
-| AWS Availability Zone | `ap-southeast-1a` |
-| AWS resource identifier | `ppsyrius-iss-groupbuy-team8-backend-dev` |
-| Terraform state name | `ppsyrius-iss-groupbuy-team8-backend-dev` |
-| VPC CIDR | `10.20.0.0/16` |
-| Public subnet | `10.20.10.0/24` |
-| EC2 | `t3.medium`, 30 GiB root volume |
-| Database | PostgreSQL 18, database name `Blocbuy` |
-| Redis | Redis 8.10 |
-| Backend port | `8589` |
+| Existing instance ID | `i-0123456789abcdef0` |
+| ECR repository | `blocbuy-backend` |
+| Public/backend URL | `https://api-dev.example.com` or blank |
+| EC2 instance-role name | `BlocBuyEc2Runtime` |
+| GitHub ECR-role name | `BlocBuyGitHubEcrPush` |
+| GitHub deploy-role name | `BlocBuyGitHubBackendDeploy` |
 
-You must confirm that the Availability Zone belongs to the selected Region and that the public subnet is
-within the VPC CIDR. PostgreSQL must be version 18 because the current migrations use `uuidv7()`.
+Do not record database, Redis, or Stripe secrets in GitHub variables, workflow inputs, IAM files, or
+SSM command parameters.
 
-## 3. AWS Setup
+## 4. Prepare Amazon ECR
 
-### 3.1 Account Security
-
-1. Sign in to the AWS Console;
-2. Enable MFA for the root user;
-3. Confirm that the root user has no access keys;
-4. Use a dedicated IAM identity for all subsequent steps, not the root user.
-
-AWS officially recommends that you do not create access keys for the root user and that you prefer
-temporary credentials. The current Bitovi interface accepts an Access Key ID, Secret Access Key, and an
-optional Session Token, so you must use a dedicated deployment identity or temporary lab credentials.
-
-### 3.2 Create a Cost Budget
-
-Open **Billing and Cost Management -> Budgets -> Create budget**:
-
-1. Select **Cost budget** and **Monthly**;
-2. Enter the monthly limit acceptable to the team;
-3. Add Actual cost email alerts at 50%, 80%, and 100%;
-4. Enter the team email address and confirm the notification.
-
-EC2, EBS, Classic Load Balancer, S3, CloudWatch, and data transfer can all incur charges.
-
-### 3.3 Create a Deployment Identity
-
-The recommended approach is to have an AWS administrator provide a dedicated deployment identity. It
-must be able to manage the EC2, VPC, subnet, security group, ELB, IAM Instance Profile, S3 Terraform
-state/logging, and CloudWatch resources enabled by this workflow.
-
-If this is an isolated, short-lived course account with no other workloads, you can perform an initial
-validation as follows:
-
-1. Go to **IAM -> Users -> Create user**;
-2. Use `github-actions-blocbuy-dev` as the username and do not enable Console access;
-3. For the first experiment, attach a broad policy approved by the team;
-4. Go to **Security credentials -> Create access key -> Third-party service**;
-5. Save the Access Key ID and Secret Access Key immediately; the Secret is shown only once;
-6. After validating the deployment, narrow the permissions based on CloudTrail and Terraform activity,
-   and set a credential rotation date.
-
-Do not retain `AdministratorAccess` long-term in a shared or production account. If the required
-permissions are unclear, ask an AWS administrator to review them instead of repeatedly adding unknown
-permissions.
-
-When using AWS Academy, you will usually also receive an `AWS_SESSION_TOKEN`. When temporary credentials
-expire, you must update all three GitHub Secrets together, or the automated deployment will fail to
-authenticate.
-
-## 4. Prepare the Repository Files
-
-### 4.1 Update the Feature Branch
+Create one private repository, enable immutable tags, and retain enough images for rollback:
 
 ```bash
-git status
-git fetch origin
-git checkout feature/backend-structure-20260830
-git pull --ff-only origin feature/backend-structure-20260830
+aws ecr create-repository \
+  --repository-name blocbuy-backend \
+  --image-tag-mutability IMMUTABLE \
+  --image-scanning-configuration scanOnPush=true \
+  --region ap-southeast-1
+
+aws ecr put-lifecycle-policy \
+  --repository-name blocbuy-backend \
+  --lifecycle-policy-text file://deployment/backend/ecr-lifecycle-policy.json \
+  --region ap-southeast-1
 ```
 
-If the team has created a different deployment feature branch, use that branch instead. Do not overwrite
-existing working-tree changes.
-
-### 4.2 Create `docker-compose.yaml` in the Repository Root
-
-```yaml
-name: blocbuy-backend
-
-services:
-  postgres:
-    image: postgres:18
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: Blocbuy
-      POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME is required}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
-    volumes:
-      - postgres-data:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 20s
-    networks: [data]
-
-  redis:
-    image: redis:8.10
-    restart: unless-stopped
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
-    command:
-      - sh
-      - -c
-      - exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"
-    volumes:
-      - redis-data:/data
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli --no-auth-warning -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 10s
-    networks: [data]
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    env_file:
-      - .env
-    ports:
-      - "8589:8589"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    stop_grace_period: 30s
-    networks:
-      - edge
-      - data
-
-networks:
-  edge:
-  data:
-    internal: true
-
-volumes:
-  postgres-data:
-  redis-data:
-```
-
-Notes: PostgreSQL and Redis do not expose host ports; backend port `8589:8589` is available to the ELB;
-do not set a separate Compose logging driver so the Action's CloudWatch logging configuration can be
-used; named volumes are not backups; do not enable `docker_full_cleanup`.
-
-### 4.3 Create `.gha-ignore` in the Repository Root
-
-```gitignore
-.git/**
-.codegraph/**
-.idea/**
-.agents/**
-frontend/**
-docs/**
-contracts/**
-backend/**/target/**
-**/.DS_Store
-```
-
-Do not exclude the Compose file, Dockerfile, Maven Wrapper, POM files, or any backend module.
-
-### 4.4 Validate Locally
-
-Generate two different passwords:
+If the repository already exists, verify it and enable immutability separately:
 
 ```bash
-openssl rand -hex 32
-openssl rand -hex 32
+aws ecr describe-repositories --repository-names blocbuy-backend --region ap-southeast-1
+aws ecr put-image-tag-mutability \
+  --repository-name blocbuy-backend \
+  --image-tag-mutability IMMUTABLE \
+  --region ap-southeast-1
 ```
 
-Create a local-only `.env` in the repository root. It must not be committed:
+The workflow deploys `repository@sha256:...`, never a tag. Tag immutability is an additional control,
+not a substitute for digest deployment.
 
-```dotenv
-SPRING_PROFILES_ACTIVE=docker
-DB_USERNAME=blocbuy
-DB_PASSWORD=<first-random-password>
-REDIS_PASSWORD=<second-random-password>
-STRIPE_API_KEY=
-STRIPE_WEBHOOK_SECRET=
-```
+## 5. Prepare the existing EC2 instance role
 
-Run:
+The instance must be a Systems Manager managed node and must pull from only the backend repository.
+
+1. Attach the AWS-managed `AmazonSSMManagedInstanceCore` policy to the EC2 instance role (or use
+   Default Host Management Configuration if that is the account standard).
+2. Replace `AWS_REGION`, `AWS_ACCOUNT_ID`, and `ECR_REPOSITORY` in
+   [`ec2-ecr-pull-policy.json.example`](../../deployment/backend/iam/ec2-ecr-pull-policy.json.example).
+3. Attach the resulting customer-managed policy to the same EC2 role.
+4. Confirm that an instance profile containing that role is attached to the existing EC2 instance.
+
+Do not attach `AmazonEC2ContainerRegistryFullAccess` or `AmazonSSMFullAccess`. The host only needs SSM
+agent communication and pull access to one ECR repository.
+
+Verify the managed-node connection from an administrator workstation:
 
 ```bash
-docker compose config --quiet
-docker compose build backend
-docker compose up -d
-docker compose ps
-curl --fail --show-error http://localhost:8589/actuator/health
+aws ssm describe-instance-information \
+  --filters Key=InstanceIds,Values=i-0123456789abcdef0 \
+  --region ap-southeast-1
 ```
 
-Success criteria: PostgreSQL and Redis are healthy, the backend is running, and the health endpoint
-returns `{"status":"UP"}`. If validation fails, run:
+The instance must appear online before enabling deployment.
+
+## 6. Configure GitHub OIDC roles
+
+Create the GitHub OIDC provider once per AWS account:
+
+- provider URL: `https://token.actions.githubusercontent.com`;
+- audience: `sts.amazonaws.com`.
+
+Create two roles rather than one combined role:
+
+| Role | Trust scope | Permission example |
+|---|---|---|
+| ECR publisher | This repository's `dev` branch | [`github-ecr-push-policy.json.example`](../../deployment/backend/iam/github-ecr-push-policy.json.example) |
+| EC2 deploy/rollback | This repository's `backend-dev` environment | [`github-ssm-deploy-policy.json.example`](../../deployment/backend/iam/github-ssm-deploy-policy.json.example) |
+
+Use the corresponding trust-policy examples in the same directory. Replace every uppercase
+placeholder and validate the policies with IAM Access Analyzer before attaching them.
+
+The included trust examples use GitHub's conventional repository subject format. GitHub repositories
+created after 15 July 2026, or repositories that opted into immutable OIDC subjects, include owner and
+repository IDs in `sub`. Confirm the actual subject format for this repository and update both trust
+policies exactly; do not replace it with a repository-wide wildcard.
+
+The deployment trust subject contains the environment, not the branch. Therefore the GitHub
+`backend-dev` environment must independently allow only the `dev` branch.
+
+The SSM permission is intentionally limited to `AWS-RunShellScript` and one instance ID. Treat this
+role as privileged: SSM Agent executes Linux Run Command with root permissions. Do not grant this role
+to PR workflows, forks, IAM users, or unrelated repositories.
+
+## 7. Bootstrap the host
+
+Required software:
+
+- Linux with SSM Agent online;
+- Docker Engine and the Docker Compose plugin;
+- AWS CLI v2;
+- Bash, `awk`, `curl`, `df`, `flock`, `grep`, `install`, `stat`, `timeout` and core utilities;
+- at least 2 GiB free under `/opt/blocbuy/backend`;
+- PostgreSQL reachable at `127.0.0.1:5432`;
+- Redis reachable at `127.0.0.1:6379`.
+
+Create only the secret environment file. The first deployment installs Compose and scripts through
+SSM, so cloning the repository on EC2 is not required.
 
 ```bash
-docker compose logs --tail=200 backend
-docker compose logs --tail=100 postgres
-docker compose logs --tail=100 redis
+sudo install -d -m 0750 /etc/blocbuy
+sudo install -m 0600 /dev/null /etc/blocbuy/backend.env
+sudo chown root:root /etc/blocbuy/backend.env
+sudoedit /etc/blocbuy/backend.env
 ```
 
-After validation, run `docker compose down`. Do not use `--volumes`. Before committing, confirm again
-that `.env` is ignored.
+Use [`backend.env.example`](../../deployment/backend/backend.env.example) as the source, replace all
+placeholders, and verify:
 
-## 5. Integrate with the Existing `ci-backend.yml`
-
-### 5.1 Expand the Trigger Paths
-
-Replace the `on` block at the top of `.github/workflows/ci-backend.yml` with:
-
-```yaml
-on:
-  push:
-    branches: [dev]
-    paths:
-      - "backend/**"
-      - "contracts/**"
-      - "docker-compose.yaml"
-      - ".gha-ignore"
-      - ".github/workflows/ci-backend.yml"
-  pull_request:
-    branches: [dev]
-    paths:
-      - "backend/**"
-      - "contracts/**"
-      - "docker-compose.yaml"
-      - ".gha-ignore"
-      - ".github/workflows/ci-backend.yml"
+```bash
+sudo stat -c '%U:%G %a %n' /etc/blocbuy/backend.env
+sudo ss -lnt | grep -E '127\.0\.0\.1:(5432|6379)'
 ```
 
-Otherwise, changes limited to the Compose file will not trigger CI or deployment.
+Expected permissions are `root:root 600`. PostgreSQL and Redis must not be exposed to the public
+internet. Restrict inbound port `8589` to the approved reverse proxy/load balancer security group or
+team test CIDRs; do not open database/cache ports in the EC2 security group.
 
-### 5.2 Append `deploy-ec2` to the End of the File
+After the first workflow has installed the bundle, run:
 
-It must be at the same level as the existing four jobs; do not place it inside `docker.steps`.
-
-```yaml
-  deploy-ec2:
-    name: deploy-ec2
-    needs:
-      - build-quality
-      - contract-check
-      - sonar
-      - docker
-    if: >-
-      always() &&
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/dev' &&
-      needs.build-quality.result == 'success' &&
-      needs.contract-check.result == 'success' &&
-      needs.docker.result == 'success' &&
-      (needs.sonar.result == 'success' || needs.sonar.result == 'skipped')
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    environment:
-      name: backend-dev
-      url: ${{ steps.deploy.outputs.vm_url }}
-    steps:
-      - id: deploy
-        name: Provision EC2 and deploy Docker Compose
-        uses: bitovi/github-actions-deploy-docker-to-ec2@v1
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws_default_region: ${{ vars.AWS_REGION }}
-
-          aws_resource_identifier: ppsyrius-iss-groupbuy-team8-backend-dev
-          tf_state_file_name: ppsyrius-iss-groupbuy-team8-backend-dev
-          aws_additional_tags: '{"Project":"blocbuy","Environment":"dev","ManagedBy":"github-actions"}'
-
-          aws_ec2_instance_type: t3.medium
-          aws_ec2_instance_root_vol_size: 30
-          aws_ec2_instance_root_vol_preserve: true
-          aws_ec2_instance_public_ip: true
-
-          aws_vpc_create: true
-          aws_vpc_cidr_block: 10.20.0.0/16
-          aws_vpc_public_subnets: 10.20.10.0/24
-          aws_vpc_availability_zones: ${{ vars.AWS_AVAILABILITY_ZONE }}
-
-          aws_elb_create: true
-          aws_elb_app_port: 8589
-          aws_elb_app_protocol: HTTP
-          aws_elb_listen_port: 80
-          aws_elb_listen_protocol: HTTP
-          aws_elb_healthcheck: HTTP:8589/actuator/health
-
-          docker_repo_app_directory: /
-          docker_repo_app_directory_cleanup: true
-          docker_backup_retention: 5
-          docker_remove_orphans: true
-          docker_full_cleanup: false
-          ansible_start_docker_timeout: 900
-
-          env_ghs: ${{ secrets.BACKEND_DOT_ENV }}
-
-          docker_cloudwatch_enable: true
-          docker_cloudwatch_retention_days: 14
+```bash
+sudo /opt/blocbuy/backend/bin/preflight.sh
 ```
 
-Behavior: it is skipped for PRs and deploys only on a push to `dev`; all three required gates must
-succeed; Sonar may be skipped when it is not configured, but must succeed once configured.
+## 8. Configure GitHub
 
-`@v1` matches the current Bitovi documentation. After the development deployment has proven stable,
-consider pinning it to a full commit SHA reviewed by the team.
+Create the `backend-dev` GitHub environment first. Allow deployments only from `dev`; add a required
+reviewer if the team wants approval-gated development deployment.
 
-### 5.3 Expand the Paths in `security.yml`
+### Repository Actions variables
 
-Add the following to both `push.paths` and `pull_request.paths` in
-`.github/workflows/security.yml`:
+These must be repository variables because the image-publishing job does not use an environment:
 
-```yaml
-      - "docker-compose.yaml"
-      - ".github/workflows/ci-backend.yml"
+| Variable | Example | Required |
+|---|---|---|
+| `AWS_ACCOUNT_ID` | `123456789012` | yes |
+| `AWS_REGION` | `ap-southeast-1` | yes |
+| `ECR_REPOSITORY` | `blocbuy-backend` | yes |
+| `AWS_ECR_PUSH_ROLE_ARN` | `arn:aws:iam::123456789012:role/BlocBuyGitHubEcrPush` | yes |
+| `ENABLE_EC2_DEPLOY` | `false`, then `true` after validation | yes |
+
+### `backend-dev` environment variables
+
+| Variable | Example | Required |
+|---|---|---|
+| `AWS_DEPLOY_ROLE_ARN` | `arn:aws:iam::123456789012:role/BlocBuyGitHubBackendDeploy` | yes |
+| `BACKEND_EC2_INSTANCE_ID` | `i-0123456789abcdef0` | yes |
+| `BACKEND_URL` | `https://api-dev.example.com` | optional |
+
+No AWS access key, secret access key, `BACKEND_DOT_ENV`, database password, Redis password, or Stripe
+key belongs in GitHub. AWS access is issued temporarily through OIDC; application secrets remain on
+the host.
+
+### Branch protection
+
+Protect `dev` and require a pull request, CODEOWNERS review, no force push, and these checks:
+
+- `build-quality`, `contract-check`, `docker`;
+- `workflow-lint`, `deployment-bundle`, `gitleaks`, `trivy-deps`, `trivy-config`;
+- `sonar` and `codeql` only after those optional services are enabled consistently.
+
+The deployment job is push-only and should not be a PR-required check.
+
+## 9. First deployment
+
+1. Keep `ENABLE_EC2_DEPLOY=false` while validating ECR, IAM, SSM and the host.
+2. Merge the deployment changes into protected `dev` through a pull request.
+3. Confirm every CI and security check is green.
+4. Set `ENABLE_EC2_DEPLOY=true`.
+5. Push or merge a backend/deployment change to `dev`.
+6. Approve the `backend-dev` environment if reviewers are configured.
+7. Inspect the `deploy-existing-ec2` job summary and SSM command output.
+
+The job publishes the image that was actually smoke-tested, captures its digest, sends the non-secret
+bundle to the one configured instance, and waits for `/actuator/health` to report `UP`.
+
+Verify independently:
+
+```bash
+curl --fail --silent https://api-dev.example.com/actuator/health
+
+aws ssm get-command-invocation \
+  --command-id '<command-id-from-job-summary>' \
+  --instance-id i-0123456789abcdef0 \
+  --region ap-southeast-1
 ```
 
-The recommended complete path block for each event is:
+On the host, the current digest is recorded in
+`/opt/blocbuy/backend/state/current-image`. Deployment never restarts or removes the PostgreSQL or
+Redis service.
 
-```yaml
-    paths:
-      - "backend/**"
-      - "docker-compose.yaml"
-      - ".gitleaks.toml"
-      - ".github/workflows/ci-backend.yml"
-      - ".github/workflows/security.yml"
-```
+## 10. Normal release and automatic recovery
 
-The security workflow runs independently and cannot be referenced directly with `needs` from another
-workflow. Use branch protection to ensure that it succeeds before merging.
+For each backend or deployment change:
 
-## 6. Create the GitHub Environment
+1. open a PR to `dev`;
+2. obtain review and pass all required checks;
+3. merge;
+4. approve `backend-dev` if configured;
+5. verify the digest and health in the job summary.
 
-Go to **Settings -> Environments -> New environment** and enter `backend-dev` as the name.
+If the new container does not become healthy, `deploy.sh` attempts to restore the previously running
+digest and leaves the workflow red. Investigate the failed deployment even when automatic rollback
+succeeds.
 
-1. Under Deployment branches and tags, allow only `dev`;
-2. For fully automatic deployment, do not configure Required reviewers;
-3. If a reviewer is configured, the workflow starts automatically but pauses for approval;
-4. Some GitHub plans restrict Environment secrets and reviewers for private repositories. If those
-   controls are unavailable, fall back to Repository Actions secrets, but retain branch protection and
-   the deploy job's push/`dev` condition.
+## 11. Manual rollback
 
-## 7. Configure GitHub Variables and Secrets
+From **Actions -> rollback-backend -> Run workflow**:
 
-Go to **Settings -> Environments -> backend-dev**.
+1. select the `dev` branch;
+2. leave `target_image` blank to use the recorded previous digest, or paste a reviewed
+   `repository@sha256:...` from the same configured ECR repository;
+3. enter an incident/change reason;
+4. select the confirmation checkbox;
+5. approve the `backend-dev` environment if required;
+6. verify the resulting digest and health in the summary.
 
-### 7.1 Variables
+Rollback and deployment share the same non-cancellable concurrency group, so they cannot change the
+host simultaneously. Tags, other repositories, other accounts, and other Regions are rejected.
 
-| Name | Value |
+An application rollback does not reverse a Flyway migration. Every automatically deployed migration
+must remain backward-compatible. Destructive schema recovery requires a separate reviewed database
+backup/restore plan.
+
+## 12. Disable delivery safely
+
+For an incident freeze, set `ENABLE_EC2_DEPLOY=false`. CI, security scans and image smoke tests still
+run, but new images are not published or deployed. The manual rollback workflow remains available for
+recovery and still requires its confirmation and environment controls.
+
+Disabling delivery does not stop the existing backend, PostgreSQL, or Redis.
+
+## 13. Troubleshooting
+
+| Symptom | Check |
 |---|---|
-| `AWS_REGION` | `ap-southeast-1` |
-| `AWS_AVAILABILITY_ZONE` | `ap-southeast-1a` |
+| ECR role cannot be assumed | OIDC provider audience, exact branch `sub`, repository variable ARN |
+| Deploy role cannot be assumed | Exact environment `sub`, `backend-dev` branch rule, role ARN |
+| SSM command cannot be sent | Instance ID/Region, `AWS-RunShellScript` and instance ARNs in policy |
+| Instance not online | SSM Agent, instance profile, SSM endpoints/NAT, managed-node status |
+| ECR pull denied | EC2 role has token plus pull actions for the exact repository |
+| Preflight rejects environment | File exists, `root:root 600`, required keys non-empty, no placeholders |
+| PostgreSQL/Redis unreachable | Both listen on host loopback at ports 5432/6379 |
+| Backend unhealthy | SSM stdout/stderr, `docker logs blocbuy-backend`, Flyway and credentials |
+| Bundle policy fails | Only `compose.yml` and the four reviewed scripts may be transported |
+| Rollback has no previous image | Supply an explicitly reviewed immutable digest from ECR |
 
-If you select another Region, you must update both values together.
-
-### 7.2 AWS Secrets
-
-| Name | Value |
-|---|---|
-| `AWS_ACCESS_KEY_ID` | Access Key ID for the deployment identity |
-| `AWS_SECRET_ACCESS_KEY` | Corresponding Secret Access Key |
-| `AWS_SESSION_TOKEN` | Required only for temporary credentials |
-
-Do not create `AWS_SESSION_TOKEN` when using long-lived IAM User credentials. Do not put Secrets in
-Variables, source code, Issues, or PRs.
-
-### 7.3 Application Secret
-
-Create `BACKEND_DOT_ENV` with the following contents:
-
-```dotenv
-SPRING_PROFILES_ACTIVE=docker
-DB_USERNAME=blocbuy
-DB_PASSWORD=<long-random-database-password>
-REDIS_PASSWORD=<different-long-random-Redis-password>
-STRIPE_API_KEY=
-STRIPE_WEBHOOK_SECRET=
-```
-
-Requirements: the passwords must differ, there must be no placeholders, lines must not begin with
-`export`, and there must be no spaces around the equals sign. Leave Stripe values empty when Stripe is
-not integrated; when it is integrated, start with test mode. The webhook path is
-`/api/v1/webhooks/stripe`.
-
-Bitovi merges `env_ghs` into the `.env` file on EC2. Do not commit an actual `repo_env` or `.env` file.
-
-### 7.4 Optional Sonar/CodeQL
-
-- When `SONAR_HOST_URL` is not set, Sonar is skipped and deployment continues;
-- Once it is set, you must also configure `SONAR_TOKEN`; SonarCloud additionally requires
-  `SONAR_ORGANIZATION`;
-- A failed Sonar Quality Gate blocks deployment;
-- CodeQL is enabled only when `ENABLE_CODEQL=true`; private repositories usually require GitHub Advanced
-  Security.
-
-Do not configure only some of the Sonar parameters.
-
-## 8. Actions Permissions and Branch Protection
-
-### 8.1 Actions Permissions
-
-Go to **Settings -> Actions -> General**. Confirm that Actions is enabled. If only selected Actions are
-allowed, allow at least:
-
-- `actions/checkout`, `actions/setup-java`, `actions/cache`, and `actions/upload-artifact`;
-- `aquasecurity/trivy-action`;
-- `github/codeql-action`;
-- `gitleaks/gitleaks-action`;
-- `bitovi/github-actions-deploy-docker-to-ec2`.
-
-### 8.2 Protect the `dev` Branch
-
-Go to **Settings -> Rules -> Rulesets** and configure the following for `dev`:
-
-1. Require changes to be merged through a PR;
-2. Require at least one approval;
-3. Require status checks;
-4. Require the branch to be up to date before merging;
-5. Prevent regular members from pushing directly to `dev`;
-6. Preferably, do not allow unrecorded bypasses.
-
-Let the checks run on this PR once before selecting their exact names. Require at least:
-
-```text
-build-quality
-contract-check
-docker
-gitleaks
-trivy-deps
-```
-
-After Sonar is fully configured, also make `sonar` required. Do not require CodeQL while it is skipped by
-default.
-
-## 9. Submit the Configuration PR
-
-First, confirm that no secrets have entered Git:
+Useful host diagnostics:
 
 ```bash
-git status --short
-git status --ignored --short
-git diff --check
-git diff -- docker-compose.yaml .gha-ignore .github/workflows/ci-backend.yml .github/workflows/security.yml
+sudo docker ps --filter name=blocbuy-backend
+sudo docker logs --tail 200 blocbuy-backend
+sudo cat /opt/blocbuy/backend/state/current-image
+curl --fail --silent http://127.0.0.1:8589/actuator/health
 ```
 
-Then run:
+Do not paste `/etc/blocbuy/backend.env`, Docker credential files, or application secrets into GitHub
+issues or workflow logs.
 
-```bash
-git add docker-compose.yaml .gha-ignore
-git add .github/workflows/ci-backend.yml .github/workflows/security.yml
-git add docs/deploy/backend-ec2-pipeline-operator-guide.md
-git diff --cached --check
-git diff --cached
-git commit -m "feat(ci): deploy backend to EC2 after quality gates"
-git push origin feature/backend-structure-20260830
-```
+## 14. Audit evidence and limitations
 
-If you use another feature branch, replace the branch name in the final command. On GitHub, create a PR
-with `dev` as the base and the actual feature branch as the compare branch. Record the AWS Region, fixed
-resource identifier, local health-check result, cost risks, and rollback owner in the PR, but never
-record credentials.
+Retain these as DevSecOps evidence:
 
-## 10. Verify the PR Stage
+- PR review and protected-branch history;
+- green quality/security checks and SARIF results where GHAS is available;
+- immutable ECR digest in the release and deployment summaries;
+- GitHub environment approval and named operator;
+- SSM command ID/status and CloudTrail role-assumption/SendCommand records;
+- automatic/manual rollback output and resulting digest;
+- database backup/restore test evidence maintained outside this application pipeline.
 
-After creating the PR, you should see:
+This phase deliberately codifies application delivery, policy gates and IAM examples but not EC2/VPC
+resource creation. The existing infrastructure still has manual drift risk. Record host/IAM/network
+changes in the team change log. A later, separately reviewed Terraform phase may import or recreate
+infrastructure only after state ownership, backups and destructive-change controls are agreed.
 
-| Job | Expected result |
-|---|---|
-| `build-quality` | Succeeds |
-| `contract-check` | Succeeds |
-| `docker` | Build, health check, and Trivy succeed |
-| `sonar` | Skipped when unconfigured; succeeds when configured |
-| `gitleaks` | Succeeds |
-| `trivy-deps` | Succeeds |
-| `deploy-ec2` | **Skipped** |
+## 15. Authoritative references
 
-Skipping deployment at the PR stage is correct. If Gitleaks detects a real secret, rotate it immediately;
-removing it only from the latest commit does not eliminate its exposure in Git history.
-
-## 11. Merge and Trigger the First Automated Deployment
-
-Before merging, confirm that:
-
-- The Budget has been created;
-- The `backend-dev` Environment exists;
-- Secrets and Variables are saved, and temporary credentials have not expired;
-- All required PR checks have succeeded;
-- No other deployment is running.
-
-After merging into `dev`:
-
-1. GitHub emits a push event;
-2. `ci-backend` runs from the beginning;
-3. `deploy-ec2` waits for its four dependency jobs;
-4. Bitovi creates the VPC, ELB, EC2, state, and logging resources;
-5. The Action installs Docker, copies the repository, generates `.env`, and runs Compose;
-6. On success, the GitHub Environment displays `vm_url`.
-
-The first run creates infrastructure, downloads images, resolves Maven dependencies, and builds on EC2,
-so it is usually noticeably slower than subsequent deployments. Do not change the resource identifier
-and rerun merely because it is slow.
-
-## 12. Post-Deployment Verification
-
-Under **Actions -> ci-backend -> latest dev push -> deploy-ec2**, record `vm_url`. Then run:
-
-```bash
-curl --fail --show-error "http://<ELB_HOST>/actuator/health"
-curl --fail --show-error "http://<ELB_HOST>/v3/api-docs" -o /tmp/blocbuy-openapi.json
-curl --fail --show-error --head "http://<ELB_HOST>/swagger-ui.html"
-```
-
-The health endpoint must return `{"status":"UP"}`.
-
-Check the following in the AWS Console:
-
-1. The EC2 instance is running, with the correct type, volume, and tags;
-2. The Classic ELB forwards HTTP port 80 to port 8589, with the health check set to
-   `HTTP:8589/actuator/health`;
-3. The instance is healthy/in service in the ELB;
-4. The security group does not expose ports 5432 or 6379 to the internet, and nobody has manually added
-   `0.0.0.0/0:22`;
-5. The CloudWatch Docker log group exists, has 14-day retention, and contains no secrets;
-6. Block Public Access is enabled on the S3 Terraform state/log bucket;
-7. Do not manually delete Terraform state objects.
-
-Record non-sensitive deployment evidence: Git SHA, Actions Run URL, Region, EC2 ID, ELB DNS name,
-verification time, and operator.
-
-## 13. Common Failure Handling
-
-| Symptom | Resolution |
-|---|---|
-| `ExpiredToken`/`InvalidClientTokenId` | Update all three temporary lab credentials, or check whether the IAM key is Active |
-| `AccessDenied` | Record the denied API/ARN and ask an administrator to add the minimum permission; do not change resource names to bypass the issue |
-| Availability Zone failure | Confirm that the Region and AZ match and that the AZ supports `t3.medium` |
-| Compose file not found | Confirm that the file is in the repository root, `docker_repo_app_directory: /` is set, and `.gha-ignore` does not exclude it |
-| Build killed or timed out | Check EC2 memory, disk, and network; retain the 900-second timeout and increase the instance size if needed |
-| Cannot resolve postgres/redis | Confirm the Docker profile, service names, and `data` network |
-| ELB unhealthy | Confirm that Spring, Dockerfile, Compose, and ELB all use port 8589, then inspect the backend startup logs |
-| Sonar causes deployment to be skipped | Configure Token/Organization completely and fix the Gate; if not using Sonar yet, remove `SONAR_HOST_URL` |
-
-The database password applies only when an empty volume is initialized for the first time. Changing the
-GitHub Secret later does not automatically update the PostgreSQL role password. You must first change the
-password in the database under controlled conditions and then update the Secret; do not solve this by
-deleting the data volume.
-
-## 14. EC2 Diagnostics, Backup, and Rollback
-
-Prefer AWS Systems Manager Session Manager. If SSH is required, allow only the operator's single public
-IP temporarily and remove the rule afterward. Common commands in the application directory:
-
-```bash
-docker compose ps
-docker compose logs --tail=200 backend
-docker compose logs --tail=100 postgres
-docker compose logs --tail=100 redis
-docker stats --no-stream
-df -h
-docker system df
-```
-
-Do not run `docker compose down --volumes` or `docker system prune` with `--volumes`, and do not print the
-`.env` file generated by the Action.
-
-Back up before a high-risk release:
-
-```bash
-docker compose exec -T postgres sh -c \
-  'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom' \
-  > "blocbuy-$(date +%Y%m%d-%H%M%S).dump"
-```
-
-Copy the backup to an encrypted, versioned, access-restricted S3 bucket; do not leave it only on the same
-EC2 root volume. Perform restore drills regularly.
-
-For a code rollback, find the most recent successful SHA, create a `git revert` for the faulty commit,
-merge it into `dev` through a PR, and let the pipeline redeploy. Keep the resource identifier and state
-name unchanged. A code rollback does not roll back Flyway; database migrations require a separate plan.
-
-## 15. Routine Automated Deployment Flow
-
-After the initial configuration is complete:
-
-1. Open a PR from a feature branch to `dev`;
-2. Pass the required checks and review;
-3. Merge the PR;
-4. The push to `dev` automatically runs `ci-backend`;
-5. `deploy-ec2` automatically updates the same EC2 environment;
-6. Check Actions, ELB health, and representative APIs;
-7. Record the SHA and verification result.
-
-The current CI concurrency setting cancels older runs for the same ref. Avoid merging multiple high-risk
-deployment changes in quick succession; wait for the current deployment to complete.
-
-## 16. HTTPS Phase Two
-
-Complete the initial HTTP deployment first. If the domain is hosted in Route 53, add the following to the
-deploy job afterward:
-
-```yaml
-          aws_r53_enable: true
-          aws_r53_domain_name: example.com
-          aws_r53_sub_domain_name: api-dev
-          aws_r53_create_sub_cert: true
-
-          aws_elb_app_port: 8589
-          aws_elb_app_protocol: HTTP
-          aws_elb_listen_port: 443
-          aws_elb_listen_protocol: SSL
-          aws_elb_healthcheck: HTTP:8589/actuator/health
-```
-
-Replace the example with the real domain. The Bitovi documentation notes that Terraform-managed
-certificates are destroyed with the stack; follow its two-phase process when changing certificate
-sources. After HTTPS is enabled, configure the Stripe Webhook as:
-
-```text
-https://api-dev.example.com/api/v1/webhooks/stripe
-```
-
-## 17. Safe Teardown
-
-Before teardown, confirm the resource identifier, complete an off-instance database backup, obtain team
-approval, and record which EBS, S3, and logging resources must be retained. Bitovi uses
-`tf_stack_destroy: true` to destroy the stack. The teardown workflow must use the same Region, resource
-identifier, and state name as the deployment.
-
-After teardown, check for and handle EBS volumes, snapshots, S3 buckets, CloudWatch logs, Secrets Manager
-secrets, ACM certificates, Elastic IPs, and IAM Instance Profiles that continue to incur charges. Do not
-directly delete unknown Terraform state, or remaining resources will lose their management relationship.
-
-## 18. Final Completion Checklist
-
-- [ ] Root-user MFA, dedicated deployment identity, and AWS Budget are complete;
-- [ ] `docker-compose.yaml` builds locally and passes the health check;
-- [ ] `.env`, AWS keys, database passwords, and Stripe keys have not entered Git;
-- [ ] `ci-backend.yml` includes the Compose path and `deploy-ec2`;
-- [ ] `security.yml` covers deployment configuration changes;
-- [ ] The `backend-dev` Environment, AWS Secrets, `BACKEND_DOT_ENV`, and Region/AZ are configured;
-- [ ] `dev` branch protection and the five required checks are configured;
-- [ ] `deploy-ec2` is correctly skipped at the PR stage;
-- [ ] `deploy-ec2` runs automatically and succeeds after merge;
-- [ ] The ELB is healthy and the public health endpoint returns `UP`;
-- [ ] Ports 5432/6379 are not exposed, and CloudWatch contains no secrets;
-- [ ] Evidence from the first deployment, key rotation, database backup, and rollback ownership are
-  recorded.
-
-## References
-
-- [Bitovi Deploy Docker to AWS EC2](https://github.com/bitovi/github-actions-deploy-docker-to-ec2)
-- [GitHub Deployments and Environments](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments)
-- [GitHub Actions Secrets](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets)
-- [AWS Root User Best Practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/root-user-best-practices.html)
-- [AWS Secure Access Keys](https://docs.aws.amazon.com/IAM/latest/UserGuide/securing_access-keys.html)
-- [AWS: Creating a Cost Budget](https://docs.aws.amazon.com/cost-management/latest/userguide/create-cost-budget.html)
-- [Backend Pipeline Guide for This Repository](../ci/backend-pipeline.md)
-- [Backend Quality Gates for This Repository](../quality/quality-gates.md)
-- [English EC2 Deployment Reference](backend-ec2-bitovi.md)
-
-Third-party Action parameters and defaults may change. Before changing `@v1`, enabling Route 53, ALB,
-WAF, EFS, or RDS, or running `tf_stack_destroy`, recheck the upstream Bitovi documentation and validate
-the change in the development environment first.
+- [GitHub: Configuring OIDC in AWS](https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws)
+- [GitHub: Deployments and environments](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments)
+- [AWS: IAM permissions for pushing to ECR](https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-push-iam.html)
+- [AWS: Configure EC2 permissions for Systems Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/setup-instance-permissions.html)
+- [AWS: Systems Manager IAM policy examples](https://docs.aws.amazon.com/systems-manager/latest/userguide/security_iam_id-based-policy-examples.html)
+- [AWS: Restrict root-level commands through SSM Agent](https://docs.aws.amazon.com/systems-manager/latest/userguide/ssm-agent-restrict-root-level-commands.html)
