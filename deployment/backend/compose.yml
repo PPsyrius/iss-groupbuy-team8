@@ -1,0 +1,31 @@
+# Existing-EC2 deployment: this project owns only the backend container.
+# PostgreSQL and Redis are intentionally absent and must be operated separately.
+name: blocbuy-backend-app
+
+services:
+  backend:
+    image: ${BACKEND_IMAGE:?BACKEND_IMAGE must be an immutable image digest}
+    container_name: blocbuy-backend
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - ${BACKEND_ENV_FILE:-/etc/blocbuy/backend.env}
+    environment:
+      SPRING_PROFILES_ACTIVE: ec2
+    labels:
+      org.opencontainers.image.revision: ${BLOCBUY_GIT_SHA:-unknown}
+      com.blocbuy.deployed-image: ${BACKEND_IMAGE}
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
