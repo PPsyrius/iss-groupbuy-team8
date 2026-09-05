@@ -46,7 +46,7 @@
     <archunit.version>1.4.2</archunit.version>
     <stripe-java.version>33.4.1</stripe-java.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
-    <checkstyle.version>10.26.1</checkstyle.version>
+    <checkstyle.version>14.1.0</checkstyle.version>
     <maven-enforcer-plugin.version>3.6.1</maven-enforcer-plugin.version>
     <!-- quality gates: versions verified against Maven Central 2026-08-31 -->
     <spotless-maven-plugin.version>3.10.1</spotless-maven-plugin.version>
