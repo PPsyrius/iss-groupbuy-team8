@@ -1,0 +1,469 @@
+# Backend pipeline: quality and security gates → immutable ECR image → existing-EC2 deploy through SSM.
+# Gates and thresholds: docs/quality/quality-gates.md. Plan: docs/ci/devsecops-pipeline-plan.md.
+name: ci-backend
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - "backend/**"
+      - "contracts/**"
+      - "docker-compose.yaml"
+      - "deployment/backend/**"
+      - ".github/workflows/ci-backend.yml"
+  pull_request:
+    branches: [dev]
+    paths:
+      - "backend/**"
+      - "contracts/**"
+      - "docker-compose.yaml"
+      - "deployment/backend/**"
+      - ".github/workflows/ci-backend.yml"
+
+concurrency:
+  group: ci-backend-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  build-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven # picks up backend/**/pom.xml
+
+      - name: Formatting + style gates (fail fast)
+        run: ./mvnw -B spotless:check checkstyle:check
+
+      - name: Verify (unit + ArchUnit + ITs + SpotBugs + JaCoCo)
+        run: ./mvnw -B verify
+
+      - name: Upload quality reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: quality-reports
+          retention-days: 7
+          path: |
+            backend/blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml
+            backend/**/target/spotbugsXml.xml
+            backend/**/target/checkstyle-result.xml
+          if-no-files-found: ignore
+
+  contract-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Regenerate contracts/openapi.json from code
+        run: ./mvnw -B verify -Popenapi-export -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true
+
+      # Pathspec must resolve from the repo root: `contracts/` under backend/ matches nothing
+      # and git diff exits 0 — the drift check would silently never fail.
+      - name: Fail if committed contract drifted
+        working-directory: ${{ github.workspace }}
+        run: git diff --exit-code -- contracts/
+
+      # Drift check above catches "forgot to commit"; this catches "broke consumers".
+      # Old spec = base branch committed contract; new spec = regenerated from PR code.
+      - name: Fail on backward-incompatible API change (PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --depth=1 origin "${{ github.base_ref }}"
+          git show FETCH_HEAD:contracts/openapi.json > /tmp/openapi-base.json
+          curl -sSfL -o /tmp/openapi-diff.jar \
+            https://repo1.maven.org/maven2/org/openapitools/openapidiff/openapi-diff-cli/2.1.7/openapi-diff-cli-2.1.7-all.jar
+          java -jar /tmp/openapi-diff.jar --fail-on-incompatible \
+            /tmp/openapi-base.json ../contracts/openapi.json
+
+  sonar:
+    # Activated by setting repo variable SONAR_HOST_URL (+ secret SONAR_TOKEN).
+    # SonarCloud also needs variable SONAR_ORGANIZATION. See docs/ci/devsecops-pipeline-plan.md Step 3.
+    if: vars.SONAR_HOST_URL != ''
+    needs: build-quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0 # full history for accurate new-code analysis
+
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.sonar/cache
+          key: sonar-${{ runner.os }}
+          restore-keys: sonar-${{ runner.os }}
+
+      - name: SonarQube scan (verify + analyze in one pass for coverage)
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+        run: >
+          ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.7.0.6970:sonar
+          -Dsonar.host.url="$SONAR_HOST_URL"
+          -Dsonar.token="$SONAR_TOKEN"
+          ${SONAR_ORGANIZATION:+-Dsonar.organization="$SONAR_ORGANIZATION"}
+          -Dsonar.qualitygate.wait=true
+
+  docker:
+    # Runs on PR too: image build + smoke + scan must gate before merge, not after push.
+    needs:
+      - build-quality
+      - contract-check
+      - sonar
+    if: >-
+      always() &&
+      needs.build-quality.result == 'success' &&
+      needs.contract-check.result == 'success' &&
+      (needs.sonar.result == 'success' || needs.sonar.result == 'skipped')
+    runs-on: ubuntu-latest
+    outputs:
+      image_uri: ${{ steps.publish.outputs.image_uri }}
+    permissions:
+      contents: read
+      id-token: write # requested only by the dev-push ECR publication step
+      security-events: write # SARIF upload (no-op without GHAS on private repos)
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      # defaults.working-directory is backend/, and the build context IS backend/ — "." is correct.
+      # Writing backend/ here would resolve to backend/backend/ and fail with "path not found".
+      - name: Build image
+        run: docker build -t blocbuy-backend:ci-${{ github.sha }} .
+
+      # Match the existing EC2 runtime: PG/Redis are host-local and the backend uses host networking.
+      - name: Smoke test EC2 profile (boot + /actuator/health)
+        run: |
+          set -Eeuo pipefail
+          cleanup() {
+            docker rm -f smoke-app smoke-postgres smoke-redis >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          cleanup
+
+          docker run -d --name smoke-postgres -p 127.0.0.1:5432:5432 \
+            -e POSTGRES_USER=blocbuy -e POSTGRES_PASSWORD=blocbuy -e POSTGRES_DB=Blocbuy \
+            postgres:18
+          docker run -d --name smoke-redis -p 127.0.0.1:6379:6379 \
+            redis:8.10 redis-server --requirepass blocbuy
+          for attempt in $(seq 1 30); do
+            if docker exec smoke-postgres pg_isready -U blocbuy -d Blocbuy; then
+              echo "PostgreSQL became ready on attempt $attempt"
+              break
+            fi
+            sleep 2
+          done
+          docker run -d --network host --name smoke-app \
+            -e SPRING_PROFILES_ACTIVE=ec2 \
+            -e DB_USERNAME=blocbuy -e DB_PASSWORD=blocbuy \
+            -e REDIS_PASSWORD=blocbuy \
+            blocbuy-backend:ci-${{ github.sha }}
+          ok=0
+          for attempt in $(seq 1 30); do
+            if curl -sf http://localhost:8589/actuator/health | grep -q '"status":"UP"'; then
+              echo "Backend became healthy on attempt $attempt"
+              ok=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ok" != "1" ]; then echo '--- smoke-app logs ---'; docker logs smoke-app; exit 1; fi
+
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.74.0
+          image-ref: blocbuy-backend:ci-${{ github.sha }}
+          severity: HIGH,CRITICAL
+          limit-severities-for-sarif: 'true' # otherwise entrypoint drops the severity filter and LOW findings trip exit-code
+          ignore-unfixed: true # gate wording is "0 unfixed"; unfixed-pending CVEs don't fail
+          exit-code: '1'       # actually fail the job — default 0 only reports
+          format: sarif
+          output: trivy-image.sarif
+
+      - name: Upload image scan SARIF
+        if: always()
+        continue-on-error: true # requires GHAS on private repos; job already gated by exit-code above
+        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          sarif_file: trivy-image.sarif
+
+      - name: Validate ECR release configuration
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev' && vars.ENABLE_EC2_DEPLOY == 'true'
+        env:
+          AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_DEV }}
+          ECR_PUSH_ROLE_ARN: ${{ vars.AWS_ECR_PUSH_ROLE_ARN }}
+        run: |
+          set -Eeuo pipefail
+          [[ "$AWS_ACCOUNT_ID" =~ ^[0-9]{12}$ ]] || { echo "AWS_ACCOUNT_ID must contain 12 digits"; exit 1; }
+          [[ "$AWS_REGION" =~ ^[a-z]{2}(-gov)?-[a-z]+-[0-9]$ ]] || { echo "AWS_REGION is invalid"; exit 1; }
+          [[ "$ECR_REPOSITORY" =~ ^[a-z0-9][a-z0-9._/-]+$ ]] || { echo "ECR_REPOSITORY is invalid"; exit 1; }
+          [[ "$ECR_PUSH_ROLE_ARN" =~ ^arn:aws:iam::${AWS_ACCOUNT_ID}:role/[A-Za-z0-9+=,.@_/-]+$ ]] \
+            || { echo "AWS_ECR_PUSH_ROLE_ARN must be an IAM role in AWS_ACCOUNT_ID"; exit 1; }
+
+      - name: Assume ECR publishing role with GitHub OIDC
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev' && vars.ENABLE_EC2_DEPLOY == 'true'
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+        with:
+          role-to-assume: ${{ vars.AWS_ECR_PUSH_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+          role-session-name: BlocBuy-ECR-${{ github.run_id }}
+
+      - id: login-ecr
+        name: Log in to Amazon ECR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev' && vars.ENABLE_EC2_DEPLOY == 'true'
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
+
+      - id: publish
+        name: Publish verified image by immutable digest
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev' && vars.ENABLE_EC2_DEPLOY == 'true'
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_DEV }}
+          IMAGE_TAG: git-${{ github.sha }}-run-${{ github.run_attempt }}
+        run: |
+          set -Eeuo pipefail
+          local_image="blocbuy-backend:ci-${GITHUB_SHA}"
+          repository_uri="${REGISTRY}/${ECR_REPOSITORY}"
+          tagged_image="${repository_uri}:${IMAGE_TAG}"
+
+          docker tag "$local_image" "$tagged_image"
+          docker push "$tagged_image"
+
+          repo_digest=''
+          while IFS= read -r candidate; do
+            if [[ "$candidate" == "$repository_uri@"* ]]; then
+              repo_digest="$candidate"
+            fi
+          done < <(docker image inspect "$tagged_image" --format '{{range .RepoDigests}}{{println .}}{{end}}')
+          image_digest="${repo_digest#"$repository_uri@"}"
+          [[ "$repo_digest" == "$repository_uri@$image_digest" ]] \
+            || { echo "Docker did not record the pushed repository digest"; exit 1; }
+          [[ "$image_digest" =~ ^sha256:[a-f0-9]{64}$ ]] \
+            || { echo "Docker returned an invalid image digest"; exit 1; }
+
+          ecr_digest="$(aws ecr describe-images \
+            --repository-name "$ECR_REPOSITORY" \
+            --image-ids "imageTag=$IMAGE_TAG" \
+            --query 'imageDetails[0].imageDigest' \
+            --output text)"
+          [[ "$ecr_digest" == "$image_digest" ]] \
+            || { echo "ECR digest does not match the image that passed CI"; exit 1; }
+
+          image_uri="${repository_uri}@${image_digest}"
+          echo "image_uri=$image_uri" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Backend release candidate"
+            echo "- Git SHA: \`$GITHUB_SHA\`"
+            echo "- Image: \`$image_uri\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Log out of Amazon ECR
+        if: always() && steps.login-ecr.outcome == 'success'
+        run: docker logout '${{ steps.login-ecr.outputs.registry }}'
+
+  deploy-existing-ec2:
+    name: deploy-existing-ec2
+    # Deployments queue and finish; the workflow-level cancel policy must not interrupt a host update.
+    concurrency:
+      group: deploy-existing-ec2-backend-dev
+      cancel-in-progress: false
+    needs:
+      - build-quality
+      - contract-check
+      - sonar
+      - docker
+    if: >-
+      always() &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/dev' &&
+      vars.ENABLE_EC2_DEPLOY == 'true' &&
+      needs.build-quality.result == 'success' &&
+      needs.contract-check.result == 'success' &&
+      needs.docker.result == 'success' &&
+      (needs.sonar.result == 'success' || needs.sonar.result == 'skipped') &&
+      needs.docker.outputs.image_uri != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    environment:
+      name: backend-dev
+      url: ${{ vars.BACKEND_URL_DEV }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Validate deployment target and image
+        env:
+          AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_DEV }}
+          INSTANCE_ID: ${{ vars.BACKEND_EC2_INSTANCE_ID_DEV }}
+          DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN_DEV }}
+          IMAGE_URI: ${{ needs.docker.outputs.image_uri }}
+        run: |
+          set -Eeuo pipefail
+          [[ "$AWS_ACCOUNT_ID" =~ ^[0-9]{12}$ ]] || { echo "AWS_ACCOUNT_ID must contain 12 digits"; exit 1; }
+          [[ "$AWS_REGION" =~ ^[a-z]{2}(-gov)?-[a-z]+-[0-9]$ ]] || { echo "AWS_REGION is invalid"; exit 1; }
+          [[ "$ECR_REPOSITORY" =~ ^[a-z0-9][a-z0-9._/-]+$ ]] || { echo "ECR_REPOSITORY is invalid"; exit 1; }
+          [[ "$INSTANCE_ID" =~ ^i-([a-f0-9]{8}|[a-f0-9]{17})$ ]] || { echo "BACKEND_EC2_INSTANCE_ID_DEV is invalid"; exit 1; }
+          [[ "$DEPLOY_ROLE_ARN" =~ ^arn:aws:iam::${AWS_ACCOUNT_ID}:role/[A-Za-z0-9+=,.@_/-]+$ ]] \
+            || { echo "AWS_DEPLOY_ROLE_ARN_DEV must be an IAM role in AWS_ACCOUNT_ID"; exit 1; }
+
+          expected_repository="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}"
+          image_digest="${IMAGE_URI#"$expected_repository@"}"
+          [[ "$IMAGE_URI" == "$expected_repository@$image_digest" ]] || { echo "Image repository does not match deployment configuration"; exit 1; }
+          [[ "$image_digest" =~ ^sha256:[a-f0-9]{64}$ ]] || { echo "IMAGE_URI is not pinned by a valid digest"; exit 1; }
+
+      - id: bundle
+        name: Package non-secret EC2 deployment bundle
+        run: |
+          set -Eeuo pipefail
+          bundle_archive="${RUNNER_TEMP}/blocbuy-backend-deployment.tgz"
+          tar --create --gzip --file "$bundle_archive" \
+            --directory "${GITHUB_WORKSPACE}/deployment/backend" \
+            compose.yml bin
+
+          expected_entries="$(printf '%s\n' \
+            compose.yml bin/ bin/deploy.sh bin/health-check.sh bin/preflight.sh bin/rollback.sh \
+            | LC_ALL=C sort)"
+          bundle_entries="$(tar --list --gzip --file "$bundle_archive" | LC_ALL=C sort)"
+          [[ "$bundle_entries" == "$expected_entries" ]] || {
+            echo "Deployment bundle contains an unexpected or missing file" >&2
+            printf '%s\n' "$bundle_entries" >&2
+            exit 1
+          }
+          bundle_size="$(wc -c < "$bundle_archive" | tr -d ' ')"
+          ((bundle_size <= 9000)) || { echo "Deployment bundle is too large for SSM inline transport"; exit 1; }
+          echo "archive=$bundle_archive" >> "$GITHUB_OUTPUT"
+          echo "Packaged deployment bundle: $bundle_size bytes"
+
+      - name: Assume existing-EC2 deployment role with GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN_DEV }}
+          aws-region: ${{ vars.AWS_REGION }}
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+          role-session-name: BlocBuy-Deploy-${{ github.run_id }}
+
+      - id: deploy
+        name: Deploy backend bundle and image through SSM
+        env:
+          AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_DEV }}
+          INSTANCE_ID: ${{ vars.BACKEND_EC2_INSTANCE_ID_DEV }}
+          IMAGE_URI: ${{ needs.docker.outputs.image_uri }}
+          BUNDLE_ARCHIVE: ${{ steps.bundle.outputs.archive }}
+        run: |
+          set -Eeuo pipefail
+          bundle_base64="$(base64 --wrap=0 "$BUNDLE_ARCHIVE")"
+          remote_script="${RUNNER_TEMP}/blocbuy-remote-deploy.sh"
+          request_file="${RUNNER_TEMP}/blocbuy-ssm-request.json"
+          invocation_file="${RUNNER_TEMP}/blocbuy-ssm-invocation.json"
+
+          {
+            echo 'set -Eeuo pipefail'
+            echo 'install -d -m 0750 /opt/blocbuy/backend/bin /opt/blocbuy/backend/state'
+            printf "printf '%%s' '%s' | base64 --decode | tar --extract --gzip --file - --directory /opt/blocbuy/backend --no-same-owner\n" "$bundle_base64"
+            echo 'chown -R root:root /opt/blocbuy/backend'
+            echo 'chmod 0644 /opt/blocbuy/backend/compose.yml'
+            echo 'chmod 0755 /opt/blocbuy/backend/bin/*.sh'
+            printf "BLOCBUY_EXPECTED_AWS_ACCOUNT_ID='%s' BLOCBUY_EXPECTED_AWS_REGION='%s' BLOCBUY_EXPECTED_ECR_REPOSITORY='%s' /opt/blocbuy/backend/bin/deploy.sh '%s' '%s'\n" \
+              "$AWS_ACCOUNT_ID" "$AWS_REGION" "$ECR_REPOSITORY" "$IMAGE_URI" "$GITHUB_SHA"
+          } > "$remote_script"
+
+          remote_script_base64="$(base64 --wrap=0 "$remote_script")"
+          (( ${#remote_script_base64} <= 18000 )) || { echo "Encoded SSM deployment command is too large"; exit 1; }
+          ssm_command="printf '%s' '$remote_script_base64' | base64 --decode | bash"
+
+          jq -n \
+            --arg instance_id "$INSTANCE_ID" \
+            --arg comment "Deploy BlocBuy backend ${GITHUB_SHA:0:12}" \
+            --arg command "$ssm_command" \
+            '{
+              InstanceIds: [$instance_id],
+              DocumentName: "AWS-RunShellScript",
+              Comment: $comment,
+              TimeoutSeconds: 900,
+              Parameters: {commands: [$command]}
+            }' > "$request_file"
+
+          command_id="$(aws ssm send-command \
+            --cli-input-json "file://$request_file" \
+            --query 'Command.CommandId' \
+            --output text)"
+          [[ "$command_id" =~ ^[a-f0-9-]{36}$ ]] || { echo "SSM returned an invalid command ID"; exit 1; }
+          echo "SSM command: $command_id"
+
+          command_status="Pending"
+          for attempt in $(seq 1 120); do
+            command_status="$(aws ssm get-command-invocation \
+              --command-id "$command_id" \
+              --instance-id "$INSTANCE_ID" \
+              --query 'Status' \
+              --output text 2>/dev/null || true)"
+            case "$command_status" in
+              Success|Cancelled|TimedOut|Failed) break ;;
+            esac
+            if ((attempt % 12 == 0)); then
+              echo "SSM command is still $command_status after $((attempt * 5)) seconds"
+            fi
+            sleep 5
+          done
+
+          aws ssm get-command-invocation \
+            --command-id "$command_id" \
+            --instance-id "$INSTANCE_ID" \
+            --output json > "$invocation_file"
+          jq -r '"SSM status: \(.Status)\n--- stdout ---\n\(.StandardOutputContent)\n--- stderr ---\n\(.StandardErrorContent)"' "$invocation_file"
+
+          final_status="$(jq -r '.Status' "$invocation_file")"
+          {
+            echo "### Existing EC2 backend deployment"
+            echo "- Git SHA: \`$GITHUB_SHA\`"
+            echo "- Image: \`$IMAGE_URI\`"
+            echo "- EC2 instance: \`$INSTANCE_ID\`"
+            echo "- SSM command: \`$command_id\`"
+            echo "- Status: \`$final_status\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          [[ "$final_status" == 'Success' ]] || exit 1
+
+      - name: Verify public backend health
+        if: vars.BACKEND_URL_DEV != ''
+        env:
+          BACKEND_URL: ${{ vars.BACKEND_URL_DEV }}
+        run: |
+          set -Eeuo pipefail
+          health_url="${BACKEND_URL%/}/actuator/health"
+          curl --fail --show-error --silent --connect-timeout 5 --max-time 10 \
+            --retry 5 --retry-delay 3 "$health_url" \
+            | grep -Eq '"status"[[:space:]]*:[[:space:]]*"UP"'

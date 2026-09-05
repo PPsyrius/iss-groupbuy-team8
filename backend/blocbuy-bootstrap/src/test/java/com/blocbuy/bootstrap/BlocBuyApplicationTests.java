@@ -9,18 +9,18 @@ import org.springframework.boot.test.context.SpringBootTest;
  * by {@code PgSmokeIT} (Testcontainers) in the infrastructure module.
  */
 @SpringBootTest(
-    properties = {
-      "spring.flyway.enabled=false",
-      "spring.datasource.url=jdbc:postgresql://localhost:1/blocbuy_placeholder?currentSchema=domain",
-      "spring.datasource.username=test",
-      "spring.datasource.password=test",
-      "spring.data.redis.host=localhost",
-      "spring.data.redis.port=1"
-    })
+        properties = {
+            "spring.flyway.enabled=false",
+            "spring.datasource.url=jdbc:postgresql://localhost:1/blocbuy_placeholder?currentSchema=domain",
+            "spring.datasource.username=test",
+            "spring.datasource.password=test",
+            "spring.data.redis.host=localhost",
+            "spring.data.redis.port=1"
+        })
 class BlocBuyApplicationTests {
 
-  @Test
-  void contextLoads() {
-    // assembly success is the assertion
-  }
+    @Test
+    void contextLoads() {
+        // assembly success is the assertion
+    }
 }

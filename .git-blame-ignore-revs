@@ -1,0 +1,7 @@
+# Commits ignored by `git blame` (GitHub honors this file automatically).
+# Local: git config blame.ignoreRevsFile .git-blame-ignore-revs
+#
+# 2026-08-31 one-time reformat: ./mvnw spotless:apply over the whole backend
+# (google-java-format AOSP). Replace the line below with the real commit hash
+# after the formatting commit lands.
+# <commit-hash> style(backend): one-time spotless:apply, google-java-format AOSP

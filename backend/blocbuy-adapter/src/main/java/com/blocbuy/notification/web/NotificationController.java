@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Notification resource controller. Protocol adaptation only: parse/validate requests, convert to
  * commands/queries, call the application service. No business transactions, no mapper calls, no
- * direct cache manipulation. Endpoints land with their use cases.
- * TODO(TEAM8-notification): add endpoints; write endpoints define idempotency ({@code Idempotency-Key}).
+ * direct cache manipulation. Endpoints land with their use cases. TODO(TEAM8-notification): add
+ * endpoints; write endpoints define idempotency ({@code Idempotency-Key}).
  */
 @Tag(name = "notifications", description = "Notification resource")
 @RestController

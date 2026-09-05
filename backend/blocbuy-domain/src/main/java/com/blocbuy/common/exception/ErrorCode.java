@@ -15,15 +15,15 @@ package com.blocbuy.common.exception;
  */
 public interface ErrorCode {
 
-  /** Stable machine code, e.g. {@code "ORDER_404_001"}. Never dynamic text. */
-  String code();
+    /** Stable machine code, e.g. {@code "ORDER_404_001"}. Never dynamic text. */
+    String code();
 
-  /** HTTP status as int, e.g. {@code 404}. */
-  int httpStatus();
+    /** HTTP status as int, e.g. {@code 404}. */
+    int httpStatus();
 
-  /** English default message, safe to expose to clients. */
-  String defaultMessage();
+    /** English default message, safe to expose to clients. */
+    String defaultMessage();
 
-  /** i18n message key, e.g. {@code "error.order.notFound"}. */
-  String messageKey();
+    /** i18n message key, e.g. {@code "error.order.notFound"}. */
+    String messageKey();
 }

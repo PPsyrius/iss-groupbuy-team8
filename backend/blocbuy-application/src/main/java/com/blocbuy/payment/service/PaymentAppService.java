@@ -13,15 +13,15 @@ package com.blocbuy.payment.service;
  */
 public interface PaymentAppService {
 
-  /**
-   * Handles a verified-or-rejected Stripe webhook callback. Verifies the signature via the
-   * gateway, deduplicates by provider event id, and transitions the persisted payment inside a
-   * local transaction. Unknown/irrelevant event types are acknowledged and ignored.
-   *
-   * @param payload raw request body, exactly as received
-   * @param signatureHeader value of the {@code Stripe-Signature} header
-   * @throws com.blocbuy.common.exception.BizException with {@code PAYMENT_400_001} on bad
-   *     signature
-   */
-  void handleStripeWebhook(String payload, String signatureHeader);
+    /**
+     * Handles a verified-or-rejected Stripe webhook callback. Verifies the signature via the
+     * gateway, deduplicates by provider event id, and transitions the persisted payment inside a
+     * local transaction. Unknown/irrelevant event types are acknowledged and ignored.
+     *
+     * @param payload raw request body, exactly as received
+     * @param signatureHeader value of the {@code Stripe-Signature} header
+     * @throws com.blocbuy.common.exception.BizException with {@code PAYMENT_400_001} on bad
+     *     signature
+     */
+    void handleStripeWebhook(String payload, String signatureHeader);
 }

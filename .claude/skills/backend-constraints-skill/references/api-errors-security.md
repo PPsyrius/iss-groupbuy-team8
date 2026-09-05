@@ -15,6 +15,7 @@ Read this when handling HTTP interfaces, exceptions, authentication, permissions
 - Write interfaces define idempotency. Order placement, payment, refund, and callbacks use an `Idempotency-Key` or a stable business request number; persist the request fingerprint and result; the same key with a different request body returns a conflict.
 - Resources that support concurrent modification use a version number/ETag or business version; never silently overwrite concurrent updates.
 - OpenAPI documents paths, status codes, authentication, pagination, idempotency, field constraints, and examples; contract changes must be backward compatible or version-bumped.
+- The generated spec is committed at `contracts/openapi.json` and is a CI gate (`contract-check` in `.github/workflows/ci-backend.yml`): CI regenerates it from code and fails on any drift. After any API-surface change, regenerate from the repo with `cd backend && ./mvnw -B verify -Popenapi-export -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true`, commit the updated file, and confirm `git diff --exit-code -- contracts/` (from the repo root) is clean. Never hand-edit the file; the export profile lives in `backend/blocbuy-bootstrap/pom.xml`.
 
 ## Error Code and Business Exception Baseline
 

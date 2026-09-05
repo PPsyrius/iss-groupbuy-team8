@@ -13,9 +13,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class PaymentRepositoryImpl implements PaymentRepository {
 
-  @Override
-  public Optional<Payment> findById(String id) {
-    // TODO(TEAM8-payment): select via PaymentMapper once the table exists
-    return Optional.empty();
-  }
+    @Override
+    public Optional<Payment> findById(String id) {
+        // TODO(TEAM8-payment): select via PaymentMapper once the table exists
+        return Optional.empty();
+    }
 }

@@ -15,16 +15,16 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 @Configuration
 public class RedisConfig {
 
-  @Bean
-  @ConditionalOnMissingBean(name = "jsonRedisTemplate")
-  public RedisTemplate<String, Object> jsonRedisTemplate(RedisConnectionFactory factory) {
-    RedisTemplate<String, Object> template = new RedisTemplate<>();
-    template.setConnectionFactory(factory);
-    template.setKeySerializer(RedisSerializer.string());
-    template.setHashKeySerializer(RedisSerializer.string());
-    template.setValueSerializer(RedisSerializer.json());
-    template.setHashValueSerializer(RedisSerializer.json());
-    template.afterPropertiesSet();
-    return template;
-  }
+    @Bean
+    @ConditionalOnMissingBean(name = "jsonRedisTemplate")
+    public RedisTemplate<String, Object> jsonRedisTemplate(RedisConnectionFactory factory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(factory);
+        template.setKeySerializer(RedisSerializer.string());
+        template.setHashKeySerializer(RedisSerializer.string());
+        template.setValueSerializer(RedisSerializer.json());
+        template.setHashValueSerializer(RedisSerializer.json());
+        template.afterPropertiesSet();
+        return template;
+    }
 }

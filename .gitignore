@@ -54,6 +54,10 @@ out/
 .project
 .settings/
 bin/
+
+# EC2 lifecycle scripts are deployment source, not generated build output.
+!deployment/backend/bin/
+!deployment/backend/bin/*.sh
 .factorypath
 
 # ==================== React / Node ====================

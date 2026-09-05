@@ -17,22 +17,24 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 class PgSmokeIT {
 
-  @Container
-  @SuppressWarnings("resource") // container lifecycle managed by Testcontainers
-  static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:18");
+    @Container
+    @SuppressWarnings("resource") // container lifecycle managed by Testcontainers
+    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:18");
 
-  @Test
-  void connectsAndCreatesDomainSchema() throws Exception {
-    try (Connection conn =
-            java.sql.DriverManager.getConnection(
-                POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword());
-        Statement stmt = conn.createStatement()) {
-      stmt.execute("CREATE SCHEMA IF NOT EXISTS domain");
-      try (ResultSet rs =
-          stmt.executeQuery(
-              "SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'domain'")) {
-        assertThat(rs.next()).as("domain schema exists").isTrue();
-      }
+    @Test
+    void connectsAndCreatesDomainSchema() throws Exception {
+        try (Connection conn =
+                        java.sql.DriverManager.getConnection(
+                                POSTGRES.getJdbcUrl(),
+                                POSTGRES.getUsername(),
+                                POSTGRES.getPassword());
+                Statement stmt = conn.createStatement()) {
+            stmt.execute("CREATE SCHEMA IF NOT EXISTS domain");
+            try (ResultSet rs =
+                    stmt.executeQuery(
+                            "SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'domain'")) {
+                assertThat(rs.next()).as("domain schema exists").isTrue();
+            }
+        }
     }
-  }
 }

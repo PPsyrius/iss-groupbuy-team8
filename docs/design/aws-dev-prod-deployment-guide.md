@@ -2,7 +2,16 @@
 
 ## Group Buying Web Application
 
-**Document status:** Proposed implementation baseline  
+> **Future-state architecture — not the current deployment runbook.** The implemented first phase
+> reuses one existing development EC2 instance and its existing PostgreSQL/Redis services. It runs no
+> Terraform or Bitovi action. Follow the
+> [existing EC2 backend operator guide](../deploy/backend-ec2-pipeline-operator-guide.md) for current
+> setup and incident operations. Do not apply the Terraform or resource-creation sections below to
+> the existing host until the team approves a separate import/migration plan with backups and state
+> ownership.
+
+**Document status:** Deferred future-state design
+
 **Application stack:** React, Java Spring Boot, PostgreSQL, optional Redis  
 **Delivery platform:** GitHub Actions  
 **Cloud platform:** Amazon Web Services  
@@ -480,7 +489,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s

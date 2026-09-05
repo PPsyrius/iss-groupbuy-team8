@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * User resource controller. Protocol adaptation only: parse/validate requests, convert to
  * commands/queries, call the application service. No business transactions, no mapper calls, no
- * direct cache manipulation. Endpoints land with their use cases.
- * TODO(TEAM8-identity): add endpoints; write endpoints define idempotency ({@code Idempotency-Key}).
+ * direct cache manipulation. Endpoints land with their use cases. TODO(TEAM8-identity): add
+ * endpoints; write endpoints define idempotency ({@code Idempotency-Key}).
  */
 @Tag(name = "users", description = "User resource")
 @RestController

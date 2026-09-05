@@ -25,17 +25,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class StripeWebhookController {
 
-  /** Header carrying Stripe's event signature. */
-  public static final String STRIPE_SIGNATURE_HEADER = "Stripe-Signature";
+    /** Header carrying Stripe's event signature. */
+    public static final String STRIPE_SIGNATURE_HEADER = "Stripe-Signature";
 
-  private final PaymentAppService paymentAppService;
+    private final PaymentAppService paymentAppService;
 
-  /** Receives a Stripe event notification. */
-  @PostMapping(value = "/stripe", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<Void> handleStripeEvent(
-      @RequestBody String payload,
-      @RequestHeader(name = STRIPE_SIGNATURE_HEADER) String signatureHeader) {
-    paymentAppService.handleStripeWebhook(payload, signatureHeader);
-    return ResponseEntity.ok().build();
-  }
+    /** Receives a Stripe event notification. */
+    @PostMapping(value = "/stripe", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> handleStripeEvent(
+            @RequestBody String payload,
+            @RequestHeader(name = STRIPE_SIGNATURE_HEADER) String signatureHeader) {
+        paymentAppService.handleStripeWebhook(payload, signatureHeader);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -12,29 +12,29 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Authentication entry points (Sa-Token). Protocol adaptation only — credential verification
- * belongs to the identity application service.
- * TODO(TEAM8-identity): POST /auth/login and /auth/register land with the user tables (V2).
+ * belongs to the identity application service. TODO(TEAM8-identity): POST /auth/login and
+ * /auth/register land with the user tables (V2).
  */
 @Tag(name = "auth", description = "Login, logout, current session")
 @RestController
 @RequestMapping(ApiConstants.API_V1 + "/auth")
 public class AuthController {
 
-  /** Current session; unauthenticated callers get 401 from the Sa-Token interceptor. */
-  @Operation(summary = "Current logged-in user id")
-  @GetMapping("/me")
-  public MeResponse me() {
-    return new MeResponse(StpUtil.getLoginIdAsString());
-  }
+    /** Current session; unauthenticated callers get 401 from the Sa-Token interceptor. */
+    @Operation(summary = "Current logged-in user id")
+    @GetMapping("/me")
+    public MeResponse me() {
+        return new MeResponse(StpUtil.getLoginIdAsString());
+    }
 
-  /** Logout: invalidates the current token. */
-  @Operation(summary = "Logout")
-  @PostMapping("/logout")
-  public ResponseEntity<Void> logout() {
-    StpUtil.logout();
-    return ResponseEntity.noContent().build();
-  }
+    /** Logout: invalidates the current token. */
+    @Operation(summary = "Logout")
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        StpUtil.logout();
+        return ResponseEntity.noContent().build();
+    }
 
-  /** Session view; never contains tokens or credentials. */
-  public record MeResponse(String loginId) {}
+    /** Session view; never contains tokens or credentials. */
+    public record MeResponse(String loginId) {}
 }

@@ -12,9 +12,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class OrderRepositoryImpl implements OrderRepository {
 
-  @Override
-  public Optional<Order> findById(String id) {
-    // TODO(TEAM8-order): select via OrderMapper once the table exists
-    return Optional.empty();
-  }
+    @Override
+    public Optional<Order> findById(String id) {
+        // TODO(TEAM8-order): select via OrderMapper once the table exists
+        return Optional.empty();
+    }
 }

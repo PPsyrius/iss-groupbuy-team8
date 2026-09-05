@@ -16,24 +16,24 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class SaTokenConfig implements WebMvcConfigurer {
 
-  /** Paths that never require authentication. */
-  private static final String[] PUBLIC_PATHS = {
-    ApiConstants.API_V1 + "/auth/login",
-    ApiConstants.API_V1 + "/auth/register",
-    // provider callbacks authenticate by signature verification, not by session
-    ApiConstants.API_V1 + "/webhooks/**",
-    "/v3/api-docs/**",
-    "/swagger-ui/**",
-    "/swagger-ui.html",
-    "/actuator/health/**",
-    "/actuator/prometheus"
-  };
+    /** Paths that never require authentication. */
+    private static final String[] PUBLIC_PATHS = {
+        ApiConstants.API_V1 + "/auth/login",
+        ApiConstants.API_V1 + "/auth/register",
+        // provider callbacks authenticate by signature verification, not by session
+        ApiConstants.API_V1 + "/webhooks/**",
+        "/v3/api-docs/**",
+        "/swagger-ui/**",
+        "/swagger-ui.html",
+        "/actuator/health/**",
+        "/actuator/prometheus"
+    };
 
-  @Override
-  public void addInterceptors(InterceptorRegistry registry) {
-    registry
-        .addInterceptor(new SaInterceptor(handler -> SaRouter.match("/**", StpUtil::checkLogin)))
-        .addPathPatterns(ApiConstants.API_V1 + "/**")
-        .excludePathPatterns(PUBLIC_PATHS);
-  }
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(
+                        new SaInterceptor(handler -> SaRouter.match("/**", StpUtil::checkLogin)))
+                .addPathPatterns(ApiConstants.API_V1 + "/**")
+                .excludePathPatterns(PUBLIC_PATHS);
+    }
 }

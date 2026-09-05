@@ -1,8 +1,8 @@
 # Repository Structure
 
-This document describes the layout of the BlocBuy monorepo, the purpose of each directory, and the development workflows supported by the `Makefile` and `docker-compose.yml`.
+This document describes the layout of the BlocBuy monorepo, the purpose of each directory, and the development workflows supported by the backend Maven wrapper and `docker-compose.yaml`.
 
-The repository is a **polyglot monorepo**: a Java Spring Boot backend, a React SPA frontend, Terraform infrastructure, CI/CD pipelines, and all project documentation live in a single repository. This gives us end-to-end traceability — every issue, pull request, pipeline run, design decision, and report revision is linked in one place, which is itself evidence of engineering discipline for the project report.
+The repository is a **polyglot monorepo**: a Java Spring Boot backend, a React SPA frontend, CI/CD pipelines, deployment policy/scripts, and project documentation live together. The current backend pipeline reuses an existing EC2 host; Terraform infrastructure is a deferred future target, not an active repository component. This gives end-to-end traceability from review and security gates to an immutable deployed image.
 
 ---
 
@@ -12,21 +12,28 @@ The repository is a **polyglot monorepo**: a Java Spring Boot backend, a React S
 blocbuy/
 ├── .github/
 │   ├── workflows/
-│   │   ├── ci-backend.yml          # mvn verify → regenerates openapi.json → fails if contracts/ dirty
-│   │   ├── ci-frontend.yml         # generate types from contracts/ → typecheck → test → build
-│   │   ├── security.yml            # SonarCloud, OWASP Dep-Check, Trivy, Gitleaks
-│   │   ├── terraform.yml           # plan on PR, gated apply
-│   │   ├── agile-metrics.yml       # cron: GitHub GraphQL → docs/agile/metrics/
-│   │   └── _reusable-*.yml
+│   │   ├── ci-backend.yml          # quality → image scan/publish → existing-EC2 SSM deployment
+│   │   ├── security.yml            # secrets, CVEs, config, workflows, shell and bundle policy
+│   │   ├── rollback-backend.yml    # confirmed/manual existing-EC2 application rollback
+│   │   ├── pr-labeler.yml          # applies labeler.yml to PRs
+│   │   ├── ci-frontend.yml         # planned: generate types from contracts/ → typecheck → test → build
+│   │   ├── terraform.yml           # future only: no Terraform workflow is active today
+│   │   └── agile-metrics.yml       # planned, cron: GitHub GraphQL → docs/agile/metrics/
+│   ├── dependabot.yml              # weekly grouped updates: maven, github-actions, docker
 │   ├── ISSUE_TEMPLATE/             # user-story.yml, bug.yml, task.yml
 │   ├── PULL_REQUEST_TEMPLATE.md
+│   ├── labeler.yml
 │   └── CODEOWNERS
+├── .gitleaks.toml                  # secret-scan allowlists (placeholders, docs)
 ├── contracts/
 │   └── openapi.json                # committed; single source of truth for the API
 ├── backend/                        # Spring Boot service (Maven, COLA multi-module)
 │   ├── pom.xml                     # blocbuy-parent: aggregate + dependencyManagement + gates
 │   ├── .mvn/wrapper/ + mvnw        # committed Maven Wrapper (Maven 3.9.x)
-│   ├── checkstyle.xml              # Google checks, line length 120
+│   ├── checkstyle.xml              # Google checks, 120 cols, AOSP indentation values
+│   ├── spotbugs-excludes.xml       # SpotBugs filter (each exclusion carries a reason)
+│   ├── Dockerfile                  # multi-stage image (maven build → temurin 21 JRE, non-root)
+│   ├── .dockerignore
 │   ├── blocbuy-client/             # external DTOs, API contracts; no business code
 │   ├── blocbuy-domain/             # aggregates, VOs, domain services, ports; JDK-only deps
 │   ├── blocbuy-application/        # command/query, use-case services, assemblers; tx boundary
@@ -39,16 +46,23 @@ blocbuy/
 │   │   └── api/generated/          # gitignored; regenerated from contracts/
 │   ├── package.json
 │   └── turbo.json
+├── deployment/
+│   └── backend/
+│       ├── compose.yml             # one backend service; host networking; no DB/Redis/volumes
+│       ├── backend.env.example     # non-secret host template; real file stays on EC2
+│       ├── bin/                    # preflight, health, deploy and rollback lifecycle scripts
+│       ├── iam/                    # replace-before-use least-privilege IAM JSON examples
+│       └── ecr-lifecycle-policy.json
 ├── infra/
-│   ├── modules/                    # reusable Terraform modules
-│   ├── envs/                       # dev/, prod/ environment compositions
-│   └── policies/                   # OPA/Conftest policy-as-code
+│   └── ...                         # deferred future Terraform phase; not currently present/active
 ├── scripts/
 │   ├── agile-metrics/              # GraphQL dump + burndown chart renderer
 │   └── generate-client.sh          # openapi-typescript wrapper
 ├── e2e/                            # cross-stack end-to-end tests
 ├── docs/
 │   ├── proposal/                   # project proposal
+│   ├── ci/                         # devsecops-pipeline-plan.md, backend-pipeline.md (runbook)
+│   ├── quality/                    # quality-gates.md (thresholds + exception process)
 │   ├── design/
 │   │   ├── adr/                    # Architecture Decision Records (numbered)
 │   │   ├── analysis/               # use cases, domain model, state machines (Mermaid)
@@ -61,7 +75,7 @@ blocbuy/
 │   │   ├── progress/               # fortnightly progress reports
 │   │   └── final/                  # final project report
 │   └── presentation/               # final presentation materials
-├── docker-compose.yml              # local runtime: postgres + backend + frontend
+├── docker-compose.yaml             # local integration runtime
 ├── Makefile                        # single entrypoint for every dev & CI task
 └── README.md
 ```
@@ -76,11 +90,14 @@ The DevSecOps pipeline lives here — GitHub Actions can only execute workflows 
 
 | File | Purpose |
 |---|---|
-| `ci-backend.yml` | Builds and tests the backend (`mvn verify`), regenerates `openapi.json` from the compiled code, and **fails the build if `contracts/` has uncommitted drift**. This guarantees the committed contract never lies. |
-| `ci-frontend.yml` | Regenerates TypeScript types from `contracts/openapi.json`, then typechecks, tests, and builds the SPA. |
-| `security.yml` | Static analysis and supply-chain scanning: SonarCloud (code quality), OWASP Dependency-Check (CVEs in dependencies), Trivy (container image scan), Gitleaks (secret detection). |
-| `terraform.yml` | Runs `terraform plan` on every PR touching `infra/`; `apply` is gated behind environment-specific approvals. |
-| `agile-metrics.yml` | Scheduled workflow that queries the GitHub Projects GraphQL API and commits sprint metrics into `docs/agile/metrics/`. Our Agile evidence collection is itself automated — a DevSecOps deliverable. |
+| `ci-backend.yml` | Quality and contract gates, EC2-profile image smoke/Trivy scan, immutable ECR publication, and an enabled `dev` deployment to one existing EC2 instance through OIDC and SSM. |
+| `security.yml` | Gitleaks, dependency/config Trivy, Actionlint, ShellCheck, one-service Compose enforcement and exact non-secret deployment archive policy; also runs weekly. |
+| `rollback-backend.yml` | Manual, confirmed and reasoned application rollback through the protected `backend-dev` environment. |
+| `pr-labeler.yml` | Applies `labeler.yml` path rules to every PR automatically. |
+| `dependabot.yml` | Weekly grouped update PRs for Maven, GitHub Actions, and Docker base images. |
+| `ci-frontend.yml` *(planned)* | Regenerates TypeScript types from `contracts/openapi.json`, then typechecks, tests, and builds the SPA. |
+| `terraform.yml` *(future)* | Not implemented. A later IaC phase must first define import/state ownership, backup and destructive-change controls. |
+| `agile-metrics.yml` *(planned)* | Scheduled workflow that queries the GitHub Projects GraphQL API and commits sprint metrics into `docs/agile/metrics/`. Our Agile evidence collection is itself automated — a DevSecOps deliverable. |
 | `ISSUE_TEMPLATE/` | Structured templates. The user-story template enforces acceptance criteria on every story — an Agile process artifact in its own right. |
 | `PULL_REQUEST_TEMPLATE.md` | Checklist linking PRs back to issues, keeping the issue → PR → pipeline traceability chain intact. |
 | `CODEOWNERS` | Routes review requests automatically (e.g. `infra/` changes ping the infra owner). |
@@ -107,7 +124,7 @@ Key conventions:
 - Auth: Sa-Token with a single token domain, Redis-backed sessions, RBAC roles/permissions loaded from the identity SQL tables.
 - Persistence: MyBatis (Mappers never leave the infrastructure layer), Flyway migrations, hand-written DO↔domain converters.
 - Datasource: database `Blocbuy`, PostgreSQL schema `domain`; secrets arrive via environment variables, never committed.
-- Build gates: Maven Enforcer (Java 21 / Maven ≥3.9 / dependency convergence), Checkstyle (Google checks, 120 columns), ArchUnit, JUnit 5 + Testcontainers.
+- Build gates: Maven Enforcer (Java 21 / Maven ≥3.9 / dependency convergence), Spotless (google-java-format AOSP formatting, checked at `validate`), Checkstyle (Google checks, 120 columns), SpotBugs (static bug analysis, threshold Medium), JaCoCo (coverage, gated via SonarQube quality gate), ArchUnit, JUnit 5 + Testcontainers. Thresholds: `docs/quality/quality-gates.md`.
 
 The full locked decision set and execution order live in `backend/docs/design/backend-skeleton-plan.md`.
 
@@ -115,7 +132,19 @@ The full locked decision set and execution order live in `backend/docs/design/ba
 
 The web frontend. `src/api/generated/` holds the TypeScript API client generated from `contracts/openapi.json`; it is **gitignored** and regenerated via `make generate-client`. `turbo.json` is scoped here (not at repo root) since Turborepo orchestrates only the frontend's own task graph.
 
-### `infra/` — Terraform Infrastructure
+### `deployment/` — Existing-host application delivery
+
+`deployment/backend/` is the host-side deployment contract. Its Compose file declares only the
+backend and connects to existing PostgreSQL/Redis over host loopback. Its scripts enforce preflight,
+immutable private-ECR digests, a deployment lock, health checks and rollback. IAM examples document
+the least privilege expected for GitHub OIDC roles and the EC2 runtime role. See the
+[operator guide](../deploy/backend-ec2-pipeline-operator-guide.md).
+
+### `infra/` — Deferred Terraform target
+
+No Terraform workflow or state is active in the current phase. The team deliberately chose to reuse
+the existing EC2, PostgreSQL and Redis first. The layout below remains a future-state option only and
+must not be read as a current operational procedure.
 
 | Subdirectory | Purpose |
 |---|---|
@@ -141,6 +170,8 @@ Everything gradeable-in-writing lives here, versioned alongside the code it desc
 | Subdirectory | Contents |
 |---|---|
 | `proposal/` | The project proposal (title, overview, architecture, scope, effort estimates). |
+| `ci/` | Pipeline docs: `devsecops-pipeline-plan.md` (DecSecOps rollout plan) and `backend-pipeline.md` (CI runbook — what runs when, how to run gates locally, how to fix a red check). |
+| `quality/` | `quality-gates.md`: the enforced threshold table (formatting, style, bugs, coverage, CVEs, secrets) and the exception process. |
 | `design/adr/` | Numbered Architecture Decision Records (`0001-monolith.md`, `0002-java-stack.md`, `0003-contract-in-repo.md`, …). Written *when decisions are made*, not reconstructed later — these feed the report's "key architectural decisions" section directly. |
 | `design/analysis/` | OOAD analysis artifacts: use case specifications, domain model, state machines — all diagrams in Mermaid so they diff and review like code. |
 | `design/architecture/` | High-level design: logical and deployment views, and the analysis→design transition strategy. |
@@ -151,7 +182,7 @@ Everything gradeable-in-writing lives here, versioned alongside the code it desc
 | `reports/final/` | The final project report sources. |
 | `presentation/` | Final presentation slides and assets. |
 
-### `docker-compose.yml` — Local Runtime Definition
+### `docker-compose.yaml` — Local Runtime Definition
 
 Defines the three local services — `postgres`, `backend`, `frontend` — their networking, environment, and health checks. Each service is independently startable, which is what enables the partial-stack dev modes described below. The frontend service is an nginx container serving the built bundle with a parameterized backend upstream (`BACKEND_URL`). This is a **local integration convenience only**: in the deployed architecture the frontend is static files on S3 behind CloudFront, and CloudFront behaviors — not nginx — perform the `/api/*` routing. The nginx config exists solely so the containerized stack is self-contained for demos and e2e runs.
 
@@ -163,7 +194,7 @@ Defines the three local services — `postgres`, `backend`, `frontend` — their
 
 They solve different problems:
 
-- **`docker-compose.yml` defines services** — what runs, how it's wired, which ports and env vars. It is a runtime description.
+- **`docker-compose.yaml` defines services** — what runs, how it's wired, which ports and env vars. It is a runtime description.
 - **The `Makefile` defines tasks** — the verbs of daily development. Many of these involve no container at all: generating the API client, running `mvn verify` on the local JVM, linting, checking contract drift, rendering sprint metrics.
 
 The Makefile is the **team's onboarding contract**. Five part-time engineers on different machines (macOS, Windows, Linux) each remember one thing: `make <verb>`. Nobody needs to recall whether tests run with `mvn verify` or `./mvnw test`, which directory to `cd` into, or which flags `openapi-typescript` needs. CI calls the *same targets*, which shrinks "works on my machine, fails in CI" drift to near zero.

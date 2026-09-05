@@ -10,21 +10,21 @@ package com.blocbuy.order.model;
  */
 public final class Order {
 
-  private final String id;
+    private final String id;
 
-  private Order(String id) {
-    if (id == null || id.isBlank()) {
-      throw new IllegalArgumentException("id must not be blank");
+    private Order(String id) {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("id must not be blank");
+        }
+        this.id = id;
     }
-    this.id = id;
-  }
 
-  /** Factory: objects are valid from birth. */
-  public static Order of(String id) {
-    return new Order(id);
-  }
+    /** Factory: objects are valid from birth. */
+    public static Order of(String id) {
+        return new Order(id);
+    }
 
-  public String id() {
-    return id;
-  }
+    public String id() {
+        return id;
+    }
 }

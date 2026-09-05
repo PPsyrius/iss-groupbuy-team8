@@ -1,0 +1,206 @@
+# Security scans: workflow/shell policy, secrets, dependency and deployment config, optional SAST.
+# The built backend image is scanned in ci-backend.yml before it can be published.
+name: security
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - "backend/**"
+      - "deployment/backend/**"
+      - "docker-compose.yaml"
+      - ".gitleaks.toml"
+      - ".github/workflows/**"
+  pull_request:
+    branches: [dev]
+    paths:
+      - "backend/**"
+      - "deployment/backend/**"
+      - "docker-compose.yaml"
+      - ".gitleaks.toml"
+      - ".github/workflows/**"
+  schedule:
+    - cron: '17 2 * * 1' # weekly Monday 02:17 UTC — catch newly published CVEs in unchanged deps
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  workflow-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Lint GitHub Actions and embedded shell
+        run: >-
+          docker run --rm
+          --volume "$GITHUB_WORKSPACE:/repo:ro"
+          --workdir /repo
+          rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+          -color
+
+  deployment-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Check deployment script syntax
+        run: bash -n deployment/backend/bin/*.sh
+
+      - name: ShellCheck deployment scripts
+        run: >-
+          docker run --rm
+          --entrypoint shellcheck
+          --volume "$GITHUB_WORKSPACE:/repo:ro"
+          koalaman/shellcheck-alpine@sha256:5921d946dac740cbeec2fb1c898747b6105e585130cc7f0602eec9a10f7ddb63
+          /repo/deployment/backend/bin/deploy.sh
+          /repo/deployment/backend/bin/health-check.sh
+          /repo/deployment/backend/bin/preflight.sh
+          /repo/deployment/backend/bin/rollback.sh
+
+      - name: Enforce backend-only Compose boundary
+        run: |
+          set -Eeuo pipefail
+          compose_json="$(docker compose \
+            --file deployment/backend/compose.yml \
+            config --no-interpolate --format json)"
+          jq -e '
+            (.services | keys == ["backend"]) and
+            (.services.backend.network_mode == "host") and
+            (.services.backend.environment.SPRING_PROFILES_ACTIVE == "ec2") and
+            ((.services.backend | has("ports")) | not) and
+            ((.services.backend | has("volumes")) | not)
+          ' <<< "$compose_json" >/dev/null
+
+      - name: Verify SSM bundle boundary and size
+        run: |
+          set -Eeuo pipefail
+          bundle_archive="${RUNNER_TEMP}/blocbuy-backend-deployment.tgz"
+          tar --create --gzip --file "$bundle_archive" \
+            --directory deployment/backend compose.yml bin
+          expected_entries="$(printf '%s\n' \
+            compose.yml bin/ bin/deploy.sh bin/health-check.sh bin/preflight.sh bin/rollback.sh \
+            | LC_ALL=C sort)"
+          bundle_entries="$(tar --list --gzip --file "$bundle_archive" | LC_ALL=C sort)"
+          if [[ "$bundle_entries" != "$expected_entries" ]]; then
+            echo "Deployment bundle contains an unexpected or missing file" >&2
+            printf '%s\n' "$bundle_entries" >&2
+            exit 1
+          fi
+          bundle_size="$(wc -c < "$bundle_archive" | tr -d ' ')"
+          ((bundle_size <= 9000)) \
+            || { echo "Deployment bundle exceeds the SSM inline transport limit"; exit 1; }
+          echo "Deployment bundle policy passed: $bundle_size bytes"
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read # gitleaks-action v3 lists PR commits to scope the scan on pull_request events
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0 # full history: a deleted secret is still a leaked secret
+
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # required by gitleaks-action v3 for pull_request events
+          GITLEAKS_CONFIG: .gitleaks.toml
+          GITLEAKS_ENABLE_COMMENTS: false # don't post PR comments; the job gate is enough
+
+  trivy-deps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven # cache ~/.m2 so dependency:go-offline is cheap on repeat runs
+
+      - name: Populate local Maven repository
+        # Trivy resolves pom.xml dependencies against ~/.m2 first; resolving here
+        # lets the scan run offline and avoids repo.maven.apache.org 429 blocks.
+        run: ./mvnw -B -q -f pom.xml dependency:go-offline -DskipTests
+        working-directory: backend
+
+      - name: Trivy filesystem scan (Maven dependencies)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.74.0
+          scan-type: fs
+          scan-ref: backend/
+          offline-scan: 'true' # never hit the remote Maven repository (429 blocks the whole job)
+          severity: HIGH,CRITICAL
+          limit-severities-for-sarif: 'true' # otherwise entrypoint drops the severity filter and LOW findings trip exit-code
+          ignore-unfixed: true # gate wording is "0 unfixed"; unfixed-pending CVEs don't fail
+          exit-code: '1'       # actually fail the job — default 0 only reports
+          format: sarif
+          output: trivy-fs.sarif
+
+      - name: Upload dependency scan SARIF
+        if: always()
+        continue-on-error: true # requires GHAS on private repos; job already gated by exit-code above
+        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          sarif_file: trivy-fs.sarif
+
+  trivy-config:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Trivy deployment configuration scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.74.0
+          scan-type: config
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          limit-severities-for-sarif: 'true' # otherwise entrypoint drops the severity filter and LOW findings trip exit-code
+          exit-code: '1'
+          format: sarif
+          output: trivy-config.sarif
+
+      - name: Upload deployment configuration SARIF
+        if: always()
+        continue-on-error: true # requires GHAS on private repos; console scan remains a hard gate
+        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          sarif_file: trivy-config.sarif
+
+  codeql:
+    # SAST for Java. Opt-in: enable with repo variable ENABLE_CODEQL=true.
+    # Requires GitHub Advanced Security on private repos (free on public repos).
+    # See docs/ci/devsecops-pipeline-plan.md Step 5.
+    if: vars.ENABLE_CODEQL == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read # only for private repos
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          languages: java-kotlin
+          build-mode: none # CodeQL traces compiled code itself; no Maven build needed
+
+      - uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          category: /language:java-kotlin

@@ -12,9 +12,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class UserRepositoryImpl implements UserRepository {
 
-  @Override
-  public Optional<User> findById(String id) {
-    // TODO(TEAM8-identity): select via UserMapper once the table exists
-    return Optional.empty();
-  }
+    @Override
+    public Optional<User> findById(String id) {
+        // TODO(TEAM8-identity): select via UserMapper once the table exists
+        return Optional.empty();
+    }
 }
