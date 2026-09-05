@@ -1,4 +1,4 @@
-# local: backend on host, PG/Redis on localhost (see docs/deploy/dev). Secrets via env only (D17).
+# local: backend on host, PG/Redis on localhost (see deployment/backend/README.md). Secrets via env only (D17).
 # NOTE (D8): database name is case-sensitive if created quoted; "Blocbuy" vs "blocbuy" — verify on
 # first connection and fix here if PostgreSQL reports the database does not exist.
 spring:
