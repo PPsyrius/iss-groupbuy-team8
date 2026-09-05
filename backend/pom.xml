@@ -43,7 +43,7 @@
     <sa-token.version>1.46.0</sa-token.version>
     <springdoc.version>2.9.0</springdoc.version>
     <springdoc-maven-plugin.version>1.5</springdoc-maven-plugin.version>
-    <archunit.version>1.4.2</archunit.version>
+    <archunit.version>1.5.0</archunit.version>
     <stripe-java.version>33.4.1</stripe-java.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <checkstyle.version>14.1.0</checkstyle.version>
