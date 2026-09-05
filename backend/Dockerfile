@@ -21,7 +21,7 @@ RUN mvn -B -q package -pl blocbuy-bootstrap -am \
       -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true
 
 # ---------- runtime ----------
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:25-jre
 WORKDIR /app
 
 # Base image ships pebble (Let's Encrypt's ACME test server) at /usr/bin/pebble —
