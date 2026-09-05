@@ -11,6 +11,12 @@ updates:
         patterns: ['org.springframework*']
       test:
         patterns: ['org.junit*', 'org.testcontainers*', 'com.tngtech.archunit*']
+    # Spring majors ride the deliberate Boot 4 migration, not Dependabot:
+    # Boot 4's BOM drops testcontainers version management and breaks Boot-3
+    # property overrides (tomcat.version etc.) — see parent pom CVE pins.
+    ignore:
+      - dependency-name: 'org.springframework*'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /
