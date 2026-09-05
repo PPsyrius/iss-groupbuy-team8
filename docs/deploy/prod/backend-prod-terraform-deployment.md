@@ -11,7 +11,7 @@ balancer, and host bootstrap are all declared as code and applied with `terrafor
 Run Command, extended with a release tag trigger and a mandatory approval gate
 
 This guide specifies the production counterpart of the existing
-[dev deployment](backend-ec2-pipeline-operator-guide.md). The application-delivery design (quality
+[dev deployment](../backend-ec2-pipeline-operator-guide.md). The application-delivery design (quality
 gates, immutable digests, OIDC, SSM Run Command, non-secret bundle, automatic rollback) is reused
 as-is; what changes is **who creates the environment**: the dev environment was bootstrapped with
 hand-run AWS CLI commands, the production environment is created by Terraform from this repository.
@@ -421,7 +421,7 @@ untracked, unreviewed root shell command. Production moves the file's contents t
 Store (SecureString) and lets the host render it:
 
 - `aws ssm put-parameter --name /blocbuy/prod/DB_USERNAME --type SecureString ...` for each key in
-  [`backend.env.example`](../../deployment/backend/backend.env.example) — one-time, from an admin
+  [`backend.env.example`](../../../deployment/backend/backend.env.example) — one-time, from an admin
   workstation; values never enter the repository or Terraform state;
 - the instance role gains `ssm:GetParameters` scoped to path `/blocbuy/prod/*`;
 - a small `bin/fetch-env.sh` (added to the deployment bundle alongside the existing four scripts,
@@ -588,5 +588,5 @@ the SSM parameter path all carry explicit `prod`/`Prod` markers.
 - [GitHub: Using environments for deployment](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments)
 - [AWS: IAM policy document data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document)
 - [AWS: SSM Parameter Store SecureString](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-secure-strings.html)
-- Dev delivery design: [backend-ec2-pipeline-operator-guide.md](backend-ec2-pipeline-operator-guide.md)
-- Dev first-deploy runbook: [backend-first-deploy-bootstrap.zh-CN.md](backend-first-deploy-bootstrap.zh-CN.md)
+- Dev delivery design: [backend-ec2-pipeline-operator-guide.md](../backend-ec2-pipeline-operator-guide.md)
+- Dev first-deploy runbook: [backend-first-deploy-bootstrap.zh-CN.md](../backend-first-deploy-bootstrap.zh-CN.md)

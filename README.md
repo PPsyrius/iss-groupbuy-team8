@@ -121,11 +121,13 @@ This repository will evolve alongside the project. Product decisions, project ar
 - [Existing EC2 backend deployment operator guide](docs/deploy/backend-ec2-pipeline-operator-guide.md)
 - [中文：现有 EC2 后端部署运维指南](docs/deploy/backend-ec2-pipeline-operator-guide.zh-CN.md)
 - [中文：首次部署一次性配置清单](docs/deploy/backend-first-deploy-bootstrap.zh-CN.md)
+- [Production backend deployment guide (Terraform IaC)](docs/deploy/prod/backend-prod-terraform-deployment.md)
 - [EC2 backend runtime bundle](deployment/backend/README.md)
 
-The current backend pipeline builds and scans one immutable image, publishes it to Amazon ECR, and
-deploys only the backend to the team's existing EC2 through AWS Systems Manager. Terraform-based
-infrastructure provisioning is intentionally deferred.
+The backend pipeline builds and scans one immutable image, publishes it to Amazon ECR, and deploys
+only the backend to the EC2 host through AWS Systems Manager. The development environment reuses a
+manually bootstrapped instance; the production environment is designed as Terraform-managed
+infrastructure per the guide above.
 
 ## Team
 
