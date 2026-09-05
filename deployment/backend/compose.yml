@@ -12,6 +12,11 @@ services:
       - ${BACKEND_ENV_FILE:-/etc/blocbuy/backend.env}
     environment:
       SPRING_PROFILES_ACTIVE: ec2
+      # /api prefix: CloudFront routes /api/* to the ALB origin; everything else stays on S3.
+      # Local health checks and the ALB target-group probe must use /api/actuator/health.
+      SERVER_SERVLET_CONTEXT_PATH: /api
+      # Honor X-Forwarded-Proto/Host from CloudFront/ALB so generated links stay https.
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
     labels:
       org.opencontainers.image.revision: ${BLOCBUY_GIT_SHA:-unknown}
       com.blocbuy.deployed-image: ${BACKEND_IMAGE}

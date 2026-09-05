@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-readonly BLOCBUY_HEALTH_URL="${BLOCBUY_HEALTH_URL:-http://127.0.0.1:8589/actuator/health}"
+readonly BLOCBUY_HEALTH_URL="${BLOCBUY_HEALTH_URL:-http://127.0.0.1:8589/api/actuator/health}"
 readonly BLOCBUY_HEALTH_ATTEMPTS="${BLOCBUY_HEALTH_ATTEMPTS:-30}"
 readonly BLOCBUY_HEALTH_INTERVAL_SECONDS="${BLOCBUY_HEALTH_INTERVAL_SECONDS:-3}"
 

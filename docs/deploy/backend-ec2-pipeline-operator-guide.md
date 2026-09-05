@@ -193,8 +193,9 @@ sudo ss -lnt | grep -E '127\.0\.0\.1:(5432|6379)'
 ```
 
 Expected permissions are `root:root 600`. PostgreSQL and Redis must not be exposed to the public
-internet. Restrict inbound port `8589` to the approved reverse proxy/load balancer security group or
-team test CIDRs; do not open database/cache ports in the EC2 security group.
+internet. Port `8589` must not be reachable from the public internet: deploy the CloudFront + ALB
+entry layer per [dev CloudFront deployment](dev-cloudfront-deployment.zh-CN.md) and allow inbound
+`8589` only from the ALB security group; do not open database/cache ports in the EC2 security group.
 
 After the first workflow has installed the bundle, run:
 
@@ -252,12 +253,13 @@ The deployment job is push-only and should not be a PR-required check.
 7. Inspect the `deploy-existing-ec2` job summary and SSM command output.
 
 The job publishes the image that was actually smoke-tested, captures its digest, sends the non-secret
-bundle to the one configured instance, and waits for `/actuator/health` to report `UP`.
+bundle to the one configured instance, and waits for `/api/actuator/health` to report `UP`.
 
-Verify independently:
+Verify independently through the CloudFront distribution (see
+[dev CloudFront deployment](dev-cloudfront-deployment.zh-CN.md)):
 
 ```bash
-curl --fail --silent https://api-dev.example.com/actuator/health
+curl --fail --silent https://<cloudfront-domain>/api/actuator/health
 
 aws ssm get-command-invocation \
   --command-id '<command-id-from-job-summary>' \
@@ -331,7 +333,7 @@ Useful host diagnostics:
 sudo docker ps --filter name=blocbuy-backend
 sudo docker logs --tail 200 blocbuy-backend
 sudo cat /opt/blocbuy/backend/state/current-image
-curl --fail --silent http://127.0.0.1:8589/actuator/health
+curl --fail --silent http://127.0.0.1:8589/api/actuator/health
 ```
 
 Do not paste `/etc/blocbuy/backend.env`, Docker credential files, or application secrets into GitHub

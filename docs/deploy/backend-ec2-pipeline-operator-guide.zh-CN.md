@@ -153,8 +153,9 @@ sudo stat -c '%U:%G %a %n' /etc/blocbuy/backend.env
 sudo ss -lnt | grep -E '127\.0\.0\.1:(5432|6379)'
 ```
 
-文件权限必须是 `root:root 600`。安全组不能向公网开放 PostgreSQL/Redis。端口 `8589` 只允许来自
-反向代理/负载均衡安全组或团队测试 CIDR。
+文件权限必须是 `root:root 600`。安全组不能向公网开放 PostgreSQL/Redis。端口 `8589` 禁止对公网开放：
+按 [dev CloudFront 部署教程](dev-cloudfront-deployment.zh-CN.md) 部署 CloudFront + ALB 入口层后，
+`8589` 入站只允许来自 ALB 安全组；数据库/缓存端口一律不要在 EC2 安全组开放。
 
 首次 Workflow 安装部署包后可执行：
 
@@ -210,7 +211,7 @@ Push-only 的部署 Job 不应设置为 PR Required Check。
 7. 检查 `deploy-existing-ec2` 的 Summary、digest 和 SSM 输出。
 
 ```bash
-curl --fail --silent https://api-dev.example.com/actuator/health
+curl --fail --silent https://<cloudfront-domain>/api/actuator/health
 ```
 
 当前 digest 记录在 `/opt/blocbuy/backend/state/current-image`。部署不会重启或删除 PostgreSQL/Redis。

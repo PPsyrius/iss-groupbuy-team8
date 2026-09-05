@@ -463,7 +463,7 @@ jobs:
           BACKEND_URL: ${{ vars.BACKEND_URL_DEV }}
         run: |
           set -Eeuo pipefail
-          health_url="${BACKEND_URL%/}/actuator/health"
+          health_url="${BACKEND_URL%/}/api/actuator/health"
           curl --fail --show-error --silent --connect-timeout 5 --max-time 10 \
             --retry 5 --retry-delay 3 "$health_url" \
             | grep -Eq '"status"[[:space:]]*:[[:space:]]*"UP"'
