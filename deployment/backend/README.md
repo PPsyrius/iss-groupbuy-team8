@@ -87,11 +87,13 @@ and previous immutable ECR images under `/opt/blocbuy/backend/state`. A legacy i
 deployed by digest may be used for immediate automatic rollback during the first release, but it is
 not retained as a selectable manual rollback target.
 
-Health is polled at `http://127.0.0.1:8589/actuator/health` for 90 seconds by default. Override the
+Health is polled at `http://127.0.0.1:8589/api/actuator/health` for 90 seconds by default (the
+backend serves everything under the `/api` servlet context on EC2 so CloudFront can route `/api/*`
+to the backend origin). Override the
 non-secret health settings when necessary:
 
 ```bash
-export BLOCBUY_HEALTH_URL=http://127.0.0.1:8589/actuator/health
+export BLOCBUY_HEALTH_URL=http://127.0.0.1:8589/api/actuator/health
 export BLOCBUY_HEALTH_ATTEMPTS=40
 export BLOCBUY_HEALTH_INTERVAL_SECONDS=3
 ```
