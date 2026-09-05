@@ -1,0 +1,592 @@
+# Production Backend Deployment Guide (Terraform IaC)
+
+**Status:** proposed design — pending team review before implementation
+
+**Environment:** `backend-prod` (a second, dedicated EC2 instance)
+
+**Provisioning model:** Terraform-managed infrastructure — IAM, ECR, EC2, security groups, load
+balancer, and host bootstrap are all declared as code and applied with `terraform apply`
+
+**Application delivery:** unchanged from dev — GitHub Actions -> Amazon ECR -> AWS Systems Manager
+Run Command, extended with a release tag trigger and a mandatory approval gate
+
+This guide specifies the production counterpart of the existing
+[dev deployment](backend-ec2-pipeline-operator-guide.md). The application-delivery design (quality
+gates, immutable digests, OIDC, SSM Run Command, non-secret bundle, automatic rollback) is reused
+as-is; what changes is **who creates the environment**: the dev environment was bootstrapped with
+hand-run AWS CLI commands, the production environment is created by Terraform from this repository.
+
+## 1. Why IaC for production — lessons from the dev bootstrap
+
+The dev deployment went live on 2026-09-05. Every incident during that first deployment traces to
+the same root cause: **the environment was assembled by hand, so reality drifted from the
+documented design**. Terraform removes that class of failure by construction:
+
+| Dev incident | Root cause | Production control (this guide) |
+|---|---|---|
+| OIDC role could not be assumed | Trust policy `sub` used the pre-2026-07 name-only format; the repo (created 2026-08-24) uses immutable subjects | Trust policy rendered by `data "aws_iam_policy_document"` from tfvars; `terraform plan` shows the exact `sub` before anything is created |
+| `ssm:SendCommand` AccessDenied | Live policy still contained the placeholder instance ID `i-0123456789abcdef0` — sed replacement was never applied | The instance ID is `aws_instance.backend.id`, a resource reference. A literal placeholder cannot exist in the rendered policy |
+| Instance missing `aws` CLI | Host prerequisites were a checklist item, not a machine state | `user_data` installs and verifies the full prerequisite set on first boot; preflight is exercised by the pipeline on every deploy |
+| Port 8589 open to `0.0.0.0/0` | Health check needed a path in; GitHub runner IPs are dynamic, so the group was opened wide | The only ingress reference for 8589 is the ALB security group ID; the workflow health check runs through SSM on the instance itself |
+| Variable naming mismatch, stray values | GitHub variables were edited by hand across sessions | All variable values are derived from `terraform output` and set with `gh variable set` in one scripted step |
+
+The general principle: **everything that was a "replace the placeholder, then verify by reading it
+back" instruction in the dev bootstrap becomes a code review of a rendered diff**.
+
+## 2. Architecture
+
+```text
+Release tag v* pushed (or workflow_dispatch)
+  ci-backend quality gates re-run on the tag
+    -> GitHub OIDC assumes BlocBuyGitHubEcrPushProd
+    -> image pushed to prod/blocbuy ECR, resolved to sha256 digest
+    -> protected backend-prod environment (required reviewers)
+    -> GitHub OIDC assumes BlocBuyGitHubBackendDeployProd
+    -> SSM installs the non-secret bundle under /opt/blocbuy/backend
+    -> deploy.sh pulls the digest and starts only blocbuy-backend
+    -> local health check (127.0.0.1:8589) inside deploy.sh; optional public check via ALB
+
+                    ┌─ ALB (internet, TLS optional) ─┐
+  users ─ HTTPS ───►│  listener :443 → target :8589  │
+                    └───────────────┬────────────────┘
+                                    │ SG: alb-sg → backend-sg (8589 only)
+                    ┌───────────────▼────────────────┐
+                    │ prod EC2 (Terraform-created)   │
+                    │  blocbuy-backend  host :8589   │◄─ SSM Run Command (deploy/rollback)
+                    │  PostgreSQL       127.0.0.1:5432│◄─ provisioned by user-data, not pipeline
+                    │  Redis            127.0.0.1:6379│◄─ provisioned by user-data, not pipeline
+                    │  secrets   /etc/blocbuy/backend.env (root:root 0600)
+                    └────────────────────────────────┘
+```
+
+Boundaries carried over from dev and unchanged:
+
+| Pipeline manages | Pipeline does not manage |
+|---|---|
+| Backend image build, scan, ECR publication, digest | EC2 lifecycle, AMI, EBS, VPC, security groups, ALB — **these become Terraform-managed** |
+| Backend Compose file and lifecycle scripts | PostgreSQL/Redis containers (Terraform/user-data-managed on the host) |
+| Backend container replacement and health check | Database backup, restore, or Flyway reversal |
+| Application rollback (automatic + approved manual) | DNS and TLS certificates (ACM) |
+
+Two boundaries are deliberately kept even though Terraform *could* cross them:
+
+1. **The deployment pipeline still owns only the backend container.** PostgreSQL and Redis on the
+   prod host are started by the Terraform user-data as a separate Compose project
+   (`blocbuy-infra`), so a pipeline deploy can never touch them.
+2. **Terraform creates the environment; the pipeline changes only the running image.** A prod
+   deploy never runs `terraform apply`, and a Terraform run never deploys an application image.
+
+## 3. Repository layout
+
+```text
+infra/terraform/
+├── backend-app-stack/            # one stack, applied per environment
+│   ├── main.tf                   # wires the modules below
+│   ├── variables.tf
+│   ├── outputs.tf                # everything the GitHub setup script needs
+│   ├── github-oidc.tf            # OIDC provider lookup + two prod roles
+│   ├── ecr.tf
+│   ├── network.tf                # VPC data sources, security groups, ALB + target group
+│   ├── ec2.tf                    # instance, instance profile, ECR-pull inline policy
+│   └── templates/
+│       └── user-data.sh.tftpl    # host bootstrap (prerequisites + infra Compose project)
+├── envs/
+│   ├── dev.tfvars                # future import of the existing dev resources (section 10)
+│   └── prod.tfvars               # the production environment this guide creates
+└── README.md
+```
+
+A single stack (rather than nested modules) keeps the first Terraform adoption reviewable in one
+PR. Split into modules only when a second consumer appears.
+
+State lives in S3 with DynamoDB locking, bootstrapped once per account (section 5.1).
+
+## 4. Values to collect
+
+| Variable | Example / actual | Source |
+|---|---|---|
+| `aws_account_id` | `402178232802` | existing account |
+| `aws_region` | `ap-southeast-1` | existing account |
+| `github_owner` / `github_owner_id` | `PPsyrius` / `19505219` | GitHub API; already verified for this repo |
+| `github_repo` / `github_repo_id` | `iss-groupbuy-team8` / `1344446887` | GitHub API; already verified for this repo |
+| `ecr_repository` | `prod/blocbuy` | new, created by this stack |
+| `release_branch` | `main` (or the branch that tags are cut from) | team decision |
+| `instance_type` | `t3.medium` (prod floor; dev runs smaller) | team decision |
+| `key_name` | EC2 key pair for break-glass SSH, or omitted if SSM-only | team decision |
+| ACM certificate ARN | existing cert, or none initially (see section 6.4) | team decision |
+
+The OIDC subject values are not guessed: they were decoded from a live workflow token on
+2026-09-05. Repositories created after 15 July 2026 (like this one) use the immutable format
+`repo:<owner>@<ownerID>/<repo>@<repoID>:<suffix>`.
+
+## 5. One-time setup
+
+### 5.1 Bootstrap the Terraform state backend
+
+Run once per AWS account from an administrator workstation (outside Terraform, like the OIDC
+provider in the dev bootstrap):
+
+```bash
+aws s3api create-bucket --bucket blocbuy-tfstate-402178232802 \
+  --region ap-southeast-1 --create-bucket-configuration LocationConstraint=ap-southeast-1
+aws s3api put-bucket-versioning --bucket blocbuy-tfstate-402178232802 \
+  --versioning-configuration Status=Enabled
+aws s3api put-bucket-encryption --bucket blocbuy-tfstate-402178232802 \
+  --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"aws:kms"}}]}'
+aws s3api put-public-access-block --bucket blocbuy-tfstate-402178232802 \
+  --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+
+aws dynamodb create-table --table-name blocbuy-tflock \
+  --attribute-definitions AttributeName=LockID,AttributeType=S \
+  --key-schema AttributeName=LockID,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST --region ap-southeast-1
+```
+
+### 5.2 OIDC provider
+
+The account already has the GitHub OIDC provider (created during the dev bootstrap). The stack
+looks it up instead of creating a second one:
+
+```hcl
+data "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+}
+```
+
+One provider per account, shared by dev and prod roles — the isolation between environments comes
+from the `sub` conditions, not from duplicate providers.
+
+## 6. The stack, component by component
+
+### 6.1 GitHub OIDC roles (placeholder-free by construction)
+
+```hcl
+locals {
+  github_repo_slug = "repo:${var.github_owner}@${var.github_owner_id}/${var.github_repo}@${var.github_repo_id}"
+}
+
+data "aws_iam_policy_document" "github_ecr_push_trust" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    principals {
+      type        = "Federated"
+      identifiers = [data.aws_iam_openid_connect_provider.github.arn]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["${local.github_repo_slug}:ref:refs/heads/${var.release_branch}"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "github_deploy_trust" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    principals {
+      type        = "Federated"
+      identifiers = [data.aws_iam_openid_connect_provider.github.arn]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["${local.github_repo_slug}:environment:backend-prod"]
+    }
+  }
+}
+```
+
+Both roles, their permission policies, and their attachments are declared in the same file. There
+is no sed step, no `.json.example`, and no post-create read-back ritual — `terraform plan` prints
+the exact trust documents before anything is created. Wildcards remain forbidden; if the plan shows
+a `sub` that does not match the formats above, the tfvars are wrong, not the policy.
+
+Role and policy names carry the `Prod` suffix (`BlocBuyGitHubEcrPushProd`,
+`BlocBuyGitHubBackendDeployProd`) so dev and prod roles are never confused in logs or reviews.
+
+### 6.2 ECR repository
+
+```hcl
+resource "aws_ecr_repository" "backend" {
+  name                 = var.ecr_repository # prod/blocbuy — separate from dev/blocbuy
+  image_tag_mutability = "IMMUTABLE"
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+resource "aws_ecr_lifecycle_policy" "backend" {
+  repository = aws_ecr_repository.backend.name
+  policy     = file("${path.module}/../../deployment/backend/ecr-lifecycle-policy.json")
+}
+```
+
+A separate repository keeps the dev ECR-push role unable to write prod images and gives prod its
+own retention budget. The lifecycle policy file is the one already committed for dev — one source
+of truth.
+
+### 6.3 Networking: security groups that reference, not enumerate
+
+```hcl
+resource "aws_security_group" "alb" {
+  name_prefix = "blocbuy-prod-alb-"
+  vpc_id      = data.aws_vpc.default.id
+  ingress {
+    description = "HTTPS from the internet"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "backend" {
+  name_prefix = "blocbuy-prod-backend-"
+  vpc_id      = data.aws_vpc.default.id
+  ingress {
+    description     = "Backend port from the ALB only"
+    from_port       = 8589
+    to_port         = 8589
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id] # <- reference, never a CIDR list
+  }
+  egress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_lb_target_group" "backend" {
+  name     = "blocbuy-prod-backend"
+  port     = 8589
+  protocol = "HTTP"
+  vpc_id   = data.aws_vpc.default.id
+  health_check {
+    path                = "/actuator/health"
+    matcher             = "200"
+    interval            = 15
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+  }
+}
+
+resource "aws_lb" "backend" {
+  name               = "blocbuy-prod"
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb.id]
+  subnets            = data.aws_subnets.public.ids
+}
+
+resource "aws_lb_target_group_attachment" "backend" {
+  target_group_arn = aws_lb_target_group.backend.arn
+  target_id        = aws_instance.backend.id
+  port             = 8589
+}
+```
+
+The dev incident of opening 8589 to the world cannot recur: the only ingress rule for 8589 names
+the ALB security group, and changing that requires a reviewed Terraform PR. SSH (22), PostgreSQL
+(5432), and Redis (6379) have **no** ingress rules at all — the host is reachable only through the
+ALB and SSM.
+
+### 6.4 TLS (decision point)
+
+- **Recommended:** an ACM certificate on the ALB listener once the team has a domain; add
+  `aws_acm_certificate` + validation + a `443` listener in `network.tf`.
+- **Interim (no domain yet):** an HTTP `:80` listener is acceptable for a course project, but the
+  Stripe live mode and any real user credentials require TLS before launch. Do not carry the HTTP
+  listener past the course.
+
+### 6.5 EC2 instance, instance profile, and ECR pull inline policy
+
+```hcl
+resource "aws_iam_role" "ec2_runtime" {
+  name = "BlocBuyEc2RuntimeProd"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+  managed_policy_arns = ["arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"]
+  inline_policy { # ECR pull scoped to exactly the prod repository — resource reference, no placeholder
+    name = "ecr-pull-prod-repository"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [{
+        Effect   = "Allow"
+        Action   = ["ecr:GetAuthorizationToken", "ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"]
+        Resource = aws_ecr_repository.backend.arn
+      }]
+    })
+  }
+}
+
+resource "aws_iam_instance_profile" "ec2_runtime" {
+  name = "BlocBuy-prod"
+  role = aws_iam_role.ec2_runtime.name
+}
+
+resource "aws_instance" "backend" {
+  ami                    = data.aws_ami.ubuntu_latest.id # pin to a specific AMI in prod.tfvars
+  instance_type          = var.instance_type
+  iam_instance_profile   = aws_iam_instance_profile.ec2_runtime.name
+  vpc_security_group_ids = [aws_security_group.backend.id]
+  user_data = templatefile("${path.module}/templates/user-data.sh.tftpl", {
+    ecr_registry = "${var.aws_account_id}.dkr.ecr.${var.aws_region}.amazonaws.com"
+  })
+  metadata_options {
+    http_tokens = "required" # IMDSv2 only
+  }
+  root_block_device {
+    volume_size = 30
+    encrypted   = true
+  }
+  tags = { Name = "blocbuy-prod-backend", ManagedBy = "terraform" }
+}
+```
+
+### 6.6 Host bootstrap: user-data replaces the prerequisite checklist
+
+`templates/user-data.sh.tftpl` makes the "host has Docker, Compose, AWS CLI v2" property part of
+the machine's definition. The dev bootstrap hit a dead deployment because this was a checklist
+line a human missed; in prod it is code that either runs at first boot or fails visibly in the
+`terraform apply` output:
+
+```bash
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# ---- prerequisites (the dev preflight list, made machine-enforced) ----
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y unzip curl ca-certificates gnupg docker.io docker-compose-v2
+
+cd /tmp
+curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+unzip -q awscliv2.zip && ./aws/install
+
+systemctl enable --now docker
+
+# ---- host-local PostgreSQL + Redis (blocbuy-infra project; pipeline never touches it) ----
+install -d -m 0750 /opt/blocbuy/infra /opt/blocbuy/backend/bin /opt/blocbuy/backend/state /etc/blocbuy
+cat > /opt/blocbuy/infra/compose.yml <<'EOF'
+name: blocbuy-infra
+services:
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    network_mode: host   # binds 127.0.0.1:5432 only (postgis not needed; matches dev)
+    environment:
+      POSTGRES_DB: Blocbuy
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  redis:
+    image: redis:8.10
+    restart: unless-stopped
+    network_mode: host
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+EOF
+chmod 0640 /opt/blocbuy/infra/compose.yml
+# Secrets are NOT templated here: see section 6.7 — they arrive via SSM Parameter Store.
+```
+
+The user-data deliberately does **not** create `/etc/blocbuy/backend.env`. Secrets never flow
+through Terraform state, user-data (which is readable on the instance), or GitHub.
+
+### 6.7 Secrets: SSM Parameter Store (upgrade from the dev hand-edited file)
+
+Dev keeps secrets in a hand-edited `/etc/blocbuy/backend.env`; every prod change to it would be an
+untracked, unreviewed root shell command. Production moves the file's contents to SSM Parameter
+Store (SecureString) and lets the host render it:
+
+- `aws ssm put-parameter --name /blocbuy/prod/DB_USERNAME --type SecureString ...` for each key in
+  [`backend.env.example`](../../deployment/backend/backend.env.example) — one-time, from an admin
+  workstation; values never enter the repository or Terraform state;
+- the instance role gains `ssm:GetParameters` scoped to path `/blocbuy/prod/*`;
+- a small `bin/fetch-env.sh` (added to the deployment bundle alongside the existing four scripts,
+  subject to the same bundle allowlist review) renders `/etc/blocbuy/backend.env` with
+  `root:root 0600` before each deploy and preflight run.
+
+`deploy.sh`, `preflight.sh`, `rollback.sh`, and `compose.yml` are reused unchanged. The prod stack
+only changes **where the env file comes from**, not how it is consumed or validated.
+
+### 6.8 Outputs: the only bridge to GitHub
+
+```hcl
+output "instance_id"          { value = aws_instance.backend.id }
+output "ecr_push_role_arn"    { value = aws_iam_role.github_ecr_push.arn }
+output "deploy_role_arn"      { value = aws_iam_role.github_deploy.arn }
+output "backend_url"          { value = "http://${aws_lb.backend.dns_name}" }
+```
+
+## 7. Pipeline extension
+
+The dev `ci-backend.yml` gains a second push-only deploy job, `deploy-existing-ec2-prod`, plus a
+release trigger. Structure mirrors the dev job exactly (validate step, bundle allowlist step, OIDC
+assume, SSM send, invocation polling) with three differences:
+
+1. **Trigger:** a release tag, not a branch push.
+
+   ```yaml
+   on:
+     push:
+       branches: [dev]
+       tags: ['v*']
+   ```
+
+   The deploy-prod job gates on `github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')`.
+   The existing dev deploy job's condition (`refs/heads/dev`) is untouched. Optionally add
+   `workflow_dispatch` with an input tag for break-fix releases.
+
+2. **Approval gate:** `environment: backend-prod` with required reviewers configured in GitHub
+   (section 8). The deploy pauses until a reviewer approves — this is the single biggest
+   dev/prod difference in the delivery flow.
+
+3. **Health check:** `deploy.sh` already polls `http://127.0.0.1:8589/actuator/health` on the host
+   and rolls back automatically on failure — in dev this was sufficient. The dev workflow's
+   *additional* public-URL check existed only because the runner had to prove reachability through
+   the security group, which is what forced `0.0.0.0/0` open. In prod the runner does **not** need
+   a public path: keep the SSM-invocation status check (which includes `deploy.sh` stdout, hence
+   the local health result), and optionally verify the ALB DNS name from the runner — the ALB is
+   public by design.
+
+Concurrency: its own group `deploy-existing-ec2-backend-prod`, `cancel-in-progress: false`, shared
+with the prod rollback workflow so a rollback and a deploy can never interleave on the host.
+
+The `rollback-backend.yml` workflow is extended the same way: a prod target selection with the
+`backend-prod` environment (reviewers required) and the `_PROD` variables.
+
+## 8. GitHub configuration (one scripted step, not a checklist)
+
+Create the `backend-prod` environment in Settings with:
+
+- required reviewers (at least two team members for prod);
+- deployment branches/tags: `v*` tags only.
+
+Then set every variable from Terraform outputs — the values are derived, never retyped:
+
+```bash
+terraform -chdir=infra/terraform output -json > /tmp/tf-outputs.json
+
+gh variable set AWS_ACCOUNT_ID  --body 402178232802
+gh variable set AWS_REGION      --body ap-southeast-1
+gh variable set ECR_REPOSITORY_PROD --body prod/blocbuy
+gh variable set AWS_ECR_PUSH_ROLE_ARN_PROD \
+  --body "$(jq -r .ecr_push_role_arn /tmp/tf-outputs.json)"
+
+# environment backend-prod
+gh variable set AWS_DEPLOY_ROLE_ARN_PROD --env backend-prod \
+  --body "$(jq -r .deploy_role_arn /tmp/tf-outputs.json)"
+gh variable set BACKEND_EC2_INSTANCE_ID_PROD --env backend-prod \
+  --body "$(jq -r .instance_id /tmp/tf-outputs.json)"
+gh variable set BACKEND_URL_PROD --env backend-prod \
+  --body "$(jq -r .backend_url /tmp/tf-outputs.json)"
+gh variable set ENABLE_EC2_DEPLOY_PROD --body false   # flip to true at step 9.4
+```
+
+No AWS access keys ever enter GitHub — OIDC issues short-lived credentials, exactly as in dev.
+
+## 9. First production deployment drill
+
+Ordered, with the freeze switch held closed until the last possible moment:
+
+1. `terraform init && terraform plan -var-file=envs/prod.tfvars` — review the rendered plan as a
+   team; specifically read both trust policies and the 8589 ingress rule.
+2. `terraform apply -var-file=envs/prod.tfvars` — creates IAM, ECR, SGs, ALB, and the EC2 host;
+   user-data completes at first boot.
+3. Verify from an admin workstation:
+
+   ```bash
+   aws ssm describe-instance-information \
+     --filters Key=InstanceIds,Values=$(terraform -chdir=infra/terraform output -raw instance_id) \
+     --region ap-southeast-1   # PingStatus must be Online
+   aws ec2 describe-security-groups ...   # confirm 8589 allows only the ALB SG
+   ```
+
+4. Seed secrets into Parameter Store (section 6.7), then set `ENABLE_EC2_DEPLOY_PROD=true`.
+5. Cut a release tag from the release branch: `git tag v0.1.0 && git push origin v0.1.0`.
+6. Quality gates re-run on the tag; the image is published to `prod/blocbuy` by digest.
+7. The `backend-prod` environment pauses for reviewer approval — approve it.
+8. Inspect the `deploy-existing-ec2-prod` job summary: digest, SSM command ID, status; confirm the
+   local health check passed inside the SSM stdout.
+9. Verify end-to-end through the ALB:
+
+   ```bash
+   curl --fail --silent "$(terraform -chdir=infra/terraform output -raw backend_url)/actuator/health"
+   ```
+
+10. Record the change in the team change log (environment creation is one Terraform PR plus one
+    apply — the PR itself is most of the audit evidence).
+
+## 10. Bringing the dev environment under Terraform (follow-up, optional)
+
+The existing dev resources predate Terraform and remain hand-managed until explicitly imported.
+When the team chooses to adopt that:
+
+1. add `envs/dev.tfvars` describing the dev environment as it exists (roles, `dev/blocbuy`,
+   instance security group);
+2. `terraform import` each resource into state — IAM roles first, then ECR, then the security
+   group;
+3. never import-and-change in the same PR: the first apply after import must be a no-op diff.
+
+Until then, the two environments coexist safely because prod role names, repository, SG names, and
+the SSM parameter path all carry explicit `prod`/`Prod` markers.
+
+## 11. Security invariants (unchanged from dev, restated for prod)
+
+- No long-lived AWS credentials in GitHub; OIDC only, with exact-match `sub` — never wildcards.
+- ECR publish and SSM deploy remain two separate roles; prod roles are separate from dev roles.
+- `ssm:SendCommand` stays scoped to `AWS-RunShellScript` on exactly the prod instance ID; SSM Run
+  Command executes as root — treat the deploy role as privileged.
+- Secrets live only in Parameter Store and `/etc/blocbuy/backend.env` (root:root 0600); never in
+  GitHub, Terraform state, user-data, workflow logs, or SSM command parameters.
+- PostgreSQL/Redis bind to loopback only; 8589 accepts traffic only from the ALB security group.
+- The deployment bundle allowlist (`compose.yml` + the four scripts) keeps applying — plus
+  `fetch-env.sh` if section 6.7 is adopted, which must go through the same review.
+- Application rollback cannot reverse Flyway migrations; every prod migration must be
+  backward-compatible.
+
+## 12. IaC practices checklist (for the course report)
+
+| Practice | Where it shows up |
+|---|---|
+| Declarative environment | Entire stack under `infra/terraform/`, reviewed as PRs |
+| Idempotent, re-runnable setup | `terraform plan/apply` replaces 60+ hand-run CLI commands |
+| No out-of-band configuration drift | SG rules, IAM policies, and trust conditions only change via PR |
+| Secrets out of code and state | Parameter Store SecureString; Terraform never sees values |
+| Immutable artifacts | Same digest-pinned ECR deployment as dev; tag-immutability enabled |
+| Least privilege by reference | Inline policies reference resource ARNs (`aws_ecr_repository...arn`, `aws_instance...id`) instead of literals |
+| Reproducibility | `envs/prod.tfvars` + pinned provider versions recreate the environment from scratch |
+| Audit trail | PR review + `terraform plan` in PR comments + CloudTrail + GitHub environment approvals |
+| Disaster recovery | `terraform apply` rebuilds the host; ECR lifecycle retains rollback digests; state bucket is versioned |
+
+## 13. Authoritative references
+
+- [Terraform: AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [Terraform: S3 backend](https://developer.hashicorp.com/terraform/language/backend/s3)
+- [GitHub: Using environments for deployment](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments)
+- [AWS: IAM policy document data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document)
+- [AWS: SSM Parameter Store SecureString](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-secure-strings.html)
+- Dev delivery design: [backend-ec2-pipeline-operator-guide.md](backend-ec2-pipeline-operator-guide.md)
+- Dev first-deploy runbook: [backend-first-deploy-bootstrap.zh-CN.md](backend-first-deploy-bootstrap.zh-CN.md)
