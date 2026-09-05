@@ -215,7 +215,7 @@ These must be repository variables because the image-publishing job does not use
 |---|---|---|
 | `AWS_ACCOUNT_ID` | `123456789012` | yes |
 | `AWS_REGION` | `ap-southeast-1` | yes |
-| `ECR_REPOSITORY` | `blocbuy-backend` | yes |
+| `ECR_REPOSITORY_DEV` | `dev/blocbuy` | yes |
 | `AWS_ECR_PUSH_ROLE_ARN` | `arn:aws:iam::123456789012:role/BlocBuyGitHubEcrPush` | yes |
 | `ENABLE_EC2_DEPLOY` | `false`, then `true` after validation | yes |
 
@@ -223,9 +223,9 @@ These must be repository variables because the image-publishing job does not use
 
 | Variable | Example | Required |
 |---|---|---|
-| `AWS_DEPLOY_ROLE_ARN` | `arn:aws:iam::123456789012:role/BlocBuyGitHubBackendDeploy` | yes |
-| `BACKEND_EC2_INSTANCE_ID` | `i-0123456789abcdef0` | yes |
-| `BACKEND_URL` | `https://api-dev.example.com` | optional |
+| `AWS_DEPLOY_ROLE_ARN_DEV` | `arn:aws:iam::123456789012:role/BlocBuyGitHubBackendDeploy` | yes |
+| `BACKEND_EC2_INSTANCE_ID_DEV` | `i-0123456789abcdef0` | yes |
+| `BACKEND_URL_DEV` | `https://api-dev.example.com` | optional |
 
 No AWS access key, secret access key, `BACKEND_DOT_ENV`, database password, Redis password, or Stripe
 key belongs in GitHub. AWS access is issued temporarily through OIDC; application secrets remain on

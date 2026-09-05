@@ -175,7 +175,7 @@ ECR 发布 Job 不引用 Environment，所以下列值必须是 Repository Varia
 |---|---|---|
 | `AWS_ACCOUNT_ID` | `123456789012` | 是 |
 | `AWS_REGION` | `ap-southeast-1` | 是 |
-| `ECR_REPOSITORY` | `blocbuy-backend` | 是 |
+| `ECR_REPOSITORY_DEV` | `dev/blocbuy` | 是 |
 | `AWS_ECR_PUSH_ROLE_ARN` | `arn:aws:iam::123456789012:role/BlocBuyGitHubEcrPush` | 是 |
 | `ENABLE_EC2_DEPLOY` | 验证完成前 `false`，之后 `true` | 是 |
 
@@ -183,9 +183,9 @@ ECR 发布 Job 不引用 Environment，所以下列值必须是 Repository Varia
 
 | Variable | 示例 | 必需 |
 |---|---|---|
-| `AWS_DEPLOY_ROLE_ARN` | `arn:aws:iam::123456789012:role/BlocBuyGitHubBackendDeploy` | 是 |
-| `BACKEND_EC2_INSTANCE_ID` | `i-0123456789abcdef0` | 是 |
-| `BACKEND_URL` | `https://api-dev.example.com` | 否 |
+| `AWS_DEPLOY_ROLE_ARN_DEV` | `arn:aws:iam::123456789012:role/BlocBuyGitHubBackendDeploy` | 是 |
+| `BACKEND_EC2_INSTANCE_ID_DEV` | `i-0123456789abcdef0` | 是 |
+| `BACKEND_URL_DEV` | `https://api-dev.example.com` | 否 |
 
 GitHub 中不需要任何长期 AWS Access Key，也不需要 `BACKEND_DOT_ENV`。AWS 凭证由 OIDC 临时签发。
 
