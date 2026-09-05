@@ -251,9 +251,11 @@ aws iam get-role --role-name "BlocBuyGitHubEcrPush" --query 'Role.Arn' --output 
 arn:aws:iam::402178232802:role/BlocBuyGitHubEcrPush
 ```
 
-示例文件的 `sub` 已填本仓库的 `repo:PPsyrius/iss-groupbuy-team8:ref:refs/heads/dev`。
-2026 年 7 月 15 日之后创建或启用 immutable OIDC subject 的仓库，`sub` 会改为包含 Owner ID 与
-Repository ID —— 创建 Role 前必须按仓库真实 subject 核对修正，不允许放宽为通配符。
+示例文件的 `sub` 已填本仓库实测的真实 subject（2026-09-05 用临时 workflow 解码 OIDC token 确认）：
+`repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:ref:refs/heads/dev`。
+2026 年 7 月 15 日之后创建或启用 immutable OIDC subject 的仓库，`sub` 采用
+`repo:<owner名>@<ownerID>/<repo名>@<repoID>:...` 的名称+ID 混合格式 —— 本仓库（创建于
+2026-08-24）即属此类。重建 Role 前仍须按仓库真实 subject 核对，不允许放宽为通配符。
 
 ### 3.3 创建 SSM 部署 Role（trust 限定 `backend-dev` environment）
 
