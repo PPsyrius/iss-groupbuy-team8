@@ -13,7 +13,7 @@ instance that already exists and already hosts PostgreSQL and Redis. It does not
 destroy EC2, VPC, subnet, security group, load balancer, PostgreSQL, Redis, or storage resources.
 
 For first-time environment setup, follow the step-by-step
-[first-deploy bootstrap checklist](backend-first-deploy-bootstrap.zh-CN.md) (Chinese); this guide
+[first-deploy bootstrap checklist](backend-first-deploy-bootstrap.md); this guide
 remains the authoritative policy reference.
 
 ## 1. Architecture and responsibility boundary
@@ -194,7 +194,7 @@ sudo ss -lnt | grep -E '127\.0\.0\.1:(5432|6379)'
 
 Expected permissions are `root:root 600`. PostgreSQL and Redis must not be exposed to the public
 internet. Port `8589` must not be reachable from the public internet: deploy the CloudFront + ALB
-entry layer per [dev CloudFront deployment](dev-cloudfront-deployment.zh-CN.md) and allow inbound
+entry layer per [dev CloudFront deployment](dev-cloudfront-deployment.md) and allow inbound
 `8589` only from the ALB security group; do not open database/cache ports in the EC2 security group.
 
 After the first workflow has installed the bundle, run:
@@ -256,7 +256,7 @@ The job publishes the image that was actually smoke-tested, captures its digest,
 bundle to the one configured instance, and waits for `/api/actuator/health` to report `UP`.
 
 Verify independently through the CloudFront distribution (see
-[dev CloudFront deployment](dev-cloudfront-deployment.zh-CN.md)):
+[dev CloudFront deployment](dev-cloudfront-deployment.md)):
 
 ```bash
 curl --fail --silent https://<cloudfront-domain>/api/actuator/health

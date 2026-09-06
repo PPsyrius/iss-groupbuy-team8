@@ -589,4 +589,4 @@ the SSM parameter path all carry explicit `prod`/`Prod` markers.
 - [AWS: IAM policy document data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document)
 - [AWS: SSM Parameter Store SecureString](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-secure-strings.html)
 - Dev delivery design: [backend-ec2-pipeline-operator-guide.md](../backend-ec2-pipeline-operator-guide.md)
-- Dev first-deploy runbook: [backend-first-deploy-bootstrap.zh-CN.md](../backend-first-deploy-bootstrap.zh-CN.md)
+- Dev first-deploy runbook: [backend-first-deploy-bootstrap.md](../backend-first-deploy-bootstrap.md)
