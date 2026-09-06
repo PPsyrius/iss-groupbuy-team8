@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# First-boot host bootstrap (design doc §6.6, extended per implementation plan §1.2).
+# Runs once per instance via cloud-init. Secrets arrive from SSM Parameter Store —
+# they are never templated into this script.
+set -Eeuo pipefail
+
+readonly BLOCBUY_PARAM_PREFIX='/blocbuy/prod'
+
+# ---- prerequisites (the dev preflight list, made machine-enforced) ----
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y unzip curl ca-certificates gnupg docker.io docker-compose-v2
+
+cd /tmp
+curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+unzip -q awscliv2.zip
+./aws/install
+rm -rf /tmp/awscliv2.zip /tmp/aws
+
+systemctl enable --now docker
+
+# ---- directories the pipeline's first bundle install lands in ----
+install -d -m 0750 /opt/blocbuy/infra /opt/blocbuy/backend/bin /opt/blocbuy/backend/state /etc/blocbuy
+
+# ---- fetch first-boot infra secrets from Parameter Store ----
+# Instance-profile credentials need a few seconds to propagate after first boot.
+params_json=''
+for _ in $(seq 1 30); do
+    if params_json="$(aws --region '${aws_region}' ssm get-parameters \
+            --names "$${BLOCBUY_PARAM_PREFIX}/POSTGRES_USER" \
+                     "$${BLOCBUY_PARAM_PREFIX}/POSTGRES_PASSWORD" \
+                     "$${BLOCBUY_PARAM_PREFIX}/REDIS_PASSWORD" \
+            --with-decryption --output json 2>/dev/null)"; then
+        break
+    fi
+    sleep 5
+done
+[[ -n "$params_json" ]] || { echo "Could not fetch infra secrets from Parameter Store" >&2; exit 1; }
+
+# Parse and render /etc/blocbuy/infra.env without echoing any value.
+BLOCBUY_PARAMS_JSON="$params_json" BLOCBUY_PARAM_PREFIX="$BLOCBUY_PARAM_PREFIX" python3 - <<'PY'
+import json
+import os
+import sys
+
+document = json.loads(os.environ["BLOCBUY_PARAMS_JSON"])
+prefix = os.environ["BLOCBUY_PARAM_PREFIX"]
+invalid = document.get("InvalidParameters") or []
+if invalid:
+    sys.exit("Missing SSM parameters: " + ", ".join(invalid))
+values = {p["Name"][len(prefix) + 1:]: p["Value"] for p in document.get("Parameters", [])}
+required = ["POSTGRES_USER", "POSTGRES_PASSWORD", "REDIS_PASSWORD"]
+for key in required:
+    value = values.get(key, "")
+    if not value or "replace-with-" in value or any(c in value for c in "\n\r"):
+        sys.exit("Parameter %s is empty or still contains a placeholder" % key)
+with open("/etc/blocbuy/infra.env", "w", encoding="utf-8") as handle:
+    for key in required:
+        handle.write("%s=%s\n" % (key, values[key]))
+PY
+chown root:root /etc/blocbuy/infra.env
+chmod 0600 /etc/blocbuy/infra.env
+
+# ---- host-local PostgreSQL + Redis (blocbuy-infra project; pipeline never touches it) ----
+# network_mode: host binds all interfaces by default, so both services are pinned
+# to loopback explicitly (implementation plan §0.3) — the images alone do not do it.
+cat > /opt/blocbuy/infra/compose.yml <<'EOF'
+name: blocbuy-infra
+services:
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    network_mode: host
+    command: ["postgres", "-c", "listen_addresses=127.0.0.1"]
+    environment:
+      POSTGRES_DB: Blocbuy
+      POSTGRES_USER: $${POSTGRES_USER:?set in /etc/blocbuy/infra.env}
+      POSTGRES_PASSWORD: $${POSTGRES_PASSWORD:?set in /etc/blocbuy/infra.env}
+  redis:
+    image: redis:8.10
+    restart: unless-stopped
+    network_mode: host
+    command: ["redis-server", "--bind", "127.0.0.1", "--requirepass", "$${REDIS_PASSWORD:?set in /etc/blocbuy/infra.env}"]
+EOF
+chmod 0640 /opt/blocbuy/infra/compose.yml
+chown root:root /opt/blocbuy/infra/compose.yml
+
+# --env-file feeds Compose variable substitution from the rendered secrets file.
+docker compose --project-directory /opt/blocbuy/infra \
+    --env-file /etc/blocbuy/infra.env up --detach
+
+# ---- self-verification: a failed bootstrap must be visible in the apply output ----
+ok=0
+for _ in $(seq 1 30); do
+    if timeout 3 bash -c '</dev/tcp/127.0.0.1/5432' 2>/dev/null \
+        && timeout 3 bash -c '</dev/tcp/127.0.0.1/6379' 2>/dev/null; then
+        ok=1
+        break
+    fi
+    sleep 5
+done
+if [[ "$ok" != 1 ]]; then
+    echo "PostgreSQL/Redis did not become reachable on loopback" >&2
+    docker compose --project-directory /opt/blocbuy/infra ps >&2 || true
+    exit 1
+fi
+
+if ss -lnt | grep -E ':(5432|6379)[[:space:]]' | grep -Ev '127\.0\.0\.1:(5432|6379)'; then
+    echo "PostgreSQL/Redis are listening on a non-loopback interface" >&2
+    exit 1
+fi
+
+docker info >/dev/null
+echo "BlocBuy prod host bootstrap complete: docker, AWS CLI, blocbuy-infra (loopback-only) healthy"

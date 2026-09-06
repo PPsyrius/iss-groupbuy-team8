@@ -10,6 +10,20 @@ The backend CI workflow packages this non-secret deployment bundle, publishes th
 ECR, and invokes `bin/deploy.sh` on the existing EC2 host through AWS Systems Manager. Runtime
 secrets remain in `/etc/blocbuy/backend.env` on the host and are never included in the bundle.
 
+## Secrets: dev vs prod
+
+- **Dev:** `/etc/blocbuy/backend.env` is hand-edited on the host (see "Install the bundle" below).
+- **Prod:** the file is rendered from SSM Parameter Store SecureStrings by `bin/fetch-env.sh`:
+
+  ```bash
+  sudo /opt/blocbuy/backend/bin/fetch-env.sh /blocbuy/prod
+  ```
+
+  The script fetches exactly the keys of `backend.env.example` in one `aws ssm get-parameters
+  --with-decryption` call, rejects missing or placeholder values, and writes the file atomically as
+  `root:root 0600`. The prod deploy job invokes it before every `deploy.sh` so secret rotation takes
+  effect on the next deploy. It is **never invoked on dev** — dev keeps its hand-edited file.
+
 ## Runtime model
 
 ```text
