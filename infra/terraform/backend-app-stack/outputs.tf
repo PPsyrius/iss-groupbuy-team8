@@ -17,7 +17,7 @@ output "deploy_role_arn" {
 }
 
 output "backend_url" {
-  description = "Public ALB URL -> GitHub BACKEND_URL_PROD (runbook appends the /api context path)"
+  description = "ALB URL — consumed as the CloudFront origin DomainName (runbook section 6.5). NOT GitHub BACKEND_URL_PROD: that variable is the CloudFront domain, set after the distribution exists"
   value       = "http${var.acm_certificate_arn != "" ? "s" : ""}://${aws_lb.backend.dns_name}"
 }
 

@@ -95,7 +95,7 @@ variable "key_name" {
 }
 
 variable "acm_certificate_arn" {
-  description = "Existing ACM certificate ARN for the ALB listener; empty string = interim HTTP :80 listener"
+  description = "ACM certificate ARN for the ALB listener (origin leg). Empty = CloudFront entry pattern: CloudFront built-in TLS, HTTP :80 origin. Setting it later upgrades the origin leg to HTTPS (design doc §6.4)."
   type        = string
   default     = ""
 

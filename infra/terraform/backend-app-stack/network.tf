@@ -1,18 +1,23 @@
 # Security groups that reference, never enumerate (design doc §6.3): the only
 # ingress for 8589 names the ALB security group, and ports 22/5432/6379 have no
 # ingress rules anywhere — the host is reachable only through the ALB and SSM.
+#
+# Entry layer = the dev CloudFront pattern (dev-cloudfront-deployment.md): user-facing
+# TLS terminates on CloudFront's built-in certificate, CloudFront forwards to the ALB
+# over HTTP with the shared X-Origin-Secret header, and the ALB's default listener
+# action is 403 — the ALB DNS name is publicly resolvable but useless without the secret.
 
 resource "aws_security_group" "alb" {
   name_prefix = "blocbuy-prod-alb-"
-  description = "BlocBuy prod ALB: public entry point"
+  description = "BlocBuy prod ALB: CloudFront origin only"
   vpc_id      = data.aws_vpc.default.id
 
   ingress {
-    description = "Public entry from the internet (443 with TLS, 80 interim without)"
-    from_port   = local.alb_listener_port
-    to_port     = local.alb_listener_port
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    description     = "Origin traffic from CloudFront only (managed prefix list)"
+    from_port       = local.alb_listener_port
+    to_port         = local.alb_listener_port
+    protocol        = "tcp"
+    prefix_list_ids = [data.aws_prefix_list.cloudfront_origin.id]
   }
 
   egress {
@@ -178,9 +183,19 @@ resource "aws_lb_target_group_attachment" "backend" {
   port             = 8589
 }
 
-# Interim HTTP :80 listener when no ACM certificate exists yet; switching to
-# HTTPS :443 is set acm_certificate_arn in tfvars and re-planning (design doc §6.4).
-# Stripe live mode requires the HTTPS switch before real users.
+# The shared CloudFront->ALB origin secret (dev pattern §2/§4.1). Seeded as a
+# SecureString in runbook section 3 BEFORE the first plan — this data source reads
+# it at plan time, so a missing parameter fails the plan, not the apply. The value
+# lands in tfstate; the state bucket is KMS-encrypted with public access fully
+# blocked, which is the accepted trade-off for keeping the entry layer in IaC.
+data "aws_ssm_parameter" "origin_secret" {
+  name = "/blocbuy/prod/ORIGIN_SECRET"
+}
+
+# HTTP :80 listener — CloudFront terminates user-facing TLS and forwards over
+# plain HTTP (OriginProtocolPolicy: http-only). Switching the origin leg to HTTPS
+# later means setting acm_certificate_arn (443/HTTPS) AND changing the CloudFront
+# origin protocol (dev-cloudfront-deployment.md §12).
 # tfsec:ignore:aws-0054
 resource "aws_lb_listener" "backend" {
   load_balancer_arn = aws_lb.backend.arn
@@ -188,8 +203,33 @@ resource "aws_lb_listener" "backend" {
   protocol          = local.alb_listener_protocol
   certificate_arn   = var.acm_certificate_arn != "" ? var.acm_certificate_arn : null
 
+  # Default-deny: anyone who learns the ALB DNS name and connects directly (not
+  # via CloudFront) gets a 403 — business endpoints are unreachable.
   default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "forbidden"
+      status_code  = "403"
+    }
+  }
+}
+
+# Only requests carrying the shared origin secret are forwarded to the backend.
+resource "aws_lb_listener_rule" "origin_secret" {
+  listener_arn = aws_lb_listener.backend.arn
+  priority     = 10
+
+  action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.backend.arn
+  }
+
+  condition {
+    http_header {
+      http_header_name = "X-Origin-Secret"
+      values           = [data.aws_ssm_parameter.origin_secret.value]
+    }
   }
 }

@@ -16,7 +16,7 @@ Manual AWS/GitHub steps: [backend-prod-operations-runbook.md](../../docs/deploy/
 |---|---|
 | `backend-app-stack/github-oidc.tf` | OIDC provider lookup + `BlocBuyGitHubEcrPushProd` / `BlocBuyGitHubBackendDeployProd` roles (exact-match `sub`, no wildcards) |
 | `backend-app-stack/ecr.tf` | `prod/blocbuy` ECR repository + shared lifecycle policy from `deployment/backend/` |
-| `backend-app-stack/network.tf` | ALB/backend security groups, ALB, target group (health path `/api/actuator/health`), listener |
+| `backend-app-stack/network.tf` | CloudFront-origin ALB security group (managed prefix list), backend SG (8589 from ALB only), target group (health path `/api/actuator/health`), default-403 listener + `X-Origin-Secret` forward rule, ALB access-log bucket |
 | `backend-app-stack/ec2.tf` | EC2 runtime role (SSM + ECR pull + `/blocbuy/prod/*` parameters), instance profile, instance |
 | `backend-app-stack/templates/user-data.sh.tftpl` | First-boot bootstrap: docker, AWS CLI v2, loopback-only PostgreSQL/Redis Compose project |
 
@@ -58,13 +58,16 @@ versions.
 ## Before the first plan
 
 1. Fill `envs/prod.tfvars`: pin the AMI (`ami_id`), confirm `release_branch` with the team.
-2. Seed every `/blocbuy/prod/*` Parameter Store SecureString (runbook section 3) — the
-   instance's user-data reads them at first boot, so they must exist **before** apply.
+2. Seed every `/blocbuy/prod/*` Parameter Store SecureString (runbook section 3) — including
+   `ORIGIN_SECRET`, which the stack's ALB listener rule reads **at plan time**, and the
+   first-boot parameters the instance's user-data needs. All must exist **before the plan**.
 3. Review the rendered plan against the runbook section 4 checklist (trust policies,
-   8589-from-ALB-only ingress, `/api/actuator/health` target-group path, IMDSv2).
+   8589-from-ALB-only ingress, CloudFront prefix list on the ALB SG, default-403 listener,
+   `/api/actuator/health` target-group path, IMDSv2).
 
 ## Outputs
 
-`instance_id`, `ecr_push_role_arn`, `deploy_role_arn`, `backend_url`, `backend_sg_name`,
-`target_group_arn` — consumed by the runbook's `gh variable set` step (section 6). No
-other bridge to GitHub exists.
+`instance_id`, `ecr_push_role_arn`, `deploy_role_arn`, `backend_url` (the ALB DNS — used as
+the CloudFront origin DomainName, not as `BACKEND_URL_PROD`), `backend_sg_name`,
+`target_group_arn` — consumed by the runbook's section 6 steps. No other bridge to GitHub
+exists.

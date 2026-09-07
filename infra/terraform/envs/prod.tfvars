@@ -28,6 +28,9 @@ ami_id = ""
 # Break-glass SSH key pair; empty = SSM-only access (recommended).
 key_name = ""
 
-# Empty = interim HTTP :80 listener on the ALB. Set an ACM certificate ARN to move
-# to HTTPS :443 (Stripe live mode requires TLS before real users).
+# CloudFront entry pattern (same as dev): user-facing TLS terminates on CloudFront's
+# built-in *.cloudfront.net certificate, the origin leg runs HTTP :80. Keep empty.
+# Set an ACM certificate ARN only to upgrade the origin leg to HTTPS :443 (requires
+# the domain route in dev-cloudfront-deployment.md §12 plus a CloudFront origin
+# protocol change). Stripe live mode is already served HTTPS by CloudFront.
 acm_certificate_arn = ""

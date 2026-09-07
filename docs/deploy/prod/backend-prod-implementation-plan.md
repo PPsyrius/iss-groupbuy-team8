@@ -50,7 +50,7 @@ infra/terraform/
 │   ├── outputs.tf           # instance_id, ecr_push_role_arn, deploy_role_arn, backend_url, backend_sg_name, target_group_arn
 │   ├── github-oidc.tf       # data lookup of existing OIDC provider + the two Prod roles (design doc §6.1)
 │   ├── ecr.tf               # prod/blocbuy repository + lifecycle policy (reuses deployment/backend/ecr-lifecycle-policy.json)
-│   ├── network.tf           # alb/backend security groups, ALB, target group (health path /api/actuator/health), listener
+│   ├── network.tf           # alb/backend security groups (CloudFront origin pattern), ALB, target group (health path /api/actuator/health), default-403 listener + secret-header rule
 │   ├── ec2.tf               # role (SSM + ECR pull + ssm:GetParameters on /blocbuy/prod/*), instance profile, instance
 │   └── templates/
 │       └── user-data.sh.tftpl
@@ -67,11 +67,13 @@ hand-managed until the team explicitly schedules the import.
 - **`github-oidc.tf`** — copy the trust documents from design doc §6.1 verbatim. The `sub` values
   interpolate `var.release_branch` (ECR push) and the fixed `environment:backend-prod` suffix
   (deploy). No `.json.example`, no sed, no wildcards.
-- **`network.tf`** — ingress rules exactly as §6.3: 443 from internet on the ALB SG; 8589 on the
+- **`network.tf`** — ingress rules exactly as §6.3 (CloudFront entry pattern): the ALB SG accepts
+  the CloudFront managed prefix list on the listener port only (no CIDR blocks); 8589 on the
   backend SG referencing `aws_security_group.alb.id` only; **no** rules for 22/5432/6379 anywhere.
-  TLS decision from the runbook drives `listener_port`/`protocol` (start with the interim HTTP :80
-  listener if no ACM cert exists — see design doc §6.4 — modeled as a variable so the later 443
-  switch is a tfvars + plan review, not a rewrite).
+  The listener is default-403 with a single `X-Origin-Secret` forward rule (secret read from
+  `/blocbuy/prod/ORIGIN_SECRET` at plan time — seed it **before the first plan**).
+  `acm_certificate_arn` drives `listener_port`/`protocol` for the later HTTPS-origin upgrade
+  (design doc §6.4); the CloudFront pattern keeps it empty and runs HTTP :80.
 - **`ec2.tf`** — one deviation from §6.5: the instance role needs a **second inline policy**
   granting `ssm:GetParameters` on `arn:aws:ssm:${region}:${account}:parameter/blocbuy/prod/*`
   (required by §6.7 fetch-env and by first-boot user-data). Everything else per §6.5: IMDSv2
@@ -181,8 +183,9 @@ thereby always "the image this run published".
   re-validates permissions and placeholders, unchanged);
 - final health verification: keep the SSM invocation status check (deploy.sh already runs the
   local `127.0.0.1:8589` health check with automatic rollback); optionally curl
-  `${BACKEND_URL_PROD}/api/actuator/health` from the runner when the variable is set (the ALB is
-  public by design — this does not require any security-group opening).
+  `${BACKEND_URL_PROD}/actuator/health` from the runner when the variable is set —
+  `BACKEND_URL_PROD` is the CloudFront domain including the `/api` path (runbook section 6.5),
+  the same URL users hit, so no security-group opening is involved.
 
 **Dev job untouched except** the shared bundle-allowlist line from Phase 2.
 

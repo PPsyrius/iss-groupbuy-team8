@@ -29,13 +29,16 @@ Decide and record the following — every later section references them:
 | `instance_type` | `t3.medium` minimum | Spring Boot + PostgreSQL + Redis on one host |
 | AMI | pin an Ubuntu 24.04 AMI ID into `envs/prod.tfvars` | do not ship a wildcard lookup to prod |
 | `key_name` | omit (SSM-only) unless break-glass SSH is required | if set, the key pair must already exist |
-| TLS | ACM cert ARN, or interim HTTP `:80` listener | Stripe live mode requires TLS before real users |
+| TLS / entry layer | CloudFront entry pattern, same as dev — **no ACM certificate, no custom domain** | user-facing TLS is CloudFront's built-in certificate; the ALB is a private origin (section 6.5) |
+| Origin secret | `openssl rand -hex 32` — one new value, becomes `/blocbuy/prod/ORIGIN_SECRET` | shared CloudFront↔ALB; consumed by the listener rule at plan time |
 | `backend-prod` reviewers | at least **two** team members | prod approvals are never single-person |
 
 Secret values to prepare (all become Parameter Store SecureStrings in section 3): one PostgreSQL
 user/password (new — prod database is separate from dev), one Redis password, the Stripe API key
-and webhook secret, and the application `DB_URL`/credentials/Redis host-port exactly as
-[`backend.env.example`](../../../deployment/backend/backend.env.example) defines them.
+and webhook secret, the application `DB_URL`/credentials/Redis host-port exactly as
+[`backend.env.example`](../../../deployment/backend/backend.env.example) defines them, and one
+`X-Origin-Secret` value (`openssl rand -hex 32`) shared between the CloudFront distribution and
+the ALB listener rule.
 
 ## 1. One-time: Terraform state backend
 
@@ -81,9 +84,10 @@ Settings → Environments → New environment → `backend-prod`:
 
 ## 3. Seed secrets into SSM Parameter Store
 
-**Ordering note (differs from design doc §9): this must happen *before* `terraform apply`.** The
-instance's user-data starts PostgreSQL/Redis at first boot and reads these parameters
-immediately; applying before seeding produces a host whose infra Compose project failed at boot.
+**Ordering note: this must happen *before the first `terraform plan`*.** The stack reads
+`ORIGIN_SECRET` at plan time (the ALB listener rule references it), and the instance's user-data
+starts PostgreSQL/Redis at first boot using the other parameters — planning or applying before
+seeding fails on the first and produces a broken host on the second.
 
 All parameters are `SecureString`, path-prefixed `/blocbuy/prod/`:
 
@@ -99,6 +103,7 @@ All parameters are `SecureString`, path-prefixed `/blocbuy/prod/`:
 | `/blocbuy/prod/STRIPE_WEBHOOK_SECRET` | backend env (fetch-env.sh) |
 | `/blocbuy/prod/POSTGRES_USER` | infra compose (first boot) |
 | `/blocbuy/prod/POSTGRES_PASSWORD` | infra compose (first boot) |
+| `/blocbuy/prod/ORIGIN_SECRET` | ALB listener rule (at plan time) **and** the CloudFront distribution's origin header (section 6.5) |
 
 ```bash
 aws ssm put-parameter --name /blocbuy/prod/DB_PASSWORD \
@@ -106,7 +111,7 @@ aws ssm put-parameter --name /blocbuy/prod/DB_PASSWORD \
 # ... repeat for every row above
 ```
 
-- [ ] All ten parameters exist (`aws ssm describe-parameters --parameter-filters ...`)
+- [ ] All eleven parameters exist (`aws ssm describe-parameters --parameter-filters ...`)
 - [ ] No value was echoed to a terminal log, issue, or file inside the repository
 - [ ] `REDIS_HOST`=`127.0.0.1`, `REDIS_PORT`=`6379`, `DB_URL` points at `127.0.0.1:5432/Blocbuy`
       (host-local infra project), schema suffix identical to dev
@@ -129,6 +134,10 @@ dev bootstrap's "replace the placeholder then read it back" ritual):
       (ECR push) and `...:environment:backend-prod` (deploy) — exact match, no wildcards
 - [ ] Backend security group: the **only** ingress for 8589 references the ALB security group ID;
       no ingress for 22, 5432, or 6379 anywhere
+- [ ] ALB security group: ingress is the CloudFront managed prefix list
+      (`com.amazonaws.global.cloudfront.origin-facing`) on the listener port only — no CIDR blocks
+- [ ] ALB listener: default action is the 403 fixed response; exactly one rule (priority 10)
+      forwards on the `X-Origin-Secret` header match
 - [ ] EC2 role inline policies: ECR pull resource is the `prod/blocbuy` repository ARN;
       `ssm:GetParameters` resource is `parameter/blocbuy/prod/*` in this account/region
 - [ ] ALB target group health check path is `/api/actuator/health` (context path — see
@@ -172,13 +181,24 @@ aws ec2 describe-security-groups --region ap-southeast-1 \
 # ALB target health (after the first deploy there will be a target; before it, expect no targets)
 aws elbv2 describe-target-health --region ap-southeast-1 \
   --target-group-arn "$(terraform -chdir=infra/terraform output -raw target_group_arn)"
+
+# Origin chain: 403 without the secret header proves the default-deny listener before
+# CloudFront even exists. With the header, expect 503 before the first deploy (no healthy
+# target yet) and {"status":"UP"} after it.
+ALB_URL="$(terraform -chdir=infra/terraform output -raw backend_url)"
+ORIGIN_SECRET="$(aws ssm get-parameter --name /blocbuy/prod/ORIGIN_SECRET \
+  --with-decryption --query Parameter.Value --output text --region ap-southeast-1)"
+curl -s -o /dev/null -w '%{http_code}\n' "$ALB_URL/api/actuator/health"   # must print 403
+curl -s -o /dev/null -w '%{http_code}\n' -H "X-Origin-Secret: $ORIGIN_SECRET" \
+  "$ALB_URL/api/actuator/health"                                          # 503 now, 200 after first deploy
 ```
 
 - [ ] `PingStatus=Online`
 - [ ] PostgreSQL/Redis listening on `127.0.0.1` only
 - [ ] No unexpected ingress rules
 - [ ] `terraform output` prints `instance_id`, `ecr_push_role_arn`, `deploy_role_arn`,
-      `backend_url` — record all four for section 6
+      `backend_url` — record all four for section 6 (`backend_url` is the ALB DNS, consumed as
+      the CloudFront origin DomainName in section 6.5 — it is NOT `BACKEND_URL_PROD`)
 
 If SSM stays `ConnectionLost`: the agent needs a few minutes after instance-profile attachment;
 then check VPC endpoints/NAT (see dev operator guide section 13).
@@ -201,16 +221,49 @@ gh variable set AWS_DEPLOY_ROLE_ARN_PROD --env backend-prod \
   --body "$(jq -r .deploy_role_arn /tmp/tf-outputs.json)"
 gh variable set BACKEND_EC2_INSTANCE_ID_PROD --env backend-prod \
   --body "$(jq -r .instance_id /tmp/tf-outputs.json)"
-gh variable set BACKEND_URL_PROD --env backend-prod \
-  --body "$(jq -r .backend_url /tmp/tf-outputs.json)/api"
+# BACKEND_URL_PROD is set in section 6.5, after the CloudFront distribution exists —
+# it must be the CloudFront domain (what users hit), never the raw ALB URL.
 ```
 
 `AWS_ACCOUNT_ID` and `AWS_REGION` already exist from the dev setup — verify, do not re-create.
 No AWS access keys and no `BACKEND_DOT_ENV` belong on GitHub.
 
-- [ ] All six variables listed by `gh variable list` (and `--env backend-prod`) with values
+- [ ] All five variables listed by `gh variable list` (and `--env backend-prod`) with values
       exactly matching the Terraform outputs
 - [ ] `ENABLE_EC2_DEPLOY_PROD=false`
+
+### 6.5 One-time: the prod CloudFront distribution
+
+The entry layer mirrors the dev rework — follow
+[dev-cloudfront-deployment.md](../dev-cloudfront-deployment.md) sections 6–7 with prod values.
+The Terraform stack has already built the ALB half (prefix-list SG, default-403 listener,
+secret-header rule), so only the CloudFront side is manual:
+
+- **Origin `alb-backend`:** DomainName = `terraform output backend_url` (the ALB DNS),
+  `OriginProtocolPolicy: http-only`, custom header `X-Origin-Secret` = the value of
+  `/blocbuy/prod/ORIGIN_SECRET` (retrieve once on the admin workstation — never into a file
+  inside the repository)
+- **Cache behavior `/api/*` → `alb-backend`:** managed `CachingDisabled` + `AllViewerExceptHostHeader`
+  policies, `redirect-to-https` (the built-in `*.cloudfront.net` certificate — no ACM, no domain)
+- **Frontend (optional):** a separate prod S3 bucket + OAC follows dev sections 6–7 verbatim with
+  `blocbuy-prod-frontend-<account>` naming; skip it if the frontend is not served from this
+  distribution yet
+- **Distribution Comment:** `BlocBuy prod - frontend S3 + backend ALB (/api)` — the lookup below
+  matches on it exactly, as the dev tutorial does
+- **Do not** create a second ALB, target group, or listener — those are Terraform-owned
+
+Then set the last environment variable to the domain users actually hit:
+
+```bash
+DIST_DOMAIN="$(aws cloudfront list-distributions \
+  --query "DistributionList.Items[?Comment=='BlocBuy prod - frontend S3 + backend ALB (/api)'].DomainName" \
+  --output text)"
+gh variable set BACKEND_URL_PROD --env backend-prod --body "https://$DIST_DOMAIN/api"
+```
+
+- [ ] `curl --fail --silent "https://$DIST_DOMAIN/api/actuator/health"` returns `{"status":"UP"}`
+      (after the first deploy in section 7; 503/404 before it is expected)
+- [ ] `BACKEND_URL_PROD` lists as `https://<cloudfront-domain>/api` under `--env backend-prod`
 
 ## 7. First production deployment drill
 
@@ -233,10 +286,12 @@ Ordered; the freeze switch opens only at step 3:
 7. - [ ] Inspect the `deploy-existing-ec2-prod` job: bundle installed, `fetch-env.sh` rendered the
        env file, SSM command `Success`, **local health check passed inside the SSM stdout**
        (deploy.sh auto-rolls-back on failure — a Success status means the app was healthy)
-8. - [ ] End-to-end through the ALB:
+8. - [ ] End-to-end through the CloudFront domain (the same URL users hit):
 
        ```bash
-       curl --fail --silent \
+       curl --fail --silent "https://<prod-dist-domain>/api/actuator/health"
+       # And the negative control: direct-to-ALB without the secret must stay 403
+       curl -s -o /dev/null -w '%{http_code}\n' \
          "$(terraform -chdir=infra/terraform output -raw backend_url)/api/actuator/health"
        ```
 
@@ -277,6 +332,8 @@ secrets, verify webhook delivery after rotation.
 |---|---|
 | ECR push role cannot be assumed on a tag | `release_branch` in tfvars ≠ the branch the tag was cut from; or `ENABLE_EC2_DEPLOY_PROD` still false |
 | Deploy role cannot be assumed | `backend-prod` environment not restricted to `v*` tags, or environment variable typo'd |
+| CloudFront `/api/*` returns 502/503 | Origin secret mismatch: the distribution's `X-Origin-Secret` header ≠ `/blocbuy/prod/ORIGIN_SECRET` (a rotation done on one side only), or the target group has no healthy target |
+| Direct request to the ALB DNS name returns 403 | None — that is the design (default-deny listener); go through CloudFront or send the secret header |
 | SSM command never leaves Pending | Instance not Online (section 5), region mismatch between `AWS_REGION` and the stack |
 | `fetch-env.sh` fails: parameter missing | Section 3 incomplete — key list must match `backend.env.example` exactly |
 | User-data failed at first boot | Parameters seeded after apply (ordering violation — section 3), or instance-profile propagation; check console output / cloud-init logs |
