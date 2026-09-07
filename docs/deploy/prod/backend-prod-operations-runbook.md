@@ -73,7 +73,7 @@ aws dynamodb create-table --table-name blocbuy-tflock \
 The GitHub OIDC provider already exists from the dev bootstrap — the stack looks it up
 (`data "aws_iam_openid_connect_provider"`), never creates a second one.
 
-## 2. One-time: GitHub `backend-prod` environment
+## 2. One-time: GitHub environments (`backend-prod` and `backend-prod-publish`)
 
 Settings → Environments → New environment → `backend-prod`:
 
@@ -81,6 +81,15 @@ Settings → Environments → New environment → `backend-prod`:
 - [ ] **Deployment branches and tags:** selected → **tags matching `v*` only** — this is what
       makes the prod approval gate unreachable from branch pushes
 - [ ] No environment secrets and no environment variables yet (section 6 fills the variables)
+
+Then create `backend-prod-publish` (the ECR push role trusts this environment's OIDC subject —
+tag refs vary per release and can never be exact-matched):
+
+- [ ] **Required reviewers:** none — publishing to ECR is not a production mutation; the human
+      gate stays on `backend-prod` (the deploy)
+- [ ] **Deployment branches and tags:** selected → **tags matching `v*` only**
+- [ ] No environment secrets and no environment variables (the publish job reads repository
+      variables only)
 
 ## 3. Seed secrets into SSM Parameter Store
 
@@ -130,7 +139,7 @@ terraform plan -var-file=envs/prod.tfvars -out=prod.tfplan
 dev bootstrap's "replace the placeholder then read it back" ritual):
 
 - [ ] Both GitHub trust policies: `sub` equals
-      `repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:ref:refs/heads/<release_branch>`
+      `repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:environment:backend-prod-publish`
       (ECR push) and `...:environment:backend-prod` (deploy) — exact match, no wildcards
 - [ ] Backend security group: the **only** ingress for 8589 references the ALB security group ID;
       no ingress for 22, 5432, or 6379 anywhere
@@ -210,7 +219,8 @@ Requires the `gh` CLI with admin on `PPsyrius/iss-groupbuy-team8`:
 ```bash
 terraform -chdir=infra/terraform output -json > /tmp/tf-outputs.json
 
-# Repository-level variables (the docker job's prod publish step is not environment-scoped)
+# Repository-level variables (read by both the publish job and the deploy job, which
+# live in different environments — repository scope is what they share)
 gh variable set ECR_REPOSITORY_PROD     --body prod/blocbuy
 gh variable set AWS_ECR_PUSH_ROLE_ARN_PROD \
   --body "$(jq -r .ecr_push_role_arn /tmp/tf-outputs.json)"
@@ -280,8 +290,8 @@ Ordered; the freeze switch opens only at step 3:
        git tag v0.1.0 && git push origin v0.1.0
        ```
 
-5. - [ ] Gates re-run on the tag; `docker` job publishes to `prod/blocbuy` **by digest**
-       (check the job summary: image `repository@sha256:...`)
+5. - [ ] Gates re-run on the tag; the `publish-ecr-prod` job publishes to `prod/blocbuy`
+       **by digest** (check the job summary: image `repository@sha256:...`)
 6. - [ ] The `backend-prod` environment pauses — an assigned reviewer approves
 7. - [ ] Inspect the `deploy-existing-ec2-prod` job: bundle installed, `fetch-env.sh` rendered the
        env file, SSM command `Success`, **local health check passed inside the SSM stdout**
@@ -330,7 +340,7 @@ secrets, verify webhook delivery after rotation.
 
 | Symptom | Most likely cause |
 |---|---|
-| ECR push role cannot be assumed on a tag | `release_branch` in tfvars ≠ the branch the tag was cut from; or `ENABLE_EC2_DEPLOY_PROD` still false |
+| ECR push role cannot be assumed on a tag | `backend-prod-publish` environment missing or not restricted to `v*` tags (the role trusts the `environment:backend-prod-publish` subject, not a branch/tag ref); or `ENABLE_EC2_DEPLOY_PROD` still false |
 | Deploy role cannot be assumed | `backend-prod` environment not restricted to `v*` tags, or environment variable typo'd |
 | CloudFront `/api/*` returns 502/503 | Origin secret mismatch: the distribution's `X-Origin-Secret` header ≠ `/blocbuy/prod/ORIGIN_SECRET` (a rotation done on one side only), or the target group has no healthy target |
 | Direct request to the ALB DNS name returns 403 | None — that is the design (default-deny listener); go through CloudFront or send the secret header |

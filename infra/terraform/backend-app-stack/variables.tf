@@ -63,7 +63,7 @@ variable "ecr_repository" {
 }
 
 variable "release_branch" {
-  description = "Branch release tags (v*) are cut from; pinned in the ECR push trust policy"
+  description = "Branch release tags (v*) are cut from; a release-convention record (the ECR push trust uses the environment subject, see github-oidc.tf)"
   type        = string
 
   validation {

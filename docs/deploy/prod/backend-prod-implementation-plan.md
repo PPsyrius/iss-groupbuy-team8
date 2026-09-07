@@ -65,8 +65,9 @@ hand-managed until the team explicitly schedules the import.
 ### 1.2 Implementation notes per file
 
 - **`github-oidc.tf`** — copy the trust documents from design doc §6.1 verbatim. The `sub` values
-  interpolate `var.release_branch` (ECR push) and the fixed `environment:backend-prod` suffix
-  (deploy). No `.json.example`, no sed, no wildcards.
+  are the fixed `environment:backend-prod-publish` suffix (ECR push — tag-name refs can never be
+  exact-matched, so the publish identity is an environment subject) and the fixed
+  `environment:backend-prod` suffix (deploy). No `.json.example`, no sed, no wildcards.
 - **`network.tf`** — ingress rules exactly as §6.3 (CloudFront entry pattern): the ALB SG accepts
   the CloudFront managed prefix list on the listener port only (no CIDR blocks); 8589 on the
   backend SG referencing `aws_security_group.alb.id` only; **no** rules for 22/5432/6379 anywhere.
@@ -149,25 +150,32 @@ on:
     tags: ['v*']   # path/branch filters are not evaluated for tag pushes
 ```
 
-**`docker` job — dual-target publication.** The build/smoke/scan steps are unchanged. The four
-ECR steps (validate / assume / login / publish) currently gate on
-`push && refs/heads/dev && ENABLE_EC2_DEPLOY`; they become event-aware:
+**`docker` job — dev-only publication.** The build/smoke/scan steps are unchanged. The four
+ECR steps (validate / assume / login / publish) gate on
+`push && refs/heads/dev && ENABLE_EC2_DEPLOY` and publish only to the dev repository. On `v*` tag
+pushes the job additionally exports the built image as a run artifact (`docker save` +
+upload-artifact) so the prod publish job never rebuilds the expensive multi-stage image.
 
-| Event | Repository | Push role | Enable switch |
-|---|---|---|---|
-| push to `dev` | `vars.ECR_REPOSITORY_DEV` | `vars.AWS_ECR_PUSH_ROLE_ARN` | `ENABLE_EC2_DEPLOY` |
-| tag `v*` | `vars.ECR_REPOSITORY_PROD` | `vars.AWS_ECR_PUSH_ROLE_ARN_PROD` | `ENABLE_EC2_DEPLOY_PROD` |
+**New `publish-ecr-prod` job** — prod publication lives here, not in `docker`:
 
-Implement as job-level `env:` selection (`if` expressions or a small `outputs` step), keeping the
-existing digest-verification logic identical for both targets. The job's `image_uri` output is
-thereby always "the image this run published".
+- `needs: [build-quality, contract-check, sonar, docker]` with the same `always() && ...result`
+  gating chain as the dev deploy job;
+- condition: `github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') &&
+  vars.ENABLE_EC2_DEPLOY_PROD == 'true'`;
+- `environment: backend-prod-publish` (v* tags only, **no** reviewers — publishing to ECR is not
+  a production mutation; the human gate stays on the deploy job). This environment subject is
+  what the ECR push role trusts (design doc §6.1): a tag-name `ref` subject varies per release
+  and can never be exact-matched, so an environment subject is the only exact-match option;
+- steps: download the image artifact, `docker load`, then the same four ECR steps as dev
+  (validate / assume / login / publish by digest) against `vars.ECR_REPOSITORY_PROD` and
+  `vars.AWS_ECR_PUSH_ROLE_ARN_PROD`; outputs `image_uri`.
 
 **New `deploy-existing-ec2-prod` job:**
 
-- `needs: [build-quality, contract-check, sonar, docker]` with the same `always() && ...result`
-  gating chain as the dev job;
+- `needs: [build-quality, contract-check, sonar, docker, publish-ecr-prod]` with the same
+  `always() && ...result` gating chain as the dev job;
 - condition adds `github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') &&
-  vars.ENABLE_EC2_DEPLOY_PROD == 'true' && needs.docker.outputs.image_uri != ''`;
+  vars.ENABLE_EC2_DEPLOY_PROD == 'true' && needs.publish-ecr-prod.outputs.image_uri != ''`;
 - `environment: backend-prod`, `url: ${{ vars.BACKEND_URL_PROD }}` — this is the approval gate;
 - `concurrency: deploy-existing-ec2-backend-prod`, `cancel-in-progress: false`;
 - variables: `ECR_REPOSITORY_PROD`, `AWS_DEPLOY_ROLE_ARN_PROD`, `BACKEND_EC2_INSTANCE_ID_PROD`
@@ -211,8 +219,8 @@ thereby always "the image this run published".
 
 - [ ] `workflow-lint` green; YAML validated with actionlint if available
 - [ ] A `v*` tag push to a throwaway ref (or `github.event_name` simulation) shows: gates run,
-      docker job publishes to `ECR_REPOSITORY_PROD`, prod deploy job correctly skipped while
-      `ENABLE_EC2_DEPLOY_PROD=false`
+      `publish-ecr-prod` publishes to `ECR_REPOSITORY_PROD`, prod deploy job correctly skipped
+      while `ENABLE_EC2_DEPLOY_PROD=false`
 - [ ] A dev push after merge behaves identically to before (no regression in dev deploy)
 
 ## 4. Phase 4 — Freeze switch rehearsal

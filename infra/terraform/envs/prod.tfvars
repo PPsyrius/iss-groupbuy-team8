@@ -23,7 +23,7 @@ release_branch = "dev"
 # plan cannot run before a human pins the AMI.
 #   aws ssm get-parameters-by-path --path /aws/service/canonical/ubuntu/server/24.04/stable/current \
 #     --region ap-southeast-1 --query "Parameters[?starts_with(Name, 'amd64')].Value" --output text
-ami_id = ""
+ami_id = "ami-0ba4172b23e57d5a8"
 
 # Break-glass SSH key pair; empty = SSM-only access (recommended).
 key_name = ""

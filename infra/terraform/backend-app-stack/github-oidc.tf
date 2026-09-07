@@ -2,6 +2,12 @@
 # The account-wide OIDC provider already exists from the dev bootstrap; this stack
 # only looks it up. Isolation between dev and prod comes from the exact-match `sub`
 # conditions, never from wildcard patterns.
+#
+# The ECR push role is assumed by the `publish-ecr-prod` workflow job, which publishes
+# on `v*` tag pushes. Tag names vary per release, so a `ref:refs/tags/...` subject can
+# never be exact-matched; the job therefore carries the stable `environment:` subject
+# `backend-prod-publish` (restricted to `v*` tags in GitHub, no reviewers — the human
+# approval gate stays on the deploy job's `backend-prod` environment).
 
 data "aws_iam_openid_connect_provider" "github" {
   url = "https://token.actions.githubusercontent.com"
@@ -25,7 +31,7 @@ data "aws_iam_policy_document" "github_ecr_push_trust" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["${local.github_repo_slug}:ref:refs/heads/${var.release_branch}"]
+      values   = ["${local.github_repo_slug}:environment:backend-prod-publish"]
     }
   }
 }

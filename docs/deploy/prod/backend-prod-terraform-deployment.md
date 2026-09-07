@@ -174,6 +174,11 @@ from the `sub` conditions, not from duplicate providers.
 
 ### 6.1 GitHub OIDC roles (placeholder-free by construction)
 
+The ECR push role is assumed by the `publish-ecr-prod` workflow job, which publishes on `v*` tag
+pushes. Tag names vary per release, so a `ref:refs/tags/...` subject can never be exact-matched —
+the job carries the stable `environment:backend-prod-publish` subject instead (the GitHub
+environment is restricted to `v*` tags; see section 8).
+
 ```hcl
 locals {
   github_repo_slug = "repo:${var.github_owner}@${var.github_owner_id}/${var.github_repo}@${var.github_repo_id}"
@@ -194,7 +199,7 @@ data "aws_iam_policy_document" "github_ecr_push_trust" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["${local.github_repo_slug}:ref:refs/heads/${var.release_branch}"]
+      values   = ["${local.github_repo_slug}:environment:backend-prod-publish"]
     }
   }
 }
@@ -520,9 +525,10 @@ output "backend_url"          { value = "http://${aws_lb.backend.dns_name}" }
 
 ## 7. Pipeline extension
 
-The dev `ci-backend.yml` gains a second push-only deploy job, `deploy-existing-ec2-prod`, plus a
-release trigger. Structure mirrors the dev job exactly (validate step, bundle allowlist step, OIDC
-assume, SSM send, invocation polling) with three differences:
+The dev `ci-backend.yml` gains a tag-path publish job (`publish-ecr-prod`) and a push-only deploy
+job (`deploy-existing-ec2-prod`), plus a release trigger. The deploy job mirrors the dev job
+exactly (validate step, bundle allowlist step, OIDC assume, SSM send, invocation polling). The
+release path differs from the dev path in four ways:
 
 1. **Trigger:** a release tag, not a branch push.
 
@@ -533,15 +539,22 @@ assume, SSM send, invocation polling) with three differences:
        tags: ['v*']
    ```
 
-   The deploy-prod job gates on `github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')`.
+   Both prod jobs gate on `github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')`.
    The existing dev deploy job's condition (`refs/heads/dev`) is untouched. Optionally add
    `workflow_dispatch` with an input tag for break-fix releases.
 
-2. **Approval gate:** `environment: backend-prod` with required reviewers configured in GitHub
+2. **Prod publish is its own environment-scoped job:** `publish-ecr-prod` receives the built image
+   from the `docker` job as a run artifact (never rebuilt), assumes the ECR push role, and
+   publishes by digest. It carries `environment: backend-prod-publish` because the ECR push trust
+   is the stable `environment:` subject (section 6.1) — a tag-name `ref` subject could never be
+   exact-matched. The environment is restricted to `v*` tags and has no reviewers: publishing to
+   ECR is not a production mutation, and the human gate stays on the deploy.
+
+3. **Approval gate:** `environment: backend-prod` with required reviewers configured in GitHub
    (section 8). The deploy pauses until a reviewer approves — this is the single biggest
    dev/prod difference in the delivery flow.
 
-3. **Health check:** `deploy.sh` already polls `http://127.0.0.1:8589/actuator/health` on the host
+4. **Health check:** `deploy.sh` already polls `http://127.0.0.1:8589/actuator/health` on the host
    and rolls back automatically on failure — in dev this was sufficient. The dev workflow's
    *additional* public-URL check existed only because the runner had to prove reachability through
    the security group, which is what forced `0.0.0.0/0` open. In prod the runner does **not** need
@@ -560,6 +573,12 @@ The `rollback-backend.yml` workflow is extended the same way: a prod target sele
 Create the `backend-prod` environment in Settings with:
 
 - required reviewers (at least two team members for prod);
+- deployment branches/tags: `v*` tags only.
+
+Also create `backend-prod-publish` (the publish job's environment — its OIDC subject is what the
+ECR push role trusts, section 6.1) with:
+
+- no required reviewers (the human gate stays on `backend-prod`);
 - deployment branches/tags: `v*` tags only.
 
 Then set every variable from Terraform outputs — the values are derived, never retyped:
@@ -612,7 +631,8 @@ Ordered, with the freeze switch held closed until the last possible moment:
 7. Freeze rehearsal: push a throwaway tag `v0.0.0-rc1` — the gates must run while nothing
    publishes and nothing deploys. Only then set `ENABLE_EC2_DEPLOY_PROD=true`.
 8. Cut a release tag from the release branch: `git tag v0.1.0 && git push origin v0.1.0`.
-9. Quality gates re-run on the tag; the image is published to `prod/blocbuy` by digest.
+9. Quality gates re-run on the tag; `publish-ecr-prod` publishes the image to `prod/blocbuy` by
+   digest.
 10. The `backend-prod` environment pauses for reviewer approval — approve it.
 11. Inspect the `deploy-existing-ec2-prod` job summary: digest, SSM command ID, status; confirm the
     local health check passed inside the SSM stdout.

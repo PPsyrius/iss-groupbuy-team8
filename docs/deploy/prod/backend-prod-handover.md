@@ -23,8 +23,9 @@ Done (code, reviewed, `terraform fmt`/`validate` clean, shellcheck/actionlint cl
   ECR, CloudFront-origin ALB (managed prefix list + default-403 listener + `X-Origin-Secret`
   rule), EC2 instance with first-boot bootstrap (Docker, AWS CLI v2, loopback-only
   PostgreSQL/Redis Compose project).
-- Pipeline extension in `.github/workflows/` — tag-triggered prod publish (`v*` tags), the
-  `deploy-existing-ec2-prod` job behind the `backend-prod` approval environment, prod rollback
+- Pipeline extension in `.github/workflows/` — tag-triggered prod publish (`v*` tags): the
+  `publish-ecr-prod` job in the `backend-prod-publish` environment, then the
+  `deploy-existing-ec2-prod` job behind the `backend-prod` approval environment; prod rollback
   target, security scanning of `infra/terraform/**`.
 
 Not done (all manual, in order — sections 1 through 9 below):
@@ -76,7 +77,7 @@ If missing, create per runbook section 1: the versioned, KMS-encrypted, public-a
 bucket `blocbuy-tfstate-402178232802` and the DynamoDB lock table `blocbuy-tflock`
 (`LockID` hash key, PAY_PER_REQUEST, region `ap-southeast-1`).
 
-## 4. One-time: GitHub `backend-prod` environment
+## 4. One-time: GitHub environments (`backend-prod` and `backend-prod-publish`)
 
 Settings → Environments → New environment → `backend-prod`:
 
@@ -84,6 +85,14 @@ Settings → Environments → New environment → `backend-prod`:
 - **Deployment branches and tags:** selected → **tags matching `v*` only**. This is what makes
   the approval gate unreachable from branch pushes — do not skip it.
 - No secrets, no variables yet (section 8 fills the variables).
+
+Then create `backend-prod-publish` (the ECR push role trusts this environment's OIDC subject —
+tag refs vary per release and can never be exact-matched):
+
+- **Required reviewers:** none — publishing to ECR is not a production mutation; the human gate
+  stays on `backend-prod` (the deploy).
+- **Deployment branches and tags:** selected → **tags matching `v*` only**.
+- No secrets, no variables (the publish job reads repository variables only).
 
 ## 5. Seed ALL secrets into SSM Parameter Store — **before the first `terraform plan`**
 
@@ -130,8 +139,8 @@ terraform -chdir=backend-app-stack plan -var-file=../envs/prod.tfvars -out=prod.
 Read the plan against the runbook section 4 checklist before applying — specifically:
 
 - [ ] Both GitHub trust policies: `sub` equals
-      `repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:ref:refs/heads/dev` (ECR push) and
-      `...:environment:backend-prod` (deploy) — exact match, no wildcards
+      `repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:environment:backend-prod-publish`
+      (ECR push) and `...:environment:backend-prod` (deploy) — exact match, no wildcards
 - [ ] Backend SG: the only ingress for 8589 references the ALB SG; no 22/5432/6379 anywhere
 - [ ] ALB SG: ingress is the CloudFront managed prefix list on the listener port only — no CIDR
 - [ ] ALB listener: default 403; exactly one rule forwarding on `X-Origin-Secret`
@@ -223,8 +232,7 @@ gh variable set BACKEND_URL_PROD --env backend-prod --body "https://$DIST_DOMAIN
 1. **Rehearse closed:** push a throwaway tag `v0.0.0-rc1`. Expect: quality gates run, nothing
    publishes, nothing deploys (the freeze switch working). Verify the `security` workflow is
    green on that tag.
-2. Confirm the docker job did NOT push to `prod/blocbuy` and `deploy-existing-ec2-prod` did NOT
-   run.
+2. Confirm `publish-ecr-prod` did NOT run and `deploy-existing-ec2-prod` did NOT run.
 3. `gh variable set ENABLE_EC2_DEPLOY_PROD --body true`
 4. Cut the real release from the release branch (`dev`):
 
@@ -233,8 +241,8 @@ gh variable set BACKEND_URL_PROD --env backend-prod --body "https://$DIST_DOMAIN
    git tag v0.1.0 && git push origin v0.1.0
    ```
 
-5. Gates re-run on the tag; the docker job publishes to `prod/blocbuy` **by digest** (check the
-   job summary: `repository@sha256:...`).
+5. Gates re-run on the tag; the `publish-ecr-prod` job publishes to `prod/blocbuy` **by digest**
+   (check the job summary: `repository@sha256:...`).
 6. The `backend-prod` environment pauses — an assigned reviewer approves.
 7. Inspect `deploy-existing-ec2-prod`: bundle installed, `fetch-env.sh` rendered the env file,
    SSM command `Success` (deploy.sh auto-rolls-back on failure — `Success` means the app was
@@ -255,7 +263,7 @@ gh variable set BACKEND_URL_PROD --env backend-prod --body "https://$DIST_DOMAIN
 | Symptom | Most likely cause |
 |---|---|
 | `terraform plan` fails on a missing parameter | Section 5 incomplete — `ORIGIN_SECRET` must exist before the first plan |
-| ECR push role cannot be assumed on a tag | Tag not cut from `dev`, or `ENABLE_EC2_DEPLOY_PROD` still false |
+| ECR push role cannot be assumed on a tag | `backend-prod-publish` environment missing or not restricted to `v*` tags (the role trusts the `environment:backend-prod-publish` subject, not a branch/tag ref); or `ENABLE_EC2_DEPLOY_PROD` still false |
 | Deploy role cannot be assumed | `backend-prod` environment not restricted to `v*` tags, or a variable typo |
 | CloudFront `/api/*` returns 502/503 | Origin-secret mismatch (distribution header ≠ SSM parameter — a one-sided rotation), or no healthy target |
 | Direct request to the ALB DNS returns 403 | None — that is the design; go through CloudFront or send the secret header |
