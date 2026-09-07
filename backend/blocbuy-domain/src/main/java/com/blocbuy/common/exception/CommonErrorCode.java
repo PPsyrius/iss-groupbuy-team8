@@ -1,10 +1,12 @@
 package com.blocbuy.common.exception;
 
 /**
- * Cross-domain error codes. Domain-specific codes live in each domain's own {@code exception}
- * package; codes once published are never reused or redefined.
+ * Cross-domain status codes. {@link #SUCCESS} backs the {@code Result} envelope's success factory;
+ * the rest are failures. Domain-specific codes live in each domain's own {@code exception} package;
+ * codes once published are never reused or redefined.
  */
 public enum CommonErrorCode implements ErrorCode {
+    SUCCESS("COMMON_200_000", 200, "Success", "result.common.success"),
     BAD_REQUEST("COMMON_400_001", 400, "Invalid request", "error.common.badRequest"),
     VALIDATION_FAILED(
             "COMMON_400_002", 400, "Request validation failed", "error.common.validationFailed"),

@@ -7,7 +7,7 @@ Read this when handling HTTP interfaces, exceptions, authentication, permissions
 - Base paths use `/api/v1`; resources use lowercase plural nouns with necessary hierarchy, e.g. `GET /api/v1/orders/{orderId}`, `POST /api/v1/group-deals/{dealId}/participants`.
 - HTTP method semantics: GET queries without side effects; POST creates / non-idempotent actions; PUT fully replaces and is idempotent; PATCH applies partial changes; DELETE idempotently deletes. Genuine business actions may use sub-resources or action endpoints, such as `POST /orders/{id}/cancellations`; avoid `/cancelOrder`.
 - Create success returns `201 Created` with `Location`; asynchronous acceptance returns `202 Accepted`; successful no-body responses return `204 No Content`; validation errors 400; unauthenticated 401; forbidden 403; not found 404; state conflict/duplicate 409; failed concurrency precondition 412; rate limited 429.
-- Do not wrap every failure in HTTP 200. Errors use a unified Problem Details style structure; success responses may return DTOs directly - if the project already has a unified success envelope, keep it consistent but do not change HTTP status semantics.
+- Do not wrap every failure in HTTP 200. All JSON responses — success and failure — use the unified `Result` envelope (`code` / `data` / `message`, plus `errors` and `traceId` only when present); the HTTP status still carries the outcome and comes from the same `ErrorCode` enum. Project decision 2026-09-07: this supersedes the earlier RFC 9457 Problem Details body.
 - Path identifies resources; Query is for filtering, sorting, and pagination. Fields, sort keys, and include/expand must be whitelisted.
 - Lists must be paginated with a maximum page size; for deep pagination prefer stable sorting + cursor/keyset, with the response indicating `nextCursor`. Unbounded full-list queries must not be offered.
 - Times use ISO-8601 including timezone/offset; internally the server represents instants with `Instant`. Monetary amounts travel as decimal strings or smallest currency units with an explicit currency; JSON floating-point error is forbidden.
@@ -56,22 +56,20 @@ There must be a single main entry point `@RestControllerAdvice` handling at leas
 - Project exceptions for not-found, conflict, and rate limiting;
 - Unknown `Exception`: log one ERROR with traceId; clients only receive a generic 500.
 
-Suggested error body:
+Error and success bodies share the `Result` envelope (`com.blocbuy.common.web.Result`):
 
 ```json
 {
-  "type": "https://blocbuy.example/problems/order-state-conflict",
-  "title": "Order state conflict",
-  "status": 409,
   "code": "ORDER_409_001",
-  "detail": "Order state does not allow this operation",
-  "instance": "/api/v1/orders/123/cancellations",
+  "message": "Order state does not allow this operation",
   "traceId": "...",
   "errors": []
 }
 ```
 
-- `detail`/`errors` must not contain SQL, stack traces, internal paths, raw third-party responses, or sensitive information.
+Success shape: `{"code": "COMMON_200_000", "data": {...}, "message": "Success"}` (`data` absent when void; `errors`/`traceId` omitted unless present).
+
+- `message`/`errors` must not contain SQL, stack traces, internal paths, raw third-party responses, or sensitive information.
 - Expected 4xx usually does not log an ERROR stack; unknown 5xx is logged exactly once at the boundary. Repository, Service, and Controller must not repeatedly log the same exception at multiple layers.
 - If there is no global handler, you must report "missing global exception handling" and recommend building it first; ad-hoc catch-all handling in each Controller is not allowed.
 
