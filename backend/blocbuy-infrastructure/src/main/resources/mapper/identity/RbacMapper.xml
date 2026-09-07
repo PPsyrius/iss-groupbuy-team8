@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blocbuy.identity.persistence.RbacMapper">
+
+    <resultMap id="roleIdMap" type="java.util.UUID">
+        <id column="id" jdbcType="OTHER"/>
+    </resultMap>
+
+    <select id="selectActiveRoleIdByCode" resultMap="roleIdMap">
+        SELECT id
+        FROM sys_role
+        WHERE role_code = #{roleCode} AND deleted = false
+    </select>
+
+    <insert id="insertUserRole">
+        INSERT INTO rel_user_role (user_id, role_id)
+        VALUES (#{userId,jdbcType=OTHER}, #{roleId,jdbcType=OTHER})
+    </insert>
+
+    <select id="selectRoleCodesByUserId" resultType="string">
+        SELECT r.role_code
+        FROM rel_user_role ur
+        JOIN sys_user u ON u.id = ur.user_id AND u.deleted = false
+        JOIN sys_role r ON r.id = ur.role_id AND r.deleted = false
+        WHERE ur.user_id = #{userId,jdbcType=OTHER} AND ur.deleted = false
+    </select>
+
+    <select id="selectPermissionCodesByUserId" resultType="string">
+        SELECT DISTINCT p.perm_code
+        FROM rel_user_role ur
+        JOIN sys_user u ON u.id = ur.user_id AND u.deleted = false
+        JOIN sys_role r ON r.id = ur.role_id AND r.deleted = false
+        JOIN rel_role_permission rp ON rp.role_id = ur.role_id AND rp.deleted = false
+        JOIN sys_permission p ON p.id = rp.permission_id AND p.deleted = false
+        WHERE ur.user_id = #{userId,jdbcType=OTHER} AND ur.deleted = false
+    </select>
+
+</mapper>

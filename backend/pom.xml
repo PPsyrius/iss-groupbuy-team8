@@ -45,6 +45,8 @@
     <springdoc-maven-plugin.version>1.5</springdoc-maven-plugin.version>
     <archunit.version>1.5.0</archunit.version>
     <stripe-java.version>33.4.1</stripe-java.version>
+    <!-- Google OIDC client (id_token verification); verified against Maven Central 2026-09-07 -->
+    <google-api-client.version>2.9.1</google-api-client.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <checkstyle.version>14.1.0</checkstyle.version>
     <maven-enforcer-plugin.version>3.6.3</maven-enforcer-plugin.version>
@@ -115,6 +117,50 @@
         <groupId>com.stripe</groupId>
         <artifactId>stripe-java</artifactId>
         <version>${stripe-java.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.api-client</groupId>
+        <artifactId>google-api-client</artifactId>
+        <version>${google-api-client.version}</version>
+      </dependency>
+      <!-- convergence pins: google-api-client's own tree mixes google-http-client 1.43.3/1.45.0/2.0.0;
+           its direct 2.0.0 wins in Maven resolution, so pin the same effective versions -->
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client</artifactId>
+        <version>2.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client-gson</artifactId>
+        <version>2.0.0</version>
+      </dependency>
+      <!-- convergence pins matching Maven nearest-wins resolution of the google-api-client tree -->
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>33.1.0-jre</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.errorprone</groupId>
+        <artifactId>error_prone_annotations</artifactId>
+        <version>2.41.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-context</artifactId>
+        <version>1.70.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.checkerframework</groupId>
+        <artifactId>checker-qual</artifactId>
+        <version>3.55.1</version>
+      </dependency>
+      <!-- @SuppressFBWarnings for justified SpotBugs suppressions -->
+      <dependency>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-annotations</artifactId>
+        <version>${spotbugs.version}</version>
       </dependency>
       <dependency>
         <groupId>com.tngtech.archunit</groupId>

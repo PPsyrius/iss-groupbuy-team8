@@ -23,6 +23,8 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
   mapper-locations: classpath*:mapper/**/*.xml
+  # UUID <-> pg uuid handler (MyBatis core has none); see UuidTypeHandler
+  type-handlers-package: com.blocbuy.common.persistence
 
 sa-token:
   token-name: blocbuy-token
@@ -58,3 +60,11 @@ blocbuy:
       # secrets via environment only — never commit values
       api-key: ${STRIPE_API_KEY:}
       webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+  oauth:
+    google:
+      # secrets via environment only — never commit values; redirect-uri must match the Google console
+      client-id: ${GOOGLE_CLIENT_ID:}
+      client-secret: ${GOOGLE_CLIENT_SECRET:}
+      # no default here: non-local deployments MUST set GOOGLE_REDIRECT_URI explicitly
+      redirect-uri: ${GOOGLE_REDIRECT_URI:}
+      state-ttl-seconds: 300

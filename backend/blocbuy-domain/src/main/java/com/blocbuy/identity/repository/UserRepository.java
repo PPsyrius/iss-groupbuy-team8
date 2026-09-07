@@ -2,13 +2,27 @@ package com.blocbuy.identity.repository;
 
 import com.blocbuy.identity.model.User;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Repository port for the User aggregate (one repository per aggregate root). Implemented in the
- * infrastructure layer; DOs and MyBatis mappers never cross this boundary. TODO(TEAM8-identity):
- * add intent-named methods (e.g. findById, saveIfVersion) per use case.
+ * infrastructure layer; DOs and MyBatis mappers never cross this boundary. All queries filter
+ * soft-deleted rows.
  */
 public interface UserRepository {
 
-    Optional<User> findById(String id);
+    /** Active (non-deleted) user by primary key. */
+    Optional<User> findById(UUID id);
+
+    /** Active user by canonical email; the OAuth account-resolution lookup. */
+    Optional<User> findActiveByEmail(String email);
+
+    /** Inserts a new aggregate; the id is assigned by the domain factory (UUIDv7). */
+    void saveNew(User user);
+
+    /**
+     * Persists the login stamp. Zero affected rows means the user vanished mid-request and surfaces
+     * as {@link com.blocbuy.identity.exception.IdentityErrorCode#USER_NOT_FOUND}.
+     */
+    void updateLastLogin(User user);
 }
