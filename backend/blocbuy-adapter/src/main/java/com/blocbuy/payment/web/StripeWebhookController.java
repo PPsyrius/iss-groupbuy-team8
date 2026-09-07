@@ -1,11 +1,11 @@
 package com.blocbuy.payment.web;
 
 import com.blocbuy.common.constant.ApiConstants;
+import com.blocbuy.common.web.Result;
 import com.blocbuy.payment.service.PaymentAppService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -32,10 +32,10 @@ public class StripeWebhookController {
 
     /** Receives a Stripe event notification. */
     @PostMapping(value = "/stripe", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> handleStripeEvent(
+    public Result<Void> handleStripeEvent(
             @RequestBody String payload,
             @RequestHeader(name = STRIPE_SIGNATURE_HEADER) String signatureHeader) {
         paymentAppService.handleStripeWebhook(payload, signatureHeader);
-        return ResponseEntity.ok().build();
+        return Result.ok();
     }
 }

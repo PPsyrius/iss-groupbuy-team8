@@ -2,11 +2,13 @@ package com.blocbuy.identity.web;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.blocbuy.common.constant.ApiConstants;
+import com.blocbuy.common.web.Result;
 import com.blocbuy.identity.service.OAuthLoginAppService;
 import com.blocbuy.identity.service.OAuthLoginAppService.GoogleAuthorizeUrl;
 import com.blocbuy.identity.service.OAuthLoginAppService.OAuthLoginResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotBlank;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
@@ -45,17 +47,20 @@ public class AuthController {
 
     /**
      * Starts the Google consent flow: 302 to the provider authorization URL, plus the browser-
-     * session binding cookie. Public path.
+     * session binding cookie. Public path. Envelope-exempt: a redirect is a protocol handshake
+     * (Location + Set-Cookie headers), not a JSON resource response.
      */
     @Operation(summary = "Redirect to Google login")
     @GetMapping("/oauth2/google")
-    public ResponseEntity<Void> googleAuthorize() {
+    public ResponseEntity<Void> googleAuthorize(HttpServletRequest request) {
         GoogleAuthorizeUrl authorize = oAuthLoginAppService.createGoogleAuthorizeUrl();
         ResponseCookie bindingCookie =
                 ResponseCookie.from(OAUTH_STATE_COOKIE, authorize.stateBinding())
                         .httpOnly(true)
                         .sameSite("Lax")
-                        .path(ApiConstants.API_V1 + "/auth")
+                        // context-path (e.g. /api on dev) is part of the browser-visible path;
+                        // without it the cookie is never sent back to the callback
+                        .path(request.getContextPath() + ApiConstants.API_V1 + "/auth")
                         .build();
         return ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create(authorize.url()))
@@ -70,32 +75,33 @@ public class AuthController {
      */
     @Operation(summary = "Google OAuth2 callback — issues the session token")
     @GetMapping("/oauth2/google/callback")
-    public LoginResponse googleCallback(
+    public Result<LoginResponse> googleCallback(
             @RequestParam @NotBlank String code,
             @RequestParam @NotBlank String state,
             @CookieValue(name = OAUTH_STATE_COOKIE, required = false) String stateBinding) {
         OAuthLoginResult result = oAuthLoginAppService.loginWithGoogle(code, state, stateBinding);
         StpUtil.login(result.userId());
-        return new LoginResponse(
-                StpUtil.getTokenValue(),
-                result.userId().toString(),
-                result.nickname(),
-                result.avatarUrl());
+        return Result.ok(
+                new LoginResponse(
+                        StpUtil.getTokenValue(),
+                        result.userId().toString(),
+                        result.nickname(),
+                        result.avatarUrl()));
     }
 
     /** Current session; unauthenticated callers get 401 from the Sa-Token interceptor. */
     @Operation(summary = "Current logged-in user id")
     @GetMapping("/me")
-    public MeResponse me() {
-        return new MeResponse(StpUtil.getLoginIdAsString());
+    public Result<MeResponse> me() {
+        return Result.ok(new MeResponse(StpUtil.getLoginIdAsString()));
     }
 
     /** Logout: invalidates the current token. */
     @Operation(summary = "Logout")
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout() {
+    public Result<Void> logout() {
         StpUtil.logout();
-        return ResponseEntity.noContent().build();
+        return Result.ok();
     }
 
     /** Session view; never contains tokens or credentials. */

@@ -11,7 +11,7 @@ User ──HTTPS──► https://xxxx.cloudfront.net (CloudFront built-in certi
                   ├── /*      → S3 frontend bucket (private via OAC)
                   └── /api/*  → ALB (HTTP:80, accepts CloudFront origins only + secret header)
                                   └─► EC2:8589 (SG allows the ALB SG only)
-                                        └─► blocbuy-backend (host network, context-path=/api)
+                                        └─► blocbuy-backend (host network, /api path prefix)
 ```
 
 | Change | Before | After |
@@ -148,10 +148,16 @@ curl --fail --silent -H "X-Origin-Secret: $ORIGIN_SECRET" "http://$ALB_DNS/api/a
 curl -s -o /dev/null -w '%{http_code}\n' "http://$ALB_DNS/api/actuator/health"   # without the secret this must be 403
 ```
 
-## 5. Deploy the backend with the `/api` context-path
+## 5. Deploy the backend with the `/api` path prefix
 
-This repository already sets `SERVER_SERVLET_CONTEXT_PATH: /api` and
-`SERVER_FORWARD_HEADERS_STRATEGY: framework` in `deployment/backend/compose.yml`, and changed the default URL in `health-check.sh` to `http://127.0.0.1:8589/api/actuator/health`.
+> **Update (2026-09-07):** the `/api` prefix no longer comes from a servlet context-path
+> (`SERVER_SERVLET_CONTEXT_PATH` was removed from `compose.yml` — it doubled the prefix to
+> `/api/api/v1/...` against the controller mappings). It is now carried by the controller
+> mappings (`ApiConstants.API_V1`) plus the management base-path
+> (`management.endpoints.web.base-path: /api/actuator`) in `application.yml`. All URL shapes
+> described in this runbook are unchanged.
+
+This repository sets `SERVER_FORWARD_HEADERS_STRATEGY: framework` in `deployment/backend/compose.yml`, and the default URL in `health-check.sh` is `http://127.0.0.1:8589/api/actuator/health`.
 
 The deployment bundle (compose.yml + scripts) is delivered over SSM by every deploy workflow run, so all you need to do is **trigger one regular deployment** (merge a change to `dev` or manually re-run the deploy job of `ci-backend`, with `ENABLE_EC2_DEPLOY=true`). The changed compose environment variables force-recreate the container, so they take effect automatically.
 
@@ -385,10 +391,10 @@ gh variable set BACKEND_URL_DEV --body "https://$DIST_DOMAIN"
 
 | Item | Notes |
 |---|---|
-| Swagger | URL becomes `https://<cloudfront-domain>/api/swagger-ui.html` (context-path prefix) |
+| Swagger | URL is `https://<cloudfront-domain>/api/swagger-ui.html` (`springdoc.swagger-ui.path`) |
 | Stripe webhook | The callback URL needs the `/api` prefix (if a public webhook is configured) |
-| Local development | Unaffected: `application.yml` is unchanged; the `/api` prefix exists only in the EC2 compose environment variables |
-| CI smoke test | The docker smoke test in `ci-backend.yml` hits `localhost:8589/actuator/health` without the context-path, so it is unaffected |
+| Local development | Same URL shape as dev: `application.yml` carries the `/api` management/swagger paths for every profile |
+| CI smoke test | The docker smoke test in `ci-backend.yml` hits `localhost:8589/api/actuator/health` (management base-path applies to every boot) |
 | Direct ALB access | The ALB DNS name is publicly resolvable, but the default 403 plus the prefix-list security group provide dual protection — business endpoints cannot be reached |
 | prod environment | The ALB/target-group health-check paths in the prod Terraform guide should be updated to `/api/actuator/health` accordingly |
 
