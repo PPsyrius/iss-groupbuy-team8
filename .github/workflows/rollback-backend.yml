@@ -1,10 +1,18 @@
-# Controlled application rollback for the existing backend EC2 instance.
+# Controlled application rollback for the existing backend EC2 instances (dev and prod).
 # Database/Flyway rollback is deliberately out of scope: migrations must remain backward-compatible.
 name: rollback-backend
 
 on:
   workflow_dispatch:
     inputs:
+      target:
+        description: "Environment to roll back"
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - prod
       target_image:
         description: "Optional immutable ECR digest; leave blank to use the host's recorded previous image"
         required: false
@@ -24,6 +32,7 @@ permissions:
 
 jobs:
   rollback-existing-ec2:
+    if: inputs.target == 'dev'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -193,6 +202,189 @@ jobs:
         run: |
           set -Eeuo pipefail
           health_url="${BACKEND_URL%/}/api/actuator/health"
+          curl --fail --show-error --silent --connect-timeout 5 --max-time 10 \
+            --retry 5 --retry-delay 3 "$health_url" \
+            | grep -Eq '"status"[[:space:]]*:[[:space:]]*"UP"'
+
+  rollback-existing-ec2-prod:
+    if: inputs.target == 'prod'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    # Required reviewers on backend-prod gate a prod rollback the same way as a deploy.
+    environment:
+      name: backend-prod
+      url: ${{ vars.BACKEND_URL_PROD }}
+    concurrency:
+      # Shared with deploy-existing-ec2-prod so a rollback and a deploy can never interleave.
+      group: deploy-existing-ec2-backend-prod
+      cancel-in-progress: false
+    steps:
+      - name: Validate authorization, target, and confirmation
+        env:
+          AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_PROD }}
+          INSTANCE_ID: ${{ vars.BACKEND_EC2_INSTANCE_ID_PROD }}
+          DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN_PROD }}
+          RELEASE_BRANCH: ${{ vars.RELEASE_BRANCH }}
+          TARGET_IMAGE: ${{ inputs.target_image }}
+          ROLLBACK_REASON: ${{ inputs.reason }}
+          CONFIRM_ROLLBACK: ${{ inputs.confirm_rollback }}
+        run: |
+          set -Eeuo pipefail
+          # Prod releases are tagged from the release branch, but the release branch
+          # may also be rolled back to dev state — allow dispatch from either.
+          if [[ "$GITHUB_REF" != 'refs/heads/dev' ]]; then
+            [[ -n "$RELEASE_BRANCH" && "$GITHUB_REF" == "refs/heads/${RELEASE_BRANCH}" ]] \
+              || { echo "Prod rollback must be dispatched from the dev branch or the release branch (RELEASE_BRANCH variable)"; exit 1; }
+          fi
+          [[ "$CONFIRM_ROLLBACK" == 'true' ]] \
+            || { echo "confirm_rollback must be selected"; exit 1; }
+          reason_without_whitespace="${ROLLBACK_REASON//[[:space:]]/}"
+          [[ -n "$reason_without_whitespace" && ${#ROLLBACK_REASON} -le 256 ]] \
+            || { echo "reason must contain 1-256 non-whitespace characters"; exit 1; }
+
+          [[ "$AWS_ACCOUNT_ID" =~ ^[0-9]{12}$ ]] \
+            || { echo "AWS_ACCOUNT_ID must contain 12 digits"; exit 1; }
+          [[ "$AWS_REGION" =~ ^[a-z]{2}(-gov)?-[a-z]+-[0-9]$ ]] \
+            || { echo "AWS_REGION is invalid"; exit 1; }
+          [[ "$ECR_REPOSITORY" =~ ^[a-z0-9][a-z0-9._/-]+$ ]] \
+            || { echo "ECR_REPOSITORY_PROD is invalid"; exit 1; }
+          [[ "$INSTANCE_ID" =~ ^i-([a-f0-9]{8}|[a-f0-9]{17})$ ]] \
+            || { echo "BACKEND_EC2_INSTANCE_ID_PROD is invalid"; exit 1; }
+          [[ "$DEPLOY_ROLE_ARN" =~ ^arn:aws:iam::${AWS_ACCOUNT_ID}:role/[A-Za-z0-9+=,.@_/-]+$ ]] \
+            || { echo "AWS_DEPLOY_ROLE_ARN_PROD must be an IAM role in AWS_ACCOUNT_ID"; exit 1; }
+
+          if [[ -n "$TARGET_IMAGE" ]]; then
+            expected_repository="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}"
+            image_digest="${TARGET_IMAGE#"$expected_repository@"}"
+            [[ "$TARGET_IMAGE" == "$expected_repository@$image_digest" ]] \
+              || { echo "target_image repository does not match deployment configuration"; exit 1; }
+            [[ "$image_digest" =~ ^sha256:[a-f0-9]{64}$ ]] \
+              || { echo "target_image must be pinned by a valid digest"; exit 1; }
+          fi
+
+      - name: Assume existing-EC2 deployment role with GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN_PROD }}
+          aws-region: ${{ vars.AWS_REGION }}
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+          role-session-name: BlocBuy-Rollback-Prod-${{ github.run_id }}
+
+      - name: Roll back backend through SSM
+        env:
+          AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_PROD }}
+          INSTANCE_ID: ${{ vars.BACKEND_EC2_INSTANCE_ID_PROD }}
+          TARGET_IMAGE: ${{ inputs.target_image }}
+          ROLLBACK_REASON: ${{ inputs.reason }}
+        run: |
+          set -Eeuo pipefail
+          remote_script="${RUNNER_TEMP}/blocbuy-remote-rollback.sh"
+          request_file="${RUNNER_TEMP}/blocbuy-ssm-rollback-request.json"
+          invocation_file="${RUNNER_TEMP}/blocbuy-ssm-rollback-invocation.json"
+
+          {
+            echo 'set -Eeuo pipefail'
+            echo 'test -x /opt/blocbuy/backend/bin/rollback.sh'
+            if [[ -n "$TARGET_IMAGE" ]]; then
+              printf "BLOCBUY_EXPECTED_AWS_ACCOUNT_ID='%s' BLOCBUY_EXPECTED_AWS_REGION='%s' BLOCBUY_EXPECTED_ECR_REPOSITORY='%s' /opt/blocbuy/backend/bin/rollback.sh '%s'\n" \
+                "$AWS_ACCOUNT_ID" "$AWS_REGION" "$ECR_REPOSITORY" "$TARGET_IMAGE"
+            else
+              printf "BLOCBUY_EXPECTED_AWS_ACCOUNT_ID='%s' BLOCBUY_EXPECTED_AWS_REGION='%s' BLOCBUY_EXPECTED_ECR_REPOSITORY='%s' /opt/blocbuy/backend/bin/rollback.sh\n" \
+                "$AWS_ACCOUNT_ID" "$AWS_REGION" "$ECR_REPOSITORY"
+            fi
+            # This literal command is written for execution by the remote shell.
+            # shellcheck disable=SC2016
+            printf '%s\n' 'printf "BLOCBUY_ROLLBACK_IMAGE=%s\n" "$(</opt/blocbuy/backend/state/current-image)"'
+          } > "$remote_script"
+          bash -n "$remote_script"
+
+          remote_script_base64="$(base64 --wrap=0 "$remote_script")"
+          (( ${#remote_script_base64} <= 4000 )) \
+            || { echo "Encoded rollback command is unexpectedly large"; exit 1; }
+          ssm_command="printf '%s' '$remote_script_base64' | base64 --decode | bash"
+
+          jq -n \
+            --arg instance_id "$INSTANCE_ID" \
+            --arg comment "Manual BlocBuy prod rollback ${GITHUB_RUN_ID}" \
+            --arg command "$ssm_command" \
+            '{
+              InstanceIds: [$instance_id],
+              DocumentName: "AWS-RunShellScript",
+              Comment: $comment,
+              TimeoutSeconds: 900,
+              Parameters: {commands: [$command]}
+            }' > "$request_file"
+
+          command_id="$(aws ssm send-command \
+            --cli-input-json "file://$request_file" \
+            --query 'Command.CommandId' \
+            --output text)"
+          [[ "$command_id" =~ ^[a-f0-9-]{36}$ ]] \
+            || { echo "SSM returned an invalid command ID"; exit 1; }
+          echo "SSM rollback command: $command_id"
+
+          command_status='Pending'
+          for attempt in $(seq 1 120); do
+            command_status="$(aws ssm get-command-invocation \
+              --command-id "$command_id" \
+              --instance-id "$INSTANCE_ID" \
+              --query 'Status' \
+              --output text 2>/dev/null || true)"
+            case "$command_status" in
+              Success|Cancelled|TimedOut|Failed) break ;;
+            esac
+            if ((attempt % 12 == 0)); then
+              echo "SSM rollback is still $command_status after $((attempt * 5)) seconds"
+            fi
+            sleep 5
+          done
+
+          aws ssm get-command-invocation \
+            --command-id "$command_id" \
+            --instance-id "$INSTANCE_ID" \
+            --output json > "$invocation_file"
+          jq -r '"SSM status: \(.Status)\n--- stdout ---\n\(.StandardOutputContent)\n--- stderr ---\n\(.StandardErrorContent)"' \
+            "$invocation_file"
+
+          final_status="$(jq -r '.Status' "$invocation_file")"
+          standard_output="$(jq -r '.StandardOutputContent // ""' "$invocation_file")"
+          resolved_image="$(sed -n 's/^BLOCBUY_ROLLBACK_IMAGE=//p' <<< "$standard_output" | tail -n 1)"
+          safe_reason="${ROLLBACK_REASON//$'\r'/ }"
+          safe_reason="${safe_reason//$'\n'/ }"
+          {
+            echo "### Existing EC2 backend rollback (prod)"
+            echo "- Requested by: \`$GITHUB_ACTOR\`"
+            echo "- Reason: $safe_reason"
+            echo "- Requested image: \`${TARGET_IMAGE:-recorded previous image}\`"
+            echo "- Resulting image: \`${resolved_image:-unknown}\`"
+            echo "- EC2 instance: \`$INSTANCE_ID\`"
+            echo "- SSM command: \`$command_id\`"
+            echo "- Status: \`$final_status\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          [[ "$final_status" == 'Success' ]] || exit 1
+          expected_repository="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}"
+          resolved_digest="${resolved_image#"$expected_repository@"}"
+          [[ "$resolved_image" == "$expected_repository@$resolved_digest" ]] \
+            || { echo "Rollback succeeded but resulting image repository is unexpected"; exit 1; }
+          [[ "$resolved_digest" =~ ^sha256:[a-f0-9]{64}$ ]] \
+            || { echo "Rollback succeeded but resulting image is not digest-pinned"; exit 1; }
+
+      - name: Verify public backend health
+        if: vars.BACKEND_URL_PROD != ''
+        env:
+          BACKEND_URL: ${{ vars.BACKEND_URL_PROD }}
+        run: |
+          set -Eeuo pipefail
+          # BACKEND_URL_PROD already carries the /api context path.
+          health_url="${BACKEND_URL%/}/actuator/health"
           curl --fail --show-error --silent --connect-timeout 5 --max-time 10 \
             --retry 5 --retry-delay 3 "$health_url" \
             | grep -Eq '"status"[[:space:]]*:[[:space:]]*"UP"'

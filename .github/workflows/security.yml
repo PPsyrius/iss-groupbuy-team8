@@ -8,6 +8,7 @@ on:
     paths:
       - "backend/**"
       - "deployment/backend/**"
+      - "infra/terraform/**"
       - "docker-compose.yaml"
       - ".gitleaks.toml"
       - ".github/workflows/**"
@@ -16,6 +17,7 @@ on:
     paths:
       - "backend/**"
       - "deployment/backend/**"
+      - "infra/terraform/**"
       - "docker-compose.yaml"
       - ".gitleaks.toml"
       - ".github/workflows/**"
@@ -55,6 +57,7 @@ jobs:
           --volume "$GITHUB_WORKSPACE:/repo:ro"
           koalaman/shellcheck-alpine@sha256:5921d946dac740cbeec2fb1c898747b6105e585130cc7f0602eec9a10f7ddb63
           /repo/deployment/backend/bin/deploy.sh
+          /repo/deployment/backend/bin/fetch-env.sh
           /repo/deployment/backend/bin/health-check.sh
           /repo/deployment/backend/bin/preflight.sh
           /repo/deployment/backend/bin/rollback.sh
@@ -80,7 +83,7 @@ jobs:
           tar --create --gzip --file "$bundle_archive" \
             --directory deployment/backend compose.yml bin
           expected_entries="$(printf '%s\n' \
-            compose.yml bin/ bin/deploy.sh bin/health-check.sh bin/preflight.sh bin/rollback.sh \
+            compose.yml bin/ bin/deploy.sh bin/fetch-env.sh bin/health-check.sh bin/preflight.sh bin/rollback.sh \
             | LC_ALL=C sort)"
           bundle_entries="$(tar --list --gzip --file "$bundle_archive" | LC_ALL=C sort)"
           if [[ "$bundle_entries" != "$expected_entries" ]]; then
