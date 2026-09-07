@@ -7,6 +7,7 @@ import com.blocbuy.identity.service.OAuthLoginAppService.GoogleAuthorizeUrl;
 import com.blocbuy.identity.service.OAuthLoginAppService.OAuthLoginResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotBlank;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
@@ -49,13 +50,15 @@ public class AuthController {
      */
     @Operation(summary = "Redirect to Google login")
     @GetMapping("/oauth2/google")
-    public ResponseEntity<Void> googleAuthorize() {
+    public ResponseEntity<Void> googleAuthorize(HttpServletRequest request) {
         GoogleAuthorizeUrl authorize = oAuthLoginAppService.createGoogleAuthorizeUrl();
         ResponseCookie bindingCookie =
                 ResponseCookie.from(OAUTH_STATE_COOKIE, authorize.stateBinding())
                         .httpOnly(true)
                         .sameSite("Lax")
-                        .path(ApiConstants.API_V1 + "/auth")
+                        // context-path (e.g. /api on dev) is part of the browser-visible path;
+                        // without it the cookie is never sent back to the callback
+                        .path(request.getContextPath() + ApiConstants.API_V1 + "/auth")
                         .build();
         return ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create(authorize.url()))
