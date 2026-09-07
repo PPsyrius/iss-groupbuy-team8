@@ -21,6 +21,7 @@
     <select id="selectRoleCodesByUserId" resultType="string">
         SELECT r.role_code
         FROM rel_user_role ur
+        JOIN sys_user u ON u.id = ur.user_id AND u.deleted = false
         JOIN sys_role r ON r.id = ur.role_id AND r.deleted = false
         WHERE ur.user_id = #{userId,jdbcType=OTHER} AND ur.deleted = false
     </select>
@@ -28,6 +29,8 @@
     <select id="selectPermissionCodesByUserId" resultType="string">
         SELECT DISTINCT p.perm_code
         FROM rel_user_role ur
+        JOIN sys_user u ON u.id = ur.user_id AND u.deleted = false
+        JOIN sys_role r ON r.id = ur.role_id AND r.deleted = false
         JOIN rel_role_permission rp ON rp.role_id = ur.role_id AND rp.deleted = false
         JOIN sys_permission p ON p.id = rp.permission_id AND p.deleted = false
         WHERE ur.user_id = #{userId,jdbcType=OTHER} AND ur.deleted = false

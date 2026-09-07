@@ -63,10 +63,11 @@ public final class User {
         if (source == RegisterSource.LOCAL) {
             throw new IllegalArgumentException("OAuth registration requires an OAuth source");
         }
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("OAuth registration requires a non-blank email");
+        }
         String nickname =
-                displayName != null && !displayName.isBlank()
-                        ? displayName
-                        : email != null ? email.split("@")[0] : null;
+                displayName != null && !displayName.isBlank() ? displayName : email.split("@")[0];
         return new User(
                 UuidV7.next(), null, email, source, UserStatus.ACTIVE, nickname, avatarUrl, null);
     }

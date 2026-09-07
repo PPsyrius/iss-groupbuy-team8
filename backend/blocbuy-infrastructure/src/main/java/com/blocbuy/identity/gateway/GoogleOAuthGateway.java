@@ -9,6 +9,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.Duration;
@@ -138,7 +139,14 @@ public class GoogleOAuthGateway implements OAuthIdentityGateway {
             log.warn("google token exchange returned an empty body");
             throw new BizException(IdentityErrorCode.OAUTH_PROVIDER_ERROR);
         }
-        JsonObject json = JsonParser.parseString(body).getAsJsonObject();
+        JsonObject json;
+        try {
+            json = JsonParser.parseString(body).getAsJsonObject();
+        } catch (JsonSyntaxException | IllegalStateException ex) {
+            // invalid JSON or a non-object payload (e.g. an HTML error page from a proxy)
+            log.warn("google token exchange returned a malformed response body");
+            throw new BizException(IdentityErrorCode.OAUTH_PROVIDER_ERROR);
+        }
         if (!json.has("id_token") || json.get("id_token").isJsonNull()) {
             // provider error payload (e.g. invalid_grant for a reused/expired code) — never log it
             // raw

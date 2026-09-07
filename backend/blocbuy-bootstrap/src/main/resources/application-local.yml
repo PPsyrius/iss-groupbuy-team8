@@ -16,3 +16,10 @@ spring:
 logging:
   level:
     com.blocbuy: debug
+
+blocbuy:
+  oauth:
+    google:
+      # localhost callback is a local-dev convenience only; other profiles must set the env var
+      redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8589/api/v1/auth/oauth2/google/callback}
+

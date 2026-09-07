@@ -35,13 +35,15 @@ public class OAuthLoginAppServiceImpl implements OAuthLoginAppService {
     private final OAuthUserTxService oAuthUserTxService;
 
     @Override
-    public String createGoogleAuthorizeUrl() {
-        return oAuthIdentityGateway.buildAuthorizeUrl(oAuthStateStore.issueState());
+    public GoogleAuthorizeUrl createGoogleAuthorizeUrl() {
+        var issued = oAuthStateStore.issueState();
+        return new GoogleAuthorizeUrl(
+                oAuthIdentityGateway.buildAuthorizeUrl(issued.state()), issued.binding());
     }
 
     @Override
-    public OAuthLoginResult loginWithGoogle(String code, String state) {
-        if (!oAuthStateStore.consume(state)) {
+    public OAuthLoginResult loginWithGoogle(String code, String state, String stateBinding) {
+        if (!oAuthStateStore.consume(state, stateBinding)) {
             throw new BizException(IdentityErrorCode.OAUTH_STATE_INVALID);
         }
         OAuthProfile profile = oAuthIdentityGateway.exchangeCodeForProfile(code);

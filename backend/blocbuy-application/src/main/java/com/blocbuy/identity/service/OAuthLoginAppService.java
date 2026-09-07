@@ -10,18 +10,28 @@ import java.util.UUID;
 public interface OAuthLoginAppService {
 
     /**
-     * Issues a one-time state and builds the Google authorization URL the client is redirected to.
+     * Issues a one-time state bound to the initiating browser session and builds the Google
+     * authorization URL the client is redirected to.
      */
-    String createGoogleAuthorizeUrl();
+    GoogleAuthorizeUrl createGoogleAuthorizeUrl();
 
     /**
-     * Handles the Google callback: validates state, verifies the code with the provider, resolves
-     * or registers the local account, and records the login. Opening the Sa-Token session is the
-     * caller's job.
+     * Handles the Google callback: validates state against the browser-session binding, verifies
+     * the code with the provider, resolves or registers the local account, and records the login.
+     * Opening the Sa-Token session is the caller's job.
      *
+     * @param stateBinding binding token from the cookie set when the flow started
      * @return the resolved local account facts for session creation
      */
-    OAuthLoginResult loginWithGoogle(String code, String state);
+    OAuthLoginResult loginWithGoogle(String code, String state, String stateBinding);
+
+    /**
+     * Authorization redirect target and its browser-session binding.
+     *
+     * @param url Google authorization URL with the one-time state embedded
+     * @param stateBinding random binding token the caller sets as an HttpOnly, SameSite=Lax cookie
+     */
+    record GoogleAuthorizeUrl(String url, String stateBinding) {}
 
     /**
      * Result of a successful OAuth login/register.

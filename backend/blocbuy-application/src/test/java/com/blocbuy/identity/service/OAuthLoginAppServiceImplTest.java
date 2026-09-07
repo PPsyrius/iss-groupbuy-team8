@@ -12,6 +12,7 @@ import com.blocbuy.identity.exception.IdentityErrorCode;
 import com.blocbuy.identity.gateway.OAuthIdentityGateway;
 import com.blocbuy.identity.gateway.OAuthIdentityGateway.OAuthProfile;
 import com.blocbuy.identity.gateway.OAuthStateStore;
+import com.blocbuy.identity.gateway.OAuthStateStore.IssuedState;
 import com.blocbuy.identity.model.OAuthIdentity;
 import com.blocbuy.identity.model.OAuthProvider;
 import com.blocbuy.identity.repository.UserOAuthRepository;
@@ -44,19 +45,21 @@ class OAuthLoginAppServiceImplTest {
 
     @Test
     void createGoogleAuthorizeUrlEmbedsIssuedState() {
-        when(oAuthStateStore.issueState()).thenReturn("state-1");
+        when(oAuthStateStore.issueState()).thenReturn(new IssuedState("state-1", "binding-1"));
         when(oAuthIdentityGateway.buildAuthorizeUrl("state-1"))
                 .thenReturn("https://accounts.google.com/o/oauth2/v2/auth?...");
 
-        assertThat(service.createGoogleAuthorizeUrl())
-                .isEqualTo("https://accounts.google.com/o/oauth2/v2/auth?...");
+        var result = service.createGoogleAuthorizeUrl();
+
+        assertThat(result.url()).isEqualTo("https://accounts.google.com/o/oauth2/v2/auth?...");
+        assertThat(result.stateBinding()).isEqualTo("binding-1");
     }
 
     @Test
     void loginRejectsUnknownStateWithoutCallingProvider() {
-        when(oAuthStateStore.consume("bad-state")).thenReturn(false);
+        when(oAuthStateStore.consume("bad-state", "b")).thenReturn(false);
 
-        assertThatThrownBy(() -> service.loginWithGoogle("code", "bad-state"))
+        assertThatThrownBy(() -> service.loginWithGoogle("code", "bad-state", "b"))
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(IdentityErrorCode.OAUTH_STATE_INVALID);
@@ -66,32 +69,32 @@ class OAuthLoginAppServiceImplTest {
     @Test
     void loginWithExistingBindingRecordsLogin() {
         OAuthIdentity identity = binding();
-        when(oAuthStateStore.consume("s")).thenReturn(true);
+        when(oAuthStateStore.consume("s", "b")).thenReturn(true);
         when(oAuthIdentityGateway.exchangeCodeForProfile("c")).thenReturn(PROFILE);
         when(userOAuthRepository.findActiveByProviderAndSubject(OAuthProvider.GOOGLE, "sub-123"))
                 .thenReturn(Optional.of(identity));
         OAuthLoginResult expected = new OAuthLoginResult(identity.userId(), "Ada", "https://pic");
         when(oAuthUserTxService.recordLogin(identity, PROFILE)).thenReturn(expected);
 
-        assertThat(service.loginWithGoogle("c", "s")).isEqualTo(expected);
+        assertThat(service.loginWithGoogle("c", "s", "b")).isEqualTo(expected);
         verify(oAuthUserTxService, never()).registerNewUser(any());
     }
 
     @Test
     void loginWithUnknownSubjectRegistersNewUser() {
-        when(oAuthStateStore.consume("s")).thenReturn(true);
+        when(oAuthStateStore.consume("s", "b")).thenReturn(true);
         when(oAuthIdentityGateway.exchangeCodeForProfile("c")).thenReturn(PROFILE);
         when(userOAuthRepository.findActiveByProviderAndSubject(OAuthProvider.GOOGLE, "sub-123"))
                 .thenReturn(Optional.empty());
         OAuthLoginResult expected = new OAuthLoginResult(UUID.randomUUID(), "Ada", "https://pic");
         when(oAuthUserTxService.registerNewUser(PROFILE)).thenReturn(expected);
 
-        assertThat(service.loginWithGoogle("c", "s")).isEqualTo(expected);
+        assertThat(service.loginWithGoogle("c", "s", "b")).isEqualTo(expected);
     }
 
     @Test
     void registerRaceRetriesAsLogin() {
-        when(oAuthStateStore.consume("s")).thenReturn(true);
+        when(oAuthStateStore.consume("s", "b")).thenReturn(true);
         when(oAuthIdentityGateway.exchangeCodeForProfile("c")).thenReturn(PROFILE);
         OAuthIdentity identity = binding();
         // first lookup misses, the loser's insert violates the unique index, re-lookup hits
@@ -103,12 +106,12 @@ class OAuthLoginAppServiceImplTest {
         OAuthLoginResult expected = new OAuthLoginResult(identity.userId(), "Ada", "https://pic");
         when(oAuthUserTxService.recordLogin(identity, PROFILE)).thenReturn(expected);
 
-        assertThat(service.loginWithGoogle("c", "s")).isEqualTo(expected);
+        assertThat(service.loginWithGoogle("c", "s", "b")).isEqualTo(expected);
     }
 
     @Test
     void registerRaceWithEmailCollisionMapsToConflict() {
-        when(oAuthStateStore.consume("s")).thenReturn(true);
+        when(oAuthStateStore.consume("s", "b")).thenReturn(true);
         when(oAuthIdentityGateway.exchangeCodeForProfile("c")).thenReturn(PROFILE);
         when(userOAuthRepository.findActiveByProviderAndSubject(OAuthProvider.GOOGLE, "sub-123"))
                 .thenReturn(Optional.empty());
@@ -123,7 +126,7 @@ class OAuthLoginAppServiceImplTest {
                                         "Ada",
                                         null)));
 
-        assertThatThrownBy(() -> service.loginWithGoogle("c", "s"))
+        assertThatThrownBy(() -> service.loginWithGoogle("c", "s", "b"))
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(IdentityErrorCode.EMAIL_ALREADY_REGISTERED);
@@ -131,7 +134,7 @@ class OAuthLoginAppServiceImplTest {
 
     @Test
     void registerRaceWithoutExplanationRethrows() {
-        when(oAuthStateStore.consume("s")).thenReturn(true);
+        when(oAuthStateStore.consume("s", "b")).thenReturn(true);
         when(oAuthIdentityGateway.exchangeCodeForProfile("c")).thenReturn(PROFILE);
         when(userOAuthRepository.findActiveByProviderAndSubject(OAuthProvider.GOOGLE, "sub-123"))
                 .thenReturn(Optional.empty());
@@ -139,7 +142,7 @@ class OAuthLoginAppServiceImplTest {
                 .thenThrow(new DuplicateKeyException("mystery"));
         when(userRepository.findActiveByEmail("ada@example.com")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.loginWithGoogle("c", "s"))
+        assertThatThrownBy(() -> service.loginWithGoogle("c", "s", "b"))
                 .isInstanceOf(DuplicateKeyException.class);
     }
 

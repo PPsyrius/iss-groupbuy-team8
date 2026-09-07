@@ -10,16 +10,16 @@ import org.springframework.stereotype.Component;
 
 /**
  * Redis-backed {@link OAuthStateStore}. Keys follow {@code
- * blocbuy:{env}:identity:oauth-state:{state}} with a short TTL (default 5 min); consumption is
- * atomic via GETDEL so a state authenticates exactly once. Derived/short-lived state only —
- * PostgreSQL stays the source of truth for accounts.
+ * blocbuy:{env}:identity:oauth-state:{state}} with a short TTL (default 5 min); the stored value is
+ * the per-browser random binding token. Consumption is atomic via GETDEL so a state authenticates
+ * exactly once, and only from the browser session that started the flow. Derived/short-lived state
+ * only — PostgreSQL stays the source of truth for accounts.
  */
 @Component
 public class RedisOAuthStateStore implements OAuthStateStore {
 
     private static final String DOMAIN = "identity";
     private static final String TYPE = "oauth-state";
-    private static final String PRESENT = "1";
 
     private final StringRedisTemplate redis;
     private final GoogleOAuthProperties properties;
@@ -35,19 +35,21 @@ public class RedisOAuthStateStore implements OAuthStateStore {
     }
 
     @Override
-    public String issueState() {
+    public IssuedState issueState() {
         String state = UUID.randomUUID().toString();
+        String binding = UUID.randomUUID().toString();
         redis.opsForValue()
-                .set(key(state), PRESENT, Duration.ofSeconds(properties.stateTtlSeconds()));
-        return state;
+                .set(key(state), binding, Duration.ofSeconds(properties.stateTtlSeconds()));
+        return new IssuedState(state, binding);
     }
 
     @Override
-    public boolean consume(String state) {
-        if (state == null || state.isBlank()) {
+    public boolean consume(String state, String binding) {
+        if (state == null || state.isBlank() || binding == null || binding.isBlank()) {
             return false;
         }
-        return redis.opsForValue().getAndDelete(key(state)) != null;
+        String stored = redis.opsForValue().getAndDelete(key(state));
+        return stored != null && stored.equals(binding);
     }
 
     private String key(String state) {

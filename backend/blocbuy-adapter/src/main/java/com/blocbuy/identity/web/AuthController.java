@@ -3,15 +3,19 @@ package com.blocbuy.identity.web;
 import cn.dev33.satoken.stp.StpUtil;
 import com.blocbuy.common.constant.ApiConstants;
 import com.blocbuy.identity.service.OAuthLoginAppService;
+import com.blocbuy.identity.service.OAuthLoginAppService.GoogleAuthorizeUrl;
 import com.blocbuy.identity.service.OAuthLoginAppService.OAuthLoginResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,24 +37,44 @@ public class AuthController {
 
     private final OAuthLoginAppService oAuthLoginAppService;
 
-    /** Starts the Google consent flow: 302 to the provider authorization URL. Public path. */
+    /**
+     * Binds the one-time OAuth state to the initiating browser; HttpOnly + SameSite=Lax so it rides
+     * the provider redirect but is unreadable from script and not sent cross-site elsewhere.
+     */
+    private static final String OAUTH_STATE_COOKIE = "blocbuy-oauth-state";
+
+    /**
+     * Starts the Google consent flow: 302 to the provider authorization URL, plus the browser-
+     * session binding cookie. Public path.
+     */
     @Operation(summary = "Redirect to Google login")
     @GetMapping("/oauth2/google")
     public ResponseEntity<Void> googleAuthorize() {
+        GoogleAuthorizeUrl authorize = oAuthLoginAppService.createGoogleAuthorizeUrl();
+        ResponseCookie bindingCookie =
+                ResponseCookie.from(OAUTH_STATE_COOKIE, authorize.stateBinding())
+                        .httpOnly(true)
+                        .sameSite("Lax")
+                        .path(ApiConstants.API_V1 + "/auth")
+                        .build();
         return ResponseEntity.status(HttpStatus.FOUND)
-                .location(URI.create(oAuthLoginAppService.createGoogleAuthorizeUrl()))
+                .location(URI.create(authorize.url()))
+                .header(HttpHeaders.SET_COOKIE, bindingCookie.toString())
                 .build();
     }
 
     /**
-     * Google callback: verifies code + one-time state, resolves or registers the local account,
-     * then opens the Sa-Token session and returns the token in the body. Public path.
+     * Google callback: verifies code + one-time state against the browser-session binding cookie,
+     * resolves or registers the local account, then opens the Sa-Token session and returns the
+     * token in the body. Public path.
      */
     @Operation(summary = "Google OAuth2 callback — issues the session token")
     @GetMapping("/oauth2/google/callback")
     public LoginResponse googleCallback(
-            @RequestParam @NotBlank String code, @RequestParam @NotBlank String state) {
-        OAuthLoginResult result = oAuthLoginAppService.loginWithGoogle(code, state);
+            @RequestParam @NotBlank String code,
+            @RequestParam @NotBlank String state,
+            @CookieValue(name = OAUTH_STATE_COOKIE, required = false) String stateBinding) {
+        OAuthLoginResult result = oAuthLoginAppService.loginWithGoogle(code, state, stateBinding);
         StpUtil.login(result.userId());
         return new LoginResponse(
                 StpUtil.getTokenValue(),
