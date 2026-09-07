@@ -41,6 +41,10 @@ server:
 management:
   endpoints:
     web:
+      # /api prefix: CloudFront/ALB forward only /api/*, so actuator must live under it
+      # (health probes: /api/actuator/health). No server.servlet.context-path — the /api
+      # prefix is carried by the controller mappings (ApiConstants.API_V1), never doubled.
+      base-path: /api/actuator
       exposure:
         include: health,info,prometheus
   endpoint:
@@ -50,9 +54,9 @@ management:
 
 springdoc:
   api-docs:
-    path: /v3/api-docs
+    path: /api/v3/api-docs
   swagger-ui:
-    path: /swagger-ui.html
+    path: /api/swagger-ui.html
 
 blocbuy:
   payment:

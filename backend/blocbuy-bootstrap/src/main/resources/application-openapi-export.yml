@@ -4,6 +4,12 @@
 server:
   port: 18080
 
+springdoc:
+  api-docs:
+    # the springdoc-maven-plugin fetches apiDocsUrl=http://localhost:18080/v3/api-docs;
+    # keep the default path here while every real profile serves it under /api
+    path: /v3/api-docs
+
 spring:
   flyway:
     enabled: false
