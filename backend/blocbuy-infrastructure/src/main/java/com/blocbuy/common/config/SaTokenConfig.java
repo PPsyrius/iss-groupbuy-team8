@@ -18,8 +18,8 @@ public class SaTokenConfig implements WebMvcConfigurer {
 
     /** Paths that never require authentication. */
     private static final String[] PUBLIC_PATHS = {
-        ApiConstants.API_V1 + "/auth/login",
-        ApiConstants.API_V1 + "/auth/register",
+        // Google OAuth2 is the sole login channel (redirect start + provider callback)
+        ApiConstants.API_V1 + "/auth/oauth2/**",
         // provider callbacks authenticate by signature verification, not by session
         ApiConstants.API_V1 + "/webhooks/**",
         "/v3/api-docs/**",

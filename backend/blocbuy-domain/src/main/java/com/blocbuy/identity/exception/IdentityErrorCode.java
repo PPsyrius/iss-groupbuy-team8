@@ -7,7 +7,34 @@ import com.blocbuy.common.exception.ErrorCode;
  * localized via {@link #messageKey()}, codes may not.
  */
 public enum IdentityErrorCode implements ErrorCode {
-    IDENTITY_PLACEHOLDER("IDENTITY_404_001", 404, "User not found", "error.identity.userNotFound");
+    USER_NOT_FOUND("IDENTITY_404_001", 404, "User not found", "error.identity.userNotFound"),
+    OAUTH_STATE_INVALID(
+            "IDENTITY_401_001",
+            401,
+            "OAuth state is invalid or expired",
+            "error.identity.oauthStateInvalid"),
+    OAUTH_TOKEN_INVALID(
+            "IDENTITY_401_002",
+            401,
+            "Identity provider token verification failed",
+            "error.identity.oauthTokenInvalid"),
+    ACCOUNT_DISABLED(
+            "IDENTITY_403_001", 403, "Account is disabled", "error.identity.accountDisabled"),
+    EMAIL_ALREADY_REGISTERED(
+            "IDENTITY_409_001",
+            409,
+            "Email is already registered via another channel",
+            "error.identity.emailAlreadyRegistered"),
+    OAUTH_PROVIDER_ERROR(
+            "IDENTITY_502_001",
+            502,
+            "Identity provider request failed",
+            "error.identity.oauthProviderError"),
+    IDENTITY_MISCONFIGURED(
+            "IDENTITY_500_001",
+            500,
+            "Identity service is misconfigured",
+            "error.identity.misconfigured");
 
     private final String code;
     private final int httpStatus;

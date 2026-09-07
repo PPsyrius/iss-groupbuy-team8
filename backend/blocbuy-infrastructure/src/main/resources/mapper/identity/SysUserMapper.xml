@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blocbuy.identity.persistence.SysUserMapper">
+
+    <resultMap id="sysUserMap" type="com.blocbuy.identity.persistence.SysUserDO">
+        <id column="id" property="id" jdbcType="OTHER"/>
+        <result column="username" property="username"/>
+        <result column="email" property="email"/>
+        <result column="phone" property="phone"/>
+        <result column="password_hash" property="passwordHash"/>
+        <result column="nickname" property="nickname"/>
+        <result column="avatar_url" property="avatarUrl"/>
+        <result column="register_source" property="registerSource"/>
+        <result column="status" property="status"/>
+        <result column="last_login_time" property="lastLoginTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="create_by" property="createBy" jdbcType="OTHER"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="update_by" property="updateBy" jdbcType="OTHER"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectActiveById" resultMap="sysUserMap">
+        SELECT id, username, email, phone, password_hash, nickname, avatar_url, register_source,
+               status, last_login_time, create_time, create_by, update_time, update_by, deleted
+        FROM sys_user
+        WHERE id = #{id,jdbcType=OTHER} AND deleted = false
+    </select>
+
+    <select id="selectActiveByEmail" resultMap="sysUserMap">
+        SELECT id, username, email, phone, password_hash, nickname, avatar_url, register_source,
+               status, last_login_time, create_time, create_by, update_time, update_by, deleted
+        FROM sys_user
+        WHERE email = #{email} AND deleted = false
+    </select>
+
+    <insert id="insert" parameterType="com.blocbuy.identity.persistence.SysUserDO">
+        INSERT INTO sys_user (id, username, email, phone, password_hash, nickname, avatar_url,
+                              register_source, status, last_login_time)
+        VALUES (#{id,jdbcType=OTHER}, #{username}, #{email}, #{phone}, #{passwordHash}, #{nickname},
+                #{avatarUrl}, #{registerSource}, #{status}, #{lastLoginTime})
+    </insert>
+
+    <update id="updateLastLogin">
+        UPDATE sys_user
+        SET last_login_time = #{lastLoginTime}, update_time = CURRENT_TIMESTAMP
+        WHERE id = #{id,jdbcType=OTHER} AND deleted = false
+    </update>
+
+</mapper>

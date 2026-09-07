@@ -56,9 +56,19 @@
       <groupId>com.stripe</groupId>
       <artifactId>stripe-java</artifactId>
     </dependency>
+    <!-- Google OIDC client: only module allowed to reference com.google.api/client types -->
+    <dependency>
+      <groupId>com.google.api-client</groupId>
+      <artifactId>google-api-client</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>com.github.spotbugs</groupId>
+      <artifactId>spotbugs-annotations</artifactId>
       <optional>true</optional>
     </dependency>
 
