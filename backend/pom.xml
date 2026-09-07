@@ -41,7 +41,7 @@
     <netty.version>4.1.136.Final</netty.version>
     <mybatis-spring-boot.version>3.0.5</mybatis-spring-boot.version>
     <sa-token.version>1.46.0</sa-token.version>
-    <springdoc.version>2.9.0</springdoc.version>
+    <springdoc.version>3.1.0</springdoc.version>
     <springdoc-maven-plugin.version>1.5</springdoc-maven-plugin.version>
     <archunit.version>1.5.0</archunit.version>
     <stripe-java.version>33.4.1</stripe-java.version>
