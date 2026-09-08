@@ -1,6 +1,7 @@
 package com.blocbuy.common.config;
 
 import cn.dev33.satoken.interceptor.SaInterceptor;
+import cn.dev33.satoken.router.SaHttpMethod;
 import cn.dev33.satoken.router.SaRouter;
 import cn.dev33.satoken.stp.StpUtil;
 import com.blocbuy.common.constant.ApiConstants;
@@ -32,8 +33,21 @@ public class SaTokenConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(
-                        new SaInterceptor(handler -> SaRouter.match("/**", StpUtil::checkLogin)))
+                        new SaInterceptor(
+                                handler -> {
+                                    // anonymous catalog browse: GET /products/** skips login;
+                                    // every other method/path under /api/v1 requires it
+                                    if (SaRouter.isMatchCurrURI(ANONYMOUS_GET_PATHS)
+                                            && SaRouter.isMatchCurrMethod(
+                                                    new SaHttpMethod[] {SaHttpMethod.GET})) {
+                                        return;
+                                    }
+                                    StpUtil.checkLogin();
+                                }))
                 .addPathPatterns(ApiConstants.API_V1 + "/**")
                 .excludePathPatterns(PUBLIC_PATHS);
     }
+
+    /** Read-only paths open without a session; writes on the same resources stay protected. */
+    private static final String[] ANONYMOUS_GET_PATHS = {ApiConstants.API_V1 + "/products/**"};
 }

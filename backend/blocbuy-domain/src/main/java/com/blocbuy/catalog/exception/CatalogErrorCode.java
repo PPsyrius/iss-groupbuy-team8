@@ -7,8 +7,12 @@ import com.blocbuy.common.exception.ErrorCode;
  * localized via {@link #messageKey()}, codes may not.
  */
 public enum CatalogErrorCode implements ErrorCode {
-    CATALOG_PLACEHOLDER(
-            "CATALOG_404_001", 404, "Product not found", "error.catalog.productNotFound");
+    PRODUCT_NOT_FOUND("CATALOG_404_001", 404, "Product not found", "error.catalog.productNotFound"),
+    PRICING_MODE_UNSUPPORTED(
+            "CATALOG_500_001",
+            500,
+            "Unsupported pricing mode",
+            "error.catalog.pricingModeUnsupported");
 
     private final String code;
     private final int httpStatus;
