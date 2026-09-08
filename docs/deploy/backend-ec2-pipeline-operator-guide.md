@@ -285,6 +285,10 @@ If the new container does not become healthy, `deploy.sh` attempts to restore th
 digest and leaves the workflow red. Investigate the failed deployment even when automatic rollback
 succeeds.
 
+For viewing and searching runtime logs (CloudWatch Logs Insights, traceId-based search, SSM port
+forwarding, and the on-box `docker logs` fallback), see the
+[backend log observability guide](backend-log-observability.md).
+
 ## 11. Manual rollback
 
 From **Actions -> rollback-backend -> Run workflow**:

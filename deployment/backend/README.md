@@ -5,6 +5,8 @@ creates, starts, stops, or removes PostgreSQL, Redis, their Compose projects, or
 
 AWS, IAM, GitHub environment and first-deployment setup are documented in the
 [existing EC2 operator guide](../../docs/deploy/backend-ec2-pipeline-operator-guide.md).
+Runtime log viewing and searching (CloudWatch Logs, traceId search, SSM port forwarding) are
+documented in the [backend log observability guide](../../docs/deploy/backend-log-observability.md).
 
 The backend CI workflow packages this non-secret deployment bundle, publishes the verified image to
 ECR, and invokes `bin/deploy.sh` on the existing EC2 host through AWS Systems Manager. Runtime
