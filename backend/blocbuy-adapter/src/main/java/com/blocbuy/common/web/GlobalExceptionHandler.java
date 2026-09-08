@@ -16,6 +16,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
@@ -68,6 +69,12 @@ public class GlobalExceptionHandler {
     /** Malformed JSON / unreadable body. */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Result<Void>> handleNotReadable(HttpMessageNotReadableException ex) {
+        return toResponse(CommonErrorCode.BAD_REQUEST, null);
+    }
+
+    /** Path/query param that failed type conversion, e.g. a non-UUID {id} → 400, never 500. */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Result<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         return toResponse(CommonErrorCode.BAD_REQUEST, null);
     }
 

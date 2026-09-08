@@ -2,6 +2,9 @@
 # NOTE (D8): database name is case-sensitive if created quoted; "Blocbuy" vs "blocbuy" — verify on
 # first connection and fix here if PostgreSQL reports the database does not exist.
 spring:
+  flyway:
+    # local-only demo catalog seed (repeatable, idempotent); docker/ec2 run schema migrations only
+    locations: classpath:db/migration,classpath:db/seed
   datasource:
     url: jdbc:postgresql://localhost:5432/Blocbuy?currentSchema=domain
     username: ${DB_USERNAME}
