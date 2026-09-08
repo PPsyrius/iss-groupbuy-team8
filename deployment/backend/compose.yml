@@ -30,8 +30,17 @@ services:
     cap_drop:
       - ALL
     stop_grace_period: 30s
+    # Ship container logs to CloudWatch Logs so they survive --force-recreate and are
+    # searchable by traceId in Logs Insights (json-file logs die with the container).
+    # Credentials come from the EC2 instance role (BlocBuyEc2Runtime + BlocBuyEc2CloudWatchLogs
+    # policy) via IMDS — no keys in env files. Docker >= 20.10 dual logging keeps
+    # `docker logs blocbuy-backend` working locally as before.
     logging:
-      driver: json-file
+      driver: awslogs
       options:
-        max-size: "10m"
-        max-file: "5"
+        awslogs-region: ap-southeast-1
+        # Overridable per environment (prod deploy passes BLOCBUY_LOG_GROUP=/blocbuy/backend/prod);
+        # dev is the default so the existing deploy.sh path needs no change.
+        awslogs-group: ${BLOCBUY_LOG_GROUP:-/blocbuy/backend/dev}
+        awslogs-stream: backend
+        awslogs-create-group: "true"
