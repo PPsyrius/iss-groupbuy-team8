@@ -15,6 +15,9 @@ on:
       - "deployment/backend/**"
       - ".github/workflows/ci-backend.yml"
   pull_request:
+    # labeled/unlabeled: applying or removing `contract-change-approved` must
+    # re-run the contract gate — the label is only visible in a fresh event.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
     branches: [dev]
     paths:
       - "backend/**"
