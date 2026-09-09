@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blocbuy.catalog.persistence.TeamPriceMapper">
+    <resultMap id="policyMap" type="com.blocbuy.catalog.persistence.TeamPricePolicyDO">
+        <result column="product_id" property="productId" jdbcType="OTHER"/>
+        <result column="amount" property="amount"/>
+        <result column="currency" property="currency"/>
+        <result column="valid_from" property="validFrom"/>
+        <result column="valid_until" property="validUntil"/>
+        <result column="version" property="version"/>
+    </resultMap>
+    <resultMap id="quoteMap" type="com.blocbuy.catalog.persistence.TeamPriceQuoteDO">
+        <id column="id" property="id" jdbcType="OTHER"/>
+        <result column="product_id" property="productId" jdbcType="OTHER"/>
+        <result column="owner_id" property="ownerId" jdbcType="OTHER"/>
+        <result column="policy_version" property="policyVersion"/>
+        <result column="amount" property="amount"/>
+        <result column="currency" property="currency"/>
+        <result column="issued_at" property="issuedAt"/>
+        <result column="expires_at" property="expiresAt"/>
+    </resultMap>
+    <select id="selectLatestPolicy" resultMap="policyMap">
+        SELECT product_id, amount, currency, valid_from, valid_until, version
+        FROM biz_team_price_policy
+        WHERE product_id = #{productId,jdbcType=OTHER} AND deleted = false
+        ORDER BY version DESC LIMIT 1
+    </select>
+    <insert id="insertPolicy">
+        INSERT INTO biz_team_price_policy
+            (product_id, amount, currency, valid_from, valid_until, version,
+             create_time, create_by, update_time, update_by)
+        VALUES (#{row.productId,jdbcType=OTHER}, #{row.amount}, #{row.currency},
+                #{row.validFrom}, #{row.validUntil}, #{row.version},
+                #{now}, #{actorId,jdbcType=OTHER}, #{now}, #{actorId,jdbcType=OTHER})
+    </insert>
+    <insert id="insertQuote">
+        INSERT INTO biz_team_price_quote
+            (id, product_id, owner_id, policy_version, amount, currency, issued_at, expires_at,
+             create_time, create_by, update_time, update_by)
+        VALUES (#{row.id,jdbcType=OTHER}, #{row.productId,jdbcType=OTHER},
+                #{row.ownerId,jdbcType=OTHER}, #{row.policyVersion}, #{row.amount}, #{row.currency},
+                #{row.issuedAt}, #{row.expiresAt}, #{row.issuedAt}, #{row.ownerId,jdbcType=OTHER},
+                #{row.issuedAt}, #{row.ownerId,jdbcType=OTHER})
+    </insert>
+    <select id="selectQuoteForOwner" resultMap="quoteMap">
+        SELECT id, product_id, owner_id, policy_version, amount, currency, issued_at, expires_at
+        FROM biz_team_price_quote
+        WHERE id = #{id,jdbcType=OTHER} AND owner_id = #{ownerId,jdbcType=OTHER} AND deleted = false
+    </select>
+    <select id="selectCurrentTime" resultType="java.time.Instant" useCache="false" flushCache="true">
+        SELECT clock_timestamp()
+    </select>
+</mapper>

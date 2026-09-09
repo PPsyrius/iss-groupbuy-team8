@@ -2,12 +2,14 @@ package com.blocbuy.catalog.pricing;
 
 import com.blocbuy.catalog.model.PricingMode;
 import com.blocbuy.catalog.model.Product;
+import java.math.BigDecimal;
+import java.time.Instant;
 
 /**
- * Pricing strategy: resolves the displayed price pair for one listing view. Isolates pricing rules
- * so a new pricing mode (new {@link PricingMode} constant + new implementation) never touches
- * browse logic; selection is driven by {@code biz_product.pricing_mode} via the application-layer
- * resolver.
+ * Pricing strategy: resolves listing displays and authoritative first-team policy prices. Isolates
+ * pricing rules so a new pricing mode (new {@link PricingMode} constant + new implementation) never
+ * touches browse logic; selection is driven by {@code biz_product.pricing_mode} via the
+ * application-layer resolver.
  *
  * <p>Implementations are pure domain objects (no Spring, no I/O) and must be stateless.
  */
@@ -22,4 +24,7 @@ public interface PricingStrategy {
      * deal applies at all.
      */
     ListingPrice resolve(Product product, GroupDealOffer activeDeal);
+
+    /** Authoritative first-team price; independent of existing deals and listing display prices. */
+    BigDecimal quoteTeamPrice(Product product, TeamPricePolicy policy, Instant now);
 }

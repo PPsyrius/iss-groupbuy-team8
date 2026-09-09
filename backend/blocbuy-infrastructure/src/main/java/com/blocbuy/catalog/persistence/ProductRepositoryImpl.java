@@ -20,6 +20,12 @@ public class ProductRepositoryImpl implements ProductRepository {
     private final BizProductMapper bizProductMapper;
 
     @Override
+    public Optional<Product> lockById(UUID id) {
+        return Optional.ofNullable(
+                ProductConverter.toDomain(bizProductMapper.selectActiveByIdForUpdate(id)));
+    }
+
+    @Override
     public Optional<Product> findById(UUID id) {
         return Optional.ofNullable(
                 ProductConverter.toDomain(bizProductMapper.selectActiveById(id)));

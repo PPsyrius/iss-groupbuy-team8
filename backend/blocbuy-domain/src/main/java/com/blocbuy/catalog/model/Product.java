@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Product aggregate root (biz_product). Sellable catalog item; group-deal pricing lives on the
- * groupbuy side and reaches catalog only as a pricing input.
+ * Product aggregate root (biz_product). Sellable catalog item; existing deal price snapshots live
+ * in groupbuy and inform browse. Independent first-team price policies belong to catalog.
  *
  * <p>Rules: the aggregate root is the only entry point for mutating its state; state transitions go
  * through behavioral methods that validate the current state (no public {@code setStatus}); no

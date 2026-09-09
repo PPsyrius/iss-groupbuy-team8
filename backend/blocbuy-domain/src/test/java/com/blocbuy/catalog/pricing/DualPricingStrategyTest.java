@@ -59,6 +59,22 @@ class DualPricingStrategyTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    @Test
+    void quotesFirstTeamFromPolicyWithoutAnExistingDeal() {
+        Instant now = Instant.parse("2026-09-09T00:00:00Z");
+        TeamPricePolicy policy =
+                new TeamPricePolicy(
+                        PRODUCT_ID,
+                        new BigDecimal("35.00"),
+                        "sgd",
+                        now.minusSeconds(1),
+                        now.plusSeconds(3600),
+                        1);
+
+        assertThat(strategy.quoteTeamPrice(product("45.00"), policy, now))
+                .isEqualByComparingTo("35.00");
+    }
+
     private static Product product(String originalPrice) {
         return Product.reconstitute(
                 PRODUCT_ID,

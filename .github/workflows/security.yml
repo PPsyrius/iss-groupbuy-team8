@@ -134,17 +134,27 @@ jobs:
 
       - name: Trivy filesystem scan (Maven dependencies)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_OFFLINE_SCAN: 'true'
         with:
           version: v0.74.0
           scan-type: fs
           scan-ref: backend/
-          offline-scan: 'true' # never hit the remote Maven repository (429 blocks the whole job)
           severity: HIGH,CRITICAL
           limit-severities-for-sarif: 'true' # otherwise entrypoint drops the severity filter and LOW findings trip exit-code
           ignore-unfixed: true # gate wording is "0 unfixed"; unfixed-pending CVEs don't fail
           exit-code: '1'       # actually fail the job — default 0 only reports
           format: sarif
           output: trivy-fs.sarif
+
+      - name: Preserve dependency scan report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: trivy-dependencies
+          path: trivy-fs.sarif
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Upload dependency scan SARIF
         if: always()
@@ -172,6 +182,15 @@ jobs:
           exit-code: '1'
           format: sarif
           output: trivy-config.sarif
+
+      - name: Preserve configuration scan report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: trivy-configuration
+          path: trivy-config.sarif
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Upload deployment configuration SARIF
         if: always()

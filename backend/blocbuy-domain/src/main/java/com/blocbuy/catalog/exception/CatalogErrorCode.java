@@ -8,6 +8,23 @@ import com.blocbuy.common.exception.ErrorCode;
  */
 public enum CatalogErrorCode implements ErrorCode {
     PRODUCT_NOT_FOUND("CATALOG_404_001", 404, "Product not found", "error.catalog.productNotFound"),
+    TEAM_PRICE_INVALID(
+            "CATALOG_400_001", 400, "Invalid team price policy", "error.catalog.teamPriceInvalid"),
+    TEAM_PRICE_UNAVAILABLE(
+            "CATALOG_409_001",
+            409,
+            "Team price is unavailable",
+            "error.catalog.teamPriceUnavailable"),
+    TEAM_PRICE_VERSION_CONFLICT(
+            "CATALOG_412_001",
+            412,
+            "Team price policy version conflict",
+            "error.catalog.teamPriceVersionConflict"),
+    TEAM_PRICE_QUOTE_NOT_FOUND(
+            "CATALOG_404_002",
+            404,
+            "Team price quote not found",
+            "error.catalog.teamPriceQuoteNotFound"),
     PRICING_MODE_UNSUPPORTED(
             "CATALOG_500_001",
             500,
