@@ -46,6 +46,9 @@ class PaidGroupDealFlowIT {
     @SuppressWarnings("resource")
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:18");
 
+    /**
+     * Connects the Spring context and full Flyway migration chain to the container's domain schema.
+     */
     @DynamicPropertySource
     static void database(DynamicPropertyRegistry properties) {
         properties.add(
@@ -62,6 +65,10 @@ class PaidGroupDealFlowIT {
     @Autowired private JdbcTemplate jdbc;
     @Autowired private PlatformTransactionManager transactions;
 
+    /**
+     * Verifies real proxy transactions persist success while initiation replay retains its earlier
+     * count.
+     */
     @Test
     void realStartAndJoinPreserveReplaySnapshot() {
         var terms = terms();
@@ -80,6 +87,7 @@ class PaidGroupDealFlowIT {
                 .isEqualTo(2);
     }
 
+    /** Verifies caller rollback removes receipt and membership too, allowing a genuine retry. */
     @Test
     void surroundingPaymentTransactionRollbackLeavesNoGroupOrMember() {
         var terms = terms();
@@ -107,6 +115,9 @@ class PaidGroupDealFlowIT {
         assertThat(memberCount(terms.id())).isEqualTo(1);
     }
 
+    /**
+     * Races distinct payments for one buyer or the last place; exactly one admission may commit.
+     */
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void concurrentPaymentsNeverDuplicateBuyerOrExceedCapacity(boolean sameBuyer) throws Exception {
@@ -168,6 +179,9 @@ class PaidGroupDealFlowIT {
                 .isEqualTo(2);
     }
 
+    /**
+     * Holds a receipt or deal lock to prove database cancellation, rollback and successful retry.
+     */
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void stalledLockTimesOutWithoutLeavingPartialParticipation(boolean receiptLock)
@@ -227,6 +241,10 @@ class PaidGroupDealFlowIT {
         assertThat(service.joinConfirmed(terms.id(), joiner).currentSize()).isEqualTo(2);
     }
 
+    /**
+     * Reads active membership directly to verify committed effects independently of service
+     * results.
+     */
     private long memberCount(UUID dealId) {
         return jdbc.queryForObject(
                 "SELECT count(*) FROM biz_group_member WHERE deal_id = ? AND deleted = false",
@@ -234,6 +252,10 @@ class PaidGroupDealFlowIT {
                 dealId);
     }
 
+    /**
+     * Inserts an on-sale product fixture and supplies accepted two-person terms with ample
+     * lifetime.
+     */
     private NewDealTerms terms() {
         UUID id = UuidV7.next();
         UUID product = UuidV7.next();
@@ -251,6 +273,9 @@ class PaidGroupDealFlowIT {
                 Instant.now().plusSeconds(600));
     }
 
+    /**
+     * Inserts an active buyer and supplies payment facts as a fixture, without contacting Stripe.
+     */
     private PaidParticipation payment() {
         UUID buyer = UuidV7.next();
         jdbc.update(

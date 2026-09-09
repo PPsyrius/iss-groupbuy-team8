@@ -10,6 +10,7 @@ import java.time.Instant;
  * UC4 does not use this creator and cannot create a replacement deal.
  */
 public abstract class PaidGroupDealCreator {
+    /** Validates supplied payment against unexpired terms before invoking the creation policy. */
     public final GroupDeal initiate(NewDealTerms terms, PaidParticipation payment, Instant now) {
         if (terms == null || payment == null || now == null || !now.isBefore(terms.expireTime())) {
             throw new BizException(GroupbuyErrorCode.INVALID_PARTICIPATION);
@@ -18,6 +19,7 @@ public abstract class PaidGroupDealCreator {
         return createGroupDeal(terms, payment, now);
     }
 
+    /** Creates the initial paid aggregate after initiation validation; performs no persistence. */
     protected abstract GroupDeal createGroupDeal(
             NewDealTerms terms, PaidParticipation payment, Instant now);
 }

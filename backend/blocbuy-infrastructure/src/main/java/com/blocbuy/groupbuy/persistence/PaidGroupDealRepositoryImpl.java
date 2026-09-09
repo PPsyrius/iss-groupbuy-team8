@@ -19,6 +19,10 @@ import org.springframework.stereotype.Repository;
 public class PaidGroupDealRepositoryImpl implements PaidGroupDealRepository {
     private final PaidGroupDealMapper mapper;
 
+    /**
+     * Reserves then locks the receipt, rejecting a pre-existing committed row with no terminal
+     * result.
+     */
     @Override
     public ParticipationReceipt reserveAndLock(UUID paymentId, String fingerprint, UUID actorId) {
         int inserted = mapper.reserveReceipt(paymentId, fingerprint, actorId);
@@ -41,27 +45,32 @@ public class PaidGroupDealRepositoryImpl implements PaidGroupDealRepository {
         return new ParticipationReceipt(row.getRequestFingerprint(), result);
     }
 
+    /** Converts the locked, non-deleted row into an immutable domain snapshot when present. */
     @Override
     public Optional<GroupDeal> lockDeal(UUID dealId) {
         return Optional.ofNullable(GroupDealConverter.toDomain(mapper.lockDeal(dealId)));
     }
 
+    /** Obtains fresh database wall-clock time for decisions made after required locks. */
     @Override
     public Instant currentTime() {
         return mapper.currentTime();
     }
 
+    /** Checks non-deleted membership through uncached SQL under the caller's deal lock. */
     @Override
     public boolean hasActiveMember(UUID dealId, UUID userId) {
         return mapper.hasActiveMember(dealId, userId);
     }
 
+    /** Requires one deal and one paid-leader insert within the caller's shared transaction. */
     @Override
     public void insertStartedDeal(GroupDeal deal, PaidParticipation paid, Instant now) {
         requireOne(mapper.insertDeal(toRow(deal, paid.userId(), now)));
         requireOne(mapper.insertMember(deal.id(), paid.paymentId(), paid.userId(), "leader", now));
     }
 
+    /** Checks the expected progress update and inserts one paid member in the same transaction. */
     @Override
     public void insertJoinedMember(
             GroupDeal before, GroupDeal after, PaidParticipation paid, Instant now) {
@@ -73,6 +82,9 @@ public class PaidGroupDealRepositoryImpl implements PaidGroupDealRepository {
         requireOne(mapper.insertMember(after.id(), paid.paymentId(), paid.userId(), "member", now));
     }
 
+    /**
+     * Persists the frozen terminal result, requiring exactly one pending receipt to be completed.
+     */
     @Override
     public void complete(UUID paymentId, ParticipationResult result, UUID actorId, Instant now) {
         var row = new ParticipationReceiptDO();
@@ -84,6 +96,7 @@ public class PaidGroupDealRepositoryImpl implements PaidGroupDealRepository {
         requireOne(mapper.completeReceipt(paymentId, row, actorId, now));
     }
 
+    /** Maps immutable domain values and caller audit context without recalculating frozen terms. */
     private static BizGroupDealDO toRow(GroupDeal deal, UUID actorId, Instant now) {
         var row = new BizGroupDealDO();
         row.setId(deal.id());
@@ -105,6 +118,9 @@ public class PaidGroupDealRepositoryImpl implements PaidGroupDealRepository {
         return row;
     }
 
+    /**
+     * Treats missing or excess writes as technical protocol failures so the transaction rolls back.
+     */
     private static void requireOne(int affected) {
         if (affected != 1) {
             throw new IllegalStateException(

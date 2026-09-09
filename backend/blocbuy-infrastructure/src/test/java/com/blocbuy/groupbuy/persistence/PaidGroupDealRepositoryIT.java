@@ -50,6 +50,11 @@ class PaidGroupDealRepositoryIT {
     private static SqlSessionFactory sessions;
     private static JdbcTemplate jdbc;
 
+    /**
+     * Loads V5 and V7 for this isolated groupbuy mapper test with bounded SQL waits. V6 adds only
+     * catalog pricing tables and permissions, which these mappers do not reference; the bootstrap
+     * PaidGroupDealFlowIT exercises the full V1-V7 Flyway chain.
+     */
     @BeforeAll
     static void migrate() throws Exception {
         String url = POSTGRES.getJdbcUrl();
@@ -84,6 +89,10 @@ class PaidGroupDealRepositoryIT {
         sessions = new SqlSessionFactoryBuilder().build(config);
     }
 
+    /**
+     * Verifies soft deletion preserves receipt replay and the permanent unique member-payment
+     * binding.
+     */
     @Test
     void receiptAndMemberPaymentCannotBeReusedAfterDeletion() {
         var paid = paid();
@@ -129,6 +138,7 @@ class PaidGroupDealRepositoryIT {
                 .isEqualTo(7);
     }
 
+    /** Verifies explicit rollback removes all three writes in the paid initiation protocol. */
     @Test
     void rollbackRemovesReceiptDealAndLeaderAtomically() {
         var paid = paid();
@@ -156,6 +166,10 @@ class PaidGroupDealRepositoryIT {
                 .isZero();
     }
 
+    /**
+     * Verifies a competing receipt reservation waits and then observes the original committed
+     * outcome.
+     */
     @Test
     void duplicateReservationWaitsForCommittedResult() throws Exception {
         var paid = paid();
@@ -191,6 +205,7 @@ class PaidGroupDealRepositoryIT {
         }
     }
 
+    /** Advances expiry under a held lock to prove post-lock wall time rejects a stale admission. */
     @Test
     void joinUsesWallClockAfterWaitingForDealLock() throws Exception {
         UUID dealId = start(paid());
@@ -251,6 +266,7 @@ class PaidGroupDealRepositoryIT {
                 .isEqualTo(1);
     }
 
+    /** Commits a complete paid-leader fixture with its receipt in one SQL session. */
     private UUID start(PaidParticipation paid) {
         try (SqlSession session = sessions.openSession()) {
             var repo = repo(session);
@@ -264,6 +280,7 @@ class PaidGroupDealRepositoryIT {
         }
     }
 
+    /** Supplies unique two-person SGD terms using the caller's database time for expiry. */
     private static NewDealTerms terms(Instant now) {
         UUID id = UuidV7.next();
         return new NewDealTerms(
@@ -276,18 +293,22 @@ class PaidGroupDealRepositoryIT {
                 now.plusSeconds(60));
     }
 
+    /** Supplies distinct UUIDv7 buyer and payment facts without invoking any payment provider. */
     private static PaidParticipation paid() {
         return new PaidParticipation(UuidV7.next(), UuidV7.next(), new BigDecimal("12.00"), "sgd");
     }
 
+    /** Binds the repository to the caller's SQL session so its writes share that transaction. */
     private static PaidGroupDealRepositoryImpl repo(SqlSession session) {
         return new PaidGroupDealRepositoryImpl(session.getMapper(PaidGroupDealMapper.class));
     }
 
+    /** Counts fixture rows by UUID to verify rollback independently of repository mapping. */
     private static int count(String query, UUID id) {
         return jdbc.queryForObject(query, Integer.class, id);
     }
 
+    /** Loads mapper XML and shared SQL fragments into the isolated MyBatis configuration. */
     private static void load(Configuration config, String resource) throws Exception {
         try (InputStream input = new ClassPathResource(resource).getInputStream()) {
             new XMLMapperBuilder(input, config, resource, config.getSqlFragments()).parse();

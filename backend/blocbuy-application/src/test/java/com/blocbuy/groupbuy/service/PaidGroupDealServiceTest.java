@@ -41,6 +41,9 @@ class PaidGroupDealServiceTest {
                     2,
                     now.plusSeconds(60));
 
+    /**
+     * Verifies initiation requests both paid-leader persistence and the matching terminal receipt.
+     */
     @Test
     void startPersistsLeaderAndReceiptTogether() {
         when(repository.reserveAndLock(eq(paid.paymentId()), any(), eq(paid.userId())))
@@ -54,6 +57,7 @@ class PaidGroupDealServiceTest {
         verify(repository).complete(paid.paymentId(), result, paid.userId(), now);
     }
 
+    /** Verifies a completed receipt short-circuits clock reads and initiation writes. */
     @Test
     void replayReturnsOriginalSnapshotWithoutReadingDeal() {
         var original = new ParticipationResult("applied", terms.id(), "open", 1, null);
@@ -66,6 +70,7 @@ class PaidGroupDealServiceTest {
         verify(repository, never()).insertStartedDeal(any(), any(), any());
     }
 
+    /** Verifies a different fingerprint is rejected before any clock-dependent application. */
     @Test
     void changedPaymentRequestCannotReuseReceipt() {
         when(repository.reserveAndLock(eq(paid.paymentId()), any(), eq(paid.userId())))
@@ -75,6 +80,9 @@ class PaidGroupDealServiceTest {
         verify(repository, never()).currentTime();
     }
 
+    /**
+     * Verifies receipt-first locking precedes time and membership reads for final-place admission.
+     */
     @Test
     void joinReadsTimeAndMembershipAfterDealLock() {
         var leader =
@@ -93,6 +101,7 @@ class PaidGroupDealServiceTest {
         order.verify(repository).insertJoinedMember(eq(deal), any(), eq(paid), eq(now));
     }
 
+    /** Verifies an absent deal records its stable rejection without inserting a member. */
     @Test
     void paidRejectionIsDurableCompensationNotRefund() {
         pendingReceipt();
@@ -105,6 +114,7 @@ class PaidGroupDealServiceTest {
         verify(repository, never()).insertJoinedMember(any(), any(), any(), any());
     }
 
+    /** Verifies storage failure propagates rather than recording a misleading terminal receipt. */
     @Test
     void technicalFailureEscapesWithoutCompletingReceipt() {
         pendingReceipt();
@@ -117,6 +127,7 @@ class PaidGroupDealServiceTest {
         verify(repository, never()).complete(any(), any(), any(), any());
     }
 
+    /** Verifies initiation at expiry records compensation without creating an aggregate. */
     @Test
     void expiredStartPersistsCompensationWithoutCreatingDeal() {
         pendingReceipt();
@@ -127,6 +138,7 @@ class PaidGroupDealServiceTest {
         verify(repository, never()).insertStartedDeal(any(), any(), any());
     }
 
+    /** Verifies another payment from an existing buyer records duplicate-member compensation. */
     @Test
     void existingMemberWithAnotherPaymentGetsCompensation() {
         var leader =
@@ -142,6 +154,7 @@ class PaidGroupDealServiceTest {
         verify(repository).complete(paid.paymentId(), result, paid.userId(), now);
     }
 
+    /** Verifies equivalent exact-cent amounts produce the same request fingerprint. */
     @Test
     void sameCentsHaveIdenticalCanonicalFingerprint() {
         pendingReceipt();
@@ -158,12 +171,16 @@ class PaidGroupDealServiceTest {
                 .isEqualTo(fingerprints.getAllValues().get(1));
     }
 
+    /**
+     * Stubs a newly reserved receipt that echoes the request fingerprint with no terminal result.
+     */
     private void pendingReceipt() {
         when(repository.reserveAndLock(eq(paid.paymentId()), any(), eq(paid.userId())))
                 .thenAnswer(
                         invocation -> new ParticipationReceipt(invocation.getArgument(1), null));
     }
 
+    /** Verifies expiry produces a durable closed-deal reason and no membership transition. */
     @Test
     void expiredJoinPersistsClosedReasonWithoutChangingMembership() {
         var leader =

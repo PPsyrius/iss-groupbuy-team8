@@ -17,6 +17,7 @@ class PaidGroupDealTest {
     private static final Instant NOW = Instant.parse("2026-09-09T00:00:00Z");
     private static final UUID LEADER = UUID.fromString("a0000000-0000-7000-8000-000000000001");
 
+    /** Verifies that initiation counts only its paid leader and does not prematurely succeed. */
     @Test
     void createsOpenDealWithExactlyOnePaidLeader() {
         GroupDeal deal = start(3);
@@ -26,6 +27,10 @@ class PaidGroupDealTest {
         assertThat(deal.successTime()).isNull();
     }
 
+    /**
+     * Verifies the capacity-reaching payment stamps success while leaving the prior snapshot
+     * unchanged.
+     */
     @Test
     void lastPaidMemberSucceedsWithoutMutatingOriginalSnapshot() {
         GroupDeal original = start(2);
@@ -38,6 +43,7 @@ class PaidGroupDealTest {
         assertThat(original.status()).isEqualTo(DealStatus.OPEN);
     }
 
+    /** Verifies initiation rejects absent payment facts and an amount below the accepted price. */
     @Test
     void rejectsMissingPaymentAndIncorrectAmountDuringInitiation() {
         assertThatThrownBy(() -> new StandardPaidGroupDealCreator().initiate(terms(3), null, NOW))
@@ -49,6 +55,7 @@ class PaidGroupDealTest {
                 .isInstanceOf(BizException.class);
     }
 
+    /** Verifies neither the leader nor a buyer already in membership can consume another place. */
     @Test
     void rejectsLeaderAndExistingMember() {
         GroupDeal deal = start(3);
@@ -58,6 +65,9 @@ class PaidGroupDealTest {
                 .isInstanceOf(BizException.class);
     }
 
+    /**
+     * Pins admission to the start-inclusive, expiry-exclusive window using the stable closed code.
+     */
     @Test
     void rejectsAtDeadlineAndBeforeStart() {
         GroupDeal deal = start(3);
@@ -81,6 +91,7 @@ class PaidGroupDealTest {
                         ex -> assertThat(ex.errorCode()).isEqualTo(GroupbuyErrorCode.DEAL_CLOSED));
     }
 
+    /** Verifies join price matching and the SGD-only paid-fact boundary. */
     @Test
     void rejectsWrongAmountOrCurrency() {
         GroupDeal deal = start(3);
@@ -96,6 +107,7 @@ class PaidGroupDealTest {
                 .isInstanceOf(BizException.class);
     }
 
+    /** Verifies every terminal lifecycle state rejects new paid admission with the closed code. */
     @ParameterizedTest
     @EnumSource(
             value = DealStatus.class,
@@ -121,6 +133,7 @@ class PaidGroupDealTest {
                         ex -> assertThat(ex.errorCode()).isEqualTo(GroupbuyErrorCode.DEAL_CLOSED));
     }
 
+    /** Verifies a legacy OPEN row at capacity is rejected even without a terminal status. */
     @Test
     void rejectsFullOpenLegacyRow() {
         GroupDeal deal =
@@ -143,6 +156,10 @@ class PaidGroupDealTest {
                         ex -> assertThat(ex.errorCode()).isEqualTo(GroupbuyErrorCode.DEAL_FULL));
     }
 
+    /**
+     * Verifies an intermediate admission changes only progress, keeping accepted terms and
+     * identity.
+     */
     @Test
     void middleMemberPreservesIdentityAndFrozenTerms() {
         GroupDeal original = start(3);
@@ -157,6 +174,9 @@ class PaidGroupDealTest {
         assertThat(joined.expireTime()).isEqualTo(original.expireTime());
     }
 
+    /**
+     * Rejects non-positive, sub-cent and overflowing amounts with the invalid-participation code.
+     */
     @ParameterizedTest
     @ValueSource(strings = {"0", "-1", "0.001", "10000000000000000.00"})
     void rejectsUnrepresentablePaymentAmounts(String amount) {
@@ -168,6 +188,7 @@ class PaidGroupDealTest {
                                         .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION));
     }
 
+    /** Verifies harmless trailing zeros normalize, while absent payment or buyer identity fails. */
     @Test
     void acceptsExactCentsWithoutRoundingAndRejectsMissingIdentity() {
         assertThat(payment(LEADER, "10.000").amount()).isEqualTo(new BigDecimal("10.00"));
@@ -177,6 +198,9 @@ class PaidGroupDealTest {
                 .isInstanceOf(BizException.class);
     }
 
+    /**
+     * Verifies initiation needs an unexpired deadline, at least two places and an explicit clock.
+     */
     @Test
     void initiationRejectsExpiredTermsInvalidSizeAndMissingClock() {
         PaidGroupDealCreator creator = new StandardPaidGroupDealCreator();
@@ -189,6 +213,7 @@ class PaidGroupDealTest {
         assertThatThrownBy(() -> terms(1)).isInstanceOf(BizException.class);
     }
 
+    /** Verifies an SGD payment cannot enter a legacy USD deal and preserves the mismatch code. */
     @Test
     void joinRejectsLegacyCurrencyMismatchWithStableErrorCode() {
         GroupDeal deal =
@@ -213,11 +238,13 @@ class PaidGroupDealTest {
                                         .isEqualTo(GroupbuyErrorCode.PAYMENT_MISMATCH));
     }
 
+    /** Creates an OPEN domain fixture with one paid leader and the requested target size. */
     private static GroupDeal start(int size) {
         PaidGroupDealCreator creator = new StandardPaidGroupDealCreator();
         return creator.initiate(terms(size), payment(LEADER, "10.00"), NOW);
     }
 
+    /** Verifies accepted nanosecond deadlines normalize to the persistence precision before use. */
     @Test
     void acceptedDeadlineMatchesPostgresMicrosecondPrecision() {
         NewDealTerms terms =
@@ -232,6 +259,7 @@ class PaidGroupDealTest {
         assertThat(terms.expireTime()).isEqualTo(NOW.plusSeconds(60));
     }
 
+    /** Supplies distinct accepted deal terms at ten SGD with a fixed sixty-second window. */
     private static NewDealTerms terms(int size) {
         return new NewDealTerms(
                 UUID.randomUUID(),
@@ -243,6 +271,9 @@ class PaidGroupDealTest {
                 NOW.plusSeconds(60));
     }
 
+    /**
+     * Builds provider-free payment facts for a chosen buyer and amount, with a fresh payment key.
+     */
     private static PaidParticipation payment(UUID userId, String amount) {
         return new PaidParticipation(UUID.randomUUID(), userId, new BigDecimal(amount), "sgd");
     }

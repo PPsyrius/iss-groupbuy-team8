@@ -33,6 +33,9 @@ public enum GroupbuyErrorCode implements ErrorCode {
     private final String defaultMessage;
     private final String messageKey;
 
+    /**
+     * Binds each stable domain code to its HTTP classification and localizable message metadata.
+     */
     GroupbuyErrorCode(String code, int httpStatus, String defaultMessage, String messageKey) {
         this.code = code;
         this.httpStatus = httpStatus;
@@ -40,21 +43,25 @@ public enum GroupbuyErrorCode implements ErrorCode {
         this.messageKey = messageKey;
     }
 
+    /** Returns the stable machine-readable identifier persisted in rejection receipts. */
     @Override
     public String code() {
         return code;
     }
 
+    /** Returns the HTTP classification for adapters translating this domain rejection. */
     @Override
     public int httpStatus() {
         return httpStatus;
     }
 
+    /** Returns the fallback human-readable explanation when no translation is available. */
     @Override
     public String defaultMessage() {
         return defaultMessage;
     }
 
+    /** Returns the localization key without changing the stable machine-readable error code. */
     @Override
     public String messageKey() {
         return messageKey;

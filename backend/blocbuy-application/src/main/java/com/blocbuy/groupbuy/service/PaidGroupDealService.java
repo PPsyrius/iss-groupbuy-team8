@@ -37,6 +37,12 @@ public class PaidGroupDealService {
     private final PaidGroupDealRepository repository;
     private final PaidGroupDealCreator creator = new StandardPaidGroupDealCreator();
 
+    /**
+     * Applies trusted, preverified payment to accepted initiation terms in a transaction. Identical
+     * requests replay the original receipt; business rejection records compensation, while
+     * technical failure rolls back all writes. New transactions have a ten-second timeout; an
+     * existing caller transaction retains its own deadline. No payment verification occurs here.
+     */
     @Transactional(timeout = 10)
     public ParticipationResult startConfirmed(NewDealTerms terms, PaidParticipation paid) {
         if (terms == null || paid == null) {
@@ -70,6 +76,12 @@ public class PaidGroupDealService {
         return result;
     }
 
+    /**
+     * Admits trusted, preverified payment under receipt-then-deal locking in a transaction. Replays
+     * return the frozen receipt; rejected admissions record compensation without refunding.
+     * Technical failure rolls back all writes. New transactions use a ten-second timeout; callers
+     * supplying an existing transaction must provide a compatible bounded deadline.
+     */
     @Transactional(timeout = 10)
     public ParticipationResult joinConfirmed(UUID dealId, PaidParticipation paid) {
         if (dealId == null || paid == null) {
@@ -99,6 +111,9 @@ public class PaidGroupDealService {
         return result;
     }
 
+    /**
+     * Locks the payment receipt and rejects reuse with a different canonical participation intent.
+     */
     private ParticipationReceipt reserve(PaidParticipation paid, String fingerprint) {
         var receipt = repository.reserveAndLock(paid.paymentId(), fingerprint, paid.userId());
         if (!fingerprint.equals(receipt.fingerprint())) {
@@ -107,6 +122,9 @@ public class PaidGroupDealService {
         return receipt;
     }
 
+    /**
+     * Completes the receipt with a business rejection for post-commit compensation by its owner.
+     */
     private ParticipationResult compensate(
             UUID dealId, PaidParticipation paid, BizException rejection, Instant now) {
         var result = ParticipationResult.compensation(dealId, rejection.errorCode().code());
@@ -114,6 +132,9 @@ public class PaidGroupDealService {
         return result;
     }
 
+    /**
+     * Hashes versioned payment and intent fields so a receipt cannot be reused for changed terms.
+     */
     private static String fingerprint(String operation, PaidParticipation paid, Object... terms) {
         // Length-prefix every field; delimiter characters in dealNo cannot alias other requests.
         var canonical = new StringBuilder();
@@ -135,6 +156,7 @@ public class PaidGroupDealService {
         }
     }
 
+    /** Length-prefixes a canonical field so delimiter characters cannot alias another request. */
     private static void append(StringBuilder target, Object value) {
         String text = value.toString();
         target.append(text.length()).append(':').append(text);

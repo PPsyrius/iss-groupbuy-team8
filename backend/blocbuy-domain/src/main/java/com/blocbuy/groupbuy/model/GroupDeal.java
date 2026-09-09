@@ -31,6 +31,9 @@ public final class GroupDeal {
     private final Instant expireTime;
     private final Instant successTime;
 
+    /**
+     * Builds an immutable snapshot with structural checks for reconstruction and paid transitions.
+     */
     private GroupDeal(
             UUID id,
             String dealNo,
@@ -111,6 +114,7 @@ public final class GroupDeal {
                 successTime);
     }
 
+    /** Creates the initial OPEN snapshot with the confirmed payer as its sole leader. */
     static GroupDeal startPaid(NewDealTerms terms, PaidParticipation payment, Instant now) {
         return new GroupDeal(
                 terms.id(),
@@ -162,18 +166,22 @@ public final class GroupDeal {
                 succeeded ? now : null);
     }
 
+    /** Returns the stable database identity shared by members and participation receipts. */
     public UUID id() {
         return id;
     }
 
+    /** Returns the business-facing deal reference supplied in accepted initiation terms. */
     public String dealNo() {
         return dealNo;
     }
 
+    /** Returns the catalog product identity frozen when this deal was created. */
     public UUID productId() {
         return productId;
     }
 
+    /** Returns the initiating buyer, who cannot join again as a member. */
     public UUID leaderUserId() {
         return leaderUserId;
     }
@@ -183,30 +191,37 @@ public final class GroupDeal {
         return dealPrice;
     }
 
+    /** Returns the frozen currency code against which joining payments are checked. */
     public String currency() {
         return currency;
     }
 
+    /** Returns the paid participant count required for the deal to succeed. */
     public int targetSize() {
         return targetSize;
     }
 
+    /** Returns the paid participant count represented by this snapshot. */
     public int currentSize() {
         return currentSize;
     }
 
+    /** Returns this snapshot's lifecycle state; only OPEN deals can admit a paid participant. */
     public DealStatus status() {
         return status;
     }
 
+    /** Returns the inclusive beginning of the deal's admission window. */
     public Instant startTime() {
         return startTime;
     }
 
+    /** Returns the exclusive deadline after which paid admission is rejected. */
     public Instant expireTime() {
         return expireTime;
     }
 
+    /** Returns the final member's admission time, or null before successful completion. */
     public Instant successTime() {
         return successTime;
     }

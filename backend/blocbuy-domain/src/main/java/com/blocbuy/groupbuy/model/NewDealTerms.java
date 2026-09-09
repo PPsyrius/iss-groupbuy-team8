@@ -16,6 +16,10 @@ public record NewDealTerms(
         String currency,
         int targetSize,
         Instant expireTime) {
+    /**
+     * Validates accepted identifiers and exact SGD price, normalizing expiry to database
+     * microseconds.
+     */
     public NewDealTerms {
         if (id == null
                 || dealNo == null
