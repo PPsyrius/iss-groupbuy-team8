@@ -1,11 +1,11 @@
-# Weekly dependency updates, grouped to keep PR volume low.
 version: 2
-
 updates:
   - package-ecosystem: maven
+    cooldown:
+      default-days: 7
     directory: /backend
     schedule:
-      interval: weekly
+      interval: daily
     groups:
       spring:
         patterns: ['org.springframework*']
@@ -19,14 +19,21 @@ updates:
         update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
+    cooldown:
+      default-days: 7
     directory: /
-    schedule:
-      interval: weekly
     groups:
-      actions:
-        patterns: ['*']
+      version-updates:
+        applies-to: version-updates
+        patterns:
+          - '*'
+    schedule:
+      interval: daily
+    target-branch: dev
 
   - package-ecosystem: docker
+    cooldown:
+      default-days: 7
     directory: /backend
     schedule:
-      interval: weekly
+      interval: daily
