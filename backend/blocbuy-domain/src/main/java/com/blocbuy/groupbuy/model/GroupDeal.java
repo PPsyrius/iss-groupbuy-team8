@@ -1,5 +1,7 @@
 package com.blocbuy.groupbuy.model;
 
+import com.blocbuy.common.exception.BizException;
+import com.blocbuy.groupbuy.exception.GroupbuyErrorCode;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -10,9 +12,9 @@ import java.util.UUID;
  *
  * <p>Rules: the aggregate root is the only entry point for mutating its state; state transitions go
  * through behavioral methods that validate the current state (no public {@code setStatus}); no
- * Lombok {@code @Data}; monetary amounts are {@code BigDecimal} major units. The product-browse use
- * case is read-only, so only reconstitution exists so far — join/expire behavior lands with those
- * use cases.
+ * Lombok {@code @Data}; monetary amounts are {@code BigDecimal} major units. Paid transitions
+ * return immutable snapshots. The application must lock the stored deal, check membership and
+ * payment idempotency, then atomically persist the member and returned snapshot.
  */
 public final class GroupDeal {
 
@@ -107,6 +109,57 @@ public final class GroupDeal {
                 startTime,
                 expireTime,
                 successTime);
+    }
+
+    static GroupDeal startPaid(NewDealTerms terms, PaidParticipation payment, Instant now) {
+        return new GroupDeal(
+                terms.id(),
+                terms.dealNo(),
+                terms.productId(),
+                payment.userId(),
+                terms.price(),
+                terms.currency(),
+                terms.targetSize(),
+                1,
+                DealStatus.OPEN,
+                now,
+                terms.expireTime(),
+                null);
+    }
+
+    /**
+     * Applies one already-confirmed payment. The membership fact and current time must be read
+     * after acquiring the database deal lock; this method is not a concurrency or payment gate.
+     */
+    public GroupDeal joinPaid(PaidParticipation payment, boolean alreadyMember, Instant now) {
+        if (payment == null || now == null) {
+            throw new BizException(GroupbuyErrorCode.INVALID_PARTICIPATION);
+        }
+        payment.requirePrice(dealPrice, currency);
+        if (alreadyMember || leaderUserId.equals(payment.userId())) {
+            throw new BizException(GroupbuyErrorCode.ALREADY_MEMBER);
+        }
+        if (status != DealStatus.OPEN || now.isBefore(startTime) || !now.isBefore(expireTime)) {
+            throw new BizException(GroupbuyErrorCode.DEAL_CLOSED);
+        }
+        if (currentSize < 1 || currentSize >= targetSize) {
+            throw new BizException(GroupbuyErrorCode.DEAL_FULL);
+        }
+        int nextSize = currentSize + 1;
+        boolean succeeded = nextSize == targetSize;
+        return new GroupDeal(
+                id,
+                dealNo,
+                productId,
+                leaderUserId,
+                dealPrice,
+                currency,
+                targetSize,
+                nextSize,
+                succeeded ? DealStatus.SUCCEEDED : DealStatus.OPEN,
+                startTime,
+                expireTime,
+                succeeded ? now : null);
     }
 
     public UUID id() {
