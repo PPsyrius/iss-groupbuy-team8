@@ -49,8 +49,6 @@ management:
         include: health,info,prometheus
   endpoint:
     health:
-      probes:
-        enabled: true
 
 springdoc:
   api-docs:
