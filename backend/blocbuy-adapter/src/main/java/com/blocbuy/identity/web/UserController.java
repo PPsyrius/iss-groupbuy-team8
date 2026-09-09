@@ -2,6 +2,7 @@ package com.blocbuy.identity.web;
 
 import com.blocbuy.common.constant.ApiConstants;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
  * endpoints; write endpoints define idempotency ({@code Idempotency-Key}).
  */
 @Tag(name = "users", description = "User resource")
+@Validated
 @RestController
 @RequestMapping(ApiConstants.API_V1 + "/users")
 public class UserController {}
