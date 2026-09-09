@@ -38,7 +38,8 @@
          CVE-2026-54291 (pgjdbc, fixed in 42.7.12) and CVE-2026-59901 (netty-codec, fixed in 4.1.136). -->
     <tomcat.version>10.1.59</tomcat.version>
     <postgresql.version>42.7.13</postgresql.version>
-    <netty.version>4.1.136.Final</netty.version>
+    <!-- CVE-2026-75595: keep Netty modules aligned on the patched 4.1 maintenance line. -->
+    <netty.version>4.1.137.Final</netty.version>
     <mybatis-spring-boot.version>3.0.5</mybatis-spring-boot.version>
     <sa-token.version>1.46.0</sa-token.version>
     <springdoc.version>2.9.0</springdoc.version>
