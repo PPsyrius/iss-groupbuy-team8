@@ -4,9 +4,6 @@ spring:
   profiles:
     active: local
   jackson:
-    # ISO-8601 with explicit offset; never JSON floating-point for money/times (D10)
-    serialization:
-      write-dates-as-timestamps: false
     deserialization:
       fail-on-unknown-properties: true
   flyway:
