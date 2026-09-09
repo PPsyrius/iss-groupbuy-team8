@@ -12,6 +12,8 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface BizProductMapper {
 
+    BizProductDO selectActiveByIdForUpdate(@Param("id") UUID id);
+
     /** Active product by primary key, any status. */
     BizProductDO selectActiveById(@Param("id") UUID id);
 

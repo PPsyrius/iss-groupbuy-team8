@@ -38,6 +38,13 @@
         WHERE id = #{id,jdbcType=OTHER} AND deleted = false
     </select>
 
+    <select id="selectActiveByIdForUpdate" resultMap="bizProductMap">
+        SELECT <include refid="columns"/>
+        FROM biz_product
+        WHERE id = #{id,jdbcType=OTHER} AND deleted = false
+        FOR UPDATE
+    </select>
+
     <!-- buyer browse shows on_sale only; 'on_sale' is a server-side status code, not user input -->
     <select id="selectOnSalePage" resultMap="bizProductMap">
         SELECT <include refid="columns"/>

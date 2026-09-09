@@ -2,6 +2,8 @@ package com.blocbuy.catalog.pricing;
 
 import com.blocbuy.catalog.model.PricingMode;
 import com.blocbuy.catalog.model.Product;
+import java.math.BigDecimal;
+import java.time.Instant;
 
 /**
  * Default dual pricing: the individual price is the product list price; the group-buy price is the
@@ -9,6 +11,12 @@ import com.blocbuy.catalog.model.Product;
  * inconsistency must never mis-price a listing) — the listing falls back to individual price only.
  */
 public final class DualPricingStrategy implements PricingStrategy {
+
+    @Override
+    public BigDecimal quoteTeamPrice(Product product, TeamPricePolicy policy, Instant now) {
+        policy.requireQuotable(product, now);
+        return policy.amount();
+    }
 
     @Override
     public PricingMode mode() {

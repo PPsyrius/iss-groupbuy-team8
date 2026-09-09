@@ -25,6 +25,7 @@ final class ArchitectureTest {
 
     private static final String DOMAIN_MODEL = "com.blocbuy..model..";
     private static final String DOMAIN_PORTS = "com.blocbuy..repository..";
+    private static final String DOMAIN_PRICING = "com.blocbuy..pricing..";
     private static final String DOMAIN_EVENT = "com.blocbuy..event..";
     private static final String DOMAIN_EXC = "com.blocbuy..exception..";
     private static final String COMMON_DOMAIN = "com.blocbuy.common.exception..";
@@ -43,7 +44,12 @@ final class ArchitectureTest {
             noClasses()
                     .that()
                     .resideInAnyPackage(
-                            DOMAIN_MODEL, DOMAIN_PORTS, DOMAIN_EVENT, DOMAIN_EXC, COMMON_DOMAIN)
+                            DOMAIN_MODEL,
+                            DOMAIN_PORTS,
+                            DOMAIN_PRICING,
+                            DOMAIN_EVENT,
+                            DOMAIN_EXC,
+                            COMMON_DOMAIN)
                     .should()
                     .dependOnClassesThat()
                     .resideInAnyPackage(
@@ -101,7 +107,8 @@ final class ArchitectureTest {
     static final ArchRule domain_has_no_outward_dependencies =
             noClasses()
                     .that()
-                    .resideInAnyPackage(DOMAIN_MODEL, DOMAIN_PORTS, DOMAIN_EVENT, DOMAIN_EXC)
+                    .resideInAnyPackage(
+                            DOMAIN_MODEL, DOMAIN_PORTS, DOMAIN_PRICING, DOMAIN_EVENT, DOMAIN_EXC)
                     .should()
                     .dependOnClassesThat()
                     .resideInAnyPackage(

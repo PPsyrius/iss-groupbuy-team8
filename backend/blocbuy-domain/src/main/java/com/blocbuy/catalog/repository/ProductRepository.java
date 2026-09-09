@@ -12,6 +12,11 @@ import java.util.UUID;
  */
 public interface ProductRepository {
 
+    /**
+     * Serializes price issuance/configuration with product changes; caller must hold a transaction.
+     */
+    Optional<Product> lockById(UUID id);
+
     /** Active (non-deleted) product by primary key, any status. */
     Optional<Product> findById(UUID id);
 
