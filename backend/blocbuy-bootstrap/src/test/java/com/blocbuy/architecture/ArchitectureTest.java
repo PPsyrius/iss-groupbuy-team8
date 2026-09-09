@@ -1,12 +1,23 @@
 package com.blocbuy.architecture;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 
+import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaMethod;
+import com.tngtech.archunit.core.domain.JavaParameter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
+import java.util.Set;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Machine-enforced module boundaries (skill hard gate). Layers are Maven modules; these rules guard
@@ -125,4 +136,75 @@ final class ArchitectureTest {
                     .beAnnotatedWith("jakarta.annotation.Resource")
                     .because(
                             "beans use @RequiredArgsConstructor + private final constructor injection");
+
+    private static final Set<String> NUMERIC_PARAM_TYPES =
+            Set.of("java.lang.Integer", "int", "java.lang.Long", "long");
+
+    private static final Set<String> RANGE_CONSTRAINTS =
+            Set.of(
+                    "jakarta.validation.constraints.Min",
+                    "jakarta.validation.constraints.Max",
+                    "jakarta.validation.constraints.Positive",
+                    "jakarta.validation.constraints.PositiveOrZero",
+                    "jakarta.validation.constraints.Negative",
+                    "jakarta.validation.constraints.NegativeOrZero",
+                    "jakarta.validation.constraints.DecimalMin",
+                    "jakarta.validation.constraints.DecimalMax");
+
+    /**
+     * Every REST controller carries {@code @Validated} — without it, method-parameter constraints
+     * on {@code @RequestParam}/{@code @PathVariable} are silently ignored (issue #57).
+     */
+    @ArchTest
+    static final ArchRule controllers_are_validated =
+            classes()
+                    .that()
+                    .areAnnotatedWith(RestController.class)
+                    .should()
+                    .beAnnotatedWith(Validated.class)
+                    .because(
+                            "method-parameter constraints need class-level @Validated to be enforced");
+
+    /**
+     * Numeric {@code @RequestParam}s must carry a range constraint — an unbounded/unvalidated
+     * number penetrates to the domain and surfaces as a 500 instead of a 400 (issue #56).
+     */
+    @ArchTest
+    static final ArchRule numeric_request_params_have_range_constraints =
+            classes()
+                    .that()
+                    .areAnnotatedWith(RestController.class)
+                    .should(haveRangeConstraintsOnNumericRequestParams())
+                    .because(
+                            "numeric @RequestParam without @Min/@Max reaches the domain guard and 500s");
+
+    private static ArchCondition<JavaClass> haveRangeConstraintsOnNumericRequestParams() {
+        return new ArchCondition<>("have range constraints on numeric @RequestParam parameters") {
+            @Override
+            public void check(JavaClass controller, ConditionEvents events) {
+                for (JavaMethod method : controller.getMethods()) {
+                    for (JavaParameter param : method.getParameters()) {
+                        if (!param.isAnnotatedWith(RequestParam.class)
+                                || !NUMERIC_PARAM_TYPES.contains(param.getRawType().getName())) {
+                            continue;
+                        }
+                        boolean constrained =
+                                param.getAnnotations().stream()
+                                        .anyMatch(
+                                                annotation ->
+                                                        RANGE_CONSTRAINTS.contains(
+                                                                annotation.getRawType().getName()));
+                        if (!constrained) {
+                            events.add(
+                                    SimpleConditionEvent.violated(
+                                            param,
+                                            param.getDescription()
+                                                    + " is a numeric @RequestParam without a"
+                                                    + " range constraint"));
+                        }
+                    }
+                }
+            }
+        };
+    }
 }

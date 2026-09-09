@@ -1,0 +1,138 @@
+package com.blocbuy.bootstrap;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import cn.dev33.satoken.dao.SaTokenDao;
+import cn.dev33.satoken.dao.SaTokenDaoDefaultImpl;
+import com.blocbuy.catalog.query.ListingView;
+import com.blocbuy.catalog.service.ProductAppService;
+import com.blocbuy.common.model.PageQuery;
+import com.blocbuy.common.model.PageResult;
+import com.blocbuy.identity.repository.RoleRepository;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+/**
+ * Real HTTP binding for the anonymous product browse: boundary validation of pagination params must
+ * reject out-of-range values with 400 before any business code runs (issue #56 — unvalidated {@code
+ * page=0} previously reached the {@code PageQuery} guard and surfaced as a 500). Only the
+ * application service and the RBAC repository are mocked; the test-only session store never
+ * connects to a developer's Redis.
+ */
+@SpringBootTest(
+        properties = {
+            "spring.flyway.enabled=false",
+            "spring.datasource.url=jdbc:postgresql://localhost:1/blocbuy_placeholder?currentSchema=domain",
+            "spring.datasource.username=test",
+            "spring.datasource.password=test",
+            "spring.data.redis.host=localhost",
+            "spring.data.redis.port=1"
+        })
+@AutoConfigureMockMvc
+@Import(ProductControllerTest.SessionStore.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+class ProductControllerTest {
+    private static final String PRODUCTS_PATH = "/api/v1/products";
+    private static final UUID PRODUCT = UUID.fromString("01990000-0000-7000-8000-000000000001");
+
+    @Autowired private MockMvc mvc;
+    @MockitoBean private ProductAppService products;
+    @MockitoBean private RoleRepository roles;
+
+    @ParameterizedTest
+    @MethodSource("invalidPagination")
+    void outOfRangePaginationIsRejectedBeforeBusinessCode(String query) throws Exception {
+        mvc.perform(get(PRODUCTS_PATH + query))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON_400_002"))
+                .andExpect(jsonPath("$.data").doesNotExist())
+                .andExpect(jsonPath("$.errors").isArray());
+        verifyNoInteractions(products);
+    }
+
+    static Stream<String> invalidPagination() {
+        return Stream.of("?page=0&size=5", "?page=-1", "?size=0", "?size=101");
+    }
+
+    @Test
+    void pageZeroErrorNamesTheOffendingField() throws Exception {
+        mvc.perform(get(PRODUCTS_PATH + "?page=0&size=5"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]", containsString("page")));
+    }
+
+    @Test
+    void nonNumericPageUsesGlobalBadRequestMapping() throws Exception {
+        mvc.perform(get(PRODUCTS_PATH + "?page=abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON_400_001"));
+        verifyNoInteractions(products);
+    }
+
+    @Test
+    void defaultsApplyWhenPaginationParamsAreAbsent() throws Exception {
+        when(products.pageListings(null, null, null))
+                .thenReturn(PageResult.of(List.of(listing()), 1, PageQuery.of(null, null)));
+        mvc.perform(get(PRODUCTS_PATH))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("COMMON_200_000"))
+                .andExpect(jsonPath("$.data.page").value(1))
+                .andExpect(jsonPath("$.data.size").value(PageQuery.DEFAULT_SIZE))
+                .andExpect(jsonPath("$.data.items[0].id").value(PRODUCT.toString()));
+        verify(products).pageListings(null, null, null);
+    }
+
+    @Test
+    void validPaginationAndCategoryPassThrough() throws Exception {
+        when(products.pageListings(2, 5, "electronics"))
+                .thenReturn(PageResult.of(List.of(listing()), 6, PageQuery.of(2, 5)));
+        mvc.perform(get(PRODUCTS_PATH + "?page=2&size=5&category=electronics"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("COMMON_200_000"))
+                .andExpect(jsonPath("$.data.page").value(2))
+                .andExpect(jsonPath("$.data.size").value(5));
+        verify(products).pageListings(2, 5, "electronics");
+    }
+
+    private static ListingView listing() {
+        return new ListingView(
+                PRODUCT,
+                "Mechanical keyboard",
+                "Hot-swap",
+                "https://img.example/cover.png",
+                "electronics",
+                new BigDecimal("129.00"),
+                new BigDecimal("99.00"),
+                "sgd");
+    }
+
+    @TestConfiguration(proxyBeanMethods = false)
+    static class SessionStore {
+        @Bean(initMethod = "init", destroyMethod = "destroy")
+        @Primary
+        SaTokenDao testSessionDao() {
+            return new SaTokenDaoDefaultImpl();
+        }
+    }
+}

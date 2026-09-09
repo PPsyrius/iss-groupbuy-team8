@@ -4,15 +4,19 @@ import com.blocbuy.catalog.query.ListingDetailView;
 import com.blocbuy.catalog.query.ListingView;
 import com.blocbuy.catalog.service.ProductAppService;
 import com.blocbuy.common.constant.ApiConstants;
+import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
 import com.blocbuy.common.web.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
  * price — individual vs group-buy — so the UI shows what joining the team saves.
  */
 @Tag(name = "products", description = "Product catalog browse")
+@Validated
 @RestController
 @RequestMapping(ApiConstants.API_V1 + "/products")
 @RequiredArgsConstructor
@@ -40,8 +45,8 @@ public class ProductController {
     @Operation(summary = "Browse on-sale listings with dual pricing")
     @GetMapping
     public Result<PageResult<ProductSummaryResponse>> pageListings(
-            @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) @Min(1) Integer page,
+            @RequestParam(required = false) @Min(1) @Max(PageQuery.MAX_SIZE) Integer size,
             @RequestParam(required = false) String category) {
         PageResult<ListingView> result = productAppService.pageListings(page, size, category);
         List<ProductSummaryResponse> items =

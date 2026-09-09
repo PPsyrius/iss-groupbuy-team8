@@ -2,6 +2,7 @@ package com.blocbuy.payment.web;
 
 import com.blocbuy.common.constant.ApiConstants;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  * ApiConstants#IDEMPOTENCY_KEY_HEADER}).
  */
 @Tag(name = "payments", description = "Payment resource")
+@Validated
 @RestController
 @RequestMapping(ApiConstants.API_V1 + "/payments")
 public class PaymentController {}
