@@ -60,7 +60,7 @@ Triggers: PRs and pushes to `dev` touching `backend/**` or `contracts/**`. Concu
   1. `./mvnw -B spotless:check checkstyle:check` (fail fast)
   2. `./mvnw -B verify` (unit tests + ArchUnit + Failsafe ITs + SpotBugs + JaCoCo)
   3. Upload `jacoco.xml` + SpotBugs XML + checkstyle results as artifacts (7-day retention)
-- **Job `contract-check`** — `./mvnw -B verify -Popenapi-export` then `git diff --exit-code -- contracts/`; fails the PR if the committed `openapi.json` drifts from the code. On PRs (Step 5) it also runs `openapi-diff --fail-on-incompatible` against the base branch's committed contract, failing on backward-incompatible API changes.
+- **Job `contract-check`** — `./mvnw -B verify -Popenapi-export` then `git diff --exit-code -- contracts/`; fails the PR if the committed `openapi.json` drifts from the code. On PRs (Step 5) it also runs `openapi-diff --fail-on-incompatible` against the base branch's committed contract, failing on backward-incompatible API changes unless the PR carries the `contract-change-approved` label (explicit human approval; diff then runs report-only).
 - **Job `sonar`** — see Step 3. Skipped unless configured.
 - **Job `docker`** — PRs and pushes to `dev`: build image, smoke test with the EC2 profile against PG 18 + Redis 8, and Trivy image scan. On an enabled green `dev` push, publish that exact image to ECR and emit its immutable digest.
 - **Job `deploy-existing-ec2`** — enabled green `dev` pushes only: protected environment, GitHub OIDC, exact SSM bundle allowlist, single-instance deployment, health check and automatic application rollback.
@@ -108,7 +108,7 @@ Fixes found during a pipeline review; all landed in-repo:
 1. **Trivy actually gates now.** `aquasecurity/trivy-action` defaults to `exit-code: 0` — both fs and image scans previously only *reported* HIGH/CRITICAL without failing the job, contradicting the "0 unfixed HIGH/CRITICAL" gate. Both scans now set `exit-code: '1'` + `ignore-unfixed: true` (the latter aligns with the "unfixed" wording so CVEs with no released patch don't break the build).
 2. **`docker` job runs on PRs** (was push-only). Image build, smoke test, and scan now gate *before* merge.
 3. **Boot smoke test in `docker` job.** After `docker build`, the image boots on a scratch Docker network against real `postgres:18` + `redis:8.10` (requirepass set) containers, and CI polls `GET /actuator/health` until `status=UP` (60s budget). Catches startup-time failures (bad Flyway migration, missing env, broken Spring context) that a successful `docker build` hides. Container logs are dumped on failure.
-4. **API breaking-change check in `contract-check`** (PR only). `openapi-diff-cli` 2.1.7 (`--fail-on-incompatible`) compares the base branch's committed `contracts/openapi.json` against the PR's regenerated spec; drift check still catches "forgot to commit", this catches "broke consumers".
+4. **API breaking-change check in `contract-check`** (PR only). `openapi-diff-cli` 2.1.7 (`--fail-on-incompatible`) compares the base branch's committed `contracts/openapi.json` against the PR's regenerated spec; drift check still catches "forgot to commit", this catches "broke consumers". Escape hatch (added 2026-09-09): a PR labeled `contract-change-approved` downgrades the check to report-only — used for deliberate spec tightening, e.g. adding validation `minimum`/`maximum` that only rejects values the server never honored (#56: `page=0` previously 500'd). The label is the recorded approval; apply it only after reviewing the diff output.
 5. **CodeQL SAST job in `security.yml`.** Opt-in via repo variable `ENABLE_CODEQL=true` (requires GHAS on private repos); `build-mode: none` so no Maven build is needed.
 6. **`setup-java cache: maven`** replaces the three hand-rolled `actions/cache` blocks for `~/.m2/repository` (it resolves `backend/**/pom.xml` itself).
 7. **Fixed a silent no-op in the drift check (pre-existing bug).** `git diff --exit-code -- contracts/` ran under `working-directory: backend`, where the pathspec matches nothing and `git diff` exits 0 — the drift gate could never fail (verified locally: modifying `contracts/openapi.json` still exited 0). The step now runs from `${{ github.workspace }}`.
@@ -160,7 +160,7 @@ These need GitHub repo settings / external accounts; do them once, then the matc
 | Vulnerabilities | 0 unfixed HIGH/CRITICAL | Trivy in CI |
 | Secrets | 0 leaks in history | Gitleaks in CI |
 | Contract drift | `contracts/openapi.json` == generated | `contract-check` job |
-| Contract compatibility | no backward-incompatible change vs base | `contract-check` job (PR only, openapi-diff) |
+| Contract compatibility | no backward-incompatible change vs base, or `contract-change-approved` label on PR | `contract-check` job (PR only, openapi-diff) |
 | Boot smoke | `/actuator/health` = UP in 60s vs PG 18 + Redis 8 | `docker` job |
 | SAST | 0 CodeQL alerts | `security.yml` `codeql` job (opt-in) |
 | Deployment bundle | exactly one backend service and six allowlisted archive entries | `security.yml` and `ci-backend.yml` |

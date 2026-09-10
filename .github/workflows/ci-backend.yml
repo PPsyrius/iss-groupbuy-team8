@@ -15,6 +15,9 @@ on:
       - "deployment/backend/**"
       - ".github/workflows/ci-backend.yml"
   pull_request:
+    # labeled/unlabeled: applying or removing `contract-change-approved` must
+    # re-run the contract gate — the label is only visible in a fresh event.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
     branches: [dev]
     paths:
       - "backend/**"
@@ -86,15 +89,25 @@ jobs:
 
       # Drift check above catches "forgot to commit"; this catches "broke consumers".
       # Old spec = base branch committed contract; new spec = regenerated from PR code.
+      # Escape hatch: label `contract-change-approved` = explicit human approval of an
+      # incompatible change (e.g. spec tightening that only rejects values the server
+      # never honored). With the label the diff still runs, but report-only.
       - name: Fail on backward-incompatible API change (PR only)
         if: github.event_name == 'pull_request'
+        env:
+          APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'contract-change-approved') }}
         run: |
           git fetch --depth=1 origin "${{ github.base_ref }}"
           git show FETCH_HEAD:contracts/openapi.json > /tmp/openapi-base.json
           curl -sSfL -o /tmp/openapi-diff.jar \
             https://repo1.maven.org/maven2/org/openapitools/openapidiff/openapi-diff-cli/2.1.7/openapi-diff-cli-2.1.7-all.jar
-          java -jar /tmp/openapi-diff.jar --fail-on-incompatible \
-            /tmp/openapi-base.json ../contracts/openapi.json
+          if [ "$APPROVED" = "true" ]; then
+            java -jar /tmp/openapi-diff.jar /tmp/openapi-base.json ../contracts/openapi.json || true
+            echo "::notice::Incompatible contract change approved via contract-change-approved label"
+          else
+            java -jar /tmp/openapi-diff.jar --fail-on-incompatible \
+              /tmp/openapi-base.json ../contracts/openapi.json
+          fi
 
   sonar:
     # Activated by setting repo variable SONAR_HOST_URL (+ secret SONAR_TOKEN).
