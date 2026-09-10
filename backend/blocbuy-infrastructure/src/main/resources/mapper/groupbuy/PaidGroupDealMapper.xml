@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blocbuy.groupbuy.persistence.PaidGroupDealMapper">
+    <resultMap id="receipt" type="com.blocbuy.groupbuy.persistence.ParticipationReceiptDO">
+        <result column="request_fingerprint" property="requestFingerprint"/>
+        <result column="deal_id" property="dealId" jdbcType="OTHER"/>
+        <result column="outcome" property="outcome"/>
+        <result column="deal_status" property="dealStatus"/>
+        <result column="current_size" property="currentSize"/>
+        <result column="reason_code" property="reasonCode"/>
+    </resultMap>
+
+    <insert id="reserveReceipt">
+        INSERT INTO biz_group_participation_receipt
+            (payment_id, request_fingerprint, create_by, update_by)
+        VALUES (#{paymentId,jdbcType=OTHER}, #{fingerprint}, #{actorId,jdbcType=OTHER}, #{actorId,jdbcType=OTHER})
+        ON CONFLICT (payment_id) DO NOTHING
+    </insert>
+
+    <select id="lockReceipt" resultMap="receipt" flushCache="true" useCache="false">
+        SELECT request_fingerprint, deal_id, outcome, deal_status, current_size, reason_code
+        FROM biz_group_participation_receipt
+        WHERE payment_id = #{paymentId,jdbcType=OTHER}
+        FOR UPDATE
+    </select>
+
+    <select id="lockDeal" resultMap="com.blocbuy.groupbuy.persistence.BizGroupDealMapper.bizGroupDealMap"
+            flushCache="true" useCache="false">
+        SELECT <include refid="com.blocbuy.groupbuy.persistence.BizGroupDealMapper.columns"/>
+        FROM biz_group_deal
+        WHERE id = #{dealId,jdbcType=OTHER} AND deleted = false
+        FOR UPDATE
+    </select>
+
+    <select id="currentTime" resultType="java.time.Instant" flushCache="true" useCache="false">
+        SELECT clock_timestamp()
+    </select>
+
+    <select id="hasActiveMember" resultType="boolean" flushCache="true" useCache="false">
+        SELECT EXISTS (
+            SELECT 1 FROM biz_group_member
+            WHERE deal_id = #{dealId,jdbcType=OTHER} AND user_id = #{userId,jdbcType=OTHER}
+              AND deleted = false
+        )
+    </select>
+
+    <insert id="insertDeal">
+        INSERT INTO biz_group_deal
+            (id, deal_no, product_id, leader_user_id, deal_price, currency, target_size,
+             current_size, status, start_time, expire_time, success_time,
+             create_time, create_by, update_time, update_by)
+        VALUES (#{id,jdbcType=OTHER}, #{dealNo}, #{productId,jdbcType=OTHER}, #{leaderUserId,jdbcType=OTHER},
+                #{dealPrice}, #{currency}, #{targetSize}, #{currentSize}, #{status},
+                #{startTime}, #{expireTime}, #{successTime}, #{createTime}, #{createBy,jdbcType=OTHER},
+                #{updateTime}, #{updateBy,jdbcType=OTHER})
+    </insert>
+
+    <insert id="insertMember">
+        INSERT INTO biz_group_member
+            (deal_id, payment_id, user_id, member_role, status, join_time,
+             create_time, create_by, update_time, update_by)
+        VALUES (#{dealId,jdbcType=OTHER}, #{paymentId,jdbcType=OTHER}, #{userId,jdbcType=OTHER},
+                #{role}, 'paid', #{now}, #{now}, #{userId,jdbcType=OTHER}, #{now}, #{userId,jdbcType=OTHER})
+    </insert>
+
+    <update id="updateDeal">
+        UPDATE biz_group_deal
+        SET current_size = #{deal.currentSize}, status = #{deal.status}, success_time = #{deal.successTime},
+            update_time = #{deal.updateTime}, update_by = #{deal.updateBy,jdbcType=OTHER}, version = version + 1
+        WHERE id = #{deal.id,jdbcType=OTHER} AND deleted = false
+          AND current_size = #{expectedSize} AND status = #{expectedStatus}
+    </update>
+
+    <update id="completeReceipt">
+        UPDATE biz_group_participation_receipt
+        SET deal_id = #{result.dealId,jdbcType=OTHER}, outcome = #{result.outcome},
+            deal_status = #{result.dealStatus}, current_size = #{result.currentSize}, reason_code = #{result.reasonCode},
+            update_time = #{now}, update_by = #{actorId,jdbcType=OTHER}
+        WHERE payment_id = #{paymentId,jdbcType=OTHER} AND outcome IS NULL
+    </update>
+</mapper>

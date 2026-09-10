@@ -1,5 +1,7 @@
 package com.blocbuy.groupbuy.model;
 
+import com.blocbuy.common.exception.BizException;
+import com.blocbuy.groupbuy.exception.GroupbuyErrorCode;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -10,9 +12,9 @@ import java.util.UUID;
  *
  * <p>Rules: the aggregate root is the only entry point for mutating its state; state transitions go
  * through behavioral methods that validate the current state (no public {@code setStatus}); no
- * Lombok {@code @Data}; monetary amounts are {@code BigDecimal} major units. The product-browse use
- * case is read-only, so only reconstitution exists so far — join/expire behavior lands with those
- * use cases.
+ * Lombok {@code @Data}; monetary amounts are {@code BigDecimal} major units. Paid transitions
+ * return immutable snapshots. The application must lock the stored deal, check membership and
+ * payment idempotency, then atomically persist the member and returned snapshot.
  */
 public final class GroupDeal {
 
@@ -29,6 +31,9 @@ public final class GroupDeal {
     private final Instant expireTime;
     private final Instant successTime;
 
+    /**
+     * Builds an immutable snapshot with structural checks for reconstruction and paid transitions.
+     */
     private GroupDeal(
             UUID id,
             String dealNo,
@@ -109,18 +114,74 @@ public final class GroupDeal {
                 successTime);
     }
 
+    /** Creates the initial OPEN snapshot with the confirmed payer as its sole leader. */
+    static GroupDeal startPaid(NewDealTerms terms, PaidParticipation payment, Instant now) {
+        return new GroupDeal(
+                terms.id(),
+                terms.dealNo(),
+                terms.productId(),
+                payment.userId(),
+                terms.price(),
+                terms.currency(),
+                terms.targetSize(),
+                1,
+                DealStatus.OPEN,
+                now,
+                terms.expireTime(),
+                null);
+    }
+
+    /**
+     * Applies one already-confirmed payment. The membership fact and current time must be read
+     * after acquiring the database deal lock; this method is not a concurrency or payment gate.
+     */
+    public GroupDeal joinPaid(PaidParticipation payment, boolean alreadyMember, Instant now) {
+        if (payment == null || now == null) {
+            throw new BizException(GroupbuyErrorCode.INVALID_PARTICIPATION);
+        }
+        payment.requirePrice(dealPrice, currency);
+        if (alreadyMember || leaderUserId.equals(payment.userId())) {
+            throw new BizException(GroupbuyErrorCode.ALREADY_MEMBER);
+        }
+        if (status != DealStatus.OPEN || now.isBefore(startTime) || !now.isBefore(expireTime)) {
+            throw new BizException(GroupbuyErrorCode.DEAL_CLOSED);
+        }
+        if (currentSize < 1 || currentSize >= targetSize) {
+            throw new BizException(GroupbuyErrorCode.DEAL_FULL);
+        }
+        int nextSize = currentSize + 1;
+        boolean succeeded = nextSize == targetSize;
+        return new GroupDeal(
+                id,
+                dealNo,
+                productId,
+                leaderUserId,
+                dealPrice,
+                currency,
+                targetSize,
+                nextSize,
+                succeeded ? DealStatus.SUCCEEDED : DealStatus.OPEN,
+                startTime,
+                expireTime,
+                succeeded ? now : null);
+    }
+
+    /** Returns the stable database identity shared by members and participation receipts. */
     public UUID id() {
         return id;
     }
 
+    /** Returns the business-facing deal reference supplied in accepted initiation terms. */
     public String dealNo() {
         return dealNo;
     }
 
+    /** Returns the catalog product identity frozen when this deal was created. */
     public UUID productId() {
         return productId;
     }
 
+    /** Returns the initiating buyer, who cannot join again as a member. */
     public UUID leaderUserId() {
         return leaderUserId;
     }
@@ -130,30 +191,37 @@ public final class GroupDeal {
         return dealPrice;
     }
 
+    /** Returns the frozen currency code against which joining payments are checked. */
     public String currency() {
         return currency;
     }
 
+    /** Returns the paid participant count required for the deal to succeed. */
     public int targetSize() {
         return targetSize;
     }
 
+    /** Returns the paid participant count represented by this snapshot. */
     public int currentSize() {
         return currentSize;
     }
 
+    /** Returns this snapshot's lifecycle state; only OPEN deals can admit a paid participant. */
     public DealStatus status() {
         return status;
     }
 
+    /** Returns the inclusive beginning of the deal's admission window. */
     public Instant startTime() {
         return startTime;
     }
 
+    /** Returns the exclusive deadline after which paid admission is rejected. */
     public Instant expireTime() {
         return expireTime;
     }
 
+    /** Returns the final member's admission time, or null before successful completion. */
     public Instant successTime() {
         return successTime;
     }
