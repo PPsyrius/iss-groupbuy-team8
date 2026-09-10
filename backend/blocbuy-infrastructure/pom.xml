@@ -35,7 +35,7 @@
     </dependency>
     <dependency>
       <groupId>cn.dev33</groupId>
-      <artifactId>sa-token-spring-boot3-starter</artifactId>
+      <artifactId>sa-token-spring-boot4-starter</artifactId>
     </dependency>
     <dependency>
       <groupId>cn.dev33</groupId>
@@ -48,7 +48,7 @@
     </dependency>
     <!-- jsonb <-> List mapping in persistence converters (BOM-managed version) -->
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
+      <groupId>tools.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
     <dependency>
