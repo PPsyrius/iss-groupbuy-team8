@@ -3,9 +3,9 @@ package com.blocbuy.catalog.persistence;
 import com.blocbuy.catalog.model.PricingMode;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductStatus;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Hand-written BizProductDO ↔ Product converter (no MapStruct — locked decision). Enum↔varchar and
