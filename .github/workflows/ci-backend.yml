@@ -38,7 +38,27 @@ defaults:
     working-directory: backend
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dorny/paths-filter@de90cc6fb38fc0963d73e26658601b224525d6d0 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - 'docker-compose.yaml'
+              - 'deployment/backend/**'
+              - '.github/workflows/ci-backend.yml'
+
   build-quality:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -113,7 +133,9 @@ jobs:
     # Activated by setting repo variable SONAR_HOST_URL (+ secret SONAR_TOKEN).
     # SonarCloud also needs variable SONAR_ORGANIZATION. See docs/ci/devsecops-pipeline-plan.md Step 3.
     if: vars.SONAR_HOST_URL != ''
-    needs: build-quality
+    needs:
+      - detect-changes
+      - build-quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -147,12 +169,13 @@ jobs:
   docker:
     # Runs on PR too: image build + smoke + scan must gate before merge, not after push.
     needs:
+      - detect-changes
       - build-quality
       - contract-check
       - sonar
     if: >-
       always() &&
-      needs.build-quality.result == 'success' &&
+      (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
       needs.contract-check.result == 'success' &&
       (needs.sonar.result == 'success' || needs.sonar.result == 'skipped')
     runs-on: ubuntu-latest
@@ -352,6 +375,7 @@ jobs:
     # be exact-matched (infra/terraform/backend-app-stack/github-oidc.tf). The GitHub
     # environment is restricted to v* tags; approval stays on the deploy job.
     needs:
+      - detect-changes
       - build-quality
       - contract-check
       - sonar
@@ -361,7 +385,7 @@ jobs:
       github.event_name == 'push' &&
       startsWith(github.ref, 'refs/tags/v') &&
       vars.ENABLE_EC2_DEPLOY_PROD == 'true' &&
-      needs.build-quality.result == 'success' &&
+      (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
       needs.contract-check.result == 'success' &&
       needs.docker.result == 'success' &&
       (needs.sonar.result == 'success' || needs.sonar.result == 'skipped')
@@ -466,6 +490,7 @@ jobs:
       group: deploy-existing-ec2-backend-dev
       cancel-in-progress: false
     needs:
+      - detect-changes
       - build-quality
       - contract-check
       - sonar
@@ -475,7 +500,7 @@ jobs:
       github.event_name == 'push' &&
       github.ref == 'refs/heads/dev' &&
       vars.ENABLE_EC2_DEPLOY == 'true' &&
-      needs.build-quality.result == 'success' &&
+      (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
       needs.contract-check.result == 'success' &&
       needs.docker.result == 'success' &&
       (needs.sonar.result == 'success' || needs.sonar.result == 'skipped') &&
@@ -646,6 +671,7 @@ jobs:
       group: deploy-existing-ec2-backend-prod
       cancel-in-progress: false
     needs:
+      - detect-changes
       - build-quality
       - contract-check
       - sonar
@@ -656,7 +682,7 @@ jobs:
       github.event_name == 'push' &&
       startsWith(github.ref, 'refs/tags/v') &&
       vars.ENABLE_EC2_DEPLOY_PROD == 'true' &&
-      needs.build-quality.result == 'success' &&
+      (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
       needs.contract-check.result == 'success' &&
       needs.docker.result == 'success' &&
       (needs.sonar.result == 'success' || needs.sonar.result == 'skipped') &&
