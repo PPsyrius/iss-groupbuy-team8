@@ -44,8 +44,6 @@ management:
       base-path: /api/actuator
       exposure:
         include: health,info,prometheus
-  endpoint:
-    health:
 
 springdoc:
   api-docs:
