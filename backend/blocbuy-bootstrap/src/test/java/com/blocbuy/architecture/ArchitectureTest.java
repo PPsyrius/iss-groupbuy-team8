@@ -69,7 +69,8 @@ final class ArchitectureTest {
                             "org.mybatis..",
                             "cn.dev33..",
                             "jakarta..",
-                            "com.fasterxml.jackson..")
+                            "com.fasterxml.jackson..",
+                            "tools.jackson..")
                     .because("domain must stay framework-free (JDK + Lombok only)");
 
     /** Application layer never touches MyBatis/Redis directly — only domain ports. */
