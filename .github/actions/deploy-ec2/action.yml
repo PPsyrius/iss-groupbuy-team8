@@ -18,8 +18,9 @@ inputs:
     description: 'IAM role ARN for deployment via OIDC'
     required: true
   image-uri:
-    description: 'Full ECR image URI with digest (repo@sha256:...)'
-    required: true
+    description: 'Full ECR image URI with digest (repo@sha256:...). Required for deploy mode.'
+    required: false
+    default: ''
   mode:
     description: 'deploy or rollback'
     required: true
@@ -79,6 +80,8 @@ runs:
         INSTANCE_ID: ${{ inputs.instance-id }}
         DEPLOY_ROLE_ARN: ${{ inputs.deploy-role-arn }}
         IMAGE_URI: ${{ inputs.image-uri }}
+        MODE: ${{ inputs.mode }}
+        TARGET_IMAGE: ${{ inputs.target-image }}
       run: |
         set -Eeuo pipefail
         [[ "$AWS_ACCOUNT_ID" =~ ^[0-9]{12}$ ]] \
@@ -93,11 +96,20 @@ runs:
           || { echo "::error::DEPLOY_ROLE_ARN must be an IAM role in AWS_ACCOUNT_ID"; exit 1; }
 
         expected_repository="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}"
-        image_digest="${IMAGE_URI#"$expected_repository@"}"
-        [[ "$IMAGE_URI" == "$expected_repository@$image_digest" ]] \
-          || { echo "::error::Image repository does not match deployment configuration"; exit 1; }
-        [[ "$image_digest" =~ ^sha256:[a-f0-9]{64}$ ]] \
-          || { echo "::error::IMAGE_URI is not pinned by a valid digest"; exit 1; }
+        if [[ "$MODE" == "deploy" ]]; then
+          image_digest="${IMAGE_URI#"$expected_repository@"}"
+          [[ "$IMAGE_URI" == "$expected_repository@$image_digest" ]] \
+            || { echo "::error::Image repository does not match deployment configuration"; exit 1; }
+          [[ "$image_digest" =~ ^sha256:[a-f0-9]{64}$ ]] \
+            || { echo "::error::IMAGE_URI is not pinned by a valid digest"; exit 1; }
+        fi
+        if [[ "$MODE" == "rollback" && -n "$TARGET_IMAGE" ]]; then
+          target_digest="${TARGET_IMAGE#"$expected_repository@"}"
+          [[ "$TARGET_IMAGE" == "$expected_repository@$target_digest" ]] \
+            || { echo "::error::target-image repository does not match deployment configuration"; exit 1; }
+          [[ "$target_digest" =~ ^sha256:[a-f0-9]{64}$ ]] \
+            || { echo "::error::target-image is not pinned by a valid digest"; exit 1; }
+        fi
 
     # ------------------------------------------------------------------
     # 2. Package deployment bundle
@@ -336,7 +348,7 @@ runs:
     # ------------------------------------------------------------------
     - name: Rollback on health check failure
       id: rollback-on-failure
-      if: inputs.mode == 'deploy' && steps.verify-health.outcome == 'failure' && inputs.health-url != ''
+      if: ${{ always() && inputs.mode == 'deploy' && inputs.health-url != '' && steps.ssm-exec.outcome == 'success' && steps.verify-health.outcome == 'failure' }}
       shell: bash
       env:
         AWS_ACCOUNT_ID: ${{ inputs.aws-account-id }}
@@ -433,6 +445,7 @@ runs:
         INSTANCE_ID: ${{ inputs.instance-id }}
         REASON: ${{ inputs.reason }}
         HEALTH_URL: ${{ inputs.health-url }}
+        TARGET_IMAGE: ${{ inputs.target-image }}
         ROLLBACK_STATUS: ${{ steps.rollback-on-failure.outcome || 'skipped' }}
       run: |
         if [[ "$MODE" == "deploy" ]]; then
@@ -460,7 +473,7 @@ runs:
             echo "### Existing EC2 backend rollback"
             echo "- Requested by: \`$GITHUB_ACTOR\`"
             echo "- Reason: $safe_reason"
-            echo "- Requested image: \`${{ inputs.target-image || 'recorded previous image' }}\`"
+            echo "- Requested image: \`${TARGET_IMAGE:-recorded previous image}\`"
             echo "- Resulting image: \`${IMAGE_URI:-unknown}\`"
             echo "- EC2 instance: \`$INSTANCE_ID\`"
             echo "- SSM command: \`$SSM_COMMAND_ID\`"
