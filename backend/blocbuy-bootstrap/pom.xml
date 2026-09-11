@@ -91,6 +91,8 @@
   </dependencies>
 
   <build>
+    <finalName>blocbuy-backend</finalName>
+
     <plugins>
       <plugin>
         <groupId>org.springframework.boot</groupId>
@@ -105,6 +107,7 @@
           </excludes>
         </configuration>
       </plugin>
+
       <!-- Aggregate coverage: bootstrap is the only module depending on all others.
            Output: target/site/jacoco-aggregate/jacoco.xml (consumed by Sonar). -->
       <plugin>
@@ -153,6 +156,7 @@
               </execution>
             </executions>
           </plugin>
+
           <plugin>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-maven-plugin</artifactId>
