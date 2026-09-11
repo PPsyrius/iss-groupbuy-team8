@@ -132,55 +132,17 @@ jobs:
               /tmp/openapi-base.json ../contracts/openapi.json
           fi
 
-  sonar:
-    # Activated by setting repo variable SONAR_HOST_URL (+ secret SONAR_TOKEN).
-    # SonarCloud also needs variable SONAR_ORGANIZATION. See docs/ci/devsecops-pipeline-plan.md Step 3.
-    if: vars.SONAR_HOST_URL != ''
-    needs:
-      - build-quality
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0 # full history for accurate new-code analysis
-
-      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
-        with:
-          distribution: temurin
-          java-version: '21'
-          cache: maven
-
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.sonar/cache
-          key: sonar-${{ runner.os }}
-          restore-keys: sonar-${{ runner.os }}
-
-      - name: SonarQube scan (verify + analyze in one pass for coverage)
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
-          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
-        run: >
-          ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.7.0.6970:sonar
-          -Dsonar.host.url="$SONAR_HOST_URL"
-          -Dsonar.token="$SONAR_TOKEN"
-          ${SONAR_ORGANIZATION:+-Dsonar.organization="$SONAR_ORGANIZATION"}
-          -Dsonar.qualitygate.wait=true
-
   docker:
     # Runs on PR too: image build + smoke + scan must gate before merge, not after push.
     needs:
       - detect-changes
       - build-quality
       - contract-check
-      - sonar
     if: >-
       always() &&
       needs.detect-changes.result == 'success' &&
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
-      needs.contract-check.result == 'success' &&
-      (needs.sonar.result == 'success' || needs.sonar.result == 'skipped')
+      needs.contract-check.result == 'success'
     runs-on: ubuntu-latest
     outputs:
       image_uri: ${{ steps.publish.outputs.image_uri }}
@@ -375,7 +337,6 @@ jobs:
       - detect-changes
       - build-quality
       - contract-check
-      - sonar
       - docker
     if: >-
       always() &&
@@ -385,8 +346,7 @@ jobs:
       needs.detect-changes.result == 'success' &&
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
       needs.contract-check.result == 'success' &&
-      needs.docker.result == 'success' &&
-      (needs.sonar.result == 'success' || needs.sonar.result == 'skipped')
+      needs.docker.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -485,7 +445,6 @@ jobs:
       - detect-changes
       - build-quality
       - contract-check
-      - sonar
       - docker
     if: >-
       always() &&
@@ -496,7 +455,6 @@ jobs:
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
       needs.contract-check.result == 'success' &&
       needs.docker.result == 'success' &&
-      (needs.sonar.result == 'success' || needs.sonar.result == 'skipped') &&
       needs.docker.outputs.image_uri != ''
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -531,7 +489,6 @@ jobs:
       - detect-changes
       - build-quality
       - contract-check
-      - sonar
       - docker
       - publish-ecr-prod
     if: >-
@@ -543,7 +500,6 @@ jobs:
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
       needs.contract-check.result == 'success' &&
       needs.docker.result == 'success' &&
-      (needs.sonar.result == 'success' || needs.sonar.result == 'skipped') &&
       needs.publish-ecr-prod.result == 'success' &&
       needs.publish-ecr-prod.outputs.image_uri != ''
     runs-on: ubuntu-latest

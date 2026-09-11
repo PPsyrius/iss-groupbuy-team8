@@ -238,7 +238,7 @@ Protect `dev` and require a pull request, CODEOWNERS review, no force push, and 
 
 - `build-quality`, `contract-check`, `docker`;
 - `workflow-lint`, `deployment-bundle`, `gitleaks`, `trivy-deps`, `trivy-config`;
-- `sonar` and `codeql` only after those optional services are enabled consistently.
+- `codeql` only after GHAS is enabled consistently.
 
 The deployment job is push-only and should not be a PR-required check.
 

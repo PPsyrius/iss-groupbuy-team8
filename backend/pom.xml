@@ -55,11 +55,6 @@
     <spotbugs-maven-plugin.version>4.10.4.0</spotbugs-maven-plugin.version>
     <spotbugs.version>4.10.4</spotbugs.version>
     <jacoco.version>0.8.15</jacoco.version>
-    <!-- SonarQube: host/organization/token come from CI secrets (docs/ci/devsecops-pipeline-plan.md) -->
-    <sonar.projectKey>blocbuy-backend</sonar.projectKey>
-    <sonar.coverage.jacoco.xmlReportPaths>
-      ${maven.multiModuleProjectDirectory}/blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml
-    </sonar.coverage.jacoco.xmlReportPaths>
   </properties>
 
   <dependencyManagement>
