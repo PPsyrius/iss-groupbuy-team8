@@ -185,13 +185,6 @@ jobs:
           name: sonar-inputs
           path: backend
 
-      # Temporary: remove after confirming the artifact handoff in CI.
-      - name: Verify restored Sonar inputs
-        run: |
-          test -f blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml
-          find . -type d -path '*/target/classes' -print
-          find . -type d -path '*/target/test-classes' -print
-
       - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
