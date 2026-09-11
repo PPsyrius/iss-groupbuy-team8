@@ -188,7 +188,7 @@ jobs:
       contents: read
       id-token: write # requested only by the dev ECR publication steps (dev push)
       security-events: write # SARIF upload (no-op without GHAS on private repos)
-      actions: read # upload-sarif telemetry
+      actions: write # upload-sarif telemetry + BuildKit GHA cache
     env:
       # Dev-only publication (implementation plan §3.1): the docker job publishes the
       # dev image on dev pushes. Prod publication lives in publish-ecr-prod — that job
@@ -203,10 +203,19 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
       # defaults.working-directory is backend/, and the build context IS backend/ — "." is correct.
       # Writing backend/ here would resolve to backend/backend/ and fail with "path not found".
       - name: Build image
-        run: docker build -t blocbuy-backend:ci-${{ github.sha }} .
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: ./backend
+          load: true
+          tags: blocbuy-backend:ci-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       # Match the existing EC2 runtime: PG/Redis are host-local and the backend uses host networking.
       - name: Smoke test EC2 profile (boot + /api/actuator/health)
