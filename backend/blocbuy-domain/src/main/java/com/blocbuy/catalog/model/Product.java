@@ -33,6 +33,9 @@ public final class Product {
     private final PricingMode pricingMode;
     private final int version;
 
+    // Aggregate snapshots are constructed whole; a parameter object would only relocate the same
+    // invariant checks and obscure them.
+    @SuppressWarnings("java:S107")
     private Product(
             UUID id,
             String productNo,
@@ -87,7 +90,8 @@ public final class Product {
         this.version = version;
     }
 
-    /** Reconstitution factory for the infrastructure converter; all fields come from the row. */
+    /** Reconstitution factory for tests; the stored revision defaults to version 0. */
+    @SuppressWarnings("java:S107") // versionless mirror of the whole-snapshot factory
     public static Product reconstitute(
             UUID id,
             String productNo,
@@ -103,7 +107,7 @@ public final class Product {
             int soldCount,
             ProductStatus status,
             PricingMode pricingMode) {
-        return new Product(
+        return reconstitute(
                 id,
                 productNo,
                 title,
@@ -122,6 +126,7 @@ public final class Product {
     }
 
     /** Reconstitute the stored revision without granting callers a mutable version setter. */
+    @SuppressWarnings("java:S107") // mirror of the whole-snapshot constructor
     public static Product reconstitute(
             UUID id,
             String productNo,

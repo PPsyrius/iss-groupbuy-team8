@@ -32,10 +32,10 @@ class ProductLifecycleTest {
         Product draft = Product.draft(UUID.randomUUID(), "SKU-2", details("10.00", 5));
         assertThat(draft.revise(details("12.00", 6)).originalPrice()).isEqualByComparingTo("12.00");
         Product published = draft.publish();
-        assertThatThrownBy(() -> published.revise(details("12.00", 5)))
-                .isInstanceOf(BizException.class);
-        assertThatThrownBy(() -> published.revise(details("10.00", 6)))
-                .isInstanceOf(BizException.class);
+        ListingDetails repriced = details("12.00", 5);
+        assertThatThrownBy(() -> published.revise(repriced)).isInstanceOf(BizException.class);
+        ListingDetails restocked = details("10.00", 6);
+        assertThatThrownBy(() -> published.revise(restocked)).isInstanceOf(BizException.class);
         assertThat(published.revise(details("10.00", 5)).version()).isEqualTo(2);
     }
 

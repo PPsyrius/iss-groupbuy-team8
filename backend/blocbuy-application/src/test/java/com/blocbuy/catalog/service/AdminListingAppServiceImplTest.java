@@ -84,7 +84,8 @@ class AdminListingAppServiceImplTest {
     /** Missing resources do not become drafts implicitly. */
     @Test
     void missingProductCannotBeRevisedOrPublished() {
-        assertThatThrownBy(() -> service.revise(ID, details(), 0, ACTOR))
+        ListingDetails content = details();
+        assertThatThrownBy(() -> service.revise(ID, content, 0, ACTOR))
                 .isInstanceOf(BizException.class);
         assertThatThrownBy(() -> service.changeStatus(ID, ProductStatus.ON_SALE, 0, ACTOR))
                 .isInstanceOf(BizException.class);
@@ -96,7 +97,8 @@ class AdminListingAppServiceImplTest {
         doThrow(new BizException(IdentityErrorCode.ACCOUNT_DISABLED))
                 .when(users)
                 .requireActive(ACTOR);
-        assertThatThrownBy(() -> service.create("SKU", details(), ACTOR))
+        ListingDetails content = details();
+        assertThatThrownBy(() -> service.create("SKU", content, ACTOR))
                 .isInstanceOf(BizException.class);
         verify(products, never()).insertDraft(any(), any());
     }

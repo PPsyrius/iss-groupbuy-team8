@@ -16,7 +16,6 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -59,27 +58,25 @@ import tools.jackson.databind.annotation.JsonDeserialize;
 @Tag(
         name = "admin-listings",
         description = "API-only listing management; admin role and catalog:product:write required")
-@ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Success in the established Result envelope"),
-    @ApiResponse(responseCode = "400", description = "Invalid input"),
-    @ApiResponse(responseCode = "401", description = "Login required"),
-    @ApiResponse(
-            responseCode = "403",
-            description = "Administrator permission required or account disabled"),
-    @ApiResponse(responseCode = "404", description = "Listing absent or deleted"),
-    @ApiResponse(
-            responseCode = "409",
-            description =
-                    "Duplicate product number, illegal lifecycle action or retained business history"),
-    @ApiResponse(responseCode = "412", description = "Stale listing version precondition")
-})
+@ApiResponse(responseCode = "200", description = "Success in the established Result envelope")
+@ApiResponse(responseCode = "400", description = "Invalid input")
+@ApiResponse(responseCode = "401", description = "Login required")
+@ApiResponse(
+        responseCode = "403",
+        description = "Administrator permission required or account disabled")
+@ApiResponse(responseCode = "404", description = "Listing absent or deleted")
+@ApiResponse(
+        responseCode = "409",
+        description =
+                "Duplicate product number, illegal lifecycle action or retained business history")
+@ApiResponse(responseCode = "412", description = "Stale listing version precondition")
 public class AdminListingController {
     /** True end-of-input in both Java and JSON Schema regexes, including a trailing newline. */
     private static final String INPUT_END = "(?![\\s\\S])";
 
     /** Require a nonzero digit while preserving exact decimal syntax and existing size limits. */
     private static final String POSITIVE_MONEY =
-            "^(?=[0-9.]*[1-9])[0-9]{1,16}(\\.[0-9]{1,2})?" + INPUT_END;
+            "^(?=[\\d.]*[1-9])\\d{1,16}(\\.\\d{1,2})?" + INPUT_END;
 
     private final AdminListingAppService listings;
 
@@ -196,6 +193,7 @@ public class AdminListingController {
     }
 
     /** Client-writable content only; amount remains a strict decimal string on the wire. */
+    @SuppressWarnings("java:S107") // flat protocol DTO mirroring the editable listing fields
     public record ListingContent(
             @NotBlank @Size(max = 256) String title,
             @Size(max = 256) String subtitle,
