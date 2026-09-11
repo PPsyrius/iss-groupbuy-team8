@@ -62,7 +62,7 @@ Triggers: PRs and pushes to `dev` touching `backend/**` or `contracts/**`. Concu
   3. Upload `jacoco.xml` + SpotBugs XML + checkstyle results as artifacts (7-day retention)
 - **Job `contract-check`** — `./mvnw -B verify -Popenapi-export` then `git diff --exit-code -- contracts/`; fails the PR if the committed `openapi.json` drifts from the code. On PRs (Step 5) it also runs `openapi-diff --fail-on-incompatible` against the base branch's committed contract, failing on backward-incompatible API changes unless the PR carries the `contract-change-approved` label (explicit human approval; diff then runs report-only).
 - **Job `sonar`** — see Step 3. Skipped unless configured.
-- **Job `docker`** — PRs and pushes to `dev`: build image, smoke test with the EC2 profile against PG 18 + Redis 8, and Trivy image scan. On an enabled green `dev` push, publish that exact image to ECR and emit its immutable digest.
+- **Job `docker`** — PRs and pushes to `dev`: build image (from the `build-quality` boot-jar artifact via `Dockerfile.ci` when available), smoke test with the EC2 profile against PG 18 + Redis 8, and Trivy image scan (vulnerability DB restored from `actions/cache`; SARIF uploaded to Code Scanning only on pushes, preserved as artifact on PRs). On an enabled green `dev` push, publish that exact image to ECR and emit its immutable digest.
 - **Job `deploy-existing-ec2`** — enabled green `dev` pushes only: protected environment, GitHub OIDC, exact SSM bundle allowlist, single-instance deployment, health check and automatic application rollback.
 
 ### `.github/workflows/pr-labeler.yml`
@@ -91,7 +91,8 @@ Options: **SonarCloud** (zero infra; private repos need a paid plan) or **self-h
 
 ## Step 4 — Security Tooling
 
-- **`backend/Dockerfile`** — multi-stage: `maven:3.9-eclipse-temurin-21` builds `blocbuy-bootstrap` (`-am`, tests skipped — they ran in `build-quality`); runtime `eclipse-temurin:21-jre`, non-root user, port 8589, `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0`. No in-image HEALTHCHECK (JRE image has no curl); orchestrator probes hit `/actuator/health` (already exposed). Profile `docker` selected by compose via `SPRING_PROFILES_ACTIVE`, not baked in.
+- **`backend/Dockerfile`** — multi-stage: `maven:3.9-eclipse-temurin-21` builds `blocbuy-bootstrap` (`-am`, tests skipped — they ran in `build-quality`); runtime `eclipse-temurin:21-jre`, non-root user, port 8589, `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0`. No in-image HEALTHCHECK (JRE image has no curl); orchestrator probes hit `/actuator/health` (already exposed). Profile `docker` selected by compose via `SPRING_PROFILES_ACTIVE`, not baked in. Used by local `docker compose` builds.
+- **`backend/Dockerfile.ci`** — runtime-only twin used by the `docker` CI job: the `build-quality` job uploads the boot jar that `mvn verify` already packaged, the `docker` job downloads it and assembles the image in seconds instead of repeating the in-container Maven build (~2.5 min saved per run). Falls back to the multi-stage `Dockerfile` when `build-quality` was skipped (e.g. contracts-only PRs, where no jar artifact exists). Image content is identical either way.
 - **`.github/workflows/security.yml`** — PR/push changes to backend, deployment or workflows plus weekly cron:
   - **Gitleaks** full-history secret scan. `.gitleaks.toml` extends defaults and allowlists reviewed placeholders.
   - **Trivy** separates Maven vulnerability and deployment-configuration gates at HIGH/CRITICAL.

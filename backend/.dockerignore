@@ -3,3 +3,7 @@ target/
 docs/
 *.md
 .mvn/wrapper/maven-wrapper.jar.sha512
+
+# Dockerfile.ci (CI pipeline) copies the prebuilt boot jar downloaded from the
+# build-quality job — re-include it despite the target/ exclusions above.
+!blocbuy-bootstrap/target/blocbuy-bootstrap-*.jar
