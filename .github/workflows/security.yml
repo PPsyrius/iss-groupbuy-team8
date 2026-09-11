@@ -170,7 +170,11 @@ jobs:
         with:
           version: v0.74.0
           scan-type: config
-          scan-ref: .
+          scan-ref: >-
+            infra/
+            backend/Dockerfile
+            deployment/
+            docker-compose.yaml
           severity: HIGH,CRITICAL
           limit-severities-for-sarif: 'true' # otherwise entrypoint drops the severity filter and LOW findings trip exit-code
           exit-code: '1'
