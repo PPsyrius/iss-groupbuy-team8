@@ -27,9 +27,9 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /** Real application proxy + MyBatis + Flyway. Payment facts are test fixtures, not Stripe proof. */
 @SpringBootTest(
@@ -44,7 +44,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 class PaidGroupDealFlowIT {
     @Container
     @SuppressWarnings("resource")
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:18");
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18");
 
     /**
      * Connects the Spring context and full Flyway migration chain to the container's domain schema.
