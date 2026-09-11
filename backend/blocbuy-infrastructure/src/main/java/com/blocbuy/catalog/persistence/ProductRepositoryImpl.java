@@ -1,7 +1,10 @@
 package com.blocbuy.catalog.persistence;
 
+import com.blocbuy.catalog.exception.CatalogErrorCode;
 import com.blocbuy.catalog.model.Product;
+import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.catalog.repository.ProductRepository;
+import com.blocbuy.common.exception.BizException;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
 import java.util.Optional;
@@ -18,6 +21,46 @@ import org.springframework.stereotype.Repository;
 public class ProductRepositoryImpl implements ProductRepository {
 
     private final BizProductMapper bizProductMapper;
+
+    /** Database uniqueness settles simultaneous attempts to create the same product number. */
+    @Override
+    public void insertDraft(Product product, UUID actorId) {
+        if (bizProductMapper.insertDraft(ProductConverter.toRow(product), actorId) != 1) {
+            throw new BizException(CatalogErrorCode.PRODUCT_NUMBER_CONFLICT);
+        }
+    }
+
+    /** Version preconditions prevent last-write-wins updates. */
+    @Override
+    public void updateListing(Product product, int expectedVersion, UUID actorId) {
+        requireChanged(
+                bizProductMapper.updateListing(
+                        ProductConverter.toRow(product), expectedVersion, actorId));
+    }
+
+    /** Preserve the row and every historical reference. */
+    @Override
+    public void deleteDraft(UUID id, int expectedVersion, UUID actorId) {
+        requireChanged(bizProductMapper.deleteDraft(id, expectedVersion, actorId));
+    }
+
+    /** Two bounded queries per page, independent of item count. */
+    @Override
+    public PageResult<Product> pageListings(PageQuery page, ProductStatus status) {
+        String statusCode = status == null ? null : status.code();
+        var rows = bizProductMapper.selectListingPage(statusCode, page.size(), page.offset());
+        return PageResult.of(
+                rows.stream().map(ProductConverter::toDomain).toList(),
+                bizProductMapper.countListings(statusCode),
+                page);
+    }
+
+    /** Conditional mutations must affect exactly one row. */
+    private static void requireChanged(int count) {
+        if (count != 1) {
+            throw new BizException(CatalogErrorCode.PRODUCT_VERSION_CONFLICT);
+        }
+    }
 
     @Override
     public Optional<Product> lockById(UUID id) {

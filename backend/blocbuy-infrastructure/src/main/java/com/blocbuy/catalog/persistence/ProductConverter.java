@@ -36,7 +36,29 @@ final class ProductConverter {
                 data.getStock() == null ? 0 : data.getStock(),
                 data.getSoldCount() == null ? 0 : data.getSoldCount(),
                 ProductStatus.fromCode(data.getStatus()),
-                PricingMode.fromCode(data.getPricingMode()));
+                PricingMode.fromCode(data.getPricingMode()),
+                data.getVersion() == null ? 0 : data.getVersion());
+    }
+
+    /** Map editable aggregate state only; audit timestamps/actor remain infrastructure-managed. */
+    static BizProductDO toRow(Product product) {
+        BizProductDO row = new BizProductDO();
+        row.setId(product.id());
+        row.setProductNo(product.productNo());
+        row.setTitle(product.title());
+        row.setSubtitle(product.subtitle());
+        row.setDescription(product.description());
+        row.setCoverImage(product.coverImage());
+        row.setImages(JSON.writeValueAsString(product.images()));
+        row.setCategory(product.category());
+        row.setOriginalPrice(product.originalPrice());
+        row.setCurrency(product.currency());
+        row.setStock(product.stock());
+        row.setSoldCount(product.soldCount());
+        row.setStatus(product.status().code());
+        row.setPricingMode(product.pricingMode().code());
+        row.setVersion(product.version());
+        return row;
     }
 
     /** images jsonb → ordered URL list; corrupt payloads fail fast, never silently empty. */

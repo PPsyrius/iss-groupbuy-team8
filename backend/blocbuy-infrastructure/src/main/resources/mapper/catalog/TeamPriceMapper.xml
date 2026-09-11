@@ -2,6 +2,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.blocbuy.catalog.persistence.TeamPriceMapper">
+    <select id="existsProductReference" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM biz_team_price_policy WHERE product_id = #{productId,jdbcType=OTHER})
+            OR EXISTS (SELECT 1 FROM biz_team_price_quote WHERE product_id = #{productId,jdbcType=OTHER})
+    </select>
     <resultMap id="policyMap" type="com.blocbuy.catalog.persistence.TeamPricePolicyDO">
         <result column="product_id" property="productId" jdbcType="OTHER"/>
         <result column="amount" property="amount"/>

@@ -5,6 +5,7 @@ import com.blocbuy.catalog.pricing.TeamPricePolicy;
 import com.blocbuy.catalog.pricing.TeamPriceQuote;
 import com.blocbuy.catalog.service.TeamPriceAppService;
 import com.blocbuy.common.constant.ApiConstants;
+import com.blocbuy.common.web.DecimalStringDeserializer;
 import com.blocbuy.common.web.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,11 +28,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import tools.jackson.core.JacksonException;
-import tools.jackson.core.JsonParser;
-import tools.jackson.core.JsonToken;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.ValueDeserializer;
 import tools.jackson.databind.annotation.JsonDeserialize;
 
 /** Authenticated catalog quotation; no buyer-supplied owner or price on quote creation. */
@@ -129,18 +125,6 @@ public class TeamPriceController {
             @NotNull @Min(0) Integer expectedVersion) {}
 
     public record QuoteRequest(@NotNull UUID productId) {}
-
-    /** Prevent Jackson's default numeric coercion from weakening the decimal-string contract. */
-    public static final class DecimalStringDeserializer extends ValueDeserializer<String> {
-        @Override
-        public String deserialize(JsonParser parser, DeserializationContext context)
-                throws JacksonException {
-            if (!parser.hasToken(JsonToken.VALUE_STRING)) {
-                return (String) context.handleUnexpectedToken(String.class, parser);
-            }
-            return parser.getText();
-        }
-    }
 
     public record PolicyResponse(
             UUID productId,

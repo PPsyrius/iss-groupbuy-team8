@@ -1,5 +1,247 @@
 # UC3 / UC4: groupbuy-side paid participation
 
+## Analysis and contribution scope
+
+Wang Ziang (Eric) implemented the groupbuy-side slice evidenced by commits `b6f7faf` and `f104abb`.
+The full-use-case accountable fields in issues #26/#27 still say TBD; this is not a reassignment
+of payment, inventory, order or invitation work. See the original [design plan's contribution map](backend-skeleton-plan.md#13-course-report-analysis-and-design-map)
+and [UC5–UC8 analysis](backend-skeleton-plan.md#16-uc5-lifecycle-and-observer-integration).
+Snapshot: 2026-09-11, code at `8fe3d14`; real payment end-to-end completion is not claimed.
+
+## UC3 analysis and design
+
+### Analysis
+
+The initiating buyer must become the first paid member of a valid team. Invalid price, currency,
+identity or expired terms must not leave a partial team. Repeated delivery of one confirmed payment
+must return the same outcome rather than create another team. A constructor alone cannot guarantee
+database atomicity, and a local transaction cannot undo money already committed at Stripe.
+
+### Design
+
+Trusted caller → `PaidGroupDealService.startConfirmed` → reserve/lock payment receipt and validate
+fingerprint → `PaidGroupDealCreator.initiate` → concrete `createGroupDeal` → repository inserts
+team and leader → complete receipt in the same local transaction. The caller supplies already
+accepted `NewDealTerms` and verified `PaidParticipation`; these value objects do not verify Stripe.
+Business rejection retains a compensation-required outcome; technical failure rolls back writes.
+
+### Design Pattern
+
+**Implemented Factory Method:** PaidGroupDealCreator is the creator, its protected abstract
+createGroupDeal is the factory method, StandardPaidGroupDealCreator is the concrete creator, and
+GroupDeal is the product. The final initiation workflow validates before dispatching creation.
+The application currently chooses the standard creator; runtime-pluggable creation policies are
+not claimed. `GroupDeal.reconstitute` and `startPaid` alone are not the GoF evidence. Repository
+and the transaction provide atomic persistence, not the factory method itself.
+
+Reject creation directly in a controller or accepting a browser's claim that payment succeeded.
+Quote acceptance, inventory/order, invite generation and provider recovery remain integration work,
+so #26's full payment + team + invite acceptance criterion is not yet satisfied by this slice.
+
+### Course five elements and alternatives for UC3
+
+Actor: initiating buyer, through a trusted application collaborator. Preconditions: verified payment
+bound to this user/intent and unexpired accepted terms. Success: one OPEN team, one paid leader and
+one applied receipt committed together. Identical retries replay; business rejection retains a
+compensation-required fact; technical failure rolls back. No public endpoint is implied here.
+
+| Element | Applied explanation |
+| --- | --- |
+| Name / category | Factory Method — creational |
+| Problem / intent | Delegate concrete team construction while preserving common initiation validation |
+| Context | PaidGroupDealCreator.initiate validates terms then calls its protected creation hook |
+| Forces | Exactly one paid leader; valid price/identity/deadline; pure construction; transaction owned by application |
+| Solution | Abstract creator and overridden createGroupDeal in StandardPaidGroupDealCreator produce GroupDeal |
+
+The **aspect to vary is creation policy**. Strategy calculates price; it does not assemble the
+initial aggregate. Builder would fit optional stepwise assembly, but these accepted terms are already
+complete. A static factory lacks the creator-method override evidenced here. The final workflow
+resembles a template, but the selected/report pattern is the actual Factory Method.
+
+SRP separates creation and persistence; DIP uses repository ports. OCP is bounded: the service
+currently constructs StandardPaidGroupDealCreator itself, so choosing a new policy requires wiring
+changes. Do not claim runtime-configurable creation. Any alternative creator must preserve the same
+accepted-payment, first-member and lifecycle contract (LSP), not skip initiation validation.
+
+### UML class diagram — implemented UC3 and UC4 collaborators
+
+```mermaid
+classDiagram
+    class PaidGroupDealService {
+        -PaidGroupDealCreator creator
+        +startConfirmed(terms, paid) ParticipationResult
+        +joinConfirmed(dealId, paid) ParticipationResult
+    }
+    class PaidGroupDealCreator {
+        <<abstract>>
+        +initiate(terms, paid, now) GroupDeal
+        #createGroupDeal(terms, paid, now) GroupDeal
+    }
+    class StandardPaidGroupDealCreator {
+        #createGroupDeal(terms, paid, now) GroupDeal
+    }
+    class GroupDeal {
+        -int currentSize
+        -int targetSize
+        -DealStatus status
+        ~startPaid(terms, paid, now) GroupDeal
+        +joinPaid(paid, alreadyMember, now) GroupDeal
+    }
+    class PaidGroupDealRepository {
+        <<interface>>
+        +reserveAndLock(paymentId, fingerprint, userId) ParticipationReceipt
+        +lockDeal(dealId) Optional~GroupDeal~
+        +insertStartedDeal(deal, paid, now) void
+        +insertJoinedMember(before, after, paid, now) void
+        +complete(paymentId, result, actor, now) void
+    }
+    PaidGroupDealService "1" --> "1" PaidGroupDealCreator : UC3 only
+    PaidGroupDealCreator <|-- StandardPaidGroupDealCreator
+    StandardPaidGroupDealCreator ..> GroupDeal : creates
+    PaidGroupDealService --> PaidGroupDealRepository
+    PaidGroupDealService ..> GroupDeal : UC4 joins existing
+```
+
+`#` is protected, `~` package visibility. PaidGroupDealCreator is Creator, its protected method is
+Factory Method, StandardPaidGroupDealCreator is ConcreteCreator, GroupDeal is Product. The domain
+product is concrete here; no fictitious product-interface hierarchy is drawn. Persisted membership
+is one-to-many, but GroupDeal has no Java member collection; a composition field would be misleading.
+
+### UML sequence diagram — UC3 local transaction
+
+```mermaid
+sequenceDiagram
+    participant Caller as Trusted caller (integration pending)
+    participant A as PaidGroupDealService
+    participant R as PaidGroupDealRepository
+    participant F as StandardPaidGroupDealCreator
+    participant G as GroupDeal
+    Note over Caller,A: Payment already verified, no provider network call inside transaction
+    Caller->>A: startConfirmed(terms, paid)
+    activate A
+    A->>R: reserveAndLock(paymentId, fingerprint, userId)
+    alt identical completed receipt
+        R-->>A: stored result
+        A-->>Caller: original result
+    else fresh matching receipt
+        A->>R: currentTime()
+        A->>F: initiate(terms, paid, now)
+        F->>F: validate then createGroupDeal(terms, paid, now)
+        alt accepted construction
+            F->>G: startPaid(terms, paid, now)
+            G-->>F: OPEN team, count 1
+            F-->>A: team
+            A->>R: insertStartedDeal(team, paid, now)
+            A->>R: complete(paymentId, applied, actor, now)
+            A-->>Caller: commit, applied
+        else business rejection
+            F-->>A: business exception
+            A->>R: complete(paymentId, compensation_required, actor, now)
+            A-->>Caller: commit, compensation_required
+        end
+    end
+    Note over A,R: Changed fingerprint rejects, technical errors roll back local writes
+    deactivate A
+```
+
+Factory Method does not create distributed atomicity. Payment commitment, quote consumption,
+inventory/order and invite generation require an explicit recoverable integration protocol; a
+local SQL rollback cannot undo a completed Stripe call.
+
+## UC4 analysis and design
+
+### Analysis
+
+Two paid buyers may compete for one slot; one buyer may submit two different payments; the same
+payment may be replayed after team state changes. Capacity, duplicate membership and deadline must
+be checked against locked current state, without charging or admitting twice. A paid loser needs
+durable compensation handling rather than a generic rejection that forgets the payment.
+
+### Design
+
+Trusted caller → `joinConfirmed` → reserve/lock receipt → replay or fingerprint check → lock deal →
+read DB time and active membership → `GroupDeal.joinPaid` → insert member and persist new team
+snapshot → complete receipt. The final admitted member transitions the snapshot to SUCCEEDED.
+Identical receipt replays return the original result even if the team later changes; changed intent
+with the same payment ID is rejected. Caller locks must precede receipt → deal ordering.
+
+### Design Pattern
+
+**No new GoF pattern is claimed for concurrency.** Repository, durable idempotency receipts, row
+locking and database uniqueness enforce admission. UC4 reuses the existing aggregate and does not
+call the UC3 Factory Method to create a replacement team. `DealStatus` currently stores codes;
+the complete UC5 State/Observer design remains pending. A plain enum or SQL lock is not GoF State.
+
+Reject read-then-write without locking, retrying with a new payment identity, or issuing Stripe
+refunds inside the locked transaction. The local aggregate operation is atomic; the public
+payment-to-order-to-team flow is not implemented by this slice.
+
+### Analysis contract and candidate selection for UC4
+
+Actor: joining buyer, through a trusted collaborator. Preconditions: payment verified and bound to
+user/intent and accepted amount/currency. Success: one membership increment, optionally SUCCEEDED,
+and applied receipt. Rejected paid admission records compensation-required, not refunded. Technical
+errors roll back all local writes. The failure categories and replay behavior are externally
+observable at this internal boundary even though no buyer HTTP endpoint exists yet.
+
+The change-sensitive concern is admission against **current shared state**. State is relevant to
+UC5's planned lifecycle, but current joinPaid uses aggregate guards and a code-only DealStatus enum.
+Command could encapsulate an executable request; PaidParticipation is only data, with no execute/
+receiver contract, so it is not Command. Chain of Responsibility could organize independently
+variable checks, but neither it nor Command prevents races. Do not replace locking with a GoF label.
+SRP keeps verification and compensation outside admission; DIP uses the repository abstraction.
+
+### UML sequence diagram — UC4 last-seat race boundary
+
+The class diagram above also applies to UC4; the creation factory is not called during a join.
+
+```mermaid
+sequenceDiagram
+    participant Caller as Trusted caller
+    participant A as PaidGroupDealService
+    participant R as PaidGroupDealRepository
+    participant G as Existing GroupDeal
+    Caller->>A: joinConfirmed(dealId, paid)
+    activate A
+    A->>R: reserveAndLock(paymentId, fingerprint, userId)
+    alt identical completed receipt
+        R-->>A: frozen result
+        A-->>Caller: replay result
+    else fresh matching receipt
+        A->>R: lockDeal(dealId)
+        Note over A,R: Competing joins serialize on this deal
+        R-->>A: current team
+        A->>R: currentTime() after lock
+        A->>R: hasActiveMember(dealId, userId)
+        A->>G: joinPaid(paid, alreadyMember, now)
+        alt eligible last seat
+            G-->>A: new snapshot, SUCCEEDED
+            A->>R: insertJoinedMember(before, after, paid, now)
+            A->>R: complete(paymentId, applied, actor, now)
+            A-->>Caller: commit, applied
+        else closed, duplicate, full or invalid
+            G-->>A: business rejection
+            A->>R: complete(paymentId, compensation_required, actor, now)
+            A-->>Caller: commit, compensation_required
+        end
+    end
+    Note over A,R: Missing deal records compensation, technical errors roll back
+    deactivate A
+```
+
+A non-final accepted member follows the same sequence and remains OPEN. The second contender reads
+the first contender's committed state only after acquiring the lock and cannot take another seat.
+UC5 timeout must use this same serialization boundary. Receipt retention supports future recovery;
+it is not an implemented Observer event dispatch to UC6/UC7.
+
+### Verification evidence for UC3 and UC4
+
+Read `PaidGroupDealTest`, `PaidGroupDealServiceTest`, `PaidGroupDealRepositoryIT` and
+`PaidGroupDealFlowIT` for construction invariants, replay, rollback, same-buyer concurrency and
+last-seat races. These are code/test evidence entry points, not a new test run for this prose edit.
+Keep real Stripe test-mode evidence separate, and include the remaining integration boundaries in
+the assessed contribution rather than marking both full use cases complete.
+
 ## Scope and ownership
 
 This slice implements groupbuy behavior behind an internal application collaborator. It does not
