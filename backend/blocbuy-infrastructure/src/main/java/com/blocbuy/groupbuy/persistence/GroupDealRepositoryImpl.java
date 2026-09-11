@@ -19,6 +19,12 @@ public class GroupDealRepositoryImpl implements GroupDealRepository {
 
     private final BizGroupDealMapper bizGroupDealMapper;
 
+    /** Historical reference check deliberately includes logically deleted deals. */
+    @Override
+    public boolean hasProductReferences(UUID productId) {
+        return bizGroupDealMapper.existsProductReference(productId);
+    }
+
     @Override
     public Optional<GroupDeal> findById(UUID id) {
         return Optional.ofNullable(

@@ -1,0 +1,672 @@
+package com.blocbuy.bootstrap;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.not;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import cn.dev33.satoken.stp.StpUtil;
+import com.blocbuy.catalog.model.ListingDetails;
+import com.blocbuy.catalog.service.AdminListingAppService;
+import com.blocbuy.common.exception.BizException;
+import com.blocbuy.common.util.UuidV7;
+import com.blocbuy.identity.repository.RoleRepository;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
+import tools.jackson.databind.ObjectMapper;
+
+/** UC9 acceptance through MockMvc, real RBAC, transactions, converters and isolated PostgreSQL. */
+@SpringBootTest(
+        properties = {
+            "spring.data.redis.host=localhost",
+            "spring.data.redis.port=1",
+            "spring.flyway.locations=classpath:db/migration"
+        })
+@AutoConfigureMockMvc
+@Testcontainers
+@Import(TeamPriceControllerTest.SessionStore.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+class AdminListingFlowIT {
+    private static final String BASE = "/api/v1/admin/products";
+    private static final String HEADER = "blocbuy-token";
+    private static final String DETAILS =
+            """
+            {"title":"Tea","description":"Leaf tea","images":["https://example.com/tea.png"],
+             "originalPrice":"12.00","currency":"sgd","stock":5}
+            """;
+
+    @Container
+    @SuppressWarnings("resource") // Testcontainers owns this disposable database.
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18");
+
+    /** Redirect all database access to the owned test container, never a developer database. */
+    @DynamicPropertySource
+    static void database(DynamicPropertyRegistry properties) {
+        properties.add(
+                "spring.datasource.url",
+                () -> {
+                    String url = POSTGRES.getJdbcUrl();
+                    return url + (url.contains("?") ? "&" : "?") + "currentSchema=domain";
+                });
+        properties.add("spring.datasource.username", POSTGRES::getUsername);
+        properties.add("spring.datasource.password", POSTGRES::getPassword);
+    }
+
+    @Autowired private MockMvc mvc;
+    @Autowired private JdbcTemplate jdbc;
+    @Autowired private ObjectMapper json;
+    @Autowired private AdminListingAppService listings;
+    @Autowired private RoleRepository roles;
+    private UUID admin;
+    private UUID buyer;
+    private String adminToken;
+    private String buyerToken;
+
+    /** Unique fixtures per test with real SQL-backed administrator grants. */
+    @BeforeEach
+    void seedIdentities() {
+        admin = UuidV7.next();
+        buyer = UuidV7.next();
+        jdbc.update(
+                """
+                INSERT INTO sys_user (id, register_source, status)
+                VALUES (?, 'google', 'active'), (?, 'google', 'active')
+                """,
+                admin,
+                buyer);
+        jdbc.update(
+                """
+                INSERT INTO rel_user_role (user_id, role_id)
+                SELECT ?, id FROM sys_role WHERE role_code = 'admin' AND deleted = false
+                """,
+                admin);
+        adminToken = StpUtil.getStpLogic().createLoginSession(admin.toString());
+        buyerToken = StpUtil.getStpLogic().createLoginSession(buyer.toString());
+    }
+
+    /** Dispose only sessions created by this test. */
+    @AfterEach
+    void clearSessions() {
+        StpUtil.logoutByTokenValue(adminToken);
+        StpUtil.logoutByTokenValue(buyerToken);
+    }
+
+    /** All management operations reject anonymous and non-admin clients. */
+    @ParameterizedTest
+    @ValueSource(strings = {"create", "page", "get", "revise", "status", "delete"})
+    void everyRouteRequiresAdministrator(String operation) throws Exception {
+        mvc.perform(request(operation)).andExpect(status().isUnauthorized());
+        mvc.perform(request(operation).header(HEADER, buyerToken))
+                .andExpect(status().isForbidden());
+    }
+
+    /** An administrator role alone must not bypass the independently checked capability. */
+    @Test
+    @Transactional
+    void administratorStillNeedsCatalogPermission() throws Exception {
+        // The test transaction rolls this grant revocation back; other fixtures remain intact.
+        assertThat(
+                        jdbc.update(
+                                """
+                UPDATE rel_role_permission SET deleted = true
+                WHERE role_id = (SELECT id FROM sys_role WHERE role_code = 'admin' AND deleted = false)
+                  AND permission_id = (SELECT id FROM sys_permission
+                      WHERE perm_code = 'catalog:product:write' AND deleted = false)
+                  AND deleted = false
+                """))
+                .isEqualTo(1);
+        assertThat(roles.findRoleCodesByUserId(admin)).contains("admin");
+        assertThat(roles.findPermissionCodesByUserId(admin))
+                .doesNotContain("catalog:product:write");
+        mvc.perform(get(BASE).header(HEADER, adminToken)).andExpect(status().isForbidden());
+    }
+
+    /** Delegating the capability alone must not grant access to administrator-only listing APIs. */
+    @Test
+    @Transactional
+    void catalogPermissionWithoutAdministratorRoleIsInsufficient() throws Exception {
+        UUID editorRole = UuidV7.next();
+        jdbc.update(
+                "INSERT INTO sys_role (id, role_code, role_name) VALUES (?, ?, 'Catalog editor')",
+                editorRole,
+                "editor-" + editorRole);
+        jdbc.update(
+                "INSERT INTO rel_user_role (user_id, role_id) VALUES (?, ?)", buyer, editorRole);
+        assertThat(
+                        jdbc.update(
+                                """
+                INSERT INTO rel_role_permission (role_id, permission_id)
+                SELECT ?, id FROM sys_permission
+                WHERE perm_code = 'catalog:product:write' AND deleted = false
+                """,
+                                editorRole))
+                .isEqualTo(1);
+        assertThat(roles.findPermissionCodesByUserId(buyer)).contains("catalog:product:write");
+        assertThat(roles.findRoleCodesByUserId(buyer)).doesNotContain("admin");
+        mvc.perform(get(BASE).header(HEADER, buyerToken)).andExpect(status().isForbidden());
+    }
+
+    /** Full CRUD round trip retains audit data and never exposes drafts to buyers. */
+    @Test
+    void draftCrudAndSoftDeletionPreserveAudit() throws Exception {
+        UUID id = create("CRUD-" + UuidV7.next());
+        mvc.perform(get("/api/v1/products/" + id)).andExpect(status().isNotFound());
+        mvc.perform(get(BASE + "/" + id).header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.version").value(0));
+        mvc.perform(
+                        put(BASE + "/" + id)
+                                .header(HEADER, adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"expectedVersion\":0,\"listing\":"
+                                                + DETAILS.replace("Tea", "Green tea")
+                                                + "}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.listing.title").value("Green tea"))
+                .andExpect(jsonPath("$.data.version").value(1));
+        mvc.perform(
+                        get(BASE)
+                                .param("status", "draft")
+                                .param("size", "1")
+                                .header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.size").value(1))
+                .andExpect(jsonPath("$.data.items[0].status").value("draft"));
+        mvc.perform(
+                        delete(BASE + "/" + id)
+                                .param("expectedVersion", "1")
+                                .header(HEADER, adminToken))
+                .andExpect(status().isOk());
+        mvc.perform(get(BASE + "/" + id).header(HEADER, adminToken))
+                .andExpect(status().isNotFound());
+        mvc.perform(
+                        delete(BASE + "/" + id)
+                                .param("expectedVersion", "1")
+                                .header(HEADER, adminToken))
+                .andExpect(status().isNotFound());
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT deleted FROM biz_product WHERE id = ?", Boolean.class, id))
+                .isTrue();
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT version FROM biz_product WHERE id = ?", Integer.class, id))
+                .isEqualTo(2);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT update_by FROM biz_product WHERE id = ?", UUID.class, id))
+                .isEqualTo(admin);
+    }
+
+    /** Publication affects browse but never permits a return to deletable draft state. */
+    @Test
+    void publishedListingCanBeDelistedButNotDeleted() throws Exception {
+        UUID id = create("STATE-" + UuidV7.next());
+        changeStatus(id, "on_sale", 0, 200);
+        mvc.perform(get("/api/v1/products/" + id)).andExpect(status().isOk());
+        changeStatus(id, "off_sale", 1, 200);
+        mvc.perform(get("/api/v1/products/" + id)).andExpect(status().isNotFound());
+        changeStatus(id, "draft", 2, 400);
+        mvc.perform(
+                        delete(BASE + "/" + id)
+                                .param("expectedVersion", "2")
+                                .header(HEADER, adminToken))
+                .andExpect(status().isConflict());
+        changeStatus(id, "on_sale", 2, 200);
+    }
+
+    /**
+     * Unique business numbers and version checks reject duplicate/stale writes without mutation.
+     */
+    @Test
+    void duplicateNumbersAndStaleWritesAreSafeConflicts() throws Exception {
+        String number = "DUP-" + UuidV7.next();
+        UUID id = create(number);
+        mvc.perform(
+                        post(BASE)
+                                .header(HEADER, adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(createBody(number)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CATALOG_409_003"));
+        changeStatus(id, "on_sale", 0, 200);
+        changeStatus(id, "off_sale", 0, 412);
+        mvc.perform(
+                        put(BASE + "/" + id)
+                                .header(HEADER, adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"expectedVersion\":1,\"listing\":"
+                                                + DETAILS.replace("12.00", "15.00")
+                                                + "}"))
+                .andExpect(status().isConflict());
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT version FROM biz_product WHERE id = ?", Integer.class, id))
+                .isEqualTo(1);
+    }
+
+    /** Defensive legacy-data guards include expired/deleted quotes, policies and closed deals. */
+    @ParameterizedTest
+    @ValueSource(strings = {"policy", "quote", "deal"})
+    void anyHistoricalReferenceVetoesDraftDeletion(String reference) throws Exception {
+        UUID id = create("REF-" + UuidV7.next());
+        switch (reference) {
+            case "policy" ->
+                    jdbc.update(
+                            """
+                            INSERT INTO biz_team_price_policy (product_id, amount, currency, valid_from,
+                                valid_until, create_by, update_by, version, deleted)
+                            VALUES (?, 9, 'sgd', now()-interval '1 hour', now(), ?, ?, 1, true)
+                            """,
+                            id,
+                            admin,
+                            admin);
+            case "quote" ->
+                    jdbc.update(
+                            """
+                            INSERT INTO biz_team_price_quote (product_id, owner_id, policy_version, amount,
+                                currency, issued_at, expires_at, create_by, update_by, deleted)
+                            VALUES (?, ?, 1, 9, 'sgd', now()-interval '1 hour', now(), ?, ?, true)
+                            """,
+                            id,
+                            buyer,
+                            admin,
+                            admin);
+            case "deal" ->
+                    jdbc.update(
+                            """
+                            INSERT INTO biz_group_deal (deal_no, product_id, leader_user_id, target_size,
+                                current_size, deal_price, currency, status, start_time, expire_time, deleted)
+                            VALUES (?, ?, ?, 2, 0, 9, 'sgd', 'expired', now()-interval '1 hour', now(), true)
+                            """,
+                            "REF-" + id,
+                            id,
+                            admin);
+            default -> throw new IllegalArgumentException(reference);
+        }
+        mvc.perform(
+                        delete(BASE + "/" + id)
+                                .param("expectedVersion", "0")
+                                .header(HEADER, adminToken))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CATALOG_409_004"));
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT deleted FROM biz_product WHERE id = ?", Boolean.class, id))
+                .isFalse();
+    }
+
+    /** Header identity alone cannot bypass an account disabled after login. */
+    @Test
+    void disabledAdministratorIsRejected() throws Exception {
+        jdbc.update("UPDATE sys_user SET status = 'disabled' WHERE id = ?", admin);
+        mvc.perform(get(BASE).header(HEADER, adminToken)).andExpect(status().isForbidden());
+    }
+
+    /** Bounded query parameters and server-owned fields are enforced before mutation. */
+    @Test
+    void invalidPayloadAndPaginationAreRejected() throws Exception {
+        mvc.perform(get(BASE).param("size", "101").header(HEADER, adminToken))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get(BASE).param("page", "0").header(HEADER, adminToken))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get(BASE).param("status", "bogus").header(HEADER, adminToken))
+                .andExpect(status().isBadRequest());
+        mvc.perform(
+                        post(BASE)
+                                .header(HEADER, adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(createBody("BAD").replace("\"12.00\"", "12.00")))
+                .andExpect(status().isBadRequest());
+        mvc.perform(
+                        post(BASE)
+                                .header(HEADER, adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        createBody("BAD")
+                                                .replace(
+                                                        "\"stock\":5",
+                                                        "\"stock\":5,\"soldCount\":99")))
+                .andExpect(status().isBadRequest());
+    }
+
+    /** A missing concurrency precondition is client input failure, never a server error. */
+    @Test
+    void missingDeletionVersionIsBadRequestWithoutMutation() throws Exception {
+        UUID id = create("MISSING-" + UuidV7.next());
+        mvc.perform(delete(BASE + "/" + id).header(HEADER, adminToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON_400_001"));
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT deleted FROM biz_product WHERE id = ?", Boolean.class, id))
+                .isFalse();
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT version FROM biz_product WHERE id = ?", Integer.class, id))
+                .isZero();
+    }
+
+    /** PUT replacement clears omitted optional values in storage, not just the response DTO. */
+    @Test
+    void replacementClearsOmittedOptionalContent() throws Exception {
+        UUID id = create("CLEAR-" + UuidV7.next());
+        mvc.perform(
+                        put(BASE + "/" + id)
+                                .header(HEADER, adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                {"expectedVersion":0,"listing":{
+                                "title":"Plain tea","originalPrice":"12.00","currency":"sgd","stock":5}}
+                                """))
+                .andExpect(status().isOk());
+        mvc.perform(get(BASE + "/" + id).header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.listing.description").isEmpty())
+                .andExpect(jsonPath("$.data.listing.images").isEmpty());
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT description FROM biz_product WHERE id = ?",
+                                String.class,
+                                id))
+                .isNull();
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT images::text FROM biz_product WHERE id = ?",
+                                String.class,
+                                id))
+                .isEqualTo("[]");
+    }
+
+    /** Administrative pagination includes every retained state but excludes soft-deleted rows. */
+    @Test
+    void unfilteredPageIncludesAllNonDeletedStates() throws Exception {
+        UUID draft = create("PAGE-DRAFT-" + UuidV7.next());
+        UUID published = create("PAGE-LIVE-" + UuidV7.next());
+        UUID delisted = create("PAGE-OFF-" + UuidV7.next());
+        UUID removed = create("PAGE-DELETED-" + UuidV7.next());
+        changeStatus(published, "on_sale", 0, 200);
+        changeStatus(delisted, "on_sale", 0, 200);
+        changeStatus(delisted, "off_sale", 1, 200);
+        mvc.perform(
+                        delete(BASE + "/" + removed)
+                                .param("expectedVersion", "0")
+                                .header(HEADER, adminToken))
+                .andExpect(status().isOk());
+        mvc.perform(get(BASE).param("size", "100").header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(
+                        jsonPath("$.data.items[*].id")
+                                .value(
+                                        hasItems(
+                                                draft.toString(),
+                                                published.toString(),
+                                                delisted.toString())))
+                .andExpect(jsonPath("$.data.items[*].id").value(not(hasItem(removed.toString()))));
+    }
+
+    /** A retired draft number may be reused without reviving or overwriting its old audit row. */
+    @Test
+    void deletedDraftNumberCanBeReusedWithNewIdentity() throws Exception {
+        String number = "REUSE-" + UuidV7.next();
+        UUID original = create(number);
+        mvc.perform(
+                        delete(BASE + "/" + original)
+                                .param("expectedVersion", "0")
+                                .header(HEADER, adminToken))
+                .andExpect(status().isOk());
+        UUID replacement = create(number);
+        assertThat(replacement).isNotEqualTo(original);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM biz_product WHERE product_no = ?",
+                                Long.class,
+                                number))
+                .isEqualTo(2L);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT deleted FROM biz_product WHERE id = ?",
+                                Boolean.class,
+                                original))
+                .isTrue();
+    }
+
+    /** Swagger and generated clients can discover admin auth without changing public operations. */
+    @Test
+    void openApiDocumentsAdministratorTokenWithoutProtectingPublicBrowse() throws Exception {
+        var spec =
+                json.readTree(
+                        mvc.perform(get("/api/v3/api-docs"))
+                                .andExpect(status().isOk())
+                                .andReturn()
+                                .getResponse()
+                                .getContentAsString());
+        var scheme = spec.path("components").path("securitySchemes").path("blocbuyToken");
+        assertThat(scheme.path("type").asText()).isEqualTo("apiKey");
+        assertThat(scheme.path("in").asText()).isEqualTo("header");
+        assertThat(scheme.path("name").asText()).isEqualTo(HEADER);
+        for (var route :
+                Map.of(
+                                BASE,
+                                List.of("get", "post"),
+                                BASE + "/{productId}",
+                                List.of("get", "put", "delete"),
+                                BASE + "/{productId}/status",
+                                List.of("put"))
+                        .entrySet()) {
+            for (String method : route.getValue()) {
+                var security =
+                        spec.path("paths").path(route.getKey()).path(method).path("security");
+                assertThat(security.isArray()).isTrue();
+                assertThat(security.path(0).path("blocbuyToken").isArray()).isTrue();
+            }
+        }
+        assertThat(spec.has("security")).isFalse();
+        assertThat(spec.path("paths").path("/api/v1/products").path("get").has("security"))
+                .isFalse();
+    }
+
+    /** OpenAPI patterns must validate complete input, like Bean Validation does at runtime. */
+    @Test
+    void openApiPatternsRejectSubstringMatches() throws Exception {
+        var spec =
+                json.readTree(
+                        mvc.perform(get("/api/v3/api-docs"))
+                                .andExpect(status().isOk())
+                                .andReturn()
+                                .getResponse()
+                                .getContentAsString());
+        var schemas = spec.path("components").path("schemas");
+        var content = schemas.path("ListingContent").path("properties");
+        assertFullPattern(
+                content.path("currency").path("pattern").asText(), "sgd", "xsgd", "sgdx", "sgd\n");
+        assertFullPattern(
+                content.path("originalPrice").path("pattern").asText(),
+                "12.00",
+                "x12.00",
+                "12.00x",
+                "12.00\n",
+                "0",
+                "0.00",
+                "00.00");
+        for (String amount : List.of("0.01", "00.01", "12", "9999999999999999.99")) {
+            assertFullPattern(content.path("originalPrice").path("pattern").asText(), amount);
+        }
+        assertFullPattern(
+                schemas.path("CreateListingRequest")
+                        .path("properties")
+                        .path("productNo")
+                        .path("pattern")
+                        .asText(),
+                "SKU-1",
+                "#SKU-1",
+                "SKU-1#",
+                "A".repeat(65));
+        assertFullPattern(
+                schemas.path("ListingStatusRequest")
+                        .path("properties")
+                        .path("status")
+                        .path("pattern")
+                        .asText(),
+                "on_sale",
+                "xon_sale",
+                "off_salex",
+                "on_sale\n");
+    }
+
+    /** Use substring search to model JSON Schema pattern semantics, not Java matches(). */
+    private static void assertFullPattern(String expression, String accepted, String... rejected) {
+        assertThat(expression).isNotBlank();
+        Pattern pattern = Pattern.compile(expression);
+        assertThat(pattern.matcher(accepted).find()).isTrue();
+        for (String value : rejected) {
+            assertThat(pattern.matcher(value).find())
+                    .as("pattern must reject <%s>", value)
+                    .isFalse();
+        }
+    }
+
+    /** Concurrent revisions from the same snapshot commit exactly once. */
+    @Test
+    void concurrentEditsCommitOneRevision() throws Exception {
+        UUID id = create("RACE-" + UuidV7.next());
+        CountDownLatch start = new CountDownLatch(1);
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            var first = pool.submit(() -> reviseAfter(start, id, "A"));
+            var second = pool.submit(() -> reviseAfter(start, id, "B"));
+            start.countDown();
+            assertThat(List.of(first.get(20, TimeUnit.SECONDS), second.get(20, TimeUnit.SECONDS)))
+                    .containsExactlyInAnyOrder("ok", "CATALOG_412_002");
+        }
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT version FROM biz_product WHERE id = ?", Integer.class, id))
+                .isEqualTo(1);
+    }
+
+    /**
+     * Competing commands use the real transactional proxy; only business conflicts are converted.
+     */
+    private String reviseAfter(CountDownLatch start, UUID id, String title)
+            throws InterruptedException {
+        if (!start.await(5, TimeUnit.SECONDS)) {
+            throw new IllegalStateException("test barrier timed out");
+        }
+        try {
+            listings.revise(
+                    id,
+                    new ListingDetails(
+                            title,
+                            null,
+                            null,
+                            null,
+                            List.of(),
+                            null,
+                            new BigDecimal("12.00"),
+                            "sgd",
+                            5),
+                    0,
+                    admin);
+            return "ok";
+        } catch (BizException ex) {
+            return ex.errorCode().code();
+        }
+    }
+
+    /** Distinct valid requests for every protected route. */
+    private MockHttpServletRequestBuilder request(String operation) {
+        String item = BASE + "/" + UuidV7.next();
+        return switch (operation) {
+            case "create" ->
+                    post(BASE)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(createBody("SECURITY"));
+            case "page" -> get(BASE);
+            case "get" -> get(item);
+            case "revise" ->
+                    put(item)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"expectedVersion\":0,\"listing\":" + DETAILS + "}");
+            case "status" ->
+                    put(item + "/status")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"expectedVersion\":0,\"status\":\"on_sale\"}");
+            case "delete" -> delete(item).param("expectedVersion", "0");
+            default -> throw new IllegalArgumentException(operation);
+        };
+    }
+
+    /** Return the created server-generated identifier after asserting the draft contract. */
+    private UUID create(String number) throws Exception {
+        String response =
+                mvc.perform(
+                                post(BASE)
+                                        .header(HEADER, adminToken)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(createBody(number)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.data.status").value("draft"))
+                        .andExpect(jsonPath("$.data.version").value(0))
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+        return UUID.fromString(json.readTree(response).path("data").path("id").asText());
+    }
+
+    /** Build a decimal-string request without client-controlled identity or status. */
+    private static String createBody(String number) {
+        return "{\"productNo\":\"" + number + "\",\"listing\":" + DETAILS + "}";
+    }
+
+    /** Exercise conditional lifecycle changes through the public protocol. */
+    private void changeStatus(UUID id, String next, int version, int expectedStatus)
+            throws Exception {
+        mvc.perform(
+                        put(BASE + "/" + id + "/status")
+                                .header(HEADER, adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        json.writeValueAsString(
+                                                Map.of(
+                                                        "status",
+                                                        next,
+                                                        "expectedVersion",
+                                                        version))))
+                .andExpect(status().is(expectedStatus));
+    }
+}

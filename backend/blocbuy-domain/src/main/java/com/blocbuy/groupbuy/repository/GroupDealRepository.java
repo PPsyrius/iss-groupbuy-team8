@@ -12,6 +12,9 @@ import java.util.UUID;
  */
 public interface GroupDealRepository {
 
+    /** Any historical product reference, including closed and soft-deleted deals. */
+    boolean hasProductReferences(UUID productId);
+
     /** Active (non-deleted) deal by primary key. */
     Optional<GroupDeal> findById(UUID id);
 

@@ -12,6 +12,30 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface BizProductMapper {
 
+    /** Insert returns zero only for a duplicate live business product number. */
+    int insertDraft(@Param("row") BizProductDO row, @Param("actorId") UUID actorId);
+
+    /** Compare-and-set revision; excludes soft-deleted rows. */
+    int updateListing(
+            @Param("row") BizProductDO row,
+            @Param("expectedVersion") int expectedVersion,
+            @Param("actorId") UUID actorId);
+
+    /** Logical deletion with defensive draft and version predicates. */
+    int deleteDraft(
+            @Param("id") UUID id,
+            @Param("expectedVersion") int expectedVersion,
+            @Param("actorId") UUID actorId);
+
+    /** Administrator page, including unpublished listings; stable newest-first order. */
+    List<BizProductDO> selectListingPage(
+            @Param("status") String status,
+            @Param("limit") int limit,
+            @Param("offset") long offset);
+
+    /** Same filter as the administrator page. */
+    long countListings(@Param("status") String status);
+
     BizProductDO selectActiveByIdForUpdate(@Param("id") UUID id);
 
     /** Active product by primary key, any status. */

@@ -20,6 +20,13 @@ public class GroupDealQueryServiceImpl implements GroupDealQueryService {
 
     private final GroupDealRepository groupDealRepository;
 
+    /** Exposes only reference existence across the catalog/groupbuy boundary. */
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasProductReferences(UUID productId) {
+        return groupDealRepository.hasProductReferences(productId);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public Map<UUID, OpenDealOffer> findBestOpenDealsByProductIds(Collection<UUID> productIds) {

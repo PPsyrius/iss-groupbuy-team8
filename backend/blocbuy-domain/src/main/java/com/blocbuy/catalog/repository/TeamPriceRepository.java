@@ -11,6 +11,9 @@ import java.util.UUID;
  * transaction.
  */
 public interface TeamPriceRepository {
+    /** Any policy or quote history prevents deleting its product, including deleted revisions. */
+    boolean hasProductReferences(UUID productId);
+
     Optional<TeamPricePolicy> findLatestPolicy(UUID productId);
 
     void appendPolicy(TeamPricePolicy policy, UUID actorId, Instant now);
