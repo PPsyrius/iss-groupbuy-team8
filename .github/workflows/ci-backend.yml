@@ -41,6 +41,7 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       pull-requests: read
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
@@ -134,7 +135,6 @@ jobs:
     # SonarCloud also needs variable SONAR_ORGANIZATION. See docs/ci/devsecops-pipeline-plan.md Step 3.
     if: vars.SONAR_HOST_URL != ''
     needs:
-      - detect-changes
       - build-quality
     runs-on: ubuntu-latest
     steps:
@@ -169,7 +169,6 @@ jobs:
   docker:
     # Runs on PR too: image build + smoke + scan must gate before merge, not after push.
     needs:
-      - detect-changes
       - build-quality
       - contract-check
       - sonar
@@ -375,7 +374,6 @@ jobs:
     # be exact-matched (infra/terraform/backend-app-stack/github-oidc.tf). The GitHub
     # environment is restricted to v* tags; approval stays on the deploy job.
     needs:
-      - detect-changes
       - build-quality
       - contract-check
       - sonar
@@ -490,7 +488,6 @@ jobs:
       group: deploy-existing-ec2-backend-dev
       cancel-in-progress: false
     needs:
-      - detect-changes
       - build-quality
       - contract-check
       - sonar
@@ -671,7 +668,6 @@ jobs:
       group: deploy-existing-ec2-backend-prod
       cancel-in-progress: false
     needs:
-      - detect-changes
       - build-quality
       - contract-check
       - sonar
