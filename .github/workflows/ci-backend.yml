@@ -45,6 +45,7 @@ jobs:
       pull-requests: read
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
+      contracts: ${{ steps.filter.outputs.contracts }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
@@ -56,6 +57,9 @@ jobs:
               - 'docker-compose.yaml'
               - 'deployment/backend/**'
               - '.github/workflows/ci-backend.yml'
+            contracts:
+              - 'backend/**'
+              - 'contracts/**'
 
   build-quality:
     needs: detect-changes
@@ -104,6 +108,10 @@ jobs:
           if-no-files-found: error
 
   contract-check:
+    needs: detect-changes
+    if: >-
+      github.event_name != 'pull_request' ||
+      needs.detect-changes.outputs.contracts == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -171,6 +179,14 @@ jobs:
           name: sonar-inputs
           path: .
 
+      # Temporary: confirm artifact restored to expected layout before Sonar runs.
+      # Remove after one successful run.
+      - name: Verify restored Sonar inputs
+        run: |
+          test -f blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml
+          find . -type d -path '*/target/classes' -print
+          find . -type d -path '*/target/test-classes' -print
+
       - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -201,7 +217,7 @@ jobs:
       always() &&
       needs.detect-changes.result == 'success' &&
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
-      needs.contract-check.result == 'success' &&
+      (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped') &&
       (needs.sonar.result == 'success' || needs.sonar.result == 'skipped')
     runs-on: ubuntu-latest
     outputs:
@@ -406,7 +422,7 @@ jobs:
       vars.ENABLE_EC2_DEPLOY_PROD == 'true' &&
       needs.detect-changes.result == 'success' &&
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
-      needs.contract-check.result == 'success' &&
+      (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped') &&
       needs.docker.result == 'success' &&
       (needs.sonar.result == 'success' || needs.sonar.result == 'skipped')
     runs-on: ubuntu-latest
@@ -516,7 +532,7 @@ jobs:
       vars.ENABLE_EC2_DEPLOY == 'true' &&
       needs.detect-changes.result == 'success' &&
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
-      needs.contract-check.result == 'success' &&
+      (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped') &&
       needs.docker.result == 'success' &&
       (needs.sonar.result == 'success' || needs.sonar.result == 'skipped') &&
       needs.docker.outputs.image_uri != ''
@@ -563,7 +579,7 @@ jobs:
       vars.ENABLE_EC2_DEPLOY_PROD == 'true' &&
       needs.detect-changes.result == 'success' &&
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
-      needs.contract-check.result == 'success' &&
+      (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped') &&
       needs.docker.result == 'success' &&
       (needs.sonar.result == 'success' || needs.sonar.result == 'skipped') &&
       needs.publish-ecr-prod.result == 'success' &&
