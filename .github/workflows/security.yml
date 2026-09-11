@@ -25,6 +25,10 @@ on:
     - cron: '17 2 * * 1' # weekly Monday 02:17 UTC — catch newly published CVEs in unchanged deps
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -147,21 +151,11 @@ jobs:
           format: sarif
           output: trivy-fs.sarif
 
-      - name: Preserve dependency scan report
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - name: Upload dependency scan SARIF
+        uses: ./.github/actions/upload-sarif
         with:
           name: trivy-dependencies
-          path: trivy-fs.sarif
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Upload dependency scan SARIF
-        if: always()
-        continue-on-error: true # requires GHAS on private repos; job already gated by exit-code above
-        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
-        with:
-          sarif_file: trivy-fs.sarif
+          sarif-file: trivy-fs.sarif
 
   trivy-config:
     runs-on: ubuntu-latest
@@ -183,21 +177,11 @@ jobs:
           format: sarif
           output: trivy-config.sarif
 
-      - name: Preserve configuration scan report
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - name: Upload deployment configuration SARIF
+        uses: ./.github/actions/upload-sarif
         with:
           name: trivy-configuration
-          path: trivy-config.sarif
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Upload deployment configuration SARIF
-        if: always()
-        continue-on-error: true # requires GHAS on private repos; console scan remains a hard gate
-        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
-        with:
-          sarif_file: trivy-config.sarif
+          sarif-file: trivy-config.sarif
 
   codeql:
     # SAST for Java. Opt-in: enable with repo variable ENABLE_CODEQL=true.

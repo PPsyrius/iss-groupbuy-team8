@@ -1,0 +1,39 @@
+name: 'Validate ECR publish configuration'
+description: 'Validates AWS account ID, region, ECR repository name, and push role ARN before publishing'
+
+inputs:
+  aws-account-id:
+    description: 'AWS account ID (12 digits)'
+    required: true
+  aws-region:
+    description: 'AWS region (e.g. ap-southeast-1)'
+    required: true
+  ecr-repository:
+    description: 'ECR repository name'
+    required: true
+  ecr-push-role-arn:
+    description: 'IAM role ARN for ECR push via OIDC'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Validate ECR release configuration
+      shell: bash
+      env:
+        AWS_ACCOUNT_ID: ${{ inputs.aws-account-id }}
+        AWS_REGION: ${{ inputs.aws-region }}
+        ECR_REPOSITORY: ${{ inputs.ecr-repository }}
+        ECR_PUSH_ROLE_ARN: ${{ inputs.ecr-push-role-arn }}
+      run: |
+        set -Eeuo pipefail
+        [[ "$AWS_ACCOUNT_ID" =~ ^[0-9]{12}$ ]] || { echo "::error::AWS_ACCOUNT_ID must contain 12 digits"; exit 1; }
+        [[ "$AWS_REGION" =~ ^[a-z]{2}(-gov)?-[a-z]+-[0-9]$ ]] || { echo "::error::AWS_REGION is invalid"; exit 1; }
+        [[ "$ECR_REPOSITORY" =~ ^[a-z0-9][a-z0-9._/-]+$ ]] || { echo "::error::ECR_REPOSITORY is invalid"; exit 1; }
+        case "$AWS_REGION" in
+          us-gov-*) AWS_PARTITION=aws-us-gov ;;
+          cn-*)     AWS_PARTITION=aws-cn ;;
+          *)        AWS_PARTITION=aws ;;
+        esac
+        [[ "$ECR_PUSH_ROLE_ARN" =~ ^arn:${AWS_PARTITION}:iam::${AWS_ACCOUNT_ID}:role/[A-Za-z0-9+=,.@_/-]+$ ]] \
+          || { echo "::error::ECR_PUSH_ROLE_ARN must be an IAM role in AWS_ACCOUNT_ID"; exit 1; }
