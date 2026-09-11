@@ -171,11 +171,13 @@ jobs:
   docker:
     # Runs on PR too: image build + smoke + scan must gate before merge, not after push.
     needs:
+      - detect-changes
       - build-quality
       - contract-check
       - sonar
     if: >-
       always() &&
+      needs.detect-changes.result == 'success' &&
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
       needs.contract-check.result == 'success' &&
       (needs.sonar.result == 'success' || needs.sonar.result == 'skipped')
@@ -377,6 +379,7 @@ jobs:
     # be exact-matched (infra/terraform/backend-app-stack/github-oidc.tf). The GitHub
     # environment is restricted to v* tags; approval stays on the deploy job.
     needs:
+      - detect-changes
       - build-quality
       - contract-check
       - sonar
@@ -386,6 +389,7 @@ jobs:
       github.event_name == 'push' &&
       startsWith(github.ref, 'refs/tags/v') &&
       vars.ENABLE_EC2_DEPLOY_PROD == 'true' &&
+      needs.detect-changes.result == 'success' &&
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
       needs.contract-check.result == 'success' &&
       needs.docker.result == 'success' &&
@@ -491,6 +495,7 @@ jobs:
       group: deploy-existing-ec2-backend-dev
       cancel-in-progress: false
     needs:
+      - detect-changes
       - build-quality
       - contract-check
       - sonar
@@ -500,6 +505,7 @@ jobs:
       github.event_name == 'push' &&
       github.ref == 'refs/heads/dev' &&
       vars.ENABLE_EC2_DEPLOY == 'true' &&
+      needs.detect-changes.result == 'success' &&
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
       needs.contract-check.result == 'success' &&
       needs.docker.result == 'success' &&
@@ -671,6 +677,7 @@ jobs:
       group: deploy-existing-ec2-backend-prod
       cancel-in-progress: false
     needs:
+      - detect-changes
       - build-quality
       - contract-check
       - sonar
@@ -681,6 +688,7 @@ jobs:
       github.event_name == 'push' &&
       startsWith(github.ref, 'refs/tags/v') &&
       vars.ENABLE_EC2_DEPLOY_PROD == 'true' &&
+      needs.detect-changes.result == 'success' &&
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
       needs.contract-check.result == 'success' &&
       needs.docker.result == 'success' &&
