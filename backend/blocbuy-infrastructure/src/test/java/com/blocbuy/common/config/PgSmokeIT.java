@@ -6,9 +6,9 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * PostgreSQL smoke test (D20): proves the pinned driver can talk to a real PostgreSQL 18 and that
@@ -19,7 +19,7 @@ class PgSmokeIT {
 
     @Container
     @SuppressWarnings("resource") // container lifecycle managed by Testcontainers
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:18");
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18");
 
     @Test
     void connectsAndCreatesDomainSchema() throws Exception {

@@ -34,9 +34,9 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * Real PostgreSQL 18 receipt uniqueness, immutable replay, rollback and wall-clock lock protocol.
@@ -45,7 +45,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 class PaidGroupDealRepositoryIT {
     @Container
     @SuppressWarnings("resource")
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:18");
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18");
 
     private static SqlSessionFactory sessions;
     private static JdbcTemplate jdbc;

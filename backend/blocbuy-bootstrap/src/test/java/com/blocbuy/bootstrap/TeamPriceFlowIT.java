@@ -33,9 +33,9 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.ObjectMapper;
 
 /** Real Flyway, HTTP, authorization, application transactions and PostgreSQL; no business mocks. */
@@ -52,7 +52,7 @@ import tools.jackson.databind.ObjectMapper;
 class TeamPriceFlowIT {
     @Container
     @SuppressWarnings("resource") // Testcontainers owns the isolated database lifecycle
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:18");
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18");
 
     @DynamicPropertySource
     static void database(DynamicPropertyRegistry properties) {
