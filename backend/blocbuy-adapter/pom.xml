@@ -26,7 +26,7 @@
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
+      <artifactId>spring-boot-starter-webmvc</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -35,7 +35,7 @@
     <!-- Sa-Token: auth entry-point annotations + exception types handled by GlobalExceptionHandler -->
     <dependency>
       <groupId>cn.dev33</groupId>
-      <artifactId>sa-token-spring-boot3-starter</artifactId>
+      <artifactId>sa-token-spring-boot4-starter</artifactId>
     </dependency>
     <!-- OpenAPI annotations for controllers (@Tag, @Operation) -->
     <dependency>

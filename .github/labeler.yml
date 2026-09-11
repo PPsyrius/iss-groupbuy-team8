@@ -48,8 +48,8 @@ dependencies:
       - 'package-lock.json'
       - 'yarn.lock'
       - 'pnpm-lock.yaml'
-      - 'pom.xml'
-      - 'build.gradle'
+      - '**/pom.xml'
+      - '**/build.gradle'
 
 # ---------------------------------------------------------
 # Documentation

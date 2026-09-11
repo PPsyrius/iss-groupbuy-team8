@@ -6,11 +6,6 @@ import com.blocbuy.catalog.pricing.TeamPriceQuote;
 import com.blocbuy.catalog.service.TeamPriceAppService;
 import com.blocbuy.common.constant.ApiConstants;
 import com.blocbuy.common.web.Result;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -20,11 +15,11 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,8 +27,15 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 /** Authenticated catalog quotation; no buyer-supplied owner or price on quote creation. */
+@Validated
 @RestController
 @RequestMapping(ApiConstants.API_V1)
 @Tag(
@@ -129,10 +131,10 @@ public class TeamPriceController {
     public record QuoteRequest(@NotNull UUID productId) {}
 
     /** Prevent Jackson's default numeric coercion from weakening the decimal-string contract. */
-    public static final class DecimalStringDeserializer extends JsonDeserializer<String> {
+    public static final class DecimalStringDeserializer extends ValueDeserializer<String> {
         @Override
         public String deserialize(JsonParser parser, DeserializationContext context)
-                throws IOException {
+                throws JacksonException {
             if (!parser.hasToken(JsonToken.VALUE_STRING)) {
                 return (String) context.handleUnexpectedToken(String.class, parser);
             }
