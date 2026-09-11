@@ -1,5 +1,185 @@
 # UC9 — administrator listing management (#32)
 
+## Analysis and contribution
+
+Member: Wang Ziang (Eric), implementation; Liu Jin, review role, per issue #32. The implementation
+is published at `8fe3d14` on `codex/uc9-admin-listings`, not merged. Review ownership is not a claim
+that a teammate has completed review. See the original [design plan's contribution map](backend-skeleton-plan.md#13-course-report-analysis-and-design-map).
+
+### Analysis
+
+An administrator needs to prepare, publish, correct and withdraw catalog listings without exposing
+drafts, overwriting concurrent edits or deleting commercial history. The hard design problem spans
+UC1 visibility, quotation consistency and UC3/UC4 retained team references, not just CRUD fields.
+Two admins can edit the same revision; a listing with old quotes or closed teams still has history.
+Google authentication alone is insufficient: the local account must have the role and permission.
+
+### Design
+
+`AdminListingController` validates transport and session → `AdminListingAppServiceImpl` bounds the
+transaction and locks the product → `Product` delegates lifecycle rules to `ProductStatus` →
+`ProductRepository` performs version-guarded persistence. Cross-domain history is queried through
+`GroupDealQueryService.hasProductReferences`; policy/quote history stays catalog-owned. Responses
+use explicit DTO mapping and the generated OpenAPI contract. No separate admin aggregate is created.
+
+Creation returns draft/version 0; successful updates increment once; stale revisions return 412.
+Published listings may be delisted but not returned to draft. Soft deletion is limited to
+unreferenced never-published drafts; it is not a physical purge or deletion of related business rows.
+
+### Design Pattern and alternative
+
+**State** participants are Product (context) and ProductStatus's per-state implementations; behavioral
+methods delegate transitions and edit/delete rules. This differs from UC5's current code-only
+DealStatus enum. **Repository** isolates persistence. Existing **PricingStrategy** is reused by the
+catalog consumers, not newly implemented by UC9. Static `Product.draft` and DTO conversion are not
+GoF Factory Method/Abstract Factory claims despite the earlier sprint's broad pattern directions.
+
+Reject controller status setters, unversioned last-write-wins updates and deletion that checks only
+active teams. New lifecycle states must define allowed operations and tests; future order persistence
+must add its owning reference facade before claiming safe product deletion. Detailed mechanics and
+tests follow below; manual acceptance remains pending as recorded in issue #68.
+
+## Course analysis and UML
+
+| Analysis item | UC9 contract |
+| --- | --- |
+| Primary actor | Active administrator with both admin role and catalog:product:write permission |
+| Trigger | Prepare, revise, publish/delist a product or delete an unused draft |
+| Preconditions | For existing products: identity exists and current version is supplied; authorization belongs to this environment |
+| Main flow | Authorize → validate → lock product → check actor/version → apply aggregate behavior → persist → return revision |
+| Success postcondition | Exactly one revision committed; public visibility follows lifecycle; audit/history retained |
+| Alternatives | 400 invalid input; 401 no session; 403 forbidden; 404 absent; 409 state/reference conflict; 412 stale version |
+| Failure guarantee | Rejected mutations do not change the stored revision; technical errors roll back the local transaction |
+
+### State selection using the course five elements
+
+| Element | Applied explanation |
+| --- | --- |
+| Name / category | State — behavioral GoF pattern |
+| Problem / intent | Publish, delist and edit have different legal behavior in different lifecycle states |
+| Context | One Product aggregate shared by admin management, public browsing and commercial-history consumers |
+| Forces / constraints | No published → draft transition; published price/stock frozen; no public status setter; pure domain; stable stored codes |
+| Solution | Product delegates rules to its current ProductStatus constant's behavior; the application persists the resulting immutable revision |
+
+The **aspect to vary is lifecycle behavior**, not calculation. State fits better than Strategy here:
+legal behavior follows current state, not a client's selection of interchangeable algorithms.
+Command could package requests but would not replace state rules. Memento is not used: restoring
+old published content could contradict accepted deals/quotes. Repeated status switches in every
+caller were rejected because they distribute the same transition rules across use cases.
+
+Participants: Product is Context; ProductStatus defines state behavior; DRAFT, ON_SALE and OFF_SALE
+constant-specific class bodies provide concrete behavior. They are not three separately named Java
+classes. A Product references a shared immutable enum value, not an exclusively owned state object.
+Default methods reject unsupported operations. The application's target switch selects the command;
+the current-state object still decides whether that command is legal.
+
+SRP separates transport, transaction, rules and SQL. DIP keeps persistence behind ports. OCP reduces
+changes to callers, but a new enum state still requires mapping/command-target/test updates: do not
+claim zero-change extension. State does not solve concurrency; row locks and expectedVersion do.
+
+### UML class diagram — implemented State
+
+`+` public, `-` private, `~` package visibility. Constant-body nodes represent actual enum behaviors,
+not invented named classes. Unrelated getters/DTO fields are omitted; association is not composition.
+
+```mermaid
+classDiagram
+    class AdminListingAppServiceImpl {
+        +changeStatus(id, target, expectedVersion, actorId) Product
+        +delete(id, expectedVersion, actorId) void
+    }
+    class Product {
+        -ProductStatus status
+        -int version
+        +publish() Product
+        +delist() Product
+        +revise(details) Product
+        +requireDeletable() void
+        +requireVersion(expectedVersion) void
+    }
+    class ProductStatus {
+        <<enumeration>>
+        ~publish() ProductStatus
+        ~delist() ProductStatus
+        ~requireCommercialEdit(current, next) void
+        ~requireDeletable() void
+    }
+    class DRAFT {
+        <<constantBody>>
+        ~publish() ProductStatus
+        ~requireDeletable() void
+    }
+    class ON_SALE {
+        <<constantBody>>
+        ~delist() ProductStatus
+    }
+    class OFF_SALE {
+        <<constantBody>>
+        ~publish() ProductStatus
+    }
+    class ProductRepository {
+        <<interface>>
+        +lockById(id) Optional~Product~
+        +updateListing(product, expectedVersion, actorId) void
+    }
+    Product "0..*" --> "1" ProductStatus : current state
+    ProductStatus <|-- DRAFT
+    ProductStatus <|-- ON_SALE
+    ProductStatus <|-- OFF_SALE
+    AdminListingAppServiceImpl ..> Product : invokes behavior
+    AdminListingAppServiceImpl --> ProductRepository : persists revision
+```
+
+### UML sequence diagram — publish and stale retry
+
+```mermaid
+sequenceDiagram
+    actor Admin
+    participant C as AdminListingController
+    participant A as AdminListingAppServiceImpl
+    participant R as ProductRepository
+    participant U as UserAppService
+    participant P as Product
+    participant S as Current ProductStatus
+    Admin->>C: PUT status(on_sale, expectedVersion)
+    activate C
+    C->>C: checkLogin, checkRole, checkPermission
+    C->>A: changeStatus(id, ON_SALE, version, actor)
+    activate A
+    Note over A,R: Bounded local transaction
+    A->>R: lockById(id)
+    R-->>A: current Product
+    A->>U: requireActive(actor)
+    A->>P: requireVersion(expectedVersion)
+    alt stale revision
+        P-->>A: version conflict
+        A-->>C: exception, rollback
+        C-->>Admin: 412 via GlobalExceptionHandler
+    else matching revision
+        A->>P: publish()
+        P->>P: require positive stock and price
+        P->>S: publish()
+        alt state permits publication
+            S-->>P: ON_SALE
+            P-->>A: new Product, version + 1
+            A->>R: updateListing(newProduct, expectedVersion, actor)
+            A-->>C: committed revision
+            C-->>Admin: 200, new version
+        else illegal transition
+            S-->>A: state conflict via Product
+            A-->>C: exception, rollback
+            C-->>Admin: 409 via exception handler
+        end
+    end
+    deactivate A
+    deactivate C
+```
+
+UC1 reads visibility from stored state, not an Observer-updated cache. Deletion additionally queries
+history-owning ports under the product lock; State alone cannot know cross-aggregate references.
+ProductLifecycleTest, AdminListingAppServiceImplTest and AdminListingFlowIT verify these boundaries;
+manual acceptance remains separate. The stock/price rejection also maps to 409 before state dispatch.
+
 ## Scope and compatibility
 
 API-only catalog CRUD, not a management UI, inventory adjustment, checkout or Stripe implementation.
@@ -191,4 +371,6 @@ verification. Java 21 on Windows with Docker Desktop / PostgreSQL 18; no WSL she
   Both additional RBAC denial scenarios were tested; no accepted review findings remain unresolved.
 
 This is local verification, not a remote CI/CD, deployed-service, browser/manual or real
-Google/Stripe-provider acceptance result. No commit, push, PR, issue or kanban update was made.
+Google/Stripe-provider acceptance result. At the time of this verification record, no commit,
+push, PR, issue or kanban update had been made. Subsequent handoff published commit `8fe3d14`
+and issue #68; it did not complete manual acceptance or merge the branch.
