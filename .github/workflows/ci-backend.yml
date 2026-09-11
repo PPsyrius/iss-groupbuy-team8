@@ -186,6 +186,7 @@ jobs:
       contents: read
       id-token: write # requested only by the dev ECR publication steps (dev push)
       security-events: write # SARIF upload (no-op without GHAS on private repos)
+      actions: read # upload-sarif telemetry
     env:
       # Dev-only publication (implementation plan §3.1): the docker job publishes the
       # dev image on dev pushes. Prod publication lives in publish-ecr-prod — that job
