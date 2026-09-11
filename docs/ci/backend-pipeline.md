@@ -12,8 +12,9 @@ Pull requests and pushes to `dev` that touch backend, contracts or backend deplo
 
 ```text
 ci-backend.yml
-├── build-quality     Spotless -> Checkstyle -> Maven verify -> reports
+├── build-quality     Spotless -> Checkstyle -> Maven verify -> reports + sonar inputs
 ├── contract-check    OpenAPI regeneration -> drift -> compatibility on PR
+├── sonar             SonarCloud scan + quality gate (artifact reuse from build-quality)
 ├── docker            image build -> EC2-profile smoke -> Trivy image gate
 │                     └── dev push only: publish the tested image to ECR by digest
 └── deploy-existing-ec2 (dev push + ENABLE_EC2_DEPLOY=true)

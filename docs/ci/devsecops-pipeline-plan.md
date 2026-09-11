@@ -26,7 +26,7 @@ Out of scope here: frontend pipeline, Terraform pipeline, agile-metrics automati
 | Spotless (AOSP) | ❌ | `spotless:check` at `validate`; `spotless:apply` for devs |
 | SpotBugs | ❌ | `spotbugs:check` at `verify`, `spotbugs-excludes.xml` filter |
 | JaCoCo | ❌ | per-module reports + aggregate in `blocbuy-bootstrap` |
-| SonarQube | ❌ | SonarCloud GitHub App (automatic PR analysis) |
+| SonarQube | ❌ | `sonar` CI job with artifact reuse (SonarCloud scan + quality gate) |
 | GitHub workflows | ❌ none | `ci-backend.yml`, `security.yml`, `pr-labeler.yml` |
 | Dependabot | ❌ | `.github/dependabot.yml` (maven, github-actions, docker) |
 | Docker image | ❌ (only `application-docker.yml`) | `backend/Dockerfile` multi-stage, non-root |
@@ -60,7 +60,9 @@ Triggers: PRs and pushes to `dev` touching `backend/**` or `contracts/**`. Concu
   1. `./mvnw -B spotless:check checkstyle:check` (fail fast)
   2. `./mvnw -B verify` (unit tests + ArchUnit + Failsafe ITs + SpotBugs + JaCoCo)
   3. Upload `jacoco.xml` + SpotBugs XML + checkstyle results as artifacts (7-day retention)
+  4. Upload Sonar inputs: compiled classes, test results, JaCoCo reports (1-day retention)
 - **Job `contract-check`** — `./mvnw -B verify -Popenapi-export` then `git diff --exit-code -- contracts/`; fails the PR if the committed `openapi.json` drifts from the code. On PRs (Step 5) it also runs `openapi-diff --fail-on-incompatible` against the base branch's committed contract, failing on backward-incompatible API changes unless the PR carries the `contract-change-approved` label (explicit human approval; diff then runs report-only).
+- **Job `sonar`** — downloads Sonar inputs from `build-quality`, runs SonarCloud scan and quality gate check. Coverage ≥ 80% on new code, no new blocker/critical issues, A ratings on new code.
 - **Job `docker`** — PRs and pushes to `dev`: build image, smoke test with the EC2 profile against PG 18 + Redis 8, and Trivy image scan. On an enabled green `dev` push, publish that exact image to ECR and emit its immutable digest.
 - **Job `deploy-existing-ec2`** — enabled green `dev` pushes only: protected environment, GitHub OIDC, exact SSM bundle allowlist, single-instance deployment, health check and automatic application rollback.
 
@@ -74,13 +76,13 @@ Weekly, grouped PRs: Maven (`backend/`), GitHub Actions (`/`), Docker (`backend/
 
 ### Branch protection (manual, repo settings)
 
-`dev`: require PR, require `build-quality` + `contract-check` + `docker` green, require CODEOWNERS review, no force-push. Cannot be expressed in-repo; recorded here as an action item (see "Off-Repo TODO" below).
+`dev`: require PR, require `build-quality` + `contract-check` + `sonar` + `docker` green, require CODEOWNERS review, no force-push. Cannot be expressed in-repo; recorded here as an action item (see "Off-Repo TODO" below).
 
-## Step 3 — SonarQube (SonarCloud GitHub App)
+## Step 3 — SonarQube (CI-based analysis)
 
-SonarCloud analysis is handled by the **SonarCloud GitHub App**, not a CI job. The app automatically analyzes PRs and provides quality gate status directly in the GitHub PR checks. No repo secrets or variables are required for analysis — the GitHub App authenticates via its installation token.
+SonarCloud analysis runs as a CI job (`sonar`) using the `SonarSource/sonarqube-scan-action`. The `build-quality` job uploads compiled classes, test results, and JaCoCo reports as artifacts; the `sonar` job downloads them and runs the scanner without recompiling. This avoids duplicating the full Maven build while still enforcing the coverage gate.
 
-Quality gate configured server-side: coverage ≥ 80% on new code, no new blocker/critical issues, A ratings on new code.
+Quality gate configured server-side: coverage ≥ 80% on new code, no new blocker/critical issues, A ratings on new code. The `SonarCloud Code Analysis` status check must be added to branch protection as a required check.
 
 ## Step 4 — Security Tooling
 
@@ -134,7 +136,7 @@ These need GitHub repo settings / external accounts; do them once, then the matc
 
 | # | Action | Where | Unblocks |
 |---|---|---|---|
-| 1 | Install the **SonarCloud GitHub App** on the repo | GitHub Marketplace → SonarCloud | Automatic PR analysis and quality gate decoration (no CI job needed) |
+| 1 | Set repo **secret** `SONAR_TOKEN` (SonarCloud scanner token) | Repo Settings → Secrets and variables → Actions | `sonar` CI job — the ≥80% new-code coverage gate and quality gate are dead until this is set |
 | 2 | Set repo **variable** `ENABLE_CODEQL=true` | same page | `codeql` SAST job. Requires **GitHub Advanced Security** if the repo is private (free for public repos) — enable GHAS first or the job fails |
 | 3 | **Branch protection** on `dev`: require PR, backend checks plus `workflow-lint`, `deployment-bundle`, `gitleaks`, `trivy-deps`, `trivy-config`, CODEOWNERS review, no force-push | Repo Settings → Branches | Prevents bypass of delivery/security policy |
 | 4 | **Gitleaks license**: `gitleaks-action` needs a free `GITLEAKS_LICENSE` secret for organization-owned repos | gitleaks.io → add as repo secret | `gitleaks` job on org repos |
@@ -149,7 +151,7 @@ These need GitHub repo settings / external accounts; do them once, then the matc
 | Style | 0 Checkstyle errors | `verify` |
 | Bugs | 0 SpotBugs findings ≥ Medium | `verify` |
 | Architecture | ArchUnit suite green | `test` |
-| Coverage | ≥ 80% on new code | SonarCloud GitHub App quality gate |
+| Coverage | ≥ 80% on new code | `sonar` CI job (SonarCloud quality gate) |
 | Vulnerabilities | 0 unfixed HIGH/CRITICAL | Trivy in CI |
 | Secrets | 0 leaks in history | Gitleaks in CI |
 | Contract drift | `contracts/openapi.json` == generated | `contract-check` job |

@@ -158,7 +158,7 @@ upload-artifact) so the prod publish job never rebuilds the expensive multi-stag
 
 **New `publish-ecr-prod` job** — prod publication lives here, not in `docker`:
 
-- `needs: [build-quality, contract-check, docker]` with the same `always() && ...result`
+- `needs: [build-quality, contract-check, sonar, docker]` with the same `always() && ...result`
   gating chain as the dev deploy job;
 - condition: `github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') &&
   vars.ENABLE_EC2_DEPLOY_PROD == 'true'`;
@@ -172,7 +172,7 @@ upload-artifact) so the prod publish job never rebuilds the expensive multi-stag
 
 **New `deploy-existing-ec2-prod` job:**
 
-- `needs: [build-quality, contract-check, docker, publish-ecr-prod]` with the same
+- `needs: [build-quality, contract-check, sonar, docker, publish-ecr-prod]` with the same
   `always() && ...result` gating chain as the dev job;
 - condition adds `github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') &&
   vars.ENABLE_EC2_DEPLOY_PROD == 'true' && needs.publish-ecr-prod.outputs.image_uri != ''`;

@@ -9,8 +9,8 @@ The numbers the pipeline enforces. Change to any row = team decision, recorded h
 | Static bugs | SpotBugs 4.10.4 | 0 findings, threshold Medium, effort Max | `verify` phase |
 | Architecture | ArchUnit 1.4.2 | all 6 rules green | unit tests (`ArchitectureTest`) |
 | Build gates | Maven Enforcer | Java [21,22), Maven ≥3.9, dependency convergence | `validate` phase |
-| Coverage | JaCoCo 0.8.15 → SonarCloud | ≥ 80% on new code (server quality gate) | SonarCloud GitHub App |
-| Code quality | SonarCloud | quality gate green: no new blocker/critical, A ratings on new code | SonarCloud GitHub App |
+| Coverage | JaCoCo 0.8.15 → SonarCloud | ≥ 80% on new code (server quality gate) | `sonar` CI job |
+| Code quality | SonarCloud | quality gate green: no new blocker/critical, A ratings on new code | `sonar` CI job |
 | Dependency CVEs | Trivy fs | 0 unfixed HIGH/CRITICAL (`exit-code: 1`, `ignore-unfixed`) | `security.yml` + weekly cron |
 | Image CVEs | Trivy image | 0 unfixed HIGH/CRITICAL (`exit-code: 1`, `ignore-unfixed`) | `ci-backend.yml` `docker` job |
 | Secrets | Gitleaks | 0 leaks in full git history | `security.yml` |
