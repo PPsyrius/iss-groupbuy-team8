@@ -37,7 +37,7 @@ unchanged dependencies.
 
 Configure `dev` branch protection with:
 
-- `build-quality`, `contract-check`, `docker`;
+- `build-quality`, `contract-check`, `docker`, `SonarCloud Code Analysis`;
 - `workflow-lint`, `deployment-bundle`, `gitleaks`, `trivy-deps`, `trivy-config`;
 - `codeql` only after GHAS is enabled consistently.
 

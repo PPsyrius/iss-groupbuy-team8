@@ -353,7 +353,7 @@ No long-lived AWS access keys and no `BACKEND_DOT_ENV` are needed on GitHub. Rea
 
 - [ ] Branch protection enabled: require PRs, CODEOWNERS review, forbid force push, and select the required checks
 
-Required checks to select: `build-quality`, `contract-check`, `docker`, `workflow-lint`,
+Required checks to select: `build-quality`, `contract-check`, `docker`, `SonarCloud Code Analysis`, `workflow-lint`,
 `deployment-bundle`, `gitleaks`, `trivy-deps`, `trivy-config`.
 Make `codeql` required only once GHAS is enabled consistently.
 Do not set the push-only deploy job (`deploy-existing-ec2`) as a PR required check.

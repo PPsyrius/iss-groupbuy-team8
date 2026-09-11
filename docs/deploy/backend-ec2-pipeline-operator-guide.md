@@ -236,7 +236,7 @@ the host.
 
 Protect `dev` and require a pull request, CODEOWNERS review, no force push, and these checks:
 
-- `build-quality`, `contract-check`, `docker`;
+- `build-quality`, `contract-check`, `docker`, `SonarCloud Code Analysis`;
 - `workflow-lint`, `deployment-bundle`, `gitleaks`, `trivy-deps`, `trivy-config`;
 - `codeql` only after GHAS is enabled consistently.
 
