@@ -102,7 +102,7 @@ jobs:
           cache: maven
 
       - name: Regenerate contracts/openapi.json from code
-        run: ./mvnw -B verify -Popenapi-export -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true
+        run: ./mvnw -B post-integration-test -Popenapi-export -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true
 
       # Pathspec must resolve from the repo root: `contracts/` under backend/ matches nothing
       # and git diff exits 0 — the drift check would silently never fail.
@@ -267,36 +267,20 @@ jobs:
           format: sarif
           output: trivy-image.sarif
 
-      - name: Preserve image scan report
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - name: Upload image scan SARIF
+        uses: ./.github/actions/upload-sarif
         with:
           name: trivy-image
-          path: trivy-image.sarif
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Upload image scan SARIF
-        if: always()
-        continue-on-error: true # requires GHAS on private repos; job already gated by exit-code above
-        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
-        with:
-          sarif_file: trivy-image.sarif
+          sarif-file: trivy-image.sarif
 
       - name: Validate ECR release configuration
         if: env.BLOCBUY_PUBLISH == 'true'
-        env:
-          AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
-          AWS_REGION: ${{ vars.AWS_REGION }}
-          ECR_REPOSITORY: ${{ env.BLOCBUY_ECR_REPOSITORY }}
-          ECR_PUSH_ROLE_ARN: ${{ env.BLOCBUY_ECR_PUSH_ROLE_ARN }}
-        run: |
-          set -Eeuo pipefail
-          [[ "$AWS_ACCOUNT_ID" =~ ^[0-9]{12}$ ]] || { echo "AWS_ACCOUNT_ID must contain 12 digits"; exit 1; }
-          [[ "$AWS_REGION" =~ ^[a-z]{2}(-gov)?-[a-z]+-[0-9]$ ]] || { echo "AWS_REGION is invalid"; exit 1; }
-          [[ "$ECR_REPOSITORY" =~ ^[a-z0-9][a-z0-9._/-]+$ ]] || { echo "ECR_REPOSITORY is invalid"; exit 1; }
-          [[ "$ECR_PUSH_ROLE_ARN" =~ ^arn:aws:iam::${AWS_ACCOUNT_ID}:role/[A-Za-z0-9+=,.@_/-]+$ ]] \
-            || { echo "AWS_ECR_PUSH_ROLE_ARN must be an IAM role in AWS_ACCOUNT_ID"; exit 1; }
+        uses: ./.github/actions/validate-ecr-publish
+        with:
+          aws-account-id: ${{ vars.AWS_ACCOUNT_ID }}
+          aws-region: ${{ vars.AWS_REGION }}
+          ecr-repository: ${{ env.BLOCBUY_ECR_REPOSITORY }}
+          ecr-push-role-arn: ${{ env.BLOCBUY_ECR_PUSH_ROLE_ARN }}
 
       - name: Assume ECR publishing role with GitHub OIDC
         if: env.BLOCBUY_PUBLISH == 'true'
@@ -425,18 +409,12 @@ jobs:
         run: docker load --input "${RUNNER_TEMP}/backend-image.tgz"
 
       - name: Validate ECR release configuration
-        env:
-          AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
-          AWS_REGION: ${{ vars.AWS_REGION }}
-          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_PROD }}
-          ECR_PUSH_ROLE_ARN: ${{ vars.AWS_ECR_PUSH_ROLE_ARN_PROD }}
-        run: |
-          set -Eeuo pipefail
-          [[ "$AWS_ACCOUNT_ID" =~ ^[0-9]{12}$ ]] || { echo "AWS_ACCOUNT_ID must contain 12 digits"; exit 1; }
-          [[ "$AWS_REGION" =~ ^[a-z]{2}(-gov)?-[a-z]+-[0-9]$ ]] || { echo "AWS_REGION is invalid"; exit 1; }
-          [[ "$ECR_REPOSITORY" =~ ^[a-z0-9][a-z0-9._/-]+$ ]] || { echo "ECR_REPOSITORY is invalid"; exit 1; }
-          [[ "$ECR_PUSH_ROLE_ARN" =~ ^arn:aws:iam::${AWS_ACCOUNT_ID}:role/[A-Za-z0-9+=,.@_/-]+$ ]] \
-            || { echo "AWS_ECR_PUSH_ROLE_ARN_PROD must be an IAM role in AWS_ACCOUNT_ID"; exit 1; }
+        uses: ./.github/actions/validate-ecr-publish
+        with:
+          aws-account-id: ${{ vars.AWS_ACCOUNT_ID }}
+          aws-region: ${{ vars.AWS_REGION }}
+          ecr-repository: ${{ vars.ECR_REPOSITORY_PROD }}
+          ecr-push-role-arn: ${{ vars.AWS_ECR_PUSH_ROLE_ARN_PROD }}
 
       - name: Assume ECR publishing role with GitHub OIDC
         uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
