@@ -30,5 +30,10 @@ runs:
         [[ "$AWS_ACCOUNT_ID" =~ ^[0-9]{12}$ ]] || { echo "::error::AWS_ACCOUNT_ID must contain 12 digits"; exit 1; }
         [[ "$AWS_REGION" =~ ^[a-z]{2}(-gov)?-[a-z]+-[0-9]$ ]] || { echo "::error::AWS_REGION is invalid"; exit 1; }
         [[ "$ECR_REPOSITORY" =~ ^[a-z0-9][a-z0-9._/-]+$ ]] || { echo "::error::ECR_REPOSITORY is invalid"; exit 1; }
-        [[ "$ECR_PUSH_ROLE_ARN" =~ ^arn:aws:iam::${AWS_ACCOUNT_ID}:role/[A-Za-z0-9+=,.@_/-]+$ ]] \
+        case "$AWS_REGION" in
+          us-gov-*) AWS_PARTITION=aws-us-gov ;;
+          cn-*)     AWS_PARTITION=aws-cn ;;
+          *)        AWS_PARTITION=aws ;;
+        esac
+        [[ "$ECR_PUSH_ROLE_ARN" =~ ^arn:${AWS_PARTITION}:iam::${AWS_ACCOUNT_ID}:role/[A-Za-z0-9+=,.@_/-]+$ ]] \
           || { echo "::error::ECR_PUSH_ROLE_ARN must be an IAM role in AWS_ACCOUNT_ID"; exit 1; }
