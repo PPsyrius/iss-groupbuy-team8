@@ -90,6 +90,19 @@ jobs:
             backend/**/target/checkstyle-result.xml
           if-no-files-found: ignore
 
+      - name: Upload Sonar inputs
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sonar-inputs
+          retention-days: 1
+          path: |
+            backend/**/target/classes/**
+            backend/**/target/test-classes/**
+            backend/**/target/site/jacoco*/**
+            backend/**/target/surefire-reports/**
+            backend/**/target/failsafe-reports/**
+          if-no-files-found: error
+
   contract-check:
     runs-on: ubuntu-latest
     steps:
@@ -102,7 +115,7 @@ jobs:
           cache: maven
 
       - name: Regenerate contracts/openapi.json from code
-        run: ./mvnw -B post-integration-test -Popenapi-export -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true
+        run: ./mvnw -B post-integration-test -Popenapi-export -DskipTests -DskipITs -Dspotless.check.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true
 
       # Pathspec must resolve from the repo root: `contracts/` under backend/ matches nothing
       # and git diff exits 0 — the drift check would silently never fail.
@@ -133,11 +146,13 @@ jobs:
           fi
 
   sonar:
-    # Activated by setting repo variable SONAR_HOST_URL (+ secret SONAR_TOKEN).
-    # SonarCloud also needs variable SONAR_ORGANIZATION. See docs/ci/devsecops-pipeline-plan.md Step 3.
-    if: vars.SONAR_HOST_URL != ''
     needs:
       - build-quality
+    # Skip when build-quality failed (incomplete artifacts) or on fork PRs (no token).
+    if: >-
+      needs.build-quality.result == 'success' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.fork == false)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -150,23 +165,30 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Download Sonar inputs
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          path: ~/.sonar/cache
-          key: sonar-${{ runner.os }}
-          restore-keys: sonar-${{ runner.os }}
+          name: sonar-inputs
+          path: .
 
-      - name: SonarQube scan (verify + analyze in one pass for coverage)
+      - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
-          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
         run: >
-          ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.7.0.6970:sonar
-          -Dsonar.host.url="$SONAR_HOST_URL"
+          ./mvnw -B
+          org.sonarsource.scanner.maven:sonar-maven-plugin:5.7.0.6970:sonar
           -Dsonar.token="$SONAR_TOKEN"
-          ${SONAR_ORGANIZATION:+-Dsonar.organization="$SONAR_ORGANIZATION"}
-          -Dsonar.qualitygate.wait=true
+          -Dsonar.organization="${{ vars.SONAR_ORGANIZATION }}"
+          -Dsonar.projectKey="${{ vars.SONAR_PROJECT_KEY }}"
+          -Dsonar.coverage.jacoco.xmlReportPaths="blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml"
+
+      - name: SonarCloud Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@7a5fffe8e523c40e0c740b6bc2712ab503e52efa # v1.2.1
+        timeout-minutes: 5
+        with:
+          scanMetadataReportFile: backend/target/sonar/report-task.txt
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   docker:
     # Runs on PR too: image build + smoke + scan must gate before merge, not after push.
