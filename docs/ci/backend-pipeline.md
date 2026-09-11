@@ -12,9 +12,9 @@ Pull requests and pushes to `dev` that touch backend, contracts or backend deplo
 
 ```text
 ci-backend.yml
-├── build-quality     Spotless -> Checkstyle -> Maven verify -> reports
+├── build-quality     Spotless -> Checkstyle -> Maven verify -> reports + sonar inputs
 ├── contract-check    OpenAPI regeneration -> drift -> compatibility on PR
-├── sonar             optional server-side quality gate
+├── sonar             SonarCloud scan + quality gate (artifact reuse from build-quality)
 ├── docker            image build -> EC2-profile smoke -> Trivy image gate
 │                     └── dev push only: publish the tested image to ECR by digest
 └── deploy-existing-ec2 (dev push + ENABLE_EC2_DEPLOY=true)
@@ -38,9 +38,9 @@ unchanged dependencies.
 
 Configure `dev` branch protection with:
 
-- `build-quality`, `contract-check`, `docker`;
+- `build-quality`, `contract-check`, `docker`, `SonarCloud Code Analysis`;
 - `workflow-lint`, `deployment-bundle`, `gitleaks`, `trivy-deps`, `trivy-config`;
-- `sonar` and `codeql` only after each optional integration is enabled consistently.
+- `codeql` only after GHAS is enabled consistently.
 
 `deploy-existing-ec2` is push-only and must not be a PR-required check.
 
