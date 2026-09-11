@@ -8,7 +8,9 @@ import com.blocbuy.catalog.service.AdminListingAppService;
 import com.blocbuy.common.constant.ApiConstants;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
+import com.blocbuy.common.web.DecimalStringDeserializer;
 import com.blocbuy.common.web.Result;
+import com.blocbuy.identity.model.RoleCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -188,7 +190,7 @@ public class AdminListingController {
     /** All admin reads and writes check both RBAC role and capability; actor is session-derived. */
     private static UUID administrator() {
         StpUtil.checkLogin();
-        StpUtil.checkRole("admin");
+        StpUtil.checkRole(RoleCode.ADMIN);
         StpUtil.checkPermission("catalog:product:write");
         return UUID.fromString(StpUtil.getLoginIdAsString());
     }
@@ -203,7 +205,7 @@ public class AdminListingController {
             @Size(max = 64) String category,
             @NotNull
                     @Pattern(regexp = POSITIVE_MONEY)
-                    @JsonDeserialize(using = TeamPriceController.DecimalStringDeserializer.class)
+                    @JsonDeserialize(using = DecimalStringDeserializer.class)
                     @Schema(
                             example = "12.00",
                             description = "Positive exact SGD major units; JSON string, not number")
