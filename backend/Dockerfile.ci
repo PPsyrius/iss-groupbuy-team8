@@ -12,7 +12,9 @@ RUN rm -f /usr/bin/pebble \
  && groupadd --system blocbuy && useradd --system --gid blocbuy blocbuy
 USER blocbuy
 
-COPY blocbuy-bootstrap/target/blocbuy-bootstrap-*.jar app.jar
+# finalName is blocbuy-backend (blocbuy-bootstrap/pom.xml) — the same jar the
+# backend-application artifact carries and the multi-stage Dockerfile copies.
+COPY blocbuy-bootstrap/target/blocbuy-backend.jar app.jar
 
 EXPOSE 8589
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"
