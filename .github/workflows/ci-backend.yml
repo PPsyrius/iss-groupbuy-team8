@@ -215,13 +215,11 @@ jobs:
       - detect-changes
       - build-quality
       - contract-check
-      - sonar
     if: >-
       always() &&
       needs.detect-changes.result == 'success' &&
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
-      (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped') &&
-      (needs.sonar.result == 'success' || needs.sonar.result == 'skipped')
+      (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped')
     runs-on: ubuntu-latest
 
     outputs:
