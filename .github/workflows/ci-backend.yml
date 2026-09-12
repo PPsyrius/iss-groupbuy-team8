@@ -223,54 +223,23 @@ jobs:
       (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped')
     runs-on: ubuntu-latest
 
-    outputs:
-      image_uri: ${{ steps.publish.outputs.image_uri }}
-
     permissions:
       contents: read
-      id-token: write
       security-events: write
       actions: write
-
-    env:
-      BLOCBUY_PUBLISH: >-
-        ${{
-          github.event_name == 'push' &&
-          github.ref == 'refs/heads/dev' &&
-          vars.ENABLE_EC2_DEPLOY == 'true'
-        }}
-      BLOCBUY_ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_DEV }}
-      BLOCBUY_ECR_PUSH_ROLE_ARN: ${{ vars.AWS_ECR_PUSH_ROLE_ARN }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # When build-quality ran it uploaded the verified boot jar (mvn verify packages
-      # it as blocbuy-backend.jar); Dockerfile.ci then assembles the image in seconds
-      # instead of rebuilding all modules in-container. When build-quality was skipped
-      # (e.g. contracts-only PR) there is no jar artifact — fall back to the full
-      # multi-stage Dockerfile.
+      # Package the exact application artifact that already passed mvn verify.
       - name: Download verified backend application
-        if: needs.build-quality.result == 'success'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: backend-application
           path: backend/blocbuy-bootstrap/target
 
       - name: Verify backend application artifact
-        if: needs.build-quality.result == 'success'
         run: test -f blocbuy-bootstrap/target/blocbuy-backend.jar
-
-      - name: Select Dockerfile
-        id: dockerfile
-        working-directory: ${{ github.workspace }}
-        run: |
-          if [ "${{ needs.build-quality.result }}" = "success" ]; then
-            ls backend/blocbuy-bootstrap/target/blocbuy-backend.jar
-            echo "file=./backend/Dockerfile.ci" >> "$GITHUB_OUTPUT"
-          else
-            echo "file=./backend/Dockerfile" >> "$GITHUB_OUTPUT"
-          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
@@ -279,7 +248,7 @@ jobs:
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: ./backend
-          file: ${{ steps.dockerfile.outputs.file }}
+          file: ./backend/Dockerfile.ci
           load: true
           tags: blocbuy-backend:ci-${{ github.sha }}
           cache-from: type=gha
@@ -288,6 +257,7 @@ jobs:
       - name: Smoke test EC2 profile (boot + /api/actuator/health)
         run: |
           set -Eeuo pipefail
+
           cleanup() {
             docker rm -f smoke-app smoke-postgres smoke-redis >/dev/null 2>&1 || true
           }
@@ -295,23 +265,34 @@ jobs:
           cleanup
 
           docker run -d --name smoke-postgres -p 127.0.0.1:5432:5432 \
-            -e POSTGRES_USER=blocbuy -e POSTGRES_PASSWORD=blocbuy -e POSTGRES_DB=Blocbuy \
+            -e POSTGRES_USER=blocbuy \
+            -e POSTGRES_PASSWORD=blocbuy \
+            -e POSTGRES_DB=Blocbuy \
             postgres:18
 
           docker run -d --name smoke-redis -p 127.0.0.1:6379:6379 \
             redis:8.10 redis-server --requirepass blocbuy
 
+          postgres_ready=0
           for attempt in $(seq 1 30); do
             if docker exec smoke-postgres pg_isready -U blocbuy -d Blocbuy; then
               echo "PostgreSQL became ready on attempt $attempt"
+              postgres_ready=1
               break
             fi
             sleep 2
           done
 
+          if [ "$postgres_ready" != "1" ]; then
+            echo "PostgreSQL did not become ready"
+            docker logs smoke-postgres
+            exit 1
+          fi
+
           docker run -d --network host --name smoke-app \
             -e SPRING_PROFILES_ACTIVE=ec2 \
-            -e DB_USERNAME=blocbuy -e DB_PASSWORD=blocbuy \
+            -e DB_USERNAME=blocbuy \
+            -e DB_PASSWORD=blocbuy \
             -e REDIS_PASSWORD=blocbuy \
             blocbuy-backend:ci-${{ github.sha }}
 
@@ -331,21 +312,22 @@ jobs:
             exit 1
           fi
 
-      # The vulnerability DB is ~300MB and otherwise re-downloads every run. Each run
-      # saves a fresh entry (run_id key) and restores the newest previous one — the DB
-      # stays recent while the download drops out of the scan's critical path.
+      # Keep the Trivy DB between runs so repeat scans avoid downloading it again.
       - name: Cache Trivy vulnerability DB
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/.cache/trivy
+          path: ${{ github.workspace }}/.cache/trivy
           key: trivy-db-${{ runner.os }}-${{ github.run_id }}
-          restore-keys: trivy-db-${{ runner.os }}-
+          restore-keys: |
+            trivy-db-${{ runner.os }}-
 
       - name: Trivy image scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           version: v0.74.0
+          scan-type: image
           image-ref: blocbuy-backend:ci-${{ github.sha }}
+          scanners: vuln
           severity: HIGH,CRITICAL
           limit-severities-for-sarif: 'true'
           ignore-unfixed: true
@@ -353,48 +335,112 @@ jobs:
           format: sarif
           output: trivy-image.sarif
 
-      # PRs keep the SARIF as an artifact but skip the ~45s codeql-action upload —
-      # the Trivy step's exit-code already gates the merge; code scanning history
-      # accumulates from dev/tag pushes.
+      # PRs preserve the report without paying the Code Scanning ingestion cost.
       - name: Upload image scan SARIF
         uses: ./.github/actions/upload-sarif
         with:
           name: trivy-image
           sarif-file: trivy-image.sarif
-          code-scanning: ${{ vars.ENABLE_CODEQL == 'true' }}
+          code-scanning: ${{ github.event_name == 'push' && vars.ENABLE_CODEQL == 'true' }}
+
+      # A publishing job runs on a different runner, so preserve the exact image
+      # that passed the smoke test and Trivy scan. No downstream job rebuilds it.
+      - name: Export verified image for publication
+        if: >-
+          github.event_name == 'push' &&
+          ((github.ref == 'refs/heads/dev' &&
+            vars.ENABLE_EC2_DEPLOY == 'true') ||
+           (startsWith(github.ref, 'refs/tags/v') &&
+            vars.ENABLE_EC2_DEPLOY_PROD == 'true'))
+        run: >-
+          docker save blocbuy-backend:ci-${{ github.sha }}
+          | gzip --stdout
+          > "${RUNNER_TEMP}/backend-image.tgz"
+
+      - name: Upload verified image artifact
+        if: >-
+          github.event_name == 'push' &&
+          ((github.ref == 'refs/heads/dev' &&
+            vars.ENABLE_EC2_DEPLOY == 'true') ||
+           (startsWith(github.ref, 'refs/tags/v') &&
+            vars.ENABLE_EC2_DEPLOY_PROD == 'true'))
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: backend-image-${{ github.sha }}
+          path: ${{ runner.temp }}/backend-image.tgz
+          retention-days: 2
+          if-no-files-found: error
+
+  publish-ecr-dev:
+    name: publish-ecr-dev
+    needs:
+      - detect-changes
+      - build-quality
+      - contract-check
+      - sonar
+      - docker
+    if: >-
+      always() &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/dev' &&
+      vars.ENABLE_EC2_DEPLOY == 'true' &&
+      needs.detect-changes.result == 'success' &&
+      needs.build-quality.result == 'success' &&
+      (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped') &&
+      needs.sonar.result == 'success' &&
+      needs.docker.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: read
+      id-token: write
+
+    outputs:
+      image_uri: ${{ steps.publish.outputs.image_uri }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download verified image artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: backend-image-${{ github.sha }}
+          path: ${{ runner.temp }}
+
+      # Restore the exact image built, smoke-tested, and scanned by docker.
+      - name: Load verified image
+        run: docker load --input "${RUNNER_TEMP}/backend-image.tgz"
 
       - name: Validate ECR release configuration
-        if: env.BLOCBUY_PUBLISH == 'true'
         uses: ./.github/actions/validate-ecr-publish
         with:
           aws-account-id: ${{ vars.AWS_ACCOUNT_ID }}
           aws-region: ${{ vars.AWS_REGION }}
-          ecr-repository: ${{ env.BLOCBUY_ECR_REPOSITORY }}
-          ecr-push-role-arn: ${{ env.BLOCBUY_ECR_PUSH_ROLE_ARN }}
+          ecr-repository: ${{ vars.ECR_REPOSITORY_DEV }}
+          ecr-push-role-arn: ${{ vars.AWS_ECR_PUSH_ROLE_ARN }}
 
       - name: Assume ECR publishing role with GitHub OIDC
-        if: env.BLOCBUY_PUBLISH == 'true'
         uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
         with:
-          role-to-assume: ${{ env.BLOCBUY_ECR_PUSH_ROLE_ARN }}
+          role-to-assume: ${{ vars.AWS_ECR_PUSH_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
           allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
           role-session-name: BlocBuy-ECR-${{ github.run_id }}
 
       - id: login-ecr
         name: Log in to Amazon ECR
-        if: env.BLOCBUY_PUBLISH == 'true'
         uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
 
       - id: publish
         name: Publish verified image by immutable digest
-        if: env.BLOCBUY_PUBLISH == 'true'
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ env.BLOCBUY_ECR_REPOSITORY }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_DEV }}
           IMAGE_TAG: git-${{ github.sha }}-run-${{ github.run_attempt }}
         run: |
           set -Eeuo pipefail
+
           local_image="blocbuy-backend:ci-${GITHUB_SHA}"
           repository_uri="${REGISTRY}/${ECR_REPOSITORY}"
           tagged_image="${repository_uri}:${IMAGE_TAG}"
@@ -407,7 +453,10 @@ jobs:
             if [[ "$candidate" == "$repository_uri@"* ]]; then
               repo_digest="$candidate"
             fi
-          done < <(docker image inspect "$tagged_image" --format '{{range .RepoDigests}}{{println .}}{{end}}')
+          done < <(
+            docker image inspect "$tagged_image" \
+              --format '{{range .RepoDigests}}{{println .}}{{end}}'
+          )
 
           image_digest="${repo_digest#"$repository_uri@"}"
 
@@ -430,7 +479,7 @@ jobs:
           echo "image_uri=$image_uri" >> "$GITHUB_OUTPUT"
 
           {
-            echo "### Backend release candidate"
+            echo "### Backend release candidate (dev)"
             echo "- Git SHA: \`$GITHUB_SHA\`"
             echo "- Image: \`$image_uri\`"
           } >> "$GITHUB_STEP_SUMMARY"
@@ -439,31 +488,12 @@ jobs:
         if: always() && steps.login-ecr.outcome == 'success'
         run: docker logout '${{ steps.login-ecr.outputs.registry }}'
 
-      - name: Export release image for prod publish
-        if: >-
-          github.event_name == 'push' &&
-          startsWith(github.ref, 'refs/tags/v') &&
-          vars.ENABLE_EC2_DEPLOY_PROD == 'true'
-        run: docker save blocbuy-backend:ci-${{ github.sha }} | gzip --stdout > "${RUNNER_TEMP}/backend-image.tgz"
-
-      - name: Upload release image artifact
-        if: >-
-          github.event_name == 'push' &&
-          startsWith(github.ref, 'refs/tags/v') &&
-          vars.ENABLE_EC2_DEPLOY_PROD == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: backend-image-${{ github.sha }}
-          path: ${{ runner.temp }}/backend-image.tgz
-          retention-days: 2
-          if-no-files-found: error
-
   publish-ecr-prod:
     name: publish-ecr-prod
     # Prod publication is environment-scoped: the ECR push role trusts the stable
     # `environment:backend-prod-publish` OIDC subject because varying tag refs cannot
-    # be exact-matched (infra/terraform/backend-app-stack/github-oidc.tf). The GitHub
-    # environment is restricted to v* tags; approval stays on the deploy job.
+    # be exact-matched. The environment is restricted to v* tags; approval remains
+    # on the production deployment job.
     needs:
       - detect-changes
       - build-quality
@@ -476,29 +506,34 @@ jobs:
       startsWith(github.ref, 'refs/tags/v') &&
       vars.ENABLE_EC2_DEPLOY_PROD == 'true' &&
       needs.detect-changes.result == 'success' &&
-      (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
+      needs.build-quality.result == 'success' &&
       (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped') &&
-      needs.docker.result == 'success' &&
-      (needs.sonar.result == 'success' || needs.sonar.result == 'skipped')
+      needs.sonar.result == 'success' &&
+      needs.docker.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
     permissions:
       contents: read
       id-token: write
+
     environment:
       name: backend-prod-publish
+
     outputs:
       image_uri: ${{ steps.publish.outputs.image_uri }}
+
     steps:
-      - name: Download release image artifact
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download verified image artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: backend-image-${{ github.sha }}
           path: ${{ runner.temp }}
 
-      # Restores the exact image the docker job built, smoke-tested, and scanned —
-      # same tag, same digest; publish never rebuilds.
-      - name: Load release image
+      # Restore the exact image built, smoke-tested, and scanned by docker.
+      - name: Load verified image
         run: docker load --input "${RUNNER_TEMP}/backend-image.tgz"
 
       - name: Validate ECR release configuration
@@ -529,6 +564,7 @@ jobs:
           IMAGE_TAG: git-${{ github.sha }}-run-${{ github.run_attempt }}
         run: |
           set -Eeuo pipefail
+
           local_image="blocbuy-backend:ci-${GITHUB_SHA}"
           repository_uri="${REGISTRY}/${ECR_REPOSITORY}"
           tagged_image="${repository_uri}:${IMAGE_TAG}"
@@ -541,10 +577,16 @@ jobs:
             if [[ "$candidate" == "$repository_uri@"* ]]; then
               repo_digest="$candidate"
             fi
-          done < <(docker image inspect "$tagged_image" --format '{{range .RepoDigests}}{{println .}}{{end}}')
+          done < <(
+            docker image inspect "$tagged_image" \
+              --format '{{range .RepoDigests}}{{println .}}{{end}}'
+          )
+
           image_digest="${repo_digest#"$repository_uri@"}"
+
           [[ "$repo_digest" == "$repository_uri@$image_digest" ]] \
             || { echo "Docker did not record the pushed repository digest"; exit 1; }
+
           [[ "$image_digest" =~ ^sha256:[a-f0-9]{64}$ ]] \
             || { echo "Docker returned an invalid image digest"; exit 1; }
 
@@ -553,11 +595,13 @@ jobs:
             --image-ids "imageTag=$IMAGE_TAG" \
             --query 'imageDetails[0].imageDigest' \
             --output text)"
+
           [[ "$ecr_digest" == "$image_digest" ]] \
             || { echo "ECR digest does not match the image that passed CI"; exit 1; }
 
           image_uri="${repository_uri}@${image_digest}"
           echo "image_uri=$image_uri" >> "$GITHUB_OUTPUT"
+
           {
             echo "### Backend release candidate (prod)"
             echo "- Git SHA: \`$GITHUB_SHA\`"
@@ -570,35 +614,45 @@ jobs:
 
   deploy-existing-ec2:
     name: deploy-existing-ec2
-    # Deployments queue and finish; the workflow-level cancel policy must not interrupt a host update.
+
+    # Deployments queue and finish; the workflow-level cancel policy must not
+    # interrupt a host update.
     concurrency:
       group: deploy-existing-ec2-backend-dev
       cancel-in-progress: false
+
     needs:
       - detect-changes
       - build-quality
       - contract-check
       - sonar
       - docker
+      - publish-ecr-dev
+
     if: >-
       always() &&
       github.event_name == 'push' &&
       github.ref == 'refs/heads/dev' &&
       vars.ENABLE_EC2_DEPLOY == 'true' &&
       needs.detect-changes.result == 'success' &&
-      (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
+      needs.build-quality.result == 'success' &&
       (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped') &&
+      needs.sonar.result == 'success' &&
       needs.docker.result == 'success' &&
-      (needs.sonar.result == 'success' || needs.sonar.result == 'skipped') &&
-      needs.docker.outputs.image_uri != ''
+      needs.publish-ecr-dev.result == 'success' &&
+      needs.publish-ecr-dev.outputs.image_uri != ''
+
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
     permissions:
       contents: read
       id-token: write
+
     environment:
       name: backend-dev
       url: ${{ vars.BACKEND_URL_DEV }}
+
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -610,16 +664,18 @@ jobs:
           ecr-repository: ${{ vars.ECR_REPOSITORY_DEV }}
           instance-id: ${{ vars.BACKEND_EC2_INSTANCE_ID_DEV }}
           deploy-role-arn: ${{ vars.AWS_DEPLOY_ROLE_ARN_DEV }}
-          image-uri: ${{ needs.docker.outputs.image_uri }}
+          image-uri: ${{ needs.publish-ecr-dev.outputs.image_uri }}
           mode: deploy
           health-url: ${{ vars.BACKEND_URL_DEV != '' && format('{0}/api/actuator/health', vars.BACKEND_URL_DEV) || '' }}
 
   deploy-existing-ec2-prod:
     name: deploy-existing-ec2-prod
+
     # Same queueing rule as dev: a prod host update must never be cancelled mid-run.
     concurrency:
       group: deploy-existing-ec2-backend-prod
       cancel-in-progress: false
+
     needs:
       - detect-changes
       - build-quality
@@ -627,27 +683,32 @@ jobs:
       - sonar
       - docker
       - publish-ecr-prod
+
     if: >-
       always() &&
       github.event_name == 'push' &&
       startsWith(github.ref, 'refs/tags/v') &&
       vars.ENABLE_EC2_DEPLOY_PROD == 'true' &&
       needs.detect-changes.result == 'success' &&
-      (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
+      needs.build-quality.result == 'success' &&
       (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped') &&
+      needs.sonar.result == 'success' &&
       needs.docker.result == 'success' &&
-      (needs.sonar.result == 'success' || needs.sonar.result == 'skipped') &&
       needs.publish-ecr-prod.result == 'success' &&
       needs.publish-ecr-prod.outputs.image_uri != ''
+
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
     permissions:
       contents: read
       id-token: write
+
     # The approval gate: backend-prod requires reviewers and is restricted to v* tags.
     environment:
       name: backend-prod
       url: ${{ vars.BACKEND_URL_PROD }}
+
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 

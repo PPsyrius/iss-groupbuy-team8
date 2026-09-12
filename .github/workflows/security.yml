@@ -201,7 +201,7 @@ jobs:
         with:
           name: trivy-dependencies
           sarif-file: trivy-fs.sarif
-          code-scanning: ${{ vars.ENABLE_CODEQL == 'true' }}
+          code-scanning: ${{ github.event_name == 'push' && vars.ENABLE_CODEQL == 'true' }
 
   trivy-config:
     needs: detect-changes
@@ -232,7 +232,7 @@ jobs:
         with:
           name: trivy-configuration
           sarif-file: trivy-config.sarif
-          code-scanning: ${{ vars.ENABLE_CODEQL == 'true' }}
+          code-scanning: ${{ github.event_name == 'push' && vars.ENABLE_CODEQL == 'true' }
 
   codeql:
     # SAST for Java. Opt-in: enable with repo variable ENABLE_CODEQL=true.
