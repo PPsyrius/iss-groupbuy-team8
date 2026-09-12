@@ -31,6 +31,13 @@
       <groupId>com.blocbuy</groupId>
       <artifactId>blocbuy-client</artifactId>
     </dependency>
+    <!-- Direct dependency so jacoco:report-aggregate includes domain coverage —
+         report-aggregate only aggregates direct deps; domain was transitive-only
+         via application/adapter and silently dropped from the Sonar report. -->
+    <dependency>
+      <groupId>com.blocbuy</groupId>
+      <artifactId>blocbuy-domain</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
