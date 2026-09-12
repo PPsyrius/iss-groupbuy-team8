@@ -218,7 +218,8 @@ jobs:
     if: >-
       always() &&
       needs.detect-changes.result == 'success' &&
-      (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
+      needs.detect-changes.outputs.backend == 'true' &&
+      needs.build-quality.result == 'success' &&
       (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped')
     runs-on: ubuntu-latest
 
