@@ -362,7 +362,7 @@ jobs:
         with:
           name: trivy-image
           sarif-file: trivy-image.sarif
-          code-scanning: ${{ github.event_name != 'pull_request' }}
+          code-scanning: ${{ vars.ENABLE_CODEQL == 'true' }}
 
       - name: Validate ECR release configuration
         if: env.BLOCBUY_PUBLISH == 'true'
