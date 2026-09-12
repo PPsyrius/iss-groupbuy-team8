@@ -188,6 +188,10 @@ jobs:
           name: sonar-inputs
           path: backend
 
+      # Coverage report path comes from backend/pom.xml (sonar.coverage.jacoco.xmlReportPaths)
+      # as an absolute ${maven.multiModuleProjectDirectory}-based path. Do NOT override it here
+      # with a relative path: the scanner resolves it per-module base dir, so the aggregate
+      # report (unit + IT coverage) is never found and coverage silently drops.
       - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -197,7 +201,6 @@ jobs:
           -Dsonar.token="$SONAR_TOKEN"
           -Dsonar.organization="${{ vars.SONAR_ORGANIZATION }}"
           -Dsonar.projectKey="${{ vars.SONAR_PROJECT_KEY }}"
-          -Dsonar.coverage.jacoco.xmlReportPaths="blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml"
 
       - name: SonarCloud Quality Gate
         uses: SonarSource/sonarqube-quality-gate-action@7a5fffe8e523c40e0c740b6bc2712ab503e52efa # v1.2.1
