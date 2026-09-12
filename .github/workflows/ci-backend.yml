@@ -337,6 +337,7 @@ jobs:
 
       # PRs preserve the report without paying the Code Scanning ingestion cost.
       - name: Upload image scan SARIF
+        if: always()
         uses: ./.github/actions/upload-sarif
         with:
           name: trivy-image
