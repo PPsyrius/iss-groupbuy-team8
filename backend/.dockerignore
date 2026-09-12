@@ -1,5 +1,11 @@
 target/
 **/target/
+
+# Allow only the verified application JAR into the Docker build context.
+!blocbuy-bootstrap/target/
+blocbuy-bootstrap/target/*
+!blocbuy-bootstrap/target/blocbuy-backend.jar
+
 docs/
 *.md
 .mvn/wrapper/maven-wrapper.jar.sha512

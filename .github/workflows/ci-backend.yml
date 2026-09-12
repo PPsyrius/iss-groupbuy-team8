@@ -45,8 +45,10 @@ jobs:
       pull-requests: read
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
+      contracts: ${{ steps.filter.outputs.contracts }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         with:
@@ -56,6 +58,9 @@ jobs:
               - 'docker-compose.yaml'
               - 'deployment/backend/**'
               - '.github/workflows/ci-backend.yml'
+            contracts:
+              - 'backend/**'
+              - 'contracts/**'
 
   build-quality:
     needs: detect-changes
@@ -63,6 +68,7 @@ jobs:
       github.event_name != 'pull_request' ||
       needs.detect-changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -70,7 +76,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-          cache: maven # picks up backend/**/pom.xml
+          cache: maven
 
       - name: Formatting + style gates (fail fast)
         run: ./mvnw -B spotless:check checkstyle:check
@@ -113,8 +119,23 @@ jobs:
             backend/**/target/failsafe-reports/**
           if-no-files-found: error
 
+      # Docker packages this exact verified binary instead of rebuilding the
+      # application from source.
+      - name: Upload verified backend application
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: backend-application
+          retention-days: 1
+          path: backend/blocbuy-bootstrap/target/blocbuy-backend.jar
+          if-no-files-found: error
+
   contract-check:
+    needs: detect-changes
+    if: >-
+      github.event_name != 'pull_request' ||
+      needs.detect-changes.outputs.contracts == 'true'
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -127,17 +148,10 @@ jobs:
       - name: Regenerate contracts/openapi.json from code
         run: ./mvnw -B post-integration-test -Popenapi-export -DskipTests -DskipITs -Dspotless.check.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true
 
-      # Pathspec must resolve from the repo root: `contracts/` under backend/ matches nothing
-      # and git diff exits 0 — the drift check would silently never fail.
       - name: Fail if committed contract drifted
         working-directory: ${{ github.workspace }}
         run: git diff --exit-code -- contracts/
 
-      # Drift check above catches "forgot to commit"; this catches "broke consumers".
-      # Old spec = base branch committed contract; new spec = regenerated from PR code.
-      # Escape hatch: label `contract-change-approved` = explicit human approval of an
-      # incompatible change (e.g. spec tightening that only rejects values the server
-      # never honored). With the label the diff still runs, but report-only.
       - name: Fail on backward-incompatible API change (PR only)
         if: github.event_name == 'pull_request'
         env:
@@ -158,16 +172,16 @@ jobs:
   sonar:
     needs:
       - build-quality
-    # Skip when build-quality failed (incomplete artifacts) or on fork PRs (no token).
     if: >-
       needs.build-quality.result == 'success' &&
       (github.event_name != 'pull_request' ||
        github.event.pull_request.head.repo.fork == false)
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0 # full history for accurate new-code analysis
+          fetch-depth: 0
 
       - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
@@ -204,7 +218,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   docker:
-    # Runs on PR too: image build + smoke + scan must gate before merge, not after push.
     needs:
       - detect-changes
       - build-quality
@@ -214,27 +227,29 @@ jobs:
       always() &&
       needs.detect-changes.result == 'success' &&
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
-      needs.contract-check.result == 'success' &&
+      (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped') &&
       (needs.sonar.result == 'success' || needs.sonar.result == 'skipped')
     runs-on: ubuntu-latest
+
     outputs:
       image_uri: ${{ steps.publish.outputs.image_uri }}
+
     permissions:
       contents: read
-      id-token: write # requested only by the dev ECR publication steps (dev push)
-      security-events: write # SARIF upload (no-op without GHAS on private repos)
-      actions: write # upload-sarif telemetry + BuildKit GHA cache
+      id-token: write
+      security-events: write
+      actions: write
+
     env:
-      # Dev-only publication (implementation plan §3.1): the docker job publishes the
-      # dev image on dev pushes. Prod publication lives in publish-ecr-prod — that job
-      # is environment-scoped because the prod ECR push role trusts the stable
-      # `environment:backend-prod-publish` OIDC subject (tag refs cannot be exact-matched).
       BLOCBUY_PUBLISH: >-
         ${{
-          github.event_name == 'push' && github.ref == 'refs/heads/dev' && vars.ENABLE_EC2_DEPLOY == 'true'
+          github.event_name == 'push' &&
+          github.ref == 'refs/heads/dev' &&
+          vars.ENABLE_EC2_DEPLOY == 'true'
         }}
       BLOCBUY_ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_DEV }}
       BLOCBUY_ECR_PUSH_ROLE_ARN: ${{ vars.AWS_ECR_PUSH_ROLE_ARN }}
+
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -260,11 +275,18 @@ jobs:
             echo "file=./backend/Dockerfile" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Download verified backend application
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: backend-application
+          path: backend/blocbuy-bootstrap/target
+
+      - name: Verify backend application artifact
+        run: test -f blocbuy-bootstrap/target/blocbuy-backend.jar
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
-      # defaults.working-directory is backend/, and the build context IS backend/ — "." is correct.
-      # Writing backend/ here would resolve to backend/backend/ and fail with "path not found".
       - name: Build image
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
@@ -275,7 +297,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Match the existing EC2 runtime: PG/Redis are host-local and the backend uses host networking.
       - name: Smoke test EC2 profile (boot + /api/actuator/health)
         run: |
           set -Eeuo pipefail
@@ -288,8 +309,10 @@ jobs:
           docker run -d --name smoke-postgres -p 127.0.0.1:5432:5432 \
             -e POSTGRES_USER=blocbuy -e POSTGRES_PASSWORD=blocbuy -e POSTGRES_DB=Blocbuy \
             postgres:18
+
           docker run -d --name smoke-redis -p 127.0.0.1:6379:6379 \
             redis:8.10 redis-server --requirepass blocbuy
+
           for attempt in $(seq 1 30); do
             if docker exec smoke-postgres pg_isready -U blocbuy -d Blocbuy; then
               echo "PostgreSQL became ready on attempt $attempt"
@@ -297,11 +320,13 @@ jobs:
             fi
             sleep 2
           done
+
           docker run -d --network host --name smoke-app \
             -e SPRING_PROFILES_ACTIVE=ec2 \
             -e DB_USERNAME=blocbuy -e DB_PASSWORD=blocbuy \
             -e REDIS_PASSWORD=blocbuy \
             blocbuy-backend:ci-${{ github.sha }}
+
           ok=0
           for attempt in $(seq 1 30); do
             if curl -sf http://localhost:8589/api/actuator/health | grep -q '"status":"UP"'; then
@@ -311,7 +336,12 @@ jobs:
             fi
             sleep 2
           done
-          if [ "$ok" != "1" ]; then echo '--- smoke-app logs ---'; docker logs smoke-app; exit 1; fi
+
+          if [ "$ok" != "1" ]; then
+            echo '--- smoke-app logs ---'
+            docker logs smoke-app
+            exit 1
+          fi
 
       # The vulnerability DB is ~300MB and otherwise re-downloads every run. Each run
       # saves a fresh entry (run_id key) and restores the newest previous one — the DB
@@ -329,9 +359,9 @@ jobs:
           version: v0.74.0
           image-ref: blocbuy-backend:ci-${{ github.sha }}
           severity: HIGH,CRITICAL
-          limit-severities-for-sarif: 'true' # otherwise entrypoint drops the severity filter and LOW findings trip exit-code
-          ignore-unfixed: true # gate wording is "0 unfixed"; unfixed-pending CVEs don't fail
-          exit-code: '1'       # actually fail the job — default 0 only reports
+          limit-severities-for-sarif: 'true'
+          ignore-unfixed: true
+          exit-code: '1'
           format: sarif
           output: trivy-image.sarif
 
@@ -390,9 +420,12 @@ jobs:
               repo_digest="$candidate"
             fi
           done < <(docker image inspect "$tagged_image" --format '{{range .RepoDigests}}{{println .}}{{end}}')
+
           image_digest="${repo_digest#"$repository_uri@"}"
+
           [[ "$repo_digest" == "$repository_uri@$image_digest" ]] \
             || { echo "Docker did not record the pushed repository digest"; exit 1; }
+
           [[ "$image_digest" =~ ^sha256:[a-f0-9]{64}$ ]] \
             || { echo "Docker returned an invalid image digest"; exit 1; }
 
@@ -401,11 +434,13 @@ jobs:
             --image-ids "imageTag=$IMAGE_TAG" \
             --query 'imageDetails[0].imageDigest' \
             --output text)"
+
           [[ "$ecr_digest" == "$image_digest" ]] \
             || { echo "ECR digest does not match the image that passed CI"; exit 1; }
 
           image_uri="${repository_uri}@${image_digest}"
           echo "image_uri=$image_uri" >> "$GITHUB_OUTPUT"
+
           {
             echo "### Backend release candidate"
             echo "- Git SHA: \`$GITHUB_SHA\`"
@@ -416,8 +451,6 @@ jobs:
         if: always() && steps.login-ecr.outcome == 'success'
         run: docker logout '${{ steps.login-ecr.outputs.registry }}'
 
-      # Hand the built image to publish-ecr-prod (same run): the multi-stage mvn
-      # build is too expensive to repeat, so the image travels as an artifact.
       - name: Export release image for prod publish
         if: >-
           github.event_name == 'push' &&
@@ -456,7 +489,7 @@ jobs:
       vars.ENABLE_EC2_DEPLOY_PROD == 'true' &&
       needs.detect-changes.result == 'success' &&
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
-      needs.contract-check.result == 'success' &&
+      (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped') &&
       needs.docker.result == 'success' &&
       (needs.sonar.result == 'success' || needs.sonar.result == 'skipped')
     runs-on: ubuntu-latest
@@ -566,7 +599,7 @@ jobs:
       vars.ENABLE_EC2_DEPLOY == 'true' &&
       needs.detect-changes.result == 'success' &&
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
-      needs.contract-check.result == 'success' &&
+      (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped') &&
       needs.docker.result == 'success' &&
       (needs.sonar.result == 'success' || needs.sonar.result == 'skipped') &&
       needs.docker.outputs.image_uri != ''
@@ -613,7 +646,7 @@ jobs:
       vars.ENABLE_EC2_DEPLOY_PROD == 'true' &&
       needs.detect-changes.result == 'success' &&
       (needs.build-quality.result == 'success' || needs.build-quality.result == 'skipped') &&
-      needs.contract-check.result == 'success' &&
+      (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped') &&
       needs.docker.result == 'success' &&
       (needs.sonar.result == 'success' || needs.sonar.result == 'skipped') &&
       needs.publish-ecr-prod.result == 'success' &&
