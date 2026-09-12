@@ -3,6 +3,45 @@
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.blocbuy.catalog.persistence.BizProductMapper">
 
+    <insert id="insertDraft">
+        INSERT INTO biz_product (id, product_no, title, subtitle, description, cover_image, images,
+            category, original_price, currency, stock, sold_count, status, pricing_mode,
+            create_by, update_by, version)
+        VALUES (#{row.id,jdbcType=OTHER}, #{row.productNo}, #{row.title}, #{row.subtitle},
+            #{row.description}, #{row.coverImage}, CAST(#{row.images} AS jsonb), #{row.category},
+            #{row.originalPrice}, #{row.currency}, #{row.stock}, 0, 'draft', #{row.pricingMode},
+            #{actorId,jdbcType=OTHER}, #{actorId,jdbcType=OTHER}, 0)
+        ON CONFLICT (product_no) WHERE deleted = false DO NOTHING
+    </insert>
+
+    <update id="updateListing">
+        UPDATE biz_product SET title = #{row.title}, subtitle = #{row.subtitle},
+            description = #{row.description}, cover_image = #{row.coverImage},
+            images = CAST(#{row.images} AS jsonb), category = #{row.category},
+            original_price = #{row.originalPrice}, currency = #{row.currency}, stock = #{row.stock},
+            status = #{row.status}, version = version + 1,
+            update_by = #{actorId,jdbcType=OTHER}, update_time = clock_timestamp()
+        WHERE id = #{row.id,jdbcType=OTHER} AND deleted = false AND version = #{expectedVersion}
+    </update>
+
+    <update id="deleteDraft">
+        UPDATE biz_product SET deleted = true, version = version + 1,
+            update_by = #{actorId,jdbcType=OTHER}, update_time = clock_timestamp()
+        WHERE id = #{id,jdbcType=OTHER} AND deleted = false AND status = 'draft'
+            AND sold_count = 0 AND version = #{expectedVersion}
+    </update>
+
+    <select id="selectListingPage" resultMap="bizProductMap">
+        SELECT <include refid="columns"/> FROM biz_product WHERE deleted = false
+        <if test="status != null">AND status = #{status}</if>
+        ORDER BY create_time DESC, id DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countListings" resultType="long">
+        SELECT COUNT(*) FROM biz_product WHERE deleted = false
+        <if test="status != null">AND status = #{status}</if>
+    </select>
+
     <resultMap id="bizProductMap" type="com.blocbuy.catalog.persistence.BizProductDO">
         <id column="id" property="id" jdbcType="OTHER"/>
         <result column="product_no" property="productNo"/>

@@ -33,7 +33,42 @@ permissions:
   contents: read
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      workflow: ${{ steps.filter.outputs.workflow }}
+      deployment: ${{ steps.filter.outputs.deployment }}
+      dependencies: ${{ steps.filter.outputs.dependencies }}
+      config: ${{ steps.filter.outputs.config }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          filters: |
+            workflow:
+              - '.github/workflows/**'
+            deployment:
+              - 'deployment/**'
+            dependencies:
+              - 'backend/**/pom.xml'
+              - 'backend/.mvn/**'
+              - 'backend/mvnw'
+            config:
+              - '.github/**'
+              - 'deployment/**'
+              - 'infra/**'
+              - 'Dockerfile*'
+              - 'docker-compose*.yml'
+
   workflow-lint:
+    needs: detect-changes
+    if: >-
+      github.event_name != 'pull_request' ||
+      needs.detect-changes.outputs.workflow == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -47,6 +82,10 @@ jobs:
           -color
 
   deployment-bundle:
+    needs: detect-changes
+    if: >-
+      github.event_name != 'pull_request' ||
+      needs.detect-changes.outputs.deployment == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -117,6 +156,12 @@ jobs:
           GITLEAKS_ENABLE_COMMENTS: false # don't post PR comments; the job gate is enough
 
   trivy-deps:
+    needs: detect-changes
+    if: >-
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name != 'pull_request' ||
+      needs.detect-changes.outputs.dependencies == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -156,8 +201,13 @@ jobs:
         with:
           name: trivy-dependencies
           sarif-file: trivy-fs.sarif
+          code-scanning: ${{ github.event_name == 'push' && vars.ENABLE_CODEQL == 'true' }
 
   trivy-config:
+    needs: detect-changes
+    if: >-
+      github.event_name != 'pull_request' ||
+      needs.detect-changes.outputs.config == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -182,6 +232,7 @@ jobs:
         with:
           name: trivy-configuration
           sarif-file: trivy-config.sarif
+          code-scanning: ${{ github.event_name == 'push' && vars.ENABLE_CODEQL == 'true' }
 
   codeql:
     # SAST for Java. Opt-in: enable with repo variable ENABLE_CODEQL=true.

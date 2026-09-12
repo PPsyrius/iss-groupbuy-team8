@@ -13,6 +13,11 @@ import java.util.UUID;
 public interface GroupDealQueryService {
 
     /**
+     * Retention guard for catalog deletion; includes every historical deal, not just open deals.
+     */
+    boolean hasProductReferences(UUID productId);
+
+    /**
      * Best open, unexpired deal per product: lowest {@code deal_price} wins (the "what joining
      * saves" headline number). One batch query for the whole collection — never per product.
      * Products without an open deal are absent from the result.

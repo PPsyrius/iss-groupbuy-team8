@@ -32,7 +32,8 @@ blocbuy/
 │   ├── .mvn/wrapper/ + mvnw        # committed Maven Wrapper (Maven 3.9.x)
 │   ├── checkstyle.xml              # Google checks, 120 cols, AOSP indentation values
 │   ├── spotbugs-excludes.xml       # SpotBugs filter (each exclusion carries a reason)
-│   ├── Dockerfile                  # multi-stage image (maven build → temurin 21 JRE, non-root)
+│   ├── Dockerfile                  # multi-stage image (maven build → temurin 21 JRE, non-root); local compose builds
+│   ├── Dockerfile.ci               # runtime-only twin: CI assembles from the build-quality boot-jar artifact
 │   ├── .dockerignore
 │   ├── blocbuy-client/             # external DTOs, API contracts; no business code
 │   ├── blocbuy-domain/             # aggregates, VOs, domain services, ports; JDK-only deps

@@ -8,6 +8,9 @@ import org.apache.ibatis.annotations.Param;
 /** Bounded policy and owner-filtered quote access; all write row counts are checked. */
 @Mapper
 public interface TeamPriceMapper {
+    /** Existence across both immutable history tables; not limited to active/valid rows. */
+    boolean existsProductReference(@Param("productId") UUID productId);
+
     TeamPricePolicyDO selectLatestPolicy(@Param("productId") UUID productId);
 
     int insertPolicy(

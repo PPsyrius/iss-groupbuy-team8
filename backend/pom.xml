@@ -55,7 +55,7 @@
     <spotbugs-maven-plugin.version>4.10.4.0</spotbugs-maven-plugin.version>
     <spotbugs.version>4.10.4</spotbugs.version>
     <jacoco.version>0.8.15</jacoco.version>
-    <!-- SonarQube: host/organization/token come from CI secrets (docs/ci/devsecops-pipeline-plan.md) -->
+    <!-- SonarCloud CI-based analysis: project key and coverage path -->
     <sonar.projectKey>blocbuy-backend</sonar.projectKey>
     <sonar.coverage.jacoco.xmlReportPaths>
       ${maven.multiModuleProjectDirectory}/blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml
@@ -163,7 +163,7 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-context</artifactId>
-        <version>1.70.0</version>
+        <version>1.84.0</version>
       </dependency>
       <dependency>
         <groupId>org.checkerframework</groupId>

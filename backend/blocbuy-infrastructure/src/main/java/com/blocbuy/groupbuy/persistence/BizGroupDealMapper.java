@@ -7,11 +7,14 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
- * MyBatis mapper for biz_group_deal. All queries filter {@code deleted = false}; updates carry an
- * explicit WHERE and report affected rows. Parameters use {@code #{}} binding only.
+ * MyBatis mapper for biz_group_deal. Browse queries filter {@code deleted = false}; retention
+ * checks deliberately include deleted history. Parameters use {@code #{}} binding only.
  */
 @Mapper
 public interface BizGroupDealMapper {
+
+    /** Retention exception to active-only reads: include all historical references. */
+    boolean existsProductReference(@Param("productId") UUID productId);
 
     /** Active deal by primary key. */
     BizGroupDealDO selectActiveById(@Param("id") UUID id);

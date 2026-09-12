@@ -2,6 +2,7 @@ package com.blocbuy.common.web;
 
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.exception.NotPermissionException;
+import cn.dev33.satoken.exception.NotRoleException;
 import com.blocbuy.common.constant.ApiConstants;
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.common.exception.CommonErrorCode;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -78,6 +80,15 @@ public class GlobalExceptionHandler {
         return toResponse(CommonErrorCode.BAD_REQUEST, null);
     }
 
+    /**
+     * Missing required query parameter: 400 without exposing request values or exception details.
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Result<Void>> handleMissingParameter(
+            MissingServletRequestParameterException ex) {
+        return toResponse(CommonErrorCode.BAD_REQUEST, null);
+    }
+
     /** Sa-Token: not logged in → 401. */
     @ExceptionHandler(NotLoginException.class)
     public ResponseEntity<Result<Void>> handleNotLogin(NotLoginException ex) {
@@ -85,8 +96,8 @@ public class GlobalExceptionHandler {
     }
 
     /** Sa-Token: logged in but lacks permission → 403. */
-    @ExceptionHandler(NotPermissionException.class)
-    public ResponseEntity<Result<Void>> handleNotPermission(NotPermissionException ex) {
+    @ExceptionHandler({NotPermissionException.class, NotRoleException.class})
+    public ResponseEntity<Result<Void>> handleNotPermission(Exception ex) {
         return toResponse(CommonErrorCode.FORBIDDEN, null);
     }
 

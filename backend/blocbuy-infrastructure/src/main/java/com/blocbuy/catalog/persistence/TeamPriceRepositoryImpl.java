@@ -15,6 +15,12 @@ import org.springframework.stereotype.Repository;
 public class TeamPriceRepositoryImpl implements TeamPriceRepository {
     private final TeamPriceMapper mapper;
 
+    /** Immutable catalog history is a deletion veto, even after expiry or soft deletion. */
+    @Override
+    public boolean hasProductReferences(UUID productId) {
+        return mapper.existsProductReference(productId);
+    }
+
     @Override
     public Optional<TeamPricePolicy> findLatestPolicy(UUID productId) {
         return Optional.ofNullable(

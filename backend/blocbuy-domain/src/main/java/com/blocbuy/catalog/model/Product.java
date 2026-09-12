@@ -1,5 +1,7 @@
 package com.blocbuy.catalog.model;
 
+import com.blocbuy.catalog.exception.CatalogErrorCode;
+import com.blocbuy.common.exception.BizException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -10,9 +12,8 @@ import java.util.UUID;
  *
  * <p>Rules: the aggregate root is the only entry point for mutating its state; state transitions go
  * through behavioral methods that validate the current state (no public {@code setStatus}); no
- * Lombok {@code @Data}; monetary amounts are {@code BigDecimal} major units. The browse use case is
- * read-only, so only reconstitution exists so far — mutation behavior lands with the first write
- * use case.
+ * Lombok {@code @Data}; monetary amounts are {@code BigDecimal} major units. UC9 mutations return a
+ * new aggregate revision and delegate lifecycle behavior to the concrete ProductStatus state.
  */
 public final class Product {
 
@@ -30,7 +31,11 @@ public final class Product {
     private final int soldCount;
     private final ProductStatus status;
     private final PricingMode pricingMode;
+    private final int version;
 
+    // Aggregate snapshots are constructed whole; a parameter object would only relocate the same
+    // invariant checks and obscure them.
+    @SuppressWarnings("java:S107")
     private Product(
             UUID id,
             String productNo,
@@ -45,7 +50,8 @@ public final class Product {
             int stock,
             int soldCount,
             ProductStatus status,
-            PricingMode pricingMode) {
+            PricingMode pricingMode,
+            int version) {
         if (id == null) {
             throw new IllegalArgumentException("id must not be null");
         }
@@ -64,6 +70,9 @@ public final class Product {
         if (pricingMode == null) {
             throw new IllegalArgumentException("pricingMode must not be null");
         }
+        if (version < 0) {
+            throw new IllegalArgumentException("negative product version");
+        }
         this.id = id;
         this.productNo = productNo;
         this.title = title;
@@ -78,9 +87,11 @@ public final class Product {
         this.soldCount = soldCount;
         this.status = status;
         this.pricingMode = pricingMode;
+        this.version = version;
     }
 
-    /** Reconstitution factory for the infrastructure converter; all fields come from the row. */
+    /** Reconstitution factory for tests; the stored revision defaults to version 0. */
+    @SuppressWarnings("java:S107") // versionless mirror of the whole-snapshot factory
     public static Product reconstitute(
             UUID id,
             String productNo,
@@ -96,6 +107,42 @@ public final class Product {
             int soldCount,
             ProductStatus status,
             PricingMode pricingMode) {
+        return reconstitute(
+                id,
+                productNo,
+                title,
+                subtitle,
+                description,
+                coverImage,
+                images,
+                category,
+                originalPrice,
+                currency,
+                stock,
+                soldCount,
+                status,
+                pricingMode,
+                0);
+    }
+
+    /** Reconstitute the stored revision without granting callers a mutable version setter. */
+    @SuppressWarnings("java:S107") // mirror of the whole-snapshot constructor
+    public static Product reconstitute(
+            UUID id,
+            String productNo,
+            String title,
+            String subtitle,
+            String description,
+            String coverImage,
+            List<String> images,
+            String category,
+            BigDecimal originalPrice,
+            String currency,
+            int stock,
+            int soldCount,
+            ProductStatus status,
+            PricingMode pricingMode,
+            int version) {
         return new Product(
                 id,
                 productNo,
@@ -110,12 +157,118 @@ public final class Product {
                 stock,
                 soldCount,
                 status,
-                pricingMode);
+                pricingMode,
+                version);
     }
 
     /** Buyer-visible listing guard: only on-sale products may appear in the browse views. */
     public boolean isOnSale() {
         return status == ProductStatus.ON_SALE;
+    }
+
+    /**
+     * Create a never-published draft; callers cannot choose lifecycle, counters or pricing mode.
+     */
+    public static Product draft(UUID id, String productNo, ListingDetails details) {
+        if (productNo == null || !productNo.matches("[A-Za-z0-9][A-Za-z0-9._-]{0,63}")) {
+            throw new BizException(CatalogErrorCode.PRODUCT_INVALID);
+        }
+        return reconstitute(
+                id,
+                productNo,
+                details.title(),
+                details.subtitle(),
+                details.description(),
+                details.coverImage(),
+                details.images(),
+                details.category(),
+                details.originalPrice(),
+                details.currency(),
+                details.stock(),
+                0,
+                ProductStatus.DRAFT,
+                PricingMode.DUAL,
+                0);
+    }
+
+    /** Replace editorial content, preserving identity, counters and published commercial terms. */
+    public Product revise(ListingDetails details) {
+        status.requireCommercialEdit(this, details);
+        return reconstitute(
+                id,
+                productNo,
+                details.title(),
+                details.subtitle(),
+                details.description(),
+                details.coverImage(),
+                details.images(),
+                details.category(),
+                details.originalPrice(),
+                details.currency(),
+                details.stock(),
+                soldCount,
+                status,
+                pricingMode,
+                nextVersion());
+    }
+
+    /** Publish or re-publish only when the current state and inventory allow it. */
+    public Product publish() {
+        if (stock <= 0 || originalPrice.signum() <= 0) {
+            throw new BizException(CatalogErrorCode.PRODUCT_STATE_CONFLICT);
+        }
+        return transition(status.publish());
+    }
+
+    /** Hide a currently published listing; no quotation/deal/order snapshot is rewritten. */
+    public Product delist() {
+        return transition(status.delist());
+    }
+
+    /** Defend draft deletion; reference existence is a cross-aggregate application concern. */
+    public void requireDeletable() {
+        status.requireDeletable();
+        if (soldCount != 0) {
+            throw new BizException(CatalogErrorCode.PRODUCT_REFERENCED);
+        }
+    }
+
+    /** Enforce client preconditions and reject version exhaustion before writing. */
+    public void requireVersion(int expected) {
+        if (version != expected || version == Integer.MAX_VALUE) {
+            throw new BizException(CatalogErrorCode.PRODUCT_VERSION_CONFLICT);
+        }
+    }
+
+    /** Optimistic concurrency token; independent from append-only team-price policy versions. */
+    public int version() {
+        return version;
+    }
+
+    /** Copy state without exposing a generic status setter to application or controller code. */
+    private Product transition(ProductStatus next) {
+        return reconstitute(
+                id,
+                productNo,
+                title,
+                subtitle,
+                description,
+                coverImage,
+                images,
+                category,
+                originalPrice,
+                currency,
+                stock,
+                soldCount,
+                next,
+                pricingMode,
+                nextVersion());
+    }
+
+    /** Never wrap the database integer concurrency token. */
+    private int nextVersion() {
+        requireVersion(version);
+        return version + 1;
     }
 
     public UUID id() {

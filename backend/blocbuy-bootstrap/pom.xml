@@ -31,6 +31,10 @@
       <groupId>com.blocbuy</groupId>
       <artifactId>blocbuy-client</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.blocbuy</groupId>
+      <artifactId>blocbuy-domain</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -47,10 +51,6 @@
     <dependency>
       <groupId>org.flywaydb</groupId>
       <artifactId>flyway-database-postgresql</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-jackson2</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -91,6 +91,8 @@
   </dependencies>
 
   <build>
+    <finalName>blocbuy-backend</finalName>
+
     <plugins>
       <plugin>
         <groupId>org.springframework.boot</groupId>
@@ -105,6 +107,7 @@
           </excludes>
         </configuration>
       </plugin>
+
       <!-- Aggregate coverage: bootstrap is the only module depending on all others.
            Output: target/site/jacoco-aggregate/jacoco.xml (consumed by Sonar). -->
       <plugin>
@@ -153,6 +156,7 @@
               </execution>
             </executions>
           </plugin>
+
           <plugin>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-maven-plugin</artifactId>

@@ -1,0 +1,24 @@
+# BlocBuy backend image for CI. Context: backend/.
+# Runtime-only: expects the boot jar already built by the ci-backend build-quality
+# job (mvn verify) and downloaded into blocbuy-bootstrap/target/ before docker build.
+# Local/offline builds use the multi-stage Dockerfile instead (docker-compose.yaml).
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+
+# Keep in sync with Dockerfile: base image ships pebble (Let's Encrypt's ACME test
+# server) at /usr/bin/pebble — its stdlib CVEs trip the Trivy image gate.
+RUN rm -f /usr/bin/pebble \
+ && groupadd --system blocbuy && useradd --system --gid blocbuy blocbuy
+USER blocbuy
+
+# finalName is blocbuy-backend (blocbuy-bootstrap/pom.xml) — the same jar the
+# backend-application artifact carries and the multi-stage Dockerfile copies.
+COPY blocbuy-bootstrap/target/blocbuy-backend.jar app.jar
+
+EXPOSE 8589
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"
+
+# No in-image HEALTHCHECK: JRE base has no curl/wget. Orchestrator probes
+# (compose healthcheck / k8s liveness) hit GET /actuator/health on :8589.
+ENTRYPOINT ["java", "-jar", "app.jar"]
