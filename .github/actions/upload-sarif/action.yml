@@ -14,7 +14,7 @@ inputs:
       keep only the artifact — e.g. on PRs, where the scan step already gates and
       code scanning history accumulates from branch pushes.
     required: false
-    default: 'true'
+    default: 'false'
 
 runs:
   using: 'composite'
