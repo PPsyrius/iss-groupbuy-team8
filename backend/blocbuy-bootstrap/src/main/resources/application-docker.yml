@@ -10,3 +10,8 @@ spring:
       port: 6379
       password: ${REDIS_PASSWORD}
       timeout: 3s
+
+sa-token:
+  cookie:
+    # compose exposes the backend over plain HTTP — browsers refuse Secure cookies over HTTP
+    secure: false

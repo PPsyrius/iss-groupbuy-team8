@@ -20,6 +20,11 @@ logging:
   level:
     com.blocbuy: debug
 
+sa-token:
+  cookie:
+    # local dev is plain http://localhost:8589 — browsers refuse Secure cookies over HTTP
+    secure: false
+
 blocbuy:
   oauth:
     google:
