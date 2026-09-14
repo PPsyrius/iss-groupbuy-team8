@@ -10,7 +10,6 @@ import com.blocbuy.common.web.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -38,15 +37,13 @@ import tools.jackson.databind.annotation.JsonDeserialize;
         name = "team-prices",
         description = "First-team price policies and immutable quotations; not checkout")
 @RequiredArgsConstructor
-@ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Success in Result envelope"),
-    @ApiResponse(responseCode = "400", description = "Invalid request or policy"),
-    @ApiResponse(responseCode = "401", description = "Login required"),
-    @ApiResponse(responseCode = "403", description = "Permission denied or account disabled"),
-    @ApiResponse(responseCode = "404", description = "Resource not found"),
-    @ApiResponse(responseCode = "409", description = "Policy unavailable"),
-    @ApiResponse(responseCode = "412", description = "Policy version precondition failed")
-})
+@ApiResponse(responseCode = "200", description = "Success in Result envelope")
+@ApiResponse(responseCode = "400", description = "Invalid request or policy")
+@ApiResponse(responseCode = "401", description = "Login required")
+@ApiResponse(responseCode = "403", description = "Permission denied or account disabled")
+@ApiResponse(responseCode = "404", description = "Resource not found")
+@ApiResponse(responseCode = "409", description = "Policy unavailable")
+@ApiResponse(responseCode = "412", description = "Policy version precondition failed")
 public class TeamPriceController {
     private static final String WRITE_PERMISSION = "catalog:product:write";
     private final TeamPriceAppService prices;
