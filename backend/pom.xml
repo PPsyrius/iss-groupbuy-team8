@@ -52,7 +52,7 @@
     <!-- quality gates: versions verified against Maven Central 2026-08-31 -->
     <spotless-maven-plugin.version>3.10.1</spotless-maven-plugin.version>
     <google-java-format.version>1.36.1</google-java-format.version>
-    <spotbugs-maven-plugin.version>4.10.4.0</spotbugs-maven-plugin.version>
+    <spotbugs-maven-plugin.version>4.10.4.1</spotbugs-maven-plugin.version>
     <spotbugs.version>4.10.4</spotbugs.version>
     <jacoco.version>0.8.15</jacoco.version>
     <!-- SonarCloud CI-based analysis: project key and coverage path -->
