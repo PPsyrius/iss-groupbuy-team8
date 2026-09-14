@@ -42,13 +42,14 @@ class GoogleOAuthGatewayTest {
 
         String url = gateway.buildAuthorizeUrl("state-abc");
 
-        assertThat(url).startsWith("https://accounts.google.com/o/oauth2/v2/auth");
-        assertThat(url).contains("client_id=client-id-123");
-        // ':' and '/' are legal inside a query component (RFC 3986) and are left as-is
-        assertThat(url).contains("redirect_uri=https://api.example.com/cb");
-        assertThat(url).contains("response_type=code");
-        assertThat(url).contains("scope=openid%20email%20profile");
-        assertThat(url).contains("state=state-abc");
+        assertThat(url)
+                .startsWith("https://accounts.google.com/o/oauth2/v2/auth")
+                .contains("client_id=client-id-123")
+                // ':' and '/' are legal inside a query component (RFC 3986) and are left as-is
+                .contains("redirect_uri=https://api.example.com/cb")
+                .contains("response_type=code")
+                .contains("scope=openid%20email%20profile")
+                .contains("state=state-abc");
     }
 
     @Test
