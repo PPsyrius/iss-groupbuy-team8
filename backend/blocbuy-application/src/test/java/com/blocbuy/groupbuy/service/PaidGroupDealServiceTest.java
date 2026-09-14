@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -23,6 +24,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 class PaidGroupDealServiceTest {
     private final PaidGroupDealRepository repository = mock(PaidGroupDealRepository.class);
@@ -164,8 +166,8 @@ class PaidGroupDealServiceTest {
                 terms,
                 new PaidParticipation(
                         paid.paymentId(), paid.userId(), new BigDecimal("12.000"), "sgd"));
-        var fingerprints = org.mockito.ArgumentCaptor.forClass(String.class);
-        verify(repository, org.mockito.Mockito.times(2))
+        var fingerprints = ArgumentCaptor.forClass(String.class);
+        verify(repository, times(2))
                 .reserveAndLock(eq(paid.paymentId()), fingerprints.capture(), eq(paid.userId()));
         assertThat(fingerprints.getAllValues().get(0))
                 .isEqualTo(fingerprints.getAllValues().get(1));
