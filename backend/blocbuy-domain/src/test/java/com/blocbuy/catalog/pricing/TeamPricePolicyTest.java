@@ -46,8 +46,7 @@ class TeamPricePolicyTest {
 
     @Test
     void rejectsEmptyValidityWindow() {
-        assertThatThrownBy(() -> policy("20", "sgd", NOW, NOW))
-                .isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> policy("20", "sgd", NOW, NOW)).isInstanceOf(BizException.class);
     }
 
     @Test

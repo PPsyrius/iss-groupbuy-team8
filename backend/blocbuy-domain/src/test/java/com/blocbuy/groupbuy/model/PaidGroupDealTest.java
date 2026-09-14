@@ -199,8 +199,7 @@ class PaidGroupDealTest {
     void acceptsExactCentsWithoutRoundingAndRejectsMissingIdentity() {
         assertThat(payment(LEADER, "10.000").amount()).isEqualTo(new BigDecimal("10.00"));
 
-        assertThatThrownBy(() -> payment(null, "10.00"))
-                .isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> payment(null, "10.00")).isInstanceOf(BizException.class);
 
         BigDecimal amount = new BigDecimal("10.00");
         assertThatThrownBy(() -> new PaidParticipation(null, LEADER, amount, "sgd"))
@@ -224,8 +223,7 @@ class PaidGroupDealTest {
         assertThatThrownBy(() -> creator.initiate(terms, missingClockPayment, null))
                 .isInstanceOf(BizException.class);
 
-        assertThatThrownBy(() -> terms(1))
-                .isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> terms(1)).isInstanceOf(BizException.class);
     }
 
     /** Verifies an SGD payment cannot enter a legacy USD deal and preserves the mismatch code. */
