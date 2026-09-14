@@ -46,12 +46,14 @@ class PaidGroupDealTest {
     /** Verifies initiation rejects absent payment facts and an amount below the accepted price. */
     @Test
     void rejectsMissingPaymentAndIncorrectAmountDuringInitiation() {
-        assertThatThrownBy(() -> new StandardPaidGroupDealCreator().initiate(terms(3), null, NOW))
+        PaidGroupDealCreator creator = new StandardPaidGroupDealCreator();
+        NewDealTerms terms = terms(3);
+
+        assertThatThrownBy(() -> creator.initiate(terms, null, NOW))
                 .isInstanceOf(BizException.class);
-        assertThatThrownBy(
-                        () ->
-                                new StandardPaidGroupDealCreator()
-                                        .initiate(terms(3), payment(LEADER, "9.99"), NOW))
+
+        PaidParticipation incorrectPayment = payment(LEADER, "9.99");
+        assertThatThrownBy(() -> creator.initiate(terms, incorrectPayment, NOW))
                 .isInstanceOf(BizException.class);
     }
 
@@ -59,9 +61,13 @@ class PaidGroupDealTest {
     @Test
     void rejectsLeaderAndExistingMember() {
         GroupDeal deal = start(3);
-        assertThatThrownBy(() -> deal.joinPaid(payment(LEADER, "10.00"), false, NOW))
+
+        PaidParticipation leaderPayment = payment(LEADER, "10.00");
+        assertThatThrownBy(() -> deal.joinPaid(leaderPayment, false, NOW))
                 .isInstanceOf(BizException.class);
-        assertThatThrownBy(() -> deal.joinPaid(payment(UUID.randomUUID(), "10.00"), true, NOW))
+
+        PaidParticipation existingMemberPayment = payment(UUID.randomUUID(), "10.00");
+        assertThatThrownBy(() -> deal.joinPaid(existingMemberPayment, true, NOW))
                 .isInstanceOf(BizException.class);
     }
 
@@ -71,21 +77,17 @@ class PaidGroupDealTest {
     @Test
     void rejectsAtDeadlineAndBeforeStart() {
         GroupDeal deal = start(3);
-        assertThatThrownBy(
-                        () ->
-                                deal.joinPaid(
-                                        payment(UUID.randomUUID(), "10.00"),
-                                        false,
-                                        deal.expireTime()))
+
+        PaidParticipation deadlinePayment = payment(UUID.randomUUID(), "10.00");
+        Instant deadline = deal.expireTime();
+        assertThatThrownBy(() -> deal.joinPaid(deadlinePayment, false, deadline))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex -> assertThat(ex.errorCode()).isEqualTo(GroupbuyErrorCode.DEAL_CLOSED));
-        assertThatThrownBy(
-                        () ->
-                                deal.joinPaid(
-                                        payment(UUID.randomUUID(), "10.00"),
-                                        false,
-                                        NOW.minusSeconds(1)))
+
+        PaidParticipation beforeStartPayment = payment(UUID.randomUUID(), "10.00");
+        Instant beforeStart = NOW.minusSeconds(1);
+        assertThatThrownBy(() -> deal.joinPaid(beforeStartPayment, false, beforeStart))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex -> assertThat(ex.errorCode()).isEqualTo(GroupbuyErrorCode.DEAL_CLOSED));
@@ -95,15 +97,15 @@ class PaidGroupDealTest {
     @Test
     void rejectsWrongAmountOrCurrency() {
         GroupDeal deal = start(3);
-        assertThatThrownBy(() -> deal.joinPaid(payment(UUID.randomUUID(), "11.00"), false, NOW))
+
+        PaidParticipation wrongAmountPayment = payment(UUID.randomUUID(), "11.00");
+        assertThatThrownBy(() -> deal.joinPaid(wrongAmountPayment, false, NOW))
                 .isInstanceOf(BizException.class);
-        assertThatThrownBy(
-                        () ->
-                                new PaidParticipation(
-                                        UUID.randomUUID(),
-                                        UUID.randomUUID(),
-                                        new BigDecimal("10.00"),
-                                        "usd"))
+
+        UUID paymentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        BigDecimal amount = new BigDecimal("10.00");
+        assertThatThrownBy(() -> new PaidParticipation(paymentId, userId, amount, "usd"))
                 .isInstanceOf(BizException.class);
     }
 
@@ -127,7 +129,9 @@ class PaidGroupDealTest {
                         NOW,
                         NOW.plusSeconds(60),
                         null);
-        assertThatThrownBy(() -> deal.joinPaid(payment(UUID.randomUUID(), "10.00"), false, NOW))
+
+        PaidParticipation payment = payment(UUID.randomUUID(), "10.00");
+        assertThatThrownBy(() -> deal.joinPaid(payment, false, NOW))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex -> assertThat(ex.errorCode()).isEqualTo(GroupbuyErrorCode.DEAL_CLOSED));
@@ -150,7 +154,9 @@ class PaidGroupDealTest {
                         NOW,
                         NOW.plusSeconds(60),
                         null);
-        assertThatThrownBy(() -> deal.joinPaid(payment(UUID.randomUUID(), "10.00"), false, NOW))
+
+        PaidParticipation payment = payment(UUID.randomUUID(), "10.00");
+        assertThatThrownBy(() -> deal.joinPaid(payment, false, NOW))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex -> assertThat(ex.errorCode()).isEqualTo(GroupbuyErrorCode.DEAL_FULL));
@@ -192,9 +198,11 @@ class PaidGroupDealTest {
     @Test
     void acceptsExactCentsWithoutRoundingAndRejectsMissingIdentity() {
         assertThat(payment(LEADER, "10.000").amount()).isEqualTo(new BigDecimal("10.00"));
+
         assertThatThrownBy(() -> payment(null, "10.00")).isInstanceOf(BizException.class);
-        assertThatThrownBy(
-                        () -> new PaidParticipation(null, LEADER, new BigDecimal("10.00"), "sgd"))
+
+        BigDecimal amount = new BigDecimal("10.00");
+        assertThatThrownBy(() -> new PaidParticipation(null, LEADER, amount, "sgd"))
                 .isInstanceOf(BizException.class);
     }
 
@@ -205,11 +213,16 @@ class PaidGroupDealTest {
     void initiationRejectsExpiredTermsInvalidSizeAndMissingClock() {
         PaidGroupDealCreator creator = new StandardPaidGroupDealCreator();
         NewDealTerms terms = terms(3);
-        assertThatThrownBy(
-                        () -> creator.initiate(terms, payment(LEADER, "10.00"), terms.expireTime()))
+        PaidParticipation expiredTermsPayment = payment(LEADER, "10.00");
+        Instant expireTime = terms.expireTime();
+
+        assertThatThrownBy(() -> creator.initiate(terms, expiredTermsPayment, expireTime))
                 .isInstanceOf(BizException.class);
-        assertThatThrownBy(() -> creator.initiate(terms, payment(LEADER, "10.00"), null))
+
+        PaidParticipation missingClockPayment = payment(LEADER, "10.00");
+        assertThatThrownBy(() -> creator.initiate(terms, missingClockPayment, null))
                 .isInstanceOf(BizException.class);
+
         assertThatThrownBy(() -> terms(1)).isInstanceOf(BizException.class);
     }
 
@@ -230,7 +243,9 @@ class PaidGroupDealTest {
                         NOW,
                         NOW.plusSeconds(60),
                         null);
-        assertThatThrownBy(() -> deal.joinPaid(payment(UUID.randomUUID(), "10.00"), false, NOW))
+
+        PaidParticipation payment = payment(UUID.randomUUID(), "10.00");
+        assertThatThrownBy(() -> deal.joinPaid(payment, false, NOW))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex ->

@@ -23,7 +23,9 @@ class TeamPricePolicyTest {
     @ParameterizedTest
     @ValueSource(strings = {"0", "-0.01", "1.001", "10000000000000000", "1e30"})
     void rejectsAmountsThatCannotBeStoredExactly(String amount) {
-        assertThatThrownBy(() -> policy(amount, "sgd", NOW, NOW.plusSeconds(60)))
+        Instant validUntil = NOW.plusSeconds(60);
+
+        assertThatThrownBy(() -> policy(amount, "sgd", NOW, validUntil))
                 .isInstanceOf(BizException.class);
     }
 
@@ -36,7 +38,9 @@ class TeamPricePolicyTest {
     @ParameterizedTest
     @ValueSource(strings = {"usd", "jpy", "SGD", "", "not-a-currency"})
     void rejectsUnsupportedCurrencyInsteadOfAssumingMinorUnits(String currency) {
-        assertThatThrownBy(() -> policy("20", currency, NOW, NOW.plusSeconds(60)))
+        Instant validUntil = NOW.plusSeconds(60);
+
+        assertThatThrownBy(() -> policy("20", currency, NOW, validUntil))
                 .isInstanceOf(BizException.class);
     }
 
@@ -49,6 +53,7 @@ class TeamPricePolicyTest {
     void rejectsWindowThatCollapsesAtPostgresqlMicrosecondPrecision() {
         Instant from = Instant.parse("2026-09-09T00:00:00.000000100Z");
         Instant until = Instant.parse("2026-09-09T00:00:00.000000200Z");
+
         assertThatThrownBy(() -> policy("20", "sgd", from, until))
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
@@ -57,38 +62,42 @@ class TeamPricePolicyTest {
 
     @Test
     void startInclusiveAndEndExclusive() {
-        var policy = policy("20", "sgd", NOW, NOW.plusSeconds(60));
-        policy.requireQuotable(product("sgd", ProductStatus.ON_SALE), NOW);
-        assertThatThrownBy(
-                        () ->
-                                policy.requireQuotable(
-                                        product("sgd", ProductStatus.ON_SALE), NOW.minusNanos(1)))
+        Instant validUntil = NOW.plusSeconds(60);
+        TeamPricePolicy policy = policy("20", "sgd", NOW, validUntil);
+        Product product = product("sgd", ProductStatus.ON_SALE);
+
+        policy.requireQuotable(product, NOW);
+
+        Instant beforeStart = NOW.minusNanos(1);
+        assertThatThrownBy(() -> policy.requireQuotable(product, beforeStart))
                 .isInstanceOf(BizException.class);
-        assertThatThrownBy(
-                        () ->
-                                policy.requireQuotable(
-                                        product("sgd", ProductStatus.ON_SALE), NOW.plusSeconds(60)))
+
+        assertThatThrownBy(() -> policy.requireQuotable(product, validUntil))
                 .isInstanceOf(BizException.class);
     }
 
     @Test
     void rejectsCurrencyMismatchAndPriceNotBelowOriginal() {
-        var policy = policy("20", "sgd", NOW, NOW.plusSeconds(60));
-        assertThatThrownBy(() -> policy.requireCompatible(product("usd", ProductStatus.ON_SALE)))
+        Instant validUntil = NOW.plusSeconds(60);
+        TeamPricePolicy policy = policy("20", "sgd", NOW, validUntil);
+
+        Product currencyMismatchProduct = product("usd", ProductStatus.ON_SALE);
+        assertThatThrownBy(() -> policy.requireCompatible(currencyMismatchProduct))
                 .isInstanceOf(BizException.class);
-        assertThatThrownBy(
-                        () ->
-                                policy("40", "sgd", NOW, NOW.plusSeconds(60))
-                                        .requireCompatible(product("sgd", ProductStatus.ON_SALE)))
+
+        TeamPricePolicy equalPricePolicy = policy("40", "sgd", NOW, validUntil);
+        Product product = product("sgd", ProductStatus.ON_SALE);
+        assertThatThrownBy(() -> equalPricePolicy.requireCompatible(product))
                 .isInstanceOf(BizException.class);
     }
 
     @Test
     void rejectsOffSaleProduct() {
-        assertThatThrownBy(
-                        () ->
-                                policy("20", "sgd", NOW, NOW.plusSeconds(60))
-                                        .requireCompatible(product("sgd", ProductStatus.OFF_SALE)))
+        Instant validUntil = NOW.plusSeconds(60);
+        TeamPricePolicy policy = policy("20", "sgd", NOW, validUntil);
+        Product offSaleProduct = product("sgd", ProductStatus.OFF_SALE);
+
+        assertThatThrownBy(() -> policy.requireCompatible(offSaleProduct))
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(CatalogErrorCode.TEAM_PRICE_UNAVAILABLE);

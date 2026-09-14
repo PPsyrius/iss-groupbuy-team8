@@ -1,7 +1,6 @@
 package com.blocbuy.identity.gateway;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -39,9 +38,9 @@ class RedisOAuthStateStoreTest {
         assertThat(issued.binding()).isNotEqualTo(issued.state());
         verify(ops)
                 .set(
-                        eq("blocbuy:local:identity:oauth-state:" + issued.state()),
-                        eq(issued.binding()),
-                        eq(Duration.ofSeconds(300)));
+                        "blocbuy:local:identity:oauth-state:" + issued.state(),
+                        issued.binding(),
+                        Duration.ofSeconds(300));
     }
 
     @Test
