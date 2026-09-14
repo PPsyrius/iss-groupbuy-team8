@@ -117,15 +117,15 @@ class PaidGroupDealRepositoryIT {
                                     .result())
                     .isEqualTo(result);
             assertThat(repo.lockDeal(dealId)).isEmpty();
+
+            PaidGroupDealMapper mapper = session.getMapper(PaidGroupDealMapper.class);
+            UUID memberId = UuidV7.next();
+            UUID paymentId = paid.paymentId();
+            UUID userId = UuidV7.next();
+            Instant now = repo.currentTime();
+
             assertThatThrownBy(
-                            () ->
-                                    session.getMapper(PaidGroupDealMapper.class)
-                                            .insertMember(
-                                                    UuidV7.next(),
-                                                    paid.paymentId(),
-                                                    UuidV7.next(),
-                                                    "member",
-                                                    repo.currentTime()))
+                            () -> mapper.insertMember(memberId, paymentId, userId, "member", now))
                     .isInstanceOf(PersistenceException.class);
             session.rollback();
         }
@@ -227,13 +227,15 @@ class PaidGroupDealRepositoryIT {
                                     Instant afterLock = repo.currentTime();
                                     assertThat(beforeLock).isBefore(deal.expireTime());
                                     assertThat(afterLock).isAfterOrEqualTo(deal.expireTime());
+
+                                    boolean hasActiveMember =
+                                            repo.hasActiveMember(dealId, joiner.userId());
+
                                     assertThatThrownBy(
                                                     () ->
                                                             deal.joinPaid(
                                                                     joiner,
-                                                                    repo.hasActiveMember(
-                                                                            dealId,
-                                                                            joiner.userId()),
+                                                                    hasActiveMember,
                                                                     afterLock))
                                             .isInstanceOf(BizException.class);
                                     reader.rollback();

@@ -218,8 +218,11 @@ class TeamPriceRepositoryIT {
                             now.plusSeconds(60)));
             session.rollback();
             assertThat(repo.findQuoteForOwner(quoteId, ownerId)).isEmpty();
-            assertThatThrownBy(() -> repo.appendPolicy(policy("25", 1, now), ownerId, now))
+
+            TeamPricePolicy duplicatePolicy = policy("25", 1, now);
+            assertThatThrownBy(() -> repo.appendPolicy(duplicatePolicy, ownerId, now))
                     .isInstanceOf(PersistenceException.class);
+
             session.rollback();
         }
         assertThat(
