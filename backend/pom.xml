@@ -39,7 +39,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <mybatis-spring-boot.version>4.1.0</mybatis-spring-boot.version>
     <sa-token.version>1.46.0</sa-token.version>
-    <springdoc.version>3.1.0</springdoc.version>
+    <springdoc.version>3.1.1</springdoc.version>
     <testcontainers.version>2.0.5</testcontainers.version>
     <springdoc-maven-plugin.version>1.5</springdoc-maven-plugin.version>
     <archunit.version>1.5.0</archunit.version>
