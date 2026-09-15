@@ -1,6 +1,6 @@
 # Frontend blueprint review (2026-09-15)
 
-Decision log for the review of `frontend/BLUEPRINT.md` before it is turned into an implementation plan. Format: verification findings, then each decision as question → options → decision → rationale, then the blocker list and assumptions. Written so the SWE5006 report can cite it directly.
+Decision log for the review of `frontend/docs/blueprint.md` before it is turned into an implementation plan. Format: verification findings, then each decision as question → options → decision → rationale, then the blocker list and assumptions. Written so the SWE5006 report can cite it directly.
 
 Participants: Lim Jiechao (frontend owner), Claude Code (reviewer). Method: the blueprint was checked claim-by-claim against the repository, the GitHub issues, and current package registries; every mismatch became either a correction or an interview question. Questions were asked one at a time with a recommended answer.
 
@@ -76,7 +76,7 @@ Question: Sprint 1 ended 2026-09-12 with #44 and #42 still To Do; how much toolc
 
 Options: two-tier with the demoable slice first; full blueprint before features; minimal toolchain.
 
-Decision: full blueprint toolchain first, then the demoable slice, both within Sprint 2. Sprint 2 dates not yet stated (see assumptions).
+Decision: full blueprint toolchain first, then the demoable slice, both within Sprint 2 (2026-09-14 to 2026-09-25, confirmed by the owner after the interview).
 
 Rationale: the report weights process at 80%; the owner prefers the quality gates in place before feature PRs so every feature PR carries evidence from day one.
 
@@ -145,14 +145,14 @@ Team asks:
 
 | ID | Ask | Gates |
 |---|---|---|
-| T1 | Sprint 2 start and end dates, and a Sprint 2 issue mirroring #49 | Task sequencing, sprint log |
+| T1 | A Sprint 2 issue mirroring #49 for 2026-09-14 to 2026-09-25 (dates confirmed) | Sprint log, kanban |
 | T2 | `read:project` access to the kanban for the reviewing agent, or a screenshot | Nothing critical; #49 status board is the proxy |
 | T3 | PPsyrius review of `.github/` changes (ci-frontend, security paths, dependabot npm, PR template) | CI |
 | T4 | CODEOWNERS additions: `*.json`, `*.mjs`, `*.cjs`, `pnpm-workspace.yaml`, `frontend/**/*.md` | Review routing |
 
 ## 4. Assumptions carried into the plan
 
-- Sprint 2 runs roughly 2026-09-15 to 2026-09-26; adjust once T1 is answered.
+- Sprint 2 runs 2026-09-14 to 2026-09-25 (confirmed). Tier 1 (toolchain and scaffold) targets the first week; tier 2 (features, Terraform import, compiler spike) the second.
 - Until B1 lands, local development uses a manual workaround: complete the Google flow once, then navigate to `/`. The cookie is already set by the callback.
 - Until B2 lands, the generated client's security typing is ignored; the browser sends the cookie automatically on same-origin requests.
 - `Result<T>` handling: keep generated envelope types, unwrap `data` in a shared `select`, throw on non-2xx or non-OK `code`. No generator transform.
@@ -162,4 +162,4 @@ Team asks:
 
 ## 5. Next step
 
-Turn the corrected `frontend/BLUEPRINT.md` into `frontend/docs/plan.md` in a planning session, then open the ADRs and the backend/AWS asks as issues linked to Sprint 2.
+Turn the corrected `frontend/docs/blueprint.md` into `frontend/docs/plan.md` in a planning session using `frontend/docs/plan-session-prompt.md`, then open the ADRs and the backend/AWS asks as issues linked to Sprint 2.
