@@ -287,7 +287,6 @@ class GoogleOAuthGatewayTest {
                 .isNotNull();
     }
 
-    /** Verifies the default constructor tolerates an empty audience. */
     /** Verifies the exchange path checks configuration before any HTTP call. */
     @Test
     void exchangeOnUnconfiguredGatewayFailsFast() {
