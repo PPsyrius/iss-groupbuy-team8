@@ -20,7 +20,7 @@ Domains (v1): `identity`, `groupbuy`, `order`, `catalog`, `notification`, `payme
 ## Prerequisites
 
 **- JDK 21 (e.g. `export JAVA_HOME=$(brew --prefix openjdk@21)`); Maven via committed `./mvnw` wrapper (3.9.x).
-- Docker (for the Testcontainers PG smoke test and local stack).
+- Docker (for the Testcontainers PostgreSQL integration test suites and local stack).
 
 ## Common commands
 
