@@ -1,0 +1,19 @@
+# Architecture Decision Records
+
+Nygard format, numbered from 0001. New decisions get the next number; superseded ADRs keep their file and point forward. Plan: `../plan.md`.
+
+| # | Title | Status |
+|---|---|---|
+| 0001 | [Frontend stack and pure CSR](0001-frontend-stack-and-csr.md) | Proposed |
+| 0002 | [Same-origin /api with cookie session and OAuth return](0002-same-origin-api-and-cookie-auth.md) | Proposed |
+| 0003 | [Generated API client, not committed](0003-generated-client-not-committed.md) | Proposed |
+| 0004 | [Single build artifact promoted dev to prod](0004-single-artifact-no-runtime-env.md) | Proposed |
+| 0005 | [SPA fallback via CloudFront Function](0005-spa-fallback-cloudfront-function.md) | Proposed |
+| 0006 | [Lint and format toolchain](0006-lint-format-toolchain.md) | Proposed |
+| 0007 | [Hand-managed dev CloudFront now, Terraform import in Sprint 2](0007-hand-managed-cloudfront-then-terraform-import.md) | Proposed |
+| 0008 | [Documentation and evidence conventions](0008-documentation-and-evidence.md) | Proposed |
+| 0009 | [Result envelope handling](0009-result-envelope-handling.md) | Proposed |
+| 0010 | [React Compiler via Babel preset now, native path as spike](0010-react-compiler-babel-now-native-spike.md) | Proposed |
+| 0011 | [Testing strategy](0011-testing-strategy.md) | Proposed |
+| 0012 | [Agent configuration](0012-agent-configuration.md) | Proposed |
+| 0013 | [Package manager and runtime pinning](0013-package-manager-and-runtime-pinning.md) | Proposed |
