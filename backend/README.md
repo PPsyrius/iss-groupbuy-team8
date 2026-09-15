@@ -1,14 +1,25 @@
 # BlocBuy Backend
 
-| | |
-|---|---|
-| **CI** | [![Backend CI](https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/ci-backend.yml/badge.svg?branch=dev)](https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/ci-backend.yml) [![Security](https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/security.yml/badge.svg?branch=dev)](https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/security.yml) |
-| **Quality** | [![Quality gate status](https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=alert_status&token=da0d7400dc3730c828d2e91ffd2c3a79b425392a)](https://sonarcloud.io/summary/new_code?id=blocbuy-backend) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=coverage&token=da0d7400dc3730c828d2e91ffd2c3a79b425392a)](https://sonarcloud.io/summary/new_code?id=blocbuy-backend) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=sqale_rating&token=da0d7400dc3730c828d2e91ffd2c3a79b425392a)](https://sonarcloud.io/summary/new_code?id=blocbuy-backend) [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=reliability_rating&token=da0d7400dc3730c828d2e91ffd2c3a79b425392a)](https://sonarcloud.io/summary/new_code?id=blocbuy-backend) |
-| **Code** | ![Java](https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Fraw.githubusercontent.com%2FPPsyrius%2Fiss-groupbuy-team8%2Fdev%2Fbackend%2Fpom.xml&query=%2F%2A%5Blocal-name%28%29%3D%27project%27%5D%2F%2A%5Blocal-name%28%29%3D%27properties%27%5D%2F%2A%5Blocal-name%28%29%3D%27java.version%27%5D&label=java) ![Spring Boot](https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Fraw.githubusercontent.com%2FPPsyrius%2Fiss-groupbuy-team8%2Fdev%2Fbackend%2Fpom.xml&query=%2F%2A%5Blocal-name%28%29%3D%27project%27%5D%2F%2A%5Blocal-name%28%29%3D%27parent%27%5D%2F%2A%5Blocal-name%28%29%3D%27version%27%5D&label=spring%20boot) ![PostgreSQL](https://img.shields.io/badge/postgresql-18-blue) ![Redis](https://img.shields.io/badge/redis-8.10-blue) |
-| **Release** | [![Latest Tag](https://img.shields.io/github/v/tag/PPsyrius/iss-groupbuy-team8?label=tag)](https://github.com/PPsyrius/iss-groupbuy-team8/tags) |
-| **GitHub** | [![Contributors](https://img.shields.io/github/contributors/PPsyrius/iss-groupbuy-team8)](https://github.com/PPsyrius/iss-groupbuy-team8/graphs/contributors) [![Last Commit](https://img.shields.io/github/last-commit/PPsyrius/iss-groupbuy-team8/dev?label=last%20commit)](https://github.com/PPsyrius/iss-groupbuy-team8/commits/dev/) |
-
-Java 21 · Spring Boot 4.1.1 · MyBatis · PostgreSQL 18 · Redis 8.10 · Sa-Token · Maven (COLA multi-module)
+<table>
+  <tr>
+    <td>CI</td>
+    <td>
+      <a href="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/ci-backend.yml?query=branch%3Adev+event%3Apush"><img src="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/ci-backend.yml/badge.svg?branch=dev&event=push" alt="Backend CI status (dev)"></a>&nbsp;<a href="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/security.yml?query=branch%3Adev+event%3Apush"><img src="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/security.yml/badge.svg?branch=dev&event=push" alt="Security status (dev)"></a>
+    </td>
+  </tr>
+  <tr>
+    <td>Quality</td>
+    <td>
+      <a href="https://sonarcloud.io/summary/new_code?id=blocbuy-backend"><img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=alert_status&token=da0d7400dc3730c828d2e91ffd2c3a79b425392a" alt="SonarCloud quality gate"></a>&nbsp;<a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=coverage&view=list"><img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=coverage&token=da0d7400dc3730c828d2e91ffd2c3a79b425392a" alt="SonarCloud coverage"></a>&nbsp;<a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=sqale_rating&view=list"><img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=sqale_rating&token=da0d7400dc3730c828d2e91ffd2c3a79b425392a" alt="SonarCloud maintainability rating"></a>&nbsp;<a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=reliability_rating&view=list"><img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=reliability_rating&token=da0d7400dc3730c828d2e91ffd2c3a79b425392a" alt="SonarCloud reliability rating"></a>
+    </td>
+  </tr>
+  <tr>
+    <td>Code</td>
+    <td>
+      <img src="https://img.shields.io/badge/java-21-41B5BE?style=flat" alt="Java 21">&nbsp;<img src="https://img.shields.io/badge/spring%20boot-4.1.1-41B5BE?style=flat" alt="Spring Boot 4.1.1">&nbsp;<img src="https://img.shields.io/badge/postgresql-18-41B5BE?style=flat" alt="PostgreSQL 18">&nbsp;<img src="https://img.shields.io/badge/redis-8.10-41B5BE?style=flat" alt="Redis 8.10">
+    </td>
+  </tr>
+</table>
 
 Locked decisions and rationale: [docs/design/backend-skeleton-plan.md](docs/design/backend-skeleton-plan.md).
 
