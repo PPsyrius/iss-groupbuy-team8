@@ -30,6 +30,12 @@ sa-token:
   is-share: false
   token-style: uuid
   is-log: false
+  cookie:
+    # token cookie: unreadable from JS (XSS exfiltration barrier), HTTPS-only, not sent on
+    # cross-site subrequests (CSRF mitigation; Lax keeps the Google OAuth redirect working)
+    http-only: true
+    secure: true
+    same-site: Lax
 
 server:
   port: 8589
