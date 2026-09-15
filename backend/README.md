@@ -1,6 +1,25 @@
 # BlocBuy Backend
 
-Java 21 · Spring Boot 3.5.15 · MyBatis · PostgreSQL 18 · Redis 8.10 · Sa-Token · Maven (COLA multi-module)
+<table>
+  <tr>
+    <td>CI</td>
+    <td>
+      <a href="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/ci-backend.yml?query=branch%3Adev+event%3Apush"><img src="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/ci-backend.yml/badge.svg?branch=dev&event=push" alt="Backend CI status (dev)"></a>&nbsp;<a href="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/security.yml?query=branch%3Adev+event%3Apush"><img src="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/security.yml/badge.svg?branch=dev&event=push" alt="Security status (dev)"></a>
+    </td>
+  </tr>
+  <tr>
+    <td>Quality</td>
+    <td>
+      <a href="https://sonarcloud.io/summary/new_code?id=blocbuy-backend"><img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=alert_status&token=da0d7400dc3730c828d2e91ffd2c3a79b425392a" alt="SonarCloud quality gate"></a>&nbsp;<a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=coverage&view=list"><img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=coverage&token=da0d7400dc3730c828d2e91ffd2c3a79b425392a" alt="SonarCloud coverage"></a>&nbsp;<a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=sqale_rating&view=list"><img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=sqale_rating&token=da0d7400dc3730c828d2e91ffd2c3a79b425392a" alt="SonarCloud maintainability rating"></a>&nbsp;<a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=reliability_rating&view=list"><img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=reliability_rating&token=da0d7400dc3730c828d2e91ffd2c3a79b425392a" alt="SonarCloud reliability rating"></a>
+    </td>
+  </tr>
+  <tr>
+    <td>Code</td>
+    <td>
+      <img src="https://img.shields.io/badge/java-21-41B5BE?style=flat" alt="Java 21">&nbsp;<img src="https://img.shields.io/badge/spring%20boot-4.1.1-41B5BE?style=flat" alt="Spring Boot 4.1.1">&nbsp;<img src="https://img.shields.io/badge/postgresql-18-41B5BE?style=flat" alt="PostgreSQL 18">&nbsp;<img src="https://img.shields.io/badge/redis-8.10-41B5BE?style=flat" alt="Redis 8.10">
+    </td>
+  </tr>
+</table>
 
 Locked decisions and rationale: [docs/design/backend-skeleton-plan.md](docs/design/backend-skeleton-plan.md).
 
