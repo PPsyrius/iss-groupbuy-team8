@@ -129,3 +129,6 @@ sketch
 infra/terraform/**/.terraform/
 *.tfstate
 *.tfplan
+
+# Claude Code worktrees
+.claude/worktrees/
