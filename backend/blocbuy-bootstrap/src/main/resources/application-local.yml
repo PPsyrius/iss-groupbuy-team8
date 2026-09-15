@@ -30,4 +30,9 @@ blocbuy:
     google:
       # localhost callback is a local-dev convenience only; other profiles must set the env var
       redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8589/api/v1/auth/oauth2/google/callback}
+  frontend:
+    # SPA dev-server origin — Vite default port 5173; set FRONTEND_URL if the SPA runs elsewhere.
+    # The failure target carries the business error code in the {errorCode} placeholder.
+    success-redirect-uri: "${FRONTEND_URL:http://localhost:5173}/"
+    failure-redirect-uri: "${FRONTEND_URL:http://localhost:5173}/login?error={errorCode}"
 

@@ -20,3 +20,10 @@ spring:
       host: localhost
       port: 6379
       timeout: 1s
+
+# export profile boots the app for contract generation only; placeholder redirect targets satisfy
+# the mandatory startup validation — no browser flow ever runs here
+blocbuy:
+  frontend:
+    success-redirect-uri: "http://localhost:5173/"
+    failure-redirect-uri: "http://localhost:5173/login?error={errorCode}"

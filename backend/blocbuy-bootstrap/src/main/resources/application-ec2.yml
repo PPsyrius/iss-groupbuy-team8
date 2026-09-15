@@ -22,3 +22,10 @@ sa-token:
 logging:
   level:
     com.blocbuy: info
+
+blocbuy:
+  frontend:
+    # SPA origin via env only — no deployment host in the repo; startup validation fails fast when
+    # FRONTEND_URL is unset
+    success-redirect-uri: "${FRONTEND_URL:}/"
+    failure-redirect-uri: "${FRONTEND_URL:}/login?error={errorCode}"

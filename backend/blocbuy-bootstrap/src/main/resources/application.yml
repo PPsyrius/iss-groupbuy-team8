@@ -58,6 +58,9 @@ springdoc:
     path: /api/swagger-ui.html
 
 blocbuy:
+  # frontend.* redirect targets (OAuth callback 302 landings) are mandatory and startup-validated
+  # (@NotBlank on AuthWebProperties) — no defaults here on purpose; each profile supplies them,
+  # non-local profiles via FRONTEND_URL only
   payment:
     stripe:
       # secrets via environment only — never commit values

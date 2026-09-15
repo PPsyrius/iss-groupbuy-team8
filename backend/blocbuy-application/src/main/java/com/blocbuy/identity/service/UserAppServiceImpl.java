@@ -21,4 +21,13 @@ public class UserAppServiceImpl implements UserAppService {
                 .orElseThrow(() -> new BizException(IdentityErrorCode.USER_NOT_FOUND))
                 .ensureActive();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CurrentUser currentUser(UUID userId) {
+        var user =
+                users.findById(userId)
+                        .orElseThrow(() -> new BizException(IdentityErrorCode.USER_NOT_FOUND));
+        return new CurrentUser(user.id(), user.nickname(), user.avatarUrl());
+    }
 }
