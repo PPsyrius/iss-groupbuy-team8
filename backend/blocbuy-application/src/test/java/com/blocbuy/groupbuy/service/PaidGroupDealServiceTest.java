@@ -198,7 +198,9 @@ class PaidGroupDealServiceTest {
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION);
-        assertThatThrownBy(() -> service.joinConfirmed(terms.id(), null))
+
+        UUID dealId = terms.id();
+        assertThatThrownBy(() -> service.joinConfirmed(dealId, null))
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION);
@@ -235,7 +237,8 @@ class PaidGroupDealServiceTest {
         when(repository.reserveAndLock(eq(paid.paymentId()), any(), eq(paid.userId())))
                 .thenReturn(new ParticipationReceipt("different", null));
 
-        assertThatThrownBy(() -> service.joinConfirmed(terms.id(), paid))
+        UUID dealId = terms.id();
+        assertThatThrownBy(() -> service.joinConfirmed(dealId, paid))
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(ParticipationErrorCode.PAYMENT_REUSED);
@@ -256,7 +259,8 @@ class PaidGroupDealServiceTest {
                 .when(repository)
                 .insertJoinedMember(any(), any(), any(), any());
 
-        assertThatThrownBy(() -> service.joinConfirmed(terms.id(), paid))
+        UUID dealId = terms.id();
+        assertThatThrownBy(() -> service.joinConfirmed(dealId, paid))
                 .isInstanceOf(IllegalStateException.class);
         verify(repository, never()).complete(any(), any(), any(), any());
     }

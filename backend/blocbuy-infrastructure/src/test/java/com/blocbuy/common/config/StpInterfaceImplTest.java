@@ -70,7 +70,8 @@ class StpInterfaceImplTest {
         when(roleRepository.findRoleCodesByUserId(userId))
                 .thenThrow(new IllegalStateException("db down"));
 
-        assertThatThrownBy(() -> stpInterface.getRoleList(userId.toString(), "login"))
+        String loginId = userId.toString();
+        assertThatThrownBy(() -> stpInterface.getRoleList(loginId, "login"))
                 .isInstanceOf(IllegalStateException.class);
     }
 }

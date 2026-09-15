@@ -28,10 +28,9 @@ class GroupDealOfferTest {
 
     @Test
     void rejectsNullDealId() {
-        assertThatThrownBy(
-                        () ->
-                                new GroupDealOffer(
-                                        null, new BigDecimal("89.00"), "sgd", 5, 2, EXPIRES))
+        BigDecimal price = new BigDecimal("89.00");
+
+        assertThatThrownBy(() -> new GroupDealOffer(null, price, "sgd", 5, 2, EXPIRES))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -39,22 +38,19 @@ class GroupDealOfferTest {
     void rejectsNullOrNegativePrice() {
         assertThatThrownBy(() -> new GroupDealOffer(DEAL, null, "sgd", 5, 2, EXPIRES))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () -> new GroupDealOffer(DEAL, new BigDecimal("-1"), "sgd", 5, 2, EXPIRES))
+
+        BigDecimal negativePrice = new BigDecimal("-1");
+        assertThatThrownBy(() -> new GroupDealOffer(DEAL, negativePrice, "sgd", 5, 2, EXPIRES))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void rejectsBlankCurrency() {
-        assertThatThrownBy(
-                        () ->
-                                new GroupDealOffer(
-                                        DEAL, new BigDecimal("89.00"), null, 5, 2, EXPIRES))
+        BigDecimal price = new BigDecimal("89.00");
+
+        assertThatThrownBy(() -> new GroupDealOffer(DEAL, price, null, 5, 2, EXPIRES))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () ->
-                                new GroupDealOffer(
-                                        DEAL, new BigDecimal("89.00"), "  ", 5, 2, EXPIRES))
+        assertThatThrownBy(() -> new GroupDealOffer(DEAL, price, "  ", 5, 2, EXPIRES))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

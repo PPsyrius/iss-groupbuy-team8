@@ -16,12 +16,14 @@ class ProductTest {
 
     @Test
     void reconstituteRejectsNullIdentity() {
+        BigDecimal price = new BigDecimal("40.00");
+
         assertThatThrownBy(
                         () ->
                                 reconstitute(
                                         null,
                                         "Product",
-                                        new BigDecimal("40.00"),
+                                        price,
                                         "sgd",
                                         ProductStatus.ON_SALE,
                                         PricingMode.DUAL,
@@ -34,7 +36,7 @@ class ProductTest {
                                 reconstitute(
                                         ID,
                                         "Product",
-                                        new BigDecimal("40.00"),
+                                        price,
                                         "sgd",
                                         null,
                                         PricingMode.DUAL,
@@ -47,7 +49,7 @@ class ProductTest {
                                 reconstitute(
                                         ID,
                                         "Product",
-                                        new BigDecimal("40.00"),
+                                        price,
                                         "sgd",
                                         ProductStatus.ON_SALE,
                                         null,
@@ -59,12 +61,14 @@ class ProductTest {
 
     @Test
     void reconstituteRejectsBlankTitle() {
+        BigDecimal price = new BigDecimal("40.00");
+
         assertThatThrownBy(
                         () ->
                                 reconstitute(
                                         ID,
                                         null,
-                                        new BigDecimal("40.00"),
+                                        price,
                                         "sgd",
                                         ProductStatus.ON_SALE,
                                         PricingMode.DUAL,
@@ -77,7 +81,7 @@ class ProductTest {
                                 reconstitute(
                                         ID,
                                         "  ",
-                                        new BigDecimal("40.00"),
+                                        price,
                                         "sgd",
                                         ProductStatus.ON_SALE,
                                         PricingMode.DUAL,
@@ -102,12 +106,14 @@ class ProductTest {
                                         0,
                                         0))
                 .isInstanceOf(IllegalArgumentException.class);
+
+        BigDecimal negativePrice = new BigDecimal("-1");
         assertThatThrownBy(
                         () ->
                                 reconstitute(
                                         ID,
                                         "Product",
-                                        new BigDecimal("-1"),
+                                        negativePrice,
                                         "sgd",
                                         ProductStatus.ON_SALE,
                                         PricingMode.DUAL,
@@ -119,12 +125,14 @@ class ProductTest {
 
     @Test
     void reconstituteRejectsBlankCurrencyAndNegativeVersion() {
+        BigDecimal price = new BigDecimal("40.00");
+
         assertThatThrownBy(
                         () ->
                                 reconstitute(
                                         ID,
                                         "Product",
-                                        new BigDecimal("40.00"),
+                                        price,
                                         null,
                                         ProductStatus.ON_SALE,
                                         PricingMode.DUAL,
@@ -137,7 +145,7 @@ class ProductTest {
                                 reconstitute(
                                         ID,
                                         "Product",
-                                        new BigDecimal("40.00"),
+                                        price,
                                         "  ",
                                         ProductStatus.ON_SALE,
                                         PricingMode.DUAL,
@@ -150,7 +158,7 @@ class ProductTest {
                                 reconstitute(
                                         ID,
                                         "Product",
-                                        new BigDecimal("40.00"),
+                                        price,
                                         "sgd",
                                         ProductStatus.ON_SALE,
                                         PricingMode.DUAL,
@@ -162,11 +170,13 @@ class ProductTest {
 
     @Test
     void draftRejectsNullOrBlankProductNo() {
-        assertThatThrownBy(() -> Product.draft(ID, null, details()))
+        ListingDetails details = details();
+
+        assertThatThrownBy(() -> Product.draft(ID, null, details))
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(CatalogErrorCode.PRODUCT_INVALID);
-        assertThatThrownBy(() -> Product.draft(ID, "!!!", details()))
+        assertThatThrownBy(() -> Product.draft(ID, "!!!", details))
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(CatalogErrorCode.PRODUCT_INVALID);

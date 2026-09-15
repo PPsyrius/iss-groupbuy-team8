@@ -86,10 +86,13 @@ class UserTest {
                                         null,
                                         null))
                 .isInstanceOf(IllegalArgumentException.class);
+
+        UUID id = UUID.randomUUID();
+
         assertThatThrownBy(
                         () ->
                                 User.reconstitute(
-                                        UUID.randomUUID(),
+                                        id,
                                         null,
                                         "ada@example.com",
                                         null,
@@ -101,7 +104,7 @@ class UserTest {
         assertThatThrownBy(
                         () ->
                                 User.reconstitute(
-                                        UUID.randomUUID(),
+                                        id,
                                         null,
                                         "ada@example.com",
                                         RegisterSource.GOOGLE,

@@ -32,15 +32,19 @@ class ListingPriceTest {
     void rejectsNullOrNegativeIndividualPrice() {
         assertThatThrownBy(() -> new ListingPrice(null, null, "sgd"))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new ListingPrice(new BigDecimal("-1"), null, "sgd"))
+
+        BigDecimal negativePrice = new BigDecimal("-1");
+        assertThatThrownBy(() -> new ListingPrice(negativePrice, null, "sgd"))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void rejectsBlankCurrency() {
-        assertThatThrownBy(() -> new ListingPrice(new BigDecimal("45.00"), null, null))
+        BigDecimal individualPrice = new BigDecimal("45.00");
+
+        assertThatThrownBy(() -> new ListingPrice(individualPrice, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new ListingPrice(new BigDecimal("45.00"), null, "  "))
+        assertThatThrownBy(() -> new ListingPrice(individualPrice, null, "  "))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

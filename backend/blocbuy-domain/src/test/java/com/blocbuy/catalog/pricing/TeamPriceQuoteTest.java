@@ -42,86 +42,47 @@ class TeamPriceQuoteTest {
 
     @Test
     void rejectsNullIdentityAndWindow() {
+        BigDecimal amount = new BigDecimal("20.00");
+        Instant expiresAt = NOW.plusSeconds(900);
+
         assertThatThrownBy(
                         () ->
                                 new TeamPriceQuote(
-                                        null,
-                                        PRODUCT,
-                                        OWNER,
-                                        1,
-                                        new BigDecimal("20.00"),
-                                        "sgd",
-                                        NOW,
-                                        NOW.plusSeconds(900)))
+                                        null, PRODUCT, OWNER, 1, amount, "sgd", NOW, expiresAt))
+                .isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(
+                        () -> new TeamPriceQuote(ID, null, OWNER, 1, amount, "sgd", NOW, expiresAt))
                 .isInstanceOf(NullPointerException.class);
         assertThatThrownBy(
                         () ->
                                 new TeamPriceQuote(
-                                        ID,
-                                        null,
-                                        OWNER,
-                                        1,
-                                        new BigDecimal("20.00"),
-                                        "sgd",
-                                        NOW,
-                                        NOW.plusSeconds(900)))
+                                        ID, PRODUCT, null, 1, amount, "sgd", NOW, expiresAt))
                 .isInstanceOf(NullPointerException.class);
         assertThatThrownBy(
                         () ->
                                 new TeamPriceQuote(
-                                        ID,
-                                        PRODUCT,
-                                        null,
-                                        1,
-                                        new BigDecimal("20.00"),
-                                        "sgd",
-                                        NOW,
-                                        NOW.plusSeconds(900)))
+                                        ID, PRODUCT, OWNER, 1, amount, "sgd", null, expiresAt))
                 .isInstanceOf(NullPointerException.class);
         assertThatThrownBy(
-                        () ->
-                                new TeamPriceQuote(
-                                        ID,
-                                        PRODUCT,
-                                        OWNER,
-                                        1,
-                                        new BigDecimal("20.00"),
-                                        "sgd",
-                                        null,
-                                        NOW.plusSeconds(900)))
-                .isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(
-                        () ->
-                                new TeamPriceQuote(
-                                        ID,
-                                        PRODUCT,
-                                        OWNER,
-                                        1,
-                                        new BigDecimal("20.00"),
-                                        "sgd",
-                                        NOW,
-                                        null))
+                        () -> new TeamPriceQuote(ID, PRODUCT, OWNER, 1, amount, "sgd", NOW, null))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void rejectsBadAmount() {
+        Instant expiresAt = NOW.plusSeconds(900);
+
         assertThatThrownBy(
                         () ->
                                 new TeamPriceQuote(
-                                        ID,
-                                        PRODUCT,
-                                        OWNER,
-                                        1,
-                                        null,
-                                        "sgd",
-                                        NOW,
-                                        NOW.plusSeconds(900)))
+                                        ID, PRODUCT, OWNER, 1, null, "sgd", NOW, expiresAt))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex ->
                                 assertThat(ex.errorCode())
                                         .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
+
+        BigDecimal negativeAmount = new BigDecimal("-1");
         assertThatThrownBy(
                         () ->
                                 new TeamPriceQuote(
@@ -129,15 +90,17 @@ class TeamPriceQuoteTest {
                                         PRODUCT,
                                         OWNER,
                                         1,
-                                        new BigDecimal("-1"),
+                                        negativeAmount,
                                         "sgd",
                                         NOW,
-                                        NOW.plusSeconds(900)))
+                                        expiresAt))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex ->
                                 assertThat(ex.errorCode())
                                         .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
+
+        BigDecimal subCentAmount = new BigDecimal("1.001");
         assertThatThrownBy(
                         () ->
                                 new TeamPriceQuote(
@@ -145,10 +108,10 @@ class TeamPriceQuoteTest {
                                         PRODUCT,
                                         OWNER,
                                         1,
-                                        new BigDecimal("1.001"),
+                                        subCentAmount,
                                         "sgd",
                                         NOW,
-                                        NOW.plusSeconds(900)))
+                                        expiresAt))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex ->
@@ -158,57 +121,33 @@ class TeamPriceQuoteTest {
 
     @Test
     void rejectsNonPositiveVersionAndNonSgd() {
+        BigDecimal amount = new BigDecimal("20.00");
+        Instant expiresAt = NOW.plusSeconds(900);
+
         assertThatThrownBy(
                         () ->
                                 new TeamPriceQuote(
-                                        ID,
-                                        PRODUCT,
-                                        OWNER,
-                                        0,
-                                        new BigDecimal("20.00"),
-                                        "sgd",
-                                        NOW,
-                                        NOW.plusSeconds(900)))
+                                        ID, PRODUCT, OWNER, 0, amount, "sgd", NOW, expiresAt))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(
                         () ->
                                 new TeamPriceQuote(
-                                        ID,
-                                        PRODUCT,
-                                        OWNER,
-                                        1,
-                                        new BigDecimal("20.00"),
-                                        "usd",
-                                        NOW,
-                                        NOW.plusSeconds(900)))
+                                        ID, PRODUCT, OWNER, 1, amount, "usd", NOW, expiresAt))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void rejectsEmptyOrReversedWindow() {
-        assertThatThrownBy(
-                        () ->
-                                new TeamPriceQuote(
-                                        ID,
-                                        PRODUCT,
-                                        OWNER,
-                                        1,
-                                        new BigDecimal("20.00"),
-                                        "sgd",
-                                        NOW,
-                                        NOW))
+        BigDecimal amount = new BigDecimal("20.00");
+
+        assertThatThrownBy(() -> new TeamPriceQuote(ID, PRODUCT, OWNER, 1, amount, "sgd", NOW, NOW))
                 .isInstanceOf(IllegalArgumentException.class);
+
+        Instant issuedAt = NOW.plusSeconds(900);
         assertThatThrownBy(
                         () ->
                                 new TeamPriceQuote(
-                                        ID,
-                                        PRODUCT,
-                                        OWNER,
-                                        1,
-                                        new BigDecimal("20.00"),
-                                        "sgd",
-                                        NOW.plusSeconds(900),
-                                        NOW))
+                                        ID, PRODUCT, OWNER, 1, amount, "sgd", issuedAt, NOW))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -136,29 +136,21 @@ class TeamPricePolicyTest {
     @Test
     void rejectsNullIdentityFields() {
         Instant validUntil = NOW.plusSeconds(60);
+        BigDecimal amount = new BigDecimal("20");
 
-        assertThatThrownBy(
-                        () ->
-                                new TeamPricePolicy(
-                                        null, new BigDecimal("20"), "sgd", NOW, validUntil, 1))
+        assertThatThrownBy(() -> new TeamPricePolicy(null, amount, "sgd", NOW, validUntil, 1))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex ->
                                 assertThat(ex.errorCode())
                                         .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
-        assertThatThrownBy(
-                        () ->
-                                new TeamPricePolicy(
-                                        PRODUCT, new BigDecimal("20"), "sgd", null, validUntil, 1))
+        assertThatThrownBy(() -> new TeamPricePolicy(PRODUCT, amount, "sgd", null, validUntil, 1))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex ->
                                 assertThat(ex.errorCode())
                                         .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
-        assertThatThrownBy(
-                        () ->
-                                new TeamPricePolicy(
-                                        PRODUCT, new BigDecimal("20"), "sgd", NOW, null, 1))
+        assertThatThrownBy(() -> new TeamPricePolicy(PRODUCT, amount, "sgd", NOW, null, 1))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex ->
@@ -169,15 +161,10 @@ class TeamPricePolicyTest {
     /** Verifies the append-only revision counter starts at one. */
     @Test
     void rejectsNonPositiveVersion() {
-        assertThatThrownBy(
-                        () ->
-                                new TeamPricePolicy(
-                                        PRODUCT,
-                                        new BigDecimal("20"),
-                                        "sgd",
-                                        NOW,
-                                        NOW.plusSeconds(60),
-                                        0))
+        BigDecimal amount = new BigDecimal("20");
+        Instant validUntil = NOW.plusSeconds(60);
+
+        assertThatThrownBy(() -> new TeamPricePolicy(PRODUCT, amount, "sgd", NOW, validUntil, 0))
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID);
@@ -186,10 +173,9 @@ class TeamPricePolicyTest {
     /** Verifies a null amount is rejected without reaching scale normalization. */
     @Test
     void rejectsNullAmount() {
-        assertThatThrownBy(
-                        () ->
-                                new TeamPricePolicy(
-                                        PRODUCT, null, "sgd", NOW, NOW.plusSeconds(60), 1))
+        Instant validUntil = NOW.plusSeconds(60);
+
+        assertThatThrownBy(() -> new TeamPricePolicy(PRODUCT, null, "sgd", NOW, validUntil, 1))
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID);

@@ -27,8 +27,9 @@ class PageResultTest {
         mutable.add("b");
 
         assertThat(result.items()).containsExactly("a");
-        assertThatThrownBy(() -> result.items().add("c"))
-                .isInstanceOf(UnsupportedOperationException.class);
+
+        List<String> items = result.items();
+        assertThatThrownBy(() -> items.add("c")).isInstanceOf(UnsupportedOperationException.class);
     }
 
     @Test
