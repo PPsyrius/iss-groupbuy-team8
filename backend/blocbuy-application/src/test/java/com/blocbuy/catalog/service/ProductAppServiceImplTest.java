@@ -3,7 +3,6 @@ package com.blocbuy.catalog.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -65,7 +64,7 @@ class ProductAppServiceImplTest {
         assertThat(result.items().get(1).groupPrice()).isNull();
         // one batch call for the whole page — never per item
         verify(groupDealQueryService, times(1))
-                .findBestOpenDealsByProductIds(eq(List.of(PRODUCT_ID, otherId)));
+                .findBestOpenDealsByProductIds(List.of(PRODUCT_ID, otherId));
     }
 
     @Test
@@ -77,17 +76,18 @@ class ProductAppServiceImplTest {
 
         assertThat(result.items()).isEmpty();
         assertThat(result.total()).isZero();
-        verify(groupDealQueryService, times(1)).findBestOpenDealsByProductIds(eq(List.of()));
+        verify(groupDealQueryService, times(1)).findBestOpenDealsByProductIds(List.of());
     }
 
     @Test
     void pagePassesCategoryAndPageQuery() {
-        when(productRepository.pageOnSale(eq(new PageQuery(2, 5)), eq("books")))
+        PageQuery pageQuery = new PageQuery(2, 5);
+        when(productRepository.pageOnSale(pageQuery, "books"))
                 .thenReturn(PageResult.of(List.of(), 0, new PageQuery(2, 5)));
 
         service.pageListings(2, 5, "books");
 
-        verify(productRepository).pageOnSale(eq(new PageQuery(2, 5)), eq("books"));
+        verify(productRepository).pageOnSale(pageQuery, "books");
     }
 
     @Test

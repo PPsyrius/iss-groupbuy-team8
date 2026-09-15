@@ -83,14 +83,11 @@ class PaidGroupDealRepositoryImplTest {
     @Test
     void insertStartedDealRequiresSingleRowWrites() {
         when(mapper.insertDeal(any())).thenReturn(0);
+        GroupDeal deal = deal();
+        PaidParticipation paid =
+                new PaidParticipation(PAYMENT, ACTOR, new BigDecimal("12.00"), "sgd");
 
-        assertThatThrownBy(
-                        () ->
-                                repository.insertStartedDeal(
-                                        deal(),
-                                        new PaidParticipation(
-                                                PAYMENT, ACTOR, new BigDecimal("12.00"), "sgd"),
-                                        NOW))
+        assertThatThrownBy(() -> repository.insertStartedDeal(deal, paid, NOW))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -102,24 +99,13 @@ class PaidGroupDealRepositoryImplTest {
                         UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("12.00"), "sgd");
         GroupDeal after = before.joinPaid(joiner, false, NOW);
         when(mapper.updateDeal(any(), eq(1), eq("open"))).thenReturn(1);
-        when(mapper.insertMember(
-                        eq(after.id()),
-                        eq(joiner.paymentId()),
-                        eq(joiner.userId()),
-                        eq("member"),
-                        eq(NOW)))
+        when(mapper.insertMember(after.id(), joiner.paymentId(), joiner.userId(), "member", NOW))
                 .thenReturn(1);
 
         repository.insertJoinedMember(before, after, joiner, NOW);
 
         verify(mapper).updateDeal(any(), eq(1), eq("open"));
-        verify(mapper)
-                .insertMember(
-                        eq(after.id()),
-                        eq(joiner.paymentId()),
-                        eq(joiner.userId()),
-                        eq("member"),
-                        eq(NOW));
+        verify(mapper).insertMember(after.id(), joiner.paymentId(), joiner.userId(), "member", NOW);
     }
 
     @Test
