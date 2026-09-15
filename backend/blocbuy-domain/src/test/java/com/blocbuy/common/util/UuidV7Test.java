@@ -2,6 +2,8 @@ package com.blocbuy.common.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -18,6 +20,9 @@ class UuidV7Test {
 
     @Test
     void generatesDistinctIds() {
-        assertThat(UuidV7.next()).isNotEqualTo(UuidV7.next());
+        Set<UUID> ids = new HashSet<>();
+        for (int i = 0; i < 10_000; i++) {
+            assertThat(ids.add(UuidV7.next())).isTrue();
+        }
     }
 }

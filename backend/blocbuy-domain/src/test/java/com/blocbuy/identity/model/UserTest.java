@@ -6,7 +6,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.identity.exception.IdentityErrorCode;
 import java.time.Instant;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** User aggregate invariants: valid from birth, state transitions via behavioral methods. */
 class UserTest {
@@ -27,9 +31,12 @@ class UserTest {
         assertThat(user.lastLoginTime()).isNull();
     }
 
-    @Test
-    void registerViaOAuthFallsBackToEmailPrefixForNickname() {
-        User user = User.registerViaOAuth(RegisterSource.GOOGLE, "ada@example.com", null, null);
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"  "})
+    void registerViaOAuthFallsBackToEmailPrefixForNickname(String displayName) {
+        User user =
+                User.registerViaOAuth(RegisterSource.GOOGLE, "ada@example.com", displayName, null);
 
         assertThat(user.nickname()).isEqualTo("ada");
     }
@@ -62,5 +69,77 @@ class UserTest {
         user.touchLogin(at);
 
         assertThat(user.lastLoginTime()).isEqualTo(at);
+    }
+
+    /** Verifies reconstitution rejects absent identity without touching other fields. */
+    @Test
+    void reconstituteRejectsNullIdentity() {
+        assertThatThrownBy(
+                        () ->
+                                User.reconstitute(
+                                        null,
+                                        null,
+                                        "ada@example.com",
+                                        RegisterSource.GOOGLE,
+                                        UserStatus.ACTIVE,
+                                        null,
+                                        null,
+                                        null))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(
+                        () ->
+                                User.reconstitute(
+                                        UUID.randomUUID(),
+                                        null,
+                                        "ada@example.com",
+                                        null,
+                                        UserStatus.ACTIVE,
+                                        null,
+                                        null,
+                                        null))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(
+                        () ->
+                                User.reconstitute(
+                                        UUID.randomUUID(),
+                                        null,
+                                        "ada@example.com",
+                                        RegisterSource.GOOGLE,
+                                        null,
+                                        null,
+                                        null,
+                                        null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    /** Verifies registration requires a usable email for account resolution. */
+    @Test
+    void registerViaOAuthRejectsBlankEmail() {
+        assertThatThrownBy(() -> User.registerViaOAuth(RegisterSource.GOOGLE, null, "Ada", null))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> User.registerViaOAuth(RegisterSource.GOOGLE, "", "Ada", null))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> User.registerViaOAuth(RegisterSource.GOOGLE, "  ", "Ada", null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    /** Verifies login stamping rejects an absent instant without mutating state. */
+    @Test
+    void touchLoginRejectsNullInstant() {
+        User user = User.registerViaOAuth(RegisterSource.GOOGLE, "ada@example.com", "Ada", null);
+
+        assertThatThrownBy(() -> user.touchLogin(null))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(user.lastLoginTime()).isNull();
+    }
+
+    /** Verifies the guard passes silently for an active account. */
+    @Test
+    void ensureActivePassesForActiveAccount() {
+        User user = User.registerViaOAuth(RegisterSource.GOOGLE, "ada@example.com", "Ada", null);
+
+        user.ensureActive();
+
+        assertThat(user.status()).isEqualTo(UserStatus.ACTIVE);
     }
 }

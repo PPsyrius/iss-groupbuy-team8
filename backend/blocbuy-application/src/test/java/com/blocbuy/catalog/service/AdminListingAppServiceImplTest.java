@@ -3,13 +3,16 @@ package com.blocbuy.catalog.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.blocbuy.catalog.exception.CatalogErrorCode;
 import com.blocbuy.catalog.model.ListingDetails;
+import com.blocbuy.catalog.model.PricingMode;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.catalog.repository.ProductRepository;
@@ -81,6 +84,20 @@ class AdminListingAppServiceImplTest {
         verify(deals, never()).hasProductReferences(any());
     }
 
+    /** A deal reference alone vetoes deletion even when no price history exists. */
+    @Test
+    void dealReferenceVetoesDraftDeletion() {
+        when(products.lockById(ID)).thenReturn(Optional.of(draft()));
+        when(prices.hasProductReferences(ID)).thenReturn(false);
+        when(deals.hasProductReferences(ID)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.delete(ID, 0, ACTOR))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(CatalogErrorCode.PRODUCT_REFERENCED);
+        verify(products, never()).deleteDraft(any(), anyInt(), any());
+    }
+
     /** Missing resources do not become drafts implicitly. */
     @Test
     void missingProductCannotBeRevisedOrPublished() {
@@ -111,6 +128,102 @@ class AdminListingAppServiceImplTest {
                 .thenReturn(PageResult.of(List.of(draft()), 1, query));
         assertThat(service.page(query, ProductStatus.DRAFT, ACTOR).total()).isEqualTo(1);
         verify(products).pageListings(query, ProductStatus.DRAFT);
+    }
+
+    /** Administrative reads check the account first, then return the stored aggregate. */
+    @Test
+    void getReturnsProductAfterActiveCheck() {
+        Product stored = draft();
+        when(products.findById(ID)).thenReturn(Optional.of(stored));
+
+        assertThat(service.get(ID, ACTOR)).isEqualTo(stored);
+        var order = inOrder(users, products);
+        order.verify(users).requireActive(ACTOR);
+        order.verify(products).findById(ID);
+    }
+
+    /** Missing rows surface as not-found rather than an empty draft. */
+    @Test
+    void getMissingProductIsNotFound() {
+        when(products.findById(ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.get(ID, ACTOR))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(CatalogErrorCode.PRODUCT_NOT_FOUND);
+    }
+
+    /** Editorial revision preserves identity and writes under the expected version. */
+    @Test
+    void reviseAppliesEditorialChangeAndWrites() {
+        when(products.lockById(ID)).thenReturn(Optional.of(draft()));
+        ListingDetails revisedDetails =
+                new ListingDetails(
+                        "Green Tea",
+                        null,
+                        null,
+                        null,
+                        List.of(),
+                        null,
+                        new BigDecimal("12.00"),
+                        "sgd",
+                        5);
+
+        Product revised = service.revise(ID, revisedDetails, 0, ACTOR);
+
+        assertThat(revised.title()).isEqualTo("Green Tea");
+        assertThat(revised.version()).isEqualTo(1);
+        verify(products).updateListing(revised, 0, ACTOR);
+    }
+
+    /** Publishing moves a stocked draft to on-sale under the expected version. */
+    @Test
+    void changeStatusPublishesDraftToOnSale() {
+        when(products.lockById(ID)).thenReturn(Optional.of(draft()));
+
+        Product published = service.changeStatus(ID, ProductStatus.ON_SALE, 0, ACTOR);
+
+        assertThat(published.status()).isEqualTo(ProductStatus.ON_SALE);
+        verify(products).updateListing(published, 0, ACTOR);
+    }
+
+    /** Delisting moves a published listing to off-sale under the expected version. */
+    @Test
+    void changeStatusDelistsOnSaleToOffSale() {
+        Product onSale =
+                Product.reconstitute(
+                        ID,
+                        "SKU",
+                        "Tea",
+                        null,
+                        null,
+                        null,
+                        List.of(),
+                        null,
+                        new BigDecimal("12.00"),
+                        "sgd",
+                        5,
+                        0,
+                        ProductStatus.ON_SALE,
+                        PricingMode.DUAL);
+        when(products.lockById(ID)).thenReturn(Optional.of(onSale));
+
+        Product delisted = service.changeStatus(ID, ProductStatus.OFF_SALE, 0, ACTOR);
+
+        assertThat(delisted.status()).isEqualTo(ProductStatus.OFF_SALE);
+        verify(products).updateListing(delisted, 0, ACTOR);
+    }
+
+    /** The draft state is terminal as a target; delist/publish carry the transition. */
+    @Test
+    void changeStatusToDraftIsRejected() {
+        when(products.lockById(ID)).thenReturn(Optional.of(draft()));
+
+        assertThatThrownBy(() -> service.changeStatus(ID, ProductStatus.DRAFT, 0, ACTOR))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(CatalogErrorCode.PRODUCT_STATE_CONFLICT);
+        verify(products, never()).updateListing(any(), anyInt(), any());
     }
 
     /** Stable never-published fixture. */
