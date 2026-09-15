@@ -12,6 +12,13 @@ spring:
       password: ${REDIS_PASSWORD}
       timeout: 3s
 
+sa-token:
+  cookie:
+    # EC2 Compose deployment has no TLS termination yet (CloudFront/ALB to be executed);
+    # browsers refuse Secure cookies over plain HTTP, so the flag must be false until
+    # the entry layer is completed.
+    secure: false
+
 logging:
   level:
     com.blocbuy: info
