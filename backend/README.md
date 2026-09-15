@@ -1,6 +1,14 @@
 # BlocBuy Backend
 
-Java 21 · Spring Boot 3.5.15 · MyBatis · PostgreSQL 18 · Redis 8.10 · Sa-Token · Maven (COLA multi-module)
+| | |
+|---|---|
+| **CI** | [![Backend CI](https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/ci-backend.yml/badge.svg?branch=dev)](https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/ci-backend.yml) [![Security](https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/security.yml/badge.svg?branch=dev)](https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/security.yml) |
+| **Quality** | [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=blocbuy-backend) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=coverage)](https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=coverage&view=list) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=sqale_rating)](https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=sqale_rating) [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=reliability_rating)](https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=reliability_rating) |
+| **Code** | ![Java](https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Fraw.githubusercontent.com%2FPPsyrius%2Fiss-groupbuy-team8%2Fdev%2Fbackend%2Fpom.xml&query=%2F%2A%5Blocal-name%28%29%3D%27project%27%5D%2F%2A%5Blocal-name%28%29%3D%27properties%27%5D%2F%2A%5Blocal-name%28%29%3D%27java.version%27%5D&label=java) ![Spring Boot](https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Fraw.githubusercontent.com%2FPPsyrius%2Fiss-groupbuy-team8%2Fdev%2Fbackend%2Fpom.xml&query=%2F%2A%5Blocal-name%28%29%3D%27project%27%5D%2F%2A%5Blocal-name%28%29%3D%27parent%27%5D%2F%2A%5Blocal-name%28%29%3D%27version%27%5D&label=spring%20boot) ![PostgreSQL](https://img.shields.io/badge/postgresql-18-blue) ![Redis](https://img.shields.io/badge/redis-8.10-blue) |
+| **Release** | [![Latest Tag](https://img.shields.io/github/v/tag/PPsyrius/iss-groupbuy-team8?label=tag)](https://github.com/PPsyrius/iss-groupbuy-team8/tags) |
+| **GitHub** | [![Contributors](https://img.shields.io/github/contributors/PPsyrius/iss-groupbuy-team8)](https://github.com/PPsyrius/iss-groupbuy-team8/graphs/contributors) [![Last Commit](https://img.shields.io/github/last-commit/PPsyrius/iss-groupbuy-team8/dev?label=last%20commit)](https://github.com/PPsyrius/iss-groupbuy-team8/commits/dev/) |
+
+Java 21 · Spring Boot 4.1.1 · MyBatis · PostgreSQL 18 · Redis 8.10 · Sa-Token · Maven (COLA multi-module)
 
 Locked decisions and rationale: [docs/design/backend-skeleton-plan.md](docs/design/backend-skeleton-plan.md).
 
