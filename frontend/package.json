@@ -9,7 +9,9 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "pnpm gen:api && vite build",
+    "gen:api": "openapi-ts",
+    "prepare": "openapi-ts",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -25,6 +27,7 @@
   },
   "devDependencies": {
     "@babel/core": "8.0.5",
+    "@hey-api/openapi-ts": "0.0.0-next-20260824173136",
     "@rolldown/plugin-babel": "0.2.4",
     "@tailwindcss/vite": "4.3.3",
     "@tanstack/react-devtools": "0.10.12",
@@ -36,6 +39,7 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.1",
     "babel-plugin-react-compiler": "1.0.0",
+    "msw": "2.15.0",
     "typescript": "7.0.2",
     "vite": "8.3.0"
   }
