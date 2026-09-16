@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -58,6 +59,7 @@ import org.springframework.test.web.servlet.MvcResult;
 class AuthControllerTest {
     private static final String CALLBACK_PATH = "/api/v1/auth/oauth2/google/callback";
     private static final String ME_PATH = "/api/v1/auth/me";
+    private static final String LOGOUT_PATH = "/api/v1/auth/logout";
     private static final UUID USER = UUID.fromString("a0000000-0000-7000-8000-000000000042");
     private static final String FRONTEND = "http://localhost:5173";
 
@@ -143,6 +145,12 @@ class AuthControllerTest {
                         header().string(
                                         HttpHeaders.LOCATION,
                                         FRONTEND + "/login?error=COMMON_400_001"));
+        mvc.perform(get(CALLBACK_PATH).param("code", "c").param("state", " "))
+                .andExpect(status().isFound())
+                .andExpect(
+                        header().string(
+                                        HttpHeaders.LOCATION,
+                                        FRONTEND + "/login?error=COMMON_400_001"));
         verifyNoInteractions(oAuthLogin);
     }
 
@@ -188,12 +196,54 @@ class AuthControllerTest {
                 .doesNotContain("Secure");
     }
 
+    /** When the authorization URL cannot be built, the browser still lands on the failure page. */
+    @Test
+    void authorizeFailureRedirectsToFrontendWithErrorCode() throws Exception {
+        when(oAuthLogin.createGoogleAuthorizeUrl())
+                .thenThrow(new BizException(IdentityErrorCode.IDENTITY_MISCONFIGURED));
+
+        MvcResult authorize =
+                mvc.perform(get("/api/v1/auth/oauth2/google"))
+                        .andExpect(status().isFound())
+                        .andExpect(
+                                header().string(
+                                                HttpHeaders.LOCATION,
+                                                FRONTEND + "/login?error=IDENTITY_500_001"))
+                        .andReturn();
+
+        assertThat(authorize.getResponse().getHeader(HttpHeaders.SET_COOKIE))
+                .as("no state cookie is issued when the flow never starts")
+                .isNull();
+    }
+
     @Test
     void meWithoutSessionIsRejectedByTheInterceptor() throws Exception {
         mvc.perform(get(ME_PATH))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("COMMON_401_001"));
         verifyNoInteractions(users);
+    }
+
+    /** Logout invalidates the token: the same session cookie is rejected afterwards. */
+    @Test
+    void logoutInvalidatesTheSession() throws Exception {
+        when(oAuthLogin.loginWithGoogle("code", "state", null))
+                .thenReturn(new OAuthLoginResult(USER, "Tester", "https://img.example/a.png"));
+
+        MvcResult callback =
+                mvc.perform(get(CALLBACK_PATH).param("code", "code").param("state", "state"))
+                        .andExpect(status().isFound())
+                        .andReturn();
+        Cookie session = callback.getResponse().getCookie("blocbuy-token");
+        assertThat(session).as("session opened before logout").isNotNull();
+
+        mvc.perform(post(LOGOUT_PATH).cookie(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("COMMON_200_000"));
+
+        mvc.perform(get(ME_PATH).cookie(session))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("COMMON_401_001"));
     }
 
     @TestConfiguration(proxyBeanMethods = false)
