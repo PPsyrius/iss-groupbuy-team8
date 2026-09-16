@@ -50,11 +50,43 @@ class PaidGroupDealTest {
         NewDealTerms terms = terms(3);
 
         assertThatThrownBy(() -> creator.initiate(terms, null, NOW))
-                .isInstanceOf(BizException.class);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION));
 
         PaidParticipation incorrectPayment = payment(LEADER, "9.99");
         assertThatThrownBy(() -> creator.initiate(terms, incorrectPayment, NOW))
-                .isInstanceOf(BizException.class);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.PAYMENT_MISMATCH));
+    }
+
+    /** Verifies initiation rejects absent terms without touching payment validation. */
+    @Test
+    void initiationRejectsNullTerms() {
+        PaidGroupDealCreator creator = new StandardPaidGroupDealCreator();
+
+        assertThatThrownBy(() -> creator.initiate(null, payment(LEADER, "10.00"), NOW))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION));
+    }
+
+    /** Verifies a null amount is rejected without reaching scale normalization. */
+    @Test
+    void exactMoneyRejectsNullAmount() {
+        assertThatThrownBy(() -> GroupDealMoney.exactSgd(null, "sgd"))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION));
     }
 
     /** Verifies neither the leader nor a buyer already in membership can consume another place. */
@@ -64,11 +96,19 @@ class PaidGroupDealTest {
 
         PaidParticipation leaderPayment = payment(LEADER, "10.00");
         assertThatThrownBy(() -> deal.joinPaid(leaderPayment, false, NOW))
-                .isInstanceOf(BizException.class);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.ALREADY_MEMBER));
 
         PaidParticipation existingMemberPayment = payment(UUID.randomUUID(), "10.00");
         assertThatThrownBy(() -> deal.joinPaid(existingMemberPayment, true, NOW))
-                .isInstanceOf(BizException.class);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.ALREADY_MEMBER));
     }
 
     /**
@@ -100,13 +140,21 @@ class PaidGroupDealTest {
 
         PaidParticipation wrongAmountPayment = payment(UUID.randomUUID(), "11.00");
         assertThatThrownBy(() -> deal.joinPaid(wrongAmountPayment, false, NOW))
-                .isInstanceOf(BizException.class);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.PAYMENT_MISMATCH));
 
         UUID paymentId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         BigDecimal amount = new BigDecimal("10.00");
         assertThatThrownBy(() -> new PaidParticipation(paymentId, userId, amount, "usd"))
-                .isInstanceOf(BizException.class);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION));
     }
 
     /** Verifies every terminal lifecycle state rejects new paid admission with the closed code. */
@@ -199,11 +247,20 @@ class PaidGroupDealTest {
     void acceptsExactCentsWithoutRoundingAndRejectsMissingIdentity() {
         assertThat(payment(LEADER, "10.000").amount()).isEqualTo(new BigDecimal("10.00"));
 
-        assertThatThrownBy(() -> payment(null, "10.00")).isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> payment(null, "10.00"))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION));
 
         BigDecimal amount = new BigDecimal("10.00");
         assertThatThrownBy(() -> new PaidParticipation(null, LEADER, amount, "sgd"))
-                .isInstanceOf(BizException.class);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION));
     }
 
     /**
@@ -217,13 +274,26 @@ class PaidGroupDealTest {
         Instant expireTime = terms.expireTime();
 
         assertThatThrownBy(() -> creator.initiate(terms, expiredTermsPayment, expireTime))
-                .isInstanceOf(BizException.class);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION));
 
         PaidParticipation missingClockPayment = payment(LEADER, "10.00");
         assertThatThrownBy(() -> creator.initiate(terms, missingClockPayment, null))
-                .isInstanceOf(BizException.class);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION));
 
-        assertThatThrownBy(() -> terms(1)).isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> terms(1))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION));
     }
 
     /** Verifies an SGD payment cannot enter a legacy USD deal and preserves the mismatch code. */

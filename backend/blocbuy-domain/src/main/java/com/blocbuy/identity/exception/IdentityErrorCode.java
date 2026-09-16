@@ -18,6 +18,11 @@ public enum IdentityErrorCode implements ErrorCode {
             401,
             "Identity provider token verification failed",
             "error.identity.oauthTokenInvalid"),
+    OAUTH_ACCESS_DENIED(
+            "IDENTITY_401_003",
+            401,
+            "OAuth authorization was denied by the user",
+            "error.identity.oauthAccessDenied"),
     ACCOUNT_DISABLED(
             "IDENTITY_403_001", 403, "Account is disabled", "error.identity.accountDisabled"),
     EMAIL_ALREADY_REGISTERED(

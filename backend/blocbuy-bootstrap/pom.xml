@@ -127,7 +127,8 @@
   </build>
 
   <!-- D12/D19: start the app (flyway off, no live PG/Redis needed), dump /v3/api-docs to
-       repo-root contracts/openapi.json. Used by `make contract-check`. -->
+       repo-root contracts/openapi.json. Run `./mvnw verify -Popenapi-export` (also what the CI
+       contract-check job runs). -->
   <profiles>
     <profile>
       <id>openapi-export</id>

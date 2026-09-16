@@ -41,7 +41,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @Testcontainers
 @Import(TeamPriceControllerTest.SessionStore.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class PaidGroupDealFlowIT {
+class PaidGroupDealServiceIT {
     @Container
     @SuppressWarnings("resource")
     static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18");
