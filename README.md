@@ -2,9 +2,74 @@
 
 > Bringing people together to buy better, one community at a time.
 
+## Project Status
+
+<table>
+  <tr>
+    <td><strong>CI / Security</strong></td>
+    <td>
+      <a href="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/ci-backend.yml">
+        <img src="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/ci-backend.yml/badge.svg?branch=dev" alt="Backend CI">
+      </a>&nbsp;
+      <a href="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/security.yml">
+        <img src="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/security.yml/badge.svg?branch=dev" alt="Security">
+      </a>
+    </td>
+  </tr>
+
+  <tr>
+    <td><strong>Quality</strong></td>
+    <td>
+      <a href="https://sonarcloud.io/summary/new_code?id=blocbuy-backend">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=alert_status&token=YOUR_BADGE_TOKEN" alt="SonarCloud quality gate">
+      </a>&nbsp;
+      <a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=coverage&view=list">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=coverage&token=YOUR_BADGE_TOKEN" alt="SonarCloud coverage">
+      </a>&nbsp;
+      <a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=sqale_rating&view=list">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=sqale_rating&token=YOUR_BADGE_TOKEN" alt="SonarCloud maintainability rating">
+      </a>&nbsp;
+      <a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=reliability_rating&view=list">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=reliability_rating&token=YOUR_BADGE_TOKEN" alt="SonarCloud reliability rating">
+      </a>
+    </td>
+  </tr>
+
+  <tr>
+    <td><strong>Backend</strong></td>
+    <td>
+      <img src="https://img.shields.io/badge/Java-21-41B5BE?style=flat" alt="Java 21">&nbsp;
+      <img src="https://img.shields.io/badge/Spring%20Boot-4.1.1-41B5BE?style=flat" alt="Spring Boot 4.1.1">&nbsp;
+      <img src="https://img.shields.io/badge/PostgreSQL-18-41B5BE?style=flat" alt="PostgreSQL 18">&nbsp;
+      <img src="https://img.shields.io/badge/Redis-8.10-41B5BE?style=flat" alt="Redis 8.10">
+    </td>
+  </tr>
+
+  <tr>
+    <td><strong>DevSecOps</strong></td>
+    <td>
+      <img src="https://img.shields.io/badge/Trivy-Vulnerability%20Scanning-41B5BE?style=flat" alt="Trivy">&nbsp;
+      <img src="https://img.shields.io/badge/Gitleaks-Secret%20Scanning-41B5BE?style=flat" alt="Gitleaks">&nbsp;
+      <img src="https://img.shields.io/badge/CodeQL-SAST-41B5BE?style=flat" alt="CodeQL">&nbsp;
+      <img src="https://img.shields.io/badge/Dependabot-Dependency%20Updates-41B5BE?style=flat" alt="Dependabot">
+    </td>
+  </tr>
+
+  <tr>
+    <td><strong>Delivery</strong></td>
+    <td>
+      <img src="https://img.shields.io/badge/Docker-Containers-41B5BE?style=flat" alt="Docker">&nbsp;
+      <img src="https://img.shields.io/badge/AWS-ECR-41B5BE?style=flat" alt="Amazon ECR">&nbsp;
+      <img src="https://img.shields.io/badge/AWS-EC2-41B5BE?style=flat" alt="Amazon EC2">&nbsp;
+      <img src="https://img.shields.io/badge/AWS-SSM-41B5BE?style=flat" alt="AWS Systems Manager">&nbsp;
+      <img src="https://img.shields.io/badge/GitHub-Merge%20Queue-41B5BE?style=flat" alt="GitHub Merge Queue">
+    </td>
+  </tr>
+</table>
+
 BlocBuy is a community group-buying platform developed by NUS-ISS Team 8 as part of the SWE5006 Practice Module project. It helps people combine their purchasing needs, reach better group deals, and coordinate the entire group-buying journey in one shared space.
 
-This README currently focuses on the product vision and project scope. Technical architecture and implementation decisions will be documented as the project progresses.
+This README focuses on the product vision and project scope. Technical architecture and implementation details are maintained in the project documentation.
 
 ## The Problem
 
