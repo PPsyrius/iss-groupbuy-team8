@@ -10,6 +10,7 @@ import com.blocbuy.identity.service.OAuthLoginAppService.OAuthLoginResult;
 import com.blocbuy.identity.service.UserAppService;
 import com.blocbuy.identity.service.UserAppService.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotBlank;
@@ -117,6 +118,8 @@ public class AuthController {
 
     /** Current session profile; unauthenticated callers get 401 from the Sa-Token interceptor. */
     @Operation(summary = "Current logged-in user")
+    // method-level, not class-level: the /oauth2/** endpoints on this controller are public paths
+    @SecurityRequirement(name = "blocbuyToken")
     @GetMapping("/me")
     public Result<MeResponse> me() {
         CurrentUser user =
@@ -127,6 +130,7 @@ public class AuthController {
 
     /** Logout: invalidates the current token. */
     @Operation(summary = "Logout")
+    @SecurityRequirement(name = "blocbuyToken")
     @PostMapping("/logout")
     public Result<Void> logout() {
         StpUtil.logout();

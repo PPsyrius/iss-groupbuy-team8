@@ -52,7 +52,7 @@ import tools.jackson.databind.annotation.JsonDeserialize;
 @SecurityScheme(
         name = "blocbuyToken",
         type = SecuritySchemeType.APIKEY,
-        in = SecuritySchemeIn.HEADER,
+        in = SecuritySchemeIn.COOKIE,
         paramName = "blocbuy-token")
 @SecurityRequirement(name = "blocbuyToken")
 @Tag(
