@@ -67,7 +67,8 @@ Say what was verified and what was not.
 
 ## 2026-09-16 - @limjiechao - T1-04 runtime and package-manager pins (#44)
 
-- Kind: chore
+- Kind: chore, nfr (NFR-17 maintainability: reproducible toolchain; row added after the commit
+  hook asked for it)
 - Changed: `frontend/.mise.toml`, `frontend/.nvmrc`, `frontend/.npmrc`, `frontend/package.json`
   (`packageManager`, `engines`, empty `scripts`), root `.gitignore` (generated client, Playwright
   outputs, e2e auth state).
