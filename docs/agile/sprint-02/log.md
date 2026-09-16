@@ -77,3 +77,29 @@ Say what was verified and what was not.
   installed on this machine.
 - Decisions: ADR 0013 (stub today; body lands in T1-15).
 - Next: T1-05 scaffold.
+
+## 2026-09-16 - @limjiechao - T1-03 frontend runbook steps and policy examples (#93, PR-B)
+
+- Kind: ops, nfr (NFR-04 OIDC deploy role reused for the frontend; NFR-16 CSP/HSTS policy source
+  now versioned, row stays `documented` until A2 executes in T2-11)
+- Changed: `docs/deploy/dev-cloudfront-deployment.md` (§7.3 marked superseded, §10 npm to pnpm
+  with the CI-identical release commands, new §14 SPA fallback, §15 response headers, §16 OIDC
+  deploy role, §17 `frontend-dev` environment; each section links its blocker A1 #99, A2 #100,
+  A3 #101, A4 #102); `deployment/frontend/cloudfront/spa-fallback.js`,
+  `deployment/frontend/cloudfront/response-headers-policy.json`,
+  `deployment/frontend/iam/README.md` and the two `.json.example` policies. Content is plan §8
+  verbatim plus the issue links.
+- Verified: T1-03 task-row command on branch `feature/deploy-frontend-runbook`: `python3 -m
+  json.tool` ok on all three JSON files, `node --check` ok on `spa-fallback.js`. Not verified: no
+  AWS command was run; the steps are for the account holder to execute (dev backend is still down
+  per the T1-01 entry, ALB 503), so the §14 and §15 curl probes cannot be exercised yet.
+- Decisions: none new; the steps implement ADR 0002 (same-origin, HSTS across `/api/*`), ADR 0004
+  (one artifact, `index.html` `no-cache`, immutable assets), ADR 0005 (SPA fallback as a CloudFront
+  Function on the default behavior, no distribution-wide error responses) and ADR 0007
+  (hand-managed CloudFront changed through the runbook; T2-07 imports these resources into
+  Terraform). Bodies land in T1-15.
+- Problems: the trust-policy `sub` format is unconfirmed; the backend example carries an
+  id-suffixed subject. Action: §16 tells the operator to copy whichever form works for the
+  backend role. Status: open until A3 executes.
+- Next: user opens PR-B (@l0sgAi runbook, @PPsyrius `deployment/`); A1–A4 executed by the
+  account holder; T1-05 scaffold.

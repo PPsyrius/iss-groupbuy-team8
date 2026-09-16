@@ -215,10 +215,10 @@ Each task below carries the file contents an implementer needs. Steps are bite-s
 
 **Files:** Modify `docs/deploy/dev-cloudfront-deployment.md` (§7.3 note, §10, new §14–§17). Create `deployment/frontend/iam/README.md`, the two `.json.example` files, `deployment/frontend/cloudfront/spa-fallback.js`, `deployment/frontend/cloudfront/response-headers-policy.json`. All content is in §8.
 
-- [ ] Step 1: Copy §8.1–§8.5 verbatim into the runbook after §13 and change §10 as in §8.5.
-- [ ] Step 2: Create the six files under `deployment/frontend/` from §8.
-- [ ] Step 3: Run the verification command from the task row.
-- [ ] Step 4: `git commit -am "docs(deploy): frontend SPA fallback, headers policy, OIDC deploy role runbook steps"` and open PR-B with the A1–A4 issue links.
+- [x] Step 1: Copy §8.1–§8.5 verbatim into the runbook after §13 and change §10 as in §8.5.
+- [x] Step 2: Create the six files under `deployment/frontend/` from §8.
+- [x] Step 3: Run the verification command from the task row.
+- [x] Step 4: `git commit -am "docs(deploy): frontend SPA fallback, headers policy, OIDC deploy role runbook steps"` and open PR-B with the A1–A4 issue links.
 
 ### T1-04: Runtime and package-manager pins
 

@@ -304,7 +304,12 @@ EOF
 aws s3api put-bucket-policy --bucket "$S3_BUCKET" --policy file:///tmp/bucket-policy.json
 ```
 
-### 7.3 (Optional) SPA routing fallback
+### 7.3 (Superseded by §14) SPA routing fallback
+
+> **Note (2026-09-16):** this step is no longer optional. The frontend uses history-mode routing, so
+> the fallback is mandatory; follow §14, which versions the function source under
+> `deployment/frontend/cloudfront/` and adds the verification probes. The text below is kept for
+> the history of the original setup only. Tracked as blocker A1 (#99).
 
 If the frontend uses history-mode routing (paths like `/groupbuy/123`), requests for non-static resources need to fall back to `index.html`. Create a CloudFront Function and attach it to the default behavior:
 
@@ -370,22 +375,23 @@ gh variable set BACKEND_URL_DEV --body "https://$DIST_DOMAIN"
 ## 10. Frontend build and release conventions
 
 - API clients must always use **relative paths** `/api/...` (e.g. `fetch('/api/actuator/health')`), never absolute URLs — same-origin deployment means no CORS, and a future custom domain will not require code changes;
-- Build:
+- Build (Node 24 + pnpm 12 via Corepack; exact steps in `frontend/AGENTS.md`):
 
   ```bash
-  cd frontend && npm ci && npm run build
+  cd frontend && corepack enable && pnpm install --frozen-lockfile && pnpm build
   ```
 
 - Release (long cache for static assets, no caching for index.html):
 
   ```bash
-  aws s3 sync dist/ "s3://$S3_BUCKET" \
-    --cache-control "public,max-age=31536000,immutable" \
-    --exclude "index.html"
+  aws s3 sync dist/ "s3://$S3_BUCKET" --delete --exclude "index.html" \
+    --cache-control "public,max-age=31536000,immutable"
   aws s3 cp dist/index.html "s3://$S3_BUCKET/index.html" \
-    --cache-control "no-cache"
+    --cache-control "no-cache" --content-type "text/html"
   aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths "/index.html"
   ```
+
+- Normal releases come from the `deploy-s3-dev` job in `ci-frontend.yml` (§16–§17); this manual path is the fallback and must use the same three commands.
 
 ## 11. Impact scope and notes
 
@@ -427,3 +433,120 @@ aws ec2 delete-security-group --group-id "$ALB_SG_ID"
 ```
 
 > ALB/CloudFront billing is hourly plus traffic; disable/delete them promptly if the dev environment sits idle long-term.
+
+## 14. SPA routing fallback (mandatory for the frontend)
+
+Blocker A1 (#99). Not attached as of the 2026-09-16 probe (`docs/agile/sprint-02/log.md`).
+
+The frontend uses history-mode routing (`/products/<uuid>`, `/account`, `/auth/callback`). Without this
+function a deep link or a browser refresh returns the S3 OAC 403. Distribution-wide custom error
+responses are deliberately NOT used: they would also mask real `/api/*` errors.
+
+Function source is versioned at `deployment/frontend/cloudfront/spa-fallback.js`.
+
+```bash
+aws cloudfront create-function \
+  --name blocbuy-dev-spa-fallback \
+  --runtime cloudfront-js-2.0 \
+  --function-config Comment="SPA fallback for BlocBuy dev frontend",Autopublish=true \
+  --function-code fileb://deployment/frontend/cloudfront/spa-fallback.js
+export SPA_FN_ARN=$(aws cloudfront describe-function --name blocbuy-dev-spa-fallback \
+  --query 'FunctionSummary.FunctionMetadata.FunctionARN' --output text)
+
+# Attach to the DEFAULT behavior only (never to /api/*)
+ETAG=$(aws cloudfront get-distribution-config --id "$DIST_ID" --query ETag --output text)
+aws cloudfront get-distribution-config --id "$DIST_ID" --query DistributionConfig --output json > /tmp/dist-config.json
+python3 - <<'PY'
+import json
+p='/tmp/dist-config.json'; d=json.load(open(p))
+import os
+d['DefaultCacheBehavior']['FunctionAssociations']={'Quantity':1,'Items':[{'EventType':'viewer-request','FunctionARN':os.environ['SPA_FN_ARN']}]}
+json.dump(d,open(p,'w'))
+PY
+aws cloudfront update-distribution --id "$DIST_ID" --if-match "$ETAG" --distribution-config file:///tmp/dist-config.json
+aws cloudfront wait distribution-deployed --id "$DIST_ID"
+```
+
+Verify (both must hold):
+
+```bash
+curl -sS -o /dev/null -w '%{http_code} %{content_type}\n' "https://$DIST_DOMAIN/products/00000000-0000-0000-0000-000000000000"
+# 200 text/html
+curl -sS -o /dev/null -w '%{http_code}\n' "https://$DIST_DOMAIN/assets/does-not-exist.js"
+# 403 or 404 (asset paths with an extension are NOT rewritten)
+curl -sS -o /dev/null -w '%{http_code}\n' "https://$DIST_DOMAIN/api/v1/products?page=1"
+# 200 (the /api/* behavior has no function association)
+```
+
+The original §7.3 code rewrote `uri.endsWith('/')` to `uri + 'index.html'`; the frontend has a single `index.html` at the root, so both branches map to `/index.html`.
+
+## 15. Security response headers (CSP, HSTS)
+
+Blocker A2 (#100). Absent as of the 2026-09-16 probe (no CSP, no HSTS on `GET /`).
+
+Policy source: `deployment/frontend/cloudfront/response-headers-policy.json`. The CSP is a starting
+point that allows HeroUI's inline styles and remote product images; the frontend owner tightens it
+after the first deploy (plan task T2-11) and re-applies with `update-response-headers-policy`.
+
+```bash
+aws cloudfront create-response-headers-policy \
+  --response-headers-policy-config file://deployment/frontend/cloudfront/response-headers-policy.json
+export RHP_ID=$(aws cloudfront list-response-headers-policies --type custom \
+  --query "ResponseHeadersPolicyList.Items[?ResponseHeadersPolicy.ResponseHeadersPolicyConfig.Name=='blocbuy-dev-security-headers'].ResponseHeadersPolicy.Id" --output text)
+
+# Attach to BOTH behaviors: HSTS must cover /api/* too; CSP on JSON responses is harmless.
+ETAG=$(aws cloudfront get-distribution-config --id "$DIST_ID" --query ETag --output text)
+aws cloudfront get-distribution-config --id "$DIST_ID" --query DistributionConfig --output json > /tmp/dist-config.json
+python3 - <<'PY'
+import json, os
+p='/tmp/dist-config.json'; d=json.load(open(p)); rid=os.environ['RHP_ID']
+d['DefaultCacheBehavior']['ResponseHeadersPolicyId']=rid
+for b in d['CacheBehaviors']['Items']:
+    b['ResponseHeadersPolicyId']=rid
+json.dump(d,open(p,'w'))
+PY
+aws cloudfront update-distribution --id "$DIST_ID" --if-match "$ETAG" --distribution-config file:///tmp/dist-config.json
+aws cloudfront wait distribution-deployed --id "$DIST_ID"
+curl -sSI "https://$DIST_DOMAIN/" | grep -Ei 'strict-transport-security|content-security-policy|x-content-type-options|x-frame-options|referrer-policy'
+```
+
+Why each CSP source: `script-src 'self'` (Vite emits no inline scripts; React Compiler output is in the bundle); `style-src 'unsafe-inline'` (React Aria / HeroUI set inline `style` attributes for positioning; revisit in T2-11); `img-src https:` (product `coverImage` hosts are unknown until seed data is inspected; narrow in T2-11); `connect-src 'self'` (all API calls are same-origin); `form-action 'self'` (login is a GET navigation, not a form post); `frame-ancestors 'none'` replaces the older `X-Frame-Options` for modern browsers while `FrameOptions` covers the rest. `Preload: false` because the `*.cloudfront.net` domain cannot be preload-listed.
+
+## 16. Frontend deploy role (GitHub OIDC)
+
+Blocker A3 (#101).
+
+The `deploy-s3-dev` job in `ci-frontend.yml` assumes a role restricted to the `frontend-dev`
+GitHub environment. Policy examples: `deployment/frontend/iam/`. The OIDC provider already exists
+(created for the backend pipeline).
+
+```bash
+sed -e "s/AWS_ACCOUNT_ID/$ACCOUNT_ID/g" \
+  deployment/frontend/iam/github-frontend-deploy-trust-policy.json.example > /tmp/fe-trust.json
+sed -e "s/AWS_ACCOUNT_ID/$ACCOUNT_ID/g" -e "s/FRONTEND_S3_BUCKET/$S3_BUCKET/g" -e "s/CLOUDFRONT_DISTRIBUTION_ID/$DIST_ID/g" \
+  deployment/frontend/iam/github-frontend-deploy-policy.json.example > /tmp/fe-policy.json
+aws iam create-role --role-name BlocBuyGitHubFrontendDeployDev --assume-role-policy-document file:///tmp/fe-trust.json
+aws iam put-role-policy --role-name BlocBuyGitHubFrontendDeployDev --policy-name frontend-s3-cloudfront-deploy --policy-document file:///tmp/fe-policy.json
+export FE_ROLE_ARN=$(aws iam get-role --role-name BlocBuyGitHubFrontendDeployDev --query Role.Arn --output text)
+```
+
+The trust policy `sub` must match the format the existing `backend-dev` deploy role uses (see
+`deployment/backend/iam/github-deploy-trust-policy.json.example`, which carries an id-suffixed
+subject). Copy whichever form works for the backend role; the GitHub-documented plain form is
+`repo:PPsyrius/iss-groupbuy-team8:environment:frontend-dev`.
+
+## 17. GitHub `frontend-dev` environment and variables
+
+Blocker A4 (#102). Depends on §16 for `FE_ROLE_ARN`.
+
+```bash
+gh api -X PUT repos/PPsyrius/iss-groupbuy-team8/environments/frontend-dev \
+  -f deployment_branch_policy[protected_branches]=false \
+  -f deployment_branch_policy[custom_branch_policies]=true
+gh api -X POST repos/PPsyrius/iss-groupbuy-team8/environments/frontend-dev/deployment-branch-policies -f name=dev
+gh variable set FRONTEND_URL_DEV --body "https://$DIST_DOMAIN"
+gh variable set FRONTEND_S3_BUCKET_DEV --body "$S3_BUCKET"
+gh variable set FRONTEND_CLOUDFRONT_DIST_ID_DEV --body "$DIST_ID"
+gh variable set AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV --body "$FE_ROLE_ARN"
+gh variable set ENABLE_S3_DEPLOY --body "true"   # set last, after one manual deploy succeeded
+```
