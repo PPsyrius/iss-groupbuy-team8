@@ -1,6 +1,6 @@
 ---
 name: backend-constraints-skill
-description: Implement or review BlocBuy backend code built with Java 21, Spring Boot 3.5, MyBatis, PostgreSQL 18, Redis 8, Sa-Token, Stripe payments, and Maven. Use for new features, refactoring, code review, and architecture checks. Enforces COLA multi-module modular monolith, DDD, four-layer architecture, REST APIs, the unified Result response envelope with ErrorCode status-code enums, Sa-Token RBAC, security, data access, testing, and observability. Any change to the HTTP API surface (controllers, endpoints, DTOs, annotations) must keep contracts/openapi.json regenerated and committed. RabbitMQ and Elasticsearch are deliberately NOT in the stack (decision 2026-08-30); do not introduce them without user approval. Not for frontend or non-Java services.
+description: Implement or review BlocBuy backend code built with Java 21, Spring Boot 3.5, MyBatis, PostgreSQL 18, Redis 8, Sa-Token, Stripe payments, and Maven. Use for new features, refactoring, code review, and architecture checks. Enforces COLA multi-module modular monolith, DDD, four-layer architecture, REST APIs, the unified Result response envelope with ErrorCode status-code enums, Sa-Token RBAC, security, data access, testing, observability, and the SonarCloud coverage quality gate (≥ 80% on new code, fed by the JaCoCo aggregate report). Any change to the HTTP API surface (controllers, endpoints, DTOs, annotations) must keep contracts/openapi.json regenerated and committed. RabbitMQ and Elasticsearch are deliberately NOT in the stack (decision 2026-08-30); do not introduce them without user approval. Not for frontend or non-Java services.
 ---
 
 # BlocBuy Backend Development Constraints
@@ -35,7 +35,8 @@ These are settled; do not reopen them without explicit user approval. Full ratio
    - Testing, logging, monitoring, performance, delivery: read [references/quality-operations.md](references/quality-operations.md).
    - Version-specific behavior or anything needing further verification: consult only the official sources listed in [references/authoritative-sources.md](references/authoritative-sources.md); never hardcode dependency versions from memory.
 4. After implementation, run the repository's existing compile, test, static-analysis, and architecture checks related to the change, then self-check against the "Hard Gates". Never delete tests, loosen gates, or hide failures to make validation pass. For review tasks, output precisely locatable findings, impact, and minimal fix suggestions, ranked by severity.
-5. If the change alters the HTTP API surface in any way — adding/removing/renaming endpoints, changing controller method signatures, request/response DTO fields, validation or springdoc annotations, tags, or operation summaries — regenerate and commit the OpenAPI contract before finishing:
+5. Before committing, run the pre-commit quality verification below — including the coverage self-check. Never leave coverage of new/changed code to be discovered by the CI SonarCloud job.
+6. If the change alters the HTTP API surface in any way — adding/removing/renaming endpoints, changing controller method signatures, request/response DTO fields, validation or springdoc annotations, tags, or operation summaries — regenerate and commit the OpenAPI contract before finishing:
 
    ```bash
    cd backend
@@ -45,6 +46,37 @@ These are settled; do not reopen them without explicit user approval. Full ratio
    ```
 
    Then verify with `git status` that `contracts/openapi.json` has no uncommitted diff left. CI's `contract-check` job (`.github/workflows/ci-backend.yml`) regenerates the spec from code and fails the PR on any drift against the committed file, and additionally rejects backward-incompatible changes versus the base branch via `openapi-diff`. A green local `git diff --exit-code -- contracts/` (run from the repo root after regeneration) means the drift gate will pass.
+
+## Pre-Commit Quality Verification (prevents SonarCloud quality-gate failures)
+
+The CI `sonar` job fails the PR when the server-side quality gate is red: **≥ 80% coverage on new code**, no new blocker/critical issues, A ratings on new code (`docs/quality/quality-gates.md`). Its coverage input is the local JaCoCo aggregate — so verify locally before committing, on JDK 21 (Enforcer rejects anything outside [21,22); e.g. `export JAVA_HOME=$(/usr/libexec/java_home -v 21)`):
+
+```bash
+cd backend
+./mvnw -B verify   # spotless + checkstyle + unit/ArchUnit + ITs + SpotBugs + JaCoCo aggregate
+```
+
+Then inspect the aggregate report for the files you added or changed and eliminate every missed line/branch on new code — target 100% on touched files, not just the 80% floor:
+
+```bash
+python3 - <<'EOF'
+import xml.etree.ElementTree as ET
+t = ET.parse('blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml')
+for sf in t.iter('sourcefile'):
+    missed = [l.get('nr') for l in sf.findall('line')
+              if int(l.get('mi')) > 0 or int(l.get('mb')) > 0]
+    if missed:
+        print(sf.get('name'), '-> missed lines:', ','.join(missed))
+EOF
+```
+
+Triage rules learned from real gate failures (2026-09-15, AuthController):
+
+- The aggregate exists only after `verify` (the `jacoco-report-aggregate` execution in `blocbuy-bootstrap/pom.xml` is bound to `verify`); `mvn test` never produces it. Module-local `jacoco.xml` files miss cross-module coverage — adapter controllers are exercised by `blocbuy-bootstrap` tests, so only the aggregate tells the truth.
+- "New code" includes every new branch: failure-path `catch` blocks, `isBlank()`-style validation arms, and trivial one-liner endpoints are the usual misses. Test the failure branch, not just the happy path.
+- A Quality Gate report can be stale — SonarCloud may have analyzed the commit *before* your tests were pushed. Check the analyzed commit in the report before writing redundant tests.
+
+Full testing/coverage guidance: [references/quality-operations.md](references/quality-operations.md).
 
 ## Hard Gates
 
