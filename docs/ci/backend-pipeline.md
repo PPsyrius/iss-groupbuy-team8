@@ -8,15 +8,29 @@ thresholds are in [devsecops-pipeline-plan.md](devsecops-pipeline-plan.md) and
 
 ## Pipeline shape
 
-Pull requests and pushes to `dev` that touch backend, contracts or backend deployment files run:
+Pull requests give fast feedback, and the `dev` merge queue repeats the same applicable
+validation against GitHub's speculative merge (`merge_group`) before the change can land.
+The `merge_group` run is the authoritative final quality/security gate. After it passes and
+GitHub updates `dev`, the `push` workflow performs delivery work only: package the merged
+application, assemble the image, publish it to ECR, and deploy it to EC2.
 
 ```text
+pull_request                 merge_group                     push/dev
+├── build-quality            ├── build-quality               ├── package merged JAR
+├── contract-check           ├── contract-check              ├── assemble image
+├── sonar                    ├── sonar                       ├── publish ECR
+├── docker                   ├── docker                      └── deploy EC2
+└── security                 └── security
+                                  ↑
+                           final pre-merge gate
+
 ci-backend.yml
-├── build-quality     Spotless -> Checkstyle -> Maven verify -> reports + sonar inputs
-├── contract-check    OpenAPI regeneration -> drift -> compatibility on PR
-├── sonar             SonarCloud scan + quality gate (artifact reuse from build-quality)
+├── build-quality     Spotless -> Checkstyle -> Maven verify -> reports + Sonar inputs
+├── contract-check    OpenAPI regeneration -> drift
+│                     └── PR only: compatibility + `contract-change-approved` handling
+├── sonar             SonarCloud Maven scan + quality gate (artifact reuse from build-quality)
 ├── docker            image build -> EC2-profile smoke -> Trivy image gate
-│                     └── dev push only: publish the tested image to ECR by digest
+│                     └── enabled dev push: preserve tested image for ECR publication
 └── deploy-existing-ec2 (dev push + ENABLE_EC2_DEPLOY=true)
                       OIDC -> protected environment -> SSM -> health/auto rollback
 
@@ -26,7 +40,7 @@ security.yml
 ├── gitleaks          full-history secret scan
 ├── trivy-deps        Maven HIGH/CRITICAL vulnerability gate
 ├── trivy-config      Docker/config HIGH/CRITICAL misconfiguration gate
-└── codeql            optional Java SAST gate
+└── codeql            Java SAST when ENABLE_CODEQL=true and Code Scanning is available
 
 rollback-backend.yml  manual, confirmed, reasoned, environment-controlled SSM rollback
 ```
@@ -36,13 +50,36 @@ unchanged dependencies.
 
 ## Required PR checks
 
-Configure `dev` branch protection with:
+Configure `dev` with merge queue enabled (`Settings > General > Pull Requests > Allow merge
+queue`) and a `dev` ruleset that requires pull requests, required CI checks and the merge queue.
+The queue's `merge_group` run is the final pre-merge validation of the speculative `dev` state.
+
+Require the same applicable CI gates for PRs and merge groups:
 
 - `build-quality`, `contract-check`, `docker`, `SonarCloud Code Analysis`;
 - `workflow-lint`, `deployment-bundle`, `gitleaks`, `trivy-deps`, `trivy-config`;
-- `codeql` only after GHAS is enabled consistently.
+- `codeql` only when GitHub Code Scanning is enabled and reporting reliably.
 
-`deploy-existing-ec2` is push-only and must not be a PR-required check.
+Recommended `dev` ruleset protections also include at least one approval, stale-approval dismissal,
+approval of the latest reviewable push, CODEOWNERS review where ownership is intentional,
+conversation resolution, deletion restriction and force-push blocking. Do not use `Restrict
+updates` merely to force PRs; the pull-request and merge-queue requirements establish that path.
+
+`deploy-existing-ec2` and `publish-ecr-*` stay `push`-only (the queue SHA is temporary and OIDC
+trusts only `refs/heads/dev`) and must not be queue-required checks.
+
+### Post-merge delivery boundary
+
+Direct changes to `dev` are prevented by the repository ruleset: normal changes must arrive through
+a pull request and the required merge queue. Because `merge_group` validates the speculative
+integrated state immediately before GitHub updates `dev`, expensive quality/security gates are not
+repeated on the resulting `push/dev`.
+
+The delivery run rebuilds/packages the deployable JAR and assembles the runtime image from the
+merged `dev` source without rerunning tests, formatting/style checks, SpotBugs, JaCoCo, Sonar,
+contract validation, smoke tests, Trivy, CodeQL, Gitleaks, or configuration scans. This deliberately
+trades exact promotion of the queue-built Docker image for substantially lower GitHub Actions
+usage. Production `v*` tag releases retain the full release validation path.
 
 ## Run backend quality gates locally
 
@@ -77,11 +114,11 @@ transported by CI.
 On PR, the `docker` job builds and boots the image with the `ec2` Spring profile against PostgreSQL
 and Redis, then fails on fixable HIGH/CRITICAL image vulnerabilities.
 
-On a green push to `dev`, when `ENABLE_EC2_DEPLOY=true`:
+After a merge-queue-validated change lands on `dev`, when `ENABLE_EC2_DEPLOY=true`:
 
-1. GitHub OIDC assumes the ECR publisher role;
-2. the exact smoke-tested image is pushed with a run-specific immutable tag;
-3. Docker's resulting digest is checked against ECR;
+1. the delivery path packages the merged application without rerunning the pre-merge gates;
+2. the runtime image is assembled and GitHub OIDC assumes the ECR publisher role;
+3. the image is pushed with a run-specific tag and Docker's resulting digest is checked against ECR;
 4. the protected `backend-dev` environment gates the deploy job;
 5. a separate OIDC role sends the allowlisted bundle and digest to one EC2 instance via SSM;
 6. the host preflight, deploy and health scripts run;
