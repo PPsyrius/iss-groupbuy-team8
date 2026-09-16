@@ -48,9 +48,9 @@
   <tr>
     <td><strong>DevSecOps</strong></td>
     <td>
-      <img src="https://img.shields.io/badge/Trivy-Vulnerability%20Scanning-41B5BE?style=flat" alt="Trivy">&nbsp;
+      <img src="https://img.shields.io/badge/SonarCloud-SAST%20%2B%20Coverage-41B5BE?style=flat" alt="SonarCloud">&nbsp;
+	  <img src="https://img.shields.io/badge/Trivy-Vulnerability%20Scanning-41B5BE?style=flat" alt="Trivy">&nbsp;
       <img src="https://img.shields.io/badge/Gitleaks-Secret%20Scanning-41B5BE?style=flat" alt="Gitleaks">&nbsp;
-      <img src="https://img.shields.io/badge/CodeQL-SAST-41B5BE?style=flat" alt="CodeQL">&nbsp;
       <img src="https://img.shields.io/badge/Dependabot-Dependency%20Updates-41B5BE?style=flat" alt="Dependabot">
     </td>
   </tr>
@@ -62,7 +62,6 @@
       <img src="https://img.shields.io/badge/AWS-ECR-41B5BE?style=flat" alt="Amazon ECR">&nbsp;
       <img src="https://img.shields.io/badge/AWS-EC2-41B5BE?style=flat" alt="Amazon EC2">&nbsp;
       <img src="https://img.shields.io/badge/AWS-SSM-41B5BE?style=flat" alt="AWS Systems Manager">&nbsp;
-      <img src="https://img.shields.io/badge/GitHub-Merge%20Queue-41B5BE?style=flat" alt="GitHub Merge Queue">
     </td>
   </tr>
 </table>
