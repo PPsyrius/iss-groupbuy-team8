@@ -4,13 +4,19 @@ pre-commit:
     frontend-format:
       root: "frontend/"
       glob: "*.{ts,tsx,js,mjs,cjs,json,css,md,yaml,yml}"
-      exclude: ["src/api/generated/**", "src/routeTree.gen.ts", "docs/**", "README.md"]
+      exclude:
+        [
+          "frontend/src/api/generated/**",
+          "frontend/src/routeTree.gen.ts",
+          "frontend/docs/**",
+          "frontend/README.md",
+        ]
       run: pnpm exec oxfmt {staged_files}
       stage_fixed: true
     frontend-lint:
       root: "frontend/"
       glob: "*.{ts,tsx}"
-      exclude: ["src/api/generated/**", "src/routeTree.gen.ts"]
+      exclude: ["frontend/src/api/generated/**", "frontend/src/routeTree.gen.ts"]
       run: pnpm exec oxlint --type-aware {staged_files}
     frontend-typecheck:
       root: "frontend/"
