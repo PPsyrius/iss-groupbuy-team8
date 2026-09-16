@@ -103,6 +103,36 @@ class AuthControllerTest {
                                         FRONTEND + "/login?error=IDENTITY_401_001"));
     }
 
+    /** Consent denial arrives as ?error=access_denied with no code — still a browser 302. */
+    @Test
+    void callbackAccessDeniedRedirectsWithFixedErrorCode() throws Exception {
+        MvcResult denied =
+                mvc.perform(get(CALLBACK_PATH).param("error", "access_denied").param("state", "x"))
+                        .andExpect(status().isFound())
+                        .andExpect(
+                                header().string(
+                                                HttpHeaders.LOCATION,
+                                                FRONTEND + "/login?error=IDENTITY_401_003"))
+                        .andReturn();
+
+        assertThat(denied.getResponse().getCookie("blocbuy-token"))
+                .as("denial never opens a session")
+                .isNull();
+        verifyNoInteractions(oAuthLogin);
+    }
+
+    /** A malformed hit missing code redirects too — the callback never answers raw 400 JSON. */
+    @Test
+    void callbackMissingCodeRedirectsInsteadOfRaw400() throws Exception {
+        mvc.perform(get(CALLBACK_PATH).param("state", "x"))
+                .andExpect(status().isFound())
+                .andExpect(
+                        header().string(
+                                        HttpHeaders.LOCATION,
+                                        FRONTEND + "/login?error=COMMON_400_001"));
+        verifyNoInteractions(oAuthLogin);
+    }
+
     @Test
     void meWithoutSessionIsRejectedByTheInterceptor() throws Exception {
         mvc.perform(get(ME_PATH))

@@ -22,3 +22,5 @@ blocbuy:
     # FRONTEND_URL is unset
     success-redirect-uri: "${FRONTEND_URL:}/auth/callback"
     failure-redirect-uri: "${FRONTEND_URL:}/login?error={errorCode}"
+    # same transport constraint as sa-token.cookie.secure above — compose serves plain HTTP
+    state-cookie-secure: false

@@ -35,4 +35,6 @@ blocbuy:
     # The failure target carries the business error code in the {errorCode} placeholder.
     success-redirect-uri: "${FRONTEND_URL:http://localhost:5173}/auth/callback"
     failure-redirect-uri: "${FRONTEND_URL:http://localhost:5173}/login?error={errorCode}"
+    # same transport constraint as sa-token.cookie.secure above — local dev is plain HTTP
+    state-cookie-secure: false
 

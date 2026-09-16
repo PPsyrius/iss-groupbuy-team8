@@ -14,11 +14,16 @@ import org.springframework.validation.annotation.Validated;
  * @param successRedirectUri where the browser lands after a successful login
  * @param failureRedirectUri where the browser lands after a failed login; an optional {@code
  *     {errorCode}} placeholder is replaced with the business error code
+ * @param stateCookieSecure whether the OAuth state-binding cookie carries the Secure attribute;
+ *     mirrors {@code sa-token.cookie.secure} — on for HTTPS deployments, off on the plain-HTTP
+ *     local/docker/ec2 profiles until the CloudFront cutover
  */
 @Validated
 @ConfigurationProperties(prefix = "blocbuy.frontend")
 public record AuthWebProperties(
-        @NotBlank String successRedirectUri, @NotBlank String failureRedirectUri) {
+        @NotBlank String successRedirectUri,
+        @NotBlank String failureRedirectUri,
+        boolean stateCookieSecure) {
 
     /** Placeholder in {@code failureRedirectUri} swapped for the failing error code. */
     private static final String ERROR_CODE_PLACEHOLDER = "{errorCode}";
