@@ -12,7 +12,9 @@
 # DevSecOps & Infrastructure
 # ---------------------------------------------------------
 # CI/CD Workflows, Actions, and Issue Templates
-.github/ @PPsyrius
+# T1-12 consistency fix (optional, reject freely): anchored to the repo root like the other
+# directory rules; the unanchored `.github/` matched the same paths.
+/.github/ @PPsyrius
 
 # Git configuration files (The .git folder itself isn't tracked, but these are)
 .gitignore @PPsyrius
@@ -51,6 +53,18 @@ pnpm-lock.yaml @limjiechao
 *.ts @limjiechao
 *.tsx @limjiechao
 *.css @limjiechao
+
+# Frontend toolchain files outside frontend/ (frontend/docs/plan.md §7.4; narrower than a
+# `*.json` catch-all, which would route contracts/openapi.json and IAM examples here)
+/lefthook.yml @limjiechao
+*.mjs @limjiechao
+*.cjs @limjiechao
+*.mts @limjiechao
+*.cts @limjiechao
+/.claude/settings.json @limjiechao @PPsyrius
+/.claude/hooks/ @limjiechao
+/deployment/frontend/ @PPsyrius @limjiechao
+/infra/terraform/frontend-stack/ @PPsyrius @limjiechao
 
 # ---------------------------------------------------------
 # Unassigned, To Be Decided Later

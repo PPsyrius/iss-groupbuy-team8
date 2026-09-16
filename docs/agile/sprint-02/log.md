@@ -430,3 +430,34 @@ Say what was verified and what was not.
   and stays in the file rather than being deleted, per plan T1-13's instruction to revert once
   T1-01's re-probe shows 200.
 - Next: T1-12 `.github` PR-E (needs @PPsyrius), T1-14 first deploy. PR-C, PR-D and PR-F not opened.
+
+## 2026-09-17 - @limjiechao - T1-12 .github frontend CI pipeline (#44, #104, #105, PR-E)
+
+- Kind: nfr, ops
+- Changed: `.github/workflows/ci-frontend.yml` (new: `detect-changes`, `frontend-check`,
+  `intent-stale`, `e2e-preview`, `deploy-s3-dev`, `e2e-dev`), `.github/workflows/security.yml`
+  (frontend path filters, pnpm-lockfile Trivy scan + SARIF), `.github/dependabot.yml` (npm
+  `/frontend`), `.github/CODEOWNERS` (§7.4 block, `/.github/` anchor), `CONTRIBUTING.md` (required
+  checks, Frontend subsection), `frontend/docs/plan.md` (T1-12 boxes 1–4, §12 note 33),
+  `docs/quality/nfr-register.md` (NFR-17/18 evidence, new NFR-19), this log. `.gitignore` (§7.5)
+  and the PR template (§7.6) already satisfied the plan; untouched.
+- Verified: actionlint 1.7.12 twice from the worktree root — the release binary, then
+  `docker run … rhysd/actionlint@sha256:b1934ee5…` (the digest `security.yml`'s `workflow-lint`
+  pins; ShellCheck 0.11.0 bundled): both exit 0, no findings, all five workflows. YAML parse of the
+  five workflows + `dependabot.yml` via `pnpm dlx yaml@2.9.1 valid` (PyYAML absent): all ok.
+  `intent-stale` step dry-run in this worktree after `corepack pnpm install --frozen-lockfile`
+  (pnpm 12.4.2): manifest diff clean, `grep -q intent-skills AGENTS.md` exit 0. The "Forbid
+  import.meta.env" grep: no hits in `src`/`e2e`. `package_json_file` (pnpm/action-setup) and
+  `node-version-file`/`cache`/`cache-dependency-path` (setup-node) confirmed against `action.yml`
+  at the pinned commits. `pnpm check` not re-run (no `frontend/` source touched). **Not verified:**
+  no GitHub run yet — a green `frontend-check` on PR-E is owed.
+- Decisions: cross-cutting, no ADR; shape per plan §7 and ADRs 0004 (build once, promote the same
+  `dist/` to S3), 0008 (evidence), 0013 (toolchain pins, now enforced in CI), bodies in T1-15. One
+  required check (`frontend-check`) with `no-runtime-env` folded in as a step; `deploy-s3-dev`
+  gated on `ENABLE_S3_DEPLOY` until A3/A4 (#101, #102) land. Deviations: plan §12 note 33.
+- Problems: `corepack pnpm install --dir frontend` ran pnpm 10.33.4 and `engines` rejected it
+  (NFR-17 doing its job; run from `frontend/`). Dependabot's pnpm-12 lockfile support is
+  undocumented (plan §12.4): "Check for updates" after the first merge. PR-E, review and the
+  branch-protection ask (step 5) are the user's and @PPsyrius's; the five `frontend-dev` variables
+  (runbook §17) must exist before `ENABLE_S3_DEPLOY=true`.
+- Next: user opens PR-E; T1-14 first deploy once A3/A4 close; T1-15 ADR bodies (in flight).
