@@ -13,9 +13,7 @@
     "@heroui/styles",
     "tailwindcss",
     "valibot",
-    "@heroui/react",
     "@tanstack/react-form",
-    "@testing-library/react",
     "@testing-library/user-event"
   ]
 }

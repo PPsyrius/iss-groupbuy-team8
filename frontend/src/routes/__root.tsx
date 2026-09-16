@@ -3,6 +3,7 @@ import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { createRootRouteWithContext, Link, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
+import { Header } from "@/components/Header";
 import type { RouterContext } from "@/router";
 
 export const Route = createRootRouteWithContext<RouterContext>()({
@@ -25,6 +26,7 @@ const devtoolsPlugins = [
 function RootLayout() {
   return (
     <>
+      <Header />
       <Outlet />
       <TanStackDevtools plugins={devtoolsPlugins} />
     </>
