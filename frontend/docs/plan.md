@@ -471,8 +471,8 @@ export const Route = createFileRoute('/')({
 
 **Interfaces produced:** `src/api/generated/@tanstack/react-query.gen.ts` exports `pageListingsOptions`, `pageListingsQueryKey`, `getListingOptions`, `getListingQueryKey`, `meOptions`, `meQueryKey`, `logoutMutation` (names derived from the contract's `operationId`s `pageListings`, `getListing`, `me`, `logout`; naming pattern verified at https://heyapi.dev/openapi-ts/plugins/tanstack-query). `src/api/generated/types.gen.ts` exports `ResultPageResultProductSummaryResponse`, `ResultProductDetailResponse`, `ResultMeResponse`, `ResultVoid`, `ProductSummaryResponse`, `ProductDetailResponse`, `ActiveDealResponse`, `MeResponse`. `src/api/generated/msw.gen.ts` exports `<operationId>Mock` handlers and `getAllMocks`. `src/api/generated/client.gen.ts` exports `client`.
 
-- [ ] Step 1: `pnpm add -D @hey-api/openapi-ts@0.99.0 msw@2.15.0`
-- [ ] Step 2: `frontend/openapi-ts.config.ts` (verified: https://heyapi.dev/openapi-ts/configuration , https://heyapi.dev/openapi-ts/clients/fetch , https://heyapi.dev/openapi-ts/plugins/valibot , https://heyapi.dev/openapi-ts/plugins/tanstack-query , https://heyapi.dev/openapi-ts/plugins/msw)
+- [x] Step 1: `pnpm add -D @hey-api/openapi-ts@0.99.0 msw@2.15.0`
+- [x] Step 2: `frontend/openapi-ts.config.ts` (verified: https://heyapi.dev/openapi-ts/configuration , https://heyapi.dev/openapi-ts/clients/fetch , https://heyapi.dev/openapi-ts/plugins/valibot , https://heyapi.dev/openapi-ts/plugins/tanstack-query , https://heyapi.dev/openapi-ts/plugins/msw)
 
 ```ts
 import { defineConfig } from '@hey-api/openapi-ts'
@@ -491,7 +491,7 @@ export default defineConfig({
 
 `definitions: true` stays on because response schemas reference component schemas; the valibot page does not state that responses work with definitions off, so this is the safe setting (see §12.8).
 
-- [ ] Step 3: `frontend/src/api/hey-api.ts`
+- [x] Step 3: `frontend/src/api/hey-api.ts`
 
 ```ts
 import type { CreateClientConfig } from './generated/client.gen'
@@ -505,17 +505,17 @@ export const createClientConfig: CreateClientConfig = (config) => ({
 })
 ```
 
-- [ ] Step 4: `package.json` scripts: `"gen:api": "openapi-ts"`, `"prepare": "openapi-ts"`, and change `"build"` to `"pnpm gen:api && vite build"`.
-- [ ] Step 5: Run the task-row verification. Confirm `git status` shows nothing under `src/api/generated`.
-- [ ] Step 6: `git add frontend/openapi-ts.config.ts frontend/src/api/hey-api.ts frontend/package.json frontend/pnpm-lock.yaml && git commit -m "feat(frontend): generate api client from contracts/openapi.json at install time"`.
+- [x] Step 4: `package.json` scripts: `"gen:api": "openapi-ts"`, `"prepare": "openapi-ts"`, and change `"build"` to `"pnpm gen:api && vite build"`.
+- [x] Step 5: Run the task-row verification. Confirm `git status` shows nothing under `src/api/generated`.
+- [x] Step 6: `git add frontend/openapi-ts.config.ts frontend/src/api/hey-api.ts frontend/package.json frontend/pnpm-lock.yaml && git commit -m "feat(frontend): generate api client from contracts/openapi.json at install time"`.
 
 ### T1-07: Envelope unwrap, error type, 401 interceptor, QueryClient
 
 **Files:** Create `frontend/src/api/envelope.ts`, `frontend/src/api/envelope.test.ts`, `frontend/src/api/client.ts`, `frontend/src/api/query-client.ts` (replace the T1-05 stub).
 
-**Interfaces produced:** `unwrapResult<T>(envelope: ResultEnvelope<T>): T`; `class ApiError extends Error { code: string; status: number; traceId?: string }`; `queryClient: QueryClient`; `installAuthInterceptor(client, queryClient)`.
+**Interfaces produced:** `unwrapResult<T>(envelope: ResultEnvelope<T>): T`; `class ApiError extends Error { code: string; status: number; traceId?: string }`; `queryClient: QueryClient`; `installAuthInterceptor(queryClient)`.
 
-- [ ] Step 1: Failing test `frontend/src/api/envelope.test.ts`
+- [x] Step 1: Failing test `frontend/src/api/envelope.test.ts`
 
 ```ts
 import { describe, expect, it } from 'vitest'
@@ -539,8 +539,8 @@ describe('unwrapResult', () => {
 })
 ```
 
-- [ ] Step 2: `pnpm vitest run src/api` → FAIL (module missing).
-- [ ] Step 3: `frontend/src/api/envelope.ts`
+- [x] Step 2: `pnpm vitest run src/api` → FAIL (module missing).
+- [x] Step 3: `frontend/src/api/envelope.ts`
 
 ```ts
 // One place that knows the backend Result<T> envelope. Generated types stay envelope-shaped;
@@ -586,7 +586,7 @@ export function unwrapResult<T>(envelope: ResultEnvelope<T>, opts: { allowVoid?:
 }
 ```
 
-- [ ] Step 4: `frontend/src/api/client.ts` (interceptor signature verified: `client.interceptors.response.use((response, request, options) => ...)`, https://heyapi.dev/openapi-ts/clients/fetch)
+- [x] Step 4: `frontend/src/api/client.ts` (interceptor signature verified: `client.interceptors.response.use((response, request, options) => ...)`, https://heyapi.dev/openapi-ts/clients/fetch)
 
 ```ts
 import type { QueryClient } from '@tanstack/react-query'
@@ -621,7 +621,7 @@ export function installAuthInterceptor(queryClient: QueryClient) {
 export { client }
 ```
 
-- [ ] Step 5: `frontend/src/api/query-client.ts`
+- [x] Step 5: `frontend/src/api/query-client.ts`
 
 ```ts
 import { QueryClient } from '@tanstack/react-query'
@@ -641,15 +641,15 @@ export const queryClient = new QueryClient({
 installAuthInterceptor(queryClient)
 ```
 
-- [ ] Step 6: `pnpm vitest run src/api` → PASS.
-- [ ] Step 7: `git add frontend/src/api && git commit -m "feat(frontend): result envelope unwrap, api error, 401 interceptor, query client defaults"`.
+- [x] Step 6: `pnpm vitest run src/api` → PASS.
+- [x] Step 7: `git add frontend/src/api && git commit -m "feat(frontend): result envelope unwrap, api error, 401 interceptor, query client defaults"`.
 
 ### T1-08: Quality toolchain and `pnpm check`
 
 **Files:** Create `frontend/.oxlintrc.json`, `frontend/.oxfmtrc.json`, `frontend/knip.json`, `frontend/vitest.config.ts`, `frontend/src/test/setup.ts`, `frontend/src/test/msw.ts`, root `lefthook.yml`. Modify `frontend/package.json`.
 
-- [ ] Step 1: `pnpm add -D oxlint@1.83.0 oxlint-tsgolint@7.0.2001 oxfmt@0.68.0 knip@6.35.1 vitest@5.0.1 @vitest/coverage-v8@5.0.1 @testing-library/react@16.3.3 @testing-library/jest-dom@7.0.1 @testing-library/user-event@14.6.7 happy-dom@20.14.5 lefthook@2.1.14`
-- [ ] Step 2: `frontend/.oxlintrc.json` (schema verified: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html ; React Compiler rules are native but off by default, https://oxc.rs/docs/guide/usage/linter/plugins)
+- [x] Step 1: `pnpm add -D oxlint@1.83.0 oxlint-tsgolint@7.0.2001 oxfmt@0.68.0 knip@6.35.1 vitest@5.0.1 @vitest/coverage-v8@5.0.1 @testing-library/react@16.3.3 @testing-library/jest-dom@7.0.1 @testing-library/user-event@14.6.7 happy-dom@20.14.5 lefthook@2.1.14`
+- [x] Step 2: `frontend/.oxlintrc.json` (schema verified: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html ; React Compiler rules are native but off by default, https://oxc.rs/docs/guide/usage/linter/plugins)
 
 ```json
 {
@@ -676,7 +676,7 @@ installAuthInterceptor(queryClient)
 }
 ```
 
-- [ ] Step 3: `frontend/.oxfmtrc.json` (https://oxc.rs/docs/guide/usage/formatter/config.html)
+- [x] Step 3: `frontend/.oxfmtrc.json` (https://oxc.rs/docs/guide/usage/formatter/config.html)
 
 ```json
 {
@@ -687,7 +687,7 @@ installAuthInterceptor(queryClient)
 }
 ```
 
-- [ ] Step 4: `frontend/knip.json` (https://knip.dev/reference/configuration ; prefer `entry`/`project` over `ignore`)
+- [x] Step 4: `frontend/knip.json` (https://knip.dev/reference/configuration ; prefer `entry`/`project` over `ignore`)
 
 ```json
 {
@@ -698,7 +698,7 @@ installAuthInterceptor(queryClient)
 }
 ```
 
-- [ ] Step 5: `frontend/vitest.config.ts`
+- [x] Step 5: `frontend/vitest.config.ts`
 
 ```ts
 import { fileURLToPath, URL } from 'node:url'
@@ -716,7 +716,7 @@ export default defineConfig({
 })
 ```
 
-- [ ] Step 6: `frontend/src/test/msw.ts` and `frontend/src/test/setup.ts` (MSW plugin output names verified at https://heyapi.dev/openapi-ts/plugins/msw)
+- [x] Step 6: `frontend/src/test/msw.ts` and `frontend/src/test/setup.ts` (MSW plugin output names verified at https://heyapi.dev/openapi-ts/plugins/msw)
 
 ```ts
 // src/test/msw.ts
@@ -739,7 +739,7 @@ afterAll(() => server.close())
 
 The "dev flag" for MSW in the browser is `?msw=1` on the URL read in `main.tsx` (not an env var): when present, `await import('./test/browser-msw')` starts `setupWorker(...getAllMocks())` before rendering. Add that file in T2-01 when the first real query exists.
 
-- [ ] Step 7: Root `lefthook.yml` (https://lefthook.dev/configuration/root/ , https://lefthook.dev/configuration/stage_fixed/)
+- [x] Step 7: Root `lefthook.yml` (https://lefthook.dev/configuration/root/ , https://lefthook.dev/configuration/stage_fixed/)
 
 ```yaml
 pre-commit:
@@ -764,8 +764,8 @@ pre-commit:
 
 Add `"postinstall": "lefthook install"` is NOT used (it would run on CI); instead document `pnpm exec lefthook install` in `frontend/AGENTS.md` and run it in the SessionStart hook (T1-10).
 
-- [ ] Step 8: Scripts (final block in §5). Run `pnpm check`; fix findings until exit 0.
-- [ ] Step 9: `git add -A frontend lefthook.yml && git commit -m "chore(frontend): oxlint, oxfmt, knip, vitest, lefthook and the pnpm check gate"`.
+- [x] Step 8: Scripts (final block in §5). Run `pnpm check`; fix findings until exit 0.
+- [x] Step 9: `git add -A frontend lefthook.yml && git commit -m "chore(frontend): oxlint, oxfmt, knip, vitest, lefthook and the pnpm check gate"`.
 
 ### T1-09: TanStack lint plugins spike
 
@@ -813,7 +813,7 @@ and set `"lint": "oxlint --type-aware && eslint ."`. Remove `jsPlugins` from `.o
 
 **Files:** Create `frontend/src/components/Header.tsx`, `frontend/src/components/Header.test.tsx`.
 
-- [ ] Step 1: Failing test
+- [x] Step 1: Failing test
 
 ```tsx
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -841,8 +841,8 @@ describe('Header', () => {
 })
 ```
 
-- [ ] Step 2: `pnpm vitest run src/components/Header.test.tsx` → FAIL.
-- [ ] Step 3: `frontend/src/components/Header.tsx` (session hook lands in T2-04; for now the header queries `meOptions` directly)
+- [x] Step 2: `pnpm vitest run src/components/Header.test.tsx` → FAIL.
+- [x] Step 3: `frontend/src/components/Header.tsx` (session hook lands in T2-04; for now the header queries `meOptions` directly)
 
 ```tsx
 import { useQuery } from '@tanstack/react-query'
@@ -868,8 +868,8 @@ export function Header() {
 
 If `Button` in HeroUI 3.2.5 does not accept `as="a"`, use a plain `<a className="...">` styled with HeroUI's `button` class from the HeroUI Button docs. Check the docs before guessing.
 
-- [ ] Step 4: PASS, then mount `<Header />` in `__root.tsx` above `<Outlet />`.
-- [ ] Step 5: `git add frontend/src/components frontend/src/routes/__root.tsx && git commit -m "feat(frontend): header with login link and first component test over generated msw handlers"`.
+- [x] Step 4: PASS, then mount `<Header />` in `__root.tsx` above `<Outlet />`.
+- [x] Step 5: `git add frontend/src/components frontend/src/routes/__root.tsx && git commit -m "feat(frontend): header with login link and first component test over generated msw handlers"`.
 
 ### T1-12: `.github` changes (PR-E, @PPsyrius)
 
@@ -2229,6 +2229,17 @@ None are applied silently; each is planned as stated below and needs the owner's
 16. **`routeTree.gen.ts` is committed.** The blueprint does not decide this. TanStack docs treat it as generated read-only output; committing it keeps `tsc --noEmit` (step 2 of `pnpm check`) working on a fresh clone before Vite runs. Excluded from oxlint, oxfmt, knip. Recorded in ADR 0001 consequences.
 17. **Sprint log is repo-wide and the evidence skill is named `agile-evidence-capture`.** Blueprint and review D9: a frontend-only `frontend/docs/sprint-2-log.md` and a `sprint-evidence` skill. Decided 2026-09-16 (team lead): one log per sprint for the whole team at `docs/agile/sprint-02/log.md`, an NFR register at `docs/quality/nfr-register.md`, ADRs kept frontend-only in `frontend/docs/adr/`, and a repo-wide `agile-evidence-capture` skill with an advisory commit hook. References in this plan were redirected; T2-10 step 3 is already done by that change set. Recorded in ADR 0008 (Accepted). Evidence: `docs/agile/README.md`, `.claude/skills/agile-evidence-capture/SKILL.md`.
 18. **`tsc --noEmit` is red between T1-05 and T1-11** (found 2026-09-16 while executing T1-05). The T1-05 `tsconfig.json` lists `vitest/globals` and `@testing-library/jest-dom/vitest` in `types`, but `vitest` arrives in T1-08 and `@testing-library/jest-dom` in T1-11, so `pnpm exec tsc --noEmit` on the T1-05 commit fails with two `TS2688` "cannot find type definition file" errors. `vite build` does not type-check, so the T1-05 task-row verification is unaffected. Kept as written: the file is final for T1-11 and the gate that runs `tsc` (`pnpm check`) does not exist until T1-08, which installs `vitest`; T1-11 must run `tsc --noEmit` and confirm it is green before PR-C is opened. Not a settled-decision deviation; informational.
+19. **`@hey-api/openapi-ts` pinned to a prerelease, not `0.99.0`.** T1-06's brief pin (`0.99.0`) uses the classic TypeScript compiler API, which `typescript@7.0.2` (the project's own pin) no longer ships — a confirmed, open upstream bug (hey-api/hey-api#4235). Repinned to the exact `next` snapshot `0.0.0-next-20260824173136`, which drops the `typescript` dependency entirely; `openapi-ts.config.ts` needed zero option-name changes. Commit `760d4d8`. ADR 0003 carries the addendum.
+20. **Generated files get a `// @ts-nocheck` banner.** `tsc --noEmit` found 29 `exactOptionalPropertyTypes` errors inside `src/api/generated/**` (the nightly hey-api output, not project code). Rather than relax `exactOptionalPropertyTypes` project-wide, `frontend/scripts/ts-nocheck-generated.mjs` stamps every generated `.ts` file with `// @ts-nocheck` as part of `gen:api`, extending the "generated = library code" treatment oxlint/oxfmt/knip already apply. Commit `f811662`. ADR 0003 carries the addendum.
+21. **`msw.gen.ts` exports `createMswHandlers().all()`, not `getAllMocks`.** The brief's `getAllMocks` name does not exist in this generator's output; the plugin's aggregate factory is `createMswHandlers(config?)` returning `{ all(options?), pick }`. `src/test/msw.ts` (T1-08, commit `c59dcf7`) uses `setupServer(...createMswHandlers().all())`. Every reference to `getAllMocks` elsewhere in this plan (e.g. §4 T1-08 step 6, §13) is stale against the real generator output.
+22. **oxfmt and lefthook exclude `docs/**` and `README.md`.** A first write-mode `oxfmt` run reformatted `frontend/docs/*.md` (1130 lines in `plan.md` alone), `docs/globals.css` and `frontend/README.md`; hand-authored prose is not a formatter target. `.oxfmtrc.json`'s `ignorePatterns` and `lefthook.yml`'s `frontend-format.exclude` both gained `"docs/**"` and `"README.md"`. Commit `c59dcf7`.
+23. **Two `.oxlintrc.json` rule overrides beyond the brief.** `react/react-in-jsx-scope` is `"off"` — it has no `jsxRuntime` setting and false-positives under the project's automatic JSX transform (`tsconfig.json` `"jsx": "react-jsx"`). `import/no-unassigned-import` stays `"error"` but with `{ "allow": ["**/*.css", "@testing-library/jest-dom/vitest"] }`, exempting the CSS side-effect import and the jest-dom matcher-extension import rather than turning the rule off. Commits `c59dcf7`, `aa7b2a6`. ADR 0006 carries the addendum.
+24. **T1-08's `scripts` block omits `"e2e"`.** T1-13 installs `@playwright/test` and adds the script itself; including it earlier would leave knip flagging an unlisted binary. No code change needed when T1-13 lands.
+25. **`knip.json` `ignoreDependencies` carries not-yet-consumed packages.** `@heroui/react` and `@testing-library/react` were added in T1-08 (installed by the plan, unused until later) and removed again once T1-11 consumed both (commit `828d48b`). `@tanstack/react-form` and `@testing-library/user-event` remain in `ignoreDependencies` as of T1-11; T2-03 and the first test that uses `user-event` are expected to remove them.
+26. **`OK_CODE` is `'COMMON_200_000'`, not `'0'`, and is module-private.** Confirmed against `backend/blocbuy-domain/.../CommonErrorCode.java` (`SUCCESS("COMMON_200_000", ...)`); `envelope.ts` and `envelope.test.ts` use the real value. `OK_CODE` is a plain `const`, not exported (knip flags unused exports); `client.ts` also drops the brief's `export { client };` for the same reason — nothing consumes it yet. Commit `48805af`. ADR 0009 carries the addendum.
+27. **Header's login control is HeroUI `Link` + `buttonVariants`, not `Button as="a"`.** HeroUI 3.2.5's `Button` wraps `react-aria-components`' `Button` primitive, which has no `href`/`as` prop, confirmed against the installed `.d.ts` — one rung past the brief's own documented plain-`<a>` fallback. The Header test wraps the component in a minimal memory-history `RouterProvider`, since `Link` (TanStack Router) throws outside one. Commit `828d48b`.
+28. **`frontend/pnpm-workspace.yaml` (`allowBuilds: { msw: true }`) is committed.** Not in the brief's file list for T1-06, but required: pnpm 12 refuses `msw`'s postinstall script otherwise and `pnpm install --frozen-lockfile` fails non-interactively (would break CI). `lefthook`'s postinstall is approved the same way in T1-08. Commit `760d4d8`.
+29. **`tsconfig.json`'s `allowImportingTsExtensions` was added, then removed.** T1-08 added it to fix `TS5097` on the generated `client.gen.ts`'s `.ts`-extension import; once T1-08's fix round 2 confirmed `// @ts-nocheck` (note 20) suppresses that diagnostic too, the flag was removed as not load-bearing (`tsc --noEmit` stayed green). Commit `aa7b2a6`.
 
 ---
 

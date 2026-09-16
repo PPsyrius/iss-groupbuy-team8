@@ -136,3 +136,86 @@ Say what was verified and what was not.
   T1-05 scope, noted for the header task (T2-04).
 - Next: T1-06 hey-api client generation (separate session, branch to be cherry-picked onto
   `feature/frontend-scaffold`).
+
+## 2026-09-16 - @limjiechao - T1-06 generated API client (hey-api openapi-ts) (#44)
+
+- Kind: feature
+- Changed: `frontend/openapi-ts.config.ts`, `frontend/src/api/hey-api.ts`, `frontend/package.json`
+  (`gen:api`/`prepare` scripts, `build` → `pnpm gen:api && vite build`, `@hey-api/openapi-ts` and
+  `msw` exact pins), `frontend/pnpm-lock.yaml`, `frontend/pnpm-workspace.yaml` (new,
+  `allowBuilds.msw: true`).
+- Verified: `pnpm gen:api` produces 7 files under `src/api/generated` (gitignored, confirmed with
+  `git check-ignore`); the task-row command passes; `pnpm build` succeeds. All on commit `760d4d8`.
+- Decisions: `@hey-api/openapi-ts` repinned to the exact prerelease `0.0.0-next-20260824173136`,
+  not the brief's `0.99.0` — `0.99.0` uses the classic TypeScript compiler API, which
+  `typescript@7.0.2` no longer ships (upstream hey-api/hey-api#4235, confirmed open);
+  `frontend/pnpm-workspace.yaml` committed so `pnpm install --frozen-lockfile` doesn't fail
+  non-interactively on msw's postinstall. ADR 0003 addendum; plan §12 notes 19, 28.
+- Problems: attempt 1 with the brief's literal `0.99.0` pin crashed `pnpm gen:api` outright; three
+  pnpm-level workarounds (`overrides`, `packageExtensions`, `patch`) failed to isolate a TS6 peer
+  for the tool before the prerelease repin resolved it. `msw.gen.ts` exports
+  `createMswHandlers().all()`, not the brief's `getAllMocks` — flagged forward to T1-07/T1-08/T1-11.
+- Next: T1-08 quality toolchain and the `pnpm check` gate.
+
+## 2026-09-16 - @limjiechao - T1-08 quality toolchain and the `pnpm check` gate (#44)
+
+- Kind: feature, nfr (NFR-18 maintainability: the `pnpm check` gate; row added)
+- Changed: `frontend/.oxlintrc.json`, `frontend/.oxfmtrc.json`, `frontend/knip.json`,
+  `frontend/vitest.config.ts`, `frontend/src/test/{setup,msw}.ts`,
+  `frontend/scripts/ts-nocheck-generated.mjs`, root `lefthook.yml`, `frontend/package.json`
+  (scripts and devDependencies), `frontend/tsconfig.json`.
+- Verified: `pnpm check` (`gen:api` → `tsc --noEmit` → `oxlint --type-aware` → `oxfmt --check` →
+  `vitest run` → `knip`) exits 0 at `aa7b2a6`; `pnpm build` passes; each step also verified
+  standalone across three commits.
+- Decisions: kept `exactOptionalPropertyTypes: true` project-wide and post-processed
+  `src/api/generated/**` with `// @ts-nocheck` instead of relaxing the flag (ADR 0003 addendum);
+  `react/react-in-jsx-scope` off (obsolete under the automatic JSX runtime);
+  `import/no-unassigned-import` kept at error with an allow-list for `**/*.css` and
+  `@testing-library/jest-dom/vitest` (ADR 0006 addendum); oxfmt and lefthook exclude `docs/**` and
+  `README.md`; the `e2e` script is deferred to T1-13; knip `ignoreDependencies` temporarily carries
+  `@tanstack/react-form` and `@testing-library/user-event`; `allowImportingTsExtensions` was tried
+  then removed as unnecessary. Plan §12 notes 20, 22-25, 29.
+- Problems: the first `oxfmt` write run reformatted `frontend/docs/*.md` (1130 lines in
+  `plan.md`), `docs/globals.css` and `frontend/README.md`; restored and excluded prose from the
+  formatter. First commit (`c59dcf7`) left `tsc --noEmit` red on 29 pre-existing
+  `exactOptionalPropertyTypes` errors in `src/api/generated/**`; fixed in `f811662`. Task review
+  found two lint-rule choices needing justification, not weakening; fixed in `aa7b2a6`.
+- Next: T1-07 envelope unwrap, `ApiError`, 401 interceptor, `QueryClient` defaults.
+
+## 2026-09-16 - @limjiechao - T1-07 result envelope unwrap, ApiError, 401 interceptor, QueryClient defaults (#44, #42)
+
+- Kind: feature
+- Changed: `frontend/src/api/envelope.ts`, `frontend/src/api/envelope.test.ts`,
+  `frontend/src/api/client.ts`, `frontend/src/api/query-client.ts` (replaces the T1-05 stub).
+- Verified: `pnpm vitest run src/api` RED (module missing) → GREEN 3/3; `pnpm check` exits 0 at
+  `48805af`; `pnpm build` passes.
+- Decisions: `OK_CODE = 'COMMON_200_000'` (backend `CommonErrorCode.SUCCESS`), not the brief's
+  `'0'` (ADR 0009 addendum); `OK_CODE` kept module-private and `client.ts` drops the brief's
+  `export { client }` — both were unused exports per knip, nothing consumes them yet. Plan §12
+  note 26; plan's T1-07 "Interfaces produced" line corrected to `installAuthInterceptor(queryClient)`
+  to match the brief's own step-4 code, which never took `client` as a parameter.
+- Problems: none blocking; three narrow oxlint-driven rewrites (an unsafe-cast avoidance in
+  `unwrapResult` and in the interceptor's response-body parsing, a conditional-expect restructure
+  in the test) with no behavior change, see the task report for detail.
+- Next: T1-11 first component test (Header).
+
+## 2026-09-16 - @limjiechao - T1-11 first component test: Header (#42)
+
+- Kind: feature
+- Changed: `frontend/src/components/Header.tsx`, `frontend/src/components/Header.test.tsx`,
+  `frontend/src/routes/__root.tsx` (mounts `<Header />` above `<Outlet />`), `frontend/knip.json`
+  (`ignoreDependencies` trimmed of `@heroui/react`, `@testing-library/react`).
+- Verified: `pnpm vitest run src/components/Header.test.tsx` RED (missing module, then a
+  router-context error) → GREEN 1/1; `pnpm check` exits 0 at `828d48b`, vitest 4/4 overall (3
+  envelope tests, 1 Header test); `pnpm build` passes. This closes the `tsc` TS2688 problem
+  recorded in the T1-05 log entry above.
+- Decisions: the login control is HeroUI's `Link` primitive with
+  `buttonVariants({ variant: "primary" })`, not `Button as="a"` — `Button` wraps
+  react-aria-components' `Button`, which has no `href`/`as` (confirmed against the installed
+  `.d.ts`); the test wraps a minimal memory-history `RouterProvider` since `Link` (TanStack
+  Router) throws outside one. Plan §12 note 27.
+- Problems: none blocking. Not verified: the interceptor's `removeQueries` on the actively
+  observed `me` query can cause one extra `/auth/me` request per later re-render after a 401
+  (bounded, not a loop); deferred to T2-04.
+- Next: PR-C (T1-06..T1-11, plus T1-09/T1-10) not yet opened; branch `feature/frontend-t1-06-11`
+  unpushed.
