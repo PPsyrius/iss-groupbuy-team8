@@ -20,9 +20,10 @@ target (T1-08, commits `c59dcf7`, `aa7b2a6`).
 
 ## Consequences
 
-2026-09-17 (T1-09, the timeboxed TanStack lint spike): the oxlint **JS-plugins** path won; no
-ESLint is installed and the plan's step-2 fallback (`eslint` 10.10.0 + `eslint-plugin-oxlint`
-1.83.0 + `frontend/eslint.config.js`) was not needed. oxlint 1.83.0 loads
+2026-09-17 (T1-09, the timeboxed TanStack lint spike): the oxlint **JS-plugins** path won, so the
+plan's step-2 fallback (`eslint` 10.10.0 + `eslint-plugin-oxlint` 1.83.0 +
+`frontend/eslint.config.js`) was not needed and no ESLint is configured or invoked anywhere in the
+gate. oxlint 1.83.0 loads
 `@tanstack/eslint-plugin-query` 5.102.8 and `@tanstack/eslint-plugin-router` 1.162.0 through the
 `jsPlugins` key of `.oxlintrc.json`, under Node 24, with no flag, no parser and no error text —
 the four rules named in the plan (`@tanstack/query/exhaustive-deps`,
@@ -36,8 +37,13 @@ in your queryKey: id`, and a mis-ordered `createFileRoute` object fails with
 
 Costs. The gate keeps **one** linter: `pnpm lint` stays `oxlint --type-aware`, `pnpm check` keeps
 its six steps, and there is no second config file, no second ignore list to keep in sync with
-`src/api/generated/**` and `src/routeTree.gen.ts`, and no `eslint`/`eslint-plugin-oxlint`/parser
-dependencies. The two plugins are devDependencies referenced only from `.oxlintrc.json`; knip
+`src/api/generated/**` and `src/routeTree.gen.ts`, and no `eslint-plugin-oxlint` and no
+`@typescript-eslint/parser`. One caveat, stated so nobody is surprised by the lockfile: both
+TanStack plugins declare `eslint` as a peer dependency, and pnpm 12 auto-installs peers, so
+`eslint@10.10.0` lands in `node_modules/.pnpm` (and in `pnpm-lock.yaml`) as a transitive package.
+It is not a direct dependency, has no config file, is not on `PATH` as a project script, and is
+never executed — oxlint hosts the rules itself. The two plugins are devDependencies referenced
+only from `.oxlintrc.json`; knip
 6.35.1 resolves them from that config and does not report them unused, so `knip.json`
 `ignoreDependencies` is untouched. Runtime cost is a Node runtime spun up alongside the Rust
 linter to host the plugin rules: on this tree `oxlint --type-aware` measured 0.246 s with the two

@@ -245,3 +245,50 @@ Say what was verified and what was not.
   `sourcemap: true` publishes full source maps (both pre-existing from T1-05); needs a plan
   decision on an `import.meta.env.DEV` carve-out (dead-code elimination only) or a lazy import,
   before T1-14.
+
+## 2026-09-17 - @limjiechao - T1-09 TanStack query/router lint rules spike (#44)
+
+- Kind: chore (tooling), nfr (maintainability, NFR-18)
+- Changed: `6627430` (`frontend/.oxlintrc.json` gains `jsPlugins` and the four `@tanstack/*` rules,
+  `frontend/package.json` + `frontend/pnpm-lock.yaml` add `@tanstack/eslint-plugin-query` 5.102.8
+  and `@tanstack/eslint-plugin-router` 1.162.0 as exact devDependency pins,
+  `frontend/docs/adr/0006-lint-format-toolchain.md` Consequences, `frontend/docs/plan.md` T1-09
+  ticks and §12 note 30); this entry plus the NFR-18 evidence cell in
+  `docs/quality/nfr-register.md`. No new NFR row: the gate this touches is already NFR-18, and
+  T1-09 only widens its lint step.
+- Verified: the plan's own task-row fixture does not work as written (see Decisions), so the
+  substituted fixture was used: `cd frontend && printf 'import { useQuery } from
+  "@tanstack/react-query"\nexport const useX = (id: number) => useQuery({ queryKey: ["x"],
+  queryFn: () => id })\n' > src/lint-fixture.ts; pnpm lint; rc=$?; rm src/lint-fixture.ts; test
+  $rc -ne 0` ⇒ `pnpm lint` exits 1 with `src/lint-fixture.ts:2:46: error
+  @tanstack/query(exhaustive-deps): The following dependencies are missing in your queryKey: id`,
+  so the `test` passes. The router half was checked the same way with a mis-ordered
+  `createFileRoute` object (`component`, then `loader`, then `beforeLoad`) ⇒ `error
+  @tanstack/router(create-route-property-order): Invalid order of properties for createFileRoute.`
+  `pnpm check` (`gen:api` → `tsc --noEmit` → `oxlint --type-aware` →
+  `oxfmt --check` → `vitest run` → `knip`) exits 0 at `6627430`; vitest 3 files / 7 tests passed;
+  `pnpm lint` on the real sources is clean.
+- Decisions: the **oxlint JS-plugins** path won, so step 2 of the plan (a minimal ESLint carrying
+  `eslint` 10.10.0 + `eslint-plugin-oxlint` 1.83.0 + `frontend/eslint.config.js`) was not needed
+  and no ESLint is configured or invoked; `lint` stays `oxlint --type-aware` and the gate keeps
+  one linter. Caveat, found while reviewing the lockfile: both plugins declare `eslint` as a peer
+  and pnpm 12 auto-installs peers, so `eslint@10.10.0` does appear in `frontend/pnpm-lock.yaml`
+  and `node_modules/.pnpm` as a transitive package — never a direct dependency, never run.
+  `6627430`'s commit message says "no ESLint enters the repo", which overstates it; ADR 0006
+  Consequences carries the precise version.
+  oxlint 1.83.0 loaded both plugins from `.oxlintrc.json`'s `jsPlugins` under Node 24 with no
+  flag, no parser and no error text on the first attempt — well inside the 2 h timebox. Rule ids
+  are namespaced `@tanstack/query/*` and `@tanstack/router/*` exactly as the plan wrote them
+  (oxlint drops the package name's `eslint-plugin-` segment). knip 6.35.1 resolves both plugins
+  from `.oxlintrc.json` and does **not** report them unused, so `knip.json` `ignoreDependencies`
+  was left alone. Measured cost of hosting the JS rules: `oxlint --type-aware` 0.246 s without the
+  plugins vs 0.310 s with them. Recorded as plan §12 note 30 (the task-row fixture) and in ADR
+  0006 Consequences (path, evidence, cost, and the alpha/no-semver risk that `jsPlugins` carries).
+- Problems: the task-row fixture in plan §3/§4 can never satisfy its own acceptance criterion —
+  `export const x = () => useQuery({ queryFn: () => 1 })` does fail `pnpm lint`, but on
+  `react-hooks(rules-of-hooks)` (`x` is neither a component nor a hook name), not on a
+  `@tanstack/query/*` rule; rename it to `useX` and lint goes green, because
+  `@tanstack/query/exhaustive-deps` only fires when the `queryFn` closes over something the
+  `queryKey` omits, and `() => 1` closes over nothing. Substituted as above and written up as §12
+  note 30, so a future reader does not conclude the plugins failed to load.
+- Next: T1-10 agent configuration; PR-C not yet opened.
