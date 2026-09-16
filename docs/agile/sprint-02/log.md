@@ -460,4 +460,60 @@ Say what was verified and what was not.
   undocumented (plan §12.4): "Check for updates" after the first merge. PR-E, review and the
   branch-protection ask (step 5) are the user's and @PPsyrius's; the five `frontend-dev` variables
   (runbook §17) must exist before `ENABLE_S3_DEPLOY=true`.
-- Next: user opens PR-E; T1-14 first deploy once A3/A4 close; T1-15 ADR bodies (in flight).
+- Next: user opens PR-E; T1-14 first deploy once A3/A4 close; T1-15 ADR bodies (next entry, same
+  branch).
+
+## 2026-09-17 - @limjiechao - T1-15 ADR 0001–0013 bodies and blocker table (#93)
+
+- Kind: decision, ops
+- Changed: `frontend/docs/adr/0001..0013-*.md` (Context, Decision, Consequences written; Status
+  `Accepted`; 0008 and 0012 unchanged), `frontend/docs/adr/README.md` (Status column),
+  `frontend/docs/plan.md` (T1-15 steps 1–4 ticked, §12 note 34), this log.
+- Verified: `grep -L '^## Decision' frontend/docs/adr/0*.md | wc -l` prints 0; `wc -l
+  frontend/docs/adr/0*.md` shows every file under 60 lines; an `awk` pass counts 13 files whose
+  first non-empty line after `## Status` is exactly `Accepted` (the command is in plan §12 note 34).
+  The apply script that produced this commit runs all three and refuses to commit unless they hold,
+  and prints the `wc -l` table. The plan's literal second command, `grep -l 'Status: Accepted'
+  frontend/docs/adr/0*.md | wc -l`, was adjusted: the Nygard layout puts `## Status` and `Accepted`
+  on separate lines, so that grep prints 0 even for the two ADRs that were already Accepted. Not
+  verified: nothing was run against AWS, the backend or `pnpm`; every fact in the bodies is cited
+  to plan §9/§12, the entries above, the config files, `contracts/openapi.json`,
+  `AuthController.java`, `CommonErrorCode.java` and `application*.yml`, all read at `beffa0e`.
+- Decisions: all thirteen ADRs are Accepted (0008 since 2026-09-16, 0012 since T1-10). Bodies that
+  record a fact changed since the plan's §9 sentence: 0001 (`routeTree.gen.ts` committed; T2-09
+  addendum slot open), 0002 (the 401 interceptor uses `setQueryData`, not `removeQueries`; B1 and
+  B3 still open), 0003 (hey-api pinned to the `next` snapshot, `// @ts-nocheck` post-processing,
+  `createMswHandlers().all()`), 0004 (devtools-in-bundle and source-map question parked before
+  T1-14), 0006 (oxlint `jsPlugins` won, no ESLint, transitive `eslint` in the lockfile), 0009
+  (`OK_CODE` is `COMMON_200_000` and exported since `2d040a2`), 0010 (`@rolldown/plugin-babel` +
+  `reactCompilerPreset()` carrier; T2-08 addendum slot open), 0011 (`pnpm e2e` outside `pnpm
+  check`; dev run owed), 0013 (Dependabot npm entry lands in T1-12; pnpm 12 lockfile parsing
+  unverified). 0005 and 0007 match §9 as written.
+- Problems: the implementing agent was pinned to the T1-12 worktree by the worktree-isolation hook
+  and could neither run a shell nor write into `feature/frontend-t1-15`; it authored the files in
+  the job scratch directory and the orchestrating session applied them (copy, plan edit, the three
+  checks above, `git add -A`, `git commit -F`) as a second commit on `feature/frontend-t1-12`,
+  stacked on T1-12 (`a300368`), so `feature/frontend-t1-15` and its worktree are redundant. The
+  orchestrating session re-checked the bodies' concrete claims against the tree before applying
+  (env grep empty, interceptor and envelope details, Vite/lint/test config, every version pin, 7
+  tests in 3 files) and re-ran `gh issue list --state all`: all twelve blockers open, as tabled.
+  Dev backend still down (T1-01 entry); changes nothing here.
+- Next: user opens PR-E from this branch; T1-14 first deploy after A3/A4; T2-08 addendum for 0010;
+  T2-09 addendum for 0001; T2-11 CSP addendum for 0002.
+
+Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 2026-09-17):
+
+| Id | Issue | Title (short) | Owner | State (2026-09-17) |
+|---|---|---|---|---|
+| B1 | #94 | OAuth callback 302 to `/auth/callback` | @l0sgAi | open |
+| B2 | #95 | Contract `blocbuyToken` as `apiKey in: cookie` | @l0sgAi | open |
+| B3 | #96 | `application-ec2.yml` cookie `secure: true` | @l0sgAi | open |
+| B4 | #97 | Enrich `/auth/me` with `nickname`, `avatarUrl` | @l0sgAi | open |
+| B5 | #98 | Confirm dev `GOOGLE_REDIRECT_URI` | @l0sgAi | open |
+| A1 | #99 | Attach SPA-fallback CloudFront Function | @l0sgAi, @PPsyrius | open |
+| A2 | #100 | Response-headers policy (HSTS, CSP) on dev | @l0sgAi, @PPsyrius | open |
+| A3 | #101 | `BlocBuyGitHubFrontendDeployDev` OIDC role | @l0sgAi, @PPsyrius | open |
+| A4 | #102 | `frontend-dev` environment and variables | @PPsyrius | open |
+| T2 | #103 | `read:project` access or weekly board screenshot | @PPsyrius | open |
+| T3 | #104 | Review `.github` changes for the frontend pipeline | @PPsyrius | open |
+| T4 | #105 | CODEOWNERS for frontend toolchain files | @PPsyrius | open |
