@@ -16,6 +16,7 @@ import com.blocbuy.common.exception.BizException;
 import com.blocbuy.identity.exception.IdentityErrorCode;
 import com.blocbuy.identity.repository.RoleRepository;
 import com.blocbuy.identity.service.OAuthLoginAppService;
+import com.blocbuy.identity.service.OAuthLoginAppService.GoogleAuthorizeUrl;
 import com.blocbuy.identity.service.OAuthLoginAppService.OAuthLoginResult;
 import com.blocbuy.identity.service.UserAppService;
 import com.blocbuy.identity.service.UserAppService.CurrentUser;
@@ -130,7 +131,61 @@ class AuthControllerTest {
                         header().string(
                                         HttpHeaders.LOCATION,
                                         FRONTEND + "/login?error=COMMON_400_001"));
+        mvc.perform(get(CALLBACK_PATH).param("code", " ").param("state", "x"))
+                .andExpect(status().isFound())
+                .andExpect(
+                        header().string(
+                                        HttpHeaders.LOCATION,
+                                        FRONTEND + "/login?error=COMMON_400_001"));
+        mvc.perform(get(CALLBACK_PATH).param("code", "c"))
+                .andExpect(status().isFound())
+                .andExpect(
+                        header().string(
+                                        HttpHeaders.LOCATION,
+                                        FRONTEND + "/login?error=COMMON_400_001"));
         verifyNoInteractions(oAuthLogin);
+    }
+
+    /** Provider error values other than access_denied map to the provider-failure code. */
+    @Test
+    void callbackProviderErrorRedirectsWithProviderErrorCode() throws Exception {
+        mvc.perform(get(CALLBACK_PATH).param("error", "server_error").param("state", "x"))
+                .andExpect(status().isFound())
+                .andExpect(
+                        header().string(
+                                        HttpHeaders.LOCATION,
+                                        FRONTEND + "/login?error=IDENTITY_502_001"));
+        verifyNoInteractions(oAuthLogin);
+    }
+
+    /**
+     * The authorize hop 302s to Google and sets the HttpOnly, SameSite=Lax state-binding cookie.
+     */
+    @Test
+    void authorizeRedirectsToGoogleAndSetsStateBindingCookie() throws Exception {
+        when(oAuthLogin.createGoogleAuthorizeUrl())
+                .thenReturn(
+                        new GoogleAuthorizeUrl(
+                                "https://accounts.google.com/o/oauth2/v2/auth?state=abc",
+                                "binding-123"));
+
+        MvcResult authorize =
+                mvc.perform(get("/api/v1/auth/oauth2/google"))
+                        .andExpect(status().isFound())
+                        .andExpect(
+                                header().string(
+                                                HttpHeaders.LOCATION,
+                                                "https://accounts.google.com/o/oauth2/v2/auth?state=abc"))
+                        .andReturn();
+
+        String setCookie = authorize.getResponse().getHeader(HttpHeaders.SET_COOKIE);
+        assertThat(setCookie)
+                .contains("blocbuy-oauth-state=binding-123")
+                .contains("HttpOnly")
+                .contains("SameSite=Lax")
+                .contains("Path=/api/v1/auth")
+                // local profile is plain HTTP (state-cookie-secure=false) — no Secure attribute
+                .doesNotContain("Secure");
     }
 
     @Test
