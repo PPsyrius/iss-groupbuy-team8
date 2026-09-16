@@ -219,3 +219,29 @@ Say what was verified and what was not.
   (bounded, not a loop); deferred to T2-04.
 - Next: PR-C (T1-06..T1-11, plus T1-09/T1-10) not yet opened; branch `feature/frontend-t1-06-11`
   unpushed.
+
+## 2026-09-17 - @limjiechao - Whole-branch review fixes for T1-06..T1-11 (#44, #42)
+
+- Kind: fix, test
+- Changed: `e735b6f` (lands the staged T1-06..T1-11 evidence: sprint log, NFR-18, ADR notes, plan
+  ticks), `6ad23a8` (`lefthook.yml` exclude globs made repo-root relative), `2d040a2`
+  (`frontend/src/api/client.ts` 401 handling, `frontend/src/api/client.test.ts`,
+  `frontend/src/components/Header.test.tsx` 200 case, `frontend/vitest.config.ts`,
+  `frontend/knip.json`).
+- Verified: `pnpm check` (`gen:api` → `tsc --noEmit` → `oxlint --type-aware` → `oxfmt --check` →
+  `vitest run` → `knip`) exits 0 at `2d040a2`; `vitest run` 3 files / 7 tests passed; `pnpm build`
+  passes. `lefthook run pre-commit` verified twice by hand: docs-only staged ⇒ `frontend-format`
+  skips (no files), exit 0; a real `frontend/*.ts` change staged ⇒ the file reaches
+  oxfmt/oxlint/tsc as before.
+- Decisions: on 401 the interceptor now `setQueryData(meQueryKey(), { code: OK_CODE, message:
+  'anonymous' })` instead of `removeQueries` — the observed `me` query stays settled (verified:
+  `state.data` survives the fetch's own subsequent error dispatch) instead of hanging pending and
+  refetching on every root re-render; never `invalidateQueries`/`resetQueries` there since the
+  `me` request's own 401 would loop. `OK_CODE` re-exported from `envelope.ts` for this consumer.
+  lefthook's `exclude` globs are matched against repo-root-relative paths even under a command's
+  `root:`, so `docs/**`/`README.md` etc. had to become `frontend/docs/**`/`frontend/README.md` to
+  actually filter files under `root: "frontend/"`.
+- Problems: parked, not fixed here — TanStack Query devtools ship in the production bundle and
+  `sourcemap: true` publishes full source maps (both pre-existing from T1-05); needs a plan
+  decision on an `import.meta.env.DEV` carve-out (dead-code elimination only) or a lazy import,
+  before T1-14.
