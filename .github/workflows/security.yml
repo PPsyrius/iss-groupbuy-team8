@@ -3,15 +3,12 @@
 name: security
 
 on:
+  # Production releases receive the full security gate before publication.
   push:
-    branches: [dev]
-    paths:
-      - "backend/**"
-      - "deployment/backend/**"
-      - "infra/terraform/**"
-      - "docker-compose.yaml"
-      - ".gitleaks.toml"
-      - ".github/workflows/**"
+    tags: ['v*']
+  # Merge queue gate: same security gates validate the speculative dev merge.
+  merge_group:
+    types: [checks_requested]
   pull_request:
     branches: [dev]
     paths:
@@ -27,7 +24,8 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Merge queue runs must never cancel each other.
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
 permissions:
   contents: read
@@ -68,8 +66,9 @@ jobs:
   workflow-lint:
     needs: detect-changes
     if: >-
-      github.event_name != 'pull_request' ||
-      needs.detect-changes.outputs.workflow == 'true'
+      (github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
+      needs.detect-changes.outputs.workflow == 'true' ||
+      (github.event_name != 'pull_request' && github.event_name != 'merge_group')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -85,8 +84,9 @@ jobs:
   deployment-bundle:
     needs: detect-changes
     if: >-
-      github.event_name != 'pull_request' ||
-      needs.detect-changes.outputs.deployment == 'true'
+      (github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
+      needs.detect-changes.outputs.deployment == 'true' ||
+      (github.event_name != 'pull_request' && github.event_name != 'merge_group')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -161,8 +161,9 @@ jobs:
     if: >-
       github.event_name == 'schedule' ||
       github.event_name == 'workflow_dispatch' ||
-      github.event_name != 'pull_request' ||
-      needs.detect-changes.outputs.dependencies == 'true'
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
+      ((github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
+       needs.detect-changes.outputs.dependencies == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -203,13 +204,14 @@ jobs:
         with:
           name: trivy-dependencies
           sarif-file: trivy-fs.sarif
-          code-scanning: ${{ github.event_name == 'push' && vars.ENABLE_CODEQL == 'true' }}
+          code-scanning: false
 
   trivy-config:
     needs: detect-changes
     if: >-
-      github.event_name != 'pull_request' ||
-      needs.detect-changes.outputs.config == 'true'
+      (github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
+      needs.detect-changes.outputs.config == 'true' ||
+      (github.event_name != 'pull_request' && github.event_name != 'merge_group')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -235,7 +237,7 @@ jobs:
         with:
           name: trivy-configuration
           sarif-file: trivy-config.sarif
-          code-scanning: ${{ github.event_name == 'push' && vars.ENABLE_CODEQL == 'true' }}
+          code-scanning: false
 
   codeql:
     # SAST for Java. Opt-in: enable with repo variable ENABLE_CODEQL=true.
