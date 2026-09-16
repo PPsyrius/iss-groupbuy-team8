@@ -3,6 +3,8 @@ package com.blocbuy.identity.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -56,14 +58,34 @@ class OAuthUserTxServiceTest {
                         argThat(
                                 user ->
                                         user.registerSource() == RegisterSource.GOOGLE
-                                                && user.lastLoginTime() != null));
+                                                && user.lastLoginTime() != null
+                                                && user.email().equals("ada@example.com")
+                                                && user.nickname().equals("Ada")
+                                                && user.avatarUrl().equals("https://pic")));
         verify(userOAuthRepository)
                 .saveNew(
                         argThat(
                                 binding ->
                                         binding.provider() == OAuthProvider.GOOGLE
-                                                && binding.providerUserId().equals("sub-123")));
+                                                && binding.providerUserId().equals("sub-123")
+                                                && binding.userId().equals(result.userId())
+                                                && binding.email().equals("ada@example.com")));
         verify(roleRepository).assignRole(result.userId(), buyerRole);
+    }
+
+    @Test
+    void registerPersistsUserBeforeBindingAndRole() {
+        UUID buyerRole = UUID.randomUUID();
+        when(roleRepository.findActiveRoleIdByCode(RoleCode.BUYER))
+                .thenReturn(Optional.of(buyerRole));
+
+        OAuthLoginResult result = service.registerNewUser(PROFILE);
+
+        var order = inOrder(userRepository, userOAuthRepository, roleRepository);
+        order.verify(userRepository).saveNew(argThat(user -> user.id().equals(result.userId())));
+        order.verify(userOAuthRepository)
+                .saveNew(argThat(binding -> binding.userId().equals(result.userId())));
+        order.verify(roleRepository).assignRole(result.userId(), buyerRole);
     }
 
     @Test
@@ -74,6 +96,10 @@ class OAuthUserTxServiceTest {
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(IdentityErrorCode.IDENTITY_MISCONFIGURED);
+        verify(userRepository, never()).saveNew(argThat(candidate -> true));
+        verify(userOAuthRepository, never()).saveNew(argThat(candidate -> true));
+        verify(roleRepository, never())
+                .assignRole(argThat(candidate -> true), argThat(candidate -> true));
     }
 
     @Test
@@ -99,6 +125,32 @@ class OAuthUserTxServiceTest {
     }
 
     @Test
+    void recordLoginRefreshesStaleSnapshotContent() {
+        User user = User.registerViaOAuth(RegisterSource.GOOGLE, "old@example.com", "Old", null);
+        OAuthIdentity identity =
+                OAuthIdentity.bind(
+                        user.id(),
+                        OAuthProvider.GOOGLE,
+                        "sub-123",
+                        "old@example.com",
+                        "Old",
+                        null,
+                        "{}");
+        when(userRepository.findById(identity.userId())).thenReturn(Optional.of(user));
+
+        OAuthLoginResult result = service.recordLogin(identity, PROFILE);
+
+        assertThat(identity.email()).isEqualTo("ada@example.com");
+        assertThat(identity.displayName()).isEqualTo("Ada");
+        assertThat(identity.avatarUrl()).isEqualTo("https://pic");
+        // Login refreshes the provider snapshot only; the local nickname is never renamed.
+        assertThat(result.nickname()).isEqualTo("Old");
+        var order = inOrder(userRepository, userOAuthRepository);
+        order.verify(userRepository).updateLastLogin(user);
+        order.verify(userOAuthRepository).updateLoginSnapshot(identity);
+    }
+
+    @Test
     void recordLoginRejectsDisabledAccount() {
         User user = User.registerViaOAuth(RegisterSource.GOOGLE, "ada@example.com", "Ada", null);
         user.disable();
@@ -117,6 +169,8 @@ class OAuthUserTxServiceTest {
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(IdentityErrorCode.ACCOUNT_DISABLED);
+        verify(userRepository, never()).updateLastLogin(argThat(candidate -> true));
+        verify(userOAuthRepository, never()).updateLoginSnapshot(argThat(candidate -> true));
     }
 
     @Test
@@ -136,5 +190,7 @@ class OAuthUserTxServiceTest {
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(IdentityErrorCode.IDENTITY_MISCONFIGURED);
+        verify(userRepository, never()).updateLastLogin(argThat(candidate -> true));
+        verify(userOAuthRepository, never()).updateLoginSnapshot(argThat(candidate -> true));
     }
 }

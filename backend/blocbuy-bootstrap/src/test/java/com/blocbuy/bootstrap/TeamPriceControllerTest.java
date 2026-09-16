@@ -226,6 +226,36 @@ class TeamPriceControllerTest {
                 "{\"productId\":\"" + PRODUCT + "\",\"amount\":\"0.01\"}");
     }
 
+    @ParameterizedTest
+    @MethodSource("missingQuoteProductIds")
+    void quoteWithoutProductIdIsRejectedBeforeBusinessCode(String body) throws Exception {
+        mvc.perform(
+                        post(QUOTE_PATH)
+                                .header(TOKEN_HEADER, login(BUYER))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON_400_002"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+        verifyNoInteractions(prices);
+    }
+
+    static Stream<String> missingQuoteProductIds() {
+        return Stream.of("{}", "{\"productId\":null}");
+    }
+
+    @Test
+    void quoteWithMalformedProductIdUsesGlobalBadRequestMapping() throws Exception {
+        mvc.perform(
+                        post(QUOTE_PATH)
+                                .header(TOKEN_HEADER, login(BUYER))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"productId\":\"not-a-uuid\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON_400_001"));
+        verifyNoInteractions(prices);
+    }
+
     @Test
     void ownerCanReadHistoricalSnapshotWithoutRepricing() throws Exception {
         when(prices.getQuote(QUOTE, BUYER)).thenReturn(quote());

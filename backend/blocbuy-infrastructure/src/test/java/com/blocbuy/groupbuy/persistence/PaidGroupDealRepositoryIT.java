@@ -53,7 +53,7 @@ class PaidGroupDealRepositoryIT {
     /**
      * Loads V5 and V7 for this isolated groupbuy mapper test with bounded SQL waits. V6 adds only
      * catalog pricing tables and permissions, which these mappers do not reference; the bootstrap
-     * PaidGroupDealFlowIT exercises the full V1-V7 Flyway chain.
+     * PaidGroupDealServiceIT exercises the full V1-V7 Flyway chain.
      */
     @BeforeAll
     static void migrate() throws Exception {

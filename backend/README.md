@@ -39,7 +39,7 @@ Domains (v1): `identity`, `groupbuy`, `order`, `catalog`, `notification`, `payme
 ## Prerequisites
 
 **- JDK 21 (e.g. `export JAVA_HOME=$(brew --prefix openjdk@21)`); Maven via committed `./mvnw` wrapper (3.9.x).
-- Docker (for the Testcontainers PG smoke test and local stack).
+- Docker (for the Testcontainers PostgreSQL integration test suites and local stack).
 
 ## Common commands
 
@@ -71,7 +71,7 @@ database name is case-sensitive if created quoted; verify `Blocbuy` vs `blocbuy`
   coverage gate (≥80% on new code) lives in the SonarQube quality gate, not Maven.
 - ArchUnit (`blocbuy-bootstrap/src/test/.../architecture/`): layer direction, framework-free domain,
   no controller→mapper, persistence internals stay internal, no field injection.
-- Tests: JUnit 5; `PgSmokeIT` spins a real PostgreSQL 18 via Testcontainers.
+- Tests: JUnit 5; repository `*IT` suites spin a real PostgreSQL 18 via Testcontainers.
 
 CI: `.github/workflows/ci-backend.yml` (build-quality → contract-check → sonar → docker) and
 `security.yml` (Gitleaks + Trivy). Runbook: [../docs/ci/backend-pipeline.md](../docs/ci/backend-pipeline.md);
