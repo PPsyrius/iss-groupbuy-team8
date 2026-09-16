@@ -12,6 +12,22 @@ spring:
       password: ${REDIS_PASSWORD}
       timeout: 3s
 
+sa-token:
+  cookie:
+    # EC2 Compose deployment has no TLS termination yet (CloudFront/ALB to be executed);
+    # browsers refuse Secure cookies over plain HTTP, so the flag must be false until
+    # the entry layer is completed.
+    secure: false
+
 logging:
   level:
     com.blocbuy: info
+
+blocbuy:
+  frontend:
+    # SPA origin via env only — no deployment host in the repo; startup validation fails fast when
+    # FRONTEND_URL is unset
+    success-redirect-uri: "${FRONTEND_URL:}/auth/callback"
+    failure-redirect-uri: "${FRONTEND_URL:}/login?error={errorCode}"
+    # same transport constraint as sa-token.cookie.secure above — flip both at the CloudFront cutover
+    state-cookie-secure: false

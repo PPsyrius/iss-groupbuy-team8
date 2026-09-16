@@ -13,6 +13,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.groupbuy.exception.GroupbuyErrorCode;
+import com.blocbuy.groupbuy.exception.ParticipationErrorCode;
 import com.blocbuy.groupbuy.model.NewDealTerms;
 import com.blocbuy.groupbuy.model.PaidParticipation;
 import com.blocbuy.groupbuy.model.ParticipationReceipt;
@@ -78,7 +80,9 @@ class PaidGroupDealServiceTest {
         when(repository.reserveAndLock(eq(paid.paymentId()), any(), eq(paid.userId())))
                 .thenReturn(new ParticipationReceipt("different", null));
         assertThatThrownBy(() -> service.startConfirmed(terms, paid))
-                .isInstanceOf(BizException.class);
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(ParticipationErrorCode.PAYMENT_REUSED);
         verify(repository, never()).currentTime();
     }
 
@@ -173,6 +177,51 @@ class PaidGroupDealServiceTest {
                 .isEqualTo(fingerprints.getAllValues().get(1));
     }
 
+    /** Verifies null initiation facts fail fast with a business error before any clock read. */
+    @Test
+    void startConfirmedRejectsNullTermsOrPayment() {
+        assertThatThrownBy(() -> service.startConfirmed(null, paid))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION);
+        assertThatThrownBy(() -> service.startConfirmed(terms, null))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION);
+        verify(repository, never()).currentTime();
+    }
+
+    /** Verifies null join facts fail fast with a business error before any lock is taken. */
+    @Test
+    void joinConfirmedRejectsNullDealIdOrPayment() {
+        assertThatThrownBy(() -> service.joinConfirmed(null, paid))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION);
+
+        UUID dealId = terms.id();
+        assertThatThrownBy(() -> service.joinConfirmed(dealId, null))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION);
+        verify(repository, never()).currentTime();
+    }
+
+    /** Verifies a completed join receipt replays without locking the deal or clock. */
+    @Test
+    void joinReplayReturnsOriginalSnapshotWithoutLockingDeal() {
+        var original = new ParticipationResult("applied", terms.id(), "open", 2, null);
+        when(repository.reserveAndLock(eq(paid.paymentId()), any(), eq(paid.userId())))
+                .thenAnswer(
+                        invocation ->
+                                new ParticipationReceipt(invocation.getArgument(1), original));
+
+        assertThat(service.joinConfirmed(terms.id(), paid)).isEqualTo(original);
+        verify(repository, never()).lockDeal(any());
+        verify(repository, never()).currentTime();
+        verify(repository, never()).insertJoinedMember(any(), any(), any(), any());
+    }
+
     /**
      * Stubs a newly reserved receipt that echoes the request fingerprint with no terminal result.
      */
@@ -180,6 +229,58 @@ class PaidGroupDealServiceTest {
         when(repository.reserveAndLock(eq(paid.paymentId()), any(), eq(paid.userId())))
                 .thenAnswer(
                         invocation -> new ParticipationReceipt(invocation.getArgument(1), null));
+    }
+
+    /** Verifies a different fingerprint is rejected on join before any membership read. */
+    @Test
+    void joinChangedPaymentCannotReuseReceipt() {
+        when(repository.reserveAndLock(eq(paid.paymentId()), any(), eq(paid.userId())))
+                .thenReturn(new ParticipationReceipt("different", null));
+
+        UUID dealId = terms.id();
+        assertThatThrownBy(() -> service.joinConfirmed(dealId, paid))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(ParticipationErrorCode.PAYMENT_REUSED);
+        verify(repository, never()).lockDeal(any());
+        verify(repository, never()).currentTime();
+    }
+
+    /** Verifies a join storage failure propagates rather than recording a terminal receipt. */
+    @Test
+    void joinTechnicalFailureEscapesWithoutCompletingReceipt() {
+        var leader =
+                new PaidParticipation(UUID.randomUUID(), UUID.randomUUID(), paid.amount(), "sgd");
+        var deal = new StandardPaidGroupDealCreator().initiate(terms, leader, now.minusSeconds(1));
+        pendingReceipt();
+        when(repository.lockDeal(terms.id())).thenReturn(Optional.of(deal));
+        when(repository.currentTime()).thenReturn(now);
+        doThrow(new IllegalStateException("database failure"))
+                .when(repository)
+                .insertJoinedMember(any(), any(), any(), any());
+
+        UUID dealId = terms.id();
+        assertThatThrownBy(() -> service.joinConfirmed(dealId, paid))
+                .isInstanceOf(IllegalStateException.class);
+        verify(repository, never()).complete(any(), any(), any(), any());
+    }
+
+    /** Verifies distinct payment facts cannot share a request fingerprint. */
+    @Test
+    void differentAmountsHaveDifferentFingerprints() {
+        pendingReceipt();
+        when(repository.currentTime()).thenReturn(now);
+        service.startConfirmed(terms, paid);
+        var dearer =
+                new PaidParticipation(
+                        paid.paymentId(), paid.userId(), new BigDecimal("13.00"), "sgd");
+        service.startConfirmed(terms, dearer);
+
+        var fingerprints = ArgumentCaptor.forClass(String.class);
+        verify(repository, times(2))
+                .reserveAndLock(eq(paid.paymentId()), fingerprints.capture(), eq(paid.userId()));
+        assertThat(fingerprints.getAllValues().get(0))
+                .isNotEqualTo(fingerprints.getAllValues().get(1));
     }
 
     /** Verifies expiry produces a durable closed-deal reason and no membership transition. */

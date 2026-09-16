@@ -466,7 +466,10 @@ class AdminListingFlowIT {
                 .isTrue();
     }
 
-    /** Swagger and generated clients can discover admin auth without changing public operations. */
+    /**
+     * Swagger and generated clients can discover cookie auth on admin and session endpoints without
+     * protecting public operations.
+     */
     @Test
     void openApiDocumentsAdministratorTokenWithoutProtectingPublicBrowse() throws Exception {
         var spec =
@@ -478,7 +481,8 @@ class AdminListingFlowIT {
                                 .getContentAsString());
         var scheme = spec.path("components").path("securitySchemes").path("blocbuyToken");
         assertThat(scheme.path("type").asText()).isEqualTo("apiKey");
-        assertThat(scheme.path("in").asText()).isEqualTo("header");
+        // the browser flow carries the token in the Sa-Token cookie, never in a header
+        assertThat(scheme.path("in").asText()).isEqualTo("cookie");
         assertThat(scheme.path("name").asText()).isEqualTo(HEADER);
         for (var route :
                 Map.of(
@@ -487,7 +491,11 @@ class AdminListingFlowIT {
                                 BASE + "/{productId}",
                                 List.of("get", "put", "delete"),
                                 BASE + "/{productId}/status",
-                                List.of("put"))
+                                List.of("put"),
+                                "/api/v1/auth/me",
+                                List.of("get"),
+                                "/api/v1/auth/logout",
+                                List.of("post"))
                         .entrySet()) {
             for (String method : route.getValue()) {
                 var security =
@@ -498,6 +506,20 @@ class AdminListingFlowIT {
         }
         assertThat(spec.has("security")).isFalse();
         assertThat(spec.path("paths").path("/api/v1/products").path("get").has("security"))
+                .isFalse();
+        // the OAuth handshake endpoints on AuthController are public paths — a class-level
+        // @SecurityRequirement would wrongly mark them as authenticated
+        assertThat(
+                        spec.path("paths")
+                                .path("/api/v1/auth/oauth2/google")
+                                .path("get")
+                                .has("security"))
+                .isFalse();
+        assertThat(
+                        spec.path("paths")
+                                .path("/api/v1/auth/oauth2/google/callback")
+                                .path("get")
+                                .has("security"))
                 .isFalse();
     }
 

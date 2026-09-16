@@ -30,6 +30,12 @@ sa-token:
   is-share: false
   token-style: uuid
   is-log: false
+  cookie:
+    # token cookie: unreadable from JS (XSS exfiltration barrier), HTTPS-only, not sent on
+    # cross-site subrequests (CSRF mitigation; Lax keeps the Google OAuth redirect working)
+    http-only: true
+    secure: true
+    same-site: Lax
 
 server:
   port: 8589
@@ -52,6 +58,13 @@ springdoc:
     path: /api/swagger-ui.html
 
 blocbuy:
+  # frontend.* redirect targets (OAuth callback 302 landings) are mandatory and startup-validated
+  # (@NotBlank on AuthWebProperties) — no defaults here on purpose; each profile supplies them,
+  # non-local profiles via FRONTEND_URL only
+  frontend:
+    # HTTPS-only flag for the OAuth state-binding cookie; plain-HTTP profiles (local/docker/ec2
+    # until the CloudFront cutover) override to false. Flips together with sa-token.cookie.secure.
+    state-cookie-secure: true
   payment:
     stripe:
       # secrets via environment only — never commit values

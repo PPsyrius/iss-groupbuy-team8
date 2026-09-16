@@ -3,6 +3,7 @@ package com.blocbuy.catalog.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.blocbuy.catalog.exception.CatalogErrorCode;
 import com.blocbuy.common.exception.BizException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -19,10 +20,20 @@ class ProductLifecycleTest {
         Product published = draft.publish();
         assertThat(published.status()).isEqualTo(ProductStatus.ON_SALE);
         assertThat(published.version()).isEqualTo(1);
-        assertThatThrownBy(published::requireDeletable).isInstanceOf(BizException.class);
+        assertThatThrownBy(published::requireDeletable)
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.PRODUCT_STATE_CONFLICT));
         Product delisted = published.delist();
         assertThat(delisted.status()).isEqualTo(ProductStatus.OFF_SALE);
-        assertThatThrownBy(delisted::requireDeletable).isInstanceOf(BizException.class);
+        assertThatThrownBy(delisted::requireDeletable)
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.PRODUCT_STATE_CONFLICT));
         assertThat(delisted.publish().status()).isEqualTo(ProductStatus.ON_SALE);
     }
 
@@ -33,9 +44,19 @@ class ProductLifecycleTest {
         assertThat(draft.revise(details("12.00", 6)).originalPrice()).isEqualByComparingTo("12.00");
         Product published = draft.publish();
         ListingDetails repriced = details("12.00", 5);
-        assertThatThrownBy(() -> published.revise(repriced)).isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> published.revise(repriced))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.PRODUCT_STATE_CONFLICT));
         ListingDetails restocked = details("10.00", 6);
-        assertThatThrownBy(() -> published.revise(restocked)).isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> published.revise(restocked))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.PRODUCT_STATE_CONFLICT));
         assertThat(published.revise(details("10.00", 5)).version()).isEqualTo(2);
     }
 
@@ -43,11 +64,36 @@ class ProductLifecycleTest {
     @Test
     void invalidTransitionsAndEmptyStockCannotPublish() {
         Product draft = Product.draft(UUID.randomUUID(), "SKU-3", details("10.00", 0));
-        assertThatThrownBy(draft::publish).isInstanceOf(BizException.class);
-        assertThatThrownBy(draft::delist).isInstanceOf(BizException.class);
-        assertThatThrownBy(() -> details("1.001", 2)).isInstanceOf(BizException.class);
-        assertThatThrownBy(() -> details("0.00", 2)).isInstanceOf(BizException.class);
-        assertThatThrownBy(() -> details("1.00", -1)).isInstanceOf(BizException.class);
+        assertThatThrownBy(draft::publish)
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.PRODUCT_STATE_CONFLICT));
+        assertThatThrownBy(draft::delist)
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.PRODUCT_STATE_CONFLICT));
+        assertThatThrownBy(() -> details("1.001", 2))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.PRODUCT_INVALID));
+        assertThatThrownBy(() -> details("0.00", 2))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.PRODUCT_INVALID));
+        assertThatThrownBy(() -> details("1.00", -1))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.PRODUCT_INVALID));
     }
 
     /** Stable fixture includes all writable fields and exact decimal money. */

@@ -1,6 +1,7 @@
 package com.blocbuy.groupbuy.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -15,6 +16,8 @@ import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -45,6 +48,20 @@ class GroupDealQueryServiceImplTest {
     }
 
     @Test
+    void pricierSecondDealKeepsFirstSeen() {
+        GroupDeal cheap = deal("b0000000-0000-7000-8000-000000000002", "89.00");
+        GroupDeal expensive = deal("b0000000-0000-7000-8000-000000000001", "99.00");
+        when(groupDealRepository.findOpenDealsByProductIds(List.of(PRODUCT_ID)))
+                .thenReturn(List.of(cheap, expensive));
+
+        Map<UUID, OpenDealOffer> best = service.findBestOpenDealsByProductIds(List.of(PRODUCT_ID));
+
+        assertThat(best).containsOnlyKeys(PRODUCT_ID);
+        assertThat(best.get(PRODUCT_ID).dealId()).isEqualTo(cheap.id());
+        assertThat(best.get(PRODUCT_ID).dealPrice()).isEqualByComparingTo("89.00");
+    }
+
+    @Test
     void productWithoutOpenDealIsAbsent() {
         when(groupDealRepository.findOpenDealsByProductIds(List.of(PRODUCT_ID)))
                 .thenReturn(List.of());
@@ -58,11 +75,46 @@ class GroupDealQueryServiceImplTest {
         verifyNoInteractions(groupDealRepository);
     }
 
+    @Test
+    void nullInputNeverHitsTheRepository() {
+        assertThat(service.findBestOpenDealsByProductIds(null)).isEmpty();
+        verifyNoInteractions(groupDealRepository);
+    }
+
+    @Test
+    void multipleProductsResolveIndependently() {
+        UUID otherProduct = UUID.fromString("a0000000-0000-7000-8000-000000000002");
+        GroupDeal cheap = deal("b0000000-0000-7000-8000-000000000002", "89.00");
+        GroupDeal other = dealFor(otherProduct, "b0000000-0000-7000-8000-000000000003", "10.00");
+        when(groupDealRepository.findOpenDealsByProductIds(List.of(PRODUCT_ID, otherProduct)))
+                .thenReturn(List.of(cheap, other));
+
+        Map<UUID, OpenDealOffer> best =
+                service.findBestOpenDealsByProductIds(List.of(PRODUCT_ID, otherProduct));
+
+        assertThat(best).containsOnlyKeys(PRODUCT_ID, otherProduct);
+        assertThat(best.get(PRODUCT_ID).dealPrice()).isEqualByComparingTo("89.00");
+        assertThat(best.get(otherProduct).dealPrice()).isEqualByComparingTo("10.00");
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void hasProductReferencesDelegatesToRepository(boolean present) {
+        when(groupDealRepository.hasProductReferences(PRODUCT_ID)).thenReturn(present);
+
+        assertThat(service.hasProductReferences(PRODUCT_ID)).isEqualTo(present);
+        verify(groupDealRepository).hasProductReferences(PRODUCT_ID);
+    }
+
     private static GroupDeal deal(String id, String dealPrice) {
+        return dealFor(PRODUCT_ID, id, dealPrice);
+    }
+
+    private static GroupDeal dealFor(UUID productId, String id, String dealPrice) {
         return GroupDeal.reconstitute(
                 UUID.fromString(id),
                 "DEMO-D-0001",
-                PRODUCT_ID,
+                productId,
                 LEADER_ID,
                 new BigDecimal(dealPrice),
                 "sgd",

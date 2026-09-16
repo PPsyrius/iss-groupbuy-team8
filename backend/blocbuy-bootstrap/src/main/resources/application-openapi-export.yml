@@ -1,4 +1,4 @@
-# openapi-export: used ONLY by the springdoc-openapi-maven-plugin (make contract-check).
+# openapi-export: used ONLY by the springdoc-openapi-maven-plugin (`./mvnw verify -Popenapi-export`).
 # Boots the app without touching live PG/Redis: Flyway off, and nothing ever opens a connection —
 # so no credentials exist here at all (no placeholder secrets to leak).
 server:
@@ -20,3 +20,10 @@ spring:
       host: localhost
       port: 6379
       timeout: 1s
+
+# export profile boots the app for contract generation only; placeholder redirect targets satisfy
+# the mandatory startup validation — no browser flow ever runs here
+blocbuy:
+  frontend:
+    success-redirect-uri: "http://localhost:5173/auth/callback"
+    failure-redirect-uri: "http://localhost:5173/login?error={errorCode}"

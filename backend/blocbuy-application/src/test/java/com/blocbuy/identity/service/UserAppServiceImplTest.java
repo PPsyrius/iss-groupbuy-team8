@@ -1,5 +1,6 @@
 package com.blocbuy.identity.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -36,6 +37,34 @@ class UserAppServiceImplTest {
                 .isEqualTo(IdentityErrorCode.ACCOUNT_DISABLED);
         when(users.findById(ID)).thenReturn(Optional.of(user(UserStatus.ACTIVE)));
         service.requireActive(ID);
+    }
+
+    @Test
+    void currentUserMapsTheProfileView() {
+        when(users.findById(ID))
+                .thenReturn(
+                        Optional.of(
+                                User.reconstitute(
+                                        ID,
+                                        null,
+                                        "test@example.invalid",
+                                        RegisterSource.GOOGLE,
+                                        UserStatus.ACTIVE,
+                                        "Tester",
+                                        "https://img.example/avatar.png",
+                                        null)));
+        var view = service.currentUser(ID);
+        assertThat(view.userId()).isEqualTo(ID);
+        assertThat(view.nickname()).isEqualTo("Tester");
+        assertThat(view.avatarUrl()).isEqualTo("https://img.example/avatar.png");
+    }
+
+    @Test
+    void currentUserFailsWhenTheAccountIsMissing() {
+        assertThatThrownBy(() -> service.currentUser(ID))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(IdentityErrorCode.USER_NOT_FOUND);
     }
 
     private static User user(UserStatus status) {
