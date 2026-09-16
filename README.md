@@ -21,16 +21,16 @@
     <td><strong>Quality</strong></td>
     <td>
       <a href="https://sonarcloud.io/summary/new_code?id=blocbuy-backend">
-        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=alert_status&token=YOUR_BADGE_TOKEN" alt="SonarCloud quality gate">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=alert_status" alt="SonarCloud quality gate">
       </a>&nbsp;
       <a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=coverage&view=list">
-        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=coverage&token=YOUR_BADGE_TOKEN" alt="SonarCloud coverage">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=coverage" alt="SonarCloud coverage">
       </a>&nbsp;
       <a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=sqale_rating&view=list">
-        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=sqale_rating&token=YOUR_BADGE_TOKEN" alt="SonarCloud maintainability rating">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=sqale_rating" alt="SonarCloud maintainability rating">
       </a>&nbsp;
       <a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=reliability_rating&view=list">
-        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=reliability_rating&token=YOUR_BADGE_TOKEN" alt="SonarCloud reliability rating">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=reliability_rating" alt="SonarCloud reliability rating">
       </a>
     </td>
   </tr>
