@@ -44,4 +44,15 @@ describe("Header", () => {
       "/api/v1/auth/oauth2/google",
     );
   });
+
+  it("shows the login id when /auth/me answers 200", async () => {
+    server.use(
+      http.get("*/api/v1/auth/me", () =>
+        HttpResponse.json({ code: "COMMON_200_000", data: { loginId: "u1" }, message: "ok" }),
+      ),
+    );
+    await renderWithQuery(<Header />);
+    expect(await screen.findByTestId("login-id")).toHaveTextContent("u1");
+    expect(screen.queryByRole("link", { name: /log in/i })).not.toBeInTheDocument();
+  });
 });

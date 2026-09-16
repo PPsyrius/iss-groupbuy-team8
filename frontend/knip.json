@@ -11,7 +11,6 @@
   "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts", "!src/api/generated/**", "!src/routeTree.gen.ts"],
   "ignoreDependencies": [
     "@heroui/styles",
-    "tailwindcss",
     "valibot",
     "@tanstack/react-form",
     "@testing-library/user-event"

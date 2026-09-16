@@ -10,7 +10,9 @@ export interface ResultEnvelope<T> {
 
 // Confirmed against backend/blocbuy-domain/.../common/exception/CommonErrorCode.java:
 // CommonErrorCode.SUCCESS = "COMMON_200_000" backs the Result envelope's success factory.
-const OK_CODE = "COMMON_200_000";
+// Re-exported: the 401 interceptor (client.ts) settles the `me` query on an anonymous envelope
+// carrying this code.
+export const OK_CODE = "COMMON_200_000";
 
 export class ApiError extends Error {
   readonly code: string;
