@@ -1,0 +1,33 @@
+# Non-Functional Requirements Register
+
+Every quality attribute the system is meant to have, as a scenario that can be checked, with where
+it is enforced and the evidence that it is. Companion to `docs/quality/quality-gates.md`, which
+holds the exact thresholds the pipeline enforces. Add or update a row in the same PR as the change.
+
+Status: `enforced` (a gate or runtime control fails when violated), `implemented` (in code or
+config, verified by hand at least once), `documented` (designed, not yet in code),
+`target undefined` (matters, no measure set).
+
+Scenario shape and worked examples: `.claude/skills/agile-evidence-capture/references/nfr-scenarios.md`.
+
+| ID | Attribute | Scenario | Enforced at | Evidence | Status |
+|---|---|---|---|---|---|
+| NFR-01 | security | When a script in the browser or a cross-site page tries to read or replay the session cookie, the browser refuses; measured by `Set-Cookie` on `/api/v1/auth/*` carrying `HttpOnly; Secure; SameSite=Lax` on dev | `backend/blocbuy-bootstrap/src/main/resources/application*.yml` (`sa-token.cookie`) | PR #84; `Secure` on ec2 pending TLS confirmation (plan blocker B3) | implemented |
+| NFR-02 | security | When any commit is pushed, no secret reaches the repository; measured by zero Gitleaks findings over full history | `security.yml` Gitleaks job | `docs/quality/quality-gates.md` row Secrets | enforced |
+| NFR-03 | security | When a dependency or base image carries a fixable HIGH or CRITICAL CVE, the build fails; measured by Trivy `exit-code: 1` with `ignore-unfixed` | `security.yml` (fs), `ci-backend.yml` docker job (image), weekly cron | `docs/quality/quality-gates.md` rows Dependency CVEs, Image CVEs | enforced |
+| NFR-04 | security | When CI deploys, it does so with short-lived credentials and no long-lived AWS keys; measured by OIDC role assumption in the workflow and least-privilege IAM examples | `ci-backend.yml`, `deployment/backend/iam/` | `docs/deploy/backend-ec2-pipeline-operator-guide.md`, `docs/ci/backend-pipeline.md` | enforced |
+| NFR-05 | maintainability | When a class imports across a forbidden COLA layer boundary, the build fails; measured by all six ArchUnit rules green | `ArchitectureTest.java` in `./mvnw verify` and CI `build-quality` | `docs/quality/quality-gates.md` row Architecture | enforced |
+| NFR-06 | maintainability | When new code is merged, it is formatted, style-clean, free of medium+ SpotBugs findings and at least 80% covered; measured by the gates table | Spotless, Checkstyle, SpotBugs, SonarCloud quality gate | `docs/quality/quality-gates.md` | enforced |
+| NFR-07 | interoperability | When a controller or DTO changes, the committed OpenAPI contract changes in the same PR and no backward-incompatible change lands without approval; measured by `contract-check` and openapi-diff | `ci-backend.yml` `contract-check` job, `contract-change-approved` label | `contracts/openapi.json`, `CONTRIBUTING.md` | enforced |
+| NFR-08 | recoverability | When a new image fails its health check after deploy, the previous digest is restored automatically; measured by `/actuator/health` returning UP on the prior digest | `.github/actions/deploy-ec2`, `deployment/backend/bin/` | `docs/ci/backend-pipeline.md` "health/auto rollback", `rollback-backend.yml` for manual rollback | implemented |
+| NFR-09 | observability | When an API request fails, an operator can find its log lines by trace id; measured by `X-Trace-Id` on the response and a CloudWatch filter returning the lines | `TraceIdFilter`, CloudWatch agent on dev EC2 | PR #45, `docs/deploy/backend-log-observability.md` | implemented |
+| NFR-10 | cost | When logs accumulate on dev, they expire before cost appears; measured by 14-day retention on `/blocbuy/backend/dev` and INFO level in the ec2 profile | CloudWatch retention policy, `application-ec2.yml` | `docs/deploy/backend-log-observability.md` "Cost guardrails" | implemented |
+| NFR-11 | performance (delivery) | When a PR is pushed, quality and image jobs finish quickly enough not to block review; measured by the docker job under about two minutes (was about five) | `ci-backend.yml` caching and artifact reuse | PR #75, PR #73 | implemented |
+| NFR-12 | robustness | When a client sends an invalid query parameter such as `page=0`, the API answers 400 with a problem body, never 500; measured by acceptance tests at controller boundaries | Jakarta Validation at controllers | Issues #56, #57 | implemented |
+| NFR-13 | data consistency | When concurrent requests join a team or change a listing version, no orphan payments or lost updates occur; measured by rollback-on-partial-failure and version-conflict tests | Application-layer transactions, optimistic versioning, idempotency keys | `backend/docs/design/paid-group-participation.md`, `admin-listings.md`, `backend/docs/db/*.sql` "Application obligations" | implemented |
+| NFR-14 | recoverability (release) | When a backend release is promoted to production, it goes through a reviewed, automated, reversible pipeline; measured by environment protection with two reviewers and an immutable image digest | GitHub environments `backend-prod-publish`, `backend-prod`; Terraform | Issue #48, `docs/deploy/prod/` | documented |
+| NFR-15 | performance (runtime) | Latency and throughput targets for listing and join endpoints | none | none; page size capped at 100 and N+1 forbidden by the backend skill, but no measured target | target undefined |
+| NFR-16 | security (frontend) | When the SPA is served from CloudFront, responses carry CSP and HSTS headers; measured by `curl -sSI` on dev showing both | CloudFront response headers policy | `frontend/docs/plan.md` A2, T2-11 | documented |
+
+Rows NFR-01 to NFR-14 were backfilled on 2026-09-16 from merged PRs and existing docs; from Sprint
+2 onward rows are added in the PR that implements them.

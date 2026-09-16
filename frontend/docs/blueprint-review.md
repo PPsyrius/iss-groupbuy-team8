@@ -120,6 +120,8 @@ Rejected: admin product create form (admin role per database, admin UI out of sc
 
 Decision: ADRs live in `frontend/docs/adr/` numbered from 0001. The plan, this review, and a running `frontend/docs/sprint-2-log.md` also live under `frontend/docs/`. Every frontend PR links its issue, names the ADR(s) it implements, includes the `pnpm check` result or CI link, and attaches a screenshot or Playwright trace for UI changes. A PR template under `.github/` and the `sprint-evidence` skill enforce this.
 
+Amended 2026-09-16: the sprint log moved repo-wide to `docs/agile/sprint-02/log.md` and the skill is `agile-evidence-capture`; see plan §12 item 17 and ADR 0008.
+
 ## 3. Blocker list
 
 Backend asks (owner l0sgAi unless noted):

@@ -24,6 +24,15 @@ Summary ≤ 72 chars, imperative. Body only when the *why* is not obvious.
 - CODEOWNERS review required. PRs touching `.github/**`, `backend/Dockerfile`, or pipeline config need the devsecops label owner.
 - New secrets/config: environment variables only, documented in `backend/README.md`. Never committed values (Gitleaks gates full history).
 
+## Evidence
+
+The course grades the report, so the paper trail is part of the work. See `docs/agile/README.md`.
+
+- Every PR links its issue (`Closes #N` or `Refs #N`) and adds an entry to `docs/agile/sprint-NN/log.md` in the same PR. `style:` and `chore(deps):` are exempt.
+- Non-functional work (security, performance, availability, observability, cost, maintainability, CI, config, infra) adds or updates a row in `docs/quality/nfr-register.md`.
+- A real choice between alternatives is written down when it is made. Only the frontend writes ADRs (`frontend/docs/adr/`). Backend decisions go in the locked decision table of `backend/docs/design/backend-skeleton-plan.md` (dated amendments in place) and the design docs under `backend/docs/design/`; cross-cutting decisions (CI, deploy, quality gates, process) go in a dated paragraph of the owning doc under `docs/`.
+- Issue and PR templates under `.github/` carry the shapes. Claude Code sessions get the same checklist from the `agile-evidence-capture` skill.
+
 ## Style & Architecture
 
 - Formatting is machine-owned: Spotless + google-java-format AOSP (4-space). Don't hand-format.

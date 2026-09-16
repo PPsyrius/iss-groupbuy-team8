@@ -74,6 +74,7 @@ Owner tickets: #44 (frontend init, list and detail pages), #42 (Google login, me
 **Documentation**
 - ADRs in `frontend/docs/adr/`, Nygard format, numbered from 0001, with a README index. Plan at `frontend/docs/plan.md`. Running `frontend/docs/sprint-2-log.md`.
 - Every frontend PR: links its issue, names the ADR(s) it implements, includes the `pnpm check` result or CI link, and attaches a screenshot or Playwright trace for UI changes. A `.github/PULL_REQUEST_TEMPLATE.md` and the `sprint-evidence` skill enforce this.
+- Amended 2026-09-16: the sprint log is repo-wide at `docs/agile/sprint-02/log.md` and the skill is `agile-evidence-capture` (plan §12 item 17, ADR 0008).
 
 ## Walking skeleton (settled)
 

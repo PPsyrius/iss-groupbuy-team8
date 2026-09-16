@@ -110,7 +110,7 @@ Every PR targets `dev`, is titled as a Conventional Commit with scope, links its
 | PR-I `feat(frontend): session, header login/logout, /account guard` | #42 | T2-04, T2-05, T2-06 | 0002 | @limjiechao |
 | PR-J `feat(infra): import dev frontend edge into frontend-stack` | Terraform | T2-07 | 0007 | @PPsyrius |
 | PR-K `docs(frontend): native compiler spike and react-table evaluation` | ADR addenda | T2-08, T2-09 | 0010, 0001 | @limjiechao |
-| PR-L `chore(skills): adr, api-client-regen, sprint-evidence` | root `.claude/skills/` | T2-10 | 0008, 0012 | @limjiechao |
+| PR-L `chore(skills): adr, api-client-regen, agile-evidence-capture` | root `.claude/skills/` | T2-10 | 0008, 0012 | @limjiechao |
 | PR-M `chore(frontend): tighten CSP after headers policy lands` | runbook JSON, sprint log | T2-11 | 0002 | @limjiechao, @PPsyrius |
 
 ## 3. Task table
@@ -122,7 +122,7 @@ Columns: id, tier, purpose, files touched, exact verification command, depends-o
 | id | tier | purpose | files touched | verification command | depends-on | issue |
 |---|---|---|---|---|---|---|
 | T0-00 | 1 | Commit this plan and the ADR stubs (this session). | `FE/docs/plan.md`, `FE/docs/adr/README.md`, `FE/docs/adr/0001..0013-*.md` | `git log --oneline -1 -- frontend/docs/plan.md` | — | new: Sprint 2 issue (T1) |
-| T1-01 | 1 | Probe dev CloudFront on day 1: `/api` behavior, SPA fallback state, cookie flags. Record in the sprint log. Zero code. | `FE/docs/sprint-2-log.md` | `curl -sS -o /dev/null -w '%{http_code} %{content_type}\n' https://d1b3np88z657cp.cloudfront.net/api/actuator/health; curl -sS -o /dev/null -w '%{http_code}\n' https://d1b3np88z657cp.cloudfront.net/products/probe; curl -sSI https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google \| grep -i 'set-cookie\|location'` | — | #44, A1, B3 |
+| T1-01 | 1 | Probe dev CloudFront on day 1: `/api` behavior, SPA fallback state, cookie flags. Record in the sprint log. Zero code. | `docs/agile/sprint-02/log.md` | `curl -sS -o /dev/null -w '%{http_code} %{content_type}\n' https://d1b3np88z657cp.cloudfront.net/api/actuator/health; curl -sS -o /dev/null -w '%{http_code}\n' https://d1b3np88z657cp.cloudfront.net/products/probe; curl -sSI https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google \| grep -i 'set-cookie\|location'` | — | #44, A1, B3 |
 | T1-02 | 1 | File blocker issues B1–B5, A1–A4, T1–T4 from §10, linked to the Sprint 2 issue. | GitHub only | `gh issue list --limit 100 --json title --jq '[.[] \| select(.title \| test("^\\[(B[1-5]\|A[1-4]\|T[1-4])\\]"))] \| length'` = 13 | T0-00 | new (13 issues) |
 | T1-03 | 1 | Runbook PR: §14 SPA fallback (promote §7.3 to mandatory), §15 response-headers policy, §16 OIDC deploy role, §17 `frontend-dev` environment and variables; §10 npm → pnpm; policy examples. Content in §8. | `docs/deploy/dev-cloudfront-deployment.md`, `deployment/frontend/iam/README.md`, `deployment/frontend/iam/github-frontend-deploy-trust-policy.json.example`, `deployment/frontend/iam/github-frontend-deploy-policy.json.example`, `deployment/frontend/cloudfront/spa-fallback.js`, `deployment/frontend/cloudfront/response-headers-policy.json` | `for f in deployment/frontend/iam/*.example deployment/frontend/cloudfront/*.json; do python3 -m json.tool "$f" >/dev/null && echo "ok $f"; done; node --check deployment/frontend/cloudfront/spa-fallback.js` | T1-01 | #48, A1, A2, A3, A4 |
 | T1-04 | 1 | Runtime and package-manager pins: `.mise.toml`, `.nvmrc`, `package.json` with `packageManager` and `engines`, `.npmrc`; root `.gitignore` entries. | `FE/.mise.toml`, `FE/.nvmrc`, `FE/package.json`, `FE/.npmrc`, `.gitignore` | `cd frontend && mise install && mise exec -- node --version \| grep -E '^v24\.' && corepack pnpm --version \| grep -x 12.4.2` | — | #44 |
@@ -136,7 +136,7 @@ Columns: id, tier, purpose, files touched, exact verification command, depends-o
 | T1-12 | 1 | `.github` PR (needs @PPsyrius): `ci-frontend.yml` (jobs in §7.1), `security.yml` path filters + pnpm dependency scan, `dependabot.yml` npm entry, CODEOWNERS additions, `.gitignore`, `PULL_REQUEST_TEMPLATE.md`, CONTRIBUTING required-check line. Docs: https://github.com/pnpm/action-setup , https://github.com/actions/setup-node , https://github.com/aws-actions/configure-aws-credentials , https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference , https://playwright.dev/docs/ci-intro | `.github/workflows/ci-frontend.yml`, `.github/workflows/security.yml`, `.github/dependabot.yml`, `.github/CODEOWNERS`, `.github/PULL_REQUEST_TEMPLATE.md`, `.gitignore`, `CONTRIBUTING.md` | `docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:latest -color` then `gh pr checks <PR-E number> --watch` shows `frontend-check` green | T1-08, T1-13, T3 | #44, #48, T3, T4 |
 | T1-13 | 1 | Playwright smoke: home renders; with `E2E_TARGET=dev` also deep link returns the SPA (A1 evidence) and `/api/actuator/health` is UP through CloudFront. Trace on first retry. Docs: https://playwright.dev/docs/ci-intro , https://playwright.dev/docs/browsers | `FE/playwright.config.ts`, `FE/e2e/smoke.spec.ts`, `FE/package.json` (`e2e`), `.gitignore` | `cd frontend && pnpm exec playwright install --with-deps chromium && pnpm e2e` (local preview), then `E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e` | T1-05 | #44, A1 |
 | T1-14 | 1 | First deploy of `dist/` to the dev bucket. Preferred: `deploy-s3-dev` job after A3+A4. Fallback: account holder runs runbook §10 by hand. | none (S3 objects, CloudFront invalidation) | `curl -sS https://d1b3np88z657cp.cloudfront.net/ \| grep -o '/assets/index-[A-Za-z0-9_-]*\.js' && curl -sSI https://d1b3np88z657cp.cloudfront.net/index.html \| grep -i 'cache-control: no-cache'` | T1-05, T1-12, A3, A4 (fallback: any AWS operator) | #44, A3, A4 |
-| T1-15 | 1 | Write ADR bodies 0001–0013 from the stubs; start `sprint-2-log.md` with T1-01 results and the blocker table. | `FE/docs/adr/*.md`, `FE/docs/adr/README.md`, `FE/docs/sprint-2-log.md` | `grep -L '^## Decision' frontend/docs/adr/0*.md \| wc -l` prints 0; `grep -l 'Status: Accepted' frontend/docs/adr/0*.md \| wc -l` ≥ 8 | T0-00, T1-09 (0006 outcome) | Sprint 2 issue (T1) |
+| T1-15 | 1 | Write ADR bodies 0001–0013 from the stubs; start `docs/agile/sprint-02/log.md` with T1-01 results and the blocker table. | `FE/docs/adr/*.md`, `FE/docs/adr/README.md`, `docs/agile/sprint-02/log.md` | `grep -L '^## Decision' frontend/docs/adr/0*.md \| wc -l` prints 0; `grep -l 'Status: Accepted' frontend/docs/adr/0*.md \| wc -l` ≥ 8 | T0-00, T1-09 (0006 outcome) | Sprint 2 issue (T1) |
 
 ### Tier 2 (week ending 2026-09-25): features, Terraform import, spikes
 
@@ -151,8 +151,8 @@ Columns: id, tier, purpose, files touched, exact verification command, depends-o
 | T2-07 | 2 | Terraform `frontend-stack`: `import` blocks for S3 bucket, bucket policy, OAC, CloudFront Function, response-headers policy, distribution; plan shows zero changes after import. Pairs with @PPsyrius (state backend, #48 §3). | `infra/terraform/frontend-stack/{versions,main,variables,outputs,s3,cloudfront,imports}.tf`, `infra/terraform/README.md` | `terraform -chdir=infra/terraform/frontend-stack init -backend-config="bucket=blocbuy-tfstate-402178232802" && terraform -chdir=infra/terraform/frontend-stack plan -detailed-exitcode` exits 0 | T1-03 executed (A1, A2), #48 §3 | #48 |
 | T2-08 | 2 | Native compiler spike (branch only): `react({ compiler: true })` + `oxc-transform-react`; compare `pnpm check`, `pnpm build` size, Header test; record in ADR 0010 addendum. Not merged as code. | `FE/vite.config.ts` (branch), `FE/docs/adr/0010-*.md` | `cd frontend && pnpm check && pnpm build && du -sh dist/assets` on the spike branch; numbers pasted into ADR 0010 | T1-08 | new: `spike(frontend): native React Compiler via oxc-transform-react` |
 | T2-09 | 2 | `@tanstack/react-table` evaluation for #31 (branch only): install 9.2.4, confirm Intent exposes its 6 skills, prototype a 10-row "my orders" table with generated types; recommendation into ADR 0001 addendum. | `FE/package.json` (branch), `FE/src/features/orders/OrdersTable.tsx` (branch), `FE/docs/adr/0001-*.md` | `cd frontend && pnpm dlx @tanstack/intent@0.4.0 list --json \| jq -e '[.[] \| select(.packageName=="@tanstack/react-table")] \| length == 6'` | T1-10 | #31 |
-| T2-10 | 2 | Author repo skills `adr`, `api-client-regen`, `sprint-evidence` in root `.claude/skills/` after one manual pass of each activity. | `.claude/skills/adr/SKILL.md`, `.claude/skills/api-client-regen/SKILL.md`, `.claude/skills/sprint-evidence/SKILL.md` | `for s in adr api-client-regen sprint-evidence; do head -5 .claude/skills/$s/SKILL.md \| grep -q '^description:' && echo "ok $s"; done` | T1-15, T1-06, PR-C merged | new: `chore(skills): frontend authored skills` |
-| T2-11 | 2 | After A2 executes: verify headers on dev, tighten the starting CSP (drop `'unsafe-inline'` from `style-src` if HeroUI renders clean; restrict `img-src` to the real image host), update the runbook JSON. | `deployment/frontend/cloudfront/response-headers-policy.json`, `docs/deploy/dev-cloudfront-deployment.md`, `FE/docs/sprint-2-log.md` | `curl -sSI https://d1b3np88z657cp.cloudfront.net/ \| grep -Ei 'content-security-policy\|strict-transport-security' && E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e` (trace shows no CSP console errors) | A2, T1-14 | A2 |
+| T2-10 | 2 | Author repo skills `adr`, `api-client-regen`, `agile-evidence-capture` in root `.claude/skills/` after one manual pass of each activity. | `.claude/skills/adr/SKILL.md`, `.claude/skills/api-client-regen/SKILL.md`, `.claude/skills/agile-evidence-capture/SKILL.md` | `for s in adr api-client-regen agile-evidence-capture; do head -5 .claude/skills/$s/SKILL.md \| grep -q '^description:' && echo "ok $s"; done` | T1-15, T1-06, PR-C merged | new: `chore(skills): frontend authored skills` |
+| T2-11 | 2 | After A2 executes: verify headers on dev, tighten the starting CSP (drop `'unsafe-inline'` from `style-src` if HeroUI renders clean; restrict `img-src` to the real image host), update the runbook JSON. | `deployment/frontend/cloudfront/response-headers-policy.json`, `docs/deploy/dev-cloudfront-deployment.md`, `docs/agile/sprint-02/log.md` | `curl -sSI https://d1b3np88z657cp.cloudfront.net/ \| grep -Ei 'content-security-policy\|strict-transport-security' && E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e` (trace shows no CSP console errors) | A2, T1-14 | A2 |
 
 ### Blocker assumptions per task
 
@@ -185,7 +185,7 @@ Each task below carries the file contents an implementer needs. Steps are bite-s
 
 ### T1-01: Day-1 probe of the dev CloudFront
 
-**Files:** Create `frontend/docs/sprint-2-log.md`.
+**Files:** Create `docs/agile/sprint-02/log.md`.
 
 - [ ] Step 1: Run the three probes from the task row. Expected today: health `200 application/json`; `/products/probe` → `403` (S3 OAC denies unknown keys; proves A1 is not attached) or `200` with `text/html` (A1 is attached); the OAuth start → `302` with `Location: https://accounts.google.com/...` and a `Set-Cookie: blocbuy-oauth-state=...; Path=/api/v1/auth; HttpOnly; SameSite=Lax`.
 - [ ] Step 2: Also record `curl -sSI https://d1b3np88z657cp.cloudfront.net/ | grep -Ei 'x-cache|content-security-policy|strict-transport-security'` (expected: `x-cache` present, no CSP/HSTS → A2 absent).
@@ -203,7 +203,7 @@ Each task below carries the file contents an implementer needs. Steps are bite-s
 | GET / headers | CSP: absent/present; HSTS: absent/present | A2 evidence |
 ```
 
-- [ ] Step 4: `git add frontend/docs/sprint-2-log.md && git commit -m "docs(frontend): sprint 2 log with day-1 CloudFront probe"`.
+- [ ] Step 4: `git add docs/agile/sprint-02/log.md && git commit -m "docs(frontend): sprint 2 log with day-1 CloudFront probe"`.
 
 ### T1-02: File the blocker issues
 
@@ -951,7 +951,7 @@ Until A1 is executed, change the deep-link test to `test.fixme(true, 'A1 not att
 
 - [ ] Step 1: For each stub in `frontend/docs/adr/`, fill Context, Decision, Consequences using §9 (title, decision, alternatives, tasks). Keep each under 60 lines. Status `Accepted` for 0001–0009, 0011–0013; 0010 `Accepted` with an open addendum slot for T2-08.
 - [ ] Step 2: Update `README.md` index status column.
-- [ ] Step 3: Append the blocker table (ids, issue numbers from T1-02, state) to `sprint-2-log.md`.
+- [ ] Step 3: Append the blocker table (ids, issue numbers from T1-02, state) to `docs/agile/sprint-02/log.md`.
 - [ ] Step 4: `git commit -am "docs(frontend): ADR 0001-0013 bodies and sprint log"`.
 
 ### T2-01: Products list
@@ -1227,14 +1227,14 @@ export const Route = createFileRoute('/auth/callback')({
 
 - [ ] Step 1: After PR-A merges, write `.claude/skills/adr/SKILL.md` (frontmatter `name: adr`, `description: Write or update a Nygard ADR in frontend/docs/adr with the next number and README index entry; use when recording a frontend architecture decision, ADR, or design choice`), body = the checklist used in T1-15.
 - [ ] Step 2: `.claude/skills/api-client-regen/SKILL.md` (`description: Regenerate the hey-api client after contracts/openapi.json changes, run pnpm check, and list type breaks; use when the contract, openapi.json, generated client, or gen:api is mentioned`).
-- [ ] Step 3: `.claude/skills/sprint-evidence/SKILL.md` (`description: Assemble PR evidence for BlocBuy frontend PRs: issue link, ADR names, pnpm check output, screenshot or Playwright trace, sprint log entry; use before opening or updating a frontend PR`).
-- [ ] Step 4: Verification command from the task row; commit `chore(skills): adr, api-client-regen and sprint-evidence skills`.
+- [ ] Step 3: `.claude/skills/agile-evidence-capture/SKILL.md` already exists (§12 item 17); verify it still describes the PR evidence set (issue link, ADR names, `pnpm check` output, screenshot or Playwright trace, sprint log entry) and extend rather than duplicate.
+- [ ] Step 4: Verification command from the task row; commit `chore(skills): adr, api-client-regen and agile-evidence-capture skills`.
 
 ### T2-11: CSP tightening
 
 - [ ] Step 1: After A2, run the task-row curl; open the dev site with DevTools console and the Playwright trace; list CSP violations.
 - [ ] Step 2: Edit `deployment/frontend/cloudfront/response-headers-policy.json` (§8.2) to the narrowest policy that passes; account holder re-applies with `update-response-headers-policy`.
-- [ ] Step 3: Log the final CSP in `sprint-2-log.md` and ADR 0002 consequences.
+- [ ] Step 3: Log the final CSP in `docs/agile/sprint-02/log.md` and ADR 0002 consequences.
 
 ---
 
@@ -1324,7 +1324,7 @@ React 19.3 CSR, Vite 8, TanStack Router (file-based via `@tanstack/router-plugin
 ## Skills
 
 - TanStack (via Intent): the block below is maintained by `pnpm dlx @tanstack/intent@0.4.0 install --map` from `frontend/`; do not hand-edit it. Router skills come from `@tanstack/router-core` (`auth-and-guards`, `search-params`, `data-loading`, `navigation`, `path-params`, `not-found-and-errors`, `code-splitting`, `type-safety`) and `@tanstack/router-plugin`. Query and Form ship no skills today; use the official docs linked in `docs/plan.md`.
-- Repo skills (root `.claude/skills/`): `adr`, `api-client-regen`, `sprint-evidence` (after T2-10).
+- Repo skills (root `.claude/skills/`): `adr`, `api-client-regen`, `agile-evidence-capture` (after T2-10).
 
 <!-- Intent guidance block placeholder: `intent install --map` replaces this comment and the section below with its managed block. Keep it as the last section of this file. -->
 ```
@@ -1617,7 +1617,7 @@ ADR(s) implemented or affected: `frontend/docs/adr/00xx-...md`
 - [ ] `pnpm check` output or CI run link:
 - [ ] Contract unchanged, or `contract-change-approved` label requested with the reason
 - [ ] Screenshot or Playwright trace attached (UI changes)
-- [ ] `frontend/docs/sprint-2-log.md` entry added (Sprint 2 only)
+- [ ] `docs/agile/sprint-02/log.md` entry added (Sprint 2 only)
 
 ## Checklist
 
@@ -1915,7 +1915,7 @@ Stubs with only the Nygard headers are created by this session; bodies are writt
 | 0005 | SPA fallback via CloudFront Function (`0005-spa-fallback-cloudfront-function.md`) | Extensionless paths on the default behavior are rewritten to `/index.html` by a viewer-request CloudFront Function; `/api/*` is untouched; no distribution-wide custom error responses. | Custom error responses 403/404 → `index.html` (masks real `/api/*` errors, wrong status codes); S3 website endpoint (public bucket, no OAC); Lambda@Edge (cost, latency). | T1-03, T1-13, T2-07 |
 | 0006 | Lint and format toolchain (`0006-lint-format-toolchain.md`) | oxlint with `typescript`, `react` (native compiler rules), `react-perf`, `jsx-a11y`, `import`, `unicorn`, `vitest`, `promise` plugins and type-aware rules, plus oxfmt; TanStack lint rules via oxlint JS plugins if the T1-09 spike passes, else a minimal ESLint carrying only those two plugins. | Full ESLint + Prettier (slower, duplicate rule sets); Biome (no type-aware rules, no TanStack plugins). | T1-08, T1-09, T1-10 hooks |
 | 0007 | Hand-managed dev CloudFront now, Terraform import in Sprint 2 (`0007-hand-managed-cloudfront-then-terraform-import.md`) | Dev edge changes (SPA function, headers policy, deploy role) are runbook steps executed by the account holder; `infra/terraform/frontend-stack` imports the same resources as a tier-2 task linked to #48. | Terraform first (blocks the walking skeleton on infra review); never import (no IaC evidence for the report). | T1-03, T1-14, T2-07 |
-| 0008 | Documentation and evidence conventions (`0008-documentation-and-evidence.md`) | ADRs live here in Nygard format; every frontend PR links its issue, names ADRs, includes `pnpm check` output or CI link, and attaches a screenshot or trace; a PR template and the `sprint-evidence` skill enforce it; `sprint-2-log.md` is the running record. | Wiki pages (not reviewed with code); report-only documentation (no trace to commits). | T0-00, T1-12, T1-15, T2-10 |
+| 0008 | Documentation and evidence conventions (`0008-documentation-and-evidence.md`) | ADRs live here in Nygard format; every frontend PR links its issue, names ADRs, includes `pnpm check` output or CI link, and attaches a screenshot or trace; a PR template and the `agile-evidence-capture` skill enforce it; `docs/agile/sprint-02/log.md` is the running record. | Wiki pages (not reviewed with code); report-only documentation (no trace to commits). | T0-00, T1-12, T1-15, T2-10 |
 | 0009 | `Result<T>` envelope handling (`0009-result-envelope-handling.md`) | Keep generated envelope types; unwrap `data` with one `unwrapResult` `select`; throw `ApiError` on non-2xx or non-OK `code`; no generator transform. | Generator transform stripping the envelope (hides `traceId`, diverges from contract); unwrap per call site (duplication). | T1-07, T2-01, T2-02 |
 | 0010 | React Compiler via Babel preset now, native path as spike (`0010-react-compiler-babel-now-native-spike.md`) | `@rolldown/plugin-babel` with `reactCompilerPreset()` from `@vitejs/plugin-react` 6 carries the stable `babel-plugin-react-compiler` 1.0.0; `react({ compiler: true })` (experimental, `oxc-transform-react`) is evaluated in T2-08 and adopted only by an addendum. | Native compiler as baseline (experimental); no compiler (manual memoisation convention). | T1-05, T2-08 |
 | 0011 | Testing strategy (`0011-testing-strategy.md`) | Vitest 5 + Testing Library + happy-dom with generated MSW handlers for unit and component tests; Playwright smoke and login journeys against `vite preview` in PRs and against the dev CloudFront after deploy. | jsdom (slower); Vitest browser mode (extra runner); Cypress (second tool). | T1-08, T1-11, T1-13, T2-06, `e2e-*` jobs |
@@ -2227,6 +2227,7 @@ None are applied silently; each is planned as stated below and needs the owner's
 14. **Action majors.** Blueprint did not pin them; current majors are `pnpm/action-setup` v6, `actions/setup-node` v7, `aws-actions/configure-aws-credentials` v6.3.0 (repo pins v6.2.4 by SHA; kept). Evidence: the three READMEs.
 15. **`@tanstack/react-router-devtools` lags the router** (1.167.2 vs 1.170.36) and the devtools packages may expose 4 Intent skills through `@tanstack/devtools`. Informational; §11 excludes them if discovered.
 16. **`routeTree.gen.ts` is committed.** The blueprint does not decide this. TanStack docs treat it as generated read-only output; committing it keeps `tsc --noEmit` (step 2 of `pnpm check`) working on a fresh clone before Vite runs. Excluded from oxlint, oxfmt, knip. Recorded in ADR 0001 consequences.
+17. **Sprint log is repo-wide and the evidence skill is named `agile-evidence-capture`.** Blueprint and review D9: a frontend-only `frontend/docs/sprint-2-log.md` and a `sprint-evidence` skill. Decided 2026-09-16 (team lead): one log per sprint for the whole team at `docs/agile/sprint-02/log.md`, an NFR register at `docs/quality/nfr-register.md`, ADRs kept frontend-only in `frontend/docs/adr/`, and a repo-wide `agile-evidence-capture` skill with an advisory commit hook. References in this plan were redirected; T2-10 step 3 is already done by that change set. Recorded in ADR 0008 (Accepted). Evidence: `docs/agile/README.md`, `.claude/skills/agile-evidence-capture/SKILL.md`.
 
 ---
 

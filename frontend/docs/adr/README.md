@@ -11,7 +11,7 @@ Nygard format, numbered from 0001. New decisions get the next number; superseded
 | 0005 | [SPA fallback via CloudFront Function](0005-spa-fallback-cloudfront-function.md) | Proposed |
 | 0006 | [Lint and format toolchain](0006-lint-format-toolchain.md) | Proposed |
 | 0007 | [Hand-managed dev CloudFront now, Terraform import in Sprint 2](0007-hand-managed-cloudfront-then-terraform-import.md) | Proposed |
-| 0008 | [Documentation and evidence conventions](0008-documentation-and-evidence.md) | Proposed |
+| 0008 | [Documentation and evidence conventions](0008-documentation-and-evidence.md) | Accepted (sprint log and NFR register apply repo-wide) |
 | 0009 | [Result envelope handling](0009-result-envelope-handling.md) | Proposed |
 | 0010 | [React Compiler via Babel preset now, native path as spike](0010-react-compiler-babel-now-native-spike.md) | Proposed |
 | 0011 | [Testing strategy](0011-testing-strategy.md) | Proposed |
