@@ -73,7 +73,8 @@ class AuthControllerTest {
         MvcResult callback =
                 mvc.perform(get(CALLBACK_PATH).param("code", "code").param("state", "state"))
                         .andExpect(status().isFound())
-                        .andExpect(header().string(HttpHeaders.LOCATION, FRONTEND + "/"))
+                        .andExpect(
+                                header().string(HttpHeaders.LOCATION, FRONTEND + "/auth/callback"))
                         .andReturn();
 
         Cookie session = callback.getResponse().getCookie("blocbuy-token");

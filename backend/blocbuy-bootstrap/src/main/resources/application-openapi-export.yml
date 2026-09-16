@@ -1,4 +1,4 @@
-# openapi-export: used ONLY by the springdoc-openapi-maven-plugin (make contract-check).
+# openapi-export: used ONLY by the springdoc-openapi-maven-plugin (`./mvnw verify -Popenapi-export`).
 # Boots the app without touching live PG/Redis: Flyway off, and nothing ever opens a connection —
 # so no credentials exist here at all (no placeholder secrets to leak).
 server:
@@ -25,5 +25,5 @@ spring:
 # the mandatory startup validation — no browser flow ever runs here
 blocbuy:
   frontend:
-    success-redirect-uri: "http://localhost:5173/"
+    success-redirect-uri: "http://localhost:5173/auth/callback"
     failure-redirect-uri: "http://localhost:5173/login?error={errorCode}"

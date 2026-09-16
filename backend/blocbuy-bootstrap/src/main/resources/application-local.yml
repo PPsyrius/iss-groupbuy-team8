@@ -33,6 +33,6 @@ blocbuy:
   frontend:
     # SPA dev-server origin — Vite default port 5173; set FRONTEND_URL if the SPA runs elsewhere.
     # The failure target carries the business error code in the {errorCode} placeholder.
-    success-redirect-uri: "${FRONTEND_URL:http://localhost:5173}/"
+    success-redirect-uri: "${FRONTEND_URL:http://localhost:5173}/auth/callback"
     failure-redirect-uri: "${FRONTEND_URL:http://localhost:5173}/login?error={errorCode}"
 
