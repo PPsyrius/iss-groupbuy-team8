@@ -30,7 +30,7 @@ ci-backend.yml
 │                     └── PR only: compatibility + `contract-change-approved` handling
 ├── sonar             SonarCloud Maven scan + quality gate (artifact reuse from build-quality)
 ├── docker            image build -> EC2-profile smoke -> Trivy image gate
-│                     └── enabled dev push: preserve tested image for ECR publication
+│                     └── enabled production tag push: preserve tested image for ECR publication
 └── deploy-existing-ec2 (dev push + ENABLE_EC2_DEPLOY=true)
                       OIDC -> protected environment -> SSM -> health/auto rollback
 
