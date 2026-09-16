@@ -13,6 +13,15 @@ Read this when writing tests, reviewing quality, adding logs or metrics, or prep
 - Test data is independent, deterministic, and repeatable; dependence on execution order, real production accounts, or shared-environment leftovers is forbidden. Time, IDs, and randomness are injected through controllable ports.
 - Fix a defect by first adding a test that reproduces the behavior; tests assert externally observable behavior, not private implementation details.
 
+## Coverage and the SonarCloud Gate
+
+- The enforced gate (server-side, in the CI `sonar` job): **≥ 80% coverage on new code**, plus no new blocker/critical issues and A ratings on new code. There is deliberately no `jacoco:check` Maven threshold (`docs/quality/quality-gates.md`) — coverage is judged only on new code in SonarCloud. Locally, hold touched files to 100% so the 80% floor is never in play.
+- Coverage data flow: per-module JaCoCo exec → `jacoco-report-aggregate` (bound to `verify` in `blocbuy-bootstrap/pom.xml`) → `blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml` → SonarCloud via `sonar.coverage.jacoco.xmlReportPaths` in `backend/pom.xml` (an absolute `${maven.multiModuleProjectDirectory}` path — never override it with a relative one on the scanner command line; the scanner resolves relative paths per-module base dir and coverage silently reads 0%).
+- **Only the aggregate report is authoritative.** Adapter classes are exercised by `blocbuy-bootstrap` tests; module-local reports miss that cross-module coverage. The aggregate exists only after `verify` — `mvn test` does not produce it.
+- When writing tests for a controller/adapter change, cover every branch you added: failure `catch` arms, blank/null validation branches, and trivial endpoints (a one-line `logout()` counted as new code and sank a gate once). Happy-path-only tests are the most common cause of gate failures.
+- A red Quality Gate can be stale: confirm which commit SonarCloud analyzed before assuming code is uncovered — the fix may already be committed but not yet analyzed.
+- Pre-commit self-check after `./mvnw -B verify` (JDK 21): list per-file missed lines from the aggregate (snippet in SKILL.md's "Pre-Commit Quality Verification"); any miss in a file you touched means add or extend a test before committing.
+
 ## Architecture and Static Gates
 
 - ArchUnit verifies the four-layer dependencies, no framework dependencies in domain, no cross-domain access to `mapper/persistence/internal` packages, and no Controller-to-Mapper dependency.
@@ -52,5 +61,6 @@ Read this when writing tests, reviewing quality, adding logs or metrics, or prep
 - REST statuses, DTOs, validation, idempotency, error-code enums, and global exception mapping are all in place.
 - Sa-Token login/permission/object-ownership checks cover both success and denial paths.
 - Transaction, consistency, concurrency, and message duplication/reordering strategies have tests or explicit verification.
+- New/changed code shows no missed lines or branches in the JaCoCo aggregate report (`./mvnw -B verify`, then inspect `blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml`) — the SonarCloud "≥ 80% on new code" gate must pass on the first CI run, not after a fix-up commit.
 - Logs are masked; key metrics/traces are locatable; configuration holds no secrets.
 - Maven verification passes; unverified items and risks are listed explicitly - never substitute "should be fine" for evidence.
