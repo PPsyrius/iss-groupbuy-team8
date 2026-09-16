@@ -3,6 +3,9 @@
 name: security
 
 on:
+  # Production releases receive the full security gate before publication.
+  push:
+    tags: ['v*']
   # Merge queue gate: same security gates validate the speculative dev merge.
   merge_group:
     types: [checks_requested]
