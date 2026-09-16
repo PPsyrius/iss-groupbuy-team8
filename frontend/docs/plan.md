@@ -273,14 +273,14 @@ frontend/e2e/.auth/*.json
 
 **Interfaces produced:** `createAppRouter(context: RouterContext)` in `src/router.tsx`; `RouterContext = { queryClient: QueryClient; session: SessionState }` (session type defined in T2-04; until then `session: null`).
 
-- [ ] Step 1: Install exact pins (from `frontend/`):
+- [x] Step 1: Install exact pins (from `frontend/`):
 
 ```bash
 pnpm add react@19.3.0 react-dom@19.3.0 @tanstack/react-router@1.170.36 @tanstack/react-query@5.102.8 @tanstack/react-form@1.33.5 valibot@1.5.0 @heroui/react@3.2.5 @heroui/styles@3.2.5 tailwindcss@4.3.3
 pnpm add -D typescript@7.0.2 @types/react@19.3.0 @types/react-dom@19.3.0 @types/node@26.5.1 vite@8.3.0 @vitejs/plugin-react@6.1.1 @rolldown/plugin-babel@0.2.4 @babel/core@8.0.5 babel-plugin-react-compiler@1.0.0 @tanstack/router-plugin@1.168.38 @tailwindcss/vite@4.3.3 @tanstack/react-devtools@0.10.12 @tanstack/react-router-devtools@1.167.2 @tanstack/react-query-devtools@5.102.8
 ```
 
-- [ ] Step 2: `frontend/vite.config.ts` (verified: https://tanstack.com/router/latest/docs/installation/with-vite ; https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react ; https://vite.dev/config/server-options)
+- [x] Step 2: `frontend/vite.config.ts` (verified: https://tanstack.com/router/latest/docs/installation/with-vite ; https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react ; https://vite.dev/config/server-options)
 
 ```ts
 import { fileURLToPath, URL } from 'node:url'
@@ -313,7 +313,7 @@ export default defineConfig({
 
 Note: `autoCodeSplitting` defaults to `false` and must be set explicitly (https://tanstack.com/router/latest/docs/api/file-based-routing). `import.meta.url` here is not `import.meta.env`; the CI grep in §7.1 matches `import.meta.env` only.
 
-- [ ] Step 3: `frontend/tsconfig.json`
+- [x] Step 3: `frontend/tsconfig.json`
 
 ```json
 {
@@ -339,7 +339,7 @@ Note: `autoCodeSplitting` defaults to `false` and must be set explicitly (https:
 
 `baseUrl` is deliberately absent: TypeScript 7 drops it and `oxlint-tsgolint` rejects it (https://oxc.rs/docs/guide/usage/linter/type-aware).
 
-- [ ] Step 4: `frontend/index.html`
+- [x] Step 4: `frontend/index.html`
 
 ```html
 <!doctype html>
@@ -356,14 +356,14 @@ Note: `autoCodeSplitting` defaults to `false` and must be set explicitly (https:
 </html>
 ```
 
-- [ ] Step 5: `frontend/src/styles/app.css` (verified: https://heroui.com/docs/react/getting-started/quick-start ; order matters, Tailwind first)
+- [x] Step 5: `frontend/src/styles/app.css` (verified: https://heroui.com/docs/react/getting-started/quick-start ; order matters, Tailwind first)
 
 ```css
 @import "tailwindcss";
 @import "@heroui/styles";
 ```
 
-- [ ] Step 6: `frontend/src/router.tsx`
+- [x] Step 6: `frontend/src/router.tsx`
 
 ```tsx
 import { createRouter } from '@tanstack/react-router'
@@ -391,7 +391,7 @@ declare module '@tanstack/react-router' {
 }
 ```
 
-- [ ] Step 7: `frontend/src/main.tsx`
+- [x] Step 7: `frontend/src/main.tsx`
 
 ```tsx
 import { StrictMode } from 'react'
@@ -415,7 +415,7 @@ createRoot(document.getElementById('root')!).render(
 
 Until T1-07 exists, create a one-line `src/api/query-client.ts` exporting `export const queryClient = new QueryClient()`; T1-07 replaces it.
 
-- [ ] Step 8: `frontend/src/routes/__root.tsx` (verified: https://tanstack.com/router/latest/docs/framework/react/guide/router-context ; https://tanstack.com/router/latest/docs/framework/react/guide/not-found-errors ; https://tanstack.com/devtools/latest/docs/framework/react/basic-setup)
+- [x] Step 8: `frontend/src/routes/__root.tsx` (verified: https://tanstack.com/router/latest/docs/framework/react/guide/router-context ; https://tanstack.com/router/latest/docs/framework/react/guide/not-found-errors ; https://tanstack.com/devtools/latest/docs/framework/react/basic-setup)
 
 ```tsx
 import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router'
@@ -451,7 +451,7 @@ function RootLayout() {
 
 `TanStackDevtools` is excluded from production builds by the package itself (https://tanstack.com/devtools/latest/docs/framework/react/basic-setup), so no `import.meta.env.DEV` gate is needed; that identifier is forbidden anyway (§7.1 grep).
 
-- [ ] Step 9: `frontend/src/routes/index.tsx` (placeholder until T2-01)
+- [x] Step 9: `frontend/src/routes/index.tsx` (placeholder until T2-01)
 
 ```tsx
 import { createFileRoute } from '@tanstack/react-router'
@@ -461,9 +461,9 @@ export const Route = createFileRoute('/')({
 })
 ```
 
-- [ ] Step 10: Add scripts to `package.json`: `"dev": "vite"`, `"build": "vite build"` (T1-06 prepends `gen:api`), `"preview": "vite preview"`.
-- [ ] Step 11: `pnpm dev` once to generate `src/routeTree.gen.ts`; then `pnpm build`; run the task-row verification.
-- [ ] Step 12: `git add -A frontend && git commit -m "feat(frontend): vite 8, react 19, tanstack router, tailwind 4, heroui scaffold"`.
+- [x] Step 10: Add scripts to `package.json`: `"dev": "vite"`, `"build": "vite build"` (T1-06 prepends `gen:api`), `"preview": "vite preview"`.
+- [x] Step 11: `pnpm dev` once to generate `src/routeTree.gen.ts`; then `pnpm build`; run the task-row verification.
+- [x] Step 12: `git add -A frontend && git commit -m "feat(frontend): vite 8, react 19, tanstack router, tailwind 4, heroui scaffold"`.
 
 ### T1-06: Generated API client
 
@@ -2228,6 +2228,7 @@ None are applied silently; each is planned as stated below and needs the owner's
 15. **`@tanstack/react-router-devtools` lags the router** (1.167.2 vs 1.170.36) and the devtools packages may expose 4 Intent skills through `@tanstack/devtools`. Informational; §11 excludes them if discovered.
 16. **`routeTree.gen.ts` is committed.** The blueprint does not decide this. TanStack docs treat it as generated read-only output; committing it keeps `tsc --noEmit` (step 2 of `pnpm check`) working on a fresh clone before Vite runs. Excluded from oxlint, oxfmt, knip. Recorded in ADR 0001 consequences.
 17. **Sprint log is repo-wide and the evidence skill is named `agile-evidence-capture`.** Blueprint and review D9: a frontend-only `frontend/docs/sprint-2-log.md` and a `sprint-evidence` skill. Decided 2026-09-16 (team lead): one log per sprint for the whole team at `docs/agile/sprint-02/log.md`, an NFR register at `docs/quality/nfr-register.md`, ADRs kept frontend-only in `frontend/docs/adr/`, and a repo-wide `agile-evidence-capture` skill with an advisory commit hook. References in this plan were redirected; T2-10 step 3 is already done by that change set. Recorded in ADR 0008 (Accepted). Evidence: `docs/agile/README.md`, `.claude/skills/agile-evidence-capture/SKILL.md`.
+18. **`tsc --noEmit` is red between T1-05 and T1-11** (found 2026-09-16 while executing T1-05). The T1-05 `tsconfig.json` lists `vitest/globals` and `@testing-library/jest-dom/vitest` in `types`, but `vitest` arrives in T1-08 and `@testing-library/jest-dom` in T1-11, so `pnpm exec tsc --noEmit` on the T1-05 commit fails with two `TS2688` "cannot find type definition file" errors. `vite build` does not type-check, so the T1-05 task-row verification is unaffected. Kept as written: the file is final for T1-11 and the gate that runs `tsc` (`pnpm check`) does not exist until T1-08, which installs `vitest`; T1-11 must run `tsc --noEmit` and confirm it is green before PR-C is opened. Not a settled-decision deviation; informational.
 
 ---
 

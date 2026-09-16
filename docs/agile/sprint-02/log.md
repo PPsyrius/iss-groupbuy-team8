@@ -103,3 +103,36 @@ Say what was verified and what was not.
   backend role. Status: open until A3 executes.
 - Next: user opens PR-B (@l0sgAi runbook, @PPsyrius `deployment/`); A1–A4 executed by the
   account holder; T1-05 scaffold.
+
+## 2026-09-16 - @limjiechao - T1-05 Vite 8 / React 19 / TanStack Router / Tailwind 4 / HeroUI scaffold (#44, #93)
+
+- Kind: feature (scaffold), nfr (NFR-17 row extended with the lockfile; `package.json` and
+  `vite.config.ts` are toolchain, not a new NFR)
+- Changed: `frontend/vite.config.ts`, `frontend/tsconfig.json`, `frontend/index.html`,
+  `frontend/src/{main,router}.tsx`, `frontend/src/styles/app.css`,
+  `frontend/src/routes/{__root,index}.tsx`, `frontend/src/api/query-client.ts` (one-line stub,
+  replaced in T1-07), `frontend/src/routeTree.gen.ts` (generated, committed read-only, plan §12.16),
+  `frontend/package.json` (23 exact pins from plan §1, scripts `dev`/`build`/`preview` only),
+  `frontend/pnpm-lock.yaml`. File contents are plan §4 T1-05 steps 2–10 verbatim.
+- Verified: on branch `feature/frontend-scaffold-t1-05` off `252ba8b`, node v24.14.1 (nvm),
+  pnpm 12.4.2 via `corepack pnpm` (mise not installed). Task-row command
+  `pnpm install --frozen-lockfile && pnpm build && test -f dist/index.html && ls dist/assets/*.js`:
+  lockfile up to date, `vite v8.3.0` built 240 modules in 548 ms, `dist/index.html` present, four
+  JS chunks (`index-*.js`, `routes-*.js`, two vendor chunks) plus a 435 kB CSS bundle (Tailwind +
+  HeroUI styles) and two HeroUI font files. `pnpm dev` once: `routeTree.gen.ts` produced with the
+  `/` route; headless Chrome (playwright-core 1.63.0 in a scratch dir, not a project dependency)
+  against the dev server and against `pnpm preview` of `dist/` rendered `<h1>BlocBuy</h1>` at `/`
+  and `<h1>Page not found</h1>` with the "Back to listings" link at `/does-not-exist`; zero page
+  errors, one 404 for the absent `favicon.ico`. Not verified: `mise install`; the `/api` proxy
+  (dev backend down, T1-01 entry); `tsc --noEmit`, which fails today, see Problems.
+- Decisions: ADR 0001 (stack and CSR; `routeTree.gen.ts` committed), ADR 0003 (generated client
+  gitignored, no `src/api/generated` yet), ADR 0013 (exact pins, `pnpm-lock.yaml` frozen in CI).
+  No new ADR: every file is as planned.
+- Problems: (1) `pnpm exec tsc --noEmit` fails with two `TS2688` errors because `tsconfig.json`
+  names `vitest/globals` and `@testing-library/jest-dom/vitest`, which arrive in T1-08 and T1-11.
+  Action: recorded as plan §12.18, tsconfig kept as written, T1-11 must show `tsc` green before
+  PR-C. Status: open until T1-11. (2) `pnpm add` reformatted `engines` in `package.json` onto
+  three lines; cosmetic, left as pnpm wrote it. (3) `index.html` has no favicon; cosmetic, out of
+  T1-05 scope, noted for the header task (T2-04).
+- Next: T1-06 hey-api client generation (separate session, branch to be cherry-picked onto
+  `feature/frontend-scaffold`).
