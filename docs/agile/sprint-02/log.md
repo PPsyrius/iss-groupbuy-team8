@@ -27,3 +27,28 @@ Say what was verified and what was not.
 - Problems: Sprint 1 report shipped with TODO burndown and contribution cells; NFR changes
   (#84, #75, #45) had no issue or doc trail. Action: this change set. Status: in review.
 - Next: file the Sprint 2 container issue (T1-02), create `nfr:*` labels, first board snapshot.
+
+## 2026-09-16 - @limjiechao - T1-01 dev CloudFront day-1 probe (#44)
+
+- Kind: ops
+- Changed: this log only (zero code). Plan task T1-01 in `frontend/docs/plan.md`.
+- Verified: against `https://d1b3np88z657cp.cloudfront.net` at about 13:00 UTC, health probe run
+  three times with the same result. Script: three `curl` probes from the T1-01 task row plus the
+  root-headers check.
+
+| Probe | Result | Meaning |
+|---|---|---|
+| GET /api/actuator/health | `503 text/html`, `server: awselb/2.0`, `x-cache: Error from cloudfront` (3 of 3 runs) | `/api/*` behavior reaches the ALB; the ALB has no healthy target. Expected `200 application/json` |
+| GET /api/v1/products?page=1 | `503 text/html` | same |
+| GET /products/probe | `403 application/xml` (S3 OAC AccessDenied) | A1 SPA fallback attached: no |
+| GET / and /index.html | `403 application/xml` | no frontend build in the bucket yet (expected before T1-14) |
+| GET /api/v1/auth/oauth2/google | `503`, no `Location`, no `Set-Cookie` | B3 (Secure flag) and B5 (redirect_uri) evidence not obtainable today |
+| GET / headers | CSP absent; HSTS absent | A2 absent |
+
+- Problems: dev backend is down. The latest `ci-backend` run on `dev` (merge of #92,
+  2026-09-16T12:23Z, run 35095495827) failed at job `deploy-existing-ec2` after `publish-ecr-dev`
+  succeeded. Action: raised with @l0sgAi and @PPsyrius; re-run the OAuth probe once dev is healthy
+  and append the B3/B5 rows here. Status: open.
+- Decisions: none. Note for T2: `gh auth status` shows `read:project` on the current token and
+  `gh project view 2 --owner PPsyrius` lists 21 items, so the board is readable at filing time.
+- Next: T1-02 file the 13 blocker issues; T1-04 runtime pins.
