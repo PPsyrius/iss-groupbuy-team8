@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Stop: typecheck frontend when frontend files changed in this working tree.
 set -euo pipefail
+# jq is not pinned anywhere in this repo and is absent from a stock macOS; under `set -e` the
+# command substitution below would abort the hook with 127. Degrade to a no-op instead.
+command -v jq >/dev/null 2>&1 || exit 0
 input="$(cat)"
 if [ "$(printf '%s' "$input" | jq -r '.stop_hook_active // false')" = "true" ]; then exit 0; fi
 root="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"

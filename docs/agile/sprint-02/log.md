@@ -328,6 +328,23 @@ Say what was verified and what was not.
   "frontend: generated client was missing; ran pnpm install (prepare → gen:api)." and the 9
   generated entries were back; the second run printed nothing (idempotent). `bash -n` clean on all
   three; all three are 0755.
+  **Review fix round 1** (second commit on the branch). The review found `jq` is an undeclared
+  hard dependency of two hooks: it is pinned nowhere in this repo and is absent from a stock
+  macOS, and under `set -euo pipefail` the `jq` substitution aborts the script with **127** before
+  its intended `exit 0`. Reproduced with a scratch PATH holding only symlinks to bash/sh/cat/
+  printf/git/pnpm — `command -v jq` fails there, and the unguarded equivalent
+  (`set -euo pipefail; input="$(cat)"; file="$(printf … | jq -r …)"`) exits 127. With
+  `command -v jq >/dev/null 2>&1 || exit 0` added to `frontend-fix.sh` and
+  `frontend-typecheck.sh`, both now exit **0** on that PATH with 0 bytes on stdout and 0 bytes on
+  stderr. The review also found the `permissions.deny` list evaded by the exact commands it
+  exists to stop: rules are prefixes, so bare `pnpm publish`, `git push --force` and
+  `git push -f` matched no deny rule (and `pnpm publish` was caught by `Bash(pnpm *)` in `allow`),
+  and `--force-with-lease` was uncovered; exact-match siblings were added and the `.env` reads
+  widened to `Read(./**/.env{,.*})`. `jq . .claude/settings.json` parses; the 11 deny rules read
+  back as written. `frontend-fix.sh` also gained a relative-path normalisation
+  (`case "$file" in /*) ;; *) file="$root/$file" ;; esac`), verified by driving it with
+  `"file_path":"frontend/src/routes/index.tsx"` — it now reformats the file instead of silently
+  missing `frontend/frontend/...`. All three hook simulations re-run green afterwards.
   **Gate.** `pnpm check` (gen:api → tsc --noEmit → oxlint --type-aware → oxfmt --check →
   vitest run → knip) exits **0**; vitest 3 files / 7 tests passed; knip reports only the six
   pre-existing configuration hints. `git check-ignore -v` on the five files that must be
@@ -339,7 +356,12 @@ Say what was verified and what was not.
   discovered at runtime and allowlisted in
   `package.json#intent`; `router-core/ssr` excluded (pure CSR, ADR 0001) along with the devtools
   plugin-authoring skills; the committed manifest stores repo-relative paths so the planned
-  T1-12 `intent-stale` diff is machine-independent.
+  T1-12 `intent-stale` diff is machine-independent. Review round 1 diverges from §6.3/§6.4 on two
+  points (plan §12 note 31(g),(h)): hooks degrade to a no-op when `jq` is missing rather than
+  assume it, and `permissions.deny` carries exact-match forms alongside the `*` forms. Plain
+  `git push` stays out of `deny` deliberately — teammates push feature branches, and the
+  user-local git-guard hook is a separate layer; refspec (`git push origin +main`) and trailing
+  `--force` spellings remain uncovered by prefix rules and fall through to a prompt.
 - Problems: (1) the in-session hook smoke — plan T1-10 step 5 as written, from a Claude Code
   session started at the repo root — could not be done from this headless run and is **owed to
   the user's next Claude Code session at the repo root**; step 5 stays unticked. (2) §6.4's
