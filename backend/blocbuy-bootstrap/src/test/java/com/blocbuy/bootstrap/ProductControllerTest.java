@@ -1,5 +1,6 @@
 package com.blocbuy.bootstrap;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -10,17 +11,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import cn.dev33.satoken.dao.SaTokenDao;
 import cn.dev33.satoken.dao.SaTokenDaoDefaultImpl;
+import com.blocbuy.catalog.exception.CatalogErrorCode;
+import com.blocbuy.catalog.query.ActiveDealView;
+import com.blocbuy.catalog.query.ListingDetailView;
 import com.blocbuy.catalog.query.ListingView;
 import com.blocbuy.catalog.service.ProductAppService;
+import com.blocbuy.catalog.web.ProductController;
+import com.blocbuy.common.exception.BizException;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
 import com.blocbuy.identity.repository.RoleRepository;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -62,24 +70,23 @@ class ProductControllerTest {
 
     @ParameterizedTest
     @MethodSource("invalidPagination")
-    void outOfRangePaginationIsRejectedBeforeBusinessCode(String query) throws Exception {
+    void outOfRangePaginationIsRejectedBeforeBusinessCode(String query, String field)
+            throws Exception {
         mvc.perform(get(PRODUCTS_PATH + query))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("COMMON_400_002"))
                 .andExpect(jsonPath("$.data").doesNotExist())
-                .andExpect(jsonPath("$.errors").isArray());
+                .andExpect(jsonPath("$.errors").isArray())
+                .andExpect(jsonPath("$.errors[0]", containsString(field)));
         verifyNoInteractions(products);
     }
 
-    static Stream<String> invalidPagination() {
-        return Stream.of("?page=0&size=5", "?page=-1", "?size=0", "?size=101");
-    }
-
-    @Test
-    void pageZeroErrorNamesTheOffendingField() throws Exception {
-        mvc.perform(get(PRODUCTS_PATH + "?page=0&size=5"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[0]", containsString("page")));
+    static Stream<Arguments> invalidPagination() {
+        return Stream.of(
+                Arguments.of("?page=0&size=5", "page"),
+                Arguments.of("?page=-1", "page"),
+                Arguments.of("?size=0", "size"),
+                Arguments.of("?size=101", "size"));
     }
 
     @Test
@@ -113,6 +120,118 @@ class ProductControllerTest {
                 .andExpect(jsonPath("$.data.page").value(2))
                 .andExpect(jsonPath("$.data.size").value(5));
         verify(products).pageListings(2, 5, "electronics");
+    }
+
+    @Test
+    void getListingReturnsDetailWithDeal() throws Exception {
+        when(products.getListingDetail(PRODUCT)).thenReturn(detailWithDeal());
+        mvc.perform(get(PRODUCTS_PATH + "/" + PRODUCT))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("COMMON_200_000"))
+                .andExpect(jsonPath("$.data.id").value(PRODUCT.toString()))
+                .andExpect(jsonPath("$.data.title").value("Mechanical keyboard"))
+                .andExpect(jsonPath("$.data.individualPrice").value(129.00))
+                .andExpect(jsonPath("$.data.groupPrice").value(99.00))
+                .andExpect(jsonPath("$.data.deal.dealId").value(DEAL.toString()));
+        verify(products).getListingDetail(PRODUCT);
+    }
+
+    @Test
+    void getListingWithoutDealHasNullDeal() throws Exception {
+        when(products.getListingDetail(PRODUCT)).thenReturn(detailWithoutDeal());
+        mvc.perform(get(PRODUCTS_PATH + "/" + PRODUCT))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("COMMON_200_000"))
+                .andExpect(jsonPath("$.data.id").value(PRODUCT.toString()))
+                .andExpect(jsonPath("$.data.deal").doesNotExist());
+        verify(products).getListingDetail(PRODUCT);
+    }
+
+    @Test
+    void getListingMissingProductMapsTo404() throws Exception {
+        when(products.getListingDetail(PRODUCT))
+                .thenThrow(new BizException(CatalogErrorCode.PRODUCT_NOT_FOUND));
+        mvc.perform(get(PRODUCTS_PATH + "/" + PRODUCT))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CATALOG_404_001"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+        verify(products).getListingDetail(PRODUCT);
+    }
+
+    @Test
+    void getListingWithInvalidUuidIsBadRequest() throws Exception {
+        mvc.perform(get(PRODUCTS_PATH + "/not-a-uuid"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON_400_001"));
+        verifyNoInteractions(products);
+    }
+
+    @Test
+    void unhandledFailureMapsToInternalErrorWithoutLeaking() throws Exception {
+        when(products.getListingDetail(PRODUCT)).thenThrow(new IllegalStateException("boom"));
+        mvc.perform(get(PRODUCTS_PATH + "/" + PRODUCT))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.code").value("COMMON_500_001"))
+                .andExpect(jsonPath("$.data").doesNotExist())
+                .andExpect(jsonPath("$.message").value("Internal server error"));
+        verify(products).getListingDetail(PRODUCT);
+    }
+
+    @Test
+    void productDetailResponseDefaultsNullImages() {
+        var response =
+                new ProductController.ProductDetailResponse(
+                        PRODUCT,
+                        "Mechanical keyboard",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        new BigDecimal("129.00"),
+                        null,
+                        "sgd",
+                        5,
+                        0,
+                        null);
+
+        assertThat(response.images()).isEmpty();
+    }
+
+    private static final UUID DEAL = UUID.fromString("01990000-0000-7000-8000-000000000002");
+
+    private static ListingDetailView detailWithDeal() {
+        return new ListingDetailView(
+                PRODUCT,
+                "Mechanical keyboard",
+                "Hot-swap",
+                "Full description",
+                "https://img.example/cover.png",
+                List.of("https://img.example/1.png"),
+                "electronics",
+                new BigDecimal("129.00"),
+                new BigDecimal("99.00"),
+                "sgd",
+                5,
+                1,
+                new ActiveDealView(DEAL, 5, 2, Instant.parse("2027-12-31T23:59:59Z")));
+    }
+
+    private static ListingDetailView detailWithoutDeal() {
+        return new ListingDetailView(
+                PRODUCT,
+                "Mechanical keyboard",
+                "Hot-swap",
+                "Full description",
+                "https://img.example/cover.png",
+                List.of(),
+                "electronics",
+                new BigDecimal("129.00"),
+                null,
+                "sgd",
+                5,
+                0,
+                null);
     }
 
     private static ListingView listing() {

@@ -26,7 +26,11 @@ class TeamPricePolicyTest {
         Instant validUntil = NOW.plusSeconds(60);
 
         assertThatThrownBy(() -> policy(amount, "sgd", NOW, validUntil))
-                .isInstanceOf(BizException.class);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
     }
 
     @Test
@@ -41,12 +45,21 @@ class TeamPricePolicyTest {
         Instant validUntil = NOW.plusSeconds(60);
 
         assertThatThrownBy(() -> policy("20", currency, NOW, validUntil))
-                .isInstanceOf(BizException.class);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
     }
 
     @Test
     void rejectsEmptyValidityWindow() {
-        assertThatThrownBy(() -> policy("20", "sgd", NOW, NOW)).isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> policy("20", "sgd", NOW, NOW))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
     }
 
     @Test
@@ -70,10 +83,18 @@ class TeamPricePolicyTest {
 
         Instant beforeStart = NOW.minusNanos(1);
         assertThatThrownBy(() -> policy.requireQuotable(product, beforeStart))
-                .isInstanceOf(BizException.class);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.TEAM_PRICE_UNAVAILABLE));
 
         assertThatThrownBy(() -> policy.requireQuotable(product, validUntil))
-                .isInstanceOf(BizException.class);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.TEAM_PRICE_UNAVAILABLE));
     }
 
     @Test
@@ -83,12 +104,20 @@ class TeamPricePolicyTest {
 
         Product currencyMismatchProduct = product("usd", ProductStatus.ON_SALE);
         assertThatThrownBy(() -> policy.requireCompatible(currencyMismatchProduct))
-                .isInstanceOf(BizException.class);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
 
         TeamPricePolicy equalPricePolicy = policy("40", "sgd", NOW, validUntil);
         Product product = product("sgd", ProductStatus.ON_SALE);
         assertThatThrownBy(() -> equalPricePolicy.requireCompatible(product))
-                .isInstanceOf(BizException.class);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
     }
 
     @Test
@@ -101,6 +130,93 @@ class TeamPricePolicyTest {
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(CatalogErrorCode.TEAM_PRICE_UNAVAILABLE);
+    }
+
+    /** Verifies absent identity fields fail before any money or window validation runs. */
+    @Test
+    void rejectsNullIdentityFields() {
+        Instant validUntil = NOW.plusSeconds(60);
+        BigDecimal amount = new BigDecimal("20");
+
+        assertThatThrownBy(() -> new TeamPricePolicy(null, amount, "sgd", NOW, validUntil, 1))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
+        assertThatThrownBy(() -> new TeamPricePolicy(PRODUCT, amount, "sgd", null, validUntil, 1))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
+        assertThatThrownBy(() -> new TeamPricePolicy(PRODUCT, amount, "sgd", NOW, null, 1))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
+    }
+
+    /** Verifies the append-only revision counter starts at one. */
+    @Test
+    void rejectsNonPositiveVersion() {
+        BigDecimal amount = new BigDecimal("20");
+        Instant validUntil = NOW.plusSeconds(60);
+
+        assertThatThrownBy(() -> new TeamPricePolicy(PRODUCT, amount, "sgd", NOW, validUntil, 0))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID);
+    }
+
+    /** Verifies a null amount is rejected without reaching scale normalization. */
+    @Test
+    void rejectsNullAmount() {
+        Instant validUntil = NOW.plusSeconds(60);
+
+        assertThatThrownBy(() -> new TeamPricePolicy(PRODUCT, null, "sgd", NOW, validUntil, 1))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID);
+    }
+
+    /** Verifies compatibility checks cannot run against an absent product. */
+    @Test
+    void requireCompatibleRejectsNullProduct() {
+        TeamPricePolicy policy = policy("20", "sgd", NOW, NOW.plusSeconds(60));
+
+        assertThatThrownBy(() -> policy.requireCompatible(null))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(CatalogErrorCode.TEAM_PRICE_UNAVAILABLE);
+    }
+
+    /** Verifies configuration cannot misprice another product. */
+    @Test
+    void requireCompatibleRejectsForeignProduct() {
+        TeamPricePolicy policy = policy("20", "sgd", NOW, NOW.plusSeconds(60));
+        Product foreign =
+                Product.reconstitute(
+                        UUID.randomUUID(),
+                        "P-9",
+                        "Product",
+                        null,
+                        null,
+                        null,
+                        List.of(),
+                        null,
+                        new BigDecimal("40.00"),
+                        "sgd",
+                        5,
+                        0,
+                        ProductStatus.ON_SALE,
+                        PricingMode.DUAL);
+
+        assertThatThrownBy(() -> policy.requireCompatible(foreign))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID);
     }
 
     private static TeamPricePolicy policy(

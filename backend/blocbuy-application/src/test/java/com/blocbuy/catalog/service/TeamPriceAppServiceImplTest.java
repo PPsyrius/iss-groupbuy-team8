@@ -3,6 +3,7 @@ package com.blocbuy.catalog.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
@@ -96,7 +97,9 @@ class TeamPriceAppServiceImplTest {
         when(prices.findLatestPolicy(PRODUCT)).thenReturn(Optional.of(policy("20", 2, NOW)));
         when(prices.currentTime()).thenReturn(NOW);
         assertThatThrownBy(() -> service.issueQuote(PRODUCT, OWNER))
-                .isInstanceOf(BizException.class);
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(CatalogErrorCode.TEAM_PRICE_UNAVAILABLE);
         verify(prices, never()).insertQuote(any());
     }
 
@@ -107,7 +110,9 @@ class TeamPriceAppServiceImplTest {
                 .when(users)
                 .requireActive(OWNER);
         assertThatThrownBy(() -> service.issueQuote(PRODUCT, OWNER))
-                .isInstanceOf(BizException.class);
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(IdentityErrorCode.ACCOUNT_DISABLED);
         verify(prices, never()).insertQuote(any());
     }
 
@@ -153,6 +158,167 @@ class TeamPriceAppServiceImplTest {
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(CatalogErrorCode.TEAM_PRICE_QUOTE_NOT_FOUND);
         verify(prices).findQuoteForOwner(PRODUCT, OWNER);
+    }
+
+    @Test
+    void getPolicyReturnsLatestRevisionAfterActiveCheck() {
+        TeamPricePolicy latest = policy("20", 2, NOW.plusSeconds(3600));
+        when(prices.findLatestPolicy(PRODUCT)).thenReturn(Optional.of(latest));
+
+        assertThat(service.getPolicy(PRODUCT, OWNER)).isEqualTo(latest);
+        var order = inOrder(users, prices);
+        order.verify(users).requireActive(OWNER);
+        order.verify(prices).findLatestPolicy(PRODUCT);
+    }
+
+    @Test
+    void getPolicyWithoutRevisionIsUnavailable() {
+        when(prices.findLatestPolicy(PRODUCT)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.getPolicy(PRODUCT, OWNER))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(CatalogErrorCode.TEAM_PRICE_UNAVAILABLE);
+    }
+
+    @Test
+    void disabledActorCannotReadPolicy() {
+        doThrow(new BizException(IdentityErrorCode.ACCOUNT_DISABLED))
+                .when(users)
+                .requireActive(OWNER);
+
+        assertThatThrownBy(() -> service.getPolicy(PRODUCT, OWNER))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(IdentityErrorCode.ACCOUNT_DISABLED);
+        verify(prices, never()).findLatestPolicy(any());
+    }
+
+    @Test
+    void configureRejectsIncompatiblePriceWithoutWriting() {
+        stubProduct();
+        when(prices.currentTime()).thenReturn(NOW);
+        var command =
+                new TeamPriceAppService.ConfigurePolicy(
+                        new BigDecimal("40"), "sgd", NOW, NOW.plusSeconds(3600), 0);
+
+        assertThatThrownBy(() -> service.configure(PRODUCT, OWNER, command))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID);
+        verify(prices, never()).appendPolicy(any(), any(), any());
+    }
+
+    @Test
+    void configureRejectsExpiredWindowWithoutWriting() {
+        stubProduct();
+        when(prices.currentTime()).thenReturn(NOW);
+        var command =
+                new TeamPriceAppService.ConfigurePolicy(
+                        new BigDecimal("20"), "sgd", NOW.minusSeconds(3600), NOW, 0);
+
+        assertThatThrownBy(() -> service.configure(PRODUCT, OWNER, command))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID);
+        verify(prices, never()).appendPolicy(any(), any(), any());
+    }
+
+    @Test
+    void configureMissingProductIsNotFound() {
+        when(products.lockById(PRODUCT)).thenReturn(Optional.empty());
+        var command =
+                new TeamPriceAppService.ConfigurePolicy(
+                        new BigDecimal("20"), "sgd", NOW, NOW.plusSeconds(3600), 0);
+
+        assertThatThrownBy(() -> service.configure(PRODUCT, OWNER, command))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(CatalogErrorCode.PRODUCT_NOT_FOUND);
+        verify(prices, never()).findLatestPolicy(any());
+    }
+
+    @Test
+    void issueQuoteMissingProductIsNotFound() {
+        when(products.lockById(PRODUCT)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.issueQuote(PRODUCT, OWNER))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(CatalogErrorCode.PRODUCT_NOT_FOUND);
+        verify(prices, never()).findLatestPolicy(any());
+    }
+
+    @Test
+    void configureUsesProductFirstLockOrder() {
+        stubProduct();
+        when(prices.findLatestPolicy(PRODUCT)).thenReturn(Optional.empty());
+        when(prices.currentTime()).thenReturn(NOW);
+        var command =
+                new TeamPriceAppService.ConfigurePolicy(
+                        new BigDecimal("20"), "sgd", NOW, NOW.plusSeconds(3600), 0);
+
+        service.configure(PRODUCT, OWNER, command);
+
+        var order = inOrder(products, users, prices);
+        order.verify(products).lockById(PRODUCT);
+        order.verify(users).requireActive(OWNER);
+        order.verify(prices).findLatestPolicy(PRODUCT);
+        order.verify(prices).currentTime();
+        order.verify(prices).appendPolicy(any(), eq(OWNER), eq(NOW));
+    }
+
+    @Test
+    void configureStaleVersionFailsBeforeClockRead() {
+        stubProduct();
+        when(prices.findLatestPolicy(PRODUCT))
+                .thenReturn(Optional.of(policy("20", 1, NOW.plusSeconds(3600))));
+        var command =
+                new TeamPriceAppService.ConfigurePolicy(
+                        new BigDecimal("21"), "sgd", NOW, NOW.plusSeconds(3600), 0);
+
+        assertThatThrownBy(() -> service.configure(PRODUCT, OWNER, command))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(CatalogErrorCode.TEAM_PRICE_VERSION_CONFLICT);
+        verify(prices, never()).currentTime();
+        verify(prices, never()).appendPolicy(any(), any(), any());
+    }
+
+    @Test
+    void getQuoteDisabledActorCannotRead() {
+        doThrow(new BizException(IdentityErrorCode.ACCOUNT_DISABLED))
+                .when(users)
+                .requireActive(OWNER);
+
+        assertThatThrownBy(() -> service.getQuote(PRODUCT, OWNER))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(IdentityErrorCode.ACCOUNT_DISABLED);
+        verify(prices, never()).findQuoteForOwner(any(), any());
+    }
+
+    @Test
+    void configureRejectsExhaustedVersionWithoutWriting() {
+        stubProduct();
+        TeamPricePolicy exhausted =
+                new TeamPricePolicy(
+                        PRODUCT,
+                        new BigDecimal("20"),
+                        "sgd",
+                        NOW.minusSeconds(10),
+                        NOW.plusSeconds(3600),
+                        Integer.MAX_VALUE);
+        when(prices.findLatestPolicy(PRODUCT)).thenReturn(Optional.of(exhausted));
+        var command =
+                new TeamPriceAppService.ConfigurePolicy(
+                        new BigDecimal("20"), "sgd", NOW, NOW.plusSeconds(3600), Integer.MAX_VALUE);
+
+        assertThatThrownBy(() -> service.configure(PRODUCT, OWNER, command))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(CatalogErrorCode.TEAM_PRICE_VERSION_CONFLICT);
+        verify(prices, never()).appendPolicy(any(), any(), any());
     }
 
     private void stubProduct() {

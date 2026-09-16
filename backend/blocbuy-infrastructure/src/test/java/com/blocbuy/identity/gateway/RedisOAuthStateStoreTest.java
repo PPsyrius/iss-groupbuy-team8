@@ -3,6 +3,7 @@ package com.blocbuy.identity.gateway;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.identity.gateway.OAuthStateStore.IssuedState;
@@ -71,5 +72,11 @@ class RedisOAuthStateStoreTest {
 
         assertThat(store.consume("gone", "b")).isFalse();
         assertThat(store.consume(" ", "b")).isFalse();
+    }
+
+    @Test
+    void consumeRejectsNullStateWithoutTouchingRedis() {
+        assertThat(store.consume(null, "b")).isFalse();
+        verifyNoInteractions(redis);
     }
 }

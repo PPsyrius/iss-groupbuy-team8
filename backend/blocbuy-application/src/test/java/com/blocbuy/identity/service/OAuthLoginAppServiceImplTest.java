@@ -3,6 +3,7 @@ package com.blocbuy.identity.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -90,6 +91,62 @@ class OAuthLoginAppServiceImplTest {
         when(oAuthUserTxService.registerNewUser(PROFILE)).thenReturn(expected);
 
         assertThat(service.loginWithGoogle("c", "s", "b")).isEqualTo(expected);
+        verify(oAuthUserTxService, never()).recordLogin(any(), any());
+    }
+
+    @Test
+    void exchangeFailurePropagatesWithoutTouchingRepositories() {
+        when(oAuthStateStore.consume("s", "b")).thenReturn(true);
+        when(oAuthIdentityGateway.exchangeCodeForProfile("c"))
+                .thenThrow(new BizException(IdentityErrorCode.OAUTH_PROVIDER_ERROR));
+
+        assertThatThrownBy(() -> service.loginWithGoogle("c", "s", "b"))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(IdentityErrorCode.OAUTH_PROVIDER_ERROR);
+        verify(userOAuthRepository, never()).findActiveByProviderAndSubject(any(), any());
+        verify(oAuthUserTxService, never()).registerNewUser(any());
+    }
+
+    @Test
+    void existingBindingDisabledPropagatesAccountDisabled() {
+        OAuthIdentity identity = binding();
+        when(oAuthStateStore.consume("s", "b")).thenReturn(true);
+        when(oAuthIdentityGateway.exchangeCodeForProfile("c")).thenReturn(PROFILE);
+        when(userOAuthRepository.findActiveByProviderAndSubject(OAuthProvider.GOOGLE, "sub-123"))
+                .thenReturn(Optional.of(identity));
+        when(oAuthUserTxService.recordLogin(identity, PROFILE))
+                .thenThrow(new BizException(IdentityErrorCode.ACCOUNT_DISABLED));
+
+        assertThatThrownBy(() -> service.loginWithGoogle("c", "s", "b"))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(IdentityErrorCode.ACCOUNT_DISABLED);
+        verify(oAuthUserTxService, never()).registerNewUser(any());
+    }
+
+    @Test
+    void collaborationFollowsConsumeExchangeLookupOrder() {
+        when(oAuthStateStore.consume("s", "b")).thenReturn(true);
+        when(oAuthIdentityGateway.exchangeCodeForProfile("c")).thenReturn(PROFILE);
+        when(userOAuthRepository.findActiveByProviderAndSubject(OAuthProvider.GOOGLE, "sub-123"))
+                .thenReturn(Optional.empty());
+        OAuthLoginResult expected = new OAuthLoginResult(UUID.randomUUID(), "Ada", "https://pic");
+        when(oAuthUserTxService.registerNewUser(PROFILE)).thenReturn(expected);
+
+        service.loginWithGoogle("c", "s", "b");
+
+        var order =
+                inOrder(
+                        oAuthStateStore,
+                        oAuthIdentityGateway,
+                        userOAuthRepository,
+                        oAuthUserTxService);
+        order.verify(oAuthStateStore).consume("s", "b");
+        order.verify(oAuthIdentityGateway).exchangeCodeForProfile("c");
+        order.verify(userOAuthRepository)
+                .findActiveByProviderAndSubject(OAuthProvider.GOOGLE, "sub-123");
+        order.verify(oAuthUserTxService).registerNewUser(PROFILE);
     }
 
     @Test
@@ -144,6 +201,22 @@ class OAuthLoginAppServiceImplTest {
 
         assertThatThrownBy(() -> service.loginWithGoogle("c", "s", "b"))
                 .isInstanceOf(DuplicateKeyException.class);
+    }
+
+    @Test
+    void registerRaceWithNullEmailRethrowsWithoutEmailLookup() {
+        OAuthProfile anonymous =
+                new OAuthProfile(OAuthProvider.GOOGLE, "sub-123", null, "Ada", null, "{}");
+        when(oAuthStateStore.consume("s", "b")).thenReturn(true);
+        when(oAuthIdentityGateway.exchangeCodeForProfile("c")).thenReturn(anonymous);
+        when(userOAuthRepository.findActiveByProviderAndSubject(OAuthProvider.GOOGLE, "sub-123"))
+                .thenReturn(Optional.empty());
+        when(oAuthUserTxService.registerNewUser(anonymous))
+                .thenThrow(new DuplicateKeyException("mystery"));
+
+        assertThatThrownBy(() -> service.loginWithGoogle("c", "s", "b"))
+                .isInstanceOf(DuplicateKeyException.class);
+        verify(userRepository, never()).findActiveByEmail(any());
     }
 
     private static OAuthIdentity binding() {

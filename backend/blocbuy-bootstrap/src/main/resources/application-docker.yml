@@ -10,3 +10,17 @@ spring:
       port: 6379
       password: ${REDIS_PASSWORD}
       timeout: 3s
+
+sa-token:
+  cookie:
+    # compose exposes the backend over plain HTTP — browsers refuse Secure cookies over HTTP
+    secure: false
+
+blocbuy:
+  frontend:
+    # SPA origin via env only — no deployment host in the repo; startup validation fails fast when
+    # FRONTEND_URL is unset
+    success-redirect-uri: "${FRONTEND_URL:}/auth/callback"
+    failure-redirect-uri: "${FRONTEND_URL:}/login?error={errorCode}"
+    # same transport constraint as sa-token.cookie.secure above — compose serves plain HTTP
+    state-cookie-secure: false

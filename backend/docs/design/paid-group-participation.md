@@ -237,7 +237,7 @@ it is not an implemented Observer event dispatch to UC6/UC7.
 ### Verification evidence for UC3 and UC4
 
 Read `PaidGroupDealTest`, `PaidGroupDealServiceTest`, `PaidGroupDealRepositoryIT` and
-`PaidGroupDealFlowIT` for construction invariants, replay, rollback, same-buyer concurrency and
+`PaidGroupDealServiceIT` for construction invariants, replay, rollback, same-buyer concurrency and
 last-seat races. These are code/test evidence entry points, not a new test run for this prose edit.
 Keep real Stripe test-mode evidence separate, and include the remaining integration boundaries in
 the assessed contribution rather than marking both full use cases complete.

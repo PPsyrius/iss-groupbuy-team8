@@ -54,7 +54,14 @@ All versions pinned in `blocbuy-parent` properties, verified against Maven Centr
 
 ### `.github/workflows/ci-backend.yml`
 
-Triggers: PRs and pushes to `dev` touching `backend/**` or `contracts/**`. Concurrency group cancels stale runs.
+Triggers: PRs and pushes to `dev` touching the backend/contract/deployment paths, `v*` tag pushes,
+and `merge_group` for the `dev` merge queue. PR and merge-group runs use the same applicable
+path-based gates; the merge-group run validates GitHub's speculative merge as the final pre-merge
+gate. The `merge_group` run is the authoritative final quality/security gate. After GitHub updates
+`dev`, the resulting push runs a lightweight delivery path only: package the merged application,
+assemble the runtime image, publish to ECR, and deploy. It does not repeat the expensive
+quality/security gates. Production `v*` tag pushes retain the full release validation path.
+Stale ordinary runs may be cancelled, but merge-group validation must not be cancelled as stale.
 
 - **Job `build-quality`** — temurin 21, Maven cache:
   1. `./mvnw -B spotless:check checkstyle:check` (fail fast)
@@ -62,9 +69,28 @@ Triggers: PRs and pushes to `dev` touching `backend/**` or `contracts/**`. Concu
   3. Upload `jacoco.xml` + SpotBugs XML + checkstyle results as artifacts (7-day retention)
   4. Upload Sonar inputs: compiled classes, test results, JaCoCo reports (1-day retention)
 - **Job `contract-check`** — `./mvnw -B verify -Popenapi-export` then `git diff --exit-code -- contracts/`; fails the PR if the committed `openapi.json` drifts from the code. On PRs (Step 5) it also runs `openapi-diff --fail-on-incompatible` against the base branch's committed contract, failing on backward-incompatible API changes unless the PR carries the `contract-change-approved` label (explicit human approval; diff then runs report-only).
-- **Job `sonar`** — see Step 3. Skipped unless configured.
-- **Job `docker`** — PRs and pushes to `dev`: build image (from the `build-quality` boot-jar artifact via `Dockerfile.ci` when available), smoke test with the EC2 profile against PG 18 + Redis 8, and Trivy image scan (vulnerability DB restored from `actions/cache`; SARIF uploaded to Code Scanning only on pushes, preserved as artifact on PRs). On an enabled green `dev` push, publish that exact image to ECR and emit its immutable digest.
-- **Job `deploy-existing-ec2`** — enabled green `dev` pushes only: protected environment, GitHub OIDC, exact SSM bundle allowlist, single-instance deployment, health check and automatic application rollback.
+- **Job `sonar`** — see Step 3. Runs after `build-quality` when Sonar credentials/context permit it.
+- **Job `docker`** — applicable PR, merge-group and push runs: download the exact boot-jar produced by successful `build-quality`, assemble it with `Dockerfile.ci`, smoke test with the EC2 profile against PG 18 + Redis 8, and run the Trivy image gate. SARIF is preserved as an artifact; Code Scanning ingestion is push-only when enabled. On an enabled green `dev` push, the tested image is preserved for the ECR publication job, which emits its immutable digest.
+- **Post-merge dev delivery** — after a merge-queue-validated change lands on `dev`, rebuild the delivery image from the merged source without repeating the pre-merge quality/security gates, publish it to ECR by immutable digest, then run `deploy-existing-ec2`.
+- **Job `deploy-existing-ec2`** — enabled `dev` delivery pushes only: protected environment, GitHub OIDC, exact SSM bundle allowlist, single-instance deployment, health check and automatic application rollback.
+
+### Merge queue and post-merge delivery decision
+
+The repository ruleset makes pull request + merge queue the normal path into `dev`; direct pushes
+and force-pushes are not part of the normal development flow. PR runs provide early feedback and
+`merge_group` repeats the same applicable gates against the speculative integrated state. A passing
+merge-group run is therefore the final technical gate before GitHub updates `dev`.
+
+To conserve GitHub Actions minutes, the resulting `push/dev` does not repeat Maven verification,
+Sonar, contract validation, Docker smoke/Trivy validation, or `security.yml`. It only performs the
+minimum work needed to create and deliver the artifact from the merged source: package, assemble
+the image, publish by immutable ECR digest, and deploy.
+
+This intentionally changes the earlier artifact-provenance model: the Docker image produced during
+merge-group validation is not promoted across workflow runs. The delivery path rebuilds the
+deployable artifact from the exact merged source after the queue passes. This accepts a small
+reproducibility/provenance trade-off in exchange for eliminating a full duplicate CI/security run.
+Production `v*` tag releases continue to execute the full release gate chain.
 
 ### `.github/workflows/pr-labeler.yml`
 
@@ -76,26 +102,37 @@ Weekly, grouped PRs: Maven (`backend/`), GitHub Actions (`/`), Docker (`backend/
 
 ### Branch protection (manual, repo settings)
 
-`dev`: require PR, require `build-quality` + `contract-check` + `sonar` + `docker` green, require CODEOWNERS review, no force-push. Cannot be expressed in-repo; recorded here as an action item (see "Off-Repo TODO" below).
+`dev`: require PR and merge queue; require the applicable backend/security checks on both PR and
+`merge_group` runs; require human review (including CODEOWNERS where ownership is intentional),
+dismiss stale approvals, require approval of the latest reviewable push, require conversation
+resolution, restrict deletion, and block force-push. `Restrict updates` remains off: PR + merge
+queue requirements, rather than bypass-only updates, define the normal path into `dev`. These
+settings are configured off-repo in the repository ruleset.
 
 ## Step 3 — SonarQube (CI-based analysis)
 
-SonarCloud analysis runs as a CI job (`sonar`) using the `SonarSource/sonarqube-scan-action`. The `build-quality` job uploads compiled classes, test results, and JaCoCo reports as artifacts; the `sonar` job downloads them and runs the scanner without recompiling. This avoids duplicating the full Maven build while still enforcing the coverage gate.
+SonarCloud analysis runs as the `sonar` CI job using the pinned Sonar Maven scanner. The
+`build-quality` job uploads compiled classes, test results, and JaCoCo reports as artifacts; the
+`sonar` job restores them and invokes `org.sonarsource.scanner.maven:sonar-maven-plugin` without
+repeating the full Maven verification build. This preserves the coverage/quality gate while
+avoiding duplicate compilation and tests.
 
 Quality gate configured server-side: coverage ≥ 80% on new code, no new blocker/critical issues, A ratings on new code. The `SonarCloud Code Analysis` status check must be added to branch protection as a required check.
 
 ## Step 4 — Security Tooling
 
 - **`backend/Dockerfile`** — multi-stage: `maven:3.9-eclipse-temurin-21` builds `blocbuy-bootstrap` (`-am`, tests skipped — they ran in `build-quality`); runtime `eclipse-temurin:21-jre`, non-root user, port 8589, `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0`. No in-image HEALTHCHECK (JRE image has no curl); orchestrator probes hit `/actuator/health` (already exposed). Profile `docker` selected by compose via `SPRING_PROFILES_ACTIVE`, not baked in. Used by local `docker compose` builds.
-- **`backend/Dockerfile.ci`** — runtime-only twin used by the `docker` CI job: the `build-quality` job uploads the boot jar that `mvn verify` already packaged, the `docker` job downloads it and assembles the image in seconds instead of repeating the in-container Maven build (~2.5 min saved per run). Falls back to the multi-stage `Dockerfile` when `build-quality` was skipped (e.g. contracts-only PRs, where no jar artifact exists). Image content is identical either way.
-- **`.github/workflows/security.yml`** — PR/push changes to backend, deployment or workflows plus weekly cron:
+- **`backend/Dockerfile.ci`** — runtime-only twin used by the `docker` CI job: successful `build-quality` uploads the boot jar packaged by `mvn verify`; `docker` downloads that exact artifact and assembles the image without repeating an in-container Maven build. The current `docker` job requires `build-quality` success, so it does not use a multi-stage fallback when that artifact is absent.
+- **`.github/workflows/security.yml`** — pull requests and merge groups affecting backend, deployment, or workflow files, plus weekly scheduled and manual scans:
   - **Gitleaks** full-history secret scan. `.gitleaks.toml` extends defaults and allowlists reviewed placeholders.
   - **Trivy** separates Maven vulnerability and deployment-configuration gates at HIGH/CRITICAL.
   - **Actionlint/ShellCheck** validates workflows, embedded shell and EC2 lifecycle scripts.
   - **Deployment policy** enforces one backend service and an exact non-secret SSM archive allowlist.
 - **Dependabot** (Step 2) closes the loop on remediation.
 
-SARIF upload to the Security tab requires GitHub Advanced Security on private repos (free on public). Upload steps are `continue-on-error` so private-repo forks still gate on the console scan itself.
+Trivy SARIF reports are preserved as workflow artifacts even when a Trivy gate fails. Security-tab
+ingestion is enabled only on push when the repository's Code Scanning capability is available;
+the Trivy exit code remains the CI gate independently of SARIF ingestion.
 
 ## Step 5 — Pipeline Hardening (implemented 2026-09-02)
 
@@ -105,7 +142,7 @@ Fixes found during a pipeline review; all landed in-repo:
 2. **`docker` job runs on PRs** (was push-only). Image build, smoke test, and scan now gate *before* merge.
 3. **Boot smoke test in `docker` job.** After `docker build`, the image boots on a scratch Docker network against real `postgres:18` + `redis:8.10` (requirepass set) containers, and CI polls `GET /actuator/health` until `status=UP` (60s budget). Catches startup-time failures (bad Flyway migration, missing env, broken Spring context) that a successful `docker build` hides. Container logs are dumped on failure.
 4. **API breaking-change check in `contract-check`** (PR only). `openapi-diff-cli` 2.1.7 (`--fail-on-incompatible`) compares the base branch's committed `contracts/openapi.json` against the PR's regenerated spec; drift check still catches "forgot to commit", this catches "broke consumers". Escape hatch (added 2026-09-09): a PR labeled `contract-change-approved` downgrades the check to report-only — used for deliberate spec tightening, e.g. adding validation `minimum`/`maximum` that only rejects values the server never honored (#56: `page=0` previously 500'd). The label is the recorded approval; apply it only after reviewing the diff output.
-5. **CodeQL SAST job in `security.yml`.** Opt-in via repo variable `ENABLE_CODEQL=true` (requires GHAS on private repos); `build-mode: none` so no Maven build is needed.
+5. **CodeQL SAST job in `security.yml`.** Opt-in via repo variable `ENABLE_CODEQL=true`; repository-side GitHub Code Scanning must also be available/enabled for result ingestion. `build-mode: none` avoids a separate Maven build.
 6. **`setup-java cache: maven`** replaces the three hand-rolled `actions/cache` blocks for `~/.m2/repository` (it resolves `backend/**/pom.xml` itself).
 7. **Fixed a silent no-op in the drift check (pre-existing bug).** `git diff --exit-code -- contracts/` ran under `working-directory: backend`, where the pathspec matches nothing and `git diff` exits 0 — the drift gate could never fail (verified locally: modifying `contracts/openapi.json` still exited 0). The step now runs from `${{ github.workspace }}`.
 
@@ -118,8 +155,9 @@ PostgreSQL and Redis services. Terraform and Bitovi are not executed.
    uses Linux host networking and declares no database, cache or volume.
 2. The runtime bundle provides preflight, health, locked deploy, automatic rollback and manual
    rollback scripts. Runtime secrets remain `/etc/blocbuy/backend.env` with `0600` permissions.
-3. A green `dev` push uses a branch-scoped OIDC role to push the smoke-tested image to one private ECR
-   repository. Docker's pushed digest is cross-checked with ECR and only the digest is deployed.
+3. After the merge queue has validated and merged a change, the lightweight `dev` delivery push
+   packages/assembles the image without repeating quality/security gates. A branch-scoped OIDC role
+   pushes it to private ECR; Docker's pushed digest is cross-checked with ECR and only the digest is deployed.
 4. A separate environment-scoped OIDC role can send `AWS-RunShellScript` only to the configured EC2
    instance. SSM transfers only the allowlisted non-secret bundle.
 5. `rollback-backend.yml` requires `dev`, a reason, explicit confirmation and the protected
@@ -138,10 +176,10 @@ These need GitHub repo settings / external accounts; do them once, then the matc
 | # | Action | Where | Unblocks |
 |---|---|---|---|
 | 1 | Set repo **secret** `SONAR_TOKEN` (SonarCloud scanner token) | Repo Settings → Secrets and variables → Actions | `sonar` CI job — the ≥80% new-code coverage gate and quality gate are dead until this is set |
-| 2 | Set repo **variable** `ENABLE_CODEQL=true` | same page | `codeql` SAST job. Requires **GitHub Advanced Security** if the repo is private (free for public repos) — enable GHAS first or the job fails |
-| 3 | **Branch protection** on `dev`: require PR, backend checks plus `workflow-lint`, `deployment-bundle`, `gitleaks`, `trivy-deps`, `trivy-config`, CODEOWNERS review, no force-push | Repo Settings → Branches | Prevents bypass of delivery/security policy |
+| 2 | Set repo **variable** `ENABLE_CODEQL=true` and enable/confirm repository-side GitHub Code Scanning | Repo Settings → Secrets and variables / Code security | `codeql` SAST result ingestion |
+| 3 | Configure the `dev` **ruleset**: require PR + merge queue, applicable backend/security checks, review requirements, deletion restriction and no force-push | Repo Settings → Rules | Makes `merge_group` the final technical gate before `dev` updates |
 | 4 | **Gitleaks license**: `gitleaks-action` needs a free `GITLEAKS_LICENSE` secret for organization-owned repos | gitleaks.io → add as repo secret | `gitleaks` job on org repos |
-| 5 | Confirm **GHAS** availability or accept `continue-on-error` SARIF uploads (scans still gate via exit codes; only the Security-tab view is lost) | Repo Settings → Advanced Security | SARIF dashboards for Trivy/CodeQL |
+| 5 | Confirm Code Scanning result ingestion works before making CodeQL/code-scanning results a repository ruleset requirement | Repo Settings → Code security | Prevents a ruleset from waiting on results the repository cannot accept |
 | 6 | Configure ECR, two OIDC roles, EC2 SSM/ECR role, `backend-dev` protections and deployment variables from the operator guide | AWS + Repo Settings | Immutable deploy and controlled rollback |
 
 ## Quality Gates Summary
@@ -177,5 +215,5 @@ Pre-push hook optional; CI is the backstop. Full runbook: `docs/ci/backend-pipel
 
 - **One-time formatting churn**: `spotless:apply` touches nearly every file. Land it alone, record in `.git-blame-ignore-revs`.
 - **JDK 26 on dev machines**: Enforcer rejects `[21,22)`-outside JDKs; set `JAVA_HOME` to a JDK 21 (`/usr/libexec/java_home -v 21` on macOS).
-- **Sonar host undecided**: job ships disabled; flipping on = one repo variable + one secret.
+- **Code-quality services are external dependencies**: Sonar requires its repository variables/token, and CodeQL result ingestion depends on repository-side Code Scanning being enabled.
 - **Infrastructure IaC is deferred**: application delivery is versioned, but EC2/VPC/IAM drift remains an operational risk until a later import/migration phase is approved.

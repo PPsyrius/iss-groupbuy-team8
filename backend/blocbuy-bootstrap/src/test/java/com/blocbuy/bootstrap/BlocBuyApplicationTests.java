@@ -6,7 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 /**
  * Context smoke test. Flyway is disabled and datasource/Redis point at placeholders — this test
  * proves the wiring assembles, not that infrastructure is reachable. Real connectivity is covered
- * by {@code PgSmokeIT} (Testcontainers) in the infrastructure module.
+ * by the repository integration tests (Testcontainers) in the infrastructure module.
  */
 @SpringBootTest(
         properties = {
