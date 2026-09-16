@@ -21,6 +21,13 @@
 > with the new contract assertions). The regenerated contract diff contains **exactly** the three
 > expected changes and nothing else.
 >
+> **Follow-up review fixes on the same branch:** consent-denied and malformed callbacks now also
+> 302 to the failure page (`IDENTITY_401_003` / `COMMON_400_001`) instead of a raw 400 JSON body;
+> the OAuth state-binding cookie gained a per-profile `Secure` flag
+> (`blocbuy.frontend.state-cookie-secure`, mirroring `sa-token.cookie.secure`); and both OAuth
+> handshake endpoints now document their 302 contract (`Location`, success-only `Set-Cookie`) in
+> the regenerated `contracts/openapi.json`.
+>
 > **What remains:** B3 (held on Q4), B5's console checks (Q7/Q8), the unowned CSP/HSTS work (Q6).
 > The frontend integration walkthrough is in [Section 8](#8-frontend-integration-flow-after-the-merge).
 
@@ -58,7 +65,10 @@ return redirect(authWebProperties.successRedirectUri()); // line 111
   cookie set on `StpUtil.login`.
 - Failures also 302 — to `blocbuy.frontend.failure-redirect-uri`, with the `{errorCode}`
   placeholder replaced by the business error code (line 108), so the user never lands on a raw
-  JSON error page.
+  JSON error page. This covers **every** entry into the callback: consent denial
+  (`?error=access_denied`, no `code`) redirects with `IDENTITY_401_003`, any other provider error
+  value with `IDENTITY_502_001`, and a malformed hit missing `code`/`state` redirects with
+  `COMMON_400_001` — the framework's 400 JSON never reaches a browser here.
 - Covered by `AuthControllerTest`: `callbackSuccessOpensSessionAndRedirectsToFrontend`,
   `callbackFailureRedirectsToFrontendWithErrorCode`, `meWithoutSessionIsRejectedByTheInterceptor`.
 
@@ -152,6 +162,11 @@ design and are not affected.
 - `SERVER_FORWARD_HEADERS_STRATEGY=framework` in `/etc/blocbuy/backend.env` (Q5) — the
   CloudFront→ALB origin leg is plain HTTP:80, so the app needs forwarded-header handling for
   anything it derives from the request scheme.
+- The OAuth state-binding cookie (`blocbuy-oauth-state`) follows the same per-profile rule as the
+  session cookie via `blocbuy.frontend.state-cookie-secure` (base `true`; `false` on
+  local/docker/ec2) — flip it together with `sa-token.cookie.secure` at the cutover. Until then,
+  on the plain-HTTP profiles only, the callback URL (including the OAuth `code`) and the state
+  cookie are exposed to the network path; that caveat does not apply once dev is HTTPS-only.
 - **CSP/HSTS are not set anywhere today** — no CloudFront `ResponseHeadersPolicy`, no Spring header
   configuration. They belong on the CloudFront distribution, not in this repo. That work is
   unowned (Q6) — it needs an owner if it is a Sprint 2 gate.
@@ -242,7 +257,8 @@ label on the PR). Once it lands, integrate in this order:
 
 4. **Login failure page** — the backend failure redirect is `/login?error={errorCode}`. Read the
    `error` query param and map the code to a user-facing message (e.g. `IDENTITY_401_001` =
-   state/callback mismatch — "please try logging in again").
+   state/callback mismatch — "please try logging in again"; `IDENTITY_401_003` = consent denied at
+   Google — "you cancelled the sign-in"; `COMMON_400_001` = malformed callback — generic retry).
 
 5. **Header user area** — render from the `/auth/me` response. `nickname` and `avatarUrl` are
    nullable (pre-existing accounts): fall back to an initials avatar / derived display name.
@@ -255,10 +271,14 @@ label on the PR). Once it lands, integrate in this order:
    header, but cross-origin fetches must send credentials:
    - **dev/prod:** frontend and API are one CloudFront origin (`/*` → S3, `/api/*` → ALB) —
      same-origin, nothing to configure.
-   - **local:** the backend has **no CORS configuration at all**, and `SameSite=Lax` cookies do
-     not ride cross-origin XHR. Use the Vite dev-server proxy (`/api` → `http://localhost:8589`)
-     so the browser sees a same-origin API — this is the supported local setup. Direct
-     `:5173 → :8589` fetches will fail regardless of `credentials: 'include'`.
+   - **local:** `localhost:5173` and `localhost:8589` are different origins but the **same site**
+     (same scheme, same host — ports do not count for site), so `SameSite=Lax` does *not* block
+     the cookie on same-site cross-origin XHR. What actually blocks direct `:5173 → :8589`
+     fetches is that the backend sends **no CORS response headers** (no
+     `Access-Control-Allow-Origin`; credentialed requests would additionally need
+     `Access-Control-Allow-Credentials`). Use the Vite dev-server proxy (`/api` →
+     `http://localhost:8589`) so the browser sees a same-origin API — this is the supported local
+     setup. `credentials: 'include'` only becomes relevant if explicit CORS support is ever added.
 
 8. **Nothing to store.** No token in `localStorage`, no interceptor attaching headers. The only
    client-side session state is the `/auth/me` response and its 401.
