@@ -1,16 +1,28 @@
 # Backend Response to the Frontend Blocker List (B1–B5)
 
-**Date:** 2026-09-16
+**Date:** 2026-09-16 (updated same day — see status banner)
 **Author:** l0sgAi (backend)
-**Code reviewed:** branch `feature/login-redirect-20260915`, HEAD `206f72c`
+**Code reviewed:** branch `feature/login-redirect-20260915`, originally HEAD `206f72c`
 ("feat(auth): Implement OAuth callback redirection to the frontend page")
 
-> **Read this first.** Two of the five asks (B1 and B4) are already implemented on
-> `feature/login-redirect-20260915` and are not yet on `dev`. The blocker list appears to have
-> been written against `dev`. Once that branch merges, the frontend work those two gate can start
-> immediately. The remaining three are small, but two of them need an answer from the frontend or
-> the AWS account holder before backend can move — those questions are collected in
-> [Section 7](#7-open-questions--who-must-answer).
+> **Status banner (2026-09-16, second revision).** B1, B2 and B4 are now **fully done** on
+> `feature/login-redirect-20260915`, including the two decisions that were open in the first
+> revision of this document:
+>
+> | Commit | Contents |
+> |---|---|
+> | `206f72c` | B1 (302 redirect flow) + B4 (`/auth/me` with `nickname`/`avatarUrl`) |
+> | `97bb063` | B2: contract `blocbuyToken` → `apiKey in: cookie`; `/auth/me` + `/auth/logout` carry a `security` requirement (Q3 folded in); `contracts/openapi.json` regenerated in the same commit |
+> | `d647da1` | B1 landing path settled: success 302 → `${FRONTEND_URL}/auth/callback` on every profile; failure target unchanged |
+> | `f1962d0` | this document |
+>
+> Verified end-to-end before committing: `./mvnw verify -Popenapi-export` (JDK 21) — BUILD SUCCESS,
+> all unit tests and Testcontainers ITs green (`AuthControllerTest` 3/3, `AdminListingFlowIT` 23/23
+> with the new contract assertions). The regenerated contract diff contains **exactly** the three
+> expected changes and nothing else.
+>
+> **What remains:** B3 (held on Q4), B5's console checks (Q7/Q8), the unowned CSP/HSTS work (Q6).
+> The frontend integration walkthrough is in [Section 8](#8-frontend-integration-flow-after-the-merge).
 
 ---
 
@@ -18,23 +30,23 @@
 
 | ID | Ask | Status | Blocked on |
 |---|---|---|---|
-| B1 | OAuth callback 302s to the frontend instead of returning JSON | **Done**, one decision open | FE: confirm the landing path and absolute-vs-relative `Location` |
-| B2 | Contract: `blocbuyToken` → `apiKey in: cookie` | **Agreed, not started** | Nothing — backend will do it; needs the `contract-change-approved` label on the PR |
-| B3 | `application-ec2.yml`: `sa-token.cookie.secure: true` | **Agreed, held** | Confirmation that dev is reachable *only* through CloudFront |
-| B4 | `GET /auth/me` returns `nickname` + `avatarUrl` | **Done** | Nothing — regenerate the client from the current contract |
+| B1 | OAuth callback 302s to the frontend instead of returning JSON | **Done** — landing path decided: `/auth/callback` | Nothing. Frontend may still veto the path; it is a one-line yml change per profile |
+| B2 | Contract: `blocbuyToken` → `apiKey in: cookie` | **Done** (commit `97bb063`), including the Q3 scope | The merge PR needs the `contract-change-approved` label |
+| B3 | `application-ec2.yml`: `sa-token.cookie.secure: true` | **Agreed, held** | Confirmation that dev is reachable *only* through CloudFront (Q4) |
+| B4 | `GET /auth/me` returns `nickname` + `avatarUrl` | **Done** (commit `206f72c`) | Nothing |
 | B5 | Confirm `GOOGLE_REDIRECT_URI` for dev | **Value confirmed in repo**, two external checks open | AWS/Google console access (l0sgAi or PPsyrius) |
 
-Nothing on this list requires a design change or a new endpoint. The critical path is: merge
-`feature/login-redirect-20260915` → settle the B1 landing path → one small PR covering B2 (+ B3 if
-confirmed).
+Nothing required a design change or a new endpoint. Critical path now: **merge
+`feature/login-redirect-20260915` → frontend integrates per Section 8** → console checks in one
+pass → flip B3 once Q4 confirms.
 
 ---
 
 ## 2. B1 — OAuth callback: 302 to the frontend, no token in the body
 
-### Status: implemented; one decision left for the frontend
+### Status: done, including the landing-path decision
 
-`AuthController.googleCallback` (`backend/blocbuy-adapter/src/main/java/com/blocbuy/identity/web/AuthController.java:100-112`) already does exactly what the ask describes:
+`AuthController.googleCallback` (`backend/blocbuy-adapter/src/main/java/com/blocbuy/identity/web/AuthController.java:100-112`):
 
 ```java
 StpUtil.login(result.userId());                        // line 110
@@ -47,232 +59,228 @@ return redirect(authWebProperties.successRedirectUri()); // line 111
 - Failures also 302 — to `blocbuy.frontend.failure-redirect-uri`, with the `{errorCode}`
   placeholder replaced by the business error code (line 108), so the user never lands on a raw
   JSON error page.
-- Covered by tests in `backend/blocbuy-bootstrap/src/test/java/com/blocbuy/bootstrap/AuthControllerTest.java`:
-  `callbackSuccessOpensSessionAndRedirectsToFrontend`, `callbackFailureRedirectsToFrontendWithErrorCode`,
-  `meWithoutSessionIsRejectedByTheInterceptor`.
+- Covered by `AuthControllerTest`: `callbackSuccessOpensSessionAndRedirectsToFrontend`,
+  `callbackFailureRedirectsToFrontendWithErrorCode`, `meWithoutSessionIsRejectedByTheInterceptor`.
 
-### What is *not* done
+### Landing path — decided (commit `d647da1`)
 
-The landing path is `${FRONTEND_URL}/`, not `/auth/callback`. That is configuration, not code —
-one line per profile in `application-ec2.yml`, `application-docker.yml`, `application-local.yml`:
+Backend proceeded with its preferred option rather than holding the branch:
 
 ```yaml
 blocbuy:
   frontend:
-    success-redirect-uri: "${FRONTEND_URL:}/"          # today
-    success-redirect-uri: "${FRONTEND_URL:}/auth/callback"  # if you confirm
+    success-redirect-uri: "${FRONTEND_URL:}/auth/callback"                     # ec2, docker
+    success-redirect-uri: "${FRONTEND_URL:http://localhost:5173}/auth/callback" # local
+    failure-redirect-uri: "${FRONTEND_URL:}/login?error={errorCode}"           # unchanged, all profiles
 ```
 
-### On "relative"
-
-A relative `Location` is technically fine — `AuthWebProperties` only validates `@NotBlank`, and
-Spring emits whatever URI we hand it — but it cannot be relative on **every** profile:
-
-- **local**: genuinely cross-origin (backend `:8589`, Vite `:5173`). Must stay absolute.
-- **dev / prod**: everything is one CloudFront origin (`/*` → S3, `/api/*` → ALB), so a bare
-  `/auth/callback` resolves correctly, and so does the absolute CloudFront URL.
-
-Backend's preference is to keep one config shape — `${FRONTEND_URL}/auth/callback` — so dev and
-local behave identically and there is no profile-specific special case. If the frontend has a
-concrete reason to need a path-only `Location` on dev, say so and we will drop the origin on the
-non-local profiles.
-
-### Needed from the frontend
-
-1. Confirm the success landing path: `/auth/callback`?
-2. Confirm the failure target stays `/login?error={errorCode}`, or name a different one.
-3. Absolute (`https://<cloudfront>/auth/callback`) or path-only (`/auth/callback`) on dev?
+- **Absolute `Location` on every profile** — one config shape, dev and local behave identically.
+  On dev the origin is CloudFront (same-site from the browser's perspective); local is genuinely
+  cross-origin (`:8589` → `:5173`) so it must be absolute anyway.
+- If the frontend wants a different path or a path-only `Location`, it is a one-line change per
+  profile file — say so and we flip it; it does not need to gate anything.
 
 ---
 
 ## 3. B2 — Contract: `blocbuyToken` security scheme → `apiKey in: cookie`
 
-### Status: agreed, will be done in one PR
+### Status: done (commit `97bb063`)
 
-The contract is **generated**, so `contracts/openapi.json` is not the file to edit. The source of
-truth is the annotation in
-`backend/blocbuy-adapter/src/main/java/com/blocbuy/catalog/web/AdminListingController.java:52-57`:
+- `AdminListingController.java:52-57`: `in = SecuritySchemeIn.HEADER` → `SecuritySchemeIn.COOKIE`.
+  `paramName = "blocbuy-token"` already matched the cookie name, so only `in` changed.
+- `contracts/openapi.json` regenerated via `./mvnw verify -Popenapi-export` and committed in the
+  same commit (CI fails on contract drift). Note: the repo has **no Makefile** — `make
+  contract-check` was a stale comment, now corrected; the real command is the Maven one above and
+  in `backend/README.md:50`.
+- **Descriptive only — no runtime behaviour changed.** Sa-Token reads the token from the header
+  *and* the cookie by default; the browser flow has always used the cookie.
 
-```java
-@SecurityScheme(
-        name = "blocbuyToken",
-        type = SecuritySchemeType.APIKEY,
-        in = SecuritySchemeIn.HEADER,   // → SecuritySchemeIn.COOKIE
-        paramName = "blocbuy-token")
+### Q3 scope — folded in, as agreed
+
+`/api/v1/auth/me` and `/api/v1/auth/logout` now carry a **method-level**
+`@SecurityRequirement(name = "blocbuyToken")` on `AuthController`. Method-level, deliberately not
+class-level: the `/oauth2/google/**` endpoints on the same controller are public paths
+(`SaTokenConfig.PUBLIC_PATHS`) and a class-level annotation would have marked the login handshake
+itself as authenticated. `AdminListingFlowIT.openApiDocumentsAdministratorTokenWithoutProtectingPublicBrowse`
+now asserts all of: scheme `in: cookie`, security on the two session endpoints, **no** security on
+the two OAuth handshake endpoints, no top-level `security`, and public product browse untouched.
+
+What the generated client now sees (verified in the regenerated contract):
+
+```json
+"blocbuyToken": { "type": "apiKey", "name": "blocbuy-token", "in": "cookie" }
+"/api/v1/auth/me":     { "get":  { "security": [ { "blocbuyToken": [] } ] } }
+"/api/v1/auth/logout": { "post": { "security": [ { "blocbuyToken": [] } ] } }
 ```
 
-`paramName` already matches `sa-token.token-name: blocbuy-token` (`application.yml:27`), which is
-also the cookie name — so only `in` changes. Backend will change the annotation, run
-`make contract-check` to regenerate, and commit the regenerated `contracts/openapi.json`.
+### PR mechanics at merge time
 
-**This is descriptive only — no runtime behaviour changes.** Sa-Token reads the token from the
-header *and* the cookie by default; the browser flow has always used the cookie. The contract was
-simply describing the wrong one.
+`ci-backend.yml:145-160` runs `openapi-diff --fail-on-incompatible` against the base branch.
+Changing a security scheme is a backward-incompatible diff, so the merge PR **does** need the
+`contract-change-approved` label. The regenerated contract is already committed, so the drift
+check (`ci-backend.yml:141-143`) will pass as-is.
 
-### PR mechanics
-
-`ci-backend.yml:145-160` runs `openapi-diff --fail-on-incompatible` against the base branch. Changing
-a security scheme is a backward-incompatible diff, so the PR **does** need the
-`contract-change-approved` label, as the blocker list says. `ci-backend.yml:141-143` additionally fails if
-the committed contract drifts from the generated one, so the regenerated JSON must be in the same commit.
-
-`backend/blocbuy-bootstrap/src/test/java/com/blocbuy/bootstrap/AdminListingFlowIT.java:479` and `:496`
-assert the scheme shape and will be updated in the same PR.
-
-### One thing the frontend should decide now, because it is the same PR and the same label
-
-`@SecurityRequirement(name = "blocbuyToken")` currently sits **only** on `AdminListingController`.
-The top-level `security` in the contract is `[]`, and `/api/v1/auth/me`, `/api/v1/auth/logout` and
-every other path behind the Sa-Token interceptor carry **no** `security` entry at all.
-
-So if the gate is "the generated client types this call as authenticated", changing `in: cookie`
-alone will not get you there — the generated client still sees those operations as anonymous.
-Fixing it means either a global `security` requirement or annotating the auth endpoints. It is the
-same PR, the same label, and roughly the same size. **Do you want it folded in?**
-
-For reference, the interceptor's actual public paths are in
-`backend/blocbuy-infrastructure/src/main/java/com/blocbuy/common/config/SaTokenConfig.java`:
+For reference, the interceptor's actual public paths are in `SaTokenConfig.java`:
 `/api/v1/auth/oauth2/**`, `/api/v1/webhooks/**`, the springdoc paths, `/actuator/health/**`,
 `/actuator/prometheus`, plus anonymous `GET /api/v1/products/**`. Everything else under
-`/api/v1/**` requires a session.
+`/api/v1/**` requires a session — paths beyond the two auth endpoints still carry no `security`
+entry in the contract (out of scope for this PR; can be revisited if the frontend wants the whole
+surface annotated).
 
 ---
 
 ## 4. B3 — `sa-token.cookie.secure: true` on EC2
 
-### Status: agreed in principle, held pending one confirmation
+### Status: agreed in principle, held pending one confirmation (unchanged)
 
-The diagnosis is correct. The base profile already has the hardened settings
-(`application.yml:36-38`): `http-only: true`, `secure: true`, `same-site: Lax`. The **only** thing
-turning it off on dev is the override at `application-ec2.yml:20`, whose comment says TLS
-termination is pending.
-
-### Why backend has not flipped it yet
-
-`docs/deploy/dev-cloudfront-deployment.md` still carries **`Status: to be executed`** at the top.
-The repo therefore cannot tell us whether that comment is stale or accurate. The risk is concrete
-and one-directional: if anyone still reaches dev at `http://<EC2-public-IP>:8589`, browsers will
-silently drop a `Secure` cookie over plain HTTP and **every login on dev breaks with no error
-message**.
+The base profile already has the hardened settings (`application.yml:36-38`): `http-only: true`,
+`secure: true`, `same-site: Lax`. The **only** thing turning it off on dev is the override at
+`application-ec2.yml:20`, whose comment says TLS termination is pending.
 
 Backend will flip it the moment someone confirms both:
 
 1. The dev CloudFront distribution is live and serving.
 2. The dev EC2 security group no longer accepts `:8589` from `0.0.0.0/0` — i.e. nobody is testing
-   against the raw IP any more.
+   against the raw IP any more. (If anyone still reaches dev over plain HTTP, browsers silently
+   drop a `Secure` cookie and **every login on dev breaks with no error message**.)
 
 `application-docker.yml` and `application-local.yml` stay `secure: false`; both are plain HTTP by
 design and are not affected.
 
-### A related dev-host check while someone is in there
+### Related dev-host checks while someone is in there
 
-The CloudFront→ALB origin leg is plain HTTP:80 (`infra/terraform/backend-app-stack/main.tf:19-22`).
-That is fine for a `Secure` cookie — the browser only ever sees the HTTPS CloudFront leg — but the
-app needs forwarded-header handling for anything it derives from the request scheme. Per
-`docs/deploy/dev-cloudfront-deployment.md:285` that means `SERVER_FORWARD_HEADERS_STRATEGY=framework`
-together with the `AllViewerExceptHostHeader` origin request policy. Please confirm the env var is
-actually set in `/etc/blocbuy/backend.env` on the dev host.
-
-### On the CSP/HSTS gate
-
-To set expectations: **nothing in this repository sets CSP or HSTS today.** There is no
-`ResponseHeadersPolicy` in the CloudFront deployment doc and no Spring header configuration. Both
-headers belong on the CloudFront distribution, not in the backend application, so flipping
-`secure: true` does not deliver them and is not blocked by them either. That work is currently
-unowned — it needs an owner if it is a Sprint 2 gate.
+- `SERVER_FORWARD_HEADERS_STRATEGY=framework` in `/etc/blocbuy/backend.env` (Q5) — the
+  CloudFront→ALB origin leg is plain HTTP:80, so the app needs forwarded-header handling for
+  anything it derives from the request scheme.
+- **CSP/HSTS are not set anywhere today** — no CloudFront `ResponseHeadersPolicy`, no Spring header
+  configuration. They belong on the CloudFront distribution, not in this repo. That work is
+  unowned (Q6) — it needs an owner if it is a Sprint 2 gate.
 
 ---
 
 ## 5. B4 — `GET /auth/me` returns `nickname` and `avatarUrl`
 
-### Status: already done — no backend change needed
+### Status: done (commit `206f72c`)
 
-Same commit as B1. `AuthController.me()` (`AuthController.java:121`) returns
-`MeResponse(userId, nickname, avatarUrl)` (`AuthController.java:137`), sourced from
-`UserAppService.CurrentUser` (`backend/blocbuy-application/.../identity/service/UserAppService.java:27`).
+`AuthController.me()` returns `MeResponse(userId, nickname, avatarUrl)`, sourced from
+`UserAppService.CurrentUser`. The generated contract is in sync — `components.schemas.MeResponse`
+carries all three fields. With the Q3 change folded in, the operation is now also typed as
+authenticated in the contract.
 
-The generated contract is already in sync — `components.schemas.MeResponse` in
-`contracts/openapi.json` carries all three fields. **Regenerate the client from the current
-contract on this branch and the typing is there.**
-
-### Two notes for the header implementation
+Two notes for the header implementation:
 
 - There is **no `LoginResponse` type anywhere in the backend.** We assume the blocker referred to
   the old JSON login body, which B1 removed. If it meant something else, tell us.
-- `nickname` and `avatarUrl` are explicitly documented as nullable (`UserAppService.java:24-25`).
-  They are populated from the Google profile at registration, so accounts created before that was
-  wired can have either as `null`. Please render a fallback (initials avatar, userId-derived
-  display name) rather than assuming both are present.
+- `nickname` and `avatarUrl` are explicitly **nullable**. They are populated from the Google
+  profile at registration, so accounts created before that was wired can have either as `null`.
+  Render a fallback (initials avatar, userId-derived display name) rather than assuming both are
+  present.
 
 ---
 
 ## 6. B5 — `GOOGLE_REDIRECT_URI` for dev
 
-### Status: the value is pinned in the repo; two checks need console access
+### Status: the value is pinned in the repo; two checks need console access (unchanged)
 
-`deployment/backend/backend.env.example` already carries the intended dev values:
+`deployment/backend/backend.env.example` carries the intended dev values:
 
 ```
 GOOGLE_REDIRECT_URI=https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google/callback
 GOOGLE_CLIENT_ID=292561274302-h39ekhsmfu9m3a2sukev37npa4d2jde6.apps.googleusercontent.com
 ```
 
-The **path is correct** and we can confirm it from code: a single `/api` prefix, no servlet
-context-path (`application.yml:47-49` is explicit about this), matching the controller mapping
-`ApiConstants.API_V1 + "/auth"` plus `@GetMapping("/oauth2/google/callback")`.
+The **path is correct** from code: a single `/api` prefix, no servlet context-path, matching the
+controller mapping. The one-time state binding cookie is scoped to `/api/v1/auth`
+(`AuthController.java:79-81`) and resolves correctly with no context-path on dev. No action needed
+on either.
 
-Related and already handled: the one-time state binding cookie is scoped to
-`request.getContextPath() + /api/v1/auth` (`AuthController.java:79-81`). With no servlet
-context-path on dev that resolves to `/api/v1/auth`, so the cookie is sent back on the callback.
-No action needed.
+Still needs the account holder:
 
-### What the repo cannot verify — needs the account holder
-
-1. **The deployed value.** `backend.env.example` is a template, not the deployed file. Someone with
-   SSH/SSM access must confirm `/etc/blocbuy/backend.env` on the dev EC2 host actually carries that
+1. The deployed `/etc/blocbuy/backend.env` on the dev EC2 host actually carries that
    `GOOGLE_REDIRECT_URI`.
-2. **The Google console.** Confirm `https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google/callback`
-   is listed under Authorized redirect URIs for client `292561274302-...`. An exact string mismatch
-   (trailing slash, `http` vs `https`) produces a `redirect_uri_mismatch` at Google and never
-   reaches our code.
-3. **`FRONTEND_URL` on the same host.** It has no default (`${FRONTEND_URL:}`) and
-   `AuthWebProperties` is `@NotBlank`-validated, so the application **fails at startup** if it is
-   unset. It should be the CloudFront origin. This is the same env file as (1) — check both in one
-   pass.
+2. The Google console lists the exact CloudFront callback URI under Authorized redirect URIs
+   (exact string match — trailing slash or `http` vs `https` mismatch fails at Google with
+   `redirect_uri_mismatch` and never reaches our code).
+3. `FRONTEND_URL` on the same host — no default, `@NotBlank`-validated, **startup fails if unset**.
+   Should be the CloudFront origin. Same env file as (1) — check both in one pass.
 
 ---
 
-## 7. Open questions — who must answer
+## 7. Open questions — status after this revision
 
-| # | Question | Blocks | Owner |
-|---|---|---|---|
-| Q1 | Success landing path — `/auth/callback`? Failure stays `/login?error={errorCode}`? | B1 | Frontend |
-| Q2 | Absolute or path-only `Location` on dev? | B1 | Frontend |
-| Q3 | Fold the missing `security` requirement on `/auth/me` + `/auth/logout` into the B2 PR? | B2 | Frontend |
-| Q4 | Is the dev CloudFront distribution live, and is `:8589` closed to the public internet? | B3 | l0sgAi / PPsyrius |
-| Q5 | Is `SERVER_FORWARD_HEADERS_STRATEGY=framework` set on the dev host? | B3 (soft) | l0sgAi / PPsyrius |
-| Q6 | Who owns the CloudFront CSP/HSTS response-headers policy? | B3 gate | Unassigned |
-| Q7 | Does `/etc/blocbuy/backend.env` on dev carry the right `GOOGLE_REDIRECT_URI` **and** `FRONTEND_URL`? | B5 | l0sgAi / PPsyrius |
-| Q8 | Does the Google console list the CloudFront callback URI? | B5 | l0sgAi / PPsyrius |
-
----
-
-## 8. Proposed sequence
-
-1. **Merge `feature/login-redirect-20260915` into `dev`.** This alone closes B4 outright and closes
-   B1 apart from the landing-path decision. Frontend can begin the `/account` route and header user
-   area against it.
-2. **Answer Q1–Q3** (frontend, minutes). Q1/Q2 turn into a one-line config change per profile.
-3. **One backend PR** carrying B2 (+ the Q3 scope if wanted) + B1's config change + B3 if Q4 has
-   come back positive. Label it `contract-change-approved`.
-4. **Q4/Q5/Q7/Q8** in a single pass on the AWS/Google consoles by the account holder.
-5. **Q6** needs an owner assigned before it can be called a Sprint 2 gate.
+| # | Question | Status |
+|---|---|---|
+| Q1 | Success landing path `/auth/callback`? Failure `/login?error={errorCode}`? | **Decided by backend** (Section 2). Frontend veto still possible — one-line yml change |
+| Q2 | Absolute or path-only `Location` on dev? | **Decided**: absolute everywhere, one config shape |
+| Q3 | Fold `security` on `/auth/me` + `/auth/logout` into the B2 PR? | **Done** (commit `97bb063`) |
+| Q4 | Is dev CloudFront live, and is `:8589` closed to the public internet? | **Open** — l0sgAi / PPsyrius; gates B3 |
+| Q5 | Is `SERVER_FORWARD_HEADERS_STRATEGY=framework` set on the dev host? | **Open** — l0sgAi / PPsyrius |
+| Q6 | Who owns the CloudFront CSP/HSTS response-headers policy? | **Open — unassigned**; needed before it can be a Sprint 2 gate |
+| Q7 | Does `/etc/blocbuy/backend.env` on dev carry the right `GOOGLE_REDIRECT_URI` **and** `FRONTEND_URL`? | **Open** — l0sgAi / PPsyrius |
+| Q8 | Does the Google console list the CloudFront callback URI? | **Open** — l0sgAi / PPsyrius |
 
 ---
 
-## 9. Scope note
+## 8. Frontend integration flow (after the merge)
 
-This document answers the **backend** section of the blocker list only. The `frontend/` directory in
-this repository contains a README and nothing else, so no frontend-side claim here is based on
+Backend merges `feature/login-redirect-20260915` into `dev` (with the `contract-change-approved`
+label on the PR). Once it lands, integrate in this order:
+
+1. **Regenerate the client** from `contracts/openapi.json` on `dev`. You get: `MeResponse` with
+   `userId`/`nickname`/`avatarUrl`, the `blocbuyToken` cookie scheme, and `/auth/me` +
+   `/auth/logout` typed as authenticated.
+
+2. **Login start** — navigate the browser (top-level navigation, **not** XHR/fetch) to
+   `GET /api/v1/auth/oauth2/google`. The backend 302s to Google; after consent, Google returns to
+   the backend callback, which opens the session (HttpOnly `blocbuy-token` cookie) and 302s to
+   `<origin>/auth/callback`. The token never appears in any URL or body — do not look for one.
+
+3. **Add the `/auth/callback` route.** It receives **no parameters and no token** — the session
+   cookie was already set by the callback's `Set-Cookie` before the redirect. On mount, call
+   `GET /api/v1/auth/me`; on success populate the session store and route on (e.g. `/account` or
+   the original target). A 401 here means the flow failed mid-way — send the user to `/login`.
+
+4. **Login failure page** — the backend failure redirect is `/login?error={errorCode}`. Read the
+   `error` query param and map the code to a user-facing message (e.g. `IDENTITY_401_001` =
+   state/callback mismatch — "please try logging in again").
+
+5. **Header user area** — render from the `/auth/me` response. `nickname` and `avatarUrl` are
+   nullable (pre-existing accounts): fall back to an initials avatar / derived display name.
+
+6. **Logout** — `POST /api/v1/auth/logout` (cookie rides automatically), then clear client-side
+   session state and route to `/login`. Do not try to delete the cookie from JS — it is HttpOnly;
+   the endpoint invalidates the server-side session.
+
+7. **HTTP client configuration** — the session is a cookie, so requests need no `Authorization`
+   header, but cross-origin fetches must send credentials:
+   - **dev/prod:** frontend and API are one CloudFront origin (`/*` → S3, `/api/*` → ALB) —
+     same-origin, nothing to configure.
+   - **local:** the backend has **no CORS configuration at all**, and `SameSite=Lax` cookies do
+     not ride cross-origin XHR. Use the Vite dev-server proxy (`/api` → `http://localhost:8589`)
+     so the browser sees a same-origin API — this is the supported local setup. Direct
+     `:5173 → :8589` fetches will fail regardless of `credentials: 'include'`.
+
+8. **Nothing to store.** No token in `localStorage`, no interceptor attaching headers. The only
+   client-side session state is the `/auth/me` response and its 401.
+
+---
+
+## 9. Remaining backend/infrastructure work (not gating the frontend)
+
+1. **Merge** `feature/login-redirect-20260915` → `dev`, label `contract-change-approved` (l0sgAi).
+2. **Q4/Q5/Q7/Q8** in a single console pass (l0sgAi / PPsyrius): security group `:8589`,
+   `SERVER_FORWARD_HEADERS_STRATEGY`, `GOOGLE_REDIRECT_URI` + `FRONTEND_URL` in
+   `/etc/blocbuy/backend.env`, Google console redirect URI list.
+3. **B3 flip** (`application-ec2.yml:20` → `secure: true`) the moment Q4 confirms — one line,
+   its own tiny PR.
+4. **Q6** — assign an owner for the CloudFront CSP/HSTS response-headers policy if it is a
+   Sprint 2 gate.
+
+---
+
+## 10. Scope note
+
+This document answers the **backend** section of the blocker list only. The `frontend/` directory
+in this repository contains a README and nothing else, so no frontend-side claim here is based on
 code. The "AWS asks" section of the original list was truncated in the copy we received — send it
 over and we will do the same pass on it.
