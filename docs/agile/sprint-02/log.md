@@ -373,3 +373,60 @@ Say what was verified and what was not.
   `CLAUDE.md` were added to the oxfmt ignore list and to `lefthook.yml`.
   All five are plan §12 note 31.
 - Next: T1-13 Playwright smoke. PR-C and PR-D not opened.
+
+## 2026-09-17 - @limjiechao - T1-13 Playwright smoke (#44)
+
+- Kind: test (NFR: testability, ADR 0011)
+- Changed: `frontend/playwright.config.ts`, `frontend/e2e/smoke.spec.ts`, `frontend/package.json`
+  (`e2e` script, `@playwright/test` devDependency), `frontend/pnpm-lock.yaml`, `frontend/AGENTS.md`
+  (Commands bullet), `frontend/docs/adr/0011-testing-strategy.md` (Consequences), `frontend/docs/plan.md`
+  (T1-13 boxes, §12 note 32), `docs/quality/nfr-register.md` (NFR-18 evidence), this log.
+- Verified: **Install.** `corepack pnpm install --frozen-lockfile` from `frontend/` (pnpm 12.4.2,
+  matches `packageManager`) exited 0, ran `prepare` → `gen:api` (7 files generated,
+  19/19 `// @ts-nocheck` stamped), "Done in 2.9s using pnpm v12.4.2". **Pin check.**
+  `pnpm view @playwright/test@1.63.0 version` → `1.63.0`; exact pin used as written, no repin
+  needed. `pnpm add -D @playwright/test@1.63.0` added devDependencies `@playwright/test 1.63.0`;
+  lockfile diff adds only `@playwright/test`, `playwright` and `playwright-core` at `1.63.0`.
+  **Browser install.** `pnpm exec playwright install --with-deps chromium` succeeded directly on
+  macOS (Chrome for Testing 153.0.8010.12, Chrome Headless Shell, FFmpeg all downloaded; no sudo
+  prompt, `--with-deps` a no-op as expected, so the plain-`install chromium` fallback was not
+  needed). **Build.** `pnpm build` (`gen:api && vite build`) exited 0, "built in 616ms",
+  `dist/index.html` + hashed assets written. **Local e2e.** `pnpm build && pnpm e2e` (no
+  `E2E_TARGET`, `webServer` runs `vite preview --port 4173 --strictPort` against `dist/`): list
+  reporter shows `1 passed` (home renders the BlocBuy header) and `2 skipped` (the whole `dev
+  CloudFront only` describe via `test.skip(!isDev, …)`), exit 0; no trace produced (`trace:
+  'on-first-retry'` with `retries: isDev ? 1 : 0` never retries locally, as expected — not forced).
+  **Dev-target attempt (owed, run anyway for real evidence).**
+  `E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e`: `2 failed`, `1
+  skipped` (the fixme'd deep-link test reports as skipped), exit 1. Home test failed —
+  `getByRole('link', { name: 'BlocBuy' })` never appeared because `https://d1b3np88z657cp.cloudfront.net/`
+  returns 403 (no `dist/` deployed until T1-14). Health test failed — `expect(res.status()).toBe(200)`
+  got `503` (`/api/actuator/health` through CloudFront; matches the controller's 2026-09-17 probe).
+  Because `E2E_TARGET=dev` sets `retries: 1`, this run's failures produced real `trace.zip` and
+  screenshot attachments under `test-results/`, confirming the `trace: 'on-first-retry'` wiring.
+  **Gate.** `pnpm check` (`gen:api` → `tsc --noEmit` → `oxlint --type-aware` → `oxfmt --check` →
+  `vitest run` → `knip`) exits **0**: `tsc --noEmit` clean (after the `webServer` fix below);
+  `oxlint --type-aware` clean, no override needed for `e2e/**` (the `vitest` plugin did not
+  misfire on `@playwright/test`'s `test`/`expect`); `oxfmt --check` "All matched files use the
+  correct format" on 30 files; `vitest run` 3 files / 7 tests passed; `knip` reports only the same
+  four pre-existing configuration hints (no unlisted `playwright` binary or `@playwright/test`
+  dependency — the existing `e2e/**/*.spec.ts` and `playwright.config.ts` entries already cover
+  them). `git check-ignore -v frontend/playwright-report frontend/test-results` confirms both are
+  ignored (`.gitignore:89-90`); `git status --short` shows nothing under either directory.
+- Decisions: no new ADR; ADR 0011 gained a dated Consequences line. One deviation from the brief's
+  verbatim `playwright.config.ts`, required to keep `pnpm check` green: the brief's
+  `webServer: process.env.E2E_BASE_URL ? undefined : {...}` fails `tsc --noEmit` under this repo's
+  `exactOptionalPropertyTypes: true` (`TS2769`: explicit `undefined` is not assignable to an
+  optional property under that flag, distinct from an absent key). Rewritten as
+  `...(process.env.E2E_BASE_URL ? {} : { webServer: {...} })` so the key is omitted rather than
+  set to `undefined`; identical runtime behaviour. Plan §12 note 32 carries the full note. `e2e`
+  was added to `frontend/package.json#scripts` but deliberately **not** to `pnpm check` (plan §12
+  note 24: it is a separate, slower gate that needs a built `dist/`).
+- Problems: dev CloudFront is not usable today — root returns 403 (no `dist/` until T1-14) and
+  `/api/actuator/health` returns 503 (dev backend down) — so the task-row's second verification
+  command (`E2E_TARGET=dev … pnpm e2e`) is **owed**: re-run once T1-14 deploys and the backend is
+  up. A1 (#99, SPA-fallback CloudFront Function) is open, so the deep-link test carries
+  `test.fixme(true, 'A1 not attached: https://github.com/PPsyrius/iss-groupbuy-team8/issues/99')`
+  and stays in the file rather than being deleted, per plan T1-13's instruction to revert once
+  T1-01's re-probe shows 200.
+- Next: T1-12 `.github` PR-E (needs @PPsyrius), T1-14 first deploy. PR-C, PR-D and PR-F not opened.
