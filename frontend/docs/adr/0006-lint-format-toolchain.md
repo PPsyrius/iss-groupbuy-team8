@@ -19,3 +19,31 @@ about the project's automatic JSX transform, so it false-positives on every JSX 
 target (T1-08, commits `c59dcf7`, `aa7b2a6`).
 
 ## Consequences
+
+2026-09-17 (T1-09, the timeboxed TanStack lint spike): the oxlint **JS-plugins** path won; no
+ESLint is installed and the plan's step-2 fallback (`eslint` 10.10.0 + `eslint-plugin-oxlint`
+1.83.0 + `frontend/eslint.config.js`) was not needed. oxlint 1.83.0 loads
+`@tanstack/eslint-plugin-query` 5.102.8 and `@tanstack/eslint-plugin-router` 1.162.0 through the
+`jsPlugins` key of `.oxlintrc.json`, under Node 24, with no flag, no parser and no error text —
+the four rules named in the plan (`@tanstack/query/exhaustive-deps`,
+`@tanstack/query/no-rest-destructuring`, `@tanstack/query/stable-query-client`,
+`@tanstack/router/create-route-property-order`) are configured by those exact ids and report under
+the namespaces `@tanstack/query` and `@tanstack/router` (oxlint strips the package name's
+`eslint-plugin-` segment). Evidence: a fixture that closes over a variable the `queryKey` omits
+fails `pnpm lint` with `@tanstack/query(exhaustive-deps): The following dependencies are missing
+in your queryKey: id`, and a mis-ordered `createFileRoute` object fails with
+`@tanstack/router(create-route-property-order)`; `pnpm check` on the real sources exits 0.
+
+Costs. The gate keeps **one** linter: `pnpm lint` stays `oxlint --type-aware`, `pnpm check` keeps
+its six steps, and there is no second config file, no second ignore list to keep in sync with
+`src/api/generated/**` and `src/routeTree.gen.ts`, and no `eslint`/`eslint-plugin-oxlint`/parser
+dependencies. The two plugins are devDependencies referenced only from `.oxlintrc.json`; knip
+6.35.1 resolves them from that config and does not report them unused, so `knip.json`
+`ignoreDependencies` is untouched. Runtime cost is a Node runtime spun up alongside the Rust
+linter to host the plugin rules: on this tree `oxlint --type-aware` measured 0.246 s with the two
+plugins removed and 0.310 s with them loaded (~60 ms), so the pre-commit hook is unaffected.
+
+Risk accepted: oxlint's JS plugins are labelled **alpha and not subject to semver** (oxlint's own
+configuration schema says so). A patch-level oxlint bump could therefore change or drop
+`jsPlugins`. The escape hatch is unchanged and cheap — plan §4 T1-09 step 2 still describes the
+minimal ESLint fallback, and adopting it would only add a `&& eslint .` to the `lint` script.

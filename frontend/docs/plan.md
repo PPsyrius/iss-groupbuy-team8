@@ -769,7 +769,7 @@ Add `"postinstall": "lefthook install"` is NOT used (it would run on CI); instea
 
 ### T1-09: TanStack lint plugins spike
 
-- [ ] Step 1 (attempt, ≤ 2 h): `pnpm add -D @tanstack/eslint-plugin-query@5.102.8 @tanstack/eslint-plugin-router@1.162.0`, then add to `.oxlintrc.json`:
+- [x] Step 1 (attempt, ≤ 2 h): `pnpm add -D @tanstack/eslint-plugin-query@5.102.8 @tanstack/eslint-plugin-router@1.162.0`, then add to `.oxlintrc.json`:
 
 ```json
 "jsPlugins": ["@tanstack/eslint-plugin-query", "@tanstack/eslint-plugin-router"],
@@ -778,7 +778,7 @@ Add `"postinstall": "lefthook install"` is NOT used (it would run on CI); instea
 
 Run the fixture command from the task row. Success = the fixture fails on a `@tanstack/query/*` rule and `pnpm check` on real sources passes.
 
-- [ ] Step 2 (fallback if step 1 fails or exceeds 2 h): `pnpm add -D eslint@10.10.0 eslint-plugin-oxlint@1.83.0`, create `frontend/eslint.config.js`:
+- [x] Step 2 (fallback if step 1 fails or exceeds 2 h) (not needed: step 1 passed): `pnpm add -D eslint@10.10.0 eslint-plugin-oxlint@1.83.0`, create `frontend/eslint.config.js`:
 
 ```js
 import pluginQuery from '@tanstack/eslint-plugin-query'
@@ -795,8 +795,8 @@ export default [
 
 and set `"lint": "oxlint --type-aware && eslint ."`. Remove `jsPlugins` from `.oxlintrc.json`.
 
-- [ ] Step 3: Record the outcome (which path, error text if any) in ADR 0006 under Consequences.
-- [ ] Step 4: `git commit -am "chore(frontend): tanstack query/router lint rules via <oxlint js-plugins | minimal eslint>"`.
+- [x] Step 3: Record the outcome (which path, error text if any) in ADR 0006 under Consequences.
+- [x] Step 4: `git commit -am "chore(frontend): tanstack query/router lint rules via <oxlint js-plugins | minimal eslint>"`.
 
 ### T1-10: Agent configuration
 
@@ -2240,6 +2240,7 @@ None are applied silently; each is planned as stated below and needs the owner's
 27. **Header's login control is HeroUI `Link` + `buttonVariants`, not `Button as="a"`.** HeroUI 3.2.5's `Button` wraps `react-aria-components`' `Button` primitive, which has no `href`/`as` prop, confirmed against the installed `.d.ts` — one rung past the brief's own documented plain-`<a>` fallback. The Header test wraps the component in a minimal memory-history `RouterProvider`, since `Link` (TanStack Router) throws outside one. Commit `828d48b`.
 28. **`frontend/pnpm-workspace.yaml` (`allowBuilds: { msw: true }`) is committed.** Not in the brief's file list for T1-06, but required: pnpm 12 refuses `msw`'s postinstall script otherwise and `pnpm install --frozen-lockfile` fails non-interactively (would break CI). `lefthook`'s postinstall is approved the same way in T1-08. Commit `760d4d8`.
 29. **`tsconfig.json`'s `allowImportingTsExtensions` was added, then removed.** T1-08 added it to fix `TS5097` on the generated `client.gen.ts`'s `.ts`-extension import; once T1-08's fix round 2 confirmed `// @ts-nocheck` (note 20) suppresses that diagnostic too, the flag was removed as not load-bearing (`tsc --noEmit` stayed green). Commit `aa7b2a6`.
+30. **T1-09's task-row lint fixture never triggers a `@tanstack/query/*` rule.** The row's fixture (`export const x = () => useQuery({ queryFn: () => 1 })`, no `queryKey`) fails `pnpm lint`, but on `react-hooks(rules-of-hooks)` — `x` is neither a component nor a hook name — not on a TanStack rule; rename it to `useX` and `pnpm lint` exits 0, because `@tanstack/query/exhaustive-deps` only reports a `queryKey` that is missing a dependency the `queryFn` actually closes over, and `queryFn: () => 1` closes over nothing. Substituted fixture, used for the T1-09 verification: `printf 'import { useQuery } from "@tanstack/react-query"\nexport const useX = (id: number) => useQuery({ queryKey: ["x"], queryFn: () => id })\n' > src/lint-fixture.ts; pnpm lint; rc=$?; rm src/lint-fixture.ts; test $rc -ne 0`, which fails with `@tanstack/query(exhaustive-deps): The following dependencies are missing in your queryKey: id`. The router half was checked the same way with a mis-ordered `createFileRoute` object (`component` before `loader` before `beforeLoad`) ⇒ `@tanstack/router(create-route-property-order)`.
 
 ---
 
