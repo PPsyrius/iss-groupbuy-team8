@@ -64,5 +64,15 @@
     "node": ">=24 <25",
     "pnpm": "12.4.2"
   },
-  "packageManager": "pnpm@12.4.2"
+  "packageManager": "pnpm@12.4.2",
+  "intent": {
+    "skills": [
+      "@tanstack/*"
+    ],
+    "exclude": [
+      "@tanstack/router-core#router-core/ssr",
+      "@tanstack/devtools#*",
+      "@tanstack/devtools-event-client#*"
+    ]
+  }
 }

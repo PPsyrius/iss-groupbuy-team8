@@ -292,3 +292,62 @@ Say what was verified and what was not.
   `queryKey` omits, and `() => 1` closes over nothing. Substituted as above and written up as §12
   note 30, so a future reader does not conclude the plugins failed to load.
 - Next: T1-10 agent configuration; PR-C not yet opened.
+
+## 2026-09-17 - @limjiechao - T1-10 Agent configuration (#44)
+
+- Kind: ops/process, decision (ADR 0012)
+- Changed: `frontend/AGENTS.md`, `frontend/CLAUDE.md` (`@AGENTS.md`), root `.claude/settings.json`
+  (merged, not overwritten), `.claude/hooks/frontend-{fix,typecheck,bootstrap}.sh`,
+  `frontend/package.json` (`intent` key), `frontend/docs/tanstack-skills.json`,
+  `frontend/.oxfmtrc.json`, `lefthook.yml` (formatter ignores for the Intent-managed files),
+  ADR 0012 + `docs/adr/README.md`, plan §11/§12 and the T1-10 boxes, this log, NFR-18 evidence.
+- Verified: **Intent discovery.** With no `intent` key, `pnpm dlx @tanstack/intent@0.4.0 list`
+  found `@tanstack/router-core` 1.171.30 with **10** skills (transitive, under
+  `node_modules/.pnpm/@tanstack+router-core@1.171.30/...`), `@tanstack/router-plugin` 1.168.38
+  with 1, `@tanstack/virtual-file-routes` 1 , `@tanstack/devtools` 4, `@tanstack/devtools-event-client`
+  3, `dotenv` 2 — so the step-3 fallback (`pnpm add @tanstack/router-core`) was **not** needed.
+  After `intent.skills: ["@tanstack/*"]` + the three excludes: router-core 9, router-plugin 1,
+  virtual-file-routes 1 (11 skills total in the committed manifest).
+  **CLI invocations** (non-interactive, no TTY):
+  `pnpm dlx @tanstack/intent@0.4.0 install` → "Updated AGENTS.md with skill loading guidance.";
+  `pnpm dlx @tanstack/intent@0.4.0 install --map` → "Updated AGENTS.md with 11 mappings.";
+  **Acceptance test.** The task row's verbatim jq filter fails —
+  `jq: error (at <stdin>:144): Cannot index array with string "packageName"` — because
+  `list --json` returns an object, not an array; and the `>= 10` threshold is `>= 9` once
+  `router-core/ssr` is excluded. The working form
+  (`... | jq -e '[.skills[] | select(.packageName=="@tanstack/router-core")] | length >= 9'
+  && grep -q intent-skills AGENTS.md
+  && bash -n ../.claude/hooks/*.sh`) prints `true` and exits 0. Written up as plan §12 note 31(e).
+  **Hook simulations** (stdin payloads piped to each script with `CLAUDE_PROJECT_DIR` set):
+  `frontend-fix.sh` turned `const   t1_10Probe   =    {a:1,   b:2,c:3}` appended to
+  `src/routes/index.tsx` into `const t1_10Probe = { a: 1, b: 2, c: 3 };` and exited 0 (file then
+  restored; `git status` clean for `frontend/src`). `frontend-typecheck.sh`: exit 0 on
+  `{"stop_hook_active":true}`; exit **2** on a probe `export const bad: number = "not a number"`
+  with `TS2322: Type 'string' is not assignable to type 'number'.` on stderr; exit 0 once the
+  probe was deleted. `frontend-bootstrap.sh`: after `rm -r frontend/src/api/generated` it printed
+  "frontend: generated client was missing; ran pnpm install (prepare → gen:api)." and the 9
+  generated entries were back; the second run printed nothing (idempotent). `bash -n` clean on all
+  three; all three are 0755.
+  **Gate.** `pnpm check` (gen:api → tsc --noEmit → oxlint --type-aware → oxfmt --check →
+  vitest run → knip) exits **0**; vitest 3 files / 7 tests passed; knip reports only the six
+  pre-existing configuration hints. `git check-ignore -v` on the five files that must be
+  committed exits 1 (nothing ignored).
+- Decisions: ADR 0012 (Accepted, 2026-09-17). Conventions in `frontend/AGENTS.md` with a one-line
+  `CLAUDE.md` import; hooks scoped to `frontend/**` by the per-handler `if` field *and* a check
+  inside each script, so nothing fires on backend or infra edits; root `.claude/settings.json`
+  merged so the `agile-evidence-capture` `PreToolUse` hook survives verbatim; TanStack skills
+  discovered at runtime and allowlisted in
+  `package.json#intent`; `router-core/ssr` excluded (pure CSR, ADR 0001) along with the devtools
+  plugin-authoring skills; the committed manifest stores repo-relative paths so the planned
+  T1-12 `intent-stale` diff is machine-independent.
+- Problems: (1) the in-session hook smoke — plan T1-10 step 5 as written, from a Claude Code
+  session started at the repo root — could not be done from this headless run and is **owed to
+  the user's next Claude Code session at the repo root**; step 5 stays unticked. (2) §6.4's
+  bootstrap script was a false positive: `pnpm install --frozen-lockfile` skips `prepare` when
+  `node_modules` is warm, so it reported success while the client stayed missing; fixed to run
+  `gen:api` explicitly and report on the directory. It also tested `-d "$root/.git"`, which is
+  false inside a worktree, and grepped for a `lefthook.checksum` that lefthook 2.1.14 does not
+  write. (3) `oxfmt --check` rewrites the Intent-managed block in `AGENTS.md`, so `AGENTS.md` and
+  `CLAUDE.md` were added to the oxfmt ignore list and to `lefthook.yml`.
+  All five are plan §12 note 31.
+- Next: T1-13 Playwright smoke. PR-C and PR-D not opened.

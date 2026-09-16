@@ -15,5 +15,5 @@ Nygard format, numbered from 0001. New decisions get the next number; superseded
 | 0009 | [Result envelope handling](0009-result-envelope-handling.md) | Proposed |
 | 0010 | [React Compiler via Babel preset now, native path as spike](0010-react-compiler-babel-now-native-spike.md) | Proposed |
 | 0011 | [Testing strategy](0011-testing-strategy.md) | Proposed |
-| 0012 | [Agent configuration](0012-agent-configuration.md) | Proposed |
+| 0012 | [Agent configuration](0012-agent-configuration.md) | Accepted (2026-09-17, T1-10) |
 | 0013 | [Package manager and runtime pinning](0013-package-manager-and-runtime-pinning.md) | Proposed |

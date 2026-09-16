@@ -6,7 +6,9 @@
     "dist/**",
     "pnpm-lock.yaml",
     "docs/**",
-    "README.md"
+    "README.md",
+    "AGENTS.md",
+    "CLAUDE.md"
   ],
   "sortImports": true,
   "sortTailwindcss": true
