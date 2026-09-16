@@ -24,7 +24,10 @@
     "import/no-cycle": "error",
     "unicorn/filename-case": "off",
     "react/react-in-jsx-scope": "off",
-    "import/no-unassigned-import": "off"
+    "import/no-unassigned-import": [
+      "error",
+      { "allow": ["**/*.css", "@testing-library/jest-dom/vitest"] }
+    ]
   },
   "ignorePatterns": [
     "src/api/generated/**",
