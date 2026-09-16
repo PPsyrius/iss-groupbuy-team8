@@ -52,3 +52,27 @@ Say what was verified and what was not.
 - Decisions: none. Note for T2: `gh auth status` shows `read:project` on the current token and
   `gh project view 2 --owner PPsyrius` lists 21 items, so the board is readable at filing time.
 - Next: T1-02 file the 13 blocker issues; T1-04 runtime pins.
+
+## 2026-09-16 - @limjiechao - T1-02 Sprint 2 container and blocker issues filed (#93)
+
+- Kind: ops
+- Changed: GitHub only. Container #93. Backend B1–B5 = #94–#98 (@l0sgAi). AWS A1–A3 = #99–#101
+  (@l0sgAi, @PPsyrius), A4 = #102 (@PPsyrius). Team T2–T4 = #103–#105 (@PPsyrius). Bodies are
+  `frontend/docs/plan.md` §10 verbatim plus a "Sprint 2 container issue: #93" line; #103 carries
+  a filing-time note that `read:project` is already granted. The T1-01 probe result and the
+  failed dev deploy are posted as a comment on #93.
+- Verified: the T1-02 task-row count command prints 13.
+- Problems: none.
+- Next: T1-03 runbook PR (PR-B) so #99–#101 have steps to execute; T1-05 scaffold.
+
+## 2026-09-16 - @limjiechao - T1-04 runtime and package-manager pins (#44)
+
+- Kind: chore
+- Changed: `frontend/.mise.toml`, `frontend/.nvmrc`, `frontend/.npmrc`, `frontend/package.json`
+  (`packageManager`, `engines`, empty `scripts`), root `.gitignore` (generated client, Playwright
+  outputs, e2e auth state).
+- Verified: `corepack pnpm --version` in `frontend/` prints `12.4.2` (binary downloaded on first
+  use); `node --version` prints `v24.14.1` (nvm). Not verified: `mise install`, mise is not
+  installed on this machine.
+- Decisions: ADR 0013 (stub today; body lands in T1-15).
+- Next: T1-05 scaffold.
