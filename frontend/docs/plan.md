@@ -145,7 +145,7 @@ Columns: id, tier, purpose, files touched, exact verification command, depends-o
 | T2-01 | 2 | Products list at `/`: `validateSearch` (page ≥ 1, size 1–100 default 12, category optional) with valibot; route `loader` warms `pageListingsOptions` via `queryClient.query`; HeroUI card grid with dual price; pagination via `Link search`. Docs: https://tanstack.com/router/latest/docs/framework/react/guide/search-params , https://tanstack.com/router/latest/docs/framework/react/guide/external-data-loading , https://tanstack.com/query/latest/docs/framework/react/guides/prefetching | `FE/src/routes/index.tsx`, `FE/src/features/catalog/products-search.ts`, `FE/src/features/catalog/ProductCard.tsx`, `FE/src/features/catalog/ProductCard.test.tsx`, `FE/src/features/catalog/Price.tsx` | `cd frontend && pnpm check && pnpm dev`, open `http://localhost:5173/?page=1&category=food`, screenshot in PR-G | T1-07, T1-08, T1-11 | #44 |
 | T2-02 | 2 | Product detail at `/products/$productId`: `getListingOptions`, deal progress (`currentSize/targetSize`, `expireTime`), image gallery, `notFoundComponent` on 404 envelope. Docs: https://tanstack.com/router/latest/docs/framework/react/guide/not-found-errors | `FE/src/routes/products.$productId.tsx`, `FE/src/features/catalog/DealProgress.tsx`, `FE/src/features/catalog/DealProgress.test.tsx` | `cd frontend && pnpm vitest run src/features/catalog && pnpm check` | T2-01 | #44 |
 | T2-03 | 2 | Listing filter form: TanStack Form + valibot, submit navigates with `search`; `category` now, `keyword` in the schema but only sent once #47's contract exposes it. Docs: https://tanstack.com/form/latest/docs/framework/react/guides/validation | `FE/src/features/catalog/FilterForm.tsx`, `FE/src/features/catalog/FilterForm.test.tsx`, `FE/src/features/catalog/filter-form.schema.ts`, `FE/src/routes/index.tsx` | `cd frontend && pnpm vitest run src/features/catalog/FilterForm.test.tsx && pnpm check` | T2-01 | #44, #47 |
-| T2-04 | 2 | Session and guard: `useSession` over `meOptions`, router context `{ queryClient, session }`, `/auth/callback` route (refetches `me`, navigates to `search.redirect` or `/`), `_authenticated` pathless layout with `beforeLoad` redirect, `/account` page, header login link. Docs: https://tanstack.com/router/latest/docs/framework/react/guide/authenticated-routes , https://tanstack.com/router/latest/docs/framework/react/guide/router-context | `FE/src/features/session/use-session.ts`, `FE/src/features/session/session.ts`, `FE/src/routes/auth.callback.tsx`, `FE/src/routes/_authenticated.tsx`, `FE/src/routes/_authenticated/account.tsx`, `FE/src/components/Header.tsx`, `FE/src/router.tsx`, `FE/src/routes/__root.tsx`, `FE/src/main.tsx` | `cd frontend && pnpm vitest run src/features/session src/components && pnpm check`; manual: `/account` logged out → `/?redirect=%2Faccount`; logged in → shows `loginId` | T1-07, T1-11; B1 | #42 |
+| T2-04 | 2 | Session and guard: `useSession` over `meOptions`, router context `{ queryClient, session }`, `/auth/callback` route (refetches `me`, navigates to `search.redirect` or `/`), `_authenticated` pathless layout with `beforeLoad` redirect, `/account` page, header login link. Docs: https://tanstack.com/router/latest/docs/framework/react/guide/authenticated-routes , https://tanstack.com/router/latest/docs/framework/react/guide/router-context | `FE/src/features/session/use-session.ts`, `FE/src/features/session/session.ts`, `FE/src/routes/auth.callback.tsx`, `FE/src/routes/_authenticated.tsx`, `FE/src/routes/_authenticated/account.tsx`, `FE/src/components/Header.tsx`, `FE/src/router.tsx`, `FE/src/routes/__root.tsx`, `FE/src/main.tsx` | `cd frontend && pnpm vitest run src/features/session src/components && pnpm check`; manual: `/account` logged out → `/?redirect=%2Faccount`; logged in → shows `nickname` (fallback `userId`) | T1-07, T1-11; B1 | #42 |
 | T2-05 | 2 | Logout: `logoutMutation()` with `onSuccess` → clear the `me` query, navigate `/`. | `FE/src/features/session/use-logout.ts`, `FE/src/components/Header.tsx`, `FE/src/components/Header.test.tsx` | `cd frontend && pnpm vitest run src/components/Header.test.tsx` | T2-04 | #42 |
 | T2-06 | 2 | Login e2e: Playwright `storageState` seeded once by hand (`pnpm exec playwright codegen --save-storage=e2e/.auth/dev.json https://d1b3np88z657cp.cloudfront.net`), then `/account` shows the user. Skipped unless the state file exists. | `FE/e2e/account.spec.ts`, `FE/e2e/.auth/.gitkeep`, `.gitignore` | `E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e --grep @auth` | T2-04, B1, B5 | #42 |
 | T2-07 | 2 | Terraform `frontend-stack`: `import` blocks for S3 bucket, bucket policy, OAC, CloudFront Function, response-headers policy, distribution; plan shows zero changes after import. Pairs with @PPsyrius (state backend, #48 §3). | `infra/terraform/frontend-stack/{versions,main,variables,outputs,s3,cloudfront,imports}.tf`, `infra/terraform/README.md` | `terraform -chdir=infra/terraform/frontend-stack init -backend-config="bucket=blocbuy-tfstate-402178232802" && terraform -chdir=infra/terraform/frontend-stack plan -detailed-exitcode` exits 0 | T1-03 executed (A1, A2), #48 §3 | #48 |
@@ -523,7 +523,7 @@ import { ApiError, unwrapResult } from './envelope'
 
 describe('unwrapResult', () => {
   it('returns data when code is OK', () => {
-    expect(unwrapResult({ code: '0', data: { loginId: 'u1' }, message: 'ok' })).toEqual({ loginId: 'u1' })
+    expect(unwrapResult({ code: '0', data: { userId: 'u1' }, message: 'ok' })).toEqual({ userId: 'u1' })
   })
   it('throws ApiError carrying code, message and traceId when code is not OK', () => {
     expect(() => unwrapResult({ code: 'AUTH_401', message: 'unauthenticated', traceId: 't-1' })).toThrowError(ApiError)
@@ -857,7 +857,7 @@ export function Header() {
     <header className="flex items-center justify-between border-b px-6 py-3">
       <Link to="/" className="text-lg font-semibold">BlocBuy</Link>
       {me.data ? (
-        <span data-testid="login-id">{me.data.loginId}</span>
+        <span data-testid="session-user">{me.data.nickname ?? me.data.userId}</span>
       ) : (
         <Button as="a" href="/api/v1/auth/oauth2/google" variant="primary">Log in</Button>
       )}
@@ -1123,7 +1123,7 @@ export function FilterForm({ initial, onSubmit }: { initial: FilterFormValues; o
 
 ### T2-04: Session, callback route, guard, account page
 
-**Interfaces produced:** `SessionState = { status: 'anonymous' } | { status: 'authenticated'; loginId: string }`; `useSession(): SessionState`; `sessionFromQuery(queryClient): Promise<SessionState>`.
+**Interfaces produced:** `SessionState = { status: 'anonymous' } | { status: 'authenticated'; userId: string; nickname: string | null; avatarUrl: string | null }` (`MeResponse` after B4, PR #89: `userId`, `nickname`, `avatarUrl`, the last two nullable); `useSession(): SessionState`; `sessionFromQuery(queryClient): Promise<SessionState>`.
 
 - [ ] Step 1: `frontend/src/features/session/session.ts`
 
@@ -1132,14 +1132,18 @@ import type { QueryClient } from '@tanstack/react-query'
 import { meOptions } from '@/api/generated/@tanstack/react-query.gen'
 import { ApiError, unwrapResult } from '@/api/envelope'
 
-export type SessionState = { status: 'anonymous' } | { status: 'authenticated'; loginId: string }
+export type SessionState =
+  | { status: 'anonymous' }
+  | { status: 'authenticated'; userId: string; nickname: string | null; avatarUrl: string | null }
 
 export const sessionOptions = () => ({ ...meOptions(), select: unwrapResult, retry: false, staleTime: 60_000 })
 
 export async function sessionFromQuery(queryClient: QueryClient): Promise<SessionState> {
   try {
     const me = await queryClient.query(sessionOptions())
-    return me.loginId ? { status: 'authenticated', loginId: me.loginId } : { status: 'anonymous' }
+    return me.userId
+      ? { status: 'authenticated', userId: me.userId, nickname: me.nickname ?? null, avatarUrl: me.avatarUrl ?? null }
+      : { status: 'anonymous' }
   } catch (e) {
     if (e instanceof ApiError && e.status === 401) return { status: 'anonymous' }
     throw e
@@ -1172,7 +1176,7 @@ export const Route = createFileRoute('/_authenticated')({
 
 Add `redirect: v.optional(v.string())` to `productsSearchSchema` so `/` accepts the param; the header's login link appends it: `/api/v1/auth/oauth2/google` (the backend does not carry a return URL today; the callback route falls back to `/`). Record in ADR 0002 that a `?redirect=` pass-through is a follow-up backend ask.
 
-- [ ] Step 5: `frontend/src/routes/_authenticated/account.tsx`: reads `Route.useRouteContext().session` and shows `loginId`.
+- [ ] Step 5: `frontend/src/routes/_authenticated/account.tsx`: reads `Route.useRouteContext().session` and shows `nickname` (fallback `userId`) and the avatar when `avatarUrl` is set.
 - [ ] Step 6: `frontend/src/routes/auth.callback.tsx`
 
 ```tsx
@@ -1189,7 +1193,7 @@ export const Route = createFileRoute('/auth/callback')({
 })
 ```
 
-- [ ] Step 7: Header uses `useSession()`; tests for anonymous and authenticated states (MSW override returning `{ code: '0', data: { loginId: 'u1' } }`).
+- [ ] Step 7: Header uses `useSession()`; tests for anonymous and authenticated states (MSW override returning `{ code: '0', data: { userId: 'u1', nickname: 'Ada', avatarUrl: null } }`; see `Header.test.tsx` for the shipped fixtures).
 - [ ] Step 8: `pnpm check`; manual walkthrough on `docker compose` backend; screenshot of `/account`; commit `feat(frontend): session query, auth callback route, authenticated layout and account page`.
 
 ### T2-05: Logout
@@ -1201,7 +1205,7 @@ export const Route = createFileRoute('/auth/callback')({
 ### T2-06: Login e2e
 
 - [ ] Step 1: One-time by hand: `pnpm exec playwright codegen --save-storage=e2e/.auth/dev.json https://d1b3np88z657cp.cloudfront.net`, complete Google login, close. The file is gitignored.
-- [ ] Step 2: `e2e/account.spec.ts` tagged `@auth`, `test.skip(!fs.existsSync('e2e/.auth/dev.json'))`, `test.use({ storageState: 'e2e/.auth/dev.json' })`, asserts `/account` shows a `login-id`.
+- [ ] Step 2: `e2e/account.spec.ts` tagged `@auth`, `test.skip(!fs.existsSync('e2e/.auth/dev.json'))`, `test.use({ storageState: 'e2e/.auth/dev.json' })`, asserts `/account` shows a `session-user`.
 - [ ] Step 3: Run the task-row command; attach the trace to PR-I.
 
 ### T2-07: Terraform import of the dev frontend edge
@@ -2042,16 +2046,16 @@ Gates plan tasks: T2-11 (CSP/HSTS policy makes sense with it), ADR 0002 conseque
 
 ```markdown
 ### Ask
-`MeResponse` currently carries `loginId` only. Add `nickname` and `avatarUrl` (both already exist on `LoginResponse`), regenerate the contract (additive, no label needed).
+`MeResponse` currently carries `loginId` only. Add `nickname` and `avatarUrl` (both already exist on `LoginResponse`), regenerate the contract (additive, no label needed). *(Draft as filed on 2026-09-16. Landed in PR #89: the shipped shape is `{ userId, nickname, avatarUrl }`, `loginId` was renamed to `userId`, and `nickname`/`avatarUrl` are nullable for accounts created before the Google profile was wired.)*
 
 ### Why
 The header user area (#42) should show a name/avatar, not a UUID.
 
 ### Acceptance
-- [ ] `GET /api/v1/auth/me` → `{ code, data: { loginId, nickname, avatarUrl } }`
+- [x] `GET /api/v1/auth/me` → `{ code, data: { userId, nickname, avatarUrl } }` (shipped shape; the draft asked for `loginId`)
 - [ ] Contract regenerated; `contract-check` green
 
-Gates plan tasks: T2-04 header rendering (frontend shows `loginId` until then).
+Gates plan tasks: T2-04 header rendering (landed; the header renders `nickname` with a `userId` fallback since 5fc8d23).
 ```
 
 ### B5
