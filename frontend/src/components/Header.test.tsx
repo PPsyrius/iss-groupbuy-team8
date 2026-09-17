@@ -45,14 +45,32 @@ describe("Header", () => {
     );
   });
 
-  it("shows the login id when /auth/me answers 200", async () => {
+  it("shows the nickname when /auth/me answers 200", async () => {
     server.use(
       http.get("*/api/v1/auth/me", () =>
-        HttpResponse.json({ code: "COMMON_200_000", data: { loginId: "u1" }, message: "ok" }),
+        HttpResponse.json({
+          code: "COMMON_200_000",
+          data: { userId: "u1", nickname: "Ada", avatarUrl: "https://example.test/a.png" },
+          message: "ok",
+        }),
       ),
     );
     await renderWithQuery(<Header />);
-    expect(await screen.findByTestId("login-id")).toHaveTextContent("u1");
+    expect(await screen.findByTestId("session-user")).toHaveTextContent("Ada");
     expect(screen.queryByRole("link", { name: /log in/i })).not.toBeInTheDocument();
+  });
+
+  it("falls back to the user id when the nickname is null", async () => {
+    server.use(
+      http.get("*/api/v1/auth/me", () =>
+        HttpResponse.json({
+          code: "COMMON_200_000",
+          data: { userId: "u1", nickname: null, avatarUrl: null },
+          message: "ok",
+        }),
+      ),
+    );
+    await renderWithQuery(<Header />);
+    expect(await screen.findByTestId("session-user")).toHaveTextContent("u1");
   });
 });

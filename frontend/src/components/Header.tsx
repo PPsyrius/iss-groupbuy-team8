@@ -13,7 +13,9 @@ export function Header() {
         BlocBuy
       </Link>
       {me.data ? (
-        <span data-testid="login-id">{me.data.loginId}</span>
+        // B4 (#97): `nickname` and `avatarUrl` are nullable for accounts registered before the
+        // Google profile was wired; fall back to the stable `userId` rather than render nothing.
+        <span data-testid="session-user">{me.data.nickname ?? me.data.userId}</span>
       ) : (
         <HeroLink
           href="/api/v1/auth/oauth2/google"
