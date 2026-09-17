@@ -23,7 +23,7 @@ pnpm install                 # runs gen:api
 pnpm check                   # gen:api + tsc + oxlint + oxfmt --check + vitest + knip (same as CI)
 ```
 
-Once per clone: `pnpm exec lefthook install` (git hooks: oxfmt, oxlint and `tsc --noEmit` on staged files). `pnpm e2e` needs `pnpm build` first. Details: `frontend/AGENTS.md`.
+Once per clone: `pnpm exec lefthook install` (git hooks: oxfmt, oxlint and `tsc --noEmit` on staged files). `pnpm e2e` builds `dist/` when it is missing and serves an existing one as is. Details: `frontend/AGENTS.md`.
 
 ## Commits
 

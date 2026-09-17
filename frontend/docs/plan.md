@@ -901,7 +901,12 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: process.env.E2E_BASE_URL
     ? undefined
-    : { command: 'pnpm preview --port 4173 --strictPort', url: 'http://localhost:4173', reuseExistingServer: true },
+    : {
+        // build once when dist/ is missing; CI restores the validated artifact and skips it
+        command: '(test -f dist/index.html || pnpm build) && pnpm preview --port 4173 --strictPort',
+        url: 'http://localhost:4173',
+        reuseExistingServer: true,
+      },
 })
 ```
 

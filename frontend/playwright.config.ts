@@ -14,7 +14,10 @@ export default defineConfig({
     ? {}
     : {
         webServer: {
-          command: "pnpm preview --port 4173 --strictPort",
+          // A clean checkout has no dist/: build it first so `pnpm e2e` works on its own.
+          // CI downloads the validated artifact into dist/ and skips the rebuild (ADR 0004).
+          command:
+            "(test -f dist/index.html || pnpm build) && pnpm preview --port 4173 --strictPort",
           url: "http://localhost:4173",
           reuseExistingServer: true,
         },
