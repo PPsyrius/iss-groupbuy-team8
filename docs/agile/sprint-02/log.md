@@ -669,6 +669,14 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   verified:** the "not applicable" path of `frontend-check` on GitHub (fires on the first
   backend-only PR after this lands); Dependabot closing #111/#112 on its own; runbook §10 manual
   sync (no `aws` CLI on this machine, and no frontend deploy role exists yet).
+  Follow-up the same evening, after the push: GitHub reported Dependabot alert 1 (moderate,
+  GHSA-hhx9-57xq-r5rw / CVE-2026-48819, `buildClientParams` prototype substitution, fixed in
+  0.97.3) against the `0.0.0-next-20260824173136` pin. Checked: the snapshot was published
+  2026-08-24, three months after 0.97.3 (2026-05-25), and the generated
+  `src/api/generated/core/params.gen.ts` creates every slot as `Object.create(null)` and writes
+  through `writeSlot`, the patched shape; the ignore therefore hides no fix. The alert is a
+  version-string comparison (`0.0.0-next` sorts below `0.97.3`); the user dismisses it as
+  inaccurate with that reason. `dependabot.yml` says so next to the ignore.
 - Decisions: (1) `frontend-check` joins ruleset `dev-require-review` (currently `build-quality`,
   `sonar`, `docker`, `gitleaks`) only after this branch lands; rejected: require it on the merged
   shape, which would stall every backend-only PR (#110 today has no `frontend-check` status at
