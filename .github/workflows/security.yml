@@ -51,6 +51,8 @@ jobs:
               - 'backend/**/pom.xml'
               - 'backend/.mvn/**'
               - 'backend/mvnw'
+              - 'frontend/package.json'
+              - 'frontend/pnpm-lock.yaml'
             config:
               - '.github/**'
               - 'deployment/**'
@@ -201,6 +203,29 @@ jobs:
         with:
           name: trivy-dependencies
           sarif-file: trivy-fs.sarif
+          code-scanning: false
+
+      # Trivy reads pnpm-lock.yaml directly; no Node setup and no ~/.m2 dependency.
+      - name: Trivy filesystem scan (pnpm lockfile)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.74.0
+          scan-type: fs
+          scan-ref: frontend/
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          limit-severities-for-sarif: 'true'
+          ignore-unfixed: true
+          exit-code: '1'
+          format: sarif
+          output: trivy-frontend.sarif
+
+      - name: Upload frontend dependency scan SARIF
+        if: always()
+        uses: ./.github/actions/upload-sarif
+        with:
+          name: trivy-frontend-dependencies
+          sarif-file: trivy-frontend.sarif
           code-scanning: false
 
   trivy-config:
