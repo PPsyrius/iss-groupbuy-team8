@@ -538,3 +538,17 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   `loginId`, so the gate had never reached knip on GitHub before this commit.
 - Next: user pushes; watch `frontend-check`; the `frontend-check` always-report change and the
   Trivy pnpm scan restore from the local rebase branch are still to be replayed.
+
+## 2026-09-17 - @limjiechao - PR #106 review: stale `MeResponse` docs after B4 (#97, #44)
+
+- Kind: docs (review fix, CodeRabbit r4030090764)
+- Changed: ADR 0002 Context (`/auth/me` shape) and Consequences (header display), `blueprint.md`
+  networking bullet (dated correction) and blocker 4, plan §1 auth line and the B4 blocker row.
+- Verified: `contracts/openapi.json` on dev and on the branch defines `MeResponse` as
+  `{userId, nickname, avatarUrl}` (PR #89, 2026-09-16); `Header.tsx` renders `nickname ?? userId`
+  since `d875f8c`. ADR 0002 stays at 59 lines (T1-15 keeps every ADR under 60), so the correction
+  is in place, not an added addendum. No code change; `pnpm check` not affected.
+- Decisions: blueprint keeps its original wording with a dated correction (it is a snapshot);
+  the plan and the ADR say the current contract outright. `blueprint-review.md` rows and the
+  B4 issue draft in plan §12 are left as written: they describe the state on the day.
+- Next: T2-04 renders `avatarUrl`; #97 closure is on the backend owner.

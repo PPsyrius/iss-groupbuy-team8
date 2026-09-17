@@ -27,7 +27,7 @@
 - valibot only at `validateSearch` and forms. Never hand-write API response schemas.
 - TanStack Form 1.x. MSW 2 handlers generated, loaded in Vitest `setupFiles` and behind a dev flag.
 - Same origin: SPA at `/`, backend at `/api/*`. Backend has no context path; `/api/v1` comes from controller mappings. CloudFront does not rewrite paths.
-- Auth: Google OAuth only. Login = full-page navigation to `GET /api/v1/auth/oauth2/google`. Probe `GET /api/v1/auth/me` → `{loginId}`. Logout `POST /api/v1/auth/logout`. Unauthenticated → JSON 401 envelope. `GET /api/v1/products/**` anonymous.
+- Auth: Google OAuth only. Login = full-page navigation to `GET /api/v1/auth/oauth2/google`. Probe `GET /api/v1/auth/me` → `{userId, nickname, avatarUrl}` (B4 landed in PR #89; it was `{loginId}` at planning time). Logout `POST /api/v1/auth/logout`. Unauthenticated → JSON 401 envelope. `GET /api/v1/products/**` anonymous.
 - Auth state: `useSession` query, 401 interceptor that clears the session query and never redirects, `beforeLoad` guards read auth from router context; only guards redirect.
 - Local dev: `docker compose up` → backend on `http://localhost:8589`; Vite proxy `/api` with prefix preserved.
 - No `VITE_*` variables, no `import.meta.env`. One artifact promoted dev → prod. Future runtime config only via `/config.json` with `no-cache`.
@@ -161,7 +161,7 @@ Columns: id, tier, purpose, files touched, exact verification command, depends-o
 | B1 callback 302 | T2-04, T2-06 | Backend responds 302 to `/auth/callback` (relative) after `StpUtil.login`; token removed from the body. The route is built regardless. | Until merged: dev workaround = complete the Google flow once, land on the JSON page, type `/` in the address bar (the cookie is already set). The callback route still works because it only refetches `me`. If B1 is refused, escalate to D1 option (c) (backend HTML bounce page); no frontend token handling will be written. |
 | B2 cookie security scheme | T1-06 | Generated `security` typing is ignored; the browser sends the cookie on same-origin requests. | No code change; `pnpm gen:api` regenerates when the contract PR lands (needs `contract-change-approved`). |
 | B3 `secure: true` on ec2 | T1-01, T2-11 | Dev terminates TLS at CloudFront; flag can be `true`. | If it stays `false`, HSTS still applies; the secure-cookie NFR is recorded as unmet in ADR 0002 consequences. |
-| B4 `me` enrichment | T2-04 header | Header shows `loginId` only. | When merged, regenerate and render `nickname` + `avatarUrl`; nothing hand-written. |
+| B4 `me` enrichment | T2-04 header | Landed in PR #89 (2026-09-16); the header renders `nickname ?? userId` since `d875f8c`. | `avatarUrl` rendering waits for T2-04; nothing hand-written. |
 | B5 redirect URI | T2-06 | `GOOGLE_REDIRECT_URI` on dev is the CloudFront URL + `/api/v1/auth/oauth2/google/callback` and is in the Google console. | Login on dev fails at Google; `@auth` e2e stays skipped; local login via `docker compose` works with the localhost URI. |
 | A1 SPA function | T1-13 dev assertions, T2-02 deep links | Not attached today (T1-01 confirms). Local preview does not need it. | Until attached, deep links on dev return the S3 403; the dev-only smoke assertion is `test.fixme` with the A1 issue link, never deleted. |
 | A2 headers policy | T2-11 | Absent today. | Nothing in tier 1 depends on it. |

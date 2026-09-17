@@ -16,9 +16,9 @@ but the `local`, `docker` and `ec2` profiles all override `secure: false`, and t
 pending") is stale since the entry layer went live on 2026-09-06 (B3, #96). Login starts with
 `GET /api/v1/auth/oauth2/google` (302 to Google plus a `blocbuy-oauth-state` cookie scoped to `/api/v1/auth`); the
 callback `GET /api/v1/auth/oauth2/google/callback` still returns `Result<LoginResponse>` with the token in the body
-(`AuthController.googleCallback`), which strands a top-level navigation on a JSON page. `GET /api/v1/auth/me`
-returns `{loginId}`, logout is `POST /api/v1/auth/logout`, unauthenticated calls get a JSON 401 envelope,
-`GET /api/v1/products/**` is anonymous, and the contract still declares `blocbuyToken` as `apiKey in: header` (B2, #95).
+(`AuthController.googleCallback`), which strands a top-level navigation on a JSON page. `GET /api/v1/auth/me` returns
+`{userId, nickname, avatarUrl}` (B4, #97, via PR #89), logout is `POST /api/v1/auth/logout`, unauthenticated calls get a JSON 401
+envelope, `GET /api/v1/products/**` is anonymous, and the contract still declares `blocbuyToken` as `apiKey in: header` (B2, #95).
 
 ## Decision
 
@@ -48,8 +48,8 @@ carried in `state` is a follow-up backend ask (B1 optional item): the login link
 return URL today, so the callback falls back to `/account`. B3 (#96) leaves the dev cookie
 non-Secure, so the secure-cookie NFR is unmet until it merges; HSTS from A2 still applies across
 `/api/*`. B5 (#98, `GOOGLE_REDIRECT_URI` on dev) and the cookie flags could not be observed on
-2026-09-16 because the dev backend answered 503 (T1-01 probe). B4 (#97) means the header shows
-`loginId` only. The starting CSP's `connect-src 'self'` holds only because of this same-origin
+2026-09-16 because the dev backend answered 503 (T1-01 probe). B4 (#97) landed in PR #89: the header
+renders `nickname ?? userId` since `d875f8c`. The starting CSP's `connect-src 'self'` holds only because of this same-origin
 rule; the final CSP after T2-11 is recorded here as a dated addendum.
 
 2026-09-17 (branch review, `2d040a2`): on 401 the interceptor uses

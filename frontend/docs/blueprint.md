@@ -40,7 +40,7 @@ Owner tickets: #44 (frontend init, list and detail pages), #42 (Google login, me
 **Networking and auth**
 - CloudFront serves the SPA at `/` (S3 origin, OAC) and the backend at `/api/*` (ALB origin, `X-Origin-Secret` header). Same origin, no CORS; the backend has zero CORS config, so same-origin is a hard requirement. Dev URL: `https://d1b3np88z657cp.cloudfront.net`.
 - The backend has no context path. `/api/v1` is carried by controller mappings; actuator is at `/api/actuator`. CloudFront does not rewrite paths.
-- Auth is Google OAuth only, via Sa-Token 1.46. Login is a full-page navigation to `GET /api/v1/auth/oauth2/google` (302 to Google). The callback sets the `blocbuy-token` cookie (HttpOnly, SameSite=Lax; Secure pending B3). Session probe is `GET /api/v1/auth/me` (returns `{loginId}`; enrichment pending B4). Logout is `POST /api/v1/auth/logout`. Unauthenticated requests get JSON 401 in the envelope; `GET /api/v1/products/**` is anonymous.
+- Auth is Google OAuth only, via Sa-Token 1.46. Login is a full-page navigation to `GET /api/v1/auth/oauth2/google` (302 to Google). The callback sets the `blocbuy-token` cookie (HttpOnly, SameSite=Lax; Secure pending B3). Session probe is `GET /api/v1/auth/me` (returned `{loginId}` when this was written; corrected 2026-09-17: it returns `{userId, nickname, avatarUrl}` since B4 landed in PR #89). Logout is `POST /api/v1/auth/logout`. Unauthenticated requests get JSON 401 in the envelope; `GET /api/v1/products/**` is anonymous.
 - Auth state: a `useSession` query over `/auth/me`, a 401 interceptor on the generated client that clears the session query and never redirects, and `beforeLoad` guards in TanStack Router reading auth from router context. Only guards redirect.
 - Post-login return to the SPA depends on backend ask B1 (callback 302 to `/auth/callback`). Until it lands, treat it as the top blocker and plan the route anyway.
 - Local dev: `docker compose up` at the repo root gives the backend on `http://localhost:8589`; Vite `server.proxy` maps `/api` to it with the prefix preserved. The `docker` profile sets the cookie non-Secure so plain HTTP works.
@@ -91,7 +91,7 @@ See `frontend/docs/blueprint-review.md` §3 for the full list with owners. Summa
 1. B1: backend callback 302 to `/auth/callback` instead of JSON. Gates the authenticated route and login e2e.
 2. B2: contract security scheme `apiKey in: cookie` (needs `contract-change-approved` label).
 3. B3: `application-ec2.yml` cookie `secure: true` behind CloudFront.
-4. B4: `/auth/me` enriched with `nickname`, `avatarUrl`.
+4. B4: `/auth/me` enriched with `nickname`, `avatarUrl`. Delivered in PR #89 (2026-09-16); only the closure of #97 is outstanding.
 5. A1–A4: runbook steps executed by the AWS account holder (SPA function, headers policy, OIDC deploy role, `frontend-dev` environment).
 6. T1: a Sprint 2 issue mirroring #49 (dates are settled: 2026-09-14 to 2026-09-25).
 7. Whether oxlint JS-plugin mode can carry the TanStack ESLint plugins (spike; fallback is settled).
