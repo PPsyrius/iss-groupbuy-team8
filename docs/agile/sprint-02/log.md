@@ -694,7 +694,8 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 ## 2026-09-18 - @limjiechao - PR #113 review follow-up: scheduled board snapshot (#113, #103, #93)
 
 - Kind: ops, cross-cutting decision (recorded in `docs/ci/devsecops-pipeline-plan.md`
-  "board-snapshot.yml"; no ADR)
+  "board-snapshot.yml"; no ADR). Not an NFR: the workflow produces process evidence for the
+  report, not a product quality attribute, so no register row.
 - Changed: `.github/workflows/board-snapshot.yml` (new: daily 15:30 UTC and `workflow_dispatch`;
   runs `snapshot-board.sh`, uploads the CSV as a 90-day artifact, rebuilds `metrics/board-snapshots`
   from `dev` plus the unmerged days, keeps one open PR to `dev`); `docs/ci/devsecops-pipeline-plan.md`
