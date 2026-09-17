@@ -54,7 +54,7 @@ Viewports: buyer Tier 1 screens get a **phone frame (390 px wide) and a desktop 
 | Screen | Tier | States to design |
 | --- | --- | --- |
 | Home / catalog grid | 1 | loading (skeleton cards), populated, empty category, error, pagination |
-| Listing detail | 1 | loading, with open teams, no open team (solo price only), off sale / not found, error |
+| Listing detail | 1 | loading, with an open team (the best one, section 8), no open team (solo price only), off sale / not found, error; the full open-team list with per-team join is Tier 2 (phone only), marked planned |
 | Sign-in page | 1 | default, returning from a gated action (explains why), error from provider |
 | Gated-action sheet | 1 | shown when a signed-out user taps a paid action |
 | Checkout | 2 | quote locked with countdown, paying, payment error, quote expired |
@@ -185,7 +185,7 @@ Include at least one listing with no open team, one with a team at "1 seat left"
 
 ### Browse and detail (Tier 1)
 
-Home is the catalog grid with a category chip row and page controls. Cards show image, title, subtitle, group price with struck solo price (or solo only), and a compact progress cue when a team is open. Detail shows the image gallery, description, sold count, stock, and three actions in this order of prominence: **Start a team** (the screen's one accent-filled primary button), **Join a team** (per open team, with each team's progress, countdown, and leader), and **Buy alone** (secondary, Tier 2). List open teams explicitly; do not auto-join.
+Home is the catalog grid with a category chip row and page controls. Cards show image, title, subtitle, group price with struck solo price (or solo only), and a compact progress cue when a team is open. Detail shows the image gallery, description, sold count, stock, and three actions in this order of prominence: **Start a team** (the screen's one accent-filled primary button), **Join the team** (the best open team the contract returns today, with its progress and countdown; there is no leader field yet), and **Buy alone** (secondary, Tier 2). Listing every open team with its own join button, progress, countdown and leader is Tier 2: it needs the planned open-team list from section 8, and the backend change request in section 12 asks for it. Never auto-join; the join button always names the team it joins.
 
 ### Sign-in (Tier 1)
 
@@ -215,7 +215,7 @@ Dashboard, listings table with status tabs and a create button, and the listing 
 2. **Flow map**: two diagrams, buyer and admin, with each node labelled by screen name and tier. Buyer nodes cover UC1 browse, UC2 sign-in, UC3 start a team, UC4 join a team, UC5 team outcome, UC6 refund, UC7 invite and share, UC8 my teams. Admin nodes cover UC9 listing lifecycle and the price policy.
 3. **Screens**: one artboard per screen and state from section 4, at the viewports in section 4. Each artboard annotated with HeroUI Pro block or component names and tokens.
 4. **Rationale**: for the design system and for each Tier 1 screen, a short block: the problem, the choice made, one alternative rejected and why.
-5. **Backend change requests**: a list of anything the design needs that the backend does not provide, so the team can schedule it. Known items to include and extend: the Google callback should redirect to the app with `returnTo` instead of returning JSON; the session endpoint should return roles (nickname and avatar landed with B4, PR #89, and section 8 already relies on them); a category list or an agreed fixed set; endpoints to start a team, join a team, create a payment, list my teams, list notifications, and resolve an invite token; keyword search and sorting on browse.
+5. **Backend change requests**: a list of anything the design needs that the backend does not provide, so the team can schedule it. Known items to include and extend: the Google callback should redirect to the app with `returnTo` instead of returning JSON; the session endpoint should return roles (nickname and avatar landed with B4, PR #89, and section 8 already relies on them); a category list or an agreed fixed set; endpoints to start a team, join a team, list the open teams of a listing (with leader nickname and avatar, for the per-team join on detail), create a payment, list my teams, list notifications, and resolve an invite token; keyword search and sorting on browse.
 
 ## 13. Do not
 
