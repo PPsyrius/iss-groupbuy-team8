@@ -99,7 +99,7 @@ These are fixed. Do not propose alternatives.
 Only the name and tagline exist. Propose the rest within these guardrails:
 
 - Personality: warm, trustworthy, community-first, a Singapore neighbourhood feel. Calm rather than urgent. Not a discount-aggressive marketplace clone. Trust cues (clear price, clear deadline, clear refund promise) over hype.
-- **One accent colour**, owned exclusively by the team price and team progress. Nothing else on the storefront uses the accent as a fill. The accent must pass 4.5:1 as text on the base background; state the ratio.
+- **One accent colour**, owned by the team price, the team progress, and the single primary action on a screen (`Button variant="primary"`: Start a team on detail, Join on the invite landing, Pay on checkout). Nothing else on the storefront uses the accent as a fill: secondary and tertiary buttons, chips, badges, links and icons stay neutral or use a status colour. The accent must pass 4.5:1 as text on the base background; state the ratio.
 - One neutral base scale. Status colours for success, warning, danger, and info, distinct from the accent.
 - A sans-serif typeface from Google Fonts with a real fallback stack. Tabular figures for prices and countdowns.
 - A simple typographic wordmark for "BlocBuy". No mascot, no illustration system.
@@ -185,7 +185,7 @@ Include at least one listing with no open team, one with a team at "1 seat left"
 
 ### Browse and detail (Tier 1)
 
-Home is the catalog grid with a category chip row and page controls. Cards show image, title, subtitle, group price with struck solo price (or solo only), and a compact progress cue when a team is open. Detail shows the image gallery, description, sold count, stock, and three actions in this order of prominence: **Start a team** (accent), **Join a team** (per open team, with each team's progress, countdown, and leader), and **Buy alone** (secondary, Tier 2). List open teams explicitly; do not auto-join.
+Home is the catalog grid with a category chip row and page controls. Cards show image, title, subtitle, group price with struck solo price (or solo only), and a compact progress cue when a team is open. Detail shows the image gallery, description, sold count, stock, and three actions in this order of prominence: **Start a team** (the screen's one accent-filled primary button), **Join a team** (per open team, with each team's progress, countdown, and leader), and **Buy alone** (secondary, Tier 2). List open teams explicitly; do not auto-join.
 
 ### Sign-in (Tier 1)
 
