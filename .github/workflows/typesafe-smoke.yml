@@ -87,14 +87,14 @@ jobs:
             }' \
             https://api.typesafe.ai/v1/systemone > "$response_file"
 
-          # Verify the service responded with a model identity.
+          # jq programs are intentionally single-quoted so the shell does not expand them.
+          # shellcheck disable=SC2016
           jq -e '
             .model | type == "string" and length > 0
           ' "$response_file" >/dev/null
 
-          # Verify the exact response shape consumed by
-          # TypeSafeJevListingSearchReranker. Do not assert which candidate wins:
-          # this is a wire-contract smoke test, not a model-quality benchmark.
+          # Validate the wire contract, not which candidate the model prefers.
+          # shellcheck disable=SC2016
           jq -e '
             .answers.best_match.type == "choice" and
 
