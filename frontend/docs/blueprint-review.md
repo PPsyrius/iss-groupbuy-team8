@@ -18,7 +18,7 @@ The original blueprint was written against `docs/design/repository-structure.md`
 | Frontend deployed via Terraform | CloudFront, OAC, and frontend bucket were built by hand with AWS CLI (`docs/deploy/dev-cloudfront-deployment.md`); `infra/terraform` has zero CloudFront resources and excludes dev by design | Ownership question (decision D3) |
 | Backend uses `server.servlet.context-path=/api` | No context path. `/api/v1` comes from `ApiConstants.API_V1` on each controller; actuator moved to `/api/actuator` | Vite proxy must not strip the prefix |
 | Auth transport is cookie-based | Sa-Token cookie is configured (HttpOnly, SameSite=Lax) but the contract declares `blocbuy-token` as an `apiKey` in `header`, and the OAuth callback returns the token in the JSON body | Decision D1 and backend asks B1–B3 |
-| Session probe is a "working name `GET /api/me`" | Already exists as `GET /api/v1/auth/me`, returns `Result<{loginId}>` | OPEN item 2 closed; enrichment ask B4 |
+| Session probe is a "working name `GET /api/me`" | Already exists as `GET /api/v1/auth/me`, returned `Result<{loginId}>` on the review day (historical: since B4 landed in PR #89 it returns `{userId, nickname, avatarUrl}`) | OPEN item 2 closed; enrichment ask B4 |
 | Renovate with grouped updates | Repo uses Dependabot (daily, Maven + Actions + Docker; no npm) | Dependabot npm ecosystem instead |
 | Deploy uses `npm ci` | Runbook §10 says npm; plan uses pnpm | Runbook line to update |
 
@@ -27,7 +27,7 @@ The original blueprint was written against `docs/design/repository-structure.md`
 | OPEN | Answer | Source |
 |---|---|---|
 | 1. Cookie flags, 401 vs redirect | `http-only: true`, `secure: true`, `same-site: Lax` in `application.yml`; every deployed profile (`local`, `docker`, `ec2`) overrides `secure: false`. Body/header/cookie reading all left at Sa-Token defaults (all enabled). Unauthenticated request → JSON 401 in the `Result` envelope via `GlobalExceptionHandler`, no redirect. `GET /api/v1/products/**` is anonymous. | `backend/blocbuy-bootstrap/src/main/resources/application*.yml`, `SaTokenConfig.java`, `GlobalExceptionHandler.java` |
-| 2. `/api/me` accepted and shape | Exists: `GET /api/v1/auth/me` → `{loginId}` | `AuthController.java`, `contracts/openapi.json` |
+| 2. `/api/me` accepted and shape | Exists: `GET /api/v1/auth/me` → `{loginId}` on the review day (historical; `{userId, nickname, avatarUrl}` since B4, PR #89) | `AuthController.java`, `contracts/openapi.json` |
 | 3. Backend CI regenerates contract and fails on drift | Yes. `contract-check` job regenerates with `-Popenapi-export` and runs `git diff --exit-code -- contracts/`, plus `openapi-diff --fail-on-incompatible` bypassable only with the `contract-change-approved` label | `.github/workflows/ci-backend.yml` |
 | 4. Running backend locally | Root `docker-compose.yaml` (postgres 18, redis 8, backend on `8589`) or JDK 21 with `application-local.yml` | `docker-compose.yaml` |
 | 5. Who owns CloudFront `/api` behavior | Hand-managed by whoever holds AWS credentials (built in PR #23 by l0sgAi); no Terraform owner | Decision D3 |
