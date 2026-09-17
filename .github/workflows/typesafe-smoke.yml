@@ -44,6 +44,9 @@ jobs:
           TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
         shell: bash
         run: |
+          # The JSON and jq programs below are intentionally single-quoted so
+          # Bash does not expand their contents.
+          # shellcheck disable=SC2016
           set -Eeuo pipefail
 
           if [[ -z "${TYPESAFE_API_KEY:-}" ]]; then
@@ -87,14 +90,12 @@ jobs:
             }' \
             https://api.typesafe.ai/v1/systemone > "$response_file"
 
-          # jq programs are intentionally single-quoted so the shell does not expand them.
-          # shellcheck disable=SC2016
           jq -e '
             .model | type == "string" and length > 0
           ' "$response_file" >/dev/null
 
-          # Validate the wire contract, not which candidate the model prefers.
-          # shellcheck disable=SC2016
+          # Validate the same Choice probability contract enforced by the
+          # production reranker. Do not assert which candidate the model prefers.
           jq -e '
             .answers.best_match.type == "choice" and
 
@@ -109,6 +110,15 @@ jobs:
             (.answers.best_match.probabilities[
               "22222222-2222-2222-2222-222222222222"
             ] | type == "number" and . >= 0 and . <= 1) and
+
+            (.answers.best_match.probabilities | keys | sort ==
+              [
+                "11111111-1111-1111-1111-111111111111",
+                "22222222-2222-2222-2222-222222222222"
+              ]) and
+
+            ((.answers.best_match.probabilities | [.[] | numbers] | add - 1)
+              | fabs <= 0.000001) and
 
             (.usage.input_tokens | type == "number") and
             (.usage.output_tokens | type == "number")
