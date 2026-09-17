@@ -43,8 +43,9 @@ plan will surface as a non-zero exit. T1-03 (2026-09-16, PR-B) verified only fil
 (`python3 -m json.tool` on the three JSON files, `node --check` on the function); no AWS command
 was run, and the §14/§15 curl probes cannot be exercised while the dev backend is down (T1-01
 entry, ALB 503). The OIDC trust-policy `sub` format is unconfirmed: the backend example carries
-an id-suffixed subject, so §16 tells the operator to copy whichever form works for the backend
-role (open until A3 executes). Execution dates land on the blocker issues and in the runbook
+an id-suffixed subject and GitHub documents a plain one, so §16 tells the operator to decode the
+subject the `frontend-dev` job actually presents and use that exact value (open until A3
+executes); the `dev`-only restriction stays on the environment's deployment branch policy (§17). Execution dates land on the blocker issues and in the runbook
 sections, not here. The deploy role is deliberately separate from the backend deploy role
 (`deployment/frontend/iam/README.md`). The `--delete`/rollback question for the bucket (ADR 0004)
 is decided in T2-07 as a lifecycle rule, since that is when the bucket becomes code.

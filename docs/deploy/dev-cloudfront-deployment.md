@@ -534,10 +534,26 @@ aws iam put-role-policy --role-name BlocBuyGitHubFrontendDeployDev --policy-name
 export FE_ROLE_ARN=$(aws iam get-role --role-name BlocBuyGitHubFrontendDeployDev --query Role.Arn --output text)
 ```
 
-The trust policy `sub` must match the format the existing `backend-dev` deploy role uses (see
-`deployment/backend/iam/github-deploy-trust-policy.json.example`, which carries an id-suffixed
-subject). Copy whichever form works for the backend role; the GitHub-documented plain form is
-`repo:PPsyrius/iss-groupbuy-team8:environment:frontend-dev`.
+The trust policy `sub` must equal the subject the `frontend-dev` job actually presents, so read it
+from a real token rather than copying another role's condition: the backend example carries an
+id-suffixed subject (`repo:PPsyrius@<id>/iss-groupbuy-team8@<id>:environment:backend-dev`) and
+the GitHub-documented plain form is `repo:PPsyrius/iss-groupbuy-team8:environment:frontend-dev`;
+which one GitHub emits depends on the repository's OIDC subject customisation, and the wrong one
+makes `deploy-s3-dev` fail at `AssumeRoleWithWebIdentity`. Decode a token once from a temporary
+step in a job that has `id-token: write` and `environment: frontend-dev` (run it via
+`workflow_dispatch` on `dev`, then delete the step):
+
+```bash
+# run: step; node is on ubuntu-latest and decodes the unpadded base64url payload
+curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+  "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" \
+  | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>console.log(JSON.parse(Buffer.from(JSON.parse(d).value.split(".")[1],"base64url")).sub))'
+```
+
+Put that exact string in the `sub` condition (edit `/tmp/fe-trust.json` before `create-role`, or
+`aws iam update-assume-role-policy` afterwards). Keep the condition on the environment claim, not
+on `ref`: the branch restriction comes from the `frontend-dev` environment's deployment branch
+policy (§17), which only allows `dev`.
 
 ## 17. GitHub `frontend-dev` environment and variables
 
