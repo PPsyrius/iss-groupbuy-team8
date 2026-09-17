@@ -78,3 +78,12 @@ blocbuy:
       # no default here: non-local deployments MUST set GOOGLE_REDIRECT_URI explicitly
       redirect-uri: ${GOOGLE_REDIRECT_URI:}
       state-ttl-seconds: 300
+  catalog:
+    search:
+      typesafe:
+        enabled: ${TYPESAFE_ENABLED:false}
+        api-key: ${TYPESAFE_API_KEY:}
+        endpoint: ${TYPESAFE_ENDPOINT:https://api.typesafe.ai/v1/systemone}
+        model: ${TYPESAFE_MODEL:jev-latest}
+        connect-timeout-millis: ${TYPESAFE_CONNECT_TIMEOUT_MILLIS:1000}
+        read-timeout-millis: ${TYPESAFE_READ_TIMEOUT_MILLIS:2000}

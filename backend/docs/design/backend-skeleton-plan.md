@@ -300,15 +300,19 @@ client, same-origin `/api`, separated request-state and presentation components,
 error/unavailable states. Do not recalculate prices in JavaScript. Component composition is not
 automatically GoF Composite; a reverse-proxy route is not a Facade class; no such claims are made.
 
-### Keyword extension analysis and design — proposed
+### Keyword extension analysis and design — backend implemented 2026-09-17
 
 Problem: combine keyword/category/page criteria without duplicating browse visibility or unsafe SQL.
 Actor: buyer; precondition: normalized bounded input; success: paginated visible matches with a
-consistent total; alternate: empty result, not failure. Case sensitivity, whitespace, literal `%`/`_`
-semantics and maximum length require owner agreement before implementation.
+consistent total; alternate: empty result, not failure. The implemented rules are: trim and collapse
+whitespace; blank keyword retains the browse path; reject keywords over 64 characters; match title,
+subtitle, and description case-insensitively; combine whitespace-separated tokens with AND and
+fields with OR; treat `%`, `_`, and `\` as literal data; combine category and keyword with AND.
 
-The change point is query criteria. A small **Query Object** is the proposed non-GoF design; explicit
-Specification composition may later be useful but neither is claimed as a taught GoF implementation.
+The change point is query criteria. The application-layer `ListingQuery` is the implemented non-GoF
+**Query Object** and exposes neutral tokens. PostgreSQL-specific case-insensitive `ILIKE`, wildcard
+wrapping, and escaping stay in infrastructure; MyBatis binds every pattern with `#{}`. Explicit
+Specification composition may later be useful but is not claimed as a taught GoF implementation.
 Do not force Builder for a few fields or Chain of Responsibility where all criteria must combine
 with AND rather than stop at the first handler. Do not introduce Elasticsearch. If the assessed
 submission needs a GoF case, Yorik's UC6 Observer/Adapter design is the separate candidate, not a
@@ -317,31 +321,27 @@ reason to relabel a WHERE clause Strategy.
 ```mermaid
 classDiagram
     class ListingQuery {
-        <<proposed>>
         +String keyword
         +String category
-        +int page
-        +int size
+        +PageQuery page
+        +keywordTokens() List
     }
-    class BrowseApplication {
-        <<proposedExtension>>
+    class ProductAppService {
         +search(query) PageResult
     }
-    class ListingSearchPort {
-        <<proposedInterface>>
-        +searchVisible(query) PageResult
+    class ProductRepository {
+        +searchOnSale(page, category, tokens) PageResult
     }
-    BrowseApplication ..> ListingQuery
-    BrowseApplication --> ListingSearchPort
-    ListingSearchPort ..> ListingQuery
+    ProductAppService ..> ListingQuery
+    ProductAppService --> ProductRepository
 ```
 
 ```mermaid
 sequenceDiagram
     actor Buyer
-    participant C as Controller (proposed extension)
-    participant A as Browse application
-    participant R as Repository (proposed query)
+    participant C as ProductController
+    participant A as ProductAppService
+    participant R as ProductRepository
     Buyer->>C: keyword, category, pagination
     C->>C: normalize and validate query object
     C->>A: search(query)
@@ -351,8 +351,24 @@ sequenceDiagram
     A-->>Buyer: page or empty result via controller
 ```
 
-Verify combined filters, wildcard-as-data behavior, empty results, consistent count/page, stable
-ordering, public visibility and batch lookup count; update OpenAPI/TypeScript only with actual code.
+Verification includes controller/application unit tests and `ProductSearchRepositoryIT` against
+PostgreSQL 18 for combined filters, wildcard-as-data behavior, empty results, consistent count/page,
+stable ordering, public visibility, and AND-token behavior. The additive OpenAPI contract contains
+the optional `keyword` query parameter. The frontend search box remains deferred until the frontend
+scaffold exists; its generated client must consume that committed contract rather than a hand-written
+shape.
+
+An optional `ai=true` query parameter applies TypeSafe Jev semantic re-ranking after PostgreSQL has
+selected the requested page when `keyword` is nonblank; otherwise the browse path is used and `ai`
+is ignored. The catalog-domain `ListingSearchReranker` port carries only public listing text and
+provider-neutral UUIDs; the infrastructure adapter asks one typed Choice question and uses its
+probability distribution as the stable sort key. At most the first 20 products on the page and 500
+description characters per product leave the service. Disabled configuration, timeout, provider
+rejection, or malformed output preserves SQL order, total, and availability. Re-ranking is
+page-local and cannot move a product between pages. `TYPESAFE_API_KEY` remains server-side; ordinary
+CI uses stubs, while the separate live smoke workflow verifies the TypeSafe API contract.
+The capstone intentionally accepts unindexed substring scans at its expected catalog size; page and
+count use identical filters but may observe normal `READ COMMITTED` drift during concurrent edits.
 
 ## 15. UC2 Google authentication
 
