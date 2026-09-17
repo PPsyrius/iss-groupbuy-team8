@@ -29,7 +29,11 @@ A3 #101, A4 #102). `infra/terraform/frontend-stack` then imports the same resour
 public-access block, OAC, function, headers policy and distribution; resources generated with
 `plan -generate-config-out` and hand-tidied into `s3.tf` and `cloudfront.tf`;
 `terraform plan -detailed-exitcode` exiting 0 as the acceptance test; never `apply` from CI (repo
-rule). `X-Origin-Secret` stays a `sensitive` variable, never in committed state.
+rule). `X-Origin-Secret` is a `sensitive` variable, which only redacts it from plan and apply
+output; the resolved value still lands in the state file once the distribution is imported. So
+`frontend-stack` state lives only in the existing remote backend (`blocbuy-tfstate-402178232802`,
+`encrypt = true`, DynamoDB lock table, readable by the two account holders alone), `*.tfstate` and
+`*.tfplan` stay in `.gitignore`, and no plan output is attached to a PR or issue.
 
 Alternatives rejected: Terraform first (blocks the walking skeleton on infra review and on
 credentials the frontend owner does not hold); never import (no IaC evidence for the report, and
