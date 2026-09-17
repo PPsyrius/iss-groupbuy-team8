@@ -125,6 +125,7 @@ class OAuthLoginAppServiceImplTest {
         verify(oAuthUserTxService, never()).registerNewUser(any());
     }
 
+    /** Proves login orders state-consume, code-exchange, binding-lookup, registration. */
     @Test
     void collaborationFollowsConsumeExchangeLookupOrder() {
         when(oAuthStateStore.consume("s", "b")).thenReturn(true);
@@ -149,6 +150,7 @@ class OAuthLoginAppServiceImplTest {
         order.verify(oAuthUserTxService).registerNewUser(PROFILE);
     }
 
+    /** Proves loser of uq_sys_user_oauth_provider_subject with re-lookup hit retries as login. */
     @Test
     void registerRaceRetriesAsLogin() {
         when(oAuthStateStore.consume("s", "b")).thenReturn(true);
@@ -166,6 +168,7 @@ class OAuthLoginAppServiceImplTest {
         assertThat(service.loginWithGoogle("c", "s", "b")).isEqualTo(expected);
     }
 
+    /** Proves losing uq_sys_user_email with active email maps to EMAIL_ALREADY_REGISTERED. */
     @Test
     void registerRaceWithEmailCollisionMapsToConflict() {
         when(oAuthStateStore.consume("s", "b")).thenReturn(true);
@@ -190,7 +193,7 @@ class OAuthLoginAppServiceImplTest {
     }
 
     @Test
-    void registerRaceWithoutExplanationRethrows() {
+    void unknownDuplicateKeyRethrowsWithoutMapping() {
         when(oAuthStateStore.consume("s", "b")).thenReturn(true);
         when(oAuthIdentityGateway.exchangeCodeForProfile("c")).thenReturn(PROFILE);
         when(userOAuthRepository.findActiveByProviderAndSubject(OAuthProvider.GOOGLE, "sub-123"))
@@ -204,7 +207,7 @@ class OAuthLoginAppServiceImplTest {
     }
 
     @Test
-    void registerRaceWithNullEmailRethrowsWithoutEmailLookup() {
+    void nullEmailRaceRethrowsSkippingEmailLookup() {
         OAuthProfile anonymous =
                 new OAuthProfile(OAuthProvider.GOOGLE, "sub-123", null, "Ada", null, "{}");
         when(oAuthStateStore.consume("s", "b")).thenReturn(true);

@@ -21,6 +21,7 @@ class NewDealTermsTest {
     private static final UUID PRODUCT_ID = UUID.fromString("a0000000-0000-7000-8000-000000000002");
     private static final Instant EXPIRY = Instant.parse("2026-09-17T12:00:00.123456789Z");
 
+    /** Proves accepted 10.00 SGD size-2 terms persist expiry 123456789ns truncated to micros. */
     @Test
     void validTermsExposeAcceptedValuesAndNormalizePersistencePrecision() {
         NewDealTerms terms = terms(ID, "DEAL-1", PRODUCT_ID, 2, EXPIRY);

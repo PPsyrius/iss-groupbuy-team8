@@ -50,7 +50,7 @@ class StripePaymentGatewayTest {
     }
 
     @Test
-    void createMapsCommandAndReturnsProviderReference() throws Exception {
+    void createMapsDecimalToCentsWithMetadataAndIdempotencyKey() throws Exception {
         PaymentIntentService paymentIntents = mock(PaymentIntentService.class);
         PaymentIntent intent = new PaymentIntent();
         intent.setId("pi_123");
@@ -98,7 +98,7 @@ class StripePaymentGatewayTest {
     }
 
     @Test
-    void validSignedPaymentIntentWebhookIsDecoded() throws Exception {
+    void succeededPaymentIntentWebhookDecodesEventAndIntentId() throws Exception {
         String payload =
                 eventPayload("evt_123", "payment_intent.succeeded", "payment_intent", "pi_123");
 
@@ -111,7 +111,7 @@ class StripePaymentGatewayTest {
     }
 
     @Test
-    void validSignedIrrelevantWebhookIsIgnored() throws Exception {
+    void irrelevantCustomerCreatedWebhookIsIgnored() throws Exception {
         String payload = eventPayload("evt_456", "customer.created", "customer", "cus_123");
 
         assertThat(gateway.verifyWebhook(payload, signature(payload))).isEmpty();

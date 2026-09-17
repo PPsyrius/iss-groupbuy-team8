@@ -70,7 +70,7 @@ class GoogleOAuthGatewayTest {
     }
 
     @Test
-    void exchangeReturnsVerifiedProfile() throws Exception {
+    void exchangeMapsVerifiedIdTokenToProfileFields() throws Exception {
         GoogleIdToken.Payload payload = new GoogleIdToken.Payload();
         payload.setSubject("sub-123");
         payload.setEmail("ada@example.com");

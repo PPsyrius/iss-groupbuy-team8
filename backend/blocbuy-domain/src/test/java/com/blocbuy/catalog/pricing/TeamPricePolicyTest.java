@@ -16,10 +16,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+/** Team-price policy: exact SGD amounts, microsecond window, compatibility guards. */
 class TeamPricePolicyTest {
     private static final UUID PRODUCT = UUID.fromString("a0000000-0000-7000-8000-000000000001");
     private static final Instant NOW = Instant.parse("2026-09-09T00:00:00Z");
 
+    /** Rejects zero/negative/3-decimal/1e30 SGD amounts lacking exact 2-decimal storage. */
     @ParameterizedTest
     @ValueSource(strings = {"0", "-0.01", "1.001", "10000000000000000", "1e30"})
     void rejectsAmountsThatCannotBeStoredExactly(String amount) {
@@ -62,6 +64,7 @@ class TeamPricePolicyTest {
                                         .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
     }
 
+    /** Rejects 100ns window collapsing to zero under PostgreSQL microsecond truncation. */
     @Test
     void rejectsWindowThatCollapsesAtPostgresqlMicrosecondPrecision() {
         Instant from = Instant.parse("2026-09-09T00:00:00.000000100Z");

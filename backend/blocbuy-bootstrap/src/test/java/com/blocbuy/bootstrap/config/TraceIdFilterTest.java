@@ -27,7 +27,7 @@ class TraceIdFilterTest {
     }
 
     @Test
-    void acceptsSafeTraceIdAndClearsMdcAfterRequest() throws Exception {
+    void safeTraceIdPassesThroughAndClearsMdc() throws Exception {
         MockHttpServletRequest request = requestWithTraceId("client.Trace-_123");
         MockHttpServletResponse response = new MockHttpServletResponse();
         AtomicReference<String> traceIdInChain = new AtomicReference<>();
@@ -43,6 +43,7 @@ class TraceIdFilterTest {
         assertThat(MDC.get(ApiConstants.TRACE_ID_MDC_KEY)).isNull();
     }
 
+    /** Replaces null/blank/65-char/unsafe-slashed traceId with fresh UUID and clears MDC. */
     @ParameterizedTest
     @MethodSource("invalidTraceIds")
     void replacesMissingOrUnsafeTraceId(String inboundTraceId) throws Exception {
@@ -57,7 +58,7 @@ class TraceIdFilterTest {
     }
 
     @Test
-    void clearsMdcWhenFilterChainFails() {
+    void chainFailureStillClearsMdc() {
         MockHttpServletRequest request = requestWithTraceId("trace-on-failure");
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain failingChain =

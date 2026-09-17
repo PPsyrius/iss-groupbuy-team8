@@ -27,6 +27,7 @@ class RedisOAuthStateStoreTest {
     private final Environment environment = mock(Environment.class);
     private final RedisOAuthStateStore store = new RedisOAuthStateStore(redis, PROPS, environment);
 
+    /** Issues distinct state/binding pair with 300s TTL under the oauth-state key. */
     @Test
     void issueStateStoresBindingWithTtl() {
         when(redis.opsForValue()).thenReturn(ops);
@@ -44,7 +45,7 @@ class RedisOAuthStateStoreTest {
     }
 
     @Test
-    void consumeSucceedsExactlyOnceWithMatchingBinding() {
+    void consumeMatchesBindingViaAtomicGetAndDelete() {
         when(redis.opsForValue()).thenReturn(ops);
         when(environment.getProperty("spring.profiles.active", "local")).thenReturn("local");
         when(ops.getAndDelete("blocbuy:local:identity:oauth-state:s")).thenReturn("b");

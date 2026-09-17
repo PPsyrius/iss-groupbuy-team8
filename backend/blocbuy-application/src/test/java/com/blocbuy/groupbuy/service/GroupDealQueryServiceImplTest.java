@@ -34,7 +34,7 @@ class GroupDealQueryServiceImplTest {
     @InjectMocks private GroupDealQueryServiceImpl service;
 
     @Test
-    void lowestPricedOpenDealWinsPerProduct() {
+    void cheapestOfTwoOpenDealsWinsForProduct() {
         GroupDeal expensive = deal("b0000000-0000-7000-8000-000000000001", "99.00");
         GroupDeal cheap = deal("b0000000-0000-7000-8000-000000000002", "89.00");
         when(groupDealRepository.findOpenDealsByProductIds(List.of(PRODUCT_ID)))
@@ -48,7 +48,7 @@ class GroupDealQueryServiceImplTest {
     }
 
     @Test
-    void pricierSecondDealKeepsFirstSeen() {
+    void dealOrderDoesNotChangeCheapestWinner() {
         GroupDeal cheap = deal("b0000000-0000-7000-8000-000000000002", "89.00");
         GroupDeal expensive = deal("b0000000-0000-7000-8000-000000000001", "99.00");
         when(groupDealRepository.findOpenDealsByProductIds(List.of(PRODUCT_ID)))
