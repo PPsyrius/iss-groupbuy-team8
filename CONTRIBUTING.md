@@ -17,7 +17,9 @@ Changed a controller or DTO? Also `./mvnw verify -Popenapi-export` and commit th
 
 ```bash
 cd frontend
-pnpm install                 # Node 24 + pnpm 12.4.2 via corepack (engine-strict); runs gen:api
+# Select Node 24 with the repository runtime tool, then enable Corepack.
+corepack enable
+pnpm install                 # runs gen:api
 pnpm check                   # gen:api + tsc + oxlint + oxfmt --check + vitest + knip (same as CI)
 ```
 
