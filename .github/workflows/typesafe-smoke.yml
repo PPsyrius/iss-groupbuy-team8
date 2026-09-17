@@ -44,9 +44,6 @@ jobs:
           TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
         shell: bash
         run: |
-          # The JSON and jq programs below are intentionally single-quoted so
-          # Bash does not expand their contents.
-          # shellcheck disable=SC2016
           set -Eeuo pipefail
 
           if [[ -z "${TYPESAFE_API_KEY:-}" ]]; then
@@ -70,7 +67,7 @@ jobs:
               "questions": {
                 "best_match": {
                   "type": "choice",
-                  "instructions": "Rank the listed products by how well each one satisfies the shopper intent in `shopper_query`.",
+                  "instructions": "Rank the listed products by how well each one satisfies the shopper intent in shopper_query.",
                   "criteria": {
                     "11111111-1111-1111-1111-111111111111": {
                       "title": "Silent Mechanical Keyboard",
@@ -90,6 +87,7 @@ jobs:
             }' \
             https://api.typesafe.ai/v1/systemone > "$response_file"
 
+          # Verify that the service reports the model used for this request.
           jq -e '
             .model | type == "string" and length > 0
           ' "$response_file" >/dev/null
