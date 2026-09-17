@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -43,7 +44,7 @@ class ProductRepositoryImplTest {
 
     @Test
     void insertDraftConvertsAndDelegates() {
-        when(mapper.insertDraft(any(), ACTOR_ID)).thenReturn(1);
+        when(mapper.insertDraft(any(), eq(ACTOR_ID))).thenReturn(1);
 
         repository.insertDraft(product(), ACTOR_ID);
 
@@ -53,12 +54,12 @@ class ProductRepositoryImplTest {
                                 value ->
                                         PRODUCT_ID.equals(value.getId())
                                                 && "DEMO-P-0001".equals(value.getProductNo())),
-                        ACTOR_ID);
+                        eq(ACTOR_ID));
     }
 
     @Test
     void insertDraftRejectsUnexpectedAffectedRows() {
-        when(mapper.insertDraft(any(), ACTOR_ID)).thenReturn(0);
+        when(mapper.insertDraft(any(), eq(ACTOR_ID))).thenReturn(0);
 
         assertConflict(
                 () -> repository.insertDraft(product(), ACTOR_ID),
@@ -67,16 +68,16 @@ class ProductRepositoryImplTest {
 
     @Test
     void updateListingDelegatesExpectedVersion() {
-        when(mapper.updateListing(any(), 3, ACTOR_ID)).thenReturn(1);
+        when(mapper.updateListing(any(), eq(3), eq(ACTOR_ID))).thenReturn(1);
 
         repository.updateListing(product(), 3, ACTOR_ID);
 
-        verify(mapper).updateListing(any(), 3, ACTOR_ID);
+        verify(mapper).updateListing(any(), eq(3), eq(ACTOR_ID));
     }
 
     @Test
     void updateListingRejectsVersionConflict() {
-        when(mapper.updateListing(any(), 2, ACTOR_ID)).thenReturn(0);
+        when(mapper.updateListing(any(), eq(2), eq(ACTOR_ID))).thenReturn(0);
 
         assertConflict(
                 () -> repository.updateListing(product(), 2, ACTOR_ID),
@@ -164,7 +165,8 @@ class ProductRepositoryImplTest {
     @Test
     void searchPassesPatternsAndCategoryToBothQueries() {
         BizProductDO row = row();
-        when(mapper.selectVisibleSearchPage("electronics", List.of("%Tea%"), anyInt(), anyLong()))
+        when(mapper.selectVisibleSearchPage(
+                        eq("electronics"), eq(List.of("%Tea%")), anyInt(), anyLong()))
                 .thenReturn(List.of(row));
         when(mapper.countVisibleSearch("electronics", List.of("%Tea%"))).thenReturn(1L);
 
@@ -182,14 +184,14 @@ class ProductRepositoryImplTest {
     @Test
     void searchEscapesLikeMetacharactersInInfrastructure() {
         List<String> expected = List.of("%100\\%%", "%cotton\\_\\\\soft%");
-        when(mapper.selectVisibleSearchPage(isNull(), expected, anyInt(), anyLong()))
+        when(mapper.selectVisibleSearchPage(isNull(), eq(expected), anyInt(), anyLong()))
                 .thenReturn(List.of());
-        when(mapper.countVisibleSearch(isNull(), expected)).thenReturn(0L);
+        when(mapper.countVisibleSearch(isNull(), eq(expected))).thenReturn(0L);
 
         repository.searchOnSale(new PageQuery(1, 20), null, List.of("100%", "cotton_\\soft"));
 
-        verify(mapper).selectVisibleSearchPage(isNull(), expected, 20, 0L);
-        verify(mapper).countVisibleSearch(isNull(), expected);
+        verify(mapper).selectVisibleSearchPage(isNull(), eq(expected), eq(20), eq(0L));
+        verify(mapper).countVisibleSearch(isNull(), eq(expected));
     }
 
     /** Verifies blank and null search filters normalize to null for page and count queries. */
@@ -205,7 +207,7 @@ class ProductRepositoryImplTest {
 
         assertThat(result.items()).isEmpty();
         assertThat(result.total()).isZero();
-        verify(mapper).selectVisibleSearchPage(isNull(), isNull(), 20, 0L);
+        verify(mapper).selectVisibleSearchPage(isNull(), isNull(), eq(20), eq(0L));
         verify(mapper).countVisibleSearch(isNull(), isNull());
     }
 
