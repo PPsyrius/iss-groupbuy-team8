@@ -86,6 +86,6 @@ class TraceIdFilterTest {
 
     private static void assertThatCodeIsUuid(String value) {
         assertThat(value).isNotBlank();
-        assertThat(UUID.fromString(value).toString()).isEqualTo(value);
+        assertThat(UUID.fromString(value)).hasToString(value);
     }
 }

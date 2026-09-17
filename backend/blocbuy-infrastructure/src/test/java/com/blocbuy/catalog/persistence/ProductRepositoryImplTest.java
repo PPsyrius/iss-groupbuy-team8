@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -44,7 +43,7 @@ class ProductRepositoryImplTest {
 
     @Test
     void insertDraftConvertsAndDelegates() {
-        when(mapper.insertDraft(any(), eq(ACTOR_ID))).thenReturn(1);
+        when(mapper.insertDraft(any(), ACTOR_ID)).thenReturn(1);
 
         repository.insertDraft(product(), ACTOR_ID);
 
@@ -54,12 +53,12 @@ class ProductRepositoryImplTest {
                                 value ->
                                         PRODUCT_ID.equals(value.getId())
                                                 && "DEMO-P-0001".equals(value.getProductNo())),
-                        eq(ACTOR_ID));
+                        ACTOR_ID);
     }
 
     @Test
     void insertDraftRejectsUnexpectedAffectedRows() {
-        when(mapper.insertDraft(any(), eq(ACTOR_ID))).thenReturn(0);
+        when(mapper.insertDraft(any(), ACTOR_ID)).thenReturn(0);
 
         assertConflict(
                 () -> repository.insertDraft(product(), ACTOR_ID),
@@ -68,16 +67,16 @@ class ProductRepositoryImplTest {
 
     @Test
     void updateListingDelegatesExpectedVersion() {
-        when(mapper.updateListing(any(), eq(3), eq(ACTOR_ID))).thenReturn(1);
+        when(mapper.updateListing(any(), 3, ACTOR_ID)).thenReturn(1);
 
         repository.updateListing(product(), 3, ACTOR_ID);
 
-        verify(mapper).updateListing(any(), eq(3), eq(ACTOR_ID));
+        verify(mapper).updateListing(any(), 3, ACTOR_ID);
     }
 
     @Test
     void updateListingRejectsVersionConflict() {
-        when(mapper.updateListing(any(), eq(2), eq(ACTOR_ID))).thenReturn(0);
+        when(mapper.updateListing(any(), 2, ACTOR_ID)).thenReturn(0);
 
         assertConflict(
                 () -> repository.updateListing(product(), 2, ACTOR_ID),
@@ -106,8 +105,8 @@ class ProductRepositoryImplTest {
     @ParameterizedTest
     @MethodSource("listingStatusFilters")
     void pageListingsPassesStatusFilterToBothQueries(ProductStatus status, String expectedCode) {
-        when(mapper.selectListingPage(eq(expectedCode), eq(5), eq(5L))).thenReturn(List.of(row()));
-        when(mapper.countListings(eq(expectedCode))).thenReturn(7L);
+        when(mapper.selectListingPage(expectedCode, 5, 5L)).thenReturn(List.of(row()));
+        when(mapper.countListings(expectedCode)).thenReturn(7L);
 
         PageResult<Product> result = repository.pageListings(new PageQuery(2, 5), status);
 
@@ -143,8 +142,8 @@ class ProductRepositoryImplTest {
     @ParameterizedTest
     @MethodSource("onSaleCategories")
     void pageOnSalePassesCategoryFilterToBothQueries(String category, String expectedCode) {
-        when(mapper.selectOnSalePage(eq(expectedCode), eq(20), eq(0L))).thenReturn(List.of(row()));
-        when(mapper.countOnSale(eq(expectedCode))).thenReturn(6L);
+        when(mapper.selectOnSalePage(expectedCode, 20, 0L)).thenReturn(List.of(row()));
+        when(mapper.countOnSale(expectedCode)).thenReturn(6L);
 
         PageResult<Product> result = repository.pageOnSale(new PageQuery(1, 20), category);
 
@@ -165,8 +164,7 @@ class ProductRepositoryImplTest {
     @Test
     void searchPassesPatternsAndCategoryToBothQueries() {
         BizProductDO row = row();
-        when(mapper.selectVisibleSearchPage(
-                        eq("electronics"), eq(List.of("%Tea%")), anyInt(), anyLong()))
+        when(mapper.selectVisibleSearchPage("electronics", List.of("%Tea%"), anyInt(), anyLong()))
                 .thenReturn(List.of(row));
         when(mapper.countVisibleSearch("electronics", List.of("%Tea%"))).thenReturn(1L);
 
@@ -184,14 +182,14 @@ class ProductRepositoryImplTest {
     @Test
     void searchEscapesLikeMetacharactersInInfrastructure() {
         List<String> expected = List.of("%100\\%%", "%cotton\\_\\\\soft%");
-        when(mapper.selectVisibleSearchPage(isNull(), eq(expected), anyInt(), anyLong()))
+        when(mapper.selectVisibleSearchPage(isNull(), expected, anyInt(), anyLong()))
                 .thenReturn(List.of());
-        when(mapper.countVisibleSearch(isNull(), eq(expected))).thenReturn(0L);
+        when(mapper.countVisibleSearch(isNull(), expected)).thenReturn(0L);
 
         repository.searchOnSale(new PageQuery(1, 20), null, List.of("100%", "cotton_\\soft"));
 
-        verify(mapper).selectVisibleSearchPage(isNull(), eq(expected), eq(20), eq(0L));
-        verify(mapper).countVisibleSearch(isNull(), eq(expected));
+        verify(mapper).selectVisibleSearchPage(isNull(), expected, 20, 0L);
+        verify(mapper).countVisibleSearch(isNull(), expected);
     }
 
     /** Verifies blank and null search filters normalize to null for page and count queries. */
@@ -207,7 +205,7 @@ class ProductRepositoryImplTest {
 
         assertThat(result.items()).isEmpty();
         assertThat(result.total()).isZero();
-        verify(mapper).selectVisibleSearchPage(isNull(), isNull(), eq(20), eq(0L));
+        verify(mapper).selectVisibleSearchPage(isNull(), isNull(), 20, 0L);
         verify(mapper).countVisibleSearch(isNull(), isNull());
     }
 

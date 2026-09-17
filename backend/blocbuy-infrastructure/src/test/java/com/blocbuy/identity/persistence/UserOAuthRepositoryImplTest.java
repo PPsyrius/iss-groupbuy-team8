@@ -97,7 +97,6 @@ class UserOAuthRepositoryImplTest {
     }
 
     private static SysUserOAuthDO row() {
-        SysUserOAuthDO row = UserOAuthConverter.toDO(identity());
-        return row;
+        return UserOAuthConverter.toDO(identity());
     }
 }
