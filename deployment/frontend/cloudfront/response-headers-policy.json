@@ -1,0 +1,23 @@
+{
+  "Name": "blocbuy-dev-security-headers",
+  "Comment": "BlocBuy dev: HSTS + starting CSP for the React SPA; tightened in plan task T2-11",
+  "SecurityHeadersConfig": {
+    "StrictTransportSecurity": {
+      "Override": true,
+      "IncludeSubdomains": false,
+      "Preload": false,
+      "AccessControlMaxAgeSec": 31536000
+    },
+    "ContentSecurityPolicy": {
+      "Override": true,
+      "ContentSecurityPolicy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+    },
+    "ContentTypeOptions": { "Override": true },
+    "FrameOptions": { "Override": true, "FrameOption": "DENY" },
+    "ReferrerPolicy": { "Override": true, "ReferrerPolicy": "strict-origin-when-cross-origin" }
+  },
+  "RemoveHeadersConfig": {
+    "Quantity": 1,
+    "Items": [{ "Header": "Server" }]
+  }
+}
