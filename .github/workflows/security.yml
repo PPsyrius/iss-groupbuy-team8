@@ -9,15 +9,10 @@ on:
   # Merge queue gate: same security gates validate the speculative dev merge.
   merge_group:
     types: [checks_requested]
+  # Run for every PR targeting dev so required security checks are always reported.
+  # Specialized jobs below use detect-changes to avoid unnecessary work.
   pull_request:
     branches: [dev]
-    paths:
-      - "backend/**"
-      - "deployment/backend/**"
-      - "infra/terraform/**"
-      - "docker-compose.yaml"
-      - ".gitleaks.toml"
-      - ".github/workflows/**"
   schedule:
     - cron: '17 2 * * 1' # weekly Monday 02:17 UTC — catch newly published CVEs in unchanged deps
   workflow_dispatch:
@@ -140,6 +135,8 @@ jobs:
             || { echo "Deployment bundle exceeds the SSM inline transport limit"; exit 1; }
           echo "Deployment bundle policy passed: $bundle_size bytes"
 
+  # Secrets can be introduced anywhere in the repository, including documentation,
+  # frontend code, workflows, and configuration, so Gitleaks runs on every PR.
   gitleaks:
     runs-on: ubuntu-latest
     permissions:
