@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [
+    "src/api/generated/**",
+    "src/routeTree.gen.ts",
+    "dist/**",
+    "pnpm-lock.yaml",
+    "docs/**",
+    "README.md",
+    "AGENTS.md",
+    "CLAUDE.md"
+  ],
+  "sortImports": true,
+  "sortTailwindcss": true
+}
