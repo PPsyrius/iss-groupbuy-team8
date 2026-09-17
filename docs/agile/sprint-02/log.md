@@ -588,3 +588,44 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   @tanstack/intent@latest load …` prompt on first use. `pnpm publish` stays in `deny`. Not a
   runtime NFR (agent-session permission surface); ADR 0012 unchanged, plan note 31(i) records it.
 - Next: none.
+
+## 2026-09-17 - @limjiechao - PR #106 review round r5236778340: thirteen CodeRabbit findings, one commit each (#44)
+
+- Kind: review fix (CI, runbook, ADR, design brief, plan, agent skill, Playwright)
+- Changed, in commit order:
+  `security.yml` gets back the `frontend/package.json` + `frontend/pnpm-lock.yaml` deps filter
+  entries and the Trivy pnpm scan the rebase dropped, NFR-19 evidence cell updated (r4037739726);
+  runbook §14 and its older copy plus plan §7 `create-function`: `Runtime` inside
+  `--function-config`, `Autopublish` removed, `publish-function` with the returned ETag
+  (r4037739679); runbook §16 decodes the `frontend-dev` OIDC `sub` from a real token instead of
+  copying the backend role's, ADR 0007 consequence aligned (r4037739708); ADR 0007 states that
+  `sensitive` only redacts output and names the state controls (r4037739744); skill templates use
+  `YYYY-MM-DD` (r4037739598); SKILL.md commands use the repo-relative `snapshot-board.sh` path
+  (r4037739647); design brief source list points at `frontend/docs/blueprint.md` (r4037739802);
+  blueprint-review `{loginId}` rows marked historical and the brief's backend ask trimmed to
+  roles (r4037739761); accent-fill rule decided, see below (r4037739774); per-team joins on
+  listing detail moved to Tier 2 (r4037739788); plan T1-06 synced with the shipped generator pin,
+  `gen:api` stamp and `createMswHandlers().all()` (r4037739812); plan session examples and B4
+  draft off `loginId` (r4037739819); Playwright web server builds `dist/` when missing, AGENTS.md
+  and CONTRIBUTING updated (r4037739834).
+- Verified: `security.yml` diff is byte-identical to the T1-12 commit `56f7ec7` (blob `d9b0381`,
+  actionlint-clean then; actionlint not installed here). Playwright: `dist/` moved aside, `pnpm
+  e2e` ran `gen:api` + `vite build` then preview, 1 passed / 2 skipped; second run with `dist/`
+  present did not build; lefthook oxfmt, oxlint `--type-aware` and `tsc --noEmit` green on the
+  commit. OIDC decode one-liner tested on a sample JWT payload. Docs-only commits: `grep` for
+  `loginId`, `getAllMocks`, `Autopublish`, `BLUEPRINT.md` and `scripts/snapshot-board.sh` after
+  each edit. Not run on GitHub: `trivy-deps` will only fire on this PR once a `frontend/` lockfile
+  or manifest change is pushed.
+- Decisions: accent fill is owned by the team price, the team progress and the single primary
+  action per screen (`Button variant="primary"`), so `button-primary` keeps the accent and the
+  brief says so; Tier 1 detail shows one Join for the best open team, the per-team list is Tier 2
+  and the open-team list endpoint joins the §12 backend asks; snapshot documents
+  (`blueprint-review.md`, the B4 draft) keep their day-of wording with dated notes rather than
+  being rewritten; the B4 "session fields" sub-item was not changed because B4 has landed (PR
+  #89) and the brief's data section is already true. Trailers: each fix commit carries
+  `Evidence-skipped` pointing at this entry.
+- Problems: `frontend/dist.bak` (the moved-aside build used for the Playwright check) is left in
+  the working tree because deleting it was refused in this session; remove it by hand. The git
+  guard rejects commit messages containing the word "restore", hence "re-add" in the CI commit.
+- Next: push and reply on the review threads; ask @PPsyrius whether the frontend Trivy scan stays
+  inside `trivy-deps` (as re-added) or becomes its own job (#108 follow-up).
