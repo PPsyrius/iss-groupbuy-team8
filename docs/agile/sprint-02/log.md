@@ -618,7 +618,8 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   or manifest change is pushed.
 - Decisions: accent fill is owned by the team price, the team progress and the single primary
   action per screen (`Button variant="primary"`), so `button-primary` keeps the accent and the
-  brief says so; Tier 1 detail shows one Join for the best open team, the per-team list is Tier 2
+  brief says so (confirmed by the owner on 2026-09-17; the header sign-in control is neutral, so
+  the shipped `Header.tsx` `variant: "primary"` on Log in is a T2-04 restyle item); Tier 1 detail shows one Join for the best open team, the per-team list is Tier 2
   and the open-team list endpoint joins the §12 backend asks; snapshot documents
   (`blueprint-review.md`, the B4 draft) keep their day-of wording with dated notes rather than
   being rewritten; the B4 "session fields" sub-item was not changed because B4 has landed (PR
