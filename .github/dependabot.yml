@@ -56,3 +56,8 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: 'typescript'
         update-types: ['version-update:semver-major']
+      # Pinned to a `next` snapshot on purpose: every published release up to 0.99.0 loads the
+      # classic TypeScript compiler API, which typescript@7 no longer ships, so `pnpm install`
+      # dies in `prepare` (hey-api/hey-api#4235; frontend/docs/plan.md §12 note 19; Dependabot
+      # PRs #111/#112 failed exactly there). Lift this once a release supports TypeScript 7.
+      - dependency-name: '@hey-api/openapi-ts'
