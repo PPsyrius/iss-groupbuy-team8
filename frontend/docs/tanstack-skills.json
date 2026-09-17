@@ -135,10 +135,15 @@
     }
   ],
   "hiddenSourceCount": 1,
-  "hiddenSources": [],
+  "hiddenSources": [
+    {
+      "name": "dotenv",
+      "skillCount": 2
+    }
+  ],
   "warnings": [],
   "notices": [
-    "1 discovered skill source with 2 skills is hidden because it is not listed in intent.skills. Ask the user to run `intent list --show-hidden` outside the agent session to review candidates."
+    "1 discovered package ships skills but is not listed in intent.skills: dotenv. Add to opt in."
   ],
   "conflicts": []
 }
