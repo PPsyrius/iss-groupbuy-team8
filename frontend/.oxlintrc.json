@@ -29,6 +29,11 @@
     "import/no-cycle": "error",
     "unicorn/filename-case": "off",
     "react/react-in-jsx-scope": "off",
+    // React Compiler memoizes object and function props; TanStack Router's `params` and `search`
+    // are object props by API and React Aria's `onPress` takes a handler (T2-01, plan §12 note
+    // 37). The array variant stays on.
+    "react-perf/jsx-no-new-object-as-prop": "off",
+    "react-perf/jsx-no-new-function-as-prop": "off",
     "import/no-unassigned-import": [
       "error",
       { "allow": ["**/*.css", "@testing-library/jest-dom/vitest"] }
@@ -39,7 +44,8 @@
     "src/routeTree.gen.ts",
     "dist/**",
     "playwright-report/**",
-    "test-results/**"
+    "test-results/**",
+    "public/mockServiceWorker.js"
   ],
   "overrides": [
     {

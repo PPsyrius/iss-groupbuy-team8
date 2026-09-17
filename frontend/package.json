@@ -77,5 +77,10 @@
       "@tanstack/devtools#*",
       "@tanstack/devtools-event-client#*"
     ]
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }
