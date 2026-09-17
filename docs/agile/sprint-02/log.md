@@ -690,3 +690,36 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   required check (#104) and does A3/A4; then T2-01 → T2-02 → T2-03 (include `keyword`, live on
   dev since #107) → T2-04 → T2-05 → T2-06 (after B5's console check); T2-07 with @PPsyrius after
   A1/A2; T2-08/T2-09 spikes any time; T2-11 after A2 and T1-14.
+
+## 2026-09-18 - @limjiechao - PR #113 review follow-up: scheduled board snapshot (#113, #103, #93)
+
+- Kind: ops, cross-cutting decision (recorded in `docs/ci/devsecops-pipeline-plan.md`
+  "board-snapshot.yml"; no ADR)
+- Changed: `.github/workflows/board-snapshot.yml` (new: daily 15:30 UTC and `workflow_dispatch`;
+  runs `snapshot-board.sh`, uploads the CSV as a 90-day artifact, rebuilds `metrics/board-snapshots`
+  from `dev` plus the unmerged days, keeps one open PR to `dev`); `docs/ci/devsecops-pipeline-plan.md`
+  (subsection with the rejected alternatives and the degraded mode; off-repo TODO 8);
+  `docs/agile/README.md`, `docs/agile/metrics/README.md`, skill `SKILL.md` (dated pointers: a hand
+  run is now for a same-day snapshot only); `docs/agile/metrics/2026-09-18.csv` (hand run, the
+  schedule only fires on `dev` after merge).
+- Verified (2026-09-18, on `22d481b` plus this change): `snapshot-board.sh --summary` exit 0, 35
+  issues, board counts Backlog 21 / Done 6 / In progress 2 / In review 2 / Ready 3 (local `gh`
+  token carries `read:project`); the workflow's branch logic replayed against a throwaway bare
+  origin in four runs (fresh branch; carry-over of one unmerged day; rebuild after a squash merge
+  shows only the new day; same-day re-run) all as designed; actionlint 1.7.12 release binary exit 0
+  on the workflow (ShellCheck not installed locally, so its shell rules did not run; the pinned
+  image in `workflow-lint` bundles it and runs on the PR because `.github/workflows/**` changed);
+  `ruby -ryaml` parses the file (1 job, 6 steps). **Not verified:** any GitHub run (schedule and
+  dispatch exist only on `dev`); the `github.token` fallback (blank board columns, manual
+  close/reopen for the required checks) follows GitHub's documented GITHUB_TOKEN rules and was not
+  observed. Docker `actionlint` and `pnpm dlx yaml valid` were refused by the session's permission
+  classifier, hence the binary and ruby.
+- Decisions: rolling bot branch rebuilt from `dev` with a lease-protected force update and one
+  open PR, over a direct commit to `dev` (ruleset has no bypass actors), a PR per day (noise, stale
+  branches), or artifact only (not in the archive). Details in the CI doc.
+- Problems: PPsyrius asked on #113 (r4038752708) what the CSV is for and for a scheduled runner
+  instead of hand runs; action: this workflow plus a reply on the thread. `BOARD_SNAPSHOT_TOKEN` is
+  an account-holder action (off-repo TODO 8; #103 is the board-access record). Status: open until
+  the secret exists; the workflow runs degraded without it.
+- Next: user pushes; reply on the review thread; @PPsyrius resolves the thread and merges #113;
+  then T2-01 (products list).

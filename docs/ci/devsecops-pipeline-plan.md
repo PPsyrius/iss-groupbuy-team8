@@ -152,6 +152,29 @@ application preserves the deterministic PostgreSQL shortlist order and total.
 
 `actions/labeler` on PR open/sync — wires up `.github/labeler.yml`.
 
+### `.github/workflows/board-snapshot.yml` (added 2026-09-18)
+
+Daily at 15:30 UTC (23:30 Singapore) and on `workflow_dispatch`: runs
+`.claude/skills/agile-evidence-capture/scripts/snapshot-board.sh`, uploads the day's CSV as a
+90-day artifact, rebuilds the bot branch `metrics/board-snapshots` from `dev` plus any snapshot
+days not merged yet, force-updates that branch (its own, lease-protected against a concurrent
+run), and keeps one open PR to `dev` titled `docs(agile): board snapshots through <date>`. Asked
+for in the PR #113 review: the first CSV (`docs/agile/metrics/2026-09-17.csv`) was a hand run.
+
+Alternatives rejected: (a) commit straight to `dev`: the `dev-require-review` ruleset has no
+bypass actors and requires a squash-merged PR with four checks; (b) one branch and PR per day:
+a review per CSV and stale branches, since `delete_branch_on_merge` is off; (c) artifact only:
+the burndown source has to be in the git archive (`docs/agile/metrics/README.md`); (d) keep
+appending to the bot branch: after a squash merge the next PR's three-dot diff re-shows the
+already-merged days, so the branch is rebuilt from `dev` instead.
+
+Degraded mode without the `BOARD_SNAPSHOT_TOKEN` secret (off-repo TODO 8): `github.token` cannot
+read the user-owned Projects v2 board, so the board columns are blank and the script warns; the
+commits it pushes start no `pull_request` workflows (GitHub's rule for GITHUB_TOKEN-driven
+events), so the required checks appear only after a human closes and reopens the PR; and
+`gh pr create` needs "Allow GitHub Actions to create and approve pull requests", failing which
+the run prints the compare URL in its summary.
+
 ### `.github/dependabot.yml`
 
 Weekly, grouped PRs: Maven (`backend/`), GitHub Actions (`/`), Docker (`backend/`), plus configured
@@ -242,6 +265,7 @@ These need GitHub repo settings / external accounts; do them once, then the matc
 | 5 | Confirm Code Scanning result ingestion works before making CodeQL/code-scanning results a repository ruleset requirement | Repo Settings → Code security | Prevents a ruleset from waiting on results the repository cannot accept |
 | 6 | Configure ECR, two OIDC roles, EC2 SSM/ECR role, `backend-dev` protections and deployment variables from the operator guide | AWS + Repo Settings | Immutable deploy and controlled rollback |
 | 7 | Keep repo **secret** `TYPESAFE_API_KEY` configured | Repo Settings → Secrets and variables → Actions | Live `typesafe-smoke` contract verification |
+| 8 | Set repo **secret** `BOARD_SNAPSHOT_TOKEN` (added 2026-09-18): a classic PAT with `repo` + `read:project` from someone who can see the Kanban (#103), or a fine-grained PAT with Contents and Pull requests read-write, Issues read, and account Projects read. Optional fallback: enable "Allow GitHub Actions to create and approve pull requests" | Repo Settings → Secrets and variables → Actions; Settings → Actions → General | `board-snapshot` fills the board columns, opens its PR, and gets the required checks without a manual close/reopen |
 
 ## Quality Gates Summary
 

@@ -1,0 +1,127 @@
+# Board and issue snapshot: writes docs/agile/metrics/YYYY-MM-DD.csv once a day and keeps one
+# open PR (`metrics/board-snapshots` -> dev) that collects the files until someone merges it.
+# Why: the Kanban board is not in the git archive and the burndown is drawn from these CSVs
+# (docs/agile/metrics/README.md). PR #113 review asked for a scheduled runner instead of a
+# hand-run script. Design and alternatives: docs/ci/devsecops-pipeline-plan.md, "board-snapshot".
+#
+# Token: `BOARD_SNAPSHOT_TOKEN` (classic PAT with `repo` + `read:project`, or a fine-grained PAT
+# with Contents/Pull requests read-write, Issues read, and account Projects read) makes the run
+# complete: board columns filled, PR opened, and the PR's required checks triggered. Without it
+# the run falls back to `github.token`: issue columns only (the script warns), and a commit
+# pushed with `github.token` starts no `pull_request` workflows, so a human closes and reopens
+# the PR once to get the required checks (GitHub's own rule for GITHUB_TOKEN-driven events).
+name: board-snapshot
+
+on:
+  schedule:
+    - cron: '30 15 * * *' # daily 15:30 UTC = 23:30 Singapore, after the day's board moves
+  workflow_dispatch:
+
+concurrency:
+  group: board-snapshot
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  SNAPSHOT_BRANCH: metrics/board-snapshots
+  # The snapshot script names the file after `date +%F`; the team's day is Singapore's.
+  TZ: Asia/Singapore
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # push the snapshot branch
+      issues: read # gh issue list
+      pull-requests: write # gh pr create / edit
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: dev
+          token: ${{ secrets.BOARD_SNAPSHOT_TOKEN || github.token }}
+
+      - name: Carry over snapshots the open PR already holds
+        # Files that dev already has are byte-identical, so this only re-adds unmerged days.
+        # Runs before the script so a same-day re-run overwrites, not the other way round.
+        run: |
+          if git fetch --depth=1 origin "$SNAPSHOT_BRANCH" 2>/dev/null; then
+            git checkout FETCH_HEAD -- docs/agile/metrics/
+            echo "carried over: $(git status --porcelain docs/agile/metrics | wc -l) file(s)"
+          else
+            echo "no $SNAPSHOT_BRANCH on origin yet"
+          fi
+
+      - name: Snapshot issues and board
+        id: snap
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.BOARD_SNAPSHOT_TOKEN || github.token }}
+        run: |
+          echo "today=$(date +%F)" >>"$GITHUB_OUTPUT"
+          {
+            echo '## Board snapshot'
+            echo
+            echo '```'
+            bash .claude/skills/agile-evidence-capture/scripts/snapshot-board.sh --summary
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        # Kept even when the branch push or PR fails, so no day is lost.
+        with:
+          name: board-snapshot-${{ steps.snap.outputs.today }}
+          path: docs/agile/metrics/${{ steps.snap.outputs.today }}.csv
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Commit and push the snapshot branch
+        id: push
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$SNAPSHOT_BRANCH"
+          git add docs/agile/metrics
+          if git diff --cached --quiet; then
+            echo "pushed=false" >>"$GITHUB_OUTPUT"
+            echo "Nothing new against dev; branch not pushed." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git commit -q -m "docs(agile): board snapshots through $TODAY" -m "Refs #93"
+          # The branch is rebuilt from dev on every run, so the push replaces whatever the last
+          # run left; the lease pins it to the ref fetched above and fails on a concurrent write.
+          expected="$(git ls-remote --heads origin "$SNAPSHOT_BRANCH" | cut -f1)"
+          git push --force-with-lease="$SNAPSHOT_BRANCH:$expected" origin "$SNAPSHOT_BRANCH"
+          echo "pushed=true" >>"$GITHUB_OUTPUT"
+        env:
+          TODAY: ${{ steps.snap.outputs.today }}
+
+      - name: Open or refresh the snapshot PR
+        if: steps.push.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.BOARD_SNAPSHOT_TOKEN || github.token }}
+          TODAY: ${{ steps.snap.outputs.today }}
+        run: |
+          title="docs(agile): board snapshots through $TODAY"
+          existing="$(gh pr list --head "$SNAPSHOT_BRANCH" --base dev --state open --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh pr edit "$existing" --title "$title"
+            echo "Refreshed PR #$existing." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          cat >"$RUNNER_TEMP/body.md" <<'EOF'
+          Daily issue and Kanban board snapshot from `board-snapshot.yml`, the burndown source
+          described in `docs/agile/metrics/README.md`. Merge whenever convenient: the next run
+          rebuilds this branch from `dev` and re-adds only the days not merged yet.
+
+          Refs #93
+          EOF
+          if gh pr create --base dev --head "$SNAPSHOT_BRANCH" --title "$title" --label documentation --body-file "$RUNNER_TEMP/body.md"; then
+            echo "Opened the snapshot PR." | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            url="https://github.com/$GITHUB_REPOSITORY/compare/dev...$SNAPSHOT_BRANCH?expand=1"
+            echo "::warning::gh pr create failed (Actions may not be allowed to open pull requests; set BOARD_SNAPSHOT_TOKEN). Open it by hand: $url"
+            echo "PR not opened; open it by hand: $url" >>"$GITHUB_STEP_SUMMARY"
+          fi
