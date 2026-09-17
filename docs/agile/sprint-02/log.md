@@ -570,3 +570,21 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 - Decisions: resolve `-C` rather than stop matching it, so worktree-style commits from a
   different cwd still get the evidence nudge. Not an NFR (agent-side advisory hook).
 - Next: none; the hook's enforce mode remains opt-in.
+
+## 2026-09-17 - @limjiechao - PR #106 review: exact package-manager allowlist in `.claude/settings.json` (#44)
+
+- Kind: security (agent permissions), review fix (CodeRabbit r4030090644, CWE-78)
+- Changed: root `.claude/settings.json` `permissions.allow`: `Bash(pnpm *)`, `Bash(corepack *)`
+  and `Bash(mise *)` replaced by 27 exact commands (repo scripts, the four `pnpm exec` gate
+  tools, pinned `pnpm dlx @tanstack/intent@0.4.0` list/install forms, `corepack enable` /
+  `pnpm --version` / `install --frozen-lockfile` / `check`, `mise install`); plan §12 note 31(i).
+- Verified: `jq -e '.permissions.allow|length'` prints 42 (27 exact + 15 unchanged git/gh
+  rules); the `deny` block, hooks and every other key are byte-identical (`git diff` touches
+  only the `allow` array). The 27 commands cover every pnpm/corepack/mise invocation named in
+  `frontend/AGENTS.md`, plan §6, the three hook scripts and `ci-frontend.yml` except the ones
+  deliberately left to a prompt.
+- Decisions: exact strings, no wildcards, as the review asked; `pnpm add`, `pnpm exec
+  playwright install`, `pnpm dev`/`preview` and the Intent block's `pnpm dlx
+  @tanstack/intent@latest load …` prompt on first use. `pnpm publish` stays in `deny`. Not a
+  runtime NFR (agent-session permission surface); ADR 0012 unchanged, plan note 31(i) records it.
+- Next: none.
