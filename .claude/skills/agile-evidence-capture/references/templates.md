@@ -10,7 +10,7 @@ Append to `docs/agile/sprint-NN/log.md`. Newest entry at the bottom. One entry p
 per author; a day with three PRs gets three entries.
 
 ```markdown
-## 2026-09-18 - @handle - UC3 join team: payment commitment (#26)
+## YYYY-MM-DD - @handle - UC3 join team: payment commitment (#26)
 
 - Kind: feature | nfr | decision | ops | chore
 - Changed: `backend/blocbuy-application/.../JoinTeamService.java`, migration `V9__...`, contract regenerated
@@ -52,7 +52,7 @@ dated paragraph in the owning doc under `docs/`.
 ```markdown
 # NNNN. <Title as a decision, e.g. "Optimistic locking for team capacity">
 
-Date: 2026-09-18
+Date: YYYY-MM-DD
 
 ## Status
 
