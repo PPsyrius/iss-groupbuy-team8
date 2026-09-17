@@ -169,6 +169,18 @@ class GoogleOAuthGatewayTest {
                 .isEqualTo(IdentityErrorCode.OAUTH_PROVIDER_ERROR);
     }
 
+    /** Verifies a whitespace-only exchange body follows the same controlled failure path. */
+    @Test
+    void blankBodyMapsToProviderError() {
+        RestClient restClient = stubRestClient("   ", HttpStatus.OK);
+        GoogleOAuthGateway gateway = new GoogleOAuthGateway(PROPS, restClient, mockVerifier());
+
+        assertThatThrownBy(() -> gateway.exchangeCodeForProfile("code"))
+                .isInstanceOf(BizException.class)
+                .extracting(ex -> ((BizException) ex).errorCode())
+                .isEqualTo(IdentityErrorCode.OAUTH_PROVIDER_ERROR);
+    }
+
     /** Verifies a null exchange body is a provider error even when the transport stays silent. */
     @Test
     void nullBodyMapsToProviderError() {

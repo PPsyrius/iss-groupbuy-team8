@@ -3,6 +3,7 @@ package com.blocbuy.bootstrap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -70,15 +71,20 @@ class AuthControllerTest {
 
     @Test
     void callbackSuccessOpensSessionAndRedirectsToFrontend() throws Exception {
-        when(oAuthLogin.loginWithGoogle("code", "state", null))
+        when(oAuthLogin.loginWithGoogle("code", "state", "binding-123"))
                 .thenReturn(new OAuthLoginResult(USER, "Tester", "https://img.example/a.png"));
 
         MvcResult callback =
-                mvc.perform(get(CALLBACK_PATH).param("code", "code").param("state", "state"))
+                mvc.perform(
+                                get(CALLBACK_PATH)
+                                        .param("code", "code")
+                                        .param("state", "state")
+                                        .cookie(new Cookie("blocbuy-oauth-state", "binding-123")))
                         .andExpect(status().isFound())
                         .andExpect(
                                 header().string(HttpHeaders.LOCATION, FRONTEND + "/auth/callback"))
                         .andReturn();
+        verify(oAuthLogin).loginWithGoogle("code", "state", "binding-123");
 
         Cookie session = callback.getResponse().getCookie("blocbuy-token");
         assertThat(session).as("Sa-Token session cookie issued on login").isNotNull();
@@ -194,6 +200,20 @@ class AuthControllerTest {
                 .contains("Path=/api/v1/auth")
                 // local profile is plain HTTP (state-cookie-secure=false) — no Secure attribute
                 .doesNotContain("Secure");
+    }
+
+    @Test
+    void authorizeStateCookiePathIncludesServletContextPath() throws Exception {
+        when(oAuthLogin.createGoogleAuthorizeUrl())
+                .thenReturn(new GoogleAuthorizeUrl("https://accounts.google.com", "binding-123"));
+
+        MvcResult authorize =
+                mvc.perform(get("/gateway/api/v1/auth/oauth2/google").contextPath("/gateway"))
+                        .andExpect(status().isFound())
+                        .andReturn();
+
+        assertThat(authorize.getResponse().getHeader(HttpHeaders.SET_COOKIE))
+                .contains("Path=/gateway/api/v1/auth");
     }
 
     /** When the authorization URL cannot be built, the browser still lands on the failure page. */

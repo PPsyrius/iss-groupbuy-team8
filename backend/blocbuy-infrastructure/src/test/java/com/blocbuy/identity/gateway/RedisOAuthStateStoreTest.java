@@ -35,8 +35,7 @@ class RedisOAuthStateStoreTest {
         IssuedState issued = store.issueState();
 
         assertThat(issued.state()).isNotBlank();
-        assertThat(issued.binding()).isNotBlank();
-        assertThat(issued.binding()).isNotEqualTo(issued.state());
+        assertThat(issued.binding()).isNotBlank().isNotEqualTo(issued.state());
         verify(ops)
                 .set(
                         "blocbuy:local:identity:oauth-state:" + issued.state(),

@@ -120,6 +120,9 @@
             <goals>
               <goal>report-aggregate</goal>
             </goals>
+            <configuration>
+              <includeCurrentProject>true</includeCurrentProject>
+            </configuration>
           </execution>
         </executions>
       </plugin>

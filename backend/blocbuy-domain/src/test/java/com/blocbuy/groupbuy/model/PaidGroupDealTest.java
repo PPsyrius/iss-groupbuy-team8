@@ -8,11 +8,13 @@ import com.blocbuy.groupbuy.exception.GroupbuyErrorCode;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+/** Paid deal lifecycle: initiation, admission, terminal states, legacy-row guards. */
 class PaidGroupDealTest {
     private static final Instant NOW = Instant.parse("2026-09-09T00:00:00Z");
     private static final UUID LEADER = UUID.fromString("a0000000-0000-7000-8000-000000000001");
@@ -21,10 +23,179 @@ class PaidGroupDealTest {
     @Test
     void createsOpenDealWithExactlyOnePaidLeader() {
         GroupDeal deal = start(3);
+        assertThat(deal.dealNo()).isEqualTo("TEST-1");
+        assertThat(deal.currency()).isEqualTo("sgd");
+        assertThat(deal.targetSize()).isEqualTo(3);
         assertThat(deal.currentSize()).isEqualTo(1);
         assertThat(deal.leaderUserId()).isEqualTo(LEADER);
         assertThat(deal.status()).isEqualTo(DealStatus.OPEN);
+        assertThat(deal.startTime()).isEqualTo(NOW);
         assertThat(deal.successTime()).isNull();
+    }
+
+    /** Verifies reconstructed snapshots reject absent or structurally invalid required fields. */
+    @Test
+    void reconstituteRejectsMalformedSnapshot() {
+        UUID id = UUID.randomUUID();
+        UUID productId = UUID.randomUUID();
+        BigDecimal price = new BigDecimal("10.00");
+        Instant expiry = NOW.plusSeconds(60);
+
+        assertMalformed(
+                () ->
+                        GroupDeal.reconstitute(
+                                null,
+                                "TEST-1",
+                                productId,
+                                LEADER,
+                                price,
+                                "sgd",
+                                2,
+                                1,
+                                DealStatus.OPEN,
+                                NOW,
+                                expiry,
+                                null));
+        assertMalformed(
+                () ->
+                        GroupDeal.reconstitute(
+                                id,
+                                "TEST-1",
+                                null,
+                                LEADER,
+                                price,
+                                "sgd",
+                                2,
+                                1,
+                                DealStatus.OPEN,
+                                NOW,
+                                expiry,
+                                null));
+        assertMalformed(
+                () ->
+                        GroupDeal.reconstitute(
+                                id,
+                                "TEST-1",
+                                productId,
+                                null,
+                                price,
+                                "sgd",
+                                2,
+                                1,
+                                DealStatus.OPEN,
+                                NOW,
+                                expiry,
+                                null));
+        assertMalformed(
+                () ->
+                        GroupDeal.reconstitute(
+                                id,
+                                "TEST-1",
+                                productId,
+                                LEADER,
+                                null,
+                                "sgd",
+                                2,
+                                1,
+                                DealStatus.OPEN,
+                                NOW,
+                                expiry,
+                                null));
+        assertMalformed(
+                () ->
+                        GroupDeal.reconstitute(
+                                id,
+                                "TEST-1",
+                                productId,
+                                LEADER,
+                                BigDecimal.ONE.negate(),
+                                "sgd",
+                                2,
+                                1,
+                                DealStatus.OPEN,
+                                NOW,
+                                expiry,
+                                null));
+        assertMalformed(
+                () ->
+                        GroupDeal.reconstitute(
+                                id,
+                                "TEST-1",
+                                productId,
+                                LEADER,
+                                price,
+                                null,
+                                2,
+                                1,
+                                DealStatus.OPEN,
+                                NOW,
+                                expiry,
+                                null));
+        assertMalformed(
+                () ->
+                        GroupDeal.reconstitute(
+                                id,
+                                "TEST-1",
+                                productId,
+                                LEADER,
+                                price,
+                                " ",
+                                2,
+                                1,
+                                DealStatus.OPEN,
+                                NOW,
+                                expiry,
+                                null));
+        assertMalformed(
+                () ->
+                        GroupDeal.reconstitute(
+                                id,
+                                "TEST-1",
+                                productId,
+                                LEADER,
+                                price,
+                                "sgd",
+                                1,
+                                1,
+                                DealStatus.OPEN,
+                                NOW,
+                                expiry,
+                                null));
+        assertMalformed(
+                () ->
+                        GroupDeal.reconstitute(
+                                id, "TEST-1", productId, LEADER, price, "sgd", 2, 1, null, NOW,
+                                expiry, null));
+        assertMalformed(
+                () ->
+                        GroupDeal.reconstitute(
+                                id,
+                                "TEST-1",
+                                productId,
+                                LEADER,
+                                price,
+                                "sgd",
+                                2,
+                                1,
+                                DealStatus.OPEN,
+                                null,
+                                expiry,
+                                null));
+        assertMalformed(
+                () ->
+                        GroupDeal.reconstitute(
+                                id,
+                                "TEST-1",
+                                productId,
+                                LEADER,
+                                price,
+                                "sgd",
+                                2,
+                                1,
+                                DealStatus.OPEN,
+                                NOW,
+                                null,
+                                null));
     }
 
     /**
@@ -69,8 +240,9 @@ class PaidGroupDealTest {
     @Test
     void initiationRejectsNullTerms() {
         PaidGroupDealCreator creator = new StandardPaidGroupDealCreator();
+        PaidParticipation payment = payment(LEADER, "10.00");
 
-        assertThatThrownBy(() -> creator.initiate(null, payment(LEADER, "10.00"), NOW))
+        assertThatThrownBy(() -> creator.initiate(null, payment, NOW))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex ->
@@ -205,6 +377,47 @@ class PaidGroupDealTest {
 
         PaidParticipation payment = payment(UUID.randomUUID(), "10.00");
         assertThatThrownBy(() -> deal.joinPaid(payment, false, NOW))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex -> assertThat(ex.errorCode()).isEqualTo(GroupbuyErrorCode.DEAL_FULL));
+    }
+
+    /** Verifies malformed legacy progress and missing admission facts fail before mutation. */
+    @Test
+    void rejectsMissingAdmissionFactsAndZeroMemberLegacyRow() {
+        GroupDeal deal = start(3);
+        PaidParticipation missingClockPayment = payment(UUID.randomUUID(), "10.00");
+
+        assertThatThrownBy(() -> deal.joinPaid(null, false, NOW))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION));
+        assertThatThrownBy(() -> deal.joinPaid(missingClockPayment, false, null))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION));
+
+        GroupDeal zeroMember =
+                GroupDeal.reconstitute(
+                        UUID.randomUUID(),
+                        "legacy",
+                        UUID.randomUUID(),
+                        LEADER,
+                        new BigDecimal("10.00"),
+                        "sgd",
+                        2,
+                        0,
+                        DealStatus.OPEN,
+                        NOW,
+                        NOW.plusSeconds(60),
+                        null);
+        PaidParticipation zeroMemberPayment = payment(UUID.randomUUID(), "10.00");
+
+        assertThatThrownBy(() -> zeroMember.joinPaid(zeroMemberPayment, false, NOW))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex -> assertThat(ex.errorCode()).isEqualTo(GroupbuyErrorCode.DEAL_FULL));
@@ -361,5 +574,9 @@ class PaidGroupDealTest {
      */
     private static PaidParticipation payment(UUID userId, String amount) {
         return new PaidParticipation(UUID.randomUUID(), userId, new BigDecimal(amount), "sgd");
+    }
+
+    private static void assertMalformed(ThrowingCallable construction) {
+        assertThatThrownBy(construction).isInstanceOf(IllegalArgumentException.class);
     }
 }
