@@ -552,3 +552,21 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   the plan and the ADR say the current contract outright. `blueprint-review.md` rows and the
   B4 issue draft in plan §12 are left as written: they describe the state on the day.
 - Next: T2-04 renders `avatarUrl`; #97 closure is on the backend owner.
+
+## 2026-09-17 - @limjiechao - PR #106 review: evidence hook honours `git -C <dir> commit` (#44)
+
+- Kind: fix (agent tooling), review fix (CodeRabbit r4030090657)
+- Changed: `.claude/skills/agile-evidence-capture/scripts/commit-evidence-hook.sh`: the matcher
+  already accepted `git -C <dir> commit`, but `rev-parse`, `diff --cached` and `status` ran
+  against the hook `cwd`. The `-C` path is now extracted once (quotes stripped, `~` and relative
+  paths resolved against cwd) into `repo_dir`, and the three git calls use it. Commands without
+  `-C` keep `repo_dir = cwd`.
+- Verified: six payloads piped to the old and new script (temp repo with a staged `src/x.ts`):
+  absolute `-C` from a non-repo cwd, relative `-C` from the parent, quoted `-C` behind an env
+  prefix and a `&&` chain now report "Sprint log" missing (old reported only "Issue reference");
+  plain `git commit` from the repo and from a non-repo cwd unchanged; enforce mode exits 2 with
+  the checklist on stderr; `git -C /x status` passes through with exit 0. `bash -n` clean;
+  shellcheck not installed here.
+- Decisions: resolve `-C` rather than stop matching it, so worktree-style commits from a
+  different cwd still get the evidence nudge. Not an NFR (agent-side advisory hook).
+- Next: none; the hook's enforce mode remains opt-in.

@@ -27,6 +27,18 @@ cmd_flat="$(tr '\n' ' ' <<<"$cmd")"
 msg="$(grep -oE -- "-m[[:space:]]+(\"[^\"]*\"|'[^']*'|[^[:space:]]+)" <<<"$cmd_flat" | sed -E "s/^-m[[:space:]]+//; s/^[\"']//; s/[\"']\$//" | tr '\n' ' ' || true)"
 type="$(grep -oE '^[a-z]+(\([^)]*\))?!?:' <<<"$msg" | head -1 || true)"
 
+# Repository to inspect: the `-C <dir>` of the commit invocation when present, else the hook
+# cwd. A relative -C path is resolved against cwd, as git itself would.
+repo_dir="$cwd"
+c_dir="$(grep -oE 'git[[:space:]]+-C[[:space:]]+[^[:space:]]+[[:space:]]+commit([[:space:]]|$)' <<<"$cmd_flat" | head -1 | sed -E 's/^git[[:space:]]+-C[[:space:]]+//; s/[[:space:]]+commit.*$//' | tr -d '"'"'" || true)"
+if [[ -n "$c_dir" ]]; then
+  case "$c_dir" in
+    /*) repo_dir="$c_dir" ;;
+    "~"|"~/"*) repo_dir="${HOME}${c_dir#"~"}" ;;
+    *) repo_dir="$cwd/$c_dir" ;;
+  esac
+fi
+
 # Chores are exempt: nothing to evidence.
 case "$type" in
   style*|revert*|"chore(deps)"*|"chore(release)"*) exit 0 ;;
@@ -34,14 +46,14 @@ esac
 if [[ "$msg" == *"Evidence-skipped:"* ]]; then exit 0; fi
 
 git_dir_ok=false
-if git -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 2>&1; then git_dir_ok=true; fi
+if git -C "$repo_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then git_dir_ok=true; fi
 staged=""
 if $git_dir_ok; then
-  staged="$(git -C "$cwd" diff --cached --name-only 2>/dev/null || true)"
+  staged="$(git -C "$repo_dir" diff --cached --name-only 2>/dev/null || true)"
   # `git add ... && git commit` in one command: staged is still empty at hook time, so also
   # consider the paths the add names and, for `commit -a`, what is modified in the tree.
   if grep -Eq 'commit[^&;|]*[[:space:]]-a' <<<"$cmd_flat"; then
-    staged="$staged"$'\n'"$(git -C "$cwd" status --porcelain 2>/dev/null | awk '{print $2}' || true)"
+    staged="$staged"$'\n'"$(git -C "$repo_dir" status --porcelain 2>/dev/null | awk '{print $2}' || true)"
   fi
 fi
 add_args="$(grep -oE 'git[[:space:]]+add[[:space:]]+[^&;|]*' <<<"$cmd_flat" | sed -E 's/^git[[:space:]]+add[[:space:]]+//' | tr ' ' '\n' | grep -v '^-' || true)"
