@@ -124,17 +124,17 @@ are exempt.
 
 **Opening a sprint.** Create `docs/agile/sprint-NN/` with a `log.md` header (dates, goal, link to
 the sprint container issue) and, if the team wrote one, `plan.md` mirroring the container issue's
-goal, member-by-use-case matrix and status board. Run `scripts/snapshot-board.sh` once so the
+goal, member-by-use-case matrix and status board. Run `.claude/skills/agile-evidence-capture/scripts/snapshot-board.sh` once so the
 burndown has a day-zero point.
 
-**During a sprint.** Run `scripts/snapshot-board.sh` at the end of any session that changed issue
+**During a sprint.** Run `.claude/skills/agile-evidence-capture/scripts/snapshot-board.sh` at the end of any session that changed issue
 or board state. Each run writes one dated CSV; a run on an unchanged day is harmless. Daily
 snapshots are what the burndown chart is drawn from.
 
 **Closing a sprint.** Gather facts before writing, from four read-only sources, and record each
 result or "not checked" in `review.md`:
 
-1. Board and issues: `scripts/snapshot-board.sh --summary`.
+1. Board and issues: `.claude/skills/agile-evidence-capture/scripts/snapshot-board.sh --summary`.
 2. Merges in the window: `gh pr list --state merged --search "merged:>=<sprint start>"`.
 3. CI health over the window: `gh run list --workflow <each workflow> --limit 20`; a workflow
    that was red for days is a review talking point, and "gates stayed green" is a claim that
