@@ -18,6 +18,15 @@
   </tr>
 
   <tr>
+    <td><strong>Environment</strong></td>
+    <td>
+      <a href="https://d1b3np88z657cp.cloudfront.net/api/actuator/health">
+        <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fd1b3np88z657cp.cloudfront.net%2Fapi%2Factuator%2Fhealth&query=%24.status&label=EC2%20Backend&style=flat" alt="EC2 Backend Health">
+      </a>
+    </td>
+  </tr>
+
+  <tr>
     <td><strong>Quality</strong></td>
     <td>
       <a href="https://sonarcloud.io/summary/new_code?id=blocbuy-backend">
