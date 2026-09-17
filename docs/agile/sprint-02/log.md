@@ -48,7 +48,7 @@ Say what was verified and what was not.
 - Problems: dev backend is down. The latest `ci-backend` run on `dev` (merge of #92,
   2026-09-16T12:23Z, run 35095495827) failed at job `deploy-existing-ec2` after `publish-ecr-dev`
   succeeded. Action: raised with @l0sgAi and @PPsyrius; re-run the OAuth probe once dev is healthy
-  and append the B3/B5 rows here. Status: open.
+  and append the B3/B5 rows here. Status: closed 2026-09-17, rows in the tier-1 close-out entry below.
 - Decisions: none. Note for T2: `gh auth status` shows `read:project` on the current token and
   `gh project view 2 --owner PPsyrius` lists 21 items, so the board is readable at filing time.
 - Next: T1-02 file the 13 blocker issues; T1-04 runtime pins.
@@ -630,3 +630,55 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   guard rejects commit messages containing the word "restore", hence "re-add" in the CI commit.
 - Next: push and reply on the review threads; ask @PPsyrius whether the frontend Trivy scan stays
   inside `trivy-deps` (as re-added) or becomes its own job (#108 follow-up).
+
+## 2026-09-17 - @limjiechao - Tier 1 close-out after PR #106: dev evidence, `frontend-check` required-check shape, Dependabot guard (#93, #104, #44)
+
+- Kind: ops, NFR (NFR-01, NFR-16, NFR-19), cross-cutting decision (CI required-check shape,
+  recorded in the `ci-frontend.yml` trigger comment and plan §12 note 35; no ADR)
+- Changed: `.github/workflows/ci-frontend.yml` (cherry-pick of `2b01f7d`, which the user's own
+  rebase of #106 dropped: `pull_request` `paths` filter removed, `frontend-check` always reports
+  with a "not applicable" step, per-step guards on `detect-changes.outputs.frontend`,
+  `e2e-preview` gated on the same output); `.github/dependabot.yml` (ignore
+  `@hey-api/openapi-ts`); `docs/quality/nfr-register.md` NFR-01/16/19; `frontend/docs/plan.md`
+  (T0-00 ticked, T1-12 step 5 and §12 note 32 annotated, note 35); first board snapshot
+  `docs/agile/metrics/2026-09-17.csv` (35 issues, board status column populated); #93 status
+  board rows PR-B..PR-E ticked; this log (T1-01 entry now points here for B3/B5).
+- Verified (2026-09-17 ~15:30 UTC, dev backend relaunched by the user, all on `ce65abe`):
+  `/api/actuator/health` 200 `application/vnd.spring-boot.actuator.v3+json`; `/api/v1/products`
+  200; `/` and `/products/probe` 403 `application/xml` (nothing deployed, A1 not attached); `/`
+  carries no HSTS or CSP (A2 open); `/api/v1/auth/oauth2/google` 302 to Google with
+  `redirect_uri=https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google/callback` (B5
+  value live) and `Set-Cookie: blocbuy-oauth-state=…; Path=/api/v1/auth; HttpOnly; SameSite=Lax`,
+  no `Secure` (B3 still off on ec2). `E2E_TARGET=dev pnpm e2e`: 1 passed (health), 1 failed
+  (home 403), 1 fixme (deep link, A1 #99), trace under `test-results/`. GitHub: `ci-frontend`
+  `push` run 35239337645 on `ce65abe` green with `package-dev`/`deploy-s3-dev`/`e2e-dev` skipped
+  (`ENABLE_S3_DEPLOY` unset; environments list shows only `backend-dev`, none of the four
+  `FRONTEND_*` / `AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV` variables exist); first green `frontend-check`
+  PR runs 35229526282..35238582567; `trivy-deps` "Trivy filesystem scan (pnpm lockfile)" success
+  on `f7b3d65` (run 35238582370), so NFR-19 moves to enforced. Dependabot parsed the pnpm 12
+  lockfile (opened #111 and #112 for `/frontend`); both fail `pnpm install` in `prepare` because
+  `@hey-api/openapi-ts` 0.97.3/0.99.0 load the classic TypeScript API under `typescript@7`
+  (`TypeError: Cannot read properties of undefined (reading 'AnyKeyword')`, run 35239556376), the
+  known upstream bug behind the `next` pin (plan §12 note 19). T1-10 step 5 in-session hook
+  smoke from a root Claude Code session: an `Edit` of `frontend/src/routes/index.tsx` with mangled
+  attributes came back byte-identical to HEAD (`git diff` empty; PostToolUse `frontend-fix.sh`);
+  `frontend/src/api/generated/` is stamped 23:02:20 local, the session start, so the
+  SessionStart bootstrap ran; the Stop hook cannot be observed from inside the turn, `pnpm exec
+  tsc --noEmit` exit 0 by hand is what it would run. actionlint 1.7.12 (container) exit 0 on all
+  workflows in the branch; `pnpm dlx yaml@2.9.1 valid` on `dependabot.yml` exit 0. **Not
+  verified:** the "not applicable" path of `frontend-check` on GitHub (fires on the first
+  backend-only PR after this lands); Dependabot closing #111/#112 on its own; runbook §10 manual
+  sync (no `aws` CLI on this machine, and no frontend deploy role exists yet).
+- Decisions: (1) `frontend-check` joins ruleset `dev-require-review` (currently `build-quality`,
+  `sonar`, `docker`, `gitleaks`) only after this branch lands; rejected: require it on the merged
+  shape, which would stall every backend-only PR (#110 today has no `frontend-check` status at
+  all). (2) Dependabot `ignore` in config rather than `@dependabot ignore` PR comments: versioned,
+  reviewed, and it names the upstream bug to lift it on. (3) T1-14 stays with the account holder:
+  A3 #101 + A4 #102 then `ENABLE_S3_DEPLOY=true`, or the runbook §10 manual sync.
+- Problems: tier 1 (due 2026-09-20) has T1-14 open and blocked on AWS access (#101, #102);
+  #94/#95/#97 are still open though B1/B2/B4 landed in PR #89; B3 (#96) unmet on dev. Action:
+  asks in the PR body; owner closes the backend issues. Status: open.
+- Next: user pushes `feature/frontend-tier1-closeout` and opens the PR; @PPsyrius adds the
+  required check (#104) and does A3/A4; then T2-01 → T2-02 → T2-03 (include `keyword`, live on
+  dev since #107) → T2-04 → T2-05 → T2-06 (after B5's console check); T2-07 with @PPsyrius after
+  A1/A2; T2-08/T2-09 spikes any time; T2-11 after A2 and T1-14.
