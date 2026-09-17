@@ -245,6 +245,28 @@ class ProductAppServiceImplTest {
     }
 
     @Test
+    void aiSearchSkipsProviderWhenNormalizedKeywordIsNull() {
+        UUID secondId = UUID.fromString("a0000000-0000-7000-8000-000000000002");
+        Product first = product(PRODUCT_ID, "129.00", ProductStatus.ON_SALE);
+        Product second = product(secondId, "45.00", ProductStatus.ON_SALE);
+        ListingQuery query = ListingQuery.of("\u2003", null, 1, 20, true);
+
+        when(productRepository.searchOnSale(new PageQuery(1, 20), null, List.of()))
+                .thenReturn(PageResult.of(List.of(first, second), 2, new PageQuery(1, 20)));
+        when(pricingStrategyResolver.strategyFor(PricingMode.DUAL))
+                .thenReturn(new DualPricingStrategy());
+        when(groupDealQueryService.findBestOpenDealsByProductIds(List.of(PRODUCT_ID, secondId)))
+                .thenReturn(Map.of());
+
+        PageResult<ListingView> result = service.search(query);
+
+        assertThat(result.items())
+                .extracting(ListingView::id)
+                .containsExactly(PRODUCT_ID, secondId);
+        verifyNoInteractions(listingSearchReranker);
+    }
+
+    @Test
     void aiSearchPreservesSqlOrderWhenProviderReturnsNull() {
         UUID secondId = UUID.fromString("a0000000-0000-7000-8000-000000000002");
         Product first = product(PRODUCT_ID, "129.00", ProductStatus.ON_SALE);

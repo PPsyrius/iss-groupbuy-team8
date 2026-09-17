@@ -57,7 +57,7 @@ public class ProductAppServiceImpl implements ProductAppService {
     }
 
     private List<Product> rerank(ListingQuery query, List<Product> products) {
-        if (!query.aiRerank() || products.size() < 2) {
+        if (!query.aiRerank() || query.keyword() == null || products.size() < 2) {
             return products;
         }
         List<Candidate> candidates =

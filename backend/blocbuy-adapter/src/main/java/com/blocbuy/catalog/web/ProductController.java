@@ -61,8 +61,9 @@ public class ProductController {
             @RequestParam(defaultValue = "false")
                     @Parameter(
                             description =
-                                    "Best-effort Jev semantic re-ranking within the returned page; "
-                                            + "falls back to catalog order when unavailable.")
+                                    "Best-effort Jev semantic re-ranking within the returned page when "
+                                            + "keyword is nonblank; otherwise ignored. Falls back to catalog "
+                                            + "order when unavailable.")
                     boolean ai) {
         if (keyword == null || keyword.isBlank()) {
             PageResult<ListingView> result = productAppService.pageListings(page, size, category);

@@ -8,21 +8,28 @@ thresholds are in [devsecops-pipeline-plan.md](devsecops-pipeline-plan.md) and
 
 ## Pipeline shape
 
-Pull requests give fast feedback, and the `dev` merge queue repeats the same applicable
-validation against GitHub's speculative merge (`merge_group`) before the change can land.
-The `merge_group` run is the authoritative final quality/security gate. After it passes and
-GitHub updates `dev`, the `push` workflow performs delivery work only: package the merged
-application, assemble the image, publish it to ECR, and deploy it to EC2.
+Pull requests are the authoritative pre-merge validation path. The `dev` ruleset requires selected
+status checks to pass against the latest `dev` state before a pull request can merge. `merge_group`
+support remains in the workflows for forward compatibility if the repository later becomes eligible
+for GitHub Merge Queue.
+
+After an up-to-date pull request passes its required checks and lands on `dev`, the `push` workflow
+performs delivery work only: package the merged application, assemble the image, publish it to ECR,
+and deploy it to EC2.
 
 ```text
-pull_request                 merge_group                     push/dev
-├── build-quality            ├── build-quality               ├── package merged JAR
-├── contract-check           ├── contract-check              ├── assemble image
-├── sonar                    ├── sonar                       ├── publish ECR
-├── docker                   ├── docker                      └── deploy EC2
-└── security                 └── security
-                                  ↑
-                           final pre-merge gate
+pull_request                    push/dev
+├── build-quality               ├── package merged JAR
+├── contract-check              ├── assemble image
+├── sonar                       ├── publish ECR
+├── docker                      └── deploy EC2
+├── security
+└── typesafe-smoke (live, non-required)
+        ↑
+ authoritative pre-merge validation
+
+merge_group
+└── same applicable validation when Merge Queue is available
 
 ci-backend.yml
 ├── build-quality     Spotless -> Checkstyle -> Maven verify -> reports + Sonar inputs
@@ -42,6 +49,12 @@ security.yml
 ├── trivy-config      Docker/config HIGH/CRITICAL misconfiguration gate
 └── codeql            Java SAST when ENABLE_CODEQL=true and Code Scanning is available
 
+typesafe-smoke.yml
+└── live Jev System One `choice` contract smoke
+    ├── backend PRs, production v* tags and manual runs
+    ├── merge_group when Merge Queue is available
+    └── non-required: Jev availability does not gate ordinary search or merging
+
 rollback-backend.yml  manual, confirmed, reasoned, environment-controlled SSM rollback
 ```
 
@@ -50,36 +63,74 @@ unchanged dependencies.
 
 ## Required PR checks
 
-Configure `dev` with merge queue enabled (`Settings > General > Pull Requests > Allow merge
-queue`) and a `dev` ruleset that requires pull requests, required CI checks and the merge queue.
-The queue's `merge_group` run is the final pre-merge validation of the speculative `dev` state.
+Configure the `dev` ruleset to require pull requests, required status checks and branches to be up
+to date before merging.
 
-Require the same applicable CI gates for PRs and merge groups:
+The currently required checks are:
 
-- `build-quality`, `contract-check`, `docker`, `SonarCloud Code Analysis`;
-- `workflow-lint`, `deployment-bundle`, `gitleaks`, `trivy-deps`, `trivy-config`;
-- `codeql` only when GitHub Code Scanning is enabled and reporting reliably.
+- `build-quality`;
+- `sonar`;
+- `docker`;
+- `gitleaks`.
+
+Other applicable CI/security jobs still run and report failures, but conditional jobs should not be
+made permanently required unless their presence is made unconditional.
+
+`typesafe-smoke` is deliberately not a required status check. It verifies compatibility with the
+live TypeSafe Jev service, while the application itself treats Jev as an optional enhancement and
+preserves deterministic SQL ordering if the service is unavailable.
 
 Recommended `dev` ruleset protections also include at least one approval, stale-approval dismissal,
 approval of the latest reviewable push, CODEOWNERS review where ownership is intentional,
 conversation resolution, deletion restriction and force-push blocking. Do not use `Restrict
-updates` merely to force PRs; the pull-request and merge-queue requirements establish that path.
+updates` merely to force PRs; the pull-request requirement establishes that path.
 
-`deploy-existing-ec2` and `publish-ecr-*` stay `push`-only (the queue SHA is temporary and OIDC
-trusts only `refs/heads/dev`) and must not be queue-required checks.
+`merge_group` remains configured in the workflows as dormant forward-compatible support. If the
+repository later becomes eligible for GitHub Merge Queue, the same applicable validation can run
+against the speculative integrated state without redesigning the workflows.
+
+`deploy-existing-ec2` and `publish-ecr-*` stay `push`-only. They must not be required pre-merge
+checks.
 
 ### Post-merge delivery boundary
 
 Direct changes to `dev` are prevented by the repository ruleset: normal changes must arrive through
-a pull request and the required merge queue. Because `merge_group` validates the speculative
-integrated state immediately before GitHub updates `dev`, expensive quality/security gates are not
-repeated on the resulting `push/dev`.
+an up-to-date pull request whose required status checks have passed. Because the pull request is
+tested against the latest `dev` state immediately before it becomes mergeable, expensive
+quality/security gates are not repeated on the resulting `push/dev`.
 
 The delivery run rebuilds/packages the deployable JAR and assembles the runtime image from the
 merged `dev` source without rerunning tests, formatting/style checks, SpotBugs, JaCoCo, Sonar,
-contract validation, smoke tests, Trivy, CodeQL, Gitleaks, or configuration scans. This deliberately
-trades exact promotion of the queue-built Docker image for substantially lower GitHub Actions
-usage. Production `v*` tag releases retain the full release validation path.
+contract validation, smoke tests, Trivy, CodeQL, Gitleaks, configuration scans, or the live TypeSafe
+smoke. This deliberately trades exact promotion of the PR-built Docker image for substantially lower
+GitHub Actions usage. Production `v*` tag releases retain the full release validation path.
+
+## TypeSafe Jev validation
+
+BlocBuy's optional AI-assisted listing search uses TypeSafe Jev System One to re-rank the
+deterministic PostgreSQL shortlist. PostgreSQL remains authoritative for filtering, pagination and
+the fallback result order.
+
+Normal backend verification uses deterministic/stubbed tests and requires no live TypeSafe
+credential. The separate `typesafe-smoke.yml` workflow performs one live API contract check using
+the same `choice` response shape consumed by the listing-search reranker.
+
+The live smoke validates the external wire contract rather than model quality:
+
+- the service returns a model identity;
+- `answers.best_match` is a `choice` answer;
+- expected candidate probabilities are present;
+- probability values are numbers in `[0,1]`;
+- usage metadata is present.
+
+It deliberately does not assert which candidate Jev must rank first.
+
+The live smoke runs for applicable non-fork, non-Dependabot backend pull requests, production `v*`
+tags, manual dispatches, and `merge_group` when Merge Queue is available. It does not run on
+`push/dev`, preserving the delivery-only post-merge design.
+
+Jev availability is not a required merge condition. If the live service is unavailable at runtime,
+the application preserves the original deterministic SQL order.
 
 ## Run backend quality gates locally
 
@@ -114,7 +165,7 @@ transported by CI.
 On PR, the `docker` job builds and boots the image with the `ec2` Spring profile against PostgreSQL
 and Redis, then fails on fixable HIGH/CRITICAL image vulnerabilities.
 
-After a merge-queue-validated change lands on `dev`, when `ENABLE_EC2_DEPLOY=true`:
+After an up-to-date, validated pull request lands on `dev`, when `ENABLE_EC2_DEPLOY=true`:
 
 1. the delivery path packages the merged application without rerunning the pre-merge gates;
 2. the runtime image is assembled and GitHub OIDC assumes the ECR publisher role;
@@ -125,6 +176,10 @@ After a merge-queue-validated change lands on `dev`, when `ENABLE_EC2_DEPLOY=tru
 7. failure triggers an automatic application rollback where a previous digest exists.
 
 The workflow never provisions or operates PostgreSQL, Redis, EC2 or Terraform state.
+
+Production `v*` releases execute the full backend and security validation path and also run the live
+TypeSafe compatibility smoke. A TypeSafe smoke failure identifies an external integration problem
+but does not change the application's deterministic search fallback design.
 
 ## Manual rollback
 
@@ -148,6 +203,7 @@ Flyway migrations; deployed migrations must remain backward-compatible.
 | `trivy-config` | Correct the Docker/config control; do not blanket-ignore policies |
 | `workflow-lint` | Fix workflow syntax, expressions or embedded shell diagnostics |
 | `deployment-bundle` | Restore the one-service boundary or remove unexpected archive content |
+| `typesafe-smoke` | Verify `TYPESAFE_API_KEY`, TypeSafe availability and the live System One `choice` response contract |
 | smoke test | Inspect `smoke-app` logs and reproduce with the `ec2` profile |
 | ECR publication | Verify OIDC branch trust, repository variables and ECR immutability |
 | SSM deployment | Verify environment trust, instance ID, managed-node status and restricted IAM policy |
@@ -156,6 +212,7 @@ Flyway migrations; deployed migrations must remain backward-compatible.
 ## Rules
 
 - Do not skip tests or security gates in the release path.
+- Do not make optional TypeSafe availability a prerequisite for deterministic listing search.
 - Do not add long-lived AWS keys or application secrets to GitHub.
 - Do not deploy mutable image tags.
 - Do not add PostgreSQL/Redis services or volumes to the backend deployment bundle.

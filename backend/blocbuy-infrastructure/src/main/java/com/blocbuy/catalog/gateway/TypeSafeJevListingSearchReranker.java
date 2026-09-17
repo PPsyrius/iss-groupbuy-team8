@@ -7,7 +7,9 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -26,6 +28,7 @@ public class TypeSafeJevListingSearchReranker implements ListingSearchReranker {
 
     private static final int MAX_CANDIDATES = 20;
     private static final int MAX_DESCRIPTION_LENGTH = 500;
+    private static final double PROBABILITY_SUM_TOLERANCE = 1e-6;
 
     private final TypeSafeJevProperties properties;
     private final RestClient restClient;
@@ -91,19 +94,37 @@ public class TypeSafeJevListingSearchReranker implements ListingSearchReranker {
         if (response == null || response.answers() == null) {
             return original;
         }
+
         ChoiceAnswer answer = response.answers().get("best_match");
         if (answer == null || !"choice".equals(answer.type()) || answer.probabilities() == null) {
             return original;
         }
 
+        Map<String, Double> probabilities = answer.probabilities();
+        Set<String> expectedKeys =
+                shortlist.stream()
+                        .map(candidate -> candidate.id().toString())
+                        .collect(Collectors.toSet());
+
+        if (!probabilities.keySet().equals(expectedKeys)) {
+            return original;
+        }
+
         Map<UUID, Double> scores = new LinkedHashMap<>();
+        double total = 0.0;
         for (Candidate candidate : shortlist) {
-            Double score = answer.probabilities().get(candidate.id().toString());
+            Double score = probabilities.get(candidate.id().toString());
             if (!isValidScore(score)) {
                 return original;
             }
             scores.put(candidate.id(), score);
+            total += score;
         }
+
+        if (Math.abs(total - 1.0) > PROBABILITY_SUM_TOLERANCE) {
+            return original;
+        }
+
         List<UUID> ranked = new ArrayList<>(scores.keySet());
         ranked.sort(Comparator.comparingDouble(scores::get).reversed());
         original.stream().filter(id -> !scores.containsKey(id)).forEach(ranked::add);

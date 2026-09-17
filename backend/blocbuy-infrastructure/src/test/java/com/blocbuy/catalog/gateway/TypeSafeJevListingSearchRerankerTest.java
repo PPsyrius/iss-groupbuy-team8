@@ -101,7 +101,7 @@ class TypeSafeJevListingSearchRerankerTest {
                 stub(
                         """
                         {"answers":{"best_match":{"type":"choice",
-                        "probabilities":{"%s":0.8}}}}
+                        "probabilities":{"%s":1.0}}}}
                         """
                                 .formatted(FIRST),
                         HttpStatus.OK);
@@ -109,9 +109,27 @@ class TypeSafeJevListingSearchRerankerTest {
                 stub(
                         """
                         {"answers":{"best_match":{"type":"choice","choice":"%s",
-                        "probabilities":{"%s":1.1,"%s":0.2},"confidence":0.5}}}
+                        "probabilities":{"%s":1.1,"%s":-0.1},"confidence":0.5}}}
                         """
                                 .formatted(FIRST, FIRST, SECOND),
+                        HttpStatus.OK);
+        RestClient invalidTotal =
+                stub(
+                        """
+                        {"answers":{"best_match":{"type":"choice","choice":"%s",
+                        "probabilities":{"%s":0.8,"%s":0.7},"confidence":0.5}}}
+                        """
+                                .formatted(FIRST, FIRST, SECOND),
+                        HttpStatus.OK);
+        UUID unexpected = UUID.fromString("a0000000-0000-7000-8000-000000000099");
+        RestClient unexpectedKey =
+                stub(
+                        """
+                        {"answers":{"best_match":{"type":"choice","choice":"%s",
+                        "probabilities":{"%s":0.2,"%s":0.8,"%s":0.0},
+                        "confidence":0.5}}}
+                        """
+                                .formatted(SECOND, FIRST, SECOND, unexpected),
                         HttpStatus.OK);
 
         assertThat(reranker(true, nullAnswers).rerank("keyboard", candidates()))
@@ -123,6 +141,10 @@ class TypeSafeJevListingSearchRerankerTest {
         assertThat(reranker(true, missingScore).rerank("keyboard", candidates()))
                 .containsExactly(FIRST, SECOND);
         assertThat(reranker(true, invalidScore).rerank("keyboard", candidates()))
+                .containsExactly(FIRST, SECOND);
+        assertThat(reranker(true, invalidTotal).rerank("keyboard", candidates()))
+                .containsExactly(FIRST, SECOND);
+        assertThat(reranker(true, unexpectedKey).rerank("keyboard", candidates()))
                 .containsExactly(FIRST, SECOND);
     }
 
@@ -140,9 +162,13 @@ class TypeSafeJevListingSearchRerankerTest {
                                                 "short description",
                                                 "test"))
                         .toList();
+
+        // A valid distribution whose scores increase with the candidate index.
+        // 1 + ... + 20 = 210, so these probabilities sum exactly to 1 mathematically.
         for (int index = 1; index <= 20; index++) {
-            probabilities.put(new UUID(0, index).toString(), index / 20.0);
+            probabilities.put(new UUID(0, index).toString(), index / 210.0);
         }
+
         StringBuilder scores = new StringBuilder();
         probabilities.forEach(
                 (id, score) -> {

@@ -359,13 +359,14 @@ scaffold exists; its generated client must consume that committed contract rathe
 shape.
 
 An optional `ai=true` query parameter applies TypeSafe Jev semantic re-ranking after PostgreSQL has
-selected the requested page. The catalog-domain `ListingSearchReranker` port carries only public
-listing text and provider-neutral UUIDs; the infrastructure adapter asks one typed Choice question
-and uses its probability distribution as the stable sort key. At most the first 20 products on the
-page and 500 description characters per product leave the service. Disabled configuration, timeout,
-provider rejection, or malformed output preserves SQL order, total, and availability. Re-ranking is
+selected the requested page when `keyword` is nonblank; otherwise the browse path is used and `ai`
+is ignored. The catalog-domain `ListingSearchReranker` port carries only public listing text and
+provider-neutral UUIDs; the infrastructure adapter asks one typed Choice question and uses its
+probability distribution as the stable sort key. At most the first 20 products on the page and 500
+description characters per product leave the service. Disabled configuration, timeout, provider
+rejection, or malformed output preserves SQL order, total, and availability. Re-ranking is
 page-local and cannot move a product between pages. `TYPESAFE_API_KEY` remains server-side; ordinary
-CI uses stubs, while the separate manually dispatched smoke workflow verifies the live credential.
+CI uses stubs, while the separate live smoke workflow verifies the TypeSafe API contract.
 The capstone intentionally accepts unindexed substring scans at its expected catalog size; page and
 count use identical filters but may observe normal `READ COMMITTED` drift during concurrent edits.
 
