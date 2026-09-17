@@ -22,9 +22,12 @@ import com.blocbuy.common.model.PageResult;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -99,26 +102,23 @@ class ProductRepositoryImplTest {
                 CatalogErrorCode.PRODUCT_VERSION_CONFLICT);
     }
 
-    @Test
-    void pageListingsConvertsRowsAndStatusFilter() {
-        when(mapper.selectListingPage("on_sale", 5, 5L)).thenReturn(List.of(row()));
-        when(mapper.countListings("on_sale")).thenReturn(7L);
+    /** Verifies listing status filter reaches page and count queries with row conversion. */
+    @ParameterizedTest
+    @MethodSource("listingStatusFilters")
+    void pageListingsPassesStatusFilterToBothQueries(ProductStatus status, String expectedCode) {
+        when(mapper.selectListingPage(eq(expectedCode), eq(5), eq(5L))).thenReturn(List.of(row()));
+        when(mapper.countListings(eq(expectedCode))).thenReturn(7L);
 
-        PageResult<Product> result =
-                repository.pageListings(new PageQuery(2, 5), ProductStatus.ON_SALE);
+        PageResult<Product> result = repository.pageListings(new PageQuery(2, 5), status);
 
         assertThat(result.items()).singleElement().extracting(Product::id).isEqualTo(PRODUCT_ID);
         assertThat(result.total()).isEqualTo(7);
-        verify(mapper).selectListingPage("on_sale", 5, 5L);
-        verify(mapper).countListings("on_sale");
+        verify(mapper).selectListingPage(expectedCode, 5, 5L);
+        verify(mapper).countListings(expectedCode);
     }
 
-    @Test
-    void pageListingsAcceptsNullStatus() {
-        when(mapper.selectListingPage(isNull(), eq(20), eq(0L))).thenReturn(List.of());
-
-        assertThat(repository.pageListings(new PageQuery(1, 20), null).items()).isEmpty();
-        verify(mapper).countListings(null);
+    static Stream<Arguments> listingStatusFilters() {
+        return Stream.of(Arguments.of(ProductStatus.ON_SALE, "on_sale"), Arguments.of(null, null));
     }
 
     @Test
@@ -139,28 +139,26 @@ class ProductRepositoryImplTest {
         verify(mapper, times(2)).selectActiveById(PRODUCT_ID);
     }
 
-    @Test
-    void pageOnSalePassesCategoryAndConvertsRows() {
-        when(mapper.selectOnSalePage("electronics", 5, 5L)).thenReturn(List.of(row()));
-        when(mapper.countOnSale("electronics")).thenReturn(6L);
+    /** Verifies on-sale category filter reaches page and count queries with row conversion. */
+    @ParameterizedTest
+    @MethodSource("onSaleCategories")
+    void pageOnSalePassesCategoryFilterToBothQueries(String category, String expectedCode) {
+        when(mapper.selectOnSalePage(eq(expectedCode), eq(20), eq(0L))).thenReturn(List.of(row()));
+        when(mapper.countOnSale(eq(expectedCode))).thenReturn(6L);
 
-        PageResult<Product> result = repository.pageOnSale(new PageQuery(2, 5), "electronics");
+        PageResult<Product> result = repository.pageOnSale(new PageQuery(1, 20), category);
 
-        assertThat(result.items()).hasSize(1);
+        assertThat(result.items()).singleElement().extracting(Product::id).isEqualTo(PRODUCT_ID);
         assertThat(result.total()).isEqualTo(6);
-        verify(mapper).selectOnSalePage("electronics", 5, 5L);
-        verify(mapper).countOnSale("electronics");
+        verify(mapper).selectOnSalePage(expectedCode, 20, 0L);
+        verify(mapper).countOnSale(expectedCode);
     }
 
-    @Test
-    void pageOnSaleNormalizesNullAndBlankCategories() {
-        when(mapper.selectOnSalePage(isNull(), eq(20), eq(0L))).thenReturn(List.of());
-
-        repository.pageOnSale(new PageQuery(1, 20), null);
-        repository.pageOnSale(new PageQuery(1, 20), "  ");
-
-        verify(mapper, times(2)).selectOnSalePage(null, 20, 0L);
-        verify(mapper, times(2)).countOnSale(null);
+    static Stream<Arguments> onSaleCategories() {
+        return Stream.of(
+                Arguments.of("electronics", "electronics"),
+                Arguments.of(null, null),
+                Arguments.of("  ", null));
     }
 
     /** Verifies identical keyword/category filters reach page and count queries. */
@@ -196,35 +194,25 @@ class ProductRepositoryImplTest {
         verify(mapper).countVisibleSearch(isNull(), eq(expected));
     }
 
-    /** Verifies blank categories and empty token sets normalize to null filters. */
-    @Test
-    void searchNormalizesBlankCategoryAndEmptyPatternsToNull() {
+    /** Verifies blank and null search filters normalize to null for page and count queries. */
+    @ParameterizedTest
+    @MethodSource("blankOrNullFilters")
+    void searchNormalizesBlankAndNullFiltersToNull(String category, List<String> keywords) {
         when(mapper.selectVisibleSearchPage(isNull(), isNull(), anyInt(), anyLong()))
                 .thenReturn(List.of());
         when(mapper.countVisibleSearch(isNull(), isNull())).thenReturn(0L);
 
-        PageResult<Product> result = repository.searchOnSale(new PageQuery(2, 5), "  ", List.of());
+        PageResult<Product> result =
+                repository.searchOnSale(new PageQuery(1, 20), category, keywords);
 
         assertThat(result.items()).isEmpty();
         assertThat(result.total()).isZero();
-        @SuppressWarnings("unchecked")
-        ArgumentCaptor<List<String>> patterns = ArgumentCaptor.forClass(List.class);
-        verify(mapper).selectVisibleSearchPage(isNull(), patterns.capture(), eq(5), eq(5L));
-        assertThat(patterns.getValue()).isNull();
-    }
-
-    /** Verifies explicit null filters allow an unfiltered bounded search. */
-    @Test
-    void searchWithNullCategoryAndNullPatternsSkipsBothFilters() {
-        when(mapper.selectVisibleSearchPage(isNull(), isNull(), anyInt(), anyLong()))
-                .thenReturn(List.of(row()));
-        when(mapper.countVisibleSearch(isNull(), isNull())).thenReturn(1L);
-
-        PageResult<Product> result = repository.searchOnSale(new PageQuery(1, 20), null, null);
-
-        assertThat(result.total()).isEqualTo(1);
         verify(mapper).selectVisibleSearchPage(isNull(), isNull(), eq(20), eq(0L));
         verify(mapper).countVisibleSearch(isNull(), isNull());
+    }
+
+    static Stream<Arguments> blankOrNullFilters() {
+        return Stream.of(Arguments.of("  ", List.of()), Arguments.of(null, null));
     }
 
     /** Builds a complete persistence row for repository conversion assertions. */

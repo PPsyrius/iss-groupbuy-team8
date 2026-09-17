@@ -1,6 +1,7 @@
 package com.blocbuy.identity.gateway;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -17,6 +18,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
@@ -157,22 +160,11 @@ class GoogleOAuthGatewayTest {
                 .isEqualTo(IdentityErrorCode.OAUTH_PROVIDER_ERROR);
     }
 
-    /** Verifies an empty exchange body is a provider error, not a parsing failure. */
-    @Test
-    void emptyBodyMapsToProviderError() {
-        RestClient restClient = stubRestClient("", HttpStatus.OK);
-        GoogleOAuthGateway gateway = new GoogleOAuthGateway(PROPS, restClient, mockVerifier());
-
-        assertThatThrownBy(() -> gateway.exchangeCodeForProfile("code"))
-                .isInstanceOf(BizException.class)
-                .extracting(ex -> ((BizException) ex).errorCode())
-                .isEqualTo(IdentityErrorCode.OAUTH_PROVIDER_ERROR);
-    }
-
-    /** Verifies a whitespace-only exchange body follows the same controlled failure path. */
-    @Test
-    void blankBodyMapsToProviderError() {
-        RestClient restClient = stubRestClient("   ", HttpStatus.OK);
+    /** Verifies degenerate exchange bodies are provider errors, never verification errors. */
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "not json at all", "[1,2]"})
+    void degenerateBodyMapsToProviderError(String body) {
+        RestClient restClient = stubRestClient(body, HttpStatus.OK);
         GoogleOAuthGateway gateway = new GoogleOAuthGateway(PROPS, restClient, mockVerifier());
 
         assertThatThrownBy(() -> gateway.exchangeCodeForProfile("code"))
@@ -198,28 +190,6 @@ class GoogleOAuthGatewayTest {
         GoogleOAuthGateway gateway = new GoogleOAuthGateway(PROPS, restClient, mockVerifier());
 
         assertThatThrownBy(() -> gateway.exchangeCodeForProfile("code"))
-                .isInstanceOf(BizException.class)
-                .extracting(ex -> ((BizException) ex).errorCode())
-                .isEqualTo(IdentityErrorCode.OAUTH_PROVIDER_ERROR);
-    }
-
-    /**
-     * Verifies unparseable and non-object bodies are provider errors, never verification errors.
-     */
-    @Test
-    void malformedBodyMapsToProviderError() {
-        GoogleOAuthGateway notJson =
-                new GoogleOAuthGateway(
-                        PROPS, stubRestClient("not json at all", HttpStatus.OK), mockVerifier());
-        GoogleOAuthGateway arrayJson =
-                new GoogleOAuthGateway(
-                        PROPS, stubRestClient("[1,2]", HttpStatus.OK), mockVerifier());
-
-        assertThatThrownBy(() -> notJson.exchangeCodeForProfile("code"))
-                .isInstanceOf(BizException.class)
-                .extracting(ex -> ((BizException) ex).errorCode())
-                .isEqualTo(IdentityErrorCode.OAUTH_PROVIDER_ERROR);
-        assertThatThrownBy(() -> arrayJson.exchangeCodeForProfile("code"))
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(IdentityErrorCode.OAUTH_PROVIDER_ERROR);
@@ -292,11 +262,11 @@ class GoogleOAuthGatewayTest {
         assertThat(gateway.buildAuthorizeUrl("s"))
                 .startsWith("https://accounts.google.com/o/oauth2/v2/auth")
                 .contains("state=s");
+        GoogleOAuthProperties anonymous =
+                new GoogleOAuthProperties(null, null, null, null, null, 0);
+
         // An empty client id is tolerated at construction (defaults to an empty audience).
-        assertThat(
-                        new GoogleOAuthGateway(
-                                new GoogleOAuthProperties(null, null, null, null, null, 0)))
-                .isNotNull();
+        assertThatCode(() -> new GoogleOAuthGateway(anonymous)).doesNotThrowAnyException();
     }
 
     /** Verifies the exchange path checks configuration before any HTTP call. */

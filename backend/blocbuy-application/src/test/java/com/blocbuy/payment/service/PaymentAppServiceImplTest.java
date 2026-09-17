@@ -1,6 +1,7 @@
 package com.blocbuy.payment.service;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -24,16 +25,13 @@ class PaymentAppServiceImplTest {
     @InjectMocks private PaymentAppServiceImpl service;
 
     @Test
-    void emptyWebhookEventReturnsNormally() {
+    void webhookEventReturnsNormallyRegardlessOfRelevance() {
         when(paymentGateway.verifyWebhook("payload", "signature")).thenReturn(Optional.empty());
 
         service.handleStripeWebhook("payload", "signature");
 
         verify(paymentGateway).verifyWebhook("payload", "signature");
-    }
 
-    @Test
-    void presentWebhookEventReturnsNormally() {
         when(paymentGateway.verifyWebhook("payload", "signature"))
                 .thenReturn(
                         Optional.of(
@@ -42,7 +40,7 @@ class PaymentAppServiceImplTest {
 
         service.handleStripeWebhook("payload", "signature");
 
-        verify(paymentGateway).verifyWebhook("payload", "signature");
+        verify(paymentGateway, times(2)).verifyWebhook("payload", "signature");
     }
 
     @Test

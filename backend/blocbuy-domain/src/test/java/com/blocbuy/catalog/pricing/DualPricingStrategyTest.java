@@ -22,16 +22,13 @@ class DualPricingStrategyTest {
     private final DualPricingStrategy strategy = new DualPricingStrategy();
 
     @Test
-    void modeIsDual() {
-        assertThat(strategy.mode()).isEqualTo(PricingMode.DUAL);
-    }
-
-    @Test
     void resolvesDualPriceWhenDealActive() {
         Product product = product("129.00");
         GroupDealOffer offer = offer("89.00", "sgd");
 
         ListingPrice price = strategy.resolve(product, offer);
+
+        assertThat(strategy.mode()).isEqualTo(PricingMode.DUAL);
 
         assertThat(price.individualPrice()).isEqualByComparingTo("129.00");
         assertThat(price.groupPrice()).isEqualByComparingTo("89.00");

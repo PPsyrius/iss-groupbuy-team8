@@ -54,22 +54,15 @@ class RedisOAuthStateStoreTest {
     }
 
     @Test
-    void consumeRejectsMismatchedOrMissingBinding() {
+    void consumeRejectsUnmatchedBindings() {
         when(redis.opsForValue()).thenReturn(ops);
         when(environment.getProperty("spring.profiles.active", "local")).thenReturn("local");
         when(ops.getAndDelete("blocbuy:local:identity:oauth-state:s")).thenReturn("b");
+        when(ops.getAndDelete("blocbuy:local:identity:oauth-state:gone")).thenReturn(null);
 
         assertThat(store.consume("s", "other")).isFalse();
         assertThat(store.consume("s", null)).isFalse();
         assertThat(store.consume("s", " ")).isFalse();
-    }
-
-    @Test
-    void consumeRejectsUnknownOrBlank() {
-        when(redis.opsForValue()).thenReturn(ops);
-        when(environment.getProperty("spring.profiles.active", "local")).thenReturn("local");
-        when(ops.getAndDelete("blocbuy:local:identity:oauth-state:gone")).thenReturn(null);
-
         assertThat(store.consume("gone", "b")).isFalse();
         assertThat(store.consume(" ", "b")).isFalse();
     }
