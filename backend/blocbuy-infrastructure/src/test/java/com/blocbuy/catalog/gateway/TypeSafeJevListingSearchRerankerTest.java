@@ -48,8 +48,7 @@ class TypeSafeJevListingSearchRerankerTest {
 
         assertThat(result).containsExactly(SECOND, FIRST);
         assertThat(captured.get().getMethod()).isEqualTo(HttpMethod.POST);
-        assertThat(captured.get().getURI().toString())
-                .isEqualTo("https://api.typesafe.ai/v1/systemone");
+        assertThat(captured.get().getURI()).hasToString("https://api.typesafe.ai/v1/systemone");
         assertThat(captured.get().getHeaders().getFirst("Authorization"))
                 .isEqualTo("Bearer test-key");
         assertThat(captured.get().getBodyAsString())

@@ -36,7 +36,7 @@ class ProductRepositoryImplTest {
         when(mapper.selectVisibleSearchPage(
                         eq("electronics"), eq(List.of("%Tea%")), anyInt(), anyLong()))
                 .thenReturn(List.of(row));
-        when(mapper.countVisibleSearch(eq("electronics"), eq(List.of("%Tea%")))).thenReturn(1L);
+        when(mapper.countVisibleSearch("electronics", List.of("%Tea%"))).thenReturn(1L);
 
         PageResult<Product> result =
                 repository.searchOnSale(new PageQuery(1, 20), "electronics", List.of("Tea"));
@@ -44,9 +44,8 @@ class ProductRepositoryImplTest {
         assertThat(result.total()).isEqualTo(1);
         assertThat(result.items()).hasSize(1);
         assertThat(result.items().get(0).title()).isEqualTo("Green Tea");
-        verify(mapper)
-                .selectVisibleSearchPage(eq("electronics"), eq(List.of("%Tea%")), eq(20), eq(0L));
-        verify(mapper).countVisibleSearch(eq("electronics"), eq(List.of("%Tea%")));
+        verify(mapper).selectVisibleSearchPage("electronics", List.of("%Tea%"), 20, 0L);
+        verify(mapper).countVisibleSearch("electronics", List.of("%Tea%"));
     }
 
     @Test

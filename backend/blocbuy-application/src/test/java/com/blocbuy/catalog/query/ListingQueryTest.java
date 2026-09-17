@@ -85,13 +85,10 @@ class ListingQueryTest {
 
     @Test
     void directConstructorRejectsOverlongKeyword() {
-        assertThatThrownBy(
-                        () ->
-                                new ListingQuery(
-                                        "k".repeat(ListingQuery.MAX_KEYWORD_LENGTH + 1),
-                                        null,
-                                        new PageQuery(1, 20),
-                                        false))
+        String tooLong = "k".repeat(ListingQuery.MAX_KEYWORD_LENGTH + 1);
+        PageQuery page = new PageQuery(1, 20);
+
+        assertThatThrownBy(() -> new ListingQuery(tooLong, null, page, false))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
