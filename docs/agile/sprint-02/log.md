@@ -517,3 +517,24 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 | T2 | #103 | `read:project` access or weekly board screenshot | @PPsyrius | open |
 | T3 | #104 | Review `.github` changes for the frontend pipeline | @PPsyrius | open |
 | T4 | #105 | CODEOWNERS for frontend toolchain files | @PPsyrius | open |
+
+## 2026-09-17 - @limjiechao - PR #106 green-up: Header B4 fix and knip lefthook reference (#42, #97, #44)
+
+- Kind: fix, ops/process (CI gate)
+- Changed: `frontend/src/components/Header.tsx`, `frontend/src/components/Header.test.tsx`
+  (cherry-picked B4 fix: render `nickname` with a `userId` fallback, test id `session-user`);
+  `frontend/package.json` (`hooks:install` script), `frontend/AGENTS.md` (git-hooks line), this log.
+- Verified: `frontend-check` on `d875f8c` (run 35229148035): `tsc`, `oxlint`, `oxfmt` and vitest
+  (3 files, 8 tests) pass; `knip` fails with "Unused devDependencies (1): lefthook". Locally
+  `pnpm check` was green on the same commit. Cause read from knip's lefthook plugin: it only looks
+  for `lefthook.yml` in the knip cwd (`frontend/`) or for installed `.git/hooks`; our config is at
+  the repo root and the CI checkout has no hooks, so nothing references `lefthook`. After adding
+  `"hooks:install": "lefthook install"` (a script reference knip's binary detection counts),
+  `pnpm check` exits 0 locally; the CI run on this commit is the real proof.
+- Decisions: a real script reference over `knip.json#ignoreDependencies`, so the dependency stays
+  checked and the install command is documented in one place; AGENTS.md now says
+  `pnpm hooks:install`. No ADR change (ADR 0006 already owns knip); NFR-18 unchanged.
+- Problems: the knip failure was masked on every earlier CI run because `tsc` failed first on
+  `loginId`, so the gate had never reached knip on GitHub before this commit.
+- Next: user pushes; watch `frontend-check`; the `frontend-check` always-report change and the
+  Trivy pnpm scan restore from the local rebase branch are still to be replayed.

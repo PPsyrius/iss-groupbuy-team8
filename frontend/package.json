@@ -16,6 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "knip": "knip",
+    "hooks:install": "lefthook install",
     "check": "pnpm gen:api && pnpm typecheck && pnpm lint && pnpm fmt:check && pnpm test && pnpm knip",
     "e2e": "playwright test"
   },

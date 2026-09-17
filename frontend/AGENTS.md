@@ -46,7 +46,7 @@ Read this before editing anything under `frontend/`. The plan is `docs/plan.md`;
 - `pnpm dev` (Vite on :5173, `/api` proxied to `http://localhost:8589`; start the backend with `docker compose up` at the repo root).
 - `pnpm check` is the only gate: gen:api → typecheck → oxlint → oxfmt --check → vitest → knip. Run it before every commit and paste the result in the PR.
 - `pnpm e2e` runs Playwright against a `vite preview` of `dist/`, so run `pnpm build` first; `E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e` runs against dev.
-- Git hooks: `pnpm exec lefthook install` once per clone.
+- Git hooks: `pnpm hooks:install` (runs `lefthook install`) once per clone. Keep that script: `lefthook.yml` lives at the repo root, so it is the only reference knip can see for the `lefthook` devDependency.
 
 ## Stack (exact pins in package.json; do not add caret ranges)
 
