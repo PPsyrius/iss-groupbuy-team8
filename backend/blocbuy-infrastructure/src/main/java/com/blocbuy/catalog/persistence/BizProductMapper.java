@@ -49,4 +49,19 @@ public interface BizProductMapper {
 
     /** Total on-sale rows matching {@code category} (null = all). */
     long countOnSale(@Param("category") String category);
+
+    /**
+     * One page of on-sale products matching keyword patterns plus category, newest first. {@code
+     * patterns} null/empty means no keyword filter; each pattern is an escaped {@code LIKE} pattern
+     * bound with {@code #{}} (never interpolated).
+     */
+    List<BizProductDO> selectVisibleSearchPage(
+            @Param("category") String category,
+            @Param("patterns") List<String> patterns,
+            @Param("limit") int limit,
+            @Param("offset") long offset);
+
+    /** Total on-sale rows matching the same keyword/category filter as the search page. */
+    long countVisibleSearch(
+            @Param("category") String category, @Param("patterns") List<String> patterns);
 }

@@ -1,6 +1,7 @@
 package com.blocbuy.catalog.service;
 
 import com.blocbuy.catalog.query.ListingDetailView;
+import com.blocbuy.catalog.query.ListingQuery;
 import com.blocbuy.catalog.query.ListingView;
 import com.blocbuy.common.model.PageResult;
 import java.util.UUID;
@@ -21,6 +22,13 @@ public interface ProductAppService {
      * category} null/blank lists all categories.
      */
     PageResult<ListingView> pageListings(Integer page, Integer size, String category);
+
+    /**
+     * Buyer listing search: keyword plus category, paginated. A null/blank keyword behaves like
+     * {@link #pageListings(Integer, Integer, String)}. PostgreSQL owns deterministic matching;
+     * callers may request best-effort semantic ordering of that bounded result page.
+     */
+    PageResult<ListingView> search(ListingQuery query);
 
     /**
      * Listing detail with the resolved dual price and the active deal's progress.

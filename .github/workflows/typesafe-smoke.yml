@@ -1,0 +1,46 @@
+name: typesafe-smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: typesafe-smoke
+  cancel-in-progress: false
+
+jobs:
+  live-api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Verify Jev System One API
+        env:
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [[ -z "${TYPESAFE_API_KEY:-}" ]]; then
+            echo "TYPESAFE_API_KEY Actions secret is not configured" >&2
+            exit 1
+          fi
+
+          response_file="$(mktemp)"
+          trap 'rm -f "$response_file"' EXIT
+          curl --silent --show-error --fail-with-body \
+            --connect-timeout 5 --max-time 20 \
+            --header "Authorization: Bearer ${TYPESAFE_API_KEY}" \
+            --header "Content-Type: application/json" \
+            --data '{"state":{"shopper_query":"quiet keyboard"},"model":"jev-latest","questions":{"relevant":{"type":"noul","instructions":"Does the shopper query describe a product-search intent?","criteria":{"true":"The text asks for or describes a product","false":"The text is unrelated to products"}}}}' \
+            https://api.typesafe.ai/v1/systemone > "$response_file"
+
+          jq -e '
+            .model | type == "string" and length > 0
+          ' "$response_file" >/dev/null
+          jq -e '
+            .answers.relevant.type == "noul" and
+            (.answers.relevant.noul | type == "number" and . >= 0 and . <= 1) and
+            (.usage.input_tokens | type == "number") and
+            (.usage.output_tokens | type == "number")
+          ' "$response_file" >/dev/null

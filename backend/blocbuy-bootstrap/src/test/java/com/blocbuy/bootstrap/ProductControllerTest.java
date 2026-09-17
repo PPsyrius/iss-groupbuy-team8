@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -14,6 +15,7 @@ import cn.dev33.satoken.dao.SaTokenDaoDefaultImpl;
 import com.blocbuy.catalog.exception.CatalogErrorCode;
 import com.blocbuy.catalog.query.ActiveDealView;
 import com.blocbuy.catalog.query.ListingDetailView;
+import com.blocbuy.catalog.query.ListingQuery;
 import com.blocbuy.catalog.query.ListingView;
 import com.blocbuy.catalog.service.ProductAppService;
 import com.blocbuy.catalog.web.ProductController;
@@ -120,6 +122,53 @@ class ProductControllerTest {
                 .andExpect(jsonPath("$.data.page").value(2))
                 .andExpect(jsonPath("$.data.size").value(5));
         verify(products).pageListings(2, 5, "electronics");
+    }
+
+    @Test
+    void keywordSearchDelegatesToSearchUseCase() throws Exception {
+        ListingQuery query = ListingQuery.of("keyboard", "electronics", 2, 5);
+        when(products.search(query))
+                .thenReturn(PageResult.of(List.of(listing()), 6, PageQuery.of(2, 5)));
+        mvc.perform(get(PRODUCTS_PATH + "?keyword=keyboard&category=electronics&page=2&size=5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("COMMON_200_000"))
+                .andExpect(jsonPath("$.data.total").value(6))
+                .andExpect(jsonPath("$.data.page").value(2))
+                .andExpect(jsonPath("$.data.size").value(5))
+                .andExpect(jsonPath("$.data.items[0].id").value(PRODUCT.toString()));
+        verify(products).search(query);
+        verifyNoMoreInteractions(products);
+    }
+
+    @Test
+    void aiKeywordSearchCarriesOptInToSearchUseCase() throws Exception {
+        ListingQuery query = ListingQuery.of("keyboard", null, null, null, true);
+        when(products.search(query))
+                .thenReturn(PageResult.of(List.of(listing()), 1, PageQuery.of(null, null)));
+
+        mvc.perform(get(PRODUCTS_PATH + "?keyword=keyboard&ai=true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items[0].id").value(PRODUCT.toString()));
+
+        verify(products).search(query);
+    }
+
+    @Test
+    void blankKeywordStaysOnBrowsePath() throws Exception {
+        when(products.pageListings(null, null, null))
+                .thenReturn(PageResult.of(List.of(listing()), 1, PageQuery.of(null, null)));
+        mvc.perform(get(PRODUCTS_PATH).param("keyword", "  "))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("COMMON_200_000"));
+        verify(products).pageListings(null, null, null);
+    }
+
+    @Test
+    void overlongKeywordIsRejectedBeforeBusinessCode() throws Exception {
+        mvc.perform(get(PRODUCTS_PATH + "?keyword=" + "k".repeat(65)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON_400_002"));
+        verifyNoInteractions(products);
     }
 
     @Test

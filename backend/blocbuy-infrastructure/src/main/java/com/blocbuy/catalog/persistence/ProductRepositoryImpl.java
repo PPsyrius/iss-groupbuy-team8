@@ -7,6 +7,7 @@ import com.blocbuy.catalog.repository.ProductRepository;
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -81,5 +82,26 @@ public class ProductRepositoryImpl implements ProductRepository {
                 bizProductMapper.selectOnSalePage(normalizedCategory, page.size(), page.offset());
         long total = bizProductMapper.countOnSale(normalizedCategory);
         return PageResult.of(rows.stream().map(ProductConverter::toDomain).toList(), total, page);
+    }
+
+    @Override
+    public PageResult<Product> searchOnSale(
+            PageQuery page, String category, List<String> keywordTokens) {
+        String normalizedCategory = category == null || category.isBlank() ? null : category;
+        List<String> patterns =
+                keywordTokens == null || keywordTokens.isEmpty()
+                        ? null
+                        : keywordTokens.stream().map(ProductRepositoryImpl::toLikePattern).toList();
+        var rows =
+                bizProductMapper.selectVisibleSearchPage(
+                        normalizedCategory, patterns, page.size(), page.offset());
+        long total = bizProductMapper.countVisibleSearch(normalizedCategory, patterns);
+        return PageResult.of(rows.stream().map(ProductConverter::toDomain).toList(), total, page);
+    }
+
+    /** Escape LIKE metacharacters so user tokens are always matched as data. */
+    private static String toLikePattern(String token) {
+        String escaped = token.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+        return "%" + escaped + "%";
     }
 }

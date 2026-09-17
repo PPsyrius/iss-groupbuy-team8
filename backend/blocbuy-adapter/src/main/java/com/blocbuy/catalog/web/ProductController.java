@@ -1,6 +1,7 @@
 package com.blocbuy.catalog.web;
 
 import com.blocbuy.catalog.query.ListingDetailView;
+import com.blocbuy.catalog.query.ListingQuery;
 import com.blocbuy.catalog.query.ListingView;
 import com.blocbuy.catalog.service.ProductAppService;
 import com.blocbuy.common.constant.ApiConstants;
@@ -8,9 +9,11 @@ import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
 import com.blocbuy.common.web.Result;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -41,19 +44,33 @@ public class ProductController {
 
     private final ProductAppService productAppService;
 
-    /** Paginated on-sale listings; optional category filter. Anonymous. */
-    @Operation(summary = "Browse on-sale listings with dual pricing")
+    /** Paginated on-sale listings; optional keyword search plus category filter. Anonymous. */
+    @Operation(summary = "Browse or search on-sale listings with dual pricing")
     @GetMapping
     public Result<PageResult<ProductSummaryResponse>> pageListings(
             @RequestParam(required = false) @Min(1) Integer page,
             @RequestParam(required = false) @Min(1) @Max(PageQuery.MAX_SIZE) Integer size,
-            @RequestParam(required = false) String category) {
-        PageResult<ListingView> result = productAppService.pageListings(page, size, category);
-        List<ProductSummaryResponse> items =
-                result.items().stream().map(ProductController::toSummary).toList();
-        return Result.ok(
-                new PageResult<>(
-                        items, result.total(), result.page(), result.size(), result.nextCursor()));
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false)
+                    @Size(max = ListingQuery.MAX_KEYWORD_LENGTH)
+                    @Parameter(
+                            description =
+                                    "Up to 64 characters. Whitespace-separated terms all match "
+                                            + "across title, subtitle, or description.")
+                    String keyword,
+            @RequestParam(defaultValue = "false")
+                    @Parameter(
+                            description =
+                                    "Best-effort Jev semantic re-ranking within the returned page; "
+                                            + "falls back to catalog order when unavailable.")
+                    boolean ai) {
+        if (keyword == null || keyword.isBlank()) {
+            PageResult<ListingView> result = productAppService.pageListings(page, size, category);
+            return toPageResult(result);
+        }
+        PageResult<ListingView> result =
+                productAppService.search(ListingQuery.of(keyword, category, page, size, ai));
+        return toPageResult(result);
     }
 
     /** One listing with dual price and active deal progress. Anonymous. */
@@ -61,6 +78,15 @@ public class ProductController {
     @GetMapping("/{id}")
     public Result<ProductDetailResponse> getListing(@PathVariable UUID id) {
         return Result.ok(toDetail(productAppService.getListingDetail(id)));
+    }
+
+    private static Result<PageResult<ProductSummaryResponse>> toPageResult(
+            PageResult<ListingView> result) {
+        List<ProductSummaryResponse> items =
+                result.items().stream().map(ProductController::toSummary).toList();
+        return Result.ok(
+                new PageResult<>(
+                        items, result.total(), result.page(), result.size(), result.nextCursor()));
     }
 
     private static ProductSummaryResponse toSummary(ListingView view) {

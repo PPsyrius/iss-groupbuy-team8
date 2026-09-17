@@ -36,7 +36,9 @@ Profiles: `local` (default; localhost PG/Redis) · `docker` (compose service nam
 `openapi-export` (build-only, no live infra).
 
 Secrets come from the environment, never from git: `DB_USERNAME`, `DB_PASSWORD`, `REDIS_PASSWORD`,
-`STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`.
+`STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`, `TYPESAFE_API_KEY`. Set `TYPESAFE_ENABLED=true` to allow
+opt-in Jev re-ranking for listing searches; model, endpoint, and timeout settings have safe defaults
+in `application.yml`.
 Local datasource: `jdbc:postgresql://localhost:5432/Blocbuy?currentSchema=domain` — note the
 database name is case-sensitive if created quoted; verify `Blocbuy` vs `blocbuy` on first connect.
 
