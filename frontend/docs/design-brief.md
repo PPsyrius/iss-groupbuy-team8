@@ -238,5 +238,5 @@ Target **WCAG 2.2 AA**. Concretely: 4.5:1 for all text including the accent on t
 - `backend/docs/design/admin-listings.md`: listing lifecycle and version conflict rules.
 - `backend/docs/design/paid-group-participation.md`: start and join semantics, outcomes.
 - `backend/docs/design/team-price-quotes.md`: quote validity and pricing rules.
-- `frontend/BLUEPRINT.md`: the settled frontend stack.
+- `frontend/docs/blueprint.md`: the settled frontend stack.
 - `README.md`: product vision (broader than what is built; sections 2 and 13 of this brief take precedence).
