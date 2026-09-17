@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 class TypeSafeJevPropertiesTest {
 
+    /** Verifies safe endpoint, model, and timeout defaults while disabled. */
     @Test
     void defaultsOptionalSettingsWhenDisabled() {
         TypeSafeJevProperties properties = new TypeSafeJevProperties(false, null, null, null, 0, 0);
@@ -17,6 +18,7 @@ class TypeSafeJevPropertiesTest {
         assertThat(properties.readTimeoutMillis()).isEqualTo(2000);
     }
 
+    /** Verifies blank optional settings receive the same safe defaults. */
     @Test
     void blankOptionalSettingsAlsoUseDefaults() {
         TypeSafeJevProperties properties = new TypeSafeJevProperties(false, null, " ", " ", -1, -1);
@@ -25,6 +27,7 @@ class TypeSafeJevPropertiesTest {
         assertThat(properties.model()).isEqualTo("jev-latest");
     }
 
+    /** Verifies that enabling provider access requires a nonblank API key. */
     @Test
     void enabledIntegrationRequiresApiKey() {
         assertThatThrownBy(() -> new TypeSafeJevProperties(true, null, null, null, 0, 0))
@@ -35,6 +38,7 @@ class TypeSafeJevPropertiesTest {
                 .hasMessageContaining("TYPESAFE_API_KEY");
     }
 
+    /** Verifies preservation of explicit endpoint, model, and timeout settings. */
     @Test
     void preservesExplicitSettings() {
         TypeSafeJevProperties properties =

@@ -124,6 +124,7 @@ class ProductControllerTest {
         verify(products).pageListings(2, 5, "electronics");
     }
 
+    /** Verifies HTTP keyword parameters are delegated to the search use case. */
     @Test
     void keywordSearchDelegatesToSearchUseCase() throws Exception {
         ListingQuery query = ListingQuery.of("keyboard", "electronics", 2, 5);
@@ -140,6 +141,7 @@ class ProductControllerTest {
         verifyNoMoreInteractions(products);
     }
 
+    /** Verifies that the HTTP AI flag reaches the normalized listing query. */
     @Test
     void aiKeywordSearchCarriesOptInToSearchUseCase() throws Exception {
         ListingQuery query = ListingQuery.of("keyboard", null, null, null, true);
@@ -153,6 +155,7 @@ class ProductControllerTest {
         verify(products).search(query);
     }
 
+    /** Verifies that a blank HTTP keyword continues through the browse path. */
     @Test
     void blankKeywordStaysOnBrowsePath() throws Exception {
         when(products.pageListings(null, null, null))
@@ -163,6 +166,7 @@ class ProductControllerTest {
         verify(products).pageListings(null, null, null);
     }
 
+    /** Verifies boundary rejection of a keyword longer than the public maximum. */
     @Test
     void overlongKeywordIsRejectedBeforeBusinessCode() throws Exception {
         mvc.perform(get(PRODUCTS_PATH + "?keyword=" + "k".repeat(65)))

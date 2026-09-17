@@ -149,6 +149,7 @@ class ProductAppServiceImplTest {
                 .isEqualTo(CatalogErrorCode.PRODUCT_NOT_FOUND);
     }
 
+    /** Verifies keyword/category delegation and one batched deal enrichment query. */
     @Test
     void searchCombinesKeywordAndCategoryWithOneBatchDealQuery() {
         Product match = product(PRODUCT_ID, "129.00", ProductStatus.ON_SALE);
@@ -169,6 +170,7 @@ class ProductAppServiceImplTest {
         verifyNoInteractions(listingSearchReranker);
     }
 
+    /** Verifies that semantic order is applied before batched listing enrichment. */
     @Test
     void aiSearchReranksPageBeforeBatchEnrichment() {
         UUID secondId = UUID.fromString("a0000000-0000-7000-8000-000000000002");
@@ -206,6 +208,7 @@ class ProductAppServiceImplTest {
         verify(groupDealQueryService).findBestOpenDealsByProductIds(List.of(secondId, PRODUCT_ID));
     }
 
+    /** Verifies that unknown IDs are ignored and omitted products retain SQL order. */
     @Test
     void aiSearchIgnoresUnknownIdsAndAppendsOmittedCandidatesInSqlOrder() {
         UUID secondId = UUID.fromString("a0000000-0000-7000-8000-000000000002");
@@ -228,6 +231,7 @@ class ProductAppServiceImplTest {
                 .containsExactly(secondId, PRODUCT_ID);
     }
 
+    /** Verifies that a one-item page does not call the semantic provider. */
     @Test
     void aiSearchSkipsProviderForSingleCandidate() {
         Product match = product(PRODUCT_ID, "129.00", ProductStatus.ON_SALE);
@@ -244,6 +248,7 @@ class ProductAppServiceImplTest {
         verifyNoInteractions(listingSearchReranker);
     }
 
+    /** Verifies that a normalized blank keyword bypasses semantic ranking. */
     @Test
     void aiSearchSkipsProviderWhenNormalizedKeywordIsNull() {
         UUID secondId = UUID.fromString("a0000000-0000-7000-8000-000000000002");
@@ -266,6 +271,7 @@ class ProductAppServiceImplTest {
         verifyNoInteractions(listingSearchReranker);
     }
 
+    /** Verifies fail-open SQL ordering when the semantic port returns no ranking. */
     @Test
     void aiSearchPreservesSqlOrderWhenProviderReturnsNull() {
         UUID secondId = UUID.fromString("a0000000-0000-7000-8000-000000000002");
@@ -287,6 +293,7 @@ class ProductAppServiceImplTest {
                 .containsExactly(PRODUCT_ID, secondId);
     }
 
+    /** Verifies that an empty search page remains valid and provider-free. */
     @Test
     void searchEmptyResultDoesNotFail() {
         ListingQuery query = ListingQuery.of("no-such-thing", null, 1, 20);

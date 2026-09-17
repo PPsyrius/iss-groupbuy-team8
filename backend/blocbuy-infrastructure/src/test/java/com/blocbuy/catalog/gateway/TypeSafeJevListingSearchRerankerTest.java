@@ -20,6 +20,7 @@ class TypeSafeJevListingSearchRerankerTest {
     private static final UUID FIRST = UUID.fromString("a0000000-0000-7000-8000-000000000001");
     private static final UUID SECOND = UUID.fromString("a0000000-0000-7000-8000-000000000002");
 
+    /** Verifies the typed Jev request and descending probability order. */
     @Test
     void sendsTypedChoiceAndOrdersByProbability() {
         AtomicReference<MockClientHttpRequest> captured = new AtomicReference<>();
@@ -55,6 +56,7 @@ class TypeSafeJevListingSearchRerankerTest {
                 .contains("jev-test", "quiet keyboard", "best_match", FIRST.toString());
     }
 
+    /** Verifies that disabling the integration avoids HTTP and preserves order. */
     @Test
     void disabledIntegrationReturnsOriginalOrderWithoutHttp() {
         TypeSafeJevListingSearchReranker reranker = reranker(false, RestClient.builder().build());
@@ -62,6 +64,7 @@ class TypeSafeJevListingSearchRerankerTest {
         assertThat(reranker.rerank("keyboard", candidates())).containsExactly(FIRST, SECOND);
     }
 
+    /** Verifies that one candidate does not require a provider call. */
     @Test
     void oneCandidateReturnsWithoutHttp() {
         TypeSafeJevListingSearchReranker reranker = reranker(true, RestClient.builder().build());
@@ -70,6 +73,7 @@ class TypeSafeJevListingSearchRerankerTest {
                 .containsExactly(FIRST);
     }
 
+    /** Verifies fail-open ordering when the provider request fails. */
     @Test
     void providerFailureReturnsOriginalOrder() {
         RestClient client =
@@ -84,6 +88,7 @@ class TypeSafeJevListingSearchRerankerTest {
                 .containsExactly(FIRST, SECOND);
     }
 
+    /** Verifies rejection of malformed, partial, and inconsistent provider answers. */
     @Test
     void malformedOrIncompleteAnswersReturnOriginalOrder() {
         RestClient nullAnswers = stub("{}", HttpStatus.OK);
@@ -147,6 +152,7 @@ class TypeSafeJevListingSearchRerankerTest {
                 .containsExactly(FIRST, SECOND);
     }
 
+    /** Verifies the provider shortlist cap and stable append of remaining candidates. */
     @Test
     void boundsProviderShortlistAndAppendsRemainingCandidates() {
         java.util.Map<String, Double> probabilities = new java.util.LinkedHashMap<>();
@@ -190,6 +196,7 @@ class TypeSafeJevListingSearchRerankerTest {
         assertThat(result.get(20)).isEqualTo(new UUID(0, 21));
     }
 
+    /** Verifies original ordering for missing responses and missing probabilities. */
     @Test
     void nullResponseOrProbabilitiesPreserveOriginalOrder() {
         java.util.List<UUID> original = java.util.List.of(FIRST, SECOND);
@@ -215,6 +222,7 @@ class TypeSafeJevListingSearchRerankerTest {
                 .isEqualTo(original);
     }
 
+    /** Verifies score validation and provider-facing text bounds. */
     @Test
     void validatesScoresAndBoundsProviderText() {
         assertThat(TypeSafeJevListingSearchReranker.isValidScore(null)).isFalse();
@@ -227,6 +235,7 @@ class TypeSafeJevListingSearchRerankerTest {
         assertThat(TypeSafeJevListingSearchReranker.truncate("x".repeat(501))).hasSize(500);
     }
 
+    /** Builds the adapter under test with explicit enablement and an injected client. */
     private static TypeSafeJevListingSearchReranker reranker(boolean enabled, RestClient client) {
         return new TypeSafeJevListingSearchReranker(
                 new TypeSafeJevProperties(
@@ -234,12 +243,14 @@ class TypeSafeJevListingSearchRerankerTest {
                 client);
     }
 
+    /** Returns the stable two-product fixture shared by ranking scenarios. */
     private static List<Candidate> candidates() {
         return List.of(
                 new Candidate(FIRST, "Office keyboard", null, "A".repeat(600), "electronics"),
                 new Candidate(SECOND, "Quiet keyboard", "Silent", null, "electronics"));
     }
 
+    /** Builds a RestClient backed by a deterministic in-memory response. */
     private static RestClient stub(String json, HttpStatus status) {
         return RestClient.builder()
                 .requestFactory(
@@ -251,6 +262,7 @@ class TypeSafeJevListingSearchRerankerTest {
                 .build();
     }
 
+    /** Encodes a synthetic provider payload as a client response. */
     private static MockClientHttpResponse response(String json, HttpStatus status) {
         MockClientHttpResponse response =
                 new MockClientHttpResponse(json.getBytes(StandardCharsets.UTF_8), status);

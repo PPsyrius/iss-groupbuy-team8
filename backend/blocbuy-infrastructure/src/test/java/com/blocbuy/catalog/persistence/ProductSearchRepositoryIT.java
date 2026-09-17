@@ -51,6 +51,7 @@ class ProductSearchRepositoryIT {
     private static SqlSessionFactory sessions;
     private static JdbcTemplate jdbc;
 
+    /** Starts the schema and MyBatis mapper used by all PostgreSQL search scenarios. */
     @BeforeAll
     static void migrateAndConfigureMyBatis() throws Exception {
         String url = POSTGRES.getJdbcUrl();
@@ -91,6 +92,7 @@ class ProductSearchRepositoryIT {
         sessions = new SqlSessionFactoryBuilder().build(config);
     }
 
+    /** Replaces catalog rows with deterministic visibility and matching fixtures. */
     @BeforeEach
     void fixtures() {
         jdbc.update("DELETE FROM biz_product");
@@ -167,6 +169,7 @@ class ProductSearchRepositoryIT {
                 Instant.parse("2026-09-16T22:00:00Z"));
     }
 
+    /** Verifies case-insensitive matching across title and description fields. */
     @Test
     void matchesTitleAndDescriptionCaseInsensitively() {
         try (SqlSession session = sessions.openSession()) {
@@ -187,6 +190,7 @@ class ProductSearchRepositoryIT {
         }
     }
 
+    /** Verifies combined filters, stable pagination, and a consistent total count. */
     @Test
     void combinesKeywordCategoryAndPaginationWithConsistentCountAndOrder() {
         try (SqlSession session = sessions.openSession()) {
@@ -201,6 +205,7 @@ class ProductSearchRepositoryIT {
         }
     }
 
+    /** Verifies percent, underscore, and backslash are matched as literal data. */
     @Test
     void treatsLikeMetacharactersAsLiteralData() {
         try (SqlSession session = sessions.openSession()) {
@@ -221,6 +226,7 @@ class ProductSearchRepositoryIT {
         }
     }
 
+    /** Verifies AND token semantics and an empty result with a zero count. */
     @Test
     void allTokensMustMatchAndNoMatchReturnsEmptyPage() {
         try (SqlSession session = sessions.openSession()) {
@@ -243,6 +249,7 @@ class ProductSearchRepositoryIT {
         }
     }
 
+    /** Verifies a product can match solely through its subtitle. */
     @Test
     void matchesSubtitleOnly() {
         try (SqlSession session = sessions.openSession()) {
@@ -258,6 +265,7 @@ class ProductSearchRepositoryIT {
         }
     }
 
+    /** Verifies descending product ID provides a deterministic creation-time tie-breaker. */
     @Test
     void equalCreationTimesUseDescendingIdTieBreaker() {
         Instant sameTime = Instant.parse("2026-09-17T06:00:00Z");
@@ -291,10 +299,12 @@ class ProductSearchRepositoryIT {
         }
     }
 
+    /** Creates a repository backed by the mapper from the supplied SQL session. */
     private static ProductRepositoryImpl repository(SqlSession session) {
         return new ProductRepositoryImpl(session.getMapper(BizProductMapper.class));
     }
 
+    /** Inserts a catalog fixture without a subtitle. */
     private static void insert(
             UUID id,
             String productNo,
@@ -321,6 +331,7 @@ class ProductSearchRepositoryIT {
                 Timestamp.from(createdAt));
     }
 
+    /** Inserts a visible catalog fixture with an explicit subtitle. */
     private static void insertWithSubtitle(
             UUID id,
             String productNo,

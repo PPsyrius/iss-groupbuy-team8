@@ -53,6 +53,7 @@ public record ListingQuery(String keyword, String category, PageQuery page, bool
         return List.of(keyword.split(" "));
     }
 
+    /** Collapses Unicode whitespace and enforces the shared keyword length limit. */
     private static String normalizeKeyword(String keyword) {
         if (keyword == null) {
             return null;
@@ -68,6 +69,7 @@ public record ListingQuery(String keyword, String category, PageQuery page, bool
         return collapsed;
     }
 
+    /** Converts a blank category into the repository's no-filter representation. */
     private static String normalizeCategory(String category) {
         if (category == null || category.isBlank()) {
             return null;

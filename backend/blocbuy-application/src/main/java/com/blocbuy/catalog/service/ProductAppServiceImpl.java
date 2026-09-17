@@ -39,6 +39,7 @@ public class ProductAppServiceImpl implements ProductAppService {
     private final PricingStrategyResolver pricingStrategyResolver;
     private final ListingSearchReranker listingSearchReranker;
 
+    /** Browses the deterministic on-sale catalog and assembles listing prices in one batch. */
     @Override
     @Transactional(readOnly = true)
     public PageResult<ListingView> pageListings(Integer page, Integer size, String category) {
@@ -47,6 +48,7 @@ public class ProductAppServiceImpl implements ProductAppService {
         return toPageResult(products, query);
     }
 
+    /** Searches the deterministic catalog shortlist and optionally re-ranks its current page. */
     @Override
     public PageResult<ListingView> search(ListingQuery query) {
         PageResult<Product> products =
@@ -56,6 +58,7 @@ public class ProductAppServiceImpl implements ProductAppService {
         return toPageResult(PageResult.of(ordered, products.total(), query.page()), query.page());
     }
 
+    /** Applies a fail-open semantic order while preserving every SQL candidate exactly once. */
     private List<Product> rerank(ListingQuery query, List<Product> products) {
         if (!query.aiRerank() || query.keyword() == null || products.size() < 2) {
             return products;

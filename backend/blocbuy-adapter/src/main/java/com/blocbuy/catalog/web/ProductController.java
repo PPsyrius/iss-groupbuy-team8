@@ -81,6 +81,7 @@ public class ProductController {
         return Result.ok(toDetail(productAppService.getListingDetail(id)));
     }
 
+    /** Converts an application page into the public response envelope. */
     private static Result<PageResult<ProductSummaryResponse>> toPageResult(
             PageResult<ListingView> result) {
         List<ProductSummaryResponse> items =

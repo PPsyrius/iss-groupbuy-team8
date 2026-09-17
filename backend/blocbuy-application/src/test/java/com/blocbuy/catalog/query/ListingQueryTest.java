@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 /** UC1-ext keyword normalization: trim/collapse, blank-to-null, and neutral tokenization. */
 class ListingQueryTest {
 
+    /** Verifies that a null keyword disables filtering and keeps default pagination. */
     @Test
     void nullKeywordMeansNoFilter() {
         ListingQuery query = ListingQuery.of(null, null, null, null);
@@ -19,6 +20,7 @@ class ListingQueryTest {
         assertThat(query.page().page()).isEqualTo(1);
     }
 
+    /** Verifies that blank keyword and category inputs normalize to no filters. */
     @Test
     void blankKeywordAndCategoryBecomeNull() {
         ListingQuery query = ListingQuery.of("   ", "  ", 1, 20);
@@ -28,6 +30,7 @@ class ListingQueryTest {
         assertThat(query.keywordTokens()).isEmpty();
     }
 
+    /** Verifies trimming and collapsing of repeated keyword whitespace. */
     @Test
     void keywordTrimsAndCollapsesWhitespace() {
         ListingQuery query = ListingQuery.of("  wireless   headphones  ", null, 1, 20);
@@ -36,6 +39,7 @@ class ListingQueryTest {
         assertThat(query.keywordTokens()).containsExactly("wireless", "headphones");
     }
 
+    /** Verifies that token casing remains available for database-side comparison. */
     @Test
     void tokensRemainDatabaseNeutral() {
         ListingQuery query = ListingQuery.of("HeadPhones", null, 1, 20);
@@ -43,6 +47,7 @@ class ListingQueryTest {
         assertThat(query.keywordTokens()).containsExactly("HeadPhones");
     }
 
+    /** Verifies that SQL wildcard characters remain untouched at the query boundary. */
     @Test
     void likeMetacharactersRemainUnmodifiedForInfrastructure() {
         ListingQuery query = ListingQuery.of("100% cotton_\\soft", null, 1, 20);
@@ -50,6 +55,7 @@ class ListingQueryTest {
         assertThat(query.keywordTokens()).containsExactly("100%", "cotton_\\soft");
     }
 
+    /** Verifies rejection of a normalized keyword beyond the public length limit. */
     @Test
     void overlongKeywordRejected() {
         String tooLong = "k".repeat(ListingQuery.MAX_KEYWORD_LENGTH + 1);
@@ -58,6 +64,7 @@ class ListingQueryTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    /** Verifies that tokenization does not silently discard later terms. */
     @Test
     void allTokensArePreserved() {
         String eleven = "a b c d e f g h i j k";
@@ -67,6 +74,7 @@ class ListingQueryTest {
                 .containsExactly("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k");
     }
 
+    /** Verifies preservation of an explicit category and page selection. */
     @Test
     void categoryPreservedWhenPresent() {
         ListingQuery query = ListingQuery.of("headphones", "electronics", 2, 5);
@@ -76,6 +84,7 @@ class ListingQueryTest {
         assertThat(query.keywordTokens()).containsExactly("headphones");
     }
 
+    /** Verifies the one-element token list produced for a single search term. */
     @Test
     void singleTokenProducesSinglePattern() {
         List<String> patterns = ListingQuery.of("tea", null, null, null).keywordTokens();
@@ -83,6 +92,7 @@ class ListingQueryTest {
         assertThat(patterns).containsExactly("tea");
     }
 
+    /** Verifies that direct construction enforces the same keyword length invariant. */
     @Test
     void directConstructorRejectsOverlongKeyword() {
         String tooLong = "k".repeat(ListingQuery.MAX_KEYWORD_LENGTH + 1);
@@ -92,6 +102,7 @@ class ListingQueryTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    /** Verifies that direct construction normalizes Unicode whitespace and blank categories. */
     @Test
     void directConstructorEnforcesNormalization() {
         ListingQuery query = new ListingQuery("  a\u2003b  ", "  ", new PageQuery(1, 20), true);

@@ -84,6 +84,7 @@ public class ProductRepositoryImpl implements ProductRepository {
         return PageResult.of(rows.stream().map(ProductConverter::toDomain).toList(), total, page);
     }
 
+    /** Runs one bounded search query plus its matching count query. */
     @Override
     public PageResult<Product> searchOnSale(
             PageQuery page, String category, List<String> keywordTokens) {

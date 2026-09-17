@@ -33,16 +33,19 @@ public class TypeSafeJevListingSearchReranker implements ListingSearchReranker {
     private final TypeSafeJevProperties properties;
     private final RestClient restClient;
 
+    /** Creates the production adapter with a timeout-configured HTTP client. */
     @Autowired
     public TypeSafeJevListingSearchReranker(TypeSafeJevProperties properties) {
         this(properties, defaultRestClient(properties));
     }
 
+    /** Creates an adapter with an injected client for deterministic testing. */
     TypeSafeJevListingSearchReranker(TypeSafeJevProperties properties, RestClient restClient) {
         this.properties = properties;
         this.restClient = restClient;
     }
 
+    /** Returns Jev's validated relevance order, or the original order on any provider failure. */
     @Override
     public List<UUID> rerank(String keyword, List<Candidate> candidates) {
         List<UUID> original = candidates.stream().map(Candidate::id).toList();
@@ -89,6 +92,7 @@ public class TypeSafeJevListingSearchReranker implements ListingSearchReranker {
         }
     }
 
+    /** Validates Jev's complete probability distribution before deriving a stable ID order. */
     static List<UUID> orderedIds(
             SystemOneResponse response, List<Candidate> shortlist, List<UUID> original) {
         if (response == null || response.answers() == null) {
@@ -131,10 +135,12 @@ public class TypeSafeJevListingSearchReranker implements ListingSearchReranker {
         return List.copyOf(ranked);
     }
 
+    /** Reports whether a probability is finite and within the inclusive unit interval. */
     static boolean isValidScore(Double score) {
         return score != null && Double.isFinite(score) && score >= 0 && score <= 1;
     }
 
+    /** Bounds optional provider-facing description text without changing shorter values. */
     static String truncate(String value) {
         if (value == null || value.length() <= MAX_DESCRIPTION_LENGTH) {
             return value;
@@ -142,6 +148,7 @@ public class TypeSafeJevListingSearchReranker implements ListingSearchReranker {
         return value.substring(0, MAX_DESCRIPTION_LENGTH);
     }
 
+    /** Builds the default client with the configured connect and read timeouts. */
     private static RestClient defaultRestClient(TypeSafeJevProperties properties) {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(Duration.ofMillis(properties.connectTimeoutMillis()));
@@ -153,6 +160,7 @@ public class TypeSafeJevListingSearchReranker implements ListingSearchReranker {
             Object state, String model, Map<String, ChoiceQuestion> questions) {}
 
     private record ChoiceQuestion(String type, Object instructions, Map<String, Object> criteria) {
+        /** Creates the single supported question type for a relevance ranking request. */
         private ChoiceQuestion(Object instructions, Map<String, Object> criteria) {
             this("choice", instructions, criteria);
         }

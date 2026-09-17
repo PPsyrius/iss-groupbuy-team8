@@ -30,6 +30,7 @@ class ProductRepositoryImplTest {
     @Mock private BizProductMapper mapper;
     @InjectMocks private ProductRepositoryImpl repository;
 
+    /** Verifies identical keyword/category filters reach page and count queries. */
     @Test
     void searchPassesPatternsAndCategoryToBothQueries() {
         BizProductDO row = row();
@@ -48,6 +49,7 @@ class ProductRepositoryImplTest {
         verify(mapper).countVisibleSearch("electronics", List.of("%Tea%"));
     }
 
+    /** Verifies SQL LIKE metacharacters are escaped before mapper delegation. */
     @Test
     void searchEscapesLikeMetacharactersInInfrastructure() {
         List<String> expected = List.of("%100\\%%", "%cotton\\_\\\\soft%");
@@ -61,6 +63,7 @@ class ProductRepositoryImplTest {
         verify(mapper).countVisibleSearch(isNull(), eq(expected));
     }
 
+    /** Verifies blank categories and empty token sets normalize to null filters. */
     @Test
     void searchNormalizesBlankCategoryAndEmptyPatternsToNull() {
         when(mapper.selectVisibleSearchPage(isNull(), isNull(), anyInt(), anyLong()))
@@ -77,6 +80,7 @@ class ProductRepositoryImplTest {
         assertThat(patterns.getValue()).isNull();
     }
 
+    /** Verifies explicit null filters allow an unfiltered bounded search. */
     @Test
     void searchWithNullCategoryAndNullPatternsSkipsBothFilters() {
         when(mapper.selectVisibleSearchPage(isNull(), isNull(), anyInt(), anyLong()))
@@ -90,6 +94,7 @@ class ProductRepositoryImplTest {
         verify(mapper).countVisibleSearch(isNull(), isNull());
     }
 
+    /** Builds a complete persistence row for repository conversion assertions. */
     private static BizProductDO row() {
         BizProductDO row = new BizProductDO();
         row.setId(PRODUCT_ID);

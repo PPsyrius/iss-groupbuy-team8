@@ -12,6 +12,7 @@ public record TypeSafeJevProperties(
         int connectTimeoutMillis,
         int readTimeoutMillis) {
 
+    /** Applies safe defaults and requires an API key only when the integration is enabled. */
     public TypeSafeJevProperties {
         if (endpoint == null || endpoint.isBlank()) {
             endpoint = "https://api.typesafe.ai/v1/systemone";
