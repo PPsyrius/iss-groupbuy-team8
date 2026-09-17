@@ -300,7 +300,7 @@ Say what was verified and what was not.
   (merged, not overwritten), `.claude/hooks/frontend-{fix,typecheck,bootstrap}.sh`,
   `frontend/package.json` (`intent` key), `frontend/docs/tanstack-skills.json`,
   `frontend/.oxfmtrc.json`, `lefthook.yml` (formatter ignores for the Intent-managed files),
-  ADR 0012 + `docs/adr/README.md`, plan §11/§12 and the T1-10 boxes, this log, NFR-18 evidence.
+  ADR 0012 + `frontend/docs/adr/README.md`, plan §11/§12 and the T1-10 boxes, this log, NFR-18 evidence.
 - Verified: **Intent discovery.** With no `intent` key, `pnpm dlx @tanstack/intent@0.4.0 list`
   found `@tanstack/router-core` 1.171.30 with **10** skills (transitive, under
   `node_modules/.pnpm/@tanstack+router-core@1.171.30/...`), `@tanstack/router-plugin` 1.168.38
