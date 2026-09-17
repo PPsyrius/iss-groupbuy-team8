@@ -1,0 +1,176 @@
+package com.blocbuy.catalog.gateway;
+
+import com.blocbuy.catalog.gateway.ListingSearchReranker.Candidate;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+
+/** TypeSafe Jev adapter that semantically re-ranks at most one ordinary result page. */
+@Slf4j
+@Component
+@EnableConfigurationProperties(TypeSafeJevProperties.class)
+public class TypeSafeJevListingSearchReranker implements ListingSearchReranker {
+
+    private static final int MAX_CANDIDATES = 20;
+    private static final int MAX_DESCRIPTION_LENGTH = 500;
+    private static final double PROBABILITY_SUM_TOLERANCE = 1e-6;
+
+    private final TypeSafeJevProperties properties;
+    private final RestClient restClient;
+
+    /** Creates the production adapter with a timeout-configured HTTP client. */
+    @Autowired
+    public TypeSafeJevListingSearchReranker(TypeSafeJevProperties properties) {
+        this(properties, defaultRestClient(properties));
+    }
+
+    /** Creates an adapter with an injected client for deterministic testing. */
+    TypeSafeJevListingSearchReranker(TypeSafeJevProperties properties, RestClient restClient) {
+        this.properties = properties;
+        this.restClient = restClient;
+    }
+
+    /** Returns Jev's validated relevance order, or the original order on any provider failure. */
+    @Override
+    public List<UUID> rerank(String keyword, List<Candidate> candidates) {
+        List<UUID> original = candidates.stream().map(Candidate::id).toList();
+        if (!properties.enabled() || candidates.size() < 2) {
+            return original;
+        }
+
+        List<Candidate> shortlist = candidates.stream().limit(MAX_CANDIDATES).toList();
+        Map<String, Object> criteria = new LinkedHashMap<>();
+        shortlist.forEach(
+                candidate ->
+                        criteria.put(
+                                candidate.id().toString(),
+                                new CandidateState(
+                                        candidate.title(),
+                                        candidate.subtitle(),
+                                        truncate(candidate.description()),
+                                        candidate.category())));
+        SystemOneRequest request =
+                new SystemOneRequest(
+                        Map.of("shopper_query", keyword),
+                        properties.model(),
+                        Map.of(
+                                "best_match",
+                                new ChoiceQuestion(
+                                        "Rank the listed products by how well each one satisfies "
+                                                + "the shopper intent in `shopper_query`.",
+                                        criteria)));
+
+        try {
+            SystemOneResponse response =
+                    restClient
+                            .post()
+                            .uri(properties.endpoint())
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + properties.apiKey())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .body(request)
+                            .retrieve()
+                            .body(SystemOneResponse.class);
+            return orderedIds(response, shortlist, original);
+        } catch (RestClientException ex) {
+            log.debug("TypeSafe Jev re-ranking unavailable: {}", ex.getClass().getSimpleName());
+            return original;
+        }
+    }
+
+    /** Validates Jev's complete probability distribution before deriving a stable ID order. */
+    static List<UUID> orderedIds(
+            SystemOneResponse response, List<Candidate> shortlist, List<UUID> original) {
+        if (response == null || response.answers() == null) {
+            return original;
+        }
+
+        ChoiceAnswer answer = response.answers().get("best_match");
+        if (answer == null || !"choice".equals(answer.type()) || answer.probabilities() == null) {
+            return original;
+        }
+
+        Map<String, Double> probabilities = answer.probabilities();
+        Set<String> expectedKeys =
+                shortlist.stream()
+                        .map(candidate -> candidate.id().toString())
+                        .collect(Collectors.toSet());
+
+        if (!probabilities.keySet().equals(expectedKeys)) {
+            return original;
+        }
+
+        Map<UUID, Double> scores = new LinkedHashMap<>();
+        double total = 0.0;
+        for (Candidate candidate : shortlist) {
+            Double score = probabilities.get(candidate.id().toString());
+            if (!isValidScore(score)) {
+                return original;
+            }
+            scores.put(candidate.id(), score);
+            total += score;
+        }
+
+        if (Math.abs(total - 1.0) > PROBABILITY_SUM_TOLERANCE) {
+            return original;
+        }
+
+        List<UUID> ranked = new ArrayList<>(scores.keySet());
+        ranked.sort(Comparator.comparingDouble(scores::get).reversed());
+        original.stream().filter(id -> !scores.containsKey(id)).forEach(ranked::add);
+        return List.copyOf(ranked);
+    }
+
+    /** Reports whether a probability is finite and within the inclusive unit interval. */
+    static boolean isValidScore(Double score) {
+        return score != null && Double.isFinite(score) && score >= 0 && score <= 1;
+    }
+
+    /** Bounds optional provider-facing description text without changing shorter values. */
+    static String truncate(String value) {
+        if (value == null || value.length() <= MAX_DESCRIPTION_LENGTH) {
+            return value;
+        }
+        return value.substring(0, MAX_DESCRIPTION_LENGTH);
+    }
+
+    /** Builds the default client with the configured connect and read timeouts. */
+    private static RestClient defaultRestClient(TypeSafeJevProperties properties) {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofMillis(properties.connectTimeoutMillis()));
+        factory.setReadTimeout(Duration.ofMillis(properties.readTimeoutMillis()));
+        return RestClient.builder().requestFactory(factory).build();
+    }
+
+    private record SystemOneRequest(
+            Object state, String model, Map<String, ChoiceQuestion> questions) {}
+
+    private record ChoiceQuestion(String type, Object instructions, Map<String, Object> criteria) {
+        /** Creates the single supported question type for a relevance ranking request. */
+        private ChoiceQuestion(Object instructions, Map<String, Object> criteria) {
+            this("choice", instructions, criteria);
+        }
+    }
+
+    private record CandidateState(
+            String title, String subtitle, String description, String category) {}
+
+    record SystemOneResponse(Map<String, ChoiceAnswer> answers) {}
+
+    record ChoiceAnswer(
+            String type, String choice, Map<String, Double> probabilities, Double confidence) {}
+}
