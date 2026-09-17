@@ -1650,12 +1650,15 @@ responses are deliberately NOT used: they would also mask real `/api/*` errors.
 Function source is versioned at `deployment/frontend/cloudfront/spa-fallback.js`.
 
 ```bash
-aws cloudfront create-function \
+# Runtime lives inside FunctionConfig (there is no --runtime option). A new function stays in
+# DEVELOPMENT until publish-function is called with the ETag create-function returned.
+FN_ETAG=$(aws cloudfront create-function \
   --name blocbuy-dev-spa-fallback \
-  --runtime cloudfront-js-2.0 \
-  --function-config Comment="SPA fallback for BlocBuy dev frontend",Autopublish=true \
-  --function-code fileb://deployment/frontend/cloudfront/spa-fallback.js
-export SPA_FN_ARN=$(aws cloudfront describe-function --name blocbuy-dev-spa-fallback \
+  --function-config '{"Comment":"SPA fallback for BlocBuy dev frontend","Runtime":"cloudfront-js-2.0"}' \
+  --function-code fileb://deployment/frontend/cloudfront/spa-fallback.js \
+  --query ETag --output text)
+aws cloudfront publish-function --name blocbuy-dev-spa-fallback --if-match "$FN_ETAG"
+export SPA_FN_ARN=$(aws cloudfront describe-function --name blocbuy-dev-spa-fallback --stage LIVE \
   --query 'FunctionSummary.FunctionMetadata.FunctionARN' --output text)
 
 # Attach to the DEFAULT behavior only (never to /api/*)
