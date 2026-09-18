@@ -12,6 +12,11 @@ import { formatPrice, Price } from "@/features/catalog/Price";
 
 // A 200 envelope without `data` is malformed for this endpoint; rejecting it here sends it to
 // the route's error boundary instead of a TypeError in the page (CodeRabbit r4045102889).
+// No `staleTime` here on purpose (AGENTS.md rule 7, ADR 0001): the loader below passes
+// `staleTime: "static"` so navigation never waits on a cached listing, while the component's
+// 30 s default refetches seat counts in the background when the cache is older than that.
+// Static on the shared options would freeze the deal row until a manual invalidate
+// (CodeRabbit r4047087107, declined).
 const detailOptions = (id: string) =>
   queryOptions({
     ...getListingOptions({ path: { id } }),
