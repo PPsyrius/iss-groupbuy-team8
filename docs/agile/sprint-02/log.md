@@ -684,3 +684,32 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   Safari 16.4.
 - Problems: CR-11 no deal sizes on the card DTO (progress cue omitted); CR-15 `--muted` 4.41:1
   (used as designed); CR-10 category strings unknown; A2's CSP must allow Google Fonts. Open.
+
+## 2026-09-18 - @limjiechao - T2-02 product detail with deal progress and not-found state (#44, #93)
+
+- Kind: feature (PR-G, UC1 detail); artboards over plan (note 41); no ADR, no NFR.
+- Changed: `DealProgress` and `deal-time` with tests, the `/products/$productId` route (loader,
+  gallery, deal progress, skeleton, error, `notFoundComponent`), MSW detail seed with a 404;
+  plan steps 1–4, notes 41–42; T2-01 follow-up `9582eb2` merged in by fast-forward.
+- Sources: `design-screens.md` §4.2/§4.5; `BlocBuy Buyer Listing Detail.dc.html` and
+  `BlocBuy Buyer Errors.dc.html`; HeroUI props from the installed 3.2.5 types (offline-first
+  after the first attempt stalled on the network).
+- Verified on `9582eb2` plus the change: `pnpm check` exit 0 (vitest 9 files / 33 tests, knip 0
+  issues); `pnpm build` ok; `pnpm e2e` 1 passed, 2 skipped; MSW screenshots of open, urgent,
+  no-bloc and not-found at 390 and 1280, 0 page errors. Review follow-up (CodeRabbit
+  r4042898923/r4042898931/r4042898937, raised on #114 while it carried this commit): route test
+  for the loader (HTTP 404 and `_404_` envelope both render the not-found card; the test installs
+  the production interceptor, without which the loader sees a raw body), "This bloc has ended"
+  header wording off the same clock as the row's chip (`hasEnded` in `deal-time`), and a gallery
+  image that fails to load is dropped so the striped tile shows; vitest 10 files / 40 tests.
+  Round 2 (r4045102856/64/80/89, plan note 43): `parseDeadline` guards `Intl` formatting
+  against an unparseable `expireTime`, the detail query rejects a data-less 200 envelope, the
+  three unwired buttons are `isDisabled`, plan step 1 wording fixed; three threads on files
+  #113 already merged answered as out of this diff. Round 3 (r4047087107) declined: the
+  loader-only `staleTime: "static"` is rule 7, so the detail keeps refetching seat counts.
+- Not verified: the real backend and its not-found shape (note 42), loading and error states in a
+  browser, the sticky bar while scrolling.
+- Decision: not-found on `status === 404` or a `_404_` code (note 42); breadcrumbs as plain router
+  links; Join / Start a bloc / Buy alone rendered unwired until T2-04 and UC3/UC4.
+- Problems: CR no 404 declared for `getListing`; CR `ActiveDealResponse` has no starter, number or
+  per-bloc list (one "Open bloc" row renders); CR no listing status for "unavailable". Open.
