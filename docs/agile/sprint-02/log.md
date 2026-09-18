@@ -739,3 +739,61 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   empty-state links keep `size`; one keyword matcher over title, subtitle and description
   (`keyword-match.ts`) shared by the browser seed and the route test. Three outdated threads on
   #115 files answered as landed there (9b67149).
+
+## 2026-09-18 - @limjiechao - T2-04 session hook, /login, /auth/callback, _authenticated guard, /account, gated sheet (#42, #93)
+
+- Kind: feature (UC2 sign-in, frontend half); security note: the `_authenticated` guard and the
+  gated sheet are UX only, every protected endpoint is enforced by the backend session cookie
+  (ADR 0002); NFR-01 unchanged (the session cookie's attributes are still observed only by the
+  T2-06 login e2e); no ADR (no new alternative was chosen; the artboards settled the shape).
+- Changed: `frontend/src/features/session/{session,use-session,login-search,return-to,
+  initials}.ts`, `GoogleSignInButton.tsx`, `GatedActionSheet.tsx` (+ tests); routes `login.tsx`,
+  `auth.callback.tsx`, `_authenticated.tsx`, `_authenticated/account.tsx` (+ route tests),
+  `__root.tsx` (session in `beforeLoad`), `products.$productId.tsx` (gated Start a bloc / Buy
+  alone), `router.tsx` (`session: SessionState`), `main.tsx`; `components/Header.tsx` (neutral
+  Sign in → `/login`, avatar + name when signed in) + test; `src/test/render-route.tsx` (shared
+  real-route-tree helper, used by `index.test.tsx` too), `src/test/browser-msw.ts` (`me` 401 by
+  default, `?msw=1&me=1` signs in as Ada Lim); `routeTree.gen.ts` regenerated; `docs/plan.md`
+  (T2-04 steps 1–8 ticked, §12 notes 44–45).
+- Sources: `frontend/docs/design-screens.md` §3 (signed-in header, buttons), §4.3 (Sign-in and
+  gated action), §4.4 (My blocs as the nearest `/account`), §7 Q1/Q13–Q17; raw
+  `BlocBuy Buyer Sign In.dc.html` (copy strings, trust triptych, sheet/modal geometry) and
+  `BlocBuy Buyer My Blocs.dc.html` under `.claude/design-artboards/`; contract auth operations
+  (`googleAuthorize` 302 → Google or `/login?error=`, `googleCallback` 302 → `/auth/callback` on
+  success with `blocbuy-token`, or `/login?error=`). HeroUI prop names from the installed 3.2.5
+  type definitions (`Modal` root `isOpen`/`onOpenChange`, `Modal.Container placement="auto"`,
+  `Avatar` `size="sm"` + `Avatar.Image`/`Avatar.Fallback`, `Alert status="danger"`, `Spinner`);
+  offline-first: no Intent skills, no `pnpm dlx`, no website fetch.
+- Verified (2026-09-18, worktree `session` on `4f2b7d0` + this change): `pnpm vitest run
+  src/features/session` 4 files / 20 tests (written first: all four suites red on missing modules,
+  then green); `pnpm check` exit 0 (gen:api 7 files; tsc clean; oxlint clean; oxfmt 67 files
+  clean; vitest 18 files / 74 tests passed; knip 0 issues, 4 pre-existing config hints);
+  `pnpm build` exit 0; `pnpm e2e` 1 passed, 2 skipped (dev-only). The first e2e run failed
+  (header not visible): the preview proxy's ECONNREFUSED for `me` blanked the app through the
+  strict root `beforeLoad`; fixed as note 45 and re-run green. Walkthrough on `pnpm dev` (port
+  5179; 5173 was held by a stale server from another worktree) + `?msw=1` / `?msw=1&me=1` with a
+  throwaway Playwright script (`node_modules/.cache/t2-04-shots.mjs`): 13 PNGs
+  `frontend/test-results/t2-04-*.png` (login default 390/1280, returning 390, error 390/1280,
+  header anonymous 1280 and signed in 390/1280, account 390/1280, anonymous `/account` →
+  `/login?returnTo=%2Faccount%3Fmsw%3D1`, gated sheet 390 and modal 1280 opened and closed with
+  "Not now", signed-in press opens nothing), 0 page errors; not committed (`pnpm e2e` wipes the
+  folder). Visually checked login 390, sheet 390, header 1280, account 390 against the artboards.
+  **Not verified:** the real Google round trip (needs the dev distribution and B5's console
+  check, T2-06) and therefore the `blocbuy-token` cookie; `redirect({ href })` against a
+  `returnTo` that carries a search string was exercised only by the walkthrough
+  (`/account?msw=1`); the HeroUI `Modal` `placement="auto"` breakpoint was read from the type
+  definitions, not the docs; `Avatar.Image` with a real `avatarUrl` (the seed has none).
+- Decisions: return path in sessionStorage rather than the URL (the backend drops query params
+  through Google; CR-13 stays a backend ask); root `beforeLoad` falls back to anonymous on any
+  non-401 failure, the callback route stays strict (note 45); the header's Sign in goes to
+  `/login` rather than straight to the backend so the artboard screen is always the gate; a
+  plain anchor with `navigate({ href })` for "Back to the listing" (a parked path is not a typed
+  `to`).
+- Problems / questions: CR-13 the backend cannot return the buyer to `returnTo` on its own;
+  CR-16 the Google mark is the artboard's placeholder tile; no artboard shows the signed-in
+  storefront header or a logout control (Q16, T2-05 will add a menu on the avatar); `/account`
+  is interim until per-user bloc data exists (Q15); the "returning from a gated action" listing
+  snapshot and countdown need listing data the login route does not load (not drawn). Status:
+  open.
+- Next: user pushes; PR against `dev`, stacked on the T2-03 branch; then T2-05 (logout) and
+  T2-06 (login e2e, after B5's console check).

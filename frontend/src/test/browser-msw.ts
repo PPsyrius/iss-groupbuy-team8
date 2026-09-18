@@ -191,6 +191,18 @@ export async function startBrowserMsw() {
   const worker = setupWorker(
     ...createMswHandlers().all({
       pick: {
+        // `?msw=1` browses anonymously (401, the interceptor's normal path); `?msw=1&me=1` is
+        // signed in as the artboards' sample buyer, so the header, /account and the gated
+        // sheet can be walked through offline. Browser seed only; the vitest handlers are set
+        // per test.
+        me: () =>
+          new URLSearchParams(window.location.search).get("me") === "1"
+            ? HttpResponse.json({
+                code: OK_CODE,
+                message: "ok",
+                data: { userId: "u-ada", nickname: "Ada Lim", avatarUrl: null },
+              })
+            : HttpResponse.json({ code: "AUTH_401", message: "unauthenticated" }, { status: 401 }),
         pageListings: ({ request }) => {
           const url = new URL(request.url);
           const page = Math.max(1, Number(url.searchParams.get("page") ?? 1));
