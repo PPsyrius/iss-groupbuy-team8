@@ -121,6 +121,7 @@ jobs:
             backend/**/target/checkstyle-result.xml
           if-no-files-found: ignore
 
+      # Sonar uses only the aggregate JaCoCo report.
       - name: Upload Sonar inputs
         if: >-
           needs.detect-changes.outputs.backend == 'true' ||
@@ -132,7 +133,7 @@ jobs:
           path: |
             backend/**/target/classes/**
             backend/**/target/test-classes/**
-            backend/**/target/site/jacoco*/**
+            backend/blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml
             backend/**/target/surefire-reports/**
             backend/**/target/failsafe-reports/**
           if-no-files-found: error
@@ -150,25 +151,103 @@ jobs:
           path: backend/blocbuy-bootstrap/target/blocbuy-backend.jar
           if-no-files-found: error
 
+      # Export OpenAPI from the verified JAR rather than rebuilding.
+      - name: Generate OpenAPI candidate from verified JAR
+        if: >-
+          needs.detect-changes.outputs.backend == 'true' ||
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+        run: |
+          set -Eeuo pipefail
+          jar='blocbuy-bootstrap/target/blocbuy-backend.jar'
+          test -s "$jar"
+          java -jar "$jar" --spring.profiles.active=openapi-export >"${RUNNER_TEMP}/openapi-app.log" 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -sf http://localhost:18080/v3/api-docs -o "${RUNNER_TEMP}/openapi-candidate.json"; then
+              echo "OpenAPI candidate fetched on attempt $attempt"
+              break
+            fi
+            if [ "$attempt" = '30' ]; then
+              echo 'OpenAPI export endpoint did not become ready'
+              cat "${RUNNER_TEMP}/openapi-app.log"
+              exit 1
+            fi
+            sleep 2
+          done
+          kill "$app_pid" 2>/dev/null || true
+          trap - EXIT
+          test -s "${RUNNER_TEMP}/openapi-candidate.json"
+
+      - name: Upload OpenAPI candidate
+        if: >-
+          needs.detect-changes.outputs.backend == 'true' ||
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: openapi-candidate
+          retention-days: 1
+          path: ${{ runner.temp }}/openapi-candidate.json
+          if-no-files-found: error
+
   contract-check:
-    needs: detect-changes
+    needs:
+      - detect-changes
+      - build-quality
     if: >-
-      (github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
-      needs.detect-changes.outputs.contracts == 'true' ||
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+      always() &&
+      needs.detect-changes.result == 'success' &&
+      (needs.build-quality.result == 'success' ||
+       needs.build-quality.result == 'skipped') &&
+      ((github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
+       needs.detect-changes.outputs.contracts == 'true' ||
+       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Download OpenAPI candidate from verified build
+        if: >-
+          needs.detect-changes.outputs.backend == 'true' ||
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: openapi-candidate
+          path: ${{ runner.temp }}
+
+      # JRE-only fast path; Maven setup is reserved for the fallback.
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        if: >-
+          needs.detect-changes.outputs.backend == 'true' ||
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        if: >-
+          (github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
+          needs.detect-changes.outputs.contracts == 'true' &&
+          needs.detect-changes.outputs.backend != 'true'
         with:
           distribution: temurin
           java-version: '21'
           cache: maven
 
       - name: Regenerate contracts/openapi.json from code
-        run: ./mvnw -B post-integration-test -Popenapi-export -DskipTests -DskipITs -Dspotless.check.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true
+        run: |
+          set -Eeuo pipefail
+          if [ -s "${RUNNER_TEMP}/openapi-candidate.json" ]; then
+            cp "${RUNNER_TEMP}/openapi-candidate.json" ../contracts/openapi.json
+          else
+            ./mvnw -B post-integration-test -Popenapi-export \
+              -DskipTests \
+              -DskipITs \
+              -Dspotless.check.skip=true \
+              -Dcheckstyle.skip=true \
+              -Dspotbugs.skip=true
+          fi
 
       - name: Fail if committed contract drifted
         working-directory: ${{ github.workspace }}
@@ -361,6 +440,14 @@ jobs:
           trap cleanup EXIT
           cleanup
 
+          # Pre-pull service images concurrently to reduce cold-run startup time.
+          docker pull postgres:18 &
+          pull_pg=$!
+          docker pull redis:8.10 &
+          pull_redis=$!
+          wait "$pull_pg"
+          wait "$pull_redis"
+
           docker run -d --name smoke-postgres -p 127.0.0.1:5432:5432 \
             -e POSTGRES_USER=blocbuy \
             -e POSTGRES_PASSWORD=blocbuy \
@@ -512,63 +599,18 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  image-dev:
-    name: image-dev
-    needs:
-      - package-dev
-    if: >-
-      needs.package-dev.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Download packaged backend application
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: backend-application-dev-${{ github.sha }}
-          path: backend/blocbuy-bootstrap/target
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
-
-      # Delivery-only assembly: no smoke test or Trivy rerun after merge.
-      - name: Assemble delivery image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        with:
-          context: ./backend
-          file: ./backend/Dockerfile.ci
-          load: true
-          tags: blocbuy-backend:ci-${{ github.sha }}
-          cache-from: type=gha
-
-      - name: Export delivery image
-        run: >-
-          docker save blocbuy-backend:ci-${{ github.sha }}
-          | gzip --stdout
-          > "${RUNNER_TEMP}/backend-image.tgz"
-
-      - name: Upload delivery image artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: backend-image-${{ github.sha }}
-          path: ${{ runner.temp }}/backend-image.tgz
-          retention-days: 2
-          if-no-files-found: error
-
   publish-ecr-dev:
     name: publish-ecr-dev
     needs:
       - detect-changes
       - package-dev
-      - image-dev
     if: >-
       always() &&
       github.event_name == 'push' &&
       github.ref == 'refs/heads/dev' &&
       vars.ENABLE_EC2_DEPLOY == 'true' &&
       needs.detect-changes.result == 'success' &&
-      needs.package-dev.result == 'success' &&
-      needs.image-dev.result == 'success'
+      needs.package-dev.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -582,15 +624,24 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Download verified image artifact
+      - name: Download packaged backend application
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: backend-image-${{ github.sha }}
-          path: ${{ runner.temp }}
+          name: backend-application-dev-${{ github.sha }}
+          path: backend/blocbuy-bootstrap/target
 
-      # Restore the exact image built, smoke-tested, and scanned by docker.
-      - name: Load verified image
-        run: docker load --input "${RUNNER_TEMP}/backend-image.tgz"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      # Delivery-only: build and push in this job; no post-merge smoke/Trivy or image transfer.
+      - name: Assemble delivery image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile.ci
+          load: true
+          tags: blocbuy-backend:ci-${{ github.sha }}
+          cache-from: type=gha
 
       - name: Validate ECR release configuration
         uses: ./.github/actions/validate-ecr-publish
@@ -613,7 +664,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
 
       - id: publish
-        name: Publish verified image by immutable digest
+        name: Publish delivery image by immutable digest
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_DEV }}
@@ -804,7 +855,6 @@ jobs:
     needs:
       - detect-changes
       - package-dev
-      - image-dev
       - publish-ecr-dev
 
     if: >-
@@ -814,7 +864,6 @@ jobs:
       vars.ENABLE_EC2_DEPLOY == 'true' &&
       needs.detect-changes.result == 'success' &&
       needs.package-dev.result == 'success' &&
-      needs.image-dev.result == 'success' &&
       needs.publish-ecr-dev.result == 'success' &&
       needs.publish-ecr-dev.outputs.image_uri != ''
 

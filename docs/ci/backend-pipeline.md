@@ -32,8 +32,8 @@ merge_group
 └── same applicable validation when Merge Queue is available
 
 ci-backend.yml
-├── build-quality     Spotless -> Checkstyle -> Maven verify -> reports + Sonar inputs
-├── contract-check    OpenAPI regeneration -> drift
+├── build-quality     Spotless -> Checkstyle -> Maven verify -> reports + Sonar inputs + OpenAPI candidate
+├── contract-check    OpenAPI candidate -> drift (Maven fallback for contracts-only changes)
 │                     └── PR only: compatibility + `contract-change-approved` handling
 ├── sonar             SonarCloud Maven scan + quality gate (artifact reuse from build-quality)
 ├── docker            image build -> EC2-profile smoke -> Trivy image gate
