@@ -789,3 +789,39 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   settled below this branch (T2-02 no-deal copy since #115, T2-03 samples in 0f4acb0, step 7
   envelope code in bd0b95b). Plan record re-added here as note 47 (the restack had dropped it).
   Round 2 (r4053031037): step 2 now names the shipped "Sign out" / "Sign in" controls.
+
+## 2026-09-18 - @limjiechao - T2-06 login e2e journey, signed-in half gated on a hand-seeded storage state (#42, #98, #93 PR-I)
+
+- Kind: feature, test (Playwright journey per ADR 0011; no NFR row: no register row covers e2e
+  or login, and the guard/login behaviour under test is UX only, the backend enforces)
+- Changed: `frontend/e2e/login.spec.ts` (new: "anonymous visitor" describe that runs on every
+  target; "signed-in buyer @auth" describe gated on `e2e/.auth/dev.json` and `E2E_TARGET=dev`,
+  `storageState` applied only when the file exists); `frontend/e2e/README.md` (new: how the two
+  halves run, the one-time codegen seeding after the B5 #98 console check, the re-seed after a
+  sign-out run, never commit or paste the file); `frontend/e2e/.auth/.gitkeep` (the folder the
+  gitignored state lands in; `.gitignore` already has `frontend/e2e/.auth/*.json`);
+  `frontend/docs/plan.md` (T2-06 step 2 ticked, steps 1 and 3 annotated as the user's, §12 note 48).
+- Verified (2026-09-18, worktree `login-e2e` on `6320ce0` + this change): `pnpm build` exit 0;
+  `pnpm e2e` 3 passed, 5 skipped: smoke home passed, "/account sends an anonymous visitor to
+  /login" passed (241 ms), "Continue with Google starts the backend OAuth flow and parks the
+  return path" passed (260 ms), "Start a bloc on a listing opens the sign-in sheet" skipped (no
+  backend behind `vite preview`), both `@auth` tests skipped (no `e2e/.auth/dev.json`), the two
+  dev-only smoke tests skipped; `pnpm check` exit 0 after two oxlint fixes in the new spec
+  (`unicorn/no-useless-spread`, `typescript/no-unsafe-type-assertion`; a typed guard reads the
+  listing id): gen:api 7 files, tsc clean, oxlint clean, oxfmt clean, vitest 18 files / 76 tests
+  (unchanged, no unit tests added), knip 0 issues (4 pre-existing config hints). Offline-first: no
+  Intent skills, no `pnpm dlx`, no website. **Not verified:** the signed-in half (needs the user's
+  `e2e/.auth/dev.json` from a real Google login after the B5 #98 console check, then
+  `E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e --grep @auth`);
+  the gated-sheet case end to end (skips without a backend; the sheet itself was walked through
+  under MSW in T2-04); the `blocbuy-token` cookie name after sign-out; any run against dev (the
+  frontend is not deployed there until T1-14, so the dev smoke still fails as recorded on
+  2026-09-17).
+- Decisions: one journey file instead of the plan's `account.spec.ts`, and a 204 answer to the
+  login navigation instead of following it, so the test never touches Google (note 48). No ADR.
+- Problems: step 1 is a human action (a real Google login) and B5's console check is still
+  unconfirmed (#98); action: asked in the PR body; the spec reports the two `@auth` tests as
+  skipped with the codegen command until then. Status: open, user-owned.
+- Next: user pushes; PR against `dev`, stacked on the T2-05 branch; after the six PRs, T2-07
+  (Terraform import with @PPsyrius, after A1/A2), T2-08/T2-09 spikes, T2-10 skills, T2-11 after A2
+  and T1-14.
