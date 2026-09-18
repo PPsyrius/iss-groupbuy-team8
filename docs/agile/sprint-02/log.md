@@ -767,3 +767,36 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   anywhere (`%5C` reads as `/` in the URL parser), with regression tests; `DealProgress` takes
   `onJoin` and the route passes `onGated`, so the open bloc's Join opens the sheet too; the
   browser seed reads `me=1` once at worker start. Plan record re-added as notes 45–46.
+
+## 2026-09-18 - @limjiechao - T2-05 logout mutation clears the session (#42, #93 PR-I)
+
+- Kind: feature (session; UX only, the backend invalidates the cookie)
+- Changed: `frontend/src/features/session/use-logout.ts` (new: generated `logoutMutation` +
+  `unwrapResult` on the `ResultVoid` body; on success `setQueryData(meQueryKey(), anonymous
+  envelope)` then `navigate({ to: '/' })`; on error the session is kept); `src/components/Header.tsx`
+  (avatar + name now link to `/account`; ghost "Sign out" `Button` with pending state and an
+  inline `role="alert"` on failure) + `Header.test.tsx` (two cases); `src/test/browser-msw.ts`
+  (`logout` OK envelope in the seed); `docs/plan.md` (T2-05 steps 1–3 ticked with dated
+  annotations, §12 note 47).
+- Verified (2026-09-18, worktree `logout` on `20496aa` + this change): `pnpm vitest run
+  src/components/Header.test.tsx` red first (2 failed: no "Sign out" button; 3 passed), then 5
+  passed; `pnpm check` exit 0 (gen:api 7 files; tsc clean after forwarding the mutation
+  `context` argument; oxlint clean; oxfmt "All matched files use the correct format"; vitest 18
+  files / 76 tests passed; knip 0 issues, 4 pre-existing config hints); `pnpm build` exit 0
+  (948 ms); `pnpm e2e` 1 passed, 2 skipped (dev-only). Walkthrough on `pnpm dev --port 5180`
+  (5173 is held by a stale server from another worktree) + `?msw=1&me=1` with a throwaway
+  Playwright script (`node_modules/.cache/t2-05-shots.mjs`): `frontend/test-results/t2-05-header-
+  signed-in-{390,1280}.png` and `t2-05-header-after-sign-out-{390,1280}.png`, the press lands on
+  `/?page=1&size=20` (home, search defaults applied) with the Sign in control back, 0 page errors; not committed. HeroUI prop names
+  from the installed 3.2.5 type definitions (`Button` `variant="ghost"`, `size="sm"`,
+  `isPending`, `onPress`); offline-first: no Intent skills, no `pnpm dlx`, no website fetch.
+  **Not verified:** the real backend clearing `blocbuy-token` on `POST /api/v1/auth/logout`
+  (T2-06 after B5's console check); the error branch only under MSW (500 envelope).
+- Decisions: settle `me` on the anonymous envelope rather than `removeQueries` (no refetch, no
+  401 round trip; note 47); a neutral "Sign out" button beside the avatar rather than the menu
+  Q16 recommends, since no artboard specifies either (note 47).
+- Problems / questions: no artboard for the signed-in storefront header or a logout control
+  (Q16; the design owner picks button vs avatar menu, and the "Sign out" / "Log out" string);
+  the avatar link goes to the interim `/account` (Q15). Status: open.
+- Next: user pushes; PR against `dev`, stacked on the T2-04 branch; then T2-06 (login e2e,
+  skips without `e2e/.auth/dev.json`; gated on B5 #98).
