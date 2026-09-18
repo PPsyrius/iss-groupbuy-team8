@@ -696,7 +696,12 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   after the first attempt stalled on the network).
 - Verified on `9582eb2` plus the change: `pnpm check` exit 0 (vitest 9 files / 33 tests, knip 0
   issues); `pnpm build` ok; `pnpm e2e` 1 passed, 2 skipped; MSW screenshots of open, urgent,
-  no-bloc and not-found at 390 and 1280, 0 page errors.
+  no-bloc and not-found at 390 and 1280, 0 page errors. Review follow-up (CodeRabbit
+  r4042898923/r4042898931/r4042898937, raised on #114 while it carried this commit): route test
+  for the loader (HTTP 404 and `_404_` envelope both render the not-found card; the test installs
+  the production interceptor, without which the loader sees a raw body), "This bloc has ended"
+  header wording off the same clock as the row's chip (`hasEnded` in `deal-time`), and a gallery
+  image that fails to load is dropped so the striped tile shows; vitest 10 files / 40 tests.
 - Not verified: the real backend and its not-found shape (note 42), loading and error states in a
   browser, the sticky bar while scrolling.
 - Decision: not-found on `status === 404` or a `_404_` code (note 42); breadcrumbs as plain router

@@ -24,6 +24,13 @@ export function formatCountdown(deadlineMs: number, nowMs: number): Countdown {
   return { text: `${mm}:${ss} left`, urgent: true };
 }
 
+// A deal with a parseable deadline in the past has ended; no deadline never ends.
+export function hasEnded(expireTime: string | undefined, nowMs: number): boolean {
+  if (!expireTime) return false;
+  const ms = Date.parse(expireTime);
+  return !Number.isNaN(ms) && ms <= nowMs;
+}
+
 const dayKey = new Intl.DateTimeFormat("en-CA", {
   timeZone: zone,
   year: "numeric",

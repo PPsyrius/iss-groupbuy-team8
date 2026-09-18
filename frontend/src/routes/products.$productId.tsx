@@ -6,8 +6,8 @@ import { useState } from "react";
 import { ApiError, unwrapResult } from "@/api/envelope";
 import { getListingOptions } from "@/api/generated/@tanstack/react-query.gen";
 import type { ProductDetailResponse } from "@/api/generated/types.gen";
-import { formatDeadlineShort } from "@/features/catalog/deal-time";
-import { DealProgress } from "@/features/catalog/DealProgress";
+import { formatDeadlineShort, hasEnded } from "@/features/catalog/deal-time";
+import { DealProgress, useNow } from "@/features/catalog/DealProgress";
 import { formatPrice, Price } from "@/features/catalog/Price";
 
 const detailOptions = (id: string) =>
@@ -59,6 +59,10 @@ function galleryImages(p: ProductDetailResponse): string[] {
 function ProductDetailPage() {
   const { productId } = Route.useParams();
   const { data: p } = useSuspenseQuery(detailOptions(productId));
+  const now = useNow();
+  // Same clock and rule as the DealProgress row's "Ended" chip, so the header never calls an
+  // expired bloc "filling" (CodeRabbit r4042898931).
+  const ended = hasEnded(p.deal?.expireTime, now);
   const currency = p.currency ?? "sgd";
   const groupPrice = p.groupPrice ?? undefined;
   const category = p.category ? titleCase(p.category) : undefined;
@@ -120,8 +124,14 @@ function ProductDetailPage() {
               <div className="flex items-baseline justify-between gap-3">
                 <h2 className="text-lg font-semibold xl:text-xl">Open blocs</h2>
                 <span className="text-muted text-sm">
-                  <span className="xl:hidden">Join one, or start your own</span>
-                  <span className="hidden xl:inline">1 filling now</span>
+                  {ended ? (
+                    "This bloc has ended"
+                  ) : (
+                    <>
+                      <span className="xl:hidden">Join one, or start your own</span>
+                      <span className="hidden xl:inline">1 filling now</span>
+                    </>
+                  )}
                 </span>
               </div>
             ) : null}
@@ -193,6 +203,14 @@ function CrumbRow({
   );
 }
 
+// An image URL that exists but fails to load is dropped, so the striped tile behind it shows
+// (CodeRabbit r4042898937); the `key` on the main shot resets the state when the shot changes.
+function GalleryImage({ src, className }: { src: string; className: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return <img alt="" className={className} src={src} onError={() => setFailed(true)} />;
+}
+
 // Gallery interaction is undefined by the artboards; thumbnails (desktop) and dots (phone) pick
 // the shown image. No images: the striped fallback tile, no caption.
 function Gallery({ images }: { images: string[] }) {
@@ -207,7 +225,9 @@ function Gallery({ images }: { images: string[] }) {
           "relative -mx-4 h-[280px] overflow-hidden xl:mx-0 xl:h-[420px] xl:rounded-lg " + tile
         }
       >
-        {current ? <img alt="" className="h-full w-full object-cover" src={current} /> : null}
+        {current ? (
+          <GalleryImage key={current} src={current} className="h-full w-full object-cover" />
+        ) : null}
         {images.length > 0 ? (
           <>
             <span className="absolute bottom-3 left-3 rounded-md bg-white px-2 py-1 font-mono text-xs">
@@ -248,7 +268,7 @@ function Gallery({ images }: { images: string[] }) {
                   (i === index ? "border-foreground" : "border-transparent")
                 }
               >
-                <img alt="" className="h-full w-full object-cover" src={src} />
+                <GalleryImage src={src} className="h-full w-full object-cover" />
               </button>
             </li>
           ))}

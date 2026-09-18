@@ -3,7 +3,7 @@ import { useSyncExternalStore } from "react";
 
 import type { ActiveDealResponse } from "@/api/generated/types.gen";
 
-import { formatCountdown, formatDeadline } from "./deal-time";
+import { formatCountdown, formatDeadline, hasEnded } from "./deal-time";
 
 // One open-bloc row from the Listing Detail artboards (docs/design-screens.md §4.2 "Deal
 // progress row"). The contract's `ActiveDealResponse` carries sizes and the deadline only, so the
@@ -19,7 +19,7 @@ function subscribe(onTick: () => void) {
 function getNow() {
   return Math.floor(Date.now() / 1000) * 1000;
 }
-function useNow() {
+export function useNow() {
   return useSyncExternalStore(subscribe, getNow, getNow);
 }
 
@@ -41,7 +41,7 @@ export function DealProgress({ deal }: { deal: ActiveDealResponse | undefined })
     >
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-semibold">Open bloc</span>
-        {countdown?.text === "Ended" ? (
+        {hasEnded(deal.expireTime, now) ? (
           <Chip color="default" variant="soft" size="sm">
             Ended
           </Chip>
