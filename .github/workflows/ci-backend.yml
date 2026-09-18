@@ -151,25 +151,103 @@ jobs:
           path: backend/blocbuy-bootstrap/target/blocbuy-backend.jar
           if-no-files-found: error
 
+      # Export OpenAPI from the verified JAR rather than rebuilding.
+      - name: Generate OpenAPI candidate from verified JAR
+        if: >-
+          needs.detect-changes.outputs.backend == 'true' ||
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+        run: |
+          set -Eeuo pipefail
+          jar='blocbuy-bootstrap/target/blocbuy-backend.jar'
+          test -s "$jar"
+          java -jar "$jar" --spring.profiles.active=openapi-export >"${RUNNER_TEMP}/openapi-app.log" 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -sf http://localhost:18080/v3/api-docs -o "${RUNNER_TEMP}/openapi-candidate.json"; then
+              echo "OpenAPI candidate fetched on attempt $attempt"
+              break
+            fi
+            if [ "$attempt" = '30' ]; then
+              echo 'OpenAPI export endpoint did not become ready'
+              cat "${RUNNER_TEMP}/openapi-app.log"
+              exit 1
+            fi
+            sleep 2
+          done
+          kill "$app_pid" 2>/dev/null || true
+          trap - EXIT
+          test -s "${RUNNER_TEMP}/openapi-candidate.json"
+
+      - name: Upload OpenAPI candidate
+        if: >-
+          needs.detect-changes.outputs.backend == 'true' ||
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: openapi-candidate
+          retention-days: 1
+          path: ${{ runner.temp }}/openapi-candidate.json
+          if-no-files-found: error
+
   contract-check:
-    needs: detect-changes
+    needs:
+      - detect-changes
+      - build-quality
     if: >-
-      (github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
-      needs.detect-changes.outputs.contracts == 'true' ||
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+      always() &&
+      needs.detect-changes.result == 'success' &&
+      (needs.build-quality.result == 'success' ||
+       needs.build-quality.result == 'skipped') &&
+      ((github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
+       needs.detect-changes.outputs.contracts == 'true' ||
+       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Download OpenAPI candidate from verified build
+        if: >-
+          needs.detect-changes.outputs.backend == 'true' ||
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: openapi-candidate
+          path: ${{ runner.temp }}
+
+      # JRE-only fast path; Maven setup is reserved for the fallback.
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        if: >-
+          needs.detect-changes.outputs.backend == 'true' ||
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        if: >-
+          (github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
+          needs.detect-changes.outputs.contracts == 'true' &&
+          needs.detect-changes.outputs.backend != 'true'
         with:
           distribution: temurin
           java-version: '21'
           cache: maven
 
       - name: Regenerate contracts/openapi.json from code
-        run: ./mvnw -B post-integration-test -Popenapi-export -DskipTests -DskipITs -Dspotless.check.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true
+        run: |
+          set -Eeuo pipefail
+          if [ -s "${RUNNER_TEMP}/openapi-candidate.json" ]; then
+            cp "${RUNNER_TEMP}/openapi-candidate.json" ../contracts/openapi.json
+          else
+            ./mvnw -B post-integration-test -Popenapi-export \
+              -DskipTests \
+              -DskipITs \
+              -Dspotless.check.skip=true \
+              -Dcheckstyle.skip=true \
+              -Dspotbugs.skip=true
+          fi
 
       - name: Fail if committed contract drifted
         working-directory: ${{ github.workspace }}
