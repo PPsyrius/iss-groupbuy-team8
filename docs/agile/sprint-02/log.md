@@ -687,47 +687,19 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 
 ## 2026-09-18 - @limjiechao - T2-02 product detail with deal progress and not-found state (#44, #93)
 
-- Kind: feature (PR-G, UC1 detail), frontend decisions recorded as plan §12 notes 41–42, no ADR
-  (no new alternative was chosen over a settled one), no NFR.
-- Changed: `frontend/src/features/catalog/{DealProgress,deal-time}.ts(x)` + tests;
-  `src/routes/products.$productId.tsx` (replaces the T2-01 placeholder: `getListingOptions`
-  loader with `queryClient.query` + `useSuspenseQuery`, artboard layout, gallery, trust triptych,
-  skeleton, error and `notFoundComponent` states); `src/test/browser-msw.ts` (detail responses
-  and a 404 for the sample listings, deal deadlines relative to page load); plan T2-02 steps 1–4
-  ticked, §12 notes 41–42. Merged the T2-01 follow-up `9582eb2` (msw gate, last-page redirect,
-  note 40) into this branch by fast-forward before the commit.
-- Sources: `frontend/docs/design-screens.md` §4.2 and §4.5; raw artboards `BlocBuy Buyer Listing
-  Detail.dc.html` (`open blocs`, `no open bloc`, `unavailable`, `loading`, `error` at 390 and
-  1280) and `BlocBuy Buyer Errors.dc.html` (`Not found`) under `.claude/design-artboards/`
-  (git-excluded, from the 2026-09-17 export of Claude Design project `27f5f1e0-…`). Artboards
-  win over plan §4 T2-02 text (note 41). HeroUI prop names came from the installed 3.2.5 type
-  definitions (`ProgressBar` root `value`/`maxValue`/`color`/`size`, `Track`/`Fill`; `Chip`
-  `color`/`variant`/`size`), not the website: this session ran offline-first after the first
-  attempt stalled on a network call.
-- Verified (2026-09-18, worktree `product-detail` on `9582eb2` + this change): `pnpm vitest run
-  src/features/catalog` 5 files / 22 tests; `pnpm check` exit 0 (gen:api 7 files; tsc clean;
-  oxlint clean; oxfmt 43 files clean; vitest 9 files / 33 tests passed, including T2-01's new
-  `routes/index.test.tsx`; knip 0 issues, 4 pre-existing config hints); `pnpm build` exit 0;
-  `pnpm e2e` 1 passed, 2 skipped (dev-only). Walkthrough on `pnpm dev` + `?msw=1` with a
-  throwaway Playwright script (`node_modules/.cache/t2-02-shots.mjs`): open deal (3 of 5, 2h 14m
-  countdown, "Ends today"), urgent deal (4 of 5, 47:25, "Closing soon"), no bloc (solo price,
-  "Be the first" card, "Start a bloc" without amount) and an unknown id (404 card) at 390 and
-  1280, 0 page errors; PNGs `frontend/test-results/t2-02-{open-deal,urgent-deal,no-bloc,not-found}-{390,1280}.png`
-  (not committed; `pnpm e2e` wipes the folder, re-run the script after it). **Not verified:**
-  the real backend (no Docker; the backend's actual not-found shape is unknown, note 42);
-  loading and error states in a browser (compile and follow the artboard geometry); the sticky
-  bottom bar while scrolling (full-page screenshots freeze it at the viewport bottom); Intent
-  skills not loaded (offline rule); the HeroUI website not consulted.
-- Decisions: not-found mapping on `status === 404` or a `_404_` code (note 42); `Breadcrumbs`
-  as plain router links rather than HeroUI `Breadcrumbs.Item` (no React Aria router provider,
-  note 41c); seat dots capped at 10 seats; Join / Start a bloc / Buy alone rendered as designed
-  with no handlers until T2-04 and UC3/UC4.
-- Problems / questions for the backend and design owners: CR the contract declares no 404 for
-  `getListing` and no product-domain error code exists; CR `ActiveDealResponse` has no starter,
-  number or per-bloc list (the artboard's three named blocs), so one "Open bloc" row renders; CR
-  no listing status on `ProductDetailResponse`, so the "unavailable" artboard cannot render; the
-  artboard's "My blocs" exit on the 404 card waits for the account route. Status: open, not
-  blocking.
-- Next: user pushes `feature/frontend-product-detail` (stacked on #114 → `dev`); then T2-03
-  (filter chip row in the T2-01 slot; artboards draw a single-select `Chip` row and no keyword
-  field, plan §12 will need the correction the handoff asks for).
+- Kind: feature (PR-G, UC1 detail); artboards over plan (note 41); no ADR, no NFR.
+- Changed: `DealProgress` and `deal-time` with tests, the `/products/$productId` route (loader,
+  gallery, deal progress, skeleton, error, `notFoundComponent`), MSW detail seed with a 404;
+  plan steps 1–4, notes 41–42; T2-01 follow-up `9582eb2` merged in by fast-forward.
+- Sources: `design-screens.md` §4.2/§4.5; `BlocBuy Buyer Listing Detail.dc.html` and
+  `BlocBuy Buyer Errors.dc.html`; HeroUI props from the installed 3.2.5 types (offline-first
+  after the first attempt stalled on the network).
+- Verified on `9582eb2` plus the change: `pnpm check` exit 0 (vitest 9 files / 33 tests, knip 0
+  issues); `pnpm build` ok; `pnpm e2e` 1 passed, 2 skipped; MSW screenshots of open, urgent,
+  no-bloc and not-found at 390 and 1280, 0 page errors.
+- Not verified: the real backend and its not-found shape (note 42), loading and error states in a
+  browser, the sticky bar while scrolling.
+- Decision: not-found on `status === 404` or a `_404_` code (note 42); breadcrumbs as plain router
+  links; Join / Start a bloc / Buy alone rendered unwired until T2-04 and UC3/UC4.
+- Problems: CR no 404 declared for `getListing`; CR `ActiveDealResponse` has no starter, number or
+  per-bloc list (one "Open bloc" row renders); CR no listing status for "unavailable". Open.
