@@ -663,3 +663,24 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   until merged into `dev`. Latest actionlint rerun was unavailable because Docker was stopped.
 - Decision: rebuild one bot branch from `dev` and lease against its fetched SHA so external writes
   fail safely. `BOARD_SNAPSHOT_TOKEN` remains account-holder TODO 8 (#103).
+
+## 2026-09-18 - @limjiechao - T2-01 products list from the Claude Design Catalog artboards (#44, #93 PR-G)
+
+- Kind: feature (UC1 browse) plus the first theme pass; artboards over plan and brief (note 39);
+  react-perf rules off (note 37); no ADR, no NFR.
+- Changed: catalog search schema, `Price`, `ProductCard`, the `/` route with loader and pager,
+  the T2-02 placeholder route, the `?msw=1` browser seed, the BlocBuy theme overlay and Inter,
+  `docs/design-screens.md` (artboard spec with provenance); plan steps 1–6, notes 36–39.
+- Sources: `design-screens.md` §2/§3/§4.1 from the 2026-09-17 export of Claude Design project
+  `27f5f1e0-…`; `BlocBuy Buyer Catalog.dc.html`, `blocbuy-theme.css`, `fig-tokens.css`.
+- Verified on `cc1c11c` plus the change: `pnpm check` exit 0 (vitest 6 files / 18 tests, knip 0
+  issues); `pnpm build` ok; `pnpm e2e` 1 passed, 2 skipped; MSW walkthrough screenshots at 390
+  and 1280 (populated, page 2, category, empty), 0 page errors. Review follow-up `9582eb2`
+  (CodeRabbit r4042311578/r4042311596): `msw=1` exact match, past-last-page redirect, route test
+  (note 40); vitest 7 files / 21 tests, build and e2e green. Second follow-up (CodeRabbit
+  r4043389594, raised on #115 against this card): the tile and the start link are `relative`, so
+  the stretched title link no longer covers the whole page; card test added, `pnpm check` green.
+- Not verified: the real backend, loading and error states in a browser, Inter offline,
+  Safari 16.4.
+- Problems: CR-11 no deal sizes on the card DTO (progress cue omitted); CR-15 `--muted` 4.41:1
+  (used as designed); CR-10 category strings unknown; A2's CSP must allow Google Fonts. Open.
