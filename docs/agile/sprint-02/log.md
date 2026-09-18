@@ -705,6 +705,14 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   for pager and hero helper text; the token is used as designed here); CR-10 category values.
   A2's CSP (#100) must allow `fonts.googleapis.com` (style) and `fonts.gstatic.com` (font).
   Status: open, not blocking.
+- Review follow-up (2026-09-18, CodeRabbit on PR #114, r4042311578 and r4042311596): the `?msw=1`
+  gate in `main.tsx` now requires the value `1` (`has("msw")` also armed the mock worker for
+  `msw=0`); the `/` loader redirects a `page` past the last page to the last page with `size` and
+  `category` kept (backend treats `page` as an offset, so `/?page=999` rendered "Page 999 of N"
+  over the empty state), plan §12 note 40; new route test `src/routes/index.test.tsx` (real
+  `routeTree` on a memory history, devtools mocked). Verified in the worktree: `pnpm check` exit 0
+  (vitest 7 files / 21 tests; oxfmt 39 files clean; knip 0 issues, 4 config hints), `pnpm build`
+  ok, `pnpm e2e` 1 passed, 2 skipped.
 - Next: user pushes `feature/frontend-products-list` (stacked on #113); PR to `dev` retargeted
   after #113 merges; then T2-02 (detail, replaces the placeholder route, artboard `BlocBuy Buyer
   Listing Detail.dc.html`).

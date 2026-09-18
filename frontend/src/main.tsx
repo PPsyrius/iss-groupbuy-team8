@@ -9,10 +9,10 @@ import { createAppRouter } from "./router";
 import "./styles/app.css";
 
 async function bootstrap() {
-  // Dev flag for offline UI work (plan §5): `?msw=1` starts the browser MSW worker with sample
-  // listings before the first query. Read from the URL, not an env var, so one build serves all
-  // environments (ADR 0004).
-  if (new URLSearchParams(window.location.search).has("msw")) {
+  // Dev flag for offline UI work (plan §5): exactly `?msw=1` starts the browser MSW worker with
+  // sample listings before the first query (`msw=0` or a bare `msw` does not). Read from the
+  // URL, not an env var, so one build serves all environments (ADR 0004).
+  if (new URLSearchParams(window.location.search).get("msw") === "1") {
     const { startBrowserMsw } = await import("./test/browser-msw");
     await startBrowserMsw();
   }

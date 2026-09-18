@@ -1,6 +1,6 @@
 import { Alert, Button, buttonVariants, Skeleton } from "@heroui/react";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 
 import { unwrapResult } from "@/api/envelope";
 import { pageListingsOptions } from "@/api/generated/@tanstack/react-query.gen";
@@ -21,8 +21,18 @@ const listOptions = ({ page, size, category }: ProductsSearch) =>
 export const Route = createFileRoute("/")({
   validateSearch: productsSearchSchema,
   loaderDeps: ({ search }) => search,
-  loader: ({ context, deps }) =>
-    context.queryClient.query({ ...listOptions(deps), staleTime: "static" }),
+  // `queryClient.query` applies `select`, so the loader sees the unwrapped page. A `page` past
+  // the last one is a valid request the backend answers with no items and the full `total` (it is
+  // an SQL offset), so the route would render "Page 999 of 3" over the empty state; send it to
+  // the last page instead, keeping `size` and `category` (CodeRabbit r4042311596, plan note 40).
+  loader: async ({ context, deps }) => {
+    const page = await context.queryClient.query({ ...listOptions(deps), staleTime: "static" });
+    const lastPage = Math.max(1, Math.ceil((page.total ?? 0) / deps.size));
+    if (deps.page > lastPage) {
+      throw redirect({ to: "/", search: { ...deps, page: lastPage }, replace: true });
+    }
+    return page;
+  },
   pendingComponent: CatalogLoading,
   errorComponent: CatalogError,
   component: ProductsPage,
