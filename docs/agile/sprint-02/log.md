@@ -48,7 +48,7 @@ Say what was verified and what was not.
 - Problems: dev backend is down. The latest `ci-backend` run on `dev` (merge of #92,
   2026-09-16T12:23Z, run 35095495827) failed at job `deploy-existing-ec2` after `publish-ecr-dev`
   succeeded. Action: raised with @l0sgAi and @PPsyrius; re-run the OAuth probe once dev is healthy
-  and append the B3/B5 rows here. Status: open.
+  and append the B3/B5 rows here. Status: closed 2026-09-17, rows in the tier-1 close-out entry below.
 - Decisions: none. Note for T2: `gh auth status` shows `read:project` on the current token and
   `gh project view 2 --owner PPsyrius` lists 21 items, so the board is readable at filing time.
 - Next: T1-02 file the 13 blocker issues; T1-04 runtime pins.
@@ -630,3 +630,36 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   guard rejects commit messages containing the word "restore", hence "re-add" in the CI commit.
 - Next: push and reply on the review threads; ask @PPsyrius whether the frontend Trivy scan stays
   inside `trivy-deps` (as re-added) or becomes its own job (#108 follow-up).
+
+## 2026-09-17 - @limjiechao - Tier 1 close-out after PR #106: dev evidence, `frontend-check` required-check shape, Dependabot guard (#93, #104, #44)
+
+- Kind: ops and NFR-01/16/19; CI shape recorded in `ci-frontend.yml` and plan note 35.
+- Changed: restored the #108 every-PR `frontend-check`, ignored incompatible `openapi-ts`
+  releases, updated the three NFRs and plan status, and captured `2026-09-17.csv` (35 issues).
+- Verified on `ce65abe`: health/products 200; `/` and `/products/probe` 403; OAuth start 302 with
+  the correct callback and `blocbuy-oauth-state` carrying `HttpOnly; SameSite=Lax`, not `Secure`.
+  Dev E2E: 1 passed health, 1 failed home 403, 1 fixme deep link. Push run 35239337645 was green
+  with delivery disabled; `trivy-deps` run 35238582370 was green on `f7b3d65`; actionlint,
+  Dependabot YAML and `tsc --noEmit` passed. Root-session edit/bootstrap hooks also fired.
+- Dependabot opened #111/#112, proving pnpm 12 parsing, but both hit hey-api/hey-api#4235 under
+  TypeScript 7. Alert GHSA-hhx9-57xq-r5rw is an inaccurate version-ordering match: the pinned
+  snapshot postdates 0.97.3 and contains its `Object.create(null)` fix.
+- Not verified: the first backend-only "not applicable" run, automatic closure of #111/#112, or
+  frontend deployment. Add `frontend-check` to `dev-require-review` only after this PR merges.
+- Problems: T1-14 remains blocked by A3 #101/A4 #102; B3 #96 remains unmet; #94/#95/#97 landed in
+  PR #89 but still need closing.
+
+## 2026-09-18 - @limjiechao - PR #113 review follow-up: scheduled board snapshot (#113, #103, #93)
+
+- Kind: ops/process and NFR-01 documentation; design and rejected alternatives are in the CI
+  plan; no ADR.
+- Changed: added the daily/manual workflow, rolling `metrics/board-snapshots` PR and 90-day
+  artifact; clarified blank-column diagnostics and planned activation; corrected NFR-01 wording.
+- Verified on `22d481b` plus the change: snapshot exit 0, 35 issues, counts Backlog 21 / Done 6 /
+  In progress 2 / In review 2 / Ready 3. Branch tests covered creation, carry-over, post-squash
+  rebuild and same-day rerun; actionlint 1.7.12 and YAML parsing passed. The review follow-up also
+  pins `--force-with-lease` to the initially fetched SHA; `git diff --check` passes.
+- Not verified: a GitHub schedule/dispatch or `github.token` fallback; the workflow cannot run
+  until merged into `dev`. Latest actionlint rerun was unavailable because Docker was stopped.
+- Decision: rebuild one bot branch from `dev` and lease against its fetched SHA so external writes
+  fail safely. `BOARD_SNAPSHOT_TOKEN` remains account-holder TODO 8 (#103).
