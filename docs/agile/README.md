@@ -45,6 +45,7 @@ or status it produced. Links beat prose.
   and a commit hook (`.claude/settings.json`) that surfaces a checklist when evidence is missing.
 - `.claude/skills/agile-evidence-capture/scripts/snapshot-board.sh` writes today's board and
   issue state to `metrics/`. Run it at the end of any session that moved issues; commit the CSV.
+  Scheduled operation and CSV interpretation are in `metrics/README.md`.
 
 ## One-time setup (team lead)
 
@@ -56,7 +57,9 @@ for a in security performance availability recoverability observability cost mai
 done
 ```
 
-Board snapshots need the `project` scope: `gh auth refresh -s project`.
+Board snapshots need the `project` scope: `gh auth refresh -s project`. The scheduled run needs
+the `BOARD_SNAPSHOT_TOKEN` repo secret for the same reason (off-repo TODO 8 in
+`docs/ci/devsecops-pipeline-plan.md`); without it the CSVs carry issue state only.
 
 ## Sprint calendar
 

@@ -56,3 +56,7 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: 'typescript'
         update-types: ['version-update:semver-major']
+      # Releases through 0.99.0 fail under TypeScript 7 (hey-api/hey-api#4235; PRs #111/#112).
+      # Lift this when a compatible release lands. GHSA-hhx9-57xq-r5rw is a version-ordering
+      # false positive: this newer snapshot already contains the Object.create(null) fix.
+      - dependency-name: '@hey-api/openapi-ts'

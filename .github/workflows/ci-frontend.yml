@@ -18,13 +18,12 @@ on:
   # ready for GitHub Merge Queue if the repository later becomes eligible.
   merge_group:
     types: [checks_requested]
+  # Run for every PR targeting dev so the required `frontend-check` status is always reported
+  # (a path-filtered required check leaves unrelated PRs waiting forever). `detect-changes`
+  # decides whether the frontend gates actually execute; otherwise the job reports
+  # "not applicable" and succeeds, the same shape as `build-quality` in ci-backend.yml (#108).
   pull_request:
     branches: [dev]
-    paths:
-      - "frontend/**"
-      - "contracts/**"
-      - "lefthook.yml"
-      - ".github/workflows/ci-frontend.yml"
 
 concurrency:
   group: ci-frontend-${{ github.ref }}
@@ -62,23 +61,31 @@ jobs:
               - '.github/workflows/ci-frontend.yml'
 
   frontend-check:
+    # The one required frontend check: always present on PRs and merge groups, gates only
+    # when frontend-relevant paths changed (see the `pull_request` trigger note above).
     needs: detect-changes
-    if: >-
-      (github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
-      needs.detect-changes.outputs.frontend == 'true'
+    if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
+      - name: Frontend validation not applicable
+        if: needs.detect-changes.outputs.frontend != 'true'
+        working-directory: ${{ github.workspace }}
+        run: echo "No frontend-relevant changes; frontend-check is not applicable."
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: needs.detect-changes.outputs.frontend == 'true'
 
       # No `version` input: the action reads `packageManager` (pnpm@12.4.2) from package.json.
       # It must run before setup-node so `cache: pnpm` can find the pnpm store.
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        if: needs.detect-changes.outputs.frontend == 'true'
         with:
           package_json_file: frontend/package.json
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        if: needs.detect-changes.outputs.frontend == 'true'
         with:
           node-version-file: frontend/.nvmrc
           cache: pnpm
@@ -86,11 +93,13 @@ jobs:
 
       # `prepare` runs `gen:api`, so the generated client exists before any check.
       - name: Install (frozen lockfile)
+        if: needs.detect-changes.outputs.frontend == 'true'
         run: pnpm install --frozen-lockfile
 
       # Runtime configuration comes from the API and the same-origin `/api` path, never from
       # build-time env; a `VITE_*` or `import.meta.env` reference means a value got baked into dist/.
       - name: Forbid import.meta.env
+        if: needs.detect-changes.outputs.frontend == 'true'
         run: |
           if grep -rn --include='*.ts' --include='*.tsx' -E 'import\.meta\.env|VITE_' src e2e; then
             echo "::error::import.meta.env / VITE_* are forbidden in the frontend (frontend/docs/plan.md §7.1)"
@@ -98,13 +107,16 @@ jobs:
           fi
 
       - name: Check (gen:api, tsc, oxlint, oxfmt, vitest, knip)
+        if: needs.detect-changes.outputs.frontend == 'true'
         run: pnpm check
 
       - name: Build
+        if: needs.detect-changes.outputs.frontend == 'true'
         run: pnpm build
 
       # e2e-preview consumes this exact build; nothing rebuilds it inside the validation path.
       - name: Upload validation build artifact
+        if: needs.detect-changes.outputs.frontend == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: frontend-dist-${{ github.sha }}
@@ -158,9 +170,13 @@ jobs:
   e2e-preview:
     # Smoke the validated dist/ through `vite preview` (playwright.config.ts starts it when
     # E2E_BASE_URL is unset). Only the home test runs here; the dev-target tests skip.
-    needs: frontend-check
+    # `frontend-check` also succeeds when it was "not applicable", so gate on the filter too.
+    needs:
+      - detect-changes
+      - frontend-check
     if: >-
       needs.frontend-check.result == 'success' &&
+      needs.detect-changes.outputs.frontend == 'true' &&
       (github.event_name == 'pull_request' || github.event_name == 'merge_group')
     runs-on: ubuntu-latest
     timeout-minutes: 10
