@@ -666,53 +666,19 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 
 ## 2026-09-18 - @limjiechao - T2-01 products list from the Claude Design Catalog artboards (#44, #93 PR-G)
 
-- Kind: feature (UC1 browse), plus a routine tooling choice (oxlint react-perf rules off, plan
-  §12 note 37) and the first theme pass; no ADR (no choice between alternatives beyond what the
-  artboards settle), no NFR.
-- Changed: `frontend/src/features/catalog/{products-search,Price,ProductCard}.ts(x)` + tests;
-  `src/routes/index.tsx` (validateSearch, loader `queryClient.query` + `useSuspenseQuery`,
-  artboard layout, skeleton/empty/error states, pager); `src/routes/products.$productId.tsx`
-  placeholder for T2-02; `src/test/{browser-msw,render}.ts(x)`, `?msw=1` gate in `main.tsx`,
-  `public/mockServiceWorker.js`; `src/styles/app.css` BlocBuy light theme overlay; `index.html`
-  Inter from Google Fonts; `.oxlintrc.json`, `.oxfmtrc.json`, `knip.json` (valibot now used);
-  `docs/design-screens.md` (artboard spec, with provenance); plan T2-01 steps 1–6 ticked, §12
-  notes 36–39; `routeTree.gen.ts` regenerated.
-- Sources: `frontend/docs/design-screens.md` §2/§3/§4.1 extracted from the local export
-  (2026-09-17) of Claude Design project `27f5f1e0-…`; raw artboards `BlocBuy Buyer Catalog.dc.html`
-  (`Catalog · loading/populated/empty category/error/page 2 · 390`, `… · 1280`),
-  `blocbuy-theme.css`, `components/fig-tokens.css` under `.claude/design-artboards/`
-  (git-excluded). Artboards win over plan §4 T2-01 text and the design brief (note 39).
-- Verified (2026-09-18, worktree `products-list` on `cc1c11c` + this change): `pnpm check` exit
-  0 (gen:api 7 files; tsc clean; oxlint clean; oxfmt 38 files clean; vitest 6 files / 18 tests
-  passed; knip 0 issues, 4 pre-existing config hints); `pnpm build` ok; `pnpm e2e` 1 passed, 2
-  skipped (dev-only). Walkthrough on `pnpm dev` + `?msw=1` seed (artboard sample content) with a
-  throwaway Playwright script: 390 and 1280 populated (`size=8`: 8 cards, "Page 1 of 2", "· 10
-  listings" at 1280), page 2 (2 cards in the 4-track grid, Next disabled), groceries filter (5
-  cards), empty category at both widths; 0 page errors; PNGs under `frontend/test-results/`
-  (not committed). Intent skill `router-core/search-params` loaded via `pnpm dlx`.
-  **Not verified:** the real backend (`docker compose` not started; dev has 10 seeded products
-  but nothing is deployed to the frontend bucket, T1-14); the loading and error states in a
-  browser (no slow/failing backend to hand; both compile and follow the artboard geometry);
-  Inter rendering offline (Google Fonts); Safari 16.4 floor.
-- Decisions: follow the artboards over plan/brief wherever they differ (note 39); progress cue
-  omitted rather than faked (CR-11); "Browse all listings" instead of "Browse Groceries" until the
-  backend's category strings are known (CR-10); HeroUI `Skeleton` for loading although the kit
-  sheet used tertiary blocks; theme overlay in `app.css` rather than importing the kit's
-  doubled-name `blocbuy-theme.css`.
-- Problems / questions for the design and backend owners: CR-11 the card DTO has no
-  `currentSize`/`targetSize`, so the artboard's "3 of 5 joined" bar cannot render on the grid;
-  CR-15 `--muted #727272` is 4.41:1 on the `background` canvas (artboards use zinc-600 `#52525B`
-  for pager and hero helper text; the token is used as designed here); CR-10 category values.
-  A2's CSP (#100) must allow `fonts.googleapis.com` (style) and `fonts.gstatic.com` (font).
-  Status: open, not blocking.
-- Review follow-up (2026-09-18, CodeRabbit on PR #114, r4042311578 and r4042311596): the `?msw=1`
-  gate in `main.tsx` now requires the value `1` (`has("msw")` also armed the mock worker for
-  `msw=0`); the `/` loader redirects a `page` past the last page to the last page with `size` and
-  `category` kept (backend treats `page` as an offset, so `/?page=999` rendered "Page 999 of N"
-  over the empty state), plan §12 note 40; new route test `src/routes/index.test.tsx` (real
-  `routeTree` on a memory history, devtools mocked). Verified in the worktree: `pnpm check` exit 0
-  (vitest 7 files / 21 tests; oxfmt 39 files clean; knip 0 issues, 4 config hints), `pnpm build`
-  ok, `pnpm e2e` 1 passed, 2 skipped.
-- Next: user pushes `feature/frontend-products-list` (stacked on #113); PR to `dev` retargeted
-  after #113 merges; then T2-02 (detail, replaces the placeholder route, artboard `BlocBuy Buyer
-  Listing Detail.dc.html`).
+- Kind: feature (UC1 browse) plus the first theme pass; artboards over plan and brief (note 39);
+  react-perf rules off (note 37); no ADR, no NFR.
+- Changed: catalog search schema, `Price`, `ProductCard`, the `/` route with loader and pager,
+  the T2-02 placeholder route, the `?msw=1` browser seed, the BlocBuy theme overlay and Inter,
+  `docs/design-screens.md` (artboard spec with provenance); plan steps 1–6, notes 36–39.
+- Sources: `design-screens.md` §2/§3/§4.1 from the 2026-09-17 export of Claude Design project
+  `27f5f1e0-…`; `BlocBuy Buyer Catalog.dc.html`, `blocbuy-theme.css`, `fig-tokens.css`.
+- Verified on `cc1c11c` plus the change: `pnpm check` exit 0 (vitest 6 files / 18 tests, knip 0
+  issues); `pnpm build` ok; `pnpm e2e` 1 passed, 2 skipped; MSW walkthrough screenshots at 390
+  and 1280 (populated, page 2, category, empty), 0 page errors. Review follow-up `9582eb2`
+  (CodeRabbit r4042311578/r4042311596): `msw=1` exact match, past-last-page redirect, route test
+  (note 40); vitest 7 files / 21 tests, build and e2e green.
+- Not verified: the real backend, loading and error states in a browser, Inter offline,
+  Safari 16.4.
+- Problems: CR-11 no deal sizes on the card DTO (progress cue omitted); CR-15 `--muted` 4.41:1
+  (used as designed); CR-10 category strings unknown; A2's CSP must allow Google Fonts. Open.
