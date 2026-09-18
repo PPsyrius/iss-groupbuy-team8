@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.blocbuy.common.model.PageQuery;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** UC1-ext keyword normalization: trim/collapse, blank-to-null, and neutral tokenization. */
@@ -82,14 +81,6 @@ class ListingQueryTest {
         assertThat(query.category()).isEqualTo("electronics");
         assertThat(query.page().page()).isEqualTo(2);
         assertThat(query.keywordTokens()).containsExactly("headphones");
-    }
-
-    /** Verifies the one-element token list produced for a single search term. */
-    @Test
-    void singleTokenProducesSinglePattern() {
-        List<String> patterns = ListingQuery.of("tea", null, null, null).keywordTokens();
-
-        assertThat(patterns).containsExactly("tea");
     }
 
     /** Verifies that direct construction enforces the same keyword length invariant. */

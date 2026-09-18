@@ -220,7 +220,7 @@ class ProductControllerTest {
     }
 
     @Test
-    void unhandledFailureMapsToInternalErrorWithoutLeaking() throws Exception {
+    void unexpectedErrorMapsToGeneric500WithoutLeak() throws Exception {
         when(products.getListingDetail(PRODUCT)).thenThrow(new IllegalStateException("boom"));
         mvc.perform(get(PRODUCTS_PATH + "/" + PRODUCT))
                 .andExpect(status().isInternalServerError())

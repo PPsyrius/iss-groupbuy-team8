@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
+/** Jev settings: safe defaults while disabled, API key required when enabled. */
 class TypeSafeJevPropertiesTest {
 
     /** Verifies safe endpoint, model, and timeout defaults while disabled. */

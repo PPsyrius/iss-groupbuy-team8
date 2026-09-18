@@ -50,7 +50,7 @@ class ProductAppServiceImplTest {
     @InjectMocks private ProductAppServiceImpl service;
 
     @Test
-    void pageListingsResolvesDualPricePerItemWithOneBatchDealQuery() {
+    void pageEnrichesDualPricesViaSingleBatchDealLookup() {
         Product withDeal = product(PRODUCT_ID, "129.00", ProductStatus.ON_SALE);
         UUID otherId = UUID.fromString("a0000000-0000-7000-8000-000000000002");
         Product withoutDeal = product(otherId, "45.00", ProductStatus.ON_SALE);
@@ -73,7 +73,7 @@ class ProductAppServiceImplTest {
     }
 
     @Test
-    void pageEmptyDoesSingleEmptyBatchQuery() {
+    void emptyPageStillQueriesDealsOnceWithEmptyList() {
         when(productRepository.pageOnSale(any(PageQuery.class), any()))
                 .thenReturn(PageResult.of(List.of(), 0, new PageQuery(1, 20)));
 

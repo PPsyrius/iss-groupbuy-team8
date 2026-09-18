@@ -33,7 +33,7 @@ class PaidGroupDealRepositoryImplTest {
     @InjectMocks private PaidGroupDealRepositoryImpl repository;
 
     @Test
-    void reserveAndLockRejectsUnexpectedInsertCount() {
+    void reserveRejectsImpossibleTwoRowInsert() {
         when(mapper.reserveReceipt(eq(PAYMENT), any(), eq(ACTOR))).thenReturn(2);
 
         assertThatThrownBy(() -> repository.reserveAndLock(PAYMENT, "fp", ACTOR))
@@ -50,7 +50,7 @@ class PaidGroupDealRepositoryImplTest {
     }
 
     @Test
-    void reserveAndLockRejectsCommittedRowWithoutResult() {
+    void reserveRejectsCommittedReceiptMissingResult() {
         when(mapper.reserveReceipt(eq(PAYMENT), any(), eq(ACTOR))).thenReturn(0);
         when(mapper.lockReceipt(PAYMENT)).thenReturn(receipt("fp", null));
 
@@ -81,7 +81,7 @@ class PaidGroupDealRepositoryImplTest {
     }
 
     @Test
-    void insertStartedDealRequiresSingleRowWrites() {
+    void insertStartedDealRejectsZeroRowDealInsert() {
         when(mapper.insertDeal(any())).thenReturn(0);
         GroupDeal deal = deal();
         PaidParticipation paid =
@@ -92,7 +92,7 @@ class PaidGroupDealRepositoryImplTest {
     }
 
     @Test
-    void insertJoinedMemberPersistsProgressAndMemberTogether() {
+    void joinedMemberWritesProgressAndMembershipTogether() {
         GroupDeal before = deal();
         PaidParticipation joiner =
                 new PaidParticipation(
@@ -109,7 +109,7 @@ class PaidGroupDealRepositoryImplTest {
     }
 
     @Test
-    void completePersistsTerminalResult() {
+    void completeMapsResultToReceiptRowFields() {
         when(mapper.completeReceipt(eq(PAYMENT), any(), eq(ACTOR), eq(NOW))).thenReturn(1);
         ParticipationResult result = new ParticipationResult("applied", DEAL, "open", 1, null);
 

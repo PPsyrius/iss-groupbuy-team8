@@ -15,6 +15,7 @@ import org.springframework.mock.http.client.MockClientHttpRequest;
 import org.springframework.mock.http.client.MockClientHttpResponse;
 import org.springframework.web.client.RestClient;
 
+/** Jev rerank adapter: typed choice request, probability ordering, safe fallback. */
 class TypeSafeJevListingSearchRerankerTest {
 
     private static final UUID FIRST = UUID.fromString("a0000000-0000-7000-8000-000000000001");

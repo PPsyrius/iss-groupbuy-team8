@@ -27,6 +27,7 @@ class RedisOAuthStateStoreTest {
     private final Environment environment = mock(Environment.class);
     private final RedisOAuthStateStore store = new RedisOAuthStateStore(redis, PROPS, environment);
 
+    /** Issues distinct state/binding pair with 300s TTL under the oauth-state key. */
     @Test
     void issueStateStoresBindingWithTtl() {
         when(redis.opsForValue()).thenReturn(ops);
@@ -35,8 +36,7 @@ class RedisOAuthStateStoreTest {
         IssuedState issued = store.issueState();
 
         assertThat(issued.state()).isNotBlank();
-        assertThat(issued.binding()).isNotBlank();
-        assertThat(issued.binding()).isNotEqualTo(issued.state());
+        assertThat(issued.binding()).isNotBlank().isNotEqualTo(issued.state());
         verify(ops)
                 .set(
                         "blocbuy:local:identity:oauth-state:" + issued.state(),
@@ -45,7 +45,7 @@ class RedisOAuthStateStoreTest {
     }
 
     @Test
-    void consumeSucceedsExactlyOnceWithMatchingBinding() {
+    void consumeMatchesBindingViaAtomicGetAndDelete() {
         when(redis.opsForValue()).thenReturn(ops);
         when(environment.getProperty("spring.profiles.active", "local")).thenReturn("local");
         when(ops.getAndDelete("blocbuy:local:identity:oauth-state:s")).thenReturn("b");
@@ -54,22 +54,15 @@ class RedisOAuthStateStoreTest {
     }
 
     @Test
-    void consumeRejectsMismatchedOrMissingBinding() {
+    void consumeRejectsUnmatchedBindings() {
         when(redis.opsForValue()).thenReturn(ops);
         when(environment.getProperty("spring.profiles.active", "local")).thenReturn("local");
         when(ops.getAndDelete("blocbuy:local:identity:oauth-state:s")).thenReturn("b");
+        when(ops.getAndDelete("blocbuy:local:identity:oauth-state:gone")).thenReturn(null);
 
         assertThat(store.consume("s", "other")).isFalse();
         assertThat(store.consume("s", null)).isFalse();
         assertThat(store.consume("s", " ")).isFalse();
-    }
-
-    @Test
-    void consumeRejectsUnknownOrBlank() {
-        when(redis.opsForValue()).thenReturn(ops);
-        when(environment.getProperty("spring.profiles.active", "local")).thenReturn("local");
-        when(ops.getAndDelete("blocbuy:local:identity:oauth-state:gone")).thenReturn(null);
-
         assertThat(store.consume("gone", "b")).isFalse();
         assertThat(store.consume(" ", "b")).isFalse();
     }
