@@ -440,6 +440,14 @@ jobs:
           trap cleanup EXIT
           cleanup
 
+          # Pre-pull service images concurrently to reduce cold-run startup time.
+          docker pull postgres:18 &
+          pull_pg=$!
+          docker pull redis:8.10 &
+          pull_redis=$!
+          wait "$pull_pg"
+          wait "$pull_redis"
+
           docker run -d --name smoke-postgres -p 127.0.0.1:5432:5432 \
             -e POSTGRES_USER=blocbuy \
             -e POSTGRES_PASSWORD=blocbuy \
