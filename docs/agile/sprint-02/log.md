@@ -702,6 +702,10 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   the production interceptor, without which the loader sees a raw body), "This bloc has ended"
   header wording off the same clock as the row's chip (`hasEnded` in `deal-time`), and a gallery
   image that fails to load is dropped so the striped tile shows; vitest 10 files / 40 tests.
+  Round 2 (r4045102856/64/80/89, plan note 43): `parseDeadline` guards `Intl` formatting
+  against an unparseable `expireTime`, the detail query rejects a data-less 200 envelope, the
+  three unwired buttons are `isDisabled`, plan step 1 wording fixed; three threads on files
+  #113 already merged answered as out of this diff.
 - Not verified: the real backend and its not-found shape (note 42), loading and error states in a
   browser, the sticky bar while scrolling.
 - Decision: not-found on `status === 404` or a `_404_` code (note 42); breadcrumbs as plain router

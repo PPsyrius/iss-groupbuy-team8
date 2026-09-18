@@ -65,6 +65,16 @@ describe("DealProgress", () => {
     expect(screen.getByText("47:24 left")).toBeInTheDocument();
   });
 
+  it("omits the countdown and deadline when expireTime cannot be parsed", () => {
+    render(
+      <DealProgress deal={{ dealId: "d3", currentSize: 2, targetSize: 5, expireTime: "soon" }} />,
+    );
+    expect(screen.getByText("2 of 5 joined")).toBeInTheDocument();
+    expect(screen.getByText("Filling")).toBeInTheDocument();
+    expect(screen.queryByText(/(\dh \d+m|\d\d:\d\d) left$/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Ends /)).not.toBeInTheDocument();
+  });
+
   it("renders the no-bloc copy when there is no deal", () => {
     render(<DealProgress deal={undefined} />);
     expect(screen.getByText("Buying alone. No bloc is open yet.")).toBeInTheDocument();

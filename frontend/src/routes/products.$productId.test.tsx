@@ -91,6 +91,28 @@ describe("/products/$productId loader", () => {
     ).toBeInTheDocument();
     expect(screen.getAllByText("S$71.00").length).toBeGreaterThan(0);
   });
+
+  it("renders the error alert when a 200 envelope carries no data", async () => {
+    server.use(
+      http.get("*/api/v1/auth/me", () =>
+        HttpResponse.json({ code: "AUTH_401", message: "unauthenticated" }, { status: 401 }),
+      ),
+      http.get("*/api/v1/products/:id", () => HttpResponse.json({ code: OK_CODE, message: "ok" })),
+    );
+    await renderAt(`/products/${knownId}`);
+    expect(await screen.findByText(/couldn’t load this listing/)).toBeInTheDocument();
+    expect(screen.queryByText(/can’t find that page/)).not.toBeInTheDocument();
+  });
+
+  it("omits the Bloc closes cell when the deadline cannot be parsed", async () => {
+    serveListing(
+      listing({ deal: { dealId: "deal-1", currentSize: 3, targetSize: 5, expireTime: "soon" } }),
+    );
+    await renderAt(`/products/${knownId}`);
+    await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" });
+    expect(screen.queryByText("Bloc closes")).not.toBeInTheDocument();
+    expect(screen.getByText("3 of 5 joined")).toBeInTheDocument();
+  });
 });
 
 describe("/products/$productId open-bloc header", () => {

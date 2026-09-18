@@ -6,12 +6,17 @@ import { useState } from "react";
 import { ApiError, unwrapResult } from "@/api/envelope";
 import { getListingOptions } from "@/api/generated/@tanstack/react-query.gen";
 import type { ProductDetailResponse } from "@/api/generated/types.gen";
-import { formatDeadlineShort, hasEnded } from "@/features/catalog/deal-time";
+import { formatDeadlineShort, hasEnded, parseDeadline } from "@/features/catalog/deal-time";
 import { DealProgress, useNow } from "@/features/catalog/DealProgress";
 import { formatPrice, Price } from "@/features/catalog/Price";
 
+// A 200 envelope without `data` is malformed for this endpoint; rejecting it here sends it to
+// the route's error boundary instead of a TypeError in the page (CodeRabbit r4045102889).
 const detailOptions = (id: string) =>
-  queryOptions({ ...getListingOptions({ path: { id } }), select: (r) => unwrapResult(r) });
+  queryOptions({
+    ...getListingOptions({ path: { id } }),
+    select: (r) => unwrapResult(r, { allowVoid: false }),
+  });
 
 // The contract declares only a 200 for GET /api/v1/products/{id}; the backend's not-found shape
 // is either an HTTP 404 (the interceptor stamps `status`) or an envelope code of the
@@ -63,6 +68,7 @@ function ProductDetailPage() {
   // Same clock and rule as the DealProgress row's "Ended" chip, so the header never calls an
   // expired bloc "filling" (CodeRabbit r4042898931).
   const ended = hasEnded(p.deal?.expireTime, now);
+  const closesMs = parseDeadline(p.deal?.expireTime);
   const currency = p.currency ?? "sgd";
   const groupPrice = p.groupPrice ?? undefined;
   const category = p.category ? titleCase(p.category) : undefined;
@@ -111,11 +117,8 @@ function ProductDetailPage() {
               </p>
             ) : null}
             <StockLine product={p} />
-            {groupPrice !== undefined && p.deal?.expireTime ? (
-              <TrustTriptych
-                payNow={formatPrice(groupPrice, currency)}
-                closes={p.deal.expireTime}
-              />
+            {groupPrice !== undefined && closesMs !== null ? (
+              <TrustTriptych payNow={formatPrice(groupPrice, currency)} closesMs={closesMs} />
             ) : null}
             <Actions product={p} currency={currency} className="hidden xl:flex" />
           </section>
@@ -291,7 +294,7 @@ function StockLine({ product: p }: { product: ProductDetailResponse }) {
   );
 }
 
-function TrustTriptych({ payNow, closes }: { payNow: string; closes: string }) {
+function TrustTriptych({ payNow, closesMs }: { payNow: string; closesMs: number }) {
   const cell = "flex flex-col gap-0.5 rounded-lg border-border border p-3";
   return (
     <dl className="grid grid-cols-3 gap-2">
@@ -301,7 +304,7 @@ function TrustTriptych({ payNow, closes }: { payNow: string; closes: string }) {
       </div>
       <div className={cell}>
         <dt className="text-muted text-xs">Bloc closes</dt>
-        <dd className="text-sm font-semibold tabular-nums">{formatDeadlineShort(closes)}</dd>
+        <dd className="text-sm font-semibold tabular-nums">{formatDeadlineShort(closesMs)}</dd>
       </div>
       <div className={cell}>
         <dt className="text-muted text-xs">If it doesn’t fill</dt>
@@ -312,7 +315,8 @@ function TrustTriptych({ payNow, closes }: { payNow: string; closes: string }) {
 }
 
 // Both actions are the artboard's, in its order of prominence (Start a bloc outranks Buy alone);
-// neither has a handler yet: T2-04 wires the gated sheet, UC3/UC4 the payment. Start a bloc
+// neither has a handler yet: T2-04 wires the gated sheet, UC3/UC4 the payment. Until then they
+// are disabled rather than activatable with no effect (CodeRabbit r4045102864). Start a bloc
 // carries no amount when there is no bloc price ("unknown until a rule exists").
 function Actions({
   product: p,
@@ -326,18 +330,26 @@ function Actions({
   const groupPrice = p.groupPrice ?? undefined;
   return (
     <div className={"flex-col gap-2 " + className}>
-      <Button variant="secondary" size="lg" className="min-h-12 w-full text-lg">
+      <Button variant="secondary" size="lg" className="min-h-12 w-full text-lg" isDisabled>
         {groupPrice === undefined
           ? "Start a bloc"
           : `Start a bloc · ${formatPrice(groupPrice, currency)}`}
       </Button>
       {p.individualPrice === undefined ? null : (
-        <Button variant="ghost" className="min-h-11 w-full text-base font-medium xl:hidden">
+        <Button
+          variant="ghost"
+          className="min-h-11 w-full text-base font-medium xl:hidden"
+          isDisabled
+        >
           Buy alone · {formatPrice(p.individualPrice, currency)}
         </Button>
       )}
       {p.individualPrice === undefined ? null : (
-        <Button variant="outline" className="hidden min-h-11 w-full text-base xl:inline-flex">
+        <Button
+          variant="outline"
+          className="hidden min-h-11 w-full text-base xl:inline-flex"
+          isDisabled
+        >
           Buy alone · {formatPrice(p.individualPrice, currency)}
         </Button>
       )}

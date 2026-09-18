@@ -3,7 +3,7 @@ import { useSyncExternalStore } from "react";
 
 import type { ActiveDealResponse } from "@/api/generated/types.gen";
 
-import { formatCountdown, formatDeadline, hasEnded } from "./deal-time";
+import { formatCountdown, formatDeadline, hasEnded, parseDeadline } from "./deal-time";
 
 // One open-bloc row from the Listing Detail artboards (docs/design-screens.md §4.2 "Deal
 // progress row"). The contract's `ActiveDealResponse` carries sizes and the deadline only, so the
@@ -31,8 +31,8 @@ export function DealProgress({ deal }: { deal: ActiveDealResponse | undefined })
   const joined = deal.currentSize ?? 0;
   const target = Math.max(1, deal.targetSize ?? 1);
   const left = Math.max(0, target - joined);
-  const expireMs = deal.expireTime ? Date.parse(deal.expireTime) : Number.NaN;
-  const countdown = Number.isNaN(expireMs) ? null : formatCountdown(expireMs, now);
+  const expireMs = parseDeadline(deal.expireTime);
+  const countdown = expireMs === null ? null : formatCountdown(expireMs, now);
   const urgent = countdown?.urgent ?? false;
   return (
     <article
@@ -104,12 +104,13 @@ export function DealProgress({ deal }: { deal: ActiveDealResponse | undefined })
               {countdown.text}
             </span>
           ) : null}
-          {deal.expireTime ? (
-            <span className="text-muted text-xs">{formatDeadline(deal.expireTime, now)}</span>
-          ) : null}
+          {expireMs === null ? null : (
+            <span className="text-muted text-xs">{formatDeadline(expireMs, now)}</span>
+          )}
         </div>
-        {/* Wired in T2-04 (gated sheet): the artboard's per-bloc Join has no action yet. */}
-        <Button variant="outline" className="min-h-11 px-4">
+        {/* Wired in T2-04 (gated sheet): the artboard's per-bloc Join has no action yet, so it
+            is disabled rather than activatable with no effect (CodeRabbit r4045102864). */}
+        <Button variant="outline" className="min-h-11 px-4" isDisabled>
           <span className="xl:hidden">Join</span>
           <span className="hidden xl:inline">Join this bloc</span>
         </Button>

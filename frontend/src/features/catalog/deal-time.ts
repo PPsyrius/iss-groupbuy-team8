@@ -24,11 +24,19 @@ export function formatCountdown(deadlineMs: number, nowMs: number): Countdown {
   return { text: `${mm}:${ss} left`, urgent: true };
 }
 
-// A deal with a parseable deadline in the past has ended; no deadline never ends.
-export function hasEnded(expireTime: string | undefined, nowMs: number): boolean {
-  if (!expireTime) return false;
+// The contract's `expireTime` as epoch ms, or null when it is absent or not a date the runtime
+// can parse. Every caller goes through this: an invalid `Date` reaching `Intl.DateTimeFormat`
+// throws a RangeError (CodeRabbit r4045102880), so the formatters below take ms, never strings.
+export function parseDeadline(expireTime: string | undefined): number | null {
+  if (!expireTime) return null;
   const ms = Date.parse(expireTime);
-  return !Number.isNaN(ms) && ms <= nowMs;
+  return Number.isNaN(ms) ? null : ms;
+}
+
+// A deal with a parseable deadline in the past has ended; no (or no readable) deadline never ends.
+export function hasEnded(expireTime: string | undefined, nowMs: number): boolean {
+  const ms = parseDeadline(expireTime);
+  return ms !== null && ms <= nowMs;
 }
 
 const dayKey = new Intl.DateTimeFormat("en-CA", {
@@ -63,15 +71,15 @@ function sgTime(date: Date): string {
   return timeLabel.format(date).replace(":", ".").replace(/\s+/g, " ").toLowerCase();
 }
 
-export function formatDeadline(expireTime: string, nowMs: number): string {
-  const date = new Date(expireTime);
+export function formatDeadline(deadlineMs: number, nowMs: number): string {
+  const date = new Date(deadlineMs);
   const isToday = dayKey.format(date) === dayKey.format(new Date(nowMs));
   const day = isToday ? "today" : sgDay(date);
   return `Ends ${day}, ${sgTime(date)} SGT`;
 }
 
 // Trust triptych "Bloc closes" value: "Thu, 9.30 pm".
-export function formatDeadlineShort(expireTime: string): string {
-  const date = new Date(expireTime);
+export function formatDeadlineShort(deadlineMs: number): string {
+  const date = new Date(deadlineMs);
   return `${part(date, "weekday")}, ${sgTime(date)}`;
 }
