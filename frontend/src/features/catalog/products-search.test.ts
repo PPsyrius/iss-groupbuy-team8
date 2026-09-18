@@ -24,4 +24,16 @@ describe("productsSearchSchema", () => {
   it("treats an empty category as no filter", () => {
     expect(v.parse(productsSearchSchema, { category: "  " }).category).toBeUndefined();
   });
+
+  it("keeps a trimmed keyword and treats an empty one as no filter", () => {
+    expect(v.parse(productsSearchSchema, { keyword: " jasmine rice " }).keyword).toBe(
+      "jasmine rice",
+    );
+    expect(v.parse(productsSearchSchema, { keyword: "" }).keyword).toBeUndefined();
+  });
+
+  it("cuts a keyword to the contract's 64 characters", () => {
+    const long = "x".repeat(70);
+    expect(v.parse(productsSearchSchema, { keyword: long }).keyword).toBe("x".repeat(64));
+  });
 });

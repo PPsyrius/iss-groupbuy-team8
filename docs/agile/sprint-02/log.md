@@ -713,3 +713,46 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   links; Join / Start a bloc / Buy alone rendered unwired until T2-04 and UC3/UC4.
 - Problems: CR no 404 declared for `getListing`; CR `ActiveDealResponse` has no starter, number or
   per-bloc list (one "Open bloc" row renders); CR no listing status for "unavailable". Open.
+
+## 2026-09-18 - @limjiechao - T2-03 catalog filter: category chips and keyword search (#44, #47, #93 PR-H)
+
+- Kind: feature (PR-H, UC1 filter), frontend decisions recorded as plan §12 note 43, no ADR
+  (TanStack Form + valibot as planned, no new alternative chosen over a settled one), no NFR.
+- Changed: `frontend/src/features/catalog/{FilterForm,categories,filter-form.schema}.ts(x)` +
+  `FilterForm.test.tsx`; `products-search.ts` (+ tests: `keyword`, cut to 64); `src/routes/index.tsx`
+  (chip row and search in the artboard's slot, `keyword` sent to `pageListingsOptions`,
+  empty-keyword state, chip skeletons) + `index.test.tsx` (keyword filter from the URL, empty
+  keyword with "Clear search"); `src/test/render.tsx` (returns the router); `src/test/browser-msw.ts`
+  (seed filters by keyword over title and subtitle); `knip.json` (`@tanstack/react-form` and
+  `@testing-library/user-event` ignores removed, note 25 closed); plan T2-03 steps 1–5 ticked
+  with a dated correction in step 4 (`keyword` now, contract live since PR #107), §12 note 43.
+- Sources: `frontend/docs/design-screens.md` §4.1 "Filter" and §7 Q3/Q4; raw
+  `BlocBuy Buyer Catalog.dc.html` (`cats()` and the chip markup: min-h 44, radius full, 14/500,
+  accent-soft over white when selected, `#B43648` text, gap 8 phone / 10 desktop) and the HeroUI
+  Kit sheet's "SearchField is designed but parked" note, under `.claude/design-artboards/`.
+  HeroUI prop names from the installed 3.2.5 type definitions (`SearchField` root
+  `value`/`onChange`/`onSubmit`/`onClear`/`isInvalid`, `Group`/`SearchIcon`/`Input`/`ClearButton`,
+  `Skeleton`); offline-first: no Intent skills, no `pnpm dlx`, no website.
+- Verified (2026-09-18, worktree `filter-form` on `e1b2549` + this change): `pnpm vitest run
+  src/features/catalog/FilterForm.test.tsx` 6 tests passed; `pnpm check` exit 0 (gen:api 7
+  files; tsc clean; oxlint clean; oxfmt 47 files clean; vitest 10 files / 43 tests passed; knip
+  0 issues, 4 pre-existing config hints); `pnpm build` exit 0; `pnpm e2e` 1 passed, 2 skipped
+  (dev-only). Walkthrough on `pnpm dev` + `?msw=1` with a throwaway Playwright script
+  (`node_modules/.cache/t2-03-shots.mjs`): Household selected at 390 and 1280, `keyword=rice`
+  at 390 and 1280, an empty keyword result at 1280, then typing "kopi" + Enter (URL gains
+  `keyword=kopi&page=1`) and choosing Groceries (URL keeps the keyword, 1 card), 0 page errors;
+  PNGs `frontend/test-results/t2-03-*.png` (not committed; `pnpm e2e` wipes the folder).
+  **Not verified:** the real backend (category strings and keyword matching are the seed's, and
+  the seed has no `description` to match on); `<search>` and `<fieldset>` (oxlint's
+  `prefer-tag-over-role`) only checked in the screenshots, not with a screen reader; Inter offline.
+- Decisions: chips as router links, not `ToggleButtonGroup` (the filter is URL state and
+  deep-links like the pager); the selected chip is a non-link with `aria-current="page"`; the
+  keyword submits only on Enter (the artboard has no button); an unchanged or empty submit is a
+  no-op; an over-long URL keyword is cut to 64, not rejected; one `categories.ts` map for
+  label and value (CR-10).
+- Problems / questions: CR the artboards have no search field, so its placement (end of the chip
+  row, full width on phone) and the empty-keyword copy are ours until the design owner confirms;
+  CR-10 the backend's category strings are still unpublished; the contract's `ai` re-rank flag
+  has no design and is not exposed. Status: open.
+- Next: user pushes; PR against `dev`, stacked on the T2-02 branch; then T2-04 (session,
+  callback, guard, account page).

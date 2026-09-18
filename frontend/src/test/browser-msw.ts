@@ -195,7 +195,17 @@ export async function startBrowserMsw() {
           const page = Math.max(1, Number(url.searchParams.get("page") ?? 1));
           const size = Math.max(1, Number(url.searchParams.get("size") ?? 20));
           const category = url.searchParams.get("category");
-          const filtered = category ? summaries.filter((p) => p.category === category) : summaries;
+          // Contract: whitespace-separated terms all match across title, subtitle or description;
+          // the summary has no description, so the seed matches title and subtitle.
+          const terms = (url.searchParams.get("keyword") ?? "")
+            .toLowerCase()
+            .split(/\s+/)
+            .filter(Boolean);
+          const filtered = summaries.filter(
+            (p) =>
+              (!category || p.category === category) &&
+              terms.every((t) => `${p.title} ${p.subtitle ?? ""}`.toLowerCase().includes(t)),
+          );
           return HttpResponse.json({
             code: OK_CODE,
             message: "ok",
