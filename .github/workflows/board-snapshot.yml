@@ -48,9 +48,11 @@ jobs:
         # Runs before the script so a same-day re-run overwrites, not the other way round.
         run: |
           if git fetch --depth=1 origin "$SNAPSHOT_BRANCH" 2>/dev/null; then
+            git rev-parse FETCH_HEAD >"$RUNNER_TEMP/snapshot-branch-expected"
             git checkout FETCH_HEAD -- docs/agile/metrics/
             echo "carried over: $(git status --porcelain docs/agile/metrics | wc -l) file(s)"
           else
+            : >"$RUNNER_TEMP/snapshot-branch-expected"
             echo "no $SNAPSHOT_BRANCH on origin yet"
           fi
 
@@ -92,7 +94,7 @@ jobs:
           git commit -q -m "docs(agile): board snapshots through $TODAY" -m "Refs #93"
           # The branch is rebuilt from dev on every run, so the push replaces whatever the last
           # run left; the lease pins it to the ref fetched above and fails on a concurrent write.
-          expected="$(git ls-remote --heads origin "$SNAPSHOT_BRANCH" | cut -f1)"
+          expected="$(cat "$RUNNER_TEMP/snapshot-branch-expected")"
           git push --force-with-lease="$SNAPSHOT_BRANCH:$expected" origin "$SNAPSHOT_BRANCH"
           echo "pushed=true" >>"$GITHUB_OUTPUT"
         env:

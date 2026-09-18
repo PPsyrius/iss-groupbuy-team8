@@ -724,3 +724,18 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   the secret exists; the workflow runs degraded without it.
 - Next: user pushes; reply on the review thread; @PPsyrius resolves the thread and merges #113;
   then T2-01 (products list).
+
+## 2026-09-18 - @limjiechao - PR #113 review follow-up: snapshot safety and NFR wording
+
+- Kind: ops/process and security documentation; no new ADR or NFR.
+- Changed: board-snapshot documentation now describes the schedule as planned until the workflow
+  reaches `dev` and distinguishes an unreadable board from a successful query with no matching
+  items; the workflow leases `metrics/board-snapshots` against the SHA fetched for carry-over;
+  NFR-01 now states each cookie attribute's actual guarantee and is `unmet` while dev disables
+  `Secure` and the `blocbuy-token` response remains unverified.
+- Verified (2026-09-18): `pnpm dlx yaml@2.9.1 valid ../.github/workflows/board-snapshot.yml`
+  exit 0; `git diff --check` exit 0; repository searches find none of the superseded activation,
+  blank-column, lease, or NFR claims. **Not verified:** `actionlint`; Docker is installed locally
+  but its daemon is not running.
+- Decision: persist the initial `FETCH_HEAD` (or an empty expectation when the branch is absent)
+  so an external branch write makes `--force-with-lease` fail instead of being accepted.
