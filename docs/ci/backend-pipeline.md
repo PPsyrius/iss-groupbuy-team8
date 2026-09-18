@@ -21,7 +21,7 @@ and deploy it to EC2.
 pull_request                    push/dev
 ├── build-quality               ├── package merged JAR
 ├── contract-check              ├── assemble image
-├── sonar                       ├── publish ECR
+├── SonarCloud Backend          ├── publish ECR
 ├── docker                      └── deploy EC2
 ├── security
 └── typesafe-smoke (live, non-required)
@@ -35,11 +35,15 @@ ci-backend.yml
 ├── build-quality     Spotless -> Checkstyle -> Maven verify -> reports + Sonar inputs + OpenAPI candidate
 ├── contract-check    OpenAPI candidate -> drift (Maven fallback for contracts-only changes)
 │                     └── PR only: compatibility + `contract-change-approved` handling
-├── sonar             SonarCloud Maven scan + quality gate (artifact reuse from build-quality)
+├── sonar-backend     SonarCloud Backend Maven scan + quality gate (artifact reuse from build-quality)
 ├── docker            image build -> EC2-profile smoke -> Trivy image gate
 │                     └── enabled production tag push: preserve tested image for ECR publication
 └── deploy-existing-ec2 (dev push + ENABLE_EC2_DEPLOY=true)
-                      OIDC -> protected environment -> SSM -> health/auto rollback
+                       OIDC -> protected environment -> SSM -> health/auto rollback
+
+ci-frontend.yml
+├── frontend-check    generated client -> types -> lint/format -> tests -> build
+└── sonar-frontend    SonarCloud Frontend TypeScript scan + LCOV quality gate
 
 security.yml
 ├── workflow-lint     Actionlint + ShellCheck for embedded workflow shell
@@ -69,9 +73,11 @@ to date before merging.
 The currently required checks are:
 
 - `build-quality`;
-- `sonar`;
+- `sonar-backend`;
 - `docker`;
-- `gitleaks`.
+- `gitleaks`;
+- `frontend-check`;
+- `sonar-frontend`.
 
 Other applicable CI/security jobs still run and report failures, but conditional jobs should not be
 made permanently required unless their presence is made unconditional.
@@ -90,7 +96,8 @@ repository later becomes eligible for GitHub Merge Queue, the same applicable va
 against the speculative integrated state without redesigning the workflows.
 
 `deploy-existing-ec2` and `publish-ecr-*` stay `push`-only. They must not be required pre-merge
-checks.
+checks. `sonar-frontend` also analyzes frontend-changing pushes to `dev` so the frontend SonarCloud
+project has a current main-branch baseline; its always-reported PR result is the required context.
 
 ### Post-merge delivery boundary
 
@@ -197,7 +204,8 @@ Flyway migrations; deployed migrations must remain backward-compatible.
 | `spotless:check` | Run `./mvnw spotless:apply` and commit the formatting |
 | Checkstyle/SpotBugs/ArchUnit | Fix the reported code or architecture violation; suppressions require a written reason |
 | `contract-check` | Regenerate and commit OpenAPI drift; revert or explicitly approve incompatible API changes |
-| `sonar`/`codeql` | Investigate the server/Security finding; document only genuine false positives |
+| `SonarCloud Backend` / `SonarCloud Frontend` | Investigate the project quality-gate finding; document only genuine false positives |
+| `codeql` | Investigate the Security finding; document only genuine false positives |
 | `gitleaks` | Rotate the credential first, then remove it from current code and Git history |
 | `trivy-deps`/image Trivy | Upgrade the dependency/base image or record time-bounded risk acceptance |
 | `trivy-config` | Correct the Docker/config control; do not blanket-ignore policies |

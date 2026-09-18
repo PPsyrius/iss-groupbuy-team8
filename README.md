@@ -11,6 +11,9 @@
       <a href="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/ci-backend.yml">
         <img src="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/ci-backend.yml/badge.svg?branch=dev" alt="Backend CI">
       </a>&nbsp;
+      <a href="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/ci-frontend.yml">
+        <img src="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/ci-frontend.yml/badge.svg?branch=dev" alt="Frontend CI">
+      </a>&nbsp;
       <a href="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/security.yml">
         <img src="https://github.com/PPsyrius/iss-groupbuy-team8/actions/workflows/security.yml/badge.svg?branch=dev" alt="Security">
       </a>
@@ -27,19 +30,37 @@
   </tr>
 
   <tr>
-    <td><strong>Quality</strong></td>
+    <td><strong>Backend Quality</strong></td>
     <td>
       <a href="https://sonarcloud.io/summary/new_code?id=blocbuy-backend">
-        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=alert_status" alt="SonarCloud quality gate">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=alert_status" alt="Backend SonarCloud quality gate">
       </a>&nbsp;
       <a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=coverage&view=list">
-        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=coverage" alt="SonarCloud coverage">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=coverage" alt="Backend SonarCloud coverage">
       </a>&nbsp;
       <a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=sqale_rating&view=list">
-        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=sqale_rating" alt="SonarCloud maintainability rating">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=sqale_rating" alt="Backend SonarCloud maintainability rating">
       </a>&nbsp;
       <a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=reliability_rating&view=list">
-        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=reliability_rating" alt="SonarCloud reliability rating">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=reliability_rating" alt="Backend SonarCloud reliability rating">
+      </a>
+    </td>
+  </tr>
+
+  <tr>
+    <td><strong>Frontend Quality</strong></td>
+    <td>
+      <a href="https://sonarcloud.io/summary/new_code?id=blocbuy-frontend">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-frontend&metric=alert_status" alt="Frontend SonarCloud quality gate">
+      </a>&nbsp;
+      <a href="https://sonarcloud.io/component_measures?id=blocbuy-frontend&metric=coverage&view=list">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-frontend&metric=coverage" alt="Frontend SonarCloud coverage">
+      </a>&nbsp;
+      <a href="https://sonarcloud.io/component_measures?id=blocbuy-frontend&metric=sqale_rating&view=list">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-frontend&metric=sqale_rating" alt="Frontend SonarCloud maintainability rating">
+      </a>&nbsp;
+      <a href="https://sonarcloud.io/component_measures?id=blocbuy-frontend&metric=reliability_rating&view=list">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-frontend&metric=reliability_rating" alt="Frontend SonarCloud reliability rating">
       </a>
     </td>
   </tr>
@@ -57,8 +78,8 @@
   <tr>
     <td><strong>DevSecOps</strong></td>
     <td>
-      <img src="https://img.shields.io/badge/SonarCloud-SAST%20%2B%20Coverage-41B5BE?style=flat" alt="SonarCloud">&nbsp;
-	  <img src="https://img.shields.io/badge/Trivy-Vulnerability%20Scanning-41B5BE?style=flat" alt="Trivy">&nbsp;
+      <img src="https://img.shields.io/badge/SonarCloud-Code%20Quality%20%2B%20Coverage-41B5BE?style=flat" alt="SonarCloud code quality and coverage">&nbsp;
+      <img src="https://img.shields.io/badge/Trivy-Vulnerability%20Scanning-41B5BE?style=flat" alt="Trivy">&nbsp;
       <img src="https://img.shields.io/badge/Gitleaks-Secret%20Scanning-41B5BE?style=flat" alt="Gitleaks">&nbsp;
       <img src="https://img.shields.io/badge/Dependabot-Dependency%20Updates-41B5BE?style=flat" alt="Dependabot">
     </td>

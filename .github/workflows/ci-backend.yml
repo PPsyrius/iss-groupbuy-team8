@@ -270,7 +270,8 @@ jobs:
               /tmp/openapi-base.json ../contracts/openapi.json
           fi
 
-  sonar:
+  sonar-backend:
+    name: SonarCloud Backend
     needs:
       - detect-changes
       - build-quality
@@ -345,6 +346,7 @@ jobs:
           -Dsonar.token="$SONAR_TOKEN"
           -Dsonar.organization="${{ vars.SONAR_ORGANIZATION }}"
           -Dsonar.projectKey="${{ vars.SONAR_PROJECT_KEY }}"
+          -Dsonar.projectName="BlocBuy Backend"
 
       - name: SonarCloud Quality Gate
         if: >-
@@ -729,7 +731,7 @@ jobs:
       - detect-changes
       - build-quality
       - contract-check
-      - sonar
+      - sonar-backend
       - docker
     if: >-
       always() &&
@@ -739,7 +741,7 @@ jobs:
       needs.detect-changes.result == 'success' &&
       needs.build-quality.result == 'success' &&
       (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped') &&
-      needs.sonar.result == 'success' &&
+      needs.sonar-backend.result == 'success' &&
       needs.docker.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -905,7 +907,7 @@ jobs:
       - detect-changes
       - build-quality
       - contract-check
-      - sonar
+      - sonar-backend
       - docker
       - publish-ecr-prod
 
@@ -917,7 +919,7 @@ jobs:
       needs.detect-changes.result == 'success' &&
       needs.build-quality.result == 'success' &&
       (needs.contract-check.result == 'success' || needs.contract-check.result == 'skipped') &&
-      needs.sonar.result == 'success' &&
+      needs.sonar-backend.result == 'success' &&
       needs.docker.result == 'success' &&
       needs.publish-ecr-prod.result == 'success' &&
       needs.publish-ecr-prod.outputs.image_uri != ''
