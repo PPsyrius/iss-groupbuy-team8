@@ -8,7 +8,9 @@ import { Price } from "./Price";
 // a sanctioned custom composition, not a HeroUI Card, so the media block can bleed to the edges.
 // The artboard's team-progress row ("3 of 5 joined", bar) is not rendered: ProductSummaryResponse
 // carries no deal sizes (CR-11). With no bloc price the card reads "Buying alone" and offers
-// "Start one →", which goes to the listing detail where the bloc actions live.
+// "Start one →", which goes to the listing detail where the bloc actions live. The title link
+// stretches over the tile via `after:absolute after:inset-0`, so the tile is `relative` (its
+// containing block) and the start link is `relative` too, painting above the stretched overlay.
 export function ProductCard({ product }: { product: ProductSummaryResponse }) {
   const {
     id,
@@ -22,7 +24,7 @@ export function ProductCard({ product }: { product: ProductSummaryResponse }) {
   const hasBloc = groupPrice !== undefined && groupPrice !== null;
   const detail = id ? { to: "/products/$productId" as const, params: { productId: id } } : null;
   return (
-    <article className="border-border bg-surface flex h-full flex-col overflow-hidden rounded-lg border">
+    <article className="border-border bg-surface relative flex h-full flex-col overflow-hidden rounded-lg border">
       <div
         aria-hidden="true"
         className="h-[150px] shrink-0 bg-[repeating-linear-gradient(135deg,var(--surface-secondary)_0_10px,var(--surface-tertiary)_10px_20px)] xl:h-[168px]"
@@ -79,7 +81,7 @@ export function ProductCard({ product }: { product: ProductSummaryResponse }) {
             {detail ? (
               <Link
                 {...detail}
-                className="text-accent-soft-foreground -mr-2.5 inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm font-semibold"
+                className="text-accent-soft-foreground relative -mr-2.5 inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm font-semibold"
               >
                 Start one →
               </Link>

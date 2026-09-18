@@ -677,7 +677,9 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   issues); `pnpm build` ok; `pnpm e2e` 1 passed, 2 skipped; MSW walkthrough screenshots at 390
   and 1280 (populated, page 2, category, empty), 0 page errors. Review follow-up `9582eb2`
   (CodeRabbit r4042311578/r4042311596): `msw=1` exact match, past-last-page redirect, route test
-  (note 40); vitest 7 files / 21 tests, build and e2e green.
+  (note 40); vitest 7 files / 21 tests, build and e2e green. Second follow-up (CodeRabbit
+  r4043389594, raised on #115 against this card): the tile and the start link are `relative`, so
+  the stretched title link no longer covers the whole page; card test added, `pnpm check` green.
 - Not verified: the real backend, loading and error states in a browser, Inter offline,
   Safari 16.4.
 - Problems: CR-11 no deal sizes on the card DTO (progress cue omitted); CR-15 `--muted` 4.41:1

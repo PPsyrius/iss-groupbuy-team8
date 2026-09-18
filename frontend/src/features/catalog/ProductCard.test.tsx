@@ -45,4 +45,17 @@ describe("ProductCard", () => {
     );
     expect(screen.queryByText(/S\$0/)).not.toBeInTheDocument();
   });
+
+  // The title link stretches over the tile with an absolutely positioned pseudo-element; the
+  // tile must be the containing block, or the overlay covers the whole page (CodeRabbit
+  // r4043389594). The start link is positioned too so it paints above that overlay.
+  it("confines the stretched title link to the tile and keeps the start link clickable", async () => {
+    const { groupPrice: _omitted, ...solo } = product;
+    await renderWithRouter(<ProductCard product={solo} />);
+    expect(screen.getByRole("article")).toHaveClass("relative");
+    expect(screen.getByRole("link", { name: "Thai jasmine rice 10 kg" })).toHaveClass(
+      "after:absolute",
+    );
+    expect(screen.getByRole("link", { name: /start one/i })).toHaveClass("relative");
+  });
 });
