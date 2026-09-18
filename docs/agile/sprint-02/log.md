@@ -651,7 +651,8 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 
 ## 2026-09-18 - @limjiechao - PR #113 review follow-up: scheduled board snapshot (#113, #103, #93)
 
-- Kind: ops/process; design and rejected alternatives are in the CI plan; no NFR or ADR.
+- Kind: ops/process and NFR-01 documentation; design and rejected alternatives are in the CI
+  plan; no ADR.
 - Changed: added the daily/manual workflow, rolling `metrics/board-snapshots` PR and 90-day
   artifact; clarified blank-column diagnostics and planned activation; corrected NFR-01 wording.
 - Verified on `22d481b` plus the change: snapshot exit 0, 35 issues, counts Backlog 21 / Done 6 /
