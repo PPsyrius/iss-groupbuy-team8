@@ -129,9 +129,8 @@ burndown has a day-zero point.
 
 **During a sprint.** Run `.claude/skills/agile-evidence-capture/scripts/snapshot-board.sh` at the end of any session that changed issue
 or board state. Each run writes one dated CSV; a run on an unchanged day is harmless. Daily
-snapshots are what the burndown chart is drawn from. Once the `board-snapshot` workflow is merged
-into `dev`, it will take the daily one at 23:30 Singapore and keep an open PR of the unmerged days;
-a hand run is for a same-day snapshot you want in your own PR.
+snapshots are what the burndown chart is drawn from; `docs/agile/metrics/README.md` covers the
+scheduled workflow and when a hand run is still useful.
 
 **Closing a sprint.** Gather facts before writing, from four read-only sources, and record each
 result or "not checked" in `review.md`:

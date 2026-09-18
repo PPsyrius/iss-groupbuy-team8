@@ -1,9 +1,9 @@
-# DevSecOps Pipeline Plan — BlocBuy Backend
+# DevSecOps Pipeline Plan — Backend and Repository Automation
 
 Status: approved. Quality/security Steps 1–5 and existing-EC2 delivery Step 6 are implemented.
-Scope: backend quality gates, CI, code-quality platform, security scanning, application delivery,
-and live TypeSafe Jev integration verification.
-Out of scope here: frontend pipeline, Terraform pipeline, agile-metrics automation (see `docs/design/repository-structure.md`).
+Scope: backend quality gates and delivery, security scanning, repository process automation, and
+live TypeSafe Jev integration verification.
+Out of scope here: frontend and Terraform pipelines (see `docs/design/repository-structure.md`).
 
 ## Goals
 

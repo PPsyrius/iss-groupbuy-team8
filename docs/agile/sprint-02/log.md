@@ -633,109 +633,32 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 
 ## 2026-09-17 - @limjiechao - Tier 1 close-out after PR #106: dev evidence, `frontend-check` required-check shape, Dependabot guard (#93, #104, #44)
 
-- Kind: ops, NFR (NFR-01, NFR-16, NFR-19), cross-cutting decision (CI required-check shape,
-  recorded in the `ci-frontend.yml` trigger comment and plan §12 note 35; no ADR)
-- Changed: `.github/workflows/ci-frontend.yml` (cherry-pick of `2b01f7d`, which the user's own
-  rebase of #106 dropped: `pull_request` `paths` filter removed, `frontend-check` always reports
-  with a "not applicable" step, per-step guards on `detect-changes.outputs.frontend`,
-  `e2e-preview` gated on the same output); `.github/dependabot.yml` (ignore
-  `@hey-api/openapi-ts`); `docs/quality/nfr-register.md` NFR-01/16/19; `frontend/docs/plan.md`
-  (T0-00 ticked, T1-12 step 5 and §12 note 32 annotated, note 35); first board snapshot
-  `docs/agile/metrics/2026-09-17.csv` (35 issues, board status column populated); #93 status
-  board rows PR-B..PR-E ticked; this log (T1-01 entry now points here for B3/B5).
-- Verified (2026-09-17 ~15:30 UTC, dev backend relaunched by the user, all on `ce65abe`):
-  `/api/actuator/health` 200 `application/vnd.spring-boot.actuator.v3+json`; `/api/v1/products`
-  200; `/` and `/products/probe` 403 `application/xml` (nothing deployed, A1 not attached); `/`
-  carries no HSTS or CSP (A2 open); `/api/v1/auth/oauth2/google` 302 to Google with
-  `redirect_uri=https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google/callback` (B5
-  value live) and `Set-Cookie: blocbuy-oauth-state=…; Path=/api/v1/auth; HttpOnly; SameSite=Lax`,
-  no `Secure` (B3 still off on ec2). `E2E_TARGET=dev pnpm e2e`: 1 passed (health), 1 failed
-  (home 403), 1 fixme (deep link, A1 #99), trace under `test-results/`. GitHub: `ci-frontend`
-  `push` run 35239337645 on `ce65abe` green with `package-dev`/`deploy-s3-dev`/`e2e-dev` skipped
-  (`ENABLE_S3_DEPLOY` unset; environments list shows only `backend-dev`, none of the four
-  `FRONTEND_*` / `AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV` variables exist); first green `frontend-check`
-  PR runs 35229526282..35238582567; `trivy-deps` "Trivy filesystem scan (pnpm lockfile)" success
-  on `f7b3d65` (run 35238582370), so NFR-19 moves to enforced. Dependabot parsed the pnpm 12
-  lockfile (opened #111 and #112 for `/frontend`); both fail `pnpm install` in `prepare` because
-  `@hey-api/openapi-ts` 0.97.3/0.99.0 load the classic TypeScript API under `typescript@7`
-  (`TypeError: Cannot read properties of undefined (reading 'AnyKeyword')`, run 35239556376), the
-  known upstream bug behind the `next` pin (plan §12 note 19). T1-10 step 5 in-session hook
-  smoke from a root Claude Code session: an `Edit` of `frontend/src/routes/index.tsx` with mangled
-  attributes came back byte-identical to HEAD (`git diff` empty; PostToolUse `frontend-fix.sh`);
-  `frontend/src/api/generated/` is stamped 23:02:20 local, the session start, so the
-  SessionStart bootstrap ran; the Stop hook cannot be observed from inside the turn, `pnpm exec
-  tsc --noEmit` exit 0 by hand is what it would run. actionlint 1.7.12 (container) exit 0 on all
-  workflows in the branch; `pnpm dlx yaml@2.9.1 valid` on `dependabot.yml` exit 0. **Not
-  verified:** the "not applicable" path of `frontend-check` on GitHub (fires on the first
-  backend-only PR after this lands); Dependabot closing #111/#112 on its own; runbook §10 manual
-  sync (no `aws` CLI on this machine, and no frontend deploy role exists yet).
-  Follow-up the same evening, after the push: GitHub reported Dependabot alert 1 (moderate,
-  GHSA-hhx9-57xq-r5rw / CVE-2026-48819, `buildClientParams` prototype substitution, fixed in
-  0.97.3) against the `0.0.0-next-20260824173136` pin. Checked: the snapshot was published
-  2026-08-24, three months after 0.97.3 (2026-05-25), and the generated
-  `src/api/generated/core/params.gen.ts` creates every slot as `Object.create(null)` and writes
-  through `writeSlot`, the patched shape; the ignore therefore hides no fix. The alert is a
-  version-string comparison (`0.0.0-next` sorts below `0.97.3`); the user dismisses it as
-  inaccurate with that reason. `dependabot.yml` says so next to the ignore.
-- Decisions: (1) `frontend-check` joins ruleset `dev-require-review` (currently `build-quality`,
-  `sonar`, `docker`, `gitleaks`) only after this branch lands; rejected: require it on the merged
-  shape, which would stall every backend-only PR (#110 today has no `frontend-check` status at
-  all). (2) Dependabot `ignore` in config rather than `@dependabot ignore` PR comments: versioned,
-  reviewed, and it names the upstream bug to lift it on. (3) T1-14 stays with the account holder:
-  A3 #101 + A4 #102 then `ENABLE_S3_DEPLOY=true`, or the runbook §10 manual sync.
-- Problems: tier 1 (due 2026-09-20) has T1-14 open and blocked on AWS access (#101, #102);
-  #94/#95/#97 are still open though B1/B2/B4 landed in PR #89; B3 (#96) unmet on dev. Action:
-  asks in the PR body; owner closes the backend issues. Status: open.
-- Next: user pushes `feature/frontend-tier1-closeout` and opens the PR; @PPsyrius adds the
-  required check (#104) and does A3/A4; then T2-01 → T2-02 → T2-03 (include `keyword`, live on
-  dev since #107) → T2-04 → T2-05 → T2-06 (after B5's console check); T2-07 with @PPsyrius after
-  A1/A2; T2-08/T2-09 spikes any time; T2-11 after A2 and T1-14.
+- Kind: ops and NFR-01/16/19; CI shape recorded in `ci-frontend.yml` and plan note 35.
+- Changed: restored the #108 every-PR `frontend-check`, ignored incompatible `openapi-ts`
+  releases, updated the three NFRs and plan status, and captured `2026-09-17.csv` (35 issues).
+- Verified on `ce65abe`: health/products 200; `/` and `/products/probe` 403; OAuth start 302 with
+  the correct callback and `blocbuy-oauth-state` carrying `HttpOnly; SameSite=Lax`, not `Secure`.
+  Dev E2E: 1 passed health, 1 failed home 403, 1 fixme deep link. Push run 35239337645 was green
+  with delivery disabled; `trivy-deps` run 35238582370 was green on `f7b3d65`; actionlint,
+  Dependabot YAML and `tsc --noEmit` passed. Root-session edit/bootstrap hooks also fired.
+- Dependabot opened #111/#112, proving pnpm 12 parsing, but both hit hey-api/hey-api#4235 under
+  TypeScript 7. Alert GHSA-hhx9-57xq-r5rw is an inaccurate version-ordering match: the pinned
+  snapshot postdates 0.97.3 and contains its `Object.create(null)` fix.
+- Not verified: the first backend-only "not applicable" run, automatic closure of #111/#112, or
+  frontend deployment. Add `frontend-check` to `dev-require-review` only after this PR merges.
+- Problems: T1-14 remains blocked by A3 #101/A4 #102; B3 #96 remains unmet; #94/#95/#97 landed in
+  PR #89 but still need closing.
 
 ## 2026-09-18 - @limjiechao - PR #113 review follow-up: scheduled board snapshot (#113, #103, #93)
 
-- Kind: ops, cross-cutting decision (recorded in `docs/ci/devsecops-pipeline-plan.md`
-  "board-snapshot.yml"; no ADR). Not an NFR: the workflow produces process evidence for the
-  report, not a product quality attribute, so no register row.
-- Changed: `.github/workflows/board-snapshot.yml` (new: daily 15:30 UTC and `workflow_dispatch`;
-  runs `snapshot-board.sh`, uploads the CSV as a 90-day artifact, rebuilds `metrics/board-snapshots`
-  from `dev` plus the unmerged days, keeps one open PR to `dev`); `docs/ci/devsecops-pipeline-plan.md`
-  (subsection with the rejected alternatives and the degraded mode; off-repo TODO 8);
-  `docs/agile/README.md`, `docs/agile/metrics/README.md`, skill `SKILL.md` (dated pointers: a hand
-  run is now for a same-day snapshot only); `docs/agile/metrics/2026-09-18.csv` (hand run, the
-  schedule only fires on `dev` after merge).
-- Verified (2026-09-18, on `22d481b` plus this change): `snapshot-board.sh --summary` exit 0, 35
-  issues, board counts Backlog 21 / Done 6 / In progress 2 / In review 2 / Ready 3 (local `gh`
-  token carries `read:project`); the workflow's branch logic replayed against a throwaway bare
-  origin in four runs (fresh branch; carry-over of one unmerged day; rebuild after a squash merge
-  shows only the new day; same-day re-run) all as designed; actionlint 1.7.12 release binary exit 0
-  on the workflow (ShellCheck not installed locally, so its shell rules did not run; the pinned
-  image in `workflow-lint` bundles it and runs on the PR because `.github/workflows/**` changed);
-  `ruby -ryaml` parses the file (1 job, 6 steps). **Not verified:** any GitHub run (schedule and
-  dispatch exist only on `dev`); the `github.token` fallback (blank board columns, manual
-  close/reopen for the required checks) follows GitHub's documented GITHUB_TOKEN rules and was not
-  observed. Docker `actionlint` and `pnpm dlx yaml valid` were refused by the session's permission
-  classifier, hence the binary and ruby.
-- Decisions: rolling bot branch rebuilt from `dev` with a lease-protected force update and one
-  open PR, over a direct commit to `dev` (ruleset has no bypass actors), a PR per day (noise, stale
-  branches), or artifact only (not in the archive). Details in the CI doc.
-- Problems: PPsyrius asked on #113 (r4038752708) what the CSV is for and for a scheduled runner
-  instead of hand runs; action: this workflow plus a reply on the thread. `BOARD_SNAPSHOT_TOKEN` is
-  an account-holder action (off-repo TODO 8; #103 is the board-access record). Status: open until
-  the secret exists; the workflow runs degraded without it.
-- Next: user pushes; reply on the review thread; @PPsyrius resolves the thread and merges #113;
-  then T2-01 (products list).
-
-## 2026-09-18 - @limjiechao - PR #113 review follow-up: snapshot safety and NFR wording
-
-- Kind: ops/process and security documentation; no new ADR or NFR.
-- Changed: board-snapshot documentation now describes the schedule as planned until the workflow
-  reaches `dev` and distinguishes an unreadable board from a successful query with no matching
-  items; the workflow leases `metrics/board-snapshots` against the SHA fetched for carry-over;
-  NFR-01 now states each cookie attribute's actual guarantee and is `unmet` while dev disables
-  `Secure` and the `blocbuy-token` response remains unverified.
-- Verified (2026-09-18): `pnpm dlx yaml@2.9.1 valid ../.github/workflows/board-snapshot.yml`
-  exit 0; `git diff --check` exit 0; repository searches find none of the superseded activation,
-  blank-column, lease, or NFR claims. **Not verified:** `actionlint`; Docker is installed locally
-  but its daemon is not running.
-- Decision: persist the initial `FETCH_HEAD` (or an empty expectation when the branch is absent)
-  so an external branch write makes `--force-with-lease` fail instead of being accepted.
+- Kind: ops/process; design and rejected alternatives are in the CI plan; no NFR or ADR.
+- Changed: added the daily/manual workflow, rolling `metrics/board-snapshots` PR and 90-day
+  artifact; clarified blank-column diagnostics and planned activation; corrected NFR-01 wording.
+- Verified on `22d481b` plus the change: snapshot exit 0, 35 issues, counts Backlog 21 / Done 6 /
+  In progress 2 / In review 2 / Ready 3. Branch tests covered creation, carry-over, post-squash
+  rebuild and same-day rerun; actionlint 1.7.12 and YAML parsing passed. The review follow-up also
+  pins `--force-with-lease` to the initially fetched SHA; `git diff --check` passes.
+- Not verified: a GitHub schedule/dispatch or `github.token` fallback; the workflow cannot run
+  until merged into `dev`. Latest actionlint rerun was unavailable because Docker was stopped.
+- Decision: rebuild one bot branch from `dev` and lease against its fetched SHA so external writes
+  fail safely. `BOARD_SNAPSHOT_TOKEN` remains account-holder TODO 8 (#103).

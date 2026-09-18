@@ -56,11 +56,7 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: 'typescript'
         update-types: ['version-update:semver-major']
-      # Pinned to a `next` snapshot on purpose: every published release up to 0.99.0 loads the
-      # classic TypeScript compiler API, which typescript@7 no longer ships, so `pnpm install`
-      # dies in `prepare` (hey-api/hey-api#4235; frontend/docs/plan.md §12 note 19; Dependabot
-      # PRs #111/#112 failed exactly there). Lift this once a release supports TypeScript 7.
-      # Dependabot alert 1 (GHSA-hhx9-57xq-r5rw, fixed in 0.97.3) matches the `0.0.0-next-*`
-      # version string only: the snapshot postdates the fix by three months and the generated
-      # `core/params.gen.ts` already writes every slot into an `Object.create(null)` record.
+      # Releases through 0.99.0 fail under TypeScript 7 (hey-api/hey-api#4235; PRs #111/#112).
+      # Lift this when a compatible release lands. GHSA-hhx9-57xq-r5rw is a version-ordering
+      # false positive: this newer snapshot already contains the Object.create(null) fix.
       - dependency-name: '@hey-api/openapi-ts'

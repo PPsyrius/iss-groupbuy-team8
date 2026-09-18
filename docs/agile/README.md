@@ -45,9 +45,7 @@ or status it produced. Links beat prose.
   and a commit hook (`.claude/settings.json`) that surfaces a checklist when evidence is missing.
 - `.claude/skills/agile-evidence-capture/scripts/snapshot-board.sh` writes today's board and
   issue state to `metrics/`. Run it at the end of any session that moved issues; commit the CSV.
-  Once the `board-snapshot` workflow is merged into `dev`, it will run daily at 23:30 Singapore
-  and keep one open PR from `metrics/board-snapshots`; a hand run is for a same-day snapshot
-  (`docs/ci/devsecops-pipeline-plan.md`, "board-snapshot.yml").
+  Scheduled operation and CSV interpretation are in `metrics/README.md`.
 
 ## One-time setup (team lead)
 

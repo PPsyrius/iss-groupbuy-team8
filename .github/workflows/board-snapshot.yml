@@ -1,15 +1,6 @@
-# Board and issue snapshot: writes docs/agile/metrics/YYYY-MM-DD.csv once a day and keeps one
-# open PR (`metrics/board-snapshots` -> dev) that collects the files until someone merges it.
-# Why: the Kanban board is not in the git archive and the burndown is drawn from these CSVs
-# (docs/agile/metrics/README.md). PR #113 review asked for a scheduled runner instead of a
-# hand-run script. Design and alternatives: docs/ci/devsecops-pipeline-plan.md, "board-snapshot".
-#
-# Token: `BOARD_SNAPSHOT_TOKEN` (classic PAT with `repo` + `read:project`, or a fine-grained PAT
-# with Contents/Pull requests read-write, Issues read, and account Projects read) makes the run
-# complete: board columns filled, PR opened, and the PR's required checks triggered. Without it
-# the run falls back to `github.token`: issue columns only (the script warns), and a commit
-# pushed with `github.token` starts no `pull_request` workflows, so a human closes and reopens
-# the PR once to get the required checks (GitHub's own rule for GITHUB_TOKEN-driven events).
+# Daily board snapshot and rolling PR; design: docs/ci/devsecops-pipeline-plan.md.
+# `BOARD_SNAPSHOT_TOKEN` needs Projects read plus repository/PR write access. Without it, the
+# `github.token` fallback leaves board fields blank and its push does not trigger PR checks.
 name: board-snapshot
 
 on:
