@@ -50,7 +50,7 @@ database name is case-sensitive if created quoted; verify `Blocbuy` vs `blocbuy`
 - Checkstyle: Google checks, 120-column line length, AOSP indentation values (`checkstyle.xml`);
   enforces only what the formatter does not own (naming, imports, Javadoc, blocks).
 - SpotBugs: effort Max, threshold Medium, exclusions with written reasons in `spotbugs-excludes.xml`.
-- JaCoCo: per-module reports + aggregate at `blocbuy-bootstrap/target/site/jacoco-aggregate/`;
+- JaCoCo: aggregate-only report at `blocbuy-bootstrap/target/site/jacoco-aggregate/`;
   coverage gate (≥80% on new code) lives in the SonarQube quality gate, not Maven.
 - ArchUnit (`blocbuy-bootstrap/src/test/.../architecture/`): layer direction, framework-free domain,
   no controller→mapper, persistence internals stay internal, no field injection.

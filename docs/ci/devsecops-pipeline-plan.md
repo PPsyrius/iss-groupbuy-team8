@@ -51,7 +51,7 @@ All versions pinned in `blocbuy-parent` properties, verified against Maven Centr
 2. **Checkstyle conflict resolution (decision)**: Spotless/AOSP is the single source of truth for formatting. Checkstyle `Indentation` module moved from Google 2-space to AOSP values (`basicOffset=4, caseIndent=4, throwsIndent=8, lineWrappingIndentation=8, arrayInitIndent=4`). Line length stays 120 (D13); google-java-format wraps at 100, which is a subset — no conflict. Everything non-formatting (naming, imports, Javadoc, blocks) stays enforced by Checkstyle.
 3. **One-time reformat**: `./mvnw spotless:apply` over the whole codebase, landed as a single formatting commit recorded in `.git-blame-ignore-revs` so `git blame` stays useful.
 4. **SpotBugs**: `check` at `verify`, `effort=Max`, `threshold=Medium`, exclusions in `backend/spotbugs-excludes.xml` (bootstrap main class, Lombok/Spring-known false positives only).
-5. **JaCoCo**: `prepare-agent` + per-module `report` in every module; `report-aggregate` in `blocbuy-bootstrap` (only module depending on all others) → `blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml`. No hard Maven coverage check — the threshold lives in the SonarQube quality gate where "new code" scoping exists.
+5. **JaCoCo**: `prepare-agent` in every module; aggregate report in `blocbuy-bootstrap` → `blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml`. Sonar owns the new-code coverage threshold.
 
 ## Step 2 — CI Workflows
 

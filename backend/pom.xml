@@ -338,7 +338,7 @@
         </executions>
       </plugin>
 
-      <!-- Coverage agent + per-module report; aggregate report lives in blocbuy-bootstrap -->
+      <!-- Coverage agent only; Sonar consumes the aggregate report from blocbuy-bootstrap. -->
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
@@ -347,13 +347,6 @@
             <id>jacoco-prepare-agent</id>
             <goals>
               <goal>prepare-agent</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>jacoco-report</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>report</goal>
             </goals>
           </execution>
         </executions>

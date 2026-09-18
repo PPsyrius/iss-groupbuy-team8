@@ -121,6 +121,7 @@ jobs:
             backend/**/target/checkstyle-result.xml
           if-no-files-found: ignore
 
+      # Sonar uses only the aggregate JaCoCo report.
       - name: Upload Sonar inputs
         if: >-
           needs.detect-changes.outputs.backend == 'true' ||
@@ -132,7 +133,7 @@ jobs:
           path: |
             backend/**/target/classes/**
             backend/**/target/test-classes/**
-            backend/**/target/site/jacoco*/**
+            backend/blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml
             backend/**/target/surefire-reports/**
             backend/**/target/failsafe-reports/**
           if-no-files-found: error
