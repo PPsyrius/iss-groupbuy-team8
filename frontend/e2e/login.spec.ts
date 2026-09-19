@@ -14,6 +14,18 @@ const CODEGEN =
   "pnpm exec playwright codegen --save-storage=e2e/.auth/dev.json https://d1b3np88z657cp.cloudfront.net/login";
 // Login is a full-page navigation to the backend (ADR 0002, `src/features/session/return-to.ts`).
 const LOGIN_START = "/api/v1/auth/oauth2/google";
+const LOGOUT = "/api/v1/auth/logout";
+const TOKEN_COOKIE = "blocbuy-token";
+
+// A `Set-Cookie` that expires the cookie: `Max-Age` of zero or less, or an `Expires` in the
+// past. A name or value check alone would also pass for a live cookie with an empty value
+// (CodeRabbit r4052574005).
+function expiresCookie(setCookie: string): boolean {
+  const maxAge = /;\s*max-age=(-?\d+)/iu.exec(setCookie)?.[1];
+  if (maxAge !== undefined) return Number(maxAge) <= 0;
+  const expires = /;\s*expires=([^;]+)/iu.exec(setCookie)?.[1];
+  return expires !== undefined && Date.parse(expires) < Date.now();
+}
 // `OK_CODE` in `src/api/envelope.ts`; the e2e folder does not import app modules.
 const OK = "COMMON_200_000";
 
@@ -128,9 +140,18 @@ test.describe("signed-in buyer @auth", () => {
   }) => {
     await page.goto("/");
     await expect(page.getByTestId("session-user")).toBeVisible();
-    await page.getByRole("button", { name: "Sign out" }).click();
+    const [logout] = await Promise.all([
+      page.waitForResponse((r) => new URL(r.url()).pathname === LOGOUT),
+      page.getByRole("button", { name: "Sign out" }).click(),
+    ]);
+    expect(logout.ok()).toBe(true);
+    const tokenSetCookie = (await logout.headersArray())
+      .filter((h) => h.name.toLowerCase() === "set-cookie")
+      .map((h) => h.value)
+      .find((v) => v.startsWith(`${TOKEN_COOKIE}=`));
+    expect(tokenSetCookie, `logout answers with a Set-Cookie for ${TOKEN_COOKIE}`).toBeDefined();
+    expect(expiresCookie(tokenSetCookie ?? "")).toBe(true);
     await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
-    const token = (await context.cookies()).find((c) => c.name === "blocbuy-token");
-    expect(token?.value ?? "").toBe("");
+    expect((await context.cookies()).some((c) => c.name === TOKEN_COOKIE)).toBe(false);
   });
 });

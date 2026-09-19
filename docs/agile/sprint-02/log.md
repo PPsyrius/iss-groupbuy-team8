@@ -808,5 +808,10 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   to end; the `blocbuy-token` cookie name after sign-out; any dev run before T1-14.
 - Decision: one journey file instead of the plan's `account.spec.ts`; the login navigation is
   answered with a 204 so the test never touches Google (note 48).
+- PR #122 review (2026-09-19, r4046597269, r4052574005): the gated-sheet journey stubs `me`, the
+  listing and its detail with `page.route`, so it runs on preview and dev alike (4 passed / 4
+  skipped locally, no more skip); the sign-out test reads the logout `Set-Cookie` and requires
+  `blocbuy-token` expired (`Max-Age` ≤ 0 or a past `Expires`) before asserting the jar has no
+  such cookie. Plan record re-added as note 48 (the restack had dropped it).
 - Problems: step 1 is a human action and B5's console check is unconfirmed (#98); asked in the PR
   body; the `@auth` tests report the codegen command as the skip reason. Open, user-owned.
