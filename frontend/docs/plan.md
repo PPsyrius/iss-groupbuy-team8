@@ -1185,7 +1185,7 @@ export const Route = createFileRoute('/auth/callback')({
 ### T2-05: Logout
 
 - [x] Step 1: `use-logout.ts`: `useMutation({ ...logoutMutation(), onSuccess: () => { queryClient.removeQueries({ queryKey: meQueryKey() }); void navigate({ to: '/' }) } })`. (2026-09-18: `setQueryData` on the anonymous envelope instead of `removeQueries`, §12 note 47.)
-- [x] Step 2: Header test: clicking "Log out" posts to `/api/v1/auth/logout` (MSW spy) and the login link reappears. (2026-09-18: the control reads "Sign out", pairing with the artboard's "Sign in"; note 47.)
+- [x] Step 2 (done 2026-09-18, note 47): Header test: clicking "Sign out" posts to `/api/v1/auth/logout` (MSW spy) and the "Sign in" link reappears. The plan first wrote "Log out" and "the login link"; the shipped control reads "Sign out" to pair with the artboard's "Sign in".
 - [x] Step 3: Commit `feat(frontend): logout mutation clears the session`.
 
 ### T2-06: Login e2e

@@ -788,3 +788,4 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 - PR #121 review (2026-09-19, r4050777123/27/30): all three threads were plan text and are
   settled below this branch (T2-02 no-deal copy since #115, T2-03 samples in 0f4acb0, step 7
   envelope code in bd0b95b). Plan record re-added here as note 47 (the restack had dropped it).
+  Round 2 (r4053031037): step 2 now names the shipped "Sign out" / "Sign in" controls.
