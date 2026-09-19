@@ -156,7 +156,7 @@ function ProductDetailPage() {
                 </span>
               </div>
             ) : null}
-            <DealProgress deal={p.deal} />
+            <DealProgress deal={p.deal} onJoin={onGated} />
           </section>
           <AboutCard product={p} category={category} className="flex xl:hidden" />
         </div>

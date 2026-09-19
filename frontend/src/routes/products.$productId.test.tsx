@@ -151,6 +151,14 @@ describe("/products/$productId gated actions", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("opens the sign-in sheet from the open bloc's Join as well", async () => {
+    serveAnonymous();
+    serveListing(listing());
+    renderRoute(`/products/${knownId}`);
+    await userEvent.click(await screen.findByRole("button", { name: /^Join/ }));
+    expect(await screen.findByRole("dialog", { name: "Sign in to hold your seat" })).toBeVisible();
+  });
+
   it("does not gate a signed-in buyer", async () => {
     serveSignedIn();
     serveListing(listing());
