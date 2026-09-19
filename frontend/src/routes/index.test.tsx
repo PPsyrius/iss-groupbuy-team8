@@ -101,11 +101,11 @@ describe("/ (products list) loader", () => {
 
   it("offers to clear the search when a keyword matches nothing", async () => {
     serveListings([listing(1)]);
-    await renderAt("/?keyword=durian&category=groceries");
+    await renderAt("/?keyword=durian&category=groceries&size=12");
     expect(await screen.findByText("No listings match “durian”")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Clear search" })).toHaveAttribute(
       "href",
-      "/?page=1&category=groceries",
+      "/?page=1&size=12&category=groceries",
     );
   });
 

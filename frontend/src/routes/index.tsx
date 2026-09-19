@@ -66,7 +66,7 @@ function ProductsPage() {
       <CatalogHero total={total} />
       <FilterForm search={search} />
       {items.length === 0 ? (
-        <CatalogEmpty category={search.category} keyword={search.keyword} />
+        <CatalogEmpty size={search.size} category={search.category} keyword={search.keyword} />
       ) : (
         <ul className={grid}>
           {items.map((p) => (
@@ -131,11 +131,14 @@ function CatalogHero({ total }: { total?: number }) {
 // backend's category values are not confirmed (CR-10), so the recovery goes to the unfiltered
 // catalog instead of guessing a value. No artboard covers an empty keyword search (the artboards
 // have no search field); that variant keeps the same card and clears the keyword only, so the
-// chosen category survives.
+// chosen category survives. Both links carry `size`: a `Link` search object replaces the URL's,
+// and the schema would otherwise reset a chosen page size to the default (CodeRabbit r4045128158).
 function CatalogEmpty({
+  size,
   category,
   keyword,
 }: {
+  size: number;
   category: string | undefined;
   keyword: string | undefined;
 }) {
@@ -156,13 +159,17 @@ function CatalogEmpty({
       {keyword ? (
         <Link
           to="/"
-          search={{ page: 1, ...(category === undefined ? {} : { category }) }}
+          search={{ page: 1, size, ...(category === undefined ? {} : { category }) }}
           className={buttonVariants({ variant: "secondary" }) + " mt-1 min-h-11 px-5"}
         >
           Clear search
         </Link>
       ) : category ? (
-        <Link to="/" className={buttonVariants({ variant: "secondary" }) + " mt-1 min-h-11 px-5"}>
+        <Link
+          to="/"
+          search={{ page: 1, size }}
+          className={buttonVariants({ variant: "secondary" }) + " mt-1 min-h-11 px-5"}
+        >
           Browse all listings
         </Link>
       ) : null}
