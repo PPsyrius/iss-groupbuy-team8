@@ -734,3 +734,8 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   Enter only, empty or unchanged submit is a no-op, URL keyword cut to 64.
 - Problems: CR no search field in the artboards (placement and empty copy are ours); CR-10
   category strings unpublished; the contract's `ai` flag has no design. Open.
+- PR #119 review (2026-09-19, r4045128139/44/58/76): the restack had dropped this task's plan
+  record; re-added as note 44 with the shipped samples. Household chip sends the seed's `home`;
+  empty-state links keep `size`; one keyword matcher over title, subtitle and description
+  (`keyword-match.ts`) shared by the browser seed and the route test. Three outdated threads on
+  #115 files answered as landed there (9b67149).

@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 import { OK_CODE } from "@/api/envelope";
 import type { ProductSummaryResponse } from "@/api/generated/types.gen";
 import { routeTree } from "@/routeTree.gen";
+import { keywordTerms, matchesKeyword } from "@/test/keyword-match";
 import { server } from "@/test/msw";
 
 // The root layout mounts the devtools; they have no place in a happy-dom route test.
@@ -35,11 +36,9 @@ function serveListings(all: ProductSummaryResponse[]) {
       const page = Number(url.searchParams.get("page") ?? 1);
       const size = Number(url.searchParams.get("size") ?? 20);
       const category = url.searchParams.get("category");
-      const keyword = url.searchParams.get("keyword")?.toLowerCase();
+      const terms = keywordTerms(url.searchParams.get("keyword"));
       const hits = all.filter(
-        (p) =>
-          (!category || p.category === category) &&
-          (!keyword || (p.title ?? "").toLowerCase().includes(keyword)),
+        (p) => (!category || p.category === category) && matchesKeyword(p, terms),
       );
       return HttpResponse.json({
         code: OK_CODE,
