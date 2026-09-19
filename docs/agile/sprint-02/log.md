@@ -713,3 +713,29 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   links; Join / Start a bloc / Buy alone rendered unwired until T2-04 and UC3/UC4.
 - Problems: CR no 404 declared for `getListing`; CR `ActiveDealResponse` has no starter, number or
   per-bloc list (one "Open bloc" row renders); CR no listing status for "unavailable". Open.
+
+## 2026-09-18 - @limjiechao - T2-03 catalog filter: category chips and keyword search (#44, #47, #93 PR-H)
+
+- Kind: feature (PR-H, UC1 filter); artboards over plan (note 44); TanStack Form + valibot as
+  planned; no ADR, no NFR.
+- Changed: `FilterForm`, `categories`, `filter-form.schema` with tests; `keyword` in the search
+  schema, the `/` query and the MSW seed; chip row and search in the artboard slot; knip ignores
+  for form and user-event removed (note 25 closed); plan steps 1–5 with a dated step 4 correction
+  (`keyword` now, contract live since PR #107), note 44.
+- Sources: `design-screens.md` §4.1 "Filter" and §7 Q3/Q4; `BlocBuy Buyer Catalog.dc.html` chip
+  markup; the HeroUI Kit sheet's parked `SearchField`; installed 3.2.5 types, offline-first.
+- Verified on `e1b2549` plus the change: `FilterForm.test.tsx` 6 tests; `pnpm check` exit 0
+  (vitest 10 files / 43 tests, knip 0 issues); `pnpm build` ok; `pnpm e2e` 1 passed, 2 skipped;
+  MSW screenshots (Household, `keyword=rice`, empty keyword, typed "kopi" + Enter) at 390 and
+  1280, 0 page errors.
+- Not verified: the real backend's category strings and keyword matching; a screen-reader pass;
+  Inter offline.
+- Decision: chips as router links with `aria-current` on the selected one; keyword submits on
+  Enter only, empty or unchanged submit is a no-op, URL keyword cut to 64.
+- Problems: CR no search field in the artboards (placement and empty copy are ours); CR-10
+  category strings unpublished; the contract's `ai` flag has no design. Open.
+- PR #119 review (2026-09-19, r4045128139/44/58/76): the restack had dropped this task's plan
+  record; re-added as note 44 with the shipped samples. Household chip sends the seed's `home`;
+  empty-state links keep `size`; one keyword matcher over title, subtitle and description
+  (`keyword-match.ts`) shared by the browser seed and the route test. Three outdated threads on
+  #115 files answered as landed there (9b67149).

@@ -4,6 +4,7 @@ import { setupWorker } from "msw/browser";
 import { OK_CODE } from "@/api/envelope";
 import { createMswHandlers } from "@/api/generated/msw.gen";
 import type { ProductDetailResponse, ProductSummaryResponse } from "@/api/generated/types.gen";
+import { keywordTerms, matchesKeyword } from "@/test/keyword-match";
 
 // Offline UI work: `?msw=1` on the URL makes main.tsx start this worker before rendering, so the
 // catalog and the listing detail render the artboards' sample content (docs/design-screens.md
@@ -61,7 +62,7 @@ const seeds: Seed[] = [
     n: 3,
     title: "Laundry detergent 5 L twin pack",
     subtitle: "Fragrance-free",
-    category: "household",
+    category: "home",
     individualPrice: 42.9,
     groupPrice: 34.9,
     description:
@@ -98,7 +99,7 @@ const seeds: Seed[] = [
     n: 6,
     title: "Fold-out drying rack",
     subtitle: "Stainless, 3 tiers",
-    category: "household",
+    category: "home",
     individualPrice: 56,
     description: "Three-tier stainless steel rack, folds flat to 6 cm.",
     stock: 30,
@@ -144,7 +145,7 @@ const seeds: Seed[] = [
     n: 10,
     title: "Dish soap refill 3 L",
     subtitle: "Lemon",
-    category: "household",
+    category: "home",
     individualPrice: 9.9,
     description: "Lemon dish soap refill pouch, 3 L.",
     stock: 200,
@@ -176,7 +177,7 @@ const details: ProductDetailResponse[] = seeds.map((s) => ({
       }),
 }));
 
-const summaries: ProductSummaryResponse[] = seeds.map((s) => ({
+const toSummary = (s: Seed): ProductSummaryResponse => ({
   id: id(s.n),
   title: s.title,
   subtitle: s.subtitle,
@@ -184,7 +185,7 @@ const summaries: ProductSummaryResponse[] = seeds.map((s) => ({
   individualPrice: s.individualPrice,
   ...(s.groupPrice === undefined ? {} : { groupPrice: s.groupPrice }),
   currency: "sgd",
-}));
+});
 
 export async function startBrowserMsw() {
   const worker = setupWorker(
@@ -195,7 +196,12 @@ export async function startBrowserMsw() {
           const page = Math.max(1, Number(url.searchParams.get("page") ?? 1));
           const size = Math.max(1, Number(url.searchParams.get("size") ?? 20));
           const category = url.searchParams.get("category");
-          const filtered = category ? summaries.filter((p) => p.category === category) : summaries;
+          // The matcher runs over the full seed record (title, subtitle, description) as the
+          // backend does, then the hits become summaries.
+          const terms = keywordTerms(url.searchParams.get("keyword"));
+          const filtered = seeds
+            .filter((s) => (!category || s.category === category) && matchesKeyword(s, terms))
+            .map(toSummary);
           return HttpResponse.json({
             code: OK_CODE,
             message: "ok",

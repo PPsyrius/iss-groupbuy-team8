@@ -963,7 +963,7 @@ Until A1 is executed, change the deep-link test to `test.fixme(true, 'A1 not att
 
 **Files:** Create `frontend/src/features/catalog/products-search.ts`, `ProductCard.tsx`, `ProductCard.test.tsx`, `Price.tsx`. Modify `frontend/src/routes/index.tsx`.
 
-**Interfaces produced:** `productsSearchSchema` (valibot), `type ProductsSearch = { page: number; size: number; category?: string }`.
+**Interfaces produced:** `productsSearchSchema` (valibot), `type ProductsSearch = { page: number; size: number; category?: string; keyword?: string }` (`keyword` added by T2-03, trimmed and cut to the contract's 64 characters).
 
 - [x] Step 1: `frontend/src/features/catalog/products-search.ts` (pattern verified: https://tanstack.com/router/latest/docs/framework/react/guide/search-params)
 
@@ -974,6 +974,7 @@ export const productsSearchSchema = v.object({
   page: v.optional(v.fallback(v.pipe(v.number(), v.integer(), v.minValue(1)), 1), 1),
   size: v.optional(v.fallback(v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(100)), 12), 12),
   category: v.optional(v.pipe(v.string(), v.trim(), v.minLength(1))),
+  keyword: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(64))), // T2-03
 })
 export type ProductsSearch = v.InferOutput<typeof productsSearchSchema>
 ```
@@ -1081,50 +1082,30 @@ function ProductDetailPage() {
 
 ### T2-03: Filter form
 
-- [ ] Step 1: `filter-form.schema.ts`
+- [x] Step 1: `filter-form.schema.ts` (done 2026-09-18 as a keyword-only schema, ≤ 64 per the contract; the category is a chip row of links, §12 note 44). Shipped:
 
 ```ts
-import * as v from 'valibot'
+import * as v from "valibot";
+
+// The keyword form behind the catalog's search field (plan §4 T2-03, artboard deviation in
+// §12 note 43: the category is a chip row of links, so only the keyword goes through TanStack
+// Form). The contract caps `keyword` at 64 characters; whitespace-separated terms all have to
+// match, so leading and trailing whitespace carries no meaning and is trimmed.
+export const KEYWORD_MAX_LENGTH = 64;
+
 export const filterFormSchema = v.object({
-  category: v.optional(v.pipe(v.string(), v.trim())),
-  keyword: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(100))),
-})
-export type FilterFormValues = v.InferInput<typeof filterFormSchema>
+  keyword: v.pipe(
+    v.string(),
+    v.trim(),
+    v.maxLength(KEYWORD_MAX_LENGTH, `Keep the search under ${KEYWORD_MAX_LENGTH} characters.`),
+  ),
+});
 ```
 
-- [ ] Step 2: Failing test: typing a category and submitting calls `onSubmit` with `{ category: 'food' }`; empty strings are dropped.
-- [ ] Step 3: `FilterForm.tsx` (verified pattern: https://tanstack.com/form/latest/docs/framework/react/guides/validation)
-
-```tsx
-import { useForm } from '@tanstack/react-form'
-import { Button, Input } from '@heroui/react'
-import { filterFormSchema, type FilterFormValues } from './filter-form.schema'
-
-export function FilterForm({ initial, onSubmit }: { initial: FilterFormValues; onSubmit: (v: FilterFormValues) => void }) {
-  const form = useForm({
-    defaultValues: { category: initial.category ?? '', keyword: initial.keyword ?? '' },
-    validators: { onChange: filterFormSchema },
-    onSubmit: ({ value }) => onSubmit({
-      ...(value.category ? { category: value.category } : {}),
-      ...(value.keyword ? { keyword: value.keyword } : {}),
-    }),
-  })
-  return (
-    <form onSubmit={(e) => { e.preventDefault(); void form.handleSubmit() }} className="flex gap-3">
-      <form.Field name="category" children={(f) => (
-        <Input label="Category" value={f.state.value} onChange={(e) => f.handleChange(e.target.value)} onBlur={f.handleBlur} />
-      )} />
-      <form.Field name="keyword" children={(f) => (
-        <Input label="Keyword" value={f.state.value} onChange={(e) => f.handleChange(e.target.value)} onBlur={f.handleBlur} />
-      )} />
-      <Button type="submit" variant="primary">Filter</Button>
-    </form>
-  )
-}
-```
-
-- [ ] Step 4: In `routes/index.tsx`, render `<FilterForm initial={search} onSubmit={(v) => navigate({ search: (prev) => ({ ...prev, page: 1, category: v.category }) })} />`. `keyword` is kept out of `productsSearchSchema` and out of the navigate call until #47's regenerated client exposes `keyword` in `pageListingsOptions`' query type; at that point add `keyword: v.optional(v.string())` to the search schema and pass it through. The form field exists now so the UI and tests do not change later.
-- [ ] Step 5: `pnpm check`, screenshot, commit `feat(frontend): listing filter form synced to url search params`.
+- [x] Step 2 (done 2026-09-18, note 44): failing tests first in `FilterForm.test.tsx`: each chip is a router `Link` carrying `page: 1` and the category (or no `category` for "All"); a keyword submits on Enter and navigates with `page: 1`; the clear button removes an applied keyword; an empty or unchanged submit does nothing; a keyword over 64 characters shows the schema message.
+- [x] Step 3 (done 2026-09-18 per the Catalog artboards, note 44): `FilterForm.tsx` takes `{ search: ProductsSearch }` and renders the `CATEGORIES` chip row from `categories.ts` (single-select router `Link`s, the selected chip a non-link with `aria-current="page"`) plus a compact HeroUI `SearchField` bound to TanStack Form with `filterFormSchema` (verified pattern: https://tanstack.com/form/latest/docs/framework/react/guides/validation). There is no `Input "Category"` and no "Filter" button; the plan's first sketch of this form was replaced by the artboards.
+- [x] Step 4 (done 2026-09-18; **correction:** the plan first held `keyword` back "until #47's regenerated client exposes it", but the contract has carried it since PR #107 and it is live on dev, so `keyword` is in `productsSearchSchema` (trimmed, cut to 64) and passed to `pageListingsOptions` now; note 44): `routes/index.tsx` renders `<FilterForm search={search} />` above the grid; chips and the search field navigate through the URL search params, so the loader refetches with the new `category` / `keyword`.
+- [x] Step 5 (done 2026-09-18: `pnpm check` exit 0, 10 files / 43 tests; screenshots `frontend/test-results/t2-03-*.png`; commit `feat(frontend): catalog filter with category chips and keyword search`): `pnpm check`, screenshot, commit.
 
 ### T2-04: Session, callback route, guard, account page
 
@@ -2277,6 +2258,7 @@ None are applied silently; each is planned as stated below and needs the owner's
 41. **T2-02 follows the Claude Design Listing Detail and Errors artboards where they differ from this plan (2026-09-18; user's rule: artboards win).** Sources: `frontend/docs/design-screens.md` §4.2 and §4.5, raw `BlocBuy Buyer Listing Detail.dc.html` (`Listing detail · loading / open blocs / no open bloc / unavailable / error · 390`, `… · 1280`) and `BlocBuy Buyer Errors.dc.html` under `.claude/design-artboards/` (git-excluded). (a) `DealProgress` with no deal renders "Buying alone. No bloc is open yet." plus the "Be the first to start a bloc" card, not the plan's "No active deal"; with a deal it renders the artboard's bloc row: chip "Filling" / "Closing soon" (warning-soft under one hour) / "Ended", "{joined} of {target} joined", "{n} seats left" (bold at 1), a 10px accent `ProgressBar` (`value`/`maxValue`, compound `Track`/`Fill` from the installed 3.2.5 types), seat dots (only when `targetSize` ≤ 10, an undefined-by-artboard cap), a live countdown ("2h 14m left", "47:25 left" under an hour, "Ended") over the absolute SGT deadline ("Ends Thu 17 Sep, 9.30 pm SGT", "Ends today, …"), and an `outline` Join ("Join this bloc" at 1280), `isDisabled` until T2-04's gated sheet gives it a handler (note 43). `ActiveDealResponse` has no starter, number or avatar, so the row is labelled "Open bloc" (CR: open-team list). (b) Page layout: phone is one column (crumb row under the global `Header` instead of the artboard's sub-page header; full-bleed 280px gallery with caption pill and dots; info block with bloc price 36/40 `accent-soft-foreground` + struck solo price, or the solo price alone; "Bloc price when a bloc fills · N seats per bloc"; sold/stock line; trust triptych "You pay now / Bloc closes / If it doesn't fill" only with a deal and bloc price; Open blocs section; About card; a `sticky bottom-0` bar with `secondary lg` "Start a bloc · S$…" over `ghost` "Buy alone · S$…", both `isDisabled` until wired, note 43), 1280 is `grid-cols-[620px_minmax(0,1fr)]` gap 32 with gallery + thumbnails + About on the left and the price card + blocs on the right; the plan's `max-w-4xl` with "Individual"/"Group" labels is dropped. (c) Desktop breadcrumb is a plain `nav`/`ol` of router `Link`s: HeroUI `Breadcrumbs.Item` is a React Aria link with no router provider here, so it would full-reload. The back arrow is an inline SVG (HeroUI 3.2.5 exports no icon set). (d) Unavailable / off-sale is not built: `ProductDetailResponse` carries no status (CR). (e) The 404 follows `Errors › Not found` (code chip, heading, body, "Nothing has been charged." line, `secondary` "Browse listings", invite hint); the artboard's "My blocs" button waits for its route (T2-04). (f) Gallery interaction (undefined by the artboards): thumbnails at 1280 and dots on phone select the image; `images` first, else `coverImage`, else the striped tile with no caption. (g) `deal-time.ts` assembles the day label from `en-US` `formatToParts` because `en-SG`/`en-GB` print "Thu, 17 Sept".
 42. **The detail loader maps both not-found shapes to `notFound()` (2026-09-18).** `contracts/openapi.json` declares only a 200 for `GET /api/v1/products/{id}`, and no `PRODUCT_*`/`LISTING_*` error code exists in the backend yet (the `_404_` family is `ORDER`, `IDENTITY`, `GROUPBUY`, `NOTIFICATION`, `PAYMENT`). The loader therefore treats an `ApiError` with `status === 404` (the interceptor stamps the HTTP status) or a code matching `/_404_/` as not found; anything else reaches `errorComponent`. The browser MSW seed answers unknown ids with `{ code: "PRODUCT_404_001" }` at HTTP 404 as a placeholder for that code (CR: contract 404 for getListing).
 43. **PR #115 review round 2 (2026-09-18, CodeRabbit r4045102856/64/80/89).** (a) The three unwired detail controls (`Join`, `Start a bloc`, `Buy alone`) carry `isDisabled`: HeroUI 3.2.5 leaves a `Button` activatable without it, and a press had no application effect. T2-04 removes it from the two it wires through `onGated`; Join stays disabled until a per-bloc action exists. (b) `deal-time` exports `parseDeadline(expireTime): number | null`, and `formatDeadline` / `formatDeadlineShort` take epoch ms: a non-empty unparseable `expireTime` passed the truthiness checks in `DealProgress` and `TrustTriptych` and reached `Intl.DateTimeFormat.format` as an invalid `Date`, which throws `RangeError`. Both now omit the deadline labels instead; `hasEnded` shares the parser. (c) The detail query selects `unwrapResult(r, { allowVoid: false })`, so a 200 envelope without `data` is an `ApiError` at the boundary (error alert) rather than a `TypeError` in the page. (d) Step 1's record above said "No active deal"; corrected to the shipped copy. Three older threads on `.github/dependabot.yml`, `board-snapshot.yml` and `docs/agile/README.md` were raised while this PR still carried #113's commits; those files are no longer in its diff and were answered on the threads for a follow-up on `dev`.
+44. **T2-03 follows the Claude Design Catalog artboards and ships `keyword` now (2026-09-18).** (a) The category filter is the artboard's single-select chip row (All, Groceries, Household, Electronics, Beauty, Kids; pills min-h 44, radius full, 14/500, accent-soft layered over white with `#B43648` text when selected), rendered as router `Link`s with `search: { ...prev, category, page: 1 }` ("All" drops `category`); the selected chip is a non-link marked `aria-current="page"`. No `Input "Category"`, no "Filter" button, no `variant="primary"` (CR-8). The label-to-value map lives in `categories.ts`; the contract publishes no dictionary (CR-10), so the values are the backend demo seed's strings (`beauty`, `electronics`, `home`: the Household chip sends `home`, and Groceries / Kids have no seed rows yet, so they render the empty state; CodeRabbit r4045128144 on PR #119). (b) `keyword` is in `productsSearchSchema` and sent to `pageListingsOptions` now: the contract has carried it since PR #107 and it is live on dev, so step 4's "until #47" hold is corrected in place. (c) The artboards draw no search field ("SearchField is designed but parked", HeroUI Kit sheet), so a compact HeroUI `SearchField` sits at the end of the chip row (full width under the chips on phone) and submits on Enter through TanStack Form with `filter-form.schema.ts` (keyword only, trimmed, max 64 per the contract; an empty or unchanged submit does nothing; the clear button removes an applied keyword). Its placement is a question for the design owner (sprint log). (d) `productsSearchSchema` cuts an over-long URL keyword to 64 rather than failing the route; an empty `?keyword=` is no filter. (e) An empty keyword result has no artboard: it reuses the `empty category` card with "No listings match “…”" and a "Clear search" link that keeps the category. (f) The loading state gains the artboard's three chip skeletons. (g) oxlint's `jsx-a11y/prefer-tag-over-role` moved the chip row to `<fieldset>` + `<legend>` and the search wrapper to `<search>`. `@tanstack/react-form` and `@testing-library/user-event` leave `knip.json#ignoreDependencies` (note 25 closed).
 
 ---
 
