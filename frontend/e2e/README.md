@@ -7,8 +7,9 @@ runs against the dev distribution. Only the smoke and login journeys live here (
 ## Login journey (`login.spec.ts`)
 
 The anonymous half needs nothing: the guard sends `/account` to `/login?returnTo=%2Faccount`, the
-Google button navigates to `/api/v1/auth/oauth2/google` (intercepted, never followed), and, when
-a backend answers `/api/v1/products`, Start a bloc on a listing opens the sign-in sheet.
+Google button navigates to `/api/v1/auth/oauth2/google` (intercepted, never followed), and
+Start a bloc on a listing opens the sign-in sheet (the listing, its detail and `me` are stubbed
+with `page.route`, so this runs against `vite preview` too).
 
 The `@auth` half needs a storage state with a real session cookie. Seed it once by hand:
 

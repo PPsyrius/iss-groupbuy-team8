@@ -14,19 +14,35 @@ const CODEGEN =
   "pnpm exec playwright codegen --save-storage=e2e/.auth/dev.json https://d1b3np88z657cp.cloudfront.net/login";
 // Login is a full-page navigation to the backend (ADR 0002, `src/features/session/return-to.ts`).
 const LOGIN_START = "/api/v1/auth/oauth2/google";
+// `OK_CODE` in `src/api/envelope.ts`; the e2e folder does not import app modules.
+const OK = "COMMON_200_000";
 
-// `data.items[0].id` of the `pageListings` envelope, read defensively: the response is untyped
-// here and the test only needs one id to open.
-function firstListingId(body: unknown): string | undefined {
-  if (typeof body !== "object" || body === null || !("data" in body)) return undefined;
-  const data: unknown = body.data;
-  if (typeof data !== "object" || data === null || !("items" in data)) return undefined;
-  const items: unknown = data.items;
-  if (!Array.isArray(items) || items.length === 0) return undefined;
-  const first: unknown = items[0];
-  if (typeof first !== "object" || first === null || !("id" in first)) return undefined;
-  return typeof first.id === "string" ? first.id : undefined;
-}
+// One listing with an open bloc, served by `page.route` so the gated-sheet journey runs on every
+// target, `vite preview` included, instead of skipping when no backend answers /api
+// (CodeRabbit r4046597269). The gate is frontend behaviour; the backend only has to say 401.
+const LISTING_ID = "a0000000-0000-7000-8000-0000000e2e01";
+const summary = {
+  id: LISTING_ID,
+  title: "Thai jasmine rice 10 kg",
+  subtitle: "New crop, vacuum packed",
+  category: "home",
+  individualPrice: 89,
+  groupPrice: 71,
+  currency: "sgd",
+};
+const detail = {
+  ...summary,
+  description: "Fragrant long grain, 10 kg sack.",
+  images: [],
+  stock: 40,
+  soldCount: 12,
+  deal: {
+    dealId: "deal-e2e-1",
+    currentSize: 3,
+    targetSize: 5,
+    expireTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+  },
+};
 
 test.describe("anonymous visitor", () => {
   test("/account sends an anonymous visitor to /login with the path they wanted", async ({
@@ -55,17 +71,23 @@ test.describe("anonymous visitor", () => {
     expect(await page.evaluate(() => sessionStorage.getItem("blocbuy.returnTo"))).toBe("/account");
   });
 
-  test("Start a bloc on a listing opens the sign-in sheet", async ({ page, request }) => {
-    // `vite preview` proxies /api to localhost:8589; without a backend there is no listing to open.
-    const res = await request.get("/api/v1/products?page=1&size=1");
-    test.skip(res.status() !== 200, "no backend behind this target: nothing to gate");
-    const id = firstListingId(await res.json());
-    test.skip(!id, "backend has no listings");
+  test("Start a bloc on a listing opens the sign-in sheet", async ({ page }) => {
+    await page.route(/\/api\/v1\/auth\/me(\?|$)/, (route) =>
+      route.fulfill({ status: 401, json: { code: "AUTH_401", message: "unauthenticated" } }),
+    );
+    await page.route(/\/api\/v1\/products(\?|$)/, (route) =>
+      route.fulfill({
+        json: { code: OK, message: "ok", data: { items: [summary], total: 1, page: 1, size: 20 } },
+      }),
+    );
+    await page.route(/\/api\/v1\/products\/[^/?]+(\?|$)/, (route) =>
+      route.fulfill({ json: { code: OK, message: "ok", data: detail } }),
+    );
 
     // Client-side navigation from the catalog, so the dev target does not need A1 (#99).
     await page.goto("/");
-    await page.locator(`a[href="/products/${id}"]`).first().click();
-    await expect(page).toHaveURL(new RegExp(`/products/${id}$`));
+    await page.locator(`a[href="/products/${LISTING_ID}"]`).first().click();
+    await expect(page).toHaveURL(new RegExp(`/products/${LISTING_ID}$`));
     await page
       .getByRole("button", { name: /^Start a bloc/ })
       .filter({ visible: true })
