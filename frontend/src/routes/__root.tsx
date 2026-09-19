@@ -23,7 +23,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   // is anonymous by contract; any other failure (backend down, proxy 502 in `vite preview`) is
   // treated as anonymous too, because browsing must never depend on `me` answering. Guarded
   // routes then send the visitor to /login, which is the honest outcome of an unconfirmed
-  // session; the callback route keeps the strict version (plan §12 note 45).
+  // session; the callback route keeps the strict version (plan §12 note 46).
   beforeLoad: async ({ context }) => ({ session: await sessionOrAnonymous(context.queryClient) }),
   component: RootLayout,
   notFoundComponent: () => (
