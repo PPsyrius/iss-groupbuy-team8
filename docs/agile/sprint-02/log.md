@@ -760,3 +760,6 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   non-401 failures while the callback stays strict (note 45); header Sign in goes to `/login`.
 - Problems: CR-13 no return URL through Google; CR-16 Google mark is a placeholder; Q16 no
   artboard for the signed-in header or logout; Q15 `/account` interim. Open.
+- Restack after #115 squash-merged (2026-09-19): the rebase onto dev had dropped the gated
+  detail actions and kept two `renderAt` tests; re-added merging with dev's disabled buttons
+  (r4045102864); `pnpm check` 87 tests, build ok; logout and login-e2e rebased on top.
