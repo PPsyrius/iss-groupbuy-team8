@@ -9,6 +9,8 @@ import type { ProductDetailResponse } from "@/api/generated/types.gen";
 import { formatDeadlineShort, hasEnded, parseDeadline } from "@/features/catalog/deal-time";
 import { DealProgress, useNow } from "@/features/catalog/DealProgress";
 import { formatPrice, Price } from "@/features/catalog/Price";
+import { GatedActionSheet } from "@/features/session/GatedActionSheet";
+import { useSession } from "@/features/session/use-session";
 
 // A 200 envelope without `data` is malformed for this endpoint; rejecting it here sends it to
 // the route's error boundary instead of a TypeError in the page (CodeRabbit r4045102889).
@@ -78,8 +80,19 @@ function ProductDetailPage() {
   const groupPrice = p.groupPrice ?? undefined;
   const category = p.category ? titleCase(p.category) : undefined;
   const images = galleryImages(p);
+  // The gate sits at the paid action (flow map "Gate"): anonymous presses open the sign-in sheet
+  // with this listing as the return path. Signed-in presses stay unwired until the join and
+  // payment use cases land (UC3/UC4), so `onGated` is undefined for them.
+  const session = useSession();
+  const [gateOpen, setGateOpen] = useState(false);
+  const onGated = session.status === "authenticated" ? undefined : () => setGateOpen(true);
   return (
     <main className={shell}>
+      <GatedActionSheet
+        isOpen={gateOpen}
+        onOpenChange={setGateOpen}
+        returnTo={`/products/${productId}`}
+      />
       <CrumbRow category={category} title={p.title} />
       <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[620px_minmax(0,1fr)] xl:gap-8">
         <div className="flex flex-col gap-4 xl:gap-6">
@@ -125,7 +138,7 @@ function ProductDetailPage() {
             {groupPrice !== undefined && closesMs !== null ? (
               <TrustTriptych payNow={formatPrice(groupPrice, currency)} closesMs={closesMs} />
             ) : null}
-            <Actions product={p} currency={currency} className="hidden xl:flex" />
+            <Actions product={p} currency={currency} onGated={onGated} className="hidden xl:flex" />
           </section>
           <section className="flex flex-col gap-3">
             {p.deal ? (
@@ -151,6 +164,7 @@ function ProductDetailPage() {
       <Actions
         product={p}
         currency={currency}
+        onGated={onGated}
         className="bg-surface border-border sticky bottom-0 -mx-4 flex border-t px-4 py-3 xl:hidden"
       />
     </main>
@@ -319,23 +333,28 @@ function TrustTriptych({ payNow, closesMs }: { payNow: string; closesMs: number 
   );
 }
 
-// Both actions are the artboard's, in its order of prominence (Start a bloc outranks Buy alone);
-// neither has a handler yet: T2-04 wires the gated sheet, UC3/UC4 the payment. Until then they
-// are disabled rather than activatable with no effect (CodeRabbit r4045102864). Start a bloc
-// carries no amount when there is no bloc price ("unknown until a rule exists").
+// Both actions are the artboard's, in its order of prominence (Start a bloc outranks Buy alone).
+// `onGated` (anonymous buyers) opens the sign-in sheet; for signed-in buyers there is no handler
+// yet, UC3/UC4 wire the payment, so the buttons are disabled rather than activatable with no
+// effect (CodeRabbit r4045102864). Start a bloc carries no amount when there is no bloc price
+// ("unknown until a rule exists").
 function Actions({
   product: p,
   currency,
+  onGated,
   className,
 }: {
   product: ProductDetailResponse;
   currency: string;
+  onGated: (() => void) | undefined;
   className: string;
 }) {
   const groupPrice = p.groupPrice ?? undefined;
+  // `exactOptionalPropertyTypes`: an absent handler is no prop at all, not `onPress={undefined}`.
+  const press = onGated ? { onPress: onGated } : { isDisabled: true };
   return (
     <div className={"flex-col gap-2 " + className}>
-      <Button variant="secondary" size="lg" className="min-h-12 w-full text-lg" isDisabled>
+      <Button variant="secondary" size="lg" className="min-h-12 w-full text-lg" {...press}>
         {groupPrice === undefined
           ? "Start a bloc"
           : `Start a bloc · ${formatPrice(groupPrice, currency)}`}
@@ -344,7 +363,7 @@ function Actions({
         <Button
           variant="ghost"
           className="min-h-11 w-full text-base font-medium xl:hidden"
-          isDisabled
+          {...press}
         >
           Buy alone · {formatPrice(p.individualPrice, currency)}
         </Button>
@@ -353,7 +372,7 @@ function Actions({
         <Button
           variant="outline"
           className="hidden min-h-11 w-full text-base xl:inline-flex"
-          isDisabled
+          {...press}
         >
           Buy alone · {formatPrice(p.individualPrice, currency)}
         </Button>
