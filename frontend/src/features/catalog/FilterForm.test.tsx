@@ -6,7 +6,7 @@ import { renderWithRouter } from "@/test/render";
 
 import { FilterForm } from "./FilterForm";
 
-const search = { page: 3, size: 20, category: "household" };
+const search = { page: 3, size: 20, category: "home" };
 
 describe("FilterForm", () => {
   it("renders the category chips as links that reset the page, with the current one marked", async () => {
@@ -38,7 +38,7 @@ describe("FilterForm", () => {
       expect(router.state.location.search).toEqual({
         page: 1,
         size: 20,
-        category: "household",
+        category: "home",
         keyword: "rice",
       }),
     );
@@ -52,7 +52,7 @@ describe("FilterForm", () => {
     expect(screen.getByRole("searchbox", { name: "Search listings" })).toHaveValue("rice");
     await user.click(screen.getByRole("button", { name: /clear/i }));
     await waitFor(() =>
-      expect(router.state.location.search).toEqual({ page: 1, size: 20, category: "household" }),
+      expect(router.state.location.search).toEqual({ page: 1, size: 20, category: "home" }),
     );
   });
 
