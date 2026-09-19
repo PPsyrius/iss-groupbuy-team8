@@ -7,7 +7,7 @@ import { KEYWORD_MAX_LENGTH } from "./filter-form.schema";
 // 20, as the Catalog artboard and the design brief §8 state (plan §12 note 39). Out-of-range or non-numeric values fall back instead of failing the
 // route, so a hand-edited URL still renders. An empty `category` or `keyword` (`?keyword=`)
 // becomes "no filter", not an error; an over-long keyword is cut to the contract's limit rather
-// than rejected (the form never produces one, plan §12 note 43).
+// than rejected (the form never produces one, plan §12 note 44).
 const DEFAULT_PAGE_SIZE = 20;
 
 const optionalTrimmed = (max?: number) =>

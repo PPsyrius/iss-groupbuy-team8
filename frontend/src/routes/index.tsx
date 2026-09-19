@@ -12,7 +12,7 @@ import { productsSearchSchema, type ProductsSearch } from "@/features/catalog/pr
 // `exactOptionalPropertyTypes`: the generated query type has `category?: string` and
 // `keyword?: string`, so an undefined filter is left out rather than passed as `undefined`. The
 // `queryOptions()` wrapper is what types `select`'s input from the generated `queryFn` (plan §12
-// note 36). `keyword` is live on dev since PR #107 (note 43).
+// note 36). `keyword` is live on dev since PR #107 (note 44).
 const listOptions = ({ page, size, category, keyword }: ProductsSearch) =>
   queryOptions({
     ...pageListingsOptions({

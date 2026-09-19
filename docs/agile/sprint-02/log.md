@@ -716,12 +716,12 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 
 ## 2026-09-18 - @limjiechao - T2-03 catalog filter: category chips and keyword search (#44, #47, #93 PR-H)
 
-- Kind: feature (PR-H, UC1 filter); artboards over plan (note 43); TanStack Form + valibot as
+- Kind: feature (PR-H, UC1 filter); artboards over plan (note 44); TanStack Form + valibot as
   planned; no ADR, no NFR.
 - Changed: `FilterForm`, `categories`, `filter-form.schema` with tests; `keyword` in the search
   schema, the `/` query and the MSW seed; chip row and search in the artboard slot; knip ignores
   for form and user-event removed (note 25 closed); plan steps 1–5 with a dated step 4 correction
-  (`keyword` now, contract live since PR #107), note 43.
+  (`keyword` now, contract live since PR #107), note 44.
 - Sources: `design-screens.md` §4.1 "Filter" and §7 Q3/Q4; `BlocBuy Buyer Catalog.dc.html` chip
   markup; the HeroUI Kit sheet's parked `SearchField`; installed 3.2.5 types, offline-first.
 - Verified on `e1b2549` plus the change: `FilterForm.test.tsx` 6 tests; `pnpm check` exit 0

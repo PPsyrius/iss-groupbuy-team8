@@ -12,7 +12,7 @@ import type { ProductsSearch } from "./products-search";
 // pager); the selected chip is the current page, not a link. The artboards draw no search
 // field ("SearchField is designed but parked"), but the contract's `keyword` is live on dev
 // since PR #107, so a compact search field sits at the end of the row, submitting on Enter
-// through TanStack Form + valibot (plan §12 note 43).
+// through TanStack Form + valibot (plan §12 note 44).
 export function FilterForm({ search }: { search: ProductsSearch }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 xl:gap-4">
