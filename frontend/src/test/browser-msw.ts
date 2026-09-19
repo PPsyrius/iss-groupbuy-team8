@@ -188,6 +188,10 @@ const toSummary = (s: Seed): ProductSummaryResponse => ({
 });
 
 export async function startBrowserMsw() {
+  // Read once at start-up: in-app navigation drops `me=1` from the URL, and a later `me`
+  // refetch (root loader, callback) must not flip the sample session back to anonymous
+  // (CodeRabbit r4050400123).
+  const signedIn = new URLSearchParams(window.location.search).get("me") === "1";
   const worker = setupWorker(
     ...createMswHandlers().all({
       pick: {
@@ -196,7 +200,7 @@ export async function startBrowserMsw() {
         // sheet can be walked through offline. Browser seed only; the vitest handlers are set
         // per test.
         me: () =>
-          new URLSearchParams(window.location.search).get("me") === "1"
+          signedIn
             ? HttpResponse.json({
                 code: OK_CODE,
                 message: "ok",

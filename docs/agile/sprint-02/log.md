@@ -763,3 +763,7 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 - Restack after #115 squash-merged (2026-09-19): the rebase onto dev had dropped the gated
   detail actions and kept two `renderAt` tests; re-added merging with dev's disabled buttons
   (r4045102864); `pnpm check` 87 tests, build ok; logout and login-e2e rebased on top.
+- PR #120 review (2026-09-19, r4045129508, r4050400116/23): return paths reject a backslash
+  anywhere (`%5C` reads as `/` in the URL parser), with regression tests; `DealProgress` takes
+  `onJoin` and the route passes `onGated`, so the open bloc's Join opens the sheet too; the
+  browser seed reads `me=1` once at worker start. Plan record re-added as notes 45–46.
