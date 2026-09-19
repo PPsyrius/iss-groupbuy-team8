@@ -25,7 +25,16 @@ export function useNow() {
 
 const maxSeatDots = 10;
 
-export function DealProgress({ deal }: { deal: ActiveDealResponse | undefined }) {
+// `onJoin` is the gated action for the row's Join (T2-04: anonymous buyers get the sign-in
+// sheet); without one the button is disabled rather than activatable with no effect
+// (CodeRabbit r4045102864, r4050400116).
+export function DealProgress({
+  deal,
+  onJoin,
+}: {
+  deal: ActiveDealResponse | undefined;
+  onJoin?: (() => void) | undefined;
+}) {
   const now = useNow();
   if (!deal) return <NoOpenBloc />;
   const joined = deal.currentSize ?? 0;
@@ -108,9 +117,11 @@ export function DealProgress({ deal }: { deal: ActiveDealResponse | undefined })
             <span className="text-muted text-xs">{formatDeadline(expireMs, now)}</span>
           )}
         </div>
-        {/* Wired in T2-04 (gated sheet): the artboard's per-bloc Join has no action yet, so it
-            is disabled rather than activatable with no effect (CodeRabbit r4045102864). */}
-        <Button variant="outline" className="min-h-11 px-4" isDisabled>
+        <Button
+          variant="outline"
+          className="min-h-11 px-4"
+          {...(onJoin ? { onPress: onJoin } : { isDisabled: true })}
+        >
           <span className="xl:hidden">Join</span>
           <span className="hidden xl:inline">Join this bloc</span>
         </Button>

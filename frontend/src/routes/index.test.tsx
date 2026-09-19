@@ -1,19 +1,12 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createMemoryHistory, createRouter, RouterProvider } from "@tanstack/react-router";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { OK_CODE } from "@/api/envelope";
 import type { ProductSummaryResponse } from "@/api/generated/types.gen";
-import { routeTree } from "@/routeTree.gen";
 import { keywordTerms, matchesKeyword } from "@/test/keyword-match";
 import { server } from "@/test/msw";
-
-// The root layout mounts the devtools; they have no place in a happy-dom route test.
-vi.mock("@tanstack/react-devtools", () => ({ TanStackDevtools: () => null }));
-vi.mock("@tanstack/react-query-devtools", () => ({ ReactQueryDevtoolsPanel: () => null }));
-vi.mock("@tanstack/react-router-devtools", () => ({ TanStackRouterDevtoolsPanel: () => null }));
+import { renderRoute } from "@/test/render-route";
 
 const listing = (n: number): ProductSummaryResponse => ({
   id: `5b1b9d5c-1a11-4e1e-9a10-${String(n).padStart(12, "0")}`,
@@ -50,21 +43,22 @@ function serveListings(all: ProductSummaryResponse[]) {
 }
 
 async function renderAt(path: string) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const router = createRouter({
-    routeTree,
-    context: { queryClient: qc, session: null },
-    history: createMemoryHistory({ initialEntries: [path] }),
-  });
-  render(
-    <QueryClientProvider client={qc}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>,
-  );
-  return router;
+  return renderRoute(path).router;
 }
 
 describe("/ (products list) loader", () => {
+  it("still renders anonymously when /auth/me fails outright", async () => {
+    serveListings([listing(1)]);
+    server.use(
+      http.get("*/api/v1/auth/me", () =>
+        HttpResponse.json({ code: "COMMON_500_000", message: "boom" }, { status: 500 }),
+      ),
+    );
+    await renderAt("/");
+    expect(await screen.findByText("Listing 1")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Sign in" })).toBeInTheDocument();
+  });
+
   it("redirects a page past the last one to the last page, keeping size and category", async () => {
     serveListings([listing(1), listing(2), listing(3)]);
     const router = await renderAt("/?page=999&size=20&category=groceries");

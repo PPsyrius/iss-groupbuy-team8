@@ -739,3 +739,31 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   empty-state links keep `size`; one keyword matcher over title, subtitle and description
   (`keyword-match.ts`) shared by the browser seed and the route test. Three outdated threads on
   #115 files answered as landed there (9b67149).
+
+## 2026-09-18 - @limjiechao - T2-04 session hook, /login, /auth/callback, _authenticated guard, /account, gated sheet (#42, #93)
+
+- Kind: feature (UC2 sign-in, frontend half); the guard and the gated sheet are UX only, the
+  backend enforces (ADR 0002); NFR-01 unchanged; artboards over plan (note 45); no ADR.
+- Changed: `useSession` and helpers, `GoogleSignInButton`, `GatedActionSheet`; routes `/login`,
+  `/auth/callback`, `_authenticated`, `/account`; root `beforeLoad` session; gated detail-page
+  actions; neutral header Sign in with avatar + name when signed in; shared `render-route.tsx`;
+  `me` in the MSW seed (`?msw=1&me=1` signs in); plan steps 1–8, notes 45–46.
+- Sources: `design-screens.md` §3, §4.3, §4.4, §7 Q1/Q13–Q17; `BlocBuy Buyer Sign In.dc.html`,
+  `BlocBuy Buyer My Blocs.dc.html`; contract auth operations; installed 3.2.5 types, offline-first.
+- Verified on `4f2b7d0` plus the change: session suites 4 files / 20 tests (red first); `pnpm
+  check` exit 0 (vitest 18 files / 74 tests, knip 0 issues); `pnpm build` ok; `pnpm e2e` 1 passed,
+  2 skipped after fixing a blank app on the preview's `me` ECONNREFUSED (note 46); 13 MSW
+  screenshots at 390 and 1280 (login, header, account, guard redirect, sheet, modal), 0 errors.
+- Not verified: the real Google round trip and the `blocbuy-token` cookie (T2-06 after B5);
+  `Modal placement="auto"` breakpoint; `Avatar.Image` with a real URL.
+- Decision: return path in sessionStorage (CR-13); root `beforeLoad` falls back to anonymous on
+  non-401 failures while the callback stays strict (note 46); header Sign in goes to `/login`.
+- Problems: CR-13 no return URL through Google; CR-16 Google mark is a placeholder; Q16 no
+  artboard for the signed-in header or logout; Q15 `/account` interim. Open.
+- Restack after #115 squash-merged (2026-09-19): the rebase onto dev had dropped the gated
+  detail actions and kept two `renderAt` tests; re-added merging with dev's disabled buttons
+  (r4045102864); `pnpm check` 87 tests, build ok; logout and login-e2e rebased on top.
+- PR #120 review (2026-09-19, r4045129508, r4050400116/23): return paths reject a backslash
+  anywhere (`%5C` reads as `/` in the URL parser), with regression tests; `DealProgress` takes
+  `onJoin` and the route passes `onGated`, so the open bloc's Join opens the sheet too; the
+  browser seed reads `me=1` once at worker start. Plan record re-added as notes 45–46.

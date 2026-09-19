@@ -17,7 +17,7 @@ async function bootstrap() {
     await startBrowserMsw();
   }
 
-  const router = createAppRouter({ queryClient, session: null });
+  const router = createAppRouter({ queryClient, session: { status: "anonymous" } });
 
   createRoot(document.getElementById("root")!).render(
     <StrictMode>

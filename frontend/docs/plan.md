@@ -1111,7 +1111,7 @@ export const filterFormSchema = v.object({
 
 **Interfaces produced:** `SessionState = { status: 'anonymous' } | { status: 'authenticated'; userId: string; nickname: string | null; avatarUrl: string | null }` (`MeResponse` after B4, PR #89: `userId`, `nickname`, `avatarUrl`, the last two nullable); `useSession(): SessionState`; `sessionFromQuery(queryClient): Promise<SessionState>`.
 
-- [ ] Step 1: `frontend/src/features/session/session.ts`
+- [x] Step 1: `frontend/src/features/session/session.ts`
 
 ```ts
 import type { QueryClient } from '@tanstack/react-query'
@@ -1137,15 +1137,15 @@ export async function sessionFromQuery(queryClient: QueryClient): Promise<Sessio
 }
 ```
 
-- [ ] Step 2: `use-session.ts`: `useQuery(sessionOptions())` mapped to `SessionState` (401 → anonymous via `error instanceof ApiError`).
-- [ ] Step 3: `router.tsx`: `RouterContext.session: SessionState`; `main.tsx` passes `{ queryClient, session: { status: 'anonymous' } }` and the root route's `beforeLoad` resolves the real value:
+- [x] Step 2: `use-session.ts`: `useQuery(sessionOptions())` mapped to `SessionState` (401 → anonymous via `error instanceof ApiError`).
+- [x] Step 3: `router.tsx`: `RouterContext.session: SessionState`; `main.tsx` passes `{ queryClient, session: { status: 'anonymous' } }` and the root route's `beforeLoad` resolves the real value:
 
 ```tsx
 // in __root.tsx
 beforeLoad: async ({ context }) => ({ session: await sessionFromQuery(context.queryClient) }),
 ```
 
-- [ ] Step 4: `frontend/src/routes/_authenticated.tsx` (verified: https://tanstack.com/router/latest/docs/framework/react/guide/authenticated-routes)
+- [x] Step 4: `frontend/src/routes/_authenticated.tsx` (verified: https://tanstack.com/router/latest/docs/framework/react/guide/authenticated-routes)
 
 ```tsx
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
@@ -1162,8 +1162,8 @@ export const Route = createFileRoute('/_authenticated')({
 
 Add `redirect: v.optional(v.string())` to `productsSearchSchema` so `/` accepts the param; the header's login link appends it: `/api/v1/auth/oauth2/google` (the backend does not carry a return URL today; the callback route falls back to `/`). Record in ADR 0002 that a `?redirect=` pass-through is a follow-up backend ask.
 
-- [ ] Step 5: `frontend/src/routes/_authenticated/account.tsx`: reads `Route.useRouteContext().session` and shows `nickname` (fallback `userId`) and the avatar when `avatarUrl` is set.
-- [ ] Step 6: `frontend/src/routes/auth.callback.tsx`
+- [x] Step 5: `frontend/src/routes/_authenticated/account.tsx`: reads `Route.useRouteContext().session` and shows `nickname` (fallback `userId`) and the avatar when `avatarUrl` is set.
+- [x] Step 6: `frontend/src/routes/auth.callback.tsx`
 
 ```tsx
 import { createFileRoute, redirect } from '@tanstack/react-router'
@@ -1179,8 +1179,8 @@ export const Route = createFileRoute('/auth/callback')({
 })
 ```
 
-- [ ] Step 7: Header uses `useSession()`; tests for anonymous and authenticated states (MSW override returning `{ code: '0', data: { userId: 'u1', nickname: 'Ada', avatarUrl: null } }`; see `Header.test.tsx` for the shipped fixtures).
-- [ ] Step 8: `pnpm check`; manual walkthrough on `docker compose` backend; screenshot of `/account`; commit `feat(frontend): session query, auth callback route, authenticated layout and account page`.
+- [x] Step 7: Header uses `useSession()`; tests for anonymous and authenticated states (MSW override returning `{ code: 'COMMON_200_000', message: 'ok', data: { userId: 'u1', nickname: 'Ada', avatarUrl: null } }` (`OK_CODE`; the plan first wrote `'0'`, CodeRabbit r4050777130 on PR #121); see `Header.test.tsx` for the shipped fixtures).
+- [x] Step 8: `pnpm check`; manual walkthrough on `docker compose` backend; screenshot of `/account`; commit `feat(frontend): session query, auth callback route, authenticated layout and account page`.
 
 ### T2-05: Logout
 
@@ -2259,6 +2259,8 @@ None are applied silently; each is planned as stated below and needs the owner's
 42. **The detail loader maps both not-found shapes to `notFound()` (2026-09-18).** `contracts/openapi.json` declares only a 200 for `GET /api/v1/products/{id}`, and no `PRODUCT_*`/`LISTING_*` error code exists in the backend yet (the `_404_` family is `ORDER`, `IDENTITY`, `GROUPBUY`, `NOTIFICATION`, `PAYMENT`). The loader therefore treats an `ApiError` with `status === 404` (the interceptor stamps the HTTP status) or a code matching `/_404_/` as not found; anything else reaches `errorComponent`. The browser MSW seed answers unknown ids with `{ code: "PRODUCT_404_001" }` at HTTP 404 as a placeholder for that code (CR: contract 404 for getListing).
 43. **PR #115 review round 2 (2026-09-18, CodeRabbit r4045102856/64/80/89).** (a) The three unwired detail controls (`Join`, `Start a bloc`, `Buy alone`) carry `isDisabled`: HeroUI 3.2.5 leaves a `Button` activatable without it, and a press had no application effect. T2-04 removes it from the two it wires through `onGated`; Join stays disabled until a per-bloc action exists. (b) `deal-time` exports `parseDeadline(expireTime): number | null`, and `formatDeadline` / `formatDeadlineShort` take epoch ms: a non-empty unparseable `expireTime` passed the truthiness checks in `DealProgress` and `TrustTriptych` and reached `Intl.DateTimeFormat.format` as an invalid `Date`, which throws `RangeError`. Both now omit the deadline labels instead; `hasEnded` shares the parser. (c) The detail query selects `unwrapResult(r, { allowVoid: false })`, so a 200 envelope without `data` is an `ApiError` at the boundary (error alert) rather than a `TypeError` in the page. (d) Step 1's record above said "No active deal"; corrected to the shipped copy. Three older threads on `.github/dependabot.yml`, `board-snapshot.yml` and `docs/agile/README.md` were raised while this PR still carried #113's commits; those files are no longer in its diff and were answered on the threads for a follow-up on `dev`.
 44. **T2-03 follows the Claude Design Catalog artboards and ships `keyword` now (2026-09-18).** (a) The category filter is the artboard's single-select chip row (All, Groceries, Household, Electronics, Beauty, Kids; pills min-h 44, radius full, 14/500, accent-soft layered over white with `#B43648` text when selected), rendered as router `Link`s with `search: { ...prev, category, page: 1 }` ("All" drops `category`); the selected chip is a non-link marked `aria-current="page"`. No `Input "Category"`, no "Filter" button, no `variant="primary"` (CR-8). The label-to-value map lives in `categories.ts`; the contract publishes no dictionary (CR-10), so the values are the backend demo seed's strings (`beauty`, `electronics`, `home`: the Household chip sends `home`, and Groceries / Kids have no seed rows yet, so they render the empty state; CodeRabbit r4045128144 on PR #119). (b) `keyword` is in `productsSearchSchema` and sent to `pageListingsOptions` now: the contract has carried it since PR #107 and it is live on dev, so step 4's "until #47" hold is corrected in place. (c) The artboards draw no search field ("SearchField is designed but parked", HeroUI Kit sheet), so a compact HeroUI `SearchField` sits at the end of the chip row (full width under the chips on phone) and submits on Enter through TanStack Form with `filter-form.schema.ts` (keyword only, trimmed, max 64 per the contract; an empty or unchanged submit does nothing; the clear button removes an applied keyword). Its placement is a question for the design owner (sprint log). (d) `productsSearchSchema` cuts an over-long URL keyword to 64 rather than failing the route; an empty `?keyword=` is no filter. (e) An empty keyword result has no artboard: it reuses the `empty category` card with "No listings match “…”" and a "Clear search" link that keeps the category. (f) The loading state gains the artboard's three chip skeletons. (g) oxlint's `jsx-a11y/prefer-tag-over-role` moved the chip row to `<fieldset>` + `<legend>` and the search wrapper to `<search>`. `@tanstack/react-form` and `@testing-library/user-event` leave `knip.json#ignoreDependencies` (note 25 closed).
+45. **T2-04 follows the Claude Design sign-in artboards; the guard, the header and the return path diverge from the plan text (2026-09-18).** (a) *`/login` exists.* `BlocBuy Buyer Sign In.dc.html` draws a dedicated screen, so `src/routes/login.tsx` renders it (default, "returning from a gated action" copy when `returnTo` is a listing, and the provider-error variant for the backend's `/login?error={errorCode}` landing declared in `contracts/openapi.json`); the `_authenticated` guard redirects to `/login?returnTo=<location.href>` instead of the plan's `/?redirect=`, and `productsSearchSchema` gains no `redirect` field. `returnTo` is validated by valibot in `src/features/session/login-search.ts` (same-origin relative path only, default `/account`). (b) *Return path rides sessionStorage.* The backend carries no return URL through Google (CR-13, ADR 0002 consequence), so `startGoogleLogin` parks the path under `blocbuy.returnTo` before the full-page navigation and `/auth/callback` takes it back (`redirect({ href })`); a callback without a session goes to `/login?error=no_session` with the same `returnTo`. (c) *Header.* "Sign in" is a router `Link` to `/login` (hidden on `/login` itself) styled as the artboard's neutral `secondary` control with the accent-soft-foreground label (CR-8, Q17), not the plan's primary "Log in" anchor to the backend; signed in shows the 32px letter `Avatar` plus `nickname ?? userId` (test id `session-user` kept); the bell and badge need notification data and are not drawn; the logout control waits for T2-05 in the signed-in slot. (d) *Gated sheet.* `GatedActionSheet` (HeroUI `Modal`, `placement="auto"`: bottom sheet on phone, centred modal on desktop) opens from Start a bloc / Buy alone for anonymous buyers with the listing as the return path; signed-in presses stay unwired until UC3/UC4. (e) *`/account` is interim* (Q15): My blocs page chrome, avatar + name, and the empty-state card; the chips and rows need per-user bloc data the contract lacks. (f) *Test plumbing.* Route tests share `src/test/render-route.tsx`, which mounts the real route tree over the app's own `QueryClient` so the 401 interceptor is installed exactly as in `main.tsx`; the browser seed answers `me` with 401 by default and signs in as the sample buyer with `?msw=1&me=1`. Plan steps 4–7 are ticked with these substitutions; step 8's walkthrough ran on the MSW seed, not `docker compose`.
+46. **The root route treats a failed `me` as anonymous; only the callback route is strict (2026-09-18).** `pnpm e2e` caught it: `vite preview` has no backend, the `/api` proxy answers ECONNREFUSED, the interceptor throws a non-401 `ApiError`, and a strict root `beforeLoad` would have blanked the whole app (the smoke spec's header assertion failed). `__root.tsx` now wraps `sessionFromQuery` in `sessionOrAnonymous`, so browsing never depends on `me` answering and guarded routes send an unconfirmed visitor to `/login`; `sessionFromQuery` itself still rethrows non-401 failures for `/auth/callback`, where "could not confirm the session" is the right message. Covered by the new `index.test.tsx` case with `me` answering 500.
 
 ---
 

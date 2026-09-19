@@ -42,6 +42,19 @@ describe("DealProgress", () => {
     expect(screen.getByRole("button", { name: /join/i })).toBeInTheDocument();
   });
 
+  it("disables Join without a handler and enables it with one", () => {
+    const deal = {
+      dealId: "d1",
+      currentSize: 3,
+      targetSize: 5,
+      expireTime: "2026-09-17T05:14:00Z",
+    };
+    const { rerender } = render(<DealProgress deal={deal} />);
+    expect(screen.getByRole("button", { name: /join/i })).toBeDisabled();
+    rerender(<DealProgress deal={deal} onJoin={() => {}} />);
+    expect(screen.getByRole("button", { name: /join/i })).toBeEnabled();
+  });
+
   it("switches to Closing soon and mm:ss under one hour, and bolds the last seat", () => {
     render(
       <DealProgress
