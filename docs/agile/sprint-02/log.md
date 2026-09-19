@@ -812,6 +812,7 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   listing and its detail with `page.route`, so it runs on preview and dev alike (4 passed / 4
   skipped locally, no more skip); the sign-out test reads the logout `Set-Cookie` and requires
   `blocbuy-token` expired (`Max-Age` ≤ 0 or a past `Expires`) before asserting the jar has no
-  such cookie. Plan record re-added as note 48 (the restack had dropped it).
+  such cookie. Plan record re-added as note 48 (the restack had dropped it). Round 2
+  (r4053028508): note 48 describes the stubbed journey instead of the old skip.
 - Problems: step 1 is a human action and B5's console check is unconfirmed (#98); asked in the PR
   body; the `@auth` tests report the codegen command as the skip reason. Open, user-owned.
