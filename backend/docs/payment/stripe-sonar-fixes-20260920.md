@@ -43,3 +43,8 @@ coverage exclusion or quality threshold was changed.
 These are local results, not a claim of deployed Stripe acceptance or the
 SonarCloud new-code percentage. The updated PR must pass its own CI analysis;
 the container-backed path is verified there. Team review is still required.
+
+The first CI run (`35506864274`) exposed a test-only JDBC URL bug: Testcontainers
+already appended `?loggerLevel=OFF`, so the schema parameter must use `&`.
+The helper now selects the separator from the existing URL. The migrations
+had succeeded; tests failed because subsequent connections used the wrong schema.
