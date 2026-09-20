@@ -16,6 +16,8 @@ import org.springframework.context.annotation.Profile;
 @Configuration
 @Profile("stripe-ops")
 public class StripeOperationsConfiguration {
+    private static final String PAYMENT_ID = "payment-id";
+    private static final String SESSION_ID = "session-id";
     private static final Logger LOG = LoggerFactory.getLogger(StripeOperationsConfiguration.class);
 
     @Bean
@@ -36,47 +38,18 @@ public class StripeOperationsConfiguration {
                             "CheckoutPayment scan: {} candidate(s), limit 100; use cases for paginated review work items",
                             pending.size());
                 }
-                case "cases" -> {
-                    UUID after =
-                            args.containsOption("after-case-id")
-                                    ? UUID.fromString(value(args, "after-case-id"))
-                                    : null;
-                    var cases = service.reviewCases(after);
-                    cases.forEach(
-                            review -> {
-                                boolean alert =
-                                        review.owner() == null
-                                                || !review.nextCheckAt().isAfter(Instant.now())
-                                                || "RECOVERY_FAILED".equals(review.reason());
-                                LOG.warn(
-                                        "payment_review caseId={} paymentId={} owner={} reason={}"
-                                                + " nextCheckAt={} alert={}",
-                                        review.caseId(),
-                                        review.paymentId(),
-                                        review.owner(),
-                                        review.reason(),
-                                        review.nextCheckAt(),
-                                        alert);
-                            });
-                    if (!cases.isEmpty()) {
-                        LOG.warn(
-                                "Review work remains: count={}, nextPageAfter={};"
-                                        + " notify the project owner manually for alerts",
-                                cases.size(),
-                                cases.getLast().caseId());
-                    }
-                }
+                case "cases" -> logReviewCases(service, args);
                 case "assign" ->
                         service.assignReview(
-                                UUID.fromString(value(args, "payment-id")),
+                                UUID.fromString(value(args, PAYMENT_ID)),
                                 value(args, "operator"),
                                 Instant.parse(value(args, "next-check-at")));
                 case "inspect" -> {
                     var preview =
                             service.preview(
-                                    UUID.fromString(value(args, "payment-id")),
-                                    args.containsOption("session-id")
-                                            ? value(args, "session-id")
+                                    UUID.fromString(value(args, PAYMENT_ID)),
+                                    args.containsOption(SESSION_ID)
+                                            ? value(args, SESSION_ID)
                                             : null);
                     LOG.info(
                             "Recovery preview (no writes): payment={} localStatus={} session={}"
@@ -90,12 +63,10 @@ public class StripeOperationsConfiguration {
                 }
                 case "recover" ->
                         service.recover(
-                                UUID.fromString(value(args, "payment-id")),
+                                UUID.fromString(value(args, PAYMENT_ID)),
                                 value(args, "operator"),
                                 "true".equals(value(args, "confirm-recovery")),
-                                args.containsOption("session-id")
-                                        ? value(args, "session-id")
-                                        : null);
+                                args.containsOption(SESSION_ID) ? value(args, SESSION_ID) : null);
                 case "expire-open-sessions" -> {
                     if (!"true".equals(value(args, "confirm-expiry"))) {
                         throw new IllegalArgumentException("Explicit expiry confirmation required");
@@ -108,6 +79,38 @@ public class StripeOperationsConfiguration {
             }
             SpringApplication.exit(context);
         };
+    }
+
+    private static void logReviewCases(
+            StripeCheckoutService service, org.springframework.boot.ApplicationArguments args) {
+        UUID after =
+                args.containsOption("after-case-id")
+                        ? UUID.fromString(value(args, "after-case-id"))
+                        : null;
+        var cases = service.reviewCases(after);
+        cases.forEach(
+                review -> {
+                    boolean alert =
+                            review.owner() == null
+                                    || !review.nextCheckAt().isAfter(Instant.now())
+                                    || "RECOVERY_FAILED".equals(review.reason());
+                    LOG.warn(
+                            "payment_review caseId={} paymentId={} owner={} reason={}"
+                                    + " nextCheckAt={} alert={}",
+                            review.caseId(),
+                            review.paymentId(),
+                            review.owner(),
+                            review.reason(),
+                            review.nextCheckAt(),
+                            alert);
+                });
+        if (!cases.isEmpty()) {
+            LOG.warn(
+                    "Review work remains: count={}, nextPageAfter={};"
+                            + " notify the project owner manually for alerts",
+                    cases.size(),
+                    cases.getLast().caseId());
+        }
     }
 
     private static String value(org.springframework.boot.ApplicationArguments args, String name) {
