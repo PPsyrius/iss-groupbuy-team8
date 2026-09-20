@@ -25,7 +25,8 @@ public final class StripeTestDatabase implements AutoCloseable {
         } else {
             container = new PostgreSQLContainer("postgres:18").withDatabaseName(database);
             container.start();
-            url = container.getJdbcUrl() + "?currentSchema=domain";
+            String jdbcUrl = container.getJdbcUrl();
+            url = jdbcUrl + (jdbcUrl.contains("?") ? "&" : "?") + "currentSchema=domain";
             username = container.getUsername();
             password = container.getPassword();
         }
