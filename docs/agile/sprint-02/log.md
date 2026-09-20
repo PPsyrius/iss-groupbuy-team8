@@ -767,3 +767,43 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   anywhere (`%5C` reads as `/` in the URL parser), with regression tests; `DealProgress` takes
   `onJoin` and the route passes `onGated`, so the open bloc's Join opens the sheet too; the
   browser seed reads `me=1` once at worker start. Plan record re-added as notes 45–46.
+
+## 2026-09-20 - Yorick - Stripe product-page payment connection (local draft)
+
+- Kind: feature, nfr
+- Changed: existing product Start/Join actions, authenticated payment receipts, generated OpenAPI client, payment HTTP/application boundary, opt-in local fixture login and Vite proxy. Tracking: `drafts/stripe-frontend-integration.md`; no GitHub issue or PR created.
+- Verified: `./mvnw -B -ntp verify -Popenapi-export -DskipITs` passed; `bash scripts/test-stripe-sprint2.sh` passed 57 tests with isolated PostgreSQL; `pnpm check` passed 106 tests and all gates; `pnpm build` passed. Two browser-created real Sandbox payments produced one order/member each and a succeeded 2/2 bloc.
+- Decisions: retain the team's Cookie session and generated client; add only an opt-in local proxy, preserving shared addresses. Return URLs identify the payment but do not assert its status. Acceptance: `backend/docs/payment/stripe-frontend-integration-20260920.md`.
+- Problems: real Google OAuth and shared deployment remain unverified; local intent/order/expiry adapters still need replacement when the final teammate modules are integrated. Refund execution and buy-alone checkout are outside this change.
+
+## 2026-09-20 - Yorick - Refund execution and buyer order history (local draft)
+
+- Kind: feature, nfr
+- Changed: Sandbox refund worker, lease/idempotency/recovery, order read model/API, account history and receipt refund display. Tracking: `drafts/stripe-refunds-orders.md`. The user explicitly extended the earlier obligation-only scope; no GitHub issue or PR was created.
+- Verified: backend `verify -Popenapi-export -DskipITs` passed; isolated PostgreSQL payment/refund tests passed; frontend `pnpm check` passed 114 tests and all gates; `pnpm build` passed; two runtime-config tests passed. A real SGD 10 Sandbox refund is successful, and the provider still has exactly one refund after rechecking.
+- Decisions: original payment remains successful, refund has its own state; order history is an explicit order-owned read projection. Details and screenshots: `backend/docs/payment/stripe-refunds-orders-20260920.md`.
+- Problems: local Google callback/credentials require the OAuth owner; shared frontend root returned 403 on the read-only probe. No shared deployment/configuration changes were made.
+
+## 2026-09-20 - Yorick - Keep original dev contracts unchanged (local draft)
+
+- Kind: chore, interoperability
+- Changed: separated Checkout aggregate/repository/gateway/controllers; added String-ID repository adapter and opt-in webhook implementation. Original dev interfaces, implementations and controllers restored. Tracking: `drafts/stripe-dev-interface-compatibility.md`; no issue or PR created.
+- Verified: backend `verify -Popenapi-export -DskipITs` passed (620 reported, 39 skipped); isolated PostgreSQL suite passed 102/102; frontend `pnpm check` passed 114 tests and `pnpm build` passed; runtime-config tests passed 2/2. Source/contract guard confirms 192 original files, 13 original HTTP paths and 23 original schemas unchanged from dev 211cfb7.
+- Decisions: preserve dev contracts and add opt-in implementations; details in `backend/docs/payment/stripe-dev-compatibility-20260920.md`.
+- Problems: formal intent/order/expiry bindings still require teammate integration. No new real Stripe transaction, shared deployment, GitHub upload or merge was performed.
+
+## 2026-09-20 - Yorick - Default-off Stripe browser features (local draft)
+
+- Kind: nfr, availability/interoperability; NFR-22. Tracking: `drafts/stripe-default-off.md`.
+- Changed: shared profile gate, authenticated database-free capability response, frontend payment/history/receipt guards and regenerated OpenAPI client. The anonymous sign-in prompt stays unchanged.
+- Verified: backend `verify -Popenapi-export -DskipITs` passed (625 reported, 39 skipped); isolated PostgreSQL suite passed 107/107; frontend `pnpm check` passed 126 tests and all gates; `pnpm build` passed. Protected dev sources/contracts still match 211cfb7.
+- Decisions: reuse `stripe-sprint2`; no separate frontend environment flag that could disagree with the backend. See the default-off addendum in `backend/docs/payment/stripe-dev-compatibility-20260920.md`.
+- Problems: production bindings remain unverified. The existing private runtime was not restarted; rebuild/restart it before manually testing the new capability endpoint. No GitHub or shared deployment changes.
+
+## 2026-09-20 - Yorick - Remove local Stripe interfaces before publication (local draft)
+
+- Kind: security, maintainability; user-requested removal. NFR-22; tracking: `drafts/stripe-remove-local-interfaces.md`.
+- Changed: removed local login/operator HTTP routes, local schedulers, runtime scripts and Vite override. Moved order/intent/expiry substitutes and SQL into explicit test fixtures, outside the application JAR. Details: `backend/docs/payment/stripe-release-cleanup-20260920.md`.
+- Verified: backend `spotless:apply verify -Popenapi-export -DskipITs` passed (626 reported, 39 skipped); isolated PostgreSQL suite passed 108/108; frontend `pnpm check` passed 126 tests and `pnpm build` passed. JAR inspection found no local runtime classes or fixture SQL. Source guard passed for 192 original files, 13 HTTP paths and 23 schemas; whitespace check passed.
+- Decisions: keep production payment ports and default-off behavior; test substitutes must never supply shared-environment bindings. Retain prior Sandbox evidence as historical records with retirement notices.
+- Problems: Git CLI lacks credentials; GitHub connector returns 404 for this private repository; Chrome file upload returned `Not allowed`. Browser shows dev `4d25dea`, a six-file logout update after the supplied snapshot. No GitHub commit, merge or shared deployment occurred.
