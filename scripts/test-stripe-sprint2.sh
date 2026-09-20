@@ -25,6 +25,5 @@ PGPASSWORD="$STRIPE_TEST_DB_PASSWORD" "$PG_BIN/createdb" -h 127.0.0.1 -p 55439 -
 PGPASSWORD="$STRIPE_TEST_DB_PASSWORD" "$PG_BIN/createdb" -h 127.0.0.1 -p 55439 -U stripe_test blocbuy_stripe_local
 export STRIPE_TEST_DB_URL='jdbc:postgresql://127.0.0.1:55439/blocbuy_stripe_test?currentSchema=domain'
 cd "$TASK_ROOT/backend"
-./mvnw -B -ntp test -Dtest=RefundServiceTest,StripeRefundGatewayTest,StripeCheckoutFlowTest,StripeCheckoutGatewayTest,StripeWebhookBoundaryTest,StripeLocalIntegrationTest,PaymentBrowserControllerTest,StripeDisabledHttpTest,StripeFeatureSwitchTest,StripeDevCompatibilityTest,StripePaymentAppServiceTest,DevPaymentRepositoryAdapterTest,CheckoutPaymentRepositoryImplTest,CheckoutPaymentTest,ArchitectureTest \
-  -Dsurefire.failIfNoSpecifiedTests=false
+./mvnw -B -ntp verify -DskipITs
 echo 'Payment tests finished with test-only business fixtures. Stripe network is mocked; not deployed acceptance.'
