@@ -26,7 +26,8 @@ class CheckoutPaymentRepositoryImplTest {
     @Test
     void scanAndReviewPageBoundsAreCheckedBeforeDatabaseAccess() {
         for (int limit : new int[] {0, 101}) {
-            assertThatThrownBy(() -> repository.pendingBefore(Instant.now(), limit))
+            var exceptionInput1 = Instant.now();
+            assertThatThrownBy(() -> repository.pendingBefore(exceptionInput1, limit))
                     .isInstanceOf(IllegalArgumentException.class);
             assertThatThrownBy(() -> repository.reviewCases(null, limit))
                     .isInstanceOf(IllegalArgumentException.class);
@@ -36,7 +37,8 @@ class CheckoutPaymentRepositoryImplTest {
 
     @Test
     void zeroUpdatedRowsCauseRetryableTransactionFailure() {
-        assertThatThrownBy(() -> repository.finishEvent("evt_fixture", UUID.randomUUID(), "DONE"))
+        var exceptionInput2 = UUID.randomUUID();
+        assertThatThrownBy(() -> repository.finishEvent("evt_fixture", exceptionInput2, "DONE"))
                 .isInstanceOf(IllegalStateException.class);
     }
 }

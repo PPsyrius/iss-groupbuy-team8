@@ -44,7 +44,8 @@ class DevPaymentRepositoryAdapterTest {
     void databaseFailureIsNotReportedAsMissingPayment() {
         UUID id = UUID.randomUUID();
         when(checkout.findById(id)).thenThrow(new IllegalStateException("database unavailable"));
-        assertThatThrownBy(() -> adapter.findById(id.toString()))
+        var exceptionInput1 = id.toString();
+        assertThatThrownBy(() -> adapter.findById(exceptionInput1))
                 .isInstanceOf(IllegalStateException.class);
     }
 }
