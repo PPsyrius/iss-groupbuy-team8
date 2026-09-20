@@ -11,6 +11,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 /** One bounded job per invocation. Stripe I/O is outside both short DB transactions. */
 @lombok.extern.slf4j.Slf4j
 public final class RefundService {
+    private static final String REVIEW = "REVIEW";
     private final RefundRepository repository;
     private final RefundGateway gateway;
     private final TransactionTemplate tx;
@@ -29,7 +30,7 @@ public final class RefundService {
         RefundWork work = tx.execute(s -> repository.claimNext());
         if (work == null) return false;
         if (!work.valid()) {
-            finish(work, work.providerRefundId(), "REVIEW", "PAYMENT_MISMATCH");
+            finish(work, work.providerRefundId(), REVIEW, "PAYMENT_MISMATCH");
             return true;
         }
         RefundGateway.Snapshot snapshot;
@@ -40,7 +41,7 @@ public final class RefundService {
                 // Stripe can prune idempotency keys after 24h. Never create again after our cutoff.
                 snapshot = gateway.findRefund(work);
                 if (snapshot == null) {
-                    finish(work, null, "REVIEW", "UNKNOWN_AFTER_RETRY_WINDOW");
+                    finish(work, null, REVIEW, "UNKNOWN_AFTER_RETRY_WINDOW");
                     return true;
                 }
             } else {
@@ -62,14 +63,14 @@ public final class RefundService {
         RefundWork work = tx.execute(s -> repository.claimReview(paymentId));
         if (work == null) return false;
         if (!work.valid()) {
-            finish(work, work.providerRefundId(), "REVIEW", "PAYMENT_MISMATCH");
+            finish(work, work.providerRefundId(), REVIEW, "PAYMENT_MISMATCH");
             return true;
         }
         RefundGateway.Snapshot snapshot;
         try {
             snapshot = gateway.retrieveRefund(providerId);
         } catch (BizException unavailable) {
-            finish(work, work.providerRefundId(), "REVIEW", "OPERATOR_PROVIDER_RETRY");
+            finish(work, work.providerRefundId(), REVIEW, "OPERATOR_PROVIDER_RETRY");
             return true;
         }
         apply(work, snapshot);
@@ -78,7 +79,7 @@ public final class RefundService {
 
     private void apply(RefundWork work, RefundGateway.Snapshot snapshot) {
         if (!matches(work, snapshot)) {
-            finish(work, work.providerRefundId(), "REVIEW", "PROVIDER_MISMATCH");
+            finish(work, work.providerRefundId(), REVIEW, "PROVIDER_MISMATCH");
             return;
         }
         String state =
@@ -86,7 +87,7 @@ public final class RefundService {
                     case "succeeded" -> "SUCCEEDED";
                     case "failed", "canceled" -> "FAILED";
                     case "pending" -> "PROCESSING";
-                    default -> "REVIEW";
+                    default -> REVIEW;
                 };
         finish(work, snapshot.id(), state, "PROVIDER_" + state);
     }
@@ -105,7 +106,7 @@ public final class RefundService {
 
     private void finish(RefundWork work, String providerId, String state, String result) {
         tx.executeWithoutResult(s -> repository.finish(work, providerId, state, result));
-        if ("REVIEW".equals(state) || "FAILED".equals(state)) {
+        if (REVIEW.equals(state) || "FAILED".equals(state)) {
             log.warn(
                     "Refund needs operator review: paymentId={}, state={}, result={}",
                     work.paymentId(),

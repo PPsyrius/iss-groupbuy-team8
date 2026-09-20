@@ -26,6 +26,10 @@ import org.springframework.transaction.support.TransactionTemplate;
  * locks. Not component-scanned: enable only after a real PaymentBusinessPort is supplied.
  */
 public final class StripeCheckoutService {
+    private static final String SYSTEM = "system";
+    private static final String EXPIRED = "expired";
+    private static final String UNPAID = "unpaid";
+    private static final String MANUAL_RECOVERY = "manual.recovery";
     private final CheckoutPaymentRepository repository;
     private final CheckoutGateway gateway;
     private final PaymentBusinessPort business;
@@ -74,12 +78,7 @@ public final class StripeCheckoutService {
                             }
                             var existing = repository.findRequest(actor, requestKey);
                             if (existing.isPresent()) {
-                                CheckoutPayment prior = existing.get();
-                                if (!prior.quote().equals(quote)
-                                        || prior.status() != CheckoutPayment.Status.CREATED) {
-                                    throw conflict();
-                                }
-                                return prior;
+                                return reusableAttempt(existing.get(), quote);
                             }
                             if (repository.findBlockingAttempt(intentId).isPresent()) {
                                 throw conflict();
@@ -116,10 +115,18 @@ public final class StripeCheckoutService {
         // Never change saved expiry or reuse an old provider key beyond the safe creation window.
         if (!repository.now().isBefore(payment.createdAt().plusSeconds(55))) {
             tx.executeWithoutResult(
-                    status -> repository.review(payment.id(), "CREATE_UNKNOWN", "system"));
+                    status -> repository.review(payment.id(), "CREATE_UNKNOWN", SYSTEM));
             throw conflict();
         }
         return bindAndReturn(payment.id(), gateway.createCheckoutSession(payment));
+    }
+
+    private static CheckoutPayment reusableAttempt(
+            CheckoutPayment prior, com.blocbuy.payment.model.CheckoutQuote quote) {
+        if (!prior.quote().equals(quote) || prior.status() != CheckoutPayment.Status.CREATED) {
+            throw conflict();
+        }
+        return prior;
     }
 
     private CheckoutResult bindAndReturn(UUID id, CheckoutGateway.Session session) {
@@ -214,8 +221,8 @@ public final class StripeCheckoutService {
             action = "FAIL_VERIFIED_TERMINAL_UNPAID_ATTEMPT";
         } else if (session.paid()) {
             action = "VERIFY_FULFILMENT_OR_RECORD_COMPENSATION";
-        } else if ("expired".equals(session.status())
-                && "unpaid".equals(session.paymentStatus())
+        } else if (EXPIRED.equals(session.status())
+                && UNPAID.equals(session.paymentStatus())
                 && session.paymentIntentId() == null
                 && payment.status() != CheckoutPayment.Status.SUCCEEDED) {
             action = "CANCEL_VERIFIED_UNPAID_ATTEMPT";
@@ -256,7 +263,7 @@ public final class StripeCheckoutService {
             if (!paymentId.toString().equals(session.paymentId())) {
                 throw conflict();
             }
-            apply(session, "recovery-" + UuidV7.next(), "manual.recovery", operator);
+            apply(session, "recovery-" + UuidV7.next(), MANUAL_RECOVERY, operator);
         } catch (RuntimeException failure) {
             tx.executeWithoutResult(
                     status -> {
@@ -282,124 +289,146 @@ public final class StripeCheckoutService {
     private void apply(
             CheckoutGateway.Session session, String eventId, String type, String operator) {
         UUID id = UUID.fromString(session.paymentId());
-        tx.executeWithoutResult(
-                status -> {
-                    if (!repository.claimEvent(eventId, type)) {
-                        return;
-                    }
-                    CheckoutPayment initial = require(id);
-                    business.lockForSettlement(initial.quote());
-                    CheckoutPayment payment = repository.lock(id);
-                    final CheckoutPayment.Status before = payment.status();
-                    if (!matches(payment, session)) {
-                        repository.review(id, "PROVIDER_MISMATCH", operator);
-                        if ("manual.recovery".equals(type)) {
-                            repository.recordRecovery(
-                                    id,
-                                    operator,
-                                    "MISMATCH",
-                                    "providerSession="
-                                            + session.id()
-                                            + "; savedSnapshotMatches=false",
-                                    false);
-                        }
-                        repository.finishEvent(eventId, id, "REVIEW");
-                        return;
-                    }
-                    payment = payment.bind(session.id(), null, session.paymentIntentId());
-                    String result = "OBSERVE";
-                    if (session.paid()) {
-                        if ((payment.status() == CheckoutPayment.Status.CANCELED
-                                        || payment.status() == CheckoutPayment.Status.FAILED)
-                                && !"manual.recovery".equals(type)) {
-                            repository.review(id, "LATE_PAID_REQUIRES_RECOVERY", operator);
-                            repository.finishEvent(eventId, id, "REVIEW");
-                            return;
-                        }
-                        payment = payment.succeed();
-                        repository.save(payment);
-                        String outcome = repository.outcome(id);
-                        if (outcome == null) {
-                            Instant now = repository.now();
-                            var outcomeValue =
-                                    payment.quote().expiredAt(now)
-                                            ? new PaymentBusinessPort.Outcome(
-                                                    null, null, "BUSINESS_EXPIRED")
-                                            : business.fulfil(
-                                                    new PaymentSucceeded(id, payment.quote(), now));
-                            if (!outcomeValue.accepted()) {
-                                repository.requireRefund(
-                                        payment, outcomeValue.rejection(), eventId);
-                            }
-                            outcome = outcomeValue.accepted() ? "FULFILLED" : "REFUND_REQUIRED";
-                            repository.recordOutcome(
-                                    id, outcomeValue.dealId(), outcomeValue.orderId(), outcome);
-                        }
-                        result = outcome;
-                    } else {
-                        if (session.terminalUnpaidFailure()) {
-                            payment = payment.failTerminalUnpaid();
-                        } else if ("expired".equals(session.status())
-                                && "unpaid".equals(session.paymentStatus())
-                                && session.paymentIntentId() == null) {
-                            payment = payment.cancelUnpaid();
-                        }
-                        repository.save(payment);
-                    }
-                    if ("manual.recovery".equals(type)) {
-                        var evidence =
-                                business.fulfilmentEvidence(
-                                        new PaymentSucceeded(
-                                                id, payment.quote(), repository.now()));
-                        boolean paidOutcomeVerified =
-                                ("FULFILLED".equals(result)
-                                                && evidence
-                                                        == PaymentBusinessPort.FulfilmentEvidence
-                                                                .COMPLETE)
-                                        || ("REFUND_REQUIRED".equals(result)
-                                                && evidence
-                                                        == PaymentBusinessPort.FulfilmentEvidence
-                                                                .NONE
-                                                && repository.refundRecorded(id));
-                        boolean resolved =
-                                (session.paid() && paidOutcomeVerified)
-                                        || (((payment.status() == CheckoutPayment.Status.CANCELED
-                                                                && "expired"
-                                                                        .equals(session.status())
-                                                                && "unpaid"
-                                                                        .equals(
-                                                                                session
-                                                                                        .paymentStatus())
-                                                                && session.paymentIntentId()
-                                                                        == null)
-                                                        || (payment.status()
-                                                                        == CheckoutPayment.Status
-                                                                                .FAILED
-                                                                && session.terminalUnpaidFailure()))
-                                                && repository.outcome(id) == null
-                                                && evidence
-                                                        == PaymentBusinessPort.FulfilmentEvidence
-                                                                .NONE);
-                        if (session.paid() && !paidOutcomeVerified) {
-                            result = "DOWNSTREAM_MISSING";
-                        }
-                        String summary =
-                                "providerSession="
-                                        + session.id()
-                                        + "; before="
-                                        + before
-                                        + "; after="
-                                        + payment.status()
-                                        + "; providerPaid="
-                                        + session.paid()
-                                        + "; providerExpired="
-                                        + "expired".equals(session.status())
-                                        + "; result="
-                                        + result;
-                        repository.recordRecovery(id, operator, result, summary, resolved);
-                    }
-                    repository.finishEvent(eventId, id, result);
-                });
+        tx.executeWithoutResult(status -> settle(session, eventId, type, operator, id));
+    }
+
+    private void settle(
+            CheckoutGateway.Session session,
+            String eventId,
+            String type,
+            String operator,
+            UUID id) {
+        if (!repository.claimEvent(eventId, type)) return;
+        CheckoutPayment initial = require(id);
+        business.lockForSettlement(initial.quote());
+        CheckoutPayment payment = repository.lock(id);
+        CheckoutPayment.Status before = payment.status();
+        if (!matches(payment, session)) {
+            recordMismatch(session, eventId, type, operator, id);
+            return;
+        }
+        payment = payment.bind(session.id(), null, session.paymentIntentId());
+        if (session.paid() && isTerminalUnpaid(payment) && !MANUAL_RECOVERY.equals(type)) {
+            repository.review(id, "LATE_PAID_REQUIRES_RECOVERY", operator);
+            repository.finishEvent(eventId, id, "REVIEW");
+            return;
+        }
+        String result = "OBSERVE";
+        if (session.paid()) {
+            payment = payment.succeed();
+            repository.save(payment);
+            result = fulfilOrCompensate(payment, eventId);
+        } else {
+            payment = applyUnpaidFact(payment, session);
+            repository.save(payment);
+        }
+        if (MANUAL_RECOVERY.equals(type)) {
+            result = recordRecoveryResult(payment, session, before, result, operator);
+        }
+        repository.finishEvent(eventId, id, result);
+    }
+
+    private void recordMismatch(
+            CheckoutGateway.Session session,
+            String eventId,
+            String type,
+            String operator,
+            UUID id) {
+        repository.review(id, "PROVIDER_MISMATCH", operator);
+        if (MANUAL_RECOVERY.equals(type)) {
+            repository.recordRecovery(
+                    id,
+                    operator,
+                    "MISMATCH",
+                    "providerSession=" + session.id() + "; savedSnapshotMatches=false",
+                    false);
+        }
+        repository.finishEvent(eventId, id, "REVIEW");
+    }
+
+    private static boolean isTerminalUnpaid(CheckoutPayment payment) {
+        return payment.status() == CheckoutPayment.Status.CANCELED
+                || payment.status() == CheckoutPayment.Status.FAILED;
+    }
+
+    private String fulfilOrCompensate(CheckoutPayment payment, String eventId) {
+        String outcome = repository.outcome(payment.id());
+        if (outcome != null) return outcome;
+        Instant now = repository.now();
+        var value =
+                payment.quote().expiredAt(now)
+                        ? new PaymentBusinessPort.Outcome(null, null, "BUSINESS_EXPIRED")
+                        : business.fulfil(new PaymentSucceeded(payment.id(), payment.quote(), now));
+        if (!value.accepted()) repository.requireRefund(payment, value.rejection(), eventId);
+        outcome = value.accepted() ? "FULFILLED" : "REFUND_REQUIRED";
+        repository.recordOutcome(payment.id(), value.dealId(), value.orderId(), outcome);
+        return outcome;
+    }
+
+    private static CheckoutPayment applyUnpaidFact(
+            CheckoutPayment payment, CheckoutGateway.Session session) {
+        if (session.terminalUnpaidFailure()) return payment.failTerminalUnpaid();
+        if (expiredWithoutIntent(session)) return payment.cancelUnpaid();
+        return payment;
+    }
+
+    private static boolean expiredWithoutIntent(CheckoutGateway.Session session) {
+        return EXPIRED.equals(session.status())
+                && UNPAID.equals(session.paymentStatus())
+                && session.paymentIntentId() == null;
+    }
+
+    private String recordRecoveryResult(
+            CheckoutPayment payment,
+            CheckoutGateway.Session session,
+            CheckoutPayment.Status before,
+            String result,
+            String operator) {
+        var evidence =
+                business.fulfilmentEvidence(
+                        new PaymentSucceeded(payment.id(), payment.quote(), repository.now()));
+        boolean paidVerified = paidOutcomeVerified(payment.id(), result, evidence);
+        boolean resolved =
+                session.paid() ? paidVerified : unpaidOutcomeVerified(payment, session, evidence);
+        if (session.paid() && !paidVerified) result = "DOWNSTREAM_MISSING";
+        String summary =
+                "providerSession="
+                        + session.id()
+                        + "; before="
+                        + before
+                        + "; after="
+                        + payment.status()
+                        + "; providerPaid="
+                        + session.paid()
+                        + "; providerExpired="
+                        + EXPIRED.equals(session.status())
+                        + "; result="
+                        + result;
+        repository.recordRecovery(payment.id(), operator, result, summary, resolved);
+        return result;
+    }
+
+    private boolean paidOutcomeVerified(
+            UUID id, String result, PaymentBusinessPort.FulfilmentEvidence evidence) {
+        return ("FULFILLED".equals(result)
+                        && evidence == PaymentBusinessPort.FulfilmentEvidence.COMPLETE)
+                || ("REFUND_REQUIRED".equals(result)
+                        && evidence == PaymentBusinessPort.FulfilmentEvidence.NONE
+                        && repository.refundRecorded(id));
+    }
+
+    private boolean unpaidOutcomeVerified(
+            CheckoutPayment payment,
+            CheckoutGateway.Session session,
+            PaymentBusinessPort.FulfilmentEvidence evidence) {
+        boolean terminal =
+                (payment.status() == CheckoutPayment.Status.CANCELED
+                                && expiredWithoutIntent(session))
+                        || (payment.status() == CheckoutPayment.Status.FAILED
+                                && session.terminalUnpaidFailure());
+        return terminal
+                && repository.outcome(payment.id()) == null
+                && evidence == PaymentBusinessPort.FulfilmentEvidence.NONE;
     }
 
     /** Run inside the caller's team-expiry transaction; never AFTER_COMMIT. */
@@ -429,7 +458,7 @@ public final class StripeCheckoutService {
             if ("open".equals(current.status())) {
                 current = gateway.expireCheckoutSession(current.id());
             }
-            apply(current, "expiry-" + UuidV7.next(), "session.cleanup", "system");
+            apply(current, "expiry-" + UuidV7.next(), "session.cleanup", SYSTEM);
             processed++;
         }
         return processed;
@@ -449,7 +478,7 @@ public final class StripeCheckoutService {
         if ("open".equals(session.status())) {
             session = gateway.expireCheckoutSession(session.id());
         }
-        apply(session, "expiry-" + UuidV7.next(), "session.cleanup", "system");
+        apply(session, "expiry-" + UuidV7.next(), "session.cleanup", SYSTEM);
     }
 
     public List<CheckoutPayment> scan() {
