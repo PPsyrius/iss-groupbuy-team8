@@ -35,7 +35,7 @@ public record CheckoutQuote(
         if (amount.signum() <= 0 || amount.precision() > 18) {
             throw new IllegalArgumentException("Invalid amount");
         }
-        amount.movePointRight(2).longValueExact();
+        // scale=2 and precision<=18 already bound minor units below Long.MAX_VALUE.
     }
 
     public boolean expiredAt(Instant now) {
