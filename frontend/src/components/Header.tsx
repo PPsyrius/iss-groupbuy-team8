@@ -1,7 +1,8 @@
-import { Avatar, buttonVariants } from "@heroui/react";
+import { Avatar, Button, buttonVariants } from "@heroui/react";
 import { Link, useLocation } from "@tanstack/react-router";
 
 import { initials } from "@/features/session/initials";
+import { useLogout } from "@/features/session/use-logout";
 import { useSession } from "@/features/session/use-session";
 
 // Storefront header per the artboards (docs/design-screens.md §3): 56px on phone, 64px at 1280,
@@ -42,17 +43,36 @@ export function Header() {
 }
 
 function SignedIn({ name, avatarUrl }: { name: string; avatarUrl: string | null }) {
+  const logout = useLogout();
   return (
-    // T2-05: the logout control mounts here (a menu on the avatar; unspecified by design, Q16).
+    // No artboard draws a signed-in storefront header or a logout control (Q16). Until design
+    // rules, the avatar + name link to /account (the My blocs screen) and a neutral ghost
+    // "Sign out" button sits beside them: no accent, pairs with the "Sign in" wording.
     <div className="flex items-center gap-2">
-      <Avatar size="sm" aria-hidden="true">
-        {avatarUrl ? <Avatar.Image src={avatarUrl} alt="" /> : null}
-        <Avatar.Fallback>{initials(name)}</Avatar.Fallback>
-      </Avatar>
-      {/* B4 (#97): nickname is nullable; the stable userId is the fallback, never nothing. */}
-      <span data-testid="session-user" className="text-sm font-medium">
-        {name}
-      </span>
+      <Link to="/account" className="flex items-center gap-2">
+        <Avatar size="sm" aria-hidden="true">
+          {avatarUrl ? <Avatar.Image src={avatarUrl} alt="" /> : null}
+          <Avatar.Fallback>{initials(name)}</Avatar.Fallback>
+        </Avatar>
+        {/* B4 (#97): nickname is nullable; the stable userId is the fallback, never nothing. */}
+        <span data-testid="session-user" className="text-sm font-medium">
+          {name}
+        </span>
+      </Link>
+      {logout.isError ? (
+        <span role="alert" className="text-danger text-sm">
+          Could not sign out. Try again.
+        </span>
+      ) : null}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-muted min-h-11 text-sm"
+        isPending={logout.isPending}
+        onPress={() => logout.mutate({})}
+      >
+        Sign out
+      </Button>
     </div>
   );
 }

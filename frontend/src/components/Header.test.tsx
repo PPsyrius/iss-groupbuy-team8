@@ -1,4 +1,5 @@
 import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 
@@ -34,6 +35,53 @@ describe("Header", () => {
     await renderWithRouter(<Header />);
     expect(await screen.findByTestId("session-user")).toHaveTextContent("Ada Lim");
     expect(screen.getByText("AL")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Sign in" })).not.toBeInTheDocument();
+  });
+
+  it("signs out: posts to /auth/logout, then the Sign in control replaces the user", async () => {
+    const user = userEvent.setup();
+    let logoutCalls = 0;
+    server.use(
+      http.get("*/api/v1/auth/me", () =>
+        HttpResponse.json({
+          code: "COMMON_200_000",
+          data: { userId: "u1", nickname: "Ada Lim", avatarUrl: null },
+          message: "ok",
+        }),
+      ),
+      http.post("*/api/v1/auth/logout", () => {
+        logoutCalls += 1;
+        return HttpResponse.json({ code: "COMMON_200_000", message: "ok" });
+      }),
+    );
+    const { router } = await renderWithRouter(<Header />);
+    await screen.findByTestId("session-user");
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+    expect(await screen.findByRole("link", { name: "Sign in" })).toBeInTheDocument();
+    expect(logoutCalls).toBe(1);
+    expect(screen.queryByTestId("session-user")).not.toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/");
+  });
+
+  it("keeps the user and says so when /auth/logout fails", async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get("*/api/v1/auth/me", () =>
+        HttpResponse.json({
+          code: "COMMON_200_000",
+          data: { userId: "u1", nickname: "Ada Lim", avatarUrl: null },
+          message: "ok",
+        }),
+      ),
+      http.post("*/api/v1/auth/logout", () =>
+        HttpResponse.json({ code: "COMMON_500_000", message: "boom" }, { status: 500 }),
+      ),
+    );
+    await renderWithRouter(<Header />);
+    await screen.findByTestId("session-user");
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Could not sign out");
+    expect(screen.getByTestId("session-user")).toHaveTextContent("Ada Lim");
     expect(screen.queryByRole("link", { name: "Sign in" })).not.toBeInTheDocument();
   });
 
