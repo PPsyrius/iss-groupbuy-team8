@@ -713,3 +713,29 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   links; Join / Start a bloc / Buy alone rendered unwired until T2-04 and UC3/UC4.
 - Problems: CR no 404 declared for `getListing`; CR `ActiveDealResponse` has no starter, number or
   per-bloc list (one "Open bloc" row renders); CR no listing status for "unavailable". Open.
+
+## 2026-09-20 - @l0sgAi - UC10 order system of record: V9–V11 migrations, Order aggregate, persistence slice, My Orders API (#124)
+
+- Kind: feature
+- Changed: `backend/blocbuy-bootstrap/src/main/resources/db/migration/V9__order.sql` (order.sql
+  draft promoted, plus `payment_id` and the `uq_biz_order_payment_id` / `uq_biz_order_deal_user`
+  partial unique indexes), `V10__payment_refund.sql`, `V11__scheduler_lock.sql`,
+  `Order`/`OrderStatus` aggregate behavior + domain unit tests (`OrderTest`, `OrderStatusTest`),
+  the order persistence four-piece (`BizOrderDO`, `BizOrderMapper`, `OrderConverter`,
+  `OrderRepositoryImpl`) with `OrderRepositoryIT` (Testcontainers), `OrderController`
+  `GET /api/v1/orders/me` + `OrderSummaryView`, `OrderErrorCode` additions, `contracts/openapi.json`
+  regenerated, `docs/agile/sprint-02/uc10-impl-plan-20260919.md`. Plan: Sprint2-Plan §3.2.3 via the
+  impl plan's §2.1/§3.1/§4.
+- Verified: `./mvnw -B verify` (JDK 21; the default JDK 26 is rejected by the enforcer gate
+  `[21,22)`) BUILD SUCCESS on `f940de2`: 669 tests, 0 failures/errors/skipped across 87
+  surefire/failsafe reports, SpotBugs 0, Checkstyle 0 violations, JaCoCo aggregate green. Contract
+  regenerated: diff vs dev is additive only (new `orders` tag, `GET /api/v1/orders/me`, page/summary
+  schemas; no existing path or schema modified).
+- Not verified: the per-changed-file JaCoCo 0-missed skill-script self-check; end-to-end against a
+  deployed dev backend.
+- Problems: `V10__payment_refund.sql` was handed to Yorik (UC6) in the impl plan's §1 memo but
+  landed in this branch (`16ab0d2`); flagged in the PR for his confirmation. Untracked working-tree
+  files `scripts/create_sprint2_issues.py` and the sa-token META-INF metadata (B3 #96 scope) are
+  deliberately left out of this PR.
+- Next: review/merge; `confirmByDealId` consumers (9/22 `OrderConfirmationSubscriber` with Eric) can
+  build on the port as planned.
