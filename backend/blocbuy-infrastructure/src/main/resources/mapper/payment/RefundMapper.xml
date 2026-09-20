@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blocbuy.payment.persistence.RefundMapper">
+  <select id="claimNext" resultType="com.blocbuy.payment.model.RefundWork" affectData="true" flushCache="true">
+    WITH candidate AS (
+      SELECT id FROM biz_refund
+      WHERE NOT deleted AND status IN ('PENDING','PROCESSING','SUCCEEDED')
+        AND next_attempt_at &lt;= clock_timestamp()
+        AND (lease_until IS NULL OR lease_until &lt; clock_timestamp())
+        AND (status != 'SUCCEEDED' OR first_attempt_at > clock_timestamp()-interval '31 days')
+      ORDER BY next_attempt_at,id LIMIT 1 FOR UPDATE SKIP LOCKED
+    ), claimed AS (
+      UPDATE biz_refund r SET lease_until=clock_timestamp()+interval '2 minutes',
+        first_attempt_at=COALESCE(r.first_attempt_at,clock_timestamp()),
+        version=r.version+1,update_time=clock_timestamp()
+      FROM candidate c WHERE r.id=c.id
+      RETURNING r.id,r.payment_id,r.amount,r.currency,r.provider_refund_id,r.first_attempt_at,r.version
+    )
+    SELECT r.id,r.payment_id,r.amount,r.currency,p.provider_payment_intent_id AS provider_intent_id,
+      p.status AS payment_status,p.amount AS paid_amount,p.currency AS paid_currency,
+      r.provider_refund_id,r.first_attempt_at,clock_timestamp() AS now,r.version
+    FROM claimed r JOIN biz_payment p ON p.id=r.payment_id
+  </select>
+  <update id="finish">
+    UPDATE biz_refund SET provider_refund_id=#{providerId},status=#{status},last_result=#{result},
+      lease_until=NULL,update_time=clock_timestamp(),
+      next_attempt_at=clock_timestamp()+CASE WHEN #{status}='SUCCEEDED' THEN interval '1 hour'
+        ELSE interval '30 seconds' END
+    WHERE id=#{work.id} AND version=#{work.version}
+  </update>
+  <select id="claimReview" resultType="com.blocbuy.payment.model.RefundWork" affectData="true" flushCache="true">
+    WITH claimed AS (
+      UPDATE biz_refund SET lease_until=clock_timestamp()+interval '2 minutes',
+        version=version+1,update_time=clock_timestamp()
+      WHERE payment_id=#{paymentId} AND NOT deleted AND status IN ('REVIEW','FAILED')
+        AND (lease_until IS NULL OR lease_until &lt; clock_timestamp())
+      RETURNING id,payment_id,amount,currency,provider_refund_id,first_attempt_at,version
+    )
+    SELECT r.id,r.payment_id,r.amount,r.currency,p.provider_payment_intent_id AS provider_intent_id,
+      p.status AS payment_status,p.amount AS paid_amount,p.currency AS paid_currency,
+      r.provider_refund_id,r.first_attempt_at,clock_timestamp() AS now,r.version
+    FROM claimed r JOIN biz_payment p ON p.id=r.payment_id
+  </select>
+  <insert id="audit">
+    INSERT INTO log_refund_attempt(refund_id,version,result) VALUES(#{work.id},#{work.version},#{result})
+  </insert>
+  <select id="status" resultType="string">
+    SELECT status FROM biz_refund WHERE payment_id=#{paymentId} AND NOT deleted
+  </select>
+</mapper>
