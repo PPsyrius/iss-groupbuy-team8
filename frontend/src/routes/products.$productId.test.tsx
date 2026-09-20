@@ -162,9 +162,17 @@ describe("/products/$productId gated actions", () => {
   it("does not gate a signed-in buyer", async () => {
     serveSignedIn();
     serveListing(listing());
+    server.use(
+      http.get("*/api/v1/payments/capabilities", () =>
+        HttpResponse.json({ code: OK_CODE, data: { enabled: true } }),
+      ),
+      http.post("*/api/v1/payments/intents", () => HttpResponse.error()),
+    );
     renderRoute(`/products/${knownId}`);
     const [start] = await screen.findAllByRole("button", { name: /Start a bloc/ });
+    await waitFor(() => expect(start).toBeEnabled());
     await userEvent.click(start!);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent("We could not open Checkout");
   });
 });
