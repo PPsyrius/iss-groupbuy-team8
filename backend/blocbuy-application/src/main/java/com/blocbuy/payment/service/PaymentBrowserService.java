@@ -1,0 +1,79 @@
+package com.blocbuy.payment.service;
+
+import com.blocbuy.common.exception.BizException;
+import com.blocbuy.payment.exception.PaymentErrorCode;
+import com.blocbuy.payment.gateway.PaymentIntentPort;
+import com.blocbuy.payment.repository.CheckoutPaymentRepository;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
+
+/** Customer-facing orchestration. Identity comes from Sa-Token, never a request buyerId. */
+@Service
+@RequiredArgsConstructor
+public class PaymentBrowserService {
+    private final ObjectProvider<PaymentIntentPort> intents;
+    private final ObjectProvider<StripeCheckoutService> checkout;
+    private final CheckoutPaymentRepository repository;
+    private final com.blocbuy.payment.repository.RefundRepository refunds;
+    private final PlatformTransactionManager transactions;
+
+    public UUID createIntent(UUID user, String operation, UUID businessId) {
+        PaymentIntentPort port = intents.getIfAvailable();
+        if (port == null) throw new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID);
+        TransactionTemplate tx = new TransactionTemplate(transactions);
+        tx.setTimeout(10);
+        try {
+            return tx.execute(status -> port.createIntent(user, operation, businessId));
+        } catch (IllegalArgumentException failure) {
+            throw new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID);
+        }
+    }
+
+    public StripeCheckoutService.CheckoutResult prepare(UUID user, UUID intent, String requestKey) {
+        StripeCheckoutService service = checkout.getIfAvailable();
+        if (service == null) throw new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID);
+        try {
+            return service.prepare(user, intent, requestKey);
+        } catch (IllegalArgumentException failure) {
+            throw new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID);
+        }
+    }
+
+    public record Receipt(
+            UUID paymentId,
+            String status,
+            String outcome,
+            String amount,
+            String currency,
+            UUID dealId,
+            UUID orderId,
+            boolean refundPending,
+            String refundStatus) {}
+
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ, timeout = 5)
+    public Receipt receipt(UUID user, UUID id) {
+        var payment =
+                repository
+                        .findById(id)
+                        .filter(p -> p.quote().userId().equals(user))
+                        .orElseThrow(() -> new BizException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+        String outcome = repository.outcome(id);
+        String refundStatus = refunds.status(id);
+        return new Receipt(
+                id,
+                payment.status().name(),
+                outcome == null ? "PENDING" : outcome,
+                payment.quote().amount().toPlainString(),
+                payment.quote().currency(),
+                repository.fulfilledDealId(id),
+                repository.orderId(id),
+                "PENDING".equals(refundStatus) || "PROCESSING".equals(refundStatus),
+                refundStatus == null ? "NONE" : refundStatus);
+    }
+}
