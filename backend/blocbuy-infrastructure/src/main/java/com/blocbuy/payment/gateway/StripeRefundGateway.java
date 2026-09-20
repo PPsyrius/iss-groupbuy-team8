@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class StripeRefundGateway implements RefundGateway {
+    private static final String OBLIGATION_ID = "obligation_id";
     private final StripeProperties properties;
 
     private StripeClient client() {
@@ -52,7 +53,7 @@ public class StripeRefundGateway implements RefundGateway {
                                                     work.amount()
                                                             .movePointRight(2)
                                                             .longValueExact())
-                                            .putMetadata("obligation_id", work.id().toString())
+                                            .putMetadata(OBLIGATION_ID, work.id().toString())
                                             .putMetadata("payment_id", work.paymentId().toString())
                                             .build(),
                                     RequestOptions.builder()
@@ -89,7 +90,7 @@ public class StripeRefundGateway implements RefundGateway {
                                     r ->
                                             work.id()
                                                     .toString()
-                                                    .equals(r.getMetadata().get("obligation_id")))
+                                                    .equals(r.getMetadata().get(OBLIGATION_ID)))
                             .toList();
             return matches.size() == 1 ? snapshot(matches.getFirst()) : null;
         } catch (StripeException failure) {
@@ -101,7 +102,7 @@ public class StripeRefundGateway implements RefundGateway {
         return new Snapshot(
                 refund.getId(),
                 refund.getPaymentIntent(),
-                refund.getMetadata().get("obligation_id"),
+                refund.getMetadata().get(OBLIGATION_ID),
                 refund.getAmount(),
                 refund.getCurrency(),
                 refund.getStatus());
