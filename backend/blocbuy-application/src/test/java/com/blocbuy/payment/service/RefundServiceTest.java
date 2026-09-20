@@ -27,8 +27,9 @@ class RefundServiceTest {
         assertThat(service.reconcile(work.paymentId(), "re_test")).isTrue();
         verify(gateway, never()).createRefund(any());
         verify(repository).finish(work, "re_test", "SUCCEEDED", "PROVIDER_SUCCEEDED");
+        var exceptionInput1 = work.paymentId();
         org.assertj.core.api.Assertions.assertThatThrownBy(
-                        () -> service.reconcile(work.paymentId(), "not-refund"))
+                        () -> service.reconcile(exceptionInput1, "not-refund"))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThat(service.reconcile(UUID.randomUUID(), "re_test")).isFalse();
     }
@@ -170,5 +171,38 @@ class RefundServiceTest {
         service.processNext();
         verifyNoInteractions(gateway);
         verify(repository).finish(unpaid, null, "REVIEW", "PAYMENT_MISMATCH");
+        when(repository.claimReview(work.paymentId())).thenReturn(unpaid);
+        assertThat(service.reconcile(work.paymentId(), "re_test")).isTrue();
+        verifyNoInteractions(gateway);
+    }
+
+    @Test
+    void missingReferenceCannotStartRecovery() {
+        UUID id = UUID.randomUUID();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.reconcile(id, null))
+                .isInstanceOf(IllegalArgumentException.class);
+        verifyNoInteractions(repository, gateway);
+    }
+
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(
+            strings = {"null", "id", "status", "binding", "intent", "obligation", "currency"})
+    void everyMismatchedRefundFactRequiresReview(String field) {
+        RefundWork work = work("re_test", 0);
+        var snapshot =
+                field.equals("null")
+                        ? null
+                        : new RefundGateway.Snapshot(
+                                field.equals("id")
+                                        ? null
+                                        : field.equals("binding") ? "re_other" : "re_test",
+                                field.equals("intent") ? "pi_other" : "pi_test",
+                                field.equals("obligation") ? "other" : work.id().toString(),
+                                1000,
+                                field.equals("currency") ? "usd" : "sgd",
+                                field.equals("status") ? null : "succeeded");
+        when(gateway.retrieveRefund("re_test")).thenReturn(snapshot);
+        assertThat(service.processNext()).isTrue();
+        verify(repository).finish(work, "re_test", "REVIEW", "PROVIDER_MISMATCH");
     }
 }
