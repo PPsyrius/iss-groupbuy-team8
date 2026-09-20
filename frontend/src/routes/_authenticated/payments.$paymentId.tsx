@@ -8,6 +8,7 @@ import { getPaymentReceiptOptions } from "@/api/generated/@tanstack/react-query.
 import { refundLabel } from "@/features/payment/refund-status";
 import { clearCompletedAttempt } from "@/features/payment/use-checkout";
 import { usePaymentAvailability } from "@/features/payment/use-payment-availability";
+import { useSession } from "@/features/session/use-session";
 
 export const Route = createFileRoute("/_authenticated/payments/$paymentId")({
   component: PaymentReceipt,
@@ -16,8 +17,16 @@ export const Route = createFileRoute("/_authenticated/payments/$paymentId")({
 function PaymentReceipt() {
   const { paymentId } = Route.useParams();
   const enabled = usePaymentAvailability();
+  const session = useSession();
+  const options = getPaymentReceiptOptions({ path: { id: paymentId } });
   const query = useQuery({
-    ...getPaymentReceiptOptions({ path: { id: paymentId } }),
+    ...options,
+    queryKey: [
+      {
+        ...options.queryKey[0],
+        tags: [session.status === "authenticated" ? session.userId : "anonymous"],
+      },
+    ],
     enabled,
     select: (r) => unwrapResult(r, { allowVoid: false }),
     retry: false,
