@@ -1,0 +1,76 @@
+{
+  "observed_at": "2026-09-20T03:47:07.597830+00:00",
+  "local": {
+    "id": "01a0bce8-1615-7f87-a736-788fbe34a1f3",
+    "status": "SUCCEEDED",
+    "amount": 10.0,
+    "currency": "sgd",
+    "intent_id": "f78d01ac-3c47-42bc-9cf0-c7ee505ecf98",
+    "operation": "START",
+    "business_id": "62165120-f588-44a6-bbe0-bf656e33e2d0",
+    "checkout_session_id": "cs_test_a1yl1z3zxW9kFbEyOwJb3Gqdr559VmeUaR5ILnZkvkWz9gAYRns7T4EMyi",
+    "provider_payment_intent_id": "pi_3UHbeV5iEVLN2uQJ1nASa65p",
+    "fulfilment_result": "FULFILLED",
+    "fulfilled_deal_id": "62165120-f588-44a6-bbe0-bf656e33e2d0"
+  },
+  "stripe": {
+    "id": "cs_test_a1yl1z3zxW9kFbEyOwJb3Gqdr559VmeUaR5ILnZkvkWz9gAYRns7T4EMyi",
+    "livemode": false,
+    "status": "complete",
+    "payment_status": "paid",
+    "amount_total": 1000,
+    "currency": "sgd",
+    "payment_intent": "pi_3UHbeV5iEVLN2uQJ1nASa65p"
+  },
+  "http": {
+    "status": "SUCCEEDED",
+    "paymentId": "01a0bce8-1615-7f87-a736-788fbe34a1f3",
+    "outcome": "FULFILLED"
+  },
+  "orders": [
+    {
+      "id": "2ac0dd1d-33e6-4227-9605-46eb5380eae8",
+      "deal_id": "62165120-f588-44a6-bbe0-bf656e33e2d0",
+      "payment_id": "01a0bce8-1615-7f87-a736-788fbe34a1f3",
+      "total_amount": 10.0,
+      "status": "paid"
+    }
+  ],
+  "refund_obligations": [
+    {
+      "payment_id": "01a0bce8-1615-7f87-a736-788fbe34a1f3",
+      "deal_id": "62165120-f588-44a6-bbe0-bf656e33e2d0",
+      "amount": 10.0,
+      "status": "PENDING",
+      "reason": "TEAM_EXPIRED"
+    }
+  ],
+  "review": [
+    {
+      "payment_id": "01a0bce8-1615-7f87-a736-788fbe34a1f3",
+      "status": "RESOLVED",
+      "reason": "RECOVERY_REQUESTED",
+      "owner": "yorik-local-operator",
+      "resolved_at": "2026-09-20T11:45:07.8036+08:00"
+    }
+  ],
+  "webhooks": [
+    {
+      "event_id": "recovery-01a0bcea-7490-7f54-80bd-0d89af0c15db",
+      "payment_id": "01a0bce8-1615-7f87-a736-788fbe34a1f3",
+      "processing_result": "FULFILLED"
+    },
+    {
+      "event_id": "recovery-01a0bcea-ecd0-7369-b4d5-5f543b999657",
+      "payment_id": "01a0bce8-1615-7f87-a736-788fbe34a1f3",
+      "processing_result": "FULFILLED"
+    }
+  ],
+  "members": [
+    {
+      "id": "01a0bcea-749f-7139-9f03-bfeaf04bc8f9",
+      "deal_id": "62165120-f588-44a6-bbe0-bf656e33e2d0",
+      "order_id": "2ac0dd1d-33e6-4227-9605-46eb5380eae8"
+    }
+  ]
+}
