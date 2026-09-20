@@ -207,6 +207,9 @@ export async function startBrowserMsw() {
                 data: { userId: "u-ada", nickname: "Ada Lim", avatarUrl: null },
               })
             : HttpResponse.json({ code: "AUTH_401", message: "unauthenticated" }, { status: 401 }),
+        // Sign out succeeds; the app settles `me` on the anonymous envelope itself, so the header
+        // flips without a refetch. A reload with `&me=1` still signs back in (seed only).
+        logout: () => HttpResponse.json({ code: OK_CODE, message: "ok" }),
         pageListings: ({ request }) => {
           const url = new URL(request.url);
           const page = Math.max(1, Number(url.searchParams.get("page") ?? 1));

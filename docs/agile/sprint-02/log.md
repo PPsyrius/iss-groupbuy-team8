@@ -807,3 +807,25 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 - Verified: backend `spotless:apply verify -Popenapi-export -DskipITs` passed (626 reported, 39 skipped); isolated PostgreSQL suite passed 108/108; frontend `pnpm check` passed 126 tests and `pnpm build` passed. JAR inspection found no local runtime classes or fixture SQL. Source guard passed for 192 original files, 13 HTTP paths and 23 schemas; whitespace check passed.
 - Decisions: keep production payment ports and default-off behavior; test substitutes must never supply shared-environment bindings. Retain prior Sandbox evidence as historical records with retirement notices.
 - Problems: Git CLI lacks credentials; GitHub connector returns 404 for this private repository; Chrome file upload returned `Not allowed`. Browser shows dev `4d25dea`, a six-file logout update after the supplied snapshot. No GitHub commit, merge or shared deployment occurred.
+
+## 2026-09-18 - @limjiechao - T2-05 logout mutation clears the session (#42, #93 PR-I)
+
+- Kind: feature (session; UX only, the backend invalidates the cookie); no ADR, no NFR.
+- Changed: `use-logout.ts` (generated `logoutMutation`, `unwrapResult`, `me` settled on the
+  anonymous envelope, navigate home; error keeps the session); header avatar links to `/account`
+  and a ghost "Sign out" button with pending state and inline alert; `logout` in the MSW seed;
+  plan steps 1–3, note 47.
+- Verified on `20496aa` plus the change: `Header.test.tsx` red first (2 failed) then 5 passed;
+  `pnpm check` exit 0 (vitest 18 files / 76 tests, knip 0 issues); `pnpm build` ok; `pnpm e2e`
+  1 passed, 2 skipped; MSW screenshots of the signed-in header and after sign-out at 390 and
+  1280, 0 page errors; HeroUI props from the installed 3.2.5 types, offline-first.
+- Not verified: the real backend clearing `blocbuy-token` (T2-06 after B5); the error branch only
+  under MSW.
+- Decision: `setQueryData` on the anonymous envelope instead of `removeQueries` (no refetch, no
+  401 round trip); a neutral button beside the avatar rather than an avatar menu (note 47).
+- Problems: Q16 no artboard for the signed-in header or a logout control (design owner picks
+  button vs menu and the string); Q15 avatar links to the interim `/account`. Open.
+- PR #121 review (2026-09-19, r4050777123/27/30): all three threads were plan text and are
+  settled below this branch (T2-02 no-deal copy since #115, T2-03 samples in 0f4acb0, step 7
+  envelope code in bd0b95b). Plan record re-added here as note 47 (the restack had dropped it).
+  Round 2 (r4053031037): step 2 now names the shipped "Sign out" / "Sign in" controls.
