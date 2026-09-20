@@ -40,16 +40,22 @@ class CheckoutPaymentTest {
     @Test
     void requestKeyAndQuoteDeadlineAreValidated() {
         CheckoutPayment p = payment();
+        var exceptionInput1 = p.id();
+        var exceptionInput2 = p.quote();
+        var exceptionInput3 = p.createdAt();
+        var exceptionInput4 = p.sessionExpiresAt();
+        var exceptionInput5 = p.successUrl();
+        var exceptionInput6 = p.cancelUrl();
         assertThatThrownBy(
                         () ->
                                 new CheckoutPayment(
-                                        p.id(),
-                                        p.quote(),
+                                        exceptionInput1,
+                                        exceptionInput2,
                                         " ",
-                                        p.createdAt(),
-                                        p.sessionExpiresAt(),
-                                        p.successUrl(),
-                                        p.cancelUrl(),
+                                        exceptionInput3,
+                                        exceptionInput4,
+                                        exceptionInput5,
+                                        exceptionInput6,
                                         null,
                                         null,
                                         null,
@@ -61,11 +67,14 @@ class CheckoutPaymentTest {
     @Test
     void invalidSnapshotVersionExpiryAndMissingRequestKeyAreRejected() {
         CheckoutPayment p = payment();
-        assertThatThrownBy(() -> snapshot(p, null, p.sessionExpiresAt(), 0))
+        var exceptionInput7 = p.sessionExpiresAt();
+        assertThatThrownBy(() -> snapshot(p, null, exceptionInput7, 0))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> snapshot(p, "key", p.sessionExpiresAt(), -1))
+        var exceptionInput8 = p.sessionExpiresAt();
+        assertThatThrownBy(() -> snapshot(p, "key", exceptionInput8, -1))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> snapshot(p, "key", p.quote().quoteValidUntil().plusSeconds(1), 0))
+        var exceptionInput9 = p.quote().quoteValidUntil().plusSeconds(1);
+        assertThatThrownBy(() -> snapshot(p, "key", exceptionInput9, 0))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
