@@ -829,3 +829,11 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   settled below this branch (T2-02 no-deal copy since #115, T2-03 samples in 0f4acb0, step 7
   envelope code in bd0b95b). Plan record re-added here as note 47 (the restack had dropped it).
   Round 2 (r4053031037): step 2 now names the shipped "Sign out" / "Sign in" controls.
+
+## 2026-09-20 - Yorick - PR #126 SonarCloud and receipt isolation fixes
+
+- Kind: maintainability, security; NFR-06 and NFR-20; tracking: PR #126.
+- Changed: payment DB suites now run in CI using isolated PostgreSQL; simplified settlement/recovery methods, added failure-path tests, fixed non-vacuous assertions and user-scoped receipt caching.
+- Verified: private PostgreSQL Maven verify passed 725 tests with no skips; frontend checks passed 127 tests and production build passed. Original 192 source/config/DDL files, 13 HTTP paths and 23 schemas pass the protection check.
+- Evidence: `backend/docs/payment/stripe-sonar-fixes-20260920.md`; aggregate JaCoCo covers all 289 lines of StripeCheckoutService and all 64 lines/46 branches of RefundService.
+- Problems: remote SonarCloud re-analysis remains authoritative for PR coverage and reliability. No threshold changes or merge to dev; deployed acceptance remains separate.
