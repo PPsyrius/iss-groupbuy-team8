@@ -78,6 +78,7 @@ public final class Order {
         if (paidAt == null) {
             throw new IllegalArgumentException("paidAt must not be null");
         }
+        requirePlacement(terms);
         return new Order(
                 UuidV7.next(),
                 terms,

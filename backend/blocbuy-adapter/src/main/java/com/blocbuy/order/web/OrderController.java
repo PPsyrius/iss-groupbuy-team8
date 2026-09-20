@@ -9,6 +9,7 @@ import com.blocbuy.order.query.OrderSummaryView;
 import com.blocbuy.order.service.OrderAppService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
  * order creation and confirmation land with the paid-participation and team-event seams.
  */
 @Tag(name = "orders", description = "Buyer orders of record")
+@SecurityRequirement(name = "blocbuyToken")
 @Validated
 @RestController
 @RequestMapping(ApiConstants.API_V1 + "/orders")

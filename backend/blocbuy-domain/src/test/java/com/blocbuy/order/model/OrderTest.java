@@ -62,6 +62,28 @@ class OrderTest {
                 .hasMessage("unitPrice must be positive");
     }
 
+    /** Placement is validated before the total is computed — never a NullPointerException. */
+    @Test
+    void createRejectsNullUnitPriceBeforeComputingTotal() {
+        Order.NewOrderTerms terms = terms("keyboard", "12.00", 1);
+        Order.NewOrderTerms nullPrice =
+                new Order.NewOrderTerms(
+                        terms.orderNo(),
+                        terms.paymentId(),
+                        terms.dealId(),
+                        terms.userId(),
+                        terms.productId(),
+                        terms.productTitle(),
+                        terms.productImage(),
+                        terms.quantity(),
+                        null,
+                        terms.currency());
+
+        assertThatThrownBy(() -> Order.create(nullPrice, PAID_AT))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("unitPrice must be positive");
+    }
+
     @Test
     void createRejectsNullTermsAndNullPaidAt() {
         Order.NewOrderTerms terms = terms("keyboard", "12.00", 1);
