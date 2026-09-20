@@ -1,9 +1,10 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { OK_CODE } from "@/api/envelope";
+import { meQueryKey } from "@/api/generated/@tanstack/react-query.gen";
 import type { Receipt } from "@/api/generated/types.gen";
 import { clearCompletedAttempt, lastPaymentKey } from "@/features/payment/use-checkout";
 import { server } from "@/test/msw";
@@ -20,6 +21,30 @@ beforeEach(() => {
   server.use(http.get("*/api/v1/payments/capabilities", () => ok({ enabled: true })));
 });
 afterEach(() => vi.restoreAllMocks());
+
+it("never reuses another account's cached payment receipt", async () => {
+  serveSignedIn();
+  receipt({ status: "SUCCEEDED", amount: "17.89", refundStatus: "NONE" });
+  const { queryClient } = renderRoute(`/payments/${paymentId}`);
+  expect(await screen.findByText(/17.89/)).toBeInTheDocument();
+  let ownershipChecks = 0;
+  server.use(
+    http.get(`*/api/v1/payments/${paymentId}`, () => {
+      ownershipChecks++;
+      return HttpResponse.json({ code: "PAYMENT_404", message: "Not found" }, { status: 404 });
+    }),
+  );
+  await act(async () => {
+    queryClient.setQueryData(meQueryKey(), {
+      code: OK_CODE,
+      message: "ok",
+      data: { userId: "different-buyer", nickname: "Buyer B", avatarUrl: null },
+    });
+  });
+  expect(await screen.findByRole("alert")).toBeInTheDocument();
+  expect(ownershipChecks).toBe(1);
+  expect(screen.queryByText(/17.89/)).not.toBeInTheDocument();
+});
 
 it("shows a completed refund without claiming active bloc membership", async () => {
   serveSignedIn();
