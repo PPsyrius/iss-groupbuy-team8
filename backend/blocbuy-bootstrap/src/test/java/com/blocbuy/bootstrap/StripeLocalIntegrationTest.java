@@ -3,10 +3,15 @@ package com.blocbuy.bootstrap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.bootstrap.fixture.PaymentFixtureConfiguration;
 import com.blocbuy.bootstrap.fixture.PaymentLifecycleFixture;
+import com.blocbuy.bootstrap.fixture.StripeTestDatabase;
 import com.blocbuy.payment.gateway.CheckoutGateway;
 import com.blocbuy.payment.model.CheckoutPayment;
 import com.blocbuy.payment.repository.CheckoutPaymentRepository;
@@ -21,7 +26,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -48,19 +52,16 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 @Import(PaymentFixtureConfiguration.class)
 @AutoConfigureMockMvc
 @DirtiesContext
-@EnabledIfEnvironmentVariable(
-        named = "STRIPE_TEST_DB_URL",
-        matches = "jdbc:postgresql://127\\.0\\.0\\.1:55439/blocbuy_stripe_test.*")
 class StripeLocalIntegrationTest {
+    // Testcontainers reaps this container after the Spring test JVM exits.
+    private static final StripeTestDatabase DATABASE =
+            new StripeTestDatabase("blocbuy_stripe_local");
+
     @DynamicPropertySource
     static void database(DynamicPropertyRegistry properties) {
-        properties.add(
-                "spring.datasource.url",
-                () ->
-                        "jdbc:postgresql://127.0.0.1:55439/blocbuy_stripe_local?currentSchema=domain");
-        properties.add("spring.datasource.username", () -> "stripe_test");
-        properties.add(
-                "spring.datasource.password", () -> System.getenv("STRIPE_TEST_DB_PASSWORD"));
+        properties.add("spring.datasource.url", DATABASE::url);
+        properties.add("spring.datasource.username", DATABASE::username);
+        properties.add("spring.datasource.password", DATABASE::password);
     }
 
     @Autowired private PaymentLifecycleFixture coordinator;
@@ -139,7 +140,9 @@ class StripeLocalIntegrationTest {
         assertThat(receipt.dealId()).isEqualTo(deal());
         assertThat(receipt.dealId()).isNotEqualTo(product);
         assertThat(receipt.refundPending()).isFalse();
-        assertThatThrownBy(() -> browser.receipt(UUID.randomUUID(), p.id()))
+        var exceptionInput1 = UUID.randomUUID();
+        var exceptionInput2 = p.id();
+        assertThatThrownBy(() -> browser.receipt(exceptionInput1, exceptionInput2))
                 .isInstanceOf(com.blocbuy.common.exception.BizException.class);
         assertThat(
                         jdbc.queryForObject(
@@ -220,7 +223,8 @@ class StripeLocalIntegrationTest {
         paid(p);
         jdbc.execute("ALTER TABLE biz_order ADD CONSTRAINT local_fail_order CHECK (quantity=999)");
         try {
-            assertThatThrownBy(() -> payments.recover(p.id(), "test-operator", true))
+            var exceptionInput3 = p.id();
+            assertThatThrownBy(() -> payments.recover(exceptionInput3, "test-operator", true))
                     .isInstanceOf(RuntimeException.class);
             assertThat(repository.findById(p.id()).orElseThrow().status())
                     .isEqualTo(CheckoutPayment.Status.CREATED);
@@ -238,6 +242,7 @@ class StripeLocalIntegrationTest {
         assertThat(
                         mappings.stream()
                                 .flatMap(handler -> handler.getHandlerMethods().keySet().stream()))
+                .isNotEmpty()
                 .allSatisfy(
                         mapping ->
                                 assertThat(mapping.getPatternValues())
@@ -317,17 +322,16 @@ class StripeLocalIntegrationTest {
         payments.recover(p.id(), "test-operator", true);
         assertThat(repository.findById(p.id()).orElseThrow().status())
                 .isEqualTo(CheckoutPayment.Status.CREATED);
-        assertThatThrownBy(
-                        () ->
-                                payments.prepare(
-                                        p.quote().userId(), p.quote().intentId(), "new-attempt"))
+        var exceptionInput4 = p.quote().userId();
+        var exceptionInput5 = p.quote().intentId();
+        assertThatThrownBy(() -> payments.prepare(exceptionInput4, exceptionInput5, "new-attempt"))
                 .isInstanceOf(RuntimeException.class);
     }
 
     @Test
     void refundExecutesOutsideTransactionAndOrderHistoryShowsRefunded() {
         CheckoutPayment p = expiredPurchase();
-        var provider = org.mockito.Mockito.mock(com.blocbuy.payment.gateway.RefundGateway.class);
+        var provider = mock(com.blocbuy.payment.gateway.RefundGateway.class);
         when(provider.createRefund(any()))
                 .thenAnswer(
                         call -> {
@@ -348,7 +352,7 @@ class StripeLocalIntegrationTest {
         var worker = new com.blocbuy.payment.service.RefundService(refunds, provider, transactions);
         assertThat(worker.processNext()).isTrue();
         assertThat(worker.processNext()).isFalse();
-        org.mockito.Mockito.verify(provider, org.mockito.Mockito.times(1)).createRefund(any());
+        verify(provider, times(1)).createRefund(any());
         var receipt = browser.receipt(p.quote().userId(), p.id());
         assertThat(receipt.refundStatus()).isEqualTo("SUCCEEDED");
         assertThat(repository.refundRecorded(p.id())).isTrue();
@@ -360,7 +364,8 @@ class StripeLocalIntegrationTest {
         assertThat(page.items().getFirst().amount()).isEqualTo("10.00");
         assertThat(orders.page(buyer(), 1, 10).items()).isEmpty();
         assertThat(orders.page(p.quote().userId(), 2, 10).items()).isEmpty();
-        assertThatThrownBy(() -> orders.page(p.quote().userId(), 0, 100))
+        var exceptionInput6 = p.quote().userId();
+        assertThatThrownBy(() -> orders.page(exceptionInput6, 0, 100))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -392,12 +397,12 @@ class StripeLocalIntegrationTest {
         jdbc.update(
                 "UPDATE biz_refund SET first_attempt_at=clock_timestamp()-interval '25 hours' WHERE payment_id=?",
                 p.id());
-        var provider = org.mockito.Mockito.mock(com.blocbuy.payment.gateway.RefundGateway.class);
+        var provider = mock(com.blocbuy.payment.gateway.RefundGateway.class);
         var worker = new com.blocbuy.payment.service.RefundService(refunds, provider, transactions);
         worker.processNext();
         assertThat(refunds.status(p.id())).isEqualTo("REVIEW");
         assertThat(worker.processNext()).isFalse();
-        org.mockito.Mockito.verify(provider, org.mockito.Mockito.never()).createRefund(any());
+        verify(provider, never()).createRefund(any());
         when(provider.retrieveRefund("re_recovered"))
                 .thenAnswer(
                         call -> {

@@ -52,8 +52,10 @@ class StripeWebhookBoundaryTest {
     private static final String PATH = "/api/v1/webhooks/stripe";
     private static final String SECRET = "local-boundary-test-not-a-credential";
     private static final String UNKNOWN =
-            "{\n \"id\":\"evt_boundary\",\"object\":\"event\","
-                    + "\"type\":\"customer.created\",\"description\":\"付款测试\",\"livemode\":false}\n";
+            """
+            {"id":"evt_boundary","object":"event",
+             "type":"customer.created","description":"付款测试","livemode":false}
+            """;
 
     @Autowired private MockMvc mvc;
     @MockitoBean private CheckoutPaymentRepository payments;

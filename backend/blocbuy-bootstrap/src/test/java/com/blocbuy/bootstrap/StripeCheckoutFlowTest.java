@@ -6,10 +6,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.blocbuy.bootstrap.fixture.StripeTestDatabase;
 import com.blocbuy.common.persistence.UuidTypeHandler;
 import com.blocbuy.common.web.GlobalExceptionHandler;
 import com.blocbuy.payment.event.PaymentSucceeded;
@@ -40,10 +44,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.flywaydb.core.Flyway;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -60,10 +64,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 /**
  * Real PostgreSQL/MyBatis transactions; provider and group/order collaborators are test doubles.
  */
-@EnabledIfEnvironmentVariable(
-        named = "STRIPE_TEST_DB_URL",
-        matches = "jdbc:postgresql://127\\.0\\.0\\.1:55439/blocbuy_stripe_test.*")
 class StripeCheckoutFlowTest {
+    private static StripeTestDatabase testDatabase;
     private static CheckoutPaymentRepositoryImpl repository;
     private static JdbcTemplate jdbc;
     private static DataSourceTransactionManager transactions;
@@ -78,15 +80,10 @@ class StripeCheckoutFlowTest {
 
     @BeforeAll
     static void database() throws Exception {
-        String url = System.getenv("STRIPE_TEST_DB_URL");
-        // Dedicated ephemeral DB only. Never fall back to application-local or DB_URL.
-        if (!url.equals(
-                "jdbc:postgresql://127.0.0.1:55439/blocbuy_stripe_test?currentSchema=domain")) {
-            throw new IllegalStateException("Refusing a non-isolated test database");
-        }
+        testDatabase = new StripeTestDatabase("blocbuy_stripe_test");
         var ds =
                 new DriverManagerDataSource(
-                        url, "stripe_test", System.getenv("STRIPE_TEST_DB_PASSWORD"));
+                        testDatabase.url(), testDatabase.username(), testDatabase.password());
         Flyway.configure()
                 .dataSource(ds)
                 .defaultSchema("domain")
@@ -109,6 +106,11 @@ class StripeCheckoutFlowTest {
                 "CREATE TABLE stripe_test_team(id uuid PRIMARY KEY, seats int NOT NULL, expired boolean NOT NULL)");
         jdbc.execute(
                 "CREATE TABLE stripe_test_orders(payment_id uuid PRIMARY KEY, order_id uuid NOT NULL)");
+    }
+
+    @AfterAll
+    static void stopDatabase() {
+        if (testDatabase != null) testDatabase.close();
     }
 
     @BeforeEach
@@ -250,8 +252,7 @@ class StripeCheckoutFlowTest {
                 .andExpect(status().isOk());
         assertThat(count("log_payment_webhook_event")).isZero();
         assertThat(count("biz_payment")).isZero();
-        org.mockito.Mockito.verify(gateway, org.mockito.Mockito.never())
-                .retrieveCheckoutSession(any());
+        verify(gateway, never()).retrieveCheckoutSession(any());
     }
 
     // Real MVC/controller/facade/core/SQL and SDK verification; remote retrieval and business
@@ -408,7 +409,8 @@ class StripeCheckoutFlowTest {
         assertThat(count("stripe_test_orders")).isZero();
         assertThat(repository.findById(payment.id()).orElseThrow().status())
                 .isEqualTo(CheckoutPayment.Status.CREATED);
-        assertThatThrownBy(() -> service.recover(payment.id(), "test", false))
+        var exceptionInput1 = payment.id();
+        assertThatThrownBy(() -> service.recover(exceptionInput1, "test", false))
                 .isInstanceOf(IllegalArgumentException.class);
         service.recover(payment.id(), "test", true);
         service.recover(payment.id(), "test", true);
@@ -451,7 +453,8 @@ class StripeCheckoutFlowTest {
         CheckoutPayment payment = prepare();
         paid(payment);
         failFulfilment.set(true);
-        assertThatThrownBy(() -> service.recover(payment.id(), "yorik", true))
+        var exceptionInput2 = payment.id();
+        assertThatThrownBy(() -> service.recover(exceptionInput2, "yorik", true))
                 .isInstanceOf(IllegalStateException.class);
         var review = service.reviewCases(null).getFirst();
         assertThat(review.reason()).isEqualTo("RECOVERY_FAILED");
@@ -526,10 +529,9 @@ class StripeCheckoutFlowTest {
         CheckoutPayment payment = prepare();
         sessions.put(payment.sessionId(), expired(session(payment, false)));
         webhook(payment, "evt_cancel_for_scan");
-        assertThatThrownBy(
-                        () ->
-                                service.assignReview(
-                                        payment.id(), "yorik", Instant.now().minusSeconds(1)))
+        var exceptionInput3 = payment.id();
+        var exceptionInput4 = Instant.now().minusSeconds(1);
+        assertThatThrownBy(() -> service.assignReview(exceptionInput3, "yorik", exceptionInput4))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThat(count("biz_payment_review_case")).isZero();
         service.assignReview(payment.id(), "yorik", Instant.now().plusSeconds(900));
@@ -551,12 +553,9 @@ class StripeCheckoutFlowTest {
         webhook(payment, "evt_late_paid");
         assertThat(count("log_payment_review")).isEqualTo(1);
         assertThat(count("stripe_test_orders")).isZero();
-        assertThatThrownBy(
-                        () ->
-                                service.prepare(
-                                        payment.quote().userId(),
-                                        payment.quote().intentId(),
-                                        "new-key"))
+        var exceptionInput5 = payment.quote().userId();
+        var exceptionInput6 = payment.quote().intentId();
+        assertThatThrownBy(() -> service.prepare(exceptionInput5, exceptionInput6, "new-key"))
                 .isInstanceOf(RuntimeException.class);
         jdbc.update("UPDATE stripe_test_team SET expired=true WHERE id=?", TEAM);
         service.recover(payment.id(), "test", true);
@@ -632,14 +631,15 @@ class StripeCheckoutFlowTest {
     @Test
     void foreignOwnerAndChangedRequestIntentAreRejected() {
         CheckoutPayment payment = prepare();
-        assertThatThrownBy(
-                        () ->
-                                service.prepare(
-                                        UUID.randomUUID(), payment.quote().intentId(), "test-key"))
+        var exceptionInput7 = UUID.randomUUID();
+        var exceptionInput8 = payment.quote().intentId();
+        assertThatThrownBy(() -> service.prepare(exceptionInput7, exceptionInput8, "test-key"))
                 .isInstanceOf(RuntimeException.class);
         var quote = quote(payment.quote().userId());
         quotes.put(quote.intentId(), quote);
-        assertThatThrownBy(() -> service.prepare(quote.userId(), quote.intentId(), "test-key"))
+        var exceptionInput9 = quote.userId();
+        var exceptionInput10 = quote.intentId();
+        assertThatThrownBy(() -> service.prepare(exceptionInput9, exceptionInput10, "test-key"))
                 .isInstanceOf(RuntimeException.class);
         assertThat(count("biz_payment")).isEqualTo(1);
     }
@@ -651,7 +651,9 @@ class StripeCheckoutFlowTest {
         doThrow(new IllegalStateException("simulated timeout"))
                 .when(gateway)
                 .createCheckoutSession(any());
-        assertThatThrownBy(() -> service.prepare(quote.userId(), quote.intentId(), "test-key"))
+        var exceptionInput11 = quote.userId();
+        var exceptionInput12 = quote.intentId();
+        assertThatThrownBy(() -> service.prepare(exceptionInput11, exceptionInput12, "test-key"))
                 .isInstanceOf(IllegalStateException.class);
         CheckoutPayment saved = repository.findRequest(quote.userId(), "test-key").orElseThrow();
         doAnswer(
@@ -688,8 +690,7 @@ class StripeCheckoutFlowTest {
                                 "SELECT provider_summary FROM biz_payment_review_case",
                                 String.class))
                 .contains(candidate);
-        org.mockito.Mockito.verify(gateway, org.mockito.Mockito.times(1))
-                .createCheckoutSession(any());
+        verify(gateway, times(1)).createCheckoutSession(any());
     }
 
     @Test
@@ -710,8 +711,7 @@ class StripeCheckoutFlowTest {
                                 .checkoutUrl())
                 .isEqualTo(sessions.get(candidate).url());
         assertThat(count("stripe_test_orders")).isZero();
-        org.mockito.Mockito.verify(gateway, org.mockito.Mockito.times(1))
-                .createCheckoutSession(any());
+        verify(gateway, times(1)).createCheckoutSession(any());
     }
 
     @Test
@@ -736,7 +736,9 @@ class StripeCheckoutFlowTest {
         sessions.put(foreign.id(), foreign);
         assertThat(service.preview(payment.id(), foreign.id()).proposedAction())
                 .isEqualTo("REVIEW_PROVIDER_MISMATCH");
-        assertThatThrownBy(() -> service.recover(payment.id(), "yorik", true, foreign.id()))
+        var exceptionInput13 = payment.id();
+        var foreignSessionId = foreign.id();
+        assertThatThrownBy(() -> service.recover(exceptionInput13, "yorik", true, foreignSessionId))
                 .isInstanceOf(RuntimeException.class);
         assertThat(repository.findById(payment.id()).orElseThrow().sessionId()).isNull();
         assertThat(repository.findById(payment.id()).orElseThrow().status())
@@ -749,16 +751,17 @@ class StripeCheckoutFlowTest {
     @Test
     void operatorHintCannotOverwriteAnExistingSessionOrUseAnArbitraryUrl() {
         CheckoutPayment payment = prepare();
-        assertThatThrownBy(() -> service.recover(payment.id(), "yorik", true, "cs_test_different"))
+        var exceptionInput14 = payment.id();
+        assertThatThrownBy(
+                        () -> service.recover(exceptionInput14, "yorik", true, "cs_test_different"))
                 .isInstanceOf(RuntimeException.class);
-        assertThatThrownBy(() -> service.preview(payment.id(), "http://127.0.0.1/private"))
+        var exceptionInput15 = payment.id();
+        assertThatThrownBy(() -> service.preview(exceptionInput15, "http://127.0.0.1/private"))
                 .isInstanceOf(RuntimeException.class);
         assertThat(repository.findById(payment.id()).orElseThrow().sessionId())
                 .isEqualTo(payment.sessionId());
-        org.mockito.Mockito.verify(gateway, org.mockito.Mockito.never())
-                .retrieveCheckoutSession("cs_test_different");
-        org.mockito.Mockito.verify(gateway, org.mockito.Mockito.never())
-                .retrieveCheckoutSession("http://127.0.0.1/private");
+        verify(gateway, never()).retrieveCheckoutSession("cs_test_different");
+        verify(gateway, never()).retrieveCheckoutSession("http://127.0.0.1/private");
     }
 
     @Test
@@ -801,7 +804,9 @@ class StripeCheckoutFlowTest {
                         })
                 .when(gateway)
                 .createCheckoutSession(any());
-        assertThatThrownBy(() -> service.prepare(quote.userId(), quote.intentId(), "test-key"))
+        var exceptionInput16 = quote.userId();
+        var exceptionInput17 = quote.intentId();
+        assertThatThrownBy(() -> service.prepare(exceptionInput16, exceptionInput17, "test-key"))
                 .isInstanceOf(IllegalStateException.class);
         CheckoutPayment saved = repository.findRequest(quote.userId(), "test-key").orElseThrow();
         assertThat(saved.sessionId()).isNull();
@@ -810,16 +815,18 @@ class StripeCheckoutFlowTest {
 
     @Test
     void providerOperationsRejectAnEnclosingDatabaseTransaction() {
-        assertThatThrownBy(
-                        () ->
-                                new TransactionTemplate(transactions)
-                                        .execute(
-                                                status ->
-                                                        service.prepare(
-                                                                UUID.randomUUID(),
-                                                                UUID.randomUUID(),
-                                                                "test-key")))
-                .isInstanceOf(IllegalStateException.class);
+        var exceptionInput18 = UUID.randomUUID();
+        var exceptionInput19 = UUID.randomUUID();
+        var transaction = new TransactionTemplate(transactions);
+        transaction.executeWithoutResult(
+                status ->
+                        assertThatThrownBy(
+                                        () ->
+                                                service.prepare(
+                                                        exceptionInput18,
+                                                        exceptionInput19,
+                                                        "test-key"))
+                                .isInstanceOf(IllegalStateException.class));
     }
 
     private CheckoutPayment prepare() {

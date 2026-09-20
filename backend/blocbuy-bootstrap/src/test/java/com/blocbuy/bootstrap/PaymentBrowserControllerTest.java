@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -218,6 +219,7 @@ class PaymentBrowserControllerTest {
                                 "NONE"));
         mvc.perform(get("/api/v1/payments/" + PAYMENT).cookie(cookie))
                 .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.data.orderId").value(INTENT.toString()))
                 .andExpect(jsonPath("$.data.checkoutUrl").doesNotExist())
                 .andExpect(jsonPath("$.data.providerPaymentIntentId").doesNotExist());

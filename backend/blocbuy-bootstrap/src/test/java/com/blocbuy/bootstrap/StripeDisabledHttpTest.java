@@ -59,6 +59,7 @@ class StripeDisabledHttpTest {
         assertThat(
                         mappings.stream()
                                 .flatMap(handler -> handler.getHandlerMethods().keySet().stream()))
+                .isNotEmpty()
                 .allSatisfy(
                         mapping ->
                                 assertThat(mapping.getPatternValues())
