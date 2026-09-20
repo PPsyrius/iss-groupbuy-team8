@@ -91,7 +91,9 @@ public class StripeCheckoutController {
     @Operation(
             operationId = "getPaymentReceipt",
             summary = "Read only the signed-in buyer's verified payment and order")
-    public Result<PaymentBrowserService.Receipt> receipt(@PathVariable UUID id) {
+    public Result<PaymentBrowserService.Receipt> receipt(
+            @PathVariable UUID id, HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store");
         feature.requireEnabled();
         return Result.ok(service.receipt(user(), id));
     }
