@@ -667,16 +667,13 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 ## 2026-09-18 - @PPsyrius - Independent Frontend SonarCloud quality gate (#104, #93)
 
 - Kind: NFR-20 maintainability and CI.
-- Changed: added independent `SonarCloud Backend` and `SonarCloud Frontend` jobs; frontend produces
-  LCOV, scans `frontend/src`, and maintains a `dev` baseline. Synced badges and quality docs.
-- Verified: YAML, Actionlint 1.7.12 and `git diff --check` pass; focused coverage passed 5/5 with
-  LCOV. GitHub quality gate pending.
-- Decision: use a separate frontend project because Maven analysis is rooted at `backend/`; CodeQL
-  remains unchanged and CI reads only `SONAR_FRONTEND_TOKEN`.
-- Problem: full local coverage is blocked by missing `@internationalized/date` package contents;
-  verify with frozen-lockfile Linux CI.
-- Next: replace required `sonar` with `SonarCloud Backend`; require `SonarCloud Frontend` after its
-  baseline and first green PR result.
+- Changed: split backend/frontend SonarCloud jobs; frontend scans `frontend/src` with LCOV and keeps
+  a `dev` baseline. Synced badges and quality docs.
+- Verified: YAML, Actionlint and `git diff --check` pass; focused coverage passed 5/5; PR #123's
+  frontend quality gate passed.
+- Decision: separate projects share `SONAR_TOKEN`; CodeQL remains unchanged.
+- Problem: malformed local `@internationalized/date` blocked full coverage; Linux CI passed.
+- Next: require both renamed checks; merge establishes the frontend `dev` baseline.
 
 ## 2026-09-18 - @limjiechao - T2-01 products list from the Claude Design Catalog artboards (#44, #93 PR-G)
 

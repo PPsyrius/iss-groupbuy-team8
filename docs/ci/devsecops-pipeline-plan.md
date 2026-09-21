@@ -290,7 +290,7 @@ These need GitHub repo settings / external accounts; do them once, then the matc
 
 | # | Action | Where | Unblocks |
 |---|---|---|---|
-| 1 | Set repo secrets `SONAR_TOKEN` for BlocBuy Backend and `SONAR_FRONTEND_TOKEN` for BlocBuy Frontend | Repo Settings → Secrets and variables → Actions | `SonarCloud Backend` and `SonarCloud Frontend` jobs and server-side quality gates |
+| 1 | Set repo secret `SONAR_TOKEN` to a SonarQube Cloud personal access token with analysis access to both BlocBuy projects | Repo Settings → Secrets and variables → Actions | `SonarCloud Backend` and `SonarCloud Frontend` jobs and server-side quality gates |
 | 2 | Set repo **variable** `ENABLE_CODEQL=true` and enable/confirm repository-side GitHub Code Scanning | Repo Settings → Secrets and variables / Code security | `codeql` SAST result ingestion |
 | 3 | Configure the `dev` **ruleset**: require PR, `build-quality`, `SonarCloud Backend`, `docker`, `gitleaks`, `frontend-check`, `SonarCloud Frontend`, branches up to date, review requirements, deletion restriction and no force-push | Repo Settings → Rules | Enforces the authoritative pre-merge validation path |
 | 4 | **Gitleaks license**: `gitleaks-action` needs a free `GITLEAKS_LICENSE` secret for organization-owned repos | gitleaks.io → add as repo secret | `gitleaks` job on org repos |
