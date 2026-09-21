@@ -3,7 +3,7 @@
 # job (mvn verify) and downloaded into blocbuy-bootstrap/target/ before docker build.
 # Local/offline builds use the multi-stage Dockerfile instead (docker-compose.yaml).
 
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:24-jre
 WORKDIR /app
 
 # Keep in sync with Dockerfile: base image ships pebble (Let's Encrypt's ACME test

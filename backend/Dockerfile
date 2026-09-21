@@ -7,7 +7,7 @@
 # Runtime profile is NOT baked in: compose/deploy sets SPRING_PROFILES_ACTIVE
 # (e.g. ec2).
 
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:24-jre
 
 WORKDIR /app
 
