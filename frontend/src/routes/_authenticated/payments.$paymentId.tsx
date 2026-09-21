@@ -5,6 +5,7 @@ import { useEffect } from "react";
 
 import { unwrapResult } from "@/api/envelope";
 import { getPaymentReceiptOptions } from "@/api/generated/@tanstack/react-query.gen";
+import type { Receipt } from "@/api/generated/types.gen";
 import { refundLabel } from "@/features/payment/refund-status";
 import { clearCompletedAttempt } from "@/features/payment/use-checkout";
 import { usePaymentAvailability } from "@/features/payment/use-payment-availability";
@@ -13,6 +14,81 @@ import { useSession } from "@/features/session/use-session";
 export const Route = createFileRoute("/_authenticated/payments/$paymentId")({
   component: PaymentReceipt,
 });
+
+function getPaymentTitle({
+  isError,
+  receipt,
+  paid,
+  waiting,
+}: {
+  isError: boolean;
+  receipt?: Pick<Receipt, "status" | "refundStatus"> | undefined;
+  paid: boolean;
+  waiting: boolean;
+}): string {
+  if (isError) return "Unable to check payment";
+  if (!receipt) return "Checking payment…";
+  if (receipt.refundStatus === "SUCCEEDED") return "Refund sent";
+  if (paid) return "Payment received";
+  if (waiting) return "Waiting for payment confirmation";
+  if (receipt.status === "CANCELED") return "Checkout closed without payment";
+  return "Payment not completed";
+}
+
+function ReceiptDetails({ receipt }: { receipt: Receipt }) {
+  return (
+    <dl className="border-border bg-surface grid grid-cols-1 gap-2 rounded-lg border p-5 sm:grid-cols-[auto_1fr]">
+      <dt>Payment reference</dt>
+      <dd className="break-all">{receipt.paymentId}</dd>
+      <dt>Amount</dt>
+      <dd>
+        {receipt.currency?.toUpperCase()} {receipt.amount}
+      </dd>
+      <dt>Payment status</dt>
+      <dd>{receipt.status}</dd>
+      {receipt.orderId ? (
+        <>
+          <dt>Order reference</dt>
+          <dd className="break-all">{receipt.orderId}</dd>
+        </>
+      ) : null}
+      {receipt.dealId ? (
+        <>
+          <dt>Bloc reference</dt>
+          <dd className="break-all">{receipt.dealId}</dd>
+        </>
+      ) : null}
+    </dl>
+  );
+}
+
+function RefundStatusBanner({ receipt, paid }: { receipt: Receipt | undefined; paid: boolean }) {
+  if (!receipt) return null;
+  if (receipt.refundStatus === "SUCCEEDED")
+    return (
+      <output>{refundLabel(receipt.refundStatus)}. Your bank may take time to show it.</output>
+    );
+  if (receipt.refundStatus === "FAILED" || receipt.refundStatus === "REVIEW")
+    return (
+      <output>{refundLabel(receipt.refundStatus)}. Keep your payment reference for support.</output>
+    );
+  if (receipt.refundPending)
+    return (
+      <output>
+        A refund is pending. Payment was received, but this purchase could not be fulfilled or the
+        bloc expired. This is not confirmation that the refund has been sent.
+      </output>
+    );
+  if (paid && receipt.orderId)
+    return <output>Your order has been saved and your bloc membership is confirmed.</output>;
+  if (paid)
+    return (
+      <output>
+        Payment is recorded. Order confirmation is not available yet; do not pay again.
+      </output>
+    );
+  return null;
+}
 
 function PaymentReceipt() {
   const { paymentId } = Route.useParams();
@@ -55,19 +131,7 @@ function PaymentReceipt() {
     );
   const paid = receipt?.status === "SUCCEEDED";
   const waiting = receipt?.status === "CREATED";
-  const title = query.isError
-    ? "Unable to check payment"
-    : !receipt
-      ? "Checking payment…"
-      : receipt.refundStatus === "SUCCEEDED"
-        ? "Refund sent"
-        : paid
-          ? "Payment received"
-          : waiting
-            ? "Waiting for payment confirmation"
-            : receipt.status === "CANCELED"
-              ? "Checkout closed without payment"
-              : "Payment not completed";
+  const title = getPaymentTitle({ isError: query.isError, receipt, paid, waiting });
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-5 p-6">
       <h1 className="text-2xl font-semibold" aria-live="polite">
@@ -85,48 +149,8 @@ function PaymentReceipt() {
           You can refresh the status without paying again.
         </p>
       ) : null}
-      {receipt ? (
-        <dl className="border-border bg-surface grid grid-cols-1 gap-2 rounded-lg border p-5 sm:grid-cols-[auto_1fr]">
-          <dt>Payment reference</dt>
-          <dd className="break-all">{receipt.paymentId}</dd>
-          <dt>Amount</dt>
-          <dd>
-            {receipt.currency?.toUpperCase()} {receipt.amount}
-          </dd>
-          <dt>Payment status</dt>
-          <dd>{receipt.status}</dd>
-          {receipt.orderId ? (
-            <>
-              <dt>Order reference</dt>
-              <dd className="break-all">{receipt.orderId}</dd>
-            </>
-          ) : null}
-          {receipt.dealId ? (
-            <>
-              <dt>Bloc reference</dt>
-              <dd className="break-all">{receipt.dealId}</dd>
-            </>
-          ) : null}
-        </dl>
-      ) : null}
-      {receipt?.refundStatus === "SUCCEEDED" ? (
-        <output>{refundLabel(receipt.refundStatus)}. Your bank may take time to show it.</output>
-      ) : receipt?.refundStatus === "FAILED" || receipt?.refundStatus === "REVIEW" ? (
-        <output>
-          {refundLabel(receipt.refundStatus)}. Keep your payment reference for support.
-        </output>
-      ) : receipt?.refundPending ? (
-        <output>
-          A refund is pending. Payment was received, but this purchase could not be fulfilled or the
-          bloc expired. This is not confirmation that the refund has been sent.
-        </output>
-      ) : paid && receipt.orderId ? (
-        <output>Your order has been saved and your bloc membership is confirmed.</output>
-      ) : paid ? (
-        <output>
-          Payment is recorded. Order confirmation is not available yet; do not pay again.
-        </output>
-      ) : null}
+      {receipt ? <ReceiptDetails receipt={receipt} /> : null}
+      <RefundStatusBanner receipt={receipt} paid={paid} />
       <div className="flex items-center gap-5">
         <Button
           variant="outline"
