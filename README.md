@@ -43,6 +43,9 @@
       </a>&nbsp;
       <a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=reliability_rating&view=list">
         <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=reliability_rating" alt="Backend SonarCloud reliability rating">
+      </a>&nbsp;
+      <a href="https://sonarcloud.io/component_measures?id=blocbuy-backend&metric=security_rating&view=list">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-backend&metric=security_rating" alt="Backend SonarCloud security rating">
       </a>
     </td>
   </tr>
@@ -61,7 +64,21 @@
       </a>&nbsp;
       <a href="https://sonarcloud.io/component_measures?id=blocbuy-frontend&metric=reliability_rating&view=list">
         <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-frontend&metric=reliability_rating" alt="Frontend SonarCloud reliability rating">
+      </a>&nbsp;
+      <a href="https://sonarcloud.io/component_measures?id=blocbuy-frontend&metric=security_rating&view=list">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=blocbuy-frontend&metric=security_rating" alt="Frontend SonarCloud security rating">
       </a>
+    </td>
+  </tr>
+
+  <tr>
+    <td><strong>Frontend</strong></td>
+    <td>
+      <img src="https://img.shields.io/badge/Node.js-24-41B5BE?style=flat" alt="Node.js 24">&nbsp;
+      <img src="https://img.shields.io/badge/TypeScript-7-41B5BE?style=flat" alt="TypeScript 7">&nbsp;
+      <img src="https://img.shields.io/badge/React-19.3-41B5BE?style=flat" alt="React 19.3">&nbsp;
+      <img src="https://img.shields.io/badge/Vite-8-41B5BE?style=flat" alt="Vite 8">&nbsp;
+      <img src="https://img.shields.io/badge/Tailwind%20CSS-4-41B5BE?style=flat" alt="Tailwind CSS 4">
     </td>
   </tr>
 
@@ -92,6 +109,8 @@
       <img src="https://img.shields.io/badge/AWS-ECR-41B5BE?style=flat" alt="Amazon ECR">&nbsp;
       <img src="https://img.shields.io/badge/AWS-EC2-41B5BE?style=flat" alt="Amazon EC2">&nbsp;
       <img src="https://img.shields.io/badge/AWS-SSM-41B5BE?style=flat" alt="AWS Systems Manager">&nbsp;
+      <img src="https://img.shields.io/badge/AWS-S3-41B5BE?style=flat" alt="Amazon S3">&nbsp;
+      <img src="https://img.shields.io/badge/AWS-CloudFront-41B5BE?style=flat" alt="Amazon CloudFront">
     </td>
   </tr>
 </table>
