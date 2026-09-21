@@ -56,7 +56,6 @@ class PaymentBrowserControllerTest {
     @MockitoBean private StripeFeatureSwitch feature;
     @MockitoBean private OAuthLoginAppService oauth;
     @MockitoBean private RoleRepository roles;
-    @MockitoBean private com.blocbuy.order.service.OrderHistoryService orders;
 
     @Test
     void enabledCapabilitiesUseTheSameSwitchAsTheBrowserEndpoints() throws Exception {
@@ -64,25 +63,7 @@ class PaymentBrowserControllerTest {
         mvc.perform(get("/api/v1/payments/capabilities").cookie(login()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.enabled").value(true));
-        verifyNoInteractions(payments, orders);
-    }
-
-    @Test
-    void orderListRequiresIdentityAndBoundsAndIgnoresSpoofedBuyer() throws Exception {
-        mvc.perform(get("/api/v1/orders")).andExpect(status().isUnauthorized());
-        Cookie cookie = login();
-        when(orders.page(USER, 1, 20))
-                .thenReturn(
-                        new com.blocbuy.common.model.PageResult<>(
-                                java.util.List.of(), 0, 1, 20, null));
-        mvc.perform(get("/api/v1/orders").cookie(cookie).param("buyerId", BUSINESS.toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.total").value(0));
-        verify(orders).page(USER, 1, 20);
-        mvc.perform(get("/api/v1/orders").cookie(cookie).param("size", "51"))
-                .andExpect(status().isBadRequest());
-        mvc.perform(get("/api/v1/orders").cookie(cookie).param("page", "0"))
-                .andExpect(status().isBadRequest());
+        verifyNoInteractions(payments);
     }
 
     private Cookie login() throws Exception {

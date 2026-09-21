@@ -64,6 +64,7 @@ public class PaymentBrowserService {
                         .filter(p -> p.quote().userId().equals(user))
                         .orElseThrow(() -> new BizException(PaymentErrorCode.PAYMENT_NOT_FOUND));
         String outcome = repository.outcome(id);
+        // Database lifecycle codes are lowercase (V2); the API vocabulary stays uppercase.
         String refundStatus = refunds.status(id);
         return new Receipt(
                 id,
@@ -73,7 +74,7 @@ public class PaymentBrowserService {
                 payment.quote().currency(),
                 repository.fulfilledDealId(id),
                 repository.orderId(id),
-                "PENDING".equals(refundStatus) || "PROCESSING".equals(refundStatus),
-                refundStatus == null ? "NONE" : refundStatus);
+                "pending".equals(refundStatus) || "processing".equals(refundStatus),
+                refundStatus == null ? "NONE" : refundStatus.toUpperCase(java.util.Locale.ROOT));
     }
 }

@@ -42,7 +42,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 @SpringBootTest(
         properties = {
             "server.address=127.0.0.1",
-            "spring.flyway.locations=classpath:db/migration,classpath:db/stripe,classpath:db/stripe-fixture",
+            "spring.flyway.locations=classpath:db/migration,classpath:db/stripe-fixture",
             "spring.data.redis.host=127.0.0.1",
             "spring.data.redis.port=1",
             "blocbuy.payment.checkout.success-url=https://shop.example/payments/return",
@@ -72,7 +72,6 @@ class StripeLocalIntegrationTest {
     @Autowired private JdbcTemplate jdbc;
     @Autowired private java.util.List<RequestMappingHandlerMapping> mappings;
     @Autowired private com.blocbuy.payment.repository.RefundRepository refunds;
-    @Autowired private com.blocbuy.order.service.OrderHistoryService orders;
     @Autowired private org.springframework.transaction.PlatformTransactionManager transactions;
     @MockitoBean private CheckoutGateway gateway;
     private final Map<String, CheckoutGateway.Session> sessions = new ConcurrentHashMap<>();
@@ -150,7 +149,7 @@ class StripeLocalIntegrationTest {
                                 Boolean.class))
                 .isTrue();
         assertThat(jdbc.queryForObject("SELECT status FROM biz_payment_review_case", String.class))
-                .isEqualTo("RESOLVED");
+                .isEqualTo("resolved");
     }
 
     @Test
@@ -212,7 +211,7 @@ class StripeLocalIntegrationTest {
         assertThat(count("biz_order")).isEqualTo(1);
         assertThat(
                         jdbc.queryForObject(
-                                "SELECT count(*) FROM biz_refund WHERE status='PENDING'",
+                                "SELECT count(*) FROM biz_refund WHERE status='pending'",
                                 Long.class))
                 .isEqualTo(2);
     }
@@ -329,7 +328,7 @@ class StripeLocalIntegrationTest {
     }
 
     @Test
-    void refundExecutesOutsideTransactionAndOrderHistoryShowsRefunded() {
+    void refundExecutesOutsideTransactionAndReceiptShowsRefunded() {
         CheckoutPayment p = expiredPurchase();
         var provider = mock(com.blocbuy.payment.gateway.RefundGateway.class);
         when(provider.createRefund(any()))
@@ -358,15 +357,6 @@ class StripeLocalIntegrationTest {
         assertThat(repository.refundRecorded(p.id())).isTrue();
         assertThat(receipt.refundPending()).isFalse();
         assertThat(receipt.status()).isEqualTo("SUCCEEDED");
-        var page = orders.page(p.quote().userId(), 1, 10);
-        assertThat(page.total()).isEqualTo(1);
-        assertThat(page.items().getFirst().status()).isEqualTo("refunded");
-        assertThat(page.items().getFirst().amount()).isEqualTo("10.00");
-        assertThat(orders.page(buyer(), 1, 10).items()).isEmpty();
-        assertThat(orders.page(p.quote().userId(), 2, 10).items()).isEmpty();
-        var exceptionInput6 = p.quote().userId();
-        assertThatThrownBy(() -> orders.page(exceptionInput6, 0, 100))
-                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -383,11 +373,11 @@ class StripeLocalIntegrationTest {
         var second = tx.execute(s -> refunds.claimNext());
         assertThat(second.version()).isEqualTo(first.version() + 1);
         assertThat(second.firstAttemptAt()).isEqualTo(first.firstAttemptAt());
-        tx.executeWithoutResult(s -> refunds.finish(first, "re_stale", "SUCCEEDED", "STALE"));
-        assertThat(refunds.status(p.id())).isEqualTo("PENDING");
+        tx.executeWithoutResult(s -> refunds.finish(first, "re_stale", "succeeded", "STALE"));
+        assertThat(refunds.status(p.id())).isEqualTo("pending");
         tx.executeWithoutResult(
-                s -> refunds.finish(second, "re_test", "PROCESSING", "PENDING_PROVIDER"));
-        assertThat(refunds.status(p.id())).isEqualTo("PROCESSING");
+                s -> refunds.finish(second, "re_test", "processing", "PENDING_PROVIDER"));
+        assertThat(refunds.status(p.id())).isEqualTo("processing");
         assertThat(browser.receipt(p.quote().userId(), p.id()).refundPending()).isTrue();
     }
 
@@ -400,7 +390,7 @@ class StripeLocalIntegrationTest {
         var provider = mock(com.blocbuy.payment.gateway.RefundGateway.class);
         var worker = new com.blocbuy.payment.service.RefundService(refunds, provider, transactions);
         worker.processNext();
-        assertThat(refunds.status(p.id())).isEqualTo("REVIEW");
+        assertThat(refunds.status(p.id())).isEqualTo("review");
         assertThat(worker.processNext()).isFalse();
         verify(provider, never()).createRefund(any());
         when(provider.retrieveRefund("re_recovered"))
@@ -420,7 +410,7 @@ class StripeLocalIntegrationTest {
                                     "succeeded");
                         });
         assertThat(worker.reconcile(p.id(), "re_recovered")).isTrue();
-        assertThat(refunds.status(p.id())).isEqualTo("SUCCEEDED");
+        assertThat(refunds.status(p.id())).isEqualTo("succeeded");
     }
 
     private CheckoutPayment expiredPurchase() {

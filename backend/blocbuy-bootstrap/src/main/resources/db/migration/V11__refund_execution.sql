@@ -1,4 +1,7 @@
--- Opt-in migration; existing team migrations and deployment profiles remain untouched.
+-- V11__refund_execution.sql — execution columns for the biz_refund obligation queue (created in V9).
+-- The lease/version pair fences concurrent workers; provider results are idempotent per
+-- provider_refund_id. Status codes lowercase (pending/processing/succeeded/failed/review).
+
 ALTER TABLE biz_refund
     ADD COLUMN provider_refund_id varchar(256),
     ADD COLUMN first_attempt_at timestamptz,
@@ -13,7 +16,7 @@ ALTER TABLE biz_refund
 CREATE UNIQUE INDEX uq_biz_refund_provider_id ON biz_refund(provider_refund_id)
     WHERE provider_refund_id IS NOT NULL;
 CREATE INDEX idx_biz_refund_due ON biz_refund(next_attempt_at,id)
-    WHERE NOT deleted AND status IN ('PENDING','PROCESSING','SUCCEEDED');
+    WHERE NOT deleted AND status IN ('pending','processing','succeeded');
 COMMENT ON COLUMN biz_refund.first_attempt_at IS 'Immutable start of provider idempotency retry window';
 COMMENT ON COLUMN biz_refund.version IS 'Fencing token: only the latest lease may persist a provider result';
 CREATE TABLE log_refund_attempt (

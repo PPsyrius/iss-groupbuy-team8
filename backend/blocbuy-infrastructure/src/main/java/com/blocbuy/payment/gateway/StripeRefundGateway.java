@@ -18,23 +18,19 @@ import org.springframework.stereotype.Component;
 public class StripeRefundGateway implements RefundGateway {
     private static final String OBLIGATION_ID = "obligation_id";
     private final StripeProperties properties;
+    private final StripeClientProvider clients;
 
-    private StripeClient client() {
+    private void requireSandbox() {
         if (!properties.configured() || !properties.apiKey().startsWith("sk_test_")) {
             throw new BizException(PaymentErrorCode.PAYMENT_PROVIDER_ERROR);
         }
-        return StripeClient.builder()
-                .setApiKey(properties.apiKey())
-                .setConnectTimeout(3000)
-                .setReadTimeout(10000)
-                .setMaxNetworkRetries(1)
-                .build();
     }
 
     @Override
     public Snapshot createRefund(RefundWork work) {
+        requireSandbox();
         try {
-            StripeClient stripe = client();
+            StripeClient stripe = clients.client();
             var payment = stripe.paymentIntents().retrieve(work.providerIntentId());
             if (Boolean.TRUE.equals(payment.getLivemode())
                     || !"succeeded".equals(payment.getStatus())
@@ -66,8 +62,9 @@ public class StripeRefundGateway implements RefundGateway {
 
     @Override
     public Snapshot retrieveRefund(String providerId) {
+        requireSandbox();
         try {
-            return snapshot(client().refunds().retrieve(providerId));
+            return snapshot(clients.client().refunds().retrieve(providerId));
         } catch (StripeException failure) {
             throw new BizException(PaymentErrorCode.PAYMENT_PROVIDER_ERROR);
         }
@@ -75,9 +72,11 @@ public class StripeRefundGateway implements RefundGateway {
 
     @Override
     public Snapshot findRefund(RefundWork work) {
+        requireSandbox();
         try {
             var results =
-                    client().refunds()
+                    clients.client()
+                            .refunds()
                             .list(
                                     RefundListParams.builder()
                                             .setPaymentIntent(work.providerIntentId())

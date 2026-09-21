@@ -13,7 +13,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.blocbuy.identity.repository.RoleRepository;
 import com.blocbuy.identity.service.OAuthLoginAppService;
 import com.blocbuy.identity.service.OAuthLoginAppService.OAuthLoginResult;
-import com.blocbuy.order.service.OrderHistoryService;
 import com.blocbuy.payment.service.PaymentBrowserService;
 import jakarta.servlet.http.Cookie;
 import java.util.UUID;
@@ -44,7 +43,6 @@ class StripeDisabledHttpTest {
     private static final String ID = "00000000-0000-4000-8000-000000000001";
     @Autowired private MockMvc mvc;
     @MockitoBean private PaymentBrowserService payments;
-    @MockitoBean private OrderHistoryService orders;
     @MockitoBean private OAuthLoginAppService oauth;
     @MockitoBean private RoleRepository roles;
 
@@ -73,7 +71,7 @@ class StripeDisabledHttpTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.data.enabled").value(false));
-        verifyNoInteractions(payments, orders);
+        verifyNoInteractions(payments);
     }
 
     @Test
@@ -95,8 +93,7 @@ class StripeDisabledHttpTest {
                                 .content("{\"intentId\":\"" + ID + "\"}"))
                 .andExpect(status().isNotFound());
         mvc.perform(get("/api/v1/payments/" + ID).cookie(cookie)).andExpect(status().isNotFound());
-        mvc.perform(get("/api/v1/orders").cookie(cookie)).andExpect(status().isNotFound());
-        verifyNoInteractions(payments, orders);
+        verifyNoInteractions(payments);
     }
 
     private Cookie login() throws Exception {

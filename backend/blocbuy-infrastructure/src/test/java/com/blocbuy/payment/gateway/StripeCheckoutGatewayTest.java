@@ -32,7 +32,9 @@ import org.junit.jupiter.api.Test;
 class StripeCheckoutGatewayTest {
     private static final String SECRET = "test-signing-secret-not-a-real-credential";
     private final StripeCheckoutGateway gateway =
-            new StripeCheckoutGateway(new StripeProperties("", SECRET));
+            new StripeCheckoutGateway(
+                    new StripeProperties("", SECRET),
+                    new StripeClientProvider(new StripeProperties("", SECRET)));
 
     @Test
     void verifiesRealSignatureAndIgnoresUnknownType() throws Exception {
@@ -111,7 +113,10 @@ class StripeCheckoutGatewayTest {
         var client = mock(StripeClient.class, RETURNS_DEEP_STUBS);
         var builder = mock(StripeClient.StripeClientBuilder.class, RETURNS_SELF);
         when(builder.build()).thenReturn(client);
-        var adapter = new StripeCheckoutGateway(new StripeProperties("sk_test_fixture", SECRET));
+        var adapter =
+                new StripeCheckoutGateway(
+                        new StripeProperties("sk_test_fixture", SECRET),
+                        new StripeClientProvider(new StripeProperties("sk_test_fixture", SECRET)));
         var payment = payment();
         var session = session(payment);
         try (var factory = mockStatic(StripeClient.class)) {
@@ -170,7 +175,10 @@ class StripeCheckoutGatewayTest {
         var client = mock(StripeClient.class, RETURNS_DEEP_STUBS);
         var builder = mock(StripeClient.StripeClientBuilder.class, RETURNS_SELF);
         when(builder.build()).thenReturn(client);
-        var adapter = new StripeCheckoutGateway(new StripeProperties("sk_test_fixture", SECRET));
+        var adapter =
+                new StripeCheckoutGateway(
+                        new StripeProperties("sk_test_fixture", SECRET),
+                        new StripeClientProvider(new StripeProperties("sk_test_fixture", SECRET)));
         try (var factory = mockStatic(StripeClient.class)) {
             factory.when(StripeClient::builder).thenReturn(builder);
             var error = new ApiException("private provider data", "request", "error", 503, null);
@@ -196,17 +204,26 @@ class StripeCheckoutGatewayTest {
         assertThatThrownBy(
                         () ->
                                 new StripeCheckoutGateway(
-                                                new StripeProperties("sk_live_fixture", SECRET))
+                                                new StripeProperties("sk_live_fixture", SECRET),
+                                                new StripeClientProvider(
+                                                        new StripeProperties(
+                                                                "sk_live_fixture", SECRET)))
                                         .createCheckoutSession(payment()))
                 .isInstanceOf(BizException.class);
         assertThatThrownBy(
                         () ->
-                                new StripeCheckoutGateway(new StripeProperties("", null))
+                                new StripeCheckoutGateway(
+                                                new StripeProperties("", null),
+                                                new StripeClientProvider(
+                                                        new StripeProperties("", null)))
                                         .verifyCheckoutWebhook("{}", "sig"))
                 .isInstanceOf(BizException.class);
         assertThatThrownBy(
                         () ->
-                                new StripeCheckoutGateway(new StripeProperties("", " "))
+                                new StripeCheckoutGateway(
+                                                new StripeProperties("", " "),
+                                                new StripeClientProvider(
+                                                        new StripeProperties("", " ")))
                                         .verifyCheckoutWebhook("{}", "sig"))
                 .isInstanceOf(BizException.class);
         assertThatThrownBy(() -> gateway.verifyCheckoutWebhook(null, "sig"))

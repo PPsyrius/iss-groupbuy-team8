@@ -43,3 +43,19 @@ by this change and must not be used as current deployment instructions.
 The local runtime was stopped before removing its launch scripts; its database and private logs
 were retained outside the repository. A source backup was saved outside the repository before
 the removal. Restoring a test harness must not enable it in shared deployment.
+
+## Pre-live checklist (added 2026-09-21, review of PR #126)
+
+Blocking items that must be closed before any production payment path is enabled:
+
+1. **Sandbox gate removal**: `StripeCheckoutGateway`/`StripeRefundGateway` refuse every key that
+   does not start with `sk_test_`. Remove that gate only together with a live-key rotation plan,
+   Stripe live webhook endpoint and re-verified refund reconciliation.
+2. **Demo adapter removal**: delete `DevPaymentRepositoryAdapter` (`@Primary`, `stripe-sprint2`
+   profile) once the team's real `PaymentRepository` implementation lands; keep no demo paths in
+   the production artifact.
+3. **Local fixtures stay test-only**: `src/test/resources/db/stripe-fixture` must never be added
+   to a deployment Flyway location.
+4. **Order history**: the payment-branch `GET /api/v1/orders` slice was removed in favour of the
+   order team's `GET /api/v1/orders/me`; the frontend order-history page needs migrating to that
+   endpoint before release.

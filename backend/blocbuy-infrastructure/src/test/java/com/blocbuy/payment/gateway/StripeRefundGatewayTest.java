@@ -23,7 +23,10 @@ import org.junit.jupiter.api.Test;
 
 class StripeRefundGatewayTest {
     private final StripeRefundGateway gateway =
-            new StripeRefundGateway(new StripeProperties("sk_test_fixture_not_real", "test"));
+            new StripeRefundGateway(
+                    new StripeProperties("sk_test_fixture_not_real", "test"),
+                    new StripeClientProvider(
+                            new StripeProperties("sk_test_fixture_not_real", "test")));
     private final RefundWork work =
             new RefundWork(
                     UUID.randomUUID(),
@@ -54,12 +57,18 @@ class StripeRefundGatewayTest {
     void rejectsLiveAndAbsentKeysBeforeNetwork() {
         assertThatThrownBy(
                         () ->
-                                new StripeRefundGateway(new StripeProperties("sk_live_test", "x"))
+                                new StripeRefundGateway(
+                                                new StripeProperties("sk_live_test", "x"),
+                                                new StripeClientProvider(
+                                                        new StripeProperties("sk_live_test", "x")))
                                         .createRefund(work))
                 .isInstanceOf(BizException.class);
         assertThatThrownBy(
                         () ->
-                                new StripeRefundGateway(new StripeProperties("", "x"))
+                                new StripeRefundGateway(
+                                                new StripeProperties("", "x"),
+                                                new StripeClientProvider(
+                                                        new StripeProperties("", "x")))
                                         .retrieveRefund("re_test"))
                 .isInstanceOf(BizException.class);
     }
@@ -109,6 +118,17 @@ class StripeRefundGatewayTest {
             collection.setData(List.of());
             assertThat(gateway.findRefund(work)).isNull();
             payment.setLivemode(true);
+            assertThatThrownBy(() -> gateway.createRefund(work)).isInstanceOf(BizException.class);
+            payment.setLivemode(false);
+            payment.setStatus("pending");
+            assertThatThrownBy(() -> gateway.createRefund(work)).isInstanceOf(BizException.class);
+            payment.setStatus("succeeded");
+            payment.setCurrency("usd");
+            assertThatThrownBy(() -> gateway.createRefund(work)).isInstanceOf(BizException.class);
+            payment.setCurrency("sgd");
+            payment.setAmountReceived(999L);
+            assertThatThrownBy(() -> gateway.createRefund(work)).isInstanceOf(BizException.class);
+            payment.setAmountReceived(null);
             assertThatThrownBy(() -> gateway.createRefund(work)).isInstanceOf(BizException.class);
         }
     }

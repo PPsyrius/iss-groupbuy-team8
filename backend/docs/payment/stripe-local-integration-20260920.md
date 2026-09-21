@@ -27,7 +27,7 @@ Update: the teammate's product-page START/JOIN payment connection has since pass
 
 锁顺序：本地团购锁／现有团购行锁、购买意图、付款、商品库存、团购参与回执和订单。START 尚无团购行时，用事务级 advisory lock 串行化同一预定团购 ID。到期处理先取同一团购锁；不同付款争最后名额仍受组员的团购行锁保护。今后接入其他写入方时，需要共同遵守锁顺序，不能只依赖本地适配的约定。
 
-`db/stripe-local` 是独立、显式启用的迁移目录。没有改团队的 V1–V8，也没有把本地订单迁移冒充团队正式 V9/V10。团队完成订单模块后，需替换这个适配并共同核对字段、事务和事件接口。
+（2026-09-21 更新）支付分支迁移已并入 `db/migration`（V9–V11）；测试专用订单/意图适配仍在 `src/test/resources/db/stripe-fixture`，仅供测试，永不加入部署 Flyway location。团队完成订单模块后，需替换这个适配并共同核对字段、事务和事件接口。
 
 ## 运行方式
 

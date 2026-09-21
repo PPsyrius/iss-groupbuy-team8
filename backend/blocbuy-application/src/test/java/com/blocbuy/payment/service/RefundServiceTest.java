@@ -26,7 +26,7 @@ class RefundServiceTest {
         when(gateway.retrieveRefund("re_test")).thenReturn(snapshot(work, "succeeded"));
         assertThat(service.reconcile(work.paymentId(), "re_test")).isTrue();
         verify(gateway, never()).createRefund(any());
-        verify(repository).finish(work, "re_test", "SUCCEEDED", "PROVIDER_SUCCEEDED");
+        verify(repository).finish(work, "re_test", "succeeded", "PROVIDER_SUCCEEDED");
         var exceptionInput1 = work.paymentId();
         org.assertj.core.api.Assertions.assertThatThrownBy(
                         () -> service.reconcile(exceptionInput1, "not-refund"))
@@ -41,7 +41,7 @@ class RefundServiceTest {
         when(gateway.retrieveRefund("re_test"))
                 .thenThrow(new BizException(PaymentErrorCode.PAYMENT_PROVIDER_ERROR));
         service.reconcile(work.paymentId(), "re_test");
-        verify(repository).finish(work, null, "REVIEW", "OPERATOR_PROVIDER_RETRY");
+        verify(repository).finish(work, null, "review", "OPERATOR_PROVIDER_RETRY");
     }
 
     private final RefundRepository repository = mock(RefundRepository.class);
@@ -62,7 +62,7 @@ class RefundServiceTest {
                         new BigDecimal("10.00"),
                         "sgd",
                         "pi_test",
-                        "SUCCEEDED",
+                        "succeeded",
                         new BigDecimal("10.00"),
                         "sgd",
                         ref,
@@ -80,17 +80,22 @@ class RefundServiceTest {
 
     @ParameterizedTest
     @CsvSource({
-        "succeeded,SUCCEEDED",
-        "pending,PROCESSING",
-        "failed,FAILED",
-        "canceled,FAILED",
-        "requires_action,REVIEW"
+        "succeeded,succeeded",
+        "pending,processing",
+        "failed,failed",
+        "canceled,failed",
+        "requires_action,review"
     })
     void persistsOnlyVerifiedProviderState(String provider, String expected) {
         RefundWork work = work(null, 0);
         when(gateway.createRefund(work)).thenReturn(snapshot(work, provider));
         assertThat(service.processNext()).isTrue();
-        verify(repository).finish(work, "re_test", expected, "PROVIDER_" + expected);
+        verify(repository)
+                .finish(
+                        work,
+                        "re_test",
+                        expected,
+                        "PROVIDER_" + expected.toUpperCase(java.util.Locale.ROOT));
         assertThat(work.providerKey()).isEqualTo("blocbuy-refund-" + work.id());
     }
 
@@ -106,7 +111,7 @@ class RefundServiceTest {
         when(gateway.retrieveRefund("re_test")).thenReturn(snapshot(work, "succeeded"));
         service.processNext();
         verify(gateway, never()).createRefund(any());
-        verify(repository).finish(work, "re_test", "SUCCEEDED", "PROVIDER_SUCCEEDED");
+        verify(repository).finish(work, "re_test", "succeeded", "PROVIDER_SUCCEEDED");
     }
 
     @Test
@@ -116,10 +121,10 @@ class RefundServiceTest {
                 .thenThrow(new BizException(PaymentErrorCode.PAYMENT_PROVIDER_ERROR))
                 .thenReturn(snapshot(work, "succeeded"));
         service.processNext();
-        verify(repository).finish(work, null, "PROCESSING", "PROVIDER_RETRY");
+        verify(repository).finish(work, null, "processing", "PROVIDER_RETRY");
         service.processNext();
         verify(gateway, times(2)).createRefund(work);
-        verify(repository).finish(work, "re_test", "SUCCEEDED", "PROVIDER_SUCCEEDED");
+        verify(repository).finish(work, "re_test", "succeeded", "PROVIDER_SUCCEEDED");
     }
 
     @Test
@@ -128,7 +133,7 @@ class RefundServiceTest {
         service.processNext();
         verify(gateway).findRefund(work);
         verify(gateway, never()).createRefund(any());
-        verify(repository).finish(work, null, "REVIEW", "UNKNOWN_AFTER_RETRY_WINDOW");
+        verify(repository).finish(work, null, "review", "UNKNOWN_AFTER_RETRY_WINDOW");
     }
 
     @Test
@@ -136,7 +141,7 @@ class RefundServiceTest {
         RefundWork work = work(null, 24);
         when(gateway.findRefund(work)).thenReturn(snapshot(work, "succeeded"));
         service.processNext();
-        verify(repository).finish(work, "re_test", "SUCCEEDED", "PROVIDER_SUCCEEDED");
+        verify(repository).finish(work, "re_test", "succeeded", "PROVIDER_SUCCEEDED");
     }
 
     @Test
@@ -147,7 +152,7 @@ class RefundServiceTest {
                         new RefundGateway.Snapshot(
                                 "re_test", "pi_test", work.id().toString(), 1, "sgd", "succeeded"));
         service.processNext();
-        verify(repository).finish(work, null, "REVIEW", "PROVIDER_MISMATCH");
+        verify(repository).finish(work, null, "review", "PROVIDER_MISMATCH");
     }
 
     @Test
@@ -160,7 +165,7 @@ class RefundServiceTest {
                         work.amount(),
                         work.currency(),
                         "pi_test",
-                        "CREATED",
+                        "created",
                         work.paidAmount(),
                         work.paidCurrency(),
                         null,
@@ -170,7 +175,7 @@ class RefundServiceTest {
         when(repository.claimNext()).thenReturn(unpaid);
         service.processNext();
         verifyNoInteractions(gateway);
-        verify(repository).finish(unpaid, null, "REVIEW", "PAYMENT_MISMATCH");
+        verify(repository).finish(unpaid, null, "review", "PAYMENT_MISMATCH");
         when(repository.claimReview(work.paymentId())).thenReturn(unpaid);
         assertThat(service.reconcile(work.paymentId(), "re_test")).isTrue();
         verifyNoInteractions(gateway);
@@ -203,6 +208,6 @@ class RefundServiceTest {
                                 field.equals("status") ? null : "succeeded");
         when(gateway.retrieveRefund("re_test")).thenReturn(snapshot);
         assertThat(service.processNext()).isTrue();
-        verify(repository).finish(work, "re_test", "REVIEW", "PROVIDER_MISMATCH");
+        verify(repository).finish(work, "re_test", "review", "PROVIDER_MISMATCH");
     }
 }

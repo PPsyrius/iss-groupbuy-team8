@@ -23,7 +23,8 @@ public record RefundWork(
     }
 
     public boolean valid() {
-        return "SUCCEEDED".equals(paymentStatus)
+        // payment_status arrives from the database, where lifecycle codes are lowercase (V2).
+        return "succeeded".equals(paymentStatus)
                 && amount.signum() > 0
                 && amount.compareTo(paidAmount) == 0
                 && currency.equals(paidCurrency)

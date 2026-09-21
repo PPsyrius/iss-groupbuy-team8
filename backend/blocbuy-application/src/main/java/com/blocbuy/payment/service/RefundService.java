@@ -8,10 +8,14 @@ import java.time.Duration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-/** One bounded job per invocation. Stripe I/O is outside both short DB transactions. */
+/**
+ * One bounded job per invocation. Stripe I/O is outside both short DB transactions. Refund
+ * lifecycle states stored via {@code finish} are lowercase database codes (V2 convention); audit
+ * result codes remain uppercase.
+ */
 @lombok.extern.slf4j.Slf4j
 public final class RefundService {
-    private static final String REVIEW = "REVIEW";
+    private static final String REVIEW = "review";
     private final RefundRepository repository;
     private final RefundGateway gateway;
     private final TransactionTemplate tx;
@@ -48,7 +52,7 @@ public final class RefundService {
                 snapshot = gateway.createRefund(work);
             }
         } catch (BizException unavailable) {
-            finish(work, work.providerRefundId(), "PROCESSING", "PROVIDER_RETRY");
+            finish(work, work.providerRefundId(), "processing", "PROVIDER_RETRY");
             return true;
         }
         apply(work, snapshot);
@@ -84,12 +88,12 @@ public final class RefundService {
         }
         String state =
                 switch (snapshot.status()) {
-                    case "succeeded" -> "SUCCEEDED";
-                    case "failed", "canceled" -> "FAILED";
-                    case "pending" -> "PROCESSING";
+                    case "succeeded" -> "succeeded";
+                    case "failed", "canceled" -> "failed";
+                    case "pending" -> "processing";
                     default -> REVIEW;
                 };
-        finish(work, snapshot.id(), state, "PROVIDER_" + state);
+        finish(work, snapshot.id(), state, "PROVIDER_" + state.toUpperCase(java.util.Locale.ROOT));
     }
 
     private static boolean matches(RefundWork work, RefundGateway.Snapshot snapshot) {
@@ -106,7 +110,7 @@ public final class RefundService {
 
     private void finish(RefundWork work, String providerId, String state, String result) {
         tx.executeWithoutResult(s -> repository.finish(work, providerId, state, result));
-        if (REVIEW.equals(state) || "FAILED".equals(state)) {
+        if (REVIEW.equals(state) || "failed".equals(state)) {
             log.warn(
                     "Refund needs operator review: paymentId={}, state={}, result={}",
                     work.paymentId(),

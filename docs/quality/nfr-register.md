@@ -38,3 +38,4 @@ Scenario shape and worked examples: `.claude/skills/agile-evidence-capture/refer
 
 Rows NFR-01 to NFR-14 were backfilled on 2026-09-16 from merged PRs and existing docs; from Sprint
 2 onward rows are added in the PR that implements them.
+| NFR-23 | data consistency, deployability | When the app ships to any environment, its schema migrations execute through Flyway from the default `db/migration` location in version order with no opt-in branch locations, no duplicate indexes against earlier migrations, and lifecycle status codes consistent with the V2 convention | `application.yml` flyway locations, migration review in PRs, `./mvnw -B verify` migrating a PostgreSQL 18 testcontainer | PR #126 review fixes (2026-09-21): V9–V11 integrated, V1–V11 migrate green in `StripeCheckoutFlowTest`/`StripeLocalIntegrationTest`; checklist in `backend/docs/payment/stripe-release-cleanup-20260920.md` | enforced |

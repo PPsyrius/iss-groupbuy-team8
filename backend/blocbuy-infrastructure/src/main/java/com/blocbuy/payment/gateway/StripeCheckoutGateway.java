@@ -3,7 +3,6 @@ package com.blocbuy.payment.gateway;
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.payment.exception.PaymentErrorCode;
 import com.blocbuy.payment.model.CheckoutPayment;
-import com.stripe.StripeClient;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
 import com.stripe.net.RequestOptions;
@@ -20,18 +19,11 @@ import org.springframework.stereotype.Component;
 @EnableConfigurationProperties(StripeProperties.class)
 public class StripeCheckoutGateway implements CheckoutGateway {
     private final StripeProperties properties;
+    private final StripeClientProvider clients;
 
-    public StripeCheckoutGateway(StripeProperties properties) {
+    public StripeCheckoutGateway(StripeProperties properties, StripeClientProvider clients) {
         this.properties = properties;
-    }
-
-    private StripeClient stripeClient() {
-        return StripeClient.builder()
-                .setApiKey(properties.apiKey())
-                .setConnectTimeout(3000)
-                .setReadTimeout(10000)
-                .setMaxNetworkRetries(1)
-                .build();
+        this.clients = clients;
     }
 
     /** Sandbox-only until the joint groupbuy/order integration is accepted. */
@@ -46,7 +38,7 @@ public class StripeCheckoutGateway implements CheckoutGateway {
         requireSandbox();
         try {
             var session =
-                    stripeClient()
+                    clients.client()
                             .checkout()
                             .sessions()
                             .create(
@@ -95,7 +87,7 @@ public class StripeCheckoutGateway implements CheckoutGateway {
         requireSandbox();
         try {
             return snapshot(
-                    stripeClient()
+                    clients.client()
                             .checkout()
                             .sessions()
                             .retrieve(
@@ -112,7 +104,7 @@ public class StripeCheckoutGateway implements CheckoutGateway {
     public CheckoutGateway.Session expireCheckoutSession(String sessionId) {
         requireSandbox();
         try {
-            stripeClient().checkout().sessions().expire(sessionId);
+            clients.client().checkout().sessions().expire(sessionId);
             return retrieveCheckoutSession(sessionId);
         } catch (StripeException ex) {
             throw new BizException(PaymentErrorCode.PAYMENT_PROVIDER_ERROR);

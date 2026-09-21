@@ -2,8 +2,11 @@ package com.blocbuy.payment.persistence;
 
 import com.blocbuy.payment.model.CheckoutPayment;
 import com.blocbuy.payment.model.CheckoutQuote;
+import java.util.Locale;
 
-/** Explicit row/aggregate conversion. */
+/**
+ * Explicit row/aggregate conversion. Lifecycle status codes are stored lowercase (V2 convention).
+ */
 final class PaymentConverter {
     private PaymentConverter() {}
 
@@ -32,7 +35,7 @@ final class PaymentConverter {
                 row.getCheckoutSessionId(),
                 row.getCheckoutUrl(),
                 row.getProviderPaymentIntentId(),
-                CheckoutPayment.Status.valueOf(row.getStatus()),
+                CheckoutPayment.Status.valueOf(row.getStatus().toUpperCase(Locale.ROOT)),
                 row.getVersion());
     }
 
@@ -55,7 +58,7 @@ final class PaymentConverter {
         row.setCheckoutSessionId(payment.sessionId());
         row.setCheckoutUrl(payment.checkoutUrl());
         row.setProviderPaymentIntentId(payment.providerPaymentIntentId());
-        row.setStatus(payment.status().name());
+        row.setStatus(payment.status().name().toLowerCase(Locale.ROOT));
         row.setVersion(payment.version());
         return row;
     }

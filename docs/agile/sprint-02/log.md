@@ -837,3 +837,31 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 - Verified: private PostgreSQL Maven verify passed 725 tests with no skips; frontend checks passed 127 tests and production build passed. Original 192 source/config/DDL files, 13 HTTP paths and 23 schemas pass the protection check.
 - Evidence: `backend/docs/payment/stripe-sonar-fixes-20260920.md`; aggregate JaCoCo covers all 289 lines of StripeCheckoutService and all 64 lines/46 branches of RefundService.
 - Problems: remote SonarCloud re-analysis remains authoritative for PR coverage and reliability. No threshold changes or merge to dev; deployed acceptance remains separate.
+
+## 2026-09-21 - l0sgAi (Liu Jin) - PR #126 review fixes: migration integration and convention alignment
+
+- Kind: correctness, maintainability; NFR-23 (new); tracking: PR #126 review by order side.
+- Changed: stripe DDL moved from opt-in `db/stripe` into `db/migration` as `V9__stripe_checkout.sql`,
+  `V10__payment_review_case.sql`, `V11__refund_execution.sql` (deployed by Flyway in every
+  environment); review-case data backfill INSERT removed; duplicate `payment_no`/provider-intent
+  unique indexes dropped in favour of V2's `uq_biz_payment_*`; remaining indexes renamed to the
+  team convention with `deleted=false` predicates; lifecycle status codes lowercased across
+  `biz_payment`/`biz_refund`/`biz_payment_review_case` (SQL, XML mappers, converter; API vocabulary
+  unchanged via `PaymentBrowserService` mapping); duplicate `GET /api/v1/orders` order-history slice
+  removed in favour of the order team's `/orders/me` (contract regenerated); shared lazy
+  `StripeClientProvider` replaces per-call client builds; `DevPaymentRepositoryAdapter` removal
+  condition Javadoc'd; pre-live checklist added to `stripe-release-cleanup-20260920.md`.
+- Decisions (confirmed with order-side reviewer, Yorick's shape wins for `biz_refund`): migrate into
+  the default Flyway location rather than keep an opt-in branch location; squash convention drift now
+  instead of after merge; keep result/audit codes (`FULFILLED`, `PROVIDER_*`) uppercase — only
+  lifecycle statuses lowercase; keep `intent_id` as the local checkout intent id (distinct from
+  `provider_payment_intent_id`), documented by column comment.
+- Verified: `./mvnw -B verify` green on JDK 21 after `clean` (Flyway V1–V11 really migrates a
+  PostgreSQL 18 container in `StripeCheckoutFlowTest`/`StripeLocalIntegrationTest`; the stale
+  order-branch `BizOrderMapper.xml` in target was flushed by clean); JaCoCo aggregate 100%
+  line+branch on all touched payment classes; `contracts/openapi.json` regenerated, staged, no
+  unstaged drift, no backward-incompatible change vs `dev` (the removed path was added by this same PR).
+- Problems: frontend `OrderHistory.tsx` still calls the removed `GET /api/v1/orders` and must migrate
+  to `/orders/me` before release (pre-live checklist item 4); order branch `V10__payment_refund.sql`
+  must be renumbered and its `biz_refund` creation dropped when it merges (V9 conflict); local
+  databases that ran the old dated versions need a manual checksum cleanup — not deployment-relevant.

@@ -60,7 +60,7 @@ public final class PaymentLifecycleFixture {
             expireTeam(deal);
         }
         jdbc.update(
-                "INSERT INTO stripe_local_expiry_request(payment_id) SELECT p.id FROM biz_payment p WHERE p.status='CREATED' AND p.intent_id IS NOT NULL AND (p.business_deadline<=clock_timestamp() OR p.quote_valid_until<=clock_timestamp() OR (p.operation='JOIN' AND EXISTS(SELECT 1 FROM biz_group_deal g WHERE g.id=p.business_id AND (g.status<>'open' OR g.deleted)))) ON CONFLICT DO NOTHING");
+                "INSERT INTO stripe_local_expiry_request(payment_id) SELECT p.id FROM biz_payment p WHERE p.status='created' AND p.intent_id IS NOT NULL AND (p.business_deadline<=clock_timestamp() OR p.quote_valid_until<=clock_timestamp() OR (p.operation='JOIN' AND EXISTS(SELECT 1 FROM biz_group_deal g WHERE g.id=p.business_id AND (g.status<>'open' OR g.deleted)))) ON CONFLICT DO NOTHING");
         for (UUID payment :
                 jdbc.queryForList(
                         "SELECT payment_id FROM stripe_local_expiry_request WHERE completed_at IS NULL AND next_attempt_at<=clock_timestamp() ORDER BY requested_at,payment_id LIMIT 100",
@@ -68,7 +68,7 @@ public final class PaymentLifecycleFixture {
             try {
                 payments.expireRequestedSession(payment);
                 jdbc.update(
-                        "UPDATE stripe_local_expiry_request SET completed_at=CASE WHEN (SELECT status FROM biz_payment WHERE id=?)<>'CREATED' THEN clock_timestamp() ELSE NULL END,attempts=attempts+1,next_attempt_at=clock_timestamp()+interval '60 seconds' WHERE payment_id=?",
+                        "UPDATE stripe_local_expiry_request SET completed_at=CASE WHEN (SELECT status FROM biz_payment WHERE id=?)<>'created' THEN clock_timestamp() ELSE NULL END,attempts=attempts+1,next_attempt_at=clock_timestamp()+interval '60 seconds' WHERE payment_id=?",
                         payment,
                         payment);
             } catch (RuntimeException failure) {

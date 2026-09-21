@@ -15,9 +15,9 @@
   </select>
   <select id="blocking" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
     SELECT <include refid="columns"/> FROM biz_payment
-    WHERE intent_id=#{intentId} AND (status IN ('CREATED','SUCCEEDED')
+    WHERE intent_id=#{intentId} AND (status IN ('created','succeeded')
       OR EXISTS(SELECT 1 FROM biz_payment_review_case r
-        WHERE r.payment_id=biz_payment.id AND r.status='OPEN')) ORDER BY id LIMIT 1
+        WHERE r.payment_id=biz_payment.id AND r.status='open')) ORDER BY id LIMIT 1
   </select>
   <insert id="insert">
     INSERT INTO biz_payment (<include refid="columns"/>,payment_no,provider)
@@ -28,7 +28,7 @@
   <update id="save">
     UPDATE biz_payment SET checkout_session_id=#{checkoutSessionId},checkout_url=#{checkoutUrl},
       provider_payment_intent_id=#{providerPaymentIntentId},status=#{status},version=version+1,
-      paid_time=CASE WHEN #{status}='SUCCEEDED' THEN COALESCE(paid_time,clock_timestamp()) ELSE paid_time END,
+      paid_time=CASE WHEN #{status}='succeeded' THEN COALESCE(paid_time,clock_timestamp()) ELSE paid_time END,
       update_time=clock_timestamp()
     WHERE id=#{id} AND version=#{version}
   </update>
@@ -46,23 +46,23 @@
   </insert>
   <insert id="openCase">
     INSERT INTO biz_payment_review_case(payment_id,reason) VALUES(#{id},#{reason})
-    ON CONFLICT(payment_id) DO UPDATE SET reason=EXCLUDED.reason,status='OPEN',
+    ON CONFLICT(payment_id) DO UPDATE SET reason=EXCLUDED.reason,status='open',
       next_check_at=clock_timestamp(),resolved_at=NULL
   </insert>
   <select id="reviewCases" resultType="com.blocbuy.payment.model.PaymentReviewCase">
     SELECT case_id,payment_id,reason,owner,status,last_checked_at,next_check_at,resolved_at,provider_summary
-    FROM biz_payment_review_case WHERE status='OPEN'
+    FROM biz_payment_review_case WHERE status='open'
     <if test="after != null">AND case_id &gt; #{after}</if>
     ORDER BY case_id LIMIT #{limit}
   </select>
   <update id="assignCase">
     UPDATE biz_payment_review_case SET owner=#{operator},next_check_at=#{nextCheck}
-    WHERE payment_id=#{id} AND status='OPEN'
+    WHERE payment_id=#{id} AND status='open'
   </update>
   <update id="recordRecovery">
     UPDATE biz_payment_review_case SET owner=#{operator},last_checked_at=clock_timestamp(),
       next_check_at=clock_timestamp()+interval '15 minutes',provider_summary=#{summary},
-      status=CASE WHEN #{resolved} THEN 'RESOLVED' ELSE 'OPEN' END,
+      status=CASE WHEN #{resolved} THEN 'resolved' ELSE 'open' END,
       resolved_at=CASE WHEN #{resolved} THEN clock_timestamp() ELSE NULL END
     WHERE payment_id=#{id}
   </update>
@@ -74,26 +74,26 @@
   <insert id="refund">
     INSERT INTO biz_refund(payment_id,intent_id,deal_id,amount,currency,reason,source_event,status)
     SELECT id,intent_id,COALESCE(fulfilled_deal_id,CASE WHEN operation='JOIN' THEN business_id END),
-      amount,currency,#{reason},#{eventId},'PENDING' FROM biz_payment WHERE id=#{id} AND status='SUCCEEDED'
+      amount,currency,#{reason},#{eventId},'pending' FROM biz_payment WHERE id=#{id} AND status='succeeded'
     ON CONFLICT(payment_id) DO UPDATE SET payment_id=EXCLUDED.payment_id
     WHERE biz_refund.amount=EXCLUDED.amount AND biz_refund.currency=EXCLUDED.currency
       AND biz_refund.reason=EXCLUDED.reason
   </insert>
   <select id="members" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
     SELECT <include refid="columns"/> FROM biz_payment
-    WHERE fulfilled_deal_id=#{dealId} AND fulfilment_result='FULFILLED' AND status='SUCCEEDED' ORDER BY id
+    WHERE fulfilled_deal_id=#{dealId} AND fulfilment_result='FULFILLED' AND status='succeeded' ORDER BY id
   </select>
   <select id="refundRecorded" resultType="boolean">
     SELECT EXISTS(SELECT 1 FROM biz_refund r JOIN biz_payment p ON p.id=r.payment_id
-      WHERE p.id=#{id} AND p.status='SUCCEEDED' AND r.amount=p.amount AND r.currency=p.currency
+      WHERE p.id=#{id} AND p.status='succeeded' AND r.amount=p.amount AND r.currency=p.currency
         AND r.intent_id=p.intent_id AND NOT r.deleted
-        AND r.status IN ('PENDING','PROCESSING','SUCCEEDED','FAILED','REVIEW'))
+        AND r.status IN ('pending','processing','succeeded','failed','review'))
   </select>
   <select id="pending" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
     SELECT <include refid="columns"/> FROM biz_payment WHERE intent_id IS NOT NULL
-      AND ((status='CREATED' AND create_time &lt; #{threshold})
-        OR (status='SUCCEEDED' AND fulfilment_result IS NULL)
-        OR EXISTS(SELECT 1 FROM biz_payment_review_case r WHERE r.payment_id=biz_payment.id AND r.status='OPEN'))
+      AND ((status='created' AND create_time &lt; #{threshold})
+        OR (status='succeeded' AND fulfilment_result IS NULL)
+        OR EXISTS(SELECT 1 FROM biz_payment_review_case r WHERE r.payment_id=biz_payment.id AND r.status='open'))
     ORDER BY create_time,id LIMIT #{limit}
   </select>
 </mapper>

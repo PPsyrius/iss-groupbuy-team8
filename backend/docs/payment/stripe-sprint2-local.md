@@ -38,7 +38,6 @@ bash scripts/test-stripe-sprint2.sh
 | `backend/blocbuy-bootstrap/src/main/resources/application-*.yml` | 应用连接数据库、Redis、OAuth 等环境配置 |
 | `backend/docs/db/*.sql` | 团队数据库表结构设计；并不等于 Java 数据访问已经实现 |
 | `backend/blocbuy-bootstrap/src/main/resources/db/migration` | 应用启动时由 Flyway 执行的正式迁移 |
-| `backend/blocbuy-bootstrap/src/main/resources/db/stripe` | 本次支付分支的显式启用迁移，默认不会执行 |
 
 `127.0.0.1` 指运行程序的那台机器自己。在 EC2 上，它可能是 EC2 本机的数据库；在 Mac 上，它就是 Mac。`postgres` 和 `redis` 则是 Docker 网络服务名，不是可以从任意机器直接访问的公网地址。
 
@@ -102,9 +101,7 @@ Eric 与 Liu Jin 的协作者需要实现：
 
 ## 迁移合并前需要确认
 
-新增迁移位于 `db/stripe/V2026092001__stripe_checkout.sql` 和 `V2026092002__payment_review_cases.sql`，只有显式把 `classpath:db/stripe` 加入 Flyway locations 才执行。第二个迁移新增持久化核查处理单，并保守导入旧核查日志中的异常；不改第一个迁移的校验和。
-
-它允许付款前 `order_id` 为空，扩展原 `biz_payment` 和回调表，增加待退款及核查日志表。没有虚构订单 ID。迁移编号、字段和 `biz_refund` 表需与 Liu Jin 正在开发的迁移对齐；不能直接把本文件当作团队正式 V9/V10 合并，尤其不能在已经执行本地高版本迁移的测试库上评估他人的低版本迁移顺序。
+2026-09-21 评审后更新：迁移已并入正式目录 `db/migration`，统一编号为 `V9__stripe_checkout.sql`、`V10__payment_review_case.sql`、`V11__refund_execution.sql`，随所有部署环境自动执行。原 `V2026092002` 中导入旧核查日志的数据回填语句已移除；与 V2 重复的 `payment_no`、provider intent 唯一索引已删除；生命周期状态字面量统一小写。`biz_refund` 表以本分支形状为准，Liu Jin 的 order 分支合并时需将其 V10 降级并重新编号。
 
 ## 操作入口与剩余恢复工作
 

@@ -64,13 +64,13 @@ class PaymentFactsTest {
 
     @ParameterizedTest
     @CsvSource({
-        "CREATED,10,10,sgd,sgd,pi_x,false",
-        "SUCCEEDED,0,0,sgd,sgd,pi_x,false",
-        "SUCCEEDED,10,9,sgd,sgd,pi_x,false",
-        "SUCCEEDED,10,10,sgd,usd,pi_x,false",
-        "SUCCEEDED,10,10,usd,usd,pi_x,false",
-        "SUCCEEDED,10,10,sgd,sgd,,false",
-        "SUCCEEDED,10,10,sgd,sgd,pi_x,true"
+        "created,10,10,sgd,sgd,pi_x,false",
+        "succeeded,0,0,sgd,sgd,pi_x,false",
+        "succeeded,10,9,sgd,sgd,pi_x,false",
+        "succeeded,10,10,sgd,usd,pi_x,false",
+        "succeeded,10,10,usd,usd,pi_x,false",
+        "succeeded,10,10,sgd,sgd,,false",
+        "succeeded,10,10,sgd,sgd,pi_x,true"
     })
     void refundRequiresMatchingPaidMoney(
             String state,

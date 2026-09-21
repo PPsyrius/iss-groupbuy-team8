@@ -20,6 +20,7 @@ import com.blocbuy.payment.event.PaymentSucceeded;
 import com.blocbuy.payment.gateway.CheckoutGateway;
 import com.blocbuy.payment.gateway.PaymentBusinessPort;
 import com.blocbuy.payment.gateway.StripeCheckoutGateway;
+import com.blocbuy.payment.gateway.StripeClientProvider;
 import com.blocbuy.payment.gateway.StripeProperties;
 import com.blocbuy.payment.model.CheckoutPayment;
 import com.blocbuy.payment.model.CheckoutQuote;
@@ -87,7 +88,7 @@ class StripeCheckoutFlowTest {
         Flyway.configure()
                 .dataSource(ds)
                 .defaultSchema("domain")
-                .locations("classpath:db/migration", "classpath:db/stripe")
+                .locations("classpath:db/migration")
                 .load()
                 .migrate();
         jdbc = new JdbcTemplate(ds);
@@ -179,7 +180,7 @@ class StripeCheckoutFlowTest {
         service.recordExpiredTeam(TEAM);
         assertThat(count("biz_refund")).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT status FROM biz_refund", String.class))
-                .isEqualTo("PENDING");
+                .isEqualTo("pending");
     }
 
     @Test
@@ -259,7 +260,10 @@ class StripeCheckoutFlowTest {
     // collaborators remain test doubles. This standalone harness does not exercise deployment
     // filters.
     private MockMvc signedHttp() {
-        var verifier = new StripeCheckoutGateway(new StripeProperties("", SIGNING_FIXTURE));
+        var verifier =
+                new StripeCheckoutGateway(
+                        new StripeProperties("", SIGNING_FIXTURE),
+                        new StripeClientProvider(new StripeProperties("", SIGNING_FIXTURE)));
         when(gateway.verifyCheckoutWebhook(any(), any()))
                 .thenAnswer(
                         call ->
@@ -394,7 +398,7 @@ class StripeCheckoutFlowTest {
         assertThat(count("biz_refund")).isEqualTo(1);
         assertThat(
                         jdbc.queryForObject(
-                                "SELECT count(*) FROM biz_payment WHERE status='SUCCEEDED'",
+                                "SELECT count(*) FROM biz_payment WHERE status='succeeded'",
                                 Integer.class))
                 .isEqualTo(2);
     }
@@ -422,7 +426,7 @@ class StripeCheckoutFlowTest {
                 .isEqualTo(2);
         assertThat(service.reviewCases(null)).isEmpty();
         assertThat(jdbc.queryForObject("SELECT status FROM biz_payment_review_case", String.class))
-                .isEqualTo("RESOLVED");
+                .isEqualTo("resolved");
     }
 
     @Test
@@ -433,7 +437,7 @@ class StripeCheckoutFlowTest {
         var openCase = service.reviewCases(null).getFirst();
         assertThat(openCase.paymentId()).isEqualTo(payment.id());
         assertThat(openCase.owner()).isEqualTo("yorik");
-        assertThat(openCase.status()).isEqualTo("OPEN");
+        assertThat(openCase.status()).isEqualTo("open");
         assertThat(openCase.lastCheckedAt()).isNotNull();
         assertThat(openCase.nextCheckAt()).isAfter(openCase.lastCheckedAt());
         assertThat(openCase.providerSummary()).contains("providerPaid=false");
@@ -476,7 +480,7 @@ class StripeCheckoutFlowTest {
         jdbc.update("DELETE FROM stripe_test_orders WHERE payment_id=?", payment.id());
         service.recover(payment.id(), "yorik", true);
         var review = service.reviewCases(null).getFirst();
-        assertThat(review.status()).isEqualTo("OPEN");
+        assertThat(review.status()).isEqualTo("open");
         assertThat(review.providerSummary()).contains("DOWNSTREAM_MISSING");
         assertThat(repository.outcome(payment.id())).isEqualTo("FULFILLED");
         assertThat(count("stripe_test_orders")).isZero();
