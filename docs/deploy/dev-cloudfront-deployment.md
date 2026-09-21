@@ -25,7 +25,7 @@ User ──HTTPS──► https://xxxx.cloudfront.net (CloudFront built-in certi
 - The dev EC2 instance already runs the backend per the [operator guide](backend-ec2-pipeline-operator-guide.md);
 - AWS CLI v2 is available on your workstation or operator environment (all commands below are run by an operator with administrative permissions);
 - The dev VPC has **subnets in two different AZs** (an ALB requires this);
-- The companion changes in this repository have been merged (the `/api` context-path in `compose.yml`, the workflow health-check path), i.e. the current `dev` branch includes the same commit batch as this tutorial.
+- The companion changes in this repository have been merged (the `/api` routing contract — controller mappings plus `management.endpoints.web.base-path`, with no servlet context path — and the workflow health-check path), i.e. the current `dev` branch includes the same commit batch as this tutorial.
 
 ## 2. Collect and export variables
 
@@ -137,7 +137,7 @@ aws elbv2 create-rule \
 
 ### 4.2 Verify the origin chain (the public 8589 rule still exists at this point; we only verify the ALB)
 
-The target group health status should turn healthy (this requires the backend to have been redeployed with the `/api` context-path — see step 5):
+The target group health status should turn healthy (this requires the backend to have been redeployed with the `/api` routing contract — controller mappings plus management base-path, no servlet context path — see step 5):
 
 ```bash
 aws elbv2 describe-target-health --target-group-arn "$TG_ARN"

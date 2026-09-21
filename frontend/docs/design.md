@@ -385,5 +385,5 @@ Use HeroUI's default rounded shape language and Tailwind radius utilities. Custo
 - Do use semantic HeroUI and Tailwind tokens as implementation handles; raw values in this file are for reference, QA, and migration only.
 - Do use the same semantic token across light and dark mode; do not branch component code to manually pick colors.
 - Don't copy raw hex, shadow, radius, or spacing values into product code when a semantic token or Tailwind utility exists.
-- Do use accent for primary emphasis (team price, team progress, one primary action per screen) and success, warning, and danger only for their semantic meanings; don't overuse accent or misuse warning for neutral emphasis or decoration.
+- Do use accent for primary emphasis (team price, team progress) and success, warning, and danger only for their semantic meanings; don't overuse accent or misuse warning for neutral emphasis or decoration. Exception: buyer-screen primary actions use neutral `secondary` styling, not accent fill — the accent fill misses the intended contrast there (see `design-screens.md` §7); accent still owns team price and team progress on those screens.
 - Don't place progress bars, meters, or decorative strips on card edges; keep status indicators inside the content flow.

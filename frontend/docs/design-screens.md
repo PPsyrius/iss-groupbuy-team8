@@ -10,8 +10,9 @@ Admin, checkout, invite, raw component assets, thumbnails, and generated icon/as
 
 The export contains standalone `*.dc.html` canvases rather than a linked application. Navigation is described in `BlocBuy Flow Maps.dc.html`. Screen data and exact copy live in each artboard's `renderVals()` data.
 
-Relevant buyer canvases:
+Relevant buyer canvases (ASCII inventory — layout intentional):
 
+```text
   ----------------------------------------------------------------------------
   File                                     States
 ---------------------------------------- -----------------------------------
@@ -37,6 +38,7 @@ Relevant buyer canvases:
 
   `BlocBuy Flow Maps.dc.html`              buyer/admin flow descriptions
   ----------------------------------------------------------------------------
+```
 
 The artboards are drawn at 390px and 1280px. Intermediate responsive behavior is an implementation decision unless explicitly annotated.
 
@@ -244,8 +246,9 @@ The buyer error composition is shared across 404, 403, and 500 states: compact c
 
 ## 5. Component guidance
 
-Use HeroUI v3 components where they fit rather than reproducing the Figma kit implementation.
+Use HeroUI v3 components where they fit rather than reproducing the Figma kit implementation (ASCII inventory — layout intentional):
 
+```text
   -----------------------------------------------------------------------
   Need                                Preferred implementation
 ----------------------------------- -----------------------------------
@@ -278,6 +281,7 @@ Use HeroUI v3 components where they fit rather than reproducing the Figma kit im
 
   tables/tabs                         reserved for admin/later screens
   -----------------------------------------------------------------------
+```
 
 Do not depend on generated Claude Design component globals in application code.
 
@@ -291,8 +295,9 @@ Wordmark/logo and Google branding should use approved project assets. Do not red
 
 ## 7. Implemented decisions and remaining limitations
 
-The original artboard review ended with 22 open questions. T2-01 through T2-06 resolved most of them:
+The original artboard review ended with 22 open questions. T2-01 through T2-06 resolved most of them (ASCII inventory — layout intentional):
 
+```text
   -----------------------------------------------------------------------
   Topic                               Current decision
 ----------------------------------- -----------------------------------
@@ -355,6 +360,7 @@ The original artboard review ended with 22 open questions. T2-01 through T2-06 r
   Font                                Inter is loaded for the styled
                                       buyer UI
   -----------------------------------------------------------------------
+```
 
 Remaining design/contract gaps:
 

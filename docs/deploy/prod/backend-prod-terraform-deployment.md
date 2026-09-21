@@ -399,7 +399,7 @@ resource "aws_instance" "backend" {
 
 ### 6.6 Host bootstrap: user-data replaces the prerequisite checklist
 
-`templates/user-data.sh.tftpl` makes the "host has Docker, Compose, AWS CLI v2" property part of the machine's definition. The dev bootstrap hit a dead deployment because this was a checklist line a human missed; in prod it is code that either runs at first boot or fails visibly in the `terraform apply` output:
+`templates/user-data.sh.tftpl` makes the "host has Docker, Compose, AWS CLI v2" property part of the machine's definition. The dev bootstrap hit a dead deployment because this was a checklist line a human missed; in prod it is code that runs at first boot. Note its limit: `terraform apply` only delivers the script — a user-data failure does **not** fail the apply. First-release verification (runbook §5) confirms via SSM that cloud-init finished and the bootstrap completion line is in the log before continuing.
 
 ```bash
 #!/usr/bin/env bash
@@ -439,7 +439,7 @@ chmod 0640 /opt/blocbuy/infra/compose.yml
 # Secrets are NOT templated here: see section 6.7 — they arrive via SSM Parameter Store.
 ```
 
-The user-data deliberately does **not** create `/etc/blocbuy/backend.env`. Secrets never flow through Terraform state, user-data (which is readable on the instance), or GitHub.
+Two separate secret paths, neither through Terraform-rendered values (the template carries no secret literals): at first boot the instance pulls `POSTGRES_USER`/`POSTGRES_PASSWORD`/`REDIS_PASSWORD` from SSM into `/etc/blocbuy/infra.env` (0600) for the local data services; at deploy time `bin/fetch-env.sh` pulls the backend parameters into `/etc/blocbuy/backend.env` (0600). User-data (readable on the instance) creates neither backend file. Sole Terraform-state exception: `/blocbuy/prod/ORIGIN_SECRET`, read at plan time into the ALB listener rule (§6.3).
 
 ### 6.7 Secrets: SSM Parameter Store (upgrade from the dev hand-edited file)
 
@@ -581,7 +581,7 @@ Until then, the two environments coexist safely because prod role names, reposit
 | Declarative environment | Entire stack under `infra/terraform/`, reviewed as PRs |
 | Idempotent, re-runnable setup | `terraform plan/apply` replaces 60+ hand-run CLI commands |
 | No out-of-band configuration drift | SG rules, IAM policies, and trust conditions only change via PR |
-| Secrets out of code and state | Parameter Store SecureString; Terraform never sees values |
+| Secrets out of code (and state, except `ORIGIN_SECRET`) | Parameter Store SecureString; Terraform never sees application-secret values — sole exception is `/blocbuy/prod/ORIGIN_SECRET`, read at plan time into the ALB rule and therefore in state (accepted trade-off, §6.3; KMS-encrypted, access-blocked bucket) |
 | Immutable artifacts | Same digest-pinned ECR deployment as dev; tag-immutability enabled |
 | Least privilege by reference | Inline policies reference resource ARNs (`aws_ecr_repository...arn`, `aws_instance...id`) instead of literals |
 | Reproducibility | `envs/prod.tfvars` + pinned provider versions recreate the environment from scratch |

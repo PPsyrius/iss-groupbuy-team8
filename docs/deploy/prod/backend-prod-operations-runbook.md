@@ -176,6 +176,12 @@ aws ssm describe-instance-information \
   --query 'InstanceInformationList[].{id:InstanceId,ping:PingStatus}'
 # PingStatus must be Online
 
+# cloud-init finished AND user-data bootstrap completed (apply does not report this)
+aws ssm send-command --instance-ids "$INSTANCE_ID" \
+  --document-name AWS-RunShellScript --region ap-southeast-1 \
+  --parameters 'commands=["cloud-init status --wait && grep -F \"BlocBuy prod host bootstrap complete\" /var/log/cloud-init-output.log"]'
+# exit must be Success: cloud-init done, completion line present; otherwise read the log tail in the same way before continuing
+
 # Infra listeners: loopback only, no public bind
 aws ssm send-command --instance-ids "$INSTANCE_ID" \
   --document-name AWS-RunShellScript --region ap-southeast-1 \
@@ -203,6 +209,7 @@ curl -s -o /dev/null -w '%{http_code}\n' -H "X-Origin-Secret: $ORIGIN_SECRET" \
 ```
 
 - [ ] `PingStatus=Online`
+- [ ] cloud-init done and user-data bootstrap completion line in the log
 - [ ] PostgreSQL/Redis listening on `127.0.0.1` only
 - [ ] No unexpected ingress rules
 - [ ] `terraform output` prints `instance_id`, `ecr_push_role_arn`, `deploy_role_arn`,

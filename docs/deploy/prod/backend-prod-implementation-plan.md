@@ -10,7 +10,7 @@
 
 These four points refine the design document; each is reflected in the phases below and was folded back into the design doc on 2026-09-21 (verified against `network.tf`, `health-check.sh`, `fetch-env.sh`, `user-data.sh.tftpl`, and the runbook):
 
-1. **ALB target-group health check path must be `/api/actuator/health`.** The deployed container sets `SERVER_SERVLET_CONTEXT_PATH: /api` (see `deployment/backend/compose.yml:17`), so `/actuator/health` would 404 and the target group would mark the instance unhealthy. The design doc §6.3 shows the wrong path.
+1. **ALB target-group health check path must be `/api/actuator/health`.** There is no servlet context path: `/api/v1` comes from the controller mappings and actuator from `management.endpoints.web.base-path: /api/actuator` in `application.yml`, so a bare `/actuator/health` would 404 and the target group would mark the instance unhealthy. (An earlier revision of this note blamed a `SERVER_SERVLET_CONTEXT_PATH` that `compose.yml` never sets — corrected 2026-09-21.) The design doc §6.3 showed the wrong path; folded 2026-09-21.
 2. **Secrets must be seeded into Parameter Store *before* `terraform apply`**, not after (design doc §9 step 4 orders it after). The user-data starts PostgreSQL/Redis at first boot and needs `POSTGRES_USER`/`POSTGRES_PASSWORD`/`REDIS_PASSWORD` immediately. The runbook reflects this.
 3. **The infra Compose project must explicitly bind loopback.** With `network_mode: host`, the stock `postgres`/`redis` images listen on **all** interfaces; "loopback only" is an invariant we claim (design doc §11), so the compose file must set `command: postgres -c listen_addresses=127.0.0.1` and `--bind 127.0.0.1` for Redis explicitly. This matches the actual dev host state (bootstrap doc §4: listening on `127.0.0.1:5432/6379`).
 4. **`fetch-env.sh` must be prod-conditional.** Dev keeps its hand-edited `/etc/blocbuy/backend.env`; if `fetch-env.sh` unconditionally pulled `/blocbuy/prod/*` on every deploy, dev would break. The script takes the parameter path as an argument and is invoked only by the prod deploy job's remote script.
@@ -105,14 +105,14 @@ on:
 
 **New `publish-ecr-prod` job** — prod publication lives here, not in `docker`:
 
-- `needs: [build-quality, contract-check, sonar, docker]` with the same `always() && ...result` gating chain as the dev deploy job;
+- `needs: [build-quality, contract-check, sonar-backend, docker]` with the same `always() && ...result` gating chain as the dev deploy job;
 - condition: `github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && vars.ENABLE_EC2_DEPLOY_PROD == 'true'`;
 - `environment: backend-prod-publish` (v* tags only, **no** reviewers — publishing to ECR is not a production mutation; the human gate stays on the deploy job). This environment subject is what the ECR push role trusts (design doc §6.1): a tag-name `ref` subject varies per release and can never be exact-matched, so an environment subject is the only exact-match option;
 - steps: download the image artifact, `docker load`, then the same four ECR steps as dev (validate / assume / login / publish by digest) against `vars.ECR_REPOSITORY_PROD` and `vars.AWS_ECR_PUSH_ROLE_ARN_PROD`; outputs `image_uri`.
 
 **New `deploy-existing-ec2-prod` job:**
 
-- `needs: [build-quality, contract-check, sonar, docker, publish-ecr-prod]` with the same `always() && ...result` gating chain as the dev job;
+- `needs: [build-quality, contract-check, sonar-backend, docker, publish-ecr-prod]` with the same `always() && ...result` gating chain as the dev job;
 - condition adds `github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && vars.ENABLE_EC2_DEPLOY_PROD == 'true' && needs.publish-ecr-prod.outputs.image_uri != ''`;
 - `environment: backend-prod`, `url: ${{ vars.BACKEND_URL_PROD }}` — this is the approval gate;
 - `concurrency: deploy-existing-ec2-backend-prod`, `cancel-in-progress: false`;
