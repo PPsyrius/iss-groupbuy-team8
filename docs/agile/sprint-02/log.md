@@ -780,46 +780,6 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   `onJoin` and the route passes `onGated`, so the open bloc's Join opens the sheet too; the
   browser seed reads `me=1` once at worker start. Plan record re-added as notes 45–46.
 
-## 2026-09-20 - Yorick - Stripe product-page payment connection (local draft)
-
-- Kind: feature, nfr
-- Changed: existing product Start/Join actions, authenticated payment receipts, generated OpenAPI client, payment HTTP/application boundary, opt-in local fixture login and Vite proxy. Tracking: `drafts/stripe-frontend-integration.md`; no GitHub issue or PR created.
-- Verified: `./mvnw -B -ntp verify -Popenapi-export -DskipITs` passed; `bash scripts/test-stripe-sprint2.sh` passed 57 tests with isolated PostgreSQL; `pnpm check` passed 106 tests and all gates; `pnpm build` passed. Two browser-created real Sandbox payments produced one order/member each and a succeeded 2/2 bloc.
-- Decisions: retain the team's Cookie session and generated client; add only an opt-in local proxy, preserving shared addresses. Return URLs identify the payment but do not assert its status. Acceptance: `backend/docs/payment/stripe-frontend-integration-20260920.md`.
-- Problems: real Google OAuth and shared deployment remain unverified; local intent/order/expiry adapters still need replacement when the final teammate modules are integrated. Refund execution and buy-alone checkout are outside this change.
-
-## 2026-09-20 - Yorick - Refund execution and buyer order history (local draft)
-
-- Kind: feature, nfr
-- Changed: Sandbox refund worker, lease/idempotency/recovery, order read model/API, account history and receipt refund display. Tracking: `drafts/stripe-refunds-orders.md`. The user explicitly extended the earlier obligation-only scope; no GitHub issue or PR was created.
-- Verified: backend `verify -Popenapi-export -DskipITs` passed; isolated PostgreSQL payment/refund tests passed; frontend `pnpm check` passed 114 tests and all gates; `pnpm build` passed; two runtime-config tests passed. A real SGD 10 Sandbox refund is successful, and the provider still has exactly one refund after rechecking.
-- Decisions: original payment remains successful, refund has its own state; order history is an explicit order-owned read projection. Details and screenshots: `backend/docs/payment/stripe-refunds-orders-20260920.md`.
-- Problems: local Google callback/credentials require the OAuth owner; shared frontend root returned 403 on the read-only probe. No shared deployment/configuration changes were made.
-
-## 2026-09-20 - Yorick - Keep original dev contracts unchanged (local draft)
-
-- Kind: chore, interoperability
-- Changed: separated Checkout aggregate/repository/gateway/controllers; added String-ID repository adapter and opt-in webhook implementation. Original dev interfaces, implementations and controllers restored. Tracking: `drafts/stripe-dev-interface-compatibility.md`; no issue or PR created.
-- Verified: backend `verify -Popenapi-export -DskipITs` passed (620 reported, 39 skipped); isolated PostgreSQL suite passed 102/102; frontend `pnpm check` passed 114 tests and `pnpm build` passed; runtime-config tests passed 2/2. Source/contract guard confirms 192 original files, 13 original HTTP paths and 23 original schemas unchanged from dev 211cfb7.
-- Decisions: preserve dev contracts and add opt-in implementations; details in `backend/docs/payment/stripe-dev-compatibility-20260920.md`.
-- Problems: formal intent/order/expiry bindings still require teammate integration. No new real Stripe transaction, shared deployment, GitHub upload or merge was performed.
-
-## 2026-09-20 - Yorick - Default-off Stripe browser features (local draft)
-
-- Kind: nfr, availability/interoperability; NFR-23. Tracking: `drafts/stripe-default-off.md`.
-- Changed: shared profile gate, authenticated database-free capability response, frontend payment/history/receipt guards and regenerated OpenAPI client. The anonymous sign-in prompt stays unchanged.
-- Verified: backend `verify -Popenapi-export -DskipITs` passed (625 reported, 39 skipped); isolated PostgreSQL suite passed 107/107; frontend `pnpm check` passed 126 tests and all gates; `pnpm build` passed. Protected dev sources/contracts still match 211cfb7.
-- Decisions: reuse `stripe-sprint2`; no separate frontend environment flag that could disagree with the backend. See the default-off addendum in `backend/docs/payment/stripe-dev-compatibility-20260920.md`.
-- Problems: production bindings remain unverified. The existing private runtime was not restarted; rebuild/restart it before manually testing the new capability endpoint. No GitHub or shared deployment changes.
-
-## 2026-09-20 - Yorick - Remove local Stripe interfaces before publication (local draft)
-
-- Kind: security, maintainability; user-requested removal. NFR-23; tracking: `drafts/stripe-remove-local-interfaces.md`.
-- Changed: removed local login/operator HTTP routes, local schedulers, runtime scripts and Vite override. Moved order/intent/expiry substitutes and SQL into explicit test fixtures, outside the application JAR. Details: `backend/docs/payment/stripe-release-cleanup-20260920.md`.
-- Verified: backend `spotless:apply verify -Popenapi-export -DskipITs` passed (626 reported, 39 skipped); isolated PostgreSQL suite passed 108/108; frontend `pnpm check` passed 126 tests and `pnpm build` passed. JAR inspection found no local runtime classes or fixture SQL. Source guard passed for 192 original files, 13 HTTP paths and 23 schemas; whitespace check passed.
-- Decisions: keep production payment ports and default-off behavior; test substitutes must never supply shared-environment bindings. Retain prior Sandbox evidence as historical records with retirement notices.
-- Problems: Git CLI lacks credentials; GitHub connector returns 404 for this private repository; Chrome file upload returned `Not allowed`. Browser shows dev `4d25dea`, a six-file logout update after the supplied snapshot. No GitHub commit, merge or shared deployment occurred.
-
 ## 2026-09-18 - @limjiechao - T2-05 logout mutation clears the session (#42, #93 PR-I)
 
 - Kind: feature (session; UX only, the backend invalidates the cookie); no ADR, no NFR.
@@ -869,58 +829,45 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 - Problems: step 1 is a human action and B5's console check is unconfirmed (#98); asked in the PR
   body; the `@auth` tests report the codegen command as the skip reason. Open, user-owned.
 
+## 2026-09-20 - Yorick - Stripe Checkout, browser and Sandbox acceptance
+
+- Kind: feature, security, data consistency; NFR-21 and NFR-22; tracking: PR #126.
+- Changed: server-owned payment intents, idempotent Hosted Checkout, signed webhooks, buyer-owned receipts, product-page START/JOIN, refund safeguards and generated-client integration.
+- Verified: isolated PostgreSQL suites and frontend gates passed; five real Sandbox payments covered backend/browser START/JOIN and recovery, and one SGD 10 refund remained unique on recheck. Evidence: `backend/docs/payment/stripe-sandbox-acceptance-20260920.md`.
+- Decisions/problems: return URLs never assert payment state; refunds remain separate from successful payments. Google OAuth, shared deployment, production collaborators and live mode were not verified.
+
+## 2026-09-20 - Yorick - Compatibility, default-off rollout and local-interface removal
+
+- Kind: maintainability, security, availability; NFR-23; tracking: PR #126.
+- Changed: separated Checkout from original payment contracts, gated it with `stripe-sprint2`, and removed local HTTP/operator/runtime interfaces. Test collaborators and SQL remain test-only.
+- Verified: source/contract guard preserved 192 files, 13 paths and 23 schemas; post-removal backend, isolated PostgreSQL, frontend, build and JAR-inspection checks passed.
+- Decisions/problems: one backend capability controls frontend availability. Production intent/order bindings, refund-worker wiring and shared deployment remain open. Current checklist: `backend/docs/payment/stripe-release-cleanup-20260920.md`.
+
 ## 2026-09-20 - Yorick - PR #126 SonarCloud and receipt isolation fixes
 
 - Kind: maintainability, security; NFR-06 and NFR-21; tracking: PR #126.
-- Changed: payment DB suites now run in CI using isolated PostgreSQL; simplified settlement/recovery methods, added failure-path tests, fixed non-vacuous assertions and user-scoped receipt caching.
-- Verified: private PostgreSQL Maven verify passed 725 tests with no skips; frontend checks passed 127 tests and production build passed. Original 192 source/config/DDL files, 13 HTTP paths and 23 schemas pass the protection check.
-- Evidence: `backend/docs/payment/stripe-sonar-fixes-20260920.md`; aggregate JaCoCo covers all 289 lines of StripeCheckoutService and all 64 lines/46 branches of RefundService.
-- Problems: remote SonarCloud re-analysis remains authoritative for PR coverage and reliability. No threshold changes or merge to dev; deployed acceptance remains separate.
+- Changed: enabled isolated PostgreSQL CI coverage, simplified settlement/recovery, added failure-path tests and scoped receipt caching by user.
+- Verified: 725 backend and 127 frontend tests passed; aggregate JaCoCo covered every line of `StripeCheckoutService` and `RefundService`. Evidence: `backend/docs/payment/stripe-sonar-fixes-20260920.md`.
+- Problems: remote SonarCloud remains authoritative; no gate was weakened and deployment is separate.
 
 ## 2026-09-21 - l0sgAi (Liu Jin) - PR #126 review fixes: migration integration and convention alignment
 
 - Kind: correctness, maintainability; NFR-24 (new); tracking: PR #126 review by order side.
-- Changed: stripe DDL moved from opt-in `db/stripe` into `db/migration` as `V9__stripe_checkout.sql`,
-  `V10__payment_review_case.sql`, `V11__refund_execution.sql` (deployed by Flyway in every
-  environment); review-case data backfill INSERT removed; duplicate `payment_no`/provider-intent
-  unique indexes dropped in favour of V2's `uq_biz_payment_*`; remaining indexes renamed to the
-  team convention with `deleted=false` predicates; lifecycle status codes lowercased across
-  `biz_payment`/`biz_refund`/`biz_payment_review_case` (SQL, XML mappers, converter; API vocabulary
-  unchanged via `PaymentBrowserService` mapping); duplicate `GET /api/v1/orders` order-history slice
-  removed in favour of the order team's `/orders/me` (contract regenerated); shared lazy
-  `StripeClientProvider` replaces per-call client builds; `DevPaymentRepositoryAdapter` removal
-  condition Javadoc'd; pre-live checklist added to `stripe-release-cleanup-20260920.md`.
-- Decisions (confirmed with order-side reviewer, Yorick's shape wins for `biz_refund`): migrate into
-  the default Flyway location rather than keep an opt-in branch location; squash convention drift now
-  instead of after merge; keep result/audit codes (`FULFILLED`, `PROVIDER_*`) uppercase — only
-  lifecycle statuses lowercase; keep `intent_id` as the local checkout intent id (distinct from
-  `provider_payment_intent_id`), documented by column comment.
-- Verified: `./mvnw -B verify` green on JDK 21 after `clean` (Flyway V1–V11 really migrates a
-  PostgreSQL 18 container in `StripeCheckoutFlowTest`/`StripeLocalIntegrationTest`; the stale
-  order-branch `BizOrderMapper.xml` in target was flushed by clean); JaCoCo aggregate 100%
-  line+branch on all touched payment classes; `contracts/openapi.json` regenerated, staged, no
-  unstaged drift, no backward-incompatible change vs `dev` (the removed path was added by this same PR).
-- Problems: frontend `OrderHistory.tsx` still calls the removed `GET /api/v1/orders` and must migrate
-  to `/orders/me` before release (pre-live checklist item 4); order branch `V10__payment_refund.sql`
-  must be renumbered and its `biz_refund` creation dropped when it merges (V9 conflict); local
-  databases that ran the old dated versions need a manual checksum cleanup — not deployment-relevant.
+- Changed: moved Stripe DDL into Flyway V9-V11, removed duplicate indexes/backfill, aligned lifecycle statuses, shared the Stripe client, and removed the duplicate order-history API in favour of `/orders/me`.
+- Decisions: keep `intent_id` distinct from the provider ID and keep result/audit codes uppercase while lifecycle statuses remain lowercase.
+- Verified: JDK 21 `./mvnw -B verify` migrated PostgreSQL 18 through V11; touched payment classes had full line/branch coverage and the regenerated contract had no backward-incompatible change.
+- Problems: order-branch migration numbering still needs reconciliation; see the release checklist.
 
 ## 2026-09-21 - l0sgAi (Liu Jin) - Sync `dev` into the stripe branch and retire the orphaned order history
 
-- Kind: chore (merge) plus the frontend half of the previous entry's open problem; NFR-23 evidence
-  touched. Tracking: PR #126 follow-up.
-- Merged `origin/dev` (92e5ca9) into `stripe`. Conflicts were two evidence documents only; `dev` had
-  moved no Java and no `frontend/src` since the merge base. `nfr-register.md`: `dev`'s reworded
-  NFR-19 and its new NFR-20 (frontend SonarCloud) kept, so the stripe rows moved to NFR-21-23 and
-  the migration row that sat below the closing paragraph moved into the table as NFR-24. The
-  renumbering was followed through `sprint-02/log.md`, `stripe-sonar-fixes-20260920.md` and
-  `drafts/stripe-default-off.md`; NFR-01..24 are contiguous and every citation resolves.
-- Removed `features/order/OrderHistory.tsx`, its test and the `/account` section that rendered it.
-  The previous entry left it calling the `GET /api/v1/orders` that the same commit had deleted, so
-  the branch tip could not typecheck. `/account` is the header only until the order team's
-  `/orders/me` reaches `dev`'s contract; release-cleanup checklist item 4 records the rebuild.
-- Verified: `pnpm check` exit 0 (118 tests, knip clean) and `pnpm build` exit 0, both after
-  `pnpm gen:api` against the committed contract. The `/account` test now asserts the header, and the
-  default-off suite dropped its `/account` case — that route no longer touches payment capabilities.
-- Problems: the merge commit needed `--no-verify` because the typecheck hook was already failing on
-  the branch tip; the fix landed in the commit right after it.
+- Kind: merge and frontend integration; NFR-23; tracking: PR #126.
+- Changed: merged `origin/dev` (`92e5ca9`), retained NFR-19/20 and renumbered Stripe rows to NFR-21-24. Removed the orphaned `/account` order-history consumer until `/orders/me` enters the contract.
+- Verified: generated client, 118 frontend tests, knip and production build passed.
+- Problems: the merge hook exposed the stale order-history call; the following commit removed it.
+
+## 2026-09-21 to 2026-09-22 - @PPsyrius - PR #126 quality, coverage and evidence review
+
+- Kind: maintainability, test and process evidence; NFR-06 and NFR-20-24; tracking: PR #126.
+- Changed: replaced repeated refund-state literals; extracted receipt title/details/refund rendering to reduce complexity; expanded backend and frontend payment coverage; removed an unreachable Checkout fallback; consolidated 17 Stripe Markdown changes into five canonical records and removed 12 superseded reports/drafts.
+- Verified: full Docker-backed `./mvnw -B -ntp verify` passed, including 32 Testcontainers integration tests and Flyway V1-V11 on PostgreSQL 18; aggregate JaCoCo had no missed lines or partial branches across 32 touched payment files. Frontend coverage passed 149 tests with touched payment/product routes at 100% line and branch coverage; TypeScript, Oxlint, Oxfmt, Spotless, retained evidence links and `git diff --check` passed.
+- Decision: prefer behavior-preserving helpers and direct branch tests over suppressions or duplicate assertions; keep the sprint log, NFR register, release boundary, Sandbox acceptance and quality report as the canonical evidence set.

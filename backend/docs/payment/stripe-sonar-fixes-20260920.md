@@ -1,50 +1,33 @@
-# PR #126: payment quality fixes
+# PR #126 payment quality evidence
 
-Owner: Yorick. Date: 20 September 2026. NFR-06 and NFR-21.
+Owner: Yorick. Started: 20 September 2026. Updated: 22 September 2026. NFR-06 and NFR-21.
 
-The SonarCloud analysis of `86863a8` reported 39.6% new-code coverage,
-reliability C and 54 open findings. The PostgreSQL payment tests were conditional
-on a local environment variable, so CI did not execute them.
+SonarCloud analysis of `86863a8` reported 39.6% new-code coverage, reliability C and 54 findings. PostgreSQL payment tests were conditional on a local environment variable, so CI had not run them.
 
 ## Changes
 
-- Run the two PostgreSQL payment suites without an environment-based skip.
-  CI starts isolated PostgreSQL 18 containers. The local test script retains its
-  guarded private cluster and now runs Maven verify, including aggregate JaCoCo.
-- Split settlement and recovery command handling into smaller methods. Remove
-  the unused exact-conversion call, extract repeated constants, and make failure
-  assertions unambiguous and non-vacuous.
-- Add tests for quote limits, ownership, provider fact mismatches, uncertain
-  Checkout creation, compensation, recovery, refunds and operator commands.
-- Set receipt responses to `Cache-Control: no-store` and scope receipt query
-  caches to the signed-in user. Test switching accounts without clearing caches.
-- Correct the local environment example's profile and registered return route.
+- Run PostgreSQL payment suites against isolated PostgreSQL 18 and include aggregate JaCoCo output.
+- Simplify settlement and recovery handling; remove unused conversion and ambiguous assertions.
+- Cover quote limits, ownership, provider mismatches, uncertain Checkout creation, compensation, recovery and refund behavior.
+- Return receipts with `Cache-Control: no-store` and scope frontend receipt caches by signed-in user.
+- Fix Sonar findings including exception-lambda clarity, redundant Mockito verification modes and duplicate/dangling test documentation.
 
-## Local verification
+## Verification
 
-`bash scripts/test-stripe-sprint2.sh` passed: 725 tests, zero failures, errors or
-skips. PostgreSQL was real and isolated; Stripe network calls were mocked.
-The build passed Spotless, Checkstyle, SpotBugs and architecture checks.
+The 20 September local script passed 725 backend tests with no failures, errors or skips. It used isolated PostgreSQL with mocked Stripe calls and passed Spotless, Checkstyle, SpotBugs and architecture checks. Frontend checks passed 127 tests and the production build.
 
-The aggregate report at
-`backend/blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml` recorded:
+The aggregate report recorded:
 
 | Class | Lines | Branches |
-|---|---:|---:|
-| StripeCheckoutService | 289/289 | 213/220 |
-| RefundService | 64/64 | 46/46 |
-| StripeOperationsConfiguration | 70/70 | 29/29 |
+| --- | ---: | ---: |
+| `StripeCheckoutService` | 289/289 | 213/220 |
+| `RefundService` | 64/64 | 46/46 |
+| `StripeOperationsConfiguration` | 70/70 | 29/29 |
 
-Frontend checks passed 127 tests; the production Vite build passed.
-The source/contract guard passed for 192 original files, 13 HTTP paths and
-23 schemas. No shared configuration, deployment setting, original interface,
-coverage exclusion or quality threshold was changed.
+On 22 September, full Docker-backed Maven verification passed, including 32 Testcontainers integration tests and Flyway V1-V11 on PostgreSQL 18; the aggregate report had no missed lines or partial branches in the 32 touched payment files. Frontend Vitest coverage passed 149 tests: payment features and the touched product/payment routes retained 100% line and branch coverage. TypeScript, Oxlint, Oxfmt and Spotless checks also passed.
 
-These are local results, not a claim of deployed Stripe acceptance or the
-SonarCloud new-code percentage. The updated PR must pass its own CI analysis;
-the container-backed path is verified there. Team review is still required.
+The historical source/contract guard passed for 192 original files, 13 HTTP paths and 23 schemas. No coverage exclusion or quality threshold was weakened.
 
-The first CI run (`35506864274`) exposed a test-only JDBC URL bug: Testcontainers
-already appended `?loggerLevel=OFF`, so the schema parameter must use `&`.
-The helper now selects the separator from the existing URL. The migrations
-had succeeded; tests failed because subsequent connections used the wrong schema.
+The first CI run (`35506864274`) exposed a test JDBC URL bug: Testcontainers had already appended `?loggerLevel=OFF`, so the schema parameter needed `&`. The helper now chooses the separator from the existing URL. Migrations had succeeded; later connections had selected the wrong schema.
+
+Remote CI and SonarCloud remain the merge gates. These local results do not claim shared deployment.
