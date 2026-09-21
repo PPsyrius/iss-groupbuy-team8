@@ -25,6 +25,7 @@ import com.blocbuy.payment.model.CheckoutPayment;
 import com.blocbuy.payment.model.CheckoutQuote;
 import com.blocbuy.payment.persistence.CheckoutPaymentRepositoryImpl;
 import com.blocbuy.payment.persistence.PaymentMapper;
+import com.blocbuy.payment.persistence.RefundMapper;
 import com.blocbuy.payment.service.StripeCheckoutService;
 import com.blocbuy.payment.service.StripePaymentAppService;
 import com.blocbuy.payment.web.StripeWebhookController;
@@ -67,6 +68,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 class StripeCheckoutFlowTest {
     private static StripeTestDatabase testDatabase;
     private static CheckoutPaymentRepositoryImpl repository;
+    private static RefundMapper refunds;
     private static JdbcTemplate jdbc;
     private static DataSourceTransactionManager transactions;
     private static final UUID TEAM = UUID.randomUUID();
@@ -98,10 +100,12 @@ class StripeCheckoutFlowTest {
         config.setMapUnderscoreToCamelCase(true);
         config.getTypeHandlerRegistry().register(UUID.class, new UuidTypeHandler());
         factory.setConfiguration(config);
-        factory.setMapperLocations(new ClassPathResource("mapper/payment/PaymentMapper.xml"));
-        repository =
-                new CheckoutPaymentRepositoryImpl(
-                        new SqlSessionTemplate(factory.getObject()).getMapper(PaymentMapper.class));
+        factory.setMapperLocations(
+                new ClassPathResource("mapper/payment/PaymentMapper.xml"),
+                new ClassPathResource("mapper/payment/RefundMapper.xml"));
+        var session = new SqlSessionTemplate(factory.getObject());
+        repository = new CheckoutPaymentRepositoryImpl(session.getMapper(PaymentMapper.class));
+        refunds = session.getMapper(RefundMapper.class);
         jdbc.execute(
                 "CREATE TABLE stripe_test_team(id uuid PRIMARY KEY, seats int NOT NULL, expired boolean NOT NULL)");
         jdbc.execute(
@@ -180,6 +184,59 @@ class StripeCheckoutFlowTest {
         assertThat(count("biz_refund")).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT status FROM biz_refund", String.class))
                 .isEqualTo("pending");
+    }
+
+    @Test
+    void softDeletedPaymentIsExcludedFromOperationalReadsAndWrites() {
+        CheckoutPayment payment = prepare();
+        UUID paymentId = payment.id();
+        jdbc.update(
+                "UPDATE biz_payment SET status='succeeded',fulfilment_result='FULFILLED',"
+                        + "fulfilled_deal_id=?,deleted=true WHERE id=?",
+                TEAM,
+                paymentId);
+        jdbc.update(
+                "INSERT INTO biz_payment_review_case(payment_id,reason) VALUES (?,?)",
+                paymentId,
+                "DELETED_FIXTURE");
+
+        assertThat(repository.findById(paymentId)).isEmpty();
+        assertThat(repository.findRequest(payment.quote().userId(), "test-key")).isEmpty();
+        assertThat(repository.findBlockingAttempt(payment.quote().intentId())).isEmpty();
+        assertThat(repository.paidMembers(TEAM)).isEmpty();
+        assertThat(repository.pendingBefore(repository.now(), 100)).isEmpty();
+        assertThat(repository.reviewCases(null, 100)).isEmpty();
+        assertThat(repository.outcome(paymentId)).isNull();
+        assertThatThrownBy(() -> repository.lock(paymentId))
+                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> repository.save(payment))
+                .isInstanceOf(IllegalStateException.class);
+        UUID orderId = UUID.randomUUID();
+        assertThatThrownBy(() -> repository.recordOutcome(paymentId, TEAM, orderId, "FULFILLED"))
+                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> repository.requireRefund(payment, "TEAM_EXPIRED", "evt_deleted"))
+                .isInstanceOf(IllegalStateException.class);
+        assertThat(count("biz_refund")).isZero();
+
+        jdbc.update(
+                "INSERT INTO biz_refund(payment_id,intent_id,deal_id,amount,currency,reason,"
+                        + "source_event,status) VALUES (?,?,?,?,?,?,?,'pending')",
+                paymentId,
+                payment.quote().intentId(),
+                TEAM,
+                payment.quote().amount(),
+                payment.quote().currency(),
+                "TEAM_EXPIRED",
+                "evt_existing");
+        assertThat(repository.refundRecorded(paymentId)).isFalse();
+        assertThat(refunds.status(paymentId)).isNull();
+        assertThat(refunds.claimNext()).isNull();
+        assertThat(refunds.claimReview(paymentId)).isNull();
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT lease_until IS NULL AND version=0 FROM biz_refund",
+                                Boolean.class))
+                .isTrue();
     }
 
     @Test

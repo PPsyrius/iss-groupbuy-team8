@@ -35,7 +35,7 @@ function getPaymentTitle({
   return "Payment not completed";
 }
 
-function ReceiptDetails({ receipt }: { receipt: Receipt }) {
+function ReceiptDetails({ receipt }: Readonly<{ receipt: Receipt }>) {
   return (
     <dl className="border-border bg-surface grid grid-cols-1 gap-2 rounded-lg border p-5 sm:grid-cols-[auto_1fr]">
       <dt>Payment reference</dt>
@@ -62,7 +62,10 @@ function ReceiptDetails({ receipt }: { receipt: Receipt }) {
   );
 }
 
-function RefundStatusBanner({ receipt, paid }: { receipt: Receipt | undefined; paid: boolean }) {
+function RefundStatusBanner({
+  receipt,
+  paid,
+}: Readonly<{ receipt: Receipt | undefined; paid: boolean }>) {
   if (!receipt) return null;
   if (receipt.refundStatus === "SUCCEEDED")
     return (

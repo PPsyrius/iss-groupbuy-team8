@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -17,11 +18,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 /** Checkout repository guards: absent rows, page bounds and write conflicts. */
 class CheckoutPaymentRepositoryImplTest {
-    private final PaymentMapper mapper = Mockito.mock(PaymentMapper.class);
+    private final PaymentMapper mapper = mock(PaymentMapper.class);
     private final CheckoutPaymentRepositoryImpl repository =
             new CheckoutPaymentRepositoryImpl(mapper);
 
@@ -73,8 +73,7 @@ class CheckoutPaymentRepositoryImplTest {
         assertThat(repository.orderId(id)).isEqualTo(row.getOrderId());
         assertThat(repository.fulfilledDealId(id)).isEqualTo(row.getFulfilledDealId());
         Optional<CheckoutPayment> found = repository.findById(id);
-        assertThat(found).isPresent();
-        assertThat(found.get().id()).isEqualTo(id);
+        assertThat(found).hasValueSatisfying(payment -> assertThat(payment.id()).isEqualTo(id));
         assertThat(repository.findRequest(user, "key-1")).isPresent();
         assertThat(repository.findBlockingAttempt(row.getIntentId())).isPresent();
         assertThat(repository.lock(id).id()).isEqualTo(id);

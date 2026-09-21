@@ -5,17 +5,20 @@
     business_deadline,request_key,create_time,session_expires_at,success_url,cancel_url,
     checkout_session_id,checkout_url,provider_payment_intent_id,status,version</sql>
   <select id="find" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
-    SELECT <include refid="columns"/>,order_id,fulfilled_deal_id FROM biz_payment WHERE id=#{id} AND intent_id IS NOT NULL
+    SELECT <include refid="columns"/>,order_id,fulfilled_deal_id FROM biz_payment
+    WHERE id=#{id} AND intent_id IS NOT NULL AND NOT deleted
   </select>
   <select id="lock" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
-    SELECT <include refid="columns"/> FROM biz_payment WHERE id=#{id} AND intent_id IS NOT NULL FOR UPDATE
+    SELECT <include refid="columns"/> FROM biz_payment
+    WHERE id=#{id} AND intent_id IS NOT NULL AND NOT deleted FOR UPDATE
   </select>
   <select id="request" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
-    SELECT <include refid="columns"/> FROM biz_payment WHERE user_id=#{userId} AND request_key=#{key}
+    SELECT <include refid="columns"/> FROM biz_payment
+    WHERE user_id=#{userId} AND request_key=#{key} AND NOT deleted
   </select>
   <select id="blocking" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
     SELECT <include refid="columns"/> FROM biz_payment
-    WHERE intent_id=#{intentId} AND (status IN ('created','succeeded')
+    WHERE intent_id=#{intentId} AND NOT deleted AND (status IN ('created','succeeded')
       OR EXISTS(SELECT 1 FROM biz_payment_review_case r
         WHERE r.payment_id=biz_payment.id AND r.status='open')) ORDER BY id LIMIT 1
   </select>
@@ -30,7 +33,7 @@
       provider_payment_intent_id=#{providerPaymentIntentId},status=#{status},version=version+1,
       paid_time=CASE WHEN #{status}='succeeded' THEN COALESCE(paid_time,clock_timestamp()) ELSE paid_time END,
       update_time=clock_timestamp()
-    WHERE id=#{id} AND version=#{version}
+    WHERE id=#{id} AND version=#{version} AND NOT deleted
   </update>
   <select id="now" resultType="java.time.Instant">SELECT clock_timestamp()</select>
   <insert id="claimEvent">
@@ -50,10 +53,12 @@
       next_check_at=clock_timestamp(),resolved_at=NULL
   </insert>
   <select id="reviewCases" resultType="com.blocbuy.payment.model.PaymentReviewCase">
-    SELECT case_id,payment_id,reason,owner,status,last_checked_at,next_check_at,resolved_at,provider_summary
-    FROM biz_payment_review_case WHERE status='open'
-    <if test="after != null">AND case_id &gt; #{after}</if>
-    ORDER BY case_id LIMIT #{limit}
+    SELECT r.case_id,r.payment_id,r.reason,r.owner,r.status,r.last_checked_at,r.next_check_at,
+      r.resolved_at,r.provider_summary
+    FROM biz_payment_review_case r JOIN biz_payment p ON p.id=r.payment_id AND NOT p.deleted
+    WHERE r.status='open'
+    <if test="after != null">AND r.case_id &gt; #{after}</if>
+    ORDER BY r.case_id LIMIT #{limit}
   </select>
   <update id="assignCase">
     UPDATE biz_payment_review_case SET owner=#{operator},next_check_at=#{nextCheck}
@@ -68,29 +73,34 @@
   </update>
   <update id="outcome">
     UPDATE biz_payment SET fulfilment_result=#{outcome},fulfilled_deal_id=#{dealId},order_id=#{orderId}
-    WHERE id=#{id} AND fulfilment_result IS NULL
+    WHERE id=#{id} AND fulfilment_result IS NULL AND NOT deleted
   </update>
-  <select id="getOutcome" resultType="string">SELECT fulfilment_result FROM biz_payment WHERE id=#{id}</select>
+  <select id="getOutcome" resultType="string">
+    SELECT fulfilment_result FROM biz_payment WHERE id=#{id} AND NOT deleted
+  </select>
   <insert id="refund">
     INSERT INTO biz_refund(payment_id,intent_id,deal_id,amount,currency,reason,source_event,status)
     SELECT id,intent_id,COALESCE(fulfilled_deal_id,CASE WHEN operation='JOIN' THEN business_id END),
-      amount,currency,#{reason},#{eventId},'pending' FROM biz_payment WHERE id=#{id} AND status='succeeded'
+      amount,currency,#{reason},#{eventId},'pending' FROM biz_payment
+    WHERE id=#{id} AND NOT deleted AND status='succeeded'
     ON CONFLICT(payment_id) DO UPDATE SET payment_id=EXCLUDED.payment_id
     WHERE biz_refund.amount=EXCLUDED.amount AND biz_refund.currency=EXCLUDED.currency
       AND biz_refund.reason=EXCLUDED.reason
   </insert>
   <select id="members" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
     SELECT <include refid="columns"/> FROM biz_payment
-    WHERE fulfilled_deal_id=#{dealId} AND fulfilment_result='FULFILLED' AND status='succeeded' ORDER BY id
+    WHERE fulfilled_deal_id=#{dealId} AND NOT deleted
+      AND fulfilment_result='FULFILLED' AND status='succeeded' ORDER BY id
   </select>
   <select id="refundRecorded" resultType="boolean">
     SELECT EXISTS(SELECT 1 FROM biz_refund r JOIN biz_payment p ON p.id=r.payment_id
-      WHERE p.id=#{id} AND p.status='succeeded' AND r.amount=p.amount AND r.currency=p.currency
+      WHERE p.id=#{id} AND NOT p.deleted AND p.status='succeeded'
+        AND r.amount=p.amount AND r.currency=p.currency
         AND r.intent_id=p.intent_id AND NOT r.deleted
         AND r.status IN ('pending','processing','succeeded','failed','review'))
   </select>
   <select id="pending" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
-    SELECT <include refid="columns"/> FROM biz_payment WHERE intent_id IS NOT NULL
+    SELECT <include refid="columns"/> FROM biz_payment WHERE intent_id IS NOT NULL AND NOT deleted
       AND ((status='created' AND create_time &lt; #{threshold})
         OR (status='succeeded' AND fulfilment_result IS NULL)
         OR EXISTS(SELECT 1 FROM biz_payment_review_case r WHERE r.payment_id=biz_payment.id AND r.status='open'))
