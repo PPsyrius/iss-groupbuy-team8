@@ -57,5 +57,7 @@ Blocking items that must be closed before any production payment path is enabled
 3. **Local fixtures stay test-only**: `src/test/resources/db/stripe-fixture` must never be added
    to a deployment Flyway location.
 4. **Order history**: the payment-branch `GET /api/v1/orders` slice was removed in favour of the
-   order team's `GET /api/v1/orders/me`; the frontend order-history page needs migrating to that
-   endpoint before release.
+   order team's `GET /api/v1/orders/me`. Its orphaned frontend consumer went with it on 2026-09-21
+   (`features/order/OrderHistory.tsx` and the `/account` section that rendered it), so `/account`
+   now carries the header only. Rebuild the section against `/orders/me` once that endpoint reaches
+   `dev`'s `contracts/openapi.json` and the generated client can type it.

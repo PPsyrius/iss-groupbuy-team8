@@ -24,7 +24,6 @@ async function disabledPage(state: string, path: string) {
     http.get("*/api/v1/payments/capabilities", capability),
     http.post("*/api/v1/payments/intents", business),
     http.post("*/api/v1/payments/checkout-sessions", business),
-    http.get("*/api/v1/orders", business),
     http.get(`*/api/v1/payments/${id}`, business),
     http.get(`*/api/v1/products/${id}`, () =>
       ok({
@@ -54,15 +53,7 @@ describe.each(["disabled", "missing", "offline", "invalid"])("Stripe capability 
     expect(business).not.toHaveBeenCalled();
   });
 
-  it("does not query orders or pretend the buyer has none", async () => {
-    const business = await disabledPage(state, "/account");
-    expect(
-      await screen.findByText("Payments and order history are not enabled in this environment."),
-    ).toBeVisible();
-    expect(screen.queryByText("You haven’t joined a bloc yet")).not.toBeInTheDocument();
-    expect(business).not.toHaveBeenCalled();
-  });
-
+  // /account carries no payment surface since 0b1f14d dropped the order-history slice.
   it("does not query or poll a direct receipt link", async () => {
     const business = await disabledPage(state, `/payments/${id}`);
     expect(await screen.findByRole("heading", { name: "Payments are unavailable" })).toBeVisible();

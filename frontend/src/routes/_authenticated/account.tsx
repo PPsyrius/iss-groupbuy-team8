@@ -1,14 +1,14 @@
 import { Avatar } from "@heroui/react";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { OrderHistory } from "@/features/order/OrderHistory";
 import { initials } from "@/features/session/initials";
 
 export const Route = createFileRoute("/_authenticated/account")({
   component: AccountPage,
 });
 
-// Preserve the team's account header; order/refund facts now come from the buyer-scoped API.
+// The account header only. The order history section returns with the order team's /orders/me:
+// 0b1f14d dropped this branch's duplicate GET /api/v1/orders, so no listing endpoint exists yet.
 const shell = "mx-auto flex max-w-[1280px] flex-col gap-4 p-4 xl:gap-6 xl:p-8";
 
 function AccountPage() {
@@ -29,7 +29,6 @@ function AccountPage() {
           </span>
         </div>
       </div>
-      <OrderHistory key={session.userId} />
     </main>
   );
 }
