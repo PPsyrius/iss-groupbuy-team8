@@ -110,12 +110,6 @@ The required status checks are currently:
 - `frontend-check`;
 - `SonarCloud Frontend`.
 
-2026-09-18 ruleset migration: on the workflow PR, replace the old required `sonar` context with
-`SonarCloud Backend` after the renamed job reports. Do not require `SonarCloud Frontend` until this
-PR merges, its frontend-changing `push/dev` run establishes the `blocbuy-frontend` main-branch
-analysis, and a subsequent PR reports the new check green. Then require it alongside
-`frontend-check`.
-
 The ruleset also requires branches to be up to date before merging. If `dev` changes after a PR has
 passed its required checks, the PR must be updated and the required validation must pass against the
 latest `dev` state before it can merge.
