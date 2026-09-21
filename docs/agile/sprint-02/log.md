@@ -803,3 +803,30 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   settled below this branch (T2-02 no-deal copy since #115, T2-03 samples in 0f4acb0, step 7
   envelope code in bd0b95b). Plan record re-added here as note 47 (the restack had dropped it).
   Round 2 (r4053031037): step 2 now names the shipped "Sign out" / "Sign in" controls.
+
+## 2026-09-18 - @limjiechao - T2-06 login e2e journey, signed-in half gated on a hand-seeded storage state (#42, #98, #93 PR-I)
+
+- Kind: feature and test (Playwright journey per ADR 0011); no NFR row covers e2e or login; the
+  guard under test is UX only. No ADR.
+- Changed: `e2e/login.spec.ts` (an "anonymous visitor" describe on every target; a "signed-in
+  buyer @auth" describe gated on `e2e/.auth/dev.json` and `E2E_TARGET=dev`); `e2e/README.md`
+  (one-time codegen seeding after the B5 #98 console check, re-seed after a sign-out run);
+  `e2e/.auth/.gitkeep`; plan step 2 ticked, steps 1 and 3 annotated as the user's, note 48.
+- Verified on `6320ce0` plus the change: `pnpm build` ok; `pnpm e2e` 3 passed, 5 skipped (the
+  `/account` redirect and the Google button parking the return path passed; gated sheet skipped
+  without a backend; both `@auth` skipped without the state file; two dev-only smoke tests);
+  `pnpm check` exit 0 after two oxlint fixes in the spec (vitest 18 files / 76 tests unchanged,
+  knip 0 issues). Offline-first, no website.
+- Not verified: the signed-in half (needs the user's `e2e/.auth/dev.json` from a real Google login
+  after B5, then `E2E_TARGET=dev E2E_BASE_URL=… pnpm e2e --grep @auth`); the gated-sheet case end
+  to end; the `blocbuy-token` cookie name after sign-out; any dev run before T1-14.
+- Decision: one journey file instead of the plan's `account.spec.ts`; the login navigation is
+  answered with a 204 so the test never touches Google (note 48).
+- PR #122 review (2026-09-19, r4046597269, r4052574005): the gated-sheet journey stubs `me`, the
+  listing and its detail with `page.route`, so it runs on preview and dev alike (4 passed / 4
+  skipped locally, no more skip); the sign-out test reads the logout `Set-Cookie` and requires
+  `blocbuy-token` expired (`Max-Age` ≤ 0 or a past `Expires`) before asserting the jar has no
+  such cookie. Plan record re-added as note 48 (the restack had dropped it). Round 2
+  (r4053028508): note 48 describes the stubbed journey instead of the old skip.
+- Problems: step 1 is a human action and B5's console check is unconfirmed (#98); asked in the PR
+  body; the `@auth` tests report the codegen command as the skip reason. Open, user-owned.
