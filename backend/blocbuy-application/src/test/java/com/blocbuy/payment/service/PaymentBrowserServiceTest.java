@@ -21,6 +21,7 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.SimpleTransactionStatus;
 
+/** Customer-facing orchestration: intents, checkout preparation and receipt mapping. */
 class PaymentBrowserServiceTest {
     @Test
     void receiptMapsLowercaseDatabaseRefundStateToApiVocabulary() {
@@ -78,6 +79,148 @@ class PaymentBrowserServiceTest {
         assertThat(settled.refundStatus()).isEqualTo("SUCCEEDED");
         when(refunds.status(id)).thenReturn(null);
         assertThat(service.receipt(userId, id).refundStatus()).isEqualTo("NONE");
+    }
+
+    @Test
+    void intentAndCheckoutDelegationSucceedsWhenPortsAreAvailable() {
+        var beans = new DefaultListableBeanFactory();
+        var tx = mock(PlatformTransactionManager.class);
+        when(tx.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
+        var port = mock(PaymentIntentPort.class);
+        var checkout = mock(StripeCheckoutService.class);
+        beans.registerSingleton("port", port);
+        beans.registerSingleton("checkout", checkout);
+        var service =
+                new PaymentBrowserService(
+                        beans.getBeanProvider(PaymentIntentPort.class),
+                        beans.getBeanProvider(StripeCheckoutService.class),
+                        mock(CheckoutPaymentRepository.class),
+                        mock(RefundRepository.class),
+                        tx);
+        UUID user = UUID.randomUUID();
+        UUID intent = UUID.randomUUID();
+        UUID paymentId = UUID.randomUUID();
+        when(port.createIntent(user, "START", intent)).thenReturn(paymentId);
+        assertThat(service.createIntent(user, "START", intent)).isEqualTo(paymentId);
+        var result =
+                new StripeCheckoutService.CheckoutResult(
+                        paymentId, "https://checkout.stripe.com/c/pay/test", "CREATED");
+        when(checkout.prepare(user, intent, "key")).thenReturn(result);
+        assertThat(service.prepare(user, intent, "key")).isSameAs(result);
+    }
+
+    @Test
+    void intentPortFailuresAreMappedToBusinessErrors() {
+        var beans = new DefaultListableBeanFactory();
+        var tx = mock(PlatformTransactionManager.class);
+        when(tx.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
+        var port = mock(PaymentIntentPort.class);
+        beans.registerSingleton("port", port);
+        var service =
+                new PaymentBrowserService(
+                        beans.getBeanProvider(PaymentIntentPort.class),
+                        beans.getBeanProvider(StripeCheckoutService.class),
+                        mock(CheckoutPaymentRepository.class),
+                        mock(RefundRepository.class),
+                        tx);
+        UUID id = UUID.randomUUID();
+        when(port.createIntent(any(), any(), any()))
+                .thenThrow(new IllegalArgumentException("invalid"));
+        assertThatThrownBy(() -> service.createIntent(id, "START", id))
+                .isInstanceOf(BizException.class);
+    }
+
+    @Test
+    void receiptOfAnotherBuyersPaymentIsNotFound() {
+        var repository = mock(CheckoutPaymentRepository.class);
+        var refunds = mock(RefundRepository.class);
+        var tx = mock(PlatformTransactionManager.class);
+        when(tx.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
+        var beans = new DefaultListableBeanFactory();
+        var service =
+                new PaymentBrowserService(
+                        beans.getBeanProvider(PaymentIntentPort.class),
+                        beans.getBeanProvider(StripeCheckoutService.class),
+                        repository,
+                        refunds,
+                        tx);
+        UUID userId = UUID.randomUUID();
+        UUID id = UUID.randomUUID();
+        var quote =
+                new CheckoutQuote(
+                        id,
+                        userId,
+                        "START",
+                        UUID.randomUUID(),
+                        new BigDecimal("10.00"),
+                        "sgd",
+                        Instant.now().plusSeconds(600),
+                        Instant.now().plusSeconds(3600));
+        var payment =
+                new CheckoutPayment(
+                        id,
+                        quote,
+                        "key",
+                        Instant.now(),
+                        Instant.now().plusSeconds(300),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        CheckoutPayment.Status.CREATED,
+                        0);
+        when(repository.findById(id)).thenReturn(Optional.of(payment));
+        UUID stranger = UUID.randomUUID();
+        assertThatThrownBy(() -> service.receipt(stranger, id)).isInstanceOf(BizException.class);
+    }
+
+    @Test
+    void receiptSurfacesStoredOutcomeWhenPresent() {
+        var repository = mock(CheckoutPaymentRepository.class);
+        var refunds = mock(RefundRepository.class);
+        var tx = mock(PlatformTransactionManager.class);
+        when(tx.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
+        var beans = new DefaultListableBeanFactory();
+        var service =
+                new PaymentBrowserService(
+                        beans.getBeanProvider(PaymentIntentPort.class),
+                        beans.getBeanProvider(StripeCheckoutService.class),
+                        repository,
+                        refunds,
+                        tx);
+        UUID userId = UUID.randomUUID();
+        UUID id = UUID.randomUUID();
+        var quote =
+                new CheckoutQuote(
+                        id,
+                        userId,
+                        "START",
+                        UUID.randomUUID(),
+                        new BigDecimal("10.00"),
+                        "sgd",
+                        Instant.now().plusSeconds(600),
+                        Instant.now().plusSeconds(3600));
+        var payment =
+                new CheckoutPayment(
+                        id,
+                        quote,
+                        "key",
+                        Instant.now(),
+                        Instant.now().plusSeconds(300),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        CheckoutPayment.Status.SUCCEEDED,
+                        0);
+        when(repository.findById(id)).thenReturn(Optional.of(payment));
+        when(repository.outcome(id)).thenReturn("FULFILLED");
+        when(refunds.status(id)).thenReturn(null);
+        var receipt = service.receipt(userId, id);
+        assertThat(receipt.outcome()).isEqualTo("FULFILLED");
+        assertThat(receipt.refundPending()).isFalse();
     }
 
     @Test

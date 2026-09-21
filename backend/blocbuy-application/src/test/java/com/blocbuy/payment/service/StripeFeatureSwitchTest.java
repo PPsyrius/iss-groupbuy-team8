@@ -8,6 +8,7 @@ import com.blocbuy.common.exception.CommonErrorCode;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.env.MockEnvironment;
 
+/** Profile-gated payment switch: only the Stripe test profile enables checkout. */
 class StripeFeatureSwitchTest {
     @Test
     void defaultAndUnrelatedProfilesRemainOff() {

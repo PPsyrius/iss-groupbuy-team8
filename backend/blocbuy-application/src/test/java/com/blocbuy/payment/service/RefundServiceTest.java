@@ -18,6 +18,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.SimpleTransactionStatus;
 
+/** Bounded refund jobs: claiming, provider reconciliation and operator review. */
 class RefundServiceTest {
     @Test
     void manualRecoveryOnlyReadsAndRejectsInvalidReferences() {

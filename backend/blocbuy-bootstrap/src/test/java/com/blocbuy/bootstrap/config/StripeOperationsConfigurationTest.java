@@ -16,6 +16,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.context.support.GenericApplicationContext;
 
+/** Operator commands: review scans, assignment and recovery recording. */
 class StripeOperationsConfigurationTest {
     private static final UUID ID = UUID.fromString("00000000-0000-4000-8000-000000000001");
     private final StripeCheckoutService service = mock(StripeCheckoutService.class);

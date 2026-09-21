@@ -177,6 +177,55 @@ describe("teammate product page payment integration", () => {
     await screen.findByRole("heading", { name: "Waiting for payment confirmation" });
     expect(assign).not.toHaveBeenCalled();
   });
+
+  it.each(["intents", "checkout-sessions"])(
+    "shows a retryable error when %s returns no purchase reference",
+    async (failing) => {
+      serveSignedIn();
+      product();
+      const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+      server.use(
+        http.post("*/api/v1/payments/intents", () =>
+          failing === "intents" ? ok({}) : ok({ intentId }),
+        ),
+        http.post("*/api/v1/payments/checkout-sessions", () =>
+          failing === "checkout-sessions"
+            ? ok({})
+            : ok({
+                paymentId,
+                status: "CREATED",
+                checkoutUrl: "https://checkout.stripe.com/c/pay/test",
+              }),
+        ),
+      );
+      renderRoute(`/products/${productId}`);
+      const [start] = await screen.findAllByRole("button", { name: /Start a bloc/ });
+      await waitFor(() => expect(start).toBeEnabled());
+      await userEvent.click(start!);
+      expect(await screen.findByRole("alert")).toHaveTextContent("We could not open Checkout");
+      expect(assign).not.toHaveBeenCalled();
+    },
+  );
+
+  it("navigates to the receipt when Checkout is already settled", async () => {
+    serveSignedIn();
+    product();
+    receipt({ status: "SUCCEEDED", orderId: "saved-order" });
+    const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+    server.use(
+      http.post("*/api/v1/payments/intents", () => ok({ intentId })),
+      http.post("*/api/v1/payments/checkout-sessions", () =>
+        ok({ paymentId, status: "SUCCEEDED" }),
+      ),
+    );
+    const { router } = renderRoute(`/products/${productId}`);
+    const [start] = await screen.findAllByRole("button", { name: /Start a bloc/ });
+    await waitFor(() => expect(start).toBeEnabled());
+    await userEvent.click(start!);
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/payments/${paymentId}`));
+    expect(await screen.findByText("saved-order")).toBeInTheDocument();
+    expect(assign).not.toHaveBeenCalled();
+  });
 });
 
 describe("backend-confirmed payment result", () => {
@@ -266,5 +315,54 @@ describe("backend-confirmed payment result", () => {
     expect(sessionStorage.getItem(key)).toBeNull();
     expect(sessionStorage.getItem(`${key}.request`)).toBeNull();
     expect(sessionStorage.getItem("blocbuy.payment.attempt.other")).toBe("keep");
+  });
+
+  it("shows a failed refund with support copy, not membership", async () => {
+    serveSignedIn();
+    receipt({ status: "SUCCEEDED", refundStatus: "FAILED", orderId: intentId });
+    renderRoute(`/payments/${paymentId}`);
+    expect(await screen.findByText(/Refund failed/)).toBeVisible();
+    expect(screen.queryByText(/bloc membership is confirmed/)).not.toBeInTheDocument();
+  });
+
+  it("shows a refund under review without claiming it was sent", async () => {
+    serveSignedIn();
+    receipt({ status: "SUCCEEDED", refundStatus: "REVIEW" });
+    renderRoute(`/payments/${paymentId}`);
+    expect(await screen.findByText(/needs review/)).toBeVisible();
+    expect(screen.queryByText(/Your bank may take time/)).not.toBeInTheDocument();
+  });
+
+  it("names an unfinished payment without a known end state", async () => {
+    serveSignedIn();
+    receipt({ status: "FAILED" });
+    renderRoute(`/payments/${paymentId}`);
+    expect(await screen.findByRole("heading", { name: "Payment not completed" })).toBeVisible();
+  });
+
+  it("records payment without order confirmation when no order exists yet", async () => {
+    serveSignedIn();
+    receipt({ status: "SUCCEEDED" });
+    renderRoute(`/payments/${paymentId}`);
+    expect(await screen.findByText(/Order confirmation is not available yet/)).toBeVisible();
+    expect(await screen.findByRole("heading", { name: "Payment received" })).toBeVisible();
+  });
+
+  it("rekeys the receipt cache when the session ends", async () => {
+    serveSignedIn();
+    receipt({ status: "SUCCEEDED", orderId: "saved-order" });
+    const { queryClient } = renderRoute(`/payments/${paymentId}`);
+    expect(await screen.findByText("saved-order")).toBeInTheDocument();
+    await act(async () => {
+      queryClient.setQueryData(meQueryKey(), { code: OK_CODE, message: "anonymous" });
+    });
+    expect(screen.getByText("saved-order")).toBeInTheDocument();
+    await waitFor(() => {
+      const keys = queryClient
+        .getQueryCache()
+        .getAll()
+        .map((query) => JSON.stringify(query.queryKey));
+      expect(keys.some((key) => key.includes('"anonymous"'))).toBe(true);
+    });
   });
 });

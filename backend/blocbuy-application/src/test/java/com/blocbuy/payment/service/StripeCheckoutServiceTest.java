@@ -28,7 +28,9 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.SimpleTransactionStatus;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+/** Checkout orchestration: preparation, webhooks, recovery, expiry and review. */
 class StripeCheckoutServiceTest {
     private static final UUID BUYER = UUID.fromString("00000000-0000-4000-8000-000000000001");
     private static final UUID INTENT = UUID.fromString("00000000-0000-4000-8000-000000000002");
@@ -118,7 +120,7 @@ class StripeCheckoutServiceTest {
                         "https://shop.example/return?from=checkout&paymentId=" + id + "#receipt");
         when(repository.findRequest(BUYER, "key")).thenReturn(Optional.of(saved));
         assertThat(service.prepare(BUYER, INTENT, "key").paymentId()).isEqualTo(id);
-        verify(gateway, times(1)).createCheckoutSession(any());
+        verify(gateway).createCheckoutSession(any());
     }
 
     @Test
@@ -151,7 +153,7 @@ class StripeCheckoutServiceTest {
         assertThatThrownBy(() -> service.prepare(BUYER, INTENT, "key"))
                 .isInstanceOf(BizException.class);
         verify(repository).review(saved.id(), "CREATE_UNKNOWN", "system");
-        verify(gateway, times(1)).createCheckoutSession(any());
+        verify(gateway).createCheckoutSession(any());
     }
 
     @Test
@@ -454,5 +456,403 @@ class StripeCheckoutServiceTest {
         assertThatThrownBy(() -> service.recordExpiredTeam(INTENT))
                 .isInstanceOf(BizException.class);
         verify(repository, never()).requireRefund(any(), any(), any());
+    }
+
+    @Test
+    void reusedAttemptWithDifferentQuoteCannotBypassOwnership() {
+        prepare();
+        when(business.lockQuote(any(), any())).thenReturn(quote(BUYER, INTENT, 3500));
+        when(repository.findRequest(BUYER, "key")).thenReturn(Optional.of(saved));
+        assertThatThrownBy(() -> service.prepare(BUYER, INTENT, "key"))
+                .isInstanceOf(BizException.class);
+    }
+
+    private void stubVerifiedWebhook(String eventId, String sessionId) {
+        when(gateway.verifyCheckoutWebhook(any(), any()))
+                .thenReturn(
+                        Optional.of(
+                                new CheckoutGateway.Event(
+                                        eventId, "completed", sessionId, false, null)));
+    }
+
+    @Test
+    void webhookObservesUnpaidSessionWithoutFulfilment() {
+        UUID id = prepare();
+        stubVerifiedWebhook("evt_unpaid", "cs_test_fixture");
+        service.handleWebhook("body", "sig");
+        verify(repository).finishEvent("evt_unpaid", id, "OBSERVE");
+        verify(business, never()).fulfil(any());
+        verify(repository, never()).requireRefund(any(), any(), any());
+    }
+
+    @Test
+    void webhookDuplicateClaimIsIgnored() {
+        prepare();
+        stubVerifiedWebhook("evt_seen", "cs_test_fixture");
+        when(repository.claimEvent(any(), any())).thenReturn(false);
+        clearInvocations(repository);
+        service.handleWebhook("body", "sig");
+        verify(repository).claimEvent("evt_seen", "completed");
+        verify(repository, never()).lock(any());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void webhookMismatchIsReviewedWithoutRecovery() {
+        UUID id = prepare();
+        stubVerifiedWebhook("evt_mismatch", "cs_test_fixture");
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(changed("amount"));
+        service.handleWebhook("body", "sig");
+        verify(repository).review(id, "PROVIDER_MISMATCH", "webhook");
+        verify(repository).finishEvent("evt_mismatch", id, "REVIEW");
+        verify(repository, never()).recordRecovery(any(), any(), any(), any(), anyBoolean());
+    }
+
+    @Test
+    void latePaidAttemptRequiresOperatorRecovery() {
+        UUID id = prepare();
+        var paid = session("complete", "paid", "pi_original", "succeeded");
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(paid);
+        saved = saved.cancelUnpaid();
+        stubVerifiedWebhook("evt_late", "cs_test_fixture");
+        service.handleWebhook("body", "sig");
+        saved = saved.failTerminalUnpaid();
+        stubVerifiedWebhook("evt_late_failed", "cs_test_fixture");
+        service.handleWebhook("body", "sig");
+        verify(repository, times(2)).review(id, "LATE_PAID_REQUIRES_RECOVERY", "webhook");
+        verify(repository, times(2)).finishEvent(any(), eq(id), eq("REVIEW"));
+    }
+
+    @Test
+    void existingOutcomeIsReusedWithoutCallingBusiness() {
+        UUID id = prepare();
+        var paid = session("complete", "paid", "pi_original", "succeeded");
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(paid);
+        when(repository.outcome(id)).thenReturn("FULFILLED");
+        stubVerifiedWebhook("evt_reuse", "cs_test_fixture");
+        service.handleWebhook("body", "sig");
+        verify(repository).finishEvent("evt_reuse", id, "FULFILLED");
+        verify(business, never()).fulfil(any());
+        verify(repository, never()).requireRefund(any(), any(), any());
+        verify(repository, never()).recordOutcome(any(), any(), any(), any());
+    }
+
+    @Test
+    void acceptedFulfilmentRecordsOutcomeWithoutRefund() {
+        UUID id = prepare();
+        var paid = session("complete", "paid", "pi_original", "succeeded");
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(paid);
+        stubVerifiedWebhook("evt_fulfil", "cs_test_fixture");
+        service.handleWebhook("body", "sig");
+        verify(business).fulfil(any());
+        verify(repository).recordOutcome(id, BUYER, INTENT, "FULFILLED");
+        verify(repository, never()).requireRefund(any(), any(), any());
+        verify(repository).finishEvent("evt_fulfil", id, "FULFILLED");
+    }
+
+    @Test
+    void terminalUnpaidSessionFailsPaymentWithoutFulfilment() {
+        prepare();
+        var terminal = session("expired", "unpaid", "pi_x", "canceled");
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(terminal);
+        stubVerifiedWebhook("evt_terminal", "cs_test_fixture");
+        service.handleWebhook("body", "sig");
+        assertThat(saved.status()).isEqualTo(CheckoutPayment.Status.FAILED);
+        verify(repository).finishEvent("evt_terminal", saved.id(), "OBSERVE");
+        verify(business, never()).fulfil(any());
+    }
+
+    @Test
+    void expiredSessionWithoutIntentCancelsUnpaidAttempt() {
+        prepare();
+        var expired = session("expired", "unpaid", null, null);
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(expired);
+        stubVerifiedWebhook("evt_expired", "cs_test_fixture");
+        service.handleWebhook("body", "sig");
+        assertThat(saved.status()).isEqualTo(CheckoutPayment.Status.CANCELED);
+        verify(repository).finishEvent("evt_expired", saved.id(), "OBSERVE");
+    }
+
+    @Test
+    void manualRecoveryOfMismatchedSessionRecordsMismatchEvidence() {
+        UUID id = prepare();
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(changed("amount"));
+        service.recover(id, "yorick", true);
+        verify(repository)
+                .recordRecovery(
+                        eq(id),
+                        eq("yorick"),
+                        eq("MISMATCH"),
+                        contains("savedSnapshotMatches=false"),
+                        eq(false));
+        verify(repository).finishEvent(any(), eq(id), eq("REVIEW"));
+    }
+
+    @Test
+    void manualRecoveryWithVerifiedDownstreamKeepsFulfilled() {
+        UUID id = prepare();
+        var paid = session("complete", "paid", "pi_original", "succeeded");
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(paid);
+        when(business.fulfilmentEvidence(any()))
+                .thenReturn(PaymentBusinessPort.FulfilmentEvidence.COMPLETE);
+        service.recover(id, "yorick", true);
+        verify(repository)
+                .recordRecovery(eq(id), eq("yorick"), eq("FULFILLED"), anyString(), eq(true));
+    }
+
+    @Test
+    void manualRecoveryWithUnverifiedDownstreamMarksMissing() {
+        UUID id = prepare();
+        var paid = session("complete", "paid", "pi_original", "succeeded");
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(paid);
+        service.recover(id, "yorick", true);
+        verify(repository)
+                .recordRecovery(
+                        eq(id), eq("yorick"), eq("DOWNSTREAM_MISSING"), anyString(), eq(false));
+    }
+
+    @Test
+    void manualRecoveryOfTerminalUnpaidVerifiesCompensation() {
+        UUID id = prepare();
+        saved = saved.failTerminalUnpaid();
+        var terminal = session("expired", "unpaid", "pi_x", "canceled");
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(terminal);
+        service.recover(id, "yorick", true);
+        verify(repository)
+                .recordRecovery(eq(id), eq("yorick"), eq("OBSERVE"), anyString(), eq(true));
+        verify(business, never()).fulfil(any());
+        verify(repository, never()).requireRefund(any(), any(), any());
+    }
+
+    @Test
+    void expiredTeamRefundsSettledMembers() {
+        prepare();
+        saved = saved.succeed();
+        when(repository.paidMembers(INTENT)).thenReturn(List.of(saved));
+        service.recordExpiredTeam(INTENT);
+        verify(repository).requireRefund(eq(saved), eq("TEAM_EXPIRED"), anyString());
+    }
+
+    @Test
+    void expiryCollectorExpiresOpenSessionsAndObservesClosedOnes() {
+        UUID id = prepare();
+        when(repository.now()).thenReturn(NOW.plusSeconds(8000));
+        when(repository.pendingBefore(any(), anyInt())).thenReturn(List.of(saved));
+        when(gateway.retrieveCheckoutSession(any()))
+                .thenReturn(session("open", "unpaid", null, null));
+        when(gateway.expireCheckoutSession(any()))
+                .thenReturn(session("expired", "unpaid", null, null));
+        assertThat(service.expireDueSessions()).isEqualTo(1);
+        verify(gateway).expireCheckoutSession("cs_test_fixture");
+        when(gateway.retrieveCheckoutSession(any()))
+                .thenReturn(session("expired", "unpaid", null, null));
+        assertThat(service.expireDueSessions()).isEqualTo(1);
+        verify(gateway).expireCheckoutSession(any());
+        assertThat(id).isNotNull();
+    }
+
+    @Test
+    void scanAndReviewCasesDelegateToRepository() {
+        when(repository.pendingBefore(any(), anyInt())).thenReturn(List.of());
+        when(repository.reviewCases(any(), anyInt())).thenReturn(List.of());
+        assertThat(service.scan()).isEmpty();
+        assertThat(service.reviewCases(null)).isEmpty();
+    }
+
+    @Test
+    void assignReviewPersistsOperatorDeadline() {
+        UUID id = UUID.randomUUID();
+        service.assignReview(id, "yorick", NOW.plusSeconds(3600));
+        verify(repository).lock(id);
+        verify(repository).review(id, "OPERATOR_REVIEW", "yorick");
+        verify(repository).assignReview(id, "yorick", NOW.plusSeconds(3600));
+    }
+
+    @Test
+    void recoverRequiresExplicitConfirmation() {
+        assertThatThrownBy(() -> service.recover(INTENT, "yorick", false))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void recoverRejectsPaymentIdMismatchAndRecordsUnverifiedLookup() {
+        UUID id = prepare();
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(changed("payment"));
+        assertThatThrownBy(() -> service.recover(id, "yorick", true, "cs_test_fixture"))
+                .isInstanceOf(BizException.class);
+        verify(repository).review(id, "RECOVERY_FAILED", "yorick");
+        verify(repository)
+                .recordRecovery(
+                        eq(id),
+                        eq("yorick"),
+                        eq("UNVERIFIED"),
+                        contains("lookupHint=cs_test_fixture"),
+                        eq(false));
+    }
+
+    @Test
+    void inspectRejectsUnboundAndMalformedSessions() {
+        doThrow(new IllegalStateException("timeout")).when(gateway).createCheckoutSession(any());
+        assertThatThrownBy(() -> service.prepare(BUYER, INTENT, "key"))
+                .isInstanceOf(IllegalStateException.class);
+        UUID savedId = saved.id();
+        assertThatThrownBy(() -> service.inspect(savedId)).isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> service.inspect(savedId, "bad")).isInstanceOf(BizException.class);
+    }
+
+    @Test
+    void returnUrlWithoutFragmentAppendsPaymentId() {
+        StripeCheckoutService plain = service("https://shop.example/return");
+        UUID id = plain.prepare(BUYER, INTENT, "key").paymentId();
+        assertThat(saved.successUrl()).isEqualTo("https://shop.example/return?paymentId=" + id);
+    }
+
+    @Test
+    void providerCallsAreRejectedInsideTransactions() {
+        TransactionSynchronizationManager.initSynchronization();
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {
+            assertThatThrownBy(() -> service.prepare(BUYER, INTENT, "key"))
+                    .isInstanceOf(IllegalStateException.class);
+        } finally {
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+    }
+
+    @Test
+    void manualRecoveryOfCanceledPaymentVerifiesCompensation() {
+        UUID id = prepare();
+        saved = saved.cancelUnpaid();
+        var expired = session("expired", "unpaid", null, null);
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(expired);
+        service.recover(id, "yorick", true);
+        verify(repository)
+                .recordRecovery(eq(id), eq("yorick"), eq("OBSERVE"), anyString(), eq(true));
+        saved = saved.cancelUnpaid();
+        when(gateway.retrieveCheckoutSession(any()))
+                .thenReturn(session("open", "unpaid", null, null));
+        service.recover(id, "yorick", true);
+        verify(repository)
+                .recordRecovery(eq(id), eq("yorick"), eq("OBSERVE"), anyString(), eq(false));
+    }
+
+    @Test
+    void manualRecoveryWithExistingOutcomeSkipsOutcomeCheck() {
+        UUID id = prepare();
+        saved = saved.failTerminalUnpaid();
+        var terminal = session("expired", "unpaid", "pi_x", "canceled");
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(terminal);
+        when(repository.outcome(id)).thenReturn("FULFILLED");
+        service.recover(id, "yorick", true);
+        verify(repository)
+                .recordRecovery(eq(id), eq("yorick"), eq("OBSERVE"), anyString(), eq(false));
+    }
+
+    @Test
+    void manualRecoveryOfFailedPaymentWithOpenSessionStaysUnresolved() {
+        UUID id = prepare();
+        saved = saved.failTerminalUnpaid();
+        when(gateway.retrieveCheckoutSession(any()))
+                .thenReturn(session("open", "unpaid", null, null));
+        service.recover(id, "yorick", true);
+        verify(repository)
+                .recordRecovery(eq(id), eq("yorick"), eq("OBSERVE"), anyString(), eq(false));
+        verify(business, never()).fulfil(any());
+    }
+
+    @Test
+    void manualRecoveryWithDownstreamEvidenceConflictMarksMissing() {
+        UUID id = prepare();
+        var paid = session("complete", "paid", "pi_original", "succeeded");
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(paid);
+        when(repository.now()).thenReturn(NOW.plusSeconds(8000));
+        when(repository.refundRecorded(id)).thenReturn(true);
+        when(business.fulfilmentEvidence(any()))
+                .thenReturn(PaymentBusinessPort.FulfilmentEvidence.COMPLETE);
+        service.recover(id, "yorick", true);
+        verify(repository).requireRefund(any(), eq("BUSINESS_EXPIRED"), anyString());
+        verify(repository)
+                .recordRecovery(
+                        eq(id), eq("yorick"), eq("DOWNSTREAM_MISSING"), anyString(), eq(false));
+    }
+
+    @Test
+    void manualRecoveryWithoutRecordedRefundMarksMissing() {
+        UUID id = prepare();
+        var paid = session("complete", "paid", "pi_original", "succeeded");
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(paid);
+        when(repository.now()).thenReturn(NOW.plusSeconds(8000));
+        service.recover(id, "yorick", true);
+        verify(repository).requireRefund(any(), eq("BUSINESS_EXPIRED"), anyString());
+        verify(repository)
+                .recordRecovery(
+                        eq(id), eq("yorick"), eq("DOWNSTREAM_MISSING"), anyString(), eq(false));
+    }
+
+    @Test
+    void manualRecoveryOfTerminalPaymentWithPaidSessionMarksDownstreamMissing() {
+        UUID id = prepare();
+        saved = saved.failTerminalUnpaid();
+        var paid = session("complete", "paid", "pi_original", "succeeded");
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(paid);
+        service.recover(id, "yorick", true);
+        verify(repository, never()).review(eq(id), eq("LATE_PAID_REQUIRES_RECOVERY"), any());
+        verify(repository)
+                .recordRecovery(
+                        eq(id), eq("yorick"), eq("DOWNSTREAM_MISSING"), anyString(), eq(false));
+    }
+
+    @Test
+    void explicitExpiryExpiresOpenSession() {
+        UUID id = prepare();
+        var expired = session("expired", "unpaid", null, null);
+        when(gateway.retrieveCheckoutSession(any()))
+                .thenReturn(session("open", "unpaid", null, null));
+        when(gateway.expireCheckoutSession(any())).thenReturn(expired);
+        service.expireRequestedSession(id);
+        verify(gateway).expireCheckoutSession("cs_test_fixture");
+        verify(repository).finishEvent(any(), eq(id), eq("OBSERVE"));
+    }
+
+    @Test
+    void assignReviewRejectsPastDeadline() {
+        UUID id = UUID.randomUUID();
+        assertThatThrownBy(() -> service.assignReview(id, "yorick", NOW))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void unboundPaymentRejectsHintsAndNullHintRecoveryIsUnverified() {
+        doThrow(new IllegalStateException("timeout")).when(gateway).createCheckoutSession(any());
+        assertThatThrownBy(() -> service.prepare(BUYER, INTENT, "key"))
+                .isInstanceOf(IllegalStateException.class);
+        UUID id = saved.id();
+        assertThatThrownBy(() -> service.inspect(id, "cs_test_aaaaaaaaaaaaaaaa"))
+                .isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> service.recover(id, "yorick", true))
+                .isInstanceOf(BizException.class);
+    }
+
+    @Test
+    void terminalUnpaidWithCompleteEvidenceStaysUnresolved() {
+        UUID id = prepare();
+        saved = saved.failTerminalUnpaid();
+        var terminal = session("expired", "unpaid", "pi_x", "canceled");
+        when(gateway.retrieveCheckoutSession(any())).thenReturn(terminal);
+        when(business.fulfilmentEvidence(any()))
+                .thenReturn(PaymentBusinessPort.FulfilmentEvidence.COMPLETE);
+        service.recover(id, "yorick", true);
+        verify(repository)
+                .recordRecovery(eq(id), eq("yorick"), eq("OBSERVE"), anyString(), eq(false));
+    }
+
+    @Test
+    void inspectAcceptsOwnBindingHintAndRejectsForeignOnes() {
+        UUID id = prepare();
+        assertThat(service.inspect(id, "cs_test_fixture").id()).isEqualTo("cs_test_fixture");
+        assertThat(service.preview(id, "cs_test_fixture").sessionId()).isEqualTo("cs_test_fixture");
+        assertThatThrownBy(() -> service.inspect(id, "cs_test_otherAAAAAAAAAAAAAAAA"))
+                .isInstanceOf(BizException.class);
     }
 }

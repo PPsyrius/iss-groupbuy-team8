@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+/** Provider session facts: paid and terminal-unpaid failure semantics. */
 class PaymentFactsTest {
     private static final UUID ID = UUID.fromString("00000000-0000-4000-8000-000000000001");
 

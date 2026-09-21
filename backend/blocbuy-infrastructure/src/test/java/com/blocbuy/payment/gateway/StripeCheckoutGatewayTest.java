@@ -29,6 +29,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.Test;
 
+/** Hosted Checkout gateway: sessions, webhook verification and request mapping. */
 class StripeCheckoutGatewayTest {
     private static final String SECRET = "test-signing-secret-not-a-real-credential";
     private final StripeCheckoutGateway gateway =
@@ -58,7 +59,8 @@ class StripeCheckoutGatewayTest {
         String stale = sign(body, Instant.now().minusSeconds(600).getEpochSecond());
         assertThatThrownBy(() -> gateway.verifyCheckoutWebhook(body, stale))
                 .isInstanceOf(BizException.class);
-        assertThatThrownBy(() -> gateway.verifyCheckoutWebhook("x".repeat(262145), signature))
+        String oversized = "x".repeat(262145);
+        assertThatThrownBy(() -> gateway.verifyCheckoutWebhook(oversized, signature))
                 .isInstanceOf(BizException.class);
     }
 
@@ -230,7 +232,8 @@ class StripeCheckoutGatewayTest {
                 .isInstanceOf(BizException.class);
         assertThatThrownBy(() -> gateway.verifyCheckoutWebhook("{}", null))
                 .isInstanceOf(BizException.class);
-        assertThatThrownBy(() -> gateway.verifyCheckoutWebhook("{}", "x".repeat(2049)))
+        String longSignature = "x".repeat(2049);
+        assertThatThrownBy(() -> gateway.verifyCheckoutWebhook("{}", longSignature))
                 .isInstanceOf(BizException.class);
     }
 

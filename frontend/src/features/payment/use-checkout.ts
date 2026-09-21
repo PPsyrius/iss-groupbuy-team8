@@ -70,7 +70,7 @@ export function useCheckout(userId: string | undefined) {
         await navigate({ to: "/payments/$paymentId", params: { paymentId: result.paymentId } });
         return;
       }
-      const destination = new URL(result.checkoutUrl ?? "");
+      const destination = new URL(result.checkoutUrl);
       if (destination.protocol !== "https:" || destination.hostname !== "checkout.stripe.com") {
         throw new Error("Invalid payment destination");
       }

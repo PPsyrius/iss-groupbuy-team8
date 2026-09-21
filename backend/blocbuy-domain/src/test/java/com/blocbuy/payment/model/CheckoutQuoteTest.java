@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+/** Immutable server-owned price commitment and its validation. */
 class CheckoutQuoteTest {
     private static final UUID ID = UUID.fromString("00000000-0000-4000-8000-000000000001");
     private static final Instant DEADLINE = Instant.parse("2026-09-20T12:00:00Z");

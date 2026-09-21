@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
+/** Development adapter preserves the legacy String-ID payment contract. */
 class DevPaymentRepositoryAdapterTest {
     private final CheckoutPaymentRepository checkout = mock(CheckoutPaymentRepository.class);
     private final DevPaymentRepositoryAdapter adapter = new DevPaymentRepositoryAdapter(checkout);

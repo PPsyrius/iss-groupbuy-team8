@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -351,7 +350,7 @@ class StripeLocalIntegrationTest {
         var worker = new com.blocbuy.payment.service.RefundService(refunds, provider, transactions);
         assertThat(worker.processNext()).isTrue();
         assertThat(worker.processNext()).isFalse();
-        verify(provider, times(1)).createRefund(any());
+        verify(provider).createRefund(any());
         var receipt = browser.receipt(p.quote().userId(), p.id());
         assertThat(receipt.refundStatus()).isEqualTo("SUCCEEDED");
         assertThat(repository.refundRecorded(p.id())).isTrue();

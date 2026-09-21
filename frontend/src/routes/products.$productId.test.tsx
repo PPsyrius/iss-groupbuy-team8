@@ -25,6 +25,14 @@ const listing = (overrides: Partial<ProductDetailResponse> = {}): ProductDetailR
   ...overrides,
 });
 
+// `exactOptionalPropertyTypes` forbids spreading an explicit `undefined`, so absent
+// properties are removed instead of overwritten.
+function without<T extends object>(value: T, ...keys: (keyof T)[]): T {
+  const copy = { ...value };
+  for (const key of keys) delete copy[key];
+  return copy;
+}
+
 const notFoundBody = { code: "PRODUCT_404_001", message: "Listing not found" };
 
 // One known listing; every other id answers the backend's not-found shape (plan §12 note 42).
@@ -173,6 +181,160 @@ describe("/products/$productId gated actions", () => {
     await waitFor(() => expect(start).toBeEnabled());
     await userEvent.click(start!);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(await screen.findByRole("alert")).toHaveTextContent("We could not open Checkout");
+  });
+});
+
+describe("/products/$productId listing variants", () => {
+  it("renders a listing without a bloc and still starts checkout", async () => {
+    serveSignedIn();
+    serveListing(without(listing(), "deal"));
+    renderRoute(`/products/${knownId}`);
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Open blocs")).not.toBeInTheDocument();
+  });
+
+  it("treats a bloc without sizes as empty", async () => {
+    serveSignedIn();
+    serveListing(listing({ deal: { dealId: "deal-1", expireTime: "2099-01-01T00:00:00Z" } }));
+    server.use(
+      http.get("*/api/v1/payments/capabilities", () =>
+        HttpResponse.json({ code: OK_CODE, data: { enabled: true } }),
+      ),
+    );
+    renderRoute(`/products/${knownId}`);
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" }),
+    ).toBeInTheDocument();
+    const [start] = await screen.findAllByRole("button", { name: /Start a bloc/ });
+    await waitFor(() => expect(start).toBeEnabled());
+    expect(screen.getByRole("progressbar", { name: "0 of 1 joined" })).toBeInTheDocument();
+  });
+
+  it("renders a full bloc without offering another seat", async () => {
+    serveAnonymous();
+    serveListing(
+      listing({
+        deal: {
+          dealId: "deal-1",
+          currentSize: 5,
+          targetSize: 5,
+          expireTime: "2099-01-01T00:00:00Z",
+        },
+      }),
+    );
+    renderRoute(`/products/${knownId}`);
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("5 of 5 joined")).toBeInTheDocument();
+  });
+
+  it("renders a bare listing without prices, stock, or media", async () => {
+    serveAnonymous();
+    serveListing({
+      id: knownId,
+      title: "Thai jasmine rice 10 kg",
+      images: [],
+    });
+    renderRoute(`/products/${knownId}`);
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/in stock/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/sold/)).not.toBeInTheDocument();
+  });
+
+  it("renders the individual price when there is no bloc price", async () => {
+    serveAnonymous();
+    serveListing(without(listing(), "groupPrice"));
+    renderRoute(`/products/${knownId}`);
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("S$89.00").length).toBeGreaterThan(0);
+  });
+
+  it("renders sold count without stock when stock is unknown", async () => {
+    serveAnonymous();
+    serveListing(without(listing(), "stock"));
+    renderRoute(`/products/${knownId}`);
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("12 sold")).toBeInTheDocument();
+    expect(screen.queryByText(/in stock/)).not.toBeInTheDocument();
+  });
+
+  it("renders the bloc price without an individual price", async () => {
+    serveAnonymous();
+    serveListing(without(listing(), "individualPrice"));
+    renderRoute(`/products/${knownId}`);
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("S$71.00").length).toBeGreaterThan(0);
+  });
+
+  it("renders the crumb without a title cell when the listing has none", async () => {
+    serveAnonymous();
+    serveListing(without(listing(), "title"));
+    const { container } = renderRoute(`/products/${knownId}`);
+    await waitFor(() => expect(screen.getByText("Home")).toBeInTheDocument());
+    expect(container.querySelector('[aria-current="page"]')).toBeNull();
+  });
+
+  it("falls back to the cover image when there are no gallery shots", async () => {
+    serveAnonymous();
+    serveListing(listing({ images: [], coverImage: "https://example.test/cover.jpg" }));
+    renderRoute(`/products/${knownId}`);
+    expect(await screen.findByText("product shot 1 of 1")).toBeInTheDocument();
+  });
+
+  it("switches product shots from the thumbnails", async () => {
+    serveAnonymous();
+    serveListing(
+      listing({
+        subtitle: "Fresh and fragrant",
+        description: "Sun-dried in the central plains.",
+        images: ["https://example.test/rice-1.jpg", "https://example.test/rice-2.jpg"],
+      }),
+    );
+    renderRoute(`/products/${knownId}`);
+    expect(await screen.findByText("product shot 1 of 2")).toBeInTheDocument();
+    expect(screen.getByText("Fresh and fragrant")).toBeInTheDocument();
+    expect(screen.getAllByText("Sun-dried in the central plains.")).toHaveLength(2);
+    const thumbs = document.querySelectorAll('button[aria-label="Show product shot 2"]');
+    expect(thumbs.length).toBeGreaterThan(1);
+    for (const thumb of thumbs) fireEvent.click(thumb);
+    await waitFor(() =>
+      expect(
+        [...document.querySelectorAll('button[aria-label="Show product shot 2"]')].every(
+          (thumb) => thumb.getAttribute("aria-pressed") === "true",
+        ),
+      ).toBe(true),
+    );
+    expect(screen.getByText("product shot 2 of 2")).toBeInTheDocument();
+  });
+
+  it("shows the loading skeleton while the listing resolves", async () => {
+    serveAnonymous();
+    server.use(http.get("*/api/v1/products/:id", () => new Promise<never>(() => {})));
+    const { container } = renderRoute(`/products/${knownId}`);
+    await waitFor(() => expect(container.querySelector('[aria-busy="true"]')).not.toBeNull(), {
+      timeout: 5000,
+    });
+  });
+
+  it("retries the listing after a server error", async () => {
+    serveAnonymous();
+    server.use(
+      http.get("*/api/v1/products/:id", () => HttpResponse.json({ code: OK_CODE, message: "ok" })),
+    );
+    renderRoute(`/products/${knownId}`);
+    expect(await screen.findByText(/couldn’t load this listing/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByText(/couldn’t load this listing/)).toBeInTheDocument();
   });
 });

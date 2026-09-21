@@ -7,7 +7,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -694,7 +693,7 @@ class StripeCheckoutFlowTest {
                                 "SELECT provider_summary FROM biz_payment_review_case",
                                 String.class))
                 .contains(candidate);
-        verify(gateway, times(1)).createCheckoutSession(any());
+        verify(gateway).createCheckoutSession(any());
     }
 
     @Test
@@ -715,7 +714,7 @@ class StripeCheckoutFlowTest {
                                 .checkoutUrl())
                 .isEqualTo(sessions.get(candidate).url());
         assertThat(count("stripe_test_orders")).isZero();
-        verify(gateway, times(1)).createCheckoutSession(any());
+        verify(gateway).createCheckoutSession(any());
     }
 
     @Test

@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
+/** Provider refund gateway: key guards, creation and retrieval. */
 class StripeRefundGatewayTest {
     private final StripeRefundGateway gateway =
             new StripeRefundGateway(
