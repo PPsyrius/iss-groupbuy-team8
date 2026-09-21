@@ -16,6 +16,11 @@ import org.springframework.transaction.support.TransactionTemplate;
 @lombok.extern.slf4j.Slf4j
 public final class RefundService {
     private static final String REVIEW = "review";
+    private static final String FAILED = "failed";
+    private static final String SUCCEEDED = "succeeded";
+    private static final String CANCELED = "canceled";
+    private static final String PENDING = "pending";
+    private static final String PROCESSING = "processing";
     private final RefundRepository repository;
     private final RefundGateway gateway;
     private final TransactionTemplate tx;
@@ -52,7 +57,7 @@ public final class RefundService {
                 snapshot = gateway.createRefund(work);
             }
         } catch (BizException unavailable) {
-            finish(work, work.providerRefundId(), "processing", "PROVIDER_RETRY");
+            finish(work, work.providerRefundId(), PROCESSING, "PROVIDER_RETRY");
             return true;
         }
         apply(work, snapshot);
@@ -88,9 +93,9 @@ public final class RefundService {
         }
         String state =
                 switch (snapshot.status()) {
-                    case "succeeded" -> "succeeded";
-                    case "failed", "canceled" -> "failed";
-                    case "pending" -> "processing";
+                    case SUCCEEDED -> SUCCEEDED;
+                    case FAILED, CANCELED -> FAILED;
+                    case PENDING -> PROCESSING;
                     default -> REVIEW;
                 };
         finish(work, snapshot.id(), state, "PROVIDER_" + state.toUpperCase(java.util.Locale.ROOT));
@@ -110,7 +115,7 @@ public final class RefundService {
 
     private void finish(RefundWork work, String providerId, String state, String result) {
         tx.executeWithoutResult(s -> repository.finish(work, providerId, state, result));
-        if (REVIEW.equals(state) || "failed".equals(state)) {
+        if (REVIEW.equals(state) || FAILED.equals(state)) {
             log.warn(
                     "Refund needs operator review: paymentId={}, state={}, result={}",
                     work.paymentId(),

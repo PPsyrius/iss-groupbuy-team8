@@ -11,7 +11,6 @@ class StripeClientProviderTest {
         StripeClientProvider provider =
                 new StripeClientProvider(new StripeProperties("sk_test_placeholder", null));
         var first = provider.client();
-        assertThat(first).isSameAs(provider.client());
-        assertThat(first).isNotNull();
+        assertThat(first).isNotNull().isSameAs(provider.client());
     }
 }
