@@ -13,6 +13,6 @@ No dev interface/configuration changes, live transactions, deployment, GitHub wr
 - [x] Explicit local enablement retains the payment/refund test flow.
 - [x] Original dev contracts remain unchanged; generated clients and regression tests pass.
 
-NFR-22: availability/interoperability. Yorick, Sprint 2. No remote issue was created.
+NFR-23: availability/interoperability. Yorick, Sprint 2. No remote issue was created.
 
 Evidence: `backend/docs/payment/stripe-dev-compatibility-20260920.md`, default-off addendum.

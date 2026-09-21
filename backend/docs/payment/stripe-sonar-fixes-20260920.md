@@ -1,6 +1,6 @@
 # PR #126: payment quality fixes
 
-Owner: Yorick. Date: 20 September 2026. NFR-06 and NFR-20.
+Owner: Yorick. Date: 20 September 2026. NFR-06 and NFR-21.
 
 The SonarCloud analysis of `86863a8` reported 39.6% new-code coverage,
 reliability C and 54 open findings. The PostgreSQL payment tests were conditional

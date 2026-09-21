@@ -664,6 +664,18 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 - Decision: rebuild one bot branch from `dev` and lease against its fetched SHA so external writes
   fail safely. `BOARD_SNAPSHOT_TOKEN` remains account-holder TODO 8 (#103).
 
+## 2026-09-18 - @PPsyrius - Independent Frontend SonarCloud quality gate (#104, #93)
+
+- Kind: NFR-20 maintainability and CI.
+- Changed: split backend/frontend SonarCloud jobs; frontend scans `frontend/src` with LCOV and keeps
+  a `dev` baseline. Synced badges and quality docs; checkouts do not persist GitHub credentials,
+  while change detection fetches history during checkout rather than requiring a later fetch.
+- Verified: YAML, Actionlint and `git diff --check` pass; zizmor has no medium/high findings;
+  focused coverage passed 5/5; PR #123's frontend quality gate passed.
+- Decision: separate projects share `SONAR_TOKEN`; CodeQL remains unchanged.
+- Problem: malformed local `@internationalized/date` blocked full coverage; Linux CI passed.
+- Next: require both renamed checks; merge establishes the frontend `dev` baseline.
+
 ## 2026-09-18 - @limjiechao - T2-01 products list from the Claude Design Catalog artboards (#44, #93 PR-G)
 
 - Kind: feature (UC1 browse) plus the first theme pass; artboards over plan and brief (note 39);
@@ -794,7 +806,7 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 
 ## 2026-09-20 - Yorick - Default-off Stripe browser features (local draft)
 
-- Kind: nfr, availability/interoperability; NFR-22. Tracking: `drafts/stripe-default-off.md`.
+- Kind: nfr, availability/interoperability; NFR-23. Tracking: `drafts/stripe-default-off.md`.
 - Changed: shared profile gate, authenticated database-free capability response, frontend payment/history/receipt guards and regenerated OpenAPI client. The anonymous sign-in prompt stays unchanged.
 - Verified: backend `verify -Popenapi-export -DskipITs` passed (625 reported, 39 skipped); isolated PostgreSQL suite passed 107/107; frontend `pnpm check` passed 126 tests and all gates; `pnpm build` passed. Protected dev sources/contracts still match 211cfb7.
 - Decisions: reuse `stripe-sprint2`; no separate frontend environment flag that could disagree with the backend. See the default-off addendum in `backend/docs/payment/stripe-dev-compatibility-20260920.md`.
@@ -802,7 +814,7 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 
 ## 2026-09-20 - Yorick - Remove local Stripe interfaces before publication (local draft)
 
-- Kind: security, maintainability; user-requested removal. NFR-22; tracking: `drafts/stripe-remove-local-interfaces.md`.
+- Kind: security, maintainability; user-requested removal. NFR-23; tracking: `drafts/stripe-remove-local-interfaces.md`.
 - Changed: removed local login/operator HTTP routes, local schedulers, runtime scripts and Vite override. Moved order/intent/expiry substitutes and SQL into explicit test fixtures, outside the application JAR. Details: `backend/docs/payment/stripe-release-cleanup-20260920.md`.
 - Verified: backend `spotless:apply verify -Popenapi-export -DskipITs` passed (626 reported, 39 skipped); isolated PostgreSQL suite passed 108/108; frontend `pnpm check` passed 126 tests and `pnpm build` passed. JAR inspection found no local runtime classes or fixture SQL. Source guard passed for 192 original files, 13 HTTP paths and 23 schemas; whitespace check passed.
 - Decisions: keep production payment ports and default-off behavior; test substitutes must never supply shared-environment bindings. Retain prior Sandbox evidence as historical records with retirement notices.
@@ -830,9 +842,36 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   envelope code in bd0b95b). Plan record re-added here as note 47 (the restack had dropped it).
   Round 2 (r4053031037): step 2 now names the shipped "Sign out" / "Sign in" controls.
 
+## 2026-09-18 - @limjiechao - T2-06 login e2e journey, signed-in half gated on a hand-seeded storage state (#42, #98, #93 PR-I)
+
+- Kind: feature and test (Playwright journey per ADR 0011); no NFR row covers e2e or login; the
+  guard under test is UX only. No ADR.
+- Changed: `e2e/login.spec.ts` (an "anonymous visitor" describe on every target; a "signed-in
+  buyer @auth" describe gated on `e2e/.auth/dev.json` and `E2E_TARGET=dev`); `e2e/README.md`
+  (one-time codegen seeding after the B5 #98 console check, re-seed after a sign-out run);
+  `e2e/.auth/.gitkeep`; plan step 2 ticked, steps 1 and 3 annotated as the user's, note 48.
+- Verified on `6320ce0` plus the change: `pnpm build` ok; `pnpm e2e` 3 passed, 5 skipped (the
+  `/account` redirect and the Google button parking the return path passed; gated sheet skipped
+  without a backend; both `@auth` skipped without the state file; two dev-only smoke tests);
+  `pnpm check` exit 0 after two oxlint fixes in the spec (vitest 18 files / 76 tests unchanged,
+  knip 0 issues). Offline-first, no website.
+- Not verified: the signed-in half (needs the user's `e2e/.auth/dev.json` from a real Google login
+  after B5, then `E2E_TARGET=dev E2E_BASE_URL=… pnpm e2e --grep @auth`); the gated-sheet case end
+  to end; the `blocbuy-token` cookie name after sign-out; any dev run before T1-14.
+- Decision: one journey file instead of the plan's `account.spec.ts`; the login navigation is
+  answered with a 204 so the test never touches Google (note 48).
+- PR #122 review (2026-09-19, r4046597269, r4052574005): the gated-sheet journey stubs `me`, the
+  listing and its detail with `page.route`, so it runs on preview and dev alike (4 passed / 4
+  skipped locally, no more skip); the sign-out test reads the logout `Set-Cookie` and requires
+  `blocbuy-token` expired (`Max-Age` ≤ 0 or a past `Expires`) before asserting the jar has no
+  such cookie. Plan record re-added as note 48 (the restack had dropped it). Round 2
+  (r4053028508): note 48 describes the stubbed journey instead of the old skip.
+- Problems: step 1 is a human action and B5's console check is unconfirmed (#98); asked in the PR
+  body; the `@auth` tests report the codegen command as the skip reason. Open, user-owned.
+
 ## 2026-09-20 - Yorick - PR #126 SonarCloud and receipt isolation fixes
 
-- Kind: maintainability, security; NFR-06 and NFR-20; tracking: PR #126.
+- Kind: maintainability, security; NFR-06 and NFR-21; tracking: PR #126.
 - Changed: payment DB suites now run in CI using isolated PostgreSQL; simplified settlement/recovery methods, added failure-path tests, fixed non-vacuous assertions and user-scoped receipt caching.
 - Verified: private PostgreSQL Maven verify passed 725 tests with no skips; frontend checks passed 127 tests and production build passed. Original 192 source/config/DDL files, 13 HTTP paths and 23 schemas pass the protection check.
 - Evidence: `backend/docs/payment/stripe-sonar-fixes-20260920.md`; aggregate JaCoCo covers all 289 lines of StripeCheckoutService and all 64 lines/46 branches of RefundService.
@@ -840,7 +879,7 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 
 ## 2026-09-21 - l0sgAi (Liu Jin) - PR #126 review fixes: migration integration and convention alignment
 
-- Kind: correctness, maintainability; NFR-23 (new); tracking: PR #126 review by order side.
+- Kind: correctness, maintainability; NFR-24 (new); tracking: PR #126 review by order side.
 - Changed: stripe DDL moved from opt-in `db/stripe` into `db/migration` as `V9__stripe_checkout.sql`,
   `V10__payment_review_case.sql`, `V11__refund_execution.sql` (deployed by Flyway in every
   environment); review-case data backfill INSERT removed; duplicate `payment_no`/provider-intent
