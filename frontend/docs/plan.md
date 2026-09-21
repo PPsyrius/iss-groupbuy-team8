@@ -877,7 +877,7 @@ If `Button` in HeroUI 3.2.5 does not accept `as="a"`, use a plain `<a className=
 - [x] Step 2: Write `.github/workflows/ci-frontend.yml` from §7.1.
 - [x] Step 3: Apply §7.2 (security.yml), §7.3 (dependabot), §7.4 (CODEOWNERS), §7.5 (.gitignore, if not already in T1-04), §7.6 (PR template), §7.7 (CONTRIBUTING).
 - [x] Step 4: `docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:latest -color`.
-- [ ] Step 5: Open PR-E; request @PPsyrius; after merge, ask @PPsyrius to add `frontend-check` to the branch protection required checks on `dev`. *(2026-09-17: PR-E = #106, merged; the required-check half waits for the every-PR shape in §12 note 35 to land, then @PPsyrius adds `frontend-check` to ruleset `dev-require-review` next to `build-quality`, `sonar`, `docker`, `gitleaks`.)*
+- [x] Step 5: Open PR-E; request @PPsyrius; after merge, ask @PPsyrius to add `frontend-check` to the branch protection required checks on `dev`. *(2026-09-17: PR-E = #106, merged; the required-check half waits for the every-PR shape in §12 note 35 to land. 2026-09-18: `frontend-check` is required; the Sonar checks are now named `SonarCloud Backend` and `SonarCloud Frontend`.)*
 
 ### T1-13: Playwright smoke
 

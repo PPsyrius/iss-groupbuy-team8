@@ -664,6 +664,18 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 - Decision: rebuild one bot branch from `dev` and lease against its fetched SHA so external writes
   fail safely. `BOARD_SNAPSHOT_TOKEN` remains account-holder TODO 8 (#103).
 
+## 2026-09-18 - @PPsyrius - Independent Frontend SonarCloud quality gate (#104, #93)
+
+- Kind: NFR-20 maintainability and CI.
+- Changed: split backend/frontend SonarCloud jobs; frontend scans `frontend/src` with LCOV and keeps
+  a `dev` baseline. Synced badges and quality docs; checkouts do not persist GitHub credentials,
+  while change detection fetches history during checkout rather than requiring a later fetch.
+- Verified: YAML, Actionlint and `git diff --check` pass; zizmor has no medium/high findings;
+  focused coverage passed 5/5; PR #123's frontend quality gate passed.
+- Decision: separate projects share `SONAR_TOKEN`; CodeQL remains unchanged.
+- Problem: malformed local `@internationalized/date` blocked full coverage; Linux CI passed.
+- Next: require both renamed checks; merge establishes the frontend `dev` baseline.
+
 ## 2026-09-18 - @limjiechao - T2-01 products list from the Claude Design Catalog artboards (#44, #93 PR-G)
 
 - Kind: feature (UC1 browse) plus the first theme pass; artboards over plan and brief (note 39);

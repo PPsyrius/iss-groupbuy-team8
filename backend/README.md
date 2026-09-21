@@ -56,7 +56,7 @@ database name is case-sensitive if created quoted; verify `Blocbuy` vs `blocbuy`
   no controller→mapper, persistence internals stay internal, no field injection.
 - Tests: JUnit 5; repository `*IT` suites spin a real PostgreSQL 18 via Testcontainers.
 
-CI: `.github/workflows/ci-backend.yml` (build-quality → contract-check → sonar → docker) and
+CI: `.github/workflows/ci-backend.yml` (build-quality → contract-check → sonar-backend → docker) and
 `security.yml` (Gitleaks + Trivy). Runbook: [../docs/ci/backend-pipeline.md](../docs/ci/backend-pipeline.md);
 thresholds: [../docs/quality/quality-gates.md](../docs/quality/quality-gates.md).
 
