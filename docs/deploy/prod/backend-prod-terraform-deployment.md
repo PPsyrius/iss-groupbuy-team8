@@ -1,26 +1,18 @@
 # Production Backend Deployment Guide (Terraform IaC)
 
-**Status:** proposed design — pending team review before implementation
+**Status:** implemented — stack code merged under `infra/terraform/`, reviewed via the implementation plan; awaiting the runbook's one-time apply and first release.
 
 **Environment:** `backend-prod` (a second, dedicated EC2 instance)
 
-**Provisioning model:** Terraform-managed infrastructure — IAM, ECR, EC2, security groups, load
-balancer, and host bootstrap are all declared as code and applied with `terraform apply`
+**Provisioning model:** Terraform-managed infrastructure — IAM, ECR, EC2, security groups, load balancer, and host bootstrap are all declared as code and applied with `terraform apply`
 
-**Application delivery:** unchanged from dev — GitHub Actions -> Amazon ECR -> AWS Systems Manager
-Run Command, extended with a release tag trigger and a mandatory approval gate
+**Application delivery:** unchanged from dev — GitHub Actions -> Amazon ECR -> AWS Systems Manager Run Command, extended with a release tag trigger and a mandatory approval gate
 
-This guide specifies the production counterpart of the existing
-[dev deployment](../backend-ec2-pipeline-operator-guide.md). The application-delivery design (quality
-gates, immutable digests, OIDC, SSM Run Command, non-secret bundle, automatic rollback) is reused
-as-is; what changes is **who creates the environment**: the dev environment was bootstrapped with
-hand-run AWS CLI commands, the production environment is created by Terraform from this repository.
+This guide specifies the production counterpart of the existing [dev deployment](../backend-ec2-pipeline-operator-guide.md). The application-delivery design (quality gates, immutable digests, OIDC, SSM Run Command, non-secret bundle, automatic rollback) is reused as-is; what changes is **who creates the environment**: the dev environment was bootstrapped with hand-run AWS CLI commands, the production environment is created by Terraform from this repository.
 
 ## 1. Why IaC for production — lessons from the dev bootstrap
 
-The dev deployment went live on 2026-09-05. Every incident during that first deployment traces to
-the same root cause: **the environment was assembled by hand, so reality drifted from the
-documented design**. Terraform removes that class of failure by construction:
+The dev deployment went live on 2026-09-05. Every incident during that first deployment traces to the same root cause: **the environment was assembled by hand, so reality drifted from the documented design**. Terraform removes that class of failure by construction:
 
 | Dev incident | Root cause | Production control (this guide) |
 |---|---|---|
@@ -30,8 +22,7 @@ documented design**. Terraform removes that class of failure by construction:
 | Port 8589 open to `0.0.0.0/0` | Health check needed a path in; GitHub runner IPs are dynamic, so the group was opened wide | The only ingress reference for 8589 is the ALB security group ID; the workflow health check runs through SSM on the instance itself |
 | Variable naming mismatch, stray values | GitHub variables were edited by hand across sessions | All variable values are derived from `terraform output` and set with `gh variable set` in one scripted step |
 
-The general principle: **everything that was a "replace the placeholder, then verify by reading it
-back" instruction in the dev bootstrap becomes a code review of a rendered diff**.
+The general principle: **everything that was a "replace the placeholder, then verify by reading it back" instruction in the dev bootstrap becomes a code review of a rendered diff**.
 
 ## 2. Architecture
 
@@ -65,12 +56,7 @@ Release tag v* pushed (or workflow_dispatch)
                     └────────────────────────────────┘
 ```
 
-The entry layer is the same pattern the dev environment adopted
-([dev-cloudfront-deployment.md](../dev-cloudfront-deployment.md)): user-facing TLS terminates on
-CloudFront's built-in certificate (no custom domain, no ACM certificate to manage), and the ALB is
-a **private origin** — its security group accepts the CloudFront managed prefix list only, and its
-listener defaults to 403 unless the request carries the shared `X-Origin-Secret` header. Anyone who
-resolves the ALB DNS name and connects directly gets nothing.
+The entry layer is the same pattern the dev environment adopted ([dev-cloudfront-deployment.md](../dev-cloudfront-deployment.md)): user-facing TLS terminates on CloudFront's built-in certificate (no custom domain, no ACM certificate to manage), and the ALB is a **private origin** — its security group accepts the CloudFront managed prefix list only, and its listener defaults to 403 unless the request carries the shared `X-Origin-Secret` header. Anyone who resolves the ALB DNS name and connects directly gets nothing.
 
 Boundaries carried over from dev and unchanged:
 
@@ -83,11 +69,8 @@ Boundaries carried over from dev and unchanged:
 
 Two boundaries are deliberately kept even though Terraform *could* cross them:
 
-1. **The deployment pipeline still owns only the backend container.** PostgreSQL and Redis on the
-   prod host are started by the Terraform user-data as a separate Compose project
-   (`blocbuy-infra`), so a pipeline deploy can never touch them.
-2. **Terraform creates the environment; the pipeline changes only the running image.** A prod
-   deploy never runs `terraform apply`, and a Terraform run never deploys an application image.
+1. **The deployment pipeline still owns only the backend container.** PostgreSQL and Redis on the prod host are started by the Terraform user-data as a separate Compose project (`blocbuy-infra`), so a pipeline deploy can never touch them.
+2. **Terraform creates the environment; the pipeline changes only the running image.** A prod deploy never runs `terraform apply`, and a Terraform run never deploys an application image.
 
 ## 3. Repository layout
 
@@ -109,8 +92,7 @@ infra/terraform/
 └── README.md
 ```
 
-A single stack (rather than nested modules) keeps the first Terraform adoption reviewable in one
-PR. Split into modules only when a second consumer appears.
+A single stack (rather than nested modules) keeps the first Terraform adoption reviewable in one PR. Split into modules only when a second consumer appears.
 
 State lives in S3 with DynamoDB locking, bootstrapped once per account (section 5.1).
 
@@ -129,16 +111,13 @@ State lives in S3 with DynamoDB locking, bootstrapped once per account (section 
 | ACM certificate ARN | empty — CloudFront entry pattern (see section 6.4); set only to upgrade the origin leg to HTTPS | team decision |
 | Origin secret | `openssl rand -hex 32`, seeded as `/blocbuy/prod/ORIGIN_SECRET` before the first plan | new, shared CloudFront↔ALB |
 
-The OIDC subject values are not guessed: they were decoded from a live workflow token on
-2026-09-05. Repositories created after 15 July 2026 (like this one) use the immutable format
-`repo:<owner>@<ownerID>/<repo>@<repoID>:<suffix>`.
+The OIDC subject values are not guessed: they were decoded from a live workflow token on 2026-09-05. Repositories created after 15 July 2026 (like this one) use the immutable format `repo:<owner>@<ownerID>/<repo>@<repoID>:<suffix>`.
 
 ## 5. One-time setup
 
 ### 5.1 Bootstrap the Terraform state backend
 
-Run once per AWS account from an administrator workstation (outside Terraform, like the OIDC
-provider in the dev bootstrap):
+Run once per AWS account from an administrator workstation (outside Terraform, like the OIDC provider in the dev bootstrap):
 
 ```bash
 aws s3api create-bucket --bucket blocbuy-tfstate-402178232802 \
@@ -158,8 +137,7 @@ aws dynamodb create-table --table-name blocbuy-tflock \
 
 ### 5.2 OIDC provider
 
-The account already has the GitHub OIDC provider (created during the dev bootstrap). The stack
-looks it up instead of creating a second one:
+The account already has the GitHub OIDC provider (created during the dev bootstrap). The stack looks it up instead of creating a second one:
 
 ```hcl
 data "aws_iam_openid_connect_provider" "github" {
@@ -167,17 +145,13 @@ data "aws_iam_openid_connect_provider" "github" {
 }
 ```
 
-One provider per account, shared by dev and prod roles — the isolation between environments comes
-from the `sub` conditions, not from duplicate providers.
+One provider per account, shared by dev and prod roles — the isolation between environments comes from the `sub` conditions, not from duplicate providers.
 
 ## 6. The stack, component by component
 
 ### 6.1 GitHub OIDC roles (placeholder-free by construction)
 
-The ECR push role is assumed by the `publish-ecr-prod` workflow job, which publishes on `v*` tag
-pushes. Tag names vary per release, so a `ref:refs/tags/...` subject can never be exact-matched —
-the job carries the stable `environment:backend-prod-publish` subject instead (the GitHub
-environment is restricted to `v*` tags; see section 8).
+The ECR push role is assumed by the `publish-ecr-prod` workflow job, which publishes on `v*` tag pushes. Tag names vary per release, so a `ref:refs/tags/...` subject can never be exact-matched — the job carries the stable `environment:backend-prod-publish` subject instead (the GitHub environment is restricted to `v*` tags; see section 8).
 
 ```hcl
 locals {
@@ -225,13 +199,9 @@ data "aws_iam_policy_document" "github_deploy_trust" {
 }
 ```
 
-Both roles, their permission policies, and their attachments are declared in the same file. There
-is no sed step, no `.json.example`, and no post-create read-back ritual — `terraform plan` prints
-the exact trust documents before anything is created. Wildcards remain forbidden; if the plan shows
-a `sub` that does not match the formats above, the tfvars are wrong, not the policy.
+Both roles, their permission policies, and their attachments are declared in the same file. There is no sed step, no `.json.example`, and no post-create read-back ritual — `terraform plan` prints the exact trust documents before anything is created. Wildcards remain forbidden; if the plan shows a `sub` that does not match the formats above, the tfvars are wrong, not the policy.
 
-Role and policy names carry the `Prod` suffix (`BlocBuyGitHubEcrPushProd`,
-`BlocBuyGitHubBackendDeployProd`) so dev and prod roles are never confused in logs or reviews.
+Role and policy names carry the `Prod` suffix (`BlocBuyGitHubEcrPushProd`, `BlocBuyGitHubBackendDeployProd`) so dev and prod roles are never confused in logs or reviews.
 
 ### 6.2 ECR repository
 
@@ -250,9 +220,7 @@ resource "aws_ecr_lifecycle_policy" "backend" {
 }
 ```
 
-A separate repository keeps the dev ECR-push role unable to write prod images and gives prod its
-own retention budget. The lifecycle policy file is the one already committed for dev — one source
-of truth.
+A separate repository keeps the dev ECR-push role unable to write prod images and gives prod its own retention budget. The lifecycle policy file is the one already committed for dev — one source of truth.
 
 ### 6.3 Networking: security groups that reference, not enumerate
 
@@ -304,7 +272,7 @@ resource "aws_lb_target_group" "backend" {
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.default.id
   health_check {
-    path                = "/actuator/health"
+    path                = "/api/actuator/health" # container serves under the /api context path
     matcher             = "200"
     interval            = 15
     healthy_threshold   = 2
@@ -365,36 +333,18 @@ resource "aws_lb_listener_rule" "origin_secret" {
 }
 ```
 
-The dev incident of opening 8589 to the world cannot recur: the only ingress rule for 8589 names
-the ALB security group, and changing that requires a reviewed Terraform PR. The ALB itself accepts
-the CloudFront managed prefix list only — a second layer the dev incident never had. SSH (22),
-PostgreSQL (5432), and Redis (6379) have **no** ingress rules at all — the host is reachable only
-through CloudFront → ALB and SSM.
+The dev incident of opening 8589 to the world cannot recur: the only ingress rule for 8589 names the ALB security group, and changing that requires a reviewed Terraform PR. The ALB itself accepts the CloudFront managed prefix list only — a second layer the dev incident never had. SSH (22), PostgreSQL (5432), and Redis (6379) have **no** ingress rules at all — the host is reachable only through CloudFront → ALB and SSM.
 
-One accepted trade-off: the origin secret is read through `data "aws_ssm_parameter"` and therefore
-lands in Terraform state. The state bucket is KMS-encrypted with public access fully blocked and
-access requires explicit IAM permission — this is the same trade-off Terraform makes for any
-secret-bearing resource, and it is why the entry layer is in code rather than hand-run CLI. The
-application secrets (`DB_PASSWORD`, Stripe keys, …) never take this path — they are fetched from
-Parameter Store on the host at deploy time and never rendered by Terraform.
+One accepted trade-off: the origin secret is read through `data "aws_ssm_parameter"` and therefore lands in Terraform state. The state bucket is KMS-encrypted with public access fully blocked and access requires explicit IAM permission — this is the same trade-off Terraform makes for any secret-bearing resource, and it is why the entry layer is in code rather than hand-run CLI. The application secrets (`DB_PASSWORD`, Stripe keys, …) never take this path — they are fetched from Parameter Store on the host at deploy time and never rendered by Terraform.
 
 ### 6.4 TLS (CloudFront entry pattern)
 
-The dev environment's entry-layer rework ([dev-cloudfront-deployment.md](../dev-cloudfront-deployment.md))
-is adopted for prod unchanged in shape:
+The dev environment's entry-layer rework ([dev-cloudfront-deployment.md](../dev-cloudfront-deployment.md)) is adopted for prod unchanged in shape:
 
-- **User-facing TLS:** CloudFront's built-in `*.cloudfront.net` certificate — no custom domain, no
-  ACM certificate to request or rotate, `ViewerProtocolPolicy: redirect-to-https`.
-- **Origin leg:** plain HTTP `:80`, protected by the prefix-list security group + the
-  `X-Origin-Secret` header + the default-403 listener. `OriginProtocolPolicy: http-only`.
-- **Origin secret:** `/blocbuy/prod/ORIGIN_SECRET` (SecureString) — generated once
-  (`openssl rand -hex 32`), consumed by this stack's listener rule and the CloudFront
-  distribution's custom origin header. Rotating it means a new parameter value, a Terraform apply
-  (listener rule), and a CloudFront distribution update, done together.
-- **Upgrade path (later, optional):** once the team has a domain, follow
-  dev-cloudfront-deployment.md §12 — ACM certificate in `us-east-1` attached to CloudFront, and
-  optionally an ACM certificate on the ALB (`acm_certificate_arn` in tfvars) to upgrade the origin
-  leg to HTTPS. No architectural rework, only a protocol change.
+- **User-facing TLS:** CloudFront's built-in `*.cloudfront.net` certificate — no custom domain, no ACM certificate to request or rotate, `ViewerProtocolPolicy: redirect-to-https`.
+- **Origin leg:** plain HTTP `:80`, protected by the prefix-list security group + the `X-Origin-Secret` header + the default-403 listener. `OriginProtocolPolicy: http-only`.
+- **Origin secret:** `/blocbuy/prod/ORIGIN_SECRET` (SecureString) — generated once (`openssl rand -hex 32`), consumed by this stack's listener rule and the CloudFront distribution's custom origin header. Rotating it means a new parameter value, a Terraform apply (listener rule), and a CloudFront distribution update, done together.
+- **Upgrade path (later, optional):** once the team has a domain, follow dev-cloudfront-deployment.md §12 — ACM certificate in `us-east-1` attached to CloudFront, and optionally an ACM certificate on the ALB (`acm_certificate_arn` in tfvars) to upgrade the origin leg to HTTPS. No architectural rework, only a protocol change.
 
 ### 6.5 EC2 instance, instance profile, and ECR pull inline policy
 
@@ -449,10 +399,7 @@ resource "aws_instance" "backend" {
 
 ### 6.6 Host bootstrap: user-data replaces the prerequisite checklist
 
-`templates/user-data.sh.tftpl` makes the "host has Docker, Compose, AWS CLI v2" property part of
-the machine's definition. The dev bootstrap hit a dead deployment because this was a checklist
-line a human missed; in prod it is code that either runs at first boot or fails visibly in the
-`terraform apply` output:
+`templates/user-data.sh.tftpl` makes the "host has Docker, Compose, AWS CLI v2" property part of the machine's definition. The dev bootstrap hit a dead deployment because this was a checklist line a human missed; in prod it is code that either runs at first boot or fails visibly in the `terraform apply` output:
 
 ```bash
 #!/usr/bin/env bash
@@ -492,27 +439,17 @@ chmod 0640 /opt/blocbuy/infra/compose.yml
 # Secrets are NOT templated here: see section 6.7 — they arrive via SSM Parameter Store.
 ```
 
-The user-data deliberately does **not** create `/etc/blocbuy/backend.env`. Secrets never flow
-through Terraform state, user-data (which is readable on the instance), or GitHub.
+The user-data deliberately does **not** create `/etc/blocbuy/backend.env`. Secrets never flow through Terraform state, user-data (which is readable on the instance), or GitHub.
 
 ### 6.7 Secrets: SSM Parameter Store (upgrade from the dev hand-edited file)
 
-Dev keeps secrets in a hand-edited `/etc/blocbuy/backend.env`; every prod change to it would be an
-untracked, unreviewed root shell command. Production moves the file's contents to SSM Parameter
-Store (SecureString) and lets the host render it:
+Dev keeps secrets in a hand-edited `/etc/blocbuy/backend.env`; every prod change to it would be an untracked, unreviewed root shell command. Production moves the file's contents to SSM Parameter Store (SecureString) and lets the host render it:
 
-- `aws ssm put-parameter --name /blocbuy/prod/DB_USERNAME --type SecureString ...` for each key in
-  [`backend.env.example`](../../../deployment/backend/backend.env.example) — one-time, from an admin
-  workstation; values never enter the repository or Terraform state. Seeding happens **before the
-  first plan**: the user-data reads the first-boot keys at instance creation, and the stack reads
-  `ORIGIN_SECRET` at plan time;
+- `aws ssm put-parameter --name /blocbuy/prod/DB_USERNAME --type SecureString ...` for each key in [`backend.env.example`](../../../deployment/backend/backend.env.example) — one-time, from an admin workstation; values never enter the repository or Terraform state. Seeding happens **before the first plan**: the user-data reads the first-boot keys at instance creation, and the stack reads `ORIGIN_SECRET` at plan time;
 - the instance role gains `ssm:GetParameters` scoped to path `/blocbuy/prod/*`;
-- a small `bin/fetch-env.sh` (added to the deployment bundle alongside the existing four scripts,
-  subject to the same bundle allowlist review) renders `/etc/blocbuy/backend.env` with
-  `root:root 0600` before each deploy and preflight run.
+- a small `bin/fetch-env.sh` (added to the deployment bundle alongside the existing scripts, subject to the same bundle allowlist review) renders `/etc/blocbuy/backend.env` with `root:root 0600` before each deploy and preflight run.
 
-`deploy.sh`, `preflight.sh`, `rollback.sh`, and `compose.yml` are reused unchanged. The prod stack
-only changes **where the env file comes from**, not how it is consumed or validated.
+`deploy.sh`, `preflight.sh`, `rollback.sh`, and `compose.yml` are reused unchanged. The prod stack only changes **where the env file comes from**, not how it is consumed or validated.
 
 ### 6.8 Outputs: the only bridge to GitHub
 
@@ -525,10 +462,7 @@ output "backend_url"          { value = "http://${aws_lb.backend.dns_name}" }
 
 ## 7. Pipeline extension
 
-The dev `ci-backend.yml` gains a tag-path publish job (`publish-ecr-prod`) and a push-only deploy
-job (`deploy-existing-ec2-prod`), plus a release trigger. The deploy job mirrors the dev job
-exactly (validate step, bundle allowlist step, OIDC assume, SSM send, invocation polling). The
-release path differs from the dev path in four ways:
+The dev `ci-backend.yml` gains a tag-path publish job (`publish-ecr-prod`) and a push-only deploy job (`deploy-existing-ec2-prod`), plus a release trigger. The deploy job mirrors the dev job exactly (validate step, bundle allowlist step, OIDC assume, SSM send, invocation polling). The release path differs from the dev path in four ways:
 
 1. **Trigger:** a release tag, not a branch push.
 
@@ -539,34 +473,17 @@ release path differs from the dev path in four ways:
        tags: ['v*']
    ```
 
-   Both prod jobs gate on `github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')`.
-   The existing dev deploy job's condition (`refs/heads/dev`) is untouched. Optionally add
-   `workflow_dispatch` with an input tag for break-fix releases.
+Both prod jobs gate on `github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')`. The existing dev deploy job's condition (`refs/heads/dev`) is untouched. Optionally add `workflow_dispatch` with an input tag for break-fix releases.
 
-2. **Prod publish is its own environment-scoped job:** `publish-ecr-prod` receives the built image
-   from the `docker` job as a run artifact (never rebuilt), assumes the ECR push role, and
-   publishes by digest. It carries `environment: backend-prod-publish` because the ECR push trust
-   is the stable `environment:` subject (section 6.1) — a tag-name `ref` subject could never be
-   exact-matched. The environment is restricted to `v*` tags and has no reviewers: publishing to
-   ECR is not a production mutation, and the human gate stays on the deploy.
+2. **Prod publish is its own environment-scoped job:** `publish-ecr-prod` receives the built image from the `docker` job as a run artifact (never rebuilt), assumes the ECR push role, and publishes by digest. It carries `environment: backend-prod-publish` because the ECR push trust is the stable `environment:` subject (section 6.1) — a tag-name `ref` subject could never be exact-matched. The environment is restricted to `v*` tags and has no reviewers: publishing to ECR is not a production mutation, and the human gate stays on the deploy.
 
-3. **Approval gate:** `environment: backend-prod` with required reviewers configured in GitHub
-   (section 8). The deploy pauses until a reviewer approves — this is the single biggest
-   dev/prod difference in the delivery flow.
+3. **Approval gate:** `environment: backend-prod` with required reviewers configured in GitHub (section 8). The deploy pauses until a reviewer approves — this is the single biggest dev/prod difference in the delivery flow.
 
-4. **Health check:** `deploy.sh` already polls `http://127.0.0.1:8589/actuator/health` on the host
-   and rolls back automatically on failure — in dev this was sufficient. The dev workflow's
-   *additional* public-URL check existed only because the runner had to prove reachability through
-   the security group, which is what forced `0.0.0.0/0` open. In prod the runner does **not** need
-   a public path: keep the SSM-invocation status check (which includes `deploy.sh` stdout, hence
-   the local health result), and optionally verify the CloudFront domain (`BACKEND_URL_PROD`,
-   runbook section 6.5) from the runner — the same URL users hit.
+4. **Health check:** `deploy.sh` already polls `http://127.0.0.1:8589/api/actuator/health` on the host and rolls back automatically on failure — in dev this was sufficient. The dev workflow's *additional* public-URL check existed only because the runner had to prove reachability through the security group, which is what forced `0.0.0.0/0` open. In prod the runner does **not** need a public path: keep the SSM-invocation status check (which includes `deploy.sh` stdout, hence the local health result), and optionally verify the CloudFront domain (`BACKEND_URL_PROD`, runbook section 6.5) from the runner — the same URL users hit.
 
-Concurrency: its own group `deploy-existing-ec2-backend-prod`, `cancel-in-progress: false`, shared
-with the prod rollback workflow so a rollback and a deploy can never interleave on the host.
+Concurrency: its own group `deploy-existing-ec2-backend-prod`, `cancel-in-progress: false`, shared with the prod rollback workflow so a rollback and a deploy can never interleave on the host.
 
-The `rollback-backend.yml` workflow is extended the same way: a prod target selection with the
-`backend-prod` environment (reviewers required) and the `_PROD` variables.
+The `rollback-backend.yml` workflow is extended the same way: a prod target selection with the `backend-prod` environment (reviewers required) and the `_PROD` variables.
 
 ## 8. GitHub configuration (one scripted step, not a checklist)
 
@@ -575,8 +492,7 @@ Create the `backend-prod` environment in Settings with:
 - required reviewers (at least two team members for prod);
 - deployment branches/tags: `v*` tags only.
 
-Also create `backend-prod-publish` (the publish job's environment — its OIDC subject is what the
-ECR push role trusts, section 6.1) with:
+Also create `backend-prod-publish` (the publish job's environment — its OIDC subject is what the ECR push role trusts, section 6.1) with:
 
 - no required reviewers (the human gate stays on `backend-prod`);
 - deployment branches/tags: `v*` tags only.
@@ -608,13 +524,9 @@ No AWS access keys ever enter GitHub — OIDC issues short-lived credentials, ex
 
 Ordered, with the freeze switch held closed until the last possible moment:
 
-1. Seed **all** secrets into Parameter Store first (section 6.7) — the stack reads `ORIGIN_SECRET`
-   at plan time and the user-data reads the first-boot keys at instance creation.
-2. `terraform init && terraform plan -var-file=envs/prod.tfvars` — review the rendered plan as a
-   team; specifically read both trust policies, the 8589 ingress rule, the CloudFront prefix list
-   on the ALB SG, and the default-403 listener with its `X-Origin-Secret` rule.
-3. `terraform apply -var-file=envs/prod.tfvars` — creates IAM, ECR, SGs, ALB, and the EC2 host;
-   user-data completes at first boot.
+1. Seed **all** secrets into Parameter Store first (section 6.7) — the stack reads `ORIGIN_SECRET` at plan time and the user-data reads the first-boot keys at instance creation.
+2. `terraform init && terraform plan -var-file=envs/prod.tfvars` — review the rendered plan as a team; specifically read both trust policies, the 8589 ingress rule, the CloudFront prefix list on the ALB SG, and the default-403 listener with its `X-Origin-Secret` rule.
+3. `terraform apply -var-file=envs/prod.tfvars` — creates IAM, ECR, SGs, ALB, and the EC2 host; user-data completes at first boot.
 4. Verify from an admin workstation:
 
    ```bash
@@ -624,18 +536,13 @@ Ordered, with the freeze switch held closed until the last possible moment:
    aws ec2 describe-security-groups ...   # confirm 8589 allows only the ALB SG
    ```
 
-5. Set the GitHub variables from `terraform output` (section 8) — `ENABLE_EC2_DEPLOY_PROD` stays
-   `false` for now.
-6. Create the prod CloudFront distribution and set `BACKEND_URL_PROD` to its domain (runbook
-   section 6.5).
-7. Freeze rehearsal: push a throwaway tag `v0.0.0-rc1` — the gates must run while nothing
-   publishes and nothing deploys. Only then set `ENABLE_EC2_DEPLOY_PROD=true`.
+5. Set the GitHub variables from `terraform output` (section 8) — `ENABLE_EC2_DEPLOY_PROD` stays `false` for now.
+6. Create the prod CloudFront distribution and set `BACKEND_URL_PROD` to its domain (runbook section 6.5).
+7. Freeze rehearsal: push a throwaway tag `v0.0.0-rc1` — the gates must run while nothing publishes and nothing deploys. Only then set `ENABLE_EC2_DEPLOY_PROD=true`.
 8. Cut a release tag from the release branch: `git tag v0.1.0 && git push origin v0.1.0`.
-9. Quality gates re-run on the tag; `publish-ecr-prod` publishes the image to `prod/blocbuy` by
-   digest.
+9. Quality gates re-run on the tag; `publish-ecr-prod` publishes the image to `prod/blocbuy` by digest.
 10. The `backend-prod` environment pauses for reviewer approval — approve it.
-11. Inspect the `deploy-existing-ec2-prod` job summary: digest, SSM command ID, status; confirm the
-    local health check passed inside the SSM stdout.
+11. Inspect the `deploy-existing-ec2-prod` job summary: digest, SSM command ID, status; confirm the local health check passed inside the SSM stdout.
 12. Verify end-to-end through the CloudFront domain:
 
     ```bash
@@ -645,40 +552,27 @@ Ordered, with the freeze switch held closed until the last possible moment:
       "$(terraform -chdir=infra/terraform output -raw backend_url)/api/actuator/health"   # 403
     ```
 
-13. Record the change in the team change log (environment creation is one Terraform PR plus one
-    apply — the PR itself is most of the audit evidence).
+13. Record the change in the team change log (environment creation is one Terraform PR plus one apply — the PR itself is most of the audit evidence).
 
 ## 10. Bringing the dev environment under Terraform (follow-up, optional)
 
-The existing dev resources predate Terraform and remain hand-managed until explicitly imported.
-When the team chooses to adopt that:
+The existing dev resources predate Terraform and remain hand-managed until explicitly imported. When the team chooses to adopt that:
 
-1. add `envs/dev.tfvars` describing the dev environment as it exists (roles, `dev/blocbuy`,
-   instance security group);
-2. `terraform import` each resource into state — IAM roles first, then ECR, then the security
-   group;
+1. add `envs/dev.tfvars` describing the dev environment as it exists (roles, `dev/blocbuy`, instance security group);
+2. `terraform import` each resource into state — IAM roles first, then ECR, then the security group;
 3. never import-and-change in the same PR: the first apply after import must be a no-op diff.
 
-Until then, the two environments coexist safely because prod role names, repository, SG names, and
-the SSM parameter path all carry explicit `prod`/`Prod` markers.
+Until then, the two environments coexist safely because prod role names, repository, SG names, and the SSM parameter path all carry explicit `prod`/`Prod` markers.
 
 ## 11. Security invariants (unchanged from dev, restated for prod)
 
 - No long-lived AWS credentials in GitHub; OIDC only, with exact-match `sub` — never wildcards.
 - ECR publish and SSM deploy remain two separate roles; prod roles are separate from dev roles.
-- `ssm:SendCommand` stays scoped to `AWS-RunShellScript` on exactly the prod instance ID; SSM Run
-  Command executes as root — treat the deploy role as privileged.
-- Application secrets live only in Parameter Store and `/etc/blocbuy/backend.env` (root:root 0600);
-  never in GitHub, Terraform state, user-data, workflow logs, or SSM command parameters. Sole
-  exception: `/blocbuy/prod/ORIGIN_SECRET` is rendered by Terraform into the ALB listener rule and
-  therefore exists in state — accepted trade-off documented in section 6.3 (KMS-encrypted,
-  public-access-blocked state bucket).
-- PostgreSQL/Redis bind to loopback only; 8589 accepts traffic only from the ALB security group,
-  and the ALB itself accepts the CloudFront managed prefix list only.
-- The deployment bundle allowlist (`compose.yml` + the four scripts) keeps applying — plus
-  `fetch-env.sh` if section 6.7 is adopted, which must go through the same review.
-- Application rollback cannot reverse Flyway migrations; every prod migration must be
-  backward-compatible.
+- `ssm:SendCommand` stays scoped to `AWS-RunShellScript` on exactly the prod instance ID; SSM Run Command executes as root — treat the deploy role as privileged.
+- Application secrets live only in Parameter Store and `/etc/blocbuy/backend.env` (root:root 0600); never in GitHub, Terraform state, user-data, workflow logs, or SSM command parameters. Sole exception: `/blocbuy/prod/ORIGIN_SECRET` is rendered by Terraform into the ALB listener rule and therefore exists in state — accepted trade-off documented in section 6.3 (KMS-encrypted, public-access-blocked state bucket).
+- PostgreSQL/Redis bind to loopback only; 8589 accepts traffic only from the ALB security group, and the ALB itself accepts the CloudFront managed prefix list only.
+- The deployment bundle allowlist (`compose.yml` + the five lifecycle scripts including `fetch-env.sh`, enforced by `security.yml`) keeps applying and must go through the same review.
+- Application rollback cannot reverse Flyway migrations; every prod migration must be backward-compatible.
 
 ## 12. IaC practices checklist (for the course report)
 

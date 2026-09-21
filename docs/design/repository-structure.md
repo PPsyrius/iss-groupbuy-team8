@@ -1,8 +1,8 @@
 # Repository Structure
 
-This document describes the layout of the BlocBuy monorepo, the purpose of each directory, and the development workflows supported by the backend Maven wrapper and `docker-compose.yaml`.
+This document describes the layout of the BlocBuy monorepo, the purpose of each directory, and the local commands behind the backend Maven wrapper and `docker-compose.yaml`. Verified against the tree on 2026-09-21; if it drifts again, the tree — not this file — wins.
 
-The repository is a **polyglot monorepo**: a Java Spring Boot backend, a React SPA frontend, CI/CD pipelines, deployment policy/scripts, and project documentation live together. The current backend pipeline reuses an existing EC2 host; Terraform infrastructure is a deferred future target, not an active repository component. This gives end-to-end traceability from review and security gates to an immutable deployed image.
+The repository is a **polyglot monorepo**: a Java Spring Boot backend, a React SPA frontend, CI/CD pipelines, deployment policy/scripts, Terraform infrastructure, and project documentation live together. Delivery reuses an existing EC2 host for dev; production infrastructure is Terraform-managed.
 
 ---
 
@@ -10,16 +10,18 @@ The repository is a **polyglot monorepo**: a Java Spring Boot backend, a React S
 
 ```
 blocbuy/
+├── .agents/                        # agent working agreements
+├── .claude/skills/                 # repo skills (agile-evidence-capture, backend-constraints-skill, pgsql-ddl)
 ├── .github/
 │   ├── workflows/
 │   │   ├── ci-backend.yml          # quality → image scan/publish → existing-EC2 SSM deployment
+│   │   ├── ci-frontend.yml         # change detection → pnpm check gate → SonarCloud → S3/CloudFront delivery
 │   │   ├── security.yml            # secrets, CVEs, config, workflows, shell and bundle policy
 │   │   ├── rollback-backend.yml    # confirmed/manual existing-EC2 application rollback
 │   │   ├── pr-labeler.yml          # applies labeler.yml to PRs
-│   │   ├── ci-frontend.yml         # planned: generate types from contracts/ → typecheck → test → build
-│   │   ├── terraform.yml           # future only: no Terraform workflow is active today
-│   │   └── agile-metrics.yml       # planned, cron: GitHub GraphQL → docs/agile/metrics/
-│   ├── dependabot.yml              # weekly grouped updates: maven, github-actions, docker
+│   │   ├── typesafe-smoke.yml      # live TypeSafe Jev contract smoke (non-required)
+│   │   └── board-snapshot.yml      # scheduled board metrics → docs/agile/metrics/
+│   ├── dependabot.yml              # weekly grouped updates: maven, github-actions, docker, npm (frontend)
 │   ├── ISSUE_TEMPLATE/             # user-story.yml, bug.yml, task.yml
 │   ├── PULL_REQUEST_TEMPLATE.md
 │   ├── labeler.yml
@@ -42,44 +44,41 @@ blocbuy/
 │   ├── blocbuy-infrastructure/     # Mapper+DO+RepositoryImpl+Converter, Redis, Sa-Token impl
 │   ├── blocbuy-bootstrap/          # @SpringBootApplication, application*.yml, assembly
 │   └── docs/design/                # backend-local design notes (skeleton plan, etc.)
-├── frontend/                       # React SPA
-│   ├── src/
-│   │   └── api/generated/          # gitignored; regenerated from contracts/
-│   ├── package.json
-│   └── turbo.json
+├── frontend/                       # React SPA (pnpm; Node 24 via .nvmrc/.mise.toml)
+│   ├── src/routes/                 # TanStack file-based routes; routeTree.gen.ts committed, never edited
+│   ├── src/features/<feature>/     # one feature per dir, colocated tests
+│   ├── src/api/generated/          # gitignored; regenerated from contracts/ via pnpm gen:api
+│   ├── e2e/                        # Playwright specs (smoke + login journeys)
+│   ├── docs/                       # plan.md, ADRs, design tokens/screens, blueprint provenance
+│   ├── AGENTS.md                   # agent conventions + Intent guidance block
+│   ├── package.json                # exact pins; pnpm check gate; lefthook hook installer
+│   └── lefthook-adjacent configs   # .oxlintrc.json, .oxfmtrc.json, knip.json, lefthook.yml at repo root
 ├── deployment/
-│   └── backend/
-│       ├── compose.yml             # one backend service; host networking; no DB/Redis/volumes
-│       ├── backend.env.example     # non-secret host template; real file stays on EC2
-│       ├── bin/                    # preflight, health, deploy and rollback lifecycle scripts
-│       ├── iam/                    # replace-before-use least-privilege IAM JSON examples
-│       └── ecr-lifecycle-policy.json
-├── infra/
-│   └── ...                         # deferred future Terraform phase; not currently present/active
-├── scripts/
-│   ├── agile-metrics/              # GraphQL dump + burndown chart renderer
-│   └── generate-client.sh          # openapi-typescript wrapper
-├── e2e/                            # cross-stack end-to-end tests
+│   ├── backend/
+│   │   ├── compose.yml             # one backend service; host networking; no DB/Redis/volumes
+│   │   ├── backend.env.example     # non-secret host template; real file stays on EC2
+│   │   ├── bin/                    # preflight, health, deploy, rollback, fetch-env scripts
+│   │   ├── iam/                    # replace-before-use least-privilege IAM JSON examples
+│   │   └── ecr-lifecycle-policy.json
+│   └── frontend/
+│       ├── cloudfront/             # versioned SPA-fallback function + response-headers policy
+│       └── iam/                    # frontend OIDC deploy-role examples
+├── infra/terraform/                # production backend stack (Terraform-managed)
+│   ├── backend-app-stack/          # OIDC roles, ECR, ALB, EC2, user-data bootstrap
+│   ├── envs/prod.tfvars            # pinned prod values (dev stays hand-managed, out of scope)
+│   └── README.md                   # init/plan/apply usage
 ├── docs/
-│   ├── proposal/                   # project proposal
-│   ├── ci/                         # devsecops-pipeline-plan.md, backend-pipeline.md (runbook)
-│   ├── quality/                    # quality-gates.md (thresholds + exception process)
-│   ├── design/
-│   │   ├── adr/                    # Architecture Decision Records (numbered)
-│   │   ├── analysis/               # use cases, domain model, state machines (Mermaid)
-│   │   ├── architecture/           # logical & deployment views, analysis→design transition
-│   │   └── patterns/               # one document per design pattern applied
-│   ├── agile/
-│   │   ├── sprint-01/              # plan.md, review.md, retro.md (one dir per sprint)
-│   │   └── metrics/                # auto-committed sprint CSVs + burndown charts
-│   ├── reports/
-│   │   ├── progress/               # fortnightly progress reports
-│   │   └── final/                  # final project report
-│   └── presentation/               # final presentation materials
-├── docker-compose.yaml             # local integration runtime
-├── Makefile                        # single entrypoint for every dev & CI task
+│   ├── agile/                      # sprint logs, metrics snapshots, README index
+│   ├── ci/                         # backend-pipeline.md (runbook), devsecops-pipeline-plan.md (decisions)
+│   ├── deploy/                     # dev runbooks + prod/ Terraform runbook set
+│   ├── design/                     # this file
+│   └── quality/                    # quality-gates.md, nfr-register.md
+├── docker-compose.yaml             # local integration runtime (postgres, redis, backend)
+├── lefthook.yml                    # pre-commit hooks (repo root)
 └── README.md
 ```
+
+There is no repo-root `Makefile` and no `scripts/` directory: backend tasks run as `./mvnw …` from `backend/`, frontend tasks as `pnpm …` from `frontend/`, and CI calls the same commands.
 
 ---
 
@@ -95,10 +94,10 @@ The DevSecOps pipeline lives here — GitHub Actions can only execute workflows 
 | `security.yml` | Gitleaks, dependency/config Trivy, Actionlint, ShellCheck, one-service Compose enforcement and exact non-secret deployment archive policy; also runs weekly. |
 | `rollback-backend.yml` | Manual, confirmed and reasoned application rollback through the protected `backend-dev` environment. |
 | `pr-labeler.yml` | Applies `labeler.yml` path rules to every PR automatically. |
-| `dependabot.yml` | Weekly grouped update PRs for Maven, GitHub Actions, and Docker base images. |
-| `ci-frontend.yml` *(planned)* | Regenerates TypeScript types from `contracts/openapi.json`, then typechecks, tests, and builds the SPA. |
-| `terraform.yml` *(future)* | Not implemented. A later IaC phase must first define import/state ownership, backup and destructive-change controls. |
-| `agile-metrics.yml` *(planned)* | Scheduled workflow that queries the GitHub Projects GraphQL API and commits sprint metrics into `docs/agile/metrics/`. Our Agile evidence collection is itself automated — a DevSecOps deliverable. |
+| `dependabot.yml` | Weekly grouped update PRs for Maven, GitHub Actions, Docker base images, and npm (`/frontend`). |
+| `ci-frontend.yml` | Change detection, `pnpm check` as the required `frontend-check`, SonarCloud Frontend analysis, preview e2e, and gated S3/CloudFront delivery. |
+| `typesafe-smoke.yml` | Live TypeSafe Jev contract smoke (non-required). |
+| `board-snapshot.yml` | Scheduled board metrics committed to `docs/agile/metrics/`. |
 | `ISSUE_TEMPLATE/` | Structured templates. The user-story template enforces acceptance criteria on every story — an Agile process artifact in its own right. |
 | `PULL_REQUEST_TEMPLATE.md` | Checklist linking PRs back to issues, keeping the issue → PR → pipeline traceability chain intact. |
 | `CODEOWNERS` | Routes review requests automatically (e.g. `infra/` changes ping the infra owner). |
@@ -111,17 +110,17 @@ The single committed `openapi.json` is the source of truth for the API, owned by
 - **Frontend reads it**: TypeScript types/client are generated from this file — the frontend never needs a running backend to compile.
 - **CI enforces it**: the backend pipeline fails if the generated spec differs from the committed one, so every API change appears as a reviewable diff in the PR.
 
-See ADR-0003 for the rationale and trade-offs.
+See `frontend/docs/adr/0003-generated-client-not-committed.md` for the client-side rationale and trade-offs.
 
 ### `backend/` — Spring Boot Service
 
-The monolithic Java 21 + Spring Boot 3.5.15 backend with PostgreSQL 18 and Redis 8.10 — no message broker and no search engine in the initial stack (decision D5, 2026-08-30). It is a **COLA multi-module Maven aggregate** (`blocbuy-parent` + `client` / `domain` / `application` / `adapter` / `infrastructure` / `bootstrap`), self-contained under `backend/` with no repo-root POM. Layer dependencies are machine-enforced twice: by Maven module dependencies and by ArchUnit tests.
+The Java 21 + Spring Boot 4.1.1 backend with PostgreSQL 18 and Redis 8.10 — no message broker and no search engine in the stack (decision D5, 2026-08-30; payment/Stripe added 2026-08-31). It is a **COLA multi-module Maven aggregate** (`blocbuy-parent` + `client` / `domain` / `application` / `adapter` / `infrastructure` / `bootstrap`), self-contained under `backend/` with no repo-root POM. Layer dependencies are machine-enforced twice: by Maven module dependencies and by ArchUnit tests.
 
-Within each module, code is organized **first by business domain** — the confirmed v1 domains are `identity`, `groupbuy`, `order`, `catalog`, `notification` (root package `com.blocbuy`). A global `controller/service/mapper/entity` grab-bag is forbidden. Unit tests are colocated under each module's `src/test/java` mirroring the main source tree — "well structured source code with unit test cases for classes with more complex behaviours" is a named module deliverable, and colocated tests keep that evidence next to the code it covers.
+Within each module, code is organized **first by business domain** — `identity`, `groupbuy`, `order`, `catalog`, `notification`, `payment` (root package `com.blocbuy`). A global `controller/service/mapper/entity` grab-bag is forbidden. Unit tests are colocated under each module's `src/test/java` mirroring the main source tree.
 
 Key conventions:
 
-- API base path `/api/v1`; errors use RFC 9457 Problem Details + stable `code` + `traceId`; no unified success envelope.
+- API base path `/api/v1`; every JSON endpoint returns the unified `Result<T>` envelope (`code`/`data`/`message`, plus `errors`/`traceId` when present) backed by `ErrorCode` status-code enums; HTTP status mirrors the outcome via the global exception handler.
 - Auth: Sa-Token with a single token domain, Redis-backed sessions, RBAC roles/permissions loaded from the identity SQL tables.
 - Persistence: MyBatis (Mappers never leave the infrastructure layer), Flyway migrations, hand-written DO↔domain converters.
 - Datasource: database `Blocbuy`, PostgreSQL schema `domain`; secrets arrive via environment variables, never committed.
@@ -131,38 +130,15 @@ The full locked decision set and execution order live in `backend/docs/design/ba
 
 ### `frontend/` — React SPA
 
-The web frontend. `src/api/generated/` holds the TypeScript API client generated from `contracts/openapi.json`; it is **gitignored** and regenerated via `make generate-client`. `turbo.json` is scoped here (not at repo root) since Turborepo orchestrates only the frontend's own task graph.
+The web frontend (React 19, TypeScript 7, Vite 8, pnpm 12, Node 24). `src/api/generated/` holds the hey-api client generated from `contracts/openapi.json`; it is **gitignored** and regenerated by `pnpm gen:api` (runs in `prepare`, first in `pnpm check` and `pnpm build`). One gate command: `pnpm check` (gen → typecheck → oxlint → oxfmt → vitest → knip). Playwright specs live in `frontend/e2e/`. Conventions: `frontend/AGENTS.md`; onboarding hub: `frontend/README.md`.
 
-### `deployment/` — Existing-host application delivery
+### `deployment/` — Application delivery
 
-`deployment/backend/` is the host-side deployment contract. Its Compose file declares only the
-backend and connects to existing PostgreSQL/Redis over host loopback. Its scripts enforce preflight,
-immutable private-ECR digests, a deployment lock, health checks and rollback. IAM examples document
-the least privilege expected for GitHub OIDC roles and the EC2 runtime role. See the
-[operator guide](../deploy/backend-ec2-pipeline-operator-guide.md).
+`deployment/backend/` is the host-side deployment contract (Compose, env template, lifecycle scripts, IAM examples, ECR policy). `deployment/frontend/` carries the versioned CloudFront function, response-headers policy, and OIDC role examples. See the [operator guide](../deploy/backend-ec2-pipeline-operator-guide.md) and [dev CloudFront guide](../deploy/dev-cloudfront-deployment.md).
 
-### `infra/` — Deferred Terraform target
+### `infra/` — Terraform-managed production
 
-No Terraform workflow or state is active in the current phase. The team deliberately chose to reuse
-the existing EC2, PostgreSQL and Redis first. The layout below remains a future-state option only and
-must not be read as a current operational procedure.
-
-| Subdirectory | Purpose |
-|---|---|
-| `modules/` | Reusable Terraform modules (network, compute, database, etc.). |
-| `envs/` | Per-environment compositions (`dev/`, `prod/`) that instantiate the modules with environment-specific variables and remote state backends. |
-| `policies/` | OPA/Conftest policies evaluated in the pipeline — policy-as-code guardrails (e.g. no public S3 buckets, mandatory tags) that form part of the DevSecOps write-up. |
-
-### `scripts/` — Automation Helpers
-
-Cross-cutting scripts invoked by the Makefile and the pipelines:
-
-- `agile-metrics/` — the GraphQL dump + burndown renderer behind `agile-metrics.yml`; can also be run manually via `make metrics`.
-- `generate-client.sh` — wraps `openapi-typescript` so client generation is one command everywhere (dev machines and CI).
-
-### `e2e/` — End-to-End Tests
-
-Cross-stack tests that exercise the fully containerized system (`make up`) through the browser/API. Kept outside `frontend/` because they test the integrated system, not one app.
+`infra/terraform/` holds the production backend stack (`backend-app-stack/`: OIDC roles, ECR, ALB, EC2, user-data bootstrap) plus `envs/prod.tfvars` and usage docs. The dev environment stays hand-managed and out of scope. See `infra/terraform/README.md`.
 
 ### `docs/` — All Written Deliverables
 
@@ -170,128 +146,24 @@ Everything gradeable-in-writing lives here, versioned alongside the code it desc
 
 | Subdirectory | Contents |
 |---|---|
-| `proposal/` | The project proposal (title, overview, architecture, scope, effort estimates). |
-| `ci/` | Pipeline docs: `devsecops-pipeline-plan.md` (DecSecOps rollout plan) and `backend-pipeline.md` (CI runbook — what runs when, how to run gates locally, how to fix a red check). |
-| `quality/` | `quality-gates.md`: the enforced threshold table (formatting, style, bugs, coverage, CVEs, secrets) and the exception process. |
-| `design/adr/` | Numbered Architecture Decision Records (`0001-monolith.md`, `0002-java-stack.md`, `0003-contract-in-repo.md`, …). Written *when decisions are made*, not reconstructed later — these feed the report's "key architectural decisions" section directly. |
-| `design/analysis/` | OOAD analysis artifacts: use case specifications, domain model, state machines — all diagrams in Mermaid so they diff and review like code. |
-| `design/architecture/` | High-level design: logical and deployment views, and the analysis→design transition strategy. |
-| `design/patterns/` | One document per design pattern applied: the problem, forces, chosen pattern, and pointers to the implementing classes. This chapter is the primary grade lever — keep it current every sprint. |
-| `agile/sprint-NN/` | Sprint plan, sprint review, and retrospective for each sprint. |
-| `agile/metrics/` | Auto-committed sprint snapshots (issue-state CSVs, burndown charts) from `agile-metrics.yml`. This is the durable evidence of our Agile process — the GitHub Projects board UI is not part of the git archive, so metrics are exported into it. |
-| `reports/progress/` | Fortnightly progress reports (`2026-09-14.md`, …) as submitted to CANVAS. |
-| `reports/final/` | The final project report sources. |
-| `presentation/` | Final presentation slides and assets. |
+| `agile/` | Sprint logs (`sprint-NN/log.md`), board snapshots (`metrics/`), README index. |
+| `ci/` | `backend-pipeline.md` (CI runbook) and `devsecops-pipeline-plan.md` (decision record). |
+| `deploy/` | Dev runbooks plus `prod/` (Terraform design, runbook, archived handover). |
+| `design/` | This file. |
+| `quality/` | `quality-gates.md` (thresholds + exception process), `nfr-register.md`. |
+| `backend-blocker-response-20260916.md` | Historical B1–B5 coordination record (assessment evidence). |
 
 ### `docker-compose.yaml` — Local Runtime Definition
 
-Defines the three local services — `postgres`, `backend`, `frontend` — their networking, environment, and health checks. Each service is independently startable, which is what enables the partial-stack dev modes described below. The frontend service is an nginx container serving the built bundle with a parameterized backend upstream (`BACKEND_URL`). This is a **local integration convenience only**: in the deployed architecture the frontend is static files on S3 behind CloudFront, and CloudFront behaviors — not nginx — perform the `/api/*` routing. The nginx config exists solely so the containerized stack is self-contained for demos and e2e runs.
+Defines the two local infrastructure services — `postgres` 18 and `redis` 8.10. The backend runs natively (`./mvnw spring-boot:run` from `backend/`, `local` profile) or via `backend/Dockerfile`; the frontend runs natively (`pnpm dev` from `frontend/`, `/api` proxied to `http://localhost:8589`). Start the data layer with `docker compose up -d` from the repo root.
 
 ---
 
-## The Makefile — One Entrypoint for Everything
+## No repo-root Makefile
 
-### Why a Makefile when we have docker-compose?
+There is no `Makefile` and no `scripts/` directory. Daily commands, per component README:
 
-They solve different problems:
-
-- **`docker-compose.yaml` defines services** — what runs, how it's wired, which ports and env vars. It is a runtime description.
-- **The `Makefile` defines tasks** — the verbs of daily development. Many of these involve no container at all: generating the API client, running `mvn verify` on the local JVM, linting, checking contract drift, rendering sprint metrics.
-
-The Makefile is the **team's onboarding contract**. Five part-time engineers on different machines (macOS, Windows, Linux) each remember one thing: `make <verb>`. Nobody needs to recall whether tests run with `mvn verify` or `./mvnw test`, which directory to `cd` into, or which flags `openapi-typescript` needs. CI calls the *same targets*, which shrinks "works on my machine, fails in CI" drift to near zero.
-
-Design rule: **keep targets thin**. A target is a memorable name plus at most ~5 lines. Anything longer moves into `scripts/` and the target calls the script.
-
-### Target Reference
-
-```makefile
-## ── Stack lifecycle ─────────────────────────────────────────────
-up:                # full containerized stack (local demo / e2e)
-	docker compose up -d --build
-
-down:
-	docker compose down
-
-## ── Daily dev modes (see next section) ──────────────────────────
-dev-frontend:      # backend+db in containers; frontend native with HMR
-	docker compose up -d postgres backend
-	cd frontend && npm run dev
-
-dev-backend:       # db+frontend in containers; backend native (IDE or CLI)
-	docker compose up -d --build postgres frontend
-	cd backend && ./mvnw spring-boot:run
-
-## ── Build & test ────────────────────────────────────────────────
-test: test-backend test-frontend
-
-test-backend:
-	cd backend && ./mvnw verify
-
-test-frontend:
-	cd frontend && npm test
-
-lint:
-	cd backend && ./mvnw checkstyle:check
-	cd frontend && npx oxlint
-
-e2e: up
-	cd e2e && npm test
-
-## ── API contract ────────────────────────────────────────────────
-generate-client:   # contracts/openapi.json → frontend/src/api/generated/
-	./scripts/generate-client.sh
-
-contract-check:    # regenerate spec from code; fail if contracts/ drifts
-	cd backend && ./mvnw verify -Popenapi-export
-	git diff --exit-code contracts/
-
-## ── Project ops ─────────────────────────────────────────────────
-metrics:           # manual run of the sprint metrics dump + burndown
-	./scripts/agile-metrics/run.sh
-```
-
-### How Each Role Uses It
-
-#### Frontend engineer — `make dev-frontend`
-
-Runs postgres and the backend as containers (run-only, no rebuilding), and the frontend natively via the Vite dev server with hot module replacement — every file save reflects in the browser instantly.
-
-Vite proxies API calls to the containerized backend (`vite.config.ts`):
-
-```ts
-server: {
-  proxy: { '/api': 'http://localhost:8080' }
-}
-```
-
-The browser talks to `localhost:5173`; Vite forwards `/api/*` to the backend container's published port. No CORS configuration needed.
-
-After pulling `main`, if the API changed: `make generate-client` refreshes the typed client from `contracts/openapi.json` — no need to run or even build the backend.
-
-#### Backend engineer — `make dev-backend`
-
-Runs postgres and the frontend as containers, and the backend natively — either:
-
-- **IDE (typical)**: run the compose line, then Run/Debug from IntelliJ. With `spring-boot-devtools` on the classpath, rebuilding (`Ctrl+F9` or build-on-save) hot-restarts the application in ~2 seconds with the debugger still attached.
-- **CLI**: `make dev-backend` runs `./mvnw spring-boot:run`, which picks up the same devtools hot-restart.
-
-Two mechanics to be aware of:
-
-1. **Routing**: the frontend container's nginx proxies `/api` to `BACKEND_URL`, which in this mode is overridden to `host.docker.internal:8080` so the container reaches the natively-running backend on the host. `extra_hosts: ["host.docker.internal:host-gateway"]` in compose makes this work on Linux too (harmless on Docker Desktop).
-2. **Stale frontend build**: the frontend container serves whatever was baked at its last image build. The `--build` flag in the target rebuilds it on every start, so after pulling `main` you always see the current UI — this removes an entire class of "it's broken for me" confusion.
-
-Datasource note: the backend uses Spring profiles to switch its database URL — `local` profile → `jdbc:postgresql://localhost:5432/Blocbuy?currentSchema=domain` (backend on host), `docker` profile → host `postgres` (backend in the compose network). Redis follows the same pattern (`localhost:6379` vs host `redis`). Credentials come from environment variables (`DB_USERNAME`, `DB_PASSWORD`, `REDIS_PASSWORD`) in both profiles.
-
-#### Everyone — cross-stack verbs
-
-| Command | When |
-|---|---|
-| `make up` | Full-stack demo, sprint review, or before running e2e — everything containerized and self-contained. Note: the backend container matches the deployed ECS artifact, but the frontend's nginx serving path is local-only (prod serves the same bundle from S3/CloudFront). |
-| `make test` | Before pushing: runs the entire test suite across both stacks. |
-| `make contract-check` | After changing any controller/DTO: regenerates the spec and fails locally if you forgot to commit the updated contract — the same check CI runs, so you catch it before the PR does. |
-| `make lint` | Same linters, same configs as the `security.yml`/CI runs. |
-| `make metrics` | Sprint boundary: manually trigger the metrics snapshot if the scheduled run needs supplementing. |
-
-### CI Uses the Same Targets
-
-The workflows in `.github/workflows/` call the identical Makefile targets (`make test-backend`, `make contract-check`, …) rather than duplicating command lines in YAML. One definition of every task, exercised on every laptop and every pipeline run.
+- Backend: `cd backend && ./mvnw spotless:apply && ./mvnw verify` (format, then full gates).
+- Frontend: `cd frontend && pnpm install --frozen-lockfile && pnpm check && pnpm build`.
+- Contract drift (same check CI runs): `cd backend && ./mvnw verify -Popenapi-export`, then `git diff --exit-code -- contracts/` from the repo root.
+- Board metrics: `.claude/skills/agile-evidence-capture/scripts/snapshot-board.sh` (see `docs/agile/metrics/README.md`).

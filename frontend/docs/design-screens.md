@@ -1,213 +1,372 @@
-# BlocBuy buyer screens: implementation spec from the Claude Design artboards
+# BlocBuy buyer screens
 
-Provenance (2026-09-18): raw files are the local export dated 2026-09-17 in `~/Downloads/BlocBuy Prototype/`, copied to `.claude/design-artboards/` (git-excluded). `BlocBuy Prototype.dc.html` (a 13-screen shell that `dc-import`s each screen artboard) and `blocbuy-theme.css` were fetched from the Claude Design project on 2026-09-18 and match the export.
+This document is the implementation reference for the buyer-facing Claude Design artboards used during Sprint 2. It records the visual rules that matter to the frontend and the places where the current API contract limits the design.
 
-Source: Claude Design project "BlocBuy Prototype" (`27f5f1e0-f34e-47ee-b06f-d5a99adc42f9`), read from the local export `~/Downloads/BlocBuy Prototype/` (files dated 2026-09-17 02:13) and copied verbatim to `.claude/design-artboards/` (untracked, excluded via `.git/info/exclude`). The `DesignSync` tool was disabled in the session that wrote this, so nothing was fetched live; if the project changed after 2026-09-17 this spec is stale. No file was truncated. `BlocBuy Prototype.dc.html` is not in the export (see §1). Every claim below cites `file › artboard` (artboard = the `data-screen-label` value).
+**Design snapshot:** Claude Design project `BlocBuy Prototype`, local export dated 2026-09-17 and reviewed on 2026-09-18. The raw export was copied to `.claude/design-artboards/` for implementation work and is intentionally not tracked. If the upstream design changes, update this document rather than depending on the old export.
 
-Skipped on purpose: `BlocBuy Admin Console.dc.html`, `BlocBuy Admin Editor.dc.html`, `BlocBuy Buyer Checkout.dc.html`, `BlocBuy Buyer Invite.dc.html`, `components/fig-assets.css`, `components/icon-data.js`, `components/Icon.jsx`, `.thumbnail`, `screenshots/01-kit-check.png`, `02-kit-check.png`, `03-kit-check.png`, and `components/assets/` (`34636dec16e6a746.png`, `44c96be97f44bbf5.png`, `765bd204eb09836b.png`, `77c2284e6733fd64.png`, `7fc8de237de4f0b8.png`, `898e92886dfab2c1.jpg`, `8adfdcf18940c4a7.jpg`, `9359cf9d6ef77b16.png`, `a7704d1a6bc9633a.jpg`, `c2c623d4ce866466.png`, `e1dcbcd75728309a.png`).
+Admin, checkout, invite, raw component assets, thumbnails, and generated icon/assets files were outside the buyer-screen pass.
 
-## 1. How the prototype is put together
+## 1. Prototype structure
 
-- There is no composing document in the export. Each `*.dc.html` is a standalone canvas (`<meta name="design_doc_mode" content="canvas">`) that lays several artboards side by side; no file links to another (`grep` for `.dc.html` hits only `support.js`). The screen files reference `styles.css`, Google Fonts Inter 400–700, and `./components/icon.js`; the kit sheet also loads `./components/Components.bundle.js`. Navigation between screens is documented only in `BlocBuy Flow Maps.dc.html` (prose nodes, not links).
-- Runtime: `support.js` is the generated "dc-runtime". It parses `<x-dc>` as a template with `{{ }}` bindings, `<sc-for list as>`, `<sc-if value>`, `<x-import component-from-global-scope="…" from="…">` (mounts a `window` global with the remaining attributes as props), and a `<script type="text/x-dc" data-dc-script>` block whose `class Component extends DCLogic { renderVals() }` supplies the data (sample listings, countdown timers, rationale). Read the `renderVals()` data to get exact copy strings; the HTML is inline-styled with raw hex, so tokens are recovered from the annotation boxes and the Design System sheet.
-- Artboards and declared widths (`data-screen-label` › `width`):
-  - `BlocBuy Buyer Catalog.dc.html`: `Catalog · loading · 390`, `Catalog · populated · 390`, `Catalog · empty category · 390`, `Catalog · error · 390`, `Catalog · page 2 · 390` (390px); `Catalog · populated · 1280`, `Catalog · loading · 1280`, `Catalog · empty category · 1280`, `Catalog · error · 1280`, `Catalog · page 3 of 3 · 1280` (1280px). Heights are content-driven.
-  - `BlocBuy Buyer Listing Detail.dc.html`: `Listing detail · loading | open blocs | no open bloc | unavailable | error · 390` (390px) and the same five at `· 1280` (1280px).
-  - `BlocBuy Buyer Sign In.dc.html`: `Sign-in · default | returning from gated action | provider error · 390`, `Gated-action sheet · 390` (390×720); `Sign-in · default | returning from gated action | provider error · 1280`, `Gated-action modal · 1280` (1280×720).
-  - `BlocBuy Buyer My Blocs.dc.html` (Tier 2, phone only): `My blocs · active | refunded | loading | empty · 390`, `Bloc detail · member | starter | filled | ended refunded · 390` (390px).
-  - `BlocBuy Buyer Errors.dc.html`: labels are templated `{{ s.name }} · 390` and `· 1280` for `Not found`, `Access denied`, `Global error` (390×min 680; 1280×640).
-  - `BlocBuy Design System.dc.html`, `BlocBuy HeroUI Kit.dc.html`, `BlocBuy Flow Maps.dc.html`: sheets, no artboards (max-width 1240 canvas).
+The export contains standalone `*.dc.html` canvases rather than a linked application. Navigation is described in `BlocBuy Flow Maps.dc.html`. Screen data and exact copy live in each artboard's `renderVals()` data.
 
-## 2. Tokens
+Relevant buyer canvases:
 
-`styles.css` imports, in order: `components/fig-tokens.css` (HeroUI Pro Figma kit, 607 variables, light `:root` plus a `:root[data-theme="dark"], .dark` block), `components/fig-typography.css` (empty: "No TEXT/EFFECT styles"), `components/fig-assets.css` (skipped), then `blocbuy-theme.css`, which overrides the kit's blue accent. `fig-tokens.css` uses doubled names (`--accent-accent`, `--surface-surface`); HeroUI 3 uses the single name (`--accent`, `--surface`). `frontend/docs/design.md` is the declared source of the values and already carries a dark set; `frontend/docs/globals.css` holds the oklch HeroUI overrides for accent/success/warning/danger only.
+  ----------------------------------------------------------------------------
+  File                                     States
+---------------------------------------- -----------------------------------
+  `BlocBuy Buyer Catalog.dc.html`          loading, populated, empty category,
+                                           error, pagination at 390 and 1280
 
-### 2.1 Colour (light; `blocbuy-theme.css` unless noted) › HeroUI 3 variable
+  `BlocBuy Buyer Listing Detail.dc.html`   loading, open bloc, no open bloc,
+                                           unavailable, error at 390 and 1280
 
-| Token | Value | HeroUI 3 | Use (`BlocBuy Design System.dc.html` › Colour tokens) |
-| --- | --- | --- | --- |
-| accent | `#FF385C` | `--accent` | Progress fill, focus ring. Not text (3.23:1 on background). |
-| accent-foreground | `#FCFCFC` | `--accent-foreground` | Unused on buyer screens (no accent fill ships, CR-8). |
-| accent-hover | `#FF556C` | `--accent-hover` | Hover on accent fills. |
-| accent-soft | `rgba(255,56,92,0.15)` | `--accent-soft` | Selected chip, Filling chip, urgent avatar; layer over surface white, not canvas (4.83:1 vs 4.46:1). |
-| accent-soft-foreground | `#B43648` | `--accent-soft-foreground` | Bloc price text, primary-button label, links on hover. 5.41:1 on background. |
-| accent-soft-hover | `rgba(255,56,92,0.2)` | `--accent-soft-hover` | |
-| focus-ring | `#FF385C` | `--focus` | 2px ring, 2px offset (`--ring-focus-width: 4`, `--ring-offset-width: 2` in `fig-tokens.css`). |
-| success / -foreground / -hover | `#008489` / `#18181B` / `#339094` | `--success…` | Bloc filled, refunded. |
-| success-soft / -foreground | `rgba(0,132,137,0.15)` / `#1F5357` | `--success-soft…` | "Refunded" chip, money-safe lines (7.1:1). |
-| warning / -foreground / -hover | `#FC642D` / `#18181B` / `#FE7648` | `--warning…` | Under-one-hour countdown. |
-| warning-soft / -foreground | `rgba(252,100,45,0.15)` / `#8A422C` | `--warning-soft…` | "Closing soon" chip, urgent countdown text (6.0:1). |
-| danger / -foreground / -hover | `#C13515` / `#FCFCFC` / `#CA4E33` | `--danger…` | Delete, validation. |
-| danger-soft / -foreground | `rgba(193,53,21,0.15)` / `#802F20` | `--danger-soft…` | Error alerts, "Refund pending", 500 chip. |
-| background | `#F5F5F5` | `--background` | Page canvas. `background-inverse` `#18181B` (kit) for "You started this" pill. |
-| surface / -secondary / -tertiary | `#FFFFFF` / `#EFEFEF` / `#EAEAEA` | `--surface…` | Cards; nested panels; skeletons, progress track, image placeholder. |
-| foreground | `#18181B` | `--foreground` | Text, solo price, icons. |
-| muted | `#727272` | `--muted` | Meta text, struck price. Only 4.41:1 on background; artboards use zinc-600 `#52525B` for helper text on the canvas (CR-15). |
-| border | `#DEDEDE` | `--border` | Card and control borders. Kit default is `rgb(222,222,224)`. |
-| separator | `#E4E4E4` (kit `--separator-separator`) | `--separator` | Row dividers. |
-| default / -hover | `#EBEBEB` / `#E1E1E2` (kit `--default-default`) | `--default` | Neutral fills: secondary button, neutral chips, avatar. |
-| field-background / -border / -border-focus / -placeholder | `#FFFFFF` / `#DEDEDE` / `#ABABAC` / `#727272` | `--field-*` | Inputs. `field-radius` 12. |
-| backdrop | `rgba(0,0,0,0.5)` (kit) | `--backdrop` | Sheet and modal scrim. |
-| chart-1…5 | `#A60017 #D2003A #FF385C #FF6780 #FF91A5` | `--chart-*` | Not used on buyer screens. |
+  `BlocBuy Buyer Sign In.dc.html`          default, gated-return, provider
+                                           error, gated sheet/modal at 390 and
+                                           1280
 
-Dark: `blocbuy-theme.css` deliberately has no dark block ("Light mode only"); `fig-tokens.css` dark block is the kit's blue default (accent `rgb(4,133,247)`, background `rgb(6,6,7)`, surface `rgb(24,24,27)`), so it is not BlocBuy. `frontend/docs/design.md` `colors.dark` is the BlocBuy dark set (background `#060606`, surface `#181818`, accent `#FF385C`, accent-soft-foreground `#FF7B87`, muted `#A0A0A0`, border `#292929`); ship light only per the brief.
+  `BlocBuy Buyer My Blocs.dc.html`         active, refunded, loading, empty,
+                                           bloc detail at 390
 
-### 2.2 Typography (`BlocBuy Design System.dc.html` › Type scale; sizes also in `fig-tokens.css` `--dimensions-font-text-*` / `--dimensions-leading-text-*`)
+  `BlocBuy Buyer Errors.dc.html`           not found, access denied, global
+                                           error at 390 and 1280
 
-Family Inter (Google Fonts, weights 400/500/600/700), fallback `"Helvetica Neue", Helvetica, Arial, sans-serif`; kit `--font: "Inter"`. Prices, countdowns, counts: `font-variant-numeric: tabular-nums`. Scale: 5xl 48/48 600 tracking -0.025em; 4xl 36/40 600 -0.025em (detail price, desktop hero); 3xl 30/36 600 -0.025em; 2xl 24/32 600; xl 20/28 600; lg 18/28 600 (button labels); base 16/24 400 (body); sm 14/20 400 (meta); xs 12/16 500 tracking 0.025em (chips, labels). Headings `tracking-tight` at 3xl and above. Listing titles `line-clamp-2` on cards, never truncated on detail. Nothing below xs.
+  `BlocBuy Design System.dc.html`          design tokens and usage rules
 
-### 2.3 Spacing, radius, shadow, breakpoints
+  `BlocBuy HeroUI Kit.dc.html`             component reference
 
-- Spacing base 4px (`fig-tokens.css` `--dimensions-spacing-1: 4` … `-16: 64`). Sheet rows: 4 icon-to-label, 8 inside a chip, 16 card padding and phone gutter, 24 section padding and desktop gutter, 40 between sections on phone, 64 on desktop. Touch targets 44px minimum on phone (text-styled actions get `min-height: 44px` + inline-flex + padding + negative margin).
-- Radius: `radius` 8 (surfaces, buttons, cards), `field-radius` 12 (inputs, share-link field), full (`9999px`) for chips, avatars, progress tracks; artboard frames and sheets 12. Kit: `--radius-sm: 8`, `--radius-md: 12`, `--dimensions-radius-rounded-lg: 8`, `-xl: 12`, `-full: 9999`.
-- Shadows (Design System › Surface, radius, spacing): `shadow-surface` `0 2px 4px 0 rgba(0,0,0,0.04), 0 1px 2px 0 rgba(0,0,0,0.06), 0 0 1px 0 rgba(0,0,0,0.06)` (cards, Google button); `shadow-overlay` `0 2px 8px 0 rgba(0,0,0,0.06), 0 -6px 12px 0 rgba(0,0,0,0.03), 0 14px 28px 0 rgba(0,0,0,0.08)` (sheet, modal). Never stack a custom shadow on a HeroUI `Card`.
-- Breakpoints (`fig-tokens.css` `--dimensions-screens-*`): sm 640, md 768, lg 1024, xl 1280, 2xl 1536. Artboards are drawn at 390 and 1280 only.
+  `BlocBuy Flow Maps.dc.html`              buyer/admin flow descriptions
+  ----------------------------------------------------------------------------
+
+The artboards are drawn at 390px and 1280px. Intermediate responsive behavior is an implementation decision unless explicitly annotated.
+
+## 2. Design tokens
+
+`frontend/docs/design.md` is the maintained token reference. Product code should use semantic HeroUI/Tailwind tokens rather than raw values.
+
+The shipped buyer UI is light-only. Although `design.md` contains a BlocBuy dark palette for completeness, the artboards and current implementation do not define dark-mode behavior.
+
+### 2.1 Core colour usage
+
+  ----------------------------------------------------------------------------
+  Token                       Light value              Use
+--------------------------- ------------------------ -----------------------
+  `background`                `#F5F5F5`                page canvas
+
+  `surface`                   `#FFFFFF`                cards, panels, overlays
+
+  `surface-secondary`         `#EFEFEF`                nested surfaces
+
+  `surface-tertiary`          `#EAEAEA`                skeletons, progress
+                                                       tracks, image fallback
+
+  `foreground`                `#18181B`                primary text/icons
+
+  `muted`                     `#727272`                secondary text, mainly
+                                                       on surfaces
+
+  `border`                    `#DEDEDE`                card/control borders
+
+  `default`                   `#EBEBEB`                neutral controls and
+                                                       chips
+
+  `accent`                    `#FF385C`                progress and focus; not
+                                                       body text
+
+  `accent-soft`               `rgba(255,56,92,0.15)`   selected/soft emphasis
+
+  `accent-soft-foreground`    `#B43648`                bloc price and accent
+                                                       text
+
+  `success-soft-foreground`   `#1F5357`                refund/safe-money copy
+
+  `warning-soft-foreground`   `#8A422C`                urgent countdown/status
+
+  `danger-soft-foreground`    `#802F20`                error copy
+
+  `focus`                     `#FF385C`                keyboard focus ring
+  ----------------------------------------------------------------------------
+
+The raw accent does not meet the intended text contrast on the page background, so buyer screens use `accent-soft-foreground` for accent-coloured text and neutral button fills for primary actions.
+
+### 2.2 Typography
+
+Inter, weights 400/500/600/700, with `"Helvetica Neue", Helvetica, Arial, sans-serif` fallback.
+
+Use tabular numbers for prices, countdowns, and counts. Main scale:
+
+  Token    Size / line-height   Typical use
+-------- -------------------- ---------------------------
+  `xs`     12 / 16              chips, labels
+  `sm`     14 / 20              metadata
+  `base`   16 / 24              body
+  `lg`     18 / 28              buttons/section headings
+  `xl`     20 / 28              headings
+  `2xl`    24 / 32              phone detail/title
+  `3xl`    30 / 36              sign-in/desktop detail
+  `4xl`    36 / 40              desktop hero/detail price
+
+Nothing in the buyer UI should be smaller than `xs`.
+
+### 2.3 Spacing and responsive rules
+
+-   Base spacing unit: 4px.
+-   Phone gutter: 16px; desktop artboards: 32px.
+-   Minimum phone touch target: 44px.
+-   Surface/button/card radius: 8px; fields and overlays: 12px;
+    chips/avatars/progress: full radius.
+-   Breakpoints follow the project Tailwind/HeroUI setup. Catalog grid
+    is 1 column at 390, 2 at 768, and 4 at 1280.
+-   Use the documented `surface` and `overlay` shadows; do not stack
+    custom shadows on HeroUI cards.
 
 ## 3. Shared chrome
 
-- No footer on any buyer artboard.
-- Phone header (`Catalog › populated · 390`): 56px, `surface`, 1px `border` bottom, padding 0 16; left wordmark PNG 22px high (`https://api.heroui.pro/api/theme-assets/2a854899-…/6c22f125-….png`, alt "BlocBuy"; SVG is CR-7); right "Sign in": `Button variant="secondary"` rendered as min 44×44, padding 0 12, radius 8, `default` fill, label 14/600 `accent-soft-foreground`. Loading state shows a 44px hamburger (`BarsStyleRegularKeywordsLinesBurger`, 20px) instead. Annotation: HeroUI `Navbar` + wordmark `Link` + `Button variant="secondary"`.
-- Desktop header (`Catalog › populated · 1280`): 64px, padding 0 32, wordmark 24px; right: tagline "Bringing people together to buy better" 14/20 `muted`, then "Sign in" (min-h 44, padding 0 18, 16/600). Design System says `h-16`, `surface`, hairline `border`.
-- Sub-page phone header (`Listing detail › open blocs · 390`, `Sign-in › default · 390`): 44×44 back target with `ArrowLeftStyleRegularKeywords` 20px, then a crumb ("Groceries", "Back to browse", listing title) 14/20 `muted` (500 `foreground` on sign-in), Sign in at right. Desktop replaces the arrow with `Breadcrumbs` ("Home / Groceries / Thai jasmine rice 10 kg", 14 `#52525B`, current in `foreground`).
-- Signed-in header (`My blocs › active · 390`): page title 18/28/600, bell (`BellStyleRegularKeywordsNotifyNotification` 20px in a 44px target) with unread `Badge` (min 20×20, accent-soft over white, `#B43648`, 12/600), then a 32px `Avatar` letter variant (`default` fill, initials 12/600). No logout control appears on any artboard.
-- Containers: phone content padding 16 (`p-4`); desktop artboards use 32px padding on a 1280 frame; the Design System sheet states `p-6` in `max-w-7xl` for the desktop storefront. Page canvas `background`.
-- Buttons (`BlocBuy HeroUI Kit.dc.html` › Button): no accent fill ships (3.43:1). Primary action = `variant="secondary" size="lg"`: `default` fill, `accent-soft-foreground` label 18/600, min-h 48 (44 at md). Secondary = `outline` (white, 1px `border`, `foreground` 16/600). Tertiary = `ghost` (transparent, 16/500). Disabled: `default` fill, `muted` label.
+-   Buyer artboards have no footer.
+-   Catalog header is 56px on phone and 64px on desktop, with the
+    BlocBuy wordmark on the left.
+-   Signed-out state uses **Sign in**, styled as a neutral/secondary
+    control with accent-soft-foreground text.
+-   Signed-in state uses avatar/name in the current implementation.
+    Notification/bell UI waits for contract-backed notification data.
+-   Sub-pages use a back/crumb pattern on phone and breadcrumbs on
+    desktop where appropriate.
+-   Buyer primary actions use neutral `secondary` styling rather than an
+    accent fill because of contrast.
+-   Secondary actions use `outline`; tertiary actions use `ghost`.
+-   Page canvas uses `background`; cards/panels use `surface`.
 
 ## 4. Screens
 
-### 4.1 Catalog (`/`; T2-01 list, T2-03 filter) — `BlocBuy Buyer Catalog.dc.html`
+### 4.1 Catalog (`/`)
 
-- Layout (phone, `populated · 390`): header; body padding 16, column gap 16: hero (h 20/28/600 tracking-tight "Buy better together"; p 14/20 `#52525B` "Fill a bloc with your neighbours and the lower price unlocks."); category chip row; card stack; pager. Desktop (`populated · 1280`): padding 32, gap 24; hero row with h 36/40 and p 16/24 "Fill a bloc with your neighbours and the lower price unlocks. Pay once, get refunded in full if the bloc doesn’t fill." plus right-aligned "47 listings on sale" (14, tabular); chip row; 4-column grid `repeat(4, minmax(0,1fr))` gap 24; centred pager.
-- Grid columns (annotation under `populated · 1280`): "Four columns at 1280, two at 768, one at 390 — the tile is identical at every width". Last page shows two cards in the 4-track grid, not stretched (`page 3 of 3 · 1280`).
-- Filter (`renderVals().cats`): single-select chip row "All, Groceries, Household, Electronics, Beauty, Kids"; pill radius full, min-h 44 (h 44 desktop), padding 0 16, 14/500, white with 1px `border`; selected = accent-soft over white, text `#B43648`, border accent-soft. Phone wraps to two lines (gap 8); desktop one row (gap 10). Annotation: HeroUI `Chip`; "the five categories are the only filter in the product". No keyword or search field on any catalog artboard; `SearchField` is "designed but parked" (Kit sheet). Choosing a chip is expected to navigate immediately; no submit button is drawn.
-- Card anatomy (`tile()` in the script; sanctioned custom composition holding `ProgressBar`): 1px `border`, radius 8, `surface`, overflow hidden; media block 150px tall (168 at desktop) with the striped fallback tile (`repeating-linear-gradient(135deg, #EFEFEF 0 10px, #EAEAEA 10px 20px)`) and `object-cover` crop to 4:3; body padding 16, gap 10: title 16/24/600 (clamp 2), subtitle 14/20 `muted`; price row (baseline, gap 10, wrap; desktop `margin-top: auto`); then either the progress cue or the no-bloc row. Card taps go to detail (target not annotated).
-- Dual price: with an open bloc, bloc price 24/32/600 tabular `accent-soft-foreground` and solo price 14/20 tabular `muted` `line-through`. With `groupPrice` null: solo price 24/32/600 `foreground` and the second slot reads "Buying alone" (not struck). Amounts printed verbatim as `S$71.00`; no percent-off, no S$0.
-- Team progress cue: left "3 of 5 joined" 14/20 tabular; right "{n} seats left" 14/400 `muted`, or "1 seat left" 14/600 `foreground`; 10px track `surface-tertiary` radius full, fill `accent` at `round(joined/target*100)%`. The rationale card admits the card DTO has no size fields (CR-11): "Until it lands the grid can only show the price, which is why the tile keeps working without the bar." No countdown on cards.
-- No-bloc row: "No open bloc yet" 14/20 `muted` left; "Start one →" 14/600 `accent-soft-foreground`, min-h 44, padding 0 10, margin-right -10 (text-styled action).
-- Badges: none on cards. The Kit sheet's tile specimen adds `Chip` "Filling" (accent soft, sm) and "Groceries" (default soft, sm); the catalog artboards do not draw them.
-- Pagination (`populated · 390`, `page 2 · 390`, `page 3 of 3 · 1280`): two `Button variant="outline"` "Previous" / "Next" (min-h 44, padding 0 16, 14/600; disabled = `default` fill + `muted` text) with "Page 1 of 3" (14 tabular `#52525B`) between; phone `space-between`, padding 4px 0 8px; desktop centred, gap 16, padding 0 18, text "Page 1 of 3 · 47 listings". Annotation: "Page size 20, page number from 1, total count from the API — no infinite scroll, because there is no cursor in the contract"; kit `Pagination` is a fixed 982px frame and is not used.
-- Loading (`loading · 390/1280`): header without Sign in; three chip skeletons (36×72/96/88 phone; 40×80/104/96/88 desktop, radius full `surface-tertiary`); 3 (phone) / 8 (desktop) skeleton cards in final geometry: media 150/168 `surface-tertiary`, then bars 16px@78%, 14@52%, 24@44%, 10@100%, radius full. Annotation: `Surface variant="tertiary"` blocks; "The kit has no Skeleton set" (HeroUI 3 has one).
-- Empty category (`empty category · 390/1280`): chips with "Beauty" selected stay visible; centred card (padding 32 24 phone, 64 32 desktop): "Nothing in Beauty yet" 18/28/600 (20/28 desktop); "This category has no listings on sale right now. Try Groceries or Household, where most blocs are filling." 14/20 `muted` (16/24, max 46ch desktop); `Button variant="secondary"` "Browse Groceries" (min-h 44, padding 0 20, 16/600). "Empty ≠ error."
-- Error (`error · 390/1280`): no chips; `Alert variant="danger"` block (danger-soft, radius 8, padding 16; desktop padding 20 24, row layout): "We couldn’t load the listings" 16/24/600 (18/28) `#802F20`; "Something went wrong on our side. Your account and any bloc you have joined are unaffected." 14/20 `#802F20`; `outline` "Try again".
-- Sample content (`renderVals().data`): Thai jasmine rice 10 kg (S$89.00 → S$71.00, 3/5), D24 durian, per kg (S$38.00 → S$32.00, 4/5), Laundry detergent 5 L twin pack (S$42.90 → S$34.90, 2/6), Replacement HEPA filters for the Coway Airmega 150, twin pack (S$118.00, no bloc), Kopi powder 500 g (S$12.80 → S$9.90, 5/8), Fold-out drying rack (S$56.00, no bloc), Kids’ stationery bundle (S$24.00 → S$19.50, 1/4), Hokkaido milk, 12 cartons (S$46.80 → S$39.60, 6/10); page 3: Bak kwa, 500 g (7/8), Dish soap refill 3 L (no bloc).
-- Undefined by the artboards: card hover/focus styling; image `alt`; behaviour of "Start one →" for a signed-out user (flow map implies the gated sheet); what "All" sends (no `category`); 3-column layout at 1024; total-count copy on phone; `size` in the URL.
+Implemented in T2-01/T2-03.
 
-### 4.2 Listing detail (`/products/$productId`; T2-02) — `BlocBuy Buyer Listing Detail.dc.html`
+**Layout**
 
-- Phone layout (`open blocs · 390`): sub-page header (back, category crumb, Sign in); gallery 280px full-bleed with caption pill "product shot 1 of 6" (12 mono on white, radius 6) bottom-left and six 8px dots bottom-right (active `foreground`, rest white); info block `surface`, padding 16, gap 12, border-bottom: title 24/32/600 tracking-tight (wraps, never truncated), subtitle 16/24 `muted`, price row (bloc 36/40/600 tabular tracking-tight `accent-soft-foreground`; solo 18/28 `muted` struck), "Bloc price when a bloc fills · 5 seats per bloc" 14 `muted`, "142 sold" 14 tabular `foreground` + "38 in stock" `muted`; section padding 16 gap 12: "Open blocs" 18/28/600 with "Join one, or start your own" 14 `#52525B`, bloc rows, "About this listing" card (16/24/600 + description 14/20 `muted`), trust triptych; pinned bottom bar (`surface`, border-top, padding 12 16, gap 8): `Button variant="secondary" size="lg"` "Start a bloc · S$71.00" (min-h 48, 18/600) over `ghost` "Buy alone · S$89.00" (min-h 44, 16/500).
-- Deal progress row (one per open bloc; card padding 16, gap 12): 36px letter `Avatar` (accent-soft/`#B43648` when the bloc is urgent, else `default`), "{Starter} started this" 14/600, "Bloc {number}" 12/16 `muted`, right `Chip` "Filling" (`default`) or "Closing soon" (warning-soft over white, `#8A422C`), 12/16/500, padding 4 10; "{joined} of {target} joined" + seats-left note (same rules as the card); 10px `ProgressBar`; seat dots (20px circles, 1px `border`, filled `accent`); countdown 14/600 tabular (`foreground`; `#8A422C` when under an hour) over absolute deadline 12/16 `muted` "Ends Thu 17 Sep, 9.30 pm SGT"; `outline` "Join" (desktop "Join this bloc"). Countdown (`countdown()`): ≥ 1h "2h 14m left"; < 1h "47:25 left" (mm:ss, urgent); ≤ 0 "Ended"; ticks every second. The contract today returns one `deal` (`ActiveDealResponse`: dealId, targetSize, currentSize, expireTime) with no leader, number or per-bloc list; the three named blocs are the Tier 2 shape (CR: open-team list).
-- Trust triptych (`trust`): three equal cards (padding 12, label 12/16 `muted`, value 14/20/600 tabular): "You pay now" S$71.00 `accent-soft-foreground`; "Bloc closes" "Thu, 9.30 pm"; "If it doesn’t fill" "Refunded in full" `#1F5357`. Repeated on the gated sheet and sign-in.
-- No open bloc (`no open bloc · 390/1280`): single solo price 36/40 `foreground`; "Buying alone. No bloc is open yet." 14 `muted`; card "Be the first to start a bloc" 16/24/600 + "You pay the bloc price now and get an invite link to share. If four neighbours join before the deadline, everyone keeps the lower price. If not, you are refunded in full."; bottom bar "Start a bloc" (no amount, "unknown until a rule exists") and "Buy alone · S$118.00".
-- Unavailable / off sale (`unavailable · 390/1280`): header crumb "Back to browse"; one card: 180px (220 desktop) fallback tile, neutral `Chip` "Off sale", title 18/28/600 (20/28), "This listing is no longer on sale, so no new bloc can be started or joined. Blocs that already filled are unaffected and their orders continue.", `secondary` "Browse Groceries" + `ghost` "My blocs" (outline on desktop). "Off sale is not a 404."
-- 404: not drawn here; use `Errors › Not found` (§4.5). Error (`error · 390/1280`): `Alert variant="danger"` "We couldn’t load this listing" / "Something went wrong on our side. Nothing has been charged and no bloc was joined." + `outline` "Try again" (+ `ghost` "Back to browse" on desktop).
-- Loading (`loading · 390/1280`): gallery skeleton 280 (420 + five 112×84 thumbs on desktop), bars 20@84%, 16@56%, 32@46%, a separator, two 92px card blocks; bottom bar withheld until data arrives.
-- Desktop (`open blocs · 1280`): padding 24 32 32; breadcrumb; grid `620px minmax(0,1fr)` gap 32. Left: main image 420px radius 8 (caption "product shot 1 of 6 · 4:3"), thumbnails 112×84 radius 8 gap 12 (selected 2px `foreground` border), About card padding 24 (18/28 heading, 16/24 body, row "142 sold · 38 in stock · Category · Groceries"). Right: price card padding 24 gap 16 (title 30/36/600, subtitle, price row, seats line, triptych, `secondary lg` "Start a bloc · S$71.00", `outline` "Buy alone · S$89.00"), then "Open blocs" 20/28/600 + "3 filling now" and the bloc rows (padding 20).
-- Undefined: gallery interaction (swipe, arrows, zoom); fallback when `images` is empty (use `coverImage`, else tile); `stock` 0; description whitespace; back-arrow target; how to label the single `deal` row without a starter.
+Phone uses a 16px gutter and a one-column card stack. Desktop uses 32px padding and a four-column grid. The hero copy is:
 
-### 4.3 Sign-in and gated action (`/login?returnTo=…`; T2-04/05/06) — `BlocBuy Buyer Sign In.dc.html`
+-   **Buy better together**
+-   Phone: "Fill a bloc with your neighbours and the lower price
+    unlocks."
+-   Desktop adds: "Pay once, get refunded in full if the bloc doesn't
+    fill."
 
-- Default (`Sign-in › default · 390`, 390×720): header back + "Back to browse" 14/500; body padding 32 24, gap 24: wordmark 26px; "Sign in to BlocBuy" 30/36/600 tracking-tight; "You only need an account to hold a seat in a bloc. Browsing stays open to everyone." 16/24 `#52525B`; Google button = `Button variant="outline" size="lg"` (min-h 48, `surface`, 1px `border`, `shadow-surface`, radius 8, 16/600, gap 12, 20px "G" placeholder tile, label "Continue with Google"; the official Google asset is CR-16, must not be redrawn); "We use your Google account only to identify you and to keep your blocs together. We never post anything. Sessions last 24 hours." 14/20 `#52525B`; bottom card (margin-top auto, padding 16): "Why we ask" 14/600 + "A seat in a bloc is paid, and a refund has to go back to a person. Signing in is how we know whose seat it is." `muted`. Desktop (`default · 1280`, 1280×720): header with "Back to browse" link at right; centred 480px card (padding 40, `shadow-surface`) using the stacked isologo PNG 40px (`…/cc89c795-….png`); same copy; note in `muted`.
-- Returning from a gated action (`returning from gated action · 390`): crumb = listing title; "Sign in to hold your seat" 24/32; "You’re joining Wei Kiat’s bloc. Nothing is charged until you confirm payment on the next step."; listing snapshot card (64px thumb, title 14/600, S$71.00 18/28 `#B43648` + struck S$89.00 12, "1 seat left · 4 of 5 joined" 12/600); trust triptych; Google button + "We’ll bring you straight back to this bloc."; bottom card "This bloc closes in 47 minutes" 14/600 + "Ends today, 8.15 pm SGT · signing in doesn’t reserve the seat" 12 `muted`. Desktop: 880px two-column (card + 360px snapshot with 160px image, progress bar, "Closes in 47 minutes"). Depends on CR-13 (callback redirect with `returnTo`).
-- Provider error (`provider error · 390/1280`): `Alert variant="danger"` "Google couldn’t sign you in" / "The sign-in was cancelled or timed out. Nothing has been charged and no seat was held."; `outline lg` "Try again with Google"; `ghost` "Back to the listing"; card "Still stuck?" / "Check that pop-ups are allowed for this site, then try again. There is no other way to sign in — BlocBuy has no password." (desktop: 560px card, actions side by side, hint below a `Separator`).
-- Gated-action sheet (`Gated-action sheet · 390`): `Drawer position="bottom"` over `backdrop`; panel `surface`, radius 12 12 0 0, `shadow-overlay`, padding 12 20 20, 44×4 grab handle in `border`; "Sign in to hold your seat" 20/28/600; "Starting a bloc means paying first — that’s what holds your seat and gives you a link to share. Sign in and we’ll bring you right back here." 14 `#52525B`; triptych (padding 10); Google button; `ghost` "Not now" (44). Dismiss by drag, tap-outside, Escape; listing stays visible behind. Desktop (`Gated-action modal · 1280`): `Modal` 520px, radius 12, padding 32, `CloseButton` 32px with `XmarkStyleRegularKeywordsCloseDelete` 14px top-right; Google button `flex: 1` beside `ghost` "Not now".
-- Undefined: what the header shows once signed in on storefront pages (CR-9 says "switch from Sign in to the avatar"); no logout control and no account page are drawn anywhere.
+Default page size is 20. Pagination uses Previous / "Page X of Y" / Next; there is no infinite scroll.
 
-### 4.4 My blocs (Tier 2, phone only; nearest thing to `/account` in T2-04) — `BlocBuy Buyer My Blocs.dc.html`
+**Filters and search**
 
-- `My blocs › active · 390`: signed-in header (§3); body padding 16, gap 14: filter chips "Active 3", "Completed 7", "Refunded 2" (44px pills, count 12 tabular; selected accent-soft/`#B43648`); rows (card padding 14, gap 12): 56px thumb radius 8, title 14/600, inverse pill "You started this" (`background-inverse`/`#FCFCFC`, 12/600) when starter, price 18/24/600 `#B43648` + "Bloc 2091" 12 `#52525B`, progress row + 10px bar, countdown 12/600 + "Paid · 16 Sep, 7.46 pm" 12 `#52525B`, status `Chip`. Refunded filter: rows swap to "{bloc} · closed {date}", "{progress} when it closed", "S$19.50 refunded" 14/600, detail line, `Chip` "Refunded" (success-soft/`#1F5357`) or "Refund pending" (danger-soft/`#802F20`); footnote "Refunds are issued automatically when a bloc closes unfilled, or when a payment could not secure a seat. Timing depends on your bank."
-- Loading: three 44px chip skeletons + two row skeletons. Empty: card "You haven’t joined a bloc yet" 18/28/600 + "Join one that’s filling, or start your own and share the link with your neighbours. Either way you’re refunded in full if it doesn’t fill." `#52525B`; `secondary lg` "See what’s filling".
-- Bloc detail (member, starter, filled, ended): waiting room / receipt / refund statement; share block = link field (radius 12, mono 12) + `secondary` "Copy" with `CopyStyleRegularKeywordsDuplicate` 16px, "Share again" `outline` with `ArrowUpRightFromSquareStyleRegularKeywordsExportExternal`; starter banner "You started this bloc" on `background-inverse`; order timeline; refund statement with amount, status chip, issue time, bank window, payment reference. Out of T2-01..06 scope; listed for the header pattern only.
-- What it shows about the account: only the avatar initials in the header. Nickname, userId and avatar URL are never displayed as a profile.
+The artboard defines a single-select chip row: All, Groceries, Household, Electronics, Beauty, Kids. The implementation keeps that interaction and adds the contract-backed keyword `SearchField`. Category/keyword changes reset to page 1.
 
-### 4.5 Errors (T1 terminal screens) — `BlocBuy Buyer Errors.dc.html`
+Category values are mapped centrally because the API contract does not publish a category dictionary. Current known values come from backend/demo data.
 
-- One composition, data-driven (`screens()`): phone 390×min 680, header wordmark only, body padding 24; card (padding 24, gap 12): code chip (mono 12/500, `default`; the 500 chip is danger-soft/`#802F20`), heading 24/32/600 tracking-tight, body 16/24 `#52525B`, separator, money line 14/600 `#1F5357` + detail 14 `muted`, `secondary` primary (min-h 48, 16/600) over `outline` secondary (44), optional hint card. Desktop 1280×640: centred 560px card padding 40, heading 30/36, actions side by side (padding 0 24), hint below a separator. No accent, no illustrations, no giant number.
-- 404 Not found: "We can’t find that page" / "The link may be old, or the listing may have been removed. Links pasted from chat sometimes lose a character at the end." / "Nothing has been charged." + "Any bloc you have already paid into is safe and still listed under My blocs." / "Browse listings", "My blocs" / hint "Came from an invite link?" "Ask the person who shared it to send it again — invite links expire when the bloc closes."
-- 403 Access denied (non-admin on `/admin`): "You don’t have access to the admin console" / "The admin console is for the team that publishes listings. Your BlocBuy account works normally everywhere else." / "Nothing has been charged." + "Your blocs, payments and refunds are unaffected by this." / "Browse listings", "My blocs" / hint "Should you have access?" "Admin is assigned by hand, not requested in the app. Ask the team to add your account."
-- 500 Global error: "Something went wrong on our side" / "This isn’t you. The page failed to load and we’ve logged it. Trying again usually works." / "No payment was taken." + "If you were part-way through paying, check My blocs before trying again — a seat is only held once a payment is confirmed." / "Try again", "Browse listings"; no hint.
-- 401: not designed. The flow map (`BlocBuy Flow Maps.dc.html` › Gate) routes signed-out paid actions to the gated sheet, and T1-07's 401 interceptor yields "anonymous"; a 401 never gets a page of its own.
+**Listing cards**
 
-## 5. Component inventory (`components/Components.d.ts`, 91 globals on `window`)
+Cards use a bordered 8px surface, image/fallback area, title/subtitle, and price block.
 
-Props listed after `className`/`style`. "H3" = HeroUI 3 (`@heroui/react` 3.2.5) equivalent.
+-   Open bloc: bloc price is prominent in `accent-soft-foreground`; solo
+    price is struck through.
+-   No open bloc: solo price is prominent and the secondary line says
+    "Buying alone".
+-   No percent-off badges or countdowns on the catalog grid.
+-   The current summary DTO does not provide bloc size/progress, so the
+    artboard progress cue cannot be contract-driven yet.
 
-| Kit name (Figma layer) | Props | Purpose | H3 |
-| --- | --- | --- | --- |
-| Alert | showDiscard, title, variant default/accent/success/warning/danger, showDescription, showAction, description, showIcon, icon1-3 | Inline status banner (catalog/detail error) | Alert |
-| AlertDialog | size xs/sm/md/lg/mobile, icon1 | Confirm dialog (admin) | AlertDialog |
-| Avatar | variant letter/letterSoft/icon/iconSoft/img, icon, type accent/default/success/warning/danger, value | Initials/image avatar | Avatar |
-| AvatarGroup | showAvatar01-05, showMultiple, showAdd | Overlapped avatars (kit slots empty; compose from Avatar) | AvatarGroup |
-| Badge | showLabel, label, variant primary/secondary/soft, prefix/suffix, type, size sm/md/lg | Unread count on the bell | Badge / Chip |
-| Breadcrumbs | level 4/3/2, icon2, icon4 | Desktop detail path | Breadcrumbs |
-| Button | label, prefix/suffix, variant primary/secondary/tertiary/outline/ghost/danger/dangerSoft, state default/hover/focus/disabled, iconOnly, size sm/md/lg | All actions | Button |
-| ButtonGroup | showDivider2-4, showButton3-5, size, orientation, width hug/fill, icon1 | Not used (baked content) | ButtonGroup |
-| Card | showIcon, icon, type basic/side/item/basic full/item full/basic img, showClose, showBlur, showFooter, icon1 | Kit card (baked copy; listing tile is custom) | Card |
-| Checkbox | showTitle, state default/invalid/disabled, showDescription, title, description, showError, errorMessage | Admin forms | Checkbox |
-| Chip | label, variant primary/secondary/tertiary/soft, prefix/suffix, type accent/default/success/warning/danger, size | Category filter, status pills | Chip |
-| CloseButton | icon, state | Modal close | CloseButton |
-| DescriptionErrorMessage | value, variant description/errormessage | Field helper/error text | FieldError / Description |
-| DescriptionModal | value | Modal body text | — |
-| Drawer | heading, position bottom/top/right/left, body, showCloseButton, footer, text1, text2, icon1, icon2 | Phone gated-action sheet | Drawer |
-| Dropdown | showGroups, showDivider, text1, text2 | Broken standalone in kit; use Popover + ListBox | Dropdown |
-| Input / InputGroup / InputAffix | value, variant primary/secondary, state placeholder/hover/focus/filled/error/disabled, type text/password/number; affix both/prefix/suffix | Text inputs | Input / InputGroup |
-| Label | value, showRequired, showTooltip, text1, icon1 | Field label | Label |
-| Link2 (layer "Link") | label, state, showIcon, icon | Text link ("Back to browse"). `Link` in the bundle is the chain icon | Link |
-| ListBox / ListBoxItem | slot, showListItem01-05, item1-5; title, description, prefix/suffix, state, variant initial/danger | Member list, menus | ListBox |
-| Meter / MeterTrack | value, size, showLabel; color | Static meter | Meter |
-| Modal / ModalHeader / ModalFooter | showClose, size mobile…full, slot, icon1; type left/center, title; buttons, breakpoint, type actions/horizontal/vertical, showCheckbox | Desktop gated-action modal | Modal |
-| NumberField | state | Admin numeric input | NumberField |
-| Pagination | variant primary/secondary, text1-3, icon1-4 | Fixed 982px; rejected for catalog | Pagination |
-| Popover / PopoverBody | title, trigger, state open/closed, slot; text1 | Admin row menu | Popover |
-| ProgressBar / ProgressTrack | value ("60%"), size sm/md/lg, showLabel; color accent/default/success/warning/danger | Bloc progress | Progress |
-| ProgressiveBlur | color dark/light | Scroll fade | — |
-| Radio / RadioControl / RadioGroup | showTitle, state, showDescription, showErrorMsg; variant, isSelected; showGroupLabel, orientation | Admin forms | RadioGroup |
-| SearchField | showLabel, showDescription, state, icon1 | Parked (no keyword endpoint) | SearchField |
-| Select | state closed/open | Admin select | Select |
-| Separator | text, variant primary/secondary/tertiary, showText, orientation | Dividers ("OR" text off) | Separator |
-| Spinner | state 1-4, color accent/current/success/warning/danger | Inline loading | Spinner |
-| Surface | variant transparent/default/secondary/tertiary/img | Skeleton blocks, panels | — (div with tokens) or Skeleton |
-| Switch / SwitchControl | showLabel, size, label, state; showIcon, isActive on/off | Admin | Switch |
-| Table + TableHeader/TableHeaderCell/TableRow/TableRowCell/TableFooter/TableChartEg | showFooter, variant, bodySlot1-2; cell types value/visual/visualSupport/compare/chip/actions | Admin listings table | Table |
-| Tabs / TabsElement | showOption1-10, showScrollShadow, variant, behavior hug/fill, icon1-4; label, state, orientation | Admin status tabs | Tabs |
-| TextArea / TextField | showLabel, showDescription, state; typeInput | Admin editor | TextArea / TextField |
-| Toast | title, type default/accent/success/warning/danger, showDescription, icon, showClose, showAction, description, showIcon | "Invite link copied" | Toast |
-| ToggleButton | label, size, showPreffix, preffix/suffix, surface, state …selected | Admin toggles | ToggleButton |
-| Tooltip / TooltipContainer | showArrow, inverse, arrowPosition; content, type | Hints | Tooltip |
-| Internal parts (`_` layers) | AlertFooter, AlertHeader, ButtonGroupDivider, ButtonSecondaryPressedMdFalse, CardFooter, CardHeader, CheckboxControl | Sub-parts, not used directly | — |
-| Icon glyph components | CaretsExpandVertical, Check2, ChevronDown/Left/Right/Up, CircleCheck, CircleDashed, CircleDollar, CircleExclamation, CircleInfo, Comment, Copy, External, Link, Magnifier, Minus, Pencil, Person, QrCode, Square, SquarePlus, TriangleExclamation, Xmark (`style2` regular/fill, `keywords`) | Kit icon variants; buyer screens use `icon.js` instead | lucide/iconify |
+SGD is displayed as `S$` with two decimals.
 
-Kit gaps recorded in `BlocBuy HeroUI Kit.dc.html` › Gaps: no Skeleton set; Dropdown cannot render standalone; ButtonGroup, Modal, Drawer, AlertDialog, InputGroup, Separator, Table carry baked demo copy and accent fills below AA.
+**States**
 
-## 6. Icons used by the buyer screens (`components/icon.js`, `window.BlocIcon`, 45 icons, viewBox 0 0 16 16, `currentColor`; names typed in `components/Icon.d.ts`)
+-   Loading: chip and card skeletons in final geometry.
+-   Empty category: selected chips remain visible with a recovery
+    action.
+-   Empty keyword result: same empty-state treatment with a clear-search
+    action.
+-   Error: danger alert with retry.
+-   Out-of-range `page` redirects to the last valid page.
 
-- `ArrowLeftStyleRegularKeywords` 20px — back target on Listing Detail, Sign In, My Blocs, Bloc detail.
-- `BarsStyleRegularKeywordsLinesBurger` 20px — catalog loading header (`Catalog › loading · 390`).
-- `XmarkStyleRegularKeywordsCloseDelete` 14px — gated-action modal close (`Gated-action modal · 1280`).
-- `BellStyleRegularKeywordsNotifyNotification` 20px — My blocs header.
-- `CopyStyleRegularKeywordsDuplicate` 16px, `ArrowUpRightFromSquareStyleRegularKeywordsExportExternal` 16px — Bloc detail share block.
-- Errors screens use no icons. The catalog card's "→" is a text character.
+### 4.2 Listing detail (`/products/$productId`)
 
-## 7. Open questions (artboards vs `design-brief.md` / `plan.md` §4 T2-01..T2-06); recommendations only
+Implemented in T2-02, with gated actions added in T2-04.
 
-1. Primary button fill. Brief §6 wants one accent-filled `Button variant="primary"` per screen; the artboards ship no accent fill (CR-8, 3.43:1) and use `variant="secondary" size="lg"` with an `accent-soft-foreground` label. Plan T2-03's `<Button variant="primary">Filter</Button>` and `Header.tsx`'s `buttonVariants({ variant: "primary" })` follow the brief. Recommend: follow the artboards until a darker accent step exists, and record CR-8 in ADR 0001 or a new ADR.
-2. Page size. Plan T2-01 defaults `size` to 12; the Catalog annotation and brief §8 say 20. Recommend aligning `productsSearchSchema` to 20, or documenting 12 as a deliberate dev default.
-3. Filter UI. Plan T2-03 is a TanStack Form with `Input` "Category" and "Keyword" plus a "Filter" button; the artboards are a single-select `Chip` row with no keyword field and no submit. Recommend keeping the valibot schema and rendering the category field as the chip row (immediate navigate, `page: 1`), with `keyword` left out of the UI until #47.
-4. Category values. Plan tests use `category: 'food'`; artboards use `Groceries, Household, Electronics, Beauty, Kids` plus "All" (CR-10, no endpoint). The backend's exact-match strings are unknown. Recommend confirming the backend values before hard-coding chip labels and mapping label → value in one place.
-5. Card price presentation. Plan T2-01 renders two labelled `Price` lines ("Individual", "Group") via `Intl.NumberFormat`; artboards render bloc price + struck solo price with no labels, "Buying alone" when `groupPrice` is null, and the literal `S$` prefix. `individualPrice` is a number in the contract, so formatting is unavoidable; recommend a `Price` that prints `S$` + two decimals (`toFixed(2)` on the number, no rounding beyond that) and marks the struck price with `<s>`/`aria-label`.
-6. Progress cue on cards. Artboards draw "3 of 5 joined" + bar, but `ProductSummaryResponse` has no size fields (CR-11). Recommend `ProductCard` render only price + "No open bloc yet"/"Start one →" now, with the progress row behind an optional prop.
-7. Detail copy and hierarchy. Plan T2-02 shows `Price` "Individual"/"Group" side by side and "No active deal"; artboards show the bloc price as a 36px hero with the struck solo, "Buying alone. No bloc is open yet.", the "Be the first to start a bloc" card, sold/stock line, and a pinned action bar. Recommend the `DealProgress` test expects the artboard strings ("3 of 5 joined", "2 seats left", "No bloc is open yet") rather than "No active deal".
-8. Detail actions. "Start a bloc", "Join", "Buy alone" have no endpoints (Tier 2). Recommend rendering them disabled or omitting the bar in T2-02, and stating which in the PR.
-9. Single deal vs bloc list. The contract's one `deal` has no starter, number or leader avatar; the artboard row needs them. Recommend one row titled "Open bloc" with progress, countdown and the SGT deadline, no avatar.
-10. Countdown and zone. Artboards tick per second, switch to mm:ss under an hour and show "Ends Thu 17 Sep, 9.30 pm SGT"; the plan only mentions `expireTime`. Recommend `Intl.DateTimeFormat('en-SG', { timeZone: 'Asia/Singapore' })` and a 1s interval only while under one hour (CR-14 asks the backend for the zone).
-11. Not-found copy. Plan T2-02 `notFoundComponent` renders "Listing not found."; the Errors artboard has the full 404 card. Recommend a shared `ErrorCard` used by `notFoundComponent`, the router `defaultNotFoundComponent`, and the error boundary.
-12. Off sale. Artboards render an "Off sale" state, never a 404; the contract has no listing status on `ProductDetailResponse`. Recommend asking whether off-sale listings 404 today, and designing the branch once the status field exists.
-13. Login route and return. Artboards use `/login?returnTo=` plus a gated sheet at the paid action; plan T2-04 has no `/login`, links the header straight to `/api/v1/auth/oauth2/google`, and redirects guards to `/?redirect=`. Recommend deciding whether `/login` ships in T2-04 (it is Tier 1 in the brief) or after B1/CR-13.
-14. Post-login landing. Plan's `/auth/callback` sends authenticated users to `/account`; artboards return to where the buyer was. Recommend `redirect` search param → fallback `/`.
-15. `/account` page. Nothing in the artboards is an account page; the closest is My blocs (Tier 2, phone only). Recommend a minimal `/account` using the My blocs header pattern (avatar initials, nickname ?? userId as `session-user`) and the empty-state card copy, and marking it interim.
-16. Header when signed in and logout. Artboards show avatar + bell and no logout; plan T2-05 needs a "Log out" control. Recommend a `Popover`/`Dropdown` on the avatar with "My blocs" and "Log out"; note it is unspecified by design.
-17. Header sign-in control. Brief says link or neutral button; artboards use `secondary` with the accent-soft-foreground label; current `Header.tsx` uses primary "Log in". Recommend "Sign in" wording and `variant="secondary"`.
-18. Container and grid. Plan uses `max-w-6xl p-6` and `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`; Design System says `max-w-7xl p-6`; artboards use 32px padding, 1/2/4 columns at 390/768/1280 and nothing at 1024. Recommend `max-w-7xl`, `p-4 md:p-6`, `grid-cols-1 md:grid-cols-2 xl:grid-cols-4`, and choose `lg:grid-cols-3` explicitly.
-19. Muted contrast. `--muted #727272` is 4.41:1 on `background`; artboards use `#52525B` for canvas helper text (CR-15). Recommend `text-muted` only on `surface`, a `text-foreground/70` or zinc-600 utility on the canvas.
-20. Skeletons. Artboards use tertiary blocks because the kit lacks Skeleton; HeroUI 3 ships one. Recommend HeroUI `Skeleton` in the artboard geometry.
-21. Assets. Wordmark and isologo are PNGs on `api.heroui.pro` (CR-7); the Google button mark is a placeholder (CR-16); the export's `components/assets/*.png|jpg` are unnamed. Recommend committing an SVG wordmark under `frontend/public/` before the header is styled.
-22. Font loading. Artboards load Inter from Google Fonts (400–700); the brief allows Google Fonts but CSP tightening is T2-11. Today `frontend/src/styles/app.css` only imports `tailwindcss` and `@heroui/styles` and `index.html` has no font link, so the app renders the system font. Recommend adding the Inter link (or a self-hosted copy) with the first styled screen and allowing `fonts.googleapis.com`/`fonts.gstatic.com` in T2-11, or self-hosting to keep the CSP tight.
+Phone is a single-column layout with gallery, listing information, open-bloc section, about card, trust copy, and sticky action bar. Desktop uses a two-column layout with gallery/about on the left and price/bloc actions on the right.
+
+**Price and availability**
+
+With a bloc, show the bloc price prominently and strike the solo price. Without one, show the solo price and:
+
+> Buying alone. No bloc is open yet.
+
+The artboard includes an off-sale state, but `ProductDetailResponse` currently has no status field, so the frontend cannot implement that state from the contract.
+
+**Open bloc**
+
+The current contract exposes a single `ActiveDealResponse` with `dealId`, target/current size, and expiry. It does not expose starter identity, bloc number, or a list of open blocs. The implementation therefore labels the row **Open bloc** rather than inventing a starter.
+
+Progress shows joined/target, seats left, progress bar, and deadline/countdown. Invalid or missing expiry values must not throw.
+
+**Actions**
+
+Start a bloc and Buy alone are gated for anonymous buyers. Signed-in behavior remains owned by their later use cases. Join remains disabled until a supported per-bloc action exists.
+
+**Errors**
+
+HTTP/not-found shapes map to the designed 404 treatment where possible; other failures use the listing error alert. Missing detail data in a successful envelope is treated as an API error rather than allowed to fail inside rendering.
+
+### 4.3 Sign-in and gated action (`/login?returnTo=...`)
+
+Implemented in T2-04/T2-06.
+
+The sign-in page uses **Continue with Google** and explains that browsing is public while paid actions require an account. There is no email/password path.
+
+Anonymous paid actions open a bottom sheet on phone and a modal on desktop. Dismissing the gate leaves the listing in place.
+
+The backend does not carry the original return URL through OAuth, so the frontend validates the return path and stores it in `sessionStorage` before navigating to `/api/v1/auth/oauth2/google`. `/auth/callback` confirms the session and restores that path.
+
+Backend provider failures return to `/login?error={errorCode}` and are mapped to user-facing retry/cancellation messages.
+
+### 4.4 My Blocs / account shell
+
+The artboard defines active/refunded/loading/empty My Blocs states and detailed bloc views, but the current frontend contract does not yet provide the per-user bloc data needed to implement them.
+
+`/account` therefore uses the My Blocs visual language as an interim authenticated shell: avatar/name and the empty-state treatment. It should not invent rows or profile data absent from the API.
+
+### 4.5 Errors
+
+The buyer error composition is shared across 404, 403, and 500 states: compact card, clear heading/body, money-safety line, recovery actions, and optional hint.
+
+-   **404:** "We can't find that page"; Browse listings; My blocs when
+    available.
+-   **403:** admin access denied; buyer account/blocs remain unaffected.
+-   **500:** "Something went wrong on our side"; Try again / Browse
+    listings.
+-   **401:** no dedicated page. Anonymous paid actions go through the
+    gated sign-in flow.
+
+## 5. Component guidance
+
+Use HeroUI v3 components where they fit rather than reproducing the Figma kit implementation.
+
+  -----------------------------------------------------------------------
+  Need                                Preferred implementation
+----------------------------------- -----------------------------------
+  status/error banner                 `Alert`
+
+  avatar                              `Avatar`
+
+  breadcrumbs                         router links / HeroUI breadcrumbs
+                                      where navigation semantics fit
+
+  actions                             `Button`, router `Link` + button
+                                      variants where required
+
+  category/status pill                `Chip`
+
+  gated phone action                  `Modal`/sheet behavior used by
+                                      `GatedActionSheet`
+
+  gated desktop action                `Modal`
+
+  forms/search                        HeroUI field components /
+                                      `SearchField`
+
+  progress                            `ProgressBar`/HeroUI progress
+                                      primitives
+
+  loading                             HeroUI `Skeleton` in final geometry
+
+  dividers                            `Separator`
+
+  tables/tabs                         reserved for admin/later screens
+  -----------------------------------------------------------------------
+
+Do not depend on generated Claude Design component globals in application code.
+
+## 6. Icons and assets
+
+The raw export includes generated icon components, but the frontend should use maintainable application assets/components rather than importing the design runtime.
+
+Buyer-screen icon needs include back, close, bell, copy, and external/share. The catalog card's arrow is text.
+
+Wordmark/logo and Google branding should use approved project assets. Do not redraw the Google mark.
+
+## 7. Implemented decisions and remaining limitations
+
+The original artboard review ended with 22 open questions. T2-01 through T2-06 resolved most of them:
+
+  -----------------------------------------------------------------------
+  Topic                               Current decision
+----------------------------------- -----------------------------------
+  Primary actions                     Neutral `secondary` styling; no
+                                      low-contrast accent fill
+
+  Catalog page size                   20
+
+  Filter UI                           Category chips plus contract-backed
+                                      keyword search
+
+  Category values                     Central mapping; contract still
+                                      lacks a category dictionary
+
+  Card prices                         `S$` formatting; bloc price +
+                                      struck solo price
+
+  Card progress                       Omitted until the summary contract
+                                      provides size/progress
+
+  Detail hierarchy                    Artboard hierarchy/copy implemented
+
+  Unsupported detail actions          Disabled or auth-gated rather than
+                                      pretending to work
+
+  Single deal vs bloc list            Render one **Open bloc** without
+                                      invented starter data
+
+  Deadline                            SGT display and defensive parsing;
+                                      live countdown where appropriate
+
+  Not found                           Designed error treatment rather
+                                      than bare text
+
+  Off sale                            Still blocked by missing detail
+                                      status
+
+  Login                               Dedicated `/login` plus gated
+                                      action sheet/modal
+
+  OAuth return                        Validated return path stored in
+                                      `sessionStorage`
+
+  `/account`                          Interim My Blocs-style
+                                      authenticated shell
+
+  Signed-in header/logout             Avatar/name plus explicit Sign out
+                                      control; final menu design remains
+                                      open
+
+  Grid                                1 / 2 / 4 columns at the
+                                      established breakpoints
+
+  Muted contrast                      Avoid `muted` on the canvas where
+                                      it misses the target contrast
+
+  Skeletons                           HeroUI `Skeleton` in artboard
+                                      geometry
+
+  Font                                Inter is loaded for the styled
+                                      buyer UI
+  -----------------------------------------------------------------------
+
+Remaining design/contract gaps:
+
+-   category values are not contract-driven;
+-   listing summary does not expose bloc progress;
+-   listing detail does not expose off-sale status;
+-   the API exposes one active deal rather than a list with starter
+    metadata;
+-   per-user blocs, notifications, checkout, start/join actions, and
+    invite flows need later contracts;
+-   the signed-in storefront menu/header is still provisional;
+-   CSP must continue to account for the chosen font/image asset hosts
+    until those assets are self-hosted or narrowed.
+
+When a later design or API contract resolves one of these gaps, update this document and the owning ADR/contract rather than preserving the old workaround as historical narrative.
