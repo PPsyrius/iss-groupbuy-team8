@@ -33,6 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+/** Team-price quotes: policy revisioning, owner-scoped reads, lock ordering, no orphan writes. */
 @ExtendWith(MockitoExtension.class)
 class TeamPriceAppServiceImplTest {
     private static final UUID PRODUCT = UUID.fromString("a0000000-0000-7000-8000-000000000001");
@@ -53,6 +54,7 @@ class TeamPriceAppServiceImplTest {
                         users);
     }
 
+    /** Proves issueQuote follows lock-active-quote-insert order with 900s UUIDv7 expiry. */
     @Test
     void firstTeamQuoteUsesStrategyAndClockAfterProductLock() {
         stubProduct();
@@ -117,7 +119,7 @@ class TeamPriceAppServiceImplTest {
     }
 
     @Test
-    void createsFirstRevisionAndRejectsStaleRetryWithoutAnotherWrite() {
+    void firstRevisionCommitsOnceThenStaleRetryConflicts() {
         stubProduct();
         when(prices.currentTime()).thenReturn(NOW);
         var command =
@@ -249,6 +251,7 @@ class TeamPriceAppServiceImplTest {
         verify(prices, never()).findLatestPolicy(any());
     }
 
+    /** Proves configure follows lock-active-policy-clock-append order with owner and time. */
     @Test
     void configureUsesProductFirstLockOrder() {
         stubProduct();
@@ -269,7 +272,7 @@ class TeamPriceAppServiceImplTest {
     }
 
     @Test
-    void configureStaleVersionFailsBeforeClockRead() {
+    void staleExpectedVersionFailsWithoutClockOrWrite() {
         stubProduct();
         when(prices.findLatestPolicy(PRODUCT))
                 .thenReturn(Optional.of(policy("20", 1, NOW.plusSeconds(3600))));

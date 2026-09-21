@@ -35,3 +35,28 @@ updates:
     directory: /backend
     schedule:
       interval: daily
+
+  # pnpm 12 lockfile: GitHub documents pnpm v7–v10 under `npm`; confirm it parses via
+  # Insights → Dependency graph → Dependabot → "Check for updates" (frontend/docs/plan.md §12.4).
+  - package-ecosystem: npm
+    cooldown:
+      default-days: 7
+    directory: /frontend
+    schedule:
+      interval: daily
+    groups:
+      tanstack:
+        patterns: ['@tanstack/*']
+      heroui:
+        patterns: ['@heroui/*', 'react-aria-components']
+    ignore:
+      - dependency-name: 'react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+      # Releases through 0.99.0 fail under TypeScript 7 (hey-api/hey-api#4235; PRs #111/#112).
+      # Lift this when a compatible release lands. GHSA-hhx9-57xq-r5rw is a version-ordering
+      # false positive: this newer snapshot already contains the Object.create(null) fix.
+      - dependency-name: '@hey-api/openapi-ts'

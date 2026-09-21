@@ -1,4 +1,4 @@
-# Quality Gates — Backend
+# Quality Gates
 
 The numbers the pipeline enforces. Change to any row = team decision, recorded here with a date.
 
@@ -9,8 +9,10 @@ The numbers the pipeline enforces. Change to any row = team decision, recorded h
 | Static bugs | SpotBugs 4.10.4 | 0 findings, threshold Medium, effort Max | `verify` phase |
 | Architecture | ArchUnit 1.4.2 | all 6 rules green | unit tests (`ArchitectureTest`) |
 | Build gates | Maven Enforcer | Java [21,22), Maven ≥3.9, dependency convergence | `validate` phase |
-| Coverage | JaCoCo 0.8.15 → SonarCloud | ≥ 80% on new code (server quality gate) | `sonar` CI job |
-| Code quality | SonarCloud | quality gate green: no new blocker/critical, A ratings on new code | `sonar` CI job |
+| Coverage | JaCoCo 0.8.15 → SonarCloud Backend | ≥ 80% on new code (server quality gate) | `ci-backend.yml` `sonar-backend` |
+| Code quality | SonarCloud Backend | quality gate green: no new blocker/critical, A ratings on new code | `ci-backend.yml` `sonar-backend` |
+| Frontend coverage | Vitest V8 LCOV → SonarCloud Frontend | ≥ 80% on new code (server quality gate) | `ci-frontend.yml` `sonar-frontend` |
+| Frontend code quality | SonarCloud Frontend TypeScript analysis | quality gate green | `ci-frontend.yml` `sonar-frontend` |
 | Dependency CVEs | Trivy fs | 0 unfixed HIGH/CRITICAL (`exit-code: 1`, `ignore-unfixed`) | `security.yml` + weekly cron |
 | Image CVEs | Trivy image | 0 unfixed HIGH/CRITICAL (`exit-code: 1`, `ignore-unfixed`) | `ci-backend.yml` `docker` job |
 | Secrets | Gitleaks | 0 leaks in full git history | `security.yml` |

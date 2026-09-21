@@ -179,7 +179,7 @@ class TeamPriceControllerTest {
     }
 
     @Test
-    void policyAmountMustBeJsonStringNotFloatingPointNumber() throws Exception {
+    void floatingPointAmountRejectedRequiresDecimalString() throws Exception {
         mvc.perform(
                         put(POLICY_PATH)
                                 .header(TOKEN_HEADER, login(ADMIN))
@@ -191,7 +191,7 @@ class TeamPriceControllerTest {
     }
 
     @Test
-    void quoteIssuanceUsesSessionOwnerAndReturnsDecimalString() throws Exception {
+    void quoteBindsSessionOwnerAndHidesOwnerId() throws Exception {
         when(prices.issueQuote(PRODUCT, BUYER)).thenReturn(quote());
         mvc.perform(
                         post(QUOTE_PATH)

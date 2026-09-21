@@ -18,7 +18,7 @@ class StpInterfaceImplTest {
     private final StpInterfaceImpl stpInterface = new StpInterfaceImpl(roleRepository);
 
     @Test
-    void loadsRolesAndPermissionsForUser() {
+    void resolvesBuyerRoleAndCreatePermissionByStringId() {
         UUID userId = UUID.randomUUID();
         when(roleRepository.findRoleCodesByUserId(userId)).thenReturn(List.of("buyer"));
         when(roleRepository.findPermissionCodesByUserId(userId))

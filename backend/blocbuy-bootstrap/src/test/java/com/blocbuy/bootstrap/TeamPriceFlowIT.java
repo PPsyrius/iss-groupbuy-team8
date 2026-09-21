@@ -171,6 +171,7 @@ class TeamPriceFlowIT {
                 .isEqualTo(1);
     }
 
+    /** Proves two Spring-proxied concurrent configures commit once; loser sees CATALOG_412_001. */
     @Test
     void concurrentConfigurationThroughSpringProxyCommitsExactlyOneRevision() throws Exception {
         CountDownLatch ready = new CountDownLatch(2);

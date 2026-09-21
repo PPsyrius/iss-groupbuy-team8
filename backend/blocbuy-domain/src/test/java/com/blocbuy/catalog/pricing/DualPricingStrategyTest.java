@@ -22,16 +22,13 @@ class DualPricingStrategyTest {
     private final DualPricingStrategy strategy = new DualPricingStrategy();
 
     @Test
-    void modeIsDual() {
-        assertThat(strategy.mode()).isEqualTo(PricingMode.DUAL);
-    }
-
-    @Test
     void resolvesDualPriceWhenDealActive() {
         Product product = product("129.00");
         GroupDealOffer offer = offer("89.00", "sgd");
 
         ListingPrice price = strategy.resolve(product, offer);
+
+        assertThat(strategy.mode()).isEqualTo(PricingMode.DUAL);
 
         assertThat(price.individualPrice()).isEqualByComparingTo("129.00");
         assertThat(price.groupPrice()).isEqualByComparingTo("89.00");
@@ -87,8 +84,9 @@ class DualPricingStrategyTest {
         TeamPricePolicy expired =
                 new TeamPricePolicy(
                         PRODUCT_ID, new BigDecimal("35.00"), "sgd", now.minusSeconds(3600), now, 1);
+        Product product = product("45.00");
 
-        assertThatThrownBy(() -> strategy.quoteTeamPrice(product("45.00"), expired, now))
+        assertThatThrownBy(() -> strategy.quoteTeamPrice(product, expired, now))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex ->
@@ -145,8 +143,9 @@ class DualPricingStrategyTest {
                         now.minusSeconds(1),
                         now.plusSeconds(3600),
                         1);
+        Product product = product("45.00");
 
-        assertThatThrownBy(() -> strategy.quoteTeamPrice(product("45.00"), foreign, now))
+        assertThatThrownBy(() -> strategy.quoteTeamPrice(product, foreign, now))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex ->

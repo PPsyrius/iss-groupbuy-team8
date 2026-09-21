@@ -64,6 +64,12 @@ sudoedit /etc/blocbuy/backend.env
 Replace every placeholder in `/etc/blocbuy/backend.env`. Do not commit or transmit the real file
 through GitHub Actions.
 
+To enable the optional Jev listing re-ranker on dev, set `TYPESAFE_ENABLED=true` and place the
+TypeSafe credential in `TYPESAFE_API_KEY`. The ordinary listing search remains available when Jev
+is disabled or temporarily unavailable; clients request page-local semantic ordering with
+`ai=true`. The repository's `typesafe-smoke` workflow uses its separate Actions secret only for a
+manually dispatched provider check and does not provision this host file.
+
 Optional deployment constraints may be supplied to `deploy.sh` by its caller:
 
 ```bash

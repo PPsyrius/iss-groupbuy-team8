@@ -28,6 +28,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+/** Trusted payment application: receipt replay, fingerprint guard, compensation without refund. */
 class PaidGroupDealServiceTest {
     private final PaidGroupDealRepository repository = mock(PaidGroupDealRepository.class);
     private final PaidGroupDealService service = new PaidGroupDealService(repository);
@@ -298,5 +299,34 @@ class PaidGroupDealServiceTest {
         assertThat(result.currentSize()).isNull();
         verify(repository).complete(paid.paymentId(), result, paid.userId(), terms.expireTime());
         verify(repository, never()).insertJoinedMember(any(), any(), any(), any());
+    }
+
+    @Test
+    void joinBeforeTargetPersistsOpenProgressAndReceipt() {
+        var threePersonTerms =
+                new NewDealTerms(
+                        terms.id(),
+                        terms.dealNo(),
+                        terms.productId(),
+                        terms.price(),
+                        terms.currency(),
+                        3,
+                        terms.expireTime());
+        var leader =
+                new PaidParticipation(UUID.randomUUID(), UUID.randomUUID(), paid.amount(), "sgd");
+        var deal =
+                new StandardPaidGroupDealCreator()
+                        .initiate(threePersonTerms, leader, now.minusSeconds(1));
+        pendingReceipt();
+        when(repository.lockDeal(terms.id())).thenReturn(Optional.of(deal));
+        when(repository.currentTime()).thenReturn(now);
+
+        var result = service.joinConfirmed(terms.id(), paid);
+
+        assertThat(result.outcome()).isEqualTo("applied");
+        assertThat(result.dealStatus()).isEqualTo("open");
+        assertThat(result.currentSize()).isEqualTo(2);
+        verify(repository).insertJoinedMember(eq(deal), any(), eq(paid), eq(now));
+        verify(repository).complete(paid.paymentId(), result, paid.userId(), now);
     }
 }

@@ -113,6 +113,7 @@ class TeamPriceRepositoryIT {
                 "QUOTE-" + productId);
     }
 
+    /** Proves UUIDv7 rows, admin-only product write grant, no FK/check on policy and quote. */
     @Test
     void migrationsUseUuidV7AndGrantManagementOnlyToAdmin() {
         try (SqlSession session = sessions.openSession()) {
@@ -150,6 +151,7 @@ class TeamPriceRepositoryIT {
                 .isZero();
     }
 
+    /** Proves v1 quote survives v2 revision, owner hit, wrong-owner miss, no deal side-effect. */
     @Test
     void firstTeamSnapshotSurvivesRevisionAndIsOwnerScoped() {
         TeamPriceQuote quote;
@@ -197,6 +199,7 @@ class TeamPriceRepositoryIT {
                 .isZero();
     }
 
+    /** Proves rollback drops uncommitted quote and duplicate (product,version) violates PK. */
     @Test
     void rollbackLeavesNoQuoteAndDuplicatePolicyRevisionFails() {
         UUID quoteId = UuidV7.next();
@@ -233,6 +236,7 @@ class TeamPriceRepositoryIT {
                 .isEqualTo(1);
     }
 
+    /** Proves blocked product lock waits (200ms TimeoutException) then reads committed v1 25. */
     @Test
     void competingQuoteWaitsForPolicyCommitThenSeesNewRevision() throws Exception {
         try (SqlSession writer = sessions.openSession();
