@@ -1,29 +1,78 @@
-import { buttonVariants, Link as HeroLink } from "@heroui/react";
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Avatar, Button, buttonVariants } from "@heroui/react";
+import { Link, useLocation } from "@tanstack/react-router";
 
-import { unwrapResult } from "@/api/envelope";
-import { meOptions } from "@/api/generated/@tanstack/react-query.gen";
+import { initials } from "@/features/session/initials";
+import { useLogout } from "@/features/session/use-logout";
+import { useSession } from "@/features/session/use-session";
 
+// Storefront header per the artboards (docs/design-screens.md §3): 56px on phone, 64px at 1280,
+// `surface` with a hairline border; wordmark left (text until the SVG asset lands, CR-7); right,
+// either the neutral "Sign in" control (`Button variant="secondary"` look, accent-soft-foreground
+// label, no accent fill: CR-8) or the avatar + name once signed in. No logout control is drawn
+// on any artboard; T2-05 adds it in the signed-in slot.
 export function Header() {
-  const me = useQuery({ ...meOptions(), select: (r) => unwrapResult(r), retry: false });
+  const session = useSession();
+  const href = useLocation({ select: (l) => l.href });
+  const onLoginPage = useLocation({ select: (l) => l.pathname === "/login" });
   return (
-    <header className="flex items-center justify-between border-b px-6 py-3">
-      <Link to="/" className="text-lg font-semibold">
+    <header className="bg-surface border-border flex h-14 items-center justify-between gap-4 border-b px-4 xl:h-16 xl:px-8">
+      <Link to="/" className="text-lg font-bold tracking-tight xl:text-xl">
         BlocBuy
       </Link>
-      {me.data ? (
-        // B4 (#97): `nickname` and `avatarUrl` are nullable for accounts registered before the
-        // Google profile was wired; fall back to the stable `userId` rather than render nothing.
-        <span data-testid="session-user">{me.data.nickname ?? me.data.userId}</span>
-      ) : (
-        <HeroLink
-          href="/api/v1/auth/oauth2/google"
-          className={buttonVariants({ variant: "primary" })}
-        >
-          Log in
-        </HeroLink>
-      )}
+      <div className="flex items-center gap-4">
+        <span className="text-muted hidden text-sm xl:inline">
+          Bringing people together to buy better
+        </span>
+        {session.status === "authenticated" ? (
+          <SignedIn name={session.nickname ?? session.userId} avatarUrl={session.avatarUrl} />
+        ) : onLoginPage ? null : (
+          <Link
+            to="/login"
+            search={{ returnTo: href }}
+            className={
+              buttonVariants({ variant: "secondary" }) +
+              " text-accent-soft-foreground min-h-11 px-3 text-sm font-semibold xl:px-[18px] xl:text-base"
+            }
+          >
+            Sign in
+          </Link>
+        )}
+      </div>
     </header>
+  );
+}
+
+function SignedIn({ name, avatarUrl }: { name: string; avatarUrl: string | null }) {
+  const logout = useLogout();
+  return (
+    // No artboard draws a signed-in storefront header or a logout control (Q16). Until design
+    // rules, the avatar + name link to /account (the My blocs screen) and a neutral ghost
+    // "Sign out" button sits beside them: no accent, pairs with the "Sign in" wording.
+    <div className="flex items-center gap-2">
+      <Link to="/account" className="flex items-center gap-2">
+        <Avatar size="sm" aria-hidden="true">
+          {avatarUrl ? <Avatar.Image src={avatarUrl} alt="" /> : null}
+          <Avatar.Fallback>{initials(name)}</Avatar.Fallback>
+        </Avatar>
+        {/* B4 (#97): nickname is nullable; the stable userId is the fallback, never nothing. */}
+        <span data-testid="session-user" className="text-sm font-medium">
+          {name}
+        </span>
+      </Link>
+      {logout.isError ? (
+        <span role="alert" className="text-danger text-sm">
+          Could not sign out. Try again.
+        </span>
+      ) : null}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-muted min-h-11 text-sm"
+        isPending={logout.isPending}
+        onPress={() => logout.mutate({})}
+      >
+        Sign out
+      </Button>
+    </div>
   );
 }

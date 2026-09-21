@@ -698,3 +698,108 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   Safari 16.4.
 - Problems: CR-11 no deal sizes on the card DTO (progress cue omitted); CR-15 `--muted` 4.41:1
   (used as designed); CR-10 category strings unknown; A2's CSP must allow Google Fonts. Open.
+
+## 2026-09-18 - @limjiechao - T2-02 product detail with deal progress and not-found state (#44, #93)
+
+- Kind: feature (PR-G, UC1 detail); artboards over plan (note 41); no ADR, no NFR.
+- Changed: `DealProgress` and `deal-time` with tests, the `/products/$productId` route (loader,
+  gallery, deal progress, skeleton, error, `notFoundComponent`), MSW detail seed with a 404;
+  plan steps 1–4, notes 41–42; T2-01 follow-up `9582eb2` merged in by fast-forward.
+- Sources: `design-screens.md` §4.2/§4.5; `BlocBuy Buyer Listing Detail.dc.html` and
+  `BlocBuy Buyer Errors.dc.html`; HeroUI props from the installed 3.2.5 types (offline-first
+  after the first attempt stalled on the network).
+- Verified on `9582eb2` plus the change: `pnpm check` exit 0 (vitest 9 files / 33 tests, knip 0
+  issues); `pnpm build` ok; `pnpm e2e` 1 passed, 2 skipped; MSW screenshots of open, urgent,
+  no-bloc and not-found at 390 and 1280, 0 page errors. Review follow-up (CodeRabbit
+  r4042898923/r4042898931/r4042898937, raised on #114 while it carried this commit): route test
+  for the loader (HTTP 404 and `_404_` envelope both render the not-found card; the test installs
+  the production interceptor, without which the loader sees a raw body), "This bloc has ended"
+  header wording off the same clock as the row's chip (`hasEnded` in `deal-time`), and a gallery
+  image that fails to load is dropped so the striped tile shows; vitest 10 files / 40 tests.
+  Round 2 (r4045102856/64/80/89, plan note 43): `parseDeadline` guards `Intl` formatting
+  against an unparseable `expireTime`, the detail query rejects a data-less 200 envelope, the
+  three unwired buttons are `isDisabled`, plan step 1 wording fixed; three threads on files
+  #113 already merged answered as out of this diff. Round 3 (r4047087107) declined: the
+  loader-only `staleTime: "static"` is rule 7, so the detail keeps refetching seat counts.
+- Not verified: the real backend and its not-found shape (note 42), loading and error states in a
+  browser, the sticky bar while scrolling.
+- Decision: not-found on `status === 404` or a `_404_` code (note 42); breadcrumbs as plain router
+  links; Join / Start a bloc / Buy alone rendered unwired until T2-04 and UC3/UC4.
+- Problems: CR no 404 declared for `getListing`; CR `ActiveDealResponse` has no starter, number or
+  per-bloc list (one "Open bloc" row renders); CR no listing status for "unavailable". Open.
+
+## 2026-09-18 - @limjiechao - T2-03 catalog filter: category chips and keyword search (#44, #47, #93 PR-H)
+
+- Kind: feature (PR-H, UC1 filter); artboards over plan (note 44); TanStack Form + valibot as
+  planned; no ADR, no NFR.
+- Changed: `FilterForm`, `categories`, `filter-form.schema` with tests; `keyword` in the search
+  schema, the `/` query and the MSW seed; chip row and search in the artboard slot; knip ignores
+  for form and user-event removed (note 25 closed); plan steps 1–5 with a dated step 4 correction
+  (`keyword` now, contract live since PR #107), note 44.
+- Sources: `design-screens.md` §4.1 "Filter" and §7 Q3/Q4; `BlocBuy Buyer Catalog.dc.html` chip
+  markup; the HeroUI Kit sheet's parked `SearchField`; installed 3.2.5 types, offline-first.
+- Verified on `e1b2549` plus the change: `FilterForm.test.tsx` 6 tests; `pnpm check` exit 0
+  (vitest 10 files / 43 tests, knip 0 issues); `pnpm build` ok; `pnpm e2e` 1 passed, 2 skipped;
+  MSW screenshots (Household, `keyword=rice`, empty keyword, typed "kopi" + Enter) at 390 and
+  1280, 0 page errors.
+- Not verified: the real backend's category strings and keyword matching; a screen-reader pass;
+  Inter offline.
+- Decision: chips as router links with `aria-current` on the selected one; keyword submits on
+  Enter only, empty or unchanged submit is a no-op, URL keyword cut to 64.
+- Problems: CR no search field in the artboards (placement and empty copy are ours); CR-10
+  category strings unpublished; the contract's `ai` flag has no design. Open.
+- PR #119 review (2026-09-19, r4045128139/44/58/76): the restack had dropped this task's plan
+  record; re-added as note 44 with the shipped samples. Household chip sends the seed's `home`;
+  empty-state links keep `size`; one keyword matcher over title, subtitle and description
+  (`keyword-match.ts`) shared by the browser seed and the route test. Three outdated threads on
+  #115 files answered as landed there (9b67149).
+
+## 2026-09-18 - @limjiechao - T2-04 session hook, /login, /auth/callback, _authenticated guard, /account, gated sheet (#42, #93)
+
+- Kind: feature (UC2 sign-in, frontend half); the guard and the gated sheet are UX only, the
+  backend enforces (ADR 0002); NFR-01 unchanged; artboards over plan (note 45); no ADR.
+- Changed: `useSession` and helpers, `GoogleSignInButton`, `GatedActionSheet`; routes `/login`,
+  `/auth/callback`, `_authenticated`, `/account`; root `beforeLoad` session; gated detail-page
+  actions; neutral header Sign in with avatar + name when signed in; shared `render-route.tsx`;
+  `me` in the MSW seed (`?msw=1&me=1` signs in); plan steps 1–8, notes 45–46.
+- Sources: `design-screens.md` §3, §4.3, §4.4, §7 Q1/Q13–Q17; `BlocBuy Buyer Sign In.dc.html`,
+  `BlocBuy Buyer My Blocs.dc.html`; contract auth operations; installed 3.2.5 types, offline-first.
+- Verified on `4f2b7d0` plus the change: session suites 4 files / 20 tests (red first); `pnpm
+  check` exit 0 (vitest 18 files / 74 tests, knip 0 issues); `pnpm build` ok; `pnpm e2e` 1 passed,
+  2 skipped after fixing a blank app on the preview's `me` ECONNREFUSED (note 46); 13 MSW
+  screenshots at 390 and 1280 (login, header, account, guard redirect, sheet, modal), 0 errors.
+- Not verified: the real Google round trip and the `blocbuy-token` cookie (T2-06 after B5);
+  `Modal placement="auto"` breakpoint; `Avatar.Image` with a real URL.
+- Decision: return path in sessionStorage (CR-13); root `beforeLoad` falls back to anonymous on
+  non-401 failures while the callback stays strict (note 46); header Sign in goes to `/login`.
+- Problems: CR-13 no return URL through Google; CR-16 Google mark is a placeholder; Q16 no
+  artboard for the signed-in header or logout; Q15 `/account` interim. Open.
+- Restack after #115 squash-merged (2026-09-19): the rebase onto dev had dropped the gated
+  detail actions and kept two `renderAt` tests; re-added merging with dev's disabled buttons
+  (r4045102864); `pnpm check` 87 tests, build ok; logout and login-e2e rebased on top.
+- PR #120 review (2026-09-19, r4045129508, r4050400116/23): return paths reject a backslash
+  anywhere (`%5C` reads as `/` in the URL parser), with regression tests; `DealProgress` takes
+  `onJoin` and the route passes `onGated`, so the open bloc's Join opens the sheet too; the
+  browser seed reads `me=1` once at worker start. Plan record re-added as notes 45–46.
+
+## 2026-09-18 - @limjiechao - T2-05 logout mutation clears the session (#42, #93 PR-I)
+
+- Kind: feature (session; UX only, the backend invalidates the cookie); no ADR, no NFR.
+- Changed: `use-logout.ts` (generated `logoutMutation`, `unwrapResult`, `me` settled on the
+  anonymous envelope, navigate home; error keeps the session); header avatar links to `/account`
+  and a ghost "Sign out" button with pending state and inline alert; `logout` in the MSW seed;
+  plan steps 1–3, note 47.
+- Verified on `20496aa` plus the change: `Header.test.tsx` red first (2 failed) then 5 passed;
+  `pnpm check` exit 0 (vitest 18 files / 76 tests, knip 0 issues); `pnpm build` ok; `pnpm e2e`
+  1 passed, 2 skipped; MSW screenshots of the signed-in header and after sign-out at 390 and
+  1280, 0 page errors; HeroUI props from the installed 3.2.5 types, offline-first.
+- Not verified: the real backend clearing `blocbuy-token` (T2-06 after B5); the error branch only
+  under MSW.
+- Decision: `setQueryData` on the anonymous envelope instead of `removeQueries` (no refetch, no
+  401 round trip); a neutral button beside the avatar rather than an avatar menu (note 47).
+- Problems: Q16 no artboard for the signed-in header or a logout control (design owner picks
+  button vs menu and the string); Q15 avatar links to the interim `/account`. Open.
+- PR #121 review (2026-09-19, r4050777123/27/30): all three threads were plan text and are
+  settled below this branch (T2-02 no-deal copy since #115, T2-03 samples in 0f4acb0, step 7
+  envelope code in bd0b95b). Plan record re-added here as note 47 (the restack had dropped it).
+  Round 2 (r4053031037): step 2 now names the shipped "Sign out" / "Sign in" controls.

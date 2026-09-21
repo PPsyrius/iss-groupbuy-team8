@@ -1,18 +1,12 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createMemoryHistory, createRouter, RouterProvider } from "@tanstack/react-router";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { OK_CODE } from "@/api/envelope";
 import type { ProductSummaryResponse } from "@/api/generated/types.gen";
-import { routeTree } from "@/routeTree.gen";
+import { keywordTerms, matchesKeyword } from "@/test/keyword-match";
 import { server } from "@/test/msw";
-
-// The root layout mounts the devtools; they have no place in a happy-dom route test.
-vi.mock("@tanstack/react-devtools", () => ({ TanStackDevtools: () => null }));
-vi.mock("@tanstack/react-query-devtools", () => ({ ReactQueryDevtoolsPanel: () => null }));
-vi.mock("@tanstack/react-router-devtools", () => ({ TanStackRouterDevtoolsPanel: () => null }));
+import { renderRoute } from "@/test/render-route";
 
 const listing = (n: number): ProductSummaryResponse => ({
   id: `5b1b9d5c-1a11-4e1e-9a10-${String(n).padStart(12, "0")}`,
@@ -34,31 +28,37 @@ function serveListings(all: ProductSummaryResponse[]) {
       const url = new URL(request.url);
       const page = Number(url.searchParams.get("page") ?? 1);
       const size = Number(url.searchParams.get("size") ?? 20);
+      const category = url.searchParams.get("category");
+      const terms = keywordTerms(url.searchParams.get("keyword"));
+      const hits = all.filter(
+        (p) => (!category || p.category === category) && matchesKeyword(p, terms),
+      );
       return HttpResponse.json({
         code: OK_CODE,
         message: "ok",
-        data: { items: all.slice((page - 1) * size, page * size), total: all.length, page, size },
+        data: { items: hits.slice((page - 1) * size, page * size), total: hits.length, page, size },
       });
     }),
   );
 }
 
 async function renderAt(path: string) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const router = createRouter({
-    routeTree,
-    context: { queryClient: qc, session: null },
-    history: createMemoryHistory({ initialEntries: [path] }),
-  });
-  render(
-    <QueryClientProvider client={qc}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>,
-  );
-  return router;
+  return renderRoute(path).router;
 }
 
 describe("/ (products list) loader", () => {
+  it("still renders anonymously when /auth/me fails outright", async () => {
+    serveListings([listing(1)]);
+    server.use(
+      http.get("*/api/v1/auth/me", () =>
+        HttpResponse.json({ code: "COMMON_500_000", message: "boom" }, { status: 500 }),
+      ),
+    );
+    await renderAt("/");
+    expect(await screen.findByText("Listing 1")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Sign in" })).toBeInTheDocument();
+  });
+
   it("redirects a page past the last one to the last page, keeping size and category", async () => {
     serveListings([listing(1), listing(2), listing(3)]);
     const router = await renderAt("/?page=999&size=20&category=groceries");
@@ -75,6 +75,31 @@ describe("/ (products list) loader", () => {
     expect(await screen.findByText("Nothing on sale yet")).toBeInTheDocument();
     expect(router.state.location.search).toEqual({ page: 1, size: 20 });
     expect(screen.getByText(/Page 1 of 1/)).toBeInTheDocument();
+  });
+
+  it("filters by the keyword from the URL and shows it in the search field", async () => {
+    serveListings([listing(1), { ...listing(2), title: "Thai jasmine rice 10 kg" }, listing(3)]);
+    const router = await renderAt("/?keyword=rice&category=groceries");
+    expect(await screen.findByText("Thai jasmine rice 10 kg")).toBeInTheDocument();
+    expect(screen.queryByText("Listing 1")).not.toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: "Search listings" })).toHaveValue("rice");
+    expect(screen.getByText("Groceries")).toHaveAttribute("aria-current", "page");
+    expect(router.state.location.search).toEqual({
+      page: 1,
+      size: 20,
+      category: "groceries",
+      keyword: "rice",
+    });
+  });
+
+  it("offers to clear the search when a keyword matches nothing", async () => {
+    serveListings([listing(1)]);
+    await renderAt("/?keyword=durian&category=groceries&size=12");
+    expect(await screen.findByText("No listings match “durian”")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Clear search" })).toHaveAttribute(
+      "href",
+      "/?page=1&size=12&category=groceries",
+    );
   });
 
   it("keeps a page that is within range", async () => {
