@@ -162,7 +162,7 @@ Apply creates: two GitHub OIDC roles, `prod/blocbuy` ECR, security groups, ALB +
 and the EC2 instance. User-data runs at first boot (Docker, AWS CLI, the `blocbuy-infra`
 PostgreSQL/Redis project, loopback-only).
 
-- [ ] `terraform apply` returned successfully; no errors in the user-data self-verification
+- [ ] `terraform apply` returned successfully; user-data bootstrap verified separately via the SSM check in section 5
 - [ ] Change log entry (link the PR + the apply)
 
 ## 5. Post-apply verification
@@ -176,11 +176,20 @@ aws ssm describe-instance-information \
   --query 'InstanceInformationList[].{id:InstanceId,ping:PingStatus}'
 # PingStatus must be Online
 
-# cloud-init finished AND user-data bootstrap completed (apply does not report this)
-aws ssm send-command --instance-ids "$INSTANCE_ID" \
+# cloud-init finished AND user-data bootstrap completed (apply does not report this).
+# send-command only submits: capture the ID, poll to a terminal status, require Success.
+CMD_ID="$(aws ssm send-command --instance-ids "$INSTANCE_ID" \
   --document-name AWS-RunShellScript --region ap-southeast-1 \
-  --parameters 'commands=["cloud-init status --wait && grep -F \"BlocBuy prod host bootstrap complete\" /var/log/cloud-init-output.log"]'
-# exit must be Success: cloud-init done, completion line present; otherwise read the log tail in the same way before continuing
+  --parameters 'commands=["cloud-init status --wait && grep -F \"BlocBuy prod host bootstrap complete\" /var/log/cloud-init-output.log"]' \
+  --query 'Command.CommandId' --output text)"
+for _ in $(seq 1 60); do
+  CMD_STATUS="$(aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" --region ap-southeast-1 --query Status --output text 2>/dev/null || true)"
+  case "$CMD_STATUS" in Success|Cancelled|TimedOut|Failed) break ;; esac
+  sleep 10
+done
+aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" --region ap-southeast-1 \
+  --query '[Status, StandardOutputContent, StandardErrorContent]' --output text
+# Status must be Success (10-minute cap above covers first-boot cloud-init); otherwise read the log tail via the same SSM path before continuing
 
 # Infra listeners: loopback only, no public bind
 aws ssm send-command --instance-ids "$INSTANCE_ID" \
