@@ -4,16 +4,24 @@ import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-rout
 
 import { unwrapResult } from "@/api/envelope";
 import { pageListingsOptions } from "@/api/generated/@tanstack/react-query.gen";
+import { categoryLabel } from "@/features/catalog/categories";
+import { FilterForm } from "@/features/catalog/FilterForm";
 import { ProductCard } from "@/features/catalog/ProductCard";
 import { productsSearchSchema, type ProductsSearch } from "@/features/catalog/products-search";
 
-// `exactOptionalPropertyTypes`: the generated query type has `category?: string`, so an
-// undefined category is left out rather than passed as `undefined`. The `queryOptions()` wrapper
-// is what types `select`'s input from the generated `queryFn` (plan §12 note 36).
-const listOptions = ({ page, size, category }: ProductsSearch) =>
+// `exactOptionalPropertyTypes`: the generated query type has `category?: string` and
+// `keyword?: string`, so an undefined filter is left out rather than passed as `undefined`. The
+// `queryOptions()` wrapper is what types `select`'s input from the generated `queryFn` (plan §12
+// note 36). `keyword` is live on dev since PR #107 (note 44).
+const listOptions = ({ page, size, category, keyword }: ProductsSearch) =>
   queryOptions({
     ...pageListingsOptions({
-      query: { page, size, ...(category === undefined ? {} : { category }) },
+      query: {
+        page,
+        size,
+        ...(category === undefined ? {} : { category }),
+        ...(keyword === undefined ? {} : { keyword }),
+      },
     }),
     select: (r) => unwrapResult(r),
   });
@@ -39,8 +47,8 @@ export const Route = createFileRoute("/")({
 });
 
 // Layout follows `BlocBuy Buyer Catalog.dc.html` (docs/design-screens.md §4.1): body padding 16
-// (32 at 1280) and column gap 16 (24); hero; the T2-03 chip row slot; 1 / 2 / 4 columns at
-// 390 / 768 / 1280; pager below. The category filter is URL-only until T2-03.
+// (32 at 1280) and column gap 16 (24); hero; the category chip row with the keyword search at its
+// end (FilterForm); 1 / 2 / 4 columns at 390 / 768 / 1280; pager below.
 const shell = "mx-auto flex max-w-[1280px] flex-col gap-4 p-4 xl:gap-6 xl:p-8";
 const grid = "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 xl:gap-6";
 const pagerButton = buttonVariants({ variant: "outline" }) + " min-h-11 px-4 text-sm xl:px-[18px]";
@@ -56,9 +64,9 @@ function ProductsPage() {
   return (
     <main className={shell}>
       <CatalogHero total={total} />
-      {/* T2-03: the category Chip row renders here (single-select, navigates with page: 1). */}
+      <FilterForm search={search} />
       {items.length === 0 ? (
-        <CatalogEmpty category={search.category} />
+        <CatalogEmpty size={search.size} category={search.category} keyword={search.keyword} />
       ) : (
         <ul className={grid}>
           {items.map((p) => (
@@ -121,20 +129,47 @@ function CatalogHero({ total }: { total?: number }) {
 
 // Artboard `empty category`: "Nothing in Beauty yet" with a "Browse Groceries" recovery. The
 // backend's category values are not confirmed (CR-10), so the recovery goes to the unfiltered
-// catalog instead of guessing a value.
-function CatalogEmpty({ category }: { category: string | undefined }) {
+// catalog instead of guessing a value. No artboard covers an empty keyword search (the artboards
+// have no search field); that variant keeps the same card and clears the keyword only, so the
+// chosen category survives. Both links carry `size`: a `Link` search object replaces the URL's,
+// and the schema would otherwise reset a chosen page size to the default (CodeRabbit r4045128158).
+function CatalogEmpty({
+  size,
+  category,
+  keyword,
+}: {
+  size: number;
+  category: string | undefined;
+  keyword: string | undefined;
+}) {
+  const heading = keyword
+    ? `No listings match “${keyword}”`
+    : category
+      ? `Nothing in ${categoryLabel(category)} yet`
+      : "Nothing on sale yet";
+  const body = keyword
+    ? "Try a different word, or clear the search to see everything on sale."
+    : category
+      ? "This category has no listings on sale right now. Try another category, where most blocs are filling."
+      : "No listings are on sale right now. Check back soon.";
   return (
     <div className="border-border bg-surface flex flex-col items-center gap-3 rounded-lg border px-6 py-8 text-center xl:px-8 xl:py-16">
-      <h2 className="text-lg font-semibold xl:text-xl">
-        {category ? `Nothing in ${category} yet` : "Nothing on sale yet"}
-      </h2>
-      <p className="text-muted max-w-[46ch] text-sm text-pretty xl:text-base">
-        {category
-          ? "This category has no listings on sale right now. Try another category, where most blocs are filling."
-          : "No listings are on sale right now. Check back soon."}
-      </p>
-      {category ? (
-        <Link to="/" className={buttonVariants({ variant: "secondary" }) + " mt-1 min-h-11 px-5"}>
+      <h2 className="text-lg font-semibold xl:text-xl">{heading}</h2>
+      <p className="text-muted max-w-[46ch] text-sm text-pretty xl:text-base">{body}</p>
+      {keyword ? (
+        <Link
+          to="/"
+          search={{ page: 1, size, ...(category === undefined ? {} : { category }) }}
+          className={buttonVariants({ variant: "secondary" }) + " mt-1 min-h-11 px-5"}
+        >
+          Clear search
+        </Link>
+      ) : category ? (
+        <Link
+          to="/"
+          search={{ page: 1, size }}
+          className={buttonVariants({ variant: "secondary" }) + " mt-1 min-h-11 px-5"}
+        >
           Browse all listings
         </Link>
       ) : null}
@@ -142,14 +177,21 @@ function CatalogEmpty({ category }: { category: string | undefined }) {
   );
 }
 
-// Artboard `loading`: skeleton tiles in the card's own geometry so nothing jumps when data lands
-// (3 on phone, 8 at 1280). HeroUI 3 ships Skeleton; the kit sheet did not.
+// Artboard `loading`: three chip skeletons (36×72/96/88 on phone, 40×80/104/96/88 at 1280) and
+// skeleton tiles in the card's own geometry so nothing jumps when data lands (3 on phone, 8 at
+// 1280). HeroUI 3 ships Skeleton; the kit sheet did not.
 const skeletonCount = 8;
+const chipSkeletons = ["w-[72px] xl:w-20", "w-24 xl:w-[104px]", "w-[88px] xl:w-24"];
 
 function CatalogLoading() {
   return (
     <main className={shell} aria-busy="true">
       <CatalogHero />
+      <div className="flex flex-wrap gap-2 xl:gap-2.5">
+        {chipSkeletons.map((w) => (
+          <Skeleton key={w} className={`h-9 rounded-full xl:h-10 ${w}`} />
+        ))}
+      </div>
       <ul className={grid}>
         {Array.from({ length: skeletonCount }, (_, i) => (
           <li

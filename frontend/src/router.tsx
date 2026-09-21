@@ -1,11 +1,14 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 
+import type { SessionState } from "./features/session/session";
 import { routeTree } from "./routeTree.gen";
 
 export interface RouterContext {
   queryClient: QueryClient;
-  session: null; // replaced by SessionState in T2-04
+  // Seeded anonymous in main.tsx; the root route's `beforeLoad` resolves the real value from the
+  // `me` query before any child route runs its guard.
+  session: SessionState;
 }
 
 export function createAppRouter(context: RouterContext) {

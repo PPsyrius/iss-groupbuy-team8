@@ -7,9 +7,10 @@ import {
 } from "@tanstack/react-router";
 import { render } from "@testing-library/react";
 
-// Components that render a TanStack Router `Link` need a router in context. This builds a
-// minimal memory-history router whose single root route renders the UI under test, with a
-// fresh QueryClient (no retries) so each test starts cold.
+// Components that render a TanStack Router `Link` or call `useNavigate` need a router in
+// context. This builds a minimal memory-history router whose single root route renders the UI
+// under test, with a fresh QueryClient (no retries) so each test starts cold. The router is
+// returned so a test can assert where a navigation landed (`router.state.location.search`).
 export async function renderWithRouter(ui: React.ReactElement) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const rootRoute = createRootRoute({ component: () => ui });
@@ -23,5 +24,5 @@ export async function renderWithRouter(ui: React.ReactElement) {
     </QueryClientProvider>,
   );
   await router.load();
-  return result;
+  return { ...result, router };
 }

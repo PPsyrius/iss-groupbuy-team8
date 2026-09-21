@@ -49,7 +49,7 @@ These are settled; do not reopen them without explicit user approval. Full ratio
 
 ## Pre-Commit Quality Verification (prevents SonarCloud quality-gate failures)
 
-The CI `sonar` job fails the PR when the server-side quality gate is red: **≥ 80% coverage on new code**, no new blocker/critical issues, A ratings on new code (`docs/quality/quality-gates.md`). Its coverage input is the local JaCoCo aggregate — so verify locally before committing, on JDK 21 (Enforcer rejects anything outside [21,22); e.g. `export JAVA_HOME=$(/usr/libexec/java_home -v 21)`):
+The CI `sonar-backend` job (`SonarCloud Backend`) fails the PR when the server-side quality gate is red: **≥ 80% coverage on new code**, no new blocker/critical issues, A ratings on new code (`docs/quality/quality-gates.md`). Its coverage input is the local JaCoCo aggregate — so verify locally before committing, on JDK 21 (Enforcer rejects anything outside [21,22); e.g. `export JAVA_HOME=$(/usr/libexec/java_home -v 21)`):
 
 ```bash
 cd backend
