@@ -36,7 +36,9 @@ Profiles: `local` (default; localhost PG/Redis) · `docker` (compose service nam
 `openapi-export` (build-only, no live infra).
 
 Secrets come from the environment, never from git: `DB_USERNAME`, `DB_PASSWORD`, `REDIS_PASSWORD`,
-`STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`.
+`STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`, `TYPESAFE_API_KEY`. Set `TYPESAFE_ENABLED=true` to allow
+opt-in Jev re-ranking for listing searches; model, endpoint, and timeout settings have safe defaults
+in `application.yml`.
 Local datasource: `jdbc:postgresql://localhost:5432/Blocbuy?currentSchema=domain` — note the
 database name is case-sensitive if created quoted; verify `Blocbuy` vs `blocbuy` on first connect.
 
@@ -48,13 +50,13 @@ database name is case-sensitive if created quoted; verify `Blocbuy` vs `blocbuy`
 - Checkstyle: Google checks, 120-column line length, AOSP indentation values (`checkstyle.xml`);
   enforces only what the formatter does not own (naming, imports, Javadoc, blocks).
 - SpotBugs: effort Max, threshold Medium, exclusions with written reasons in `spotbugs-excludes.xml`.
-- JaCoCo: per-module reports + aggregate at `blocbuy-bootstrap/target/site/jacoco-aggregate/`;
+- JaCoCo: aggregate-only report at `blocbuy-bootstrap/target/site/jacoco-aggregate/`;
   coverage gate (≥80% on new code) lives in the SonarQube quality gate, not Maven.
 - ArchUnit (`blocbuy-bootstrap/src/test/.../architecture/`): layer direction, framework-free domain,
   no controller→mapper, persistence internals stay internal, no field injection.
 - Tests: JUnit 5; repository `*IT` suites spin a real PostgreSQL 18 via Testcontainers.
 
-CI: `.github/workflows/ci-backend.yml` (build-quality → contract-check → sonar → docker) and
+CI: `.github/workflows/ci-backend.yml` (build-quality → contract-check → sonar-backend → docker) and
 `security.yml` (Gitleaks + Trivy). Runbook: [../docs/ci/backend-pipeline.md](../docs/ci/backend-pipeline.md);
 thresholds: [../docs/quality/quality-gates.md](../docs/quality/quality-gates.md).
 

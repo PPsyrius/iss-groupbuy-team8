@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
+/** Session account guard: missing and disabled accounts fail, profile view maps safely. */
 class UserAppServiceImplTest {
     private final UserRepository users = mock(UserRepository.class);
     private final UserAppService service = new UserAppServiceImpl(users);

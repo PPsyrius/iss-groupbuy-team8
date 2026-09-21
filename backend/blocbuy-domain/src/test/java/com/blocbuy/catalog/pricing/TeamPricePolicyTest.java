@@ -12,14 +12,19 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+/** Team-price policy: exact SGD amounts, microsecond window, compatibility guards. */
 class TeamPricePolicyTest {
     private static final UUID PRODUCT = UUID.fromString("a0000000-0000-7000-8000-000000000001");
     private static final Instant NOW = Instant.parse("2026-09-09T00:00:00Z");
 
+    /** Rejects zero/negative/3-decimal/1e30 SGD amounts lacking exact 2-decimal storage. */
     @ParameterizedTest
     @ValueSource(strings = {"0", "-0.01", "1.001", "10000000000000000", "1e30"})
     void rejectsAmountsThatCannotBeStoredExactly(String amount) {
@@ -62,6 +67,7 @@ class TeamPricePolicyTest {
                                         .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
     }
 
+    /** Rejects 100ns window collapsing to zero under PostgreSQL microsecond truncation. */
     @Test
     void rejectsWindowThatCollapsesAtPostgresqlMicrosecondPrecision() {
         Instant from = Instant.parse("2026-09-09T00:00:00.000000100Z");
@@ -132,53 +138,25 @@ class TeamPricePolicyTest {
                 .isEqualTo(CatalogErrorCode.TEAM_PRICE_UNAVAILABLE);
     }
 
-    /** Verifies absent identity fields fail before any money or window validation runs. */
-    @Test
-    void rejectsNullIdentityFields() {
-        Instant validUntil = NOW.plusSeconds(60);
-        BigDecimal amount = new BigDecimal("20");
-
-        assertThatThrownBy(() -> new TeamPricePolicy(null, amount, "sgd", NOW, validUntil, 1))
-                .isInstanceOfSatisfying(
-                        BizException.class,
-                        ex ->
-                                assertThat(ex.errorCode())
-                                        .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
-        assertThatThrownBy(() -> new TeamPricePolicy(PRODUCT, amount, "sgd", null, validUntil, 1))
-                .isInstanceOfSatisfying(
-                        BizException.class,
-                        ex ->
-                                assertThat(ex.errorCode())
-                                        .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
-        assertThatThrownBy(() -> new TeamPricePolicy(PRODUCT, amount, "sgd", NOW, null, 1))
-                .isInstanceOfSatisfying(
-                        BizException.class,
-                        ex ->
-                                assertThat(ex.errorCode())
-                                        .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID));
-    }
-
-    /** Verifies the append-only revision counter starts at one. */
-    @Test
-    void rejectsNonPositiveVersion() {
-        BigDecimal amount = new BigDecimal("20");
-        Instant validUntil = NOW.plusSeconds(60);
-
-        assertThatThrownBy(() -> new TeamPricePolicy(PRODUCT, amount, "sgd", NOW, validUntil, 0))
+    /** Verifies absent identity, amount, and revision fields fail before business validation. */
+    @ParameterizedTest
+    @MethodSource("invalidIdentities")
+    void rejectsInvalidIdentityAmountAndVersion(ThrowingCallable construction) {
+        assertThatThrownBy(construction)
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID);
     }
 
-    /** Verifies a null amount is rejected without reaching scale normalization. */
-    @Test
-    void rejectsNullAmount() {
+    static Stream<ThrowingCallable> invalidIdentities() {
         Instant validUntil = NOW.plusSeconds(60);
-
-        assertThatThrownBy(() -> new TeamPricePolicy(PRODUCT, null, "sgd", NOW, validUntil, 1))
-                .isInstanceOf(BizException.class)
-                .extracting(ex -> ((BizException) ex).errorCode())
-                .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID);
+        BigDecimal amount = new BigDecimal("20");
+        return Stream.of(
+                () -> new TeamPricePolicy(null, amount, "sgd", NOW, validUntil, 1),
+                () -> new TeamPricePolicy(PRODUCT, amount, "sgd", null, validUntil, 1),
+                () -> new TeamPricePolicy(PRODUCT, amount, "sgd", NOW, null, 1),
+                () -> new TeamPricePolicy(PRODUCT, amount, "sgd", NOW, validUntil, 0),
+                () -> new TeamPricePolicy(PRODUCT, null, "sgd", NOW, validUntil, 1));
     }
 
     /** Verifies compatibility checks cannot run against an absent product. */

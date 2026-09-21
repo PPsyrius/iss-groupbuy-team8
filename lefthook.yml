@@ -1,0 +1,33 @@
+pre-commit:
+  parallel: false
+  commands:
+    frontend-format:
+      # Lefthook evaluates glob/exclude patterns from the Git repository root;
+      # `root` changes the command CWD and limits files to frontend/, but does
+      # not rebase these patterns.
+      root: "frontend/"
+      glob: "*.{ts,tsx,js,mjs,cjs,json,css,md,yaml,yml}"
+      exclude:
+        [
+          "frontend/src/api/generated/**",
+          "frontend/src/routeTree.gen.ts",
+          "frontend/docs/**",
+          "frontend/README.md",
+          "frontend/AGENTS.md",
+          "frontend/CLAUDE.md",
+        ]
+      run: pnpm exec oxfmt {staged_files}
+      stage_fixed: true
+    frontend-lint:
+      root: "frontend/"
+      glob: "*.{ts,tsx}"
+      exclude:
+        [
+          "frontend/src/api/generated/**",
+          "frontend/src/routeTree.gen.ts",
+        ]
+      run: pnpm exec oxlint --type-aware {staged_files}
+    frontend-typecheck:
+      root: "frontend/"
+      glob: "*.{ts,tsx}"
+      run: pnpm exec tsc --noEmit

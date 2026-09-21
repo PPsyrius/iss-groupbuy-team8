@@ -25,12 +25,10 @@ class PricingStrategyResolverTest {
 
     @Test
     void duplicateModeFailsFastAtStartup() {
-        assertThatThrownBy(
-                        () ->
-                                new PricingStrategyResolver(
-                                        List.of(
-                                                new DualPricingStrategy(),
-                                                new DualPricingStrategy())))
+        List<PricingStrategy> strategies =
+                List.of(new DualPricingStrategy(), new DualPricingStrategy());
+
+        assertThatThrownBy(() -> new PricingStrategyResolver(strategies))
                 .isInstanceOf(IllegalStateException.class);
     }
 

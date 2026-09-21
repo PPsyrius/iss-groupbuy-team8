@@ -34,31 +34,24 @@ class GroupDealQueryServiceImplTest {
     @InjectMocks private GroupDealQueryServiceImpl service;
 
     @Test
-    void lowestPricedOpenDealWinsPerProduct() {
+    void cheapestOfTwoOpenDealsWinsForProduct() {
         GroupDeal expensive = deal("b0000000-0000-7000-8000-000000000001", "99.00");
         GroupDeal cheap = deal("b0000000-0000-7000-8000-000000000002", "89.00");
         when(groupDealRepository.findOpenDealsByProductIds(List.of(PRODUCT_ID)))
-                .thenReturn(List.of(expensive, cheap));
-
-        Map<UUID, OpenDealOffer> best = service.findBestOpenDealsByProductIds(List.of(PRODUCT_ID));
-
-        assertThat(best).containsOnlyKeys(PRODUCT_ID);
-        assertThat(best.get(PRODUCT_ID).dealPrice()).isEqualByComparingTo("89.00");
-        assertThat(best.get(PRODUCT_ID).dealId()).isEqualTo(cheap.id());
-    }
-
-    @Test
-    void pricierSecondDealKeepsFirstSeen() {
-        GroupDeal cheap = deal("b0000000-0000-7000-8000-000000000002", "89.00");
-        GroupDeal expensive = deal("b0000000-0000-7000-8000-000000000001", "99.00");
-        when(groupDealRepository.findOpenDealsByProductIds(List.of(PRODUCT_ID)))
+                .thenReturn(List.of(expensive, cheap))
                 .thenReturn(List.of(cheap, expensive));
 
         Map<UUID, OpenDealOffer> best = service.findBestOpenDealsByProductIds(List.of(PRODUCT_ID));
 
         assertThat(best).containsOnlyKeys(PRODUCT_ID);
-        assertThat(best.get(PRODUCT_ID).dealId()).isEqualTo(cheap.id());
         assertThat(best.get(PRODUCT_ID).dealPrice()).isEqualByComparingTo("89.00");
+        assertThat(best.get(PRODUCT_ID).dealId()).isEqualTo(cheap.id());
+
+        Map<UUID, OpenDealOffer> reversed =
+                service.findBestOpenDealsByProductIds(List.of(PRODUCT_ID));
+
+        assertThat(reversed.get(PRODUCT_ID).dealId()).isEqualTo(cheap.id());
+        assertThat(reversed.get(PRODUCT_ID).dealPrice()).isEqualByComparingTo("89.00");
     }
 
     @Test

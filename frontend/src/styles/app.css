@@ -1,0 +1,70 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+/* BlocBuy theme overlay on HeroUI 3's default theme. Values are the light set from
+   docs/design.md, as shipped in the Claude Design export (`blocbuy-theme.css`, kit-doubled names
+   such as `--accent-accent`) and mapped here to HeroUI 3's single names (docs/design-screens.md
+   §2.1). Light only, per the design brief; no dark block, so a dark screen cannot appear by
+   accident. Inter is loaded by index.html from Google Fonts (A2's CSP will need `font-src
+   https://fonts.gstatic.com` and `style-src https://fonts.googleapis.com`). */
+@layer base {
+  :root,
+  .light,
+  [data-theme="light"] {
+    /* Accent: bloc price text (soft-foreground), progress fill and focus ring only */
+    --accent: #ff385c;
+    --accent-foreground: #fcfcfc;
+    --accent-hover: #ff556c;
+    --accent-soft: rgba(255, 56, 92, 0.15);
+    --accent-soft-foreground: #b43648; /* the only accent-hued text token, 5.41:1 */
+    --accent-soft-hover: rgba(255, 56, 92, 0.2);
+    --focus: #ff385c;
+
+    /* Status */
+    --success: #008489;
+    --success-foreground: #18181b;
+    --success-hover: #339094;
+    --success-soft: rgba(0, 132, 137, 0.15);
+    --success-soft-foreground: #1f5357;
+    --success-soft-hover: rgba(0, 132, 137, 0.2);
+    --warning: #fc642d;
+    --warning-foreground: #18181b;
+    --warning-hover: #fe7648;
+    --warning-soft: rgba(252, 100, 45, 0.15);
+    --warning-soft-foreground: #8a422c;
+    --warning-soft-hover: rgba(252, 100, 45, 0.2);
+    --danger: #c13515;
+    --danger-foreground: #fcfcfc;
+    --danger-hover: #ca4e33;
+    --danger-soft: rgba(193, 53, 21, 0.15);
+    --danger-soft-foreground: #802f20;
+    --danger-soft-hover: rgba(193, 53, 21, 0.2);
+
+    /* Neutrals: pinned so the sheet and the kit cannot drift */
+    --background: #f5f5f5;
+    --surface: #ffffff;
+    --surface-secondary: #efefef;
+    --surface-tertiary: #eaeaea;
+    --foreground: #18181b;
+    --muted: #727272; /* 4.41:1 on background: CR-15 open with the design owner */
+    --border: #dedede;
+    --default: #ebebeb;
+    --default-hover: #e1e1e2;
+
+    /* Charts: accent-derived series */
+    --chart-1: #a60017;
+    --chart-2: #d2003a;
+    --chart-3: #ff385c;
+    --chart-4: #ff6780;
+    --chart-5: #ff91a5;
+  }
+
+  html {
+    font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

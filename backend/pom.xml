@@ -52,7 +52,7 @@
     <!-- quality gates: versions verified against Maven Central 2026-08-31 -->
     <spotless-maven-plugin.version>3.10.1</spotless-maven-plugin.version>
     <google-java-format.version>1.36.1</google-java-format.version>
-    <spotbugs-maven-plugin.version>4.10.4.0</spotbugs-maven-plugin.version>
+    <spotbugs-maven-plugin.version>4.10.4.1</spotbugs-maven-plugin.version>
     <spotbugs.version>4.10.4</spotbugs.version>
     <jacoco.version>0.8.15</jacoco.version>
     <!-- SonarCloud CI-based analysis: project key and coverage path -->
@@ -338,7 +338,7 @@
         </executions>
       </plugin>
 
-      <!-- Coverage agent + per-module report; aggregate report lives in blocbuy-bootstrap -->
+      <!-- Coverage agent only; Sonar consumes the aggregate report from blocbuy-bootstrap. -->
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
@@ -347,13 +347,6 @@
             <id>jacoco-prepare-agent</id>
             <goals>
               <goal>prepare-agent</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>jacoco-report</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>report</goal>
             </goals>
           </execution>
         </executions>

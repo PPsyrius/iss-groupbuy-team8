@@ -5,13 +5,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.catalog.exception.CatalogErrorCode;
+import com.blocbuy.catalog.gateway.ListingSearchReranker;
+import com.blocbuy.catalog.gateway.ListingSearchReranker.Candidate;
 import com.blocbuy.catalog.model.PricingMode;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.catalog.pricing.DualPricingStrategy;
+import com.blocbuy.catalog.query.ListingQuery;
 import com.blocbuy.catalog.query.ListingView;
 import com.blocbuy.catalog.repository.ProductRepository;
 import com.blocbuy.common.exception.BizException;
@@ -41,11 +45,12 @@ class ProductAppServiceImplTest {
     @Mock private ProductRepository productRepository;
     @Mock private GroupDealQueryService groupDealQueryService;
     @Mock private PricingStrategyResolver pricingStrategyResolver;
+    @Mock private ListingSearchReranker listingSearchReranker;
 
     @InjectMocks private ProductAppServiceImpl service;
 
     @Test
-    void pageListingsResolvesDualPricePerItemWithOneBatchDealQuery() {
+    void pageEnrichesDualPricesViaSingleBatchDealLookup() {
         Product withDeal = product(PRODUCT_ID, "129.00", ProductStatus.ON_SALE);
         UUID otherId = UUID.fromString("a0000000-0000-7000-8000-000000000002");
         Product withoutDeal = product(otherId, "45.00", ProductStatus.ON_SALE);
@@ -68,7 +73,7 @@ class ProductAppServiceImplTest {
     }
 
     @Test
-    void pageEmptyDoesSingleEmptyBatchQuery() {
+    void emptyPageStillQueriesDealsOnceWithEmptyList() {
         when(productRepository.pageOnSale(any(PageQuery.class), any()))
                 .thenReturn(PageResult.of(List.of(), 0, new PageQuery(1, 20)));
 
@@ -142,6 +147,165 @@ class ProductAppServiceImplTest {
                 .isInstanceOf(BizException.class)
                 .extracting(e -> ((BizException) e).errorCode())
                 .isEqualTo(CatalogErrorCode.PRODUCT_NOT_FOUND);
+    }
+
+    /** Verifies keyword/category delegation and one batched deal enrichment query. */
+    @Test
+    void searchCombinesKeywordAndCategoryWithOneBatchDealQuery() {
+        Product match = product(PRODUCT_ID, "129.00", ProductStatus.ON_SALE);
+        ListingQuery query = ListingQuery.of("headphones", "electronics", 1, 20);
+        when(productRepository.searchOnSale(
+                        new PageQuery(1, 20), "electronics", List.of("headphones")))
+                .thenReturn(PageResult.of(List.of(match), 1, new PageQuery(1, 20)));
+        when(pricingStrategyResolver.strategyFor(PricingMode.DUAL))
+                .thenReturn(new DualPricingStrategy());
+        when(groupDealQueryService.findBestOpenDealsByProductIds(List.of(PRODUCT_ID)))
+                .thenReturn(Map.of(PRODUCT_ID, offer(PRODUCT_ID, "89.00")));
+
+        PageResult<ListingView> result = service.search(query);
+
+        assertThat(result.total()).isEqualTo(1);
+        assertThat(result.items().get(0).groupPrice()).isEqualByComparingTo("89.00");
+        verify(groupDealQueryService, times(1)).findBestOpenDealsByProductIds(List.of(PRODUCT_ID));
+        verifyNoInteractions(listingSearchReranker);
+    }
+
+    /** Verifies that semantic order is applied before batched listing enrichment. */
+    @Test
+    void aiSearchReranksPageBeforeBatchEnrichment() {
+        UUID secondId = UUID.fromString("a0000000-0000-7000-8000-000000000002");
+        Product first = product(PRODUCT_ID, "129.00", ProductStatus.ON_SALE);
+        Product second = product(secondId, "45.00", ProductStatus.ON_SALE);
+        ListingQuery query = ListingQuery.of("headphones", null, 1, 20, true);
+        when(productRepository.searchOnSale(new PageQuery(1, 20), null, List.of("headphones")))
+                .thenReturn(PageResult.of(List.of(first, second), 2, new PageQuery(1, 20)));
+        when(listingSearchReranker.rerank(
+                        "headphones",
+                        List.of(
+                                new Candidate(
+                                        PRODUCT_ID,
+                                        "Headphones",
+                                        "subtitle",
+                                        "description",
+                                        "electronics"),
+                                new Candidate(
+                                        secondId,
+                                        "Headphones",
+                                        "subtitle",
+                                        "description",
+                                        "electronics"))))
+                .thenReturn(List.of(secondId, PRODUCT_ID));
+        when(pricingStrategyResolver.strategyFor(PricingMode.DUAL))
+                .thenReturn(new DualPricingStrategy());
+        when(groupDealQueryService.findBestOpenDealsByProductIds(List.of(secondId, PRODUCT_ID)))
+                .thenReturn(Map.of());
+
+        PageResult<ListingView> result = service.search(query);
+
+        assertThat(result.items())
+                .extracting(ListingView::id)
+                .containsExactly(secondId, PRODUCT_ID);
+        verify(groupDealQueryService).findBestOpenDealsByProductIds(List.of(secondId, PRODUCT_ID));
+    }
+
+    /** Verifies that unknown IDs are ignored and omitted products retain SQL order. */
+    @Test
+    void aiSearchIgnoresUnknownIdsAndAppendsOmittedCandidatesInSqlOrder() {
+        UUID secondId = UUID.fromString("a0000000-0000-7000-8000-000000000002");
+        UUID unknownId = UUID.fromString("a0000000-0000-7000-8000-000000000099");
+        Product first = product(PRODUCT_ID, "129.00", ProductStatus.ON_SALE);
+        Product second = product(secondId, "45.00", ProductStatus.ON_SALE);
+        ListingQuery query = ListingQuery.of("headphones", null, 1, 20, true);
+        when(productRepository.searchOnSale(new PageQuery(1, 20), null, List.of("headphones")))
+                .thenReturn(PageResult.of(List.of(first, second), 2, new PageQuery(1, 20)));
+        when(listingSearchReranker.rerank(any(), any())).thenReturn(List.of(unknownId, secondId));
+        when(pricingStrategyResolver.strategyFor(PricingMode.DUAL))
+                .thenReturn(new DualPricingStrategy());
+        when(groupDealQueryService.findBestOpenDealsByProductIds(List.of(secondId, PRODUCT_ID)))
+                .thenReturn(Map.of());
+
+        PageResult<ListingView> result = service.search(query);
+
+        assertThat(result.items())
+                .extracting(ListingView::id)
+                .containsExactly(secondId, PRODUCT_ID);
+    }
+
+    /** Verifies that a one-item page does not call the semantic provider. */
+    @Test
+    void aiSearchSkipsProviderForSingleCandidate() {
+        Product match = product(PRODUCT_ID, "129.00", ProductStatus.ON_SALE);
+        ListingQuery query = ListingQuery.of("headphones", null, 1, 20, true);
+        when(productRepository.searchOnSale(new PageQuery(1, 20), null, List.of("headphones")))
+                .thenReturn(PageResult.of(List.of(match), 1, new PageQuery(1, 20)));
+        when(pricingStrategyResolver.strategyFor(PricingMode.DUAL))
+                .thenReturn(new DualPricingStrategy());
+        when(groupDealQueryService.findBestOpenDealsByProductIds(List.of(PRODUCT_ID)))
+                .thenReturn(Map.of());
+
+        service.search(query);
+
+        verifyNoInteractions(listingSearchReranker);
+    }
+
+    /** Verifies that a normalized blank keyword bypasses semantic ranking. */
+    @Test
+    void aiSearchSkipsProviderWhenNormalizedKeywordIsNull() {
+        UUID secondId = UUID.fromString("a0000000-0000-7000-8000-000000000002");
+        Product first = product(PRODUCT_ID, "129.00", ProductStatus.ON_SALE);
+        Product second = product(secondId, "45.00", ProductStatus.ON_SALE);
+        ListingQuery query = ListingQuery.of("\u2003", null, 1, 20, true);
+
+        when(productRepository.searchOnSale(new PageQuery(1, 20), null, List.of()))
+                .thenReturn(PageResult.of(List.of(first, second), 2, new PageQuery(1, 20)));
+        when(pricingStrategyResolver.strategyFor(PricingMode.DUAL))
+                .thenReturn(new DualPricingStrategy());
+        when(groupDealQueryService.findBestOpenDealsByProductIds(List.of(PRODUCT_ID, secondId)))
+                .thenReturn(Map.of());
+
+        PageResult<ListingView> result = service.search(query);
+
+        assertThat(result.items())
+                .extracting(ListingView::id)
+                .containsExactly(PRODUCT_ID, secondId);
+        verifyNoInteractions(listingSearchReranker);
+    }
+
+    /** Verifies fail-open SQL ordering when the semantic port returns no ranking. */
+    @Test
+    void aiSearchPreservesSqlOrderWhenProviderReturnsNull() {
+        UUID secondId = UUID.fromString("a0000000-0000-7000-8000-000000000002");
+        Product first = product(PRODUCT_ID, "129.00", ProductStatus.ON_SALE);
+        Product second = product(secondId, "45.00", ProductStatus.ON_SALE);
+        ListingQuery query = ListingQuery.of("headphones", null, 1, 20, true);
+        when(productRepository.searchOnSale(new PageQuery(1, 20), null, List.of("headphones")))
+                .thenReturn(PageResult.of(List.of(first, second), 2, new PageQuery(1, 20)));
+        when(listingSearchReranker.rerank(any(), any())).thenReturn(null);
+        when(pricingStrategyResolver.strategyFor(PricingMode.DUAL))
+                .thenReturn(new DualPricingStrategy());
+        when(groupDealQueryService.findBestOpenDealsByProductIds(List.of(PRODUCT_ID, secondId)))
+                .thenReturn(Map.of());
+
+        PageResult<ListingView> result = service.search(query);
+
+        assertThat(result.items())
+                .extracting(ListingView::id)
+                .containsExactly(PRODUCT_ID, secondId);
+    }
+
+    /** Verifies that an empty search page remains valid and provider-free. */
+    @Test
+    void searchEmptyResultDoesNotFail() {
+        ListingQuery query = ListingQuery.of("no-such-thing", null, 1, 20);
+        when(productRepository.searchOnSale(new PageQuery(1, 20), null, List.of("no-such-thing")))
+                .thenReturn(PageResult.of(List.of(), 0, new PageQuery(1, 20)));
+
+        PageResult<ListingView> result = service.search(query);
+
+        assertThat(result.items()).isEmpty();
+        assertThat(result.total()).isZero();
+        verify(groupDealQueryService, times(1)).findBestOpenDealsByProductIds(List.of());
+        verifyNoInteractions(listingSearchReranker);
     }
 
     private static Product product(UUID id, String originalPrice, ProductStatus status) {

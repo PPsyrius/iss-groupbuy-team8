@@ -1,0 +1,40 @@
+/*
+ * HeroUI Pro Theme
+ * Add this to your globals.css after importing @heroui/styles
+ * Only includes variables customized from the selected theme
+ * @see https://heroui.com/docs/react/getting-started/theming
+ */
+
+/*
+ * Font: Inter
+ * Load this font in your app:
+ * <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet" />
+ */
+:root,
+.light,
+.default,
+[data-theme="light"],
+[data-theme="default"] {
+  /* Theme Colors */
+  --accent: oklch(65.79% 0.2309 17.07);
+  --accent-foreground: oklch(0.9911 0 0);
+  --success: oklch(0.5573 0.0947 199.48);
+  --success-foreground: oklch(0.9911 0 0);
+  --warning: oklch(0.6904 0.1972 38.75);
+  --warning-foreground: oklch(0.9911 0 0);
+  --danger: oklch(0.5392 0.1816 33.72);
+  --danger-foreground: oklch(0.9911 0 0);
+}
+
+.dark,
+[data-theme="dark"] {
+  color-scheme: dark;
+  /* Theme Colors */
+  --accent: oklch(65.79% 0.2309 17.07);
+  --accent-foreground: oklch(0.9911 0 0);
+  --success: oklch(0.652 0.114864 185.0749);
+  --success-foreground: oklch(0.9911 0 0);
+  --warning: oklch(0.8197 0.170602 78.4658);
+  --danger: oklch(0.5392 0.1816 33.72);
+  --danger-foreground: oklch(0.9911 0 0);
+}

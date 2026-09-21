@@ -74,7 +74,7 @@ class OAuthUserTxServiceTest {
     }
 
     @Test
-    void registerPersistsUserBeforeBindingAndRole() {
+    void registerOrdersUserBindingThenBuyerRole() {
         UUID buyerRole = UUID.randomUUID();
         when(roleRepository.findActiveRoleIdByCode(RoleCode.BUYER))
                 .thenReturn(Optional.of(buyerRole));

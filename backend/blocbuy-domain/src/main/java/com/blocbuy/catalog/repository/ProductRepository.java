@@ -4,6 +4,7 @@ import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,4 +39,11 @@ public interface ProductRepository {
      * blank means no category filter.
      */
     PageResult<Product> pageOnSale(PageQuery page, String category);
+
+    /**
+     * Page of on-sale products matching keyword plus category, newest first. {@code category} null
+     * or blank means no category filter; {@code keywordTokens} null or empty means no keyword
+     * filter. Tokens combine with AND and fields with OR in the infrastructure query.
+     */
+    PageResult<Product> searchOnSale(PageQuery page, String category, List<String> keywordTokens);
 }

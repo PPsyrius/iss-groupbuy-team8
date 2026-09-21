@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -14,6 +15,7 @@ import cn.dev33.satoken.dao.SaTokenDaoDefaultImpl;
 import com.blocbuy.catalog.exception.CatalogErrorCode;
 import com.blocbuy.catalog.query.ActiveDealView;
 import com.blocbuy.catalog.query.ListingDetailView;
+import com.blocbuy.catalog.query.ListingQuery;
 import com.blocbuy.catalog.query.ListingView;
 import com.blocbuy.catalog.service.ProductAppService;
 import com.blocbuy.catalog.web.ProductController;
@@ -122,6 +124,57 @@ class ProductControllerTest {
         verify(products).pageListings(2, 5, "electronics");
     }
 
+    /** Verifies HTTP keyword parameters are delegated to the search use case. */
+    @Test
+    void keywordSearchDelegatesToSearchUseCase() throws Exception {
+        ListingQuery query = ListingQuery.of("keyboard", "electronics", 2, 5);
+        when(products.search(query))
+                .thenReturn(PageResult.of(List.of(listing()), 6, PageQuery.of(2, 5)));
+        mvc.perform(get(PRODUCTS_PATH + "?keyword=keyboard&category=electronics&page=2&size=5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("COMMON_200_000"))
+                .andExpect(jsonPath("$.data.total").value(6))
+                .andExpect(jsonPath("$.data.page").value(2))
+                .andExpect(jsonPath("$.data.size").value(5))
+                .andExpect(jsonPath("$.data.items[0].id").value(PRODUCT.toString()));
+        verify(products).search(query);
+        verifyNoMoreInteractions(products);
+    }
+
+    /** Verifies that the HTTP AI flag reaches the normalized listing query. */
+    @Test
+    void aiKeywordSearchCarriesOptInToSearchUseCase() throws Exception {
+        ListingQuery query = ListingQuery.of("keyboard", null, null, null, true);
+        when(products.search(query))
+                .thenReturn(PageResult.of(List.of(listing()), 1, PageQuery.of(null, null)));
+
+        mvc.perform(get(PRODUCTS_PATH + "?keyword=keyboard&ai=true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items[0].id").value(PRODUCT.toString()));
+
+        verify(products).search(query);
+    }
+
+    /** Verifies that a blank HTTP keyword continues through the browse path. */
+    @Test
+    void blankKeywordStaysOnBrowsePath() throws Exception {
+        when(products.pageListings(null, null, null))
+                .thenReturn(PageResult.of(List.of(listing()), 1, PageQuery.of(null, null)));
+        mvc.perform(get(PRODUCTS_PATH).param("keyword", "  "))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("COMMON_200_000"));
+        verify(products).pageListings(null, null, null);
+    }
+
+    /** Verifies boundary rejection of a keyword longer than the public maximum. */
+    @Test
+    void overlongKeywordIsRejectedBeforeBusinessCode() throws Exception {
+        mvc.perform(get(PRODUCTS_PATH + "?keyword=" + "k".repeat(65)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON_400_002"));
+        verifyNoInteractions(products);
+    }
+
     @Test
     void getListingReturnsDetailWithDeal() throws Exception {
         when(products.getListingDetail(PRODUCT)).thenReturn(detailWithDeal());
@@ -167,7 +220,7 @@ class ProductControllerTest {
     }
 
     @Test
-    void unhandledFailureMapsToInternalErrorWithoutLeaking() throws Exception {
+    void unexpectedErrorMapsToGeneric500WithoutLeak() throws Exception {
         when(products.getListingDetail(PRODUCT)).thenThrow(new IllegalStateException("boom"));
         mvc.perform(get(PRODUCTS_PATH + "/" + PRODUCT))
                 .andExpect(status().isInternalServerError())

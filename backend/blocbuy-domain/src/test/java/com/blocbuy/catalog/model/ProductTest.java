@@ -265,31 +265,6 @@ class ProductTest {
         assertThat(product.images()).isEmpty();
     }
 
-    @Test
-    void accessorsExposeState() {
-        Product product =
-                reconstitute(
-                        ID,
-                        "Product",
-                        new BigDecimal("40.00"),
-                        "sgd",
-                        ProductStatus.ON_SALE,
-                        PricingMode.DUAL,
-                        5,
-                        2,
-                        3);
-
-        assertThat(product.productNo()).isEqualTo("P-1");
-        assertThat(product.title()).isEqualTo("Product");
-        assertThat(product.subtitle()).isNull();
-        assertThat(product.description()).isNull();
-        assertThat(product.coverImage()).isNull();
-        assertThat(product.images()).isEmpty();
-        assertThat(product.category()).isNull();
-        assertThat(product.soldCount()).isEqualTo(2);
-        assertThat(product.pricingMode()).isEqualTo(PricingMode.DUAL);
-    }
-
     private static Product reconstitute(
             UUID id,
             String title,

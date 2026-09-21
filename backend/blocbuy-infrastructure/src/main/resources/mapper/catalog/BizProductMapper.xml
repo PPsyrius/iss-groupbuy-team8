@@ -84,14 +84,19 @@
         FOR UPDATE
     </select>
 
-    <!-- buyer browse shows on_sale only; 'on_sale' is a server-side status code, not user input -->
-    <select id="selectOnSalePage" resultMap="bizProductMap">
-        SELECT <include refid="columns"/>
-        FROM biz_product
+    <!-- Shared buyer visibility/category rule prevents browse and search from drifting. -->
+    <sql id="visibleOnSaleFilters">
         WHERE deleted = false AND status = 'on_sale'
         <if test="category != null">
             AND category = #{category}
         </if>
+    </sql>
+
+    <!-- buyer browse shows on_sale only; 'on_sale' is a server-side status code, not user input -->
+    <select id="selectOnSalePage" resultMap="bizProductMap">
+        SELECT <include refid="columns"/>
+        FROM biz_product
+        <include refid="visibleOnSaleFilters"/>
         ORDER BY create_time DESC, id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
@@ -99,9 +104,36 @@
     <select id="countOnSale" resultType="long">
         SELECT COUNT(*)
         FROM biz_product
-        WHERE deleted = false AND status = 'on_sale'
-        <if test="category != null">
-            AND category = #{category}
+        <include refid="visibleOnSaleFilters"/>
+    </select>
+
+    <!-- UC1-ext search: keyword tokens AND-combine, fields OR-match. Infrastructure prepares
+         escaped patterns, which bind with #{} only; PostgreSQL owns case-insensitive matching. -->
+    <select id="selectVisibleSearchPage" resultMap="bizProductMap">
+        SELECT <include refid="columns"/>
+        FROM biz_product
+        <include refid="visibleOnSaleFilters"/>
+        <if test="patterns != null and patterns.size() > 0">
+            <foreach collection="patterns" item="pattern" open="AND (" separator=" AND " close=")">
+                (title ILIKE #{pattern} ESCAPE '\'
+                OR subtitle ILIKE #{pattern} ESCAPE '\'
+                OR description ILIKE #{pattern} ESCAPE '\')
+            </foreach>
+        </if>
+        ORDER BY create_time DESC, id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countVisibleSearch" resultType="long">
+        SELECT COUNT(*)
+        FROM biz_product
+        <include refid="visibleOnSaleFilters"/>
+        <if test="patterns != null and patterns.size() > 0">
+            <foreach collection="patterns" item="pattern" open="AND (" separator=" AND " close=")">
+                (title ILIKE #{pattern} ESCAPE '\'
+                OR subtitle ILIKE #{pattern} ESCAPE '\'
+                OR description ILIKE #{pattern} ESCAPE '\')
+            </foreach>
         </if>
     </select>
 

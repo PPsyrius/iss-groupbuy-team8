@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Kanban board
+    url: https://github.com/users/PPsyrius/projects/2/views/1
+    about: Sprint status lives on the board; issues are the backlog items.

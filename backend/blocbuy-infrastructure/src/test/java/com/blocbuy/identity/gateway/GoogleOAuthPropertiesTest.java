@@ -36,6 +36,10 @@ class GoogleOAuthPropertiesTest {
                 .isFalse();
         assertThat(new GoogleOAuthProperties(null, null, null, null, null, 0).configured())
                 .isFalse();
+        assertThat(new GoogleOAuthProperties("cid", null, "https://cb", null, null, 0).configured())
+                .isFalse();
+        assertThat(new GoogleOAuthProperties("cid", "secret", null, null, null, 0).configured())
+                .isFalse();
     }
 
     @Test

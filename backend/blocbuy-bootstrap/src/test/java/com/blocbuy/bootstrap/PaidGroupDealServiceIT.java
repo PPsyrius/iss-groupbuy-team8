@@ -14,6 +14,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -26,6 +27,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -93,14 +95,14 @@ class PaidGroupDealServiceIT {
         var terms = terms();
         var payment = payment();
         var transaction = new TransactionTemplate(transactions);
-        assertThatThrownBy(
-                        () ->
-                                transaction.executeWithoutResult(
-                                        status -> {
-                                            service.startConfirmed(terms, payment);
-                                            throw new IllegalStateException(
-                                                    "simulated caller failure after group persistence");
-                                        }))
+        Consumer<TransactionStatus> callback =
+                status -> {
+                    service.startConfirmed(terms, payment);
+                    throw new IllegalStateException(
+                            "simulated caller failure after group persistence");
+                };
+
+        assertThatThrownBy(() -> transaction.executeWithoutResult(callback))
                 .isInstanceOf(IllegalStateException.class);
         assertThat(memberCount(terms.id())).isZero();
         assertThat(
