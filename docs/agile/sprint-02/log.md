@@ -995,3 +995,42 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   because `TeamPricePolicy`'s own constructor already rejects anything but SGD.
 - Next: PR-B `PurchaseIntentAppService implements PaymentIntentPort`, then PR-C
   `OrderFulfilmentAdapter implements PaymentBusinessPort`, then PR-D wiring and fixture retirement.
+
+## 2026-09-22 - l0sgAi (Liu Jin) - Purchase intent app service: the payment intent port finally has a production implementation (#124, #126)
+
+- Scope: PR-B of `order-payment-integration-plan-20260922.md`. `PaymentIntentPort` had no
+  production implementation at all — only the test fixture — so the browser checkout path was
+  unreachable outside the `stripe-sprint2` profile. `PurchaseIntentAppService` is that
+  implementation: only ids come in, and every number that reaches the payment (amount, currency,
+  team size, both deadlines) is read server-side under a lock.
+- START: `CatalogPurchaseSupport.lockStartQuote` prices it, the team id is reserved with
+  `UuidV7.next()` because the team does not exist until the payment succeeds, the quote lasts 2400s
+  and the business deadline is `now + lifetimeSeconds` from the product's team terms.
+- JOIN: the team's own frozen `dealPrice` is the price, never a fresh policy price, which may have
+  moved since the team opened. The quote is capped by the team's `expire_time`, so a quote can
+  never outlive the team it buys into.
+- Why a second facade: the plan's §0 listed `PaidGroupDealRepository.lockDeal` as directly
+  reusable, but it returns groupbuy's `GroupDeal` aggregate, and the hard gate forbids order
+  touching it — the same reason PR-A gave for not reading `biz_product`. So groupbuy now exposes
+  `GroupDealPurchaseSupport.lockJoinTerms`, which validates OPEN / not expired / not full / not
+  already a member inside the deal row lock and hands back a value object. The rules deliberately
+  repeat `GroupDeal.joinPaid`: rejecting a quote costs nothing, rejecting a payment costs a refund.
+- Also changed: `PurchaseIntentRepository` gains `currentTime()` (`clock_timestamp()`, matching the
+  groupbuy and catalog ports) so deadlines are cut from the clock that writes them;
+  `PurchaseOperation.parse` returns `Optional` for request input, leaving `fromCode` for stored
+  values. `OrderErrorCode.TEAM_NOT_JOINABLE` was dropped before it was ever used — joinability is
+  groupbuy's rule and its codes say so; `ORDER_409_004` stays retired rather than reused.
+- Transaction: `@Transactional(propagation = MANDATORY)`. The caller owns the transaction because
+  the deal row lock has to stay held until the intent row is committed; a quote in its own short
+  transaction would release the team lock and let two buyers quote the last seat.
+- Not wired yet, on purpose: the service is not a `@Service`. Registering a second
+  `PaymentIntentPort` bean would collide with `PaymentBusinessFixture` in the Stripe integration
+  test. Assembly is PR-D, which retires the fixture in the same change.
+- Verified on JDK 21: `./mvnw -B verify` BUILD SUCCESS (147 bootstrap unit tests, 32 Testcontainers
+  ITs, ArchUnit 8/8, SpotBugs and Checkstyle clean). New tests: `PurchaseIntentAppServiceTest` 17,
+  `GroupDealPurchaseSupportImplTest` 13, plus two additions to existing suites. JaCoCo aggregate
+  self-check: every file touched by this change reports **no missed line or branch**.
+- Contract: unchanged, `git diff --exit-code -- contracts/` clean — still an internal port.
+- Next: PR-C `OrderFulfilmentAdapter implements PaymentBusinessPort` (the six methods, lock order
+  group → intent → payment, orders created as `PENDING`), then PR-D wiring, fixture retirement, the
+  `status='paid'` mismatch in Yorick's fixture, the NFR row and an ADR.

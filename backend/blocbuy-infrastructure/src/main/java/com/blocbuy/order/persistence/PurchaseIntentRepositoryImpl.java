@@ -4,6 +4,7 @@ import com.blocbuy.common.exception.BizException;
 import com.blocbuy.order.exception.OrderErrorCode;
 import com.blocbuy.order.model.PurchaseIntent;
 import com.blocbuy.order.repository.PurchaseIntentRepository;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,11 @@ import org.springframework.stereotype.Repository;
 public class PurchaseIntentRepositoryImpl implements PurchaseIntentRepository {
 
     private final BizPurchaseIntentMapper intents;
+
+    @Override
+    public Instant currentTime() {
+        return intents.currentTime();
+    }
 
     @Override
     public PurchaseIntent save(PurchaseIntent intent) {

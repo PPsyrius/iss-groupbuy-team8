@@ -22,7 +22,8 @@
 
 可直接复用,不重造:
 - `PaidGroupDealService.startConfirmed / joinConfirmed` — 已实现"付款后建团/入团",内部用 `reserveAndLock` 的 fingerprint 做幂等
-- `PaidGroupDealRepository.lockDeal / hasActiveMember / currentTime / complete`
+- `PaidGroupDealRepository.lockDeal / hasActiveMember / currentTime / complete` —— **仅限 groupbuy 模块内部
+  复用**;order 只能经 §3.2 修正 1 的 `GroupDealPurchaseSupport` 间接使用
 - `OrderRepository.save / findByPaymentId / confirmByDealId / cancelByDealId`
 - `ProductRepository.lockById`、`TeamPriceRepository.findLatestPolicy`
 
@@ -34,6 +35,7 @@
 |---|---|---|
 | START 要读商品与团条款 | order 侧开 mapper 直读 `biz_product` | catalog 暴露应用层门面 `CatalogPurchaseSupport`,order 调它 |
 | 付款成功要扣库存 | order 侧 `UPDATE biz_product` | 同上,门面出 `consumeOneUnit` |
+| JOIN 要读团的价与名额 | order 侧调 `PaidGroupDealRepository.lockDeal` 拿 `GroupDeal` | groupbuy 暴露应用层门面 `GroupDealPurchaseSupport`,order 只收值对象 |
 | 建团/入团 | order 侧写 `biz_group_member` | 调既有 `PaidGroupDealService` |
 
 `biz_product` 的两列(V14)归 catalog。**不动 `Product.reconstitute`** —— 它有 14 处调用方,为两列改签名波及面过大、收益为零。改为 catalog 内部新增一个小值对象 `ProductTeamTerms` 与一条自己的 mapper 查询,聚合根不变。
@@ -41,12 +43,14 @@
 分层落点一览:
 
 ```
-catalog / application  CatalogPurchaseSupport(接口) + CatalogPurchaseSupportImpl
-catalog / domain       ProductTeamTerms(值对象) + ProductRepository 增两个方法
-catalog / infra        ProductRepositoryImpl 实现 + BizProductMapper 新增两条语句
-order   / application  PurchaseIntentAppService  implements PaymentIntentPort
-order   / application  OrderFulfilmentAdapter    implements PaymentBusinessPort
-bootstrap / config     PaymentIntegrationConfiguration(装配,替掉夹具)
+catalog  / application  CatalogPurchaseSupport(接口) + CatalogPurchaseSupportImpl
+catalog  / domain       ProductTeamTerms(值对象) + ProductRepository 增两个方法
+catalog  / infra        ProductRepositoryImpl 实现 + BizProductMapper 新增两条语句
+groupbuy / application  GroupDealPurchaseSupport(接口) + GroupDealPurchaseSupportImpl
+order    / domain       PurchaseIntentRepository 增 currentTime
+order    / application  PurchaseIntentAppService  implements PaymentIntentPort
+order    / application  OrderFulfilmentAdapter    implements PaymentBusinessPort
+bootstrap / config      PaymentIntegrationConfiguration(装配,替掉夹具)
 ```
 
 > 2026-09-22 实现时的修正:原计划给团条款单开一个 `ProductTeamTermsRepository`,实际落地改为在既有
@@ -128,6 +132,22 @@ UUID createIntent(UUID user, String operation, UUID businessId)
 写 `PurchaseIntentRepository.save`,返回 intent id。
 
 > 注意 `CheckoutQuote` 的不变式:`quoteValidUntil`/`businessDeadline` 都会被截断到微秒,`currency` 只接受 `sgd`,`amount` 必须 scale=2。`PurchaseIntent` 已经用同一组规则,两边不会打架。
+
+> 2026-09-22 实现时的修正(PR-B 落地,3 条):
+>
+> 1. **JOIN 不直接调 `PaidGroupDealRepository`。** §0 原本把 `lockDeal / hasActiveMember / currentTime`
+>    列为"可直接复用",但 `lockDeal` 返回的是 groupbuy 的聚合根 `GroupDeal`,order 拿到它就违反了
+>    同一条硬门禁 —— 与 PR-A 否决"order 直读 `biz_product`"是同一个理由。改为 groupbuy 侧新增应用层门面
+>    `GroupDealPurchaseSupport.lockJoinTerms(dealId, buyerId)`,在团行锁内做完"OPEN / 未过期 / 未满 /
+>    非团长且非已有成员"四项校验,只把值对象 `JoinTerms` 交出来。校验规则刻意与 `GroupDeal.joinPaid`
+>    重复:付款前拒绝零成本,付款后拒绝要退款。
+> 2. **时钟来自 order 自己的端口。** `PurchaseIntentRepository` 增 `currentTime()`(`clock_timestamp()`),
+>    与 `PaidGroupDealRepository` / `TeamPriceRepository` 同一套写法。不用应用服务器时钟:intent 冻结的
+>    两个 deadline 将来都要和库里的 `timestamptz` 比大小。
+> 3. **`PurchaseOperation.parse` 替代 `fromCode` 处理请求输入。** `operation` 来自 HTTP 请求体,未知值是
+>    用户输入错误而不是编程错误,`fromCode` 的 `IllegalArgumentException` 语义不对。新增返回
+>    `Optional` 的 `parse`,调用方转成自己的 `BizException`。`ORDER_409_004`(`TEAM_NOT_JOINABLE`)因此
+>    永久空缺 —— 可加入性是 groupbuy 的规则,由它自己的错误码表达,号段退休不复用。
 
 ### 3.3 PR-C — `OrderFulfilmentAdapter implements PaymentBusinessPort`
 

@@ -1,5 +1,6 @@
 package com.blocbuy.order.persistence;
 
+import java.time.Instant;
 import java.util.UUID;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -10,6 +11,9 @@ import org.apache.ibatis.annotations.Param;
  */
 @Mapper
 public interface BizPurchaseIntentMapper {
+
+    /** {@code clock_timestamp()}, deliberately not {@code now()}: statement time, not tx start. */
+    Instant currentTime();
 
     int insert(@Param("row") BizPurchaseIntentDO row);
 

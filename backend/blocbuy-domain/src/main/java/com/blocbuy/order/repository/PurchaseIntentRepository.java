@@ -1,6 +1,7 @@
 package com.blocbuy.order.repository;
 
 import com.blocbuy.order.model.PurchaseIntent;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,6 +18,13 @@ import java.util.UUID;
  * turns a replayed webhook into a database collision rather than a second membership and order.
  */
 public interface PurchaseIntentRepository {
+
+    /**
+     * Fresh database wall clock, not transaction-start time. Every deadline the intent freezes is
+     * compared against stored {@code timestamptz} values, so the quote must be cut from the same
+     * clock that wrote them rather than from the application server's.
+     */
+    Instant currentTime();
 
     /** Inserts a freshly issued, unfulfilled intent. */
     PurchaseIntent save(PurchaseIntent intent);

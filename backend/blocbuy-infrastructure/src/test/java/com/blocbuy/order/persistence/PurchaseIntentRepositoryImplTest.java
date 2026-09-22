@@ -55,6 +55,13 @@ class PurchaseIntentRepositoryImplTest {
     }
 
     @Test
+    void theClockComesFromTheDatabaseRatherThanTheApplicationServer() {
+        when(mapper.currentTime()).thenReturn(NOW);
+
+        assertThat(repository.currentTime()).isEqualTo(NOW);
+    }
+
+    @Test
     void saveWritesTheRowAndReturnsTheIssuedIntent() {
         PurchaseIntent issued = intent(null, 0);
         assertThat(repository.save(issued)).isSameAs(issued);

@@ -28,16 +28,14 @@ public enum OrderErrorCode implements ErrorCode {
             400,
             "Purchase intent terms are not valid",
             "error.order.purchaseIntentTermsInvalid"),
+    // ORDER_409_004 was briefly reserved for a "team not joinable" code. Joinability is groupbuy's
+    // rule, raised by its own facade as GROUPBUY_409_002/003/004, so this domain never owned it.
+    // The number stays retired rather than reused.
     PURCHASE_INTENT_ALREADY_FULFILLED(
             "ORDER_409_003",
             409,
             "Purchase intent was already fulfilled by another payment",
-            "error.order.purchaseIntentAlreadyFulfilled"),
-    TEAM_NOT_JOINABLE(
-            "ORDER_409_004",
-            409,
-            "Team is not accepting new members",
-            "error.order.teamNotJoinable");
+            "error.order.purchaseIntentAlreadyFulfilled");
 
     private final String code;
     private final int httpStatus;

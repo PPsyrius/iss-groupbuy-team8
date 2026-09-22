@@ -86,6 +86,15 @@ class PurchaseIntentTest {
     }
 
     @Test
+    void parsingRequestInputAnswersEmptyInsteadOfThrowing() {
+        // Callers that receive the operation from a browser turn the miss into their own typed
+        // business rejection, so an unknown value must not arrive as an IllegalArgumentException.
+        assertThat(PurchaseOperation.parse("JOIN")).contains(PurchaseOperation.JOIN);
+        assertThat(PurchaseOperation.parse("join")).isEmpty();
+        assertThat(PurchaseOperation.parse(null)).isEmpty();
+    }
+
+    @Test
     void issuedIntentIsUnfulfilledAndKeepsItsTerms() {
         PurchaseIntent intent = issued();
         assertThat(intent.fulfilled()).isFalse();
