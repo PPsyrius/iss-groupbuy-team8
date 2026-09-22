@@ -15,6 +15,16 @@ updates:
     ignore:
       - dependency-name: 'org.springframework*'
         update-types: ['version-update:semver-major']
+      # Boot-4-line artifacts ride deliberate upgrades, not Dependabot.
+      - dependency-name: 'org.mybatis.spring.boot*'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'cn.dev33*'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'org.springdoc*'
+        update-types: ['version-update:semver-major']
+      # Boot 4.1 pairs Tomcat 11; the CVE override stays, majors need review.
+      - dependency-name: 'org.apache.tomcat*'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     cooldown:
@@ -35,6 +45,10 @@ updates:
     directory: /backend
     schedule:
       interval: daily
+    # Java upgrades are deliberate stack decisions; keep the backend on Java 21 LTS.
+    ignore:
+      - dependency-name: 'eclipse-temurin'
+        update-types: ['version-update:semver-major']
 
   # pnpm 12 lockfile: GitHub documents pnpm v7–v10 under `npm`; confirm it parses via
   # Insights → Dependency graph → Dependabot → "Check for updates" (frontend/docs/plan.md §12.4).

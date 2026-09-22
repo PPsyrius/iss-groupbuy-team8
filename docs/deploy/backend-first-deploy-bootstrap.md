@@ -1,11 +1,10 @@
 # First-Deploy One-Time Bootstrap Checklist
 
-**Status:** executable checklist of the current implementation
+**Status:** one-time bootstrap completed on dev (delivery pipeline green); retained as first-deployment evidence. For steady-state policy see the operator guide — if they conflict, the guide wins.
 
 **Use case:** setting up the deployment environment from scratch and completing the first pipeline deployment. Every step is executed exactly once.
 
-**Authoritative reference:** for policy, rationale, and security constraints see the
-[existing EC2 backend deployment operator guide](backend-ec2-pipeline-operator-guide.md). If this checklist ever conflicts with that guide, the guide wins.
+**Authoritative reference:** for policy, rationale, and security constraints see the [existing EC2 backend deployment operator guide](backend-ec2-pipeline-operator-guide.md). If this checklist ever conflicts with that guide, the guide wins.
 
 **Environment boundary:** reuses the existing EC2 instance and its PostgreSQL/Redis; this checklist creates and modifies no infrastructure resources.
 
@@ -244,10 +243,7 @@ aws iam get-role --role-name "BlocBuyGitHubEcrPush" --query 'Role.Arn' --output 
 arn:aws:iam::402178232802:role/BlocBuyGitHubEcrPush
 ```
 
-The example file's `sub` is already filled with this repository's verified real subject (confirmed 2026-09-05 by decoding the OIDC token with a temporary workflow):
-`repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:ref:refs/heads/dev`.
-Repositories created after 15 July 2026 (or with immutable OIDC subjects enabled) use the combined name+ID format for `sub`:
-`repo:<owner-name>@<ownerID>/<repo-name>@<repoID>:...` — this repository (created 2026-08-24) is one of them. Before recreating the role you must still verify the repository's actual subject; relaxing it to a wildcard is not allowed.
+The example file's `sub` is already filled with this repository's verified real subject (confirmed 2026-09-05 by decoding the OIDC token with a temporary workflow): `repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:ref:refs/heads/dev`. Repositories created after 15 July 2026 (or with immutable OIDC subjects enabled) use the combined name+ID format for `sub`: `repo:<owner-name>@<ownerID>/<repo-name>@<repoID>:...` — this repository (created 2026-08-24) is one of them. Before recreating the role you must still verify the repository's actual subject; relaxing it to a wildcard is not allowed.
 
 ### 3.3 Create the SSM deploy role (trust scoped to the `backend-dev` environment)
 
@@ -295,9 +291,7 @@ sudo chown root:root /etc/blocbuy/backend.env
 sudoedit /etc/blocbuy/backend.env   # fill in all secrets per deployment/backend/backend.env.example
 ```
 
-Keys in `backend.env.example`: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `REDIS_HOST`,
-`REDIS_PORT`, `REDIS_PASSWORD`, `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`. `BACKEND_IMAGE`
-does not belong in this file; the deploy script injects it by digest.
+Keys in `backend.env.example`: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`. `BACKEND_IMAGE` does not belong in this file; the deploy script injects it by digest.
 
 ```bash
 # Verify
@@ -308,8 +302,7 @@ grep -r 'replace-with' /etc/blocbuy/backend.env        # must produce no output
 
 Security group check: PostgreSQL/Redis must not be open to the public internet; `8589` may only allow the reverse-proxy/load-balancer security group or the team's testing CIDR.
 
-The deployment bundle (`compose.yml` and scripts) is installed automatically to
-`/opt/blocbuy/backend` by SSM **on the first workflow run**; the EC2 host does not need a clone of the repository. Once installed you can run the preflight manually:
+The deployment bundle (`compose.yml` and scripts) is installed automatically to `/opt/blocbuy/backend` by SSM **on the first workflow run**; the EC2 host does not need a clone of the repository. Once installed you can run the preflight manually:
 
 ```bash
 sudo /opt/blocbuy/backend/bin/preflight.sh
@@ -351,13 +344,7 @@ No long-lived AWS access keys and no `BACKEND_DOT_ENV` are needed on GitHub. Rea
 
 ### 5.4 Protect the `dev` branch
 
-- [ ] Branch protection enabled: require PRs, CODEOWNERS review, forbid force push, and select the required checks
-
-Required checks to select: `build-quality`, `contract-check`, `docker`, `SonarCloud Backend`,
-`frontend-check`, `SonarCloud Frontend`, `workflow-lint`, `deployment-bundle`, `gitleaks`,
-`trivy-deps`, `trivy-config`.
-Make `codeql` required only once GHAS is enabled consistently.
-Do not set the push-only deploy job (`deploy-existing-ec2`) as a PR required check.
+- [ ] Branch protection enabled: require PRs, CODEOWNERS review, forbid force push, and select the required checks listed in [backend-pipeline.md](../ci/backend-pipeline.md#required-pr-checks). Do not set the push-only deploy job (`deploy-existing-ec2`) as a PR required check.
 
 ## 6. First deployment rehearsal
 
@@ -372,11 +359,10 @@ Execute in order; on any failure, troubleshoot before continuing:
 - [ ] 7. Business verification:
 
 ```bash
-curl --fail --silent "https://<backend-address>/actuator/health"
+curl --fail --silent "https://<backend-address>/api/actuator/health"
 ```
 
-The currently deployed image digest is recorded on the EC2 host in `/opt/blocbuy/backend/state/current-image`.
-Deployment does not restart or delete PostgreSQL/Redis.
+The currently deployed image digest is recorded on the EC2 host in `/opt/blocbuy/backend/state/current-image`. Deployment does not restart or delete PostgreSQL/Redis.
 
 ## Rollback and freeze (after the first deployment is confirmed working)
 
@@ -396,6 +382,6 @@ See [operator guide section 13](backend-ec2-pipeline-operator-guide.md#13-troubl
 | Instance not online | SSM agent not running / instance profile not attached / missing NAT or VPC endpoint |
 | ECR pull denied | Section 2.2 policy not attached or placeholders not substituted |
 | Preflight failed | env file permissions not `root:root 600` / leftover placeholders / insufficient disk |
-| Bundle policy failed | Deployment bundle contains files outside the allowlist (only `compose.yml` and the four scripts are allowed) |
+| Bundle policy failed | Deployment bundle contains files outside the allowlist (only `compose.yml` and the five lifecycle scripts are allowed — see `security.yml`) |
 
 **Security red lines:** never paste `/etc/blocbuy/backend.env`, Docker credentials, or application secrets into issues, PRs, workflow logs, or any file in this repository; the substituted IAM JSON must only live in a private directory outside the repository.

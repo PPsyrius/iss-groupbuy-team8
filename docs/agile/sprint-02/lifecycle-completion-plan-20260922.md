@@ -20,7 +20,7 @@ returned.
 | Order `pending → confirmed / cancelled` | #124 UC10, remaining item | @l0sgAi (me) | `OrderRepository.confirmByDealId` / `cancelByDealId` are implemented and tested, with **zero callers in the application layer** |
 | Triggering and executing refunds on expiry | #29 UC6 | @Yorick-Yu (handed over) | `StripeCheckoutService.recordExpiredTeam` and `RefundService.processNext` have no production callers at all; there is not one `@Scheduled` anywhere in `src/main` |
 | Two defects that block wiring the refund worker | #132 / #133 | @Yorick-Yu (handed over) | See §3.2 |
-| No write surface for product group terms | NFR-28 / backend ADR 0001 "Open" | Unassigned | `grep team_target_size` finds reads only across all of main; `AdminListingController.ListingContent` has neither field |
+| No write surface for product group terms | NFR-29 / backend ADR 0001 "Open" | Unassigned | `grep team_target_size` finds reads only across all of main; `AdminListingController.ListingContent` has neither field |
 | `GET /orders/{id}` | #31 UC8, backend half | @limjiechao | The contract has only `/orders/me` |
 | A webhook for an unknown payment answers 500 | #139 | @Yorick-Yu (handed over) | Nothing catches `UUID.fromString` in `apply` or `require(id)` in `settle` |
 | The sandbox gate is duplicated seven times | #130 | @Yorick-Yu (handed over) | Seven sites across three files; `StripePaymentGateway` has none at all |
@@ -121,7 +121,7 @@ annotations, so `domain_is_framework_free` still passes.
 | 2 | PR-F | Pre-wiring fixes for the refund worker (#132 / #133) + #138 regression guard | — | No |
 | 3 | PR-J | Record and acknowledge webhooks for unknown payments (#139) | — | No |
 | 4 | PR-G | Scheduling foundation (lease) + team-expiry sweeper + refund worker | PR-E, PR-F | No |
-| 5 | PR-H | Admin write surface for product group terms (NFR-28) | — | **Yes** (additive) |
+| 5 | PR-H | Admin write surface for product group terms (NFR-29) | — | **Yes** (additive) |
 | 6 | PR-I | `GET /orders/{id}` | — | **Yes** (additive) |
 | 7 | PR-K | Consolidate the sandbox gate into `StripeClientProvider` (#130) | PR-J | No |
 
@@ -317,7 +317,7 @@ idempotency key) and one `StripeLocalIntegrationTest` case (after
   team going through one scheduler run leaves the order `cancelled` and a `pending` refund
   obligation; a second run has no further effect.
 
-### 3.4 PR-H: admin write surface for product group terms (NFR-28)
+### 3.4 PR-H: admin write surface for product group terms (NFR-29)
 
 `AdminListingController.ListingContent` gains two **optional** fields:
 
@@ -338,7 +338,7 @@ called by `AdminListingAppServiceImpl.create` / `revise` **inside the same trans
 same `expectedVersion` CAS**. Two UPDATEs against the same row is deliberate: changing the
 aggregate root's signature would hit 14 `reconstitute` call sites for zero benefit.
 
-Contract: additive. Regenerate with `./mvnw -Popenapi-export` and commit. NFR-28 moves to
+Contract: additive. Regenerate with `./mvnw -Popenapi-export` and commit. NFR-29 moves to
 `implemented`.
 
 ### 3.5 PR-I: `GET /orders/{id}`
@@ -473,7 +473,7 @@ cd backend && ./mvnw -B verify
 - PR-H / PR-I: after regenerating with `./mvnw -B verify -Popenapi-export -DskipTests ...`,
   `git diff --exit-code -- contracts/` is clean
 - One `docs/agile/sprint-02/log.md` entry per PR; PR-E and PR-G each add an NFR row; PR-H moves
-  NFR-28 to `implemented`; the timing and lock-order arguments from PR-E and PR-G go into backend
+  NFR-29 to `implemented`; the timing and lock-order arguments from PR-E and PR-G go into backend
   ADR 0002
 - PR-K additionally runs issue #130's grep-based AC and pastes the output into the PR description
 

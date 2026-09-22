@@ -10,8 +10,7 @@ written from, versioned with the code it describes.
 docs/agile/
 ├── README.md              this file
 ├── sprint-01/README.md    pointer to the Sprint 1 container issue and report
-├── sprint-02/log/         running log, one file per day: one dated entry per unit of work per member
-├── sprint-02/log.md       index of the day files
+├── sprint-02/log.md       running log: one dated entry per unit of work per member
 ├── sprint-NN/plan.md      sprint goal and member-by-use-case matrix (mirrors the container issue)
 ├── sprint-NN/review.md    plan vs actual, written at the sprint review
 ├── sprint-NN/retro.md     what went well, what could be better, what we try next
@@ -29,11 +28,6 @@ Related homes:
 - `.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md`: the shapes issues and PRs take.
 
 ## The rule
-
-Everything here is written in English, like every other file in this repository. The team does not
-share one first language and the report is read from outside the team, so a document only counts as
-evidence if every member and every reviewer can act on it. The full rule, including what it does
-not cover, is in [`AGENTS.md`](../../AGENTS.md).
 
 Every PR that changes code, config or infrastructure adds a sprint-log entry in the same PR.
 Every PR that touches a non-functional concern adds or updates an NFR register row. Every real

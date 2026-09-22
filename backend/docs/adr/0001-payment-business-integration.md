@@ -81,7 +81,7 @@ unit at `consumeOneUnit` therefore rolls the whole settlement back rather than c
 membership and an order next to a refund.
 
 Open: no product has group terms yet, so the START path is unavailable until an operator supplies
-them; there is no admin surface for that in this change (NFR-26 records it as the unmet part).
+them; there is no admin surface for that in this change (NFR-29 records it as the unmet part).
 A START reserves its team id before the team exists, so an intent that is never paid leaves a
 dangling `deal_id` — harmless, since the column has no foreign key, but a cleanup job for expired
 unfulfilled intents is owed in Sprint 3.
