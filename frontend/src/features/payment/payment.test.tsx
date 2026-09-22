@@ -7,6 +7,7 @@ import { OK_CODE } from "@/api/envelope";
 import { meQueryKey } from "@/api/generated/@tanstack/react-query.gen";
 import type { Receipt } from "@/api/generated/types.gen";
 import { clearCompletedAttempt, lastPaymentKey } from "@/features/payment/use-checkout";
+import { receiptPollingInterval } from "@/routes/_authenticated/payments.$paymentId";
 import { server } from "@/test/msw";
 import { renderRoute, serveAnonymous, serveSignedIn } from "@/test/render-route";
 
@@ -229,6 +230,27 @@ describe("teammate product page payment integration", () => {
 });
 
 describe("backend-confirmed payment result", () => {
+  it("stops polling after an error even when the cached receipt is pending", () => {
+    expect(
+      receiptPollingInterval({
+        receipt: { status: "CREATED", refundPending: false },
+        error: new Error("temporary read failure"),
+        deadline: 61_000,
+        now: 3000,
+      }),
+    ).toBe(false);
+  });
+
+  it("stops polling at a deadline independent of successful updates", () => {
+    const receiptState = { status: "CREATED", refundPending: false };
+    expect(
+      receiptPollingInterval({ receipt: receiptState, error: null, deadline: 60_000, now: 59_999 }),
+    ).toBe(2000);
+    expect(
+      receiptPollingInterval({ receipt: receiptState, error: null, deadline: 60_000, now: 60_000 }),
+    ).toBe(false);
+  });
+
   it("does not infer payment from the return URL; refresh shows the saved order", async () => {
     serveSignedIn();
     receipt({ status: "CREATED" });

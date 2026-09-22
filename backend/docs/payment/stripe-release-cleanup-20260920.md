@@ -6,7 +6,7 @@ This is the current deployment boundary for the Stripe work. Historical Sandbox 
 
 ## Current boundary
 
-- `stripe-sprint2` is the rollout switch. Without it, `StripeFeatureSwitch` rejects payment-intent, Checkout and receipt routes before business or database access. The authenticated capabilities endpoint returns `enabled=false` with `Cache-Control: no-store`; missing, invalid or unavailable capability responses also keep frontend payment actions off.
+- `stripe-sprint2` is the rollout switch. Without it, `StripeFeatureSwitch` rejects payment-intent, Checkout and receipt routes before business or database access. The authenticated capabilities endpoint returns `enabled=false` with `Cache-Control: no-store`; missing, invalid or unavailable capability responses also keep frontend payment actions off. When enabled, a pending receipt is polled every two seconds for at most 60 seconds and automatic polling stops immediately after a read error.
 - Browser requests contain operation and business identifiers, not buyer or amount. Sa-Token owns identity, server-side ports own pricing, and Checkout retries reuse the intent and idempotency key.
 - `CheckoutPayment`, its repository and `CheckoutGateway` are separate from the original payment contracts. The original webhook contract remains, with `StripePaymentAppService` selected only under the Stripe profile.
 - `PaymentBusinessPort` and `PaymentIntentPort` still require the team's production bindings before Stripe can be enabled. `DevPaymentRepositoryAdapter` must be removed when the real repository lands.

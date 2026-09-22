@@ -1,7 +1,7 @@
 import { Button } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { unwrapResult } from "@/api/envelope";
 import { getPaymentReceiptOptions } from "@/api/generated/@tanstack/react-query.gen";
@@ -14,6 +14,24 @@ import { useSession } from "@/features/session/use-session";
 export const Route = createFileRoute("/_authenticated/payments/$paymentId")({
   component: PaymentReceipt,
 });
+
+const RECEIPT_POLL_INTERVAL_MS = 2000;
+const RECEIPT_POLL_WINDOW_MS = RECEIPT_POLL_INTERVAL_MS * 30;
+
+export function receiptPollingInterval({
+  receipt,
+  error,
+  deadline,
+  now = Date.now(),
+}: Readonly<{
+  receipt: Pick<Receipt, "status" | "refundPending"> | undefined;
+  error: unknown;
+  deadline: number;
+  now?: number;
+}>): number | false {
+  if (error || now >= deadline) return false;
+  return receipt?.status === "CREATED" || receipt?.refundPending ? RECEIPT_POLL_INTERVAL_MS : false;
+}
 
 function getPaymentTitle({
   isError,
@@ -95,6 +113,11 @@ function RefundStatusBanner({
 
 function PaymentReceipt() {
   const { paymentId } = Route.useParams();
+  return <PaymentReceiptForId key={paymentId} paymentId={paymentId} />;
+}
+
+function PaymentReceiptForId({ paymentId }: Readonly<{ paymentId: string }>) {
+  const [pollingDeadline] = useState(() => Date.now() + RECEIPT_POLL_WINDOW_MS);
   const enabled = usePaymentAvailability();
   const session = useSession();
   const options = getPaymentReceiptOptions({ path: { id: paymentId } });
@@ -111,10 +134,11 @@ function PaymentReceipt() {
     retry: false,
     // A redirect is not proof of payment. Poll the webhook-confirmed database state only.
     refetchInterval: (q) =>
-      (q.state.data?.data?.status === "CREATED" || q.state.data?.data?.refundPending) &&
-      q.state.dataUpdateCount < 30
-        ? 2000
-        : false,
+      receiptPollingInterval({
+        receipt: q.state.data?.data,
+        error: q.state.error,
+        deadline: pollingDeadline,
+      }),
   });
   const receipt = query.data;
   const terminal = receipt?.status && receipt.status !== "CREATED";
