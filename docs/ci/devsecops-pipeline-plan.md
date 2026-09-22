@@ -198,6 +198,13 @@ the run prints the compare URL in its summary.
 Weekly, grouped PRs: Maven (`backend/`), GitHub Actions (`/`), Docker (`backend/`), plus configured
 frontend dependency updates where supported.
 
+**2026-09-22 Java runtime update policy.** The backend remains on the agreed Java 21 LTS and Spring Boot 4 baseline.
+Dependabot may refresh Java 21 `eclipse-temurin` images, but ignores major Docker tag updates; it also
+ignores majors for the Boot-4-line Maven artifacts (`org.mybatis.spring.boot*`, `cn.dev33*`, `org.springdoc*`,
+`org.apache.tomcat*`) while same-line maintenance still flows. Moving to a later Java release requires a
+deliberate stack decision and coordinated updates to Maven Enforcer, CI, runtime images, and documentation.
+Automatically following non-LTS Java tags was rejected because it would split the build and runtime from the Java 21 baseline.
+
 ### Branch protection (manual, repo settings)
 
 `dev`: require PRs; require `build-quality`, `SonarCloud Backend`, `docker`, `gitleaks`,

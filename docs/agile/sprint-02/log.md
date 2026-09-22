@@ -872,3 +872,19 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 - Verified: JDK 21 `./mvnw.cmd -B -ntp verify` passed, including 32 Testcontainers integration tests and Flyway V1-V11 on PostgreSQL 18; aggregate JaCoCo had no missed lines or partial branches across 32 touched payment files. The Node 24 `pnpm check` gate passed TypeScript, Oxlint, Oxfmt, 151 tests and Knip; touched payment/product routes had 100% line and branch coverage.
 - Decision: prefer behavior-preserving helpers and direct branch tests over suppressions or duplicate assertions; treat soft-deleted payments as absent from operational payment/refund flows; keep the sprint log, NFR register, release boundary, Sandbox acceptance and quality report as the canonical evidence set.
 - Problems: remote SonarCloud and shared deployment remain authoritative and were not run locally.
+## 2026-09-22 - @PPsyrius - Keep automated updates on Java 21 and Boot 4
+
+- Kind: nfr, decision, chore
+- Changed: `.github/dependabot.yml` ignores major `eclipse-temurin` Docker updates plus majors for
+  the Boot-4-line Maven artifacts (`org.mybatis.spring.boot*`, `cn.dev33*`, `org.springdoc*`,
+  `org.apache.tomcat*`); same-line maintenance still flows. CI policy and NFR-26 record the agreed
+  Java 21 LTS + Boot 4 baseline.
+- Verified: `pnpm dlx yaml@2.9.1 valid .github/dependabot.yml` (before and after the Maven rules);
+  `git diff --check` clean. Maven tests not run because no application or build source changed.
+  Dependabot's next update run is not locally reproducible.
+- Decisions: `docs/ci/devsecops-pipeline-plan.md` "Java runtime update policy"; later Java releases
+  require a coordinated stack decision rather than an automated dependency PR. Scope deliberately
+  Java/Boot only: ArchUnit, Stripe, Enforcer plugin, Flyway, npm and Actions reviewed and left
+  unpinned (test-only, unrelated stacks, or fail-closed).
+- Problems: register row takes NFR-26 since Stripe claimed NFR-21–25 on `dev`; commit and push are
+  user-owned.
