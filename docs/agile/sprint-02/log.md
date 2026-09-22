@@ -879,3 +879,11 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 - Verified: `pnpm dlx yaml@2.9.1 valid .github/dependabot.yml` (before and after the Maven rules); `git diff --check` clean. Maven tests not run because no application or build source changed. Dependabot's next update run is not locally reproducible.
 - Decisions: `docs/ci/devsecops-pipeline-plan.md` "Java runtime update policy"; later Java releases require a coordinated stack decision rather than an automated dependency PR. Scope deliberately Java/Boot only: ArchUnit, Stripe, Enforcer plugin, Flyway, npm and Actions reviewed and left unpinned (test-only, unrelated stacks, or fail-closed).
 - Problems: register row takes NFR-26 since Stripe claimed NFR-21–25 on `dev`; commit and push are user-owned.
+
+## 2026-09-22 - @PPsyrius - Gitleaks false positives: Stripe test placeholder and contract baseline
+
+- Kind: nfr (security, NFR-02), chore
+- Changed: `StripeClientProviderTest` placeholder `sk_test_placeholder` → `test-placeholder` (tripped the secret-key detector); `.gitleaks.toml` allowlists `scripts/stripe-dev-contract-baseline.json` (sha256 content hashes, no secrets) with the written reason in the config, per the quality-gates exception process. Narrowest exclusions: one renamed literal, one exact file path — no rule weakened.
+- Verified: JDK 21 `./mvnw -B -ntp verify` BUILD SUCCESS with both changes in tree (7 modules green, 32 bootstrap tests 0 failures, SpotBugs/Checkstyle clean); TOML parses; `git diff --check` clean. CI `gitleaks` job owed (no local binary).
+- Decisions: rename over allowlisting for the test literal (removes the trigger entirely); allowlist only for the generated baseline, which cannot avoid high-entropy hashes.
+- Problems: gitleaks not installed locally, so the finding reproduction and the post-fix zero-findings run are CI-owed. Next: user commits + opens PR.
