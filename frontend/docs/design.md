@@ -247,7 +247,9 @@ components:
     textColor: "#18181B"
 ---
 
-# BlocBuy
+# BlocBuy Design Tokens
+
+This is the token reference; the YAML frontmatter retains the complete palette and the tables below explain its use. Product code uses semantic HeroUI tokens rather than copying resolved values. The app ships light mode; dark values are retained for future use.
 
 ## Colors
 Use semantic HeroUI tokens and Tailwind utilities in product code. The raw values below are resolved color values for each mode; component code should still use the same token name and let CSS resolve light or dark mode.
@@ -262,7 +264,7 @@ Use semantic HeroUI tokens and Tailwind utilities in product code. The raw value
 | `surface` | `#FFFFFF` | `#181818` | `Light: = white; Dark: oklch(21.03% 0.0000 17.07)` | `--surface` | `bg-surface text-surface-foreground` for cards and panels | Container background for cards, panels, modals, and dropdowns. |
 | `surface-secondary` | `#EFEFEF` | `#232323` | `Light: oklch(95.24% 0.0000 17.07); Dark: oklch(25.70% 0.0000 17.07)` | `--surface-secondary` | `bg-surface-secondary` for subdued nested surfaces | Secondary surface for nested containers and layered panels. |
 | `surface-tertiary` | `#EAEAEA` | `#272727` | `Light: oklch(93.73% 0.0000 17.07); Dark: oklch(27.21% 0.0000 17.07)` | `--surface-tertiary` | `bg-surface-tertiary` for low-emphasis nested surfaces | Tertiary surface for deeper nesting levels. |
-| `accent` | `#FF385C` | `#FF385C` | `oklch(65.79% 0.2309 17.07)` | `--accent` | `Button variant="primary"` for the single primary action on a screen; `bg-accent text-accent-foreground` only for team price and team progress | Primary brand color. Owned by the team price, the team progress, and one primary action per screen (design brief §6); no other fills on the storefront. |
+| `accent` | `#FF385C` | `#FF385C` | `oklch(65.79% 0.2309 17.07)` | `--accent` | `bg-accent` for team progress; `text-accent-soft-foreground` for price text | Brand accent. Buyer actions use neutral `secondary` fills because the original accent-fill proposal misses contrast (see `design-screens.md` §7). |
 | `accent-foreground` | `#FCFCFC` | `#FCFCFC` | `= snow` | `--accent-foreground` | `text-accent-foreground` on accent surfaces | Text/icon color on accent backgrounds. Optimized for contrast and readability. |
 | `accent-hover` | `#FF556C` | `#FF556C` | `accent / 90% + accent-foreground / 10%` | `--accent-hover` | Prefer HeroUI hover states; use `bg-accent-hover` only for custom surfaces | Accent hover state. Derived automatically from accent and accent-foreground. |
 | `accent-soft` | `rgba(255, 56, 92, 0.15)` | `rgba(255, 56, 92, 0.12)` | `Light: accent / 15% + transparent; Dark: accent / 12% + transparent` | `--accent-soft` | `bg-accent-soft text-accent-soft-foreground` for selected or soft emphasis | Subtle accent background. A low-opacity tint for soft emphasis and selections. |
@@ -330,22 +332,7 @@ Use semantic HeroUI tokens and Tailwind utilities in product code. The raw value
 | `warning-soft-hover` | `rgba(252, 100, 45, 0.2)` | `rgba(255, 180, 0, 0.16)` | `Light: warning / 20% + transparent; Dark: warning / 16% + transparent` | `--warning-soft-hover` | Prefer the HeroUI token for warning-soft-hover. | Hover state for warning-soft backgrounds. |
 
 ## Typography
-Use the generated font and text scale through HeroUI components and Tailwind text utilities. The raw values below are normalized to px for design handoff.
-| Token | Font family | Font size | Line height | HeroUI variable | Tailwind equivalent |
-| --- | --- | --- | --- | --- | --- |
-| `xs` | Inter | `12px` | `16px` | `--text-xs` | `text-xs` |
-| `sm` | Inter | `14px` | `20px` | `--text-sm` | `text-sm` |
-| `base` | Inter | `16px` | `24px` | `--text-base` | `text-base` |
-| `lg` | Inter | `18px` | `28px` | `--text-lg` | `text-lg` |
-| `xl` | Inter | `20px` | `28px` | `--text-xl` | `text-xl` |
-| `2xl` | Inter | `24px` | `32px` | `--text-2xl` | `text-2xl` |
-| `3xl` | Inter | `30px` | `36px` | `--text-3xl` | `text-3xl` |
-| `4xl` | Inter | `36px` | `40px` | `--text-4xl` | `text-4xl` |
-| `5xl` | Inter | `48px` | `48px` | `--text-5xl` | `text-5xl` |
-| `6xl` | Inter | `60px` | `60px` | `--text-6xl` | `text-6xl` |
-| `7xl` | Inter | `72px` | `72px` | `--text-7xl` | `text-7xl` |
-| `8xl` | Inter | `96px` | `96px` | `--text-8xl` | `text-8xl` |
-| `9xl` | Inter | `128px` | `128px` | `--text-9xl` | `text-9xl` |
+Inter through HeroUI components and Tailwind `text-*` utilities (`text-xs`–`text-9xl`, standard Tailwind scale, `16px` base / `24px` line height). No product-specific type scale; usage lives in the Design System artboard and `design-screens.md`.
 ### Font and Letter Spacing
 
 | Token | Raw value | Formula / source | HeroUI variable | Tailwind / component equivalent | Purpose |
@@ -388,45 +375,15 @@ Use HeroUI's default rounded shape language and Tailwind radius utilities. Custo
 | `field radius` | `12px` |  | `--field-radius` | Prefer HeroUI field components so this radius is applied automatically. | Corner radius basis for inputs, selects, text areas, and other form controls. |
 
 ## Components
-- **Buttons:** Use HeroUI Button semantic variants. Primary actions use `variant="primary"`; alternatives use `secondary`, `tertiary`, `outline`, or `ghost`; destructive actions use `danger` or `danger-soft`.
+- **Buttons:** Use HeroUI variants. Buyer primary actions use neutral `secondary` rather than the contrast-limited accent fill; alternatives use `outline` or `ghost`, and destructive actions use `danger`.
 - **Cards and surfaces:** Use HeroUI Card, Surface, overlays, and `bg-surface` tokens. Do not add extra custom shadows to components that already include surface elevation.
 - **Forms:** Use HeroUI field components so `--field-background`, `--field-border`, `--field-foreground`, `--field-radius`, and field widths resolve consistently.
 - **Status:** Use semantic status tokens for actual meaning: success for positive outcomes, warning for caution, danger for destructive or critical states.
 - **Charts:** Use `--chart-1` through `--chart-5` for multi-series charts; `--chart-3` aligns to the accent baseline.
 
-## Do's and Don'ts
-- Do use semantic HeroUI and Tailwind tokens as implementation handles; use raw values in this file for reference, QA, and migration only.
+## Product rules (the rest is standard design practice, not repeated here)
+- Do use semantic HeroUI and Tailwind tokens as implementation handles; raw values in this file are for reference, QA, and migration only.
 - Do use the same semantic token across light and dark mode; do not branch component code to manually pick colors.
-- Do keep layouts spacious but controlled with consistent spacing, constrained max widths, and comfortable reading lines on wide screens.
-- Do maintain a clear general-to-specific hierarchy: summaries and primary actions first, detail and supplementary content later.
-- Do keep page and section spacing on a consistent 4px/8px rhythm; avoid doubling parent and child padding in the same direction.
-- Do size containers to their content; avoid excess fixed heights, oversized sections, and layouts that stretch wider than their content warrants.
-- Do align sibling items consistently so cards, sections, names, prices, metrics, and controls start from the same visual anchors.
-- Do use neutral surface tokens for containers, cards, stat pills, and nested panels; reserve accent and status colors for real meaning.
-- Do create hierarchy with surface levels, spacing, typography, and content order before adding more borders or decoration.
-- Do use accent for primary emphasis and success, warning, and danger only for their semantic meanings.
-- Do keep typography concise and scannable with short Title Case headings, muted secondary text, and tabular numbers for metrics.
-- Do keep descriptions and supporting text short; aim for two or three lines so content stays easy to scan.
-- Do visually align large numbers, prices, temperatures, and metrics with their supporting labels using tight line-height and optical adjustment.
-- Do use elevation deliberately with tokenized surface and overlay shadows; avoid stacking extra custom shadows on elevated components.
-- Do align nested surfaces, images, and custom containers to the same radius scale as the theme.
-- Do keep inner and outer radii visually related; inner media should feel contained by the parent surface.
-- Do prefer spacing, grouping, and hierarchy before adding separators, borders, icons, or decorative wrappers.
-- Do use separators sparingly and only where they communicate structure; use spacing for ordinary grouping.
-- Do keep icons purposeful, semantically colored, and subordinate to text unless they carry real meaning.
-- Do make active, selected, and applied states persistent and visible without replacing the controls that created them.
-- Do keep interactive targets comfortable and accessible, especially icon-only actions and touch-facing controls.
-- Do reserve hover feedback for interactive elements; display-only content should not imply interactivity.
 - Don't copy raw hex, shadow, radius, or spacing values into product code when a semantic token or Tailwind utility exists.
-- Don't overuse accent colors, warning colors, decorative icons, borders, or shadows to create visual interest.
-- Don't mix inconsistent radius scales, padding systems, or sibling card treatments in the same view.
-- Don't duplicate the same information in multiple visual forms unless each form adds distinct value.
-- Don't use color alone to create hierarchy when spacing, type scale, surface level, or content order would communicate it more clearly.
+- Do use accent for primary emphasis (team price, team progress) and success, warning, and danger only for their semantic meanings; don't overuse accent or misuse warning for neutral emphasis or decoration. Exception: buyer-screen primary actions use neutral `secondary` styling, not accent fill — the accent fill misses the intended contrast there (see `design-screens.md` §7); accent still owns team price and team progress on those screens.
 - Don't place progress bars, meters, or decorative strips on card edges; keep status indicators inside the content flow.
-- Don't nest visually heavy surfaces inside other heavy surfaces; avoid card-on-card depth unless hierarchy truly needs it.
-- Don't let badges, chips, tags, or compact indicators stretch full width; they should remain content-sized.
-- Don't add redundant icons, logos, badges, wrappers, or trust signals that do not introduce new information.
-- Don't use ALL CAPS labels or verbose headings when short Title Case labels communicate the section clearly.
-- Don't misuse warning for neutral emphasis or decoration; reserve it for genuine caution.
-- Don't allow floating controls to overlap content; add enough spacing or padding for close buttons, badges, and overlay actions.
-- Don't add hover or transition behavior to non-interactive content; reserve feedback for actual interactions.

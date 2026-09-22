@@ -1,69 +1,93 @@
-# BlocBuy frontend
+# BlocBuy Frontend
 
-The BlocBuy web app: a phone-first single-page app where buyers browse listings, start or join a bloc (a group buy that unlocks the bloc price once it fills), pay through Stripe Checkout, and follow their blocs, orders and receipts. It is React 19 with Vite, TanStack Router and Query, and HeroUI, served as one static build behind CloudFront; every request goes to the same-origin `/api`. Conventions for changing the code are in [`AGENTS.md`](AGENTS.md).
+React 19 client-side application for BlocBuy buyers. The admin console is planned separately in `docs/admin-plan.md`. The app is built with Vite and served from S3 through CloudFront; API requests use the same origin under `/api/*`.
 
-## Prerequisites
+## Requirements
 
-- Node.js 24 (`engines.node` is `>=24 <25`; `.nvmrc` says `24`).
-- pnpm 12.4.2 through Corepack: run `corepack enable` once and the `packageManager` field in `package.json` selects the version.
+- Node.js 24
+- pnpm 12.4.2 via Corepack
+- Backend on `http://localhost:8589` for local API access
 
-## Commands
+Node and pnpm versions are pinned by `.nvmrc`, `.mise.toml`, `package.json`, and `.npmrc`.
 
-Run these from `frontend/`.
+## Setup
 
-| Command | What it does |
-| --- | --- |
-| `pnpm install` | Installs dependencies and generates the API client into `src/api/generated/` (never committed). |
-| `pnpm dev` | Starts Vite on http://localhost:5173 and proxies `/api` to `http://localhost:8589` (start the backend with `docker compose up` at the repo root, or use mock mode below). |
-| `pnpm check` | The only gate: API client generation, typecheck, oxlint, oxfmt, Vitest and knip. |
-| `pnpm build` | Builds the delivery artifact into `dist/`. |
-| `pnpm e2e` | Runs the Playwright smoke and login journeys against a `vite preview` of `dist/` (it builds first when `dist/index.html` is missing; rebuild after source changes). |
+From `frontend/`:
 
-The signed-in `@auth` journeys run against the dev environment only:
-
-```sh
-E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e --grep @auth
+```bash
+corepack enable
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
-They need a signed-in storage state in `e2e/.auth/dev.json`, seeded once by hand with the Playwright codegen command the skipped test prints. That file holds a live session cookie: it is gitignored and must never be committed.
+Vite serves the frontend locally and proxies `/api` to `http://localhost:8589`. The backend can be started from the repository root with `docker compose up`.
 
-## Mock mode
+The OpenAPI client is generated from `../contracts/openapi.json` during installation. Generated files under `src/api/generated/` are not committed.
 
-Mock mode runs the app with no backend. It works only under `pnpm dev`: the production build swaps the mock and devtools modules for no-ops, so these flags do nothing on a built site. The flags are read once when the page loads, so add them to the first URL you open.
+## Mock mode and demo
 
-- `?msw=1` starts the in-browser mock API with sample listings, browsing anonymously.
-- `&me=1` signs in as the sample buyer Ada Lim, with payments on and a set of blocs, orders and receipts.
-- `&devtools=1` mounts the TanStack Query and Router devtools. They are off by default because their trigger covers the BlocBuy wordmark on a phone.
+For a backend-free local demo, run `pnpm dev` and open `http://localhost:5173/?msw=1` to browse sample listings. Add `&me=1` to sign in as the sample buyer Ada Lim and see blocs, orders and receipts; `&devtools=1` enables TanStack devtools. These flags are read on page load and work only in the dev server, not in production builds. Mock state resets on reload.
 
-## Demo script
+The listing IDs are `5b1b9d5c-1a11-4e1e-9a10-00000000000N` and the receipt IDs are `0192f0a0-0000-7000-9000-00000000000N`. At a 390px viewport, try:
 
-Run `pnpm dev` and open each URL in a phone-width window (390 px). The listing ids are `5b1b9d5c-1a11-4e1e-9a10-00000000000N` and the receipt ids `0192f0a0-0000-7000-9000-00000000000N`.
+1. Browse `/?msw=1`, filter with the Groceries chip, and open `/products/5b1b9d5c-1a11-4e1e-9a10-000000000001?msw=1`; Start a bloc opens the sign-in sheet when signed out.
+2. Reopen that listing with `?msw=1&me=1`; Start a bloc opens the quote sheet, and Continue to payment opens a receipt that changes from Waiting to Paid after about four seconds.
+3. Open `/account?msw=1&me=1` to see Active blocs and orders; try `&blocs=completed` or `&blocs=refunded`, then view `/payments/0192f0a0-0000-7000-9000-000000000009?msw=1&me=1` for a pending refund.
+4. On the first listing, Join a bloc, wait for Paid, and use See the listing to find the share link; open the copied link in a new tab with `&msw=1` appended to see the invite landing.
+5. On `/products/5b1b9d5c-1a11-4e1e-9a10-000000000002?msw=1&me=1`, Join returns a mocked 409 refusal: nothing is charged. A 401 on anonymous session checks is expected in the browser console.
 
-1. Catalog: http://localhost:5173/?msw=1, then tap the Groceries chip to filter.
-2. Signed-out gate: http://localhost:5173/products/5b1b9d5c-1a11-4e1e-9a10-000000000001?msw=1, then Start a bloc opens the sign-in sheet.
-3. Closing soon: http://localhost:5173/products/5b1b9d5c-1a11-4e1e-9a10-000000000002?msw=1 (the durian bloc, under an hour left). No bloc: http://localhost:5173/products/5b1b9d5c-1a11-4e1e-9a10-000000000004?msw=1 (a listing with no bloc price).
-4. Sign-in page: http://localhost:5173/login?msw=1&returnTo=/products/5b1b9d5c-1a11-4e1e-9a10-000000000001
-5. Start a bloc and pay: http://localhost:5173/products/5b1b9d5c-1a11-4e1e-9a10-000000000001?msw=1&me=1, then Start a bloc shows the quote sheet and Continue to payment opens receipt `…001`. It reads Waiting for about 4 seconds, then Paid, as if Stripe had confirmed the payment.
-6. A paid receipt: http://localhost:5173/payments/0192f0a0-0000-7000-9000-000000000005?msw=1&me=1
-7. My blocs: http://localhost:5173/account?msw=1&me=1 (Active), then http://localhost:5173/account?msw=1&me=1&blocs=completed and http://localhost:5173/account?msw=1&me=1&blocs=refunded. The orders below the blocs match them: open blocs are waiting, the filled one is confirmed, the closed ones are cancelled.
-8. Refunds: http://localhost:5173/payments/0192f0a0-0000-7000-9000-000000000009?msw=1&me=1 (refund pending) and http://localhost:5173/payments/0192f0a0-0000-7000-9000-000000000008?msw=1&me=1 (refunded).
-9. Not found: http://localhost:5173/does-not-exist?msw=1
-10. A refused join: http://localhost:5173/products/5b1b9d5c-1a11-4e1e-9a10-000000000002?msw=1&me=1, then Join answers "This bloc filled up before you joined. Nothing has been charged." Only this durian bloc refuses; Join on any other listing goes through the same mock checkout to a Waiting, then Paid receipt.
-11. Share a bloc: http://localhost:5173/products/5b1b9d5c-1a11-4e1e-9a10-000000000001?msw=1&me=1, then Join, wait for Paid and tap "See the listing": the share block shows your invite link. Paste the copied link into a new tab with `&msw=1` added to open the invite landing. A seeded bloc shares the same way: on http://localhost:5173/account?msw=1&me=1, tap Share invite link on an Active row; its link opens that bloc on its listing, open and joinable.
+## Quality gate
 
-Demo notes:
+```bash
+pnpm check
+```
 
-- Browsing anonymously logs two expected `401 (Unauthorized)` console errors per page load: the session check answering "not signed in".
-- The refused join in step 10 logs one expected `409 (Conflict)`: that refusal is the mocked answer.
-- Without a backend and without `?msw=1`, the API calls are retried for about 3 seconds before the error states appear.
-- The mock keeps its state until the page reloads; reload the URL to start the script over.
+The gate regenerates the API client, type-checks, lints, verifies formatting, runs Vitest, and checks unused code with Knip.
+
+End-to-end tests are separate:
+
+```bash
+pnpm build
+pnpm e2e
+```
+
+Authenticated dev tests use a local Playwright storage state under `e2e/.auth/`; it must not be committed.
+
+## Main stack
+
+- React 19 + TypeScript 7 + Vite 8
+- TanStack Router, Query, and Form
+- HeroUI 3 + Tailwind CSS 4
+- hey-api generated OpenAPI client
+- Valibot
+- Vitest + Testing Library + MSW
+- Playwright
+- oxlint, oxfmt, Knip, and Lefthook
+
+Exact versions are pinned in `package.json`.
+
+## Architecture rules
+
+- Pure CSR; no SSR runtime.
+- Browser API requests use relative `/api/*` paths.
+- Do not add `VITE_*` configuration or application `import.meta.env` dependencies.
+- Do not edit `src/api/generated/**` by hand.
+- API response types come from the generated client.
+- `useSession()` is the frontend authentication source of truth.
+- API interceptors may update session state but do not redirect; route guards own redirects.
+- React Compiler is enabled; avoid manual `useMemo`, `useCallback`, and `React.memo`.
+
+See `AGENTS.md` for the complete implementation conventions.
 
 ## Documentation
 
-- [`docs/plan.md`](docs/plan.md): the frontend plan, task list and decision notes.
-- [`docs/design-screens.md`](docs/design-screens.md): the screen-by-screen design reference.
-- [`docs/adr/`](docs/adr/): the frontend architecture decision records.
+- `docs/plan.md` — implementation plan and current task status
+- `docs/backlog.md` — newer buyer tasks and follow-ups
+- `docs/admin-plan.md` — deferred admin-console scope and backend asks
+- `docs/adr/` — architecture decisions
+- `docs/design.md` — design tokens
+- `docs/design-screens.md` — buyer-screen implementation specification
+- `docs/product.md` and `docs/design-brief.md` — product and original design inputs
+- `docs/blueprint.md` and `docs/blueprint-review.md` — planning provenance
 
-## Assets
-
-The Inter typeface is self-hosted through `@fontsource/inter` under the SIL Open Font License 1.1. The favicon, app icons and the BlocBuy wordmark are made by the project team.
+Deployment procedures are in `../docs/deploy/dev-cloudfront-deployment.md`.
