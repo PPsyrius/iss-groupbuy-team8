@@ -117,7 +117,7 @@
 
 BlocBuy is a community group-buying platform developed by NUS-ISS Team 8 as part of the SWE5006 Practice Module project. It helps people combine their purchasing needs, reach better group deals, and coordinate the entire group-buying journey in one shared space.
 
-This README focuses on the product vision and project scope. Technical architecture and implementation details are maintained in the project documentation.
+This README focuses on the product vision and project scope. To work on the repository, see [`CONTRIBUTING.md`](CONTRIBUTING.md); the sprint log, NFR register and other assessment evidence are indexed in [`docs/agile/README.md`](docs/agile/README.md). Technical architecture and implementation details are maintained in the project documentation.
 
 ## The Problem
 

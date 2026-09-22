@@ -22,7 +22,7 @@ verification output is still on screen beats a paragraph guessed two weeks later
 
 | Artefact | Path | Feeds |
 |---|---|---|
-| Sprint log (one per sprint, repo-wide) | `docs/agile/sprint-NN/log.md` | plan vs actual, problems, contributions |
+| Sprint log (one per sprint, repo-wide) | `docs/agile/sprint-NN/log/YYYY-MM-DD.md`, one file per day; `log.md` is the sprint index | plan vs actual, problems, contributions |
 | NFR register | `docs/quality/nfr-register.md` | quality attributes, highlights |
 | ADRs (frontend only) | `frontend/docs/adr/`, README index; nobody else writes ADRs, see below | key decisions |
 | Backend decisions | D-table in `backend/docs/design/backend-skeleton-plan.md` (dated amendments), design docs in `backend/docs/design/` | key decisions |
@@ -98,7 +98,8 @@ attributes this project already cares about.
 
 Do these in order; each is a few lines.
 
-1. **Sprint log entry.** Append to `docs/agile/sprint-NN/log.md` using the template. Date, author,
+1. **Sprint log entry.** Append to `docs/agile/sprint-NN/log/YYYY-MM-DD.md` (create the day's file
+   if needed; `log.md` indexes the day files) using the template. Date, author,
    issue, kind, what changed, verification, decisions or ADRs, open problems. If a problem was
    hit, name it and the action taken; the report has a "problems encountered, action plan, status"
    table that is otherwise empty.
@@ -152,11 +153,13 @@ measure against the written plan instead.
 
 ## Write it in English
 
-Every artefact in the table above is written in English, whatever language the task was discussed
-in — the repository-wide rule is in `AGENTS.md`. Evidence that a teammate or a marker cannot read
-is not evidence. Keep replying to the user in their own language; the rule is about what lands in
-git. If asked for a plan or ADR in another language, write English and say why in one sentence;
-if the user repeats the request, write what they asked for.
+Every artefact in the table above must be written in English, regardless of the language used to
+discuss the task. This repository-wide rule is defined in `AGENTS.md`. Evidence that a teammate or
+a marker cannot read is not useful evidence.
+
+Continue replying to the user in their own language; this rule applies only to content committed
+to git. If asked to write a plan or ADR in another language, write it in English and briefly
+explain why. If the user repeats the request, follow their requested language.
 
 ## Keep it cheap
 

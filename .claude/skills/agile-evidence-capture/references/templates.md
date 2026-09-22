@@ -6,9 +6,9 @@ frontend ADR stubs), so nothing here is a new convention.
 
 ## Sprint log entry
 
-Append to `docs/agile/sprint-NN/log/YYYY-MM-DD.md`, creating the day's file if it does not exist
-(`log.md` indexes the day files). Newest entry at the bottom of the day's file. One entry per unit
-of work per author; a day with three PRs gets three entries.
+Append to `docs/agile/sprint-NN/log/YYYY-MM-DD.md`, creating the day's file if needed; `log.md`
+indexes the daily files. Add new entries at the bottom. Use one entry per PR per author; three
+PRs in one day require three entries.
 
 ```markdown
 ## YYYY-MM-DD - @handle - UC3 join team: payment commitment (#26)
