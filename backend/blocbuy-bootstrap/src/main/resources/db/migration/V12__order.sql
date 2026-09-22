@@ -1,4 +1,4 @@
--- V9__order.sql — order domain system of record (schema: domain, PostgreSQL 18).
+-- V12__order.sql — order domain system of record (schema: domain, PostgreSQL 18).
 -- Promotes backend/docs/db/order.sql into Flyway with three Sprint 2 additions (UC10 / US19 / US20):
 -- a payment_id dedup key, a per-deal-per-user uniqueness guarantee, and a narrowed status
 -- vocabulary (pending -> confirmed | cancelled) matching the team-lifecycle-driven order model.

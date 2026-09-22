@@ -69,7 +69,7 @@ class OrderRepositoryIT {
                         "resources",
                         "db",
                         "migration");
-        new ResourceDatabasePopulator(new FileSystemResource(migrations.resolve("V9__order.sql")))
+        new ResourceDatabasePopulator(new FileSystemResource(migrations.resolve("V12__order.sql")))
                 .execute(source);
         var config =
                 new Configuration(new Environment("test", new JdbcTransactionFactory(), source));
