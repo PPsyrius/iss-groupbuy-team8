@@ -63,7 +63,7 @@ React 19.3 CSR, Vite 8, TanStack Router (file-based via `@tanstack/router-plugin
 
 ## Rules
 
-1. Data comes from the generated client only: `pageListingsOptions()`, `getListingOptions()`, `meOptions()`, `logoutMutation()` from `src/api/generated/@tanstack/react-query.gen.ts`. Always pass `select: unwrapResult` (or a function that calls it). Never hand-write a response type or schema; regenerate with `pnpm gen:api` when `contracts/openapi.json` changes.
+1. Data comes from the generated client only: `pageListingsOptions()`, `getListingOptions()`, `meOptions()`, `logoutMutation()` from `src/api/generated/@tanstack/react-query.gen.ts`. Always pass `select: unwrapResult` (or a function that calls it). Never hand-write a response type or schema; regenerate with `pnpm gen:api` when `contracts/openapi.json` changes. What the schema cannot express — status vocabularies, required headers, call ordering, which backend capabilities have no endpoint yet — is in [`docs/api/backend-integration-guide.md`](../docs/api/backend-integration-guide.md).
 2. valibot appears in exactly two places: `validateSearch` schemas (`src/features/<feature>/*-search.ts`) and form schemas (`src/features/<feature>/*.schema.ts`).
 3. HeroUI components over raw React Aria Components. Check the HeroUI docs (https://heroui.com/docs/react) for prop names; do not guess.
 4. React Compiler is on. No `useMemo`, `useCallback`, or `React.memo`. oxlint's `react/*` compiler rules fail the build on violations.
