@@ -65,7 +65,7 @@ touches_code=false; touches_nfr=false; has_log=false; has_register=false; has_ad
 while IFS= read -r f; do
   [[ -z "$f" ]] && continue
   case "$f" in
-    docs/agile/sprint-*/log.md) has_log=true ;;
+    docs/agile/sprint-*/log.md|docs/agile/sprint-*/log/*.md) has_log=true ;;
     docs/quality/nfr-register.md) has_register=true ;;
     frontend/docs/adr/[0-9][0-9][0-9][0-9]-*.md) has_adr=true ;;
   esac
@@ -86,7 +86,7 @@ if [[ -z "$msg" ]]; then has_issue_ref=true; fi
 
 missing=()
 if $touches_code && ! $has_log; then
-  missing+=("- Sprint log: append an entry to docs/agile/sprint-NN/log.md (date, handle, issue, changed, verified, decisions, problems) and stage it with this commit.")
+  missing+=("- Sprint log: append an entry to docs/agile/sprint-NN/log/YYYY-MM-DD.md (create the day's file if new; see log.md for the index; date, handle, issue, changed, verified, decisions, problems) and stage it with this commit.")
 fi
 if $touches_nfr && ! $has_register; then
   missing+=("- NFR register: this commit touches CI/config/security/infra paths. Add or update the row in docs/quality/nfr-register.md (scenario, enforcement point, evidence, status), or state in the log entry why it is not an NFR.")
