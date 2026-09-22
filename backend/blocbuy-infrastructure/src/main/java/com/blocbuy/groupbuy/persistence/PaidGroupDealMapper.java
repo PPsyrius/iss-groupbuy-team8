@@ -52,6 +52,18 @@ public interface PaidGroupDealMapper {
             @Param("expectedStatus") String expectedStatus);
 
     /**
+     * Binds the order to the payment's member row, tolerating a re-link of the same order so a
+     * replayed fulfilment does not look like a missing row.
+     */
+    int linkOrder(
+            @Param("dealId") UUID dealId,
+            @Param("paymentId") UUID paymentId,
+            @Param("orderId") UUID orderId);
+
+    /** Reads the membership a payment produced; the payment key is globally unique. */
+    PaidMemberDO selectPaidMember(@Param("paymentId") UUID paymentId);
+
+    /**
      * Writes a terminal result only to a pending receipt, preserving completed replay snapshots.
      */
     int completeReceipt(

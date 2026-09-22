@@ -46,7 +46,8 @@
 catalog  / application  CatalogPurchaseSupport(接口) + CatalogPurchaseSupportImpl
 catalog  / domain       ProductTeamTerms(值对象) + ProductRepository 增两个方法
 catalog  / infra        ProductRepositoryImpl 实现 + BizProductMapper 新增两条语句
-groupbuy / application  GroupDealPurchaseSupport(接口) + GroupDealPurchaseSupportImpl
+groupbuy / application  GroupDealPurchaseSupport(未付) + GroupDealSettlementSupport(已付) + 两个 Impl
+groupbuy / domain       PaidMember(值对象) + PaidGroupDealRepository 增 linkOrder / findPaidMember
 order    / domain       PurchaseIntentRepository 增 currentTime
 order    / application  PurchaseIntentAppService  implements PaymentIntentPort
 order    / application  OrderFulfilmentAdapter    implements PaymentBusinessPort
@@ -177,6 +178,31 @@ UUID createIntent(UUID user, String operation, UUID businessId)
 `Outcome` 的 rejection 码必须匹配 `[A-Z_]{1,64}`(record 构造器已强制),且不得携带敏感信息。
 
 **订单初始状态 = `PENDING`**,不是夹具用的 `'paid'`。`OrderStatus` 只有 `pending/confirmed/cancelled`,`pending → confirmed` 由 TeamSucceeded、`pending → cancelled` 由 TeamExpired 驱动。夹具那边的 `status='paid'` 插入与 `fulfilmentEvidence` 里的 `o.status='paid'` 检查要一起改成 `pending`,属 PR-D,改的是 Yorik 的文件,PR 里 @ 他。
+
+> 2026-09-22 实现时的修正(PR-C 落地,5 条):
+>
+> 1. **groupbuy 再出一个门面 `GroupDealSettlementSupport`。** 与 PR-B 同一条硬门禁:回填
+>    `biz_group_member.order_id`、按 paymentId 读成员、锁团行、校验团已过期,四件事全部落在 groupbuy 的表上,
+>    order 不能自己写。已付一侧与未付一侧分开两个门面:`GroupDealPurchaseSupport` 判可加入并拒绝,
+>    `GroupDealSettlementSupport` **只锁不判** —— 结算时团可能已满/已成/已过期,那是
+>    `PaidGroupDealService` 拿到钱之后才有资格裁决的事。领域侧 `PaidGroupDealRepository` 相应新增
+>    `linkOrder` / `findPaidMember`,后者返回新值对象 `PaidMember`。
+> 2. **拒绝必须先于第一次写。** 原 9 步顺序里,`consumeOneUnit`(第 9 步)失败要抛异常 —— 这条保留,
+>    但要补一条更硬的规则:`Outcome` 带 rejection 时调用方是**提交**事务再去退款的,所以任何写之后返回
+>    rejection 都会把那次写和退款一起提交。因此第 2/3/4 步(已 fulfilled、买家、商品)全部是只读检查,
+>    第 5 步之后只许抛不许拒。`linkOrder` 返回 false 同理:抛。
+> 3. **START 没有团行锁可加。** `lockTeam` 对预留 dealId 调 `lockDeal` 返回空即结束。不补夹具那套
+>    `pg_advisory_xact_lock`:预留 id 对一个 intent 唯一,能碰到它的并发写者都会先卡在 intent 行锁上,
+>    外加 `PaidGroupDealService` 自己按 paymentId 锁回执,咨询锁没有增加任何保护。
+> 4. **`fulfilmentEvidence` 不检查订单状态。** 夹具查的是 `o.status='paid'`;真实现下订单建出来是 `pending`,
+>    团成后变 `confirmed`、团过期变 `cancelled`,这些生命周期迁移都不会取消"履约发生过"这个事实。
+>    改为核对成员 ↔ 订单 ↔ intent 三方的 id、金额、币种与 `member.status='paid'`。
+> 5. **单号自己生成。** 仓库里没有订单号/团号生成器。采用 `前缀 + UTC 日期 + UUID 低 12 位十六进制`,
+>    从 paymentId / dealId 推导而非取序列 —— 重放同一笔付款不会造出第二个号。
+>
+> **锁序补充说明(评审要看)**:本适配器按 团 → intent 加锁,而 `PaidGroupDealService` 内部是
+> 回执 → 团。合起来是 团 → intent → 回执 → 团(可重入),理论上成环。实际不会死锁:回执按 paymentId 唯一,
+> 两个并发事务不可能争同一行回执。PR-D 的并发 IT 要覆盖这条。
 
 ### 3.4 PR-D — 装配与夹具退场
 

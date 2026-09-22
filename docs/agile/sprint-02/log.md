@@ -1034,3 +1034,50 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 - Next: PR-C `OrderFulfilmentAdapter implements PaymentBusinessPort` (the six methods, lock order
   group → intent → payment, orders created as `PENDING`), then PR-D wiring, fixture retirement, the
   `status='paid'` mismatch in Yorick's fixture, the NFR row and an ADR.
+
+## 2026-09-22 - l0sgAi (Liu Jin) - Order fulfilment adapter: the payment business port gets its production half (#124, #126)
+
+- Scope: PR-C of `order-payment-integration-plan-20260922.md`. `OrderFulfilmentAdapter` implements
+  all six `PaymentBusinessPort` methods, so the contract whose Javadoc still reads "No production
+  stub is supplied" now has one. The payment slice owns the money; this owns what it buys — a team
+  membership, an order, and the consumption of the intent that priced them.
+- Lock order, unchanged and global: group deal → purchase intent → payment. Every method takes the
+  team lock first. Review note: `PaidGroupDealService` locks its receipt before the deal, so the
+  combined path is team → intent → receipt → team (re-entrant) and is a cycle on paper. It cannot
+  deadlock in practice because a receipt is keyed by payment id and no two transactions contend for
+  the same one. PR-D owes a concurrency IT that demonstrates this.
+- The rule that shaped `fulfil`: an `Outcome` carrying a rejection is committed by the caller,
+  which then arranges a refund. So a rejection returned after a write would commit that write
+  alongside the refund. Every rejecting check — already fulfilled, buyer inactive, product
+  unsellable — is therefore read-only and runs before the first write; after that point failures
+  throw and roll the settlement back. That includes losing the last unit at `consumeOneUnit`:
+  stock is funds-safety class, so the whole fulfilment is discarded and the webhook retries, where
+  the purchasability check refuses it cleanly instead.
+- Second groupbuy facade, same hard gate as PR-A and PR-B: backfilling `biz_group_member.order_id`,
+  reading a membership by payment and locking the team are all writes and reads on groupbuy's
+  tables. `GroupDealSettlementSupport` does them. It deliberately **only locks, never judges** —
+  at settlement a team may legitimately be full, succeeded or expired, and deciding that belongs to
+  `PaidGroupDealService` once the money is presented. `PaidGroupDealRepository` gained `linkOrder`
+  and `findPaidMember`; `PaidMember` is the new value object.
+- START has no team row to lock — the team is created by the settlement itself. No advisory lock is
+  added for it: the reserved deal id is unique to one intent, so every writer that can reach it is
+  already serialized by the intent row lock and by the receipt lock keyed on the payment.
+- `fulfilmentEvidence` no longer checks the order's status the way the fixture's `o.status='paid'`
+  did. A real order is created PENDING and later moves to CONFIRMED or CANCELLED with the team's
+  lifecycle, none of which unmakes the fulfilment. It cross-checks the member, the order and the
+  intent instead: ids, amount, currency and `member.status = 'paid'`.
+- Order and deal numbers are derived — prefix, UTC day, and the UUID's low 12 hex digits — from the
+  payment or deal id rather than drawn from a sequence, so a replayed fulfilment cannot invent a
+  second number for the same fact. The repository had no generator before this.
+- Still not wired, same reason as PR-B: registering a `PaymentBusinessPort` bean would collide with
+  `PaymentBusinessFixture`. PR-D assembles both adapters and retires the fixture.
+- Verified on JDK 21: `./mvnw -B verify` BUILD SUCCESS (147 bootstrap unit tests, 32 Testcontainers
+  ITs, ArchUnit 8/8, SpotBugs and Checkstyle clean). New tests: `OrderFulfilmentAdapterTest` 37,
+  `GroupDealSettlementSupportImplTest` 12, plus additions to the groupbuy persistence and
+  `ParticipationResult` suites. JaCoCo aggregate self-check: every file touched reports **no missed
+  line or branch**.
+- Contract: unchanged, `git diff --exit-code -- contracts/` clean.
+- Next: PR-D — `PaymentIntegrationConfiguration` in bootstrap, `StripeLocalIntegrationTest` moved
+  onto the real implementations, `PaymentBusinessFixture` retired, the fixture's `status='paid'`
+  rows corrected (Yorick's files, needs his sign-off), a replay concurrency IT, the NFR row and an
+  ADR.
