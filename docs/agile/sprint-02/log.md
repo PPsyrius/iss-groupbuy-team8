@@ -323,13 +323,13 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 - Verified: 725 backend and 127 frontend tests passed; aggregate JaCoCo covered every line of `StripeCheckoutService` and `RefundService`. Evidence: `backend/docs/payment/stripe-sonar-fixes-20260920.md`.
 - Problems: remote SonarCloud remains authoritative; no gate was weakened and deployment is separate.
 
-## 2026-09-21 - @PPsyrius - Documentation cleanup: anchors, stale-file pass, CI/prod consolidation (#93)
+## 2026-09-21 - @PPsyrius - Documentation cleanup: stale-file pass, CI/prod consolidation (#93)
 
-- Kind: maintainability (docs); no code, no NFR change.
-- Changed: added stable plan anchors and hey-api/oxlint reconciliation; marked historical docs; rewrote repository structure against the verified tree; removed superseded §7.3/prod TODO material and consolidated pipeline/prod docs; marked bootstrap documentation complete; condensed handover 343 → 81 lines; simplified design/README. Review fixes covered the `sonar-backend` dependency, `ORIGIN_SECRET` exception, infra/backend secret boundary, removal of apply/user-data claims, fenced inventories, and an SSM cloud-init poll requiring `Success`.
+- Kind: maintainability (docs); no code, no NFR change. Frontend docs (`frontend/README.md`, `frontend/docs/plan.md`, `blueprint.md`, `blueprint-review.md`, `design.md`, `design-screens.md`, `plan-session-prompt.md`) are out of scope here; they move with `frontend_doc_cleanup`.
+- Changed: rewrote repository structure against the verified tree; removed superseded §7.3/prod TODO material and consolidated pipeline/prod docs; marked bootstrap documentation complete; condensed handover 343 → 81 lines. Review fixes covered the `sonar-backend` dependency, `ORIGIN_SECRET` exception, infra/backend secret boundary, removal of apply/user-data claims, fenced inventories, and an SSM cloud-init poll requiring `Success`.
 - Format: all touched docs reflowed to one line per item (tables/fences/ASCII blocks preserved; one table-in-quote caught and restored).
 - Not changed: skeleton (locked D-table + §13 anchors); runbook/operator-guide/`backend-pipeline.md` canonical; badges live status.
-- Verified: `git diff --check` clean; §12 grep covers ADR citations; zero refs to deleted TODO; appendix anchor present; fence counts even; no stray `sonar` ID; extracted SSM snippet passes `bash -n`. Skipped: LanguageTool list-voice nit (intentional).
+- Verified: `git diff --check` clean; zero refs to deleted TODO; appendix anchor present; fence counts even; no stray `sonar` ID; extracted SSM snippet passes `bash -n`. Skipped: LanguageTool list-voice nit (intentional).
 - Not verified: GitHub rendered Markdown — check on the PR page.
 
 ## 2026-09-21 - l0sgAi (Liu Jin) - PR #126 review fixes: migration integration and convention alignment

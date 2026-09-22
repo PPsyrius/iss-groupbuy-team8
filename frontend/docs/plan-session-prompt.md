@@ -1,4 +1,4 @@
-# Planning-session prompt (historical — executed 2026-09-16; do not re-run)
+# Planning-session prompt
 
 Prompt used to produce `frontend/docs/plan.md` from `frontend/docs/blueprint.md` revision 2. Kept in the repo so the report can show how the plan was derived. Run from the repository root in a fresh Claude Code session on branch `feature/frontend-scaffold`.
 
@@ -12,7 +12,7 @@ Read, in this order, before anything else:
 
 Do not read docs/design/repository-structure.md as a source of fact; it describes an intended repository.
 
-Where the plan names a TanStack Router, HeroUI, hey-api, oxlint, or Vite API, verify it against the current official documentation and cite the source in the task row. Re-verify every pinned version against the npm registry on the day the plan is produced; the blueprint pins were checked on 2026-09-15.
+Skills: invoke superpowers:brainstorming is NOT needed; the brainstorm is already recorded in blueprint-review.md. Invoke superpowers:writing-plans for the plan format. Where the plan names a TanStack Router, HeroUI, hey-api, oxlint, or Vite API, verify it against current official docs (WebFetch) rather than memory, and cite the URL in the task row. Re-verify every pinned version against the npm registry on the day you run; the blueprint's pins were checked on 2026-09-15.
 
 Constraints:
 - Sprint 2 is 2026-09-14 to 2026-09-25. Tier 1 (toolchain, scaffold, agent config, CI, runbook steps, deploy to dev CloudFront, Playwright smoke) targets the week ending 2026-09-20. Tier 2 (list/detail, /account, logout, filter form, Terraform frontend-stack import, native-compiler spike, react-table evaluation for #31) targets the week ending 2026-09-25.

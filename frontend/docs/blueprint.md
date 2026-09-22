@@ -1,8 +1,8 @@
-# BlocBuy frontend blueprint
+# BlocBuy frontend: planning brief for a fresh agent
 
 Revision 2, 2026-09-15. Reviewed claim-by-claim against the repository, the GitHub issues, and package registries; see `frontend/docs/blueprint-review.md` for findings, decisions, and the blocker list. Revision 1 was written against `docs/design/repository-structure.md`, which describes an intended repository, not the real one. Do not use that document as a source of fact.
 
-This blueprint records the verified frontend constraints and decisions used to produce the Sprint 2 implementation plan. Items marked OPEN were unresolved at the time and should be treated as historical planning blockers unless a later ADR or implementation record supersedes them.
+You are picking up the frontend of BlocBuy, a group-buy commerce platform built by a five-person NUS-ISS MTech team for module SWE5006. Your job in this session is to **produce a plan, not to implement it**. Read this brief fully, load the relevant skills, inspect the repository, then deliver the artifacts listed under "Deliverables". Do not make decisions that are marked OPEN below; surface them as blockers or explicit assumptions instead.
 
 ## Repository shape (verified)
 
@@ -97,14 +97,14 @@ See `frontend/docs/blueprint-review.md` §3 for the full list with owners. Summa
 7. Whether oxlint JS-plugin mode can carry the TanStack ESLint plugins (spike; fallback is settled).
 8. Whether Intent discovers transitive `router-core` under pnpm.
 
-## Planning method (historical — how this blueprint was used on 2026-09-16)
+## Method
 
-1. Use the installed TanStack Router skills where available, and verify Query, Form, HeroUI and other library APIs against their official documentation.
+1. Load skills before anything else: TanStack Router (via `intent load` for `router-core` and `router-plugin` once installed) and any other skill present. Prefer the skill over training-data memory for every API you name. For Query, Form and HeroUI, use the official docs.
 2. Inspect the repo: `contracts/openapi.json`, `docs/deploy/dev-cloudfront-deployment.md`, `backend/blocbuy-bootstrap/src/main/resources/application*.yml`, `AuthController.java`, `SaTokenConfig.java`, `GlobalExceptionHandler.java`, `.github/workflows/ci-backend.yml`, `CONTRIBUTING.md`, `.github/CODEOWNERS`.
 3. Verify current versions of every pinned package before you write them into the plan. Do not pin from memory; the versions in this brief were checked on 2026-09-15.
-4. This document defines planning inputs; implementation belongs in `frontend/docs/plan.md`.
+4. Plan, do not implement. No package installs, no file scaffolding, no Terraform or runbook changes in this session.
 
-## Deliverables (historical — all produced; implementation lives in `plan.md`)
+## Deliverables
 
 1. `frontend/docs/plan.md`: sequenced task list to bring `frontend/` from empty to the walking skeleton above. Each task has: purpose, files touched, verification command, dependencies on other tasks or OPEN items. Tier 1 = toolchain and scaffold; tier 2 = features, Terraform import, native-compiler spike. Order by dependency, then risk.
 2. In the same file: the exact `pnpm check` chain; the proposed `frontend/AGENTS.md` content; proposed root `.claude/settings.json` hooks and permissions; proposed `ci-frontend.yml` job list; the runbook steps to add to `docs/deploy/dev-cloudfront-deployment.md`.

@@ -1,10 +1,8 @@
-# Frontend blueprint review (2026-09-15, historical — decisions D1–D9 implemented via ADRs and `plan.md`)
-
-Superseded where ADRs or implementation records say otherwise (notably D9 amended 2026-09-16: sprint log is repo-wide at `docs/agile/sprint-02/log.md`, skill is `agile-evidence-capture`).
+# Frontend blueprint review (2026-09-15)
 
 Decision log for the review of `frontend/docs/blueprint.md` before it is turned into an implementation plan. Format: verification findings, then each decision as question → options → decision → rationale, then the blocker list and assumptions. Written so the SWE5006 report can cite it directly.
 
-Participants: Lim Jiechao (frontend owner) with an AI-assisted repository review. The blueprint was checked against the repository, GitHub issues, and package registries. Mismatches were recorded as corrections, decisions, or open questions.
+Participants: Lim Jiechao (frontend owner), Claude Code (reviewer). Method: the blueprint was checked claim-by-claim against the repository, the GitHub issues, and current package registries; every mismatch became either a correction or an interview question. Questions were asked one at a time with a recommended answer.
 
 ## 1. Verification findings
 
