@@ -1,8 +1,8 @@
 # Order/payment integration ports — implementation plan (Liu Jin)
 
 Date: 2026-09-22. Branch: `feature/order-deal-20260919`. Conventions: `backend-constraints-skill`
-plus `pgsql-ddl`. Prerequisite: `order-stripe-merge-plan-20260921.md` has been fully executed
-(merge `d6de139`, IT fix `f3d1f4f`, storage slice `c84868d`).
+plus `pgsql-ddl`. Baseline: Stripe merge `d6de139`, integration-test fix `f3d1f4f`, and storage
+slice `c84868d` are complete.
 
 ## 0. Current baseline (measured 2026-09-22)
 

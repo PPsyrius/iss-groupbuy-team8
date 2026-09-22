@@ -146,7 +146,7 @@ Everything gradeable-in-writing lives here, versioned alongside the code it desc
 
 | Subdirectory | Contents |
 |---|---|
-| `agile/` | Sprint logs (`sprint-NN/log.md`), board snapshots (`metrics/`), README index. |
+| `agile/` | Sprint-log indexes (`sprint-NN/log.md`), daily entries (`sprint-NN/log/YYYY-MM-DD.md`), board snapshots (`metrics/`), README index. |
 | `ci/` | `backend-pipeline.md` (CI runbook) and `devsecops-pipeline-plan.md` (decision record). |
 | `deploy/` | Dev runbooks plus `prod/` (Terraform design, runbook, archived handover). |
 | `design/` | This file. |
