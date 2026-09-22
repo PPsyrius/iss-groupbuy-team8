@@ -152,7 +152,7 @@ Columns: id, tier, purpose, files touched, exact verification command, depends-o
 | T2-08 | 2 | Native compiler spike (branch only): `react({ compiler: true })` + `oxc-transform-react`; compare `pnpm check`, `pnpm build` size, Header test; record in ADR 0010 addendum. Not merged as code. | `FE/vite.config.ts` (branch), `FE/docs/adr/0010-*.md` | `cd frontend && pnpm check && pnpm build && du -sh dist/assets` on the spike branch; numbers pasted into ADR 0010 | T1-08 | new: `spike(frontend): native React Compiler via oxc-transform-react` |
 | T2-09 | 2 | `@tanstack/react-table` evaluation for #31 (branch only): install 9.2.4, confirm Intent exposes its 6 skills, prototype a 10-row "my orders" table with generated types; recommendation into ADR 0001 addendum. | `FE/package.json` (branch), `FE/src/features/orders/OrdersTable.tsx` (branch), `FE/docs/adr/0001-*.md` | `cd frontend && pnpm dlx @tanstack/intent@0.4.0 list --json \| jq -e '[.[] \| select(.packageName=="@tanstack/react-table")] \| length == 6'` | T1-10 | #31 |
 | T2-10 | 2 | Author repo skills `adr`, `api-client-regen`, `agile-evidence-capture` in root `.claude/skills/` after one manual pass of each activity. | `.claude/skills/adr/SKILL.md`, `.claude/skills/api-client-regen/SKILL.md`, `.claude/skills/agile-evidence-capture/SKILL.md` | `for s in adr api-client-regen agile-evidence-capture; do head -5 .claude/skills/$s/SKILL.md \| grep -q '^description:' && echo "ok $s"; done` | T1-15, T1-06, PR-C merged | new: `chore(skills): frontend authored skills` |
-| T2-11 | 2 | After A2 executes: verify headers on dev, tighten the starting CSP (drop `'unsafe-inline'` from `style-src` if HeroUI renders clean; restrict `img-src` to the real image host), update the runbook JSON. | `deployment/frontend/cloudfront/response-headers-policy.json`, `docs/deploy/dev-cloudfront-deployment.md`, `docs/agile/sprint-02/log.md` | `curl -sSI https://d1b3np88z657cp.cloudfront.net/ \| grep -Ei 'content-security-policy\|strict-transport-security' && E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e` (trace shows no CSP console errors) | A2, T1-14 | A2 |
+| T2-11 | 2 | After A2 executes: verify headers on dev, tighten the starting CSP (drop `'unsafe-inline'` from `style-src` if HeroUI renders clean; restrict `img-src` to the real image host), update the runbook JSON. | `deployment/frontend/cloudfront/response-headers-policy.json`, `docs/deploy/dev-cloudfront-deployment.md`, `docs/agile/sprint-02/log/YYYY-MM-DD.md` | `curl -sSI https://d1b3np88z657cp.cloudfront.net/ \| grep -Ei 'content-security-policy\|strict-transport-security' && E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e` (trace shows no CSP console errors) | A2, T1-14 | A2 |
 
 ### Blocker assumptions per task
 
@@ -1224,7 +1224,7 @@ export const Route = createFileRoute('/auth/callback')({
 
 - [ ] Step 1: After A2, run the task-row curl; open the dev site with DevTools console and the Playwright trace; list CSP violations.
 - [ ] Step 2: Edit `deployment/frontend/cloudfront/response-headers-policy.json` (§8.2) to the narrowest policy that passes; account holder re-applies with `update-response-headers-policy`.
-- [ ] Step 3: Log the final CSP in `docs/agile/sprint-02/log.md` and ADR 0002 consequences.
+- [ ] Step 3: Log the final CSP in `docs/agile/sprint-02/log/YYYY-MM-DD.md` and ADR 0002 consequences.
 
 ---
 
@@ -1607,7 +1607,7 @@ ADR(s) implemented or affected: `frontend/docs/adr/00xx-...md`
 - [ ] `pnpm check` output or CI run link:
 - [ ] Contract unchanged, or `contract-change-approved` label requested with the reason
 - [ ] Screenshot or Playwright trace attached (UI changes)
-- [ ] `docs/agile/sprint-02/log.md` entry added (Sprint 2 only)
+- [ ] `docs/agile/sprint-02/log/YYYY-MM-DD.md` entry added (Sprint 2 only)
 
 ## Checklist
 

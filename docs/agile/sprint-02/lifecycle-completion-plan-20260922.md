@@ -28,7 +28,7 @@ returned.
 The last two rows are not lifecycle gaps. They are payment-slice hardening folded into this
 iteration on 2026-09-22; the reasoning is in §0.4.
 
-Item 2 of the pre-live checklist in `docs/payment/stripe-release-cleanup-20260920.md` — "Wire and
+Item 2 of the pre-live checklist in `backend/docs/payment/stripe-release-cleanup-20260920.md` — "Wire and
 monitor the refund worker and expiry notification path" — is the same work as rows 3 and 4 above.
 Item 1 was closed by the previous plan.
 
@@ -472,7 +472,7 @@ cd backend && ./mvnw -B verify
   the files this PR touched have **0 missed lines and 0 missed branches**
 - PR-H / PR-I: after regenerating with `./mvnw -B verify -Popenapi-export -DskipTests ...`,
   `git diff --exit-code -- contracts/` is clean
-- One `docs/agile/sprint-02/log.md` entry per PR; PR-E and PR-G each add an NFR row; PR-H moves
+- One `docs/agile/sprint-02/log/YYYY-MM-DD.md` entry per PR; PR-E and PR-G each add an NFR row; PR-H moves
   NFR-29 to `implemented`; the timing and lock-order arguments from PR-E and PR-G go into backend
   ADR 0002
 - PR-K additionally runs issue #130's grep-based AC and pastes the output into the PR description

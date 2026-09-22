@@ -381,7 +381,7 @@ by the enforcer's `[21,22)` range.
 
 ## 8. Evidence obligations
 
-Inside each PR: one entry in `sprint-02/log.md`. PR-D additionally adds an NFR row (funds safety /
+Inside each PR: one entry in `sprint-02/log/YYYY-MM-DD.md`. PR-D additionally adds an NFR row (funds safety /
 idempotence: one payment produces at most one membership and one order, and a replay produces no
 second copy) and an ADR (why the purchase intent belongs to the order module, and why the group
 terms belong on `biz_product`). The two `docs/db/catalog.sql` columns ship with PR-A.

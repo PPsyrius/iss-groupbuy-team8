@@ -81,8 +81,8 @@ is not.
 
 For agents specifically:
 
-- When the user asks for a document in another language, write it in English and say why in one
-  sentence. If they repeat the request after that, it is their call — write what they asked for.
+- When the user asks for a committed document in another language, write it in English and explain
+  the repository rule in one sentence. A conversational translation can be provided separately.
 - Never produce a document that is English in structure and another language in its prose, or a
   table whose headers are English and whose cells are not.
 - When you touch an existing non-English document for any other reason, do not silently translate

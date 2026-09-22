@@ -32,7 +32,7 @@ See `docs/agile/README.md` for the human-facing index and `references/report-map
 | NFR | NFR issue if absent, register row, daily log entry, PR body |
 | Decision | owning decision record plus a log pointer |
 | Ops or process | daily log entry; decision record only for durable constraints |
-| Formatting, dependency bump, typo | Conventional Commit only |
+| `style:` or `chore(deps):` | Conventional Commit only; these are the only log exemptions |
 
 NFR signals include security, performance, availability, recoverability, observability, cost, maintainability, compliance, DevSecOps, and changes under `.github/`, deployment, infrastructure, runtime configuration, Docker, caches, indexes, retention, or timeouts. Use `references/nfr-scenarios.md` for measurable acceptance criteria.
 
