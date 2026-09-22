@@ -182,6 +182,37 @@ class RefundServiceTest {
         verifyNoInteractions(gateway);
     }
 
+    /**
+     * A PaymentIntent that is not refundable does not become refundable by asking again. Parking it
+     * for review is what stops the worker re-asking every 30 seconds for the next 23 hours (#132).
+     */
+    @Test
+    void permanentProviderStateParksForReviewAndStopsCallingStripe() {
+        RefundWork work = work(null, 0);
+        when(gateway.createRefund(work))
+                .thenThrow(new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID));
+
+        assertThat(service.processNext()).isTrue();
+
+        verify(repository).finish(work, null, "review", "PROVIDER_STATE_MISMATCH");
+        verify(gateway, times(1)).createRefund(work);
+        verify(gateway, never()).retrieveRefund(any());
+        verify(gateway, never()).findRefund(any());
+    }
+
+    /** The same split under operator recovery keeps the row in review, only naming the reason. */
+    @Test
+    void permanentProviderStateUnderRecoveryIsNamedAsSuch() {
+        RefundWork work = work(null, 24);
+        when(repository.claimReview(work.paymentId())).thenReturn(work);
+        when(gateway.retrieveRefund("re_test"))
+                .thenThrow(new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID));
+
+        assertThat(service.reconcile(work.paymentId(), "re_test")).isTrue();
+
+        verify(repository).finish(work, null, "review", "OPERATOR_PROVIDER_STATE_MISMATCH");
+    }
+
     @Test
     void missingReferenceCannotStartRecovery() {
         UUID id = UUID.randomUUID();

@@ -11,6 +11,7 @@ import com.blocbuy.order.repository.OrderRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,6 +58,35 @@ class OrderAppServiceImplTest {
         assertThat(result.items()).isEmpty();
         assertThat(result.total()).isZero();
         assertThat(result.hasNext()).isFalse();
+    }
+
+    @Test
+    void findMineReturnsTheBuyersOwnOrder() {
+        Order order = Order.create(terms("12.00"), Instant.parse("2026-09-20T10:00:00Z"));
+        when(orders.findById(order.id())).thenReturn(Optional.of(order));
+
+        Optional<OrderSummaryView> found = service.findMine(order.id(), BUYER);
+
+        assertThat(found).isPresent();
+        assertThat(found.orElseThrow().orderId()).isEqualTo(order.id());
+        assertThat(found.orElseThrow().status()).isEqualTo("pending");
+    }
+
+    /** Another buyer's order must be indistinguishable from one that does not exist. */
+    @Test
+    void findMineHidesAnotherBuyersOrder() {
+        Order order = Order.create(terms("12.00"), Instant.parse("2026-09-20T10:00:00Z"));
+        when(orders.findById(order.id())).thenReturn(Optional.of(order));
+
+        assertThat(service.findMine(order.id(), UUID.randomUUID())).isEmpty();
+    }
+
+    @Test
+    void findMineReturnsEmptyForAnUnknownOrder() {
+        UUID unknown = UUID.randomUUID();
+        when(orders.findById(unknown)).thenReturn(Optional.empty());
+
+        assertThat(service.findMine(unknown, BUYER)).isEmpty();
     }
 
     private static Order.NewOrderTerms terms(String unitPrice) {

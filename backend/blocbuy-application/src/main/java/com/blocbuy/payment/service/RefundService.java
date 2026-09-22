@@ -1,10 +1,13 @@
 package com.blocbuy.payment.service;
 
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.payment.exception.PaymentErrorCode;
 import com.blocbuy.payment.gateway.RefundGateway;
 import com.blocbuy.payment.model.RefundWork;
 import com.blocbuy.payment.repository.RefundRepository;
 import java.time.Duration;
+import java.util.Optional;
+import java.util.function.Supplier;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -36,8 +39,9 @@ public final class RefundService {
     }
 
     public boolean processNext() {
-        RefundWork work = tx.execute(s -> repository.claimNext());
-        if (work == null) return false;
+        Optional<RefundWork> claimed = claim(repository::claimNext);
+        if (claimed.isEmpty()) return false;
+        RefundWork work = claimed.orElseThrow();
         if (!work.valid()) {
             finish(work, work.providerRefundId(), REVIEW, "PAYMENT_MISMATCH");
             return true;
@@ -56,8 +60,13 @@ public final class RefundService {
             } else {
                 snapshot = gateway.createRefund(work);
             }
-        } catch (BizException unavailable) {
-            finish(work, work.providerRefundId(), PROCESSING, "PROVIDER_RETRY");
+        } catch (BizException refused) {
+            boolean permanent = permanent(refused);
+            finish(
+                    work,
+                    work.providerRefundId(),
+                    permanent ? REVIEW : PROCESSING,
+                    permanent ? "PROVIDER_STATE_MISMATCH" : "PROVIDER_RETRY");
             return true;
         }
         apply(work, snapshot);
@@ -69,8 +78,9 @@ public final class RefundService {
         if (providerId == null || !providerId.matches("re_[A-Za-z0-9]{1,128}")) {
             throw new IllegalArgumentException("Invalid provider refund reference");
         }
-        RefundWork work = tx.execute(s -> repository.claimReview(paymentId));
-        if (work == null) return false;
+        Optional<RefundWork> claimed = claim(() -> repository.claimReview(paymentId));
+        if (claimed.isEmpty()) return false;
+        RefundWork work = claimed.orElseThrow();
         if (!work.valid()) {
             finish(work, work.providerRefundId(), REVIEW, "PAYMENT_MISMATCH");
             return true;
@@ -78,12 +88,47 @@ public final class RefundService {
         RefundGateway.Snapshot snapshot;
         try {
             snapshot = gateway.retrieveRefund(providerId);
-        } catch (BizException unavailable) {
-            finish(work, work.providerRefundId(), REVIEW, "OPERATOR_PROVIDER_RETRY");
+        } catch (BizException refused) {
+            // The stored state stays review either way: this row is already in an operator's
+            // hands, and putting it back into processing would hand it to the automatic worker
+            // mid-investigation. Only the recorded reason distinguishes the two failures.
+            finish(
+                    work,
+                    work.providerRefundId(),
+                    REVIEW,
+                    permanent(refused)
+                            ? "OPERATOR_PROVIDER_STATE_MISMATCH"
+                            : "OPERATOR_PROVIDER_RETRY");
             return true;
         }
         apply(work, snapshot);
         return true;
+    }
+
+    /**
+     * Runs one claim in its own short transaction and says plainly whether anything was claimed.
+     *
+     * <p>"Nothing is due" is expressed by the returned {@code Optional}, built inside the
+     * transaction, rather than by a null coming back out of the transaction template — the template
+     * returns null only because its callback did, which makes an absent row and a framework-level
+     * null indistinguishable at the call site.
+     */
+    private Optional<RefundWork> claim(Supplier<RefundWork> claim) {
+        return tx.execute(status -> Optional.ofNullable(claim.get()));
+    }
+
+    /**
+     * Splits provider refusals by kind, because they need opposite treatment.
+     *
+     * <p>{@code PAYMENT_STATE_INVALID} means the PaymentIntent is not in a refundable state, or its
+     * amount, currency or mode does not match this obligation. Nothing about that changes by asking
+     * again, so retrying it every 30 seconds would burn a provider call per cycle for as long as
+     * the obligation lives and bury real failures in the log; it belongs to an operator instead.
+     * {@code PAYMENT_PROVIDER_ERROR} is a transport or availability failure, which is exactly what
+     * retrying is for — the idempotency key keeps a retry from sending money twice.
+     */
+    private static boolean permanent(BizException refused) {
+        return refused.errorCode() == PaymentErrorCode.PAYMENT_STATE_INVALID;
     }
 
     private void apply(RefundWork work, RefundGateway.Snapshot snapshot) {

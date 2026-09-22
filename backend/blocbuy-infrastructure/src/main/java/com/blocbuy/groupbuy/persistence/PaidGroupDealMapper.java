@@ -1,6 +1,7 @@
 package com.blocbuy.groupbuy.persistence;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -62,6 +63,18 @@ public interface PaidGroupDealMapper {
 
     /** Reads the membership a payment produced; the payment key is globally unique. */
     PaidMemberDO selectPaidMember(@Param("paymentId") UUID paymentId);
+
+    /**
+     * Reads the ids of open deals already past their deadline, oldest first, through the partial
+     * index {@code idx_biz_group_deal_status_expire}. One query per sweep, never one per team.
+     */
+    List<UUID> selectDueForExpiry(@Param("now") Instant now, @Param("limit") int limit);
+
+    /**
+     * Resolves one open deal as expired under the caller's row lock; a deal another writer already
+     * resolved matches nothing and returns zero.
+     */
+    int expireDeal(@Param("deal") BizGroupDealDO deal);
 
     /**
      * Writes a terminal result only to a pending receipt, preserving completed replay snapshots.

@@ -41,7 +41,9 @@
     ON CONFLICT (event_id) DO NOTHING
   </insert>
   <update id="finishEvent">
-    UPDATE log_payment_webhook_event SET payment_id=#{paymentId},processing_result=#{result}
+    <!-- payment_id is nullable and is null for an event about a payment we do not hold; without an
+         explicit jdbcType MyBatis cannot infer the type of a null against a uuid column. -->
+    UPDATE log_payment_webhook_event SET payment_id=#{paymentId,jdbcType=OTHER},processing_result=#{result}
     WHERE event_id=#{eventId}
   </update>
   <insert id="review">

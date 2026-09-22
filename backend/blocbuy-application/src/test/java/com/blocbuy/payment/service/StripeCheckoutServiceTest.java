@@ -255,6 +255,79 @@ class StripeCheckoutServiceTest {
                 .isInstanceOf(BizException.class);
     }
 
+    /**
+     * A developer machine and the shared server pointing at the same Stripe sandbox endpoint is the
+     * normal case, so events for payments this database never held arrive constantly. They are
+     * ignored events: recorded and acknowledged, never answered with a failure the provider would
+     * retry for three days (#139).
+     */
+    @Test
+    void aWebhookForAPaymentThisDatabaseDoesNotHoldIsRecordedAndAcknowledged() {
+        String foreign = deliverForeignPayment("evt_foreign", UUID.randomUUID().toString());
+
+        assertThat(foreign).isEqualTo("evt_foreign");
+        verify(repository).finishEvent("evt_foreign", null, "UNKNOWN_PAYMENT");
+        verify(business, never()).lockForSettlement(any());
+        verify(repository, never()).lock(any());
+        verify(repository, never()).save(any());
+    }
+
+    /** Provider metadata that is not a UUID at all never reaches the settlement transaction. */
+    @Test
+    void aWebhookWhosePaymentReferenceIsNotAUuidIsRecordedAndAcknowledged() {
+        deliverForeignPayment("evt_garbled", "not-a-uuid");
+
+        verify(repository).finishEvent("evt_garbled", null, "UNKNOWN_PAYMENT");
+        verify(business, never()).lockForSettlement(any());
+        verify(repository, never()).lock(any());
+        verify(repository, never()).save(any());
+    }
+
+    /** A duplicate delivery of such an event is deduplicated by the claim, like any other. */
+    @Test
+    void aRepeatedUnknownPaymentEventIsRecordedOnlyOnce() {
+        when(repository.claimEvent("evt_garbled", "completed")).thenReturn(false);
+
+        deliverForeignPayment("evt_garbled", "not-a-uuid");
+
+        verify(repository, never()).finishEvent(any(), any(), any());
+    }
+
+    /**
+     * Delivers one verified webhook whose session names a payment reference of the test's choosing,
+     * and forgets the preparation that set the fixture up so the assertions see only what the
+     * webhook itself did.
+     */
+    private String deliverForeignPayment(String eventId, String paymentReference) {
+        prepare();
+        CheckoutPayment ours = saved;
+        when(gateway.retrieveCheckoutSession(any()))
+                .thenReturn(
+                        new CheckoutGateway.Session(
+                                "cs_test_fixture",
+                                paymentReference,
+                                INTENT.toString(),
+                                null,
+                                1000,
+                                "sgd",
+                                "open",
+                                "unpaid",
+                                false,
+                                "https://checkout.stripe.com/c/pay/test",
+                                ours.sessionExpiresAt(),
+                                null));
+        when(gateway.verifyCheckoutWebhook(any(), any()))
+                .thenReturn(
+                        Optional.of(
+                                new CheckoutGateway.Event(
+                                        eventId, "completed", "cs_test_fixture", false, null)));
+        saved = null;
+        clearInvocations(business, repository);
+
+        service.handleWebhook("body", "sig");
+        return eventId;
+    }
+
     @Test
     void differentWebhookSessionIdCannotBeApplied() {
         prepare();

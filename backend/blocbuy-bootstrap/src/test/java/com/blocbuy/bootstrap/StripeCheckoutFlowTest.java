@@ -896,6 +896,12 @@ class StripeCheckoutFlowTest {
         return repository.findById(result.paymentId()).orElseThrow();
     }
 
+    /**
+     * Both production paths mint quotes with {@code quoteValidUntil <= businessDeadline}: a JOIN
+     * takes the earlier of now+2400s and the team's deadline, a START gives the team at least 2400
+     * seconds of life. This fixture had the two the wrong way round, which let a checkout session
+     * be issued that outlived the team it was for (#138). Keep the real ordering here.
+     */
     private CheckoutQuote quote(UUID user) {
         Instant now = repository.now().truncatedTo(ChronoUnit.MICROS);
         return new CheckoutQuote(
@@ -905,8 +911,8 @@ class StripeCheckoutFlowTest {
                 TEAM,
                 new BigDecimal("10.00"),
                 "sgd",
-                now.plusSeconds(3600),
-                now.plusSeconds(300));
+                now.plusSeconds(2400),
+                now.plusSeconds(3600));
     }
 
     private CheckoutGateway.Session session(CheckoutPayment payment, boolean paid) {

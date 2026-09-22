@@ -96,6 +96,24 @@
         WHERE payment_id = #{paymentId,jdbcType=OTHER} AND deleted = false
     </select>
 
+    <!-- Matches idx_biz_group_deal_status_expire (status, expire_time) WHERE deleted = false.
+         One batch read per sweep; the caller resolves each id in its own short transaction. -->
+    <select id="selectDueForExpiry" resultType="java.util.UUID" flushCache="true" useCache="false">
+        SELECT id
+        FROM biz_group_deal
+        WHERE deleted = false AND status = 'open' AND expire_time &lt;= #{now}
+        ORDER BY expire_time
+        LIMIT #{limit}
+    </select>
+
+    <!-- Status-guarded: a team a webhook already carried to 'succeeded' matches nothing, and the
+         caller reads that zero as an idempotent replay rather than a failure. -->
+    <update id="expireDeal">
+        UPDATE biz_group_deal
+        SET status = #{deal.status}, update_time = #{deal.updateTime}, version = version + 1
+        WHERE id = #{deal.id,jdbcType=OTHER} AND deleted = false AND status = 'open'
+    </update>
+
     <update id="completeReceipt">
         UPDATE biz_group_participation_receipt
         SET deal_id = #{result.dealId,jdbcType=OTHER}, outcome = #{result.outcome},

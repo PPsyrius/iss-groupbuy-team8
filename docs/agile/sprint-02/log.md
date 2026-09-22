@@ -1125,3 +1125,72 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   refused with `CATALOG_409_006` until an operator sets them. NFR-28 and the ADR both say so. Also
   owed to Sprint 3: a cleanup job for expired unfulfilled intents, whose reserved `deal_id` points
   at a team that was never created.
+
+## 2026-09-22 - l0sgAi (Liu Jin) - The team lifecycle gets an end: resolution, events, subscribers, and three payment fixes (#28, #124, #132, #133, #138, #139)
+
+- Scope: the order and payment half of `lifecycle-completion-plan-20260922.md`, plus the groupbuy
+  publisher it needs to be more than dead code — **PR-E, PR-F, PR-J and PR-I**. Not in this change:
+  PR-G (the scheduler and its lease), PR-H (the admin write surface for group terms) and PR-K (the
+  sandbox-gate refactor).
+- **PR-E, the lifecycle.** `DealStatus.canTransitionTo` holds the whole matrix (only `OPEN` moves,
+  never to itself, terminal states never re-enter); `GroupDeal.expire(now)` returns the resolved
+  snapshot; `joinPaid`'s open-deal check now goes through the same matrix, so no service branches
+  on status. `PaidGroupDealRepository` gains `dueForExpiry` (one batch read on
+  `idx_biz_group_deal_status_expire`) and a status-guarded `expire`. `GroupDealExpiryService`
+  resolves exactly one team per call — the sweep loop belongs to PR-G's scheduler, and keeping it
+  out leaves this class unit-testable and the lock on a single row.
+- groupbuy publishes `TeamSucceeded` / `TeamExpired` (plain JDK records, no annotations, so
+  `domain_is_framework_free` still passes); `OrderLifecycleSubscriber` (order, order(10)) confirms
+  or cancels that team's orders, `TeamExpiryRefundSubscriber` (payment, order(20), registered under
+  `@Profile("stripe-sprint2")`) records the refund obligations. **The two `confirmByDealId` /
+  `cancelByDealId` methods that had been implemented and tested since UC10 finally have callers.**
+- The timing decision is the part that was easiest to get wrong, and it is written up in backend
+  ADR 0002. `BEFORE_COMMIT`, not `AFTER_COMMIT` (`recordExpiredTeam` forbids the latter verbatim,
+  and it would leave a window where a team is expired and nobody is owed money), and not a plain
+  `@EventListener` — `TeamSucceeded` is published from `joinConfirmed`, but the order of the buyer
+  who *completed* the team is saved by `OrderFulfilmentAdapter` only after `admit` returns, so an
+  immediate listener would sweep the team one row too early and leave that buyer pending forever.
+  The ITs therefore assert on rows, not on the listener having run: only the rows can tell.
+- **PR-F, the two defects that would have made the worker an incident.** #132: `processNext` split
+  a single `catch (BizException)` into permanent (`PAYMENT_STATE_INVALID` → `review` /
+  `PROVIDER_STATE_MISMATCH`) and transient (`PAYMENT_PROVIDER_ERROR` → `processing` /
+  `PROVIDER_RETRY`); a non-refundable PaymentIntent no longer costs a provider call every 30
+  seconds for 23 hours. `reconcile` splits the same way but keeps the stored state at `review`
+  either way — that row is in an operator's hands, and handing it back to the automatic worker
+  mid-investigation is not an improvement. #133: `claimNext` no longer claims `succeeded`, `finish`
+  no longer schedules a next attempt an hour out, and `V16__refund_due_index.sql` narrows the
+  partial index to match (DROP + CREATE without `CONCURRENTLY` — Flyway runs migrations in a
+  transaction, and the table is tiny).
+- **#138 is closed by one line, and the fixture it exposed was wrong.** `prepare` now asks
+  `quote.expiredAt(expires)` instead of comparing `quoteValidUntil` by hand. That immediately
+  failed 21 cases in `StripeCheckoutFlowTest`, whose quote fixture had `quoteValidUntil = now+3600`
+  and `businessDeadline = now+300` — the exact inversion the issue describes, letting a session be
+  issued that outlives its team. Both production paths guarantee the opposite ordering, so the
+  fixture was corrected to 2400 / 3600, not the check.
+- **PR-J, #139.** A webhook whose `payment_id` is not a UUID, or names a payment this database has
+  never held, is an *ignored* event: recorded as `UNKNOWN_PAYMENT` and acknowledged 2xx, touching
+  neither `business`, `lock` nor `save`. Previously both threw past every handler into
+  `handleUnknown` and answered 500, which Stripe retries for three days — and since `claimEvent`
+  rolled back with the transaction, deduplication never engaged either. `finishEvent` needed
+  `#{paymentId,jdbcType=OTHER}` to write the null. This is a precondition for PR-G's observability,
+  not a nicety: a developer machine and the shared server on one sandbox endpoint produce these
+  continuously.
+- **PR-I, `GET /orders/{id}`.** Owner-scoped through `OrderAppService.findMine`; a live order
+  belonging to another buyer answers **404, not 403**, so the endpoint cannot be used to probe
+  which order ids exist. Response reuses the `OrderSummaryResponse` field set — no `paymentId`, no
+  recipient PII. Contract change is additive: one path, one schema (`ResultOrderSummaryResponse`),
+  nothing removed.
+- Verified on JDK 21: `./mvnw -B verify` **BUILD SUCCESS** — Spotless, Checkstyle, SpotBugs and all
+  ArchUnit rules green, unit tests and Testcontainers ITs included. JaCoCo aggregate self-check:
+  every file this change touched reports **no missed line and no missed branch**, except two
+  pre-existing lines in `PaidGroupDealService` (the unreachable `NoSuchAlgorithmException` arm),
+  which this change does not touch. Contract regenerated with `-Popenapi-export` and committed;
+  `git diff --exit-code -- contracts/` clean afterwards.
+- Evidence written: backend ADR 0002 (transition matrix, `BEFORE_COMMIT` timing, the lock-order
+  argument for sweeper-versus-webhook), NFR-29 (every consequence of a resolution in one
+  transaction) and NFR-30 (a foreign webhook is acknowledged, not 500).
+- Closeable by this change: #28, #124, #132, #133, #138, #139. Still open from the plan: #29 needs
+  PR-G's worker on a schedule, NFR-28 needs PR-H, #130 is PR-K. Frontend impact: none — but
+  **three capabilities now exist with no UI**: my orders / my teams (#31, #128), the group-terms
+  admin page, and refund progress. "The backend closes the loop" must not be read at the sprint
+  review as "UC5 and UC6 can be demonstrated end to end".

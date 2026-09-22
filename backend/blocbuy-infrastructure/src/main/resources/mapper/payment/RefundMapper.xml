@@ -4,10 +4,12 @@
   <select id="claimNext" resultType="com.blocbuy.payment.model.RefundWork" affectData="true" flushCache="true">
     WITH candidate AS (
       SELECT r.id FROM biz_refund r
-      WHERE NOT r.deleted AND r.status IN ('pending','processing','succeeded')
+      <!-- Only unfinished work is claimable. A succeeded refund is a terminal fact: re-claiming it
+           re-read Stripe once an hour for 31 days and wrote two audit rows each time, telling us
+           nothing we did not already know. Matches idx_biz_refund_due (V16). -->
+      WHERE NOT r.deleted AND r.status IN ('pending','processing')
         AND next_attempt_at &lt;= clock_timestamp()
         AND (lease_until IS NULL OR lease_until &lt; clock_timestamp())
-        AND (status != 'succeeded' OR first_attempt_at > clock_timestamp()-interval '31 days')
         AND EXISTS(SELECT 1 FROM biz_payment p WHERE p.id=r.payment_id AND NOT p.deleted)
       ORDER BY next_attempt_at,id LIMIT 1 FOR UPDATE SKIP LOCKED
     ), claimed AS (
@@ -23,10 +25,11 @@
     FROM claimed r JOIN biz_payment p ON p.id=r.payment_id AND NOT p.deleted
   </select>
   <update id="finish">
+    <!-- One backoff for every outcome. Terminal states are excluded by claimNext, so scheduling
+         them a next attempt at all was what made a finished refund look like due work. -->
     UPDATE biz_refund SET provider_refund_id=#{providerId},status=#{status},last_result=#{result},
       lease_until=NULL,update_time=clock_timestamp(),
-      next_attempt_at=clock_timestamp()+CASE WHEN #{status}='succeeded' THEN interval '1 hour'
-        ELSE interval '30 seconds' END
+      next_attempt_at=clock_timestamp()+interval '30 seconds'
     WHERE id=#{work.id} AND version=#{work.version}
       AND EXISTS(SELECT 1 FROM biz_payment p WHERE p.id=payment_id AND NOT p.deleted)
   </update>

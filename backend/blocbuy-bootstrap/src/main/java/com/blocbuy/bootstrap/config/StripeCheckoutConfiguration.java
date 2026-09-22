@@ -28,6 +28,16 @@ public class StripeCheckoutConfiguration {
         return new com.blocbuy.payment.service.RefundService(repository, gateway, transactions);
     }
 
+    /**
+     * The refund half of team expiry. Without the checkout profile no buyer ever paid through this
+     * application, so an expired team owes nobody money and only its orders need cancelling.
+     */
+    @Bean
+    com.blocbuy.payment.service.TeamExpiryRefundSubscriber teamExpiryRefundSubscriber(
+            StripeCheckoutService payments) {
+        return new com.blocbuy.payment.service.TeamExpiryRefundSubscriber(payments);
+    }
+
     @Bean
     StripeCheckoutService stripeCheckoutService(
             CheckoutPaymentRepository repository,
