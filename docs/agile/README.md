@@ -10,7 +10,7 @@ written from, versioned with the code it describes.
 docs/agile/
 ├── README.md              this file
 ├── sprint-01/README.md    pointer to the Sprint 1 container issue and report
-├── sprint-02/log/         running log, one file per day: one dated entry per unit of work per member
+├── sprint-02/log/         running log, one file per day: one dated entry per PR per author
 ├── sprint-02/log.md       index of the day files
 ├── sprint-NN/plan.md      sprint goal and member-by-use-case matrix (mirrors the container issue)
 ├── sprint-NN/review.md    plan vs actual, written at the sprint review

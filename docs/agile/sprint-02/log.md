@@ -2,7 +2,7 @@
 
 Goal: track the `[T1] Sprint 2` container issue #93 (`frontend/docs/plan.md` T1-02). Tier 1 targets the week ending 2026-09-20, tier 2 the week ending 2026-09-25; code freeze 2026-09-24 EOD.
 
-One entry per unit of work per member, newest at the bottom. Shape and rules: `.claude/skills/agile-evidence-capture/references/templates.md`. Three to eight lines each. Say what was verified and what was not.
+One entry per PR per author, newest at the bottom. Shape and rules: `.claude/skills/agile-evidence-capture/references/templates.md`. Three to eight lines each. Say what was verified and what was not.
 
 Entries live in one file per day under `log/`. The first entry of a day creates `log/YYYY-MM-DD.md`; later entries that day append to the same file, newest at the bottom inside it.
 
