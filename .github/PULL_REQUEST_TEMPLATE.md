@@ -15,7 +15,7 @@ ADR(s) implemented or affected: <!-- e.g. `frontend/docs/adr/0009-...md` (fronte
 - [ ] Verification: <!-- `./mvnw verify` N tests green on <sha>, `pnpm check` output, or CI run link -->
 - [ ] Contract: unchanged / regenerated (additive) / breaking with `contract-change-approved` requested because <!-- reason -->
 - [ ] UI change: screenshot or Playwright trace attached (frontend only)
-- [ ] `docs/agile/sprint-NN/log.md` entry added (all PRs except `style:` and `chore(deps):`)
+- [ ] `docs/agile/sprint-NN/log/YYYY-MM-DD.md` entry added (all PRs except `style:` and `chore(deps):`)
 - [ ] `docs/quality/nfr-register.md` row added or updated (security, performance, availability, observability, cost, maintainability, CI, config, infra changes)
 
 ## Checklist

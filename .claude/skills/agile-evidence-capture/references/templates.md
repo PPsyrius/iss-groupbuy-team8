@@ -6,8 +6,9 @@ frontend ADR stubs), so nothing here is a new convention.
 
 ## Sprint log entry
 
-Append to `docs/agile/sprint-NN/log.md`. Newest entry at the bottom. One entry per unit of work
-per author; a day with three PRs gets three entries.
+Append to `docs/agile/sprint-NN/log/YYYY-MM-DD.md`, creating the day's file if it does not exist
+(`log.md` indexes the day files). Newest entry at the bottom of the day's file. One entry per unit
+of work per author; a day with three PRs gets three entries.
 
 ```markdown
 ## YYYY-MM-DD - @handle - UC3 join team: payment commitment (#26)
@@ -172,7 +173,7 @@ ADR(s) implemented or affected: `frontend/docs/adr/0009-...md` (frontend); a bac
 - [ ] Verification: `./mvnw verify` 211 tests green on a1b2c3d / CI run <link>
 - [ ] Contract: unchanged | regenerated, additive | breaking, `contract-change-approved` requested because <reason>
 - [ ] UI: screenshot or Playwright trace attached (frontend only)
-- [ ] `docs/agile/sprint-NN/log.md` entry added
+- [ ] `docs/agile/sprint-NN/log/YYYY-MM-DD.md` entry added
 - [ ] `docs/quality/nfr-register.md` updated (NFR work only)
 
 ## Checklist
