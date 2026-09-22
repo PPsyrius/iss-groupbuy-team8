@@ -362,10 +362,9 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 - Decisions: `docs/ci/devsecops-pipeline-plan.md` "Java runtime update policy"; later Java releases require a coordinated stack decision rather than an automated dependency PR. Scope deliberately Java/Boot only: ArchUnit, Stripe, Enforcer plugin, Flyway, npm and Actions reviewed and left unpinned (test-only, unrelated stacks, or fail-closed).
 - Problems: register row takes NFR-26 since Stripe claimed NFR-21–25 on `dev`; commit and push are user-owned.
 
-## 2026-09-22 - @PPsyrius - Gitleaks false positives: Stripe test placeholder and contract baseline
+## 2026-09-22 - @PPsyrius - Gitleaks false-positive fixes
 
 - Kind: nfr (security, NFR-02), chore
-- Changed: `StripeClientProviderTest` placeholder `sk_test_placeholder` → `test-placeholder` (tripped the secret-key detector); `.gitleaks.toml` allowlists `scripts/stripe-dev-contract-baseline.json` (sha256 content hashes, no secrets) with the written reason in the config, per the quality-gates exception process. Narrowest exclusions: one renamed literal, one exact file path — no rule weakened.
-- Verified: JDK 21 `./mvnw -B -ntp verify` BUILD SUCCESS with both changes in tree (7 modules green, 32 bootstrap tests 0 failures, SpotBugs/Checkstyle clean); TOML parses; `git diff --check` clean. CI `gitleaks` job owed (no local binary).
-- Decisions: rename over allowlisting for the test literal (removes the trigger entirely); allowlist only for the generated baseline, which cannot avoid high-entropy hashes.
-- Problems: gitleaks not installed locally, so the finding reproduction and the post-fix zero-findings run are CI-owed. Next: user commits + opens PR.
+- Changed: renamed `sk_test_placeholder` → `test-placeholder`; narrowly allowlisted the historical placeholder; kept `stripe-dev-contract-baseline.json` scanned and added SHA-256 format validation to its checker.
+- Verified: backend `./mvnw -B -ntp verify` passed (7 modules, 32 bootstrap tests); TOML parse and `git diff --check` passed. Full-history Gitleaks run is CI-owed.
+- Decision: preserve default secret rules and baseline scanning; suppress only the known historical non-secret literal.
