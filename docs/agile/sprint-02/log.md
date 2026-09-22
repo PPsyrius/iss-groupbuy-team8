@@ -828,3 +828,47 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   (r4053028508): note 48 describes the stubbed journey instead of the old skip.
 - Problems: step 1 is a human action and B5's console check is unconfirmed (#98); asked in the PR
   body; the `@auth` tests report the codegen command as the skip reason. Open, user-owned.
+
+## 2026-09-20 - Yorick - Stripe Checkout, browser and Sandbox acceptance
+
+- Kind: feature, security, data consistency; NFR-21 and NFR-22; tracking: PR #126.
+- Changed: server-owned payment intents, idempotent Hosted Checkout, signed webhooks, buyer-owned receipts, product-page START/JOIN, refund safeguards and generated-client integration.
+- Verified: isolated PostgreSQL suites and frontend gates passed; five real Sandbox payments covered backend/browser START/JOIN and recovery, and one SGD 10 refund remained unique on recheck. Evidence: `backend/docs/payment/stripe-sandbox-acceptance-20260920.md`.
+- Decisions/problems: return URLs never assert payment state; refunds remain separate from successful payments. Google OAuth, shared deployment, production collaborators and live mode were not verified.
+
+## 2026-09-20 - Yorick - Compatibility, default-off rollout and local-interface removal
+
+- Kind: maintainability, security, availability; NFR-23; tracking: PR #126.
+- Changed: separated Checkout from original payment contracts, gated it with `stripe-sprint2`, and removed local HTTP/operator/runtime interfaces. Test collaborators and SQL remain test-only.
+- Verified: source/contract guard preserved 192 files, 13 paths and 23 schemas; post-removal backend, isolated PostgreSQL, frontend, build and JAR-inspection checks passed.
+- Decisions/problems: one backend capability controls frontend availability. Production intent/order bindings, refund-worker wiring and shared deployment remain open. Current checklist: `backend/docs/payment/stripe-release-cleanup-20260920.md`.
+
+## 2026-09-20 - Yorick - PR #126 SonarCloud and receipt isolation fixes
+
+- Kind: maintainability, security; NFR-06 and NFR-21; tracking: PR #126.
+- Changed: enabled isolated PostgreSQL CI coverage, simplified settlement/recovery, added failure-path tests and scoped receipt caching by user.
+- Verified: 725 backend and 127 frontend tests passed; aggregate JaCoCo covered every line of `StripeCheckoutService` and `RefundService`. Evidence: `backend/docs/payment/stripe-sonar-fixes-20260920.md`.
+- Problems: remote SonarCloud remains authoritative; no gate was weakened and deployment is separate.
+
+## 2026-09-21 - l0sgAi (Liu Jin) - PR #126 review fixes: migration integration and convention alignment
+
+- Kind: correctness, maintainability; NFR-24 (new); tracking: PR #126 review by order side.
+- Changed: moved Stripe DDL into Flyway V9-V11, removed duplicate indexes/backfill, aligned lifecycle statuses, shared the Stripe client, and removed the duplicate order-history API in favour of `/orders/me`.
+- Decisions: keep `intent_id` distinct from the provider ID and keep result/audit codes uppercase while lifecycle statuses remain lowercase.
+- Verified: JDK 21 `./mvnw -B verify` migrated PostgreSQL 18 through V11; touched payment classes had full line/branch coverage and the regenerated contract had no backward-incompatible change.
+- Problems: order-branch migration numbering still needs reconciliation; see the release checklist.
+
+## 2026-09-21 - l0sgAi (Liu Jin) - Sync `dev` into the stripe branch and retire the orphaned order history
+
+- Kind: merge and frontend integration; NFR-23; tracking: PR #126.
+- Changed: merged `origin/dev` (`92e5ca9`), retained NFR-19/20 and renumbered Stripe rows to NFR-21-24. Removed the orphaned `/account` order-history consumer until `/orders/me` enters the contract.
+- Verified: generated client, 118 frontend tests, knip and production build passed.
+- Problems: the merge hook exposed the stale order-history call; the following commit removed it.
+
+## 2026-09-21 to 2026-09-22 - @PPsyrius - PR #126 quality, coverage and evidence review
+
+- Kind: maintainability, performance, test and process evidence; NFR-06 and NFR-20-25; tracking: PR #126.
+- Changed: replaced repeated refund-state literals; extracted receipt title/details/refund rendering to reduce complexity; bounded receipt polling by error state and a fixed 60-second deadline; expanded payment coverage; enforced the soft-delete boundary across payment and refund worker reads/writes; corrected the exact OAuth callback guidance; applied readonly React props and static Mockito imports; consolidated 17 Stripe Markdown changes into five canonical records and removed 12 superseded reports/drafts.
+- Verified: JDK 21 `./mvnw.cmd -B -ntp verify` passed, including 32 Testcontainers integration tests and Flyway V1-V11 on PostgreSQL 18; aggregate JaCoCo had no missed lines or partial branches across 32 touched payment files. The Node 24 `pnpm check` gate passed TypeScript, Oxlint, Oxfmt, 151 tests and Knip; touched payment/product routes had 100% line and branch coverage.
+- Decision: prefer behavior-preserving helpers and direct branch tests over suppressions or duplicate assertions; treat soft-deleted payments as absent from operational payment/refund flows; keep the sprint log, NFR register, release boundary, Sandbox acceptance and quality report as the canonical evidence set.
+- Problems: remote SonarCloud and shared deployment remain authoritative and were not run locally.

@@ -9,6 +9,7 @@ import type { ProductDetailResponse } from "@/api/generated/types.gen";
 import { formatDeadlineShort, hasEnded, parseDeadline } from "@/features/catalog/deal-time";
 import { DealProgress, useNow } from "@/features/catalog/DealProgress";
 import { formatPrice, Price } from "@/features/catalog/Price";
+import { useCheckout } from "@/features/payment/use-checkout";
 import { GatedActionSheet } from "@/features/session/GatedActionSheet";
 import { useSession } from "@/features/session/use-session";
 
@@ -80,12 +81,28 @@ function ProductDetailPage() {
   const groupPrice = p.groupPrice ?? undefined;
   const category = p.category ? titleCase(p.category) : undefined;
   const images = galleryImages(p);
-  // The gate sits at the paid action (flow map "Gate"): anonymous presses open the sign-in sheet
-  // with this listing as the return path. Signed-in presses stay unwired until the join and
-  // payment use cases land (UC3/UC4), so `onGated` is undefined for them.
+  // Keep the existing sign-in gate; the server derives buyer identity and price.
   const session = useSession();
   const [gateOpen, setGateOpen] = useState(false);
   const onGated = session.status === "authenticated" ? undefined : () => setGateOpen(true);
+  const checkout = useCheckout(session.status === "authenticated" ? session.userId : undefined);
+  const onStart =
+    onGated ??
+    (checkout.enabled
+      ? () => {
+          void checkout.begin("START", productId);
+        }
+      : undefined);
+  const onJoin =
+    onGated ??
+    (checkout.enabled &&
+    p.deal?.dealId &&
+    !ended &&
+    (p.deal.currentSize ?? 0) < (p.deal.targetSize ?? 0)
+      ? () => {
+          void checkout.begin("JOIN", p.deal!.dealId!);
+        }
+      : undefined);
   return (
     <main className={shell}>
       <GatedActionSheet
@@ -94,6 +111,11 @@ function ProductDetailPage() {
         returnTo={`/products/${productId}`}
       />
       <CrumbRow category={category} title={p.title} />
+      {checkout.error ? (
+        <p role="alert" className="text-danger">
+          {checkout.error}
+        </p>
+      ) : null}
       <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[620px_minmax(0,1fr)] xl:gap-8">
         <div className="flex flex-col gap-4 xl:gap-6">
           <Gallery images={images} />
@@ -138,7 +160,14 @@ function ProductDetailPage() {
             {groupPrice !== undefined && closesMs !== null ? (
               <TrustTriptych payNow={formatPrice(groupPrice, currency)} closesMs={closesMs} />
             ) : null}
-            <Actions product={p} currency={currency} onGated={onGated} className="hidden xl:flex" />
+            <Actions
+              product={p}
+              currency={currency}
+              onGated={onGated}
+              onStart={onStart}
+              isPending={checkout.isPending}
+              className="hidden xl:flex"
+            />
           </section>
           <section className="flex flex-col gap-3">
             {p.deal ? (
@@ -156,7 +185,7 @@ function ProductDetailPage() {
                 </span>
               </div>
             ) : null}
-            <DealProgress deal={p.deal} onJoin={onGated} />
+            <DealProgress deal={p.deal} onJoin={checkout.isPending ? undefined : onJoin} />
           </section>
           <AboutCard product={p} category={category} className="flex xl:hidden" />
         </div>
@@ -165,6 +194,8 @@ function ProductDetailPage() {
         product={p}
         currency={currency}
         onGated={onGated}
+        onStart={onStart}
+        isPending={checkout.isPending}
         className="bg-surface border-border sticky bottom-0 -mx-4 flex border-t px-4 py-3 xl:hidden"
       />
     </main>
@@ -334,19 +365,20 @@ function TrustTriptych({ payNow, closesMs }: { payNow: string; closesMs: number 
 }
 
 // Both actions are the artboard's, in its order of prominence (Start a bloc outranks Buy alone).
-// `onGated` (anonymous buyers) opens the sign-in sheet; for signed-in buyers there is no handler
-// yet, UC3/UC4 wire the payment, so the buttons are disabled rather than activatable with no
-// effect (CodeRabbit r4045102864). Start a bloc carries no amount when there is no bloc price
-// ("unknown until a rule exists").
+// Buy alone stays separate and disabled for authenticated buyers until its own flow exists.
 function Actions({
   product: p,
   currency,
   onGated,
+  onStart,
+  isPending,
   className,
 }: {
   product: ProductDetailResponse;
   currency: string;
   onGated: (() => void) | undefined;
+  onStart: (() => void) | undefined;
+  isPending: boolean;
   className: string;
 }) {
   const groupPrice = p.groupPrice ?? undefined;
@@ -354,7 +386,14 @@ function Actions({
   const press = onGated ? { onPress: onGated } : { isDisabled: true };
   return (
     <div className={"flex-col gap-2 " + className}>
-      <Button variant="secondary" size="lg" className="min-h-12 w-full text-lg" {...press}>
+      <Button
+        variant="secondary"
+        size="lg"
+        className="min-h-12 w-full text-lg"
+        {...(onStart ? { onPress: onStart } : {})}
+        isPending={isPending}
+        isDisabled={isPending || !onStart}
+      >
         {groupPrice === undefined
           ? "Start a bloc"
           : `Start a bloc · ${formatPrice(groupPrice, currency)}`}
