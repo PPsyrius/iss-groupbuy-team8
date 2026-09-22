@@ -119,6 +119,27 @@ class PurchaseIntentRepositoryImplTest {
     }
 
     @Test
+    void aRowMissingItsNotNullCountersFailsTheDomainGuardRatherThanUnboxing() {
+        BizPurchaseIntentDO broken = row(null, 0);
+        broken.setTargetSize(null);
+        when(mapper.selectById(intentId)).thenReturn(broken);
+
+        // target_size and version are NOT NULL columns; the converter defaults rather than
+        // throwing an NPE, and the aggregate then rejects the impossible value.
+        assertThatThrownBy(() -> repository.findById(intentId)).isInstanceOf(BizException.class);
+    }
+
+    @Test
+    void aRowWithoutAVersionReadsAsVersionZero() {
+        BizPurchaseIntentDO noVersion = row(null, 0);
+        noVersion.setVersion(null);
+        when(mapper.selectById(intentId)).thenReturn(noVersion);
+
+        assertThat(repository.findById(intentId))
+                .hasValueSatisfying(found -> assertThat(found.version()).isZero());
+    }
+
+    @Test
     void aVanishedRowIsNotFound() {
         UUID payment = UUID.randomUUID();
         when(mapper.markFulfilled(intentId, payment, 0)).thenReturn(0);

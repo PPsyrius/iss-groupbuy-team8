@@ -961,3 +961,37 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   ADR, and `docs/db/catalog.sql` sync for the two `biz_product` columns (catalog owns that file).
 - Next: implement the adapter against these ports, then delete `PaymentBusinessFixture`'s
   production stand-in role and let `StripeCheckoutConfiguration` resolve a real collaborator.
+
+## 2026-09-22 - l0sgAi (Liu Jin) - Catalog purchase-support facade, the first slice of the payment integration (#124, #126)
+
+- Kind: feature (PR-A of `order-payment-integration-plan-20260922.md`); no NFR row yet, the row
+  lands with PR-D when the behaviour becomes observable. No ADR yet, owed with PR-D.
+- Plan: wrote `docs/agile/sprint-02/order-payment-integration-plan-20260922.md` first — baseline,
+  layer placement under the COLA hard gates, four-PR split, lock order, idempotency design,
+  contract impact, coverage self-check and risks.
+- Why a facade: the order module has to price a checkout from catalog data, but the hard gate
+  forbids cross-domain access to another module's mappers, DOs or aggregates
+  (`architecture-and-ddd.md` L51). So catalog exposes `CatalogPurchaseSupport` and keeps
+  `biz_product` and the price policy to itself.
+- Changed: `ProductTeamTerms` value (bounds live here, not in a CHECK, per pgsql-ddl);
+  `ProductRepository` gains `findTeamTerms` and `consumeOneUnit`; `BizProductMapper` gains the two
+  statements plus `BizProductTeamTermsDO`; `CatalogPurchaseSupport` + impl in the catalog
+  application layer; `CatalogErrorCode` gains `PRODUCT_NOT_PURCHASABLE` and
+  `PRODUCT_NOT_STARTABLE`; `OrderErrorCode.PRODUCT_NOT_STARTABLE` became `TEAM_NOT_JOINABLE`
+  (the startability rejection belongs to catalog). `docs/db/catalog.sql` mirrors V14.
+- Stock is taken by one conditional `UPDATE ... WHERE stock > 0 AND status = 'on_sale'`, never
+  read-then-write, so two settlements racing for the last unit cannot both win.
+- Deviation from the plan, recorded in the plan itself: team terms were added to the existing
+  `ProductRepository` instead of a new `ProductTeamTermsRepository` — they belong to the Product
+  aggregate and one aggregate root gets one repository.
+- Verified on JDK 21: `./mvnw -B verify` BUILD SUCCESS (147 bootstrap unit tests, 32
+  Testcontainers ITs, ArchUnit 8/8, SpotBugs and Checkstyle clean). New tests:
+  `CatalogPurchaseSupportImplTest` 19, `ProductTeamTermsPersistenceTest` 5, `PurchaseIntentTest`
+  grew to 28, `PurchaseIntentRepositoryImplTest` to 9. JaCoCo aggregate self-check: every file
+  touched by this change and by `c84868d` reports **no missed line or branch**.
+- Contract: unchanged, as the plan predicted — this is an internal port, no HTTP surface moved.
+  `git diff --exit-code -- contracts/` is clean.
+- Removed a dead guard while covering it: the impl no longer re-checks `policy.currency()`,
+  because `TeamPricePolicy`'s own constructor already rejects anything but SGD.
+- Next: PR-B `PurchaseIntentAppService implements PaymentIntentPort`, then PR-C
+  `OrderFulfilmentAdapter implements PaymentBusinessPort`, then PR-D wiring and fixture retirement.

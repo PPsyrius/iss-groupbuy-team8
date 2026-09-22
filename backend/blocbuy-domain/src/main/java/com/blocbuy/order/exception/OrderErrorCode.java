@@ -33,11 +33,11 @@ public enum OrderErrorCode implements ErrorCode {
             409,
             "Purchase intent was already fulfilled by another payment",
             "error.order.purchaseIntentAlreadyFulfilled"),
-    PRODUCT_NOT_STARTABLE(
+    TEAM_NOT_JOINABLE(
             "ORDER_409_004",
             409,
-            "Product has no team terms configured, so no team can be started on it",
-            "error.order.productNotStartable");
+            "Team is not accepting new members",
+            "error.order.teamNotJoinable");
 
     private final String code;
     private final int httpStatus;

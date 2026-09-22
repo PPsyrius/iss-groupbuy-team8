@@ -2,6 +2,7 @@ package com.blocbuy.catalog.repository;
 
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductStatus;
+import com.blocbuy.catalog.model.ProductTeamTerms;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
 import java.util.List;
@@ -33,6 +34,22 @@ public interface ProductRepository {
 
     /** Active (non-deleted) product by primary key, any status. */
     Optional<Product> findById(UUID id);
+
+    /**
+     * Team terms of an active product: how big a team started on it must be and how long it stays
+     * open. Empty when the product itself is gone; a present value may still be {@link
+     * ProductTeamTerms#startable() not startable} when the columns were never configured.
+     */
+    Optional<ProductTeamTerms> findTeamTerms(UUID id);
+
+    /**
+     * Takes one unit off an on-sale product and counts the sale, as a single conditional update —
+     * never read-then-write. Called inside the transaction that settles a verified payment.
+     *
+     * @return false when the product is gone, not on sale, or out of stock; the caller decides
+     *     whether that is a business rejection or a rollback
+     */
+    boolean consumeOneUnit(UUID id);
 
     /**
      * Page of on-sale products for the buyer listing browse, newest first. {@code category} null or

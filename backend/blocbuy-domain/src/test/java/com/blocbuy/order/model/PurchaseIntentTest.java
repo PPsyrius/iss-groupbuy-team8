@@ -18,6 +18,43 @@ class PurchaseIntentTest {
 
     private static final Instant NOW = Instant.parse("2026-09-22T10:00:00Z");
     private static final UUID USER = UUID.randomUUID();
+    private static final UUID DEAL = UUID.randomUUID();
+    private static final UUID PRODUCT = UUID.randomUUID();
+
+    private static PurchaseIntent issueWith(
+            UUID user, PurchaseOperation operation, UUID dealId, UUID productId) {
+        return PurchaseIntent.issue(
+                new PurchaseIntent.Terms(
+                        user,
+                        operation,
+                        dealId,
+                        productId,
+                        "Sourdough starter kit",
+                        null,
+                        new BigDecimal("12.50"),
+                        "sgd",
+                        3),
+                NOW.plusSeconds(2400),
+                NOW.plusSeconds(86_400),
+                NOW);
+    }
+
+    private static PurchaseIntent issueWithImage(String image) {
+        return PurchaseIntent.issue(
+                new PurchaseIntent.Terms(
+                        USER,
+                        PurchaseOperation.JOIN,
+                        DEAL,
+                        PRODUCT,
+                        "Sourdough starter kit",
+                        image,
+                        new BigDecimal("12.50"),
+                        "sgd",
+                        3),
+                NOW.plusSeconds(2400),
+                NOW.plusSeconds(86_400),
+                NOW);
+    }
 
     private static PurchaseIntent.Terms terms() {
         return new PurchaseIntent.Terms(
@@ -163,6 +200,69 @@ class PurchaseIntentTest {
         assertThatThrownBy(() -> issueWithTitle(null)).isInstanceOf(BizException.class);
         assertThatThrownBy(() -> issueWithTitle("  ")).isInstanceOf(BizException.class);
         assertThatThrownBy(() -> issueWithTitle("x".repeat(257))).isInstanceOf(BizException.class);
+    }
+
+    @Test
+    void everyMissingPieceOfTheTermsIsRejectedOnItsOwn() {
+        assertThatThrownBy(() -> PurchaseIntent.issue(null, NOW.plusSeconds(60), NOW, NOW))
+                .isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> issueWith(null, PurchaseOperation.JOIN, DEAL, PRODUCT))
+                .isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> issueWith(USER, null, DEAL, PRODUCT))
+                .isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> issueWith(USER, PurchaseOperation.JOIN, null, PRODUCT))
+                .isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> issueWith(USER, PurchaseOperation.JOIN, DEAL, null))
+                .isInstanceOf(BizException.class);
+    }
+
+    @Test
+    void anOverlongProductImageIsRejectedButAShortOneIsKept() {
+        assertThatThrownBy(() -> issueWithImage("https://cdn/" + "x".repeat(1024)))
+                .isInstanceOf(BizException.class);
+        assertThat(issueWithImage("https://cdn/cover.jpg").productImage())
+                .isEqualTo("https://cdn/cover.jpg");
+    }
+
+    @Test
+    void anAmountWiderThanTheColumnIsRejected() {
+        assertThatThrownBy(() -> issue(new BigDecimal("99999999999999999.00"), "sgd"))
+                .isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> issue(null, "sgd")).isInstanceOf(BizException.class);
+    }
+
+    @Test
+    void issuingNeedsAClockAndAQuoteDeadline() {
+        assertThatThrownBy(
+                        () ->
+                                PurchaseIntent.issue(
+                                        terms(),
+                                        NOW.plusSeconds(2400),
+                                        NOW.plusSeconds(86_400),
+                                        null))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> PurchaseIntent.issue(terms(), null, NOW.plusSeconds(86_400), NOW))
+                .isInstanceOf(BizException.class);
+    }
+
+    @Test
+    void aReconstitutedRowWithoutATeamDeadlineIsImpossible() {
+        assertThatThrownBy(
+                        () ->
+                                PurchaseIntent.reconstitute(
+                                        UUID.randomUUID(),
+                                        terms(),
+                                        NOW.plusSeconds(2400),
+                                        null,
+                                        null,
+                                        NOW,
+                                        0))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void theTermsRecordIsReadableAsAWhole() {
+        assertThat(issued().terms().productTitle()).isEqualTo("Sourdough starter kit");
     }
 
     @Test
