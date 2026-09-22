@@ -3,7 +3,11 @@
 import hashlib
 import json
 import pathlib
+import re
 import sys
+
+
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 def digest(value):
@@ -18,6 +22,10 @@ def main():
         (root / "scripts/stripe-dev-contract-baseline.json").read_text()
     )
     errors = []
+    for section in ("files", "openapi_paths", "openapi_schemas"):
+        for name, expected in baseline[section].items():
+            if not isinstance(expected, str) or not SHA256_RE.fullmatch(expected):
+                errors.append("Invalid SHA-256 baseline value: " + section + "/" + name)
     bootstrap = root / "backend/blocbuy-bootstrap/src/main"
     for retired in (bootstrap / "java/com/blocbuy/bootstrap/local", bootstrap / "resources/db/stripe-local"):
         if retired.exists() and any(path.is_file() for path in retired.rglob("*")):
