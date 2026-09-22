@@ -1,0 +1,55 @@
+{
+  "observed_at": "2026-09-20T03:47:10.419527+00:00",
+  "local": {
+    "id": "01a0bce3-9b2a-734e-9451-b03ef2194f17",
+    "status": "SUCCEEDED",
+    "amount": 10.0,
+    "currency": "sgd",
+    "intent_id": "eb28f52d-d987-4e24-9aa7-9069d03bdb34",
+    "operation": "START",
+    "business_id": "6bf828c0-35fd-4ccb-b477-a71028e3cb66",
+    "checkout_session_id": "cs_test_a1007ZiTv38ID9dVag46KzP2y2f62R6XyCUcqlrZpU9P3KD1ouUn7fYHpO",
+    "provider_payment_intent_id": "pi_3UHbaN5iEVLN2uQJ1Ki4Ao37",
+    "fulfilment_result": "FULFILLED",
+    "fulfilled_deal_id": "6bf828c0-35fd-4ccb-b477-a71028e3cb66"
+  },
+  "stripe": {
+    "id": "cs_test_a1007ZiTv38ID9dVag46KzP2y2f62R6XyCUcqlrZpU9P3KD1ouUn7fYHpO",
+    "livemode": false,
+    "status": "complete",
+    "payment_status": "paid",
+    "amount_total": 1000,
+    "currency": "sgd",
+    "payment_intent": "pi_3UHbaN5iEVLN2uQJ1Ki4Ao37"
+  },
+  "http": {
+    "status": "SUCCEEDED",
+    "paymentId": "01a0bce3-9b2a-734e-9451-b03ef2194f17",
+    "outcome": "FULFILLED"
+  },
+  "orders": [
+    {
+      "id": "bb2acb42-e026-40b6-8b02-7f905e57da46",
+      "deal_id": "6bf828c0-35fd-4ccb-b477-a71028e3cb66",
+      "payment_id": "01a0bce3-9b2a-734e-9451-b03ef2194f17",
+      "total_amount": 10.0,
+      "status": "paid"
+    }
+  ],
+  "refund_obligations": [],
+  "review": [],
+  "webhooks": [
+    {
+      "event_id": "evt_1UHbaO5iEVLN2uQJKGZXRoDE",
+      "payment_id": "01a0bce3-9b2a-734e-9451-b03ef2194f17",
+      "processing_result": "FULFILLED"
+    }
+  ],
+  "members": [
+    {
+      "id": "01a0bce5-06e7-75dd-9deb-2a82e274f5fe",
+      "deal_id": "6bf828c0-35fd-4ccb-b477-a71028e3cb66",
+      "order_id": "bb2acb42-e026-40b6-8b02-7f905e57da46"
+    }
+  ]
+}

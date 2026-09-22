@@ -1,0 +1,32 @@
+{
+  "verified_at": "2026-09-20T03:47:10.512134+00:00",
+  "result": "PASS",
+  "scope": "real Stripe Sandbox + real local PostgreSQL/team service + minimal local intent/order/expiry adapters",
+  "checks": [
+    "START paid -> one member/order",
+    "JOIN paid -> team succeeded, size 2/2",
+    "missed delivery -> inspect/assigned recovery -> resolved, one member/order",
+    "team expiry -> unique PENDING refund obligation",
+    "open Checkout expired -> no order or refund",
+    "same provider event replay -> no duplicate effects",
+    "tampered signature -> HTTP 400"
+  ],
+  "payment_ids": {
+    "start": "01a0bce3-9b2a-734e-9451-b03ef2194f17",
+    "join": "01a0bce6-8ba6-764f-a16c-223fdbc8b9ac",
+    "recovered": "01a0bce8-1615-7f87-a736-788fbe34a1f3",
+    "expired": "01a0bcea-dec3-71e9-9e43-a981f1bb3b12"
+  },
+  "replay": {
+    "paymentId": "01a0bce3-9b2a-734e-9451-b03ef2194f17",
+    "eventId": "evt_1UHbaO5iEVLN2uQJKGZXRoDE",
+    "duplicate_http": [
+      200,
+      200
+    ],
+    "tampered_http": 400,
+    "no_duplicate_business_records": true,
+    "delivery": "local HMAC replay of actual Stripe event, not Stripe redelivery"
+  },
+  "boundary": "No live payment, refund execution, shared database write, or GitHub write. Expiry uses a local test deadline fixture."
+}

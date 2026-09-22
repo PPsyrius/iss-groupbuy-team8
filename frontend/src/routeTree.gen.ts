@@ -15,6 +15,8 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
+import { Route as AuthenticatedPaymentsPaymentIdRouteImport } from './routes/_authenticated/payments.$paymentId'
+import { Route as AuthenticatedPaymentsReturnRouteImport } from './routes/_authenticated/payments.return'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -45,6 +47,18 @@ const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
   path: '/products/$productId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPaymentsPaymentIdRoute =
+  AuthenticatedPaymentsPaymentIdRouteImport.update({
+    id: '/payments/$paymentId',
+    path: '/payments/$paymentId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPaymentsReturnRoute =
+  AuthenticatedPaymentsReturnRouteImport.update({
+    id: '/payments/return',
+    path: '/payments/return',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -52,6 +66,8 @@ export interface FileRoutesByFullPath {
   '/account': typeof AuthenticatedAccountRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/products/$productId': typeof ProductsProductIdRoute
+  '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
+  '/payments/return': typeof AuthenticatedPaymentsReturnRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -59,6 +75,8 @@ export interface FileRoutesByTo {
   '/account': typeof AuthenticatedAccountRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/products/$productId': typeof ProductsProductIdRoute
+  '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
+  '/payments/return': typeof AuthenticatedPaymentsReturnRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -68,13 +86,28 @@ export interface FileRoutesById {
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/products/$productId': typeof ProductsProductIdRoute
+  '/_authenticated/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
+  '/_authenticated/payments/return': typeof AuthenticatedPaymentsReturnRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/login' | '/account' | '/auth/callback' | '/products/$productId'
+    | '/'
+    | '/login'
+    | '/account'
+    | '/auth/callback'
+    | '/products/$productId'
+    | '/payments/$paymentId'
+    | '/payments/return'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/account' | '/auth/callback' | '/products/$productId'
+  to:
+    | '/'
+    | '/login'
+    | '/account'
+    | '/auth/callback'
+    | '/products/$productId'
+    | '/payments/$paymentId'
+    | '/payments/return'
   id:
     | '__root__'
     | '/'
@@ -83,6 +116,8 @@ export interface FileRouteTypes {
     | '/_authenticated/account'
     | '/auth/callback'
     | '/products/$productId'
+    | '/_authenticated/payments/$paymentId'
+    | '/_authenticated/payments/return'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -137,15 +172,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/payments/$paymentId': {
+      id: '/_authenticated/payments/$paymentId'
+      path: '/payments/$paymentId'
+      fullPath: '/payments/$paymentId'
+      preLoaderRoute: typeof AuthenticatedPaymentsPaymentIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/payments/return': {
+      id: '/_authenticated/payments/return'
+      path: '/payments/return'
+      fullPath: '/payments/return'
+      preLoaderRoute: typeof AuthenticatedPaymentsReturnRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+  AuthenticatedPaymentsPaymentIdRoute: typeof AuthenticatedPaymentsPaymentIdRoute
+  AuthenticatedPaymentsReturnRoute: typeof AuthenticatedPaymentsReturnRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+  AuthenticatedPaymentsPaymentIdRoute: AuthenticatedPaymentsPaymentIdRoute,
+  AuthenticatedPaymentsReturnRoute: AuthenticatedPaymentsReturnRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
