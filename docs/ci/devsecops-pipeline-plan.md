@@ -1,10 +1,6 @@
 # DevSecOps Pipeline Plan — Backend, Frontend Quality, and Repository Automation
 
-Status: approved. Quality/security Steps 1–5 and existing-EC2 delivery Step 6 are implemented.
-Scope: backend quality gates and delivery, frontend SonarCloud quality analysis, security scanning,
-repository process automation, and live TypeSafe Jev integration verification.
-Out of scope here: frontend application delivery details and Terraform pipelines (see
-`frontend/docs/plan.md` and `docs/design/repository-structure.md`).
+Status: approved. Quality/security Steps 1–5 and existing-EC2 delivery Step 6 are implemented. Scope: backend quality gates and delivery, frontend SonarCloud quality analysis, security scanning, repository process automation, and live TypeSafe Jev integration verification. Out of scope here: frontend application delivery details and Terraform pipelines (see `frontend/docs/plan.md`, `backend/README.md`, `frontend/README.md`).
 
 ## Goals
 
@@ -21,22 +17,9 @@ Out of scope here: frontend application delivery details and Terraform pipelines
 | Live AI integration compatibility | TypeSafe Jev System One smoke | applicable PRs, `v*`, manual; non-required |
 | Immutable application delivery | ECR digest + GitHub OIDC + SSM | green push to protected `dev` |
 
-## Current State → Target State
+## Rolled-out state (Steps 1–6 implemented)
 
-| Item | Before | After Steps 1–6 |
-|---|---|---|
-| Checkstyle + ArchUnit + Enforcer | ✅ configured | unchanged |
-| Spotless (AOSP) | ❌ | `spotless:check` at `validate`; `spotless:apply` for devs |
-| SpotBugs | ❌ | `spotbugs:check` at `verify`, `spotbugs-excludes.xml` filter |
-| JaCoCo | ❌ | per-module reports + aggregate in `blocbuy-bootstrap` |
-| SonarCloud Backend | ❌ | `sonar-backend` CI job with Maven artifact reuse and quality gate |
-| SonarCloud Frontend | ❌ | `sonar-frontend` CI job with TypeScript analysis, LCOV and quality gate |
-| GitHub workflows | ❌ none | `ci-backend.yml`, `security.yml`, `pr-labeler.yml`, `typesafe-smoke.yml`, `rollback-backend.yml` |
-| Dependabot | ❌ | `.github/dependabot.yml` (maven, github-actions, docker) |
-| Docker image | ❌ (only `application-docker.yml`) | `backend/Dockerfile` multi-stage, non-root |
-| Secret scanning | ❌ | Gitleaks in `security.yml` + `.gitleaks.toml` |
-| TypeSafe Jev | ❌ | optional listing-search reranker + deterministic tests + live contract smoke |
-| Existing EC2 delivery | ❌ | backend-only bundle, ECR digest, SSM deploy, health and rollback |
+The before/after rollout table was removed 2026-09-21 after implementation: every item below landed (Spotless, SpotBugs, JaCoCo, both SonarCloud jobs, all workflows, Dependabot, Docker, Gitleaks/Trivy, TypeSafe smoke, EC2 delivery). What each step does today lives in [backend-pipeline.md](backend-pipeline.md); the steps below remain as the decision record.
 
 ## Step 1 — Local Quality Tooling (POM + format)
 
@@ -59,17 +42,11 @@ All versions pinned in `blocbuy-parent` properties, verified against Maven Centr
 
 ### `.github/workflows/ci-backend.yml`
 
-Triggers: PRs and pushes to `dev` touching the backend/contract/deployment paths, `v*` tag pushes,
-and `merge_group` for forward compatibility with GitHub Merge Queue.
+Triggers: PRs and pushes to `dev` touching the backend/contract/deployment paths, `v*` tag pushes, and `merge_group` for forward compatibility with GitHub Merge Queue.
 
-Pull requests are the authoritative pre-merge validation path. The `dev` repository ruleset requires
-selected status checks to pass against the latest `dev` state before merging. `merge_group` retains
-the same applicable validation so Merge Queue can be enabled later without redesigning the
-workflows.
+Pull requests are the authoritative pre-merge validation path. The `dev` repository ruleset requires selected status checks to pass against the latest `dev` state before merging. `merge_group` retains the same applicable validation so Merge Queue can be enabled later without redesigning the workflows.
 
-After GitHub updates `dev`, the resulting push runs a lightweight delivery path only: package the
-merged application, assemble the runtime image, publish to ECR, and deploy. It does not repeat the
-expensive quality/security gates. Production `v*` tag pushes retain the full release validation path.
+After GitHub updates `dev`, the resulting push runs a lightweight delivery path only: package the merged application, assemble the runtime image, publish to ECR, and deploy. It does not repeat the expensive quality/security gates. Production `v*` tag pushes retain the full release validation path.
 
 Stale ordinary runs may be cancelled, but merge-group validation must not be cancelled as stale.
 
@@ -86,59 +63,30 @@ Stale ordinary runs may be cancelled, but merge-group validation must not be can
 
 ### `.github/workflows/ci-frontend.yml` SonarCloud job (added 2026-09-18)
 
-- **Job `sonar-frontend`** (`SonarCloud Frontend`) is independent of `frontend-check` and always
-  reports on pull requests, so it can be a required status check without blocking unrelated PRs.
-- Trusted frontend changes install from the frozen lockfile, generate Vitest V8 LCOV, scan
-  `frontend/src` under project key `blocbuy-frontend`, and wait for the server-side quality gate.
-- Frontend-changing pushes to `dev` run the same job to keep SonarCloud's main-branch baseline
-  current. Non-frontend, fork and Dependabot PRs report a successful not-applicable result because
-  repository secrets are unavailable or no frontend source needs analysis.
-- `frontend-check` remains the separate required generation, type, lint, format, test, unused-code
-  and build gate. SonarCloud does not replace or modify the existing CodeQL job in `security.yml`.
+- **Job `sonar-frontend`** (`SonarCloud Frontend`) is independent of `frontend-check` and always reports on pull requests, so it can be a required status check without blocking unrelated PRs.
+- Trusted frontend changes install from the frozen lockfile, generate Vitest V8 LCOV, scan `frontend/src` under project key `blocbuy-frontend`, and wait for the server-side quality gate.
+- Frontend-changing pushes to `dev` run the same job to keep SonarCloud's main-branch baseline current. Non-frontend, fork and Dependabot PRs report a successful not-applicable result because repository secrets are unavailable or no frontend source needs analysis.
+- `frontend-check` remains the separate required generation, type, lint, format, test, unused-code and build gate. SonarCloud does not replace or modify the existing CodeQL job in `security.yml`.
 
 ### Pull-request and post-merge delivery decision
 
-The repository ruleset makes pull requests the normal path into `dev`; direct pushes and
-force-pushes are not part of the normal development flow.
+The repository ruleset makes pull requests the normal path into `dev`; direct pushes and force-pushes are not part of the normal development flow.
 
-The required status checks are currently:
+The required status checks are listed in [backend-pipeline.md](backend-pipeline.md#required-pr-checks) (`build-quality`, `SonarCloud Backend`, `docker`, `gitleaks`, `frontend-check`, `SonarCloud Frontend`); that file owns the current list. This plan does not duplicate it.
 
-- `build-quality`;
-- `SonarCloud Backend`;
-- `docker`;
-- `gitleaks`;
-- `frontend-check`;
-- `SonarCloud Frontend`.
+The ruleset also requires branches to be up to date before merging. If `dev` changes after a PR has passed its required checks, the PR must be updated and the required validation must pass against the latest `dev` state before it can merge.
 
-The ruleset also requires branches to be up to date before merging. If `dev` changes after a PR has
-passed its required checks, the PR must be updated and the required validation must pass against the
-latest `dev` state before it can merge.
+`merge_group` support is retained in the workflows but is not the repository's current authoritative gate. If the repository later becomes eligible for GitHub Merge Queue, the same applicable gates can validate GitHub's speculative integrated state.
 
-`merge_group` support is retained in the workflows but is not the repository's current authoritative
-gate. If the repository later becomes eligible for GitHub Merge Queue, the same applicable gates
-can validate GitHub's speculative integrated state.
+To conserve GitHub Actions minutes, the resulting `push/dev` does not repeat Maven verification, SonarCloud Backend, contract validation, Docker smoke/Trivy validation, `security.yml`, or the live TypeSafe smoke. It only performs the minimum work needed to create and deliver the backend artifact from the merged source: package, assemble the image, publish by immutable ECR digest, and deploy. SonarCloud Frontend is the narrow exception: frontend-changing pushes update that project's required main-branch baseline by running only install, tests with coverage, analysis and its quality gate.
 
-To conserve GitHub Actions minutes, the resulting `push/dev` does not repeat Maven verification,
-SonarCloud Backend, contract validation, Docker smoke/Trivy validation, `security.yml`, or the live
-TypeSafe smoke. It only performs the minimum work needed to create and deliver the backend artifact
-from the merged source: package, assemble the image, publish by immutable ECR digest, and deploy.
-SonarCloud Frontend is the narrow exception: frontend-changing pushes update that project's required
-main-branch baseline by running only install, tests with coverage, analysis and its quality gate.
-
-This intentionally changes the earlier artifact-provenance model: the Docker image produced during
-pre-merge validation is not promoted across workflow runs. The delivery path rebuilds the deployable
-artifact from the exact merged source after the up-to-date PR passes. This accepts a small
-reproducibility/provenance trade-off in exchange for eliminating a full duplicate CI/security run.
-Production `v*` tag releases continue to execute the full release gate chain.
+This intentionally changes the earlier artifact-provenance model: the Docker image produced during pre-merge validation is not promoted across workflow runs. The delivery path rebuilds the deployable artifact from the exact merged source after the up-to-date PR passes. This accepts a small reproducibility/provenance trade-off in exchange for eliminating a full duplicate CI/security run. Production `v*` tag releases continue to execute the full release gate chain.
 
 ### `.github/workflows/typesafe-smoke.yml`
 
-The TypeSafe workflow performs a live compatibility check against the Jev System One API used by
-the optional listing-search reranker.
+The TypeSafe workflow performs a live compatibility check against the Jev System One API used by the optional listing-search reranker.
 
-Normal `build-quality` verification remains deterministic and uses tests/stubs rather than a live
-API key. The live smoke complements those tests by verifying that BlocBuy's expected external Jev
-wire contract is still accepted by the real service.
+Normal `build-quality` verification remains deterministic and uses tests/stubs rather than a live API key. The live smoke complements those tests by verifying that BlocBuy's expected external Jev wire contract is still accepted by the real service.
 
 The smoke uses the same `choice` shape as the production listing-search reranker:
 
@@ -149,8 +97,7 @@ The smoke uses the same `choice` shape as the production listing-search reranker
 - every probability must be a number in `[0,1]`;
 - model identity and usage metadata must be present.
 
-The smoke does not assert which candidate should win. It is a contract/availability test, not a
-model-quality benchmark.
+The smoke does not assert which candidate should win. It is a contract/availability test, not a model-quality benchmark.
 
 Triggers:
 
@@ -159,12 +106,9 @@ Triggers:
 - production `v*` tag pushes;
 - manual `workflow_dispatch`.
 
-Fork and Dependabot PRs do not receive the TypeSafe API secret and therefore skip the live call.
-Normal `push/dev` does not run the smoke because post-merge `dev` runs are delivery-only.
+Fork and Dependabot PRs do not receive the TypeSafe API secret and therefore skip the live call. Normal `push/dev` does not run the smoke because post-merge `dev` runs are delivery-only.
 
-`typesafe-smoke` is deliberately not a required repository status check. The production
-listing-search integration treats Jev as a best-effort enhancement: if the live call fails, the
-application preserves the deterministic PostgreSQL shortlist order and total.
+`typesafe-smoke` is deliberately not a required repository status check. The production listing-search integration treats Jev as a best-effort enhancement: if the live call fails, the application preserves the deterministic PostgreSQL shortlist order and total.
 
 ### `.github/workflows/pr-labeler.yml`
 
@@ -172,72 +116,39 @@ application preserves the deterministic PostgreSQL shortlist order and total.
 
 ### `.github/workflows/board-snapshot.yml` (added 2026-09-18)
 
-Daily at 15:30 UTC (23:30 Singapore) and on `workflow_dispatch`: runs
-`.claude/skills/agile-evidence-capture/scripts/snapshot-board.sh`, uploads the day's CSV as a
-90-day artifact, rebuilds the bot branch `metrics/board-snapshots` from `dev` plus any snapshot
-days not merged yet, force-updates that branch (its own, lease-protected against a concurrent
-run), and keeps one open PR to `dev` titled `docs(agile): board snapshots through <date>`. Asked
-for in the PR #113 review: the first CSV (`docs/agile/metrics/2026-09-17.csv`) was a hand run.
+Daily at 15:30 UTC (23:30 Singapore) and on `workflow_dispatch`: runs `.claude/skills/agile-evidence-capture/scripts/snapshot-board.sh`, uploads the day's CSV as a 90-day artifact, rebuilds the bot branch `metrics/board-snapshots` from `dev` plus any snapshot days not merged yet, force-updates that branch (its own, lease-protected against a concurrent run), and keeps one open PR to `dev` titled `docs(agile): board snapshots through <date>`. Asked for in the PR #113 review: the first CSV (`docs/agile/metrics/2026-09-17.csv`) was a hand run.
 
-Alternatives rejected: (a) commit straight to `dev`: the `dev-require-review` ruleset has no
-bypass actors and requires a squash-merged PR with four checks; (b) one branch and PR per day:
-a review per CSV and stale branches, since `delete_branch_on_merge` is off; (c) artifact only:
-the burndown source has to be in the git archive (`docs/agile/metrics/README.md`); (d) keep
-appending to the bot branch: after a squash merge the next PR's three-dot diff re-shows the
-already-merged days, so the branch is rebuilt from `dev` instead.
+Alternatives rejected: (a) commit straight to `dev`: the `dev-require-review` ruleset has no bypass actors and requires a squash-merged PR with four checks; (b) one branch and PR per day: a review per CSV and stale branches, since `delete_branch_on_merge` is off; (c) artifact only: the burndown source has to be in the git archive (`docs/agile/metrics/README.md`); (d) keep appending to the bot branch: after a squash merge the next PR's three-dot diff re-shows the already-merged days, so the branch is rebuilt from `dev` instead.
 
-Degraded mode without the `BOARD_SNAPSHOT_TOKEN` secret (off-repo TODO 8): `github.token` cannot
-read the user-owned Projects v2 board, so the board columns are blank and the script warns; the
-commits it pushes start no `pull_request` workflows (GitHub's rule for GITHUB_TOKEN-driven
-events), so the required checks appear only after a human closes and reopens the PR; and
-`gh pr create` needs "Allow GitHub Actions to create and approve pull requests", failing which
-the run prints the compare URL in its summary.
+Degraded mode without the `BOARD_SNAPSHOT_TOKEN` secret (off-repo TODO 8): `github.token` cannot read the user-owned Projects v2 board, so the board columns are blank and the script warns; the commits it pushes start no `pull_request` workflows (GitHub's rule for GITHUB_TOKEN-driven events), so the required checks appear only after a human closes and reopens the PR; and `gh pr create` needs "Allow GitHub Actions to create and approve pull requests", failing which the run prints the compare URL in its summary.
 
 ### `.github/dependabot.yml`
 
-Weekly, grouped PRs: Maven (`backend/`), GitHub Actions (`/`), Docker (`backend/`), plus configured
-frontend dependency updates where supported.
+Weekly, grouped PRs: Maven (`backend/`), GitHub Actions (`/`), Docker (`backend/`), plus configured frontend dependency updates where supported.
 
 **2026-09-22 Java runtime update policy.** The backend remains on the agreed Java 21 LTS and Spring Boot 4 baseline. Dependabot may refresh Java 21 `eclipse-temurin` images, but ignores major Docker tag updates; it also ignores majors for the Boot-4-line Maven artifacts (`org.mybatis.spring.boot*`, `cn.dev33*`, `org.springdoc*`, `org.apache.tomcat*`) while same-line maintenance still flows. These ignores use `update-types: version-update:semver-major`, which filters version updates only — security updates, including major security updates, remain eligible and land as PRs for deliberate handling, never silent adoption. Moving to a later Java release requires a deliberate stack decision and coordinated updates to Maven Enforcer, CI, runtime images, and documentation. Automatically following non-LTS Java tags was rejected because it would split the build and runtime from the Java 21 baseline.
 
 ### Branch protection (manual, repo settings)
 
-`dev`: require PRs; require `build-quality`, `SonarCloud Backend`, `docker`, `gitleaks`,
-`frontend-check`, and `SonarCloud Frontend`; require branches to be up to date before merging;
-require human review (including CODEOWNERS where ownership is intentional), dismiss stale
-approvals, require approval of the latest reviewable push, require conversation resolution,
-restrict deletion, and block force-push.
+The `dev` ruleset mirrors the required checks in [backend-pipeline.md](backend-pipeline.md#required-pr-checks): require PRs, require branches to be up to date before merging, human review (including CODEOWNERS where ownership is intentional), stale-approval dismissal, approval of the latest reviewable push, conversation resolution, deletion restriction, and no force-push.
 
-`Restrict updates` remains off: the PR requirement, rather than bypass-only updates, defines the
-normal path into `dev`.
+`Restrict updates` remains off: the PR requirement, rather than bypass-only updates, defines the normal path into `dev`.
 
-`merge_group` is retained in workflow configuration for forward compatibility but Merge Queue is
-not currently required by the repository ruleset.
+`merge_group` is retained in workflow configuration for forward compatibility but Merge Queue is not currently required by the repository ruleset.
 
 These settings are configured off-repo in the repository ruleset.
 
 ## Step 3 — SonarCloud Backend and Frontend (CI-based analysis)
 
-Backend analysis runs as `sonar-backend` (`SonarCloud Backend`) using the pinned Sonar Maven scanner.
-The project name is `BlocBuy Backend` and its stable key remains `blocbuy-backend`. The
-`build-quality` job uploads compiled classes, test results, and JaCoCo reports as artifacts; the
-Sonar job restores them and invokes `org.sonarsource.scanner.maven:sonar-maven-plugin` without
-repeating the full Maven verification build.
+Backend analysis runs as `sonar-backend` (`SonarCloud Backend`) using the pinned Sonar Maven scanner. The project name is `BlocBuy Backend` and its stable key remains `blocbuy-backend`. The `build-quality` job uploads compiled classes, test results, and JaCoCo reports as artifacts; the Sonar job restores them and invokes `org.sonarsource.scanner.maven:sonar-maven-plugin` without repeating the full Maven verification build.
 
-Quality gate configured server-side: coverage ≥ 80% on new code, no new blocker/critical issues,
-A ratings on new code. The required `SonarCloud Backend` status must report reliably before merge.
+Quality gate configured server-side: coverage ≥ 80% on new code, no new blocker/critical issues, A ratings on new code. The required `SonarCloud Backend` status must report reliably before merge.
 
-Frontend analysis runs independently as `sonar-frontend` (`SonarCloud Frontend`) using the pinned
-Sonar scanner action. The project name is `BlocBuy Frontend` and its stable key is
-`blocbuy-frontend`. Vitest produces `coverage/lcov.info`; generated API and route-tree files are
-excluded, and test files are classified separately so they do not count as product LOC. A separate
-project is necessary because the Maven scanner is rooted at `backend/`, while two independent scans
-into one project key would replace rather than combine analysis results. This frontend quality gate
-is additive; the existing optional CodeQL configuration remains unchanged.
+Frontend analysis runs independently as `sonar-frontend` (`SonarCloud Frontend`) using the pinned Sonar scanner action. The project name is `BlocBuy Frontend` and its stable key is `blocbuy-frontend`. Vitest produces `coverage/lcov.info`; generated API and route-tree files are excluded, and test files are classified separately so they do not count as product LOC. A separate project is necessary because the Maven scanner is rooted at `backend/`, while two independent scans into one project key would replace rather than combine analysis results. This frontend quality gate is additive; the existing optional CodeQL configuration remains unchanged.
 
 ## Step 4 — Security Tooling
 
-- **`backend/Dockerfile`** — multi-stage: `maven:3.9-eclipse-temurin-21` builds `blocbuy-bootstrap` (`-am`, tests skipped — they ran in `build-quality`); runtime `eclipse-temurin:21-jre`, non-root user, port 8589, `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0`. No in-image HEALTHCHECK (JRE image has no curl); orchestrator probes hit `/actuator/health` (already exposed). Profile `docker` selected by compose via `SPRING_PROFILES_ACTIVE`, not baked in. Used by local `docker compose` builds.
+- **`backend/Dockerfile`** — multi-stage: `maven:3.9-eclipse-temurin-21` builds `blocbuy-bootstrap` (`-am`, tests skipped — they ran in `build-quality`); runtime `eclipse-temurin:21-jre`, non-root user, port 8589, `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0`. No in-image HEALTHCHECK (JRE image has no curl); orchestrator probes hit `/api/actuator/health` (management base-path, already exposed). Profile `docker` selected by compose via `SPRING_PROFILES_ACTIVE`, not baked in. Used by local `docker compose` builds.
 - **`backend/Dockerfile.ci`** — runtime-only twin used by the `docker` CI job: successful `build-quality` uploads the boot jar packaged by `mvn verify`; `docker` downloads that exact artifact and assembles the image without repeating an in-container Maven build. The current `docker` job requires `build-quality` success, so it does not use a multi-stage fallback when that artifact is absent.
 - **`.github/workflows/security.yml`** — pull requests and merge groups affecting backend, deployment, or workflow files; production `v*` tag pushes; plus weekly scheduled and manual scans:
   - **Gitleaks** full-history secret scan. `.gitleaks.toml` extends defaults and allowlists reviewed placeholders.
@@ -247,9 +158,7 @@ is additive; the existing optional CodeQL configuration remains unchanged.
   - **CodeQL** provides optional Java SAST when repository Code Scanning is enabled.
 - **Dependabot** (Step 2) closes the loop on remediation.
 
-Trivy SARIF reports are preserved as workflow artifacts even when a Trivy gate fails. Security-tab
-ingestion is enabled only when the repository's Code Scanning capability is available; the Trivy
-exit code remains the CI gate independently of SARIF ingestion.
+Trivy SARIF reports are preserved as workflow artifacts even when a Trivy gate fails. Security-tab ingestion is enabled only when the repository's Code Scanning capability is available; the Trivy exit code remains the CI gate independently of SARIF ingestion.
 
 ## Step 5 — Pipeline Hardening (implemented 2026-09-02)
 
@@ -267,18 +176,9 @@ Fixes found during pipeline reviews; all landed in-repo:
 
 ## Step 6 — Existing EC2 application delivery (implemented 2026-09-04)
 
-The selected first deployment phase deliberately reuses one existing EC2 host and its existing
-PostgreSQL and Redis services. Terraform and Bitovi are not executed.
+The selected first deployment phase deliberately reuses one existing EC2 host and its existing PostgreSQL and Redis services. Terraform and Bitovi are not executed. The delivery design (host-loopback Compose, runtime bundle, digest-pinned ECR deploy, environment-scoped OIDC roles, rollback) is detailed in the operator guide; this plan keeps only the decision.
 
-1. `application-ec2.yml` uses host-loopback PostgreSQL/Redis settings; the backend-only Compose model uses Linux host networking and declares no database, cache or volume.
-2. The runtime bundle provides preflight, health, locked deploy, automatic rollback and manual rollback scripts. Runtime secrets remain `/etc/blocbuy/backend.env` with `0600` permissions.
-3. After an up-to-date PR has passed the required checks and merged, the lightweight `dev` delivery push packages/assembles the image without repeating quality/security or live TypeSafe gates. A branch-scoped OIDC role pushes it to private ECR; Docker's pushed digest is cross-checked with ECR and only the digest is deployed.
-4. A separate environment-scoped OIDC role can send `AWS-RunShellScript` only to the configured EC2 instance. SSM transfers only the allowlisted non-secret bundle.
-5. `rollback-backend.yml` requires `dev`, a reason, explicit confirmation and the protected `backend-dev` environment. It uses the recorded previous digest unless an operator supplies a reviewed digest from the configured repository.
-6. Deployment and rollback share a non-cancellable concurrency group. Neither operation reverses Flyway migrations or manages PostgreSQL/Redis.
-
-Canonical setup and incident procedures:
-[`docs/deploy/backend-ec2-pipeline-operator-guide.md`](../deploy/backend-ec2-pipeline-operator-guide.md).
+Canonical setup and incident procedures: [`docs/deploy/backend-ec2-pipeline-operator-guide.md`](../deploy/backend-ec2-pipeline-operator-guide.md).
 
 ## Off-Repo TODO (cannot be done from the codebase)
 
@@ -297,38 +197,13 @@ These need GitHub repo settings / external accounts; do them once, then the matc
 
 ## Quality Gates Summary
 
-| Gate | Threshold | Where enforced |
-|---|---|---|
-| Formatting | 100% Spotless-clean | `validate` / CI step 1 |
-| Style | 0 Checkstyle errors | `verify` |
-| Bugs | 0 SpotBugs findings ≥ Medium | `verify` |
-| Architecture | ArchUnit suite green | `test` |
-| Backend coverage | ≥ 80% on new code | `sonar-backend` / `SonarCloud Backend` quality gate |
-| Frontend coverage | ≥ 80% on new code | `sonar-frontend` / `SonarCloud Frontend` quality gate |
-| Vulnerabilities | 0 unfixed HIGH/CRITICAL | Trivy in CI |
-| Secrets | 0 leaks in history | Gitleaks in CI |
-| Contract drift | `contracts/openapi.json` == generated | `contract-check` job |
-| Contract compatibility | no backward-incompatible change vs base, or `contract-change-approved` label on PR | `contract-check` job (PR only, openapi-diff) |
-| Boot smoke | Actuator health = `UP` against PG 18 + Redis 8 | `docker` job |
-| SAST | 0 CodeQL alerts | `security.yml` `codeql` job (opt-in) |
-| Deployment bundle | exactly one backend service and allowlisted archive entries | `security.yml` and `ci-backend.yml` |
-| Jev live compatibility | expected System One `choice` wire contract | `typesafe-smoke.yml` (non-required) |
-| Release identity | production tested ECR image pinned by SHA-256 digest | `ci-backend.yml` |
-| Deployment health | Actuator reports `UP`; otherwise application rollback | EC2 lifecycle scripts |
+Enforced thresholds live in [`docs/quality/quality-gates.md`](../quality/quality-gates.md); this plan does not duplicate that table.
 
 ## Local Developer Loop
 
-```bash
-cd backend
-./mvnw spotless:apply          # fix formatting before commit
-./mvnw verify                  # deterministic backend verification
-```
+See `backend/README.md` for the local commands (`spotless:apply`, `verify`).
 
-Normal local verification does not require `TYPESAFE_API_KEY`; Jev-dependent application tests use
-controlled test doubles/stubs. The live external contract check is owned by `typesafe-smoke.yml`.
-
-Pre-push hook optional; CI is the backstop. Full runbook: `docs/ci/backend-pipeline.md`. Thresholds:
-`docs/quality/quality-gates.md`.
+Normal local verification does not require `TYPESAFE_API_KEY`; Jev-dependent application tests use controlled test doubles/stubs. The live external contract check is owned by `typesafe-smoke.yml`. Pre-push hook optional; CI is the backstop. Full runbook: `docs/ci/backend-pipeline.md`. Thresholds: `docs/quality/quality-gates.md`.
 
 ## Risks / Notes
 

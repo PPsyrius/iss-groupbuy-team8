@@ -136,8 +136,6 @@ This often creates problems such as:
 
 BlocBuy aims to make group buying simple, transparent, and community-driven. We envision a platform where neighbours, colleagues, friends, and other communities can organise shared purchases with less administrative effort and greater confidence.
 
-By keeping the key information and activities for each group buy in one place, BlocBuy allows participants to understand what they are joining, while giving organisers a clearer way to coordinate the group from launch to completion.
-
 ## Who BlocBuy Is For
 
 ### Buyers
@@ -226,8 +224,6 @@ BlocBuy will be considered successful when it can demonstrate that:
 
 BlocBuy is the group project of **NUS-ISS Team 8** for the **SWE5006 Designing Modern Software Systems Practice Module**. The project provides a realistic product context in which the team can practise agile delivery, software analysis and design, reusable design approaches, and delivery automation during later stages of the module.
 
-This repository will evolve alongside the project. Product decisions, project artefacts, and technical documentation will be added as they are developed and validated by the team.
-
 ## Engineering and Operations
 
 - [Backend CI/CD runbook](docs/ci/backend-pipeline.md)
@@ -237,10 +233,7 @@ This repository will evolve alongside the project. Product decisions, project ar
 - [Production backend deployment guide (Terraform IaC)](docs/deploy/prod/backend-prod-terraform-deployment.md)
 - [EC2 backend runtime bundle](deployment/backend/README.md)
 
-The backend pipeline builds and scans one immutable image, publishes it to Amazon ECR, and deploys
-only the backend to the EC2 host through AWS Systems Manager. The development environment reuses a
-manually bootstrapped instance; the production environment is designed as Terraform-managed
-infrastructure per the guide above.
+The backend pipeline builds and scans one immutable image, publishes it to Amazon ECR, and deploys only the backend to the EC2 host through AWS Systems Manager. The development environment reuses a manually bootstrapped instance; the production environment is designed as Terraform-managed infrastructure per the guide above.
 
 ## Team
 
