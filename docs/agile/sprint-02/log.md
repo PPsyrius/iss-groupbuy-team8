@@ -361,3 +361,10 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 - Verified: `pnpm dlx yaml@2.9.1 valid .github/dependabot.yml` (before and after the Maven rules); `git diff --check` clean. Maven tests not run because no application or build source changed. Dependabot's next update run is not locally reproducible.
 - Decisions: `docs/ci/devsecops-pipeline-plan.md` "Java runtime update policy"; later Java releases require a coordinated stack decision rather than an automated dependency PR. Scope deliberately Java/Boot only: ArchUnit, Stripe, Enforcer plugin, Flyway, npm and Actions reviewed and left unpinned (test-only, unrelated stacks, or fail-closed).
 - Problems: register row takes NFR-26 since Stripe claimed NFR-21–25 on `dev`; commit and push are user-owned.
+
+## 2026-09-22 - @PPsyrius - Gitleaks false-positive fixes
+
+- Kind: nfr (security, NFR-02), chore
+- Changed: renamed `sk_test_placeholder` → `test-placeholder`; narrowly allowlisted the historical placeholder; kept `stripe-dev-contract-baseline.json` scanned and added SHA-256 format validation to its checker.
+- Verified: backend `./mvnw -B -ntp verify` passed (7 modules, 32 bootstrap tests); TOML parse and `git diff --check` passed. Full-history Gitleaks run is CI-owed.
+- Decision: preserve default secret rules and baseline scanning; suppress only the known historical non-secret literal.
