@@ -69,6 +69,9 @@ bootstrap / config      PaymentIntegrationConfiguration(装配,替掉夹具)
 | PR-C | `OrderFulfilmentAdapter`(`PaymentBusinessPort` 六方法)+ 单测 | PR-B | 核心,含锁序与幂等 |
 | PR-D | bootstrap 装配 + `StripeLocalIntegrationTest` 迁到真实现 + ADR + NFR 行 | PR-C | 夹具退场 |
 
+四个 PR 于 2026-09-22 全部完成:`d24f8c6`(A)、`0dc6fe1`(B)、`ace9c24`(C)、PR-D 本次。
+每个 PR 的实现偏离都记在对应的 §3.x 小节里。
+
 建议 PR-A 先合,catalog owner 只需 review 一个只加不改的门面。PR-C 最重,单独 review。
 
 ## 3. 实现规格
@@ -209,6 +212,26 @@ UUID createIntent(UUID user, String operation, UUID businessId)
 新增 `PaymentIntegrationConfiguration`(bootstrap,**不带 profile**),把两个适配器注册为 `PaymentBusinessPort` / `PaymentIntentPort` bean。`StripeCheckoutConfiguration` 的 `@Profile("stripe-sprint2")` 是否可以摘掉由 Yorik 定 —— 摘掉意味着支付在默认 profile 下也装配,`StripeFeatureSwitch` 仍然是运行时开关,不影响默认关闭的行为。
 
 `StripeLocalIntegrationTest` 改为跑真实现;`PaymentBusinessFixture` 只保留 `stripe_local_*` 那部分本地替身,或整体删除 —— 取决于 Yorik 是否还需要脱离 order 模块单跑支付。
+
+> 2026-09-22 实现时的修正(PR-D 落地,计划到此执行完毕):
+>
+> 1. **`StripeCheckoutConfiguration` 的 `@Profile` 保留。** 原计划说"摘不摘由 Yorik 定"。实测否决:
+>    `blocbuy.payment.checkout.success-url` / `cancel-url` 在**任何** `application*.yml` 里都没有,
+>    只由 IT 的 `@SpringBootTest(properties=…)` 注入。摘掉 profile 会让默认 profile 下的每个上下文
+>    启动即失败。而且这个 profile 名就是 `StripeFeatureSwitch` 读的那个,它本来就是灰度开关。
+>    只改注释:从"没有业务协作方就启动失败"改成"这是灰度开关"。
+> 2. **`PaymentBusinessFixture` 整体删除**,不保留任何一半。它的 `createIntent` / 六个端口方法全部由真
+>    实现接管;`lockGroup` 换成 `GroupDealSettlementSupport.lockTeam`;`PaymentLifecycleFixture` 只
+>    剩下生产代码里没有的两件事 —— 把团强行推过截止时间、驱动本地会话清理。
+> 3. **夹具表删两张。** `stripe_local_intent` 由 `biz_purchase_intent`(V15)接管,
+>    `stripe_local_product_terms` 由 `biz_product` 两列(V14)接管。只留 `stripe_local_expiry_request` ——
+>    它替代的是本切片不发布的调度器,没有生产对应物。
+> 4. **`status='paid'` 那处不一致自动消失。** 它只存在于夹具的 `INSERT INTO biz_order(... 'paid' ...)`
+>    与 `fulfilmentEvidence` 的 `o.status='paid'` 检查里,两者随夹具一起删除。真实现建单即 `pending`,
+>    `fulfilmentEvidence` 不看订单状态。不需要任何人确认。
+> 5. **并发用例落在 `StripeLocalIntegrationTest`。** 新增
+>    `eightConcurrentWebhookReplaysStillProduceOneMemberAndOneOrder`:8 线程同时重放同一笔付款,
+>    断言 1 个团、1 名成员、1 张单、0 笔退款、库存恰好减 1、intent 只被消费一次。
 
 ## 4. 并发与幂等设计(硬门禁要求逐条说明)
 

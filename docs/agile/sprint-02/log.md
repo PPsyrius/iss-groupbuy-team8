@@ -1081,3 +1081,47 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
   onto the real implementations, `PaymentBusinessFixture` retired, the fixture's `status='paid'`
   rows corrected (Yorick's files, needs his sign-off), a replay concurrency IT, the NFR row and an
   ADR.
+
+## 2026-09-22 - l0sgAi (Liu Jin) - Wiring, fixture retirement, ADR and NFR rows: the checkout path is production code (#124, #126)
+
+- Scope: PR-D, the last of `order-payment-integration-plan-20260922.md`. `PaymentIntegrationConfiguration`
+  (bootstrap, **no profile**) registers `PurchaseIntentAppService` as `PaymentIntentPort` and
+  `OrderFulfilmentAdapter` as `PaymentBusinessPort`. The business half of a checkout is always
+  correct to have; whether checkout is reachable stays with `StripeFeatureSwitch`.
+- `PaymentBusinessFixture` is deleted outright — 380 lines of `JdbcTemplate` that read
+  `biz_product`, `biz_group_deal`, `biz_group_member` and `sys_user` and wrote `biz_order` from one
+  class, which is exactly why it could never be promoted. `StripeLocalIntegrationTest` now runs the
+  real implementations against PostgreSQL: **13 cases green**, including the twenty-buyer race for
+  the last seat (2 members, 2 orders, 19 refund obligations, stock 98) and the technical-failure
+  rollback.
+- `StripeCheckoutConfiguration` keeps its `@Profile("stripe-sprint2")`, against the plan's
+  suggestion to consider removing it. Evidence: `blocbuy.payment.checkout.success-url` and
+  `cancel-url` appear in no `application*.yml` — only in the integration test's inline properties —
+  so removing the profile would fail startup in every default-profile context. The profile is also
+  the same one `StripeFeatureSwitch` reads, so it is the rollout switch, not a stub guard. Only the
+  stale comment changed.
+- New concurrency evidence: `eightConcurrentWebhookReplaysStillProduceOneMemberAndOneOrder` fires
+  eight threads at the same payment and asserts one deal, one member, one order, zero refunds,
+  exactly one unit of stock consumed and the intent consumed once. This is the case the plan owed
+  for the lock-order cycle (team → intent → receipt → team); it holds because a receipt is keyed by
+  payment id and no two transactions contend for the same row.
+- Fixture schema shrank to one table. `stripe_local_intent` and `stripe_local_product_terms` are
+  gone — `biz_purchase_intent` (V15) and `biz_product.team_*` (V14) own those facts now. Only
+  `stripe_local_expiry_request` remains, standing in for a scheduler this slice does not ship.
+- The `status='paid'` mismatch flagged in the merge plan resolved itself: it existed only in the
+  fixture's insert and its `o.status='paid'` evidence check, both deleted. Real orders are created
+  PENDING, and `fulfilmentEvidence` does not look at order status at all.
+- Evidence written: backend ADR 0001 `backend/docs/adr/0001-payment-business-integration.md` (why
+  the purchase intent belongs to order and the group terms to the product) — this also starts
+  `backend/docs/adr/`, numbered independently of the frontend's. NFR-26 (one payment, at most one
+  membership and one order, under replay), NFR-27 (server-owned pricing) and NFR-28 (START is
+  unavailable until an operator sets group terms — recorded as `target undefined`, since no admin
+  surface writes those two columns yet).
+- Verified on JDK 21: `./mvnw -B verify` BUILD SUCCESS — 148 bootstrap unit tests, 32 Testcontainers
+  ITs, ArchUnit 8/8, SpotBugs and Checkstyle clean. JaCoCo aggregate self-check: every file touched
+  across PR-A through PR-D reports **no missed line or branch**. Contract unchanged,
+  `git diff --exit-code -- contracts/` clean.
+- Known gap, carried deliberately: no product has group terms on a fresh database, so START is
+  refused with `CATALOG_409_006` until an operator sets them. NFR-28 and the ADR both say so. Also
+  owed to Sprint 3: a cleanup job for expired unfulfilled intents, whose reserved `deal_id` points
+  at a team that was never created.
