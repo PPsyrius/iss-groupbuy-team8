@@ -29,6 +29,11 @@ Related homes:
 
 ## The rule
 
+Everything here is written in English, like every other file in this repository. The team does not
+share one first language and the report is read from outside the team, so a document only counts as
+evidence if every member and every reviewer can act on it. The full rule, including what it does
+not cover, is in [`AGENTS.md`](../../AGENTS.md).
+
 Every PR that changes code, config or infrastructure adds a sprint-log entry in the same PR.
 Every PR that touches a non-functional concern adds or updates an NFR register row. Every real
 choice between alternatives is written down where its area keeps decisions: a frontend ADR, a

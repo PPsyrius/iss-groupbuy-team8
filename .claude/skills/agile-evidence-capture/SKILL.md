@@ -150,6 +150,14 @@ both for the team to edit at the review meeting. Do not invent ceremonies that d
 there was no stand-up, the retro says so. If the container issue was never filed, say so and
 measure against the written plan instead.
 
+## Write it in English
+
+Every artefact in the table above is written in English, whatever language the task was discussed
+in — the repository-wide rule is in `AGENTS.md`. Evidence that a teammate or a marker cannot read
+is not evidence. Keep replying to the user in their own language; the rule is about what lands in
+git. If asked for a plan or ADR in another language, write English and say why in one sentence;
+if the user repeats the request, write what they asked for.
+
 ## Keep it cheap
 
 - A log entry is under a dozen lines; the Verified and Problems lines earn their length, the
