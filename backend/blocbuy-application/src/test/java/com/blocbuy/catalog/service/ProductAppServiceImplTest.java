@@ -3,7 +3,6 @@ package com.blocbuy.catalog.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -68,8 +67,7 @@ class ProductAppServiceImplTest {
         assertThat(result.items().get(0).groupPrice()).isEqualByComparingTo("89.00");
         assertThat(result.items().get(1).groupPrice()).isNull();
         // one batch call for the whole page — never per item
-        verify(groupDealQueryService, times(1))
-                .findBestOpenDealsByProductIds(List.of(PRODUCT_ID, otherId));
+        verify(groupDealQueryService).findBestOpenDealsByProductIds(List.of(PRODUCT_ID, otherId));
     }
 
     @Test
@@ -81,7 +79,7 @@ class ProductAppServiceImplTest {
 
         assertThat(result.items()).isEmpty();
         assertThat(result.total()).isZero();
-        verify(groupDealQueryService, times(1)).findBestOpenDealsByProductIds(List.of());
+        verify(groupDealQueryService).findBestOpenDealsByProductIds(List.of());
     }
 
     @Test
@@ -166,7 +164,7 @@ class ProductAppServiceImplTest {
 
         assertThat(result.total()).isEqualTo(1);
         assertThat(result.items().get(0).groupPrice()).isEqualByComparingTo("89.00");
-        verify(groupDealQueryService, times(1)).findBestOpenDealsByProductIds(List.of(PRODUCT_ID));
+        verify(groupDealQueryService).findBestOpenDealsByProductIds(List.of(PRODUCT_ID));
         verifyNoInteractions(listingSearchReranker);
     }
 
@@ -304,7 +302,7 @@ class ProductAppServiceImplTest {
 
         assertThat(result.items()).isEmpty();
         assertThat(result.total()).isZero();
-        verify(groupDealQueryService, times(1)).findBestOpenDealsByProductIds(List.of());
+        verify(groupDealQueryService).findBestOpenDealsByProductIds(List.of());
         verifyNoInteractions(listingSearchReranker);
     }
 

@@ -16,6 +16,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>com.github.spotbugs</groupId>
+      <artifactId>spotbugs-annotations</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>com.blocbuy</groupId>
       <artifactId>blocbuy-adapter</artifactId>
     </dependency>
