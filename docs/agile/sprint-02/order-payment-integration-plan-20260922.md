@@ -230,11 +230,10 @@ The order of `fulfil(PaymentSucceeded)` — every step must be idempotent:
 An `Outcome` rejection code must match `[A-Z_]{1,64}` (already enforced by the record constructor)
 and must carry nothing sensitive.
 
-**An order is born `PENDING`**, not the `'paid'` the fixture uses. `OrderStatus` has only
-`pending/confirmed/cancelled`; `pending → confirmed` is driven by TeamSucceeded and
-`pending → cancelled` by TeamExpired. The fixture's `status='paid'` insert and the `o.status='paid'`
-check in `fulfilmentEvidence` must both change to `pending` together — that is PR-D, it edits
-Yorik's files, so @-mention them in the PR.
+**An order is born `PENDING`.** `OrderStatus` has only `pending/confirmed/cancelled`;
+`pending → confirmed` is driven by TeamSucceeded and `pending → cancelled` by TeamExpired. Landed
+PR-D deleted `PaymentBusinessFixture` rather than changing its two `'paid'` checks. The production
+adapter creates `pending` orders, and `fulfilmentEvidence` deliberately ignores order status.
 
 > Amendments made during implementation (PR-C landed; 5 items), 2026-09-22:
 >
@@ -247,13 +246,13 @@ Yorik's files, so @-mention them in the PR.
 >    `PaidGroupDealService` is entitled to rule on that once the money is in. On the domain side
 >    `PaidGroupDealRepository` gains `linkOrder` / `findPaidMember`, the latter returning the new
 >    value object `PaidMember`.
-> 2. **Every rejection must precede the first write.** The original nine steps had `consumeOneUnit`
->    (step 9) throwing on failure — that stands, but a harder rule is needed alongside it: when an
->    `Outcome` carries a rejection the caller **commits** the transaction and then raises a refund,
->    so returning a rejection after any write would commit that write next to the refund. Steps 2,
->    3 and 4 (already fulfilled, buyer, product) are therefore all read-only checks, and from step 5
->    onwards the code may only throw, never reject. `linkOrder` returning false is the same case:
->    throw.
+> 2. **Every rejection must precede the first fulfilment write.** Steps 2, 3 and 4 (already
+>    fulfilled, buyer, product) are read-only checks. Step 5 has one deliberate exception:
+>    `PaidGroupDealService` may persist its idempotency receipt as compensation and return
+>    `GROUP_REJECTED`, which the caller commits before raising the refund obligation. That path must
+>    not persist a member, order, member-order link, consumed intent, or stock change. Once admission
+>    is applied, all later failures, including `linkOrder` or `consumeOneUnit` returning false, throw
+>    and roll back the fulfilment writes.
 > 3. **A START has no team row to lock.** `lockTeam` calls `lockDeal` with the reserved dealId,
 >    gets nothing back, and stops there. The fixture's `pg_advisory_xact_lock` is not reproduced:
 >    the reserved id is unique to one intent, any concurrent writer that could reach it blocks on
@@ -269,11 +268,15 @@ Yorik's files, so @-mention them in the PR.
 >    paymentId / dealId rather than from a sequence — replaying the same payment cannot mint a
 >    second number.
 >
-> **Additional note on lock order (for reviewers)**: this adapter locks team → intent, while
-> `PaidGroupDealService` internally locks receipt → team. Combined, that is team → intent → receipt
-> → team (re-entrant), which is a cycle on paper. It cannot deadlock in practice: a receipt is keyed
-> by paymentId, so two concurrent transactions can never contend for the same receipt row. PR-D's
-> concurrency IT must cover this.
+> **Additional note on lock order (for reviewers):** settlement calls this adapter for team → intent,
+> then the payment service locks payment; `fulfil` re-enters team → intent before
+> `PaidGroupDealService` locks receipt and re-enters the already-held team lock. Concurrent
+> replays of the same payment **do contend** for the same receipt row; receipt identity is not a
+> deadlock-safety argument. The landed production settlement path is safe because every replay
+> enters through the same team-first prefix. A new production caller must not invoke the
+> receipt-first service while competing with that path unless it first follows the same prefix.
+> PR-D's eight-replay integration test covers the shared-payment contention path and verifies one
+> member, one order, one stock decrement, and no refund.
 
 ### 3.4 PR-D — wiring, and the fixture retires
 

@@ -231,6 +231,11 @@ currently swallows every provider exception in a single `catch (BizException)` a
 
 `reconcile` splits the same way (`OPERATOR_PROVIDER_STATE_MISMATCH`).
 
+The 23-hour create-versus-lookup cutoff is evaluated immediately before the provider call, not
+from the timestamp captured by `claimNext`. Add `RefundRepository.currentTime()` backed by the
+database clock and compare that fresh value with `firstAttemptAt`. A worker suspended after claiming
+work must use `findRefund` rather than `createRefund` if it resumes beyond the cutoff.
+
 **#133, a succeeded refund should not be claimed again.** Three places change together; missing any
 one makes the fix ineffective:
 
@@ -246,9 +251,10 @@ one makes the fix ineffective:
 in `prepare` to `quote.expiredAt(expires)`. Behaviourally equivalent (§0.3), but it pins the
 invariant in one place, on `CheckoutQuote`.
 
-**Tests**: written against the two issues' ACs — two `RefundServiceTest` cases (a state mismatch
+**Tests**: written against the two issues' ACs — three `RefundServiceTest` cases (a state mismatch
 parks for review and makes no further gateway call; a transient error still retries under the same
-idempotency key) and one `StripeLocalIntegrationTest` case (after
+idempotency key; and a worker claimed before the cutoff but dispatched after it uses `findRefund`
+without calling `createRefund`) and one `StripeLocalIntegrationTest` case (after
 `finish(..., "succeeded", ...)`, `claimNext` returns null).
 
 ### 3.3 PR-G: the scheduling foundation and two jobs
@@ -306,8 +312,13 @@ idempotency key) and one `StripeLocalIntegrationTest` case (after
 - The refund worker running concurrently with `recordExpiredTeam`: the former only claims
   `biz_refund` rows, the latter inserts them, and the `UNIQUE` on `biz_refund.payment_id` (V9) is
   the final line of defence against duplicate refund obligations.
-- Losing the lease (another instance taking over after a hung one) still cannot double-refund: the
-  same unique constraint, plus the `version` fencing token on the refund row.
+- Losing the lease does not by itself fence a hung worker's provider call. Concurrent stale-owner
+  calls use the same immutable `RefundWork.providerKey()` as Stripe's idempotency key, so retries
+  within the provider window resolve to one provider refund. The refund-row `version` only fences a
+  stale local completion, the payment-id unique constraint prevents duplicate obligations, and the
+  provider-refund-id unique index is a persistence backstop after Stripe returns an id. The fresh
+  23-hour check above prevents a suspended worker from issuing another create after the idempotency
+  retention boundary.
 
 **Tests**
 
