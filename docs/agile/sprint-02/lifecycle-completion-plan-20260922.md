@@ -63,7 +63,7 @@ regression protection — one line, carried by PR-F.
 
 ### 0.4 Two payment-slice issues folded into this iteration (decided 2026-09-22)
 
-#139 and #130 do not belong to lifecycle completion. The reasons for including them differ, and are
+`#139` and `#130` do not belong to lifecycle completion. The reasons for including them differ, and are
 recorded separately:
 
 - **#139 (a webhook for an unknown payment answers 500)** — it will fire continuously during this
@@ -478,7 +478,7 @@ cd backend && ./mvnw -B verify
 - PR-K additionally runs issue #130's grep-based AC and pastes the output into the PR description
 
 Issues that should be closeable at the end of this iteration: #27, #28, #29, #124, #130, #132,
-#133, #138, #139 — nine, all closed after the branch merges into `dev`.
+`#133`, `#138`, `#139` — nine, all closed after the branch merges into `dev`.
 
 ### 5.1 Frontend impact (verified 2026-09-22)
 
