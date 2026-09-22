@@ -87,3 +87,54 @@ CREATE INDEX idx_biz_order_product_id
 -- * receiver_* and shipping_address carry PII: never logged in full, never returned to other users.
 -- * Physical purge: orders are financial records — retain; if purge ever required, children
 --   (payment, refund, group member) are handled first. Orphan audit on deal_id, user_id, product_id.
+
+-- ---------------------------------------------------------------------------------------------
+-- Server-owned purchase intents. Mirrors migration V15__purchase_intent.sql (db/migration); that
+-- migration is the applied source of truth — keep this section in sync with it. The intent is the
+-- production storage behind the payment slice's PaymentIntentPort / PaymentBusinessPort: a browser
+-- names a product (START) or a team (JOIN), the server prices it here under the product or team
+-- row lock, and Stripe Checkout is built from this row only.
+-- ---------------------------------------------------------------------------------------------
+
+CREATE TABLE biz_purchase_intent (
+    id                   uuid           NOT NULL DEFAULT uuidv7(),
+    user_id              uuid           NOT NULL,
+    operation            varchar(8)     NOT NULL,
+    deal_id              uuid           NOT NULL,
+    product_id           uuid           NOT NULL,
+    product_title        varchar(256)   NOT NULL,
+    product_image        varchar(1024),
+    amount               numeric(18, 2) NOT NULL,
+    currency             varchar(4)     NOT NULL,
+    target_size          integer        NOT NULL,
+    quote_valid_until    timestamptz    NOT NULL,
+    business_deadline    timestamptz    NOT NULL,
+    fulfilled_payment_id uuid,
+    create_time          timestamptz    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    create_by            uuid,
+    update_time          timestamptz    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_by            uuid,
+    deleted              boolean        NOT NULL DEFAULT false,
+    version              integer        NOT NULL DEFAULT 0,
+    CONSTRAINT pk_biz_purchase_intent PRIMARY KEY (id)
+);
+
+CREATE UNIQUE INDEX uq_biz_purchase_intent_fulfilled_payment
+    ON biz_purchase_intent (fulfilled_payment_id)
+    WHERE deleted = false AND fulfilled_payment_id IS NOT NULL;
+
+CREATE INDEX idx_biz_purchase_intent_user
+    ON biz_purchase_intent (user_id, create_time DESC)
+    WHERE deleted = false;
+
+-- Application obligations:
+-- * Lock order is fixed and shared with the payment slice: group deal, then intent, then payment.
+--   Any other order deadlocks against a concurrent JOIN on the same team.
+-- * amount, target_size and both deadlines are server-computed at issue time and immutable after:
+--   settlement re-reads the locked row and aborts if a quoted field moved.
+-- * operation is START or JOIN; the vocabulary is uppercase because the payment slice's
+--   CheckoutQuote validates it, unlike the lowercase lifecycle statuses elsewhere.
+-- * fulfilled_payment_id is set in the same transaction that inserts the membership and the order,
+--   so the three either all exist or none do.
+-- * START also needs biz_product.team_target_size and team_lifetime_seconds
+--   (V14__product_team_terms.sql); a product with either column null cannot start a team.

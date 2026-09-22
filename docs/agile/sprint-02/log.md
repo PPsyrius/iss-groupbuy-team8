@@ -925,3 +925,39 @@ Blocker state at T1-15 (container #93; `gh issue list --limit 100 --state all`, 
 - Problems: the production `PaymentBusinessPort`/`PaymentIntentPort` implementation is still
   missing (Stripe ships no production stub by design), so `StripeCheckoutService` stays
   unregistered outside the `stripe-sprint2` profile. Addressed next on this branch.
+
+## 2026-09-22 - l0sgAi (Liu Jin) - Purchase intent storage for the payment integration ports (#124, #126)
+
+- Kind: feature (storage slice) and data consistency. No NFR row yet; the row lands with the
+  adapter that makes the behaviour observable. No ADR yet — see Decisions.
+- Why: the Stripe slice ships `PaymentBusinessPort` and `PaymentIntentPort` with "No production
+  stub is supplied" and a test-only `PaymentBusinessFixture` behind them, so `StripeCheckoutService`
+  is registered only under the `stripe-sprint2` profile. Production needs somewhere to keep a
+  server-owned quote before any provider call; the fixture used `stripe_local_intent`, which never
+  leaves the test classpath.
+- Changed: `V14__product_team_terms.sql` adds `biz_product.team_target_size` and
+  `team_lifetime_seconds` (both nullable; a product with either null cannot start a team) —
+  production had no source at all for how big a new team is or how long it stays open.
+  `V15__purchase_intent.sql` adds `biz_purchase_intent` with a partial unique index on
+  `fulfilled_payment_id`, so a replayed webhook collides at the database instead of creating a
+  second membership and order. Domain: `PurchaseIntent` aggregate, `PurchaseOperation`,
+  `PurchaseIntentRepository`, four new `OrderErrorCode` entries. Infrastructure: the four-piece
+  persistence slice (`BizPurchaseIntentDO`, mapper + XML, converter, repository impl) following the
+  `biz_order` idiom. `docs/db/order.sql` mirrors V15.
+- Verified on JDK 21: `./mvnw -B verify` BUILD SUCCESS (147 bootstrap unit tests, 32 Testcontainers
+  ITs, ArchUnit 8/8, SpotBugs and Checkstyle clean) with V1-V15 migrating a PostgreSQL 18 container.
+  New code: `PurchaseIntentTest` 22 tests, `PurchaseIntentRepositoryImplTest` 7 tests, both green —
+  the claim race, the replayed claim by the same payment and the vanished row are all covered.
+- Decisions: team terms live on `biz_product` (per-product) rather than in configuration, chosen
+  with the user on 2026-09-22; the intent aggregate belongs to the order module because fulfilment
+  writes the order, and the payment module keeps only the port. An ADR is owed once the adapter
+  lands and the decision is exercised end to end.
+- Problems / not done: this is storage only. The production `PaymentBusinessPort` /
+  `PaymentIntentPort` implementation is **not** written yet, so nothing consumes
+  `PurchaseIntentRepository` and `StripeCheckoutService` still has no production bean. Still owed:
+  the locked catalog read for START (product + latest `biz_team_price_policy` revision + the two
+  V14 columns) and the stock decrement, the adapter's six methods over `PaidGroupDealService` and
+  `OrderRepository`, the bootstrap wiring that replaces the fixture, its tests, the NFR row, the
+  ADR, and `docs/db/catalog.sql` sync for the two `biz_product` columns (catalog owns that file).
+- Next: implement the adapter against these ports, then delete `PaymentBusinessFixture`'s
+  production stand-in role and let `StripeCheckoutConfiguration` resolve a real collaborator.

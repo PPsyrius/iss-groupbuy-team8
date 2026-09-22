@@ -17,7 +17,27 @@ public enum OrderErrorCode implements ErrorCode {
             "ORDER_409_002",
             409,
             "Order was modified concurrently; retry with the latest version",
-            "error.order.versionConflict");
+            "error.order.versionConflict"),
+    PURCHASE_INTENT_NOT_FOUND(
+            "ORDER_404_002",
+            404,
+            "Purchase intent not found",
+            "error.order.purchaseIntentNotFound"),
+    PURCHASE_INTENT_TERMS_INVALID(
+            "ORDER_400_001",
+            400,
+            "Purchase intent terms are not valid",
+            "error.order.purchaseIntentTermsInvalid"),
+    PURCHASE_INTENT_ALREADY_FULFILLED(
+            "ORDER_409_003",
+            409,
+            "Purchase intent was already fulfilled by another payment",
+            "error.order.purchaseIntentAlreadyFulfilled"),
+    PRODUCT_NOT_STARTABLE(
+            "ORDER_409_004",
+            409,
+            "Product has no team terms configured, so no team can be started on it",
+            "error.order.productNotStartable");
 
     private final String code;
     private final int httpStatus;
