@@ -10,7 +10,7 @@ The repository is a **polyglot monorepo**: a Java Spring Boot backend, a React S
 
 ```
 blocbuy/
-├── .agents/                        # agent working agreements
+├── .agents/skills/                 # additional agent skills
 ├── .claude/skills/                 # repo skills (agile-evidence-capture, backend-constraints-skill, pgsql-ddl)
 ├── .github/
 │   ├── workflows/
@@ -73,12 +73,16 @@ blocbuy/
 │   ├── deploy/                     # dev runbooks + prod/ Terraform runbook set
 │   ├── design/                     # this file
 │   └── quality/                    # quality-gates.md, nfr-register.md
+├── scripts/                        # Stripe dev-contract checker, baseline and test runner
+├── .gitattributes                  # cross-platform line-ending rules
+├── AGENTS.md                       # repository guidance index for coding agents
+├── CLAUDE.md                       # Claude entry point to AGENTS.md
 ├── docker-compose.yaml             # local integration runtime (postgres, redis, backend)
 ├── lefthook.yml                    # pre-commit hooks (repo root)
 └── README.md
 ```
 
-There is no repo-root `Makefile` and no `scripts/` directory: backend tasks run as `./mvnw …` from `backend/`, frontend tasks as `pnpm …` from `frontend/`, and CI calls the same commands.
+There is no repo-root `Makefile`: backend tasks run as `./mvnw …` from `backend/`, frontend tasks as `pnpm …` from `frontend/`, and `scripts/` contains Stripe-specific verification tooling.
 
 ---
 
@@ -146,7 +150,7 @@ Everything gradeable-in-writing lives here, versioned alongside the code it desc
 
 | Subdirectory | Contents |
 |---|---|
-| `agile/` | Sprint logs (`sprint-NN/log.md`), board snapshots (`metrics/`), README index. |
+| `agile/` | Sprint-log indexes (`sprint-NN/log.md`), daily entries (`sprint-NN/log/YYYY-MM-DD.md`), board snapshots (`metrics/`), README index. |
 | `ci/` | `backend-pipeline.md` (CI runbook) and `devsecops-pipeline-plan.md` (decision record). |
 | `deploy/` | Dev runbooks plus `prod/` (Terraform design, runbook, archived handover). |
 | `design/` | This file. |
@@ -161,7 +165,7 @@ Defines the two local infrastructure services — `postgres` 18 and `redis` 8.10
 
 ## No repo-root Makefile
 
-There is no `Makefile` and no `scripts/` directory. Daily commands, per component README:
+There is no `Makefile`. Daily commands live in each component README; root `scripts/` contains the Stripe dev-contract checker and test runner:
 
 - Backend: `cd backend && ./mvnw spotless:apply && ./mvnw verify` (format, then full gates).
 - Frontend: `cd frontend && pnpm install --frozen-lockfile && pnpm check && pnpm build`.

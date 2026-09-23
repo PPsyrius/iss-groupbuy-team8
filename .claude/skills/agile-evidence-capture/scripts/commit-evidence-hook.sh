@@ -39,9 +39,9 @@ if [[ -n "$c_dir" ]]; then
   esac
 fi
 
-# Chores are exempt: nothing to evidence.
+# These are the only evidence exemptions, matching CONTRIBUTING.md.
 case "$type" in
-  style*|revert*|"chore(deps)"*|"chore(release)"*) exit 0 ;;
+  style*|"chore(deps)"*) exit 0 ;;
 esac
 if [[ "$msg" == *"Evidence-skipped:"* ]]; then exit 0; fi
 
@@ -61,17 +61,14 @@ staged="$staged"$'\n'"$add_args"
 staged="$(sed '/^$/d' <<<"$staged" | sort -u)"
 
 # Nothing staged we can see: still advise, but only about the message.
-touches_code=false; touches_nfr=false; has_log=false; has_register=false; has_adr=false
+touches_work=false; touches_nfr=false; has_log=false; has_register=false; has_adr=false
 while IFS= read -r f; do
   [[ -z "$f" ]] && continue
+  touches_work=true
   case "$f" in
-    docs/agile/sprint-*/log.md) has_log=true ;;
+    docs/agile/sprint-*/log.md|docs/agile/sprint-*/log/*.md) has_log=true ;;
     docs/quality/nfr-register.md) has_register=true ;;
     frontend/docs/adr/[0-9][0-9][0-9][0-9]-*.md) has_adr=true ;;
-  esac
-  case "$f" in
-    *.md|*.txt|*.drawio|*.png|*.svg|*.docx|*.csv) ;;
-    *) touches_code=true ;;
   esac
   case "$f" in
     .github/*|*/application*.yml|*/application*.yaml|deployment/*|infra/*|*Dockerfile*|docker-compose*|*cloudfront*|*/pom.xml|pom.xml|*/package.json|*vite.config.*|*lefthook*|*.gitleaks*|*checkstyle*|*spotbugs*|*/security/*|*Security*|*Cookie*|*Cors*|*RateLimit*|*Filter.java|*/db/migration/*)
@@ -85,8 +82,8 @@ if grep -Eq '(#[0-9]+|Refs|Closes|Fixes)' <<<"$msg"; then has_issue_ref=true; fi
 if [[ -z "$msg" ]]; then has_issue_ref=true; fi
 
 missing=()
-if $touches_code && ! $has_log; then
-  missing+=("- Sprint log: append an entry to docs/agile/sprint-NN/log.md (date, handle, issue, changed, verified, decisions, problems) and stage it with this commit.")
+if $touches_work && ! $has_log; then
+  missing+=("- Sprint log: append an entry to docs/agile/sprint-NN/log/YYYY-MM-DD.md (create the day's file if new; log.md is the index; date, handle, issue, changed, verified, decisions, problems) and stage it with this commit.")
 fi
 if $touches_nfr && ! $has_register; then
   missing+=("- NFR register: this commit touches CI/config/security/infra paths. Add or update the row in docs/quality/nfr-register.md (scenario, enforcement point, evidence, status), or state in the log entry why it is not an NFR.")
