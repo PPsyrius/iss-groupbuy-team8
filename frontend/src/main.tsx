@@ -4,6 +4,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { queryClient } from "./api/query-client";
+import { AppErrorBoundary } from "./components/AppErrorBoundary";
 import { createAppRouter } from "./router";
 
 import "./styles/app.css";
@@ -21,9 +22,11 @@ async function bootstrap() {
 
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>
+      <AppErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+      </AppErrorBoundary>
     </StrictMode>,
   );
 }

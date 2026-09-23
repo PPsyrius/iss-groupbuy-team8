@@ -1,4 +1,4 @@
-import { Alert, Button, buttonVariants, Chip, Skeleton } from "@heroui/react";
+import { Alert, Button, buttonVariants, Skeleton } from "@heroui/react";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ApiError, unwrapResult } from "@/api/envelope";
 import { getListingOptions } from "@/api/generated/@tanstack/react-query.gen";
 import type { ProductDetailResponse } from "@/api/generated/types.gen";
+import { NotFoundCard } from "@/components/ErrorCard";
 import { formatDeadlineShort, hasEnded, parseDeadline } from "@/features/catalog/deal-time";
 import { DealProgress, useNow } from "@/features/catalog/DealProgress";
 import { formatPrice, Price } from "@/features/catalog/Price";
@@ -47,7 +48,7 @@ export const Route = createFileRoute("/products/$productId")({
   },
   pendingComponent: DetailLoading,
   errorComponent: DetailError,
-  notFoundComponent: ListingNotFound,
+  notFoundComponent: NotFoundCard,
   component: ProductDetailPage,
 });
 
@@ -509,53 +510,6 @@ function DetailError({ reset }: { reset: () => void }) {
           </div>
         </Alert.Content>
       </Alert>
-    </main>
-  );
-}
-
-// `Errors › Not found` (docs/design-screens.md §4.5): one card, one primary way out, the money
-// question answered first. "My blocs" waits for its route (T2-04); the invite hint stays.
-function ListingNotFound() {
-  return (
-    <main className="mx-auto flex max-w-[1280px] justify-center p-6 xl:py-16">
-      <div className={card + " flex w-full max-w-[560px] flex-col gap-3 p-6 xl:p-10"}>
-        <Chip color="default" variant="soft" size="sm" className="self-start font-mono">
-          404
-        </Chip>
-        <h1 className="text-2xl font-semibold tracking-tight xl:text-3xl">
-          We can’t find that page
-        </h1>
-        <p className="text-base text-[#52525B]">
-          The link may be old, or the listing may have been removed. Links pasted from chat
-          sometimes lose a character at the end.
-        </p>
-        <hr className="border-separator" />
-        <p className="text-sm">
-          <span className="text-success-soft-foreground font-semibold">
-            Nothing has been charged.
-          </span>{" "}
-          <span className="text-muted">
-            Any bloc you have already paid into is safe and still listed under My blocs.
-          </span>
-        </p>
-        <Link
-          to="/"
-          className={
-            buttonVariants({ variant: "secondary" }) +
-            " mt-1 min-h-12 w-full text-base xl:w-auto xl:self-start xl:px-6"
-          }
-        >
-          Browse listings
-        </Link>
-        <hr className="border-separator" />
-        <div className="flex flex-col gap-1">
-          <h2 className="text-sm font-semibold">Came from an invite link?</h2>
-          <p className="text-muted text-sm">
-            Ask the person who shared it to send it again — invite links expire when the bloc
-            closes.
-          </p>
-        </div>
-      </div>
     </main>
   );
 }

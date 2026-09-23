@@ -1,5 +1,6 @@
-import { createRootRouteWithContext, Link, Outlet } from "@tanstack/react-router";
+import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 
+import { NotFoundCard, RouteErrorCard } from "@/components/ErrorCard";
 import { Header } from "@/components/Header";
 import { Devtools } from "@/dev/devtools";
 import { type SessionState, sessionFromQuery } from "@/features/session/session";
@@ -24,14 +25,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   // session; the callback route keeps the strict version (plan §12 note 46).
   beforeLoad: async ({ context }) => ({ session: await sessionOrAnonymous(context.queryClient) }),
   component: RootLayout,
-  notFoundComponent: () => (
-    <main className="p-8">
-      <h1 className="text-xl font-semibold">Page not found</h1>
-      <Link to="/" className="underline">
-        Back to listings
-      </Link>
-    </main>
-  ),
+  // §4.5 terminal screens (#157): the shared card for 404 and for any loader or render error
+  // in a route without its own `errorComponent` (router.tsx sets the same default).
+  notFoundComponent: NotFoundCard,
+  errorComponent: RouteErrorCard,
 });
 
 function RootLayout() {
