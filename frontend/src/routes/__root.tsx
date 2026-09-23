@@ -1,9 +1,7 @@
-import { TanStackDevtools } from "@tanstack/react-devtools";
-import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { createRootRouteWithContext, Link, Outlet } from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 import { Header } from "@/components/Header";
+import { Devtools } from "@/dev/devtools";
 import { type SessionState, sessionFromQuery } from "@/features/session/session";
 import type { RouterContext } from "@/router";
 
@@ -36,17 +34,12 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   ),
 });
 
-const devtoolsPlugins = [
-  { name: "TanStack Query", render: <ReactQueryDevtoolsPanel /> },
-  { name: "TanStack Router", render: <TanStackRouterDevtoolsPanel /> },
-];
-
 function RootLayout() {
   return (
     <>
       <Header />
       <Outlet />
-      <TanStackDevtools plugins={devtoolsPlugins} />
+      <Devtools />
     </>
   );
 }

@@ -4,6 +4,7 @@
     "src/main.tsx",
     "src/api/hey-api.ts",
     "src/routes/**/*.tsx",
+    "src/dev/*.noop.{ts,tsx}",
     "e2e/**/*.spec.ts",
     "openapi-ts.config.ts",
     "playwright.config.ts"
