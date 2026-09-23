@@ -121,9 +121,11 @@ WHERE lock_key = #{lockKey} AND owner = #{owner} AND deleted = false
 
 0 rows means the run outlived its lease and someone took over → WARN (see §4, overlap is safe).
 
+Both statements carry a JDBC statement timeout in the mapper XML, `timeout="3"` (seconds). Without it, a session that holds the lease row locked for a long time (for example a manual `SELECT ... FOR UPDATE` in psql left uncommitted) would block the upsert indefinitely and, with it, the single default scheduler thread. With it, PostgreSQL cancels the statement after 3 s (SQLState `57014`), Spring raises a `DataAccessException`, and `LeasedJobRunner` counts the run as `failed`; the next run tries again. This restores the fail-fast property NOWAIT would have given, bounded at 3 s.
+
 Implementation guards (technical misuse, `IllegalArgumentException`, not `BizException`): `lockKey` non-blank and ≤ 64 chars, `owner` non-blank and ≤ 128 chars (V13 column sizes), `lease` positive. Any other row count than 0/1 → `IllegalStateException`.
 
-**Deviation from V13's comment, recorded in ADR 0002:** V13 describes `SELECT ... FOR UPDATE NOWAIT` then UPDATE. The single upsert meets the same obligations (fail fast, no queueing behind a sweep, stale takeover under the row lock, one row per key) with one statement, no lock-not-available exception mapping, and fewer branches to cover. V13 itself cannot be edited (Flyway checksum).
+**Deviation from V13's comment, recorded in ADR 0002 (decided 2026-09-23):** V13 describes `SELECT ... FOR UPDATE NOWAIT` then UPDATE. Both designs are leases: the row lock is held only for the acquire statement, never for the sweep, and `locked_until` is what excludes other instances. NOWAIT's fail-fast therefore only covers a millisecond race, where both designs end the same way (the loser skips the run). The single upsert meets V13's obligations (no queueing behind a sweep, stale takeover under the row lock, one row per key) with one autocommit statement instead of three statements in an explicit transaction, no `55P03` → `CannotAcquireLockException` mapping, the "expired or ours" decision made atomically in SQL rather than in Java, and about half the branches to cover. NOWAIT's one real advantage — returning at once when another session holds the row lock for a long time — is recovered by the 3 s statement timeout below. V13 itself cannot be edited (Flyway checksum).
 
 ### 3.3 Sweeper
 
@@ -202,7 +204,7 @@ public void run() {
 
 1. Put `traceId = "job-" + UuidV7.next()` into MDC (so CloudWatch Logs Insights can group one run's lines).
 2. `tryAcquire`; false → counter `outcome=skipped`, DEBUG, return.
-3. Run the work inside `try`; any exception → counter `outcome=failed`, ERROR once (the sweeper already isolates per team, so this is only a lease/DB-level failure).
+3. Run the work inside `try`; any exception → counter `outcome=failed`, ERROR once (the sweeper already isolates per team, so this is only a lease/DB-level failure). A `DataAccessException` from `tryAcquire` itself (including the 3 s statement timeout) is caught the same way, counted `failed`, and does not attempt a release.
 4. `finally` release; false → WARN "lease expired before the run finished"; clear MDC.
 5. Owner id: `HOSTNAME` env (container id on EC2) + `/` + a per-JVM `UuidV7`, truncated to 128.
 
@@ -245,7 +247,7 @@ Required by the backend constraints for anything that leads to refunds.
 
 | Decision | Alternative rejected | Why |
 | --- | --- | --- |
-| Single-statement upsert lease | V13's `SELECT ... FOR UPDATE NOWAIT` + UPDATE | same guarantees, one round trip, no `CannotAcquireLockException` mapping, fewer branches |
+| Single-statement upsert lease with a 3 s statement timeout (decided 2026-09-23) | V13's `SELECT ... FOR UPDATE NOWAIT` + UPDATE | same guarantees, one autocommit statement, no `CannotAcquireLockException` mapping, decision atomic in SQL, fewer branches; the timeout bounds the one case where NOWAIT would return sooner |
 | Master switch off by default, on per deploy profile | on by default, disabled in tests | 13 existing `@SpringBootTest` contexts and `StripeLocalIntegrationTest`'s manual `expireOne` would race a live scheduler; opt-in keeps openapi-export DB-free |
 | Lease helper in bootstrap (`LeasedJobRunner`) | lease logic inside the sweeper | the sweeper stays a pure use case; G2 reuses the runner unchanged |
 | DB clock for due selection and lease | JVM `Instant.now()` | instances and DB can skew; `expireOne` already decides on DB time |
@@ -263,7 +265,7 @@ Target: 0 missed lines and 0 missed branches in the JaCoCo aggregate for every t
 | --- | --- |
 | `SchedulerLeaseRepositoryImplTest` (mock mapper) | 1 row → true; 0 rows → false; unexpected count → `IllegalStateException`; each argument guard; release true/false |
 | `GroupDealExpirySweeperTest` | nothing due → zeroes and no `expireOne`; mixed true/false; **three teams where the second throws → other two resolved, `failed = 1`**; `limit < 1` rejected; `dueForExpiry` receives the DB time |
-| `LeasedJobRunnerTest` | not acquired → work not run, `skipped`; acquired → work run, released, `completed`; work throws → released, `failed`, not rethrown; release false → WARN branch; MDC set during the run and cleared after |
+| `LeasedJobRunnerTest` | not acquired → work not run, `skipped`; acquired → work run, released, `completed`; work throws → released, `failed`, not rethrown; **`tryAcquire` throws `DataAccessException` → work not run, no release, `failed`, not rethrown**; release false → WARN branch; MDC set during the run and cleared after |
 | `TeamExpirySweepJobTest` | passes key/lease/batch from properties; INFO vs DEBUG branch; counters per result |
 | `SchedulingPropertiesTest` | defaults; batch outside 1..500 and non-positive lease rejected |
 
@@ -271,7 +273,7 @@ Target: 0 missed lines and 0 missed branches in the JaCoCo aggregate for every t
 
 | Test | Proves |
 | --- | --- |
-| `SchedulerLeaseRepositoryIT` (infrastructure, V13 only, same raw `SqlSessionFactory` setup as `PaidGroupDealRepositoryIT`) | first acquire inserts; second owner blocked while live; takeover after `locked_until` passes; same owner re-acquires; release of a foreign lease returns false; **N threads acquire concurrently → exactly one true** |
+| `SchedulerLeaseRepositoryIT` (infrastructure, V13 only, same raw `SqlSessionFactory` setup as `PaidGroupDealRepositoryIT`) | first acquire inserts; second owner blocked while live; takeover after `locked_until` passes; same owner re-acquires; release of a foreign lease returns false; **N threads acquire concurrently → exactly one true**; **a second connection holds the lease row with `SELECT ... FOR UPDATE` in an open transaction → `tryAcquire` throws `DataAccessException` within ~3 s instead of hanging** (asserted with `assertTimeoutPreemptively(Duration.ofSeconds(10), ...)`), and succeeds once that transaction ends |
 | `TeamExpirySchedulingIT` (bootstrap, `blocbuy.scheduling.enabled=true`, `initial-delay=PT1H` so the timer never fires, calls `job.run()` directly; own container like `StripeLocalIntegrationTest`) | paid overdue team → after one run: deal `expired`, order `cancelled`, one `biz_refund` `pending`; a second run changes nothing; an open, not-yet-due team is untouched; a team whose expiry throws does not stop the others (real transactions, no outer rollback); a held foreign lease makes the run skip |
 | `BlocBuyApplicationTest` (existing) | one added assertion: no `TeamExpirySweepJob` bean when the switch is absent |
 
@@ -296,6 +298,7 @@ Size: about 13 main/config files and 7 test files; roughly 400 lines of main cod
 | R3 | Refund obligations pile up as `pending` until PR-G2 lands | intended; they are the durable record G2 drains. State it in the PR description |
 | R4 | The single default scheduler thread will be shared with G2's worker | G2 sets `spring.task.scheduling.pool.size: 2`; not needed for one job |
 | R5 | Someone enables the switch in a shared test context | only `TeamExpirySchedulingIT` sets it, with a 1 h initial delay |
+| R6 | A long-lived row lock on the lease row (manual psql session, stuck transaction) blocks the upsert and freezes the single scheduler thread | `timeout="3"` on both lease statements (§3.2): the run fails after 3 s, counted `blocbuy.scheduler.runs{outcome=failed}`, and the next run retries; covered by `SchedulerLeaseRepositoryIT` |
 
 ## 9. Commit sequence
 
