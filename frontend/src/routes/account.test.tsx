@@ -12,11 +12,14 @@ describe("/account behind the _authenticated guard", () => {
     expect(await screen.findByRole("heading", { name: "Sign in to BlocBuy" })).toBeVisible();
   });
 
-  it("renders the account header for a signed-in buyer", async () => {
+  it("renders the account header and the empty-state card for a signed-in buyer", async () => {
     serveSignedIn({ userId: "u1", nickname: null, avatarUrl: null });
     const { router } = renderRoute("/account");
     expect(await screen.findByRole("heading", { name: "My blocs" })).toBeVisible();
     expect(screen.getByTestId("account-user")).toHaveTextContent("u1");
     expect(router.state.location.pathname).toBe("/account");
+    // §4.4 empty state (#137): a way forward until the order history lands (#128)
+    expect(screen.getByRole("heading", { name: "You haven’t joined a bloc yet" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "See what’s filling" })).toHaveAttribute("href", "/");
   });
 });
