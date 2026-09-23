@@ -9,16 +9,10 @@ CREATE TABLE stripe_local_intent (
 CREATE TABLE stripe_local_product_terms (
  product_id uuid PRIMARY KEY, target_size integer NOT NULL, lifetime_seconds integer NOT NULL
 );
--- Minimal order persistence with the team's documented names; no shipping/PII functionality.
-CREATE TABLE biz_order (
- id uuid PRIMARY KEY, order_no varchar(64) NOT NULL UNIQUE, user_id uuid NOT NULL,
- deal_id uuid NOT NULL, product_id uuid NOT NULL, product_title varchar(256) NOT NULL,
- quantity integer NOT NULL, unit_price numeric(18,2) NOT NULL, total_amount numeric(18,2) NOT NULL,
- currency varchar(4) NOT NULL, status varchar(16) NOT NULL, payment_id uuid NOT NULL UNIQUE,
- paid_time timestamptz NOT NULL, create_time timestamptz NOT NULL DEFAULT clock_timestamp(),
- update_time timestamptz NOT NULL DEFAULT clock_timestamp(), deleted boolean NOT NULL DEFAULT false,
- version integer NOT NULL DEFAULT 0
-);
+-- biz_order is no longer created here: V12__order.sql owns the real table since the UC10 order
+-- slice merged (2026-09-22). This fixture's inserts and reads target that table; the columns it
+-- does not supply (product_image, receiver_*, shipping_address, cancel_time, finish_time,
+-- create_by, update_by) are all nullable there.
 CREATE TABLE stripe_local_expiry_request (
  payment_id uuid PRIMARY KEY, requested_at timestamptz NOT NULL DEFAULT clock_timestamp(),
  completed_at timestamptz, attempts integer NOT NULL DEFAULT 0, next_attempt_at timestamptz NOT NULL DEFAULT clock_timestamp()

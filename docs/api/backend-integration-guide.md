@@ -43,7 +43,7 @@ The contract currently exposes these values as strings.
 
 ## Money and time
 
-- `Receipt.amount` is a decimal string such as `"12.00"`; order and catalog amounts are JSON numbers.
+- `Receipt.amount` and order amounts are decimal strings such as `"12.00"`; catalog amounts are JSON numbers.
 - Do not accumulate money with floating-point arithmetic. Currency is currently lowercase `"sgd"`.
 - Instants are ISO-8601 UTC strings; parse them at the display boundary.
 
