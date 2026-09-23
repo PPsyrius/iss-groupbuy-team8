@@ -1,10 +1,12 @@
 package com.blocbuy.groupbuy.repository;
 
 import com.blocbuy.groupbuy.model.GroupDeal;
+import com.blocbuy.groupbuy.model.PaidMember;
 import com.blocbuy.groupbuy.model.PaidParticipation;
 import com.blocbuy.groupbuy.model.ParticipationReceipt;
 import com.blocbuy.groupbuy.model.ParticipationResult;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,4 +42,32 @@ public interface PaidGroupDealRepository {
      * rejection.
      */
     void complete(UUID paymentId, ParticipationResult result, UUID actorId, Instant now);
+
+    /**
+     * Backfills the order backing a payment's membership, in the transaction that inserts it.
+     * Re-linking the same order is allowed so a replay is harmless; a different order is not.
+     *
+     * @return false when no active member of this deal carries that payment
+     */
+    boolean linkOrder(UUID dealId, UUID paymentId, UUID orderId);
+
+    /** The membership a payment produced, or empty when it admitted nobody. Reconciliation only. */
+    Optional<PaidMember> findPaidMember(UUID paymentId);
+
+    /**
+     * Ids of open deals whose admission window has closed, oldest deadline first. One batch read
+     * for a whole sweep — the caller then resolves each team in its own short transaction.
+     *
+     * @param limit hard upper bound on the returned ids, so one run cannot grow unbounded
+     */
+    List<UUID> dueForExpiry(Instant now, int limit);
+
+    /**
+     * Persists a validated expiry under the caller's deal lock. The UPDATE is status-guarded, so a
+     * team another writer already resolved matches nothing.
+     *
+     * @throws com.blocbuy.common.exception.BizException {@code DEAL_CLOSED} when no open row
+     *     matched, which the caller swallows as an idempotent replay
+     */
+    void expire(GroupDeal before, GroupDeal after, Instant now);
 }

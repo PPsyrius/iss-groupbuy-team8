@@ -140,3 +140,9 @@ infra/terraform/**/.terraform/
 
 # Claude Code worktrees
 .claude/worktrees/
+
+# Local working-tree files kept out of feature PRs (2026-09-21). Both are real files someone may
+# want to land later on their own branch; ignoring them only keeps them out of `git status` and
+# away from a stray `git add -A`. To commit either one, drop its line here or use `git add -f`.
+scripts/create_sprint2_issues.py
+backend/blocbuy-bootstrap/src/main/resources/META-INF/additional-spring-configuration-metadata.json

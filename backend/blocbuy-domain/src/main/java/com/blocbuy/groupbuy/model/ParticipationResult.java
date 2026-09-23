@@ -16,6 +16,11 @@ public record ParticipationResult(
         }
     }
 
+    /** True when the payment was admitted; false when it recorded a compensation requirement. */
+    public boolean applied() {
+        return "applied".equals(outcome);
+    }
+
     /** Freezes successful admission's status and count for later replay, not a live deal view. */
     public static ParticipationResult applied(GroupDeal deal) {
         return new ParticipationResult(

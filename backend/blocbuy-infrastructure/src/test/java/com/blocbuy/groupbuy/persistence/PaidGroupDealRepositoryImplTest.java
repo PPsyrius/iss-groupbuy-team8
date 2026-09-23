@@ -109,6 +109,35 @@ class PaidGroupDealRepositoryImplTest {
     }
 
     @Test
+    void linkingTheOrderReportsWhetherOneMemberRowMatched() {
+        UUID order = UUID.randomUUID();
+        when(mapper.linkOrder(DEAL, PAYMENT, order)).thenReturn(1, 0);
+
+        assertThat(repository.linkOrder(DEAL, PAYMENT, order)).isTrue();
+        assertThat(repository.linkOrder(DEAL, PAYMENT, order)).isFalse();
+    }
+
+    @Test
+    void thePaidMemberProjectionMapsThroughAndKeepsMissesEmpty() {
+        var row = new PaidMemberDO();
+        row.setDealId(DEAL);
+        row.setUserId(ACTOR);
+        row.setStatus("paid");
+        when(mapper.selectPaidMember(PAYMENT)).thenReturn(row, (PaidMemberDO) null);
+
+        assertThat(repository.findPaidMember(PAYMENT))
+                .hasValueSatisfying(
+                        member -> {
+                            assertThat(member.dealId()).isEqualTo(DEAL);
+                            assertThat(member.userId()).isEqualTo(ACTOR);
+                            assertThat(member.status()).isEqualTo("paid");
+                            // Null until the order backfill lands in the same transaction.
+                            assertThat(member.orderId()).isNull();
+                        });
+        assertThat(repository.findPaidMember(PAYMENT)).isEmpty();
+    }
+
+    @Test
     void completeMapsResultToReceiptRowFields() {
         when(mapper.completeReceipt(eq(PAYMENT), any(), eq(ACTOR), eq(NOW))).thenReturn(1);
         ParticipationResult result = new ParticipationResult("applied", DEAL, "open", 1, null);
@@ -138,6 +167,51 @@ class PaidGroupDealRepositoryImplTest {
             row.setReasonCode(result.reasonCode());
         }
         return row;
+    }
+
+    @Test
+    void dueForExpiryPassesTheBoundedBatchStraightThrough() {
+        when(mapper.selectDueForExpiry(NOW, 50)).thenReturn(java.util.List.of(DEAL));
+
+        assertThat(repository.dueForExpiry(NOW, 50)).containsExactly(DEAL);
+    }
+
+    /** Writes only the status and the audit timestamp; frozen terms are never recalculated. */
+    @Test
+    void expireWritesTheResolvedStatusUnderTheStatusGuard() {
+        when(mapper.expireDeal(
+                        argThat(
+                                row ->
+                                        DEAL.equals(row.getId())
+                                                && "expired".equals(row.getStatus())
+                                                && NOW.equals(row.getUpdateTime()))))
+                .thenReturn(1);
+
+        repository.expire(deal(), deal().expire(NOW.plusSeconds(60)), NOW);
+
+        verify(mapper).expireDeal(any());
+    }
+
+    /**
+     * Zero rows means another writer resolved this deal first — a replay, not a broken protocol.
+     */
+    @Test
+    void expireReportsAConcurrentResolutionAsABusinessRejection() {
+        GroupDeal before = deal();
+        GroupDeal after = before.expire(NOW.plusSeconds(60));
+        when(mapper.expireDeal(any())).thenReturn(0);
+
+        assertThatThrownBy(() -> repository.expire(before, after, NOW))
+                .isInstanceOf(com.blocbuy.common.exception.BizException.class)
+                .satisfies(
+                        failure ->
+                                assertThat(
+                                                ((com.blocbuy.common.exception.BizException)
+                                                                failure)
+                                                        .errorCode())
+                                        .isEqualTo(
+                                                com.blocbuy.groupbuy.exception.GroupbuyErrorCode
+                                                        .DEAL_CLOSED));
     }
 
     private static GroupDeal deal() {

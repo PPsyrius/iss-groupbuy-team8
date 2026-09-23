@@ -1,11 +1,15 @@
 package com.blocbuy.groupbuy.persistence;
 
+import com.blocbuy.common.exception.BizException;
+import com.blocbuy.groupbuy.exception.GroupbuyErrorCode;
 import com.blocbuy.groupbuy.model.GroupDeal;
+import com.blocbuy.groupbuy.model.PaidMember;
 import com.blocbuy.groupbuy.model.PaidParticipation;
 import com.blocbuy.groupbuy.model.ParticipationReceipt;
 import com.blocbuy.groupbuy.model.ParticipationResult;
 import com.blocbuy.groupbuy.repository.PaidGroupDealRepository;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -94,6 +98,47 @@ public class PaidGroupDealRepositoryImpl implements PaidGroupDealRepository {
         row.setCurrentSize(result.currentSize());
         row.setReasonCode(result.reasonCode());
         requireOne(mapper.completeReceipt(paymentId, row, actorId, now));
+    }
+
+    /** Reports whether the payment's member row now carries the order, without judging why not. */
+    @Override
+    public boolean linkOrder(UUID dealId, UUID paymentId, UUID orderId) {
+        return mapper.linkOrder(dealId, paymentId, orderId) == 1;
+    }
+
+    /** Projects the payment's member row; the payment key is unique, so there is at most one. */
+    @Override
+    public Optional<PaidMember> findPaidMember(UUID paymentId) {
+        var row = mapper.selectPaidMember(paymentId);
+        return row == null
+                ? Optional.empty()
+                : Optional.of(
+                        new PaidMember(
+                                row.getDealId(),
+                                row.getUserId(),
+                                row.getOrderId(),
+                                row.getStatus()));
+    }
+
+    /** One batch read of due ids; the sweep resolves them one at a time, never one query per id. */
+    @Override
+    public List<UUID> dueForExpiry(Instant now, int limit) {
+        return mapper.selectDueForExpiry(now, limit);
+    }
+
+    /**
+     * Zero affected rows is not a protocol failure here: it means another writer resolved this deal
+     * first, which the caller treats as an idempotent replay.
+     */
+    @Override
+    public void expire(GroupDeal before, GroupDeal after, Instant now) {
+        var row = new BizGroupDealDO();
+        row.setId(before.id());
+        row.setStatus(after.status().code());
+        row.setUpdateTime(now);
+        if (mapper.expireDeal(row) != 1) {
+            throw new BizException(GroupbuyErrorCode.DEAL_CLOSED);
+        }
     }
 
     /** Maps immutable domain values and caller audit context without recalculating frozen terms. */

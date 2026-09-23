@@ -72,6 +72,48 @@
           AND current_size = #{expectedSize} AND status = #{expectedStatus}
     </update>
 
+    <!-- Re-linking the same order is a no-harm replay, so it must still count as one affected row;
+         a different order on the same payment is a real inconsistency and matches nothing. -->
+    <update id="linkOrder">
+        UPDATE biz_group_member
+        SET order_id = #{orderId,jdbcType=OTHER}, update_time = clock_timestamp(),
+            update_by = user_id
+        WHERE deal_id = #{dealId,jdbcType=OTHER} AND payment_id = #{paymentId,jdbcType=OTHER}
+          AND deleted = false
+          AND (order_id IS NULL OR order_id = #{orderId,jdbcType=OTHER})
+    </update>
+
+    <resultMap id="paidMember" type="com.blocbuy.groupbuy.persistence.PaidMemberDO">
+        <result column="deal_id" property="dealId" jdbcType="OTHER"/>
+        <result column="user_id" property="userId" jdbcType="OTHER"/>
+        <result column="order_id" property="orderId" jdbcType="OTHER"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <select id="selectPaidMember" resultMap="paidMember" flushCache="true" useCache="false">
+        SELECT deal_id, user_id, order_id, status
+        FROM biz_group_member
+        WHERE payment_id = #{paymentId,jdbcType=OTHER} AND deleted = false
+    </select>
+
+    <!-- Matches idx_biz_group_deal_status_expire (status, expire_time) WHERE deleted = false.
+         One batch read per sweep; the caller resolves each id in its own short transaction. -->
+    <select id="selectDueForExpiry" resultType="java.util.UUID" flushCache="true" useCache="false">
+        SELECT id
+        FROM biz_group_deal
+        WHERE deleted = false AND status = 'open' AND expire_time &lt;= #{now}
+        ORDER BY expire_time
+        LIMIT #{limit}
+    </select>
+
+    <!-- Status-guarded: a team a webhook already carried to 'succeeded' matches nothing, and the
+         caller reads that zero as an idempotent replay rather than a failure. -->
+    <update id="expireDeal">
+        UPDATE biz_group_deal
+        SET status = #{deal.status}, update_time = #{deal.updateTime}, version = version + 1
+        WHERE id = #{deal.id,jdbcType=OTHER} AND deleted = false AND status = 'open'
+    </update>
+
     <update id="completeReceipt">
         UPDATE biz_group_participation_receipt
         SET deal_id = #{result.dealId,jdbcType=OTHER}, outcome = #{result.outcome},

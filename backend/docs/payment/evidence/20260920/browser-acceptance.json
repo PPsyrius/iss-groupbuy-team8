@@ -1,0 +1,44 @@
+{
+  "verified_at": "2026-09-20T04:55:07.493845+00:00",
+  "result": "PASS",
+  "scope": "browser-created real Sandbox START/JOIN, local PostgreSQL, real Cookie receipt API",
+  "receipts": {
+    "start": {
+      "paymentId": "01a0bd24-1858-7019-81ed-ef6415c3a237",
+      "status": "SUCCEEDED",
+      "outcome": "FULFILLED",
+      "amount": "10.00",
+      "currency": "sgd",
+      "dealId": "d00e90c3-dff9-4404-b1b8-46445ea9086f",
+      "orderId": "eac32257-0c2e-4181-95cd-9a50a73343b8",
+      "refundPending": false
+    },
+    "join": {
+      "paymentId": "01a0bd25-529b-7603-b564-3518c8b2cb10",
+      "status": "SUCCEEDED",
+      "outcome": "FULFILLED",
+      "amount": "10.00",
+      "currency": "sgd",
+      "dealId": "d00e90c3-dff9-4404-b1b8-46445ea9086f",
+      "orderId": "9e18bf54-9550-4baa-b1d4-d80e4008df8a",
+      "refundPending": false
+    }
+  },
+  "team": {
+    "id": "d00e90c3-dff9-4404-b1b8-46445ea9086f",
+    "status": "succeeded",
+    "size": "2/2"
+  },
+  "security": [
+    "anonymous rejected 401",
+    "other buyer rejected 404",
+    "HttpOnly Cookie",
+    "missing CSRF header rejected 400",
+    "wrong CSRF header rejected 403"
+  ],
+  "not_verified": [
+    "real Google OAuth",
+    "shared dev deployment",
+    "refund execution"
+  ]
+}

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blocbuy.payment.persistence.PaymentMapper">
+  <sql id="columns">id,intent_id,user_id,operation,business_id,amount,currency,quote_valid_until,
+    business_deadline,request_key,create_time,session_expires_at,success_url,cancel_url,
+    checkout_session_id,checkout_url,provider_payment_intent_id,status,version</sql>
+  <select id="find" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
+    SELECT <include refid="columns"/>,order_id,fulfilled_deal_id FROM biz_payment
+    WHERE id=#{id} AND intent_id IS NOT NULL AND NOT deleted
+  </select>
+  <select id="lock" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
+    SELECT <include refid="columns"/> FROM biz_payment
+    WHERE id=#{id} AND intent_id IS NOT NULL AND NOT deleted FOR UPDATE
+  </select>
+  <select id="request" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
+    SELECT <include refid="columns"/> FROM biz_payment
+    WHERE user_id=#{userId} AND request_key=#{key} AND NOT deleted
+  </select>
+  <select id="blocking" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
+    SELECT <include refid="columns"/> FROM biz_payment
+    WHERE intent_id=#{intentId} AND NOT deleted AND (status IN ('created','succeeded')
+      OR EXISTS(SELECT 1 FROM biz_payment_review_case r
+        WHERE r.payment_id=biz_payment.id AND r.status='open')) ORDER BY id LIMIT 1
+  </select>
+  <insert id="insert">
+    INSERT INTO biz_payment (<include refid="columns"/>,payment_no,provider)
+    VALUES (#{id},#{intentId},#{userId},#{operation},#{businessId},#{amount},#{currency},#{quoteValidUntil},
+      #{businessDeadline},#{requestKey},#{createTime},#{sessionExpiresAt},#{successUrl},#{cancelUrl},
+      #{checkoutSessionId},#{checkoutUrl},#{providerPaymentIntentId},#{status},#{version},CAST(#{id} AS text),'stripe')
+  </insert>
+  <update id="save">
+    UPDATE biz_payment SET checkout_session_id=#{checkoutSessionId},checkout_url=#{checkoutUrl},
+      provider_payment_intent_id=#{providerPaymentIntentId},status=#{status},version=version+1,
+      paid_time=CASE WHEN #{status}='succeeded' THEN COALESCE(paid_time,clock_timestamp()) ELSE paid_time END,
+      update_time=clock_timestamp()
+    WHERE id=#{id} AND version=#{version} AND NOT deleted
+  </update>
+  <select id="now" resultType="java.time.Instant">SELECT clock_timestamp()</select>
+  <insert id="claimEvent">
+    INSERT INTO log_payment_webhook_event(event_id,event_type) VALUES(#{eventId},#{type})
+    ON CONFLICT (event_id) DO NOTHING
+  </insert>
+  <update id="finishEvent">
+    <!-- payment_id is nullable and is null for an event about a payment we do not hold; without an
+         explicit jdbcType MyBatis cannot infer the type of a null against a uuid column. -->
+    UPDATE log_payment_webhook_event SET payment_id=#{paymentId,jdbcType=OTHER},processing_result=#{result}
+    WHERE event_id=#{eventId}
+  </update>
+  <insert id="review">
+    INSERT INTO log_payment_review(payment_id,reason,operator_id) VALUES(#{id},#{reason},#{operator})
+  </insert>
+  <insert id="openCase">
+    INSERT INTO biz_payment_review_case(payment_id,reason) VALUES(#{id},#{reason})
+    ON CONFLICT(payment_id) DO UPDATE SET reason=EXCLUDED.reason,status='open',
+      next_check_at=clock_timestamp(),resolved_at=NULL
+  </insert>
+  <select id="reviewCases" resultType="com.blocbuy.payment.model.PaymentReviewCase">
+    SELECT r.case_id,r.payment_id,r.reason,r.owner,r.status,r.last_checked_at,r.next_check_at,
+      r.resolved_at,r.provider_summary
+    FROM biz_payment_review_case r JOIN biz_payment p ON p.id=r.payment_id AND NOT p.deleted
+    WHERE r.status='open'
+    <if test="after != null">AND r.case_id &gt; #{after}</if>
+    ORDER BY r.case_id LIMIT #{limit}
+  </select>
+  <update id="assignCase">
+    UPDATE biz_payment_review_case SET owner=#{operator},next_check_at=#{nextCheck}
+    WHERE payment_id=#{id} AND status='open'
+  </update>
+  <update id="recordRecovery">
+    UPDATE biz_payment_review_case SET owner=#{operator},last_checked_at=clock_timestamp(),
+      next_check_at=clock_timestamp()+interval '15 minutes',provider_summary=#{summary},
+      status=CASE WHEN #{resolved} THEN 'resolved' ELSE 'open' END,
+      resolved_at=CASE WHEN #{resolved} THEN clock_timestamp() ELSE NULL END
+    WHERE payment_id=#{id}
+  </update>
+  <update id="outcome">
+    UPDATE biz_payment SET fulfilment_result=#{outcome},fulfilled_deal_id=#{dealId},order_id=#{orderId}
+    WHERE id=#{id} AND fulfilment_result IS NULL AND NOT deleted
+  </update>
+  <select id="getOutcome" resultType="string">
+    SELECT fulfilment_result FROM biz_payment WHERE id=#{id} AND NOT deleted
+  </select>
+  <insert id="refund">
+    INSERT INTO biz_refund(payment_id,intent_id,deal_id,amount,currency,reason,source_event,status)
+    SELECT id,intent_id,COALESCE(fulfilled_deal_id,CASE WHEN operation='JOIN' THEN business_id END),
+      amount,currency,#{reason},#{eventId},'pending' FROM biz_payment
+    WHERE id=#{id} AND NOT deleted AND status='succeeded'
+    ON CONFLICT(payment_id) DO UPDATE SET payment_id=EXCLUDED.payment_id
+    WHERE NOT biz_refund.deleted
+      AND biz_refund.amount=EXCLUDED.amount AND biz_refund.currency=EXCLUDED.currency
+      AND biz_refund.reason=EXCLUDED.reason
+  </insert>
+  <select id="lockRefundableMemberIds" resultType="java.util.UUID">
+    SELECT id FROM biz_payment
+    WHERE fulfilled_deal_id=#{dealId} AND NOT deleted
+      AND fulfilment_result='FULFILLED' AND status='succeeded'
+    ORDER BY id FOR UPDATE
+  </select>
+  <insert id="refundExpiredTeam">
+    INSERT INTO biz_refund(payment_id,intent_id,deal_id,amount,currency,reason,source_event,status)
+    SELECT id,intent_id,fulfilled_deal_id,amount,currency,#{reason},#{eventId},'pending'
+    FROM biz_payment
+    WHERE fulfilled_deal_id=#{dealId} AND NOT deleted
+      AND fulfilment_result='FULFILLED' AND status='succeeded'
+    ORDER BY id
+    ON CONFLICT(payment_id) DO UPDATE SET payment_id=EXCLUDED.payment_id
+    WHERE NOT biz_refund.deleted
+      AND biz_refund.intent_id=EXCLUDED.intent_id AND biz_refund.deal_id=EXCLUDED.deal_id
+      AND biz_refund.amount=EXCLUDED.amount AND biz_refund.currency=EXCLUDED.currency
+      AND biz_refund.reason=EXCLUDED.reason
+  </insert>
+  <select id="refundRecorded" resultType="boolean">
+    SELECT EXISTS(SELECT 1 FROM biz_refund r JOIN biz_payment p ON p.id=r.payment_id
+      WHERE p.id=#{id} AND NOT p.deleted AND p.status='succeeded'
+        AND r.amount=p.amount AND r.currency=p.currency
+        AND r.intent_id=p.intent_id AND NOT r.deleted
+        AND r.status IN ('pending','processing','succeeded','failed','review'))
+  </select>
+  <select id="pending" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
+    SELECT <include refid="columns"/> FROM biz_payment WHERE intent_id IS NOT NULL AND NOT deleted
+      AND ((status='created' AND create_time &lt; #{threshold})
+        OR (status='succeeded' AND fulfilment_result IS NULL)
+        OR EXISTS(SELECT 1 FROM biz_payment_review_case r WHERE r.payment_id=biz_payment.id AND r.status='open'))
+    ORDER BY create_time,id LIMIT #{limit}
+  </select>
+</mapper>

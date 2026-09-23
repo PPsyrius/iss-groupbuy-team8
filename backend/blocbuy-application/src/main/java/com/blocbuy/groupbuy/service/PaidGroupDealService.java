@@ -1,8 +1,10 @@
 package com.blocbuy.groupbuy.service;
 
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.groupbuy.event.TeamSucceeded;
 import com.blocbuy.groupbuy.exception.GroupbuyErrorCode;
 import com.blocbuy.groupbuy.exception.ParticipationErrorCode;
+import com.blocbuy.groupbuy.model.DealStatus;
 import com.blocbuy.groupbuy.model.GroupDeal;
 import com.blocbuy.groupbuy.model.NewDealTerms;
 import com.blocbuy.groupbuy.model.PaidGroupDealCreator;
@@ -18,6 +20,7 @@ import java.time.Instant;
 import java.util.HexFormat;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,11 +33,16 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>Business rejection of confirmed money commits a compensation-required fact. Payment owner must
  * arrange compensation after commit; this service never refunds or treats that as success.
  * Technical failures propagate and roll back the receipt, membership and deal together.
+ *
+ * <p>A join that fills the team publishes {@link TeamSucceeded} in the same transaction. The
+ * consequences in other domains — confirming their orders — belong to subscribers, not to inline
+ * calls from here.
  */
 @Service
 @RequiredArgsConstructor
 public class PaidGroupDealService {
     private final PaidGroupDealRepository repository;
+    private final ApplicationEventPublisher events;
     private final PaidGroupDealCreator creator = new StandardPaidGroupDealCreator();
 
     /**
@@ -108,6 +116,12 @@ public class PaidGroupDealService {
         repository.insertJoinedMember(before, after, paid, now);
         var result = ParticipationResult.applied(after);
         repository.complete(paid.paymentId(), result, paid.userId(), now);
+        if (after.status() == DealStatus.SUCCEEDED) {
+            // Subscribers run at BEFORE_COMMIT, after this buyer's own order is saved by the
+            // caller — a plain listener would confirm the team while that order is still pending.
+            events.publishEvent(
+                    new TeamSucceeded(after.id(), after.productId(), after.currentSize(), now));
+        }
         return result;
     }
 

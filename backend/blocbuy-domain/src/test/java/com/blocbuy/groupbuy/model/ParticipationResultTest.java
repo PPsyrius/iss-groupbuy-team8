@@ -19,6 +19,12 @@ class ParticipationResultTest {
         assertThat(result.outcome()).isEqualTo("applied");
         assertThat(result.currentSize()).isEqualTo(1);
         assertThat(result.reasonCode()).isNull();
+        assertThat(result.applied()).isTrue();
+    }
+
+    @Test
+    void compensationIsNotAnAdmission() {
+        assertThat(ParticipationResult.compensation(DEAL, "GROUPBUY_409_004").applied()).isFalse();
     }
 
     @Test
