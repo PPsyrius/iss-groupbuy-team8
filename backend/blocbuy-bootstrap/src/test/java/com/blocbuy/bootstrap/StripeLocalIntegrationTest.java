@@ -37,7 +37,11 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-/** Actual group service and PostgreSQL, test-only order/intent fixture, mocked Stripe network. */
+/**
+ * Actual group, order and catalog services against PostgreSQL, with only the Stripe network mocked.
+ * Since 2026-09-22 there is no business fixture left: intents and fulfilment go through the
+ * production {@code PaymentIntentPort} and {@code PaymentBusinessPort} implementations.
+ */
 @SpringBootTest(
         properties = {
             "server.address=127.0.0.1",
@@ -79,7 +83,7 @@ class StripeLocalIntegrationTest {
     @BeforeEach
     void setup() {
         jdbc.execute(
-                "TRUNCATE log_refund_attempt,biz_payment,log_payment_webhook_event,biz_refund,log_payment_review,biz_payment_review_case,stripe_local_intent,stripe_local_expiry_request,biz_order,biz_group_member,biz_group_deal,biz_group_participation_receipt,stripe_local_product_terms,biz_team_price_policy,biz_product,sys_user");
+                "TRUNCATE log_refund_attempt,biz_payment,log_payment_webhook_event,biz_refund,log_payment_review,biz_payment_review_case,biz_purchase_intent,stripe_local_expiry_request,biz_order,biz_group_member,biz_group_deal,biz_group_participation_receipt,biz_team_price_policy,biz_product,sys_user");
         product = UUID.randomUUID();
         jdbc.update(
                 "INSERT INTO biz_product(id,product_no,title,original_price,currency,stock,status) VALUES(?,?,'Local test product',20,'sgd',100,'on_sale')",
@@ -91,7 +95,10 @@ class StripeLocalIntegrationTest {
                 product,
                 admin,
                 admin);
-        jdbc.update("INSERT INTO stripe_local_product_terms VALUES(?,2,7200)", product);
+        // Group terms live on the product itself now (V14); the fixture table is gone.
+        jdbc.update(
+                "UPDATE biz_product SET team_target_size=2, team_lifetime_seconds=7200 WHERE id=?",
+                product);
         when(gateway.createCheckoutSession(any()))
                 .thenAnswer(
                         call -> {
@@ -149,6 +156,52 @@ class StripeLocalIntegrationTest {
                 .isTrue();
         assertThat(jdbc.queryForObject("SELECT status FROM biz_payment_review_case", String.class))
                 .isEqualTo("resolved");
+    }
+
+    @Test
+    void eightConcurrentWebhookReplaysStillProduceOneMemberAndOneOrder() throws Exception {
+        CheckoutPayment p = prepare(buyer(), "START", product);
+        paid(p);
+        var start = new CountDownLatch(1);
+        var failures = new java.util.concurrent.atomic.AtomicInteger();
+        try (var executor = Executors.newFixedThreadPool(8)) {
+            var replays =
+                    java.util.stream.IntStream.range(0, 8)
+                            .mapToObj(
+                                    ignored ->
+                                            executor.submit(
+                                                    () -> {
+                                                        start.await();
+                                                        try {
+                                                            payments.recover(
+                                                                    p.id(), "test-operator", true);
+                                                        } catch (RuntimeException contended) {
+                                                            // Losing a lock race is acceptable; a
+                                                            // second membership is not.
+                                                            failures.incrementAndGet();
+                                                        }
+                                                        return true;
+                                                    }))
+                            .toList();
+            start.countDown();
+            for (var replay : replays) {
+                assertThat(replay.get(40, TimeUnit.SECONDS)).isTrue();
+            }
+        }
+        assertThat(failures.get()).isLessThan(8);
+        assertThat(count("biz_group_deal")).isEqualTo(1);
+        assertThat(count("biz_group_member")).isEqualTo(1);
+        assertThat(count("biz_order")).isEqualTo(1);
+        assertThat(count("biz_refund")).isZero();
+        assertThat(jdbc.queryForObject("SELECT stock FROM biz_product", Integer.class))
+                .isEqualTo(99);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM biz_purchase_intent WHERE fulfilled_payment_id=?",
+                                Long.class,
+                                p.id()))
+                .isEqualTo(1);
+        assertThat(browser.receipt(p.quote().userId(), p.id()).outcome()).isEqualTo("FULFILLED");
     }
 
     @Test

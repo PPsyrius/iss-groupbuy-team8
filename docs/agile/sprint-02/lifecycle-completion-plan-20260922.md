@@ -1,8 +1,8 @@
 # Team lifecycle and refunds — completion plan (Liu Jin)
 
 Date: 2026-09-22. Branch: `feature/order-deal-20260919`. Conventions: `backend-constraints-skill`
-plus `pgsql-ddl`. Prerequisite: the four PRs of `order-payment-integration-plan-20260922.md` are
-complete (`d24f8c6` / `0dc6fe1` / `ace9c24` / `d1c9d7e`).
+plus `pgsql-ddl`. Prerequisite: the payment-integration slice is complete (ADR 0001; original-branch
+commits `d24f8c6` / `0dc6fe1` / `ace9c24` / `d1c9d7e`).
 
 ## 0. Requirements confirmed (measured 2026-09-22)
 

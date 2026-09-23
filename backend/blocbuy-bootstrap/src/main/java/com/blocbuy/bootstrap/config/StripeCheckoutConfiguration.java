@@ -10,7 +10,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.transaction.PlatformTransactionManager;
 
-/** Explicit opt-in; startup fails if the team has not supplied the real business collaborator. */
+/**
+ * Provider wiring for checkout, still explicit opt-in. The business collaborator it needs now
+ * exists unconditionally ({@link PaymentIntegrationConfiguration}), so the profile is no longer a
+ * guard against a missing implementation — it is the rollout switch, the same profile {@code
+ * StripeFeatureSwitch} reads, and it also gates the beans whose {@code success-url} / {@code
+ * cancel-url} properties are only supplied where checkout is actually configured.
+ */
 @Configuration
 @Profile("stripe-sprint2")
 public class StripeCheckoutConfiguration {

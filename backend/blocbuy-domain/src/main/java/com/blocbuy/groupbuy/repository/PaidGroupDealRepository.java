@@ -1,6 +1,7 @@
 package com.blocbuy.groupbuy.repository;
 
 import com.blocbuy.groupbuy.model.GroupDeal;
+import com.blocbuy.groupbuy.model.PaidMember;
 import com.blocbuy.groupbuy.model.PaidParticipation;
 import com.blocbuy.groupbuy.model.ParticipationReceipt;
 import com.blocbuy.groupbuy.model.ParticipationResult;
@@ -40,4 +41,15 @@ public interface PaidGroupDealRepository {
      * rejection.
      */
     void complete(UUID paymentId, ParticipationResult result, UUID actorId, Instant now);
+
+    /**
+     * Backfills the order backing a payment's membership, in the transaction that inserts it.
+     * Re-linking the same order is allowed so a replay is harmless; a different order is not.
+     *
+     * @return false when no active member of this deal carries that payment
+     */
+    boolean linkOrder(UUID dealId, UUID paymentId, UUID orderId);
+
+    /** The membership a payment produced, or empty when it admitted nobody. Reconciliation only. */
+    Optional<PaidMember> findPaidMember(UUID paymentId);
 }

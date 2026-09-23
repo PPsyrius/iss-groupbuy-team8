@@ -72,6 +72,30 @@
           AND current_size = #{expectedSize} AND status = #{expectedStatus}
     </update>
 
+    <!-- Re-linking the same order is a no-harm replay, so it must still count as one affected row;
+         a different order on the same payment is a real inconsistency and matches nothing. -->
+    <update id="linkOrder">
+        UPDATE biz_group_member
+        SET order_id = #{orderId,jdbcType=OTHER}, update_time = clock_timestamp(),
+            update_by = user_id
+        WHERE deal_id = #{dealId,jdbcType=OTHER} AND payment_id = #{paymentId,jdbcType=OTHER}
+          AND deleted = false
+          AND (order_id IS NULL OR order_id = #{orderId,jdbcType=OTHER})
+    </update>
+
+    <resultMap id="paidMember" type="com.blocbuy.groupbuy.persistence.PaidMemberDO">
+        <result column="deal_id" property="dealId" jdbcType="OTHER"/>
+        <result column="user_id" property="userId" jdbcType="OTHER"/>
+        <result column="order_id" property="orderId" jdbcType="OTHER"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <select id="selectPaidMember" resultMap="paidMember" flushCache="true" useCache="false">
+        SELECT deal_id, user_id, order_id, status
+        FROM biz_group_member
+        WHERE payment_id = #{paymentId,jdbcType=OTHER} AND deleted = false
+    </select>
+
     <update id="completeReceipt">
         UPDATE biz_group_participation_receipt
         SET deal_id = #{result.dealId,jdbcType=OTHER}, outcome = #{result.outcome},

@@ -109,6 +109,35 @@ class PaidGroupDealRepositoryImplTest {
     }
 
     @Test
+    void linkingTheOrderReportsWhetherOneMemberRowMatched() {
+        UUID order = UUID.randomUUID();
+        when(mapper.linkOrder(DEAL, PAYMENT, order)).thenReturn(1, 0);
+
+        assertThat(repository.linkOrder(DEAL, PAYMENT, order)).isTrue();
+        assertThat(repository.linkOrder(DEAL, PAYMENT, order)).isFalse();
+    }
+
+    @Test
+    void thePaidMemberProjectionMapsThroughAndKeepsMissesEmpty() {
+        var row = new PaidMemberDO();
+        row.setDealId(DEAL);
+        row.setUserId(ACTOR);
+        row.setStatus("paid");
+        when(mapper.selectPaidMember(PAYMENT)).thenReturn(row, (PaidMemberDO) null);
+
+        assertThat(repository.findPaidMember(PAYMENT))
+                .hasValueSatisfying(
+                        member -> {
+                            assertThat(member.dealId()).isEqualTo(DEAL);
+                            assertThat(member.userId()).isEqualTo(ACTOR);
+                            assertThat(member.status()).isEqualTo("paid");
+                            // Null until the order backfill lands in the same transaction.
+                            assertThat(member.orderId()).isNull();
+                        });
+        assertThat(repository.findPaidMember(PAYMENT)).isEmpty();
+    }
+
+    @Test
     void completeMapsResultToReceiptRowFields() {
         when(mapper.completeReceipt(eq(PAYMENT), any(), eq(ACTOR), eq(NOW))).thenReturn(1);
         ParticipationResult result = new ParticipationResult("applied", DEAL, "open", 1, null);
