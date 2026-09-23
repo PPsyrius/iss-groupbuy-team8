@@ -6,6 +6,7 @@ import com.blocbuy.order.model.Order;
 import com.blocbuy.order.query.OrderSummaryView;
 import com.blocbuy.order.repository.OrderRepository;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,15 @@ public class OrderAppServiceImpl implements OrderAppService {
         List<OrderSummaryView> views =
                 result.items().stream().map(OrderAppServiceImpl::toView).toList();
         return PageResult.of(views, result.total(), page);
+    }
+
+    /** Ownership is a filter, not a separate failure: a foreign order simply is not found. */
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<OrderSummaryView> findMine(UUID orderId, UUID userId) {
+        return orders.findById(orderId)
+                .filter(order -> order.userId().equals(userId))
+                .map(OrderAppServiceImpl::toView);
     }
 
     private static OrderSummaryView toView(Order order) {

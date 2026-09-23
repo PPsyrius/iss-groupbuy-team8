@@ -3,6 +3,7 @@ package com.blocbuy.bootstrap.fixture;
 import com.blocbuy.groupbuy.service.GroupDealSettlementSupport;
 import com.blocbuy.payment.service.PaymentBrowserService;
 import com.blocbuy.payment.service.StripeCheckoutService;
+import com.blocbuy.payment.service.TeamExpiryRefundService;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -17,7 +18,8 @@ public class PaymentFixtureConfiguration {
             PaymentBrowserService browser,
             GroupDealSettlementSupport teams,
             StripeCheckoutService payments,
+            TeamExpiryRefundService refunds,
             PlatformTransactionManager transactions) {
-        return new PaymentLifecycleFixture(jdbc, browser, teams, payments, transactions);
+        return new PaymentLifecycleFixture(jdbc, browser, teams, payments, refunds, transactions);
     }
 }

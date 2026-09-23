@@ -11,8 +11,12 @@ import com.blocbuy.order.service.OrderFulfilmentAdapter;
 import com.blocbuy.order.service.PurchaseIntentAppService;
 import com.blocbuy.payment.gateway.PaymentBusinessPort;
 import com.blocbuy.payment.gateway.PaymentIntentPort;
+import com.blocbuy.payment.repository.CheckoutPaymentRepository;
+import com.blocbuy.payment.service.TeamExpiryRefundService;
+import com.blocbuy.payment.service.TeamExpiryRefundSubscriber;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * Assembles the two adapters that connect the payment slice to order, groupbuy and catalog.
@@ -46,5 +50,18 @@ public class PaymentIntegrationConfiguration {
             UserAppService users) {
         return new OrderFulfilmentAdapter(
                 intents, orders, teams, settlement, groups, products, users);
+    }
+
+    @Bean
+    TeamExpiryRefundService teamExpiryRefundService(
+            CheckoutPaymentRepository repository,
+            PaymentBusinessPort business,
+            PlatformTransactionManager transactions) {
+        return new TeamExpiryRefundService(repository, business, transactions);
+    }
+
+    @Bean
+    TeamExpiryRefundSubscriber teamExpiryRefundSubscriber(TeamExpiryRefundService refunds) {
+        return new TeamExpiryRefundSubscriber(refunds);
     }
 }

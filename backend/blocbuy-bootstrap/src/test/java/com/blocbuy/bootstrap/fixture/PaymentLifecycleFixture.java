@@ -3,6 +3,7 @@ package com.blocbuy.bootstrap.fixture;
 import com.blocbuy.groupbuy.service.GroupDealSettlementSupport;
 import com.blocbuy.payment.service.PaymentBrowserService;
 import com.blocbuy.payment.service.StripeCheckoutService;
+import com.blocbuy.payment.service.TeamExpiryRefundService;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -21,6 +22,7 @@ public final class PaymentLifecycleFixture {
     private final PaymentBrowserService browser;
     private final GroupDealSettlementSupport teams;
     private final StripeCheckoutService payments;
+    private final TeamExpiryRefundService refunds;
     private final TransactionTemplate tx;
 
     @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
@@ -32,11 +34,13 @@ public final class PaymentLifecycleFixture {
             PaymentBrowserService browser,
             GroupDealSettlementSupport teams,
             StripeCheckoutService payments,
+            TeamExpiryRefundService refunds,
             PlatformTransactionManager transactions) {
         this.jdbc = jdbc;
         this.browser = browser;
         this.teams = teams;
         this.payments = payments;
+        this.refunds = refunds;
         this.tx = new TransactionTemplate(transactions);
         this.tx.setTimeout(10);
     }
@@ -59,7 +63,7 @@ public final class PaymentLifecycleFixture {
                                             "SELECT status FROM biz_group_deal WHERE id=?",
                                             String.class,
                                             deal))) {
-                        payments.recordExpiredTeam(deal);
+                        refunds.recordExpiredTeam(deal);
                     }
                 });
     }

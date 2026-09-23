@@ -125,8 +125,13 @@ public class CheckoutPaymentRepositoryImpl implements CheckoutPaymentRepository 
     }
 
     @Override
-    public List<CheckoutPayment> paidMembers(UUID dealId) {
-        return mapper.members(dealId).stream().map(PaymentConverter::fromRow).toList();
+    public void requireRefundsForExpiredTeam(UUID dealId, String reason, String eventId) {
+        int expected = mapper.lockRefundableMemberIds(dealId).size();
+        int changed = mapper.refundExpiredTeam(dealId, reason, eventId);
+        if (changed != expected) {
+            throw new IllegalStateException(
+                    "Expired-team refund write conflict; retry transaction");
+        }
     }
 
     @Override

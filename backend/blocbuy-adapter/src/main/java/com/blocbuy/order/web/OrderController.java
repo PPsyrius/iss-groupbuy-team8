@@ -2,9 +2,11 @@ package com.blocbuy.order.web;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.blocbuy.common.constant.ApiConstants;
+import com.blocbuy.common.exception.BizException;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
 import com.blocbuy.common.web.Result;
+import com.blocbuy.order.exception.OrderErrorCode;
 import com.blocbuy.order.query.OrderSummaryView;
 import com.blocbuy.order.service.OrderAppService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +23,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -60,6 +63,24 @@ public class OrderController {
         return Result.ok(
                 new PageResult<>(
                         items, result.total(), result.page(), result.size(), result.nextCursor()));
+    }
+
+    /**
+     * One of the buyer's own orders. A live order belonging to another buyer answers 404, not 403:
+     * a 403 would confirm the id exists and turn this endpoint into an order-id oracle.
+     */
+    @Operation(summary = "Get one of my orders by id")
+    @ApiResponse(responseCode = "404", description = "No such order for this buyer")
+    @GetMapping("/{orderId}")
+    public Result<OrderSummaryResponse> myOrder(
+            @PathVariable UUID orderId, HttpServletResponse response) {
+        StpUtil.checkLogin();
+        response.setHeader("Cache-Control", "no-store");
+        UUID buyer = UUID.fromString(StpUtil.getLoginIdAsString());
+        return Result.ok(
+                orders.findMine(orderId, buyer)
+                        .map(OrderController::toResponse)
+                        .orElseThrow(() -> new BizException(OrderErrorCode.ORDER_NOT_FOUND)));
     }
 
     private static OrderSummaryResponse toResponse(OrderSummaryView view) {

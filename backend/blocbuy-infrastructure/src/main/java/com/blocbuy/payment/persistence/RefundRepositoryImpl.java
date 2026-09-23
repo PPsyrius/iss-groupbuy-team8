@@ -2,6 +2,7 @@ package com.blocbuy.payment.persistence;
 
 import com.blocbuy.payment.model.RefundWork;
 import com.blocbuy.payment.repository.RefundRepository;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -23,6 +24,11 @@ public class RefundRepositoryImpl implements RefundRepository {
         RefundWork work = mapper.claimNext();
         if (work != null) mapper.audit(work, "CLAIMED");
         return work;
+    }
+
+    @Override
+    public Instant now() {
+        return mapper.now();
     }
 
     @Override

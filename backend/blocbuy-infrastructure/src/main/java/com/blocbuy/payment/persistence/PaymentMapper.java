@@ -64,7 +64,12 @@ public interface PaymentMapper {
 
     boolean refundRecorded(@Param("id") UUID id);
 
-    List<BizPaymentDO> members(@Param("dealId") UUID dealId);
+    List<UUID> lockRefundableMemberIds(@Param("dealId") UUID dealId);
+
+    int refundExpiredTeam(
+            @Param("dealId") UUID dealId,
+            @Param("reason") String reason,
+            @Param("eventId") String eventId);
 
     List<BizPaymentDO> pending(@Param("threshold") Instant threshold, @Param("limit") int limit);
 }

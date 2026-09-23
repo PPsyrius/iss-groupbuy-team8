@@ -11,3 +11,4 @@ Locked stack decisions that predate this directory live in
 | # | Title | Status |
 |---|---|---|
 | 0001 | [Purchase intent lives in order, group terms live on the product](0001-payment-business-integration.md) | Accepted (2026-09-22) |
+| 0002 | [A team's resolution is published, and its consequences run before the commit](0002-team-lifecycle-events.md) | Accepted (2026-09-22) |

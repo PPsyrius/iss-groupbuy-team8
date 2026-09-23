@@ -143,12 +143,24 @@ class CheckoutPaymentRepositoryImplTest {
     @Test
     void memberAndPendingScansMapRowsToPayments() {
         Instant threshold = Instant.now();
-        when(mapper.members(any())).thenReturn(List.of(row()));
         when(mapper.pending(any(), anyInt())).thenReturn(List.of(row()));
         when(mapper.reviewCases(any(), anyInt())).thenReturn(List.of());
-        assertThat(repository.paidMembers(UUID.randomUUID())).hasSize(1);
         assertThat(repository.pendingBefore(threshold, 10)).hasSize(1);
         assertThat(repository.reviewCases(null, 10)).isEmpty();
+    }
+
+    @Test
+    void expiredTeamRefundRequiresEveryEligiblePaymentToBeRecorded() {
+        UUID dealId = UUID.randomUUID();
+        when(mapper.lockRefundableMemberIds(dealId))
+                .thenReturn(List.of(UUID.randomUUID(), UUID.randomUUID()));
+        when(mapper.refundExpiredTeam(dealId, "TEAM_EXPIRED", "event")).thenReturn(1);
+
+        assertThatThrownBy(
+                        () ->
+                                repository.requireRefundsForExpiredTeam(
+                                        dealId, "TEAM_EXPIRED", "event"))
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test

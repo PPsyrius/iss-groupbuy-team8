@@ -169,6 +169,51 @@ class PaidGroupDealRepositoryImplTest {
         return row;
     }
 
+    @Test
+    void dueForExpiryPassesTheBoundedBatchStraightThrough() {
+        when(mapper.selectDueForExpiry(NOW, 50)).thenReturn(java.util.List.of(DEAL));
+
+        assertThat(repository.dueForExpiry(NOW, 50)).containsExactly(DEAL);
+    }
+
+    /** Writes only the status and the audit timestamp; frozen terms are never recalculated. */
+    @Test
+    void expireWritesTheResolvedStatusUnderTheStatusGuard() {
+        when(mapper.expireDeal(
+                        argThat(
+                                row ->
+                                        DEAL.equals(row.getId())
+                                                && "expired".equals(row.getStatus())
+                                                && NOW.equals(row.getUpdateTime()))))
+                .thenReturn(1);
+
+        repository.expire(deal(), deal().expire(NOW.plusSeconds(60)), NOW);
+
+        verify(mapper).expireDeal(any());
+    }
+
+    /**
+     * Zero rows means another writer resolved this deal first — a replay, not a broken protocol.
+     */
+    @Test
+    void expireReportsAConcurrentResolutionAsABusinessRejection() {
+        GroupDeal before = deal();
+        GroupDeal after = before.expire(NOW.plusSeconds(60));
+        when(mapper.expireDeal(any())).thenReturn(0);
+
+        assertThatThrownBy(() -> repository.expire(before, after, NOW))
+                .isInstanceOf(com.blocbuy.common.exception.BizException.class)
+                .satisfies(
+                        failure ->
+                                assertThat(
+                                                ((com.blocbuy.common.exception.BizException)
+                                                                failure)
+                                                        .errorCode())
+                                        .isEqualTo(
+                                                com.blocbuy.groupbuy.exception.GroupbuyErrorCode
+                                                        .DEAL_CLOSED));
+    }
+
     private static GroupDeal deal() {
         return GroupDeal.reconstitute(
                 DEAL,

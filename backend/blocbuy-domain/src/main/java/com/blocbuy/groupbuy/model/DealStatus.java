@@ -17,6 +17,14 @@ public enum DealStatus {
         this.code = code;
     }
 
+    /**
+     * Only an {@link #OPEN} deal may move, and never to itself. Terminal states never re-enter. The
+     * full matrix is decided here — services must never branch on status with {@code if/else}.
+     */
+    public boolean canTransitionTo(DealStatus target) {
+        return this == OPEN && target != null && target != OPEN;
+    }
+
     /** Stored code, e.g. {@code "open"}. */
     public String code() {
         return code;

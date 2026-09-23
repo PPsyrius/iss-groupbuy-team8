@@ -58,7 +58,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class OrderControllerTest {
 
-    private static final String ORDERS_ME_PATH = "/api/v1/orders/me";
+    private static final String ORDERS_PATH = "/api/v1/orders";
+    private static final String ORDERS_ME_PATH = ORDERS_PATH + "/me";
     private static final UUID BUYER = UUID.fromString("01990000-0000-7000-8000-000000000002");
     private static final UUID OTHER_BUYER = UUID.fromString("01990000-0000-7000-8000-000000000004");
     private static final String TOKEN_HEADER = "blocbuy-token";
@@ -135,6 +136,51 @@ class OrderControllerTest {
                 .andExpect(jsonPath("$.data.total").value(0))
                 .andExpect(jsonPath("$.data.items").isEmpty());
         verify(orders).pageMyOrders(PageQuery.of(2, 5), OTHER_BUYER);
+    }
+
+    @Test
+    void anonymousSingleOrderIsRejectedBeforeBusinessCode() throws Exception {
+        mvc.perform(get(ORDERS_PATH + "/" + view().orderId()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("COMMON_401_001"));
+        verifyNoInteractions(orders);
+    }
+
+    @Test
+    void singleOrderIsScopedToTheSessionBuyer() throws Exception {
+        when(orders.findMine(view().orderId(), BUYER)).thenReturn(java.util.Optional.of(view()));
+        String token = login(BUYER);
+        mvc.perform(get(ORDERS_PATH + "/" + view().orderId()).header(TOKEN_HEADER, token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("COMMON_200_000"))
+                .andExpect(jsonPath("$.data.orderId").value(view().orderId().toString()))
+                .andExpect(jsonPath("$.data.status").value("pending"))
+                .andExpect(jsonPath("$.data.paymentId").doesNotExist())
+                .andExpect(header().string("Cache-Control", "no-store"));
+        verify(orders).findMine(view().orderId(), BUYER);
+    }
+
+    /** Another buyer's live order must look exactly like one that does not exist. */
+    @Test
+    void anotherBuyersOrderIsNotFoundRatherThanForbidden() throws Exception {
+        when(orders.findMine(view().orderId(), OTHER_BUYER)).thenReturn(java.util.Optional.empty());
+        String token = login(OTHER_BUYER);
+        mvc.perform(get(ORDERS_PATH + "/" + view().orderId()).header(TOKEN_HEADER, token))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("ORDER_404_001"))
+                .andExpect(jsonPath("$.data").doesNotExist())
+                .andExpect(header().string("Cache-Control", "no-store"));
+        verify(orders).findMine(view().orderId(), OTHER_BUYER);
+    }
+
+    @Test
+    void aMalformedOrderIdIsRejectedBeforeBusinessCode() throws Exception {
+        String token = login(BUYER);
+        mvc.perform(get(ORDERS_PATH + "/not-a-uuid").header(TOKEN_HEADER, token))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON_400_001"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+        verifyNoInteractions(orders);
     }
 
     private String login(UUID userId) {
