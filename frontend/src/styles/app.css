@@ -1,5 +1,11 @@
 @import "tailwindcss";
 @import "@heroui/styles";
+/* Inter 400-700, latin subset, self-hosted (#158): the hashed woff2 files ship in dist/assets,
+   so no Google Fonts host is needed in the CSP. */
+@import "@fontsource/inter/latin-400.css";
+@import "@fontsource/inter/latin-500.css";
+@import "@fontsource/inter/latin-600.css";
+@import "@fontsource/inter/latin-700.css";
 
 /* BlocBuy theme overlay on HeroUI 3's default theme. Values are the light set from
    docs/design.md, as shipped in the Claude Design export (`blocbuy-theme.css`, kit-doubled names

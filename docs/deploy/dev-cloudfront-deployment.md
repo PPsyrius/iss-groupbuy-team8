@@ -441,6 +441,13 @@ The original §7.3 code rewrote `uri.endsWith('/')` to `uri + 'index.html'`; the
 ## 15. Security response headers (CSP, HSTS)
 
 Blocker A2 (#100), executed 2026-09-22. On 2026-09-23 both CloudFront behaviors returned the five exact values derived from the policy source below.
+The first Playwright console probe on the deployed site (2026-09-22) showed one CSP violation on every page:
+the Google Fonts stylesheet for Inter (`index.html`), so the policy applied that day allowed
+`https://fonts.googleapis.com` in `style-src` and `https://fonts.gstatic.com` in `font-src`.
+Since 2026-09-23 (#158) Inter is self-hosted (`@fontsource/inter`, hashed woff2 in `dist/assets`),
+so the JSON below no longer lists either host; **re-apply it with `update-response-headers-policy`
+after the first deploy that carries the self-hosted font** (the live policy stays permissive until
+then, which is harmless). T2-11 step 2 does the remaining tightening.
 
 Policy source: `deployment/frontend/cloudfront/response-headers-policy.json`. The CSP is a starting point that allows HeroUI's inline styles and remote product images; the frontend owner tightens it after the first deploy (plan task T2-11) and re-applies with `update-response-headers-policy`.
 
@@ -520,7 +527,7 @@ for header_path in map(Path, sys.argv[1:]):
 PY
 ```
 
-Why each CSP source: `script-src 'self'` (Vite emits no inline scripts; React Compiler output is in the bundle); `style-src 'unsafe-inline' https://fonts.googleapis.com` (React Aria / HeroUI set inline `style` attributes and `index.html` loads Inter from Google Fonts; revisit both in T2-11); `font-src https://fonts.gstatic.com` (the Inter files referenced by that stylesheet); `img-src https:` (product `coverImage` hosts are unknown until seed data is inspected; narrow in T2-11); `connect-src 'self'` (all API calls are same-origin); `form-action 'self'` (login is a GET navigation, not a form post); `frame-ancestors 'none'` replaces the older `X-Frame-Options` for modern browsers while `FrameOptions` covers the rest. `Preload: false` because the `*.cloudfront.net` domain cannot be preload-listed.
+Why each CSP source: `script-src 'self'` (Vite emits no inline scripts; React Compiler output is in the bundle); `style-src 'unsafe-inline'` (React Aria / HeroUI set inline `style` attributes for positioning; revisit in T2-11; the Google Fonts host allowed on 2026-09-22 went away with the self-hosted Inter, #158); `font-src 'self' data:` (the `@fontsource/inter` woff2 files are same-origin hashed assets); `img-src https:` (product `coverImage` hosts are unknown until seed data is inspected; narrow in T2-11); `connect-src 'self'` (all API calls are same-origin); `form-action 'self'` (login is a GET navigation, not a form post); `frame-ancestors 'none'` replaces the older `X-Frame-Options` for modern browsers while `FrameOptions` covers the rest. `Preload: false` because the `*.cloudfront.net` domain cannot be preload-listed.
 
 ## 16. Frontend deploy role (GitHub OIDC)
 

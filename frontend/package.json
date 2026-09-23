@@ -21,6 +21,7 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@fontsource/inter": "5.3.0",
     "@heroui/react": "3.2.5",
     "@heroui/styles": "3.2.5",
     "@tanstack/react-form": "1.33.5",
