@@ -26,6 +26,9 @@ sa-token:
     secure: false
 
 blocbuy:
+  scheduling:
+    # off locally and in every test context (tests run with this profile); opt in with the env var
+    enabled: ${BLOCBUY_SCHEDULING_ENABLED:false}
   oauth:
     google:
       # localhost callback is a local-dev convenience only; other profiles must set the env var
