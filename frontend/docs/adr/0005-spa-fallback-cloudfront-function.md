@@ -43,3 +43,5 @@ rewrites `uri.endsWith('/')` to `/index.html` rather than appending `index.html`
 build has a single `index.html` at the root. T2-07 imports the function into
 `infra/terraform/frontend-stack` (ADR 0007). Deep-link coverage on dev is the A1 evidence line in
 the `e2e-dev` job once T1-14 has deployed a build.
+
+2026-09-23: the live deep-link and asset probes return 200, so the temporary Playwright `fixme` was removed and future `e2e-dev` runs enforce the fallback behavior.

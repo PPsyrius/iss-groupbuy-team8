@@ -51,3 +51,5 @@ is not attached to the dev CloudFront distribution yet, so the deep-link test ca
 `test.fixme(true, ...)` pointing at #99, and the dev distribution itself has no `dist/` deployed
 until T1-14. `E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e` was run
 and, as expected today, failed (root 403, health 503) — recorded as owed in sprint 2 log.
+
+2026-09-23: `ci-frontend` run #165 passed `e2e-dev` after automated deployment. Independent live probes confirmed root, deep link and asset 200 plus API `UP`; after removing the stale deep-link `fixme`, the dev-target rerun passed 6 tests with only the two unseeded `@auth` tests skipped.

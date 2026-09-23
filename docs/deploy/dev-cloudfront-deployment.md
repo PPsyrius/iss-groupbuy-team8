@@ -1,6 +1,6 @@
 # Dev Environment Entry-Layer Rework: CloudFront + ALB Tutorial (Removing Public Port 8589)
 
-**Status:** to be executed **Environment:** `backend-dev` (existing EC2 instance) **Goal:** backend port 8589 is no longer exposed to the public internet; the frontend is served from S3 + CloudFront; all API traffic goes through CloudFront at `https://<cloudfront-domain>/api/*`. No custom domain is needed at any point — the built-in `*.cloudfront.net` certificate on CloudFront handles user-facing HTTPS.
+**Status:** operational and automation-verified 2026-09-23 **Environment:** `backend-dev` (existing EC2 instance) **Goal:** backend port 8589 is no longer exposed to the public internet; the frontend is served from S3 + CloudFront; all API traffic goes through CloudFront at `https://<cloudfront-domain>/api/*`. Root, deep-link and asset probes return 200, API health returns `UP`, and `ci-frontend` run #165 passed deployment plus `e2e-dev`. No custom domain is needed at any point — the built-in `*.cloudfront.net` certificate on CloudFront handles user-facing HTTPS.
 
 ## 0. Target architecture
 
@@ -392,7 +392,7 @@ aws ec2 delete-security-group --group-id "$ALB_SG_ID"
 
 ## 14. SPA routing fallback (mandatory for the frontend)
 
-Blocker A1 (#99). Not attached as of the 2026-09-16 probe (`docs/agile/sprint-02/log.md`).
+Blocker A1 (#99), executed 2026-09-22 and re-verified by live deep-link and automated deployment checks on 2026-09-23.
 
 The frontend uses history-mode routing (`/products/<uuid>`, `/account`, `/auth/callback`). Without this function a deep link or a browser refresh returns the S3 OAC 403. Distribution-wide custom error responses are deliberately NOT used: they would also mask real `/api/*` errors.
 
@@ -439,7 +439,7 @@ The original §7.3 code rewrote `uri.endsWith('/')` to `uri + 'index.html'`; the
 
 ## 15. Security response headers (CSP, HSTS)
 
-Blocker A2 (#100). Absent as of the 2026-09-16 probe (no CSP, no HSTS on `GET /`).
+Blocker A2 (#100), executed 2026-09-22. On 2026-09-23 both CloudFront behaviors returned the five exact values derived from the policy source below.
 
 Policy source: `deployment/frontend/cloudfront/response-headers-policy.json`. The CSP is a starting point that allows HeroUI's inline styles and remote product images; the frontend owner tightens it after the first deploy (plan task T2-11) and re-applies with `update-response-headers-policy`.
 
@@ -462,16 +462,57 @@ json.dump(d,open(p,'w'))
 PY
 aws cloudfront update-distribution --id "$DIST_ID" --if-match "$ETAG" --distribution-config file:///tmp/dist-config.json
 aws cloudfront wait distribution-deployed --id "$DIST_ID"
-curl -sSI "https://$DIST_DOMAIN/" | grep -Ei 'strict-transport-security|content-security-policy|x-content-type-options|x-frame-options|referrer-policy'
+
+ROOT_HEADERS=$(mktemp)
+API_HEADERS=$(mktemp)
+trap 'rm -f "$ROOT_HEADERS" "$API_HEADERS"' EXIT
+curl -fsS -D "$ROOT_HEADERS" -o /dev/null "https://$DIST_DOMAIN/"
+curl -fsS -D "$API_HEADERS" -o /dev/null "https://$DIST_DOMAIN/api/v1/products?page=1"
+
+# Fail unless both behaviors return every header with the value defined by the policy source.
+python3 - "$ROOT_HEADERS" "$API_HEADERS" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+policy = json.loads(Path("deployment/frontend/cloudfront/response-headers-policy.json").read_text())
+security = policy["SecurityHeadersConfig"]
+hsts = security["StrictTransportSecurity"]
+hsts_value = f"max-age={hsts['AccessControlMaxAgeSec']}"
+if hsts["IncludeSubdomains"]:
+    hsts_value += "; includeSubDomains"
+if hsts["Preload"]:
+    hsts_value += "; preload"
+
+expected = {
+    "strict-transport-security": hsts_value,
+    "content-security-policy": security["ContentSecurityPolicy"]["ContentSecurityPolicy"],
+    "x-content-type-options": "nosniff",
+    "x-frame-options": security["FrameOptions"]["FrameOption"],
+    "referrer-policy": security["ReferrerPolicy"]["ReferrerPolicy"],
+}
+
+for header_path in map(Path, sys.argv[1:]):
+    actual = {}
+    for line in header_path.read_text().splitlines():
+        name, separator, value = line.partition(":")
+        if separator:
+            actual.setdefault(name.lower(), []).append(value.strip())
+    for name, value in expected.items():
+        if actual.get(name) != [value]:
+            raise SystemExit(
+                f"{header_path}: expected {name}: {value!r}, got {actual.get(name)!r}"
+            )
+PY
 ```
 
-Why each CSP source: `script-src 'self'` (Vite emits no inline scripts; React Compiler output is in the bundle); `style-src 'unsafe-inline'` (React Aria / HeroUI set inline `style` attributes for positioning; revisit in T2-11); `img-src https:` (product `coverImage` hosts are unknown until seed data is inspected; narrow in T2-11); `connect-src 'self'` (all API calls are same-origin); `form-action 'self'` (login is a GET navigation, not a form post); `frame-ancestors 'none'` replaces the older `X-Frame-Options` for modern browsers while `FrameOptions` covers the rest. `Preload: false` because the `*.cloudfront.net` domain cannot be preload-listed.
+Why each CSP source: `script-src 'self'` (Vite emits no inline scripts; React Compiler output is in the bundle); `style-src 'unsafe-inline' https://fonts.googleapis.com` (React Aria / HeroUI set inline `style` attributes and `index.html` loads Inter from Google Fonts; revisit both in T2-11); `font-src https://fonts.gstatic.com` (the Inter files referenced by that stylesheet); `img-src https:` (product `coverImage` hosts are unknown until seed data is inspected; narrow in T2-11); `connect-src 'self'` (all API calls are same-origin); `form-action 'self'` (login is a GET navigation, not a form post); `frame-ancestors 'none'` replaces the older `X-Frame-Options` for modern browsers while `FrameOptions` covers the rest. `Preload: false` because the `*.cloudfront.net` domain cannot be preload-listed.
 
 ## 16. Frontend deploy role (GitHub OIDC)
 
-Blocker A3 (#101).
+Blocker A3 (#101), operationally resolved and exercised by `ci-frontend` run #165 on 2026-09-23.
 
-The `deploy-s3-dev` job in `ci-frontend.yml` assumes a role restricted to the `frontend-dev` GitHub environment. Policy examples: `deployment/frontend/iam/`. The OIDC provider already exists (created for the backend pipeline).
+The `deploy-s3-dev` job in `ci-frontend.yml` assumes `BlocBuyGitHubFrontendDeployDev`, restricted to the `frontend-dev` GitHub environment. The existing role has the scoped S3/CloudFront policy from `deployment/frontend/iam/`; the OIDC provider already exists. The following commands are reconstruction steps when the role is absent, not recurring deployment steps.
 
 ```bash
 sed -e "s/AWS_ACCOUNT_ID/$ACCOUNT_ID/g" \
@@ -483,20 +524,17 @@ aws iam put-role-policy --role-name BlocBuyGitHubFrontendDeployDev --policy-name
 export FE_ROLE_ARN=$(aws iam get-role --role-name BlocBuyGitHubFrontendDeployDev --query Role.Arn --output text)
 ```
 
-The trust policy `sub` must equal the subject the `frontend-dev` job actually presents, so read it from a real token rather than copying another role's condition: the backend example carries an id-suffixed subject (`repo:PPsyrius@<id>/iss-groupbuy-team8@<id>:environment:backend-dev`) and the GitHub-documented plain form is `repo:PPsyrius/iss-groupbuy-team8:environment:frontend-dev`; which one GitHub emits depends on the repository's OIDC subject customisation, and the wrong one makes `deploy-s3-dev` fail at `AssumeRoleWithWebIdentity`. Decode a token once from a temporary step in a job that has `id-token: write` and `environment: frontend-dev` (run it via `workflow_dispatch` on `dev`, then delete the step):
+The repository OIDC customization reports `use_immutable_subject: true`, so the trust policy must use `repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:environment:frontend-dev`. Recheck before recreating the role:
 
 ```bash
-# run: step; node is on ubuntu-latest and decodes the unpadded base64url payload
-curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-  "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" \
-  | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>console.log(JSON.parse(Buffer.from(JSON.parse(d).value.split(".")[1],"base64url")).sub))'
+gh api repos/PPsyrius/iss-groupbuy-team8/actions/oidc/customization/sub
 ```
 
-Put that exact string in the `sub` condition (edit `/tmp/fe-trust.json` before `create-role`, or `aws iam update-assume-role-policy` afterwards). Keep the condition on the environment claim, not on `ref`: the branch restriction comes from the `frontend-dev` environment's deployment branch policy (§17), which only allows `dev`.
+Keep the condition on the environment claim, not on `ref`: the branch restriction comes from the `frontend-dev` environment's deployment branch policy (§17), which only allows `dev`.
 
 ## 17. GitHub `frontend-dev` environment and variables
 
-Blocker A4 (#102). Depends on §16 for `FE_ROLE_ARN`.
+Blocker A4 (#102), operationally resolved 2026-09-23. `frontend-dev` permits only `dev`; the variables below are repository-scoped because `package-dev` evaluates the switch before environment entry and `e2e-dev` has no environment declaration. `ENABLE_S3_DEPLOY=true` is the normal deploy/freeze switch.
 
 ```bash
 gh api -X PUT repos/PPsyrius/iss-groupbuy-team8/environments/frontend-dev \

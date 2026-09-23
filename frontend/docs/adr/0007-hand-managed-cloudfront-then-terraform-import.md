@@ -53,3 +53,5 @@ executes); the `dev`-only restriction stays on the environment's deployment bran
 sections, not here. The deploy role is deliberately separate from the backend deploy role
 (`deployment/frontend/iam/README.md`). The `--delete`/rollback question for the bucket (ADR 0004)
 is decided in T2-07 as a lifecycle rule, since that is when the bucket becomes code.
+
+2026-09-23: the existing frontend role was verified with the immutable subject `repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:environment:frontend-dev` and scoped S3/CloudFront permissions. Run #165 assumed it successfully; `frontend-dev` permits only `dev`.
