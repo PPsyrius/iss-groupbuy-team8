@@ -1,6 +1,7 @@
 package com.blocbuy.groupbuy.persistence;
 
 import com.blocbuy.groupbuy.model.GroupDeal;
+import com.blocbuy.groupbuy.model.PaidMember;
 import com.blocbuy.groupbuy.model.PaidParticipation;
 import com.blocbuy.groupbuy.model.ParticipationReceipt;
 import com.blocbuy.groupbuy.model.ParticipationResult;
@@ -94,6 +95,26 @@ public class PaidGroupDealRepositoryImpl implements PaidGroupDealRepository {
         row.setCurrentSize(result.currentSize());
         row.setReasonCode(result.reasonCode());
         requireOne(mapper.completeReceipt(paymentId, row, actorId, now));
+    }
+
+    /** Reports whether the payment's member row now carries the order, without judging why not. */
+    @Override
+    public boolean linkOrder(UUID dealId, UUID paymentId, UUID orderId) {
+        return mapper.linkOrder(dealId, paymentId, orderId) == 1;
+    }
+
+    /** Projects the payment's member row; the payment key is unique, so there is at most one. */
+    @Override
+    public Optional<PaidMember> findPaidMember(UUID paymentId) {
+        var row = mapper.selectPaidMember(paymentId);
+        return row == null
+                ? Optional.empty()
+                : Optional.of(
+                        new PaidMember(
+                                row.getDealId(),
+                                row.getUserId(),
+                                row.getOrderId(),
+                                row.getStatus()));
     }
 
     /** Maps immutable domain values and caller audit context without recalculating frozen terms. */

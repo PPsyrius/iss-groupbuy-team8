@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blocbuy.order.persistence.BizPurchaseIntentMapper">
+
+    <select id="currentTime" resultType="java.time.Instant" flushCache="true" useCache="false">
+        SELECT clock_timestamp()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO biz_purchase_intent (id, user_id, operation, deal_id, product_id,
+            product_title, product_image, amount, currency, target_size, quote_valid_until,
+            business_deadline, create_time, update_time, create_by, version)
+        VALUES (#{row.id,jdbcType=OTHER}, #{row.userId,jdbcType=OTHER}, #{row.operation},
+            #{row.dealId,jdbcType=OTHER}, #{row.productId,jdbcType=OTHER}, #{row.productTitle},
+            #{row.productImage}, #{row.amount}, #{row.currency}, #{row.targetSize},
+            #{row.quoteValidUntil}, #{row.businessDeadline}, #{row.createTime}, #{row.createTime},
+            #{row.userId,jdbcType=OTHER}, #{row.version})
+    </insert>
+
+    <!-- Claim guarded twice: the NULL check is the business rule (one payment per intent), the
+         version check makes a concurrent claim lose rather than overwrite. -->
+    <update id="markFulfilled">
+        UPDATE biz_purchase_intent
+        SET fulfilled_payment_id = #{paymentId,jdbcType=OTHER}, version = version + 1,
+            update_time = clock_timestamp()
+        WHERE id = #{id,jdbcType=OTHER} AND deleted = false AND version = #{expectedVersion}
+            AND fulfilled_payment_id IS NULL
+    </update>
+
+    <resultMap id="bizPurchaseIntentMap" type="com.blocbuy.order.persistence.BizPurchaseIntentDO">
+        <id column="id" property="id" jdbcType="OTHER"/>
+        <result column="user_id" property="userId" jdbcType="OTHER"/>
+        <result column="operation" property="operation"/>
+        <result column="deal_id" property="dealId" jdbcType="OTHER"/>
+        <result column="product_id" property="productId" jdbcType="OTHER"/>
+        <result column="product_title" property="productTitle"/>
+        <result column="product_image" property="productImage"/>
+        <result column="amount" property="amount"/>
+        <result column="currency" property="currency"/>
+        <result column="target_size" property="targetSize"/>
+        <result column="quote_valid_until" property="quoteValidUntil"/>
+        <result column="business_deadline" property="businessDeadline"/>
+        <result column="fulfilled_payment_id" property="fulfilledPaymentId" jdbcType="OTHER"/>
+        <result column="create_time" property="createTime"/>
+        <result column="create_by" property="createBy" jdbcType="OTHER"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="update_by" property="updateBy" jdbcType="OTHER"/>
+        <result column="deleted" property="deleted"/>
+        <result column="version" property="version"/>
+    </resultMap>
+
+    <sql id="columns">
+        id, user_id, operation, deal_id, product_id, product_title, product_image, amount,
+        currency, target_size, quote_valid_until, business_deadline, fulfilled_payment_id,
+        create_time, create_by, update_time, update_by, deleted, version
+    </sql>
+
+    <select id="selectById" resultMap="bizPurchaseIntentMap">
+        SELECT <include refid="columns"/> FROM biz_purchase_intent
+        WHERE id = #{id,jdbcType=OTHER} AND deleted = false
+    </select>
+
+    <!-- Row lock for the settlement path; the group deal row is already locked by the caller. -->
+    <select id="lockById" resultMap="bizPurchaseIntentMap">
+        SELECT <include refid="columns"/> FROM biz_purchase_intent
+        WHERE id = #{id,jdbcType=OTHER} AND deleted = false
+        FOR UPDATE
+    </select>
+
+</mapper>

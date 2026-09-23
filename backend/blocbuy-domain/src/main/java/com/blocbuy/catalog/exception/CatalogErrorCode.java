@@ -46,6 +46,16 @@ public enum CatalogErrorCode implements ErrorCode {
             404,
             "Team price quote not found",
             "error.catalog.teamPriceQuoteNotFound"),
+    PRODUCT_NOT_PURCHASABLE(
+            "CATALOG_409_005",
+            409,
+            "Product is not on sale or out of stock",
+            "error.catalog.productNotPurchasable"),
+    PRODUCT_NOT_STARTABLE(
+            "CATALOG_409_006",
+            409,
+            "Product has no group-buy terms configured, so no team can be started on it",
+            "error.catalog.productNotStartable"),
     PRICING_MODE_UNSUPPORTED(
             "CATALOG_500_001",
             500,
