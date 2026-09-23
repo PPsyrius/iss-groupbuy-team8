@@ -1,6 +1,6 @@
 # Stripe release boundary
 
-Owner: Yorick. Updated: 22 September 2026. PR #126.
+Owner: Yorick. Updated: 23 September 2026. PRs #126 and #148.
 
 This is the current deployment boundary for the Stripe work. Historical Sandbox evidence is in [stripe-sandbox-acceptance-20260920.md](stripe-sandbox-acceptance-20260920.md), and quality evidence is in [stripe-sonar-fixes-20260920.md](stripe-sonar-fixes-20260920.md).
 
@@ -9,8 +9,8 @@ This is the current deployment boundary for the Stripe work. Historical Sandbox 
 - `stripe-sprint2` is the rollout switch. Without it, `StripeFeatureSwitch` rejects payment-intent, Checkout and receipt routes before business or database access. The authenticated capabilities endpoint returns `enabled=false` with `Cache-Control: no-store`; missing, invalid or unavailable capability responses also keep frontend payment actions off. When enabled, a pending receipt is polled every two seconds for at most 60 seconds and automatic polling stops immediately after a read error.
 - Browser requests contain operation and business identifiers, not buyer or amount. Sa-Token owns identity, server-side ports own pricing, and Checkout retries reuse the intent and idempotency key.
 - `CheckoutPayment`, its repository and `CheckoutGateway` are separate from the original payment contracts. The original webhook contract remains, with `StripePaymentAppService` selected only under the Stripe profile.
-- `PaymentBusinessPort` and `PaymentIntentPort` still require the team's production bindings before Stripe can be enabled. `DevPaymentRepositoryAdapter` must be removed when the real repository lands.
-- `RefundService` and `StripeRefundGateway` retain provider verification, idempotency, leasing and uncertain-outcome safeguards. No production refund worker or recovery endpoint is wired.
+- `PaymentIntegrationConfiguration` provides the production `PaymentBusinessPort` and `PaymentIntentPort` bindings with no profile, and the test-only `PaymentBusinessFixture` is retired (backend ADR 0001). `DevPaymentRepositoryAdapter` still awaits its production replacement.
+- `RefundService` and `StripeRefundGateway` retain provider verification, idempotency, leasing and uncertain-outcome safeguards. The profile-independent `TeamExpiryRefundService` and unconditional `TeamExpiryRefundSubscriber` create durable refund obligations in the lifecycle transaction. No production expiry scheduler, refund worker or recovery endpoint is wired.
 
 ## Removed before publication
 
@@ -26,8 +26,8 @@ The historical compatibility guard compared 192 original files, 13 HTTP paths an
 
 ## Pre-live checklist
 
-1. Replace `PaymentBusinessPort`, `PaymentIntentPort` and `DevPaymentRepositoryAdapter` with team production implementations and verify shared lock and transaction ordering.
-2. Wire and monitor the refund worker and expiry notification path; define production recovery ownership without restoring private local HTTP controls.
+1. ~~Replace `PaymentBusinessPort` and `PaymentIntentPort` with team production implementations~~ — done 2026-09-22 (PR #147, backend ADR 0001). Remaining: replace `DevPaymentRepositoryAdapter` and verify shared lock and transaction ordering.
+2. Wire and monitor the expiry scheduler and refund worker; define production recovery ownership without restoring private local HTTP controls. The in-transaction expiry notification path and durable obligation creation are already wired.
 3. Keep test fixtures and `db/stripe-fixture` outside every deployment Flyway location.
 4. Rebuild account history against `/api/v1/orders/me` after its contract is available.
 5. Remove the gateways' `sk_test_` restriction only with live-key rotation, a live webhook endpoint, reconciliation controls and renewed payment/refund acceptance.

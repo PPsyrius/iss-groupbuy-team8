@@ -28,6 +28,7 @@ import com.blocbuy.payment.persistence.PaymentMapper;
 import com.blocbuy.payment.persistence.RefundMapper;
 import com.blocbuy.payment.service.StripeCheckoutService;
 import com.blocbuy.payment.service.StripePaymentAppService;
+import com.blocbuy.payment.service.TeamExpiryRefundService;
 import com.blocbuy.payment.web.StripeWebhookController;
 import com.stripe.Stripe;
 import java.math.BigDecimal;
@@ -79,6 +80,7 @@ class StripeCheckoutFlowTest {
     private final AtomicBoolean failFulfilment = new AtomicBoolean();
     private CheckoutGateway gateway;
     private StripeCheckoutService service;
+    private TeamExpiryRefundService expiryRefunds;
 
     @BeforeAll
     static void database() throws Exception {
@@ -144,14 +146,16 @@ class StripeCheckoutFlowTest {
                                     .isFalse();
                             return sessions.get(call.getArgument(0));
                         });
+        var business = new TestBusiness();
         service =
                 new StripeCheckoutService(
                         repository,
                         gateway,
-                        new TestBusiness(),
+                        business,
                         transactions,
                         "http://localhost:5173/payment/success",
                         "http://localhost:5173/payment/cancel");
+        expiryRefunds = new TeamExpiryRefundService(repository, business, transactions);
     }
 
     @Test
@@ -178,9 +182,9 @@ class StripeCheckoutFlowTest {
                         status -> {
                             jdbc.update(
                                     "UPDATE stripe_test_team SET expired=true WHERE id=?", TEAM);
-                            service.recordExpiredTeam(TEAM);
+                            expiryRefunds.recordExpiredTeam(TEAM);
                         });
-        service.recordExpiredTeam(TEAM);
+        expiryRefunds.recordExpiredTeam(TEAM);
         assertThat(count("biz_refund")).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT status FROM biz_refund", String.class))
                 .isEqualTo("pending");
@@ -203,7 +207,7 @@ class StripeCheckoutFlowTest {
         assertThat(repository.findById(paymentId)).isEmpty();
         assertThat(repository.findRequest(payment.quote().userId(), "test-key")).isEmpty();
         assertThat(repository.findBlockingAttempt(payment.quote().intentId())).isEmpty();
-        assertThat(repository.paidMembers(TEAM)).isEmpty();
+        repository.requireRefundsForExpiredTeam(TEAM, "TEAM_EXPIRED", "evt_deleted_team");
         assertThat(repository.pendingBefore(repository.now(), 100)).isEmpty();
         assertThat(repository.reviewCases(null, 100)).isEmpty();
         assertThat(repository.outcome(paymentId)).isNull();
@@ -237,6 +241,61 @@ class StripeCheckoutFlowTest {
                                 "SELECT lease_until IS NULL AND version=0 FROM biz_refund",
                                 Boolean.class))
                 .isTrue();
+    }
+
+    @Test
+    void softDeletedRefundCannotSatisfyANewObligation() {
+        CheckoutPayment payment = prepare();
+        jdbc.update(
+                "UPDATE biz_payment SET status='succeeded',fulfilment_result='FULFILLED',"
+                        + "fulfilled_deal_id=? WHERE id=?",
+                TEAM,
+                payment.id());
+        jdbc.update(
+                "INSERT INTO biz_refund(payment_id,intent_id,deal_id,amount,currency,reason,"
+                        + "source_event,status,deleted) VALUES (?,?,?,?,?,?,?,'pending',true)",
+                payment.id(),
+                payment.quote().intentId(),
+                TEAM,
+                payment.quote().amount(),
+                payment.quote().currency(),
+                "TEAM_EXPIRED",
+                "evt_deleted_refund");
+
+        assertThatThrownBy(
+                        () -> repository.requireRefund(payment, "TEAM_EXPIRED", "evt_replacement"))
+                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(
+                        () ->
+                                repository.requireRefundsForExpiredTeam(
+                                        TEAM, "TEAM_EXPIRED", "evt_replacement_team"))
+                .isInstanceOf(IllegalStateException.class);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT COUNT(*) FROM biz_refund WHERE NOT deleted", Integer.class))
+                .isZero();
+    }
+
+    @Test
+    void concurrentExpiryRecordingCreatesOneObligationPerPaidMember() throws Exception {
+        CheckoutPayment first = prepare();
+        CheckoutPayment second = prepare();
+        jdbc.update(
+                "UPDATE biz_payment SET status='succeeded',fulfilment_result='FULFILLED',"
+                        + "fulfilled_deal_id=? WHERE id IN (?,?)",
+                TEAM,
+                first.id(),
+                second.id());
+        jdbc.update("UPDATE stripe_test_team SET expired=true WHERE id=?", TEAM);
+
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            var one = executor.submit(() -> expiryRefunds.recordExpiredTeam(TEAM));
+            var two = executor.submit(() -> expiryRefunds.recordExpiredTeam(TEAM));
+            one.get(10, TimeUnit.SECONDS);
+            two.get(10, TimeUnit.SECONDS);
+        }
+
+        assertThat(count("biz_refund")).isEqualTo(2);
     }
 
     @Test
@@ -896,6 +955,12 @@ class StripeCheckoutFlowTest {
         return repository.findById(result.paymentId()).orElseThrow();
     }
 
+    /**
+     * Both production paths mint quotes with {@code quoteValidUntil <= businessDeadline}: a JOIN
+     * takes the earlier of now+2400s and the team's deadline, a START gives the team at least 2400
+     * seconds of life. This fixture had the two the wrong way round, which let a checkout session
+     * be issued that outlived the team it was for (#138). Keep the real ordering here.
+     */
     private CheckoutQuote quote(UUID user) {
         Instant now = repository.now().truncatedTo(ChronoUnit.MICROS);
         return new CheckoutQuote(
@@ -905,8 +970,8 @@ class StripeCheckoutFlowTest {
                 TEAM,
                 new BigDecimal("10.00"),
                 "sgd",
-                now.plusSeconds(3600),
-                now.plusSeconds(300));
+                now.plusSeconds(2400),
+                now.plusSeconds(3600));
     }
 
     private CheckoutGateway.Session session(CheckoutPayment payment, boolean paid) {

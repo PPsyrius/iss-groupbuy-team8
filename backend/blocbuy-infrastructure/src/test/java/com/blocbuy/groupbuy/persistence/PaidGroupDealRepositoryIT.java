@@ -268,6 +268,82 @@ class PaidGroupDealRepositoryIT {
                 .isEqualTo(1);
     }
 
+    /**
+     * The due-list query and the status-guarded expiry UPDATE against real SQL: the deadline
+     * comparison is inclusive, resolved teams leave the queue, and a team another writer already
+     * moved matches nothing.
+     */
+    @Test
+    void dueListAndExpiryUpdateAgreeOnWhatIsStillOpen() {
+        var paid = paid();
+        UUID dealId = start(paid);
+        jdbc.update(
+                "UPDATE biz_group_deal SET expire_time = clock_timestamp() - interval '1 minute'"
+                        + " WHERE id = ?",
+                dealId);
+
+        try (SqlSession session = sessions.openSession()) {
+            var repo = repo(session);
+            Instant now = repo.currentTime();
+            assertThat(repo.dueForExpiry(now, 10)).contains(dealId);
+            assertThat(repo.dueForExpiry(now.minusSeconds(3600), 10)).doesNotContain(dealId);
+
+            var before = repo.lockDeal(dealId).orElseThrow();
+            repo.expire(before, before.expire(now), now);
+            session.commit();
+        }
+
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT status FROM biz_group_deal WHERE id = ?",
+                                String.class,
+                                dealId))
+                .isEqualTo("expired");
+        try (SqlSession session = sessions.openSession()) {
+            var repo = repo(session);
+            Instant now = repo.currentTime();
+            assertThat(repo.dueForExpiry(now, 10)).doesNotContain(dealId);
+            session.rollback();
+        }
+    }
+
+    /** A team that is already closed matches the status guard nowhere, so the write is refused. */
+    @Test
+    void expiryRefusesATeamThatIsNoLongerOpen() {
+        var paid = paid();
+        UUID dealId = start(paid);
+        jdbc.update(
+                "UPDATE biz_group_deal SET expire_time = clock_timestamp() - interval '1 minute'"
+                        + " WHERE id = ?",
+                dealId);
+        com.blocbuy.groupbuy.model.GroupDeal before;
+        Instant now;
+        try (SqlSession session = sessions.openSession()) {
+            var repo = repo(session);
+            before = repo.lockDeal(dealId).orElseThrow();
+            now = repo.currentTime();
+            session.commit();
+        }
+        // The webhook that filled this team wins the race while the sweeper is between its read
+        // and its write; no lock is held here, so the two writers really do overlap.
+        jdbc.update("UPDATE biz_group_deal SET status = 'succeeded' WHERE id = ?", dealId);
+
+        try (SqlSession session = sessions.openSession()) {
+            var repo = repo(session);
+            var after = before.expire(now);
+
+            assertThatThrownBy(() -> repo.expire(before, after, now))
+                    .isInstanceOf(BizException.class);
+            session.rollback();
+        }
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT status FROM biz_group_deal WHERE id = ?",
+                                String.class,
+                                dealId))
+                .isEqualTo("succeeded");
+    }
+
     /** Commits a complete paid-leader fixture with its receipt in one SQL session. */
     private UUID start(PaidParticipation paid) {
         try (SqlSession session = sessions.openSession()) {

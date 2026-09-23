@@ -37,7 +37,11 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-/** Actual group service and PostgreSQL, test-only order/intent fixture, mocked Stripe network. */
+/**
+ * Actual group, order and catalog services against PostgreSQL, with only the Stripe network mocked.
+ * Since 2026-09-22 there is no business fixture left: intents and fulfilment go through the
+ * production {@code PaymentIntentPort} and {@code PaymentBusinessPort} implementations.
+ */
 @SpringBootTest(
         properties = {
             "server.address=127.0.0.1",
@@ -71,6 +75,7 @@ class StripeLocalIntegrationTest {
     @Autowired private JdbcTemplate jdbc;
     @Autowired private java.util.List<RequestMappingHandlerMapping> mappings;
     @Autowired private com.blocbuy.payment.repository.RefundRepository refunds;
+    @Autowired private com.blocbuy.groupbuy.service.GroupDealExpiryService expiry;
     @Autowired private org.springframework.transaction.PlatformTransactionManager transactions;
     @MockitoBean private CheckoutGateway gateway;
     private final Map<String, CheckoutGateway.Session> sessions = new ConcurrentHashMap<>();
@@ -79,7 +84,7 @@ class StripeLocalIntegrationTest {
     @BeforeEach
     void setup() {
         jdbc.execute(
-                "TRUNCATE log_refund_attempt,biz_payment,log_payment_webhook_event,biz_refund,log_payment_review,biz_payment_review_case,stripe_local_intent,stripe_local_expiry_request,biz_order,biz_group_member,biz_group_deal,biz_group_participation_receipt,stripe_local_product_terms,biz_team_price_policy,biz_product,sys_user");
+                "TRUNCATE log_refund_attempt,biz_payment,log_payment_webhook_event,biz_refund,log_payment_review,biz_payment_review_case,biz_purchase_intent,stripe_local_expiry_request,biz_order,biz_group_member,biz_group_deal,biz_group_participation_receipt,biz_team_price_policy,biz_product,sys_user");
         product = UUID.randomUUID();
         jdbc.update(
                 "INSERT INTO biz_product(id,product_no,title,original_price,currency,stock,status) VALUES(?,?,'Local test product',20,'sgd',100,'on_sale')",
@@ -91,7 +96,10 @@ class StripeLocalIntegrationTest {
                 product,
                 admin,
                 admin);
-        jdbc.update("INSERT INTO stripe_local_product_terms VALUES(?,2,7200)", product);
+        // Group terms live on the product itself now (V14); the fixture table is gone.
+        jdbc.update(
+                "UPDATE biz_product SET team_target_size=2, team_lifetime_seconds=7200 WHERE id=?",
+                product);
         when(gateway.createCheckoutSession(any()))
                 .thenAnswer(
                         call -> {
@@ -149,6 +157,52 @@ class StripeLocalIntegrationTest {
                 .isTrue();
         assertThat(jdbc.queryForObject("SELECT status FROM biz_payment_review_case", String.class))
                 .isEqualTo("resolved");
+    }
+
+    @Test
+    void eightConcurrentWebhookReplaysStillProduceOneMemberAndOneOrder() throws Exception {
+        CheckoutPayment p = prepare(buyer(), "START", product);
+        paid(p);
+        var start = new CountDownLatch(1);
+        var failures = new java.util.concurrent.atomic.AtomicInteger();
+        try (var executor = Executors.newFixedThreadPool(8)) {
+            var replays =
+                    java.util.stream.IntStream.range(0, 8)
+                            .mapToObj(
+                                    ignored ->
+                                            executor.submit(
+                                                    () -> {
+                                                        start.await();
+                                                        try {
+                                                            payments.recover(
+                                                                    p.id(), "test-operator", true);
+                                                        } catch (RuntimeException contended) {
+                                                            // Losing a lock race is acceptable; a
+                                                            // second membership is not.
+                                                            failures.incrementAndGet();
+                                                        }
+                                                        return true;
+                                                    }))
+                            .toList();
+            start.countDown();
+            for (var replay : replays) {
+                assertThat(replay.get(40, TimeUnit.SECONDS)).isTrue();
+            }
+        }
+        assertThat(failures.get()).isLessThan(8);
+        assertThat(count("biz_group_deal")).isEqualTo(1);
+        assertThat(count("biz_group_member")).isEqualTo(1);
+        assertThat(count("biz_order")).isEqualTo(1);
+        assertThat(count("biz_refund")).isZero();
+        assertThat(jdbc.queryForObject("SELECT stock FROM biz_product", Integer.class))
+                .isEqualTo(99);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM biz_purchase_intent WHERE fulfilled_payment_id=?",
+                                Long.class,
+                                p.id()))
+                .isEqualTo(1);
+        assertThat(browser.receipt(p.quote().userId(), p.id()).outcome()).isEqualTo("FULFILLED");
     }
 
     @Test
@@ -434,6 +488,108 @@ class StripeLocalIntegrationTest {
                 .isInstanceOf(com.blocbuy.common.exception.BizException.class);
         assertThatThrownBy(() -> browser.prepare(user, intent, ""))
                 .isInstanceOf(com.blocbuy.common.exception.BizException.class);
+    }
+
+    /**
+     * The whole success half of the lifecycle through production code: two buyers pay, the team
+     * fills up, and both orders — including the one written moments earlier in the very same
+     * transaction — end up confirmed. Asserting on the rows rather than on the listener is the
+     * point: a {@code BEFORE_COMMIT} subscriber that ran too early would leave the second order
+     * pending and still look like it was invoked.
+     */
+    @Test
+    void aTeamThatFillsUpConfirmsEveryOrderItContains() {
+        CheckoutPayment leader = prepare(buyer(), "START", product);
+        paid(leader);
+        payments.recover(leader.id(), "test-operator", true);
+        UUID deal = deal();
+
+        CheckoutPayment joiner = prepare(buyer(), "JOIN", deal);
+        paid(joiner);
+        payments.recover(joiner.id(), "test-operator", true);
+
+        assertThat(status("biz_group_deal")).isEqualTo("succeeded");
+        assertThat(count("biz_order")).isEqualTo(2);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM biz_order WHERE status='confirmed'",
+                                Long.class))
+                .isEqualTo(2);
+        assertThat(count("biz_refund")).isZero();
+    }
+
+    /**
+     * The expiry half: one paid buyer, a team that never fills, and a deadline that passes. The
+     * order is cancelled and the money owed is recorded in the same transaction as the expiry.
+     */
+    @Test
+    void anExpiredTeamCancelsItsOrdersAndOwesItsBuyersMoney() {
+        CheckoutPayment leader = prepare(buyer(), "START", product);
+        paid(leader);
+        payments.recover(leader.id(), "test-operator", true);
+        UUID deal = deal();
+        overdue(deal);
+
+        assertThat(expiry.expireOne(deal)).isTrue();
+
+        assertThat(status("biz_group_deal")).isEqualTo("expired");
+        assertThat(jdbc.queryForObject("SELECT status FROM biz_order", String.class))
+                .isEqualTo("cancelled");
+        assertThat(jdbc.queryForObject("SELECT cancel_time FROM biz_order", Object.class))
+                .isNotNull();
+        assertThat(count("biz_refund")).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT status FROM biz_refund", String.class))
+                .isEqualTo("pending");
+    }
+
+    /** A second sweep over the same team writes nothing: the status guard makes it a no-op. */
+    @Test
+    void expiringTheSameTeamTwiceChangesNothingTheSecondTime() {
+        CheckoutPayment leader = prepare(buyer(), "START", product);
+        paid(leader);
+        payments.recover(leader.id(), "test-operator", true);
+        UUID deal = deal();
+        overdue(deal);
+        assertThat(expiry.expireOne(deal)).isTrue();
+
+        assertThat(expiry.expireOne(deal)).isFalse();
+
+        assertThat(count("biz_refund")).isEqualTo(1);
+        assertThat(status("biz_group_deal")).isEqualTo("expired");
+        assertThat(jdbc.queryForObject("SELECT status FROM biz_order", String.class))
+                .isEqualTo("cancelled");
+    }
+
+    /**
+     * A finished refund is terminal. Before #133 it stayed in the due queue and was re-read from
+     * the provider once an hour for 31 days, writing two audit rows each time.
+     */
+    @Test
+    void aSucceededRefundLeavesTheDueQueueForGood() {
+        CheckoutPayment leader = prepare(buyer(), "START", product);
+        paid(leader);
+        payments.recover(leader.id(), "test-operator", true);
+        UUID deal = deal();
+        overdue(deal);
+        expiry.expireOne(deal);
+
+        var work = refunds.claimNext();
+        assertThat(work).isNotNull();
+        refunds.finish(work, "re_test_" + work.id(), "succeeded", "PROVIDER_SUCCEEDED");
+
+        assertThat(refunds.claimNext()).isNull();
+    }
+
+    /** Moves a team's deadline into the past, as the passage of time would. */
+    private void overdue(UUID deal) {
+        jdbc.update(
+                "UPDATE biz_group_deal SET expire_time=clock_timestamp()-interval '1 minute'"
+                        + " WHERE id=?",
+                deal);
+    }
+
+    private String status(String table) {
+        return jdbc.queryForObject("SELECT status FROM " + table, String.class);
     }
 
     private CheckoutPayment prepare(UUID buyer, String operation, UUID business) {

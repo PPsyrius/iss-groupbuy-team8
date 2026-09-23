@@ -5,9 +5,9 @@ The numbers the pipeline enforces. Change to any row = team decision, recorded h
 | Gate | Tool | Threshold | Enforced at |
 |---|---|---|---|
 | Formatting | Spotless + google-java-format (AOSP) | 100% formatted | `validate` phase, CI `build-quality` step 1 |
-| Code style | Checkstyle 10.26.1 (Google checks) | 0 errors; line length 120 (D13) | `verify` phase |
+| Code style | Checkstyle 14.1.0 (Google checks) | 0 errors; line length 120 (D13) | `verify` phase |
 | Static bugs | SpotBugs 4.10.4 | 0 findings, threshold Medium, effort Max | `verify` phase |
-| Architecture | ArchUnit 1.4.2 | all 6 rules green | unit tests (`ArchitectureTest`) |
+| Architecture | ArchUnit 1.5.0 | all 8 rules green | unit tests (`ArchitectureTest`) |
 | Build gates | Maven Enforcer | Java [21,22), Maven ≥3.9, dependency convergence | `validate` phase |
 | Coverage | JaCoCo 0.8.15 → SonarCloud Backend | ≥ 80% on new code (server quality gate) | `ci-backend.yml` `sonar-backend` |
 | Code quality | SonarCloud Backend | quality gate green: no new blocker/critical, A ratings on new code | `ci-backend.yml` `sonar-backend` |

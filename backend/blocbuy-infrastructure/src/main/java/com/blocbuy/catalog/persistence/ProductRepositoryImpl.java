@@ -3,6 +3,7 @@ package com.blocbuy.catalog.persistence;
 import com.blocbuy.catalog.exception.CatalogErrorCode;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductStatus;
+import com.blocbuy.catalog.model.ProductTeamTerms;
 import com.blocbuy.catalog.repository.ProductRepository;
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.common.model.PageQuery;
@@ -73,6 +74,23 @@ public class ProductRepositoryImpl implements ProductRepository {
     public Optional<Product> findById(UUID id) {
         return Optional.ofNullable(
                 ProductConverter.toDomain(bizProductMapper.selectActiveById(id)));
+    }
+
+    @Override
+    public Optional<ProductTeamTerms> findTeamTerms(UUID id) {
+        BizProductTeamTermsDO row = bizProductMapper.selectTeamTerms(id);
+        return row == null
+                ? Optional.empty()
+                : Optional.of(
+                        new ProductTeamTerms(
+                                row.getProductId(),
+                                row.getTeamTargetSize(),
+                                row.getTeamLifetimeSeconds()));
+    }
+
+    @Override
+    public boolean consumeOneUnit(UUID id) {
+        return bizProductMapper.consumeOneUnit(id) == 1;
     }
 
     @Override

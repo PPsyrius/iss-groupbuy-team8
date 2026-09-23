@@ -34,6 +34,9 @@ public final class GroupDeal {
     /**
      * Builds an immutable snapshot with structural checks for reconstruction and paid transitions.
      */
+    // Aggregate snapshots are constructed whole; a parameter object would only relocate the same
+    // invariant checks and obscure them. Same call as Product (catalog).
+    @SuppressWarnings("java:S107")
     private GroupDeal(
             UUID id,
             String dealNo,
@@ -86,6 +89,7 @@ public final class GroupDeal {
     }
 
     /** Reconstitution factory for the infrastructure converter; all fields come from the row. */
+    @SuppressWarnings("java:S107") // mirror of the whole-snapshot constructor
     public static GroupDeal reconstitute(
             UUID id,
             String dealNo,
@@ -143,7 +147,9 @@ public final class GroupDeal {
         if (alreadyMember || leaderUserId.equals(payment.userId())) {
             throw new BizException(GroupbuyErrorCode.ALREADY_MEMBER);
         }
-        if (status != DealStatus.OPEN || now.isBefore(startTime) || !now.isBefore(expireTime)) {
+        if (!status.canTransitionTo(DealStatus.SUCCEEDED)
+                || now.isBefore(startTime)
+                || !now.isBefore(expireTime)) {
             throw new BizException(GroupbuyErrorCode.DEAL_CLOSED);
         }
         if (currentSize < 1 || currentSize >= targetSize) {
@@ -164,6 +170,43 @@ public final class GroupDeal {
                 startTime,
                 expireTime,
                 succeeded ? now : null);
+    }
+
+    /**
+     * Resolves a deal whose admission window has closed without reaching its target size. The
+     * caller must hold the database deal lock and read {@code now} after acquiring it.
+     *
+     * <p>The two guards are deliberately different kinds of failure. A deal that is already
+     * terminal is a business fact — a concurrent success or cancellation won the race, and the
+     * caller swallows it as an idempotent replay. A deal that is not due yet is a bug in the
+     * caller's own due-list query, not user input, so it fails loudly.
+     *
+     * @throws BizException {@code DEAL_CLOSED} when this snapshot is already terminal
+     * @throws IllegalStateException when the admission window has not closed yet
+     */
+    public GroupDeal expire(Instant now) {
+        if (now == null) {
+            throw new IllegalArgumentException("now must not be null");
+        }
+        if (!status.canTransitionTo(DealStatus.EXPIRED)) {
+            throw new BizException(GroupbuyErrorCode.DEAL_CLOSED);
+        }
+        if (now.isBefore(expireTime)) {
+            throw new IllegalStateException("Deal is not due for expiry yet");
+        }
+        return new GroupDeal(
+                id,
+                dealNo,
+                productId,
+                leaderUserId,
+                dealPrice,
+                currency,
+                targetSize,
+                currentSize,
+                DealStatus.EXPIRED,
+                startTime,
+                expireTime,
+                successTime);
     }
 
     /** Returns the stable database identity shared by members and participation receipts. */

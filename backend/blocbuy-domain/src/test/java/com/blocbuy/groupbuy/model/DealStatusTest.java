@@ -21,4 +21,20 @@ class DealStatusTest {
         assertThatThrownBy(() -> DealStatus.fromCode("nope"))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    /** Every pair in the matrix, so no service is ever tempted to re-decide one with if/else. */
+    @ParameterizedTest
+    @EnumSource(DealStatus.class)
+    void onlyOpenMovesAndNeverToItself(DealStatus source) {
+        for (DealStatus target : DealStatus.values()) {
+            boolean legal = source == DealStatus.OPEN && target != DealStatus.OPEN;
+            assertThat(source.canTransitionTo(target)).isEqualTo(legal);
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(DealStatus.class)
+    void noStatusTransitionsToNothing(DealStatus source) {
+        assertThat(source.canTransitionTo(null)).isFalse();
+    }
 }
