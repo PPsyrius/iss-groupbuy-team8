@@ -23,7 +23,10 @@ public interface PaidGroupDealRepository {
     /** Locks a non-deleted deal after receipt locking, returning empty when unavailable. */
     Optional<GroupDeal> lockDeal(UUID dealId);
 
-    /** Fresh wall clock, not transaction-start time; call only after required locks. */
+    /**
+     * Fresh wall clock, not transaction-start time. Decisions must read it only after the required
+     * locks; reading it earlier is fine only to pick candidates that are re-checked under the lock.
+     */
     Instant currentTime();
 
     /** Checks non-deleted membership under the deal lock to prevent duplicate buyer admission. */
