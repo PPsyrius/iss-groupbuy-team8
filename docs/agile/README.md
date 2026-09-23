@@ -69,4 +69,4 @@ the `BOARD_SNAPSHOT_TOKEN` repo secret for the same reason (off-repo TODO 8 in
 | Sprint | Dates | Container issue |
 |---|---|---|
 | 1 | 2026-09-02 to 2026-09-12 | #49 |
-| 2 | 2026-09-14 to 2026-09-25 | `[T1] Sprint 2` (to be filed per `frontend/docs/plan.md` T1-02) |
+| 2 | 2026-09-14 to 2026-09-25 | #93 (`[T1] Sprint 2`) |
