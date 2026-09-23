@@ -29,6 +29,8 @@ export default defineConfig(({ command }) => ({
     },
   },
   build: {
-    sourcemap: true,
+    // No maps in the delivery artifact: they were synced to the public bucket with the code
+    // (#155). Nothing consumes them (no error tracker); `vite dev` serves maps regardless.
+    sourcemap: false,
   },
 }));

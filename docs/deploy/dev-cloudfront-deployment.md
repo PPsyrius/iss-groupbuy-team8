@@ -340,7 +340,7 @@ gh variable set BACKEND_URL_DEV --body "https://$DIST_DOMAIN"
 - Release (long cache for static assets, no caching for index.html):
 
   ```bash
-  aws s3 sync dist/ "s3://$S3_BUCKET" --delete --exclude "index.html" \
+  aws s3 sync dist/ "s3://$S3_BUCKET" --delete --exclude "index.html" --exclude "*.map" \
     --cache-control "public,max-age=31536000,immutable"
   aws s3 cp dist/index.html "s3://$S3_BUCKET/index.html" \
     --cache-control "no-cache" --content-type "text/html"
@@ -348,6 +348,7 @@ gh variable set BACKEND_URL_DEV --body "https://$DIST_DOMAIN"
   ```
 
 - Normal releases come from the `deploy-s3-dev` job in `ci-frontend.yml` (§16–§17); this manual path is the fallback and must use the same three commands.
+- Source maps: `pnpm build` emits none since 2026-09-23 (#155) and the sync excludes `*.map` as a second guard. The maps published by the first deploy on 2026-09-22 are not removed by `--delete` (excluded keys are ignored); delete them once with `aws s3 rm "s3://$S3_BUCKET/assets/" --recursive --exclude "*" --include "*.map"`.
 
 ## 11. Impact scope and notes
 
