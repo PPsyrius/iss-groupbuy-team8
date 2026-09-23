@@ -41,6 +41,8 @@ fallback is the account holder running runbook §10 by hand with a `dist/` built
 `dev` SHA. `--delete` on the sync means no previous build's hashed assets survive a release; if a
 rollback build is wanted, drop `--delete` and add a lifecycle rule in T2-07.
 
+2026-09-23: `ci-frontend` run #165 built `fbb71a9`, deployed that artifact through the scoped OIDC role and passed `e2e-dev`; A3/A4 no longer block this path.
+
 Open, found in the 2026-09-17 branch review: the TanStack devtools are in the production bundle
 and `build.sourcemap: true` publishes full source maps. Both fixes on the table (an
 `import.meta.env.DEV` carve-out used only for dead-code elimination, or a lazy import) touch this

@@ -393,8 +393,8 @@ jobs:
       - detect-changes
       - package-dev
 
-    # Gated on ENABLE_S3_DEPLOY until the bucket, OIDC role and `frontend-dev` environment exist
-    # (runbook §16–§17). The role trusts the `environment:frontend-dev` OIDC subject.
+    # ENABLE_S3_DEPLOY is the operational deploy/freeze switch. The role trusts the
+    # `environment:frontend-dev` OIDC subject and the environment permits only dev.
     if: >-
       always() &&
       github.event_name == 'push' &&

@@ -163,9 +163,9 @@ Columns: id, tier, purpose, files touched, exact verification command, depends-o
 | B3 `secure: true` on ec2 | T1-01, T2-11 | Dev terminates TLS at CloudFront; flag can be `true`. | If it stays `false`, HSTS still applies; the secure-cookie NFR is recorded as unmet in ADR 0002 consequences. |
 | B4 `me` enrichment | T2-04 header | Landed in PR #89 (2026-09-16); the header renders `nickname ?? userId` since `d875f8c`. | `avatarUrl` rendering waits for T2-04; nothing hand-written. |
 | B5 redirect URI | T2-06 | `GOOGLE_REDIRECT_URI` on dev is the CloudFront URL + `/api/v1/auth/oauth2/google/callback` and is in the Google console. | Login on dev fails at Google; `@auth` e2e stays skipped; local login via `docker compose` works with the localhost URI. |
-| A1 SPA function | T1-13 dev assertions, T2-02 deep links | Not attached today (T1-01 confirms). Local preview does not need it. | Until attached, deep links on dev return the S3 403; the dev-only smoke assertion is `test.fixme` with the A1 issue link, never deleted. |
-| A2 headers policy | T2-11 | Absent today. | Nothing in tier 1 depends on it. |
-| A3 OIDC role, A4 environment | T1-14, `deploy-s3-dev` | Both created before 2026-09-19. | Fallback: manual `aws s3 sync` by the account holder per runbook §10; the job stays gated by `ENABLE_S3_DEPLOY` and never runs. |
+| A1 SPA function | T1-13 dev assertions, T2-02 deep links | Executed 2026-09-22; live deep links return the SPA. | The dev-only smoke assertion is active from 2026-09-23. |
+| A2 headers policy | T2-11 | Executed 2026-09-22; all five configured headers and their exact values were rechecked on root and `/api/*` on 2026-09-23. | T2-11 still owns CSP tightening. |
+| A3 OIDC role, A4 environment | T1-14, `deploy-s3-dev` | Operationally resolved 2026-09-23: immutable OIDC subject verified, `frontend-dev` restricted to `dev`, repository variables enabled. | `ci-frontend` run #165 at `fbb71a9` passed `package-dev`, `deploy-s3-dev` and `e2e-dev`; `ENABLE_S3_DEPLOY` is now the deploy/freeze switch. |
 | T3 `.github` review | T1-12 | @PPsyrius reviews within two working days. | `frontend-check` cannot be a required check until merged; PR-C..PR-F paste `pnpm check` output by hand. |
 | T4 CODEOWNERS | T1-12 | The narrowed patterns in §7.4 are accepted. | Root `.claude/settings.json` review is requested by hand. |
 
@@ -941,16 +941,16 @@ test.describe('dev CloudFront only', () => {
 })
 ```
 
-Until A1 is executed, change the deep-link test to `test.fixme(true, 'A1 not attached: <issue url>')` in the same file; revert when T1-01 re-probe shows 200.
+The temporary A1 `test.fixme` was removed on 2026-09-23 after the live deep-link probe returned 200.
 
-- [x] Step 4: Scripts: `"e2e": "playwright test"`. Run the task-row commands (local preview first, then dev). Ticked for the local run only; the dev-target run was attempted and its expected failure (403/503) recorded — see plan §12 note 32.
+- [x] Step 4: Scripts: `"e2e": "playwright test"`. Local preview evidence is in plan §12 note 32; on 2026-09-23 the automated deploy job passed and the post-A1 dev-target rerun passed 6 tests with only two unseeded `@auth` tests skipped.
 - [x] Step 5: `git add frontend/playwright.config.ts frontend/e2e && git commit -m "test(frontend): playwright smoke for home, deep link and api health"`.
 
 ### T1-14: First deploy
 
-- [ ] Step 1 (preferred): merge PR-E with `ENABLE_S3_DEPLOY=true` set by @PPsyrius after A3/A4; push to `dev` triggers `deploy-s3-dev`, then `e2e-dev`.
-- [ ] Step 2 (fallback): the account holder runs runbook §10 (pnpm form, §8.5) from a machine with `dist/` built by `pnpm build` at the merged `dev` SHA; paste the three command outputs into the sprint log.
-- [ ] Step 3: Run the task-row verification and the dev Playwright run; attach the HTML report to PR-F.
+- [x] Step 1 (preferred): `ENABLE_S3_DEPLOY=true`; rerun `ci-frontend` #165 at `fbb71a9` passed `package-dev`, `deploy-s3-dev` and `e2e-dev` on 2026-09-23.
+- [ ] Step 2 (fallback): not required for the verified automated path; the account holder's earlier manual deployment established the bucket contents before automation was enabled.
+- [x] Step 3: root, deep link and deployed asset returned 200, API health returned `UP`, and the post-`fixme` dev Playwright rerun passed 6 tests with only two unseeded `@auth` tests skipped; evidence is in the 2026-09-23 sprint log and run #165.
 
 ### T1-15: ADR bodies and sprint log
 
@@ -1504,7 +1504,7 @@ Triggers: `push` to `dev` and `pull_request` to `dev`, both with `paths: ["front
 | `deploy-s3-dev` | `always() && github.event_name == 'push' && github.ref == 'refs/heads/dev' && vars.ENABLE_S3_DEPLOY == 'true' && needs.frontend-check.result == 'success'`; `environment: { name: frontend-dev, url: ${{ vars.FRONTEND_URL_DEV }} }`; `permissions: { contents: read, id-token: write }`; `concurrency: { group: deploy-s3-frontend-dev, cancel-in-progress: false }`; `timeout-minutes: 15` | checkout; download `frontend-dist-${{ github.sha }}` into `frontend/dist`; `aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c` with `role-to-assume: ${{ vars.AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV }}`, `aws-region: ${{ vars.AWS_REGION }}`, `allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}`, `role-session-name: BlocBuy-Frontend-${{ github.run_id }}`; `aws s3 sync dist/ "s3://${{ vars.FRONTEND_S3_BUCKET_DEV }}" --delete --exclude index.html --cache-control "public,max-age=31536000,immutable"`; `aws s3 cp dist/index.html "s3://${{ vars.FRONTEND_S3_BUCKET_DEV }}/index.html" --cache-control no-cache --content-type text/html`; `aws cloudfront create-invalidation --distribution-id "${{ vars.FRONTEND_CLOUDFRONT_DIST_ID_DEV }}" --paths /index.html`; step summary with SHA and URL | no |
 | `e2e-dev` | `needs.deploy-s3-dev.result == 'success'` | checkout; pnpm + node; install; `pnpm exec playwright install --with-deps chromium`; `E2E_TARGET=dev E2E_BASE_URL=${{ vars.FRONTEND_URL_DEV }} pnpm e2e`; upload `playwright-report-dev` (`if: ${{ !cancelled() }}`) | no |
 
-GitHub variables introduced (set by @PPsyrius after A3/A4): `ENABLE_S3_DEPLOY`, `FRONTEND_URL_DEV` (`https://d1b3np88z657cp.cloudfront.net`), `FRONTEND_S3_BUCKET_DEV` (`blocbuy-dev-frontend-402178232802`), `FRONTEND_CLOUDFRONT_DIST_ID_DEV`, `AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV`. `AWS_REGION` and `AWS_ACCOUNT_ID` already exist.
+GitHub repository variables, verified 2026-09-23: `ENABLE_S3_DEPLOY=true`, `FRONTEND_URL_DEV` (`https://d1b3np88z657cp.cloudfront.net`), `FRONTEND_S3_BUCKET_DEV` (`blocbuy-dev-frontend-402178232802`), `FRONTEND_CLOUDFRONT_DIST_ID_DEV`, `AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV`. `AWS_REGION` and `AWS_ACCOUNT_ID` already exist. They remain repository-scoped because `package-dev` evaluates the enable switch before entering an environment and `e2e-dev` does not declare one.
 
 `--delete` on the sync is safe because hashed assets from older builds are not needed once `index.html` is replaced and invalidated; if the team prefers keeping one previous build for rollback, drop `--delete` and add a lifecycle rule in T2-07.
 
@@ -1633,9 +1633,7 @@ Edit §7.3's heading to "(Superseded by §14)". New section:
 ````markdown
 ## 14. SPA routing fallback (mandatory for the frontend)
 
-The frontend uses history-mode routing (`/products/<uuid>`, `/account`, `/auth/callback`). Without this
-function a deep link or a browser refresh returns the S3 OAC 403. Distribution-wide custom error
-responses are deliberately NOT used: they would also mask real `/api/*` errors.
+The frontend uses history-mode routing (`/products/<uuid>`, `/account`, `/auth/callback`). Without this function a deep link or a browser refresh returns the S3 OAC 403. Distribution-wide custom error responses are deliberately NOT used: they would also mask real `/api/*` errors.
 
 Function source is versioned at `deployment/frontend/cloudfront/spa-fallback.js`.
 
@@ -1702,9 +1700,7 @@ The runbook's original §7.3 code rewrote `uri.endsWith('/')` to `uri + 'index.h
 ````markdown
 ## 15. Security response headers (CSP, HSTS)
 
-Policy source: `deployment/frontend/cloudfront/response-headers-policy.json`. The CSP is a starting
-point that allows HeroUI's inline styles and remote product images; the frontend owner tightens it
-after the first deploy (plan task T2-11) and re-applies with `update-response-headers-policy`.
+Policy source: `deployment/frontend/cloudfront/response-headers-policy.json`. The CSP is a starting point that allows HeroUI's inline styles and remote product images; the frontend owner tightens it after the first deploy (plan task T2-11) and re-applies with `update-response-headers-policy`.
 
 ```bash
 aws cloudfront create-response-headers-policy \
@@ -1744,7 +1740,7 @@ curl -sSI "https://$DIST_DOMAIN/" | grep -Ei 'strict-transport-security|content-
     },
     "ContentSecurityPolicy": {
       "Override": true,
-      "ContentSecurityPolicy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+      "ContentSecurityPolicy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
     },
     "ContentTypeOptions": { "Override": true },
     "FrameOptions": { "Override": true, "FrameOption": "DENY" },
@@ -1757,16 +1753,14 @@ curl -sSI "https://$DIST_DOMAIN/" | grep -Ei 'strict-transport-security|content-
 }
 ```
 
-Why each CSP source: `script-src 'self'` (Vite emits no inline scripts; React Compiler output is in the bundle); `style-src 'unsafe-inline'` (React Aria / HeroUI set inline `style` attributes for positioning; revisit in T2-11); `img-src https:` (product `coverImage` hosts are unknown until seed data is inspected; narrow in T2-11); `connect-src 'self'` (all API calls are same-origin); `form-action 'self'` (login is a GET navigation, not a form post); `frame-ancestors 'none'` replaces the older `X-Frame-Options` for modern browsers while `FrameOptions` covers the rest. `Preload: false` because the `*.cloudfront.net` domain cannot be preload-listed.
+Why each CSP source: `script-src 'self'` (Vite emits no inline scripts; React Compiler output is in the bundle); `style-src 'unsafe-inline' https://fonts.googleapis.com` (React Aria / HeroUI set inline `style` attributes and `index.html` loads Inter from Google Fonts; revisit both in T2-11); `font-src https://fonts.gstatic.com` (the Inter files referenced by that stylesheet); `img-src https:` (product `coverImage` hosts are unknown until seed data is inspected; narrow in T2-11); `connect-src 'self'` (all API calls are same-origin); `form-action 'self'` (login is a GET navigation, not a form post); `frame-ancestors 'none'` replaces the older `X-Frame-Options` for modern browsers while `FrameOptions` covers the rest. `Preload: false` because the `*.cloudfront.net` domain cannot be preload-listed.
 
 ### 8.3 §16. GitHub OIDC deploy role for the frontend bucket
 
 ````markdown
 ## 16. Frontend deploy role (GitHub OIDC)
 
-The `deploy-s3-dev` job in `ci-frontend.yml` assumes a role restricted to the `frontend-dev`
-GitHub environment. Policy examples: `deployment/frontend/iam/`. The OIDC provider already exists
-(created for the backend pipeline).
+The `deploy-s3-dev` job in `ci-frontend.yml` assumes a role restricted to the `frontend-dev` GitHub environment. Policy examples: `deployment/frontend/iam/`. The OIDC provider already exists (created for the backend pipeline).
 
 ```bash
 sed -e "s/AWS_ACCOUNT_ID/$ACCOUNT_ID/g" \
@@ -1778,10 +1772,7 @@ aws iam put-role-policy --role-name BlocBuyGitHubFrontendDeployDev --policy-name
 export FE_ROLE_ARN=$(aws iam get-role --role-name BlocBuyGitHubFrontendDeployDev --query Role.Arn --output text)
 ```
 
-The trust policy `sub` must match the format the existing `backend-dev` deploy role uses (see
-`deployment/backend/iam/github-deploy-trust-policy.json.example`, which carries an id-suffixed
-subject). Copy whichever form works for the backend role; the GitHub-documented plain form is
-`repo:PPsyrius/iss-groupbuy-team8:environment:frontend-dev`.
+The repository uses immutable OIDC subjects. The verified frontend subject is `repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:environment:frontend-dev`; recheck the repository OIDC customization API before recreating the role.
 ````
 
 `deployment/frontend/iam/github-frontend-deploy-trust-policy.json.example` (format verified: https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services):
@@ -1799,7 +1790,7 @@ subject). Copy whichever form works for the backend role; the GitHub-documented 
       "Condition": {
         "StringEquals": {
           "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-          "token.actions.githubusercontent.com:sub": "repo:PPsyrius/iss-groupbuy-team8:environment:frontend-dev"
+          "token.actions.githubusercontent.com:sub": "repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:environment:frontend-dev"
         }
       }
     }
@@ -1840,8 +1831,7 @@ subject). Copy whichever form works for the backend role; the GitHub-documented 
 ```markdown
 # Frontend IAM policy examples
 
-Examples, not deployable policies: copy outside the repository, replace `AWS_ACCOUNT_ID`,
-`FRONTEND_S3_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`, validate with IAM Access Analyzer, attach.
+Examples, not deployable policies: copy outside the repository, replace `AWS_ACCOUNT_ID`, `FRONTEND_S3_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`, validate with IAM Access Analyzer, attach.
 
 | File | Attach/use with |
 |---|---|
