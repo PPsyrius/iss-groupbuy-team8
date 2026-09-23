@@ -80,7 +80,7 @@
   },
   "msw": {
     "workerDirectory": [
-      "public"
+      "dev"
     ]
   }
 }
