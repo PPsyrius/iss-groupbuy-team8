@@ -62,7 +62,7 @@ NFR signals include security, performance, availability, recoverability, observa
 2. Add or update any NFR register row.
 3. Tick only acceptance criteria that now pass.
 4. Use a Conventional Commit, reference the issue, and commit evidence with the change it describes.
-5. Complete `.github/PULL_REQUEST_TEMPLATE.md` with decisions and verification evidence.
+5. Complete `.github/PULL_REQUEST_TEMPLATE.md` with decisions and verification evidence: the issue link, the ADR or decision record, the `pnpm check` / `./mvnw verify` output or CI link, the contract line, a screenshot or Playwright trace for UI changes, the day-log entry and the register row (set verified against the template 2026-09-23, T2-10). ADR mechanics: the `adr` skill; contract changes: the `api-client-regen` skill.
 6. Propose board updates and missing estimates; do not write them without approval.
 
 The advisory commit hook in `.claude/settings.json` runs `scripts/commit-evidence-hook.sh`. Address its checklist or add an `Evidence-skipped: <reason>` trailer when a deliberate exemption applies.
