@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.groupbuy.event.TeamSucceeded;
 import com.blocbuy.groupbuy.exception.GroupbuyErrorCode;
 import com.blocbuy.groupbuy.exception.ParticipationErrorCode;
 import com.blocbuy.groupbuy.model.NewDealTerms;
@@ -27,11 +28,13 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
 
 /** Trusted payment application: receipt replay, fingerprint guard, compensation without refund. */
 class PaidGroupDealServiceTest {
     private final PaidGroupDealRepository repository = mock(PaidGroupDealRepository.class);
-    private final PaidGroupDealService service = new PaidGroupDealService(repository);
+    private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
+    private final PaidGroupDealService service = new PaidGroupDealService(repository, events);
     private final Instant now = Instant.parse("2026-09-09T00:00:00Z");
     private final PaidParticipation paid =
             new PaidParticipation(
@@ -328,5 +331,38 @@ class PaidGroupDealServiceTest {
         assertThat(result.currentSize()).isEqualTo(2);
         verify(repository).insertJoinedMember(eq(deal), any(), eq(paid), eq(now));
         verify(repository).complete(paid.paymentId(), result, paid.userId(), now);
+        verify(events, never()).publishEvent(any(TeamSucceeded.class));
+    }
+
+    /** The team that fills up announces it; the consequences belong to subscribers, not to us. */
+    @Test
+    void joinReachingTargetPublishesTeamSucceededWithTheWrittenSnapshot() {
+        var leader =
+                new PaidParticipation(UUID.randomUUID(), UUID.randomUUID(), paid.amount(), "sgd");
+        var deal = new StandardPaidGroupDealCreator().initiate(terms, leader, now.minusSeconds(1));
+        pendingReceipt();
+        when(repository.lockDeal(terms.id())).thenReturn(Optional.of(deal));
+        when(repository.currentTime()).thenReturn(now);
+
+        var result = service.joinConfirmed(terms.id(), paid);
+
+        assertThat(result.dealStatus()).isEqualTo("succeeded");
+        var published = ArgumentCaptor.forClass(TeamSucceeded.class);
+        verify(events).publishEvent(published.capture());
+        assertThat(published.getValue())
+                .isEqualTo(new TeamSucceeded(terms.id(), terms.productId(), 2, now));
+    }
+
+    /** An initiated team is never full on its own, so creation announces nothing. */
+    @Test
+    void startNeverPublishesTeamSucceeded() {
+        when(repository.reserveAndLock(eq(paid.paymentId()), any(), eq(paid.userId())))
+                .thenAnswer(
+                        invocation -> new ParticipationReceipt(invocation.getArgument(1), null));
+        when(repository.currentTime()).thenReturn(now);
+
+        service.startConfirmed(terms, paid);
+
+        verify(events, never()).publishEvent(any(Object.class));
     }
 }

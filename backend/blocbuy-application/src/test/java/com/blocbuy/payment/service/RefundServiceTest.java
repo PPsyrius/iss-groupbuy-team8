@@ -10,6 +10,7 @@ import com.blocbuy.payment.gateway.RefundGateway;
 import com.blocbuy.payment.model.RefundWork;
 import com.blocbuy.payment.repository.RefundRepository;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -70,6 +71,7 @@ class RefundServiceTest {
                         now.minusSeconds(ageHours * 3600L),
                         now,
                         1);
+        when(repository.now()).thenReturn(now);
         when(repository.claimNext()).thenReturn(work);
         return work;
     }
@@ -138,6 +140,17 @@ class RefundServiceTest {
     }
 
     @Test
+    void retryCutoffUsesFreshDatabaseTimeRatherThanClaimTimestamp() {
+        RefundWork work = work(null, 22);
+        when(repository.now()).thenReturn(work.firstAttemptAt().plus(Duration.ofHours(24)));
+
+        service.processNext();
+
+        verify(gateway).findRefund(work);
+        verify(gateway, never()).createRefund(any());
+    }
+
+    @Test
     void oldUnknownCanRecoverByMetadata() {
         RefundWork work = work(null, 24);
         when(gateway.findRefund(work)).thenReturn(snapshot(work, "succeeded"));
@@ -180,6 +193,37 @@ class RefundServiceTest {
         when(repository.claimReview(work.paymentId())).thenReturn(unpaid);
         assertThat(service.reconcile(work.paymentId(), "re_test")).isTrue();
         verifyNoInteractions(gateway);
+    }
+
+    /**
+     * A PaymentIntent that is not refundable does not become refundable by asking again. Parking it
+     * for review is what stops the worker re-asking every 30 seconds for the next 23 hours (#132).
+     */
+    @Test
+    void permanentProviderStateParksForReviewAndStopsCallingStripe() {
+        RefundWork work = work(null, 0);
+        when(gateway.createRefund(work))
+                .thenThrow(new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID));
+
+        assertThat(service.processNext()).isTrue();
+
+        verify(repository).finish(work, null, "review", "PROVIDER_STATE_MISMATCH");
+        verify(gateway, times(1)).createRefund(work);
+        verify(gateway, never()).retrieveRefund(any());
+        verify(gateway, never()).findRefund(any());
+    }
+
+    /** The same split under operator recovery keeps the row in review, only naming the reason. */
+    @Test
+    void permanentProviderStateUnderRecoveryIsNamedAsSuch() {
+        RefundWork work = work(null, 24);
+        when(repository.claimReview(work.paymentId())).thenReturn(work);
+        when(gateway.retrieveRefund("re_test"))
+                .thenThrow(new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID));
+
+        assertThat(service.reconcile(work.paymentId(), "re_test")).isTrue();
+
+        verify(repository).finish(work, null, "review", "OPERATOR_PROVIDER_STATE_MISMATCH");
     }
 
     @Test

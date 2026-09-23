@@ -1,6 +1,7 @@
 package com.blocbuy.payment.persistence;
 
 import com.blocbuy.payment.model.RefundWork;
+import java.time.Instant;
 import java.util.UUID;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -10,6 +11,8 @@ public interface RefundMapper {
     RefundWork claimNext();
 
     RefundWork claimReview(@Param("paymentId") UUID paymentId);
+
+    Instant now();
 
     int finish(
             @Param("work") RefundWork work,

@@ -16,7 +16,7 @@
 Paths below are relative to `/api/v1`.
 
 | Header | Required by | Value |
-|---|---|---|
+| --- | --- | --- |
 | `X-BlocBuy-Request` | `POST /payments/intents`, `POST /payments/checkout-sessions` | `checkout` |
 | `Idempotency-Key` | `POST /payments/checkout-sessions` | `[A-Za-z0-9._-]{1,128}` |
 
@@ -26,17 +26,17 @@ Missing or changing `X-BlocBuy-Request` returns `403 COMMON_403_001`. Reuse an i
 
 The contract currently exposes these values as strings.
 
-| Field | Value | Meaning |
-|---|---|---|
-| Order status | `pending` | Payment succeeded; team remains open |
-| Order status | `confirmed` | Team reached its target |
-| Order status | `cancelled` | Team expired; refund is owed |
-| Payment status | `CREATED` | Checkout has no provider outcome |
-| Payment status | `SUCCEEDED` | Provider-verified payment |
-| Payment status | `FAILED` | Verified terminal unpaid failure |
-| Payment status | `CANCELED` | Checkout expired without payment |
-| Receipt outcome | `PENDING` | Business settlement is incomplete |
-| Receipt outcome | `FULFILLED` | Membership and order were created |
+| Field           | Value             | Meaning                                       |
+| --------------- | ----------------- | --------------------------------------------- |
+| Order status    | `pending`         | Payment succeeded; team remains open          |
+| Order status    | `confirmed`       | Team reached its target                       |
+| Order status    | `cancelled`       | Team expired; refund is owed                  |
+| Payment status  | `CREATED`         | Checkout has no provider outcome              |
+| Payment status  | `SUCCEEDED`       | Provider-verified payment                     |
+| Payment status  | `FAILED`          | Verified terminal unpaid failure              |
+| Payment status  | `CANCELED`        | Checkout expired without payment              |
+| Receipt outcome | `PENDING`         | Business settlement is incomplete             |
+| Receipt outcome | `FULFILLED`       | Membership and order were created             |
 | Receipt outcome | `REFUND_REQUIRED` | Payment succeeded but fulfilment was rejected |
 
 `refundStatus` is `NONE`, `PENDING`, `PROCESSING`, `SUCCEEDED`, `FAILED`, `REVIEW`, `CANCELED`; `refundPending` is true only for `PENDING` and `PROCESSING`. Order `cancelled` and payment/refund `CANCELED` are intentionally different published values.
@@ -44,6 +44,7 @@ The contract currently exposes these values as strings.
 ## Money and time
 
 - `Receipt.amount` and order amounts are decimal strings such as `"12.00"`; catalog amounts are JSON numbers.
+- Optional order fields `productImage` and `cancelTime` are nullable in the OpenAPI contract.
 - Do not accumulate money with floating-point arithmetic. Currency is currently lowercase `"sgd"`.
 - Instants are ISO-8601 UTC strings; parse them at the display boundary.
 
@@ -71,7 +72,7 @@ The contract currently exposes these values as strings.
 
 `ProductDetailResponse.deal` contains only an open, unexpired team. Null means no team is currently joinable, not necessarily that a previous team was marked expired.
 
-`GET /orders/{orderId}` is owner-scoped. Foreign and unknown orders both return `404 ORDER_404_001`; do not present this as a permission error. Order responses expose neither `paymentId` nor recipient PII.
+`GET /orders/{orderId}` is owner-scoped. Foreign and unknown orders both return `404 ORDER_404_001`; do not present this as a permission error. Successful and error responses include `Cache-Control: no-store`, so clients must not retain the order detail. Order responses expose neither `paymentId` nor recipient PII.
 
 Reaching the team target changes pending orders to `confirmed`; resolving an expired team changes them to `cancelled` and records refund obligations. Refetch orders after a receipt reaches a terminal outcome because no push channel exists.
 
@@ -79,21 +80,21 @@ Automatic expiry is not scheduled. An overdue team can disappear from the catalo
 
 ## Unavailable capabilities
 
-| Capability | Current state |
-|---|---|
-| My teams | No `GET /group-deals/me` endpoint |
-| Refund history | Available only through an individual payment receipt |
-| Order-to-payment navigation | Orders do not expose `paymentId` |
-| Resolved team history | Catalog exposes only the active team |
-| Automatic team expiry | Resolution exists, but no scheduler invokes it |
-| Admin group terms | No write endpoint for team size or lifetime |
+| Capability                  | Current state                                        |
+| --------------------------- | ---------------------------------------------------- |
+| My teams                    | No `GET /group-deals/me` endpoint                    |
+| Refund history              | Available only through an individual payment receipt |
+| Order-to-payment navigation | Orders do not expose `paymentId`                     |
+| Resolved team history       | Catalog exposes only the active team                 |
+| Automatic team expiry       | Resolution exists, but no scheduler invokes it       |
+| Admin group terms           | No write endpoint for team size or lifetime          |
 
 A product without group terms cannot start a team: `POST /payments/intents` returns `CATALOG_409_006`. Joining an existing configured team may still work.
 
 ## Errors requiring specific handling
 
 | Code | Meaning | Frontend behavior |
-|---|---|---|
+| --- | --- | --- |
 | `COMMON_401_001` | No authenticated session | Treat user as anonymous |
 | `COMMON_400_002` | Validation failed | Display safe field details from `errors` |
 | `COMMON_404_001` | Unknown resource or disabled payment route | Use payment capabilities to distinguish disabled state |
