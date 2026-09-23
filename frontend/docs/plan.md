@@ -1203,15 +1203,15 @@ export const Route = createFileRoute('/auth/callback')({
 
 ### T2-08: Native compiler spike (branch `spike/native-react-compiler`)
 
-- [ ] Step 1: `pnpm add -D oxc-transform-react@0.150.0`; in `vite.config.ts` replace `react()` + `babel(...)` with `react({ compiler: true })`.
-- [ ] Step 2: `pnpm check && pnpm build && du -sh dist/assets`; compare with `dev` numbers; run the Header test.
-- [ ] Step 3: Write the ADR 0010 addendum (numbers, any diagnostics from `logDiagnostics`). Close the branch without merging code.
+- [x] Step 1 (2026-09-23, on the working tree of `feature/frontend-spikes-adr`, not a `spike/` branch): `oxc-transform-react@0.150.0` added, `react({ compiler: { logDiagnostics: true } })` replaced `react()` + `babel(...)`; reverted before the commit.
+- [x] Step 2: `pnpm check` exit 0 (25 files / 163 tests), build 350 ms vs 929 ms, `dist/assets` 1356 KB vs 1352 KB, Header test 5/5, no diagnostics.
+- [x] Step 3: ADR 0010 addendum written: keep the Babel preset. No spike code committed.
 
 ### T2-09: react-table evaluation (branch `spike/react-table-31`)
 
-- [ ] Step 1: `pnpm add @tanstack/react-table@9.2.4`; run the task-row Intent check; `pnpm dlx @tanstack/intent@0.4.0 load @tanstack/react-table#getting-started`.
-- [ ] Step 2: Prototype `OrdersTable.tsx` with static rows typed from a hand-declared `OrderRow` (no backend endpoint yet).
-- [ ] Step 3: Write the recommendation in ADR 0001 addendum (adopt for #31 or use plain HeroUI `Table`). Close the branch.
+- [x] Step 1 (2026-09-23): `@tanstack/react-table@9.2.4` added on the working tree; the six Intent skills confirmed in `node_modules/@tanstack/react-table/skills` (`pnpm dlx @tanstack/intent list` printed nothing in the sandbox; `getting-started` read from the package); reverted before the commit.
+- [x] Step 2: `OrdersTable.tsx` (react-table model) and `OrdersTablePlain.tsx` (HeroUI `Table` alone) on a hand-declared `OrderRow`, 10 rows, sorting + paging; both pass `tsc` and oxlint; route chunk 184 / 55 kB gz vs 149 / 45 kB gz.
+- [x] Step 3: ADR 0001 addendum written: plain HeroUI `Table` for #31. No spike code committed.
 
 ### T2-10: Authored skills
 
