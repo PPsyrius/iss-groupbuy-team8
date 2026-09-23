@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blocbuy.order.persistence.BizOrderMapper">
+
+    <insert id="insert">
+        INSERT INTO biz_order (id, order_no, payment_id, user_id, deal_id, product_id,
+            product_title, product_image, quantity, unit_price, total_amount, currency, status,
+            paid_time, cancel_time, create_time, update_time, version)
+        VALUES (#{row.id,jdbcType=OTHER}, #{row.orderNo}, #{row.paymentId,jdbcType=OTHER},
+            #{row.userId,jdbcType=OTHER}, #{row.dealId,jdbcType=OTHER}, #{row.productId,jdbcType=OTHER},
+            #{row.productTitle}, #{row.productImage}, #{row.quantity}, #{row.unitPrice},
+            #{row.totalAmount}, #{row.currency}, #{row.status}, #{row.paidTime}, #{row.cancelTime},
+            #{row.createTime}, #{row.createTime}, #{row.version})
+    </insert>
+
+    <!-- Mutable aggregate state only; product snapshot and identities are immutable after insert.
+         version compare-and-swap gives US20's no-lost-update guarantee. -->
+    <update id="updateIfVersion">
+        UPDATE biz_order SET status = #{row.status}, paid_time = #{row.paidTime},
+            cancel_time = #{row.cancelTime}, version = version + 1, update_time = clock_timestamp()
+        WHERE id = #{row.id,jdbcType=OTHER} AND deleted = false AND version = #{expectedVersion}
+    </update>
+
+    <!-- 'pending' is a server-side status code owned by OrderStatus, never user input. -->
+    <update id="confirmPendingByDealId">
+        UPDATE biz_order SET status = 'confirmed', version = version + 1,
+            update_time = clock_timestamp()
+        WHERE deal_id = #{dealId,jdbcType=OTHER} AND status = 'pending' AND deleted = false
+    </update>
+
+    <update id="cancelPendingByDealId">
+        UPDATE biz_order SET status = 'cancelled', cancel_time = #{canceledAt},
+            version = version + 1, update_time = clock_timestamp()
+        WHERE deal_id = #{dealId,jdbcType=OTHER} AND status = 'pending' AND deleted = false
+    </update>
+
+    <resultMap id="bizOrderMap" type="com.blocbuy.order.persistence.BizOrderDO">
+        <id column="id" property="id" jdbcType="OTHER"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="payment_id" property="paymentId" jdbcType="OTHER"/>
+        <result column="user_id" property="userId" jdbcType="OTHER"/>
+        <result column="deal_id" property="dealId" jdbcType="OTHER"/>
+        <result column="product_id" property="productId" jdbcType="OTHER"/>
+        <result column="product_title" property="productTitle"/>
+        <result column="product_image" property="productImage"/>
+        <result column="quantity" property="quantity"/>
+        <result column="unit_price" property="unitPrice"/>
+        <result column="total_amount" property="totalAmount"/>
+        <result column="currency" property="currency"/>
+        <result column="status" property="status"/>
+        <result column="paid_time" property="paidTime"/>
+        <result column="cancel_time" property="cancelTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="create_by" property="createBy" jdbcType="OTHER"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="update_by" property="updateBy" jdbcType="OTHER"/>
+        <result column="deleted" property="deleted"/>
+        <result column="version" property="version"/>
+    </resultMap>
+
+    <sql id="columns">
+        id, order_no, payment_id, user_id, deal_id, product_id, product_title, product_image,
+        quantity, unit_price, total_amount, currency, status, paid_time, cancel_time, create_time,
+        create_by, update_time, update_by, deleted, version
+    </sql>
+
+    <select id="selectById" resultMap="bizOrderMap">
+        SELECT <include refid="columns"/>
+        FROM biz_order
+        WHERE id = #{id,jdbcType=OTHER} AND deleted = false
+    </select>
+
+    <select id="selectByPaymentId" resultMap="bizOrderMap">
+        SELECT <include refid="columns"/>
+        FROM biz_order
+        WHERE payment_id = #{paymentId,jdbcType=OTHER} AND deleted = false
+    </select>
+
+    <select id="selectPageByUserId" resultMap="bizOrderMap">
+        SELECT <include refid="columns"/>
+        FROM biz_order
+        WHERE user_id = #{userId,jdbcType=OTHER} AND deleted = false
+        ORDER BY create_time DESC, id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*)
+        FROM biz_order
+        WHERE user_id = #{userId,jdbcType=OTHER} AND deleted = false
+    </select>
+
+</mapper>

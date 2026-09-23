@@ -7,7 +7,17 @@ import com.blocbuy.common.exception.ErrorCode;
  * localized via {@link #messageKey()}, codes may not.
  */
 public enum OrderErrorCode implements ErrorCode {
-    ORDER_PLACEHOLDER("ORDER_404_001", 404, "Order not found", "error.order.notFound");
+    ORDER_NOT_FOUND("ORDER_404_001", 404, "Order not found", "error.order.notFound"),
+    ORDER_STATE_INVALID(
+            "ORDER_409_001",
+            409,
+            "Order is in a state that does not allow this operation",
+            "error.order.stateInvalid"),
+    ORDER_VERSION_CONFLICT(
+            "ORDER_409_002",
+            409,
+            "Order was modified concurrently; retry with the latest version",
+            "error.order.versionConflict");
 
     private final String code;
     private final int httpStatus;

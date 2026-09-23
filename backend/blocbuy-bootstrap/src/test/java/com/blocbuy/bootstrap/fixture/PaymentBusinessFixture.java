@@ -204,7 +204,7 @@ public final class PaymentBusinessFixture
         }
         UUID order = UUID.randomUUID();
         jdbc.update(
-                "INSERT INTO biz_order(id,order_no,user_id,deal_id,product_id,product_title,quantity,unit_price,total_amount,currency,status,payment_id,paid_time) VALUES(?,?,?,?,?,?,1,?,?,?,'paid',?,clock_timestamp())",
+                "INSERT INTO biz_order(id,order_no,user_id,deal_id,product_id,product_title,quantity,unit_price,total_amount,currency,status,payment_id,paid_time) VALUES(?,?,?,?,?,?,1,?,?,?,'pending',?,clock_timestamp())",
                 order,
                 "LOCAL-" + order,
                 quote.userId(),
@@ -248,7 +248,7 @@ public final class PaymentBusinessFixture
         boolean valid =
                 Boolean.TRUE.equals(
                         jdbc.queryForObject(
-                                "SELECT EXISTS(SELECT 1 FROM biz_group_member m JOIN biz_order o ON o.id=m.order_id JOIN stripe_local_intent i ON i.fulfilled_payment_id=o.payment_id WHERE o.payment_id=? AND m.payment_id=o.payment_id AND o.user_id=? AND m.user_id=o.user_id AND m.deal_id=o.deal_id AND i.deal_id=o.deal_id AND i.id=? AND o.total_amount=? AND o.currency=? AND o.status='paid' AND m.status='paid' AND NOT o.deleted AND NOT m.deleted)",
+                                "SELECT EXISTS(SELECT 1 FROM biz_group_member m JOIN biz_order o ON o.id=m.order_id JOIN stripe_local_intent i ON i.fulfilled_payment_id=o.payment_id WHERE o.payment_id=? AND m.payment_id=o.payment_id AND o.user_id=? AND m.user_id=o.user_id AND m.deal_id=o.deal_id AND i.deal_id=o.deal_id AND i.id=? AND o.total_amount=? AND o.currency=? AND m.status='paid' AND NOT o.deleted AND NOT m.deleted)",
                                 Boolean.class,
                                 event.paymentId(),
                                 event.quote().userId(),
