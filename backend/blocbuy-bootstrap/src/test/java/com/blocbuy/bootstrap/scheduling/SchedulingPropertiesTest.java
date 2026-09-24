@@ -46,7 +46,9 @@ class SchedulingPropertiesTest {
 
     @Test
     void anOutOfRangeValueFailsBinding() {
-        assertThatThrownBy(() -> bind(Map.of("blocbuy.scheduling.team-expiry.batch-size", "501")))
+        Map<String, String> values = Map.of("blocbuy.scheduling.team-expiry.batch-size", "501");
+
+        assertThatThrownBy(() -> bind(values))
                 .isInstanceOf(BindException.class)
                 .rootCause()
                 .isInstanceOf(IllegalArgumentException.class);

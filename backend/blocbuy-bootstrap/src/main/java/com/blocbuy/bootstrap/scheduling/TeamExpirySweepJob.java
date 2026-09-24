@@ -17,6 +17,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 public class TeamExpirySweepJob {
     static final String JOB = "team-expiry-sweep";
     static final String TEAMS = "blocbuy.team.expiry.teams";
+    private static final String RESULT_TAG = "result";
 
     private final LeasedJobRunner runner;
     private final GroupDealExpirySweeper sweeper;
@@ -34,9 +35,9 @@ public class TeamExpirySweepJob {
     private void sweepOnce() {
         long started = System.nanoTime();
         GroupDealExpirySweeper.Result result = sweeper.sweep(settings.batchSize());
-        meters.counter(TEAMS, "result", "expired").increment(result.expired());
-        meters.counter(TEAMS, "result", "already_resolved").increment(result.alreadyResolved());
-        meters.counter(TEAMS, "result", "failed").increment(result.failed());
+        meters.counter(TEAMS, RESULT_TAG, "expired").increment(result.expired());
+        meters.counter(TEAMS, RESULT_TAG, "already_resolved").increment(result.alreadyResolved());
+        meters.counter(TEAMS, RESULT_TAG, "failed").increment(result.failed());
         long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
         if (result.due() > 0) {
             log.info(

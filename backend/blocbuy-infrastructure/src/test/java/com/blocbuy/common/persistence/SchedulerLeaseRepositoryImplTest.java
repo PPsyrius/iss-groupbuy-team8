@@ -46,9 +46,10 @@ class SchedulerLeaseRepositoryImplTest {
 
     @Test
     void anyOtherRowCountIsATechnicalFailure() {
+        Duration lease = Duration.ofMinutes(2);
         when(mapper.acquire(anyString(), anyString(), anyDouble())).thenReturn(2);
 
-        assertThatThrownBy(() -> leases.tryAcquire(KEY, OWNER, Duration.ofMinutes(2)))
+        assertThatThrownBy(() -> leases.tryAcquire(KEY, OWNER, lease))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -95,13 +96,16 @@ class SchedulerLeaseRepositoryImplTest {
 
     @Test
     void theLeaseMustLastAtLeastOneMillisecond() {
+        Duration tooShort = Duration.ofNanos(999_999);
+        Duration negative = Duration.ofSeconds(-1);
+
         assertThatThrownBy(() -> leases.tryAcquire(KEY, OWNER, null))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> leases.tryAcquire(KEY, OWNER, Duration.ZERO))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> leases.tryAcquire(KEY, OWNER, Duration.ofNanos(999_999)))
+        assertThatThrownBy(() -> leases.tryAcquire(KEY, OWNER, tooShort))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> leases.tryAcquire(KEY, OWNER, Duration.ofSeconds(-1)))
+        assertThatThrownBy(() -> leases.tryAcquire(KEY, OWNER, negative))
                 .isInstanceOf(IllegalArgumentException.class);
         verifyNoInteractions(mapper);
     }
