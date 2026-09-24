@@ -5,6 +5,7 @@ import com.blocbuy.groupbuy.model.PaidMember;
 import com.blocbuy.groupbuy.model.PaidParticipation;
 import com.blocbuy.groupbuy.model.ParticipationReceipt;
 import com.blocbuy.groupbuy.model.ParticipationResult;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -58,12 +59,19 @@ public interface PaidGroupDealRepository {
     Optional<PaidMember> findPaidMember(UUID paymentId);
 
     /**
-     * Ids of open deals whose admission window has closed, oldest deadline first. One batch read
-     * for a whole sweep — the caller then resolves each team in its own short transaction.
+     * Ids of open deals whose admission window has closed and whose retry delay has elapsed, oldest
+     * deadline first. One batch read for a whole sweep — the caller then resolves each team in its
+     * own short transaction.
      *
      * @param limit hard upper bound on the returned ids, so one run cannot grow unbounded
      */
     List<UUID> dueForExpiry(Instant now, int limit);
+
+    /**
+     * Defers one failed expiry on the database clock. This write runs after the team's transaction
+     * rolled back, so a poisoned oldest row cannot consume a batch slot on every sweep.
+     */
+    void deferExpiryRetry(UUID dealId, Duration delay);
 
     /**
      * Persists a validated expiry under the caller's deal lock. The UPDATE is status-guarded, so a

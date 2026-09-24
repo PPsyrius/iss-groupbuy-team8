@@ -140,6 +140,57 @@ class SchedulerLeaseRepositoryIT {
     }
 
     @Test
+    void renewalExtendsOnlyAStillLiveOwnedLease() {
+        String key = key();
+        assertThat(leases.tryAcquire(key, "a", LEASE)).isTrue();
+
+        assertThat(leases.renew(key, "a", Duration.ofMinutes(3))).isTrue();
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT locked_until > clock_timestamp() + interval '150 seconds'"
+                                        + " FROM sys_scheduler_lock WHERE lock_key = ?",
+                                Boolean.class,
+                                key))
+                .isTrue();
+
+        jdbc.update(
+                "UPDATE sys_scheduler_lock SET locked_until = clock_timestamp() - interval '1 second'"
+                        + " WHERE lock_key = ?",
+                key);
+        assertThat(leases.renew(key, "a", LEASE)).isFalse();
+    }
+
+    @Test
+    void contendedReacquireStartsItsDeadlineAfterTheRowLockIsObtained() throws Exception {
+        String key = key();
+        assertThat(leases.tryAcquire(key, "a", LEASE)).isTrue();
+        try (Connection holder = source.getConnection();
+                var pool = Executors.newSingleThreadExecutor()) {
+            holder.setAutoCommit(false);
+            try (var lock =
+                    holder.prepareStatement(
+                            "SELECT 1 FROM sys_scheduler_lock WHERE lock_key = ? FOR UPDATE")) {
+                lock.setString(1, key);
+                lock.executeQuery().close();
+            }
+            Future<Boolean> reacquired =
+                    pool.submit(() -> leases.tryAcquire(key, "a", Duration.ofSeconds(5)));
+
+            Thread.sleep(Duration.ofMillis(1500));
+            holder.rollback();
+
+            assertThat(reacquired.get()).isTrue();
+        }
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT locked_until > clock_timestamp() + interval '4 seconds'"
+                                        + " FROM sys_scheduler_lock WHERE lock_key = ?",
+                                Boolean.class,
+                                key))
+                .isTrue();
+    }
+
+    @Test
     void ofManyRacingOwnersExactlyOneWins() throws Exception {
         String key = key();
         int racers = 8;

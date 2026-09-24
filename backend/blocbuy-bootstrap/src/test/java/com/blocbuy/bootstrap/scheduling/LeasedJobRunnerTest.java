@@ -11,6 +11,8 @@ import com.blocbuy.common.constant.ApiConstants;
 import com.blocbuy.common.repository.SchedulerLeaseRepository;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
@@ -34,7 +36,7 @@ class LeasedJobRunnerTest {
         when(leases.release(JOB, OWNER)).thenReturn(true);
         var traceId = new AtomicReference<String>();
 
-        runner.run(JOB, LEASE, () -> traceId.set(MDC.get(ApiConstants.TRACE_ID_MDC_KEY)));
+        runner.run(JOB, LEASE, ignored -> traceId.set(MDC.get(ApiConstants.TRACE_ID_MDC_KEY)));
 
         assertThat(traceId.get()).startsWith("job-");
         assertThat(MDC.get(ApiConstants.TRACE_ID_MDC_KEY)).isNull();
@@ -48,7 +50,7 @@ class LeasedJobRunnerTest {
     void aLeaseHeldElsewhereSkipsTheRunWithoutReleasing() {
         when(leases.tryAcquire(JOB, OWNER, LEASE)).thenReturn(false);
 
-        runner.run(JOB, LEASE, runs::incrementAndGet);
+        runner.run(JOB, LEASE, ignored -> runs.incrementAndGet());
 
         assertThat(runs).hasValue(0);
         verify(leases, never()).release(any(), any());
@@ -63,7 +65,7 @@ class LeasedJobRunnerTest {
         runner.run(
                 JOB,
                 LEASE,
-                () -> {
+                ignored -> {
                     throw new IllegalStateException("boom");
                 });
 
@@ -78,7 +80,7 @@ class LeasedJobRunnerTest {
         when(leases.tryAcquire(JOB, OWNER, LEASE))
                 .thenThrow(new QueryTimeoutException("canceling statement"));
 
-        runner.run(JOB, LEASE, runs::incrementAndGet);
+        runner.run(JOB, LEASE, ignored -> runs.incrementAndGet());
 
         assertThat(runs).hasValue(0);
         verify(leases, never()).release(any(), any());
@@ -92,11 +94,82 @@ class LeasedJobRunnerTest {
                 .thenReturn(false)
                 .thenThrow(new QueryTimeoutException("canceling statement"));
 
-        runner.run(JOB, LEASE, runs::incrementAndGet);
-        runner.run(JOB, LEASE, runs::incrementAndGet);
+        runner.run(JOB, LEASE, ignored -> runs.incrementAndGet());
+        runner.run(JOB, LEASE, ignored -> runs.incrementAndGet());
 
         assertThat(runs).hasValue(2);
         assertThat(runs(LeasedJobRunner.COMPLETED)).isEqualTo(2.0);
+    }
+
+    @Test
+    void failedRenewalInvalidatesTheLeaseAwareWorkAndTheRun() {
+        Duration shortLease = Duration.ofMillis(60);
+        var renewalAttempted = new CountDownLatch(1);
+        var observedValidity = new AtomicReference<Boolean>();
+        when(leases.tryAcquire(JOB, OWNER, shortLease)).thenReturn(true);
+        when(leases.renew(JOB, OWNER, shortLease))
+                .thenAnswer(
+                        ignored -> {
+                            renewalAttempted.countDown();
+                            return false;
+                        });
+        when(leases.release(JOB, OWNER)).thenReturn(false);
+
+        runner.run(
+                JOB,
+                shortLease,
+                leaseValid -> {
+                    await(renewalAttempted);
+                    observedValidity.set(leaseValid.getAsBoolean());
+                });
+
+        assertThat(observedValidity).hasValue(false);
+        assertThat(runs(LeasedJobRunner.FAILED)).isEqualTo(1.0);
+    }
+
+    @Test
+    void successfulRenewalKeepsTheWorkValidAndCarriesTheTraceId() {
+        Duration shortLease = Duration.ofMillis(60);
+        var renewed = new CountDownLatch(1);
+        var renewalTraceId = new AtomicReference<String>();
+        when(leases.tryAcquire(JOB, OWNER, shortLease)).thenReturn(true);
+        when(leases.renew(JOB, OWNER, shortLease))
+                .thenAnswer(
+                        ignored -> {
+                            renewalTraceId.set(MDC.get(ApiConstants.TRACE_ID_MDC_KEY));
+                            renewed.countDown();
+                            return true;
+                        });
+        when(leases.release(JOB, OWNER)).thenReturn(true);
+
+        runner.run(
+                JOB,
+                shortLease,
+                leaseValid -> {
+                    await(renewed);
+                    assertThat(leaseValid.getAsBoolean()).isTrue();
+                });
+
+        assertThat(renewalTraceId.get()).startsWith("job-");
+        assertThat(runs(LeasedJobRunner.COMPLETED)).isEqualTo(1.0);
+    }
+
+    @Test
+    void renewalExceptionInvalidatesTheRun() {
+        Duration shortLease = Duration.ofMillis(60);
+        var renewalAttempted = new CountDownLatch(1);
+        when(leases.tryAcquire(JOB, OWNER, shortLease)).thenReturn(true);
+        when(leases.renew(JOB, OWNER, shortLease))
+                .thenAnswer(
+                        ignored -> {
+                            renewalAttempted.countDown();
+                            throw new QueryTimeoutException("canceling renewal");
+                        });
+        when(leases.release(JOB, OWNER)).thenReturn(false);
+
+        runner.run(JOB, shortLease, ignored -> await(renewalAttempted));
+
+        assertThat(runs(LeasedJobRunner.FAILED)).isEqualTo(1.0);
     }
 
     @Test
@@ -116,5 +189,14 @@ class LeasedJobRunnerTest {
                 .tag("outcome", outcome)
                 .counter()
                 .count();
+    }
+
+    private static void await(CountDownLatch latch) {
+        try {
+            assertThat(latch.await(2, TimeUnit.SECONDS)).isTrue();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError(e);
+        }
     }
 }

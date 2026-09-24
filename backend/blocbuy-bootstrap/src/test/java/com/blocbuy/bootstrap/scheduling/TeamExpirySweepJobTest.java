@@ -31,7 +31,7 @@ class TeamExpirySweepJobTest {
     void runWorkInline() {
         doAnswer(
                         call -> {
-                            call.<Runnable>getArgument(2).run();
+                            call.<LeasedJobRunner.LeaseAwareWork>getArgument(2).run(() -> true);
                             return null;
                         })
                 .when(runner)
@@ -40,11 +40,12 @@ class TeamExpirySweepJobTest {
 
     @Test
     void aSweepWithDueTeamsIsCountedPerResult() {
-        when(sweeper.sweep(42)).thenReturn(new GroupDealExpirySweeper.Result(6, 3, 2, 1));
+        when(sweeper.sweep(eq(42), any()))
+                .thenReturn(new GroupDealExpirySweeper.Result(6, 3, 2, 1));
 
         job.run();
 
-        verify(sweeper).sweep(42);
+        verify(sweeper).sweep(eq(42), any());
         assertThat(teams("expired")).isEqualTo(3.0);
         assertThat(teams("already_resolved")).isEqualTo(2.0);
         assertThat(teams("failed")).isEqualTo(1.0);
@@ -52,7 +53,8 @@ class TeamExpirySweepJobTest {
 
     @Test
     void anIdleSweepCountsNothing() {
-        when(sweeper.sweep(42)).thenReturn(new GroupDealExpirySweeper.Result(0, 0, 0, 0));
+        when(sweeper.sweep(eq(42), any()))
+                .thenReturn(new GroupDealExpirySweeper.Result(0, 0, 0, 0));
 
         job.run();
 

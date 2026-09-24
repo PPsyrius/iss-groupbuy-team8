@@ -3,6 +3,7 @@ package com.blocbuy.bootstrap.scheduling;
 import com.blocbuy.groupbuy.service.GroupDealExpirySweeper;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -32,9 +33,9 @@ public class TeamExpirySweepJob {
         runner.run(JOB, settings.lease(), this::sweepOnce);
     }
 
-    private void sweepOnce() {
+    private void sweepOnce(BooleanSupplier leaseValid) {
         long started = System.nanoTime();
-        GroupDealExpirySweeper.Result result = sweeper.sweep(settings.batchSize());
+        GroupDealExpirySweeper.Result result = sweeper.sweep(settings.batchSize(), leaseValid);
         meters.counter(TEAMS, RESULT_TAG, "expired").increment(result.expired());
         meters.counter(TEAMS, RESULT_TAG, "already_resolved").increment(result.alreadyResolved());
         meters.counter(TEAMS, RESULT_TAG, "failed").increment(result.failed());

@@ -70,6 +70,10 @@ public interface PaidGroupDealMapper {
      */
     List<UUID> selectDueForExpiry(@Param("now") Instant now, @Param("limit") int limit);
 
+    /** Records or extends database-clock backoff for a failed team-expiry attempt. */
+    int deferExpiryRetry(
+            @Param("dealId") UUID dealId, @Param("retryDelaySeconds") double retryDelaySeconds);
+
     /**
      * Resolves one open deal as expired under the caller's row lock; a deal another writer already
      * resolved matches nothing and returns zero.

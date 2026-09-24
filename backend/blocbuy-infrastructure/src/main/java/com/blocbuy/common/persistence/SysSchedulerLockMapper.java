@@ -17,6 +17,12 @@ public interface SysSchedulerLockMapper {
             @Param("owner") String owner,
             @Param("leaseSeconds") double leaseSeconds);
 
+    /** Extends a still-live lease owned by this instance; returns zero after expiry or takeover. */
+    int renew(
+            @Param("lockKey") String lockKey,
+            @Param("owner") String owner,
+            @Param("leaseSeconds") double leaseSeconds);
+
     /** Expires the lease now if this owner still holds it; returns the affected row count. */
     int release(@Param("lockKey") String lockKey, @Param("owner") String owner);
 }

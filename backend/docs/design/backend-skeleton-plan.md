@@ -212,7 +212,7 @@ Evidence snapshot: code `8fe3d14`, 2026-09-11. Names follow the existing Sprint 
 | UC2 | Liu Jin: backend; Lim Jiechao: frontend | [§15](#15-uc2-google-authentication) | OAuth backend exists; real local login acceptance blocked by config |
 | UC3 | Wang Ziang (Eric): groupbuy-side slice | [Paid participation](paid-group-participation.md#uc3-analysis-and-design) | Factory Method and local atomic creation exist; checkout/invite integration pending |
 | UC4 | Wang Ziang (Eric): groupbuy-side slice | [Paid participation](paid-group-participation.md#uc4-analysis-and-design) | Locked admission/replay exist; full paid buyer flow pending |
-| UC5 | Liu Jin | [§16](#16-uc5-lifecycle-and-observer-integration) | State transitions and synchronous observers implemented; expiry scheduler deferred to PR-G |
+| UC5 | Liu Jin | [§16](#16-uc5-lifecycle-and-observer-integration) | State transitions, synchronous observers and the opt-in expiry scheduler implemented; refund worker deferred to PR-G2 |
 | UC6 | Yu Qianshuo (Yorik) | [§17](#17-uc6-expiry-refunds) | Durable expiry obligations and refund execution implemented; production worker deferred to PR-G |
 | UC7 | Lim Jiechao | [§18](#18-uc7-share-attribution) | Observer subscriber proposed |
 | UC8 | Lim Jiechao | [§19](#19-uc8-my-orders-and-teams) | Placeholder services/controllers; owner-scoped query proposed |
@@ -392,7 +392,7 @@ UC9's [#68 handoff](https://github.com/PPsyrius/iss-groupbuy-team8/issues/68) re
 
 ## 16. UC5 lifecycle and Observer integration
 
-> **Implementation update (2026-09-23):** The design below records the original proposal. PR #148 implemented the state-transition policy and synchronous before-commit subscribers. Expiry refund handling is profile-independent through `TeamExpiryRefundService`, with deterministic payment locks and set-based obligation insertion. Only the expiry scheduler remains deferred to PR-G.
+> **Implementation update (2026-09-24):** The design below records the original proposal. PR #148 implemented the state-transition policy and synchronous before-commit subscribers. Expiry refund handling is profile-independent through `TeamExpiryRefundService`, with deterministic payment locks and set-based obligation insertion. PR-G1 adds the deployment-opt-in, renewable-lease expiry scheduler; only the Stripe refund worker remains deferred to PR-G2.
 
 Member: Liu Jin, #28. **Implemented:** GroupDeal.joinPaid reaches SUCCEEDED on the final accepted member under the UC4 lock. **Proposed:** full State behavior, scheduled expiry and event publishing. DealStatus currently stores codes; it is not the implemented State shown for UC9.
 

@@ -22,6 +22,14 @@ public interface SchedulerLeaseRepository {
     boolean tryAcquire(String lockKey, String owner, Duration lease);
 
     /**
+     * Extends a still-live lease held by {@code owner}. Unlike acquisition, renewal never takes
+     * over an expired lease.
+     *
+     * @return false when the lease expired or another owner already took it over
+     */
+    boolean renew(String lockKey, String owner, Duration lease);
+
+    /**
      * Ends the lease early so the next run need not wait for it to expire.
      *
      * @return false when the lease was no longer ours — it expired and another owner took it over

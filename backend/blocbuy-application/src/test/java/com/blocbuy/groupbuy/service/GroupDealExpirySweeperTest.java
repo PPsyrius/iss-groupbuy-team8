@@ -3,6 +3,7 @@ package com.blocbuy.groupbuy.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -13,6 +14,7 @@ import com.blocbuy.groupbuy.repository.PaidGroupDealRepository;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 
 /** One batch read, one transaction per team, and no team's failure reaches another. */
@@ -58,6 +60,41 @@ class GroupDealExpirySweeperTest {
         assertThat(sweeper.sweep(100)).isEqualTo(new GroupDealExpirySweeper.Result(3, 2, 0, 1));
 
         verify(expiry).expireOne(THIRD);
+        verify(deals).deferExpiryRetry(SECOND, GroupDealExpirySweeper.RETRY_DELAY);
+    }
+
+    @Test
+    void aBackoffWriteFailureFailsTheRunRatherThanHidingLostRetryState() {
+        when(deals.currentTime()).thenReturn(DB_NOW);
+        when(deals.dueForExpiry(DB_NOW, 2)).thenReturn(List.of(FIRST, SECOND));
+        when(expiry.expireOne(FIRST)).thenThrow(new IllegalStateException("inconsistent rows"));
+        doThrow(new IllegalStateException("retry table unavailable"))
+                .when(deals)
+                .deferExpiryRetry(FIRST, GroupDealExpirySweeper.RETRY_DELAY);
+
+        assertThatThrownBy(() -> sweeper.sweep(2))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("retry backoff could not be recorded");
+
+        verify(expiry, never()).expireOne(SECOND);
+    }
+
+    @Test
+    void leaseLossStopsBeforeTheNextTeam() {
+        when(deals.currentTime()).thenReturn(DB_NOW);
+        when(deals.dueForExpiry(DB_NOW, 2)).thenReturn(List.of(FIRST, SECOND));
+        var leaseValid = new AtomicBoolean(true);
+        when(expiry.expireOne(FIRST))
+                .thenAnswer(
+                        ignored -> {
+                            leaseValid.set(false);
+                            return true;
+                        });
+
+        assertThat(sweeper.sweep(2, leaseValid::get))
+                .isEqualTo(new GroupDealExpirySweeper.Result(2, 1, 0, 0));
+
+        verify(expiry, never()).expireOne(SECOND);
     }
 
     @Test

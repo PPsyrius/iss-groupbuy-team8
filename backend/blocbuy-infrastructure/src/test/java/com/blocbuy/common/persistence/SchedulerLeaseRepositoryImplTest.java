@@ -64,6 +64,17 @@ class SchedulerLeaseRepositoryImplTest {
         verify(mapper, times(3)).release(KEY, OWNER);
     }
 
+    @Test
+    void renewReportsWhetherTheLiveLeaseWasStillOurs() {
+        Duration lease = Duration.ofMinutes(2);
+        when(mapper.renew(KEY, OWNER, 120.0)).thenReturn(1, 0, 2);
+
+        assertThat(leases.renew(KEY, OWNER, lease)).isTrue();
+        assertThat(leases.renew(KEY, OWNER, lease)).isFalse();
+        assertThatThrownBy(() -> leases.renew(KEY, OWNER, lease))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {"", "   "})
