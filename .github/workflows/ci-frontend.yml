@@ -393,8 +393,8 @@ jobs:
       - detect-changes
       - package-dev
 
-    # Gated on ENABLE_S3_DEPLOY until the bucket, OIDC role and `frontend-dev` environment exist
-    # (runbook §16–§17). The role trusts the `environment:frontend-dev` OIDC subject.
+    # ENABLE_S3_DEPLOY is the operational deploy/freeze switch. The role trusts the
+    # `environment:frontend-dev` OIDC subject and the environment permits only dev.
     if: >-
       always() &&
       github.event_name == 'push' &&
@@ -431,7 +431,7 @@ jobs:
         run: test -f dist/index.html
 
       - name: Assume frontend deploy role with GitHub OIDC
-        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ vars.AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV }}
           aws-region: ${{ vars.AWS_REGION }}
@@ -441,7 +441,7 @@ jobs:
       # Hashed assets are immutable; `--delete` drops assets of the previous build (plan §7.1:
       # keep one build for rollback by removing --delete and adding a lifecycle rule in T2-07).
       - name: Sync hashed assets (immutable cache)
-        run: aws s3 sync dist/ "s3://${{ vars.FRONTEND_S3_BUCKET_DEV }}" --delete --exclude index.html --cache-control "public,max-age=31536000,immutable"
+        run: aws s3 sync dist/ "s3://${{ vars.FRONTEND_S3_BUCKET_DEV }}" --delete --exclude index.html --exclude "*.map" --cache-control "public,max-age=31536000,immutable"
 
       # index.html is the only mutable object: uploaded last so it never references a missing asset.
       - name: Publish index.html (no-cache)

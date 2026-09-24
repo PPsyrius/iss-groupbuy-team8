@@ -108,6 +108,7 @@ All parameters are `SecureString`, path-prefixed `/blocbuy/prod/`:
 | `/blocbuy/prod/REDIS_HOST` | backend env (fetch-env.sh) |
 | `/blocbuy/prod/REDIS_PORT` | backend env (fetch-env.sh) |
 | `/blocbuy/prod/REDIS_PASSWORD` | backend env (fetch-env.sh) **and** infra compose (first boot) |
+| `/blocbuy/prod/BLOCBUY_SCHEDULING_ENABLED` | backend scheduler master switch; seed `false` and enable after the overdue-team backlog check |
 | `/blocbuy/prod/STRIPE_API_KEY` | backend env (fetch-env.sh) |
 | `/blocbuy/prod/STRIPE_WEBHOOK_SECRET` | backend env (fetch-env.sh) |
 | `/blocbuy/prod/POSTGRES_USER` | infra compose (first boot) |
@@ -120,10 +121,11 @@ aws ssm put-parameter --name /blocbuy/prod/DB_PASSWORD \
 # ... repeat for every row above
 ```
 
-- [ ] All eleven parameters exist (`aws ssm describe-parameters --parameter-filters ...`)
+- [ ] All twelve parameters exist (`aws ssm describe-parameters --parameter-filters ...`)
 - [ ] No value was echoed to a terminal log, issue, or file inside the repository
 - [ ] `REDIS_HOST`=`127.0.0.1`, `REDIS_PORT`=`6379`, `DB_URL` points at `127.0.0.1:5432/Blocbuy`
       (host-local infra project), schema suffix identical to dev
+- [ ] `BLOCBUY_SCHEDULING_ENABLED=false` until the overdue-team backlog has been counted
 
 ## 4. Plan, review, apply the stack
 
@@ -162,7 +164,7 @@ Apply creates: two GitHub OIDC roles, `prod/blocbuy` ECR, security groups, ALB +
 and the EC2 instance. User-data runs at first boot (Docker, AWS CLI, the `blocbuy-infra`
 PostgreSQL/Redis project, loopback-only).
 
-- [ ] `terraform apply` returned successfully; no errors in the user-data self-verification
+- [ ] `terraform apply` returned successfully; user-data bootstrap verified separately via the SSM check in section 5
 - [ ] Change log entry (link the PR + the apply)
 
 ## 5. Post-apply verification
@@ -175,6 +177,21 @@ aws ssm describe-instance-information \
   --filters "Key=InstanceIds,Values=$INSTANCE_ID" --region ap-southeast-1 \
   --query 'InstanceInformationList[].{id:InstanceId,ping:PingStatus}'
 # PingStatus must be Online
+
+# cloud-init finished AND user-data bootstrap completed (apply does not report this).
+# send-command only submits: capture the ID, poll to a terminal status, require Success.
+CMD_ID="$(aws ssm send-command --instance-ids "$INSTANCE_ID" \
+  --document-name AWS-RunShellScript --region ap-southeast-1 \
+  --parameters 'commands=["cloud-init status --wait && grep -F \"BlocBuy prod host bootstrap complete\" /var/log/cloud-init-output.log"]' \
+  --query 'Command.CommandId' --output text)"
+for _ in $(seq 1 60); do
+  CMD_STATUS="$(aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" --region ap-southeast-1 --query Status --output text 2>/dev/null || true)"
+  case "$CMD_STATUS" in Success|Cancelled|TimedOut|Failed) break ;; esac
+  sleep 10
+done
+aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" --region ap-southeast-1 \
+  --query '[Status, StandardOutputContent, StandardErrorContent]' --output text
+# Status must be Success (10-minute cap above covers first-boot cloud-init); otherwise read the log tail via the same SSM path before continuing
 
 # Infra listeners: loopback only, no public bind
 aws ssm send-command --instance-ids "$INSTANCE_ID" \
@@ -203,6 +220,7 @@ curl -s -o /dev/null -w '%{http_code}\n' -H "X-Origin-Secret: $ORIGIN_SECRET" \
 ```
 
 - [ ] `PingStatus=Online`
+- [ ] cloud-init done and user-data bootstrap completion line in the log
 - [ ] PostgreSQL/Redis listening on `127.0.0.1` only
 - [ ] No unexpected ingress rules
 - [ ] `terraform output` prints `instance_id`, `ecr_push_role_arn`, `deploy_role_arn`,

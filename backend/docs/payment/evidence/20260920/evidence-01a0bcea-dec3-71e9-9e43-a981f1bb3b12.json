@@ -1,0 +1,46 @@
+{
+  "observed_at": "2026-09-20T03:47:07.947896+00:00",
+  "local": {
+    "id": "01a0bcea-dec3-71e9-9e43-a981f1bb3b12",
+    "status": "CANCELED",
+    "amount": 10.0,
+    "currency": "sgd",
+    "intent_id": "7e8b1a71-3b08-44c7-8e45-6727de01a2ef",
+    "operation": "JOIN",
+    "business_id": "62165120-f588-44a6-bbe0-bf656e33e2d0",
+    "checkout_session_id": "cs_test_a1m0NaIjdrIPZ9X54npi9v8oZ24UWGClaLbPEBYtRADvF09QbOrbuXeHGb",
+    "provider_payment_intent_id": null,
+    "fulfilment_result": null,
+    "fulfilled_deal_id": null
+  },
+  "stripe": {
+    "id": "cs_test_a1m0NaIjdrIPZ9X54npi9v8oZ24UWGClaLbPEBYtRADvF09QbOrbuXeHGb",
+    "livemode": false,
+    "status": "expired",
+    "payment_status": "unpaid",
+    "amount_total": 1000,
+    "currency": "sgd",
+    "payment_intent": null
+  },
+  "http": {
+    "status": "CANCELED",
+    "paymentId": "01a0bcea-dec3-71e9-9e43-a981f1bb3b12",
+    "outcome": "PENDING"
+  },
+  "orders": [],
+  "refund_obligations": [],
+  "review": [],
+  "webhooks": [
+    {
+      "event_id": "expiry-01a0bceb-a41f-7fff-a085-e5d15bb2b378",
+      "payment_id": "01a0bcea-dec3-71e9-9e43-a981f1bb3b12",
+      "processing_result": "OBSERVE"
+    },
+    {
+      "event_id": "evt_1UHbhO5iEVLN2uQJoV7JzDo2",
+      "payment_id": "01a0bcea-dec3-71e9-9e43-a981f1bb3b12",
+      "processing_result": "OBSERVE"
+    }
+  ],
+  "members": []
+}

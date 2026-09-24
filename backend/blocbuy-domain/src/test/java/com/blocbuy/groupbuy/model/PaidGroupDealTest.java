@@ -536,6 +536,74 @@ class PaidGroupDealTest {
                                         .isEqualTo(GroupbuyErrorCode.PAYMENT_MISMATCH));
     }
 
+    /** Verifies an overdue open deal resolves to an expired snapshot, changing nothing else. */
+    @Test
+    void expireClosesAnOverdueOpenDeal() {
+        GroupDeal deal = start(3);
+        Instant due = deal.expireTime();
+
+        GroupDeal expired = deal.expire(due);
+
+        assertThat(expired.status()).isEqualTo(DealStatus.EXPIRED);
+        assertThat(expired.id()).isEqualTo(deal.id());
+        assertThat(expired.currentSize()).isEqualTo(deal.currentSize());
+        assertThat(expired.expireTime()).isEqualTo(deal.expireTime());
+        assertThat(expired.successTime()).isNull();
+    }
+
+    /**
+     * A sweeper asking for a deal that is not due yet is a bug in its own query, not a rejection.
+     */
+    @Test
+    void expireRefusesADealThatIsNotDueYet() {
+        GroupDeal deal = start(3);
+        Instant early = deal.expireTime().minusMillis(1);
+
+        assertThatThrownBy(() -> deal.expire(early)).isInstanceOf(IllegalStateException.class);
+    }
+
+    /**
+     * A team another writer already resolved is a business fact the caller swallows as a replay.
+     */
+    @ParameterizedTest
+    @EnumSource(
+            value = DealStatus.class,
+            names = {"SUCCEEDED", "EXPIRED", "FAILED", "CANCELED"})
+    void expireRefusesATerminalDeal(DealStatus terminal) {
+        GroupDeal deal = reconstituteWith(terminal);
+        Instant due = deal.expireTime();
+
+        assertThatThrownBy(() -> deal.expire(due))
+                .isInstanceOf(BizException.class)
+                .satisfies(
+                        failure ->
+                                assertThat(((BizException) failure).errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.DEAL_CLOSED));
+    }
+
+    @Test
+    void expireRequiresAClock() {
+        GroupDeal deal = start(3);
+        assertMalformed(() -> deal.expire(null));
+    }
+
+    /** Rebuilds a stored snapshot in an arbitrary lifecycle state, as the converter would. */
+    private static GroupDeal reconstituteWith(DealStatus status) {
+        return GroupDeal.reconstitute(
+                UUID.randomUUID(),
+                "TEST-1",
+                UUID.randomUUID(),
+                LEADER,
+                new BigDecimal("10.00"),
+                "sgd",
+                3,
+                1,
+                status,
+                NOW,
+                NOW.plusSeconds(60),
+                null);
+    }
+
     /** Creates an OPEN domain fixture with one paid leader and the requested target size. */
     private static GroupDeal start(int size) {
         PaidGroupDealCreator creator = new StandardPaidGroupDealCreator();

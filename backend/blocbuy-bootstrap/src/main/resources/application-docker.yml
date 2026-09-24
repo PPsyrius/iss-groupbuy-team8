@@ -17,6 +17,9 @@ sa-token:
     secure: false
 
 blocbuy:
+  scheduling:
+    # team-expiry sweep (#28); opt in after checking the local overdue-team backlog
+    enabled: ${BLOCBUY_SCHEDULING_ENABLED:false}
   frontend:
     # SPA origin via env only — no deployment host in the repo; startup validation fails fast when
     # FRONTEND_URL is unset

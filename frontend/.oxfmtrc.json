@@ -9,7 +9,7 @@
     "README.md",
     "AGENTS.md",
     "CLAUDE.md",
-    "public/mockServiceWorker.js"
+    "dev/mockServiceWorker.js"
   ],
   "sortImports": true,
   "sortTailwindcss": true

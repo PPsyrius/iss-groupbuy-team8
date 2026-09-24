@@ -23,8 +23,11 @@
   <tr>
     <td><strong>Environment</strong></td>
     <td>
+      <a href="https://d1b3np88z657cp.cloudfront.net/">
+        <img src="https://img.shields.io/badge/Dev%20Frontend-open-41B5BE?style=flat" alt="Open Dev Frontend">
+      </a>&nbsp;
       <a href="https://d1b3np88z657cp.cloudfront.net/api/actuator/health">
-        <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fd1b3np88z657cp.cloudfront.net%2Fapi%2Factuator%2Fhealth&query=%24.status&label=EC2%20Backend&style=flat" alt="EC2 Backend Health">
+        <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fd1b3np88z657cp.cloudfront.net%2Fapi%2Factuator%2Fhealth&query=%24.status&label=Dev%20API&style=flat" alt="Dev API Health">
       </a>
     </td>
   </tr>
@@ -117,7 +120,7 @@
 
 BlocBuy is a community group-buying platform developed by NUS-ISS Team 8 as part of the SWE5006 Practice Module project. It helps people combine their purchasing needs, reach better group deals, and coordinate the entire group-buying journey in one shared space.
 
-This README focuses on the product vision and project scope. Technical architecture and implementation details are maintained in the project documentation.
+This README focuses on the product vision and project scope. To work on the repository, see [`CONTRIBUTING.md`](CONTRIBUTING.md); the sprint log, NFR register and other assessment evidence are indexed in [`docs/agile/README.md`](docs/agile/README.md). Technical architecture and implementation details are maintained in the project documentation.
 
 ## The Problem
 
@@ -135,8 +138,6 @@ This often creates problems such as:
 ## Our Vision
 
 BlocBuy aims to make group buying simple, transparent, and community-driven. We envision a platform where neighbours, colleagues, friends, and other communities can organise shared purchases with less administrative effort and greater confidence.
-
-By keeping the key information and activities for each group buy in one place, BlocBuy allows participants to understand what they are joining, while giving organisers a clearer way to coordinate the group from launch to completion.
 
 ## Who BlocBuy Is For
 
@@ -226,8 +227,6 @@ BlocBuy will be considered successful when it can demonstrate that:
 
 BlocBuy is the group project of **NUS-ISS Team 8** for the **SWE5006 Designing Modern Software Systems Practice Module**. The project provides a realistic product context in which the team can practise agile delivery, software analysis and design, reusable design approaches, and delivery automation during later stages of the module.
 
-This repository will evolve alongside the project. Product decisions, project artefacts, and technical documentation will be added as they are developed and validated by the team.
-
 ## Engineering and Operations
 
 - [Backend CI/CD runbook](docs/ci/backend-pipeline.md)
@@ -237,10 +236,7 @@ This repository will evolve alongside the project. Product decisions, project ar
 - [Production backend deployment guide (Terraform IaC)](docs/deploy/prod/backend-prod-terraform-deployment.md)
 - [EC2 backend runtime bundle](deployment/backend/README.md)
 
-The backend pipeline builds and scans one immutable image, publishes it to Amazon ECR, and deploys
-only the backend to the EC2 host through AWS Systems Manager. The development environment reuses a
-manually bootstrapped instance; the production environment is designed as Terraform-managed
-infrastructure per the guide above.
+The backend pipeline builds and scans one immutable image, publishes it to Amazon ECR, and deploys only the backend to the EC2 host through AWS Systems Manager. The development environment reuses a manually bootstrapped instance; the production environment is designed as Terraform-managed infrastructure per the guide above.
 
 ## Team
 

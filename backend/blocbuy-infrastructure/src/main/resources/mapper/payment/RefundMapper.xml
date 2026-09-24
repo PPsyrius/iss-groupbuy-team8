@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blocbuy.payment.persistence.RefundMapper">
+  <select id="now" resultType="java.time.Instant">SELECT clock_timestamp()</select>
+  <select id="claimNext" resultType="com.blocbuy.payment.model.RefundWork" affectData="true" flushCache="true">
+    WITH candidate AS (
+      SELECT r.id FROM biz_refund r
+      <!-- Only unfinished work is claimable. A succeeded refund is a terminal fact: re-claiming it
+           re-read Stripe once an hour for 31 days and wrote two audit rows each time, telling us
+           nothing we did not already know. Matches idx_biz_refund_due (V16). -->
+      WHERE NOT r.deleted AND r.status IN ('pending','processing')
+        AND next_attempt_at &lt;= clock_timestamp()
+        AND (lease_until IS NULL OR lease_until &lt; clock_timestamp())
+        AND EXISTS(SELECT 1 FROM biz_payment p WHERE p.id=r.payment_id AND NOT p.deleted)
+      ORDER BY next_attempt_at,id LIMIT 1 FOR UPDATE SKIP LOCKED
+    ), claimed AS (
+      UPDATE biz_refund r SET lease_until=clock_timestamp()+interval '2 minutes',
+        first_attempt_at=COALESCE(r.first_attempt_at,clock_timestamp()),
+        version=r.version+1,update_time=clock_timestamp()
+      FROM candidate c WHERE r.id=c.id
+      RETURNING r.id,r.payment_id,r.amount,r.currency,r.provider_refund_id,r.first_attempt_at,r.version
+    )
+    SELECT r.id,r.payment_id,r.amount,r.currency,p.provider_payment_intent_id AS provider_intent_id,
+      p.status AS payment_status,p.amount AS paid_amount,p.currency AS paid_currency,
+      r.provider_refund_id,r.first_attempt_at,clock_timestamp() AS now,r.version
+    FROM claimed r JOIN biz_payment p ON p.id=r.payment_id AND NOT p.deleted
+  </select>
+  <update id="finish">
+    <!-- One backoff for every outcome. Terminal states are excluded by claimNext, so scheduling
+         them a next attempt at all was what made a finished refund look like due work. -->
+    UPDATE biz_refund SET provider_refund_id=#{providerId},status=#{status},last_result=#{result},
+      lease_until=NULL,update_time=clock_timestamp(),
+      next_attempt_at=clock_timestamp()+interval '30 seconds'
+    WHERE id=#{work.id} AND version=#{work.version}
+      AND EXISTS(SELECT 1 FROM biz_payment p WHERE p.id=payment_id AND NOT p.deleted)
+  </update>
+  <select id="claimReview" resultType="com.blocbuy.payment.model.RefundWork" affectData="true" flushCache="true">
+    WITH claimed AS (
+      UPDATE biz_refund SET lease_until=clock_timestamp()+interval '2 minutes',
+        version=version+1,update_time=clock_timestamp()
+       WHERE payment_id=#{paymentId} AND NOT deleted AND status IN ('review','failed')
+         AND (lease_until IS NULL OR lease_until &lt; clock_timestamp())
+         AND EXISTS(SELECT 1 FROM biz_payment p
+           WHERE p.id=biz_refund.payment_id AND NOT p.deleted)
+      RETURNING id,payment_id,amount,currency,provider_refund_id,first_attempt_at,version
+    )
+    SELECT r.id,r.payment_id,r.amount,r.currency,p.provider_payment_intent_id AS provider_intent_id,
+      p.status AS payment_status,p.amount AS paid_amount,p.currency AS paid_currency,
+      r.provider_refund_id,r.first_attempt_at,clock_timestamp() AS now,r.version
+    FROM claimed r JOIN biz_payment p ON p.id=r.payment_id AND NOT p.deleted
+  </select>
+  <insert id="audit">
+    INSERT INTO log_refund_attempt(refund_id,version,result) VALUES(#{work.id},#{work.version},#{result})
+  </insert>
+  <select id="status" resultType="string">
+    SELECT r.status FROM biz_refund r JOIN biz_payment p ON p.id=r.payment_id AND NOT p.deleted
+    WHERE r.payment_id=#{paymentId} AND NOT r.deleted
+  </select>
+</mapper>

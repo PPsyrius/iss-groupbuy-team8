@@ -1,0 +1,55 @@
+{
+  "observed_at": "2026-09-20T03:47:07.232614+00:00",
+  "local": {
+    "id": "01a0bce6-8ba6-764f-a16c-223fdbc8b9ac",
+    "status": "SUCCEEDED",
+    "amount": 10.0,
+    "currency": "sgd",
+    "intent_id": "40b7c9c6-2884-48f5-9047-e1b9c57cd5c2",
+    "operation": "JOIN",
+    "business_id": "6bf828c0-35fd-4ccb-b477-a71028e3cb66",
+    "checkout_session_id": "cs_test_a16lv6AZsBy2Wm8B8lz1HIr1pVVVJnu1GJN1O6SvKh4efMfsJyoMuTouDx",
+    "provider_payment_intent_id": "pi_3UHbch5iEVLN2uQJ1yDvwhHW",
+    "fulfilment_result": "FULFILLED",
+    "fulfilled_deal_id": "6bf828c0-35fd-4ccb-b477-a71028e3cb66"
+  },
+  "stripe": {
+    "id": "cs_test_a16lv6AZsBy2Wm8B8lz1HIr1pVVVJnu1GJN1O6SvKh4efMfsJyoMuTouDx",
+    "livemode": false,
+    "status": "complete",
+    "payment_status": "paid",
+    "amount_total": 1000,
+    "currency": "sgd",
+    "payment_intent": "pi_3UHbch5iEVLN2uQJ1yDvwhHW"
+  },
+  "http": {
+    "status": "SUCCEEDED",
+    "paymentId": "01a0bce6-8ba6-764f-a16c-223fdbc8b9ac",
+    "outcome": "FULFILLED"
+  },
+  "orders": [
+    {
+      "id": "752a0103-e8d9-4766-bb82-b66e89732aa5",
+      "deal_id": "6bf828c0-35fd-4ccb-b477-a71028e3cb66",
+      "payment_id": "01a0bce6-8ba6-764f-a16c-223fdbc8b9ac",
+      "total_amount": 10.0,
+      "status": "paid"
+    }
+  ],
+  "refund_obligations": [],
+  "review": [],
+  "webhooks": [
+    {
+      "event_id": "evt_1UHbch5iEVLN2uQJAaRfYg4J",
+      "payment_id": "01a0bce6-8ba6-764f-a16c-223fdbc8b9ac",
+      "processing_result": "FULFILLED"
+    }
+  ],
+  "members": [
+    {
+      "id": "01a0bce7-36e7-7e69-bcc5-75f1e3792bfa",
+      "deal_id": "6bf828c0-35fd-4ccb-b477-a71028e3cb66",
+      "order_id": "752a0103-e8d9-4766-bb82-b66e89732aa5"
+    }
+  ]
+}

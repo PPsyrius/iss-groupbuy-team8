@@ -1,0 +1,49 @@
+{
+  "verified_at": "2026-09-20T07:26:21.644421+00:00",
+  "result": "PASS",
+  "scope": "real Stripe Sandbox refund + isolated PostgreSQL + teammate frontend HTTP API",
+  "payment_id": "01a0bce8-1615-7f87-a736-788fbe34a1f3",
+  "provider_refund_id": "re_3UHbeV5iEVLN2uQJ1V71krwQ",
+  "amount_minor": 1000,
+  "currency": "sgd",
+  "provider_status": "succeeded",
+  "provider_refund_count": 1,
+  "local_processing_version": 2,
+  "receipt": {
+    "paymentId": "01a0bce8-1615-7f87-a736-788fbe34a1f3",
+    "status": "SUCCEEDED",
+    "outcome": "FULFILLED",
+    "amount": "10.00",
+    "currency": "sgd",
+    "dealId": "62165120-f588-44a6-bbe0-bf656e33e2d0",
+    "orderId": "2ac0dd1d-33e6-4227-9605-46eb5380eae8",
+    "refundPending": false,
+    "refundStatus": "SUCCEEDED"
+  },
+  "order": {
+    "id": "2ac0dd1d-33e6-4227-9605-46eb5380eae8",
+    "orderNo": "LOCAL-2ac0dd1d-33e6-4227-9605-46eb5380eae8",
+    "productId": "00000000-0000-4000-8000-000000000010",
+    "productTitle": "Stripe local demo product",
+    "quantity": 1,
+    "amount": "10.00",
+    "currency": "sgd",
+    "status": "refunded",
+    "paymentStatus": "SUCCEEDED",
+    "paymentId": "01a0bce8-1615-7f87-a736-788fbe34a1f3",
+    "dealId": "62165120-f588-44a6-bbe0-bf656e33e2d0",
+    "dealStatus": "expired",
+    "refundStatus": "SUCCEEDED",
+    "createdAt": "2026-09-20T03:44:37.024595Z"
+  },
+  "security": [
+    "anonymous 401",
+    "other buyer receipt 404",
+    "other buyer order list excludes this order",
+    "page size capped at 50"
+  ],
+  "not_verified": [
+    "real Google OAuth",
+    "shared dev deployment"
+  ]
+}

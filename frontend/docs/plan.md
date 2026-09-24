@@ -152,7 +152,20 @@ Columns: id, tier, purpose, files touched, exact verification command, depends-o
 | T2-08 | 2 | Native compiler spike (branch only): `react({ compiler: true })` + `oxc-transform-react`; compare `pnpm check`, `pnpm build` size, Header test; record in ADR 0010 addendum. Not merged as code. | `FE/vite.config.ts` (branch), `FE/docs/adr/0010-*.md` | `cd frontend && pnpm check && pnpm build && du -sh dist/assets` on the spike branch; numbers pasted into ADR 0010 | T1-08 | new: `spike(frontend): native React Compiler via oxc-transform-react` |
 | T2-09 | 2 | `@tanstack/react-table` evaluation for #31 (branch only): install 9.2.4, confirm Intent exposes its 6 skills, prototype a 10-row "my orders" table with generated types; recommendation into ADR 0001 addendum. | `FE/package.json` (branch), `FE/src/features/orders/OrdersTable.tsx` (branch), `FE/docs/adr/0001-*.md` | `cd frontend && pnpm dlx @tanstack/intent@0.4.0 list --json \| jq -e '[.[] \| select(.packageName=="@tanstack/react-table")] \| length == 6'` | T1-10 | #31 |
 | T2-10 | 2 | Author repo skills `adr`, `api-client-regen`, `agile-evidence-capture` in root `.claude/skills/` after one manual pass of each activity. | `.claude/skills/adr/SKILL.md`, `.claude/skills/api-client-regen/SKILL.md`, `.claude/skills/agile-evidence-capture/SKILL.md` | `for s in adr api-client-regen agile-evidence-capture; do head -5 .claude/skills/$s/SKILL.md \| grep -q '^description:' && echo "ok $s"; done` | T1-15, T1-06, PR-C merged | new: `chore(skills): frontend authored skills` |
-| T2-11 | 2 | After A2 executes: verify headers on dev, tighten the starting CSP (drop `'unsafe-inline'` from `style-src` if HeroUI renders clean; restrict `img-src` to the real image host), update the runbook JSON. | `deployment/frontend/cloudfront/response-headers-policy.json`, `docs/deploy/dev-cloudfront-deployment.md`, `docs/agile/sprint-02/log.md` | `curl -sSI https://d1b3np88z657cp.cloudfront.net/ \| grep -Ei 'content-security-policy\|strict-transport-security' && E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e` (trace shows no CSP console errors) | A2, T1-14 | A2 |
+| T2-11 | 2 | After A2 executes: verify headers on dev, tighten the starting CSP (drop `'unsafe-inline'` from `style-src` if HeroUI renders clean; restrict `img-src` to the real image host), update the runbook JSON. | `deployment/frontend/cloudfront/response-headers-policy.json`, `docs/deploy/dev-cloudfront-deployment.md`, `docs/agile/sprint-02/log/YYYY-MM-DD.md` | `curl -sSI https://d1b3np88z657cp.cloudfront.net/ \| grep -Ei 'content-security-policy\|strict-transport-security' && E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e` (trace shows no CSP console errors) | A2, T1-14 | A2 |
+
+### Tier 3 (Sprint 3 candidates, added 2026-09-23 by #160; not scheduled): payment flow completion, UC4/UC7/UC8
+
+Rows only; each starts when its "depends-on" column is true. The payment slice they extend is recorded in §12 note 49 and ADR 0014.
+
+| id | tier | purpose | files touched | verification command | depends-on | issue |
+|---|---|---|---|---|---|---|
+| T3-01 | 3 | UC3 first-team quote step before checkout: on "Start a bloc" call `issue` (`POST /api/v1/team-price-quotes`), show the quoted price and expiry (min of 15 min and policy validity) with a re-quote path, read `getPolicy` for the terms, then `begin('START', businessId)` from `use-checkout.ts`; `getQuote` re-reads the snapshot after a reload. | `FE/src/features/payment/use-quote.ts`, `FE/src/features/payment/QuoteSheet.tsx`, `FE/src/features/payment/QuoteSheet.test.tsx`, `FE/src/routes/products.$productId.tsx` | `cd frontend && pnpm vitest run src/features/payment` (quote issued, expiry countdown, expired quote re-issues) | none: endpoints in `contracts/openapi.json` since #50; ADR 0014 | #26, #50 |
+| T3-02 | 3 | UC8 order history on `GET /orders/me` (#128): `myOrdersOptions` list on `/account` replacing the #137 empty state when non-empty; page/size search params; no refund label (the UC10 schema carries no refund field, option B in #128). | `FE/src/features/order/OrderHistory.tsx`, `FE/src/features/order/OrderHistory.test.tsx`, `FE/src/routes/_authenticated/account.tsx`, `FE/src/routes/account.test.tsx` | `cd frontend && pnpm gen:api && pnpm vitest run src/features/order src/routes/account.test.tsx` | #124 merged to `dev` with `contracts/openapi.json` regenerated | #128, #31 |
+| T3-03 | 3 | UC8 my blocs on `/account` per design-screens §4.4: Active / Completed / Refunded chips with counts, bloc rows (thumb, starter pill, price, progress, countdown, paid line, status chip), refunded-row variant, skeletons. Plain HeroUI `Table`/list per ADR 0001 addendum. | `FE/src/features/blocs/BlocRow.tsx`, `FE/src/features/blocs/BlocFilterChips.tsx`, tests, `FE/src/routes/_authenticated/account.tsx` | `cd frontend && pnpm vitest run src/features/blocs` | a teams-by-user endpoint (none in the contract; ask filed on #31), T3-02 | #31 |
+| T3-04 | 3 | UC4 join flow: "Join this bloc" issues the join through the UC4 endpoint once it exists, then `begin('JOIN', businessId)`; gated sheet path unchanged; deal progress refetch after return. | `FE/src/routes/products.$productId.tsx`, `FE/src/features/catalog/DealProgress.tsx`, tests | `cd frontend && pnpm vitest run src/routes/products.\$productId.test.tsx` | UC4 public endpoint (#27; today only internal services, `backend-skeleton-plan.md` §ownership) | #27, #44 |
+| T3-05 | 3 | UC7 share attribution: invite link with a sharer reference on the listing (`/products/$productId?ref=…`, valibot in `products-search.ts`), share block per §4.4 (link field, Copy, Share again), reference carried into the join/intent request. | `FE/src/features/share/ShareBlock.tsx`, `FE/src/features/share/ShareBlock.test.tsx`, `FE/src/features/catalog/products-search.ts`, `FE/src/routes/products.$productId.tsx` | `cd frontend && pnpm vitest run src/features/share src/features/catalog/products-search.test.ts` | an attribution field on the UC4 join / intent request (#30), T3-04 | #30 |
+| T3-06 | 3 | Receipt and return pages restyled against the artboards: `/payments/$paymentId` and `/payments/return` use the §4.5 card shape and the §4.4 refund-statement fields (amount, status chip, issue time, bank window, payment reference); waiting state while `CREATED`. | `FE/src/routes/_authenticated/payments.$paymentId.tsx`, `FE/src/routes/_authenticated/payments.return.tsx`, tests, `FE/docs/design-screens.md` §4.6 | `cd frontend && pnpm vitest run src/routes` plus a screenshot of the receipt in each state on the PR | design owner answers §4.6 (Q23–Q25) | #160 |
 
 ### Blocker assumptions per task
 
@@ -163,9 +176,9 @@ Columns: id, tier, purpose, files touched, exact verification command, depends-o
 | B3 `secure: true` on ec2 | T1-01, T2-11 | Dev terminates TLS at CloudFront; flag can be `true`. | If it stays `false`, HSTS still applies; the secure-cookie NFR is recorded as unmet in ADR 0002 consequences. |
 | B4 `me` enrichment | T2-04 header | Landed in PR #89 (2026-09-16); the header renders `nickname ?? userId` since `d875f8c`. | `avatarUrl` rendering waits for T2-04; nothing hand-written. |
 | B5 redirect URI | T2-06 | `GOOGLE_REDIRECT_URI` on dev is the CloudFront URL + `/api/v1/auth/oauth2/google/callback` and is in the Google console. | Login on dev fails at Google; `@auth` e2e stays skipped; local login via `docker compose` works with the localhost URI. |
-| A1 SPA function | T1-13 dev assertions, T2-02 deep links | Not attached today (T1-01 confirms). Local preview does not need it. | Until attached, deep links on dev return the S3 403; the dev-only smoke assertion is `test.fixme` with the A1 issue link, never deleted. |
-| A2 headers policy | T2-11 | Absent today. | Nothing in tier 1 depends on it. |
-| A3 OIDC role, A4 environment | T1-14, `deploy-s3-dev` | Both created before 2026-09-19. | Fallback: manual `aws s3 sync` by the account holder per runbook §10; the job stays gated by `ENABLE_S3_DEPLOY` and never runs. |
+| A1 SPA function | T1-13 dev assertions, T2-02 deep links | Executed 2026-09-22; live deep links return the SPA. | The dev-only smoke assertion is active from 2026-09-23. |
+| A2 headers policy | T2-11 | Executed 2026-09-22; all five configured headers and their exact values were rechecked on root and `/api/*` on 2026-09-23. | T2-11 still owns CSP tightening. |
+| A3 OIDC role, A4 environment | T1-14, `deploy-s3-dev` | Operationally resolved 2026-09-23: immutable OIDC subject verified, `frontend-dev` restricted to `dev`, repository variables enabled. | `ci-frontend` run #165 at `fbb71a9` passed `package-dev`, `deploy-s3-dev` and `e2e-dev`; `ENABLE_S3_DEPLOY` is now the deploy/freeze switch. |
 | T3 `.github` review | T1-12 | @PPsyrius reviews within two working days. | `frontend-check` cannot be a required check until merged; PR-C..PR-F paste `pnpm check` output by hand. |
 | T4 CODEOWNERS | T1-12 | The narrowed patterns in §7.4 are accepted. | Root `.claude/settings.json` review is requested by hand. |
 
@@ -941,16 +954,16 @@ test.describe('dev CloudFront only', () => {
 })
 ```
 
-Until A1 is executed, change the deep-link test to `test.fixme(true, 'A1 not attached: <issue url>')` in the same file; revert when T1-01 re-probe shows 200.
+The temporary A1 `test.fixme` was removed on 2026-09-23 after the live deep-link probe returned 200.
 
-- [x] Step 4: Scripts: `"e2e": "playwright test"`. Run the task-row commands (local preview first, then dev). Ticked for the local run only; the dev-target run was attempted and its expected failure (403/503) recorded — see plan §12 note 32.
+- [x] Step 4: Scripts: `"e2e": "playwright test"`. Local preview evidence is in plan §12 note 32; on 2026-09-23 the automated deploy job passed and the post-A1 dev-target rerun passed 6 tests with only two unseeded `@auth` tests skipped.
 - [x] Step 5: `git add frontend/playwright.config.ts frontend/e2e && git commit -m "test(frontend): playwright smoke for home, deep link and api health"`.
 
 ### T1-14: First deploy
 
-- [ ] Step 1 (preferred): merge PR-E with `ENABLE_S3_DEPLOY=true` set by @PPsyrius after A3/A4; push to `dev` triggers `deploy-s3-dev`, then `e2e-dev`.
-- [ ] Step 2 (fallback): the account holder runs runbook §10 (pnpm form, §8.5) from a machine with `dist/` built by `pnpm build` at the merged `dev` SHA; paste the three command outputs into the sprint log.
-- [ ] Step 3: Run the task-row verification and the dev Playwright run; attach the HTML report to PR-F.
+- [x] Step 1 (preferred): `ENABLE_S3_DEPLOY=true`; rerun `ci-frontend` #165 at `fbb71a9` passed `package-dev`, `deploy-s3-dev` and `e2e-dev` on 2026-09-23.
+- [x] Step 2 (fallback, executed 2026-09-22 by @limjiechao with an AdministratorAccess Identity Center session, not the account holder): runbook §10 at dev `983b401`; sync 89 assets + `index.html` no-cache, invalidation `/index.html`; root and deep link 200 `text/html`; `GET /api/v1/products?page=1` 200 `application/json` (not rewritten by the SPA function). Superseded by the automated path on 2026-09-23 (Step 1). ~~the account holder runs runbook §10 (pnpm form, §8.5) from a machine with `dist/` built by `pnpm build` at the merged `dev` SHA; paste the three command outputs into the sprint log.~~
+- [x] Step 3: root, deep link and deployed asset returned 200, API health returned `UP`, and the post-`fixme` dev Playwright rerun passed 6 tests with only two unseeded `@auth` tests skipped; evidence is in the 2026-09-23 sprint log and run #165.
 
 ### T1-15: ADR bodies and sprint log
 
@@ -1203,30 +1216,66 @@ export const Route = createFileRoute('/auth/callback')({
 
 ### T2-08: Native compiler spike (branch `spike/native-react-compiler`)
 
-- [ ] Step 1: `pnpm add -D oxc-transform-react@0.150.0`; in `vite.config.ts` replace `react()` + `babel(...)` with `react({ compiler: true })`.
-- [ ] Step 2: `pnpm check && pnpm build && du -sh dist/assets`; compare with `dev` numbers; run the Header test.
-- [ ] Step 3: Write the ADR 0010 addendum (numbers, any diagnostics from `logDiagnostics`). Close the branch without merging code.
+- [x] Step 1 (2026-09-23, on the working tree of `feature/frontend-spikes-adr`, not a `spike/` branch): `oxc-transform-react@0.150.0` added, `react({ compiler: { logDiagnostics: true } })` replaced `react()` + `babel(...)`; reverted before the commit.
+- [x] Step 2: `pnpm check` exit 0 (25 files / 163 tests), build 350 ms vs 929 ms, `dist/assets` 1356 KB vs 1352 KB, Header test 5/5, no diagnostics.
+- [x] Step 3: ADR 0010 addendum written: keep the Babel preset. No spike code committed.
 
 ### T2-09: react-table evaluation (branch `spike/react-table-31`)
 
-- [ ] Step 1: `pnpm add @tanstack/react-table@9.2.4`; run the task-row Intent check; `pnpm dlx @tanstack/intent@0.4.0 load @tanstack/react-table#getting-started`.
-- [ ] Step 2: Prototype `OrdersTable.tsx` with static rows typed from a hand-declared `OrderRow` (no backend endpoint yet).
-- [ ] Step 3: Write the recommendation in ADR 0001 addendum (adopt for #31 or use plain HeroUI `Table`). Close the branch.
+- [x] Step 1 (2026-09-23): `@tanstack/react-table@9.2.4` added on the working tree; the six Intent skills confirmed in `node_modules/@tanstack/react-table/skills` (`pnpm dlx @tanstack/intent list` printed nothing in the sandbox; `getting-started` read from the package); reverted before the commit.
+- [x] Step 2: `OrdersTable.tsx` (react-table model) and `OrdersTablePlain.tsx` (HeroUI `Table` alone) on a hand-declared `OrderRow`, 10 rows, sorting + paging; both pass `tsc` and oxlint; route chunk 184 / 55 kB gz vs 149 / 45 kB gz.
+- [x] Step 3: ADR 0001 addendum written: plain HeroUI `Table` for #31. No spike code committed.
 
 ### T2-10: Authored skills
 
-- [ ] Step 1: After PR-A merges, write `.claude/skills/adr/SKILL.md` (frontmatter `name: adr`, `description: Write or update a Nygard ADR in frontend/docs/adr with the next number and README index entry; use when recording a frontend architecture decision, ADR, or design choice`), body = the checklist used in T1-15.
-- [ ] Step 2: `.claude/skills/api-client-regen/SKILL.md` (`description: Regenerate the hey-api client after contracts/openapi.json changes, run pnpm check, and list type breaks; use when the contract, openapi.json, generated client, or gen:api is mentioned`).
-- [ ] Step 3: `.claude/skills/agile-evidence-capture/SKILL.md` already exists (§12 item 17); verify it still describes the PR evidence set (issue link, ADR names, `pnpm check` output, screenshot or Playwright trace, sprint log entry) and extend rather than duplicate.
-- [ ] Step 4: Verification command from the task row; commit `chore(skills): adr, api-client-regen and agile-evidence-capture skills`.
+- [x] Step 1 (2026-09-23): `.claude/skills/adr/SKILL.md` + `references/template.md`; description kept to triggers (the writing-skills rule), the T1-15 checklist is the body (scope table, new/amend/supersede, verification, mistakes). Dry run against ADR 0014 and the 0010 addendum: 43 / 58 lines, one README row each, header comment present. Original brief: write `.claude/skills/adr/SKILL.md` (frontmatter `name: adr`, `description: Write or update a Nygard ADR in frontend/docs/adr with the next number and README index entry; use when recording a frontend architecture decision, ADR, or design choice`), body = the checklist used in T1-15.
+- [x] Step 2 (2026-09-23): `.claude/skills/api-client-regen/SKILL.md`; every command in it was run against the tree (`jq` operation list, consumer grep for `pageListingsOptions`, `pnpm gen:api` output present after install). Original brief: `.claude/skills/api-client-regen/SKILL.md` (`description: Regenerate the hey-api client after contracts/openapi.json changes, run pnpm check, and list type breaks; use when the contract, openapi.json, generated client, or gen:api is mentioned`).
+- [x] Step 3 (2026-09-23): `agile-evidence-capture` already describes the day-file log (PPsyrius, #145); Close item 5 now spells out the PR evidence set and points at the two new skills. Original brief: `.claude/skills/agile-evidence-capture/SKILL.md` already exists (§12 item 17); verify it still describes the PR evidence set (issue link, ADR names, `pnpm check` output, screenshot or Playwright trace, sprint log entry) and extend rather than duplicate.
+- [x] Step 4 (2026-09-23): verification command printed `ok adr`, `ok api-client-regen`, `ok agile-evidence-capture`; committed as `docs(skills): author the adr and api-client-regen skills, align agile-evidence-capture with the day-file log (T2-10)` on the loop's stack (PR-L).
 
 ### T2-11: CSP tightening
 
-- [ ] Step 1: After A2, run the task-row curl; open the dev site with DevTools console and the Playwright trace; list CSP violations.
-- [ ] Step 2: Edit `deployment/frontend/cloudfront/response-headers-policy.json` (§8.2) to the narrowest policy that passes; account holder re-applies with `update-response-headers-policy`.
-- [ ] Step 3: Log the final CSP in `docs/agile/sprint-02/log.md` and ADR 0002 consequences.
+- [x] Step 1 (2026-09-22/23): task-row curl green after A2; Playwright console probe on the deployed site found one violation per page (Google Fonts, fixed by self-hosting Inter, #158); the tightening candidates were probed against `vite preview`, which now mirrors the policy JSON (`vite.config.ts` `preview.headers`), on `/`, a listing with the sign-in sheet open, `/login`, `/account`, `/payments/return`, a 404.
+- [x] Step 2 (2026-09-23): JSON narrowed to `style-src 'self' 'unsafe-inline'; img-src 'self' https:; font-src 'self'` (`data:` dropped from both; `'unsafe-inline'` kept: React Aria's injected `<style>` and overlay positioning are refused without it). Re-apply on dev with `update-response-headers-policy` is owed to the user/account holder; the dev curl + `E2E_TARGET=dev pnpm e2e` verification runs after that.
+- [x] Step 3 (2026-09-23): final CSP in `docs/agile/sprint-02/log/2026-09-23.md` and ADR 0002 consequences.
 
 ---
+
+### T3-01: First-team quote before checkout (UC3)
+
+- [ ] Step 1: `use-quote.ts` wraps `issueMutation()` and `getQuoteOptions()` (generated) with `select: unwrapResult`; the quote id is kept in `sessionStorage` next to the attempt key so a reload re-reads the snapshot.
+- [ ] Step 2: `QuoteSheet.tsx` (HeroUI sheet, same pattern as `GatedActionSheet`) shows the quoted price, the policy terms from `getPolicy`, an expiry countdown (`deal-time.ts` helpers) and "Continue to payment" → `begin('START', businessId)`; an expired quote shows "Get a new price".
+- [ ] Step 3: `products.$productId.tsx` opens the sheet from "Start a bloc"; tests cover issue → continue, expiry → re-issue, and a 4xx from `issue` (policy missing) leaving the button usable.
+
+### T3-02: Order history on `GET /orders/me` (UC8, #128)
+
+- [ ] Step 1: after #124 merges, `pnpm gen:api`; confirm `myOrdersOptions` and `OrderSummaryResponse` (no refund field) exist.
+- [ ] Step 2: `OrderHistory.tsx` lists `items` with product title, quantity, total, status, paid time; page/size via `validateSearch` on `/account`; the #137 card stays for `total === 0`.
+- [ ] Step 3: record option B (no refund label on the list; the receipt keeps it) on #128 and in ADR 0014 consequences.
+
+### T3-03: My blocs rows and filter chips (UC8, #31)
+
+- [ ] Step 1: file the teams-by-user endpoint ask on #31 (owner-scoped, status filter, counts) and wait for the contract.
+- [ ] Step 2: `BlocFilterChips.tsx` + `BlocRow.tsx` per design-screens §4.4 (Active / Completed / Refunded, starter pill, progress, countdown, refunded variant, skeletons).
+- [ ] Step 3: mount on `/account` above the order history; tests per chip state.
+
+### T3-04: Join flow (UC4, #27)
+
+- [ ] Step 1: wait for the UC4 public endpoint in `contracts/openapi.json`; `pnpm gen:api`.
+- [ ] Step 2: "Join this bloc" calls it, then `begin('JOIN', businessId)`; on return the receipt links back to the listing and `DealProgress` refetches.
+- [ ] Step 3: tests: join → checkout redirect; full bloc → disabled with reason; anonymous → gated sheet (unchanged).
+
+### T3-05: Share attribution (UC7, #30)
+
+- [ ] Step 1: `ref` search param on `/products/$productId` (valibot, opaque string, dropped from the URL after being parked in `sessionStorage`).
+- [ ] Step 2: `ShareBlock.tsx` per §4.4 (link field, Copy via `navigator.clipboard`, Share again via `navigator.share` when present) on the listing for a signed-in starter or member.
+- [ ] Step 3: the parked reference goes on the join / intent request once #30 defines the field; tests for parse, park and clear.
+
+### T3-06: Receipt and return pages against the artboards
+
+- [ ] Step 1: design owner answers design-screens §4.6 Q23–Q25 (which artboard, waiting-state copy, "My orders" vs "My blocs").
+- [ ] Step 2: rebuild `payments.$paymentId.tsx` on the §4.5 card shape with the §4.4 refund-statement fields; `payments.return.tsx` fallback uses `ErrorCard`.
+- [ ] Step 3: tests for CREATED (polling), SUCCEEDED, FAILED, refund pending, refund sent; screenshots on the PR.
 
 ## 5. The `pnpm check` chain and every script it relies on
 
@@ -1504,7 +1553,7 @@ Triggers: `push` to `dev` and `pull_request` to `dev`, both with `paths: ["front
 | `deploy-s3-dev` | `always() && github.event_name == 'push' && github.ref == 'refs/heads/dev' && vars.ENABLE_S3_DEPLOY == 'true' && needs.frontend-check.result == 'success'`; `environment: { name: frontend-dev, url: ${{ vars.FRONTEND_URL_DEV }} }`; `permissions: { contents: read, id-token: write }`; `concurrency: { group: deploy-s3-frontend-dev, cancel-in-progress: false }`; `timeout-minutes: 15` | checkout; download `frontend-dist-${{ github.sha }}` into `frontend/dist`; `aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c` with `role-to-assume: ${{ vars.AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV }}`, `aws-region: ${{ vars.AWS_REGION }}`, `allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}`, `role-session-name: BlocBuy-Frontend-${{ github.run_id }}`; `aws s3 sync dist/ "s3://${{ vars.FRONTEND_S3_BUCKET_DEV }}" --delete --exclude index.html --cache-control "public,max-age=31536000,immutable"`; `aws s3 cp dist/index.html "s3://${{ vars.FRONTEND_S3_BUCKET_DEV }}/index.html" --cache-control no-cache --content-type text/html`; `aws cloudfront create-invalidation --distribution-id "${{ vars.FRONTEND_CLOUDFRONT_DIST_ID_DEV }}" --paths /index.html`; step summary with SHA and URL | no |
 | `e2e-dev` | `needs.deploy-s3-dev.result == 'success'` | checkout; pnpm + node; install; `pnpm exec playwright install --with-deps chromium`; `E2E_TARGET=dev E2E_BASE_URL=${{ vars.FRONTEND_URL_DEV }} pnpm e2e`; upload `playwright-report-dev` (`if: ${{ !cancelled() }}`) | no |
 
-GitHub variables introduced (set by @PPsyrius after A3/A4): `ENABLE_S3_DEPLOY`, `FRONTEND_URL_DEV` (`https://d1b3np88z657cp.cloudfront.net`), `FRONTEND_S3_BUCKET_DEV` (`blocbuy-dev-frontend-402178232802`), `FRONTEND_CLOUDFRONT_DIST_ID_DEV`, `AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV`. `AWS_REGION` and `AWS_ACCOUNT_ID` already exist.
+GitHub repository variables, verified 2026-09-23: `ENABLE_S3_DEPLOY=true`, `FRONTEND_URL_DEV` (`https://d1b3np88z657cp.cloudfront.net`), `FRONTEND_S3_BUCKET_DEV` (`blocbuy-dev-frontend-402178232802`), `FRONTEND_CLOUDFRONT_DIST_ID_DEV`, `AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV`. `AWS_REGION` and `AWS_ACCOUNT_ID` already exist. They remain repository-scoped because `package-dev` evaluates the enable switch before entering an environment and `e2e-dev` does not declare one.
 
 `--delete` on the sync is safe because hashed assets from older builds are not needed once `index.html` is replaced and invalidated; if the team prefers keeping one previous build for rollback, drop `--delete` and add a lifecycle rule in T2-07.
 
@@ -1607,7 +1656,7 @@ ADR(s) implemented or affected: `frontend/docs/adr/00xx-...md`
 - [ ] `pnpm check` output or CI run link:
 - [ ] Contract unchanged, or `contract-change-approved` label requested with the reason
 - [ ] Screenshot or Playwright trace attached (UI changes)
-- [ ] `docs/agile/sprint-02/log.md` entry added (Sprint 2 only)
+- [ ] `docs/agile/sprint-02/log/YYYY-MM-DD.md` entry added (Sprint 2 only)
 
 ## Checklist
 
@@ -1633,9 +1682,7 @@ Edit §7.3's heading to "(Superseded by §14)". New section:
 ````markdown
 ## 14. SPA routing fallback (mandatory for the frontend)
 
-The frontend uses history-mode routing (`/products/<uuid>`, `/account`, `/auth/callback`). Without this
-function a deep link or a browser refresh returns the S3 OAC 403. Distribution-wide custom error
-responses are deliberately NOT used: they would also mask real `/api/*` errors.
+The frontend uses history-mode routing (`/products/<uuid>`, `/account`, `/auth/callback`). Without this function a deep link or a browser refresh returns the S3 OAC 403. Distribution-wide custom error responses are deliberately NOT used: they would also mask real `/api/*` errors.
 
 Function source is versioned at `deployment/frontend/cloudfront/spa-fallback.js`.
 
@@ -1702,9 +1749,7 @@ The runbook's original §7.3 code rewrote `uri.endsWith('/')` to `uri + 'index.h
 ````markdown
 ## 15. Security response headers (CSP, HSTS)
 
-Policy source: `deployment/frontend/cloudfront/response-headers-policy.json`. The CSP is a starting
-point that allows HeroUI's inline styles and remote product images; the frontend owner tightens it
-after the first deploy (plan task T2-11) and re-applies with `update-response-headers-policy`.
+Policy source: `deployment/frontend/cloudfront/response-headers-policy.json`. The CSP is a starting point that allows HeroUI's inline styles and remote product images; the frontend owner tightens it after the first deploy (plan task T2-11) and re-applies with `update-response-headers-policy`.
 
 ```bash
 aws cloudfront create-response-headers-policy \
@@ -1744,7 +1789,7 @@ curl -sSI "https://$DIST_DOMAIN/" | grep -Ei 'strict-transport-security|content-
     },
     "ContentSecurityPolicy": {
       "Override": true,
-      "ContentSecurityPolicy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+      "ContentSecurityPolicy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
     },
     "ContentTypeOptions": { "Override": true },
     "FrameOptions": { "Override": true, "FrameOption": "DENY" },
@@ -1757,16 +1802,14 @@ curl -sSI "https://$DIST_DOMAIN/" | grep -Ei 'strict-transport-security|content-
 }
 ```
 
-Why each CSP source: `script-src 'self'` (Vite emits no inline scripts; React Compiler output is in the bundle); `style-src 'unsafe-inline'` (React Aria / HeroUI set inline `style` attributes for positioning; revisit in T2-11); `img-src https:` (product `coverImage` hosts are unknown until seed data is inspected; narrow in T2-11); `connect-src 'self'` (all API calls are same-origin); `form-action 'self'` (login is a GET navigation, not a form post); `frame-ancestors 'none'` replaces the older `X-Frame-Options` for modern browsers while `FrameOptions` covers the rest. `Preload: false` because the `*.cloudfront.net` domain cannot be preload-listed.
+Why each CSP source: `script-src 'self'` (Vite emits no inline scripts; React Compiler output is in the bundle); `style-src 'unsafe-inline' https://fonts.googleapis.com` (React Aria / HeroUI set inline `style` attributes and `index.html` loads Inter from Google Fonts; revisit both in T2-11); `font-src https://fonts.gstatic.com` (the Inter files referenced by that stylesheet); `img-src https:` (product `coverImage` hosts are unknown until seed data is inspected; narrow in T2-11); `connect-src 'self'` (all API calls are same-origin); `form-action 'self'` (login is a GET navigation, not a form post); `frame-ancestors 'none'` replaces the older `X-Frame-Options` for modern browsers while `FrameOptions` covers the rest. `Preload: false` because the `*.cloudfront.net` domain cannot be preload-listed.
 
 ### 8.3 §16. GitHub OIDC deploy role for the frontend bucket
 
 ````markdown
 ## 16. Frontend deploy role (GitHub OIDC)
 
-The `deploy-s3-dev` job in `ci-frontend.yml` assumes a role restricted to the `frontend-dev`
-GitHub environment. Policy examples: `deployment/frontend/iam/`. The OIDC provider already exists
-(created for the backend pipeline).
+The `deploy-s3-dev` job in `ci-frontend.yml` assumes a role restricted to the `frontend-dev` GitHub environment. Policy examples: `deployment/frontend/iam/`. The OIDC provider already exists (created for the backend pipeline).
 
 ```bash
 sed -e "s/AWS_ACCOUNT_ID/$ACCOUNT_ID/g" \
@@ -1778,10 +1821,7 @@ aws iam put-role-policy --role-name BlocBuyGitHubFrontendDeployDev --policy-name
 export FE_ROLE_ARN=$(aws iam get-role --role-name BlocBuyGitHubFrontendDeployDev --query Role.Arn --output text)
 ```
 
-The trust policy `sub` must match the format the existing `backend-dev` deploy role uses (see
-`deployment/backend/iam/github-deploy-trust-policy.json.example`, which carries an id-suffixed
-subject). Copy whichever form works for the backend role; the GitHub-documented plain form is
-`repo:PPsyrius/iss-groupbuy-team8:environment:frontend-dev`.
+The repository uses immutable OIDC subjects. The verified frontend subject is `repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:environment:frontend-dev`; recheck the repository OIDC customization API before recreating the role.
 ````
 
 `deployment/frontend/iam/github-frontend-deploy-trust-policy.json.example` (format verified: https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services):
@@ -1799,7 +1839,7 @@ subject). Copy whichever form works for the backend role; the GitHub-documented 
       "Condition": {
         "StringEquals": {
           "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-          "token.actions.githubusercontent.com:sub": "repo:PPsyrius/iss-groupbuy-team8:environment:frontend-dev"
+          "token.actions.githubusercontent.com:sub": "repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:environment:frontend-dev"
         }
       }
     }
@@ -1840,8 +1880,7 @@ subject). Copy whichever form works for the backend role; the GitHub-documented 
 ```markdown
 # Frontend IAM policy examples
 
-Examples, not deployable policies: copy outside the repository, replace `AWS_ACCOUNT_ID`,
-`FRONTEND_S3_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`, validate with IAM Access Analyzer, attach.
+Examples, not deployable policies: copy outside the repository, replace `AWS_ACCOUNT_ID`, `FRONTEND_S3_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`, validate with IAM Access Analyzer, attach.
 
 | File | Attach/use with |
 |---|---|
@@ -2263,6 +2302,8 @@ None are applied silently; each is planned as stated below and needs the owner's
 46. **The root route treats a failed `me` as anonymous; only the callback route is strict (2026-09-18).** `pnpm e2e` caught it: `vite preview` has no backend, the `/api` proxy answers ECONNREFUSED, the interceptor throws a non-401 `ApiError`, and a strict root `beforeLoad` would have blanked the whole app (the smoke spec's header assertion failed). `__root.tsx` now wraps `sessionFromQuery` in `sessionOrAnonymous`, so browsing never depends on `me` answering and guarded routes send an unconfirmed visitor to `/login`; `sessionFromQuery` itself still rethrows non-401 failures for `/auth/callback`, where "could not confirm the session" is the right message. Covered by the new `index.test.tsx` case with `me` answering 500.
 47. **T2-05 logout settles `me` instead of removing it, and the control is a neutral "Sign out" button, not a menu (2026-09-18).** (a) The plan's `removeQueries({ queryKey: meQueryKey() })` would make the next observer refetch `me`, receive a 401 and reach the anonymous state through the interceptor one round trip later; `use-logout.ts` writes the interceptor's own anonymous envelope (`{ code: OK_CODE, message: 'anonymous' }`, AGENTS.md rule 6) with `setQueryData` and then navigates home, so the header flips at once. The mutation also runs `unwrapResult` on the `ResultVoid` body, so a 200 with a non-OK code is an error, not a sign-out. On error the session is kept and the header shows "Could not sign out. Try again." (`role="alert"`); nothing redirects. (b) No artboard draws a signed-in storefront header or a logout control (design-screens.md Q16, which recommends a menu on the avatar with "My blocs" and "Log out"). Until design rules, the avatar + name link to `/account` (the My blocs screen) and a ghost-variant "Sign out" `Button` (no accent, `text-muted`, 44px target) sits beside them; "Sign out" pairs with the artboard's "Sign in" string, so the plan's "Log out" wording was not used. Replacing the pair with the recommended menu is a one-file change when the design lands. (c) The browser seed answers `logout` with an OK envelope so `?msw=1&me=1` can walk the flow; a reload with `&me=1` signs back in (seed only, no state).
 48. **T2-06 is one `login.spec.ts` with an anonymous half that always runs and an `@auth` half gated twice (2026-09-18).** The plan's `account.spec.ts` held only the storage-state test. The journey file now has (a) an "anonymous visitor" describe that runs on every target including `vite preview` in CI: `/account` redirects to `/login?returnTo=%2Faccount` and the sign-in screen renders without the header's own Sign in control; "Continue with Google" is proven to navigate to `/api/v1/auth/oauth2/google` by answering that top-level request with a 204 through `page.route` (the browser stays put, Google is never reached) and the parked `sessionStorage` return path is asserted; and the gated sheet on a listing opens and closes, with `me` (401), the listing page and its detail stubbed through `page.route` so it runs on every target including `vite preview` in CI (it first skipped when `GET /api/v1/products` was not 200; PR #122 review r4046597269), reached by client-side navigation from `/` so the dev target does not need A1 (#99). (b) A "signed-in buyer @auth" describe that `test.skip`s when `e2e/.auth/dev.json` is missing, with the codegen command as the reason, and again when `E2E_TARGET` is not `dev` (the cookie is only valid there); `test.use({ storageState })` is applied only when the file exists so a skipped run never tries to read it. Its last test signs out, which invalidates the seeded session, so `e2e/README.md` says to re-seed before the next run. Step 1 (the real Google login) stays with the user after the B5 (#98) console check; the codegen URL now ends in `/login`, the T2-04 sign-in screen. The session cookie name asserted after sign-out (`blocbuy-token`) comes from the backend's Sa-Token config and is unverified in a browser until that run happens.
+
+49. **The payment slice (PR #126, `983b401`, 2026-09-21) was built outside this plan; recorded here and in ADR 0014 (2026-09-23, #160).** The payment team shipped `frontend/src/features/payment/` (`use-checkout.ts`, `use-payment-availability.ts`, `refund-status.ts`, `payments-return-search.ts` since #131) and the routes `_authenticated/payments.$paymentId.tsx` (owner-scoped receipt, polls `GET /api/v1/payments/{id}` every 2 s for up to 60 s while `CREATED` or a refund is pending, refund label) and `_authenticated/payments.return.tsx` (Stripe return hop → receipt). "Start a bloc" and "Join this bloc" on the listing now call `begin()`, so note 43(a) ("Join stays `isDisabled`") is superseded. No plan task, ADR or artboard existed for it; the review produced #128, #131, #135, #137; the first-team quote step (`POST /api/v1/team-price-quotes`) is still skipped. Follow-ups are the Tier 3 rows T3-01..T3-06 (§3) and `design-screens.md` §4.6.
 
 ---
 

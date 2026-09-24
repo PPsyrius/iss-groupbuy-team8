@@ -1,52 +1,24 @@
 # caveman
 
-Talk like smart caveman. Same brain, fewer tokens.
+Token-efficient response style that removes filler while preserving technical accuracy, code, commands, symbols, numbers, units, and exact errors.
 
-## What it does
+## Invoke
 
-Compress model responses to caveman-style prose by dropping articles, filler,
-pleasantries, and hedging. Instruction preserves technical detail, code blocks,
-error strings, and symbols. Result depends on model and workload; no aggregate
-reduction or quality-equivalence claim is published, and mode persists until
-changed or stopped.
-
-Six intensity levels:
-
-| Level | What change |
-|-------|-------------|
-| `lite` | Drop filler/hedging. Sentences stay full. Professional but tight. |
-| `full` | Default. Drop articles, fragments OK, short synonyms. |
-| `ultra` | Bare fragments. Abbreviations (DB, auth, fn). Arrows for causality. |
-| `wenyan-lite` | Classical Chinese register, light compression. |
-| `wenyan-full` | Maximum 文言文 compression. |
-| `wenyan-ultra` | Extreme classical compression. |
-
-Auto-clarity rule: caveman drops to normal prose for security warnings, irreversible-action confirmations, multi-step sequences where fragment ambiguity risks misread, and when user repeats a question. Resumes after the clear part.
-
-## How to invoke
-
-```
-/caveman              # full mode (default)
-/caveman lite         # lighter compression
-/caveman ultra        # extreme compression
+```text
+/caveman              # full, default
+/caveman lite         # concise full sentences
+/caveman ultra        # shortest unambiguous fragments
 /caveman wenyan       # classical Chinese
-stop caveman          # back to normal prose
+stop caveman          # normal prose
 ```
 
-## Example output
+| Level | Style |
+|---|---|
+| `lite` | No filler or hedging; full sentences |
+| `full` | Drop articles where safe; fragments allowed |
+| `ultra` | Remove conjunctions and repetition where meaning remains clear |
+| `wenyan-lite` | Light classical Chinese compression |
+| `wenyan-full` | Strong classical Chinese compression |
+| `wenyan-ultra` | Maximum unambiguous classical compression |
 
-Question: "Why does my React component re-render?"
-
-Normal prose:
-> Your component re-renders because you create a new object reference each render. Wrapping it in `useMemo` will fix the issue.
-
-Caveman (full):
-> New object ref each render. Inline object prop = new ref = re-render. Wrap in `useMemo`.
-
-Caveman (ultra):
-> Inline obj prop → new ref → re-render. `useMemo`.
-
-## See also
-
-- [`SKILL.md`](./SKILL.md): full LLM-facing instructions
-- [Caveman README](../../README.md): repo overview, install, benchmarks
+The mode persists until stopped. Security warnings, irreversible confirmations, and ambiguity-prone procedures temporarily use normal prose. See [`SKILL.md`](./SKILL.md) for complete instructions.

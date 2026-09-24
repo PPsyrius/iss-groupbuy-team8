@@ -4,10 +4,11 @@
     "src/main.tsx",
     "src/api/hey-api.ts",
     "src/routes/**/*.tsx",
+    "src/dev/*.noop.{ts,tsx}",
     "e2e/**/*.spec.ts",
     "openapi-ts.config.ts",
     "playwright.config.ts"
   ],
   "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts", "!src/api/generated/**", "!src/routeTree.gen.ts"],
-  "ignoreDependencies": ["@heroui/styles"]
+  "ignoreDependencies": ["@heroui/styles", "@fontsource/inter"]
 }

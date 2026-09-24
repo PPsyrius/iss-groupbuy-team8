@@ -1,6 +1,7 @@
 # Gitleaks config: default ruleset + BlocBuy allowlists.
 # Real secrets must NEVER be committed regardless of allowlist — these only silence
-# placeholders (${VAR} in yml), docs examples, and lockfiles.
+# placeholders (${VAR} in yml), docs examples, lockfiles, and explicitly documented
+# non-secret test fixtures.
 [extend]
 useDefault = true
 
@@ -15,4 +16,5 @@ useDefault = true
   ]
   regexes = [
     '''\$\{[A-Z_]+(:[^}]*)?\}''', # ${DB_PASSWORD} / ${STRIPE_API_KEY:} env placeholders
+    '''sk_test_placeholder''', # historical non-secret test fixture; current code uses test-placeholder
   ]
