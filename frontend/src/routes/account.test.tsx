@@ -18,8 +18,10 @@ describe("/account behind the _authenticated guard", () => {
     expect(await screen.findByRole("heading", { name: "My blocs" })).toBeVisible();
     expect(screen.getByTestId("account-user")).toHaveTextContent("u1");
     expect(router.state.location.pathname).toBe("/account");
-    // §4.4 empty state (#137): a way forward until the order history lands (#128)
-    expect(screen.getByRole("heading", { name: "You haven’t joined a bloc yet" })).toBeVisible();
+    // §4.4 card layout (#137) with neutral copy until the order history lands (#128): the page
+    // cannot yet tell a buyer with orders from one without
+    expect(screen.getByRole("heading", { name: "Your orders will appear here" })).toBeVisible();
+    expect(screen.queryByText(/haven’t joined a bloc/)).toBeNull();
     expect(screen.getByRole("link", { name: "See what’s filling" })).toHaveAttribute("href", "/");
   });
 });
