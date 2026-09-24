@@ -4,6 +4,7 @@ import { HttpResponse, http } from "msw";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { installAuthInterceptor } from "@/api/client";
 import { OK_CODE } from "@/api/envelope";
 import { useCheckout } from "@/features/payment/use-checkout";
 import { server } from "@/test/msw";
@@ -12,6 +13,10 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@tanstack/react-router")>();
   return { ...actual, useNavigate: () => vi.fn<() => Promise<void>>() };
 });
+
+// The production interceptor turns non-2xx envelopes into `ApiError` (status + code); the hook's
+// 409 handling is only reachable through it, so register it on the module-level client once.
+installAuthInterceptor(new QueryClient());
 
 type Checkout = ReturnType<typeof useCheckout>;
 
@@ -106,6 +111,57 @@ describe("useCheckout begin guard", () => {
       await checkout.begin("START", businessId);
     });
     expect(intents).toBe(0);
+  });
+
+  it("frees the cached intent after a 409 so the next attempt freezes a fresh one", async () => {
+    const attemptKey = `blocbuy.payment.attempt.buyer-1.START.${businessId}`;
+    serveCheckout();
+    server.use(
+      http.post("*/api/v1/payments/checkout-sessions", () =>
+        HttpResponse.json(
+          { code: "PAYMENT_409_001", message: "Payment state invalid" },
+          { status: 409 },
+        ),
+      ),
+    );
+    const checkoutRef = renderProbe("buyer-1");
+    await waitFor(() => expect(checkoutRef.current?.enabled).toBe(true));
+    const checkout = await readyCheckout(checkoutRef);
+    await act(async () => {
+      await checkout.begin("START", businessId);
+    });
+    expect(intents).toBe(1);
+    expect(sessionStorage.getItem(attemptKey)).toBeNull();
+    expect(sessionStorage.getItem(`${attemptKey}.request`)).toBeNull();
+    await waitFor(() => expect(checkoutRef.current?.error).not.toBeNull());
+
+    serveCheckout();
+    const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+    await act(async () => {
+      await readyCheckout(checkoutRef).then((c) => c.begin("START", businessId));
+    });
+    expect(intents).toBe(2);
+    expect(assign).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the cached intent after any other failure", async () => {
+    const attemptKey = `blocbuy.payment.attempt.buyer-1.START.${businessId}`;
+    serveCheckout();
+    server.use(
+      http.post("*/api/v1/payments/checkout-sessions", () =>
+        HttpResponse.json({ code: "COMMON_500_000", message: "boom" }, { status: 500 }),
+      ),
+    );
+    const checkoutRef = renderProbe("buyer-1");
+    await waitFor(() => expect(checkoutRef.current?.enabled).toBe(true));
+    const checkout = await readyCheckout(checkoutRef);
+    await act(async () => {
+      await checkout.begin("START", businessId);
+      await checkout.begin("START", businessId);
+    });
+    expect(intents).toBe(1);
+    expect(sessionStorage.getItem(attemptKey)).toBe(intentId);
+    expect(sessionStorage.getItem(`${attemptKey}.request`)).not.toBeNull();
   });
 
   it("returns early when payments are unavailable", async () => {
