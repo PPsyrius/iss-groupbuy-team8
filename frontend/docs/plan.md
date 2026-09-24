@@ -949,7 +949,7 @@ The temporary A1 `test.fixme` was removed on 2026-09-23 after the live deep-link
 ### T1-14: First deploy
 
 - [x] Step 1 (preferred): `ENABLE_S3_DEPLOY=true`; rerun `ci-frontend` #165 at `fbb71a9` passed `package-dev`, `deploy-s3-dev` and `e2e-dev` on 2026-09-23.
-- [ ] Step 2 (fallback): not required for the verified automated path; the account holder's earlier manual deployment established the bucket contents before automation was enabled.
+- [x] Step 2 (fallback, executed 2026-09-22 by @limjiechao with an AdministratorAccess Identity Center session, not the account holder): runbook §10 at dev `983b401`; sync 89 assets + `index.html` no-cache, invalidation `/index.html`; root and deep link 200 `text/html`; `GET /api/v1/products?page=1` 200 `application/json` (not rewritten by the SPA function). Superseded by the automated path on 2026-09-23 (Step 1). ~~the account holder runs runbook §10 (pnpm form, §8.5) from a machine with `dist/` built by `pnpm build` at the merged `dev` SHA; paste the three command outputs into the sprint log.~~
 - [x] Step 3: root, deep link and deployed asset returned 200, API health returned `UP`, and the post-`fixme` dev Playwright rerun passed 6 tests with only two unseeded `@auth` tests skipped; evidence is in the 2026-09-23 sprint log and run #165.
 
 ### T1-15: ADR bodies and sprint log
