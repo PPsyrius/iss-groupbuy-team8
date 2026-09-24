@@ -466,8 +466,21 @@ aws cloudfront wait distribution-deployed --id "$DIST_ID"
 ROOT_HEADERS=$(mktemp)
 API_HEADERS=$(mktemp)
 trap 'rm -f "$ROOT_HEADERS" "$API_HEADERS"' EXIT
-curl -fsS -D "$ROOT_HEADERS" -o /dev/null "https://$DIST_DOMAIN/"
-curl -fsS -D "$API_HEADERS" -o /dev/null "https://$DIST_DOMAIN/api/v1/products?page=1"
+# Each behavior must answer 2xx before its headers count; `curl -f` alone lets 3xx through and
+# the header check below never reads the status line.
+check_success() {
+  local headers=$1 url=$2 status
+  if ! status=$(curl -sS -D "$headers" -o /dev/null -w '%{http_code}' "$url"); then
+    echo "curl failed: $url" >&2
+    return 1
+  fi
+  case "$status" in
+    2??) ;;
+    *) echo "unexpected HTTP status $status for $url" >&2; return 1 ;;
+  esac
+}
+check_success "$ROOT_HEADERS" "https://$DIST_DOMAIN/" || exit 1
+check_success "$API_HEADERS" "https://$DIST_DOMAIN/api/v1/products?page=1" || exit 1
 
 # Fail unless both behaviors return every header with the value defined by the policy source.
 python3 - "$ROOT_HEADERS" "$API_HEADERS" <<'PY'
