@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath, URL } from "node:url";
 
@@ -32,6 +33,41 @@ const mswWorkerInDev: Plugin = {
   },
 };
 
+// `vite preview` mirrors the dev CloudFront response headers policy so the CSP can be checked
+// locally before the account holder re-applies it (plan T2-11). Read from the versioned JSON so
+// the two cannot drift; HSTS is skipped because preview is plain http.
+const headersPolicy: unknown = JSON.parse(
+  readFileSync(
+    fileURLToPath(
+      new URL("../deployment/frontend/cloudfront/response-headers-policy.json", import.meta.url),
+    ),
+    "utf8",
+  ),
+);
+function policyString(...path: string[]): string {
+  let node: unknown = headersPolicy;
+  for (const key of path) {
+    if (typeof node !== "object" || node === null || !(key in node)) {
+      throw new Error(`response-headers-policy.json: missing ${path.join(".")}`);
+    }
+    node = Reflect.get(node, key);
+  }
+  if (typeof node !== "string") {
+    throw new Error(`response-headers-policy.json: ${path.join(".")} is not a string`);
+  }
+  return node;
+}
+const previewHeaders = {
+  "Content-Security-Policy": policyString(
+    "SecurityHeadersConfig",
+    "ContentSecurityPolicy",
+    "ContentSecurityPolicy",
+  ),
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": policyString("SecurityHeadersConfig", "FrameOptions", "FrameOption"),
+  "Referrer-Policy": policyString("SecurityHeadersConfig", "ReferrerPolicy", "ReferrerPolicy"),
+};
+
 export default defineConfig(({ command }) => ({
   plugins: [
     tanstackRouter({ target: "react", autoCodeSplitting: true }),
@@ -48,6 +84,7 @@ export default defineConfig(({ command }) => ({
       "/api": { target: "http://localhost:8589", changeOrigin: true },
     },
   },
+  preview: { headers: previewHeaders },
   build: {
     // No maps in the delivery artifact: they were synced to the public bucket with the code
     // (#155). Nothing consumes them (no error tracker); `vite dev` serves maps regardless.

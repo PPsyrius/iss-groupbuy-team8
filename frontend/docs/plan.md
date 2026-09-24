@@ -1222,9 +1222,9 @@ export const Route = createFileRoute('/auth/callback')({
 
 ### T2-11: CSP tightening
 
-- [ ] Step 1: After A2, run the task-row curl; open the dev site with DevTools console and the Playwright trace; list CSP violations.
-- [ ] Step 2: Edit `deployment/frontend/cloudfront/response-headers-policy.json` (§8.2) to the narrowest policy that passes; account holder re-applies with `update-response-headers-policy`.
-- [ ] Step 3: Log the final CSP in `docs/agile/sprint-02/log/YYYY-MM-DD.md` and ADR 0002 consequences.
+- [x] Step 1 (2026-09-22/23): task-row curl green after A2; Playwright console probe on the deployed site found one violation per page (Google Fonts, fixed by self-hosting Inter, #158); the tightening candidates were probed against `vite preview`, which now mirrors the policy JSON (`vite.config.ts` `preview.headers`), on `/`, a listing with the sign-in sheet open, `/login`, `/account`, `/payments/return`, a 404.
+- [x] Step 2 (2026-09-23): JSON narrowed to `style-src 'self' 'unsafe-inline'; img-src 'self' https:; font-src 'self'` (`data:` dropped from both; `'unsafe-inline'` kept: React Aria's injected `<style>` and overlay positioning are refused without it). Re-apply on dev with `update-response-headers-policy` is owed to the user/account holder; the dev curl + `E2E_TARGET=dev pnpm e2e` verification runs after that.
+- [x] Step 3 (2026-09-23): final CSP in `docs/agile/sprint-02/log/2026-09-23.md` and ADR 0002 consequences.
 
 ---
 

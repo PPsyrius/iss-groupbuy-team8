@@ -10,15 +10,14 @@ Accepted
 
 The dev distribution serves `/` from S3 and `/api/*` from the ALB (`CachingDisabled`, `AllViewerExceptHostHeader`,
 all seven methods, `X-Origin-Secret` on the origin leg). The backend has no context path (`/api/v1` comes from
-`ApiConstants.API_V1` on the controllers) and zero CORS configuration. Sessions are Sa-Token 1.46 with
-`token-name: blocbuy-token`; `application.yml` sets the cookie `http-only: true`, `secure: true`, `same-site: Lax`,
-but the `local`, `docker` and `ec2` profiles all override `secure: false`, and the `ec2` comment ("TLS termination
-pending") is stale since the entry layer went live on 2026-09-06 (B3, #96). Login starts with
-`GET /api/v1/auth/oauth2/google` (302 to Google plus a `blocbuy-oauth-state` cookie scoped to `/api/v1/auth`); the
-callback `GET /api/v1/auth/oauth2/google/callback` still returns `Result<LoginResponse>` with the token in the body
-(`AuthController.googleCallback`), which strands a top-level navigation on a JSON page. `GET /api/v1/auth/me` returns
-`{userId, nickname, avatarUrl}` (B4, #97, via PR #89), logout is `POST /api/v1/auth/logout`, unauthenticated calls get a JSON 401
-envelope, `GET /api/v1/products/**` is anonymous, and the contract still declares `blocbuyToken` as `apiKey in: header` (B2, #95).
+`ApiConstants.API_V1`) and zero CORS configuration. Sessions are Sa-Token 1.46 (`token-name: blocbuy-token`;
+`application.yml` sets `http-only: true`, `secure: true`, `same-site: Lax`, but the `local`, `docker` and `ec2`
+profiles override `secure: false`; the `ec2` comment "TLS termination pending" is stale since 2026-09-06, B3 #96).
+Login starts with `GET /api/v1/auth/oauth2/google` (302 to Google plus a `blocbuy-oauth-state` cookie scoped to
+`/api/v1/auth`); the callback still returns `Result<LoginResponse>` with the token in the body, stranding a
+top-level navigation on a JSON page. `GET /api/v1/auth/me` returns `{userId, nickname, avatarUrl}` (B4 #97, PR #89),
+logout is `POST /api/v1/auth/logout`, unauthenticated calls get a JSON 401 envelope, `GET /api/v1/products/**` is
+anonymous, and the contract still declares `blocbuyToken` as `apiKey in: header` (B2, #95).
 
 ## Decision
 
@@ -34,26 +33,27 @@ re-resolves the session and redirects to `/account` or `/`. `useSession` over th
 never redirects. Only `beforeLoad` guards redirect: the `_authenticated` pathless layout sends
 anonymous users to `/` with a `redirect` search param.
 
-Alternatives rejected: CORS with a bearer token in `localStorage` (XSS exposure; the backend has
-no CORS config to begin with); a popup flow reading the JSON callback (fragile, still exposes the
-token to script); a BFF proxy (an extra service nobody on the team operates).
+Alternatives rejected: CORS with a bearer token in `localStorage` (XSS exposure, no backend CORS config);
+a popup flow reading the JSON callback (fragile, still exposes the token); a BFF proxy (an extra service).
 
 ## Consequences
 
 B1 is open, so until #94 merges the dev workaround is to complete the Google flow, land on the
-JSON page and type `/` (the cookie is already set); the `/auth/callback` route is built regardless
-because it only refetches `me`. If B1 is refused the escalation is D1 option (c), a backend HTML
-bounce page; no frontend token handling will be written either way. A `?redirect=` pass-through
-carried in `state` is a follow-up backend ask (B1 optional item): the login link cannot carry a
-return URL today, so the callback falls back to `/account`. B3 (#96) leaves the dev cookie
-non-Secure, so the secure-cookie NFR is unmet until it merges; HSTS from A2 still applies across
-`/api/*`. B5 (#98, `GOOGLE_REDIRECT_URI` on dev) and the cookie flags could not be observed on
-2026-09-16 because the dev backend answered 503 (T1-01 probe). B4 (#97) landed in PR #89: the header
-renders `nickname ?? userId` since `d875f8c`. The starting CSP's `connect-src 'self'` holds only because of this same-origin
-rule; the final CSP after T2-11 is recorded here as a dated addendum.
+JSON page and type `/` (the cookie is already set); `/auth/callback` is built regardless (it only
+refetches `me`). If B1 is refused the escalation is D1 option (c), a backend HTML bounce page; no
+frontend token handling either way. A `?redirect=` pass-through in `state` is a follow-up backend
+ask (B1 optional item): the login link cannot carry a return URL, so the callback falls back to `/account`. B3 (#96) leaves the dev cookie
+non-Secure (secure-cookie NFR unmet until it merges; HSTS from A2 still covers `/api/*`). B5 (#98)
+and the cookie flags were unobservable on 2026-09-16 (dev 503). B4 (#97) landed in PR #89 (`d875f8c`,
+header renders `nickname ?? userId`). `connect-src 'self'` holds only because of this same-origin rule.
 
-2026-09-17 (branch review, `2d040a2`): on 401 the interceptor uses
-`setQueryData(meQueryKey(), { code: OK_CODE, message: 'anonymous' })` instead of `removeQueries`,
-so the observed `me` query stays settled rather than pending and refetching on every root
-re-render; it must never `invalidateQueries` or `resetQueries` there, because the `me` request's
-own 401 would loop. `OK_CODE` is exported from `envelope.ts` for that consumer.
+2026-09-17 (branch review, `2d040a2`): on 401 the interceptor uses `setQueryData(meQueryKey(),
+{ code: OK_CODE, message: 'anonymous' })`, never `removeQueries`/`invalidateQueries`/`resetQueries`
+(the `me` request's own 401 would loop); `OK_CODE` is exported from `envelope.ts` for it.
+
+2026-09-23 (T2-11, final CSP): `default-src 'self'; script-src 'self'; style-src 'self'
+'unsafe-inline'; img-src 'self' https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none';
+base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests`. `'unsafe-inline'`
+stays: without it React Aria's injected `<style id="react-aria-pressable-style">` and overlay
+positioning are refused on every page (preview probe); `data:` left `img-src`/`font-src` (nothing
+uses it); `img-src https:` stays until the contract pins a listing image host (avatars are Google).
