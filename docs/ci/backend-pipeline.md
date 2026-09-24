@@ -1,28 +1,19 @@
 # Backend CI/CD Runbook
 
-This runbook describes the implemented backend quality, security, release, deployment and rollback
-workflows. AWS/EC2 setup is in the
-[existing EC2 operator guide](../deploy/backend-ec2-pipeline-operator-guide.md); gate rationale and
-thresholds are in [devsecops-pipeline-plan.md](devsecops-pipeline-plan.md) and
-[`quality-gates.md`](../quality/quality-gates.md).
+This runbook describes the implemented backend quality, security, release, deployment and rollback workflows. AWS/EC2 setup is in the [existing EC2 operator guide](../deploy/backend-ec2-pipeline-operator-guide.md); gate rationale and thresholds are in [devsecops-pipeline-plan.md](devsecops-pipeline-plan.md) and [`quality-gates.md`](../quality/quality-gates.md).
 
 ## Pipeline shape
 
-Pull requests are the authoritative pre-merge validation path. The `dev` ruleset requires selected
-status checks to pass against the latest `dev` state before a pull request can merge. `merge_group`
-support remains in the workflows for forward compatibility if the repository later becomes eligible
-for GitHub Merge Queue.
+Pull requests are the authoritative pre-merge validation path. The `dev` ruleset requires selected status checks to pass against the latest `dev` state before a pull request can merge. `merge_group` support remains in the workflows for forward compatibility if the repository later becomes eligible for GitHub Merge Queue.
 
-After an up-to-date pull request passes its required checks and lands on `dev`, the `push` workflow
-performs delivery work only: package the merged application, assemble the image, publish it to ECR,
-and deploy it to EC2.
+After an up-to-date pull request passes its required checks and lands on `dev`, backend-relevant pushes run tests, PostgreSQL ITs and JaCoCo in `sonar-backend` on the merged SHA, then refresh its main-branch baseline. Spotless, Checkstyle and SpotBugs are not repeated. Packaging, ECR publication and EC2 deployment run independently when enabled.
 
 ```text
-pull_request                    push/dev
-├── build-quality               ├── package merged JAR
-├── contract-check              ├── assemble image
-├── SonarCloud Backend          ├── publish ECR
-├── docker                      └── deploy EC2
+pull_request                    push/dev (backend-relevant)
+├── build-quality               ├── SonarCloud Backend (tests + coverage → scan)
+├── contract-check              └── package merged JAR → assemble image → publish ECR → deploy EC2
+├── SonarCloud Backend
+├── docker
 ├── security
 └── typesafe-smoke (live, non-required)
         ↑
@@ -32,10 +23,10 @@ merge_group
 └── same applicable validation when Merge Queue is available
 
 ci-backend.yml
-├── build-quality     Spotless -> Checkstyle -> Maven verify -> reports + Sonar inputs + OpenAPI candidate
+├── build-quality     PR/tag: Spotless -> Checkstyle -> Maven verify -> reports + Sonar inputs + OpenAPI candidate
 ├── contract-check    OpenAPI candidate -> drift (Maven fallback for contracts-only changes)
 │                     └── PR only: compatibility + `contract-change-approved` handling
-├── sonar-backend     SonarCloud Backend Maven scan + quality gate (artifact reuse from build-quality)
+├── sonar-backend     PR/tag: reuse build-quality artifacts; dev: Maven verify (coverage only) -> scan + quality gate
 ├── docker            image build -> EC2-profile smoke -> Trivy image gate
 │                     └── enabled production tag push: preserve tested image for ECR publication
 └── deploy-existing-ec2 (dev push + ENABLE_EC2_DEPLOY=true)
@@ -62,13 +53,11 @@ typesafe-smoke.yml
 rollback-backend.yml  manual, confirmed, reasoned, environment-controlled SSM rollback
 ```
 
-The security workflow also runs every Monday at 02:17 UTC to detect newly disclosed issues in
-unchanged dependencies.
+The security workflow also runs every Monday at 02:17 UTC to detect newly disclosed issues in unchanged dependencies.
 
 ## Required PR checks
 
-Configure the `dev` ruleset to require pull requests, required status checks and branches to be up
-to date before merging.
+Configure the `dev` ruleset to require pull requests, required status checks and branches to be up to date before merging.
 
 The currently required checks are:
 
@@ -79,48 +68,27 @@ The currently required checks are:
 - `frontend-check`;
 - `sonar-frontend`.
 
-Other applicable CI/security jobs still run and report failures, but conditional jobs should not be
-made permanently required unless their presence is made unconditional.
+Other applicable CI/security jobs still run and report failures, but conditional jobs should not be made permanently required unless their presence is made unconditional.
 
-`typesafe-smoke` is deliberately not a required status check. It verifies compatibility with the
-live TypeSafe Jev service, while the application itself treats Jev as an optional enhancement and
-preserves deterministic SQL ordering if the service is unavailable.
+`typesafe-smoke` is deliberately not a required status check. It verifies compatibility with the live TypeSafe Jev service, while the application itself treats Jev as an optional enhancement and preserves deterministic SQL ordering if the service is unavailable.
 
-Recommended `dev` ruleset protections also include at least one approval, stale-approval dismissal,
-approval of the latest reviewable push, CODEOWNERS review where ownership is intentional,
-conversation resolution, deletion restriction and force-push blocking. Do not use `Restrict
-updates` merely to force PRs; the pull-request requirement establishes that path.
+Recommended `dev` ruleset protections also include at least one approval, stale-approval dismissal, approval of the latest reviewable push, CODEOWNERS review where ownership is intentional, conversation resolution, deletion restriction and force-push blocking. Do not use `Restrict updates` merely to force PRs; the pull-request requirement establishes that path.
 
-`merge_group` remains configured in the workflows as dormant forward-compatible support. If the
-repository later becomes eligible for GitHub Merge Queue, the same applicable validation can run
-against the speculative integrated state without redesigning the workflows.
+`merge_group` remains configured in the workflows as dormant forward-compatible support. If the repository later becomes eligible for GitHub Merge Queue, the same applicable validation can run against the speculative integrated state without redesigning the workflows.
 
-`deploy-existing-ec2` and `publish-ecr-*` stay `push`-only. They must not be required pre-merge
-checks. `sonar-frontend` also analyzes frontend-changing pushes to `dev` so the frontend SonarCloud
-project has a current main-branch baseline; its always-reported PR result is the required context.
+`deploy-existing-ec2` and `publish-ecr-*` stay `push`-only. They must not be required pre-merge checks. Backend and frontend SonarCloud jobs also analyze relevant pushes to `dev` so both projects retain a current main-branch baseline; their PR results remain the required contexts.
 
 ### Post-merge delivery boundary
 
-Direct changes to `dev` are prevented by the repository ruleset: normal changes must arrive through
-an up-to-date pull request whose required status checks have passed. Because the pull request is
-tested against the latest `dev` state immediately before it becomes mergeable, expensive
-quality/security gates are not repeated on the resulting `push/dev`.
+Direct changes to `dev` are prevented by the repository ruleset: normal changes arrive through an up-to-date pull request with passing required checks. For backend-relevant pushes, `sonar-backend` generates classes and aggregate JaCoCo coverage using Maven `verify` (unit tests, PostgreSQL ITs and ArchUnit; Spotless, Checkstyle and SpotBugs skipped), then scans the exact merged SHA on the same runner. It refreshes the `dev` dashboard without gating `package-dev`, ECR publication or deployment. Failed analysis leaves the dashboard stale and the push workflow red even if delivery succeeds.
 
-The delivery run rebuilds/packages the deployable JAR and assembles the runtime image from the
-merged `dev` source without rerunning tests, formatting/style checks, SpotBugs, JaCoCo, Sonar,
-contract validation, smoke tests, Trivy, CodeQL, Gitleaks, configuration scans, or the live TypeSafe
-smoke. This deliberately trades exact promotion of the PR-built Docker image for substantially lower
-GitHub Actions usage. Production `v*` tag releases retain the full release validation path.
+The separate delivery path still builds the deployable JAR from the merged source without rerunning Docker smoke, Trivy, contract compatibility, Gitleaks, CodeQL, configuration scans or the live TypeSafe smoke. It does not promote the PR-built Docker image across workflow runs. Production `v*` tag releases retain their full release validation path.
 
 ## TypeSafe Jev validation
 
-BlocBuy's optional AI-assisted listing search uses TypeSafe Jev System One to re-rank the
-deterministic PostgreSQL shortlist. PostgreSQL remains authoritative for filtering, pagination and
-the fallback result order.
+BlocBuy's optional AI-assisted listing search uses TypeSafe Jev System One to re-rank the deterministic PostgreSQL shortlist. PostgreSQL remains authoritative for filtering, pagination and the fallback result order.
 
-Normal backend verification uses deterministic/stubbed tests and requires no live TypeSafe
-credential. The separate `typesafe-smoke.yml` workflow performs one live API contract check using
-the same `choice` response shape consumed by the listing-search reranker.
+Normal backend verification uses deterministic/stubbed tests and requires no live TypeSafe credential. The separate `typesafe-smoke.yml` workflow performs one live API contract check using the same `choice` response shape consumed by the listing-search reranker.
 
 The live smoke validates the external wire contract rather than model quality:
 
@@ -132,12 +100,9 @@ The live smoke validates the external wire contract rather than model quality:
 
 It deliberately does not assert which candidate Jev must rank first.
 
-The live smoke runs for applicable non-fork, non-Dependabot backend pull requests, production `v*`
-tags, manual dispatches, and `merge_group` when Merge Queue is available. It does not run on
-`push/dev`, preserving the delivery-only post-merge design.
+The live smoke runs for applicable non-fork, non-Dependabot backend pull requests, production `v*` tags, manual dispatches, and `merge_group` when Merge Queue is available. It does not run on `push/dev`; live Jev checks are not part of the post-merge validation.
 
-Jev availability is not a required merge condition. If the live service is unavailable at runtime,
-the application preserves the original deterministic SQL order.
+Jev availability is not a required merge condition. If the live service is unavailable at runtime, the application preserves the original deterministic SQL order.
 
 ## Run backend quality gates locally
 
@@ -163,14 +128,11 @@ bash -n deployment/backend/bin/*.sh
 docker compose -f deployment/backend/compose.yml config --no-interpolate
 ```
 
-The `security` workflow additionally runs pinned Actionlint, ShellCheck and Trivy versions. The SSM
-bundle may contain exactly `compose.yml` and the four lifecycle scripts; application secrets are not
-transported by CI.
+The `security` workflow additionally runs pinned Actionlint, ShellCheck and Trivy versions. The SSM bundle may contain exactly `compose.yml` and the four lifecycle scripts; application secrets are not transported by CI.
 
 ## Release and deployment behavior
 
-On PR, the `docker` job builds and boots the image with the `ec2` Spring profile against PostgreSQL
-and Redis, then fails on fixable HIGH/CRITICAL image vulnerabilities.
+On PR, the `docker` job builds and boots the image with the `ec2` Spring profile against PostgreSQL and Redis, then fails on fixable HIGH/CRITICAL image vulnerabilities.
 
 After an up-to-date, validated pull request lands on `dev`, when `ENABLE_EC2_DEPLOY=true`:
 
@@ -184,18 +146,13 @@ After an up-to-date, validated pull request lands on `dev`, when `ENABLE_EC2_DEP
 
 The workflow never provisions or operates PostgreSQL, Redis, EC2 or Terraform state.
 
-Production `v*` releases execute the full backend and security validation path and also run the live
-TypeSafe compatibility smoke. A TypeSafe smoke failure identifies an external integration problem
-but does not change the application's deterministic search fallback design.
+Production `v*` releases execute the full backend and security validation path and also run the live TypeSafe compatibility smoke. A TypeSafe smoke failure identifies an external integration problem but does not change the application's deterministic search fallback design.
 
 ## Manual rollback
 
-Use **Actions -> rollback-backend -> Run workflow** from `dev`. Provide a reason, confirm the warning,
-and normally leave `target_image` blank to use the recorded previous image. An explicit target must
-be a digest in the configured account, Region and repository.
+Use **Actions -> rollback-backend -> Run workflow** from `dev`. Provide a reason, confirm the warning, and normally leave `target_image` blank to use the recorded previous image. An explicit target must be a digest in the configured account, Region and repository.
 
-Deployment and rollback share one non-cancellable concurrency group. A rollback cannot reverse
-Flyway migrations; deployed migrations must remain backward-compatible.
+Deployment and rollback share one non-cancellable concurrency group. A rollback cannot reverse Flyway migrations; deployed migrations must remain backward-compatible.
 
 ## Fixing a red check
 

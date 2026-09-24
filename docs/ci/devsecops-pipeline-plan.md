@@ -82,6 +82,10 @@ To conserve GitHub Actions minutes, the resulting `push/dev` does not repeat Mav
 
 This intentionally changes the earlier artifact-provenance model: the Docker image produced during pre-merge validation is not promoted across workflow runs. The delivery path rebuilds the deployable artifact from the exact merged source after the up-to-date PR passes. This accepts a small reproducibility/provenance trade-off in exchange for eliminating a full duplicate CI/security run. Production `v*` tag releases continue to execute the full release gate chain.
 
+### Addendum (2026-09-24): refresh the backend `dev` SonarCloud baseline
+
+The backend project's main branch remained at its 2026-09-16 analysis even while backend PR quality gates passed on 2026-09-24. For backend-relevant dev pushes, `sonar-backend` generates merged-SHA coverage (unit tests, PostgreSQL ITs and aggregate JaCoCo; skip Spotless, Checkstyle and SpotBugs) and scans on one runner without transferring artifacts from another job. This adds a test run for accurate current-commit coverage, but not another full quality-gate chain; package/ECR/SSM delivery stays independent.
+
 ### `.github/workflows/typesafe-smoke.yml`
 
 The TypeSafe workflow performs a live compatibility check against the Jev System One API used by the optional listing-search reranker.
@@ -106,7 +110,7 @@ Triggers:
 - production `v*` tag pushes;
 - manual `workflow_dispatch`.
 
-Fork and Dependabot PRs do not receive the TypeSafe API secret and therefore skip the live call. Normal `push/dev` does not run the smoke because post-merge `dev` runs are delivery-only.
+Fork and Dependabot PRs do not receive the TypeSafe API secret and therefore skip the live call. Normal `push/dev` does not run the smoke; its triggers are listed above.
 
 `typesafe-smoke` is deliberately not a required repository status check. The production listing-search integration treats Jev as a best-effort enhancement: if the live call fails, the application preserves the deterministic PostgreSQL shortlist order and total.
 
