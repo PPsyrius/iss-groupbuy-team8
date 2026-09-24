@@ -1228,10 +1228,10 @@ export const Route = createFileRoute('/auth/callback')({
 
 ### T2-10: Authored skills
 
-- [ ] Step 1: After PR-A merges, write `.claude/skills/adr/SKILL.md` (frontmatter `name: adr`, `description: Write or update a Nygard ADR in frontend/docs/adr with the next number and README index entry; use when recording a frontend architecture decision, ADR, or design choice`), body = the checklist used in T1-15.
-- [ ] Step 2: `.claude/skills/api-client-regen/SKILL.md` (`description: Regenerate the hey-api client after contracts/openapi.json changes, run pnpm check, and list type breaks; use when the contract, openapi.json, generated client, or gen:api is mentioned`).
-- [ ] Step 3: `.claude/skills/agile-evidence-capture/SKILL.md` already exists (§12 item 17); verify it still describes the PR evidence set (issue link, ADR names, `pnpm check` output, screenshot or Playwright trace, sprint log entry) and extend rather than duplicate.
-- [ ] Step 4: Verification command from the task row; commit `chore(skills): adr, api-client-regen and agile-evidence-capture skills`.
+- [x] Step 1 (2026-09-23): `.claude/skills/adr/SKILL.md` + `references/template.md`; description kept to triggers (the writing-skills rule), the T1-15 checklist is the body (scope table, new/amend/supersede, verification, mistakes). Dry run against ADR 0014 and the 0010 addendum: 43 / 58 lines, one README row each, header comment present. Original brief: write `.claude/skills/adr/SKILL.md` (frontmatter `name: adr`, `description: Write or update a Nygard ADR in frontend/docs/adr with the next number and README index entry; use when recording a frontend architecture decision, ADR, or design choice`), body = the checklist used in T1-15.
+- [x] Step 2 (2026-09-23): `.claude/skills/api-client-regen/SKILL.md`; every command in it was run against the tree (`jq` operation list, consumer grep for `pageListingsOptions`, `pnpm gen:api` output present after install). Original brief: `.claude/skills/api-client-regen/SKILL.md` (`description: Regenerate the hey-api client after contracts/openapi.json changes, run pnpm check, and list type breaks; use when the contract, openapi.json, generated client, or gen:api is mentioned`).
+- [x] Step 3 (2026-09-23): `agile-evidence-capture` already describes the day-file log (PPsyrius, #145); Close item 5 now spells out the PR evidence set and points at the two new skills. Original brief: `.claude/skills/agile-evidence-capture/SKILL.md` already exists (§12 item 17); verify it still describes the PR evidence set (issue link, ADR names, `pnpm check` output, screenshot or Playwright trace, sprint log entry) and extend rather than duplicate.
+- [x] Step 4 (2026-09-23): verification command printed `ok adr`, `ok api-client-regen`, `ok agile-evidence-capture`; committed as `docs(skills): author the adr and api-client-regen skills, align agile-evidence-capture with the day-file log (T2-10)` on the loop's stack (PR-L).
 
 ### T2-11: CSP tightening
 
