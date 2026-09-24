@@ -52,6 +52,8 @@ sudoedit /etc/blocbuy/backend.env
 
 Replace every placeholder in `/etc/blocbuy/backend.env`. Do not commit or transmit the real file through GitHub Actions.
 
+### Change the scheduling flag
+
 `BLOCBUY_SCHEDULING_ENABLED` defaults to `false`. Before enabling it, run:
 
 ```sql
@@ -60,7 +62,7 @@ FROM domain.biz_group_deal
 WHERE deleted = false AND status = 'open' AND expire_time <= now();
 ```
 
-Record the backlog, then set the variable to `true` and restart the backend. Set it back to `false` and restart to pause new sweeps; an in-flight team transaction is allowed to finish or roll back.
+Record the backlog before enabling the sweep. On dev, edit `/etc/blocbuy/backend.env` directly. On prod, update `/blocbuy/prod/BLOCBUY_SCHEDULING_ENABLED` in SSM Parameter Store and rerun `sudo /opt/blocbuy/backend/bin/fetch-env.sh /blocbuy/prod` to refresh the host env file. For either value and environment, run an approved backend deployment or the reviewed [`deploy.sh` command](#deploy) with the current immutable image digest: it force-recreates the backend container and reloads the env file. `docker compose restart` and `docker restart` retain the old container environment. To pause, set `false` and recreate; an in-flight team transaction may finish or roll back.
 
 To enable the optional Jev listing re-ranker on dev, set `TYPESAFE_ENABLED=true` and place the TypeSafe credential in `TYPESAFE_API_KEY`. The ordinary listing search remains available when Jev is disabled or temporarily unavailable; clients request page-local semantic ordering with `ai=true`. The repository's `typesafe-smoke` workflow uses its separate Actions secret only for a manually dispatched provider check and does not provision this host file.
 

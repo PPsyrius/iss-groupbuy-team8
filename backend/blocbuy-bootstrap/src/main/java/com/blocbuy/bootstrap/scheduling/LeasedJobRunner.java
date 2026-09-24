@@ -6,6 +6,8 @@ import com.blocbuy.common.util.UuidV7;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 import lombok.RequiredArgsConstructor;
@@ -82,7 +84,8 @@ public class LeasedJobRunner {
             return SKIPPED;
         }
         AtomicBoolean leaseValid = new AtomicBoolean(true);
-        Thread renewal = startRenewal(job, lease, leaseValid);
+        CountDownLatch stop = new CountDownLatch(1);
+        Thread renewal = startRenewal(job, lease, leaseValid, stop);
         String outcome = COMPLETED;
         try {
             work.run(leaseValid::get);
@@ -90,13 +93,14 @@ public class LeasedJobRunner {
             log.error("Job {} failed; the next run retries", job, e);
             outcome = FAILED;
         } finally {
-            stopRenewal(renewal);
+            stopRenewal(renewal, stop);
             release(job);
         }
         return leaseValid.get() ? outcome : FAILED;
     }
 
-    private Thread startRenewal(String job, Duration lease, AtomicBoolean leaseValid) {
+    private Thread startRenewal(
+            String job, Duration lease, AtomicBoolean leaseValid, CountDownLatch stop) {
         String traceId = MDC.get(ApiConstants.TRACE_ID_MDC_KEY);
         Duration renewalInterval = lease.dividedBy(3);
         return Thread.ofVirtual()
@@ -105,8 +109,10 @@ public class LeasedJobRunner {
                         () -> {
                             MDC.put(ApiConstants.TRACE_ID_MDC_KEY, traceId);
                             try {
-                                while (leaseValid.get()) {
-                                    Thread.sleep(renewalInterval);
+                                while (leaseValid.get()
+                                        && !stop.await(
+                                                renewalInterval.toMillis(),
+                                                TimeUnit.MILLISECONDS)) {
                                     if (!leases.renew(job, owner, lease)) {
                                         leaseValid.set(false);
                                         log.warn(
@@ -126,9 +132,9 @@ public class LeasedJobRunner {
                         });
     }
 
-    private static void stopRenewal(Thread renewal) {
+    private static void stopRenewal(Thread renewal, CountDownLatch stop) {
         boolean interrupted = Thread.interrupted();
-        renewal.interrupt();
+        stop.countDown();
         while (renewal.isAlive()) {
             try {
                 renewal.join();

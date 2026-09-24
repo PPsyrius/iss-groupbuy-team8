@@ -15,6 +15,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.LockSupport;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 import org.springframework.dao.QueryTimeoutException;
@@ -120,11 +121,55 @@ class LeasedJobRunnerTest {
                 shortLease,
                 leaseValid -> {
                     await(renewalAttempted);
+                    long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2);
+                    while (leaseValid.getAsBoolean() && System.nanoTime() < deadline) {
+                        Thread.onSpinWait();
+                    }
                     observedValidity.set(leaseValid.getAsBoolean());
                 });
 
         assertThat(observedValidity).hasValue(false);
         assertThat(runs(LeasedJobRunner.FAILED)).isEqualTo(1.0);
+    }
+
+    @Test
+    void completedRunSignalsStopWithoutInterruptingAnInFlightRenewal() throws Exception {
+        Duration shortLease = Duration.ofMillis(60);
+        var renewing = new CountDownLatch(1);
+        var finishRenewal = new CountDownLatch(1);
+        var interrupted = new AtomicReference<Boolean>(false);
+        when(leases.tryAcquire(JOB, OWNER, shortLease)).thenReturn(true);
+        when(leases.renew(JOB, OWNER, shortLease))
+                .thenAnswer(
+                        ignored -> {
+                            renewing.countDown();
+                            try {
+                                if (!finishRenewal.await(2, TimeUnit.SECONDS)) {
+                                    throw new QueryTimeoutException("renewal did not finish");
+                                }
+                            } catch (InterruptedException e) {
+                                interrupted.set(true);
+                                Thread.currentThread().interrupt();
+                                throw new QueryTimeoutException("renewal was interrupted", e);
+                            }
+                            return true;
+                        });
+        when(leases.release(JOB, OWNER)).thenReturn(true);
+
+        Thread finish =
+                Thread.ofVirtual()
+                        .start(
+                                () -> {
+                                    await(renewing);
+                                    LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(100));
+                                    finishRenewal.countDown();
+                                });
+        runner.run(JOB, shortLease, ignored -> await(renewing));
+        finish.join();
+
+        assertThat(interrupted).hasValue(false);
+        assertThat(runs(LeasedJobRunner.COMPLETED)).isEqualTo(1.0);
+        verify(leases).release(JOB, OWNER);
     }
 
     @Test
