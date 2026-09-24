@@ -82,13 +82,13 @@ export function useCheckout(userId: string | undefined) {
         throw new Error("Invalid payment destination");
       }
       window.location.assign(destination.href);
-    } catch (failure) {
+    } catch (checkoutError) {
       const knownPayment = sessionStorage.getItem(`${key}.payment`);
       if (knownPayment) {
         await navigate({ to: "/payments/$paymentId", params: { paymentId: knownPayment } });
         return;
       }
-      if (isStaleIntent(failure)) {
+      if (isStaleIntent(checkoutError)) {
         // No payment was ever created for this intent, so freeing both keys lets the next
         // begin() freeze a fresh intent under a fresh idempotency key. Every other failure
         // (timeouts included) keeps them: a retry must not create a second charge.
