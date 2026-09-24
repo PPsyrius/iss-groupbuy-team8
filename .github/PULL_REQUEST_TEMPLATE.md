@@ -8,7 +8,7 @@ Closes #
 
 ## Decisions
 
-ADR(s) implemented or affected: <!-- e.g. `frontend/docs/adr/0009-...md` (frontend only); a backend decision cites its D-table row or design doc, a cross-cutting one its section under `docs/`; or "none" -->
+ADR(s) implemented or affected: <!-- frontend: `frontend/docs/adr/NNNN-...md`; backend: `backend/docs/adr/NNNN-...md`, its D-table row or owning design doc; cross-cutting: owning section under `docs/`; or "none" -->
 
 ## Evidence
 
