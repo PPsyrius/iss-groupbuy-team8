@@ -78,13 +78,17 @@ The ruleset also requires branches to be up to date before merging. If `dev` cha
 
 `merge_group` support is retained in the workflows but is not the repository's current authoritative gate. If the repository later becomes eligible for GitHub Merge Queue, the same applicable gates can validate GitHub's speculative integrated state.
 
-To conserve GitHub Actions minutes, the resulting `push/dev` does not repeat the full Maven quality/security gate chain, contract validation, Docker smoke/Trivy validation, `security.yml`, or the live TypeSafe smoke. Backend-relevant pushes run `sonar-backend` to generate merged-SHA coverage and update its main-branch baseline without repeating the full gate chain. Independently, the delivery path packages the merged source, assembles the image, publishes by immutable ECR digest, and deploys. Frontend-changing pushes likewise refresh their project's main-branch baseline with install, tests with coverage, analysis and its quality gate.
+To conserve GitHub Actions minutes, the resulting `push/dev` does not repeat the full Maven quality/security gate chain, contract validation, Docker smoke/Trivy validation, or the live TypeSafe smoke. Backend-relevant pushes run `sonar-backend` to generate merged-SHA coverage and update its main-branch baseline without repeating the full gate chain. Every `dev` push runs Gitleaks in `security.yml`; the broader security gates remain pre-merge, on releases and in the weekly scan. Independently, the delivery path packages the merged source, assembles the image, publishes by immutable ECR digest, and deploys. Frontend-changing pushes likewise refresh their project's main-branch baseline with install, tests with coverage, analysis and its quality gate.
 
 This intentionally changes the earlier artifact-provenance model: the Docker image produced during pre-merge validation is not promoted across workflow runs. The delivery path rebuilds the deployable artifact from the exact merged source after the up-to-date PR passes. This accepts a small reproducibility/provenance trade-off in exchange for eliminating a full duplicate CI/security run. Production `v*` tag releases continue to execute the full release gate chain.
 
 ### Addendum (2026-09-24): refresh the backend `dev` SonarCloud baseline
 
 The backend project's main branch remained at its 2026-09-16 analysis even while backend PR quality gates passed on 2026-09-24. For backend-relevant dev pushes, `sonar-backend` generates merged-SHA coverage (unit tests, PostgreSQL ITs and aggregate JaCoCo; skip Spotless, Checkstyle and SpotBugs) and scans on one runner without transferring artifacts from another job. This adds a test run for accurate current-commit coverage, but not another full quality-gate chain; package/ECR/SSM delivery stays independent.
+
+### Addendum (2026-09-24): refresh the Security `dev` badge
+
+The Security badge targets `dev`, but the workflow's regular `dev` run was only the weekly scheduled scan; successful PR checks did not refresh it. Every merged `dev` push now runs the independent full-history Gitleaks job, without repeating the PR's workflow, deployment, dependency, configuration or optional CodeQL scans. Weekly and manual runs still execute the broader checks, and a green push badge only confirms this lightweight post-merge secret scan.
 
 ### `.github/workflows/typesafe-smoke.yml`
 
@@ -154,7 +158,7 @@ Frontend analysis runs independently as `sonar-frontend` (`SonarCloud Frontend`)
 
 - **`backend/Dockerfile`** — multi-stage: `maven:3.9-eclipse-temurin-21` builds `blocbuy-bootstrap` (`-am`, tests skipped — they ran in `build-quality`); runtime `eclipse-temurin:21-jre`, non-root user, port 8589, `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0`. No in-image HEALTHCHECK (JRE image has no curl); orchestrator probes hit `/api/actuator/health` (management base-path, already exposed). Profile `docker` selected by compose via `SPRING_PROFILES_ACTIVE`, not baked in. Used by local `docker compose` builds.
 - **`backend/Dockerfile.ci`** — runtime-only twin used by the `docker` CI job: successful `build-quality` uploads the boot jar packaged by `mvn verify`; `docker` downloads that exact artifact and assembles the image without repeating an in-container Maven build. The current `docker` job requires `build-quality` success, so it does not use a multi-stage fallback when that artifact is absent.
-- **`.github/workflows/security.yml`** — pull requests and merge groups affecting backend, deployment, or workflow files; production `v*` tag pushes; plus weekly scheduled and manual scans:
+- **`.github/workflows/security.yml`** — pull requests and merge groups affecting backend, deployment, or workflow files; production `v*` tag pushes; weekly scheduled and manual scans; plus Gitleaks-only `dev` pushes:
   - **Gitleaks** full-history secret scan. `.gitleaks.toml` extends defaults and allowlists reviewed placeholders.
   - **Trivy** separates Maven vulnerability and deployment-configuration gates at HIGH/CRITICAL.
   - **Actionlint/ShellCheck** validates workflows, embedded shell and EC2 lifecycle scripts.
@@ -175,7 +179,7 @@ Fixes found during pipeline reviews; all landed in-repo:
 5. **CodeQL SAST job in `security.yml`.** Opt-in via repo variable `ENABLE_CODEQL=true`; repository-side GitHub Code Scanning must also be available/enabled for result ingestion. `build-mode: none` avoids a separate Maven build.
 6. **`setup-java cache: maven`** replaces hand-rolled Maven cache blocks.
 7. **Fixed a silent no-op in the drift check.** `git diff --exit-code -- contracts/` previously ran under `working-directory: backend`, where the pathspec matched nothing. The step now runs from `${{ github.workspace }}`.
-8. **Pre-merge validation + delivery-only `push/dev`.** Required up-to-date PR checks are the authoritative pre-merge boundary; merged `dev` pushes no longer repeat the expensive validation chain.
+8. **Pre-merge validation + lightweight `push/dev`.** Required up-to-date PR checks are the authoritative pre-merge boundary; merged `dev` pushes do not repeat the expensive validation chain (see the dated Sonar and Security baseline addenda above).
 9. **Live TypeSafe Jev contract smoke.** The real System One endpoint is exercised separately from deterministic Maven verification using the same `choice` response contract consumed by the listing-search reranker. It remains non-required because Jev is an optional runtime enhancement with deterministic fallback.
 
 ## Step 6 — Existing EC2 application delivery (implemented 2026-09-04)

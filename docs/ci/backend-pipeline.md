@@ -6,13 +6,13 @@ This runbook describes the implemented backend quality, security, release, deplo
 
 Pull requests are the authoritative pre-merge validation path. The `dev` ruleset requires selected status checks to pass against the latest `dev` state before a pull request can merge. `merge_group` support remains in the workflows for forward compatibility if the repository later becomes eligible for GitHub Merge Queue.
 
-After an up-to-date pull request passes its required checks and lands on `dev`, backend-relevant pushes run tests, PostgreSQL ITs and JaCoCo in `sonar-backend` on the merged SHA, then refresh its main-branch baseline. Spotless, Checkstyle and SpotBugs are not repeated. Packaging, ECR publication and EC2 deployment run independently when enabled.
+After an up-to-date pull request passes its required checks and lands on `dev`, backend-relevant pushes run tests, PostgreSQL ITs and JaCoCo in `sonar-backend` on the merged SHA, then refresh its main-branch baseline. Every `dev` push also runs Gitleaks to update the Security badge; the broader security gates stay on PRs, releases and weekly scans. Packaging, ECR publication and EC2 deployment run independently when enabled.
 
 ```text
-pull_request                    push/dev (backend-relevant)
-├── build-quality               ├── SonarCloud Backend (tests + coverage → scan)
-├── contract-check              └── package merged JAR → assemble image → publish ECR → deploy EC2
-├── SonarCloud Backend
+pull_request                    push/dev
+├── build-quality               ├── SonarCloud Backend (backend-relevant: tests + coverage → scan)
+├── contract-check              ├── Security (Gitleaks only)
+├── SonarCloud Backend          └── package merged JAR → assemble image → publish ECR → deploy EC2
 ├── docker
 ├── security
 └── typesafe-smoke (live, non-required)
@@ -37,6 +37,7 @@ ci-frontend.yml
 └── sonar-frontend    SonarCloud Frontend TypeScript scan + LCOV quality gate
 
 security.yml
+├── dev push          Gitleaks only (updates the Security badge)
 ├── workflow-lint     Actionlint + ShellCheck for embedded workflow shell
 ├── deployment-bundle ShellCheck + backend-only Compose + exact archive policy
 ├── gitleaks          full-history secret scan
