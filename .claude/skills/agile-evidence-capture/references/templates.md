@@ -2,7 +2,7 @@
 
 ## Daily sprint log
 
-Append one entry per PR per author to `docs/agile/sprint-NN/log/YYYY-MM-DD.md`. Drop fields that do not apply.
+Append one entry per PR per author to `docs/agile/sprint-NN/log/YYYY-MM-DD.md`. Drop fields that do not apply. Write each bullet on one physical line and never hard-wrap it (`CONTRIBUTING.md`).
 
 ```markdown
 ## YYYY-MM-DD - @handle - <work summary> (#N)
