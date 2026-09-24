@@ -1273,6 +1273,7 @@ export const Route = createFileRoute('/auth/callback')({
 
 ### T3-06: Receipt and return pages against the artboards
 
+- [x] Step 0 (moved from T3-04): the receipt links back to its listing. `Receipt` carries only `dealId`/`orderId`, so "See the listing" reads `productId` from the buyer's own order (`GET /api/v1/orders/{orderId}`, `myOrder`); no order yet, or an unreadable one, shows no link and "Back to listings" stays. No restyle; the card shape waits for Step 1.
 - [ ] Step 1: design owner answers design-screens §4.6 Q23–Q25 (which artboard, waiting-state copy, "My orders" vs "My blocs").
 - [ ] Step 2: rebuild `payments.$paymentId.tsx` on the §4.5 card shape with the §4.4 refund-statement fields; `payments.return.tsx` fallback uses `ErrorCard`.
 - [ ] Step 3: tests for CREATED (polling), SUCCEEDED, FAILED, refund pending, refund sent; screenshots on the PR.

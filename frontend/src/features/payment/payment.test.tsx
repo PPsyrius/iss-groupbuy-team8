@@ -353,6 +353,38 @@ describe("backend-confirmed payment result", () => {
     ).toBe(false);
   });
 
+  it("links a saved order's receipt back to its listing through the order's product", async () => {
+    const orderId = "00000000-0000-4000-8000-000000000060";
+    serveSignedIn();
+    receipt({ status: "SUCCEEDED", orderId, dealId });
+    server.use(http.get(`*/api/v1/orders/${orderId}`, () => ok({ orderId, dealId, productId })));
+    renderRoute(`/payments/${paymentId}`);
+    expect(await screen.findByRole("link", { name: "See the listing" })).toHaveAttribute(
+      "href",
+      `/products/${productId}`,
+    );
+  });
+
+  it("offers no listing link while the receipt has no order, or the order cannot be read", async () => {
+    const orderId = "00000000-0000-4000-8000-000000000061";
+    serveSignedIn();
+    receipt({ status: "CREATED" });
+    renderRoute(`/payments/${paymentId}`);
+    await screen.findByRole("heading", { name: "Waiting for payment confirmation" });
+    expect(screen.queryByRole("link", { name: "See the listing" })).not.toBeInTheDocument();
+
+    const read = vi.fn<() => Response>(() =>
+      HttpResponse.json({ code: "ORDER_404_001", message: "Not found" }, { status: 404 }),
+    );
+    server.use(http.get(`*/api/v1/orders/${orderId}`, read));
+    receipt({ status: "SUCCEEDED", orderId });
+    await userEvent.click(screen.getByRole("button", { name: "Refresh status" }));
+    await screen.findByRole("heading", { name: "Payment received" });
+    await waitFor(() => expect(read).toHaveBeenCalled());
+    expect(screen.queryByRole("link", { name: "See the listing" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to listings" })).toBeInTheDocument();
+  });
+
   it("does not infer payment from the return URL; refresh shows the saved order", async () => {
     serveSignedIn();
     receipt({ status: "CREATED" });

@@ -222,6 +222,8 @@ const orders: OrderSummaryResponse[] = orderSeeds.map(({ n, quantity, status, da
   };
 });
 
+const samplePaymentId = "0192f0a0-0000-7000-9000-000000000005";
+
 // First-team quotes (T3-01): the seed's bloc price, valid for 15 minutes; a listing without one
 // answers the backend's "team price unavailable" 409. Issued quotes are kept for `getQuote`.
 const quotes = new Map<string, QuoteResponse>();
@@ -340,6 +342,39 @@ export async function startBrowserMsw() {
             ? HttpResponse.json({ code: OK_CODE, message: "ok", data: quote })
             : HttpResponse.json(
                 { code: "CATALOG_404_002", message: "Team price quote not found" },
+                { status: 404 },
+              );
+        },
+        myOrder: ({ params }) => {
+          const found = orders.find((o) => o.orderId === params.orderId);
+          return found
+            ? HttpResponse.json({ code: OK_CODE, message: "ok", data: found })
+            : HttpResponse.json(
+                { code: "ORDER_404_001", message: "Order not found" },
+                { status: 404 },
+              );
+        },
+        // One paid receipt for the confirmed sample order (T3-06): `/payments/<samplePaymentId>`
+        // shows the receipt with its "See the listing" link; any other id is not the buyer's.
+        getPaymentReceipt: ({ params }) => {
+          const order = orders[1];
+          return params.id === samplePaymentId && order
+            ? HttpResponse.json({
+                code: OK_CODE,
+                message: "ok",
+                data: {
+                  paymentId: samplePaymentId,
+                  status: "SUCCEEDED",
+                  amount: order.totalAmount,
+                  currency: order.currency,
+                  dealId: order.dealId,
+                  orderId: order.orderId,
+                  refundPending: false,
+                  refundStatus: "NONE",
+                },
+              })
+            : HttpResponse.json(
+                { code: "PAYMENT_404_001", message: "Payment not found" },
                 { status: 404 },
               );
         },

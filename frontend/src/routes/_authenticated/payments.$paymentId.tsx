@@ -5,7 +5,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { unwrapResult } from "@/api/envelope";
-import { getPaymentReceiptOptions } from "@/api/generated/@tanstack/react-query.gen";
+import {
+  getPaymentReceiptOptions,
+  myOrderOptions,
+} from "@/api/generated/@tanstack/react-query.gen";
 import type { Receipt } from "@/api/generated/types.gen";
 import { refundLabel } from "@/features/payment/refund-status";
 import { clearCompletedAttempt } from "@/features/payment/use-checkout";
@@ -112,6 +115,26 @@ function RefundStatusBanner({
   return null;
 }
 
+// The receipt names the order and the bloc but not the product, so the way back to the listing
+// goes through the buyer's own order (GET /orders/{orderId} carries `productId`). No order yet, or
+// an order the buyer cannot read, means no link; "Back to listings" always remains.
+function ListingLink({ orderId, userTag }: Readonly<{ orderId: string; userTag: string }>) {
+  const options = myOrderOptions({ path: { orderId } });
+  const order = useQuery({
+    ...options,
+    queryKey: [{ ...options.queryKey[0], tags: [userTag] }],
+    select: (r) => unwrapResult(r, { allowVoid: false }),
+    retry: false,
+  });
+  const productId = order.data?.productId;
+  if (!productId) return null;
+  return (
+    <Link to="/products/$productId" params={{ productId }} className="underline">
+      See the listing
+    </Link>
+  );
+}
+
 function PaymentReceipt() {
   const { paymentId } = Route.useParams();
   return <PaymentReceiptForId key={paymentId} paymentId={paymentId} />;
@@ -121,15 +144,11 @@ function PaymentReceiptForId({ paymentId }: Readonly<{ paymentId: string }>) {
   const [pollingDeadline] = useState(() => Date.now() + RECEIPT_POLL_WINDOW_MS);
   const enabled = usePaymentAvailability();
   const session = useSession();
+  const userTag = session.status === "authenticated" ? session.userId : "anonymous";
   const options = getPaymentReceiptOptions({ path: { id: paymentId } });
   const query = useQuery({
     ...options,
-    queryKey: [
-      {
-        ...options.queryKey[0],
-        tags: [session.status === "authenticated" ? session.userId : "anonymous"],
-      },
-    ],
+    queryKey: [{ ...options.queryKey[0], tags: [userTag] }],
     enabled,
     select: (r) => unwrapResult(r, { allowVoid: false }),
     retry: false,
@@ -179,7 +198,7 @@ function PaymentReceiptForId({ paymentId }: Readonly<{ paymentId: string }>) {
       ) : null}
       {receipt ? <ReceiptDetails receipt={receipt} /> : null}
       <RefundStatusBanner receipt={receipt} paid={paid} />
-      <div className="flex items-center gap-5">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-3 whitespace-nowrap">
         <Button
           variant="outline"
           isPending={query.isFetching}
@@ -192,6 +211,7 @@ function PaymentReceiptForId({ paymentId }: Readonly<{ paymentId: string }>) {
         <Link to="/" className="underline">
           Back to listings
         </Link>
+        {receipt?.orderId ? <ListingLink orderId={receipt.orderId} userTag={userTag} /> : null}
         <Link to="/account" className="underline">
           My orders
         </Link>
