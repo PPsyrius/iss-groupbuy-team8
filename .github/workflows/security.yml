@@ -3,8 +3,10 @@
 name: security
 
 on:
-  # Production releases receive the full security gate before publication.
+  # Keep the dev badge current with a lightweight post-merge secret scan;
+  # production releases still receive the full security gate before publication.
   push:
+    branches: [dev]
     tags: ['v*']
   # Merge queue gate: same security gates validate the speculative dev merge.
   merge_group:
@@ -27,6 +29,8 @@ permissions:
 
 jobs:
   detect-changes:
+    # PR/tag/weekly scans need path filtering; dev pushes only run Gitleaks.
+    if: github.event_name != 'push' || github.ref != 'refs/heads/dev'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -138,7 +142,8 @@ jobs:
           echo "Deployment bundle policy passed: $bundle_size bytes"
 
   # Secrets can be introduced anywhere in the repository, including documentation,
-  # frontend code, workflows, and configuration, so Gitleaks runs on every PR.
+  # frontend code, workflows, and configuration, so Gitleaks runs on every PR
+  # and merged dev push, independently of the other scans.
   gitleaks:
     runs-on: ubuntu-latest
     permissions:
@@ -265,7 +270,9 @@ jobs:
     # SAST for Java. Opt-in: enable with repo variable ENABLE_CODEQL=true.
     # Code Scanning must be available for the repository.
     # See docs/ci/devsecops-pipeline-plan.md Step 5.
-    if: vars.ENABLE_CODEQL == 'true'
+    if: >-
+      vars.ENABLE_CODEQL == 'true' &&
+      (github.event_name != 'push' || github.ref != 'refs/heads/dev')
     runs-on: ubuntu-latest
     permissions:
       actions: read # only for private repos
