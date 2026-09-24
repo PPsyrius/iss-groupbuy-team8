@@ -48,6 +48,11 @@ Fast Refresh and the automatic JSX runtime (`jsx: react-jsx`), which is why
 unmemoised silently unless a lint rule catches it; the enabled rules are the guard. Bumping
 `babel-plugin-react-compiler` past 1.0.x is a Dependabot PR reviewed like any other pin (ADR 0013).
 
-Addendum slot (T2-08): native compiler spike outcome (`pnpm check` result, `du -sh dist/assets` on
-`dev` versus the spike branch, Header test, any `logDiagnostics` output) and the adopt/keep
-decision. Open as of 2026-09-17; nothing in the build changes until it is written.
+Addendum (T2-08, 2026-09-23, spike on the working tree at `12045be`, reverted): `react({ compiler:
+{ logDiagnostics: true } })` with `oxc-transform-react` 0.150.0 (0.151.0 is current) replacing the
+Babel pass. `pnpm check` exit 0 (25 files / 163 tests, oxlint compiler rules unchanged, knip did not
+flag the three idle Babel pins); Header test 5/5; `vite build` 350 ms vs 929 ms; `dist/assets`
+1356 KB vs 1352 KB (JS 638,828 B vs 637,250 B); unminified builds reference `useMemoCache` 7 times
+on both paths; no diagnostics logged. Decision: keep the Babel preset. The native path saves about
+0.6 s per build and nothing at runtime, is still labelled experimental, and swapping carriers
+costs a fourth pin; revisit when `@vitejs/plugin-react` drops the experimental label.

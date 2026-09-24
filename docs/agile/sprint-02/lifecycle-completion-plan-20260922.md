@@ -2,7 +2,7 @@
 
 Date: 2026-09-22. Branch: `feature/order-deal-20260919`. Conventions: `backend-constraints-skill` plus `pgsql-ddl`. Prerequisite: the payment-integration slice is complete (ADR 0001; original-branch commits `d24f8c6` / `0dc6fe1` / `ace9c24` / `d1c9d7e`).
 
-> **Implementation update (2026-09-23):** This document preserves the measured baseline and plan as written. PR #148 implemented expiry-obligation recording through the profile-independent `TeamExpiryRefundService` and unconditional `TeamExpiryRefundSubscriber`; it no longer routes through `StripeCheckoutService` or `StripeCheckoutConfiguration`. Refundable payments are locked in deterministic order and obligations are inserted with a set-based upsert. `RefundService` obtains fresh database time immediately before Stripe dispatch. The expiry scheduler and refund worker remain deferred to PR-G.
+> **Implementation update (2026-09-24):** This document preserves the measured baseline and plan as written. PR #148 implemented profile-independent expiry-obligation recording. PR-G1 adds the deployment-opt-in expiry scheduler with renewable PostgreSQL leases and durable per-item retry backoff. The Stripe refund worker remains deferred to PR-G2.
 
 ## 0. Requirements confirmed (measured 2026-09-22)
 

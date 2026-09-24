@@ -70,7 +70,7 @@ One PR. Adds the prod secret-rendering script and updates the bundle allowlist *
 ### 2.1 `deployment/backend/bin/fetch-env.sh` (new)
 
 - Usage: `fetch-env.sh <ssm-parameter-path-prefix>` (e.g. `/blocbuy/prod`).
-- Fetches exactly the keys of `backend.env.example`: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET` — via one `aws ssm get-parameters --with-decryption` call; fails if **any** parameter is missing or any value still looks like a placeholder.
+- Fetches the required runtime keys: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `BLOCBUY_SCHEDULING_ENABLED`, `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET` — via one `aws ssm get-parameters --with-decryption` call; fails if **any** parameter is missing or any value still looks like a placeholder. Scheduling starts as `false` and is enabled only after the overdue-team backlog check.
 - Writes `/etc/blocbuy/backend.env` atomically (temp file + `mv`), `root:root 0600`.
 - Refuses to run as non-root; never echoes parameter values.
 - `bash -n` clean and shellcheck-clean to the standard of the existing four scripts.

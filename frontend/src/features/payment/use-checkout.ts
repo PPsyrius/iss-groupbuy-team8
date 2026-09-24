@@ -1,8 +1,9 @@
+// Decision record: frontend/docs/adr/0014-stripe-hosted-checkout-server-owned-intent.md
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 
-import { unwrapResult } from "@/api/envelope";
+import { ApiError, unwrapResult } from "@/api/envelope";
 import {
   createPaymentCheckoutMutation,
   createPaymentIntentMutation,
@@ -12,6 +13,13 @@ import { usePaymentAvailability } from "@/features/payment/use-payment-availabil
 
 export const lastPaymentKey = "blocbuy.payment.last";
 const attemptPrefix = "blocbuy.payment.attempt.";
+// PaymentErrorCode.PAYMENT_STATE_INVALID (HTTP 409): the frozen intent can no longer be checked
+// out (quote expired, or a session would outlive it), so re-sending the same intentId never works.
+const staleIntentCode = "PAYMENT_409_001";
+
+function isStaleIntent(error: unknown): boolean {
+  return error instanceof ApiError && (error.status === 409 || error.code === staleIntentCode);
+}
 
 // Only non-secret references are stored. Ownership and all amounts are checked by the server.
 // Keeping the same intent + key after a timeout prevents a retry creating another charge.
@@ -75,11 +83,18 @@ export function useCheckout(userId: string | undefined) {
         throw new Error("Invalid payment destination");
       }
       window.location.assign(destination.href);
-    } catch {
+    } catch (checkoutError) {
       const knownPayment = sessionStorage.getItem(`${key}.payment`);
       if (knownPayment) {
         await navigate({ to: "/payments/$paymentId", params: { paymentId: knownPayment } });
         return;
+      }
+      if (isStaleIntent(checkoutError)) {
+        // No payment was ever created for this intent, so freeing both keys lets the next
+        // begin() freeze a fresh intent under a fresh idempotency key. Every other failure
+        // (timeouts included) keeps them: a retry must not create a second charge.
+        sessionStorage.removeItem(key);
+        sessionStorage.removeItem(`${key}.request`);
       }
       setError(
         "We could not open Checkout. Please retry the same action. Do not make another payment if you have already paid.",

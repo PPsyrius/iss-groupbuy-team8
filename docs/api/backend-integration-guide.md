@@ -76,7 +76,7 @@ The contract currently exposes these values as strings.
 
 Reaching the team target changes pending orders to `confirmed`; resolving an expired team changes them to `cancelled` and records refund obligations. Refetch orders after a receipt reaches a terminal outcome because no push channel exists.
 
-Automatic expiry is not scheduled. An overdue team can disappear from the catalog while orders remain `pending` and no refund is recorded; UI correctness must not depend on prompt expiry. Issue #29 tracks this gap.
+Automatic expiry is available through the deployment-opt-in scheduler (`BLOCBUY_SCHEDULING_ENABLED`). UI correctness must still tolerate delayed expiry while the switch is off, a failed item is in retry backoff, or a deployment is unavailable. Issue #29 tracks execution of the durable refund obligations, not team expiry.
 
 ## Unavailable capabilities
 
@@ -86,7 +86,7 @@ Automatic expiry is not scheduled. An overdue team can disappear from the catalo
 | Refund history              | Available only through an individual payment receipt |
 | Order-to-payment navigation | Orders do not expose `paymentId`                     |
 | Resolved team history       | Catalog exposes only the active team                 |
-| Automatic team expiry       | Resolution exists, but no scheduler invokes it       |
+| Automatic team expiry       | Available when the deployment scheduler is enabled   |
 | Admin group terms           | No write endpoint for team size or lifetime          |
 
 A product without group terms cannot start a team: `POST /payments/intents` returns `CATALOG_409_006`. Joining an existing configured team may still work.

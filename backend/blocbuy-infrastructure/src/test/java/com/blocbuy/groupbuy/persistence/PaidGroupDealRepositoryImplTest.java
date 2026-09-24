@@ -13,6 +13,7 @@ import com.blocbuy.groupbuy.model.GroupDeal;
 import com.blocbuy.groupbuy.model.PaidParticipation;
 import com.blocbuy.groupbuy.model.ParticipationResult;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -174,6 +175,29 @@ class PaidGroupDealRepositoryImplTest {
         when(mapper.selectDueForExpiry(NOW, 50)).thenReturn(java.util.List.of(DEAL));
 
         assertThat(repository.dueForExpiry(NOW, 50)).containsExactly(DEAL);
+    }
+
+    @Test
+    void failedExpiryBackoffRequiresOneRetryRow() {
+        Duration delay = Duration.ofMinutes(5);
+        when(mapper.deferExpiryRetry(DEAL, 300.0)).thenReturn(1, 0);
+
+        repository.deferExpiryRetry(DEAL, delay);
+
+        assertThatThrownBy(() -> repository.deferExpiryRetry(DEAL, delay))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void failedExpiryBackoffRejectsMissingOrNonPositiveValues() {
+        Duration delay = Duration.ofMinutes(5);
+
+        assertThatThrownBy(() -> repository.deferExpiryRetry(null, delay))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> repository.deferExpiryRetry(DEAL, null))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> repository.deferExpiryRetry(DEAL, Duration.ZERO))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     /** Writes only the status and the audit timestamp; frozen terms are never recalculated. */

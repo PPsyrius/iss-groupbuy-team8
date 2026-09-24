@@ -46,9 +46,14 @@ order (note 10). Because HeroUI's `Button` wraps react-aria-components' `Button`
 
 T1-05 (2026-09-16) verified the scaffold: `vite v8.3.0` built 240 modules in 548 ms into
 `dist/index.html`, four JS chunks and a 435 kB CSS bundle; `/` and `/does-not-exist` rendered in
-headless Chrome with zero page errors. Open, parked by the 2026-09-17 branch review: the TanStack
-devtools ship in the production bundle and `build.sourcemap: true` publishes full source maps;
-resolving that needs a decision before T1-14 (ADR 0004 carries the runtime-config constraint).
+headless Chrome with zero page errors. The devtools and source-map exposure parked by the
+2026-09-17 branch review were closed by #154 and #155 (ADR 0004 addenda, 2026-09-23).
 
-Addendum slot (T2-09): `@tanstack/react-table` 9.2.4 recommendation for #31 (adopt, or plain
-HeroUI `Table`), with the Intent skill count check from the T2-09 task row. Not written yet.
+Addendum (T2-09, 2026-09-23, prototype on the working tree at `12045be`, reverted): a 10-row
+"my orders" table on a hand-declared `OrderRow` was built twice, `@tanstack/react-table` 9.2.4 as
+the headless model (`useTable`, `rowSortingFeature`, `rowPaginationFeature`) and HeroUI `Table`
+alone (`sortDescriptor` / `onSortChange`, page by `slice`). Both pass `tsc` and oxlint; the package
+ships its six Intent skills. Route chunk: 149 kB raw / 45 kB gz with HeroUI alone, 184 / 55 kB
+with react-table. Decision for #31: plain HeroUI `Table`. Sorting and paging are server-side on
+`GET /orders/me` (`page`, `size`), so the client model adds a dependency and a second sort-state
+API for no feature; revisit if grouping or virtualisation lands.

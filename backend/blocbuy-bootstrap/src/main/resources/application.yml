@@ -15,6 +15,12 @@ spring:
     hikari:
       maximum-pool-size: 10
       connection-timeout: 3000
+  task:
+    scheduling:
+      shutdown:
+        # bounded grace for the whole scheduled task; below compose stop_grace_period (30s)
+        await-termination: true
+        await-termination-period: 20s
 
 mybatis:
   configuration:
@@ -58,6 +64,15 @@ springdoc:
     path: /api/swagger-ui.html
 
 blocbuy:
+  scheduling:
+    # master switch, off by default everywhere; deployments opt in after their backlog check
+    enabled: false
+    team-expiry:
+      interval: PT1M
+      initial-delay: PT30S
+      # a crashed holder blocks other instances no longer than this
+      lease: PT2M
+      batch-size: 100
   # frontend.* redirect targets (OAuth callback 302 landings) are mandatory and startup-validated
   # (@NotBlank on AuthWebProperties) — no defaults here on purpose; each profile supplies them,
   # non-local profiles via FRONTEND_URL only

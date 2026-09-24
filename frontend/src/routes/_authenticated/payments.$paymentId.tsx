@@ -1,3 +1,4 @@
+// Decision record: frontend/docs/adr/0014-stripe-hosted-checkout-server-owned-intent.md
 import { Button } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";

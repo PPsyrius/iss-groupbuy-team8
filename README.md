@@ -23,8 +23,11 @@
   <tr>
     <td><strong>Environment</strong></td>
     <td>
+      <a href="https://d1b3np88z657cp.cloudfront.net/">
+        <img src="https://img.shields.io/badge/Dev%20Frontend-open-41B5BE?style=flat" alt="Open Dev Frontend">
+      </a>&nbsp;
       <a href="https://d1b3np88z657cp.cloudfront.net/api/actuator/health">
-        <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fd1b3np88z657cp.cloudfront.net%2Fapi%2Factuator%2Fhealth&query=%24.status&label=EC2%20Backend&style=flat" alt="EC2 Backend Health">
+        <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fd1b3np88z657cp.cloudfront.net%2Fapi%2Factuator%2Fhealth&query=%24.status&label=Dev%20API&style=flat" alt="Dev API Health">
       </a>
     </td>
   </tr>

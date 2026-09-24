@@ -2,7 +2,7 @@
 
 ## Daily sprint log
 
-Append one entry per PR per author to `docs/agile/sprint-NN/log/YYYY-MM-DD.md`. Drop fields that do not apply.
+Append one entry per PR per author to `docs/agile/sprint-NN/log/YYYY-MM-DD.md`. Drop fields that do not apply. Write each bullet on one physical line and never hard-wrap it (`CONTRIBUTING.md`).
 
 ```markdown
 ## YYYY-MM-DD - @handle - <work summary> (#N)
@@ -34,7 +34,7 @@ Use security, performance, availability, recoverability, observability, cost, ma
 
 ## Frontend ADR
 
-Use Nygard format under sixty lines in `frontend/docs/adr/NNNN-kebab-title.md` and add it to that directory's index. Backend and cross-cutting decisions use their owning design documents, not ADRs.
+Use Nygard format in `frontend/docs/adr/NNNN-kebab-title.md` (under sixty lines) or `backend/docs/adr/NNNN-kebab-title.md` (concise; do not rewrite longer accepted records) and add it to that directory's index. Numbering is independent by area. Locked backend stack decisions stay in the D-table; focused backend design and cross-cutting decisions stay in their owning documents.
 
 ```markdown
 # NNNN. <Decision title>

@@ -127,6 +127,12 @@ Family Inter (Google Fonts, weights 400/500/600/700), fallback `"Helvetica Neue"
 - 500 Global error: "Something went wrong on our side" / "This isn’t you. The page failed to load and we’ve logged it. Trying again usually works." / "No payment was taken." + "If you were part-way through paying, check My blocs before trying again — a seat is only held once a payment is confirmed." / "Try again", "Browse listings"; no hint.
 - 401: not designed. The flow map (`BlocBuy Flow Maps.dc.html` › Gate) routes signed-out paid actions to the gated sheet, and T1-07's 401 interceptor yields "anonymous"; a 401 never gets a page of its own.
 
+### 4.6 Payment receipt and return (`/payments/$paymentId`, `/payments/return`; PR #126, plan §12 note 49, ADR 0014) — no artboard
+
+- Shipped 2026-09-21 without a screen: `payments.$paymentId.tsx` renders a heading per state (waiting while `CREATED`, paid, failed, refund pending / sent), the amount, the payment reference, "Try again" (refetch) and links to `/` and `/account` ("My orders"); `payments.return.tsx` is a redirect hop with a plain "Payment reference unavailable" fallback. Both use `max-w-xl p-6`, raw headings and links, no card, no trust copy.
+- Nearest artboards: the §4.5 terminal-screen card (code chip, heading, body, money line + detail, `secondary` primary over `outline` secondary, optional hint) for the shape, and the §4.4 bloc-detail refund statement (amount, status chip, issue time, bank window, payment reference) for the fields. Plan task T3-06 applies them once §7 Q23–Q25 are answered.
+- Open questions: Q23–Q25 in §7.
+
 ## 5. Component inventory (`components/Components.d.ts`, 91 globals on `window`)
 
 Props listed after `className`/`style`. "H3" = HeroUI 3 (`@heroui/react` 3.2.5) equivalent.
@@ -211,3 +217,6 @@ Kit gaps recorded in `BlocBuy HeroUI Kit.dc.html` › Gaps: no Skeleton set; Dro
 20. Skeletons. Artboards use tertiary blocks because the kit lacks Skeleton; HeroUI 3 ships one. Recommend HeroUI `Skeleton` in the artboard geometry.
 21. Assets. Wordmark and isologo are PNGs on `api.heroui.pro` (CR-7); the Google button mark is a placeholder (CR-16); the export's `components/assets/*.png|jpg` are unnamed. Recommend committing an SVG wordmark under `frontend/public/` before the header is styled.
 22. Font loading. Artboards load Inter from Google Fonts (400–700); the brief allows Google Fonts but CSP tightening is T2-11. Today `frontend/src/styles/app.css` only imports `tailwindcss` and `@heroui/styles` and `index.html` has no font link, so the app renders the system font. Recommend adding the Inter link (or a self-hosted copy) with the first styled screen and allowing `fonts.googleapis.com`/`fonts.gstatic.com` in T2-11, or self-hosting to keep the CSP tight.
+23. Receipt screen (§4.6). No artboard covers `/payments/$paymentId`. Recommend the §4.5 card shape (no accent, code chip carries the payment status) with the §4.4 refund-statement fields; confirm whether the bloc-detail "receipt" state in `BlocBuy Buyer My Blocs.dc.html` is meant to be this page or a later member view.
+24. Waiting copy while `CREATED`. The page polls for up to 60 s; the artboards have no "we're confirming your payment" state. Recommend the 500-card tone ("No payment was taken" / "check My blocs before trying again") adapted to "Your seat is held once Stripe confirms".
+25. "My orders" vs "My blocs". The receipt links to `/account` as "My orders"; §4.4 names the screen "My blocs" and the 404/403 cards say "My blocs". Recommend "My blocs" everywhere once T3-02/T3-03 land, "My orders" only as the list heading inside it.

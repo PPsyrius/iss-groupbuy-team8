@@ -4,14 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BlocBuy</title>
-    <!-- Inter 400-700 as the Claude Design artboards load it. A2's CSP (#100) needs
-         style-src https://fonts.googleapis.com and font-src https://fonts.gstatic.com. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
+    <meta
+      name="description"
+      content="Group-buy listings for your block: start or join a bloc and pay the group price."
     />
+    <meta name="theme-color" content="#FF385C" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- Inter 400-700 is self-hosted via @fontsource/inter (imported in src/styles/app.css),
+         so the CSP needs no Google Fonts hosts (#158, A2 #100). -->
   </head>
   <body>
     <div id="root"></div>

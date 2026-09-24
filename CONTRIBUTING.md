@@ -44,12 +44,15 @@ The course grades the report, so the paper trail is part of the work. See `docs/
 
 - Every PR links its issue (`Closes #N` or `Refs #N`) and adds an entry to `docs/agile/sprint-NN/log/YYYY-MM-DD.md` in the same PR, creating the day's file if needed (`log.md` indexes the day files). `style:` and `chore(deps):` are exempt.
 - Non-functional work (security, performance, availability, observability, cost, maintainability, CI, config, infra) adds or updates a row in `docs/quality/nfr-register.md`.
-- A real choice between alternatives is written down when it is made. Only the frontend writes ADRs (`frontend/docs/adr/`). Backend decisions go in the locked decision table of `backend/docs/design/backend-skeleton-plan.md` (dated amendments in place) and the design docs under `backend/docs/design/`; cross-cutting decisions (CI, deploy, quality gates, process) go in a dated paragraph of the owning doc under `docs/`.
+- A real choice between alternatives is written down when it is made. Frontend decisions use `frontend/docs/adr/`; backend architecture decisions use numbered `backend/docs/adr/` records and its index. Locked backend stack decisions stay in `backend/docs/design/backend-skeleton-plan.md`, and focused backend design decisions stay in their owning `backend/docs/design/*.md`; amend an existing owning record rather than duplicating it. Cross-cutting decisions (CI, deploy, quality gates, process) go in a dated paragraph of the owning doc under `docs/`.
 - Issue and PR templates under `.github/` carry the shapes. Claude Code sessions get the same checklist from the `agile-evidence-capture` skill.
+
+2026-09-24: `backend/docs/adr/README.md` already indexes accepted backend ADRs 0001 and 0002 and defines numbering for future decisions. The former "frontend only" ADR rule was stale; the locked-stack D-table and focused design docs retain their separate roles.
 
 ## Style & Architecture
 
 - Formatting is machine-owned: Spotless + google-java-format AOSP (4-space). Don't hand-format.
+- In Markdown prose (READMEs, sprint logs, ADRs and every page under `docs/`), keep each prose paragraph and prose list item on one physical source line. Fenced code blocks, tables, and nested lists retain the line breaks their structure requires. Apply this when writing or editing such a document; do not reflow unrelated or historical documents just to adopt the convention.
 - COLA layering enforced by ArchUnit — violations fail the build. Layer rules: `backend/blocbuy-bootstrap/src/test/java/com/blocbuy/architecture/ArchitectureTest.java`.
 - Gates and thresholds: `docs/quality/quality-gates.md`. Pipeline runbook: `docs/ci/backend-pipeline.md`.
 

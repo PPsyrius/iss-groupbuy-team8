@@ -76,6 +76,24 @@ while IFS= read -r f; do
   esac
 done <<<"$staged"
 
+# Advisory only, never blocking: a sprint-log line that starts with two spaces outside a code
+# fence and is not a nested list item continues a hard-wrapped bullet (CONTRIBUTING.md: one
+# prose list item per physical line). Reads the working tree when a `git add` in the same
+# command names the file (that copy is what gets committed), else the staged copy.
+wrapped=()
+if $git_dir_ok; then
+  while IFS= read -r f; do
+    case "$f" in docs/agile/sprint-*/log.md|docs/agile/sprint-*/log/*.md) ;; *) continue ;; esac
+    if grep -qxF -- "$f" <<<"$add_args"; then
+      content="$(cat "$repo_dir/$f" 2>/dev/null || true)"
+    else
+      content="$(git -C "$repo_dir" show ":$f" 2>/dev/null || cat "$repo_dir/$f" 2>/dev/null || true)"
+    fi
+    lines="$(awk '/^[[:space:]]*(```|~~~)/ { fence = !fence; next } !fence && /^  / && !/^ +([-*+]|[0-9]+\.)[[:space:]]/ { printf "%s%d", sep, NR; sep = "," }' <<<"$content")"
+    [[ -n "$lines" ]] && wrapped+=("- Wrapped bullet in $f (lines $lines): join each continuation onto its bullet so every bullet is one physical line.")
+  done <<<"$staged"
+fi
+
 has_issue_ref=false
 if grep -Eq '(#[0-9]+|Refs|Closes|Fixes)' <<<"$msg"; then has_issue_ref=true; fi
 # With -F/--file or an editor we cannot see the message; don't nag about it.
@@ -92,15 +110,22 @@ if ! $has_issue_ref; then
   missing+=("- Issue reference: add 'Refs #N' or 'Closes #N' to the commit body so the issue -> PR chain exists.")
 fi
 
-if [[ ${#missing[@]} -eq 0 ]]; then exit 0; fi
+if [[ ${#missing[@]} -eq 0 && ${#wrapped[@]} -eq 0 ]]; then exit 0; fi
 
-checklist="agile-evidence-capture: before this commit lands, evidence looks incomplete."$'\n'
-checklist+="$(printf '%s\n' "${missing[@]}")"$'\n'
-checklist+="If skipping is deliberate, add a commit trailer: Evidence-skipped: <reason>. Templates: .claude/skills/agile-evidence-capture/references/templates.md"
-
-if [[ "$mode" == "enforce" ]]; then
-  printf '%s\n' "$checklist" >&2
-  exit 2
+checklist=""
+if [[ ${#missing[@]} -gt 0 ]]; then
+  checklist="agile-evidence-capture: before this commit lands, evidence looks incomplete."$'\n'
+  checklist+="$(printf '%s\n' "${missing[@]}")"$'\n'
+  checklist+="If skipping is deliberate, add a commit trailer: Evidence-skipped: <reason>. Templates: .claude/skills/agile-evidence-capture/references/templates.md"
+  if [[ "$mode" == "enforce" ]]; then
+    printf '%s\n' "$checklist" ${wrapped[@]+"${wrapped[@]}"} >&2
+    exit 2
+  fi
+fi
+if [[ ${#wrapped[@]} -gt 0 ]]; then
+  [[ -n "$checklist" ]] && checklist+=$'\n'
+  checklist+="agile-evidence-capture (advisory): sprint-log bullets are hard-wrapped."$'\n'
+  checklist+="$(printf '%s\n' "${wrapped[@]}")"
 fi
 
 jq -n --arg ctx "$checklist" '{hookSpecificOutput:{hookEventName:"PreToolUse",additionalContext:$ctx}}'

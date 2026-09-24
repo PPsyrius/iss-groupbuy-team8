@@ -8,6 +8,7 @@ import com.blocbuy.groupbuy.model.PaidParticipation;
 import com.blocbuy.groupbuy.model.ParticipationReceipt;
 import com.blocbuy.groupbuy.model.ParticipationResult;
 import com.blocbuy.groupbuy.repository.PaidGroupDealRepository;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -124,6 +125,15 @@ public class PaidGroupDealRepositoryImpl implements PaidGroupDealRepository {
     @Override
     public List<UUID> dueForExpiry(Instant now, int limit) {
         return mapper.selectDueForExpiry(now, limit);
+    }
+
+    /** Persists retry backoff independently of the failed team's rolled-back transaction. */
+    @Override
+    public void deferExpiryRetry(UUID dealId, Duration delay) {
+        if (dealId == null || delay == null || delay.toMillis() <= 0) {
+            throw new IllegalArgumentException("dealId and a positive retry delay are required");
+        }
+        requireOne(mapper.deferExpiryRetry(dealId, delay.toMillis() / 1000.0));
     }
 
     /**

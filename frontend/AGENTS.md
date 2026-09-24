@@ -56,9 +56,10 @@ React 19.3 CSR, Vite 8, TanStack Router (file-based via `@tanstack/router-plugin
 
 - `src/routes/` — one file per route, TanStack flat naming: `__root.tsx`, `index.tsx` (`/`), `products.$productId.tsx`, `_authenticated.tsx` (pathless guard layout) + `_authenticated/account.tsx`, `auth.callback.tsx`. Files starting with `-` are ignored by the route generator. `src/routeTree.gen.ts` is generated: commit it, never edit it.
 - `src/features/<feature>/` — components, hooks, schemas, tests for one feature (`catalog`, `session`). Colocate tests as `Name.test.tsx` next to `Name.tsx`.
-- `src/components/` — shared presentational components (`Header`).
+- `src/components/` — shared presentational components (`Header`, `ErrorCard` with the §4.5 404/500 presets and `RouteErrorCard`, `AppErrorBoundary`).
 - `src/api/` — `envelope.ts` (Result unwrap, `ApiError`), `client.ts` (401 interceptor), `query-client.ts`, `hey-api.ts` (runtime config, `baseUrl: '/'`), `generated/` (gitignored output).
 - `src/test/` — Vitest setup and MSW server (`msw.ts`), browser MSW behind `?msw=1` (`browser-msw.ts`).
+- `src/dev/` — development-only entry modules (`devtools`, `browser-msw`) with `.noop` siblings that `vite.config.ts` aliases in on `vite build` (ADR 0004 addenda); `dev/mockServiceWorker.js` is served by the dev server only.
 - `e2e/` — Playwright specs; `e2e/.auth/*.json` is local-only.
 
 ## Rules
@@ -78,4 +79,4 @@ React 19.3 CSR, Vite 8, TanStack Router (file-based via `@tanstack/router-plugin
 ## Skills
 
 - TanStack (via Intent): the `intent-skills` block at the top of this file is maintained by `pnpm dlx @tanstack/intent@0.4.0 install --map` from `frontend/` (the tool writes it there, not at the end); do not hand-edit it. The allowlist and exclusions live in `package.json#intent`. Router skills come from `@tanstack/router-core` (`auth-and-guards`, `search-params`, `data-loading`, `navigation`, `path-params`, `not-found-and-errors`, `code-splitting`, `type-safety`) and `@tanstack/router-plugin`. Query and Form ship no skills today; use the official docs linked in `docs/plan.md`.
-- Repo skills (root `.claude/skills/`): `agile-evidence-capture` — run it alongside any change here, it owns the sprint log, the NFR register and the ADR paper trail. `backend-constraints-skill` and `pgsql-ddl` are backend-only; do not load them for frontend work. `adr` and `api-client-regen` land with T2-10.
+- Repo skills (root `.claude/skills/`): `agile-evidence-capture` — run it alongside any change here, it owns the sprint log, the NFR register and the ADR paper trail. `backend-constraints-skill` and `pgsql-ddl` are backend-only; do not load them for frontend work. `adr` — load before writing, amending or superseding anything under `docs/adr/` (numbering, Nygard shape, README row, header comment). `api-client-regen` — load when `contracts/openapi.json` changes or a generated name goes missing (regen, consumer sweep, `select: unwrapResult`, gate). Both authored in T2-10 (2026-09-23).

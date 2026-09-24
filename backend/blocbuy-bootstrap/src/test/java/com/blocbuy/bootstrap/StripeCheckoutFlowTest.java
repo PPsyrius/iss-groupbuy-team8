@@ -402,7 +402,7 @@ class StripeCheckoutFlowTest {
                 + Stripe.API_VERSION
                 + "\",\"livemode\":false,\"type\":\""
                 + type
-                + "\",\"description\":\"本地付款验证\",\"data\":{\"object\":{\"id\":\""
+                + "\",\"description\":\"Local payment verification\",\"data\":{\"object\":{\"id\":\""
                 + sessionId
                 + "\",\"object\":\"checkout.session\"}}\n}\n";
     }
