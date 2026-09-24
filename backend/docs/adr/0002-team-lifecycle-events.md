@@ -56,3 +56,43 @@ The subscribers' `@Order` follows the global lock order team → intent → orde
 | groupbuy calling `OrderRepository` / payment orchestration directly | Cross-domain hard gate, and UC5 requires the consequences to be carried by subscribers |
 | One transaction expiring a whole batch of teams | One team's failure rolls back the batch, and the lock hold time starts contending with webhook settlement |
 | A message broker between the domains | Not in the stack (locked decision, 2026-08-30); in-process publication inside one local transaction is what the consistency rule asks for |
+
+## Addendum (2026-09-23): the scheduled sweep (#28)
+
+The scheduler that the section "One aggregate, one transaction" left out now exists. Plan: `docs/agile/sprint-02/team-expiry-sweeper-plan-20260923.md`.
+
+**Shape.** `TeamExpirySweepJob` (bootstrap) fires on a fixed delay, default one minute, and hands the work to `LeasedJobRunner`, which takes the database lease or skips the run. `GroupDealExpirySweeper` (application) reads up to 100 due team ids in one query on the database clock, then calls `expireOne` once per team. The sweeper is deliberately not `@Transactional`: every team commits or rolls back on its own. One team that throws is logged, counted and retried on the next run. It stays first in `ORDER BY expire_time`, so it costs one slot per run but never blocks the others. `TeamExpirySchedulingIT` proves this with a real rollback.
+
+**Master switch.** `blocbuy.scheduling.enabled` is off by default and in the `local` profile, and on in `ec2` and `docker`. Every test context runs with `local`, and `StripeLocalIntegrationTest` drives `expireOne` by hand, so a live scheduler there would race the assertions. The `openapi-export` profile also stays free of database connections.
+
+**Lease: a single upsert with a statement timeout, not V13's `SELECT ... FOR UPDATE NOWAIT`.** V13 cannot be edited (Flyway checksum), so this deviation is recorded here:
+
+```sql
+INSERT INTO sys_scheduler_lock (lock_key, owner, locked_until)
+VALUES (?, ?, clock_timestamp() + make_interval(secs => ?))
+ON CONFLICT (lock_key) WHERE deleted = false
+DO UPDATE SET owner = EXCLUDED.owner, locked_until = EXCLUDED.locked_until, ...
+WHERE sys_scheduler_lock.locked_until <= clock_timestamp() OR sys_scheduler_lock.owner = EXCLUDED.owner
+```
+
+Both designs are leases. The row lock lasts only as long as the acquire statement, and `locked_until` is what keeps other instances out for the length of a run. NOWAIT's fail-fast therefore only covers a millisecond race, and in that race both designs end the same way: the loser skips.
+
+The upsert meets every V13 obligation:
+
+- no queueing behind a sweep;
+- a stale lease is taken over under the row lock;
+- there is one row per key.
+
+It does so in one autocommit statement. The "expired or ours" decision is made atomically in SQL, and there is no `55P03` mapping.
+
+NOWAIT's one real advantage is returning at once when a session holds the row lock for a long time. `timeout="3"` on both lease statements recovers it: PostgreSQL cancels the statement (`57014`), the run counts as `failed`, and the scheduler thread is never stuck. `SchedulerLeaseRepositoryIT` proves the single winner under an eight-way race and the timeout against a held `FOR UPDATE`.
+
+**Overlap is safe.** A run can outlive its two-minute lease and overlap a second instance, or two containers can run during a redeploy. In both cases, every `expireOne` still goes through the status-guarded UPDATE, and `UNIQUE (payment_id)` on `biz_refund` backs it up. The lease exists for efficiency and log clarity, not correctness.
+
+**Observability.** Each run carries its own `traceId` (`job-<uuidv7>`) in MDC. The job writes one INFO summary per non-empty run (`due`, `expired`, `alreadyResolved`, `failed`, `tookMs`); idle runs log at DEBUG. It also records these meters:
+
+- `blocbuy.scheduler.runs{job,outcome}`;
+- `blocbuy.scheduler.run.duration{job}`;
+- `blocbuy.team.expiry.teams{result}`.
+
+**Not yet.** The refund worker that sends the recorded obligations to Stripe is PR-G2 (#29), which will reuse `LeasedJobRunner` unchanged. Until it lands, obligations stay `pending`.
