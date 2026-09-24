@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blocbuy.common.persistence.SysSchedulerLockMapper">
+
+    <!--
+        One statement, decided on the database clock. ON CONFLICT DO UPDATE row-locks the
+        conflicting row and re-evaluates the WHERE on its committed version, so of two racing
+        instances exactly one sees an expired (or own) lease and wins; the other gets 0 rows.
+        timeout="3": a session holding this row locked for long must not freeze the scheduler
+        thread; PostgreSQL cancels the statement (57014) and the run counts as failed.
+    -->
+    <insert id="acquire" timeout="3">
+        INSERT INTO sys_scheduler_lock (lock_key, owner, locked_until)
+        VALUES (#{lockKey}, #{owner}, clock_timestamp() + make_interval(secs => #{leaseSeconds}))
+        ON CONFLICT (lock_key) WHERE deleted = false
+        DO UPDATE SET owner        = EXCLUDED.owner,
+                      locked_until = EXCLUDED.locked_until,
+                      update_time  = clock_timestamp(),
+                      version      = sys_scheduler_lock.version + 1
+        WHERE sys_scheduler_lock.locked_until &lt;= clock_timestamp()
+           OR sys_scheduler_lock.owner = EXCLUDED.owner
+    </insert>
+
+    <update id="release" timeout="3">
+        UPDATE sys_scheduler_lock
+        SET locked_until = clock_timestamp(), update_time = clock_timestamp(), version = version + 1
+        WHERE lock_key = #{lockKey} AND owner = #{owner} AND deleted = false
+    </update>
+</mapper>
