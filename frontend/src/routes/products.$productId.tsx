@@ -1,5 +1,5 @@
 import { Alert, Button, buttonVariants, Skeleton } from "@heroui/react";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -89,7 +89,11 @@ function ProductDetailPage() {
   const [gateOpen, setGateOpen] = useState(false);
   const onGated = session.status === "authenticated" ? undefined : () => setGateOpen(true);
   const buyerId = session.status === "authenticated" ? session.userId : undefined;
-  const checkout = useCheckout(buyerId);
+  // A refused JOIN (full, closed or gone) refetches the listing so the bloc row shows why.
+  const queryClient = useQueryClient();
+  const checkout = useCheckout(buyerId, () => {
+    void queryClient.invalidateQueries({ queryKey: detailOptions(productId).queryKey });
+  });
   // START goes through the quote sheet first (T3-01); JOIN has no quote and pays directly.
   // The sheet belongs to the buyer and listing it was opened for: this component stays mounted
   // across `$productId` changes, so a new listing starts with the sheet closed (CodeRabbit

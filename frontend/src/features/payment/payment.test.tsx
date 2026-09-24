@@ -146,6 +146,50 @@ describe("teammate product page payment integration", () => {
       expect(button).toBeDisabled();
   });
 
+  it.each([
+    ["GROUPBUY_409_004", "This bloc filled up before you joined. Nothing has been charged."],
+    ["GROUPBUY_409_002", "This bloc is no longer taking members. Nothing has been charged."],
+    ["GROUPBUY_409_003", "You are already in this bloc. Nothing new has been charged."],
+    ["GROUPBUY_404_001", "This bloc no longer exists. Nothing has been charged."],
+  ])("names a rejected JOIN (%s) and refreshes the bloc", async (code, message) => {
+    serveSignedIn();
+    product();
+    let listings = 0;
+    let checkouts = 0;
+    server.use(
+      http.get("*/api/v1/products/:id", () => {
+        listings++;
+        return ok({
+          id: productId,
+          title: "Stripe integration product",
+          individualPrice: 20,
+          groupPrice: 10,
+          currency: "sgd",
+          stock: 10,
+          deal: { dealId, currentSize: 1, targetSize: 2, expireTime: "2099-01-01T00:00:00Z" },
+        });
+      }),
+      http.post("*/api/v1/payments/intents", () =>
+        HttpResponse.json(
+          { code, message: "rejected" },
+          { status: code.includes("_404_") ? 404 : 409 },
+        ),
+      ),
+      http.post("*/api/v1/payments/checkout-sessions", () => {
+        checkouts++;
+        return ok({});
+      }),
+    );
+    renderRoute(`/products/${productId}`);
+    const [join] = await screen.findAllByRole("button", { name: /^Join/ });
+    await waitFor(() => expect(join).toBeEnabled());
+    const before = listings;
+    await userEvent.click(join!);
+    expect(await screen.findByRole("alert")).toHaveTextContent(message);
+    await waitFor(() => expect(listings).toBeGreaterThan(before));
+    expect(checkouts).toBe(0);
+  });
+
   it("retries a lost Checkout response using the same intent and idempotency key", async () => {
     serveSignedIn();
     product();
