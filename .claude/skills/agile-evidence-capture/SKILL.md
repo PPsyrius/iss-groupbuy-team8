@@ -76,8 +76,8 @@ The advisory commit hook in `.claude/settings.json` runs `scripts/commit-evidenc
 ## Rules
 
 - Write committed artefacts in English; converse with the user in their language.
-- When editing a README, follow `CONTRIBUTING.md`: one prose paragraph or prose list item per physical source line; preserve structural line breaks in code blocks, tables, and nested lists.
-- Keep log entries under twelve lines, frontend ADRs under sixty lines, backend ADRs concise without rewriting longer accepted records, and register rows to one table row.
+- Follow `CONTRIBUTING.md` for all Markdown prose, including sprint-log entries and PR bodies as well as READMEs, ADRs and `docs/` pages: one prose paragraph or prose list item per physical source line; preserve structural line breaks in code blocks, tables, and nested lists; do not reflow historical records to adopt it.
+- Keep log entries under twelve lines, counting one bullet per physical line (never hard-wrap a bullet to fit), frontend ADRs under sixty lines, backend ADRs concise without rewriting longer accepted records, and register rows to one table row.
 - Prefer links over restating diffs. State what was not verified; "tested" alone is not evidence.
 - Never rewrite historical records solely for a new convention; add a dated amendment.
 - Keep living operational guidance at a stable, descriptive canonical path. Preserve dated acceptance evidence, sprint plans, logs and snapshots as dated records; when moving a cited living page, leave a pointer for historical citations and update links in current-facing docs. Combine same-author entries that describe the same PR into one daily entry.

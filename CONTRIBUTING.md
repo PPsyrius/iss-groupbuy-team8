@@ -52,7 +52,7 @@ The course grades the report, so the paper trail is part of the work. See `docs/
 ## Style & Architecture
 
 - Formatting is machine-owned: Spotless + google-java-format AOSP (4-space). Don't hand-format.
-- In README files, keep each prose paragraph and prose list item on one physical source line. Fenced code blocks, tables, and nested lists retain the line breaks their structure requires. Apply this when editing a README; do not reflow unrelated or historical documents just to adopt the convention.
+- In Markdown prose (READMEs, sprint logs, ADRs and every page under `docs/`), keep each prose paragraph and prose list item on one physical source line. Fenced code blocks, tables, and nested lists retain the line breaks their structure requires. Apply this when writing or editing such a document; do not reflow unrelated or historical documents just to adopt the convention.
 - COLA layering enforced by ArchUnit — violations fail the build. Layer rules: `backend/blocbuy-bootstrap/src/test/java/com/blocbuy/architecture/ArchitectureTest.java`.
 - Gates and thresholds: `docs/quality/quality-gates.md`. Pipeline runbook: `docs/ci/backend-pipeline.md`.
 

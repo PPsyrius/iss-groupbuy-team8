@@ -26,7 +26,7 @@ Related homes:
 
 Every PR adds a sprint-log entry in the same PR. Every PR that touches a non-functional concern adds or updates an NFR register row. Every real choice between alternatives is written down where its area keeps decisions: a frontend or backend ADR, an existing backend D-table row or focused design-doc section, or a dated paragraph in the owning `docs/` page. Only `style:` and `chore(deps):` PRs are exempt.
 
-Entries are short: three to eight lines, with the command that verified the change and the count or status it produced. Links beat prose.
+Entries are short: three to eight lines, with the command that verified the change and the count or status it produced. A line is one bullet on one physical line; never hard-wrap a bullet to meet the limit. Links beat prose.
 
 The one-entry-per-PR-per-author rule applies from 2026-09-22; older entries remain unchanged as historical evidence.
 
