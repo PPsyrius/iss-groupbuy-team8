@@ -440,17 +440,7 @@ The original §7.3 code rewrote `uri.endsWith('/')` to `uri + 'index.html'`; the
 
 ## 15. Security response headers (CSP, HSTS)
 
-Blocker A2 (#100), executed 2026-09-22. On 2026-09-23 both CloudFront behaviors returned the five exact values derived from the policy source below.
-The first Playwright console probe on the deployed site (2026-09-22) showed one CSP violation on every page:
-the Google Fonts stylesheet for Inter (`index.html`), so the policy applied that day allowed
-`https://fonts.googleapis.com` in `style-src` and `https://fonts.gstatic.com` in `font-src`.
-Since 2026-09-23 (#158) Inter is self-hosted (`@fontsource/inter`, hashed woff2 in `dist/assets`),
-so the JSON below no longer lists either host; **re-apply it with `update-response-headers-policy`
-after the first deploy that carries the self-hosted font** (the live policy stays permissive until
-then, which is harmless). **2026-09-23, T2-11 done:** the JSON also drops `data:` from `img-src`
-and `font-src`; `'unsafe-inline'` for styles stays (see the rationale below). `vite preview` now
-serves the same headers (`frontend/vite.config.ts` reads this JSON), so the console probe runs
-locally before any re-apply. Re-apply once, after the hygiene batch (#154–#158) is deployed:
+Blocker A2 (#100), executed 2026-09-22. On 2026-09-23 both CloudFront behaviors returned the five exact values derived from the policy source below. The first Playwright console probe on the deployed site (2026-09-22) showed one CSP violation on every page: the Google Fonts stylesheet for Inter (`index.html`), so the policy applied that day allowed `https://fonts.googleapis.com` in `style-src` and `https://fonts.gstatic.com` in `font-src`. Since 2026-09-23 (#158) Inter is self-hosted (`@fontsource/inter`, hashed woff2 in `dist/assets`), so the JSON below no longer lists either host; **re-apply it with `update-response-headers-policy` after the first deploy that carries the self-hosted font** (the live policy stays permissive until then, which is harmless). **2026-09-23, T2-11 done:** the JSON also drops `data:` from `img-src` and `font-src`; `'unsafe-inline'` for styles stays (see the rationale below). `vite preview` now serves the same headers (`frontend/vite.config.ts` reads this JSON), so the console probe runs locally before any re-apply. Re-apply once, after the hygiene batch (#154–#158) is deployed:
 
 ```bash
 ETAG=$(aws cloudfront get-response-headers-policy-config --id 3c91a2c1-f130-42e8-b9cc-fec6a682c838 --query ETag --output text)
