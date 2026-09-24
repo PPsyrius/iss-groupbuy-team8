@@ -77,7 +77,7 @@ class PaidGroupDealServiceIT {
         var leader = payment();
         var start = service.startConfirmed(terms, leader);
         assertThat(start.currentSize()).isEqualTo(1);
-        assertThat(service.joinConfirmed(terms.id(), payment()).dealStatus())
+        assertThat(service.joinConfirmed(terms.id(), payment(), null).dealStatus())
                 .isEqualTo("succeeded");
         assertThat(service.startConfirmed(terms, leader)).isEqualTo(start);
         assertThat(memberCount(terms.id())).isEqualTo(2);
@@ -150,7 +150,7 @@ class PaidGroupDealServiceIT {
                                 if (!start.await(10, TimeUnit.SECONDS)) {
                                     throw new IllegalStateException("start timed out");
                                 }
-                                return service.joinConfirmed(terms.id(), first);
+                                return service.joinConfirmed(terms.id(), first, null);
                             });
             var b =
                     executor.submit(
@@ -159,7 +159,7 @@ class PaidGroupDealServiceIT {
                                 if (!start.await(10, TimeUnit.SECONDS)) {
                                     throw new IllegalStateException("start timed out");
                                 }
-                                return service.joinConfirmed(terms.id(), second);
+                                return service.joinConfirmed(terms.id(), second, null);
                             });
             assertThat(ready.await(10, TimeUnit.SECONDS)).isTrue();
             start.countDown();
@@ -167,8 +167,8 @@ class PaidGroupDealServiceIT {
             var resultB = b.get(20, TimeUnit.SECONDS);
             assertThat(java.util.List.of(resultA.outcome(), resultB.outcome()))
                     .containsExactlyInAnyOrder("applied", "compensation_required");
-            assertThat(service.joinConfirmed(terms.id(), first)).isEqualTo(resultA);
-            assertThat(service.joinConfirmed(terms.id(), second)).isEqualTo(resultB);
+            assertThat(service.joinConfirmed(terms.id(), first, null)).isEqualTo(resultA);
+            assertThat(service.joinConfirmed(terms.id(), second, null)).isEqualTo(resultB);
         } finally {
             start.countDown();
         }
@@ -210,7 +210,7 @@ class PaidGroupDealServiceIT {
                                 () ->
                                         receiptLock
                                                 ? service.startConfirmed(terms, leader)
-                                                : service.joinConfirmed(terms.id(), joiner));
+                                                : service.joinConfirmed(terms.id(), joiner, null));
                 try {
                     // Must be database cancellation, not this test's Future timeout.
                     assertThatThrownBy(() -> waiting.get(20, TimeUnit.SECONDS))
@@ -240,7 +240,7 @@ class PaidGroupDealServiceIT {
                                 joiner.paymentId()))
                 .isZero();
         assertThat(service.startConfirmed(terms, leader)).isEqualTo(original);
-        assertThat(service.joinConfirmed(terms.id(), joiner).currentSize()).isEqualTo(2);
+        assertThat(service.joinConfirmed(terms.id(), joiner, null).currentSize()).isEqualTo(2);
     }
 
     /**

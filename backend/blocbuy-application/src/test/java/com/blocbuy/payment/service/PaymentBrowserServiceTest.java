@@ -100,8 +100,8 @@ class PaymentBrowserServiceTest {
         UUID user = UUID.randomUUID();
         UUID intent = UUID.randomUUID();
         UUID paymentId = UUID.randomUUID();
-        when(port.createIntent(user, "START", intent)).thenReturn(paymentId);
-        assertThat(service.createIntent(user, "START", intent)).isEqualTo(paymentId);
+        when(port.createIntent(user, "START", intent, "ref-1")).thenReturn(paymentId);
+        assertThat(service.createIntent(user, "START", intent, "ref-1")).isEqualTo(paymentId);
         var result =
                 new StripeCheckoutService.CheckoutResult(
                         paymentId, "https://checkout.stripe.com/c/pay/test", "CREATED");
@@ -124,9 +124,9 @@ class PaymentBrowserServiceTest {
                         mock(RefundRepository.class),
                         tx);
         UUID id = UUID.randomUUID();
-        when(port.createIntent(any(), any(), any()))
+        when(port.createIntent(any(), any(), any(), any()))
                 .thenThrow(new IllegalArgumentException("invalid"));
-        assertThatThrownBy(() -> service.createIntent(id, "START", id))
+        assertThatThrownBy(() -> service.createIntent(id, "START", id, null))
                 .isInstanceOf(BizException.class);
     }
 
@@ -236,7 +236,7 @@ class PaymentBrowserServiceTest {
                         mock(RefundRepository.class),
                         tx);
         UUID id = UUID.randomUUID();
-        assertThatThrownBy(() -> service.createIntent(id, "START", id))
+        assertThatThrownBy(() -> service.createIntent(id, "START", id, null))
                 .isInstanceOf(BizException.class);
         assertThatThrownBy(() -> service.prepare(id, id, "key")).isInstanceOf(BizException.class);
         var checkout = mock(StripeCheckoutService.class);

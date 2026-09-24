@@ -77,6 +77,7 @@ class StripeLocalIntegrationTest {
     @Autowired private com.blocbuy.payment.repository.RefundRepository refunds;
     @Autowired private com.blocbuy.groupbuy.service.GroupDealExpiryService expiry;
     @Autowired private org.springframework.transaction.PlatformTransactionManager transactions;
+    @Autowired private com.blocbuy.groupbuy.service.ShareInviteAppService shareInvites;
     @MockitoBean private CheckoutGateway gateway;
     private final Map<String, CheckoutGateway.Session> sessions = new ConcurrentHashMap<>();
     private UUID product;
@@ -84,7 +85,7 @@ class StripeLocalIntegrationTest {
     @BeforeEach
     void setup() {
         jdbc.execute(
-                "TRUNCATE log_refund_attempt,biz_payment,log_payment_webhook_event,biz_refund,log_payment_review,biz_payment_review_case,biz_purchase_intent,stripe_local_expiry_request,biz_order,biz_group_member,biz_group_deal,biz_group_participation_receipt,biz_team_price_policy,biz_product,sys_user");
+                "TRUNCATE log_refund_attempt,biz_payment,log_payment_webhook_event,biz_refund,log_payment_review,biz_payment_review_case,biz_purchase_intent,stripe_local_expiry_request,biz_order,biz_group_member,biz_group_deal,biz_group_participation_receipt,biz_share_invite,biz_share_credit,biz_team_price_policy,biz_product,sys_user");
         product = UUID.randomUUID();
         jdbc.update(
                 "INSERT INTO biz_product(id,product_no,title,original_price,currency,stock,status) VALUES(?,?,'Local test product',20,'sgd',100,'on_sale')",
@@ -481,10 +482,10 @@ class StripeLocalIntegrationTest {
     @Test
     void browserServiceCreatesOwnedIntentAndCheckoutAndRejectsInvalidCommands() {
         UUID user = buyer();
-        UUID intent = browser.createIntent(user, "START", product);
+        UUID intent = browser.createIntent(user, "START", product, null);
         var result = browser.prepare(user, intent, "browser-native-test");
         assertThat(browser.receipt(user, result.paymentId()).status()).isEqualTo("CREATED");
-        assertThatThrownBy(() -> browser.createIntent(user, "INVALID", product))
+        assertThatThrownBy(() -> browser.createIntent(user, "INVALID", product, null))
                 .isInstanceOf(com.blocbuy.common.exception.BizException.class);
         assertThatThrownBy(() -> browser.prepare(user, intent, ""))
                 .isInstanceOf(com.blocbuy.common.exception.BizException.class);
@@ -578,6 +579,77 @@ class StripeLocalIntegrationTest {
         refunds.finish(work, "re_test_" + work.id(), "succeeded", "PROVIDER_SUCCEEDED");
 
         assertThat(refunds.claimNext()).isNull();
+    }
+
+    /**
+     * UC7 end to end: a member's invite rides the JOIN intent, the admission records the sharer on
+     * the membership, and the credit appears only after the commit — asserted on rows, not on the
+     * listener. A replayed settlement publishes nothing, so the credit stays single.
+     */
+    @Test
+    void anInvitedJoinIsTracedAndCreditsItsSharerAfterCommit() {
+        UUID sharer = buyer();
+        CheckoutPayment leader = prepare(sharer, "START", product);
+        paid(leader);
+        payments.recover(leader.id(), "test-operator", true);
+        UUID deal = deal();
+        String ref = shareInvites.mint(sharer, deal).ref();
+        assertThat(shareInvites.mint(sharer, deal).ref()).isEqualTo(ref);
+
+        UUID invitee = buyer();
+        UUID intent = coordinator.intent(invitee, "JOIN", deal, ref);
+        var result = payments.prepare(invitee, intent, UUID.randomUUID().toString());
+        CheckoutPayment joiner = repository.findById(result.paymentId()).orElseThrow();
+        paid(joiner);
+        payments.recover(joiner.id(), "test-operator", true);
+        payments.recover(joiner.id(), "test-operator", true);
+
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT sharer_user_id FROM biz_purchase_intent WHERE id=?",
+                                UUID.class,
+                                intent))
+                .isEqualTo(sharer);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT sharer_user_id FROM biz_group_member WHERE user_id=?",
+                                UUID.class,
+                                invitee))
+                .isEqualTo(sharer);
+        assertThat(count("biz_share_credit")).isEqualTo(1);
+        var credit =
+                jdbc.queryForMap(
+                        "SELECT deal_id, payment_id, sharer_user_id, invitee_user_id"
+                                + " FROM biz_share_credit");
+        assertThat(credit)
+                .containsEntry("deal_id", deal)
+                .containsEntry("payment_id", joiner.id())
+                .containsEntry("sharer_user_id", sharer)
+                .containsEntry("invitee_user_id", invitee);
+    }
+
+    /** #30: an unattributed join credits nobody, and an unknown reference never fails it. */
+    @Test
+    void anUninvitedJoinCreditsNobody() {
+        CheckoutPayment leader = prepare(buyer(), "START", product);
+        paid(leader);
+        payments.recover(leader.id(), "test-operator", true);
+        UUID deal = deal();
+
+        UUID invitee = buyer();
+        UUID intent = coordinator.intent(invitee, "JOIN", deal, "AAAAAAAAAAAAAAAAAAAAAA");
+        var result = payments.prepare(invitee, intent, UUID.randomUUID().toString());
+        CheckoutPayment joiner = repository.findById(result.paymentId()).orElseThrow();
+        paid(joiner);
+        payments.recover(joiner.id(), "test-operator", true);
+
+        assertThat(status("biz_group_deal")).isEqualTo("succeeded");
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM biz_group_member WHERE sharer_user_id IS NOT NULL",
+                                Long.class))
+                .isZero();
+        assertThat(count("biz_share_credit")).isZero();
     }
 
     /** Moves a team's deadline into the past, as the passage of time would. */

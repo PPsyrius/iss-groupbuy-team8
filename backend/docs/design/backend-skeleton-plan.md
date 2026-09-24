@@ -214,7 +214,7 @@ Evidence snapshot: code `8fe3d14`, 2026-09-11. Names follow the existing Sprint 
 | UC4 | Wang Ziang (Eric): groupbuy-side slice | [Paid participation](paid-group-participation.md#uc4-analysis-and-design) | Locked admission/replay exist; full paid buyer flow pending |
 | UC5 | Liu Jin | [§16](#16-uc5-lifecycle-and-observer-integration) | State transitions, synchronous observers and the opt-in expiry scheduler implemented; refund worker deferred to PR-G2 |
 | UC6 | Yu Qianshuo (Yorik) | [§17](#17-uc6-expiry-refunds) | Durable expiry obligations and refund execution implemented; production worker deferred to PR-G |
-| UC7 | Lim Jiechao | [§18](#18-uc7-share-attribution) | Observer subscriber proposed |
+| UC7 | Lim Jiechao; backend implemented by los gai | [§18](#18-uc7-share-attribution) | Invite mint, attributed JOIN intent and post-commit Observer subscriber implemented (backend ADR 0003); frontend T3-05 pending |
 | UC8 | Lim Jiechao | [§19](#19-uc8-my-orders-and-teams) | Placeholder services/controllers; owner-scoped query proposed |
 | UC9 | Wang Ziang (Eric); Liu Jin: review role | [Admin listings](admin-listings.md#course-analysis-and-uml) | State implemented on published branch; manual acceptance/merge pending |
 | Production readiness | Panpakorn Siripanich (Pan) | [Existing handover appendix](../../../docs/deploy/prod/backend-prod-handover.md#course-analysis-and-contribution) | Repository design exists; external release evidence not verified here |
@@ -551,42 +551,93 @@ Test duplicate expiry, same-key retry after provider-success/local-timeout, part
 
 ## 18. UC7 share attribution
 
-Member: Lim Jiechao, #30. **Proposed only:** no invitation/attribution subscriber exists in this checkout. A receipt or event package-info placeholder is not an Observer implementation.
+Member: Lim Jiechao (accountable, #30). The backend half was implemented by los gai by agreement on 2026-09-24. **Implemented (backend)**: plan `docs/agile/sprint-02/share-attribution-plan-20260924.md`, decision [backend ADR 0003](../adr/0003-share-credit-post-commit-subscriber.md), migrations V18/V19. The frontend half is plan task T3-05.
 
 ### Analysis
 
-Actor: sharer and referred joining buyer. Preconditions: valid invitation reference and accepted paid membership. Main flow: retain validated referral context with accepted intent, then credit on committed join. Postcondition: at most one agreed credit per accepted participation. Alternatives: unattributed join, forged/expired invitation, rejected admission or duplicate event.
+- **Actors:** the sharer (an active member of an open team) and the referred joining buyer.
+- **Preconditions:** a server-minted invite reference, and a paid, accepted membership.
+- **Main flow:**
+  1. The member mints an invite (`POST /api/v1/group-deals/{dealId}/invites`).
+  2. The buyer's JOIN intent presents it as `ref`. The server resolves it under the team lock and freezes the sharer on the intent.
+  3. Admission records the sharer on the membership and publishes `MemberJoined`.
+  4. After the commit, the subscriber records one credit.
+- **Postcondition:** at most one credit per accepted participation.
+- **Alternatives:** an unattributed join; an unknown, other-team or self-referring reference (the join goes ahead unattributed); a rejected admission or a replay (no event, no credit); a duplicate event (absorbed by the unique participation key).
 
 ### Observer five elements and design
 
-| Element | Applied proposal |
+| Element | Applied |
 | --- | --- |
 | Name / category | Observer — behavioral, subscriber side |
 | Problem / intent | Keep referral crediting independent of capacity/payment admission |
-| Context | UC4 accepted membership emits a durable fact consumed by attribution |
-| Forces | No credit for attempts/rejections; validated sharer identity; deduplication and recoverable delivery |
-| Solution | JoinAttributionSubscriber handles accepted-join facts and records credit idempotently |
+| Context | `PaidGroupDealService.joinConfirmed` publishes `MemberJoined` for every accepted join through `ApplicationEventPublisher` |
+| Forces | No credit for attempts or rejections; server-resolved sharer identity; deduplication; a credit failure must never roll back paid admission; recoverable after a crash |
+| Solution | `ShareCreditSubscriber` handles `MemberJoined` at `AFTER_COMMIT` in its own `REQUIRES_NEW` transaction and records `ShareCredit` idempotently through `ShareCreditRepository` |
 
-Publisher, EventSubscriber and JoinAttributionSubscriber participants are in §16's proposed class diagram. The event must describe the **accepted join**, not just TeamSucceeded: the latter cannot identify each referral. Self-referral, attribution precedence, link validity and reversal rules remain owner decisions before freezing schema. Observer decouples consumers (SRP/OCP); it does not authenticate a browser-supplied sharer ID. Direct crediting inside the locked join flow is rejected. Command might encapsulate a later credit operation but does not replace the subscription problem.
+The publisher knows nothing about crediting (SRP/OCP): adding a notification subscriber to `MemberJoined` needs no change to the admission. `TeamSucceeded` could not serve here because it cannot identify each referral.
+
+Observer does not authenticate a sharer. The browser only ever presents an opaque reference, and `GroupDealPurchaseSupport.resolveSharer` turns it into a sharer. Direct crediting inside the locked join flow was rejected.
+
+The credit status (pending/earned/void) is derived from the team's status rather than updated by lifecycle subscribers. ADR 0003 explains why, along with the `AFTER_COMMIT` trade-offs and the reconciliation query.
+
+```mermaid
+classDiagram
+    class PaidGroupDealService {
+        +joinConfirmed(dealId, paid, sharerUserId) ParticipationResult
+    }
+    class MemberJoined {
+        <<record>>
+        +dealId UUID
+        +memberUserId UUID
+        +paymentId UUID
+        +sharerUserId UUID
+        +attributed() boolean
+    }
+    class ApplicationEventPublisher {
+        <<interface>>
+        +publishEvent(event) void
+    }
+    class ShareCreditSubscriber {
+        +onMemberJoined(event) void
+    }
+    class ShareCreditRepository {
+        <<interface>>
+        +recordIfAbsent(credit) boolean
+    }
+    class ShareCredit {
+        <<record>>
+        +of(joined) ShareCredit
+    }
+    PaidGroupDealService ..> MemberJoined : creates
+    PaidGroupDealService --> ApplicationEventPublisher : publishes through
+    ApplicationEventPublisher ..> ShareCreditSubscriber : delivers after commit
+    ShareCreditSubscriber ..> ShareCredit : creates
+    ShareCreditSubscriber --> ShareCreditRepository
+```
 
 ```mermaid
 sequenceDiagram
-    participant Join as UC4 integration (proposed)
-    participant DB as Membership and durable event store
-    participant D as Dispatcher (proposed)
-    participant S as Attribution subscriber (proposed)
-    Join->>DB: commit accepted membership and validated referral fact
-    D->>DB: read committed join event
-    D->>S: MemberJoined(eventId, participationId, referral)
-    alt valid attributed join
-        S->>DB: record credit once for participation
-    else absent attribution or duplicate
-        S->>S: no new credit
+    participant O as OrderFulfilmentAdapter
+    participant G as PaidGroupDealService
+    participant DB as PostgreSQL
+    participant S as ShareCreditSubscriber
+    O->>G: joinConfirmed(dealId, paid, intent.sharerUserId)
+    G->>DB: member row with sharer_user_id, receipt
+    G-)S: publish MemberJoined (delivery deferred to after commit)
+    Note over O,DB: COMMIT (member, order, intent, payment)
+    alt attributed
+        S->>DB: REQUIRES_NEW insert biz_share_credit ON CONFLICT DO NOTHING
+    else unattributed
+        S->>S: no credit
     end
-    Note over D,S: Consumer failure retries without replaying admission
+    Note over S,DB: failure is logged and swallowed; reconcile from biz_group_member.sharer_user_id
 ```
 
-Verify tampered invitations, unattributed acceptance, rejected admission, duplicate delivery and restart. UC3 invite generation, UC4 accepted-join publishing and any UC5 settlement consequences must agree on IDs and event semantics; no new broker or public API is authorized here.
+Evidence:
+
+- Unit: `ShareCreditSubscriberTest` (an attributed join credits, an unattributed one does not, duplicates and failures are swallowed), `PaidGroupDealServiceTest` (publish order, sharer persisted, replay and rejection publish nothing), `GroupDealPurchaseSupportImplTest` (the five resolution outcomes), `ShareInviteAppServiceTest`, `PurchaseIntentAppServiceTest`, `PurchaseIntentTest`, `MemberJoinedTest`, `ShareInviteTest`, `ShareCreditTest`.
+- Integration: `ShareAttributionRepositoryIT` (concurrent mint, one credit per participation) and `StripeLocalIntegrationTest` (an invited paid join leaves one credit row after commit, and a replay leaves it single; an unknown reference credits nobody).
 
 ## 19. UC8 my orders and teams
 

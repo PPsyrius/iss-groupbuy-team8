@@ -54,7 +54,7 @@ public class PurchaseIntentAppService implements PaymentIntentPort {
      */
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
-    public UUID createIntent(UUID user, String operation, UUID businessId) {
+    public UUID createIntent(UUID user, String operation, UUID businessId, String inviteRef) {
         if (user == null || businessId == null) {
             throw new BizException(OrderErrorCode.PURCHASE_INTENT_TERMS_INVALID);
         }
@@ -70,12 +70,15 @@ public class PurchaseIntentAppService implements PaymentIntentPort {
         PurchaseIntent issued =
                 switch (kind) {
                     case START -> start(user, businessId, now);
-                    case JOIN -> join(user, businessId, now);
+                    case JOIN -> join(user, businessId, inviteRef, now);
                 };
         return intents.save(issued).id();
     }
 
-    /** START: the business id is a product, and the team it will open does not exist yet. */
+    /**
+     * START: the business id is a product, and the team it will open does not exist yet. Any invite
+     * reference is ignored — a buyer starting their own team may still hold one from browsing.
+     */
     private PurchaseIntent start(UUID user, UUID productId, Instant now) {
         CatalogPurchaseSupport.StartQuote quote = products.lockStartQuote(productId, now);
         // Reserved, not created: the team is only inserted once the payment succeeds, but the
@@ -99,8 +102,12 @@ public class PurchaseIntentAppService implements PaymentIntentPort {
                 now);
     }
 
-    /** JOIN: the business id is an open team, whose frozen price is the one the buyer pays. */
-    private PurchaseIntent join(UUID user, UUID dealId, Instant now) {
+    /**
+     * JOIN: the business id is an open team, whose frozen price is the one the buyer pays. An
+     * invite reference that names this team and another member freezes that member as the sharer
+     * (UC7); any other reference is ignored rather than failing the purchase.
+     */
+    private PurchaseIntent join(UUID user, UUID dealId, String inviteRef, Instant now) {
         GroupDealPurchaseSupport.JoinTerms team = deals.lockJoinTerms(dealId, user);
         CatalogPurchaseSupport.PurchasableProduct product =
                 products.requirePurchasable(team.productId());
@@ -117,7 +124,9 @@ public class PurchaseIntentAppService implements PaymentIntentPort {
                         team.targetSize());
         // A quote must never outlive the team it buys into, so the team's own deadline caps it.
         Instant quoteValidUntil = earlier(now.plusSeconds(QUOTE_WINDOW_SECONDS), team.expireTime());
-        return PurchaseIntent.issue(terms, quoteValidUntil, team.expireTime(), now);
+        UUID sharer = deals.resolveSharer(inviteRef, team.dealId(), user).orElse(null);
+        return PurchaseIntent.issue(terms, quoteValidUntil, team.expireTime(), now)
+                .attributedTo(sharer);
     }
 
     private static Instant earlier(Instant one, Instant other) {

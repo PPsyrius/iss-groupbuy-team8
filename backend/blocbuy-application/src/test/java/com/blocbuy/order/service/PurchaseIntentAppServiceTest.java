@@ -26,6 +26,7 @@ import com.blocbuy.order.model.PurchaseOperation;
 import com.blocbuy.order.repository.PurchaseIntentRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
@@ -269,5 +270,45 @@ class PurchaseIntentAppServiceTest {
         order.verify(deals).lockJoinTerms(DEAL, USER);
         order.verify(products).requirePurchasable(PRODUCT);
         order.verify(intents).save(any());
+    }
+
+    /** UC7: a JOIN that presents an attributing invite freezes its sharer on the intent. */
+    @Test
+    void aJoinThroughAnInviteFreezesTheSharerTheTeamResolved() {
+        clockReads();
+        teamQuotes("9.90", "sgd", NOW.plusSeconds(86_400));
+        UUID sharer = UUID.randomUUID();
+        when(deals.resolveSharer("ref-1", DEAL, USER)).thenReturn(Optional.of(sharer));
+
+        service.createIntent(USER, "JOIN", DEAL, "ref-1");
+
+        assertThat(saved().sharerUserId()).isEqualTo(sharer);
+        var order = inOrder(deals);
+        order.verify(deals).lockJoinTerms(DEAL, USER);
+        order.verify(deals).resolveSharer("ref-1", DEAL, USER);
+    }
+
+    /** A reference groupbuy cannot attribute leaves the JOIN unattributed, never failed. */
+    @Test
+    void aJoinWhoseInviteDoesNotResolveStaysUnattributed() {
+        clockReads();
+        teamQuotes("9.90", "sgd", NOW.plusSeconds(86_400));
+        when(deals.resolveSharer("stale", DEAL, USER)).thenReturn(Optional.empty());
+
+        service.createIntent(USER, "JOIN", DEAL, "stale");
+
+        assertThat(saved().sharerUserId()).isNull();
+    }
+
+    /** A buyer starting their own team may still hold an invite; it is ignored, not resolved. */
+    @Test
+    void aStartIgnoresAnyInviteReference() {
+        clockReads();
+        productQuotes(86_400);
+
+        service.createIntent(USER, "START", PRODUCT, "ref-1");
+
+        assertThat(saved().sharerUserId()).isNull();
+        verify(deals, never()).resolveSharer(any(), any(), any());
     }
 }

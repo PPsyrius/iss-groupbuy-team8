@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.order.exception.OrderErrorCode;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -305,6 +307,56 @@ class PurchaseIntentTest {
         assertThat(stored.version()).isEqualTo(4);
         assertThat(stored.createTime()).isEqualTo(NOW);
         assertThat(stored.fulfilledPaymentId()).isEqualTo(payment);
+    }
+
+    /** UC7: a JOIN freezes its sharer beside the price, and keeps it once a payment consumes it. */
+    @Test
+    void aJoinFreezesItsSharerAndKeepsItThroughFulfilment() {
+        UUID sharer = UUID.randomUUID();
+        PurchaseIntent unattributed = issueWith(USER, PurchaseOperation.JOIN, DEAL, PRODUCT);
+
+        PurchaseIntent attributed = unattributed.attributedTo(sharer);
+
+        assertThat(unattributed.sharerUserId()).isNull();
+        assertThat(attributed.sharerUserId()).isEqualTo(sharer);
+        assertThat(attributed.id()).isEqualTo(unattributed.id());
+        assertThat(attributed.terms()).isEqualTo(unattributed.terms());
+        assertThat(attributed.fulfilBy(UUID.randomUUID()).sharerUserId()).isEqualTo(sharer);
+        assertThat(unattributed.attributedTo(null)).isSameAs(unattributed);
+    }
+
+    @Test
+    void onlyAJoinByAnotherBuyerCanBeAttributed() {
+        UUID sharer = UUID.randomUUID();
+        PurchaseIntent start = issueWith(USER, PurchaseOperation.START, DEAL, PRODUCT);
+        PurchaseIntent join = issueWith(USER, PurchaseOperation.JOIN, DEAL, PRODUCT);
+
+        assertRejected(() -> start.attributedTo(sharer));
+        assertRejected(() -> join.attributedTo(USER));
+    }
+
+    @Test
+    void aReconstitutedIntentCarriesItsStoredSharer() {
+        UUID sharer = UUID.randomUUID();
+        PurchaseIntent stored =
+                PurchaseIntent.reconstitute(
+                        UUID.randomUUID(),
+                        terms(),
+                        NOW.plusSeconds(2400),
+                        NOW.plusSeconds(86_400),
+                        null,
+                        sharer,
+                        NOW,
+                        0);
+
+        assertThat(stored.sharerUserId()).isEqualTo(sharer);
+    }
+
+    private static void assertRejected(ThrowingCallable call) {
+        assertThatThrownBy(call)
+                .isInstanceOf(BizException.class)
+                .extracting(thrown -> ((BizException) thrown).errorCode())
+                .isEqualTo(OrderErrorCode.PURCHASE_INTENT_TERMS_INVALID);
     }
 
     @Test

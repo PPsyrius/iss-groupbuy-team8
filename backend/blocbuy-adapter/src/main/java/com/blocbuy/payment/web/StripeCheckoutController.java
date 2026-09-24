@@ -9,6 +9,7 @@ import com.blocbuy.payment.service.PaymentBrowserService;
 import com.blocbuy.payment.service.StripeCheckoutService;
 import com.blocbuy.payment.service.StripeFeatureSwitch;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -54,7 +55,16 @@ public class StripeCheckoutController {
     }
 
     public record IntentRequest(
-            @NotNull @Pattern(regexp = "START|JOIN") String operation, @NotNull UUID businessId) {}
+            @NotNull @Pattern(regexp = "START|JOIN") String operation,
+            @NotNull UUID businessId,
+            @Schema(
+                            nullable = true,
+                            description =
+                                    "Optional invite reference (UC7). Attributes a JOIN to the"
+                                            + " member who shared it; ignored for START and when"
+                                            + " it cannot attribute this join")
+                    @Pattern(regexp = "[A-Za-z0-9_-]{1,64}")
+                    String ref) {}
 
     public record IntentResponse(UUID intentId) {}
 
@@ -71,7 +81,8 @@ public class StripeCheckoutController {
         feature.requireEnabled();
         return Result.ok(
                 new IntentResponse(
-                        service.createIntent(user(), request.operation(), request.businessId())));
+                        service.createIntent(
+                                user(), request.operation(), request.businessId(), request.ref())));
     }
 
     @PostMapping("/checkout-sessions")

@@ -23,13 +23,13 @@ public class PaymentBrowserService {
     private final com.blocbuy.payment.repository.RefundRepository refunds;
     private final PlatformTransactionManager transactions;
 
-    public UUID createIntent(UUID user, String operation, UUID businessId) {
+    public UUID createIntent(UUID user, String operation, UUID businessId, String inviteRef) {
         PaymentIntentPort port = intents.getIfAvailable();
         if (port == null) throw new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID);
         TransactionTemplate tx = new TransactionTemplate(transactions);
         tx.setTimeout(10);
         try {
-            return tx.execute(status -> port.createIntent(user, operation, businessId));
+            return tx.execute(status -> port.createIntent(user, operation, businessId, inviteRef));
         } catch (IllegalArgumentException failure) {
             throw new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID);
         }

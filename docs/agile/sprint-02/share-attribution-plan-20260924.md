@@ -4,6 +4,15 @@ Date: 2026-09-24 · Branch: `feature/shared-attribution-backend-20260924` · Iss
 
 Backend owner changed from @limjiechao to los gai by agreement on 2026-09-24; the frontend half stays with T3-05. Target: backend merged to `dev` with the regenerated contract by end of day 2026-09-25.
 
+> **Implementation notes (2026-09-25).** D4 and D5 were confirmed as written. The implementation departs from this plan in the following ways:
+>
+> - **Migrations.** The schema is split into V18 (groupbuy: invite, credit, member column) and V19 (order: intent column), so that the isolated groupbuy repository ITs can load their own domain's migrations.
+> - **Meters.** Micrometer lives only in bootstrap, so `resolveSharer` outcomes are DEBUG logs rather than meters.
+> - **Reconciliation.** It is not code. It is the SQL recorded in backend ADR 0003, run by hand until a scheduled job is approved.
+> - **Transaction handling.** The subscriber uses an explicit `TransactionTemplate(REQUIRES_NEW)` inside its `try` instead of `@Transactional`, so that a failed commit is caught too.
+> - **Exception mapping.** `GlobalExceptionHandler` now maps `MissingRequestHeaderException` to 400. Previously only the Stripe controllers had that mapping, and every other controller answered 500.
+> - **Mint concurrency.** Ref collisions are covered by `ON CONFLICT DO NOTHING` across both unique indexes instead of a retry.
+
 ## 1. Goal and acceptance criteria
 
 A member of an open team mints an invite reference. A buyer who joins through it is traced to the sharer, and a subscriber records the credit after the join commits.
