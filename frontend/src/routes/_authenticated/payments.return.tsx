@@ -1,10 +1,10 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import * as v from "valibot";
 
+import { paymentsReturnSearchSchema } from "@/features/payment/payments-return-search";
 import { lastPaymentKey } from "@/features/payment/use-checkout";
 
 export const Route = createFileRoute("/_authenticated/payments/return")({
-  validateSearch: v.object({ paymentId: v.optional(v.pipe(v.string(), v.uuid())) }),
+  validateSearch: paymentsReturnSearchSchema,
   beforeLoad: ({ search }) => {
     // URL is only a reference, never proof of success; the receipt enforces ownership server-side.
     // Storage supports older already-issued local Checkout links without the new parameter.
