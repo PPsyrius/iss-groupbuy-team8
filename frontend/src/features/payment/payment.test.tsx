@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -17,10 +17,31 @@ const intentId = "00000000-0000-4000-8000-000000000030";
 const dealId = "00000000-0000-4000-8000-000000000040";
 const ok = (data: unknown) => HttpResponse.json({ code: OK_CODE, message: "ok", data });
 
+const quote = () => ({
+  id: "00000000-0000-4000-8000-000000000050",
+  productId,
+  policyVersion: 1,
+  amount: "10.00",
+  currency: "sgd",
+  issuedAt: new Date().toISOString(),
+  expiresAt: new Date(Date.now() + 15 * 60_000).toISOString(),
+});
+
 beforeEach(() => {
   sessionStorage.clear();
-  server.use(http.get("*/api/v1/payments/capabilities", () => ok({ enabled: true })));
+  server.use(
+    http.get("*/api/v1/payments/capabilities", () => ok({ enabled: true })),
+    http.post("*/api/v1/team-price-quotes", () => ok(quote())),
+    http.get("*/api/v1/team-price-quotes/:quoteId", () => ok(quote())),
+  );
 });
+
+// START passes through the quote sheet (T3-01): open it, then continue with the quoted price.
+async function continueFromQuote() {
+  const dialog = await screen.findByRole("dialog", { name: "Your bloc price" });
+  const button = await within(dialog).findByRole("button", { name: "Continue to payment" });
+  await userEvent.click(button);
+}
 afterEach(() => vi.restoreAllMocks());
 
 it("never reuses another account's cached payment receipt", async () => {
@@ -114,6 +135,7 @@ describe("teammate product page payment integration", () => {
     });
     await waitFor(() => expect(buttons[0]).toBeEnabled());
     await userEvent.click(buttons[0]!);
+    if (operation === "START") await continueFromQuote();
     await waitFor(() => expect(assign).toHaveBeenCalledOnce());
     expect(bodies).toEqual([
       { operation, businessId: operation === "START" ? productId : dealId },
@@ -149,11 +171,15 @@ describe("teammate product page payment integration", () => {
     renderRoute(`/products/${productId}`);
     const [button] = await screen.findAllByRole("button", { name: /Start a bloc/ });
     await waitFor(() => expect(button).toBeEnabled());
+    await userEvent.click(button!);
+    const dialog = await screen.findByRole("dialog", { name: "Your bloc price" });
+    const next = await within(dialog).findByRole("button", { name: "Continue to payment" });
     // Two synchronous clicks must share one in-flight attempt.
-    fireEvent.click(button!);
-    fireEvent.click(button!);
+    fireEvent.click(next);
+    fireEvent.click(next);
     await screen.findByRole("alert");
     await userEvent.click(button!);
+    await continueFromQuote();
     await waitFor(() => expect(assign).toHaveBeenCalledOnce());
     expect(intents).toBe(1);
     expect(keys).toHaveLength(2);
@@ -175,6 +201,7 @@ describe("teammate product page payment integration", () => {
     const [start] = await screen.findAllByRole("button", { name: /Start a bloc/ });
     await waitFor(() => expect(start).toBeEnabled());
     await userEvent.click(start!);
+    await continueFromQuote();
     await screen.findByRole("heading", { name: "Waiting for payment confirmation" });
     expect(assign).not.toHaveBeenCalled();
   });
@@ -203,6 +230,7 @@ describe("teammate product page payment integration", () => {
       const [start] = await screen.findAllByRole("button", { name: /Start a bloc/ });
       await waitFor(() => expect(start).toBeEnabled());
       await userEvent.click(start!);
+      await continueFromQuote();
       expect(await screen.findByRole("alert")).toHaveTextContent("We could not open Checkout");
       expect(assign).not.toHaveBeenCalled();
     },
@@ -223,6 +251,7 @@ describe("teammate product page payment integration", () => {
     const [start] = await screen.findAllByRole("button", { name: /Start a bloc/ });
     await waitFor(() => expect(start).toBeEnabled());
     await userEvent.click(start!);
+    await continueFromQuote();
     await waitFor(() => expect(router.state.location.pathname).toBe(`/payments/${paymentId}`));
     expect(await screen.findByText("saved-order")).toBeInTheDocument();
     expect(assign).not.toHaveBeenCalled();

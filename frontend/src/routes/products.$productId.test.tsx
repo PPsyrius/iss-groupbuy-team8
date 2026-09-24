@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
@@ -170,17 +170,89 @@ describe("/products/$productId gated actions", () => {
   it("does not gate a signed-in buyer", async () => {
     serveSignedIn();
     serveListing(listing());
+    servePayments();
+    serveQuote();
+    renderRoute(`/products/${knownId}`);
+    const [start] = await screen.findAllByRole("button", { name: /Start a bloc/ });
+    await waitFor(() => expect(start).toBeEnabled());
+    await userEvent.click(start!);
+    expect(await screen.findByRole("dialog", { name: "Your bloc price" })).toBeVisible();
+    expect(screen.queryByRole("dialog", { name: "Sign in to hold your seat" })).toBeNull();
+  });
+});
+
+// Payments on, and every intent fails before a payment exists (the page-level alert path).
+function servePayments() {
+  server.use(
+    http.get("*/api/v1/payments/capabilities", () =>
+      HttpResponse.json({ code: OK_CODE, data: { enabled: true } }),
+    ),
+    http.post("*/api/v1/payments/intents", () => HttpResponse.error()),
+  );
+}
+
+function serveQuote(
+  answer: () => Response = () =>
+    HttpResponse.json({
+      code: OK_CODE,
+      message: "ok",
+      data: {
+        id: "0192f0a0-0000-7000-8000-000000000001",
+        productId: knownId,
+        policyVersion: 1,
+        amount: "71.00",
+        currency: "sgd",
+        issuedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 15 * 60_000).toISOString(),
+      },
+    }),
+) {
+  server.use(http.post("*/api/v1/team-price-quotes", answer));
+}
+
+describe("/products/$productId quote step", () => {
+  it("quotes the bloc price, then starts checkout for this listing", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(listing());
+    let intentBody: unknown;
+    servePayments();
     server.use(
-      http.get("*/api/v1/payments/capabilities", () =>
-        HttpResponse.json({ code: OK_CODE, data: { enabled: true } }),
+      http.post("*/api/v1/payments/intents", async ({ request }) => {
+        intentBody = await request.json();
+        return HttpResponse.error();
+      }),
+    );
+    serveQuote();
+    renderRoute(`/products/${knownId}`);
+    const [start] = await screen.findAllByRole("button", { name: /Start a bloc/ });
+    await waitFor(() => expect(start).toBeEnabled());
+    await userEvent.click(start!);
+    const dialog = await screen.findByRole("dialog", { name: "Your bloc price" });
+    expect(await within(dialog).findByRole("timer")).toHaveTextContent(/left/);
+    await userEvent.click(within(dialog).getByRole("button", { name: "Continue to payment" }));
+    await waitFor(() => expect(intentBody).toEqual({ operation: "START", businessId: knownId }));
+    // The failed intent closes the sheet so the page-level alert is visible.
+    expect(await screen.findByText(/We could not open Checkout/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("says no price is set when the listing has no team price policy", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(without(listing(), "deal", "groupPrice"));
+    servePayments();
+    serveQuote(() =>
+      HttpResponse.json(
+        { code: "CATALOG_409_001", message: "Team price is unavailable" },
+        { status: 409 },
       ),
-      http.post("*/api/v1/payments/intents", () => HttpResponse.error()),
     );
     renderRoute(`/products/${knownId}`);
     const [start] = await screen.findAllByRole("button", { name: /Start a bloc/ });
     await waitFor(() => expect(start).toBeEnabled());
     await userEvent.click(start!);
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(await screen.findByText(/No bloc price is set for this listing yet/)).toBeVisible();
   });
 });
 
