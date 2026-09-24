@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
@@ -173,10 +174,19 @@ class SchedulerLeaseRepositoryIT {
                 lock.setString(1, key);
                 lock.executeQuery().close();
             }
+            var attempting = new CountDownLatch(1);
             Future<Boolean> reacquired =
-                    pool.submit(() -> leases.tryAcquire(key, "a", Duration.ofSeconds(5)));
+                    pool.submit(
+                            () -> {
+                                attempting.countDown();
+                                return leases.tryAcquire(key, "a", Duration.ofSeconds(5));
+                            });
 
-            Thread.sleep(Duration.ofMillis(1500));
+            assertThat(attempting.await(5, TimeUnit.SECONDS)).isTrue();
+            // Hold the row lock beyond the old pre-lock deadline calculation, on the DB clock.
+            try (var delay = holder.createStatement()) {
+                delay.execute("SELECT pg_sleep(1.5)");
+            }
             holder.rollback();
 
             assertThat(reacquired.get()).isTrue();

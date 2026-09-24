@@ -6,6 +6,7 @@ import com.blocbuy.common.util.UuidV7;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -85,7 +86,7 @@ public class LeasedJobRunner {
         }
         AtomicBoolean leaseValid = new AtomicBoolean(true);
         CountDownLatch stop = new CountDownLatch(1);
-        Thread renewal = startRenewal(job, lease, leaseValid, stop);
+        CompletableFuture<Void> renewal = startRenewal(job, lease, leaseValid, stop);
         String outcome = COMPLETED;
         try {
             work.run(leaseValid::get);
@@ -99,16 +100,17 @@ public class LeasedJobRunner {
         return leaseValid.get() ? outcome : FAILED;
     }
 
-    private Thread startRenewal(
+    private CompletableFuture<Void> startRenewal(
             String job, Duration lease, AtomicBoolean leaseValid, CountDownLatch stop) {
         String traceId = MDC.get(ApiConstants.TRACE_ID_MDC_KEY);
         Duration renewalInterval = lease.dividedBy(3);
-        return Thread.ofVirtual()
+        var finished = new CompletableFuture<Void>();
+        Thread.ofVirtual()
                 .name("lease-renewal-" + job)
                 .start(
                         () -> {
-                            MDC.put(ApiConstants.TRACE_ID_MDC_KEY, traceId);
                             try {
+                                MDC.put(ApiConstants.TRACE_ID_MDC_KEY, traceId);
                                 while (leaseValid.get()
                                         && !stop.await(
                                                 renewalInterval.toMillis(),
@@ -128,23 +130,15 @@ public class LeasedJobRunner {
                                         "Job {} lease renewal failed; stopping its batch", job, e);
                             } finally {
                                 MDC.remove(ApiConstants.TRACE_ID_MDC_KEY);
+                                finished.complete(null);
                             }
                         });
+        return finished;
     }
 
-    private static void stopRenewal(Thread renewal, CountDownLatch stop) {
-        boolean interrupted = Thread.interrupted();
+    private static void stopRenewal(CompletableFuture<Void> renewal, CountDownLatch stop) {
         stop.countDown();
-        while (renewal.isAlive()) {
-            try {
-                renewal.join();
-            } catch (InterruptedException e) {
-                interrupted = true;
-            }
-        }
-        if (interrupted) {
-            Thread.currentThread().interrupt();
-        }
+        renewal.join();
     }
 
     private void release(String job) {

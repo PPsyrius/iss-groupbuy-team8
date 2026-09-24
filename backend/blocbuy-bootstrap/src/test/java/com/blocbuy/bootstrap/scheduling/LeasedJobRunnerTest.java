@@ -164,12 +164,24 @@ class LeasedJobRunnerTest {
                                     LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(100));
                                     finishRenewal.countDown();
                                 });
-        runner.run(JOB, shortLease, ignored -> await(renewing));
-        finish.join();
+        try {
+            runner.run(
+                    JOB,
+                    shortLease,
+                    ignored -> {
+                        await(renewing);
+                        Thread.currentThread().interrupt();
+                    });
 
-        assertThat(interrupted).hasValue(false);
-        assertThat(runs(LeasedJobRunner.COMPLETED)).isEqualTo(1.0);
-        verify(leases).release(JOB, OWNER);
+            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+            assertThat(interrupted).hasValue(false);
+            assertThat(runs(LeasedJobRunner.COMPLETED)).isEqualTo(1.0);
+            verify(leases).release(JOB, OWNER);
+        } finally {
+            Thread.interrupted();
+            finishRenewal.countDown();
+            finish.join();
+        }
     }
 
     @Test
