@@ -49,3 +49,14 @@ and `build.sourcemap: true` publishes full source maps. Both fixes on the table 
 decision's "no `import.meta.env`" rule and the CI grep, so whichever is chosen is recorded here as
 a dated addendum before T1-14; a DCE-only `DEV` check still yields one artifact per build, which
 is the property this ADR protects.
+
+Addendum 2026-09-23 (#154): neither option above was taken. `vite.config.ts` aliases
+`@/dev/devtools` to `src/dev/devtools.noop.tsx` when the command is `build`, so the delivery
+artifact carries no devtools code and no `import.meta.env` enters `src/`; `vite dev` and Vitest
+resolve the real module. The switch is the build command, not an environment, so there is still
+exactly one artifact per build. The CI grep and rule 5 are unchanged.
+
+Addendum 2026-09-23 (#156): the same alias list swaps `@/dev/browser-msw` for a no-op on
+`build`, and the MSW worker script moved from `public/` to `dev/` (served by a dev-server
+middleware), so `?msw=1` on a deployed site logs a warning instead of serving sample data, and
+`dist/` carries neither msw nor `mockServiceWorker.js`.

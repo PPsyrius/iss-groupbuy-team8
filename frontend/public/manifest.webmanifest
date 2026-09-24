@@ -1,0 +1,13 @@
+{
+  "name": "BlocBuy",
+  "short_name": "BlocBuy",
+  "description": "Group-buy listings for your block: start or join a bloc and pay the group price.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FCFCFC",
+  "theme_color": "#FF385C",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}
