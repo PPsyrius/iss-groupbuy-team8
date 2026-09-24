@@ -42,7 +42,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
             "blocbuy.payment.checkout.cancel-url=https://shop.example/payments/return",
             "blocbuy.scheduling.enabled=true",
             "blocbuy.scheduling.team-expiry.initial-delay=PT1H",
-            "blocbuy.scheduling.team-expiry.interval=PT1H"
+            "blocbuy.scheduling.team-expiry.interval=PT1H",
+            "blocbuy.scheduling.team-expiry.batch-size=2"
         })
 @ActiveProfiles({"local", "stripe-sprint2"})
 @Import(PaymentFixtureConfiguration.class)
@@ -70,7 +71,7 @@ class TeamExpirySchedulingIT {
     @BeforeEach
     void setup() {
         jdbc.execute(
-                "TRUNCATE sys_scheduler_lock,log_refund_attempt,biz_payment,log_payment_webhook_event,biz_refund,log_payment_review,biz_payment_review_case,biz_purchase_intent,stripe_local_expiry_request,biz_order,biz_group_member,biz_group_deal,biz_group_participation_receipt,biz_team_price_policy,biz_product,sys_user");
+                "TRUNCATE sys_scheduled_item_retry,sys_scheduler_lock,log_refund_attempt,biz_payment,log_payment_webhook_event,biz_refund,log_payment_review,biz_payment_review_case,biz_purchase_intent,stripe_local_expiry_request,biz_order,biz_group_member,biz_group_deal,biz_group_participation_receipt,biz_team_price_policy,biz_product,sys_user");
         product = UUID.randomUUID();
         jdbc.update(
                 "INSERT INTO biz_product(id,product_no,title,original_price,currency,stock,status,team_target_size,team_lifetime_seconds) VALUES(?,?,'Expiry test product',20,'sgd',100,'on_sale',2,7200)",
@@ -126,8 +127,8 @@ class TeamExpirySchedulingIT {
 
     /**
      * A test trigger makes the middle team's expiry UPDATE fail inside its own transaction. Only
-     * that team rolls back — nothing wraps the sweep in an outer transaction — and the next run,
-     * with the fault gone, resolves it.
+     * that team rolls back and receives durable backoff. The next run bypasses it and resolves the
+     * newer team; after the backoff lapses, another run retries it.
      */
     @Test
     void aTeamWhoseExpiryFailsRollsBackAloneAndIsRetriedByTheNextRun() {
@@ -153,13 +154,29 @@ class TeamExpirySchedulingIT {
         }
 
         assertThat(dealStatus(first)).isEqualTo("expired");
-        assertThat(dealStatus(last)).isEqualTo("expired");
         assertThat(refunds(first)).isEqualTo(1);
-        assertThat(refunds(last)).isEqualTo(1);
+        assertThat(dealStatus(last)).isEqualTo("open");
         assertThat(dealStatus(poisoned)).isEqualTo("open");
         assertThat(orderStatus(poisoned)).isEqualTo("pending");
         assertThat(refunds(poisoned)).isZero();
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT failure_count FROM sys_scheduled_item_retry"
+                                        + " WHERE job_key='team-expiry-sweep' AND item_id=?",
+                                Integer.class,
+                                poisoned))
+                .isEqualTo(1);
 
+        job.run();
+
+        assertThat(dealStatus(last)).isEqualTo("expired");
+        assertThat(refunds(last)).isEqualTo(1);
+        assertThat(dealStatus(poisoned)).isEqualTo("open");
+
+        jdbc.update(
+                "UPDATE sys_scheduled_item_retry SET retry_after=clock_timestamp()-interval '1 second'"
+                        + " WHERE job_key='team-expiry-sweep' AND item_id=?",
+                poisoned);
         job.run();
 
         assertThat(dealStatus(poisoned)).isEqualTo("expired");

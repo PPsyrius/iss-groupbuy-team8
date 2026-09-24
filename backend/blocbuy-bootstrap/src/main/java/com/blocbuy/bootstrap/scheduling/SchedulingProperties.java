@@ -5,8 +5,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
- * Scheduled jobs, bound from {@code blocbuy.scheduling.*}. The master switch is off unless a deploy
- * profile turns it on, so no test context and no tool profile (openapi-export) ever starts a job by
+ * Scheduled jobs, bound from {@code blocbuy.scheduling.*}. The master switch is off unless a
+ * deployment turns it on after its backlog check, so no test or tool profile starts a job by
  * accident. Invalid values fail startup rather than the first run.
  *
  * @param enabled master switch; read by {@code SchedulingConfiguration}'s condition
@@ -17,6 +17,8 @@ public record SchedulingProperties(boolean enabled, @DefaultValue TeamExpiry tea
 
     /** Upper bound on one sweep, so a backlog drains in bounded runs. */
     static final int MAX_BATCH_SIZE = 500;
+
+    static final Duration MIN_LEASE = Duration.ofSeconds(10);
 
     /**
      * Team-expiry sweep settings.
@@ -41,9 +43,9 @@ public record SchedulingProperties(boolean enabled, @DefaultValue TeamExpiry tea
                 throw new IllegalArgumentException(
                         "team-expiry.initial-delay must not be negative");
             }
-            if (lease == null || lease.toMillis() <= 0) {
+            if (lease == null || lease.compareTo(MIN_LEASE) < 0) {
                 throw new IllegalArgumentException(
-                        "team-expiry.lease must be at least one millisecond");
+                        "team-expiry.lease must be at least " + MIN_LEASE);
             }
             if (batchSize < 1 || batchSize > MAX_BATCH_SIZE) {
                 throw new IllegalArgumentException(

@@ -73,6 +73,7 @@ The advisory commit hook in `.claude/settings.json` runs `scripts/commit-evidenc
 ## Rules
 
 - Write committed artefacts in English; converse with the user in their language.
+- When editing a README, follow `CONTRIBUTING.md`: one prose paragraph or prose list item per physical source line; preserve structural line breaks in code blocks, tables, and nested lists.
 - Keep log entries under twelve lines, ADRs under sixty lines, and register rows to one table row.
 - Prefer links over restating diffs. State what was not verified; "tested" alone is not evidence.
 - Never rewrite historical records solely for a new convention; add a dated amendment.

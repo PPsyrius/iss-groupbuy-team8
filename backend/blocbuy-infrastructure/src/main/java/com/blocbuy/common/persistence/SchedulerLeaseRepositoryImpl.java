@@ -23,12 +23,14 @@ public class SchedulerLeaseRepositoryImpl implements SchedulerLeaseRepository {
 
     @Override
     public boolean tryAcquire(String lockKey, String owner, Duration lease) {
-        requireText(lockKey, MAX_KEY_LENGTH, "lockKey");
-        requireText(owner, MAX_OWNER_LENGTH, "owner");
-        if (lease == null || lease.toMillis() <= 0) {
-            throw new IllegalArgumentException("lease must be at least one millisecond");
-        }
+        validate(lockKey, owner, lease);
         return oneOrZero(mapper.acquire(lockKey, owner, lease.toMillis() / 1000.0));
+    }
+
+    @Override
+    public boolean renew(String lockKey, String owner, Duration lease) {
+        validate(lockKey, owner, lease);
+        return oneOrZero(mapper.renew(lockKey, owner, lease.toMillis() / 1000.0));
     }
 
     @Override
@@ -50,6 +52,14 @@ public class SchedulerLeaseRepositoryImpl implements SchedulerLeaseRepository {
         if (value == null || value.isBlank() || value.length() > maxLength) {
             throw new IllegalArgumentException(
                     name + " must be non-blank and at most " + maxLength + " characters");
+        }
+    }
+
+    private static void validate(String lockKey, String owner, Duration lease) {
+        requireText(lockKey, MAX_KEY_LENGTH, "lockKey");
+        requireText(owner, MAX_OWNER_LENGTH, "owner");
+        if (lease == null || lease.toMillis() <= 0) {
+            throw new IllegalArgumentException("lease must be at least one millisecond");
         }
     }
 }

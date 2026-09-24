@@ -13,9 +13,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * Scheduled jobs, opt-in. Only the {@code ec2} and {@code docker} profiles set {@code
- * blocbuy.scheduling.enabled}; everywhere else — tests included — no scheduler thread exists, so no
- * job can race a test that drives the same use case by hand.
+ * Scheduled jobs, deployment-opt-in. Every profile defaults {@code blocbuy.scheduling.enabled} to
+ * false, so no scheduler thread exists until an operator completes the backlog check and enables it
+ * explicitly.
  */
 @Configuration(proxyBeanMethods = false)
 @EnableScheduling

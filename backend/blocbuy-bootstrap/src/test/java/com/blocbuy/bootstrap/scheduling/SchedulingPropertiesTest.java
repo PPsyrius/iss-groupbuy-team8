@@ -6,9 +6,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.Duration;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.context.properties.bind.BindException;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;
+import org.springframework.boot.env.YamlPropertySourceLoader;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.mock.env.MockEnvironment;
 
 /** Defaults hold with no configuration at all, and nonsense values stop startup. */
 class SchedulingPropertiesTest {
@@ -52,6 +57,24 @@ class SchedulingPropertiesTest {
                 .isInstanceOf(BindException.class)
                 .rootCause()
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {"application-local.yml", "application-ec2.yml", "application-docker.yml"})
+    void deploymentProfilesRequireExplicitOptIn(String profile) throws java.io.IOException {
+        var environment = new MockEnvironment();
+        environment
+                .getPropertySources()
+                .addLast(
+                        new YamlPropertySourceLoader()
+                                .load(profile, new ClassPathResource(profile))
+                                .getFirst());
+
+        assertThat(environment.getProperty("blocbuy.scheduling.enabled", Boolean.class)).isFalse();
+
+        environment.setProperty("BLOCBUY_SCHEDULING_ENABLED", "true");
+        assertThat(environment.getProperty("blocbuy.scheduling.enabled", Boolean.class)).isTrue();
     }
 
     @Test

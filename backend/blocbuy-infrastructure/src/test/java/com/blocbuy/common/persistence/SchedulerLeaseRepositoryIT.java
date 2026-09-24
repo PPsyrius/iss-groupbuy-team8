@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
@@ -137,6 +139,79 @@ class SchedulerLeaseRepositoryIT {
         assertThat(leases.release(key, "a")).isTrue();
 
         assertThat(leases.tryAcquire(key, "b", LEASE)).isTrue();
+    }
+
+    @Test
+    void renewalExtendsOnlyAStillLiveOwnedLease() {
+        String key = key();
+        assertThat(leases.tryAcquire(key, "a", LEASE)).isTrue();
+
+        assertThat(leases.renew(key, "a", Duration.ofMinutes(3))).isTrue();
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT locked_until > clock_timestamp() + interval '150 seconds'"
+                                        + " FROM sys_scheduler_lock WHERE lock_key = ?",
+                                Boolean.class,
+                                key))
+                .isTrue();
+
+        jdbc.update(
+                "UPDATE sys_scheduler_lock SET locked_until = clock_timestamp() - interval '1 second'"
+                        + " WHERE lock_key = ?",
+                key);
+        assertThat(leases.renew(key, "a", LEASE)).isFalse();
+    }
+
+    @Test
+    void contendedReacquireStartsItsDeadlineAfterTheRowLockIsObtained() throws Exception {
+        String key = key();
+        assertThat(leases.tryAcquire(key, "a", LEASE)).isTrue();
+        try (Connection holder = source.getConnection();
+                var pool = Executors.newSingleThreadExecutor()) {
+            holder.setAutoCommit(false);
+            int holderPid;
+            try (var lock =
+                    holder.prepareStatement(
+                            "SELECT pg_backend_pid() FROM sys_scheduler_lock"
+                                    + " WHERE lock_key = ? FOR UPDATE")) {
+                lock.setString(1, key);
+                try (var row = lock.executeQuery()) {
+                    assertThat(row.next()).isTrue();
+                    holderPid = row.getInt(1);
+                }
+            }
+            Future<Boolean> reacquired =
+                    pool.submit(() -> leases.tryAcquire(key, "a", Duration.ofSeconds(5)));
+
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+            while (!Boolean.TRUE.equals(
+                    jdbc.queryForObject(
+                            "SELECT EXISTS (SELECT 1 FROM pg_stat_activity"
+                                    + " WHERE wait_event_type = 'Lock'"
+                                    + " AND ? = ANY(pg_blocking_pids(pid))"
+                                    + " AND query LIKE '%INSERT INTO sys_scheduler_lock%')",
+                            Boolean.class, holderPid))) {
+                assertThat(reacquired.isDone()).as("acquire must wait for the held row").isFalse();
+                if (System.nanoTime() >= deadline) {
+                    throw new AssertionError("Timed out waiting for the lease-row lock contention");
+                }
+                LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(10));
+            }
+            // Hold the row lock beyond the old pre-lock deadline calculation, on the DB clock.
+            try (var delay = holder.createStatement()) {
+                delay.execute("SELECT pg_sleep(1.5)");
+            }
+            holder.rollback();
+
+            assertThat(reacquired.get()).isTrue();
+        }
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT locked_until > clock_timestamp() + interval '4 seconds'"
+                                        + " FROM sys_scheduler_lock WHERE lock_key = ?",
+                                Boolean.class,
+                                key))
+                .isTrue();
     }
 
     @Test

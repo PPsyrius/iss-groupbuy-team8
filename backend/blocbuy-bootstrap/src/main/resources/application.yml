@@ -18,7 +18,7 @@ spring:
   task:
     scheduling:
       shutdown:
-        # let a running sweep finish its current team; below compose stop_grace_period (30s)
+        # bounded grace for the whole scheduled task; below compose stop_grace_period (30s)
         await-termination: true
         await-termination-period: 20s
 
@@ -65,7 +65,7 @@ springdoc:
 
 blocbuy:
   scheduling:
-    # master switch, off by default: tests and tool profiles never start a job; ec2/docker turn it on
+    # master switch, off by default everywhere; deployments opt in after their backlog check
     enabled: false
     team-expiry:
       interval: PT1M

@@ -291,7 +291,7 @@ sudo chown root:root /etc/blocbuy/backend.env
 sudoedit /etc/blocbuy/backend.env   # fill in all secrets per deployment/backend/backend.env.example
 ```
 
-Keys in `backend.env.example`: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`. `BACKEND_IMAGE` does not belong in this file; the deploy script injects it by digest.
+Keys fetched for the application environment: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `BLOCBUY_SCHEDULING_ENABLED`, `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`. Keep scheduling `false` until the overdue-team backlog has been counted. `BACKEND_IMAGE` does not belong in this file; the deploy script injects it by digest.
 
 ```bash
 # Verify

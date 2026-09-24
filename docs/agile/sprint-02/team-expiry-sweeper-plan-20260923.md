@@ -2,6 +2,8 @@
 
 Date: 2026-09-23 · Branch: `feature/group-expiry-20260923` · Issue: #28 (UC5) · Parent plan: [`lifecycle-completion-plan-20260922.md`](lifecycle-completion-plan-20260922.md) §3.3
 
+> **Review hardening (2026-09-24):** deployed profiles now default the scheduler off; V17 records five-minute per-item retry backoff; leases renew every third of their duration and stop the batch after renewal loss; the acquire deadline is calculated after lock contention.
+
 PR-G in the parent plan bundled the scheduling foundation, the team-expiry sweeper and the refund worker. It is split in two:
 
 | PR | Content | Closes |
@@ -17,7 +19,7 @@ Why split: G1 writes only to our database; G2 is the only job that moves money t
 
 1. A database lease on `sys_scheduler_lock` (V13), as a domain port with an infrastructure implementation.
 2. `GroupDealExpirySweeper`: one batch read of due team ids, then `GroupDealExpiryService.expireOne` per team with per-team failure isolation.
-3. A bootstrap scheduling driver behind a master switch that is **off by default**, on in the `ec2` and `docker` profiles.
+3. A bootstrap scheduling driver behind a master switch that is **off by default in every profile** and enabled per deployment after a backlog check.
 4. Metrics, one summary log line per non-empty run, shutdown behaviour.
 5. Tests (unit + Testcontainers IT), ADR 0002 addendum, NFR-32 row, sprint-log entry.
 
@@ -27,7 +29,7 @@ Why split: G1 writes only to our database; G2 is the only job that moves money t
 | --- | --- |
 | Scheduling the refund worker (`RefundService.processNext`) | PR-G2 / #29 |
 | `expireDueSessions` head-of-line blocking and crowd-out | #134 (payment session cleanup, a different job) |
-| Quarantining a team that fails expiry permanently | §8 risk R2; needs a column and a migration, follow-up if R2 is observed |
+| Operator quarantine and manual repair UI | Follow-up only; V17 retry backoff prevents failed rows from starving the batch |
 | Frontend display of expired teams or refunds | #128 / #31 |
 | Any HTTP API change | none — `contracts/openapi.json` stays unchanged |
 
@@ -75,7 +77,7 @@ Test hazard found: `StripeLocalIntegrationTest` (`@ActiveProfiles({"local", "str
 | bootstrap | `com.blocbuy.bootstrap.scheduling` | `SchedulingProperties`, `LeasedJobRunner`, `TeamExpirySweepJob` | lease wrap, metrics, MDC, timer |
 | bootstrap | `com.blocbuy.bootstrap.config` | `SchedulingConfiguration` | `@EnableScheduling` + beans, behind the master switch |
 
-No new domain package, no migration, no API change. The lease is technical infrastructure shared by jobs, hence `common`, not `groupbuy`.
+No new domain package or API change. V17 adds generic scheduled-item retry state. The lease is technical infrastructure shared by jobs, hence `common`, not `groupbuy`.
 
 ### 3.2 Lease port and SQL
 
@@ -86,6 +88,9 @@ package com.blocbuy.common.repository;
 public interface SchedulerLeaseRepository {
     /** @return true when this owner now holds {@code lockKey} until DB-now + lease */
     boolean tryAcquire(String lockKey, String owner, Duration lease);
+
+    /** Extends only a still-live lease held by this owner; never takes over an expired lease. */
+    boolean renew(String lockKey, String owner, Duration lease);
 
     /** @return false when the lease was no longer ours (taken over after it expired) */
     boolean release(String lockKey, String owner);
@@ -99,7 +104,7 @@ INSERT INTO sys_scheduler_lock (lock_key, owner, locked_until)
 VALUES (#{lockKey}, #{owner}, clock_timestamp() + make_interval(secs => #{leaseSeconds}))
 ON CONFLICT (lock_key) WHERE deleted = false
 DO UPDATE SET owner        = EXCLUDED.owner,
-              locked_until = EXCLUDED.locked_until,
+              locked_until = clock_timestamp() + make_interval(secs => #{leaseSeconds}),
               update_time  = clock_timestamp(),
               version      = sys_scheduler_lock.version + 1
 WHERE sys_scheduler_lock.locked_until <= clock_timestamp()
@@ -108,8 +113,9 @@ WHERE sys_scheduler_lock.locked_until <= clock_timestamp()
 
 - Affected rows: 1 = acquired (first ever run inserts, later runs update); 0 = another owner holds a live lease → skip this run.
 - Two instances racing: `ON CONFLICT DO UPDATE` row-locks the conflicting row and re-evaluates the `WHERE` on the committed version, so exactly one wins; the loser waits only for a single-statement transaction (milliseconds), then gets 0.
-- `OR owner = EXCLUDED.owner` lets the same instance re-acquire after a failed release.
+- `OR owner = EXCLUDED.owner` lets the same instance re-acquire after a failed release; the update-side deadline is calculated after any row-lock wait.
 - `id` comes from the column default `uuidv7()`; `create_by`/`update_by` stay NULL (system actor).
+- Renewal is a guarded UPDATE requiring the same owner and a still-future `locked_until`; it never revives an expired lease.
 
 Release:
 
@@ -140,16 +146,18 @@ public class GroupDealExpirySweeper {
     public record Result(int due, int expired, int alreadyResolved, int failed) {}
 
     /** Not @Transactional on purpose: each team commits or rolls back on its own. */
-    public Result sweep(int limit) {
+    public Result sweep(int limit, BooleanSupplier leaseValid) {
         // limit < 1 → IllegalArgumentException
         Instant now = deals.currentTime();            // DB clock, same source expireOne uses
         List<UUID> due = deals.dueForExpiry(now, limit);   // one batch read
         for (UUID id : due) {
+            if (!leaseValid.getAsBoolean()) break;
             try {
                 if (expiry.expireOne(id)) expired++; else alreadyResolved++;
             } catch (RuntimeException e) {
                 failed++;
-                log.warn("Team {} expiry failed; the next run retries it", id, e);
+                deals.deferExpiryRetry(id, Duration.ofMinutes(5));
+                log.warn("Team {} expiry failed; retry deferred", id, e);
             }
         }
         return new Result(due.size(), expired, alreadyResolved, failed);
@@ -161,18 +169,18 @@ public class GroupDealExpirySweeper {
 - **Hard-gate exception, stated explicitly:** the loop issues one `lockDeal` + one UPDATE (+ subscriber writes) per team. This is a write job that locks one aggregate per transaction, not read amplification; the ids come from one batch query. Merging into one transaction is rejected in ADR 0002 (rollback blast radius, lock hold time against webhook settlement).
 - **Clock consistency:** candidates use DB time `t1`; `expireOne` re-reads DB time `t2 ≥ t1` under the row lock, so a due team is still due and `GroupDeal.expire`'s "not due yet" `IllegalStateException` cannot fire from clock skew. `currentTime()`'s Javadoc ("call only after required locks") concerns decisions; this call only selects candidates, and the decision is re-made under the lock. Update the Javadoc to say so.
 - `expireOne` returning false (webhook filled the team, or another sweeper got there) is counted as `alreadyResolved`, not failure.
-- A failing team stays `open` and first in `ORDER BY expire_time`, so the next run retries it; it consumes one slot per run but does not block the others (contrast #134).
+- A failed team stays `open`, but V17 excludes it for five minutes. This write commits after its team transaction rolls back, so later overdue teams retain batch capacity; once `retry_after` passes, the same oldest-first query retries it.
 
 ### 3.4 Driver
 
-`SchedulingProperties` (`@ConfigurationProperties("blocbuy.scheduling")`, `@Validated`, record):
+`SchedulingProperties` (`@ConfigurationProperties("blocbuy.scheduling")`, compact-constructor validation, record):
 
 | Property | Default | Constraint |
 | --- | --- | --- |
 | `enabled` | `false` | master switch |
 | `team-expiry.interval` | `PT1M` | fixed delay between runs |
 | `team-expiry.initial-delay` | `PT30S` | lets the app finish starting |
-| `team-expiry.lease` | `PT2M` | > 0 |
+| `team-expiry.lease` | `PT2M` | at least 10 s; renewed every third |
 | `team-expiry.batch-size` | `100` | 1..500 |
 
 `SchedulingConfiguration`:
@@ -181,7 +189,7 @@ public class GroupDealExpirySweeper {
 @Configuration(proxyBeanMethods = false)
 @EnableScheduling
 @EnableConfigurationProperties(SchedulingProperties.class)
-@ConditionalOnProperty(prefix = "blocbuy.scheduling", name = "enabled", havingValue = "true")
+@ConditionalOnBooleanProperty("blocbuy.scheduling.enabled")
 public class SchedulingConfiguration {
     @Bean LeasedJobRunner leasedJobRunner(SchedulerLeaseRepository leases, MeterRegistry meters) { ... }
     @Bean TeamExpirySweepJob teamExpirySweepJob(LeasedJobRunner runner, GroupDealExpirySweeper sweeper,
@@ -196,17 +204,18 @@ public class SchedulingConfiguration {
            initialDelayString = "${blocbuy.scheduling.team-expiry.initial-delay:PT30S}")
 public void run() {
     runner.run("team-expiry-sweep", props.teamExpiry().lease(),
-               () -> sweeper.sweep(props.teamExpiry().batchSize()));   // + per-result counters
+               leaseValid -> sweeper.sweep(props.teamExpiry().batchSize(), leaseValid));
 }
 ```
 
-`LeasedJobRunner.run(key, lease, work)` — reused unchanged by G2:
+`LeasedJobRunner.run(key, lease, leaseAwareWork)` — reusable by G2:
 
 1. Put `traceId = "job-" + UuidV7.next()` into MDC (so CloudWatch Logs Insights can group one run's lines).
 2. `tryAcquire`; false → counter `outcome=skipped`, DEBUG, return.
-3. Run the work inside `try`; any exception → counter `outcome=failed`, ERROR once (the sweeper already isolates per team, so this is only a lease/DB-level failure). A `DataAccessException` from `tryAcquire` itself (including the 3 s statement timeout) is caught the same way, counted `failed`, and does not attempt a release.
-4. `finally` release; false → WARN "lease expired before the run finished"; clear MDC.
-5. Owner id: `HOSTNAME` env (container id on EC2) + `/` + a per-JVM `UuidV7`, truncated to 128.
+3. Renew the still-live owned lease on a dedicated virtual thread every `lease / 3`; renewal logs carry the run trace id.
+4. Run the work inside `try`; acquisition, renewal or work failure counts `failed`. Renewal loss makes the callback false, so the sweeper stops before the next team.
+5. Stop the renewal thread, release the lease, then clear MDC. A current in-flight item remains safe under the status/refund uniqueness guards.
+6. Owner id: `HOSTNAME` env (container id on EC2) + `/` + a per-JVM `UuidV7`, truncated to 128.
 
 Logging: INFO once per run **only when `due > 0`** (`due, expired, alreadyResolved, failed, tookMs`); DEBUG otherwise, so an idle system does not write one INFO line a minute.
 
@@ -223,12 +232,12 @@ Metrics (low-cardinality tags only, no ids):
 | File | Change |
 | --- | --- |
 | `application.yml` | `blocbuy.scheduling.enabled: false` plus the `team-expiry.*` defaults; `spring.task.scheduling.shutdown.await-termination: true`, `await-termination-period: 20s` (< 30 s `stop_grace_period`) |
-| `application-ec2.yml` | `blocbuy.scheduling.enabled: ${BLOCBUY_SCHEDULING_ENABLED:true}` |
+| `application-ec2.yml` | `blocbuy.scheduling.enabled: ${BLOCBUY_SCHEDULING_ENABLED:false}`; enable after the backlog check |
 | `application-docker.yml` | same as ec2 |
 | `application-local.yml` | `blocbuy.scheduling.enabled: ${BLOCBUY_SCHEDULING_ENABLED:false}` — tests run with `local`, so it stays off there |
 | `application-openapi-export.yml` | nothing; the default `false` keeps the "no DB connection" promise of that profile |
 
-A shutdown mid-run is safe: each `expireOne` is its own transaction, a killed one rolls back, and an unreleased lease expires after `lease` (2 min delay at worst).
+A shutdown mid-run is safe: each `expireOne` is its own transaction, a killed one rolls back, and an unreleased or unrenewed lease expires after its remaining duration. The 20-second grace period applies to the whole scheduled task, not specifically one team.
 
 ## 4. Funds safety and concurrency
 
@@ -237,10 +246,10 @@ Required by the backend constraints for anything that leads to refunds.
 | Question | Answer |
 | --- | --- |
 | Database constraints | `uq_sys_scheduler_lock_key` (one lease row per job); `biz_group_deal` status-guarded UPDATE; `UNIQUE (payment_id)` on `biz_refund` (V9); `uq_biz_order_payment_id` |
-| Locks and lock order | sweeper → `expireOne` locks `biz_group_deal` first, same as webhook settlement; subscribers follow team → intent → order → payment (ADR 0002). The lease row is committed and released before any team is locked, so it is never held together with a business row lock |
+| Locks and lock order | sweeper → `expireOne` locks `biz_group_deal` first, same as webhook settlement; subscribers follow team → intent → order → payment (ADR 0002). Each lease acquire/renew row lock commits before a business lock is taken; the logical lease remains live for the run |
 | Idempotency | a replayed or concurrent expiry matches 0 rows under `status = 'open'` → `expireOne` returns false; order cancel and refund upsert are status-guarded / unique-keyed |
-| Overlap (lease lost mid-run, or a second container during deploy) | harmless for correctness: both runs go through the same status guard, at most one expires each team. The lease exists for efficiency and log clarity, not correctness |
-| Failure recovery | a failed team stays `open` and is retried next run; a failed run leaves nothing half-written (per-team transactions); a crashed holder's lease expires after 2 min |
+| Overlap (takeover while one item is in flight) | bounded to the current item after renewal loss; both runs use the same status guard, so at most one expires it |
+| Failure recovery | a failed team stays `open`, receives five-minute durable backoff and cannot monopolize later batches; a crashed holder's lease expires unless renewed |
 | Money movement in G1 | none. Refund obligations are written `pending`; only G2's worker calls Stripe |
 
 ## 5. Decisions and rejected alternatives
@@ -253,7 +262,7 @@ Required by the backend constraints for anything that leads to refunds.
 | DB clock for due selection and lease | JVM `Instant.now()` | instances and DB can skew; `expireOne` already decides on DB time |
 | Redis lock | — | ruled out by V13 and the stack rule: a lock that leads to refunds is business state, PostgreSQL only |
 | ShedLock or Quartz | — | a new dependency for one table we already own; not in the locked stack |
-| Batch 100 / interval 1 min | larger batch | a backlog of *n* overdue teams clears in ⌈n/100⌉ minutes; each `expireOne` holds one row lock for milliseconds |
+| Batch 100 / interval 1 min | larger batch | bounds each candidate set and lock exposure; drain time also depends on processing duration, skipped runs and retry backoff |
 
 ## 6. Tests
 
@@ -263,9 +272,9 @@ Target: 0 missed lines and 0 missed branches in the JaCoCo aggregate for every t
 
 | Class | Cases |
 | --- | --- |
-| `SchedulerLeaseRepositoryImplTest` (mock mapper) | 1 row → true; 0 rows → false; unexpected count → `IllegalStateException`; each argument guard; release true/false |
-| `GroupDealExpirySweeperTest` | nothing due → zeroes and no `expireOne`; mixed true/false; **three teams where the second throws → other two resolved, `failed = 1`**; `limit < 1` rejected; `dueForExpiry` receives the DB time |
-| `LeasedJobRunnerTest` | not acquired → work not run, `skipped`; acquired → work run, released, `completed`; work throws → released, `failed`, not rethrown; **`tryAcquire` throws `DataAccessException` → work not run, no release, `failed`, not rethrown**; release false → WARN branch; MDC set during the run and cleared after |
+| `SchedulerLeaseRepositoryImplTest` (mock mapper) | acquire/renew/release 1/0/unexpected row counts and argument guards |
+| `GroupDealExpirySweeperTest` | mixed results; failure backoff success/failure; lease loss stops before the next team; invalid limit |
+| `LeasedJobRunnerTest` | acquisition outcomes; work failure; renewal success/loss/exception; lease-valid callback; MDC on work and renewal; release outcomes |
 | `TeamExpirySweepJobTest` | passes key/lease/batch from properties; INFO vs DEBUG branch; counters per result |
 | `SchedulingPropertiesTest` | defaults; batch outside 1..500 and non-positive lease rejected |
 
@@ -276,16 +285,17 @@ Target: 0 missed lines and 0 missed branches in the JaCoCo aggregate for every t
 | `SchedulerLeaseRepositoryIT` (infrastructure, V13 only, same raw `SqlSessionFactory` setup as `PaidGroupDealRepositoryIT`) | first acquire inserts; second owner blocked while live; takeover after `locked_until` passes; same owner re-acquires; release of a foreign lease returns false; **N threads acquire concurrently → exactly one true**; **a second connection holds the lease row with `SELECT ... FOR UPDATE` in an open transaction → `tryAcquire` throws `DataAccessException` within ~3 s instead of hanging** (asserted with `assertTimeoutPreemptively(Duration.ofSeconds(10), ...)`), and succeeds once that transaction ends |
 | `TeamExpirySchedulingIT` (bootstrap, `blocbuy.scheduling.enabled=true`, `initial-delay=PT1H` so the timer never fires, calls `job.run()` directly; own container like `StripeLocalIntegrationTest`) | paid overdue team → after one run: deal `expired`, order `cancelled`, one `biz_refund` `pending`; a second run changes nothing; an open, not-yet-due team is untouched; a team whose expiry throws does not stop the others (real transactions, no outer rollback); a held foreign lease makes the run skip |
 | `BlocBuyApplicationTest` (existing) | one added assertion: no `TeamExpirySweepJob` bean when the switch is absent |
+| `TeamExpiryTimerTest` | an enabled short initial delay invokes the job through Spring scheduling, without calling `run()` directly |
 
 ## 7. Files
 
-New (main): `SchedulerLeaseRepository.java`, `SchedulerLeaseRepositoryImpl.java`, `SysSchedulerLockMapper.java`, `mapper/common/SysSchedulerLockMapper.xml`, `GroupDealExpirySweeper.java`, `SchedulingConfiguration.java`, `SchedulingProperties.java`, `LeasedJobRunner.java`, `TeamExpirySweepJob.java`.
+New (main): `SchedulerLeaseRepository.java`, `SchedulerLeaseRepositoryImpl.java`, `SysSchedulerLockMapper.java`, `mapper/common/SysSchedulerLockMapper.xml`, `GroupDealExpirySweeper.java`, `SchedulingConfiguration.java`, `SchedulingProperties.java`, `LeasedJobRunner.java`, `TeamExpirySweepJob.java`, and V17 retry-state migration.
 
 Changed (main): `application.yml`, `application-ec2.yml`, `application-docker.yml`, `application-local.yml`, `PaidGroupDealRepository.java` (Javadoc of `currentTime` only).
 
 New/changed (test): the seven test classes in §6.
 
-Docs: this plan; `backend/docs/adr/0002-team-lifecycle-events.md` addendum (scheduler, lease upsert vs V13 NOWAIT, overlap argument); `docs/quality/nfr-register.md` **NFR-32** (availability/funds safety: an overdue open team is resolved within interval + ⌈backlog/batch⌉ minutes, single-flight across instances, one failing team does not block the rest; evidence = the two ITs); `docs/agile/sprint-02/log/2026-09-23.md` entry.
+Docs: this plan; ADR 0002 scheduler addendum; NFR-32 (bounded independent expiry, renewable lease and durable retry); sprint-log entry; deployment switch/runbook documentation.
 
 Size: about 13 main/config files and 7 test files; roughly 400 lines of main code and 500 of tests.
 
@@ -293,11 +303,11 @@ Size: about 13 main/config files and 7 test files; roughly 400 lines of main cod
 
 | # | Risk | Mitigation |
 | --- | --- | --- |
-| R1 | First run on dev expires a backlog of old seeded or abandoned open teams at once | before enabling, count them: `SELECT count(*) FROM domain.biz_group_deal WHERE deleted = false AND status = 'open' AND expire_time <= now();` (SSM port-forward, `docs/deploy/backend-log-observability.md`). Batch 100/min bounds the rate. Expiring them is correct: browse already hides open-but-overdue teams |
-| R2 | A team whose expiry always throws (e.g. inconsistent payment rows) is retried every minute forever, WARN each time | `blocbuy.team.expiry.teams{result=failed}` counter + WARN with deal id; a quarantine column is a follow-up only if it happens |
+| R1 | First run on dev expires a backlog of old seeded or abandoned open teams | every deployed profile defaults the switch to false; count and record the backlog before setting `BLOCBUY_SCHEDULING_ENABLED=true` |
+| R2 | A team whose expiry always throws | V17 records failure count and five-minute retry backoff outside the failed transaction, preserving capacity for later teams; metrics/WARN identify repair candidates |
 | R3 | Refund obligations pile up as `pending` until PR-G2 lands | intended; they are the durable record G2 drains. State it in the PR description |
 | R4 | The single default scheduler thread will be shared with G2's worker | G2 sets `spring.task.scheduling.pool.size: 2`; not needed for one job |
-| R5 | Someone enables the switch in a shared test context | only `TeamExpirySchedulingIT` sets it, with a 1 h initial delay |
+| R5 | Someone enables the switch in a shared test context | only scheduling-specific tests enable it; the timer test uses mocks and the PostgreSQL IT delays automatic firing for 1 h |
 | R6 | A long-lived row lock on the lease row (manual psql session, stuck transaction) blocks the upsert and freezes the single scheduler thread | `timeout="3"` on both lease statements (§3.2): the run fails after 3 s, counted `blocbuy.scheduler.runs{outcome=failed}`, and the next run retries; covered by `SchedulerLeaseRepositoryIT` |
 
 ## 9. Commit sequence
@@ -321,4 +331,4 @@ cd backend && ./mvnw -B verify
 - Spotless, Checkstyle (0), SpotBugs, all ArchUnit rules green.
 - JaCoCo aggregate (`blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml`): 0 missed lines/branches in touched files (script in the backend constraints skill).
 - `git diff --exit-code -- contracts/` clean (no API change expected).
-- After merge and deploy to dev: CloudWatch `/blocbuy/backend/dev` shows the INFO summary line for the first non-empty run, and the R1 count query returns 0 within ⌈backlog/100⌉ + 1 minutes.
+- After deploy to dev: record the R1 backlog while scheduling remains disabled, enable it explicitly, then verify CloudWatch `/blocbuy/backend/dev` shows the first non-empty summary and the backlog trends to zero without failed IDs monopolizing the batch.

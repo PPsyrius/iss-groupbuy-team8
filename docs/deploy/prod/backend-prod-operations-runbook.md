@@ -108,6 +108,7 @@ All parameters are `SecureString`, path-prefixed `/blocbuy/prod/`:
 | `/blocbuy/prod/REDIS_HOST` | backend env (fetch-env.sh) |
 | `/blocbuy/prod/REDIS_PORT` | backend env (fetch-env.sh) |
 | `/blocbuy/prod/REDIS_PASSWORD` | backend env (fetch-env.sh) **and** infra compose (first boot) |
+| `/blocbuy/prod/BLOCBUY_SCHEDULING_ENABLED` | backend scheduler master switch; seed `false` and enable after the overdue-team backlog check |
 | `/blocbuy/prod/STRIPE_API_KEY` | backend env (fetch-env.sh) |
 | `/blocbuy/prod/STRIPE_WEBHOOK_SECRET` | backend env (fetch-env.sh) |
 | `/blocbuy/prod/POSTGRES_USER` | infra compose (first boot) |
@@ -120,10 +121,11 @@ aws ssm put-parameter --name /blocbuy/prod/DB_PASSWORD \
 # ... repeat for every row above
 ```
 
-- [ ] All eleven parameters exist (`aws ssm describe-parameters --parameter-filters ...`)
+- [ ] All twelve parameters exist (`aws ssm describe-parameters --parameter-filters ...`)
 - [ ] No value was echoed to a terminal log, issue, or file inside the repository
 - [ ] `REDIS_HOST`=`127.0.0.1`, `REDIS_PORT`=`6379`, `DB_URL` points at `127.0.0.1:5432/Blocbuy`
       (host-local infra project), schema suffix identical to dev
+- [ ] `BLOCBUY_SCHEDULING_ENABLED=false` until the overdue-team backlog has been counted
 
 ## 4. Plan, review, apply the stack
 

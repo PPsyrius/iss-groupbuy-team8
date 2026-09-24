@@ -1,9 +1,11 @@
 package com.blocbuy.groupbuy.service;
 
 import com.blocbuy.groupbuy.repository.PaidGroupDealRepository;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.BooleanSupplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class GroupDealExpirySweeper {
 
+    static final Duration RETRY_DELAY = Duration.ofMinutes(5);
+
     private final PaidGroupDealRepository deals;
     private final GroupDealExpiryService expiry;
 
@@ -35,7 +39,7 @@ public class GroupDealExpirySweeper {
      * @param due teams selected as overdue
      * @param expired teams this sweep resolved
      * @param alreadyResolved teams a concurrent writer resolved first (filled, or another sweep)
-     * @param failed teams whose expiry threw; they stay open and the next sweep retries them
+     * @param failed teams whose expiry threw; they stay open until their retry backoff elapses
      */
     public record Result(int due, int expired, int alreadyResolved, int failed) {}
 
@@ -44,6 +48,11 @@ public class GroupDealExpirySweeper {
      * logged and counted, never propagated, so it cannot stop the others.
      */
     public Result sweep(int limit) {
+        return sweep(limit, () -> true);
+    }
+
+    /** Resolves candidates until the batch ends or the caller reports that its lease was lost. */
+    public Result sweep(int limit, BooleanSupplier leaseValid) {
         if (limit < 1) {
             throw new IllegalArgumentException("limit must be positive");
         }
@@ -54,6 +63,9 @@ public class GroupDealExpirySweeper {
         int alreadyResolved = 0;
         int failed = 0;
         for (UUID dealId : due) {
+            if (!leaseValid.getAsBoolean()) {
+                break;
+            }
             try {
                 if (expiry.expireOne(dealId)) {
                     expired++;
@@ -62,9 +74,21 @@ public class GroupDealExpirySweeper {
                 }
             } catch (RuntimeException e) {
                 failed++;
-                log.warn("Team {} expiry failed; the next sweep retries it", dealId, e);
+                deferRetry(dealId, e);
             }
         }
         return new Result(due.size(), expired, alreadyResolved, failed);
+    }
+
+    private void deferRetry(UUID dealId, RuntimeException failure) {
+        try {
+            deals.deferExpiryRetry(dealId, RETRY_DELAY);
+            log.warn("Team {} expiry failed; retry deferred for {}", dealId, RETRY_DELAY, failure);
+        } catch (RuntimeException backoffFailure) {
+            failure.addSuppressed(backoffFailure);
+            throw new IllegalStateException(
+                    "Team " + dealId + " expiry failed and retry backoff could not be recorded",
+                    failure);
+        }
     }
 }

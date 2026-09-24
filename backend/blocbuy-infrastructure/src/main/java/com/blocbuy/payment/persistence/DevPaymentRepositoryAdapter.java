@@ -16,8 +16,7 @@ import org.springframework.stereotype.Repository;
  * <p>REMOVE BEFORE LIVE TRAFFIC: this demo adapter exists only for the {@code stripe-sprint2}
  * profile while the team's real {@code PaymentRepository} implementation is pending. It must be
  * deleted (and the profile retired) in the release cleanup that enables any production payment path
- * — tracked by the pre-live checklist in {@code
- * backend/docs/payment/stripe-release-cleanup-20260920.md}.
+ * — tracked by the pre-live checklist in {@code backend/docs/payment/stripe-release-boundary.md}.
  */
 @Repository
 @Primary
