@@ -17,3 +17,4 @@ Nygard format, numbered from 0001. New decisions get the next number; superseded
 | 0011 | [Testing strategy](0011-testing-strategy.md) | Accepted (2026-09-17, T1-15) |
 | 0012 | [Agent configuration](0012-agent-configuration.md) | Accepted (2026-09-17, T1-10) |
 | 0013 | [Package manager and runtime pinning](0013-package-manager-and-runtime-pinning.md) | Accepted (2026-09-17, T1-15) |
+| 0014 | [Payments through Stripe Hosted Checkout with a server-owned intent](0014-stripe-hosted-checkout-server-owned-intent.md) | Accepted (2026-09-23, #160; records PR #126) |

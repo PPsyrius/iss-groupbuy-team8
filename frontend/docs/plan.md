@@ -154,6 +154,19 @@ Columns: id, tier, purpose, files touched, exact verification command, depends-o
 | T2-10 | 2 | Author repo skills `adr`, `api-client-regen`, `agile-evidence-capture` in root `.claude/skills/` after one manual pass of each activity. | `.claude/skills/adr/SKILL.md`, `.claude/skills/api-client-regen/SKILL.md`, `.claude/skills/agile-evidence-capture/SKILL.md` | `for s in adr api-client-regen agile-evidence-capture; do head -5 .claude/skills/$s/SKILL.md \| grep -q '^description:' && echo "ok $s"; done` | T1-15, T1-06, PR-C merged | new: `chore(skills): frontend authored skills` |
 | T2-11 | 2 | After A2 executes: verify headers on dev, tighten the starting CSP (drop `'unsafe-inline'` from `style-src` if HeroUI renders clean; restrict `img-src` to the real image host), update the runbook JSON. | `deployment/frontend/cloudfront/response-headers-policy.json`, `docs/deploy/dev-cloudfront-deployment.md`, `docs/agile/sprint-02/log/YYYY-MM-DD.md` | `curl -sSI https://d1b3np88z657cp.cloudfront.net/ \| grep -Ei 'content-security-policy\|strict-transport-security' && E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e` (trace shows no CSP console errors) | A2, T1-14 | A2 |
 
+### Tier 3 (Sprint 3 candidates, added 2026-09-23 by #160; not scheduled): payment flow completion, UC4/UC7/UC8
+
+Rows only; each starts when its "depends-on" column is true. The payment slice they extend is recorded in §12 note 49 and ADR 0014.
+
+| id | tier | purpose | files touched | verification command | depends-on | issue |
+|---|---|---|---|---|---|---|
+| T3-01 | 3 | UC3 first-team quote step before checkout: on "Start a bloc" call `issue` (`POST /api/v1/team-price-quotes`), show the quoted price and expiry (min of 15 min and policy validity) with a re-quote path, read `getPolicy` for the terms, then `begin('START', businessId)` from `use-checkout.ts`; `getQuote` re-reads the snapshot after a reload. | `FE/src/features/payment/use-quote.ts`, `FE/src/features/payment/QuoteSheet.tsx`, `FE/src/features/payment/QuoteSheet.test.tsx`, `FE/src/routes/products.$productId.tsx` | `cd frontend && pnpm vitest run src/features/payment` (quote issued, expiry countdown, expired quote re-issues) | none: endpoints in `contracts/openapi.json` since #50; ADR 0014 | #26, #50 |
+| T3-02 | 3 | UC8 order history on `GET /orders/me` (#128): `myOrdersOptions` list on `/account` replacing the #137 empty state when non-empty; page/size search params; no refund label (the UC10 schema carries no refund field, option B in #128). | `FE/src/features/order/OrderHistory.tsx`, `FE/src/features/order/OrderHistory.test.tsx`, `FE/src/routes/_authenticated/account.tsx`, `FE/src/routes/account.test.tsx` | `cd frontend && pnpm gen:api && pnpm vitest run src/features/order src/routes/account.test.tsx` | #124 merged to `dev` with `contracts/openapi.json` regenerated | #128, #31 |
+| T3-03 | 3 | UC8 my blocs on `/account` per design-screens §4.4: Active / Completed / Refunded chips with counts, bloc rows (thumb, starter pill, price, progress, countdown, paid line, status chip), refunded-row variant, skeletons. Plain HeroUI `Table`/list per ADR 0001 addendum. | `FE/src/features/blocs/BlocRow.tsx`, `FE/src/features/blocs/BlocFilterChips.tsx`, tests, `FE/src/routes/_authenticated/account.tsx` | `cd frontend && pnpm vitest run src/features/blocs` | a teams-by-user endpoint (none in the contract; ask filed on #31), T3-02 | #31 |
+| T3-04 | 3 | UC4 join flow: "Join this bloc" issues the join through the UC4 endpoint once it exists, then `begin('JOIN', businessId)`; gated sheet path unchanged; deal progress refetch after return. | `FE/src/routes/products.$productId.tsx`, `FE/src/features/catalog/DealProgress.tsx`, tests | `cd frontend && pnpm vitest run src/routes/products.\$productId.test.tsx` | UC4 public endpoint (#27; today only internal services, `backend-skeleton-plan.md` §ownership) | #27, #44 |
+| T3-05 | 3 | UC7 share attribution: invite link with a sharer reference on the listing (`/products/$productId?ref=…`, valibot in `products-search.ts`), share block per §4.4 (link field, Copy, Share again), reference carried into the join/intent request. | `FE/src/features/share/ShareBlock.tsx`, `FE/src/features/share/ShareBlock.test.tsx`, `FE/src/features/catalog/products-search.ts`, `FE/src/routes/products.$productId.tsx` | `cd frontend && pnpm vitest run src/features/share src/features/catalog/products-search.test.ts` | an attribution field on the UC4 join / intent request (#30), T3-04 | #30 |
+| T3-06 | 3 | Receipt and return pages restyled against the artboards: `/payments/$paymentId` and `/payments/return` use the §4.5 card shape and the §4.4 refund-statement fields (amount, status chip, issue time, bank window, payment reference); waiting state while `CREATED`. | `FE/src/routes/_authenticated/payments.$paymentId.tsx`, `FE/src/routes/_authenticated/payments.return.tsx`, tests, `FE/docs/design-screens.md` §4.6 | `cd frontend && pnpm vitest run src/routes` plus a screenshot of the receipt in each state on the PR | design owner answers §4.6 (Q23–Q25) | #160 |
+
 ### Blocker assumptions per task
 
 | Blocker | Tasks gated | Assumption planned under | If it resolves the other way |
@@ -1228,6 +1241,42 @@ export const Route = createFileRoute('/auth/callback')({
 
 ---
 
+### T3-01: First-team quote before checkout (UC3)
+
+- [ ] Step 1: `use-quote.ts` wraps `issueMutation()` and `getQuoteOptions()` (generated) with `select: unwrapResult`; the quote id is kept in `sessionStorage` next to the attempt key so a reload re-reads the snapshot.
+- [ ] Step 2: `QuoteSheet.tsx` (HeroUI sheet, same pattern as `GatedActionSheet`) shows the quoted price, the policy terms from `getPolicy`, an expiry countdown (`deal-time.ts` helpers) and "Continue to payment" → `begin('START', businessId)`; an expired quote shows "Get a new price".
+- [ ] Step 3: `products.$productId.tsx` opens the sheet from "Start a bloc"; tests cover issue → continue, expiry → re-issue, and a 4xx from `issue` (policy missing) leaving the button usable.
+
+### T3-02: Order history on `GET /orders/me` (UC8, #128)
+
+- [ ] Step 1: after #124 merges, `pnpm gen:api`; confirm `myOrdersOptions` and `OrderSummaryResponse` (no refund field) exist.
+- [ ] Step 2: `OrderHistory.tsx` lists `items` with product title, quantity, total, status, paid time; page/size via `validateSearch` on `/account`; the #137 card stays for `total === 0`.
+- [ ] Step 3: record option B (no refund label on the list; the receipt keeps it) on #128 and in ADR 0014 consequences.
+
+### T3-03: My blocs rows and filter chips (UC8, #31)
+
+- [ ] Step 1: file the teams-by-user endpoint ask on #31 (owner-scoped, status filter, counts) and wait for the contract.
+- [ ] Step 2: `BlocFilterChips.tsx` + `BlocRow.tsx` per design-screens §4.4 (Active / Completed / Refunded, starter pill, progress, countdown, refunded variant, skeletons).
+- [ ] Step 3: mount on `/account` above the order history; tests per chip state.
+
+### T3-04: Join flow (UC4, #27)
+
+- [ ] Step 1: wait for the UC4 public endpoint in `contracts/openapi.json`; `pnpm gen:api`.
+- [ ] Step 2: "Join this bloc" calls it, then `begin('JOIN', businessId)`; on return the receipt links back to the listing and `DealProgress` refetches.
+- [ ] Step 3: tests: join → checkout redirect; full bloc → disabled with reason; anonymous → gated sheet (unchanged).
+
+### T3-05: Share attribution (UC7, #30)
+
+- [ ] Step 1: `ref` search param on `/products/$productId` (valibot, opaque string, dropped from the URL after being parked in `sessionStorage`).
+- [ ] Step 2: `ShareBlock.tsx` per §4.4 (link field, Copy via `navigator.clipboard`, Share again via `navigator.share` when present) on the listing for a signed-in starter or member.
+- [ ] Step 3: the parked reference goes on the join / intent request once #30 defines the field; tests for parse, park and clear.
+
+### T3-06: Receipt and return pages against the artboards
+
+- [ ] Step 1: design owner answers design-screens §4.6 Q23–Q25 (which artboard, waiting-state copy, "My orders" vs "My blocs").
+- [ ] Step 2: rebuild `payments.$paymentId.tsx` on the §4.5 card shape with the §4.4 refund-statement fields; `payments.return.tsx` fallback uses `ErrorCard`.
+- [ ] Step 3: tests for CREATED (polling), SUCCEEDED, FAILED, refund pending, refund sent; screenshots on the PR.
+
 ## 5. The `pnpm check` chain and every script it relies on
 
 Final `scripts` block of `frontend/package.json` after T1-08 (T1-09 may append `&& eslint .` to `lint`):
@@ -2253,6 +2302,8 @@ None are applied silently; each is planned as stated below and needs the owner's
 46. **The root route treats a failed `me` as anonymous; only the callback route is strict (2026-09-18).** `pnpm e2e` caught it: `vite preview` has no backend, the `/api` proxy answers ECONNREFUSED, the interceptor throws a non-401 `ApiError`, and a strict root `beforeLoad` would have blanked the whole app (the smoke spec's header assertion failed). `__root.tsx` now wraps `sessionFromQuery` in `sessionOrAnonymous`, so browsing never depends on `me` answering and guarded routes send an unconfirmed visitor to `/login`; `sessionFromQuery` itself still rethrows non-401 failures for `/auth/callback`, where "could not confirm the session" is the right message. Covered by the new `index.test.tsx` case with `me` answering 500.
 47. **T2-05 logout settles `me` instead of removing it, and the control is a neutral "Sign out" button, not a menu (2026-09-18).** (a) The plan's `removeQueries({ queryKey: meQueryKey() })` would make the next observer refetch `me`, receive a 401 and reach the anonymous state through the interceptor one round trip later; `use-logout.ts` writes the interceptor's own anonymous envelope (`{ code: OK_CODE, message: 'anonymous' }`, AGENTS.md rule 6) with `setQueryData` and then navigates home, so the header flips at once. The mutation also runs `unwrapResult` on the `ResultVoid` body, so a 200 with a non-OK code is an error, not a sign-out. On error the session is kept and the header shows "Could not sign out. Try again." (`role="alert"`); nothing redirects. (b) No artboard draws a signed-in storefront header or a logout control (design-screens.md Q16, which recommends a menu on the avatar with "My blocs" and "Log out"). Until design rules, the avatar + name link to `/account` (the My blocs screen) and a ghost-variant "Sign out" `Button` (no accent, `text-muted`, 44px target) sits beside them; "Sign out" pairs with the artboard's "Sign in" string, so the plan's "Log out" wording was not used. Replacing the pair with the recommended menu is a one-file change when the design lands. (c) The browser seed answers `logout` with an OK envelope so `?msw=1&me=1` can walk the flow; a reload with `&me=1` signs back in (seed only, no state).
 48. **T2-06 is one `login.spec.ts` with an anonymous half that always runs and an `@auth` half gated twice (2026-09-18).** The plan's `account.spec.ts` held only the storage-state test. The journey file now has (a) an "anonymous visitor" describe that runs on every target including `vite preview` in CI: `/account` redirects to `/login?returnTo=%2Faccount` and the sign-in screen renders without the header's own Sign in control; "Continue with Google" is proven to navigate to `/api/v1/auth/oauth2/google` by answering that top-level request with a 204 through `page.route` (the browser stays put, Google is never reached) and the parked `sessionStorage` return path is asserted; and the gated sheet on a listing opens and closes, with `me` (401), the listing page and its detail stubbed through `page.route` so it runs on every target including `vite preview` in CI (it first skipped when `GET /api/v1/products` was not 200; PR #122 review r4046597269), reached by client-side navigation from `/` so the dev target does not need A1 (#99). (b) A "signed-in buyer @auth" describe that `test.skip`s when `e2e/.auth/dev.json` is missing, with the codegen command as the reason, and again when `E2E_TARGET` is not `dev` (the cookie is only valid there); `test.use({ storageState })` is applied only when the file exists so a skipped run never tries to read it. Its last test signs out, which invalidates the seeded session, so `e2e/README.md` says to re-seed before the next run. Step 1 (the real Google login) stays with the user after the B5 (#98) console check; the codegen URL now ends in `/login`, the T2-04 sign-in screen. The session cookie name asserted after sign-out (`blocbuy-token`) comes from the backend's Sa-Token config and is unverified in a browser until that run happens.
+
+49. **The payment slice (PR #126, `983b401`, 2026-09-21) was built outside this plan; recorded here and in ADR 0014 (2026-09-23, #160).** The payment team shipped `frontend/src/features/payment/` (`use-checkout.ts`, `use-payment-availability.ts`, `refund-status.ts`, `payments-return-search.ts` since #131) and the routes `_authenticated/payments.$paymentId.tsx` (owner-scoped receipt, polls `GET /api/v1/payments/{id}` every 2 s for up to 60 s while `CREATED` or a refund is pending, refund label) and `_authenticated/payments.return.tsx` (Stripe return hop → receipt). "Start a bloc" and "Join this bloc" on the listing now call `begin()`, so note 43(a) ("Join stays `isDisabled`") is superseded. No plan task, ADR or artboard existed for it; the review produced #128, #131, #135, #137; the first-team quote step (`POST /api/v1/team-price-quotes`) is still skipped. Follow-ups are the Tier 3 rows T3-01..T3-06 (§3) and `design-screens.md` §4.6.
 
 ---
 

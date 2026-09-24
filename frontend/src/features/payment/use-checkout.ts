@@ -1,3 +1,4 @@
+// Decision record: frontend/docs/adr/0014-stripe-hosted-checkout-server-owned-intent.md
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
