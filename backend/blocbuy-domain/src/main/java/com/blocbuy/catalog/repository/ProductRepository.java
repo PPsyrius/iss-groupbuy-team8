@@ -5,6 +5,7 @@ import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.catalog.model.ProductTeamTerms;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,6 +35,12 @@ public interface ProductRepository {
 
     /** Active (non-deleted) product by primary key, any status. */
     Optional<Product> findById(UUID id);
+
+    /**
+     * Active (non-deleted) products by primary key, any status, in one batch query (never per id —
+     * N+1 is forbidden). Unknown ids are absent from the result; empty input returns an empty list.
+     */
+    List<Product> findByIds(Collection<UUID> ids);
 
     /**
      * Team terms of an active product: how big a team started on it must be and how long it stays

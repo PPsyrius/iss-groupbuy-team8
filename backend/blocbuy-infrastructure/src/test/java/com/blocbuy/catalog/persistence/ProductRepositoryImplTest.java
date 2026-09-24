@@ -131,6 +131,18 @@ class ProductRepositoryImplTest {
     }
 
     @Test
+    void findByIdsConvertsOneBatchAndSkipsQueryForNullOrEmptyIds() {
+        List<UUID> ids = List.of(PRODUCT_ID);
+        when(mapper.selectActiveByIds(ids)).thenReturn(List.of(row()));
+
+        assertThat(repository.findByIds(ids)).extracting(Product::id).containsExactly(PRODUCT_ID);
+        assertThat(repository.findByIds(null)).isEmpty();
+        assertThat(repository.findByIds(List.of())).isEmpty();
+        verify(mapper).selectActiveByIds(ids);
+        verify(mapper, times(1)).selectActiveByIds(any());
+    }
+
+    @Test
     void findByIdConvertsPresentAndMissingRows() {
         doReturn(row()).doReturn(null).when(mapper).selectActiveById(PRODUCT_ID);
 

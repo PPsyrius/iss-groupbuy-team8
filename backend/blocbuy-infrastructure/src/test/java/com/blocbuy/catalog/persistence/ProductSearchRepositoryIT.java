@@ -1,6 +1,7 @@
 package com.blocbuy.catalog.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.common.model.PageQuery;
@@ -31,7 +32,10 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
-/** Real PostgreSQL coverage for UC1-ext matching, visibility, count, order, and pagination. */
+/**
+ * Real PostgreSQL coverage for UC1-ext matching, visibility, count, order, and pagination, plus the
+ * batch by-id read behind the UC8 My Teams display lookup.
+ */
 @Testcontainers
 class ProductSearchRepositoryIT {
 
@@ -296,6 +300,24 @@ class ProductSearchRepositoryIT {
                                     .items())
                     .extracting(Product::id)
                     .containsExactly(TIE_HIGH, TIE_LOW);
+        }
+    }
+
+    /** Batch by-id read keeps any live status, drops soft-deleted and unknown ids. */
+    @Test
+    void findByIdsReturnsLiveProductsOfAnyStatusInOneQuery() {
+        UUID draft = UUID.fromString("a0000000-0000-7000-8000-000000000004");
+        UUID deleted = UUID.fromString("a0000000-0000-7000-8000-000000000005");
+        UUID unknown = UUID.fromString("a0000000-0000-7000-8000-0000000000ff");
+
+        try (SqlSession session = sessions.openSession()) {
+            assertThat(
+                            repository(session)
+                                    .findByIds(List.of(NEWER_COFFEE, draft, deleted, unknown)))
+                    .extracting(Product::id, Product::title)
+                    .containsExactlyInAnyOrder(
+                            tuple(NEWER_COFFEE, "Premium Coffee Beans"),
+                            tuple(draft, "Coffee draft"));
         }
     }
 

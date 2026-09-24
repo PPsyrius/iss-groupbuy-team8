@@ -77,6 +77,15 @@
         WHERE id = #{id,jdbcType=OTHER} AND deleted = false
     </select>
 
+    <select id="selectActiveByIds" resultMap="bizProductMap">
+        SELECT <include refid="columns"/>
+        FROM biz_product
+        WHERE deleted = false AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id,jdbcType=OTHER}
+        </foreach>
+    </select>
+
     <resultMap id="bizProductTeamTermsMap"
                type="com.blocbuy.catalog.persistence.BizProductTeamTermsDO">
         <id column="id" property="productId" jdbcType="OTHER"/>

@@ -590,7 +590,16 @@ Verify tampered invitations, unattributed acceptance, rejected admission, duplic
 
 ## 19. UC8 my orders and teams
 
-Member: Lim Jiechao, #31. OrderController/OrderAppService are placeholders. GroupDealQueryService currently supports catalog enrichment/reference checks, not a my-teams API. Order design DDL is not a migrated order implementation. This entire query extension is **proposed**.
+Member: Lim Jiechao, #31. Delivered as two owner-scoped lists rather than a combined feed: My Orders is `GET /api/v1/orders/me` (#124) and My Teams is `GET /api/v1/group-deals/me` (#179, 2026-09-24). The combined-feed analysis below is kept as the original proposal.
+
+### Implemented: My Teams query-model ownership (#179)
+
+- Owner: groupbuy. `GroupDealAppService.pageMyTeams` returns the groupbuy-owned `MyTeamView`; `GroupDealRepository.pageMembershipsByUserId` reads `biz_group_member` joined to `biz_group_deal`, a join inside one domain.
+- Product display fields: groupbuy declares the consumer-owned port `groupbuy.gateway.ListingDisplayGateway`; catalog implements it in `catalog.service.GroupbuyListingDisplayAdapter` over `ProductRepository.findByIds`. This keeps the existing catalog → groupbuy direction and avoids a cycle; only title and cover image cross the boundary. The title is the current catalog title, not the order's frozen snapshot.
+- Cost: a fixed three queries per page (rows, count, one batch product read); an empty page skips the product read; a missing product keeps its row with null display fields.
+- Paging: offset `PageQuery` with `ORDER BY join_time DESC, id DESC`, matching `/orders/me`; keyset deferred because per-buyer team counts are small. No new index.
+- Status: the committed `biz_group_deal.status`, never derived from the clock, so each row agrees with its order (`succeeded` ↔ `confirmed`, `expired` ↔ `cancelled`) including the window before the sweeper runs.
+- Plan and evidence: `docs/agile/sprint-02/my-teams-plan-20260924.md`; NFR-34.
 
 ### Analysis
 
