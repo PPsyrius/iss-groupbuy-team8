@@ -79,6 +79,8 @@ it("shows a completed refund without claiming active bloc membership", async () 
   renderRoute(`/payments/${paymentId}`);
   expect(await screen.findByRole("heading", { name: "Refund sent" })).toBeVisible();
   expect(screen.getByText(/Refund sent to your original payment method/)).toBeVisible();
+  expect(screen.getByText("Refunded")).toBeInTheDocument();
+  expect(screen.getByText(/usually 5–10 business days/)).toBeInTheDocument();
   expect(screen.queryByText(/bloc membership is confirmed/)).not.toBeInTheDocument();
 });
 
@@ -353,6 +355,26 @@ describe("backend-confirmed payment result", () => {
     ).toBe(false);
   });
 
+  it("shows the paid receipt as a status card with the order's paid time and My blocs", async () => {
+    const orderId = "00000000-0000-4000-8000-000000000062";
+    serveSignedIn();
+    receipt({ status: "SUCCEEDED", amount: "17.89", orderId, dealId });
+    server.use(
+      http.get(`*/api/v1/orders/${orderId}`, () =>
+        ok({ orderId, dealId, productId, paidTime: "2026-09-16T11:46:00Z" }),
+      ),
+    );
+    renderRoute(`/payments/${paymentId}`);
+    expect(await screen.findByRole("heading", { name: "Payment received" })).toBeVisible();
+    expect(screen.getByText("Paid")).toBeInTheDocument();
+    expect(screen.getByText("S$17.89 paid.")).toBeInTheDocument();
+    expect(await screen.findByText("Paid · 16 Sep, 7.46 pm")).toBeInTheDocument();
+    expect(screen.getByText(paymentId)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "My blocs" })).toHaveAttribute("href", "/account");
+    expect(screen.queryByRole("link", { name: "My orders" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Refresh status" })).not.toBeInTheDocument();
+  });
+
   it("links a saved order's receipt back to its listing through the order's product", async () => {
     const orderId = "00000000-0000-4000-8000-000000000060";
     serveSignedIn();
@@ -390,6 +412,8 @@ describe("backend-confirmed payment result", () => {
     receipt({ status: "CREATED" });
     renderRoute(`/payments/${paymentId}?paid=true`);
     await screen.findByRole("heading", { name: "Waiting for payment confirmation" });
+    expect(screen.getByText(/Your seat is held once Stripe confirms/)).toBeInTheDocument();
+    expect(screen.getByText("No payment is taken twice.")).toBeInTheDocument();
     expect(screen.queryByText(/order has been saved/)).not.toBeInTheDocument();
     receipt({ status: "SUCCEEDED", orderId: "saved-order", dealId });
     await userEvent.click(screen.getByRole("button", { name: "Refresh status" }));
@@ -404,6 +428,8 @@ describe("backend-confirmed payment result", () => {
     expect(await screen.findByText(/A refund is pending/)).toHaveTextContent(
       "not confirmation that the refund has been sent",
     );
+    expect(screen.getByText("Refund pending")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh status" })).toBeInTheDocument();
   });
 
   it("shows canceled unpaid Checkout, not successful payment", async () => {
@@ -450,6 +476,10 @@ describe("backend-confirmed payment result", () => {
     expect(
       await screen.findByRole("heading", { name: "Payment reference unavailable" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Payment")).toBeInTheDocument();
+    expect(screen.getByText("Do not pay again to check its status.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Browse listings" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "My blocs" })).toHaveAttribute("href", "/account");
   });
 
   it("uses the Checkout-specific return reference instead of another tab's last payment", async () => {

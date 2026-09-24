@@ -5,53 +5,78 @@ import type { ReactNode } from "react";
 // The one terminal-screen card of docs/design-screens.md §4.5 (Q11): code chip, heading, body,
 // separator, money line, actions, optional hint. Phone: full-width card, padding 24, stacked
 // actions; desktop: centred 560px, padding 40, actions side by side. No accent, no illustration.
+// The payment receipt and return pages reuse it (§4.6, Q23/Q26 A): the chip carries the payment
+// status, `references` holds the §4.4 refund-statement rows, and `live` announces a polled change.
 const card = "border-border bg-surface rounded-lg border";
 
-const primaryAction =
+export const primaryAction =
   buttonVariants({ variant: "secondary" }) + " min-h-12 w-full text-base xl:w-auto xl:px-6";
-const secondaryAction =
+export const secondaryAction =
   buttonVariants({ variant: "outline" }) + " min-h-11 w-full xl:w-auto xl:px-6";
 
 interface ErrorCardProps {
   code: string;
-  danger?: boolean;
+  color?: "default" | "success" | "danger";
   title: string;
   body: string;
+  alert?: boolean;
+  live?: boolean;
   moneyLead: string;
-  moneyDetail: string;
+  moneyDetail?: string | undefined;
+  references?: { label: string; value: string }[];
   children: ReactNode;
   hint?: { title: string; body: string };
 }
 
-function ErrorCard({
+export function ErrorCard({
   code,
-  danger = false,
+  color = "default",
   title,
   body,
+  alert = false,
+  live = false,
   moneyLead,
   moneyDetail,
+  references,
   children,
   hint,
 }: ErrorCardProps) {
   return (
     <main className="mx-auto flex max-w-[1280px] justify-center p-6 xl:py-16">
       <div className={card + " flex w-full max-w-[560px] flex-col gap-3 p-6 xl:p-10"}>
-        <Chip
-          color={danger ? "danger" : "default"}
-          variant="soft"
-          size="sm"
-          className="self-start font-mono"
-        >
+        <Chip color={color} variant="soft" size="sm" className="self-start font-mono">
           {code}
         </Chip>
-        <h1 className="text-2xl font-semibold tracking-tight xl:text-3xl">{title}</h1>
-        <p className="text-base text-[#52525B]">{body}</p>
+        <h1
+          className="text-2xl font-semibold tracking-tight xl:text-3xl"
+          aria-live={live ? "polite" : undefined}
+        >
+          {title}
+        </h1>
+        <p className="text-base text-[#52525B]" role={alert ? "alert" : undefined}>
+          {body}
+        </p>
         <hr className="border-separator" />
         <p className="text-sm">
-          <span className="text-success-soft-foreground font-semibold">{moneyLead}</span>{" "}
-          <span className="text-muted">{moneyDetail}</span>
+          <span className="text-success-soft-foreground font-semibold">{moneyLead}</span>
+          {moneyDetail ? (
+            <>
+              {" "}
+              <span className="text-muted">{moneyDetail}</span>
+            </>
+          ) : null}
         </p>
-        <div className="mt-1 flex flex-col gap-2 xl:flex-row">{children}</div>
+        {references && references.length > 0 ? (
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+            {references.map(({ label, value }) => (
+              <div key={label} className="contents">
+                <dt className="text-muted">{label}</dt>
+                <dd className="font-mono text-xs break-all">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
+        <div className="mt-1 flex flex-col gap-2 xl:flex-row xl:flex-wrap">{children}</div>
         {hint ? (
           <>
             <hr className="border-separator" />
@@ -95,7 +120,7 @@ export function GlobalErrorCard({ onRetry }: { onRetry: () => void }) {
   return (
     <ErrorCard
       code="500"
-      danger
+      color="danger"
       title="Something went wrong on our side"
       body="This isn’t you. The page failed to load and we’ve logged it. Trying again usually works."
       moneyLead="No payment was taken."
