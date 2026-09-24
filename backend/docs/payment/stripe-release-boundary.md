@@ -1,6 +1,6 @@
 # Stripe release boundary
 
-Owner: Yorick. Updated: 23 September 2026. PRs #126 and #148.
+Owner: Yorick. Updated: 24 September 2026. PRs #126 and #148; local #29 refund-worker candidate.
 
 This is the current deployment boundary for the Stripe work. Historical Sandbox evidence is in [stripe-sandbox-acceptance-20260920.md](stripe-sandbox-acceptance-20260920.md), and quality evidence is in [stripe-sonar-fixes-20260920.md](stripe-sonar-fixes-20260920.md).
 
@@ -10,7 +10,7 @@ This is the current deployment boundary for the Stripe work. Historical Sandbox 
 - Browser requests contain operation and business identifiers, not buyer or amount. Sa-Token owns identity, server-side ports own pricing, and Checkout retries reuse the intent and idempotency key.
 - `CheckoutPayment`, its repository and `CheckoutGateway` are separate from the original payment contracts. The original webhook contract remains, with `StripePaymentAppService` selected only under the Stripe profile.
 - `PaymentIntegrationConfiguration` provides the production `PaymentBusinessPort` and `PaymentIntentPort` bindings with no profile, and the test-only `PaymentBusinessFixture` is retired (backend ADR 0001). `DevPaymentRepositoryAdapter` still awaits its production replacement.
-- `RefundService` and `StripeRefundGateway` retain provider verification, idempotency, leasing and uncertain-outcome safeguards. The profile-independent `TeamExpiryRefundService` and unconditional `TeamExpiryRefundSubscriber` create durable refund obligations in the lifecycle transaction. The team-expiry scheduler is wired behind `BLOCBUY_SCHEDULING_ENABLED`; no refund worker or recovery endpoint is wired.
+- `RefundService` and `StripeRefundGateway` retain provider verification, idempotency, leasing and uncertain-outcome safeguards. The profile-independent `TeamExpiryRefundService` and unconditional `TeamExpiryRefundSubscriber` create durable refund obligations in the lifecycle transaction. The team-expiry scheduler is wired behind `BLOCBUY_SCHEDULING_ENABLED`. The #29 candidate adds a refund worker that attempts one due obligation per tick only when both `stripe-sprint2` and `BLOCBUY_SCHEDULING_ENABLED=true` are active; it adds no recovery endpoint.
 
 ## Removed before publication
 
@@ -27,7 +27,7 @@ The historical compatibility guard compared 192 original files, 13 HTTP paths an
 ## Pre-live checklist
 
 1. ~~Replace `PaymentBusinessPort` and `PaymentIntentPort` with team production implementations~~ — done 2026-09-22 (PR #147, backend ADR 0001). Remaining: replace `DevPaymentRepositoryAdapter` and verify shared lock and transaction ordering.
-2. Enable and monitor the expiry scheduler after its backlog check; wire the refund worker and define production recovery ownership without restoring private local HTTP controls. The in-transaction expiry notification path and durable obligation creation are already wired.
+2. After merging #29, enable and monitor the expiry scheduler and refund worker only after the overdue-team and pending-refund backlog checks. The current EC2 deployment uses only the `ec2` profile and leaves scheduling disabled, so merging the code alone does not send refunds. Define production recovery ownership without restoring private local HTTP controls. The in-transaction expiry notification path and durable obligation creation are already wired.
 3. Keep test fixtures and `db/stripe-fixture` outside every deployment Flyway location.
 4. Rebuild account history against `/api/v1/orders/me` after its contract is available.
 5. Remove the gateways' `sk_test_` restriction only with live-key rotation, a live webhook endpoint, reconciliation controls and renewed payment/refund acceptance.

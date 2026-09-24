@@ -96,4 +96,10 @@ NOWAIT's one real advantage is returning at once when a session holds the row lo
 - `blocbuy.scheduler.run.duration{job}`;
 - `blocbuy.team.expiry.teams{result}`.
 
-**Not yet.** The refund worker that sends the recorded obligations to Stripe is PR-G2 (#29), which will reuse `LeasedJobRunner` unchanged. Until it lands, obligations stay `pending`.
+**Next layer.** The refund worker that sends the recorded obligations to Stripe is #29; it reuses `LeasedJobRunner` unchanged. Until that change is merged and explicitly enabled in deployment, obligations stay `pending`.
+
+## Addendum (2026-09-24): local refund-worker candidate (#29)
+
+`RefundWorkerJob` uses the renewable lease under the distinct `refund-worker` key and checks lease validity before calling `RefundService.processNext`. Each tick claims at most one due obligation; it neither loops over repository queries nor holds a database transaction across Stripe I/O. A provider failure remains eligible for the existing idempotent retry path, and uncertain or mismatched outcomes retain their existing operator-review state.
+
+The bean requires both the `stripe-sprint2` profile and `blocbuy.scheduling.enabled=true`. This preserves the deployment-opt-in rule introduced for #28, but it also means the current `ec2`-only Compose configuration does not activate the worker. Enabling it requires a separate, deliberate rollout after backlog inspection and an operator recovery owner is named. Local PostgreSQL tests with a mocked Stripe gateway cover expiry, obligation persistence, a failed provider attempt, retry, receipt and audit without a duplicate refund; no shared-environment or live-provider result is claimed for this candidate.

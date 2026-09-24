@@ -30,6 +30,12 @@ class SchedulingPropertiesTest {
                                 Duration.ofSeconds(30),
                                 Duration.ofMinutes(2),
                                 100));
+        assertThat(properties.refundWorker())
+                .isEqualTo(
+                        new SchedulingProperties.RefundWorker(
+                                Duration.ofSeconds(30),
+                                Duration.ofSeconds(45),
+                                Duration.ofMinutes(2)));
     }
 
     @Test
@@ -91,6 +97,15 @@ class SchedulingPropertiesTest {
         assertInvalid(ok, ok, ok, SchedulingProperties.MAX_BATCH_SIZE + 1);
         assertThat(new SchedulingProperties.TeamExpiry(ok, Duration.ZERO, ok, 1).batchSize())
                 .isEqualTo(1);
+
+        assertRefundInvalid(null, ok, ok);
+        assertRefundInvalid(Duration.ZERO, ok, ok);
+        assertRefundInvalid(ok, null, ok);
+        assertRefundInvalid(ok, Duration.ofSeconds(-1), ok);
+        assertRefundInvalid(ok, ok, null);
+        assertRefundInvalid(ok, ok, Duration.ofSeconds(1));
+        assertThat(new SchedulingProperties.RefundWorker(ok, Duration.ZERO, ok).lease())
+                .isEqualTo(ok);
     }
 
     private static void assertInvalid(
@@ -99,6 +114,13 @@ class SchedulingPropertiesTest {
                         () ->
                                 new SchedulingProperties.TeamExpiry(
                                         interval, initialDelay, lease, batchSize))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    private static void assertRefundInvalid(
+            Duration interval, Duration initialDelay, Duration lease) {
+        assertThatThrownBy(
+                        () -> new SchedulingProperties.RefundWorker(interval, initialDelay, lease))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
