@@ -230,6 +230,35 @@ class LeasedJobRunnerTest {
     }
 
     @Test
+    void interruptedRenewalStopsTheBatchAndFailsTheRun() {
+        Duration shortLease = Duration.ofMillis(60);
+        var renewalAttempted = new CountDownLatch(1);
+        when(leases.tryAcquire(JOB, OWNER, shortLease)).thenReturn(true);
+        when(leases.renew(JOB, OWNER, shortLease))
+                .thenAnswer(
+                        ignored -> {
+                            renewalAttempted.countDown();
+                            Thread.currentThread().interrupt();
+                            return true;
+                        });
+        when(leases.release(JOB, OWNER)).thenReturn(false);
+
+        runner.run(
+                JOB,
+                shortLease,
+                leaseValid -> {
+                    await(renewalAttempted);
+                    long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2);
+                    while (leaseValid.getAsBoolean() && System.nanoTime() < deadline) {
+                        Thread.onSpinWait();
+                    }
+                    assertThat(leaseValid.getAsBoolean()).isFalse();
+                });
+
+        assertThat(runs(LeasedJobRunner.FAILED)).isEqualTo(1.0);
+    }
+
+    @Test
     void ownerIdsAreUniquePerJvmAndFitTheV13Column() {
         String first = LeasedJobRunner.ownerId("ip-10-0-0-1");
 

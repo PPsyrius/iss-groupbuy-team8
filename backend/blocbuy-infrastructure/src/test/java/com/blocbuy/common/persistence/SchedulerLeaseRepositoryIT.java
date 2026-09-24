@@ -16,6 +16,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
@@ -168,21 +169,34 @@ class SchedulerLeaseRepositoryIT {
         try (Connection holder = source.getConnection();
                 var pool = Executors.newSingleThreadExecutor()) {
             holder.setAutoCommit(false);
+            int holderPid;
             try (var lock =
                     holder.prepareStatement(
-                            "SELECT 1 FROM sys_scheduler_lock WHERE lock_key = ? FOR UPDATE")) {
+                            "SELECT pg_backend_pid() FROM sys_scheduler_lock"
+                                    + " WHERE lock_key = ? FOR UPDATE")) {
                 lock.setString(1, key);
-                lock.executeQuery().close();
+                try (var row = lock.executeQuery()) {
+                    assertThat(row.next()).isTrue();
+                    holderPid = row.getInt(1);
+                }
             }
-            var attempting = new CountDownLatch(1);
             Future<Boolean> reacquired =
-                    pool.submit(
-                            () -> {
-                                attempting.countDown();
-                                return leases.tryAcquire(key, "a", Duration.ofSeconds(5));
-                            });
+                    pool.submit(() -> leases.tryAcquire(key, "a", Duration.ofSeconds(5)));
 
-            assertThat(attempting.await(5, TimeUnit.SECONDS)).isTrue();
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+            while (!Boolean.TRUE.equals(
+                    jdbc.queryForObject(
+                            "SELECT EXISTS (SELECT 1 FROM pg_stat_activity"
+                                    + " WHERE wait_event_type = 'Lock'"
+                                    + " AND ? = ANY(pg_blocking_pids(pid))"
+                                    + " AND query LIKE '%INSERT INTO sys_scheduler_lock%')",
+                            Boolean.class, holderPid))) {
+                assertThat(reacquired.isDone()).as("acquire must wait for the held row").isFalse();
+                if (System.nanoTime() >= deadline) {
+                    throw new AssertionError("Timed out waiting for the lease-row lock contention");
+                }
+                LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(10));
+            }
             // Hold the row lock beyond the old pre-lock deadline calculation, on the DB clock.
             try (var delay = holder.createStatement()) {
                 delay.execute("SELECT pg_sleep(1.5)");

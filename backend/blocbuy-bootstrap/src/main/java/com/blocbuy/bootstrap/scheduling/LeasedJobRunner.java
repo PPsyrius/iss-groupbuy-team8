@@ -123,7 +123,11 @@ public class LeasedJobRunner {
                                     }
                                 }
                             } catch (InterruptedException stopped) {
+                                leaseValid.set(false);
                                 Thread.currentThread().interrupt();
+                                log.warn(
+                                        "Job {} lease renewal interrupted; stopping its batch",
+                                        job);
                             } catch (RuntimeException e) {
                                 leaseValid.set(false);
                                 log.error(

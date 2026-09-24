@@ -194,6 +194,8 @@ class PaidGroupDealRepositoryImplTest {
 
         assertThatThrownBy(() -> repository.deferExpiryRetry(null, delay))
                 .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> repository.deferExpiryRetry(DEAL, null))
+                .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> repository.deferExpiryRetry(DEAL, Duration.ZERO))
                 .isInstanceOf(IllegalArgumentException.class);
     }
