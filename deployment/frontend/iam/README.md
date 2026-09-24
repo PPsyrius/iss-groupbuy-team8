@@ -10,5 +10,4 @@ Examples, not deployable policies: copy outside the repository, replace `AWS_ACC
 
 Do not merge this role with the backend deploy role. Setup: `docs/deploy/dev-cloudfront-deployment.md` §16.
 
-Tracking: the role is blocker A3 (#101); the `frontend-dev` environment it trusts is blocker A4 (#102).
-Both hang off the Sprint 2 container issue #93.
+Operational status (2026-09-23): the role exists with the immutable repository subject and the scoped S3/CloudFront policy; `frontend-dev` permits only `dev`; `ci-frontend` run #165 successfully assumed the role, deployed and passed `e2e-dev`. Issues A3 #101 and A4 #102 remain the traceability records under Sprint 2 issue #93.

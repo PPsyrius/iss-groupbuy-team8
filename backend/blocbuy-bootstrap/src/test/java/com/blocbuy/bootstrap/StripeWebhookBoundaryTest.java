@@ -54,7 +54,7 @@ class StripeWebhookBoundaryTest {
     private static final String UNKNOWN =
             """
             {"id":"evt_boundary","object":"event",
-             "type":"customer.created","description":"付款测试","livemode":false}
+             "type":"customer.created","description":"Payment test","livemode":false}
             """;
 
     @Autowired private MockMvc mvc;

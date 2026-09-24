@@ -24,6 +24,9 @@ logging:
     com.blocbuy: info
 
 blocbuy:
+  scheduling:
+    # team-expiry sweep (#28); enable only after the deployment backlog check
+    enabled: ${BLOCBUY_SCHEDULING_ENABLED:false}
   frontend:
     # SPA origin via env only — no deployment host in the repo; startup validation fails fast when
     # FRONTEND_URL is unset

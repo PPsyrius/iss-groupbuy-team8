@@ -55,7 +55,7 @@ public interface CheckoutPaymentRepository {
 
     boolean refundRecorded(UUID paymentId);
 
-    List<CheckoutPayment> paidMembers(UUID dealId);
+    void requireRefundsForExpiredTeam(UUID dealId, String reason, String eventId);
 
     List<CheckoutPayment> pendingBefore(Instant threshold, int limit);
 }

@@ -41,7 +41,9 @@
     ON CONFLICT (event_id) DO NOTHING
   </insert>
   <update id="finishEvent">
-    UPDATE log_payment_webhook_event SET payment_id=#{paymentId},processing_result=#{result}
+    <!-- payment_id is nullable and is null for an event about a payment we do not hold; without an
+         explicit jdbcType MyBatis cannot infer the type of a null against a uuid column. -->
+    UPDATE log_payment_webhook_event SET payment_id=#{paymentId,jdbcType=OTHER},processing_result=#{result}
     WHERE event_id=#{eventId}
   </update>
   <insert id="review">
@@ -84,14 +86,29 @@
       amount,currency,#{reason},#{eventId},'pending' FROM biz_payment
     WHERE id=#{id} AND NOT deleted AND status='succeeded'
     ON CONFLICT(payment_id) DO UPDATE SET payment_id=EXCLUDED.payment_id
-    WHERE biz_refund.amount=EXCLUDED.amount AND biz_refund.currency=EXCLUDED.currency
+    WHERE NOT biz_refund.deleted
+      AND biz_refund.amount=EXCLUDED.amount AND biz_refund.currency=EXCLUDED.currency
       AND biz_refund.reason=EXCLUDED.reason
   </insert>
-  <select id="members" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
-    SELECT <include refid="columns"/> FROM biz_payment
+  <select id="lockRefundableMemberIds" resultType="java.util.UUID">
+    SELECT id FROM biz_payment
     WHERE fulfilled_deal_id=#{dealId} AND NOT deleted
-      AND fulfilment_result='FULFILLED' AND status='succeeded' ORDER BY id
+      AND fulfilment_result='FULFILLED' AND status='succeeded'
+    ORDER BY id FOR UPDATE
   </select>
+  <insert id="refundExpiredTeam">
+    INSERT INTO biz_refund(payment_id,intent_id,deal_id,amount,currency,reason,source_event,status)
+    SELECT id,intent_id,fulfilled_deal_id,amount,currency,#{reason},#{eventId},'pending'
+    FROM biz_payment
+    WHERE fulfilled_deal_id=#{dealId} AND NOT deleted
+      AND fulfilment_result='FULFILLED' AND status='succeeded'
+    ORDER BY id
+    ON CONFLICT(payment_id) DO UPDATE SET payment_id=EXCLUDED.payment_id
+    WHERE NOT biz_refund.deleted
+      AND biz_refund.intent_id=EXCLUDED.intent_id AND biz_refund.deal_id=EXCLUDED.deal_id
+      AND biz_refund.amount=EXCLUDED.amount AND biz_refund.currency=EXCLUDED.currency
+      AND biz_refund.reason=EXCLUDED.reason
+  </insert>
   <select id="refundRecorded" resultType="boolean">
     SELECT EXISTS(SELECT 1 FROM biz_refund r JOIN biz_payment p ON p.id=r.payment_id
       WHERE p.id=#{id} AND NOT p.deleted AND p.status='succeeded'

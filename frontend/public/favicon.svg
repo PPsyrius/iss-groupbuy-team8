@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="BlocBuy">
+  <rect width="64" height="64" rx="14" fill="#FF385C"/>
+  <circle cx="24" cy="26" r="9" fill="#FCFCFC"/>
+  <circle cx="40" cy="26" r="9" fill="#FCFCFC" fill-opacity="0.72"/>
+  <circle cx="32" cy="41" r="9" fill="#FCFCFC" fill-opacity="0.88"/>
+</svg>

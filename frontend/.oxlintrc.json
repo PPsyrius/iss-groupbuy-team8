@@ -45,7 +45,7 @@
     "dist/**",
     "playwright-report/**",
     "test-results/**",
-    "public/mockServiceWorker.js"
+    "dev/mockServiceWorker.js"
   ],
   "overrides": [
     {

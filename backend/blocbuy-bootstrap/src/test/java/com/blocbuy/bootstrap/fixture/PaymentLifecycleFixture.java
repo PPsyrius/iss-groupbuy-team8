@@ -1,16 +1,28 @@
 package com.blocbuy.bootstrap.fixture;
 
+import com.blocbuy.groupbuy.service.GroupDealSettlementSupport;
+import com.blocbuy.payment.service.PaymentBrowserService;
 import com.blocbuy.payment.service.StripeCheckoutService;
+import com.blocbuy.payment.service.TeamExpiryRefundService;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-/** Test-only expiry driver; obligations commit with team expiry, never AFTER_COMMIT. */
+/**
+ * Test-only expiry driver; obligations commit with team expiry, never AFTER_COMMIT.
+ *
+ * <p>What used to be here as well — a whole second implementation of the business ports — is gone
+ * since 2026-09-22. Intents now come from the production {@code PaymentIntentPort} through {@link
+ * PaymentBrowserService}, and the team lock comes from groupbuy's own facade. This class only does
+ * what no production code does: force a team past its deadline and drive the local sweeper.
+ */
 public final class PaymentLifecycleFixture {
     private final JdbcTemplate jdbc;
-    private final PaymentBusinessFixture business;
+    private final PaymentBrowserService browser;
+    private final GroupDealSettlementSupport teams;
     private final StripeCheckoutService payments;
+    private final TeamExpiryRefundService refunds;
     private final TransactionTemplate tx;
 
     @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
@@ -19,24 +31,29 @@ public final class PaymentLifecycleFixture {
                     "Constructor-injected shared Spring JDBC collaborator; intentionally not copied")
     public PaymentLifecycleFixture(
             JdbcTemplate jdbc,
-            PaymentBusinessFixture business,
+            PaymentBrowserService browser,
+            GroupDealSettlementSupport teams,
             StripeCheckoutService payments,
+            TeamExpiryRefundService refunds,
             PlatformTransactionManager transactions) {
         this.jdbc = jdbc;
-        this.business = business;
+        this.browser = browser;
+        this.teams = teams;
         this.payments = payments;
+        this.refunds = refunds;
         this.tx = new TransactionTemplate(transactions);
         this.tx.setTimeout(10);
     }
 
+    /** The production intent path; kept here only so tests read the same way they used to. */
     public UUID intent(UUID user, String operation, UUID businessId) {
-        return tx.execute(status -> business.createIntent(user, operation, businessId));
+        return browser.createIntent(user, operation, businessId);
     }
 
     public void expireTeam(UUID deal) {
         tx.executeWithoutResult(
                 status -> {
-                    business.lockGroup(deal);
+                    teams.lockTeam(deal);
                     jdbc.update(
                             "UPDATE biz_group_deal SET status='expired',version=version+1,update_time=clock_timestamp() WHERE id=? AND status='open' AND expire_time<=clock_timestamp() AND current_size<target_size",
                             deal);
@@ -46,7 +63,7 @@ public final class PaymentLifecycleFixture {
                                             "SELECT status FROM biz_group_deal WHERE id=?",
                                             String.class,
                                             deal))) {
-                        payments.recordExpiredTeam(deal);
+                        refunds.recordExpiredTeam(deal);
                     }
                 });
     }

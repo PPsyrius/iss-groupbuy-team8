@@ -9,7 +9,7 @@ class StripeClientProviderTest {
     @Test
     void reusesOneClientAcrossCalls() {
         StripeClientProvider provider =
-                new StripeClientProvider(new StripeProperties("sk_test_placeholder", null));
+                new StripeClientProvider(new StripeProperties("test-placeholder", null));
         var first = provider.client();
         assertThat(first).isNotNull().isSameAs(provider.client());
     }

@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 
+import { RouteErrorCard } from "./components/ErrorCard";
 import type { SessionState } from "./features/session/session";
 import { routeTree } from "./routeTree.gen";
 
@@ -17,6 +18,8 @@ export function createAppRouter(context: RouterContext) {
     context,
     defaultPreload: "intent",
     scrollRestoration: true,
+    // §4.5 "500" card for routes without their own `errorComponent` (#157).
+    defaultErrorComponent: RouteErrorCard,
   });
 }
 

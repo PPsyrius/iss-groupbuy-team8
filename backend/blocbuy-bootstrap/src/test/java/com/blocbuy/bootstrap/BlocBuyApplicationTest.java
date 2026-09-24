@@ -1,11 +1,16 @@
 package com.blocbuy.bootstrap;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mockStatic;
 
+import com.blocbuy.bootstrap.scheduling.LeasedJobRunner;
+import com.blocbuy.bootstrap.scheduling.TeamExpirySweepJob;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 
 /**
  * Context smoke test. Flyway is disabled and datasource/Redis point at placeholders — this test
@@ -23,9 +28,18 @@ import org.springframework.boot.test.context.SpringBootTest;
         })
 class BlocBuyApplicationTest {
 
+    @Autowired private ApplicationContext context;
+
     @Test
     void contextLoads() {
         // assembly success is the assertion
+    }
+
+    /** Scheduling is opt-in per deploy profile; a context that does not ask gets no jobs. */
+    @Test
+    void noJobIsScheduledUnlessTheSwitchIsOn() {
+        assertThat(context.getBeansOfType(TeamExpirySweepJob.class)).isEmpty();
+        assertThat(context.getBeansOfType(LeasedJobRunner.class)).isEmpty();
     }
 
     @Test

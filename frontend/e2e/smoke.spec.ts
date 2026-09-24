@@ -11,7 +11,6 @@ test.describe("dev CloudFront only", () => {
   test.skip(!isDev, "needs the dev distribution");
 
   test("deep link is served by the SPA (A1 CloudFront Function)", async ({ page }) => {
-    test.fixme(true, "A1 not attached: https://github.com/PPsyrius/iss-groupbuy-team8/issues/99");
     const res = await page.goto("/products/00000000-0000-0000-0000-000000000000");
     expect(res?.status()).toBe(200);
     await expect(page.getByRole("link", { name: "BlocBuy" })).toBeVisible();

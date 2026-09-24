@@ -72,6 +72,69 @@
           AND current_size = #{expectedSize} AND status = #{expectedStatus}
     </update>
 
+    <!-- Re-linking the same order is a no-harm replay, so it must still count as one affected row;
+         a different order on the same payment is a real inconsistency and matches nothing. -->
+    <update id="linkOrder">
+        UPDATE biz_group_member
+        SET order_id = #{orderId,jdbcType=OTHER}, update_time = clock_timestamp(),
+            update_by = user_id
+        WHERE deal_id = #{dealId,jdbcType=OTHER} AND payment_id = #{paymentId,jdbcType=OTHER}
+          AND deleted = false
+          AND (order_id IS NULL OR order_id = #{orderId,jdbcType=OTHER})
+    </update>
+
+    <resultMap id="paidMember" type="com.blocbuy.groupbuy.persistence.PaidMemberDO">
+        <result column="deal_id" property="dealId" jdbcType="OTHER"/>
+        <result column="user_id" property="userId" jdbcType="OTHER"/>
+        <result column="order_id" property="orderId" jdbcType="OTHER"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <select id="selectPaidMember" resultMap="paidMember" flushCache="true" useCache="false">
+        SELECT deal_id, user_id, order_id, status
+        FROM biz_group_member
+        WHERE payment_id = #{paymentId,jdbcType=OTHER} AND deleted = false
+    </select>
+
+    <!-- Matches idx_biz_group_deal_status_expire (status, expire_time) WHERE deleted = false.
+         One batch read per sweep; the caller resolves each id in its own short transaction. -->
+    <select id="selectDueForExpiry" resultType="java.util.UUID" flushCache="true" useCache="false">
+        SELECT deal.id
+        FROM biz_group_deal deal
+        WHERE deal.deleted = false AND deal.status = 'open' AND deal.expire_time &lt;= #{now}
+          AND NOT EXISTS (
+              SELECT 1
+              FROM sys_scheduled_item_retry retry
+              WHERE retry.job_key = 'team-expiry-sweep'
+                AND retry.item_id = deal.id
+                AND retry.deleted = false
+                AND retry.retry_after > #{now}
+          )
+        ORDER BY deal.expire_time, deal.id
+        LIMIT #{limit}
+    </select>
+
+    <!-- This statement runs after the failed expiry transaction has rolled back. Its own commit is
+         what prevents one poisoned oldest team from monopolizing every bounded candidate batch. -->
+    <insert id="deferExpiryRetry">
+        INSERT INTO sys_scheduled_item_retry (job_key, item_id, failure_count, retry_after)
+        VALUES ('team-expiry-sweep', #{dealId,jdbcType=OTHER}, 1,
+                clock_timestamp() + make_interval(secs => #{retryDelaySeconds}))
+        ON CONFLICT (job_key, item_id) WHERE deleted = false
+        DO UPDATE SET failure_count = sys_scheduled_item_retry.failure_count + 1,
+                      retry_after   = EXCLUDED.retry_after,
+                      update_time  = clock_timestamp(),
+                      version      = sys_scheduled_item_retry.version + 1
+    </insert>
+
+    <!-- Status-guarded: a team a webhook already carried to 'succeeded' matches nothing, and the
+         caller reads that zero as an idempotent replay rather than a failure. -->
+    <update id="expireDeal">
+        UPDATE biz_group_deal
+        SET status = #{deal.status}, update_time = #{deal.updateTime}, version = version + 1
+        WHERE id = #{deal.id,jdbcType=OTHER} AND deleted = false AND status = 'open'
+    </update>
+
     <update id="completeReceipt">
         UPDATE biz_group_participation_receipt
         SET deal_id = #{result.dealId,jdbcType=OTHER}, outcome = #{result.outcome},

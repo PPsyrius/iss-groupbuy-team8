@@ -1,5 +1,5 @@
-import { Avatar } from "@heroui/react";
-import { createFileRoute } from "@tanstack/react-router";
+import { Avatar, buttonVariants } from "@heroui/react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { initials } from "@/features/session/initials";
 
@@ -7,8 +7,12 @@ export const Route = createFileRoute("/_authenticated/account")({
   component: AccountPage,
 });
 
-// The account header only. The order history section returns with the order team's /orders/me:
-// 0b1f14d dropped this branch's duplicate GET /api/v1/orders, so no listing endpoint exists yet.
+// Interim account page (docs/design-screens.md §4.4, §7 Q15): the signed-in header and a card
+// in the §4.4 empty-state layout, restored by #137 after #126 cut the page down to its header.
+// The copy is neutral, not §4.4's "You haven't joined a bloc yet": the page cannot tell whether
+// the buyer has orders, and the payment receipt links here as "My orders" (#165 review). The
+// order history replaces the card once the order team's GET /orders/me lands (#128); the Active /
+// Completed / Refunded chips wait for per-user bloc data the contract does not expose yet.
 const shell = "mx-auto flex max-w-[1280px] flex-col gap-4 p-4 xl:gap-6 xl:p-8";
 
 function AccountPage() {
@@ -29,6 +33,21 @@ function AccountPage() {
           </span>
         </div>
       </div>
+      <section className="border-border bg-surface flex flex-col gap-3 rounded-lg border p-5 xl:max-w-[560px] xl:p-8">
+        <h2 className="text-lg font-semibold">Your orders will appear here</h2>
+        <p className="text-base text-zinc-600">
+          Order history is on its way. Every bloc either fills or refunds you in full.
+        </p>
+        <Link
+          to="/"
+          className={
+            buttonVariants({ variant: "secondary", size: "lg" }) +
+            " min-h-12 justify-center text-lg font-semibold xl:self-start"
+          }
+        >
+          See what’s filling
+        </Link>
+      </section>
     </main>
   );
 }

@@ -41,9 +41,22 @@ fallback is the account holder running runbook §10 by hand with a `dist/` built
 `dev` SHA. `--delete` on the sync means no previous build's hashed assets survive a release; if a
 rollback build is wanted, drop `--delete` and add a lifecycle rule in T2-07.
 
+2026-09-23: `ci-frontend` run #165 built `fbb71a9`, deployed that artifact through the scoped OIDC role and passed `e2e-dev`; A3/A4 no longer block this path.
+
 Open, found in the 2026-09-17 branch review: the TanStack devtools are in the production bundle
 and `build.sourcemap: true` publishes full source maps. Both fixes on the table (an
 `import.meta.env.DEV` carve-out used only for dead-code elimination, or a lazy import) touch this
 decision's "no `import.meta.env`" rule and the CI grep, so whichever is chosen is recorded here as
 a dated addendum before T1-14; a DCE-only `DEV` check still yields one artifact per build, which
 is the property this ADR protects.
+
+Addendum 2026-09-23 (#154): neither option above was taken. `vite.config.ts` aliases
+`@/dev/devtools` to `src/dev/devtools.noop.tsx` when the command is `build`, so the delivery
+artifact carries no devtools code and no `import.meta.env` enters `src/`; `vite dev` and Vitest
+resolve the real module. The switch is the build command, not an environment, so there is still
+exactly one artifact per build. The CI grep and rule 5 are unchanged.
+
+Addendum 2026-09-23 (#156): the same alias list swaps `@/dev/browser-msw` for a no-op on
+`build`, and the MSW worker script moved from `public/` to `dev/` (served by a dev-server
+middleware), so `?msw=1` on a deployed site logs a warning instead of serving sample data, and
+`dist/` carries neither msw nor `mockServiceWorker.js`.

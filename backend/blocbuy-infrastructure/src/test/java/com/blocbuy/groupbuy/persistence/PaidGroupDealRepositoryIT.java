@@ -13,6 +13,7 @@ import com.blocbuy.groupbuy.model.StandardPaidGroupDealCreator;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -51,9 +52,9 @@ class PaidGroupDealRepositoryIT {
     private static JdbcTemplate jdbc;
 
     /**
-     * Loads V5 and V7 for this isolated groupbuy mapper test with bounded SQL waits. V6 adds only
-     * catalog pricing tables and permissions, which these mappers do not reference; the bootstrap
-     * PaidGroupDealServiceIT exercises the full V1-V7 Flyway chain.
+     * Loads V5, V7 and V17 for this isolated groupbuy mapper test with bounded SQL waits. V17
+     * supplies retry state read by the due-team query; unrelated migrations are covered by the
+     * bootstrap integration tests using the full Flyway chain.
      */
     @BeforeAll
     static void migrate() throws Exception {
@@ -78,7 +79,8 @@ class PaidGroupDealRepositoryIT {
         new ResourceDatabasePopulator(
                         new FileSystemResource(migrations.resolve("V5__groupbuy.sql")),
                         new FileSystemResource(
-                                migrations.resolve("V7__groupbuy_paid_participation.sql")))
+                                migrations.resolve("V7__groupbuy_paid_participation.sql")),
+                        new FileSystemResource(migrations.resolve("V17__scheduled_item_retry.sql")))
                 .execute(source);
         var config =
                 new Configuration(new Environment("test", new JdbcTransactionFactory(), source));
@@ -266,6 +268,120 @@ class PaidGroupDealRepositoryIT {
                                 Integer.class,
                                 dealId))
                 .isEqualTo(1);
+    }
+
+    /**
+     * The due-list query and the status-guarded expiry UPDATE against real SQL: the deadline
+     * comparison is inclusive, resolved teams leave the queue, and a team another writer already
+     * moved matches nothing.
+     */
+    @Test
+    void dueListAndExpiryUpdateAgreeOnWhatIsStillOpen() {
+        var paid = paid();
+        UUID dealId = start(paid);
+        jdbc.update(
+                "UPDATE biz_group_deal SET expire_time = clock_timestamp() - interval '1 minute'"
+                        + " WHERE id = ?",
+                dealId);
+
+        try (SqlSession session = sessions.openSession()) {
+            var repo = repo(session);
+            Instant now = repo.currentTime();
+            assertThat(repo.dueForExpiry(now, 10)).contains(dealId);
+            assertThat(repo.dueForExpiry(now.minusSeconds(3600), 10)).doesNotContain(dealId);
+
+            var before = repo.lockDeal(dealId).orElseThrow();
+            repo.expire(before, before.expire(now), now);
+            session.commit();
+        }
+
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT status FROM biz_group_deal WHERE id = ?",
+                                String.class,
+                                dealId))
+                .isEqualTo("expired");
+        try (SqlSession session = sessions.openSession()) {
+            var repo = repo(session);
+            Instant now = repo.currentTime();
+            assertThat(repo.dueForExpiry(now, 10)).doesNotContain(dealId);
+            session.rollback();
+        }
+    }
+
+    /** A failed oldest team is deferred without hiding newer due teams, then retried when due. */
+    @Test
+    void retryBackoffExcludesOnlyTheDeferredTeamUntilItsDeadline() {
+        UUID deferred = start(paid());
+        UUID next = start(paid());
+        jdbc.update(
+                "UPDATE biz_group_deal SET expire_time = clock_timestamp() - interval '2 minutes'"
+                        + " WHERE id = ?",
+                deferred);
+        jdbc.update(
+                "UPDATE biz_group_deal SET expire_time = clock_timestamp() - interval '1 minute'"
+                        + " WHERE id = ?",
+                next);
+
+        try (SqlSession session = sessions.openSession()) {
+            var repo = repo(session);
+            assertThat(repo.dueForExpiry(repo.currentTime(), 1)).containsExactly(deferred);
+            repo.deferExpiryRetry(deferred, Duration.ofMinutes(5));
+            session.commit();
+        }
+
+        try (SqlSession session = sessions.openSession()) {
+            var repo = repo(session);
+            assertThat(repo.dueForExpiry(repo.currentTime(), 1)).containsExactly(next);
+            session.rollback();
+        }
+
+        jdbc.update(
+                "UPDATE sys_scheduled_item_retry SET retry_after = clock_timestamp()"
+                        + " - interval '1 second' WHERE item_id = ?",
+                deferred);
+        try (SqlSession session = sessions.openSession()) {
+            var repo = repo(session);
+            assertThat(repo.dueForExpiry(repo.currentTime(), 1)).containsExactly(deferred);
+            session.rollback();
+        }
+    }
+
+    /** A team that is already closed matches the status guard nowhere, so the write is refused. */
+    @Test
+    void expiryRefusesATeamThatIsNoLongerOpen() {
+        var paid = paid();
+        UUID dealId = start(paid);
+        jdbc.update(
+                "UPDATE biz_group_deal SET expire_time = clock_timestamp() - interval '1 minute'"
+                        + " WHERE id = ?",
+                dealId);
+        com.blocbuy.groupbuy.model.GroupDeal before;
+        Instant now;
+        try (SqlSession session = sessions.openSession()) {
+            var repo = repo(session);
+            before = repo.lockDeal(dealId).orElseThrow();
+            now = repo.currentTime();
+            session.commit();
+        }
+        // The webhook that filled this team wins the race while the sweeper is between its read
+        // and its write; no lock is held here, so the two writers really do overlap.
+        jdbc.update("UPDATE biz_group_deal SET status = 'succeeded' WHERE id = ?", dealId);
+
+        try (SqlSession session = sessions.openSession()) {
+            var repo = repo(session);
+            var after = before.expire(now);
+
+            assertThatThrownBy(() -> repo.expire(before, after, now))
+                    .isInstanceOf(BizException.class);
+            session.rollback();
+        }
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT status FROM biz_group_deal WHERE id = ?",
+                                String.class,
+                                dealId))
+                .isEqualTo("succeeded");
     }
 
     /** Commits a complete paid-leader fixture with its receipt in one SQL session. */

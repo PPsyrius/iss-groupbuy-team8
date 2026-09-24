@@ -25,6 +25,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  * CheckoutPayment application slice. Explicit short transactions keep provider I/O outside DB
  * locks. Not component-scanned: enable only after a real PaymentBusinessPort is supplied.
  */
+@lombok.extern.slf4j.Slf4j
 public final class StripeCheckoutService {
     private static final String SYSTEM = "system";
     private static final String EXPIRED = "expired";
@@ -86,7 +87,10 @@ public final class StripeCheckoutService {
                             // One minute of headroom for Stripe's minimum 30-minute expiry
                             // validation.
                             Instant expires = now.plusSeconds(1860).truncatedTo(ChronoUnit.SECONDS);
-                            if (expires.isAfter(quote.quoteValidUntil())) {
+                            // Ask the quote itself rather than comparing one of its fields here:
+                            // a session must not outlive either the quote or the team's deadline,
+                            // and CheckoutQuote is the one place that knows what "expired" means.
+                            if (quote.expiredAt(expires)) {
                                 throw conflict();
                             }
                             UUID paymentId = UuidV7.next();
@@ -286,10 +290,30 @@ public final class StripeCheckoutService {
         }
     }
 
+    /**
+     * A {@code payment_id} that is not a UUID, or names a payment this database has never held, is
+     * an event for somebody else's environment — typically another developer's machine or a
+     * database that has since been reset, sharing one Stripe sandbox endpoint with us. It is an
+     * ignored event, not a failure: record it and acknowledge, because answering non-2xx makes the
+     * provider retry the same foreign event for three days and drowns our own logs in it.
+     */
     private void apply(
             CheckoutGateway.Session session, String eventId, String type, String operator) {
-        UUID id = UUID.fromString(session.paymentId());
+        UUID id;
+        try {
+            id = UUID.fromString(session.paymentId());
+        } catch (IllegalArgumentException notOurIdentifier) {
+            log.warn("Webhook carries a non-UUID payment reference; session={}", session.id());
+            tx.executeWithoutResult(status -> recordUnknownPayment(eventId, type));
+            return;
+        }
         tx.executeWithoutResult(status -> settle(session, eventId, type, operator, id));
+    }
+
+    /** Claim first so the record is deduplicated the same way a settled event is. */
+    private void recordUnknownPayment(String eventId, String type) {
+        if (!repository.claimEvent(eventId, type)) return;
+        repository.finishEvent(eventId, null, "UNKNOWN_PAYMENT");
     }
 
     private void settle(
@@ -299,7 +323,15 @@ public final class StripeCheckoutService {
             String operator,
             UUID id) {
         if (!repository.claimEvent(eventId, type)) return;
-        CheckoutPayment initial = require(id);
+        var known = repository.findById(id);
+        if (known.isEmpty()) {
+            // The claim above already happened in this transaction, so this record is deduplicated
+            // for free. Touch neither the business port, the payment lock nor save.
+            log.warn("Webhook names a payment this database does not hold; event={}", eventId);
+            repository.finishEvent(eventId, null, "UNKNOWN_PAYMENT");
+            return;
+        }
+        CheckoutPayment initial = known.orElseThrow();
         business.lockForSettlement(initial.quote());
         CheckoutPayment payment = repository.lock(id);
         CheckoutPayment.Status before = payment.status();
@@ -429,21 +461,6 @@ public final class StripeCheckoutService {
         return terminal
                 && repository.outcome(payment.id()) == null
                 && evidence == PaymentBusinessPort.FulfilmentEvidence.NONE;
-    }
-
-    /** Run inside the caller's team-expiry transaction; never AFTER_COMMIT. */
-    public void recordExpiredTeam(UUID dealId) {
-        tx.executeWithoutResult(
-                status -> {
-                    business.lockExpiredTeam(dealId);
-                    for (CheckoutPayment member : repository.paidMembers(dealId)) {
-                        CheckoutPayment paid = repository.lock(member.id());
-                        if (paid.status() != CheckoutPayment.Status.SUCCEEDED) {
-                            throw conflict();
-                        }
-                        repository.requireRefund(paid, "TEAM_EXPIRED", "team-expired-" + dealId);
-                    }
-                });
     }
 
     /** Bounded local operations hook. Failures leave CREATED for the next run/manual recovery. */

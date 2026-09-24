@@ -13,6 +13,16 @@ Read this when writing tests, reviewing quality, adding logs or metrics, or prep
 - Test data is independent, deterministic, and repeatable; dependence on execution order, real production accounts, or shared-environment leftovers is forbidden. Time, IDs, and randomness are injected through controllable ports.
 - Fix a defect by first adding a test that reproduces the behavior; tests assert externally observable behavior, not private implementation details.
 
+## Scheduled Job Review
+
+For a job that changes durable business state, identify the database-owned recovery state, the timer's opt-in/default policy, and what happens to a backlog on the first enabled run. See [backend ADR 0002](../../../../backend/docs/adr/0002-team-lifecycle-events.md) for the team-expiry implementation; do not treat its particular lease or retry interval as universal defaults.
+
+- Select candidate IDs with a bounded, stable-order query on the database clock. If failed oldest items remain eligible, persist retry/backoff or an advancing cursor outside their rolled-back transaction so they cannot consume every batch indefinitely. A failed backoff write must not look like a successful run.
+- For the approved team-expiry sweep in backend ADR 0002, the outer sweep is not transactional; each `expireOne` has its own short transaction so one failure cannot roll back the batch. Batch candidate reads and collection enrichment. This is not a blanket exception for other jobs: seek explicit approval with a decision record before adding per-item repository calls elsewhere.
+- For a database lease, acquire atomically, compute deadlines after any row-lock wait, bound lock waits, and renew only a still-live lease held by the same owner. Stop taking new items on renewal loss. Let an in-flight database renewal finish when shutting down the renewal worker rather than interrupting JDBC I/O; bound the wait with a statement timeout. An item already in flight must still be idempotent if another instance takes over.
+- Test actual timer/profile wiring as well as direct job invocation; test lease acquisition, contention, timeout, renewal and loss, per-item rollback, idempotent replay, backoff starvation and expiry. Isolated PostgreSQL test fixtures must create every table their mapper queries; a separate full-Flyway test does not supply those tables to another test container.
+- Do not promise a backlog drain deadline from interval and batch size alone; processing time, skips, failures and retry backoff all affect it. Record safe run counters and logs without high-cardinality metric tags.
+
 ## Coverage and the SonarCloud Gate
 
 - The enforced gate (server-side, in the CI `sonar-backend` job / `SonarCloud Backend` check): **≥ 80% coverage on new code**, plus no new blocker/critical issues and A ratings on new code. There is deliberately no `jacoco:check` Maven threshold (`docs/quality/quality-gates.md`) — coverage is judged only on new code in SonarCloud. Locally, hold touched files to 100% so the 80% floor is never in play.

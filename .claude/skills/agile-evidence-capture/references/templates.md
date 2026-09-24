@@ -1,56 +1,43 @@
-# Templates
+# Evidence templates
 
-Copy these shapes verbatim. They are lifted from artefacts the team already writes (issue #24,
-issue #48, the Sprint 1 container issue #49, the backend design docs' verification record, the
-frontend ADR stubs), so nothing here is a new convention.
+## Daily sprint log
 
-## Sprint log entry
-
-Append to `docs/agile/sprint-NN/log.md`. Newest entry at the bottom. One entry per unit of work
-per author; a day with three PRs gets three entries.
+Append one entry per PR per author to `docs/agile/sprint-NN/log/YYYY-MM-DD.md`. Drop fields that do not apply. Write each bullet on one physical line and never hard-wrap it (`CONTRIBUTING.md`).
 
 ```markdown
-## YYYY-MM-DD - @handle - UC3 join team: payment commitment (#26)
+## YYYY-MM-DD - @handle - <work summary> (#N)
 
 - Kind: feature | nfr | decision | ops | chore
-- Changed: `backend/blocbuy-application/.../JoinTeamService.java`, migration `V9__...`, contract regenerated
-- Verified: `./mvnw verify` 211 tests green on `a1b2c3d`; not run against dev
-- Decisions: `backend/docs/design/paid-group-participation.md` "Domain behavior" (optimistic lock on team capacity; backend decisions live in design docs, not ADRs)
-- Problems: Stripe test key missing from CI secrets; action: asked @PPsyrius, tracked in #NN
-- Next: frontend join button (#44) blocked on B1
+- Changed: <outcome and canonical artefacts>
+- Verified: `<command>` <count/status> on `<commit>`; <not verified>
+- Decisions: <owning decision record or "none">
+- Problems: <problem, action, tracking issue, status>
+- Next: <follow-up or blocker>
 ```
 
-Rules: date first, handle second, issue in the heading. Drop lines that do not apply. Never write
-"tested" without the command and the count or status.
+Never write "tested" without the command and count or status.
 
 ## NFR register row
 
-One line in the table in `docs/quality/nfr-register.md`. Columns:
-
-```
-| NFR-NN | <attribute> | <scenario: when <stimulus>, the system <response>, measured by <measure>> | <enforced at: CI job, config path, code> | <evidence: PR #, workflow, doc> | enforced | implemented | documented | target undefined |
-```
-
-Attribute vocabulary: security, performance, availability, recoverability, observability, cost,
-maintainability, interoperability, data consistency, usability, compliance. Status meaning:
-
-- `enforced`: a CI gate or runtime control fails when it is violated.
-- `implemented`: present in code or config and verified by hand at least once.
-- `documented`: designed or promised, not yet in code.
-- `target undefined`: the attribute matters but no measure has been set; this is a valid row and
-  a report talking point.
-
-## ADR
-
-Frontend only. Nygard format, under sixty lines, file name `NNNN-kebab-title.md` in
-`frontend/docs/adr/`, plus a row in that directory's `README.md` index. Nobody else writes ADRs:
-backend decisions are recorded in the locked decision table of
-`backend/docs/design/backend-skeleton-plan.md` (dated amendments in place) and in the design docs
-under `backend/docs/design/`; cross-cutting decisions (CI, deploy, quality gates, process) as a
-dated paragraph in the owning doc under `docs/`.
+Add one row to `docs/quality/nfr-register.md`:
 
 ```markdown
-# NNNN. <Title as a decision, e.g. "Optimistic locking for team capacity">
+| NFR-NN | <attribute> | when <stimulus>, the system <response>, measured by <measure> | <enforcement> | <evidence> | enforced | implemented | documented | target undefined |
+```
+
+Use security, performance, availability, recoverability, observability, cost, maintainability, interoperability, data consistency, usability, or compliance. Statuses mean:
+
+- `enforced`: CI or runtime control fails on violation.
+- `implemented`: present and verified at least once.
+- `documented`: designed but not implemented.
+- `target undefined`: relevant, but no measure is agreed.
+
+## Frontend ADR
+
+Use Nygard format in `frontend/docs/adr/NNNN-kebab-title.md` (under sixty lines) or `backend/docs/adr/NNNN-kebab-title.md` (concise; do not rewrite longer accepted records) and add it to that directory's index. Numbering is independent by area. Locked backend stack decisions stay in the D-table; focused backend design and cross-cutting decisions stay in their owning documents.
+
+```markdown
+# NNNN. <Decision title>
 
 Date: YYYY-MM-DD
 
@@ -60,20 +47,18 @@ Proposed | Accepted | Superseded by NNNN
 
 ## Context
 
-Two to five sentences: the forces, the constraint, the issue that raised it (#N).
+<Forces, constraints, and triggering issue.>
 
 ## Decision
 
-One paragraph in the active voice: "We will ...". Name the alternatives considered and why they
-lost, one line each.
+We will <choice>. We rejected <alternatives> because <reasons>.
 
 ## Consequences
 
-What becomes easier, what becomes harder, what must now be kept in sync, what would make us
-revisit this.
+<Benefits, costs, synchronization obligations, and revisit condition.>
 ```
 
-## Issue: use case
+## Use-case issue
 
 ```markdown
 ## Use Case: UCn - <title>
@@ -81,7 +66,7 @@ revisit this.
 | Field | Value |
 |---|---|
 | Complexity | CRUD / medium / complex |
-| Accountable Members | @handle (frontend) · @handle (backend) |
+| Accountable Members | @handle (frontend) / @handle (backend) |
 | Design Problem Evidenced | <problem> - **<Pattern>** |
 | Notes | <entry point, dependencies, sprint> |
 
@@ -89,21 +74,18 @@ revisit this.
 As a <role>, I can <action>, so that <benefit>.
 
 ### Design Problem
-<what varies or what must be isolated, and the pattern that addresses it>
+<What varies or must be isolated, and the pattern used.>
 
 ### Acceptance Criteria
-- [ ] <observable behaviour, backend>
-- [ ] <observable behaviour, frontend>
-- [ ] Unit tests cover <the complex behaviour>
+- [ ] <observable backend behaviour>
+- [ ] <observable frontend behaviour>
+- [ ] Unit tests cover <complex behaviour>
 
 ### Contribution Summary linkage
-- <Member name> - <what they own in this UC>
+- <Member> - <ownership>
 ```
 
-Unfiled drafts of either issue shape live at `docs/agile/sprint-NN/drafts/<slug>.md` and are
-deleted once the issue exists.
-
-## Issue: non-functional requirement
+## NFR issue
 
 ```markdown
 ## Non-functional Requirement: <attribute> - <title>
@@ -112,83 +94,81 @@ deleted once the issue exists.
 |---|---|
 | Quality attribute | security / performance / availability / recoverability / observability / cost / maintainability |
 | Accountable Member | @handle |
-| Register ID | NFR-NN (or "new") |
-| Design Problem Evidenced | <mechanism, e.g. approval gate, immutable artifact, circuit breaker> |
+| Register ID | NFR-NN or new |
+| Design Problem Evidenced | <mechanism> |
 | Notes | <sprint, trigger, related UC> |
 
 ### Description
-As a <team | operator | buyer>, we need <capability>, so that <risk avoided or quality gained>.
+As a <team/operator/user>, we need <capability>, so that <risk is reduced or quality improves>.
 
 ### Quality attribute scenario
-- Source: <who or what triggers it>
-- Stimulus: <the event>
-- Environment: <normal operation, peak, deploy, attack>
-- Response: <what the system does>
-- Measure: <the number or observable that says it worked>
+- Source: <triggering actor or system>
+- Stimulus: <event>
+- Environment: <operating condition>
+- Response: <system behaviour>
+- Measure: <observable threshold>
 
 ### Acceptance Criteria
-- [ ] <the measure holds on dev, with the command that shows it>
-- [ ] <enforcement point exists: CI job, config, test>
-- [ ] `docs/quality/nfr-register.md` row added or updated
+- [ ] <measure holds, with verification command>
+- [ ] <CI, configuration, or test enforces it>
+- [ ] NFR register row added or updated
 
 ### Contribution Summary linkage
-- <Member name> - <what they own>
+- <Member> - <ownership>
 ```
 
-## Issue: engineering task or bug
-
-Matches #56 and #57.
+## Engineering task or bug
 
 ```markdown
 ## Background
-<what was observed, with the request or log line; link the triggering issue or PR>
+<Observation, decisive log or request, and triggering issue/PR.>
 
 ## Scope
-1. <concrete change>
-2. <concrete change>
+1. <change>
+2. <change>
 
 ## Non-goals
-- <what this deliberately does not do>
+- <excluded work>
 
 ## Acceptance Criteria
 - [ ] <observable result>
 ```
 
+Unfiled issue drafts live under `docs/agile/sprint-NN/drafts/` and are deleted after filing.
+
 ## PR body
 
-`.github/PULL_REQUEST_TEMPLATE.md` is the source of truth; this is the filled shape.
+Use `.github/PULL_REQUEST_TEMPLATE.md` as the source of truth:
 
 ```markdown
 ## What
-<one paragraph; same intent as the Conventional Commit title>
+<One-paragraph summary.>
 
 ## Issue
-Closes #N (or Refs #N when the issue stays open)
+Closes #N | Refs #N
 
 ## Decisions
-ADR(s) implemented or affected: `frontend/docs/adr/0009-...md` (frontend); a backend decision cites its D-table row or design doc, a cross-cutting one its section under `docs/`; or "none"
+<Frontend ADR, backend/cross-cutting design record, or none.>
 
 ## Evidence
-- [ ] Verification: `./mvnw verify` 211 tests green on a1b2c3d / CI run <link>
-- [ ] Contract: unchanged | regenerated, additive | breaking, `contract-change-approved` requested because <reason>
-- [ ] UI: screenshot or Playwright trace attached (frontend only)
-- [ ] `docs/agile/sprint-NN/log.md` entry added
-- [ ] `docs/quality/nfr-register.md` updated (NFR work only)
+- [ ] Verification: `<command>` <count/status> on <commit or CI link>
+- [ ] Contract: unchanged | regenerated, additive | approved breaking change
+- [ ] UI evidence attached when applicable
+- [ ] Daily sprint-log entry added
+- [ ] NFR register updated when applicable
 
 ## Checklist
 - [ ] Small PR, one concern
-- [ ] No secrets committed; new config documented in the area README
+- [ ] No secrets; new configuration documented
 ```
 
 ## Sprint review
-
-`docs/agile/sprint-NN/review.md`, drafted from the container issue's status board and the log.
 
 ```markdown
 # Sprint NN review (YYYY-MM-DD to YYYY-MM-DD)
 
 ## Goal
-<from the container issue>
+<Container issue goal.>
 
 ## Plan vs actual
 | Work item | Owner | Planned | Actual | Status | Evidence |
@@ -197,16 +177,16 @@ ADR(s) implemented or affected: `frontend/docs/adr/0009-...md` (frontend); a bac
 ## Environment and CI at close
 | Check | Command | Result |
 |---|---|---|
-| dev health | `curl -sS -o /dev/null -w '%{http_code}' <health url>` | <code or "not checked"> |
-| dev page | `curl -sS -o /dev/null -w '%{http_code}' <page url>` | <code or "not checked"> |
-| ci-backend last 10 runs | `gh run list --workflow ci-backend.yml --limit 10` | <n green / n red> |
-| security last 10 runs | `gh run list --workflow security.yml --limit 10` | <n green / n red> |
+| dev health | `curl ...` | <status or not checked> |
+| dev page | `curl ...` | <status or not checked> |
+| backend CI | `gh run list --workflow ci-backend.yml --limit 10` | <summary> |
+| security CI | `gh run list --workflow security.yml --limit 10` | <summary> |
 
 ## Demo notes
-<what was shown, on which environment, with links; if dev is down, the fallback plan>
+<What was shown, environment, links, and fallback.>
 
 ## Carried over
-- <item, reason, new issue>
+- <item, reason, tracking issue>
 ```
 
 ## Sprint retrospective
@@ -217,8 +197,9 @@ ADR(s) implemented or affected: `frontend/docs/adr/0009-...md` (frontend); a bac
 ## What went well
 ## What could have gone better
 ## What we will try next sprint
+
 | Action | Owner | Tracked in |
 |---|---|---|
 ```
 
-Draw candidates from the log's "Problems" lines. Do not list a ceremony that did not happen.
+Draw review and retrospective content from recorded facts. Do not invent ceremonies.

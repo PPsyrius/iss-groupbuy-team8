@@ -21,6 +21,7 @@ orders.forEach(order -> order.attachProduct(products.get(order.productId())));
 - Batch writes use MyBatis batch/multi-value insert or whatever the database handles well, controlling batch size and transaction memory.
 - MyBatis `resultMap` nested selects that cause implicit N+1 are forbidden; use a second batch query or a deliberate join.
 - If the requirement is naturally streaming, process in fixed-size batches with pagination/cursors and a fixed number of queries per batch; record batch size, totals, and the failure-recovery point.
+- The sole approved exception is `GroupDealExpirySweeper` (backend ADR 0002): one bounded candidate-ID query followed by a separate `GroupDealExpiryService.expireOne` transaction for each aggregate. One team's failure must not roll back the whole batch. This exception does not cover other jobs, collection enrichment or remote calls; obtain explicit user approval and record bounds, lock/write protocol, failure isolation and recovery before introducing another exception.
 
 ## MyBatis
 
@@ -35,7 +36,7 @@ orders.forEach(order -> order.attachProduct(products.get(order.productId())));
 
 ## PostgreSQL
 
-- Table/column names use lowercase snake_case; the primary key strategy is unified. Invariants expressible as foreign keys, NOT NULL, CHECK, and UNIQUE must be pushed down to the database; application validation is not a substitute.
+- Table/column names use lowercase snake_case; the primary key strategy is unified. Follow the [team PostgreSQL DDL skill](../../pgsql-ddl/SKILL.md): structural `PRIMARY KEY`, `UNIQUE`, and `NOT NULL` constraints only; never add foreign keys or `CHECK` constraints. Validate business rules and reference consistency in the application with an explicit concurrency protocol, using unique indexes and status/version guards where appropriate.
 - Instants use `timestamptz` with a unified UTC convention; money uses `numeric(precision, scale)` or an explicit smallest-unit integer; do not casually stuff structured, queryable data into JSONB.
 - Indexes are driven by real queries and selectivity; consider composite index column order, partial indexes, and covering indexes. Every index costs write amplification - "index every column" is forbidden.
 - Validate slow queries with `EXPLAIN (ANALYZE, BUFFERS)` at realistic data volumes; never judge by SQL appearance alone. Monitor sequential scans, lock waits, bloat, and connection pools.

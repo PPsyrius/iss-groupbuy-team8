@@ -12,6 +12,7 @@ readonly BLOCBUY_ENV_KEYS=(
     REDIS_HOST
     REDIS_PORT
     REDIS_PASSWORD
+    BLOCBUY_SCHEDULING_ENABLED
     STRIPE_API_KEY
     STRIPE_WEBHOOK_SECRET
 )
@@ -90,7 +91,7 @@ if invalid:
 values = {p["Name"][len(prefix) + 1:]: p["Value"] for p in document.get("Parameters", [])}
 required = [
     "DB_URL", "DB_USERNAME", "DB_PASSWORD", "REDIS_HOST", "REDIS_PORT",
-    "REDIS_PASSWORD", "STRIPE_API_KEY", "STRIPE_WEBHOOK_SECRET",
+    "REDIS_PASSWORD", "BLOCBUY_SCHEDULING_ENABLED", "STRIPE_API_KEY", "STRIPE_WEBHOOK_SECRET",
 ]
 for key in required:
     value = values.get(key, "")
@@ -99,6 +100,8 @@ for key in required:
         sys.exit("Parameter %s is empty or still contains a placeholder" % key)
     if any(c in value for c in "\n\r"):
         sys.exit("Parameter %s contains a line break" % key)
+if values["BLOCBUY_SCHEDULING_ENABLED"].lower() not in ("true", "false"):
+    sys.exit("Parameter BLOCBUY_SCHEDULING_ENABLED must be true or false")
 with open(os.environ["BLOCBUY_ENV_TARGET"], "w", encoding="utf-8") as handle:
     for key in required:
         handle.write("%s=%s\n" % (key, values[key]))
