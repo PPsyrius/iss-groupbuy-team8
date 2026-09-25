@@ -4,7 +4,7 @@ import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 
 import { OK_CODE } from "@/api/envelope";
-import type { OrderSummaryResponse } from "@/api/generated/types.gen";
+import type { MyTeamResponse, OrderSummaryResponse } from "@/api/generated/types.gen";
 import { queryClient } from "@/api/query-client";
 import { server } from "@/test/msw";
 import { renderRoute, serveAnonymous, serveSignedIn } from "@/test/render-route";
@@ -45,6 +45,51 @@ function serveOrders(total: number) {
   return seen;
 }
 
+const team = (n: number, over: Partial<MyTeamResponse> = {}): MyTeamResponse => ({
+  dealId: `0192f0a0-0000-7000-8000-${String(n).padStart(12, "0")}`,
+  productId: `0b6f2c1e-6b1a-4f0e-9d1c-${String(n).padStart(12, "0")}`,
+  productTitle: `Bloc product ${n}`,
+  productImage: null,
+  dealPrice: "9.90",
+  currency: "sgd",
+  targetSize: 5,
+  currentSize: 2,
+  status: "open",
+  expireTime: new Date(Date.now() + 5 * 3_600_000).toISOString(),
+  successTime: null,
+  role: "member",
+  joinTime: "2026-09-16T11:46:00Z",
+  orderId: null,
+  ...over,
+});
+
+// Answers GET /group-deals/me with `teams` (and `total`, when the buyer has more than one page),
+// recording each request's query.
+function serveTeams(teams: MyTeamResponse[], total = teams.length) {
+  const seen: URLSearchParams[] = [];
+  server.use(
+    http.get("*/api/v1/group-deals/me", ({ request }) => {
+      const url = new URL(request.url);
+      seen.push(url.searchParams);
+      return HttpResponse.json({
+        code: OK_CODE,
+        message: "ok",
+        data: { items: teams, total, page: 1, size: Number(url.searchParams.get("size")) },
+      });
+    }),
+  );
+  return seen;
+}
+
+const mixed = [
+  team(1, { role: "leader" }),
+  team(2),
+  team(3, { status: "OPEN" }),
+  team(4, { status: "succeeded", currentSize: 5, successTime: "2026-09-16T13:30:00Z" }),
+  team(5, { status: "expired", expireTime: "2026-09-15T13:32:00Z" }),
+  team(6, { status: "failed", expireTime: "2026-09-12T13:32:00Z" }),
+];
+
 describe("/account behind the _authenticated guard", () => {
   it("sends anonymous visitors to /login with the wanted path", async () => {
     serveAnonymous();
@@ -54,11 +99,16 @@ describe("/account behind the _authenticated guard", () => {
     expect(await screen.findByRole("heading", { name: "Sign in to BlocBuy" })).toBeVisible();
   });
 
-  it("renders the account header and the empty-state card when the buyer has no orders", async () => {
+  it("renders the account header and one empty card when the buyer has no blocs and no orders", async () => {
     serveSignedIn({ userId: "u1", nickname: null, avatarUrl: null });
     serveOrders(0);
+    serveTeams([]);
     const { router } = renderRoute("/account");
-    expect(await screen.findByRole("heading", { name: "No orders yet" })).toBeVisible();
+    expect(
+      await screen.findByRole("heading", { name: "You haven’t joined a bloc yet" }),
+    ).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "No orders yet" })).toBeNull();
+    expect(screen.queryByRole("group", { name: "Show blocs" })).toBeNull();
     expect(screen.getByRole("heading", { name: "My blocs" })).toBeVisible();
     expect(screen.getByTestId("account-user")).toHaveTextContent("u1");
     expect(router.state.location.pathname).toBe("/account");
@@ -70,6 +120,7 @@ describe("/account behind the _authenticated guard", () => {
 describe("/account order history (T3-02, #128)", () => {
   it("lists the buyer's orders from GET /orders/me, ten per page by default", async () => {
     serveSignedIn();
+    serveTeams([]);
     const seen = serveOrders(3);
     renderRoute("/account");
     const list = await screen.findByRole("list", { name: "My orders" });
@@ -84,6 +135,7 @@ describe("/account order history (T3-02, #128)", () => {
 
   it("pages through the orders with the page in the URL", async () => {
     serveSignedIn();
+    serveTeams([]);
     serveOrders(12);
     const { router } = renderRoute("/account");
     const pager = await screen.findByRole("navigation", { name: "Order pages" });
@@ -97,6 +149,7 @@ describe("/account order history (T3-02, #128)", () => {
 
   it("sends a page past the last one to the last page", async () => {
     serveSignedIn();
+    serveTeams([]);
     serveOrders(12);
     const { router } = renderRoute("/account?page=9");
     await waitFor(() => expect(router.state.location.search).toEqual({ page: 2 }));
@@ -105,6 +158,7 @@ describe("/account order history (T3-02, #128)", () => {
 
   it("keeps the header and offers a retry when the orders fail to load", async () => {
     serveSignedIn();
+    serveTeams([]);
     let failing = true;
     server.use(
       http.get("*/api/v1/orders/me", () =>
@@ -122,11 +176,112 @@ describe("/account order history (T3-02, #128)", () => {
     queryClient.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, retry: false } });
     try {
       renderRoute("/account");
-      expect(await screen.findByText("We couldn’t load your orders")).toBeVisible();
+      expect(await screen.findByText("We couldn’t load your blocs and orders")).toBeVisible();
       expect(screen.getByRole("heading", { name: "My blocs" })).toBeVisible();
       failing = false;
       await userEvent.click(screen.getByRole("button", { name: "Try again" }));
       expect(await screen.findByRole("list", { name: "My orders" })).toBeVisible();
+    } finally {
+      queryClient.setDefaultOptions(defaults);
+    }
+  });
+});
+
+describe("/account my blocs (T3-03, #31)", () => {
+  it("fetches the latest 100 blocs once and counts each chip from mixed statuses", async () => {
+    serveSignedIn();
+    serveOrders(1);
+    const seen = serveTeams(mixed);
+    renderRoute("/account");
+    const chips = await screen.findByRole("group", { name: "Show blocs" });
+    expect(within(chips).getByText("Active").closest("[aria-current]")).toHaveTextContent(
+      "Active 3",
+    );
+    expect(within(chips).getByRole("link", { name: "Completed 1" })).toBeVisible();
+    expect(within(chips).getByRole("link", { name: "Refunded 2" })).toBeVisible();
+    const list = screen.getByRole("list", { name: "My blocs" });
+    expect(within(list).getAllByRole("listitem")).toHaveLength(3);
+    expect(within(list).getByText("You started this")).toBeVisible();
+    expect(seen).toHaveLength(1);
+    expect(seen[0]?.get("page")).toBe("1");
+    expect(seen[0]?.get("size")).toBe("100");
+    // Blocs first, then the orders
+    expect(screen.getByRole("list", { name: "My orders" })).toBeVisible();
+    expect(screen.queryByText(/Showing your latest/)).toBeNull();
+  });
+
+  it("switches chips through ?blocs= without refetching", async () => {
+    serveSignedIn();
+    serveOrders(1);
+    const seen = serveTeams(mixed);
+    const { router } = renderRoute("/account");
+    await userEvent.click(await screen.findByRole("link", { name: "Refunded 2" }));
+    await waitFor(() => expect(router.state.location.search).toEqual({ blocs: "refunded" }));
+    const list = screen.getByRole("list", { name: "My blocs" });
+    await waitFor(() => expect(within(list).getAllByRole("listitem")).toHaveLength(2));
+    expect(within(list).getAllByText(/refund due$/)).toHaveLength(2);
+    expect(screen.getByText(/^Refunds are issued automatically/)).toBeVisible();
+    await userEvent.click(screen.getByRole("link", { name: "Completed 1" }));
+    await waitFor(() => expect(router.state.location.search).toEqual({ blocs: "completed" }));
+    expect(await screen.findByText("Filled")).toBeVisible();
+    expect(seen).toHaveLength(1);
+  });
+
+  it("falls back to Active for an unknown ?blocs= value", async () => {
+    serveSignedIn();
+    serveOrders(1);
+    serveTeams(mixed);
+    const { router } = renderRoute("/account?blocs=bogus");
+    const list = await screen.findByRole("list", { name: "My blocs" });
+    expect(within(list).getAllByRole("listitem")).toHaveLength(3);
+    await waitFor(() => expect(router.state.location.search).toEqual({}));
+  });
+
+  it("says so when a filter has no blocs, and keeps the orders empty card", async () => {
+    serveSignedIn();
+    serveOrders(0);
+    serveTeams([team(1)]);
+    renderRoute("/account?blocs=completed");
+    expect(await screen.findByText("No completed blocs")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "No orders yet" })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "You haven’t joined a bloc yet" })).toBeNull();
+  });
+
+  it("notes that only the latest 100 blocs are shown when the buyer has more", async () => {
+    serveSignedIn();
+    serveOrders(1);
+    serveTeams(
+      Array.from({ length: 100 }, (_, i) => team(i + 1)),
+      130,
+    );
+    renderRoute("/account");
+    expect(await screen.findByText("Showing your latest 100 blocs")).toBeVisible();
+  });
+
+  it("offers a retry when the blocs fail to load, then recovers", async () => {
+    serveSignedIn();
+    serveOrders(1);
+    let failing = true;
+    server.use(
+      http.get("*/api/v1/group-deals/me", () =>
+        failing
+          ? HttpResponse.json({ code: "COMMON_500_000", message: "boom" }, { status: 500 })
+          : HttpResponse.json({
+              code: OK_CODE,
+              message: "ok",
+              data: { items: mixed, total: mixed.length, page: 1, size: 100 },
+            }),
+      ),
+    );
+    const defaults = queryClient.getDefaultOptions();
+    queryClient.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, retry: false } });
+    try {
+      renderRoute("/account");
+      expect(await screen.findByText("We couldn’t load your blocs and orders")).toBeVisible();
+      expect(screen.getByRole("heading", { name: "My blocs" })).toBeVisible();
+      failing = false;
+      await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+      expect(await screen.findByRole("list", { name: "My blocs" })).toBeVisible();
     } finally {
       queryClient.setDefaultOptions(defaults);
     }
