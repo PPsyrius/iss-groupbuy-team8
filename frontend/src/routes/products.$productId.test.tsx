@@ -256,6 +256,35 @@ describe("/products/$productId quote step", () => {
   });
 });
 
+describe("/products/$productId quote sheet across listings", () => {
+  it("closes the sheet when the buyer moves to another listing", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    const otherId = "5b1b9d5c-1a11-4e1e-9a10-000000000002";
+    const products = [listing(), listing({ id: otherId, title: "D24 durian 1 kg" })];
+    server.use(
+      http.get("*/api/v1/products/:id", ({ params }) => {
+        const product = products.find((p) => p.id === params.id);
+        return product
+          ? HttpResponse.json({ code: OK_CODE, message: "ok", data: product })
+          : HttpResponse.json(notFoundBody, { status: 404 });
+      }),
+    );
+    servePayments();
+    serveQuote();
+    const { router } = renderRoute(`/products/${knownId}`);
+    const [start] = await screen.findAllByRole("button", { name: /Start a bloc/ });
+    await waitFor(() => expect(start).toBeEnabled());
+    await userEvent.click(start!);
+    const dialog = await screen.findByRole("dialog", { name: "Your bloc price" });
+    expect(await within(dialog).findByRole("timer")).toHaveTextContent(/left/);
+    // A history step (browser back or forward) lands on another listing under the open sheet.
+    await router.navigate({ to: "/products/$productId", params: { productId: otherId } });
+    expect(await screen.findByRole("heading", { name: "D24 durian 1 kg" })).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+});
+
 describe("/products/$productId listing variants", () => {
   it("renders a listing without a bloc and still starts checkout", async () => {
     serveSignedIn();

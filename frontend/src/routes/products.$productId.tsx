@@ -91,8 +91,14 @@ function ProductDetailPage() {
   const buyerId = session.status === "authenticated" ? session.userId : undefined;
   const checkout = useCheckout(buyerId);
   // START goes through the quote sheet first (T3-01); JOIN has no quote and pays directly.
+  // The sheet belongs to the buyer and listing it was opened for: this component stays mounted
+  // across `$productId` changes, so a new listing starts with the sheet closed (CodeRabbit
+  // r4102738802).
   const quoting = useQuote(buyerId, productId);
-  const [quoteOpen, setQuoteOpen] = useState(false);
+  const sheetFor = `${buyerId ?? ""}/${productId}`;
+  const [openFor, setOpenFor] = useState<string | null>(null);
+  const quoteOpen = openFor === sheetFor;
+  const setQuoteOpen = (open: boolean) => setOpenFor(open ? sheetFor : null);
   const onStart =
     onGated ??
     (checkout.enabled

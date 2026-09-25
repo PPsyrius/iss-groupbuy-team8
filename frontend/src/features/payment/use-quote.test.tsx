@@ -16,12 +16,14 @@ type Quoting = ReturnType<typeof useQuote>;
 
 function Probe({
   userId,
+  product = productId,
   quotingRef,
 }: {
   userId: string | undefined;
+  product?: string;
   quotingRef: { current: Quoting | null };
 }) {
-  const quoting = useQuote(userId, productId);
+  const quoting = useQuote(userId, product);
   useEffect(() => {
     quotingRef.current = quoting;
   }, [quoting, quotingRef]);
@@ -29,6 +31,7 @@ function Probe({
 }
 
 const productId = "0192f0a0-0000-7000-8000-000000000010";
+const otherProductId = "0192f0a0-0000-7000-8000-000000000011";
 const userId = "buyer-1";
 const ok = (data: unknown) => HttpResponse.json({ code: OK_CODE, message: "ok", data });
 const inMinutes = (m: number) => new Date(Date.now() + m * 60_000).toISOString();
@@ -139,6 +142,62 @@ describe("useQuote", () => {
   it("reports a retryable error for any other failure", async () => {
     server.use(http.post("*/api/v1/team-price-quotes", () => HttpResponse.error()));
     expect(await run(renderProbe(userId), "load")).toEqual({ status: "error" });
+  });
+
+  it("forgets the previous listing's quote when the listing changes", async () => {
+    serveQuotes();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const quotingRef: { current: Quoting | null } = { current: null };
+    const probe = (product: string) => (
+      <QueryClientProvider client={queryClient}>
+        <Probe userId={userId} product={product} quotingRef={quotingRef} />
+      </QueryClientProvider>
+    );
+    const { rerender } = render(probe(productId));
+    expect(await run(quotingRef, "load")).toMatchObject({ status: "ready" });
+    rerender(probe(otherProductId));
+    await waitFor(() => expect(quotingRef.current!.state).toEqual({ status: "idle" }));
+  });
+
+  it("drops a late quote for the previous listing and still quotes the new one", async () => {
+    let releaseFirst!: () => void;
+    const firstHeld = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    server.use(
+      http.post("*/api/v1/team-price-quotes", async () => {
+        issued++;
+        const id = `q-${issued}`;
+        if (issued === 1) await firstHeld;
+        return ok(quote(id));
+      }),
+    );
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const quotingRef: { current: Quoting | null } = { current: null };
+    const probe = (product: string) => (
+      <QueryClientProvider client={queryClient}>
+        <Probe userId={userId} product={product} quotingRef={quotingRef} />
+      </QueryClientProvider>
+    );
+    const { rerender } = render(probe(productId));
+    await waitFor(() => expect(quotingRef.current).not.toBeNull());
+    let first!: Promise<void>;
+    act(() => {
+      first = quotingRef.current!.load();
+    });
+    await waitFor(() => expect(issued).toBe(1));
+    rerender(probe(otherProductId));
+    await waitFor(() => expect(quotingRef.current!.state).toEqual({ status: "idle" }));
+    expect(await run(quotingRef, "load")).toMatchObject({
+      status: "ready",
+      quote: { id: "q-2" },
+    });
+    await act(async () => {
+      releaseFirst();
+      await first;
+    });
+    expect(quotingRef.current!.state).toMatchObject({ status: "ready", quote: { id: "q-2" } });
+    expect(sessionStorage.getItem(quoteStorageKey(userId, productId))).toBe("q-1");
   });
 
   it("does nothing without a buyer", async () => {
