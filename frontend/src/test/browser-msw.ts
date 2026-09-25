@@ -3,7 +3,11 @@ import { setupWorker } from "msw/browser";
 
 import { OK_CODE } from "@/api/envelope";
 import { createMswHandlers } from "@/api/generated/msw.gen";
-import type { ProductDetailResponse, ProductSummaryResponse } from "@/api/generated/types.gen";
+import type {
+  OrderSummaryResponse,
+  ProductDetailResponse,
+  ProductSummaryResponse,
+} from "@/api/generated/types.gen";
 import { keywordTerms, matchesKeyword } from "@/test/keyword-match";
 
 // Offline UI work: `?msw=1` on the URL makes main.tsx start this worker before rendering, so the
@@ -187,6 +191,36 @@ const toSummary = (s: Seed): ProductSummaryResponse => ({
   currency: "sgd",
 });
 
+// The sample buyer's orders for `/account` (§4.4 rows): one per lifecycle state, paid over the
+// last few days. `?msw=1&me=1` shows them; anonymous browsing never reaches the endpoint.
+const orderSeeds: { n: number; quantity: number; status: string; daysAgo: number }[] = [
+  { n: 1, quantity: 1, status: "pending", daysAgo: 0 },
+  { n: 5, quantity: 2, status: "confirmed", daysAgo: 3 },
+  { n: 8, quantity: 1, status: "cancelled", daysAgo: 6 },
+];
+
+const orders: OrderSummaryResponse[] = orderSeeds.map(({ n, quantity, status, daysAgo }) => {
+  const s = seeds.find((x) => x.n === n);
+  const unit = s?.groupPrice ?? s?.individualPrice ?? 0;
+  const paid = inSeconds(-daysAgo * 86_400 - 3_600);
+  return {
+    orderId: `0192f0a0-0000-7000-8000-${String(n).padStart(12, "0")}`,
+    orderNo: `BB-${2090 + n}`,
+    dealId: `deal-${n}`,
+    productId: id(n),
+    productTitle: s?.title ?? "",
+    productImage: null,
+    quantity,
+    unitPrice: unit.toFixed(2),
+    totalAmount: (unit * quantity).toFixed(2),
+    currency: "sgd",
+    status,
+    paidTime: paid,
+    cancelTime: status === "cancelled" ? inSeconds(-daysAgo * 86_400 + 3_600) : null,
+    createTime: paid,
+  };
+});
+
 export async function startBrowserMsw() {
   // Read once at start-up: in-app navigation drops `me=1` from the URL, and a later `me`
   // refetch (root loader, callback) must not flip the sample session back to anonymous
@@ -227,6 +261,21 @@ export async function startBrowserMsw() {
             data: {
               items: filtered.slice((page - 1) * size, page * size),
               total: filtered.length,
+              page,
+              size,
+            },
+          });
+        },
+        myOrders: ({ request }) => {
+          const url = new URL(request.url);
+          const page = Math.max(1, Number(url.searchParams.get("page") ?? 1));
+          const size = Math.max(1, Number(url.searchParams.get("size") ?? 20));
+          return HttpResponse.json({
+            code: OK_CODE,
+            message: "ok",
+            data: {
+              items: orders.slice((page - 1) * size, page * size),
+              total: orders.length,
               page,
               size,
             },

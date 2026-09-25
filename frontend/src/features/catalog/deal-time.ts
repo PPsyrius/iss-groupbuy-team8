@@ -83,3 +83,9 @@ export function formatDeadlineShort(deadlineMs: number): string {
   const date = new Date(deadlineMs);
   return `${part(date, "weekday")}, ${sgTime(date)}`;
 }
+
+// My blocs paid line (§4.4 "Paid · 16 Sep, 7.46 pm"): day and month without the weekday.
+export function formatDayTime(ms: number): string {
+  const date = new Date(ms);
+  return `${part(date, "day")} ${part(date, "month")}, ${sgTime(date)}`;
+}

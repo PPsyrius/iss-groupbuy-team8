@@ -38,6 +38,7 @@ webhook state from the frontend (the receipt endpoint already reflects it).
 The pay buttons on the listing (`products.$productId.tsx`) call `begin()` directly; the first-team
 quote step (`POST /api/v1/team-price-quotes`) is not in the flow yet (plan T3-01). No refund can be
 started from the frontend; the receipt only reports it (UC6, backend #29). The receipt and return
-pages have no artboard (`design-screens.md` §4.6, T3-06). `/account` shows an empty state until
-`GET /orders/me` lands (#124, T3-02). `payments.return` reads its `paymentId` through a valibot
+pages have no artboard (`design-screens.md` §4.6, T3-06). `/account` lists the buyer's orders from
+`GET /orders/me` (T3-02) with no refund label: the order schema has no refund field, so refunds
+stay on the receipt (option B on #128). `payments.return` reads its `paymentId` through a valibot
 search schema (#131, AGENTS.md rule 2).
