@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.common.exception.BizException;
@@ -11,6 +13,7 @@ import com.blocbuy.payment.gateway.PaymentIntentPort;
 import com.blocbuy.payment.model.CheckoutPayment;
 import com.blocbuy.payment.model.CheckoutQuote;
 import com.blocbuy.payment.repository.CheckoutPaymentRepository;
+import com.blocbuy.payment.repository.CheckoutPaymentRepository.ReceiptSnapshot;
 import com.blocbuy.payment.repository.RefundRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -63,12 +66,25 @@ class PaymentBrowserServiceTest {
                         null,
                         CheckoutPayment.Status.SUCCEEDED,
                         0);
-        when(repository.findById(id)).thenReturn(Optional.of(payment));
-        when(repository.outcome(id)).thenReturn(null);
-        when(repository.fulfilledDealId(id)).thenReturn(null);
-        when(repository.orderId(id)).thenReturn(null);
+        when(repository.receipt(id))
+                .thenReturn(
+                        Optional.of(
+                                new ReceiptSnapshot(
+                                        userId,
+                                        payment.status(),
+                                        quote.amount(),
+                                        quote.currency(),
+                                        null,
+                                        null,
+                                        null)));
         when(refunds.status(id)).thenReturn("processing");
         var receipt = service.receipt(userId, id);
+        verify(repository).receipt(id);
+        verify(refunds).status(id);
+        verifyNoMoreInteractions(repository);
+        assertThat(receipt.outcome()).isEqualTo("PENDING");
+        assertThat(receipt.amount()).isEqualTo("10.00");
+        assertThat(receipt.currency()).isEqualTo("sgd");
         assertThat(receipt.refundPending()).isTrue();
         assertThat(receipt.refundStatus()).isEqualTo("PROCESSING");
         when(refunds.status(id)).thenReturn("pending");
@@ -170,9 +186,20 @@ class PaymentBrowserServiceTest {
                         null,
                         CheckoutPayment.Status.CREATED,
                         0);
-        when(repository.findById(id)).thenReturn(Optional.of(payment));
+        when(repository.receipt(id))
+                .thenReturn(
+                        Optional.of(
+                                new ReceiptSnapshot(
+                                        userId,
+                                        payment.status(),
+                                        quote.amount(),
+                                        quote.currency(),
+                                        null,
+                                        null,
+                                        null)));
         UUID stranger = UUID.randomUUID();
         assertThatThrownBy(() -> service.receipt(stranger, id)).isInstanceOf(BizException.class);
+        verifyNoMoreInteractions(refunds);
     }
 
     @Test
@@ -215,11 +242,24 @@ class PaymentBrowserServiceTest {
                         null,
                         CheckoutPayment.Status.SUCCEEDED,
                         0);
-        when(repository.findById(id)).thenReturn(Optional.of(payment));
-        when(repository.outcome(id)).thenReturn("FULFILLED");
+        UUID dealId = UUID.randomUUID();
+        UUID orderId = UUID.randomUUID();
+        when(repository.receipt(id))
+                .thenReturn(
+                        Optional.of(
+                                new ReceiptSnapshot(
+                                        userId,
+                                        payment.status(),
+                                        quote.amount(),
+                                        quote.currency(),
+                                        "FULFILLED",
+                                        dealId,
+                                        orderId)));
         when(refunds.status(id)).thenReturn(null);
         var receipt = service.receipt(userId, id);
         assertThat(receipt.outcome()).isEqualTo("FULFILLED");
+        assertThat(receipt.dealId()).isEqualTo(dealId);
+        assertThat(receipt.orderId()).isEqualTo(orderId);
         assertThat(receipt.refundPending()).isFalse();
     }
 

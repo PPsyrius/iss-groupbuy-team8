@@ -13,6 +13,7 @@ public class BizPaymentDO {
     private UUID id;
     private UUID orderId;
     private UUID fulfilledDealId;
+    private String fulfilmentResult;
     private UUID intentId;
     private UUID userId;
     private String operation;
