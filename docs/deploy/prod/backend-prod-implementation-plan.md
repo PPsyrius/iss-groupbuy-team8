@@ -24,7 +24,7 @@ One PR. Creates the code only; nobody applies anything yet.
 ```text
 infra/terraform/
 ├── backend-app-stack/
-│   ├── versions.tf          # terraform >= 1.9, aws provider pinned (~> 5.x, exact pin in lock)
+│   ├── versions.tf          # terraform ~> 1.16.4, aws provider pinned (~> 5.x, exact pin in lock)
 │   ├── backend.tf           # partial S3 backend config: key + dynamodb_table; bucket passed via -backend-config
 │   ├── main.tf              # locals (github_repo_slug), providers, data sources (default VPC, public subnets, AMI)
 │   ├── variables.tf         # every value from design doc §4
@@ -59,8 +59,8 @@ infra/terraform/
 
 ### 1.3 Acceptance criteria
 
-- [ ] `terraform fmt -check` clean; `terraform validate` passes with `-backend=false`
-- [ ] `terraform plan` against the real account (read-only) shows the intended resources — the plan itself is attached to the PR for review (this doubles as the §12 audit-trail evidence)
+- [ ] On a clean checkout from the repository root, run Terraform 1.16.4 `terraform -chdir=infra/terraform/backend-app-stack init -backend=false`, `terraform -chdir=infra/terraform/backend-app-stack fmt -check` and `terraform -chdir=infra/terraform/backend-app-stack validate`; all pass (offline syntax check, not a live plan)
+- [ ] `terraform plan` against the real account (read-only) shows the intended resources — review the full secret-bearing plan privately and attach only a redacted action summary to the PR (§12 audit-trail evidence)
 - [ ] Grep proofs: no `i-0` literal instance IDs, no account IDs hardcoded outside tfvars examples, no wildcard in any trust policy
 
 ## 2. Phase 2 — `fetch-env.sh` and the shared deployment bundle
@@ -70,7 +70,7 @@ One PR. Adds the prod secret-rendering script and updates the bundle allowlist *
 ### 2.1 `deployment/backend/bin/fetch-env.sh` (new)
 
 - Usage: `fetch-env.sh <ssm-parameter-path-prefix>` (e.g. `/blocbuy/prod`).
-- Fetches the required runtime keys: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `BLOCBUY_SCHEDULING_ENABLED`, `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET` — via one `aws ssm get-parameters --with-decryption` call; fails if **any** parameter is missing or any value still looks like a placeholder. Scheduling starts as `false` and is enabled only after the overdue-team backlog check.
+- Fetches the required runtime keys: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `BLOCBUY_SCHEDULING_ENABLED`, `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET` — via one `aws ssm get-parameters --with-decryption` call; fails if **any** parameter is missing or any value still looks like a placeholder. Scheduling starts as `false` and is enabled only after checking overdue teams and due refund obligations; under `ec2` it also starts the sandbox refund worker.
 - Writes `/etc/blocbuy/backend.env` atomically (temp file + `mv`), `root:root 0600`.
 - Refuses to run as non-root; never echoes parameter values.
 - `bash -n` clean and shellcheck-clean to the standard of the existing four scripts.

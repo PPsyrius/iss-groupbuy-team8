@@ -77,6 +77,23 @@
         WHERE id = #{id,jdbcType=OTHER} AND deleted = false
     </select>
 
+    <resultMap id="bizProductDisplayMap"
+               type="com.blocbuy.catalog.persistence.BizProductDisplayDO">
+        <id column="id" property="productId" jdbcType="OTHER"/>
+        <result column="title" property="title"/>
+        <result column="cover_image" property="coverImage"/>
+    </resultMap>
+
+    <!-- Display columns only: My Teams must not depend on images, status or price being valid. -->
+    <select id="selectDisplaysByIds" resultMap="bizProductDisplayMap">
+        SELECT id, title, cover_image
+        FROM biz_product
+        WHERE deleted = false AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id,jdbcType=OTHER}
+        </foreach>
+    </select>
+
     <resultMap id="bizProductTeamTermsMap"
                type="com.blocbuy.catalog.persistence.BizProductTeamTermsDO">
         <id column="id" property="productId" jdbcType="OTHER"/>

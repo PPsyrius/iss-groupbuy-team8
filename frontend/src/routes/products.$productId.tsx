@@ -10,7 +10,9 @@ import { NotFoundCard } from "@/components/ErrorCard";
 import { formatDeadlineShort, hasEnded, parseDeadline } from "@/features/catalog/deal-time";
 import { DealProgress, useNow } from "@/features/catalog/DealProgress";
 import { formatPrice, Price } from "@/features/catalog/Price";
+import { QuoteSheet } from "@/features/payment/QuoteSheet";
 import { useCheckout } from "@/features/payment/use-checkout";
+import { useQuote } from "@/features/payment/use-quote";
 import { GatedActionSheet } from "@/features/session/GatedActionSheet";
 import { useSession } from "@/features/session/use-session";
 
@@ -86,12 +88,23 @@ function ProductDetailPage() {
   const session = useSession();
   const [gateOpen, setGateOpen] = useState(false);
   const onGated = session.status === "authenticated" ? undefined : () => setGateOpen(true);
-  const checkout = useCheckout(session.status === "authenticated" ? session.userId : undefined);
+  const buyerId = session.status === "authenticated" ? session.userId : undefined;
+  const checkout = useCheckout(buyerId);
+  // START goes through the quote sheet first (T3-01); JOIN has no quote and pays directly.
+  // The sheet belongs to the buyer and listing it was opened for: this component stays mounted
+  // across `$productId` changes, so a new listing starts with the sheet closed (CodeRabbit
+  // r4102738802).
+  const quoting = useQuote(buyerId, productId);
+  const sheetFor = `${buyerId ?? ""}/${productId}`;
+  const [openFor, setOpenFor] = useState<string | null>(null);
+  const quoteOpen = openFor === sheetFor;
+  const setQuoteOpen = (open: boolean) => setOpenFor(open ? sheetFor : null);
   const onStart =
     onGated ??
     (checkout.enabled
       ? () => {
-          void checkout.begin("START", productId);
+          setQuoteOpen(true);
+          void quoting.load();
         }
       : undefined);
   const onJoin =
@@ -110,6 +123,23 @@ function ProductDetailPage() {
         isOpen={gateOpen}
         onOpenChange={setGateOpen}
         returnTo={`/products/${productId}`}
+      />
+      <QuoteSheet
+        isOpen={quoteOpen}
+        onOpenChange={setQuoteOpen}
+        state={quoting.state}
+        now={now}
+        isPaying={checkout.isPending}
+        // Success leaves for Stripe; a failure closes the sheet so the page-level alert shows.
+        onContinue={() => {
+          void checkout.begin("START", productId).then(() => setQuoteOpen(false));
+        }}
+        onRefresh={() => {
+          void quoting.refresh();
+        }}
+        onRetry={() => {
+          void quoting.load();
+        }}
       />
       <CrumbRow category={category} title={p.title} />
       {checkout.error ? (

@@ -1,6 +1,9 @@
 package com.blocbuy.groupbuy.repository;
 
+import com.blocbuy.common.model.PageQuery;
+import com.blocbuy.common.model.PageResult;
 import com.blocbuy.groupbuy.model.GroupDeal;
+import com.blocbuy.groupbuy.model.TeamMembership;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -23,4 +26,12 @@ public interface GroupDealRepository {
      * is forbidden). Empty input returns an empty list.
      */
     List<GroupDeal> findOpenDealsByProductIds(Collection<UUID> productIds);
+
+    /**
+     * Owner-scoped My Teams page: every active team the buyer leads or joined, newest participation
+     * first with a unique tie-breaker. Two bounded queries (page + count), independent of page
+     * size. They agree only when the caller runs them in one snapshot ({@code REPEATABLE READ});
+     * under {@code READ COMMITTED} each statement sees its own.
+     */
+    PageResult<TeamMembership> pageMembershipsByUserId(PageQuery query, UUID userId);
 }

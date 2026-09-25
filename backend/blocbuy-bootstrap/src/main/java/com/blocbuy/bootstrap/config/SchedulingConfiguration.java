@@ -1,10 +1,12 @@
 package com.blocbuy.bootstrap.config;
 
 import com.blocbuy.bootstrap.scheduling.LeasedJobRunner;
+import com.blocbuy.bootstrap.scheduling.RefundWorkerJob;
 import com.blocbuy.bootstrap.scheduling.SchedulingProperties;
 import com.blocbuy.bootstrap.scheduling.TeamExpirySweepJob;
 import com.blocbuy.common.repository.SchedulerLeaseRepository;
 import com.blocbuy.groupbuy.service.GroupDealExpirySweeper;
+import com.blocbuy.payment.service.RefundService;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -36,5 +38,14 @@ public class SchedulingConfiguration {
             SchedulingProperties properties,
             MeterRegistry meters) {
         return new TeamExpirySweepJob(runner, sweeper, properties.teamExpiry(), meters);
+    }
+
+    @Bean
+    RefundWorkerJob refundWorkerJob(
+            LeasedJobRunner runner,
+            RefundService refunds,
+            SchedulingProperties properties,
+            MeterRegistry meters) {
+        return new RefundWorkerJob(runner, refunds, properties.refundWorker(), meters);
     }
 }

@@ -7,6 +7,7 @@ import type {
   OrderSummaryResponse,
   ProductDetailResponse,
   ProductSummaryResponse,
+  QuoteResponse,
 } from "@/api/generated/types.gen";
 import { keywordTerms, matchesKeyword } from "@/test/keyword-match";
 
@@ -221,6 +222,27 @@ const orders: OrderSummaryResponse[] = orderSeeds.map(({ n, quantity, status, da
   };
 });
 
+// First-team quotes (T3-01): the seed's bloc price, valid for 15 minutes; a listing without one
+// answers the backend's "team price unavailable" 409. Issued quotes are kept for `getQuote`.
+const quotes = new Map<string, QuoteResponse>();
+
+function issueQuote(productId: string): QuoteResponse | null {
+  const s = seeds.find((x) => id(x.n) === productId);
+  if (s?.groupPrice === undefined) return null;
+  const now = Date.now();
+  const quote = {
+    id: crypto.randomUUID(),
+    productId,
+    policyVersion: 1,
+    amount: s.groupPrice.toFixed(2),
+    currency: "sgd",
+    issuedAt: new Date(now).toISOString(),
+    expiresAt: new Date(now + 15 * 60_000).toISOString(),
+  };
+  quotes.set(quote.id, quote);
+  return quote;
+}
+
 export async function startBrowserMsw() {
   // Read once at start-up: in-app navigation drops `me=1` from the URL, and a later `me`
   // refetch (root loader, callback) must not flip the sample session back to anonymous
@@ -280,6 +302,29 @@ export async function startBrowserMsw() {
               size,
             },
           });
+        },
+        // Payments are on for the sample buyer so Start a bloc opens the quote sheet; the intent
+        // itself is not mocked, so Continue ends on the page's "could not open Checkout" alert.
+        getPaymentCapabilities: () =>
+          HttpResponse.json({ code: OK_CODE, message: "ok", data: { enabled: signedIn } }),
+        issue: async ({ request }) => {
+          const body = (await request.json()) as { productId?: string };
+          const quote = issueQuote(body.productId ?? "");
+          return quote
+            ? HttpResponse.json({ code: OK_CODE, message: "ok", data: quote })
+            : HttpResponse.json(
+                { code: "CATALOG_409_001", message: "Team price is unavailable" },
+                { status: 409 },
+              );
+        },
+        getQuote: ({ params }) => {
+          const quote = quotes.get(params.quoteId);
+          return quote
+            ? HttpResponse.json({ code: OK_CODE, message: "ok", data: quote })
+            : HttpResponse.json(
+                { code: "CATALOG_404_002", message: "Team price quote not found" },
+                { status: 404 },
+              );
         },
         getListing: ({ params }) => {
           const found = details.find((p) => p.id === params.id);

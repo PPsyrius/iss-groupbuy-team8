@@ -137,6 +137,7 @@ sketch
 infra/terraform/**/.terraform/
 *.tfstate
 *.tfplan
+infra/terraform/frontend-stack/generated.tf
 
 # Claude Code worktrees
 .claude/worktrees/

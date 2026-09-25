@@ -233,10 +233,11 @@ BlocBuy is the group project of **NUS-ISS Team 8** for the **SWE5006 Designing M
 - [Existing EC2 backend deployment operator guide](docs/deploy/backend-ec2-pipeline-operator-guide.md)
 - [First-deploy one-time bootstrap checklist](docs/deploy/backend-first-deploy-bootstrap.md)
 - [Dev CloudFront + ALB entry-layer deployment](docs/deploy/dev-cloudfront-deployment.md)
+- [Terraform stacks and state ownership](infra/terraform/README.md)
 - [Production backend deployment guide (Terraform IaC)](docs/deploy/prod/backend-prod-terraform-deployment.md)
 - [EC2 backend runtime bundle](deployment/backend/README.md)
 
-The backend pipeline builds and scans one immutable image, publishes it to Amazon ECR, and deploys only the backend to the EC2 host through AWS Systems Manager. The development environment reuses a manually bootstrapped instance; the production environment is designed as Terraform-managed infrastructure per the guide above.
+The backend pipeline builds and scans one immutable image, publishes it to Amazon ECR, and deploys only the backend to the EC2 host through AWS Systems Manager. The dev backend still uses a manually bootstrapped instance; the existing dev frontend edge was adopted into separate Terraform state on 2026-09-25 with a zero-change plan (#161), but its source PR has not merged. The production backend infrastructure is defined in its own Terraform stack; production landing remains tracked by #48.
 
 ## Team
 

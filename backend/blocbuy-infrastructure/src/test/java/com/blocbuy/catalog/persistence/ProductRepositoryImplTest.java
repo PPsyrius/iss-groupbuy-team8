@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import com.blocbuy.catalog.exception.CatalogErrorCode;
 import com.blocbuy.catalog.model.Product;
+import com.blocbuy.catalog.model.ProductDisplay;
 import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.common.model.PageQuery;
@@ -128,6 +129,22 @@ class ProductRepositoryImplTest {
         assertThat(repository.lockById(PRODUCT_ID)).isPresent();
         assertThat(repository.lockById(PRODUCT_ID)).isEmpty();
         verify(mapper, times(2)).selectActiveByIdForUpdate(PRODUCT_ID);
+    }
+
+    @Test
+    void findDisplaysByIdsMapsOneBatchAndSkipsQueryForNullOrEmptyIds() {
+        List<UUID> ids = List.of(PRODUCT_ID);
+        BizProductDisplayDO display = new BizProductDisplayDO();
+        display.setProductId(PRODUCT_ID);
+        display.setTitle("Tea");
+        display.setCoverImage("tea.jpg");
+        when(mapper.selectDisplaysByIds(ids)).thenReturn(List.of(display));
+
+        assertThat(repository.findDisplaysByIds(ids))
+                .containsExactly(new ProductDisplay(PRODUCT_ID, "Tea", "tea.jpg"));
+        assertThat(repository.findDisplaysByIds(null)).isEmpty();
+        assertThat(repository.findDisplaysByIds(List.of())).isEmpty();
+        verify(mapper, times(1)).selectDisplaysByIds(any());
     }
 
     @Test
