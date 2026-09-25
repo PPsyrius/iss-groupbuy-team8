@@ -18,7 +18,7 @@ export function QuoteSheet({
   onContinue,
   onRefresh,
   onRetry,
-}: {
+}: Readonly<{
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   state: QuoteState;
@@ -27,7 +27,7 @@ export function QuoteSheet({
   onContinue: () => void;
   onRefresh: () => void;
   onRetry: () => void;
-}) {
+}>) {
   const quote = state.status === "ready" ? state.quote : null;
   const expired = quote !== null && quote.expiresMs <= now;
   return (
@@ -139,7 +139,10 @@ export function QuoteSheet({
 
 // Same three cells as the listing's trust triptych (§4.2), with the hold countdown in the middle.
 // `role="timer"` keeps the per-second tick out of screen-reader announcements.
-function QuoteTerms({ payNow, held }: { payNow: string; held: { text: string; urgent: boolean } }) {
+function QuoteTerms({
+  payNow,
+  held,
+}: Readonly<{ payNow: string; held: { text: string; urgent: boolean } }>) {
   const cell = "flex flex-col gap-0.5 rounded-lg border-border border p-3";
   return (
     <dl className="grid grid-cols-3 gap-2">
