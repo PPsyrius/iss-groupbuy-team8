@@ -1,8 +1,10 @@
 package com.blocbuy.catalog.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.blocbuy.catalog.model.Product;
+import com.blocbuy.catalog.model.ProductDisplay;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
 import com.blocbuy.common.persistence.UuidTypeHandler;
@@ -31,7 +33,10 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
-/** Real PostgreSQL coverage for UC1-ext matching, visibility, count, order, and pagination. */
+/**
+ * Real PostgreSQL coverage for UC1-ext matching, visibility, count, order, and pagination, plus the
+ * batch by-id read behind the UC8 My Teams display lookup.
+ */
 @Testcontainers
 class ProductSearchRepositoryIT {
 
@@ -296,6 +301,44 @@ class ProductSearchRepositoryIT {
                                     .items())
                     .extracting(Product::id)
                     .containsExactly(TIE_HIGH, TIE_LOW);
+        }
+    }
+
+    /** Batch display read keeps any live status, drops soft-deleted and unknown ids. */
+    @Test
+    void findDisplaysByIdsReturnsLiveProductsOfAnyStatusInOneQuery() {
+        UUID draft = UUID.fromString("a0000000-0000-7000-8000-000000000004");
+        UUID deleted = UUID.fromString("a0000000-0000-7000-8000-000000000005");
+        UUID unknown = UUID.fromString("a0000000-0000-7000-8000-0000000000ff");
+
+        try (SqlSession session = sessions.openSession()) {
+            assertThat(
+                            repository(session)
+                                    .findDisplaysByIds(
+                                            List.of(NEWER_COFFEE, draft, deleted, unknown)))
+                    .extracting(ProductDisplay::productId, ProductDisplay::title)
+                    .containsExactlyInAnyOrder(
+                            tuple(NEWER_COFFEE, "Premium Coffee Beans"),
+                            tuple(draft, "Coffee draft"));
+        }
+    }
+
+    /**
+     * #182 review: a row the aggregate would refuse to rebuild — images that are not a string
+     * array, an unknown status and pricing mode — still yields its title and cover.
+     */
+    @Test
+    void aRowTheAggregateCannotRebuildStillDisplays() {
+        jdbc.update(
+                "UPDATE biz_product SET images = '{\"not\":\"an array\"}'::jsonb,"
+                        + " status = 'weird', pricing_mode = 'weird', cover_image = 'coffee.jpg'"
+                        + " WHERE id = ?",
+                NEWER_COFFEE);
+
+        try (SqlSession session = sessions.openSession()) {
+            assertThat(repository(session).findDisplaysByIds(List.of(NEWER_COFFEE)))
+                    .containsExactly(
+                            new ProductDisplay(NEWER_COFFEE, "Premium Coffee Beans", "coffee.jpg"));
         }
     }
 

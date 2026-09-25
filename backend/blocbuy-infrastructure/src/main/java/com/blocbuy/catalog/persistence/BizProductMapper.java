@@ -1,5 +1,6 @@
 package com.blocbuy.catalog.persistence;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import org.apache.ibatis.annotations.Mapper;
@@ -40,6 +41,12 @@ public interface BizProductMapper {
 
     /** Active product by primary key, any status. */
     BizProductDO selectActiveById(@Param("id") UUID id);
+
+    /**
+     * Display columns of active products by primary key, any status. Callers must guard the empty
+     * collection.
+     */
+    List<BizProductDisplayDO> selectDisplaysByIds(@Param("ids") Collection<UUID> ids);
 
     /** Team terms only; the listing snapshot is not needed to decide whether a team can start. */
     BizProductTeamTermsDO selectTeamTerms(@Param("id") UUID id);
