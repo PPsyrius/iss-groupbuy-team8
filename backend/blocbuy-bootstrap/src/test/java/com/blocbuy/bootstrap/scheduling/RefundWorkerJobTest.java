@@ -76,8 +76,7 @@ class RefundWorkerJobTest {
     void unexpectedFailureDoesNotCountAsACompletedAttempt() {
         when(refunds.processNext()).thenThrow(new IllegalStateException("database unavailable"));
         SchedulerLeaseRepository leases = mock(SchedulerLeaseRepository.class);
-        when(leases.tryAcquire(RefundWorkerJob.JOB, "test", SETTINGS.lease()))
-                .thenReturn(true);
+        when(leases.tryAcquire(RefundWorkerJob.JOB, "test", SETTINGS.lease())).thenReturn(true);
         when(leases.release(RefundWorkerJob.JOB, "test")).thenReturn(true);
         RefundWorkerJob realRunnerJob =
                 new RefundWorkerJob(
