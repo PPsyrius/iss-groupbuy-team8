@@ -5,6 +5,7 @@ import com.blocbuy.payment.model.PaymentReviewCase;
 import com.blocbuy.payment.repository.CheckoutPaymentRepository;
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -20,15 +21,20 @@ public class CheckoutPaymentRepositoryImpl implements CheckoutPaymentRepository 
     private final PaymentMapper mapper;
 
     @Override
-    public UUID orderId(UUID id) {
-        var row = mapper.find(id);
-        return row == null ? null : row.getOrderId();
-    }
-
-    @Override
-    public UUID fulfilledDealId(UUID id) {
-        var row = mapper.find(id);
-        return row == null ? null : row.getFulfilledDealId();
+    public Optional<ReceiptSnapshot> receipt(UUID id) {
+        var row = mapper.receipt(id);
+        if (row == null) {
+            return Optional.empty();
+        }
+        return Optional.of(
+                new ReceiptSnapshot(
+                        row.getUserId(),
+                        CheckoutPayment.Status.valueOf(row.getStatus().toUpperCase(Locale.ROOT)),
+                        row.getAmount(),
+                        row.getCurrency(),
+                        row.getFulfilmentResult(),
+                        row.getFulfilledDealId(),
+                        row.getOrderId()));
     }
 
     @Override
