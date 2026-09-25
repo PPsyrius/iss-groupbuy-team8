@@ -8,50 +8,22 @@ Accepted
 
 ## Context
 
-The dev entry layer (ALB with the `X-Origin-Secret` listener rule, private S3 bucket with OAC,
-the CloudFront distribution with its `/api/*` behavior) was built by hand from
-`docs/deploy/dev-cloudfront-deployment.md` and has been live since 2026-09-06.
-`infra/terraform/backend-app-stack` covers EC2, ALB, ECR and OIDC and deliberately leaves the dev
-CloudFront out; #48 tracks the Terraform work and its state backend
-(`blocbuy-tfstate-402178232802`). Only the AWS account holders (@l0sgAi, @PPsyrius) can change
-the edge; the frontend owner holds no AWS credentials. Tier 1 needs three edge changes before the
-first deploy by 2026-09-20 (SPA fallback function, response-headers policy, deploy role plus
-GitHub environment), and the report needs infrastructure-as-code evidence for the frontend edge.
+The dev entry layer (ALB with the `X-Origin-Secret` listener rule, private S3 bucket with OAC, the CloudFront distribution with its `/api/*` behavior) was built by hand from `docs/deploy/dev-cloudfront-deployment.md` and has been live since 2026-09-06. `infra/terraform/backend-app-stack` covers EC2, ALB, ECR and OIDC and deliberately leaves the dev CloudFront out; #48 tracks the Terraform work and its state backend (`blocbuy-tfstate-402178232802`). Only the AWS account holders (@l0sgAi, @PPsyrius) can change the edge; the frontend owner holds no AWS credentials. Tier 1 needs three edge changes before the first deploy by 2026-09-20 (SPA fallback function, response-headers policy, deploy role plus GitHub environment), and the report needs infrastructure-as-code evidence for the frontend edge.
 
 ## Decision
 
-Dev edge changes are runbook steps, not Terraform: §14 SPA fallback, §15 response-headers
-policy, §16 OIDC deploy role, §17 `frontend-dev` environment, each with its source versioned
-under `deployment/frontend/` (`cloudfront/spa-fallback.js`, `cloudfront/response-headers-policy.json`,
-`iam/*.json.example`) and each tracked as a blocker the account holder executes (A1 #99, A2 #100,
-A3 #101, A4 #102). `infra/terraform/frontend-stack` then imports the same resources in T2-07
-(PR-J, paired with @PPsyrius, linked to #48): `import` blocks for the bucket, bucket policy,
-public-access block, OAC, function, headers policy and distribution; resources generated with
-`plan -generate-config-out` and hand-tidied into `s3.tf` and `cloudfront.tf`;
-`terraform plan -detailed-exitcode` exiting 0 as the acceptance test; never `apply` from CI (repo
-rule). `X-Origin-Secret` is a `sensitive` variable, which only redacts it from plan and apply
-output; the resolved value still lands in the state file once the distribution is imported. So
-`frontend-stack` state lives only in the existing remote backend (`blocbuy-tfstate-402178232802`,
-`encrypt = true`, DynamoDB lock table, readable by the two account holders alone), `*.tfstate` and
-`*.tfplan` stay in `.gitignore`, and no plan output is attached to a PR or issue.
+Dev edge changes are runbook steps, not Terraform: §14 SPA fallback, §15 response-headers policy, §16 OIDC deploy role, §17 `frontend-dev` environment, each with its source versioned under `deployment/frontend/` (`cloudfront/spa-fallback.js`, `cloudfront/response-headers-policy.json`, `iam/*.json.example`) and each tracked as a blocker the account holder executes (A1 #99, A2 #100, A3 #101, A4 #102). `infra/terraform/frontend-stack` then imports the same resources in T2-07 (PR-J, paired with @PPsyrius, linked to #48): `import` blocks for the bucket, bucket policy, public-access block, OAC, function, headers policy and distribution; resources generated with `plan -generate-config-out` and hand-tidied into `s3.tf` and `cloudfront.tf`; `terraform plan -detailed-exitcode` exiting 0 as the acceptance test; never `apply` from CI (repo rule). `X-Origin-Secret` is a `sensitive` variable, which only redacts it from plan and apply output; the resolved value still lands in the state file once the distribution is imported. So `frontend-stack` state lives only in the existing remote backend (`blocbuy-tfstate-402178232802`, `encrypt = true`, DynamoDB lock table, readable by the two account holders alone), `*.tfstate` and `*.tfplan` stay in `.gitignore`, and no plan output is attached to a PR or issue.
 
-Alternatives rejected: Terraform first (blocks the walking skeleton on infra review and on
-credentials the frontend owner does not hold); never import (no IaC evidence for the report, and
-the edge stays reproducible only from prose).
+Alternatives rejected: Terraform first (blocks the walking skeleton on infra review and on credentials the frontend owner does not hold); never import (no IaC evidence for the report, and the edge stays reproducible only from prose).
 
 ## Consequences
 
-Until T2-07 there are two sources of truth for the edge, the runbook plus `deployment/frontend/`
-and whatever the console holds, so any change made outside the runbook is drift that the import's
-plan will surface as a non-zero exit. T1-03 (2026-09-16, PR-B) verified only file syntax
-(`python3 -m json.tool` on the three JSON files, `node --check` on the function); no AWS command
-was run, and the §14/§15 curl probes cannot be exercised while the dev backend is down (T1-01
-entry, ALB 503). The OIDC trust-policy `sub` format is unconfirmed: the backend example carries
-an id-suffixed subject and GitHub documents a plain one, so §16 tells the operator to decode the
-subject the `frontend-dev` job actually presents and use that exact value (open until A3
-executes); the `dev`-only restriction stays on the environment's deployment branch policy (§17). Execution dates land on the blocker issues and in the runbook
-sections, not here. The deploy role is deliberately separate from the backend deploy role
-(`deployment/frontend/iam/README.md`). The `--delete`/rollback question for the bucket (ADR 0004)
-is decided in T2-07 as a lifecycle rule, since that is when the bucket becomes code.
+Until T2-07 there are two sources of truth for the edge: the runbook plus `deployment/frontend/` and whatever the console holds. Any difference appears as a non-zero import plan; do not apply a plan that proposes live changes. The deploy role stays separate from the backend deploy role (`deployment/frontend/iam/README.md`). The `--delete`/rollback question for the bucket (ADR 0004) belongs to T2-07 when the bucket becomes code.
+
+2026-09-16 (T1-03, PR-B): only versioned file syntax was checked (`python3 -m json.tool` on three JSON files, `node --check` on the function); no AWS commands ran. The dev backend was down (ALB 503), so §14/§15 curl probes could not run. The OIDC `sub` format was also unresolved at this point; the account holder had to establish the real `frontend-dev` subject while GitHub environment branch policy kept deployment on `dev`.
 
 2026-09-23: the existing frontend role was verified with the immutable subject `repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:environment:frontend-dev` and scoped S3/CloudFront permissions. Run #165 assumed it successfully; `frontend-dev` permits only `dev`.
+
+2026-09-25 (#161): `infra/terraform/frontend-stack/` declares nine imports, including the deploy role and inline policy, with its own state key. The account holder confirmed the backend in #161; read-only AWS checks matched the versioned edge. Terraform 1.16.4 local and CloudShell `init`/`validate` passed with AWS provider 5.100.0; the first two plans proposed four updates and the third three, so none was applied. The first pasted diff exposed the origin secret: coordinate rotation and share only filtered action summaries. Filtered diagnostics showed identical before/after origins; AWS provider 5.100.0 hashes the set differently when the custom header is sensitive, so the account holder approved `nonsensitive` only at that provider field to retain full origin management. This overrides the original decision's assumption that the variable alone redacts every plan: state, saved plans and future changed-header diffs can reveal it. The fourth private plan exited 0 with nine no-op imports and no live-resource changes, **not applied**. The draft follows the provider's empty-origin shape and sets `publish = false` with that virtual function field ignored for import; publishing new LIVE code requires separate review. `--delete` stays in the frontend sync and rollback redeploys a known-good artifact; no bucket lifecycle rule is added without a retention change (ADR 0004). Terraform ownership still requires reviewed state adoption and post-import `plan -detailed-exitcode` exit 0. Keep the original bootstrap in the runbook's linked Git revision.
+
+2026-09-25 completion (#161): after explicit account-holder authorization, CloudShell applied the reviewed fourth plan: **nine imports, zero added/changed/destroyed**. The immediate post-import `plan -detailed-exitcode -var-file=../envs/frontend-dev.tfvars` exited **0**, reporting no changes. The imported dev frontend edge is now Terraform-managed in separate remote state with no live-resource modification. The code and evidence are still staged locally; #161's PR/merge criterion and separately coordinated origin-secret rotation remain open. Preserve the historical hand-managed runbook and never publish raw plan/state output.

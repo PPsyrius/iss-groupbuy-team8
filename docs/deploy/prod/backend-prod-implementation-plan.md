@@ -24,7 +24,7 @@ One PR. Creates the code only; nobody applies anything yet.
 ```text
 infra/terraform/
 ├── backend-app-stack/
-│   ├── versions.tf          # terraform >= 1.9, aws provider pinned (~> 5.x, exact pin in lock)
+│   ├── versions.tf          # terraform ~> 1.16.4, aws provider pinned (~> 5.x, exact pin in lock)
 │   ├── backend.tf           # partial S3 backend config: key + dynamodb_table; bucket passed via -backend-config
 │   ├── main.tf              # locals (github_repo_slug), providers, data sources (default VPC, public subnets, AMI)
 │   ├── variables.tf         # every value from design doc §4
@@ -59,8 +59,8 @@ infra/terraform/
 
 ### 1.3 Acceptance criteria
 
-- [ ] `terraform fmt -check` clean; `terraform validate` passes with `-backend=false`
-- [ ] `terraform plan` against the real account (read-only) shows the intended resources — the plan itself is attached to the PR for review (this doubles as the §12 audit-trail evidence)
+- [ ] Terraform 1.16.4 `terraform -chdir=infra/terraform/backend-app-stack init -backend=false`, `fmt -check` and `validate` pass on a clean checkout (offline syntax check, not a live plan)
+- [ ] `terraform plan` against the real account (read-only) shows the intended resources — review the full secret-bearing plan privately and attach only a redacted action summary to the PR (§12 audit-trail evidence)
 - [ ] Grep proofs: no `i-0` literal instance IDs, no account IDs hardcoded outside tfvars examples, no wildcard in any trust policy
 
 ## 2. Phase 2 — `fetch-env.sh` and the shared deployment bundle

@@ -4,7 +4,7 @@
 
 **Environment:** `backend-prod` (a second, dedicated EC2 instance)
 
-**Provisioning model:** Terraform-managed infrastructure — IAM, ECR, EC2, security groups, load balancer, and host bootstrap are all declared as code and applied with `terraform apply`
+**Provisioning model:** Terraform-defined production infrastructure — IAM, ECR, EC2, security groups, load balancer and host bootstrap are declared as code; production `terraform apply` remains an account-holder runbook step (#48), not a completed deployment claim.
 
 **Application delivery:** unchanged from dev — GitHub Actions -> Amazon ECR -> AWS Systems Manager Run Command, extended with a release tag trigger and a mandatory approval gate
 
@@ -117,7 +117,7 @@ The OIDC subject values are not guessed: they were decoded from a live workflow 
 
 ### 5.1 Bootstrap the Terraform state backend
 
-Run once per AWS account from an administrator workstation (outside Terraform, like the OIDC provider in the dev bootstrap):
+Run once per AWS account from an administrator workstation (outside Terraform, like the OIDC provider in the dev bootstrap). On 2026-09-25 the bucket and active `LockID (S)` DynamoDB table were confirmed for #161; verify versioning, encryption and access rather than replaying create commands against existing resources.
 
 ```bash
 aws s3api create-bucket --bucket blocbuy-tfstate-402178232802 \
@@ -500,7 +500,7 @@ Also create `backend-prod-publish` (the publish job's environment — its OIDC s
 Then set every variable from Terraform outputs — the values are derived, never retyped:
 
 ```bash
-terraform -chdir=infra/terraform output -json > /tmp/tf-outputs.json
+terraform -chdir=infra/terraform/backend-app-stack output -json > /tmp/tf-outputs.json
 
 gh variable set AWS_ACCOUNT_ID  --body 402178232802
 gh variable set AWS_REGION      --body ap-southeast-1
@@ -525,13 +525,13 @@ No AWS access keys ever enter GitHub — OIDC issues short-lived credentials, ex
 Ordered, with the freeze switch held closed until the last possible moment:
 
 1. Seed **all** secrets into Parameter Store first (section 6.7) — the stack reads `ORIGIN_SECRET` at plan time and the user-data reads the first-boot keys at instance creation.
-2. `terraform init && terraform plan -var-file=envs/prod.tfvars` — review the rendered plan as a team; specifically read both trust policies, the 8589 ingress rule, the CloudFront prefix list on the ALB SG, and the default-403 listener with its `X-Origin-Secret` rule.
-3. `terraform apply -var-file=envs/prod.tfvars` — creates IAM, ECR, SGs, ALB, and the EC2 host; user-data completes at first boot.
+2. From the repository root, run `terraform -chdir=infra/terraform/backend-app-stack init -backend-config="bucket=blocbuy-tfstate-402178232802" -backend-config="region=ap-southeast-1"` and `terraform -chdir=infra/terraform/backend-app-stack plan -var-file=../envs/prod.tfvars -out=prod.tfplan`; review both trust policies, 8589 ingress, the CloudFront prefix list and the default-403/secret-header rule privately. The saved plan may contain the origin secret; share only a redacted action summary.
+3. After the team's review, `terraform -chdir=infra/terraform/backend-app-stack apply prod.tfplan` creates IAM, ECR, SGs, ALB and the EC2 host; verify user-data separately after boot.
 4. Verify from an admin workstation:
 
    ```bash
    aws ssm describe-instance-information \
-     --filters Key=InstanceIds,Values=$(terraform -chdir=infra/terraform output -raw instance_id) \
+      --filters Key=InstanceIds,Values=$(terraform -chdir=infra/terraform/backend-app-stack output -raw instance_id) \
      --region ap-southeast-1   # PingStatus must be Online
    aws ec2 describe-security-groups ...   # confirm 8589 allows only the ALB SG
    ```
@@ -547,16 +547,16 @@ Ordered, with the freeze switch held closed until the last possible moment:
 
     ```bash
     curl --fail --silent "https://<prod-dist-domain>/api/actuator/health"
-    # Direct-to-ALB sanity: without the secret header this must 403
-    curl -s -o /dev/null -w '%{http_code}\n' \
-      "$(terraform -chdir=infra/terraform output -raw backend_url)/api/actuator/health"   # 403
+    # Direct ALB access without the secret is blocked: prefix-list SG timeout/000, or listener 403.
+    curl --max-time 5 -s -o /dev/null -w '%{http_code}\n' \
+      "$(terraform -chdir=infra/terraform/backend-app-stack output -raw backend_url)/api/actuator/health"
     ```
 
 13. Record the change in the team change log (environment creation is one Terraform PR plus one apply — the PR itself is most of the audit evidence).
 
 ## 10. Bringing the dev environment under Terraform (follow-up, optional)
 
-The existing dev resources predate Terraform and remain hand-managed until explicitly imported. When the team chooses to adopt that:
+The **dev backend** EC2/ALB resources predate Terraform and remain hand-managed; the separate dev **frontend** edge was imported into `frontend-stack` on 2026-09-25 with a zero-change plan (#161). If the team later adopts the dev backend:
 
 1. add `envs/dev.tfvars` describing the dev environment as it exists (roles, `dev/blocbuy`, instance security group);
 2. `terraform import` each resource into state — IAM roles first, then ECR, then the security group;
@@ -585,7 +585,7 @@ Until then, the two environments coexist safely because prod role names, reposit
 | Immutable artifacts | Same digest-pinned ECR deployment as dev; tag-immutability enabled |
 | Least privilege by reference | Inline policies reference resource ARNs (`aws_ecr_repository...arn`, `aws_instance...id`) instead of literals |
 | Reproducibility | `envs/prod.tfvars` + pinned provider versions recreate the environment from scratch |
-| Audit trail | PR review + `terraform plan` in PR comments + CloudTrail + GitHub environment approvals |
+| Audit trail | PR review + redacted Terraform plan summary in PR comments (no raw secret-bearing plan/state) + CloudTrail + GitHub environment approvals |
 | Disaster recovery | `terraform apply` rebuilds the host; ECR lifecycle retains rollback digests; state bucket is versioned |
 
 ## 13. Authoritative references
