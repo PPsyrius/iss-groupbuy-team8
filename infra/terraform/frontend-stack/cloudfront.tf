@@ -66,6 +66,9 @@ resource "aws_cloudfront_response_headers_policy" "security" {
   }
 }
 
+# The imported dev distribution has no WAF. Adding one is a separate live
+# security/cost decision, not part of the zero-change state adoption in #161.
+# tfsec:ignore:aws-0011
 resource "aws_cloudfront_distribution" "dev" {
   enabled             = true
   comment             = "BlocBuy dev - frontend S3 + backend ALB (/api)"

@@ -71,3 +71,7 @@ terraform -chdir=infra/terraform/frontend-stack plan -detailed-exitcode -input=f
 Exit **0** is the drift gate (exit 2 is a change, exit 1 an error). Review full plans only inside the authorized account-holder environment and share only filtered action summaries. Do not replay the import plan or apply changed-resource plans as part of the completed import; follow a separate review for future modifications.
 
 The account holder observed post-import exit **0** with zero changes. Summarize the nine imports, zero live actions and post-import result in the human PR, without attaching raw plan output or state. Keep the import blocks for reconstruction; Terraform skips them for resources already in state. Never run `terraform apply` from CI.
+
+## Existing dev controls and Trivy exceptions
+
+The existing private dev S3 bucket uses SSE-S3 (`AES256`) and public-access blocking, not a customer-managed KMS key; the live CloudFront distribution has no AWS WAF. The import deliberately made no live changes. Trivy's HIGH `AWS-0132` (S3 CMK) and `AWS-0011` (CloudFront WAF) findings are therefore narrowly annotated at the two imported resources, with reasons at the enforcement points. These are **not** equivalent controls: a CMK would need an explicit key and reviewed delivery/OAC permissions, while WAF needs its own security/cost decision. Revisit both in a separately reviewed live change instead of weakening the repository-wide HIGH/CRITICAL scan or silently changing the deployed edge during #161.

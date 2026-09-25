@@ -42,7 +42,7 @@ the ALB listener rule.
 
 ## 1. One-time: Terraform state backend
 
-Run once per AWS account (skip if the bucket/table already exist). On 2026-09-25 the account holder confirmed `blocbuy-tfstate-402178232802` in `ap-southeast-1` and an active `blocbuy-tflock` table with `LockID (S)` for the separate frontend import; versioning, encryption and production access still require the checks below before a prod apply.
+On the existing account `402178232802`, first perform the read-only state-backend verification in the [production design §5.1](backend-prod-terraform-deployment.md#51-bootstrap-the-terraform-state-backend). On 2026-09-25 the bucket and active `blocbuy-tflock` table with `LockID (S)` were confirmed for the frontend import; versioning, encryption and production access still require verification before a prod apply. The following bootstrap commands are **only for a genuinely new account with no bucket or lock table**; do not run them on the existing state backend.
 
 ```bash
 aws s3api create-bucket --bucket blocbuy-tfstate-402178232802 \

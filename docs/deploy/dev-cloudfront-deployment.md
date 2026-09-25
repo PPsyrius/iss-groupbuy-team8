@@ -13,7 +13,7 @@ Browser --HTTPS--> CloudFront d1b3np88z657cp.cloudfront.net
                                  --> EC2:8589 (inbound from ALB SG only)
 ```
 
-The ALB has a default 403 listener action; its forwarding rule checks `X-Origin-Secret`. CloudFront's default certificate handles viewer HTTPS without a custom domain. The ALB origin leg is HTTP; the managed origin-facing prefix list and the secret-header rule limit access. Both browser routes and API requests share the CloudFront origin, so frontend clients use relative `/api/...` paths and do not require CORS.
+The ALB has a default 403 listener action; its forwarding rule checks `X-Origin-Secret`. CloudFront's default certificate handles viewer HTTPS without a custom domain. **The `alb-backend` origin uses `http-only`: CloudFront sends the custom header and `/api/*` requests to the ALB over unencrypted HTTP.** The managed origin-facing prefix list and the secret-header rule restrict access, but neither encrypts this hop or protects the header from an observer on it. The previously disclosed secret also needs rotation. Treat a reviewed HTTPS-origin migration and coordinated rotation as separate live work before relying on the header for confidentiality; the 2026-09-25 Terraform import intentionally changed only state. Browser routes and API requests share the CloudFront viewer origin, so clients still use relative `/api/...` paths without CORS.
 
 | Resource | Existing dev value |
 |---|---|
@@ -133,7 +133,7 @@ Source maps are disabled in the build since 2026-09-23 (#155) and excluded from 
 
 ## 12. Optional custom-domain upgrade
 
-Once the team owns a domain, issue a CloudFront viewer ACM certificate in `us-east-1`, attach it to a reviewed distribution change and add the alias/DNS record. An ALB origin certificate in `ap-southeast-1` plus a 443 listener could separately upgrade the HTTP origin leg to HTTPS. Plan the corresponding Terraform change and verify origin health; neither change is part of #161.
+Viewer-domain customization is optional: if the team owns a domain, issue a CloudFront viewer ACM certificate in `us-east-1`, attach it to a reviewed distribution change and add the alias/DNS record. **Origin TLS is a separate confidentiality requirement**, not dependent on a custom viewer domain: use an origin DNS name the team controls with a valid ACM certificate in `ap-southeast-1`, add an ALB HTTPS:443 listener and corresponding CloudFront-prefix-list SG ingress, switch the CloudFront ALB origin to `https-only` with TLSv1.2+, and verify `/api/*` health and negative direct-ALB probes. Coordinate a fresh `X-Origin-Secret` across the ALB rule and CloudFront custom header after the encrypted origin leg is working; the previously disclosed value must not be relied upon. Plan/review those live changes separately from #161's import-only state adoption, and never publish their secret-bearing plan output.
 
 ## 13. Recovery and cleanup
 

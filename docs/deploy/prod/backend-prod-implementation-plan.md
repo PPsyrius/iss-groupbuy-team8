@@ -59,7 +59,7 @@ infra/terraform/
 
 ### 1.3 Acceptance criteria
 
-- [ ] Terraform 1.16.4 `terraform -chdir=infra/terraform/backend-app-stack init -backend=false`, `fmt -check` and `validate` pass on a clean checkout (offline syntax check, not a live plan)
+- [ ] On a clean checkout from the repository root, run Terraform 1.16.4 `terraform -chdir=infra/terraform/backend-app-stack init -backend=false`, `terraform -chdir=infra/terraform/backend-app-stack fmt -check` and `terraform -chdir=infra/terraform/backend-app-stack validate`; all pass (offline syntax check, not a live plan)
 - [ ] `terraform plan` against the real account (read-only) shows the intended resources — review the full secret-bearing plan privately and attach only a redacted action summary to the PR (§12 audit-trail evidence)
 - [ ] Grep proofs: no `i-0` literal instance IDs, no account IDs hardcoded outside tfvars examples, no wildcard in any trust policy
 

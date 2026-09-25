@@ -117,23 +117,21 @@ The OIDC subject values are not guessed: they were decoded from a live workflow 
 
 ### 5.1 Bootstrap the Terraform state backend
 
-Run once per AWS account from an administrator workstation (outside Terraform, like the OIDC provider in the dev bootstrap). On 2026-09-25 the bucket and active `LockID (S)` DynamoDB table were confirmed for #161; verify versioning, encryption and access rather than replaying create commands against existing resources.
+For the **existing** account `402178232802`, verify the backend without changing it: on 2026-09-25 the bucket and active `LockID (S)` DynamoDB table were confirmed for #161, but versioning, encryption and access still need checking for production. Do not replay bucket/table creation or configuration commands against these resources; the production operator runbook §1 reserves bootstrap commands for a genuinely new account.
 
 ```bash
-aws s3api create-bucket --bucket blocbuy-tfstate-402178232802 \
-  --region ap-southeast-1 --create-bucket-configuration LocationConstraint=ap-southeast-1
-aws s3api put-bucket-versioning --bucket blocbuy-tfstate-402178232802 \
-  --versioning-configuration Status=Enabled
-aws s3api put-bucket-encryption --bucket blocbuy-tfstate-402178232802 \
-  --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"aws:kms"}}]}'
-aws s3api put-public-access-block --bucket blocbuy-tfstate-402178232802 \
-  --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
-
-aws dynamodb create-table --table-name blocbuy-tflock \
-  --attribute-definitions AttributeName=LockID,AttributeType=S \
-  --key-schema AttributeName=LockID,KeyType=HASH \
-  --billing-mode PAY_PER_REQUEST --region ap-southeast-1
+aws sts get-caller-identity --query Account --output text
+aws s3api head-bucket --bucket blocbuy-tfstate-402178232802 --region ap-southeast-1
+aws s3api get-bucket-versioning --bucket blocbuy-tfstate-402178232802 --query Status --output text
+aws s3api get-bucket-encryption --bucket blocbuy-tfstate-402178232802 \
+  --query 'ServerSideEncryptionConfiguration.Rules[].ApplyServerSideEncryptionByDefault.SSEAlgorithm' --output text
+aws s3api get-public-access-block --bucket blocbuy-tfstate-402178232802 \
+  --query PublicAccessBlockConfiguration --output json
+aws dynamodb describe-table --table-name blocbuy-tflock --region ap-southeast-1 \
+  --query 'Table.{status:TableStatus,keys:KeySchema,attributes:AttributeDefinitions}' --output json
 ```
+
+Expect account `402178232802`, bucket versioning `Enabled`, encryption `aws:kms`, all four public-access-block flags `true`, and an active lock table with `LockID (S)`. If any differs, investigate and review an explicit backend change rather than running setup commands on a populated state bucket.
 
 ### 5.2 OIDC provider
 
@@ -342,9 +340,9 @@ One accepted trade-off: the origin secret is read through `data "aws_ssm_paramet
 The dev environment's entry-layer rework ([dev-cloudfront-deployment.md](../dev-cloudfront-deployment.md)) is adopted for prod unchanged in shape:
 
 - **User-facing TLS:** CloudFront's built-in `*.cloudfront.net` certificate — no custom domain, no ACM certificate to request or rotate, `ViewerProtocolPolicy: redirect-to-https`.
-- **Origin leg:** plain HTTP `:80`, protected by the prefix-list security group + the `X-Origin-Secret` header + the default-403 listener. `OriginProtocolPolicy: http-only`.
+- **Origin leg in the original CloudFront entry pattern:** plain HTTP `:80` with prefix-list SG, `X-Origin-Secret` and default-403 listener; `OriginProtocolPolicy: http-only`. These are access controls, **not transport encryption**: the header and `/api/*` payload cross the CloudFront→ALB hop in cleartext.
 - **Origin secret:** `/blocbuy/prod/ORIGIN_SECRET` (SecureString) — generated once (`openssl rand -hex 32`), consumed by this stack's listener rule and the CloudFront distribution's custom origin header. Rotating it means a new parameter value, a Terraform apply (listener rule), and a CloudFront distribution update, done together.
-- **Upgrade path (later, optional):** once the team has a domain, follow dev-cloudfront-deployment.md §12 — ACM certificate in `us-east-1` attached to CloudFront, and optionally an ACM certificate on the ALB (`acm_certificate_arn` in tfvars) to upgrade the origin leg to HTTPS. No architectural rework, only a protocol change.
+- **Before relying on origin-secret confidentiality in a release:** review the dev runbook §12 HTTPS-origin migration independently of an optional viewer-domain upgrade. The ALB needs an origin DNS name covered by a valid regional ACM certificate, HTTPS:443 listener and CloudFront-prefix-list SG ingress; CloudFront must use `https-only`. Rotate any disclosed origin secret across CloudFront and the ALB rule only in a separately reviewed live change. The production stack has not been applied (#48), so this is a release-readiness constraint rather than a claim of current prod TLS.
 
 ### 6.5 EC2 instance, instance profile, and ECR pull inline policy
 
