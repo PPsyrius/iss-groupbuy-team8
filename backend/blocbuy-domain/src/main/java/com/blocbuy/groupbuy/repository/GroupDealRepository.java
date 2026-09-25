@@ -30,7 +30,8 @@ public interface GroupDealRepository {
     /**
      * Owner-scoped My Teams page: every active team the buyer leads or joined, newest participation
      * first with a unique tie-breaker. Two bounded queries (page + count), independent of page
-     * size.
+     * size. They agree only when the caller runs them in one snapshot ({@code REPEATABLE READ});
+     * under {@code READ COMMITTED} each statement sees its own.
      */
     PageResult<TeamMembership> pageMembershipsByUserId(PageQuery query, UUID userId);
 }

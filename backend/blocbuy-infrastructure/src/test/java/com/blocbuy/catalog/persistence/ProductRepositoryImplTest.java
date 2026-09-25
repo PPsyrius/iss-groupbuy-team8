@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import com.blocbuy.catalog.exception.CatalogErrorCode;
 import com.blocbuy.catalog.model.Product;
+import com.blocbuy.catalog.model.ProductDisplay;
 import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.common.model.PageQuery;
@@ -131,15 +132,19 @@ class ProductRepositoryImplTest {
     }
 
     @Test
-    void findByIdsConvertsOneBatchAndSkipsQueryForNullOrEmptyIds() {
+    void findDisplaysByIdsMapsOneBatchAndSkipsQueryForNullOrEmptyIds() {
         List<UUID> ids = List.of(PRODUCT_ID);
-        when(mapper.selectActiveByIds(ids)).thenReturn(List.of(row()));
+        BizProductDisplayDO display = new BizProductDisplayDO();
+        display.setProductId(PRODUCT_ID);
+        display.setTitle("Tea");
+        display.setCoverImage("tea.jpg");
+        when(mapper.selectDisplaysByIds(ids)).thenReturn(List.of(display));
 
-        assertThat(repository.findByIds(ids)).extracting(Product::id).containsExactly(PRODUCT_ID);
-        assertThat(repository.findByIds(null)).isEmpty();
-        assertThat(repository.findByIds(List.of())).isEmpty();
-        verify(mapper).selectActiveByIds(ids);
-        verify(mapper, times(1)).selectActiveByIds(any());
+        assertThat(repository.findDisplaysByIds(ids))
+                .containsExactly(new ProductDisplay(PRODUCT_ID, "Tea", "tea.jpg"));
+        assertThat(repository.findDisplaysByIds(null)).isEmpty();
+        assertThat(repository.findDisplaysByIds(List.of())).isEmpty();
+        verify(mapper, times(1)).selectDisplaysByIds(any());
     }
 
     @Test

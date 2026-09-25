@@ -48,7 +48,12 @@ public class GroupDealController {
      * UC8 My Teams: owner-scoped page of teams the buyer leads or joined, newest participation
      * first; anonymous access is rejected by Sa-Token.
      */
-    @Operation(summary = "List teams I lead or joined")
+    @Operation(
+            summary = "List teams I lead or joined",
+            description =
+                    "Offset-paged, newest participation first. Each response reads one snapshot,"
+                            + " so total always matches the rows it describes; a team joined"
+                            + " between two page requests can shift rows across pages.")
     @GetMapping("/me")
     public Result<PageResult<MyTeamResponse>> myTeams(
             @RequestParam(required = false) @Min(1) Integer page,

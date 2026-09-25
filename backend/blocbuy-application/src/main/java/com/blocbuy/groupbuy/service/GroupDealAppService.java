@@ -14,7 +14,8 @@ public interface GroupDealAppService {
 
     /**
      * UC8 My Teams: the teams the buyer leads or joined, newest participation first. Fixed three
-     * queries per page (rows, count, one batch product lookup), independent of page size.
+     * queries per page (rows, count, one batch product lookup), independent of page size, all read
+     * from one snapshot so {@code total} agrees with {@code items}.
      */
     PageResult<MyTeamView> pageMyTeams(PageQuery page, UUID userId);
 }

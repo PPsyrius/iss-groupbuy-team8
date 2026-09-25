@@ -2,6 +2,7 @@ package com.blocbuy.catalog.persistence;
 
 import com.blocbuy.catalog.exception.CatalogErrorCode;
 import com.blocbuy.catalog.model.Product;
+import com.blocbuy.catalog.model.ProductDisplay;
 import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.catalog.model.ProductTeamTerms;
 import com.blocbuy.catalog.repository.ProductRepository;
@@ -79,12 +80,15 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     /** One batch query; the empty guard keeps an empty {@code IN ()} from reaching SQL. */
     @Override
-    public List<Product> findByIds(Collection<UUID> ids) {
+    public List<ProductDisplay> findDisplaysByIds(Collection<UUID> ids) {
         if (ids == null || ids.isEmpty()) {
             return List.of();
         }
-        return bizProductMapper.selectActiveByIds(ids).stream()
-                .map(ProductConverter::toDomain)
+        return bizProductMapper.selectDisplaysByIds(ids).stream()
+                .map(
+                        row ->
+                                new ProductDisplay(
+                                        row.getProductId(), row.getTitle(), row.getCoverImage()))
                 .toList();
     }
 

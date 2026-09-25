@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -31,9 +32,15 @@ public class GroupDealAppServiceImpl implements GroupDealAppService {
      * One page query, then one batch product lookup for the page's distinct products, then an
      * in-memory join. A product that is no longer active keeps its row with null display fields, so
      * the page and its total never disagree.
+     *
+     * <p>{@code REPEATABLE_READ} gives the rows, the count and the product lookup one snapshot.
+     * Under the default {@code READ COMMITTED} each statement takes its own, so a team joined
+     * between the rows query and the count would be counted but not listed. Read-only at this level
+     * never raises a serialization failure, so no retry is needed. Offset pages can still repeat or
+     * skip a row if the buyer joins a team between two requests; only keyset paging would fix that.
      */
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ, timeout = 5)
     public PageResult<MyTeamView> pageMyTeams(PageQuery page, UUID userId) {
         PageResult<TeamMembership> memberships =
                 groupDealRepository.pageMembershipsByUserId(page, userId);

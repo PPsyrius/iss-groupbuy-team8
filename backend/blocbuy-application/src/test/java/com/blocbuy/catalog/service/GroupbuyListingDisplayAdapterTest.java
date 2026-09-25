@@ -5,12 +5,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.blocbuy.catalog.model.PricingMode;
-import com.blocbuy.catalog.model.Product;
-import com.blocbuy.catalog.model.ProductStatus;
+import com.blocbuy.catalog.model.ProductDisplay;
 import com.blocbuy.catalog.repository.ProductRepository;
 import com.blocbuy.groupbuy.gateway.ListingDisplayGateway.ListingDisplay;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -35,13 +32,15 @@ class GroupbuyListingDisplayAdapterTest {
     @Test
     void mapsEachFoundProductToItsDisplayFieldsWithOneBatchRead() {
         Set<UUID> ids = Set.of(TEA, MUG, GONE);
-        when(productRepository.findByIds(ids))
+        when(productRepository.findDisplaysByIds(ids))
                 .thenReturn(
-                        List.of(product(TEA, "Green Tea", "tea.jpg"), product(MUG, "Mug", null)));
+                        List.of(
+                                new ProductDisplay(TEA, "Green Tea", "tea.jpg"),
+                                new ProductDisplay(MUG, "Mug", null)));
 
         var result = adapter.findByProductIds(ids);
 
-        verify(productRepository).findByIds(ids);
+        verify(productRepository).findDisplaysByIds(ids);
         assertThat(result)
                 .containsOnlyKeys(TEA, MUG)
                 .containsEntry(TEA, new ListingDisplay(TEA, "Green Tea", "tea.jpg"))
@@ -53,23 +52,5 @@ class GroupbuyListingDisplayAdapterTest {
         assertThat(adapter.findByProductIds(null)).isEmpty();
         assertThat(adapter.findByProductIds(List.of())).isEmpty();
         verifyNoInteractions(productRepository);
-    }
-
-    private static Product product(UUID id, String title, String coverImage) {
-        return Product.reconstitute(
-                id,
-                "P-" + title,
-                title,
-                "subtitle",
-                "description",
-                coverImage,
-                List.of(),
-                "grocery",
-                new BigDecimal("10.00"),
-                "sgd",
-                5,
-                0,
-                ProductStatus.ON_SALE,
-                PricingMode.DUAL);
     }
 }

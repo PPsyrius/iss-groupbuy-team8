@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.blocbuy.catalog.model.Product;
+import com.blocbuy.catalog.model.ProductDisplay;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
 import com.blocbuy.common.persistence.UuidTypeHandler;
@@ -303,9 +304,9 @@ class ProductSearchRepositoryIT {
         }
     }
 
-    /** Batch by-id read keeps any live status, drops soft-deleted and unknown ids. */
+    /** Batch display read keeps any live status, drops soft-deleted and unknown ids. */
     @Test
-    void findByIdsReturnsLiveProductsOfAnyStatusInOneQuery() {
+    void findDisplaysByIdsReturnsLiveProductsOfAnyStatusInOneQuery() {
         UUID draft = UUID.fromString("a0000000-0000-7000-8000-000000000004");
         UUID deleted = UUID.fromString("a0000000-0000-7000-8000-000000000005");
         UUID unknown = UUID.fromString("a0000000-0000-7000-8000-0000000000ff");
@@ -313,11 +314,31 @@ class ProductSearchRepositoryIT {
         try (SqlSession session = sessions.openSession()) {
             assertThat(
                             repository(session)
-                                    .findByIds(List.of(NEWER_COFFEE, draft, deleted, unknown)))
-                    .extracting(Product::id, Product::title)
+                                    .findDisplaysByIds(
+                                            List.of(NEWER_COFFEE, draft, deleted, unknown)))
+                    .extracting(ProductDisplay::productId, ProductDisplay::title)
                     .containsExactlyInAnyOrder(
                             tuple(NEWER_COFFEE, "Premium Coffee Beans"),
                             tuple(draft, "Coffee draft"));
+        }
+    }
+
+    /**
+     * #182 review: a row the aggregate would refuse to rebuild — images that are not a string
+     * array, an unknown status and pricing mode — still yields its title and cover.
+     */
+    @Test
+    void aRowTheAggregateCannotRebuildStillDisplays() {
+        jdbc.update(
+                "UPDATE biz_product SET images = '{\"not\":\"an array\"}'::jsonb,"
+                        + " status = 'weird', pricing_mode = 'weird', cover_image = 'coffee.jpg'"
+                        + " WHERE id = ?",
+                NEWER_COFFEE);
+
+        try (SqlSession session = sessions.openSession()) {
+            assertThat(repository(session).findDisplaysByIds(List.of(NEWER_COFFEE)))
+                    .containsExactly(
+                            new ProductDisplay(NEWER_COFFEE, "Premium Coffee Beans", "coffee.jpg"));
         }
     }
 

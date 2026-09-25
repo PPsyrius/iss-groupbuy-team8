@@ -29,6 +29,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 /** UC8 My Teams: one page query, one batch product lookup, in-memory join, no dropped rows. */
 @ExtendWith(MockitoExtension.class)
@@ -131,5 +133,21 @@ class GroupDealAppServiceImplTest {
                 role,
                 Instant.parse("2026-09-24T0" + suffix + ":00:00Z"),
                 orderId);
+    }
+
+    /**
+     * #182 review: rows, count and product lookup must share one snapshot, so {@code total} cannot
+     * disagree with {@code items}. Guards the annotation against a silent edit; the snapshot
+     * semantics themselves are PostgreSQL's.
+     */
+    @Test
+    void thePageIsReadFromOneReadOnlySnapshot() throws NoSuchMethodException {
+        Transactional tx =
+                GroupDealAppServiceImpl.class
+                        .getMethod("pageMyTeams", PageQuery.class, UUID.class)
+                        .getAnnotation(Transactional.class);
+
+        assertThat(tx.readOnly()).isTrue();
+        assertThat(tx.isolation()).isEqualTo(Isolation.REPEATABLE_READ);
     }
 }

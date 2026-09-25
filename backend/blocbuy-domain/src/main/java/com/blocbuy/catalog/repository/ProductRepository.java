@@ -1,6 +1,7 @@
 package com.blocbuy.catalog.repository;
 
 import com.blocbuy.catalog.model.Product;
+import com.blocbuy.catalog.model.ProductDisplay;
 import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.catalog.model.ProductTeamTerms;
 import com.blocbuy.common.model.PageQuery;
@@ -37,10 +38,12 @@ public interface ProductRepository {
     Optional<Product> findById(UUID id);
 
     /**
-     * Active (non-deleted) products by primary key, any status, in one batch query (never per id —
-     * N+1 is forbidden). Unknown ids are absent from the result; empty input returns an empty list.
+     * Display fields of active (non-deleted) products by primary key, any status, in one batch
+     * query (never per id — N+1 is forbidden). Reads only id, title and cover image, so a row whose
+     * other columns would fail the aggregate's invariants still displays. Unknown ids are absent
+     * from the result; empty input returns an empty list.
      */
-    List<Product> findByIds(Collection<UUID> ids);
+    List<ProductDisplay> findDisplaysByIds(Collection<UUID> ids);
 
     /**
      * Team terms of an active product: how big a team started on it must be and how long it stays
