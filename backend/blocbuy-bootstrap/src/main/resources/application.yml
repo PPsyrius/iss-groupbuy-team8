@@ -73,6 +73,11 @@ blocbuy:
       # a crashed holder blocks other instances no longer than this
       lease: PT2M
       batch-size: 100
+    refund-worker:
+      # one due obligation per tick; only wired with stripe-sprint2 and master opt-in
+      interval: PT30S
+      initial-delay: PT45S
+      lease: PT2M
   # frontend.* redirect targets (OAuth callback 302 landings) are mandatory and startup-validated
   # (@NotBlank on AuthWebProperties) — no defaults here on purpose; each profile supplies them,
   # non-local profiles via FRONTEND_URL only

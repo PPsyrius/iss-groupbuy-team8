@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mockStatic;
 
 import com.blocbuy.bootstrap.scheduling.LeasedJobRunner;
+import com.blocbuy.bootstrap.scheduling.RefundWorkerJob;
 import com.blocbuy.bootstrap.scheduling.TeamExpirySweepJob;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -39,6 +40,7 @@ class BlocBuyApplicationTest {
     @Test
     void noJobIsScheduledUnlessTheSwitchIsOn() {
         assertThat(context.getBeansOfType(TeamExpirySweepJob.class)).isEmpty();
+        assertThat(context.getBeansOfType(RefundWorkerJob.class)).isEmpty();
         assertThat(context.getBeansOfType(LeasedJobRunner.class)).isEmpty();
     }
 

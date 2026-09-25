@@ -10,9 +10,9 @@
 #   --out-dir   write somewhere other than docs/agile/metrics (used by tests)
 # Env: REPO (default PPsyrius/iss-groupbuy-team8), PROJECT_OWNER (PPsyrius), PROJECT_NUMBER (2)
 #
-# Needs `gh` authenticated with repo scope. Board columns need the `project` scope
-# (`gh auth refresh -s project`); without it the status/size/estimate columns are blank and a
-# warning is printed, which is still a usable issue-state snapshot.
+# Needs `gh` authenticated with repo and read:project access to the private board
+# (`gh auth refresh -s read:project`). An unreadable or unmatched board is an error;
+# no CSV is written in that case.
 set -euo pipefail
 
 REPO="${REPO:-PPsyrius/iss-groupbuy-team8}"
@@ -39,16 +39,18 @@ trap 'rm -rf "$tmp"' EXIT
 gh issue list -R "$REPO" --state all --limit 500 \
   --json number,title,state,labels,assignees,createdAt,closedAt,milestone >"$tmp/issues.json"
 
-if gh project item-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --limit 500 --format json >"$tmp/board.json" 2>"$tmp/board.err"; then
-  :
-else
-  echo "warning: board not readable ($(head -c 200 "$tmp/board.err")); status columns left blank. Try: gh auth refresh -s project" >&2
-  echo '{"items":[]}' >"$tmp/board.json"
+if ! gh project item-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --limit 500 --format json >"$tmp/board.json" 2>"$tmp/board.err"; then
+  echo "error: board not readable ($(head -c 200 "$tmp/board.err")); check the token's read:project scope and access to $PROJECT_OWNER/projects/$PROJECT_NUMBER" >&2
+  exit 1
+fi
+if ! jq -e --arg repo "$REPO" '[.items[]? | select(.content.type == "Issue" and .content.repository == $repo and (.status // "") != "")] | length > 0' "$tmp/board.json" >/dev/null; then
+  echo "error: board has no status-bearing issues from $REPO; refusing to write an issue-only snapshot" >&2
+  exit 1
 fi
 
-jq -r --arg d "$today" --slurpfile board "$tmp/board.json" '
+jq -r --arg d "$today" --arg repo "$REPO" --slurpfile board "$tmp/board.json" '
   (($board[0].items // [])
-    | map(select(.content != null and .content.number != null))
+    | map(select(.content.type == "Issue" and .content.repository == $repo and .content.number != null))
     | map({key: (.content.number|tostring), value: .})
     | from_entries) as $b
   | (["snapshot_date","number","title","state","board_status","labels","assignees","size","estimate","priority","milestone","created_at","closed_at"] | @csv),
@@ -67,6 +69,6 @@ echo "wrote $out ($(($(wc -l <"$out") - 1)) issues)"
 if $summary; then
   echo
   echo "Board status counts ($today):"
-  jq -r '(.items // []) | map(.status // "(no status)") | group_by(.) | map("\(.[0]): \(length)") | .[]' "$tmp/board.json"
+  jq -r --arg repo "$REPO" '(.items // []) | map(select(.content.type == "Issue" and .content.repository == $repo) | .status // "(no status)") | group_by(.) | map("\(.[0]): \(length)") | .[]' "$tmp/board.json"
   echo "Issues: open $(jq '[.[] | select(.state=="OPEN")] | length' "$tmp/issues.json"), closed $(jq '[.[] | select(.state=="CLOSED")] | length' "$tmp/issues.json")"
 fi
