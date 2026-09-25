@@ -12,6 +12,8 @@
 
 **Planning date:** 2026-09-16. Sprint 2: 2026-09-14 to 2026-09-25. Tier 1 targets the week ending 2026-09-20; tier 2 the week ending 2026-09-25.
 
+Frozen for new tasks on 2026-09-25: new frontend tasks go in [backlog.md](backlog.md), the admin console in [admin-plan.md](admin-plan.md). Existing tasks are still ticked here.
+
 ## Global Constraints
 
 - React 19.3, pure CSR, no SSR framework. Static files to the existing S3 + CloudFront (`https://d1b3np88z657cp.cloudfront.net`).

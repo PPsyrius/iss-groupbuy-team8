@@ -1,0 +1,71 @@
+# Frontend backlog
+
+- [`plan.md`](plan.md) was frozen for new tasks on 2026-09-25. Its existing tasks are still ticked there.
+- New frontend buyer tasks live here, with IDs `FB-NN`.
+- The admin console lives in [`admin-plan.md`](admin-plan.md) (A-tiers).
+- Each task is one PR.
+- Decisions go in [`design-screens.md`](design-screens.md) or the ADRs ([`adr/`](adr/README.md)), not here.
+
+Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE` = `frontend/`. Commands run from the repository root unless prefixed `cd frontend &&`.
+
+## 1. Task table
+
+| id | priority | task | purpose | files touched | verification command | depends-on |
+|---|---|---|---|---|---|---|
+| FB-01 | P1 | Demo readiness (DONE 2026-09-25, branch `feature/frontend-demo-readiness`) | Mock mode walks the whole buyer journey for the demo and submission. | `FE/src/dev/devtools.tsx`, `FE/src/test/browser-msw.ts`, `FE/src/routes/_authenticated/account.tsx`, `FE/e2e/login.spec.ts`, `FE/README.md` | `cd frontend && pnpm check && pnpm build && pnpm e2e` | — |
+| FB-02 | P1 | Shared Playwright API stubs | One set of `page.route` stubs for the e2e specs, reusing the pattern in `FE/e2e/login.spec.ts`. The production build drops `?msw=1`, so e2e must stub with `page.route`. | `FE/e2e/fixtures/api.ts` (new), `FE/e2e/login.spec.ts` | `cd frontend && pnpm e2e` | — |
+| FB-03 | P1 | Buyer-journey e2e | Catalog → listing → quote → checkout → an intercepted Stripe 302 to `/payments/return` → receipt Waiting then Paid → My blocs. | `FE/e2e/buyer-journey.spec.ts` (new) | `cd frontend && pnpm e2e buyer-journey` | FB-02 |
+| FB-04 | P1 | JOIN refusal e2e | `GROUPBUY_409_004`, `GROUPBUY_409_002`, `GROUPBUY_409_003` and `GROUPBUY_404_001` each name the reason, and no checkout-session call is made. | `FE/e2e/join-refusal.spec.ts` (new) | `cd frontend && pnpm e2e join-refusal` | FB-02 |
+| FB-05 | P1 | Quote e2e | 15-minute expiry with `page.clock`, then re-issue; a 409 `CATALOG_409_001` shows no price. | `FE/e2e/quote.spec.ts` (new) | `cd frontend && pnpm e2e quote` | FB-02 |
+| FB-06 | P2 | CI e2e comment and dev-safe specs | Fix the stale "Only the home test runs here" comment in the `e2e-preview` job; keep the new specs safe to run against dev. | `.github/workflows/ci-frontend.yml` | `docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:latest -color` | FB-03, FB-04, FB-05 |
+| FB-07 | P2 | SonarCloud coverage exclusions | Exclude `src/main.tsx`, `src/router.tsx` and `src/dev/**` from coverage in the `sonar-frontend` job args, or add a router test instead. | `.github/workflows/ci-frontend.yml` | `sonar-frontend` job green on the PR | — |
+| FB-08 | P2 | Unit gaps | Catalog listings 500 alert and recovery; an unknown route renders the 404 card through the route tree; `/account` loading skeletons (`AccountLoading`, `BlocsSkeleton`). | `FE/src/routes/index.test.tsx`, `FE/src/routes/account.test.tsx` | `cd frontend && pnpm vitest run src/routes` | — |
+| FB-09 | P1 | Login error variant has no h1 | The `?error=` variant of `/login` needs a page heading. | `FE/src/routes/login.tsx`, `FE/src/routes/login.test.tsx` | `cd frontend && pnpm vitest run src/routes/login.test.tsx` | — |
+| FB-10 | P2 | PressResponder console warning | "PressResponder was rendered without a pressable child" from the controlled HeroUI Modals. | `FE/src/features/session/GatedActionSheet.tsx`, `FE/src/features/payment/QuoteSheet.tsx` | `cd frontend && pnpm vitest run src/features` shows no warning | — |
+| FB-11 | P2 | Gated sheet trust triptych | The gated sheet lacks the artboard's trust triptych. | `FE/src/features/session/GatedActionSheet.tsx` | `cd frontend && pnpm vitest run src/features/session` plus a screenshot | — |
+| FB-12 | P2 | Per-route document titles | Each route sets `document.title`, e.g. "Thai jasmine rice · BlocBuy". | `FE/src/routes/*.tsx`, `FE/src/routes/_authenticated/*.tsx` | `cd frontend && pnpm vitest run src/routes` | — |
+| FB-13 | P3 | Google "G" mark | Replace the placeholder tile with the official brand asset plus an attribution note (CR-16). | `FE/src/features/session/GoogleSignInButton.tsx`, `FE/public/` | `cd frontend && pnpm check` plus a screenshot | — |
+| FB-14 | P3 | Pagination demo | More catalog seeds so `?page=2` exists in mock mode. | `FE/src/test/browser-msw.ts` | `cd frontend && pnpm dev`, open `/?msw=1&page=2` | — |
+| FB-15 | P3 | Refund-pending receipt heading | The heading reads "Payment received"; consider "Refund on its way". Needs the design owner. | `FE/src/features/payment/receipt-view.ts` | `cd frontend && pnpm vitest run src/features/payment` | design owner |
+| FB-16 | P3 | Catalog cards at 1280 | Cards have an empty gap because the summary has no bloc size fields. | `FE/src/features/catalog/ProductCard.tsx` | screenshot at 1280 px | backend ask CR-11 |
+| FB-17 | P3 | Tooling hygiene | `routeFileIgnorePattern` for `*.test.tsx` (the dev server warns 5 times); clear the 4 knip config hints. | `FE/vite.config.ts`, `FE/knip.json` | `cd frontend && pnpm dev` (no route warnings) and `pnpm knip` (no hints) | — |
+| FB-18 | P3 | Docs | Mark design-screens §7 Q1–Q22 as answered with cross-links to plan §12 notes; add a LICENSE decision note (the repository has no LICENSE). | `FE/docs/design-screens.md` | `grep -c 'Answered' frontend/docs/design-screens.md` | — |
+
+## 2. Steps
+
+### FB-01: Demo readiness
+
+- [x] Step 1 (2026-09-25): dev devtools mount only with `?devtools=1` (`bf3791a`).
+- [x] Step 2 (2026-09-25): mock blocs, orders and receipts come from one set of seeds (`6ef346a`).
+- [x] Step 3 (2026-09-25): the duplicate name row is gone from the `/account` header (`48a6275`).
+- [x] Step 4 (2026-09-25): the mock START/JOIN checkout reaches a receipt that goes Waiting then Paid (`28e0a83`).
+- [x] Step 5 (2026-09-25): `frontend/README.md` has a ten-step demo script (`384ad1d`).
+- [ ] Step 6: rerun the `@auth` e2e against dev (`E2E_TARGET=dev pnpm e2e --grep @auth`), because `48a6275` changed its assertions.
+
+### FB-02: Shared Playwright API stubs
+
+- [ ] Step 1: move the `page.route` stubs out of `e2e/login.spec.ts` into `e2e/fixtures/api.ts` (me, listings, listing, intents, receipts).
+- [ ] Step 2: `login.spec.ts` uses the fixture; `pnpm e2e` still passes.
+
+### FB-03: Buyer-journey e2e
+
+- [ ] Step 1: catalog → listing → quote sheet → Continue to payment.
+- [ ] Step 2: intercept the Stripe 302 and land on `/payments/return`; the receipt shows Waiting then Paid; My blocs lists the bloc.
+
+### FB-04: JOIN refusal e2e
+
+- [ ] Step 1: one case per code (`GROUPBUY_409_004`, `_002`, `_003`, `GROUPBUY_404_001`): the reason and "nothing was charged" show, and no checkout-session request is made.
+
+### FB-05: Quote e2e
+
+- [ ] Step 1: `page.clock` moves past 15 minutes; payment is disabled and "Get a new price" re-issues.
+- [ ] Step 2: a 409 `CATALOG_409_001` shows no price and no pay button.
+
+### FB-06 to FB-18
+
+- [ ] One step each: the task row is the whole task; tick it with the date and PR when it merges.
+
+## 3. Blocked / external
+
+- T3-05 (share attribution) stays in `plan.md`, blocked on the backend: branch `feature/shared-attribution-backend-20260924` has no PR and no `GET /invites/{ref}`.
+- The admin console: see [`admin-plan.md`](admin-plan.md); its Q1 (whether it is in Sprint 3) is open.
