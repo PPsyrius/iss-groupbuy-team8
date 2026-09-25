@@ -98,7 +98,7 @@ class PaidGroupDealRepositoryImplTest {
         PaidParticipation joiner =
                 new PaidParticipation(
                         UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("12.00"), "sgd");
-        GroupDeal after = before.joinPaid(joiner, false, NOW);
+        GroupDeal after = before.joinPaid(joiner, false, NOW).deal();
         when(mapper.updateDeal(any(), eq(1), eq("open"))).thenReturn(1);
         when(mapper.insertMember(after.id(), joiner.paymentId(), joiner.userId(), "member", NOW))
                 .thenReturn(1);

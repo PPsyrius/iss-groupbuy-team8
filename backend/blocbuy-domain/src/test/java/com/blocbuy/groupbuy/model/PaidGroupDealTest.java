@@ -205,13 +205,25 @@ class PaidGroupDealTest {
     @Test
     void lastPaidMemberSucceedsWithoutMutatingOriginalSnapshot() {
         GroupDeal original = start(2);
-        GroupDeal joined =
+        PaidAdmission admission =
                 original.joinPaid(payment(UUID.randomUUID(), "10.00"), false, NOW.plusSeconds(1));
+        GroupDeal joined = admission.deal();
+        assertThat(admission.teamCompleted()).isTrue();
         assertThat(joined.currentSize()).isEqualTo(2);
         assertThat(joined.status()).isEqualTo(DealStatus.SUCCEEDED);
         assertThat(joined.successTime()).isEqualTo(NOW.plusSeconds(1));
         assertThat(original.currentSize()).isEqualTo(1);
         assertThat(original.status()).isEqualTo(DealStatus.OPEN);
+    }
+
+    /** The admission result cannot report a completion inconsistent with its new snapshot. */
+    @Test
+    void paidAdmissionRejectsContradictoryCompletionFact() {
+        GroupDeal open = start(3);
+        assertThatThrownBy(() -> new PaidAdmission(open, true))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new PaidAdmission(null, false))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     /** Verifies initiation rejects absent payment facts and an amount below the accepted price. */
@@ -430,7 +442,9 @@ class PaidGroupDealTest {
     @Test
     void middleMemberPreservesIdentityAndFrozenTerms() {
         GroupDeal original = start(3);
-        GroupDeal joined = original.joinPaid(payment(UUID.randomUUID(), "10.0"), false, NOW);
+        PaidAdmission admission = original.joinPaid(payment(UUID.randomUUID(), "10.0"), false, NOW);
+        GroupDeal joined = admission.deal();
+        assertThat(admission.teamCompleted()).isFalse();
         assertThat(joined.currentSize()).isEqualTo(2);
         assertThat(joined.status()).isEqualTo(DealStatus.OPEN);
         assertThat(joined.successTime()).isNull();

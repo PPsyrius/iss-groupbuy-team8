@@ -16,6 +16,8 @@ import com.blocbuy.common.exception.BizException;
 import com.blocbuy.groupbuy.event.TeamSucceeded;
 import com.blocbuy.groupbuy.exception.GroupbuyErrorCode;
 import com.blocbuy.groupbuy.exception.ParticipationErrorCode;
+import com.blocbuy.groupbuy.model.DealStatus;
+import com.blocbuy.groupbuy.model.GroupDeal;
 import com.blocbuy.groupbuy.model.NewDealTerms;
 import com.blocbuy.groupbuy.model.PaidParticipation;
 import com.blocbuy.groupbuy.model.ParticipationReceipt;
@@ -122,6 +124,7 @@ class PaidGroupDealServiceTest {
         assertThat(result.reasonCode()).isEqualTo("GROUPBUY_404_001");
         verify(repository).complete(paid.paymentId(), result, paid.userId(), now);
         verify(repository, never()).insertJoinedMember(any(), any(), any(), any());
+        verify(events, never()).publishEvent(any(TeamSucceeded.class));
     }
 
     /** Verifies storage failure propagates rather than recording a misleading terminal receipt. */
@@ -224,6 +227,7 @@ class PaidGroupDealServiceTest {
         verify(repository, never()).lockDeal(any());
         verify(repository, never()).currentTime();
         verify(repository, never()).insertJoinedMember(any(), any(), any(), any());
+        verify(events, never()).publishEvent(any(TeamSucceeded.class));
     }
 
     /**
@@ -351,6 +355,17 @@ class PaidGroupDealServiceTest {
         verify(events).publishEvent(published.capture());
         assertThat(published.getValue())
                 .isEqualTo(new TeamSucceeded(terms.id(), terms.productId(), 2, now));
+        var persistedThenPublished = inOrder(repository, events);
+        var written = ArgumentCaptor.forClass(GroupDeal.class);
+        persistedThenPublished
+                .verify(repository)
+                .insertJoinedMember(eq(deal), written.capture(), eq(paid), eq(now));
+        assertThat(written.getValue().status()).isEqualTo(DealStatus.SUCCEEDED);
+        assertThat(written.getValue().successTime()).isEqualTo(now);
+        persistedThenPublished
+                .verify(repository)
+                .complete(paid.paymentId(), result, paid.userId(), now);
+        persistedThenPublished.verify(events).publishEvent(any(TeamSucceeded.class));
     }
 
     /** An initiated team is never full on its own, so creation announces nothing. */
