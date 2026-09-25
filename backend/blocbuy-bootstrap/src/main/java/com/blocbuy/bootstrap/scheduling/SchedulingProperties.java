@@ -11,9 +11,13 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  *
  * @param enabled master switch; read by {@code SchedulingConfiguration}'s condition
  * @param teamExpiry the team-expiry sweep
+ * @param refundWorker the single-obligation refund worker
  */
 @ConfigurationProperties("blocbuy.scheduling")
-public record SchedulingProperties(boolean enabled, @DefaultValue TeamExpiry teamExpiry) {
+public record SchedulingProperties(
+        boolean enabled,
+        @DefaultValue TeamExpiry teamExpiry,
+        @DefaultValue RefundWorker refundWorker) {
 
     /** Upper bound on one sweep, so a backlog drains in bounded runs. */
     static final int MAX_BATCH_SIZE = 500;
@@ -50,6 +54,27 @@ public record SchedulingProperties(boolean enabled, @DefaultValue TeamExpiry tea
             if (batchSize < 1 || batchSize > MAX_BATCH_SIZE) {
                 throw new IllegalArgumentException(
                         "team-expiry.batch-size must be between 1 and " + MAX_BATCH_SIZE);
+            }
+        }
+    }
+
+    /** One independently transactional refund attempt per tick, under a renewable lease. */
+    public record RefundWorker(
+            @DefaultValue("PT30S") Duration interval,
+            @DefaultValue("PT45S") Duration initialDelay,
+            @DefaultValue("PT2M") Duration lease) {
+
+        public RefundWorker {
+            if (interval == null || !interval.isPositive()) {
+                throw new IllegalArgumentException("refund-worker.interval must be positive");
+            }
+            if (initialDelay == null || initialDelay.isNegative()) {
+                throw new IllegalArgumentException(
+                        "refund-worker.initial-delay must not be negative");
+            }
+            if (lease == null || lease.compareTo(MIN_LEASE) < 0) {
+                throw new IllegalArgumentException(
+                        "refund-worker.lease must be at least " + MIN_LEASE);
             }
         }
     }

@@ -21,14 +21,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 @Profile("stripe-sprint2")
 public class StripeCheckoutConfiguration {
     @Bean
-    com.blocbuy.payment.service.RefundService refundService(
-            com.blocbuy.payment.repository.RefundRepository repository,
-            com.blocbuy.payment.gateway.RefundGateway gateway,
-            PlatformTransactionManager transactions) {
-        return new com.blocbuy.payment.service.RefundService(repository, gateway, transactions);
-    }
-
-    @Bean
     StripeCheckoutService stripeCheckoutService(
             CheckoutPaymentRepository repository,
             CheckoutGateway gateway,
