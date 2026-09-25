@@ -2,6 +2,8 @@ package com.blocbuy.bootstrap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.bootstrap.fixture.PaymentFixtureConfiguration;
@@ -276,7 +278,7 @@ class TeamExpirySchedulingIT {
         assertThat(auditCount(payment, "CLAIMED")).isEqualTo(2);
         assertThat(auditCount(payment, "PROVIDER_SUCCEEDED")).isEqualTo(1);
         assertThat(refunds(deal)).isEqualTo(1);
-        org.mockito.Mockito.verify(refundGateway, org.mockito.Mockito.times(2)).createRefund(any());
+        verify(refundGateway, times(2)).createRefund(any());
     }
 
     /** A paid leader's team: one member, one pending order, one successful payment. */

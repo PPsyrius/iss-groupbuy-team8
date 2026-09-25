@@ -12,7 +12,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProp
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -42,7 +41,6 @@ public class SchedulingConfiguration {
     }
 
     @Bean
-    @Profile("stripe-sprint2")
     RefundWorkerJob refundWorkerJob(
             LeasedJobRunner runner,
             RefundService refunds,

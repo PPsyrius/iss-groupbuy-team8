@@ -1,7 +1,6 @@
 package com.blocbuy.bootstrap.scheduling;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -10,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.blocbuy.common.repository.SchedulerLeaseRepository;
 import com.blocbuy.payment.service.RefundService;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Duration;
@@ -75,9 +75,27 @@ class RefundWorkerJobTest {
     @Test
     void unexpectedFailureDoesNotCountAsACompletedAttempt() {
         when(refunds.processNext()).thenThrow(new IllegalStateException("database unavailable"));
+        SchedulerLeaseRepository leases = mock(SchedulerLeaseRepository.class);
+        when(leases.tryAcquire(eq(RefundWorkerJob.JOB), eq("test"), eq(SETTINGS.lease())))
+                .thenReturn(true);
+        when(leases.release(RefundWorkerJob.JOB, "test")).thenReturn(true);
+        RefundWorkerJob realRunnerJob =
+                new RefundWorkerJob(
+                        new LeasedJobRunner(leases, meters, "test"), refunds, SETTINGS, meters);
 
-        assertThatThrownBy(job::run).isInstanceOf(IllegalStateException.class);
+        realRunnerJob.run();
+
         assertThat(attempts()).isZero();
+        assertThat(
+                        meters.counter(
+                                        LeasedJobRunner.RUNS,
+                                        "job",
+                                        RefundWorkerJob.JOB,
+                                        "outcome",
+                                        LeasedJobRunner.FAILED)
+                                .count())
+                .isEqualTo(1.0);
+        verify(leases).release(RefundWorkerJob.JOB, "test");
     }
 
     private double attempts() {

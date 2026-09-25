@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 
-/** Attempts one due refund per tick; the provider call stays outside database transactions. */
+/** Attempts one due refund per tick when scheduling is enabled, regardless of checkout profile. */
 @Slf4j
 @RequiredArgsConstructor
 public class RefundWorkerJob {
@@ -15,7 +15,7 @@ public class RefundWorkerJob {
     static final String REFUNDS = "blocbuy.refund.worker.attempts";
 
     private final LeasedJobRunner runner;
-    private final RefundService refunds;
+    private final RefundService refundService;
     private final SchedulingProperties.RefundWorker settings;
     private final MeterRegistry meters;
 
@@ -30,7 +30,7 @@ public class RefundWorkerJob {
         if (!leaseValid.getAsBoolean()) {
             return;
         }
-        if (refunds.processNext()) {
+        if (refundService.processNext()) {
             meters.counter(REFUNDS).increment();
             log.info("Refund worker attempted one obligation");
         } else {
