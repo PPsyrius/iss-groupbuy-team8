@@ -12,7 +12,8 @@ describe("/auth/callback", () => {
     rememberReturnTo("/account");
     const { router } = renderRoute("/auth/callback");
     await waitFor(() => expect(router.state.location.pathname).toBe("/account"));
-    expect(await screen.findByTestId("account-user")).toHaveTextContent("Ada");
+    expect(await screen.findByRole("heading", { level: 1, name: "My blocs" })).toBeVisible();
+    expect(screen.getByTestId("session-user")).toHaveTextContent("Ada");
     expect(sessionStorage.getItem("blocbuy.returnTo")).toBeNull();
   });
 
