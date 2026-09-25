@@ -1,5 +1,7 @@
 # BlocBuy Admin Console Implementation Plan
 
+Buyer side: [`plan.md`](plan.md) (frozen for new tasks on 2026-09-25) and [`backlog.md`](backlog.md) (new buyer tasks).
+
 **Goal:** Build the UC9 admin console under `/admin`: dashboard, listings table, listing editor with lifecycle actions and version-conflict recovery, and the bloc price rule panel. Build it against the contract as it stands today. Record every artboard need the API cannot meet as a backend ask, not as frontend invention.
 
 **Architecture:** The console is a second shell in the same SPA. It is a route subtree `_authenticated/admin*` with its own dark-rail layout. The storefront `Header` is hidden through route `staticData`. Admin access is decided by a probe: `me` carries no roles (CR-9), so the admin layout's `beforeLoad` calls `GET /api/v1/admin/products?page=1&size=1` and turns a 403 into the Access denied screen. All server state goes through the generated hey-api client with `select: unwrapResult`. Forms use TanStack Form with valibot. Every write is pessimistic and sends the loaded `version`. A 412 always ends in the conflict banner and a Reload, never a merge.
