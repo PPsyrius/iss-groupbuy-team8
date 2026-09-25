@@ -116,9 +116,11 @@ class GroupDealRepositoryImplTest {
         assertThat(membership.targetSize()).isZero();
         assertThat(membership.currentSize()).isZero();
         assertThat(membership.role()).isEqualTo(MemberRole.MEMBER);
-        assertThatThrownBy(() -> GroupDealConverter.toMembership(membershipRow("gone", "member")))
+        TeamMembershipDO unknownStatus = membershipRow("gone", "member");
+        TeamMembershipDO unknownRole = membershipRow("open", "owner");
+        assertThatThrownBy(() -> GroupDealConverter.toMembership(unknownStatus))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> GroupDealConverter.toMembership(membershipRow("open", "owner")))
+        assertThatThrownBy(() -> GroupDealConverter.toMembership(unknownRole))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
