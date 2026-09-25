@@ -18,4 +18,8 @@ data "aws_iam_openid_connect_provider" "github" {
 locals {
   bucket_name      = "blocbuy-dev-frontend-${data.aws_caller_identity.current.account_id}"
   github_repo_slug = "repo:${var.github_owner}@${var.github_owner_id}/${var.github_repo}@${var.github_repo_id}"
+
+  # Stable across distribution updates: policy JSON must not become unknown
+  # when only the ALB origin header is rotated.
+  distribution_arn = "arn:aws:cloudfront::${var.aws_account_id}:distribution/E3U5W7UWDL8LRV"
 }

@@ -6,7 +6,7 @@
 
 **Provisioning model:** Terraform-defined production infrastructure — IAM, ECR, EC2, security groups, load balancer and host bootstrap are declared as code; production `terraform apply` remains an account-holder runbook step (#48), not a completed deployment claim.
 
-**Application delivery:** unchanged from dev — GitHub Actions -> Amazon ECR -> AWS Systems Manager Run Command, extended with a release tag trigger and a mandatory approval gate
+**Application delivery:** GitHub Actions -> Amazon ECR -> AWS Systems Manager Run Command, gated by `v*` tags and an operator-controlled deploy switch; the private personal repository has no native environment reviewer gate (2026-09-25 amendment below).
 
 This guide specifies the production counterpart of the existing [dev deployment](../backend-ec2-pipeline-operator-guide.md). The application-delivery design (quality gates, immutable digests, OIDC, SSM Run Command, non-secret bundle, automatic rollback) is reused as-is; what changes is **who creates the environment**: the dev environment was bootstrapped with hand-run AWS CLI commands, the production environment is created by Terraform from this repository.
 
@@ -31,7 +31,7 @@ Release tag v* pushed (or workflow_dispatch)
   ci-backend quality gates re-run on the tag
     -> GitHub OIDC assumes BlocBuyGitHubEcrPushProd
     -> image pushed to prod/blocbuy ECR, resolved to sha256 digest
-    -> protected backend-prod environment (required reviewers)
+    -> backend-prod environment (v* tags only; no native reviewers)
     -> GitHub OIDC assumes BlocBuyGitHubBackendDeployProd
     -> SSM installs the non-secret bundle under /opt/blocbuy/backend
     -> deploy.sh pulls the digest and starts only blocbuy-backend
@@ -117,7 +117,7 @@ The OIDC subject values are not guessed: they were decoded from a live workflow 
 
 ### 5.1 Bootstrap the Terraform state backend
 
-For the **existing** account `402178232802`, verify the backend without changing it: on 2026-09-25 the bucket and active `LockID (S)` DynamoDB table were confirmed for #161, but versioning, encryption and access still need checking for production. Do not replay bucket/table creation or configuration commands against these resources; the production operator runbook §1 reserves bootstrap commands for a genuinely new account.
+For existing account `402178232802`, verify rather than recreate state infrastructure. On 2026-09-25 read-only checks found versioning `Enabled`, encryption `aws:kms`, four public-access blocks, active `LockID (S)` locking and no backend-stack state object. This does not authorize an apply; the [operator runbook §1](backend-prod-operations-runbook.md#1-one-time-terraform-state-backend) reserves bootstrap commands for new accounts.
 
 ```bash
 aws sts get-caller-identity --query Account --output text
@@ -214,7 +214,7 @@ resource "aws_ecr_repository" "backend" {
 
 resource "aws_ecr_lifecycle_policy" "backend" {
   repository = aws_ecr_repository.backend.name
-  policy     = file("${path.module}/../../deployment/backend/ecr-lifecycle-policy.json")
+  policy     = file("${path.module}/../../../deployment/backend/ecr-lifecycle-policy.json")
 }
 ```
 
@@ -222,9 +222,12 @@ A separate repository keeps the dev ECR-push role unable to write prod images an
 
 ### 6.3 Networking: security groups that reference, not enumerate
 
+2026-09-25: legacy `aws_prefix_list` could not find CloudFront's managed list; `DescribeManagedPrefixLists` found AWS-owned `pl-31a34658`. Local code now uses `aws_ec2_managed_prefix_list`, and a private plan showed 21 creates/0 changes or destroys. The fix is unmerged; no apply ran ([operator runbook §4](backend-prod-operations-runbook.md#4-plan-review-apply-the-stack)).
+
 ```hcl
-# The ALB is a CloudFront origin, not a public entry point.
-data "aws_prefix_list" "cloudfront_origin" {
+# DescribeManagedPrefixLists returns CloudFront's global origin-facing list;
+# the legacy aws_prefix_list lookup uses DescribePrefixLists and finds no match.
+data "aws_ec2_managed_prefix_list" "cloudfront_origin" {
   name = "com.amazonaws.global.cloudfront.origin-facing"
 }
 
@@ -236,7 +239,7 @@ resource "aws_security_group" "alb" {
     from_port       = 80
     to_port         = 80
     protocol        = "tcp"
-    prefix_list_ids = [data.aws_prefix_list.cloudfront_origin.id] # <- managed list, auto-updated
+    prefix_list_ids = [data.aws_ec2_managed_prefix_list.cloudfront_origin.id] # <- managed list, auto-updated
   }
   egress {
     from_port = 0
@@ -473,27 +476,26 @@ The dev `ci-backend.yml` gains a tag-path publish job (`publish-ecr-prod`) and a
 
 Both prod jobs gate on `github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')`. The existing dev deploy job's condition (`refs/heads/dev`) is untouched. Optionally add `workflow_dispatch` with an input tag for break-fix releases.
 
-2. **Prod publish is its own environment-scoped job:** `publish-ecr-prod` receives the built image from the `docker` job as a run artifact (never rebuilt), assumes the ECR push role, and publishes by digest. It carries `environment: backend-prod-publish` because the ECR push trust is the stable `environment:` subject (section 6.1) — a tag-name `ref` subject could never be exact-matched. The environment is restricted to `v*` tags and has no reviewers: publishing to ECR is not a production mutation, and the human gate stays on the deploy.
+2. **Prod publish is its own environment-scoped job:** `publish-ecr-prod` receives the built image from the `docker` job as a run artifact (never rebuilt), assumes the ECR push role, and publishes by digest. It carries `environment: backend-prod-publish` because the ECR push trust is the stable `environment:` subject (section 6.1). The environment admits `v*` tags only; the deploy switch must remain off until release readiness is reviewed.
 
-3. **Approval gate:** `environment: backend-prod` with required reviewers configured in GitHub (section 8). The deploy pauses until a reviewer approves — this is the single biggest dev/prod difference in the delivery flow.
+3. **Operator-controlled release gate (2026-09-25 amendment):** `environment: backend-prod` admits `v*` tags only. This private personal repository exposes no native required-reviewers rule; listing two eligible reviewers elsewhere would not enforce two approvals per release anyway. The account holder elected to drop the unavailable reviewer gate, so no approval pause is claimed. `ENABLE_EC2_DEPLOY_PROD` stays unset/false until a human explicitly enables production delivery after reviewing the plan, environment settings and release prerequisites. Once enabled, a qualifying tag can publish/deploy automatically; the switch is a deliberate operator control, not a two-person approval mechanism.
 
 4. **Health check:** `deploy.sh` already polls `http://127.0.0.1:8589/api/actuator/health` on the host and rolls back automatically on failure — in dev this was sufficient. The dev workflow's *additional* public-URL check existed only because the runner had to prove reachability through the security group, which is what forced `0.0.0.0/0` open. In prod the runner does **not** need a public path: keep the SSM-invocation status check (which includes `deploy.sh` stdout, hence the local health result), and optionally verify the CloudFront domain (`BACKEND_URL_PROD`, runbook section 6.5) from the runner — the same URL users hit.
 
 Concurrency: its own group `deploy-existing-ec2-backend-prod`, `cancel-in-progress: false`, shared with the prod rollback workflow so a rollback and a deploy can never interleave on the host.
 
-The `rollback-backend.yml` workflow is extended the same way: a prod target selection with the `backend-prod` environment (reviewers required) and the `_PROD` variables.
+The prod path in `rollback-backend.yml` uses the `backend-prod` environment and `_PROD` variables. With the tag-only environment, manual prod rollback must be dispatched from an existing `v*` release tag; automatic rollback inside a failed deploy remains unchanged. Do not permit `dev` in that production environment solely to make manual rollback work.
 
 ## 8. GitHub configuration (one scripted step, not a checklist)
 
-Create the `backend-prod` environment in Settings with:
+On 2026-09-25 the account holder explicitly created both environments (no release tag or Terraform apply). Verify `backend-prod` in Settings or the API with:
 
-- required reviewers (at least two team members for prod);
-- deployment branches/tags: `v*` tags only.
+- selected **`v*` tags only** (no branch policy) and no native reviewer protection rule;
+- no deployment credentials or derived variables until Terraform apply and the runbook §6 hand-off.
 
-Also create `backend-prod-publish` (the publish job's environment — its OIDC subject is what the ECR push role trusts, section 6.1) with:
+Verify `backend-prod-publish` (its OIDC subject is what the ECR push role trusts) with:
 
-- no required reviewers (the human gate stays on `backend-prod`);
-- deployment branches/tags: `v*` tags only.
+- selected **`v*` tags only** and no branch/reviewer policy. `ENABLE_EC2_DEPLOY_PROD` is unset, so both production delivery jobs remain skipped.
 
 Then set every variable from Terraform outputs — the values are derived, never retyped:
 
@@ -539,7 +541,7 @@ Ordered, with the freeze switch held closed until the last possible moment:
 7. Freeze rehearsal: push a throwaway tag `v0.0.0-rc1` — the gates must run while nothing publishes and nothing deploys. Only then set `ENABLE_EC2_DEPLOY_PROD=true`.
 8. Cut a release tag from the release branch: `git tag v0.1.0 && git push origin v0.1.0`.
 9. Quality gates re-run on the tag; `publish-ecr-prod` publishes the image to `prod/blocbuy` by digest.
-10. The `backend-prod` environment pauses for reviewer approval — approve it.
+10. The tag-only `backend-prod` environment does **not** pause for approval: after the operator enables the deploy switch, confirm the job's intended tag, digest and target before release, then verify its outcome in the following step.
 11. Inspect the `deploy-existing-ec2-prod` job summary: digest, SSM command ID, status; confirm the local health check passed inside the SSM stdout.
 12. Verify end-to-end through the CloudFront domain:
 
@@ -583,7 +585,7 @@ Until then, the two environments coexist safely because prod role names, reposit
 | Immutable artifacts | Same digest-pinned ECR deployment as dev; tag-immutability enabled |
 | Least privilege by reference | Inline policies reference resource ARNs (`aws_ecr_repository...arn`, `aws_instance...id`) instead of literals |
 | Reproducibility | `envs/prod.tfvars` + pinned provider versions recreate the environment from scratch |
-| Audit trail | PR review + redacted Terraform plan summary in PR comments (no raw secret-bearing plan/state) + CloudTrail + GitHub environment approvals |
+| Audit trail | PR review + redacted Terraform plan summary (no raw secret-bearing plan/state) + operator switch/tag decision + CloudTrail and GitHub run records; native environment approvals are unavailable on this private repository |
 | Disaster recovery | `terraform apply` rebuilds the host; ECR lifecycle retains rollback digests; state bucket is versioned |
 
 ## 13. Authoritative references
