@@ -194,59 +194,46 @@ const toSummary = (s: Seed): ProductSummaryResponse => ({
   currency: "sgd",
 });
 
-// The sample buyer's orders for `/account` (§4.4 rows): one per lifecycle state, paid over the
-// last few days. `?msw=1&me=1` shows them; anonymous browsing never reaches the endpoint.
-const orderSeeds: { n: number; quantity: number; status: string; daysAgo: number }[] = [
-  { n: 1, quantity: 1, status: "pending", daysAgo: 0 },
-  { n: 5, quantity: 2, status: "confirmed", daysAgo: 3 },
-  { n: 8, quantity: 1, status: "cancelled", daysAgo: 6 },
-];
-
-const orders: OrderSummaryResponse[] = orderSeeds.map(({ n, quantity, status, daysAgo }) => {
-  const s = seeds.find((x) => x.n === n);
-  const unit = s?.groupPrice ?? s?.individualPrice ?? 0;
-  const paid = inSeconds(-daysAgo * 86_400 - 3_600);
-  return {
-    orderId: `0192f0a0-0000-7000-8000-${String(n).padStart(12, "0")}`,
-    orderNo: `BB-${2090 + n}`,
-    dealId: `deal-${n}`,
-    productId: id(n),
-    productTitle: s?.title ?? "",
-    productImage: null,
-    quantity,
-    unitPrice: unit.toFixed(2),
-    totalAmount: (unit * quantity).toFixed(2),
-    currency: "sgd",
-    status,
-    paidTime: paid,
-    cancelTime: status === "cancelled" ? inSeconds(-daysAgo * 86_400 + 3_600) : null,
-    createTime: paid,
-  };
-});
-
 // The sample buyer's blocs for the §4.4 My blocs chips (`?msw=1&me=1`), after the artboard's
 // rows: three active (one closing soon, one the buyer started), one filled, two closed unfilled.
+// A closed bloc is an earlier bloc on the listing, so its id never collides with the live deal
+// the listing page shows.
 const teamSeeds: {
   n: number;
-  status: string;
+  status: "open" | "succeeded" | "expired";
   joined: number;
   target: number;
   endsIn: number;
   leader?: boolean;
+  quantity?: number;
   paidDaysAgo: number;
 }[] = [
   { n: 1, status: "open", joined: 4, target: 5, endsIn: 52 * 60 + 9, paidDaysAgo: 1 },
-  { n: 5, status: "open", joined: 5, target: 8, endsIn: 28 * 3600, leader: true, paidDaysAgo: 2 },
+  {
+    n: 5,
+    status: "open",
+    joined: 5,
+    target: 8,
+    endsIn: 28 * 3600,
+    leader: true,
+    quantity: 2,
+    paidDaysAgo: 2,
+  },
   { n: 8, status: "open", joined: 6, target: 10, endsIn: 57 * 3600, paidDaysAgo: 3 },
   { n: 9, status: "succeeded", joined: 8, target: 8, endsIn: -86_400, paidDaysAgo: 4 },
   { n: 7, status: "expired", joined: 3, target: 5, endsIn: -2 * 86_400, paidDaysAgo: 5 },
   { n: 2, status: "expired", joined: 2, target: 5, endsIn: -5 * 86_400, paidDaysAgo: 7 },
 ];
 
+const dealIdOf = (t: (typeof teamSeeds)[number]) =>
+  t.status === "open" ? `deal-${t.n}` : `deal-${t.n}-closed`;
+const orderIdOf = (n: number) => `0192f0a0-0000-7000-8000-${String(n).padStart(12, "0")}`;
+const joinTimeOf = (t: (typeof teamSeeds)[number]) => inSeconds(-t.paidDaysAgo * 86_400 - 3_600);
+
 const teams: MyTeamResponse[] = teamSeeds.map((t) => {
   const s = seeds.find((x) => x.n === t.n);
   return {
-    dealId: `deal-${t.n}`,
+    dealId: dealIdOf(t),
     productId: id(t.n),
     productTitle: s?.title ?? null,
     productImage: null,
@@ -258,13 +245,45 @@ const teams: MyTeamResponse[] = teamSeeds.map((t) => {
     expireTime: inSeconds(t.endsIn),
     successTime: t.status === "succeeded" ? inSeconds(t.endsIn - 3_600) : null,
     role: t.leader ? "leader" : "member",
-    joinTime: inSeconds(-t.paidDaysAgo * 86_400 - 3_600),
-    orderId: null,
+    joinTime: joinTimeOf(t),
+    orderId: orderIdOf(t.n),
   };
 });
 
-// One receipt per §4.6 state: paid (the confirmed order), waiting (no order yet), refund pending
-// and refunded (the cancelled order). The last digits name the state for `?msw=1&me=1`.
+// The buyer's orders for `/account`, one per bloc above and derived from it so the two lists
+// agree: paid when the buyer joined, "Waiting for the bloc" while it is open, confirmed once it
+// filled, cancelled when it closed unfilled (`OrderStatus.java`). Anonymous browsing never reaches
+// the endpoint.
+const orderStatusOf = { open: "pending", succeeded: "confirmed", expired: "cancelled" } as const;
+
+const orders: OrderSummaryResponse[] = teamSeeds.map((t) => {
+  const s = seeds.find((x) => x.n === t.n);
+  const unit = s?.groupPrice ?? s?.individualPrice ?? 0;
+  const quantity = t.quantity ?? 1;
+  const paid = joinTimeOf(t);
+  return {
+    orderId: orderIdOf(t.n),
+    orderNo: `BB-${2090 + t.n}`,
+    dealId: dealIdOf(t),
+    productId: id(t.n),
+    productTitle: s?.title ?? "",
+    productImage: null,
+    quantity,
+    unitPrice: unit.toFixed(2),
+    totalAmount: (unit * quantity).toFixed(2),
+    currency: "sgd",
+    status: orderStatusOf[t.status],
+    paidTime: paid,
+    cancelTime: t.status === "expired" ? inSeconds(t.endsIn) : null,
+    createTime: paid,
+  };
+});
+
+const orderFor = (n: number) => orders.find((o) => o.productId === id(n));
+
+// One receipt per §4.6 state; the last digits name the state for `?msw=1&me=1`: 1 waiting (no
+// order yet), 5 paid (the filled bak kwa bloc's confirmed order), 9 refund pending and 8 refunded
+// (the cancelled orders of the two blocs that closed unfilled).
 const receiptId = (n: number) => `0192f0a0-0000-7000-9000-${String(n).padStart(12, "0")}`;
 const receiptFor = (order: OrderSummaryResponse | undefined) => ({
   amount: order?.totalAmount ?? "0.00",
@@ -274,20 +293,25 @@ const receiptFor = (order: OrderSummaryResponse | undefined) => ({
 });
 
 function sampleReceipts(): Receipt[] {
-  const { amount, currency } = receiptFor(orders[0]);
+  const { amount, currency } = receiptFor(orderFor(1));
   return [
     {
       paymentId: receiptId(5),
       status: "SUCCEEDED",
-      ...receiptFor(orders[1]),
+      ...receiptFor(orderFor(9)),
       refundStatus: "NONE",
     },
     { paymentId: receiptId(1), status: "CREATED", amount, currency },
-    { paymentId: receiptId(9), status: "SUCCEEDED", ...receiptFor(orders[2]), refundPending: true },
+    {
+      paymentId: receiptId(9),
+      status: "SUCCEEDED",
+      ...receiptFor(orderFor(7)),
+      refundPending: true,
+    },
     {
       paymentId: receiptId(8),
       status: "SUCCEEDED",
-      ...receiptFor(orders[2]),
+      ...receiptFor(orderFor(2)),
       refundStatus: "SUCCEEDED",
     },
   ];
