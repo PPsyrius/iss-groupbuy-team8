@@ -12,6 +12,8 @@
 
 **Planning date:** 2026-09-16. Sprint 2: 2026-09-14 to 2026-09-25. Tier 1 targets the week ending 2026-09-20; tier 2 the week ending 2026-09-25.
 
+See also: [`admin-plan.md`](admin-plan.md), the UC9 admin console plan (Sprint 3 candidates).
+
 ## Global Constraints
 
 - React 19.3, pure CSR, no SSR framework. Static files to the existing S3 + CloudFront (`https://d1b3np88z657cp.cloudfront.net`).
