@@ -28,13 +28,16 @@ function renderSheet(state: QuoteState, overrides: Partial<Parameters<typeof Quo
 }
 
 describe("QuoteSheet", () => {
-  it("shows the quoted price, the hold countdown and the refund promise", async () => {
+  it("shows the quoted price as a preview with its countdown and the refund promise", async () => {
     const props = renderSheet(ready(now + 14 * 60_000 + 59_000));
     const dialog = await screen.findByRole("dialog", { name: "Your bloc price" });
     expect(dialog).toHaveTextContent("S$71.00");
     expect(screen.getByRole("timer")).toHaveTextContent("14:59 left");
     expect(dialog).toHaveTextContent("Refunded in full");
+    expect(dialog).toHaveTextContent("Quote valid for");
+    expect(dialog).toHaveTextContent(/This price is a preview and may change before you pay/);
     expect(dialog).toHaveTextContent(/Stripe shows the final amount/);
+    expect(dialog).not.toHaveTextContent(/held/i);
     await userEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
     expect(props.onContinue).toHaveBeenCalledOnce();
   });

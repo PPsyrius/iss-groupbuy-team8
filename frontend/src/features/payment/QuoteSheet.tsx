@@ -6,9 +6,10 @@ import type { QuoteState } from "@/features/payment/use-quote";
 
 // The first-team quote step (UC3, plan T3-01): "Start a bloc" opens this sheet over the listing,
 // the same `placement="auto"` sheet/modal as the sign-in gate (§4.3). It shows the server's
-// quoted price with its hold countdown and the refund promise (design brief §6 "Checkout"); an
-// expired quote disables payment and offers a fresh price. The quote is a preview only: START
-// re-prices from the latest policy and Stripe's page carries the charged amount (ADR 0014).
+// quoted price with its validity countdown and the refund promise (design brief §6 "Checkout");
+// an expired quote disables payment and offers a fresh price. The quote is a preview only: START
+// re-prices from the latest policy and Stripe's page carries the charged amount (ADR 0014), so
+// the copy never promises a held price (CodeRabbit r4102738782).
 export function QuoteSheet({
   isOpen,
   onOpenChange,
@@ -71,7 +72,7 @@ export function QuoteSheet({
                   </p>
                   <QuoteTerms
                     payNow={formatPrice(quote.amount, quote.currency)}
-                    held={formatCountdown(quote.expiresMs, now)}
+                    validFor={formatCountdown(quote.expiresMs, now)}
                   />
                   {expired ? (
                     <Alert status="warning" aria-live="polite">
@@ -84,8 +85,8 @@ export function QuoteSheet({
                     </Alert>
                   ) : (
                     <p className="text-muted text-sm">
-                      Prices are held for up to 15 minutes. Stripe shows the final amount before you
-                      pay, and nothing is charged until you confirm there.
+                      This price is a preview and may change before you pay. Stripe shows the final
+                      amount, and nothing is charged until you confirm there.
                     </p>
                   )}
                 </>
@@ -137,12 +138,13 @@ export function QuoteSheet({
   );
 }
 
-// Same three cells as the listing's trust triptych (§4.2), with the hold countdown in the middle.
+// Same three cells as the listing's trust triptych (§4.2), with the quote's validity countdown in
+// the middle.
 // `role="timer"` keeps the per-second tick out of screen-reader announcements.
 function QuoteTerms({
   payNow,
-  held,
-}: Readonly<{ payNow: string; held: { text: string; urgent: boolean } }>) {
+  validFor,
+}: Readonly<{ payNow: string; validFor: { text: string; urgent: boolean } }>) {
   const cell = "flex flex-col gap-0.5 rounded-lg border-border border p-3";
   return (
     <dl className="grid grid-cols-3 gap-2">
@@ -151,9 +153,9 @@ function QuoteTerms({
         <dd className="text-accent-soft-foreground text-sm font-semibold tabular-nums">{payNow}</dd>
       </div>
       <div className={cell}>
-        <dt className="text-muted text-xs">Price held for</dt>
+        <dt className="text-muted text-xs">Quote valid for</dt>
         <dd role="timer" className="text-sm font-semibold tabular-nums">
-          {held.text}
+          {validFor.text}
         </dd>
       </div>
       <div className={cell}>

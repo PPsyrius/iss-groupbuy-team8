@@ -222,7 +222,7 @@ const orders: OrderSummaryResponse[] = orderSeeds.map(({ n, quantity, status, da
   };
 });
 
-// First-team quotes (T3-01): the seed's bloc price held for 15 minutes; a listing without one
+// First-team quotes (T3-01): the seed's bloc price, valid for 15 minutes; a listing without one
 // answers the backend's "team price unavailable" 409. Issued quotes are kept for `getQuote`.
 const quotes = new Map<string, QuoteResponse>();
 
