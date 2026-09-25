@@ -60,9 +60,12 @@ Replace every placeholder in `/etc/blocbuy/backend.env`. Do not commit or transm
 SELECT count(*)
 FROM domain.biz_group_deal
 WHERE deleted = false AND status = 'open' AND expire_time <= now();
+SELECT count(*)
+FROM domain.biz_refund
+WHERE deleted = false AND status IN ('pending', 'processing') AND next_attempt_at <= now();
 ```
 
-Record the backlog before enabling the sweep. On dev, edit `/etc/blocbuy/backend.env` directly. On prod, update `/blocbuy/prod/BLOCBUY_SCHEDULING_ENABLED` in SSM Parameter Store and rerun `sudo /opt/blocbuy/backend/bin/fetch-env.sh /blocbuy/prod` to refresh the host env file. For either value and environment, run an approved backend deployment or the reviewed [`deploy.sh` command](#deploy) with the current immutable image digest: it force-recreates the backend container and reloads the env file. `docker compose restart` and `docker restart` retain the old container environment. To pause, set `false` and recreate; an in-flight team transaction may finish or roll back.
+Record both backlogs before enabling scheduling: under the `ec2` profile this switch starts the expiry sweep and the refund worker, which attempts one due obligation every 30 seconds and can send sandbox refunds when `STRIPE_API_KEY` is configured with a `sk_test_` key. Checkout remains disabled without `stripe-sprint2`. On dev, edit `/etc/blocbuy/backend.env` directly. On prod, update `/blocbuy/prod/BLOCBUY_SCHEDULING_ENABLED` in SSM Parameter Store and rerun `sudo /opt/blocbuy/backend/bin/fetch-env.sh /blocbuy/prod` to refresh the host env file. For either value and environment, run an approved backend deployment or the reviewed [`deploy.sh` command](#deploy) with the current immutable image digest: it force-recreates the backend container and reloads the env file. `docker compose restart` and `docker restart` retain the old container environment. To pause, set `false` and recreate; an in-flight provider call may finish before the container stops.
 
 To enable the optional Jev listing re-ranker on dev, set `TYPESAFE_ENABLED=true` and place the TypeSafe credential in `TYPESAFE_API_KEY`. The ordinary listing search remains available when Jev is disabled or temporarily unavailable; clients request page-local semantic ordering with `ai=true`. The repository's `typesafe-smoke` workflow uses its separate Actions secret only for a manually dispatched provider check and does not provision this host file.
 

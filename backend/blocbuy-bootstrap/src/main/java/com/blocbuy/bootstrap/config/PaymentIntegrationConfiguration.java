@@ -11,7 +11,10 @@ import com.blocbuy.order.service.OrderFulfilmentAdapter;
 import com.blocbuy.order.service.PurchaseIntentAppService;
 import com.blocbuy.payment.gateway.PaymentBusinessPort;
 import com.blocbuy.payment.gateway.PaymentIntentPort;
+import com.blocbuy.payment.gateway.RefundGateway;
 import com.blocbuy.payment.repository.CheckoutPaymentRepository;
+import com.blocbuy.payment.repository.RefundRepository;
+import com.blocbuy.payment.service.RefundService;
 import com.blocbuy.payment.service.TeamExpiryRefundService;
 import com.blocbuy.payment.service.TeamExpiryRefundSubscriber;
 import org.springframework.context.annotation.Bean;
@@ -63,5 +66,14 @@ public class PaymentIntegrationConfiguration {
     @Bean
     TeamExpiryRefundSubscriber teamExpiryRefundSubscriber(TeamExpiryRefundService refunds) {
         return new TeamExpiryRefundSubscriber(refunds);
+    }
+
+    /** The scheduled refund worker also runs under ec2 without activating checkout. */
+    @Bean
+    RefundService refundService(
+            RefundRepository repository,
+            RefundGateway gateway,
+            PlatformTransactionManager transactions) {
+        return new RefundService(repository, gateway, transactions);
     }
 }
