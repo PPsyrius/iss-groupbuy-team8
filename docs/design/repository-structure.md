@@ -2,7 +2,7 @@
 
 This document describes the layout of the BlocBuy monorepo, the purpose of each directory, and the local commands behind the backend Maven wrapper and `docker-compose.yaml`. Verified against the tree on 2026-09-21; if it drifts again, the tree — not this file — wins.
 
-The repository is a **polyglot monorepo**: a Java Spring Boot backend, a React SPA frontend, CI/CD pipelines, deployment policy/scripts, Terraform infrastructure, and project documentation live together. Delivery reuses an existing EC2 host for dev; production infrastructure is Terraform-managed.
+The repository is a **polyglot monorepo**: a Java Spring Boot backend, a React SPA frontend, CI/CD pipelines, deployment policy/scripts, Terraform infrastructure, and project documentation live together. The dev backend reuses an existing EC2 host; the dev frontend edge is in separate imported Terraform state (source PR pending), and the production backend stack is declared in Terraform but has not been applied (#48).
 
 ---
 
@@ -63,10 +63,11 @@ blocbuy/
 │   └── frontend/
 │       ├── cloudfront/             # versioned SPA-fallback function + response-headers policy
 │       └── iam/                    # frontend OIDC deploy-role examples
-├── infra/terraform/                # production backend stack (Terraform-managed)
-│   ├── backend-app-stack/          # OIDC roles, ECR, ALB, EC2, user-data bootstrap
-│   ├── envs/prod.tfvars            # pinned prod values (dev stays hand-managed, out of scope)
-│   └── README.md                   # init/plan/apply usage
+├── infra/terraform/                # separate prod backend and dev frontend stacks
+│   ├── backend-app-stack/          # planned prod: OIDC roles, ECR, ALB, EC2, user-data
+│   ├── frontend-stack/             # imported dev edge: S3, CloudFront, deploy role
+│   ├── envs/                       # prod.tfvars and frontend-dev.tfvars (no secrets)
+│   └── README.md                   # state ownership, init/plan usage
 ├── docs/
 │   ├── agile/                      # sprint logs, metrics snapshots, README index
 │   ├── ci/                         # backend-pipeline.md (runbook), devsecops-pipeline-plan.md (decisions)
@@ -140,9 +141,9 @@ The web frontend (React 19, TypeScript 7, Vite 8, pnpm 12, Node 24). `src/api/ge
 
 `deployment/backend/` is the host-side deployment contract (Compose, env template, lifecycle scripts, IAM examples, ECR policy). `deployment/frontend/` carries the versioned CloudFront function, response-headers policy, and OIDC role examples. See the [operator guide](../deploy/backend-ec2-pipeline-operator-guide.md) and [dev CloudFront guide](../deploy/dev-cloudfront-deployment.md).
 
-### `infra/` — Terraform-managed production
+### `infra/` — Terraform stacks by environment
 
-`infra/terraform/` holds the production backend stack (`backend-app-stack/`: OIDC roles, ECR, ALB, EC2, user-data bootstrap) plus `envs/prod.tfvars` and usage docs. The dev environment stays hand-managed and out of scope. See `infra/terraform/README.md`.
+`infra/terraform/` holds the production backend stack (`backend-app-stack/`: OIDC roles, ECR, ALB, EC2, user-data bootstrap) and a separate `frontend-stack/` for the existing dev frontend edge (nine resources imported into remote state with a zero-change plan on 2026-09-25; source PR pending). The dev backend remains hand-managed. Separate state keys, env files and operator status are documented in `infra/terraform/README.md`.
 
 ### `docs/` — All Written Deliverables
 

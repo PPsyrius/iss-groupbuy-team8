@@ -42,7 +42,7 @@ the ALB listener rule.
 
 ## 1. One-time: Terraform state backend
 
-Run once per AWS account (skip if the bucket/table already exist):
+On the existing account `402178232802`, first perform the read-only state-backend verification in the [production design §5.1](backend-prod-terraform-deployment.md#51-bootstrap-the-terraform-state-backend). On 2026-09-25 the bucket and active `blocbuy-tflock` table with `LockID (S)` were confirmed for the frontend import; versioning, encryption and production access still require verification before a prod apply. The following bootstrap commands are **only for a genuinely new account with no bucket or lock table**; do not run them on the existing state backend.
 
 ```bash
 aws s3api create-bucket --bucket blocbuy-tfstate-402178232802 \
@@ -129,12 +129,15 @@ aws ssm put-parameter --name /blocbuy/prod/DB_PASSWORD \
 
 ## 4. Plan, review, apply the stack
 
+From the repository root, keep the saved plan local and access-restricted; it can contain the resolved `/blocbuy/prod/ORIGIN_SECRET` value. Do not attach raw plan/state output to a PR—record a redacted action summary and reviewer decision instead.
+
 ```bash
-cd infra/terraform
-terraform init \
-  -backend-config bucket=blocbuy-tfstate-402178232802 \
-  -backend-config region=ap-southeast-1
-terraform plan -var-file=envs/prod.tfvars -out=prod.tfplan
+umask 077
+terraform -chdir=infra/terraform/backend-app-stack init \
+  -backend-config="bucket=blocbuy-tfstate-402178232802" \
+  -backend-config="region=ap-southeast-1" -lockfile=readonly -input=false
+terraform -chdir=infra/terraform/backend-app-stack plan -input=false \
+  -var-file=../envs/prod.tfvars -out=prod.tfplan
 ```
 
 **Team plan review — read all of these in the plan output before applying** (this replaces the
@@ -157,7 +160,7 @@ dev bootstrap's "replace the placeholder then read it back" ritual):
 - [ ] No resource outside this stack is being modified or destroyed (plan shows only `+`)
 
 ```bash
-terraform apply prod.tfplan
+terraform -chdir=infra/terraform/backend-app-stack apply prod.tfplan
 ```
 
 Apply creates: two GitHub OIDC roles, `prod/blocbuy` ECR, security groups, ALB + target group,
@@ -170,7 +173,7 @@ PostgreSQL/Redis project, loopback-only).
 ## 5. Post-apply verification
 
 ```bash
-INSTANCE_ID="$(terraform -chdir=infra/terraform output -raw instance_id)"
+INSTANCE_ID="$(terraform -chdir=infra/terraform/backend-app-stack output -raw instance_id)"
 
 # SSM agent online (first boot installs prerequisites; allow a few minutes)
 aws ssm describe-instance-information \
@@ -201,22 +204,20 @@ aws ssm send-command --instance-ids "$INSTANCE_ID" \
 
 # Security groups: 8589 only from the ALB SG; nothing else ingress
 aws ec2 describe-security-groups --region ap-southeast-1 \
-  --group-names "$(terraform -chdir=infra/terraform output -raw backend_sg_name)" \
+  --group-names "$(terraform -chdir=infra/terraform/backend-app-stack output -raw backend_sg_name)" \
   --query 'SecurityGroups[].IpPermissions[]'
 
 # ALB target health (after the first deploy there will be a target; before it, expect no targets)
 aws elbv2 describe-target-health --region ap-southeast-1 \
-  --target-group-arn "$(terraform -chdir=infra/terraform output -raw target_group_arn)"
+  --target-group-arn "$(terraform -chdir=infra/terraform/backend-app-stack output -raw target_group_arn)"
 
-# Origin chain: 403 without the secret header proves the default-deny listener before
-# CloudFront even exists. With the header, expect 503 before the first deploy (no healthy
-# target yet) and {"status":"UP"} after it.
-ALB_URL="$(terraform -chdir=infra/terraform output -raw backend_url)"
-ORIGIN_SECRET="$(aws ssm get-parameter --name /blocbuy/prod/ORIGIN_SECRET \
-  --with-decryption --query Parameter.Value --output text --region ap-southeast-1)"
-curl -s -o /dev/null -w '%{http_code}\n' "$ALB_URL/api/actuator/health"   # must print 403
-curl -s -o /dev/null -w '%{http_code}\n' -H "X-Origin-Secret: $ORIGIN_SECRET" \
-  "$ALB_URL/api/actuator/health"                                          # 503 now, 200 after first deploy
+# The ALB SG accepts CloudFront origins only. Direct requests from an admin workstation
+# can time out before the listener; inspect its default action without reading rule secrets.
+ALB_ARN="$(aws elbv2 describe-load-balancers --names blocbuy-prod \
+  --query 'LoadBalancers[0].LoadBalancerArn' --output text --region ap-southeast-1)"
+aws elbv2 describe-listeners --load-balancer-arn "$ALB_ARN" --region ap-southeast-1 \
+  --query 'Listeners[].{port:Port,defaultStatus:DefaultActions[0].FixedResponseConfig.StatusCode}'
+# Expect port 80 and defaultStatus 403; verify public API health through CloudFront in section 7.
 ```
 
 - [ ] `PingStatus=Online`
@@ -235,7 +236,7 @@ then check VPC endpoints/NAT (see dev operator guide section 13).
 Requires the `gh` CLI with admin on `PPsyrius/iss-groupbuy-team8`:
 
 ```bash
-terraform -chdir=infra/terraform output -json > /tmp/tf-outputs.json
+terraform -chdir=infra/terraform/backend-app-stack output -json > /tmp/tf-outputs.json
 
 # Repository-level variables (read by both the publish job and the deploy job, which
 # live in different environments — repository scope is what they share)
@@ -262,8 +263,7 @@ No AWS access keys and no `BACKEND_DOT_ENV` belong on GitHub.
 
 ### 6.5 One-time: the prod CloudFront distribution
 
-The entry layer mirrors the dev rework — follow
-[dev-cloudfront-deployment.md](../dev-cloudfront-deployment.md) sections 6–7 with prod values.
+The entry layer mirrors the dev rework: follow [the current dev entry-layer requirements](../dev-cloudfront-deployment.md) sections 6–7 with prod values. Those sections describe the live resource pattern; the original one-time CLI creation examples are retained in [the dev guide at 12df8a8](https://github.com/PPsyrius/iss-groupbuy-team8/blob/12df8a83c86012d51b9de4532741bc0bf80dcad7/docs/deploy/dev-cloudfront-deployment.md#6-frontend-s3-bucket--oac) for historical reference, not as commands to replay against dev.
 The Terraform stack has already built the ALB half (prefix-list SG, default-403 listener,
 secret-header rule), so only the CloudFront side is manual:
 
@@ -318,9 +318,9 @@ Ordered; the freeze switch opens only at step 3:
 
        ```bash
        curl --fail --silent "https://<prod-dist-domain>/api/actuator/health"
-       # And the negative control: direct-to-ALB without the secret must stay 403
-       curl -s -o /dev/null -w '%{http_code}\n' \
-         "$(terraform -chdir=infra/terraform output -raw backend_url)/api/actuator/health"
+       # Direct-to-ALB cannot reach backend health: SG timeout/000 or listener 403.
+       curl --max-time 5 -sS -o /dev/null -w '%{http_code}\n' \
+         "$(terraform -chdir=infra/terraform/backend-app-stack output -raw backend_url)/api/actuator/health"
        ```
 
 9. - [ ] Target group healthy:
