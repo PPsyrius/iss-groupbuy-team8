@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { QuoteSheet } from "./QuoteSheet";
 import type { QuoteState } from "./use-quote";
@@ -28,6 +28,14 @@ function renderSheet(state: QuoteState, overrides: Partial<Parameters<typeof Quo
 }
 
 describe("QuoteSheet", () => {
+  // The sheet's `now` prop is the route's per-second clock; Continue also re-reads `Date.now()`.
+  beforeEach(() => {
+    vi.spyOn(Date, "now").mockReturnValue(now);
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("shows the quoted price as a preview with its countdown and the refund promise", async () => {
     const props = renderSheet(ready(now + 14 * 60_000 + 59_000));
     const dialog = await screen.findByRole("dialog", { name: "Your bloc price" });
@@ -48,6 +56,15 @@ describe("QuoteSheet", () => {
     expect(screen.queryByRole("button", { name: "Continue to payment" })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Get a new price" }));
     expect(props.onRefresh).toHaveBeenCalledOnce();
+  });
+
+  it("does not start checkout when the quote expired since the last clock tick", async () => {
+    // The rendered clock still says 10:00:00.000 but the quote lapsed at 10:00:00.500.
+    const props = renderSheet(ready(now + 500));
+    const button = await screen.findByRole("button", { name: "Continue to payment" });
+    vi.mocked(Date.now).mockReturnValue(now + 900);
+    await userEvent.click(button);
+    expect(props.onContinue).not.toHaveBeenCalled();
   });
 
   it("says no price is set yet when the policy is unavailable", async () => {

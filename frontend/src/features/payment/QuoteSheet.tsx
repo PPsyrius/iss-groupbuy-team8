@@ -99,7 +99,12 @@ export function QuoteSheet({
                   size="lg"
                   className="min-h-12 w-full text-lg xl:flex-1"
                   isPending={isPaying}
-                  onPress={onContinue}
+                  // `now` is floored to the second and ticks once a second, so the button can
+                  // outlive the quote by up to two seconds; the press re-reads the clock and
+                  // leaves the expired state to the next tick (CodeRabbit r4104866984).
+                  onPress={() => {
+                    if (quote.expiresMs > Date.now()) onContinue();
+                  }}
                 >
                   Continue to payment
                 </Button>
