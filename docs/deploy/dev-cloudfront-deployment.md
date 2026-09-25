@@ -1,569 +1,205 @@
-# Dev Environment Entry-Layer Rework: CloudFront + ALB Tutorial (Removing Public Port 8589)
+# Dev CloudFront entry layer: operations and import status
 
-**Status:** operational and automation-verified 2026-09-23 **Environment:** `backend-dev` (existing EC2 instance) **Goal:** backend port 8589 is no longer exposed to the public internet; the frontend is served from S3 + CloudFront; all API traffic goes through CloudFront at `https://<cloudfront-domain>/api/*`. Root, deep-link and asset probes return 200, API health returns `UP`, and `ci-frontend` run #165 passed deployment plus `e2e-dev`. No custom domain is needed at any point — the built-in `*.cloudfront.net` certificate on CloudFront handles user-facing HTTPS.
+**Environment:** account `402178232802`, region `ap-southeast-1`, existing dev EC2/ALB, S3 and CloudFront. **Status (2026-09-25):** live frontend/backend delivery passed `ci-frontend` run #165 on 2026-09-23; the dev frontend edge was imported into `infra/terraform/frontend-stack/` remote state on 2026-09-25 with nine imports, zero live-resource changes and a post-import zero-change plan. The config and evidence remain staged locally, not merged into `dev`; #161 stays open until a human lands the reviewed PR. The dev backend EC2/ALB remains hand-managed and outside this frontend stack.
+
+This is the current operator guide. The original 2026-09-06 CLI creation tutorial, including the old distribution JSON, remains in [Git history at 12df8a8](https://github.com/PPsyrius/iss-groupbuy-team8/blob/12df8a83c86012d51b9de4532741bc0bf80dcad7/docs/deploy/dev-cloudfront-deployment.md); the resource definitions and import procedure now live in [`infra/terraform/frontend-stack/`](../../infra/terraform/frontend-stack/README.md). Sections 6–7 retain the S3/CloudFront entry-layer pattern referenced by the production guides; sections 14–17 retain the frontend rollout references. Issue #93 and blockers [#99](https://github.com/PPsyrius/iss-groupbuy-team8/issues/99), [#100](https://github.com/PPsyrius/iss-groupbuy-team8/issues/100), [#101](https://github.com/PPsyrius/iss-groupbuy-team8/issues/101) and [#102](https://github.com/PPsyrius/iss-groupbuy-team8/issues/102) record the original execution.
 
 ## 0. Target architecture
 
 ```text
-User ──HTTPS──► https://xxxx.cloudfront.net (CloudFront built-in certificate)
-                  ├── /*      → S3 frontend bucket (private via OAC)
-                  └── /api/*  → ALB (HTTP:80, accepts CloudFront origins only + secret header)
-                                  └─► EC2:8589 (SG allows the ALB SG only)
-                                        └─► blocbuy-backend (host network, /api path prefix)
+Browser --HTTPS--> CloudFront d1b3np88z657cp.cloudfront.net
+                   | /*      --> private S3 bucket via OAC
+                   | /api/*  --> ALB HTTP:80 (CloudFront prefix list + X-Origin-Secret rule)
+                                 --> EC2:8589 (inbound from ALB SG only)
 ```
 
-| Change | Before | After |
-|---|---|---|
-| User access to backend | `http://<EC2-public-IP>:8589` | `https://<cloudfront-domain>/api/...` |
-| EC2 security group inbound 8589 | `0.0.0.0/0` | ALB security group only |
-| CORS | cross-origin configuration needed | frontend and backend same origin (`/api` prefix), no CORS needed |
-| User-facing TLS | none (plaintext HTTP) | TLS terminated by CloudFront |
-| Origin protection | security groups only | CloudFront managed prefix list + `X-Origin-Secret` header |
+The ALB has a default 403 listener action; its forwarding rule checks `X-Origin-Secret`. CloudFront's default certificate handles viewer HTTPS without a custom domain. **The `alb-backend` origin uses `http-only`: CloudFront sends the custom header and `/api/*` requests to the ALB over unencrypted HTTP.** The managed origin-facing prefix list and the secret-header rule restrict access, but neither encrypts this hop or protects the header from an observer on it. The previously disclosed secret also needs rotation. Treat a reviewed HTTPS-origin migration and coordinated rotation as separate live work before relying on the header for confidentiality; the 2026-09-25 Terraform import intentionally changed only state. Browser routes and API requests share the CloudFront viewer origin, so clients still use relative `/api/...` paths without CORS.
+
+| Resource | Existing dev value |
+|---|---|
+| Distribution | `E3U5W7UWDL8LRV` (`d1b3np88z657cp.cloudfront.net`) |
+| S3 bucket | `blocbuy-dev-frontend-402178232802` |
+| S3 origin access control | `blocbuy-dev-frontend-oac` (`E2WEBPIBHXOW90`) |
+| Backend ALB origin | `blocbuy-dev-backend-1247042341.ap-southeast-1.elb.amazonaws.com` |
+| SPA function | `blocbuy-dev-spa-fallback` |
+| Response-headers policy | `blocbuy-dev-security-headers` (`3c91a2c1-f130-42e8-b9cc-fec6a682c838`) |
+| Deploy role | `BlocBuyGitHubFrontendDeployDev` |
 
 ## 1. Prerequisites
 
-- The dev EC2 instance already runs the backend per the [operator guide](backend-ec2-pipeline-operator-guide.md);
-- AWS CLI v2 is available on your workstation or operator environment (all commands below are run by an operator with administrative permissions);
-- The dev VPC has **subnets in two different AZs** (an ALB requires this);
-- The companion changes in this repository have been merged (the `/api` routing contract — controller mappings plus `management.endpoints.web.base-path`, with no servlet context path — and the workflow health-check path), i.e. the current `dev` branch includes the same commit batch as this tutorial.
+Use an authorized AWS account-holder session and the [backend EC2 operator guide](backend-ec2-pipeline-operator-guide.md) for runtime/deploy checks. Confirm the AWS account, region, distribution and GitHub `frontend-dev` environment before an operation; do not infer live settings from examples. Backend health is `/api/actuator/health`: the `/api` prefix comes from controller mappings and the management base path, not a servlet context path. Never print, paste or commit the origin secret, Terraform state or a saved plan.
 
 ## 2. Collect and export variables
 
+The following are non-secret identifiers. These exports apply to the current shell only; recheck AWS before using them. Retrieve the existing origin secret through an approved private channel only when an authorized task requires it; never regenerate it during verification.
+
 ```bash
-export AWS_REGION=ap-southeast-1            # replace with your actual region
+export AWS_REGION=ap-southeast-1
 export ACCOUNT_ID=402178232802
-export INSTANCE_ID=i-0852b6c3475b19f05               # dev EC2 instance ID
-export VPC_ID=$(aws ec2 describe-instances --instance-ids "i-0852b6c3475b19f05" \
-  --query 'Reservations[0].Instances[0].VpcId' --output text)
-export BACKEND_SG_ID=$(aws ec2 describe-instances --instance-ids "i-0852b6c3475b19f05" \
-  --query 'Reservations[0].Instances[0].SecurityGroups[0].GroupId' --output text)
-
-# Subnets in two different AZs (required by the ALB)
-aws ec2 describe-subnets --filters Name=vpc-id,Values="$VPC_ID" \
-  --query 'Subnets[?MapPublicIpOnLaunch==`true`].[SubnetId,AvailabilityZone]' --output table
-export SUBNET_A=subnet-aaaa
-export SUBNET_B=subnet-bbbb
-
-# Anti-bypass secret: CloudFront → ALB must carry it; the ALB only forwards after validating it
-export ORIGIN_SECRET=$(openssl rand -hex 32)
-echo "$ORIGIN_SECRET"   # used in several later steps — keep it safe; do not commit it to the repository
-<64-hex-character-secret>
+export DIST_ID=E3U5W7UWDL8LRV
+export DIST_DOMAIN=d1b3np88z657cp.cloudfront.net
+export S3_BUCKET=blocbuy-dev-frontend-402178232802
+aws sts get-caller-identity --query Account --output text
+aws cloudfront get-distribution --id "$DIST_ID" --query 'Distribution.[ARN,DomainName,Status]' --output text
 ```
 
-If the instance has multiple security groups, `SecurityGroups[0]` may pick the wrong one; confirm which one allows port 8589 with `aws ec2 describe-instances --query '...Instances[0].SecurityGroups'`.
+The ARN returned by AWS must identify account `402178232802`; the distribution must be `Deployed` before checking changes to the edge.
 
 ## 3. Security groups
 
-### 3.1 Create the ALB security group (accepts CloudFront origins only)
+The ALB security group accepts TCP:80 only from `com.amazonaws.global.cloudfront.origin-facing` (look up the AWS-managed prefix-list ID with `describe-managed-prefix-lists`, not the legacy `describe-prefix-lists`). The backend security group accepts TCP:8589 from the ALB security group only; public `0.0.0.0/0:8589` must stay closed. Review the actual group IDs and rules before diagnosing an inaccessible origin.
 
-CloudFront origin IPs are maintained in the official AWS managed prefix list — reference it directly and it updates automatically:
+## 4. Target group, ALB and listener
 
-```bash
-# Note: the CloudFront prefix list can only be found via describe-managed-prefix-lists;
-# the older describe-prefix-lists only returns legacy lists such as S3/DynamoDB and yields None.
-export CF_PREFIX_LIST=$(aws ec2 describe-managed-prefix-lists \
-  --filters Name=prefix-list-name,Values=com.amazonaws.global.cloudfront.origin-facing \
-  --query 'PrefixLists[0].PrefixListId' --output text)
-echo "$CF_PREFIX_LIST"   # should start with pl-; if it is None the lookup failed — investigate before continuing
-pl-31a34658
-
-aws ec2 create-security-group \
-  --group-name blocbuy-dev-alb-sg \
-  --description "BlocBuy dev ALB - CloudFront origin only" \
-  --vpc-id "$VPC_ID"
-export ALB_SG_ID=$(aws ec2 describe-security-groups \
-  --filters Name=group-name,Values=blocbuy-dev-alb-sg Name=vpc-id,Values="$VPC_ID" \
-  --query 'SecurityGroups[0].GroupId' --output text)
-
-# The simplified syntax does not support prefix lists (there is no --source-prefix-list option);
-# --ip-permissions must be used.
-aws ec2 authorize-security-group-ingress \
-  --group-id "$ALB_SG_ID" \
-  --ip-permissions "IpProtocol=tcp,FromPort=80,ToPort=80,PrefixListIds=[{PrefixListId=$CF_PREFIX_LIST}]"
-```
-
-> The prefix list is **global** (`com.amazonaws.global.cloudfront.origin-facing`) and has many entries — reference it by ID; do not expand it into a CIDR list.
-
-### 3.2 Allow ALB → EC2:8589 (leave the existing public rule in place for now; close it after verification)
+The `blocbuy-dev-backend` target group forwards HTTP:8589 to the existing instance and health-checks `/api/actuator/health` for 200. The ALB listens on HTTP:80 with a default fixed 403; priority 10 forwards only requests with the matching `X-Origin-Secret`. Do not expose or recreate the rule when checking it. Query the non-secret status; a direct-ALB request without the header must not reach backend health:
 
 ```bash
-aws ec2 authorize-security-group-ingress \
-  --group-id "$BACKEND_SG_ID" --protocol tcp --port 8589 --source-group "$ALB_SG_ID"
+aws elbv2 describe-target-groups --names blocbuy-dev-backend --query 'TargetGroups[0].[TargetGroupArn,HealthCheckPath]' --output text
+curl --max-time 5 -sS -o /dev/null -w '%{http_code}\n' 'http://blocbuy-dev-backend-1247042341.ap-southeast-1.elb.amazonaws.com/api/actuator/health'
+# A timeout/000 means the SG blocked the client; 403 means the request reached the default listener. Neither should return 200.
 ```
 
-## 4. Create the target group and ALB
+### 4.1 Listener rule
 
-```bash
-aws elbv2 create-target-group \
-  --name blocbuy-dev-backend \
-  --protocol HTTP --port 8589 --vpc-id "$VPC_ID" --target-type instance \
-  --health-check-path /api/actuator/health \
-  --health-check-protocol HTTP --health-check-port traffic-port \
-  --health-check-interval-seconds 15 --health-check-timeout-seconds 5 \
-  --healthy-threshold-count 2 --unhealthy-threshold-count 3 \
-  --matcher HttpCode=200
-export TG_ARN=$(aws elbv2 describe-target-groups --names blocbuy-dev-backend \
-  --query 'TargetGroups[0].TargetGroupArn' --output text)
+The forwarding header must have the same private value on the ALB rule and CloudFront's `alb-backend` origin. The default 403 is defense in depth; direct clients outside the managed prefix list are dropped by the ALB security group before reaching the listener. Inspect the rule through an authorized private channel if its behavior differs; do not attach unredacted listener-rule or origin configuration to an issue or PR.
 
-aws elbv2 register-targets --target-group-arn "$TG_ARN" --targets Id="$INSTANCE_ID"
+### 4.2 Origin-chain check
 
-aws elbv2 create-load-balancer \
-  --name blocbuy-dev-backend \
-  --subnets "$SUBNET_A" "$SUBNET_B" \
-  --security-groups "$ALB_SG_ID" \
-  --scheme internet-facing --type application --ip-address-type ipv4
-export ALB_ARN=$(aws elbv2 describe-load-balancers --names blocbuy-dev-backend \
-  --query 'LoadBalancers[0].LoadBalancerArn' --output text)
-export ALB_DNS=$(aws elbv2 describe-load-balancers --names blocbuy-dev-backend \
-  --query 'LoadBalancers[0].DNSName' --output text)
-```
+Use `describe-target-health` for the existing target group and the direct probe above, then check the public CloudFront API health in section 8. A failing backend target is a runtime/deploy issue, not a reason to open port 8589 publicly.
 
-### 4.1 Listener: default 403, only requests carrying the secret header are forwarded
+## 5. Backend `/api` routing
 
-Without a domain there is no ACM certificate available on the ALB, so only an HTTP:80 listener is created (TLS is CloudFront's job). The default action returns 403; only traffic matching the `X-Origin-Secret` rule is forwarded to the backend — even someone who learns the ALB DNS name and connects directly gets nothing:
+`deployment/backend/compose.yml` sets `SERVER_FORWARD_HEADERS_STRATEGY: framework`; the controller paths and management base path supply `/api`. `health-check.sh` checks `http://127.0.0.1:8589/api/actuator/health` on the host. Regular backend deployment via `ci-backend` delivers the bundle over SSM and force-recreates the container when its environment changes. Check host-local health with the [backend operator guide](backend-ec2-pipeline-operator-guide.md) rather than adding a second servlet context path (the 2026-09-07 correction prevented `/api/api/...`).
 
-```bash
-aws elbv2 create-listener \
-  --load-balancer-arn "$ALB_ARN" --protocol HTTP --port 80 \
-  --default-actions Type=fixed-response,FixedResponseConfig="{StatusCode=403,ContentType=text/plain,MessageBody=forbidden}"
-export LISTENER_ARN=$(aws elbv2 describe-listeners --load-balancer-arn "$ALB_ARN" \
-  --query 'Listeners[0].ListenerArn' --output text)
+## 6. Frontend S3 bucket and OAC
 
-aws elbv2 create-rule \
-  --listener-arn "$LISTENER_ARN" --priority 10 \
-  --conditions Field=http-header,HttpHeaderConfig="{HttpHeaderName=X-Origin-Secret,Values=[$ORIGIN_SECRET]}" \
-  --actions Type=forward,TargetGroupArn="$TG_ARN"
-```
+The frontend bucket is private with all four S3 public-access-block switches enabled. `blocbuy-dev-frontend-oac` signs S3 reads with sigv4 and `always`; the S3 origin domain is the regional REST endpoint, not a website endpoint. The 2026-09-25 read-only checks and zero-change Terraform plan verified these imported resources. For a new environment, use these constraints and the source under `infra/terraform/frontend-stack/s3.tf` and `cloudfront.tf` rather than replaying dev creation commands against existing names.
 
-### 4.2 Verify the origin chain (the public 8589 rule still exists at this point; we only verify the ALB)
+## 7. CloudFront distribution and bucket policy
 
-The target group health status should turn healthy (this requires the backend to have been redeployed with the `/api` routing contract — controller mappings plus management base-path, no servlet context path — see step 5):
+The distribution has a default `s3-frontend` origin/behavior and a single ordered `/api/*` behavior targeting `alb-backend`. Viewer traffic redirects to HTTPS. The S3 behavior uses AWS managed CachingOptimized (`658327ea-f89d-4fab-a63d-7e88639e58f6`); `/api/*` uses CachingDisabled (`4135ea2d-6df8-44a3-9df3-4b5a84be39ad`) and AllViewerExceptHostHeader (`b689b0a8-53d0-40ab-baf2-68738e2966ac`). Both behaviors attach the response-headers policy; only the default behavior attaches the SPA function. The S3 bucket policy allows `s3:GetObject` to the CloudFront service principal conditioned on this distribution's ARN.
 
-```bash
-aws elbv2 describe-target-health --target-group-arn "$TG_ARN"
-curl --fail --silent -H "X-Origin-Secret: $ORIGIN_SECRET" "http://$ALB_DNS/api/actuator/health"
-# should return {"status":"UP",...}
-curl -s -o /dev/null -w '%{http_code}\n' "http://$ALB_DNS/api/actuator/health"   # without the secret this must be 403
-```
-
-## 5. Deploy the backend with the `/api` path prefix
-
-> **Update (2026-09-07):** the `/api` prefix no longer comes from a servlet context-path (`SERVER_SERVLET_CONTEXT_PATH` was removed from `compose.yml` — it doubled the prefix to `/api/api/v1/...` against the controller mappings). It is now carried by the controller mappings (`ApiConstants.API_V1`) plus the management base-path (`management.endpoints.web.base-path: /api/actuator`) in `application.yml`. All URL shapes described in this runbook are unchanged.
-
-This repository sets `SERVER_FORWARD_HEADERS_STRATEGY: framework` in `deployment/backend/compose.yml`, and the default URL in `health-check.sh` is `http://127.0.0.1:8589/api/actuator/health`.
-
-The deployment bundle (compose.yml + scripts) is delivered over SSM by every deploy workflow run, so all you need to do is **trigger one regular deployment** (merge a change to `dev` or manually re-run the deploy job of `ci-backend`, with `ENABLE_EC2_DEPLOY=true`). The changed compose environment variables force-recreate the container, so they take effect automatically.
-
-After the deployment, verify on the EC2 host:
-
-```bash
-aws ssm send-command --instance-ids "$INSTANCE_ID" \
-  --document-name AWS-RunShellScript \
-  --parameters commands='curl --fail --silent http://127.0.0.1:8589/api/actuator/health'
-```
-
-## 6. Frontend S3 bucket + OAC
-
-```bash
-export S3_BUCKET=blocbuy-dev-frontend-$ACCOUNT_ID
-aws s3 mb "s3://$S3_BUCKET" --region "$AWS_REGION"
-aws s3api put-public-access-block --bucket "$S3_BUCKET" --public-access-block-configuration \
-  BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
-
-# OAC: lets CloudFront read the bucket privately
-cat > /tmp/oac.json <<EOF
-{
-  "Name": "blocbuy-dev-frontend-oac",
-  "Description": "OAC for blocbuy dev frontend bucket",
-  "SigningProtocol": "sigv4",
-  "SigningBehavior": "always",
-  "OriginAccessControlOriginType": "s3"
-}
-EOF
-aws cloudfront create-origin-access-control --origin-access-control-config file:///tmp/oac.json
-export OAC_ID=$(aws cloudfront list-origin-access-controls \
-  --query "OriginAccessControlList.Items[?Name=='blocbuy-dev-frontend-oac'].Id" --output text)
-```
-
-The bucket policy depends on the distribution ARN, so it is filled in **after** the distribution is created in step 7 (see 7.2).
-
-## 7. Create the CloudFront distribution
+**2026-09-25 Terraform-managed (#161):** read-only account-holder checks matched the distribution behaviors, origins, OAC, bucket access and policy condition, and IAM role. The account holder supplied the existing origin secret privately to Terraform, reviewed the fourth import plan (nine no-op imports, no create/update/delete), and applied **that saved plan** from CloudShell: `Apply complete! Resources: 9 imported, 0 added, 0 changed, 0 destroyed.` Immediately afterward, `terraform plan -detailed-exitcode -input=false -no-color -var-file=../envs/frontend-dev.tfvars` exited **0** with `No changes. Your infrastructure matches the configuration.` State is in the separate encrypted frontend S3 key; no live resource changed. The source is still unmerged, and the origin secret disclosed in an earlier pasted plan needs separately coordinated rotation; never share raw plan or state output.
 
 ### 7.1 Distribution configuration
 
-```bash
-cat > /tmp/cloudfront-dist.json <<EOF
-{
-  "CallerReference": "blocbuy-dev-$(date +%s)",
-  "Comment": "BlocBuy dev - frontend S3 + backend ALB (/api)",
-  "Enabled": true,
-  "DefaultRootObject": "index.html",
-  "HttpVersion": "http2",
-  "IsIPV6Enabled": true,
-  "PriceClass": "PriceClass_All",
-  "Origins": {
-    "Quantity": 2,
-    "Items": [
-      {
-        "Id": "s3-frontend",
-        "DomainName": "$S3_BUCKET.s3.$AWS_REGION.amazonaws.com",
-        "OriginAccessControlId": "$OAC_ID",
-        "S3OriginConfig": {
-          "OriginAccessIdentity": ""
-        }
-      },
-      {
-        "Id": "alb-backend",
-        "DomainName": "$ALB_DNS",
-        "CustomOriginConfig": {
-          "HTTPPort": 80,
-          "HTTPSPort": 443,
-          "OriginProtocolPolicy": "http-only",
-          "OriginSslProtocols": {"Quantity": 1, "Items": ["TLSv1.2"]}
-        },
-        "CustomHeaders": {
-          "Quantity": 1,
-          "Items": [{"HeaderName": "X-Origin-Secret", "HeaderValue": "$ORIGIN_SECRET"}]
-        }
-      }
-    ]
-  },
-  "DefaultCacheBehavior": {
-    "TargetOriginId": "s3-frontend",
-    "ViewerProtocolPolicy": "redirect-to-https",
-    "AllowedMethods": {"Quantity": 2, "Items": ["GET", "HEAD"], "CachedMethods": {"Quantity": 2, "Items": ["GET", "HEAD"]}},
-    "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
-    "Compress": true
-  },
-  "CacheBehaviors": {
-    "Quantity": 1,
-    "Items": [
-      {
-        "PathPattern": "/api/*",
-        "TargetOriginId": "alb-backend",
-        "ViewerProtocolPolicy": "redirect-to-https",
-        "AllowedMethods": {
-          "Quantity": 7,
-          "Items": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
-          "CachedMethods": {"Quantity": 2, "Items": ["GET", "HEAD"]}
-        },
-        "CachePolicyId": "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
-        "OriginRequestPolicyId": "b689b0a8-53d0-40ab-baf2-68738e2966ac",
-        "Compress": true
-      }
-    ]
-  },
-  "ViewerCertificate": {
-    "CloudFrontDefaultCertificate": true,
-    "MinimumProtocolVersion": "TLSv1.2_2021",
-    "SSLSupportMethod": "vip"
-  },
-  "Restrictions": {"GeoRestriction": {"RestrictionType": "none", "Quantity": 0}}
-}
-EOF
+The live default CloudFront viewer certificate reports `CloudFrontDefaultCertificate: true`, `SSLSupportMethod: vip` and `MinimumProtocolVersion: TLSv1` (read-only 2026-09-25 check). The old CLI tutorial proposed `TLSv1.2_2021`, which did not describe the returned live configuration; `infra/terraform/frontend-stack/cloudfront.tf` matches live. The ALB origin uses HTTP:80, SSL-protocol entry TLSv1.2 and default 30-second read / 5-second keepalive timeouts. Both origins use 3 connection attempts, 10-second connection timeout and no Origin Shield. Do not print `Origins.Items` wholesale: it includes the private custom header.
 
-aws cloudfront create-distribution --distribution-config file:///tmp/cloudfront-dist.json
-export DIST_ID=$(aws cloudfront list-distributions \
-  --query "DistributionList.Items[?Comment=='BlocBuy dev - frontend S3 + backend ALB (/api)'].Id" --output text)
-export DIST_DOMAIN=$(aws cloudfront get-distribution --id "$DIST_ID" \
-  --query 'Distribution.DomainName' --output text)
-export DIST_ARN=$(aws cloudfront get-distribution --id "$DIST_ID" \
-  --query 'Distribution.ARN' --output text)
-echo "$DIST_DOMAIN"   # looks like dxxxxxxxxxxxx.cloudfront.net
-```
+### 7.2 S3 bucket policy (OAC)
 
-Notes:
+The `AllowCloudFrontOAC` policy has `AWS:SourceArn` set to the exact distribution ARN and grants `s3:GetObject` on `arn:aws:s3:::blocbuy-dev-frontend-402178232802/*` to `cloudfront.amazonaws.com`. `infra/terraform/frontend-stack/s3.tf` is the imported definition. If a future plan proposes modifying this policy, stop and inspect the actual ARN and JSON normalization before applying anything.
 
-- `4135ea2d-...` is the managed **CachingDisabled** policy (the API needs `POST`/`PUT`, so nothing may be cached);
-- `b689b0a8-...` is the managed **AllViewerExceptHostHeader** origin request policy, which forwards browser request headers (including `X-Forwarded-Proto`) to the backend; combined with `SERVER_FORWARD_HEADERS_STRATEGY=framework` this makes forwarded headers work;
-- `OriginProtocolPolicy: http-only` is the key to the no-domain setup: CloudFront's built-in certificate handles user-facing TLS while the origin leg runs plain HTTP; security on that leg comes from the prefix-list security group + secret header + the private ALB→EC2 path.
+### 7.3 SPA routing fallback (superseded by section 14)
 
-### 7.2 Fill in the S3 bucket policy (OAC)
+The 2026-09-16 optional fallback from the bootstrap tutorial was superseded by the mandatory, versioned CloudFront Function in section 14. Do not enable distribution-wide 403/404 custom error responses: they mask real `/api/*` failures.
+
+## 8. Verify public entry and closed port 8589
+
+Run these after a deployment or CloudFront change. Root and extensionless deep links should return 200 HTML, missing static assets should remain 403/404, API health should return 200 with `UP`, and direct ALB access without the header must be blocked (timeout at the SG or 403 from the listener). Confirm the backend security group has no public inbound 8589 rule; do not treat a healthy CloudFront response alone as proof that 8589 is closed.
 
 ```bash
-cat > /tmp/bucket-policy.json <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Sid": "AllowCloudFrontOAC",
-    "Effect": "Allow",
-    "Principal": {"Service": "cloudfront.amazonaws.com"},
-    "Action": "s3:GetObject",
-    "Resource": "arn:aws:s3:::$S3_BUCKET/*",
-    "Condition": {"StringEquals": {"AWS:SourceArn": "$DIST_ARN"}}
-  }]
-}
-EOF
-aws s3api put-bucket-policy --bucket "$S3_BUCKET" --policy file:///tmp/bucket-policy.json
-```
-
-### 7.3 (Superseded by §14) SPA routing fallback
-
-> **Note (2026-09-16):** this step is no longer optional. The frontend uses history-mode routing, so the fallback is mandatory; follow §14, which versions the function source under `deployment/frontend/cloudfront/` and adds the verification probes. The original inline commands were removed 2026-09-21 after implementation (they duplicated §14); the pre-§14 history remains in git. Tracked as blocker A1 (#99).
-
-## 8. Close the public 8589 inbound rule only after end-to-end verification
-
-```bash
-# 1) API path (wait for the distribution to finish deploying, Status=Deployed, usually 3-5 minutes)
-curl --fail --silent "https://$DIST_DOMAIN/api/actuator/health" | grep '"status":"UP"'
-
-# 2) Correctness: direct ALB access without the secret must return 403 (already verified in 4.2)
-
-# 3) Close public 8589 — the core benefit of this tutorial
-aws ec2 revoke-security-group-ingress \
-  --group-id "$BACKEND_SG_ID" --protocol tcp --port 8589 --cidr 0.0.0.0/0
-
-# 4) Confirm: direct public access to 8589 should time out/be refused, while the ALB chain still works
-curl -s -o /dev/null -w '%{http_code}' --connect-timeout 5 "http://<EC2-public-IP>:8589/api/actuator/health" || echo " blocked (expected)"
-curl --fail --silent "https://$DIST_DOMAIN/api/actuator/health" | grep '"status":"UP"'
-```
-
-Then trigger one more `ci-backend` deployment or a `rollback-backend` run; the built-in "Verify public backend health" workflow step now uses `https://<cloudfront-domain>/api/actuator/health` (see step 9). When it is fully green, the migration is complete.
-
-## 9. Update GitHub variables
-
-```bash
-gh variable set BACKEND_URL_DEV --body "https://$DIST_DOMAIN"
-```
-
-`BACKEND_URL_DEV` is only used for the workflow's public health verification and as the environment URL display; the main deployment path (ECR → SSM → on-host health check) does not depend on it, so even a wrong value here does not affect releases themselves.
-
-## 10. Frontend build and release conventions
-
-- API clients must always use **relative paths** `/api/...` (e.g. `fetch('/api/actuator/health')`), never absolute URLs — same-origin deployment means no CORS, and a future custom domain will not require code changes;
-- Build (Node 24 + pnpm 12 via Corepack; exact steps in `frontend/AGENTS.md`):
-
-  ```bash
-  cd frontend && corepack enable && pnpm install --frozen-lockfile && pnpm build
-  ```
-
-- Release (long cache for static assets, no caching for index.html):
-
-  ```bash
-  aws s3 sync dist/ "s3://$S3_BUCKET" --delete --exclude "index.html" --exclude "*.map" \
-    --cache-control "public,max-age=31536000,immutable"
-  aws s3 cp dist/index.html "s3://$S3_BUCKET/index.html" \
-    --cache-control "no-cache" --content-type "text/html"
-  aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths "/index.html"
-  ```
-
-- Normal releases come from the `deploy-s3-dev` job in `ci-frontend.yml` (§16–§17); this manual path is the fallback and must use the same three commands.
-- Source maps: `pnpm build` emits none since 2026-09-23 (#155) and the sync excludes `*.map` as a second guard. The maps published by the first deploy on 2026-09-22 are not removed by `--delete` (excluded keys are ignored); delete them once with `aws s3 rm "s3://$S3_BUCKET/assets/" --recursive --exclude "*" --include "*.map"`.
-
-## 11. Impact scope and notes
-
-| Item | Notes |
-|---|---|
-| Swagger | URL is `https://<cloudfront-domain>/api/swagger-ui.html` (`springdoc.swagger-ui.path`) |
-| Stripe webhook | The callback URL needs the `/api` prefix (if a public webhook is configured) |
-| Local development | Same URL shape as dev: `application.yml` carries the `/api` management/swagger paths for every profile |
-| CI smoke test | The docker smoke test in `ci-backend.yml` hits `localhost:8589/api/actuator/health` (management base-path applies to every boot) |
-| Direct ALB access | The ALB DNS name is publicly resolvable, but the default 403 plus the prefix-list security group provide dual protection — business endpoints cannot be reached |
-| prod environment | The ALB/target-group health-check paths in the prod Terraform guide are `/api/actuator/health` (updated 2026-09-21) |
-
-## 12. Upgrade path after buying a domain
-
-1. Create a Route53 hosted zone and add an Alternate Domain Name (CNAME) to CloudFront;
-2. Issue an ACM certificate for the domain (**must be in us-east-1**) and attach it to the CloudFront ViewerCertificate;
-3. (Optional) Add an ACM certificate to the ALB (in the region), switch the CloudFront origin to `https-only`, add a 443 listener to the ALB, and change the 80 listener to a redirect;
-4. No architectural rework is needed — this only upgrades the HTTP origin leg of the temporary no-domain setup to HTTPS.
-
-## 13. Rollback and cleanup
-
-Entry-layer rollback (re-opening 8589 restores the old access path):
-
-```bash
-aws ec2 authorize-security-group-ingress \
-  --group-id "$BACKEND_SG_ID" --protocol tcp --port 8589 --cidr 0.0.0.0/0
-```
-
-Full cleanup (once you are certain the CloudFront setup is no longer needed):
-
-```bash
-aws cloudfront disable-distribution --id "$DIST_ID"
-# After Status=Deployed:
-aws cloudfront delete-distribution --id "$DIST_ID" --if-match "$(aws cloudfront get-distribution --id $DIST_ID --query ETag --output text)"
-aws s3 rb "s3://$S3_BUCKET" --force
-aws elbv2 delete-load-balancer --load-balancer-arn "$ALB_ARN"
-aws elbv2 delete-target-group --target-group-arn "$TG_ARN"
-aws ec2 delete-security-group --group-id "$ALB_SG_ID"
-```
-
-> ALB/CloudFront billing is hourly plus traffic; disable/delete them promptly if the dev environment sits idle long-term.
-
-## 14. SPA routing fallback (mandatory for the frontend)
-
-Blocker A1 (#99), executed 2026-09-22 and re-verified by live deep-link and automated deployment checks on 2026-09-23.
-
-The frontend uses history-mode routing (`/products/<uuid>`, `/account`, `/auth/callback`). Without this function a deep link or a browser refresh returns the S3 OAC 403. Distribution-wide custom error responses are deliberately NOT used: they would also mask real `/api/*` errors.
-
-Function source is versioned at `deployment/frontend/cloudfront/spa-fallback.js`.
-
-```bash
-# Runtime lives inside FunctionConfig (there is no --runtime option). A new function stays in
-# DEVELOPMENT until publish-function is called with the ETag create-function returned.
-FN_ETAG=$(aws cloudfront create-function \
-  --name blocbuy-dev-spa-fallback \
-  --function-config '{"Comment":"SPA fallback for BlocBuy dev frontend","Runtime":"cloudfront-js-2.0"}' \
-  --function-code fileb://deployment/frontend/cloudfront/spa-fallback.js \
-  --query ETag --output text)
-aws cloudfront publish-function --name blocbuy-dev-spa-fallback --if-match "$FN_ETAG"
-export SPA_FN_ARN=$(aws cloudfront describe-function --name blocbuy-dev-spa-fallback --stage LIVE \
-  --query 'FunctionSummary.FunctionMetadata.FunctionARN' --output text)
-
-# Attach to the DEFAULT behavior only (never to /api/*)
-ETAG=$(aws cloudfront get-distribution-config --id "$DIST_ID" --query ETag --output text)
-aws cloudfront get-distribution-config --id "$DIST_ID" --query DistributionConfig --output json > /tmp/dist-config.json
-python3 - <<'PY'
-import json
-p='/tmp/dist-config.json'; d=json.load(open(p))
-import os
-d['DefaultCacheBehavior']['FunctionAssociations']={'Quantity':1,'Items':[{'EventType':'viewer-request','FunctionARN':os.environ['SPA_FN_ARN']}]}
-json.dump(d,open(p,'w'))
-PY
-aws cloudfront update-distribution --id "$DIST_ID" --if-match "$ETAG" --distribution-config file:///tmp/dist-config.json
-aws cloudfront wait distribution-deployed --id "$DIST_ID"
-```
-
-Verify (both must hold):
-
-```bash
+curl -sS -o /dev/null -w '%{http_code} %{content_type}\n' "https://$DIST_DOMAIN/"
 curl -sS -o /dev/null -w '%{http_code} %{content_type}\n' "https://$DIST_DOMAIN/products/00000000-0000-0000-0000-000000000000"
-# 200 text/html
 curl -sS -o /dev/null -w '%{http_code}\n' "https://$DIST_DOMAIN/assets/does-not-exist.js"
-# 403 or 404 (asset paths with an extension are NOT rewritten)
-curl -sS -o /dev/null -w '%{http_code}\n' "https://$DIST_DOMAIN/api/v1/products?page=1"
-# 200 (the /api/* behavior has no function association)
+curl --fail --silent "https://$DIST_DOMAIN/api/actuator/health"
 ```
 
-The original §7.3 code rewrote `uri.endsWith('/')` to `uri + 'index.html'`; the frontend has a single `index.html` at the root, so both branches map to `/index.html`.
+## 9. Backend GitHub variable
 
-## 15. Security response headers (CSP, HSTS)
+`BACKEND_URL_DEV` should be `https://d1b3np88z657cp.cloudfront.net`; verify with `gh variable get BACKEND_URL_DEV`. The backend workflow uses it for public health verification and the environment URL, not for its ECR/SSM deploy or host-local health check. Change it only when the distribution domain changes.
 
-Blocker A2 (#100), executed 2026-09-22. On 2026-09-23 both CloudFront behaviors returned the five exact values derived from the policy source below. The first Playwright console probe on the deployed site (2026-09-22) showed one CSP violation on every page: the Google Fonts stylesheet for Inter (`index.html`), so the policy applied that day allowed `https://fonts.googleapis.com` in `style-src` and `https://fonts.gstatic.com` in `font-src`. Since 2026-09-23 (#158) Inter is self-hosted (`@fontsource/inter`, hashed woff2 in `dist/assets`), so the JSON below no longer lists either host; **re-apply it with `update-response-headers-policy` after the first deploy that carries the self-hosted font** (the live policy stays permissive until then, which is harmless). **2026-09-23, T2-11 done:** the JSON also drops `data:` from `img-src` and `font-src`; `'unsafe-inline'` for styles stays (see the rationale below). `vite preview` now serves the same headers (`frontend/vite.config.ts` reads this JSON), so the console probe runs locally before any re-apply. Re-apply once, after the hygiene batch (#154–#158) is deployed:
+## 10. Frontend build and release
+
+The normal `deploy-s3-dev` workflow builds the versioned frontend, synchronizes immutable assets with a long cache policy, uploads `index.html` with `no-cache`, and invalidates `/index.html`. The manual fallback, when explicitly needed, must perform those same steps from `frontend/` after `pnpm install --frozen-lockfile` and `pnpm build` (Node/pnpm versions in `frontend/AGENTS.md`):
 
 ```bash
-ETAG=$(aws cloudfront get-response-headers-policy-config --id 3c91a2c1-f130-42e8-b9cc-fec6a682c838 --query ETag --output text)
-aws cloudfront update-response-headers-policy --id 3c91a2c1-f130-42e8-b9cc-fec6a682c838 --if-match "$ETAG" \
-  --response-headers-policy-config file://deployment/frontend/cloudfront/response-headers-policy.json
+aws s3 sync dist/ "s3://$S3_BUCKET" --delete --exclude 'index.html' --exclude '*.map' --cache-control 'public,max-age=31536000,immutable'
+aws s3 cp dist/index.html "s3://$S3_BUCKET/index.html" --cache-control 'no-cache' --content-type 'text/html'
+aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths '/index.html'
 ```
 
-Policy source: `deployment/frontend/cloudfront/response-headers-policy.json`. The CSP is a starting point that allows HeroUI's inline styles and remote product images; the frontend owner tightens it after the first deploy (plan task T2-11) and re-applies with `update-response-headers-policy`.
+Source maps are disabled in the build since 2026-09-23 (#155) and excluded from the sync. `--delete` does not remove excluded legacy `*.map` objects from the first 2026-09-22 deployment; review and remove those separately if they still exist. Deploy the same built artifact through the normal workflow when possible; validate root, deep link, asset, API and headers afterward.
+
+## 11. Impact scope
+
+| Item | Current rule |
+|---|---|
+| Swagger | `https://<cloudfront-domain>/api/swagger-ui.html` |
+| Stripe webhook | Callback URL needs the `/api` prefix if configured publicly |
+| Local development | The management/swagger paths have the same `/api` shape across profiles |
+| CI smoke | Backend Docker smoke checks `localhost:8589/api/actuator/health` |
+| Direct ALB | DNS resolves publicly, but SG and default-403 listener block unauthorized access |
+| Production | ALB/target health path is `/api/actuator/health` in the prod Terraform guide |
+
+## 12. Optional custom-domain upgrade
+
+Viewer-domain customization is optional: if the team owns a domain, issue a CloudFront viewer ACM certificate in `us-east-1`, attach it to a reviewed distribution change and add the alias/DNS record. **Origin TLS is a separate confidentiality requirement**, not dependent on a custom viewer domain: use an origin DNS name the team controls with a valid ACM certificate in `ap-southeast-1`, add an ALB HTTPS:443 listener and corresponding CloudFront-prefix-list SG ingress, switch the CloudFront ALB origin to `https-only` with TLSv1.2+, and verify `/api/*` health and negative direct-ALB probes. Coordinate a fresh `X-Origin-Secret` across the ALB rule and CloudFront custom header after the encrypted origin leg is working; the previously disclosed value must not be relied upon. Plan/review those live changes separately from #161's import-only state adoption, and never publish their secret-bearing plan output.
+
+## 13. Recovery and cleanup
+
+Use the existing `ci-backend` / `rollback-backend` workflow for application rollback and verify CloudFront API health, blocked direct-ALB access and host-local health. A frontend release rolls back by redeploying a known-good artifact and invalidating `/index.html`; check that assets referenced by that index are still present. Do not reopen public port 8589 or delete the distribution/bucket as routine recovery. If the entire dev edge is to be retired, review dependencies and the Terraform state ownership first, then use a separately approved cleanup plan; the original destructive bootstrap-era CLI snippet is not a current runbook step.
+
+## 14. SPA routing fallback
+
+The mandatory function [`deployment/frontend/cloudfront/spa-fallback.js`](../../deployment/frontend/cloudfront/spa-fallback.js) rewrites extensionless SPA paths to `/index.html` only on the default behavior; `/api/*` and asset paths are not rewritten. Issue #99 records the 2026-09-22 rollout. On 2026-09-25 the account holder fetched both DEVELOPMENT and LIVE stages read-only; each `git hash-object` matched the versioned file (`af347accf5d62eaf9c6b5515ddc8621e1edcf3dc`). The import and post-import plan made no function changes. AWS provider 5.100.0 reads DEVELOPMENT code but does not read the virtual `publish` flag back from AWS; `publish = false` with `ignore_changes = [publish]` prevented a publish during import. Publishing future code to LIVE needs a separately reviewed step. Verify behavior with section 8 probes after any such change.
+
+## 15. Security response headers
+
+The versioned [`response-headers-policy.json`](../../deployment/frontend/cloudfront/response-headers-policy.json) declares HSTS, CSP, content-type, frame and referrer protections plus removal of `Server`. It attaches to both default and `/api/*` behaviors (issue #100). The 2026-09-23 probes checked five header name/value pairs on both behaviors; the 2026-09-25 policy query matched the tightened fields, including self-hosted fonts and no `data:` source. AWS returned an empty `XSSProtection` object, but the import and post-import plan required no policy update. The older instruction to re-apply the tightened CSP is superseded by the live policy check; use reviewed Terraform changes for future policy edits.
+
+After a policy or deployment change, run the following from the repository root with `DIST_DOMAIN` set as in section 2. Require 2xx from both behaviors and compare all five configured header values; a response that merely contains header names is not sufficient.
 
 ```bash
-aws cloudfront create-response-headers-policy \
-  --response-headers-policy-config file://deployment/frontend/cloudfront/response-headers-policy.json
-export RHP_ID=$(aws cloudfront list-response-headers-policies --type custom \
-  --query "ResponseHeadersPolicyList.Items[?ResponseHeadersPolicy.ResponseHeadersPolicyConfig.Name=='blocbuy-dev-security-headers'].ResponseHeadersPolicy.Id" --output text)
-
-# Attach to BOTH behaviors: HSTS must cover /api/* too; CSP on JSON responses is harmless.
-ETAG=$(aws cloudfront get-distribution-config --id "$DIST_ID" --query ETag --output text)
-aws cloudfront get-distribution-config --id "$DIST_ID" --query DistributionConfig --output json > /tmp/dist-config.json
-python3 - <<'PY'
-import json, os
-p='/tmp/dist-config.json'; d=json.load(open(p)); rid=os.environ['RHP_ID']
-d['DefaultCacheBehavior']['ResponseHeadersPolicyId']=rid
-for b in d['CacheBehaviors']['Items']:
-    b['ResponseHeadersPolicyId']=rid
-json.dump(d,open(p,'w'))
-PY
-aws cloudfront update-distribution --id "$DIST_ID" --if-match "$ETAG" --distribution-config file:///tmp/dist-config.json
-aws cloudfront wait distribution-deployed --id "$DIST_ID"
-
 ROOT_HEADERS=$(mktemp)
 API_HEADERS=$(mktemp)
 trap 'rm -f "$ROOT_HEADERS" "$API_HEADERS"' EXIT
-# Each behavior must answer 2xx before its headers count; `curl -f` alone lets 3xx through and
-# the header check below never reads the status line.
 check_success() {
-  local headers=$1 url=$2 status
-  if ! status=$(curl -sS -D "$headers" -o /dev/null -w '%{http_code}' "$url"); then
-    echo "curl failed: $url" >&2
-    return 1
-  fi
-  case "$status" in
-    2??) ;;
-    *) echo "unexpected HTTP status $status for $url" >&2; return 1 ;;
-  esac
+  local status
+  status=$(curl -sS -D "$1" -o /dev/null -w '%{http_code}' "$2") || return 1
+  case "$status" in 2??) ;; *) echo "unexpected HTTP status $status: $2" >&2; return 1 ;; esac
 }
 check_success "$ROOT_HEADERS" "https://$DIST_DOMAIN/" || exit 1
 check_success "$API_HEADERS" "https://$DIST_DOMAIN/api/v1/products?page=1" || exit 1
-
-# Fail unless both behaviors return every header with the value defined by the policy source.
 python3 - "$ROOT_HEADERS" "$API_HEADERS" <<'PY'
 import json
 import sys
 from pathlib import Path
 
-policy = json.loads(Path("deployment/frontend/cloudfront/response-headers-policy.json").read_text())
-security = policy["SecurityHeadersConfig"]
-hsts = security["StrictTransportSecurity"]
+policy = json.loads(Path('deployment/frontend/cloudfront/response-headers-policy.json').read_text())
+security = policy['SecurityHeadersConfig']
+hsts = security['StrictTransportSecurity']
 hsts_value = f"max-age={hsts['AccessControlMaxAgeSec']}"
-if hsts["IncludeSubdomains"]:
-    hsts_value += "; includeSubDomains"
-if hsts["Preload"]:
-    hsts_value += "; preload"
-
+if hsts['IncludeSubdomains']:
+    hsts_value += '; includeSubDomains'
+if hsts['Preload']:
+    hsts_value += '; preload'
 expected = {
-    "strict-transport-security": hsts_value,
-    "content-security-policy": security["ContentSecurityPolicy"]["ContentSecurityPolicy"],
-    "x-content-type-options": "nosniff",
-    "x-frame-options": security["FrameOptions"]["FrameOption"],
-    "referrer-policy": security["ReferrerPolicy"]["ReferrerPolicy"],
+    'strict-transport-security': hsts_value,
+    'content-security-policy': security['ContentSecurityPolicy']['ContentSecurityPolicy'],
+    'x-content-type-options': 'nosniff',
+    'x-frame-options': security['FrameOptions']['FrameOption'],
+    'referrer-policy': security['ReferrerPolicy']['ReferrerPolicy'],
 }
-
-for header_path in map(Path, sys.argv[1:]):
+for path in map(Path, sys.argv[1:]):
     actual = {}
-    for line in header_path.read_text().splitlines():
-        name, separator, value = line.partition(":")
+    for line in path.read_text().splitlines():
+        name, separator, value = line.partition(':')
         if separator:
             actual.setdefault(name.lower(), []).append(value.strip())
     for name, value in expected.items():
         if actual.get(name) != [value]:
-            raise SystemExit(
-                f"{header_path}: expected {name}: {value!r}, got {actual.get(name)!r}"
-            )
+            raise SystemExit(f'{path}: expected {name}: {value!r}, got {actual.get(name)!r}')
 PY
 ```
 
-Why each CSP source: `script-src 'self'` (Vite emits no inline scripts; React Compiler output is in the bundle); `style-src 'unsafe-inline'` (kept after the T2-11 probe on 2026-09-23: without it React Aria's injected `<style id="react-aria-pressable-style">` and overlay positioning are refused on every page; a hash would break on each React Aria upgrade; the Google Fonts host allowed on 2026-09-22 went away with the self-hosted Inter, #158); `font-src 'self'` (the `@fontsource/inter` woff2 files are same-origin hashed assets; `data:` dropped 2026-09-23, nothing uses it); `img-src 'self' https:` (`data:` dropped 2026-09-23; `https:` stays until the contract pins a listing image host, since `coverImage` is a free string and avatars come from Google); `connect-src 'self'` (all API calls are same-origin); `form-action 'self'` (login is a GET navigation, not a form post); `frame-ancestors 'none'` replaces the older `X-Frame-Options` for modern browsers while `FrameOptions` covers the rest. `Preload: false` because the `*.cloudfront.net` domain cannot be preload-listed.
+`style-src 'unsafe-inline'` remains for React Aria's injected styles; `img-src https:` permits product images and avatars; `Preload: false` suits the `*.cloudfront.net` domain. A CSP on API JSON is harmless. The zero-change import has passed; use reviewed Terraform changes rather than manual `update-response-headers-policy` commands.
 
 ## 16. Frontend deploy role (GitHub OIDC)
 
-Blocker A3 (#101), operationally resolved and exercised by `ci-frontend` run #165 on 2026-09-23.
-
-The `deploy-s3-dev` job in `ci-frontend.yml` assumes `BlocBuyGitHubFrontendDeployDev`, restricted to the `frontend-dev` GitHub environment. The existing role has the scoped S3/CloudFront policy from `deployment/frontend/iam/`; the OIDC provider already exists. The following commands are reconstruction steps when the role is absent, not recurring deployment steps.
-
-```bash
-sed -e "s/AWS_ACCOUNT_ID/$ACCOUNT_ID/g" \
-  deployment/frontend/iam/github-frontend-deploy-trust-policy.json.example > /tmp/fe-trust.json
-sed -e "s/AWS_ACCOUNT_ID/$ACCOUNT_ID/g" -e "s/FRONTEND_S3_BUCKET/$S3_BUCKET/g" -e "s/CLOUDFRONT_DISTRIBUTION_ID/$DIST_ID/g" \
-  deployment/frontend/iam/github-frontend-deploy-policy.json.example > /tmp/fe-policy.json
-aws iam create-role --role-name BlocBuyGitHubFrontendDeployDev --assume-role-policy-document file:///tmp/fe-trust.json
-aws iam put-role-policy --role-name BlocBuyGitHubFrontendDeployDev --policy-name frontend-s3-cloudfront-deploy --policy-document file:///tmp/fe-policy.json
-export FE_ROLE_ARN=$(aws iam get-role --role-name BlocBuyGitHubFrontendDeployDev --query Role.Arn --output text)
-```
-
-The repository OIDC customization reports `use_immutable_subject: true`, so the trust policy must use `repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:environment:frontend-dev`. Recheck before recreating the role:
-
-```bash
-gh api repos/PPsyrius/iss-groupbuy-team8/actions/oidc/customization/sub
-```
-
-Keep the condition on the environment claim, not on `ref`: the branch restriction comes from the `frontend-dev` environment's deployment branch policy (§17), which only allows `dev`.
+The `deploy-s3-dev` job assumes `BlocBuyGitHubFrontendDeployDev` under the `frontend-dev` GitHub environment. The trust policy exact-matches audience `sts.amazonaws.com` and immutable subject `repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:environment:frontend-dev`. Its `frontend-s3-cloudfront-deploy` inline policy grants bucket list, object put/delete and invalidation on this distribution only; the OIDC provider is existing account infrastructure and is not imported by frontend-stack. The versioned trust/permission examples are in [`deployment/frontend/iam/`](../../deployment/frontend/iam/README.md). Issue #101 and `ci-frontend` run #165 record the successful first assumption on 2026-09-23; read-only `get-role` / `get-role-policy` checks matched the configuration. The role and inline policy were imported without changes and passed the post-import zero-change plan. The GitHub environment remains outside this stack and restricts deployment to `dev`.
 
 ## 17. GitHub `frontend-dev` environment and variables
 
-Blocker A4 (#102), operationally resolved 2026-09-23. `frontend-dev` permits only `dev`; the variables below are repository-scoped because `package-dev` evaluates the switch before environment entry and `e2e-dev` has no environment declaration. `ENABLE_S3_DEPLOY=true` is the normal deploy/freeze switch.
+Issue #102 records that `frontend-dev` and its `dev`-only deployment branch policy were operational on 2026-09-23. Confirm that protection in GitHub before changing delivery. `FRONTEND_URL_DEV`, `FRONTEND_S3_BUCKET_DEV`, `FRONTEND_CLOUDFRONT_DIST_ID_DEV` and `AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV` are repository variables; `package-dev` evaluates the `ENABLE_S3_DEPLOY` switch before environment entry, and `e2e-dev` has no environment declaration. `ENABLE_S3_DEPLOY=true` is the normal deploy/freeze switch, not a Terraform input. The GitHub environment is outside frontend-stack's import scope.
 
-```bash
-gh api -X PUT repos/PPsyrius/iss-groupbuy-team8/environments/frontend-dev \
-  -f deployment_branch_policy[protected_branches]=false \
-  -f deployment_branch_policy[custom_branch_policies]=true
-gh api -X POST repos/PPsyrius/iss-groupbuy-team8/environments/frontend-dev/deployment-branch-policies -f name=dev
-gh variable set FRONTEND_URL_DEV --body "https://$DIST_DOMAIN"
-gh variable set FRONTEND_S3_BUCKET_DEV --body "$S3_BUCKET"
-gh variable set FRONTEND_CLOUDFRONT_DIST_ID_DEV --body "$DIST_ID"
-gh variable set AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV --body "$FE_ROLE_ARN"
-gh variable set ENABLE_S3_DEPLOY --body "true"   # set last, after one manual deploy succeeded
-```
+**2026-09-25 #161 hand-off:** account-holder CloudShell (`linux_amd64`, Terraform 1.16.4, AWS 5.100.0) confirmed the backend settings, initialized the separate frontend remote state, and passed `fmt -check` and `validate`; DynamoDB locking emitted its expected deprecation warning. After three non-import-only plans were rejected and provider normalization was reconciled, the fourth plan showed nine no-op imports. The account holder authorized and applied that saved plan with **9 imported, 0 added, 0 changed, 0 destroyed**, then ran `plan -detailed-exitcode` with the same tfvars and private origin-secret input: **exit 0, no changes**. The code and evidence remain staged locally pending a human PR/merge; the existing secret was disclosed in an earlier pasted plan and requires separate rotation. Never attach raw plan/state output to a PR; [frontend-stack/README.md](../../infra/terraform/frontend-stack/README.md) owns the ongoing procedure.
