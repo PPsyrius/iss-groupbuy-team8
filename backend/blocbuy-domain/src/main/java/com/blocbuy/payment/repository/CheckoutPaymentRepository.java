@@ -2,6 +2,7 @@ package com.blocbuy.payment.repository;
 
 import com.blocbuy.payment.model.CheckoutPayment;
 import com.blocbuy.payment.model.PaymentReviewCase;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -16,7 +17,21 @@ import java.util.UUID;
  */
 public interface CheckoutPaymentRepository {
 
+    /**
+     * Read-only facts needed by one buyer receipt, without reconstructing the payment aggregate.
+     */
+    record ReceiptSnapshot(
+            UUID userId,
+            CheckoutPayment.Status status,
+            BigDecimal amount,
+            String currency,
+            String outcome,
+            UUID dealId,
+            UUID orderId) {}
+
     Optional<CheckoutPayment> findById(UUID id);
+
+    Optional<ReceiptSnapshot> receipt(UUID id);
 
     Optional<CheckoutPayment> findRequest(UUID userId, String requestKey);
 
@@ -46,10 +61,6 @@ public interface CheckoutPaymentRepository {
     void recordOutcome(UUID paymentId, UUID dealId, UUID orderId, String outcome);
 
     String outcome(UUID paymentId);
-
-    UUID orderId(UUID paymentId);
-
-    UUID fulfilledDealId(UUID paymentId);
 
     void requireRefund(CheckoutPayment payment, String reason, String eventId);
 

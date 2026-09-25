@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.payment.model.CheckoutPayment;
@@ -53,16 +54,34 @@ class CheckoutPaymentRepositoryImplTest {
     }
 
     @Test
-    void missingRowsHaveNoOrderOrDealAndCannotBeLocked() {
+    void receiptReadsThePaymentRowOnce() {
+        BizPaymentDO row = row();
+        row.setFulfilmentResult("FULFILLED");
+        when(mapper.receipt(row.getId())).thenReturn(row);
+
+        var receipt = repository.receipt(row.getId()).orElseThrow();
+
+        assertThat(receipt.userId()).isEqualTo(row.getUserId());
+        assertThat(receipt.status()).isEqualTo(CheckoutPayment.Status.CREATED);
+        assertThat(receipt.amount()).isEqualByComparingTo(row.getAmount());
+        assertThat(receipt.currency()).isEqualTo(row.getCurrency());
+        assertThat(receipt.outcome()).isEqualTo("FULFILLED");
+        assertThat(receipt.dealId()).isEqualTo(row.getFulfilledDealId());
+        assertThat(receipt.orderId()).isEqualTo(row.getOrderId());
+        verify(mapper).receipt(row.getId());
+        verifyNoMoreInteractions(mapper);
+    }
+
+    @Test
+    void missingReceiptCannotBeLocked() {
         UUID id = UUID.randomUUID();
-        assertThat(repository.orderId(id)).isNull();
-        assertThat(repository.fulfilledDealId(id)).isNull();
+        assertThat(repository.receipt(id)).isEmpty();
         assertThat(repository.findById(id)).isEmpty();
         assertThatThrownBy(() -> repository.lock(id)).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    void presentRowsResolveOrderDealPaymentAndLock() {
+    void presentRowsResolveReceiptPaymentAndLock() {
         BizPaymentDO row = row();
         UUID id = row.getId();
         UUID user = row.getUserId();
@@ -70,8 +89,6 @@ class CheckoutPaymentRepositoryImplTest {
         when(mapper.request(user, "key-1")).thenReturn(row);
         when(mapper.blocking(row.getIntentId())).thenReturn(row);
         when(mapper.lock(id)).thenReturn(row);
-        assertThat(repository.orderId(id)).isEqualTo(row.getOrderId());
-        assertThat(repository.fulfilledDealId(id)).isEqualTo(row.getFulfilledDealId());
         Optional<CheckoutPayment> found = repository.findById(id);
         assertThat(found).hasValueSatisfying(payment -> assertThat(payment.id()).isEqualTo(id));
         assertThat(repository.findRequest(user, "key-1")).isPresent();
