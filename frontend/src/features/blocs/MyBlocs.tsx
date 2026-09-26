@@ -16,10 +16,12 @@ export function MyBlocs({
   teams = noTeams,
   total,
   selected,
+  userId,
 }: Readonly<{
   teams?: MyTeamResponse[] | undefined;
   total: number;
   selected: BlocFilter;
+  userId?: string | undefined;
 }>) {
   const shown = teams.filter((team) => blocFilter(team.status) === selected);
   const label = blocFilters.find((f) => f.value === selected)?.label.toLowerCase() ?? selected;
@@ -35,7 +37,7 @@ export function MyBlocs({
         <ul aria-label="My blocs" className="flex flex-col gap-3">
           {shown.map((team) => (
             <li key={team.dealId}>
-              <BlocRow team={team} />
+              <BlocRow team={team} userId={userId} />
             </li>
           ))}
         </ul>

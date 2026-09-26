@@ -15,6 +15,7 @@ import { myTeamsQuery } from "@/features/blocs/my-teams-query";
 import { BlocsSkeleton, MyBlocs } from "@/features/blocs/MyBlocs";
 import { OrderHistory } from "@/features/order/OrderHistory";
 import type { OrdersSearch } from "@/features/order/orders-search";
+import { useSession } from "@/features/session/use-session";
 
 const ordersOptions = ({ page, size }: OrdersSearch) =>
   queryOptions({
@@ -64,6 +65,9 @@ function AccountPage() {
   const search = Route.useSearch();
   const { data } = useSuspenseQuery(ordersOptions(search));
   const { data: teams } = useSuspenseQuery(teamsOptions);
+  // The share control on an open bloc row mints the invite under this buyer (T3-05, #30).
+  const session = useSession();
+  const userId = session.status === "authenticated" ? session.userId : undefined;
   const total = data.total ?? 0;
   const teamsTotal = teams.total ?? 0;
   const lastPage = Math.max(1, Math.ceil(total / search.size));
@@ -78,7 +82,7 @@ function AccountPage() {
   return (
     <main className={shell}>
       <AccountHeader />
-      <MyBlocs teams={teams.items} total={teamsTotal} selected={search.blocs} />
+      <MyBlocs teams={teams.items} total={teamsTotal} selected={search.blocs} userId={userId} />
       {total === 0 ? (
         <NoOrders />
       ) : (
