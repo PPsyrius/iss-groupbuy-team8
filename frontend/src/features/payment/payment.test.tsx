@@ -146,11 +146,16 @@ describe("teammate product page payment integration", () => {
       expect(button).toBeDisabled();
   });
 
+  // A refusal only covers this attempt: the server checks full and closed before membership, so
+  // a buyer who already paid for a seat elsewhere can still get _004 or _002.
+  const notChargedNow =
+    "This attempt was not charged. Any bloc you have already paid into is safe and still listed under My blocs.";
+
   it.each([
-    ["GROUPBUY_409_004", "This bloc filled up before you joined. Nothing has been charged."],
-    ["GROUPBUY_409_002", "This bloc is no longer taking members. Nothing has been charged."],
+    ["GROUPBUY_409_004", `This bloc filled up before you joined. ${notChargedNow}`],
+    ["GROUPBUY_409_002", `This bloc is no longer taking members. ${notChargedNow}`],
     ["GROUPBUY_409_003", "You are already in this bloc. Nothing new has been charged."],
-    ["GROUPBUY_404_001", "This bloc no longer exists. Nothing has been charged."],
+    ["GROUPBUY_404_001", `This bloc no longer exists. ${notChargedNow}`],
   ])("names a rejected JOIN (%s) and refreshes the bloc", async (code, message) => {
     serveSignedIn();
     product();
@@ -188,6 +193,30 @@ describe("teammate product page payment integration", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(message);
     await waitFor(() => expect(listings).toBeGreaterThan(before));
     expect(checkouts).toBe(0);
+  });
+
+  // Checkout re-runs the JOIN admission before it looks up an earlier request, so a refusal can
+  // arrive after an intent exists. The copy stays scoped to this attempt, and the intent and
+  // idempotency key are kept: freeing them would let a retry open a second payment.
+  it("scopes a JOIN refused at checkout to this attempt and keeps its keys", async () => {
+    serveSignedIn();
+    product();
+    server.use(
+      http.post("*/api/v1/payments/intents", () => ok({ intentId })),
+      http.post("*/api/v1/payments/checkout-sessions", () =>
+        HttpResponse.json({ code: "GROUPBUY_409_004", message: "full" }, { status: 409 }),
+      ),
+    );
+    renderRoute(`/products/${productId}`);
+    const [join] = await screen.findAllByRole("button", { name: /^Join/ });
+    await waitFor(() => expect(join).toBeEnabled());
+    await userEvent.click(join!);
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(`This bloc filled up before you joined. ${notChargedNow}`);
+    expect(alert).not.toHaveTextContent("Nothing has been charged");
+    const key = `blocbuy.payment.attempt.u1.JOIN.${dealId}`;
+    expect(sessionStorage.getItem(key)).toBe(intentId);
+    expect(sessionStorage.getItem(`${key}.request`)).not.toBeNull();
   });
 
   it("retries a lost Checkout response using the same intent and idempotency key", async () => {
