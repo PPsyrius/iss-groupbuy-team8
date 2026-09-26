@@ -124,7 +124,7 @@ aws ssm put-parameter --name /blocbuy/prod/DB_PASSWORD \
 
 From the repository root, keep the saved plan local and access-restricted; it can contain the resolved `/blocbuy/prod/ORIGIN_SECRET` value. Do not attach raw plan/state output to a PR—record a redacted action summary and reviewer decision instead.
 
-**2026-09-25 read-only plan (#48):** CloudShell reused a byte-identical signed AWS 5.100.0 provider after its first install ran out of space. The legacy `aws_prefix_list` lookup failed; local HCL now uses `aws_ec2_managed_prefix_list` for AWS-owned `pl-31a34658`. `fmt`/`validate` and a private plan passed: **21 creates, 0 updates/destroys**, with expected SGs, health path, IMDSv2, encryption and exact OIDC trust. The fix is unmerged, the plan/log were removed, the state key remains absent, and **nothing was applied**. Production GitHub environments and origin TLS remain release blockers; share only filtered plan actions.
+**2026-09-25 read-only plan (#48):** CloudShell reused a byte-identical signed AWS 5.100.0 provider after its first install ran out of space. The legacy `aws_prefix_list` lookup failed; local HCL now uses `aws_ec2_managed_prefix_list` for AWS-owned `pl-31a34658`. `fmt`/`validate` and a private plan passed: **21 creates, 0 updates/destroys**, with expected SGs, health path, IMDSv2, encryption and exact OIDC trust. The fix is unmerged, the plan/log were removed, the state key remains absent, and **nothing was applied**. Production deployment variables and credentials remain pending Terraform apply; recheck both `v*` environment policies before release. Release-readiness review and origin TLS remain blockers. Keep `ENABLE_EC2_DEPLOY_PROD` unset/false until the review; share only filtered plan actions.
 
 ```bash
 umask 077

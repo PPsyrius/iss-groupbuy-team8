@@ -16,7 +16,7 @@ Run from the repository root, confirming AWS account `402178232802` first. The v
 aws sts get-caller-identity --query Account --output text
 set +x
 TF_VAR_origin_secret="$(aws cloudfront get-distribution-config --id E3U5W7UWDL8LRV --query "DistributionConfig.Origins.Items[?Id=='alb-backend'].CustomHeaders.Items[0].HeaderValue | [0]" --output text)"
-if [ -n "$TF_VAR_origin_secret" ] && [ "$TF_VAR_origin_secret" != None ]; then export TF_VAR_origin_secret; else unset TF_VAR_origin_secret; echo 'Origin secret unavailable; stop'; fi
+if [ -n "$TF_VAR_origin_secret" ] && [ "$TF_VAR_origin_secret" != None ]; then export TF_VAR_origin_secret; else unset TF_VAR_origin_secret; echo 'Origin secret unavailable; stop' >&2; exit 1; fi
 terraform -chdir=infra/terraform/frontend-stack init -backend-config="bucket=blocbuy-tfstate-402178232802" -backend-config="region=ap-southeast-1" -lockfile=readonly -input=false
 terraform -chdir=infra/terraform/frontend-stack fmt -check
 terraform -chdir=infra/terraform/frontend-stack validate
