@@ -79,6 +79,10 @@ function ProductDetailPage() {
   // Same clock and rule as the DealProgress row's "Ended" chip, so the header never calls an
   // expired bloc "filling" (CodeRabbit r4042898931).
   const ended = hasEnded(p.deal?.expireTime, now);
+  // Same rule as the row's "Full" chip, so a JOIN that lost the last seat does not leave the
+  // header saying "filling" over a disabled Join (CodeRabbit, PR #200).
+  const full =
+    p.deal !== undefined && (p.deal.currentSize ?? 0) >= Math.max(1, p.deal.targetSize ?? 1);
   const closesMs = parseDeadline(p.deal?.expireTime);
   const currency = p.currency ?? "sgd";
   const groupPrice = p.groupPrice ?? undefined;
@@ -211,6 +215,8 @@ function ProductDetailPage() {
                 <span className="text-muted text-sm">
                   {ended ? (
                     "This bloc has ended"
+                  ) : full ? (
+                    "This bloc has filled up"
                   ) : (
                     <>
                       <span className="xl:hidden">Join one, or start your own</span>
