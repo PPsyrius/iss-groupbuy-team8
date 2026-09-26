@@ -49,7 +49,7 @@ Run `pnpm dev` and open each URL in a phone-width window (390 px). The listing i
 8. Refunds: http://localhost:5173/payments/0192f0a0-0000-7000-9000-000000000009?msw=1&me=1 (refund pending) and http://localhost:5173/payments/0192f0a0-0000-7000-9000-000000000008?msw=1&me=1 (refunded).
 9. Not found: http://localhost:5173/does-not-exist?msw=1
 10. A refused join: http://localhost:5173/products/5b1b9d5c-1a11-4e1e-9a10-000000000002?msw=1&me=1, then Join answers "This bloc filled up before you joined. Nothing has been charged." Only this durian bloc refuses; Join on any other listing goes through the same mock checkout to a Waiting, then Paid receipt.
-11. Share a bloc: http://localhost:5173/products/5b1b9d5c-1a11-4e1e-9a10-000000000001?msw=1&me=1, then Join, wait for Paid and tap "See the listing": the share block shows your invite link. Paste the copied link into a new tab with `&msw=1` added to open the invite landing.
+11. Share a bloc: http://localhost:5173/products/5b1b9d5c-1a11-4e1e-9a10-000000000001?msw=1&me=1, then Join, wait for Paid and tap "See the listing": the share block shows your invite link. Paste the copied link into a new tab with `&msw=1` added to open the invite landing. A seeded bloc shares the same way: on http://localhost:5173/account?msw=1&me=1, tap Share invite link on an Active row; its link opens that bloc on its listing, open and joinable.
 
 Demo notes:
 
