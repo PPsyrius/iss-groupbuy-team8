@@ -47,7 +47,12 @@ public final class PaymentLifecycleFixture {
 
     /** The production intent path; kept here only so tests read the same way they used to. */
     public UUID intent(UUID user, String operation, UUID businessId) {
-        return browser.createIntent(user, operation, businessId);
+        return intent(user, operation, businessId, null);
+    }
+
+    /** A JOIN presenting a UC7 invite reference, through the same production path. */
+    public UUID intent(UUID user, String operation, UUID businessId, String inviteRef) {
+        return browser.createIntent(user, operation, businessId, inviteRef);
     }
 
     public void expireTeam(UUID deal) {

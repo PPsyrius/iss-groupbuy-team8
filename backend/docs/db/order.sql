@@ -109,6 +109,7 @@ CREATE TABLE biz_purchase_intent (
     quote_valid_until    timestamptz    NOT NULL,
     business_deadline    timestamptz    NOT NULL,
     fulfilled_payment_id uuid,
+    sharer_user_id       uuid,
     create_time          timestamptz    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     create_by            uuid,
     update_time          timestamptz    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -135,5 +136,7 @@ CREATE INDEX idx_biz_purchase_intent_user
 --   CheckoutQuote validates it, unlike the lowercase lifecycle statuses elsewhere.
 -- * fulfilled_payment_id is set in the same transaction that inserts the membership and the order,
 --   so the three either all exist or none do.
+-- * sharer_user_id (V19, UC7) is set only at JOIN issue time from an invite for the same deal_id,
+--   never equals user_id, is never updated, and is not a quote term.
 -- * START also needs biz_product.team_target_size and team_lifetime_seconds
 --   (V14__product_team_terms.sql); a product with either column null cannot start a team.

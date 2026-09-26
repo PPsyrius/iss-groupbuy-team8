@@ -38,8 +38,15 @@ public interface PaidGroupDealRepository {
 
     /**
      * Persists the validated transition and paid member atomically under the existing deal lock.
+     *
+     * @param sharerUserId the member whose invite the buyer came through, or null when unattributed
      */
-    void insertJoinedMember(GroupDeal before, GroupDeal after, PaidParticipation paid, Instant now);
+    void insertJoinedMember(
+            GroupDeal before,
+            GroupDeal after,
+            PaidParticipation paid,
+            UUID sharerUserId,
+            Instant now);
 
     /**
      * Freezes a pending receipt's terminal result in the same transaction as admission or

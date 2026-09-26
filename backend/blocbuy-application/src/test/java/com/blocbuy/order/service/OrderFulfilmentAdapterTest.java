@@ -303,19 +303,42 @@ class OrderFulfilmentAdapterTest {
     @Test
     void aJoinEntersTheExistingTeamInsteadOfCreatingOne() {
         PurchaseIntent stored = locked(PurchaseOperation.JOIN, null);
-        when(groups.joinConfirmed(eq(DEAL), any())).thenReturn(applied());
+        when(groups.joinConfirmed(eq(DEAL), any(), any())).thenReturn(applied());
         settlementSucceeds();
 
         assertThat(adapter.fulfil(event(stored)).accepted()).isTrue();
 
-        verify(groups).joinConfirmed(eq(DEAL), any());
+        verify(groups).joinConfirmed(eq(DEAL), any(), any());
         verify(groups, never()).startConfirmed(any(), any());
+    }
+
+    /** UC7: the sharer frozen on the intent reaches the admission; payment never carries it. */
+    @Test
+    void anAttributedJoinHandsItsFrozenSharerToTheAdmission() {
+        UUID sharer = UUID.randomUUID();
+        PurchaseIntent stored =
+                PurchaseIntent.reconstitute(
+                        INTENT,
+                        intent(PurchaseOperation.JOIN, null).terms(),
+                        NOW.plusSeconds(2400),
+                        NOW.plusSeconds(7200),
+                        null,
+                        sharer,
+                        NOW,
+                        0);
+        when(intents.lockById(INTENT)).thenReturn(Optional.of(stored));
+        when(groups.joinConfirmed(eq(DEAL), any(), eq(sharer))).thenReturn(applied());
+        settlementSucceeds();
+
+        assertThat(adapter.fulfil(event(stored)).accepted()).isTrue();
+
+        verify(groups).joinConfirmed(eq(DEAL), any(), eq(sharer));
     }
 
     @Test
     void theTeamIsLockedBeforeTheIntent() {
         PurchaseIntent stored = locked(PurchaseOperation.JOIN, null);
-        when(groups.joinConfirmed(eq(DEAL), any())).thenReturn(applied());
+        when(groups.joinConfirmed(eq(DEAL), any(), any())).thenReturn(applied());
         settlementSucceeds();
 
         adapter.fulfil(event(stored));
@@ -381,7 +404,7 @@ class OrderFulfilmentAdapterTest {
     @Test
     void aTeamThatRefusesTheAdmissionLeavesNoOrderBehind() {
         PurchaseIntent stored = locked(PurchaseOperation.JOIN, null);
-        when(groups.joinConfirmed(eq(DEAL), any()))
+        when(groups.joinConfirmed(eq(DEAL), any(), any()))
                 .thenReturn(ParticipationResult.compensation(DEAL, "GROUPBUY_409_004"));
 
         PaymentBusinessPort.Outcome outcome = adapter.fulfil(event(stored));
@@ -397,7 +420,7 @@ class OrderFulfilmentAdapterTest {
     void anAdmittedPaymentWithoutAMemberRowRollsTheSettlementBack() {
         PurchaseIntent stored = locked(PurchaseOperation.JOIN, null);
         PaymentSucceeded event = event(stored);
-        when(groups.joinConfirmed(eq(DEAL), any())).thenReturn(applied());
+        when(groups.joinConfirmed(eq(DEAL), any(), any())).thenReturn(applied());
         when(orders.save(any())).thenAnswer(call -> call.getArgument(0));
         when(settlement.linkOrder(any(), any(), any())).thenReturn(false);
 
@@ -411,7 +434,7 @@ class OrderFulfilmentAdapterTest {
         // funds-safety class, so the whole settlement is thrown away and the webhook retries.
         PurchaseIntent stored = locked(PurchaseOperation.JOIN, null);
         PaymentSucceeded event = event(stored);
-        when(groups.joinConfirmed(eq(DEAL), any())).thenReturn(applied());
+        when(groups.joinConfirmed(eq(DEAL), any(), any())).thenReturn(applied());
         when(orders.save(any())).thenAnswer(call -> call.getArgument(0));
         when(settlement.linkOrder(any(), any(), any())).thenReturn(true);
         when(products.consumeOneUnit(PRODUCT)).thenReturn(false);

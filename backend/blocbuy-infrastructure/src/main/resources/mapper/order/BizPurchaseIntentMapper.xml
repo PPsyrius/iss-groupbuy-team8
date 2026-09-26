@@ -10,11 +10,12 @@
     <insert id="insert">
         INSERT INTO biz_purchase_intent (id, user_id, operation, deal_id, product_id,
             product_title, product_image, amount, currency, target_size, quote_valid_until,
-            business_deadline, create_time, update_time, create_by, version)
+            business_deadline, sharer_user_id, create_time, update_time, create_by, version)
         VALUES (#{row.id,jdbcType=OTHER}, #{row.userId,jdbcType=OTHER}, #{row.operation},
             #{row.dealId,jdbcType=OTHER}, #{row.productId,jdbcType=OTHER}, #{row.productTitle},
             #{row.productImage}, #{row.amount}, #{row.currency}, #{row.targetSize},
-            #{row.quoteValidUntil}, #{row.businessDeadline}, #{row.createTime}, #{row.createTime},
+            #{row.quoteValidUntil}, #{row.businessDeadline}, #{row.sharerUserId,jdbcType=OTHER},
+            #{row.createTime}, #{row.createTime},
             #{row.userId,jdbcType=OTHER}, #{row.version})
     </insert>
 
@@ -42,6 +43,7 @@
         <result column="quote_valid_until" property="quoteValidUntil"/>
         <result column="business_deadline" property="businessDeadline"/>
         <result column="fulfilled_payment_id" property="fulfilledPaymentId" jdbcType="OTHER"/>
+        <result column="sharer_user_id" property="sharerUserId" jdbcType="OTHER"/>
         <result column="create_time" property="createTime"/>
         <result column="create_by" property="createBy" jdbcType="OTHER"/>
         <result column="update_time" property="updateTime"/>
@@ -53,7 +55,7 @@
     <sql id="columns">
         id, user_id, operation, deal_id, product_id, product_title, product_image, amount,
         currency, target_size, quote_valid_until, business_deadline, fulfilled_payment_id,
-        create_time, create_by, update_time, update_by, deleted, version
+        sharer_user_id, create_time, create_by, update_time, update_by, deleted, version
     </sql>
 
     <select id="selectById" resultMap="bizPurchaseIntentMap">

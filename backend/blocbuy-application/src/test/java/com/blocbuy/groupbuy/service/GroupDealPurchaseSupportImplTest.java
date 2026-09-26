@@ -11,7 +11,9 @@ import com.blocbuy.common.exception.BizException;
 import com.blocbuy.groupbuy.exception.GroupbuyErrorCode;
 import com.blocbuy.groupbuy.model.DealStatus;
 import com.blocbuy.groupbuy.model.GroupDeal;
+import com.blocbuy.groupbuy.model.ShareInvite;
 import com.blocbuy.groupbuy.repository.PaidGroupDealRepository;
+import com.blocbuy.groupbuy.repository.ShareInviteRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
@@ -29,9 +31,13 @@ class GroupDealPurchaseSupportImplTest {
     private static final UUID PRODUCT = UUID.randomUUID();
     private static final UUID LEADER = UUID.randomUUID();
     private static final UUID BUYER = UUID.randomUUID();
+    private static final UUID SHARER = UUID.randomUUID();
+    private static final String REF = "AAAAAAAAAAAAAAAAAAAAAA";
 
     private final PaidGroupDealRepository deals = mock(PaidGroupDealRepository.class);
-    private final GroupDealPurchaseSupportImpl support = new GroupDealPurchaseSupportImpl(deals);
+    private final ShareInviteRepository invites = mock(ShareInviteRepository.class);
+    private final GroupDealPurchaseSupportImpl support =
+            new GroupDealPurchaseSupportImpl(deals, invites);
 
     private static GroupDeal deal(
             DealStatus status, int currentSize, Instant startTime, Instant expireTime) {
@@ -154,5 +160,46 @@ class GroupDealPurchaseSupportImplTest {
         var order = inOrder(deals);
         order.verify(deals).lockDeal(DEAL);
         order.verify(deals).currentTime();
+    }
+
+    @Test
+    void anInviteIntoThisTeamFromAnotherMemberResolvesToItsSharer() {
+        when(invites.findByRef(REF))
+                .thenReturn(Optional.of(new ShareInvite(UUID.randomUUID(), REF, DEAL, SHARER)));
+
+        assertThat(support.resolveSharer(REF, DEAL, BUYER)).contains(SHARER);
+    }
+
+    @Test
+    void anAbsentReferenceAttributesNothingWithoutALookup() {
+        assertThat(support.resolveSharer(null, DEAL, BUYER)).isEmpty();
+        assertThat(support.resolveSharer(" ", DEAL, BUYER)).isEmpty();
+        verifyNoInteractions(invites);
+    }
+
+    @Test
+    void anUnknownReferenceAttributesNothing() {
+        when(invites.findByRef(REF)).thenReturn(Optional.empty());
+
+        assertThat(support.resolveSharer(REF, DEAL, BUYER)).isEmpty();
+    }
+
+    @Test
+    void anInviteIntoAnotherTeamAttributesNothing() {
+        when(invites.findByRef(REF))
+                .thenReturn(
+                        Optional.of(
+                                new ShareInvite(
+                                        UUID.randomUUID(), REF, UUID.randomUUID(), SHARER)));
+
+        assertThat(support.resolveSharer(REF, DEAL, BUYER)).isEmpty();
+    }
+
+    @Test
+    void nobodyIsAttributedToTheirOwnInvite() {
+        when(invites.findByRef(REF))
+                .thenReturn(Optional.of(new ShareInvite(UUID.randomUUID(), REF, DEAL, BUYER)));
+
+        assertThat(support.resolveSharer(REF, DEAL, BUYER)).isEmpty();
     }
 }
