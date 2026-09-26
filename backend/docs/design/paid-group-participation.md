@@ -12,6 +12,8 @@ Snapshot: 2026-09-11, code at `8fe3d14`; real payment end-to-end completion is n
 
 The sections below preserve the original Eric-owned UC3/UC4 design and its course-pattern evidence, but their 2026-09-11 integration caveats are superseded by this current-state section and [ADR 0001](../adr/0001-payment-business-integration.md) / [ADR 0002](../adr/0002-team-lifecycle-events.md). The groupbuy domain still owns team admission and lifecycle, while catalog owns product terms and pricing, order owns the purchase intent and order, and payment owns Stripe settlement and refunds.
 
+The preserved UML diagrams below are dated 2026-09-11 snapshots of that slice. Where a preserved diagram disagrees with the current contract — for UC4, `joinPaid` now returns `PaidAdmission` and `TeamSucceeded` is published only for the completing admission — the current-state diagrams above are authoritative.
+
 | Boundary | Current responsibility and collaborating contract |
 | --- | --- |
 | Catalog | `CatalogPurchaseSupport` supplies accepted product terms, validates purchasability and consumes stock; the existing pricing Strategy remains catalog-owned. |
@@ -142,7 +144,9 @@ currently constructs StandardPaidGroupDealCreator itself, so choosing a new poli
 changes. Do not claim runtime-configurable creation. Any alternative creator must preserve the same
 accepted-payment, first-member and lifecycle contract (LSP), not skip initiation validation.
 
-### UML class diagram — implemented UC3 and UC4 collaborators
+### UML class diagram — implemented UC3 and UC4 collaborators (2026-09-11 snapshot)
+
+Preserved as implemented at `8fe3d14`: the UC3 collaborators still match the code, but UC4's `joinPaid` now returns `PaidAdmission` instead of `GroupDeal` — see the current-state class diagram above.
 
 ```mermaid
 classDiagram
@@ -186,7 +190,9 @@ Factory Method, StandardPaidGroupDealCreator is ConcreteCreator, GroupDeal is Pr
 product is concrete here; no fictitious product-interface hierarchy is drawn. Persisted membership
 is one-to-many, but GroupDeal has no Java member collection; a composition field would be misleading.
 
-### UML sequence diagram — UC3 local transaction
+### UML sequence diagram — UC3 local transaction (2026-09-11 snapshot)
+
+The flow still matches `startConfirmed`; the "integration pending" caller label is historical — `OrderFulfilmentAdapter` is the wired trusted caller now (current-state section above).
 
 ```mermaid
 sequenceDiagram
@@ -270,9 +276,9 @@ receiver contract, so it is not Command. Chain of Responsibility could organize 
 variable checks, but neither it nor Command prevents races. Do not replace locking with a GoF label.
 SRP keeps verification and compensation outside admission; DIP uses the repository abstraction.
 
-### UML sequence diagram — UC4 last-seat race boundary
+### UML sequence diagram — UC4 last-seat race boundary (2026-09-11 snapshot)
 
-The class diagram above also applies to UC4; the creation factory is not called during a join.
+The class diagram above also applies to UC4; the creation factory is not called during a join. In this snapshot the aggregate returns the new snapshot directly and no event is published; the current aggregate returns `PaidAdmission(after, teamCompleted)` and the service publishes `TeamSucceeded` only for the completing admission — see the current-state sequence diagram above.
 
 ```mermaid
 sequenceDiagram
