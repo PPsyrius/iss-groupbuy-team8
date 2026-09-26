@@ -57,24 +57,24 @@ class GroupDealRepositoryImplTest {
     }
 
     @Test
-    void findOpenDealsReturnsEmptyWithoutQueryForNullOrEmptyIds() {
-        assertThat(repository.findOpenDealsByProductIds(null)).isEmpty();
-        assertThat(repository.findOpenDealsByProductIds(List.of())).isEmpty();
+    void findBestOpenDealsReturnsEmptyWithoutQueryForNullOrEmptyIds() {
+        assertThat(repository.findBestOpenDealsByProductIds(null)).isEmpty();
+        assertThat(repository.findBestOpenDealsByProductIds(List.of())).isEmpty();
         verifyNoInteractions(mapper);
     }
 
     @Test
-    void findOpenDealsConvertsBatchRows() {
+    void findBestOpenDealsConvertsBatchRows() {
         List<UUID> productIds = List.of(PRODUCT_ID);
-        when(mapper.selectOpenByProductIds(productIds)).thenReturn(List.of(row()));
+        when(mapper.selectBestOpenByProductIds(productIds)).thenReturn(List.of(row()));
 
-        var result = repository.findOpenDealsByProductIds(productIds);
+        var result = repository.findBestOpenDealsByProductIds(productIds);
 
         assertThat(result)
                 .singleElement()
                 .extracting(deal -> deal.productId())
                 .isEqualTo(PRODUCT_ID);
-        verify(mapper).selectOpenByProductIds(productIds);
+        verify(mapper).selectBestOpenByProductIds(productIds);
     }
 
     @Test

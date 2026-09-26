@@ -22,10 +22,11 @@ public interface GroupDealRepository {
     Optional<GroupDeal> findById(UUID id);
 
     /**
-     * All open, unexpired deals for the given products, in one batch query (never per product — N+1
-     * is forbidden). Empty input returns an empty list.
+     * At most one open, unexpired, non-deleted deal per requested product, selected in one batch
+     * query by lowest deal price and then ascending deal ID. Null or empty input returns an empty
+     * list; products without an eligible deal are absent.
      */
-    List<GroupDeal> findOpenDealsByProductIds(Collection<UUID> productIds);
+    List<GroupDeal> findBestOpenDealsByProductIds(Collection<UUID> productIds);
 
     /**
      * Owner-scoped My Teams page: every active team the buyer leads or joined, newest participation

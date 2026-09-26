@@ -20,10 +20,12 @@ public interface BizGroupDealMapper {
     BizGroupDealDO selectActiveById(@Param("id") UUID id);
 
     /**
-     * All open, unexpired deals for the given products in one batch. Callers must guard the empty
-     * collection before invoking.
+     * At most one open, unexpired, non-deleted deal per requested product, ordered by product ID.
+     * Lowest price wins; equal prices use ascending deal ID. Callers must guard null or empty
+     * input.
      */
-    List<BizGroupDealDO> selectOpenByProductIds(@Param("productIds") Collection<UUID> productIds);
+    List<BizGroupDealDO> selectBestOpenByProductIds(
+            @Param("productIds") Collection<UUID> productIds);
 
     /**
      * Owner-scoped My Teams page: the buyer's active memberships joined to their active deals,
