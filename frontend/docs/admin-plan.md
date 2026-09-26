@@ -251,7 +251,7 @@ export async function requireAdmin(qc: QueryClient) {
 
 - [ ] Step 1: `admin.spec.ts` "anonymous" (every target): `/admin` → `/login?returnTo=%2Fadmin`.
 - [ ] Step 2: "non-admin" (every target, `page.route` stubs `me` 200 and admin 403): the 403 card is shown and the storefront header is absent.
-- [ ] Step 3: "admin, stubbed" (every target, `page.route` with an in-spec store): create draft → publish dialog shows the three values → status On sale v2 → a forced 412 shows the banner → Reload.
+- [ ] Step 3: "admin, stubbed" (every target, `page.route` with an in-spec store): create draft → publish dialog shows the three values → status On sale v1 (publish from v0) → a forced 412 shows the banner → Reload.
 - [ ] Step 4: `@admin` (dev only; skipped unless `e2e/.auth/admin.json` exists): the list loads and one draft is created, then deleted. `e2e/README.md` gets the seeding command and the "admin role must be granted in the dev DB" note.
 
 ### A2-04: Docs
