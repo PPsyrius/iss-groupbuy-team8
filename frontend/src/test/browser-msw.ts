@@ -424,6 +424,20 @@ function issueQuote(productId: string): QuoteResponse | null {
   return quote;
 }
 
+// UC7 invites (T3-05): one ref per bloc for the sample buyer, reused on every later mint as the
+// backend does. Only an open bloc the buyer is in can be shared: joining the rice bloc in the demo
+// and going back to its listing shows the share block, and the link it copies opens the invite
+// landing (`?msw=1` in a fresh tab).
+const invites = new Map<string, string>();
+
+function mintRef(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return btoa(String.fromCharCode(...bytes))
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/=+$/, "");
+}
+
 export async function startBrowserMsw() {
   // Read once at start-up: in-app navigation drops `me=1` from the URL, and a later `me`
   // refetch (root loader, callback) must not flip the sample session back to anonymous
@@ -537,6 +551,33 @@ export async function startBrowserMsw() {
             code: OK_CODE,
             message: "ok",
             data: { paymentId, status: "CREATED" },
+          });
+        },
+        createShareInvite: ({ params }) => {
+          const team = teams.find((t) => t.dealId === params.dealId);
+          if (!team) {
+            return HttpResponse.json(
+              { code: "GROUPBUY_404_001", message: "Group deal not found" },
+              { status: 404 },
+            );
+          }
+          if (team.status !== "open") {
+            return HttpResponse.json(
+              { code: "GROUPBUY_409_002", message: "Group deal is not accepting members" },
+              { status: 409 },
+            );
+          }
+          const ref = invites.get(params.dealId) ?? mintRef();
+          invites.set(params.dealId, ref);
+          return HttpResponse.json({
+            code: OK_CODE,
+            message: "ok",
+            data: {
+              ref,
+              dealId: params.dealId,
+              productId: team.productId,
+              expiresAt: team.expireTime,
+            },
           });
         },
         getPaymentCapabilities: () =>
