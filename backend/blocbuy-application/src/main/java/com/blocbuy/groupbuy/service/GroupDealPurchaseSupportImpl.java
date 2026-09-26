@@ -4,10 +4,14 @@ import com.blocbuy.common.exception.BizException;
 import com.blocbuy.groupbuy.exception.GroupbuyErrorCode;
 import com.blocbuy.groupbuy.model.DealStatus;
 import com.blocbuy.groupbuy.model.GroupDeal;
+import com.blocbuy.groupbuy.model.ShareInvite;
 import com.blocbuy.groupbuy.repository.PaidGroupDealRepository;
+import com.blocbuy.groupbuy.repository.ShareInviteRepository;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
@@ -20,11 +24,13 @@ import org.springframework.stereotype.Service;
  * the intended order, because rejecting a quote costs nothing and rejecting a payment costs a
  * refund.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GroupDealPurchaseSupportImpl implements GroupDealPurchaseSupport {
 
     private final PaidGroupDealRepository deals;
+    private final ShareInviteRepository invites;
 
     @Override
     public JoinTerms lockJoinTerms(UUID dealId, UUID buyerId) {
@@ -56,5 +62,23 @@ public class GroupDealPurchaseSupportImpl implements GroupDealPurchaseSupport {
                 deal.currency(),
                 deal.targetSize(),
                 deal.expireTime());
+    }
+
+    /** Outcomes are logged at DEBUG by kind only; the reference itself is never logged. */
+    @Override
+    public Optional<UUID> resolveSharer(String inviteRef, UUID dealId, UUID buyerId) {
+        if (inviteRef == null || inviteRef.isBlank()) {
+            return Optional.empty();
+        }
+        Optional<ShareInvite> invite = invites.findByRef(inviteRef);
+        if (invite.isEmpty()) {
+            log.debug("Invite reference unknown for deal {}", dealId);
+            return Optional.empty();
+        }
+        if (!invite.get().attributes(dealId, buyerId)) {
+            log.debug("Invite reference for deal {} does not attribute this join", dealId);
+            return Optional.empty();
+        }
+        return Optional.of(invite.get().sharerUserId());
     }
 }

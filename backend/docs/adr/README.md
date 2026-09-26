@@ -12,3 +12,4 @@ Locked stack decisions that predate this directory live in
 |---|---|---|
 | 0001 | [Purchase intent lives in order, group terms live on the product](0001-payment-business-integration.md) | Accepted (2026-09-22) |
 | 0002 | [A team's resolution is published, and its consequences run before the commit](0002-team-lifecycle-events.md) | Accepted (2026-09-22) |
+| 0003 | [Referral credit is a post-commit subscriber](0003-share-credit-post-commit-subscriber.md) | Accepted (2026-09-25) |

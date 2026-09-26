@@ -58,10 +58,11 @@
 
     <insert id="insertMember">
         INSERT INTO biz_group_member
-            (deal_id, payment_id, user_id, member_role, status, join_time,
+            (deal_id, payment_id, user_id, member_role, status, join_time, sharer_user_id,
              create_time, create_by, update_time, update_by)
         VALUES (#{dealId,jdbcType=OTHER}, #{paymentId,jdbcType=OTHER}, #{userId,jdbcType=OTHER},
-                #{role}, 'paid', #{now}, #{now}, #{userId,jdbcType=OTHER}, #{now}, #{userId,jdbcType=OTHER})
+                #{role}, 'paid', #{now}, #{sharerUserId,jdbcType=OTHER},
+                #{now}, #{userId,jdbcType=OTHER}, #{now}, #{userId,jdbcType=OTHER})
     </insert>
 
     <update id="updateDeal">

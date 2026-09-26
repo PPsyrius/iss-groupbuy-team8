@@ -38,12 +38,16 @@ public interface PaidGroupDealMapper {
      */
     int insertDeal(BizGroupDealDO deal);
 
-    /** Inserts a paid leader or member with a globally unique payment binding. */
+    /**
+     * Inserts a paid leader or member with a globally unique payment binding and, for an attributed
+     * join, the sharer it came through (null otherwise).
+     */
     int insertMember(
             @Param("dealId") UUID dealId,
             @Param("paymentId") UUID paymentId,
             @Param("userId") UUID userId,
             @Param("role") String role,
+            @Param("sharerUserId") UUID sharerUserId,
             @Param("now") Instant now);
 
     /** Updates progress only if stored size and status match the locked pre-transition snapshot. */

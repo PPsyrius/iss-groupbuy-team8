@@ -52,9 +52,9 @@ class PaidGroupDealRepositoryIT {
     private static JdbcTemplate jdbc;
 
     /**
-     * Loads V5, V7 and V17 for this isolated groupbuy mapper test with bounded SQL waits. V17
-     * supplies retry state read by the due-team query; unrelated migrations are covered by the
-     * bootstrap integration tests using the full Flyway chain.
+     * Loads V5, V7, V17 and V18 for this isolated groupbuy mapper test with bounded SQL waits. V17
+     * supplies retry state read by the due-team query and V18 the member's sharer column; unrelated
+     * migrations are covered by the bootstrap integration tests using the full Flyway chain.
      */
     @BeforeAll
     static void migrate() throws Exception {
@@ -80,7 +80,8 @@ class PaidGroupDealRepositoryIT {
                         new FileSystemResource(migrations.resolve("V5__groupbuy.sql")),
                         new FileSystemResource(
                                 migrations.resolve("V7__groupbuy_paid_participation.sql")),
-                        new FileSystemResource(migrations.resolve("V17__scheduled_item_retry.sql")))
+                        new FileSystemResource(migrations.resolve("V17__scheduled_item_retry.sql")),
+                        new FileSystemResource(migrations.resolve("V18__share_attribution.sql")))
                 .execute(source);
         var config =
                 new Configuration(new Environment("test", new JdbcTransactionFactory(), source));
@@ -127,7 +128,9 @@ class PaidGroupDealRepositoryIT {
             Instant now = repo.currentTime();
 
             assertThatThrownBy(
-                            () -> mapper.insertMember(memberId, paymentId, userId, "member", now))
+                            () ->
+                                    mapper.insertMember(
+                                            memberId, paymentId, userId, "member", null, now))
                     .isInstanceOf(PersistenceException.class);
             session.rollback();
         }
