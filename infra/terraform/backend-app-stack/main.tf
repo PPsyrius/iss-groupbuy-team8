@@ -30,10 +30,9 @@ data "aws_vpc" "default" {
   default = true
 }
 
-# CloudFront origin-facing managed prefix list: the ALB accepts origin traffic from
-# CloudFront only (the dev entry-layer pattern, dev-cloudfront-deployment.md §3.1).
-# Referencing the managed list means AWS updates the IP set automatically.
-data "aws_prefix_list" "cloudfront_origin" {
+# CloudFront's global origin-facing list is returned by DescribeManagedPrefixLists,
+# not the legacy DescribePrefixLists used by aws_prefix_list. AWS updates its IP set.
+data "aws_ec2_managed_prefix_list" "cloudfront_origin" {
   name = "com.amazonaws.global.cloudfront.origin-facing"
 }
 

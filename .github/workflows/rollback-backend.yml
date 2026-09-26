@@ -106,7 +106,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    # Required reviewers on backend-prod gate a prod rollback the same way as a deploy.
+    # backend-prod admits v* tags only; prod rollback must dispatch from a release tag.
     environment:
       name: backend-prod
       url: ${{ vars.BACKEND_URL_PROD }}
@@ -122,18 +122,13 @@ jobs:
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_PROD }}
           INSTANCE_ID: ${{ vars.BACKEND_EC2_INSTANCE_ID_PROD }}
           DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN_PROD }}
-          RELEASE_BRANCH: ${{ vars.RELEASE_BRANCH }}
           TARGET_IMAGE: ${{ inputs.target_image }}
           ROLLBACK_REASON: ${{ inputs.reason }}
           CONFIRM_ROLLBACK: ${{ inputs.confirm_rollback }}
         run: |
           set -Eeuo pipefail
-          # Prod releases are tagged from the release branch, but the release branch
-          # may also be rolled back to dev state — allow dispatch from either.
-          if [[ "$GITHUB_REF" != 'refs/heads/dev' ]]; then
-            [[ -n "$RELEASE_BRANCH" && "$GITHUB_REF" == "refs/heads/${RELEASE_BRANCH}" ]] \
-              || { echo "Prod rollback must be dispatched from the dev branch or the release branch (RELEASE_BRANCH variable)"; exit 1; }
-          fi
+          [[ "$GITHUB_REF" == refs/tags/v* ]] \
+            || { echo "Prod rollback must be dispatched from a v* release tag"; exit 1; }
           [[ "$CONFIRM_ROLLBACK" == 'true' ]] \
             || { echo "confirm_rollback must be selected"; exit 1; }
           reason_without_whitespace="${ROLLBACK_REASON//[[:space:]]/}"

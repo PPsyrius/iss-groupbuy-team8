@@ -2,7 +2,7 @@
 
 This document describes the layout of the BlocBuy monorepo, the purpose of each directory, and the local commands behind the backend Maven wrapper and `docker-compose.yaml`. Verified against the tree on 2026-09-21; if it drifts again, the tree — not this file — wins.
 
-The repository is a **polyglot monorepo**: a Java Spring Boot backend, a React SPA frontend, CI/CD pipelines, deployment policy/scripts, Terraform infrastructure, and project documentation live together. The dev backend reuses an existing EC2 host; the dev frontend edge is in separate imported Terraform state (source PR pending), and the production backend stack is declared in Terraform but has not been applied (#48).
+The repository is a **polyglot monorepo** for the Java backend, React SPA, CI/CD, deployment tooling, Terraform and course evidence. Stack ownership and current state are under `infra/terraform/` below.
 
 ---
 
@@ -143,7 +143,7 @@ The web frontend (React 19, TypeScript 7, Vite 8, pnpm 12, Node 24). `src/api/ge
 
 ### `infra/` — Terraform stacks by environment
 
-`infra/terraform/` holds the production backend stack (`backend-app-stack/`: OIDC roles, ECR, ALB, EC2, user-data bootstrap) and a separate `frontend-stack/` for the existing dev frontend edge (nine resources imported into remote state with a zero-change plan on 2026-09-25; source PR pending). The dev backend remains hand-managed. Separate state keys, env files and operator status are documented in `infra/terraform/README.md`.
+`infra/terraform/` separates the production backend stack (planned: OIDC, ECR, ALB, EC2) from the imported dev frontend edge (S3, CloudFront, deploy role; PR #190). The dev backend remains hand-managed; the prod backend has a reviewed read-only plan but no apply. State keys, env files and operator status live in [`infra/terraform/README.md`](../../infra/terraform/README.md).
 
 ### `docs/` — All Written Deliverables
 

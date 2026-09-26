@@ -947,7 +947,7 @@ jobs:
       contents: read
       id-token: write
 
-    # The approval gate: backend-prod requires reviewers and is restricted to v* tags.
+    # backend-prod admits v* tags only; the operator-controlled deploy switch gates releases.
     environment:
       name: backend-prod
       url: ${{ vars.BACKEND_URL_PROD }}

@@ -237,7 +237,7 @@ BlocBuy is the group project of **NUS-ISS Team 8** for the **SWE5006 Designing M
 - [Production backend deployment guide (Terraform IaC)](docs/deploy/prod/backend-prod-terraform-deployment.md)
 - [EC2 backend runtime bundle](deployment/backend/README.md)
 
-The backend pipeline builds and scans one immutable image, publishes it to Amazon ECR, and deploys only the backend to the EC2 host through AWS Systems Manager. The dev backend still uses a manually bootstrapped instance; the existing dev frontend edge was adopted into separate Terraform state on 2026-09-25 with a zero-change plan (#161), but its source PR has not merged. The production backend infrastructure is defined in its own Terraform stack; production landing remains tracked by #48.
+The backend pipeline deploys a scanned ECR image to EC2 through SSM. The dev backend is hand-managed; the dev frontend edge is Terraform-managed (PR #190), with a later origin-secret rotation whose stable-ARN fix awaits review. The production backend stack has a reviewed **read-only** 21-create plan, but no apply (#48). See the [Terraform overview](infra/terraform/README.md) for ownership and remaining gates.
 
 ## Team
 
