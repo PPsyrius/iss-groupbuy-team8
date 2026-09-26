@@ -5,9 +5,9 @@ import com.blocbuy.groupbuy.event.MemberJoined;
 import com.blocbuy.groupbuy.event.TeamSucceeded;
 import com.blocbuy.groupbuy.exception.GroupbuyErrorCode;
 import com.blocbuy.groupbuy.exception.ParticipationErrorCode;
-import com.blocbuy.groupbuy.model.DealStatus;
 import com.blocbuy.groupbuy.model.GroupDeal;
 import com.blocbuy.groupbuy.model.NewDealTerms;
+import com.blocbuy.groupbuy.model.PaidAdmission;
 import com.blocbuy.groupbuy.model.PaidGroupDealCreator;
 import com.blocbuy.groupbuy.model.PaidParticipation;
 import com.blocbuy.groupbuy.model.ParticipationReceipt;
@@ -116,12 +116,13 @@ public class PaidGroupDealService {
         }
         var before = existing.orElseThrow();
         boolean member = repository.hasActiveMember(dealId, paid.userId());
-        GroupDeal after;
+        PaidAdmission admission;
         try {
-            after = before.joinPaid(paid, member, now);
+            admission = before.joinPaid(paid, member, now);
         } catch (BizException rejection) {
             return compensate(dealId, paid, rejection, now);
         }
+        GroupDeal after = admission.deal();
         UUID sharer = paid.userId().equals(sharerUserId) ? null : sharerUserId;
         repository.insertJoinedMember(before, after, paid, sharer, now);
         var result = ParticipationResult.applied(after);
@@ -135,7 +136,7 @@ public class PaidGroupDealService {
                         paid.paymentId(),
                         sharer,
                         now));
-        if (after.status() == DealStatus.SUCCEEDED) {
+        if (admission.teamCompleted()) {
             // Subscribers run at BEFORE_COMMIT, after this buyer's own order is saved by the
             // caller — a plain listener would confirm the team while that order is still pending.
             events.publishEvent(

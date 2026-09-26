@@ -139,7 +139,7 @@ public final class GroupDeal {
      * Applies one already-confirmed payment. The membership fact and current time must be read
      * after acquiring the database deal lock; this method is not a concurrency or payment gate.
      */
-    public GroupDeal joinPaid(PaidParticipation payment, boolean alreadyMember, Instant now) {
+    public PaidAdmission joinPaid(PaidParticipation payment, boolean alreadyMember, Instant now) {
         if (payment == null || now == null) {
             throw new BizException(GroupbuyErrorCode.INVALID_PARTICIPATION);
         }
@@ -157,19 +157,21 @@ public final class GroupDeal {
         }
         int nextSize = currentSize + 1;
         boolean succeeded = nextSize == targetSize;
-        return new GroupDeal(
-                id,
-                dealNo,
-                productId,
-                leaderUserId,
-                dealPrice,
-                currency,
-                targetSize,
-                nextSize,
-                succeeded ? DealStatus.SUCCEEDED : DealStatus.OPEN,
-                startTime,
-                expireTime,
-                succeeded ? now : null);
+        return new PaidAdmission(
+                new GroupDeal(
+                        id,
+                        dealNo,
+                        productId,
+                        leaderUserId,
+                        dealPrice,
+                        currency,
+                        targetSize,
+                        nextSize,
+                        succeeded ? DealStatus.SUCCEEDED : DealStatus.OPEN,
+                        startTime,
+                        expireTime,
+                        succeeded ? now : null),
+                succeeded);
     }
 
     /**
