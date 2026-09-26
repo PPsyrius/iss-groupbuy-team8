@@ -6,10 +6,9 @@ import { blocCounts, blocFilter, blocFilters, type BlocFilter } from "./bloc-sta
 import { BlocFilterChips } from "./BlocFilterChips";
 import { BlocRow } from "./BlocRow";
 
-// The §4.4 My blocs list on `/account` (UC8, #31). `GET /group-deals/me` has no status filter
-// and no counts, so the route fetches the latest 100 blocs once and the chips filter and count
-// them here; switching chips never refetches (plan §12 note 50).
-export const MY_BLOCS_FETCH_SIZE = 100;
+// The §4.4 My blocs list on `/account` (UC8, #31). The route fetches the latest 100 blocs once
+// (`myTeamsQuery`) and the chips filter and count them here; switching chips never refetches
+// (plan §12 note 50).
 
 const noTeams: MyTeamResponse[] = [];
 

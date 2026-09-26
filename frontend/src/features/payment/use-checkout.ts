@@ -10,6 +10,7 @@ import {
 } from "@/api/generated/@tanstack/react-query.gen";
 import type { IntentRequest } from "@/api/generated/types.gen";
 import { usePaymentAvailability } from "@/features/payment/use-payment-availability";
+import { forgetInvite, parkedRefFor } from "@/features/share/invite-ref";
 
 export const lastPaymentKey = "blocbuy.payment.last";
 const attemptPrefix = "blocbuy.payment.attempt.";
@@ -72,9 +73,13 @@ export function useCheckout(userId: string | undefined, onRejected?: () => void)
     try {
       let intentId = sessionStorage.getItem(key);
       if (!intentId) {
+        // UC7 (#30): a JOIN of the bloc the buyer was invited to carries the parked invite ref;
+        // the server freezes the sharer on the intent, so the ref is forgotten once it exists.
+        // START never sends one (the server would ignore it).
+        const ref = operation === "JOIN" ? parkedRefFor(businessId) : undefined;
         const created = unwrapResult(
           await intent.mutateAsync({
-            body: { operation, businessId },
+            body: { operation, businessId, ...(ref ? { ref } : {}) },
             headers: { "X-BlocBuy-Request": "checkout" },
           }),
           { allowVoid: false },
@@ -82,6 +87,7 @@ export function useCheckout(userId: string | undefined, onRejected?: () => void)
         if (!created.intentId) throw new Error("Missing purchase reference");
         intentId = created.intentId;
         sessionStorage.setItem(key, intentId);
+        if (ref) forgetInvite(businessId);
       }
       const requestKey = sessionStorage.getItem(`${key}.request`) ?? crypto.randomUUID();
       sessionStorage.setItem(`${key}.request`, requestKey);

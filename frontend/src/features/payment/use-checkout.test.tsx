@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { installAuthInterceptor } from "@/api/client";
 import { OK_CODE } from "@/api/envelope";
 import { useCheckout } from "@/features/payment/use-checkout";
+import { parkInvite, readParkedInvite } from "@/features/share/invite-ref";
 import { server } from "@/test/msw";
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
@@ -173,5 +174,69 @@ describe("useCheckout begin guard", () => {
       await checkout.begin("START", businessId);
     });
     expect(intents).toBe(0);
+  });
+});
+
+describe("useCheckout invite ref (UC7)", () => {
+  const ref = "Qm9vbS1pbnZpdGUtcmVm_-";
+  let bodies: unknown[] = [];
+
+  function serveRecordedCheckout() {
+    bodies = [];
+    serveCheckout();
+    server.use(
+      http.post("*/api/v1/payments/intents", async ({ request }) => {
+        bodies.push(await request.json());
+        return ok({ intentId });
+      }),
+    );
+  }
+
+  it("sends the parked ref on a JOIN of the invited bloc, then forgets it", async () => {
+    serveRecordedCheckout();
+    parkInvite({ productId: "p-1", dealId: businessId, ref });
+    vi.spyOn(window.location, "assign").mockImplementation(() => {});
+    const checkoutRef = renderProbe("buyer-1");
+    await waitFor(() => expect(checkoutRef.current?.enabled).toBe(true));
+    const checkout = await readyCheckout(checkoutRef);
+    await act(async () => {
+      await checkout.begin("JOIN", businessId);
+    });
+    expect(bodies).toEqual([{ operation: "JOIN", businessId, ref }]);
+    expect(readParkedInvite()).toBeNull();
+  });
+
+  it("keeps the ref when the intent could not be frozen, so a retry still carries it", async () => {
+    serveRecordedCheckout();
+    server.use(http.post("*/api/v1/payments/intents", () => HttpResponse.error()));
+    parkInvite({ productId: "p-1", dealId: businessId, ref });
+    const checkoutRef = renderProbe("buyer-1");
+    await waitFor(() => expect(checkoutRef.current?.enabled).toBe(true));
+    const checkout = await readyCheckout(checkoutRef);
+    await act(async () => {
+      await checkout.begin("JOIN", businessId);
+    });
+    expect(readParkedInvite()?.ref).toBe(ref);
+  });
+
+  it("never sends a ref on START or for another bloc", async () => {
+    serveRecordedCheckout();
+    parkInvite({ productId: "p-1", dealId: "00000000-0000-4000-8000-0000000000ff", ref });
+    vi.spyOn(window.location, "assign").mockImplementation(() => {});
+    const checkoutRef = renderProbe("buyer-1");
+    await waitFor(() => expect(checkoutRef.current?.enabled).toBe(true));
+    const checkout = await readyCheckout(checkoutRef);
+    await act(async () => {
+      await checkout.begin("JOIN", businessId);
+    });
+    parkInvite({ productId: "p-1", dealId: businessId, ref });
+    await act(async () => {
+      await readyCheckout(checkoutRef).then((c) => c.begin("START", businessId));
+    });
+    expect(bodies).toEqual([
+      { operation: "JOIN", businessId },
+      { operation: "START", businessId },
+    ]);
+    expect(readParkedInvite()?.ref).toBe(ref);
   });
 });
