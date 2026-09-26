@@ -50,5 +50,41 @@
             #{productId,jdbcType=OTHER}
         </foreach>
     </select>
+    <resultMap id="teamMembershipMap" type="com.blocbuy.groupbuy.persistence.TeamMembershipDO">
+        <id column="member_id" property="memberId" jdbcType="OTHER"/>
+        <result column="deal_id" property="dealId" jdbcType="OTHER"/>
+        <result column="product_id" property="productId" jdbcType="OTHER"/>
+        <result column="deal_price" property="dealPrice"/>
+        <result column="currency" property="currency"/>
+        <result column="target_size" property="targetSize"/>
+        <result column="current_size" property="currentSize"/>
+        <result column="status" property="status"/>
+        <result column="expire_time" property="expireTime"/>
+        <result column="success_time" property="successTime"/>
+        <result column="member_role" property="memberRole"/>
+        <result column="join_time" property="joinTime"/>
+        <result column="order_id" property="orderId" jdbcType="OTHER"/>
+    </resultMap>
+
+    <!-- My Teams: page and count share this FROM/WHERE so total always matches the rows -->
+    <sql id="membershipsOfUser">
+        FROM biz_group_member m
+        JOIN biz_group_deal d ON d.id = m.deal_id AND d.deleted = false
+        WHERE m.user_id = #{userId,jdbcType=OTHER} AND m.deleted = false
+    </sql>
+
+    <select id="selectMembershipPageByUserId" resultMap="teamMembershipMap">
+        SELECT m.id AS member_id, d.id AS deal_id, d.product_id, d.deal_price, d.currency,
+               d.target_size, d.current_size, d.status, d.expire_time, d.success_time,
+               m.member_role, m.join_time, m.order_id
+        <include refid="membershipsOfUser"/>
+        ORDER BY m.join_time DESC, m.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countMembershipsByUserId" resultType="long">
+        SELECT COUNT(*)
+        <include refid="membershipsOfUser"/>
+    </select>
 
 </mapper>

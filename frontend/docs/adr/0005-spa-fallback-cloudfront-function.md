@@ -45,3 +45,5 @@ build has a single `index.html` at the root. T2-07 imports the function into
 the `e2e-dev` job once T1-14 has deployed a build.
 
 2026-09-23: the live deep-link and asset probes return 200, so the temporary Playwright `fixme` was removed and future `e2e-dev` runs enforce the fallback behavior.
+
+2026-09-25 (#161): the existing function was imported into `infra/terraform/frontend-stack` without changing its DEVELOPMENT or LIVE code; the post-import plan exited 0. AWS provider 5.100.0 does not refresh the virtual `publish` setting from AWS, so the import configuration sets `publish = false` and ignores that field; publishing future code to LIVE is a separate reviewed release step (ADR 0007).

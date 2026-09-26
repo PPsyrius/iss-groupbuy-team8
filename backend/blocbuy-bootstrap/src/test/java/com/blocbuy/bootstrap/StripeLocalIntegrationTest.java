@@ -78,6 +78,8 @@ class StripeLocalIntegrationTest {
     @Autowired private com.blocbuy.groupbuy.service.GroupDealExpiryService expiry;
     @Autowired private org.springframework.transaction.PlatformTransactionManager transactions;
     @Autowired private com.blocbuy.groupbuy.service.ShareInviteAppService shareInvites;
+    @Autowired private com.blocbuy.groupbuy.service.GroupDealAppService myTeams;
+    @Autowired private com.blocbuy.order.service.OrderAppService myOrders;
     @MockitoBean private CheckoutGateway gateway;
     private final Map<String, CheckoutGateway.Session> sessions = new ConcurrentHashMap<>();
     private UUID product;
@@ -500,12 +502,14 @@ class StripeLocalIntegrationTest {
      */
     @Test
     void aTeamThatFillsUpConfirmsEveryOrderItContains() {
-        CheckoutPayment leader = prepare(buyer(), "START", product);
+        UUID leaderBuyer = buyer();
+        CheckoutPayment leader = prepare(leaderBuyer, "START", product);
         paid(leader);
         payments.recover(leader.id(), "test-operator", true);
         UUID deal = deal();
 
-        CheckoutPayment joiner = prepare(buyer(), "JOIN", deal);
+        UUID joinerBuyer = buyer();
+        CheckoutPayment joiner = prepare(joinerBuyer, "JOIN", deal);
         paid(joiner);
         payments.recover(joiner.id(), "test-operator", true);
 
@@ -517,6 +521,8 @@ class StripeLocalIntegrationTest {
                                 Long.class))
                 .isEqualTo(2);
         assertThat(count("biz_refund")).isZero();
+        myTeamAgreesWithMyOrder(leaderBuyer, deal, "leader", "succeeded", "confirmed");
+        myTeamAgreesWithMyOrder(joinerBuyer, deal, "member", "succeeded", "confirmed");
     }
 
     /**
@@ -525,11 +531,14 @@ class StripeLocalIntegrationTest {
      */
     @Test
     void anExpiredTeamCancelsItsOrdersAndOwesItsBuyersMoney() {
-        CheckoutPayment leader = prepare(buyer(), "START", product);
+        UUID leaderBuyer = buyer();
+        CheckoutPayment leader = prepare(leaderBuyer, "START", product);
         paid(leader);
         payments.recover(leader.id(), "test-operator", true);
         UUID deal = deal();
         overdue(deal);
+        // Past the deadline but not yet swept: both sides still show the committed state.
+        myTeamAgreesWithMyOrder(leaderBuyer, deal, "leader", "open", "pending");
 
         assertThat(expiry.expireOne(deal)).isTrue();
 
@@ -541,6 +550,7 @@ class StripeLocalIntegrationTest {
         assertThat(count("biz_refund")).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT status FROM biz_refund", String.class))
                 .isEqualTo("pending");
+        myTeamAgreesWithMyOrder(leaderBuyer, deal, "leader", "expired", "cancelled");
     }
 
     /** A second sweep over the same team writes nothing: the status guard makes it a no-op. */
@@ -650,6 +660,30 @@ class StripeLocalIntegrationTest {
                                 Long.class))
                 .isZero();
         assertThat(count("biz_share_credit")).isZero();
+    }
+
+    /**
+     * UC8: My Teams must tell the buyer what My Orders tells them — the same team, linked to the
+     * same order, in agreeing states — and resolve the product title through catalog.
+     */
+    private void myTeamAgreesWithMyOrder(
+            UUID buyer, UUID deal, String role, String teamStatus, String orderStatus) {
+        var page = com.blocbuy.common.model.PageQuery.of(null, null);
+        var orders = myOrders.pageMyOrders(page, buyer);
+        assertThat(orders.items()).hasSize(1);
+        var order = orders.items().getFirst();
+        assertThat(order.dealId()).isEqualTo(deal);
+        assertThat(order.status()).isEqualTo(orderStatus);
+
+        var teams = myTeams.pageMyTeams(page, buyer);
+        assertThat(teams.total()).isEqualTo(1);
+        var team = teams.items().getFirst();
+        assertThat(team.dealId()).isEqualTo(deal);
+        assertThat(team.role()).isEqualTo(role);
+        assertThat(team.status()).isEqualTo(teamStatus);
+        assertThat(team.orderId()).isEqualTo(order.orderId());
+        assertThat(team.productId()).isEqualTo(product);
+        assertThat(team.productTitle()).isEqualTo("Local test product");
     }
 
     /** Moves a team's deadline into the past, as the passage of time would. */

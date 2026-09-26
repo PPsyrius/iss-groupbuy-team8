@@ -2,19 +2,28 @@ package com.blocbuy.bootstrap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.bootstrap.fixture.PaymentFixtureConfiguration;
 import com.blocbuy.bootstrap.fixture.PaymentLifecycleFixture;
 import com.blocbuy.bootstrap.fixture.StripeTestDatabase;
+import com.blocbuy.bootstrap.scheduling.RefundWorkerJob;
 import com.blocbuy.bootstrap.scheduling.TeamExpirySweepJob;
+import com.blocbuy.common.exception.BizException;
+import com.blocbuy.payment.exception.PaymentErrorCode;
 import com.blocbuy.payment.gateway.CheckoutGateway;
+import com.blocbuy.payment.gateway.RefundGateway;
 import com.blocbuy.payment.model.CheckoutPayment;
+import com.blocbuy.payment.model.RefundWork;
 import com.blocbuy.payment.repository.CheckoutPaymentRepository;
+import com.blocbuy.payment.service.PaymentBrowserService;
 import com.blocbuy.payment.service.StripeCheckoutService;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +52,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
             "blocbuy.scheduling.enabled=true",
             "blocbuy.scheduling.team-expiry.initial-delay=PT1H",
             "blocbuy.scheduling.team-expiry.interval=PT1H",
-            "blocbuy.scheduling.team-expiry.batch-size=2"
+            "blocbuy.scheduling.team-expiry.batch-size=2",
+            "blocbuy.scheduling.refund-worker.initial-delay=PT1H",
+            "blocbuy.scheduling.refund-worker.interval=PT1H"
         })
 @ActiveProfiles({"local", "stripe-sprint2"})
 @Import(PaymentFixtureConfiguration.class)
@@ -60,11 +71,14 @@ class TeamExpirySchedulingIT {
     }
 
     @Autowired private TeamExpirySweepJob job;
+    @Autowired private RefundWorkerJob refundWorker;
+    @Autowired private PaymentBrowserService browser;
     @Autowired private PaymentLifecycleFixture coordinator;
     @Autowired private StripeCheckoutService payments;
     @Autowired private CheckoutPaymentRepository repository;
     @Autowired private JdbcTemplate jdbc;
     @MockitoBean private CheckoutGateway gateway;
+    @MockitoBean private RefundGateway refundGateway;
     private final Map<String, CheckoutGateway.Session> sessions = new ConcurrentHashMap<>();
     private UUID product;
 
@@ -204,6 +218,69 @@ class TeamExpirySchedulingIT {
         assertThat(dealStatus(overdue)).isEqualTo("expired");
     }
 
+    @Test
+    void expiryToRefundToBuyerReceiptIsAuditedAndRetriesWithoutDuplicatePayment() {
+        UUID deal = paidTeam();
+        UUID payment =
+                jdbc.queryForObject(
+                        "SELECT payment_id FROM biz_group_member WHERE deal_id=?",
+                        UUID.class,
+                        deal);
+        UUID buyer =
+                jdbc.queryForObject(
+                        "SELECT user_id FROM biz_group_member WHERE deal_id=?", UUID.class, deal);
+        overdue(deal, 1);
+        job.run();
+
+        assertThat(refundStatus(deal)).isEqualTo("pending");
+        assertThat(browser.receipt(buyer, payment).refundStatus()).isEqualTo("PENDING");
+        AtomicReference<String> firstKey = new AtomicReference<>();
+        when(refundGateway.createRefund(any()))
+                .thenAnswer(
+                        call -> {
+                            assertThat(
+                                            org.springframework.transaction.support
+                                                    .TransactionSynchronizationManager
+                                                    .isActualTransactionActive())
+                                    .isFalse();
+                            RefundWork work = call.getArgument(0);
+                            firstKey.set(work.providerKey());
+                            throw new BizException(PaymentErrorCode.PAYMENT_PROVIDER_ERROR);
+                        })
+                .thenAnswer(
+                        call -> {
+                            RefundWork work = call.getArgument(0);
+                            assertThat(work.providerKey()).isEqualTo(firstKey.get());
+                            return new RefundGateway.Snapshot(
+                                    "re_expired_team",
+                                    work.providerIntentId(),
+                                    work.id().toString(),
+                                    work.amount().movePointRight(2).longValueExact(),
+                                    work.currency(),
+                                    "succeeded");
+                        });
+
+        refundWorker.run();
+        assertThat(refundStatus(deal)).isEqualTo("processing");
+        assertThat(browser.receipt(buyer, payment).refundStatus()).isEqualTo("PROCESSING");
+        assertThat(auditCount(payment, "PROVIDER_RETRY")).isEqualTo(1);
+
+        jdbc.update(
+                "UPDATE biz_refund SET next_attempt_at=clock_timestamp()-interval '1 second'"
+                        + " WHERE payment_id=?",
+                payment);
+        refundWorker.run();
+        refundWorker.run();
+
+        assertThat(refundStatus(deal)).isEqualTo("succeeded");
+        assertThat(browser.receipt(buyer, payment).refundStatus()).isEqualTo("SUCCEEDED");
+        assertThat(browser.receipt(buyer, payment).refundPending()).isFalse();
+        assertThat(auditCount(payment, "CLAIMED")).isEqualTo(2);
+        assertThat(auditCount(payment, "PROVIDER_SUCCEEDED")).isEqualTo(1);
+        assertThat(refunds(deal)).isEqualTo(1);
+        verify(refundGateway, times(2)).createRefund(any());
+    }
+
     /** A paid leader's team: one member, one pending order, one successful payment. */
     private UUID paidTeam() {
         UUID buyer = buyer();
@@ -251,6 +328,15 @@ class TeamExpirySchedulingIT {
                         + " WHERE m.deal_id=?",
                 String.class,
                 deal);
+    }
+
+    private long auditCount(UUID payment, String result) {
+        return jdbc.queryForObject(
+                "SELECT count(*) FROM log_refund_attempt a JOIN biz_refund r ON r.id=a.refund_id"
+                        + " WHERE r.payment_id=? AND a.result=?",
+                Long.class,
+                payment,
+                result);
     }
 
     private UUID buyer() {

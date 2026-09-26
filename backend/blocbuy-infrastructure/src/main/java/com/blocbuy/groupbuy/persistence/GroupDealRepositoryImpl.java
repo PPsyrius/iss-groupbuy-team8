@@ -1,6 +1,9 @@
 package com.blocbuy.groupbuy.persistence;
 
+import com.blocbuy.common.model.PageQuery;
+import com.blocbuy.common.model.PageResult;
 import com.blocbuy.groupbuy.model.GroupDeal;
+import com.blocbuy.groupbuy.model.TeamMembership;
 import com.blocbuy.groupbuy.repository.GroupDealRepository;
 import java.util.Collection;
 import java.util.List;
@@ -39,5 +42,17 @@ public class GroupDealRepositoryImpl implements GroupDealRepository {
         return bizGroupDealMapper.selectOpenByProductIds(productIds).stream()
                 .map(GroupDealConverter::toDomain)
                 .toList();
+    }
+
+    /** Two bounded queries per page (rows + count), independent of item count. */
+    @Override
+    public PageResult<TeamMembership> pageMembershipsByUserId(PageQuery query, UUID userId) {
+        List<TeamMembership> items =
+                bizGroupDealMapper
+                        .selectMembershipPageByUserId(userId, query.size(), query.offset())
+                        .stream()
+                        .map(GroupDealConverter::toMembership)
+                        .toList();
+        return PageResult.of(items, bizGroupDealMapper.countMembershipsByUserId(userId), query);
     }
 }

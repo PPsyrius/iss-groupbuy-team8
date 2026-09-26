@@ -35,9 +35,12 @@ webhook state from the frontend (the receipt endpoint already reflects it).
 
 ## Consequences
 
-The pay buttons on the listing (`products.$productId.tsx`) call `begin()` directly; the first-team
-quote step (`POST /api/v1/team-price-quotes`) is not in the flow yet (plan T3-01). No refund can be
+"Join this bloc" calls `begin('JOIN')` directly; "Start a bloc" first opens the quote sheet
+(plan T3-01, addendum below) and calls `begin('START')` from its "Continue to payment". No refund can be
 started from the frontend; the receipt only reports it (UC6, backend #29). The receipt and return
-pages have no artboard (`design-screens.md` §4.6, T3-06). `/account` shows an empty state until
-`GET /orders/me` lands (#124, T3-02). `payments.return` reads its `paymentId` through a valibot
+pages have no artboard (`design-screens.md` §4.6, T3-06). `/account` lists the buyer's orders from
+`GET /orders/me` (T3-02) with no refund label: the order schema has no refund field, so refunds
+stay on the receipt (option B on #128). `payments.return` reads its `paymentId` through a valibot
 search schema (#131, AGENTS.md rule 2).
+
+Addendum (T3-01, 2026-09-24): the first-team quote is a preview, not a price lock. `QuoteSheet.tsx` and `use-quote.ts` issue `POST /api/v1/team-price-quotes` and re-read a stored quote id with `GET /api/v1/team-price-quotes/{quoteId}`; they show the amount and a countdown to `expiresAt`, and an expired quote disables payment and offers a new price. A 409 (`CATALOG_409_001`) reads as "no bloc price set yet". `getPolicy` is not called, because it requires `catalog:product:write` on purpose (`backend/docs/design/team-price-quotes.md`, "explicitly protected"), which buyers never hold. `IntentRequest` carries no quote id: START re-prices from the latest policy (`PurchaseIntentAppService` → `lockStartQuote`), so an admin edit between the quote and `begin()` changes the charged amount. Stripe's page shows the amount actually charged, and the sheet says so. Whether START should honour the quote id is asked on #50.

@@ -24,4 +24,14 @@ public interface BizGroupDealMapper {
      * collection before invoking.
      */
     List<BizGroupDealDO> selectOpenByProductIds(@Param("productIds") Collection<UUID> productIds);
+
+    /**
+     * Owner-scoped My Teams page: the buyer's active memberships joined to their active deals,
+     * newest participation first, member id as the unique tie-breaker.
+     */
+    List<TeamMembershipDO> selectMembershipPageByUserId(
+            @Param("userId") UUID userId, @Param("limit") int limit, @Param("offset") long offset);
+
+    /** Total rows matching the My Teams owner filter; same predicates as the page query. */
+    long countMembershipsByUserId(@Param("userId") UUID userId);
 }

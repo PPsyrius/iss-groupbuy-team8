@@ -2,6 +2,8 @@ package com.blocbuy.groupbuy.persistence;
 
 import com.blocbuy.groupbuy.model.DealStatus;
 import com.blocbuy.groupbuy.model.GroupDeal;
+import com.blocbuy.groupbuy.model.MemberRole;
+import com.blocbuy.groupbuy.model.TeamMembership;
 
 /**
  * Hand-written BizGroupDealDO ↔ GroupDeal converter (no MapStruct — locked decision). Enum↔varchar
@@ -28,5 +30,22 @@ final class GroupDealConverter {
                 data.getStartTime(),
                 data.getExpireTime(),
                 data.getSuccessTime());
+    }
+
+    /** Unknown status or role codes fail fast, like the aggregate mapping above. */
+    static TeamMembership toMembership(TeamMembershipDO data) {
+        return new TeamMembership(
+                data.getDealId(),
+                data.getProductId(),
+                data.getDealPrice(),
+                data.getCurrency(),
+                data.getTargetSize() == null ? 0 : data.getTargetSize(),
+                data.getCurrentSize() == null ? 0 : data.getCurrentSize(),
+                DealStatus.fromCode(data.getStatus()),
+                data.getExpireTime(),
+                data.getSuccessTime(),
+                MemberRole.fromCode(data.getMemberRole()),
+                data.getJoinTime(),
+                data.getOrderId());
     }
 }

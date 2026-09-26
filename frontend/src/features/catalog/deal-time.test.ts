@@ -4,6 +4,7 @@ import {
   formatCountdown,
   formatDeadline,
   formatDeadlineShort,
+  formatDayTime,
   hasEnded,
   parseDeadline,
 } from "./deal-time";
@@ -73,5 +74,15 @@ describe("hasEnded", () => {
     expect(hasEnded("2026-09-16T03:00:01Z", now)).toBe(false);
     expect(hasEnded(undefined, now)).toBe(false);
     expect(hasEnded("not a date", now)).toBe(false);
+  });
+});
+
+describe("formatDayTime", () => {
+  it("prints the Singapore day and time the way the My blocs paid line does", () => {
+    expect(formatDayTime(Date.parse("2026-09-16T11:46:00Z"))).toBe("16 Sep, 7.46 pm");
+  });
+
+  it("uses Singapore's date, not UTC's, near midnight", () => {
+    expect(formatDayTime(Date.parse("2026-09-16T16:05:00Z"))).toBe("17 Sep, 12.05 am");
   });
 });

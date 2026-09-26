@@ -12,10 +12,6 @@ The board UI is not in the git archive, so these files are the only durable reco
 movement. Run the script at the end of any session that changed issue or board state, and commit
 the CSV with that day's work.
 
-Once `.github/workflows/board-snapshot.yml` is merged into `dev`, it will write the day's file at
-23:30 Singapore and collect the unmerged days in one open PR from `metrics/board-snapshots`.
-Merge it whenever. All-blank board columns mean that no queried board item matched the repository
-issues. This commonly occurs when the project query is unauthorized, including when
-`BOARD_SNAPSHOT_TOKEN` is absent, but can also occur when a successful query returns no matching
-items. Check the workflow log for `warning: board not readable` to identify a query failure;
-burndown falls back to `state = OPEN`, as above.
+The scheduled `.github/workflows/board-snapshot.yml` collects unmerged daily files in one open PR from `metrics/board-snapshots`; the cron targets 23:30 Singapore, but GitHub may start scheduled runs late enough to write the following Singapore day's file. Merge the PR whenever convenient.
+The run requires `BOARD_SNAPSHOT_TOKEN` with repository contents/PR write, Issues read, `read:project`, and access to `users/PPsyrius/projects/2`. A missing token, failed project query, or board with no status-bearing repository issues fails the run before it writes or publishes a CSV. Refreshing local `gh` authentication does not change the repository secret; see `docs/ci/devsecops-pipeline-plan.md` off-repo TODO 8.
+Snapshots dated 2026-09-19 through 2026-09-24 were originally published with blank board columns after the workflow's project query failed; their board statuses were reconstructed from the project's dated issue timeline events at each run's capture time. Issue #22 legitimately has no board card and keeps a blank status; for individual unboarded issues, burndown falls back to `state = OPEN` as above.

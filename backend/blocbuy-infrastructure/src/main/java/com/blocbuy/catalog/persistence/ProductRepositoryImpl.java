@@ -2,12 +2,14 @@ package com.blocbuy.catalog.persistence;
 
 import com.blocbuy.catalog.exception.CatalogErrorCode;
 import com.blocbuy.catalog.model.Product;
+import com.blocbuy.catalog.model.ProductDisplay;
 import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.catalog.model.ProductTeamTerms;
 import com.blocbuy.catalog.repository.ProductRepository;
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -74,6 +76,20 @@ public class ProductRepositoryImpl implements ProductRepository {
     public Optional<Product> findById(UUID id) {
         return Optional.ofNullable(
                 ProductConverter.toDomain(bizProductMapper.selectActiveById(id)));
+    }
+
+    /** One batch query; the empty guard keeps an empty {@code IN ()} from reaching SQL. */
+    @Override
+    public List<ProductDisplay> findDisplaysByIds(Collection<UUID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        return bizProductMapper.selectDisplaysByIds(ids).stream()
+                .map(
+                        row ->
+                                new ProductDisplay(
+                                        row.getProductId(), row.getTitle(), row.getCoverImage()))
+                .toList();
     }
 
     @Override

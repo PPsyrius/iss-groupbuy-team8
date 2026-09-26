@@ -46,7 +46,7 @@ for a in security performance availability recoverability observability cost mai
 done
 ```
 
-Board snapshots need the `project` scope: `gh auth refresh -s project`. The scheduled run needs the `BOARD_SNAPSHOT_TOKEN` repo secret for the same reason (off-repo TODO 8 in `docs/ci/devsecops-pipeline-plan.md`); without it the CSVs carry issue state only.
+Board snapshots need `read:project`: `gh auth refresh -s read:project`. The scheduled run needs a separate `BOARD_SNAPSHOT_TOKEN` repository secret with access to the private board and repository/PR writes (off-repo TODO 8 in `docs/ci/devsecops-pipeline-plan.md`); local `gh` authentication does not update the secret, and missing or insufficient access fails the run.
 
 ## Sprint calendar
 

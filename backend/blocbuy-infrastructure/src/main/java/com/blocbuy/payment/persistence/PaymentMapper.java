@@ -12,6 +12,8 @@ import org.apache.ibatis.annotations.Param;
 public interface PaymentMapper {
     BizPaymentDO find(@Param("id") UUID id);
 
+    BizPaymentDO receipt(@Param("id") UUID id);
+
     BizPaymentDO lock(@Param("id") UUID id);
 
     BizPaymentDO request(@Param("userId") UUID userId, @Param("key") String key);

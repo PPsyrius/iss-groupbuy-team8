@@ -4,7 +4,7 @@
 
 **Environment:** `backend-prod` (a second, dedicated EC2 instance)
 
-**Provisioning model:** Terraform-managed infrastructure — IAM, ECR, EC2, security groups, load balancer, and host bootstrap are all declared as code and applied with `terraform apply`
+**Provisioning model:** Terraform-defined production infrastructure — IAM, ECR, EC2, security groups, load balancer and host bootstrap are declared as code; production `terraform apply` remains an account-holder runbook step (#48), not a completed deployment claim.
 
 **Application delivery:** unchanged from dev — GitHub Actions -> Amazon ECR -> AWS Systems Manager Run Command, extended with a release tag trigger and a mandatory approval gate
 
@@ -117,23 +117,21 @@ The OIDC subject values are not guessed: they were decoded from a live workflow 
 
 ### 5.1 Bootstrap the Terraform state backend
 
-Run once per AWS account from an administrator workstation (outside Terraform, like the OIDC provider in the dev bootstrap):
+For the **existing** account `402178232802`, verify the backend without changing it: on 2026-09-25 the bucket and active `LockID (S)` DynamoDB table were confirmed for #161, but versioning, encryption and access still need checking for production. Do not replay bucket/table creation or configuration commands against these resources; the production operator runbook §1 reserves bootstrap commands for a genuinely new account.
 
 ```bash
-aws s3api create-bucket --bucket blocbuy-tfstate-402178232802 \
-  --region ap-southeast-1 --create-bucket-configuration LocationConstraint=ap-southeast-1
-aws s3api put-bucket-versioning --bucket blocbuy-tfstate-402178232802 \
-  --versioning-configuration Status=Enabled
-aws s3api put-bucket-encryption --bucket blocbuy-tfstate-402178232802 \
-  --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"aws:kms"}}]}'
-aws s3api put-public-access-block --bucket blocbuy-tfstate-402178232802 \
-  --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
-
-aws dynamodb create-table --table-name blocbuy-tflock \
-  --attribute-definitions AttributeName=LockID,AttributeType=S \
-  --key-schema AttributeName=LockID,KeyType=HASH \
-  --billing-mode PAY_PER_REQUEST --region ap-southeast-1
+aws sts get-caller-identity --query Account --output text
+aws s3api head-bucket --bucket blocbuy-tfstate-402178232802 --region ap-southeast-1
+aws s3api get-bucket-versioning --bucket blocbuy-tfstate-402178232802 --query Status --output text
+aws s3api get-bucket-encryption --bucket blocbuy-tfstate-402178232802 \
+  --query 'ServerSideEncryptionConfiguration.Rules[].ApplyServerSideEncryptionByDefault.SSEAlgorithm' --output text
+aws s3api get-public-access-block --bucket blocbuy-tfstate-402178232802 \
+  --query PublicAccessBlockConfiguration --output json
+aws dynamodb describe-table --table-name blocbuy-tflock --region ap-southeast-1 \
+  --query 'Table.{status:TableStatus,keys:KeySchema,attributes:AttributeDefinitions}' --output json
 ```
+
+Expect account `402178232802`, bucket versioning `Enabled`, encryption `aws:kms`, all four public-access-block flags `true`, and an active lock table with `LockID (S)`. If any differs, investigate and review an explicit backend change rather than running setup commands on a populated state bucket.
 
 ### 5.2 OIDC provider
 
@@ -342,9 +340,9 @@ One accepted trade-off: the origin secret is read through `data "aws_ssm_paramet
 The dev environment's entry-layer rework ([dev-cloudfront-deployment.md](../dev-cloudfront-deployment.md)) is adopted for prod unchanged in shape:
 
 - **User-facing TLS:** CloudFront's built-in `*.cloudfront.net` certificate — no custom domain, no ACM certificate to request or rotate, `ViewerProtocolPolicy: redirect-to-https`.
-- **Origin leg:** plain HTTP `:80`, protected by the prefix-list security group + the `X-Origin-Secret` header + the default-403 listener. `OriginProtocolPolicy: http-only`.
+- **Origin leg in the original CloudFront entry pattern:** plain HTTP `:80` with prefix-list SG, `X-Origin-Secret` and default-403 listener; `OriginProtocolPolicy: http-only`. These are access controls, **not transport encryption**: the header and `/api/*` payload cross the CloudFront→ALB hop in cleartext.
 - **Origin secret:** `/blocbuy/prod/ORIGIN_SECRET` (SecureString) — generated once (`openssl rand -hex 32`), consumed by this stack's listener rule and the CloudFront distribution's custom origin header. Rotating it means a new parameter value, a Terraform apply (listener rule), and a CloudFront distribution update, done together.
-- **Upgrade path (later, optional):** once the team has a domain, follow dev-cloudfront-deployment.md §12 — ACM certificate in `us-east-1` attached to CloudFront, and optionally an ACM certificate on the ALB (`acm_certificate_arn` in tfvars) to upgrade the origin leg to HTTPS. No architectural rework, only a protocol change.
+- **Before relying on origin-secret confidentiality in a release:** review the dev runbook §12 HTTPS-origin migration independently of an optional viewer-domain upgrade. The ALB needs an origin DNS name covered by a valid regional ACM certificate, HTTPS:443 listener and CloudFront-prefix-list SG ingress; CloudFront must use `https-only`. Rotate any disclosed origin secret across CloudFront and the ALB rule only in a separately reviewed live change. The production stack has not been applied (#48), so this is a release-readiness constraint rather than a claim of current prod TLS.
 
 ### 6.5 EC2 instance, instance profile, and ECR pull inline policy
 
@@ -500,7 +498,7 @@ Also create `backend-prod-publish` (the publish job's environment — its OIDC s
 Then set every variable from Terraform outputs — the values are derived, never retyped:
 
 ```bash
-terraform -chdir=infra/terraform output -json > /tmp/tf-outputs.json
+terraform -chdir=infra/terraform/backend-app-stack output -json > /tmp/tf-outputs.json
 
 gh variable set AWS_ACCOUNT_ID  --body 402178232802
 gh variable set AWS_REGION      --body ap-southeast-1
@@ -525,13 +523,13 @@ No AWS access keys ever enter GitHub — OIDC issues short-lived credentials, ex
 Ordered, with the freeze switch held closed until the last possible moment:
 
 1. Seed **all** secrets into Parameter Store first (section 6.7) — the stack reads `ORIGIN_SECRET` at plan time and the user-data reads the first-boot keys at instance creation.
-2. `terraform init && terraform plan -var-file=envs/prod.tfvars` — review the rendered plan as a team; specifically read both trust policies, the 8589 ingress rule, the CloudFront prefix list on the ALB SG, and the default-403 listener with its `X-Origin-Secret` rule.
-3. `terraform apply -var-file=envs/prod.tfvars` — creates IAM, ECR, SGs, ALB, and the EC2 host; user-data completes at first boot.
+2. From the repository root, run `terraform -chdir=infra/terraform/backend-app-stack init -backend-config="bucket=blocbuy-tfstate-402178232802" -backend-config="region=ap-southeast-1"` and `terraform -chdir=infra/terraform/backend-app-stack plan -var-file=../envs/prod.tfvars -out=prod.tfplan`; review both trust policies, 8589 ingress, the CloudFront prefix list and the default-403/secret-header rule privately. The saved plan may contain the origin secret; share only a redacted action summary.
+3. After the team's review, `terraform -chdir=infra/terraform/backend-app-stack apply prod.tfplan` creates IAM, ECR, SGs, ALB and the EC2 host; verify user-data separately after boot.
 4. Verify from an admin workstation:
 
    ```bash
    aws ssm describe-instance-information \
-     --filters Key=InstanceIds,Values=$(terraform -chdir=infra/terraform output -raw instance_id) \
+      --filters Key=InstanceIds,Values=$(terraform -chdir=infra/terraform/backend-app-stack output -raw instance_id) \
      --region ap-southeast-1   # PingStatus must be Online
    aws ec2 describe-security-groups ...   # confirm 8589 allows only the ALB SG
    ```
@@ -547,16 +545,16 @@ Ordered, with the freeze switch held closed until the last possible moment:
 
     ```bash
     curl --fail --silent "https://<prod-dist-domain>/api/actuator/health"
-    # Direct-to-ALB sanity: without the secret header this must 403
-    curl -s -o /dev/null -w '%{http_code}\n' \
-      "$(terraform -chdir=infra/terraform output -raw backend_url)/api/actuator/health"   # 403
+    # Direct ALB access without the secret is blocked: prefix-list SG timeout/000, or listener 403.
+    curl --max-time 5 -s -o /dev/null -w '%{http_code}\n' \
+      "$(terraform -chdir=infra/terraform/backend-app-stack output -raw backend_url)/api/actuator/health"
     ```
 
 13. Record the change in the team change log (environment creation is one Terraform PR plus one apply — the PR itself is most of the audit evidence).
 
 ## 10. Bringing the dev environment under Terraform (follow-up, optional)
 
-The existing dev resources predate Terraform and remain hand-managed until explicitly imported. When the team chooses to adopt that:
+The **dev backend** EC2/ALB resources predate Terraform and remain hand-managed; the separate dev **frontend** edge was imported into `frontend-stack` on 2026-09-25 with a zero-change plan (#161). If the team later adopts the dev backend:
 
 1. add `envs/dev.tfvars` describing the dev environment as it exists (roles, `dev/blocbuy`, instance security group);
 2. `terraform import` each resource into state — IAM roles first, then ECR, then the security group;
@@ -585,7 +583,7 @@ Until then, the two environments coexist safely because prod role names, reposit
 | Immutable artifacts | Same digest-pinned ECR deployment as dev; tag-immutability enabled |
 | Least privilege by reference | Inline policies reference resource ARNs (`aws_ecr_repository...arn`, `aws_instance...id`) instead of literals |
 | Reproducibility | `envs/prod.tfvars` + pinned provider versions recreate the environment from scratch |
-| Audit trail | PR review + `terraform plan` in PR comments + CloudTrail + GitHub environment approvals |
+| Audit trail | PR review + redacted Terraform plan summary in PR comments (no raw secret-bearing plan/state) + CloudTrail + GitHub environment approvals |
 | Disaster recovery | `terraform apply` rebuilds the host; ECR lifecycle retains rollback digests; state bucket is versioned |
 
 ## 13. Authoritative references
