@@ -2,6 +2,7 @@ package com.blocbuy.groupbuy.service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -28,6 +29,14 @@ public interface GroupDealPurchaseSupport {
      *     or has already joined it, {@code INVALID_PARTICIPATION} when an identifier is missing
      */
     JoinTerms lockJoinTerms(UUID dealId, UUID buyerId);
+
+    /**
+     * Resolves a UC7 invite reference presented with a JOIN into the sharer to freeze on the
+     * intent. Never fails the purchase: a missing, unknown, other-team or self-referring reference
+     * resolves to empty, and the join simply goes unattributed. Call after {@link #lockJoinTerms},
+     * which has already refused a closed team.
+     */
+    Optional<UUID> resolveSharer(String inviteRef, UUID dealId, UUID buyerId);
 
     /**
      * What groupbuy contributes to a JOIN quote. The amount is the team's frozen per-buyer price —

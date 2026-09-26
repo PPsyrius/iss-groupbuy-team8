@@ -19,6 +19,11 @@ import java.util.UUID;
  * that, and it refuses a second, different payment — the database's partial unique index on {@code
  * fulfilled_payment_id} is the same rule at the other end.
  *
+ * <p>A JOIN may also carry the sharer whose invite the buyer arrived through (UC7). The sharer is
+ * frozen here at quote time, like the price, but it is <em>not</em> a quote term: it never reaches
+ * the payment and is not compared at settlement. A START never has one, and nobody is their own
+ * sharer.
+ *
  * <p>Rules follow the {@link Order} idiom: framework-free, immutable snapshots, transitions through
  * behavioral methods, no public setters. Instants are truncated to microseconds because that is
  * what PostgreSQL {@code timestamptz} stores; keeping the boundary here means a reconstituted
@@ -31,18 +36,22 @@ public final class PurchaseIntent {
     private final Instant quoteValidUntil;
     private final Instant businessDeadline;
     private final UUID fulfilledPaymentId;
+    private final UUID sharerUserId;
     private final Instant createTime;
     private final int version;
 
+    @SuppressWarnings("java:S107") // one parameter per persisted column; private, factories only
     private PurchaseIntent(
             UUID id,
             Terms terms,
             Instant quoteValidUntil,
             Instant businessDeadline,
             UUID fulfilledPaymentId,
+            UUID sharerUserId,
             Instant createTime,
             int version) {
         requireTerms(terms);
+        requireSharer(terms, sharerUserId);
         if (id == null) {
             throw new IllegalArgumentException("id must not be null");
         }
@@ -62,6 +71,7 @@ public final class PurchaseIntent {
         this.quoteValidUntil = quote;
         this.businessDeadline = deadline;
         this.fulfilledPaymentId = fulfilledPaymentId;
+        this.sharerUserId = sharerUserId;
         this.createTime = createTime;
         this.version = version;
     }
@@ -92,10 +102,32 @@ public final class PurchaseIntent {
             throw new BizException(OrderErrorCode.PURCHASE_INTENT_TERMS_INVALID);
         }
         return new PurchaseIntent(
-                UuidV7.next(), terms, quoteValidUntil, businessDeadline, null, now, 0);
+                UuidV7.next(), terms, quoteValidUntil, businessDeadline, null, null, now, 0);
     }
 
-    /** Reconstitution factory for the infrastructure converter; all fields come from the row. */
+    /**
+     * Freezes the sharer a JOIN was attributed to, before the intent is saved. A null sharer means
+     * unattributed and returns this intent unchanged.
+     *
+     * @throws BizException {@code PURCHASE_INTENT_TERMS_INVALID} for a START or a self-referral —
+     *     the caller resolves the sharer, so either is a bug upstream, not a buyer error
+     */
+    public PurchaseIntent attributedTo(UUID sharer) {
+        if (sharer == null) {
+            return this;
+        }
+        return new PurchaseIntent(
+                id,
+                terms,
+                quoteValidUntil,
+                businessDeadline,
+                fulfilledPaymentId,
+                sharer,
+                createTime,
+                version);
+    }
+
+    /** Reconstitution factory for an unattributed row. */
     public static PurchaseIntent reconstitute(
             UUID id,
             Terms terms,
@@ -104,12 +136,35 @@ public final class PurchaseIntent {
             UUID fulfilledPaymentId,
             Instant createTime,
             int version) {
+        return reconstitute(
+                id,
+                terms,
+                quoteValidUntil,
+                businessDeadline,
+                fulfilledPaymentId,
+                null,
+                createTime,
+                version);
+    }
+
+    /** Reconstitution factory for the infrastructure converter; all fields come from the row. */
+    @SuppressWarnings("java:S107") // one parameter per persisted column
+    public static PurchaseIntent reconstitute(
+            UUID id,
+            Terms terms,
+            Instant quoteValidUntil,
+            Instant businessDeadline,
+            UUID fulfilledPaymentId,
+            UUID sharerUserId,
+            Instant createTime,
+            int version) {
         return new PurchaseIntent(
                 id,
                 terms,
                 quoteValidUntil,
                 businessDeadline,
                 fulfilledPaymentId,
+                sharerUserId,
                 createTime,
                 version);
     }
@@ -132,7 +187,14 @@ public final class PurchaseIntent {
             throw new BizException(OrderErrorCode.PURCHASE_INTENT_ALREADY_FULFILLED);
         }
         return new PurchaseIntent(
-                id, terms, quoteValidUntil, businessDeadline, paymentId, createTime, version);
+                id,
+                terms,
+                quoteValidUntil,
+                businessDeadline,
+                paymentId,
+                sharerUserId,
+                createTime,
+                version);
     }
 
     /**
@@ -173,6 +235,13 @@ public final class PurchaseIntent {
             throw new BizException(OrderErrorCode.PURCHASE_INTENT_TERMS_INVALID);
         }
         requireAmount(terms.amount(), terms.currency());
+    }
+
+    private static void requireSharer(Terms terms, UUID sharer) {
+        if (sharer != null
+                && (terms.operation() != PurchaseOperation.JOIN || sharer.equals(terms.userId()))) {
+            throw new BizException(OrderErrorCode.PURCHASE_INTENT_TERMS_INVALID);
+        }
     }
 
     private static void requireAmount(BigDecimal amount, String currency) {
@@ -241,6 +310,11 @@ public final class PurchaseIntent {
 
     public UUID fulfilledPaymentId() {
         return fulfilledPaymentId;
+    }
+
+    /** The member whose invite this JOIN came through, or null when unattributed. */
+    public UUID sharerUserId() {
+        return sharerUserId;
     }
 
     public Instant createTime() {

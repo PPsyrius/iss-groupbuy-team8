@@ -197,7 +197,7 @@ public class OrderFulfilmentAdapter implements PaymentBusinessPort {
                             quote.businessDeadline());
             return groups.startConfirmed(terms, paid);
         }
-        return groups.joinConfirmed(intent.dealId(), paid);
+        return groups.joinConfirmed(intent.dealId(), paid, intent.sharerUserId());
     }
 
     private Order orderFor(PaymentSucceeded event, PurchaseIntent intent) {

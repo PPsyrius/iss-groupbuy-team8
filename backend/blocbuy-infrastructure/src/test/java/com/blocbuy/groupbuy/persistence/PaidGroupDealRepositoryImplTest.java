@@ -100,13 +100,17 @@ class PaidGroupDealRepositoryImplTest {
                         UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("12.00"), "sgd");
         GroupDeal after = before.joinPaid(joiner, false, NOW).deal();
         when(mapper.updateDeal(any(), eq(1), eq("open"))).thenReturn(1);
-        when(mapper.insertMember(after.id(), joiner.paymentId(), joiner.userId(), "member", NOW))
+        UUID sharer = UUID.randomUUID();
+        when(mapper.insertMember(
+                        after.id(), joiner.paymentId(), joiner.userId(), "member", sharer, NOW))
                 .thenReturn(1);
 
-        repository.insertJoinedMember(before, after, joiner, NOW);
+        repository.insertJoinedMember(before, after, joiner, sharer, NOW);
 
         verify(mapper).updateDeal(any(), eq(1), eq("open"));
-        verify(mapper).insertMember(after.id(), joiner.paymentId(), joiner.userId(), "member", NOW);
+        verify(mapper)
+                .insertMember(
+                        after.id(), joiner.paymentId(), joiner.userId(), "member", sharer, NOW);
     }
 
     @Test

@@ -17,7 +17,7 @@ resource "aws_security_group" "alb" {
     from_port       = local.alb_listener_port
     to_port         = local.alb_listener_port
     protocol        = "tcp"
-    prefix_list_ids = [data.aws_prefix_list.cloudfront_origin.id]
+    prefix_list_ids = [data.aws_ec2_managed_prefix_list.cloudfront_origin.id]
   }
 
   egress {

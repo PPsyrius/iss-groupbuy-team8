@@ -1,6 +1,7 @@
 package com.blocbuy.groupbuy.service;
 
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.groupbuy.event.MemberJoined;
 import com.blocbuy.groupbuy.event.TeamSucceeded;
 import com.blocbuy.groupbuy.exception.GroupbuyErrorCode;
 import com.blocbuy.groupbuy.exception.ParticipationErrorCode;
@@ -34,9 +35,9 @@ import org.springframework.transaction.annotation.Transactional;
  * arrange compensation after commit; this service never refunds or treats that as success.
  * Technical failures propagate and roll back the receipt, membership and deal together.
  *
- * <p>A join that fills the team publishes {@link TeamSucceeded} in the same transaction. The
- * consequences in other domains — confirming their orders — belong to subscribers, not to inline
- * calls from here.
+ * <p>Every accepted join publishes {@link MemberJoined}, and a join that fills the team then
+ * publishes {@link TeamSucceeded}, both in the same transaction. The consequences — confirming
+ * orders, crediting a sharer — belong to subscribers, not to inline calls from here.
  */
 @Service
 @RequiredArgsConstructor
@@ -89,9 +90,17 @@ public class PaidGroupDealService {
      * return the frozen receipt; rejected admissions record compensation without refunding.
      * Technical failure rolls back all writes. New transactions use a ten-second timeout; callers
      * supplying an existing transaction must provide a compatible bounded deadline.
+     *
+     * <p>The sharer is recorded on the membership and carried on {@link MemberJoined}. It is not
+     * part of the receipt fingerprint: it comes from the caller's immutable intent, which a replay
+     * of the same payment cannot change. Attribution never fails an admission — a self-referring
+     * sharer is dropped rather than rolling back paid money.
+     *
+     * @param sharerUserId the member whose invite the buyer came through, or null
      */
     @Transactional(timeout = 10)
-    public ParticipationResult joinConfirmed(UUID dealId, PaidParticipation paid) {
+    public ParticipationResult joinConfirmed(
+            UUID dealId, PaidParticipation paid, UUID sharerUserId) {
         if (dealId == null || paid == null) {
             throw new BizException(GroupbuyErrorCode.INVALID_PARTICIPATION);
         }
@@ -114,9 +123,19 @@ public class PaidGroupDealService {
             return compensate(dealId, paid, rejection, now);
         }
         GroupDeal after = admission.deal();
-        repository.insertJoinedMember(before, after, paid, now);
+        UUID sharer = paid.userId().equals(sharerUserId) ? null : sharerUserId;
+        repository.insertJoinedMember(before, after, paid, sharer, now);
         var result = ParticipationResult.applied(after);
         repository.complete(paid.paymentId(), result, paid.userId(), now);
+        // Published before TeamSucceeded, so subscribers see the join before the team's resolution.
+        events.publishEvent(
+                new MemberJoined(
+                        after.id(),
+                        after.productId(),
+                        paid.userId(),
+                        paid.paymentId(),
+                        sharer,
+                        now));
         if (admission.teamCompleted()) {
             // Subscribers run at BEFORE_COMMIT, after this buyer's own order is saved by the
             // caller — a plain listener would confirm the team while that order is still pending.

@@ -140,7 +140,7 @@ class PaymentBrowserControllerTest {
 
     @Test
     void createsServerOwnedIntentInResultEnvelope() throws Exception {
-        when(payments.createIntent(USER, "START", BUSINESS)).thenReturn(INTENT);
+        when(payments.createIntent(USER, "START", BUSINESS, null)).thenReturn(INTENT);
         mvc.perform(
                         post(INTENTS)
                                 .cookie(login())
@@ -153,7 +153,45 @@ class PaymentBrowserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("COMMON_200_000"))
                 .andExpect(jsonPath("$.data.intentId").value(INTENT.toString()));
-        verify(payments).createIntent(USER, "START", BUSINESS);
+        verify(payments).createIntent(USER, "START", BUSINESS, null);
+    }
+
+    /** UC7: the invite reference is passed through to the intent service untouched. */
+    @Test
+    void aJoinCarriesItsInviteReferenceToTheIntentService() throws Exception {
+        when(payments.createIntent(USER, "JOIN", BUSINESS, "Ab-_09")).thenReturn(INTENT);
+        mvc.perform(
+                        post(INTENTS)
+                                .cookie(login())
+                                .header("X-BlocBuy-Request", "checkout")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"operation\":\"JOIN\",\"businessId\":\""
+                                                + BUSINESS
+                                                + "\",\"ref\":\"Ab-_09\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.intentId").value(INTENT.toString()));
+        verify(payments).createIntent(USER, "JOIN", BUSINESS, "Ab-_09");
+    }
+
+    @Test
+    void aMalformedInviteReferenceIsRejectedBeforeAnyWork() throws Exception {
+        Cookie cookie = login();
+        for (String ref : new String[] {"has space", "a".repeat(65), ""}) {
+            mvc.perform(
+                            post(INTENTS)
+                                    .cookie(cookie)
+                                    .header("X-BlocBuy-Request", "checkout")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(
+                                            "{\"operation\":\"JOIN\",\"businessId\":\""
+                                                    + BUSINESS
+                                                    + "\",\"ref\":\""
+                                                    + ref
+                                                    + "\"}"))
+                    .andExpect(status().isBadRequest());
+        }
+        verifyNoInteractions(payments);
     }
 
     @Test

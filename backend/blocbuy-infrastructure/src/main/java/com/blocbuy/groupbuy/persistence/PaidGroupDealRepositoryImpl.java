@@ -72,19 +72,27 @@ public class PaidGroupDealRepositoryImpl implements PaidGroupDealRepository {
     @Override
     public void insertStartedDeal(GroupDeal deal, PaidParticipation paid, Instant now) {
         requireOne(mapper.insertDeal(toRow(deal, paid.userId(), now)));
-        requireOne(mapper.insertMember(deal.id(), paid.paymentId(), paid.userId(), "leader", now));
+        requireOne(
+                mapper.insertMember(
+                        deal.id(), paid.paymentId(), paid.userId(), "leader", null, now));
     }
 
     /** Checks the expected progress update and inserts one paid member in the same transaction. */
     @Override
     public void insertJoinedMember(
-            GroupDeal before, GroupDeal after, PaidParticipation paid, Instant now) {
+            GroupDeal before,
+            GroupDeal after,
+            PaidParticipation paid,
+            UUID sharerUserId,
+            Instant now) {
         requireOne(
                 mapper.updateDeal(
                         toRow(after, paid.userId(), now),
                         before.currentSize(),
                         before.status().code()));
-        requireOne(mapper.insertMember(after.id(), paid.paymentId(), paid.userId(), "member", now));
+        requireOne(
+                mapper.insertMember(
+                        after.id(), paid.paymentId(), paid.userId(), "member", sharerUserId, now));
     }
 
     /**

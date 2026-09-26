@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -13,6 +14,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.groupbuy.event.MemberJoined;
 import com.blocbuy.groupbuy.event.TeamSucceeded;
 import com.blocbuy.groupbuy.exception.GroupbuyErrorCode;
 import com.blocbuy.groupbuy.exception.ParticipationErrorCode;
@@ -103,14 +105,14 @@ class PaidGroupDealServiceTest {
         pendingReceipt();
         when(repository.lockDeal(terms.id())).thenReturn(Optional.of(deal));
         when(repository.currentTime()).thenReturn(now);
-        var result = service.joinConfirmed(terms.id(), paid);
+        var result = service.joinConfirmed(terms.id(), paid, null);
         assertThat(result.dealStatus()).isEqualTo("succeeded");
         var order = inOrder(repository);
         order.verify(repository).reserveAndLock(eq(paid.paymentId()), any(), eq(paid.userId()));
         order.verify(repository).lockDeal(terms.id());
         order.verify(repository).currentTime();
         order.verify(repository).hasActiveMember(terms.id(), paid.userId());
-        order.verify(repository).insertJoinedMember(eq(deal), any(), eq(paid), eq(now));
+        order.verify(repository).insertJoinedMember(eq(deal), any(), eq(paid), isNull(), eq(now));
     }
 
     /** Verifies an absent deal records its stable rejection without inserting a member. */
@@ -119,12 +121,12 @@ class PaidGroupDealServiceTest {
         pendingReceipt();
         when(repository.lockDeal(terms.id())).thenReturn(Optional.empty());
         when(repository.currentTime()).thenReturn(now);
-        var result = service.joinConfirmed(terms.id(), paid);
+        var result = service.joinConfirmed(terms.id(), paid, null);
         assertThat(result.outcome()).isEqualTo("compensation_required");
         assertThat(result.reasonCode()).isEqualTo("GROUPBUY_404_001");
         verify(repository).complete(paid.paymentId(), result, paid.userId(), now);
-        verify(repository, never()).insertJoinedMember(any(), any(), any(), any());
-        verify(events, never()).publishEvent(any(TeamSucceeded.class));
+        verify(repository, never()).insertJoinedMember(any(), any(), any(), any(), any());
+        verify(events, never()).publishEvent(any(Object.class));
     }
 
     /** Verifies storage failure propagates rather than recording a misleading terminal receipt. */
@@ -161,9 +163,9 @@ class PaidGroupDealServiceTest {
         when(repository.lockDeal(terms.id())).thenReturn(Optional.of(deal));
         when(repository.currentTime()).thenReturn(now);
         when(repository.hasActiveMember(terms.id(), paid.userId())).thenReturn(true);
-        var result = service.joinConfirmed(terms.id(), paid);
+        var result = service.joinConfirmed(terms.id(), paid, null);
         assertThat(result.reasonCode()).isEqualTo("GROUPBUY_409_003");
-        verify(repository, never()).insertJoinedMember(any(), any(), any(), any());
+        verify(repository, never()).insertJoinedMember(any(), any(), any(), any(), any());
         verify(repository).complete(paid.paymentId(), result, paid.userId(), now);
     }
 
@@ -201,13 +203,13 @@ class PaidGroupDealServiceTest {
     /** Verifies null join facts fail fast with a business error before any lock is taken. */
     @Test
     void joinConfirmedRejectsNullDealIdOrPayment() {
-        assertThatThrownBy(() -> service.joinConfirmed(null, paid))
+        assertThatThrownBy(() -> service.joinConfirmed(null, paid, null))
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION);
 
         UUID dealId = terms.id();
-        assertThatThrownBy(() -> service.joinConfirmed(dealId, null))
+        assertThatThrownBy(() -> service.joinConfirmed(dealId, null, null))
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION);
@@ -223,11 +225,11 @@ class PaidGroupDealServiceTest {
                         invocation ->
                                 new ParticipationReceipt(invocation.getArgument(1), original));
 
-        assertThat(service.joinConfirmed(terms.id(), paid)).isEqualTo(original);
+        assertThat(service.joinConfirmed(terms.id(), paid, UUID.randomUUID())).isEqualTo(original);
         verify(repository, never()).lockDeal(any());
         verify(repository, never()).currentTime();
-        verify(repository, never()).insertJoinedMember(any(), any(), any(), any());
-        verify(events, never()).publishEvent(any(TeamSucceeded.class));
+        verify(repository, never()).insertJoinedMember(any(), any(), any(), any(), any());
+        verify(events, never()).publishEvent(any(Object.class));
     }
 
     /**
@@ -246,7 +248,7 @@ class PaidGroupDealServiceTest {
                 .thenReturn(new ParticipationReceipt("different", null));
 
         UUID dealId = terms.id();
-        assertThatThrownBy(() -> service.joinConfirmed(dealId, paid))
+        assertThatThrownBy(() -> service.joinConfirmed(dealId, paid, null))
                 .isInstanceOf(BizException.class)
                 .extracting(ex -> ((BizException) ex).errorCode())
                 .isEqualTo(ParticipationErrorCode.PAYMENT_REUSED);
@@ -265,10 +267,10 @@ class PaidGroupDealServiceTest {
         when(repository.currentTime()).thenReturn(now);
         doThrow(new IllegalStateException("database failure"))
                 .when(repository)
-                .insertJoinedMember(any(), any(), any(), any());
+                .insertJoinedMember(any(), any(), any(), any(), any());
 
         UUID dealId = terms.id();
-        assertThatThrownBy(() -> service.joinConfirmed(dealId, paid))
+        assertThatThrownBy(() -> service.joinConfirmed(dealId, paid, null))
                 .isInstanceOf(IllegalStateException.class);
         verify(repository, never()).complete(any(), any(), any(), any());
     }
@@ -300,12 +302,13 @@ class PaidGroupDealServiceTest {
         pendingReceipt();
         when(repository.lockDeal(terms.id())).thenReturn(Optional.of(deal));
         when(repository.currentTime()).thenReturn(terms.expireTime());
-        var result = service.joinConfirmed(terms.id(), paid);
+        var result = service.joinConfirmed(terms.id(), paid, null);
         assertThat(result.outcome()).isEqualTo("compensation_required");
         assertThat(result.reasonCode()).isEqualTo("GROUPBUY_409_002");
         assertThat(result.currentSize()).isNull();
         verify(repository).complete(paid.paymentId(), result, paid.userId(), terms.expireTime());
-        verify(repository, never()).insertJoinedMember(any(), any(), any(), any());
+        verify(repository, never()).insertJoinedMember(any(), any(), any(), any(), any());
+        verify(events, never()).publishEvent(any(Object.class));
     }
 
     @Test
@@ -328,17 +331,20 @@ class PaidGroupDealServiceTest {
         when(repository.lockDeal(terms.id())).thenReturn(Optional.of(deal));
         when(repository.currentTime()).thenReturn(now);
 
-        var result = service.joinConfirmed(terms.id(), paid);
+        var result = service.joinConfirmed(terms.id(), paid, null);
 
         assertThat(result.outcome()).isEqualTo("applied");
         assertThat(result.dealStatus()).isEqualTo("open");
         assertThat(result.currentSize()).isEqualTo(2);
-        verify(repository).insertJoinedMember(eq(deal), any(), eq(paid), eq(now));
+        verify(repository).insertJoinedMember(eq(deal), any(), eq(paid), isNull(), eq(now));
         verify(repository).complete(paid.paymentId(), result, paid.userId(), now);
         verify(events, never()).publishEvent(any(TeamSucceeded.class));
     }
 
-    /** The team that fills up announces it; the consequences belong to subscribers, not to us. */
+    /**
+     * The team that fills up announces it; the consequences belong to subscribers, not to us. The
+     * join itself is announced first, so subscribers see the member before the resolution.
+     */
     @Test
     void joinReachingTargetPublishesTeamSucceededWithTheWrittenSnapshot() {
         var leader =
@@ -348,23 +354,32 @@ class PaidGroupDealServiceTest {
         when(repository.lockDeal(terms.id())).thenReturn(Optional.of(deal));
         when(repository.currentTime()).thenReturn(now);
 
-        var result = service.joinConfirmed(terms.id(), paid);
+        var result = service.joinConfirmed(terms.id(), paid, null);
 
         assertThat(result.dealStatus()).isEqualTo("succeeded");
-        var published = ArgumentCaptor.forClass(TeamSucceeded.class);
-        verify(events).publishEvent(published.capture());
-        assertThat(published.getValue())
-                .isEqualTo(new TeamSucceeded(terms.id(), terms.productId(), 2, now));
+        var published = ArgumentCaptor.forClass(Object.class);
+        verify(events, times(2)).publishEvent(published.capture());
+        assertThat(published.getAllValues())
+                .containsExactly(
+                        new MemberJoined(
+                                terms.id(),
+                                terms.productId(),
+                                paid.userId(),
+                                paid.paymentId(),
+                                null,
+                                now),
+                        new TeamSucceeded(terms.id(), terms.productId(), 2, now));
         var persistedThenPublished = inOrder(repository, events);
         var written = ArgumentCaptor.forClass(GroupDeal.class);
         persistedThenPublished
                 .verify(repository)
-                .insertJoinedMember(eq(deal), written.capture(), eq(paid), eq(now));
+                .insertJoinedMember(eq(deal), written.capture(), eq(paid), isNull(), eq(now));
         assertThat(written.getValue().status()).isEqualTo(DealStatus.SUCCEEDED);
         assertThat(written.getValue().successTime()).isEqualTo(now);
         persistedThenPublished
                 .verify(repository)
                 .complete(paid.paymentId(), result, paid.userId(), now);
+        persistedThenPublished.verify(events).publishEvent(any(MemberJoined.class));
         persistedThenPublished.verify(events).publishEvent(any(TeamSucceeded.class));
     }
 
@@ -379,5 +394,51 @@ class PaidGroupDealServiceTest {
         service.startConfirmed(terms, paid);
 
         verify(events, never()).publishEvent(any(Object.class));
+    }
+
+    /** UC7: an attributed join records its sharer on the membership and on the published fact. */
+    @Test
+    void attributedJoinPersistsAndPublishesItsSharer() {
+        var leader =
+                new PaidParticipation(UUID.randomUUID(), UUID.randomUUID(), paid.amount(), "sgd");
+        var deal = new StandardPaidGroupDealCreator().initiate(terms, leader, now.minusSeconds(1));
+        pendingReceipt();
+        when(repository.lockDeal(terms.id())).thenReturn(Optional.of(deal));
+        when(repository.currentTime()).thenReturn(now);
+
+        service.joinConfirmed(terms.id(), paid, leader.userId());
+
+        verify(repository)
+                .insertJoinedMember(eq(deal), any(), eq(paid), eq(leader.userId()), eq(now));
+        verify(events)
+                .publishEvent(
+                        new MemberJoined(
+                                terms.id(),
+                                terms.productId(),
+                                paid.userId(),
+                                paid.paymentId(),
+                                leader.userId(),
+                                now));
+    }
+
+    /** Attribution never fails paid money: a self-referring sharer is dropped, not rejected. */
+    @Test
+    void selfReferringSharerIsDroppedRatherThanFailingTheAdmission() {
+        var leader =
+                new PaidParticipation(UUID.randomUUID(), UUID.randomUUID(), paid.amount(), "sgd");
+        var deal = new StandardPaidGroupDealCreator().initiate(terms, leader, now.minusSeconds(1));
+        pendingReceipt();
+        when(repository.lockDeal(terms.id())).thenReturn(Optional.of(deal));
+        when(repository.currentTime()).thenReturn(now);
+
+        var result = service.joinConfirmed(terms.id(), paid, paid.userId());
+
+        assertThat(result.outcome()).isEqualTo("applied");
+        verify(repository).insertJoinedMember(eq(deal), any(), eq(paid), isNull(), eq(now));
+        var published = ArgumentCaptor.forClass(Object.class);
+        verify(events, times(2)).publishEvent(published.capture());
+        assertThat(published.getAllValues().getFirst())
+                .isInstanceOfSatisfying(
+                        MemberJoined.class, joined -> assertThat(joined.attributed()).isFalse());
     }
 }

@@ -31,7 +31,7 @@ Decide and record the following — every later section references them:
 | `key_name` | omit (SSM-only) unless break-glass SSH is required | if set, the key pair must already exist |
 | TLS / entry layer | CloudFront entry pattern, same as dev — **no ACM certificate, no custom domain** | user-facing TLS is CloudFront's built-in certificate; the ALB is a private origin (section 6.5) |
 | Origin secret | `openssl rand -hex 32` — one new value, becomes `/blocbuy/prod/ORIGIN_SECRET` | shared CloudFront↔ALB; consumed by the listener rule at plan time |
-| `backend-prod` reviewers | at least **two** team members | prod approvals are never single-person |
+| Release control | operator-controlled `ENABLE_EC2_DEPLOY_PROD` switch and `v*`-tag-only environments | native reviewer rules are unavailable on this private repo; no approval pause is claimed |
 
 Secret values to prepare (all become Parameter Store SecureStrings in section 3): one PostgreSQL
 user/password (new — prod database is separate from dev), one Redis password, the Stripe API key
@@ -42,7 +42,7 @@ the ALB listener rule.
 
 ## 1. One-time: Terraform state backend
 
-On the existing account `402178232802`, first perform the read-only state-backend verification in the [production design §5.1](backend-prod-terraform-deployment.md#51-bootstrap-the-terraform-state-backend). On 2026-09-25 the bucket and active `blocbuy-tflock` table with `LockID (S)` were confirmed for the frontend import; versioning, encryption and production access still require verification before a prod apply. The following bootstrap commands are **only for a genuinely new account with no bucket or lock table**; do not run them on the existing state backend.
+On 2026-09-25 the account holder verified bucket versioning, KMS encryption, public-access blocking, active `blocbuy-tflock` (`LockID (S)`) and no backend-stack state object. Recheck with [design §5.1](backend-prod-terraform-deployment.md#51-bootstrap-the-terraform-state-backend) before provisioning; the §4 read-only plan was **not applied**. The bootstrap commands below are **new-account-only**; never replay them against this populated state bucket.
 
 ```bash
 aws s3api create-bucket --bucket blocbuy-tfstate-402178232802 \
@@ -75,21 +75,13 @@ The GitHub OIDC provider already exists from the dev bootstrap — the stack loo
 
 ## 2. One-time: GitHub environments (`backend-prod` and `backend-prod-publish`)
 
-Settings → Environments → New environment → `backend-prod`:
+**2026-09-25 operator decision:** the account holder created `backend-prod` and `backend-prod-publish` explicitly before any release tag. Read-only API verification found exactly one deployment policy per environment: type `tag`, pattern `v*`, with **no branches or reviewer rule**. Native Required reviewers is unavailable in this private personal repository; the account holder chose tag scoping and an operator-controlled deploy switch rather than an unenforceable two-reviewer gate. Once the switch is true, a qualifying tag can deploy automatically—there is no approval pause.
 
-- [ ] **Required reviewers:** at least two team members
-- [ ] **Deployment branches and tags:** selected → **tags matching `v*` only** — this is what
-      makes the prod approval gate unreachable from branch pushes
-- [ ] No environment secrets and no environment variables yet (section 6 fills the variables)
+- [x] `backend-prod`: selected `v*` tags only, no reviewer protection; environment variables await Terraform outputs in §6.
+- [x] `backend-prod-publish`: selected `v*` tags only; its OIDC subject is trusted by the prod ECR push role.
+- [x] `ENABLE_EC2_DEPLOY_PROD` absent on 2026-09-25; keep it unset/false through the closed-switch rehearsal and release-readiness review.
 
-Then create `backend-prod-publish` (the ECR push role trusts this environment's OIDC subject —
-tag refs vary per release and can never be exact-matched):
-
-- [ ] **Required reviewers:** none — publishing to ECR is not a production mutation; the human
-      gate stays on `backend-prod` (the deploy)
-- [ ] **Deployment branches and tags:** selected → **tags matching `v*` only**
-- [ ] No environment secrets and no environment variables (the publish job reads repository
-      variables only)
+The publish job reads repository variables, not environment secrets. Recheck both tag policies before a release: a missing environment can be auto-created by a workflow without protection rules.
 
 ## 3. Seed secrets into SSM Parameter Store
 
@@ -122,6 +114,7 @@ aws ssm put-parameter --name /blocbuy/prod/DB_PASSWORD \
 ```
 
 - [ ] All twelve parameters exist (`aws ssm describe-parameters --parameter-filters ...`)
+- 2026-09-25 metadata check: eleven required SecureStrings existed; the account holder created the missing `/blocbuy/prod/BLOCBUY_SCHEDULING_ENABLED` as SecureString `false` (version 1, Standard tier) after approval and verified its name/type. The other eleven values were not decrypted or validated; this does not make the first production apply or release ready.
 - [ ] No value was echoed to a terminal log, issue, or file inside the repository
 - [ ] `REDIS_HOST`=`127.0.0.1`, `REDIS_PORT`=`6379`, `DB_URL` points at `127.0.0.1:5432/Blocbuy`
       (host-local infra project), schema suffix identical to dev
@@ -130,6 +123,8 @@ aws ssm put-parameter --name /blocbuy/prod/DB_PASSWORD \
 ## 4. Plan, review, apply the stack
 
 From the repository root, keep the saved plan local and access-restricted; it can contain the resolved `/blocbuy/prod/ORIGIN_SECRET` value. Do not attach raw plan/state output to a PR—record a redacted action summary and reviewer decision instead.
+
+**2026-09-25 read-only plan (#48):** CloudShell reused a byte-identical signed AWS 5.100.0 provider after its first install ran out of space. The legacy `aws_prefix_list` lookup failed; local HCL now uses `aws_ec2_managed_prefix_list` for AWS-owned `pl-31a34658`. `fmt`/`validate` and a private plan passed: **21 creates, 0 updates/destroys**, with expected SGs, health path, IMDSv2, encryption and exact OIDC trust. The fix is unmerged, the plan/log were removed, the state key remains absent, and **nothing was applied**. Production deployment variables and credentials remain pending Terraform apply; recheck both `v*` environment policies before release. Release-readiness review and origin TLS remain blockers. Keep `ENABLE_EC2_DEPLOY_PROD` unset/false until the review; share only filtered plan actions.
 
 ```bash
 umask 077
@@ -310,7 +305,7 @@ Ordered; the freeze switch opens only at step 3:
 
 5. - [ ] Gates re-run on the tag; the `publish-ecr-prod` job publishes to `prod/blocbuy`
        **by digest** (check the job summary: image `repository@sha256:...`)
-6. - [ ] The `backend-prod` environment pauses — an assigned reviewer approves
+6. - [ ] The operator has authorized this release tag and enabled the deploy switch; `backend-prod` admits the tag but does **not** pause for reviewer approval
 7. - [ ] Inspect the `deploy-existing-ec2-prod` job: bundle installed, `fetch-env.sh` rendered the
        env file, SSM command `Success`, **local health check passed inside the SSM stdout**
        (deploy.sh auto-rolls-back on failure — a Success status means the app was healthy)
@@ -329,18 +324,18 @@ Ordered; the freeze switch opens only at step 3:
        aws elbv2 describe-target-health --target-group-arn <arn> --region ap-southeast-1
        ```
 
-10. - [ ] Change log entry: first prod deployment, tag, image digest, approver
+10. - [ ] Change log entry: first prod deployment, tag, image digest and operator decision
 
 ## 8. Steady-state operations
 
-**Routine release:** merge to the release branch → cut `vX.Y.Z` tag → approve the
-`backend-prod` environment. Nothing else.
+**Routine release:** verify both `v*` environment policies and prerequisites → deliberately enable the deploy switch → cut `vX.Y.Z` tag → inspect the digest, SSM result and health. No native reviewer pause protects this path.
 
-**Rollback (application image only):** Actions → `rollback-backend` → Run workflow →
-`target=prod`, branch = release branch or `dev` → `target_image` empty (host's recorded previous
-digest) or an explicit `repository@sha256:...` → fill reason → tick the confirmation → a
-`backend-prod` reviewer approves. Database/Flyway state is never reverted — migrations must stay
-backward-compatible.
+**Manual rollback (application image only):** dispatch `rollback-backend` with `target=prod` from an existing **`v*` release tag**, not `dev` or a release branch. Leave `target_image` empty for the host's recorded previous digest or supply `repository@sha256:...`; add a non-empty reason and select `confirm_rollback=true`. `backend-prod` admits tags only, without reviewer approval. Merge the tag-ref guard before the **first** release tag so that tag contains the corrected workflow. Automatic rollback within a failed deploy is unchanged; neither path reverts Flyway migrations.
+
+```bash
+gh workflow run rollback-backend.yml --ref vX.Y.Z --repo PPsyrius/iss-groupbuy-team8 \
+  -f target=prod -f reason='reviewed incident reason' -F confirm_rollback=true
+```
 
 **Freeze:** `gh variable set ENABLE_EC2_DEPLOY_PROD --body false`. CI and scanning keep running
 on tags; nothing publishes or deploys; manual rollback stays available.
@@ -361,7 +356,7 @@ secrets, verify webhook delivery after rotation.
 | ECR push role cannot be assumed on a tag | `backend-prod-publish` environment missing or not restricted to `v*` tags (the role trusts the `environment:backend-prod-publish` subject, not a branch/tag ref); or `ENABLE_EC2_DEPLOY_PROD` still false |
 | Deploy role cannot be assumed | `backend-prod` environment not restricted to `v*` tags, or environment variable typo'd |
 | CloudFront `/api/*` returns 502/503 | Origin secret mismatch: the distribution's `X-Origin-Secret` header ≠ `/blocbuy/prod/ORIGIN_SECRET` (a rotation done on one side only), or the target group has no healthy target |
-| Direct request to the ALB DNS name returns 403 | None — that is the design (default-deny listener); go through CloudFront or send the secret header |
+| Direct request to the ALB DNS name times out/returns 000 or 403 | Expected SG block or default-deny listener; use CloudFront for public health checks |
 | SSM command never leaves Pending | Instance not Online (section 5), region mismatch between `AWS_REGION` and the stack |
 | `fetch-env.sh` fails: parameter missing | Section 3 incomplete — key list must match `backend.env.example` exactly |
 | User-data failed at first boot | Parameters seeded after apply (ordering violation — section 3), or instance-profile propagation; check console output / cloud-init logs |

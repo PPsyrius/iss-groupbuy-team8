@@ -107,14 +107,14 @@ on:
 
 - `needs: [build-quality, contract-check, sonar-backend, docker]` with the same `always() && ...result` gating chain as the dev deploy job;
 - condition: `github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && vars.ENABLE_EC2_DEPLOY_PROD == 'true'`;
-- `environment: backend-prod-publish` (v* tags only, **no** reviewers — publishing to ECR is not a production mutation; the human gate stays on the deploy job). This environment subject is what the ECR push role trusts (design doc §6.1): a tag-name `ref` subject varies per release and can never be exact-matched, so an environment subject is the only exact-match option;
+- `environment: backend-prod-publish` (`v*` tags only, no native reviewers). This exact environment OIDC subject is what the ECR push role trusts (design doc §6.1); production delivery remains disabled until the operator enables `ENABLE_EC2_DEPLOY_PROD`;
 - steps: download the image artifact, `docker load`, then the same four ECR steps as dev (validate / assume / login / publish by digest) against `vars.ECR_REPOSITORY_PROD` and `vars.AWS_ECR_PUSH_ROLE_ARN_PROD`; outputs `image_uri`.
 
 **New `deploy-existing-ec2-prod` job:**
 
 - `needs: [build-quality, contract-check, sonar-backend, docker, publish-ecr-prod]` with the same `always() && ...result` gating chain as the dev job;
 - condition adds `github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && vars.ENABLE_EC2_DEPLOY_PROD == 'true' && needs.publish-ecr-prod.outputs.image_uri != ''`;
-- `environment: backend-prod`, `url: ${{ vars.BACKEND_URL_PROD }}` — this is the approval gate;
+- `environment: backend-prod`, `url: ${{ vars.BACKEND_URL_PROD }}` — `v*`-tag-only OIDC scope, **not** a native approval gate on this private repository (2026-09-25 amendment);
 - `concurrency: deploy-existing-ec2-backend-prod`, `cancel-in-progress: false`;
 - variables: `ECR_REPOSITORY_PROD`, `AWS_DEPLOY_ROLE_ARN_PROD`, `BACKEND_EC2_INSTANCE_ID_PROD` (same validation regexes as the dev job);
 - bundle step: copy of the dev step **plus `bin/fetch-env.sh`** in the allowlist;
@@ -132,7 +132,7 @@ so each prod deploy re-renders the env file from Parameter Store before `deploy.
 ### 3.2 `rollback-backend.yml`
 
 - New input `target` (`dev` | `prod`, default `dev`).
-- New job `rollback-existing-ec2-prod` mirroring the dev job with: prod `_PROD` variables, `environment: backend-prod` (reviewers required), `concurrency: deploy-existing-ec2-backend-prod` (shared with the deploy job so a rollback and a deploy can never interleave), and the branch guard allowing dispatch from the release branch as well as `dev`.
+- New job `rollback-existing-ec2-prod` mirroring the dev job with: prod `_PROD` variables, tag-only `environment: backend-prod`, and `concurrency: deploy-existing-ec2-backend-prod` (shared with deployment). **2026-09-25 correction:** with the actual tag-only environment, dispatch prod rollback from an existing `v*` release tag; reject `dev` and release-branch refs, and merge this guard before the first release tag.
 - The dev job gains `if: inputs.target == 'dev'` so dispatching a prod rollback never touches dev.
 
 ### 3.3 Housekeeping in the same PR
@@ -151,7 +151,7 @@ so each prod deploy re-renders the env file from Parameter Store before `deploy.
 No new code. With the runbook's AWS/GitHub steps complete up to (but not including) the first tag, the team verifies the closed-switch path:
 
 - [ ] `ENABLE_EC2_DEPLOY_PROD=false`, push a `v0.0.0-rc1` tag: gates green, **no** ECR publish to prod, **no** deploy job run
-- [ ] Flip `ENABLE_EC2_DEPLOY_PROD=true`, cut the real first release tag — full drill per the runbook section 7
+- [ ] After operator review of tag-only environments and release prerequisites, flip `ENABLE_EC2_DEPLOY_PROD=true`, cut the real first release tag and verify the full drill per runbook §7; there is no native reviewer approval pause on this private repo
 
 ## 5. Phase 5 — Documentation
 
