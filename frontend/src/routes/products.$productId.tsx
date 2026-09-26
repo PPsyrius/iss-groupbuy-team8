@@ -159,6 +159,10 @@ function ProductDetailPage() {
           void checkout.begin("JOIN", p.deal!.dealId!);
         }
       : undefined);
+  // An invite to this listing's open bloc makes its Join the visit's primary action (Invite
+  // artboard 5b.1: one button, under the lead); "Start a bloc" steps down a rank. A closed or
+  // full invited bloc, or no invite, leaves the listing's own order.
+  const inviteJoin = invitedOpen && !shareable;
   return (
     <main className={shell}>
       <GatedActionSheet
@@ -189,6 +193,14 @@ function ProductDetailPage() {
           open={invitedOpen}
           hasOtherBloc={listingOpen}
           signedIn={buyerId !== undefined}
+          join={{
+            label:
+              groupPrice === undefined
+                ? "Join this bloc"
+                : `Join this bloc · ${formatPrice(groupPrice, currency)}`,
+            onPress: checkout.isPending ? undefined : onJoin,
+            isPending: checkout.isPending,
+          }}
         />
       ) : null}
       {checkout.error ? (
@@ -246,6 +258,7 @@ function ProductDetailPage() {
               onGated={onGated}
               onStart={onStart}
               isPending={checkout.isPending}
+              demoted={inviteJoin}
               className="hidden xl:flex"
             />
           </section>
@@ -292,6 +305,7 @@ function ProductDetailPage() {
         onGated={onGated}
         onStart={onStart}
         isPending={checkout.isPending}
+        demoted={inviteJoin}
         className="bg-surface border-border sticky bottom-0 -mx-4 flex border-t px-4 py-3 xl:hidden"
       />
     </main>
@@ -462,12 +476,15 @@ function TrustTriptych({ payNow, closesMs }: { payNow: string; closesMs: number 
 
 // Both actions are the artboard's, in its order of prominence (Start a bloc outranks Buy alone).
 // Buy alone stays separate and disabled for authenticated buyers until its own flow exists.
+// `demoted` (an invite to the open bloc) drops Start a bloc to the `outline` rank, 44px, so the
+// invite's Join is the only top-rank button on the page.
 function Actions({
   product: p,
   currency,
   onGated,
   onStart,
   isPending,
+  demoted,
   className,
 }: {
   product: ProductDetailResponse;
@@ -475,6 +492,7 @@ function Actions({
   onGated: (() => void) | undefined;
   onStart: (() => void) | undefined;
   isPending: boolean;
+  demoted: boolean;
   className: string;
 }) {
   const groupPrice = p.groupPrice ?? undefined;
@@ -483,9 +501,9 @@ function Actions({
   return (
     <div className={"flex-col gap-2 " + className}>
       <Button
-        variant="secondary"
-        size="lg"
-        className="min-h-12 w-full text-lg"
+        variant={demoted ? "outline" : "secondary"}
+        size={demoted ? "md" : "lg"}
+        className={demoted ? "min-h-11 w-full text-base" : "min-h-12 w-full text-lg"}
         {...(onStart ? { onPress: onStart } : {})}
         isPending={isPending}
         isDisabled={isPending || !onStart}

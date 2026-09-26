@@ -490,7 +490,7 @@ describe("/products/$productId invite link (UC7)", () => {
       ref,
     });
     // Join is gated; the sheet brings the buyer back to the bare listing URL.
-    await userEvent.click(screen.getByRole("button", { name: /^Join/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Join this bloc · S$71.00" }));
     expect(await screen.findByRole("dialog", { name: "Sign in to hold your seat" })).toBeVisible();
     first.unmount();
 
@@ -506,13 +506,65 @@ describe("/products/$productId invite link (UC7)", () => {
       }),
     );
     renderRoute(`/products/${knownId}`);
-    const join = await screen.findByRole("button", { name: /^Join/ });
+    const join = await screen.findByRole("button", { name: "Join this bloc · S$71.00" });
     await waitFor(() => expect(join).toBeEnabled());
-    expect(screen.getByText(/Join it below at the bloc price/)).toBeInTheDocument();
+    expect(screen.getByText(/You’ll pay the bloc price now/)).toBeInTheDocument();
     await userEvent.click(join);
     await waitFor(() =>
       expect(intentBody).toEqual({ operation: "JOIN", businessId: "deal-1", ref }),
     );
+  });
+
+  it("makes the invited bloc's Join the primary action and steps Start a bloc down", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(listing());
+    renderRoute(`/products/${knownId}?deal=deal-1&ref=${ref}`);
+    const invite = await screen.findByRole("region", { name: "Invite" });
+    const join = within(invite).getByRole("button", { name: "Join this bloc · S$71.00" });
+    expect(join).toHaveClass("button--secondary", "button--lg");
+    const starts = screen.getAllByRole("button", { name: /Start a bloc/ });
+    expect(starts.length).toBeGreaterThan(0);
+    for (const start of starts) {
+      expect(start).toHaveClass("button--outline");
+      expect(start).not.toHaveClass("button--secondary");
+    }
+    // The primary Join comes before the page's other actions in reading order.
+    expect(
+      join.compareDocumentPosition(starts[0]!) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("keeps Start a bloc primary without an invite", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(listing());
+    renderRoute(`/products/${knownId}`);
+    const [start] = await screen.findAllByRole("button", { name: /Start a bloc/ });
+    expect(start).toHaveClass("button--secondary");
+    expect(screen.queryByRole("button", { name: /^Join this bloc ·/ })).toBeNull();
+  });
+
+  it("keeps Start a bloc primary when the invited bloc is full", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(
+      listing({
+        deal: {
+          dealId: "deal-1",
+          currentSize: 5,
+          targetSize: 5,
+          expireTime: "2099-01-01T00:00:00Z",
+        },
+      }),
+    );
+    renderRoute(`/products/${knownId}?deal=deal-1&ref=${ref}`);
+    expect(
+      await screen.findByRole("heading", { name: "The bloc you were invited to has closed" }),
+    ).toBeInTheDocument();
+    const [start] = screen.getAllByRole("button", { name: /Start a bloc/ });
+    expect(start).toHaveClass("button--secondary");
+    expect(screen.queryByRole("button", { name: /^Join this bloc ·/ })).toBeNull();
   });
 
   it("drops an invalid ref without parking it", async () => {
@@ -535,6 +587,9 @@ describe("/products/$productId invite link (UC7)", () => {
       await screen.findByRole("heading", { name: "The bloc you were invited to has closed" }),
     ).toBeInTheDocument();
     expect(screen.getByText(/joining the open bloc below/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Join this bloc ·/ })).toBeNull();
+    const [start] = screen.getAllByRole("button", { name: /Start a bloc/ });
+    expect(start).toHaveClass("button--secondary");
   });
 
   it("shows the share block to a buyer in the listing's open bloc", async () => {
