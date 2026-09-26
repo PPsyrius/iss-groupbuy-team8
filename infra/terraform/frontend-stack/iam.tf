@@ -37,7 +37,7 @@ data "aws_iam_policy_document" "github_deploy" {
   statement {
     sid       = "InvalidateIndexHtml"
     actions   = ["cloudfront:CreateInvalidation"]
-    resources = [aws_cloudfront_distribution.dev.arn]
+    resources = [local.distribution_arn]
   }
 }
 

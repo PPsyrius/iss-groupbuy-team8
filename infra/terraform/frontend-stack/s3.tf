@@ -28,7 +28,7 @@ data "aws_iam_policy_document" "frontend_read" {
     condition {
       test     = "StringEquals"
       variable = "AWS:SourceArn"
-      values   = [aws_cloudfront_distribution.dev.arn]
+      values   = [local.distribution_arn]
     }
   }
 }
