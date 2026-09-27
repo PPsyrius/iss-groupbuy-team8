@@ -15,7 +15,8 @@ public class PaymentRepositoryImpl implements PaymentRepository {
 
     @Override
     public Optional<Payment> findById(String id) {
-        // TODO(TEAM8-payment): select via PaymentMapper once the table exists
+        // TODO(TEAM8-payment): implement the legacy ID lookup or retire this compatibility port;
+        // the payment table exists, but this disabled-profile fallback still returns empty.
         return Optional.empty();
     }
 }

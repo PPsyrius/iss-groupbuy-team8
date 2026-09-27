@@ -77,8 +77,8 @@ public class StripePaymentGateway implements PaymentGateway {
         } catch (SignatureVerificationException ex) {
             throw new BizException(PaymentErrorCode.PAYMENT_WEBHOOK_SIGNATURE_INVALID);
         }
-        // TODO(TEAM8-payment): whitelist handled types (payment_intent.succeeded /
-        // payment_intent.payment_failed / charge.refunded); ignore the rest.
+        // TODO(TEAM8-payment): filter legacy PaymentIntent events if this adapter is retained;
+        // the active Checkout gateway already whitelists checkout.session.* events.
         EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
         return deserializer
                 .getObject()
@@ -88,7 +88,8 @@ public class StripePaymentGateway implements PaymentGateway {
     }
 
     private StripeClient stripeClient() {
-        // TODO(TEAM8-payment): hoist to a singleton bean once credentials are provisioned per env
+        // TODO(TEAM8-payment): reuse StripeClientProvider or retire this legacy gateway;
+        // the active Checkout gateway already shares a lazily built client.
         return new StripeClient(properties.apiKey());
     }
 }
