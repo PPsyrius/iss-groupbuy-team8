@@ -44,28 +44,28 @@ export function ErrorCard({
   return (
     <main className="mx-auto flex max-w-[1280px] justify-center p-6 xl:py-16">
       <div className={card + " flex w-full max-w-[560px] flex-col gap-3 p-6 xl:p-10"}>
-        <Chip color={color} variant="soft" size="sm" className="self-start font-mono">
-          {code}
-        </Chip>
-        <h1
-          className="text-2xl font-semibold tracking-tight xl:text-3xl"
-          aria-live={live ? "polite" : undefined}
-        >
-          {title}
-        </h1>
-        <p className="text-base text-[#52525B]" role={alert ? "alert" : undefined}>
-          {body}
-        </p>
-        <hr className="border-separator" />
-        <p className="text-sm">
-          <span className="text-success-soft-foreground font-semibold">{moneyLead}</span>
-          {moneyDetail ? (
-            <>
-              {" "}
-              <span className="text-muted">{moneyDetail}</span>
-            </>
-          ) : null}
-        </p>
+        {/* One live region for everything a poll can change: a refund moving to review keeps the
+            title, so announcing the heading alone would miss it. An error is announced by the
+            body's alert instead, so the status role steps aside rather than wrap it. */}
+        <div className="flex flex-col gap-3" role={live && !alert ? "status" : undefined}>
+          <Chip color={color} variant="soft" size="sm" className="self-start font-mono">
+            {code}
+          </Chip>
+          <h1 className="text-2xl font-semibold tracking-tight xl:text-3xl">{title}</h1>
+          <p className="text-base text-[#52525B]" role={alert ? "alert" : undefined}>
+            {body}
+          </p>
+          <hr className="border-separator" />
+          <p className="text-sm">
+            <span className="text-success-soft-foreground font-semibold">{moneyLead}</span>
+            {moneyDetail ? (
+              <>
+                {" "}
+                <span className="text-muted">{moneyDetail}</span>
+              </>
+            ) : null}
+          </p>
+        </div>
         {references && references.length > 0 ? (
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
             {references.map(({ label, value }) => (

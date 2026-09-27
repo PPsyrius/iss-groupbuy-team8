@@ -429,6 +429,11 @@ describe("backend-confirmed payment result", () => {
       "not confirmation that the refund has been sent",
     );
     expect(screen.getByText("Refund pending")).toBeInTheDocument();
+    // A poll can change the chip, body and money line without the title, so all sit in one region.
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("Refund pending");
+    expect(status).toHaveTextContent("A refund is pending");
+    expect(status).toHaveTextContent("to be refunded.");
     expect(screen.getByRole("button", { name: "Refresh status" })).toBeInTheDocument();
   });
 
@@ -459,6 +464,8 @@ describe("backend-confirmed payment result", () => {
     renderRoute(`/payments/${paymentId}`);
     await screen.findByRole("heading", { name: "Unable to check payment" });
     expect(screen.queryByText("Payment received")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("We could not read your payment");
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
   it("restores the same-tab reference on return", async () => {
