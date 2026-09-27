@@ -1,8 +1,8 @@
 package com.blocbuy.payment.service;
 
 /**
- * Webhook entry port retained for the original controller. Under {@code stripe-sprint2},
- * {@link StripePaymentAppService} delegates to the transactional {@link StripeCheckoutService} for
+ * Webhook entry port retained for the original controller. Under {@code stripe-sprint2}, {@link
+ * StripePaymentAppService} delegates to the transactional {@link StripeCheckoutService} for
  * signature verification, event deduplication and settlement. Checkout commands have their own
  * application service; this interface does not need one method per payment use case.
  */
