@@ -4,6 +4,7 @@ import { setupWorker } from "msw/browser";
 import { OK_CODE } from "@/api/envelope";
 import { createMswHandlers } from "@/api/generated/msw.gen";
 import type {
+  MyTeamResponse,
   OrderSummaryResponse,
   ProductDetailResponse,
   ProductSummaryResponse,
@@ -223,6 +224,45 @@ const orders: OrderSummaryResponse[] = orderSeeds.map(({ n, quantity, status, da
   };
 });
 
+// The sample buyer's blocs for the §4.4 My blocs chips (`?msw=1&me=1`), after the artboard's
+// rows: three active (one closing soon, one the buyer started), one filled, two closed unfilled.
+const teamSeeds: {
+  n: number;
+  status: string;
+  joined: number;
+  target: number;
+  endsIn: number;
+  leader?: boolean;
+  paidDaysAgo: number;
+}[] = [
+  { n: 1, status: "open", joined: 4, target: 5, endsIn: 52 * 60 + 9, paidDaysAgo: 1 },
+  { n: 5, status: "open", joined: 5, target: 8, endsIn: 28 * 3600, leader: true, paidDaysAgo: 2 },
+  { n: 8, status: "open", joined: 6, target: 10, endsIn: 57 * 3600, paidDaysAgo: 3 },
+  { n: 9, status: "succeeded", joined: 8, target: 8, endsIn: -86_400, paidDaysAgo: 4 },
+  { n: 7, status: "expired", joined: 3, target: 5, endsIn: -2 * 86_400, paidDaysAgo: 5 },
+  { n: 2, status: "expired", joined: 2, target: 5, endsIn: -5 * 86_400, paidDaysAgo: 7 },
+];
+
+const teams: MyTeamResponse[] = teamSeeds.map((t) => {
+  const s = seeds.find((x) => x.n === t.n);
+  return {
+    dealId: `deal-${t.n}`,
+    productId: id(t.n),
+    productTitle: s?.title ?? null,
+    productImage: null,
+    dealPrice: (s?.groupPrice ?? s?.individualPrice ?? 0).toFixed(2),
+    currency: "sgd",
+    targetSize: t.target,
+    currentSize: t.joined,
+    status: t.status,
+    expireTime: inSeconds(t.endsIn),
+    successTime: t.status === "succeeded" ? inSeconds(t.endsIn - 3_600) : null,
+    role: t.leader ? "leader" : "member",
+    joinTime: inSeconds(-t.paidDaysAgo * 86_400 - 3_600),
+    orderId: null,
+  };
+});
+
 // One receipt per §4.6 state: paid (the confirmed order), waiting (no order yet), refund pending
 // and refunded (the cancelled order). The last digits name the state for `?msw=1&me=1`.
 const receiptId = (n: number) => `0192f0a0-0000-7000-9000-${String(n).padStart(12, "0")}`;
@@ -334,6 +374,12 @@ export async function startBrowserMsw() {
             },
           });
         },
+        myTeams: () =>
+          HttpResponse.json({
+            code: OK_CODE,
+            message: "ok",
+            data: { items: teams, total: teams.length, page: 1, size: 100 },
+          }),
         // Payments are on for the sample buyer so Start a bloc opens the quote sheet; a START
         // intent is not mocked, so Continue ends on the page's "could not open Checkout" alert.
         // A JOIN always loses the last-seat race (GROUPBUY_409_004) and fills the bloc, so the
