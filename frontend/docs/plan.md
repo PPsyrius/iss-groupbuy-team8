@@ -1276,7 +1276,7 @@ export const Route = createFileRoute('/auth/callback')({
 - [x] Step 0 (moved from T3-04): the receipt links back to its listing. `Receipt` carries only `dealId`/`orderId`, so "See the listing" reads `productId` from the buyer's own order (`GET /api/v1/orders/{orderId}`, `myOrder`); no order yet, or an unreadable one, shows no link and "Back to listings" stays. No restyle; the card shape waits for Step 1.
 - [x] Step 1: design owner answers design-screens §4.6 Q23–Q25 (which artboard, waiting-state copy, "My orders" vs "My blocs"). Answered A to Q23–Q26 on 2026-09-24 (Q26: the return fallback's `Payment` chip).
 - [x] Step 2: rebuild `payments.$paymentId.tsx` on the §4.5 card shape with the §4.4 refund-statement fields; `payments.return.tsx` fallback uses `ErrorCard`. `ErrorCard` is exported with a chip colour, reference rows and a live heading; the state copy lives in `features/payment/receipt-view.ts`; the paid time comes from the order's `paidTime`.
-- [x] Step 3: tests for CREATED (polling), SUCCEEDED, FAILED, refund pending, refund sent; screenshots on the PR (`receipt-view.test.ts`, `payment.test.tsx`; 226 tests).
+- [x] Step 3: tests for CREATED (polling), SUCCEEDED, FAILED, refund pending, refund sent; screenshots on the PR (`receipt-view.test.ts`, `payment.test.tsx`; 232 tests).
 
 ## 5. The `pnpm check` chain and every script it relies on
 
