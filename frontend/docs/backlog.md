@@ -30,6 +30,7 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 | FB-16 | P3 | Catalog cards at 1280 | Cards have an empty gap because the summary has no bloc size fields. | `FE/src/features/catalog/ProductCard.tsx` | screenshot at 1280 px | backend ask CR-11 |
 | FB-17 | P3 | Tooling hygiene | `routeFileIgnorePattern` for `*.test.tsx` (the dev server warns 5 times); clear the 4 knip config hints. | `FE/vite.config.ts`, `FE/knip.json` | `cd frontend && pnpm dev` (no route warnings) and `cd frontend && pnpm knip` (no hints) | — |
 | FB-18 | P3 | Docs | Mark design-screens §7 Q1–Q22 as answered with cross-links to plan §12 notes; add a LICENSE decision note (the repository has no LICENSE). | `FE/docs/design-screens.md` | `grep -c 'Answered' frontend/docs/design-screens.md` | — |
+| FB-19 | P2 | Sharer nickname on the invite banner | Once backend #201 resolves an invite ref to the sharer's nickname, the invite banner leads with the Invite artboard's "{sharerNickname} started this bloc" (5b.1–5b.3, design-screens §4.2) instead of the generic "You’ve been invited to join this bloc". | `FE/src/features/share/InviteBanner.tsx`, `FE/src/routes/products.$productId.tsx`, `FE/src/test/browser-msw.ts`, `FE/src/routes/products.$productId.test.tsx` | `cd frontend && pnpm vitest run src/routes/products.\$productId.test.tsx` | backend #201 |
 
 ## 2. Steps
 
@@ -65,7 +66,12 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 
 - [ ] One step each: the task row is the whole task; tick it with the date and PR when it merges.
 
+### FB-19: Sharer nickname on the invite banner
+
+- [ ] Step 1: after #201 merges, regenerate the API client and read the sharer's nickname for the parked ref; the mock (`?msw=1`) returns one.
+- [ ] Step 2: the banner leads with "{sharerNickname} started this bloc" and keeps the generic lead when the ref has no nickname or the call fails; tests cover both.
+
 ## 3. Blocked / external
 
-- T3-05 (share attribution) stays in `plan.md` and is no longer blocked: #198 (merged 2026-09-26) added `POST /api/v1/group-deals/{dealId}/invites` and attribution at purchase, and T3-05 is built on `feature/frontend-share-attribution` (its PR closes #30). Only the sharer's nickname on the invite banner still waits on the backend: no endpoint resolves a ref to it yet (backend #201, open).
+- T3-05 (share attribution) stays in `plan.md` and is no longer blocked: #198 (merged 2026-09-26) added `POST /api/v1/group-deals/{dealId}/invites` and attribution at purchase, and T3-05 is built on `feature/frontend-share-attribution` (its PR closes #30). Only the sharer's nickname on the invite banner still waits on the backend: no endpoint resolves a ref to it yet (backend #201, open); it is FB-19.
 - The admin console: see [`admin-plan.md`](admin-plan.md); its Q1 was answered on 2026-09-26 (#202): only A0-00 is in Sprint 3, and every A1 and A2 row is deferred.
