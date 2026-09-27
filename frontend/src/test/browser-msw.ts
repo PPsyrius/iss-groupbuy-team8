@@ -303,8 +303,25 @@ export async function startBrowserMsw() {
             },
           });
         },
-        // Payments are on for the sample buyer so Start a bloc opens the quote sheet; the intent
-        // itself is not mocked, so Continue ends on the page's "could not open Checkout" alert.
+        // Payments are on for the sample buyer so Start a bloc opens the quote sheet; a START
+        // intent is not mocked, so Continue ends on the page's "could not open Checkout" alert.
+        // A JOIN always loses the last-seat race (GROUPBUY_409_004) and fills the bloc, so the
+        // refetched row shows the "This bloc is full" state (T3-04).
+        createPaymentIntent: async ({ request }) => {
+          const body = (await request.json()) as { operation?: string; businessId?: string };
+          const deal = details.find((p) => p.deal?.dealId === body.businessId)?.deal;
+          if (body.operation !== "JOIN" || !deal) {
+            return HttpResponse.json(
+              { code: "PAYMENT_503_001", message: "Checkout is not mocked" },
+              { status: 503 },
+            );
+          }
+          deal.currentSize = deal.targetSize ?? 0;
+          return HttpResponse.json(
+            { code: "GROUPBUY_409_004", message: "Group deal is full" },
+            { status: 409 },
+          );
+        },
         getPaymentCapabilities: () =>
           HttpResponse.json({ code: OK_CODE, message: "ok", data: { enabled: signedIn } }),
         issue: async ({ request }) => {
