@@ -1,5 +1,5 @@
 import { Alert, Button, buttonVariants, Skeleton } from "@heroui/react";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -79,6 +79,10 @@ function ProductDetailPage() {
   // Same clock and rule as the DealProgress row's "Ended" chip, so the header never calls an
   // expired bloc "filling" (CodeRabbit r4042898931).
   const ended = hasEnded(p.deal?.expireTime, now);
+  // Same rule as the row's "Full" chip, so a JOIN that lost the last seat does not leave the
+  // header saying "filling" over a disabled Join (CodeRabbit, PR #200).
+  const full =
+    p.deal !== undefined && (p.deal.currentSize ?? 0) >= Math.max(1, p.deal.targetSize ?? 1);
   const closesMs = parseDeadline(p.deal?.expireTime);
   const currency = p.currency ?? "sgd";
   const groupPrice = p.groupPrice ?? undefined;
@@ -89,7 +93,11 @@ function ProductDetailPage() {
   const [gateOpen, setGateOpen] = useState(false);
   const onGated = session.status === "authenticated" ? undefined : () => setGateOpen(true);
   const buyerId = session.status === "authenticated" ? session.userId : undefined;
-  const checkout = useCheckout(buyerId);
+  // A refused JOIN (full, closed or gone) refetches the listing so the bloc row shows why.
+  const queryClient = useQueryClient();
+  const checkout = useCheckout(buyerId, () => {
+    void queryClient.invalidateQueries({ queryKey: detailOptions(productId).queryKey });
+  });
   // START goes through the quote sheet first (T3-01); JOIN has no quote and pays directly.
   // The sheet belongs to the buyer and listing it was opened for: this component stays mounted
   // across `$productId` changes, so a new listing starts with the sheet closed (CodeRabbit
@@ -207,6 +215,8 @@ function ProductDetailPage() {
                 <span className="text-muted text-sm">
                   {ended ? (
                     "This bloc has ended"
+                  ) : full ? (
+                    "This bloc has filled up"
                   ) : (
                     <>
                       <span className="xl:hidden">Join one, or start your own</span>

@@ -94,4 +94,41 @@ describe("DealProgress", () => {
     expect(screen.getByText("Be the first to start a bloc")).toBeInTheDocument();
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
+
+  it("keeps Join disabled on a full bloc and says why, even with a handler", () => {
+    render(
+      <DealProgress
+        deal={{ dealId: "d4", currentSize: 5, targetSize: 5, expireTime: "2026-09-17T05:14:00Z" }}
+        onJoin={() => {}}
+      />,
+    );
+    const join = screen.getByRole("button", { name: /join/i });
+    expect(join).toBeDisabled();
+    expect(join).toHaveAccessibleDescription("This bloc is full");
+    expect(screen.getByText("This bloc is full")).toBeVisible();
+    expect(screen.getByText("Full")).toBeInTheDocument();
+    expect(screen.queryByText("Filling")).not.toBeInTheDocument();
+  });
+
+  it("keeps Join disabled on an ended bloc and says why", () => {
+    render(
+      <DealProgress
+        deal={{ dealId: "d5", currentSize: 2, targetSize: 5, expireTime: "2026-09-17T02:00:00Z" }}
+        onJoin={() => {}}
+      />,
+    );
+    const join = screen.getByRole("button", { name: /join/i });
+    expect(join).toBeDisabled();
+    expect(join).toHaveAccessibleDescription("No longer taking members");
+  });
+
+  it("gives no reason while the bloc can still be joined", () => {
+    render(
+      <DealProgress
+        deal={{ dealId: "d1", currentSize: 3, targetSize: 5, expireTime: "2026-09-17T05:14:00Z" }}
+        onJoin={() => {}}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /join/i })).not.toHaveAccessibleDescription();
+  });
 });
