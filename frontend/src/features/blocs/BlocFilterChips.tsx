@@ -15,10 +15,10 @@ const chipOn =
 export function BlocFilterChips({
   selected,
   counts,
-}: {
+}: Readonly<{
   selected: BlocFilter;
   counts: Record<BlocFilter, number>;
-}) {
+}>) {
   return (
     <fieldset className="flex flex-wrap gap-2">
       <legend className="sr-only">Show blocs</legend>

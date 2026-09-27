@@ -2,11 +2,16 @@ import { Chip, ProgressBar } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 
 import type { MyTeamResponse } from "@/api/generated/types.gen";
-import { formatDay, formatDayTime, parseDeadline } from "@/features/catalog/deal-time";
+import {
+  formatDay,
+  formatDayTime,
+  parseDeadline,
+  type Countdown,
+} from "@/features/catalog/deal-time";
 import { useNow } from "@/features/catalog/DealProgress";
 import { formatPrice } from "@/features/catalog/Price";
 
-import { blocChip, blocCountdown, blocFilter } from "./bloc-status";
+import { blocChip, blocCountdown, blocFilter, type BlocChip } from "./bloc-status";
 
 // One §4.4 My blocs row (docs/design-screens.md, `BlocBuy Buyer My Blocs.dc.html`): card padding
 // 14, gap 12; 56px thumb, title 14/600, the inverse "You started this" pill for the starter,
@@ -15,63 +20,71 @@ import { blocChip, blocCountdown, blocFilter } from "./bloc-status";
 // not drawn. A closed bloc swaps to the Refunded-filter variant: closing date, "… when it closed",
 // a grey bar and the amount as refund due; the endpoint has no refund state, so it never claims
 // "Refunded" (plan §12 note 50).
-export function BlocRow({ team }: { team: MyTeamResponse }) {
+export function BlocRow({ team }: Readonly<{ team: MyTeamResponse }>) {
   const now = useNow();
-  const filter = blocFilter(team.status);
-  const currency = team.currency ?? "sgd";
   const price = Number(team.dealPrice);
-  const priceText = Number.isFinite(price) ? formatPrice(price, currency) : null;
   const target = Math.max(1, team.targetSize ?? 1);
-  const joined = Math.min(target, Math.max(0, team.currentSize ?? 0));
-  const paidMs = parseDeadline(team.joinTime);
-  const chip = blocChip(team, now);
-  const statusChip = (
-    <Chip color={chip.color} variant="soft" size="sm" className="shrink-0">
-      {chip.label}
-    </Chip>
+  const facts: RowFacts = {
+    team,
+    now,
+    priceText: Number.isFinite(price) ? formatPrice(price, team.currency ?? "sgd") : null,
+    target,
+    joined: Math.min(target, Math.max(0, team.currentSize ?? 0)),
+    chip: blocChip(team, now),
+  };
+  return blocFilter(team.status) === "refunded" ? (
+    <ClosedBlocRow {...facts} />
+  ) : (
+    <OpenBlocRow {...facts} />
   );
-  const paidLine =
-    paidMs === null ? null : (
-      <span className="text-xs text-zinc-600">Paid · {formatDayTime(paidMs)}</span>
-    );
+}
 
-  if (filter === "refunded") {
-    const closedMs = parseDeadline(team.expireTime);
-    return (
-      <article className="border-border bg-surface flex flex-col gap-3 rounded-lg border p-3.5">
-        <div className="flex items-start gap-3">
-          <Thumb image={team.productImage} />
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <Title team={team} />
-            <span className="text-xs text-zinc-600 tabular-nums">
-              {closedMs === null || closedMs > now ? "Closed" : `Closed ${formatDay(closedMs)}`}
-            </span>
-            <span className="text-xs tabular-nums">
-              {joined} of {target} joined when it closed
-            </span>
-          </div>
-        </div>
-        <Progress joined={joined} target={target} tone="closed" />
-        <div className="border-separator flex items-center justify-between gap-3 border-t pt-3">
-          <div className="flex flex-col">
-            {priceText ? (
-              <span className="text-sm font-semibold tabular-nums">{priceText} · refund due</span>
-            ) : null}
-            {paidLine}
-          </div>
-          {statusChip}
-        </div>
-      </article>
-    );
-  }
+type RowFacts = Readonly<{
+  team: MyTeamResponse;
+  now: number;
+  priceText: string | null;
+  target: number;
+  joined: number;
+  chip: BlocChip;
+}>;
 
-  const completed = filter === "completed";
-  const left = target - joined;
+function ClosedBlocRow({ team, now, priceText, target, joined, chip }: RowFacts) {
+  const closedMs = parseDeadline(team.expireTime);
+  return (
+    <article className="border-border bg-surface flex flex-col gap-3 rounded-lg border p-3.5">
+      <div className="flex items-start gap-3">
+        <Thumb image={team.productImage} />
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <Title team={team} />
+          <span className="text-xs text-zinc-600 tabular-nums">
+            {closedMs === null || closedMs > now ? "Closed" : `Closed ${formatDay(closedMs)}`}
+          </span>
+          <span className="text-xs tabular-nums">
+            {joined} of {target} joined when it closed
+          </span>
+        </div>
+      </div>
+      <Progress joined={joined} target={target} tone="closed" />
+      <div className="border-separator flex items-center justify-between gap-3 border-t pt-3">
+        <div className="flex flex-col">
+          {priceText ? (
+            <span className="text-sm font-semibold tabular-nums">{priceText} · refund due</span>
+          ) : null}
+          <PaidLine joinTime={team.joinTime} />
+        </div>
+        <StatusChip chip={chip} />
+      </div>
+    </article>
+  );
+}
+
+function OpenBlocRow({ team, now, priceText, target, joined, chip }: RowFacts) {
+  const completed = blocFilter(team.status) === "completed";
   const successMs = parseDeadline(team.successTime ?? undefined);
   // An open bloc past its deadline is "Ended" while it waits for the sweeper: no countdown and
   // no seats to fill.
-  const ended = !completed && chip.label === "Ended";
-  const countdown = completed || ended ? null : blocCountdown(team, now);
+  const settled = completed || chip.label === "Ended";
+  const countdown = settled ? null : blocCountdown(team, now);
   return (
     <article className="border-border bg-surface flex flex-col gap-3 rounded-lg border p-3.5">
       <div className="flex items-start gap-3">
@@ -97,47 +110,64 @@ export function BlocRow({ team }: { team: MyTeamResponse }) {
           <span className="text-sm tabular-nums">
             {joined} of {target} joined
           </span>
-          {completed || ended ? null : (
-            <span
-              className={
-                left === 1
-                  ? "text-sm font-semibold tabular-nums"
-                  : "text-sm text-zinc-600 tabular-nums"
-              }
-            >
-              {left === 1 ? "1 seat left" : `${left} seats left`}
-            </span>
-          )}
+          {settled ? null : <SeatsLeft left={target - joined} />}
         </div>
         <Progress joined={completed ? target : joined} target={target} tone="accent" />
       </div>
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-col">
-          {countdown ? (
-            <span
-              className={
-                "text-xs font-semibold tabular-nums" +
-                (countdown.urgent ? " text-warning-soft-foreground" : "")
-              }
-            >
-              {countdown.text}
-            </span>
-          ) : null}
+          {countdown ? <CountdownLine countdown={countdown} /> : null}
           {completed && successMs !== null ? (
             <span className="text-xs font-semibold tabular-nums">
               Filled {formatDayTime(successMs)}
             </span>
           ) : null}
-          {paidLine}
+          <PaidLine joinTime={team.joinTime} />
         </div>
-        {statusChip}
+        <StatusChip chip={chip} />
       </div>
     </article>
   );
 }
 
+function SeatsLeft({ left }: Readonly<{ left: number }>) {
+  return left === 1 ? (
+    <span className="text-sm font-semibold tabular-nums">1 seat left</span>
+  ) : (
+    <span className="text-sm text-zinc-600 tabular-nums">{`${left} seats left`}</span>
+  );
+}
+
+function CountdownLine({ countdown }: Readonly<{ countdown: Countdown }>) {
+  return (
+    <span
+      className={
+        "text-xs font-semibold tabular-nums" +
+        (countdown.urgent ? " text-warning-soft-foreground" : "")
+      }
+    >
+      {countdown.text}
+    </span>
+  );
+}
+
+function PaidLine({ joinTime }: Readonly<{ joinTime: string | undefined }>) {
+  const paidMs = parseDeadline(joinTime);
+  return paidMs === null ? null : (
+    <span className="text-xs text-zinc-600">Paid · {formatDayTime(paidMs)}</span>
+  );
+}
+
+function StatusChip({ chip }: Readonly<{ chip: BlocChip }>) {
+  return (
+    <Chip color={chip.color} variant="soft" size="sm" className="shrink-0">
+      {chip.label}
+    </Chip>
+  );
+}
+
 // The deleted-listing case: the title is null and the listing page would 404, so no link.
-function Title({ team }: { team: MyTeamResponse }) {
+function Title({ team }: Readonly<{ team: MyTeamResponse }>) {
   const { productId, productTitle } = team;
   return (
     <h3 className="line-clamp-2 min-w-0 text-sm font-semibold">
@@ -152,7 +182,7 @@ function Title({ team }: { team: MyTeamResponse }) {
   );
 }
 
-function Thumb({ image }: { image: string | null | undefined }) {
+function Thumb({ image }: Readonly<{ image: string | null | undefined }>) {
   return (
     <div
       aria-hidden="true"
@@ -169,11 +199,11 @@ function Progress({
   joined,
   target,
   tone,
-}: {
+}: Readonly<{
   joined: number;
   target: number;
   tone: "accent" | "closed";
-}) {
+}>) {
   return (
     <ProgressBar
       aria-label={`${joined} of ${target} joined`}
