@@ -36,8 +36,8 @@ export type ProductsSearch = v.InferOutput<typeof productsSearchSchema>;
 // endpoint, D5). `ref` follows `IntentRequest.ref`'s contract pattern; `deal` names the bloc the
 // invite is for, since a listing can show a newer bloc by the time the link is opened. A value
 // that fails its pattern is dropped, never parked, so an invalid ref can never reach the intent.
-export const INVITE_REF_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
-export const INVITE_DEAL_PATTERN = /^[A-Za-z0-9-]{1,64}$/;
+export const SHARE_REF_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
+export const SHARE_DEAL_PATTERN = /^[A-Za-z0-9-]{1,64}$/;
 
 // Anything else (a number the router parsed, a cut-off or padded value) becomes "absent".
 const optionalMatching = (pattern: RegExp) =>
@@ -52,6 +52,6 @@ const optionalMatching = (pattern: RegExp) =>
   );
 
 export const listingSearchSchema = v.object({
-  deal: optionalMatching(INVITE_DEAL_PATTERN),
-  ref: optionalMatching(INVITE_REF_PATTERN),
+  deal: optionalMatching(SHARE_DEAL_PATTERN),
+  ref: optionalMatching(SHARE_REF_PATTERN),
 });

@@ -1,4 +1,4 @@
-import { INVITE_DEAL_PATTERN, INVITE_REF_PATTERN } from "@/features/catalog/products-search";
+import { SHARE_DEAL_PATTERN, SHARE_REF_PATTERN } from "@/features/catalog/products-search";
 
 // The invite a buyer arrived with (UC7, #30). The listing route parks it here and drops it from
 // the URL, so it survives the Google sign-in hop (sessionStorage is per tab and outlives the two
@@ -37,8 +37,8 @@ export function readParkedInvite(): ParkedInvite | null {
       typeof value.productId === "string" &&
       typeof value.dealId === "string" &&
       typeof value.ref === "string" &&
-      INVITE_DEAL_PATTERN.test(value.dealId) &&
-      INVITE_REF_PATTERN.test(value.ref)
+      SHARE_DEAL_PATTERN.test(value.dealId) &&
+      SHARE_REF_PATTERN.test(value.ref)
     ) {
       return { productId: value.productId, dealId: value.dealId, ref: value.ref };
     }
