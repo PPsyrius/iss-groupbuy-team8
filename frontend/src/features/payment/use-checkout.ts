@@ -41,6 +41,21 @@ function isStaleIntent(error: unknown): boolean {
   return error instanceof ApiError && (error.status === 409 || error.code === staleIntentCode);
 }
 
+// UC7 (#30): a JOIN of the bloc the buyer was invited to carries the parked invite ref; the server
+// freezes the sharer on the intent. START never sends one (the server would ignore it).
+function intentRequest(operation: IntentRequest["operation"], businessId: string): IntentRequest {
+  const ref = operation === "JOIN" ? parkedRefFor(businessId) : undefined;
+  return ref ? { operation, businessId, ref } : { operation, businessId };
+}
+
+function stripeCheckoutDestination(checkoutUrl: string): URL {
+  const destination = new URL(checkoutUrl);
+  if (destination.protocol !== "https:" || destination.hostname !== "checkout.stripe.com") {
+    throw new Error("Invalid payment destination");
+  }
+  return destination;
+}
+
 // Only non-secret references are stored. Ownership and all amounts are checked by the server.
 // Keeping the same intent + key after a timeout prevents a retry creating another charge.
 export function clearCompletedAttempt(paymentId: string) {
@@ -73,13 +88,10 @@ export function useCheckout(userId: string | undefined, onRejected?: () => void)
     try {
       let intentId = sessionStorage.getItem(key);
       if (!intentId) {
-        // UC7 (#30): a JOIN of the bloc the buyer was invited to carries the parked invite ref;
-        // the server freezes the sharer on the intent, so the ref is forgotten once it exists.
-        // START never sends one (the server would ignore it).
-        const ref = operation === "JOIN" ? parkedRefFor(businessId) : undefined;
+        const body = intentRequest(operation, businessId);
         const created = unwrapResult(
           await intent.mutateAsync({
-            body: { operation, businessId, ...(ref ? { ref } : {}) },
+            body,
             headers: { "X-BlocBuy-Request": "checkout" },
           }),
           { allowVoid: false },
@@ -87,7 +99,8 @@ export function useCheckout(userId: string | undefined, onRejected?: () => void)
         if (!created.intentId) throw new Error("Missing purchase reference");
         intentId = created.intentId;
         sessionStorage.setItem(key, intentId);
-        if (ref) forgetInvite(businessId);
+        // The sharer is frozen on the intent now, so the parked ref is no longer needed.
+        if (body.ref) forgetInvite(businessId);
       }
       const requestKey = sessionStorage.getItem(`${key}.request`) ?? crypto.randomUUID();
       sessionStorage.setItem(`${key}.request`, requestKey);
@@ -105,11 +118,7 @@ export function useCheckout(userId: string | undefined, onRejected?: () => void)
         await navigate({ to: "/payments/$paymentId", params: { paymentId: result.paymentId } });
         return;
       }
-      const destination = new URL(result.checkoutUrl);
-      if (destination.protocol !== "https:" || destination.hostname !== "checkout.stripe.com") {
-        throw new Error("Invalid payment destination");
-      }
-      window.location.assign(destination.href);
+      window.location.assign(stripeCheckoutDestination(result.checkoutUrl).href);
     } catch (checkoutError) {
       const knownPayment = sessionStorage.getItem(`${key}.payment`);
       if (knownPayment) {
