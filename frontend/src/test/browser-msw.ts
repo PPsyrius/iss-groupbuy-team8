@@ -8,6 +8,7 @@ import type {
   ProductDetailResponse,
   ProductSummaryResponse,
   QuoteResponse,
+  Receipt,
 } from "@/api/generated/types.gen";
 import { keywordTerms, matchesKeyword } from "@/test/keyword-match";
 
@@ -222,6 +223,36 @@ const orders: OrderSummaryResponse[] = orderSeeds.map(({ n, quantity, status, da
   };
 });
 
+// One receipt per §4.6 state: paid (the confirmed order), waiting (no order yet), refund pending
+// and refunded (the cancelled order). The last digits name the state for `?msw=1&me=1`.
+const receiptId = (n: number) => `0192f0a0-0000-7000-9000-${String(n).padStart(12, "0")}`;
+const receiptFor = (order: OrderSummaryResponse | undefined) => ({
+  amount: order?.totalAmount ?? "0.00",
+  currency: order?.currency ?? "sgd",
+  dealId: order?.dealId ?? "",
+  orderId: order?.orderId ?? "",
+});
+
+function sampleReceipts(): Receipt[] {
+  const { amount, currency } = receiptFor(orders[0]);
+  return [
+    {
+      paymentId: receiptId(5),
+      status: "SUCCEEDED",
+      ...receiptFor(orders[1]),
+      refundStatus: "NONE",
+    },
+    { paymentId: receiptId(1), status: "CREATED", amount, currency },
+    { paymentId: receiptId(9), status: "SUCCEEDED", ...receiptFor(orders[2]), refundPending: true },
+    {
+      paymentId: receiptId(8),
+      status: "SUCCEEDED",
+      ...receiptFor(orders[2]),
+      refundStatus: "SUCCEEDED",
+    },
+  ];
+}
+
 // First-team quotes (T3-01): the seed's bloc price, valid for 15 minutes; a listing without one
 // answers the backend's "team price unavailable" 409. Issued quotes are kept for `getQuote`.
 const quotes = new Map<string, QuoteResponse>();
@@ -340,6 +371,26 @@ export async function startBrowserMsw() {
             ? HttpResponse.json({ code: OK_CODE, message: "ok", data: quote })
             : HttpResponse.json(
                 { code: "CATALOG_404_002", message: "Team price quote not found" },
+                { status: 404 },
+              );
+        },
+        myOrder: ({ params }) => {
+          const found = orders.find((o) => o.orderId === params.orderId);
+          return found
+            ? HttpResponse.json({ code: OK_CODE, message: "ok", data: found })
+            : HttpResponse.json(
+                { code: "ORDER_404_001", message: "Order not found" },
+                { status: 404 },
+              );
+        },
+        // Sample receipts for the §4.6 card states (T3-06): `/payments/<id>` with the ids in
+        // `sampleReceipts`; any other id is not the buyer's.
+        getPaymentReceipt: ({ params }) => {
+          const receipt = sampleReceipts().find((r) => r.paymentId === params.id);
+          return receipt
+            ? HttpResponse.json({ code: OK_CODE, message: "ok", data: receipt })
+            : HttpResponse.json(
+                { code: "PAYMENT_404_001", message: "Payment not found" },
                 { status: 404 },
               );
         },
