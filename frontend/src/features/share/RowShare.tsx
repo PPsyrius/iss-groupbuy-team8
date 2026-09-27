@@ -1,7 +1,8 @@
 import { Button } from "@heroui/react";
 import { useId, useState } from "react";
 
-import { ShareIcon, ShareInvitePanel, type ShareMessageFacts } from "./ShareBlock";
+import type { ShareFacts } from "./share-link";
+import { ShareIcon, ShareInvitePanel } from "./ShareBlock";
 
 // Sharing from a My blocs row (UC7, #30; design-screens §4.4). The artboard puts the share block
 // on the bloc-detail screen, which does not exist yet, so an open row carries a compact version:
@@ -19,7 +20,7 @@ export function RowShare({
   userId: string;
   dealId: string;
   productId: string;
-  message: ShareMessageFacts;
+  message: ShareFacts;
 }>) {
   const [open, setOpen] = useState(false);
   const panelId = useId();

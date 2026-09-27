@@ -135,7 +135,10 @@ describe("ShareBlock", () => {
     await userEvent.click(screen.getByRole("button", { name: "Share" }));
     expect(share).toHaveBeenCalledOnce();
     expect(share.mock.calls[0]?.[0].title).toBe("Kopi powder 500 g");
-    expect(share.mock.calls[0]?.[0].text).toContain(link);
+    // The link rides in `url`, which some targets read instead of the text; not in both.
+    expect(share.mock.calls[0]?.[0].url).toBe(link);
+    expect(share.mock.calls[0]?.[0].text).toMatch(/^Getting Kopi powder 500 g/);
+    expect(share.mock.calls[0]?.[0].text).not.toContain(link);
     expect(writeText).not.toHaveBeenCalled();
   });
 

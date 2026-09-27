@@ -1,7 +1,15 @@
 import { Button, Input, Skeleton } from "@heroui/react";
 import { useRef } from "react";
 
-import { displayLink, inviteUrl, seatsToGo, shareFailure, shareMessage } from "./share-link";
+import {
+  displayLink,
+  inviteUrl,
+  seatsToGo,
+  type ShareFacts,
+  shareFailure,
+  shareMessage,
+  sharePitch,
+} from "./share-link";
 import { useShareActions, useShareInvite, type CopyState } from "./use-share-invite";
 
 // The §4.4 share block (`BlocBuy Buyer My Blocs.dc.html`, Bloc detail › starter and › member),
@@ -63,8 +71,6 @@ function shareHeading(leader: boolean, seatsLeft: number): string {
   return seatsLeft === 1 ? "Help fill the last seat" : "Help fill this bloc";
 }
 
-export type ShareMessageFacts = Omit<Parameters<typeof shareMessage>[0], "url">;
-
 // The share block's body: it mints the invite when it mounts (so a caller that mounts it only
 // when asked mints lazily), then shows the link field and Copy with the inline confirmation, and
 // Share where the Web Share API exists. `compact` is the My blocs row's variant, after the
@@ -80,7 +86,7 @@ export function ShareInvitePanel({
   userId: string;
   dealId: string;
   productId: string;
-  message: ShareMessageFacts;
+  message: ShareFacts;
   compact: boolean;
 }>) {
   const invite = useShareInvite(userId, dealId);
@@ -138,7 +144,7 @@ export function ShareInvitePanel({
           variant="outline"
           className={shareButtonClass[compact ? "compact" : "full"]}
           onPress={() => {
-            void actions.share({ title: facts.title, text: message });
+            void actions.share({ title: facts.title, text: sharePitch(facts) });
           }}
         >
           <ShareIcon />

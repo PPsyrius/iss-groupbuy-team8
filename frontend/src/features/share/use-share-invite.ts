@@ -35,8 +35,9 @@ export type CopyState = "idle" | "copied" | "manual";
 
 // Copy with the async Clipboard API; where it is missing or refused (older WebViews, an insecure
 // origin, a denied permission) the caller selects the link so it can be copied by hand. Share
-// uses the Web Share API when the browser has one; a dismissed share sheet is not an error, and
-// any other failure falls back to copying.
+// uses the Web Share API when the browser has one, with the link in `url` (the caller's text
+// leaves it out); a dismissed share sheet is not an error, and any other failure falls back to
+// copying.
 export function useShareActions(url: string | undefined, select: () => void) {
   const [copyState, setCopyState] = useState<CopyState>("idle");
   const canShare = typeof navigator !== "undefined" && "share" in navigator;
@@ -55,7 +56,7 @@ export function useShareActions(url: string | undefined, select: () => void) {
   async function share(data: { title: string; text: string }) {
     if (!url) return;
     try {
-      await navigator.share({ title: data.title, text: data.text });
+      await navigator.share({ title: data.title, text: data.text, url });
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       await copy();

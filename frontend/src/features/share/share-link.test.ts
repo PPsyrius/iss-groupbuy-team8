@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import { ApiError } from "@/api/envelope";
 
-import { displayLink, inviteUrl, seatsToGo, shareFailure, shareMessage } from "./share-link";
+import {
+  displayLink,
+  inviteUrl,
+  seatsToGo,
+  shareFailure,
+  shareMessage,
+  sharePitch,
+} from "./share-link";
 
 const url = "https://blocbuy.app/products/p-1?deal=deal-1&ref=AbC_12-xyz";
 
@@ -56,6 +63,12 @@ describe("shareMessage", () => {
     ).toBe(`Getting Kopi powder 500 g at S$9.90 — need 1 more person. ${url}`);
     expect(shareMessage({ ...base, groupPrice: undefined, closesMs: null })).toBe(
       `Getting Kopi powder 500 g — need 3 more people. ${url}`,
+    );
+  });
+
+  it("leaves the link out of the pitch the native share sheet gets", () => {
+    expect(sharePitch(base)).toBe(
+      "Getting Kopi powder 500 g at S$9.90 instead of S$12.80 — need 3 more people by Fri, 2.40 pm.",
     );
   });
 });

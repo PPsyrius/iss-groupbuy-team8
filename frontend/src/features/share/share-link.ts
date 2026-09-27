@@ -26,20 +26,28 @@ export function seatsToGo(left: number): string {
 // §4.4 starter view: "Getting kopi powder at S$9.90 instead of S$12.80 — need 3 more people by
 // Friday 2.40 pm. <link>". Rebuilt from the live seats and deadline on every render, so a
 // re-share never pastes a stale claim. The title keeps its case ("Thai jasmine rice").
-export function shareMessage(args: {
+export function shareMessage(args: ShareFacts & { url: string }): string {
+  return `${sharePitch(args)} ${args.url}`;
+}
+
+export interface ShareFacts {
   title: string;
   groupPrice: number | undefined;
   individualPrice: number | undefined;
   currency: string;
   seatsLeft: number;
   closesMs: number | null;
-  url: string;
-}): string {
-  const { title, groupPrice, individualPrice, currency, seatsLeft, closesMs, url } = args;
+}
+
+// The suggested message without its link, for the Web Share API: the link goes in the share's
+// own `url` field, which some targets read instead of the text, and a link in both would show
+// twice.
+export function sharePitch(facts: ShareFacts): string {
+  const { title, groupPrice, individualPrice, currency, seatsLeft, closesMs } = facts;
   const price = priceClause(groupPrice, individualPrice, currency);
   const people = seatsLeft === 1 ? "1 more person" : `${seatsLeft} more people`;
   const by = closesMs === null ? "" : ` by ${formatDeadlineShort(closesMs)}`;
-  return `Getting ${title}${price} — need ${people}${by}. ${url}`;
+  return `Getting ${title}${price} — need ${people}${by}.`;
 }
 
 // " at S$9.90 instead of S$12.80": the saving is claimed only when buying alone costs more.
