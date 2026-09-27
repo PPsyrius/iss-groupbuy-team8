@@ -1,5 +1,5 @@
 import { Button, Chip, ProgressBar } from "@heroui/react";
-import { useSyncExternalStore } from "react";
+import { useId, useSyncExternalStore } from "react";
 
 import type { ActiveDealResponse } from "@/api/generated/types.gen";
 
@@ -27,7 +27,8 @@ const maxSeatDots = 10;
 
 // `onJoin` is the gated action for the row's Join (T2-04: anonymous buyers get the sign-in
 // sheet); without one the button is disabled rather than activatable with no effect
-// (CodeRabbit r4045102864, r4050400116).
+// (CodeRabbit r4045102864, r4050400116). A full or ended bloc disables Join whatever the handler
+// and names the reason (T3-04); the server repeats both checks (GROUPBUY_409_004 / _002).
 export function DealProgress({
   deal,
   onJoin,
@@ -36,6 +37,7 @@ export function DealProgress({
   onJoin?: (() => void) | undefined;
 }) {
   const now = useNow();
+  const reasonId = useId();
   if (!deal) return <NoOpenBloc />;
   const joined = deal.currentSize ?? 0;
   const target = Math.max(1, deal.targetSize ?? 1);
@@ -43,6 +45,9 @@ export function DealProgress({
   const expireMs = parseDeadline(deal.expireTime);
   const countdown = expireMs === null ? null : formatCountdown(expireMs, now);
   const urgent = countdown?.urgent ?? false;
+  const ended = hasEnded(deal.expireTime, now);
+  const blocked = ended ? "No longer taking members" : left === 0 ? "This bloc is full" : null;
+  const join = onJoin && !blocked ? { onPress: onJoin } : { isDisabled: true };
   return (
     <article
       aria-label="Open bloc"
@@ -50,9 +55,13 @@ export function DealProgress({
     >
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-semibold">Open bloc</span>
-        {hasEnded(deal.expireTime, now) ? (
+        {ended ? (
           <Chip color="default" variant="soft" size="sm">
             Ended
+          </Chip>
+        ) : left === 0 ? (
+          <Chip color="default" variant="soft" size="sm">
+            Full
           </Chip>
         ) : urgent ? (
           <Chip color="warning" variant="soft" size="sm">
@@ -117,14 +126,22 @@ export function DealProgress({
             <span className="text-muted text-xs">{formatDeadline(expireMs, now)}</span>
           )}
         </div>
-        <Button
-          variant="outline"
-          className="min-h-11 px-4"
-          {...(onJoin ? { onPress: onJoin } : { isDisabled: true })}
-        >
-          <span className="xl:hidden">Join</span>
-          <span className="hidden xl:inline">Join this bloc</span>
-        </Button>
+        <div className="flex flex-col items-end gap-1">
+          <Button
+            variant="outline"
+            className="min-h-11 px-4"
+            {...join}
+            {...(blocked ? { "aria-describedby": reasonId } : {})}
+          >
+            <span className="xl:hidden">Join</span>
+            <span className="hidden xl:inline">Join this bloc</span>
+          </Button>
+          {blocked ? (
+            <span id={reasonId} className="text-muted text-xs">
+              {blocked}
+            </span>
+          ) : null}
+        </div>
       </div>
     </article>
   );

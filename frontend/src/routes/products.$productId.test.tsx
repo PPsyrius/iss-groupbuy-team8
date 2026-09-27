@@ -129,6 +129,25 @@ describe("/products/$productId open-bloc header", () => {
     expect(screen.queryByText("1 filling now")).not.toBeInTheDocument();
     expect(screen.queryByText("Join one, or start your own")).not.toBeInTheDocument();
   });
+
+  it("does not describe a full bloc as filling or joinable", async () => {
+    serveAnonymous();
+    serveListing(
+      listing({
+        deal: {
+          dealId: "deal-1",
+          currentSize: 5,
+          targetSize: 5,
+          expireTime: "2099-01-01T00:00:00Z",
+        },
+      }),
+    );
+    renderRoute(`/products/${knownId}`);
+    expect(await screen.findByText("Full")).toBeInTheDocument();
+    expect(screen.getByText("This bloc has filled up")).toBeInTheDocument();
+    expect(screen.queryByText("1 filling now")).not.toBeInTheDocument();
+    expect(screen.queryByText("Join one, or start your own")).not.toBeInTheDocument();
+  });
 });
 
 describe("/products/$productId gallery", () => {

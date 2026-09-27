@@ -17,6 +17,25 @@ const attemptPrefix = "blocbuy.payment.attempt.";
 // out (quote expired, or a session would outlive it), so re-sending the same intentId never works.
 const staleIntentCode = "PAYMENT_409_001";
 
+// GroupbuyErrorCode: the server's JOIN admission (`lockJoinTerms`) runs when the intent is created
+// and again when Checkout is prepared, before an earlier request is looked up; either way this
+// attempt opened no payment, so the buyer is told why instead of being told to retry. The claim is
+// scoped to this attempt: full and closed are checked before membership, so a buyer who already
+// paid for a seat (another tab, an earlier visit) can get _004 or _002 too. The second sentence is
+// the Errors artboard's paid-seat line (design-screens.md §4.5).
+const notChargedNow =
+  "This attempt was not charged. Any bloc you have already paid into is safe and still listed under My blocs.";
+const joinRejections: Record<string, string> = {
+  GROUPBUY_404_001: `This bloc no longer exists. ${notChargedNow}`,
+  GROUPBUY_409_002: `This bloc is no longer taking members. ${notChargedNow}`,
+  GROUPBUY_409_003: "You are already in this bloc. Nothing new has been charged.",
+  GROUPBUY_409_004: `This bloc filled up before you joined. ${notChargedNow}`,
+};
+
+function joinRejection(error: unknown): string | undefined {
+  return error instanceof ApiError ? joinRejections[error.code] : undefined;
+}
+
 function isStaleIntent(error: unknown): boolean {
   return error instanceof ApiError && (error.status === 409 || error.code === staleIntentCode);
 }
@@ -33,7 +52,9 @@ export function clearCompletedAttempt(paymentId: string) {
   }
 }
 
-export function useCheckout(userId: string | undefined) {
+// `onRejected` runs after the server refuses the purchase itself (a full, closed or missing bloc),
+// so the page can refetch the listing and show the bloc's current state.
+export function useCheckout(userId: string | undefined, onRejected?: () => void) {
   const enabled = usePaymentAvailability();
   const intent = useMutation(createPaymentIntentMutation());
   const checkout = useMutation(createPaymentCheckoutMutation());
@@ -87,6 +108,15 @@ export function useCheckout(userId: string | undefined) {
       const knownPayment = sessionStorage.getItem(`${key}.payment`);
       if (knownPayment) {
         await navigate({ to: "/payments/$paymentId", params: { paymentId: knownPayment } });
+        return;
+      }
+      const rejection = joinRejection(checkoutError);
+      if (rejection) {
+        // The intent and idempotency key stay: a refusal at Checkout can follow a lost response
+        // that already opened a payment, and a fresh intent would bypass the server's one
+        // blocking attempt per intent.
+        setError(rejection);
+        onRejected?.();
         return;
       }
       if (isStaleIntent(checkoutError)) {
