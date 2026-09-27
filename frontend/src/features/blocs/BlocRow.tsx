@@ -95,6 +95,7 @@ function OpenBlocRow({ team, now, priceText, target, joined, chip, userId }: Row
   const countdown = settled ? null : blocCountdown(team, now);
   const left = target - joined;
   const price = Number(team.dealPrice);
+  const groupPrice = Number.isFinite(price) ? price : undefined;
   const { dealId, productId } = team;
   const shareable =
     !settled && left > 0 && userId && dealId && productId && team.productTitle
@@ -148,7 +149,7 @@ function OpenBlocRow({ team, now, priceText, target, joined, chip, userId }: Row
           productId={shareable.productId}
           message={{
             title: team.productTitle ?? "this listing",
-            groupPrice: Number.isFinite(price) ? price : undefined,
+            groupPrice,
             individualPrice: undefined,
             currency: team.currency ?? "sgd",
             seatsLeft: left,

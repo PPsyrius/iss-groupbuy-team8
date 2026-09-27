@@ -36,16 +36,22 @@ export function shareMessage(args: {
   url: string;
 }): string {
   const { title, groupPrice, individualPrice, currency, seatsLeft, closesMs, url } = args;
-  const price =
-    groupPrice === undefined
-      ? ""
-      : ` at ${formatPrice(groupPrice, currency)}` +
-        (individualPrice === undefined || individualPrice <= groupPrice
-          ? ""
-          : ` instead of ${formatPrice(individualPrice, currency)}`);
+  const price = priceClause(groupPrice, individualPrice, currency);
   const people = seatsLeft === 1 ? "1 more person" : `${seatsLeft} more people`;
   const by = closesMs === null ? "" : ` by ${formatDeadlineShort(closesMs)}`;
   return `Getting ${title}${price} — need ${people}${by}. ${url}`;
+}
+
+// " at S$9.90 instead of S$12.80": the saving is claimed only when buying alone costs more.
+function priceClause(
+  groupPrice: number | undefined,
+  individualPrice: number | undefined,
+  currency: string,
+): string {
+  if (groupPrice === undefined) return "";
+  const at = ` at ${formatPrice(groupPrice, currency)}`;
+  if (individualPrice === undefined || individualPrice <= groupPrice) return at;
+  return `${at} instead of ${formatPrice(individualPrice, currency)}`;
 }
 
 // POST /group-deals/{dealId}/invites refusals, in the page's "nothing was charged" tone. 404 is

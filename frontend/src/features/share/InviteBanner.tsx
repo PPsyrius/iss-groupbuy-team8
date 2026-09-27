@@ -15,12 +15,12 @@ export function InviteBanner({
   hasOtherBloc,
   signedIn,
   join,
-}: {
+}: Readonly<{
   open: boolean;
   hasOtherBloc: boolean;
   signedIn: boolean;
   join: { label: string; onPress: (() => void) | undefined; isPending: boolean };
-}) {
+}>) {
   if (open) {
     return (
       <section

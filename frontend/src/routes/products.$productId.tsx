@@ -163,6 +163,11 @@ function ProductDetailPage() {
   // artboard 5b.1: one button, under the lead); "Start a bloc" steps down a rank. A closed or
   // full invited bloc, or no invite, leaves the listing's own order.
   const inviteJoin = invitedOpen && !shareable;
+  const joinLabel =
+    groupPrice === undefined
+      ? "Join this bloc"
+      : `Join this bloc · ${formatPrice(groupPrice, currency)}`;
+  const joinPress = checkout.isPending ? undefined : onJoin;
   return (
     <main className={shell}>
       <GatedActionSheet
@@ -194,11 +199,8 @@ function ProductDetailPage() {
           hasOtherBloc={listingOpen}
           signedIn={buyerId !== undefined}
           join={{
-            label:
-              groupPrice === undefined
-                ? "Join this bloc"
-                : `Join this bloc · ${formatPrice(groupPrice, currency)}`,
-            onPress: checkout.isPending ? undefined : onJoin,
+            label: joinLabel,
+            onPress: joinPress,
             isPending: checkout.isPending,
           }}
         />
@@ -486,7 +488,7 @@ function Actions({
   isPending,
   demoted,
   className,
-}: {
+}: Readonly<{
   product: ProductDetailResponse;
   currency: string;
   onGated: (() => void) | undefined;
@@ -494,7 +496,7 @@ function Actions({
   isPending: boolean;
   demoted: boolean;
   className: string;
-}) {
+}>) {
   const groupPrice = p.groupPrice ?? undefined;
   // `exactOptionalPropertyTypes`: an absent handler is no prop at all, not `onPress={undefined}`.
   const press = onGated ? { onPress: onGated } : { isDisabled: true };

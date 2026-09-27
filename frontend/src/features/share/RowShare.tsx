@@ -15,12 +15,12 @@ export function RowShare({
   dealId,
   productId,
   message,
-}: {
+}: Readonly<{
   userId: string;
   dealId: string;
   productId: string;
   message: ShareMessageFacts;
-}) {
+}>) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   return (
