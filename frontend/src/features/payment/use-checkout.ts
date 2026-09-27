@@ -10,7 +10,7 @@ import {
 } from "@/api/generated/@tanstack/react-query.gen";
 import type { IntentRequest } from "@/api/generated/types.gen";
 import { usePaymentAvailability } from "@/features/payment/use-payment-availability";
-import { forgetInvite, parkedRefFor } from "@/features/share/invite-ref";
+import { parkedRefFor } from "@/features/share/invite-ref";
 
 export const lastPaymentKey = "blocbuy.payment.last";
 const attemptPrefix = "blocbuy.payment.attempt.";
@@ -42,7 +42,9 @@ function isStaleIntent(error: unknown): boolean {
 }
 
 // UC7 (#30): a JOIN of the bloc the buyer was invited to carries the parked invite ref; the server
-// freezes the sharer on the intent. START never sends one (the server would ignore it).
+// freezes the sharer on the intent. START never sends one (the server would ignore it). The ref
+// stays parked after the intent exists: a stale intent (PAYMENT_409_001) or a failed or expired
+// payment needs a replacement intent, and that one must carry the ref too.
 function intentRequest(operation: IntentRequest["operation"], businessId: string): IntentRequest {
   const ref = operation === "JOIN" ? parkedRefFor(businessId) : undefined;
   return ref ? { operation, businessId, ref } : { operation, businessId };
@@ -88,10 +90,9 @@ export function useCheckout(userId: string | undefined, onRejected?: () => void)
     try {
       let intentId = sessionStorage.getItem(key);
       if (!intentId) {
-        const body = intentRequest(operation, businessId);
         const created = unwrapResult(
           await intent.mutateAsync({
-            body,
+            body: intentRequest(operation, businessId),
             headers: { "X-BlocBuy-Request": "checkout" },
           }),
           { allowVoid: false },
@@ -99,8 +100,6 @@ export function useCheckout(userId: string | undefined, onRejected?: () => void)
         if (!created.intentId) throw new Error("Missing purchase reference");
         intentId = created.intentId;
         sessionStorage.setItem(key, intentId);
-        // The sharer is frozen on the intent now, so the parked ref is no longer needed.
-        if (body.ref) forgetInvite(businessId);
       }
       const requestKey = sessionStorage.getItem(`${key}.request`) ?? crypto.randomUUID();
       sessionStorage.setItem(`${key}.request`, requestKey);

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { forgetInvite, parkedRefFor, parkInvite, readParkedInvite } from "./invite-ref";
+import { discardInvite, parkedRefFor, parkInvite, readParkedInvite } from "./invite-ref";
 
 const invite = { productId: "p-1", dealId: "deal-1", ref: "AbC_12-xyz" };
 
@@ -24,11 +24,9 @@ describe("invite parking", () => {
     expect(parkedRefFor("deal-2")).toBeUndefined();
   });
 
-  it("forgets the invite once its bloc used it, and not for another bloc", () => {
+  it("empties the slot when a newer link turns out invalid", () => {
     parkInvite(invite);
-    forgetInvite("deal-2");
-    expect(readParkedInvite()).toEqual(invite);
-    forgetInvite("deal-1");
+    discardInvite();
     expect(readParkedInvite()).toBeNull();
   });
 

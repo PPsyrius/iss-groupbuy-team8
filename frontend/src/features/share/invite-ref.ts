@@ -3,8 +3,9 @@ import { SHARE_DEAL_PATTERN, SHARE_REF_PATTERN } from "@/features/catalog/produc
 // The invite a buyer arrived with (UC7, #30). The listing route parks it here and drops it from
 // the URL, so it survives the Google sign-in hop (sessionStorage is per tab and outlives the two
 // cross-origin redirects, as `return-to.ts` relies on) and the quote sheet. The newest link wins
-// (backend plan D9, last touch per session). `use-checkout` sends the ref on a JOIN of the same
-// bloc and forgets it once the server has frozen it on the intent.
+// (backend plan D9, last touch per session), and a newer link that fails the contract's patterns
+// empties the slot rather than leaving an older sharer credited. `use-checkout` sends the ref on
+// every JOIN intent of the same bloc, so a replacement intent after a stale one still carries it.
 const KEY = "blocbuy.invite";
 
 export interface ParkedInvite {
@@ -55,8 +56,7 @@ export function parkedRefFor(dealId: string): string | undefined {
   return invite?.dealId === dealId ? invite.ref : undefined;
 }
 
-export function forgetInvite(dealId: string): void {
-  if (readParkedInvite()?.dealId !== dealId) return;
+export function discardInvite(): void {
   try {
     sessionStorage.removeItem(KEY);
   } catch {

@@ -1271,7 +1271,7 @@ export const Route = createFileRoute('/auth/callback')({
 
 - [x] Step 1: `ref` search param on `/products/$productId` (valibot, opaque string, dropped from the URL after being parked in `sessionStorage`). Done 2026-09-26 with `deal` beside it (backend plan D4); an invite to the open bloc makes its Join the primary action; see design-screens §4.2.
 - [x] Step 2: `ShareBlock.tsx` per §4.4 (link field, Copy via `navigator.clipboard`, Share again via `navigator.share` when present) on the listing for a signed-in starter or member. Done 2026-09-26; the button reads "Share". Open My blocs rows share too, minted on expand (design-screens §4.4).
-- [x] Step 3: the parked reference goes on the join / intent request once #30 defines the field; tests for parse, park and clear. Done 2026-09-26: JOIN only, forgotten once the intent exists.
+- [x] Step 3: the parked reference goes on the join / intent request once #30 defines the field; tests for parse, park and clear. Done 2026-09-26: JOIN only; kept parked for the tab so a replacement intent still carries it, and an invalid newer link clears it (CodeRabbit on #219, 2026-09-27).
 
 ### T3-06: Receipt and return pages against the artboards
 

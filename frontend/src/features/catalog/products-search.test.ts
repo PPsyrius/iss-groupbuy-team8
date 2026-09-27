@@ -47,23 +47,25 @@ describe("listingSearchSchema (UC7 invite link)", () => {
   });
 
   it("is empty without an invite", () => {
-    expect(v.parse(listingSearchSchema, {})).toEqual({});
+    const search = v.parse(listingSearchSchema, {});
+    expect(search.deal).toBeUndefined();
+    expect(search.ref).toBeUndefined();
   });
 
-  it("drops a ref outside the pattern instead of failing the route", () => {
-    expect(v.parse(listingSearchSchema, { deal, ref: "bad ref!" }).ref).toBeUndefined();
-    expect(v.parse(listingSearchSchema, { deal, ref: "x".repeat(65) }).ref).toBeUndefined();
-    expect(v.parse(listingSearchSchema, { deal, ref: "" }).ref).toBeUndefined();
+  it("marks a ref outside the pattern as invalid instead of failing the route", () => {
+    expect(v.parse(listingSearchSchema, { deal, ref: "bad ref!" }).ref).toBeNull();
+    expect(v.parse(listingSearchSchema, { deal, ref: "x".repeat(65) }).ref).toBeNull();
+    expect(v.parse(listingSearchSchema, { deal, ref: "" }).ref).toBeNull();
   });
 
-  it("drops a non-string value the router parsed from the query", () => {
+  it("marks a non-string value the router parsed from the query as invalid", () => {
     expect(v.parse(listingSearchSchema, { deal: 42, ref: { a: 1 } })).toEqual({
-      deal: undefined,
-      ref: undefined,
+      deal: null,
+      ref: null,
     });
   });
 
-  it("drops a deal id with characters no id carries", () => {
-    expect(v.parse(listingSearchSchema, { deal: "../x", ref }).deal).toBeUndefined();
+  it("marks a deal id with characters no id carries as invalid", () => {
+    expect(v.parse(listingSearchSchema, { deal: "../x", ref }).deal).toBeNull();
   });
 });

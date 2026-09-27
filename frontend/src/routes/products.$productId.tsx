@@ -18,7 +18,7 @@ import { useCheckout } from "@/features/payment/use-checkout";
 import { useQuote } from "@/features/payment/use-quote";
 import { GatedActionSheet } from "@/features/session/GatedActionSheet";
 import { useSession } from "@/features/session/use-session";
-import { parkInvite, readParkedInvite } from "@/features/share/invite-ref";
+import { discardInvite, parkInvite, readParkedInvite } from "@/features/share/invite-ref";
 import { InviteBanner } from "@/features/share/InviteBanner";
 import { ShareBlock } from "@/features/share/ShareBlock";
 
@@ -46,12 +46,16 @@ export const Route = createFileRoute("/products/$productId")({
   // UC7 invite link (T3-05, #30): `?deal=…&ref=…` is parked in sessionStorage and dropped from
   // the URL before anything renders, so it survives the sign-in hop and the quote sheet without
   // riding along on every later link, and a copied address bar never re-shares someone's ref.
-  // A pair that fails the contract's patterns is dropped without being parked.
+  // A pair that fails the contract's patterns is dropped without being parked, and it empties the
+  // slot too (the newest link wins, D9), so an older sharer is never credited for it. The schema
+  // marks a supplied but invalid value `null`, an absent one `undefined`.
   validateSearch: listingSearchSchema,
   beforeLoad: ({ search, params }) => {
     if (search.deal === undefined && search.ref === undefined) return;
-    if (search.deal !== undefined && search.ref !== undefined) {
+    if (typeof search.deal === "string" && typeof search.ref === "string") {
       parkInvite({ productId: params.productId, dealId: search.deal, ref: search.ref });
+    } else {
+      discardInvite();
     }
     throw redirect({ to: "/products/$productId", params, search: {}, replace: true });
   },

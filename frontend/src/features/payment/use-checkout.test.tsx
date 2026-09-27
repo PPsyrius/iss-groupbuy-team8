@@ -192,7 +192,7 @@ describe("useCheckout invite ref (UC7)", () => {
     );
   }
 
-  it("sends the parked ref on a JOIN of the invited bloc, then forgets it", async () => {
+  it("sends the parked ref on a JOIN of the invited bloc and keeps it parked", async () => {
     serveRecordedCheckout();
     parkInvite({ productId: "p-1", dealId: businessId, ref });
     vi.spyOn(window.location, "assign").mockImplementation(() => {});
@@ -203,7 +203,35 @@ describe("useCheckout invite ref (UC7)", () => {
       await checkout.begin("JOIN", businessId);
     });
     expect(bodies).toEqual([{ operation: "JOIN", businessId, ref }]);
-    expect(readParkedInvite()).toBeNull();
+    expect(readParkedInvite()?.ref).toBe(ref);
+  });
+
+  it("sends the ref again on the intent that replaces a stale one", async () => {
+    serveRecordedCheckout();
+    server.use(
+      http.post("*/api/v1/payments/checkout-sessions", () =>
+        HttpResponse.json(
+          { code: "PAYMENT_409_001", message: "Payment state invalid" },
+          { status: 409 },
+        ),
+      ),
+    );
+    parkInvite({ productId: "p-1", dealId: businessId, ref });
+    const checkoutRef = renderProbe("buyer-1");
+    await waitFor(() => expect(checkoutRef.current?.enabled).toBe(true));
+    const checkout = await readyCheckout(checkoutRef);
+    await act(async () => {
+      await checkout.begin("JOIN", businessId);
+    });
+    await waitFor(() => expect(checkoutRef.current?.error).not.toBeNull());
+    expect(bodies).toEqual([{ operation: "JOIN", businessId, ref }]);
+
+    serveRecordedCheckout();
+    vi.spyOn(window.location, "assign").mockImplementation(() => {});
+    await act(async () => {
+      await readyCheckout(checkoutRef).then((c) => c.begin("JOIN", businessId));
+    });
+    expect(bodies).toEqual([{ operation: "JOIN", businessId, ref }]);
   });
 
   it("keeps the ref when the intent could not be frozen, so a retry still carries it", async () => {

@@ -578,6 +578,36 @@ describe("/products/$productId invite link (UC7)", () => {
     expect(screen.queryByRole("region", { name: "Invite" })).toBeNull();
   });
 
+  it("empties the parked invite when a newer link to the listing is invalid", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(listing());
+    const first = renderRoute(`/products/${knownId}?deal=deal-1&ref=${ref}`);
+    await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" });
+    expect(sessionStorage.getItem("blocbuy.invite")).not.toBeNull();
+    first.unmount();
+
+    const { router } = renderRoute(`/products/${knownId}?deal=deal-1&ref=other%20ref!`);
+    await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" });
+    expect(router.state.location.href).toBe(`/products/${knownId}`);
+    expect(sessionStorage.getItem("blocbuy.invite")).toBeNull();
+    expect(screen.queryByRole("region", { name: "Invite" })).toBeNull();
+  });
+
+  it("drops a link whose deal and ref are both invalid, and empties the parked invite", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(listing());
+    sessionStorage.setItem(
+      "blocbuy.invite",
+      JSON.stringify({ productId: knownId, dealId: "deal-1", ref }),
+    );
+    const { router } = renderRoute(`/products/${knownId}?deal=bad%20deal!&ref=bad%20ref!`);
+    await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" });
+    expect(router.state.location.href).toBe(`/products/${knownId}`);
+    expect(sessionStorage.getItem("blocbuy.invite")).toBeNull();
+  });
+
   it("points a buyer invited to a closed bloc at the open one", async () => {
     sessionStorage.clear();
     serveAnonymous();
