@@ -8,8 +8,8 @@ This directory is the durable record of how the team worked, sprint by sprint. G
 docs/agile/
 ├── README.md              this file
 ├── sprint-01/README.md    pointer to the Sprint 1 container issue and report
-├── sprint-02/log/         running log, one file per day: one dated entry per PR per author
-├── sprint-02/log.md       index of the day files
+├── sprint-NN/log/         running log from Sprint 2, one file per day: one dated entry per PR per author
+├── sprint-NN/log.md       index of the day files
 ├── sprint-NN/plan.md      sprint goal and member-by-use-case matrix (mirrors the container issue)
 ├── sprint-NN/review.md    plan vs actual, written at the sprint review
 ├── sprint-NN/retro.md     what went well, what could be better, what we try next
@@ -29,6 +29,8 @@ Every PR adds a sprint-log entry in the same PR. Every PR that touches a non-fun
 Entries are short: three to eight lines, with the command that verified the change and the count or status it produced. A line is one bullet on one physical line; never hard-wrap a bullet to meet the limit. Links beat prose.
 
 The one-entry-per-PR-per-author rule applies from 2026-09-22; older entries remain unchanged as historical evidence.
+
+A PR logs in the sprint it merges into `dev` in: once the `v0.1.0-sprintN` tag is cut, later merges log under sprint N+1, keeping the date the work was done.
 
 ## How it is enforced
 
