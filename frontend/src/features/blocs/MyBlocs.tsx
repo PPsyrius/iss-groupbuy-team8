@@ -17,11 +17,11 @@ export function MyBlocs({
   teams = noTeams,
   total,
   selected,
-}: {
+}: Readonly<{
   teams?: MyTeamResponse[] | undefined;
   total: number;
   selected: BlocFilter;
-}) {
+}>) {
   const shown = teams.filter((team) => blocFilter(team.status) === selected);
   const label = blocFilters.find((f) => f.value === selected)?.label.toLowerCase() ?? selected;
   return (
