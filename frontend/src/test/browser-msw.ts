@@ -194,77 +194,126 @@ const toSummary = (s: Seed): ProductSummaryResponse => ({
   currency: "sgd",
 });
 
-// The sample buyer's orders for `/account` (§4.4 rows): one per lifecycle state, paid over the
-// last few days. `?msw=1&me=1` shows them; anonymous browsing never reaches the endpoint.
-const orderSeeds: { n: number; quantity: number; status: string; daysAgo: number }[] = [
-  { n: 1, quantity: 1, status: "pending", daysAgo: 0 },
-  { n: 5, quantity: 2, status: "confirmed", daysAgo: 3 },
-  { n: 8, quantity: 1, status: "cancelled", daysAgo: 6 },
-];
-
-const orders: OrderSummaryResponse[] = orderSeeds.map(({ n, quantity, status, daysAgo }) => {
-  const s = seeds.find((x) => x.n === n);
-  const unit = s?.groupPrice ?? s?.individualPrice ?? 0;
-  const paid = inSeconds(-daysAgo * 86_400 - 3_600);
-  return {
-    orderId: `0192f0a0-0000-7000-8000-${String(n).padStart(12, "0")}`,
-    orderNo: `BB-${2090 + n}`,
-    dealId: `deal-${n}`,
-    productId: id(n),
-    productTitle: s?.title ?? "",
-    productImage: null,
-    quantity,
-    unitPrice: unit.toFixed(2),
-    totalAmount: (unit * quantity).toFixed(2),
-    currency: "sgd",
-    status,
-    paidTime: paid,
-    cancelTime: status === "cancelled" ? inSeconds(-daysAgo * 86_400 + 3_600) : null,
-    createTime: paid,
-  };
-});
-
 // The sample buyer's blocs for the §4.4 My blocs chips (`?msw=1&me=1`), after the artboard's
 // rows: three active (one closing soon, one the buyer started), one filled, two closed unfilled.
-const teamSeeds: {
+// Each is its own bloc on the listing, not the live deal the listing page features (their counts
+// differ), so joining that deal in the demo adds a row instead of duplicating one.
+interface TeamSeed {
   n: number;
-  status: string;
+  status: "open" | "succeeded" | "expired";
   joined: number;
   target: number;
   endsIn: number;
   leader?: boolean;
+  quantity?: number;
   paidDaysAgo: number;
-}[] = [
+}
+
+const teamSeeds: TeamSeed[] = [
   { n: 1, status: "open", joined: 4, target: 5, endsIn: 52 * 60 + 9, paidDaysAgo: 1 },
-  { n: 5, status: "open", joined: 5, target: 8, endsIn: 28 * 3600, leader: true, paidDaysAgo: 2 },
+  {
+    n: 5,
+    status: "open",
+    joined: 5,
+    target: 8,
+    endsIn: 28 * 3600,
+    leader: true,
+    quantity: 2,
+    paidDaysAgo: 2,
+  },
   { n: 8, status: "open", joined: 6, target: 10, endsIn: 57 * 3600, paidDaysAgo: 3 },
   { n: 9, status: "succeeded", joined: 8, target: 8, endsIn: -86_400, paidDaysAgo: 4 },
   { n: 7, status: "expired", joined: 3, target: 5, endsIn: -2 * 86_400, paidDaysAgo: 5 },
   { n: 2, status: "expired", joined: 2, target: 5, endsIn: -5 * 86_400, paidDaysAgo: 7 },
 ];
 
-const teams: MyTeamResponse[] = teamSeeds.map((t) => {
-  const s = seeds.find((x) => x.n === t.n);
-  return {
-    dealId: `deal-${t.n}`,
-    productId: id(t.n),
-    productTitle: s?.title ?? null,
-    productImage: null,
-    dealPrice: (s?.groupPrice ?? s?.individualPrice ?? 0).toFixed(2),
-    currency: "sgd",
-    targetSize: t.target,
-    currentSize: t.joined,
-    status: t.status,
-    expireTime: inSeconds(t.endsIn),
-    successTime: t.status === "succeeded" ? inSeconds(t.endsIn - 3_600) : null,
-    role: t.leader ? "leader" : "member",
-    joinTime: inSeconds(-t.paidDaysAgo * 86_400 - 3_600),
-    orderId: null,
-  };
+// One membership: the bloc row and the order it paid for are both built from it, so the two
+// lists agree. `orderN` numbers the order (the listing's number for the seeds).
+interface Membership {
+  n: number;
+  orderN: number;
+  dealId: string;
+  status: TeamSeed["status"];
+  joined: number;
+  target: number;
+  expireTime: string;
+  successTime: string | null;
+  leader: boolean;
+  quantity: number;
+  paidAt: string;
+}
+
+const fromSeed = (t: TeamSeed): Membership => ({
+  n: t.n,
+  orderN: t.n,
+  dealId: `deal-${t.n}-bloc-${t.n}`,
+  status: t.status,
+  joined: t.joined,
+  target: t.target,
+  expireTime: inSeconds(t.endsIn),
+  successTime: t.status === "succeeded" ? inSeconds(t.endsIn - 3_600) : null,
+  leader: t.leader ?? false,
+  quantity: t.quantity ?? 1,
+  paidAt: inSeconds(-t.paidDaysAgo * 86_400 - 3_600),
 });
 
-// One receipt per §4.6 state: paid (the confirmed order), waiting (no order yet), refund pending
-// and refunded (the cancelled order). The last digits name the state for `?msw=1&me=1`.
+const unitPriceOf = (n: number) => {
+  const s = seeds.find((x) => x.n === n);
+  return s?.groupPrice ?? s?.individualPrice ?? 0;
+};
+const orderIdOf = (n: number) => `0192f0a0-0000-7000-8000-${String(n).padStart(12, "0")}`;
+
+const teamOf = (m: Membership): MyTeamResponse => ({
+  dealId: m.dealId,
+  productId: id(m.n),
+  productTitle: seeds.find((x) => x.n === m.n)?.title ?? null,
+  productImage: null,
+  dealPrice: unitPriceOf(m.n).toFixed(2),
+  currency: "sgd",
+  targetSize: m.target,
+  currentSize: m.joined,
+  status: m.status,
+  expireTime: m.expireTime,
+  successTime: m.successTime,
+  role: m.leader ? "leader" : "member",
+  joinTime: m.paidAt,
+  orderId: orderIdOf(m.orderN),
+});
+
+// The order is paid when the buyer joins, "Waiting for the bloc" while the bloc is open,
+// confirmed once it fills and cancelled when it closes unfilled (`OrderStatus.java`).
+const orderStatusOf = { open: "pending", succeeded: "confirmed", expired: "cancelled" } as const;
+
+const orderOf = (m: Membership): OrderSummaryResponse => {
+  const unit = unitPriceOf(m.n);
+  return {
+    orderId: orderIdOf(m.orderN),
+    orderNo: `BB-${2090 + m.orderN}`,
+    dealId: m.dealId,
+    productId: id(m.n),
+    productTitle: seeds.find((x) => x.n === m.n)?.title ?? "",
+    productImage: null,
+    quantity: m.quantity,
+    unitPrice: unit.toFixed(2),
+    totalAmount: (unit * m.quantity).toFixed(2),
+    currency: "sgd",
+    status: orderStatusOf[m.status],
+    paidTime: m.paidAt,
+    cancelTime: m.status === "expired" ? m.expireTime : null,
+    createTime: m.paidAt,
+  };
+};
+
+// Newest first, as the endpoints answer. A mock checkout that settles adds to the front.
+const memberships = teamSeeds.map(fromSeed);
+const teams: MyTeamResponse[] = memberships.map(teamOf);
+const orders: OrderSummaryResponse[] = memberships.map(orderOf);
+
+const orderFor = (n: number) => orders.find((o) => o.orderId === orderIdOf(n));
+
+// One receipt per §4.6 state; the last digits name the state for `?msw=1&me=1`: 5 paid (the
+// filled bak kwa bloc's confirmed order), 9 refund pending and 8 refunded (the cancelled orders
+// of the two blocs that closed unfilled), and 1 waiting, which is a mock checkout (below).
 const receiptId = (n: number) => `0192f0a0-0000-7000-9000-${String(n).padStart(12, "0")}`;
 const receiptFor = (order: OrderSummaryResponse | undefined) => ({
   amount: order?.totalAmount ?? "0.00",
@@ -273,25 +322,86 @@ const receiptFor = (order: OrderSummaryResponse | undefined) => ({
   orderId: order?.orderId ?? "",
 });
 
-function sampleReceipts(): Receipt[] {
-  const { amount, currency } = receiptFor(orders[0]);
-  return [
-    {
-      paymentId: receiptId(5),
-      status: "SUCCEEDED",
-      ...receiptFor(orders[1]),
-      refundStatus: "NONE",
-    },
-    { paymentId: receiptId(1), status: "CREATED", amount, currency },
-    { paymentId: receiptId(9), status: "SUCCEEDED", ...receiptFor(orders[2]), refundPending: true },
-    {
-      paymentId: receiptId(8),
-      status: "SUCCEEDED",
-      ...receiptFor(orders[2]),
-      refundStatus: "SUCCEEDED",
-    },
-  ];
+const settledReceipts: Receipt[] = [
+  {
+    paymentId: receiptId(5),
+    status: "SUCCEEDED",
+    ...receiptFor(orderFor(9)),
+    refundStatus: "NONE",
+  },
+  { paymentId: receiptId(9), status: "SUCCEEDED", ...receiptFor(orderFor(7)), refundPending: true },
+  {
+    paymentId: receiptId(8),
+    status: "SUCCEEDED",
+    ...receiptFor(orderFor(2)),
+    refundStatus: "SUCCEEDED",
+  },
+];
+
+// Mock Stripe Checkout. The checkout session answers with a payment and no `checkoutUrl`, which
+// use-checkout already treats as "go to the receipt" in-app, so the demo reaches a receipt
+// without the Stripe host check being relaxed. Each receipt then reads "Waiting" for its first
+// `WAITING_READS` reads (about 4 s of the page's 2 s poll) and turns "Paid" as if the webhook had
+// landed; that adds the bloc and its pending order to My blocs. Receipt 1 is the first checkout
+// (a direct visit plays Start a bloc on the rice listing); later checkouts get fresh ids.
+const WAITING_READS = 2;
+
+interface Checkout {
+  n: number;
+  deal: ProductDetailResponse["deal"] | undefined;
+  reads: number;
+  claimed: boolean;
+  order?: OrderSummaryResponse;
 }
+
+const checkouts = new Map<string, Checkout>([
+  [receiptId(1), { n: 1, deal: undefined, reads: 0, claimed: false }],
+]);
+const intents = new Map<string, Pick<Checkout, "n" | "deal"> & { paymentId?: string }>();
+let nextN = 11;
+
+function settle(c: Checkout): OrderSummaryResponse {
+  const orderN = nextN++;
+  const now = Date.now();
+  const joined = (c.deal?.currentSize ?? 0) + 1;
+  const target = c.deal?.targetSize ?? seeds.find((x) => x.n === c.n)?.deal?.target ?? 5;
+  if (c.deal) c.deal.currentSize = joined;
+  const m: Membership = {
+    n: c.n,
+    orderN,
+    dealId: c.deal?.dealId ?? `deal-${c.n}-bloc-${orderN}`,
+    status: joined >= target ? "succeeded" : "open",
+    joined,
+    target,
+    expireTime: c.deal?.expireTime ?? new Date(now + 24 * 3_600_000).toISOString(),
+    successTime: joined >= target ? new Date(now).toISOString() : null,
+    leader: !c.deal,
+    quantity: 1,
+    paidAt: new Date(now).toISOString(),
+  };
+  teams.unshift(teamOf(m));
+  const order = orderOf(m);
+  orders.unshift(order);
+  return order;
+}
+
+function readCheckout(paymentId: string, c: Checkout): Receipt {
+  if (!c.order && ++c.reads > WAITING_READS) c.order = settle(c);
+  return c.order
+    ? { paymentId, status: "SUCCEEDED", ...receiptFor(c.order), refundStatus: "NONE" }
+    : { paymentId, status: "CREATED", amount: unitPriceOf(c.n).toFixed(2), currency: "sgd" };
+}
+
+function openCheckout(purchase: Pick<Checkout, "n" | "deal">): string {
+  const first = checkouts.get(receiptId(1));
+  const paymentId = first && !first.claimed && !first.order ? receiptId(1) : receiptId(nextN++);
+  checkouts.set(paymentId, { n: purchase.n, deal: purchase.deal, reads: 0, claimed: true });
+  return paymentId;
+}
+
+// The one bloc whose JOIN loses the last-seat race (GROUPBUY_409_004): the closing-soon durian.
+// The deal is left as it is, so the refusal can be shown again.
+const FULL_ON_JOIN = "deal-2";
 
 // First-team quotes (T3-01): the seed's bloc price, valid for 15 minutes; a listing without one
 // answers the backend's "team price unavailable" 409. Issued quotes are kept for `getQuote`.
@@ -380,24 +490,54 @@ export async function startBrowserMsw() {
             message: "ok",
             data: { items: teams, total: teams.length, page: 1, size: 100 },
           }),
-        // Payments are on for the sample buyer so Start a bloc opens the quote sheet; a START
-        // intent is not mocked, so Continue ends on the page's "could not open Checkout" alert.
-        // A JOIN always loses the last-seat race (GROUPBUY_409_004) and fills the bloc, so the
-        // refetched row shows the "This bloc is full" state (T3-04).
+        // Payments are on for the sample buyer. START and JOIN freeze an intent and the checkout
+        // session sends the buyer to the mock receipt; one designated JOIN is refused (above).
         createPaymentIntent: async ({ request }) => {
           const body = (await request.json()) as { operation?: string; businessId?: string };
-          const deal = details.find((p) => p.deal?.dealId === body.businessId)?.deal;
-          if (body.operation !== "JOIN" || !deal) {
+          const listing =
+            body.operation === "START"
+              ? details.find((p) => p.id === body.businessId && p.groupPrice !== undefined)
+              : details.find((p) => p.deal?.dealId === body.businessId);
+          if (!listing || (body.operation !== "START" && body.operation !== "JOIN")) {
             return HttpResponse.json(
-              { code: "PAYMENT_503_001", message: "Checkout is not mocked" },
-              { status: 503 },
+              { code: "GROUPBUY_404_001", message: "Group deal not found" },
+              { status: 404 },
             );
           }
-          deal.currentSize = deal.targetSize ?? 0;
-          return HttpResponse.json(
-            { code: "GROUPBUY_409_004", message: "Group deal is full" },
-            { status: 409 },
-          );
+          if (body.operation === "JOIN" && body.businessId === FULL_ON_JOIN) {
+            return HttpResponse.json(
+              { code: "GROUPBUY_409_004", message: "Group deal is full" },
+              { status: 409 },
+            );
+          }
+          if (body.operation === "JOIN" && teams.some((t) => t.dealId === body.businessId)) {
+            return HttpResponse.json(
+              { code: "GROUPBUY_409_003", message: "Already joined this group deal" },
+              { status: 409 },
+            );
+          }
+          const n = seeds.find((x) => id(x.n) === listing.id)?.n ?? 1;
+          const intentId = crypto.randomUUID();
+          intents.set(intentId, { n, deal: body.operation === "JOIN" ? listing.deal : undefined });
+          return HttpResponse.json({ code: OK_CODE, message: "ok", data: { intentId } });
+        },
+        createPaymentCheckout: async ({ request }) => {
+          const body = (await request.json()) as { intentId?: string };
+          const purchase = intents.get(body.intentId ?? "");
+          if (!purchase) {
+            return HttpResponse.json(
+              { code: "PAYMENT_409_001", message: "Payment intent is no longer valid" },
+              { status: 409 },
+            );
+          }
+          // Same intent, same payment: a retried Continue must not open a second checkout.
+          purchase.paymentId ??= openCheckout(purchase);
+          const { paymentId } = purchase;
+          return HttpResponse.json({
+            code: OK_CODE,
+            message: "ok",
+            data: { paymentId, status: "CREATED" },
+          });
         },
         getPaymentCapabilities: () =>
           HttpResponse.json({ code: OK_CODE, message: "ok", data: { enabled: signedIn } }),
@@ -429,10 +569,13 @@ export async function startBrowserMsw() {
                 { status: 404 },
               );
         },
-        // Sample receipts for the §4.6 card states (T3-06): `/payments/<id>` with the ids in
-        // `sampleReceipts`; any other id is not the buyer's.
+        // Sample receipts for the §4.6 card states (T3-06): `/payments/<id>` with the settled ids
+        // or a mock checkout's; any other id is not the buyer's.
         getPaymentReceipt: ({ params }) => {
-          const receipt = sampleReceipts().find((r) => r.paymentId === params.id);
+          const checkout = checkouts.get(params.id);
+          const receipt = checkout
+            ? readCheckout(params.id, checkout)
+            : settledReceipts.find((r) => r.paymentId === params.id);
           return receipt
             ? HttpResponse.json({ code: OK_CODE, message: "ok", data: receipt })
             : HttpResponse.json(

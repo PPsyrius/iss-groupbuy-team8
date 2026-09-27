@@ -1,4 +1,4 @@
-import { Alert, Avatar, Button, buttonVariants, Skeleton } from "@heroui/react";
+import { Alert, Button, buttonVariants, Skeleton } from "@heroui/react";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import {
   createFileRoute,
@@ -14,7 +14,6 @@ import { accountSearchDefaults, accountSearchSchema } from "@/features/blocs/blo
 import { BlocsSkeleton, MY_BLOCS_FETCH_SIZE, MyBlocs } from "@/features/blocs/MyBlocs";
 import { OrderHistory } from "@/features/order/OrderHistory";
 import type { OrdersSearch } from "@/features/order/orders-search";
-import { initials } from "@/features/session/initials";
 
 const ordersOptions = ({ page, size }: OrdersSearch) =>
   queryOptions({
@@ -58,9 +57,8 @@ export const Route = createFileRoute("/_authenticated/account")({
 // `/account` is the §4.4 My blocs screen (docs/design-screens.md), phone-first: the header, the
 // Active / Completed / Refunded chips and bloc rows from GET /group-deals/me (T3-03, #31), then
 // the buyer's orders from GET /orders/me (T3-02, #128) under a "My orders" heading (§7 Q25). A
-// buyer with neither sees the one §4.4 empty card. The header, the empty card and the error alert
-// keep the page's shape in every state, so the signed-in name never disappears behind a failed
-// list.
+// buyer with neither sees the one §4.4 empty card. The heading, the empty card and the error alert
+// keep the page's shape in every state.
 const shell = "mx-auto flex max-w-[1280px] flex-col gap-4 p-4 xl:gap-6 xl:p-8";
 const pagerButton = buttonVariants({ variant: "outline" }) + " min-h-11 px-4 text-sm xl:px-[18px]";
 
@@ -123,24 +121,10 @@ function AccountPage() {
   );
 }
 
+// One header, as on the artboard: the site header already shows who is signed in, and §4.4 never
+// shows the nickname as a profile here.
 function AccountHeader() {
-  const { session } = Route.useRouteContext();
-  if (session.status !== "authenticated") return null; // the layout guard already redirected
-  const name = session.nickname ?? session.userId;
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <h1 className="text-lg font-semibold xl:text-2xl">My blocs</h1>
-      <div className="flex items-center gap-2">
-        <Avatar size="sm" aria-hidden="true">
-          {session.avatarUrl ? <Avatar.Image src={session.avatarUrl} alt="" /> : null}
-          <Avatar.Fallback>{initials(name)}</Avatar.Fallback>
-        </Avatar>
-        <span data-testid="account-user" className="text-sm font-medium">
-          {name}
-        </span>
-      </div>
-    </div>
-  );
+  return <h1 className="text-lg font-semibold xl:text-2xl">My blocs</h1>;
 }
 
 // §4.4 empty: a buyer with no bloc and no order. The refund promise is repeated because this is
