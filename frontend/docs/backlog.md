@@ -12,7 +12,7 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 
 | id | priority | task | purpose | files touched | verification command | depends-on |
 |---|---|---|---|---|---|---|
-| FB-01 | P1 | Demo readiness (DONE 2026-09-25, branch `feature/frontend-demo-readiness`) | Mock mode walks the whole buyer journey for the demo and submission. | `FE/src/dev/devtools.tsx`, `FE/src/test/browser-msw.ts`, `FE/src/routes/_authenticated/account.tsx`, `FE/e2e/login.spec.ts`, `FE/README.md` | `cd frontend && pnpm check && pnpm build && pnpm e2e` | — |
+| FB-01 | P1 | Demo readiness (steps 1–5 merged in #214 on 2026-09-27; step 6 open) | Mock mode walks the whole buyer journey for the demo and submission. | `FE/src/dev/devtools.tsx`, `FE/src/test/browser-msw.ts`, `FE/src/routes/_authenticated/account.tsx`, `FE/e2e/login.spec.ts`, `FE/README.md` | `cd frontend && pnpm check && pnpm build && pnpm e2e` | — |
 | FB-02 | P1 | Shared Playwright API stubs | One set of `page.route` stubs for the e2e specs, reusing the pattern in `FE/e2e/login.spec.ts`. The production build drops `?msw=1`, so e2e must stub with `page.route`. | `FE/e2e/fixtures/api.ts` (new), `FE/e2e/login.spec.ts` | `cd frontend && pnpm e2e` | — |
 | FB-03 | P1 | Buyer-journey e2e | Catalog → listing → quote → checkout → an intercepted Stripe 302 to `/payments/return` → receipt Waiting then Paid → My blocs. | `FE/e2e/buyer-journey.spec.ts` (new) | `cd frontend && pnpm e2e buyer-journey` | FB-02 |
 | FB-04 | P1 | JOIN refusal e2e | `GROUPBUY_409_004`, `GROUPBUY_409_002`, `GROUPBUY_409_003` and `GROUPBUY_404_001` each name the reason, and no checkout-session call is made. | `FE/e2e/join-refusal.spec.ts` (new) | `cd frontend && pnpm e2e join-refusal` | FB-02 |
@@ -28,7 +28,7 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 | FB-14 | P3 | Pagination demo | More catalog seeds so `?page=2` exists in mock mode. | `FE/src/test/browser-msw.ts` | `cd frontend && pnpm dev`, open `/?msw=1&page=2` | — |
 | FB-15 | P3 | Refund-pending receipt heading | The heading reads "Payment received"; consider "Refund on its way". Needs the design owner. | `FE/src/features/payment/receipt-view.ts` | `cd frontend && pnpm vitest run src/features/payment` | design owner |
 | FB-16 | P3 | Catalog cards at 1280 | Cards have an empty gap because the summary has no bloc size fields. | `FE/src/features/catalog/ProductCard.tsx` | screenshot at 1280 px | backend ask CR-11 |
-| FB-17 | P3 | Tooling hygiene | `routeFileIgnorePattern` for `*.test.tsx` (the dev server warns 5 times); clear the 4 knip config hints. | `FE/vite.config.ts`, `FE/knip.json` | `cd frontend && pnpm dev` (no route warnings) and `pnpm knip` (no hints) | — |
+| FB-17 | P3 | Tooling hygiene | `routeFileIgnorePattern` for `*.test.tsx` (the dev server warns 5 times); clear the 4 knip config hints. | `FE/vite.config.ts`, `FE/knip.json` | `cd frontend && pnpm dev` (no route warnings) and `cd frontend && pnpm knip` (no hints) | — |
 | FB-18 | P3 | Docs | Mark design-screens §7 Q1–Q22 as answered with cross-links to plan §12 notes; add a LICENSE decision note (the repository has no LICENSE). | `FE/docs/design-screens.md` | `grep -c 'Answered' frontend/docs/design-screens.md` | — |
 
 ## 2. Steps
