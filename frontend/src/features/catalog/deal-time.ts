@@ -89,3 +89,9 @@ export function formatDayTime(ms: number): string {
   const date = new Date(ms);
   return `${part(date, "day")} ${part(date, "month")}, ${sgTime(date)}`;
 }
+
+// My blocs Refunded row (§4.4 "closed 15 Sep"): day and month only.
+export function formatDay(ms: number): string {
+  const date = new Date(ms);
+  return `${part(date, "day")} ${part(date, "month")}`;
+}
