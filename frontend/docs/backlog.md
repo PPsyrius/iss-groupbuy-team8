@@ -67,5 +67,5 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 
 ## 3. Blocked / external
 
-- T3-05 (share attribution) stays in `plan.md`, blocked on the backend: branch `feature/shared-attribution-backend-20260924` has no PR and no `GET /invites/{ref}`.
-- The admin console: see [`admin-plan.md`](admin-plan.md); its Q1 (whether it is in Sprint 3) is open.
+- T3-05 (share attribution) stays in `plan.md`, blocked on the backend: #198 (merged 2026-09-26) added `POST /api/v1/group-deals/{dealId}/invites` and attribution at purchase, but there is still no endpoint that resolves a ref to the sharer's nickname (backend #201, open).
+- The admin console: see [`admin-plan.md`](admin-plan.md); its Q1 was answered on 2026-09-26 (#202): only A0-00 is in Sprint 3, and every A1 and A2 row is deferred.
