@@ -458,3 +458,219 @@ describe("/products/$productId listing variants", () => {
     expect(await screen.findByText(/couldn’t load this listing/)).toBeInTheDocument();
   });
 });
+
+function serveTeams(items: unknown[]) {
+  server.use(
+    http.get("*/api/v1/group-deals/me", () =>
+      HttpResponse.json({
+        code: OK_CODE,
+        message: "ok",
+        data: { items, total: items.length, page: 1, size: 100 },
+      }),
+    ),
+  );
+}
+
+describe("/products/$productId invite link (UC7)", () => {
+  const ref = "Qm9vbS1pbnZpdGUtcmVm_-";
+
+  it("parks the ref, drops it from the URL, and sends it on the JOIN after sign-in", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(listing());
+    const first = renderRoute(`/products/${knownId}?deal=deal-1&ref=${ref}`);
+    expect(
+      await screen.findByRole("heading", { name: "You’ve been invited to join this bloc" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/You’ll sign in with Google, then pay/)).toBeInTheDocument();
+    expect(first.router.state.location.href).toBe(`/products/${knownId}`);
+    expect(JSON.parse(sessionStorage.getItem("blocbuy.invite") ?? "null")).toEqual({
+      productId: knownId,
+      dealId: "deal-1",
+      ref,
+    });
+    // Join is gated; the sheet brings the buyer back to the bare listing URL.
+    await userEvent.click(screen.getByRole("button", { name: "Join this bloc · S$71.00" }));
+    expect(await screen.findByRole("dialog", { name: "Sign in to hold your seat" })).toBeVisible();
+    first.unmount();
+
+    // Back from Google (a full page load): the ref is still parked in this tab.
+    serveSignedIn();
+    serveTeams([]);
+    servePayments();
+    let intentBody: unknown;
+    server.use(
+      http.post("*/api/v1/payments/intents", async ({ request }) => {
+        intentBody = await request.json();
+        return HttpResponse.error();
+      }),
+    );
+    renderRoute(`/products/${knownId}`);
+    const join = await screen.findByRole("button", { name: "Join this bloc · S$71.00" });
+    await waitFor(() => expect(join).toBeEnabled());
+    expect(screen.getByText(/You’ll pay the bloc price now/)).toBeInTheDocument();
+    await userEvent.click(join);
+    await waitFor(() =>
+      expect(intentBody).toEqual({ operation: "JOIN", businessId: "deal-1", ref }),
+    );
+  });
+
+  it("makes the invited bloc's Join the primary action and steps Start a bloc down", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(listing());
+    renderRoute(`/products/${knownId}?deal=deal-1&ref=${ref}`);
+    const invite = await screen.findByRole("region", { name: "Invite" });
+    const join = within(invite).getByRole("button", { name: "Join this bloc · S$71.00" });
+    expect(join).toHaveClass("button--secondary", "button--lg");
+    const starts = screen.getAllByRole("button", { name: /Start a bloc/ });
+    expect(starts.length).toBeGreaterThan(0);
+    for (const start of starts) {
+      expect(start).toHaveClass("button--outline");
+      expect(start).not.toHaveClass("button--secondary");
+    }
+    // The primary Join comes before the page's other actions in reading order.
+    expect(
+      join.compareDocumentPosition(starts[0]!) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("keeps Start a bloc primary without an invite", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(listing());
+    renderRoute(`/products/${knownId}`);
+    const [start] = await screen.findAllByRole("button", { name: /Start a bloc/ });
+    expect(start).toHaveClass("button--secondary");
+    expect(screen.queryByRole("button", { name: /^Join this bloc ·/ })).toBeNull();
+  });
+
+  it("keeps Start a bloc primary when the invited bloc is full", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(
+      listing({
+        deal: {
+          dealId: "deal-1",
+          currentSize: 5,
+          targetSize: 5,
+          expireTime: "2099-01-01T00:00:00Z",
+        },
+      }),
+    );
+    renderRoute(`/products/${knownId}?deal=deal-1&ref=${ref}`);
+    expect(
+      await screen.findByRole("heading", { name: "The bloc you were invited to has closed" }),
+    ).toBeInTheDocument();
+    const [start] = screen.getAllByRole("button", { name: /Start a bloc/ });
+    expect(start).toHaveClass("button--secondary");
+    expect(screen.queryByRole("button", { name: /^Join this bloc ·/ })).toBeNull();
+  });
+
+  it("drops an invalid ref without parking it", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(listing());
+    const { router } = renderRoute(`/products/${knownId}?deal=deal-1&ref=bad%20ref!`);
+    await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" });
+    expect(router.state.location.href).toBe(`/products/${knownId}`);
+    expect(sessionStorage.getItem("blocbuy.invite")).toBeNull();
+    expect(screen.queryByRole("region", { name: "Invite" })).toBeNull();
+  });
+
+  it("empties the parked invite when a newer link to the listing is invalid", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(listing());
+    const first = renderRoute(`/products/${knownId}?deal=deal-1&ref=${ref}`);
+    await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" });
+    expect(sessionStorage.getItem("blocbuy.invite")).not.toBeNull();
+    first.unmount();
+
+    const { router } = renderRoute(`/products/${knownId}?deal=deal-1&ref=other%20ref!`);
+    await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" });
+    expect(router.state.location.href).toBe(`/products/${knownId}`);
+    expect(sessionStorage.getItem("blocbuy.invite")).toBeNull();
+    expect(screen.queryByRole("region", { name: "Invite" })).toBeNull();
+  });
+
+  it("drops a link whose deal and ref are both invalid, and empties the parked invite", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(listing());
+    sessionStorage.setItem(
+      "blocbuy.invite",
+      JSON.stringify({ productId: knownId, dealId: "deal-1", ref }),
+    );
+    const { router } = renderRoute(`/products/${knownId}?deal=bad%20deal!&ref=bad%20ref!`);
+    await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" });
+    expect(router.state.location.href).toBe(`/products/${knownId}`);
+    expect(sessionStorage.getItem("blocbuy.invite")).toBeNull();
+  });
+
+  it("points a buyer invited to a closed bloc at the open one", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(listing());
+    renderRoute(`/products/${knownId}?deal=deal-0&ref=${ref}`);
+    expect(
+      await screen.findByRole("heading", { name: "The bloc you were invited to has closed" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/joining the open bloc below/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Join this bloc ·/ })).toBeNull();
+    const [start] = screen.getAllByRole("button", { name: /Start a bloc/ });
+    expect(start).toHaveClass("button--secondary");
+  });
+
+  it("shows the share block to a buyer in the listing's open bloc", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(listing());
+    serveTeams([{ dealId: "deal-1", productId: knownId, status: "open", role: "leader" }]);
+    server.use(
+      http.post("*/api/v1/group-deals/:dealId/invites", ({ params }) =>
+        HttpResponse.json({
+          code: OK_CODE,
+          message: "ok",
+          data: {
+            ref,
+            dealId: params.dealId,
+            productId: knownId,
+            expiresAt: "2099-01-01T00:00:00Z",
+          },
+        }),
+      ),
+    );
+    renderRoute(`/products/${knownId}`);
+    expect(await screen.findByRole("heading", { name: "Share your bloc" })).toBeInTheDocument();
+    const field = await screen.findByRole<HTMLInputElement>("textbox", { name: "Invite link" });
+    expect(field.value).toContain(`/products/${knownId}?deal=deal-1&ref=${ref}`);
+    expect(screen.getByText("2 seats to go.")).toBeInTheDocument();
+  });
+
+  it("hides the share block from a buyer who is not in the bloc", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(listing());
+    let asked = false;
+    server.use(
+      http.get("*/api/v1/group-deals/me", () => {
+        asked = true;
+        return HttpResponse.json({
+          code: OK_CODE,
+          message: "ok",
+          data: {
+            items: [{ dealId: "deal-9", productId: knownId, status: "open", role: "member" }],
+            total: 1,
+            page: 1,
+            size: 100,
+          },
+        });
+      }),
+    );
+    renderRoute(`/products/${knownId}`);
+    await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" });
+    await waitFor(() => expect(asked).toBe(true));
+    expect(screen.queryByRole("heading", { name: "Share your bloc" })).toBeNull();
+  });
+});

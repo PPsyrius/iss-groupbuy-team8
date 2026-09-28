@@ -6,10 +6,9 @@ import { blocCounts, blocFilter, blocFilters, type BlocFilter } from "./bloc-sta
 import { BlocFilterChips } from "./BlocFilterChips";
 import { BlocRow } from "./BlocRow";
 
-// The §4.4 My blocs list on `/account` (UC8, #31). `GET /group-deals/me` has no status filter
-// and no counts, so the route fetches the latest 100 blocs once and the chips filter and count
-// them here; switching chips never refetches (plan §12 note 50).
-export const MY_BLOCS_FETCH_SIZE = 100;
+// The §4.4 My blocs list on `/account` (UC8, #31). The route fetches the latest 100 blocs once
+// (`myTeamsQuery`) and the chips filter and count them here; switching chips never refetches
+// (plan §12 note 50).
 
 const noTeams: MyTeamResponse[] = [];
 
@@ -17,10 +16,12 @@ export function MyBlocs({
   teams = noTeams,
   total,
   selected,
+  userId,
 }: Readonly<{
   teams?: MyTeamResponse[] | undefined;
   total: number;
   selected: BlocFilter;
+  userId?: string | undefined;
 }>) {
   const shown = teams.filter((team) => blocFilter(team.status) === selected);
   const label = blocFilters.find((f) => f.value === selected)?.label.toLowerCase() ?? selected;
@@ -36,7 +37,7 @@ export function MyBlocs({
         <ul aria-label="My blocs" className="flex flex-col gap-3">
           {shown.map((team) => (
             <li key={team.dealId}>
-              <BlocRow team={team} />
+              <BlocRow team={team} userId={userId} />
             </li>
           ))}
         </ul>

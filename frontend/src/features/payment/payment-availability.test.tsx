@@ -25,6 +25,8 @@ async function disabledPage(state: string, path: string) {
     http.post("*/api/v1/payments/intents", business),
     http.post("*/api/v1/payments/checkout-sessions", business),
     http.get(`*/api/v1/payments/${id}`, business),
+    // The listing asks whether a signed-in buyer is in its bloc (T3-05 share block).
+    http.get("*/api/v1/group-deals/me", () => ok({ items: [], total: 0, page: 1, size: 100 })),
     http.get(`*/api/v1/products/${id}`, () =>
       ok({
         id,
