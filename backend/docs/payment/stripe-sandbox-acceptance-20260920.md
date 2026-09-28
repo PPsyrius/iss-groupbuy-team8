@@ -2,7 +2,7 @@
 
 Owner: Yorick. Run: 20 September 2026, Team8 Stripe Sandbox (`livemode=false`).
 
-This is historical acceptance evidence. Its private local routes and scripts were removed before publication; the current boundary is [stripe-release-cleanup-20260920.md](stripe-release-cleanup-20260920.md).
+This is historical acceptance evidence. Its private local routes and scripts were removed before publication; the current boundary is [stripe-release-boundary.md](stripe-release-boundary.md).
 
 ## Results
 
