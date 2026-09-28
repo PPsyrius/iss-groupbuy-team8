@@ -26,10 +26,8 @@ public class PaymentAppServiceImpl implements PaymentAppService {
         if (event.isEmpty()) {
             return;
         }
-        // TODO(TEAM8-payment): deduplicate by event.eventId() (processed-event table or unique
-        // row),
-        // load payment by event.providerPaymentIntentId(), transition state via the aggregate,
-        // then trigger order-domain confirmation in the same local transaction.
+        // TODO(TEAM8-payment): retire this compatibility webhook before live Stripe, or implement
+        // event deduplication and settlement here; the active Checkout flow handles both elsewhere.
         log.info(
                 "stripe webhook accepted: eventId={}, type={}",
                 event.get().eventId(),

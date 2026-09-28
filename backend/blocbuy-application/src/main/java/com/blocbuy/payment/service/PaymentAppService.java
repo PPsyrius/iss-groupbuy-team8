@@ -1,15 +1,10 @@
 package com.blocbuy.payment.service;
 
 /**
- * Use-case service for Payment — transaction boundary sits on public command methods
- * ({@code @Transactional}, queries {@code readOnly = true}). Orchestrates the Payment aggregate,
- * {@code PaymentRepository}, and {@code PaymentGateway}; carries no rules that belong to the
- * aggregate itself.
- *
- * <p>Flow outline (first use case): create payment → persist row + create provider intent in one
- * use case; webhook handler → verify signature via gateway, deduplicate by provider event id,
- * transition the persisted payment inside a local transaction. Redis never holds payment truth.
- * TODO(TEAM8-payment): add one public method per use case; write paths require Idempotency-Key.
+ * Webhook entry port retained for the original controller. Under {@code stripe-sprint2}, {@link
+ * StripePaymentAppService} delegates to the transactional {@link StripeCheckoutService} for
+ * signature verification, event deduplication and settlement. Checkout commands have their own
+ * application service; this interface does not need one method per payment use case.
  */
 public interface PaymentAppService {
 

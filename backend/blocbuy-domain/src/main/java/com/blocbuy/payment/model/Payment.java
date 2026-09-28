@@ -1,16 +1,9 @@
 package com.blocbuy.payment.model;
 
 /**
- * Payment aggregate root — placeholder.
- *
- * <p>Rules: the aggregate root is the only entry point for mutating its state; state transitions
- * (created → succeeded/failed/canceled, refunds) go through behavioral methods that validate the
- * current state (no public {@code setStatus}); no Lombok {@code @Data}; monetary amounts use {@code
- * BigDecimal} major units with an explicit currency — conversion to Stripe minor units happens only
- * in the infrastructure gateway. Payment facts live in PostgreSQL, never solely in Redis or derived
- * from provider callbacks without local persistence. TODO(TEAM8-payment): model fields (paymentNo,
- * orderId, amount, currency, status, provider references), invariants (amount > 0, one active
- * payment per order), and behavior when the first payment use case lands.
+ * ID-only legacy payment view retained for compatibility callers. The implemented checkout
+ * aggregate, including its persisted pricing, status and provider references, is {@link
+ * CheckoutPayment}; refund obligations are tracked separately.
  */
 public final class Payment {
 
