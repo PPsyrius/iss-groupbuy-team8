@@ -71,7 +71,6 @@ class StripeLocalIntegrationTest {
     @Autowired private StripeCheckoutService payments;
     @Autowired private PaymentBrowserService browser;
     @Autowired private CheckoutPaymentRepository repository;
-    @Autowired private com.blocbuy.payment.repository.PaymentRepository devPayments;
     @Autowired private JdbcTemplate jdbc;
     @Autowired private java.util.List<RequestMappingHandlerMapping> mappings;
     @Autowired private com.blocbuy.payment.repository.RefundRepository refunds;
@@ -142,8 +141,7 @@ class StripeLocalIntegrationTest {
         assertThat(count("biz_group_member")).isEqualTo(1);
         assertThat(count("biz_order")).isEqualTo(1);
         var receipt = browser.receipt(p.quote().userId(), p.id());
-        assertThat(devPayments.findById(p.id().toString()).orElseThrow().id())
-                .isEqualTo(p.id().toString());
+        assertThat(repository.findById(p.id()).orElseThrow().id()).isEqualTo(p.id());
         assertThat(receipt.status()).isEqualTo("SUCCEEDED");
         assertThat(receipt.orderId())
                 .isEqualTo(jdbc.queryForObject("SELECT id FROM biz_order", UUID.class));

@@ -4,7 +4,6 @@ import com.blocbuy.common.exception.BizException;
 import com.blocbuy.payment.exception.PaymentErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
  * Missing integration fails closed instead of acknowledging an unprocessed money notification.
  */
 @Service
-@Primary
 @Profile("stripe-sprint2")
 @RequiredArgsConstructor
 public class StripePaymentAppService implements PaymentAppService {

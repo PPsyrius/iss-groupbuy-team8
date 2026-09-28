@@ -32,7 +32,7 @@ Domains (v1): `identity`, `groupbuy`, `order`, `catalog`, `notification`, `payme
 docker build -t blocbuy-backend .              # production image (Dockerfile at backend/)
 ```
 
-Profiles: `local` (default; localhost PG/Redis) · `docker` (compose service names) · `openapi-export` (build-only, no live infra).
+Profiles: `local` (default; localhost PG/Redis) · `docker` (compose service names) · `stripe-sprint2` (opt-in Sandbox Checkout) · `openapi-export` (build-only, no live infra). Payment rollout and pre-live gates: [Stripe release boundary](docs/payment/stripe-release-boundary.md).
 
 Secrets come from the environment, never from git: `DB_USERNAME`, `DB_PASSWORD`, `REDIS_PASSWORD`, `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`, `TYPESAFE_API_KEY`. Set `TYPESAFE_ENABLED=true` to allow opt-in Jev re-ranking for listing searches; model, endpoint, and timeout settings have safe defaults in `application.yml`.
 
@@ -54,7 +54,7 @@ CI: `.github/workflows/ci-backend.yml` (build-quality → contract-check → son
 
 ## API conventions
 
-- Base path `/api/v1`; errors are RFC 9457 Problem Details + stable `code` + `traceId`.
+- Base path `/api/v1`; JSON successes and failures use `Result<T>` with stable `code` and `message`, optional `data`, `errors` and `traceId`, and a matching HTTP status for failures.
 - Auth: Sa-Token, one token domain, Redis-backed sessions, RBAC from identity tables. Exception: `POST /api/v1/webhooks/stripe` is a public path; authenticity comes from Stripe signature verification in the gateway, not session auth.
 - Write endpoints define idempotency via the `Idempotency-Key` header.
 - Lists paginate with a 100-item page cap; cursor field reserved for keyset pagination.

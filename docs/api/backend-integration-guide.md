@@ -56,7 +56,7 @@ The contract currently exposes these values as strings.
 3. POST /payments/checkout-sessions
 4. Navigate to the returned Stripe Checkout URL
 5. Stripe redirects to the server-owned return URL with paymentId
-6. GET  /payments/{paymentId} until outcome is no longer PENDING
+6. GET  /payments/{paymentId} while payment is CREATED or a refund is pending (at most 60 s)
 ```
 
 - Gate payment UI on `capabilities.enabled`.
@@ -74,20 +74,20 @@ The contract currently exposes these values as strings.
 
 `GET /orders/{orderId}` is owner-scoped. Foreign and unknown orders both return `404 ORDER_404_001`; do not present this as a permission error. Successful and error responses include `Cache-Control: no-store`, so clients must not retain the order detail. Order responses expose neither `paymentId` nor recipient PII.
 
+`GET /group-deals/me` lists the signed-in buyer's blocs with `page` and `size` (maximum 100); it carries committed team status but no payment or refund state. The `/account` "Refunded" filter groups closed blocs, not confirmed refunds; read the owner-scoped receipt for actual refund status.
+
 Reaching the team target changes pending orders to `confirmed`; resolving an expired team changes them to `cancelled` and records refund obligations. Refetch orders after a receipt reaches a terminal outcome because no push channel exists.
 
-Automatic expiry is available through the deployment-opt-in scheduler (`BLOCBUY_SCHEDULING_ENABLED`). UI correctness must still tolerate delayed expiry while the switch is off, a failed item is in retry backoff, or a deployment is unavailable. Issue #29 tracks execution of the durable refund obligations, not team expiry.
+Automatic expiry and refund execution are deployment-opt-in under `BLOCBUY_SCHEDULING_ENABLED` (#29, [release boundary](../../backend/docs/payment/stripe-release-boundary.md)). UI correctness must tolerate delayed expiry while scheduling is off, an item is in retry backoff, or a deployment is unavailable.
 
-## Unavailable capabilities
+## Remaining capability limits
 
-| Capability                  | Current state                                        |
-| --------------------------- | ---------------------------------------------------- |
-| My teams                    | No `GET /group-deals/me` endpoint                    |
-| Refund history              | Available only through an individual payment receipt |
-| Order-to-payment navigation | Orders do not expose `paymentId`                     |
-| Resolved team history       | Catalog exposes only the active team                 |
-| Automatic team expiry       | Available when the deployment scheduler is enabled   |
-| Admin group terms           | No write endpoint for team size or lifetime          |
+| Capability | Limit |
+| --- | --- |
+| Refund history | Only on individual payment receipts |
+| Order-to-payment navigation | Orders omit `paymentId` |
+| Catalog team history | Only the active team; buyer history is under `/group-deals/me` |
+| Admin group terms | No write endpoint for size or lifetime |
 
 A product without group terms cannot start a team: `POST /payments/intents` returns `CATALOG_409_006`. Joining an existing configured team may still work.
 
