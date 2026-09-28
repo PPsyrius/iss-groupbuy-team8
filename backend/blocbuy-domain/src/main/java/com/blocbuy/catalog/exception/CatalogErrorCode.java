@@ -56,6 +56,11 @@ public enum CatalogErrorCode implements ErrorCode {
             409,
             "Product has no group-buy terms configured, so no team can be started on it",
             "error.catalog.productNotStartable"),
+    TEAM_PRICE_QUOTE_EXPIRED(
+            "CATALOG_409_007",
+            409,
+            "Team price quote has expired",
+            "error.catalog.teamPriceQuoteExpired"),
     PRICING_MODE_UNSUPPORTED(
             "CATALOG_500_001",
             500,

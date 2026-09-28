@@ -118,6 +118,8 @@ and the transaction provide atomic persistence, not the factory method itself.
 Reject creation directly in a controller or accepting a browser's claim that payment succeeded.
 Quote acceptance, inventory/order, invite generation and provider recovery remain integration work,
 so #26's full payment + team + invite acceptance criterion is not yet satisfied by this slice.
+(2026-09-28: quote acceptance landed with #183. A START intent may carry a `quoteId` and is then
+charged that quote; see backend ADR 0001 addendum.)
 
 ### Course five elements and alternatives for UC3
 

@@ -4,6 +4,13 @@ Date: 2026-09-28 · Branch: `refactor/price-shown-20260928` · Issue: #183 (US26
 
 Budget: 6 h (Sprint 3 plan). Target: merged to `dev` with the regenerated contract by 2026-10-02, so that the US13 switch-on and the Review demo charge the quoted price.
 
+> **Implementation notes (2026-09-28).** Implemented as planned; D2 and D8 remain open for Planning. Departures:
+>
+> - **IT placement.** The IT cases live in `StripeLocalIntegrationTest`, reusing its container and context; no separate `QuotedStartIT`. IT-1 goes past `prepare`: it also settles and asserts `biz_order.total_amount`, and IT-5's "unquoted START still takes the latest policy" is asserted inside IT-1 after the revision.
+> - **UT-A2.** It asserts `COMMON_400_001`, the existing `HttpMessageNotReadableException` mapping.
+> - **Null guard.** `lockQuotedStart` rejects a null quote or buyer id with `IllegalArgumentException`, mirroring `lockStartQuote`'s null-clock guard. The order caller never passes either.
+> - **Generated client.** `frontend/src/api/generated/` is gitignored and rebuilt by `pnpm gen:api`, so the backend PR carries no frontend file. The field is optional, so the frontend compiles unchanged.
+
 ## 1. Goal and acceptance criteria
 
 A START intent can carry the id of a team-price quote. When it does, the intent charges the quote's amount, not the latest policy's amount. The decision was made on #183 (comment of 2026-09-26): "START will accept the quote id".

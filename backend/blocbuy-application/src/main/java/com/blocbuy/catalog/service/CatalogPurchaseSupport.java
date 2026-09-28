@@ -29,6 +29,20 @@ public interface CatalogPurchaseSupport {
     StartQuote lockStartQuote(UUID productId, Instant now);
 
     /**
+     * Prices a START at the amount of a team-price quote the buyer was already shown (#183). Takes
+     * the same product row lock and product checks as {@link #lockStartQuote}, but never reads the
+     * latest policy: a revision made after the quote was issued does not move its price. Expiry is
+     * judged against the database clock read after the lock, not the caller's earlier clock.
+     *
+     * @throws com.blocbuy.common.exception.BizException {@code PRODUCT_NOT_FOUND}, {@code
+     *     PRODUCT_NOT_PURCHASABLE} or {@code PRODUCT_NOT_STARTABLE} as for {@link #lockStartQuote},
+     *     {@code TEAM_PRICE_QUOTE_NOT_FOUND} when the quote is missing, belongs to another buyer or
+     *     prices another product, {@code TEAM_PRICE_QUOTE_EXPIRED} when it has lapsed, {@code
+     *     TEAM_PRICE_UNAVAILABLE} when its amount no longer undercuts the original price
+     */
+    StartQuote lockQuotedStart(UUID productId, UUID quoteId, UUID buyerId);
+
+    /**
      * Validates that a product can back a checkout right now, without locking it. Used by JOIN,
      * which takes its price from the team rather than from a policy.
      *

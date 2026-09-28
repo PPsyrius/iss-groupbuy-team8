@@ -20,11 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
  * The order module's answer to "what would this checkout cost?" — the production implementation of
  * the payment slice's {@link PaymentIntentPort}, which until now had none.
  *
- * <p>Only identifiers enter: the buyer comes from the Sa-Token session and the business id names a
- * product (START) or a team (JOIN). Every number that ends up on the payment — the amount, the
- * currency, the team size and both deadlines — is read here from the database under a lock, so no
- * request can choose its own price. The result is a {@link PurchaseIntent} row; the payment slice
- * later turns it into a {@code CheckoutQuote} and never re-prices it.
+ * <p>Only identifiers enter: the buyer comes from the Sa-Token session, the business id names a
+ * product (START) or a team (JOIN), and a START may name the price quote the buyer was shown. Every
+ * number that ends up on the payment — the amount, the currency, the team size and both deadlines —
+ * is read here from the database under a lock, so no request can choose its own price. The result
+ * is a {@link PurchaseIntent} row; the payment slice later turns it into a {@code CheckoutQuote}
+ * and never re-prices it.
  *
  * <p>Collaborators are the three other domains' public application facades, never their mappers or
  * aggregates. Locks are taken in the fixed global order group deal → purchase intent → payment;
@@ -54,7 +55,8 @@ public class PurchaseIntentAppService implements PaymentIntentPort {
      */
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
-    public UUID createIntent(UUID user, String operation, UUID businessId, String inviteRef) {
+    public UUID createIntent(
+            UUID user, String operation, UUID businessId, String inviteRef, UUID quoteId) {
         if (user == null || businessId == null) {
             throw new BizException(OrderErrorCode.PURCHASE_INTENT_TERMS_INVALID);
         }
@@ -64,12 +66,17 @@ public class PurchaseIntentAppService implements PaymentIntentPort {
                                 () ->
                                         new BizException(
                                                 OrderErrorCode.PURCHASE_INTENT_TERMS_INVALID));
+        // A JOIN pays the team's frozen price, so a quote there is a client bug. Unlike an invite
+        // reference on a START, a money term is refused rather than ignored.
+        if (kind == PurchaseOperation.JOIN && quoteId != null) {
+            throw new BizException(OrderErrorCode.PURCHASE_INTENT_TERMS_INVALID);
+        }
         // The session says who is logged in; identity says whether that account may still buy.
         users.requireActive(user);
         Instant now = intents.currentTime();
         PurchaseIntent issued =
                 switch (kind) {
-                    case START -> start(user, businessId, now);
+                    case START -> start(user, businessId, quoteId, now);
                     case JOIN -> join(user, businessId, inviteRef, now);
                 };
         return intents.save(issued).id();
@@ -77,10 +84,14 @@ public class PurchaseIntentAppService implements PaymentIntentPort {
 
     /**
      * START: the business id is a product, and the team it will open does not exist yet. Any invite
-     * reference is ignored — a buyer starting their own team may still hold one from browsing.
+     * reference is ignored — a buyer starting their own team may still hold one from browsing. With
+     * a quote id the buyer pays the quote they were shown (#183); without one, the latest policy.
      */
-    private PurchaseIntent start(UUID user, UUID productId, Instant now) {
-        CatalogPurchaseSupport.StartQuote quote = products.lockStartQuote(productId, now);
+    private PurchaseIntent start(UUID user, UUID productId, UUID quoteId, Instant now) {
+        CatalogPurchaseSupport.StartQuote quote =
+                quoteId == null
+                        ? products.lockStartQuote(productId, now)
+                        : products.lockQuotedStart(productId, quoteId, user);
         // Reserved, not created: the team is only inserted once the payment succeeds, but the
         // settlement path needs a stable lock target from the moment the quote exists.
         UUID dealId = UuidV7.next();

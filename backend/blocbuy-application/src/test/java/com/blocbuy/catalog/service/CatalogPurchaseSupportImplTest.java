@@ -2,7 +2,11 @@ package com.blocbuy.catalog.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.catalog.exception.CatalogErrorCode;
@@ -11,6 +15,7 @@ import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.catalog.model.ProductTeamTerms;
 import com.blocbuy.catalog.pricing.TeamPricePolicy;
+import com.blocbuy.catalog.pricing.TeamPriceQuote;
 import com.blocbuy.catalog.repository.ProductRepository;
 import com.blocbuy.catalog.repository.TeamPriceRepository;
 import com.blocbuy.common.exception.BizException;
@@ -22,6 +27,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.InOrder;
 
 /** What catalog will and will not let a checkout be priced against. */
 class CatalogPurchaseSupportImplTest {
@@ -217,5 +223,147 @@ class CatalogPurchaseSupportImplTest {
         when(products.consumeOneUnit(PRODUCT)).thenReturn(true, false);
         assertThat(support.consumeOneUnit(PRODUCT)).isTrue();
         assertThat(support.consumeOneUnit(PRODUCT)).isFalse();
+    }
+
+    // ---- #183: a START priced at the quote the buyer was shown ----
+
+    private static final UUID BUYER = UUID.randomUUID();
+    private static final UUID QUOTE = UUID.randomUUID();
+
+    private static TeamPriceQuote quote(UUID productId, String amount, Instant expiresAt) {
+        return new TeamPriceQuote(
+                QUOTE,
+                productId,
+                BUYER,
+                1,
+                new BigDecimal(amount),
+                "sgd",
+                expiresAt.minusSeconds(900),
+                expiresAt);
+    }
+
+    private void givenQuoted(Product product, ProductTeamTerms terms, TeamPriceQuote quote) {
+        when(products.lockById(PRODUCT)).thenReturn(Optional.ofNullable(product));
+        when(products.findTeamTerms(PRODUCT)).thenReturn(Optional.ofNullable(terms));
+        when(teamPrices.currentTime()).thenReturn(NOW);
+        when(teamPrices.findQuoteForOwner(QUOTE, BUYER)).thenReturn(Optional.ofNullable(quote));
+    }
+
+    private static CatalogErrorCode codeOf(Throwable error) {
+        return (CatalogErrorCode) ((BizException) error).errorCode();
+    }
+
+    @Test
+    void aQuotedStartChargesTheQuoteAndNeverReadsTheLatestPolicy() {
+        givenQuoted(onSale(), terms(3, 7200), quote(PRODUCT, "40.00", NOW.plusSeconds(600)));
+        // A later revision at another price must not move the quote.
+        when(teamPrices.findLatestPolicy(PRODUCT))
+                .thenReturn(
+                        Optional.of(policy("80.00", NOW.minusSeconds(60), NOW.plusSeconds(9999))));
+
+        CatalogPurchaseSupport.StartQuote start = support.lockQuotedStart(PRODUCT, QUOTE, BUYER);
+
+        assertThat(start.productId()).isEqualTo(PRODUCT);
+        assertThat(start.title()).isEqualTo("Headphones");
+        assertThat(start.coverImage()).isEqualTo("https://cdn.example.com/cover.jpg");
+        assertThat(start.amount()).isEqualByComparingTo("40.00");
+        assertThat(start.currency()).isEqualTo("sgd");
+        assertThat(start.targetSize()).isEqualTo(3);
+        assertThat(start.lifetimeSeconds()).isEqualTo(7200);
+        verify(teamPrices, never()).findLatestPolicy(any());
+    }
+
+    @Test
+    void aQuoteIsHonouredEvenWhenNoPolicyIsInForceAnyMore() {
+        givenQuoted(onSale(), terms(3, 7200), quote(PRODUCT, "40.00", NOW.plusSeconds(600)));
+        when(teamPrices.findLatestPolicy(PRODUCT)).thenReturn(Optional.empty());
+
+        assertThat(support.lockQuotedStart(PRODUCT, QUOTE, BUYER).amount())
+                .isEqualByComparingTo("40.00");
+    }
+
+    @Test
+    void aQuoteExpiresExactlyAtItsDeadline() {
+        givenQuoted(onSale(), terms(3, 7200), quote(PRODUCT, "40.00", NOW));
+        assertThatThrownBy(() -> support.lockQuotedStart(PRODUCT, QUOTE, BUYER))
+                .isInstanceOf(BizException.class)
+                .extracting(CatalogPurchaseSupportImplTest::codeOf)
+                .isEqualTo(CatalogErrorCode.TEAM_PRICE_QUOTE_EXPIRED);
+
+        givenQuoted(onSale(), terms(3, 7200), quote(PRODUCT, "40.00", NOW.plusNanos(1_000)));
+        assertThat(support.lockQuotedStart(PRODUCT, QUOTE, BUYER).amount())
+                .isEqualByComparingTo("40.00");
+    }
+
+    @Test
+    void aMissingForeignOrOtherProductQuoteIsTheSameNotFound() {
+        // Missing, or owned by someone else: the owner-scoped lookup finds nothing either way.
+        givenQuoted(onSale(), terms(3, 7200), null);
+        assertThatThrownBy(() -> support.lockQuotedStart(PRODUCT, QUOTE, BUYER))
+                .isInstanceOf(BizException.class)
+                .extracting(CatalogPurchaseSupportImplTest::codeOf)
+                .isEqualTo(CatalogErrorCode.TEAM_PRICE_QUOTE_NOT_FOUND);
+
+        givenQuoted(
+                onSale(), terms(3, 7200), quote(UUID.randomUUID(), "40.00", NOW.plusSeconds(600)));
+        assertThatThrownBy(() -> support.lockQuotedStart(PRODUCT, QUOTE, BUYER))
+                .isInstanceOf(BizException.class)
+                .extracting(CatalogPurchaseSupportImplTest::codeOf)
+                .isEqualTo(CatalogErrorCode.TEAM_PRICE_QUOTE_NOT_FOUND);
+    }
+
+    @Test
+    void aQuoteThatNoLongerUndercutsTheOriginalPriceIsRefused() {
+        givenQuoted(onSale(), terms(3, 7200), quote(PRODUCT, "100.00", NOW.plusSeconds(600)));
+        assertThatThrownBy(() -> support.lockQuotedStart(PRODUCT, QUOTE, BUYER))
+                .isInstanceOf(BizException.class)
+                .extracting(CatalogPurchaseSupportImplTest::codeOf)
+                .isEqualTo(CatalogErrorCode.TEAM_PRICE_UNAVAILABLE);
+    }
+
+    @Test
+    void aQuotedStartStillNeedsASellableStartableProductAndChecksThatFirst() {
+        givenQuoted(
+                product(ProductStatus.OFF_SALE, 10, "sgd"),
+                terms(3, 7200),
+                quote(PRODUCT, "40.00", NOW.plusSeconds(600)));
+        assertThatThrownBy(() -> support.lockQuotedStart(PRODUCT, QUOTE, BUYER))
+                .isInstanceOf(BizException.class)
+                .extracting(CatalogPurchaseSupportImplTest::codeOf)
+                .isEqualTo(CatalogErrorCode.PRODUCT_NOT_PURCHASABLE);
+
+        givenQuoted(onSale(), terms(null, 7200), quote(PRODUCT, "40.00", NOW.plusSeconds(600)));
+        assertThatThrownBy(() -> support.lockQuotedStart(PRODUCT, QUOTE, BUYER))
+                .isInstanceOf(BizException.class)
+                .extracting(CatalogPurchaseSupportImplTest::codeOf)
+                .isEqualTo(CatalogErrorCode.PRODUCT_NOT_STARTABLE);
+
+        givenQuoted(null, terms(3, 7200), quote(PRODUCT, "40.00", NOW.plusSeconds(600)));
+        assertThatThrownBy(() -> support.lockQuotedStart(PRODUCT, QUOTE, BUYER))
+                .isInstanceOf(BizException.class)
+                .extracting(CatalogPurchaseSupportImplTest::codeOf)
+                .isEqualTo(CatalogErrorCode.PRODUCT_NOT_FOUND);
+
+        verify(teamPrices, never()).findQuoteForOwner(any(), any());
+    }
+
+    @Test
+    void theQuotedStartLocksThenReadsTheClockThenTheQuote() {
+        givenQuoted(onSale(), terms(3, 7200), quote(PRODUCT, "40.00", NOW.plusSeconds(600)));
+
+        support.lockQuotedStart(PRODUCT, QUOTE, BUYER);
+
+        InOrder order = inOrder(products, teamPrices);
+        order.verify(products).lockById(PRODUCT);
+        order.verify(teamPrices).currentTime();
+        order.verify(teamPrices).findQuoteForOwner(QUOTE, BUYER);
+    }
+
+    @Test
+    void aQuotedStartNeedsAQuoteAndABuyer() {
+        assertThatThrownBy(() -> support.lockQuotedStart(PRODUCT, null, BUYER))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> support.lockQuotedStart(PRODUCT, QUOTE, null))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

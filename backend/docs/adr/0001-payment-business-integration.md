@@ -108,3 +108,20 @@ PRs landed; these are the decisions in it that the sections above do not already
    `ORDER_409_004` (`TEAM_NOT_JOINABLE`) is therefore permanently vacant — joinability is
    groupbuy's rule, expressed by its own error codes — and a vacated number is retired, never
    reused.
+
+## Addendum (2026-09-28): START honours a team-price quote (#183)
+
+Plan: `docs/agile/sprint-03/quote-honouring-plan-20260928.md`. Until now a START re-priced from the latest policy when the intent was created. An admin revision between the quote sheet and "Continue to payment" therefore charged an amount the buyer had not been shown.
+
+**Shape.**
+- `IntentRequest` carries an optional `quoteId`. `PaymentIntentPort` passes it through as an opaque value, like `inviteRef`, and payment never interprets it.
+- `PurchaseIntentAppService` sends a quoted START to `CatalogPurchaseSupport.lockQuotedStart` instead of `lockStartQuote`.
+- Catalog stays the only reader of `biz_team_price_quote`, so the cross-domain rule above holds.
+
+**Rules.**
+1. **Lock first, then clock, then quote.** The product row lock is taken first, with the same sellable and team-terms checks as an unquoted START. The database clock is read *after* the lock, and the quote is read last. A buyer who waited on the lock cannot slip a quote that lapsed meanwhile through on the earlier clock. Quote rows are immutable and need no lock. Lock order is unchanged.
+2. **The latest policy is not read.** A revision, or a withdrawn policy, does not move a quote's price. Exposure is bounded by the quote itself: at most 15 minutes, and never past the `valid_until` of the policy it was issued under. The admin's kill switch is still the product status. The quoted amount must still be below the product's current original price (`CATALOG_409_001` otherwise).
+3. **Missing, foreign and other-product quotes are the same 404** (`CATALOG_404_002`), so a quote id is not an existence oracle. An expired quote is `CATALOG_409_007`. That leaks nothing, because only the owner can get past the 404.
+4. **A quote on JOIN is refused** (`ORDER_400_001`) before anything is read. A JOIN pays the team's frozen price. Unlike an invite reference on START, a money term sent to the wrong operation is not silently ignored.
+5. **Reusable until expiry.** Each use issues a new intent, and each intent is still consumed by at most one payment. Retries after a stale intent or a cancelled Checkout keep the shown price. The intent's own pay window (40 minutes) is unchanged: the quote's expiry is the deadline to accept the price, not to pay it.
+6. **Unquoted START is unchanged.** `quoteId` is optional, and the contract change is additive. Making it required would be a breaking API change and needs approval. The quote id is not stored on the intent; the frozen amount is the audit fact.
