@@ -79,6 +79,8 @@ it("shows a completed refund without claiming active bloc membership", async () 
   renderRoute(`/payments/${paymentId}`);
   expect(await screen.findByRole("heading", { name: "Refund sent" })).toBeVisible();
   expect(screen.getByText(/Refund sent to your original payment method/)).toBeVisible();
+  expect(screen.getByText("Refunded")).toBeInTheDocument();
+  expect(screen.getByText(/usually 5–10 business days/)).toBeInTheDocument();
   expect(screen.queryByText(/bloc membership is confirmed/)).not.toBeInTheDocument();
 });
 
@@ -144,6 +146,79 @@ describe("teammate product page payment integration", () => {
     expect(sessionStorage.getItem(lastPaymentKey)).toBe(paymentId);
     for (const button of screen.getAllByRole("button", { name: /Buy alone/ }))
       expect(button).toBeDisabled();
+  });
+
+  // A refusal only covers this attempt: the server checks full and closed before membership, so
+  // a buyer who already paid for a seat elsewhere can still get _004 or _002.
+  const notChargedNow =
+    "This attempt was not charged. Any bloc you have already paid into is safe and still listed under My blocs.";
+
+  it.each([
+    ["GROUPBUY_409_004", `This bloc filled up before you joined. ${notChargedNow}`],
+    ["GROUPBUY_409_002", `This bloc is no longer taking members. ${notChargedNow}`],
+    ["GROUPBUY_409_003", "You are already in this bloc. Nothing new has been charged."],
+    ["GROUPBUY_404_001", `This bloc no longer exists. ${notChargedNow}`],
+  ])("names a rejected JOIN (%s) and refreshes the bloc", async (code, message) => {
+    serveSignedIn();
+    product();
+    let listings = 0;
+    let checkouts = 0;
+    server.use(
+      http.get("*/api/v1/products/:id", () => {
+        listings++;
+        return ok({
+          id: productId,
+          title: "Stripe integration product",
+          individualPrice: 20,
+          groupPrice: 10,
+          currency: "sgd",
+          stock: 10,
+          deal: { dealId, currentSize: 1, targetSize: 2, expireTime: "2099-01-01T00:00:00Z" },
+        });
+      }),
+      http.post("*/api/v1/payments/intents", () =>
+        HttpResponse.json(
+          { code, message: "rejected" },
+          { status: code.includes("_404_") ? 404 : 409 },
+        ),
+      ),
+      http.post("*/api/v1/payments/checkout-sessions", () => {
+        checkouts++;
+        return ok({});
+      }),
+    );
+    renderRoute(`/products/${productId}`);
+    const [join] = await screen.findAllByRole("button", { name: /^Join/ });
+    await waitFor(() => expect(join).toBeEnabled());
+    const before = listings;
+    await userEvent.click(join!);
+    expect(await screen.findByRole("alert")).toHaveTextContent(message);
+    await waitFor(() => expect(listings).toBeGreaterThan(before));
+    expect(checkouts).toBe(0);
+  });
+
+  // Checkout re-runs the JOIN admission before it looks up an earlier request, so a refusal can
+  // arrive after an intent exists. The copy stays scoped to this attempt, and the intent and
+  // idempotency key are kept: freeing them would let a retry open a second payment.
+  it("scopes a JOIN refused at checkout to this attempt and keeps its keys", async () => {
+    serveSignedIn();
+    product();
+    server.use(
+      http.post("*/api/v1/payments/intents", () => ok({ intentId })),
+      http.post("*/api/v1/payments/checkout-sessions", () =>
+        HttpResponse.json({ code: "GROUPBUY_409_004", message: "full" }, { status: 409 }),
+      ),
+    );
+    renderRoute(`/products/${productId}`);
+    const [join] = await screen.findAllByRole("button", { name: /^Join/ });
+    await waitFor(() => expect(join).toBeEnabled());
+    await userEvent.click(join!);
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(`This bloc filled up before you joined. ${notChargedNow}`);
+    expect(alert).not.toHaveTextContent("Nothing has been charged");
+    const key = `blocbuy.payment.attempt.u1.JOIN.${dealId}`;
+    expect(sessionStorage.getItem(key)).toBe(intentId);
+    expect(sessionStorage.getItem(`${key}.request`)).not.toBeNull();
   });
 
   it("retries a lost Checkout response using the same intent and idempotency key", async () => {
@@ -280,11 +355,65 @@ describe("backend-confirmed payment result", () => {
     ).toBe(false);
   });
 
+  it("shows the paid receipt as a status card with the order's paid time and My blocs", async () => {
+    const orderId = "00000000-0000-4000-8000-000000000062";
+    serveSignedIn();
+    receipt({ status: "SUCCEEDED", amount: "17.89", orderId, dealId });
+    server.use(
+      http.get(`*/api/v1/orders/${orderId}`, () =>
+        ok({ orderId, dealId, productId, paidTime: "2026-09-16T11:46:00Z" }),
+      ),
+    );
+    renderRoute(`/payments/${paymentId}`);
+    expect(await screen.findByRole("heading", { name: "Payment received" })).toBeVisible();
+    expect(screen.getByText("Paid")).toBeInTheDocument();
+    expect(screen.getByText("S$17.89 paid.")).toBeInTheDocument();
+    expect(await screen.findByText("Paid · 16 Sep, 7.46 pm")).toBeInTheDocument();
+    expect(screen.getByText(paymentId)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "My blocs" })).toHaveAttribute("href", "/account");
+    expect(screen.queryByRole("link", { name: "My orders" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Refresh status" })).not.toBeInTheDocument();
+  });
+
+  it("links a saved order's receipt back to its listing through the order's product", async () => {
+    const orderId = "00000000-0000-4000-8000-000000000060";
+    serveSignedIn();
+    receipt({ status: "SUCCEEDED", orderId, dealId });
+    server.use(http.get(`*/api/v1/orders/${orderId}`, () => ok({ orderId, dealId, productId })));
+    renderRoute(`/payments/${paymentId}`);
+    expect(await screen.findByRole("link", { name: "See the listing" })).toHaveAttribute(
+      "href",
+      `/products/${productId}`,
+    );
+  });
+
+  it("offers no listing link while the receipt has no order, or the order cannot be read", async () => {
+    const orderId = "00000000-0000-4000-8000-000000000061";
+    serveSignedIn();
+    receipt({ status: "CREATED" });
+    renderRoute(`/payments/${paymentId}`);
+    await screen.findByRole("heading", { name: "Waiting for payment confirmation" });
+    expect(screen.queryByRole("link", { name: "See the listing" })).not.toBeInTheDocument();
+
+    const read = vi.fn<() => Response>(() =>
+      HttpResponse.json({ code: "ORDER_404_001", message: "Not found" }, { status: 404 }),
+    );
+    server.use(http.get(`*/api/v1/orders/${orderId}`, read));
+    receipt({ status: "SUCCEEDED", orderId });
+    await userEvent.click(screen.getByRole("button", { name: "Refresh status" }));
+    await screen.findByRole("heading", { name: "Payment received" });
+    await waitFor(() => expect(read).toHaveBeenCalled());
+    expect(screen.queryByRole("link", { name: "See the listing" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to listings" })).toBeInTheDocument();
+  });
+
   it("does not infer payment from the return URL; refresh shows the saved order", async () => {
     serveSignedIn();
     receipt({ status: "CREATED" });
     renderRoute(`/payments/${paymentId}?paid=true`);
     await screen.findByRole("heading", { name: "Waiting for payment confirmation" });
+    expect(screen.getByText(/Your seat is held once Stripe confirms/)).toBeInTheDocument();
+    expect(screen.getByText("No payment is taken twice.")).toBeInTheDocument();
     expect(screen.queryByText(/order has been saved/)).not.toBeInTheDocument();
     receipt({ status: "SUCCEEDED", orderId: "saved-order", dealId });
     await userEvent.click(screen.getByRole("button", { name: "Refresh status" }));
@@ -299,6 +428,13 @@ describe("backend-confirmed payment result", () => {
     expect(await screen.findByText(/A refund is pending/)).toHaveTextContent(
       "not confirmation that the refund has been sent",
     );
+    expect(screen.getByText("Refund pending")).toBeInTheDocument();
+    // A poll can change the chip, body and money line without the title, so all sit in one region.
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("Refund pending");
+    expect(status).toHaveTextContent("A refund is pending");
+    expect(status).toHaveTextContent("to be refunded.");
+    expect(screen.getByRole("button", { name: "Refresh status" })).toBeInTheDocument();
   });
 
   it("shows canceled unpaid Checkout, not successful payment", async () => {
@@ -328,6 +464,8 @@ describe("backend-confirmed payment result", () => {
     renderRoute(`/payments/${paymentId}`);
     await screen.findByRole("heading", { name: "Unable to check payment" });
     expect(screen.queryByText("Payment received")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("We could not read your payment");
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
   it("restores the same-tab reference on return", async () => {
@@ -345,6 +483,10 @@ describe("backend-confirmed payment result", () => {
     expect(
       await screen.findByRole("heading", { name: "Payment reference unavailable" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Payment")).toBeInTheDocument();
+    expect(screen.getByText("Do not pay again to check its status.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Browse listings" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "My blocs" })).toHaveAttribute("href", "/account");
   });
 
   it("uses the Checkout-specific return reference instead of another tab's last payment", async () => {

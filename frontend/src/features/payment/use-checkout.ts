@@ -10,6 +10,7 @@ import {
 } from "@/api/generated/@tanstack/react-query.gen";
 import type { IntentRequest } from "@/api/generated/types.gen";
 import { usePaymentAvailability } from "@/features/payment/use-payment-availability";
+import { parkedRefFor } from "@/features/share/invite-ref";
 
 export const lastPaymentKey = "blocbuy.payment.last";
 const attemptPrefix = "blocbuy.payment.attempt.";
@@ -17,8 +18,44 @@ const attemptPrefix = "blocbuy.payment.attempt.";
 // out (quote expired, or a session would outlive it), so re-sending the same intentId never works.
 const staleIntentCode = "PAYMENT_409_001";
 
+// GroupbuyErrorCode: the server's JOIN admission (`lockJoinTerms`) runs when the intent is created
+// and again when Checkout is prepared, before an earlier request is looked up; either way this
+// attempt opened no payment, so the buyer is told why instead of being told to retry. The claim is
+// scoped to this attempt: full and closed are checked before membership, so a buyer who already
+// paid for a seat (another tab, an earlier visit) can get _004 or _002 too. The second sentence is
+// the Errors artboard's paid-seat line (design-screens.md §4.5).
+const notChargedNow =
+  "This attempt was not charged. Any bloc you have already paid into is safe and still listed under My blocs.";
+const joinRejections: Record<string, string> = {
+  GROUPBUY_404_001: `This bloc no longer exists. ${notChargedNow}`,
+  GROUPBUY_409_002: `This bloc is no longer taking members. ${notChargedNow}`,
+  GROUPBUY_409_003: "You are already in this bloc. Nothing new has been charged.",
+  GROUPBUY_409_004: `This bloc filled up before you joined. ${notChargedNow}`,
+};
+
+function joinRejection(error: unknown): string | undefined {
+  return error instanceof ApiError ? joinRejections[error.code] : undefined;
+}
+
 function isStaleIntent(error: unknown): boolean {
   return error instanceof ApiError && (error.status === 409 || error.code === staleIntentCode);
+}
+
+// UC7 (#30): a JOIN of the bloc the buyer was invited to carries the parked invite ref; the server
+// freezes the sharer on the intent. START never sends one (the server would ignore it). The ref
+// stays parked after the intent exists: a stale intent (PAYMENT_409_001) or a failed or expired
+// payment needs a replacement intent, and that one must carry the ref too.
+function intentRequest(operation: IntentRequest["operation"], businessId: string): IntentRequest {
+  const ref = operation === "JOIN" ? parkedRefFor(businessId) : undefined;
+  return ref ? { operation, businessId, ref } : { operation, businessId };
+}
+
+function stripeCheckoutDestination(checkoutUrl: string): URL {
+  const destination = new URL(checkoutUrl);
+  if (destination.protocol !== "https:" || destination.hostname !== "checkout.stripe.com") {
+    throw new Error("Invalid payment destination");
+  }
+  return destination;
 }
 
 // Only non-secret references are stored. Ownership and all amounts are checked by the server.
@@ -33,7 +70,9 @@ export function clearCompletedAttempt(paymentId: string) {
   }
 }
 
-export function useCheckout(userId: string | undefined) {
+// `onRejected` runs after the server refuses the purchase itself (a full, closed or missing bloc),
+// so the page can refetch the listing and show the bloc's current state.
+export function useCheckout(userId: string | undefined, onRejected?: () => void) {
   const enabled = usePaymentAvailability();
   const intent = useMutation(createPaymentIntentMutation());
   const checkout = useMutation(createPaymentCheckoutMutation());
@@ -53,7 +92,7 @@ export function useCheckout(userId: string | undefined) {
       if (!intentId) {
         const created = unwrapResult(
           await intent.mutateAsync({
-            body: { operation, businessId },
+            body: intentRequest(operation, businessId),
             headers: { "X-BlocBuy-Request": "checkout" },
           }),
           { allowVoid: false },
@@ -78,15 +117,20 @@ export function useCheckout(userId: string | undefined) {
         await navigate({ to: "/payments/$paymentId", params: { paymentId: result.paymentId } });
         return;
       }
-      const destination = new URL(result.checkoutUrl);
-      if (destination.protocol !== "https:" || destination.hostname !== "checkout.stripe.com") {
-        throw new Error("Invalid payment destination");
-      }
-      window.location.assign(destination.href);
+      window.location.assign(stripeCheckoutDestination(result.checkoutUrl).href);
     } catch (checkoutError) {
       const knownPayment = sessionStorage.getItem(`${key}.payment`);
       if (knownPayment) {
         await navigate({ to: "/payments/$paymentId", params: { paymentId: knownPayment } });
+        return;
+      }
+      const rejection = joinRejection(checkoutError);
+      if (rejection) {
+        // The intent and idempotency key stay: a refusal at Checkout can follow a lost response
+        // that already opened a payment, and a fresh intent would bypass the server's one
+        // blocking attempt per intent.
+        setError(rejection);
+        onRejected?.();
         return;
       }
       if (isStaleIntent(checkoutError)) {
