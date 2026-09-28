@@ -4,6 +4,8 @@ Paste everything below the line into Claude Design as the opening message. It is
 
 Decisions in this brief were settled in a grilling session on 2026-09-16 and are recorded here as report evidence. Tier labels indicate backend readiness, not design priority.
 
+Historical design snapshot: the embedded Stripe Payment Element proposed in §§8 and 11 was superseded by Stripe Hosted Checkout in [frontend ADR 0014](adr/0014-stripe-hosted-checkout-server-owned-intent.md). Use the [backend integration guide](../../docs/api/backend-integration-guide.md) for the current payment flow; the original brief below remains dated design evidence.
+
 ---
 
 ## 1. Your role

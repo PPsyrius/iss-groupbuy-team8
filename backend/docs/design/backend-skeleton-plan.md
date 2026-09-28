@@ -488,6 +488,8 @@ Required tests: timeout versus final join, exact deadline, repeat resolution, on
 
 > **Implementation update (2026-09-23):** The design below records the original proposal. PR #148 implemented durable refund obligations and Stripe refund execution without introducing the proposed generic outbox/dispatcher. A fresh database timestamp is read immediately before each Stripe dispatch for the idempotency cutoff. The production refund worker and recovery ownership remain deferred to PR-G.
 
+> **Implementation update (2026-09-28, #216):** The `PaymentGateway` / `StripePaymentGateway`, `PaymentAppServiceImpl` and legacy `PaymentRepository` referenced in the historical proposal below were retired, not completed as a second settlement pipeline. Backend ADR 0004 records the current webhook and Checkout boundary; the existing `PaymentIntentPort` is the order-owned purchase-intent collaboration, not the retired gateway.
+
 Member: Yu Qianshuo (Yorik), #29. PaymentGateway/StripePaymentGateway provide an **existing Adapter foundation**, but PaymentGateway has no refund operation. PaymentAppServiceImpl still has TODOs for payment event deduplication and order confirmation. This section does not count unrelated local Stripe WIP as merged work. An admission compensation receipt is not a refund processor.
 
 ### Analysis

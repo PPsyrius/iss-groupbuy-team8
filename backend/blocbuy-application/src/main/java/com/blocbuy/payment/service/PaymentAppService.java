@@ -1,22 +1,22 @@
 package com.blocbuy.payment.service;
 
 /**
- * Webhook entry port retained for the original controller. Under {@code stripe-sprint2}, {@link
- * StripePaymentAppService} delegates to the transactional {@link StripeCheckoutService} for
- * signature verification, event deduplication and settlement. Checkout commands have their own
- * application service; this interface does not need one method per payment use case.
+ * Webhook entry port retained for the controller. Under {@code stripe-sprint2}, {@link
+ * StripePaymentAppService} delegates to {@link StripeCheckoutService} for durable settlement;
+ * otherwise {@link DisabledStripePaymentAppService} verifies but cannot settle Checkout events.
+ * Checkout commands have their own application service.
  */
 public interface PaymentAppService {
 
     /**
-     * Handles a verified-or-rejected Stripe webhook callback. Verifies the signature via the
-     * gateway, deduplicates by provider event id, and transitions the persisted payment inside a
-     * local transaction. Unknown/irrelevant event types are acknowledged and ignored.
+     * Verifies the signed callback. Checkout events are acknowledged only after durable handling;
+     * irrelevant event types are ignored after verification. When Checkout is off, signed Checkout
+     * settlement and other money events fail so the provider can retry.
      *
      * @param payload raw request body, exactly as received
      * @param signatureHeader value of the {@code Stripe-Signature} header
      * @throws com.blocbuy.common.exception.BizException with {@code PAYMENT_400_001} on bad
-     *     signature
+     *     signature or {@code PAYMENT_502_001} when processing is unavailable
      */
     void handleStripeWebhook(String payload, String signatureHeader);
 }

@@ -28,6 +28,8 @@ import java.util.UUID;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** Hosted Checkout gateway: sessions, webhook verification and request mapping. */
 class StripeCheckoutGatewayTest {
@@ -48,6 +50,58 @@ class StripeCheckoutGatewayTest {
                         gateway.verifyCheckoutWebhook(
                                 unknown, sign(unknown, Instant.now().getEpochSecond())))
                 .isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "checkout.session.completed",
+                "checkout.session.async_payment_succeeded",
+                "checkout.session.async_payment_failed",
+                "checkout.session.expired",
+                "payment_intent.succeeded",
+                "payment_intent.payment_failed",
+                "charge.refunded",
+                "refund.updated",
+                "refund.failed"
+            })
+    void signedMoneyEventsRequireProcessingWhileCheckoutIsDisabled(String type) throws Exception {
+        String body = event(type);
+
+        assertThat(gateway.verifyMoneyWebhook(body, sign(body, Instant.now().getEpochSecond())))
+                .isTrue();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"customer.created", "checkout.session.created"})
+    void signedUnrelatedEventsDoNotRequireProcessing(String type) throws Exception {
+        String body = event(type);
+
+        assertThat(gateway.verifyMoneyWebhook(body, sign(body, Instant.now().getEpochSecond())))
+                .isFalse();
+    }
+
+    @Test
+    void disabledClassifierRejectsInvalidSignaturesAndMissingEventTypes() throws Exception {
+        String body = event("payment_intent.succeeded");
+        String signature = sign(body, Instant.now().getEpochSecond());
+        assertThatThrownBy(() -> gateway.verifyMoneyWebhook(body + " ", signature))
+                .isInstanceOf(BizException.class);
+
+        String blankType = event("");
+        assertThatThrownBy(
+                        () ->
+                                gateway.verifyMoneyWebhook(
+                                        blankType, sign(blankType, Instant.now().getEpochSecond())))
+                .isInstanceOf(BizException.class);
+        String missingType =
+                event("customer.created").replace("\"type\":\"customer.created\",", "");
+        assertThatThrownBy(
+                        () ->
+                                gateway.verifyMoneyWebhook(
+                                        missingType,
+                                        sign(missingType, Instant.now().getEpochSecond())))
+                .isInstanceOf(BizException.class);
     }
 
     @Test
@@ -110,8 +164,7 @@ class StripeCheckoutGatewayTest {
     }
 
     @Test
-    void checkoutAdapterCreatesRetrievesAndExpiresWithoutChangingPaymentIntentGateway()
-            throws Exception {
+    void checkoutAdapterCreatesRetrievesAndExpiresUsingSharedClient() throws Exception {
         var client = mock(StripeClient.class, RETURNS_DEEP_STUBS);
         var builder = mock(StripeClient.StripeClientBuilder.class, RETURNS_SELF);
         when(builder.build()).thenReturn(client);

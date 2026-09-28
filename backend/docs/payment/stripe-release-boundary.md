@@ -1,36 +1,37 @@
 # Stripe release boundary
 
-Owner: Yorick. Updated: 24 September 2026. PRs #126 and #148; local #29 refund-worker candidate.
+Owner: Yorick. Updated: 28 September 2026. PRs #126 and #148; #216 legacy-path cleanup.
 
 This is the current deployment boundary for the Stripe work. Historical Sandbox evidence is in [stripe-sandbox-acceptance-20260920.md](stripe-sandbox-acceptance-20260920.md), and quality evidence is in [stripe-sonar-fixes-20260920.md](stripe-sonar-fixes-20260920.md).
 
 ## Current boundary
 
-- `stripe-sprint2` is the rollout switch. Without it, `StripeFeatureSwitch` rejects payment-intent, Checkout and receipt routes before business or database access. The authenticated capabilities endpoint returns `enabled=false` with `Cache-Control: no-store`; missing, invalid or unavailable capability responses also keep frontend payment actions off. When enabled, a pending receipt is polled every two seconds for at most 60 seconds and automatic polling stops immediately after a read error.
+- `stripe-sprint2` enables the buyer-facing intent, Checkout and receipt routes. Without it, `StripeFeatureSwitch` rejects them before business/database access; authenticated capabilities return `enabled=false` with `Cache-Control: no-store`. The frontend also keeps payment actions off when capabilities are missing or unavailable ([integration guide](../../../docs/api/backend-integration-guide.md)).
 - Browser requests contain operation and business identifiers, not buyer or amount. Sa-Token owns identity, server-side ports own pricing, and Checkout retries reuse the intent and idempotency key.
-- `CheckoutPayment`, its repository and `CheckoutGateway` are separate from the original payment contracts. The original webhook contract remains, with `StripePaymentAppService` selected only under the Stripe profile.
-- `PaymentIntegrationConfiguration` provides the production `PaymentBusinessPort` and `PaymentIntentPort` bindings with no profile, and the test-only `PaymentBusinessFixture` is retired (backend ADR 0001). `DevPaymentRepositoryAdapter` still awaits its production replacement.
-- `RefundService` and `StripeRefundGateway` retain provider verification, idempotency, leasing and uncertain-outcome safeguards. The profile-independent `TeamExpiryRefundService` and unconditional `TeamExpiryRefundSubscriber` create durable refund obligations in the lifecycle transaction. Both the team-expiry scheduler and the one-obligation-per-tick refund worker are wired behind `BLOCBUY_SCHEDULING_ENABLED`, including under `ec2` without `stripe-sprint2`; this does not enable Checkout or add a recovery endpoint. `StripeRefundGateway` still requires a sandbox key.
+- Checkout currently requests `card` only, in Stripe Sandbox. Future eligible payment methods can be evaluated as separate Checkout work, using the existing settlement boundary rather than reviving the retired PaymentIntent pipeline.
+- The webhook controller keeps one `PaymentAppService` per profile: Checkout settles signed session events durably when enabled; when disabled, signed unrelated events are acknowledged but supported Checkout events and `payment_intent.*`, `charge.*`, `refund.*` return non-2xx without database access. The old PaymentIntent gateway, String-ID repository, stub and dev adapter are retired (backend ADR 0004).
+- `PaymentIntegrationConfiguration` always binds the production `PaymentBusinessPort` and `PaymentIntentPort` (backend ADR 0001). The latter issues an order-owned purchase intent, not a provider PaymentIntent.
+- `TeamExpiryRefundSubscriber` records refund obligations in the lifecycle transaction. `RefundService` and `StripeRefundGateway` process them with provider checks, idempotency and leasing; both scheduled jobs require `BLOCBUY_SCHEDULING_ENABLED`, independently of `stripe-sprint2` even under `ec2`. Scheduling is off by default and the refund gateway still requires a sandbox key (backend ADR 0002).
 
 ## Removed before publication
 
 The local login/operator routes, `/local/stripe/*`, local schedulers, runtime and operator scripts, Vite override, and deployable intent/order/expiry substitutes were removed. Test substitutes and SQL remain under bootstrap test sources and are explicitly imported by tests; they are not packaged in the application JAR or included in deployment Flyway locations.
 
-The payment-branch `GET /api/v1/orders` and its `/account` consumer were also removed in favour of the order team's `GET /api/v1/orders/me`. Rebuild account history only after that endpoint reaches the committed OpenAPI contract.
+The payment-branch `GET /api/v1/orders` was removed in favour of the order team's `GET /api/v1/orders/me`, now in the contract and used on `/account`.
 
 ## Migration and compatibility status
 
-PR review moved the payment schema into the standard Flyway path as V9-V11. Duplicate V2 indexes and the review-case backfill were removed, lifecycle status values follow the existing lowercase convention, and `intent_id` remains distinct from the provider PaymentIntent ID.
+The payment schema uses the standard Flyway path (V9–V11); local `intent_id` is distinct from Stripe's PaymentIntent ID. See backend ADR 0001 for the order/payment boundary.
 
-The historical compatibility guard compared 192 original files, 13 HTTP paths and 23 schemas with the supplied `211cfb7` snapshot. The branch later merged `origin/dev` at `92e5ca9`; the guard is historical evidence, not a substitute for current CI and contract review.
+The `211cfb7` source/contract snapshot guard is historical evidence, not a current CI or contract gate ([quality record](stripe-sonar-fixes-20260920.md)).
 
 ## Pre-live checklist
 
-1. ~~Replace `PaymentBusinessPort` and `PaymentIntentPort` with team production implementations~~ — done 2026-09-22 (PR #147, backend ADR 0001). Remaining: replace `DevPaymentRepositoryAdapter` and verify shared lock and transaction ordering.
-2. After merging #29, enable and monitor the expiry scheduler and refund worker only after the overdue-team and due-refund backlog checks. The current EC2 deployment leaves scheduling disabled; setting `BLOCBUY_SCHEDULING_ENABLED=true` activates both jobs without enabling Checkout and can issue sandbox refunds. Define production recovery ownership without restoring private local HTTP controls. The in-transaction expiry notification path and durable obligation creation are already wired.
+1. ~~Supply production business and purchase-intent ports~~ — PR #147, backend ADR 0001. The legacy gateway/repository retirement is implemented locally in #216 (backend ADR 0004); merge it and verify Checkout lock/transaction ordering with PostgreSQL integration tests before enabling Checkout on dev (#223).
+2. Refund worker and expiry notifications are wired (#29). Before enabling `BLOCBUY_SCHEDULING_ENABLED` on dev (#223), count overdue teams and due refunds, name a recovery owner and monitor both jobs; the switch can issue sandbox refunds without enabling Checkout. The checked-in EC2 deployment leaves scheduling off.
 3. Keep test fixtures and `db/stripe-fixture` outside every deployment Flyway location.
-4. Rebuild account history against `/api/v1/orders/me` after its contract is available.
+4. ~~Rebuild account history against `/api/v1/orders/me`~~ — shipped in the contract and `/account` (#128).
 5. Remove the gateways' `sk_test_` restriction only with live-key rotation, a live webhook endpoint, reconciliation controls and renewed payment/refund acceptance.
-6. Drain or reconcile in-flight Checkout and refund work before disabling an enabled deployment.
+6. Drain or reconcile in-flight Checkout and refund work before disabling an enabled deployment. Feature-off rejects signed Checkout settlement, PaymentIntent, charge and refund events; Stripe retries are finite and cannot replace operator-owned reconciliation. Keep the endpoint subscribed to all four supported Checkout session event types.
 
 Local and Sandbox evidence does not establish Google OAuth, shared AWS deployment, public TLS or live Stripe readiness.
