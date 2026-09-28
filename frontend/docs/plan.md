@@ -1238,7 +1238,7 @@ export const Route = createFileRoute('/auth/callback')({
 ### T2-11: CSP tightening
 
 - [x] Step 1 (2026-09-22/23): task-row curl green after A2; Playwright console probe on the deployed site found one violation per page (Google Fonts, fixed by self-hosting Inter, #158); the tightening candidates were probed against `vite preview`, which now mirrors the policy JSON (`vite.config.ts` `preview.headers`), on `/`, a listing with the sign-in sheet open, `/login`, `/account`, `/payments/return`, a 404.
-- [x] Step 2 (2026-09-23): JSON narrowed to `style-src 'self' 'unsafe-inline'; img-src 'self' https:; font-src 'self'` (`data:` dropped from both; `'unsafe-inline'` kept: React Aria's injected `<style>` and overlay positioning are refused without it). Re-apply on dev with `update-response-headers-policy` is owed to the user/account holder; the dev curl + `E2E_TARGET=dev pnpm e2e` verification runs after that.
+- [x] Step 2 (2026-09-23): JSON narrowed to `style-src 'self' 'unsafe-inline'; img-src 'self' https:; font-src 'self'` (`data:` dropped from both; `'unsafe-inline'` kept: React Aria's injected `<style>` and overlay positioning are refused without it). Re-apply on dev with `update-response-headers-policy` is owed to the user/account holder; the dev curl + `E2E_TARGET=dev pnpm e2e` verification runs after that. Re-applied and verified 2026-09-24; on 2026-09-28 `curl -sSI` on `/` shows `content-security-policy` and `strict-transport-security`.
 - [x] Step 3 (2026-09-23): final CSP in `docs/agile/sprint-02/log/2026-09-23.md` and ADR 0002 consequences.
 
 ---
@@ -2142,7 +2142,7 @@ Execute runbook §16 with the examples in `deployment/frontend/iam/`: trust = `f
 
 ### Acceptance
 - [x] `gh variable get AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV` prints the ARN (2026-09-28: closed in #101; live check prints it)
-- [x] IAM Access Analyzer shows no findings for the policy (2026-09-28: closed in #101; no Access Analyzer result is recorded, #101 left it as a console read; the policy is the unchanged example with three identifiers filled in)
+- [x] ~~IAM Access Analyzer shows no findings for the policy~~ Not verified: no Access Analyzer result was recorded; closed with #101 on 2026-09-28 review (the policy is the unchanged example with three identifiers filled in).
 
 Gates plan tasks: T1-14, `deploy-s3-dev` job.
 ```
