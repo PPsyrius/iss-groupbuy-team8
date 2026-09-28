@@ -9,11 +9,13 @@ import {
 } from "@tanstack/react-router";
 
 import { unwrapResult } from "@/api/envelope";
-import { myOrdersOptions, myTeamsOptions } from "@/api/generated/@tanstack/react-query.gen";
+import { myOrdersOptions } from "@/api/generated/@tanstack/react-query.gen";
 import { accountSearchDefaults, accountSearchSchema } from "@/features/blocs/blocs-search";
-import { BlocsSkeleton, MY_BLOCS_FETCH_SIZE, MyBlocs } from "@/features/blocs/MyBlocs";
+import { myTeamsQuery } from "@/features/blocs/my-teams-query";
+import { BlocsSkeleton, MyBlocs } from "@/features/blocs/MyBlocs";
 import { OrderHistory } from "@/features/order/OrderHistory";
 import type { OrdersSearch } from "@/features/order/orders-search";
+import { useSession } from "@/features/session/use-session";
 
 const ordersOptions = ({ page, size }: OrdersSearch) =>
   queryOptions({
@@ -22,10 +24,7 @@ const ordersOptions = ({ page, size }: OrdersSearch) =>
   });
 
 // One fetch of the latest 100 blocs; the chips filter it client-side (plan §12 note 50).
-const teamsOptions = queryOptions({
-  ...myTeamsOptions({ query: { page: 1, size: MY_BLOCS_FETCH_SIZE } }),
-  select: (r) => unwrapResult(r),
-});
+const teamsOptions = myTeamsQuery;
 
 export const Route = createFileRoute("/_authenticated/account")({
   validateSearch: accountSearchSchema,
@@ -66,6 +65,9 @@ function AccountPage() {
   const search = Route.useSearch();
   const { data } = useSuspenseQuery(ordersOptions(search));
   const { data: teams } = useSuspenseQuery(teamsOptions);
+  // The share control on an open bloc row mints the invite under this buyer (T3-05, #30).
+  const session = useSession();
+  const userId = session.status === "authenticated" ? session.userId : undefined;
   const total = data.total ?? 0;
   const teamsTotal = teams.total ?? 0;
   const lastPage = Math.max(1, Math.ceil(total / search.size));
@@ -80,7 +82,7 @@ function AccountPage() {
   return (
     <main className={shell}>
       <AccountHeader />
-      <MyBlocs teams={teams.items} total={teamsTotal} selected={search.blocs} />
+      <MyBlocs teams={teams.items} total={teamsTotal} selected={search.blocs} userId={userId} />
       {total === 0 ? (
         <NoOrders />
       ) : (

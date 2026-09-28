@@ -1,20 +1,26 @@
 import { Alert, Button, buttonVariants, Skeleton } from "@heroui/react";
-import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
+import { queryOptions, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, notFound, redirect, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { ApiError, unwrapResult } from "@/api/envelope";
 import { getListingOptions } from "@/api/generated/@tanstack/react-query.gen";
 import type { ProductDetailResponse } from "@/api/generated/types.gen";
 import { NotFoundCard } from "@/components/ErrorCard";
+import { blocFilter } from "@/features/blocs/bloc-status";
+import { myTeamsQuery } from "@/features/blocs/my-teams-query";
 import { formatDeadlineShort, hasEnded, parseDeadline } from "@/features/catalog/deal-time";
 import { DealProgress, useNow } from "@/features/catalog/DealProgress";
 import { formatPrice, Price } from "@/features/catalog/Price";
+import { listingSearchSchema } from "@/features/catalog/products-search";
 import { QuoteSheet } from "@/features/payment/QuoteSheet";
 import { useCheckout } from "@/features/payment/use-checkout";
 import { useQuote } from "@/features/payment/use-quote";
 import { GatedActionSheet } from "@/features/session/GatedActionSheet";
 import { useSession } from "@/features/session/use-session";
+import { discardInvite, parkInvite, readParkedInvite } from "@/features/share/invite-ref";
+import { InviteBanner } from "@/features/share/InviteBanner";
+import { ShareBlock } from "@/features/share/ShareBlock";
 
 // A 200 envelope without `data` is malformed for this endpoint; rejecting it here sends it to
 // the route's error boundary instead of a TypeError in the page (CodeRabbit r4045102889).
@@ -37,6 +43,22 @@ function isListingNotFound(error: unknown): boolean {
 }
 
 export const Route = createFileRoute("/products/$productId")({
+  // UC7 invite link (T3-05, #30): `?deal=…&ref=…` is parked in sessionStorage and dropped from
+  // the URL before anything renders, so it survives the sign-in hop and the quote sheet without
+  // riding along on every later link, and a copied address bar never re-shares someone's ref.
+  // A pair that fails the contract's patterns is dropped without being parked, and it empties the
+  // slot too (the newest link wins, D9), so an older sharer is never credited for it. The schema
+  // marks a supplied but invalid value `null`, an absent one `undefined`.
+  validateSearch: listingSearchSchema,
+  beforeLoad: ({ search, params }) => {
+    if (search.deal === undefined && search.ref === undefined) return;
+    if (typeof search.deal === "string" && typeof search.ref === "string") {
+      parkInvite({ productId: params.productId, dealId: search.deal, ref: search.ref });
+    } else {
+      discardInvite();
+    }
+    throw redirect({ to: "/products/$productId", params, search: {}, replace: true });
+  },
   loader: async ({ context, params }) => {
     try {
       await context.queryClient.query({
@@ -47,6 +69,9 @@ export const Route = createFileRoute("/products/$productId")({
       if (isListingNotFound(error)) throw notFound();
       throw error;
     }
+    // The invite this buyer arrived with, if it was for this listing (drives the banner).
+    const invite = readParkedInvite();
+    return invite?.productId === params.productId ? invite : null;
   },
   pendingComponent: DetailLoading,
   errorComponent: DetailError,
@@ -74,6 +99,7 @@ function galleryImages(p: ProductDetailResponse): string[] {
 
 function ProductDetailPage() {
   const { productId } = Route.useParams();
+  const invite = Route.useLoaderData();
   const { data: p } = useSuspenseQuery(detailOptions(productId));
   const now = useNow();
   // Same clock and rule as the DealProgress row's "Ended" chip, so the header never calls an
@@ -115,6 +141,18 @@ function ProductDetailPage() {
           void quoting.load();
         }
       : undefined);
+  // UC7 share block: a signed-in buyer who is in this listing's open bloc, while it can still
+  // take members. Membership comes from `GET /group-deals/me` (the My blocs query), re-read on
+  // every visit: a buyer who just paid comes back here and must see the block at once.
+  const teams = useQuery({ ...myTeamsQuery, staleTime: 0, enabled: buyerId !== undefined });
+  const dealId = p.deal?.dealId;
+  const seatsLeft = Math.max(0, (p.deal?.targetSize ?? 0) - (p.deal?.currentSize ?? 0));
+  const myTeam = dealId
+    ? teams.data?.items?.find((t) => t.dealId === dealId && blocFilter(t.status) === "active")
+    : undefined;
+  const shareable = buyerId !== undefined && myTeam !== undefined && !ended && seatsLeft > 0;
+  const listingOpen = dealId !== undefined && !ended && seatsLeft > 0;
+  const invitedOpen = listingOpen && invite?.dealId === dealId;
   const onJoin =
     onGated ??
     (checkout.enabled &&
@@ -125,6 +163,15 @@ function ProductDetailPage() {
           void checkout.begin("JOIN", p.deal!.dealId!);
         }
       : undefined);
+  // An invite to this listing's open bloc makes its Join the visit's primary action (Invite
+  // artboard 5b.1: one button, under the lead); "Start a bloc" steps down a rank. A closed or
+  // full invited bloc, or no invite, leaves the listing's own order.
+  const inviteJoin = invitedOpen && !shareable;
+  const joinLabel =
+    groupPrice === undefined
+      ? "Join this bloc"
+      : `Join this bloc · ${formatPrice(groupPrice, currency)}`;
+  const joinPress = checkout.isPending ? undefined : onJoin;
   return (
     <main className={shell}>
       <GatedActionSheet
@@ -150,6 +197,18 @@ function ProductDetailPage() {
         }}
       />
       <CrumbRow category={category} title={p.title} />
+      {invite && !shareable ? (
+        <InviteBanner
+          open={invitedOpen}
+          hasOtherBloc={listingOpen}
+          signedIn={buyerId !== undefined}
+          join={{
+            label: joinLabel,
+            onPress: joinPress,
+            isPending: checkout.isPending,
+          }}
+        />
+      ) : null}
       {checkout.error ? (
         <p role="alert" className="text-danger">
           {checkout.error}
@@ -205,6 +264,7 @@ function ProductDetailPage() {
               onGated={onGated}
               onStart={onStart}
               isPending={checkout.isPending}
+              demoted={inviteJoin}
               className="hidden xl:flex"
             />
           </section>
@@ -228,6 +288,20 @@ function ProductDetailPage() {
             ) : null}
             <DealProgress deal={p.deal} onJoin={checkout.isPending ? undefined : onJoin} />
           </section>
+          {shareable && buyerId && dealId ? (
+            <ShareBlock
+              userId={buyerId}
+              dealId={dealId}
+              productId={productId}
+              leader={myTeam.role?.toLowerCase() === "leader"}
+              title={p.title ?? "this listing"}
+              groupPrice={groupPrice}
+              individualPrice={p.individualPrice}
+              currency={currency}
+              seatsLeft={seatsLeft}
+              closesMs={closesMs}
+            />
+          ) : null}
           <AboutCard product={p} category={category} className="flex xl:hidden" />
         </div>
       </div>
@@ -237,6 +311,7 @@ function ProductDetailPage() {
         onGated={onGated}
         onStart={onStart}
         isPending={checkout.isPending}
+        demoted={inviteJoin}
         className="bg-surface border-border sticky bottom-0 -mx-4 flex border-t px-4 py-3 xl:hidden"
       />
     </main>
@@ -407,30 +482,34 @@ function TrustTriptych({ payNow, closesMs }: { payNow: string; closesMs: number 
 
 // Both actions are the artboard's, in its order of prominence (Start a bloc outranks Buy alone).
 // Buy alone stays separate and disabled for authenticated buyers until its own flow exists.
+// `demoted` (an invite to the open bloc) drops Start a bloc to the `outline` rank, 44px, so the
+// invite's Join is the only top-rank button on the page.
 function Actions({
   product: p,
   currency,
   onGated,
   onStart,
   isPending,
+  demoted,
   className,
-}: {
+}: Readonly<{
   product: ProductDetailResponse;
   currency: string;
   onGated: (() => void) | undefined;
   onStart: (() => void) | undefined;
   isPending: boolean;
+  demoted: boolean;
   className: string;
-}) {
+}>) {
   const groupPrice = p.groupPrice ?? undefined;
   // `exactOptionalPropertyTypes`: an absent handler is no prop at all, not `onPress={undefined}`.
   const press = onGated ? { onPress: onGated } : { isDisabled: true };
   return (
     <div className={"flex-col gap-2 " + className}>
       <Button
-        variant="secondary"
-        size="lg"
-        className="min-h-12 w-full text-lg"
+        variant={demoted ? "outline" : "secondary"}
+        size={demoted ? "md" : "lg"}
+        className={demoted ? "min-h-11 w-full text-base" : "min-h-12 w-full text-lg"}
         {...(onStart ? { onPress: onStart } : {})}
         isPending={isPending}
         isDisabled={isPending || !onStart}
