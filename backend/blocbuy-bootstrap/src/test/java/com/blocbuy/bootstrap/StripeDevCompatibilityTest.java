@@ -37,10 +37,8 @@ class StripeDevCompatibilityTest {
         CheckoutGateway gateway = mock(CheckoutGateway.class);
         when(gateway.verifyMoneyWebhook("body", "signature")).thenReturn(true);
         try (var context = context(false, gateway, null)) {
-            assertThatThrownBy(
-                            () ->
-                                    context.getBean(StripeWebhookController.class)
-                                            .handleStripeEvent("body", "signature"))
+            var controller = context.getBean(StripeWebhookController.class);
+            assertThatThrownBy(() -> controller.handleStripeEvent("body", "signature"))
                     .isInstanceOf(BizException.class);
         }
     }
@@ -61,10 +59,8 @@ class StripeDevCompatibilityTest {
     @Test
     void enabledFacadeWithoutCheckoutNeverAcknowledgesAnUnprocessedPayment() {
         try (var context = context(true, mock(CheckoutGateway.class), null)) {
-            assertThatThrownBy(
-                            () ->
-                                    context.getBean(StripeWebhookController.class)
-                                            .handleStripeEvent("body", "sig"))
+            var controller = context.getBean(StripeWebhookController.class);
+            assertThatThrownBy(() -> controller.handleStripeEvent("body", "sig"))
                     .isInstanceOf(BizException.class);
         }
     }

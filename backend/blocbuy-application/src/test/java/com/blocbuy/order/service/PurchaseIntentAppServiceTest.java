@@ -311,4 +311,63 @@ class PurchaseIntentAppServiceTest {
         assertThat(saved().sharerUserId()).isNull();
         verify(deals, never()).resolveSharer(any(), any(), any());
     }
+
+    // ---- #183: the price on the quote sheet is the price charged ----
+
+    private static final UUID QUOTE = UUID.randomUUID();
+
+    @Test
+    void aStartWithAQuoteIsPricedAtThatQuoteNotTheLatestPolicy() {
+        clockReads();
+        when(products.lockQuotedStart(PRODUCT, QUOTE, USER))
+                .thenReturn(
+                        new CatalogPurchaseSupport.StartQuote(
+                                PRODUCT,
+                                "Headphones",
+                                "https://cdn.example.com/cover.jpg",
+                                new BigDecimal("9.40"),
+                                "sgd",
+                                3,
+                                86_400));
+
+        service.createIntent(USER, "START", PRODUCT, null, QUOTE);
+
+        PurchaseIntent intent = saved();
+        assertThat(intent.amount()).isEqualByComparingTo("9.40");
+        assertThat(intent.productId()).isEqualTo(PRODUCT);
+        // The quote fixes the price only; the pay window is the intent's own, as for any START.
+        assertThat(intent.quoteValidUntil()).isEqualTo(NOW.plusSeconds(2400));
+        assertThat(intent.businessDeadline()).isEqualTo(NOW.plusSeconds(86_400));
+        verify(products, never()).lockStartQuote(any(), any());
+    }
+
+    @Test
+    void aStartWithoutAQuoteKeepsPricingFromTheLatestPolicy() {
+        clockReads();
+        productQuotes(86_400);
+
+        service.createIntent(USER, "START", PRODUCT, null, null);
+
+        assertThat(saved().amount()).isEqualByComparingTo("12.50");
+        verify(products, never()).lockQuotedStart(any(), any(), any());
+    }
+
+    @Test
+    void aJoinCarryingAQuoteIsRejectedBeforeAnythingIsRead() {
+        assertRejected(
+                () -> service.createIntent(USER, "JOIN", DEAL, null, QUOTE),
+                OrderErrorCode.PURCHASE_INTENT_TERMS_INVALID);
+        verifyNoInteractions(users, products, deals, intents);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"TEAM_PRICE_QUOTE_EXPIRED", "TEAM_PRICE_QUOTE_NOT_FOUND"})
+    void catalogsRefusalOfAQuoteIsNotSwallowed(String code) {
+        clockReads();
+        CatalogErrorCode refusal = CatalogErrorCode.valueOf(code);
+        when(products.lockQuotedStart(PRODUCT, QUOTE, USER)).thenThrow(new BizException(refusal));
+
+        assertRejected(() -> service.createIntent(USER, "START", PRODUCT, null, QUOTE), refusal);
+        verify(intents, never()).save(any());
+    }
 }

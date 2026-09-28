@@ -140,7 +140,7 @@ class PaymentBrowserControllerTest {
 
     @Test
     void createsServerOwnedIntentInResultEnvelope() throws Exception {
-        when(payments.createIntent(USER, "START", BUSINESS, null)).thenReturn(INTENT);
+        when(payments.createIntent(USER, "START", BUSINESS, null, null)).thenReturn(INTENT);
         mvc.perform(
                         post(INTENTS)
                                 .cookie(login())
@@ -153,13 +153,13 @@ class PaymentBrowserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("COMMON_200_000"))
                 .andExpect(jsonPath("$.data.intentId").value(INTENT.toString()));
-        verify(payments).createIntent(USER, "START", BUSINESS, null);
+        verify(payments).createIntent(USER, "START", BUSINESS, null, null);
     }
 
     /** UC7: the invite reference is passed through to the intent service untouched. */
     @Test
     void aJoinCarriesItsInviteReferenceToTheIntentService() throws Exception {
-        when(payments.createIntent(USER, "JOIN", BUSINESS, "Ab-_09")).thenReturn(INTENT);
+        when(payments.createIntent(USER, "JOIN", BUSINESS, "Ab-_09", null)).thenReturn(INTENT);
         mvc.perform(
                         post(INTENTS)
                                 .cookie(login())
@@ -171,7 +171,44 @@ class PaymentBrowserControllerTest {
                                                 + "\",\"ref\":\"Ab-_09\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.intentId").value(INTENT.toString()));
-        verify(payments).createIntent(USER, "JOIN", BUSINESS, "Ab-_09");
+        verify(payments).createIntent(USER, "JOIN", BUSINESS, "Ab-_09", null);
+    }
+
+    /** #183: a START names the quote the buyer was shown, and it reaches the service untouched. */
+    @Test
+    void aStartCarriesItsQuoteIdToTheIntentService() throws Exception {
+        UUID quote = UUID.fromString("00000000-0000-4000-8000-000000000040");
+        when(payments.createIntent(USER, "START", BUSINESS, null, quote)).thenReturn(INTENT);
+        mvc.perform(
+                        post(INTENTS)
+                                .cookie(login())
+                                .header("X-BlocBuy-Request", "checkout")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"operation\":\"START\",\"businessId\":\""
+                                                + BUSINESS
+                                                + "\",\"quoteId\":\""
+                                                + quote
+                                                + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.intentId").value(INTENT.toString()));
+        verify(payments).createIntent(USER, "START", BUSINESS, null, quote);
+    }
+
+    @Test
+    void aMalformedQuoteIdIsRejectedBeforeAnyWork() throws Exception {
+        mvc.perform(
+                        post(INTENTS)
+                                .cookie(login())
+                                .header("X-BlocBuy-Request", "checkout")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"operation\":\"START\",\"businessId\":\""
+                                                + BUSINESS
+                                                + "\",\"quoteId\":\"not-a-uuid\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON_400_001"));
+        verifyNoInteractions(payments);
     }
 
     @Test

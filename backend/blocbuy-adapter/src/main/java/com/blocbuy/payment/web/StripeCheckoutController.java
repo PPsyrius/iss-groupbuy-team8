@@ -64,7 +64,14 @@ public class StripeCheckoutController {
                                             + " member who shared it; ignored for START and when"
                                             + " it cannot attribute this join")
                     @Pattern(regexp = "[A-Za-z0-9_-]{1,64}")
-                    String ref) {}
+                    String ref,
+            @Schema(
+                            nullable = true,
+                            description =
+                                    "Optional first-team price quote (UC3). A START is charged"
+                                            + " its amount while it is unexpired; rejected on"
+                                            + " JOIN")
+                    UUID quoteId) {}
 
     public record IntentResponse(UUID intentId) {}
 
@@ -82,7 +89,11 @@ public class StripeCheckoutController {
         return Result.ok(
                 new IntentResponse(
                         service.createIntent(
-                                user(), request.operation(), request.businessId(), request.ref())));
+                                user(),
+                                request.operation(),
+                                request.businessId(),
+                                request.ref(),
+                                request.quoteId())));
     }
 
     @PostMapping("/checkout-sessions")

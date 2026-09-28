@@ -89,18 +89,13 @@ class StripeCheckoutGatewayTest {
                 .isInstanceOf(BizException.class);
 
         String blankType = event("");
-        assertThatThrownBy(
-                        () ->
-                                gateway.verifyMoneyWebhook(
-                                        blankType, sign(blankType, Instant.now().getEpochSecond())))
+        String blankTypeSignature = sign(blankType, Instant.now().getEpochSecond());
+        assertThatThrownBy(() -> gateway.verifyMoneyWebhook(blankType, blankTypeSignature))
                 .isInstanceOf(BizException.class);
         String missingType =
                 event("customer.created").replace("\"type\":\"customer.created\",", "");
-        assertThatThrownBy(
-                        () ->
-                                gateway.verifyMoneyWebhook(
-                                        missingType,
-                                        sign(missingType, Instant.now().getEpochSecond())))
+        String missingTypeSignature = sign(missingType, Instant.now().getEpochSecond());
+        assertThatThrownBy(() -> gateway.verifyMoneyWebhook(missingType, missingTypeSignature))
                 .isInstanceOf(BizException.class);
     }
 
@@ -246,7 +241,8 @@ class StripeCheckoutGatewayTest {
                             .retrieve(eq("cs_test_fixture"), any(SessionRetrieveParams.class)))
                     .thenThrow(error);
             when(client.checkout().sessions().expire("cs_test_fixture")).thenThrow(error);
-            assertThatThrownBy(() -> adapter.createCheckoutSession(payment()))
+            var payment = payment();
+            assertThatThrownBy(() -> adapter.createCheckoutSession(payment))
                     .isInstanceOf(BizException.class)
                     .hasMessageNotContaining("private provider");
             assertThatThrownBy(() -> adapter.retrieveCheckoutSession("cs_test_fixture"))
@@ -256,30 +252,24 @@ class StripeCheckoutGatewayTest {
                     .isInstanceOf(BizException.class)
                     .hasMessageNotContaining("private provider");
         }
-        assertThatThrownBy(
-                        () ->
-                                new StripeCheckoutGateway(
-                                                new StripeProperties("sk_live_fixture", SECRET),
-                                                new StripeClientProvider(
-                                                        new StripeProperties(
-                                                                "sk_live_fixture", SECRET)))
-                                        .createCheckoutSession(payment()))
+        var liveKeyGateway =
+                new StripeCheckoutGateway(
+                        new StripeProperties("sk_live_fixture", SECRET),
+                        new StripeClientProvider(new StripeProperties("sk_live_fixture", SECRET)));
+        var livePayment = payment();
+        assertThatThrownBy(() -> liveKeyGateway.createCheckoutSession(livePayment))
                 .isInstanceOf(BizException.class);
-        assertThatThrownBy(
-                        () ->
-                                new StripeCheckoutGateway(
-                                                new StripeProperties("", null),
-                                                new StripeClientProvider(
-                                                        new StripeProperties("", null)))
-                                        .verifyCheckoutWebhook("{}", "sig"))
+        var nullSecretGateway =
+                new StripeCheckoutGateway(
+                        new StripeProperties("", null),
+                        new StripeClientProvider(new StripeProperties("", null)));
+        assertThatThrownBy(() -> nullSecretGateway.verifyCheckoutWebhook("{}", "sig"))
                 .isInstanceOf(BizException.class);
-        assertThatThrownBy(
-                        () ->
-                                new StripeCheckoutGateway(
-                                                new StripeProperties("", " "),
-                                                new StripeClientProvider(
-                                                        new StripeProperties("", " ")))
-                                        .verifyCheckoutWebhook("{}", "sig"))
+        var blankSecretGateway =
+                new StripeCheckoutGateway(
+                        new StripeProperties("", " "),
+                        new StripeClientProvider(new StripeProperties("", " ")));
+        assertThatThrownBy(() -> blankSecretGateway.verifyCheckoutWebhook("{}", "sig"))
                 .isInstanceOf(BizException.class);
         assertThatThrownBy(() -> gateway.verifyCheckoutWebhook(null, "sig"))
                 .isInstanceOf(BizException.class);
