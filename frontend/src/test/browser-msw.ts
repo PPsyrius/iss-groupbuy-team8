@@ -11,6 +11,7 @@ import type {
   QuoteResponse,
   Receipt,
 } from "@/api/generated/types.gen";
+import { readParkedInvite } from "@/features/share/invite-ref";
 import { keywordTerms, matchesKeyword } from "@/test/keyword-match";
 
 // Offline UI work: `?msw=1` on the URL makes main.tsx start this worker before rendering, so the
@@ -197,7 +198,8 @@ const toSummary = (s: Seed): ProductSummaryResponse => ({
 // The sample buyer's blocs for the §4.4 My blocs chips (`?msw=1&me=1`), after the artboard's
 // rows: three active (one closing soon, one the buyer started), one filled, two closed unfilled.
 // Each is its own bloc on the listing, not the live deal the listing page features (their counts
-// differ), so joining that deal in the demo adds a row instead of duplicating one.
+// differ), so joining that deal in the demo adds a row instead of duplicating one. An invite link
+// copied from an open row still lands on its bloc: see `invitedBloc` below.
 interface TeamSeed {
   n: number;
   status: "open" | "succeeded" | "expired";
@@ -308,6 +310,37 @@ const orderOf = (m: Membership): OrderSummaryResponse => {
 const memberships = teamSeeds.map(fromSeed);
 const teams: MyTeamResponse[] = memberships.map(teamOf);
 const orders: OrderSummaryResponse[] = memberships.map(orderOf);
+
+// The open seeded blocs as listing deals. The listing page features one bloc per listing; when the
+// visitor arrived on an invite to one of these (Share invite link on an Active My blocs row), the
+// mock features that bloc instead, with the row's counts, so the landing shows it open and
+// joinable. A JOIN of it is then refused as "already joined" for the sample buyer (409_003).
+const seededBlocs = memberships
+  .filter((m) => m.status === "open")
+  .map((m) => ({
+    n: m.n,
+    deal: {
+      dealId: m.dealId,
+      currentSize: m.joined,
+      targetSize: m.target,
+      expireTime: m.expireTime,
+    },
+  }));
+
+function invitedBloc(productId: string) {
+  const invite = readParkedInvite();
+  if (invite?.productId !== productId) return undefined;
+  return seededBlocs.find((b) => id(b.n) === productId && b.deal.dealId === invite.dealId)?.deal;
+}
+
+// The listing and the bloc a JOIN names: a listing's featured deal or an open seeded bloc.
+function joinTarget(dealId: string | undefined) {
+  const featured = details.find((p) => p.deal?.dealId === dealId);
+  if (featured) return { listing: featured, deal: featured.deal };
+  const seeded = seededBlocs.find((b) => b.deal.dealId === dealId);
+  const listing = seeded && details.find((p) => p.id === id(seeded.n));
+  return listing ? { listing, deal: seeded.deal } : undefined;
+}
 
 const orderFor = (n: number) => orders.find((o) => o.orderId === orderIdOf(n));
 
@@ -424,6 +457,20 @@ function issueQuote(productId: string): QuoteResponse | null {
   return quote;
 }
 
+// UC7 invites (T3-05): one ref per bloc for the sample buyer, reused on every later mint as the
+// backend does. Only an open bloc the buyer is in can be shared: Share invite link on an Active
+// My blocs row, or the share block on a listing after joining its bloc, copies a link that opens
+// the invite landing (`?msw=1` in a fresh tab).
+const invites = new Map<string, string>();
+
+function mintRef(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return btoa(String.fromCharCode(...bytes))
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/=+$/, "");
+}
+
 export async function startBrowserMsw() {
   // Read once at start-up: in-app navigation drops `me=1` from the URL, and a later `me`
   // refetch (root loader, callback) must not flip the sample session back to anonymous
@@ -494,10 +541,16 @@ export async function startBrowserMsw() {
         // session sends the buyer to the mock receipt; one designated JOIN is refused (above).
         createPaymentIntent: async ({ request }) => {
           const body = (await request.json()) as { operation?: string; businessId?: string };
-          const listing =
+          const target =
             body.operation === "START"
-              ? details.find((p) => p.id === body.businessId && p.groupPrice !== undefined)
-              : details.find((p) => p.deal?.dealId === body.businessId);
+              ? {
+                  listing: details.find(
+                    (p) => p.id === body.businessId && p.groupPrice !== undefined,
+                  ),
+                  deal: undefined,
+                }
+              : joinTarget(body.businessId);
+          const listing = target?.listing;
           if (!listing || (body.operation !== "START" && body.operation !== "JOIN")) {
             return HttpResponse.json(
               { code: "GROUPBUY_404_001", message: "Group deal not found" },
@@ -518,7 +571,7 @@ export async function startBrowserMsw() {
           }
           const n = seeds.find((x) => id(x.n) === listing.id)?.n ?? 1;
           const intentId = crypto.randomUUID();
-          intents.set(intentId, { n, deal: body.operation === "JOIN" ? listing.deal : undefined });
+          intents.set(intentId, { n, deal: target?.deal });
           return HttpResponse.json({ code: OK_CODE, message: "ok", data: { intentId } });
         },
         createPaymentCheckout: async ({ request }) => {
@@ -537,6 +590,33 @@ export async function startBrowserMsw() {
             code: OK_CODE,
             message: "ok",
             data: { paymentId, status: "CREATED" },
+          });
+        },
+        createShareInvite: ({ params }) => {
+          const team = teams.find((t) => t.dealId === params.dealId);
+          if (!team) {
+            return HttpResponse.json(
+              { code: "GROUPBUY_404_001", message: "Group deal not found" },
+              { status: 404 },
+            );
+          }
+          if (team.status !== "open") {
+            return HttpResponse.json(
+              { code: "GROUPBUY_409_002", message: "Group deal is not accepting members" },
+              { status: 409 },
+            );
+          }
+          const ref = invites.get(params.dealId) ?? mintRef();
+          invites.set(params.dealId, ref);
+          return HttpResponse.json({
+            code: OK_CODE,
+            message: "ok",
+            data: {
+              ref,
+              dealId: params.dealId,
+              productId: team.productId,
+              expiresAt: team.expireTime,
+            },
           });
         },
         getPaymentCapabilities: () =>
@@ -591,7 +671,9 @@ export async function startBrowserMsw() {
               { status: 404 },
             );
           }
-          return HttpResponse.json({ code: OK_CODE, message: "ok", data: found });
+          const bloc = invitedBloc(found.id ?? "");
+          const data = bloc ? { ...found, deal: bloc } : found;
+          return HttpResponse.json({ code: OK_CODE, message: "ok", data });
         },
       },
     }),

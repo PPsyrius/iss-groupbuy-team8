@@ -10,6 +10,7 @@ import {
 } from "@/api/generated/@tanstack/react-query.gen";
 import type { IntentRequest } from "@/api/generated/types.gen";
 import { usePaymentAvailability } from "@/features/payment/use-payment-availability";
+import { parkedRefFor } from "@/features/share/invite-ref";
 
 export const lastPaymentKey = "blocbuy.payment.last";
 const attemptPrefix = "blocbuy.payment.attempt.";
@@ -38,6 +39,23 @@ function joinRejection(error: unknown): string | undefined {
 
 function isStaleIntent(error: unknown): boolean {
   return error instanceof ApiError && (error.status === 409 || error.code === staleIntentCode);
+}
+
+// UC7 (#30): a JOIN of the bloc the buyer was invited to carries the parked invite ref; the server
+// freezes the sharer on the intent. START never sends one (the server would ignore it). The ref
+// stays parked after the intent exists: a stale intent (PAYMENT_409_001) or a failed or expired
+// payment needs a replacement intent, and that one must carry the ref too.
+function intentRequest(operation: IntentRequest["operation"], businessId: string): IntentRequest {
+  const ref = operation === "JOIN" ? parkedRefFor(businessId) : undefined;
+  return ref ? { operation, businessId, ref } : { operation, businessId };
+}
+
+function stripeCheckoutDestination(checkoutUrl: string): URL {
+  const destination = new URL(checkoutUrl);
+  if (destination.protocol !== "https:" || destination.hostname !== "checkout.stripe.com") {
+    throw new Error("Invalid payment destination");
+  }
+  return destination;
 }
 
 // Only non-secret references are stored. Ownership and all amounts are checked by the server.
@@ -74,7 +92,7 @@ export function useCheckout(userId: string | undefined, onRejected?: () => void)
       if (!intentId) {
         const created = unwrapResult(
           await intent.mutateAsync({
-            body: { operation, businessId },
+            body: intentRequest(operation, businessId),
             headers: { "X-BlocBuy-Request": "checkout" },
           }),
           { allowVoid: false },
@@ -99,11 +117,7 @@ export function useCheckout(userId: string | undefined, onRejected?: () => void)
         await navigate({ to: "/payments/$paymentId", params: { paymentId: result.paymentId } });
         return;
       }
-      const destination = new URL(result.checkoutUrl);
-      if (destination.protocol !== "https:" || destination.hostname !== "checkout.stripe.com") {
-        throw new Error("Invalid payment destination");
-      }
-      window.location.assign(destination.href);
+      window.location.assign(stripeCheckoutDestination(result.checkoutUrl).href);
     } catch (checkoutError) {
       const knownPayment = sessionStorage.getItem(`${key}.payment`);
       if (knownPayment) {

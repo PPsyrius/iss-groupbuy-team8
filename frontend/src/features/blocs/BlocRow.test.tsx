@@ -1,7 +1,11 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { OK_CODE } from "@/api/envelope";
 import type { MyTeamResponse } from "@/api/generated/types.gen";
+import { server } from "@/test/msw";
 import { renderWithRouter } from "@/test/render";
 
 import { BlocRow } from "./BlocRow";
@@ -113,5 +117,94 @@ describe("BlocRow", () => {
       <BlocRow team={{ ...rice, productImage: "https://example.test/rice.jpg" }} />,
     );
     expect(container.querySelector("img")).toHaveAttribute("src", "https://example.test/rice.jpg");
+  });
+});
+
+// UC7 (#30): an open row shares its bloc; the invite is minted only once the buyer asks.
+describe("BlocRow share", () => {
+  const ref = "Qm9vbS1pbnZpdGUtcmVm_-";
+  let mints: string[] = [];
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(now);
+    mints = [];
+    server.use(
+      http.post("*/api/v1/group-deals/:dealId/invites", ({ params }) => {
+        mints.push(String(params.dealId));
+        return HttpResponse.json({
+          code: OK_CODE,
+          message: "ok",
+          data: {
+            ref,
+            dealId: params.dealId,
+            productId: rice.productId,
+            expiresAt: "2099-01-01T00:00:00Z",
+          },
+        });
+      }),
+    );
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    Reflect.deleteProperty(navigator, "clipboard");
+  });
+
+  it("mints nothing until the buyer opens the share panel, then mints once", async () => {
+    await renderWithRouter(<BlocRow team={rice} userId="u1" />);
+    const toggle = screen.getByRole("button", { name: "Share invite link" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("textbox", { name: "Invite link" })).toBeNull();
+    expect(mints).toEqual([]);
+
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    const panel = screen.getByRole("region", { name: "Invite link for Thai jasmine rice 10 kg" });
+    const field = await within(panel).findByRole<HTMLInputElement>("textbox", {
+      name: "Invite link",
+    });
+    expect(field.value).toContain(`/products/${rice.productId}?deal=${rice.dealId}&ref=${ref}`);
+    expect(mints).toEqual([rice.dealId]);
+    // The compact variant leaves the suggested-message panel out.
+    expect(within(panel).queryByText("Suggested message")).toBeNull();
+
+    // Closing and reopening reuses the minted ref.
+    await userEvent.click(toggle);
+    expect(screen.queryByRole("textbox", { name: "Invite link" })).toBeNull();
+    await userEvent.click(toggle);
+    await screen.findByRole("textbox", { name: "Invite link" });
+    expect(mints).toEqual([rice.dealId]);
+  });
+
+  it("copies the link and confirms it inline", async () => {
+    const writeText = vi.fn<(text: string) => Promise<void>>(() => Promise.resolve());
+    await renderWithRouter(<BlocRow team={rice} userId="u1" />);
+    await userEvent.click(screen.getByRole("button", { name: "Share invite link" }));
+    await screen.findByRole("textbox", { name: "Invite link" });
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+    await userEvent.click(screen.getByRole("button", { name: "Copy" }));
+    await waitFor(() =>
+      expect(writeText).toHaveBeenCalledWith(
+        `${window.location.origin}/products/${rice.productId}?deal=${rice.dealId}&ref=${ref}`,
+      ),
+    );
+    expect(await screen.findByText("Invite link copied")).toBeInTheDocument();
+  });
+
+  it.each([
+    ["a filled bloc", { status: "succeeded", currentSize: 5 }],
+    ["a closed bloc", { status: "expired", currentSize: 3 }],
+    ["an open bloc past its deadline", { expireTime: inMinutes(-3) }],
+    ["an open bloc with no seat left", { currentSize: 5 }],
+    ["a removed listing", { productTitle: null }],
+  ] satisfies [string, Partial<MyTeamResponse>][])("offers no share on %s", async (_, change) => {
+    await renderWithRouter(<BlocRow team={{ ...rice, ...change }} userId="u1" />);
+    expect(screen.queryByRole("button", { name: "Share invite link" })).toBeNull();
+    expect(mints).toEqual([]);
+  });
+
+  it("offers no share without a signed-in buyer", async () => {
+    await renderWithRouter(<BlocRow team={rice} />);
+    expect(screen.queryByRole("button", { name: "Share invite link" })).toBeNull();
   });
 });

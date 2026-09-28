@@ -10,6 +10,7 @@ import {
 } from "@/features/catalog/deal-time";
 import { useNow } from "@/features/catalog/DealProgress";
 import { formatPrice } from "@/features/catalog/Price";
+import { RowShare } from "@/features/share/RowShare";
 
 import { blocChip, blocCountdown, blocFilter, type BlocChip } from "./bloc-status";
 
@@ -19,8 +20,13 @@ import { blocChip, blocCountdown, blocFilter, type BlocChip } from "./bloc-statu
 // status chip. `GET /group-deals/me` carries no bloc number, so the artboard's "Bloc 2091" is
 // not drawn. A closed bloc swaps to the Refunded-filter variant: closing date, "… when it closed",
 // a grey bar and the amount as refund due; the endpoint has no refund state, so it never claims
-// "Refunded" (plan §12 note 50).
-export function BlocRow({ team }: Readonly<{ team: MyTeamResponse }>) {
+// "Refunded" (plan §12 note 50). An open bloc with seats left and time to run gets the compact
+// share control (`RowShare`, UC7 #30) for the signed-in buyer `userId`; filled and closed rows
+// have nothing to share.
+export function BlocRow({
+  team,
+  userId,
+}: Readonly<{ team: MyTeamResponse; userId?: string | undefined }>) {
   const now = useNow();
   const price = Number(team.dealPrice);
   const target = Math.max(1, team.targetSize ?? 1);
@@ -31,6 +37,7 @@ export function BlocRow({ team }: Readonly<{ team: MyTeamResponse }>) {
     target,
     joined: Math.min(target, Math.max(0, team.currentSize ?? 0)),
     chip: blocChip(team, now),
+    userId,
   };
   return blocFilter(team.status) === "refunded" ? (
     <ClosedBlocRow {...facts} />
@@ -46,6 +53,7 @@ type RowFacts = Readonly<{
   target: number;
   joined: number;
   chip: BlocChip;
+  userId?: string | undefined;
 }>;
 
 function ClosedBlocRow({ team, now, priceText, target, joined, chip }: RowFacts) {
@@ -78,13 +86,21 @@ function ClosedBlocRow({ team, now, priceText, target, joined, chip }: RowFacts)
   );
 }
 
-function OpenBlocRow({ team, now, priceText, target, joined, chip }: RowFacts) {
+function OpenBlocRow({ team, now, priceText, target, joined, chip, userId }: RowFacts) {
   const completed = blocFilter(team.status) === "completed";
   const successMs = parseDeadline(team.successTime ?? undefined);
   // An open bloc past its deadline is "Ended" while it waits for the sweeper: no countdown and
   // no seats to fill.
   const settled = completed || chip.label === "Ended";
   const countdown = settled ? null : blocCountdown(team, now);
+  const left = target - joined;
+  const price = Number(team.dealPrice);
+  const groupPrice = Number.isFinite(price) ? price : undefined;
+  const { dealId, productId } = team;
+  const shareable =
+    !settled && left > 0 && userId && dealId && productId && team.productTitle
+      ? { userId, dealId, productId }
+      : null;
   return (
     <article className="border-border bg-surface flex flex-col gap-3 rounded-lg border p-3.5">
       <div className="flex items-start gap-3">
@@ -110,7 +126,7 @@ function OpenBlocRow({ team, now, priceText, target, joined, chip }: RowFacts) {
           <span className="text-sm tabular-nums">
             {joined} of {target} joined
           </span>
-          {settled ? null : <SeatsLeft left={target - joined} />}
+          {settled ? null : <SeatsLeft left={left} />}
         </div>
         <Progress joined={completed ? target : joined} target={target} tone="accent" />
       </div>
@@ -126,6 +142,21 @@ function OpenBlocRow({ team, now, priceText, target, joined, chip }: RowFacts) {
         </div>
         <StatusChip chip={chip} />
       </div>
+      {shareable ? (
+        <RowShare
+          userId={shareable.userId}
+          dealId={shareable.dealId}
+          productId={shareable.productId}
+          message={{
+            title: team.productTitle ?? "this listing",
+            groupPrice,
+            individualPrice: undefined,
+            currency: team.currency ?? "sgd",
+            seatsLeft: left,
+            closesMs: parseDeadline(team.expireTime),
+          }}
+        />
+      ) : null}
     </article>
   );
 }
