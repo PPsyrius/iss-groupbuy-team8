@@ -16,7 +16,7 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 | FB-02 | P1 | Shared Playwright API stubs (done 2026-09-29) | One set of `page.route` stubs for the e2e specs, reusing the pattern in `FE/e2e/login.spec.ts`. The production build drops `?msw=1`, so e2e must stub with `page.route`. | `FE/e2e/fixtures/api.ts` (new), `FE/e2e/login.spec.ts` | `cd frontend && pnpm e2e` | — |
 | FB-03 | P1 | Buyer-journey e2e (done 2026-09-29) | Catalog → listing → quote → checkout → an intercepted Stripe 302 to `/payments/return` → receipt Waiting then Paid → My blocs. | `FE/e2e/buyer-journey.spec.ts` (new) | `cd frontend && pnpm e2e buyer-journey` | FB-02 |
 | FB-04 | P1 | JOIN refusal e2e (done 2026-09-29) | `GROUPBUY_409_004`, `GROUPBUY_409_002`, `GROUPBUY_409_003` and `GROUPBUY_404_001` each name the reason, and no checkout-session call is made. | `FE/e2e/join-refusal.spec.ts` (new) | `cd frontend && pnpm e2e join-refusal` | FB-02 |
-| FB-05 | P1 | Quote e2e | 15-minute expiry with `page.clock`, then re-issue; a 409 `CATALOG_409_001` shows no price. | `FE/e2e/quote.spec.ts` (new) | `cd frontend && pnpm e2e quote` | FB-02 |
+| FB-05 | P1 | Quote e2e (done 2026-09-29) | 15-minute expiry with `page.clock`, then re-issue; a 409 `CATALOG_409_001` shows no price. | `FE/e2e/quote.spec.ts` (new) | `cd frontend && pnpm e2e quote` | FB-02 |
 | FB-06 | P2 | CI e2e comment and dev-safe specs | Fix the stale "Only the home test runs here" comment in the `e2e-preview` job; keep the new specs safe to run against dev. | `.github/workflows/ci-frontend.yml` | `docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:latest -color` | FB-03, FB-04, FB-05 |
 | FB-07 | P2 | SonarCloud coverage exclusions | Exclude `src/main.tsx`, `src/router.tsx` and `src/dev/**` from coverage in the `sonar-frontend` job args, or add a router test instead. | `.github/workflows/ci-frontend.yml` | `sonar-frontend` job green on the PR | — |
 | FB-08 | P2 | Unit gaps | Catalog listings 500 alert and recovery; an unknown route renders the 404 card through the route tree; `/account` loading skeletons (`AccountLoading`, `BlocsSkeleton`). | `FE/src/routes/index.test.tsx`, `FE/src/routes/account.test.tsx` | `cd frontend && pnpm vitest run src/routes` | — |
@@ -62,8 +62,8 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 
 ### FB-05: Quote e2e
 
-- [ ] Step 1: `page.clock` moves past 15 minutes; payment is disabled and "Get a new price" re-issues.
-- [ ] Step 2: a 409 `CATALOG_409_001` shows no price and no pay button.
+- [x] Step 1 (2026-09-29): `page.clock` moves past 15 minutes; payment is disabled and "Get a new price" re-issues.
+- [x] Step 2 (2026-09-29): a 409 `CATALOG_409_001` shows no price and no pay button.
 
 ### FB-06 to FB-18
 
