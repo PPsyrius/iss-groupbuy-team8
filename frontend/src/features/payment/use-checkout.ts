@@ -71,6 +71,18 @@ function intentRequest(
   return ref ? { operation, businessId, ref } : { operation, businessId };
 }
 
+// An intent freezes one quote's amount, so a new quote needs its own intent: the attempt key
+// names the quote and a retry of the same quote still reuses its intent and idempotency key.
+function attemptKey(
+  userId: string,
+  operation: IntentRequest["operation"],
+  businessId: string,
+  quoteId: string | undefined,
+): string {
+  const quoted = operation === "START" && quoteId ? `.${quoteId}` : "";
+  return `${attemptPrefix}${userId}.${operation}.${businessId}${quoted}`;
+}
+
 function stripeCheckoutDestination(checkoutUrl: string): URL {
   const destination = new URL(checkoutUrl);
   if (destination.protocol !== "https:" || destination.hostname !== "checkout.stripe.com") {
@@ -102,6 +114,77 @@ export function useCheckout(userId: string | undefined, onRejected?: () => void)
   const [isPending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  async function openCheckout(
+    key: string,
+    operation: IntentRequest["operation"],
+    businessId: string,
+    quoteId: string | undefined,
+  ): Promise<void> {
+    let intentId = sessionStorage.getItem(key);
+    if (!intentId) {
+      const created = unwrapResult(
+        await intent.mutateAsync({
+          body: intentRequest(operation, businessId, quoteId),
+          headers: { "X-BlocBuy-Request": "checkout" },
+        }),
+        { allowVoid: false },
+      );
+      if (!created.intentId) throw new Error("Missing purchase reference");
+      intentId = created.intentId;
+      sessionStorage.setItem(key, intentId);
+    }
+    const requestKey = sessionStorage.getItem(`${key}.request`) ?? crypto.randomUUID();
+    sessionStorage.setItem(`${key}.request`, requestKey);
+    const result = unwrapResult(
+      await checkout.mutateAsync({
+        body: { intentId },
+        headers: { "X-BlocBuy-Request": "checkout", "Idempotency-Key": requestKey },
+      }),
+      { allowVoid: false },
+    );
+    if (!result.paymentId) throw new Error("Missing payment reference");
+    sessionStorage.setItem(lastPaymentKey, result.paymentId);
+    sessionStorage.setItem(`${key}.payment`, result.paymentId);
+    if (result.status !== "CREATED" || !result.checkoutUrl) {
+      await navigate({ to: "/payments/$paymentId", params: { paymentId: result.paymentId } });
+      return;
+    }
+    window.location.assign(stripeCheckoutDestination(result.checkoutUrl).href);
+  }
+
+  async function recover(
+    key: string,
+    operation: IntentRequest["operation"],
+    checkoutError: unknown,
+  ): Promise<CheckoutOutcome> {
+    const knownPayment = sessionStorage.getItem(`${key}.payment`);
+    if (knownPayment) {
+      await navigate({ to: "/payments/$paymentId", params: { paymentId: knownPayment } });
+      return "settled";
+    }
+    if (operation === "START" && isQuoteRejection(checkoutError)) return "quote-rejected";
+    const rejection = joinRejection(checkoutError);
+    if (rejection) {
+      // The intent and idempotency key stay: a refusal at Checkout can follow a lost response
+      // that already opened a payment, and a fresh intent would bypass the server's one
+      // blocking attempt per intent.
+      setError(rejection);
+      onRejected?.();
+      return "settled";
+    }
+    if (isStaleIntent(checkoutError)) {
+      // No payment was ever created for this intent, so freeing both keys lets the next
+      // begin() freeze a fresh intent under a fresh idempotency key. Every other failure
+      // (timeouts included) keeps them: a retry must not create a second charge.
+      sessionStorage.removeItem(key);
+      sessionStorage.removeItem(`${key}.request`);
+    }
+    setError(
+      "We could not open Checkout. Please retry the same action. Do not make another payment if you have already paid.",
+    );
+    return "settled";
+  }
+
   async function begin(
     operation: IntentRequest["operation"],
     businessId: string,
@@ -111,69 +194,12 @@ export function useCheckout(userId: string | undefined, onRejected?: () => void)
     busy.current = true;
     setPending(true);
     setError(null);
-    // An intent freezes one quote's amount, so a new quote needs its own intent: the attempt key
-    // names the quote and a retry of the same quote still reuses its intent and idempotency key.
-    const quoted = operation === "START" && quoteId ? `.${quoteId}` : "";
-    const key = `${attemptPrefix}${userId}.${operation}.${businessId}${quoted}`;
+    const key = attemptKey(userId, operation, businessId, quoteId);
     try {
-      let intentId = sessionStorage.getItem(key);
-      if (!intentId) {
-        const created = unwrapResult(
-          await intent.mutateAsync({
-            body: intentRequest(operation, businessId, quoteId),
-            headers: { "X-BlocBuy-Request": "checkout" },
-          }),
-          { allowVoid: false },
-        );
-        if (!created.intentId) throw new Error("Missing purchase reference");
-        intentId = created.intentId;
-        sessionStorage.setItem(key, intentId);
-      }
-      const requestKey = sessionStorage.getItem(`${key}.request`) ?? crypto.randomUUID();
-      sessionStorage.setItem(`${key}.request`, requestKey);
-      const result = unwrapResult(
-        await checkout.mutateAsync({
-          body: { intentId },
-          headers: { "X-BlocBuy-Request": "checkout", "Idempotency-Key": requestKey },
-        }),
-        { allowVoid: false },
-      );
-      if (!result.paymentId) throw new Error("Missing payment reference");
-      sessionStorage.setItem(lastPaymentKey, result.paymentId);
-      sessionStorage.setItem(`${key}.payment`, result.paymentId);
-      if (result.status !== "CREATED" || !result.checkoutUrl) {
-        await navigate({ to: "/payments/$paymentId", params: { paymentId: result.paymentId } });
-        return "settled";
-      }
-      window.location.assign(stripeCheckoutDestination(result.checkoutUrl).href);
+      await openCheckout(key, operation, businessId, quoteId);
       return "settled";
     } catch (checkoutError) {
-      const knownPayment = sessionStorage.getItem(`${key}.payment`);
-      if (knownPayment) {
-        await navigate({ to: "/payments/$paymentId", params: { paymentId: knownPayment } });
-        return "settled";
-      }
-      if (operation === "START" && isQuoteRejection(checkoutError)) return "quote-rejected";
-      const rejection = joinRejection(checkoutError);
-      if (rejection) {
-        // The intent and idempotency key stay: a refusal at Checkout can follow a lost response
-        // that already opened a payment, and a fresh intent would bypass the server's one
-        // blocking attempt per intent.
-        setError(rejection);
-        onRejected?.();
-        return "settled";
-      }
-      if (isStaleIntent(checkoutError)) {
-        // No payment was ever created for this intent, so freeing both keys lets the next
-        // begin() freeze a fresh intent under a fresh idempotency key. Every other failure
-        // (timeouts included) keeps them: a retry must not create a second charge.
-        sessionStorage.removeItem(key);
-        sessionStorage.removeItem(`${key}.request`);
-      }
-      setError(
-        "We could not open Checkout. Please retry the same action. Do not make another payment if you have already paid.",
-      );
-      return "settled";
+      return await recover(key, operation, checkoutError);
     } finally {
       busy.current = false;
       setPending(false);

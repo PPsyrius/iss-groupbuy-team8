@@ -45,56 +45,9 @@ export function QuoteSheet({
               </Modal.Heading>
             </Modal.Header>
             <div className="flex flex-col gap-3" aria-busy={state.status === "loading"}>
-              {state.status === "idle" || state.status === "loading" ? (
-                <>
-                  <p className="text-muted text-sm">Getting your bloc price…</p>
-                  <Skeleton className="h-10 w-[46%] rounded-full" />
-                  <Skeleton className="h-[68px] rounded-lg" />
-                </>
-              ) : null}
-              {state.status === "unavailable" ? (
-                <p className="text-muted text-sm">
-                  No bloc price is set for this listing yet, so a bloc can’t be started right now.
-                  Nothing has been charged.
-                </p>
-              ) : null}
-              {state.status === "error" ? (
-                <Alert status="danger">
-                  <Alert.Content>
-                    <Alert.Title>We couldn’t get a price</Alert.Title>
-                    <Alert.Description>
-                      Something went wrong on our side. Nothing has been charged.
-                    </Alert.Description>
-                  </Alert.Content>
-                </Alert>
-              ) : null}
+              <QuoteStatus status={state.status} />
               {quote ? (
-                <>
-                  <p className="text-accent-soft-foreground text-4xl font-semibold tracking-tight tabular-nums">
-                    {formatPrice(quote.amount, quote.currency)}
-                  </p>
-                  <QuoteTerms
-                    payNow={formatPrice(quote.amount, quote.currency)}
-                    validFor={formatCountdown(quote.expiresMs, now)}
-                  />
-                  {stale ? (
-                    <Alert status="warning" aria-live="polite">
-                      <Alert.Content>
-                        <Alert.Title>
-                          {expired ? "This price has expired" : "This price is no longer available"}
-                        </Alert.Title>
-                        <Alert.Description>
-                          Get a new price to continue. Nothing has been charged.
-                        </Alert.Description>
-                      </Alert.Content>
-                    </Alert>
-                  ) : (
-                    <p className="text-muted text-sm">
-                      This is the price you pay if you continue before it expires. Nothing is
-                      charged until you confirm on Stripe.
-                    </p>
-                  )}
-                </>
+                <QuotePrice quote={quote} now={now} expired={expired} stale={stale} />
               ) : null}
             </div>
             <Modal.Footer className="flex flex-col gap-2 xl:flex-row-reverse">
@@ -145,6 +98,76 @@ export function QuoteSheet({
         </Modal.Container>
       </Modal.Backdrop>
     </Modal>
+  );
+}
+
+// Everything the sheet says before (or instead of) a price: loading, no policy, or a failure.
+function QuoteStatus({ status }: Readonly<{ status: QuoteState["status"] }>) {
+  if (status === "idle" || status === "loading") {
+    return (
+      <>
+        <p className="text-muted text-sm">Getting your bloc price…</p>
+        <Skeleton className="h-10 w-[46%] rounded-full" />
+        <Skeleton className="h-[68px] rounded-lg" />
+      </>
+    );
+  }
+  if (status === "unavailable") {
+    return (
+      <p className="text-muted text-sm">
+        No bloc price is set for this listing yet, so a bloc can’t be started right now. Nothing has
+        been charged.
+      </p>
+    );
+  }
+  if (status === "error") {
+    return (
+      <Alert status="danger">
+        <Alert.Content>
+          <Alert.Title>We couldn’t get a price</Alert.Title>
+          <Alert.Description>
+            Something went wrong on our side. Nothing has been charged.
+          </Alert.Description>
+        </Alert.Content>
+      </Alert>
+    );
+  }
+  return null;
+}
+
+type Quote = Extract<QuoteState, { status: "ready" }>["quote"];
+
+function QuotePrice({
+  quote,
+  now,
+  expired,
+  stale,
+}: Readonly<{ quote: Quote; now: number; expired: boolean; stale: boolean }>) {
+  const price = formatPrice(quote.amount, quote.currency);
+  return (
+    <>
+      <p className="text-accent-soft-foreground text-4xl font-semibold tracking-tight tabular-nums">
+        {price}
+      </p>
+      <QuoteTerms payNow={price} validFor={formatCountdown(quote.expiresMs, now)} />
+      {stale ? (
+        <Alert status="warning" aria-live="polite">
+          <Alert.Content>
+            <Alert.Title>
+              {expired ? "This price has expired" : "This price is no longer available"}
+            </Alert.Title>
+            <Alert.Description>
+              Get a new price to continue. Nothing has been charged.
+            </Alert.Description>
+          </Alert.Content>
+        </Alert>
+      ) : (
+        <p className="text-muted text-sm">
+          This is the price you pay if you continue before it expires. Nothing is charged until you
+          confirm on Stripe.
+        </p>
+      )}
+    </>
   );
 }
 
