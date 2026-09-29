@@ -8,6 +8,9 @@ blocbuy-bootstrap/target/*
 
 docs/
 *.md
+.env
+.env.*
+docker-compose.yaml
 .mvn/wrapper/maven-wrapper.jar.sha512
 
 # Dockerfile.ci (CI pipeline) copies the prebuilt boot jar downloaded from the

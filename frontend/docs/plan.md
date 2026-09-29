@@ -27,7 +27,7 @@
 - Same origin: SPA at `/`, backend at `/api/*`. Backend has no context path; `/api/v1` comes from controller mappings. CloudFront does not rewrite paths.
 - Auth: Google OAuth only. Login = full-page navigation to `GET /api/v1/auth/oauth2/google`. Probe `GET /api/v1/auth/me` → `{userId, nickname, avatarUrl}` (B4 landed in PR #89; it was `{loginId}` at planning time). Logout `POST /api/v1/auth/logout`. Unauthenticated → JSON 401 envelope. `GET /api/v1/products/**` anonymous.
 - Auth state: `useSession` query; the 401 interceptor settles `me` to an anonymous success envelope and never redirects. Route `beforeLoad` guards own redirects.
-- Local dev: `docker compose up` → backend on `http://localhost:8589`; Vite proxy `/api` with prefix preserved.
+- Local dev: `docker compose up` from `backend/` → backend on `http://localhost:8589`; Vite proxy `/api` with prefix preserved. For a shared-origin stack, see [`fullstack-localhost/README.md`](../../fullstack-localhost/README.md).
 - No `VITE_*` variables, no `import.meta.env`. One artifact promoted dev → prod. Future runtime config only via `/config.json` with `no-cache`.
 - Dev CloudFront was hand-built, then adopted by `infra/terraform/frontend-stack/` in PR #190; changes follow its reviewed Terraform plan and the runbook. SPA fallback uses a CloudFront Function on viewer-request of the default behavior. No distribution-wide custom error responses.
 - Cache headers: hashed assets `public,max-age=31536000,immutable`; `index.html` `no-cache`; invalidate `/index.html` on deploy.
