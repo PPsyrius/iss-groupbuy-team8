@@ -1,0 +1,103 @@
+import { screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { HttpResponse, http } from "msw";
+import { describe, expect, it, vi } from "vitest";
+
+import { queryClient } from "@/api/query-client";
+import { adminSeed, createAdminStore } from "@/test/admin-msw";
+import { server } from "@/test/msw";
+import { renderRoute, serveAdmin } from "@/test/render-route";
+
+// The listings table route (admin plan A1-04, artboards 4a.2–4a.4) over the stateful admin store:
+// 62 rows, of which 14 are drafts, 34 on sale and 14 off sale.
+describe("/admin/listings", () => {
+  it("shows the first page with the tab counts and the pager", async () => {
+    serveAdmin();
+    renderRoute("/admin/listings");
+    expect(await screen.findByRole("heading", { name: "Listings" })).toBeVisible();
+    expect(screen.getByText("62 listings · page size 20")).toBeVisible();
+    expect(await screen.findByText("Showing 1–20 of 62")).toBeVisible();
+    expect(screen.getByText("Page 1 of 4")).toBeVisible();
+    expect(screen.getAllByRole("row")).toHaveLength(21);
+    const tabs = screen.getByRole("tablist", { name: "Listing status" });
+    await waitFor(() =>
+      expect(
+        within(tabs)
+          .getAllByRole("tab")
+          .map((t) => t.textContent),
+      ).toEqual(["All62", "Draft14", "On sale34", "Off sale14"]),
+    );
+    expect(within(tabs).getByRole("tab", { name: /All/ })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("link", { name: "Listings" })).toHaveAttribute(
+      "href",
+      "/admin/listings",
+    );
+  });
+
+  it("filters by the tab in the URL and moves between tabs", async () => {
+    const user = userEvent.setup();
+    serveAdmin();
+    const { router } = renderRoute("/admin/listings?tab=off-sale");
+    expect(await screen.findByText("Showing 1–14 of 14")).toBeVisible();
+    for (const chip of screen
+      .getAllByText(/^(On sale|Draft|Off sale)$/)
+      .filter((e) => e.closest(".chip")))
+      expect(chip).toHaveTextContent("Off sale");
+    await user.click(screen.getByRole("tab", { name: /Draft/ }));
+    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "draft" }));
+    expect(await screen.findByText("Showing 1–14 of 14")).toBeVisible();
+    await user.click(screen.getByRole("tab", { name: /All/ }));
+    await waitFor(() => expect(router.state.location.search).toEqual({}));
+  });
+
+  it("sends a page past the last one to the last page", async () => {
+    serveAdmin();
+    const { router } = renderRoute("/admin/listings?page=99");
+    await waitFor(() => expect(router.state.location.search).toEqual({ page: 4 }));
+    expect(await screen.findByText("Showing 61–62 of 62")).toBeVisible();
+    expect(screen.getByText("Page 4 of 4")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Next" })).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("teaches the draft rule when the Draft tab is empty", async () => {
+    serveAdmin(createAdminStore(adminSeed().filter((r) => r.status !== "draft")));
+    renderRoute("/admin/listings?tab=draft");
+    expect(await screen.findByRole("heading", { name: "No drafts" })).toBeVisible();
+    expect(
+      screen.getByText(
+        "Every listing here is published. A new listing starts as a draft at version 0 and stays private until you publish it.",
+      ),
+    ).toBeVisible();
+    const buttons = screen.getAllByRole("link", { name: "New listing" });
+    expect(buttons).toHaveLength(2);
+    expect(buttons[0]).toHaveClass("button--outline");
+    expect(buttons[1]).toHaveClass("button--secondary");
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+  });
+
+  it("offers Try again when the listings fail to load", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const user = userEvent.setup();
+    serveAdmin();
+    let fail = true;
+    server.use(
+      http.get("*/api/v1/admin/products", ({ request }) =>
+        new URL(request.url).searchParams.get("size") === "20" && fail
+          ? HttpResponse.json({ code: "COMMON_500_000", message: "boom" }, { status: 500 })
+          : undefined,
+      ),
+    );
+    // The app client retries a 500 twice with backoff; skip the wait, not the behaviour.
+    const defaults = queryClient.getDefaultOptions();
+    queryClient.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, retry: false } });
+    try {
+      renderRoute("/admin/listings");
+      expect(await screen.findByText("We couldn’t load the listings")).toBeVisible();
+      fail = false;
+      await user.click(screen.getByRole("button", { name: "Try again" }));
+      expect(await screen.findByText("Showing 1–20 of 62")).toBeVisible();
+    } finally {
+      queryClient.setDefaultOptions(defaults);
+    }
+  });
+});

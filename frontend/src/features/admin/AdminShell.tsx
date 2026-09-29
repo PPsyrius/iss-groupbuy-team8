@@ -14,7 +14,7 @@ import isologo from "./isologo.png";
 // hidden through `staticData.shell`. Desktop only, dense: the content column keeps 1024px and
 // scrolls sideways below that (Q12). The isologo is the artboard's PNG until the SVG lands
 // (CR-7). Payments and Bloc price rules stay out of the nav until their screens exist (Q3,
-// A3-06); A1-04 adds Listings when its route exists.
+// A3-06).
 const nav = "flex min-h-11 items-center rounded-lg px-3 text-sm";
 
 export function AdminShell() {
@@ -34,6 +34,14 @@ export function AdminShell() {
             inactiveProps={{ className: "text-[#A0A0A0]" }}
           >
             Dashboard
+          </Link>
+          <Link
+            to="/admin/listings"
+            className={nav + " hover:text-background"}
+            activeProps={{ className: "bg-white/10 font-semibold text-background" }}
+            inactiveProps={{ className: "text-[#A0A0A0]" }}
+          >
+            Listings
           </Link>
         </nav>
         <AdminUser />
