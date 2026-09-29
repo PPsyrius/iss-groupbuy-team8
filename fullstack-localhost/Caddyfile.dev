@@ -1,0 +1,11 @@
+# `pnpm stack:dev`: same origin as the production build, but everything except /api/* comes from the
+# Vite dev server on the host, including its hot module reloading WebSocket.
+:80 {
+	handle /api/* {
+		reverse_proxy backend:8589
+	}
+
+	handle {
+		reverse_proxy host.docker.internal:5173
+	}
+}

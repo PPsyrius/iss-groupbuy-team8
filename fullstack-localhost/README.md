@@ -1,56 +1,47 @@
 # Full-stack localhost development
 
-One command runs the whole of BlocBuy on your machine with the same routing as the dev and production CloudFront deployments: the SPA at `/` and the backend at `/api/` on one origin. The only requirement is Docker (Docker Desktop, or Docker Engine with the Compose plugin v2.24+); no JDK, Node or pnpm is needed.
+One command runs the whole of BlocBuy on your machine with the same routing as the dev and production CloudFront deployments: the SPA at `/` and the backend at `/api/` on one origin, <http://localhost:8080>. Google sign-in works in both modes because both use that origin.
 
-```sh
-# from the repository root
-docker compose -f fullstack-localhost/compose.yaml up --build
-```
+| Mode | Run in `frontend/` | Open | SPA comes from |
+| --- | --- | --- | --- |
+| Development | `pnpm stack:dev` | <http://localhost:8080> | Vite on your machine, with hot module reloading |
+| Production build | `pnpm stack:prod` | <http://localhost:8080> | `pnpm build` output served by Caddy in a container |
 
-From `frontend/`, `pnpm stack:prod` runs the same command, and `pnpm stack:dev` starts the backend, PostgreSQL and Redis in the background and then Vite with hot module reloading on <http://localhost:5173>.
+`pnpm stack:dev` needs Node 24 and pnpm (see `CONTRIBUTING.md`). `pnpm stack:prod` needs only Docker: without Node, run the same stack from the repository root with `docker compose -f fullstack-localhost/compose.yaml up --build`. Docker means Docker Desktop, or Docker Engine with the Compose plugin v2.24+; no JDK is needed. The first build downloads Maven and pnpm dependencies and takes a few minutes; later builds reuse the BuildKit cache.
 
-Open <http://localhost:8080>. The first build downloads Maven and pnpm dependencies and takes a few minutes; later builds reuse the BuildKit cache.
-
-| URL | Serves |
-| --- | --- |
-| `http://localhost:8080/` | SPA (production build), with client-side routes falling back to `index.html` |
-| `http://localhost:8080/api/*` | Backend, proxied by Caddy |
-| `http://localhost:8589/api/*` | Backend directly, for `pnpm dev` and API tools |
-| `http://localhost:8080/api/swagger-ui.html` | Swagger UI |
+Always use port 8080. Vite also listens on <http://localhost:5173> and the backend on <http://localhost:8589>, but Google sign-in only returns to 8080.
 
 ## What runs
 
 | Service | Built from | Notes |
 | --- | --- | --- |
-| `frontend` | `frontend.Dockerfile` | Builds `frontend/` with Node 24 and pnpm, then serves `dist/` with Caddy; `Caddyfile` sends `/api/*` to the backend |
+| `frontend` | `frontend.Dockerfile` | `stack:prod` only. Builds `frontend/` with Node 24 and pnpm, then serves `dist/` with Caddy; `Caddyfile` sends `/api/*` to the backend |
+| `frontend-dev` | `caddy:2-alpine` | `stack:dev` only (Compose profile `dev`). `Caddyfile.dev` sends `/api/*` to the backend and everything else, including the hot-reload WebSocket, to Vite on the host |
 | `backend` | `backend.Dockerfile` | Compiles `backend/` with JDK 21 (tests and quality gates skipped, CI runs them) under the `docker` profile |
 | `postgres`, `redis` | upstream images | Internal network only; data persists in named volumes |
 
-Flyway applies the schema migrations and the demo catalog seed (10 products) that the `local` profile uses, so the listing page is not empty.
+Both front doors publish port 8080, so each script stops the other one first. Flyway applies the schema migrations and the demo catalog seed (10 products) that the `local` profile uses, so the listing page is not empty. Swagger UI is at <http://localhost:8080/api/swagger-ui.html>.
+
+## Google sign-in
+
+1. Copy `.env.example` to `.env` in this folder and fill in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`; the comments in `.env.example` walk through it.
+2. The OAuth client must list `http://localhost:8080/api/v1/auth/oauth2/google/callback` as an authorized redirect URI.
+3. Restart with `pnpm stack:dev` or `pnpm stack:prod`.
+
+After the callback the backend redirects to the relative `/auth/callback`, so you land back on the front door you started from.
 
 ## Everyday use
 
-- Rebuild after code changes: `docker compose -f fullstack-localhost/compose.yaml up --build -d`.
-- Frontend hot reload: run `pnpm stack:dev` in `frontend/`; Vite serves <http://localhost:5173> and proxies `/api` to the backend on port 8589, so the `frontend` container is not needed. Google sign-in still redirects to `FRONTEND_URL` (port 8080) unless `.env` points it and `GOOGLE_REDIRECT_URI` at port 5173.
-- Stop the containers after `pnpm stack:dev`: stopping Vite leaves them running, so run the stop command below.
+- Backend or Dockerfile changes: rerun your `pnpm stack:*` command; it rebuilds what changed.
+- Frontend changes: under `stack:dev` they appear immediately; under `stack:prod` rerun the command to rebuild the image.
+- Stopping Vite (Ctrl+C) leaves the containers running, and `frontend-dev` answers 502 until Vite is back. Stop everything with `docker compose -f fullstack-localhost/compose.yaml --profile dev down`; add `-v` to wipe the database and Redis data.
 - Logs: `docker compose -f fullstack-localhost/compose.yaml logs -f backend`.
-- Stop: `docker compose -f fullstack-localhost/compose.yaml down`; add `-v` to wipe the database and Redis data.
-
-## Optional settings
-
-Localhost defaults need no configuration. To override them, create `fullstack-localhost/.env` (gitignored); Compose reads it automatically. Use Sandbox or local-only values, never deployed-environment secrets.
-
-| Key | Default | Purpose |
-| --- | --- | --- |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | empty | Google sign-in; the OAuth client must list `GOOGLE_REDIRECT_URI` |
-| `GOOGLE_REDIRECT_URI` | `http://localhost:8080/api/v1/auth/oauth2/google/callback` | OAuth callback on the shared origin |
-| `FRONTEND_URL` | `http://localhost:8080` | Where the backend redirects after sign-in |
-| `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET` | empty | Stripe Sandbox (`sk_test_...`) |
-| `BLOCBUY_SCHEDULING_ENABLED` | `false` | Team-expiry sweep |
-| `DB_USERNAME`, `DB_PASSWORD`, `REDIS_PASSWORD` | local-only values in `compose.yaml` | Credentials for the containers on the internal network |
+- Plain `pnpm dev` still works against this backend on port 8589, without Google sign-in.
 
 ## Differences from dev and production
 
 - Plain HTTP, so session cookies are not `Secure` (the `docker` profile already allows this).
 - Caddy does not add the CloudFront response headers; check the CSP with `pnpm build && pnpm preview` in `frontend/`.
+- Stripe Checkout is off: it needs the `stripe-sprint2` Spring profile, which this stack does not enable.
 - Ports 8080 and 8589 bind to `127.0.0.1` only. Stop the backend-only root `docker-compose.yaml` stack first if it holds port 8589.
+- Tested on macOS with Docker Desktop only. On Linux Docker Engine, `frontend-dev` reaches the host through `host-gateway`, and Vite listening on 127.0.0.1 may not be reachable that way; `stack:prod` does not depend on it.

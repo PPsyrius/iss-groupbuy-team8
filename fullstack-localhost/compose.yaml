@@ -45,15 +45,14 @@ services:
       DB_USERNAME: ${DB_USERNAME:-blocbuy}
       DB_PASSWORD: ${DB_PASSWORD:-localhost-only}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-localhost-only}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+      # FRONTEND_URL stays unset: post-sign-in redirects are relative (/auth/callback), as behind
+      # CloudFront, so they land on whichever of the two :8080 front doors served the callback.
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8080/api/v1/auth/oauth2/google/callback}
-      STRIPE_API_KEY: ${STRIPE_API_KEY:-}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       BLOCBUY_SCHEDULING_ENABLED: ${BLOCBUY_SCHEDULING_ENABLED:-false}
     ports:
-      # Published so `pnpm dev` (Vite proxies /api to :8589) can use this backend with hot reload.
+      # Published for API tools and plain `pnpm dev` (Vite proxies /api to :8589; no Google sign-in).
       - "127.0.0.1:8589:8589"
     depends_on:
       postgres:
@@ -66,6 +65,21 @@ services:
     build:
       context: ..
       dockerfile: fullstack-localhost/frontend.Dockerfile
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on: [backend]
+    networks: [edge]
+
+  # `pnpm stack:dev` front door on the same :8080 origin, proxying to the Vite dev server on the host.
+  # Opt-in profile, so a plain `up` never starts it; only one of frontend/frontend-dev can hold :8080.
+  frontend-dev:
+    image: caddy:2-alpine
+    profiles: [dev]
+    volumes:
+      - ./Caddyfile.dev:/etc/caddy/Caddyfile:ro
+    extra_hosts:
+      # Docker Desktop defines host.docker.internal already; Linux Docker Engine needs this mapping.
+      - "host.docker.internal:host-gateway"
     ports:
       - "127.0.0.1:8080:80"
     depends_on: [backend]
