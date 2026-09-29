@@ -1,4 +1,4 @@
-import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
+import { createRootRouteWithContext, Outlet, useMatches } from "@tanstack/react-router";
 
 import { NotFoundCard, RouteErrorCard } from "@/components/ErrorCard";
 import { Header } from "@/components/Header";
@@ -32,9 +32,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 function RootLayout() {
+  // The admin console draws its own dark rail instead (staticData.shell, admin plan §12 note 1).
+  const adminShell = useMatches({ select: (ms) => ms.some((m) => m.staticData.shell === "admin") });
   return (
     <>
-      <Header />
+      {adminShell ? null : <Header />}
       <Outlet />
       <Devtools />
     </>
