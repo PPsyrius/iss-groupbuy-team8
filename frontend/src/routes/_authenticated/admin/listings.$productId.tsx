@@ -1,10 +1,13 @@
 import { Button } from "@heroui/react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useState } from "react";
 
 import { ApiError } from "@/api/envelope";
 import { adminListingOptions } from "@/features/admin/admin-api";
-import { EditorSidebar } from "@/features/admin/EditorSidebar";
+import { EditorSidebar, SidebarActions } from "@/features/admin/EditorSidebar";
+import { actionsFor } from "@/features/admin/lifecycle";
+import { type DialogKind, LifecycleDialog } from "@/features/admin/LifecycleDialogs";
 import { fromListing } from "@/features/admin/listing-form";
 import { statusLabel } from "@/features/admin/listing-status";
 import { ListingForm, type SubmitProblem } from "@/features/admin/ListingForm";
@@ -37,6 +40,14 @@ function EditListingPage() {
   const version = listing.version ?? 0;
   const published = listing.status !== "draft";
   const { save, isPending } = useSaveListing(productId, version);
+  const [dirty, setDirty] = useState(false);
+  const [dialog, setDialog] = useState<DialogKind | null>(null);
+  const actions = actionsFor(listing.status, {
+    dirty,
+    stock: listing.listing?.stock ?? 0,
+    price: listing.listing?.originalPrice ?? "",
+  });
+  const publish = actions.find((a) => a.kind === "publish");
   const onSubmit = async (
     values: ReturnType<typeof fromListing>,
   ): Promise<SubmitProblem | undefined> => {
@@ -71,16 +82,38 @@ function EditListingPage() {
           </h1>
           <p className="text-muted font-mono text-xs">{facts.join(" · ")}</p>
         </div>
-        <Button
-          type="submit"
-          form={FORM_ID}
-          variant="secondary"
-          className="min-h-11 shrink-0 px-[18px] text-sm"
-          isDisabled={isPending}
-        >
-          {published ? "Save changes" : "Save draft"}
-        </Button>
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <div className="flex gap-2">
+            <Button
+              type="submit"
+              form={FORM_ID}
+              variant={publish ? "tertiary" : "secondary"}
+              className="min-h-11 px-[18px] text-sm"
+              isDisabled={isPending}
+            >
+              {published ? "Save changes" : "Save draft"}
+            </Button>
+            {publish ? (
+              <Button
+                variant="secondary"
+                className="min-h-11 px-[18px] text-sm"
+                isDisabled={!publish.enabled || isPending}
+                onPress={() => setDialog("publish")}
+              >
+                Publish
+              </Button>
+            ) : null}
+          </div>
+          {publish && !publish.enabled ? (
+            <p className="text-muted text-xs">
+              {dirty
+                ? "Save your changes before publishing."
+                : "Publishing needs a positive price and positive stock. Fill those in and save first."}
+            </p>
+          ) : null}
+        </div>
       </div>
+      <LifecycleDialog kind={dialog} listing={listing} onClose={() => setDialog(null)} />
       <div className="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-6">
         <ListingForm
           key={version}
@@ -91,9 +124,12 @@ function EditListingPage() {
           frozen={published}
           soldCount={published ? (listing.soldCount ?? 0) : undefined}
           guardUnsaved
+          onDirtyChange={setDirty}
         />
         <aside className="flex flex-col gap-4">
-          <EditorSidebar status={listing.status} version={version} showLifecycle />
+          <EditorSidebar status={listing.status} version={version} showLifecycle>
+            <SidebarActions actions={actions} onOpen={setDialog} />
+          </EditorSidebar>
         </aside>
       </div>
     </div>

@@ -6,7 +6,9 @@ import type { AdminListingResponse } from "@/api/generated/types.gen";
 import {
   adminListingOptions,
   forgetListingPages,
+  useChangeStatus,
   useCreateListing,
+  useDeleteListing,
   useReviseListing,
 } from "./admin-api";
 import { type ListingFormValues, toListingContent } from "./listing-form";
@@ -58,6 +60,38 @@ export function useSaveListing(productId: string, expectedVersion: number) {
       });
       remember(qc, listing);
       return listing;
+    },
+  };
+}
+
+const targetStatus = {
+  publish: "on_sale",
+  takeOffSale: "off_sale",
+  putBackOnSale: "on_sale",
+} as const;
+
+export type LifecycleChange = keyof typeof targetStatus | "delete";
+
+// The lifecycle writes (admin plan A1-07): a status change or a draft's delete, each carrying the
+// loaded version. A status change answers with the listing at its new version, which becomes the
+// `get` cache like a save's. A delete answers with nothing; only the table pages are dropped, and
+// the caller leaves the editor (the listing's own entry would 404 on its next read anyway).
+export function useLifecycleChange(productId: string, expectedVersion: number) {
+  const qc = useQueryClient();
+  const change = useChangeStatus();
+  const remove = useDeleteListing();
+  return {
+    isPending: change.isPending || remove.isPending,
+    run: async (kind: LifecycleChange) => {
+      if (kind === "delete") {
+        await remove.mutateAsync({ productId, expectedVersion });
+        forgetListingPages(qc);
+        return;
+      }
+      remember(
+        qc,
+        await change.mutateAsync({ productId, status: targetStatus[kind], expectedVersion }),
+      );
     },
   };
 }

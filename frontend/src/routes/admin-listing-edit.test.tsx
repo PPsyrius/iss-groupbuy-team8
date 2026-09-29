@@ -228,4 +228,92 @@ describe("/admin/listings/$productId", () => {
       await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" }),
     ).toBeVisible();
   });
+
+  it("publishes a saved draft after naming the fields that freeze", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const milk = rowOf(store, "BB-100472");
+    renderRoute(`/admin/listings/${milk.id}`);
+    await user.click(await screen.findByRole("button", { name: "Publish" }));
+    const dialog = await screen.findByRole("alertdialog", { name: "Publish this listing?" });
+    expect(within(dialog).getByText("S$46.80")).toBeVisible();
+    await user.click(within(dialog).getByRole("button", { name: "Publish listing" }));
+
+    expect(await screen.findByText("BB-100472 · on sale · v1 · 0 sold")).toBeVisible();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Solo price" })).toHaveAttribute("readonly");
+    expect(screen.queryByRole("button", { name: "Publish" })).not.toBeInTheDocument();
+    const status = screen.getByRole("region", { name: "Status" });
+    expect(within(status).getByRole("button", { name: "Take off sale" })).toBeVisible();
+    expect(milk).toMatchObject({ status: "on_sale", version: 1 });
+  });
+
+  it("keeps Publish disabled until the draft is saved and sellable", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const milk = rowOf(store, "BB-100472");
+    renderRoute(`/admin/listings/${milk.id}`);
+    const publish = await screen.findByRole("button", { name: "Publish" });
+    expect(publish).toBeEnabled();
+    await user.type(screen.getByRole("textbox", { name: "Subtitle" }), "Chilled");
+    await waitFor(() => expect(publish).toBeDisabled());
+    expect(screen.getByText("Save your changes before publishing.")).toBeVisible();
+  });
+
+  it("explains why Publish is disabled on a draft without stock", async () => {
+    const store = serveAdmin();
+    const milk = rowOf(store, "BB-100472");
+    milk.listing.stock = 0;
+    renderRoute(`/admin/listings/${milk.id}`);
+    expect(await screen.findByRole("button", { name: "Publish" })).toBeDisabled();
+    expect(
+      screen.getByText(
+        "Publishing needs a positive price and positive stock. Fill those in and save first.",
+      ),
+    ).toBeVisible();
+  });
+
+  it("deletes a draft from its danger zone and lands on the Draft tab", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const milk = rowOf(store, "BB-100472");
+    const { router } = renderRoute(`/admin/listings/${milk.id}`);
+    const status = await screen.findByRole("region", { name: "Status" });
+    expect(within(status).getByText("Danger zone")).toBeVisible();
+    expect(
+      within(status).getByText("Allowed: never published, no bloc, quote or rule history."),
+    ).toBeVisible();
+    await user.click(within(status).getByRole("button", { name: "Delete draft" }));
+    const dialog = await screen.findByRole("alertdialog", { name: "Delete this draft?" });
+    await user.click(within(dialog).getByRole("button", { name: "Delete draft" }));
+
+    expect(await screen.findByText("Draft deleted")).toBeVisible();
+    await waitFor(() => expect(router.state.location.pathname).toBe("/admin/listings"));
+    expect(router.state.location.search).toMatchObject({ tab: "draft" });
+    expect(store.find(milk.id)).toBeUndefined();
+  });
+
+  it("replaces Delete with its reason once published, and takes the listing off sale", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const rice = rowOf(store, "BB-100481");
+    renderRoute(`/admin/listings/${rice.id}`);
+    const status = await screen.findByRole("region", { name: "Status" });
+    expect(
+      within(status).getByText(
+        "Not available. This listing has been published; take it off sale instead.",
+      ),
+    ).toBeVisible();
+    expect(within(status).queryByRole("button", { name: /Delete/ })).not.toBeInTheDocument();
+
+    await user.click(within(status).getByRole("button", { name: "Take off sale" }));
+    const dialog = await screen.findByRole("alertdialog", { name: "Take this listing off sale?" });
+    await user.click(within(dialog).getByRole("button", { name: "Take off sale" }));
+    expect(await screen.findByText("BB-100481 · off sale · v5 · 142 sold")).toBeVisible();
+    expect(
+      await within(screen.getByRole("region", { name: "Status" })).findByRole("button", {
+        name: "Put back on sale",
+      }),
+    ).toBeVisible();
+  });
 });

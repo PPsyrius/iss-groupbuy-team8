@@ -11,9 +11,9 @@ import {
   TextArea,
   TextField,
 } from "@heroui/react";
-import { useForm } from "@tanstack/react-form";
+import { useForm, useStore } from "@tanstack/react-form";
 import { useBlocker } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { CATEGORIES, categoryLabel } from "@/features/catalog/categories";
 
@@ -78,6 +78,7 @@ export function ListingForm({
   frozen = false,
   soldCount,
   guardUnsaved = false,
+  onDirtyChange,
 }: Readonly<{
   id: string;
   mode: "create" | "edit";
@@ -86,6 +87,7 @@ export function ListingForm({
   frozen?: boolean;
   soldCount?: number | undefined;
   guardUnsaved?: boolean;
+  onDirtyChange?: (dirty: boolean) => void;
 }>) {
   const loadedCategory =
     defaultValues.category !== "" &&
@@ -140,6 +142,12 @@ export function ListingForm({
     disabled: !guardUnsaved,
     withResolver: true,
   });
+  // The editor keeps Publish disabled while edits are unsaved (A1-07): the publish dialog confirms
+  // the saved values, which are the ones that freeze.
+  const isDirty = useStore(form.store, (state) => state.isDirty);
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
   const help = frozen ? publishedHelp : draftHelp;
 
   return (
