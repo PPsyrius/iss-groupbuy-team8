@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import { createServer } from "node:http";
 import { networkInterfaces } from "node:os";
 import { fileURLToPath, URL } from "node:url";
 
@@ -60,6 +61,22 @@ function listeningPort(server: ViteDevServer): number | undefined {
   return typeof address === "object" && address !== null ? address.port : undefined;
 }
 
+// On Linux Vite listens on the docker0 address only, so a loopback listener on the same port keeps
+// http://localhost:5173 answering with the redirect to the front door.
+function redirectFromLoopback(server: ViteDevServer): void {
+  const loopback = createServer((req, res) => {
+    res.writeHead(307, { Location: frontDoorLocation(req.url) }).end();
+  });
+  loopback.on("error", (error) => {
+    server.config.logger.warn(`Loopback redirect to ${stackFrontDoor} is off: ${error.message}`);
+  });
+  server.httpServer?.once("listening", () => {
+    const port = listeningPort(server);
+    if (port !== undefined) loopback.listen(port, "127.0.0.1");
+  });
+  server.httpServer?.once("close", () => loopback.close());
+}
+
 const stackDevServer: Plugin = {
   name: "blocbuy:stack-front-door",
   apply: (_config, { command, mode }) => command === "serve" && mode === "stack",
@@ -68,6 +85,7 @@ const stackDevServer: Plugin = {
     server.printUrls = () => {
       server.config.logger.info(`\n  ➜  Open ${stackFrontDoor}/\n`);
     };
+    if (server.config.server.host !== "127.0.0.1") redirectFromLoopback(server);
     server.middlewares.use((req, res, next) => {
       const port = listeningPort(server);
       if (port !== undefined && req.headers.host?.endsWith(`:${port}`)) {
