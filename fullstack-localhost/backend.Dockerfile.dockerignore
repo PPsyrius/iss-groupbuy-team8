@@ -1,0 +1,4 @@
+# Replaces backend/.dockerignore for this build: send sources, never build output.
+**/target/
+.idea/
+*.iml

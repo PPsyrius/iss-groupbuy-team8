@@ -24,6 +24,22 @@
         WHERE id = #{row.id,jdbcType=OTHER} AND deleted = false AND version = #{expectedVersion}
     </update>
 
+    <update id="updateTeamTerms">
+        UPDATE biz_product SET team_target_size = #{row.teamTargetSize},
+            team_lifetime_seconds = #{row.teamLifetimeSeconds}, version = version + 1,
+            update_by = #{actorId,jdbcType=OTHER}, update_time = clock_timestamp()
+        WHERE id = #{row.id,jdbcType=OTHER} AND deleted = false AND version = #{expectedVersion}
+    </update>
+
+    <insert id="insertTeamTermsLog">
+        INSERT INTO log_product_team_terms (product_id, product_version, old_target_size,
+            old_lifetime_seconds, new_target_size, new_lifetime_seconds, team_price_version,
+            create_by)
+        VALUES (#{row.productId,jdbcType=OTHER}, #{row.productVersion}, #{row.oldTargetSize},
+            #{row.oldLifetimeSeconds}, #{row.newTargetSize}, #{row.newLifetimeSeconds},
+            #{row.teamPriceVersion}, #{row.createBy,jdbcType=OTHER})
+    </insert>
+
     <update id="deleteDraft">
         UPDATE biz_product SET deleted = true, version = version + 1,
             update_by = #{actorId,jdbcType=OTHER}, update_time = clock_timestamp()
@@ -57,6 +73,8 @@
         <result column="sold_count" property="soldCount"/>
         <result column="status" property="status"/>
         <result column="pricing_mode" property="pricingMode"/>
+        <result column="team_target_size" property="teamTargetSize"/>
+        <result column="team_lifetime_seconds" property="teamLifetimeSeconds"/>
         <result column="create_time" property="createTime"/>
         <result column="create_by" property="createBy" jdbcType="OTHER"/>
         <result column="update_time" property="updateTime"/>
@@ -68,6 +86,7 @@
     <sql id="columns">
         id, product_no, title, subtitle, description, cover_image, images, category,
         original_price, currency, stock, sold_count, status, pricing_mode,
+        team_target_size, team_lifetime_seconds,
         create_time, create_by, update_time, update_by, deleted, version
     </sql>
 

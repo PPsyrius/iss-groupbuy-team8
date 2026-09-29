@@ -1,10 +1,23 @@
 package com.blocbuy.catalog.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.blocbuy.catalog.exception.CatalogErrorCode;
+import com.blocbuy.catalog.model.PricingMode;
+import com.blocbuy.catalog.model.Product;
+import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.catalog.model.ProductTeamTerms;
+import com.blocbuy.catalog.model.TeamTermsChange;
+import com.blocbuy.common.exception.BizException;
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +46,7 @@ class ProductTeamTermsPersistenceTest {
                             assertThat(terms.productId()).isEqualTo(productId);
                             assertThat(terms.targetSize()).isEqualTo(3);
                             assertThat(terms.lifetimeSeconds()).isEqualTo(7200);
-                            assertThat(terms.startable()).isTrue();
+                            assertThat(terms.configured()).isTrue();
                         });
     }
 
@@ -42,7 +55,7 @@ class ProductTeamTermsPersistenceTest {
         when(mapper.selectTeamTerms(productId)).thenReturn(row(null, null));
 
         assertThat(repository.findTeamTerms(productId))
-                .hasValueSatisfying(terms -> assertThat(terms.startable()).isFalse());
+                .hasValueSatisfying(terms -> assertThat(terms.configured()).isFalse());
     }
 
     @Test
@@ -61,9 +74,80 @@ class ProductTeamTermsPersistenceTest {
     }
 
     @Test
+    void termsWriteIsConditionalOnTheExpectedVersion() {
+        UUID actor = UUID.randomUUID();
+        Product revised = configuredProduct();
+        when(mapper.updateTeamTerms(any(), eq(2), eq(actor))).thenReturn(1, 0);
+
+        repository.updateTeamTerms(revised, 2, actor);
+
+        verify(mapper)
+                .updateTeamTerms(
+                        argThat(
+                                row ->
+                                        productId.equals(row.getId())
+                                                && Integer.valueOf(3)
+                                                        .equals(row.getTeamTargetSize())
+                                                && Integer.valueOf(7200)
+                                                        .equals(row.getTeamLifetimeSeconds())),
+                        eq(2),
+                        eq(actor));
+        assertThatThrownBy(() -> repository.updateTeamTerms(revised, 2, actor))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.PRODUCT_VERSION_CONFLICT));
+    }
+
+    @Test
+    void theAuditRowMustBeStored() {
+        TeamTermsChange change =
+                new TeamTermsChange(
+                        productId,
+                        3,
+                        ProductTeamTerms.unset(productId),
+                        new ProductTeamTerms(productId, 3, 7200),
+                        null,
+                        UUID.randomUUID());
+        when(mapper.insertTeamTermsLog(any())).thenReturn(1, 0);
+
+        repository.appendTeamTermsLog(change);
+
+        verify(mapper)
+                .insertTeamTermsLog(
+                        argThat(
+                                row ->
+                                        productId.equals(row.getProductId())
+                                                && Integer.valueOf(3).equals(row.getNewTargetSize())
+                                                && row.getOldTargetSize() == null));
+        assertThatThrownBy(() -> repository.appendTeamTermsLog(change))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    private Product configuredProduct() {
+        return Product.reconstitute(
+                productId,
+                "SKU-T",
+                "Tea",
+                null,
+                null,
+                null,
+                List.of(),
+                null,
+                new BigDecimal("10.00"),
+                "sgd",
+                5,
+                0,
+                ProductStatus.DRAFT,
+                PricingMode.DUAL,
+                3,
+                new ProductTeamTerms(productId, 3, 7200));
+    }
+
+    @Test
     void termsAlwaysKnowTheirProduct() {
-        org.assertj.core.api.Assertions.assertThatThrownBy(
-                        () -> new ProductTeamTerms(null, 3, 7200))
+        assertThatThrownBy(() -> new ProductTeamTerms(null, 3, 7200))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

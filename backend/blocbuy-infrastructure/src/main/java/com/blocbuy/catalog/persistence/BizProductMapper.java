@@ -22,6 +22,15 @@ public interface BizProductMapper {
             @Param("expectedVersion") int expectedVersion,
             @Param("actorId") UUID actorId);
 
+    /** Compare-and-set of the two team terms columns; excludes soft-deleted rows. */
+    int updateTeamTerms(
+            @Param("row") BizProductDO row,
+            @Param("expectedVersion") int expectedVersion,
+            @Param("actorId") UUID actorId);
+
+    /** Append-only audit row for one team terms write. */
+    int insertTeamTermsLog(@Param("row") LogProductTeamTermsDO row);
+
     /** Logical deletion with defensive draft and version predicates. */
     int deleteDraft(
             @Param("id") UUID id,

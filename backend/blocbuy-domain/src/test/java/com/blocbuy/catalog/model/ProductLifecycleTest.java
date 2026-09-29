@@ -96,6 +96,85 @@ class ProductLifecycleTest {
                                         .isEqualTo(CatalogErrorCode.PRODUCT_INVALID));
     }
 
+    /** Terms are editable in every lifecycle state and the write is a new revision. */
+    @Test
+    void teamTermsAreConfigurableInEveryStateAsANewRevision() {
+        UUID id = UUID.randomUUID();
+        Product draft = Product.draft(id, "SKU-T", details("10.00", 5));
+        assertThat(draft.teamTerms().configured()).isFalse();
+        assertThat(draft.teamTerms().targetSize()).isNull();
+
+        Product configured = draft.configureTeamTerms(3, 7200);
+        assertThat(configured.teamTerms()).isEqualTo(new ProductTeamTerms(id, 3, 7200));
+        assertThat(configured.teamTerms().configured()).isTrue();
+        assertThat(configured.version()).isEqualTo(1);
+        assertThat(configured.title()).isEqualTo(draft.title());
+        assertThat(draft.version()).isZero();
+        assertThat(draft.teamTerms().configured()).isFalse();
+
+        Product published = configured.publish();
+        Product live = published.configureTeamTerms(4, 3600);
+        assertThat(live.teamTerms()).isEqualTo(new ProductTeamTerms(id, 4, 3600));
+        assertThat(live.status()).isEqualTo(ProductStatus.ON_SALE);
+        assertThat(live.delist().configureTeamTerms(5, 2400).teamTerms().targetSize()).isEqualTo(5);
+    }
+
+    /** Terms survive every other revision; only the terms command changes them. */
+    @Test
+    void otherRevisionsCarryTheTermsThrough() {
+        Product configured =
+                Product.draft(UUID.randomUUID(), "SKU-C", details("10.00", 5))
+                        .configureTeamTerms(3, 7200);
+        ProductTeamTerms terms = configured.teamTerms();
+        assertThat(configured.revise(details("10.00", 5)).teamTerms()).isEqualTo(terms);
+        assertThat(configured.publish().teamTerms()).isEqualTo(terms);
+        assertThat(configured.publish().delist().teamTerms()).isEqualTo(terms);
+    }
+
+    /** A rejected command reports each bad term field and changes nothing. */
+    @Test
+    void invalidTermsAreRejectedWithEachViolatedField() {
+        Product draft = Product.draft(UUID.randomUUID(), "SKU-I", details("10.00", 5));
+        assertThatThrownBy(() -> draft.configureTeamTerms(1, 10))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex -> {
+                            assertThat(ex.errorCode())
+                                    .isEqualTo(CatalogErrorCode.TEAM_TERMS_INVALID);
+                            assertThat(ex.details())
+                                    .containsOnlyKeys("targetSize", "lifetimeSeconds");
+                        });
+        assertThat(draft.version()).isZero();
+    }
+
+    /** The version token never wraps, even for the terms command. */
+    @Test
+    void exhaustedVersionRefusesTheTermsCommand() {
+        Product exhausted =
+                Product.reconstitute(
+                        UUID.randomUUID(),
+                        "SKU-M",
+                        "Tea",
+                        null,
+                        null,
+                        null,
+                        List.of(),
+                        null,
+                        new BigDecimal("10.00"),
+                        "sgd",
+                        5,
+                        0,
+                        ProductStatus.DRAFT,
+                        PricingMode.DUAL,
+                        Integer.MAX_VALUE);
+        assertThatThrownBy(() -> exhausted.configureTeamTerms(2, 2400))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.errorCode())
+                                        .isEqualTo(CatalogErrorCode.PRODUCT_VERSION_CONFLICT));
+    }
+
     /** Stable fixture includes all writable fields and exact decimal money. */
     private static ListingDetails details(String price, int stock) {
         return new ListingDetails(
