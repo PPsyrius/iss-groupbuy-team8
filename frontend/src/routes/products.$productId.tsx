@@ -107,8 +107,8 @@ function ProductDetailPage() {
   // expired bloc "filling" (CodeRabbit r4042898931).
   const ended = hasEnded(p.deal?.expireTime, now);
   // Same rule as the row's "Full" chip, so a JOIN that lost the last seat does not leave the
-  // header saying "filling" over a disabled Join (CodeRabbit, PR #200). The API sends `deal: null`
-  // for a listing without a bloc although the type only allows omission, so test truthiness.
+  // header saying "filling" over a disabled Join (CodeRabbit, PR #200). A listing without a bloc
+  // carries `deal: null` (#243), so test truthiness.
   const full = p.deal ? (p.deal.currentSize ?? 0) >= Math.max(1, p.deal.targetSize ?? 1) : false;
   const closesMs = parseDeadline(p.deal?.expireTime);
   const currency = p.currency ?? "sgd";
@@ -306,7 +306,7 @@ function ProductDetailPage() {
               </div>
             ) : null}
             <DealProgress
-              deal={p.deal}
+              deal={p.deal ?? undefined}
               onJoin={checkout.isPending ? undefined : onJoin}
               member={myTeam !== undefined}
             />

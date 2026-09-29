@@ -416,13 +416,7 @@ describe("/products/$productId listing variants", () => {
 
   it("renders a listing whose deal is null, as the API sends it without a bloc", async () => {
     serveSignedIn();
-    // The contract does not mark `deal` nullable, but the backend serialises a missing bloc as
-    // `null`; the raw handler sends the wire payload the generated type cannot express.
-    server.use(
-      http.get("*/api/v1/products/:id", () =>
-        HttpResponse.json({ code: OK_CODE, message: "ok", data: { ...listing(), deal: null } }),
-      ),
-    );
+    serveListing(listing({ deal: null }));
     renderRoute(`/products/${knownId}`);
     expect(
       await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" }),

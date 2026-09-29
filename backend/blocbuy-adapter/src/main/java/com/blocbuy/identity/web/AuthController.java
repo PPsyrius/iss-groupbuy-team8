@@ -197,5 +197,8 @@ public class AuthController {
     }
 
     /** Session profile view; never contains tokens or credentials. */
-    public record MeResponse(String userId, String nickname, String avatarUrl) {}
+    public record MeResponse(
+            String userId,
+            @Schema(nullable = true) String nickname,
+            @Schema(nullable = true) String avatarUrl) {}
 }
