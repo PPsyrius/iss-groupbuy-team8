@@ -72,6 +72,9 @@ export function QuoteSheet({
                   variant="secondary"
                   size="lg"
                   className="min-h-12 w-full text-lg xl:flex-1"
+                  // A quote can expire while its checkout is still opening; a new price then would
+                  // be closed by that checkout's outcome, so it waits (CodeRabbit, PR #269).
+                  isDisabled={isPaying}
                   onPress={onRefresh}
                 >
                   Get a new price

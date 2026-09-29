@@ -97,6 +97,14 @@ describe("QuoteSheet", () => {
     expect(await screen.findByText("Getting your bloc price…")).toBeInTheDocument();
   });
 
+  it("holds the new price while checkout for the expired quote is still opening", async () => {
+    const props = renderSheet(ready(now - 1_000), { isPaying: true });
+    const refresh = await screen.findByRole("button", { name: "Get a new price" });
+    expect(refresh).toBeDisabled();
+    await userEvent.click(refresh);
+    expect(props.onRefresh).not.toHaveBeenCalled();
+  });
+
   it("keeps the continue button pending while checkout opens", async () => {
     renderSheet(ready(now + 60_000), { isPaying: true });
     const button = await screen.findByRole("button", { name: /Continue to payment/ });
