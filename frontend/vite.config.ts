@@ -33,6 +33,29 @@ const mswWorkerInDev: Plugin = {
   },
 };
 
+// `pnpm stack:dev` runs `vite --mode stack` behind the fullstack-localhost Caddy front door. Google
+// sign-in only returns to that origin, so the banner names it and browser requests that reach Vite's
+// own port directly are sent there. Caddy forwards the front door's Host header, which passes through.
+const stackFrontDoor = "http://localhost:8080";
+const stackDevServer: Plugin = {
+  name: "blocbuy:stack-front-door",
+  apply: (_config, { command, mode }) => command === "serve" && mode === "stack",
+  configureServer(server) {
+    server.printUrls = () => {
+      server.config.logger.info(`\n  ➜  Open ${stackFrontDoor}/ (not this port)\n`);
+    };
+    server.middlewares.use((req, res, next) => {
+      if (req.headers.host?.endsWith(`:${server.config.server.port}`)) {
+        res.statusCode = 302;
+        res.setHeader("Location", `${stackFrontDoor}${req.url ?? "/"}`);
+        res.end();
+        return;
+      }
+      next();
+    });
+  },
+};
+
 // `vite preview` mirrors the dev CloudFront response headers policy so the CSP can be checked
 // locally before the account holder re-applies it (plan T2-11). Read from the versioned JSON so
 // the two cannot drift; HSTS is skipped because preview is plain http.
@@ -75,6 +98,7 @@ export default defineConfig(({ command }) => ({
     babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),
     mswWorkerInDev,
+    stackDevServer,
   ],
   resolve: {
     alias: [...(command === "build" ? deliveryStubs : []), { find: "@", replacement: src }],

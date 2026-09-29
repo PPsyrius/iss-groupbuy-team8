@@ -9,7 +9,7 @@ One command runs the whole of BlocBuy on your machine with the same routing as t
 
 `pnpm stack:dev` needs Node 24 and pnpm (see `CONTRIBUTING.md`). `pnpm stack:prod` needs only Docker: without Node, run the same stack from the repository root with `docker compose -f fullstack-localhost/compose.yaml up --build`. Docker means Docker Desktop, or Docker Engine with the Compose plugin v2.24+; no JDK is needed. The first build downloads Maven and pnpm dependencies and takes a few minutes; later builds reuse the BuildKit cache.
 
-Always use port 8080. Vite also listens on <http://localhost:5173> and the backend on <http://localhost:8589>, but Google sign-in only returns to 8080.
+Always use port 8080, because Google sign-in only returns there. Under `stack:dev`, Vite's banner prints that address, and a browser that reaches Vite's own port 5173 is redirected to the same path on 8080. The backend also answers directly on <http://localhost:8589> for API tools.
 
 ## What runs
 
