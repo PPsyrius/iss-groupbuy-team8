@@ -4,6 +4,7 @@ import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductDisplay;
 import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.catalog.model.ProductTeamTerms;
+import com.blocbuy.catalog.model.TeamTermsChange;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
 import java.util.Collection;
@@ -22,6 +23,15 @@ public interface ProductRepository {
 
     /** Store one aggregate revision under its existing row lock and expected version. */
     void updateListing(Product product, int expectedVersion, UUID actorId);
+
+    /**
+     * Store the team terms of one aggregate revision under its existing row lock and expected
+     * version; touches only the two terms columns, the version and the audit stamp.
+     */
+    void updateTeamTerms(Product product, int expectedVersion, UUID actorId);
+
+    /** Append one immutable audit row for a team terms write, in the writer's transaction. */
+    void appendTeamTermsLog(TeamTermsChange change);
 
     /** Soft-delete a checked draft only; reference checks and row lock belong to the caller. */
     void deleteDraft(UUID id, int expectedVersion, UUID actorId);
@@ -48,7 +58,7 @@ public interface ProductRepository {
     /**
      * Team terms of an active product: how big a team started on it must be and how long it stays
      * open. Empty when the product itself is gone; a present value may still be {@link
-     * ProductTeamTerms#startable() not startable} when the columns were never configured.
+     * ProductTeamTerms#configured() not configured} when the columns were never configured.
      */
     Optional<ProductTeamTerms> findTeamTerms(UUID id);
 

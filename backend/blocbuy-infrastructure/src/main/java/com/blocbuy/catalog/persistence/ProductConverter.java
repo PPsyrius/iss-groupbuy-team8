@@ -3,6 +3,8 @@ package com.blocbuy.catalog.persistence;
 import com.blocbuy.catalog.model.PricingMode;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductStatus;
+import com.blocbuy.catalog.model.ProductTeamTerms;
+import com.blocbuy.catalog.model.TeamTermsChange;
 import java.util.List;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
@@ -37,7 +39,9 @@ final class ProductConverter {
                 data.getSoldCount() == null ? 0 : data.getSoldCount(),
                 ProductStatus.fromCode(data.getStatus()),
                 PricingMode.fromCode(data.getPricingMode()),
-                data.getVersion() == null ? 0 : data.getVersion());
+                data.getVersion() == null ? 0 : data.getVersion(),
+                new ProductTeamTerms(
+                        data.getId(), data.getTeamTargetSize(), data.getTeamLifetimeSeconds()));
     }
 
     /** Map editable aggregate state only; audit timestamps/actor remain infrastructure-managed. */
@@ -58,6 +62,22 @@ final class ProductConverter {
         row.setStatus(product.status().code());
         row.setPricingMode(product.pricingMode().code());
         row.setVersion(product.version());
+        row.setTeamTargetSize(product.teamTerms().targetSize());
+        row.setTeamLifetimeSeconds(product.teamTerms().lifetimeSeconds());
+        return row;
+    }
+
+    /** Map one audited terms write; the id and timestamp are assigned by the database. */
+    static LogProductTeamTermsDO toLogRow(TeamTermsChange change) {
+        LogProductTeamTermsDO row = new LogProductTeamTermsDO();
+        row.setProductId(change.productId());
+        row.setProductVersion(change.productVersion());
+        row.setOldTargetSize(change.previous().targetSize());
+        row.setOldLifetimeSeconds(change.previous().lifetimeSeconds());
+        row.setNewTargetSize(change.current().targetSize());
+        row.setNewLifetimeSeconds(change.current().lifetimeSeconds());
+        row.setTeamPriceVersion(change.teamPriceVersion());
+        row.setCreateBy(change.actorId());
         return row;
     }
 

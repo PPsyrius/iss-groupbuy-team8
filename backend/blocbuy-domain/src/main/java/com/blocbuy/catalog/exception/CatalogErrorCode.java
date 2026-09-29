@@ -8,6 +8,8 @@ import com.blocbuy.common.exception.ErrorCode;
  */
 public enum CatalogErrorCode implements ErrorCode {
     PRODUCT_INVALID("CATALOG_400_002", 400, "Invalid listing", "error.catalog.productInvalid"),
+    TEAM_TERMS_INVALID(
+            "CATALOG_400_003", 400, "Invalid team terms", "error.catalog.teamTermsInvalid"),
     PRODUCT_STATE_CONFLICT(
             "CATALOG_409_002",
             409,
