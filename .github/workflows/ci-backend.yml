@@ -46,6 +46,7 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       contracts: ${{ steps.filter.outputs.contracts }}
+      sonar: ${{ steps.filter.outputs.sonar }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -61,22 +62,34 @@ jobs:
             contracts:
               - 'backend/**'
               - 'contracts/**'
+            sonar:
+              - 'backend/**/src/**'
+              - 'backend/pom.xml'
+              - 'backend/**/pom.xml'
+              - 'backend/.mvn/**'
+              - 'backend/mvnw'
+              - 'backend/mvnw.cmd'
+              - '.github/workflows/ci-backend.yml'
 
   build-quality:
     needs: detect-changes
+    # A successful non-backend PR needs no runner, but a failed path filter
+    # must fail this required check instead of silently skipping validation.
     if: >-
-      github.event_name == 'pull_request' ||
-      github.event_name == 'merge_group' ||
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+      always() &&
+      (github.event_name == 'pull_request' ||
+       github.event_name == 'merge_group' ||
+       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))) &&
+      (needs.detect-changes.result != 'success' ||
+       needs.detect-changes.outputs.backend == 'true' ||
+       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
     runs-on: ubuntu-latest
 
     steps:
-      - name: Backend validation not applicable
-        if: >-
-          (github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
-          needs.detect-changes.outputs.backend != 'true'
+      - name: Require successful change detection
+        if: needs.detect-changes.result != 'success'
         working-directory: ${{ github.workspace }}
-        run: echo "No backend-relevant changes; build-quality is not applicable."
+        run: exit 1
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: >-
@@ -279,22 +292,18 @@ jobs:
       always() &&
       needs.detect-changes.result == 'success' &&
       (needs.build-quality.result == 'success' ||
-       (github.event_name == 'push' && github.ref == 'refs/heads/dev' &&
-        needs.build-quality.result == 'skipped')) &&
-      (github.event_name == 'pull_request' ||
-       github.event_name == 'merge_group' ||
-       (github.event_name == 'push' &&
-        (startsWith(github.ref, 'refs/tags/v') ||
-         (github.ref == 'refs/heads/dev' && needs.detect-changes.outputs.backend == 'true'))))
+        (github.event_name == 'push' && github.ref == 'refs/heads/dev' &&
+         needs.build-quality.result == 'skipped')) &&
+      (((github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
+        needs.detect-changes.outputs.backend == 'true') ||
+        (github.event_name == 'push' &&
+         (startsWith(github.ref, 'refs/tags/v') ||
+          (github.ref == 'refs/heads/dev' && needs.detect-changes.outputs.sonar == 'true'))))
     runs-on: ubuntu-latest
 
     steps:
       - name: Sonar analysis not applicable
-        if: >-
-          ((github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
-           needs.detect-changes.outputs.backend != 'true') ||
-          (github.event_name == 'pull_request' &&
-           github.event.pull_request.head.repo.fork == true)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
         working-directory: ${{ github.workspace }}
         run: echo "No applicable backend Sonar analysis for this change."
 
@@ -398,13 +407,6 @@ jobs:
       actions: write
 
     steps:
-      - name: Docker validation not applicable
-        if: >-
-          (github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
-          needs.detect-changes.outputs.backend != 'true'
-        working-directory: ${{ github.workspace }}
-        run: echo "No backend-relevant changes; Docker validation is not applicable."
-
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: >-
           needs.detect-changes.outputs.backend == 'true' ||
