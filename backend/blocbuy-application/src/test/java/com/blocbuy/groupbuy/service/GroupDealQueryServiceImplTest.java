@@ -42,8 +42,8 @@ class GroupDealQueryServiceImplTest {
 
         Map<UUID, OpenDealOffer> best = service.findBestOpenDealsByProductIds(List.of(PRODUCT_ID));
 
-        assertThat(best).containsOnlyKeys(PRODUCT_ID);
         assertThat(best)
+                .containsOnlyKeys(PRODUCT_ID)
                 .containsEntry(
                         PRODUCT_ID,
                         new OpenDealOffer(
