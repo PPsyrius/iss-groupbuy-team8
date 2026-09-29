@@ -20,7 +20,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Vite serves the frontend locally and proxies `/api` to `http://localhost:8589`. The backend can be started from the repository root with `docker compose up`, or with the source-built stack in [full-stack localhost development](../fullstack-localhost/README.md): both `pnpm stack:dev` (this dev server with hot reloading) and `pnpm stack:prod` (a production build) serve the SPA and the API on http://localhost:8080, where Google sign-in works.
+Vite serves the frontend locally and proxies `/api` to `http://localhost:8589`. The backend can be started from the repository root with `docker compose up`, or with the source-built stack in [full-stack localhost development](../fullstack-localhost/README.md). Both `pnpm stack:dev` (this dev server with hot reloading) and `pnpm stack:prod` (a production build) serve the SPA and the API on http://localhost:8080, where Google sign-in can be enabled (see the stack README).
 
 The OpenAPI client is generated from `../contracts/openapi.json` during installation. Generated files under `src/api/generated/` are not committed.
 
