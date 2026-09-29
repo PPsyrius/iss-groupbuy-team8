@@ -763,6 +763,41 @@ describe("/products/$productId invite link (UC7)", () => {
     expect(screen.getByText("2 seats to go.")).toBeInTheDocument();
   });
 
+  it("disables Join for a member of the open bloc and sends no intent (FB-20)", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(listing());
+    servePayments();
+    serveTeams([{ dealId: "deal-1", productId: knownId, status: "open", role: "member" }]);
+    let intents = 0;
+    server.use(
+      http.post("*/api/v1/payments/intents", () => {
+        intents++;
+        return HttpResponse.error();
+      }),
+    );
+    renderRoute(`/products/${knownId}`);
+    const bloc = await screen.findByRole("article", { name: "Open bloc" });
+    const join = within(bloc).getByRole("button", { name: /join/i });
+    await waitFor(() => expect(join).toHaveAccessibleDescription("You’re in this bloc"));
+    expect(join).toBeDisabled();
+    await userEvent.click(join);
+    expect(intents).toBe(0);
+  });
+
+  it("keeps Join enabled for a signed-in buyer outside the open bloc (FB-20)", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(listing());
+    servePayments();
+    serveTeams([{ dealId: "deal-9", productId: knownId, status: "open", role: "member" }]);
+    renderRoute(`/products/${knownId}`);
+    const bloc = await screen.findByRole("article", { name: "Open bloc" });
+    const join = within(bloc).getByRole("button", { name: /join/i });
+    await waitFor(() => expect(join).toBeEnabled());
+    expect(join).not.toHaveAccessibleDescription();
+  });
+
   it("hides the share block from a buyer who is not in the bloc", async () => {
     sessionStorage.clear();
     serveSignedIn();

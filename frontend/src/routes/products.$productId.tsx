@@ -165,9 +165,12 @@ function ProductDetailPage() {
   const shareable = buyerId !== undefined && myTeam !== undefined && !ended && seatsLeft > 0;
   const listingOpen = dealId !== undefined && !ended && seatsLeft > 0;
   const invitedOpen = listingOpen && invite?.dealId === dealId;
+  // A member of the open bloc has no Join (FB-20): the server would refuse it with
+  // GROUPBUY_409_003, and `DealProgress` names the reason instead.
   const onJoin =
     onGated ??
     (checkout.enabled &&
+    myTeam === undefined &&
     p.deal?.dealId &&
     !ended &&
     (p.deal.currentSize ?? 0) < (p.deal.targetSize ?? 0)
@@ -298,7 +301,11 @@ function ProductDetailPage() {
                 </span>
               </div>
             ) : null}
-            <DealProgress deal={p.deal} onJoin={checkout.isPending ? undefined : onJoin} />
+            <DealProgress
+              deal={p.deal}
+              onJoin={checkout.isPending ? undefined : onJoin}
+              member={myTeam !== undefined}
+            />
           </section>
           {shareable && buyerId && dealId ? (
             <ShareBlock

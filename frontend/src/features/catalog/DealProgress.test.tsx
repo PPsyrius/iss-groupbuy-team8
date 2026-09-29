@@ -122,6 +122,31 @@ describe("DealProgress", () => {
     expect(join).toHaveAccessibleDescription("No longer taking members");
   });
 
+  it("keeps Join disabled for a member of the bloc and says why (FB-20)", () => {
+    render(
+      <DealProgress
+        deal={{ dealId: "d1", currentSize: 3, targetSize: 5, expireTime: "2026-09-17T05:14:00Z" }}
+        member
+      />,
+    );
+    const join = screen.getByRole("button", { name: /join/i });
+    expect(join).toBeDisabled();
+    expect(join).toHaveAccessibleDescription("You’re in this bloc");
+    expect(screen.getByText("Filling")).toBeInTheDocument();
+  });
+
+  it("names the full reason before membership on a full bloc", () => {
+    render(
+      <DealProgress
+        deal={{ dealId: "d4", currentSize: 5, targetSize: 5, expireTime: "2026-09-17T05:14:00Z" }}
+        member
+      />,
+    );
+    expect(screen.getByRole("button", { name: /join/i })).toHaveAccessibleDescription(
+      "This bloc is full",
+    );
+  });
+
   it("gives no reason while the bloc can still be joined", () => {
     render(
       <DealProgress
