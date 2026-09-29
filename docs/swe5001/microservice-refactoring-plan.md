@@ -2,6 +2,15 @@
 
 This is the engineering companion to the [project proposal](project-proposal.typ). Its sections follow the proposal's structure (Overview, General Architecture, Scope of Work, Effort Estimates, Risks): the proposal states *what* is built and *why* for the reviewers, and this plan records *how* for the team. It covers the service decomposition, the implementation approach that lets the monolith and the services coexist on one trunk, the integration and data design, the AWS deployment model, the Terraform layout and the working conventions shared with SWE5006.
 
+Implementation detail is split into four plans, one per aspect:
+
+| Aspect | Plan |
+| --- | --- |
+| Backend code architecture | [impl-backend-architecture.md](impl-backend-architecture.md) |
+| GitHub repository configuration and pipelines | [impl-github-configuration.md](impl-github-configuration.md) |
+| AWS infrastructure | [impl-aws-infrastructure.md](impl-aws-infrastructure.md) |
+| Verification, performance testing and observability | [impl-verification-observability.md](impl-verification-observability.md) |
+
 Status: **Draft, revised 2026-09-29** (first draft 2026-09-28). Cost and effort figures are estimates; confirm cost with the AWS Pricing Calculator before committing to a budget.
 
 ---
@@ -117,7 +126,7 @@ backend/
 
 - **Selection:** the property `blocbuy.topology` selects the adapter through `@ConditionalOnProperty`. The monolith value is the default (`matchIfMissing = true`), so the SWE5006 deployment and its tests run unchanged.
 - **Callers do not change:** a port such as `UserAppService` keeps its interface; only its implementation differs by topology. The same holds for the in-process `@TransactionalEventListener` subscribers inside `commerce-svc`.
-- **Shared configuration:** generic configuration now under `com.blocbuy.bootstrap` (trace-ID filter, Sa-Token, scheduling infrastructure) moves into `blocbuy-platform-starter` so every assembly reuses it. Context-specific configuration (Stripe, team-expiry and refund jobs) moves into the owning context's package so `commerce-svc` picks it up by scanning.
+- **Shared configuration:** nothing moves. `blocbuy-bootstrap` is also published as a plain library jar, and each service imports only the configuration it needs from `com.blocbuy.bootstrap.config` and `com.blocbuy.bootstrap.scheduling` (Stripe and the team-expiry and refund jobs go to `commerce-svc`). `com.blocbuy.common` (Sa-Token, Redis, MyBatis) is already shared through `blocbuy-infrastructure`. New cross-cutting code goes into `blocbuy-platform-starter`. Details: [backend plan](impl-backend-architecture.md), section 3.
 - **Relocation is deferred:** moving `identity` and `notification` code into their own Maven aggregates is optional and happens only after SWE5006 feature work stops. The commerce contexts stay in place.
 
 #### Guardrails
@@ -225,7 +234,7 @@ The environment is **disposable**: the runtime layer is destroyed when not in us
 
 | Stack | Contents | Lifecycle |
 | --- | --- | --- |
-| `foundation` | Terraform state bucket (`use_lockfile = true`), GitHub OIDC provider and roles, ECR repositories (lifecycle: keep the last 10 images), SSM parameters (Stripe test keys, Google client secret, Stripe webhook secret, origin secret), AWS Budgets alerts | Persistent |
+| `foundation` | Terraform state keys under `swe5001/` in the existing state bucket (`use_lockfile = true`), GitHub OIDC roles (the existing OIDC provider is reused), ECR repositories (lifecycle: keep the last 10 images), SSM parameters (Stripe test keys, Google client secret, Stripe webhook secret, origin secret), AWS Budgets alerts | Persistent |
 | `edge` | S3 SPA bucket, CloudFront distribution; reads the ALB DNS name from `runtime` remote state | Persistent (re-applied after each `runtime` apply) |
 | `runtime` | VPC, fck-nat, ALB, ECS cluster and services, RDS, Valkey, SNS/SQS, Service Connect namespace, CloudWatch log groups, dashboard, alarms | Created before use, destroyed after |
 
