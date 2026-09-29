@@ -12,13 +12,16 @@ import {
   TextField,
 } from "@heroui/react";
 import { useForm } from "@tanstack/react-form";
+import { useBlocker } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { CATEGORIES, categoryLabel } from "@/features/catalog/categories";
 
+import { FrozenLabel, frozenInput } from "./FrozenField";
 import { ImageUrlsField } from "./ImageUrlsField";
 import type { ListingFormValues } from "./listing-form";
 import { listingFormSchema } from "./listing-form.schema";
+import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
 
 // What a failed save hands back: messages for named fields, and a form-level alert for the rest.
 export interface SubmitProblem {
@@ -63,16 +66,26 @@ const fixedCategories = CATEGORIES.flatMap((c) => (c.value === null ? [] : [c]))
 // 4b.1): one column, the artboard's helper text under each field. It renders a bare `<form id>`,
 // so the page header's Save button submits it with `form={id}`. Validation runs on submit only;
 // a failed save's field messages land on their fields until the next submit.
+//
+// In the editor (A1-06) a published listing passes `frozen`: Solo price, Currency and Stock turn
+// read-only with their 4b.3 reasons and the server's Sold count joins them. `guardUnsaved` asks
+// before a navigation would drop unsaved edits; a navigation made by the save itself passes.
 export function ListingForm({
   id,
   mode,
   defaultValues,
   onSubmit,
+  frozen = false,
+  soldCount,
+  guardUnsaved = false,
 }: Readonly<{
   id: string;
   mode: "create" | "edit";
   defaultValues: ListingFormValues;
   onSubmit: (values: ListingFormValues) => Promise<SubmitProblem | undefined>;
+  frozen?: boolean;
+  soldCount?: number | undefined;
+  guardUnsaved?: boolean;
 }>) {
   const loadedCategory =
     defaultValues.category !== "" &&
@@ -114,6 +127,13 @@ export function ListingForm({
     },
   });
 
+  const blocker = useBlocker({
+    shouldBlockFn: () => form.state.isDirty && !form.state.isSubmitting,
+    disabled: !guardUnsaved,
+    withResolver: true,
+  });
+  const help = frozen ? publishedHelp : draftHelp;
+
   return (
     <form
       id={id}
@@ -125,6 +145,11 @@ export function ListingForm({
       }}
     >
       {/* Announced when it appears: the save was pressed in the header, away from this alert. */}
+      <UnsavedChangesDialog
+        isOpen={blocker.status === "blocked"}
+        onKeepEditing={() => blocker.reset?.()}
+        onDiscard={() => blocker.proceed?.()}
+      />
       {alert ? (
         <Alert status="danger" role="alert">
           <Alert.Content>
@@ -144,7 +169,7 @@ export function ListingForm({
           >
             <Label>Title</Label>
             <Input />
-            <Description>Shown on cards and on the listing page.</Description>
+            <Description>{help.title}</Description>
             <FieldError>{messageOf(field.state.meta.errors)}</FieldError>
           </TextField>
         )}
@@ -160,7 +185,7 @@ export function ListingForm({
           >
             <Label>Subtitle</Label>
             <Input />
-            <Description>One short line under the title.</Description>
+            <Description>{help.subtitle}</Description>
             <FieldError>{messageOf(field.state.meta.errors)}</FieldError>
           </TextField>
         )}
@@ -202,7 +227,7 @@ export function ListingForm({
               <Select.Value />
               <Select.Indicator />
             </Select.Trigger>
-            <Description>One of five fixed categories.</Description>
+            <Description>{help.category}</Description>
             <FieldError>{messageOf(field.state.meta.errors)}</FieldError>
             <Select.Popover>
               <ListBox>
@@ -226,23 +251,24 @@ export function ListingForm({
               value={field.state.value}
               onChange={field.handleChange}
               onBlur={field.handleBlur}
+              isReadOnly={frozen}
               isInvalid={messageOf(field.state.meta.errors) !== undefined}
             >
-              <Label>Solo price</Label>
-              <InputGroup>
+              {frozen ? <FrozenLabel>Solo price</FrozenLabel> : <Label>Solo price</Label>}
+              <InputGroup className={frozen ? frozenInput : ""}>
                 <InputGroup.Prefix>S$</InputGroup.Prefix>
                 <InputGroup.Input inputMode="decimal" placeholder="0.00" className="tabular-nums" />
               </InputGroup>
-              <Description>Decimal string, SGD only. Freezes on publish.</Description>
+              <Description>{help.price}</Description>
               <FieldError>{messageOf(field.state.meta.errors)}</FieldError>
             </TextField>
           )}
         </form.Field>
 
         <TextField value="SGD" isReadOnly>
-          <Label>Currency</Label>
-          <Input />
-          <Description>BlocBuy is Singapore-only.</Description>
+          {frozen ? <FrozenLabel>Currency</FrozenLabel> : <Label>Currency</Label>}
+          <Input className={frozen ? frozenInput : ""} />
+          <Description>{help.currency}</Description>
         </TextField>
 
         <form.Field name="stock">
@@ -253,18 +279,29 @@ export function ListingForm({
               onBlur={field.handleBlur}
               minValue={0}
               formatOptions={{ maximumFractionDigits: 0, useGrouping: false }}
+              isReadOnly={frozen}
               isInvalid={messageOf(field.state.meta.errors) !== undefined}
             >
-              <Label>Stock</Label>
-              <NumberField.Group>
+              {frozen ? <FrozenLabel>Stock</FrozenLabel> : <Label>Stock</Label>}
+              <NumberField.Group className={frozen ? frozenInput : ""}>
                 <NumberField.Input className="tabular-nums" />
               </NumberField.Group>
-              <Description>Must be positive to publish. Freezes on publish.</Description>
+              <Description>{help.stock}</Description>
               <FieldError>{messageOf(field.state.meta.errors)}</FieldError>
             </NumberField>
           )}
         </form.Field>
       </div>
+
+      {soldCount === undefined ? null : (
+        <div className="grid grid-cols-3 gap-4">
+          <TextField value={String(soldCount)} isReadOnly>
+            <Label>Sold</Label>
+            <Input className={`${frozenInput} tabular-nums`} />
+            <Description>Read-only, maintained by the server.</Description>
+          </TextField>
+        </div>
+      )}
 
       <form.Field name="coverImage">
         {(field) => (
@@ -324,3 +361,22 @@ export function ListingForm({
     </form>
   );
 }
+
+// Helper text per field: 4b.1 for a draft, 4b.3 once the listing has been published.
+const draftHelp = {
+  title: "Shown on cards and on the listing page.",
+  subtitle: "One short line under the title.",
+  category: "One of five fixed categories.",
+  price: "Decimal string, SGD only. Freezes on publish.",
+  currency: "BlocBuy is Singapore-only.",
+  stock: "Must be positive to publish. Freezes on publish.",
+};
+
+const publishedHelp: typeof draftHelp = {
+  title: "Editable. Changes appear on the storefront immediately.",
+  subtitle: "Editable.",
+  category: "Editable. Moves the listing between filter chips.",
+  price: "Frozen at first publish, so quotes already issued stay honest.",
+  currency: "Frozen. BlocBuy is Singapore-only.",
+  stock: "Frozen at first publish. Sold count moves; stock does not.",
+};

@@ -209,10 +209,10 @@ export async function requireAdmin(qc: QueryClient) {
 
 ### A1-06: Editor for an existing listing
 
-- [ ] Step 1: failing tests: draft (4b.2 header "Hokkaido milk, 12 cartons · BB-100472 · draft · v0", all fields editable); on sale (4b.3: Solo price, Currency and Stock read-only with the "Frozen" chip and their 4b.3 reasons; Sold read-only "Read-only, maintained by the server."); save sends `expectedVersion` = loaded version and unchanged frozen values; after save the header shows v5 and the form is clean; unknown id → an in-shell not-found ("This listing no longer exists", link to Listings).
-- [ ] Step 2: loader `queryClient.query({ ...adminListingOptions(id) })` **without** `staleTime: 'static'` (§12 note 5); `useSuspenseQuery` in the component; `ListingForm` keyed by `version`, so a Reload or a save remounts it from server data.
-- [ ] Step 3: `EditorSidebar`: Status chip + `v{n}` chip; the lifecycle trail from 4b.2 / 4b.3 ("Draft — you are here", "On sale — after publishing", "Off sale — reversible later"; published variant); helper "Draft → on sale → off sale → on sale. There is no way back to draft."
-- [ ] Step 4: `useBlocker({ shouldBlockFn: () => isDirty && !isSubmitting, withResolver: true })` with `UnsavedChangesDialog` ("Discard your changes?", Keep editing / Discard); §11 D5.
+- [x] Step 1: failing tests: draft (4b.2 header "Hokkaido milk, 12 cartons · BB-100472 · draft · v0", all fields editable); on sale (4b.3: Solo price, Currency and Stock read-only with the "Frozen" chip and their 4b.3 reasons; Sold read-only "Read-only, maintained by the server."); save sends `expectedVersion` = loaded version and unchanged frozen values; after save the header shows v5 and the form is clean; unknown id → an in-shell not-found ("This listing no longer exists", link to Listings). (2026-09-29)
+- [x] Step 2: loader `queryClient.query({ ...adminListingOptions(id) })` **without** `staleTime: 'static'` (§12 note 5); `useSuspenseQuery` in the component; `ListingForm` keyed by `version`, so a Reload or a save remounts it from server data. (2026-09-29)
+- [x] Step 3: `EditorSidebar`: Status chip + `v{n}` chip; the lifecycle trail from 4b.2 / 4b.3 ("Draft — you are here", "On sale — after publishing", "Off sale — reversible later"; published variant); helper "Draft → on sale → off sale → on sale. There is no way back to draft." (2026-09-29)
+- [x] Step 4: `useBlocker({ shouldBlockFn: () => isDirty && !isSubmitting, withResolver: true })` with `UnsavedChangesDialog` ("Discard your changes?", Keep editing / Discard); §11 D5. (2026-09-29)
 
 ### A1-07: Lifecycle actions
 
