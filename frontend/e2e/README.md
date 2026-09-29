@@ -16,7 +16,7 @@ The anonymous half stubs `me` and the listing through the shared `api` fixture, 
 
 The `@auth` half needs a storage state with a real session cookie. Seed it once by hand:
 
-1. Confirm the Google console still lists `https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google/callback` as an authorised redirect URI (B5, #98). A user-seeded signed-in dev run passed on 2026-09-24; reruns need a fresh session.
+1. Confirm the Google console still lists `https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google/callback` as an authorised redirect URI (B5, #98). A user-seeded signed-in dev run last passed on 2026-09-29; reruns need a fresh session.
 2. From `frontend/`:
 
    ```bash
