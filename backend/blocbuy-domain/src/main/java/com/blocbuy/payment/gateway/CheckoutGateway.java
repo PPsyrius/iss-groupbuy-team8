@@ -4,7 +4,7 @@ import com.blocbuy.payment.model.CheckoutPayment;
 import java.time.Instant;
 import java.util.Optional;
 
-/** Hosted Checkout capability, separate from the legacy PaymentIntent API. No SDK types. */
+/** Hosted Checkout capability. No SDK types cross this port. */
 public interface CheckoutGateway {
     Session createCheckoutSession(CheckoutPayment payment);
 
@@ -12,7 +12,14 @@ public interface CheckoutGateway {
 
     Session expireCheckoutSession(String sessionId);
 
+    /** Verifies the signature; empty means a signed event outside Checkout settlement. */
     Optional<Event> verifyCheckoutWebhook(String rawBody, String signature);
+
+    /**
+     * Verifies the signature; true for supported Checkout sessions or {@code payment_intent.*},
+     * {@code charge.*} and {@code refund.*} events that cannot be handled with Checkout disabled.
+     */
+    boolean verifyMoneyWebhook(String rawBody, String signature);
 
     record Session(
             String id,

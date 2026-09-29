@@ -71,7 +71,6 @@ class StripeLocalIntegrationTest {
     @Autowired private StripeCheckoutService payments;
     @Autowired private PaymentBrowserService browser;
     @Autowired private CheckoutPaymentRepository repository;
-    @Autowired private com.blocbuy.payment.repository.PaymentRepository devPayments;
     @Autowired private JdbcTemplate jdbc;
     @Autowired private java.util.List<RequestMappingHandlerMapping> mappings;
     @Autowired private com.blocbuy.payment.repository.RefundRepository refunds;
@@ -80,6 +79,7 @@ class StripeLocalIntegrationTest {
     @Autowired private com.blocbuy.groupbuy.service.ShareInviteAppService shareInvites;
     @Autowired private com.blocbuy.groupbuy.service.GroupDealAppService myTeams;
     @Autowired private com.blocbuy.order.service.OrderAppService myOrders;
+    @Autowired private com.blocbuy.catalog.service.TeamPriceAppService teamPrices;
     @MockitoBean private CheckoutGateway gateway;
     private final Map<String, CheckoutGateway.Session> sessions = new ConcurrentHashMap<>();
     private UUID product;
@@ -87,7 +87,7 @@ class StripeLocalIntegrationTest {
     @BeforeEach
     void setup() {
         jdbc.execute(
-                "TRUNCATE log_refund_attempt,biz_payment,log_payment_webhook_event,biz_refund,log_payment_review,biz_payment_review_case,biz_purchase_intent,stripe_local_expiry_request,biz_order,biz_group_member,biz_group_deal,biz_group_participation_receipt,biz_share_invite,biz_share_credit,biz_team_price_policy,biz_product,sys_user");
+                "TRUNCATE log_refund_attempt,biz_payment,log_payment_webhook_event,biz_refund,log_payment_review,biz_payment_review_case,biz_purchase_intent,stripe_local_expiry_request,biz_order,biz_group_member,biz_group_deal,biz_group_participation_receipt,biz_share_invite,biz_share_credit,biz_team_price_policy,biz_team_price_quote,biz_product,sys_user");
         product = UUID.randomUUID();
         jdbc.update(
                 "INSERT INTO biz_product(id,product_no,title,original_price,currency,stock,status) VALUES(?,?,'Local test product',20,'sgd',100,'on_sale')",
@@ -141,8 +141,7 @@ class StripeLocalIntegrationTest {
         assertThat(count("biz_group_member")).isEqualTo(1);
         assertThat(count("biz_order")).isEqualTo(1);
         var receipt = browser.receipt(p.quote().userId(), p.id());
-        assertThat(devPayments.findById(p.id().toString()).orElseThrow().id())
-                .isEqualTo(p.id().toString());
+        assertThat(repository.findById(p.id()).orElseThrow().id()).isEqualTo(p.id());
         assertThat(receipt.status()).isEqualTo("SUCCEEDED");
         assertThat(receipt.orderId())
                 .isEqualTo(jdbc.queryForObject("SELECT id FROM biz_order", UUID.class));
@@ -479,6 +478,101 @@ class StripeLocalIntegrationTest {
                 group);
         coordinator.expireTeam(group);
         return p;
+    }
+
+    // ---- #183: the price on the quote sheet is the price charged ----
+
+    /** An admin revision between the quote and the intent (policy v1 → v2) moves nothing. */
+    private void reviseTeamPrice(String amount) {
+        UUID admin = buyer();
+        jdbc.update(
+                "INSERT INTO biz_team_price_policy(product_id,amount,currency,valid_from,valid_until,create_by,update_by,version) VALUES(?,?::numeric,'sgd',clock_timestamp()-interval '1 hour',clock_timestamp()+interval '1 day',?,?,(SELECT max(version)+1 FROM biz_team_price_policy WHERE product_id=?))",
+                product,
+                amount,
+                admin,
+                admin,
+                product);
+    }
+
+    private static com.blocbuy.catalog.exception.CatalogErrorCode catalogCode(Throwable error) {
+        return (com.blocbuy.catalog.exception.CatalogErrorCode)
+                ((com.blocbuy.common.exception.BizException) error).errorCode();
+    }
+
+    @Test
+    void aQuotedStartIsChargedTheQuoteThroughCheckoutAndSettlement() {
+        UUID user = buyer();
+        var quote = teamPrices.issueQuote(product, user);
+        assertThat(quote.amount()).isEqualByComparingTo("10.00");
+        reviseTeamPrice("15.00");
+
+        UUID intent = browser.createIntent(user, "START", product, null, quote.id());
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT amount FROM biz_purchase_intent WHERE id=?",
+                                java.math.BigDecimal.class,
+                                intent))
+                .isEqualByComparingTo("10.00");
+        var result = browser.prepare(user, intent, "quoted-start");
+        CheckoutPayment p = repository.findById(result.paymentId()).orElseThrow();
+        // The payment row is what the Stripe gateway turns into the Checkout amount.
+        assertThat(p.quote().amount()).isEqualByComparingTo("10.00");
+
+        paid(p);
+        payments.recover(p.id(), "test-operator", true);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT total_amount FROM biz_order", java.math.BigDecimal.class))
+                .isEqualByComparingTo("10.00");
+
+        // The same revision prices an unquoted START at the new amount, as before #183.
+        UUID other = buyer();
+        UUID unquoted = browser.createIntent(other, "START", product, null);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT amount FROM biz_purchase_intent WHERE id=?",
+                                java.math.BigDecimal.class,
+                                unquoted))
+                .isEqualByComparingTo("15.00");
+    }
+
+    @Test
+    void anotherBuyersQuoteIsNotFoundAndIssuesNoIntent() {
+        var quote = teamPrices.issueQuote(product, buyer());
+        UUID stranger = buyer();
+
+        assertThatThrownBy(() -> browser.createIntent(stranger, "START", product, null, quote.id()))
+                .extracting(StripeLocalIntegrationTest::catalogCode)
+                .isEqualTo(
+                        com.blocbuy.catalog.exception.CatalogErrorCode.TEAM_PRICE_QUOTE_NOT_FOUND);
+        assertThat(count("biz_purchase_intent")).isZero();
+    }
+
+    @Test
+    void anExpiredQuoteIsRefusedAndIssuesNoIntent() {
+        UUID user = buyer();
+        var quote = teamPrices.issueQuote(product, user);
+        // Test-only rewind; production never updates a quote.
+        jdbc.update(
+                "UPDATE biz_team_price_quote SET issued_at=clock_timestamp()-interval '20 minutes', expires_at=clock_timestamp()-interval '1 second' WHERE id=?",
+                quote.id());
+
+        assertThatThrownBy(() -> browser.createIntent(user, "START", product, null, quote.id()))
+                .extracting(StripeLocalIntegrationTest::catalogCode)
+                .isEqualTo(com.blocbuy.catalog.exception.CatalogErrorCode.TEAM_PRICE_QUOTE_EXPIRED);
+        assertThat(count("biz_purchase_intent")).isZero();
+    }
+
+    @Test
+    void takingTheProductOffSaleStillStopsAQuotedStart() {
+        UUID user = buyer();
+        var quote = teamPrices.issueQuote(product, user);
+        jdbc.update("UPDATE biz_product SET status='off_sale' WHERE id=?", product);
+
+        assertThatThrownBy(() -> browser.createIntent(user, "START", product, null, quote.id()))
+                .extracting(StripeLocalIntegrationTest::catalogCode)
+                .isEqualTo(com.blocbuy.catalog.exception.CatalogErrorCode.PRODUCT_NOT_PURCHASABLE);
+        assertThat(count("biz_purchase_intent")).isZero();
     }
 
     @Test

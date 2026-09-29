@@ -4,6 +4,7 @@ import {
   formatCountdown,
   formatDeadline,
   formatDeadlineShort,
+  formatDay,
   formatDayTime,
   hasEnded,
   parseDeadline,
@@ -84,5 +85,11 @@ describe("formatDayTime", () => {
 
   it("uses Singapore's date, not UTC's, near midnight", () => {
     expect(formatDayTime(Date.parse("2026-09-16T16:05:00Z"))).toBe("17 Sep, 12.05 am");
+  });
+});
+
+describe("formatDay", () => {
+  it("prints the Singapore day and month the way the Refunded row does", () => {
+    expect(formatDay(Date.parse("2026-09-15T16:30:00Z"))).toBe("16 Sep");
   });
 });

@@ -5,9 +5,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { unwrapResult } from "@/api/envelope";
-import { getPaymentReceiptOptions } from "@/api/generated/@tanstack/react-query.gen";
+import {
+  getPaymentReceiptOptions,
+  myOrderOptions,
+} from "@/api/generated/@tanstack/react-query.gen";
 import type { Receipt } from "@/api/generated/types.gen";
-import { refundLabel } from "@/features/payment/refund-status";
+import { ErrorCard, primaryAction, secondaryAction } from "@/components/ErrorCard";
+import { receiptView } from "@/features/payment/receipt-view";
 import { clearCompletedAttempt } from "@/features/payment/use-checkout";
 import { usePaymentAvailability } from "@/features/payment/use-payment-availability";
 import { useSession } from "@/features/session/use-session";
@@ -34,82 +38,37 @@ export function receiptPollingInterval({
   return receipt?.status === "CREATED" || receipt?.refundPending ? RECEIPT_POLL_INTERVAL_MS : false;
 }
 
-function getPaymentTitle({
-  isError,
-  receipt,
-  paid,
-  waiting,
-}: {
-  isError: boolean;
-  receipt?: Pick<Receipt, "status" | "refundStatus"> | undefined;
-  paid: boolean;
-  waiting: boolean;
-}): string {
-  if (isError) return "Unable to check payment";
-  if (!receipt) return "Checking payment…";
-  if (receipt.refundStatus === "SUCCEEDED") return "Refund sent";
-  if (paid) return "Payment received";
-  if (waiting) return "Waiting for payment confirmation";
-  if (receipt.status === "CANCELED") return "Checkout closed without payment";
-  return "Payment not completed";
+// The §4.4 refund-statement references. The amount, paid time and bank window sit on the money
+// line; the receipt carries no Stripe `pi_…` reference, so BlocBuy's own ids stand in.
+function receiptReferences(receipt: Receipt | undefined): { label: string; value: string }[] {
+  if (!receipt) return [];
+  return [
+    { label: "Payment reference", value: receipt.paymentId },
+    { label: "Order reference", value: receipt.orderId },
+    { label: "Bloc reference", value: receipt.dealId },
+  ].filter((row): row is { label: string; value: string } => Boolean(row.value));
 }
 
-function ReceiptDetails({ receipt }: Readonly<{ receipt: Receipt }>) {
+function MyBlocsLink({ className }: Readonly<{ className: string }>) {
   return (
-    <dl className="border-border bg-surface grid grid-cols-1 gap-2 rounded-lg border p-5 sm:grid-cols-[auto_1fr]">
-      <dt>Payment reference</dt>
-      <dd className="break-all">{receipt.paymentId}</dd>
-      <dt>Amount</dt>
-      <dd>
-        {receipt.currency?.toUpperCase()} {receipt.amount}
-      </dd>
-      <dt>Payment status</dt>
-      <dd>{receipt.status}</dd>
-      {receipt.orderId ? (
-        <>
-          <dt>Order reference</dt>
-          <dd className="break-all">{receipt.orderId}</dd>
-        </>
-      ) : null}
-      {receipt.dealId ? (
-        <>
-          <dt>Bloc reference</dt>
-          <dd className="break-all">{receipt.dealId}</dd>
-        </>
-      ) : null}
-    </dl>
+    <Link to="/account" className={className}>
+      My blocs
+    </Link>
   );
 }
 
-function RefundStatusBanner({
-  receipt,
-  paid,
-}: Readonly<{ receipt: Receipt | undefined; paid: boolean }>) {
-  if (!receipt) return null;
-  if (receipt.refundStatus === "SUCCEEDED")
-    return (
-      <output>{refundLabel(receipt.refundStatus)}. Your bank may take time to show it.</output>
-    );
-  if (receipt.refundStatus === "FAILED" || receipt.refundStatus === "REVIEW")
-    return (
-      <output>{refundLabel(receipt.refundStatus)}. Keep your payment reference for support.</output>
-    );
-  if (receipt.refundPending)
-    return (
-      <output>
-        A refund is pending. Payment was received, but this purchase could not be fulfilled or the
-        bloc expired. This is not confirmation that the refund has been sent.
-      </output>
-    );
-  if (paid && receipt.orderId)
-    return <output>Your order has been saved and your bloc membership is confirmed.</output>;
-  if (paid)
-    return (
-      <output>
-        Payment is recorded. Order confirmation is not available yet; do not pay again.
-      </output>
-    );
-  return null;
+// The receipt names the order and the bloc but not the product or a paid time, so both come from
+// the buyer's own order (GET /orders/{orderId}). No order yet, or one the buyer cannot read, means
+// no listing link and no paid line; "Back to listings" always remains.
+function useReceiptOrder(orderId: string | undefined, userTag: string) {
+  const options = myOrderOptions({ path: { orderId: orderId ?? "" } });
+  return useQuery({
+    ...options,
+    queryKey: [{ ...options.queryKey[0], tags: [userTag] }],
+    select: (r) => unwrapResult(r, { allowVoid: false }),
+    enabled: Boolean(orderId),
+    retry: false,
+  });
 }
 
 function PaymentReceipt() {
@@ -121,15 +80,11 @@ function PaymentReceiptForId({ paymentId }: Readonly<{ paymentId: string }>) {
   const [pollingDeadline] = useState(() => Date.now() + RECEIPT_POLL_WINDOW_MS);
   const enabled = usePaymentAvailability();
   const session = useSession();
+  const userTag = session.status === "authenticated" ? session.userId : "anonymous";
   const options = getPaymentReceiptOptions({ path: { id: paymentId } });
   const query = useQuery({
     ...options,
-    queryKey: [
-      {
-        ...options.queryKey[0],
-        tags: [session.status === "authenticated" ? session.userId : "anonymous"],
-      },
-    ],
+    queryKey: [{ ...options.queryKey[0], tags: [userTag] }],
     enabled,
     select: (r) => unwrapResult(r, { allowVoid: false }),
     retry: false,
@@ -146,42 +101,41 @@ function PaymentReceiptForId({ paymentId }: Readonly<{ paymentId: string }>) {
   useEffect(() => {
     if (enabled && terminal) clearCompletedAttempt(paymentId);
   }, [enabled, terminal, paymentId]);
+  const order = useReceiptOrder(receipt?.orderId, userTag);
   if (!enabled)
     return (
-      <main className="mx-auto flex max-w-2xl flex-col gap-5 p-6">
-        <h1 className="text-2xl font-semibold">Payments are unavailable</h1>
-        <p>
-          Payment status cannot be checked in this environment. Keep your reference and do not pay
-          again to check the result.
-        </p>
-        <Link to="/">Back to listings</Link>
-      </main>
+      <ErrorCard
+        code="Payments"
+        title="Payments are unavailable"
+        body="Payment status cannot be checked in this environment."
+        moneyLead="Keep your reference and do not pay again to check the result."
+      >
+        <Link to="/" className={primaryAction}>
+          Back to listings
+        </Link>
+      </ErrorCard>
     );
-  const paid = receipt?.status === "SUCCEEDED";
-  const waiting = receipt?.status === "CREATED";
-  const title = getPaymentTitle({ isError: query.isError, receipt, paid, waiting });
+  const view = receiptView({ receipt, isError: query.isError, paidTime: order.data?.paidTime });
+  // Refresh leads while the answer can still change; a settled receipt leads to My blocs (Q25 A).
+  const refreshFirst =
+    query.isError || !receipt || receipt.status === "CREATED" || Boolean(receipt.refundPending);
+  const productId = order.data?.productId;
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-5 p-6">
-      <h1 className="text-2xl font-semibold" aria-live="polite">
-        {title}
-      </h1>
-      {query.isError ? (
-        <p role="alert">
-          We could not read your payment. Check your login and try again. Do not pay again to check
-          the result.
-        </p>
-      ) : null}
-      {waiting ? (
-        <p>
-          Your payment may still be processing. This page checks the backend, not the return URL.
-          You can refresh the status without paying again.
-        </p>
-      ) : null}
-      {receipt ? <ReceiptDetails receipt={receipt} /> : null}
-      <RefundStatusBanner receipt={receipt} paid={paid} />
-      <div className="flex items-center gap-5">
+    <ErrorCard
+      code={view.chip.label}
+      color={view.chip.color}
+      title={view.title}
+      body={view.body}
+      alert={query.isError}
+      live
+      moneyLead={view.moneyLead}
+      moneyDetail={view.moneyDetail}
+      references={receiptReferences(receipt)}
+    >
+      {refreshFirst ? (
         <Button
-          variant="outline"
+          variant="secondary"
+          className="min-h-12 w-full text-base xl:w-auto xl:px-6"
           isPending={query.isFetching}
           onPress={() => {
             void query.refetch();
@@ -189,13 +143,18 @@ function PaymentReceiptForId({ paymentId }: Readonly<{ paymentId: string }>) {
         >
           Refresh status
         </Button>
-        <Link to="/" className="underline">
-          Back to listings
+      ) : (
+        <MyBlocsLink className={primaryAction} />
+      )}
+      {productId ? (
+        <Link to="/products/$productId" params={{ productId }} className={secondaryAction}>
+          See the listing
         </Link>
-        <Link to="/account" className="underline">
-          My orders
-        </Link>
-      </div>
-    </main>
+      ) : null}
+      <Link to="/" className={secondaryAction}>
+        Back to listings
+      </Link>
+      {refreshFirst ? <MyBlocsLink className={secondaryAction} /> : null}
+    </ErrorCard>
   );
 }
