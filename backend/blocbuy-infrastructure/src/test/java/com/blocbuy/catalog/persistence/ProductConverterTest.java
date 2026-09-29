@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.blocbuy.catalog.model.PricingMode;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductStatus;
+import com.blocbuy.catalog.model.ProductTeamTerms;
+import com.blocbuy.catalog.model.TeamTermsChange;
 import java.math.BigDecimal;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -78,6 +80,48 @@ class ProductConverterTest {
         assertThat(result.getStatus()).isEqualTo("draft");
         assertThat(result.getPricingMode()).isEqualTo("dual");
         assertThat(result.getVersion()).isEqualTo(3);
+    }
+
+    /** The two terms columns travel with the aggregate, null meaning never configured. */
+    @Test
+    void teamTermsMapBothWays() {
+        BizProductDO stored = row();
+        stored.setTeamTargetSize(4);
+        stored.setTeamLifetimeSeconds(7200);
+
+        Product product = ProductConverter.toDomain(stored);
+        assertThat(product.teamTerms()).isEqualTo(new ProductTeamTerms(PRODUCT_ID, 4, 7200));
+        BizProductDO result = ProductConverter.toRow(product);
+        assertThat(result.getTeamTargetSize()).isEqualTo(4);
+        assertThat(result.getTeamLifetimeSeconds()).isEqualTo(7200);
+
+        Product unconfigured = ProductConverter.toDomain(row());
+        assertThat(unconfigured.teamTerms()).isEqualTo(ProductTeamTerms.unset(PRODUCT_ID));
+        assertThat(ProductConverter.toRow(unconfigured).getTeamTargetSize()).isNull();
+    }
+
+    @Test
+    void auditRowCarriesBeforeAfterAndActor() {
+        UUID actor = UUID.randomUUID();
+        TeamTermsChange change =
+                new TeamTermsChange(
+                        PRODUCT_ID,
+                        5,
+                        ProductTeamTerms.unset(PRODUCT_ID),
+                        new ProductTeamTerms(PRODUCT_ID, 4, 7200),
+                        2,
+                        actor);
+
+        LogProductTeamTermsDO result = ProductConverter.toLogRow(change);
+
+        assertThat(result.getProductId()).isEqualTo(PRODUCT_ID);
+        assertThat(result.getProductVersion()).isEqualTo(5);
+        assertThat(result.getOldTargetSize()).isNull();
+        assertThat(result.getOldLifetimeSeconds()).isNull();
+        assertThat(result.getNewTargetSize()).isEqualTo(4);
+        assertThat(result.getNewLifetimeSeconds()).isEqualTo(7200);
+        assertThat(result.getTeamPriceVersion()).isEqualTo(2);
+        assertThat(result.getCreateBy()).isEqualTo(actor);
     }
 
     @Test

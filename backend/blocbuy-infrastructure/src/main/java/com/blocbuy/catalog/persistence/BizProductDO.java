@@ -27,6 +27,8 @@ public class BizProductDO {
     private Integer soldCount;
     private String status;
     private String pricingMode;
+    private Integer teamTargetSize;
+    private Integer teamLifetimeSeconds;
     private Instant createTime;
     private UUID createBy;
     private Instant updateTime;

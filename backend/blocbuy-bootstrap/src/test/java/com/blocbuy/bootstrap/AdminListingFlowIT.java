@@ -125,7 +125,7 @@ class AdminListingFlowIT {
 
     /** All management operations reject anonymous and non-admin clients. */
     @ParameterizedTest
-    @ValueSource(strings = {"create", "page", "get", "revise", "status", "delete"})
+    @ValueSource(strings = {"create", "page", "get", "revise", "status", "teamTerms", "delete"})
     void everyRouteRequiresAdministrator(String operation) throws Exception {
         mvc.perform(request(operation)).andExpect(status().isUnauthorized());
         mvc.perform(request(operation).header(HEADER, buyerToken))
@@ -492,6 +492,8 @@ class AdminListingFlowIT {
                                 List.of("get", "put", "delete"),
                                 BASE + "/{productId}/status",
                                 List.of("put"),
+                                BASE + "/{productId}/team-terms",
+                                List.of("put"),
                                 "/api/v1/auth/me",
                                 List.of("get"),
                                 "/api/v1/auth/logout",
@@ -648,6 +650,11 @@ class AdminListingFlowIT {
                     put(item + "/status")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"expectedVersion\":0,\"status\":\"on_sale\"}");
+            case "teamTerms" ->
+                    put(item + "/team-terms")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(
+                                    "{\"expectedVersion\":0,\"targetSize\":3,\"lifetimeSeconds\":7200}");
             case "delete" -> delete(item).param("expectedVersion", "0");
             default -> throw new IllegalArgumentException(operation);
         };

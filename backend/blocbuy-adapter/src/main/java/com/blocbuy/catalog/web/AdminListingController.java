@@ -4,7 +4,10 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.blocbuy.catalog.model.ListingDetails;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductStatus;
+import com.blocbuy.catalog.model.ProductTeamTerms;
 import com.blocbuy.catalog.service.AdminListingAppService;
+import com.blocbuy.catalog.service.TeamPriceAppService;
+import com.blocbuy.catalog.service.TeamTermsAppService;
 import com.blocbuy.common.constant.ApiConstants;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
@@ -27,6 +30,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -79,6 +83,7 @@ public class AdminListingController {
             "^(?=[\\d.]*[1-9])\\d{1,16}(\\.\\d{1,2})?" + INPUT_END;
 
     private final AdminListingAppService listings;
+    private final TeamTermsAppService teamTerms;
 
     /** Trusted identity and lifecycle are never accepted from the creation body. */
     @PostMapping
@@ -170,6 +175,36 @@ public class AdminListingController {
                                 administrator())));
     }
 
+    /** Terms and the optional first-team price are one command, one transaction, one rule set. */
+    @PutMapping("/{productId}/team-terms")
+    @Operation(
+            summary = "Set team terms and first-team price conditionally",
+            description =
+                    "Requires expectedVersion from the admin read; a stale value returns 412 without "
+                            + "mutation. Replaces targetSize (>= 2) and lifetimeSeconds (2400-86400), allowed "
+                            + "in every lifecycle state; a team already started keeps the terms it was "
+                            + "started with. Optional teamPrice appends a policy revision in the same "
+                            + "transaction and needs an on-sale listing; its expectedVersion is the latest "
+                            + "policy version (0 for the first) and it must be below the original price. "
+                            + "Any rejection changes nothing. Not replay-idempotent: a replay carries a "
+                            + "stale version. Each write is audited.")
+    public Result<TeamTermsResponse> configureTeamTerms(
+            @PathVariable UUID productId, @Valid @RequestBody TeamTermsRequest request) {
+        UUID actor = administrator();
+        return Result.ok(
+                TeamTermsResponse.from(
+                        teamTerms.configure(
+                                productId,
+                                new TeamTermsAppService.ConfigureTerms(
+                                        request.expectedVersion(),
+                                        request.targetSize(),
+                                        request.lifetimeSeconds(),
+                                        request.teamPrice() == null
+                                                ? null
+                                                : request.teamPrice().toPolicy()),
+                                actor)));
+    }
+
     /** Deletion keeps an audit row and never cascades to financial or business history. */
     @DeleteMapping("/{productId}")
     @Operation(
@@ -254,6 +289,40 @@ public class AdminListingController {
     public record UpdateListingRequest(
             @NotNull @Valid ListingContent listing, @NotNull @Min(0) Integer expectedVersion) {}
 
+    /**
+     * Full replacement of the team terms with an optional first-team price; the bounds repeat the
+     * domain's, which stays authoritative and reports cross-field violations.
+     */
+    public record TeamTermsRequest(
+            @NotNull @Min(0) Integer expectedVersion,
+            @NotNull @Min(ProductTeamTerms.MIN_TARGET_SIZE) Integer targetSize,
+            @NotNull
+                    @Min(ProductTeamTerms.MIN_LIFETIME_SECONDS)
+                    @Max(ProductTeamTerms.MAX_LIFETIME_SECONDS)
+                    Integer lifetimeSeconds,
+            @Valid TeamPriceRequest teamPrice) {}
+
+    /** Policy revision to append with the terms; same shape as the standalone policy endpoint. */
+    public record TeamPriceRequest(
+            @NotNull
+                    @Pattern(regexp = POSITIVE_MONEY)
+                    @JsonDeserialize(using = DecimalStringDeserializer.class)
+                    @Schema(
+                            example = "89.00",
+                            description =
+                                    "SGD major units as a JSON string, strictly below the original price")
+                    String amount,
+            @NotNull @Pattern(regexp = "^sgd" + INPUT_END) String currency,
+            @NotNull Instant validFrom,
+            @NotNull Instant validUntil,
+            @NotNull @Min(0) Integer expectedVersion) {
+        /** Convert only after Bean Validation; the policy's own rules run in the use case. */
+        TeamPriceAppService.ConfigurePolicy toPolicy() {
+            return new TeamPriceAppService.ConfigurePolicy(
+                    new BigDecimal(amount), currency, validFrom, validUntil, expectedVersion);
+        }
+    }
+
     /** Public lifecycle targets deliberately exclude draft. */
     public record ListingStatusRequest(
             @NotNull @Pattern(regexp = "^(?:on_sale|off_sale)" + INPUT_END) String status,
@@ -267,7 +336,8 @@ public class AdminListingController {
             String status,
             String pricingMode,
             int soldCount,
-            int version) {
+            int version,
+            TeamTermsView teamTerms) {
         /** Convert pure business values only; no persistence object crosses the HTTP boundary. */
         static AdminListingResponse from(Product product) {
             return new AdminListingResponse(
@@ -277,7 +347,35 @@ public class AdminListingController {
                     product.status().code(),
                     product.pricingMode().code(),
                     product.soldCount(),
-                    product.version());
+                    product.version(),
+                    TeamTermsView.from(product.teamTerms()));
+        }
+    }
+
+    /**
+     * Stored team terms; members are null and startable is false for a never-configured listing.
+     */
+    public record TeamTermsView(Integer targetSize, Integer lifetimeSeconds, boolean startable) {
+        static TeamTermsView from(ProductTeamTerms terms) {
+            return new TeamTermsView(
+                    terms.targetSize(), terms.lifetimeSeconds(), terms.startable());
+        }
+    }
+
+    /** New product version to send next, the terms now in force and the policy appended, if any. */
+    public record TeamTermsResponse(
+            UUID productId,
+            int version,
+            TeamTermsView teamTerms,
+            TeamPriceController.PolicyResponse teamPrice) {
+        static TeamTermsResponse from(TeamTermsAppService.TeamTermsResult result) {
+            return new TeamTermsResponse(
+                    result.product().id(),
+                    result.product().version(),
+                    TeamTermsView.from(result.product().teamTerms()),
+                    result.teamPrice() == null
+                            ? null
+                            : TeamPriceController.PolicyResponse.from(result.teamPrice()));
         }
     }
 }

@@ -79,7 +79,8 @@ class TeamPriceRepositoryIT {
                         new FileSystemResource(migrations.resolve("V3__identity.sql")),
                         new FileSystemResource(migrations.resolve("V4__catalog.sql")),
                         new FileSystemResource(migrations.resolve("V5__groupbuy.sql")),
-                        new FileSystemResource(migrations.resolve("V6__catalog_team_price.sql")));
+                        new FileSystemResource(migrations.resolve("V6__catalog_team_price.sql")),
+                        new FileSystemResource(migrations.resolve("V14__product_team_terms.sql")));
         scripts.execute(dataSource);
         var config =
                 new Configuration(

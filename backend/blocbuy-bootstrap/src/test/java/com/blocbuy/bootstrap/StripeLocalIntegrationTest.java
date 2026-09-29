@@ -11,6 +11,8 @@ import static org.mockito.Mockito.when;
 import com.blocbuy.bootstrap.fixture.PaymentFixtureConfiguration;
 import com.blocbuy.bootstrap.fixture.PaymentLifecycleFixture;
 import com.blocbuy.bootstrap.fixture.StripeTestDatabase;
+import com.blocbuy.catalog.service.TeamTermsAppService;
+import com.blocbuy.catalog.service.TeamTermsAppService.ConfigureTerms;
 import com.blocbuy.payment.gateway.CheckoutGateway;
 import com.blocbuy.payment.model.CheckoutPayment;
 import com.blocbuy.payment.repository.CheckoutPaymentRepository;
@@ -80,6 +82,7 @@ class StripeLocalIntegrationTest {
     @Autowired private com.blocbuy.groupbuy.service.GroupDealAppService myTeams;
     @Autowired private com.blocbuy.order.service.OrderAppService myOrders;
     @Autowired private com.blocbuy.catalog.service.TeamPriceAppService teamPrices;
+    @Autowired private TeamTermsAppService adminTerms;
     @MockitoBean private CheckoutGateway gateway;
     private final Map<String, CheckoutGateway.Session> sessions = new ConcurrentHashMap<>();
     private UUID product;
@@ -87,7 +90,7 @@ class StripeLocalIntegrationTest {
     @BeforeEach
     void setup() {
         jdbc.execute(
-                "TRUNCATE log_refund_attempt,biz_payment,log_payment_webhook_event,biz_refund,log_payment_review,biz_payment_review_case,biz_purchase_intent,stripe_local_expiry_request,biz_order,biz_group_member,biz_group_deal,biz_group_participation_receipt,biz_share_invite,biz_share_credit,biz_team_price_policy,biz_team_price_quote,biz_product,sys_user");
+                "TRUNCATE log_refund_attempt,biz_payment,log_payment_webhook_event,biz_refund,log_payment_review,biz_payment_review_case,biz_purchase_intent,stripe_local_expiry_request,biz_order,biz_group_member,biz_group_deal,biz_group_participation_receipt,biz_share_invite,biz_share_credit,log_product_team_terms,biz_team_price_policy,biz_team_price_quote,biz_product,sys_user");
         product = UUID.randomUUID();
         jdbc.update(
                 "INSERT INTO biz_product(id,product_no,title,original_price,currency,stock,status) VALUES(?,?,'Local test product',20,'sgd',100,'on_sale')",
@@ -99,10 +102,8 @@ class StripeLocalIntegrationTest {
                 product,
                 admin,
                 admin);
-        // Group terms live on the product itself now (V14); the fixture table is gone.
-        jdbc.update(
-                "UPDATE biz_product SET team_target_size=2, team_lifetime_seconds=7200 WHERE id=?",
-                product);
+        // Group terms live on the product itself (V14) and are written through the admin command.
+        adminTerms.configure(product, new ConfigureTerms(0, 2, 7200, null), admin);
         when(gateway.createCheckoutSession(any()))
                 .thenAnswer(
                         call -> {
@@ -573,6 +574,83 @@ class StripeLocalIntegrationTest {
                 .extracting(StripeLocalIntegrationTest::catalogCode)
                 .isEqualTo(com.blocbuy.catalog.exception.CatalogErrorCode.PRODUCT_NOT_PURCHASABLE);
         assertThat(count("biz_purchase_intent")).isZero();
+    }
+
+    /**
+     * US25: a product nobody configured refuses START; one administrator command with terms and a
+     * team price makes it startable, and the START then prices from exactly that command.
+     */
+    @Test
+    void anAdminCommandMakesAnUnconfiguredProductStartable() {
+        UUID bare = UUID.randomUUID();
+        jdbc.update(
+                "INSERT INTO biz_product(id,product_no,title,original_price,currency,stock,status) VALUES(?,?,'Unconfigured product',20,'sgd',100,'on_sale')",
+                bare,
+                bare.toString());
+        UUID admin = buyer();
+        UUID user = buyer();
+        assertThatThrownBy(() -> browser.createIntent(user, "START", bare, null))
+                .extracting(StripeLocalIntegrationTest::catalogCode)
+                .isEqualTo(com.blocbuy.catalog.exception.CatalogErrorCode.PRODUCT_NOT_STARTABLE);
+        assertThat(count("biz_purchase_intent")).isZero();
+
+        var configured =
+                adminTerms.configure(
+                        bare,
+                        new ConfigureTerms(
+                                0,
+                                3,
+                                7200,
+                                new com.blocbuy.catalog.service.TeamPriceAppService.ConfigurePolicy(
+                                        new java.math.BigDecimal("12.00"),
+                                        "sgd",
+                                        java.time.Instant.now().minusSeconds(3600),
+                                        java.time.Instant.now().plusSeconds(86_400),
+                                        0)),
+                        admin);
+        assertThat(configured.product().teamTerms().startable()).isTrue();
+
+        UUID intent = browser.createIntent(user, "START", bare, null);
+        assertThat(
+                        jdbc.queryForMap(
+                                "SELECT amount, target_size FROM biz_purchase_intent WHERE id=?",
+                                intent))
+                .containsEntry("target_size", 3)
+                .extractingByKey("amount")
+                .satisfies(
+                        amount ->
+                                assertThat((java.math.BigDecimal) amount)
+                                        .isEqualByComparingTo("12.00"));
+    }
+
+    /**
+     * Terms are read only when a team starts and frozen into the intent and the team, so an admin
+     * edit moves neither an issued intent nor the team it becomes; only the next START sees it.
+     */
+    @Test
+    void changingTermsNeverMovesAnIssuedIntentOrARunningTeam() {
+        UUID leaderBuyer = buyer();
+        CheckoutPayment leader = prepare(leaderBuyer, "START", product);
+
+        adminTerms.configure(product, new ConfigureTerms(1, 5, 3600, null), leaderBuyer);
+
+        paid(leader);
+        payments.recover(leader.id(), "test-operator", true);
+        assertThat(jdbc.queryForObject("SELECT target_size FROM biz_group_deal", Integer.class))
+                .isEqualTo(2);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT expire_time > clock_timestamp() + interval '100 minutes' FROM biz_group_deal",
+                                Boolean.class))
+                .isTrue();
+
+        UUID next = browser.createIntent(buyer(), "START", product, null);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT target_size FROM biz_purchase_intent WHERE id=?",
+                                Integer.class,
+                                next))
+                .isEqualTo(5);
     }
 
     @Test

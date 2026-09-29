@@ -80,8 +80,7 @@ runs before the first write, and everything after the first write throws instead
 unit at `consumeOneUnit` therefore rolls the whole settlement back rather than committing a
 membership and an order next to a refund.
 
-Open: no product has group terms yet, so the START path is unavailable until an operator supplies
-them; there is no admin surface for that in this change (NFR-29 records it as the unmet part).
+Resolved 2026-09-29 (US25, #221): an administrator now writes the group terms (see the addendum below). Products that predate V14 stay unconfigured, and START keeps refusing them with `CATALOG_409_006` until an admin configures them.
 A START reserves its team id before the team exists, so an intent that is never paid leaves a
 dangling `deal_id` — harmless, since the column has no foreign key, but a cleanup job for expired
 unfulfilled intents is owed in Sprint 3.
@@ -125,3 +124,20 @@ Plan: `docs/agile/sprint-03/quote-honouring-plan-20260928.md`. Until now a START
 4. **A quote on JOIN is refused** (`ORDER_400_001`) before anything is read. A JOIN pays the team's frozen price. Unlike an invite reference on START, a money term sent to the wrong operation is not silently ignored.
 5. **Reusable until expiry.** Each use issues a new intent, and each intent is still consumed by at most one payment. A retry that issues a replacement intent after a stale intent or a cancelled Checkout keeps the shown price only while the quote remains unexpired; a replacement intent created at or after `expiresAt` is refused with `CATALOG_409_007`. An intent that accepted the quote before expiry keeps its frozen amount for its own unchanged pay window (40 minutes): the quote's expiry is the deadline to accept the price, not to pay it.
 6. **Unquoted START is unchanged.** `quoteId` is optional, and the contract change is additive. Making it required would be a breaking API change and needs approval. The quote id is not stored on the intent; the frozen amount is the audit fact.
+
+## Addendum (2026-09-29): an administrator writes the team terms (#221)
+
+Plan: `docs/agile/sprint-03/team-terms-plan-20260929.md`. V14 gave a product its group terms but nothing wrote them, so START was unavailable outside tests.
+
+**Shape.**
+- One command, `PUT /api/v1/admin/products/{productId}/team-terms`, sets `targetSize` and `lifetimeSeconds` and optionally appends a first-team price policy revision, in one local transaction. `TeamTermsAppServiceImpl` takes the product row lock first, the only lock START, quotation and listing edits also take, so a START sees the old terms or the new terms, never a mix, and the global lock order is unchanged.
+- The standalone `PUT /products/{id}/team-price-policy` remains for price-only changes. The price part of this command delegates to `TeamPriceAppService.configure`, so a rejected price rolls the terms back with it and the policy rules are not copied.
+- `Product` carries the terms (`ProductTeamTerms`, "unset" when both columns are null). `Product.configureTeamTerms` returns the next revision; `TeamTermsSpecification` checks size, lifetime and "team price below the original price" as one rule set and reports every violated field (`CATALOG_400_003`).
+
+**Rules.**
+1. **One optimistic token per listing.** `expectedVersion` is the product version, checked in the domain and again in SQL (`WHERE version = ?`, 0 rows → `CATALOG_412_002`). A successful write bumps it once, so a terms write and a concurrent listing edit conflict. `teamPrice.expectedVersion` is the latest policy version, checked separately (`CATALOG_412_001`), because the standalone policy endpoint does not bump the product version.
+2. **Terms are editable in every lifecycle state**; the price part still needs an on-sale listing (`CATALOG_409_001`), the existing `TeamPricePolicy.requireCompatible` rule. Seeding order: create draft → set terms → publish → set terms again with `teamPrice`.
+3. **A change never moves a team already started.** START freezes the size and lifetime into the intent and the team snapshots them, so an edit only reaches the next START. It is not snapshotted into quotes (#183 D12).
+4. **Bounds are code constants** (`ProductTeamTerms`: size ≥ 2, lifetime 2400–86400 s), not a property: an environment must not be able to configure a lifetime shorter than the 2400 s quote window.
+5. **No clearing in v1.** Both terms are required on every write. Delisting is the kill switch for START.
+6. **Audited by history, not just a stamp.** Each write also appends one immutable row to `log_product_team_terms` (V20: product, resulting version, terms before and after, policy version, actor) in the same transaction, because the columns are overwritten in place.

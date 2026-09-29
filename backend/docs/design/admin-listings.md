@@ -228,7 +228,19 @@ so JSON Schema substring matching does not weaken the documented request constra
 | GET `/{id}` | Read draft/on-sale/off-sale listing including its version; deleted/absent returns 404. |
 | PUT `/{id}` | Replace `listing` content with required `expectedVersion`; do not accept productNo/status/counters/pricingMode. |
 | PUT `/{id}/status` | Required `status` (`on_sale` or `off_sale`) and `expectedVersion`. |
+| PUT `/{id}/team-terms` | US25 (#221). Required `expectedVersion`, `targetSize` (>= 2) and `lifetimeSeconds` (2400-86400); optional `teamPrice` (`amount`, `currency`, `validFrom`, `validUntil`, `expectedVersion` = latest policy version). See below. |
 | DELETE `/{id}?expectedVersion=N` | Conditional soft deletion of an unreferenced draft only; row remains for audit. |
+
+Team terms (US25): `PUT /{id}/team-terms` sets how many paid members a team needs and how long it
+stays open, and optionally appends a first-team price policy revision in the same transaction. It
+is a full replacement, allowed in every lifecycle state; `teamPrice` needs an on-sale listing and a
+value below the original price. `expectedVersion` is the product version (412 `CATALOG_412_002`),
+`teamPrice.expectedVersion` the latest policy version (412 `CATALOG_412_001`); a rejected price
+rolls the terms back. Bean Validation failures are 400 `COMMON_400_002` with a list of field
+errors, domain rule failures 400 `CATALOG_400_003` with a map of field errors. The response
+returns the new product `version`, the `teamTerms` and the `teamPrice` appended, if any; the admin
+`GET` responses gain `teamTerms` (members null and `startable` false when never configured). Each
+write appends a `log_product_team_terms` row. Decisions: [backend ADR 0001](../adr/0001-payment-business-integration.md), addendum 2026-09-29.
 
 Creation example:
 

@@ -4,6 +4,7 @@ import com.blocbuy.catalog.exception.CatalogErrorCode;
 import com.blocbuy.common.exception.BizException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -32,6 +33,7 @@ public final class Product {
     private final ProductStatus status;
     private final PricingMode pricingMode;
     private final int version;
+    private final ProductTeamTerms teamTerms;
 
     // Aggregate snapshots are constructed whole; a parameter object would only relocate the same
     // invariant checks and obscure them.
@@ -51,7 +53,8 @@ public final class Product {
             int soldCount,
             ProductStatus status,
             PricingMode pricingMode,
-            int version) {
+            int version,
+            ProductTeamTerms teamTerms) {
         if (id == null) {
             throw new IllegalArgumentException("id must not be null");
         }
@@ -88,6 +91,7 @@ public final class Product {
         this.status = status;
         this.pricingMode = pricingMode;
         this.version = version;
+        this.teamTerms = teamTerms == null ? ProductTeamTerms.unset(id) : teamTerms;
     }
 
     /** Reconstitution factory for tests; the stored revision defaults to version 0. */
@@ -143,6 +147,47 @@ public final class Product {
             ProductStatus status,
             PricingMode pricingMode,
             int version) {
+        return reconstitute(
+                id,
+                productNo,
+                title,
+                subtitle,
+                description,
+                coverImage,
+                images,
+                category,
+                originalPrice,
+                currency,
+                stock,
+                soldCount,
+                status,
+                pricingMode,
+                version,
+                null);
+    }
+
+    /**
+     * Reconstitute the stored revision with its team terms; null terms mean the columns were never
+     * configured.
+     */
+    @SuppressWarnings("java:S107") // mirror of the whole-snapshot constructor
+    public static Product reconstitute(
+            UUID id,
+            String productNo,
+            String title,
+            String subtitle,
+            String description,
+            String coverImage,
+            List<String> images,
+            String category,
+            BigDecimal originalPrice,
+            String currency,
+            int stock,
+            int soldCount,
+            ProductStatus status,
+            PricingMode pricingMode,
+            int version,
+            ProductTeamTerms teamTerms) {
         return new Product(
                 id,
                 productNo,
@@ -158,7 +203,8 @@ public final class Product {
                 soldCount,
                 status,
                 pricingMode,
-                version);
+                version,
+                teamTerms);
     }
 
     /** Buyer-visible listing guard: only on-sale products may appear in the browse views. */
@@ -209,7 +255,28 @@ public final class Product {
                 soldCount,
                 status,
                 pricingMode,
-                nextVersion());
+                nextVersion(),
+                teamTerms);
+    }
+
+    /**
+     * Set how many paid members a team started on this product needs and how long it stays open,
+     * validated together with the optional team price as one rule set. Allowed in every lifecycle
+     * state: the terms are read only when a team starts and frozen into it, so a running team never
+     * changes. Returns the next revision; the caller has already checked the version.
+     *
+     * @param teamPrice the team price amount being set in the same command, or null when the price
+     *     policy is left alone
+     * @throws BizException {@code CATALOG_400_003} carrying every violated field
+     */
+    public Product configureTeamTerms(int targetSize, int lifetimeSeconds, BigDecimal teamPrice) {
+        Map<String, Object> violations =
+                TeamTermsSpecification.violations(
+                        targetSize, lifetimeSeconds, teamPrice, originalPrice);
+        if (!violations.isEmpty()) {
+            throw new BizException(CatalogErrorCode.TEAM_TERMS_INVALID, violations);
+        }
+        return copy(status, new ProductTeamTerms(id, targetSize, lifetimeSeconds));
     }
 
     /** Publish or re-publish only when the current state and inventory allow it. */
@@ -240,6 +307,13 @@ public final class Product {
         }
     }
 
+    /**
+     * Team terms as stored; {@link ProductTeamTerms#unset unset} for a never-configured product.
+     */
+    public ProductTeamTerms teamTerms() {
+        return teamTerms;
+    }
+
     /** Optimistic concurrency token; independent from append-only team-price policy versions. */
     public int version() {
         return version;
@@ -247,6 +321,11 @@ public final class Product {
 
     /** Copy state without exposing a generic status setter to application or controller code. */
     private Product transition(ProductStatus next) {
+        return copy(next, teamTerms);
+    }
+
+    /** The next revision with a new state and terms; everything else is carried over unchanged. */
+    private Product copy(ProductStatus nextStatus, ProductTeamTerms nextTerms) {
         return reconstitute(
                 id,
                 productNo,
@@ -260,9 +339,10 @@ public final class Product {
                 currency,
                 stock,
                 soldCount,
-                next,
+                nextStatus,
                 pricingMode,
-                nextVersion());
+                nextVersion(),
+                nextTerms);
     }
 
     /** Never wrap the database integer concurrency token. */

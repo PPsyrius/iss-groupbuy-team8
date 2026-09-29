@@ -5,6 +5,7 @@ import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductDisplay;
 import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.catalog.model.ProductTeamTerms;
+import com.blocbuy.catalog.model.TeamTermsChange;
 import com.blocbuy.catalog.repository.ProductRepository;
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.common.model.PageQuery;
@@ -40,6 +41,22 @@ public class ProductRepositoryImpl implements ProductRepository {
         requireChanged(
                 bizProductMapper.updateListing(
                         ProductConverter.toRow(product), expectedVersion, actorId));
+    }
+
+    /** Version precondition and row lock make the terms write compare-and-set, like the listing. */
+    @Override
+    public void updateTeamTerms(Product product, int expectedVersion, UUID actorId) {
+        requireChanged(
+                bizProductMapper.updateTeamTerms(
+                        ProductConverter.toRow(product), expectedVersion, actorId));
+    }
+
+    /** An audit row that cannot be stored fails the whole write, never silently drops. */
+    @Override
+    public void appendTeamTermsLog(TeamTermsChange change) {
+        if (bizProductMapper.insertTeamTermsLog(ProductConverter.toLogRow(change)) != 1) {
+            throw new IllegalStateException("team terms audit row was not stored");
+        }
     }
 
     /** Preserve the row and every historical reference. */

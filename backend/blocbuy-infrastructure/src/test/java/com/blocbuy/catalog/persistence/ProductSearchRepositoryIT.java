@@ -77,7 +77,9 @@ class ProductSearchRepositoryIT {
                         "resources",
                         "db",
                         "migration");
-        new ResourceDatabasePopulator(new FileSystemResource(migrations.resolve("V4__catalog.sql")))
+        new ResourceDatabasePopulator(
+                        new FileSystemResource(migrations.resolve("V4__catalog.sql")),
+                        new FileSystemResource(migrations.resolve("V14__product_team_terms.sql")))
                 .execute(dataSource);
 
         var config =
