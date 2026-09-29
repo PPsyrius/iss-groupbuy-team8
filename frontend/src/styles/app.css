@@ -10,9 +10,8 @@
 /* BlocBuy theme overlay on HeroUI 3's default theme. Values are the light set from
    docs/design.md, as shipped in the Claude Design export (`blocbuy-theme.css`, kit-doubled names
    such as `--accent-accent`) and mapped here to HeroUI 3's single names (docs/design-screens.md
-   §2.1). Light only, per the design brief; no dark block, so a dark screen cannot appear by
-   accident. Inter is loaded by index.html from Google Fonts (A2's CSP will need `font-src
-   https://fonts.gstatic.com` and `style-src https://fonts.googleapis.com`). */
+    §2.1). Light only, per the design brief; no dark block, so a dark screen cannot appear by
+    accident. Inter is self-hosted through the imports above; no Google Fonts CSP exception. */
 @layer base {
   :root,
   .light,

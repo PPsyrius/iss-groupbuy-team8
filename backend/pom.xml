@@ -32,6 +32,9 @@
     <maven.compiler.release>21</maven.compiler.release>
     <!-- CVE-2026-65182, CVE-2026-65905, CVE-2026-68525: Tomcat 11.0.24 → 11.0.25 -->
     <tomcat.version>11.0.25</tomcat.version>
+    <!-- CVE-2026-68497: keep both Jackson BOMs on their patched maintenance lines -->
+    <jackson-2-bom.version>2.21.6</jackson-2-bom.version>
+    <jackson-bom.version>3.1.6</jackson-bom.version>
     <!-- Override Testcontainers transitive 1.24.0 — known CVE hotspot (zip-slip, path traversal) -->
     <commons-compress.version>1.28.0</commons-compress.version>
     <!-- Flyway 12.4.0 (Boot BOM) doesn't support PostgreSQL 18; 13.5.0 does -->
@@ -40,7 +43,6 @@
     <mybatis-spring-boot.version>4.1.0</mybatis-spring-boot.version>
     <sa-token.version>1.46.0</sa-token.version>
     <springdoc.version>3.1.1</springdoc.version>
-    <testcontainers.version>2.0.5</testcontainers.version>
     <springdoc-maven-plugin.version>1.5</springdoc-maven-plugin.version>
     <archunit.version>1.5.0</archunit.version>
     <stripe-java.version>33.4.2</stripe-java.version>
@@ -64,14 +66,6 @@
 
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>org.testcontainers</groupId>
-        <artifactId>testcontainers-bom</artifactId>
-        <version>${testcontainers.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
       <!-- Override Testcontainers transitive commons-compress 1.24.0 (CVE hotspot) -->
       <dependency>
         <groupId>org.apache.commons</groupId>

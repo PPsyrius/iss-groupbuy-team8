@@ -1,5 +1,7 @@
 # BlocBuy UI design brief for Claude Design
 
+Historical design input from 2026-09-16. It predates the shipped Stripe Hosted Checkout (ADR 0014), owner-scoped My Teams endpoint and later buyer screens. For implementation use [`design-screens.md`](design-screens.md), [`admin-plan.md`](admin-plan.md), the current OpenAPI contract and the ADR index; retain the brief as the artboard/report provenance, not current endpoint guidance.
+
 Paste everything below the line into Claude Design as the opening message. It is self-contained. If the tool can read files, the "Source files" section at the end lists where the facts came from.
 
 Decisions in this brief were settled in a grilling session on 2026-09-16 and are recorded here as report evidence. Tier labels indicate backend readiness, not design priority.

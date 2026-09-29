@@ -29,9 +29,11 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 | FB-15 | P3 | Refund-pending receipt heading | The heading reads "Payment received"; consider "Refund on its way". Needs the design owner. | `FE/src/features/payment/receipt-view.ts` | `cd frontend && pnpm vitest run src/features/payment` | design owner |
 | FB-16 | P3 | Catalog cards at 1280 | Cards have an empty gap because the summary has no bloc size fields. | `FE/src/features/catalog/ProductCard.tsx` | screenshot at 1280 px | backend ask CR-11 |
 | FB-17 | P3 | Tooling hygiene | `routeFileIgnorePattern` for `*.test.tsx` (the dev server warns 5 times); clear the 4 knip config hints. | `FE/vite.config.ts`, `FE/knip.json` | `cd frontend && pnpm dev` (no route warnings) and `cd frontend && pnpm knip` (no hints) | — |
-| FB-18 | P3 | Docs | Mark design-screens §7 Q1–Q22 as answered with cross-links to plan §12 notes; add a LICENSE decision note (the repository has no LICENSE). | `FE/docs/design-screens.md` | `grep -c 'Answered' frontend/docs/design-screens.md` | — |
+| FB-18 | P3 | Buyer-screen documentation | Audit `design-screens.md` §7 against shipped UI and the current contract; link remaining gaps to the owning backlog item or issue without recreating the historical Q1–Q22 list. Repository licensing is a separate, repo-level decision. | `FE/docs/design-screens.md` | Review §7 against `FE/src/`, `contracts/openapi.json` and backlog links; `git diff --check` | — |
 | FB-19 | P2 | Sharer nickname on the invite banner | Once backend #201 resolves an invite ref to the sharer's nickname, the invite banner leads with the Invite artboard's "{sharerNickname} started this bloc" (5b.1–5b.3, design-screens §4.2) instead of the generic "You’ve been invited to join this bloc". | `FE/src/features/share/InviteBanner.tsx`, `FE/src/routes/products.$productId.tsx`, `FE/src/test/browser-msw.ts`, `FE/src/routes/products.$productId.test.tsx` | `cd frontend && pnpm vitest run src/routes/products.\$productId.test.tsx` | backend #201 |
 | FB-20 | P2 | Hide Join from a member of the open bloc | A buyer already in the open bloc (a `GET /group-deals/me` row matches `p.deal.dealId`; the listing computes `myTeam`) still sees an enabled "Join this bloc" on the Open bloc card beside "Share your bloc", because `onJoin` never checks `myTeam`; pressing it only earns `GROUPBUY_409_003` (no charge). With payments on, a member sees Join disabled with the reason "You're in this bloc" and no `POST /payments/intents` is sent; a non-member keeps an enabled Join. | `FE/src/routes/products.$productId.tsx`, `FE/src/features/catalog/DealProgress.tsx`, `FE/src/routes/products.$productId.test.tsx`, `FE/src/features/catalog/DealProgress.test.tsx` | `cd frontend && pnpm vitest run src/routes/products.\$productId.test.tsx src/features/catalog/DealProgress.test.tsx` | — |
+| FB-21 | P3 | In-session smoke of the Claude Code hooks (from `plan.md` T1-10 step 5) | The three frontend hooks in `.claude/settings.json` were only driven by piping their stdin payloads to the scripts (plan §12 note 31(a)); nobody has confirmed them in a real Claude Code session at the repo root. | `docs/agile/sprint-03/log/` (results only; no code change expected) | Claude Code session at the repo root, steps below | — |
+| FB-22 | P2 | Verify `Secure` on the auth cookies once backend #96 lands (from `plan.md` B3) | The `ec2` profile still sets `sa-token.cookie.secure: false` and `blocbuy.frontend.state-cookie-secure: false`, so on dev `blocbuy-oauth-state` (and `blocbuy-token`) go out without `Secure` although browsers reach the backend only over HTTPS. The fix is backend (#96, @l0sgAi); the frontend part is verification. | none in `FE/` (backend: `backend/blocbuy-bootstrap/src/main/resources/application-ec2.yml`) | `curl -sSI https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google \| grep -i set-cookie` shows `Secure` on `blocbuy-oauth-state` | backend #96 |
 
 ## 2. Steps
 
@@ -41,7 +43,7 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 - [x] Step 2 (2026-09-25): mock blocs, orders and receipts come from one set of seeds (`6ef346a`).
 - [x] Step 3 (2026-09-25): the duplicate name row is gone from the `/account` header (`48a6275`).
 - [x] Step 4 (2026-09-25): the mock START/JOIN checkout reaches a receipt that goes Waiting then Paid (`28e0a83`).
-- [x] Step 5 (2026-09-25): `frontend/README.md` has a ten-step demo script (`384ad1d`).
+- [x] Step 5 (2026-09-25): `frontend/README.md` gained a ten-step demo script (`384ad1d`); the current README condenses it to five journeys while retaining the mock-mode instructions.
 - [ ] Step 6: rerun the `@auth` e2e against dev (`E2E_TARGET=dev pnpm e2e --grep @auth`), because `48a6275` changed its assertions.
 
 ### FB-02: Shared Playwright API stubs
@@ -77,7 +79,22 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 - [ ] Step 1: `onJoin` on the listing is undefined when `myTeam` is set, and `DealProgress` gains a member reason, "You're in this bloc", beside its full and ended ones (today it names a reason only for those); frontend only, since the listing's `ActiveDealResponse` has no membership field and `/group-deals/me` is already fetched.
 - [ ] Step 2: tests: with payments on, a member gets a disabled Join and no `POST /payments/intents`; a non-member still gets an enabled Join.
 
+### FB-21: In-session smoke of the Claude Code hooks
+
+Preconditions: `jq` on `PATH` (the PostToolUse and Stop scripts exit 0 without it) and `frontend/node_modules` installed (both scripts skip without it).
+
+- [ ] Step 1: edit `frontend/src/routes/index.tsx` with a badly formatted line; confirm the PostToolUse `Edit|Write` hook (`.claude/hooks/frontend-fix.sh`: `oxfmt`, then `oxlint --fix` for `.ts`/`.tsx`) reformats it.
+- [ ] Step 2: end the turn with that change still in the tree; confirm the Stop hook (`.claude/hooks/frontend-typecheck.sh`) runs `pnpm exec tsc --noEmit` (it runs only when `git status` shows frontend changes outside `frontend/docs/` and `frontend/e2e/.auth/`, and exits 2 with the errors on stderr).
+- [ ] Step 3: delete `frontend/src/api/generated` and start a new session; confirm the SessionStart hook (`.claude/hooks/frontend-bootstrap.sh`, matcher `startup|resume`) regenerates it and prints "generated client was missing".
+- [ ] Step 4: note the results in the sprint log.
+
+### FB-22: Verify `Secure` on the auth cookies (backend #96)
+
+- [ ] Step 1: after #96 merges and deploys (the `ec2` profile sets both `sa-token.cookie.secure: true` and `blocbuy.frontend.state-cookie-secure: true`), `curl -sSI https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google | grep -i set-cookie` shows `Secure` on `blocbuy-oauth-state`.
+- [ ] Step 2: after a Google login on dev, the `blocbuy-token` cookie shows `Secure` in DevTools; note both results in the sprint log.
+
 ## 3. Blocked / external
 
 - T3-05 (share attribution, tracked in `plan.md`) merged in #219 on 2026-09-28 and closed #30; it builds on #198 (merged 2026-09-26: `POST /api/v1/group-deals/{dealId}/invites` and attribution at purchase). Only the sharer's nickname on the invite banner still waits on the backend: no endpoint resolves a ref to it yet (backend #201, open); it is FB-19.
+- B3 (the `Secure` flag on `blocbuy-oauth-state` and `blocbuy-token`, tracked in `plan.md` §10) waits on the backend: the `ec2` profile still sets both cookie flags to `false` (backend #96, open, @l0sgAi); the frontend verification is FB-22.
 - The admin console: see [`admin-plan.md`](admin-plan.md); its Q1 was answered on 2026-09-26 (#202): only A0-00 is in Sprint 3, and every A1 and A2 row is deferred.

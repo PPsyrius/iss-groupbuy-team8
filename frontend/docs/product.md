@@ -2,7 +2,7 @@
 
 ## Register
 
-Group buy e-commerce platfom like Pinduoduo in its early day.
+Community group-buying e-commerce, inspired by early Pinduoduo.
 
 ## Users
 
@@ -38,7 +38,7 @@ Expressed as:
 
 - **One accent colour**, owned exclusively by the team price and team progress. Nothing else on the storefront uses the accent as a fill.
 - **A neutral base scale** with distinct status colours for success, warning, danger, and info.
-- **A sans-serif typeface** from Google Fonts with a real fallback stack, and tabular figures for prices and countdowns.
+- **A sans-serif typeface** with a real fallback stack and tabular figures for prices and countdowns; Inter is self-hosted in the current app.
 - **A simple typographic wordmark**. No mascot, no illustration system. Always "BlocBuy", never "Blocbuy" or "Bloc Buy".
 - **Buyer-facing vocabulary derived from the product name** (for example a team may be a "bloc"), used identically in the storefront and the admin console. Raw backend codes such as `on_sale` or `succeeded` never appear in the UI.
 - **Money always as `S$89.00`**, prefix and two decimals, never rounded or recomputed in the browser.

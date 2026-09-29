@@ -10,10 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Default {@link GroupDealQueryService}. One batch repository call, then in-memory pick of the
- * lowest-priced open deal per product (ties keep the first row seen).
- */
+/** Maps the repository's bounded batch of best open deals into catalog-facing offers. */
 @Service
 @RequiredArgsConstructor
 public class GroupDealQueryServiceImpl implements GroupDealQueryService {
@@ -33,16 +30,10 @@ public class GroupDealQueryServiceImpl implements GroupDealQueryService {
         if (productIds == null || productIds.isEmpty()) {
             return Map.of();
         }
-        var deals = groupDealRepository.findOpenDealsByProductIds(productIds);
+        var deals = groupDealRepository.findBestOpenDealsByProductIds(productIds);
         Map<UUID, OpenDealOffer> bestByProduct = new HashMap<>();
         for (GroupDeal deal : deals) {
-            bestByProduct.merge(
-                    deal.productId(),
-                    toOffer(deal),
-                    (current, candidate) ->
-                            candidate.dealPrice().compareTo(current.dealPrice()) < 0
-                                    ? candidate
-                                    : current);
+            bestByProduct.put(deal.productId(), toOffer(deal));
         }
         return bestByProduct;
     }
