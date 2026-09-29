@@ -134,7 +134,7 @@ BlocBuy is designed as a two-sided platform rather than a single online shop. It
 - *Reusable common services.* Identity, payment settlement and notification are capabilities that other group-buying scenarios can reuse, for example event tickets, bulk subscriptions or neighbourhood produce boxes, without rebuilding them.
 
 == Relationship to Prior Work
-The functional baseline of BlocBuy (use cases UC1–UC9, listed in @scope-use-cases) was built as a COLA modular monolith for the SWE5006 practice module. The SWE5001 project *forks* that codebase on a dedicated long-lived branch (`swe5001/main`). The effort in this proposal targets the SWE5001 learning outcomes: platform architecture, microservice decomposition, scalability, cloud-native design on AWS, infrastructure as code and DevSecOps. It does not re-implement the business features.
+The functional baseline of BlocBuy (use cases UC1–UC9, listed in @scope-use-cases) was built as a COLA modular monolith for the SWE5006 practice module. The SWE5001 project *extends the same codebase on the same trunk* rather than forking it. The microservice deployment is added alongside the monolith and selected at deployment time, so every business feature is written once and runs in both shapes. The effort in this proposal targets the SWE5001 learning outcomes: platform architecture, microservice decomposition, scalability, cloud-native design on AWS, infrastructure as code and DevSecOps. It does not re-implement the business features.
 
 // ---------------------------------------------------------------- 5
 = General Architecture
@@ -340,7 +340,7 @@ The following demonstrations are scripted and repeatable. Throughput and latency
 - *Disposable environment.* The runtime environment is created before use and destroyed afterwards, with deterministic seed data. It runs at about US\$0.20 per hour and costs about US\$1–3 per month while idle, against about US\$125 per month for running continuously. Rebuilding from zero is itself demonstrated.
 
 == DevOps and DevSecOps
-- *Source and artifacts.* One repository. SWE5001 work lives on the long-lived branch `swe5001/main` with short-lived topic branches (`swe5001/<type>/<description>-<date>`) and pull-request review. Container images are pushed to Amazon ECR and deployed by immutable digest.
+- *Source and artifacts.* One repository and one trunk (`dev`), shared with SWE5006. SWE5001 work lands through short-lived topic branches and pull-request review. The monolith and the three service images are built from the same commit, pushed to Amazon ECR and deployed by immutable digest.
 - *Infrastructure as code.* Terraform only, in three layered stacks:
   - `foundation` (persistent): state, GitHub OIDC roles, ECR, parameters, budgets;
   - `edge` (persistent): CloudFront, S3;
@@ -429,7 +429,7 @@ The guideline is about ten person-days per member, 50 person-days in total. The 
     [The synchronous identity check inside the payment webhook transaction adds a failure mode.], [A short timeout with fail-safe rejection; Stripe retries webhooks, and settlement is idempotent.],
     [The cloud budget is exceeded.], [The disposable runtime environment, AWS Budgets alerts and a nightly automatic teardown.],
     [`commerce-svc` is perceived as too coarse.], [The consistency-boundary rationale is recorded as an architecture decision, with the payment-extraction evolution path.],
-    [The functional baseline changes during the project.], [Changes flow one way only, from the baseline branch into `swe5001/main`, through reviewed sync pull requests.],
+    [The functional baseline changes during the project.], [Both courses share one trunk, so baseline changes reach the services without a sync step. CI builds the monolith and every service on each pull request, and architecture tests reject new cross-service calls that bypass ports or events.],
   ),
   caption: [Key risks and mitigations],
 )

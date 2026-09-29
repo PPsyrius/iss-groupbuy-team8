@@ -1,6 +1,6 @@
 # SWE5001 Microservice Refactoring Plan
 
-This is the engineering companion to the [project proposal](project-proposal.typ). Its sections follow the proposal's structure (Overview, General Architecture, Scope of Work, Effort Estimates, Risks): the proposal states *what* is built and *why* for the reviewers, and this plan records *how* for the team. It covers the service decomposition, the implementation approach that keeps `dev` syncs cheap, the integration and data design, the AWS deployment model, the Terraform layout and the branch and sync conventions for this fork.
+This is the engineering companion to the [project proposal](project-proposal.typ). Its sections follow the proposal's structure (Overview, General Architecture, Scope of Work, Effort Estimates, Risks): the proposal states *what* is built and *why* for the reviewers, and this plan records *how* for the team. It covers the service decomposition, the implementation approach that lets the monolith and the services coexist on one trunk, the integration and data design, the AWS deployment model, the Terraform layout and the working conventions shared with SWE5006.
 
 Status: **Draft, revised 2026-09-29** (first draft 2026-09-28). Cost and effort figures are estimates; confirm cost with the AWS Pricing Calculator before committing to a budget.
 
@@ -8,11 +8,11 @@ Status: **Draft, revised 2026-09-29** (first draft 2026-09-28). Cost and effort 
 
 ## 1. Overview
 
-### 1.1 Why this fork exists
+### 1.1 One codebase, two deployment shapes
 
 BlocBuy is developed for SWE5006 as a COLA modular monolith on the `dev` branch. SWE5001 grades a different set of outcomes: platform thinking (seed, producers, consumers, reusable services), demonstrated scalability (auto-scaling under scripted load), cloud-native use of managed services, automated DevSecOps, and minimum security controls.
 
-The SWE5001 work lives on the long-lived branch `swe5001/main`, forked from `dev` at `71ddfed` (tag `swe5001-fork-base`). SWE5006 business features continue on `dev` and flow one way into this branch through sync PRs ([section 3.6](#36-branch-conventions-and-dev-sync)). Because the fork keeps receiving `dev` changes until SWE5006 ends, the refactoring is designed to keep those syncs cheap ([section 2.3](#23-implementation-approach-split-by-assembly-not-by-relocation)).
+The SWE5001 work lands on the same trunk, `dev`, instead of a long-lived fork. A fork was tried first (2026-09-28) and dropped on 2026-09-29: its first sync already produced seven conflicts, and every SWE5006 feature would have had to be merged twice. On one trunk, business features are written once. SWE5001 adds a second deployment shape, three services on ECS, next to the SWE5006 monolith on EC2, and the shape is chosen at deployment time ([section 2.3](#23-implementation-approach-split-by-assembly-not-by-relocation)).
 
 ### 1.2 Course constraints that shape the plan
 
@@ -22,21 +22,23 @@ The SWE5001 work lives on the long-lived branch `swe5001/main`, forked from `dev
 | Demo must show auto-scaling and scripted performance testing | Every service has a scaling policy, and k6 scripts and a CloudWatch dashboard are deliverables. |
 | DevSecOps pipeline scripts are deliverables | Infrastructure is Terraform-only, and deployment runs through GitHub Actions with OIDC. |
 | Demo project with no real traffic | The runtime environment is disposable: created before use and destroyed after. |
-| SWE5006 feature work continues on `dev` in parallel | Fork changes must not move or rewrite code that `dev` is still changing ([section 2.3](#23-implementation-approach-split-by-assembly-not-by-relocation)). |
+| SWE5006 feature work continues on the same trunk | SWE5001 changes are additive: they must not move or rewrite code that SWE5006 is still changing, and must keep the monolith deployment and its tests green ([section 2.3](#23-implementation-approach-split-by-assembly-not-by-relocation)). |
 | Key dates: proposal 4 Oct, presentation 23 Oct (Team 8, 16:15), report 16 Nov | See the timeline in [section 4](#4-effort-estimates-and-timeline). |
 
-### 1.3 Deliberate deviations from SWE5006 rules (this branch only)
+### 1.3 Deliberate deviations from SWE5006 rules (distributed shape only)
 
-- **Messaging.** The SWE5006 backend constraints exclude message brokers. This branch introduces Amazon SNS and SQS for cross-service events. RabbitMQ and Elasticsearch stay out.
-- **Deployment unit.** The single deployable becomes three services. Inside each service, the COLA layering, DDD, `Result` envelope, `ErrorCode` enums and Sa-Token RBAC rules still apply unchanged.
+Both deviations need a backend ADR and an amendment to `backend-constraints-skill` before the first code PR, because they change rules the SWE5006 team works under.
+
+- **Messaging.** The SWE5006 backend constraints exclude message brokers. The distributed shape introduces Amazon SNS and SQS for cross-service events; the monolith keeps in-process Spring events only. RabbitMQ and Elasticsearch stay out.
+- **Deployment unit.** Besides the single monolith deployable, the same code is also packaged as three services. Inside each service, the COLA layering, DDD, `Result` envelope, `ErrorCode` enums and Sa-Token RBAC rules still apply unchanged.
 
 ### 1.4 Baseline
 
 - **Backend:** a Java 21 / Spring Boot 4 modular monolith with six bounded contexts: `identity`, `catalog`, `groupbuy`, `order`, `payment`, `notification`.
 - **Context integration:** in-process ports and Spring events. `TeamSucceeded` and `TeamExpired` subscribers run at `BEFORE_COMMIT` ([backend ADR 0002](../../backend/docs/adr/0002-team-lifecycle-events.md)).
-- **Runtime (on `dev`):** one EC2 host running Docker Compose with the backend, PostgreSQL 18 and Redis 8. CloudFront routes `/api/*` to an ALB and the EC2 host, and serves everything else from S3. The EC2 deployment was removed from this branch.
-- **Existing Terraform (on `dev`):** `infra/terraform/backend-app-stack` (EC2, ALB, ECR, OIDC) and `infra/terraform/frontend-stack` (S3, CloudFront).
-- **Last sync:** `dev` at `c66bb40`, merged on 2026-09-29.
+- **Runtime:** one EC2 host running Docker Compose with the backend, PostgreSQL 18 and Redis 8. CloudFront routes `/api/*` to an ALB and the EC2 host, and serves everything else from S3. This stays the SWE5006 deployment and is not changed by SWE5001.
+- **Existing Terraform:** `infra/terraform/backend-app-stack` (EC2, ALB, ECR, OIDC) and `infra/terraform/frontend-stack` (S3, CloudFront). The SWE5001 stacks live separately under `infra/swe5001/`.
+- **Starting point:** `dev` at `c66bb40` (2026-09-29).
 
 ---
 
@@ -44,7 +46,7 @@ The SWE5001 work lives on the long-lived branch `swe5001/main`, forked from `dev
 
 ### 2.1 Architectural drivers
 
-The drivers (scalability, consistency, availability, security, cost efficiency, modifiability) are stated in the proposal, section 5.1. Their checkable scenarios are rows QA-01 to QA-16 of the [NFR register](../quality/nfr-register.md). This plan adds one internal driver, **sync cost**: a `dev` sync must stay a routine merge, not a re-port.
+The drivers (scalability, consistency, availability, security, cost efficiency, modifiability) are stated in the proposal, section 5.1. Their checkable scenarios are added to the shared [NFR register](../quality/nfr-register.md) as new rows, in the PR that implements each one. This plan adds one internal driver, **coexistence**: every SWE5001 change keeps the SWE5006 monolith, its deployment and its test suite working.
 
 ### 2.2 Decomposition decision
 
@@ -89,7 +91,7 @@ Each service keeps its own copy of `sys_scheduler_lock` and `sys_scheduled_item_
 
 #### Why
 
-The split must not fight the `dev` sync. Between 2026-09-01 and 2026-09-29, `dev` changed main code in the commerce contexts in 46 commits (catalog 13, groupbuy 16, order 7, payment 10) and in identity and notification in 7 (identity 4, notification 3). Moving the commerce code into new directories would turn every later `dev` change there into a conflict or a manual re-port. The two contexts that do move are the ones `dev` rarely touches.
+The split must not disrupt SWE5006 work on the same trunk. Between 2026-09-01 and 2026-09-29, `dev` changed main code in the commerce contexts in 46 commits (catalog 13, groupbuy 16, order 7, payment 10) and in identity and notification in 7 (identity 4, notification 3). Moving the commerce code into new directories would conflict with every open SWE5006 pull request in those contexts. Adding entry points and adapters next to the existing code does not.
 
 #### How
 
@@ -98,7 +100,7 @@ A deployable service is an **assembly**: a Spring Boot entry point plus configur
 ```
 backend/
   blocbuy-client / domain / application / adapter / infrastructure   # shared, unchanged paths
-  blocbuy-bootstrap/          # monolith assembly (topology=monolith): baseline tests, strangler step 0
+  blocbuy-bootstrap/          # monolith assembly (topology=monolith): SWE5006 deployment, baseline tests, strangler step 0
   blocbuy-platform-starter/   # Result envelope, ErrorCode base, Sa-Token config, trace ID, outbox, idempotency
   services/
     commerce-svc/             # scans catalog, groupbuy, order, payment (topology=distributed)
@@ -113,15 +115,15 @@ backend/
 | Cross-service events | Spring events only | Spring events plus the outbox relay to SNS/SQS |
 | Database | One database | One database and role per service ([section 2.6](#26-persistence-design)) |
 
-- **Selection:** the property `blocbuy.topology` selects the adapter through `@ConditionalOnProperty`. The monolith value is the default (`matchIfMissing = true`), so code and tests merged from `dev` run unchanged.
+- **Selection:** the property `blocbuy.topology` selects the adapter through `@ConditionalOnProperty`. The monolith value is the default (`matchIfMissing = true`), so the SWE5006 deployment and its tests run unchanged.
 - **Callers do not change:** a port such as `UserAppService` keeps its interface; only its implementation differs by topology. The same holds for the in-process `@TransactionalEventListener` subscribers inside `commerce-svc`.
 - **Shared configuration:** generic configuration now under `com.blocbuy.bootstrap` (trace-ID filter, Sa-Token, scheduling infrastructure) moves into `blocbuy-platform-starter` so every assembly reuses it. Context-specific configuration (Stripe, team-expiry and refund jobs) moves into the owning context's package so `commerce-svc` picks it up by scanning.
-- **Relocation is deferred:** moving `identity` and `notification` code into their own Maven aggregates is optional and happens only after SWE5006 feature work on `dev` stops. The commerce contexts stay in place.
+- **Relocation is deferred:** moving `identity` and `notification` code into their own Maven aggregates is optional and happens only after SWE5006 feature work stops. The commerce contexts stay in place.
 
 #### Guardrails
 
 - **ArchUnit:** commerce contexts must not depend on identity or notification internals, except through `UserAppService` and domain events. This makes the assembly split safe even though the code is co-located.
-- **CI builds every assembly:** the monolith and the three service images build on every PR. A `dev` change that breaks the distributed topology fails in the sync PR, not later.
+- **CI builds every assembly:** the monolith and the three service images build on every PR. A SWE5006 change that breaks the distributed shape, or a SWE5001 change that breaks the monolith, fails in its own PR.
 - **One behaviour suite for both topologies:** the existing integration tests run against the monolith assembly; a smoke suite runs against the three services in Docker Compose.
 
 ### 2.4 Integration
@@ -191,8 +193,8 @@ Messaging        : SNS topics → SQS queues (+ DLQs) → notification-svc
 - **Instance:** one RDS PostgreSQL instance (`db.t4g.micro`, single-AZ) hosting three databases: `identity`, `commerce` and `notification`.
 - **Roles:** each service gets its own DB role, which can connect only to its own database.
 - **Schema:** each database keeps the baseline PostgreSQL schema `domain`, so JDBC `currentSchema` and Flyway `defaultSchema` settings carry over unchanged.
-- **Migrations, while `dev` is active:** the baseline `db/migration` history stays one ordered stream, because `dev` keeps adding versions to it (for example V19 and later). Every service database applies the full stream, and ownership is enforced by grants: each service role gets privileges only on the tables it owns (section 2.2), so foreign tables exist but stay empty and unreachable. This keeps every `dev` migration a clean merge.
-- **Migrations, after `dev` freezes:** each service gets its own migration location with a fresh baseline for its tables only, and foreign tables are no longer created. This is the end state stated in the proposal (section 5.4).
+- **Migrations, while SWE5006 is active:** the baseline `db/migration` history stays one ordered stream. The SWE5006 databases have already applied the existing versions (V1–V19 at `c66bb40`), so those scripts cannot be split or rewritten without breaking Flyway checksums, and SWE5006 keeps adding versions. Every service database applies the full stream, and ownership is enforced by grants: each service role gets privileges only on the tables it owns (section 2.2), so foreign tables exist but stay empty and unreachable. A new SWE5006 migration then needs no SWE5001 follow-up beyond a grant for any new table.
+- **Migrations, after SWE5006 feature work stops:** each service gets its own migration location with a fresh baseline for its tables only, and foreign tables are no longer created. This is the end state stated in the proposal (section 5.4).
 - **Trade-off:** isolation is logical, but the instance is physically shared. The report records this cost-driven decision and names separate instances as the scale-out path.
 - **Other stores:** Valkey holds sessions and caches only. It keeps no durable business state.
 - **API contract:** `contracts/openapi.json` stays one aggregated contract covering every service's public `/api/v1` paths behind the single edge, so the frontend client is unaffected by the split. `/internal/**` endpoints are never part of it.
@@ -203,7 +205,7 @@ Messaging        : SNS topics → SQS queues (+ DLQs) → notification-svc
 
 ### 3.1 Platform components and use cases
 
-Seed, producers, consumers, the core interaction and the use-case-to-service mapping (UC1–UC9 plus event-driven notifications) are defined in the proposal, sections 6.1 and 6.2. Business use cases are inherited from `dev` and are not re-implemented here; the fork only changes where they run.
+Seed, producers, consumers, the core interaction and the use-case-to-service mapping (UC1–UC9 plus event-driven notifications) are defined in the proposal, sections 6.1 and 6.2. Business use cases are shared with SWE5006 and are not re-implemented; SWE5001 only changes where they run.
 
 ### 3.2 Scalability demonstration
 
@@ -290,62 +292,46 @@ infra/swe5001/
 
 ### 3.4 DevOps and DevSecOps
 
+The existing pipelines are extended, not duplicated. SWE5001 adds jobs and workflows next to the SWE5006 ones and leaves the EC2 deployment untouched.
+
 | Workflow | Trigger | Steps |
 | --- | --- | --- |
-| `ci-swe5001` | PRs to and pushes on `swe5001/main` | Path-filtered build and test of every assembly (monolith and the three services), Sonar (separate project keys), Trivy image scan, `terraform fmt`/`validate`/`plan`, checkov; the plan is posted as a PR comment. |
-| Image publish and deploy | Push to `swe5001/main` | Build ARM64 images, push to ECR by digest, record the digest as the last known good release in SSM. If `runtime` is up, deploy with `amazon-ecs-deploy-task-definition`; the ECS deployment circuit breaker rolls back automatically. |
-| `env-up` | Manual | Apply `runtime` with the last known good digests, apply `edge`, wait for healthy targets, run a smoke test, print the URLs to the job summary. |
-| `env-down` | Manual and nightly at 23:00 SGT | Destroy `runtime`. |
-| `env-cycle` | Every 2–3 days | Full up, smoke test, down, to catch apply drift early and to evidence rebuild-from-zero time. |
+| `ci-backend.yml` (extended) | Existing triggers | Existing gates unchanged. New: a matrix job builds and smoke-boots every assembly image (monolith and the three services) and scans each with Trivy. New modules join the existing JaCoCo aggregate and SonarCloud project. |
+| `infra-swe5001.yml` (new) | PRs and `dev` pushes touching `infra/swe5001/**` | `terraform fmt`/`validate`/`plan`, checkov; the plan is posted as a PR comment. |
+| `swe5001-deploy.yml` (new) | `dev` push touching backend code | Build ARM64 service images, push to ECR by digest, record the digest as the last known good release in SSM. If `runtime` is up, deploy with `amazon-ecs-deploy-task-definition`; the ECS deployment circuit breaker rolls back automatically. |
+| `swe5001-env.yml` (new): `env-up` | Manual | Apply `runtime` with the last known good digests, apply `edge`, wait for healthy targets, run a smoke test, print the URLs to the job summary. |
+| `swe5001-env.yml` (new): `env-down` | Manual and nightly at 23:00 SGT | Destroy `runtime`. |
+| `swe5001-env.yml` (new): `env-cycle` | Every 2–3 days | Full up, smoke test, down, to catch apply drift early and to evidence rebuild-from-zero time. |
 
 **Constraints:**
 
-- **CI is paused on this branch** (2026-09-28) until the SWE5001 SonarCloud projects exist; see the [progress log entry](log/2026-09-28-ci-pause-branch-workflows.md). Until it is restored, every PR records local `./mvnw verify` (JDK 21) and `pnpm check` results.
-- **Default-branch requirement:** `workflow_dispatch` and `schedule` only register from workflow files on the default branch (`dev`). A thin stub `.github/workflows/swe5001-env.yml` on `dev` that checks out `swe5001/main` is required for `env-up`, `env-down` and `env-cycle`. This touches the SWE5006 mainline and needs team agreement.
-- **OIDC:** new roles are created in `foundation` with GitHub environment `swe5001-demo` (environment-type subject). The existing `dev` roles are not reused.
+- **Default branch:** `workflow_dispatch` and `schedule` only register from workflow files on the default branch. Working on `dev` means the environment workflows register directly.
+- **OIDC:** new roles are created in `foundation` with GitHub environment `swe5001-demo` (environment-type subject). The existing SWE5006 roles and environments are not reused, and the new roles cannot touch the EC2 stack.
 - **Tags:** tags must not match `v*`, because `ci-backend.yml` and `security.yml` start the production release chain on `v*` tags. Use `swe5001-*` tags only.
+- **Required checks:** the SWE5006 required checks (`build-quality`, `contract-check`, `frontend-check`) stay required. New SWE5001 jobs start as non-required and become required once stable.
 
 ### 3.5 Platform engineering
 
 - **`blocbuy-platform-starter`:** carries the `Result` envelope, `ErrorCode` base, Sa-Token configuration, trace-ID propagation, outbox and idempotency support. A new service inherits these by adding one dependency. It is also what makes the assembly approach in section 2.3 work.
 - **Golden-path Terraform module:** `runtime` declares services as a map consumed by `for_each` over the `ecs-service` module. Adding a service is a map entry of about ten lines.
 
-### 3.6 Branch conventions and dev sync
+### 3.6 Working conventions
 
-| Purpose | Name |
+SWE5001 follows the repository's existing rules in `CONTRIBUTING.md`: PRs target `dev`, stay small, and need green required checks and CODEOWNERS review.
+
+| Purpose | Convention |
 | --- | --- |
-| Long-lived trunk | `swe5001/main` |
-| Topic branches | `swe5001/<type>/<desc>-<yyyymmdd>`, where `<type>` is one of `feat`, `fix`, `infra`, `perf`, `refactor`, `docs`, `chore` |
-| Sync from `dev` | `swe5001/sync/dev-<yyyymmdd>`, merged through a PR into `swe5001/main` |
-| Fork-point tag | `swe5001-fork-base` on `71ddfed` |
+| Trunk | `dev`, shared with SWE5006 |
+| Topic branches | The repository's existing pattern, with `swe5001` in the name, for example `feature/swe5001-identity-svc-20261012` or `chore/swe5001-foundation-stack-20261001` |
+| Commits | Conventional Commits with the service or stack as scope, for example `feat(identity-svc): ...` or `chore(infra-runtime): ...` |
 | Milestone tags | `swe5001-demo-20261023`, `swe5001-report-20261116` |
 
-**Rules:**
+**Coexistence rules:**
 
-- **Sync direction:** changes flow one way only, `dev` → `swe5001/main`. Generic fixes land on `dev` first and arrive through a sync branch.
-- **PR targets:** topic PRs target `swe5001/main`, never `dev`.
-- **Commits:** Conventional Commits with the service as scope, for example `feat(identity-svc): ...` or `infra(runtime): ...`.
-- **Branch protection:** a ruleset on `swe5001/main` requires a PR and green `ci-swe5001`.
-
-#### Sync procedure
-
-- **Cadence:** at least weekly while SWE5006 is active, and always before an extraction PR, so each sync stays small.
-- **Method:** a true merge (`git merge --no-ff origin/dev` on the sync branch), never a rebase or squash, so the next sync starts from the recorded merge base.
-- **Verification:** the synced branch passes `./mvnw verify` (JDK 21) and `pnpm check`, and every assembly still builds. A `dev` change that needs adaptation for the distributed topology (for example a new cross-context call) is fixed in the sync PR.
-- **Log:** each sync gets a progress log entry listing the `dev` range, the conflicts and their resolution.
-
-#### Standing conflict-resolution rules
-
-These come from the first sync (2026-09-29) and apply to every later one.
-
-| Conflict | Resolution |
-| --- | --- |
-| Workflow logic changed on `dev` (`ci-*.yml`, `security.yml`) | Take the `dev` logic, retarget `refs/heads/dev` to `refs/heads/swe5001/main`, and keep the fork's paused triggers until CI is restored. |
-| `dev` changes EC2, SSM or S3 deploy jobs that the fork removed | Keep them removed. |
-| SWE5006-only artifacts (`docs/agile/**`, `docs/ci/**`, `docs/quality/evidence/**`, sprint plans, board snapshots) | Keep them deleted, including new files `dev` adds there. |
-| `docs/quality/nfr-register.md` | Keep the fork's QA register. Add a QA row only when a `dev` change affects a SWE5001 quality scenario. |
-| New Flyway versions from `dev` | Accept as-is into the shared stream ([section 2.6](#26-persistence-design)); update the ownership grants if the migration creates a table. |
-| Code in shared COLA modules | Merge normally; this is why section 2.3 keeps these paths stable. |
+- **Additive only:** SWE5001 PRs add modules, adapters, configuration, workflows and Terraform. They do not move, rename or rewrite shared business code or existing migrations (sections 2.3 and 2.6).
+- **Monolith stays the default:** `blocbuy.topology` defaults to `monolith`, and the SWE5006 EC2 deployment, its workflows and its Terraform are not changed by SWE5001 PRs.
+- **Shared rules still apply:** SWE5001 PRs follow the same backend constraints, contract-regeneration rule and evidence practice as SWE5006 work. The deviations in section 1.3 are recorded as ADRs before code relies on them.
+- **Progress tracking:** each SWE5001 PR cites its proposal WBS item (section 4) and records hours per member, so fortnightly progress reports can be built from the PR history.
 
 ### 3.7 Out of scope
 
@@ -358,7 +344,7 @@ These come from the first sync (2026-09-29) and apply to every later one.
 
 ## 4. Effort Estimates and Timeline
 
-The authoritative work breakdown is the proposal's Table 7 (50 person-days); the [progress log](log/README.md) records actual hours against the same WBS numbers. The mapping below shows where the plan sections land.
+The authoritative work breakdown is the proposal's Table 7 (50 person-days); PRs record actual hours against the same WBS numbers (section 3.6). The mapping below shows where the plan sections land.
 
 | WBS | Work item | Plan section |
 | --- | --- | --- |
@@ -370,16 +356,15 @@ The authoritative work breakdown is the proposal's Table 7 (50 person-days); the
 | 4.1–4.5 | Terraform stacks, modules, scaling, dashboard | 2.5, 3.3 |
 | 5.1–5.3 | CI, Terraform pipeline, ECS deploy and environment workflows | 3.4 |
 | 6.1–6.3 | k6, resilience drills, end-to-end regression | 3.2 |
-| n/a | `dev` syncs (about 0.5 person-days each, estimated) | 3.6 |
 
 | Window | Work |
 | --- | --- |
-| 28 Sep – 4 Oct | Proposal. First `dev` sync (done 2026-09-29). `foundation`, `network` and `ecs-cluster` modules. Run the monolith assembly (`topology=monolith`) on Fargate: strangler step 0. |
+| 28 Sep – 4 Oct | Proposal. ADRs for section 1.3. `foundation`, `network` and `ecs-cluster` modules. Run the monolith assembly (`topology=monolith`) on Fargate: strangler step 0. |
 | 5 – 11 Oct | `blocbuy-platform-starter` and the `blocbuy.topology` switch. Outbox, SNS and SQS. `notification-svc` assembly with event consumers. |
 | 12 – 18 Oct | `identity-svc` assembly (HTTP `UserAppService` adapter, shared session). Per-service databases and grants. ALB routing. Scaling policies. |
 | 19 – 22 Oct | k6 scripts, dashboard, self-healing and rollback drills, full rehearsal on 22 Oct. |
 | 23 Oct | `env-up` before noon; no destroy that day; presentation at 16:15. |
-| by 16 Nov | Per-service Flyway baselines once `dev` freezes. Report; final `terraform destroy`. |
+| by 16 Nov | Per-service Flyway baselines once SWE5006 feature work stops. Report; final `terraform destroy`. |
 
 ---
 
@@ -388,11 +373,11 @@ The authoritative work breakdown is the proposal's Table 7 (50 person-days); the
 | Risk or question | Mitigation or owner |
 | --- | --- |
 | The `env-up` apply fails on presentation day | Regular `env-cycle` runs; apply before noon on 23 Oct; a recorded fallback video of the scaling demo. |
-| The default-branch workflow stub needs SWE5006 team approval | Raise at the next stand-up; the fallback is running Terraform locally with the same scripts. |
+| SWE5001 changes on the shared trunk break SWE5006 work, its deployment or its evidence | Additive changes only; the monolith stays the default topology; CI builds the monolith and the SWE5006 required checks stay required; the EC2 stack and workflows are not touched (section 3.6). |
+| The SWE5006 team does not agree to SNS/SQS and the new modules on `dev` | Agree the section 1.3 ADRs at the next stand-up, before the first code PR. |
 | Synchronous `requireActive` inside the webhook transaction | 1–2 s timeout; failure takes the existing reject path; Stripe retries. |
-| A `dev` change adds a new cross-context call that the distributed topology cannot serve | ArchUnit rule and all-assembly CI build fail in the sync PR; the fix is a port plus HTTP adapter or an event, made in that PR. |
-| Syncs grow large while CI is paused | Weekly cadence; local `verify` and `check` recorded in each sync's log entry; restore CI before the first feature PR. |
-| When does SWE5006 feature work on `dev` stop? | Open. It gates the per-service Flyway baselines and any code relocation (sections 2.3 and 2.6). |
+| A SWE5006 change adds a new cross-context call that the distributed shape cannot serve | The ArchUnit rule and the all-assembly CI build fail in that PR; the fix is a port plus HTTP adapter or an event. |
+| When does SWE5006 feature work stop? | Open. It gates the per-service Flyway baselines and any code relocation (sections 2.3 and 2.6). |
 | AWS account budget or credits under the organisation SCP | Confirm with the account owner before the first `runtime` apply. |
-| Proposal reviewers challenge the three-service scope | The rationale is in [section 2.2](#22-decomposition-decision); record it as an ADR on this branch. |
-| Sonar configuration for the new services | Create separate project keys (`blocbuy-swe5001-*`). |
+| Proposal reviewers challenge the three-service scope | The rationale is in [section 2.2](#22-decomposition-decision); record it as a backend ADR. |
+| Coverage of the new modules pulls down the SonarCloud gate for SWE5006 PRs | New modules ship with tests in the same PR; the ≥ 80% new-code gate applies to them like any other code. |
