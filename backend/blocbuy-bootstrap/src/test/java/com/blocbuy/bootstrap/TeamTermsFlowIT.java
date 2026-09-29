@@ -42,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
@@ -461,7 +462,7 @@ class TeamTermsFlowIT {
         assertThat(operation.path("security").path(0).path("blocbuyToken").isArray()).isTrue();
         var request = spec.path("components").path("schemas").path("TeamTermsRequest");
         assertThat(request.path("required"))
-                .extracting(node -> node.asText())
+                .extracting(JsonNode::asText)
                 .contains(EXPECTED_VERSION, TARGET_SIZE, LIFETIME_SECONDS)
                 .doesNotContain(TEAM_PRICE_KEY);
         assertThat(request.path("properties").path(TARGET_SIZE).path("minimum").asInt())

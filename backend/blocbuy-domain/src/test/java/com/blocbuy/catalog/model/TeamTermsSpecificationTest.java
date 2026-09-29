@@ -52,7 +52,9 @@ class TeamTermsSpecificationTest {
                         TeamTermsSpecification.TARGET_SIZE,
                         TeamTermsSpecification.LIFETIME_SECONDS,
                         TeamTermsSpecification.TEAM_PRICE_AMOUNT);
-        assertThat(violations.get(TeamTermsSpecification.LIFETIME_SECONDS))
-                .isEqualTo("must be between 2400 and 86400 seconds");
+        assertThat(violations)
+                .containsEntry(
+                        TeamTermsSpecification.LIFETIME_SECONDS,
+                        "must be between 2400 and 86400 seconds");
     }
 }
