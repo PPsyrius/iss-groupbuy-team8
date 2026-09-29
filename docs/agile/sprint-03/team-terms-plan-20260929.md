@@ -10,6 +10,7 @@ Budget: 12 h (Sprint 3 plan). Target: merged to `dev` with the regenerated contr
 > - **`ProductTeamTerms.configured` factory** was dropped: `Product.configureTeamTerms` is the only entry point, so a second factory would be unused code.
 > - **`teamTerms` on `AdminListingResponse` is always present** (members null and `configured` false when never configured) instead of a nullable object, so clients need no null branch.
 > - **`startable` renamed to `configured` (amended in review of #242)**, both `ProductTeamTerms.configured()` and the `teamTerms.configured` response field: it only means both terms are set and in bounds. START also needs an on-sale listing with stock and a price policy in force for the next 2400 s. `startable` in D13 and §4 below reads as `configured`.
+> - **Response nulls (review of #242).** `teamTerms.targetSize` / `lifetimeSeconds` are marked nullable in the schema; `teamPrice` is omitted rather than null when no price was set, because the generator cannot express a nullable `$ref`.
 > - **One PR, not two.** D9's PR A / PR B split did not happen; the plan, contract, code and docs shipped together in #242 (see §7).
 > - **Extra test-schema change.** Two repository ITs that load a hand-picked migration list (`TeamPriceRepositoryIT`, `ProductSearchRepositoryIT`) now also load V14, because the shared product mapper selects the terms columns.
 > - **Test placement.** The controller checks (UT-A*) live in `TeamTermsFlowIT` (real Bean Validation and RBAC over MockMvc) rather than a separate mocked controller test.
@@ -114,7 +115,7 @@ Response 200, `Result<TeamTermsResponse>`:
 | 200 | `COMMON_200_000` | written; `version` is the new product version |
 | 400 | `COMMON_400_002` | Bean Validation failed, with `errors: [{field, message}]` |
 | 400 | `COMMON_400_001` | malformed JSON or path id |
-| 400 | `CATALOG_400_003` (new) | term rules failed, with `errors: {field: message}` naming each bad term field (`targetSize`, `lifetimeSeconds`) |
+| 400 | `CATALOG_400_003` (new) | term rules failed, with `errors: {field: message}` naming each bad term field (`targetSize`, `lifetimeSeconds`). Not reached over HTTP: Bean Validation repeats the bounds and answers `COMMON_400_002` first; it is the domain backstop for other callers |
 | 400 | `CATALOG_400_001` | bad `teamPrice`, no field errors: price not below the original price, `validFrom` not before `validUntil`, or `validUntil` already past (as on the standalone endpoint) |
 | 401 / 403 | `COMMON_401_001` / `COMMON_403_001` | no session / missing role or permission / disabled account |
 | 404 | `CATALOG_404_001` | product absent or deleted |
@@ -276,7 +277,7 @@ Documentation changed in #242:
 - **`docs/quality/nfr-register.md` NFR-29**: the writer, the IT that proves START succeeds after configuration, and V20 as the audit trail. Row status stays `implemented`.
 - **`ProductTeamTerms` Javadoc**: points at `Product.configureTeamTerms` and says configured terms are necessary but not sufficient for START.
 - **`V14__product_team_terms.sql`**: unchanged (applied migrations are never rewritten).
-- **Frontend hand-off**: in the #242 description (Follow-ups) for @limjiechao: use the returned `version` for the next write; the two error shapes (list on Bean Validation, map on `CATALOG_400_003`, none on `CATALOG_400_001`); the seeding order for a new listing.
+- **Frontend hand-off**: in the #242 description (Follow-ups) for @limjiechao: use the returned `version` for the next write; the error shapes (a field list on `COMMON_400_002` for bad terms, none on `CATALOG_400_001` for a bad price); `teamPrice` omitted when no price was set; the seeding order for a new listing.
 
 ## 8. Verification checklist (before PR B)
 

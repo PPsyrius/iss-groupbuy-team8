@@ -14,6 +14,7 @@ import com.blocbuy.common.model.PageResult;
 import com.blocbuy.common.web.DecimalStringDeserializer;
 import com.blocbuy.common.web.Result;
 import com.blocbuy.identity.model.RoleCode;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -186,8 +187,9 @@ public class AdminListingController {
                             + "started with. Optional teamPrice appends a policy revision in the same "
                             + "transaction and needs an on-sale listing; its expectedVersion is the latest "
                             + "policy version (0 for the first) and it must be below the original price. "
-                            + "Errors: 400 CATALOG_400_003 with a map naming each bad term field "
-                            + "(targetSize, lifetimeSeconds); 400 CATALOG_400_001 without field errors "
+                            + "Errors: 400 COMMON_400_002 with a list of field errors for a missing or "
+                            + "out-of-range expectedVersion, targetSize or lifetimeSeconds (Bean "
+                            + "Validation); 400 CATALOG_400_001 without field errors "
                             + "for a bad teamPrice (price not below the original price, validFrom not "
                             + "before validUntil, or validUntil already past); 409 CATALOG_409_001 when "
                             + "teamPrice is sent for a listing that is not on sale. Any rejection changes "
@@ -296,7 +298,7 @@ public class AdminListingController {
 
     /**
      * Full replacement of the team terms with an optional first-team price; the bounds repeat the
-     * domain's, which stays authoritative and reports cross-field violations.
+     * domain's, so out-of-range terms are rejected here, before the domain's authoritative check.
      */
     public record TeamTermsRequest(
             @NotNull @Min(0) Integer expectedVersion,
@@ -361,8 +363,8 @@ public class AdminListingController {
      * Stored team terms; members are null and configured is false for a never-configured listing.
      */
     public record TeamTermsView(
-            Integer targetSize,
-            Integer lifetimeSeconds,
+            @Schema(nullable = true) Integer targetSize,
+            @Schema(nullable = true) Integer lifetimeSeconds,
             @Schema(
                             description =
                                     "Both terms are set and inside the bounds. START can still fail:"
@@ -376,12 +378,17 @@ public class AdminListingController {
         }
     }
 
-    /** New product version to send next, the terms now in force and the policy appended, if any. */
+    /**
+     * New product version to send next, the terms now in force and the policy appended, if any. An
+     * absent policy is omitted, not null: the generator cannot express a nullable {@code $ref}.
+     */
     public record TeamTermsResponse(
             UUID productId,
             int version,
             TeamTermsView teamTerms,
-            TeamPriceController.PolicyResponse teamPrice) {
+            @Schema(description = "Omitted when the command set no team price")
+                    @JsonInclude(JsonInclude.Include.NON_NULL)
+                    TeamPriceController.PolicyResponse teamPrice) {
         static TeamTermsResponse from(TeamTermsAppService.TeamTermsResult result) {
             return new TeamTermsResponse(
                     result.product().id(),

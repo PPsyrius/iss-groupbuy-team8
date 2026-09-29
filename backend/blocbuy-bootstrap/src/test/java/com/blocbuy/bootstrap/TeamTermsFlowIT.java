@@ -3,6 +3,8 @@ package com.blocbuy.bootstrap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -144,7 +146,7 @@ class TeamTermsFlowIT {
                 .andExpect(jsonPath("$.data.teamTerms.targetSize").value(3))
                 .andExpect(jsonPath("$.data.teamTerms.lifetimeSeconds").value(7200))
                 .andExpect(jsonPath("$.data.teamTerms.configured").value(true))
-                .andExpect(jsonPath("$.data.teamPrice").doesNotExist());
+                .andExpect(jsonPath("$.data", not(hasKey(TEAM_PRICE_KEY))));
 
         assertThat(jdbc.queryForMap(READ_TERMS, id))
                 .containsEntry("team_target_size", 3)
@@ -516,7 +518,7 @@ class TeamTermsFlowIT {
         assertThat(request.path("properties").path(LIFETIME_SECONDS).path("maximum").asInt())
                 .isEqualTo(86_400);
         assertThat(operation.path("description").asText())
-                .contains("CATALOG_400_003", TEAM_PRICE_INVALID, "CATALOG_409_001");
+                .contains("COMMON_400_002", TEAM_PRICE_INVALID, "CATALOG_409_001");
         var listing = spec.path("components").path("schemas").path("AdminListingResponse");
         assertThat(listing.path("properties").has("teamTerms")).isTrue();
         var view = spec.path("components").path("schemas").path("TeamTermsView").path("properties");
@@ -524,6 +526,12 @@ class TeamTermsFlowIT {
         assertThat(view.has("startable")).isFalse();
         assertThat(view.path("configured").path("description").asText())
                 .contains("START can still fail");
+        assertThat(view.path(TARGET_SIZE).path("type"))
+                .extracting(JsonNode::asText)
+                .contains("null");
+        assertThat(view.path(LIFETIME_SECONDS).path("type"))
+                .extracting(JsonNode::asText)
+                .contains("null");
     }
 
     /** Competing commands use the real transactional proxy; only business conflicts convert. */

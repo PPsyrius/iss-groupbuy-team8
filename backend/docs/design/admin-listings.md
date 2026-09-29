@@ -216,7 +216,7 @@ All routes are under `/api/v1/admin/products`. Every operation requires the exis
 AND `catalog:product:write` permission, currently granted only to administrators by V6. Reads are
 also protected. The actor comes from Sa-Token, and application services recheck account activity.
 No new auth framework, token domain or permission migration is introduced.
-Generated OpenAPI declares the `blocbuyToken` header apiKey scheme on these seven operations only;
+Generated OpenAPI declares the `blocbuyToken` cookie apiKey scheme (cookie `blocbuy-token`) on these seven operations only;
 it does not add a global security requirement or change anonymous buyer browsing. UC9 schema
 patterns enforce complete strings (including rejecting trailing newlines) and positive money,
 so JSON Schema substring matching does not weaken the documented request constraints.
@@ -233,9 +233,9 @@ so JSON Schema substring matching does not weaken the documented request constra
 
 Team terms (US25): `PUT /{id}/team-terms` sets how many paid members a team needs and how long it stays open, and optionally appends a first-team price policy revision in the same transaction. It is a full replacement, allowed in every lifecycle state; `teamPrice` needs an on-sale listing and a value below the original price. `expectedVersion` is the product version (412 `CATALOG_412_002`), `teamPrice.expectedVersion` the latest policy version (412 `CATALOG_412_001`); a rejected price rolls the terms back.
 
-Errors: Bean Validation failures are 400 `COMMON_400_002` with a list of field errors. Bad terms are 400 `CATALOG_400_003` with a map naming each bad term field (`targetSize`, `lifetimeSeconds`). A bad `teamPrice` is 400 `CATALOG_400_001` with no field errors, exactly as on the standalone policy endpoint: a price not below the original price, `validFrom` not before `validUntil`, or `validUntil` already past. A `teamPrice` for a listing that is not on sale is 409 `CATALOG_409_001`. Term errors are reported before the price is checked.
+Errors: a missing or out-of-range `expectedVersion`, `targetSize` or `lifetimeSeconds` is 400 `COMMON_400_002` with a list of field errors, because the request repeats the domain bounds as Bean Validation. The domain's own check (`CATALOG_400_003`, a map naming each bad term field) stays as the backstop for non-HTTP callers and is not reached through this endpoint. A bad `teamPrice` is 400 `CATALOG_400_001` with no field errors, exactly as on the standalone policy endpoint: a price not below the original price, `validFrom` not before `validUntil`, or `validUntil` already past. A `teamPrice` for a listing that is not on sale is 409 `CATALOG_409_001`. Term errors are reported before the price is checked.
 
-The response returns the new product `version`, the `teamTerms` and the `teamPrice` appended, if any; the admin `GET` responses gain `teamTerms` (members null and `configured` false when never configured). `configured` only means both terms are set and in bounds: START can still fail on a configured listing that is not on sale, has no stock, or has no price policy in force for at least the next 2400 seconds. Each write appends a `log_product_team_terms` row. Decisions: [backend ADR 0001](../adr/0001-payment-business-integration.md), addendum 2026-09-29.
+The response returns the new product `version`, the `teamTerms` and the `teamPrice` appended, if any; the admin `GET` responses gain `teamTerms` (members null and `configured` false when never configured; the schema marks both members nullable). `teamPrice` is omitted, not null, when the command set no price. `configured` only means both terms are set and in bounds: START can still fail on a configured listing that is not on sale, has no stock, or has no price policy in force for at least the next 2400 seconds. Each write appends a `log_product_team_terms` row. Decisions: [backend ADR 0001](../adr/0001-payment-business-integration.md), addendum 2026-09-29.
 
 Creation example:
 
