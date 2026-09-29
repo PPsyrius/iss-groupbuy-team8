@@ -1,27 +1,12 @@
-# Backend CI/CD Runbook
+# CI/CD Pipeline Runbook
 
-This runbook describes the implemented backend quality, security, release, deployment and rollback workflows. AWS/EC2 setup is in the [existing EC2 operator guide](../deploy/backend-ec2-pipeline-operator-guide.md); gate rationale and thresholds are in [devsecops-pipeline-plan.md](devsecops-pipeline-plan.md) and [`quality-gates.md`](../quality/quality-gates.md).
+This runbook covers PR validation, `dev` analysis and delivery, releases, and rollback. See the [EC2 operator guide](../deploy/backend-ec2-pipeline-operator-guide.md) for AWS setup and the [pipeline plan](devsecops-pipeline-plan.md) and [quality gates](../quality/quality-gates.md) for rationale and thresholds.
 
 ## Pipeline shape
 
-Pull requests are the authoritative pre-merge validation path. The `dev` ruleset requires selected status checks to pass against the latest `dev` state before a pull request can merge. `merge_group` support remains in the workflows for forward compatibility if the repository later becomes eligible for GitHub Merge Queue.
-
-After an up-to-date pull request passes its required checks and lands on `dev`, backend-relevant pushes run tests, PostgreSQL ITs and JaCoCo in `sonar-backend` on the merged SHA, then refresh its main-branch baseline. Every `dev` push also runs Gitleaks to update the Security badge; the broader security gates stay on PRs, releases and weekly scans. Packaging, ECR publication and EC2 deployment run independently when enabled.
+PR checks against current `dev` are authoritative before merge. Code-relevant `dev` pushes refresh Sonar baselines on the merged SHA; every `dev` push runs Gitleaks, while packaging and deployment run separately when enabled. `merge_group` validation is configured for future Merge Queue use.
 
 ```text
-pull_request                    push/dev
-├── build-quality               ├── SonarCloud Backend (backend-relevant: tests + coverage → scan)
-├── contract-check              ├── Security (Gitleaks only)
-├── SonarCloud Backend          └── package merged JAR → assemble image → publish ECR → deploy EC2
-├── docker
-├── security
-└── typesafe-smoke (live, non-required)
-        ↑
- authoritative pre-merge validation
-
-merge_group
-└── same applicable validation when Merge Queue is available
-
 ci-backend.yml
 ├── build-quality     PR/tag: Spotless -> Checkstyle -> Maven verify -> reports + Sonar inputs + OpenAPI candidate
 ├── contract-check    OpenAPI candidate -> drift (Maven fallback for contracts-only changes)
@@ -33,8 +18,8 @@ ci-backend.yml
                        OIDC -> protected environment -> SSM -> health/auto rollback
 
 ci-frontend.yml
-├── frontend-check    generated client -> types -> lint/format -> tests -> build
-└── sonar-frontend    SonarCloud Frontend TypeScript scan + LCOV quality gate
+├── frontend-check    generated client -> types -> lint/format -> tests (+ PR LCOV) -> build
+└── sonar-frontend    reuse PR LCOV (generate fresh on dev push) -> SonarCloud scan + quality gate
 
 security.yml
 ├── dev push          Gitleaks only (updates the Security badge)
@@ -54,36 +39,43 @@ typesafe-smoke.yml
 rollback-backend.yml  manual, confirmed, reasoned, environment-controlled SSM rollback
 ```
 
-The security workflow also runs every Monday at 02:17 UTC to detect newly disclosed issues in unchanged dependencies.
+The security workflow also scans weekly on Monday at 02:17 UTC for newly disclosed issues in unchanged dependencies.
 
 ## Required PR checks
 
-Configure the `dev` ruleset to require pull requests, required status checks and branches to be up to date before merging.
+The `dev` ruleset requires PRs, up-to-date branches and these checks:
 
-The currently required checks are:
-
-- `build-quality`;
-- `sonar-backend`;
-- `docker`;
+- `build-quality`, `SonarCloud Backend` (`sonar-backend`), `docker`;
 - `gitleaks`;
-- `frontend-check`;
-- `sonar-frontend`.
+- `frontend-check`, `SonarCloud Frontend` (`sonar-frontend`).
 
-Other applicable CI/security jobs still run and report failures, but conditional jobs should not be made permanently required unless their presence is made unconditional.
+After successful change detection, unrelated required jobs skip before starting a runner; skipped *jobs* satisfy required checks, but a path-skipped *workflow* leaves them pending. `build-quality` and `frontend-check` fail if detection fails. Contracts-only PRs still run `contract-check` via its Maven fallback when `build-quality` skips. Confirm the check contexts on the first PR with these changes (CI verification pending).
 
-`typesafe-smoke` is deliberately not a required status check. It verifies compatibility with the live TypeSafe Jev service, while the application itself treats Jev as an optional enhancement and preserves deterministic SQL ordering if the service is unavailable.
+Other applicable jobs still run, but jobs absent on some PRs must not be required.
+
+`typesafe-smoke` is non-required because Jev is optional and search has deterministic SQL fallback.
 
 Recommended `dev` ruleset protections also include at least one approval, stale-approval dismissal, approval of the latest reviewable push, CODEOWNERS review where ownership is intentional, conversation resolution, deletion restriction and force-push blocking. Do not use `Restrict updates` merely to force PRs; the pull-request requirement establishes that path.
 
-`merge_group` remains configured in the workflows as dormant forward-compatible support. If the repository later becomes eligible for GitHub Merge Queue, the same applicable validation can run against the speculative integrated state without redesigning the workflows.
-
-`deploy-existing-ec2` and `publish-ecr-*` stay `push`-only. They must not be required pre-merge checks. Backend and frontend SonarCloud jobs also analyze relevant pushes to `dev` so both projects retain a current main-branch baseline; their PR results remain the required contexts.
+`deploy-existing-ec2` and `publish-ecr-*` are push-only, never required pre-merge checks. PR Sonar results are required; code-, test- and build-relevant `dev` pushes refresh the corresponding dashboard baseline.
 
 ### Post-merge delivery boundary
 
-Direct changes to `dev` are prevented by the repository ruleset: normal changes arrive through an up-to-date pull request with passing required checks. For backend-relevant pushes, `sonar-backend` generates classes and aggregate JaCoCo coverage using Maven `verify` (unit tests, PostgreSQL ITs and ArchUnit; Spotless, Checkstyle and SpotBugs skipped), then scans the exact merged SHA on the same runner. It refreshes the `dev` dashboard without gating `package-dev`, ECR publication or deployment. Failed analysis leaves the dashboard stale and the push workflow red even if delivery succeeds.
+For backend code-, test- or build-relevant `dev` pushes, `sonar-backend` runs Maven `verify` (unit tests, PostgreSQL ITs, ArchUnit and JaCoCo; style and SpotBugs skipped) and scans the same merged SHA. Sonar does not gate `package-dev` or deployment: a failed scan leaves the dashboard stale and the workflow red even if delivery succeeds.
 
 The separate delivery path still builds the deployable JAR from the merged source without rerunning Docker smoke, Trivy, contract compatibility, Gitleaks, CodeQL, configuration scans or the live TypeSafe smoke. It does not promote the PR-built Docker image across workflow runs. Production `v*` tag releases retain their full release validation path.
+
+### Frontend PR coverage reuse (2026-09-29)
+
+On relevant PRs and merge groups, `frontend-check` sets `CI_COVERAGE=true` for its existing `pnpm check` run and uploads `coverage/lcov.info` for one day. `sonar-frontend` waits for validation, verifies the report and scans without a second install/test run; fork and Dependabot PRs still report Sonar as not applicable. Local `pnpm check` has no coverage unless the flag is set. Relevant `dev` pushes generate fresh coverage on the merged SHA.
+
+### Frontend auxiliary-job cost (2026-09-29)
+
+Non-required `intent-stale` runs only when its manifest, package/lockfile, Node/pnpm settings, `frontend/AGENTS.md` or workflow changes. Both Playwright jobs install Chromium's headless shell with system dependencies instead of the unused full browser. Required gates and smoke cases remain unchanged; CI savings have not yet been measured.
+
+### Post-merge Sonar change detection (2026-09-29)
+
+On `dev`, backend Sonar reruns for source/tests/resources, Maven inputs or its workflow; frontend Sonar reruns for source, OpenAPI, dependencies, test/build/client-generation inputs or its workflow. Documentation-only and E2E-only merges skip coverage/analysis, leaving the dashboard at the last code-relevant SHA until the next scan. PR and release-tag gates, and the separate packaging/deployment filters, are unchanged.
 
 ## TypeSafe Jev validation
 

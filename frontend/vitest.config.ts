@@ -11,6 +11,8 @@ export default defineConfig({
     include: ["src/**/*.test.{ts,tsx}"],
     coverage: {
       provider: "v8",
+      enabled: process.env.CI_COVERAGE === "true",
+      reporter: ["text", "lcov"],
       include: ["src/**"],
       exclude: ["src/api/generated/**", "src/routeTree.gen.ts"],
     },
