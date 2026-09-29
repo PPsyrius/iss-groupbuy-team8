@@ -42,7 +42,7 @@ const stackDevServer: Plugin = {
   apply: (_config, { command, mode }) => command === "serve" && mode === "stack",
   configureServer(server) {
     server.printUrls = () => {
-      server.config.logger.info(`\n  ➜  Open ${stackFrontDoor}/ (not this port)\n`);
+      server.config.logger.info(`\n  ➜  Open ${stackFrontDoor}/\n`);
     };
     server.middlewares.use((req, res, next) => {
       if (req.headers.host?.endsWith(`:${server.config.server.port}`)) {
