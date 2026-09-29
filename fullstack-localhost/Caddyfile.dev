@@ -1,6 +1,13 @@
 # `pnpm stack:dev`: same origin as the production build, but everything except /api/* comes from the
-# Vite dev server on the host, including its hot module reloading WebSocket.
-:80 {
+# Vite dev server on the host, including its hot module reloading WebSocket. No CloudFront headers, as
+# with `pnpm dev`: the React refresh preamble Vite injects is an inline script the CSP would block.
+{
+	# Runs unprivileged, so nothing may write to disk: no admin API and no saved config.
+	admin off
+	persist_config off
+}
+
+:8080 {
 	handle /api/* {
 		reverse_proxy backend:8589
 	}

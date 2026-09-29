@@ -4,6 +4,7 @@
 !deployment/frontend/cloudfront/response-headers-policy.json
 !frontend/
 !fullstack-localhost/Caddyfile
+!fullstack-localhost/cloudfront-headers.mjs
 frontend/node_modules/
 frontend/dist/
 frontend/src/api/generated/
