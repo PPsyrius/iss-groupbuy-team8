@@ -159,10 +159,10 @@ Each task ends with `pnpm check` green, a screenshot or Playwright trace on the 
 
 **Interfaces produced:** `adminListingsOptions(q: {page; size; status?})`, `adminListingOptions(id)`, `adminPolicyOptions(id)`, `useCreateListing()`, `useReviseListing()`, `useChangeStatus()`, `useDeleteListing()`, `useConfigurePolicy()`; `ApiError.errors: unknown`; `fieldViolations(e): Record<string, string>`; `toCents(s): bigint | null`, `formatSgd(s): string` ("S$46.80"); `statusLabel(code)`.
 
-- [ ] Step 1: failing tests. `envelope.test.ts`: `ApiError` keeps `errors`. `client.test.ts`: a 400 body `{errors:[{field:"listing.originalPrice",message:"…"}]}` reaches `ApiError.errors`. `money.test.ts`: `toCents("12.8") === 1280n`, `"0.00"` → 0n, `"1.234"` → null; `formatSgd("89")` → `S$89.00`. `listing-status.test.ts`: the three codes plus an unknown code → "Unknown".
-- [ ] Step 2: extend `ApiError` with `errors` and have the interceptor copy `candidate.errors` as-is (still `unknown`). `fieldViolations` accepts only `{field: string, message: string}[]` and strips the `listing.` prefix.
-- [ ] Step 3: `admin-api.ts` wraps the generated names in `queryOptions({...pageOptions({query}), select: (r) => unwrapResult(r, {allowVoid:false})})` and similar; mutations run `unwrapResult` on success. This is the one file that knows the generic operationIds (BA-9).
-- [ ] Step 4: ADR 0009 addendum line: `ApiError.errors` carries the safe `FieldViolation[]`.
+- [x] Step 1: failing tests. `envelope.test.ts`: `ApiError` keeps `errors`. `client.test.ts`: a 400 body `{errors:[{field:"listing.originalPrice",message:"…"}]}` reaches `ApiError.errors`. `money.test.ts`: `toCents("12.8") === 1280n`, `"0.00"` → 0n, `"1.234"` → null; `formatSgd("89")` → `S$89.00`. `listing-status.test.ts`: the three codes plus an unknown code → "Unknown". (2026-09-29)
+- [x] Step 2: extend `ApiError` with `errors` and have the interceptor copy `candidate.errors` as-is (still `unknown`). `fieldViolations` accepts only `{field: string, message: string}[]` and strips the `listing.` prefix. (2026-09-29)
+- [x] Step 3: `admin-api.ts` wraps the generated names in `queryOptions({...pageOptions({query}), select: (r) => unwrapResult(r, {allowVoid:false})})` and similar; mutations run `unwrapResult` on success. This is the one file that knows the generic operationIds (BA-9). (2026-09-29)
+- [x] Step 4: ADR 0009 addendum line: `ApiError.errors` carries the safe `FieldViolation[]`. (2026-09-29)
 
 ### A1-02: Admin MSW
 

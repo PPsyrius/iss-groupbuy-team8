@@ -18,13 +18,38 @@ export class ApiError extends Error {
   readonly code: string;
   readonly status: number;
   readonly traceId: string | undefined;
-  constructor(args: { code: string; message: string; status?: number; traceId?: string }) {
+  // The envelope's `errors` as sent (a `FieldViolation[]` on a 400 validation failure); left
+  // `unknown` because only `fieldViolations` below reads it, and it checks every entry.
+  readonly errors: unknown;
+  constructor(args: {
+    code: string;
+    message: string;
+    status?: number;
+    traceId?: string;
+    errors?: unknown;
+  }) {
     super(args.message);
     this.name = "ApiError";
     this.code = args.code;
     this.status = args.status ?? 200;
     this.traceId = args.traceId;
+    this.errors = args.errors;
   }
+}
+
+// Field-level messages from a 400, keyed by field for a form's `setFieldMeta`. Only
+// `{field: string, message: string}` entries count; the admin write DTOs nest the content under
+// `listing`, so a `listing.` prefix is stripped to match the form's own field names.
+export function fieldViolations(error: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!(error instanceof ApiError) || !Array.isArray(error.errors)) return out;
+  for (const entry of error.errors as unknown[]) {
+    if (!entry || typeof entry !== "object") continue;
+    const { field, message } = entry as { field?: unknown; message?: unknown };
+    if (typeof field !== "string" || typeof message !== "string") continue;
+    out[field.replace(/^listing\./, "")] = message;
+  }
+  return out;
 }
 
 export function unwrapResult<T>(
@@ -37,6 +62,7 @@ export function unwrapResult<T>(
       code: envelope.code ?? "UNKNOWN",
       message: envelope.message ?? "Request failed",
       ...(envelope.traceId === undefined ? {} : { traceId: envelope.traceId }),
+      ...(envelope.errors === undefined ? {} : { errors: envelope.errors }),
     });
   }
   if (envelope.data === undefined) {
