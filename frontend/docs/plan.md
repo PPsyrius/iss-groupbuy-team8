@@ -821,7 +821,7 @@ and set `"lint": "oxlint --type-aware && eslint ."`. Remove `jsPlugins` from `.o
 - [x] Step 2: From `frontend/`, run interactively: `pnpm dlx @tanstack/intent@0.4.0 install`. Choose the `@tanstack/*` scope and `AGENTS.md` as the target. Then run `pnpm dlx @tanstack/intent@0.4.0 install --map`. Do NOT run `hooks install` (it would overwrite `.claude/settings.json`; https://tanstack.com/intent/latest/docs/cli/intent-hooks).
 - [x] Step 3: Verify discovery: `pnpm dlx @tanstack/intent@0.4.0 list --json > docs/tanstack-skills.json` and check `router-core` appears with 10 skills and `router-plugin` with 1. If `router-core` is missing (pnpm strict `node_modules` hides transitive packages from a top-level walk), run `pnpm add @tanstack/router-core@1.171.30` and repeat; record the outcome in ADR 0012 and update §11.
 - [x] Step 4: Write `.claude/settings.json` from §6.3 and the three scripts from §6.4; `chmod +x .claude/hooks/*.sh`.
-- [ ] Step 5: Smoke the hooks from a Claude Code session started at the repo root: edit `frontend/src/routes/index.tsx` (a badly formatted line) and confirm the PostToolUse hook reformats it; end the turn and confirm the Stop hook runs `tsc`; delete `frontend/src/api/generated` and start a new session to confirm the bootstrap hook regenerates it. Note results in the sprint log.
+- [x] ~~Step 5: Smoke the hooks from a Claude Code session started at the repo root: edit `frontend/src/routes/index.tsx` (a badly formatted line) and confirm the PostToolUse hook reformats it; end the turn and confirm the Stop hook runs `tsc`; delete `frontend/src/api/generated` and start a new session to confirm the bootstrap hook regenerates it. Note results in the sprint log.~~ Brought forward to `backlog.md` FB-21 on 2026-09-28.
 - [x] Step 6: `git add frontend/AGENTS.md frontend/CLAUDE.md frontend/docs/tanstack-skills.json frontend/package.json .claude/settings.json .claude/hooks && git commit -m "chore(agents): frontend AGENTS.md, Claude Code hooks scoped to frontend, Intent skills"`.
 
 ### T1-11: First component test
@@ -1238,7 +1238,7 @@ export const Route = createFileRoute('/auth/callback')({
 ### T2-11: CSP tightening
 
 - [x] Step 1 (2026-09-22/23): task-row curl green after A2; Playwright console probe on the deployed site found one violation per page (Google Fonts, fixed by self-hosting Inter, #158); the tightening candidates were probed against `vite preview`, which now mirrors the policy JSON (`vite.config.ts` `preview.headers`), on `/`, a listing with the sign-in sheet open, `/login`, `/account`, `/payments/return`, a 404.
-- [x] Step 2 (2026-09-23): JSON narrowed to `style-src 'self' 'unsafe-inline'; img-src 'self' https:; font-src 'self'` (`data:` dropped from both; `'unsafe-inline'` kept: React Aria's injected `<style>` and overlay positioning are refused without it). Re-apply on dev with `update-response-headers-policy` is owed to the user/account holder; the dev curl + `E2E_TARGET=dev pnpm e2e` verification runs after that.
+- [x] Step 2 (2026-09-23): JSON narrowed to `style-src 'self' 'unsafe-inline'; img-src 'self' https:; font-src 'self'` (`data:` dropped from both; `'unsafe-inline'` kept: React Aria's injected `<style>` and overlay positioning are refused without it). Re-apply on dev with `update-response-headers-policy` is owed to the user/account holder; the dev curl + `E2E_TARGET=dev pnpm e2e` verification runs after that. Re-applied and verified 2026-09-24; on 2026-09-28 `curl -sSI` on `/` shows `content-security-policy` and `strict-transport-security`.
 - [x] Step 3 (2026-09-23): final CSP in `docs/agile/sprint-02/log/2026-09-23.md` and ADR 0002 consequences.
 
 ---
@@ -1253,7 +1253,7 @@ export const Route = createFileRoute('/auth/callback')({
 
 - [x] Step 1 (2026-09-24): #124 merged via #149; `pnpm gen:api` yields `myOrdersOptions` and `OrderSummaryResponse` with no refund field; the wire `status` is the domain's lowercase code (`pending`, `confirmed`, `cancelled`).
 - [x] Step 2 (2026-09-24): `OrderHistory.tsx` lists `items` in the §4.4 row shape (thumb, title linked to the listing, total, seats and order number, paid line, status chip); `orders-search.ts` pages 10 per page with defaults stripped from the URL; the #137 card stays for `total === 0` as "No orders yet"; loading skeleton and a retry alert keep the header.
-- [ ] Step 3: record option B (no refund label on the list; the receipt keeps it) on #128 and in ADR 0014 consequences. ADR 0014 consequences updated 2026-09-24; the #128 comment is still owed.
+- [x] Step 3: record option B (no refund label on the list; the receipt keeps it) on #128 and in ADR 0014 consequences. ADR 0014 consequences updated 2026-09-24; the #128 comment is still owed. Verified 2026-09-28: @limjiechao posted the option-B decision on #128 on 2026-09-24 (13:54Z); #128 closed 2026-09-25.
 
 ### T3-03: My blocs rows and filter chips (UC8, #31)
 
@@ -2025,9 +2025,9 @@ In `AuthController.googleCallback`, after `StpUtil.login(result.userId())`, resp
 The callback is a top-level browser navigation. A CSR app cannot intercept a JSON response, so the user is left on a JSON page with a valid cookie and no way back. Blueprint-review decision D1 option (a).
 
 ### Acceptance
-- [ ] `curl -I` on the callback (with a valid code/state) shows `302` + `Set-Cookie: blocbuy-token=...; HttpOnly; SameSite=Lax` and no token in the body
-- [ ] `contracts/openapi.json` regenerated (`-Popenapi-export`); response for `googleCallback` becomes 302 with no schema; `contract-change-approved` label applied (backward-incompatible)
-- [ ] Optional follow-up: honour a `?redirect=` query on `/oauth2/google` carried through `state`, so the SPA can return to the deep link it came from
+- [x] `curl -I` on the callback (with a valid code/state) shows `302` + `Set-Cookie: blocbuy-token=...; HttpOnly; SameSite=Lax` and no token in the body (2026-09-28: closed in #94 after #89; no live curl with a valid code, but `AuthControllerTest.callbackSuccessOpensSessionAndRedirectsToFrontend` asserts the 302 to `/auth/callback` and the `blocbuy-token` cookie; `googleCallback` returns `ResponseEntity<Void>` built with no body, so no token can be in it; `application.yml` sets `http-only: true` and `same-site: Lax`; the user's Google login on dev landed on 2026-09-24, T2-06 step 1)
+- [x] `contracts/openapi.json` regenerated (`-Popenapi-export`); response for `googleCallback` becomes 302 with no schema; `contract-change-approved` label applied (backward-incompatible) (2026-09-28: the contract's `googleCallback` has only a `302` with `Set-Cookie` and `Location` headers and no schema; #89 carries `contract-change-approved`)
+- [x] ~~Optional follow-up: honour a `?redirect=` query on `/oauth2/google` carried through `state`, so the SPA can return to the deep link it came from~~ Not taken up (optional); dropped 2026-09-28. The SPA parks the return path in `sessionStorage` instead (`return-to.ts`, #120).
 
 ### Local workaround until merged
 Complete the Google flow once, land on the JSON page, type `/` in the address bar. The cookie is already set.
@@ -2047,8 +2047,8 @@ Change the springdoc `SecurityScheme` for `blocbuyToken` from `in: header` to `i
 The generated frontend client types `security` from the contract. Today it suggests a header the browser never sets; the real transport is the cookie. Sa-Token still accepts header and body, so no runtime change.
 
 ### Acceptance
-- [ ] `components.securitySchemes.blocbuyToken.in == "cookie"` in the committed contract
-- [ ] `ci-backend` `contract-check` green with the label
+- [x] `components.securitySchemes.blocbuyToken.in == "cookie"` in the committed contract (2026-09-28: closed in #95; `jq` on the committed contract prints `"cookie"`)
+- [x] `ci-backend` `contract-check` green with the label (2026-09-28: closed in #95; the closing comment reports the contract drift check green on `dev`)
 
 Gates plan tasks: T1-06 typing only (frontend ignores the scheme until then).
 ```
@@ -2062,8 +2062,8 @@ Gates plan tasks: T1-06 typing only (frontend ignores the scheme until then).
 `backend/blocbuy-bootstrap/src/main/resources/application-ec2.yml` overrides `sa-token.cookie.secure: false` with a comment saying the entry layer is pending. The dev entry layer (CloudFront → ALB → EC2) has been live since 2026-09-06; browsers reach the backend only over HTTPS. Set `secure: true` on the `ec2` profile (keep `false` on `local` and `docker`).
 
 ### Acceptance
-- [ ] `curl -sSI https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google | grep -i set-cookie` shows `Secure` on `blocbuy-oauth-state`
-- [ ] After a Google login on dev, the `blocbuy-token` cookie shows `Secure` in DevTools
+- [x] ~~`curl -sSI https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google | grep -i set-cookie` shows `Secure` on `blocbuy-oauth-state`~~ Brought forward to `backlog.md` FB-22 on 2026-09-28 (backend #96 still open).
+- [x] ~~After a Google login on dev, the `blocbuy-token` cookie shows `Secure` in DevTools~~ Brought forward to `backlog.md` FB-22 on 2026-09-28 (backend #96 still open).
 
 Gates plan tasks: T2-11 (CSP/HSTS policy makes sense with it), ADR 0002 consequences.
 ```
@@ -2081,7 +2081,7 @@ The header user area (#42) should show a name/avatar, not a UUID.
 
 ### Acceptance
 - [x] `GET /api/v1/auth/me` → `{ code, data: { userId, nickname, avatarUrl } }` (shipped shape; the draft asked for `loginId`)
-- [ ] Contract regenerated; `contract-check` green
+- [x] Contract regenerated; `contract-check` green (2026-09-28: closed in #97; the committed `MeResponse` has `userId`, `nickname`, `avatarUrl`)
 
 Gates plan tasks: T2-04 header rendering (landed; the header renders `nickname` with a `userId` fallback since 5fc8d23).
 ```
@@ -2095,8 +2095,8 @@ Gates plan tasks: T2-04 header rendering (landed; the header renders `nickname` 
 Confirm the dev EC2 environment sets `GOOGLE_REDIRECT_URI=https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google/callback` and that the Google Cloud console lists exactly that URI as an authorised redirect. Paste the (redacted) `Location` header from `GET /api/v1/auth/oauth2/google` on dev showing `redirect_uri=`.
 
 ### Acceptance
-- [ ] Redirect URI matches on both sides
-- [ ] A test login on dev returns to the callback without a `redirect_uri_mismatch` error
+- [x] Redirect URI matches on both sides (2026-09-28: closed in #98; its 2026-09-19 probe shows `redirect_uri` is the CloudFront callback and Google accepted it)
+- [x] A test login on dev returns to the callback without a `redirect_uri_mismatch` error (2026-09-28: closed in #98; the user's Google login on dev on 2026-09-24, T2-06 step 1)
 
 Gates plan tasks: T2-06 login e2e on dev.
 ```
@@ -2110,9 +2110,9 @@ Gates plan tasks: T2-06 login e2e on dev.
 Execute runbook §14 (`docs/deploy/dev-cloudfront-deployment.md`, added by PR-B): create `blocbuy-dev-spa-fallback` from `deployment/frontend/cloudfront/spa-fallback.js` and attach it as `viewer-request` on the DEFAULT behavior only.
 
 ### Acceptance
-- [ ] `curl -s -o /dev/null -w '%{http_code}' https://d1b3np88z657cp.cloudfront.net/products/00000000-0000-0000-0000-000000000000` → `200`
-- [ ] `/api/v1/products?page=1` still `200` JSON (no association on `/api/*`)
-- [ ] Runbook step marked executed with the date
+- [x] `curl -s -o /dev/null -w '%{http_code}' https://d1b3np88z657cp.cloudfront.net/products/00000000-0000-0000-0000-000000000000` → `200` (2026-09-28: closed in #99; live check `200`)
+- [x] `/api/v1/products?page=1` still `200` JSON (no association on `/api/*`) (2026-09-28: closed in #99; live check `200` JSON)
+- [x] Runbook step marked executed with the date (2026-09-28: closed in #99; `docs/deploy/dev-cloudfront-deployment.md` records the 2026-09-22 rollout of `blocbuy-dev-spa-fallback`)
 
 Gates plan tasks: T1-13 dev assertions, T2-02 deep links, T2-07 import.
 ```
@@ -2126,8 +2126,8 @@ Gates plan tasks: T1-13 dev assertions, T2-02 deep links, T2-07 import.
 Execute runbook §15: `create-response-headers-policy` from `deployment/frontend/cloudfront/response-headers-policy.json`, attach to both behaviors.
 
 ### Acceptance
-- [ ] `curl -sSI https://d1b3np88z657cp.cloudfront.net/ | grep -i strict-transport-security` present
-- [ ] `content-security-policy` present; frontend owner confirms no console CSP violations (plan T2-11)
+- [x] `curl -sSI https://d1b3np88z657cp.cloudfront.net/ | grep -i strict-transport-security` present (2026-09-28: closed in #100; live `max-age=31536000`)
+- [x] `content-security-policy` present; frontend owner confirms no console CSP violations (plan T2-11) (2026-09-28: closed in #100; CSP present live; the #100 Playwright console probe found zero violations on four pages after the fonts fix)
 
 Gates plan tasks: T2-11, T2-07 import.
 ```
@@ -2141,8 +2141,8 @@ Gates plan tasks: T2-11, T2-07 import.
 Execute runbook §16 with the examples in `deployment/frontend/iam/`: trust = `frontend-dev` environment subject; permissions = `s3:ListBucket` on the bucket, `s3:PutObject`/`s3:DeleteObject` on objects, `cloudfront:CreateInvalidation` on the dev distribution. Store the ARN as `AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV`.
 
 ### Acceptance
-- [ ] `gh variable get AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV` prints the ARN
-- [ ] IAM Access Analyzer shows no findings for the policy
+- [x] `gh variable get AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV` prints the ARN (2026-09-28: closed in #101; live check prints it)
+- [x] ~~IAM Access Analyzer shows no findings for the policy~~ Not verified: no Access Analyzer result was recorded; closed with #101 on 2026-09-28 review (the policy is the unchanged example with three identifiers filled in).
 
 Gates plan tasks: T1-14, `deploy-s3-dev` job.
 ```
@@ -2156,8 +2156,8 @@ Gates plan tasks: T1-14, `deploy-s3-dev` job.
 Execute runbook §17: environment `frontend-dev` restricted to branch `dev`; variables `FRONTEND_URL_DEV`, `FRONTEND_S3_BUCKET_DEV`, `FRONTEND_CLOUDFRONT_DIST_ID_DEV`, `AWS_FRONTEND_DEPLOY_ROLE_ARN_DEV`; `ENABLE_S3_DEPLOY=true` last.
 
 ### Acceptance
-- [ ] `gh api repos/PPsyrius/iss-groupbuy-team8/environments/frontend-dev` returns the environment
-- [ ] First `deploy-s3-dev` run green; `e2e-dev` green
+- [x] `gh api repos/PPsyrius/iss-groupbuy-team8/environments/frontend-dev` returns the environment (2026-09-28: closed in #102; live check returns it)
+- [x] First `deploy-s3-dev` run green; `e2e-dev` green (2026-09-28: closed in #102; `ci-frontend` run 36400324812 on `dev` has `deploy-s3-dev` and `e2e-dev` green)
 
 Gates plan tasks: T1-14.
 ```
