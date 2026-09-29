@@ -12,6 +12,7 @@ import { myTeamsQuery } from "@/features/blocs/my-teams-query";
 import { formatDeadlineShort, hasEnded, parseDeadline } from "@/features/catalog/deal-time";
 import { DealProgress, useNow } from "@/features/catalog/DealProgress";
 import { formatPrice, Price } from "@/features/catalog/Price";
+import { ProductGallery } from "@/features/catalog/ProductGallery";
 import { listingSearchSchema } from "@/features/catalog/products-search";
 import { QuoteSheet } from "@/features/payment/QuoteSheet";
 import { useCheckout } from "@/features/payment/use-checkout";
@@ -215,8 +216,8 @@ function ProductDetailPage() {
         </p>
       ) : null}
       <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[620px_minmax(0,1fr)] xl:gap-8">
-        <div className="flex flex-col gap-4 xl:gap-6">
-          <Gallery images={images} />
+        <div className="flex min-w-0 flex-col gap-4 xl:gap-6">
+          <ProductGallery key={productId} images={images} />
           <AboutCard product={p} category={category} className="hidden xl:flex" />
         </div>
         <div className="flex flex-col gap-4 xl:gap-6">
@@ -369,81 +370,6 @@ function CrumbRow({
         ) : null}
       </ol>
     </nav>
-  );
-}
-
-// An image URL that exists but fails to load is dropped, so the striped tile behind it shows
-// (CodeRabbit r4042898937); the `key` on the main shot resets the state when the shot changes.
-function GalleryImage({ src, className }: { src: string; className: string }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) return null;
-  return <img alt="" className={className} src={src} onError={() => setFailed(true)} />;
-}
-
-// Gallery interaction is undefined by the artboards; thumbnails (desktop) and dots (phone) pick
-// the shown image. No images: the striped fallback tile, no caption.
-function Gallery({ images }: { images: string[] }) {
-  const [index, setIndex] = useState(0);
-  const current = images[Math.min(index, Math.max(0, images.length - 1))];
-  const tile =
-    "bg-[repeating-linear-gradient(135deg,var(--surface-secondary)_0_10px,var(--surface-tertiary)_10px_20px)]";
-  return (
-    <div className="flex flex-col gap-3">
-      <div
-        className={
-          "relative -mx-4 h-[280px] overflow-hidden xl:mx-0 xl:h-[420px] xl:rounded-lg " + tile
-        }
-      >
-        {current ? (
-          <GalleryImage key={current} src={current} className="h-full w-full object-cover" />
-        ) : null}
-        {images.length > 0 ? (
-          <>
-            <span className="absolute bottom-3 left-3 rounded-md bg-white px-2 py-1 font-mono text-xs">
-              product shot {index + 1} of {images.length}
-            </span>
-            {images.length > 1 ? (
-              <ul className="absolute right-3 bottom-3 flex gap-1.5 xl:hidden">
-                {images.map((src, i) => (
-                  <li key={src}>
-                    <button
-                      type="button"
-                      aria-label={`Show product shot ${i + 1}`}
-                      aria-pressed={i === index}
-                      onClick={() => setIndex(i)}
-                      className={
-                        "block h-2 w-2 rounded-full" +
-                        (i === index ? " bg-foreground" : " bg-white")
-                      }
-                    />
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </>
-        ) : null}
-      </div>
-      {images.length > 1 ? (
-        <ul className="hidden gap-3 xl:flex">
-          {images.map((src, i) => (
-            <li key={src}>
-              <button
-                type="button"
-                aria-label={`Show product shot ${i + 1}`}
-                aria-pressed={i === index}
-                onClick={() => setIndex(i)}
-                className={
-                  "h-[84px] w-[112px] overflow-hidden rounded-lg border-2 " +
-                  (i === index ? "border-foreground" : "border-transparent")
-                }
-              >
-                <GalleryImage src={src} className="h-full w-full object-cover" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
   );
 }
 

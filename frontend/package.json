@@ -33,7 +33,7 @@
     "valibot": "1.5.0"
   },
   "devDependencies": {
-    "@babel/core": "8.0.5",
+    "@babel/core": "8.0.6",
     "@hey-api/openapi-ts": "0.0.0-next-20260824173136",
     "@playwright/test": "1.63.0",
     "@rolldown/plugin-babel": "0.2.4",
@@ -47,7 +47,7 @@
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
     "@testing-library/user-event": "14.6.7",
-    "@types/node": "26.6.1",
+    "@types/node": "26.6.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.1",
