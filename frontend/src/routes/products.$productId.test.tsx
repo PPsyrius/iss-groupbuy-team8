@@ -1,9 +1,10 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 
 import { OK_CODE } from "@/api/envelope";
+import { getListingQueryKey } from "@/api/generated/@tanstack/react-query.gen";
 import type { ProductDetailResponse } from "@/api/generated/types.gen";
 import { server } from "@/test/msw";
 import { renderRoute, serveAnonymous, serveSignedIn } from "@/test/render-route";
@@ -151,6 +152,53 @@ describe("/products/$productId open-bloc header", () => {
 });
 
 describe("/products/$productId gallery", () => {
+  it("keeps the selected image and caption consistent when the image list shrinks", async () => {
+    const images = [
+      "https://example.test/rice-1.jpg",
+      "https://example.test/rice-2.jpg",
+      "https://example.test/rice-3.jpg",
+    ];
+    serveAnonymous();
+    serveListing(listing({ images }));
+    const { container, queryClient } = renderRoute(`/products/${knownId}`);
+    await screen.findByText("product shot 1 of 3");
+    await userEvent.click(screen.getAllByRole("button", { name: "Show product shot 3" })[0]!);
+    expect(screen.getByText("product shot 3 of 3")).toBeInTheDocument();
+
+    act(() => {
+      queryClient.setQueryData(getListingQueryKey({ path: { id: knownId } }), {
+        code: OK_CODE,
+        message: "ok",
+        data: listing({ images: images.slice(0, 2) }),
+      });
+    });
+
+    expect(await screen.findByText("product shot 1 of 2")).toBeInTheDocument();
+    expect(container.querySelector("main img")).toHaveAttribute("src", images[0]);
+    for (const control of screen.getAllByRole("button", { name: "Show product shot 1" })) {
+      expect(control).toHaveAttribute("aria-pressed", "true");
+    }
+  });
+
+  it("starts at the first shot when navigating to another product", async () => {
+    const images = ["https://example.test/rice-1.jpg", "https://example.test/rice-2.jpg"];
+    serveAnonymous();
+    serveListing(listing({ images }));
+    const { container, router } = renderRoute(`/products/${knownId}`);
+    await screen.findByText("product shot 1 of 2");
+    await userEvent.click(screen.getAllByRole("button", { name: "Show product shot 2" })[0]!);
+    expect(screen.getByText("product shot 2 of 2")).toBeInTheDocument();
+
+    serveListing(listing({ id: unknownId, title: "Another rice listing", images }));
+    await act(() =>
+      router.navigate({ to: "/products/$productId", params: { productId: unknownId } }),
+    );
+
+    await screen.findByRole("heading", { level: 1, name: "Another rice listing" });
+    expect(screen.getByText("product shot 1 of 2")).toBeInTheDocument();
+    expect(container.querySelector("main img")).toHaveAttribute("src", images[0]);
+  });
+
   it("drops an image that fails to load so the fallback tile shows", async () => {
     const src = "https://example.test/rice.jpg";
     serveAnonymous();
