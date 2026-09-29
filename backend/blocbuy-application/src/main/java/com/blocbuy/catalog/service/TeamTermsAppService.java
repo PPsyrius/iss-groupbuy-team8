@@ -5,9 +5,9 @@ import com.blocbuy.catalog.pricing.TeamPricePolicy;
 import java.util.UUID;
 
 /**
- * UC9-ext use case: make a listing startable by setting its team terms and, in the same command,
- * optionally its first-team price. The caller authenticates the administrator and passes only a
- * trusted actor id.
+ * UC9-ext use case: configure a listing for group-buy by setting its team terms and, in the same
+ * command, optionally its first-team price. The caller authenticates the administrator and passes
+ * only a trusted actor id.
  */
 public interface TeamTermsAppService {
 

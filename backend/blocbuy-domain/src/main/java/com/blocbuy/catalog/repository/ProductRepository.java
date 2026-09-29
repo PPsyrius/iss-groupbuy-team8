@@ -58,7 +58,7 @@ public interface ProductRepository {
     /**
      * Team terms of an active product: how big a team started on it must be and how long it stays
      * open. Empty when the product itself is gone; a present value may still be {@link
-     * ProductTeamTerms#startable() not startable} when the columns were never configured.
+     * ProductTeamTerms#configured() not configured} when the columns were never configured.
      */
     Optional<ProductTeamTerms> findTeamTerms(UUID id);
 

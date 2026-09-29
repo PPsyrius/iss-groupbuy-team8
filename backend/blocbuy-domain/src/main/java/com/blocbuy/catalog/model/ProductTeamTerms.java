@@ -8,7 +8,9 @@ import java.util.UUID;
  * only these two facts and the listing itself never changes when they do.
  *
  * <p>Both are nullable in {@code biz_product}: a product that has never been configured for
- * group-buy simply cannot start a team, which {@link #startable()} answers. The bounds repeat the
+ * group-buy simply cannot start a team, which {@link #configured()} answers. Configured terms are
+ * necessary for START but not sufficient: START also needs an on-sale listing with stock, and a
+ * team price policy in force that stays in force for the whole quote window. The bounds repeat the
  * ones documented in {@code V14__product_team_terms.sql} — the database carries no CHECK, so this
  * is where they are enforced (pgsql-ddl conventions). An administrator writes them through {@link
  * Product#configureTeamTerms}, which checks them with {@link TeamTermsSpecification}.
@@ -35,8 +37,11 @@ public record ProductTeamTerms(UUID productId, Integer targetSize, Integer lifet
         return new ProductTeamTerms(productId, null, null);
     }
 
-    /** True when both terms are present and inside the documented bounds. */
-    public boolean startable() {
+    /**
+     * True when both terms are present and inside the documented bounds. This does not mean START
+     * will succeed; see the class comment for what else it checks.
+     */
+    public boolean configured() {
         return targetSize != null
                 && lifetimeSeconds != null
                 && targetSize >= MIN_TARGET_SIZE

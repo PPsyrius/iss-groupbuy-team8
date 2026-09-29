@@ -46,7 +46,7 @@ class ProductTeamTermsPersistenceTest {
                             assertThat(terms.productId()).isEqualTo(productId);
                             assertThat(terms.targetSize()).isEqualTo(3);
                             assertThat(terms.lifetimeSeconds()).isEqualTo(7200);
-                            assertThat(terms.startable()).isTrue();
+                            assertThat(terms.configured()).isTrue();
                         });
     }
 
@@ -55,7 +55,7 @@ class ProductTeamTermsPersistenceTest {
         when(mapper.selectTeamTerms(productId)).thenReturn(row(null, null));
 
         assertThat(repository.findTeamTerms(productId))
-                .hasValueSatisfying(terms -> assertThat(terms.startable()).isFalse());
+                .hasValueSatisfying(terms -> assertThat(terms.configured()).isFalse());
     }
 
     @Test

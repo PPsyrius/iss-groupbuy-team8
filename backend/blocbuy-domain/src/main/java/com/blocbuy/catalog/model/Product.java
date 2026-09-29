@@ -260,19 +260,17 @@ public final class Product {
     }
 
     /**
-     * Set how many paid members a team started on this product needs and how long it stays open,
-     * validated together with the optional team price as one rule set. Allowed in every lifecycle
-     * state: the terms are read only when a team starts and frozen into it, so a running team never
-     * changes. Returns the next revision; the caller has already checked the version.
+     * Set how many paid members a team started on this product needs and how long it stays open.
+     * Allowed in every lifecycle state: the terms are read only when a team starts and frozen into
+     * it, so a running team never changes. Returns the next revision; the caller has already
+     * checked the version. A team price set in the same command is checked by {@code
+     * TeamPricePolicy}, not here.
      *
-     * @param teamPrice the team price amount being set in the same command, or null when the price
-     *     policy is left alone
-     * @throws BizException {@code CATALOG_400_003} carrying every violated field
+     * @throws BizException {@code CATALOG_400_003} carrying each violated term field
      */
-    public Product configureTeamTerms(int targetSize, int lifetimeSeconds, BigDecimal teamPrice) {
+    public Product configureTeamTerms(int targetSize, int lifetimeSeconds) {
         Map<String, Object> violations =
-                TeamTermsSpecification.violations(
-                        targetSize, lifetimeSeconds, teamPrice, originalPrice);
+                TeamTermsSpecification.violations(targetSize, lifetimeSeconds);
         if (!violations.isEmpty()) {
             throw new BizException(CatalogErrorCode.TEAM_TERMS_INVALID, violations);
         }

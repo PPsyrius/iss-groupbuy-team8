@@ -186,8 +186,13 @@ public class AdminListingController {
                             + "started with. Optional teamPrice appends a policy revision in the same "
                             + "transaction and needs an on-sale listing; its expectedVersion is the latest "
                             + "policy version (0 for the first) and it must be below the original price. "
-                            + "Any rejection changes nothing. Not replay-idempotent: a replay carries a "
-                            + "stale version. Each write is audited.")
+                            + "Errors: 400 CATALOG_400_003 with a map naming each bad term field "
+                            + "(targetSize, lifetimeSeconds); 400 CATALOG_400_001 without field errors "
+                            + "for a bad teamPrice (price not below the original price, validFrom not "
+                            + "before validUntil, or validUntil already past); 409 CATALOG_409_001 when "
+                            + "teamPrice is sent for a listing that is not on sale. Any rejection changes "
+                            + "nothing. Not replay-idempotent: a replay carries a stale version. Each "
+                            + "write is audited.")
     public Result<TeamTermsResponse> configureTeamTerms(
             @PathVariable UUID productId, @Valid @RequestBody TeamTermsRequest request) {
         UUID actor = administrator();
@@ -353,12 +358,21 @@ public class AdminListingController {
     }
 
     /**
-     * Stored team terms; members are null and startable is false for a never-configured listing.
+     * Stored team terms; members are null and configured is false for a never-configured listing.
      */
-    public record TeamTermsView(Integer targetSize, Integer lifetimeSeconds, boolean startable) {
+    public record TeamTermsView(
+            Integer targetSize,
+            Integer lifetimeSeconds,
+            @Schema(
+                            description =
+                                    "Both terms are set and inside the bounds. START can still fail:"
+                                            + " it also needs an on-sale listing with stock and a"
+                                            + " team price policy in force for at least the next"
+                                            + " 2400 seconds")
+                    boolean configured) {
         static TeamTermsView from(ProductTeamTerms terms) {
             return new TeamTermsView(
-                    terms.targetSize(), terms.lifetimeSeconds(), terms.startable());
+                    terms.targetSize(), terms.lifetimeSeconds(), terms.configured());
         }
     }
 

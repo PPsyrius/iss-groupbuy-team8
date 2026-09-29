@@ -141,8 +141,8 @@ class CatalogPurchaseSupportImplTest {
 
     @Test
     void theTeamTermBoundsAreInclusiveAtBothEnds() {
-        assertThat(terms(2, 2400).startable()).isTrue();
-        assertThat(terms(2, 86_400).startable()).isTrue();
+        assertThat(terms(2, 2400).configured()).isTrue();
+        assertThat(terms(2, 86_400).configured()).isTrue();
     }
 
     @Test

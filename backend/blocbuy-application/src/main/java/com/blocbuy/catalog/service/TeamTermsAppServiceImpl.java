@@ -37,13 +37,10 @@ public class TeamTermsAppServiceImpl implements TeamTermsAppService {
 
         ConfigurePolicy price = command.teamPrice();
         Product revised =
-                current.configureTeamTerms(
-                        command.targetSize(),
-                        command.lifetimeSeconds(),
-                        price == null ? null : price.amount());
+                current.configureTeamTerms(command.targetSize(), command.lifetimeSeconds());
         products.updateTeamTerms(revised, command.expectedVersion(), actorId);
 
-        // Joins this transaction; a rejected policy rolls the terms back with it.
+        // Joins this transaction and owns every price rule; a rejected policy rolls the terms back.
         TeamPricePolicy policy = price == null ? null : prices.configure(productId, actorId, price);
         products.appendTeamTermsLog(
                 new TeamTermsChange(

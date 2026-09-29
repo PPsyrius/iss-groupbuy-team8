@@ -76,7 +76,7 @@ class TeamTermsAppServiceImplTest {
     /** The audit row records the terms before and after, the new revision and the actor. */
     @Test
     void auditRowCapturesBeforeAndAfter() {
-        Product configured = product(0).configureTeamTerms(2, 2400, null);
+        Product configured = product(0).configureTeamTerms(2, 2400);
         when(products.lockById(ID)).thenReturn(Optional.of(configured));
 
         service.configure(ID, new ConfigureTerms(1, 5, 3600, null), ACTOR);
@@ -163,7 +163,7 @@ class TeamTermsAppServiceImplTest {
         verify(products, never()).updateTeamTerms(any(), anyInt(), any());
     }
 
-    /** Rule violations write nothing and name every field. */
+    /** Term violations write nothing, name each bad term field and never reach the price rules. */
     @Test
     void invalidTermsAreRejectedWithFieldsAndNothingIsWritten() {
         when(products.lockById(ID)).thenReturn(Optional.of(product(0)));
@@ -176,8 +176,7 @@ class TeamTermsAppServiceImplTest {
                             assertThat(ex.errorCode())
                                     .isEqualTo(CatalogErrorCode.TEAM_TERMS_INVALID);
                             assertThat(ex.details())
-                                    .containsOnlyKeys(
-                                            "targetSize", "lifetimeSeconds", "teamPrice.amount");
+                                    .containsOnlyKeys("targetSize", "lifetimeSeconds");
                         });
         verify(products, never()).updateTeamTerms(any(), anyInt(), any());
         verify(products, never()).appendTeamTermsLog(any());

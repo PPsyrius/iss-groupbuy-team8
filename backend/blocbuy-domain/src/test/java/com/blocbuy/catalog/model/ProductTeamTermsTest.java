@@ -14,23 +14,23 @@ class ProductTeamTermsTest {
     private static final UUID ACTOR = UUID.randomUUID();
 
     @Test
-    void unsetTermsAreNeverStartable() {
+    void unsetTermsAreNeverConfigured() {
         ProductTeamTerms unset = ProductTeamTerms.unset(ID);
         assertThat(unset.productId()).isEqualTo(ID);
         assertThat(unset.targetSize()).isNull();
         assertThat(unset.lifetimeSeconds()).isNull();
-        assertThat(unset.startable()).isFalse();
+        assertThat(unset.configured()).isFalse();
     }
 
     @Test
-    void startableNeedsBothTermsInsideTheBounds() {
-        assertThat(new ProductTeamTerms(ID, 2, 2400).startable()).isTrue();
-        assertThat(new ProductTeamTerms(ID, 2, 86_400).startable()).isTrue();
-        assertThat(new ProductTeamTerms(ID, 1, 2400).startable()).isFalse();
-        assertThat(new ProductTeamTerms(ID, 2, 2399).startable()).isFalse();
-        assertThat(new ProductTeamTerms(ID, 2, 86_401).startable()).isFalse();
-        assertThat(new ProductTeamTerms(ID, null, 2400).startable()).isFalse();
-        assertThat(new ProductTeamTerms(ID, 2, null).startable()).isFalse();
+    void configuredNeedsBothTermsInsideTheBounds() {
+        assertThat(new ProductTeamTerms(ID, 2, 2400).configured()).isTrue();
+        assertThat(new ProductTeamTerms(ID, 2, 86_400).configured()).isTrue();
+        assertThat(new ProductTeamTerms(ID, 1, 2400).configured()).isFalse();
+        assertThat(new ProductTeamTerms(ID, 2, 2399).configured()).isFalse();
+        assertThat(new ProductTeamTerms(ID, 2, 86_401).configured()).isFalse();
+        assertThat(new ProductTeamTerms(ID, null, 2400).configured()).isFalse();
+        assertThat(new ProductTeamTerms(ID, 2, null).configured()).isFalse();
     }
 
     @Test

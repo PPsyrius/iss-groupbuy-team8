@@ -608,7 +608,7 @@ class StripeLocalIntegrationTest {
                                         java.time.Instant.now().plusSeconds(86_400),
                                         0)),
                         admin);
-        assertThat(configured.product().teamTerms().startable()).isTrue();
+        assertThat(configured.product().teamTerms().configured()).isTrue();
 
         UUID intent = browser.createIntent(user, "START", bare, null);
         assertThat(

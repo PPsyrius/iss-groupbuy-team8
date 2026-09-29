@@ -72,6 +72,8 @@ class TeamTermsFlowIT {
     private static final String TEAM_PRICE_KEY = "teamPrice";
     private static final String TEAM_PRICE_AMOUNT = "teamPrice.amount";
     private static final String CODE = "$.code";
+    private static final String ERRORS = "$.errors";
+    private static final String TEAM_PRICE_INVALID = "CATALOG_400_001";
     private static final String READ_TERMS =
             "SELECT team_target_size, team_lifetime_seconds, version FROM biz_product WHERE id = ?";
 
@@ -141,7 +143,7 @@ class TeamTermsFlowIT {
                 .andExpect(jsonPath("$.data.version").value(1))
                 .andExpect(jsonPath("$.data.teamTerms.targetSize").value(3))
                 .andExpect(jsonPath("$.data.teamTerms.lifetimeSeconds").value(7200))
-                .andExpect(jsonPath("$.data.teamTerms.startable").value(true))
+                .andExpect(jsonPath("$.data.teamTerms.configured").value(true))
                 .andExpect(jsonPath("$.data.teamPrice").doesNotExist());
 
         assertThat(jdbc.queryForMap(READ_TERMS, id))
@@ -169,15 +171,15 @@ class TeamTermsFlowIT {
         mvc.perform(get(BASE + "/" + id).header(HEADER, adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.teamTerms.targetSize").value(3))
-                .andExpect(jsonPath("$.data.teamTerms.startable").value(true));
+                .andExpect(jsonPath("$.data.teamTerms.configured").value(true));
         mvc.perform(get("/api/v1/products/" + id)).andExpect(status().isNotFound());
     }
 
     /**
-     * A never-configured listing reads as not startable, and the page carries terms without N+1.
+     * A never-configured listing reads as not configured, and the page carries terms without N+1.
      */
     @Test
-    void unconfiguredListingReadsAsNotStartableAndPagesCarryTerms() throws Exception {
+    void unconfiguredListingReadsAsNotConfiguredAndPagesCarryTerms() throws Exception {
         UUID bare = product(DRAFT);
         UUID configured = product(DRAFT);
         write(configured, adminToken, body(0, 2, 2400, null)).andExpect(status().isOk());
@@ -185,14 +187,14 @@ class TeamTermsFlowIT {
         mvc.perform(get(BASE + "/" + bare).header(HEADER, adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.teamTerms.targetSize").doesNotExist())
-                .andExpect(jsonPath("$.data.teamTerms.startable").value(false));
+                .andExpect(jsonPath("$.data.teamTerms.configured").value(false));
         mvc.perform(get(BASE).header(HEADER, adminToken).param("size", "100"))
                 .andExpect(status().isOk())
                 .andExpect(
-                        jsonPath("$.data.items[?(@.id=='" + configured + "')].teamTerms.startable")
+                        jsonPath("$.data.items[?(@.id=='" + configured + "')].teamTerms.configured")
                                 .value(hasItem(true)))
                 .andExpect(
-                        jsonPath("$.data.items[?(@.id=='" + bare + "')].teamTerms.startable")
+                        jsonPath("$.data.items[?(@.id=='" + bare + "')].teamTerms.configured")
                                 .value(hasItem(false)));
     }
 
@@ -298,17 +300,59 @@ class TeamTermsFlowIT {
         assertThat(logRows(id)).isZero();
     }
 
-    /** The cross-field price rule is the domain's: Bean Validation cannot see the listing price. */
+    /**
+     * Price rules live only in the team price policy, so a bad price gets the standalone endpoint's
+     * CATALOG_400_001 without field errors, and the terms roll back with it.
+     */
     @Test
-    void teamPriceNotBelowTheOriginalPriceIsRejectedByTheDomain() throws Exception {
+    void teamPriceNotBelowTheOriginalPriceIsRejectedByThePolicy() throws Exception {
         UUID id = product(ON_SALE);
 
         write(id, adminToken, body(0, 3, 7200, price(ORIGINAL_PRICE, 0)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath(CODE).value("CATALOG_400_003"))
-                .andExpect(jsonPath("$.errors['teamPrice.amount']").exists())
-                .andExpect(jsonPath("$.errors.targetSize").doesNotExist());
-        assertThat(jdbc.queryForMap(READ_TERMS, id)).containsEntry("version", 0);
+                .andExpect(jsonPath(CODE).value(TEAM_PRICE_INVALID))
+                .andExpect(jsonPath(ERRORS).doesNotExist());
+        assertNothingWritten(id);
+    }
+
+    /** A price window the policy cannot hold is CATALOG_400_001 and writes nothing. */
+    @Test
+    void badTeamPriceWindowIsRejectedWithoutFieldErrors() throws Exception {
+        UUID id = product(ON_SALE);
+        Instant now = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+
+        write(
+                        id,
+                        adminToken,
+                        body(
+                                0,
+                                3,
+                                7200,
+                                price(
+                                        TEAM_PRICE,
+                                        now.minus(2, ChronoUnit.DAYS),
+                                        now.minus(1, ChronoUnit.DAYS))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath(CODE).value(TEAM_PRICE_INVALID))
+                .andExpect(jsonPath(ERRORS).doesNotExist());
+        write(
+                        id,
+                        adminToken,
+                        body(
+                                0,
+                                3,
+                                7200,
+                                price(TEAM_PRICE, now.plusSeconds(3600), now.plusSeconds(3600))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath(CODE).value(TEAM_PRICE_INVALID))
+                .andExpect(jsonPath(ERRORS).doesNotExist());
+        assertNothingWritten(id);
+    }
+
+    private void assertNothingWritten(UUID id) {
+        assertThat(jdbc.queryForMap(READ_TERMS, id))
+                .containsEntry("team_target_size", null)
+                .containsEntry("version", 0);
         assertThat(logRows(id)).isZero();
         assertThat(policyCount(id)).isZero();
     }
@@ -471,8 +515,15 @@ class TeamTermsFlowIT {
                 .isEqualTo(2400);
         assertThat(request.path("properties").path(LIFETIME_SECONDS).path("maximum").asInt())
                 .isEqualTo(86_400);
+        assertThat(operation.path("description").asText())
+                .contains("CATALOG_400_003", TEAM_PRICE_INVALID, "CATALOG_409_001");
         var listing = spec.path("components").path("schemas").path("AdminListingResponse");
         assertThat(listing.path("properties").has("teamTerms")).isTrue();
+        var view = spec.path("components").path("schemas").path("TeamTermsView").path("properties");
+        assertThat(view.has("configured")).isTrue();
+        assertThat(view.has("startable")).isFalse();
+        assertThat(view.path("configured").path("description").asText())
+                .contains("START can still fail");
     }
 
     /** Competing commands use the real transactional proxy; only business conflicts convert. */
@@ -510,12 +561,20 @@ class TeamTermsFlowIT {
 
     private static Map<String, Object> price(String amount, int policyVersion) {
         Instant now = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+        Map<String, Object> price =
+                price(amount, now.minusSeconds(60), now.plus(30, ChronoUnit.DAYS));
+        price.put(EXPECTED_VERSION, policyVersion);
+        return price;
+    }
+
+    /** A first policy (expected version 0) over the given window. */
+    private static Map<String, Object> price(String amount, Instant validFrom, Instant validUntil) {
         Map<String, Object> price = new LinkedHashMap<>();
         price.put("amount", amount);
         price.put("currency", "sgd");
-        price.put("validFrom", now.minusSeconds(60).toString());
-        price.put("validUntil", now.plus(30, ChronoUnit.DAYS).toString());
-        price.put(EXPECTED_VERSION, policyVersion);
+        price.put("validFrom", validFrom.toString());
+        price.put("validUntil", validUntil.toString());
+        price.put(EXPECTED_VERSION, 0);
         return price;
     }
 

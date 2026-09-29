@@ -101,23 +101,22 @@ class ProductLifecycleTest {
     void teamTermsAreConfigurableInEveryStateAsANewRevision() {
         UUID id = UUID.randomUUID();
         Product draft = Product.draft(id, "SKU-T", details("10.00", 5));
-        assertThat(draft.teamTerms().startable()).isFalse();
+        assertThat(draft.teamTerms().configured()).isFalse();
         assertThat(draft.teamTerms().targetSize()).isNull();
 
-        Product configured = draft.configureTeamTerms(3, 7200, null);
+        Product configured = draft.configureTeamTerms(3, 7200);
         assertThat(configured.teamTerms()).isEqualTo(new ProductTeamTerms(id, 3, 7200));
-        assertThat(configured.teamTerms().startable()).isTrue();
+        assertThat(configured.teamTerms().configured()).isTrue();
         assertThat(configured.version()).isEqualTo(1);
         assertThat(configured.title()).isEqualTo(draft.title());
         assertThat(draft.version()).isZero();
-        assertThat(draft.teamTerms().startable()).isFalse();
+        assertThat(draft.teamTerms().configured()).isFalse();
 
         Product published = configured.publish();
-        Product live = published.configureTeamTerms(4, 3600, new BigDecimal("8.00"));
+        Product live = published.configureTeamTerms(4, 3600);
         assertThat(live.teamTerms()).isEqualTo(new ProductTeamTerms(id, 4, 3600));
         assertThat(live.status()).isEqualTo(ProductStatus.ON_SALE);
-        assertThat(live.delist().configureTeamTerms(5, 2400, null).teamTerms().targetSize())
-                .isEqualTo(5);
+        assertThat(live.delist().configureTeamTerms(5, 2400).teamTerms().targetSize()).isEqualTo(5);
     }
 
     /** Terms survive every other revision; only the terms command changes them. */
@@ -125,26 +124,25 @@ class ProductLifecycleTest {
     void otherRevisionsCarryTheTermsThrough() {
         Product configured =
                 Product.draft(UUID.randomUUID(), "SKU-C", details("10.00", 5))
-                        .configureTeamTerms(3, 7200, null);
+                        .configureTeamTerms(3, 7200);
         ProductTeamTerms terms = configured.teamTerms();
         assertThat(configured.revise(details("10.00", 5)).teamTerms()).isEqualTo(terms);
         assertThat(configured.publish().teamTerms()).isEqualTo(terms);
         assertThat(configured.publish().delist().teamTerms()).isEqualTo(terms);
     }
 
-    /** A rejected command reports every field and changes nothing. */
+    /** A rejected command reports each bad term field and changes nothing. */
     @Test
-    void invalidTermsAreRejectedWithEveryViolatedField() {
+    void invalidTermsAreRejectedWithEachViolatedField() {
         Product draft = Product.draft(UUID.randomUUID(), "SKU-I", details("10.00", 5));
-        assertThatThrownBy(() -> draft.configureTeamTerms(1, 10, new BigDecimal("10.00")))
+        assertThatThrownBy(() -> draft.configureTeamTerms(1, 10))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex -> {
                             assertThat(ex.errorCode())
                                     .isEqualTo(CatalogErrorCode.TEAM_TERMS_INVALID);
                             assertThat(ex.details())
-                                    .containsOnlyKeys(
-                                            "targetSize", "lifetimeSeconds", "teamPrice.amount");
+                                    .containsOnlyKeys("targetSize", "lifetimeSeconds");
                         });
         assertThat(draft.version()).isZero();
     }
@@ -169,7 +167,7 @@ class ProductLifecycleTest {
                         ProductStatus.DRAFT,
                         PricingMode.DUAL,
                         Integer.MAX_VALUE);
-        assertThatThrownBy(() -> exhausted.configureTeamTerms(2, 2400, null))
+        assertThatThrownBy(() -> exhausted.configureTeamTerms(2, 2400))
                 .isInstanceOfSatisfying(
                         BizException.class,
                         ex ->
