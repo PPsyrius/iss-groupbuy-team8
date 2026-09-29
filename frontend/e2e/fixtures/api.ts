@@ -2,8 +2,11 @@ import { test as base, type Route } from "@playwright/test";
 
 import type {
   MeResponse,
+  MyTeamResponse,
+  OrderSummaryResponse,
   ProductDetailResponse,
   ProductSummaryResponse,
+  QuoteResponse,
   Receipt,
 } from "@/api/generated/types.gen";
 
@@ -36,8 +39,16 @@ interface ApiState {
   paymentsEnabled: boolean;
   /** `GET /products` lists their summaries; `GET /products/{id}` serves one. */
   listings: ProductDetailResponse[];
+  /** `POST /team-price-quotes` issues one for a listing with a `groupPrice`; `GET` reads it. */
+  quotes: Map<string, QuoteResponse>;
+  /** `GET /group-deals/me` (My blocs, and the listing's membership check). */
+  teams: MyTeamResponse[];
+  /** `GET /orders/me` lists them; `GET /orders/{orderId}` serves one. */
+  orders: OrderSummaryResponse[];
   /** `GET /payments/{id}`: successive reads walk the list, and the last one repeats. */
   receipts: Map<string, Receipt[]>;
+  /** `paymentId` of `POST /payments/checkout-sessions`; a UUID, as `/payments/return` requires. */
+  paymentId: string;
   /** `checkoutUrl` of `POST /payments/checkout-sessions`. */
   checkoutUrl: string;
 }
@@ -50,7 +61,13 @@ interface Api {
   calls: (method?: string, path?: RegExp) => Call[];
 }
 
+// A quote's validity, as the backend issues it (T3-01).
+const QUOTE_TTL_MS = 15 * 60 * 1000;
+
 const envelope = (data: unknown) => ({ code: OK, message: "ok", data });
+
+const page1 = (items: unknown[], size = 100) =>
+  envelope({ items, total: items.length, page: 1, size });
 
 function fail(route: Route, status: number, code: string, message: string) {
   return route.fulfill({ status, json: { code, message } });
@@ -104,43 +121,116 @@ export function listing(overrides: ProductDetailResponse = {}): ProductDetailRes
   };
 }
 
-function serveFromState(state: ApiState, route: Route, call: Call, seq: number): Promise<void> {
-  const { method, path } = call;
-  if (method === "GET" && path === "auth/me") {
-    return state.me
-      ? route.fulfill({ json: envelope(state.me) })
-      : fail(route, 401, "AUTH_401", "unauthenticated");
+// A quote at the listing's bloc price, as the backend issues it; a listing without one answers
+// the backend's "team price unavailable" 409.
+function issueQuote(state: ApiState, route: Route, call: Call): Promise<void> {
+  const { body } = call;
+  const productId =
+    typeof body === "object" && body !== null && "productId" in body ? body.productId : undefined;
+  const found = state.listings.find((l) => l.id === productId);
+  if (found?.id === undefined || found.groupPrice === undefined) {
+    return fail(route, 409, "CATALOG_409_001", "team price is unavailable");
   }
-  if (method === "GET" && path === "payments/capabilities") {
-    return route.fulfill({ json: envelope({ enabled: state.paymentsEnabled }) });
+  const now = Date.now();
+  const quote: QuoteResponse = {
+    id: crypto.randomUUID(),
+    productId: found.id,
+    policyVersion: 1,
+    amount: found.groupPrice.toFixed(2),
+    currency: found.currency ?? "sgd",
+    issuedAt: new Date(now).toISOString(),
+    expiresAt: new Date(now + QUOTE_TTL_MS).toISOString(),
+  };
+  state.quotes.set(quote.id ?? "", quote);
+  return route.fulfill({ json: envelope(quote) });
+}
+
+function nextReceipt(reads: Receipt[] | undefined): Receipt | undefined {
+  if (reads === undefined || reads.length === 0) return undefined;
+  return reads.length > 1 ? reads.shift() : reads[0];
+}
+
+// `found` or the backend's 404 for that resource.
+function oneOf(route: Route, found: unknown, code: string): Promise<void> {
+  return found === undefined
+    ? fail(route, 404, code, "not found")
+    : route.fulfill({ json: envelope(found) });
+}
+
+type Stub = (state: ApiState, route: Route, call: Call, id: string) => Promise<void>;
+
+// One row per endpoint the state serves: method, path (a capture group names the id) and answer.
+const STUBS: [string, RegExp, Stub][] = [
+  [
+    "GET",
+    /^auth\/me$/u,
+    (s, route) =>
+      s.me ? route.fulfill({ json: envelope(s.me) }) : fail(route, 401, "AUTH_401", "anonymous"),
+  ],
+  [
+    "GET",
+    /^payments\/capabilities$/u,
+    (s, route) => route.fulfill({ json: envelope({ enabled: s.paymentsEnabled }) }),
+  ],
+  [
+    "GET",
+    /^products$/u,
+    (s, route) => route.fulfill({ json: page1(s.listings.map(summaryOf), 20) }),
+  ],
+  [
+    "GET",
+    /^products\/([^/]+)$/u,
+    (s, route, _, id) =>
+      oneOf(
+        route,
+        s.listings.find((l) => l.id === id),
+        "CATALOG_404_001",
+      ),
+  ],
+  ["POST", /^team-price-quotes$/u, (s, route, call) => issueQuote(s, route, call)],
+  [
+    "GET",
+    /^team-price-quotes\/([^/]+)$/u,
+    (s, route, _, id) => oneOf(route, s.quotes.get(id), "CATALOG_404_002"),
+  ],
+  ["GET", /^group-deals\/me$/u, (s, route) => route.fulfill({ json: page1(s.teams) })],
+  ["GET", /^orders\/me$/u, (s, route) => route.fulfill({ json: page1(s.orders) })],
+  [
+    "GET",
+    /^orders\/([^/]+)$/u,
+    (s, route, _, id) =>
+      oneOf(
+        route,
+        s.orders.find((o) => o.orderId === id),
+        "ORDER_404_001",
+      ),
+  ],
+  [
+    "POST",
+    /^payments\/intents$/u,
+    (_, route) => route.fulfill({ json: envelope({ intentId: crypto.randomUUID() }) }),
+  ],
+  [
+    "POST",
+    /^payments\/checkout-sessions$/u,
+    (s, route) =>
+      route.fulfill({
+        json: envelope({ paymentId: s.paymentId, checkoutUrl: s.checkoutUrl, status: "CREATED" }),
+      }),
+  ],
+  [
+    "GET",
+    /^payments\/([^/]+)$/u,
+    (s, route, _, id) => oneOf(route, nextReceipt(s.receipts.get(id)), "PAYMENT_404_001"),
+  ],
+];
+
+function serveFromState(state: ApiState, route: Route, call: Call): Promise<void> {
+  for (const [method, path, stub] of STUBS) {
+    const match = method === call.method ? path.exec(call.path) : null;
+    if (match) return stub(state, route, call, match[1] ?? "");
   }
-  if (method === "GET" && path === "products") {
-    const items = state.listings.map(summaryOf);
-    return route.fulfill({ json: envelope({ items, total: items.length, page: 1, size: 20 }) });
-  }
-  const product = /^products\/([^/]+)$/u.exec(path)?.[1];
-  if (method === "GET" && product !== undefined) {
-    const found = state.listings.find((l) => l.id === product);
-    return found
-      ? route.fulfill({ json: envelope(found) })
-      : fail(route, 404, "CATALOG_404_001", "listing not found");
-  }
-  if (method === "POST" && path === "payments/intents") {
-    return route.fulfill({ json: envelope({ intentId: `intent-e2e-${seq}` }) });
-  }
-  if (method === "POST" && path === "payments/checkout-sessions") {
-    const paymentId = `payment-e2e-${seq}`;
-    return route.fulfill({
-      json: envelope({ paymentId, checkoutUrl: state.checkoutUrl, status: "CREATED" }),
-    });
-  }
-  const payment = /^payments\/([^/]+)$/u.exec(path)?.[1];
-  const reads = payment === undefined ? undefined : state.receipts.get(payment);
-  if (method === "GET" && reads !== undefined && reads.length > 0) {
-    const next = reads.length > 1 ? reads.shift() : reads[0];
-    return route.fulfill({ json: envelope(next) });
-  }
-  return fail(route, 501, "E2E_501_UNSTUBBED", `no e2e stub for ${method} ${API}${path}`);
+  return fail(route, 501, "E2E_501_UNSTUBBED", `no e2e stub for ${call.method} ${API}${call.path}`);
 }
 
 // A spec may pass a /g or /y pattern; reset its lastIndex so repeated requests match every time.
@@ -156,7 +246,11 @@ export const test = base.extend<{ api: Api }>({
       me: null,
       paymentsEnabled: true,
       listings: [],
+      quotes: new Map(),
+      teams: [],
+      orders: [],
       receipts: new Map(),
+      paymentId: "0e2e0000-0000-4000-8000-000000000001",
       checkoutUrl: "https://checkout.stripe.com/c/pay/e2e",
     };
     const recorded: Call[] = [];
@@ -174,9 +268,7 @@ export const test = base.extend<{ api: Api }>({
         const hit = overrides.findLast(
           (o) => o.method === call.method && matches(o.path, call.path),
         );
-        await (hit
-          ? hit.handler(route, call)
-          : serveFromState(state, route, call, recorded.length));
+        await (hit ? hit.handler(route, call) : serveFromState(state, route, call));
       },
     );
     await provide({
