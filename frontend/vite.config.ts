@@ -1,12 +1,13 @@
 import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import { networkInterfaces } from "node:os";
 import { fileURLToPath, URL } from "node:url";
 
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, type Plugin, type ViteDevServer } from "vite";
 
 const src = fileURLToPath(new URL("./src", import.meta.url));
 const mswWorker = fileURLToPath(new URL("./dev/mockServiceWorker.js", import.meta.url));
@@ -37,17 +38,42 @@ const mswWorkerInDev: Plugin = {
 // sign-in only returns to that origin, so the banner names it and browser requests that reach Vite's
 // own port directly are sent there. Caddy forwards the front door's Host header, which passes through.
 const stackFrontDoor = "http://localhost:8080";
+
+// The front door reaches Vite at host.docker.internal:5173 (`fullstack-localhost/Caddyfile.dev`).
+// Docker Desktop forwards that name to the host's loopback; Linux Docker Engine maps it to the docker0
+// bridge address, so Vite listens there instead, which is still not reachable from the network.
+function stackDevHost(): string {
+  if (process.platform !== "linux") return "127.0.0.1";
+  const bridge = networkInterfaces().docker0?.find((address) => address.family === "IPv4");
+  return bridge?.address ?? "127.0.0.1";
+}
+
+// Only the path and query carry over, so any request target stays on the front door.
+function frontDoorLocation(requestUrl = "/"): string {
+  if (!URL.canParse(requestUrl, stackFrontDoor)) return `${stackFrontDoor}/`;
+  const { pathname, search } = new URL(requestUrl, stackFrontDoor);
+  return `${stackFrontDoor}${pathname}${search}`;
+}
+
+function listeningPort(server: ViteDevServer): number | undefined {
+  const address = server.httpServer?.address();
+  return typeof address === "object" && address !== null ? address.port : undefined;
+}
+
 const stackDevServer: Plugin = {
   name: "blocbuy:stack-front-door",
   apply: (_config, { command, mode }) => command === "serve" && mode === "stack",
+  config: () => ({ server: { host: stackDevHost() } }),
   configureServer(server) {
     server.printUrls = () => {
       server.config.logger.info(`\n  ➜  Open ${stackFrontDoor}/\n`);
     };
     server.middlewares.use((req, res, next) => {
-      if (req.headers.host?.endsWith(`:${server.config.server.port}`)) {
-        res.statusCode = 302;
-        res.setHeader("Location", `${stackFrontDoor}${req.url ?? "/"}`);
+      const port = listeningPort(server);
+      if (port !== undefined && req.headers.host?.endsWith(`:${port}`)) {
+        // 307 keeps the method and body, so a direct POST to /api is not replayed as a GET.
+        res.statusCode = 307;
+        res.setHeader("Location", frontDoorLocation(req.url));
         res.end();
         return;
       }
