@@ -1,4 +1,4 @@
-# The build context is the repository root; send only what web.Dockerfile copies.
+# The build context is the repository root; send only what frontend.Dockerfile copies.
 *
 !contracts/openapi.json
 !deployment/frontend/cloudfront/response-headers-policy.json

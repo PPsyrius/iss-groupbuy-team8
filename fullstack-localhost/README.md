@@ -20,7 +20,7 @@ Open <http://localhost:8080>. The first build downloads Maven and pnpm dependenc
 
 | Service | Built from | Notes |
 | --- | --- | --- |
-| `web` | `web.Dockerfile` | Builds `frontend/` with Node 24 and pnpm, then serves `dist/` with Caddy; `Caddyfile` sends `/api/*` to the backend |
+| `frontend` | `frontend.Dockerfile` | Builds `frontend/` with Node 24 and pnpm, then serves `dist/` with Caddy; `Caddyfile` sends `/api/*` to the backend |
 | `backend` | `backend.Dockerfile` | Compiles `backend/` with JDK 21 (tests and quality gates skipped, CI runs them) under the `docker` profile |
 | `postgres`, `redis` | upstream images | Internal network only; data persists in named volumes |
 

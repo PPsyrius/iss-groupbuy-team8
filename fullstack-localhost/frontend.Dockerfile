@@ -1,4 +1,4 @@
-# Localhost-only web image: builds the SPA and serves it with Caddy, which also forwards /api/* to
+# Localhost-only frontend image: builds the SPA and serves it with Caddy, which also forwards /api/* to
 # the backend, the same single-origin routing CloudFront applies in dev and production.
 # Context: the repository root, because `gen:api` reads contracts/openapi.json.
 
