@@ -1,10 +1,17 @@
 import { Button, buttonVariants } from "@heroui/react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 
+import { AdminChildError } from "@/features/admin/AdminShell";
 import { EditorSidebar } from "@/features/admin/EditorSidebar";
+import { refusalOf } from "@/features/admin/listing-errors";
 import { emptyListingForm } from "@/features/admin/listing-form";
-import { ListingForm, type SubmitProblem } from "@/features/admin/ListingForm";
-import { problemFor, useCreateDraft } from "@/features/admin/use-listing-mutations";
+import { type FieldProblem, ListingForm, type SubmitProblem } from "@/features/admin/ListingForm";
+import {
+  problemFor,
+  useCreateDraft,
+  useRouteBoundary,
+} from "@/features/admin/use-listing-mutations";
 
 // The new-draft editor (admin plan A1-05, artboard 4b.1): the shared listing form beside a
 // sidebar that already teaches the lifecycle (Draft v0, Publish disabled with its precondition,
@@ -12,6 +19,7 @@ import { problemFor, useCreateDraft } from "@/features/admin/use-listing-mutatio
 // while it is in flight. A saved draft opens in the editor (A1-06).
 export const Route = createFileRoute("/_authenticated/admin/listings/new")({
   component: NewListingPage,
+  errorComponent: AdminChildError,
 });
 
 const FORM_ID = "new-listing";
@@ -19,6 +27,9 @@ const FORM_ID = "new-listing";
 function NewListingPage() {
   const navigate = useNavigate();
   const create = useCreateDraft();
+  const toBoundary = useRouteBoundary();
+  // Save stays disabled while a field shows an error (A1-08, artboard 4b.4).
+  const [fieldProblems, setFieldProblems] = useState<FieldProblem[]>([]);
   const save = async (values: typeof emptyListingForm): Promise<SubmitProblem | undefined> => {
     try {
       const listing = await create.save(values);
@@ -29,7 +40,9 @@ function NewListingPage() {
       );
       return undefined;
     } catch (error) {
-      return problemFor(error, "The draft wasn’t saved");
+      const refusal = refusalOf(error);
+      if (refusal.kind === "forbidden") toBoundary(error);
+      return problemFor(refusal, "The draft wasn’t saved");
     }
   };
   return (
@@ -62,14 +75,20 @@ function NewListingPage() {
             form={FORM_ID}
             variant="secondary"
             className="min-h-11 px-[18px] text-sm"
-            isDisabled={create.isPending}
+            isDisabled={create.isPending || fieldProblems.length > 0}
           >
             Save draft
           </Button>
         </div>
       </div>
       <div className="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-6">
-        <ListingForm id={FORM_ID} mode="create" defaultValues={emptyListingForm} onSubmit={save} />
+        <ListingForm
+          id={FORM_ID}
+          mode="create"
+          defaultValues={emptyListingForm}
+          onSubmit={save}
+          onProblemsChange={setFieldProblems}
+        />
         <aside className="flex flex-col gap-4">
           <EditorSidebar version={0} showLifecycle={false}>
             <div className="flex flex-col gap-2">

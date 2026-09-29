@@ -124,6 +124,31 @@ describe("/admin/listings", () => {
     expect(store.rows[0]).toMatchObject({ status: "off_sale", version: 5 });
   });
 
+  it("refreshes a stale row after a 412 from its menu, with no banner to raise", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    renderRoute("/admin/listings");
+    await user.click(
+      await screen.findByRole("button", { name: "Actions for Thai jasmine rice 10 kg" }),
+    );
+    const menu = await screen.findByRole("menu");
+    await user.click(within(menu).getByRole("menuitem", { name: "Take off sale" }));
+    const rice = store.rows[0];
+    if (!rice) throw new Error("no seeded rows");
+    rice.version = 5;
+    const dialog = await screen.findByRole("alertdialog", { name: "Take this listing off sale?" });
+    await user.click(within(dialog).getByRole("button", { name: "Take off sale" }));
+
+    expect(
+      await within(dialog).findByText(
+        "Someone else changed this listing while the table was open. Its row has been refreshed; try again.",
+      ),
+    ).toBeVisible();
+    const row = screen.getByRole("row", { name: /Thai jasmine rice 10 kg/ });
+    expect(await within(row).findByText("v5")).toBeVisible();
+    expect(rice).toMatchObject({ status: "on_sale", version: 5 });
+  });
+
   it("offers Publish and Delete draft on a draft row, and Edit opens the editor", async () => {
     const user = userEvent.setup();
     const store = serveAdmin();

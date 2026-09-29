@@ -1,23 +1,33 @@
 import { Button } from "@heroui/react";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { ApiError } from "@/api/envelope";
-import { adminListingOptions } from "@/features/admin/admin-api";
+import { adminListingOptions, adminServerVersionOptions } from "@/features/admin/admin-api";
+import { AdminChildError } from "@/features/admin/AdminShell";
+import { ConflictBanner, ProblemsCard } from "@/features/admin/ConflictBanner";
 import { EditorSidebar, SidebarActions } from "@/features/admin/EditorSidebar";
 import { actionsFor } from "@/features/admin/lifecycle";
 import { type DialogKind, LifecycleDialog } from "@/features/admin/LifecycleDialogs";
+import { refusalOf } from "@/features/admin/listing-errors";
 import { fromListing } from "@/features/admin/listing-form";
 import { statusLabel } from "@/features/admin/listing-status";
-import { ListingForm, type SubmitProblem } from "@/features/admin/ListingForm";
-import { problemFor, useSaveListing } from "@/features/admin/use-listing-mutations";
+import { type FieldProblem, ListingForm, type SubmitProblem } from "@/features/admin/ListingForm";
+import {
+  problemFor,
+  useRouteBoundary,
+  useSaveListing,
+} from "@/features/admin/use-listing-mutations";
 
 // The editor for an existing listing (admin plan A1-06, artboards 4b.2 and 4b.3). The version is
 // the save's precondition, so this read is always fresh (§12 note 5): the loader asks with
 // `staleTime: 0` instead of the usual `'static'`, and a stale cached version cannot guarantee a
-// 412. The form is keyed by the version, so a save (or A1-08's Reload) remounts it from server
-// data and leaves it clean.
+// 412. The form is keyed by the version, so a save (or the conflict banner's Reload) remounts it
+// from server data and leaves it clean.
+//
+// A 412 on a save, a lifecycle change or a delete raises the conflict banner (A1-08, artboard
+// 4b.4) and disables every write until Reload: no merge, no retry (§12 note 7).
 export const Route = createFileRoute("/_authenticated/admin/listings/$productId")({
   loader: async ({ context, params }) => {
     try {
@@ -29,6 +39,7 @@ export const Route = createFileRoute("/_authenticated/admin/listings/$productId"
     }
   },
   notFoundComponent: ListingNotFound,
+  errorComponent: AdminChildError,
   component: EditListingPage,
 });
 
@@ -42,6 +53,30 @@ function EditListingPage() {
   const { save, isPending } = useSaveListing(productId, version);
   const [dirty, setDirty] = useState(false);
   const [dialog, setDialog] = useState<DialogKind | null>(null);
+  const [fieldProblems, setFieldProblems] = useState<FieldProblem[]>([]);
+  const [conflict, setConflict] = useState(false);
+  const [reloads, setReloads] = useState(0);
+  const [reloading, setReloading] = useState(false);
+  const toBoundary = useRouteBoundary();
+  const qc = useQueryClient();
+  const { data: serverVersion } = useQuery({
+    ...adminServerVersionOptions(productId),
+    enabled: conflict,
+  });
+  // Reload writes the fresh read into the editor's entry and remounts the form from it; the
+  // counter remounts it even if the version did not move.
+  const reload = async () => {
+    setReloading(true);
+    try {
+      await qc.fetchQuery({ ...adminListingOptions(productId), staleTime: 0 });
+      qc.removeQueries({ queryKey: adminServerVersionOptions(productId).queryKey });
+      setConflict(false);
+      setFieldProblems([]);
+      setReloads((n) => n + 1);
+    } finally {
+      setReloading(false);
+    }
+  };
   const actions = actionsFor(listing.status, {
     dirty,
     stock: listing.listing?.stock ?? 0,
@@ -55,7 +90,10 @@ function EditListingPage() {
       await save(values);
       return undefined;
     } catch (error) {
-      return problemFor(error, "Your changes weren’t saved");
+      const refusal = refusalOf(error);
+      if (refusal.kind === "conflict") setConflict(true);
+      if (refusal.kind === "forbidden") toBoundary(error);
+      return problemFor(refusal, "Your changes weren’t saved");
     }
   };
   const facts = [
@@ -66,6 +104,14 @@ function EditListingPage() {
   ];
   return (
     <div className="flex flex-col gap-6">
+      {conflict ? (
+        <ConflictBanner
+          loadedVersion={version}
+          serverVersion={serverVersion}
+          onReload={() => void reload()}
+          isReloading={reloading}
+        />
+      ) : null}
       <nav aria-label="Breadcrumb" className="text-muted flex items-center gap-2">
         <Link to="/admin/listings" className="hover:text-foreground">
           Listings
@@ -89,7 +135,7 @@ function EditListingPage() {
               form={FORM_ID}
               variant={publish ? "tertiary" : "secondary"}
               className="min-h-11 px-[18px] text-sm"
-              isDisabled={isPending}
+              isDisabled={isPending || conflict || fieldProblems.length > 0}
             >
               {published ? "Save changes" : "Save draft"}
             </Button>
@@ -97,7 +143,7 @@ function EditListingPage() {
               <Button
                 variant="secondary"
                 className="min-h-11 px-[18px] text-sm"
-                isDisabled={!publish.enabled || isPending}
+                isDisabled={!publish.enabled || isPending || conflict}
                 onPress={() => setDialog("publish")}
               >
                 Publish
@@ -113,10 +159,15 @@ function EditListingPage() {
           ) : null}
         </div>
       </div>
-      <LifecycleDialog kind={dialog} listing={listing} onClose={() => setDialog(null)} />
+      <LifecycleDialog
+        kind={dialog}
+        listing={listing}
+        onClose={() => setDialog(null)}
+        onConflict={() => setConflict(true)}
+      />
       <div className="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-6">
         <ListingForm
-          key={version}
+          key={`${version}.${reloads}`}
           id={FORM_ID}
           mode="edit"
           defaultValues={fromListing(listing)}
@@ -125,11 +176,15 @@ function EditListingPage() {
           soldCount={published ? (listing.soldCount ?? 0) : undefined}
           guardUnsaved
           onDirtyChange={setDirty}
+          onProblemsChange={setFieldProblems}
         />
         <aside className="flex flex-col gap-4">
           <EditorSidebar status={listing.status} version={version} showLifecycle>
-            <SidebarActions actions={actions} onOpen={setDialog} />
+            <SidebarActions actions={actions} onOpen={setDialog} isDisabled={conflict} />
           </EditorSidebar>
+          {conflict && fieldProblems.length > 0 ? (
+            <ProblemsCard fieldProblems={fieldProblems} serverVersion={serverVersion} />
+          ) : null}
         </aside>
       </div>
     </div>
