@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "pnpm gen:api && vite build",
     "preview": "vite preview",
+    "stack": "docker compose -f ../fullstack-localhost/compose.yaml up --build",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",

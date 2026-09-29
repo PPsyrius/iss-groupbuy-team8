@@ -20,7 +20,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Vite serves the frontend locally and proxies `/api` to `http://localhost:8589`. The backend can be started from the repository root with `docker compose up`, or together with a production build of the SPA on one origin with [full-stack localhost development](../fullstack-localhost/README.md).
+Vite serves the frontend locally and proxies `/api` to `http://localhost:8589`. The backend can be started from the repository root with `docker compose up`, or together with a production build of the SPA on one origin with `pnpm stack` ([full-stack localhost development](../fullstack-localhost/README.md)).
 
 The OpenAPI client is generated from `../contracts/openapi.json` during installation. Generated files under `src/api/generated/` are not committed.
 

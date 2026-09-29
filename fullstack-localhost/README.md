@@ -7,6 +7,8 @@ One command runs the whole of BlocBuy on your machine with the same routing as t
 docker compose -f fullstack-localhost/compose.yaml up --build
 ```
 
+From `frontend/`, `pnpm stack` runs the same command.
+
 Open <http://localhost:8080>. The first build downloads Maven and pnpm dependencies and takes a few minutes; later builds reuse the BuildKit cache.
 
 | URL | Serves |
