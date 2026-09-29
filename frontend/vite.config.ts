@@ -1,12 +1,14 @@
 import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import { createServer } from "node:http";
+import { networkInterfaces } from "node:os";
 import { fileURLToPath, URL } from "node:url";
 
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, type Plugin, type ViteDevServer } from "vite";
 
 const src = fileURLToPath(new URL("./src", import.meta.url));
 const mswWorker = fileURLToPath(new URL("./dev/mockServiceWorker.js", import.meta.url));
@@ -29,6 +31,71 @@ const mswWorkerInDev: Plugin = {
       res.setHeader("Content-Type", "text/javascript");
       res.setHeader("Cache-Control", "no-store");
       res.end(await readFile(mswWorker));
+    });
+  },
+};
+
+// `pnpm stack:dev` runs `vite --mode stack` behind the fullstack-localhost Caddy front door. Google
+// sign-in only returns to that origin, so the banner names it and browser requests that reach Vite's
+// own port directly are sent there. Caddy forwards the front door's Host header, which passes through.
+const stackFrontDoor = "http://localhost:8080";
+
+// The front door reaches Vite at host.docker.internal:5173 (`fullstack-localhost/Caddyfile.dev`).
+// Docker Desktop forwards that name to the host's loopback; Linux Docker Engine maps it to the docker0
+// bridge address, so Vite listens there instead, which is still not reachable from the network.
+function stackDevHost(): string {
+  if (process.platform !== "linux") return "127.0.0.1";
+  const bridge = networkInterfaces().docker0?.find((address) => address.family === "IPv4");
+  return bridge?.address ?? "127.0.0.1";
+}
+
+// Only the path and query carry over, so any request target stays on the front door.
+function frontDoorLocation(requestUrl = "/"): string {
+  if (!URL.canParse(requestUrl, stackFrontDoor)) return `${stackFrontDoor}/`;
+  const { pathname, search } = new URL(requestUrl, stackFrontDoor);
+  return `${stackFrontDoor}${pathname}${search}`;
+}
+
+function listeningPort(server: ViteDevServer): number | undefined {
+  const address = server.httpServer?.address();
+  return typeof address === "object" && address !== null ? address.port : undefined;
+}
+
+// On Linux Vite listens on the docker0 address only, so a loopback listener on the same port keeps
+// http://localhost:5173 answering with the redirect to the front door.
+function redirectFromLoopback(server: ViteDevServer): void {
+  const loopback = createServer((req, res) => {
+    res.writeHead(307, { Location: frontDoorLocation(req.url) }).end();
+  });
+  loopback.on("error", (error) => {
+    server.config.logger.warn(`Loopback redirect to ${stackFrontDoor} is off: ${error.message}`);
+  });
+  server.httpServer?.once("listening", () => {
+    const port = listeningPort(server);
+    if (port !== undefined) loopback.listen(port, "127.0.0.1");
+  });
+  server.httpServer?.once("close", () => loopback.close());
+}
+
+const stackDevServer: Plugin = {
+  name: "blocbuy:stack-front-door",
+  apply: (_config, { command, mode }) => command === "serve" && mode === "stack",
+  config: () => ({ server: { host: stackDevHost() } }),
+  configureServer(server) {
+    server.printUrls = () => {
+      server.config.logger.info(`\n  ➜  Open ${stackFrontDoor}/\n`);
+    };
+    if (server.config.server.host !== "127.0.0.1") redirectFromLoopback(server);
+    server.middlewares.use((req, res, next) => {
+      const port = listeningPort(server);
+      if (port !== undefined && req.headers.host?.endsWith(`:${port}`)) {
+        // 307 keeps the method and body, so a direct POST to /api is not replayed as a GET.
+        res.statusCode = 307;
+        res.setHeader("Location", frontDoorLocation(req.url));
+        res.end();
+        return;
+      }
+      next();
     });
   },
 };
@@ -75,6 +142,7 @@ export default defineConfig(({ command }) => ({
     babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),
     mswWorkerInDev,
+    stackDevServer,
   ],
   resolve: {
     alias: [...(command === "build" ? deliveryStubs : []), { find: "@", replacement: src }],
