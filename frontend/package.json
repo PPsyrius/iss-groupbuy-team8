@@ -5,10 +5,10 @@
   "scripts": {
     "prepare": "pnpm gen:api",
     "gen:api": "openapi-ts && node scripts/ts-nocheck-generated.mjs",
-    "dev": "vite",
+    "dev": "pnpm gen:api && vite",
     "build": "pnpm gen:api && vite build",
     "preview": "vite preview",
-    "stack:dev": "docker compose -f ../fullstack-localhost/compose.yaml stop frontend && docker compose -f ../fullstack-localhost/compose.yaml up --build -d frontend-dev && vite --mode stack --port 5173 --strictPort",
+    "stack:dev": "docker compose -f ../fullstack-localhost/compose.yaml stop frontend && docker compose -f ../fullstack-localhost/compose.yaml up --build -d frontend-dev && pnpm gen:api && vite --mode stack --port 5173 --strictPort",
     "stack:prod": "docker compose -f ../fullstack-localhost/compose.yaml stop frontend-dev && docker compose -f ../fullstack-localhost/compose.yaml up --build",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint --type-aware",
