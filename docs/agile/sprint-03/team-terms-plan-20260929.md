@@ -6,9 +6,11 @@ Budget: 12 h (Sprint 3 plan). Target: merged to `dev` with the regenerated contr
 
 > **Status (2026-09-29): decisions accepted, implemented on this branch.** D1 (one command with an optional `teamPrice`), D3 (no clearing in v1), D5 (terms editable on an on-sale listing), D7 (`log_product_team_terms`) and D11 (code constants) were confirmed by the owner. Departures from the text below:
 >
-> - **Specification scope.** `TeamTermsSpecification` checks size, lifetime and "team price below the original price". The currency match stays in `TeamPricePolicy.requireCompatible`, reached through the delegated policy write, because the request already restricts `currency` to `sgd`.
+> - **Specification scope (amended in review of #242).** `TeamTermsSpecification` checks size and lifetime only. Every price rule, including "team price below the original price" and the currency match, stays in `TeamPricePolicy`, reached through the delegated policy write (D8). A bad price therefore returns `CATALOG_400_001` without field errors, the same as the standalone endpoint, instead of a `teamPrice.amount` key in `CATALOG_400_003`. This supersedes the price part of D6 and §4.2.
 > - **`ProductTeamTerms.configured` factory** was dropped: `Product.configureTeamTerms` is the only entry point, so a second factory would be unused code.
-> - **`teamTerms` on `AdminListingResponse` is always present** (members null and `startable` false when never configured) instead of a nullable object, so clients need no null branch.
+> - **`teamTerms` on `AdminListingResponse` is always present** (members null and `configured` false when never configured) instead of a nullable object, so clients need no null branch.
+> - **`startable` renamed to `configured` (amended in review of #242)**, both `ProductTeamTerms.configured()` and the `teamTerms.configured` response field: it only means both terms are set and in bounds. START also needs an on-sale listing with stock and a price policy in force for the next 2400 s. `startable` in D13 and §4 below reads as `configured`.
+> - **One PR, not two.** D9's PR A / PR B split did not happen; the plan, contract, code and docs shipped together in #242 (see §7).
 > - **Extra test-schema change.** Two repository ITs that load a hand-picked migration list (`TeamPriceRepositoryIT`, `ProductSearchRepositoryIT`) now also load V14, because the shared product mapper selects the terms columns.
 > - **Test placement.** The controller checks (UT-A*) live in `TeamTermsFlowIT` (real Bean Validation and RBAC over MockMvc) rather than a separate mocked controller test.
 
@@ -100,7 +102,7 @@ Response 200, `Result<TeamTermsResponse>`:
   "data": {
     "productId": "0199...",
     "version": 4,
-    "teamTerms": { "targetSize": 5, "lifetimeSeconds": 7200, "startable": true },
+    "teamTerms": { "targetSize": 5, "lifetimeSeconds": 7200, "configured": true },
     "teamPrice": { "amount": "89.00", "currency": "sgd", "validFrom": "...", "validUntil": "...", "version": 1 }
   },
   "message": "Success"
@@ -112,7 +114,8 @@ Response 200, `Result<TeamTermsResponse>`:
 | 200 | `COMMON_200_000` | written; `version` is the new product version |
 | 400 | `COMMON_400_002` | Bean Validation failed, with `errors: [{field, message}]` |
 | 400 | `COMMON_400_001` | malformed JSON or path id |
-| 400 | `CATALOG_400_003` (new) | domain rule set failed, with `errors: {field: message}` (all violations) |
+| 400 | `CATALOG_400_003` (new) | term rules failed, with `errors: {field: message}` naming each bad term field (`targetSize`, `lifetimeSeconds`) |
+| 400 | `CATALOG_400_001` | bad `teamPrice`, no field errors: price not below the original price, `validFrom` not before `validUntil`, or `validUntil` already past (as on the standalone endpoint) |
 | 401 / 403 | `COMMON_401_001` / `COMMON_403_001` | no session / missing role or permission / disabled account |
 | 404 | `CATALOG_404_001` | product absent or deleted |
 | 409 | `CATALOG_409_001` | `teamPrice` sent for a product that is not on sale (D5) |
@@ -264,16 +267,16 @@ Calendar (from the task plan): 09-29 steps 0–2; 09-30 steps 3–5 and open PR 
 
 ## 7. PRs, documentation and evidence
 
-PR A (docs, review first) and PR B (implementation) as in D9. Both add a sprint-log entry (`docs/agile/sprint-03/log/2026-09-29.md`, `2026-09-30.md`), per the agile-evidence rule.
+As shipped: **one PR, #242**. D9's PR A / PR B split was not used; the plan, the generated contract, the code and the docs were reviewed together. AC5 is met by `contract-check` and `openapi-diff` on that PR rather than by a separate contract PR. The sprint-log entry is `docs/agile/sprint-03/log/2026-09-29.md`.
 
-PR B documentation changes:
+Documentation changed in #242:
 
-- **Backend ADR 0001**: resolve the "Open" paragraph with "Addendum (2026-09-3x): admin writes team terms (#221)". It records D1, D2, D4, D5, D7, D8, D10 and the START/terms lock rule. It amends the owning ADR, not a new one.
-- **`admin-listings.md`**: add the route to the HTTP contract table; record that the standalone team-price-policy endpoint remains and the two version tokens are independent (product version vs policy version).
-- **`docs/quality/nfr-register.md` NFR-29**: replace "no admin writer exists, so fresh databases refuse START" with the writer, the IT that proves START succeeds after configuration, and V20 as the audit trail. Row status stays `implemented`.
-- **`ProductTeamTerms` Javadoc**: point at the new writer instead of "the catalog admin path fills them in".
+- **Backend ADR 0001**: "Addendum (2026-09-29): an administrator writes the team terms (#221)" resolves the "Open" paragraph. It records D1, D2, D4, D5, D7, D8, D10, the START/terms lock rule, that price rules live only in `TeamPricePolicy` (`CATALOG_400_001` vs `CATALOG_400_003`), and what `configured` does and does not mean. It amends the owning ADR, not a new one.
+- **`admin-listings.md`**: the route in the HTTP contract table; the two independent version tokens (product version vs policy version); the error codes of this endpoint; the standalone team-price-policy endpoint remains.
+- **`docs/quality/nfr-register.md` NFR-29**: the writer, the IT that proves START succeeds after configuration, and V20 as the audit trail. Row status stays `implemented`.
+- **`ProductTeamTerms` Javadoc**: points at `Product.configureTeamTerms` and says configured terms are necessary but not sufficient for START.
 - **`V14__product_team_terms.sql`**: unchanged (applied migrations are never rewritten).
-- **Frontend hand-off** (comment on #221 once PR A is approved): the endpoint and JSON; the two-step seeding order for a new listing; both error shapes (list on Bean Validation, map on `CATALOG_400_003`); use the returned `version` for the next write; the price policy is not on the admin page response.
+- **Frontend hand-off**: in the #242 description (Follow-ups) for @limjiechao: use the returned `version` for the next write; the two error shapes (list on Bean Validation, map on `CATALOG_400_003`, none on `CATALOG_400_001`); the seeding order for a new listing.
 
 ## 8. Verification checklist (before PR B)
 
@@ -302,10 +305,13 @@ Hard-gate self-check: no field injection; `@RequiredArgsConstructor` (never `@Re
 | Team price no longer undercuts the original price after a later edit | A discount that is not one | Not reachable through this API: D5 allows `teamPrice` only on-sale, and `revise` freezes the price after first publication. `lockStartQuote` and `issueQuote` re-check the undercut anyway |
 | Extra `SELECT ... FOR UPDATE` in the nested `configure` | Negligible; the row is already held | Accepted (D8); revisit only if the writer is extracted |
 
-## 10. Open questions for the reviewer
+## 10. Resolved questions
 
-1. **D1**: one command with an optional `teamPrice` (recommended) or terms only (A)?
-2. **D3**: allow clearing terms, or leave delisting as the only way to stop START?
-3. **D5**: are terms editable on an on-sale listing (recommended), or only while draft or off-sale?
-4. **D7**: the `log_product_team_terms` table (recommended) or `update_by` / `update_time` only?
-5. **D11**: keep the lifetime range as domain constants (recommended) or make it a property?
+The owner answered every open question before implementation; review of #242 added two amendments.
+
+1. **D1**: one command with an optional `teamPrice`. Shipped.
+2. **D3**: no clearing in v1; delisting stays the only way to stop START. Shipped.
+3. **D5**: terms are editable on an on-sale listing (and in every other state). Shipped.
+4. **D7**: the `log_product_team_terms` audit table (V20). Shipped.
+5. **D11**: the lifetime range stays as code constants on `ProductTeamTerms`. Shipped.
+6. **Review of #242**: the price rule left `TeamTermsSpecification` (price errors are `CATALOG_400_001` only), and `startable` became `configured`. Follow-ups filed as issues: read the terms from the locked `Product` in `lockStartable` instead of a second query, and reject price windows that START cannot use.
