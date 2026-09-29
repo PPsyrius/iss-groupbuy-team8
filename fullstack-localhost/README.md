@@ -7,7 +7,7 @@ One command runs the whole of BlocBuy on your machine with the same routing as t
 docker compose -f fullstack-localhost/compose.yaml up --build
 ```
 
-From `frontend/`, `pnpm stack` runs the same command.
+From `frontend/`, `pnpm stack:prod` runs the same command, and `pnpm stack:dev` starts the backend, PostgreSQL and Redis in the background and then Vite with hot module reloading on <http://localhost:5173>.
 
 Open <http://localhost:8080>. The first build downloads Maven and pnpm dependencies and takes a few minutes; later builds reuse the BuildKit cache.
 
@@ -31,7 +31,8 @@ Flyway applies the schema migrations and the demo catalog seed (10 products) tha
 ## Everyday use
 
 - Rebuild after code changes: `docker compose -f fullstack-localhost/compose.yaml up --build -d`.
-- Frontend hot reload: keep this stack running and run `pnpm dev` in `frontend/`; Vite serves <http://localhost:5173> and proxies `/api` to the backend on port 8589.
+- Frontend hot reload: run `pnpm stack:dev` in `frontend/`; Vite serves <http://localhost:5173> and proxies `/api` to the backend on port 8589, so the `frontend` container is not needed. Google sign-in still redirects to `FRONTEND_URL` (port 8080) unless `.env` points it and `GOOGLE_REDIRECT_URI` at port 5173.
+- Stop the containers after `pnpm stack:dev`: stopping Vite leaves them running, so run the stop command below.
 - Logs: `docker compose -f fullstack-localhost/compose.yaml logs -f backend`.
 - Stop: `docker compose -f fullstack-localhost/compose.yaml down`; add `-v` to wipe the database and Redis data.
 
