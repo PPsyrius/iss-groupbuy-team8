@@ -38,7 +38,7 @@ export function receiptPollingInterval({
   return receipt?.status === "CREATED" || receipt?.refundPending ? RECEIPT_POLL_INTERVAL_MS : false;
 }
 
-// The §4.4 refund-statement references. The amount, paid time and bank window sit on the money
+// The receipt's BlocBuy reference rows. The amount, paid time and bank window sit on the money
 // line; the receipt carries no Stripe `pi_…` reference, so BlocBuy's own ids stand in.
 function receiptReferences(receipt: Receipt | undefined): { label: string; value: string }[] {
   if (!receipt) return [];
