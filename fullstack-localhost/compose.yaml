@@ -1,0 +1,113 @@
+# Full-stack localhost development: SPA at http://localhost:8080/ and the backend at /api/ on the
+# same origin, as CloudFront serves them. Run from the repository root:
+#   docker compose -f fullstack-localhost/compose.yaml up --build
+# Optional overrides go in fullstack-localhost/.env (see .env.example). Not a deployment artefact.
+name: blocbuy-fullstack-localhost
+
+services:
+  postgres:
+    image: postgres:18.6
+    environment:
+      POSTGRES_DB: Blocbuy
+      POSTGRES_USER: ${DB_USERNAME:-blocbuy}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-localhost-only}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      # TCP, not the socket: the entrypoint's first-run init server answers on the socket only.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [data]
+
+  redis:
+    image: redis:8.10.2
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-localhost-only}
+    command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli --no-auth-warning -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [data]
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../fullstack-localhost/backend.Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      # The docker profile runs schema migrations only; add the demo catalog the local profile seeds.
+      SPRING_FLYWAY_LOCATIONS: classpath:db/migration,classpath:db/seed
+      DB_USERNAME: ${DB_USERNAME:-blocbuy}
+      DB_PASSWORD: ${DB_PASSWORD:-localhost-only}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-localhost-only}
+      # FRONTEND_URL stays unset: post-sign-in redirects are relative (/auth/callback), as behind
+      # CloudFront, so they land on whichever of the two :8080 front doors served the callback.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8080/api/v1/auth/oauth2/google/callback}
+      BLOCBUY_SCHEDULING_ENABLED: ${BLOCBUY_SCHEDULING_ENABLED:-false}
+    ports:
+      # Published for API tools and plain `pnpm dev` (Vite proxies /api to :8589; no Google sign-in).
+      - "127.0.0.1:8589:8589"
+    # A failed first start (for example a database that is still initialising) retries instead of
+    # leaving the front door on 502.
+    restart: on-failure
+    healthcheck:
+      # The JRE image has no curl or wget, so bash sends the request; actuator answers 503 when DOWN.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8589 && printf 'GET /api/actuator/health HTTP/1.0\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q ' 200 '"]
+      interval: 5s
+      timeout: 5s
+      start_period: 60s
+      retries: 12
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [edge, data]
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: fullstack-localhost/frontend.Dockerfile
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [edge]
+
+  # `pnpm stack:dev` front door on the same :8080 origin, proxying to the Vite dev server on the host.
+  # Opt-in profile, so a plain `up` never starts it; only one of frontend/frontend-dev can hold :8080.
+  frontend-dev:
+    image: caddy:2.11.4-alpine
+    profiles: [dev]
+    # Unprivileged: Caddy listens on 8080 and Caddyfile.dev turns off everything that writes to disk.
+    user: "65534:65534"
+    volumes:
+      - ./Caddyfile.dev:/etc/caddy/Caddyfile:ro
+    extra_hosts:
+      # Docker Desktop defines host.docker.internal already. Linux Docker Engine needs this mapping,
+      # which points at the docker0 bridge, so `vite --mode stack` listens there on Linux.
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [edge]
+
+networks:
+  edge:
+  data:
+    internal: true
+
+volumes:
+  postgres-data:
+  redis-data:

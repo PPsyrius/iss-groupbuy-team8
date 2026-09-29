@@ -1,0 +1,29 @@
+# One origin, as in CloudFront: /api/* goes to the backend, everything else is the SPA.
+{
+	# Runs unprivileged, so nothing may write to disk: no admin API and no saved config.
+	admin off
+	persist_config off
+}
+
+:8080 {
+	# The CloudFront response headers policy on every response, as both CloudFront behaviors attach
+	# it; frontend.Dockerfile generates this file from response-headers-policy.json.
+	import /etc/caddy/cloudfront-headers.caddy
+
+	handle /api/* {
+		reverse_proxy backend:8589
+	}
+
+	# Hashed build output: a missing file is a 404, not the SPA shell served as JavaScript.
+	handle /assets/* {
+		root * /srv
+		file_server
+	}
+
+	handle {
+		root * /srv
+		# Client-side routes such as /products/<id> fall back to the SPA shell.
+		try_files {path} /index.html
+		file_server
+	}
+}
