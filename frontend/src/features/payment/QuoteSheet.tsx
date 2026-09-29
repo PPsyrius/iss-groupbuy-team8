@@ -7,15 +7,16 @@ import type { QuoteState } from "@/features/payment/use-quote";
 // The first-team quote step (UC3, plan T3-01): "Start a bloc" opens this sheet over the listing,
 // the same `placement="auto"` sheet/modal as the sign-in gate (§4.3). It shows the server's
 // quoted price with its validity countdown and the refund promise (design brief §6 "Checkout");
-// an expired quote disables payment and offers a fresh price. The quote is a preview only: START
-// re-prices from the latest policy and Stripe's page carries the charged amount (ADR 0014), so
-// the copy never promises a held price (CodeRabbit r4102738782).
+// an expired quote disables payment and offers a fresh price. START sends the quote id and the
+// server charges the quoted amount while the quote is valid (US26, #183; ADR 0014 addendum
+// 2026-09-29). A quote the server refused at START (`isRejected`) reads like an expired one.
 export function QuoteSheet({
   isOpen,
   onOpenChange,
   state,
   now,
   isPaying,
+  isRejected = false,
   onContinue,
   onRefresh,
   onRetry,
@@ -25,12 +26,14 @@ export function QuoteSheet({
   state: QuoteState;
   now: number;
   isPaying: boolean;
-  onContinue: () => void;
+  isRejected?: boolean;
+  onContinue: (quoteId: string) => void;
   onRefresh: () => void;
   onRetry: () => void;
 }>) {
   const quote = state.status === "ready" ? state.quote : null;
   const expired = quote !== null && quote.expiresMs <= now;
+  const stale = quote !== null && (expired || isRejected);
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
       <Modal.Backdrop isDismissable>
@@ -74,10 +77,12 @@ export function QuoteSheet({
                     payNow={formatPrice(quote.amount, quote.currency)}
                     validFor={formatCountdown(quote.expiresMs, now)}
                   />
-                  {expired ? (
+                  {stale ? (
                     <Alert status="warning" aria-live="polite">
                       <Alert.Content>
-                        <Alert.Title>This price has expired</Alert.Title>
+                        <Alert.Title>
+                          {expired ? "This price has expired" : "This price is no longer available"}
+                        </Alert.Title>
                         <Alert.Description>
                           Get a new price to continue. Nothing has been charged.
                         </Alert.Description>
@@ -85,15 +90,15 @@ export function QuoteSheet({
                     </Alert>
                   ) : (
                     <p className="text-muted text-sm">
-                      This price is a preview and may change before you pay. Stripe shows the final
-                      amount, and nothing is charged until you confirm there.
+                      This is the price you pay if you continue before it expires. Nothing is
+                      charged until you confirm on Stripe.
                     </p>
                   )}
                 </>
               ) : null}
             </div>
             <Modal.Footer className="flex flex-col gap-2 xl:flex-row-reverse">
-              {quote && !expired ? (
+              {quote && !stale ? (
                 <Button
                   variant="secondary"
                   size="lg"
@@ -103,13 +108,13 @@ export function QuoteSheet({
                   // outlive the quote by up to two seconds; the press re-reads the clock and
                   // leaves the expired state to the next tick (CodeRabbit r4104866984).
                   onPress={() => {
-                    if (quote.expiresMs > Date.now()) onContinue();
+                    if (quote.expiresMs > Date.now()) onContinue(quote.id);
                   }}
                 >
                   Continue to payment
                 </Button>
               ) : null}
-              {expired ? (
+              {stale ? (
                 <Button
                   variant="secondary"
                   size="lg"

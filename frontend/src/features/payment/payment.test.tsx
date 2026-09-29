@@ -139,10 +139,12 @@ describe("teammate product page payment integration", () => {
     await userEvent.click(buttons[0]!);
     if (operation === "START") await continueFromQuote();
     await waitFor(() => expect(assign).toHaveBeenCalledOnce());
-    expect(bodies).toEqual([
-      { operation, businessId: operation === "START" ? productId : dealId },
-      { intentId },
-    ]);
+    // START carries the shown quote (US26); JOIN pays the bloc's frozen price.
+    const intentBody =
+      operation === "START"
+        ? { operation, businessId: productId, quoteId: quote().id }
+        : { operation, businessId: dealId };
+    expect(bodies).toEqual([intentBody, { intentId }]);
     expect(sessionStorage.getItem(lastPaymentKey)).toBe(paymentId);
     for (const button of screen.getAllByRole("button", { name: /Buy alone/ }))
       expect(button).toBeDisabled();

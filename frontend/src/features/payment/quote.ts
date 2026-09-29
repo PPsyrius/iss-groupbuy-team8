@@ -1,6 +1,5 @@
-// The first-team quote (UC3, plan T3-01) as the sheet shows it. The quote is a preview: START
-// re-prices from the latest policy when the intent is created, and Stripe's page carries the
-// amount actually charged (ADR 0014 addendum 2026-09-24).
+// The first-team quote (UC3, plan T3-01) as the sheet shows it. START sends its id and the server
+// charges the quoted amount while it is valid (US26, #183; ADR 0014 addendum 2026-09-29).
 import { ApiError } from "@/api/envelope";
 import type { QuoteResponse } from "@/api/generated/types.gen";
 import { parseDeadline } from "@/features/catalog/deal-time";

@@ -75,6 +75,12 @@ async function readyCheckout(checkoutRef: { current: Checkout | null }) {
   return checkout;
 }
 
+async function signedInCheckout() {
+  const checkoutRef = renderProbe("buyer-1");
+  await waitFor(() => expect(checkoutRef.current?.enabled).toBe(true));
+  return checkoutRef;
+}
+
 beforeEach(() => {
   intents = 0;
   sessionStorage.clear();
@@ -267,4 +273,132 @@ describe("useCheckout invite ref (UC7)", () => {
     ]);
     expect(readParkedInvite()?.ref).toBe(ref);
   });
+});
+
+describe("useCheckout quote honouring (US26, #183)", () => {
+  const quoteA = "0192f0a0-0000-7000-8000-00000000000a";
+  const quoteB = "0192f0a0-0000-7000-8000-00000000000b";
+  let bodies: unknown[] = [];
+
+  function serveRecordedCheckout(checkoutStatus = 200) {
+    bodies = [];
+    serveCheckout();
+    server.use(
+      http.post("*/api/v1/payments/intents", async ({ request }) => {
+        intents++;
+        bodies.push(await request.json());
+        return ok({ intentId });
+      }),
+    );
+    if (checkoutStatus !== 200) {
+      server.use(
+        http.post("*/api/v1/payments/checkout-sessions", () =>
+          HttpResponse.json(
+            { code: "COMMON_500_000", message: "boom" },
+            { status: checkoutStatus },
+          ),
+        ),
+      );
+    }
+  }
+
+  it("sends the shown quote on START so the server charges that price", async () => {
+    serveRecordedCheckout();
+    vi.spyOn(window.location, "assign").mockImplementation(() => {});
+    const checkoutRef = await signedInCheckout();
+    await act(async () => {
+      await readyCheckout(checkoutRef).then((c) => c.begin("START", businessId, quoteA));
+    });
+    expect(bodies).toEqual([{ operation: "START", businessId, quoteId: quoteA }]);
+  });
+
+  it("never sends a quote on JOIN, which pays the bloc's frozen price", async () => {
+    serveRecordedCheckout();
+    vi.spyOn(window.location, "assign").mockImplementation(() => {});
+    const checkoutRef = await signedInCheckout();
+    await act(async () => {
+      await readyCheckout(checkoutRef).then((c) => c.begin("JOIN", businessId, quoteA));
+    });
+    expect(bodies).toEqual([{ operation: "JOIN", businessId }]);
+  });
+
+  it("reuses the intent for a retry of the same quote but freezes a new one for a new quote", async () => {
+    serveRecordedCheckout(500);
+    const checkoutRef = await signedInCheckout();
+    await act(async () => {
+      await readyCheckout(checkoutRef).then((c) => c.begin("START", businessId, quoteA));
+    });
+    await act(async () => {
+      await readyCheckout(checkoutRef).then((c) => c.begin("START", businessId, quoteA));
+    });
+    expect(intents).toBe(1);
+    await act(async () => {
+      await readyCheckout(checkoutRef).then((c) => c.begin("START", businessId, quoteB));
+    });
+    expect(intents).toBe(2);
+    expect(bodies).toEqual([
+      { operation: "START", businessId, quoteId: quoteA },
+      { operation: "START", businessId, quoteId: quoteB },
+    ]);
+  });
+
+  it("keeps a catalog refusal on JOIN on the page-level alert", async () => {
+    serveCheckout();
+    server.use(
+      http.post("*/api/v1/payments/intents", () =>
+        HttpResponse.json(
+          { code: "CATALOG_409_001", message: "Team price is unavailable" },
+          { status: 409 },
+        ),
+      ),
+    );
+    const checkoutRef = await signedInCheckout();
+    let outcome: string | undefined;
+    await act(async () => {
+      outcome = await readyCheckout(checkoutRef).then((c) => c.begin("JOIN", businessId));
+    });
+    expect(outcome).toBe("settled");
+    await waitFor(() => expect(checkoutRef.current?.error).toMatch(/We could not open Checkout/));
+  });
+
+  it.each([
+    ["CATALOG_409_007", 409, "Team price quote has expired"],
+    ["CATALOG_404_002", 404, "Team price quote not found"],
+    ["CATALOG_409_001", 409, "Team price is unavailable"],
+  ])(
+    "reports a refused quote (%s) to the sheet instead of the page",
+    async (code, status, message) => {
+      serveCheckout();
+      server.use(
+        http.post("*/api/v1/payments/intents", () =>
+          HttpResponse.json({ code, message }, { status }),
+        ),
+      );
+      const onRejected = vi.fn<() => void>();
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      const checkoutRef: { current: Checkout | null } = { current: null };
+      function RejectingProbe() {
+        const checkout = useCheckout("buyer-1", onRejected);
+        useEffect(() => {
+          checkoutRef.current = checkout;
+        }, [checkout]);
+        return null;
+      }
+      render(
+        <QueryClientProvider client={queryClient}>
+          <RejectingProbe />
+        </QueryClientProvider>,
+      );
+      await waitFor(() => expect(checkoutRef.current?.enabled).toBe(true));
+      let outcome: string | undefined;
+      await act(async () => {
+        outcome = await readyCheckout(checkoutRef).then((c) =>
+          c.begin("START", businessId, quoteA),
+        );
+      });
+      expect(outcome).toBe("quote-rejected");
+      expect(checkoutRef.current?.error).toBeNull();
+      expect(onRejected).not.toHaveBeenCalled();
+    },
+  );
 });
