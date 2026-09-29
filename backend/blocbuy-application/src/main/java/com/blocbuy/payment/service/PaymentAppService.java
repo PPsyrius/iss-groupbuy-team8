@@ -1,27 +1,22 @@
 package com.blocbuy.payment.service;
 
 /**
- * Use-case service for Payment — transaction boundary sits on public command methods
- * ({@code @Transactional}, queries {@code readOnly = true}). Orchestrates the Payment aggregate,
- * {@code PaymentRepository}, and {@code PaymentGateway}; carries no rules that belong to the
- * aggregate itself.
- *
- * <p>Flow outline (first use case): create payment → persist row + create provider intent in one
- * use case; webhook handler → verify signature via gateway, deduplicate by provider event id,
- * transition the persisted payment inside a local transaction. Redis never holds payment truth.
- * TODO(TEAM8-payment): add one public method per use case; write paths require Idempotency-Key.
+ * Webhook entry port retained for the controller. Under {@code stripe-sprint2}, {@link
+ * StripePaymentAppService} delegates to {@link StripeCheckoutService} for durable settlement;
+ * otherwise {@link DisabledStripePaymentAppService} verifies but cannot settle Checkout events.
+ * Checkout commands have their own application service.
  */
 public interface PaymentAppService {
 
     /**
-     * Handles a verified-or-rejected Stripe webhook callback. Verifies the signature via the
-     * gateway, deduplicates by provider event id, and transitions the persisted payment inside a
-     * local transaction. Unknown/irrelevant event types are acknowledged and ignored.
+     * Verifies the signed callback. Checkout events are acknowledged only after durable handling;
+     * irrelevant event types are ignored after verification. When Checkout is off, signed Checkout
+     * settlement and other money events fail so the provider can retry.
      *
      * @param payload raw request body, exactly as received
      * @param signatureHeader value of the {@code Stripe-Signature} header
      * @throws com.blocbuy.common.exception.BizException with {@code PAYMENT_400_001} on bad
-     *     signature
+     *     signature or {@code PAYMENT_502_001} when processing is unavailable
      */
     void handleStripeWebhook(String payload, String signatureHeader);
 }

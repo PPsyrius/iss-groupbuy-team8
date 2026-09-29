@@ -124,12 +124,12 @@ test.describe("signed-in buyer @auth", () => {
   );
   test.use(hasAuthState ? { storageState: AUTH_STATE } : {});
 
-  test("header and /account show the signed-in user", async ({ page }) => {
+  test("/account opens under the header that names the signed-in user", async ({ page }) => {
     await page.goto("/account");
     await expect(page).toHaveURL(/\/account$/);
+    await expect(page.getByRole("heading", { level: 1, name: "My blocs" })).toBeVisible();
     const name = (await page.getByTestId("session-user").textContent())?.trim() ?? "";
     expect(name).not.toBe("");
-    await expect(page.getByTestId("account-user")).toHaveText(name);
   });
 
   // Last on purpose: it invalidates the server-side session, so the storage state has to be

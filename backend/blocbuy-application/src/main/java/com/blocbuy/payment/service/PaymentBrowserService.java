@@ -24,12 +24,19 @@ public class PaymentBrowserService {
     private final PlatformTransactionManager transactions;
 
     public UUID createIntent(UUID user, String operation, UUID businessId, String inviteRef) {
+        return createIntent(user, operation, businessId, inviteRef, null);
+    }
+
+    /** The quote id is passed through untouched; the port prices the intent at it or refuses. */
+    public UUID createIntent(
+            UUID user, String operation, UUID businessId, String inviteRef, UUID quoteId) {
         PaymentIntentPort port = intents.getIfAvailable();
         if (port == null) throw new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID);
         TransactionTemplate tx = new TransactionTemplate(transactions);
         tx.setTimeout(10);
         try {
-            return tx.execute(status -> port.createIntent(user, operation, businessId, inviteRef));
+            return tx.execute(
+                    status -> port.createIntent(user, operation, businessId, inviteRef, quoteId));
         } catch (IllegalArgumentException failure) {
             throw new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID);
         }

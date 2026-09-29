@@ -116,8 +116,13 @@ class PaymentBrowserServiceTest {
         UUID user = UUID.randomUUID();
         UUID intent = UUID.randomUUID();
         UUID paymentId = UUID.randomUUID();
-        when(port.createIntent(user, "START", intent, "ref-1")).thenReturn(paymentId);
+        when(port.createIntent(user, "START", intent, "ref-1", null)).thenReturn(paymentId);
         assertThat(service.createIntent(user, "START", intent, "ref-1")).isEqualTo(paymentId);
+        // A shown quote travels to the port untouched; payment never interprets it.
+        UUID quote = UUID.randomUUID();
+        UUID quoted = UUID.randomUUID();
+        when(port.createIntent(user, "START", intent, null, quote)).thenReturn(quoted);
+        assertThat(service.createIntent(user, "START", intent, null, quote)).isEqualTo(quoted);
         var result =
                 new StripeCheckoutService.CheckoutResult(
                         paymentId, "https://checkout.stripe.com/c/pay/test", "CREATED");
@@ -140,7 +145,7 @@ class PaymentBrowserServiceTest {
                         mock(RefundRepository.class),
                         tx);
         UUID id = UUID.randomUUID();
-        when(port.createIntent(any(), any(), any(), any()))
+        when(port.createIntent(any(), any(), any(), any(), any()))
                 .thenThrow(new IllegalArgumentException("invalid"));
         assertThatThrownBy(() -> service.createIntent(id, "START", id, null))
                 .isInstanceOf(BizException.class);

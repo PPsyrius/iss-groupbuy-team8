@@ -43,6 +43,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class GoogleOAuthGateway implements OAuthIdentityGateway {
 
     private static final String SCOPE = "openid email profile";
+    private static final String ID_TOKEN = "id_token";
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(3);
     private static final Duration READ_TIMEOUT = Duration.ofSeconds(5);
 
@@ -147,13 +148,13 @@ public class GoogleOAuthGateway implements OAuthIdentityGateway {
             log.warn("google token exchange returned a malformed response body");
             throw new BizException(IdentityErrorCode.OAUTH_PROVIDER_ERROR);
         }
-        if (!json.has("id_token") || json.get("id_token").isJsonNull()) {
+        if (!json.has(ID_TOKEN) || json.get(ID_TOKEN).isJsonNull()) {
             // provider error payload (e.g. invalid_grant for a reused/expired code) — never log it
             // raw
             log.warn("google token exchange returned no id_token");
             throw new BizException(IdentityErrorCode.OAUTH_TOKEN_INVALID);
         }
-        return json.get("id_token").getAsString();
+        return json.get(ID_TOKEN).getAsString();
     }
 
     private GoogleIdToken.Payload verify(String idToken) {

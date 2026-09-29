@@ -142,8 +142,8 @@ sequenceDiagram
 
 Missing product/account/policy fails before strategy dispatch. See the original
 [design plan](backend-skeleton-plan.md#14-uc1-browse-and-search) for UC1 sequence. UC3 must not call
-getQuote and assume checkout eligibility: owner, expiry, availability and consumption still need an
-agreed transaction. UC9 shares the product lock and preserves accepted history. These mechanisms
+getQuote and assume checkout eligibility: owner, expiry and availability are rechecked in the START
+intent's own transaction (`lockQuotedStart`, #183). UC9 shares the product lock and preserves accepted history. These mechanisms
 address multi-use-case consistency beyond the Strategy itself.
 
 ## Boundaries and Strategy
@@ -158,12 +158,12 @@ All success responses use the established HTTP 200 `Result` envelope; failures u
 
 - `PUT /api/v1/products/{productId}/team-price-policy`: requires `catalog:product:write`. The V6 migration grants this new permission only to the existing administrator role. Body: decimal-string `amount`, literal `currency: "sgd"`, inclusive `validFrom`, exclusive `validUntil`, and required `expectedVersion`. Version 0 creates revision 1; later requests must match the latest revision. A stale retry returns 412 and creates nothing. This is a conditional replacement, not an unconditional last-write-wins PUT.
 - `GET /api/v1/products/{productId}/team-price-policy`: same permission and active-account validation, explicitly protected even though other product GET routes are anonymous.
-- `POST /api/v1/team-price-quotes`: authenticated body contains only `productId`; owner is taken from the trusted session. Each call creates a new snapshot, so retries are **not idempotent**. No financial or inventory effect exists. Clients must not treat this as checkout.
+- `POST /api/v1/team-price-quotes`: authenticated body contains only `productId`; owner is taken from the trusted session. Each call creates a new snapshot, so retries are **not idempotent**. Issuing has no financial or inventory effect. The quote id may be passed to a START purchase intent (`POST /api/v1/payments/intents`, `quoteId`), which then charges its amount (#183, backend ADR 0001 addendum 2026-09-28).
 - `GET /api/v1/team-price-quotes/{quoteId}`: active authenticated owner only; absent and foreign-owned IDs both return 404. Historical snapshots remain readable after expiry. Reading is not validation or consumption of a quote.
 
 V1 quotes support SGD only, exact positive cents fitting `numeric(18,2)`, strictly below the product original price. No rounding, client-selected amounts on issuance, or guessed currency minor units. Wire amounts are decimal strings. Policy instants normalize to PostgreSQL's microsecond precision before validation, so a valid Java-only nanosecond window cannot collapse when persisted. Latest policy always replaces earlier revisions, including a future or expired latest policy: there is no fallback.
 
-Quote lifetime is an explicit v1 rule: at most **15 minutes**, clipped to policy expiry. Expiry is exclusive. Policy edits never alter old snapshots or extend their deadlines. Future checkout must revalidate owner, quote expiry, product availability and consumption under its own transaction; this increment promises neither single-use quotes nor fulfilment.
+Quote lifetime is an explicit v1 rule: at most **15 minutes**, clipped to policy expiry. Expiry is exclusive. Policy edits never alter old snapshots or extend their deadlines. A START intent accepts a quote only under the product row lock, after rechecking that the product is sellable and startable, that the quote belongs to this buyer and product, and that it is unexpired on the database clock read after the lock (`CatalogPurchaseSupport.lockQuotedStart`). It does not consult the latest policy. Quotes are not single-use: each acceptance issues a new intent, and each intent is consumed by at most one payment.
 
 ## Persistence, authorization, and concurrency
 
