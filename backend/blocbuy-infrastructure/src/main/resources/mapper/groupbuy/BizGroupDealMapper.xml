@@ -40,15 +40,16 @@
         WHERE id = #{id,jdbcType=OTHER} AND deleted = false
     </select>
 
-    <!-- open = joinable now: status 'open' (server-side code) and not past expiry (DB clock) -->
-    <select id="selectOpenByProductIds" resultMap="bizGroupDealMap">
-        SELECT <include refid="columns"/>
+    <!-- Preserve open/unexpired eligibility; select one cheapest deal per product in PostgreSQL. -->
+    <select id="selectBestOpenByProductIds" resultMap="bizGroupDealMap">
+        SELECT DISTINCT ON (product_id) <include refid="columns"/>
         FROM biz_group_deal
         WHERE deleted = false AND status = 'open' AND expire_time &gt; CURRENT_TIMESTAMP
           AND product_id IN
         <foreach collection="productIds" item="productId" open="(" separator="," close=")">
             #{productId,jdbcType=OTHER}
         </foreach>
+        ORDER BY product_id ASC, deal_price ASC, id ASC
     </select>
     <resultMap id="teamMembershipMap" type="com.blocbuy.groupbuy.persistence.TeamMembershipDO">
         <id column="member_id" property="memberId" jdbcType="OTHER"/>

@@ -35,11 +35,11 @@ public class GroupDealRepositoryImpl implements GroupDealRepository {
     }
 
     @Override
-    public List<GroupDeal> findOpenDealsByProductIds(Collection<UUID> productIds) {
+    public List<GroupDeal> findBestOpenDealsByProductIds(Collection<UUID> productIds) {
         if (productIds == null || productIds.isEmpty()) {
             return List.of();
         }
-        return bizGroupDealMapper.selectOpenByProductIds(productIds).stream()
+        return bizGroupDealMapper.selectBestOpenByProductIds(productIds).stream()
                 .map(GroupDealConverter::toDomain)
                 .toList();
     }
