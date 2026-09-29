@@ -229,6 +229,7 @@ BlocBuy is the group project of **NUS-ISS Team 8** for the **SWE5006 Designing M
 
 ## Engineering and Operations
 
+- [Full-stack localhost development](fullstack-localhost/README.md): SPA and API on one origin with one Docker Compose command
 - [Backend CI/CD runbook](docs/ci/backend-pipeline.md)
 - [Existing EC2 backend deployment operator guide](docs/deploy/backend-ec2-pipeline-operator-guide.md)
 - [First-deploy one-time bootstrap checklist](docs/deploy/backend-first-deploy-bootstrap.md)

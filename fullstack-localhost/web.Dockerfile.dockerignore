@@ -1,0 +1,12 @@
+# The build context is the repository root; send only what web.Dockerfile copies.
+*
+!contracts/openapi.json
+!deployment/frontend/cloudfront/response-headers-policy.json
+!frontend/
+!fullstack-localhost/Caddyfile
+frontend/node_modules/
+frontend/dist/
+frontend/src/api/generated/
+frontend/playwright-report/
+frontend/test-results/
+frontend/coverage/

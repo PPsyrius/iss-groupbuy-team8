@@ -1,0 +1,81 @@
+# Full-stack localhost development: SPA at http://localhost:8080/ and the backend at /api/ on the
+# same origin, as CloudFront serves them. Run from the repository root:
+#   docker compose -f fullstack-localhost/compose.yaml up --build
+# Optional overrides go in fullstack-localhost/.env (see .env.example). Not a deployment artefact.
+name: blocbuy-fullstack-localhost
+
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: Blocbuy
+      POSTGRES_USER: ${DB_USERNAME:-blocbuy}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-localhost-only}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [data]
+
+  redis:
+    image: redis:8.10
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-localhost-only}
+    command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli --no-auth-warning -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [data]
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../fullstack-localhost/backend.Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      # The docker profile runs schema migrations only; add the demo catalog the local profile seeds.
+      SPRING_FLYWAY_LOCATIONS: classpath:db/migration,classpath:db/seed
+      DB_USERNAME: ${DB_USERNAME:-blocbuy}
+      DB_PASSWORD: ${DB_PASSWORD:-localhost-only}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-localhost-only}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8080/api/v1/auth/oauth2/google/callback}
+      STRIPE_API_KEY: ${STRIPE_API_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      BLOCBUY_SCHEDULING_ENABLED: ${BLOCBUY_SCHEDULING_ENABLED:-false}
+    ports:
+      # Published so `pnpm dev` (Vite proxies /api to :8589) can use this backend with hot reload.
+      - "127.0.0.1:8589:8589"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [edge, data]
+
+  web:
+    build:
+      context: ..
+      dockerfile: fullstack-localhost/web.Dockerfile
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on: [backend]
+    networks: [edge]
+
+networks:
+  edge:
+  data:
+    internal: true
+
+volumes:
+  postgres-data:
+  redis-data:

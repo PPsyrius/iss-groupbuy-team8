@@ -1,0 +1,13 @@
+# One origin, as in CloudFront: /api/* goes to the backend, everything else is the SPA.
+:80 {
+	handle /api/* {
+		reverse_proxy backend:8589
+	}
+
+	handle {
+		root * /srv
+		# Client-side routes such as /products/<id> fall back to the SPA shell.
+		try_files {path} /index.html
+		file_server
+	}
+}
