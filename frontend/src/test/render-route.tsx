@@ -7,6 +7,7 @@ import { vi } from "vitest";
 import { OK_CODE } from "@/api/envelope";
 import { queryClient } from "@/api/query-client";
 import { routeTree } from "@/routeTree.gen";
+import { adminHandlers, createAdminStore } from "@/test/admin-msw";
 import { server } from "@/test/msw";
 
 // The root layout mounts the devtools; they have no place in a happy-dom route test.
@@ -53,4 +54,18 @@ export function serveSignedIn(
       HttpResponse.json({ code: OK_CODE, message: "ok", data: user }),
     ),
   );
+}
+
+// Signed in as an admin over a fresh stateful admin store (admin plan A1-02); the store is
+// returned so a test can inspect it or arm a conflict.
+export function serveAdmin(store = createAdminStore()) {
+  serveSignedIn();
+  server.use(...adminHandlers(store, { role: "admin" }));
+  return store;
+}
+
+// Signed in as a buyer: every admin path answers 403, as Sa-Token's role check does.
+export function serveNonAdmin() {
+  serveSignedIn();
+  server.use(...adminHandlers(createAdminStore(), { role: "buyer" }));
 }

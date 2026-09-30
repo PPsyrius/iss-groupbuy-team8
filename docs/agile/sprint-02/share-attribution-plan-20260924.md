@@ -13,6 +13,8 @@ Backend owner changed from @limjiechao to los gai by agreement on 2026-09-24; th
 > - **Exception mapping.** `GlobalExceptionHandler` now maps `MissingRequestHeaderException` to 400. Previously only the Stripe controllers had that mapping, and every other controller answered 500.
 > - **Mint concurrency.** Ref collisions are covered by `ON CONFLICT DO NOTHING` across both unique indexes instead of a retry.
 
+> **Amendment (2026-09-30).** D5 is superseded: #201 adds the resolve endpoint `GET /api/v1/invites/{ref}` (anonymous GET, rate-limited, `no-store`) for the "X started this bloc" banner. Decisions and design: [US15b invite resolve plan](../sprint-03/invite-sharer-resolve-plan-20260930.md).
+
 ## 1. Goal and acceptance criteria
 
 A member of an open team mints an invite reference. A buyer who joins through it is traced to the sharer, and a subscriber records the credit after the join commits.

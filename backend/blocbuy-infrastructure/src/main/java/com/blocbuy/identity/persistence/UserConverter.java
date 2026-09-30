@@ -2,6 +2,7 @@ package com.blocbuy.identity.persistence;
 
 import com.blocbuy.identity.model.RegisterSource;
 import com.blocbuy.identity.model.User;
+import com.blocbuy.identity.model.UserProfile;
 import com.blocbuy.identity.model.UserStatus;
 
 /**
@@ -22,8 +23,7 @@ final class UserConverter {
                 data.getEmail(),
                 RegisterSource.fromCode(data.getRegisterSource()),
                 UserStatus.fromCode(data.getStatus()),
-                data.getNickname(),
-                data.getAvatarUrl(),
+                new UserProfile(data.getNickname(), data.getAvatarUrl()),
                 data.getLastLoginTime());
     }
 

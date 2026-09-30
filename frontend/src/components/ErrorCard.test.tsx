@@ -10,7 +10,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AppErrorBoundary } from "./AppErrorBoundary";
-import { NotFoundCard, RouteErrorCard } from "./ErrorCard";
+import { AccessDeniedCard, NotFoundCard, RouteErrorCard } from "./ErrorCard";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -29,6 +29,38 @@ describe("NotFoundCard", () => {
     expect(screen.getByText("Nothing has been charged.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Browse listings" })).toHaveAttribute("href", "/");
     expect(screen.getByRole("heading", { name: "Came from an invite link?" })).toBeVisible();
+  });
+});
+
+describe("AccessDeniedCard", () => {
+  it("renders the §4.5 403 card with the Errors artboard copy", async () => {
+    const rootRoute = createRootRoute({ component: () => <AccessDeniedCard /> });
+    const router = createRouter({
+      routeTree: rootRoute,
+      history: createMemoryHistory({ initialEntries: ["/admin"] }),
+    });
+    render(<RouterProvider router={router} />);
+    expect(
+      await screen.findByRole("heading", { name: "You don’t have access to the admin console" }),
+    ).toBeVisible();
+    expect(screen.getByText("403")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "The admin console is for the team that publishes listings. Your BlocBuy account works normally everywhere else.",
+      ),
+    ).toBeVisible();
+    expect(screen.getByText("Nothing has been charged.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Your blocs, payments and refunds are unaffected by this."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Browse listings" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "My blocs" })).toHaveAttribute("href", "/account");
+    expect(screen.getByRole("heading", { name: "Should you have access?" })).toBeVisible();
+    expect(
+      screen.getByText(
+        "Admin is assigned by hand, not requested in the app. Ask the team to add your account.",
+      ),
+    ).toBeVisible();
   });
 });
 

@@ -9,6 +9,7 @@ import com.blocbuy.common.exception.BizException;
 import com.blocbuy.identity.exception.IdentityErrorCode;
 import com.blocbuy.identity.model.RegisterSource;
 import com.blocbuy.identity.model.User;
+import com.blocbuy.identity.model.UserProfile;
 import com.blocbuy.identity.model.UserStatus;
 import com.blocbuy.identity.repository.UserRepository;
 import java.util.Optional;
@@ -51,8 +52,7 @@ class UserAppServiceImplTest {
                                         "test@example.invalid",
                                         RegisterSource.GOOGLE,
                                         UserStatus.ACTIVE,
-                                        "Tester",
-                                        "https://img.example/avatar.png",
+                                        new UserProfile("Tester", "https://img.example/avatar.png"),
                                         null)));
         var view = service.currentUser(ID);
         assertThat(view.userId()).isEqualTo(ID);
@@ -68,8 +68,32 @@ class UserAppServiceImplTest {
                 .isEqualTo(IdentityErrorCode.USER_NOT_FOUND);
     }
 
+    @Test
+    void publicNicknameDelegatesToTheAggregateRule() {
+        when(users.findById(ID))
+                .thenReturn(
+                        Optional.of(
+                                User.reconstitute(
+                                        ID,
+                                        null,
+                                        "test@example.invalid",
+                                        RegisterSource.GOOGLE,
+                                        UserStatus.ACTIVE,
+                                        new UserProfile("Sarah Tan", null),
+                                        null)));
+        assertThat(service.publicNickname(ID)).contains("Sarah Tan");
+
+        when(users.findById(ID)).thenReturn(Optional.of(user(UserStatus.DISABLED)));
+        assertThat(service.publicNickname(ID)).isEmpty();
+    }
+
+    @Test
+    void publicNicknameIsEmptyForAnUnknownUser() {
+        assertThat(service.publicNickname(ID)).isEmpty();
+    }
+
     private static User user(UserStatus status) {
         return User.reconstitute(
-                ID, null, "test@example.invalid", RegisterSource.GOOGLE, status, null, null, null);
+                ID, null, "test@example.invalid", RegisterSource.GOOGLE, status, null, null);
     }
 }

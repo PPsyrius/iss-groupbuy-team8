@@ -83,7 +83,6 @@ class UserTest {
                                         RegisterSource.GOOGLE,
                                         UserStatus.ACTIVE,
                                         null,
-                                        null,
                                         null))
                 .isInstanceOf(IllegalArgumentException.class);
 
@@ -98,7 +97,6 @@ class UserTest {
                                         null,
                                         UserStatus.ACTIVE,
                                         null,
-                                        null,
                                         null))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(
@@ -108,7 +106,6 @@ class UserTest {
                                         null,
                                         "ada@example.com",
                                         RegisterSource.GOOGLE,
-                                        null,
                                         null,
                                         null,
                                         null))
@@ -144,5 +141,57 @@ class UserTest {
         user.ensureActive();
 
         assertThat(user.status()).isEqualTo(UserStatus.ACTIVE);
+    }
+
+    private static User user(UserStatus status, String email, String nickname) {
+        return User.reconstitute(
+                UUID.randomUUID(),
+                null,
+                email,
+                RegisterSource.GOOGLE,
+                status,
+                new UserProfile(nickname, null),
+                null);
+    }
+
+    @Test
+    void publicNicknameIsTheStoredNicknameUnchanged() {
+        assertThat(user(UserStatus.ACTIVE, "sarah@example.com", "Sarah Tan").publicNickname())
+                .contains("Sarah Tan");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"sarah.tan93", "Sarah.Tan93", "SARAH.TAN93"})
+    void publicNicknameHidesANicknameThatIsTheEmailLocalPart(String nickname) {
+        assertThat(user(UserStatus.ACTIVE, "sarah.tan93@gmail.com", nickname).publicNickname())
+                .isEmpty();
+    }
+
+    @Test
+    void publicNicknameKeepsANicknameThatOnlyContainsTheEmailLocalPart() {
+        assertThat(
+                        user(UserStatus.ACTIVE, "sarah.tan93@gmail.com", "sarah.tan93 fan")
+                                .publicNickname())
+                .contains("sarah.tan93 fan");
+    }
+
+    @Test
+    void publicNicknameComparesTheWholeEmailWhenItHasNoAtSign() {
+        assertThat(user(UserStatus.ACTIVE, "localonly", "localonly").publicNickname()).isEmpty();
+        assertThat(user(UserStatus.ACTIVE, null, "Sarah").publicNickname()).contains("Sarah");
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   "})
+    void publicNicknameIsEmptyWithoutANickname(String nickname) {
+        assertThat(user(UserStatus.ACTIVE, "sarah@example.com", nickname).publicNickname())
+                .isEmpty();
+    }
+
+    @Test
+    void publicNicknameIsEmptyForADisabledAccount() {
+        assertThat(user(UserStatus.DISABLED, "sarah@example.com", "Sarah Tan").publicNickname())
+                .isEmpty();
     }
 }
