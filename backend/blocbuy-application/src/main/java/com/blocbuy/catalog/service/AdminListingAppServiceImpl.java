@@ -32,55 +32,72 @@ public class AdminListingAppServiceImpl implements AdminListingAppService {
     /** Create server-owned identity, lifecycle and counters after checking account state. */
     @Override
     @Transactional(timeout = 10)
-    public Product create(String productNo, ListingDetails details, UUID actorId) {
+    public ManagedListing create(String productNo, ListingDetails details, UUID actorId) {
         users.requireActive(actorId);
         Product product =
                 Product.draft(UuidV7.next(), products.resolveProductNumber(productNo), details);
         products.insertDraft(product, actorId);
-        return product;
+        return new ManagedListing(product, null);
     }
 
     /** Administrative reads cannot be performed by a disabled account with an old session. */
     @Override
-    @Transactional(readOnly = true)
-    public Product get(UUID id, UUID actorId) {
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public ManagedListing get(UUID id, UUID actorId) {
         users.requireActive(actorId);
-        return products.findById(id)
-                .orElseThrow(() -> new BizException(CatalogErrorCode.PRODUCT_NOT_FOUND));
+        Product product =
+                products.findById(id)
+                        .orElseThrow(() -> new BizException(CatalogErrorCode.PRODUCT_NOT_FOUND));
+        return withLatestPolicy(product);
     }
 
     /** Keep count and data filters aligned and never query once per listing. */
     @Override
-    @Transactional(readOnly = true)
-    public PageResult<Product> page(PageQuery page, ProductStatus status, UUID actorId) {
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public PageResult<ManagedListing> page(PageQuery page, ProductStatus status, UUID actorId) {
         users.requireActive(actorId);
-        return products.pageListings(page, status);
+        var result = products.pageListings(page, status);
+        var policies = prices.findLatestPolicies(result.items().stream().map(Product::id).toList());
+        return new PageResult<>(
+                result.items().stream()
+                        .map(product -> new ManagedListing(product, policies.get(product.id())))
+                        .toList(),
+                result.total(),
+                result.page(),
+                result.size(),
+                result.nextCursor());
     }
 
-    /** Two aggregate reads share one snapshot and the transaction's database expiry clock. */
+    /** Three aggregate reads share one snapshot and the transaction's database expiry clock. */
     @Override
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public ListingCounts counts(UUID actorId) {
         users.requireActive(actorId);
         var statuses = products.countListingStatuses();
         return new ListingCounts(
-                statuses.draft(), statuses.onSale(), statuses.offSale(), deals.countOpenDeals());
+                statuses.draft(),
+                statuses.onSale(),
+                statuses.offSale(),
+                deals.countOpenDeals(),
+                prices.countListingsWithActivePolicy());
     }
 
     /** Domain revision preserves identity, sold counters and pricing strategy selection. */
     @Override
     @Transactional(timeout = 10)
-    public Product revise(UUID id, ListingDetails details, int expectedVersion, UUID actorId) {
+    public ManagedListing revise(
+            UUID id, ListingDetails details, int expectedVersion, UUID actorId) {
         Product current = lockForChange(id, expectedVersion, actorId);
         Product revised = current.revise(details);
         products.updateListing(revised, expectedVersion, actorId);
-        return revised;
+        return withLatestPolicy(revised);
     }
 
     /** Route intent into state-specific aggregate behavior, never a public status setter. */
     @Override
     @Transactional(timeout = 10)
-    public Product changeStatus(UUID id, ProductStatus target, int expectedVersion, UUID actorId) {
+    public ManagedListing changeStatus(
+            UUID id, ProductStatus target, int expectedVersion, UUID actorId) {
         Product current = lockForChange(id, expectedVersion, actorId);
         Product changed =
                 switch (target) {
@@ -89,7 +106,7 @@ public class AdminListingAppServiceImpl implements AdminListingAppService {
                     case DRAFT -> throw new BizException(CatalogErrorCode.PRODUCT_STATE_CONFLICT);
                 };
         products.updateListing(changed, expectedVersion, actorId);
-        return changed;
+        return withLatestPolicy(changed);
     }
 
     /** All historical references veto deletion, including expired or logically deleted history. */
@@ -102,6 +119,11 @@ public class AdminListingAppServiceImpl implements AdminListingAppService {
             throw new BizException(CatalogErrorCode.PRODUCT_REFERENCED);
         }
         products.deleteDraft(id, expectedVersion, actorId);
+    }
+
+    /** Single-listing reads and mutation responses use the same latest-revision rule. */
+    private ManagedListing withLatestPolicy(Product product) {
+        return new ManagedListing(product, prices.findLatestPolicy(product.id()).orElse(null));
     }
 
     /**

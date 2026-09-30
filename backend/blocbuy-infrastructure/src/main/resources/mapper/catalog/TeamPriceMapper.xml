@@ -30,6 +30,25 @@
         WHERE product_id = #{productId,jdbcType=OTHER} AND deleted = false
         ORDER BY version DESC LIMIT 1
     </select>
+    <select id="selectLatestPolicies" resultMap="policyMap">
+        SELECT DISTINCT ON (product_id) product_id, amount, currency, valid_from, valid_until, version
+        FROM biz_team_price_policy
+        WHERE deleted = false AND product_id IN
+        <foreach collection="productIds" item="productId" open="(" separator="," close=")">
+            #{productId,jdbcType=OTHER}
+        </foreach>
+        ORDER BY product_id, version DESC
+    </select>
+    <select id="countListingsWithActivePolicy" resultType="long">
+        SELECT COUNT(*) FROM (
+            SELECT DISTINCT ON (policy.product_id) policy.product_id, policy.valid_from, policy.valid_until
+            FROM biz_team_price_policy policy
+            JOIN biz_product product ON product.id = policy.product_id AND product.deleted = false
+            WHERE policy.deleted = false
+            ORDER BY policy.product_id, policy.version DESC
+        ) latest
+        WHERE latest.valid_from &lt;= CURRENT_TIMESTAMP AND latest.valid_until &gt; CURRENT_TIMESTAMP
+    </select>
     <insert id="insertPolicy">
         INSERT INTO biz_team_price_policy
             (product_id, amount, currency, valid_from, valid_until, version,
