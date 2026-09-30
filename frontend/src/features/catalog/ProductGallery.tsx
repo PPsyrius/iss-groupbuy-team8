@@ -8,11 +8,11 @@ function GalleryImage({
   src,
   alt,
   loading,
-}: {
+}: Readonly<{
   src: string;
   alt: string;
   loading: "eager" | "lazy";
-}) {
+}>) {
   const [failed, setFailed] = useState(false);
   if (failed) return null;
   return (
@@ -40,7 +40,7 @@ function selectedShotIndex(
 // The route keys this component by product ID. Within a product, retain the selected source
 // after reordering or choose the first remaining shot if it was removed. Keep the index too
 // so duplicate URLs can still be selected individually.
-export function ProductGallery({ images }: { images: string[] }) {
+export function ProductGallery({ images }: Readonly<{ images: string[] }>) {
   const [selection, setSelection] = useState<{ src: string; index: number } | null>(() =>
     images[0] ? { src: images[0], index: 0 } : null,
   );

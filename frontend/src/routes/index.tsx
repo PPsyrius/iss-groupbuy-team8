@@ -105,7 +105,7 @@ function ProductsPage() {
   );
 }
 
-function CatalogHero({ total }: { total?: number }) {
+function CatalogHero({ total }: Readonly<{ total?: number }>) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-6">
       <div className="flex max-w-[560px] flex-col gap-1 xl:gap-1.5">
@@ -137,11 +137,11 @@ function CatalogEmpty({
   size,
   category,
   keyword,
-}: {
+}: Readonly<{
   size: number;
   category: string | undefined;
   keyword: string | undefined;
-}) {
+}>) {
   const { heading, body } = catalogEmptyCopy(category, keyword);
   return (
     <div className="border-border bg-surface flex flex-col items-center gap-3 rounded-lg border px-6 py-8 text-center xl:px-8 xl:py-16">
@@ -245,7 +245,7 @@ function CatalogLoading() {
 
 // Artboard `error`: Alert variant danger with a retry; the reassurance about existing blocs is
 // deliberate. `router.invalidate()` re-runs the loader; `reset` clears the error boundary.
-function CatalogError({ reset }: { reset: () => void }) {
+function CatalogError({ reset }: Readonly<{ reset: () => void }>) {
   const router = useRouter();
   return (
     <main className={shell}>

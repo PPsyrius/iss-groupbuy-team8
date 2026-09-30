@@ -204,7 +204,7 @@ function AccountLoading() {
 
 // Same Alert as the catalog error artboard, for either list failing; `router.invalidate()`
 // re-runs the loader, which refetches both.
-function AccountError({ reset }: { reset: () => void }) {
+function AccountError({ reset }: Readonly<{ reset: () => void }>) {
   const router = useRouter();
   return (
     <main className={shell}>
