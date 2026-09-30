@@ -1,10 +1,11 @@
-import { queryOptions, useMutation } from "@tanstack/react-query";
+import { type QueryClient, queryOptions, useMutation } from "@tanstack/react-query";
 
 import { unwrapResult } from "@/api/envelope";
 import {
   getOptions,
   getPolicyOptions,
   pageOptions,
+  pageQueryKey,
 } from "@/api/generated/@tanstack/react-query.gen";
 import { changeStatus, configure, create, delete_, revise } from "@/api/generated/sdk.gen";
 import type {
@@ -26,6 +27,14 @@ export function adminListingsOptions(q: { page: number; size: number; status?: s
     ...pageOptions({ query: q }),
     select: (r) => unwrapResult(r, { allowVoid: false }),
   });
+}
+
+// After a write: every page of the table, the tab counts and the guard's probe share the `page`
+// key. Pages on screen refetch now; the others are dropped rather than marked stale, because the
+// route loaders read with `staleTime: 'static'`, which would serve an invalidated page as is.
+export function forgetListingPages(qc: QueryClient) {
+  void qc.invalidateQueries({ queryKey: pageQueryKey() });
+  qc.removeQueries({ queryKey: pageQueryKey(), type: "inactive" });
 }
 
 export function adminListingOptions(productId: string) {
