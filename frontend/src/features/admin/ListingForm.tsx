@@ -127,7 +127,11 @@ export function ListingForm({
     },
   });
 
-  const hasUnsavedChanges = () => form.state.isDirty && !form.state.isSubmitting;
+  // Still true while a save is in flight: a failed save must find its form mounted, and an unload
+  // would cancel the request. A successful save remounts the form (keyed by version), so the guard
+  // never stands in front of our own navigation; any that must leave a dirty form passes
+  // `ignoreBlocker`.
+  const hasUnsavedChanges = () => form.state.isDirty;
   // `enableBeforeUnload` defaults to `true`, which the browser history treats as "always prompt on
   // reload or tab close"; give it the same predicate so a clean form never prompts.
   const blocker = useBlocker({

@@ -1,8 +1,10 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { http } from "msw";
 import { describe, expect, it } from "vitest";
 
 import type { createAdminStore } from "@/test/admin-msw";
+import { server } from "@/test/msw";
 import { renderRoute, serveAdmin } from "@/test/render-route";
 
 type Store = ReturnType<typeof createAdminStore>;
@@ -155,6 +157,38 @@ describe("/admin/listings/$productId", () => {
     );
     await waitFor(() => expect(router.state.location.pathname).toBe("/admin/listings"));
     expect(milk.listing).not.toHaveProperty("subtitle");
+  });
+
+  it("keeps asking before leaving while a save is still in flight", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const milk = rowOf(store, "BB-100472");
+    // Hold the save open; returning nothing falls through to the store's handler once released.
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    server.use(
+      http.put("*/api/v1/admin/products/:productId", async () => {
+        await held;
+      }),
+    );
+    const { router } = renderRoute(`/admin/listings/${milk.id}`);
+    await user.type(await screen.findByRole("textbox", { name: "Subtitle" }), "Chilled, 1 L each");
+    await user.click(screen.getByRole("button", { name: "Save draft" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save draft" })).toBeDisabled());
+
+    // A failed save must still find its form, and an unload would cancel the request.
+    expect(blocksUnload(router)).toBe(true);
+    const crumb = screen.getByRole("navigation", { name: "Breadcrumb" });
+    await user.click(within(crumb).getByRole("link", { name: "Listings" }));
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Keep editing" }));
+    expect(router.state.location.pathname).toBe(`/admin/listings/${milk.id}`);
+
+    release();
+    expect(await screen.findByText("BB-100472 · draft · v1")).toBeVisible();
+    expect(blocksUnload(router)).toBe(false);
   });
 
   it("asks before a reload or tab close only while the form has unsaved changes", async () => {
