@@ -1,0 +1,81 @@
+{
+  "startedAt": "2026-09-30T04:55:12.121Z",
+  "node": "v22.22.3",
+  "model": "closed-loop, sequential scenarios, one session per VU",
+  "vus": 100,
+  "warmupSeconds": 10,
+  "durationSeconds": 60,
+  "thinkMs": 200,
+  "scenarios": {
+    "browse": {
+      "warmup": {
+        "iterations": 4174,
+        "statuses": {
+          "200": 8348
+        }
+      },
+      "vus": 100,
+      "configuredSeconds": 60,
+      "elapsedSeconds": 60.19510660000001,
+      "actions": 27700,
+      "p50Ms": 15.077900000003865,
+      "p95Ms": 24.18499999999767,
+      "p99Ms": 37.01009999999951,
+      "errors": 0,
+      "errorRate": 0,
+      "actionsPerSecond": 460.1702956366223,
+      "requestsPerSecond": 920.3405912732446,
+      "statuses": {
+        "200": 55400
+      },
+      "p95TargetMet": true
+    },
+    "join_intent": {
+      "warmup": {
+        "iterations": 3747,
+        "statuses": {
+          "200": 3747
+        }
+      },
+      "vus": 100,
+      "configuredSeconds": 60,
+      "elapsedSeconds": 60.22803510000001,
+      "actions": 25143,
+      "p50Ms": 38.005099999994854,
+      "p95Ms": 56.560699999987264,
+      "p99Ms": 66.84979999999632,
+      "errors": 0,
+      "errorRate": 0,
+      "actionsPerSecond": 417.4633948833572,
+      "requestsPerSecond": 417.4633948833572,
+      "statuses": {
+        "200": 25143
+      },
+      "p95TargetMet": true
+    },
+    "my_orders": {
+      "warmup": {
+        "iterations": 4600,
+        "statuses": {
+          "200": 4600
+        }
+      },
+      "vus": 100,
+      "configuredSeconds": 60,
+      "elapsedSeconds": 60.102394700000005,
+      "actions": 27700,
+      "p50Ms": 11.206999999994878,
+      "p95Ms": 18.379799999995157,
+      "p99Ms": 22.35690000001341,
+      "errors": 0,
+      "errorRate": 0,
+      "actionsPerSecond": 460.8801386078548,
+      "requestsPerSecond": 460.8801386078548,
+      "statuses": {
+        "200": 27700
+      },
+      "p95TargetMet": true
+    }
+  },
+  "finishedAt": "2026-09-30T04:58:43.106Z"
+}

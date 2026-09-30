@@ -84,6 +84,13 @@
         <if test="status != null">AND status = #{status}</if>
     </select>
 
+    <select id="countListingStatuses" resultType="com.blocbuy.catalog.persistence.BizListingCountsDO">
+        SELECT COUNT(*) FILTER (WHERE status = 'draft') AS draft,
+               COUNT(*) FILTER (WHERE status = 'on_sale') AS on_sale,
+               COUNT(*) FILTER (WHERE status = 'off_sale') AS off_sale
+        FROM biz_product WHERE deleted = false
+    </select>
+
     <resultMap id="bizProductMap" type="com.blocbuy.catalog.persistence.BizProductDO">
         <id column="id" property="id" jdbcType="OTHER"/>
         <result column="product_no" property="productNo"/>

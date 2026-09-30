@@ -15,6 +15,7 @@ import com.blocbuy.identity.service.UserAppService;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -54,6 +55,16 @@ public class AdminListingAppServiceImpl implements AdminListingAppService {
     public PageResult<Product> page(PageQuery page, ProductStatus status, UUID actorId) {
         users.requireActive(actorId);
         return products.pageListings(page, status);
+    }
+
+    /** Two aggregate reads share one snapshot and the transaction's database expiry clock. */
+    @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public ListingCounts counts(UUID actorId) {
+        users.requireActive(actorId);
+        var statuses = products.countListingStatuses();
+        return new ListingCounts(
+                statuses.draft(), statuses.onSale(), statuses.offSale(), deals.countOpenDeals());
     }
 
     /** Domain revision preserves identity, sold counters and pricing strategy selection. */
