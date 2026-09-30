@@ -19,6 +19,7 @@ import { Route as ProductsProductIdRouteImport } from './routes/products.$produc
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedPaymentsPaymentIdRouteImport } from './routes/_authenticated/payments.$paymentId'
 import { Route as AuthenticatedPaymentsReturnRouteImport } from './routes/_authenticated/payments.return'
+import { Route as AuthenticatedAdminListingsIndexRouteImport } from './routes/_authenticated/admin/listings.index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -71,6 +72,12 @@ const AuthenticatedPaymentsReturnRoute =
     path: '/payments/return',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminListingsIndexRoute =
+  AuthenticatedAdminListingsIndexRouteImport.update({
+    id: '/listings/',
+    path: '/listings/',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/payments/return': typeof AuthenticatedPaymentsReturnRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/listings/': typeof AuthenticatedAdminListingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -92,6 +100,7 @@ export interface FileRoutesByTo {
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/payments/return': typeof AuthenticatedPaymentsReturnRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/listings': typeof AuthenticatedAdminListingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -105,6 +114,7 @@ export interface FileRoutesById {
   '/_authenticated/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/_authenticated/payments/return': typeof AuthenticatedPaymentsReturnRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/listings/': typeof AuthenticatedAdminListingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/payments/$paymentId'
     | '/payments/return'
     | '/admin/'
+    | '/admin/listings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/payments/$paymentId'
     | '/payments/return'
     | '/admin'
+    | '/admin/listings'
   id:
     | '__root__'
     | '/'
@@ -140,6 +152,7 @@ export interface FileRouteTypes {
     | '/_authenticated/payments/$paymentId'
     | '/_authenticated/payments/return'
     | '/_authenticated/admin/'
+    | '/_authenticated/admin/listings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -222,15 +235,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPaymentsReturnRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/listings/': {
+      id: '/_authenticated/admin/listings/'
+      path: '/listings'
+      fullPath: '/admin/listings/'
+      preLoaderRoute: typeof AuthenticatedAdminListingsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminListingsIndexRoute: typeof AuthenticatedAdminListingsIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminListingsIndexRoute: AuthenticatedAdminListingsIndexRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
