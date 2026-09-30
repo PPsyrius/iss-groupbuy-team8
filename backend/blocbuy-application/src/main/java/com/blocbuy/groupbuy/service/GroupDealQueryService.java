@@ -12,6 +12,9 @@ import java.util.UUID;
  */
 public interface GroupDealQueryService {
 
+    /** Global count of non-deleted, unexpired open deals with seats remaining. */
+    long countOpenDeals();
+
     /**
      * Retention guard for catalog deletion; includes every historical deal, not just open deals.
      */

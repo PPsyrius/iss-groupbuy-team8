@@ -52,6 +52,9 @@ public interface BizProductMapper {
     /** Same filter as the administrator page. */
     long countListings(@Param("status") String status);
 
+    /** Aggregate all administrator status totals without loading listing rows. */
+    BizListingCountsDO countListingStatuses();
+
     BizProductDO selectActiveByIdForUpdate(@Param("id") UUID id);
 
     /** Active product by primary key, any status. */

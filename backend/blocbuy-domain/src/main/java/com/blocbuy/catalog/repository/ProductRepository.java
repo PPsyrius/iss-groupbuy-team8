@@ -1,5 +1,6 @@
 package com.blocbuy.catalog.repository;
 
+import com.blocbuy.catalog.model.ListingStatusCounts;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductDisplay;
 import com.blocbuy.catalog.model.ProductStatus;
@@ -43,6 +44,9 @@ public interface ProductRepository {
 
     /** Bounded administrator browse of all non-deleted states; null status means all. */
     PageResult<Product> pageListings(PageQuery page, ProductStatus status);
+
+    /** All three status totals in one query, using the administrator page's deletion filter. */
+    ListingStatusCounts countListingStatuses();
 
     /**
      * Serializes price issuance/configuration with product changes; caller must hold a transaction.

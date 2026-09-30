@@ -225,6 +225,7 @@ so JSON Schema substring matching does not weaken the documented request constra
 | --- | --- |
 | POST `/` | Create a draft with server UUIDv7, optional productNo (omitted/null generates a `BB-` number), version 0, soldCount 0 and existing `dual` pricing mode. |
 | GET `/` | Page all non-deleted listings; optional `status`; page >= 1, size 1–100; newest first with UUID tie-breaker. |
+| GET `/counts` | Read `{draft, onSale, offSale, openDeals}` totals in the Result envelope; same login, role, permission and active-account checks as the page. |
 | GET `/{id}` | Read draft/on-sale/off-sale listing including its version; deleted/absent returns 404. |
 | PUT `/{id}` | Replace `listing` content with required `expectedVersion`; do not accept productNo/status/counters/pricingMode. |
 | PUT `/{id}/status` | Required `status` (`on_sale` or `off_sale`) and `expectedVersion`. |
@@ -278,6 +279,14 @@ codes. Omitting DELETE's required version returns HTTP 400 / `COMMON_400_001`, n
 No business exception is converted to a success envelope.
 
 ## Transactions, history and extension obligations
+
+### Dashboard counts decision — 2026-09-30 (#248 / BA-3)
+
+The catalog application owns the composed admin dashboard read model (`AdminListingAppService.ListingCounts`), exposed as `GET /api/v1/admin/products/counts`. Reuse the existing public `GroupDealQueryService.countOpenDeals` boundary rather than joining groupbuy tables from catalog or requiring a second HTTP endpoint. Infrastructure keeps the listing and deal aggregate SQL in their owning domains, returning only counts across the boundary. The controller exposes an explicit response DTO inside `Result` and uses the established administrator guard; the application rechecks account activity.
+
+One catalog query uses PostgreSQL filtered counts for `draft`, `on_sale` and `off_sale` with `deleted = false`, matching the paged admin read's predicates. One groupbuy query counts every non-deleted deal whose stored status is `open`, `current_size < target_size` and `expire_time > CURRENT_TIMESTAMP`, across all products regardless of listing publication status. Multiple eligible deals on one listing each count; a stale open flag on a full or expired deal is insufficient. Empty populations return numeric zeros. No aggregate rows are loaded or queries executed per listing.
+
+The application read uses a read-only `REPEATABLE READ` transaction: account validation and both aggregate queries share a database snapshot, and expiry uses its transaction-time database clock. This is a point-in-time dashboard, not a reservation or a guarantee that separate later page requests see identical totals during concurrent writes. Existing pagination is unchanged. Exact global totals necessarily scan qualifying rows; no speculative index or cache is added without volume and latency evidence. `AdminListingFlowIT` verifies status/page agreement, empty results, full/overfull/expired/exact-expiry/closed/deleted exclusions, multiple deals per product and administrator authorization, including independently missing role or permission and disabled accounts.
 
 ### Product number decision — 2026-09-30 (#247 / BA-2)
 
