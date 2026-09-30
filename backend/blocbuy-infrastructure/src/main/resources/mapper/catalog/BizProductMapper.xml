@@ -8,18 +8,25 @@
     </select>
 
     <!-- The preceding lock is a separate statement so READ COMMITTED sees the prior creator's
-         committed insert. Sequence advances survive rollbacks; numbers need not be gap-free. -->
+         committed insert. N historical BB rows can occupy at most N of N+1 candidates.
+         Advance only to the first unused candidate, never to a supplied suffix's high-water mark.
+         Sequence advances survive rollbacks; numbers need not be gap-free. -->
     <select id="nextProductNumber" resultType="string" flushCache="true" useCache="false">
-        SELECT 'BB-' || setval('domain.seq_biz_product_product_no',
-            GREATEST(nextval('domain.seq_biz_product_product_no'),
-                COALESCE((
-                    SELECT MAX(number) + 1 FROM (
-                        SELECT CASE WHEN product_no ~ '^BB-[1-9][0-9]*$'
-                            THEN substring(product_no FROM 4)::numeric END AS number
-                        FROM biz_product
-                    ) existing_numbers
-                    WHERE number &lt;= 9223372036854775807
-                ), 100001))::bigint)
+        WITH allocation_start AS MATERIALIZED (
+            SELECT nextval('domain.seq_biz_product_product_no')::numeric AS number
+        ), history AS MATERIALIZED (
+            SELECT product_no FROM biz_product WHERE product_no LIKE 'BB-%'
+        ), candidates AS (
+            SELECT allocation_start.number + offsets.value AS number
+            FROM allocation_start
+            CROSS JOIN generate_series(0, (SELECT COUNT(*) FROM history)) AS offsets(value)
+        )
+        SELECT 'BB-' || setval('domain.seq_biz_product_product_no', MIN(candidate.number)::bigint)
+        FROM candidates candidate
+        WHERE candidate.number &lt;= 9223372036854775807
+            AND NOT EXISTS (
+                SELECT 1 FROM history WHERE product_no = 'BB-' || candidate.number::text
+            )
     </select>
 
     <insert id="insertDraft">

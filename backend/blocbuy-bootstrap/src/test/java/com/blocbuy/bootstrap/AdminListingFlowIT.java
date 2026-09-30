@@ -382,8 +382,9 @@ class AdminListingFlowIT {
         long reserved =
                 jdbc.queryForObject(
                                 "SELECT nextval('domain.seq_biz_product_product_no')", Long.class)
-                        + 10;
+                        + 1;
         UUID supplied = create("BB-" + reserved);
+        create("BB-" + (reserved + 1));
         create("BB-999999999999999999999999999999");
         mvc.perform(
                         delete(BASE + "/" + supplied)
@@ -391,7 +392,40 @@ class AdminListingFlowIT {
                                 .param("expectedVersion", "0"))
                 .andExpect(status().isOk());
         String number = createGeneratedAfter(new CountDownLatch(0));
-        assertThat(Long.parseLong(number.substring(3))).isGreaterThan(reserved);
+        assertThat(Long.parseLong(number.substring(3))).isEqualTo(reserved + 2);
+    }
+
+    /** Large supplied suffixes must not advance or exhaust the generated-number sequence. */
+    @ParameterizedTest
+    @ValueSource(strings = {"9223372036854775807", "9223372036854775806"})
+    @Transactional
+    void suppliedBoundaryNumbersDoNotExhaustGeneration(String suffix) throws Exception {
+        UUID supplied = create("BB-" + suffix);
+        String first = createGeneratedAfter(new CountDownLatch(0));
+        String nullResponse =
+                mvc.perform(
+                                post(BASE)
+                                        .header(HEADER, adminToken)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                "{\"productNo\":null,\"listing\":" + DETAILS + "}"))
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+        String second = json.readTree(nullResponse).path("data").path("productNo").asText();
+        assertThat(Long.parseLong(second.substring(3)))
+                .isGreaterThan(Long.parseLong(first.substring(3)))
+                .isLessThan(Long.parseLong(suffix));
+        mvc.perform(
+                        delete(BASE + "/" + supplied)
+                                .header(HEADER, adminToken)
+                                .param("expectedVersion", "0"))
+                .andExpect(status().isOk());
+        String afterDeletion = createGeneratedAfter(new CountDownLatch(0));
+        assertThat(Long.parseLong(afterDeletion.substring(3)))
+                .isGreaterThan(Long.parseLong(second.substring(3)))
+                .isLessThan(Long.parseLong(suffix));
     }
 
     /** Both HTTP creates finish successfully with different, persisted sequence-backed numbers. */
