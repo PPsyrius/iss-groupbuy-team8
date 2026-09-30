@@ -8,6 +8,7 @@ import { ApiError, OK_CODE } from "@/api/envelope";
 import { server } from "@/test/msw";
 
 import {
+  adminCountsOptions,
   adminListingOptions,
   adminListingsOptions,
   adminPolicyOptions,
@@ -57,6 +58,14 @@ describe("admin reads", () => {
     expect(page).toEqual({ items: [row], total: 1, page: 1, size: 1 });
     expect(url?.searchParams.get("status")).toBe("draft");
     expect(url?.searchParams.get("size")).toBe("1");
+  });
+
+  it("unwraps the counts snapshot (#290)", async () => {
+    const counts = { draft: 14, onSale: 34, offSale: 14, openDeals: 26 };
+    server.use(http.get("*/api/v1/admin/products/counts", () => ok(counts)));
+    const qc = new QueryClient();
+    const options = adminCountsOptions();
+    expect(options.select?.(await qc.fetchQuery(options))).toEqual(counts);
   });
 
   it("unwraps one listing and its policy", async () => {
@@ -210,5 +219,19 @@ describe("admin writes", () => {
     await waitFor(() => expect(hits).toBe(3));
     expect(qc.getQueryData(adminListingsOptions({ page: 2, size: 20 }).queryKey)).toBeUndefined();
     expect(qc.getQueryData(adminListingsOptions({ page: 1, size: 20 }).queryKey)).toBeDefined();
+  });
+
+  it("forgetListingPages also refreshes the counts", async () => {
+    let hits = 0;
+    server.use(
+      http.get("*/api/v1/admin/products/counts", () => {
+        hits += 1;
+        return ok({ draft: hits, onSale: 0, offSale: 0, openDeals: 0 });
+      }),
+    );
+    const { qc, result } = hook(() => useQuery(adminCountsOptions()));
+    await waitFor(() => expect(result.current.data?.draft).toBe(1));
+    forgetListingPages(qc);
+    await waitFor(() => expect(result.current.data?.draft).toBe(2));
   });
 });

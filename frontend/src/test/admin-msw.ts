@@ -176,7 +176,9 @@ function seedPolicies(rows: AdminRow[]) {
   return policies;
 }
 
-export function createAdminStore(seed: AdminRow[] = adminSeed()) {
+// `openDeals` stands in for the bloc tables the mock does not model: the `counts` read (#290)
+// reports it as is. 26 is the artboard's Open blocs figure (4a.1).
+export function createAdminStore(seed: AdminRow[] = adminSeed(), { openDeals = 26 } = {}) {
   const rows = seed.map((r) => ({ ...r, listing: { ...r.listing } }));
   const policies = seedPolicies(rows);
   let conflictArmed = false;
@@ -187,6 +189,7 @@ export function createAdminStore(seed: AdminRow[] = adminSeed()) {
   return {
     rows,
     policies,
+    openDeals,
     policyOf: (id: string) => policies.get(id),
     find: (id: string) => rows.find((r) => r.id === id),
     // `&conflict=1` and the 4b.4 tests: the next write finds the server one version ahead, as if
@@ -328,6 +331,20 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
         store.rows.unshift(row);
         return ok(view(row));
       }),
+    ),
+
+    // Registered ahead of `/:productId`, which would read "counts" as an id. One snapshot of the
+    // non-deleted rows per status, as the page filters see them (#290).
+    http.get(
+      `${admin}/counts`,
+      guarded(() =>
+        ok({
+          draft: store.rows.filter((r) => r.status === "draft").length,
+          onSale: store.rows.filter((r) => r.status === "on_sale").length,
+          offSale: store.rows.filter((r) => r.status === "off_sale").length,
+          openDeals: store.openDeals,
+        }),
+      ),
     ),
 
     http.get(

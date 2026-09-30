@@ -81,7 +81,7 @@ Generated names come from `@/api/generated/@tanstack/react-query.gen` with the c
 |---|---|---|---|
 | **BA-1 (CR-9)** `GET /auth/me` returns `roles: string[]` | Admin guard without a probe; the rail's "Admin" label | **Answered by #282**: `MeResponse.roles` (`string[]`) | A1-03 probes `GET /admin/products?size=1` in `beforeLoad` (403 → S1); A3-01 switches to `roles` |
 | **BA-2** Server-assigned product number | 4b.1 has no product number field: "the server assigns it on save" | **Answered by #288**: `productNo` is optional on create; omitted or `null` → the server generates a `BB-` number; a supplied number is kept and must be unique (duplicate → 409) | A1-05 shows a create-only field; A3-08 removes it |
-| **BA-3** Admin counts: `{draft, onSale, offSale}` plus an **open blocs** count | Dashboard's 4 stats, tab badges, rail counts | No counts; no open-bloc count anywhere | Three `page?status=X&size=1` calls reading `total`; the **Open blocs card is omitted** |
+| **BA-3** Admin counts: `{draft, onSale, offSale}` plus an **open blocs** count | Dashboard's 4 stats, tab badges, rail counts | **Answered by #290**: `GET /api/v1/admin/products/counts` (operationId `counts`) → `{draft, onSale, offSale, openDeals}`, one database snapshot; `openDeals` counts open, unfilled, unexpired blocs across all listings | A1-04 read `total` from four `page?size=1` calls (All plus one per status); A3-02 switches the tabs to `counts` (All = the three statuses summed); the Open blocs card arrives with A2-02 |
 | **BA-4** Latest policy summary on `AdminListingResponse` (`latestPolicy {amount, validFrom, validUntil, version}`) and a policy count | Table subline "Bloc price S$71.00 · valid to 30 Sep"; rail "Bloc price rules 18" | Only per-listing `getPolicy` | Subline omitted (no 20× N+1); rail item hidden (Q3) |
 | **BA-5** Reference counts on the admin read (`references {deals, quotes, policies}`) or a `deletable` flag | 4b.3 "has 26 bloc records, 61 quotes and 3 price rules" | None | Reason without counts: "Not available. This listing has been published; take it off sale instead." |
 | **BA-6 (CR-12)** Field path on domain 400s (`CATALOG_400_001` / `400_002`) | 4b.4 attaches "Must be strictly below the solo price" and "Must be after the start" to their fields | Bean validation returns `errors: [{field, message}]`; domain `BizException` 400s carry no field | Client valibot catches both rules before submit; a server domain 400 renders as a form-level alert |
@@ -118,7 +118,7 @@ Columns match `plan.md` §3. `FE` = `frontend/`, `A` = `FE/src/features/admin/`.
 | id | tier | purpose | files touched | verification command | depends-on | issue |
 |---|---|---|---|---|---|---|
 | A2-01 | A2 | Bloc price rule panel: none, scheduled, active, expired, conflict, unavailable (draft or off sale); revision form with SGT date pickers; replace-now warning | `A/policy.ts` (state derivation), `A/policy.test.ts`, `A/sgt.ts`, `A/sgt.test.ts`, `A/policy-form.schema.ts`, `A/policy-form.schema.test.ts`, `A/PricePolicyPanel.tsx`, `A/PricePolicyPanel.test.tsx`, `FE/src/routes/_authenticated/admin/listings.$productId.tsx`, `FE/package.json` (`@internationalized/date` 3.12.4) | `cd frontend && pnpm vitest run src/features/admin && pnpm knip` | A1-08 | new · L 2.5d · deferred (Q1) |
-| A2-02 | A2 | Dashboard: SGT date line, 3 stat cards (Open blocs waits for BA-3), Recent listings (5), New listing, loading / empty | `FE/src/routes/_authenticated/admin/index.tsx`, `A/StatCards.tsx`, `A/StatCards.test.tsx`, `A/RecentListings.tsx`, `FE/src/routes/admin-dashboard.test.tsx` | `cd frontend && pnpm vitest run src/routes/admin-dashboard.test.tsx` | A1-04 | new · S 0.75d · deferred (Q1) |
+| A2-02 | A2 | Dashboard: SGT date line, 4 stat cards (Open blocs reads `openDeals` from `counts`, #290), Recent listings (5), New listing, loading / empty | `FE/src/routes/_authenticated/admin/index.tsx`, `A/StatCards.tsx`, `A/StatCards.test.tsx`, `A/RecentListings.tsx`, `FE/src/routes/admin-dashboard.test.tsx` | `cd frontend && pnpm vitest run src/routes/admin-dashboard.test.tsx` | A1-04 | new · S 0.75d · deferred (Q1) |
 | A2-03 | A2 | Playwright: anonymous → `/login`; non-admin → 403 card; stubbed admin create → publish → conflict; `@admin` real run on dev behind a storage state | `FE/e2e/admin.spec.ts`, `FE/e2e/README.md` | `cd frontend && pnpm build && pnpm e2e --grep admin`; `E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e --grep @admin` | A1-08, A2-01 | new · S 0.5d · deferred (Q1) |
 | A2-04 | A2 | Docs: `design-screens.md` §4.7 (admin, from the artboards), ADR 0015 (admin shell, probe guard, pessimistic writes), AGENTS.md layout line, sprint log | `FE/docs/design-screens.md`, `FE/docs/adr/0015-admin-console-shell-and-guard.md`, `FE/docs/adr/README.md`, `FE/AGENTS.md`, `docs/agile/sprint-03/log/…` | `grep -q '4.7' frontend/docs/design-screens.md && test -f frontend/docs/adr/0015-*.md` | A1-03 | new · S 0.5d · deferred (Q1) |
 
@@ -127,7 +127,7 @@ Columns match `plan.md` §3. `FE` = `frontend/`, `A` = `FE/src/features/admin/`.
 | id | tier | purpose | files touched | verification command | depends-on | issue |
 |---|---|---|---|---|---|---|
 | A3-01 | A3 | Guard reads `session.roles` and drops the probe; rail shows the role | `A/admin-guard.ts`, `FE/src/features/session/session.ts`, tests | `cd frontend && pnpm gen:api && pnpm vitest run src/features/admin src/features/session` | A1-03, #282 (BA-1, merged) | BA-1 |
-| A3-02 | A3 | Counts endpoint: tabs, rail and dashboard (+ Open blocs card) | `A/use-status-counts.ts`, `A/StatCards.tsx`, tests | as above | BA-3 | BA-3 |
+| A3-02 | A3 | Counts endpoint: the tab counts come from one `counts` read instead of four `size=1` pages; writes refresh it; the dashboard's stat cards (Open blocs included) stay with A2-02 | `A/use-status-counts.ts`, `A/admin-api.ts`, `FE/src/test/admin-msw.ts`, tests | `cd frontend && pnpm vitest run src/features/admin src/test/admin-msw.test.ts src/routes/admin-listings.test.tsx` | #290 (merged) | BA-3 |
 | A3-03 | A3 | Table bloc-rule subline; "Bloc price rules" rail item and count | `A/ListingsTable.tsx`, `A/AdminShell.tsx`, tests | as above | BA-4, Q3 | BA-4 |
 | A3-04 | A3 | Group terms panel (seats per bloc, bloc lifetime) on the editor page, with its own write (`configureTeamTerms`), not `ListingForm` fields; the backend blocker (BA-7) is cleared by #242, design is not | `A/admin-api.ts` (`useConfigureTeamTerms`), `A/team-terms.schema.ts`, `A/TeamTermsPanel.tsx`, `FE/src/routes/_authenticated/admin/listings.$productId.tsx`, `FE/src/test/admin-msw.ts` (terms endpoint), tests | as above | design (§11 D6) | BA-7 |
 | A3-05 | A3 | Delete-blocked reason with counts | `A/EditorSidebar.tsx`, tests | as above | BA-5 | BA-5 |
@@ -247,7 +247,7 @@ Note (#242): a team-terms write also increments the product `version`, so a term
 ### A2-02: Dashboard
 
 - [ ] Step 1: heading "Dashboard" + "{Weekday d Month yyyy} · all times SGT" (SGT formatter) + a secondary "New listing".
-- [ ] Step 2: `StatCards`: Drafts ("private until published"), On sale ("visible on the storefront"), Off sale ("delisted, no new blocs"); neutral surface panels, no accent, no trend. The Open blocs card is omitted until BA-3 (§11 D1). Counts are withheld (skeleton) while loading.
+- [ ] Step 2: `StatCards`: Drafts ("private until published"), On sale ("visible on the storefront"), Off sale ("delisted, no new blocs"); neutral surface panels, no accent, no trend. Open blocs reads `openDeals` from `counts` (#290); the artboard's "filling across N listings" detail has no source and is left out. Counts are withheld (skeleton) while loading.
 - [ ] Step 3: `RecentListings`: the table component with 7 columns, `page=1&size=5`, "View all" → `/admin/listings`.
 - [ ] Step 4: empty (total 0): "No listings yet" + "New listing" (§11 D4). Error: danger alert + retry.
 
@@ -283,7 +283,13 @@ Note (#242): a team-terms write also increments the product `version`, so a term
 - [x] Step 2: add `conflictVersion` beside `fieldViolations`; the admin mock's 412 bodies (listing and policy) carry `errors: {currentVersion}`. (2026-09-30)
 - [x] Step 3: `use-listing-mutations.ts` passes the version to `ConflictBanner`; the background refetch stays as the fallback when the error has none. (2026-09-30)
 
-### A3-02..A3-07
+### A3-02: Counts endpoint (BA-3, #290)
+
+- [x] Step 1: failing tests. `admin-msw.test.ts`: `GET /admin/products/counts` answers the store's totals per status plus the seeded `openDeals`, and 403 for a buyer. `routes/admin-listings.test.tsx`: the tabs still read All 62, Draft 14, On sale 34, Off sale 14, from one `counts` request and no `size=1` page; after a publish the counts move. (2026-09-30)
+- [x] Step 2: `admin-api.ts` gains `adminCountsOptions()` (`countsOptions`, `unwrapResult`, `adminRetry`); `forgetListingPages` also refreshes the counts. The admin mock answers `counts` ahead of `/:productId`. (2026-09-30)
+- [x] Step 3: `use-status-counts.ts` reads `counts`; All is `draft + onSale + offSale` (the backend counts the same non-deleted rows the page filters use). A missing field reads as 0; the tabs stay hidden until the read arrives. (2026-09-30)
+
+### A3-03..A3-07
 
 - [ ] Each row starts only when its ask is merged into `contracts/openapi.json`. Run `pnpm gen:api` with the `api-client-regen` skill, then make the change in the files listed and add tests for the new field.
 
@@ -370,7 +376,7 @@ Each body is **Ask / Why (artboard + contract line) / Acceptance / Frontend fall
 
 - **[BA-1] `/auth/me` returns `roles`.** Answered by #282. Ask: add `roles: string[]` (Sa-Token `getRoleList`) to `MeResponse`. Why: CR-9; the admin guard currently probes an admin endpoint. Acceptance: an admin session → `["buyer","admin"]` or `["admin"]`; the contract is additive. Fallback: probe.
 - **[BA-2] Server-assigned product number.** Answered by #288 (optional on create; a supplied number is kept). Ask: drop `productNo` from `CreateListingRequest` and generate one (for example `BB-` + sequence), or confirm the client-supplied number is intended. Why: 4b.1 note "the server assigns it on save". Fallback: create-only field.
-- **[BA-3] Admin counts.** Ask: `GET /api/v1/admin/products/counts` → `{draft, onSale, offSale, openDeals}`. Why: 4a.1 stat cards, tab badges, rail. Fallback: three `size=1` calls; no Open blocs.
+- **[BA-3] Admin counts.** Answered by #290 (`counts`, `{draft, onSale, offSale, openDeals}`; none marked required). Ask: `GET /api/v1/admin/products/counts` → `{draft, onSale, offSale, openDeals}`. Why: 4a.1 stat cards, tab badges, rail. Fallback: three `size=1` calls; no Open blocs.
 - **[BA-4] Latest policy on the admin listing.** Ask: `AdminListingResponse.latestPolicy` (nullable) + count. Why: 4a.2 subline, rail count. Fallback: none shown.
 - **[BA-5] Reference counts.** Ask: `references {deals, quotes, policies}` or `deletable` on the admin read. Why: 4b.3 delete-blocked copy. Fallback: reason without counts.
 - **[BA-6] Field paths on domain 400s (CR-12).** Ask: `CATALOG_400_001` / `400_002` carry `errors: [{field, message}]` (`amount`, `validUntil`, `listing.originalPrice`). Fallback: client pre-validation plus a form alert.
@@ -383,7 +389,7 @@ Each body is **Ask / Why (artboard + contract line) / Acceptance / Frontend fall
 
 ## 11. Design gaps for the design owner
 
-- **D1** Open blocs stat and rail counts (Bloc price rules 18, Payments 2) have no data source; the proposal drops them until BA-3 and BA-4.
+- **D1** Rail counts (Bloc price rules 18, Payments 2) have no data source; the proposal drops them until BA-4 and BA-8. The Open blocs stat has one since #290.
 - **D2** Undrawn dialogs, proposed copy. *Take off sale:* "Take this listing off sale?" / "Buyers can no longer start or join blocs on it. Blocs already filled keep their orders. You can put it back on sale later." / "Take off sale". *Put back on sale:* "Put this listing back on sale?" / "It becomes visible on the storefront again. Price, currency and stock are unchanged." *Delete draft:* "Delete this draft?" / "It disappears from the console. This cannot be undone." (danger). *Unsaved:* "Discard your changes?"
 - **D3** Scheduled rule state (validFrom in the future) and the replace-now warning.
 - **D4** Dashboard loading and empty; table error; All / On sale / Off sale empty.

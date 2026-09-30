@@ -2,6 +2,8 @@ import { type QueryClient, queryOptions, useMutation } from "@tanstack/react-que
 
 import { ApiError, unwrapResult } from "@/api/envelope";
 import {
+  countsOptions,
+  countsQueryKey,
   getOptions,
   getPolicyOptions,
   pageOptions,
@@ -38,12 +40,24 @@ export function adminListingsOptions(q: { page: number; size: number; status?: s
   });
 }
 
-// After a write: every page of the table and the tab counts share the `page` key. Pages on
+// The per-status totals and the open blocs, one snapshot (#290, BA-3). A 30s staleTime keeps
+// moving between tabs from re-asking; writes refresh it through `forgetListingPages`.
+export function adminCountsOptions() {
+  return queryOptions({
+    ...countsOptions(),
+    select: (r) => unwrapResult(r, { allowVoid: false }),
+    staleTime: 30_000,
+    retry: adminRetry,
+  });
+}
+
+// After a write: every page of the table shares the `page` key, and the counts move too. Pages on
 // screen refetch now; the others are dropped rather than marked stale, because the route loaders
 // read with `staleTime: 'static'`, which would serve an invalidated page as is.
 export function forgetListingPages(qc: QueryClient) {
   void qc.invalidateQueries({ queryKey: pageQueryKey() });
   qc.removeQueries({ queryKey: pageQueryKey(), type: "inactive" });
+  void qc.invalidateQueries({ queryKey: countsQueryKey() });
 }
 
 export function adminListingOptions(productId: string) {
