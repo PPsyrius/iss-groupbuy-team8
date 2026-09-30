@@ -6,10 +6,18 @@ import type { MeResponse } from "@/api/generated/types.gen";
 
 // The one source of auth truth (AGENTS.md rule 6, ADR 0002): `me` through the generated client.
 // B4 (#97): `nickname` and `avatarUrl` are nullable for accounts registered before the Google
-// profile was wired, so callers fall back to the stable `userId`.
+// profile was wired, so callers fall back to the stable `userId`. `roles` are the backend's role
+// codes (`buyer`, `admin`; #282), empty when `me` omits them; they drive UX only, since the backend
+// checks the role on every protected call.
 export type SessionState =
   | { status: "anonymous" }
-  | { status: "authenticated"; userId: string; nickname: string | null; avatarUrl: string | null };
+  | {
+      status: "authenticated";
+      userId: string;
+      nickname: string | null;
+      avatarUrl: string | null;
+      roles: readonly string[];
+    };
 
 export const sessionOptions = () =>
   queryOptions({
@@ -26,6 +34,7 @@ export function toSessionState(me: MeResponse | undefined): SessionState {
     userId: me.userId,
     nickname: me.nickname ?? null,
     avatarUrl: me.avatarUrl ?? null,
+    roles: me.roles ?? [],
   };
 }
 

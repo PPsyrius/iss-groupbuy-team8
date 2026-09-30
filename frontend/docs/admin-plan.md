@@ -266,10 +266,10 @@ Note (#242): a team-terms write also increments the product `version`, so a term
 
 ### A3-01: Role guard (BA-1, #282)
 
-- [ ] Step 1: failing tests. `admin-guard.test.ts`: a session with `roles: ["admin"]` passes without a network call; `["buyer"]` throws `AdminAccessDenied`. `routes/admin.test.tsx` keeps its four cases; the All-tab count test in `routes/admin-listings.test.tsx` still shows 62.
-- [ ] Step 2: the session read carries `roles` (default `[]`); the mock `me` answers `roles: ["admin"]` under `admin=1` and `["buyer"]` otherwise.
-- [ ] Step 3: `requireAdmin` reads the session's roles and drops the probe. The All-tab count loses the probe's cached result, so `use-status-counts.ts` asks for its own `size=1` page.
-- [ ] Step 4: keep the 403 boundary: a role revoked mid-session still reaches Access denied from any admin read. The rail shows the role from `roles`.
+- [x] Step 1: failing tests. `admin-guard.test.ts`: a session with `roles: ["admin"]` passes without a network call; `["buyer"]` throws `AdminAccessDenied`. `routes/admin.test.tsx` keeps its four cases; the All-tab count test in `routes/admin-listings.test.tsx` still shows 62. (2026-09-30)
+- [x] Step 2: the session read carries `roles` (default `[]`); the mock `me` answers `roles: ["admin"]` under `admin=1` and `["buyer"]` otherwise. (2026-09-30)
+- [x] Step 3: `requireAdmin` reads the session's roles and drops the probe. The All-tab count loses the probe's cached result, so `use-status-counts.ts` asks for its own `size=1` page. (2026-09-30)
+- [x] Step 4: keep the 403 boundary: a role revoked mid-session still reaches Access denied from any admin read. The rail shows the role from `roles`. (2026-09-30)
 
 ### A3-08: Product number from the server (BA-2, #288)
 

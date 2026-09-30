@@ -22,6 +22,7 @@ describe("toSessionState", () => {
       userId: "u1",
       nickname: null,
       avatarUrl: null,
+      roles: [],
     });
     expect(toSessionState({ userId: "u1", nickname: "Ada", avatarUrl: "https://x/a.png" })).toEqual(
       {
@@ -29,8 +30,15 @@ describe("toSessionState", () => {
         userId: "u1",
         nickname: "Ada",
         avatarUrl: "https://x/a.png",
+        roles: [],
       },
     );
+  });
+
+  it("carries the role codes from /auth/me (#282)", () => {
+    expect(toSessionState({ userId: "u1", roles: ["buyer", "admin"] })).toMatchObject({
+      roles: ["buyer", "admin"],
+    });
   });
 });
 
@@ -46,13 +54,14 @@ describe("sessionFromQuery", () => {
     me(200, {
       code: "COMMON_200_000",
       message: "ok",
-      data: { userId: "u1", nickname: "Ada", avatarUrl: null },
+      data: { userId: "u1", nickname: "Ada", avatarUrl: null, roles: ["buyer"] },
     });
     await expect(sessionFromQuery(queryClient)).resolves.toEqual({
       status: "authenticated",
       userId: "u1",
       nickname: "Ada",
       avatarUrl: null,
+      roles: ["buyer"],
     });
   });
 

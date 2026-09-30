@@ -11,6 +11,7 @@ import {
   adminListingOptions,
   adminListingsOptions,
   adminPolicyOptions,
+  adminRetry,
   adminServerVersionOptions,
   forgetListingPages,
   useChangeStatus,
@@ -89,6 +90,29 @@ describe("admin reads", () => {
     await expect(qc.fetchQuery(adminListingsOptions({ page: 1, size: 1 }))).rejects.toMatchObject({
       status: 403,
     });
+  });
+});
+
+const fail = (status: number) => new ApiError({ code: "X", message: "x", status });
+
+describe("admin read retries", () => {
+  it("never retries a 403: the role is gone, asking again cannot help", () => {
+    expect(adminRetry(0, fail(403))).toBe(false);
+    expect(adminRetry(0, fail(401))).toBe(false);
+    expect(adminRetry(0, fail(404))).toBe(false);
+  });
+
+  it("retries a server failure twice, as the app default does", () => {
+    expect(adminRetry(0, fail(500))).toBe(true);
+    expect(adminRetry(1, fail(500))).toBe(true);
+    expect(adminRetry(2, fail(500))).toBe(false);
+  });
+
+  it("applies to every admin read", () => {
+    expect(adminListingsOptions({ page: 1, size: 1 }).retry).toBe(adminRetry);
+    expect(adminListingOptions("p1").retry).toBe(adminRetry);
+    expect(adminServerVersionOptions("p1").retry).toBe(adminRetry);
+    expect(adminPolicyOptions("p1").retry).toBe(adminRetry);
   });
 });
 

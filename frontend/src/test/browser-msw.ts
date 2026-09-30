@@ -508,14 +508,14 @@ export async function startBrowserMsw() {
   // (CodeRabbit r4050400123).
   const signedIn = new URLSearchParams(window.location.search).get("me") === "1";
   // The admin console (admin plan A1-02): with `me=1`, `admin=1` signs in as an admin over a
-  // stateful store and anything else is a buyer (403 on every admin path); `conflict=1` makes the
+  // stateful store and anything else is a buyer (403 on every admin path), and `me` names that
+  // role (#282); `conflict=1` makes the
   // next admin write find the server a version ahead (4b.4).
   const adminParams = new URLSearchParams(window.location.search);
   const adminStore = createAdminStore();
   if (adminParams.get("conflict") === "1") adminStore.conflictOnNextWrite();
-  const admin = signedIn
-    ? adminHandlers(adminStore, { role: adminParams.get("admin") === "1" ? "admin" : "buyer" })
-    : [];
+  const role = adminParams.get("admin") === "1" ? "admin" : "buyer";
+  const admin = signedIn ? adminHandlers(adminStore, { role }) : [];
   const worker = setupWorker(
     ...admin,
     ...createMswHandlers().all({
@@ -529,7 +529,7 @@ export async function startBrowserMsw() {
             ? HttpResponse.json({
                 code: OK_CODE,
                 message: "ok",
-                data: { userId: "u-ada", nickname: "Ada Lim", avatarUrl: null },
+                data: { userId: "u-ada", nickname: "Ada Lim", avatarUrl: null, roles: [role] },
               })
             : HttpResponse.json({ code: "AUTH_401", message: "unauthenticated" }, { status: 401 }),
         // Sign out succeeds; the app settles `me` on the anonymous envelope itself, so the header
