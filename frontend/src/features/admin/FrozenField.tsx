@@ -5,7 +5,7 @@ import { Chip, Label } from "@heroui/react";
 // label, a `surface-secondary` fill with no shadow, and a one-line reason as its description.
 export const frozenInput = "bg-surface-secondary text-muted shadow-none";
 
-export function FrozenLabel({ children }: { children: string }) {
+export function FrozenLabel({ children }: Readonly<{ children: string }>) {
   return (
     <div className="flex items-center justify-between gap-2">
       <Label>{children}</Label>

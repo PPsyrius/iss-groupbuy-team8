@@ -7,11 +7,11 @@ export function UnsavedChangesDialog({
   isOpen,
   onKeepEditing,
   onDiscard,
-}: {
+}: Readonly<{
   isOpen: boolean;
   onKeepEditing: () => void;
   onDiscard: () => void;
-}) {
+}>) {
   return (
     <AlertDialog.Backdrop
       isOpen={isOpen}

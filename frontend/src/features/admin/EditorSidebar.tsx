@@ -21,12 +21,12 @@ export function EditorSidebar({
   version,
   showLifecycle,
   children,
-}: {
+}: Readonly<{
   status?: string | undefined;
   version: number;
   showLifecycle: boolean;
   children?: ReactNode;
-}) {
+}>) {
   const trail = trails[status];
   return (
     <section
