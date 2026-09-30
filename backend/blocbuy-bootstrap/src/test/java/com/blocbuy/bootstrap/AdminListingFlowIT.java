@@ -307,6 +307,168 @@ class AdminListingFlowIT {
                 .isEqualTo(1);
     }
 
+    /** Omitted and explicit-null product numbers both generate persisted immutable references. */
+    @ParameterizedTest
+    @ValueSource(strings = {"", "\"productNo\":null,"})
+    void missingProductNumberGeneratesPersistedDraft(String optionalNumber) throws Exception {
+        var data =
+                json.readTree(
+                                mvc.perform(
+                                                post(BASE)
+                                                        .header(HEADER, adminToken)
+                                                        .contentType(MediaType.APPLICATION_JSON)
+                                                        .content(
+                                                                "{"
+                                                                        + optionalNumber
+                                                                        + "\"listing\":"
+                                                                        + DETAILS
+                                                                        + "}"))
+                                        .andExpect(status().isOk())
+                                        .andExpect(jsonPath("$.data.status").value("draft"))
+                                        .andExpect(jsonPath("$.data.version").value(0))
+                                        .andReturn()
+                                        .getResponse()
+                                        .getContentAsString())
+                        .path("data");
+        String number = data.path("productNo").asText();
+        UUID id = UUID.fromString(data.path("id").asText());
+        assertThat(number).matches("BB-[1-9][0-9]{5,18}");
+        assertThat(id.version()).isEqualTo(7);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT product_no FROM biz_product WHERE id = ?",
+                                String.class,
+                                id))
+                .isEqualTo(number);
+        mvc.perform(
+                        put(BASE + "/" + id)
+                                .header(HEADER, adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"expectedVersion\":0,\"listing\":" + DETAILS + "}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.productNo").value(number));
+    }
+
+    /**
+     * Optional does not mean that empty, whitespace, malformed or oversized values are accepted.
+     */
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "",
+                " ",
+                "-TEA",
+                "TEA/001",
+                "TEA\n",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+            })
+    void invalidSuppliedProductNumberIsStillRejected(String number) throws Exception {
+        mvc.perform(
+                        post(BASE)
+                                .header(HEADER, adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"productNo\":"
+                                                + json.writeValueAsString(number)
+                                                + ",\"listing\":"
+                                                + DETAILS
+                                                + "}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    /** Supplied BB numbers, including deleted history, cannot collide with generated references. */
+    @Test
+    void generatedNumberSkipsSuppliedNumbersAndDeletedHistory() throws Exception {
+        long reserved =
+                jdbc.queryForObject(
+                                "SELECT nextval('domain.seq_biz_product_product_no')", Long.class)
+                        + 1;
+        UUID supplied = create("BB-" + reserved);
+        create("BB-" + (reserved + 1));
+        create("BB-999999999999999999999999999999");
+        mvc.perform(
+                        delete(BASE + "/" + supplied)
+                                .header(HEADER, adminToken)
+                                .param("expectedVersion", "0"))
+                .andExpect(status().isOk());
+        String number = createGeneratedAfter(new CountDownLatch(0));
+        assertThat(Long.parseLong(number.substring(3))).isEqualTo(reserved + 2);
+    }
+
+    /** Large supplied suffixes must not advance or exhaust the generated-number sequence. */
+    @ParameterizedTest
+    @ValueSource(strings = {"9223372036854775807", "9223372036854775806"})
+    @Transactional
+    void suppliedBoundaryNumbersDoNotExhaustGeneration(String suffix) throws Exception {
+        UUID supplied = create("BB-" + suffix);
+        String first = createGeneratedAfter(new CountDownLatch(0));
+        String nullResponse =
+                mvc.perform(
+                                post(BASE)
+                                        .header(HEADER, adminToken)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                "{\"productNo\":null,\"listing\":" + DETAILS + "}"))
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+        String second = json.readTree(nullResponse).path("data").path("productNo").asText();
+        assertThat(Long.parseLong(second.substring(3)))
+                .isGreaterThan(Long.parseLong(first.substring(3)))
+                .isLessThan(Long.parseLong(suffix));
+        mvc.perform(
+                        delete(BASE + "/" + supplied)
+                                .header(HEADER, adminToken)
+                                .param("expectedVersion", "0"))
+                .andExpect(status().isOk());
+        String afterDeletion = createGeneratedAfter(new CountDownLatch(0));
+        assertThat(Long.parseLong(afterDeletion.substring(3)))
+                .isGreaterThan(Long.parseLong(second.substring(3)))
+                .isLessThan(Long.parseLong(suffix));
+    }
+
+    /** Both HTTP creates finish successfully with different, persisted sequence-backed numbers. */
+    @Test
+    void concurrentCreatesWithoutNumbersAreUnique() throws Exception {
+        CountDownLatch start = new CountDownLatch(1);
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            var first = pool.submit(() -> createGeneratedAfter(start));
+            var second = pool.submit(() -> createGeneratedAfter(start));
+            start.countDown();
+            String firstNumber = first.get(20, TimeUnit.SECONDS);
+            String secondNumber = second.get(20, TimeUnit.SECONDS);
+            assertThat(firstNumber).isNotEqualTo(secondNumber);
+            assertThat(
+                            jdbc.queryForObject(
+                                    "SELECT count(*) FROM biz_product WHERE product_no IN (?, ?) AND deleted = false",
+                                    Integer.class,
+                                    firstNumber,
+                                    secondNumber))
+                    .isEqualTo(2);
+        }
+    }
+
+    /**
+     * Exercise the actual servlet chain and independent application transactions on each thread.
+     */
+    private String createGeneratedAfter(CountDownLatch start) throws Exception {
+        if (!start.await(5, TimeUnit.SECONDS)) {
+            throw new IllegalStateException("test barrier timed out");
+        }
+        String response =
+                mvc.perform(
+                                post(BASE)
+                                        .header(HEADER, adminToken)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content("{\"listing\":" + DETAILS + "}"))
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+        return json.readTree(response).path("data").path("productNo").asText();
+    }
+
     /** Stale commands report the locked stored revision and leave all listing state intact. */
     @ParameterizedTest
     @ValueSource(strings = {"revise", "status", "delete", "teamTerms"})

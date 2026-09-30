@@ -27,6 +27,13 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     private final BizProductMapper bizProductMapper;
 
+    /** Serialize number allocation and insertion, including explicitly supplied numbers. */
+    @Override
+    public String resolveProductNumber(String productNo) {
+        bizProductMapper.lockProductNumberAllocation();
+        return productNo == null ? bizProductMapper.nextProductNumber() : productNo;
+    }
+
     /** Database uniqueness settles simultaneous attempts to create the same product number. */
     @Override
     public void insertDraft(Product product, UUID actorId) {

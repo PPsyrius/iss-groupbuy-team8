@@ -33,7 +33,8 @@ public class AdminListingAppServiceImpl implements AdminListingAppService {
     @Transactional(timeout = 10)
     public Product create(String productNo, ListingDetails details, UUID actorId) {
         users.requireActive(actorId);
-        Product product = Product.draft(UuidV7.next(), productNo, details);
+        Product product =
+                Product.draft(UuidV7.next(), products.resolveProductNumber(productNo), details);
         products.insertDraft(product, actorId);
         return product;
     }
