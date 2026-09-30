@@ -7,6 +7,7 @@ import { server } from "@/test/msw";
 import { installAuthInterceptor } from "./client";
 import { ApiError, OK_CODE } from "./envelope";
 import { meOptions, meQueryKey } from "./generated/@tanstack/react-query.gen";
+import { create } from "./generated/sdk.gen";
 
 // `installAuthInterceptor` registers a response interceptor on the module-level generated
 // `client` (shared across the whole process), so it must be installed exactly once here rather
@@ -57,5 +58,30 @@ describe("installAuthInterceptor", () => {
     expect(caught).toBeInstanceOf(ApiError);
     expect(caught).toMatchObject({ status: 403, code: "HTTP_403" });
     expect(qc.getQueryData(meQueryKey())).toBeUndefined();
+  });
+
+  it("carries a 400 body's field violations on ApiError.errors", async () => {
+    const errors = [{ field: "listing.originalPrice", message: "must be greater than 0" }];
+    server.use(
+      http.post("*/api/v1/admin/products", () =>
+        HttpResponse.json({ code: "COMMON_400_001", message: "invalid", errors }, { status: 400 }),
+      ),
+    );
+
+    let caught: unknown;
+    try {
+      await create({
+        body: {
+          productNo: "BB-1",
+          listing: { title: "t", originalPrice: "0", currency: "sgd", stock: 1 },
+        },
+        throwOnError: true,
+      });
+    } catch (e) {
+      caught = e;
+    }
+
+    expect(caught).toBeInstanceOf(ApiError);
+    expect(caught).toMatchObject({ status: 400, code: "COMMON_400_001", errors });
   });
 });
