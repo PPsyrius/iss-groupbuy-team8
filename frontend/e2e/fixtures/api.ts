@@ -143,6 +143,12 @@ function serveFromState(state: ApiState, route: Route, call: Call, seq: number):
   return fail(route, 501, "E2E_501_UNSTUBBED", `no e2e stub for ${method} ${API}${path}`);
 }
 
+// A spec may pass a /g or /y pattern; reset its lastIndex so repeated requests match every time.
+function matches(pattern: RegExp, path: string): boolean {
+  pattern.lastIndex = 0;
+  return pattern.test(path);
+}
+
 export const test = base.extend<{ api: Api }>({
   // `provide` is Playwright's `use`, renamed so the React hooks lint does not mistake it for one.
   api: async ({ page }, provide) => {
@@ -165,7 +171,9 @@ export const test = base.extend<{ api: Api }>({
           body: bodyOf(route),
         };
         recorded.push(call);
-        const hit = overrides.findLast((o) => o.method === call.method && o.path.test(call.path));
+        const hit = overrides.findLast(
+          (o) => o.method === call.method && matches(o.path, call.path),
+        );
         await (hit
           ? hit.handler(route, call)
           : serveFromState(state, route, call, recorded.length));
@@ -176,7 +184,9 @@ export const test = base.extend<{ api: Api }>({
       override: (method, path, handler) => overrides.push({ method, path, handler }),
       calls: (method, path) =>
         recorded.filter(
-          (c) => (method === undefined || c.method === method) && (path?.test(c.path) ?? true),
+          (c) =>
+            (method === undefined || c.method === method) &&
+            (path === undefined || matches(path, c.path)),
         ),
     });
   },
