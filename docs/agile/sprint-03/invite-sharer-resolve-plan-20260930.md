@@ -4,7 +4,13 @@ Date: 2026-09-30 · Branch: `feature/invite-sharer-resolve-20260930` · Issue: #
 
 Budget: about 5 h of the 6 h US15b line (the rest is the #230 UI). Due **2026-09-30**, so #230 can regenerate the client and ship by 2026-10-02.
 
-> **Status (2026-09-30): draft for owner review. Nothing implemented or committed yet.** D1 and D2 were accepted in chat on 2026-09-30. D3 is new and needs a decision (⚠️).
+> **Status (2026-09-30): implemented on this branch, not yet committed or merged.** D1, D2 and D3 were accepted in chat on 2026-09-30 and recorded on #201. Departures from the text below:
+>
+> - **No window index in the Redis key (§4.5).** The key is `blocbuy:{env}:common:rate-limit:{scope}:{digest}`; the first request of a window creates it with a one-window TTL in the same Lua call, and the window ends when the key expires. No clock is involved, so nothing needs to be injected or mocked.
+> - **Subject digest.** `UUID.nameUUIDFromBytes` (name-based UUID) instead of truncated SHA-256: same pseudonymisation, no checked `NoSuchAlgorithmException` branch.
+> - **No ArchUnit change (§4.2 item 4 dropped).** Infrastructure implementations share their port's package (`identity.gateway.RedisOAuthStateStore`), so a framework-free rule on `common.gateway..` would flag `RedisRateLimitGateway`. The port stays JDK-only by review, like the other gateway ports.
+> - **WEB-7.** A POST on the invite path never reaches the use case, but it returns 500, not 401: Spring rejects the method before the Sa-Token interceptor runs, and `GlobalExceptionHandler` has no 405 mapping (pre-existing, app-wide; split out). The test instead proves a deeper path (`/invites/{ref}/credits`) still needs a session (401), so only single-segment GET is anonymous.
+> - **NFR row is NFR-45**, not NFR-43: the draft misread the register, where NFR-43 and NFR-44 already existed.
 
 ## 1. Goal and acceptance criteria
 
@@ -36,7 +42,7 @@ Out of scope: any change to attribution or crediting (`resolveSharer` on JOIN st
 | Client IP on dev | `SERVER_FORWARD_HEADERS_STRATEGY=framework` makes `getRemoteAddr()` the **leftmost** `X-Forwarded-For` value, which the caller controls. CloudFront `/api/*` uses the managed `AllViewerExceptHostHeader` origin request policy (`infra/terraform/frontend-stack/cloudfront.tf`); the ALB only accepts the CloudFront prefix list and the origin secret header; 8589 is closed to the public (`docs/deploy/dev-cloudfront-deployment.md`) | key the limiter on `CloudFront-Viewer-Address` (D2) |
 | `Result` envelope | `@JsonInclude(NON_NULL)` on `Result` only; nested DTO nulls serialise as `null` | `sharerNickname: null` is sent explicitly |
 | Latest error code in groupbuy | `GROUPBUY_404_001` (deal not found) | new `GROUPBUY_404_002` |
-| NFR register | latest row NFR-42 | new NFR-43 (§7) |
+| NFR register | latest row NFR-44 | new NFR-45 (§7) |
 
 ## 3. Decisions
 
@@ -47,11 +53,11 @@ Out of scope: any change to attribution or crediting (`resolveSharer` on JOIN st
 | D0 ✅ | Option (a) resolve endpoint or (b) nickname in the URL | **(a)** `GET /api/v1/invites/{ref}` | (b) puts an editable name in the link, so anyone can forge "Sarah invited you". (a) keeps the name server-owned and the link unchanged |
 | D1 ✅ (chat, 2026-09-30) | Response for a full, succeeded, expired or failed bloc | **200 for every existing invite, whatever the bloc status.** 404 only for an unknown, deleted or malformed ref (and for an invite whose deal row is gone). No 410 | #230 needs the name for the full and ended banners ("Sarah's bloc is full"). The landing already loads the bloc status from `productId` and `deal`, so returning the name reveals nothing new. This departs from the issue's "404 or 410 for an expired or closed bloc"; the issue comment records it |
 | D2 ✅ (chat, 2026-09-30) | Client address for the per-IP limit | **`CloudFront-Viewer-Address`** when the `blocbuy.web.client-address-header` property names it (set on the `ec2` profile only); otherwise `getRemoteAddr()` (local and docker profiles). The port suffix is stripped | `getRemoteAddr()` on dev is the leftmost `X-Forwarded-For` value, so a caller could reset the limit on every request by sending a new header. CloudFront sets `CloudFront-Viewer-Address` itself. Whether the managed policy forwards it, and whether CloudFront overwrites a viewer-supplied copy, is checked on dev before the limit is relied on (§8 DEV-3, DEV-4). If it is not forwarded, a custom origin request policy in `cloudfront.tf` is a separate infra PR (deployment-operations skill) |
-| D3 ⚠️ | What name leaves the server | **First word of the nickname only, at most 32 characters, and nothing when the nickname is the email local part or the account is not active.** "Sarah Tan" → "Sarah"; "sarah.tan" (derived from `sarah.tan@gmail.com`) → `null`; a disabled account → `null` | The nickname is the Google display name, often a full legal name, or the email local part. `/auth/me` shows it only to its owner; this endpoint shows it to anyone holding the link. The design only needs a first name ("the nickname is what a group chat recognises"). Alternative: return the stored nickname unchanged (what the issue text says; simpler, but leaks full names and email prefixes). Say which you want; the rule lives in one identity method either way |
+| D3 ✅ (chat, 2026-09-30) | What name leaves the server | **The stored nickname unchanged, with two exceptions that return `null`:** (1) the account is not `ACTIVE`; (2) the nickname equals the local part of the user's email (case-insensitive). Null or blank also → `null`. "Sarah Tan" → "Sarah Tan"; "sarah.tan93" (from `sarah.tan93@gmail.com`) → `null`; a disabled account → `null` | The issue asks for the nickname, the same field as `MeResponse.nickname`, and it is what the sharer's contacts see elsewhere in the app. Rejected: first word only, which turns "Lim Jie Chao" into the family name "Lim". (1) stops a banned user's name appearing on a landing page. (2) covers `User.registerViaOAuth` falling back to the email local part when Google gives no display name, which would reveal most of the sharer's email address to anyone holding the link. No server-side length cut; the banner truncates long names with CSS (#230) |
 | D4 ✅ | Rate limit shape | **Fixed window, 60 requests per minute per client address**, scope `invite-resolve`. Redis `INCR` + `PEXPIRE` in one Lua script, so no key is ever left without a TTL. **Fail-open** on Redis errors (WARN log) | Refs are 128 random bits, so the limit is defence in depth, not the enumeration barrier; a Redis outage must not take the invite landing down. 60/min covers a class demo behind one NAT. A token bucket or sliding window is more exact but unnecessary here; #274 can revisit |
 | D5 ✅ | Where the limit is enforced | **Application layer**: `ShareInviteAppService.resolve` calls the `RateLimitGateway` port first, before any database read | Controllers stay protocol-only (backend skill); the port sits in `blocbuy-domain` `common.gateway` because infrastructure cannot depend on application. #274 calls the same port from its three use cases. Alternative: a `HandlerInterceptor` (keeps the use case clean, but splits one use-case rule across layers) |
 | D6 ✅ | Transaction | **No `@Transactional` on `resolve`.** It does two independent indexed reads plus one identity read that has its own read-only transaction | The result is display text; a deal that closes between the two reads changes nothing that matters. Not opening a transaction also avoids holding a DB connection during the Redis call |
-| D7 ✅ | Cross-domain nickname lookup | **New method on identity's public `UserAppService`**: `Optional<String> publicFirstName(UUID userId)` | Same pattern as `order` → `identity`. A consumer-owned port (like `ListingDisplayGateway`) is only needed when the dependency would form a cycle, and it would not here |
+| D7 ✅ | Cross-domain nickname lookup | **New method on identity's public `UserAppService`**: `Optional<String> publicNickname(UUID userId)` | Same pattern as `order` → `identity`. A consumer-owned port (like `ListingDisplayGateway`) is only needed when the dependency would form a cycle, and it would not here |
 | D8 ✅ | Malformed ref | **400 `COMMON_400_002`** through Bean Validation (`@Pattern` on the path variable, using the domain's pattern constant) | "All external input goes through Bean Validation." The format is public, so a 400 reveals nothing. The use case also treats a malformed ref as not found, for callers other than the controller |
 | D9 ✅ | Caching | **`Cache-Control: no-store`** on every response, set before the use case runs so 404 and 429 carry it too. No Redis cache for the lookup | CloudFront `/api/*` already uses `CachingDisabled`; `no-store` also stops browsers keeping it. Caching the lookup is #276 |
 
@@ -70,7 +76,7 @@ GET /api/v1/invites/{ref}          anonymous (no session needed); tag "invites"
 429  COMMON_429_001                more than 60 requests in the current minute from this client address
 ```
 
-- `sharerNickname`: `@Schema(nullable = true, description = "The sharer's first name for display; null when there is none to show. Unverified display text, never an identifier")`. It is a scalar, so swagger-core renders `type: [string, "null"]`, and hey-api generates `string | null` (the #267 `$ref` problem does not apply).
+- `sharerNickname`: `@Schema(nullable = true, description = "The sharer's nickname for display; null when there is none to show. Unverified display text, never an identifier")`. It is a scalar, so swagger-core renders `type: [string, "null"]`, and hey-api generates `string | null` (the #267 `$ref` problem does not apply).
 - `expiresAt`: the bloc's own deadline, the same value `POST /group-deals/{dealId}/invites` returns.
 - The bloc status is **not** in the response (non-goal of #201; the landing already reads it from the deal).
 - `@Operation` description states D1: any existing invite resolves, whatever the bloc status.
@@ -97,11 +103,10 @@ GET /api/v1/invites/{ref}          anonymous (no session needed); tag "invites"
 
 ### 4.3 Application (`blocbuy-application`)
 
-1. `identity.service.UserAppService.publicFirstName(UUID userId)` → `Optional<String>`; `UserAppServiceImpl` (`@Transactional(readOnly = true)`):
-   - `users.findById(userId)`; empty when absent or `status() != ACTIVE`.
-   - Empty when the nickname is null or blank, or equals the local part of the user's email (case-insensitive): D3.
-   - Otherwise the first whitespace-separated word, cut to 32 code points.
-   - The rule is a domain method `User.publicFirstName()` returning `Optional<String>`, so it is unit-tested without Spring; the service only loads and delegates.
+1. `identity.service.UserAppService.publicNickname(UUID userId)` → `Optional<String>`; `UserAppServiceImpl` (`@Transactional(readOnly = true)`):
+   - `users.findById(userId)`; empty when absent.
+   - The rule is a domain method `User.publicNickname()` returning `Optional<String>`, so it is unit-tested without Spring; the service only loads and delegates.
+   - `User.publicNickname()`: empty when `status != ACTIVE`, when the nickname is null or blank, or when it equals the local part of the user's email, ignoring case (D3). Otherwise the stored nickname, unchanged.
 2. `groupbuy.query.ResolvedInviteView(UUID dealId, UUID productId, String sharerNickname, Instant expiresAt)`.
 3. `groupbuy.service.ShareInviteAppService.resolve(String ref, String clientAddress)`:
 
@@ -110,7 +115,7 @@ GET /api/v1/invites/{ref}          anonymous (no session needed); tag "invites"
    if (!ShareInvite.isWellFormedRef(ref))                    throw BizException(INVITE_NOT_FOUND)
    invite = invites.findByRef(ref)          orElseThrow INVITE_NOT_FOUND
    deal   = deals.findById(invite.dealId()) orElseThrow INVITE_NOT_FOUND
-   name   = users.publicFirstName(invite.sharerUserId()).orElse(null)
+   name   = users.publicNickname(invite.sharerUserId()).orElse(null)
    return ResolvedInviteView(deal.id(), deal.productId(), name, deal.expireTime())
    ```
 
@@ -170,13 +175,13 @@ No migration and no SQL change.
 | --- | --- | --- |
 | DOM-1 | `ShareInviteTest` | `isWellFormedRef`: minted ref true; 21 and 23 chars, `+`, `/`, `=`, blank, null false |
 | DOM-2 | `RateLimitTest` (domain) | valid record; blank or upper-case scope, `maxRequests < 1`, null, sub-second or fractional window rejected |
-| DOM-3 | `UserTest` | `publicFirstName`: "Sarah Tan" → "Sarah"; single word; leading spaces; 40-char word → 32 code points (emoji-safe); equals email local part (any case) → empty; null or blank → empty; `DISABLED` → empty |
+| DOM-3 | `UserTest` | `publicNickname`: "Sarah Tan" → "Sarah Tan" (unchanged); equals the email local part → empty, also with different case; contains the local part but is not equal ("sarah.tan93 fan") → unchanged; null or blank → empty; `DISABLED` → empty |
 | APP-1 | `UserAppServiceImplTest` | delegates to the aggregate; unknown user → empty (no exception) |
 | APP-2 | `ShareInviteAppServiceTest` | over the limit → `RATE_LIMITED` and no repository or identity call |
 | APP-3 | same | malformed ref → `INVITE_NOT_FOUND`, no repository call |
 | APP-4 | same | unknown ref → `INVITE_NOT_FOUND` |
 | APP-5 | same | invite whose deal is missing → `INVITE_NOT_FOUND` |
-| APP-6 | same | open deal → view with `dealId`, `productId`, first name, `expireTime` |
+| APP-6 | same | open deal → view with `dealId`, `productId`, nickname, `expireTime` |
 | APP-7 | same | `SUCCEEDED`, `FAILED`, `EXPIRED` and past-deadline `OPEN` deals still resolve (D1) |
 | APP-8 | same | identity returns empty → `sharerNickname` null |
 | RL-1 | `RedisRateLimitGatewayIT` (Testcontainers `redis:8.10`) | 60 acquisitions true, the 61st false |
@@ -201,9 +206,9 @@ Coverage: after `./mvnw -B verify`, the aggregate report shows no missed line or
 
 | # | Step | h |
 | --- | --- | --- |
-| 1 | Post D0–D9 (with the D3 answer) on #201 | 0.1 |
-| 2 | Domain: `REF_PATTERN`, `isWellFormedRef`, `INVITE_NOT_FOUND`, `RateLimitGateway` + `RateLimit`, `User.publicFirstName`, ArchUnit line; DOM-1..3 | 0.6 |
-| 3 | Identity: `UserAppService.publicFirstName`; APP-1 | 0.2 |
+| 1 | Post D0–D9 on #201 | 0.1 |
+| 2 | Domain: `REF_PATTERN`, `isWellFormedRef`, `INVITE_NOT_FOUND`, `RateLimitGateway` + `RateLimit`, `User.publicNickname`, ArchUnit line; DOM-1..3 | 0.6 |
+| 3 | Identity: `UserAppService.publicNickname`; APP-1 | 0.2 |
 | 4 | Infrastructure: `RedisRateLimitGateway` + script; RL-1..5 | 1.2 |
 | 5 | Application: `ResolvedInviteView`, `ShareInviteAppService.resolve`; APP-2..8 | 0.6 |
 | 6 | Adapter: `InviteController`, `ClientAddressResolver`, `SaTokenConfig`, `application-ec2.yml`; WEB-1..9 | 1.0 |
@@ -213,9 +218,9 @@ Coverage: after `./mvnw -B verify`, the aggregate report shows no missed line or
 
 ## 7. PR, documentation and evidence
 
-- **One PR**, about 20 files (well under the 50-file limit): `feat(groupbuy): resolve an invite ref to the sharer's first name (#201)`, body `Closes #201`, reviewer @limjiechao. The contract, code, tests and docs ship together.
+- **One PR**, about 20 files (well under the 50-file limit): `feat(groupbuy): resolve an invite ref to the sharer's nickname (#201)`, body `Closes #201`, reviewer @limjiechao. The contract, code, tests and docs ship together.
 - `docs/agile/sprint-02/share-attribution-plan-20260924.md` D5: mark it built by #201 and link this plan.
-- `docs/quality/nfr-register.md`: new **NFR-43**, security and privacy: "An anonymous invite resolve returns only a first name and three identifiers, at most 60 per minute per viewer address, never cached (`no-store`)". Evidence: WEB-2, WEB-3, RL-1 and the DEV-3 output.
+- `docs/quality/nfr-register.md`: new **NFR-45**, security and privacy: "An anonymous invite resolve returns only the sharer's nickname (none for inactive accounts or email-derived nicknames) and three identifiers, at most 60 per minute per viewer address, never cached (`no-store`)". Evidence: WEB-2, WEB-3, RL-1 and the DEV-3 output.
 - This plan: status banner updated to "implemented", with departures listed, as in the US25 plan.
 - `docs/agile/sprint-03/log/2026-09-30.md`: day-log entry (agile-evidence-capture skill).
 - After merge: comment on #230 that the client can be regenerated; tick US15b API in the Sprint 3 plan.
@@ -233,7 +238,7 @@ Before the PR:
 
 On dev, after deploy (record the output in the day log):
 
-- [ ] **DEV-1** `curl -sS https://d1b3np88z657cp.cloudfront.net/api/v1/invites/<real ref>` → 200 with a first name; `-D -` shows `cache-control: no-store`
+- [ ] **DEV-1** `curl -sS https://d1b3np88z657cp.cloudfront.net/api/v1/invites/<real ref>` → 200 with the sharer's nickname; `-D -` shows `cache-control: no-store`
 - [ ] **DEV-2** random well-formed ref → 404 `GROUPBUY_404_002`; malformed → 400
 - [ ] **DEV-3** 61 requests within a minute from one machine → the 61st is 429 `COMMON_429_001`; from a second network → 200. This proves `CloudFront-Viewer-Address` reaches the backend (if it did not, the key would fall back to `getRemoteAddr()` and the result is not trustworthy; check the next item)
 - [ ] **DEV-4** repeat DEV-3 sending a different `X-Forwarded-For` and a forged `CloudFront-Viewer-Address: 203.0.113.<n>:1` on every request → still 429 after 60. If this passes the limit, the viewer header is not trusted; open the custom origin request policy PR (R1)
@@ -245,10 +250,11 @@ On dev, after deploy (record the output in the day log):
 | R1 | The managed `AllViewerExceptHostHeader` policy may not forward `CloudFront-Viewer-Address`, or may pass a viewer-forged copy; the limit is then per spoofable address | DEV-3 and DEV-4 detect it. The fix is a custom origin request policy in `infra/terraform/frontend-stack/cloudfront.tf` (separate PR, deployment-operations skill). The wider problem (every `getRemoteAddr()` on dev is spoofable via `X-Forwarded-For`) is a separate task |
 | R2 | Many users behind one NAT (a classroom demo) share one address | 60/min per address, one request per landing load; the constant is easy to raise |
 | R3 | Redis outage turns the limit off (fail-open) | Enumeration still faces 2^128 refs; WARN log makes the outage visible |
-| R4 | A first name is still personal data, visible to anyone with the link | D3 limits it to a first name the sharer's contacts already know; disabled accounts and email-derived nicknames show nothing. The sharer chose to share the link |
+| R4 | The nickname is often a full real name, visible to anyone holding the link | The sharer chose to share the link, usually with people who already know them; refs are unguessable and the endpoint is rate-limited. Disabled accounts and email-derived nicknames show nothing (D3). If a first-name-only display is wanted later, it is a change to `User.publicNickname` alone |
+| R7 | A long nickname overflows the banner | No server-side cut (D3); #230 truncates with CSS |
 | R5 | `ShareInviteAppService` gains two dependencies and a second use case | Both use cases concern the same invite; split into `InviteQueryService` if #276 adds caching |
 | R6 | Frontend treats `sharerNickname` as trusted | Contract description says display text only; React escapes text by default |
 
-## 10. Open questions
+## 10. Resolved questions
 
-1. D3: first name only, with email-derived nicknames suppressed (recommended), or the stored nickname unchanged?
+1. D3 (2026-09-30): the stored nickname unchanged, `null` for inactive accounts and email-derived nicknames. First-word-only was rejected because it breaks names written family name first.

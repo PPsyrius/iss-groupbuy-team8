@@ -1,5 +1,6 @@
 package com.blocbuy.identity.service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -16,6 +17,14 @@ public interface UserAppService {
      * receive the identity aggregate.
      */
     CurrentUser currentUser(UUID userId);
+
+    /**
+     * The nickname any visitor may see for this user, for example on a public invite landing page.
+     * Read-only and never throws for an unknown user.
+     *
+     * @return empty when the user is unknown or not active, or has no nickname to show
+     */
+    Optional<String> publicNickname(UUID userId);
 
     /**
      * Display facts of the current session's account; never carries credentials or provider data.

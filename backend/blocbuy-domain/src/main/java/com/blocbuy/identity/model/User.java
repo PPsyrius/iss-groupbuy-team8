@@ -4,6 +4,7 @@ import com.blocbuy.common.exception.BizException;
 import com.blocbuy.common.util.UuidV7;
 import com.blocbuy.identity.exception.IdentityErrorCode;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -32,8 +33,7 @@ public final class User {
             String email,
             RegisterSource registerSource,
             UserStatus status,
-            String nickname,
-            String avatarUrl,
+            UserProfile profile,
             Instant lastLoginTime) {
         if (id == null) {
             throw new IllegalArgumentException("id must not be null");
@@ -49,8 +49,9 @@ public final class User {
         this.email = email;
         this.registerSource = registerSource;
         this.status = status;
-        this.nickname = nickname;
-        this.avatarUrl = avatarUrl;
+        UserProfile display = profile == null ? UserProfile.EMPTY : profile;
+        this.nickname = display.nickname();
+        this.avatarUrl = display.avatarUrl();
         this.lastLoginTime = lastLoginTime;
     }
 
@@ -69,21 +70,28 @@ public final class User {
         String nickname =
                 displayName != null && !displayName.isBlank() ? displayName : email.split("@")[0];
         return new User(
-                UuidV7.next(), null, email, source, UserStatus.ACTIVE, nickname, avatarUrl, null);
+                UuidV7.next(),
+                null,
+                email,
+                source,
+                UserStatus.ACTIVE,
+                new UserProfile(nickname, avatarUrl),
+                null);
     }
 
-    /** Reconstitution factory for the infrastructure converter; all fields come from the row. */
+    /**
+     * Reconstitution factory for the infrastructure converter; all fields come from the row. A null
+     * profile means neither a nickname nor an avatar.
+     */
     public static User reconstitute(
             UUID id,
             String username,
             String email,
             RegisterSource registerSource,
             UserStatus status,
-            String nickname,
-            String avatarUrl,
+            UserProfile profile,
             Instant lastLoginTime) {
-        return new User(
-                id, username, email, registerSource, status, nickname, avatarUrl, lastLoginTime);
+        return new User(id, username, email, registerSource, status, profile, lastLoginTime);
     }
 
     /** Stamps a successful login (any channel). */
@@ -99,6 +107,27 @@ public final class User {
         if (status != UserStatus.ACTIVE) {
             throw new BizException(IdentityErrorCode.ACCOUNT_DISABLED);
         }
+    }
+
+    /**
+     * The nickname other people may see, for example on an invite landing page that anyone with the
+     * link can open. Empty for an account that is not active, and for a nickname that is only the
+     * email local part (the OAuth fallback when the provider gives no display name), so a public
+     * page never reveals an email prefix.
+     */
+    public Optional<String> publicNickname() {
+        if (status != UserStatus.ACTIVE || nickname == null || nickname.isBlank()) {
+            return Optional.empty();
+        }
+        if (email != null && nickname.equalsIgnoreCase(emailLocalPart(email))) {
+            return Optional.empty();
+        }
+        return Optional.of(nickname);
+    }
+
+    private static String emailLocalPart(String email) {
+        int at = email.indexOf('@');
+        return at < 0 ? email : email.substring(0, at);
     }
 
     /** Administrative disable; idempotent on an already-disabled account. */
