@@ -3,6 +3,7 @@ package com.blocbuy.bootstrap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.blocbuy.bootstrap.scheduling.SchedulingProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
@@ -41,6 +42,10 @@ import tools.jackson.databind.json.JsonMapper;
             "blocbuy.payment.checkout.success-url=https://shop.example/payments/return",
             "blocbuy.payment.checkout.cancel-url=https://shop.example/payments/return",
             "blocbuy.scheduling.enabled=true",
+            "blocbuy.scheduling.team-expiry.interval=PT1M",
+            "blocbuy.scheduling.team-expiry.initial-delay=PT30S",
+            "blocbuy.scheduling.team-expiry.batch-size=100",
+            "blocbuy.scheduling.team-expiry.lease=PT2M",
             "blocbuy.scheduling.refund-worker.initial-delay=PT1H",
             "logging.level.com.blocbuy=INFO"
         })
@@ -75,11 +80,16 @@ class PerformanceBaselineIT {
     @LocalServerPort private int port;
     @Autowired private JdbcTemplate jdbc;
     @Autowired private MeterRegistry meters;
+    @Autowired private SchedulingProperties scheduling;
 
     @Test
     void recordOneHundredUserBaselineAndExpiryLag() throws Exception {
         Path output = Path.of("target", "perf");
         Files.createDirectories(output);
+        assertThat(scheduling.teamExpiry().interval().getSeconds()).isEqualTo(60);
+        assertThat(scheduling.teamExpiry().initialDelay().getSeconds()).isEqualTo(30);
+        assertThat(scheduling.teamExpiry().batchSize()).isEqualTo(100);
+        assertThat(scheduling.teamExpiry().lease().getSeconds()).isEqualTo(120);
         new ResourceDatabasePopulator(new ClassPathResource("perf/seed.sql"))
                 .execute(jdbc.getDataSource());
         List<Map<String, Object>> users = new ArrayList<>();
@@ -171,7 +181,13 @@ class PerformanceBaselineIT {
                                     meters.counter("blocbuy.team.expiry.teams", "result", "failed")
                                             .count(),
                                     "schedulerIntervalSeconds",
-                                    60,
+                                    scheduling.teamExpiry().interval().getSeconds(),
+                                    "schedulerInitialDelaySeconds",
+                                    scheduling.teamExpiry().initialDelay().getSeconds(),
+                                    "schedulerBatchSize",
+                                    scheduling.teamExpiry().batchSize(),
+                                    "schedulerLeaseSeconds",
+                                    scheduling.teamExpiry().lease().getSeconds(),
                                     "maxResolutionLagMs",
                                     expiries.stream()
                                             .filter(row -> "expired".equals(row.get("status")))
