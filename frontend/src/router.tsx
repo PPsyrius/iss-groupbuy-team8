@@ -27,4 +27,9 @@ declare module "@tanstack/react-router" {
   interface Register {
     router: ReturnType<typeof createAppRouter>;
   }
+  // `shell: "admin"` marks the console subtree, whose own layout replaces the storefront header
+  // (admin plan §12 note 1).
+  interface StaticDataRouteOption {
+    shell?: "admin";
+  }
 }
