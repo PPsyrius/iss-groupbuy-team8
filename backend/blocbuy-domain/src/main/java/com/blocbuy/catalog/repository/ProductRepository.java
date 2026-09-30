@@ -18,6 +18,11 @@ import java.util.UUID;
  */
 public interface ProductRepository {
 
+    /**
+     * Resolve an optional number under a creation lock held until the caller's transaction ends.
+     */
+    String resolveProductNumber(String productNo);
+
     /** Insert a new draft; duplicate live product numbers are reported as business conflicts. */
     void insertDraft(Product product, UUID actorId);
 

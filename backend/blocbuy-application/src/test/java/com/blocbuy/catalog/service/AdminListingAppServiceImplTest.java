@@ -53,11 +53,24 @@ class AdminListingAppServiceImplTest {
     /** Account validation precedes creating server-owned draft identity. */
     @Test
     void creationUsesUuidV7AndDraftDefaults() {
+        when(products.resolveProductNumber("SKU")).thenReturn("SKU");
         Product created = service.create("SKU", details(), ACTOR);
         assertThat(created.id().version()).isEqualTo(7);
         assertThat(created.status()).isEqualTo(ProductStatus.DRAFT);
         assertThat(created.soldCount()).isZero();
         verify(products).insertDraft(created, ACTOR);
+    }
+
+    /** Missing numbers are resolved only after checking the actor's account. */
+    @Test
+    void creationResolvesMissingProductNumberBeforeInsertion() {
+        when(products.resolveProductNumber(null)).thenReturn("BB-100001");
+        Product created = service.create(null, details(), ACTOR);
+        assertThat(created.productNo()).isEqualTo("BB-100001");
+        var order = inOrder(users, products);
+        order.verify(users).requireActive(ACTOR);
+        order.verify(products).resolveProductNumber(null);
+        order.verify(products).insertDraft(created, ACTOR);
     }
 
     /** Product lock precedes account/reference checks and the conditional delete. */
