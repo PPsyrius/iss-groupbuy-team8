@@ -132,6 +132,34 @@ class AdminListingFlowIT {
                 .andExpect(status().isForbidden());
     }
 
+    /** The current-session response reports the user's actual SQL-backed roles. */
+    @Test
+    void meReturnsPersistedRolesWithoutGrantingBuyerAdminAccess() throws Exception {
+        mvc.perform(get("/api/v1/auth/me").header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.userId").value(admin.toString()))
+                .andExpect(jsonPath("$.data.roles", hasItem("admin")));
+
+        mvc.perform(get("/api/v1/auth/me").header(HEADER, buyerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.userId").value(buyer.toString()))
+                .andExpect(jsonPath("$.data.roles").isEmpty())
+                .andExpect(jsonPath("$.data.roles", not(hasItem("admin"))));
+
+        jdbc.update(
+                """
+                INSERT INTO rel_user_role (user_id, role_id)
+                SELECT ?, id FROM sys_role WHERE role_code = 'buyer' AND deleted = false
+                """,
+                buyer);
+        mvc.perform(get("/api/v1/auth/me").header(HEADER, buyerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.roles", hasItem("buyer")))
+                .andExpect(jsonPath("$.data.roles", not(hasItem("admin"))));
+
+        mvc.perform(get("/api/v1/auth/me")).andExpect(status().isUnauthorized());
+    }
+
     /** An administrator role alone must not bypass the independently checked capability. */
     @Test
     @Transactional

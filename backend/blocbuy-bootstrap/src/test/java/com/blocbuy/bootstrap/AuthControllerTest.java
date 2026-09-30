@@ -23,6 +23,7 @@ import com.blocbuy.identity.service.OAuthLoginAppService.OAuthLoginResult;
 import com.blocbuy.identity.service.UserAppService;
 import com.blocbuy.identity.service.UserAppService.CurrentUser;
 import jakarta.servlet.http.Cookie;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,12 +92,14 @@ class AuthControllerTest {
 
         when(users.currentUser(USER))
                 .thenReturn(new CurrentUser(USER, "Tester", "https://img.example/a.png"));
+        when(roles.findRoleCodesByUserId(USER)).thenReturn(List.of("buyer"));
         mvc.perform(get(ME_PATH).cookie(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("COMMON_200_000"))
                 .andExpect(jsonPath("$.data.userId").value(USER.toString()))
                 .andExpect(jsonPath("$.data.nickname").value("Tester"))
-                .andExpect(jsonPath("$.data.avatarUrl").value("https://img.example/a.png"));
+                .andExpect(jsonPath("$.data.avatarUrl").value("https://img.example/a.png"))
+                .andExpect(jsonPath("$.data.roles[0]").value("buyer"));
     }
 
     @Test
