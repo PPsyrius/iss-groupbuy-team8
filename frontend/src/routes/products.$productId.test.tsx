@@ -258,13 +258,15 @@ function servePayments() {
   );
 }
 
+const quoteOne = "0192f0a0-0000-7000-8000-000000000001";
+
 function serveQuote(
   answer: () => Response = () =>
     HttpResponse.json({
       code: OK_CODE,
       message: "ok",
       data: {
-        id: "0192f0a0-0000-7000-8000-000000000001",
+        id: quoteOne,
         productId: knownId,
         policyVersion: 1,
         amount: "71.00",
@@ -298,10 +300,59 @@ describe("/products/$productId quote step", () => {
     const dialog = await screen.findByRole("dialog", { name: "Your bloc price" });
     expect(await within(dialog).findByRole("timer")).toHaveTextContent(/left/);
     await userEvent.click(within(dialog).getByRole("button", { name: "Continue to payment" }));
-    await waitFor(() => expect(intentBody).toEqual({ operation: "START", businessId: knownId }));
+    await waitFor(() =>
+      expect(intentBody).toEqual({ operation: "START", businessId: knownId, quoteId: quoteOne }),
+    );
     // The failed intent closes the sheet so the page-level alert is visible.
     expect(await screen.findByText(/We could not open Checkout/)).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("keeps the sheet open on a refused quote and prices again on request", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(listing());
+    servePayments();
+    server.use(
+      http.post("*/api/v1/payments/intents", () =>
+        HttpResponse.json(
+          { code: "CATALOG_409_007", message: "Team price quote has expired" },
+          { status: 409 },
+        ),
+      ),
+    );
+    let issued = 0;
+    serveQuote(() => {
+      issued++;
+      return HttpResponse.json({
+        code: OK_CODE,
+        message: "ok",
+        data: {
+          id: `0192f0a0-0000-7000-8000-00000000000${issued}`,
+          productId: knownId,
+          policyVersion: 1,
+          amount: "71.00",
+          currency: "sgd",
+          issuedAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 15 * 60_000).toISOString(),
+        },
+      });
+    });
+    renderRoute(`/products/${knownId}`);
+    const [start] = await screen.findAllByRole("button", { name: /Start a bloc/ });
+    await waitFor(() => expect(start).toBeEnabled());
+    await userEvent.click(start!);
+    const dialog = await screen.findByRole("dialog", { name: "Your bloc price" });
+    await userEvent.click(
+      await within(dialog).findByRole("button", { name: "Continue to payment" }),
+    );
+    expect(await within(dialog).findByText("This price is no longer available")).toBeVisible();
+    expect(screen.queryByText(/We could not open Checkout/)).toBeNull();
+    await userEvent.click(within(dialog).getByRole("button", { name: "Get a new price" }));
+    expect(
+      await within(dialog).findByRole("button", { name: "Continue to payment" }),
+    ).toBeVisible();
+    expect(issued).toBe(2);
   });
 
   it("says no price is set when the listing has no team price policy", async () => {

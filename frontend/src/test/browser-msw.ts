@@ -457,6 +457,36 @@ function issueQuote(productId: string): QuoteResponse | null {
   return quote;
 }
 
+// A START that carries a quote pays the quoted amount (US26, #183), so the quote must be this
+// listing's and still valid, as `lockQuotedStart` checks; a JOIN with a quote is a client bug.
+function quoteRefusal(body: {
+  operation?: string;
+  businessId?: string;
+  quoteId?: string | null;
+}): Response | null {
+  if (!body.quoteId) return null;
+  if (body.operation === "JOIN") {
+    return HttpResponse.json(
+      { code: "ORDER_400_001", message: "Purchase intent terms are invalid" },
+      { status: 400 },
+    );
+  }
+  const quote = quotes.get(body.quoteId);
+  if (!quote || quote.productId !== body.businessId) {
+    return HttpResponse.json(
+      { code: "CATALOG_404_002", message: "Team price quote not found" },
+      { status: 404 },
+    );
+  }
+  if (Date.parse(quote.expiresAt ?? "") <= Date.now()) {
+    return HttpResponse.json(
+      { code: "CATALOG_409_007", message: "Team price quote has expired" },
+      { status: 409 },
+    );
+  }
+  return null;
+}
+
 // UC7 invites (T3-05): one ref per bloc for the sample buyer, reused on every later mint as the
 // backend does. Only an open bloc the buyer is in can be shared: Share invite link on an Active
 // My blocs row, or the share block on a listing after joining its bloc, copies a link that opens
@@ -540,7 +570,13 @@ export async function startBrowserMsw() {
         // Payments are on for the sample buyer. START and JOIN freeze an intent and the checkout
         // session sends the buyer to the mock receipt; one designated JOIN is refused (above).
         createPaymentIntent: async ({ request }) => {
-          const body = (await request.json()) as { operation?: string; businessId?: string };
+          const body = (await request.json()) as {
+            operation?: string;
+            businessId?: string;
+            quoteId?: string | null;
+          };
+          const refused = quoteRefusal(body);
+          if (refused) return refused;
           const target =
             body.operation === "START"
               ? {

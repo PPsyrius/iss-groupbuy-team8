@@ -134,6 +134,17 @@ function ProductDetailPage() {
   const [openFor, setOpenFor] = useState<string | null>(null);
   const quoteOpen = openFor === sheetFor;
   const setQuoteOpen = (open: boolean) => setOpenFor(open ? sheetFor : null);
+  // The quote the server refused at START (US26): the sheet stays open on "Get a new price", and
+  // a fresh quote has a new id, so it is no longer marked.
+  const [rejectedQuote, setRejectedQuote] = useState<string | null>(null);
+  const shownQuote = quoting.state.status === "ready" ? quoting.state.quote.id : null;
+  // Success leaves for Stripe; a failure closes the sheet so the page-level alert shows, except a
+  // refused quote, which keeps the sheet open for a new price.
+  async function continueWithQuote(quoteId: string) {
+    const outcome = await checkout.begin("START", productId, quoteId);
+    if (outcome === "quote-rejected") setRejectedQuote(quoteId);
+    else setQuoteOpen(false);
+  }
   const onStart =
     onGated ??
     (checkout.enabled
@@ -186,9 +197,9 @@ function ProductDetailPage() {
         state={quoting.state}
         now={now}
         isPaying={checkout.isPending}
-        // Success leaves for Stripe; a failure closes the sheet so the page-level alert shows.
-        onContinue={() => {
-          void checkout.begin("START", productId).then(() => setQuoteOpen(false));
+        isRejected={shownQuote !== null && shownQuote === rejectedQuote}
+        onContinue={(quoteId) => {
+          void continueWithQuote(quoteId);
         }}
         onRefresh={() => {
           void quoting.refresh();

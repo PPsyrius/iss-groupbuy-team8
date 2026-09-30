@@ -199,7 +199,7 @@ Progress shows joined/target, seats left, progress bar, and deadline/countdown. 
 
 **Actions**
 
-Anonymous paid actions open the sign-in sheet. Signed-in Start opens the quote preview (T3-01); JOIN starts a server-owned purchase intent (T3-04), but full and ended blocs disable the button with a reason. Buy alone uses the same checkout boundary (ADR 0014).
+Anonymous paid actions open the sign-in sheet. Signed-in Start opens the quote sheet (T3-01), and START is charged the quoted price (US26); JOIN starts a server-owned purchase intent (T3-04), but full and ended blocs disable the button with a reason. Buy alone uses the same checkout boundary (ADR 0014).
 
 **Invite landing and sharing (T3-05, #30):** A share link uses `/products/$productId?deal={dealId}&ref={ref}`; the listing is the landing because there is no invite-resolution endpoint. Validated `deal` and `ref` are parked in `sessionStorage` (last link wins), then removed from the URL; an invalid new link clears the parked invitation. The reference is sent only with JOIN for that bloc and remains available if the buyer must replace a stale intent. A matching open bloc displays an invite card with primary "Join this bloc" and downgrades Start a bloc to an outline action; a closed invitation offers recovery. No sharer name is shown because the contract lacks one (#201).
 
