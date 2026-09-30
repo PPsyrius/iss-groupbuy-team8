@@ -5,6 +5,7 @@ import com.blocbuy.catalog.model.ListingDetails;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.catalog.model.ProductTeamTerms;
+import com.blocbuy.catalog.pricing.TeamPricePolicy;
 import com.blocbuy.catalog.service.AdminListingAppService;
 import com.blocbuy.catalog.service.TeamPriceAppService;
 import com.blocbuy.catalog.service.TeamTermsAppService;
@@ -112,7 +113,9 @@ public class AdminListingController {
     @GetMapping("/{productId}")
     @Operation(
             summary = "Read a managed listing",
-            description = "Includes drafts and off-sale listings, never deleted rows.")
+            description =
+                    "Includes drafts and off-sale listings, never deleted rows. latestPolicy is "
+                            + "the latest non-deleted revision, even if expired or future, or null when none exists.")
     public Result<AdminListingResponse> get(@PathVariable UUID productId) {
         return Result.ok(AdminListingResponse.from(listings.get(productId, administrator())));
     }
@@ -123,7 +126,8 @@ public class AdminListingController {
             summary = "Page managed listings",
             description =
                     "Newest first, UUID tie-breaker. page starts at 1; size is 1-100. "
-                            + "Omitted status includes every non-deleted state.")
+                            + "Omitted status includes every non-deleted state. latestPolicy is loaded "
+                            + "in one batch for the page and is null when no non-deleted revision exists.")
     public Result<PageResult<AdminListingResponse>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(PageQuery.MAX_SIZE) int size,
@@ -152,16 +156,31 @@ public class AdminListingController {
                     "One database snapshot. Listing totals count non-deleted rows by stored status, "
                             + "matching the admin page filters. openDeals spans all products and counts "
                             + "non-deleted deals with open status, currentSize below targetSize and "
-                            + "expiry strictly after database time.")
+                            + "expiry strictly after database time. withActivePolicy counts non-deleted "
+                            + "listings whose latest non-deleted policy has validFrom <= database time "
+                            + "and validUntil > database time, regardless of publication state.")
     public Result<ListingCountsResponse> counts() {
         var counts = listings.counts(administrator());
         return Result.ok(
                 new ListingCountsResponse(
-                        counts.draft(), counts.onSale(), counts.offSale(), counts.openDeals()));
+                        counts.draft(),
+                        counts.onSale(),
+                        counts.offSale(),
+                        counts.openDeals(),
+                        counts.withActivePolicy()));
     }
 
     /** Stable dashboard protocol view; every total is zero when its population is empty. */
-    public record ListingCountsResponse(long draft, long onSale, long offSale, long openDeals) {}
+    public record ListingCountsResponse(
+            long draft,
+            long onSale,
+            long offSale,
+            long openDeals,
+            @Schema(
+                            description =
+                                    "Non-deleted listings whose latest non-deleted policy is valid now; "
+                                            + "validFrom inclusive, validUntil exclusive, irrespective of listing status")
+                    long withActivePolicy) {}
 
     /** A full content replacement leaves server-owned lifecycle and counters untouched. */
     @PutMapping("/{productId}")
@@ -375,9 +394,16 @@ public class AdminListingController {
             String pricingMode,
             int soldCount,
             int version,
-            TeamTermsView teamTerms) {
+            TeamTermsView teamTerms,
+            @JsonInclude(JsonInclude.Include.ALWAYS)
+                    @Schema(
+                            nullable = true,
+                            description =
+                                    "Latest non-deleted revision, even if expired or future; null when none exists")
+                    LatestPolicyResponse latestPolicy) {
         /** Convert pure business values only; no persistence object crosses the HTTP boundary. */
-        static AdminListingResponse from(Product product) {
+        static AdminListingResponse from(AdminListingAppService.ManagedListing listing) {
+            Product product = listing.product();
             return new AdminListingResponse(
                     product.id(),
                     product.productNo(),
@@ -386,7 +412,23 @@ public class AdminListingController {
                     product.pricingMode().code(),
                     product.soldCount(),
                     product.version(),
-                    TeamTermsView.from(product.teamTerms()));
+                    TeamTermsView.from(product.teamTerms()),
+                    LatestPolicyResponse.from(listing.latestPolicy()));
+        }
+    }
+
+    /** Policy summary uses the existing policy read's exact decimal-string representation. */
+    public record LatestPolicyResponse(
+            String amount, String currency, Instant validFrom, Instant validUntil, int version) {
+        static LatestPolicyResponse from(TeamPricePolicy policy) {
+            return policy == null
+                    ? null
+                    : new LatestPolicyResponse(
+                            policy.amount().toPlainString(),
+                            policy.currency(),
+                            policy.validFrom(),
+                            policy.validUntil(),
+                            policy.version());
         }
     }
 

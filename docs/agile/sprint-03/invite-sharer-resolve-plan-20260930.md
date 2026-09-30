@@ -10,7 +10,7 @@ Budget: about 5 h of the 6 h US15b line (the rest is the #230 UI). Due **2026-09
 > - **Subject digest.** `UUID.nameUUIDFromBytes` (name-based UUID) instead of truncated SHA-256: same pseudonymisation, no checked `NoSuchAlgorithmException` branch.
 > - **No ArchUnit change (§4.2 item 4 dropped).** Infrastructure implementations share their port's package (`identity.gateway.RedisOAuthStateStore`), so a framework-free rule on `common.gateway..` would flag `RedisRateLimitGateway`. The port stays JDK-only by review, like the other gateway ports.
 > - **WEB-7.** A POST on the invite path never reaches the use case, but it returns 500, not 401: Spring rejects the method before the Sa-Token interceptor runs, and `GlobalExceptionHandler` has no 405 mapping (pre-existing, app-wide; split out). The test instead proves a deeper path (`/invites/{ref}/credits`) still needs a session (401), so only single-segment GET is anonymous.
-> - **NFR row is NFR-45**, not NFR-43: the draft misread the register, where NFR-43 and NFR-44 already existed.
+> - **NFR row is NFR-46**, not NFR-43: the draft misread the register, where NFR-43 and NFR-44 already existed; NFR-45 was then taken by #249 on `dev`.
 
 ## 1. Goal and acceptance criteria
 
@@ -42,7 +42,7 @@ Out of scope: any change to attribution or crediting (`resolveSharer` on JOIN st
 | Client IP on dev | `SERVER_FORWARD_HEADERS_STRATEGY=framework` makes `getRemoteAddr()` the **leftmost** `X-Forwarded-For` value, which the caller controls. CloudFront `/api/*` uses the managed `AllViewerExceptHostHeader` origin request policy (`infra/terraform/frontend-stack/cloudfront.tf`); the ALB only accepts the CloudFront prefix list and the origin secret header; 8589 is closed to the public (`docs/deploy/dev-cloudfront-deployment.md`) | key the limiter on `CloudFront-Viewer-Address` (D2) |
 | `Result` envelope | `@JsonInclude(NON_NULL)` on `Result` only; nested DTO nulls serialise as `null` | `sharerNickname: null` is sent explicitly |
 | Latest error code in groupbuy | `GROUPBUY_404_001` (deal not found) | new `GROUPBUY_404_002` |
-| NFR register | latest row NFR-44 | new NFR-45 (§7) |
+| NFR register | latest row NFR-45 | new NFR-46 (§7) |
 
 ## 3. Decisions
 
@@ -220,7 +220,7 @@ Coverage: after `./mvnw -B verify`, the aggregate report shows no missed line or
 
 - **One PR**, about 20 files (well under the 50-file limit): `feat(groupbuy): resolve an invite ref to the sharer's nickname (#201)`, body `Closes #201`, reviewer @limjiechao. The contract, code, tests and docs ship together.
 - `docs/agile/sprint-02/share-attribution-plan-20260924.md` D5: mark it built by #201 and link this plan.
-- `docs/quality/nfr-register.md`: new **NFR-45**, security and privacy: "An anonymous invite resolve returns only the sharer's nickname (none for inactive accounts or email-derived nicknames) and three identifiers, at most 60 per minute per viewer address, never cached (`no-store`)". Evidence: WEB-2, WEB-3, RL-1 and the DEV-3 output.
+- `docs/quality/nfr-register.md`: new **NFR-46**, security and privacy: "An anonymous invite resolve returns only the sharer's nickname (none for inactive accounts or email-derived nicknames) and three identifiers, at most 60 per minute per viewer address, never cached (`no-store`)". Evidence: WEB-2, WEB-3, RL-1 and the DEV-3 output.
 - This plan: status banner updated to "implemented", with departures listed, as in the US25 plan.
 - `docs/agile/sprint-03/log/2026-09-30.md`: day-log entry (agile-evidence-capture skill).
 - After merge: comment on #230 that the client can be regenerated; tick US15b API in the Sprint 3 plan.

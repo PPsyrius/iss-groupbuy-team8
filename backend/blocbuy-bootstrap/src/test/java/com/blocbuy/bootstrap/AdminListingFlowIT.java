@@ -56,7 +56,7 @@ import tools.jackson.databind.ObjectMapper;
         })
 @AutoConfigureMockMvc
 @Testcontainers
-@Import(TeamPriceControllerTest.SessionStore.class)
+@Import({TeamPriceControllerTest.SessionStore.class, SqlStatementCapture.Configuration.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class AdminListingFlowIT {
     private static final String BASE = "/api/v1/admin/products";
@@ -89,6 +89,7 @@ class AdminListingFlowIT {
     @Autowired private ObjectMapper json;
     @Autowired private AdminListingAppService listings;
     @Autowired private RoleRepository roles;
+    @Autowired private SqlStatementCapture sqlStatements;
     private UUID admin;
     private UUID buyer;
     private String adminToken;
@@ -599,7 +600,200 @@ class AdminListingFlowIT {
                 .andExpect(jsonPath("$.data.draft").value(0))
                 .andExpect(jsonPath("$.data.onSale").value(0))
                 .andExpect(jsonPath("$.data.offSale").value(0))
-                .andExpect(jsonPath("$.data.openDeals").value(0));
+                .andExpect(jsonPath("$.data.openDeals").value(0))
+                .andExpect(jsonPath("$.data.withActivePolicy").value(0));
+        mvc.perform(get(BASE).header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items").isEmpty())
+                .andExpect(jsonPath("$.data.total").value(0));
+    }
+
+    /** Detail and page agree with the established latest-policy read, regardless of validity. */
+    @ParameterizedTest
+    @ValueSource(ints = {-3600, 3600})
+    @Transactional
+    void latestPolicyMatchesExistingReadIncludingExpiredAndFutureRevisions(int startOffset)
+            throws Exception {
+        jdbc.update("UPDATE biz_product SET deleted = true");
+        UUID id = create("POLICY-" + UuidV7.next());
+        UUID withoutPolicy = create("NO-POLICY-" + UuidV7.next());
+        seedPolicy(id, 1, -60, 7200, false);
+        seedPolicy(id, 2, startOffset, startOffset + 1800, false);
+        seedPolicy(id, 3, -60, 7200, true);
+        var expected =
+                json.readTree(
+                                mvc.perform(
+                                                get("/api/v1/products/" + id + "/team-price-policy")
+                                                        .header(HEADER, adminToken))
+                                        .andExpect(status().isOk())
+                                        .andReturn()
+                                        .getResponse()
+                                        .getContentAsString())
+                        .path("data");
+        var detail =
+                json.readTree(
+                                mvc.perform(get(BASE + "/" + id).header(HEADER, adminToken))
+                                        .andExpect(status().isOk())
+                                        .andReturn()
+                                        .getResponse()
+                                        .getContentAsString())
+                        .path("data")
+                        .path("latestPolicy");
+        assertThat(detail.path("version").asInt()).isEqualTo(2);
+        for (String field : List.of("amount", "currency", "validFrom", "validUntil", "version")) {
+            assertThat(detail.path(field)).isEqualTo(expected.path(field));
+        }
+        var page =
+                json.readTree(
+                                mvc.perform(get(BASE).header(HEADER, adminToken))
+                                        .andExpect(status().isOk())
+                                        .andReturn()
+                                        .getResponse()
+                                        .getContentAsString())
+                        .path("data")
+                        .path("items");
+        assertThat(page.size()).isEqualTo(2);
+        for (var item : page) {
+            if (item.path("id").asText().equals(id.toString())) {
+                assertThat(item.path("latestPolicy")).isEqualTo(detail);
+            } else {
+                assertThat(item.path("id").asText()).isEqualTo(withoutPolicy.toString());
+                assertThat(item.has("latestPolicy")).isTrue();
+                assertThat(item.path("latestPolicy").isNull()).isTrue();
+            }
+        }
+        var noPolicyDetail =
+                json.readTree(
+                                mvc.perform(
+                                                get(BASE + "/" + withoutPolicy)
+                                                        .header(HEADER, adminToken))
+                                        .andExpect(status().isOk())
+                                        .andReturn()
+                                        .getResponse()
+                                        .getContentAsString())
+                        .path("data");
+        assertThat(noPolicyDetail.has("latestPolicy")).isTrue();
+        assertThat(noPolicyDetail.path("latestPolicy").isNull()).isTrue();
+        mvc.perform(
+                        put(BASE + "/" + id + "/status")
+                                .header(HEADER, adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"expectedVersion\":0,\"status\":\"on_sale\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.latestPolicy.version").value(2));
+        mvc.perform(
+                        put(BASE + "/" + id)
+                                .header(HEADER, adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"expectedVersion\":1,\"listing\":" + DETAILS + "}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.latestPolicy.version").value(2));
+    }
+
+    /** Only the latest live revision's interval matters; counts never fall back or double-count. */
+    @Test
+    @Transactional
+    void activePolicyCountUsesLatestRevisionAndHalfOpenValidity() throws Exception {
+        jdbc.update("UPDATE biz_product SET deleted = true");
+        String prefix = "ACTIVE-" + UuidV7.next();
+        jdbc.update(
+                """
+                INSERT INTO biz_product (product_no, title, original_price, currency, stock, status, deleted)
+                SELECT ? || '-' || n, 'Policy tea', 12, 'sgd', 5,
+                    CASE WHEN n = 1 THEN 'off_sale' WHEN n = 5 THEN 'draft' ELSE 'on_sale' END,
+                    n = 11 FROM generate_series(1, 11) AS fixture(n)
+                """,
+                prefix);
+        jdbc.update(
+                """
+                INSERT INTO biz_team_price_policy (product_id, amount, currency, valid_from, valid_until,
+                    version, deleted, create_by, update_by)
+                SELECT product.id, 9, 'sgd', CURRENT_TIMESTAMP + fixture.starts * interval '1 second',
+                    CURRENT_TIMESTAMP + fixture.ends * interval '1 second', fixture.version, fixture.deleted, ?, ?
+                FROM (VALUES (1, 1, -60, 3600, false), (1, 2, -60, 3600, false),
+                    (2, 1, 100, 3600, false), (3, 1, -3600, -1, false), (4, 1, -60, 0, false),
+                    (5, 1, 0, 3600, false), (6, 1, -60, 3600, false), (6, 2, 100, 3600, false),
+                    (7, 1, -60, 3600, false), (7, 2, -3600, -1, false),
+                    (8, 1, -60, 3600, false), (8, 2, 100, 3600, true),
+                    (9, 1, -60, 3600, true), (11, 1, -60, 3600, false))
+                    AS fixture(n, version, starts, ends, deleted)
+                JOIN biz_product product ON product.product_no = ? || '-' || fixture.n
+                """,
+                admin,
+                admin,
+                prefix);
+        mvc.perform(get(BASE + "/counts").header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.withActivePolicy").value(3));
+    }
+
+    /** Count actual prepared statements: a twenty-row page does not perform twenty policy reads. */
+    @Test
+    void policyEnrichmentKeepsSqlCountIndependentOfPageSize() throws Exception {
+        String prefix = "BATCH-" + UuidV7.next();
+        jdbc.update(
+                """
+                INSERT INTO biz_product (product_no, title, original_price, currency, stock, status)
+                SELECT ? || '-' || n, 'Batch tea', 12, 'sgd', 5, 'draft'
+                FROM generate_series(1, 20) AS fixture(n)
+                """,
+                prefix);
+        jdbc.update(
+                """
+                INSERT INTO biz_team_price_policy (product_id, amount, currency, valid_from, valid_until, version,
+                    create_by, update_by)
+                SELECT product.id, 9, 'sgd', CURRENT_TIMESTAMP - interval '1 hour',
+                    CURRENT_TIMESTAMP + interval '1 hour', 1, ?, ?
+                FROM biz_product product WHERE product_no LIKE ?
+                """,
+                admin,
+                admin,
+                prefix + "-%");
+        var small = capturePageStatements(1);
+        var large = capturePageStatements(20);
+        assertThat(large).hasSameSizeAs(small);
+        assertThat(large.stream().filter(sql -> sql.contains("biz_team_price_policy")).toList())
+                .hasSize(1);
+        assertThat(large.stream().filter(sql -> sql.contains("biz_product")).toList()).hasSize(2);
+    }
+
+    /** Capture stops even if an HTTP assertion fails. */
+    private List<String> capturePageStatements(int size) throws Exception {
+        sqlStatements.start();
+        List<String> captured;
+        try {
+            mvc.perform(
+                            get(BASE)
+                                    .param("status", "draft")
+                                    .param("size", Integer.toString(size))
+                                    .header(HEADER, adminToken))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.items.length()").value(size))
+                    .andExpect(jsonPath("$.data.items[0].latestPolicy.version").value(1));
+        } finally {
+            captured = sqlStatements.finish();
+        }
+        return captured;
+    }
+
+    /** Historical fixtures use database transaction time so interval boundaries are exact. */
+    private void seedPolicy(
+            UUID productId, int version, int startOffset, int endOffset, boolean deleted) {
+        jdbc.update(
+                """
+                INSERT INTO biz_team_price_policy (product_id, amount, currency, valid_from, valid_until,
+                    version, deleted, create_by, update_by)
+                VALUES (?, ?, 'sgd', CURRENT_TIMESTAMP + ? * interval '1 second',
+                    CURRENT_TIMESTAMP + ? * interval '1 second', ?, ?, ?, ?)
+                """,
+                productId,
+                10 - version,
+                startOffset,
+                endOffset,
+                version,
+                deleted,
+                admin,
+                admin);
     }
 
     /** Counts match each paged total and exclude deleted rows in every publication state. */
@@ -852,6 +1046,15 @@ class AdminListingFlowIT {
             }
         }
         assertThat(spec.has("security")).isFalse();
+        var policySchema =
+                spec.path("components")
+                        .path("schemas")
+                        .path("AdminListingResponse")
+                        .path("properties")
+                        .path("latestPolicy");
+        assertThat(policySchema.path("anyOf").path(0).path("$ref").asText())
+                .isEqualTo("#/components/schemas/LatestPolicyResponse");
+        assertThat(policySchema.path("anyOf").path(1).path("type").asText()).isEqualTo("null");
         assertThat(spec.path("paths").path("/api/v1/products").path("get").has("security"))
                 .isFalse();
         // the OAuth handshake endpoints on AuthController are public paths — a class-level
