@@ -22,6 +22,11 @@ public class GroupDealRepositoryImpl implements GroupDealRepository {
 
     private final BizGroupDealMapper bizGroupDealMapper;
 
+    @Override
+    public long countOpenDeals() {
+        return bizGroupDealMapper.countOpenDeals();
+    }
+
     /** Historical reference check deliberately includes logically deleted deals. */
     @Override
     public boolean hasProductReferences(UUID productId) {

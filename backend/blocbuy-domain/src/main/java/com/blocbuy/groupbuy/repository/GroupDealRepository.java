@@ -15,6 +15,9 @@ import java.util.UUID;
  */
 public interface GroupDealRepository {
 
+    /** Non-deleted open deals with seats remaining and expiry strictly after database time. */
+    long countOpenDeals();
+
     /** Any historical product reference, including closed and soft-deleted deals. */
     boolean hasProductReferences(UUID productId);
 

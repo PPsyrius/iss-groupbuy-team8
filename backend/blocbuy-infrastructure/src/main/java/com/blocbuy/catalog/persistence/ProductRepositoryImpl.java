@@ -1,6 +1,7 @@
 package com.blocbuy.catalog.persistence;
 
 import com.blocbuy.catalog.exception.CatalogErrorCode;
+import com.blocbuy.catalog.model.ListingStatusCounts;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductDisplay;
 import com.blocbuy.catalog.model.ProductStatus;
@@ -81,6 +82,13 @@ public class ProductRepositoryImpl implements ProductRepository {
                 rows.stream().map(ProductConverter::toDomain).toList(),
                 bizProductMapper.countListings(statusCode),
                 page);
+    }
+
+    /** One aggregate row even when there are no listings. */
+    @Override
+    public ListingStatusCounts countListingStatuses() {
+        var counts = bizProductMapper.countListingStatuses();
+        return new ListingStatusCounts(counts.getDraft(), counts.getOnSale(), counts.getOffSale());
     }
 
     /** Conditional mutations must affect exactly one row. */

@@ -17,6 +17,12 @@ public class GroupDealQueryServiceImpl implements GroupDealQueryService {
 
     private final GroupDealRepository groupDealRepository;
 
+    @Override
+    @Transactional(readOnly = true)
+    public long countOpenDeals() {
+        return groupDealRepository.countOpenDeals();
+    }
+
     /** Exposes only reference existence across the catalog/groupbuy boundary. */
     @Override
     @Transactional(readOnly = true)
