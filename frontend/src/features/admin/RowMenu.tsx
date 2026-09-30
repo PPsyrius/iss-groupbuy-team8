@@ -19,7 +19,7 @@ const isDialogKind = (kind: LifecycleKind): kind is DialogKind => kind !== "dele
 // A table row's menu (admin plan A1-07, §12 note 10: HeroUI `Dropdown` for menu semantics and
 // keyboard support): Edit, then what `actionsFor` allows on the saved row, opening the same
 // dialogs as the editor. A published row has no Delete item; the editor explains why.
-export function RowMenu({ listing }: { listing: AdminListingResponse }) {
+export function RowMenu({ listing }: Readonly<{ listing: AdminListingResponse }>) {
   const navigate = useNavigate();
   const [open, setOpen] = useState<DialogKind | null>(null);
   const actions = actionsFor(listing.status, {

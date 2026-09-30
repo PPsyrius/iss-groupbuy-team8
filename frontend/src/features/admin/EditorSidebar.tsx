@@ -88,10 +88,10 @@ export function EditorSidebar({
 export function SidebarActions({
   actions,
   onOpen,
-}: {
+}: Readonly<{
   actions: LifecycleAction[];
   onOpen: (kind: DialogKind) => void;
-}) {
+}>) {
   return (
     <>
       {actions.map(({ kind }) => {

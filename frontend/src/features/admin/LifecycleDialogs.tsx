@@ -67,11 +67,11 @@ export function LifecycleDialog({
   kind,
   listing,
   onClose,
-}: {
+}: Readonly<{
   kind: DialogKind | null;
   listing: AdminListingResponse;
   onClose: () => void;
-}) {
+}>) {
   const navigate = useNavigate();
   const { run, isPending } = useLifecycleChange(listing.id ?? "", listing.version ?? 0);
   const [problem, setProblem] = useState<string>();
@@ -144,7 +144,7 @@ export function LifecycleDialog({
 
 // The 4b.2 box: the values the server holds now, which are the ones that freeze. Publish is only
 // offered on a saved form, so these match what the admin sees in the editor.
-function FreezeList({ listing }: { listing: AdminListingResponse }) {
+function FreezeList({ listing }: Readonly<{ listing: AdminListingResponse }>) {
   const price = listing.listing?.originalPrice;
   const rows = [
     ["Solo price", price ? formatSgd(price) : "—"],
