@@ -63,6 +63,7 @@ jobs:
               - 'infra/**'
               - 'Dockerfile*'
               - 'docker-compose*.yml'
+              - 'backend/docker-compose.yaml'
 
   workflow-lint:
     needs: detect-changes

@@ -33,6 +33,8 @@ beforeEach(() => {
     http.get("*/api/v1/payments/capabilities", () => ok({ enabled: true })),
     http.post("*/api/v1/team-price-quotes", () => ok(quote())),
     http.get("*/api/v1/team-price-quotes/:quoteId", () => ok(quote())),
+    // The listing holds Join until membership is known (FB-20); this buyer is in no bloc.
+    http.get("*/api/v1/group-deals/me", () => ok({ items: [], total: 0, page: 1, size: 100 })),
   );
 });
 
@@ -139,10 +141,12 @@ describe("teammate product page payment integration", () => {
     await userEvent.click(buttons[0]!);
     if (operation === "START") await continueFromQuote();
     await waitFor(() => expect(assign).toHaveBeenCalledOnce());
-    expect(bodies).toEqual([
-      { operation, businessId: operation === "START" ? productId : dealId },
-      { intentId },
-    ]);
+    // START carries the shown quote (US26); JOIN pays the bloc's frozen price.
+    const intentBody =
+      operation === "START"
+        ? { operation, businessId: productId, quoteId: quote().id }
+        : { operation, businessId: dealId };
+    expect(bodies).toEqual([intentBody, { intentId }]);
     expect(sessionStorage.getItem(lastPaymentKey)).toBe(paymentId);
     for (const button of screen.getAllByRole("button", { name: /Buy alone/ }))
       expect(button).toBeDisabled();

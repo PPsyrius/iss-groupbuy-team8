@@ -1,6 +1,6 @@
 # Repository Structure
 
-This document describes the layout of the BlocBuy monorepo, the purpose of each directory, and the local commands behind the backend Maven wrapper and `docker-compose.yaml`. Verified against the tree on 2026-09-21; if it drifts again, the tree — not this file — wins.
+This document describes the layout of the BlocBuy monorepo, the purpose of each directory, and the local commands behind the backend Maven wrapper and `backend/docker-compose.yaml`. Verified against the tree on 2026-09-21; if it drifts again, the tree — not this file — wins.
 
 The repository is a **polyglot monorepo** for the Java backend, React SPA, CI/CD, deployment tooling, Terraform and course evidence. Stack ownership and current state are under `infra/terraform/` below.
 
@@ -37,6 +37,7 @@ blocbuy/
 │   ├── Dockerfile                  # multi-stage image (maven build → temurin 21 JRE, non-root); local compose builds
 │   ├── Dockerfile.ci               # runtime-only twin: CI assembles from the build-quality boot-jar artifact
 │   ├── .dockerignore
+│   ├── docker-compose.yaml         # local postgres, redis and backend stack
 │   ├── blocbuy-client/             # external DTOs, API contracts; no business code
 │   ├── blocbuy-domain/             # aggregates, VOs, domain services, ports; JDK-only deps
 │   ├── blocbuy-application/        # command/query, use-case services, assemblers; tx boundary
@@ -78,7 +79,6 @@ blocbuy/
 ├── .gitattributes                  # cross-platform line-ending rules
 ├── AGENTS.md                       # repository guidance index for coding agents
 ├── CLAUDE.md                       # Claude entry point to AGENTS.md
-├── docker-compose.yaml             # local integration runtime (postgres, redis, backend)
 ├── lefthook.yml                    # pre-commit hooks (repo root)
 └── README.md
 ```
@@ -158,9 +158,9 @@ Everything gradeable-in-writing lives here, versioned alongside the code it desc
 | `quality/` | `quality-gates.md` (thresholds + exception process), `nfr-register.md`. |
 | `backend-blocker-response-20260916.md` | Historical B1–B5 coordination record (assessment evidence). |
 
-### `docker-compose.yaml` — Local Runtime Definition
+### `backend/docker-compose.yaml` — Local Runtime Definition
 
-Defines the two local infrastructure services — `postgres` 18 and `redis` 8.10. The backend runs natively (`./mvnw spring-boot:run` from `backend/`, `local` profile) or via `backend/Dockerfile`; the frontend runs natively (`pnpm dev` from `frontend/`, `/api` proxied to `http://localhost:8589`). Start the data layer with `docker compose up -d` from the repo root.
+Defines the two local infrastructure services — `postgres` 18 and `redis` 8.10 — plus the optional backend container. The backend runs natively (`./mvnw spring-boot:run` from `backend/`, `local` profile) or via `backend/Dockerfile`; the frontend runs natively (`pnpm dev` from `frontend/`, `/api` proxied to `http://localhost:8589`). Put local `DB_USERNAME`, `DB_PASSWORD`, and `REDIS_PASSWORD` in `backend/.env` (gitignored), then run `docker compose up -d` from `backend/`; add `postgres redis` to start only the data layer.
 
 ---
 

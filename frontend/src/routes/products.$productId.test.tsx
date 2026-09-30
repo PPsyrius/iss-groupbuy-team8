@@ -258,13 +258,15 @@ function servePayments() {
   );
 }
 
+const quoteOne = "0192f0a0-0000-7000-8000-000000000001";
+
 function serveQuote(
   answer: () => Response = () =>
     HttpResponse.json({
       code: OK_CODE,
       message: "ok",
       data: {
-        id: "0192f0a0-0000-7000-8000-000000000001",
+        id: quoteOne,
         productId: knownId,
         policyVersion: 1,
         amount: "71.00",
@@ -298,10 +300,59 @@ describe("/products/$productId quote step", () => {
     const dialog = await screen.findByRole("dialog", { name: "Your bloc price" });
     expect(await within(dialog).findByRole("timer")).toHaveTextContent(/left/);
     await userEvent.click(within(dialog).getByRole("button", { name: "Continue to payment" }));
-    await waitFor(() => expect(intentBody).toEqual({ operation: "START", businessId: knownId }));
+    await waitFor(() =>
+      expect(intentBody).toEqual({ operation: "START", businessId: knownId, quoteId: quoteOne }),
+    );
     // The failed intent closes the sheet so the page-level alert is visible.
     expect(await screen.findByText(/We could not open Checkout/)).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("keeps the sheet open on a refused quote and prices again on request", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(listing());
+    servePayments();
+    server.use(
+      http.post("*/api/v1/payments/intents", () =>
+        HttpResponse.json(
+          { code: "CATALOG_409_007", message: "Team price quote has expired" },
+          { status: 409 },
+        ),
+      ),
+    );
+    let issued = 0;
+    serveQuote(() => {
+      issued++;
+      return HttpResponse.json({
+        code: OK_CODE,
+        message: "ok",
+        data: {
+          id: `0192f0a0-0000-7000-8000-00000000000${issued}`,
+          productId: knownId,
+          policyVersion: 1,
+          amount: "71.00",
+          currency: "sgd",
+          issuedAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 15 * 60_000).toISOString(),
+        },
+      });
+    });
+    renderRoute(`/products/${knownId}`);
+    const [start] = await screen.findAllByRole("button", { name: /Start a bloc/ });
+    await waitFor(() => expect(start).toBeEnabled());
+    await userEvent.click(start!);
+    const dialog = await screen.findByRole("dialog", { name: "Your bloc price" });
+    await userEvent.click(
+      await within(dialog).findByRole("button", { name: "Continue to payment" }),
+    );
+    expect(await within(dialog).findByText("This price is no longer available")).toBeVisible();
+    expect(screen.queryByText(/We could not open Checkout/)).toBeNull();
+    await userEvent.click(within(dialog).getByRole("button", { name: "Get a new price" }));
+    expect(
+      await within(dialog).findByRole("button", { name: "Continue to payment" }),
+    ).toBeVisible();
+    expect(issued).toBe(2);
   });
 
   it("says no price is set when the listing has no team price policy", async () => {
@@ -710,6 +761,85 @@ describe("/products/$productId invite link (UC7)", () => {
     const field = await screen.findByRole<HTMLInputElement>("textbox", { name: "Invite link" });
     expect(field.value).toContain(`/products/${knownId}?deal=deal-1&ref=${ref}`);
     expect(screen.getByText("2 seats to go.")).toBeInTheDocument();
+  });
+
+  it("disables Join for a member of the open bloc and sends no intent (FB-20)", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(listing());
+    servePayments();
+    serveTeams([{ dealId: "deal-1", productId: knownId, status: "open", role: "member" }]);
+    let intents = 0;
+    server.use(
+      http.post("*/api/v1/payments/intents", () => {
+        intents++;
+        return HttpResponse.error();
+      }),
+    );
+    renderRoute(`/products/${knownId}`);
+    const bloc = await screen.findByRole("article", { name: "Open bloc" });
+    const join = within(bloc).getByRole("button", { name: /join/i });
+    await waitFor(() => expect(join).toHaveAccessibleDescription("You’re in this bloc"));
+    expect(join).toBeDisabled();
+    await userEvent.click(join);
+    expect(intents).toBe(0);
+  });
+
+  it("keeps Join enabled for a signed-in buyer outside the open bloc (FB-20)", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(listing());
+    servePayments();
+    serveTeams([{ dealId: "deal-9", productId: knownId, status: "open", role: "member" }]);
+    renderRoute(`/products/${knownId}`);
+    const bloc = await screen.findByRole("article", { name: "Open bloc" });
+    const join = within(bloc).getByRole("button", { name: /join/i });
+    await waitFor(() => expect(join).toBeEnabled());
+    expect(join).not.toHaveAccessibleDescription();
+  });
+
+  it("holds Join until the buyer's membership is known (FB-20)", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(listing());
+    servePayments();
+    const gate: { open?: () => void } = {};
+    const answered = new Promise<void>((resolve) => {
+      gate.open = resolve;
+    });
+    server.use(
+      http.get("*/api/v1/group-deals/me", async () => {
+        await answered;
+        return HttpResponse.json({
+          code: OK_CODE,
+          message: "ok",
+          data: { items: [], total: 0, page: 1, size: 100 },
+        });
+      }),
+    );
+    renderRoute(`/products/${knownId}`);
+    const bloc = await screen.findByRole("article", { name: "Open bloc" });
+    const join = within(bloc).getByRole("button", { name: /join/i });
+    // Payments are on by now (Start a bloc is live); only the membership read is outstanding.
+    const [start] = screen.getAllByRole("button", { name: /Start a bloc/ });
+    await waitFor(() => expect(start).toBeEnabled());
+    expect(join).toBeDisabled();
+    expect(join).not.toHaveAccessibleDescription();
+    gate.open?.();
+    await waitFor(() => expect(join).toBeEnabled());
+  });
+
+  it("keeps Join enabled when the membership read fails (FB-20)", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(listing());
+    servePayments();
+    server.use(http.get("*/api/v1/group-deals/me", () => new HttpResponse(null, { status: 500 })));
+    renderRoute(`/products/${knownId}`);
+    const bloc = await screen.findByRole("article", { name: "Open bloc" });
+    const join = within(bloc).getByRole("button", { name: /join/i });
+    // The query client retries twice before the read settles as failed.
+    await waitFor(() => expect(join).toBeEnabled(), { timeout: 5000 });
   });
 
   it("hides the share block from a buyer who is not in the bloc", async () => {

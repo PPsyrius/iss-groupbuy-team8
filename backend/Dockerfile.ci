@@ -1,7 +1,7 @@
 # BlocBuy backend image for CI. Context: backend/.
 # Runtime-only: expects the boot jar already built by the ci-backend build-quality
 # job (mvn verify) and downloaded into blocbuy-bootstrap/target/ before docker build.
-# Local/offline builds use the multi-stage Dockerfile instead (docker-compose.yaml).
+# Local/offline builds use the multi-stage Dockerfile instead (backend/docker-compose.yaml).
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app

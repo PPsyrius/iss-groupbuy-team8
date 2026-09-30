@@ -29,13 +29,17 @@ const maxSeatDots = 10;
 // sheet); without one the button is disabled rather than activatable with no effect
 // (CodeRabbit r4045102864, r4050400116). A full or ended bloc disables Join whatever the handler
 // and names the reason (T3-04); the server repeats both checks (GROUPBUY_409_004 / _002).
+// A buyer already in the bloc (`member`, from `GET /group-deals/me`) gets the same treatment
+// with its own reason (FB-20); the server would refuse the JOIN with GROUPBUY_409_003.
 export function DealProgress({
   deal,
   onJoin,
-}: {
+  member = false,
+}: Readonly<{
   deal: ActiveDealResponse | undefined;
   onJoin?: (() => void) | undefined;
-}) {
+  member?: boolean;
+}>) {
   const now = useNow();
   const reasonId = useId();
   if (!deal) return <NoOpenBloc />;
@@ -46,7 +50,7 @@ export function DealProgress({
   const countdown = expireMs === null ? null : formatCountdown(expireMs, now);
   const urgent = countdown?.urgent ?? false;
   const ended = hasEnded(deal.expireTime, now);
-  const blocked = ended ? "No longer taking members" : left === 0 ? "This bloc is full" : null;
+  const blocked = joinBlockedReason({ ended, full: left === 0, member });
   const join = onJoin && !blocked ? { onPress: onJoin } : { isDisabled: true };
   return (
     <article
@@ -145,6 +149,19 @@ export function DealProgress({
       </div>
     </article>
   );
+}
+
+// Why Join is disabled, in the order a buyer can act on least: an ended bloc, then a full one,
+// then the buyer's own membership. `null` while the bloc can still take this buyer.
+function joinBlockedReason({
+  ended,
+  full,
+  member,
+}: Readonly<{ ended: boolean; full: boolean; member: boolean }>) {
+  if (ended) return "No longer taking members";
+  if (full) return "This bloc is full";
+  if (member) return "You’re in this bloc";
+  return null;
 }
 
 function NoOpenBloc() {
