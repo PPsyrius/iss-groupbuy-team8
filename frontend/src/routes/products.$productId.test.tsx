@@ -763,6 +763,85 @@ describe("/products/$productId invite link (UC7)", () => {
     expect(screen.getByText("2 seats to go.")).toBeInTheDocument();
   });
 
+  it("disables Join for a member of the open bloc and sends no intent (FB-20)", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(listing());
+    servePayments();
+    serveTeams([{ dealId: "deal-1", productId: knownId, status: "open", role: "member" }]);
+    let intents = 0;
+    server.use(
+      http.post("*/api/v1/payments/intents", () => {
+        intents++;
+        return HttpResponse.error();
+      }),
+    );
+    renderRoute(`/products/${knownId}`);
+    const bloc = await screen.findByRole("article", { name: "Open bloc" });
+    const join = within(bloc).getByRole("button", { name: /join/i });
+    await waitFor(() => expect(join).toHaveAccessibleDescription("You’re in this bloc"));
+    expect(join).toBeDisabled();
+    await userEvent.click(join);
+    expect(intents).toBe(0);
+  });
+
+  it("keeps Join enabled for a signed-in buyer outside the open bloc (FB-20)", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(listing());
+    servePayments();
+    serveTeams([{ dealId: "deal-9", productId: knownId, status: "open", role: "member" }]);
+    renderRoute(`/products/${knownId}`);
+    const bloc = await screen.findByRole("article", { name: "Open bloc" });
+    const join = within(bloc).getByRole("button", { name: /join/i });
+    await waitFor(() => expect(join).toBeEnabled());
+    expect(join).not.toHaveAccessibleDescription();
+  });
+
+  it("holds Join until the buyer's membership is known (FB-20)", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(listing());
+    servePayments();
+    const gate: { open?: () => void } = {};
+    const answered = new Promise<void>((resolve) => {
+      gate.open = resolve;
+    });
+    server.use(
+      http.get("*/api/v1/group-deals/me", async () => {
+        await answered;
+        return HttpResponse.json({
+          code: OK_CODE,
+          message: "ok",
+          data: { items: [], total: 0, page: 1, size: 100 },
+        });
+      }),
+    );
+    renderRoute(`/products/${knownId}`);
+    const bloc = await screen.findByRole("article", { name: "Open bloc" });
+    const join = within(bloc).getByRole("button", { name: /join/i });
+    // Payments are on by now (Start a bloc is live); only the membership read is outstanding.
+    const [start] = screen.getAllByRole("button", { name: /Start a bloc/ });
+    await waitFor(() => expect(start).toBeEnabled());
+    expect(join).toBeDisabled();
+    expect(join).not.toHaveAccessibleDescription();
+    gate.open?.();
+    await waitFor(() => expect(join).toBeEnabled());
+  });
+
+  it("keeps Join enabled when the membership read fails (FB-20)", async () => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(listing());
+    servePayments();
+    server.use(http.get("*/api/v1/group-deals/me", () => new HttpResponse(null, { status: 500 })));
+    renderRoute(`/products/${knownId}`);
+    const bloc = await screen.findByRole("article", { name: "Open bloc" });
+    const join = within(bloc).getByRole("button", { name: /join/i });
+    // The query client retries twice before the read settles as failed.
+    await waitFor(() => expect(join).toBeEnabled(), { timeout: 5000 });
+  });
+
   it("hides the share block from a buyer who is not in the bloc", async () => {
     sessionStorage.clear();
     serveSignedIn();

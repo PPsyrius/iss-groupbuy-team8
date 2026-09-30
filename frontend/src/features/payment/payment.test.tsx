@@ -33,6 +33,8 @@ beforeEach(() => {
     http.get("*/api/v1/payments/capabilities", () => ok({ enabled: true })),
     http.post("*/api/v1/team-price-quotes", () => ok(quote())),
     http.get("*/api/v1/team-price-quotes/:quoteId", () => ok(quote())),
+    // The listing holds Join until membership is known (FB-20); this buyer is in no bloc.
+    http.get("*/api/v1/group-deals/me", () => ok({ items: [], total: 0, page: 1, size: 100 })),
   );
 });
 
