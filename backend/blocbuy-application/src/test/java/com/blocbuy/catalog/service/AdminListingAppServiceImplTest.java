@@ -54,7 +54,7 @@ class AdminListingAppServiceImplTest {
     @Test
     void creationUsesUuidV7AndDraftDefaults() {
         when(products.resolveProductNumber("SKU")).thenReturn("SKU");
-        Product created = service.create("SKU", details(), ACTOR);
+        Product created = service.create("SKU", details(), ACTOR).product();
         assertThat(created.id().version()).isEqualTo(7);
         assertThat(created.status()).isEqualTo(ProductStatus.DRAFT);
         assertThat(created.soldCount()).isZero();
@@ -65,7 +65,7 @@ class AdminListingAppServiceImplTest {
     @Test
     void creationResolvesMissingProductNumberBeforeInsertion() {
         when(products.resolveProductNumber(null)).thenReturn("BB-100001");
-        Product created = service.create(null, details(), ACTOR);
+        Product created = service.create(null, details(), ACTOR).product();
         assertThat(created.productNo()).isEqualTo("BB-100001");
         var order = inOrder(users, products);
         order.verify(users).requireActive(ACTOR);
@@ -149,7 +149,7 @@ class AdminListingAppServiceImplTest {
         Product stored = draft();
         when(products.findById(ID)).thenReturn(Optional.of(stored));
 
-        assertThat(service.get(ID, ACTOR)).isEqualTo(stored);
+        assertThat(service.get(ID, ACTOR).product()).isEqualTo(stored);
         var order = inOrder(users, products);
         order.verify(users).requireActive(ACTOR);
         order.verify(products).findById(ID);
@@ -182,7 +182,7 @@ class AdminListingAppServiceImplTest {
                         "sgd",
                         5);
 
-        Product revised = service.revise(ID, revisedDetails, 0, ACTOR);
+        Product revised = service.revise(ID, revisedDetails, 0, ACTOR).product();
 
         assertThat(revised.title()).isEqualTo("Green Tea");
         assertThat(revised.version()).isEqualTo(1);
@@ -194,7 +194,7 @@ class AdminListingAppServiceImplTest {
     void changeStatusPublishesDraftToOnSale() {
         when(products.lockById(ID)).thenReturn(Optional.of(draft()));
 
-        Product published = service.changeStatus(ID, ProductStatus.ON_SALE, 0, ACTOR);
+        Product published = service.changeStatus(ID, ProductStatus.ON_SALE, 0, ACTOR).product();
 
         assertThat(published.status()).isEqualTo(ProductStatus.ON_SALE);
         verify(products).updateListing(published, 0, ACTOR);
@@ -221,7 +221,7 @@ class AdminListingAppServiceImplTest {
                         PricingMode.DUAL);
         when(products.lockById(ID)).thenReturn(Optional.of(onSale));
 
-        Product delisted = service.changeStatus(ID, ProductStatus.OFF_SALE, 0, ACTOR);
+        Product delisted = service.changeStatus(ID, ProductStatus.OFF_SALE, 0, ACTOR).product();
 
         assertThat(delisted.status()).isEqualTo(ProductStatus.OFF_SALE);
         verify(products).updateListing(delisted, 0, ACTOR);

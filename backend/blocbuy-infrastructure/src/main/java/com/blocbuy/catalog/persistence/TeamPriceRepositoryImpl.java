@@ -4,8 +4,12 @@ import com.blocbuy.catalog.pricing.TeamPricePolicy;
 import com.blocbuy.catalog.pricing.TeamPriceQuote;
 import com.blocbuy.catalog.repository.TeamPriceRepository;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -25,6 +29,21 @@ public class TeamPriceRepositoryImpl implements TeamPriceRepository {
     public Optional<TeamPricePolicy> findLatestPolicy(UUID productId) {
         return Optional.ofNullable(
                 TeamPriceConverter.toDomain(mapper.selectLatestPolicy(productId)));
+    }
+
+    @Override
+    public Map<UUID, TeamPricePolicy> findLatestPolicies(Collection<UUID> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return Map.of();
+        }
+        return mapper.selectLatestPolicies(productIds).stream()
+                .map(TeamPriceConverter::toDomain)
+                .collect(Collectors.toMap(TeamPricePolicy::productId, Function.identity()));
+    }
+
+    @Override
+    public long countListingsWithActivePolicy() {
+        return mapper.countListingsWithActivePolicy();
     }
 
     @Override

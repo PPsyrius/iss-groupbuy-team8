@@ -1,6 +1,8 @@
 package com.blocbuy.catalog.persistence;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -12,6 +14,12 @@ public interface TeamPriceMapper {
     boolean existsProductReference(@Param("productId") UUID productId);
 
     TeamPricePolicyDO selectLatestPolicy(@Param("productId") UUID productId);
+
+    /** One latest revision per product; caller guards empty input. */
+    List<TeamPricePolicyDO> selectLatestPolicies(@Param("productIds") Collection<UUID> productIds);
+
+    /** Latest revision only: no fallback to an older still-valid policy. */
+    long countListingsWithActivePolicy();
 
     int insertPolicy(
             @Param("row") TeamPricePolicyDO row,
