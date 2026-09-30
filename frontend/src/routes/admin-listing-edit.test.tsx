@@ -7,6 +7,17 @@ import { renderRoute, serveAdmin } from "@/test/render-route";
 
 type Store = ReturnType<typeof createAdminStore>;
 
+// The browser history's `beforeunload` handler (@tanstack/history) blocks when any blocker's
+// `enableBeforeUnload` is `true` (the default) or a function returning `true`. The memory history
+// used here never listens for `beforeunload`, so apply the same rule to its blockers directly.
+function blocksUnload(router: ReturnType<typeof renderRoute>["router"]) {
+  // oxlint-disable-next-line no-underscore-dangle -- the history's only (typed) way to list blockers
+  return router.history._getBlockers().some((b) => {
+    const enable = b.enableBeforeUnload ?? true;
+    return enable === true || (typeof enable === "function" && enable());
+  });
+}
+
 function rowOf(store: Store, productNo: string) {
   const row = store.rows.find((r) => r.productNo === productNo);
   if (!row) throw new Error(`no seeded row ${productNo}`);
@@ -144,6 +155,17 @@ describe("/admin/listings/$productId", () => {
     );
     await waitFor(() => expect(router.state.location.pathname).toBe("/admin/listings"));
     expect(milk.listing).not.toHaveProperty("subtitle");
+  });
+
+  it("asks before a reload or tab close only while the form has unsaved changes", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const milk = rowOf(store, "BB-100472");
+    const { router } = renderRoute(`/admin/listings/${milk.id}`);
+    const subtitle = await screen.findByRole("textbox", { name: "Subtitle" });
+    expect(blocksUnload(router)).toBe(false);
+    await user.type(subtitle, "Chilled, 1 L each");
+    expect(blocksUnload(router)).toBe(true);
   });
 
   it("says so inside the console when the listing does not exist", async () => {

@@ -127,8 +127,12 @@ export function ListingForm({
     },
   });
 
+  const hasUnsavedChanges = () => form.state.isDirty && !form.state.isSubmitting;
+  // `enableBeforeUnload` defaults to `true`, which the browser history treats as "always prompt on
+  // reload or tab close"; give it the same predicate so a clean form never prompts.
   const blocker = useBlocker({
-    shouldBlockFn: () => form.state.isDirty && !form.state.isSubmitting,
+    shouldBlockFn: hasUnsavedChanges,
+    enableBeforeUnload: hasUnsavedChanges,
     disabled: !guardUnsaved,
     withResolver: true,
   });
