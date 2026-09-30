@@ -95,7 +95,7 @@ export function listing(overrides: ProductDetailResponse = {}): ProductDetailRes
     stock: 40,
     soldCount: 12,
     deal: {
-      dealId: "deal-e2e-1",
+      dealId: "a0000000-0000-7000-8000-0000000e2e01",
       currentSize: 3,
       targetSize: 5,
       expireTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
