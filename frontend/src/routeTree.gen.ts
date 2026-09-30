@@ -20,6 +20,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPaymentsPaymentIdRouteImport } from './routes/_authenticated/payments.$paymentId'
 import { Route as AuthenticatedPaymentsReturnRouteImport } from './routes/_authenticated/payments.return'
 import { Route as AuthenticatedAdminListingsIndexRouteImport } from './routes/_authenticated/admin/listings.index'
+import { Route as AuthenticatedAdminListingsProductIdRouteImport } from './routes/_authenticated/admin/listings.$productId'
 import { Route as AuthenticatedAdminListingsNewRouteImport } from './routes/_authenticated/admin/listings.new'
 
 const IndexRoute = IndexRouteImport.update({
@@ -79,6 +80,12 @@ const AuthenticatedAdminListingsIndexRoute =
     path: '/listings/',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminListingsProductIdRoute =
+  AuthenticatedAdminListingsProductIdRouteImport.update({
+    id: '/listings/$productId',
+    path: '/listings/$productId',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminListingsNewRoute =
   AuthenticatedAdminListingsNewRouteImport.update({
     id: '/listings/new',
@@ -96,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/payments/return': typeof AuthenticatedPaymentsReturnRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/listings/$productId': typeof AuthenticatedAdminListingsProductIdRoute
   '/admin/listings/new': typeof AuthenticatedAdminListingsNewRoute
   '/admin/listings/': typeof AuthenticatedAdminListingsIndexRoute
 }
@@ -108,6 +116,7 @@ export interface FileRoutesByTo {
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/payments/return': typeof AuthenticatedPaymentsReturnRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/listings/$productId': typeof AuthenticatedAdminListingsProductIdRoute
   '/admin/listings/new': typeof AuthenticatedAdminListingsNewRoute
   '/admin/listings': typeof AuthenticatedAdminListingsIndexRoute
 }
@@ -123,6 +132,7 @@ export interface FileRoutesById {
   '/_authenticated/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/_authenticated/payments/return': typeof AuthenticatedPaymentsReturnRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/listings/$productId': typeof AuthenticatedAdminListingsProductIdRoute
   '/_authenticated/admin/listings/new': typeof AuthenticatedAdminListingsNewRoute
   '/_authenticated/admin/listings/': typeof AuthenticatedAdminListingsIndexRoute
 }
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/payments/$paymentId'
     | '/payments/return'
     | '/admin/'
+    | '/admin/listings/$productId'
     | '/admin/listings/new'
     | '/admin/listings/'
   fileRoutesByTo: FileRoutesByTo
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/payments/$paymentId'
     | '/payments/return'
     | '/admin'
+    | '/admin/listings/$productId'
     | '/admin/listings/new'
     | '/admin/listings'
   id:
@@ -164,6 +176,7 @@ export interface FileRouteTypes {
     | '/_authenticated/payments/$paymentId'
     | '/_authenticated/payments/return'
     | '/_authenticated/admin/'
+    | '/_authenticated/admin/listings/$productId'
     | '/_authenticated/admin/listings/new'
     | '/_authenticated/admin/listings/'
   fileRoutesById: FileRoutesById
@@ -255,6 +268,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminListingsIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/listings/$productId': {
+      id: '/_authenticated/admin/listings/$productId'
+      path: '/listings/$productId'
+      fullPath: '/admin/listings/$productId'
+      preLoaderRoute: typeof AuthenticatedAdminListingsProductIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/listings/new': {
       id: '/_authenticated/admin/listings/new'
       path: '/listings/new'
@@ -267,12 +287,15 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminListingsProductIdRoute: typeof AuthenticatedAdminListingsProductIdRoute
   AuthenticatedAdminListingsNewRoute: typeof AuthenticatedAdminListingsNewRoute
   AuthenticatedAdminListingsIndexRoute: typeof AuthenticatedAdminListingsIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminListingsProductIdRoute:
+    AuthenticatedAdminListingsProductIdRoute,
   AuthenticatedAdminListingsNewRoute: AuthenticatedAdminListingsNewRoute,
   AuthenticatedAdminListingsIndexRoute: AuthenticatedAdminListingsIndexRoute,
 }
