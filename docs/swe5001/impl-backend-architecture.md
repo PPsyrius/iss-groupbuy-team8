@@ -134,9 +134,9 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
 - `identity-svc`: `InternalUserController` `GET /internal/users/{id}/active` → `204` when active, `404` when missing, `409` when disabled; delegates to `UserAppServiceImpl.requireActive`.
 - `commerce-svc`: `RemoteUserAppService implements UserAppService`:
   - `requireActive` calls `http://identity-svc:8589/internal/users/{id}/active` through Service Connect with connect timeout 500 ms and read timeout 1500 ms, and maps `404`/`409` to the same `IdentityErrorCode` exceptions the local implementation throws;
-  - timeouts and `5xx` map to a fail-closed `ErrorCode` (request rejected; Stripe webhook retried);
+  - timeouts and `5xx` throw `IdentityUnavailableException` (unchecked, not a `BizException`), so `OrderFulfilmentAdapter.rejects` does not turn them into `BUYER_INACTIVE`: the webhook transaction rolls back, the global handler answers 500 and Stripe redelivers; user requests fail closed with 500;
   - `currentUser` throws `UnsupportedOperationException` (only `AuthController` uses it, and it runs in `identity-svc`).
-- **Done when:** contract test runs the same `requireActive` cases against both implementations; WireMock test covers timeout and `5xx`.
+- **Done when:** contract test runs the same `requireActive` cases against both implementations; WireMock test covers timeout and `5xx`; a webhook test proves a timeout returns 500, writes no `BUYER_INACTIVE` outcome and succeeds on redelivery.
 
 ### WP-B6 Transactional outbox and publisher (WBS 2.2)
 
@@ -156,7 +156,7 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
 
 ### WP-B8 Per-service data access (WBS 3.4)
 
-- All three services run the full `db/migration` stream (plan section 2.6); Flyway runs as the database owner role.
+- All three services run the full `db/migration` stream (plan section 2.6); Flyway runs as the database owner role, never as the runtime role.
 - Repeatable migration `R__swe5001_grants.sql` in a location loaded only by service profiles (`classpath:db/grants/<service>`): grants the service's runtime role `SELECT, INSERT, UPDATE, DELETE` on owned tables only.
 - Each service connects at runtime as its own role (`blocbuy_identity_app`, `blocbuy_commerce_app`, `blocbuy_notification_app`); Flyway uses the owner credentials (`SPRING_FLYWAY_USER`/`PASSWORD`).
 - **Done when:** IT proves `commerce` role gets `permission denied` on `sys_user` and `biz_notification`.

@@ -426,7 +426,7 @@ The guideline is about ten person-days per member, 50 person-days in total. The 
     columns: (1.6fr, 2.4fr),
     [Risk or assumption], [Mitigation],
     [Environment creation fails on presentation day.], [A periodic full rebuild cycle in CI; the environment is created on the morning of the presentation; a recorded fallback of the scaling demonstration.],
-    [The synchronous identity check inside the payment webhook transaction adds a failure mode.], [A short timeout with fail-safe rejection; Stripe retries webhooks, and settlement is idempotent.],
+    [The synchronous identity check inside the payment webhook transaction adds a failure mode.], [A short timeout; a timeout fails the webhook with a server error instead of rejecting the buyer, so Stripe retries it, and settlement is idempotent.],
     [The cloud budget is exceeded.], [The disposable runtime environment, AWS Budgets alerts and a nightly automatic teardown.],
     [`commerce-svc` is perceived as too coarse.], [The consistency-boundary rationale is recorded as an architecture decision, with the payment-extraction evolution path.],
     [The functional baseline changes during the project.], [Both courses share one trunk, so baseline changes reach the services without a sync step. CI builds the monolith and every service on each pull request, and architecture tests reject new cross-service calls that bypass ports or events.],

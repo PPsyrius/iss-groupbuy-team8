@@ -142,7 +142,7 @@ backend/
 - **Mechanism:** ECS Service Connect (Cloud Map namespace, Envoy sidecar), which provides retries and per-service metrics.
 - **Identity checks:** `commerce-svc` keeps the `UserAppService` interface and swaps in an HTTP adapter that calls `identity-svc` at `GET /internal/users/{id}/active`, so the 10 call sites stay unchanged.
 - **Internal endpoints:** `/internal/**` is reachable only inside the VPC. It is excluded from ALB routing and the security groups only admit peer services.
-- **Risk:** `OrderFulfilmentAdapter.fulfil` calls `requireActive` inside the webhook transaction. The mitigation is a 1–2 s timeout: on failure, the existing reject branch runs and Stripe retries the webhook.
+- **Risk:** `OrderFulfilmentAdapter.fulfil` calls `requireActive` inside the webhook transaction, and its reject branch turns any `BizException` into `BUYER_INACTIVE` and answers Stripe with 2xx. The HTTP adapter therefore maps only `404` (missing) and `409` (disabled) to the identity `BizException`s. A timeout (1–2 s) or `5xx` throws a separate unchecked exception that bypasses the reject branch, rolls back the webhook transaction and returns 500 through the global exception handler, so Stripe redelivers the event.
 
 #### Asynchronous events
 
@@ -200,9 +200,9 @@ Messaging        : SNS topics → SQS queues (+ DLQs) → notification-svc
 ### 2.6 Persistence design
 
 - **Instance:** one RDS PostgreSQL instance (`db.t4g.micro`, single-AZ) hosting three databases: `identity`, `commerce` and `notification`.
-- **Roles:** each service gets its own DB role, which can connect only to its own database.
+- **Roles:** each service gets its own runtime DB role, which can connect only to its own database. Flyway never uses it: each service assembly configures a separate migration role (`SPRING_FLYWAY_USER`/`PASSWORD`) that owns the database and can apply the full migration stream.
 - **Schema:** each database keeps the baseline PostgreSQL schema `domain`, so JDBC `currentSchema` and Flyway `defaultSchema` settings carry over unchanged.
-- **Migrations, while SWE5006 is active:** the baseline `db/migration` history stays one ordered stream. The SWE5006 databases have already applied the existing versions (V1–V19 at `c66bb40`), so those scripts cannot be split or rewritten without breaking Flyway checksums, and SWE5006 keeps adding versions. Every service database applies the full stream, and ownership is enforced by grants: each service role gets privileges only on the tables it owns (section 2.2), so foreign tables exist but stay empty and unreachable. A new SWE5006 migration then needs no SWE5001 follow-up beyond a grant for any new table.
+- **Migrations, while SWE5006 is active:** the baseline `db/migration` history stays one ordered stream. The SWE5006 databases have already applied the existing versions (V1–V19 at `c66bb40`), so those scripts cannot be split or rewritten without breaking Flyway checksums, and SWE5006 keeps adding versions. Every service database applies the full stream, and ownership is enforced by grants: each service's runtime role gets privileges only on the tables it owns (section 2.2), so foreign tables exist but stay empty and unreachable. A new SWE5006 migration then needs no SWE5001 follow-up beyond a grant for any new table.
 - **Migrations, after SWE5006 feature work stops:** each service gets its own migration location with a fresh baseline for its tables only, and foreign tables are no longer created. This is the end state stated in the proposal (section 5.4).
 - **Trade-off:** isolation is logical, but the instance is physically shared. The report records this cost-driven decision and names separate instances as the scale-out path.
 - **Other stores:** Valkey holds sessions and caches only. It keeps no durable business state.
@@ -220,7 +220,7 @@ Seed, producers, consumers, the core interaction and the use-case-to-service map
 
 1. **HTTP scaling:** k6 ramps load on `GET /api/v1/products`. The dashboard shows `commerce-svc` scaling from 1 task to N and p95 latency recovering.
 2. **Queue scaling:** a burst of team expiries grows the SQS backlog; `notification-svc` scales out and drains it.
-3. **Self-healing:** stopping a task manually; ECS replaces it with no failed requests behind the ALB.
+3. **Self-healing:** with `commerce-svc` held at two tasks (minimum raised to 2 for the run), stopping one task manually; the ALB keeps routing to the healthy task while ECS replaces the stopped one, with no failed requests. With a single task the ALB has no healthy target during replacement and returns 503.
 4. **Safe deployment:** deploying a deliberately broken image; the circuit breaker rolls back.
 5. **Pipeline:** a PR run showing the plan comment, security scans, the approval gate and the apply.
 
@@ -307,8 +307,8 @@ The existing pipelines are extended, not duplicated. SWE5001 adds jobs and workf
 | --- | --- | --- |
 | `ci-backend.yml` (extended) | Existing triggers | Existing gates unchanged. New: a matrix job builds and smoke-boots every assembly image (monolith and the three services) and scans each with Trivy. New modules join the existing JaCoCo aggregate and SonarCloud project. |
 | `infra-swe5001.yml` (new) | PRs and `dev` pushes touching `infra/swe5001/**` | `terraform fmt`/`validate`/`plan`, checkov; the plan is posted as a PR comment. |
-| `swe5001-deploy.yml` (new) | `dev` push touching backend code | Build ARM64 service images, push to ECR by digest, record the digest as the last known good release in SSM. If `runtime` is up, deploy with `amazon-ecs-deploy-task-definition`; the ECS deployment circuit breaker rolls back automatically. |
-| `swe5001-env.yml` (new): `env-up` | Manual | Apply `runtime` with the last known good digests, apply `edge`, wait for healthy targets, run a smoke test, print the URLs to the job summary. |
+| `swe5001-deploy.yml` (new) | `dev` push touching backend code | Build ARM64 service images, push to ECR by digest, record the digest as the candidate release in SSM. If `runtime` is up, deploy with `amazon-ecs-deploy-task-definition`; the ECS deployment circuit breaker rolls back automatically. Only after the service reaches steady state on the new task definition and the smoke test passes is the candidate promoted to the last known good release; on rollback or a failed smoke test the prior last known good digest stays. |
+| `swe5001-env.yml` (new): `env-up` | Manual | Apply `runtime` with the last known good digests, apply `edge`, wait for healthy targets, run a smoke test, then deploy any pending candidate digests through the same promote-on-success path; print the URLs to the job summary. |
 | `swe5001-env.yml` (new): `env-down` | Manual and nightly at 23:00 SGT | Destroy `runtime`. |
 | `swe5001-env.yml` (new): `env-cycle` | Every 2–3 days | Full up, smoke test, down, to catch apply drift early and to evidence rebuild-from-zero time. |
 
@@ -384,7 +384,7 @@ The authoritative work breakdown is the proposal's Table 7 (50 person-days); PRs
 | The `env-up` apply fails on presentation day | Regular `env-cycle` runs; apply before noon on 23 Oct; a recorded fallback video of the scaling demo. |
 | SWE5001 changes on the shared trunk break SWE5006 work, its deployment or its evidence | Additive changes only; the monolith stays the default topology; CI builds the monolith and the SWE5006 required checks stay required; the EC2 stack and workflows are not touched (section 3.6). |
 | The SWE5006 team does not agree to SNS/SQS and the new modules on `dev` | Agree the section 1.3 ADRs at the next stand-up, before the first code PR. |
-| Synchronous `requireActive` inside the webhook transaction | 1–2 s timeout; failure takes the existing reject path; Stripe retries. |
+| Synchronous `requireActive` inside the webhook transaction | 1–2 s timeout; a timeout or `5xx` fails the webhook with 500 instead of taking the `BUYER_INACTIVE` reject path, so Stripe retries (section 2.4). |
 | A SWE5006 change adds a new cross-context call that the distributed shape cannot serve | The ArchUnit rule and the all-assembly CI build fail in that PR; the fix is a port plus HTTP adapter or an event. |
 | When does SWE5006 feature work stop? | Open. It gates the per-service Flyway baselines and any code relocation (sections 2.3 and 2.6). |
 | AWS account budget or credits under the organisation SCP | Confirm with the account owner before the first `runtime` apply. |
