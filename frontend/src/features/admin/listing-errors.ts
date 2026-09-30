@@ -1,4 +1,4 @@
-import { ApiError, fieldViolations } from "@/api/envelope";
+import { ApiError, conflictVersion, fieldViolations } from "@/api/envelope";
 
 // What a refused listing write means for the screen (admin plan A1-08): the code, never the raw
 // code itself, decides where the admin reads about it. Codes are the backend's
@@ -6,8 +6,9 @@ import { ApiError, fieldViolations } from "@/api/envelope";
 // A team-terms write elsewhere also bumps the listing version (#242), so it arrives here as the
 // ordinary `CATALOG_412_002`.
 export type Refusal =
-  // 412: someone saved first. The editor shows the conflict banner; only Reload resolves it.
-  | { kind: "conflict" }
+  // 412: someone saved first. The editor shows the conflict banner; only Reload resolves it. The
+  // server's version comes with the 412 (#286); `null` when it did not, so the page asks.
+  | { kind: "conflict"; serverVersion: number | null }
   // 403: the admin role is gone. The route boundary shows Access denied.
   | { kind: "forbidden" }
   // 401: the session ended. The form stays as typed and offers the way to sign in again.
@@ -30,7 +31,8 @@ function statusOf(error: ApiError): number {
 export function refusalOf(error: unknown): Refusal {
   if (!(error instanceof ApiError))
     return { kind: "message", message: "Something went wrong on our side. Try again." };
-  if (error.code === "CATALOG_412_002") return { kind: "conflict" };
+  if (error.code === "CATALOG_412_002")
+    return { kind: "conflict", serverVersion: conflictVersion(error) };
   const message = messages[error.code];
   if (message) return { kind: "message", message };
   const status = statusOf(error);

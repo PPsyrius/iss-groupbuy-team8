@@ -54,8 +54,9 @@ export function adminListingOptions(productId: string) {
   });
 }
 
-// The version the server holds now, for the conflict banner (A1-08, BA-12: a 412 body carries no
-// version). Its own key, never the editor's `get` entry: writing there would remount the form and
+// The version the server holds now, for the conflict banner when a 412 does not name it (A1-08;
+// since #286 the 412 carries `currentVersion`, read by `conflictVersion`, so this is the
+// fallback). Its own key, never the editor's `get` entry: writing there would remount the form and
 // drop the edits the banner warns about (§12 note 7).
 export function adminServerVersionOptions(productId: string) {
   return queryOptions({

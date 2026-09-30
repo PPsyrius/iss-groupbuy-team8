@@ -211,7 +211,11 @@ describe("revise", () => {
         listing: draft.listing,
         expectedVersion: draft.version + 1,
       }),
-    ).toMatchObject({ status: 412, code: "CATALOG_412_002" });
+    ).toMatchObject({
+      status: 412,
+      code: "CATALOG_412_002",
+      errors: { currentVersion: draft.version },
+    });
   });
 
   it("refuses a frozen-field change after publication with 409 CATALOG_409_002", async () => {
@@ -249,7 +253,7 @@ describe("revise", () => {
         listing: draft.listing,
         expectedVersion: draft.version,
       }),
-    ).toMatchObject({ status: 412 });
+    ).toMatchObject({ status: 412, errors: { currentVersion: draft.version + 1 } });
     const fresh = await call("GET", `/admin/products/${draft.id}`);
     expect(fresh.data.version).toBe(draft.version + 1);
   });
@@ -273,6 +277,12 @@ describe("status", () => {
     expect(await move("on_sale", v + 2)).toMatchObject({
       status: 200,
       data: { status: "on_sale", version: v + 3 },
+    });
+    // A stale status change names the version the store holds now (#286).
+    expect(await move("off_sale", v)).toMatchObject({
+      status: 412,
+      code: "CATALOG_412_002",
+      errors: { currentVersion: v + 3 },
     });
   });
 
@@ -322,7 +332,11 @@ describe("delete", () => {
     const draft = await firstOf("draft");
     expect(
       await call("DELETE", `/admin/products/${draft.id}?expectedVersion=${draft.version + 3}`),
-    ).toMatchObject({ status: 412, code: "CATALOG_412_002" });
+    ).toMatchObject({
+      status: 412,
+      code: "CATALOG_412_002",
+      errors: { currentVersion: draft.version },
+    });
     expect(await call("DELETE", `/admin/products/${draft.id}`)).toMatchObject({
       status: 400,
       code: "COMMON_400_001",
@@ -352,6 +366,7 @@ describe("team price policy", () => {
     expect(await call("PUT", path, { ...rule, expectedVersion: 0 })).toMatchObject({
       status: 412,
       code: "CATALOG_412_001",
+      errors: { currentVersion: 1 },
     });
     expect(await call("GET", path)).toMatchObject({ status: 200, data: { version: 1 } });
   });

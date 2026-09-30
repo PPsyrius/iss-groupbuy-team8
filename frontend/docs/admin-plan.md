@@ -279,9 +279,9 @@ Note (#242): a team-terms write also increments the product `version`, so a term
 
 ### A3-09: Server version from the 412 (BA-12, #286)
 
-- [ ] Step 1: failing tests. `envelope.test.ts`: `conflictVersion(e)` returns `currentVersion` from a 412 `ApiError` whose `errors` is `{currentVersion: number}`, else `null`. `admin-msw.test.ts`: every 412 carries it. `admin-listing-edit.test.tsx`: the banner shows "the server now has v{n}" from the error, before any refetch.
-- [ ] Step 2: add `conflictVersion` beside `fieldViolations`; the admin mock's 412 bodies (listing and policy) carry `errors: {currentVersion}`.
-- [ ] Step 3: `use-listing-mutations.ts` passes the version to `ConflictBanner`; the background refetch stays as the fallback when the error has none.
+- [x] Step 1: failing tests. `envelope.test.ts`: `conflictVersion(e)` returns `currentVersion` from a 412 `ApiError` whose `errors` is `{currentVersion: number}`, else `null`. `admin-msw.test.ts`: every 412 carries it. `admin-listing-edit.test.tsx`: the banner shows "the server now has v{n}" from the error, before any refetch. (2026-09-30)
+- [x] Step 2: add `conflictVersion` beside `fieldViolations`; the admin mock's 412 bodies (listing and policy) carry `errors: {currentVersion}`. (2026-09-30)
+- [x] Step 3: `use-listing-mutations.ts` passes the version to `ConflictBanner`; the background refetch stays as the fallback when the error has none. (2026-09-30)
 
 ### A3-02..A3-07
 
