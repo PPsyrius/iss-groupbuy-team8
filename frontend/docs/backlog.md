@@ -44,7 +44,7 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 - [x] Step 3 (2026-09-25): the duplicate name row is gone from the `/account` header (`48a6275`).
 - [x] Step 4 (2026-09-25): the mock START/JOIN checkout reaches a receipt that goes Waiting then Paid (`28e0a83`).
 - [x] Step 5 (2026-09-25): `frontend/README.md` gained a ten-step demo script (`384ad1d`); the current README condenses it to five journeys while retaining the mock-mode instructions.
-- [x] Step 6 (2026-09-29): rerun the `@auth` e2e against dev (`E2E_TARGET=dev pnpm e2e --grep @auth`), because `48a6275` changed its assertions: 2 passed from `ddba7d3`, on a storage state seeded from a normal-Chrome `blocbuy-token`.
+- [x] Step 6 (2026-09-29): rerun the `@auth` e2e against dev (`E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e --grep @auth`), because `48a6275` changed its assertions: 2 passed from `ddba7d3`, on a storage state seeded from a normal-Chrome `blocbuy-token`.
 
 ### FB-02: Shared Playwright API stubs
 
