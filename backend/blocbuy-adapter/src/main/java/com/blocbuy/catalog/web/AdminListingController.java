@@ -74,7 +74,14 @@ import tools.jackson.databind.annotation.JsonDeserialize;
         responseCode = "409",
         description =
                 "Duplicate product number, illegal lifecycle action or retained business history")
-@ApiResponse(responseCode = "412", description = "Stale listing version precondition")
+@ApiResponse(
+        responseCode = "412",
+        description =
+                "Version precondition failed: CATALOG_412_002 has errors: {currentVersion: <int>} "
+                        + "with the stored listing version checked under the product row lock. "
+                        + "For an optional teamPrice, CATALOG_412_001 has the same errors shape "
+                        + "with the latest policy version (0 if none), checked under that lock. "
+                        + "Reload before resubmitting; no mutation or automatic retry occurs.")
 public class AdminListingController {
     /** True end-of-input in both Java and JSON Schema regexes, including a trailing newline. */
     private static final String INPUT_END = "(?![\\s\\S])";
@@ -91,7 +98,8 @@ public class AdminListingController {
     @Operation(
             summary = "Create a draft listing",
             description =
-                    "Non-idempotent POST. productNo is unique among non-deleted listings; a duplicate returns 409. "
+                    "Non-idempotent POST. Omit productNo or send null for a server-generated BB- number. "
+                            + "Supplied productNo is retained and unique among non-deleted listings; a duplicate returns 409. "
                             + "Server assigns UUID, draft status, dual pricing mode and version 0. SGD only.")
     public Result<AdminListingResponse> create(@Valid @RequestBody CreateListingRequest request) {
         UUID actor = administrator();
@@ -284,11 +292,15 @@ public class AdminListingController {
     }
 
     /**
-     * Stable product number is supplied once; all other identity and lifecycle fields are
-     * server-owned.
+     * Optional product number; omission generates it, and either form is immutable after create.
      */
     public record CreateListingRequest(
-            @NotNull @Pattern(regexp = "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}" + INPUT_END)
+            @Pattern(regexp = "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}" + INPUT_END)
+                    @Schema(
+                            nullable = true,
+                            description =
+                                    "Optional immutable product number. Omitted or null: server-generated BB- number. "
+                                            + "Supplied: retained, validated, and unique among non-deleted listings.")
                     String productNo,
             @NotNull @Valid ListingContent listing) {}
 

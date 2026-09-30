@@ -3,6 +3,32 @@
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.blocbuy.catalog.persistence.BizProductMapper">
 
+    <select id="lockProductNumberAllocation" resultType="int">
+        SELECT 1 FROM pg_advisory_xact_lock(hashtextextended('catalog.product-number', 0))
+    </select>
+
+    <!-- The preceding lock is a separate statement so READ COMMITTED sees the prior creator's
+         committed insert. N historical BB rows can occupy at most N of N+1 candidates.
+         Advance only to the first unused candidate, never to a supplied suffix's high-water mark.
+         Sequence advances survive rollbacks; numbers need not be gap-free. -->
+    <select id="nextProductNumber" resultType="string" flushCache="true" useCache="false">
+        WITH allocation_start AS MATERIALIZED (
+            SELECT nextval('domain.seq_biz_product_product_no')::numeric AS number
+        ), history AS MATERIALIZED (
+            SELECT product_no FROM biz_product WHERE product_no LIKE 'BB-%'
+        ), candidates AS (
+            SELECT allocation_start.number + offsets.value AS number
+            FROM allocation_start
+            CROSS JOIN generate_series(0, (SELECT COUNT(*) FROM history)) AS offsets(value)
+        )
+        SELECT 'BB-' || setval('domain.seq_biz_product_product_no', MIN(candidate.number)::bigint)
+        FROM candidates candidate
+        WHERE candidate.number &lt;= 9223372036854775807
+            AND NOT EXISTS (
+                SELECT 1 FROM history WHERE product_no = 'BB-' || candidate.number::text
+            )
+    </select>
+
     <insert id="insertDraft">
         INSERT INTO biz_product (id, product_no, title, subtitle, description, cover_image, images,
             category, original_price, currency, stock, sold_count, status, pricing_mode,

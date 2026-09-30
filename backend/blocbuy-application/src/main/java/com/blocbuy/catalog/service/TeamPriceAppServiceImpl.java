@@ -11,6 +11,7 @@ import com.blocbuy.common.util.UuidV7;
 import com.blocbuy.identity.service.UserAppService;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +39,9 @@ public class TeamPriceAppServiceImpl implements TeamPriceAppService {
         int currentVersion =
                 prices.findLatestPolicy(productId).map(TeamPricePolicy::version).orElse(0);
         if (command.expectedVersion() != currentVersion || currentVersion == Integer.MAX_VALUE) {
-            throw new BizException(CatalogErrorCode.TEAM_PRICE_VERSION_CONFLICT);
+            throw new BizException(
+                    CatalogErrorCode.TEAM_PRICE_VERSION_CONFLICT,
+                    Map.of("currentVersion", currentVersion));
         }
         Instant now = prices.currentTime();
         TeamPricePolicy policy =

@@ -13,6 +13,12 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface BizProductMapper {
 
+    /** Transaction-scoped lock shared by all listing creators; callers must hold a transaction. */
+    int lockProductNumberAllocation();
+
+    /** Allocate the first unused sequence candidate, checking both live and deleted history. */
+    String nextProductNumber();
+
     /** Insert returns zero only for a duplicate live business product number. */
     int insertDraft(@Param("row") BizProductDO row, @Param("actorId") UUID actorId);
 
