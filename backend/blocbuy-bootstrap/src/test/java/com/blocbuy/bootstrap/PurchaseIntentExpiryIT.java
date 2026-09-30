@@ -16,6 +16,7 @@ import com.blocbuy.payment.repository.CheckoutPaymentRepository;
 import com.blocbuy.payment.service.StripeCheckoutService;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,6 +25,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -426,19 +428,18 @@ class PurchaseIntentExpiryIT {
             assertThat(held.await(5, TimeUnit.SECONDS)).isTrue();
             var cleanup = workers.submit(job::run);
             try {
-                long bound = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-                int waiting;
-                do {
-                    waiting =
-                            jdbc.queryForObject(
-                                    "SELECT count(*) FROM pg_stat_activity WHERE datname=current_database()"
-                                            + " AND wait_event_type='Lock' AND position('biz_group_deal' in query)>0",
-                                    Integer.class);
-                    if (waiting == 0) {
-                        TimeUnit.MILLISECONDS.sleep(10);
-                    }
-                } while (waiting == 0 && System.nanoTime() < bound);
-                assertThat(waiting).isPositive();
+                Awaitility.await()
+                        .pollDelay(Duration.ZERO)
+                        .pollInterval(Duration.ofMillis(10))
+                        .atMost(Duration.ofSeconds(5))
+                        .untilAsserted(
+                                () ->
+                                        assertThat(
+                                                        jdbc.queryForObject(
+                                                                "SELECT count(*) FROM pg_stat_activity WHERE datname=current_database()"
+                                                                        + " AND wait_event_type='Lock' AND position('biz_group_deal' in query)>0",
+                                                                Integer.class))
+                                                .isPositive());
                 assertThat(cleanup.isDone()).isFalse();
                 assertThat(expired(pending.quote().intentId())).isFalse();
             } finally {

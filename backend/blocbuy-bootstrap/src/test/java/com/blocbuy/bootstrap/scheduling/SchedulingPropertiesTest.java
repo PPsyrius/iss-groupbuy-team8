@@ -64,12 +64,9 @@ class SchedulingPropertiesTest {
                 .isInstanceOf(BindException.class)
                 .rootCause()
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () ->
-                                bind(
-                                        Map.of(
-                                                "blocbuy.scheduling.purchase-intent-expiry.batch-size",
-                                                "0")))
+        Map<String, String> invalidPurchaseIntentValues =
+                Map.of("blocbuy.scheduling.purchase-intent-expiry.batch-size", "0");
+        assertThatThrownBy(() -> bind(invalidPurchaseIntentValues))
                 .isInstanceOf(BindException.class);
         assertThat(
                         bind(Map.of("blocbuy.scheduling.purchase-intent-expiry.batch-size", "7"))

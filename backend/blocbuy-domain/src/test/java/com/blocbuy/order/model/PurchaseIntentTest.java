@@ -27,7 +27,8 @@ class PurchaseIntentTest {
         assertThat(expired.expiredAt()).isEqualTo(deadline);
         assertThat(expired.fulfilled()).isFalse();
         assertThat(expired.expireAt(deadline.plusSeconds(60))).isSameAs(expired);
-        assertThatThrownBy(() -> expired.fulfilBy(UUID.randomUUID()))
+        UUID payment = UUID.randomUUID();
+        assertThatThrownBy(() -> expired.fulfilBy(payment))
                 .isInstanceOf(IllegalStateException.class);
     }
 
