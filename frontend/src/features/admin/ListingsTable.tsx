@@ -43,7 +43,7 @@ function Head() {
   );
 }
 
-export function ListingsTable({ items }: { items: AdminListingResponse[] }) {
+export function ListingsTable({ items }: Readonly<{ items: AdminListingResponse[] }>) {
   return (
     <Table>
       <Table.ScrollContainer>

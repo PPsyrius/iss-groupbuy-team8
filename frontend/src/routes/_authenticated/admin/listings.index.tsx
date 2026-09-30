@@ -74,7 +74,7 @@ const emptyCopy: Record<ListingTab, { heading: string; body: string }> = {
 
 // A1-05 adds the new-draft route; a plain link until the route tree knows it. The header button
 // drops to outline when the empty state carries its own (4a.3), so one primary stays on screen.
-function NewListing({ variant }: { variant: "secondary" | "outline" }) {
+function NewListing({ variant }: Readonly<{ variant: "secondary" | "outline" }>) {
   return (
     <a
       href="/admin/listings/new"
@@ -85,7 +85,10 @@ function NewListing({ variant }: { variant: "secondary" | "outline" }) {
   );
 }
 
-function ListingsHeader({ subtitle, cta }: { subtitle?: string; cta?: "secondary" | "outline" }) {
+function ListingsHeader({
+  subtitle,
+  cta,
+}: Readonly<{ subtitle?: string; cta?: "secondary" | "outline" }>) {
   return (
     <div className="flex items-end justify-between gap-6">
       <div className="flex flex-col gap-1">
@@ -180,7 +183,7 @@ function ListingsLoading() {
 }
 
 // Not drawn (admin plan §2.1 S3): the catalog's error Alert in the console's words.
-function ListingsError({ reset }: { reset: () => void }) {
+function ListingsError({ reset }: Readonly<{ reset: () => void }>) {
   const router = useRouter();
   return (
     <div className="flex flex-col gap-5">

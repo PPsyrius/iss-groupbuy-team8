@@ -21,11 +21,11 @@ export function StatusTabs({
   tab,
   counts,
   onSelect,
-}: {
+}: Readonly<{
   tab: ListingTab;
   counts?: Record<ListingTab, number> | undefined;
   onSelect: (tab: ListingTab) => void;
-}) {
+}>) {
   return (
     <Tabs
       variant="secondary"
