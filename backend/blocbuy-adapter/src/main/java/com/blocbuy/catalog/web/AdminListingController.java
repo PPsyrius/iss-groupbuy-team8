@@ -74,7 +74,14 @@ import tools.jackson.databind.annotation.JsonDeserialize;
         responseCode = "409",
         description =
                 "Duplicate product number, illegal lifecycle action or retained business history")
-@ApiResponse(responseCode = "412", description = "Stale listing version precondition")
+@ApiResponse(
+        responseCode = "412",
+        description =
+                "Version precondition failed: CATALOG_412_002 has errors: {currentVersion: <int>} "
+                        + "with the stored listing version checked under the product row lock. "
+                        + "For an optional teamPrice, CATALOG_412_001 has the same errors shape "
+                        + "with the latest policy version (0 if none), checked under that lock. "
+                        + "Reload before resubmitting; no mutation or automatic retry occurs.")
 public class AdminListingController {
     /** True end-of-input in both Java and JSON Schema regexes, including a trailing newline. */
     private static final String INPUT_END = "(?![\\s\\S])";

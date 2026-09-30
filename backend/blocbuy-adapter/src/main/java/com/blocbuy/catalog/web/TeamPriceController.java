@@ -43,7 +43,12 @@ import tools.jackson.databind.annotation.JsonDeserialize;
 @ApiResponse(responseCode = "403", description = "Permission denied or account disabled")
 @ApiResponse(responseCode = "404", description = "Resource not found")
 @ApiResponse(responseCode = "409", description = "Policy unavailable")
-@ApiResponse(responseCode = "412", description = "Policy version precondition failed")
+@ApiResponse(
+        responseCode = "412",
+        description =
+                "Policy version precondition failed: CATALOG_412_001 has errors: {currentVersion: <int>} "
+                        + "with the latest policy version (0 if none), checked under the product row lock. "
+                        + "Reload before resubmitting; no revision or automatic retry occurs.")
 public class TeamPriceController {
     private static final String WRITE_PERMISSION = "catalog:product:write";
     private final TeamPriceAppService prices;

@@ -307,6 +307,51 @@ class AdminListingFlowIT {
                 .isEqualTo(1);
     }
 
+    /** Stale commands report the locked stored revision and leave all listing state intact. */
+    @ParameterizedTest
+    @ValueSource(strings = {"revise", "status", "delete", "teamTerms"})
+    void staleListingWritesReturnStoredVersionWithoutMutation(String operation) throws Exception {
+        UUID id = create("STALE-" + UuidV7.next());
+        mvc.perform(
+                        put(BASE + "/" + id)
+                                .header(HEADER, adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"expectedVersion\":0,\"listing\":" + DETAILS + "}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.version").value(1));
+        String item = BASE + "/" + id;
+        MockHttpServletRequestBuilder stale =
+                switch (operation) {
+                    case "revise" ->
+                            put(item)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("{\"expectedVersion\":0,\"listing\":" + DETAILS + "}");
+                    case "status" ->
+                            put(item + "/status")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("{\"expectedVersion\":0,\"status\":\"on_sale\"}");
+                    case "delete" -> delete(item).param("expectedVersion", "0");
+                    case "teamTerms" ->
+                            put(item + "/team-terms")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(
+                                            "{\"expectedVersion\":0,\"targetSize\":3,\"lifetimeSeconds\":7200}");
+                    default -> throw new IllegalArgumentException(operation);
+                };
+        Integer storedVersion =
+                jdbc.queryForObject(
+                        "SELECT version FROM biz_product WHERE id = ?", Integer.class, id);
+        mvc.perform(stale.header(HEADER, adminToken))
+                .andExpect(status().isPreconditionFailed())
+                .andExpect(jsonPath("$.code").value("CATALOG_412_002"))
+                .andExpect(jsonPath("$.errors.currentVersion").value(storedVersion));
+        mvc.perform(get(item).header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.version").value(storedVersion))
+                .andExpect(jsonPath("$.data.status").value("draft"))
+                .andExpect(jsonPath("$.data.teamTerms.configured").value(false));
+    }
+
     /** Defensive legacy-data guards include expired/deleted quotes, policies and closed deals. */
     @ParameterizedTest
     @ValueSource(strings = {"policy", "quote", "deal"})
@@ -656,6 +701,7 @@ class AdminListingFlowIT {
                     admin);
             return "ok";
         } catch (BizException ex) {
+            assertThat(ex.details()).containsEntry("currentVersion", 1);
             return ex.errorCode().code();
         }
     }
