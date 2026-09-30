@@ -223,7 +223,7 @@ so JSON Schema substring matching does not weaken the documented request constra
 
 | Method/path | Semantics |
 | --- | --- |
-| POST `/` | Create a draft with server UUIDv7, version 0, soldCount 0 and existing `dual` pricing mode. |
+| POST `/` | Create a draft with server UUIDv7, optional productNo (omitted/null generates a `BB-` number), version 0, soldCount 0 and existing `dual` pricing mode. |
 | GET `/` | Page all non-deleted listings; optional `status`; page >= 1, size 1–100; newest first with UUID tie-breaker. |
 | GET `/{id}` | Read draft/on-sale/off-sale listing including its version; deleted/absent returns 404. |
 | PUT `/{id}` | Replace `listing` content with required `expectedVersion`; do not accept productNo/status/counters/pricingMode. |
@@ -238,6 +238,8 @@ Errors: a missing or out-of-range `expectedVersion`, `targetSize` or `lifetimeSe
 The response returns the new product `version`, the `teamTerms` and the `teamPrice` appended, if any; the admin `GET` responses gain `teamTerms` (members null and `configured` false when never configured; the schema marks both members nullable). `teamPrice` is omitted, not null, when the command set no price. `configured` only means both terms are set and in bounds: START can still fail on a configured listing that is not on sale, has no stock, or has no price policy in force for at least the next 2400 seconds. Each write appends a `log_product_team_terms` row. Decisions: [backend ADR 0001](../adr/0001-payment-business-integration.md), addendum 2026-09-29.
 
 Creation example:
+
+`productNo` may be omitted or null to use server generation; a supplied value such as the example below is retained and must meet the existing format and live-row uniqueness rules.
 
 ```json
 {
@@ -276,6 +278,14 @@ codes. Omitting DELETE's required version returns HTTP 400 / `COMMON_400_001`, n
 No business exception is converted to a success envelope.
 
 ## Transactions, history and extension obligations
+
+### Product number decision — 2026-09-30 (#247 / BA-2)
+
+Accepted option (a) with compatibility: create without a product number generates `BB-100001`-style numbers; existing clients may continue to supply their own valid numbers. Empty, whitespace, malformed and overlong supplied values still return 400; a duplicate live supplied number still returns `CATALOG_409_003`. The number remains immutable after creation. This matches the admin artboard without removing the request field or changing existing clients' supplied identifiers; A3-08 can omit the field once this contract lands.
+
+V21 adds `domain.seq_biz_product_product_no` (bigint, starts at 100001, no cycle). The application checks the active actor, then resolves the number and inserts the draft in its existing 10-second transaction. Both supplied and generated paths acquire the same PostgreSQL transaction-scoped advisory lock before insertion. Generated allocation uses a separate statement after lock acquisition, so READ COMMITTED observes the preceding creator's committed insert; it advances above the sequence and the highest existing canonical `BB-` number representable as bigint, including deleted history. A CASE protects numeric conversion of arbitrary supplied strings. Supplied numbers larger than bigint remain valid strings and cannot equal a generated number.
+
+The short creation lock deliberately serializes admin creates to avoid supplied/generated namespace races; revising existing listings retains its product-row lock protocol. Allocation performs one aggregate scan when generation is requested, accepts the capstone catalog size, and makes no query/retry loop. All supported creators must use the application service and its transaction. Direct SQL imports must coordinate with the same lock; the existing partial unique index remains the final live-row conflict guard. Sequence advances survive rollback, so gaps are expected; generated numbers are not promised to be consecutive. Keep V21 and the sequence state during application rollback, and apply the migration before deploying the new creator.
 
 Commands use a 10-second bounded application transaction, locking `biz_product` first with the
 same `FOR UPDATE` used by quotation configuration/issuance, then checking actor and version.

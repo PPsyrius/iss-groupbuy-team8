@@ -9,6 +9,8 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -42,6 +44,22 @@ class ProductRepositoryImplTest {
 
     @Mock private BizProductMapper mapper;
     @InjectMocks private ProductRepositoryImpl repository;
+
+    @Test
+    void missingProductNumberIsAllocatedUnderCreationLock() {
+        when(mapper.nextProductNumber()).thenReturn("BB-100001");
+        assertThat(repository.resolveProductNumber(null)).isEqualTo("BB-100001");
+        var order = inOrder(mapper);
+        order.verify(mapper).lockProductNumberAllocation();
+        order.verify(mapper).nextProductNumber();
+    }
+
+    @Test
+    void suppliedProductNumberIsRetainedUnderTheSameLock() {
+        assertThat(repository.resolveProductNumber("TEA-001")).isEqualTo("TEA-001");
+        verify(mapper).lockProductNumberAllocation();
+        verify(mapper, never()).nextProductNumber();
+    }
 
     @Test
     void insertDraftConvertsAndDelegates() {
