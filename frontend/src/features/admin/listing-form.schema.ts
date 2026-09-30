@@ -5,11 +5,9 @@ import { CATEGORIES } from "@/features/catalog/categories";
 import { isHttpsUrl } from "./listing-form";
 import { toCents } from "./money";
 
-// The listing form's rules, mirroring the contract's `ListingContent` and `CreateListingRequest`
-// validation (admin plan §2.2) so a draft is refused here before the backend would refuse it.
+// The listing form's rules, mirroring the contract's `ListingContent` validation (admin plan §2.2) so a draft is refused here before the backend would refuse it.
 // Fields are trimmed only for checking; `toListingContent` trims what is sent.
 
-const PRODUCT_NO = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 // Contract: a positive decimal string with at most 16 integer digits and 2 decimals.
 const PRICE = /^\d{1,16}(\.\d{1,2})?$/;
 const URL_MAX = 1024;
@@ -26,29 +24,16 @@ const imageUrl = v.pipe(
 
 const fixedCategories: string[] = CATEGORIES.flatMap((c) => (c.value === null ? [] : [c.value]));
 
+// The product number is not a form field: the server assigns it on save (#288, artboard 4b.1),
+// and the editor shows it from the loaded listing.
 export function listingFormSchema({
-  mode,
   loadedCategory,
 }: {
-  mode: "create" | "edit";
   // An existing listing may carry a category the fixed list does not know yet; it stays allowed.
   loadedCategory?: string;
 }) {
   const categories = loadedCategory ? [...fixedCategories, loadedCategory] : fixedCategories;
   return v.object({
-    // The product number is set once, on create; the editor shows it but never sends it.
-    productNo:
-      mode === "create"
-        ? v.pipe(
-            v.string(),
-            v.trim(),
-            v.nonEmpty("Enter a product number."),
-            v.check(
-              (no) => no === "" || PRODUCT_NO.test(no),
-              "Use letters, digits, dots, dashes or underscores, starting with a letter or digit.",
-            ),
-          )
-        : v.string(),
     title: v.pipe(
       v.string(),
       v.trim(),

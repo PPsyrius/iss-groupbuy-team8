@@ -84,7 +84,6 @@ function NewListingPage() {
       <div className="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-6">
         <ListingForm
           id={FORM_ID}
-          mode="create"
           defaultValues={emptyListingForm}
           onSubmit={save}
           onProblemsChange={setFieldProblems}

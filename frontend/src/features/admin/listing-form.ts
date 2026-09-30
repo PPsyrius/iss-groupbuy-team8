@@ -5,7 +5,6 @@ import type { AdminListingResponse, ListingContent } from "@/api/generated/types
 // the server sent (§12 note 8), so a revise after publish sends it back byte for byte and the
 // backend's frozen-field check never trips on formatting.
 export interface ListingFormValues {
-  productNo: string;
   title: string;
   subtitle: string;
   description: string;
@@ -18,7 +17,6 @@ export interface ListingFormValues {
 
 // 4b.1 opens with one empty image row and a stock of 0.
 export const emptyListingForm: ListingFormValues = {
-  productNo: "",
   title: "",
   subtitle: "",
   description: "",
@@ -61,7 +59,6 @@ export function toListingContent(values: ListingFormValues): ListingContent {
 export function fromListing(dto: AdminListingResponse): ListingFormValues {
   const listing = dto.listing;
   return {
-    productNo: dto.productNo ?? "",
     title: listing?.title ?? "",
     subtitle: listing?.subtitle ?? "",
     description: listing?.description ?? "",

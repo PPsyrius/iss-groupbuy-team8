@@ -26,7 +26,6 @@ describe("toListingContent", () => {
   it("keeps the filled fields and drops blank image rows", () => {
     expect(
       toListingContent({
-        productNo: "BB-1",
         title: "Rice",
         subtitle: "New crop",
         description: "Vacuum packed.",
@@ -68,7 +67,6 @@ describe("fromListing", () => {
 
   it("keeps the price exactly as the server sent it", () => {
     expect(fromListing(dto)).toEqual({
-      productNo: "BB-100481",
       title: "Thai jasmine rice 10 kg",
       subtitle: "",
       description: "",

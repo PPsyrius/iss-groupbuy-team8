@@ -156,6 +156,15 @@ describe("create", () => {
     expect(page.data).toMatchObject({ total: 63, items: [{ productNo: "BB-200001" }] });
   });
 
+  it("numbers a draft sent without a product number, skipping taken numbers (#288)", async () => {
+    serveAdmin();
+    const omitted = await call("POST", "/admin/products", { listing: content() });
+    expect(omitted).toMatchObject({ status: 200, data: { productNo: "BB-100001" } });
+    await call("POST", "/admin/products", { productNo: "BB-100002", listing: content() });
+    const nulled = await call("POST", "/admin/products", { productNo: null, listing: content() });
+    expect(nulled).toMatchObject({ status: 200, data: { productNo: "BB-100003" } });
+  });
+
   it("refuses a duplicate product number with 409 CATALOG_409_003", async () => {
     serveAdmin();
     expect(

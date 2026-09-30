@@ -273,9 +273,9 @@ Note (#242): a team-terms write also increments the product `version`, so a term
 
 ### A3-08: Product number from the server (BA-2, #288)
 
-- [ ] Step 1: failing tests. `listing-form.schema.test.ts`: create mode has no `productNo`; `routes/admin-listing-new.test.tsx`: the create request omits `productNo` and the new editor shows the server's `BB-` number.
-- [ ] Step 2: remove the create field (artboard 4b.1: "the server assigns it on save") from `listing-form.schema.ts`, `listing-form.ts` and `ListingForm.tsx`; the editor keeps the read-only number.
-- [ ] Step 3: the admin mock generates the next `BB-` number when `productNo` is omitted or `null`, and still answers 409 `CATALOG_409_003` for a supplied duplicate.
+- [x] Step 1: failing tests. `listing-form.schema.test.ts`: create mode has no `productNo`; `routes/admin-listing-new.test.tsx`: the create request omits `productNo` and the new editor shows the server's `BB-` number. (2026-09-30)
+- [x] Step 2: remove the create field (artboard 4b.1: "the server assigns it on save") from `listing-form.schema.ts`, `listing-form.ts` and `ListingForm.tsx`; the editor keeps the read-only number. (2026-09-30)
+- [x] Step 3: the admin mock generates the next `BB-` number when `productNo` is omitted or `null`, and still answers 409 `CATALOG_409_003` for a supplied duplicate. (2026-09-30)
 
 ### A3-09: Server version from the 412 (BA-12, #286)
 

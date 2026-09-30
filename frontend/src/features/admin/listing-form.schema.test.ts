@@ -6,14 +6,13 @@ import { listingFormSchema } from "./listing-form.schema";
 
 const valid: ListingFormValues = {
   ...emptyListingForm,
-  productNo: "BB-100490",
   title: "Hokkaido milk, 12 cartons",
   category: "groceries",
   originalPrice: "46.80",
   stock: 0,
 };
 
-const create = listingFormSchema({ mode: "create" });
+const create = listingFormSchema({});
 
 // The issue messages keyed by field path ("images.1" for the second image row). TanStack Form
 // shows every issue of a field, so two rules firing on one value would show both: joined here, a
@@ -86,15 +85,8 @@ describe("listingFormSchema", () => {
     });
   });
 
-  it("needs a product number in the backend's pattern, on create only", () => {
-    expect(problems(create, { ...valid, productNo: "" })).toEqual({
-      productNo: "Enter a product number.",
-    });
-    expect(problems(create, { ...valid, productNo: "-BB 1" })).toEqual({
-      productNo:
-        "Use letters, digits, dots, dashes or underscores, starting with a letter or digit.",
-    });
-    expect(problems(listingFormSchema({ mode: "edit" }), { ...valid, productNo: "" })).toEqual({});
+  it("has no product number: the server assigns it on save (#288)", () => {
+    expect(Object.keys(create.entries)).not.toContain("productNo");
   });
 
   it("takes a fixed category, or the one the listing already has", () => {
@@ -102,7 +94,7 @@ describe("listingFormSchema", () => {
     expect(problems(create, { ...valid, category: "snacks" })).toEqual({
       category: "Choose one of the categories.",
     });
-    const edit = listingFormSchema({ mode: "edit", loadedCategory: "snacks" });
+    const edit = listingFormSchema({ loadedCategory: "snacks" });
     expect(problems(edit, { ...valid, category: "snacks" })).toEqual({});
   });
 });

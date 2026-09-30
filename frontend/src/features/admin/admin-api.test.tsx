@@ -126,9 +126,9 @@ describe("admin writes", () => {
       }),
     );
     const { result } = hook(() => useCreateListing());
-    const created = await result.current.mutateAsync({ productNo: "BB-100481", listing });
+    const created = await result.current.mutateAsync({ listing });
     expect(created).toEqual(row);
-    expect(body).toEqual({ productNo: "BB-100481", listing });
+    expect(body).toEqual({ listing });
   });
 
   it("revise and changeStatus send the loaded version", async () => {

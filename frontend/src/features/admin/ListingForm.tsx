@@ -43,7 +43,6 @@ type FieldName = keyof ListingFormValues | `images[${number}]`;
 const fieldLabels: Record<string, string> = {
   title: "Title",
   subtitle: "Subtitle",
-  productNo: "Product number",
   category: "Category",
   originalPrice: "Solo price",
   stock: "Stock",
@@ -103,7 +102,6 @@ const fixedCategories = CATEGORIES.flatMap((c) => (c.value === null ? [] : [c]))
 // before a navigation would drop unsaved edits; a navigation made by the save itself passes.
 export function ListingForm({
   id,
-  mode,
   defaultValues,
   onSubmit,
   frozen = false,
@@ -113,7 +111,6 @@ export function ListingForm({
   onProblemsChange,
 }: Readonly<{
   id: string;
-  mode: "create" | "edit";
   defaultValues: ListingFormValues;
   onSubmit: (values: ListingFormValues) => Promise<SubmitProblem | undefined>;
   frozen?: boolean;
@@ -136,7 +133,7 @@ export function ListingForm({
     defaultValues,
     validationLogic: revalidateLogic(),
     validators: {
-      onDynamic: listingFormSchema({ mode, ...(loadedCategory ? { loadedCategory } : {}) }),
+      onDynamic: listingFormSchema(loadedCategory ? { loadedCategory } : {}),
     },
     // A server's message on a field (or on one of its image rows) goes once that field changes.
     listeners: {
@@ -272,28 +269,6 @@ export function ListingForm({
           </TextField>
         )}
       </form.Field>
-
-      {/* The artboard leaves the product number out ("the server assigns it on save"), but the
-          contract's CreateListingRequest requires it from the client (admin plan §2.2). */}
-      {mode === "create" ? (
-        <form.Field name="productNo">
-          {(field) => (
-            <TextField
-              value={field.state.value}
-              onChange={field.handleChange}
-              onBlur={field.handleBlur}
-              isInvalid={messageOf(field.state.meta.errors) !== undefined}
-            >
-              <Label>Product number</Label>
-              <Input className="font-mono" placeholder="BB-100490" />
-              <Description>
-                Your reference for this listing. It can’t change after saving.
-              </Description>
-              <FieldError>{messageOf(field.state.meta.errors)}</FieldError>
-            </TextField>
-          )}
-        </form.Field>
-      ) : null}
 
       <form.Field name="category">
         {(field) => (
