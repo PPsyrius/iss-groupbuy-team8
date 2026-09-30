@@ -35,7 +35,7 @@ public class SaTokenConfig implements WebMvcConfigurer {
         registry.addInterceptor(
                         new SaInterceptor(
                                 handler -> {
-                                    // anonymous catalog browse: GET /products/** skips login;
+                                    // anonymous catalog browse and invite resolve: GET only;
                                     // every other method/path under /api/v1 requires it
                                     if (SaRouter.isMatchCurrURI(ANONYMOUS_GET_PATHS)
                                             && SaRouter.isMatchCurrMethod(
@@ -48,6 +48,11 @@ public class SaTokenConfig implements WebMvcConfigurer {
                 .excludePathPatterns(PUBLIC_PATHS);
     }
 
-    /** Read-only paths open without a session; writes on the same resources stay protected. */
-    private static final String[] ANONYMOUS_GET_PATHS = {ApiConstants.API_V1 + "/products/**"};
+    /**
+     * Read-only paths open without a session; writes on the same resources stay protected. Invite
+     * links are resolved before sign-in (#201).
+     */
+    private static final String[] ANONYMOUS_GET_PATHS = {
+        ApiConstants.API_V1 + "/products/**", ApiConstants.API_V1 + "/invites/*"
+    };
 }

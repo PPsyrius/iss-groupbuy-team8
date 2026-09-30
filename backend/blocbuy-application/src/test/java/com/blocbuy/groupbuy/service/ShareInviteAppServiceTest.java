@@ -10,23 +10,33 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.common.exception.CommonErrorCode;
+import com.blocbuy.common.exception.ErrorCode;
+import com.blocbuy.common.gateway.RateLimitGateway;
 import com.blocbuy.groupbuy.exception.GroupbuyErrorCode;
 import com.blocbuy.groupbuy.model.DealStatus;
 import com.blocbuy.groupbuy.model.GroupDeal;
 import com.blocbuy.groupbuy.model.ShareInvite;
+import com.blocbuy.groupbuy.query.ResolvedInviteView;
 import com.blocbuy.groupbuy.query.ShareInviteView;
 import com.blocbuy.groupbuy.repository.GroupDealRepository;
 import com.blocbuy.groupbuy.repository.PaidGroupDealRepository;
 import com.blocbuy.groupbuy.repository.ShareInviteRepository;
+import com.blocbuy.identity.service.UserAppService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 
-/** UC7 minting: members only, open teams only, and one invite per team and member. */
+/**
+ * UC7 minting: members only, open teams only, and one invite per team and member. Resolving: any
+ * stored invite, rate-limited first.
+ */
 class ShareInviteAppServiceTest {
 
     private static final Instant NOW = Instant.parse("2026-09-25T10:00:00Z");
@@ -38,8 +48,11 @@ class ShareInviteAppServiceTest {
     private final GroupDealRepository deals = mock(GroupDealRepository.class);
     private final PaidGroupDealRepository participation = mock(PaidGroupDealRepository.class);
     private final ShareInviteRepository invites = mock(ShareInviteRepository.class);
+    private final RateLimitGateway rateLimits = mock(RateLimitGateway.class);
+    private final UserAppService users = mock(UserAppService.class);
     private final ShareInviteAppService service =
-            new ShareInviteAppService(deals, participation, invites);
+            new ShareInviteAppService(deals, participation, invites, rateLimits, users);
+    private static final String CLIENT = "198.51.100.10";
 
     private static GroupDeal deal(DealStatus status, Instant expireTime) {
         return GroupDeal.reconstitute(
@@ -63,7 +76,7 @@ class ShareInviteAppServiceTest {
         when(participation.currentTime()).thenReturn(NOW);
     }
 
-    private static void assertRejected(ThrowingCallable call, GroupbuyErrorCode expected) {
+    private static void assertRejected(ThrowingCallable call, ErrorCode expected) {
         assertThatThrownBy(call)
                 .isInstanceOf(BizException.class)
                 .extracting(thrown -> ((BizException) thrown).errorCode())
@@ -153,5 +166,91 @@ class ShareInviteAppServiceTest {
         stored(deal(DealStatus.OPEN, NOW), true);
 
         assertRejected(() -> service.mint(MEMBER, DEAL), GroupbuyErrorCode.DEAL_CLOSED);
+    }
+
+    private ShareInvite storedInvite() {
+        ShareInvite invite = new ShareInvite(UUID.randomUUID(), REF, DEAL, MEMBER);
+        when(rateLimits.tryAcquire(ShareInviteAppService.RESOLVE_LIMIT, CLIENT)).thenReturn(true);
+        when(invites.findByRef(REF)).thenReturn(Optional.of(invite));
+        return invite;
+    }
+
+    @Test
+    void aStoredInviteResolvesToItsTeamProductDeadlineAndSharerNickname() {
+        Instant expiry = NOW.plusSeconds(3600);
+        storedInvite();
+        when(deals.findById(DEAL)).thenReturn(Optional.of(deal(DealStatus.OPEN, expiry)));
+        when(users.publicNickname(MEMBER)).thenReturn(Optional.of("Sarah Tan"));
+
+        ResolvedInviteView view = service.resolve(REF, CLIENT);
+
+        assertThat(view).isEqualTo(new ResolvedInviteView(DEAL, PRODUCT, "Sarah Tan", expiry));
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = DealStatus.class,
+            names = {"SUCCEEDED", "FAILED", "EXPIRED"})
+    void anInviteIntoAClosedTeamStillResolves(DealStatus status) {
+        storedInvite();
+        when(deals.findById(DEAL)).thenReturn(Optional.of(deal(status, NOW.minusSeconds(60))));
+        when(users.publicNickname(MEMBER)).thenReturn(Optional.of("Sarah Tan"));
+
+        assertThat(service.resolve(REF, CLIENT).sharerNickname()).isEqualTo("Sarah Tan");
+    }
+
+    @Test
+    void anOpenTeamPastItsDeadlineStillResolves() {
+        Instant expiry = NOW.minusSeconds(1);
+        storedInvite();
+        when(deals.findById(DEAL)).thenReturn(Optional.of(deal(DealStatus.OPEN, expiry)));
+        when(users.publicNickname(MEMBER)).thenReturn(Optional.empty());
+
+        assertThat(service.resolve(REF, CLIENT).expiresAt()).isEqualTo(expiry);
+    }
+
+    @Test
+    void aSharerWithNoPublicNicknameResolvesWithANullNickname() {
+        storedInvite();
+        when(deals.findById(DEAL))
+                .thenReturn(Optional.of(deal(DealStatus.OPEN, NOW.plusSeconds(3600))));
+        when(users.publicNickname(MEMBER)).thenReturn(Optional.empty());
+
+        assertThat(service.resolve(REF, CLIENT).sharerNickname()).isNull();
+    }
+
+    @Test
+    void aClientOverItsLimitIsRejectedBeforeAnyRead() {
+        when(rateLimits.tryAcquire(ShareInviteAppService.RESOLVE_LIMIT, CLIENT)).thenReturn(false);
+
+        assertRejected(() -> service.resolve(REF, CLIENT), CommonErrorCode.RATE_LIMITED);
+        verifyNoInteractions(invites, deals, users);
+    }
+
+    @Test
+    void aMalformedReferenceIsNotFoundWithoutARead() {
+        when(rateLimits.tryAcquire(ShareInviteAppService.RESOLVE_LIMIT, CLIENT)).thenReturn(true);
+
+        assertRejected(
+                () -> service.resolve("not-a-ref", CLIENT), GroupbuyErrorCode.INVITE_NOT_FOUND);
+        verifyNoInteractions(invites, deals, users);
+    }
+
+    @Test
+    void anUnknownReferenceIsNotFound() {
+        when(rateLimits.tryAcquire(ShareInviteAppService.RESOLVE_LIMIT, CLIENT)).thenReturn(true);
+        when(invites.findByRef(REF)).thenReturn(Optional.empty());
+
+        assertRejected(() -> service.resolve(REF, CLIENT), GroupbuyErrorCode.INVITE_NOT_FOUND);
+        verifyNoInteractions(deals, users);
+    }
+
+    @Test
+    void anInviteWhoseTeamIsGoneIsNotFound() {
+        storedInvite();
+        when(deals.findById(DEAL)).thenReturn(Optional.empty());
+
+        assertRejected(() -> service.resolve(REF, CLIENT), GroupbuyErrorCode.INVITE_NOT_FOUND);
+        verifyNoInteractions(users);
     }
 }

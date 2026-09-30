@@ -9,6 +9,7 @@ import com.blocbuy.common.exception.BizException;
 import com.blocbuy.identity.exception.IdentityErrorCode;
 import com.blocbuy.identity.model.RegisterSource;
 import com.blocbuy.identity.model.User;
+import com.blocbuy.identity.model.UserProfile;
 import com.blocbuy.identity.model.UserStatus;
 import java.time.Instant;
 import java.util.UUID;
@@ -109,8 +110,7 @@ class UserRepositoryImplTest {
                 "buyer@example.com",
                 RegisterSource.GOOGLE,
                 UserStatus.ACTIVE,
-                "Buyer",
-                "https://cdn.example.com/avatar.png",
+                new UserProfile("Buyer", "https://cdn.example.com/avatar.png"),
                 LAST_LOGIN);
     }
 

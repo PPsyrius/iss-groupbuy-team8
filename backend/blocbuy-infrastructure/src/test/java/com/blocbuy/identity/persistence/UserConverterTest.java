@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.blocbuy.identity.model.RegisterSource;
 import com.blocbuy.identity.model.User;
+import com.blocbuy.identity.model.UserProfile;
 import com.blocbuy.identity.model.UserStatus;
 import java.time.Instant;
 import java.util.UUID;
@@ -43,8 +44,7 @@ class UserConverterTest {
                         "buyer@example.com",
                         RegisterSource.GOOGLE,
                         UserStatus.DISABLED,
-                        "Buyer",
-                        "https://cdn.example.com/avatar.png",
+                        new UserProfile("Buyer", "https://cdn.example.com/avatar.png"),
                         LAST_LOGIN);
 
         SysUserDO row = UserConverter.toDO(user);

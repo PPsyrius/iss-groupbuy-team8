@@ -2,7 +2,9 @@ package com.blocbuy.identity.service;
 
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.identity.exception.IdentityErrorCode;
+import com.blocbuy.identity.model.User;
 import com.blocbuy.identity.repository.UserRepository;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,5 +31,11 @@ public class UserAppServiceImpl implements UserAppService {
                 users.findById(userId)
                         .orElseThrow(() -> new BizException(IdentityErrorCode.USER_NOT_FOUND));
         return new CurrentUser(user.id(), user.nickname(), user.avatarUrl());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<String> publicNickname(UUID userId) {
+        return users.findById(userId).flatMap(User::publicNickname);
     }
 }
