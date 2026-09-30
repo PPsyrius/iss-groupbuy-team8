@@ -19,6 +19,9 @@ public interface BizGroupDealMapper {
     /** Retention exception to active-only reads: include all historical references. */
     boolean existsProductReference(@Param("productId") UUID productId);
 
+    /** Historical count with the same predicate as the deletion veto. */
+    long countProductReferences(@Param("productId") UUID productId);
+
     /** Active deal by primary key. */
     BizGroupDealDO selectActiveById(@Param("id") UUID id);
 

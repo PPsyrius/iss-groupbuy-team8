@@ -1,6 +1,7 @@
 package com.blocbuy.catalog.service;
 
 import com.blocbuy.catalog.model.ListingDetails;
+import com.blocbuy.catalog.model.ListingReferences;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.catalog.pricing.TeamPricePolicy;
@@ -27,7 +28,24 @@ public interface AdminListingAppService {
             long draft, long onSale, long offSale, long openDeals, long withActivePolicy) {}
 
     /** Catalog-owned administrative view; policy is null when no non-deleted revision exists. */
-    record ManagedListing(Product product, TeamPricePolicy latestPolicy) {}
+    record ManagedListing(
+            Product product, TeamPricePolicy latestPolicy, ListingReferences references) {
+        /** Page and mutation views omit the detail-only history projection. */
+        public ManagedListing(Product product, TeamPricePolicy latestPolicy) {
+            this(product, latestPolicy, null);
+        }
+
+        /**
+         * Eligibility at the read snapshot; DELETE still checks the submitted version and locks.
+         */
+        public Boolean deletable() {
+            return references == null
+                    ? null
+                    : product.allowsDeletion()
+                            && product.canAdvanceVersion()
+                            && !references.hasAny();
+        }
+    }
 
     /** Conditional content replacement; stale writes return 412 without mutation. */
     ManagedListing revise(UUID id, ListingDetails details, int expectedVersion, UUID actorId);

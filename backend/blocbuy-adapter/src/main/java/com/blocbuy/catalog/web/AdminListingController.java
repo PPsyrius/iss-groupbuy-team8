@@ -2,6 +2,7 @@ package com.blocbuy.catalog.web;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.blocbuy.catalog.model.ListingDetails;
+import com.blocbuy.catalog.model.ListingReferences;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.catalog.model.ProductTeamTerms;
@@ -115,7 +116,10 @@ public class AdminListingController {
             summary = "Read a managed listing",
             description =
                     "Includes drafts and off-sale listings, never deleted rows. latestPolicy is "
-                            + "the latest non-deleted revision, even if expired or future, or null when none exists.")
+                            + "the latest non-deleted revision, even if expired or future, or null when none exists. "
+                            + "Detail-only references counts all deal, quote and policy history, including deleted "
+                            + "rows. deletable uses the DELETE lifecycle, sale, history and version-exhaustion rules "
+                            + "at this snapshot; DELETE still rechecks under lock with expectedVersion.")
     public Result<AdminListingResponse> get(@PathVariable UUID productId) {
         return Result.ok(AdminListingResponse.from(listings.get(productId, administrator())));
     }
@@ -400,7 +404,17 @@ public class AdminListingController {
                             nullable = true,
                             description =
                                     "Latest non-deleted revision, even if expired or future; null when none exists")
-                    LatestPolicyResponse latestPolicy) {
+                    LatestPolicyResponse latestPolicy,
+            @JsonInclude(JsonInclude.Include.NON_NULL)
+                    @Schema(
+                            description =
+                                    "Present on the single admin GET only; all retained history, including deleted rows")
+                    ListingReferencesResponse references,
+            @JsonInclude(JsonInclude.Include.NON_NULL)
+                    @Schema(
+                            description =
+                                    "Present on the single admin GET only; snapshot eligibility, not a deletion reservation")
+                    Boolean deletable) {
         /** Convert pure business values only; no persistence object crosses the HTTP boundary. */
         static AdminListingResponse from(AdminListingAppService.ManagedListing listing) {
             Product product = listing.product();
@@ -413,7 +427,19 @@ public class AdminListingController {
                     product.soldCount(),
                     product.version(),
                     TeamTermsView.from(product.teamTerms()),
-                    LatestPolicyResponse.from(listing.latestPolicy()));
+                    LatestPolicyResponse.from(listing.latestPolicy()),
+                    ListingReferencesResponse.from(listing.references()),
+                    listing.deletable());
+        }
+    }
+
+    /** Editor-only history projection; no cross-domain aggregate crosses the HTTP boundary. */
+    public record ListingReferencesResponse(long deals, long quotes, long policies) {
+        static ListingReferencesResponse from(ListingReferences references) {
+            return references == null
+                    ? null
+                    : new ListingReferencesResponse(
+                            references.deals(), references.quotes(), references.policies());
         }
     }
 

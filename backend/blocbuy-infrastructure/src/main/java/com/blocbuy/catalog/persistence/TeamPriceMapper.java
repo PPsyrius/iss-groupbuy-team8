@@ -13,6 +13,9 @@ public interface TeamPriceMapper {
     /** Existence across both immutable history tables; not limited to active/valid rows. */
     boolean existsProductReference(@Param("productId") UUID productId);
 
+    /** Historical policy/quote counts with the same predicates as the existence check. */
+    PriceReferencesDO countProductReferences(@Param("productId") UUID productId);
+
     TeamPricePolicyDO selectLatestPolicy(@Param("productId") UUID productId);
 
     /** One latest revision per product; caller guards empty input. */

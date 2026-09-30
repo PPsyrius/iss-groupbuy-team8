@@ -102,12 +102,12 @@ classDiagram
         ~publish() ProductStatus
         ~delist() ProductStatus
         ~requireCommercialEdit(current, next) void
-        ~requireDeletable() void
+        ~deletionError() CatalogErrorCode
     }
     class DRAFT {
         <<constantBody>>
         ~publish() ProductStatus
-        ~requireDeletable() void
+        ~deletionError() CatalogErrorCode
     }
     class ON_SALE {
         <<constantBody>>
@@ -226,7 +226,7 @@ so JSON Schema substring matching does not weaken the documented request constra
 | POST `/` | Create a draft with server UUIDv7, optional productNo (omitted/null generates a `BB-` number), version 0, soldCount 0 and existing `dual` pricing mode. |
 | GET `/` | Page all non-deleted listings; optional `status`; page >= 1, size 1–100; newest first with UUID tie-breaker. |
 | GET `/counts` | Read `{draft, onSale, offSale, openDeals, withActivePolicy}` totals in the Result envelope; same login, role, permission and active-account checks as the page. |
-| GET `/{id}` | Read draft/on-sale/off-sale listing including its version; deleted/absent returns 404. |
+| GET `/{id}` | Read draft/on-sale/off-sale listing including its version, latest policy, retained `references {deals, quotes, policies}` and snapshot `deletable` flag; deleted/absent returns 404. |
 | PUT `/{id}` | Replace `listing` content with required `expectedVersion`; do not accept productNo/status/counters/pricingMode. |
 | PUT `/{id}/status` | Required `status` (`on_sale` or `off_sale`) and `expectedVersion`. |
 | PUT `/{id}/team-terms` | US25 (#221). Required `expectedVersion`, `targetSize` (>= 2) and `lifetimeSeconds` (2400-86400); optional `teamPrice` (`amount`, `currency`, `validFrom`, `validUntil`, `expectedVersion` = latest policy version). See below. |
@@ -295,6 +295,14 @@ The application read uses a read-only `REPEATABLE READ` transaction: account val
 Admin detail and page reads now use read-only REPEATABLE READ. Choose one batched latest-policy lookup over a joined product projection: it reuses the policy converter and latest-revision semantics while preserving existing pagination and aggregate persistence. A non-empty page makes three catalog statements (rows, total, policies), independent of its size; an empty page skips policy SQL. `SqlStatementCapture` counts actual MyBatis prepared statements in `AdminListingFlowIT`, comparing 1-row and 20-row pages and requiring one policy statement in the larger page. The batch is bounded by the existing 100-row page limit and uses the policy table's existing product/version index.
 
 Counts gain `withActivePolicy`: one aggregate statement selects the latest non-deleted revision for each non-deleted listing before applying `valid_from <= CURRENT_TIMESTAMP < valid_until`. Draft and off-sale listings can count; this measures configured valid rules, not checkout eligibility. Future or expired latest revisions suppress older valid ones; multiple revisions count a listing once, and deleted revisions/listings are excluded. This adds a third aggregate read to #248's snapshot transaction. The buyer policy endpoint is unchanged. PostgreSQL integration tests cover matching read values, explicit nulls, replacement rules, deleted history and exact start/end boundaries; query-count evidence is not a latency benchmark.
+
+### Delete-blocking references decision — 2026-09-30 (#250 / BA-5)
+
+Choose the preferred counts option plus a `deletable` flag for `GET /api/v1/admin/products/{productId}`. Its `references {deals, quotes, policies}` counts every product-scoped row retained by the DELETE veto, including expired, closed and soft-deleted history. Catalog owns the composed view: one aggregate statement counts policies/quotes, while deal counts come through `GroupDealQueryService.countProductReferences`. Each owning mapper shares SQL fragments between counts and the existing EXISTS guard so their filters cannot drift. Existing product-reference indexes support these counts; no new schema or query per history row is introduced.
+
+`ProductStatus.deletionError()` and `Product.deletionError()` provide one lifecycle/sale rule for the boolean read and `requireDeletable`; published states retain `CATALOG_409_002`, while sold drafts retain `CATALOG_409_004`. `canAdvanceVersion()` is shared with the existing version guard, so an exhausted version reports false and DELETE still returns `CATALOG_412_002`. The detail flag also requires all three reference counts to be zero. DELETE preserves its product-first lock, account/version preconditions, EXISTS checks and conditional soft deletion; it does not trust the earlier read flag.
+
+The detail read retains read-only REPEATABLE READ, so product state, policy and history counts agree at one snapshot. Eligibility is not a reservation: later writes or a stale submitted version can still reject DELETE. `references` and `deletable` are omitted from page and mutation responses, and pages keep their existing fixed three-statement catalog lookup. PostgreSQL integration tests verify zero-history deletion, each live/deleted history type, product-scoped mixed counts (26 deals, 61 quotes, three policy revisions), published/sold/version-exhausted rejection and omission on pages. Frontend A3-05 consumes the detail projection.
 
 ### Product number decision — 2026-09-30 (#247 / BA-2)
 

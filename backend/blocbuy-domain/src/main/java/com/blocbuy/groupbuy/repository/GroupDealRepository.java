@@ -21,6 +21,9 @@ public interface GroupDealRepository {
     /** Any historical product reference, including closed and soft-deleted deals. */
     boolean hasProductReferences(UUID productId);
 
+    /** All product references, including closed and soft-deleted deal history. */
+    long countProductReferences(UUID productId);
+
     /** Active (non-deleted) deal by primary key. */
     Optional<GroupDeal> findById(UUID id);
 

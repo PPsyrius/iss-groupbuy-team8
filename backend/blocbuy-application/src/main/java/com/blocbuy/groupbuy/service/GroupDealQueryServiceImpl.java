@@ -32,6 +32,12 @@ public class GroupDealQueryServiceImpl implements GroupDealQueryService {
 
     @Override
     @Transactional(readOnly = true)
+    public long countProductReferences(UUID productId) {
+        return groupDealRepository.countProductReferences(productId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<UUID, OpenDealOffer> findBestOpenDealsByProductIds(Collection<UUID> productIds) {
         if (productIds == null || productIds.isEmpty()) {
             return Map.of();

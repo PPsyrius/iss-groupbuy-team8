@@ -18,8 +18,8 @@ public enum ProductStatus {
 
         /** Only never-published drafts admit deletion. References are checked by the use case. */
         @Override
-        void requireDeletable() {
-            /* Draft is the only deletable state. */
+        CatalogErrorCode deletionError() {
+            return null;
         }
 
         /** No accepted commercial history exists before publication. */
@@ -60,8 +60,8 @@ public enum ProductStatus {
     }
 
     /** Published states never become deletable again. */
-    void requireDeletable() {
-        throw new BizException(CatalogErrorCode.PRODUCT_STATE_CONFLICT);
+    CatalogErrorCode deletionError() {
+        return CatalogErrorCode.PRODUCT_STATE_CONFLICT;
     }
 
     /** Catalog editing must never act as a stock adjustment or reprice a published product. */

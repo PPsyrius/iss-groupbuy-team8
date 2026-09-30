@@ -29,6 +29,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -228,6 +229,10 @@ class AdminListingFlowIT {
         mvc.perform(get("/api/v1/products/" + id)).andExpect(status().isNotFound());
         mvc.perform(get(BASE + "/" + id).header(HEADER, adminToken))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.deletable").value(true))
+                .andExpect(jsonPath("$.data.references.deals").value(0))
+                .andExpect(jsonPath("$.data.references.quotes").value(0))
+                .andExpect(jsonPath("$.data.references.policies").value(0))
                 .andExpect(jsonPath("$.data.version").value(0));
         mvc.perform(
                         put(BASE + "/" + id)
@@ -279,8 +284,15 @@ class AdminListingFlowIT {
     void publishedListingCanBeDelistedButNotDeleted() throws Exception {
         UUID id = create("STATE-" + UuidV7.next());
         changeStatus(id, "on_sale", 0, 200);
+        mvc.perform(get(BASE + "/" + id).header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.deletable").value(false))
+                .andExpect(jsonPath("$.data.references.deals").value(0));
         mvc.perform(get("/api/v1/products/" + id)).andExpect(status().isOk());
         changeStatus(id, "off_sale", 1, 200);
+        mvc.perform(get(BASE + "/" + id).header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.deletable").value(false));
         mvc.perform(get("/api/v1/products/" + id)).andExpect(status().isNotFound());
         changeStatus(id, "draft", 2, 400);
         mvc.perform(
@@ -531,8 +543,16 @@ class AdminListingFlowIT {
 
     /** Defensive legacy-data guards include expired/deleted quotes, policies and closed deals. */
     @ParameterizedTest
-    @ValueSource(strings = {"policy", "quote", "deal"})
-    void anyHistoricalReferenceVetoesDraftDeletion(String reference) throws Exception {
+    @CsvSource({
+        "policy,true",
+        "policy,false",
+        "quote,true",
+        "quote,false",
+        "deal,true",
+        "deal,false"
+    })
+    void anyHistoricalReferenceVetoesDraftDeletion(String reference, boolean deleted)
+            throws Exception {
         UUID id = create("REF-" + UuidV7.next());
         switch (reference) {
             case "policy" ->
@@ -540,34 +560,48 @@ class AdminListingFlowIT {
                             """
                             INSERT INTO biz_team_price_policy (product_id, amount, currency, valid_from,
                                 valid_until, create_by, update_by, version, deleted)
-                            VALUES (?, 9, 'sgd', now()-interval '1 hour', now(), ?, ?, 1, true)
+                             VALUES (?, 9, 'sgd', now()-interval '1 hour', now(), ?, ?, 1, ?)
                             """,
                             id,
                             admin,
-                            admin);
+                            admin,
+                            deleted);
             case "quote" ->
                     jdbc.update(
                             """
                             INSERT INTO biz_team_price_quote (product_id, owner_id, policy_version, amount,
                                 currency, issued_at, expires_at, create_by, update_by, deleted)
-                            VALUES (?, ?, 1, 9, 'sgd', now()-interval '1 hour', now(), ?, ?, true)
+                             VALUES (?, ?, 1, 9, 'sgd', now()-interval '1 hour', now(), ?, ?, ?)
                             """,
                             id,
                             buyer,
                             admin,
-                            admin);
+                            admin,
+                            deleted);
             case "deal" ->
                     jdbc.update(
                             """
                             INSERT INTO biz_group_deal (deal_no, product_id, leader_user_id, target_size,
                                 current_size, deal_price, currency, status, start_time, expire_time, deleted)
-                            VALUES (?, ?, ?, 2, 0, 9, 'sgd', 'expired', now()-interval '1 hour', now(), true)
+                             VALUES (?, ?, ?, 2, 0, 9, 'sgd', 'expired', now()-interval '1 hour', now(), ?)
                             """,
                             "REF-" + id,
                             id,
-                            admin);
+                            admin,
+                            deleted);
             default -> throw new IllegalArgumentException(reference);
         }
+        mvc.perform(get(BASE + "/" + id).header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.deletable").value(false))
+                .andExpect(
+                        jsonPath("$.data.references.deals").value("deal".equals(reference) ? 1 : 0))
+                .andExpect(
+                        jsonPath("$.data.references.quotes")
+                                .value("quote".equals(reference) ? 1 : 0))
+                .andExpect(
+                        jsonPath("$.data.references.policies")
+                                .value("policy".equals(reference) ? 1 : 0));
         mvc.perform(
                         delete(BASE + "/" + id)
                                 .param("expectedVersion", "0")
@@ -578,6 +612,77 @@ class AdminListingFlowIT {
                         jdbc.queryForObject(
                                 "SELECT deleted FROM biz_product WHERE id = ?", Boolean.class, id))
                 .isFalse();
+    }
+
+    /** Counts are product-scoped, include all revisions, and retain deleted/expired history. */
+    @Test
+    void editorCountsAllHistoryWithoutCountingAnotherListing() throws Exception {
+        UUID id = create("HISTORY-" + UuidV7.next());
+        UUID other = create("UNRELATED-" + UuidV7.next());
+        jdbc.update(
+                """
+                INSERT INTO biz_team_price_policy (product_id, amount, currency, valid_from, valid_until,
+                    create_by, update_by, version, deleted)
+                SELECT fixture.product_id, 9, 'sgd', now()-interval '1 hour', now(), ?, ?, n, n % 2 = 0
+                FROM (VALUES (?), (?)) AS fixture(product_id) CROSS JOIN generate_series(1, 3) AS revisions(n)
+                """,
+                admin, admin, id, other);
+        jdbc.update(
+                """
+                INSERT INTO biz_team_price_quote (product_id, owner_id, policy_version, amount, currency,
+                    issued_at, expires_at, create_by, update_by, deleted)
+                SELECT fixture.product_id, ?, 1, 9, 'sgd', now()-interval '1 hour', now(), ?, ?, n % 2 = 0
+                FROM (VALUES (?), (?)) AS fixture(product_id) CROSS JOIN generate_series(1, 61) AS quotes(n)
+                """,
+                buyer, admin, admin, id, other);
+        jdbc.update(
+                """
+                INSERT INTO biz_group_deal (deal_no, product_id, leader_user_id, target_size,
+                    current_size, deal_price, currency, status, start_time, expire_time, deleted)
+                SELECT 'HISTORY-' || fixture.product_id || '-' || n, fixture.product_id, ?, 2, 0, 9, 'sgd',
+                    'expired', now()-interval '1 hour', now(), n % 2 = 0
+                FROM (VALUES (?), (?)) AS fixture(product_id) CROSS JOIN generate_series(1, 26) AS deals(n)
+                """,
+                admin, id, other);
+        mvc.perform(get(BASE + "/" + id).header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.deletable").value(false))
+                .andExpect(jsonPath("$.data.references.deals").value(26))
+                .andExpect(jsonPath("$.data.references.quotes").value(61))
+                .andExpect(jsonPath("$.data.references.policies").value(3));
+        mvc.perform(
+                        delete(BASE + "/" + id)
+                                .param("expectedVersion", "0")
+                                .header(HEADER, adminToken))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CATALOG_409_004"));
+    }
+
+    /**
+     * Sale history vetoes a draft even without references; an exhausted version still rejects 412.
+     */
+    @ParameterizedTest
+    @CsvSource({"1,0,CATALOG_409_004,409", "0,2147483647,CATALOG_412_002,412"})
+    void editorEligibilityIncludesSalesAndVersionExhaustion(
+            int soldCount, int version, String errorCode, int httpStatus) throws Exception {
+        UUID id = create("GUARD-" + UuidV7.next());
+        jdbc.update(
+                "UPDATE biz_product SET sold_count = ?, version = ? WHERE id = ?",
+                soldCount,
+                version,
+                id);
+        mvc.perform(get(BASE + "/" + id).header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.deletable").value(false))
+                .andExpect(jsonPath("$.data.references.deals").value(0))
+                .andExpect(jsonPath("$.data.references.quotes").value(0))
+                .andExpect(jsonPath("$.data.references.policies").value(0));
+        mvc.perform(
+                        delete(BASE + "/" + id)
+                                .param("expectedVersion", Integer.toString(version))
+                                .header(HEADER, adminToken))
+                .andExpect(status().is(httpStatus))
+                .andExpect(jsonPath("$.code").value(errorCode));
     }
 
     /** Header identity alone cannot bypass an account disabled after login. */
@@ -769,6 +874,8 @@ class AdminListingFlowIT {
                                     .header(HEADER, adminToken))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.items.length()").value(size))
+                    .andExpect(jsonPath("$.data.items[0].references").doesNotExist())
+                    .andExpect(jsonPath("$.data.items[0].deletable").doesNotExist())
                     .andExpect(jsonPath("$.data.items[0].latestPolicy.version").value(1));
         } finally {
             captured = sqlStatements.finish();
