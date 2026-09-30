@@ -12,11 +12,11 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 
 | id | priority | task | purpose | files touched | verification command | depends-on |
 |---|---|---|---|---|---|---|
-| FB-01 | P1 | Demo readiness (steps 1–5 merged in #214 on 2026-09-27; step 6 open) | Mock mode walks the whole buyer journey for the demo and submission. | `FE/src/dev/devtools.tsx`, `FE/src/test/browser-msw.ts`, `FE/src/routes/_authenticated/account.tsx`, `FE/e2e/login.spec.ts`, `FE/README.md` | `cd frontend && pnpm check && pnpm build && pnpm e2e` | — |
+| FB-01 | P1 | Demo readiness (steps 1–5 merged in #214 on 2026-09-27; done 2026-09-29) | Mock mode walks the whole buyer journey for the demo and submission. | `FE/src/dev/devtools.tsx`, `FE/src/test/browser-msw.ts`, `FE/src/routes/_authenticated/account.tsx`, `FE/e2e/login.spec.ts`, `FE/README.md` | `cd frontend && pnpm check && pnpm build && pnpm e2e` | — |
 | FB-02 | P1 | Shared Playwright API stubs (done 2026-09-29) | One set of `page.route` stubs for the e2e specs, reusing the pattern in `FE/e2e/login.spec.ts`. The production build drops `?msw=1`, so e2e must stub with `page.route`. | `FE/e2e/fixtures/api.ts` (new), `FE/e2e/login.spec.ts` | `cd frontend && pnpm e2e` | — |
-| FB-03 | P1 | Buyer-journey e2e | Catalog → listing → quote → checkout → an intercepted Stripe 302 to `/payments/return` → receipt Waiting then Paid → My blocs. | `FE/e2e/buyer-journey.spec.ts` (new) | `cd frontend && pnpm e2e buyer-journey` | FB-02 |
-| FB-04 | P1 | JOIN refusal e2e | `GROUPBUY_409_004`, `GROUPBUY_409_002`, `GROUPBUY_409_003` and `GROUPBUY_404_001` each name the reason, and no checkout-session call is made. | `FE/e2e/join-refusal.spec.ts` (new) | `cd frontend && pnpm e2e join-refusal` | FB-02 |
-| FB-05 | P1 | Quote e2e | 15-minute expiry with `page.clock`, then re-issue; a 409 `CATALOG_409_001` shows no price. | `FE/e2e/quote.spec.ts` (new) | `cd frontend && pnpm e2e quote` | FB-02 |
+| FB-03 | P1 | Buyer-journey e2e (done 2026-09-29) | Catalog → listing → quote → checkout → an intercepted Stripe 302 to `/payments/return` → receipt Waiting then Paid → My blocs. | `FE/e2e/buyer-journey.spec.ts` (new) | `cd frontend && pnpm e2e buyer-journey` | FB-02 |
+| FB-04 | P1 | JOIN refusal e2e (done 2026-09-29) | `GROUPBUY_409_004`, `GROUPBUY_409_002`, `GROUPBUY_409_003` and `GROUPBUY_404_001` each name the reason, and no checkout-session call is made. | `FE/e2e/join-refusal.spec.ts` (new) | `cd frontend && pnpm e2e join-refusal` | FB-02 |
+| FB-05 | P1 | Quote e2e (done 2026-09-29) | 15-minute expiry with `page.clock`, then re-issue; a 409 `CATALOG_409_001` shows no price. | `FE/e2e/quote.spec.ts` (new) | `cd frontend && pnpm e2e quote` | FB-02 |
 | FB-06 | P2 | CI e2e comment and dev-safe specs | Fix the stale "Only the home test runs here" comment in the `e2e-preview` job; keep the new specs safe to run against dev. | `.github/workflows/ci-frontend.yml` | `docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:latest -color` | FB-03, FB-04, FB-05 |
 | FB-07 | P2 | SonarCloud coverage exclusions | Exclude `src/main.tsx`, `src/router.tsx` and `src/dev/**` from coverage in the `sonar-frontend` job args, or add a router test instead. | `.github/workflows/ci-frontend.yml` | `sonar-frontend` job green on the PR | — |
 | FB-08 | P2 | Unit gaps | Catalog listings 500 alert and recovery; an unknown route renders the 404 card through the route tree; `/account` loading skeletons (`AccountLoading`, `BlocsSkeleton`). | `FE/src/routes/index.test.tsx`, `FE/src/routes/account.test.tsx` | `cd frontend && pnpm vitest run src/routes` | — |
@@ -44,7 +44,7 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 - [x] Step 3 (2026-09-25): the duplicate name row is gone from the `/account` header (`48a6275`).
 - [x] Step 4 (2026-09-25): the mock START/JOIN checkout reaches a receipt that goes Waiting then Paid (`28e0a83`).
 - [x] Step 5 (2026-09-25): `frontend/README.md` gained a ten-step demo script (`384ad1d`); the current README condenses it to five journeys while retaining the mock-mode instructions.
-- [ ] Step 6: rerun the `@auth` e2e against dev (`E2E_TARGET=dev pnpm e2e --grep @auth`), because `48a6275` changed its assertions.
+- [x] Step 6 (2026-09-29): rerun the `@auth` e2e against dev (`E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e --grep @auth`), because `48a6275` changed its assertions: 2 passed from `ddba7d3`, on a storage state seeded from a normal-Chrome `blocbuy-token`.
 
 ### FB-02: Shared Playwright API stubs
 
@@ -53,17 +53,17 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 
 ### FB-03: Buyer-journey e2e
 
-- [ ] Step 1: catalog → listing → quote sheet → Continue to payment.
-- [ ] Step 2: intercept the Stripe 302 and land on `/payments/return`; the receipt shows Waiting then Paid; My blocs lists the bloc.
+- [x] Step 1 (2026-09-29): catalog → listing → quote sheet → Continue to payment.
+- [x] Step 2 (2026-09-29): intercept the Stripe 302 and land on `/payments/return`; the receipt shows Waiting then Paid; My blocs lists the bloc.
 
 ### FB-04: JOIN refusal e2e
 
-- [ ] Step 1: one case per code (`GROUPBUY_409_004`, `_002`, `_003`, `GROUPBUY_404_001`): the reason and "nothing was charged" show, and no checkout-session request is made.
+- [x] Step 1 (2026-09-29): one case per code (`GROUPBUY_409_004`, `_002`, `_003`, `GROUPBUY_404_001`): the reason and "nothing was charged" show, and no checkout-session request is made.
 
 ### FB-05: Quote e2e
 
-- [ ] Step 1: `page.clock` moves past 15 minutes; payment is disabled and "Get a new price" re-issues.
-- [ ] Step 2: a 409 `CATALOG_409_001` shows no price and no pay button.
+- [x] Step 1 (2026-09-29): `page.clock` moves past 15 minutes; payment is disabled and "Get a new price" re-issues.
+- [x] Step 2 (2026-09-29): a 409 `CATALOG_409_001` shows no price and no pay button.
 
 ### FB-06 to FB-18
 
