@@ -2,7 +2,6 @@ package com.blocbuy.bootstrap.config;
 
 import com.blocbuy.payment.gateway.CheckoutGateway;
 import com.blocbuy.payment.service.DisabledStripePaymentAppService;
-import com.blocbuy.payment.service.PaymentAppService;
 import com.blocbuy.payment.service.StripeCheckoutService;
 import com.blocbuy.payment.service.StripeFeatureSwitch;
 import com.blocbuy.payment.service.StripePaymentAppService;
@@ -26,7 +25,8 @@ public class StripePaymentFacadeConfiguration {
             prefix = "blocbuy.payment.stripe",
             name = "checkout-enabled",
             havingValue = "true")
-    PaymentAppService stripePaymentAppService(ObjectProvider<StripeCheckoutService> checkout) {
+    StripePaymentAppService stripePaymentAppService(
+            ObjectProvider<StripeCheckoutService> checkout) {
         return new StripePaymentAppService(checkout);
     }
 
@@ -36,7 +36,7 @@ public class StripePaymentFacadeConfiguration {
             name = "checkout-enabled",
             havingValue = "false",
             matchIfMissing = true)
-    PaymentAppService disabledStripePaymentAppService(CheckoutGateway gateway) {
+    DisabledStripePaymentAppService disabledStripePaymentAppService(CheckoutGateway gateway) {
         return new DisabledStripePaymentAppService(gateway);
     }
 }

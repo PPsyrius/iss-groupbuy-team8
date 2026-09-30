@@ -51,6 +51,7 @@ class StripeCheckoutFlagConfigurationTest {
                     assertThat(context.getBeansOfType(PaymentAppService.class)).hasSize(1);
                     assertThat(context.getBean(PaymentAppService.class))
                             .isInstanceOf(DisabledStripePaymentAppService.class);
+                    assertThat(context.getBeansOfType(StripePaymentAppService.class)).isEmpty();
                     assertThat(context.getBeansOfType(StripeCheckoutService.class)).isEmpty();
                     assertThat(context.getBean(StripeFeatureSwitch.class).enabled()).isFalse();
                 });
@@ -74,6 +75,12 @@ class StripeCheckoutFlagConfigurationTest {
                             assertThat(context.getBeansOfType(PaymentAppService.class)).hasSize(1);
                             assertThat(context.getBean(PaymentAppService.class))
                                     .isInstanceOf(StripePaymentAppService.class);
+                            assertThat(context.getBeansOfType(StripePaymentAppService.class))
+                                    .hasSize(1);
+                            assertThat(
+                                            context.getBeansOfType(
+                                                    DisabledStripePaymentAppService.class))
+                                    .isEmpty();
                             assertThat(context.getBeansOfType(StripeCheckoutService.class))
                                     .hasSize(1);
                             assertThat(context.getBean(StripeFeatureSwitch.class).enabled())
