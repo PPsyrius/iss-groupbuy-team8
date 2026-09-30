@@ -128,7 +128,8 @@ function issueQuote(state: ApiState, route: Route, call: Call): Promise<void> {
   const productId =
     typeof body === "object" && body !== null && "productId" in body ? body.productId : undefined;
   const found = state.listings.find((l) => l.id === productId);
-  if (found?.id === undefined || found.groupPrice === undefined) {
+  // `groupPrice` is nullable in the contract (#268): no team price set answers the same 409.
+  if (found?.id === undefined || found.groupPrice == null) {
     return fail(route, 409, "CATALOG_409_001", "team price is unavailable");
   }
   const now = Date.now();
