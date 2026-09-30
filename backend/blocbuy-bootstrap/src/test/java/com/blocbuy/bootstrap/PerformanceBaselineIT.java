@@ -39,6 +39,9 @@ import tools.jackson.databind.json.JsonMapper;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
             "spring.flyway.locations=classpath:db/migration",
+            "blocbuy.payment.stripe.checkout-enabled=true",
+            "blocbuy.payment.stripe.api-key=sk_test_fixture_placeholder",
+            "blocbuy.payment.stripe.webhook-secret=whsec_fixture_placeholder",
             "blocbuy.payment.checkout.success-url=https://shop.example/payments/return",
             "blocbuy.payment.checkout.cancel-url=https://shop.example/payments/return",
             "blocbuy.scheduling.enabled=true",
@@ -49,7 +52,7 @@ import tools.jackson.databind.json.JsonMapper;
             "blocbuy.scheduling.refund-worker.initial-delay=PT1H",
             "logging.level.com.blocbuy=INFO"
         })
-@ActiveProfiles({"local", "stripe-sprint2"})
+@ActiveProfiles("local")
 @EnabledIfSystemProperty(named = "perf.enabled", matches = "true")
 @DirtiesContext
 class PerformanceBaselineIT {

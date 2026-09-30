@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.blocbuy.bootstrap.config.StripePaymentFacadeConfiguration;
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.payment.gateway.CheckoutGateway;
 import com.blocbuy.payment.service.DisabledStripePaymentAppService;
@@ -13,8 +14,10 @@ import com.blocbuy.payment.service.PaymentAppService;
 import com.blocbuy.payment.service.StripeCheckoutService;
 import com.blocbuy.payment.service.StripePaymentAppService;
 import com.blocbuy.payment.web.StripeWebhookController;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.core.env.MapPropertySource;
 
 /** Exactly one webhook facade is selected at the unchanged public entry in each profile. */
 class StripeDevCompatibilityTest {
@@ -68,17 +71,19 @@ class StripeDevCompatibilityTest {
     private static AnnotationConfigApplicationContext context(
             boolean enabled, CheckoutGateway gateway, StripeCheckoutService checkout) {
         var context = new AnnotationConfigApplicationContext();
-        if (enabled) {
-            context.getEnvironment().setActiveProfiles("stripe-sprint2");
-        }
+        context.getEnvironment()
+                .getPropertySources()
+                .addFirst(
+                        new MapPropertySource(
+                                "checkout-test",
+                                Map.of(
+                                        "blocbuy.payment.stripe.checkout-enabled",
+                                        Boolean.toString(enabled))));
         context.registerBean(CheckoutGateway.class, () -> gateway);
         if (checkout != null) {
             context.registerBean(StripeCheckoutService.class, () -> checkout);
         }
-        context.register(
-                DisabledStripePaymentAppService.class,
-                StripePaymentAppService.class,
-                StripeWebhookController.class);
+        context.register(StripePaymentFacadeConfiguration.class, StripeWebhookController.class);
         context.refresh();
         return context;
     }

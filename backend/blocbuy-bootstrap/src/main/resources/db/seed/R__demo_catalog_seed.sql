@@ -1,6 +1,6 @@
 -- R__demo_catalog_seed.sql — demo catalog data for the local profile only (repeatable migration;
 -- location db/seed is added to spring.flyway.locations in application-local.yml, never in docker/
--- ec2). Idempotent: fixed ids + ON CONFLICT (id) DO NOTHING, safe to re-run on checksum change.
+-- ec2). Idempotent fixed ids and policies, safe to re-run on checksum change.
 -- 10 on_sale products across 3 categories; 6 open deals on 5 of them (product ...0001 carries two
 -- open deals to exercise the lowest-deal-price rule; products ...0008..0010 have no deal, so the
 -- listing shows groupPrice = null).
@@ -50,6 +50,36 @@ VALUES
      'https://cdn.example.com/demo/p10-cover.jpg', NULL,
      'beauty', 79.00, 'sgd', 60, 23, 'on_sale', 'dual')
 ON CONFLICT (id) DO NOTHING;
+
+-- Existing local demo rows receive terms only when at least one term is missing.
+UPDATE biz_product
+SET team_target_size = COALESCE(team_target_size, 3),
+    team_lifetime_seconds = COALESCE(team_lifetime_seconds, 86400),
+    update_time = CURRENT_TIMESTAMP,
+    update_by = 'c0000000-0000-7000-8000-000000000001',
+    version = version + 1
+WHERE product_no LIKE 'DEMO-P-%'
+  AND status = 'on_sale'
+  AND (team_target_size IS NULL OR team_lifetime_seconds IS NULL);
+
+-- First policy revision for each local demo product. The quote window fits inside this interval.
+INSERT INTO biz_team_price_policy
+    (id, product_id, amount, currency, valid_from, valid_until, create_by, update_by, version)
+SELECT uuidv7(), product.id, prices.amount, product.currency,
+       '2026-01-01T00:00:00Z', '2030-01-01T00:00:00Z',
+       'c0000000-0000-7000-8000-000000000001',
+       'c0000000-0000-7000-8000-000000000001', 1
+FROM (VALUES
+    ('DEMO-P-0001', 89.00), ('DEMO-P-0002', 69.00),
+    ('DEMO-P-0003', 35.00), ('DEMO-P-0004', 49.00),
+    ('DEMO-P-0005', 119.00), ('DEMO-P-0006', 249.00),
+    ('DEMO-P-0007', 179.00), ('DEMO-P-0008', 29.00),
+    ('DEMO-P-0009', 19.00), ('DEMO-P-0010', 59.00)
+) AS prices(product_no, amount)
+JOIN biz_product product ON product.product_no = prices.product_no
+WHERE product.status = 'on_sale'
+  AND prices.amount < product.original_price
+ON CONFLICT (product_id, version) DO NOTHING;
 
 INSERT INTO biz_group_deal (id, deal_no, product_id, leader_user_id, deal_price, currency,
                             target_size, current_size, status, start_time, expire_time)
