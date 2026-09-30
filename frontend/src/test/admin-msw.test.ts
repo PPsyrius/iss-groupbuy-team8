@@ -347,6 +347,22 @@ describe("team price policy", () => {
     expect(await call("GET", path)).toMatchObject({ status: 200, data: { version: 1 } });
   });
 
+  it("keeps an armed conflict for a first rule, then accepts the retry", async () => {
+    const store = serveAdmin(createAdminStore(adminSeed()));
+    const live = await unruled(store);
+    const rule = { amount: "1.00", currency: "sgd", validFrom: future(0), validUntil: future(7) };
+    const path = `/products/${live.id}/team-price-policy`;
+    store.conflictOnNextWrite();
+    expect(await call("PUT", path, { ...rule, expectedVersion: 0 })).toMatchObject({
+      status: 412,
+      code: "CATALOG_412_001",
+    });
+    expect(await call("PUT", path, { ...rule, expectedVersion: 0 })).toMatchObject({
+      status: 200,
+      data: { version: 1 },
+    });
+  });
+
   it("refuses a rule on a listing that is not on sale with 409 CATALOG_409_001", async () => {
     serveAdmin();
     const draft = await firstOf("draft");

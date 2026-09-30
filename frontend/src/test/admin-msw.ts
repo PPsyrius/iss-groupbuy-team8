@@ -412,8 +412,11 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
         }>(request);
         if (row.status !== "on_sale") return fail(E.policyUnavailable);
         const current = store.policyOf(id);
-        if (store.takeConflict() && current) current.version += 1;
-        if (body.expectedVersion !== (current?.version ?? 0)) return fail(E.policyVersionConflict);
+        // An armed conflict always refuses, even for a first rule (absent policy = version 0).
+        const conflicted = store.takeConflict();
+        if (conflicted && current) current.version += 1;
+        if (conflicted || body.expectedVersion !== (current?.version ?? 0))
+          return fail(E.policyVersionConflict);
         const amount = typeof body.amount === "string" ? toCents(body.amount) : null;
         const price = toCents(row.listing.originalPrice) ?? 0n;
         const from = Date.parse(body.validFrom ?? "");
