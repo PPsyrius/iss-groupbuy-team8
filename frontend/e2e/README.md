@@ -2,9 +2,13 @@
 
 `pnpm e2e` runs against `vite preview` of `dist/` (rebuilt when missing; see `playwright.config.ts`). `E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e` runs against the dev distribution. The current specs cover smoke and login journeys (ADR 0011).
 
+## Shared API stubs (`fixtures/api.ts`)
+
+The production build drops `?msw=1`, so a spec that needs data imports `test` and `expect` from `./fixtures/api` and asks for the `api` fixture. It answers every `/api/v1` call from a per-test `api.state` (signed-in `me`, payments switch, listings, intents, checkout sessions, receipt reads), records each call for `api.calls()`, and takes per-test handlers through `api.override()`. Unserved paths answer 501 `E2E_501_UNSTUBBED`. Tests that do not ask for `api` reach the real backend, which keeps the `@auth` half honest on dev.
+
 ## Login journey (`login.spec.ts`)
 
-The anonymous half uses `page.route` to stub `me` and the listing, so it runs against `vite preview`. It checks the `/account` guard, intercepts Google navigation without following it and opens the sign-in sheet from a listing.
+The anonymous half stubs `me` and the listing through the shared `api` fixture, so it runs against `vite preview`. It checks the `/account` guard, intercepts Google navigation without following it and opens the sign-in sheet from a listing.
 
 The `@auth` half needs a storage state with a real session cookie. Seed it once by hand:
 
