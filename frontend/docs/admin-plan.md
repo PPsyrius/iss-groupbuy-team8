@@ -193,10 +193,10 @@ export async function requireAdmin(qc: QueryClient) {
 
 ### A1-04: Listings table
 
-- [ ] Step 1: `listings-search.ts` (valibot): `tab` picklist `all | draft | on-sale | off-sale` (default `all`, stripped from the URL), `page` ≥1 default 1, `size` 1..100 default 20. `tabToStatus()` maps to contract codes in one place.
-- [ ] Step 2: failing tests: 9 column headers (PRODUCT NO., TITLE, CATEGORY, PRICE, STOCK, SOLD, STATUS, VER, menu), right-aligned tabular numbers, "On sale" chip success-soft and others neutral, "v4" cells; tab counts hidden while loading; Draft empty shows "No drafts" + the lifecycle copy + a secondary "New listing", with the header button switching to `outline`; `?page=99` redirects to the last page (buyer note 40); the pager reads "Showing 1–20 of 62 · Page 1 of 4".
-- [ ] Step 3: HeroUI `Table` (no react-table; §12 note 4), `Tabs` as router links, `Skeleton` × 8 rows in the column grid; title cell links to the editor; error is `Alert status="danger"` "We couldn’t load the listings" + "Try again". No sort indicators, no search.
-- [ ] Step 4: `use-status-counts.ts` runs `useQueries` over `size=1` for all, draft, on_sale and off_sale, reading `total` (shared with the probe and the dashboard).
+- [x] Step 1: `listings-search.ts` (valibot): `tab` picklist `all | draft | on-sale | off-sale` (default `all`, stripped from the URL), `page` ≥1 default 1, `size` 1..100 default 20. `tabToStatus()` maps to contract codes in one place. (2026-09-29)
+- [x] Step 2: failing tests: 9 column headers (PRODUCT NO., TITLE, CATEGORY, PRICE, STOCK, SOLD, STATUS, VER, menu), right-aligned tabular numbers, "On sale" chip success-soft and others neutral, "v4" cells; tab counts hidden while loading; Draft empty shows "No drafts" + the lifecycle copy + a secondary "New listing", with the header button switching to `outline`; `?page=99` redirects to the last page (buyer note 40); the pager reads "Showing 1–20 of 62 · Page 1 of 4". (2026-09-29)
+- [x] Step 3: HeroUI `Table` (no react-table; §12 note 4), `Tabs` as router links, `Skeleton` × 8 rows in the column grid; title cell links to the editor; error is `Alert status="danger"` "We couldn’t load the listings" + "Try again". No sort indicators, no search. (2026-09-29)
+- [x] Step 4: `use-status-counts.ts` runs `useQueries` over `size=1` for all, draft, on_sale and off_sale, reading `total` (shared with the probe and the dashboard). (2026-09-29)
 
 ### A1-05: Listing form and new draft
 
