@@ -16,13 +16,13 @@ export function ImageUrlsField({
   onChange,
   onAdd,
   onRemove,
-}: {
+}: Readonly<{
   values: readonly string[];
   errorAt: (index: number) => string | undefined;
   onChange: (index: number, value: string) => void;
   onAdd: () => void;
   onRemove: (index: number) => void;
-}) {
+}>) {
   return (
     <fieldset className="flex flex-col gap-2">
       <legend className="mb-1 text-sm font-medium">

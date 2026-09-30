@@ -10,10 +10,10 @@ const noErrors: Record<number, string> = {};
 function Harness({
   initial,
   errors = noErrors,
-}: {
+}: Readonly<{
   initial: string[];
   errors?: Record<number, string>;
-}) {
+}>) {
   const [values, setValues] = useState(initial);
   return (
     <ImageUrlsField

@@ -68,12 +68,12 @@ export function ListingForm({
   mode,
   defaultValues,
   onSubmit,
-}: {
+}: Readonly<{
   id: string;
   mode: "create" | "edit";
   defaultValues: ListingFormValues;
   onSubmit: (values: ListingFormValues) => Promise<SubmitProblem | undefined>;
-}) {
+}>) {
   const loadedCategory =
     defaultValues.category !== "" &&
     !fixedCategories.some((c) => c.value === defaultValues.category)

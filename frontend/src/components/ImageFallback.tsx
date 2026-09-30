@@ -5,10 +5,10 @@
 export function ImageFallback({
   src,
   className = "",
-}: {
+}: Readonly<{
   src?: string | null | undefined;
   className?: string;
-}) {
+}>) {
   return (
     <div
       aria-hidden="true"
