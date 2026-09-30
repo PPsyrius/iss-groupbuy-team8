@@ -12,7 +12,7 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 
 | id | priority | task | purpose | files touched | verification command | depends-on |
 |---|---|---|---|---|---|---|
-| FB-01 | P1 | Demo readiness (steps 1–5 merged in #214 on 2026-09-27; step 6 open) | Mock mode walks the whole buyer journey for the demo and submission. | `FE/src/dev/devtools.tsx`, `FE/src/test/browser-msw.ts`, `FE/src/routes/_authenticated/account.tsx`, `FE/e2e/login.spec.ts`, `FE/README.md` | `cd frontend && pnpm check && pnpm build && pnpm e2e` | — |
+| FB-01 | P1 | Demo readiness (steps 1–5 merged in #214 on 2026-09-27; done 2026-09-29) | Mock mode walks the whole buyer journey for the demo and submission. | `FE/src/dev/devtools.tsx`, `FE/src/test/browser-msw.ts`, `FE/src/routes/_authenticated/account.tsx`, `FE/e2e/login.spec.ts`, `FE/README.md` | `cd frontend && pnpm check && pnpm build && pnpm e2e` | — |
 | FB-02 | P1 | Shared Playwright API stubs (done 2026-09-29) | One set of `page.route` stubs for the e2e specs, reusing the pattern in `FE/e2e/login.spec.ts`. The production build drops `?msw=1`, so e2e must stub with `page.route`. | `FE/e2e/fixtures/api.ts` (new), `FE/e2e/login.spec.ts` | `cd frontend && pnpm e2e` | — |
 | FB-03 | P1 | Buyer-journey e2e (done 2026-09-29) | Catalog → listing → quote → checkout → an intercepted Stripe 302 to `/payments/return` → receipt Waiting then Paid → My blocs. | `FE/e2e/buyer-journey.spec.ts` (new) | `cd frontend && pnpm e2e buyer-journey` | FB-02 |
 | FB-04 | P1 | JOIN refusal e2e (done 2026-09-29) | `GROUPBUY_409_004`, `GROUPBUY_409_002`, `GROUPBUY_409_003` and `GROUPBUY_404_001` each name the reason, and no checkout-session call is made. | `FE/e2e/join-refusal.spec.ts` (new) | `cd frontend && pnpm e2e join-refusal` | FB-02 |
@@ -44,7 +44,7 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 - [x] Step 3 (2026-09-25): the duplicate name row is gone from the `/account` header (`48a6275`).
 - [x] Step 4 (2026-09-25): the mock START/JOIN checkout reaches a receipt that goes Waiting then Paid (`28e0a83`).
 - [x] Step 5 (2026-09-25): `frontend/README.md` gained a ten-step demo script (`384ad1d`); the current README condenses it to five journeys while retaining the mock-mode instructions.
-- [ ] Step 6: rerun the `@auth` e2e against dev (`E2E_TARGET=dev pnpm e2e --grep @auth`), because `48a6275` changed its assertions.
+- [x] Step 6 (2026-09-29): rerun the `@auth` e2e against dev (`E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e --grep @auth`), because `48a6275` changed its assertions: 2 passed from `ddba7d3`, on a storage state seeded from a normal-Chrome `blocbuy-token`.
 
 ### FB-02: Shared Playwright API stubs
 
