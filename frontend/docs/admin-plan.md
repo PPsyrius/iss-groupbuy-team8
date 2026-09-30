@@ -166,10 +166,10 @@ Each task ends with `pnpm check` green, a screenshot or Playwright trace on the 
 
 ### A1-02: Admin MSW
 
-- [ ] Step 1: `admin-msw.ts` exports `createAdminStore(seed)` and `adminHandlers(store, {role: 'admin' | 'buyer'})`. It mirrors the backend rules: version check → 412 `CATALOG_412_002`; publish needs positive stock → 409 `CATALOG_409_002`; frozen-field change after publish → 409; duplicate `productNo` → 409 `CATALOG_409_003`; delete of a non-draft → 409; policy absent → 409 `CATALOG_409_001`; policy on a non-on-sale listing → 409; `amount` not below the price → 400 `CATALOG_400_001`; buyer role → 403 `COMMON_403_*` on every admin path.
-- [ ] Step 2: seed from the 4a.2 rows (BB-100481 … BB-100472, versions 4, 7, 2, 1, 9, 3, 5, 0) with the artboard copy; 62 total, generated up to that count.
-- [ ] Step 3: `browser-msw.ts` mounts it for `?msw=1&me=1&admin=1` (`admin=0` → 403); `&conflict=1` bumps the server version on the next write so 4b.4 can be walked.
-- [ ] Step 4: `render-route.tsx` gains `serveAdmin()` and `serveNonAdmin()`.
+- [x] Step 1: `admin-msw.ts` exports `createAdminStore(seed)` and `adminHandlers(store, {role: 'admin' | 'buyer'})`. It mirrors the backend rules: version check → 412 `CATALOG_412_002`; publish needs positive stock → 409 `CATALOG_409_002`; frozen-field change after publish → 409; duplicate `productNo` → 409 `CATALOG_409_003`; delete of a non-draft → 409; policy absent → 409 `CATALOG_409_001`; policy on a non-on-sale listing → 409; `amount` not below the price → 400 `CATALOG_400_001`; buyer role → 403 `COMMON_403_*` on every admin path. (2026-09-29)
+- [x] Step 2: seed from the 4a.2 rows (BB-100481 … BB-100472, versions 4, 7, 2, 1, 9, 3, 5, 0) with the artboard copy; 62 total, generated up to that count. (2026-09-29)
+- [x] Step 3: `browser-msw.ts` mounts it for `?msw=1&me=1&admin=1` (`admin=0` → 403); `&conflict=1` bumps the server version on the next write so 4b.4 can be walked. (2026-09-29)
+- [x] Step 4: `render-route.tsx` gains `serveAdmin()` and `serveNonAdmin()`. (2026-09-29)
 
 ### A1-03: Route tree, guard, shell
 

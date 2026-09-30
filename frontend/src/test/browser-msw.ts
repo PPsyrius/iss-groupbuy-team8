@@ -12,6 +12,7 @@ import type {
   Receipt,
 } from "@/api/generated/types.gen";
 import { readParkedInvite } from "@/features/share/invite-ref";
+import { adminHandlers, createAdminStore } from "@/test/admin-msw";
 import { keywordTerms, matchesKeyword } from "@/test/keyword-match";
 
 // Offline UI work: `?msw=1` on the URL makes main.tsx start this worker before rendering, so the
@@ -506,7 +507,17 @@ export async function startBrowserMsw() {
   // refetch (root loader, callback) must not flip the sample session back to anonymous
   // (CodeRabbit r4050400123).
   const signedIn = new URLSearchParams(window.location.search).get("me") === "1";
+  // The admin console (admin plan A1-02): with `me=1`, `admin=1` signs in as an admin over a
+  // stateful store and anything else is a buyer (403 on every admin path); `conflict=1` makes the
+  // next admin write find the server a version ahead (4b.4).
+  const adminParams = new URLSearchParams(window.location.search);
+  const adminStore = createAdminStore();
+  if (adminParams.get("conflict") === "1") adminStore.conflictOnNextWrite();
+  const admin = signedIn
+    ? adminHandlers(adminStore, { role: adminParams.get("admin") === "1" ? "admin" : "buyer" })
+    : [];
   const worker = setupWorker(
+    ...admin,
     ...createMswHandlers().all({
       pick: {
         // `?msw=1` browses anonymously (401, the interceptor's normal path); `?msw=1&me=1` is
