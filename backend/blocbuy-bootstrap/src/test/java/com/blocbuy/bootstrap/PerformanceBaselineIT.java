@@ -177,6 +177,23 @@ class PerformanceBaselineIT {
                                     expiries,
                                     "expiredMetric",
                                     expired,
+                                    "resolutionTargetMs",
+                                    60_000,
+                                    "resolutionTargetMet",
+                                    expiries.size() == EXPIRY_TEAMS
+                                            && expiries.stream()
+                                                    .allMatch(
+                                                            row ->
+                                                                    "expired"
+                                                                                    .equals(
+                                                                                            row.get(
+                                                                                                    "status"))
+                                                                            && ((Number)
+                                                                                                    row
+                                                                                                            .get(
+                                                                                                                    "observed_lag_ms"))
+                                                                                            .doubleValue()
+                                                                                    <= 60_000),
                                     "failedMetric",
                                     meters.counter("blocbuy.team.expiry.teams", "result", "failed")
                                             .count(),
@@ -200,7 +217,7 @@ class PerformanceBaselineIT {
             assertThat(workload.exitValue()).as("workload errors; see target/perf").isZero();
             assertThat(expiries).hasSize(EXPIRY_TEAMS);
             assertThat(expiries)
-                    .allSatisfy(row -> assertThat(row.get("status")).isEqualTo("expired"));
+                    .allSatisfy(row -> assertThat(row).containsEntry("status", "expired"));
             assertThat(expired).isEqualTo(EXPIRY_TEAMS);
             assertThat(
                             jdbc.queryForObject(

@@ -34,7 +34,7 @@ The bound timer used interval 60 s, initial delay 30 s, batch size 100 and lease
 
 ## Reproduction record
 
-- Tested source: `10da173bbcda84e7f76c05d20cc27f3a59329a01`, based on dev `a1e7de9cb78e2a98b1bc623809719d03b3909444`; clean tracked source throughout the measurement. Later commits only record evidence and documentation.
+- Tested source: `10da173bbcda84e7f76c05d20cc27f3a59329a01`, based on dev `a1e7de9cb78e2a98b1bc623809719d03b3909444`; clean tracked source throughout the measurement. These measurements remain tied to that source. The later merge of dev `6234d11` passed ordinary full verification; it was not remeasured.
 - Load window: `2026-09-30T04:55:12.121Z`–`2026-09-30T04:58:43.106Z` (12:55:12–12:58:43 UTC+08). Maven completed at 12:58:52 UTC+08 with `BUILD SUCCESS`.
 - Placement: Spring Boot and Node on the same Windows host; PostgreSQL and Redis in disposable Docker Linux containers, accessed through mapped localhost ports. Production schema migrations V1–V20; profiles `local,stripe-sprint2`. No Compose deployment, CloudFront, ALB, EC2, TLS, Google login flow or Stripe provider calls.
 - Host: Windows 11 Home Chinese, version `10.0.26200`, build 26200; AMD Ryzen 9 7945HX, 16 cores / 32 logical processors; RAM 68,384,485,376 bytes. Docker Engine 29.7.2 reported 32 CPUs and 33,487,212,544 bytes memory; neither database container had a per-container CPU or memory limit.

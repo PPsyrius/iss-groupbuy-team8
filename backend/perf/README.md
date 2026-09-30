@@ -41,6 +41,8 @@ The fixture polls all 30 teams in one batched read per second during load, recor
 
 Targets: p95 < 2,000 ms per buyer action, zero business errors in the fixture, and all seeded teams resolved within 60 seconds of their deadline. A latency miss is a result to report, not a reason to delete samples or silently tune the system; HTTP/business errors fail the workload even if latency is low. Inspect the raw output when the fixture fails.
 
+`expiry.json` explicitly reports `resolutionTargetMs: 60000` and `resolutionTargetMet`, requiring all 30 teams to be expired with observed lag at most that bound. Performance target misses remain reportable measurements; a successful Maven exit proves workload correctness/completion, not that every latency target passed. Check both scenario `p95TargetMet` values and the expiry outcome. The archived run predates the explicit expiry outcome fields; its 30 timestamps and 58,175.597 ms maximum establish the recorded pass without altering the raw file.
+
 Commit the measured summary, exact tested SHA, JVM/Node/PostgreSQL/Redis versions, CPU/memory allocation, database sizes and limitations in `docs/perf/sprint3-baseline.md`; update NFR-15 and the sprint day log in the same PR. The Sprint 2 issue's historical filename `docs/perf/sprint2-baseline.md` is retained as a pointer to the Sprint 3 carry-over evidence. A local baseline cannot substantiate deployed dev or production performance.
 
 The fast `node --test perf/workload.test.mjs` checks the workload against a disposable HTTP server: concurrent VUs, all paths, CSRF/body/session headers, failed authentication, empty catalog and wrong-owner orders. It is a tool regression check, not the application performance baseline.
