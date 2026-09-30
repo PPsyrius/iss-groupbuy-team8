@@ -216,7 +216,7 @@ export async function requireAdmin(qc: QueryClient) {
 
 ### A1-07: Lifecycle actions
 
-- [x] Step 1: `lifecycle.ts` (pure): `actionsFor(status, {dirty, stock})` → `publish` (draft, enabled only when not dirty and stock > 0), `takeOffSale` (on sale), `putBackOnSale` (off sale), `delete` (draft) or `deleteBlocked` (other). Table tests. (2026-09-29)
+- [x] Step 1: `lifecycle.ts` (pure): `actionsFor(status, {dirty, stock, price})` → `publish` (draft, enabled only when not dirty, stock > 0 and price > 0), `takeOffSale` (on sale), `putBackOnSale` (off sale), `delete` (draft) or `deleteBlocked` (other). Table tests. (2026-09-29)
 - [x] Step 2: Publish `AlertDialog size="sm"`: "Publish this listing?" / "It becomes visible on the storefront immediately and buyers can start blocs on it." / box "These three fields freeze for good" listing Solo price, Currency and Stock with **current saved values** / "Title, subtitle, description, images and category stay editable. Price, currency and stock do not — and there is no route back to draft." / Cancel, "Publish listing". (2026-09-29)
 - [x] Step 3: Take off sale, Put back on sale and Delete dialogs use the §11 D2 proposed copy. On delete success: toast "Draft deleted", then navigate to `/admin/listings?tab=draft`. (2026-09-29)
 - [x] Step 4: the delete-blocked text replaces the button (no greyed button): "Not available. This listing has been published; take it off sale instead." A 409 `CATALOG_409_004` on a draft reads "Not available. This draft already has price or bloc history." (2026-09-29)
