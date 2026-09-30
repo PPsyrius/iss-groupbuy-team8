@@ -10,6 +10,7 @@ import com.blocbuy.common.model.PageResult;
 import com.blocbuy.common.web.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -130,28 +131,28 @@ public class ProductController {
     public record ProductSummaryResponse(
             UUID id,
             String title,
-            String subtitle,
-            String coverImage,
-            String category,
+            @Schema(nullable = true) String subtitle,
+            @Schema(nullable = true) String coverImage,
+            @Schema(nullable = true) String category,
             BigDecimal individualPrice,
-            BigDecimal groupPrice,
+            @Schema(nullable = true) BigDecimal groupPrice,
             String currency) {}
 
     /** Full listing for the detail page; {@code deal} null when no open deal. */
     public record ProductDetailResponse(
             UUID id,
             String title,
-            String subtitle,
-            String description,
-            String coverImage,
+            @Schema(nullable = true) String subtitle,
+            @Schema(nullable = true) String description,
+            @Schema(nullable = true) String coverImage,
             List<String> images,
-            String category,
+            @Schema(nullable = true) String category,
             BigDecimal individualPrice,
-            BigDecimal groupPrice,
+            @Schema(nullable = true) BigDecimal groupPrice,
             String currency,
             int stock,
             int soldCount,
-            ActiveDealResponse deal) {
+            @Schema(nullable = true) ActiveDealResponse deal) {
 
         /** Defensive copy: response records never alias a caller's mutable list. */
         public ProductDetailResponse {

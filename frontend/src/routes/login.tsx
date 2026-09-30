@@ -116,6 +116,8 @@ function ErrorBody({ returnTo, backLabel }: { returnTo: string; backLabel: strin
   const fromListing = returnTo.startsWith("/products/");
   return (
     <>
+      {/* The artboard leads with the alert, not a title; the page still needs its one h1. */}
+      <h1 className="sr-only">Sign in to BlocBuy</h1>
       <Alert status="danger">
         <Alert.Indicator />
         <Alert.Content>

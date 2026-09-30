@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -184,7 +185,11 @@ public class AuthController {
         CurrentUser user =
                 userAppService.currentUser(UUID.fromString(StpUtil.getLoginIdAsString()));
         return Result.ok(
-                new MeResponse(user.userId().toString(), user.nickname(), user.avatarUrl()));
+                new MeResponse(
+                        user.userId().toString(),
+                        user.nickname(),
+                        user.avatarUrl(),
+                        StpUtil.getRoleList()));
     }
 
     /** Logout: invalidates the current token. */
@@ -197,5 +202,9 @@ public class AuthController {
     }
 
     /** Session profile view; never contains tokens or credentials. */
-    public record MeResponse(String userId, String nickname, String avatarUrl) {}
+    public record MeResponse(
+            String userId,
+            @Schema(nullable = true) String nickname,
+            @Schema(nullable = true) String avatarUrl,
+            List<String> roles) {}
 }

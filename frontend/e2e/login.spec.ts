@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 
-import { expect, test } from "@playwright/test";
+import { expect, listing, test } from "./fixtures/api";
 
 // The login journey (plan T2-06, ADR 0011). Two halves:
 // - anonymous: runs on every target, including `vite preview` in CI (no backend behind /api);
@@ -26,35 +26,12 @@ function expiresCookie(setCookie: string): boolean {
   const expires = /;\s*expires=([^;]+)/iu.exec(setCookie)?.[1];
   return expires !== undefined && Date.parse(expires) < Date.now();
 }
-// `OK_CODE` in `src/api/envelope.ts`; the e2e folder does not import app modules.
-const OK = "COMMON_200_000";
-
-// One listing with an open bloc, served by `page.route` so the gated-sheet journey runs on every
-// target, `vite preview` included, instead of skipping when no backend answers /api
-// (CodeRabbit r4046597269). The gate is frontend behaviour; the backend only has to say 401.
-const LISTING_ID = "a0000000-0000-7000-8000-0000000e2e01";
-const summary = {
-  id: LISTING_ID,
-  title: "Thai jasmine rice 10 kg",
-  subtitle: "New crop, vacuum packed",
-  category: "home",
-  individualPrice: 89,
-  groupPrice: 71,
-  currency: "sgd",
-};
-const detail = {
-  ...summary,
-  description: "Fragrant long grain, 10 kg sack.",
-  images: [],
-  stock: 40,
-  soldCount: 12,
-  deal: {
-    dealId: "deal-e2e-1",
-    currentSize: 3,
-    targetSize: 5,
-    expireTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-  },
-};
+// One listing with an open bloc, served by the shared `api` stubs (`fixtures/api.ts`) so the
+// gated-sheet journey runs on every target, `vite preview` included, instead of skipping when no
+// backend answers /api (CodeRabbit r4046597269). The gate is frontend behaviour; the backend only
+// has to say 401, which is the stubs' default `me`.
+const LISTING = listing();
+const LISTING_ID = LISTING.id ?? "";
 
 test.describe("anonymous visitor", () => {
   test("/account sends an anonymous visitor to /login with the path they wanted", async ({
@@ -83,18 +60,8 @@ test.describe("anonymous visitor", () => {
     expect(await page.evaluate(() => sessionStorage.getItem("blocbuy.returnTo"))).toBe("/account");
   });
 
-  test("Start a bloc on a listing opens the sign-in sheet", async ({ page }) => {
-    await page.route(/\/api\/v1\/auth\/me(\?|$)/, (route) =>
-      route.fulfill({ status: 401, json: { code: "AUTH_401", message: "unauthenticated" } }),
-    );
-    await page.route(/\/api\/v1\/products(\?|$)/, (route) =>
-      route.fulfill({
-        json: { code: OK, message: "ok", data: { items: [summary], total: 1, page: 1, size: 20 } },
-      }),
-    );
-    await page.route(/\/api\/v1\/products\/[^/?]+(\?|$)/, (route) =>
-      route.fulfill({ json: { code: OK, message: "ok", data: detail } }),
-    );
+  test("Start a bloc on a listing opens the sign-in sheet", async ({ page, api }) => {
+    api.state.listings.push(LISTING);
 
     // Client-side navigation from the catalog, so the dev target does not need A1 (#99).
     await page.goto("/");

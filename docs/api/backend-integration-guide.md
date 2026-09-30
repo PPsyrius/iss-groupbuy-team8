@@ -45,6 +45,7 @@ The contract currently exposes these values as strings.
 
 - `Receipt.amount` and order amounts are decimal strings such as `"12.00"`; catalog amounts are JSON numbers.
 - Optional order fields `productImage` and `cancelTime` are nullable in the OpenAPI contract.
+- A response field the backend can serialise as `null` is marked `@Schema(nullable = true)`, so the contract says `type: [T, "null"]` (object fields: `anyOf: [$ref, null]` via `NullableRefCustomizer`) and the generated type reads `T | null`; catalog `groupPrice`, `subtitle`, `description`, `coverImage`, `category`, `deal` and `MeResponse.nickname`/`avatarUrl` are nullable (#267).
 - Do not accumulate money with floating-point arithmetic. Currency is currently lowercase `"sgd"`.
 - Instants are ISO-8601 UTC strings; parse them at the display boundary.
 
