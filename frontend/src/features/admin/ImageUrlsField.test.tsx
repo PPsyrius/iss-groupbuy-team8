@@ -30,6 +30,11 @@ const url = "https://cdn.example.com/a.jpg";
 const oneBlank = [""];
 const twenty = Array<string>(20).fill(url);
 const mixed = [url, "http://cdn.example.com/b.jpg", ""];
+const threeUrls = [
+  "https://cdn.example.com/1.jpg",
+  "https://cdn.example.com/2.jpg",
+  "https://cdn.example.com/3.jpg",
+];
 const secondBad = ["", "ftp://x"];
 const secondBadError = { 1: "Use an https:// URL." };
 
@@ -44,6 +49,17 @@ describe("ImageUrlsField", () => {
     await user.click(screen.getByRole("button", { name: "Remove image URL 1" }));
     expect(screen.getAllByRole("textbox")).toHaveLength(1);
     expect(screen.getByRole("textbox", { name: "Image URL 1" })).toHaveValue("");
+  });
+
+  it("keeps each row's own input when a middle row is removed", async () => {
+    const user = userEvent.setup();
+    render(<Harness initial={threeUrls} />);
+    const third = screen.getByRole("textbox", { name: "Image URL 3" });
+    await user.click(screen.getByRole("button", { name: "Remove image URL 2" }));
+    expect(screen.getByRole("textbox", { name: "Image URL 1" })).toHaveValue(threeUrls[0]);
+    // The third row's input survives as the second row: rows are keyed by identity, not position.
+    expect(screen.getByRole("textbox", { name: "Image URL 2" })).toBe(third);
+    expect(third).toHaveValue(threeUrls[2]);
   });
 
   it("stops at 20 rows", () => {

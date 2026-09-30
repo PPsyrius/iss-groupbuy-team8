@@ -1,4 +1,5 @@
 import { Button, CloseButton, Description, FieldError, Input, TextField } from "@heroui/react";
+import { useState } from "react";
 
 import { ImageFallback } from "@/components/ImageFallback";
 
@@ -9,7 +10,9 @@ const MAX_ROWS = 20;
 // The gallery as a list of URL rows (artboard 4b.1 "Image URLs · up to 20"). There is no upload:
 // the contract and the design take URLs only (admin plan §12 note 12). Each row previews its image
 // on the striped fallback tile once the URL is an https one, so a mistyped or vanished host shows
-// as stripes rather than a broken image. The rows are controlled: the form owns the values.
+// as stripes rather than a broken image. The rows are controlled: the form owns the values, and this
+// field owns only a stable id per row, so removing a middle row keeps every other row's input.
+// The form remounts this field on reset (the editor is keyed by version), which re-seeds the ids.
 export function ImageUrlsField({
   values,
   errorAt,
@@ -23,15 +26,15 @@ export function ImageUrlsField({
   onAdd: () => void;
   onRemove: (index: number) => void;
 }>) {
+  const [ids, setIds] = useState(() => values.map(() => crypto.randomUUID()));
+  const rows = values.map((value, i) => ({ value, id: ids[i] }));
   return (
     <fieldset className="flex flex-col gap-2">
       <legend className="mb-1 text-sm font-medium">
         Image URLs <span className="text-muted font-normal">· up to {MAX_ROWS}</span>
       </legend>
-      {values.map((value, i) => (
-        // Rows have no identity beyond their position, as the contract's `images` array.
-        // oxlint-disable-next-line react/no-array-index-key
-        <div key={i} className="flex items-start gap-3">
+      {rows.map(({ value, id }, i) => (
+        <div key={id} className="flex items-start gap-3">
           <ImageFallback
             src={isHttpsUrl(value.trim()) ? value.trim() : null}
             className="size-11 shrink-0 overflow-hidden rounded-md"
@@ -46,14 +49,23 @@ export function ImageUrlsField({
             <Input placeholder="https://…" inputMode="url" />
             <FieldError>{errorAt(i)}</FieldError>
           </TextField>
-          <CloseButton aria-label={`Remove image URL ${i + 1}`} onPress={() => onRemove(i)} />
+          <CloseButton
+            aria-label={`Remove image URL ${i + 1}`}
+            onPress={() => {
+              setIds((prev) => prev.filter((_, j) => j !== i));
+              onRemove(i);
+            }}
+          />
         </div>
       ))}
       <Button
         variant="ghost"
         className="min-h-11 self-start px-3 text-sm"
         isDisabled={values.length >= MAX_ROWS}
-        onPress={onAdd}
+        onPress={() => {
+          setIds((prev) => [...prev, crypto.randomUUID()]);
+          onAdd();
+        }}
       >
         Add another URL
       </Button>
