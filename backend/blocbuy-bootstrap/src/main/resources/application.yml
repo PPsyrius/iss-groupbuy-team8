@@ -10,6 +10,9 @@ spring:
     enabled: true
     locations: classpath:db/migration
     default-schema: domain
+    postgresql:
+      # V23 uses concurrent index creation; a transactional advisory lock blocks that DDL.
+      transactional-lock: false
 
   datasource:
     hikari:
@@ -71,6 +74,11 @@ blocbuy:
       interval: PT1M
       initial-delay: PT30S
       # a crashed holder blocks other instances no longer than this
+      lease: PT2M
+      batch-size: 100
+    purchase-intent-expiry:
+      interval: PT1M
+      initial-delay: PT30S
       lease: PT2M
       batch-size: 100
     refund-worker:

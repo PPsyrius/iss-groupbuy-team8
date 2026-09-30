@@ -23,6 +23,7 @@ public class BizPurchaseIntentDO {
     private Instant businessDeadline;
     private UUID fulfilledPaymentId;
     private UUID sharerUserId;
+    private Instant expiredAt;
     private Instant createTime;
     private UUID createBy;
     private Instant updateTime;

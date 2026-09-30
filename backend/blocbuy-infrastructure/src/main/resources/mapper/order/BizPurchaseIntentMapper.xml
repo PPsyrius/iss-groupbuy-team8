@@ -26,7 +26,7 @@
         SET fulfilled_payment_id = #{paymentId,jdbcType=OTHER}, version = version + 1,
             update_time = clock_timestamp()
         WHERE id = #{id,jdbcType=OTHER} AND deleted = false AND version = #{expectedVersion}
-            AND fulfilled_payment_id IS NULL
+            AND fulfilled_payment_id IS NULL AND expired_at IS NULL
     </update>
 
     <resultMap id="bizPurchaseIntentMap" type="com.blocbuy.order.persistence.BizPurchaseIntentDO">
@@ -44,6 +44,7 @@
         <result column="business_deadline" property="businessDeadline"/>
         <result column="fulfilled_payment_id" property="fulfilledPaymentId" jdbcType="OTHER"/>
         <result column="sharer_user_id" property="sharerUserId" jdbcType="OTHER"/>
+        <result column="expired_at" property="expiredAt"/>
         <result column="create_time" property="createTime"/>
         <result column="create_by" property="createBy" jdbcType="OTHER"/>
         <result column="update_time" property="updateTime"/>
@@ -55,7 +56,7 @@
     <sql id="columns">
         id, user_id, operation, deal_id, product_id, product_title, product_image, amount,
         currency, target_size, quote_valid_until, business_deadline, fulfilled_payment_id,
-        sharer_user_id, create_time, create_by, update_time, update_by, deleted, version
+        sharer_user_id, expired_at, create_time, create_by, update_time, update_by, deleted, version
     </sql>
 
     <select id="selectById" resultMap="bizPurchaseIntentMap">
@@ -70,4 +71,46 @@
         FOR UPDATE
     </select>
 
+    <select id="tryLockForExpiry" resultMap="bizPurchaseIntentMap">
+        SELECT <include refid="columns"/> FROM biz_purchase_intent
+        WHERE id = #{id,jdbcType=OTHER} AND deleted = false
+        FOR UPDATE SKIP LOCKED
+    </select>
+
+    <select id="dueForExpiry" resultType="java.util.UUID" flushCache="true" useCache="false">
+        SELECT i.id FROM biz_purchase_intent i
+        WHERE i.deleted = false AND i.fulfilled_payment_id IS NULL AND i.expired_at IS NULL
+            AND i.quote_valid_until &lt;= #{now}
+            AND NOT EXISTS (SELECT 1 FROM sys_scheduled_item_retry r
+                WHERE r.job_key = 'purchase-intent-expiry' AND r.item_id = i.id
+                    AND r.deleted = false AND r.retry_after &gt; #{now})
+        ORDER BY i.quote_valid_until, i.id LIMIT #{limit}
+    </select>
+
+    <update id="markExpired">
+        UPDATE biz_purchase_intent
+        SET expired_at = #{now}, update_time = #{now}, version = version + 1
+        WHERE id = #{id,jdbcType=OTHER} AND deleted = false AND version = #{expectedVersion}
+            AND fulfilled_payment_id IS NULL AND expired_at IS NULL
+            AND quote_valid_until &lt;= #{now}
+    </update>
+
+    <!-- Recovery runs after the item transaction, so bound its own lock waits. -->
+    <insert id="excludePaidFromExpiry" timeout="3">
+        INSERT INTO sys_scheduled_item_retry (job_key, item_id, failure_count, retry_after)
+        VALUES ('purchase-intent-expiry', #{id,jdbcType=OTHER}, 0, 'infinity'::timestamptz)
+        ON CONFLICT (job_key, item_id) WHERE deleted = false
+        DO UPDATE SET retry_after = EXCLUDED.retry_after, update_time = clock_timestamp(),
+            version = sys_scheduled_item_retry.version + 1
+    </insert>
+
+    <insert id="deferExpiryRetry" timeout="3">
+        INSERT INTO sys_scheduled_item_retry (job_key, item_id, failure_count, retry_after)
+        VALUES ('purchase-intent-expiry', #{id,jdbcType=OTHER}, 1,
+            clock_timestamp() + make_interval(secs => #{retryDelaySeconds}))
+        ON CONFLICT (job_key, item_id) WHERE deleted = false
+        DO UPDATE SET failure_count = sys_scheduled_item_retry.failure_count + 1,
+            retry_after = EXCLUDED.retry_after, update_time = clock_timestamp(),
+            version = sys_scheduled_item_retry.version + 1
+    </insert>
 </mapper>
