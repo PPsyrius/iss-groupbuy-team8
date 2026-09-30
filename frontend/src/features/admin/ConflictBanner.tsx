@@ -10,12 +10,12 @@ export function ConflictBanner({
   serverVersion,
   onReload,
   isReloading = false,
-}: {
+}: Readonly<{
   loadedVersion: number;
   serverVersion?: number | undefined;
   onReload: () => void;
   isReloading?: boolean;
-}) {
+}>) {
   const server =
     serverVersion === undefined
       ? "the server has a newer version"
@@ -56,10 +56,10 @@ const counts = [
 export function ProblemsCard({
   fieldProblems,
   serverVersion,
-}: {
+}: Readonly<{
   fieldProblems: readonly { label: string; message: string }[];
   serverVersion?: number | undefined;
-}) {
+}>) {
   const total = fieldProblems.length + 1;
   const heading = `${counts[total] ?? total} problems to clear`;
   const conflict =
