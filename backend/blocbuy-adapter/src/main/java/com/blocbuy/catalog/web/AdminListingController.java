@@ -144,6 +144,25 @@ public class AdminListingController {
                         result.nextCursor()));
     }
 
+    /** Dashboard totals use the same authorization as the paged administrator read. */
+    @GetMapping("/counts")
+    @Operation(
+            summary = "Count managed listings and open group deals",
+            description =
+                    "One database snapshot. Listing totals count non-deleted rows by stored status, "
+                            + "matching the admin page filters. openDeals spans all products and counts "
+                            + "non-deleted deals with open status, currentSize below targetSize and "
+                            + "expiry strictly after database time.")
+    public Result<ListingCountsResponse> counts() {
+        var counts = listings.counts(administrator());
+        return Result.ok(
+                new ListingCountsResponse(
+                        counts.draft(), counts.onSale(), counts.offSale(), counts.openDeals()));
+    }
+
+    /** Stable dashboard protocol view; every total is zero when its population is empty. */
+    public record ListingCountsResponse(long draft, long onSale, long offSale, long openDeals) {}
+
     /** A full content replacement leaves server-owned lifecycle and counters untouched. */
     @PutMapping("/{productId}")
     @Operation(

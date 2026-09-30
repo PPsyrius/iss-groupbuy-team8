@@ -125,7 +125,17 @@ class AdminListingFlowIT {
 
     /** All management operations reject anonymous and non-admin clients. */
     @ParameterizedTest
-    @ValueSource(strings = {"create", "page", "get", "revise", "status", "teamTerms", "delete"})
+    @ValueSource(
+            strings = {
+                "create",
+                "page",
+                "counts",
+                "get",
+                "revise",
+                "status",
+                "teamTerms",
+                "delete"
+            })
     void everyRouteRequiresAdministrator(String operation) throws Exception {
         mvc.perform(request(operation)).andExpect(status().isUnauthorized());
         mvc.perform(request(operation).header(HEADER, buyerToken))
@@ -179,6 +189,8 @@ class AdminListingFlowIT {
         assertThat(roles.findPermissionCodesByUserId(admin))
                 .doesNotContain("catalog:product:write");
         mvc.perform(get(BASE).header(HEADER, adminToken)).andExpect(status().isForbidden());
+        mvc.perform(get(BASE + "/counts").header(HEADER, adminToken))
+                .andExpect(status().isForbidden());
     }
 
     /** Delegating the capability alone must not grant access to administrator-only listing APIs. */
@@ -204,6 +216,8 @@ class AdminListingFlowIT {
         assertThat(roles.findPermissionCodesByUserId(buyer)).contains("catalog:product:write");
         assertThat(roles.findRoleCodesByUserId(buyer)).doesNotContain("admin");
         mvc.perform(get(BASE).header(HEADER, buyerToken)).andExpect(status().isForbidden());
+        mvc.perform(get(BASE + "/counts").header(HEADER, buyerToken))
+                .andExpect(status().isForbidden());
     }
 
     /** Full CRUD round trip retains audit data and never exposes drafts to buyers. */
@@ -570,6 +584,100 @@ class AdminListingFlowIT {
     void disabledAdministratorIsRejected() throws Exception {
         jdbc.update("UPDATE sys_user SET status = 'disabled' WHERE id = ?", admin);
         mvc.perform(get(BASE).header(HEADER, adminToken)).andExpect(status().isForbidden());
+        mvc.perform(get(BASE + "/counts").header(HEADER, adminToken))
+                .andExpect(status().isForbidden());
+    }
+
+    /** Empty populations produce explicit numeric zeros, not missing aggregate fields. */
+    @Test
+    @Transactional
+    void emptyDashboardCountsAreZero() throws Exception {
+        jdbc.update("UPDATE biz_product SET deleted = true");
+        jdbc.update("UPDATE biz_group_deal SET deleted = true");
+        mvc.perform(get(BASE + "/counts").header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.draft").value(0))
+                .andExpect(jsonPath("$.data.onSale").value(0))
+                .andExpect(jsonPath("$.data.offSale").value(0))
+                .andExpect(jsonPath("$.data.openDeals").value(0));
+    }
+
+    /** Counts match each paged total and exclude deleted rows in every publication state. */
+    @Test
+    @Transactional
+    void dashboardStatusCountsMatchPagedTotals() throws Exception {
+        jdbc.update("UPDATE biz_product SET deleted = true");
+        jdbc.update(
+                """
+                INSERT INTO biz_product (product_no, title, original_price, currency, stock, status, deleted)
+                SELECT ? || '-' || fixture.n, 'Counted tea', 12, 'sgd', 5, fixture.status, fixture.deleted
+                FROM (VALUES (1, 'draft', false), (2, 'draft', false),
+                    (3, 'on_sale', false), (4, 'off_sale', false),
+                    (5, 'draft', true), (6, 'on_sale', true), (7, 'off_sale', true))
+                    AS fixture(n, status, deleted)
+                """,
+                "COUNTS-" + UuidV7.next());
+        var counts =
+                json.readTree(
+                                mvc.perform(get(BASE + "/counts").header(HEADER, adminToken))
+                                        .andExpect(status().isOk())
+                                        .andExpect(jsonPath("$.data.draft").value(2))
+                                        .andExpect(jsonPath("$.data.onSale").value(1))
+                                        .andExpect(jsonPath("$.data.offSale").value(1))
+                                        .andReturn()
+                                        .getResponse()
+                                        .getContentAsString())
+                        .path("data");
+        for (var entry :
+                Map.of("draft", "draft", "on_sale", "onSale", "off_sale", "offSale").entrySet()) {
+            var page =
+                    json.readTree(
+                                    mvc.perform(
+                                                    get(BASE)
+                                                            .param("status", entry.getKey())
+                                                            .param("size", "1")
+                                                            .header(HEADER, adminToken))
+                                            .andExpect(status().isOk())
+                                            .andReturn()
+                                            .getResponse()
+                                            .getContentAsString())
+                            .path("data");
+            assertThat(counts.path(entry.getValue()).asLong())
+                    .isEqualTo(page.path("total").asLong());
+        }
+    }
+
+    /**
+     * Count every eligible deal, not one per listing; reject stale open flags and closed history.
+     */
+    @Test
+    @Transactional
+    void dashboardOpenDealsExcludeFullExpiredClosedAndDeletedDeals() throws Exception {
+        jdbc.update("UPDATE biz_group_deal SET deleted = true");
+        UUID first = create("OPEN-" + UuidV7.next());
+        UUID second = create("OPEN-" + UuidV7.next());
+        jdbc.update(
+                """
+                INSERT INTO biz_group_deal (deal_no, product_id, leader_user_id, target_size,
+                    current_size, deal_price, currency, status, start_time, expire_time, deleted)
+                SELECT ? || '-' || fixture.n, CASE WHEN fixture.n = 3 THEN ? ELSE ? END,
+                    ?, 3, fixture.members, 9, 'sgd', fixture.status,
+                    CURRENT_TIMESTAMP - interval '1 hour',
+                    CURRENT_TIMESTAMP + fixture.seconds * interval '1 second', fixture.deleted
+                FROM (VALUES (1, 'open', 0, 3600, false), (2, 'open', 2, 3600, false),
+                    (3, 'open', 1, 3600, false), (4, 'open', 3, 3600, false),
+                    (5, 'open', 4, 3600, false), (6, 'open', 1, -1, false),
+                    (7, 'open', 1, 0, false), (8, 'expired', 1, 3600, false),
+                    (9, 'success', 3, 3600, false), (10, 'cancelled', 1, 3600, false),
+                    (11, 'open', 1, 3600, true)) AS fixture(n, status, members, seconds, deleted)
+                """,
+                "DEAL-COUNTS-" + UuidV7.next(),
+                second,
+                first,
+                admin);
+        mvc.perform(get(BASE + "/counts").header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.openDeals").value(3));
     }
 
     /** Bounded query parameters and server-owned fields are enforced before mutation. */
@@ -723,6 +831,8 @@ class AdminListingFlowIT {
                 Map.of(
                                 BASE,
                                 List.of("get", "post"),
+                                BASE + "/counts",
+                                List.of("get"),
                                 BASE + "/{productId}",
                                 List.of("get", "put", "delete"),
                                 BASE + "/{productId}/status",
@@ -877,6 +987,7 @@ class AdminListingFlowIT {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(createBody("SECURITY"));
             case "page" -> get(BASE);
+            case "counts" -> get(BASE + "/counts");
             case "get" -> get(item);
             case "revise" ->
                     put(item)

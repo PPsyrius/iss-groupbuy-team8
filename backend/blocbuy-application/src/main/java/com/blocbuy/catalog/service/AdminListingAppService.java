@@ -18,6 +18,12 @@ public interface AdminListingAppService {
     /** Paginated administrative read; null status includes all non-deleted states. */
     PageResult<Product> page(PageQuery page, ProductStatus status, UUID actorId);
 
+    /** Catalog-owned dashboard view composed through the public groupbuy query port. */
+    ListingCounts counts(UUID actorId);
+
+    /** Counts share one database snapshot; open deals span all products. */
+    record ListingCounts(long draft, long onSale, long offSale, long openDeals) {}
+
     /** Conditional content replacement; stale writes return 412 without mutation. */
     Product revise(UUID id, ListingDetails details, int expectedVersion, UUID actorId);
 

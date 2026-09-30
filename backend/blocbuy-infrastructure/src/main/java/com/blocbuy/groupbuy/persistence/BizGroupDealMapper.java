@@ -13,6 +13,9 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface BizGroupDealMapper {
 
+    /** Count deals still accepting members across all products. */
+    long countOpenDeals();
+
     /** Retention exception to active-only reads: include all historical references. */
     boolean existsProductReference(@Param("productId") UUID productId);
 
