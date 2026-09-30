@@ -1,13 +1,16 @@
 package com.blocbuy.catalog.persistence;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.catalog.pricing.TeamPricePolicy;
 import com.blocbuy.catalog.pricing.TeamPriceQuote;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +27,14 @@ class TeamPriceRepositoryImplTest {
 
     @Mock private TeamPriceMapper mapper;
     @InjectMocks private TeamPriceRepositoryImpl repository;
+
+    /** Empty batches never generate an invalid IN clause or access the database. */
+    @Test
+    void emptyPolicyBatchesSkipSql() {
+        assertThat(repository.findLatestPolicies(null)).isEmpty();
+        assertThat(repository.findLatestPolicies(List.of())).isEmpty();
+        verifyNoInteractions(mapper);
+    }
 
     @Test
     void appendPolicyRequiresSingleRowWrite() {

@@ -225,7 +225,7 @@ so JSON Schema substring matching does not weaken the documented request constra
 | --- | --- |
 | POST `/` | Create a draft with server UUIDv7, optional productNo (omitted/null generates a `BB-` number), version 0, soldCount 0 and existing `dual` pricing mode. |
 | GET `/` | Page all non-deleted listings; optional `status`; page >= 1, size 1–100; newest first with UUID tie-breaker. |
-| GET `/counts` | Read `{draft, onSale, offSale, openDeals}` totals in the Result envelope; same login, role, permission and active-account checks as the page. |
+| GET `/counts` | Read `{draft, onSale, offSale, openDeals, withActivePolicy}` totals in the Result envelope; same login, role, permission and active-account checks as the page. |
 | GET `/{id}` | Read draft/on-sale/off-sale listing including its version; deleted/absent returns 404. |
 | PUT `/{id}` | Replace `listing` content with required `expectedVersion`; do not accept productNo/status/counters/pricingMode. |
 | PUT `/{id}/status` | Required `status` (`on_sale` or `off_sale`) and `expectedVersion`. |
@@ -287,6 +287,14 @@ The catalog application owns the composed admin dashboard read model (`AdminList
 One catalog query uses PostgreSQL filtered counts for `draft`, `on_sale` and `off_sale` with `deleted = false`, matching the paged admin read's predicates. One groupbuy query counts every non-deleted deal whose stored status is `open`, `current_size < target_size` and `expire_time > CURRENT_TIMESTAMP`, across all products regardless of listing publication status. Multiple eligible deals on one listing each count; a stale open flag on a full or expired deal is insufficient. Empty populations return numeric zeros. No aggregate rows are loaded or queries executed per listing.
 
 The application read uses a read-only `REPEATABLE READ` transaction: account validation and both aggregate queries share a database snapshot, and expiry uses its transaction-time database clock. This is a point-in-time dashboard, not a reservation or a guarantee that separate later page requests see identical totals during concurrent writes. Existing pagination is unchanged. Exact global totals necessarily scan qualifying rows; no speculative index or cache is added without volume and latency evidence. `AdminListingFlowIT` verifies status/page agreement, empty results, full/overfull/expired/exact-expiry/closed/deleted exclusions, multiple deals per product and administrator authorization, including independently missing role or permission and disabled accounts.
+
+### Latest policy read decision — 2026-09-30 (#249 / BA-4)
+
+`AdminListingResponse.latestPolicy` contains `{amount, currency, validFrom, validUntil, version}` from the highest non-deleted policy revision, matching `getPolicy` even when the revision is expired or future-dated. An absent revision is explicit JSON null; OpenAPI expresses the object-or-null union and generated frontend types preserve it. The application returns a catalog-owned `ManagedListing` view, keeping policy history out of the Product aggregate. Create returns null; revise/status responses also return the current summary so their shared response shape remains accurate.
+
+Admin detail and page reads now use read-only REPEATABLE READ. Choose one batched latest-policy lookup over a joined product projection: it reuses the policy converter and latest-revision semantics while preserving existing pagination and aggregate persistence. A non-empty page makes three catalog statements (rows, total, policies), independent of its size; an empty page skips policy SQL. `SqlStatementCapture` counts actual MyBatis prepared statements in `AdminListingFlowIT`, comparing 1-row and 20-row pages and requiring one policy statement in the larger page. The batch is bounded by the existing 100-row page limit and uses the policy table's existing product/version index.
+
+Counts gain `withActivePolicy`: one aggregate statement selects the latest non-deleted revision for each non-deleted listing before applying `valid_from <= CURRENT_TIMESTAMP < valid_until`. Draft and off-sale listings can count; this measures configured valid rules, not checkout eligibility. Future or expired latest revisions suppress older valid ones; multiple revisions count a listing once, and deleted revisions/listings are excluded. This adds a third aggregate read to #248's snapshot transaction. The buyer policy endpoint is unchanged. PostgreSQL integration tests cover matching read values, explicit nulls, replacement rules, deleted history and exact start/end boundaries; query-count evidence is not a latency benchmark.
 
 ### Product number decision — 2026-09-30 (#247 / BA-2)
 
