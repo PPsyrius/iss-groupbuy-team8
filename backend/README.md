@@ -24,6 +24,8 @@ Domains (v1): `identity`, `groupbuy`, `order`, `catalog`, `notification`, `payme
 
 ## Common commands
 
+For the local Docker stack, put `DB_USERNAME`, `DB_PASSWORD`, and `REDIS_PASSWORD` in `backend/.env` (gitignored), then run `docker compose up -d` from this directory. Use `docker compose up -d postgres redis` when running the backend natively. If you previously used a repository-root `.env`, move your local copy into `backend/` without committing it.
+
 ```bash
 ./mvnw spotless:apply                          # auto-format (google-java-format AOSP) — run before commit
 ./mvnw verify                                  # format check + compile + unit tests + ArchUnit + checkstyle + SpotBugs + JaCoCo + ITs
