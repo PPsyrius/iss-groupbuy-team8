@@ -301,7 +301,8 @@ public final class Product {
     /** Enforce client preconditions and reject version exhaustion before writing. */
     public void requireVersion(int expected) {
         if (version != expected || version == Integer.MAX_VALUE) {
-            throw new BizException(CatalogErrorCode.PRODUCT_VERSION_CONFLICT);
+            throw new BizException(
+                    CatalogErrorCode.PRODUCT_VERSION_CONFLICT, Map.of("currentVersion", version));
         }
     }
 

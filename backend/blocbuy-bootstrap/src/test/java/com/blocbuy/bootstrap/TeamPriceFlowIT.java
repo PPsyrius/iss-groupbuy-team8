@@ -171,6 +171,33 @@ class TeamPriceFlowIT {
                 .isEqualTo(1);
     }
 
+    /** A stale HTTP write reports the policy revision, rather than the product revision. */
+    @Test
+    void staleConfigurationReturnsStoredPolicyVersionWithoutAnotherRevision() throws Exception {
+        configure("89.00", 0);
+        configure("79.00", 1);
+        Integer storedVersion =
+                jdbc.queryForObject(
+                        "SELECT max(version) FROM biz_team_price_policy WHERE product_id = ?",
+                        Integer.class,
+                        product);
+        mvc.perform(
+                        put(policyPath())
+                                .header("blocbuy-token", adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(policyBody("69.00", 1)))
+                .andExpect(status().isPreconditionFailed())
+                .andExpect(jsonPath("$.code").value("CATALOG_412_001"))
+                .andExpect(jsonPath("$.errors.currentVersion").value(storedVersion));
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM biz_team_price_policy WHERE product_id = ?",
+                                Long.class,
+                                product))
+                .isEqualTo(2);
+        assertThat(prices.getPolicy(product, admin).version()).isEqualTo(storedVersion);
+    }
+
     /** Proves two Spring-proxied concurrent configures commit once; loser sees CATALOG_412_001. */
     @Test
     void concurrentConfigurationThroughSpringProxyCommitsExactlyOneRevision() throws Exception {
@@ -244,6 +271,7 @@ class TeamPriceFlowIT {
                             new BigDecimal(amount), "sgd", validFrom, validUntil, 0));
             return "committed";
         } catch (BizException ex) {
+            assertThat(ex.details()).containsEntry("currentVersion", 1);
             return ex.errorCode().code();
         }
     }
