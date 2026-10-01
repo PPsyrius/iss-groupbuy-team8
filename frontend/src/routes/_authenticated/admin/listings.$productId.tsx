@@ -55,6 +55,8 @@ function EditListingPage() {
   const published = listing.status !== "draft";
   const { save, isPending } = useSaveListing(productId, version);
   const [dirty, setDirty] = useState(false);
+  // The bloc price rule form's unsaved edits share the listing form's leave prompt.
+  const [ruleDirty, setRuleDirty] = useState(false);
   const [dialog, setDialog] = useState<DialogKind | null>(null);
   const [fieldProblems, setFieldProblems] = useState<FieldProblem[]>([]);
   // `null` while there is no conflict; otherwise the server's version as the 412 named it.
@@ -195,6 +197,7 @@ function EditListingPage() {
           frozen={published}
           soldCount={published ? (listing.soldCount ?? 0) : undefined}
           guardUnsaved
+          unsavedElsewhere={ruleDirty}
           onDirtyChange={setDirty}
           onProblemsChange={setFieldProblems}
         />
@@ -214,6 +217,7 @@ function EditListingPage() {
             productId={productId}
             status={listing.status}
             originalPrice={listing.listing?.originalPrice ?? ""}
+            onDirtyChange={setRuleDirty}
           />
         </aside>
       </div>

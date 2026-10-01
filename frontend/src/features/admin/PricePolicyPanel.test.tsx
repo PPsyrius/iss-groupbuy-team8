@@ -22,9 +22,9 @@ function rowOf(store: Store, productNo: string) {
 
 async function openPanel(store: Store, productNo: string) {
   const row = rowOf(store, productNo);
-  renderRoute(`/admin/listings/${row.id}`);
+  const { router } = renderRoute(`/admin/listings/${row.id}`);
   const panel = await screen.findByRole("region", { name: "Bloc price rule" });
-  return { row, panel };
+  return { row, panel, router };
 }
 
 const refuse = (status: number, body: Record<string, unknown>) =>
@@ -132,7 +132,10 @@ describe("PricePolicyPanel", () => {
     const amount = within(panel).getByRole("textbox", { name: "Bloc price" });
     expect(amount).toHaveValue("");
     expect(within(panel).getByRole("group", { name: "Valid from" })).toBeVisible();
-    expect(within(panel).getByRole("group", { name: "Valid until" })).toBeVisible();
+    // Valid until shows the last valid minute (4b.4, §6 Q13).
+    const until = within(panel).getByRole("group", { name: "Valid until" });
+    // The segments wrap the time in bidi isolates (U+2066..U+2069); read without them.
+    expect(until.textContent?.replaceAll(/[\u2066-\u2069]/g, "")).toMatch(/11:59\sPM$/);
     await user.type(amount, "9.90");
     await user.click(within(panel).getByRole("button", { name: "Save rule" }));
 
@@ -140,12 +143,15 @@ describe("PricePolicyPanel", () => {
     expect(within(panel).getByText("S$9.90")).toBeVisible();
     expect(within(panel).getByText("v1")).toBeVisible();
     expect(store.policyOf(row.id)).toMatchObject({ amount: "9.90", version: 1 });
+    // …and sends the minute after it: midnight SGT, the exclusive end.
+    expect(store.policyOf(row.id)?.validUntil).toMatch(/T16:00:00\.000Z$/);
   });
 
   it("revises with the loaded version and closes the form", async () => {
     const user = userEvent.setup();
     const store = serveAdmin();
     const { row, panel } = await openPanel(store, "BB-100481");
+    const loadedEnd = Date.parse(store.policyOf(row.id)?.validUntil ?? "");
     await user.click(await within(panel).findByRole("button", { name: "New revision" }));
     const amount = within(panel).getByRole("textbox", { name: "Bloc price" });
     expect(amount).toHaveValue("71.00");
@@ -156,6 +162,10 @@ describe("PricePolicyPanel", () => {
     expect(within(panel).getByText("v4")).toBeVisible();
     expect(within(panel).queryByRole("textbox", { name: "Bloc price" })).not.toBeInTheDocument();
     expect(store.policyOf(row.id)).toMatchObject({ amount: "69.00", version: 4 });
+    // The loaded end, shown a minute earlier, goes back as the same instant (to the minute).
+    expect(store.policyOf(row.id)?.validUntil).toBe(
+      new Date(Math.floor(loadedEnd / 60_000) * 60_000).toISOString(),
+    );
   });
 
   it("cancels a revision without saving", async () => {
@@ -166,6 +176,40 @@ describe("PricePolicyPanel", () => {
     await user.click(within(panel).getByRole("button", { name: "Cancel" }));
     expect(within(panel).queryByRole("textbox", { name: "Bloc price" })).not.toBeInTheDocument();
     expect(within(panel).getByText("v3")).toBeVisible();
+  });
+
+  it("asks before leaving with unsaved rule edits, as the listing form does", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const { row, panel, router } = await openPanel(store, "BB-100481");
+    const crumb = screen.getByRole("navigation", { name: "Breadcrumb" });
+    await user.click(await within(panel).findByRole("button", { name: "New revision" }));
+    await user.type(within(panel).getByRole("textbox", { name: "Bloc price" }), "5");
+
+    await user.click(within(crumb).getByRole("link", { name: "Listings" }));
+    const dialog = await screen.findByRole("alertdialog");
+    expect(within(dialog).getByRole("heading", { name: "Discard your changes?" })).toBeVisible();
+    await user.click(within(dialog).getByRole("button", { name: "Keep editing" }));
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+    expect(router.state.location.pathname).toBe(`/admin/listings/${row.id}`);
+    expect(within(panel).getByRole("textbox", { name: "Bloc price" })).toHaveValue("71.005");
+
+    // Cancel drops the edits, so leaving asks nothing.
+    await user.click(within(panel).getByRole("button", { name: "Cancel" }));
+    await user.click(within(crumb).getByRole("link", { name: "Listings" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/admin/listings"));
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  it("leaves without asking when the open rule form is untouched", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const { panel, router } = await openPanel(store, "BB-100481");
+    await user.click(await within(panel).findByRole("button", { name: "New revision" }));
+    const crumb = screen.getByRole("navigation", { name: "Breadcrumb" });
+    await user.click(within(crumb).getByRole("link", { name: "Listings" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/admin/listings"));
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   });
 
   it("refuses a bloc price not below the solo price before sending (4b.4)", async () => {
@@ -208,7 +252,8 @@ describe("PricePolicyPanel", () => {
     const until = within(panel).getByRole("group", { name: "Valid until" });
     await user.click(within(until).getByRole("button"));
     const calendar = await screen.findByRole("application", { name: /Valid until/ });
-    const [day28] = within(calendar).getAllByText("28");
+    // The visible month's 28th: an earlier "28" can be the previous month's, outside the grid.
+    const day28 = within(calendar).getAllByText("28").at(-1);
     if (!day28) throw new Error("no 28th in the calendar");
     await user.click(day28);
     const [daySegment] = within(until).getAllByRole("spinbutton", { name: /day/i });

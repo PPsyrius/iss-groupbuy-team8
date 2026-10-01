@@ -13,7 +13,7 @@ import {
 import type { ZonedDateTime } from "@internationalized/date";
 import { revalidateLogic, useForm, useStore } from "@tanstack/react-form";
 import { Link, useLocation } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { PolicyResponse } from "@/api/generated/types.gen";
 
@@ -30,8 +30,8 @@ const fieldNames = new Set<string>(["amount", "validFrom", "validUntil"]);
 const isFieldName = (name: string): name is FieldName => fieldNames.has(name);
 
 // The revision form inside the bloc price rule panel (admin plan A2-01 step 4, artboard 4b.4): the
-// bloc price as a decimal string, and both ends on Singapore minute pickers. Valid until is the
-// exact end, which the rule does not include (§6 Q13). Validation first runs on submit, then on
+// bloc price as a decimal string, and both ends on Singapore minute pickers. Valid until shows the
+// last valid minute; the form sends the minute after it, the backend's exclusive end (§6 Q13). Validation first runs on submit, then on
 // every change; a failed save's field messages stay on their fields until that field changes, as
 // on the listing form. A later start on an active rule raises the replace-now warning (step 5).
 export function PolicyForm({
@@ -41,6 +41,7 @@ export function PolicyForm({
   nowMs,
   onSubmit,
   onCancel,
+  onDirtyChange,
 }: Readonly<{
   rule: PolicyResponse | null;
   timing: RuleTiming;
@@ -48,6 +49,7 @@ export function PolicyForm({
   nowMs: number;
   onSubmit: (values: PolicyFormValues) => Promise<SubmitProblem | undefined>;
   onCancel: () => void;
+  onDirtyChange?: ((dirty: boolean) => void) | undefined;
 }>) {
   const [alert, setAlert] = useState<SubmitProblem["alert"] & { signIn?: boolean }>();
   const { href } = useLocation();
@@ -92,6 +94,12 @@ export function PolicyForm({
   const validFrom = useStore(form.store, (state) => state.values.validFrom);
   const startMs = validFrom ? validFrom.toDate().getTime() : null;
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
+  // The editor's unsaved-changes prompt covers these edits too; a closed form has none.
+  const isDirty = useStore(form.store, (state) => state.isDirty);
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
 
   return (
     <form
@@ -158,7 +166,7 @@ export function PolicyForm({
         {(field) => (
           <MinutePicker
             label="Valid until"
-            help="Singapore time. The rule ends at this minute."
+            help="Singapore time. The last minute the rule applies."
             value={field.state.value}
             onChange={field.handleChange}
             onBlur={field.handleBlur}

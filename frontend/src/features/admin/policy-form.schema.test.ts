@@ -11,7 +11,7 @@ const schema = policyFormSchema({ originalPrice: "12.80", nowMs: now });
 const valid: PolicyFormValues = {
   amount: "9.90",
   validFrom: toZoned("2026-09-16T02:03:00Z"),
-  validUntil: toZoned("2026-10-16T16:00:00Z"),
+  validUntil: toZoned("2026-10-16T15:59:00Z"),
 };
 
 function problems(values: PolicyFormValues, s = schema) {
@@ -61,23 +61,25 @@ describe("policyFormSchema", () => {
     });
   });
 
-  it("ends after the start of the rule (4b.4)", () => {
+  // Valid until shows the last valid minute; the checks compare the instant sent, a minute later.
+  it("ends after the start of the rule (4b.4), compared on the end instant sent", () => {
+    const from = toZoned("2026-09-16T16:00:00Z");
+    // Last valid minute = the start: a one-minute rule ending at 16:01, after the start.
+    expect(problems({ ...valid, validFrom: from, validUntil: from })).toEqual({});
     expect(
-      problems({
-        ...valid,
-        validFrom: toZoned("2026-09-16T16:00:00Z"),
-        validUntil: toZoned("2026-09-16T16:00:00Z"),
-      }),
+      problems({ ...valid, validFrom: from, validUntil: toZoned("2026-09-16T15:59:00Z") }),
     ).toEqual({ validUntil: "Must be after the start of the rule." });
   });
 
-  it("ends in the future", () => {
+  it("ends in the future, compared on the end instant sent", () => {
+    const from = toZoned("2026-09-01T00:00:00Z");
+    // Shown 1 minute before now: sent exactly at now, which is not in the future.
     expect(
-      problems({
-        ...valid,
-        validFrom: toZoned("2026-09-01T00:00:00Z"),
-        validUntil: toZoned("2026-09-16T02:03:00Z"),
-      }),
+      problems({ ...valid, validFrom: from, validUntil: toZoned("2026-09-16T02:02:00Z") }),
     ).toEqual({ validUntil: "Must be in the future." });
+    // Shown at now: sent a minute after it.
+    expect(
+      problems({ ...valid, validFrom: from, validUntil: toZoned("2026-09-16T02:03:00Z") }),
+    ).toEqual({});
   });
 });

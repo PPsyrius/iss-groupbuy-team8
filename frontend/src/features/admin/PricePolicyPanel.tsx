@@ -58,7 +58,14 @@ export function PricePolicyPanel({
   productId,
   status,
   originalPrice,
-}: Readonly<{ productId: string; status: string | undefined; originalPrice: string }>) {
+  onDirtyChange,
+}: Readonly<{
+  productId: string;
+  status: string | undefined;
+  originalPrice: string;
+  // Unsaved edits in the revision form, for the editor's unsaved-changes prompt.
+  onDirtyChange?: (dirty: boolean) => void;
+}>) {
   const nowMs = useMinuteClock();
   const qc = useQueryClient();
   const toBoundary = useRouteBoundary();
@@ -197,6 +204,7 @@ export function PricePolicyPanel({
             nowMs={nowMs}
             onSubmit={save}
             onCancel={() => setEditing(false)}
+            onDirtyChange={onDirtyChange}
           />
         ) : null}
       </RuleBody>
