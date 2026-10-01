@@ -17,6 +17,8 @@ The backend CI workflow packages this non-secret deployment bundle, publishes th
 
   The script fetches its required key allowlist in one `aws ssm get-parameters --with-decryption` call, rejects missing or placeholder values, and writes the file atomically as `root:root 0600`. The prod deploy job invokes it before every `deploy.sh` so rotation takes effect on the next deploy. It is **never invoked on dev** — dev keeps its hand-edited file.
 
+  `/blocbuy/prod/BLOCBUY_STRIPE_CHECKOUT_ENABLED` is an optional SSM parameter that defaults to `false` if absent; leave it false until a separate production payment release. The other existing required parameters remain required.
+
 ## Runtime model
 
 ```text
@@ -65,7 +67,11 @@ FROM domain.biz_refund
 WHERE deleted = false AND status IN ('pending', 'processing') AND next_attempt_at <= now();
 ```
 
-Record both backlogs before enabling scheduling: under the `ec2` profile this switch starts the expiry sweep and the refund worker, which attempts one due obligation every 30 seconds and can send sandbox refunds when `STRIPE_API_KEY` is configured with a `sk_test_` key. Checkout remains disabled without `stripe-sprint2`. On dev, edit `/etc/blocbuy/backend.env` directly. On prod, update `/blocbuy/prod/BLOCBUY_SCHEDULING_ENABLED` in SSM Parameter Store and rerun `sudo /opt/blocbuy/backend/bin/fetch-env.sh /blocbuy/prod` to refresh the host env file. For either value and environment, run an approved backend deployment or the reviewed [`deploy.sh` command](#deploy) with the current immutable image digest: it force-recreates the backend container and reloads the env file. `docker compose restart` and `docker restart` retain the old container environment. To pause, set `false` and recreate; an in-flight provider call may finish before the container stops.
+Record both backlogs before enabling scheduling: under the `ec2` profile this switch starts the expiry sweep and the refund worker, which attempts one due obligation every 30 seconds and can send sandbox refunds when `STRIPE_API_KEY` is configured with a `sk_test_` key. Checkout is a separate `BLOCBUY_STRIPE_CHECKOUT_ENABLED` switch and remains disabled by default. On dev, edit `/etc/blocbuy/backend.env` directly. On prod, update `/blocbuy/prod/BLOCBUY_SCHEDULING_ENABLED` in SSM Parameter Store and rerun `sudo /opt/blocbuy/backend/bin/fetch-env.sh /blocbuy/prod` to refresh the host env file. For either value and environment, run an approved backend deployment or the reviewed [`deploy.sh` command](#deploy) with the current immutable image digest: it force-recreates the backend container and reloads the env file. `docker compose restart` and `docker restart` retain the old container environment. To pause, set `false` and recreate; an in-flight provider call may finish before the container stops.
+
+### Change the Sandbox Checkout flag
+
+On dev only, set `BLOCBUY_STRIPE_CHECKOUT_ENABLED=true` in `/etc/blocbuy/backend.env` along with a `sk_test_` API key, the test webhook signing secret, and both `BLOCBUY_PAYMENT_CHECKOUT_*_URL` values pointing to the dev frontend's `/payments/return` route. Complete the [Stripe pre-live checklist](../../backend/docs/payment/stripe-release-boundary.md) and configure dev product team terms through the audited admin API before force-recreating the backend with an approved deployment. Keep production's optional SSM flag false; no live-key rollout is included. A plain container restart does not load changed environment variables.
 
 To enable the optional Jev listing re-ranker on dev, set `TYPESAFE_ENABLED=true` and place the TypeSafe credential in `TYPESAFE_API_KEY`. The ordinary listing search remains available when Jev is disabled or temporarily unavailable; clients request page-local semantic ordering with `ai=true`. The repository's `typesafe-smoke` workflow uses its separate Actions secret only for a manually dispatched provider check and does not provision this host file.
 

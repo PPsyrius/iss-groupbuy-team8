@@ -4,15 +4,11 @@ import com.blocbuy.common.exception.BizException;
 import com.blocbuy.payment.exception.PaymentErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
 
 /**
  * Webhook facade. The Checkout service owns transaction boundaries after provider verification.
  * Missing integration fails closed instead of acknowledging an unprocessed money notification.
  */
-@Service
-@Profile("stripe-sprint2")
 @RequiredArgsConstructor
 public class StripePaymentAppService implements PaymentAppService {
 

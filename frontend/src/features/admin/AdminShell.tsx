@@ -58,9 +58,10 @@ export function AdminShell() {
 function AdminUser() {
   const session = useSession();
   if (session.status !== "authenticated") return null;
-  // B4 (#97): nickname is nullable; the stable userId is the fallback. "Admin" is a fixed label:
-  // the probe proved the role, and `me` cannot name it (CR-9).
+  // B4 (#97): nickname is nullable; the stable userId is the fallback. The role label comes from
+  // `me` (#282); the guard only lets an admin role in, so it names that one.
   const name = session.nickname ?? session.userId;
+  const role = session.roles.includes("admin") ? "Admin" : null;
   return (
     <div className="mt-auto flex items-center gap-2.5 rounded-lg bg-[#232323] p-3">
       <Avatar size="sm" aria-hidden="true">
@@ -68,14 +69,14 @@ function AdminUser() {
       </Avatar>
       <div className="flex min-w-0 flex-col text-xs">
         <span className="text-background truncate font-semibold">{name}</span>
-        <span className="text-[#A0A0A0]">Admin</span>
+        {role && <span className="text-[#A0A0A0]">{role}</span>}
       </div>
     </div>
   );
 }
 
-// The layout's error boundary: a 403 from the probe, or from any admin call later (a role
-// revoked mid-session), is the Access denied card; anything else is the global error card.
+// The layout's error boundary: the guard's denial (no admin role), or a 403 from any admin call
+// later (a role revoked mid-session), is the Access denied card; anything else is the global error card.
 // Both sit under a wordmark-only bar, since the storefront header is hidden on this subtree.
 export function isAdminDenied(error: unknown) {
   return (
@@ -100,7 +101,7 @@ export function AdminRouteError(props: ErrorComponentProps) {
 
 // The boundary of a console page (A1-08). A 403 there means the role went away mid-session: it is
 // handed up to the console's boundary above, which swaps the whole shell for Access denied, as
-// the probe does on entry. Anything else stays a page error inside the shell.
+// the guard does on entry. Anything else stays a page error inside the shell.
 export function AdminChildError(props: ErrorComponentProps) {
   if (isAdminDenied(props.error)) throw props.error;
   return <RouteErrorCard {...props} />;

@@ -1,0 +1,5 @@
+# Compatibility alias for existing local Stripe Sandbox setups; remove in a follow-up release.
+blocbuy:
+  payment:
+    stripe:
+      checkout-enabled: true

@@ -39,12 +39,13 @@ import org.springframework.test.web.servlet.MockMvc;
             "spring.datasource.password=unused",
             "spring.data.redis.host=127.0.0.1",
             "spring.data.redis.port=1",
-            "blocbuy.payment.stripe.api-key=",
+            "blocbuy.payment.stripe.checkout-enabled=true",
+            "blocbuy.payment.stripe.api-key=sk_test_boundary_placeholder",
             "blocbuy.payment.stripe.webhook-secret=local-boundary-test-not-a-credential",
             "blocbuy.payment.checkout.success-url=http://localhost:5173/payment/success",
             "blocbuy.payment.checkout.cancel-url=http://localhost:5173/payment/cancel"
         })
-@ActiveProfiles({"local", "stripe-sprint2"})
+@ActiveProfiles("local")
 @AutoConfigureMockMvc
 @Import(StripeWebhookBoundaryTest.LocalSessionStore.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)

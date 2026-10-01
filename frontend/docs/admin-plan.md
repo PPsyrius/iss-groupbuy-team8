@@ -4,7 +4,7 @@ Buyer-side Sprint 2 tasks and recorded Tier 3 follow-ups live in [`plan.md`](pla
 
 **Goal:** Build the UC9 admin console under `/admin`: dashboard, listings table, listing editor with lifecycle actions and version-conflict recovery, and the bloc price rule panel. Build it against the contract as it stands today. Record every artboard need the API cannot meet as a backend ask, not as frontend invention.
 
-**Architecture:** The console is a second shell in the same SPA. It is a route subtree `_authenticated/admin*` with its own dark-rail layout. The storefront `Header` is hidden through route `staticData`. Admin access is decided by a probe: `me` carries no roles (CR-9), so the admin layout's `beforeLoad` calls `GET /api/v1/admin/products?page=1&size=1` and turns a 403 into the Access denied screen. All server state goes through the generated hey-api client with `select: unwrapResult`. Forms use TanStack Form with valibot. Every write is pessimistic and sends the loaded `version`. A 412 always ends in the conflict banner and a Reload, never a merge.
+**Architecture:** The console is a second shell in the same SPA. It is a route subtree `_authenticated/admin*` with its own dark-rail layout. The storefront `Header` is hidden through route `staticData`. Admin access is decided by a probe: the admin layout's `beforeLoad` calls `GET /api/v1/admin/products?page=1&size=1` and turns a 403 into the Access denied screen. `me` had no roles when A1 was built (CR-9); #282 added them, and A3-01 replaces the probe with a `roles` check. All server state goes through the generated hey-api client with `select: unwrapResult`. Forms use TanStack Form with valibot. Every write is pessimistic and sends the loaded `version`. A 412 always ends in the conflict banner and a Reload, never a merge.
 
 **Tech Stack:** Use the current exact pins in `frontend/package.json` (HeroUI OSS, TanStack Router/Query/Form, valibot, MSW and Playwright). The proposed A2-01 date picker would add an exact-pinned direct dependency on `@internationalized/date`; it is not yet in `package.json`.
 
@@ -63,7 +63,7 @@ Generated names come from `@/api/generated/@tanstack/react-query.gen` with the c
 | Endpoint (operationId → generated) | Request | Response `data` | Validation (contract + backend) | Errors | Screens |
 |---|---|---|---|---|---|
 | `GET /api/v1/admin/products` (`page` → `pageOptions`, `pageQueryKey`) | query `page` ≥1 (default 1), `size` 1..100 (default 20), `status` optional, `^(draft\|on_sale\|off_sale)$` | `PageResultAdminListingResponse {items, total, page, size, nextCursor}`; newest first, UUID tie-breaker; no sort, no search | Bean validation on params → 400 `COMMON_400_001` with `errors: ["page must be…"]` | 401 `COMMON_401_*`, 403 `COMMON_403_*` (Sa-Token `NotRole`/`NotPermission`) | S1 probe, S2 counts + recent, S3 table + tab counts |
-| `POST /api/v1/admin/products` (`create` → `createMutation`) | `CreateListingRequest {productNo, listing: ListingContent}` | `AdminListingResponse` (status `draft`, version 0, `pricingMode` `dual`, `soldCount` 0) | `productNo` `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$`, required, unique among live rows. `ListingContent`: `title` required, not blank, ≤256; `subtitle` ≤256; `description` ≤10000; `coverImage` ≤1024; `images` ≤20, each not blank and ≤1024; `category` ≤64; `originalPrice` required, positive decimal string with at most 16.2 digits (**must be positive even on a draft**); `currency` `sgd`; `stock` int ≥0. Unknown JSON fields are rejected. Non-idempotent. | 400 `COMMON_400_001` + `errors: [{field, message}]` (for example `listing.originalPrice`); 400 `CATALOG_400_002` (domain, no field); 409 `CATALOG_409_003` duplicate product number | S4 |
+| `POST /api/v1/admin/products` (`create` → `createMutation`) | `CreateListingRequest {productNo?, listing: ListingContent}` | `AdminListingResponse` (status `draft`, version 0, `pricingMode` `dual`, `soldCount` 0) | `productNo` `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$`, optional since #288 (omitted or `null` → server-generated `BB-` number; a supplied number is kept and must be unique among live rows; A3-08 drops the field from the form). `ListingContent`: `title` required, not blank, ≤256; `subtitle` ≤256; `description` ≤10000; `coverImage` ≤1024; `images` ≤20, each not blank and ≤1024; `category` ≤64; `originalPrice` required, positive decimal string with at most 16.2 digits (**must be positive even on a draft**); `currency` `sgd`; `stock` int ≥0. Unknown JSON fields are rejected. Non-idempotent. | 400 `COMMON_400_001` + `errors: [{field, message}]` (for example `listing.originalPrice`); 400 `CATALOG_400_002` (domain, no field); 409 `CATALOG_409_003` duplicate product number | S4 |
 | `GET /api/v1/admin/products/{productId}` (`get` → `getOptions`, `getQueryKey`) | path uuid | `AdminListingResponse {id, productNo, listing, status, pricingMode, soldCount, version, teamTerms}` | non-uuid → 400 | 404 `CATALOG_404_001` absent or deleted | S5–S7 |
 | `PUT /api/v1/admin/products/{productId}` (`revise` → `reviseMutation`) | `UpdateListingRequest {listing, expectedVersion}` | new `AdminListingResponse` (version + 1) | **Full replacement**: an omitted optional field is cleared. After first publication `originalPrice`, `currency` and `stock` must equal the stored values. `productNo`, `pricingMode` and `soldCount` are not writable. | 412 `CATALOG_412_002` stale; 409 `CATALOG_409_002` frozen field changed; 400 as above; 404 | S5–S7 |
 | `PUT /api/v1/admin/products/{productId}/status` (`changeStatus` → `changeStatusMutation`) | `ListingStatusRequest {status: "on_sale"\|"off_sale", expectedVersion}` | new `AdminListingResponse` | draft → on_sale ↔ off_sale; no route back to draft; publishing needs positive stock and price | 409 `CATALOG_409_002` (illegal transition, or the stock/price precondition, which "maps to 409 before state dispatch"); 412; 404 | S5, S6, S3 row menu |
@@ -71,7 +71,7 @@ Generated names come from `@/api/generated/@tanstack/react-query.gen` with the c
 | `PUT /api/v1/admin/products/{productId}/team-terms` (`configureTeamTerms` → `configureTeamTermsMutation`) | `TeamTermsRequest {expectedVersion, targetSize, lifetimeSeconds, teamPrice?: TeamPriceRequest}` | `TeamTermsResponse {productId, version, teamTerms, teamPrice?}` (`teamPrice` omitted when none was sent) | Both terms required: `targetSize` ≥2 with no maximum, `lifetimeSeconds` 2400..86400. Allowed in every lifecycle state. **Increments the product `version`**, so a concurrent terms edit makes a later save or lifecycle call a 412. Revise and status changes keep the terms. Optional `teamPrice` appends a policy revision through the same service as `/team-price-policy` and needs an on-sale listing. | 400 `COMMON_400_002` + field errors for out-of-range terms (`CATALOG_400_003` exists but is not reachable over HTTP); 412 `CATALOG_412_002` stale product version; with `teamPrice`: 400 `CATALOG_400_001`, 409 `CATALOG_409_001`, 412 `CATALOG_412_001`; 404 | A3-04 terms panel (not built in A1) |
 | `GET /api/v1/products/{productId}/team-price-policy` (`getPolicy` → `getPolicyOptions`) | path uuid | `PolicyResponse {productId, amount, currency, validFrom, validUntil, version}`: **latest revision only** | needs `catalog:product:write` (admin only) | **409 `CATALOG_409_001` when no rule exists** (not 404); 404 `CATALOG_404_001` unknown product; 403 | S8 |
 | `PUT /api/v1/products/{productId}/team-price-policy` (`configure` → `configureMutation`) | `PolicyRequest {amount, currency: "sgd", validFrom, validUntil, expectedVersion}` | new `PolicyResponse` (version + 1) | `expectedVersion` 0 creates revision 1, later ones must match the latest; `amount` > 0 and **strictly below `originalPrice`**; `validFrom < validUntil`; `validUntil > now`; validFrom inclusive and validUntil exclusive; **the product must be on sale**. The latest revision always replaces earlier ones, including a future or expired one: no fallback. | 400 `CATALOG_400_001` (domain, no field path); 409 `CATALOG_409_001` product not on sale; 412 `CATALOG_412_001` stale; 404 | S8 |
-| `GET /api/v1/auth/me` (`me` → `meOptions`) | — | `MeResponse {userId, nickname, avatarUrl}`: **no roles** | — | 401 | rail user block; guard (anonymous → `/login`) |
+| `GET /api/v1/auth/me` (`me` → `meOptions`) | — | `MeResponse {userId, nickname, avatarUrl, roles}`: `roles: string[]` since #282 (A3-01 reads it) | — | 401 | rail user block; guard (anonymous → `/login`) |
 
 **Admin authorisation today.** Sa-Token RBAC. `AdminListingController.administrator()` runs `StpUtil.checkLogin()`, then `checkRole("admin")` (`RoleCode.ADMIN`), then `checkPermission("catalog:product:write")` on every admin call, reads included. `TeamPriceController` checks only the permission. Roles and permissions load from `sys_role`, `rel_user_role` and `rel_role_permission` through `StpInterfaceImpl`. V3 seeds the roles `buyer` (granted at first Google sign-in) and `admin` ("assigned manually"), and V6 grants `catalog:product:write` to `admin` only. Sign-in is the same Google OAuth for everyone: an admin is simply a buyer account whose DB row has the admin role. `GlobalExceptionHandler` maps `NotRoleException` and `NotPermissionException` to 403 `CommonErrorCode.FORBIDDEN` and `NotLoginException` to 401. A disabled account also returns 403 (application-layer `requireActive`). The client cannot tell a 403 for "not admin" from a 403 for "disabled"; both land on S1.
 
@@ -79,18 +79,18 @@ Generated names come from `@/api/generated/@tanstack/react-query.gen` with the c
 
 | Ask | Artboard need | Contract today | Frontend fallback until it lands |
 |---|---|---|---|
-| **BA-1 (CR-9)** `GET /auth/me` returns `roles: string[]` | Admin guard without a probe; the rail's "Admin" label | No roles | Probe `GET /admin/products?size=1` in `beforeLoad`; 403 → S1 |
-| **BA-2** Server-assigned product number | 4b.1 has no product number field: "the server assigns it on save" | `productNo` is client-supplied and required at create; duplicate → 409 | A "Product number" field on create only, read-only afterwards (Q2) |
+| **BA-1 (CR-9)** `GET /auth/me` returns `roles: string[]` | Admin guard without a probe; the rail's "Admin" label | **Answered by #282**: `MeResponse.roles` (`string[]`) | A1-03 probes `GET /admin/products?size=1` in `beforeLoad` (403 → S1); A3-01 switches to `roles` |
+| **BA-2** Server-assigned product number | 4b.1 has no product number field: "the server assigns it on save" | **Answered by #288**: `productNo` is optional on create; omitted or `null` → the server generates a `BB-` number; a supplied number is kept and must be unique (duplicate → 409) | A1-05 shows a create-only field; A3-08 removes it |
 | **BA-3** Admin counts: `{draft, onSale, offSale}` plus an **open blocs** count | Dashboard's 4 stats, tab badges, rail counts | No counts; no open-bloc count anywhere | Three `page?status=X&size=1` calls reading `total`; the **Open blocs card is omitted** |
 | **BA-4** Latest policy summary on `AdminListingResponse` (`latestPolicy {amount, validFrom, validUntil, version}`) and a policy count | Table subline "Bloc price S$71.00 · valid to 30 Sep"; rail "Bloc price rules 18" | Only per-listing `getPolicy` | Subline omitted (no 20× N+1); rail item hidden (Q3) |
 | **BA-5** Reference counts on the admin read (`references {deals, quotes, policies}`) or a `deletable` flag | 4b.3 "has 26 bloc records, 61 quotes and 3 price rules" | None | Reason without counts: "Not available. This listing has been published; take it off sale instead." |
 | **BA-6 (CR-12)** Field path on domain 400s (`CATALOG_400_001` / `400_002`) | 4b.4 attaches "Must be strictly below the solo price" and "Must be after the start" to their fields | Bean validation returns `errors: [{field, message}]`; domain `BizException` 400s carry no field | Client valibot catches both rules before submit; a server domain 400 renders as a form-level alert |
 | **BA-7 (NFR-29, lifecycle plan PR-H)** Group terms (seats per bloc, bloc lifetime) | Buyer detail's "5 seats per bloc" needs it; without it every START is refused (`CATALOG_409_006`) | **Answered by #242**, as a separate endpoint rather than fields on `ListingContent`: `PUT /admin/products/{id}/team-terms` (`configureTeamTerms`), both terms required on the request (`targetSize` ≥2, no maximum; `lifetimeSeconds` 2400..86400), editable in every lifecycle state; an optional `teamPrice` needs an on-sale listing. Reads carry `teamTerms`. | Not drawn on any artboard. A3-04 builds a separate terms panel once design gap D6 is answered. |
 | **BA-8** `GET /admin/payments?attention=true` (payment id, buyer nickname, bloc number, reason, amount, refund status, time) | 4b.6 | No endpoint | Screen not built (Tier 3) |
-| **BA-9** Distinct operationIds (`pageAdminListings`, `getAdminListing`, `createAdminListing`, `reviseAdminListing`, `changeAdminListingStatus`, `deleteAdminListing`) | — | Generic `get`, `page`, `create`, `delete` generate `getOptions`, `pageOptions`, `createMutation`, `deleteMutation` (sdk `delete_`) | Wrapped once in `admin-api.ts`; the rename is a one-file change |
+| **BA-9** Distinct operationIds for the six generically named admin operations (`configureTeamTerms`, the seventh, is already distinct) (`pageAdminListings`, `getAdminListing`, `createAdminListing`, `reviseAdminListing`, `changeAdminListingStatus`, `deleteAdminListing`) | — | Generic `get`, `page`, `create`, `delete` generate `getOptions`, `pageOptions`, `createMutation`, `deleteMutation` (sdk `delete_`) | Wrapped once in `admin-api.ts`; the rename is a one-file change |
 | **BA-10** Policy revision history | 4b.5 "an expired rule is shown, never deleted" | Latest only | The panel shows the latest revision only |
 | **BA-11** Policy on drafts: allow it, or confirm it is intentional | 4b.1 "Add a rule after the listing has a price" | `configure` requires on sale (`requireCompatible`) | Copy "Add a rule after you publish"; disabled on draft and off sale |
-| **BA-12** 412 body carries `currentVersion` | 4b.4 "the server now has v5" | 412 has no version | A background refetch of `get` / `getPolicy` fills in the number (§12 note 6) |
+| **BA-12** 412 body carries `currentVersion` | 4b.4 "the server now has v5" | **Answered by #286**: 412 `errors: {currentVersion}`, the listing version for `CATALOG_412_002` and the policy version (0 if none) for `CATALOG_412_001` | A1-08 fills the number from a background refetch of `get` / `getPolicy` (§12 note 6); A3-09 reads it from the error |
 | **CR-10** Category dictionary | "One of five fixed categories" | Free string ≤64 | Reuse `features/catalog/categories.ts`; an unknown stored value shows as an extra option |
 
 ---
@@ -126,22 +126,23 @@ Columns match `plan.md` §3. `FE` = `frontend/`, `A` = `FE/src/features/admin/`.
 
 | id | tier | purpose | files touched | verification command | depends-on | issue |
 |---|---|---|---|---|---|---|
-| A3-01 | A3 | Guard reads `session.roles` and drops the probe; rail shows the role | `A/admin-guard.ts`, `FE/src/features/session/session.ts`, tests | `cd frontend && pnpm gen:api && pnpm vitest run src/features/admin src/features/session` | BA-1 | BA-1 |
+| A3-01 | A3 | Guard reads `session.roles` and drops the probe; rail shows the role | `A/admin-guard.ts`, `FE/src/features/session/session.ts`, tests | `cd frontend && pnpm gen:api && pnpm vitest run src/features/admin src/features/session` | A1-03, #282 (BA-1, merged) | BA-1 |
 | A3-02 | A3 | Counts endpoint: tabs, rail and dashboard (+ Open blocs card) | `A/use-status-counts.ts`, `A/StatCards.tsx`, tests | as above | BA-3 | BA-3 |
 | A3-03 | A3 | Table bloc-rule subline; "Bloc price rules" rail item and count | `A/ListingsTable.tsx`, `A/AdminShell.tsx`, tests | as above | BA-4, Q3 | BA-4 |
 | A3-04 | A3 | Group terms panel (seats per bloc, bloc lifetime) on the editor page, with its own write (`configureTeamTerms`), not `ListingForm` fields; the backend blocker (BA-7) is cleared by #242, design is not | `A/admin-api.ts` (`useConfigureTeamTerms`), `A/team-terms.schema.ts`, `A/TeamTermsPanel.tsx`, `FE/src/routes/_authenticated/admin/listings.$productId.tsx`, `FE/src/test/admin-msw.ts` (terms endpoint), tests | as above | design (§11 D6) | BA-7 |
 | A3-05 | A3 | Delete-blocked reason with counts | `A/EditorSidebar.tsx`, tests | as above | BA-5 | BA-5 |
 | A3-06 | A3 | Payments needing attention (read-only table) | `FE/src/routes/_authenticated/admin/payments.tsx`, `A/AttentionQueue.tsx`, tests | as above | BA-8 | BA-8 |
 | A3-07 | A3 | Attach domain 400s to fields through `fieldViolations` | `A/listing-errors.ts`, `A/PricePolicyPanel.tsx`, tests | as above | BA-6 | BA-6 |
-| A3-08 | A3 | Remove the product number field from create | `A/listing-form.schema.ts`, `A/ListingForm.tsx`, tests | as above | BA-2 accepted | BA-2 |
+| A3-08 | A3 | Remove the product number field from create | `A/listing-form.schema.ts`, `A/ListingForm.tsx`, tests | as above | A1-05, #288 (BA-2, merged) | BA-2 |
+| A3-09 | A3 | 412 banner reads `currentVersion` from the error | `FE/src/api/envelope.ts` (typed reader beside `fieldViolations`), `FE/src/api/envelope.test.ts`, `A/use-listing-mutations.ts`, `A/ConflictBanner.tsx`, `FE/src/test/admin-msw.ts` (412 bodies carry `currentVersion`), `FE/src/test/admin-msw.test.ts`, `FE/src/routes/admin-listing-edit.test.tsx` | `cd frontend && pnpm vitest run src/features/admin src/api src/test/admin-msw.test.ts src/routes/admin-listing-edit.test.tsx` | A1-08, #286 (BA-12, merged) | BA-12 |
 
 ### Blocker assumptions per task
 
 | Blocker | Tasks gated | Assumption planned under | If it resolves the other way |
 |---|---|---|---|
 | An admin account on dev | A2-03 `@admin`, the demo | Someone with DB access grants `admin` to one Google account on the dev DB (#68: grants do not travel with git) | `@admin` stays skipped; all other admin tests run on MSW and `page.route` stubs |
-| CR-9 / BA-1 | A1-03 | Probe guard | A3-01 swaps in one function; S1 unchanged |
-| BA-2 | A1-05 | Product number field on create | A3-08 deletes the field |
+| CR-9 / BA-1 | A1-03 | Probe guard | Resolved by #282: A3-01 swaps in one function; S1 unchanged |
+| BA-2 | A1-05 | Product number field on create | Resolved by #288: A3-08 deletes the field |
 | Q1 scope | all | Sprint 3 includes the console | Resolved the other way on 2026-09-26: rows stay as backlog; A0-00 still files the asks |
 
 ---
@@ -263,7 +264,26 @@ Note (#242): a team-terms write also increments the product `version`, so a term
 - [ ] Step 2: ADR 0015 "Admin console: second shell, probe guard, pessimistic versioned writes" (Nygard, under 60 lines); README row.
 - [ ] Step 3: AGENTS.md Layout gains `src/features/admin/` and `routes/_authenticated/admin*`.
 
-### A3-01..A3-08
+### A3-01: Role guard (BA-1, #282)
+
+- [x] Step 1: failing tests. `admin-guard.test.ts`: a session with `roles: ["admin"]` passes without a network call; `["buyer"]` throws `AdminAccessDenied`. `routes/admin.test.tsx` keeps its four cases; the All-tab count test in `routes/admin-listings.test.tsx` still shows 62. (2026-09-30)
+- [x] Step 2: the session read carries `roles` (default `[]`); the mock `me` answers `roles: ["admin"]` under `admin=1` and `["buyer"]` otherwise. (2026-09-30)
+- [x] Step 3: `requireAdmin` reads the session's roles and drops the probe. The All-tab count loses the probe's cached result, so `use-status-counts.ts` asks for its own `size=1` page. (2026-09-30)
+- [x] Step 4: keep the 403 boundary: a role revoked mid-session still reaches Access denied from any admin read. The rail shows the role from `roles`. (2026-09-30)
+
+### A3-08: Product number from the server (BA-2, #288)
+
+- [ ] Step 1: failing tests. `listing-form.schema.test.ts`: create mode has no `productNo`; `routes/admin-listing-new.test.tsx`: the create request omits `productNo` and the new editor shows the server's `BB-` number.
+- [ ] Step 2: remove the create field (artboard 4b.1: "the server assigns it on save") from `listing-form.schema.ts`, `listing-form.ts` and `ListingForm.tsx`; the editor keeps the read-only number.
+- [ ] Step 3: the admin mock generates the next `BB-` number when `productNo` is omitted or `null`, and still answers 409 `CATALOG_409_003` for a supplied duplicate.
+
+### A3-09: Server version from the 412 (BA-12, #286)
+
+- [ ] Step 1: failing tests. `envelope.test.ts`: `conflictVersion(e)` returns `currentVersion` from a 412 `ApiError` whose `errors` is `{currentVersion: number}`, else `null`. `admin-msw.test.ts`: every 412 carries it. `admin-listing-edit.test.tsx`: the banner shows "the server now has v{n}" from the error, before any refetch.
+- [ ] Step 2: add `conflictVersion` beside `fieldViolations`; the admin mock's 412 bodies (listing and policy) carry `errors: {currentVersion}`.
+- [ ] Step 3: `use-listing-mutations.ts` passes the version to `ConflictBanner`; the background refetch stays as the fallback when the error has none.
+
+### A3-02..A3-07
 
 - [ ] Each row starts only when its ask is merged into `contracts/openapi.json`. Run `pnpm gen:api` with the `api-client-regen` skill, then make the change in the files listed and add tests for the new field.
 
@@ -348,18 +368,18 @@ The MSW store implements the backend rules (§2.2), so the rules are tested at t
 
 Each body is **Ask / Why (artboard + contract line) / Acceptance / Frontend fallback**, as in plan §10.
 
-- **[BA-1] `/auth/me` returns `roles`.** Ask: add `roles: string[]` (Sa-Token `getRoleList`) to `MeResponse`. Why: CR-9; the admin guard currently probes an admin endpoint. Acceptance: an admin session → `["buyer","admin"]` or `["admin"]`; the contract is additive. Fallback: probe.
-- **[BA-2] Server-assigned product number.** Ask: drop `productNo` from `CreateListingRequest` and generate one (for example `BB-` + sequence), or confirm the client-supplied number is intended. Why: 4b.1 note "the server assigns it on save". Fallback: create-only field.
+- **[BA-1] `/auth/me` returns `roles`.** Answered by #282. Ask: add `roles: string[]` (Sa-Token `getRoleList`) to `MeResponse`. Why: CR-9; the admin guard currently probes an admin endpoint. Acceptance: an admin session → `["buyer","admin"]` or `["admin"]`; the contract is additive. Fallback: probe.
+- **[BA-2] Server-assigned product number.** Answered by #288 (optional on create; a supplied number is kept). Ask: drop `productNo` from `CreateListingRequest` and generate one (for example `BB-` + sequence), or confirm the client-supplied number is intended. Why: 4b.1 note "the server assigns it on save". Fallback: create-only field.
 - **[BA-3] Admin counts.** Ask: `GET /api/v1/admin/products/counts` → `{draft, onSale, offSale, openDeals}`. Why: 4a.1 stat cards, tab badges, rail. Fallback: three `size=1` calls; no Open blocs.
 - **[BA-4] Latest policy on the admin listing.** Ask: `AdminListingResponse.latestPolicy` (nullable) + count. Why: 4a.2 subline, rail count. Fallback: none shown.
 - **[BA-5] Reference counts.** Ask: `references {deals, quotes, policies}` or `deletable` on the admin read. Why: 4b.3 delete-blocked copy. Fallback: reason without counts.
 - **[BA-6] Field paths on domain 400s (CR-12).** Ask: `CATALOG_400_001` / `400_002` carry `errors: [{field, message}]` (`amount`, `validUntil`, `listing.originalPrice`). Fallback: client pre-validation plus a form alert.
 - **[BA-7] Group terms on `ListingContent` (NFR-29 PR-H).** Answered by #242 (`eed59da`) as a separate endpoint, not `ListingContent` fields: `PUT /api/v1/admin/products/{productId}/team-terms` (`configureTeamTerms`). Both terms are required on the request: `targetSize` ≥2 with no maximum, `lifetimeSeconds` 2400..86400. Terms can be edited in every lifecycle state; the optional `teamPrice` needs an on-sale listing. No longer to be filed.
 - **[BA-8] Payments attention queue.** Ask: an admin-only read of participations in compensation-required state with the 4b.6 columns. Tier 3.
-- **[BA-9] Distinct operationIds** for the six admin operations. Not an HTTP change; generated names only.
+- **[BA-9] Distinct operationIds** for the six generically named admin operations (of seven; `configureTeamTerms` is already distinct). Not an HTTP change; generated names only.
 - **[BA-10] Policy revision history** read (optional).
 - **[BA-11] Policy on drafts.** Either allow it (the price rule prepared before publish) or confirm the on-sale requirement is intentional so design copy changes.
-- **[BA-12] Current version in 412 `errors`** (`{currentVersion}`) for both listing and policy.
+- **[BA-12] Current version in 412 `errors`** (`{currentVersion}`) for both listing and policy. Answered by #286.
 
 ## 11. Design gaps for the design owner
 
@@ -368,14 +388,14 @@ Each body is **Ask / Why (artboard + contract line) / Acceptance / Frontend fall
 - **D3** Scheduled rule state (validFrom in the future) and the replace-now warning.
 - **D4** Dashboard loading and empty; table error; All / On sale / Off sale empty.
 - **D5** Unsaved-changes prompt; toast after save or delete.
-- **D6** Group terms fields in the editor (BA-7).
+- **D6** Group terms panel on the editor page (BA-7, answered by #242): a separate panel with its own save (A3-04), not `ListingForm` fields.
 - **D7** The Description field is missing from 4b.1.
-- **D8** Product number field on create (BA-2 fallback), and the copy change "Add a rule after you publish" (BA-11).
+- **D8** The copy change "Add a rule after you publish" (BA-11). The product number field on create (BA-2 fallback) is no longer needed: #288 answered BA-2, and A3-08 removes the field.
 
 ## 12. Decision notes
 
 1. **Route tree.** `src/routes/_authenticated/admin.tsx` (layout), `admin/index.tsx` (`/admin`), `admin/listings.index.tsx`, `admin/listings.new.tsx`, `admin/listings.$productId.tsx`; Tier 3 `admin/payments.tsx`. Nesting under `_authenticated` reuses the login redirect and `returnTo`. The storefront header is suppressed through `staticData.shell`, not by moving every storefront route under a new pathless layout (that would be a churn-only rename of eight routes).
-2. **Role guard = probe.** `me` has no roles (CR-9), and the flow map says "the console probes and handles 403". The probe is the "All" count query (`size=1`, `staleTime` 30s), so the dashboard and tabs reuse its result. A 403 anywhere later (role revoked) goes to the same boundary. Only `beforeLoad` redirects (AGENTS.md rule 6). Access denied is rendered in place at `/admin`, not as a redirect, as the flow map's terminal node shows.
+2. **Role guard = probe.** When A1 was built `me` had no roles (CR-9); #282 added them and A3-01 replaces the probe. The flow map says "the console probes and handles 403". The probe is the "All" count query (`size=1`, `staleTime` 30s), so the dashboard and tabs reuse its result. A 403 anywhere later (role revoked) goes to the same boundary. Only `beforeLoad` redirects (AGENTS.md rule 6). Access denied is rendered in place at `/admin`, not as a redirect, as the flow map's terminal node shows.
 3. **Generated names are wrapped once** in `admin-api.ts`; no feature file imports `getOptions` or `deleteMutation` directly.
 4. **Table, not list.** Admin data is 8–9 comparable columns, paged server-side, with no sorting (the contract has none; the artboard rationale rejects client sorting of one page). HeroUI `Table` fits and ADR 0001's addendum already chose plain HeroUI `Table` over `@tanstack/react-table`. No new dependency.
 5. **Editor reads are fresh.** Loaders elsewhere use `staleTime: 'static'` (rule 7). The editor loader omits it, because the version is the save precondition and a stale cached version guarantees a 412. The form is keyed by `version`.

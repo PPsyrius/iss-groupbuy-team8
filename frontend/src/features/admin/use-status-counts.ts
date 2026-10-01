@@ -3,9 +3,9 @@ import { useQueries } from "@tanstack/react-query";
 import { adminListingsOptions } from "./admin-api";
 import { LISTING_TABS, type ListingTab, tabToStatus } from "./listings-search";
 
-// The contract has no count endpoint, so each tab's count is the `total` of a one-row page. The
-// "All" query is the admin guard's probe (same key, same 30s staleTime), so it is already cached
-// when the console opens; the dashboard reuses all four (admin plan A1-04 step 4, §12 note 2).
+// The contract has no count endpoint, so each tab's count is the `total` of a one-row page, the
+// "All" tab included (admin plan A1-04 step 4, A3-01); the dashboard reuses all four. A 30s
+// staleTime keeps moving between tabs from re-asking.
 function statusCountOptions(tab: ListingTab) {
   const status = tabToStatus(tab);
   return {

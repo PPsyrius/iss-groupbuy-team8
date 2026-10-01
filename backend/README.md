@@ -34,7 +34,7 @@ For the local Docker stack, put `DB_USERNAME`, `DB_PASSWORD`, and `REDIS_PASSWOR
 docker build -t blocbuy-backend .              # production image (Dockerfile at backend/)
 ```
 
-Profiles: `local` (default; localhost PG/Redis) · `docker` (compose service names) · `stripe-sprint2` (opt-in Sandbox Checkout) · `openapi-export` (build-only, no live infra). Payment rollout and pre-live gates: [Stripe release boundary](docs/payment/stripe-release-boundary.md).
+Profiles: `local` (default; localhost PG/Redis) · `docker` (compose service names) · `ec2` (host loopback) · `openapi-export` (build-only, no live infra). Set `BLOCBUY_STRIPE_CHECKOUT_ENABLED=true` with Sandbox credentials and return URLs to opt into Checkout; it defaults to `false` in every profile. `stripe-sprint2` remains a one-release compatibility alias. Payment rollout and pre-live gates: [Stripe release boundary](docs/payment/stripe-release-boundary.md).
 
 Secrets come from the environment, never from git: `DB_USERNAME`, `DB_PASSWORD`, `REDIS_PASSWORD`, `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`, `TYPESAFE_API_KEY`. Set `TYPESAFE_ENABLED=true` to allow opt-in Jev re-ranking for listing searches; model, endpoint, and timeout settings have safe defaults in `application.yml`.
 

@@ -52,6 +52,11 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8080/api/v1/auth/oauth2/google/callback}
       BLOCBUY_SCHEDULING_ENABLED: ${BLOCBUY_SCHEDULING_ENABLED:-false}
+      BLOCBUY_STRIPE_CHECKOUT_ENABLED: ${BLOCBUY_STRIPE_CHECKOUT_ENABLED:-false}
+      STRIPE_API_KEY: ${STRIPE_API_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      BLOCBUY_PAYMENT_CHECKOUT_SUCCESS_URL: ${BLOCBUY_PAYMENT_CHECKOUT_SUCCESS_URL:-http://localhost:8080/payments/return}
+      BLOCBUY_PAYMENT_CHECKOUT_CANCEL_URL: ${BLOCBUY_PAYMENT_CHECKOUT_CANCEL_URL:-http://localhost:8080/payments/return}
     ports:
       # Published for API tools and plain `pnpm dev` (Vite proxies /api to :8589; no Google sign-in).
       - "127.0.0.1:8589:8589"

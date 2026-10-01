@@ -47,7 +47,12 @@ export function serveAnonymous() {
 }
 
 export function serveSignedIn(
-  user: { userId: string; nickname: string | null; avatarUrl: string | null } = ada,
+  user: {
+    userId: string;
+    nickname: string | null;
+    avatarUrl: string | null;
+    roles?: string[];
+  } = ada,
 ) {
   server.use(
     http.get("*/api/v1/auth/me", () =>
@@ -59,13 +64,13 @@ export function serveSignedIn(
 // Signed in as an admin over a fresh stateful admin store (admin plan A1-02); the store is
 // returned so a test can inspect it or arm a conflict.
 export function serveAdmin(store = createAdminStore()) {
-  serveSignedIn();
+  serveSignedIn({ ...ada, roles: ["admin"] });
   server.use(...adminHandlers(store, { role: "admin" }));
   return store;
 }
 
 // Signed in as a buyer: every admin path answers 403, as Sa-Token's role check does.
 export function serveNonAdmin() {
-  serveSignedIn();
+  serveSignedIn({ ...ada, roles: ["buyer"] });
   server.use(...adminHandlers(createAdminStore(), { role: "buyer" }));
 }
