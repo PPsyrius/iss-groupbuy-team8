@@ -15,7 +15,7 @@ const optionalTrimmed = (max?: number) =>
     v.pipe(
       v.string(),
       v.trim(),
-      v.transform((s) => (s.length > 0 ? (max === undefined ? s : s.slice(0, max)) : undefined)),
+      v.transform((s) => (s.length > 0 ? s.slice(0, max) : undefined)),
     ),
   );
 

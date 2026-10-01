@@ -26,6 +26,17 @@ function GalleryImage({
   );
 }
 
+// Position of the selected shot: its own index while that still holds its source, otherwise the
+// source's first remaining position (-1 when it was removed).
+function selectedShotIndex(
+  images: string[],
+  selection: { src: string; index: number } | null,
+): number {
+  if (!selection) return 0;
+  if (images[selection.index] === selection.src) return selection.index;
+  return images.indexOf(selection.src);
+}
+
 // The route keys this component by product ID. Within a product, retain the selected source
 // after reordering or choose the first remaining shot if it was removed. Keep the index too
 // so duplicate URLs can still be selected individually.
@@ -38,12 +49,7 @@ export function ProductGallery({ images }: { images: string[] }) {
       previous?.src === src && previous.index === shotIndex ? previous : { src, index: shotIndex },
     );
   };
-  const selectedIndex = selection
-    ? images[selection.index] === selection.src
-      ? selection.index
-      : images.indexOf(selection.src)
-    : 0;
-  const index = Math.max(0, selectedIndex);
+  const index = Math.max(0, selectedShotIndex(images, selection));
   const current = images[index];
   const resolvedSelection = current ? { src: current, index } : null;
   // Persist the displayed fallback so later refreshes retain it instead of reviving a removed shot.

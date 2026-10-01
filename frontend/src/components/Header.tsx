@@ -23,9 +23,10 @@ export function Header() {
         <span className="text-muted hidden text-sm xl:inline">
           Bringing people together to buy better
         </span>
-        {session.status === "authenticated" ? (
+        {session.status === "authenticated" && (
           <SignedIn name={session.nickname ?? session.userId} avatarUrl={session.avatarUrl} />
-        ) : onLoginPage ? null : (
+        )}
+        {session.status !== "authenticated" && !onLoginPage && (
           <Link
             to="/login"
             search={{ returnTo: href }}
