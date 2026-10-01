@@ -123,7 +123,7 @@ Columns match `plan.md` §3. `FE` = `frontend/`, `A` = `FE/src/features/admin/`.
 |---|---|---|---|---|---|---|
 | A2-01 | A2 | Bloc price rule panel: none, scheduled, active, expired, conflict, unavailable (draft or off sale); revision form with SGT date pickers; replace-now warning | `A/policy.ts` (state derivation), `A/policy.test.ts`, `A/sgt.ts`, `A/sgt.test.ts`, `A/policy-form.schema.ts`, `A/policy-form.schema.test.ts`, `A/PricePolicyPanel.tsx`, `A/PricePolicyPanel.test.tsx`, `FE/src/routes/_authenticated/admin/listings.$productId.tsx`, `FE/package.json` (`@internationalized/date` 3.12.4) | `cd frontend && pnpm vitest run src/features/admin && pnpm knip` | A1-08 | new · L 2.5d · stack 3 (2026-10-01; PR pending) |
 | A2-02 | A2 | Dashboard: SGT date line, 4 stat cards (Open blocs reads `openDeals` from `counts`, #290), Recent listings (5), New listing, loading / empty / error | `FE/src/routes/_authenticated/admin/index.tsx`, `A/StatCards.tsx`, `A/StatCards.test.tsx`, `A/RecentListings.tsx`, `A/ListingsTable.tsx` (`variant="recent"`), `A/sgt.ts` (`formatSgtDate`), `A/sgt.test.ts`, `A/use-minute-clock.ts`, `FE/src/routes/admin-dashboard.test.tsx` | `cd frontend && pnpm vitest run src/routes/admin-dashboard.test.tsx src/features/admin` | A1-04 | new · S 0.75d · stack 2 (2026-10-01) |
-| A2-03 | A2 | Playwright: anonymous → `/login`; non-admin → 403 card; stubbed admin create → publish → conflict; `@admin` real run on dev behind a storage state | `FE/e2e/admin.spec.ts`, `FE/e2e/README.md` | `cd frontend && pnpm build && pnpm e2e --grep admin`; `E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e --grep @admin` | A1-08, A2-01 | new · S 0.5d · deferred (Q1) |
+| A2-03 | A2 | Playwright: anonymous → `/login`; non-admin → 403 card; stubbed admin create → publish → conflict; `@admin` real run on dev behind a storage state | `FE/e2e/admin.spec.ts`, `FE/e2e/README.md` | `cd frontend && pnpm build && pnpm e2e --grep admin`; `E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e --grep @admin` | A1-08, A2-01 | new · S 0.5d · stack 3 (2026-10-01; PR pending) |
 | A2-04 | A2 | Docs: `design-screens.md` §4.7 (admin, from the artboards), ADR 0015 (admin shell, probe guard, pessimistic writes), AGENTS.md layout line, sprint log | `FE/docs/design-screens.md`, `FE/docs/adr/0015-admin-console-shell-and-guard.md`, `FE/docs/adr/README.md`, `FE/AGENTS.md`, `docs/agile/sprint-03/log/…` | `grep -q '4.7' frontend/docs/design-screens.md && test -f frontend/docs/adr/0015-*.md` | A1-03 | new · S 0.5d · deferred (Q1) |
 
 ### Tier A3: blocked on backend asks (rows only)
@@ -257,10 +257,10 @@ Note (#242): a team-terms write also increments the product `version`, so a term
 
 ### A2-03: Playwright
 
-- [ ] Step 1: `admin.spec.ts` "anonymous" (every target): `/admin` → `/login?returnTo=%2Fadmin`.
-- [ ] Step 2: "non-admin" (every target, `page.route` stubs `me` 200 and admin 403): the 403 card is shown and the storefront header is absent.
-- [ ] Step 3: "admin, stubbed" (every target, `page.route` with an in-spec store): create draft → publish dialog shows the three values → status On sale v1 (publish from v0) → a forced 412 shows the banner → Reload.
-- [ ] Step 4: `@admin` (dev only; skipped unless `e2e/.auth/admin.json` exists): the list loads and one draft is created, then deleted. `e2e/README.md` gets the seeding command and the "admin role must be granted in the dev DB" note.
+- [x] Step 1: `admin.spec.ts` "anonymous" (every target): `/admin` → `/login?returnTo=%2Fadmin`. (2026-10-01)
+- [x] Step 2: "non-admin" (every target, `page.route` stubs `me` 200 and admin 403): the 403 card is shown and the storefront header is absent. (2026-10-01)
+- [x] Step 3: "admin, stubbed" (every target, `page.route` with an in-spec store): create draft → publish dialog shows the three values → status On sale v1 (publish from v0) → a forced 412 shows the banner → Reload. (2026-10-01)
+- [x] Step 4: `@admin` (dev only; skipped unless `e2e/.auth/admin.json` exists): the list loads and one draft is created, then deleted. `e2e/README.md` gets the seeding command and the "admin role must be granted in the dev DB" note. Written; it skips until an admin is granted on the dev DB (§6 Q11). (2026-10-01)
 
 ### A2-04: Docs
 
