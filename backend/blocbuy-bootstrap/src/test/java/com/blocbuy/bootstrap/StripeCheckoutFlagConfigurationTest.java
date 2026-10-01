@@ -14,6 +14,7 @@ import com.blocbuy.payment.service.StripeCheckoutService;
 import com.blocbuy.payment.service.StripeFeatureSwitch;
 import com.blocbuy.payment.service.StripePaymentAppService;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -130,9 +131,9 @@ class StripeCheckoutFlagConfigurationTest {
 
     private static String causeMessages(Throwable failure) {
         return Stream.iterate(failure, Throwable::getCause)
-                .takeWhile(cause -> cause != null)
+                .takeWhile(Objects::nonNull)
                 .map(Throwable::getMessage)
-                .filter(message -> message != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.joining("\n"));
     }
 
