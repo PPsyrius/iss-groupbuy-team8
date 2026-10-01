@@ -14,6 +14,7 @@ import { refusalOf } from "@/features/admin/listing-errors";
 import { fromListing } from "@/features/admin/listing-form";
 import { statusLabel } from "@/features/admin/listing-status";
 import { type FieldProblem, ListingForm, type SubmitProblem } from "@/features/admin/ListingForm";
+import { PricePolicyPanel } from "@/features/admin/PricePolicyPanel";
 import {
   problemFor,
   useRouteBoundary,
@@ -209,6 +210,11 @@ function EditListingPage() {
           {conflict !== null && fieldProblems.length > 0 ? (
             <ProblemsCard fieldProblems={fieldProblems} serverVersion={serverVersion} />
           ) : null}
+          <PricePolicyPanel
+            productId={productId}
+            status={listing.status}
+            originalPrice={listing.listing?.originalPrice ?? ""}
+          />
         </aside>
       </div>
     </div>

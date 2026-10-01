@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 
 import { CATEGORIES, categoryLabel } from "@/features/catalog/categories";
 
+import { messageOf } from "./field-message";
 import { FrozenLabel, frozenInput } from "./FrozenField";
 import { ImageUrlsField } from "./ImageUrlsField";
 import type { ListingFormValues } from "./listing-form";
@@ -56,18 +57,6 @@ const fieldNames = new Set<string>(Object.keys(fieldLabels));
 // A server field path, already stripped of its `listing.` prefix; `images[3]` names a row.
 function isFieldName(name: string): name is FieldName {
   return fieldNames.has(name) || /^images\[\d+\]$/.test(name);
-}
-
-// TanStack Form keeps every validator's errors: valibot issues from the schema, or the plain
-// strings a failed save puts there.
-function messageOf(errors: readonly unknown[]): string | undefined {
-  const messages = errors.flatMap((e) => {
-    if (typeof e === "string") return [e];
-    if (e && typeof e === "object" && "message" in e && typeof e.message === "string")
-      return [e.message];
-    return [];
-  });
-  return messages.length > 0 ? messages.join(" ") : undefined;
 }
 
 function labelOf(name: string): string {

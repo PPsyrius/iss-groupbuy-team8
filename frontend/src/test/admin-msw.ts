@@ -313,6 +313,23 @@ function stale(store: AdminStore, row: AdminRow, expected: unknown) {
   return expected !== row.version;
 }
 
+// A rule the backend's `TeamPricePolicy` refuses on its own, with the field path and message it
+// sends since #323 (BA-6).
+function policyProblem(
+  body: Partial<{ currency: string; validFrom: string; validUntil: string }>,
+  amount: bigint,
+): { field: string; message: string } | null {
+  const from = Date.parse(body.validFrom ?? "");
+  const until = Date.parse(body.validUntil ?? "");
+  if (Number.isNaN(from)) return { field: "validFrom", message: "Start time is required" };
+  if (Number.isNaN(until) || !(from < until))
+    return { field: "validUntil", message: "Must be after the start" };
+  if (body.currency !== "sgd") return { field: "currency", message: "Must be SGD (sgd)" };
+  if (amount <= 0n)
+    return { field: "amount", message: "Must be positive and at most 9999999999999999.99" };
+  return null;
+}
+
 export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "buyer" }) {
   const admin = "*/api/v1/admin/products";
   const policy = "*/api/v1/products/:productId/team-price-policy";
@@ -492,26 +509,28 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
           validUntil: string;
           expectedVersion: number;
         }>(request);
-        if (row.status !== "on_sale") return fail(E.policyUnavailable);
         const current = store.policyOf(id);
+        // The backend's order (TeamPriceAppServiceImpl.configure): the version under the row
+        // lock, then the rule itself, then the listing it prices, then the end against now.
         // An armed conflict always refuses, even for a first rule (absent policy = version 0).
         const conflicted = store.takeConflict();
         if (conflicted && current) current.version += 1;
         if (conflicted || body.expectedVersion !== (current?.version ?? 0))
           return staleAt(E.policyVersionConflict, current?.version ?? 0);
         const amount = typeof body.amount === "string" ? toCents(body.amount) : null;
-        const price = toCents(row.listing.originalPrice) ?? 0n;
-        const from = Date.parse(body.validFrom ?? "");
-        const until = Date.parse(body.validUntil ?? "");
-        if (
-          amount === null ||
-          amount <= 0n ||
-          amount >= price ||
-          body.currency !== "sgd" ||
-          !(from < until) ||
-          !(until > Date.now())
-        )
-          return fail(E.policyInvalid);
+        if (amount === null)
+          return fail(E.validationFailed, [
+            { field: "amount", message: "must be a decimal amount" },
+          ]);
+        const problem = policyProblem(body, amount);
+        if (problem) return fail(E.policyInvalid, [problem]);
+        if (row.status !== "on_sale") return fail(E.policyUnavailable);
+        if (amount >= (toCents(row.listing.originalPrice) ?? 0n))
+          return fail(E.policyInvalid, [
+            { field: "amount", message: "Must be strictly below the solo price" },
+          ]);
+        if (!(Date.parse(body.validUntil ?? "") > Date.now()))
+          return fail(E.policyInvalid, [{ field: "validUntil", message: "Must be in the future" }]);
         const next: Policy = {
           productId: id,
           amount: body.amount ?? "",
