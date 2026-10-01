@@ -48,6 +48,8 @@ import org.springframework.transaction.support.TransactionTemplate;
             "spring.flyway.locations=classpath:db/migration,classpath:db/stripe-fixture",
             "spring.data.redis.host=127.0.0.1",
             "spring.data.redis.port=1",
+            "blocbuy.payment.stripe.api-key=sk_test_local_fixture",
+            "blocbuy.payment.stripe.webhook-secret=whsec_local_fixture",
             "blocbuy.payment.checkout.success-url=https://shop.example/payments/return",
             "blocbuy.payment.checkout.cancel-url=https://shop.example/payments/return",
             "blocbuy.scheduling.enabled=true",
