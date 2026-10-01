@@ -356,6 +356,79 @@ describe("/admin/listings/$productId conflicts and refusals", () => {
     expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled();
   });
 
+  // Raises the banner the usual way: someone else saved v5 while v4 was open.
+  async function staleSave(user: ReturnType<typeof userEvent.setup>, store: Store) {
+    const rice = rowOf(store, "BB-100481");
+    renderRoute(`/admin/listings/${rice.id}`);
+    await user.type(await screen.findByRole("textbox", { name: "Subtitle" }), "!");
+    rice.version = 5;
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(await screen.findByText(stale)).toBeVisible();
+    return rice;
+  }
+
+  it("says so when Reload fails, keeps the banner and lets Reload try again", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    let failing = true;
+    server.use(
+      http.get("*/api/v1/admin/products/:productId", () =>
+        failing
+          ? HttpResponse.json(
+              { code: "COMMON_500_001", message: "Internal error" },
+              { status: 500 },
+            )
+          : undefined,
+      ),
+    );
+    failing = false;
+    await staleSave(user, store);
+
+    failing = true;
+    await user.click(screen.getByRole("button", { name: "Reload" }));
+    expect(await screen.findByText("We couldn’t reload the listing. Try again.")).toBeVisible();
+    expect(screen.getByText("This listing was updated by someone else")).toBeVisible();
+
+    failing = false;
+    await user.click(screen.getByRole("button", { name: "Reload" }));
+    expect(await screen.findByText("BB-100481 · on sale · v5 · 142 sold")).toBeVisible();
+    expect(screen.queryByText("This listing was updated by someone else")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("We couldn’t reload the listing. Try again."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows that the listing no longer exists when Reload finds it deleted", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const rice = await staleSave(user, store);
+    store.rows.splice(store.rows.indexOf(rice), 1);
+
+    await user.click(screen.getByRole("button", { name: "Reload" }));
+    expect(
+      await screen.findByRole("heading", { name: "This listing no longer exists" }),
+    ).toBeVisible();
+  });
+
+  it("shows Access denied when Reload is refused", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    await staleSave(user, store);
+    server.use(
+      http.get("*/api/v1/admin/products/:productId", () =>
+        HttpResponse.json(
+          { code: "COMMON_403_001", message: "Permission denied" },
+          { status: 403 },
+        ),
+      ),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Reload" }));
+    expect(
+      await screen.findByRole("heading", { name: "You don’t have access to the admin console" }),
+    ).toBeVisible();
+  });
+
   it("closes a stale publish into the same banner", async () => {
     const user = userEvent.setup();
     const store = serveAdmin();

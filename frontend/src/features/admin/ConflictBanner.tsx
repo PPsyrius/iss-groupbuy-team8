@@ -10,11 +10,13 @@ export function ConflictBanner({
   serverVersion,
   onReload,
   isReloading = false,
+  reloadFailed = false,
 }: Readonly<{
   loadedVersion: number;
   serverVersion?: number | undefined;
   onReload: () => void;
   isReloading?: boolean;
+  reloadFailed?: boolean;
 }>) {
   const server =
     serverVersion === undefined
@@ -29,6 +31,11 @@ export function ConflictBanner({
           You loaded v{loadedVersion}; {server}. Reload to see the latest version — your unsaved
           changes will be lost.
         </Alert.Description>
+        {reloadFailed ? (
+          <Alert.Description className="font-medium">
+            We couldn’t reload the listing. Try again.
+          </Alert.Description>
+        ) : null}
       </Alert.Content>
       <Button variant="tertiary" size="sm" onPress={onReload} isDisabled={isReloading}>
         Reload

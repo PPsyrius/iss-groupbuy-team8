@@ -57,6 +57,7 @@ function EditListingPage() {
   const [conflict, setConflict] = useState(false);
   const [reloads, setReloads] = useState(0);
   const [reloading, setReloading] = useState(false);
+  const [reloadFailed, setReloadFailed] = useState(false);
   const toBoundary = useRouteBoundary();
   const qc = useQueryClient();
   const { data: serverVersion } = useQuery({
@@ -64,15 +65,24 @@ function EditListingPage() {
     enabled: conflict,
   });
   // Reload writes the fresh read into the editor's entry and remounts the form from it; the
-  // counter remounts it even if the version did not move.
+  // counter remounts it even if the version did not move. A failed read keeps the banner and
+  // says so, so Reload can be tried again; a listing deleted meanwhile shows the not-found card,
+  // and a revoked role goes to Access denied, as a refused write does.
   const reload = async () => {
     setReloading(true);
+    setReloadFailed(false);
     try {
-      await qc.fetchQuery({ ...adminListingOptions(productId), staleTime: 0 });
+      // No automatic retry: Reload is the user's own action and they can press it again.
+      await qc.fetchQuery({ ...adminListingOptions(productId), staleTime: 0, retry: false });
       qc.removeQueries({ queryKey: adminServerVersionOptions(productId).queryKey });
       setConflict(false);
       setFieldProblems([]);
       setReloads((n) => n + 1);
+    } catch (error) {
+      if (error instanceof ApiError && (error.status === 404 || /_404_/.test(error.code)))
+        toBoundary(notFound());
+      else if (refusalOf(error).kind === "forbidden") toBoundary(error);
+      else setReloadFailed(true);
     } finally {
       setReloading(false);
     }
@@ -110,6 +120,7 @@ function EditListingPage() {
           serverVersion={serverVersion}
           onReload={() => void reload()}
           isReloading={reloading}
+          reloadFailed={reloadFailed}
         />
       ) : null}
       <nav aria-label="Breadcrumb" className="text-muted flex items-center gap-2">
