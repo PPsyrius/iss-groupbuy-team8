@@ -1,10 +1,11 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
+import { OK_CODE } from "@/api/envelope";
 import { queryClient } from "@/api/query-client";
-import { createAdminStore } from "@/test/admin-msw";
+import { adminHandlers, createAdminStore } from "@/test/admin-msw";
 import { server } from "@/test/msw";
 import { renderRoute, serveAdmin } from "@/test/render-route";
 
@@ -87,6 +88,36 @@ describe("/admin (dashboard)", () => {
     }
   });
 
+  it("shows the moved counts and the changed row after a write elsewhere", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const { router } = renderRoute("/admin");
+    await screen.findByRole("region", { name: "Recent listings" });
+    expect(await within(stat("Open blocs")).findByText("26")).toBeVisible();
+    expect(within(stat("On sale")).getByText("34")).toBeVisible();
+
+    // Take the rice listing off sale from the table's row menu, then come back.
+    await router.navigate({ to: "/admin/listings" });
+    await user.click(
+      await screen.findByRole("button", { name: "Actions for Thai jasmine rice 10 kg" }),
+    );
+    const menu = await screen.findByRole("menu");
+    await user.click(within(menu).getByRole("menuitem", { name: "Take off sale" }));
+    const dialog = await screen.findByRole("alertdialog", { name: "Take this listing off sale?" });
+    await user.click(within(dialog).getByRole("button", { name: "Take off sale" }));
+    await waitFor(() => expect(store.rows[0]).toMatchObject({ status: "off_sale", version: 5 }));
+
+    await router.navigate({ to: "/admin" });
+    // Wait for the rows themselves: the loading view's skeleton table carries the same region.
+    await screen.findByRole("link", { name: "Thai jasmine rice 10 kg" });
+    const recent = screen.getByRole("region", { name: "Recent listings" });
+    const rice = within(recent).getByRole("row", { name: /Thai jasmine rice 10 kg/ });
+    expect(await within(rice).findByText("Off sale")).toBeVisible();
+    expect(within(rice).getByText("v5")).toBeVisible();
+    expect(await within(stat("On sale")).findByText("33")).toBeVisible();
+    expect(within(stat("Off sale")).getByText("15")).toBeVisible();
+  });
+
   it("invites the first listing when there are none", async () => {
     serveAdmin(createAdminStore([], { openDeals: 0 }));
     renderRoute("/admin");
@@ -97,6 +128,28 @@ describe("/admin (dashboard)", () => {
     expect(links).toHaveLength(2);
     for (const link of links) expect(link).toHaveAttribute("href", "/admin/listings/new");
     expect(await within(stat("Drafts")).findByText("0")).toBeVisible();
+  });
+
+  it("treats a page without items as empty", async () => {
+    serveAdmin();
+    server.use(
+      http.get("*/api/v1/admin/products", () =>
+        HttpResponse.json({ code: OK_CODE, message: "ok", data: { total: 0 } }),
+      ),
+    );
+    renderRoute("/admin");
+    expect(await screen.findByRole("heading", { name: "No listings yet" })).toBeVisible();
+  });
+
+  it("shows Access denied when the role went away mid-session", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    serveAdmin();
+    server.use(...adminHandlers(createAdminStore(), { role: "buyer" }));
+    renderRoute("/admin");
+    expect(
+      await screen.findByRole("heading", { name: "You don’t have access to the admin console" }),
+    ).toBeVisible();
+    expect(screen.queryByText("We couldn’t load the dashboard")).toBeNull();
   });
 
   it("offers Try again when the recent listings fail to load", async () => {
