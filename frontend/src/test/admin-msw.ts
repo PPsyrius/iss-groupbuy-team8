@@ -72,14 +72,19 @@ interface AdminRow {
   version: number;
 }
 
-// #242 added `teamTerms` to every admin listing response. The terms endpoint itself is not mocked
-// yet (admin plan A3-04), so every listing reads as never configured, the backend default.
-const view = (row: AdminRow) => ({
-  ...row,
-  teamTerms: { targetSize: null, lifetimeSeconds: null, configured: false },
-});
-
 type Policy = Required<PolicyResponse>;
+
+// #242 added `teamTerms` to every admin listing response. The terms endpoint itself is not mocked
+// yet (admin plan A3-04), so every listing reads as never configured, the backend default. #293
+// added `latestPolicy`: the latest rule revision without its `productId`, or null when none.
+const view = (row: AdminRow, policy: Policy | undefined) => {
+  const { productId: _productId, ...latestPolicy } = policy ?? {};
+  return {
+    ...row,
+    teamTerms: { targetSize: null, lifetimeSeconds: null, configured: false },
+    latestPolicy: policy ? latestPolicy : null,
+  };
+};
 
 const rowId = (n: number) => `0192f0a0-0000-7000-a000-${String(n).padStart(12, "0")}`;
 const daysFromNow = (d: number) => new Date(Date.now() + d * 86_400_000).toISOString();
@@ -253,8 +258,10 @@ function historyBlocks(store: AdminStore, row: AdminRow) {
 
 // The single admin read adds the retained history and the snapshot eligibility (#300); page and
 // mutation responses omit both.
+const viewOf = (store: AdminStore, row: AdminRow) => view(row, store.policyOf(row.id));
+
 const detail = (store: AdminStore, row: AdminRow) => ({
-  ...view(row),
+  ...viewOf(store, row),
   references: store.references(row.id),
   deletable: row.status === "draft" && !historyBlocks(store, row),
 });
@@ -340,7 +347,7 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
         if (errors.length > 0) return fail(E.badRequest, errors);
         const hits = status === null ? store.rows : store.rows.filter((r) => r.status === status);
         return ok({
-          items: hits.slice((page - 1) * size, page * size).map(view),
+          items: hits.slice((page - 1) * size, page * size).map((row) => viewOf(store, row)),
           total: hits.length,
           page,
           size,
@@ -370,7 +377,7 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
           version: 0,
         };
         store.rows.unshift(row);
-        return ok(view(row));
+        return ok(viewOf(store, row));
       }),
     ),
 
@@ -417,7 +424,7 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
           return fail(E.stateConflict);
         row.listing = { ...next };
         row.version += 1;
-        return ok(view(row));
+        return ok(viewOf(store, row));
       }),
     ),
 
@@ -438,7 +445,7 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
           return fail(E.stateConflict);
         row.status = body.status;
         row.version += 1;
-        return ok(view(row));
+        return ok(viewOf(store, row));
       }),
     ),
 
