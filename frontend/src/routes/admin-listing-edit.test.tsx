@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { http } from "msw";
+import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 
 import type { createAdminStore } from "@/test/admin-msw";
@@ -314,6 +314,264 @@ describe("/admin/listings/$productId", () => {
       await within(screen.getByRole("region", { name: "Status" })).findByRole("button", {
         name: "Put back on sale",
       }),
+    ).toBeVisible();
+  });
+});
+
+// Conflicts and refusals (admin plan A1-08, artboard 4b.4). "Someone else" is the test moving the
+// stored row on, as another admin's save would.
+describe("/admin/listings/$productId conflicts and refusals", () => {
+  const stale =
+    "You loaded v4; the server now has v5. Reload to see the latest version — your unsaved changes will be lost.";
+
+  it("turns a stale save into the conflict banner and keeps the typed edits until Reload", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const rice = rowOf(store, "BB-100481");
+    renderRoute(`/admin/listings/${rice.id}`);
+    const title = await screen.findByRole("textbox", { name: "Title" });
+    rice.version = 5;
+    rice.listing.title = "Thai jasmine rice 10 kg (their edit)";
+    await user.clear(title);
+    await user.type(title, "Thai jasmine rice 10 kg (my edit)");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(await screen.findByText("This listing was updated by someone else")).toBeVisible();
+    expect(await screen.findByText(stale)).toBeVisible();
+    // The background read leaves the form alone, and nothing can be sent until Reload.
+    expect(screen.getByRole("textbox", { name: "Title" })).toHaveValue(
+      "Thai jasmine rice 10 kg (my edit)",
+    );
+    expect(screen.getByText("BB-100481 · on sale · v4 · 142 sold")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
+    const status = screen.getByRole("region", { name: "Status" });
+    expect(within(status).getByRole("button", { name: "Take off sale" })).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: "Reload" }));
+    expect(await screen.findByText("BB-100481 · on sale · v5 · 142 sold")).toBeVisible();
+    expect(screen.queryByText("This listing was updated by someone else")).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Title" })).toHaveValue(
+      "Thai jasmine rice 10 kg (their edit)",
+    );
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled();
+  });
+
+  // Raises the banner the usual way: someone else saved v5 while v4 was open.
+  async function staleSave(user: ReturnType<typeof userEvent.setup>, store: Store) {
+    const rice = rowOf(store, "BB-100481");
+    renderRoute(`/admin/listings/${rice.id}`);
+    await user.type(await screen.findByRole("textbox", { name: "Subtitle" }), "!");
+    rice.version = 5;
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(await screen.findByText(stale)).toBeVisible();
+    return rice;
+  }
+
+  it("says so when Reload fails, keeps the banner and lets Reload try again", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    let failing = true;
+    server.use(
+      http.get("*/api/v1/admin/products/:productId", () =>
+        failing
+          ? HttpResponse.json(
+              { code: "COMMON_500_001", message: "Internal error" },
+              { status: 500 },
+            )
+          : undefined,
+      ),
+    );
+    failing = false;
+    await staleSave(user, store);
+
+    failing = true;
+    await user.click(screen.getByRole("button", { name: "Reload" }));
+    expect(await screen.findByText("We couldn’t reload the listing. Try again.")).toBeVisible();
+    expect(screen.getByText("This listing was updated by someone else")).toBeVisible();
+
+    failing = false;
+    await user.click(screen.getByRole("button", { name: "Reload" }));
+    expect(await screen.findByText("BB-100481 · on sale · v5 · 142 sold")).toBeVisible();
+    expect(screen.queryByText("This listing was updated by someone else")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("We couldn’t reload the listing. Try again."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows that the listing no longer exists when Reload finds it deleted", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const rice = await staleSave(user, store);
+    store.rows.splice(store.rows.indexOf(rice), 1);
+
+    await user.click(screen.getByRole("button", { name: "Reload" }));
+    expect(
+      await screen.findByRole("heading", { name: "This listing no longer exists" }),
+    ).toBeVisible();
+  });
+
+  it("shows Access denied when Reload is refused", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    await staleSave(user, store);
+    server.use(
+      http.get("*/api/v1/admin/products/:productId", () =>
+        HttpResponse.json(
+          { code: "COMMON_403_001", message: "Permission denied" },
+          { status: 403 },
+        ),
+      ),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Reload" }));
+    expect(
+      await screen.findByRole("heading", { name: "You don’t have access to the admin console" }),
+    ).toBeVisible();
+  });
+
+  it("closes a stale publish into the same banner", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const milk = rowOf(store, "BB-100472");
+    renderRoute(`/admin/listings/${milk.id}`);
+    await user.click(await screen.findByRole("button", { name: "Publish" }));
+    milk.version = 1;
+    const dialog = await screen.findByRole("alertdialog", { name: "Publish this listing?" });
+    await user.click(within(dialog).getByRole("button", { name: "Publish listing" }));
+
+    expect(await screen.findByText("This listing was updated by someone else")).toBeVisible();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("alertdialog", { name: "Publish this listing?" }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(screen.getByRole("button", { name: "Publish" })).toBeDisabled();
+    expect(milk).toMatchObject({ status: "draft", version: 1 });
+  });
+
+  it("closes a stale delete into the same banner", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const milk = rowOf(store, "BB-100472");
+    renderRoute(`/admin/listings/${milk.id}`);
+    const status = await screen.findByRole("region", { name: "Status" });
+    await user.click(within(status).getByRole("button", { name: "Delete draft" }));
+    milk.version = 1;
+    const dialog = await screen.findByRole("alertdialog", { name: "Delete this draft?" });
+    await user.click(within(dialog).getByRole("button", { name: "Delete draft" }));
+
+    expect(await screen.findByText("This listing was updated by someone else")).toBeVisible();
+    expect(
+      within(screen.getByRole("region", { name: "Status" })).getByRole("button", {
+        name: "Delete draft",
+      }),
+    ).toBeDisabled();
+    expect(store.find(milk.id)).toBeDefined();
+  });
+
+  it("asks for a reload when the listing changed state underneath", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const rice = rowOf(store, "BB-100481");
+    renderRoute(`/admin/listings/${rice.id}`);
+    const status = await screen.findByRole("region", { name: "Status" });
+    rice.status = "off_sale";
+    await user.click(within(status).getByRole("button", { name: "Take off sale" }));
+    const dialog = await screen.findByRole("alertdialog", { name: "Take this listing off sale?" });
+    await user.click(within(dialog).getByRole("button", { name: "Take off sale" }));
+
+    expect(
+      await within(dialog).findByText(
+        "This listing changed state. Reload to see what you can do now.",
+      ),
+    ).toBeVisible();
+    expect(screen.queryByText("This listing was updated by someone else")).not.toBeInTheDocument();
+  });
+
+  it("keeps Save disabled until a field error clears", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const rice = rowOf(store, "BB-100481");
+    renderRoute(`/admin/listings/${rice.id}`);
+    const title = await screen.findByRole("textbox", { name: "Title" });
+    await user.clear(title);
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(await screen.findByText("Enter a title.")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
+    await user.type(title, "Jasmine rice");
+    await waitFor(() => expect(screen.queryByText("Enter a title.")).not.toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled();
+  });
+
+  it("lists a field error and a conflict together as two problems to clear", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const rice = rowOf(store, "BB-100481");
+    renderRoute(`/admin/listings/${rice.id}`);
+    const title = await screen.findByRole("textbox", { name: "Title" });
+    await user.clear(title);
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(await screen.findByText("Enter a title.")).toBeVisible();
+
+    rice.version = 5;
+    const status = screen.getByRole("region", { name: "Status" });
+    await user.click(within(status).getByRole("button", { name: "Take off sale" }));
+    const dialog = await screen.findByRole("alertdialog", { name: "Take this listing off sale?" });
+    await user.click(within(dialog).getByRole("button", { name: "Take off sale" }));
+
+    const problems = await screen.findByRole("region", { name: "Two problems to clear" });
+    expect(
+      within(problems)
+        .getAllByRole("listitem")
+        .map((li) => li.textContent),
+    ).toEqual(["Title: Enter a title.", "Someone else saved v5 while this page was open."]);
+    expect(await screen.findByText(stale)).toBeVisible();
+  });
+
+  it("keeps the form and offers sign-in when the session ended", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const rice = rowOf(store, "BB-100481");
+    server.use(
+      http.put("*/api/v1/admin/products/:productId", () =>
+        HttpResponse.json({ code: "COMMON_401_001", message: "Not signed in" }, { status: 401 }),
+      ),
+    );
+    renderRoute(`/admin/listings/${rice.id}`);
+    const subtitle = await screen.findByRole("textbox", { name: "Subtitle" });
+    await user.clear(subtitle);
+    await user.type(subtitle, "Kept while signed out");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    const message = await screen.findByText("Your session ended. Sign in again to save.");
+    const alert = message.closest<HTMLElement>('[role="alert"]');
+    if (!alert) throw new Error("the session message is not in an alert");
+    expect(message).toBeVisible();
+    expect(within(alert).getByRole("link", { name: "Sign in" })).toHaveAttribute(
+      "href",
+      `/login?returnTo=${encodeURIComponent(`/admin/listings/${rice.id}`)}`,
+    );
+    expect(subtitle).toHaveValue("Kept while signed out");
+  });
+
+  it("shows Access denied when the admin role is revoked mid-session", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const rice = rowOf(store, "BB-100481");
+    server.use(
+      http.put("*/api/v1/admin/products/:productId", () =>
+        HttpResponse.json(
+          { code: "COMMON_403_001", message: "Permission denied" },
+          { status: 403 },
+        ),
+      ),
+    );
+    renderRoute(`/admin/listings/${rice.id}`);
+    await user.type(await screen.findByRole("textbox", { name: "Subtitle" }), "!");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(
+      await screen.findByRole("heading", { name: "You don’t have access to the admin console" }),
     ).toBeVisible();
   });
 });

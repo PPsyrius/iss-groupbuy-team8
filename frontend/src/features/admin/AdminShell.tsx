@@ -77,10 +77,15 @@ function AdminUser() {
 // The layout's error boundary: a 403 from the probe, or from any admin call later (a role
 // revoked mid-session), is the Access denied card; anything else is the global error card.
 // Both sit under a wordmark-only bar, since the storefront header is hidden on this subtree.
+export function isAdminDenied(error: unknown) {
+  return (
+    error instanceof AdminAccessDenied ||
+    (error instanceof ApiError && (error.status === 403 || /_403_/.test(error.code)))
+  );
+}
+
 export function AdminRouteError(props: ErrorComponentProps) {
-  const denied =
-    props.error instanceof AdminAccessDenied ||
-    (props.error instanceof ApiError && props.error.status === 403);
+  const denied = isAdminDenied(props.error);
   return (
     <>
       <header className="bg-surface border-border flex h-16 items-center border-b px-8">
@@ -91,4 +96,12 @@ export function AdminRouteError(props: ErrorComponentProps) {
       {denied ? <AccessDeniedCard /> : <RouteErrorCard {...props} />}
     </>
   );
+}
+
+// The boundary of a console page (A1-08). A 403 there means the role went away mid-session: it is
+// handed up to the console's boundary above, which swaps the whole shell for Access denied, as
+// the probe does on entry. Anything else stays a page error inside the shell.
+export function AdminChildError(props: ErrorComponentProps) {
+  if (isAdminDenied(props.error)) throw props.error;
+  return <RouteErrorCard {...props} />;
 }
