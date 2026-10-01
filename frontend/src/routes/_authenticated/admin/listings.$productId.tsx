@@ -8,7 +8,7 @@ import { adminListingOptions, adminServerVersionOptions } from "@/features/admin
 import { AdminChildError } from "@/features/admin/AdminShell";
 import { ConflictBanner, ProblemsCard } from "@/features/admin/ConflictBanner";
 import { EditorSidebar, SidebarActions } from "@/features/admin/EditorSidebar";
-import { actionsFor } from "@/features/admin/lifecycle";
+import { actionsFor, deleteBlockedReason } from "@/features/admin/lifecycle";
 import { type DialogKind, LifecycleDialog } from "@/features/admin/LifecycleDialogs";
 import { refusalOf } from "@/features/admin/listing-errors";
 import { fromListing } from "@/features/admin/listing-form";
@@ -95,6 +95,7 @@ function EditListingPage() {
     dirty,
     stock: listing.listing?.stock ?? 0,
     price: listing.listing?.originalPrice ?? "",
+    deletable: listing.deletable,
   });
   const publish = actions.find((a) => a.kind === "publish");
   const onSubmit = async (
@@ -194,7 +195,12 @@ function EditListingPage() {
         />
         <aside className="flex flex-col gap-4">
           <EditorSidebar status={listing.status} version={version} showLifecycle>
-            <SidebarActions actions={actions} onOpen={setDialog} isDisabled={conflict !== null} />
+            <SidebarActions
+              actions={actions}
+              onOpen={setDialog}
+              blockedReason={deleteBlockedReason(listing.status, listing.references)}
+              isDisabled={conflict !== null}
+            />
           </EditorSidebar>
           {conflict !== null && fieldProblems.length > 0 ? (
             <ProblemsCard fieldProblems={fieldProblems} serverVersion={serverVersion} />
