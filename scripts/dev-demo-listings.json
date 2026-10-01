@@ -1,0 +1,70 @@
+[
+  {
+    "productNo": "US34-01",
+    "listing": {
+      "title": "Wireless Earbuds Pro",
+      "subtitle": "Active noise cancelling, 30h with case",
+      "description": "Demo listing seeded on dev for the Sprint 3 Review (US34). Synthetic data.",
+      "coverImage": null,
+      "images": null,
+      "category": "electronics",
+      "originalPrice": "119.00",
+      "currency": "sgd",
+      "stock": 100
+    },
+    "targetSize": 3,
+    "lifetimeSeconds": 86400,
+    "teamPrice": "89.00"
+  },
+  {
+    "productNo": "US34-02",
+    "listing": {
+      "title": "Insulated Water Bottle 750ml",
+      "subtitle": "Keeps drinks cold for 24h",
+      "description": "Demo listing seeded on dev for the Sprint 3 Review (US34). Synthetic data.",
+      "coverImage": null,
+      "images": null,
+      "category": "home",
+      "originalPrice": "39.00",
+      "currency": "sgd",
+      "stock": 100
+    },
+    "targetSize": 3,
+    "lifetimeSeconds": 86400,
+    "teamPrice": "29.00"
+  },
+  {
+    "productNo": "US34-03",
+    "listing": {
+      "title": "Pour-Over Coffee Kit",
+      "subtitle": "Dripper, glass server and 100 filters",
+      "description": "Demo listing seeded on dev for the Sprint 3 Review (US34). Synthetic data.",
+      "coverImage": null,
+      "images": null,
+      "category": "home",
+      "originalPrice": "69.00",
+      "currency": "sgd",
+      "stock": 100
+    },
+    "targetSize": 3,
+    "lifetimeSeconds": 86400,
+    "teamPrice": "49.00"
+  },
+  {
+    "productNo": "US34-04",
+    "listing": {
+      "title": "Universal Travel Adapter",
+      "subtitle": "Short-lived team for the expiry and refund check (US13)",
+      "description": "Demo listing seeded on dev for the US13 expiry test: a team of 2 that expires 40 minutes after START. Synthetic data.",
+      "coverImage": null,
+      "images": null,
+      "category": "electronics",
+      "originalPrice": "29.00",
+      "currency": "sgd",
+      "stock": 100
+    },
+    "targetSize": 2,
+    "lifetimeSeconds": 2400,
+    "teamPrice": "22.00"
+  }
+]
