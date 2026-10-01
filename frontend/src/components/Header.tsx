@@ -43,7 +43,7 @@ export function Header() {
   );
 }
 
-function SignedIn({ name, avatarUrl }: { name: string; avatarUrl: string | null }) {
+function SignedIn({ name, avatarUrl }: Readonly<{ name: string; avatarUrl: string | null }>) {
   const logout = useLogout();
   return (
     // No artboard draws a signed-in storefront header or a logout control (Q16). Until design

@@ -46,6 +46,9 @@ public class GlobalExceptionHandler {
                 "business rejection: code={}, detail={}",
                 errorCode.code(),
                 errorCode.defaultMessage());
+        if (!ex.fieldViolations().isEmpty()) {
+            return toResponse(errorCode, ex.fieldViolations());
+        }
         return toResponse(errorCode, ex.details().isEmpty() ? null : ex.details());
     }
 

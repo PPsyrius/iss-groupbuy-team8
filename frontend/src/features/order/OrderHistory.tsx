@@ -18,9 +18,9 @@ const noOrders: OrderSummaryResponse[] = [];
 
 export function OrderHistory({
   orders = noOrders,
-}: {
+}: Readonly<{
   orders?: OrderSummaryResponse[] | undefined;
-}) {
+}>) {
   return (
     <ul aria-label="My orders" className="flex flex-col gap-3 xl:max-w-[720px]">
       {orders.map((order) => (
@@ -32,7 +32,7 @@ export function OrderHistory({
   );
 }
 
-function OrderRow({ order }: { order: OrderSummaryResponse }) {
+function OrderRow({ order }: Readonly<{ order: OrderSummaryResponse }>) {
   const { productId, productTitle, productImage, quantity = 1, orderNo, currency = "sgd" } = order;
   const status = orderStatus(order.status);
   const paidMs = parseDeadline(order.paidTime);

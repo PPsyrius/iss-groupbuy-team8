@@ -3,7 +3,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 
 import { unwrapResult } from "@/api/envelope";
-import { getQuoteOptions, issueMutation } from "@/api/generated/@tanstack/react-query.gen";
+import {
+  getTeamPriceQuoteOptions,
+  issueTeamPriceQuoteMutation,
+} from "@/api/generated/@tanstack/react-query.gen";
 import { type Quote, quoteFailure, readQuote } from "@/features/payment/quote";
 
 export type QuoteState =
@@ -22,14 +25,14 @@ export function quoteStorageKey(userId: string, productId: string) {
 }
 
 // Issuing is not idempotent (each call is a new snapshot), so a live stored quote is re-read
-// before a new one is issued. `getPolicy` is deliberately not called: it needs
+// before a new one is issued. `getTeamPricePolicy` is deliberately not called: it needs
 // `catalog:product:write`, which buyers never hold (backend/docs/design/team-price-quotes.md).
 // State is tagged with the buyer and product it was obtained for: the listing route keeps this
 // hook mounted across `$productId` changes, so a quote (or a late reply) for the previous
 // listing reads as idle instead of pricing the new one (CodeRabbit r4102738802).
 export function useQuote(userId: string | undefined, productId: string) {
   const queryClient = useQueryClient();
-  const issue = useMutation(issueMutation());
+  const issue = useMutation(issueTeamPriceQuoteMutation());
   const inFlight = useRef<string | null>(null);
   const [tagged, setTagged] = useState<{ key: string; state: QuoteState }>({
     key: "",
@@ -43,7 +46,10 @@ export function useQuote(userId: string | undefined, productId: string) {
     try {
       const stored = readQuote(
         unwrapResult(
-          await queryClient.fetchQuery({ ...getQuoteOptions({ path: { quoteId } }), staleTime: 0 }),
+          await queryClient.fetchQuery({
+            ...getTeamPriceQuoteOptions({ path: { quoteId } }),
+            staleTime: 0,
+          }),
           { allowVoid: false },
         ),
       );

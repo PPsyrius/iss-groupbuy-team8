@@ -23,6 +23,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -231,7 +233,12 @@ class TeamPriceFlowIT {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(policyBody("129.00", 0)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("CATALOG_400_001"));
+                .andExpect(jsonPath("$.code").value("CATALOG_400_001"))
+                .andExpect(jsonPath("$.errors.length()").value(1))
+                .andExpect(jsonPath("$.errors[0].field").value("amount"))
+                .andExpect(
+                        jsonPath("$.errors[0].message")
+                                .value("Must be strictly below the solo price"));
         assertThat(
                         jdbc.queryForObject(
                                 "SELECT count(*) FROM biz_team_price_policy WHERE product_id = ?",
@@ -252,6 +259,48 @@ class TeamPriceFlowIT {
         assertThat(
                         jdbc.queryForObject(
                                 "SELECT count(*) FROM biz_team_price_quote WHERE product_id = ?",
+                                Long.class,
+                                product))
+                .isZero();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"129.00", "130.00", "0.00"})
+    void invalidAmountNamesTheRequestFieldWithoutWritingPolicy(String amount) throws Exception {
+        mvc.perform(
+                        put(policyPath())
+                                .header("blocbuy-token", adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(policyBody(amount, 0)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("CATALOG_400_001"))
+                .andExpect(jsonPath("$.errors.length()").value(1))
+                .andExpect(jsonPath("$.errors[0].field").value("amount"));
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM biz_team_price_policy WHERE product_id = ?",
+                                Long.class,
+                                product))
+                .isZero();
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1})
+    void invalidWindowNamesEndTimeWithoutWritingPolicy(int secondsAfterEnd) throws Exception {
+        validFrom = validUntil.plusSeconds(secondsAfterEnd);
+        mvc.perform(
+                        put(policyPath())
+                                .header("blocbuy-token", adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(policyBody("89.00", 0)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("CATALOG_400_001"))
+                .andExpect(jsonPath("$.errors.length()").value(1))
+                .andExpect(jsonPath("$.errors[0].field").value("validUntil"))
+                .andExpect(jsonPath("$.errors[0].message").value("Must be after the start"));
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM biz_team_price_policy WHERE product_id = ?",
                                 Long.class,
                                 product))
                 .isZero();

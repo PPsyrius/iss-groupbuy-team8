@@ -13,7 +13,7 @@ import type { ProductsSearch } from "./products-search";
 // field ("SearchField is designed but parked"), but the contract's `keyword` is live on dev
 // since PR #107, so a compact search field sits at the end of the row, submitting on Enter
 // through TanStack Form + valibot (plan §12 note 44).
-export function FilterForm({ search }: { search: ProductsSearch }) {
+export function FilterForm({ search }: Readonly<{ search: ProductsSearch }>) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 xl:gap-4">
       <CategoryChips search={search} />
@@ -30,7 +30,7 @@ const chipOff = "border-border bg-surface text-foreground hover:bg-surface-secon
 const chipOn =
   "border-accent-soft bg-surface bg-[image:linear-gradient(var(--accent-soft),var(--accent-soft))] text-accent-soft-foreground";
 
-function CategoryChips({ search }: { search: ProductsSearch }) {
+function CategoryChips({ search }: Readonly<{ search: ProductsSearch }>) {
   const current = search.category ?? null;
   const { category: _omit, ...rest } = search;
   return (
@@ -58,7 +58,7 @@ function CategoryChips({ search }: { search: ProductsSearch }) {
 
 // Remounted by `key` when the URL's keyword changes (back button, chip navigation), so the field
 // always starts from the URL and needs no effect to sync.
-function KeywordSearch({ search }: { search: ProductsSearch }) {
+function KeywordSearch({ search }: Readonly<{ search: ProductsSearch }>) {
   const navigate = useNavigate();
   const applied = search.keyword ?? "";
   const go = (keyword: string) => {

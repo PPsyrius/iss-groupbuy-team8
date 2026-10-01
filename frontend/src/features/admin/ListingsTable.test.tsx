@@ -1,5 +1,5 @@
 import { screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { AdminListingResponse } from "@/api/generated/types.gen";
 import { renderWithRouter } from "@/test/render";
@@ -30,9 +30,37 @@ const mixed = [
   row({ id: "c", productNo: "BB-3", status: "off_sale", version: 7 }),
 ];
 
+// 4a.2's first row: the rice rule runs 1–30 Sep SGT (its end, 1 Oct 00:00 SGT, is exclusive).
+const ruled = [
+  row({
+    latestPolicy: {
+      amount: "71.00",
+      currency: "sgd",
+      validFrom: "2026-08-31T16:00:00Z",
+      validUntil: "2026-09-30T16:00:00Z",
+      version: 3,
+    },
+  }),
+  ...mixed.slice(1),
+];
+
+// No id, category or sold count (optional in the contract) and a blank price.
+const bare: AdminListingResponse[] = [
+  {
+    productNo: "BB-1",
+    listing: { title: "Untitled", originalPrice: "", currency: "sgd", stock: 0 },
+    status: "on_sale",
+    version: 1,
+  },
+];
+
 const heads = ["PRODUCT NO.", "TITLE", "CATEGORY", "PRICE", "STOCK", "SOLD", "STATUS", "VER"];
 
 describe("ListingsTable", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("has the artboard's nine columns, the last one for the row menu", async () => {
     await renderWithRouter(<ListingsTable items={rice} />);
     const columns = await screen.findAllByRole("columnheader");
@@ -45,7 +73,7 @@ describe("ListingsTable", () => {
     const cells = [...(row1?.querySelectorAll('[role="gridcell"], [role="rowheader"]') ?? [])];
     expect(cells.map((c) => c.textContent)).toEqual([
       "BB-100481",
-      "Thai jasmine rice 10 kg",
+      "Thai jasmine rice 10 kgNo bloc price rule yet",
       "Groceries",
       "S$89.00",
       "38",
@@ -65,12 +93,41 @@ describe("ListingsTable", () => {
     );
   });
 
+  it("prints the latest bloc price rule under the title, as 4a.2 words it", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-16T02:00:00Z"));
+    await renderWithRouter(<ListingsTable items={ruled} />);
+    const rule = await screen.findByText("Bloc price S$71.00 · valid to 30 Sep");
+    expect(rule).toHaveClass("text-xs", "text-muted", "truncate");
+    expect(rule.closest('[role="rowheader"]')).toHaveTextContent(/^Thai jasmine rice 10 kg/);
+    expect(screen.getByText("Draft · not published")).toBeVisible();
+    expect(screen.getByText("No bloc price rule yet")).toBeVisible();
+  });
+
   it("marks only On sale with the success chip", async () => {
     await renderWithRouter(<ListingsTable items={mixed} />);
     expect((await screen.findByText("On sale")).closest(".chip")).toHaveClass("chip--success");
     expect(screen.getByText("Draft").closest(".chip")).toHaveClass("chip--default");
     expect(screen.getByText("Off sale").closest(".chip")).toHaveClass("chip--default");
     expect(screen.getByText("v0")).toBeInTheDocument();
+  });
+
+  it("prints dashes and zeros for the fields the contract leaves optional", async () => {
+    await renderWithRouter(<ListingsTable items={bare} />);
+    const cells = (await screen.findAllByRole("row"))[1]?.querySelectorAll(
+      '[role="rowheader"], [role="gridcell"], td, th',
+    );
+    const text = Array.from(cells ?? [], (c) => c.textContent);
+    expect(text.slice(2, 6)).toEqual(["—", "—", "0", "0"]);
+  });
+
+  it("drops SOLD, the rule line and the row menu in the dashboard's recent variant", async () => {
+    await renderWithRouter(<ListingsTable items={ruled} variant="recent" />);
+    const columns = await screen.findAllByRole("columnheader");
+    expect(columns.map((c) => c.textContent)).toEqual(heads.filter((h) => h !== "SOLD"));
+    expect(screen.queryByText(/Bloc price/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("grid", { name: "Recent listings" })).toBeInTheDocument();
   });
 });
 
@@ -79,6 +136,12 @@ describe("ListingsTableSkeleton", () => {
     await renderWithRouter(<ListingsTableSkeleton />);
     expect(await screen.findAllByRole("columnheader")).toHaveLength(9);
     expect(screen.getAllByRole("row")).toHaveLength(9);
+  });
+
+  it("draws the recent variant's seven columns and the asked-for rows", async () => {
+    await renderWithRouter(<ListingsTableSkeleton rows={5} variant="recent" />);
+    expect(await screen.findAllByRole("columnheader")).toHaveLength(7);
+    expect(screen.getAllByRole("row")).toHaveLength(6);
   });
 });
 

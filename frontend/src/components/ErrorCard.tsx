@@ -40,7 +40,7 @@ export function ErrorCard({
   references,
   children,
   hint,
-}: ErrorCardProps) {
+}: Readonly<ErrorCardProps>) {
   return (
     <main className="mx-auto flex max-w-[1280px] justify-center p-6 xl:py-16">
       <div className={card + " flex w-full max-w-[560px] flex-col gap-3 p-6 xl:p-10"}>
@@ -141,7 +141,7 @@ export function AccessDeniedCard() {
 // §4.5 "500 Global error"."Browse listings" is a full navigation on purpose: after a crash the
 // safest catalogue is a fresh one, and this card also renders outside the router (the boundary
 // in main.tsx), where `Link` is unavailable.
-export function GlobalErrorCard({ onRetry }: { onRetry: () => void }) {
+export function GlobalErrorCard({ onRetry }: Readonly<{ onRetry: () => void }>) {
   return (
     <ErrorCard
       code="500"

@@ -72,14 +72,19 @@ interface AdminRow {
   version: number;
 }
 
-// #242 added `teamTerms` to every admin listing response. The terms endpoint itself is not mocked
-// yet (admin plan A3-04), so every listing reads as never configured, the backend default.
-const view = (row: AdminRow) => ({
-  ...row,
-  teamTerms: { targetSize: null, lifetimeSeconds: null, configured: false },
-});
-
 type Policy = Required<PolicyResponse>;
+
+// #242 added `teamTerms` to every admin listing response. The terms endpoint itself is not mocked
+// yet (admin plan A3-04), so every listing reads as never configured, the backend default. #293
+// added `latestPolicy`: the latest rule revision without its `productId`, or null when none.
+const view = (row: AdminRow, policy: Policy | undefined) => {
+  const { productId: _productId, ...latestPolicy } = policy ?? {};
+  return {
+    ...row,
+    teamTerms: { targetSize: null, lifetimeSeconds: null, configured: false },
+    latestPolicy: policy ? latestPolicy : null,
+  };
+};
 
 const rowId = (n: number) => `0192f0a0-0000-7000-a000-${String(n).padStart(12, "0")}`;
 const daysFromNow = (d: number) => new Date(Date.now() + d * 86_400_000).toISOString();
@@ -176,11 +181,29 @@ function seedPolicies(rows: AdminRow[]) {
   return policies;
 }
 
+type History = { deals: number; quotes: number };
+
+// The bloc and quote rows the mock does not model, as counts per listing (#300): the 4b.3 rice
+// listing "has 26 bloc records, 61 quotes and 3 price rules". Its 3 rules are its policy revisions.
+function seedHistory(rows: AdminRow[]) {
+  const history = new Map<string, History>();
+  const [rice] = rows;
+  if (rice?.productNo === "BB-100481") history.set(rice.id, { deals: 26, quotes: 61 });
+  return history;
+}
+
 // `openDeals` stands in for the bloc tables the mock does not model: the `counts` read (#290)
 // reports it as is. 26 is the artboard's Open blocs figure (4a.1).
 export function createAdminStore(seed: AdminRow[] = adminSeed(), { openDeals = 26 } = {}) {
   const rows = seed.map((r) => ({ ...r, listing: { ...r.listing } }));
   const policies = seedPolicies(rows);
+  const history = seedHistory(rows);
+  // Every retained row the backend's DELETE veto counts; each policy revision is one rule.
+  const references = (id: string) => ({
+    deals: history.get(id)?.deals ?? 0,
+    quotes: history.get(id)?.quotes ?? 0,
+    policies: policies.get(id)?.version ?? 0,
+  });
   let conflictArmed = false;
   let created = 0;
   // The backend's `seq_biz_product_product_no` (V21, #288): starts at 100001 and skips numbers
@@ -191,6 +214,15 @@ export function createAdminStore(seed: AdminRow[] = adminSeed(), { openDeals = 2
     policies,
     openDeals,
     policyOf: (id: string) => policies.get(id),
+    references,
+    // Tests give a listing bloc or quote history the mock cannot create itself.
+    addHistory: (id: string, more: Partial<History>) => {
+      const was = history.get(id) ?? { deals: 0, quotes: 0 };
+      history.set(id, {
+        deals: was.deals + (more.deals ?? 0),
+        quotes: was.quotes + (more.quotes ?? 0),
+      });
+    },
     find: (id: string) => rows.find((r) => r.id === id),
     // `&conflict=1` and the 4b.4 tests: the next write finds the server one version ahead, as if
     // another admin had saved first.
@@ -217,6 +249,22 @@ export function createAdminStore(seed: AdminRow[] = adminSeed(), { openDeals = 2
 }
 
 type AdminStore = ReturnType<typeof createAdminStore>;
+
+// Only a never-published, unsold draft with no history may be deleted (#300).
+function historyBlocks(store: AdminStore, row: AdminRow) {
+  const { deals, quotes, policies } = store.references(row.id);
+  return row.soldCount > 0 || deals + quotes + policies > 0;
+}
+
+// The single admin read adds the retained history and the snapshot eligibility (#300); page and
+// mutation responses omit both.
+const viewOf = (store: AdminStore, row: AdminRow) => view(row, store.policyOf(row.id));
+
+const detail = (store: AdminStore, row: AdminRow) => ({
+  ...viewOf(store, row),
+  references: store.references(row.id),
+  deletable: row.status === "draft" && !historyBlocks(store, row),
+});
 
 const PRODUCT_NO = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 
@@ -299,7 +347,7 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
         if (errors.length > 0) return fail(E.badRequest, errors);
         const hits = status === null ? store.rows : store.rows.filter((r) => r.status === status);
         return ok({
-          items: hits.slice((page - 1) * size, page * size).map(view),
+          items: hits.slice((page - 1) * size, page * size).map((row) => viewOf(store, row)),
           total: hits.length,
           page,
           size,
@@ -329,7 +377,7 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
           version: 0,
         };
         store.rows.unshift(row);
-        return ok(view(row));
+        return ok(viewOf(store, row));
       }),
     ),
 
@@ -351,7 +399,7 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
       `${admin}/:productId`,
       guarded(({ params }) => {
         const row = store.find(param(params.productId));
-        return row ? ok(view(row)) : fail(E.notFound);
+        return row ? ok(detail(store, row)) : fail(E.notFound);
       }),
     ),
 
@@ -376,7 +424,7 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
           return fail(E.stateConflict);
         row.listing = { ...next };
         row.version += 1;
-        return ok(view(row));
+        return ok(viewOf(store, row));
       }),
     ),
 
@@ -397,7 +445,7 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
           return fail(E.stateConflict);
         row.status = body.status;
         row.version += 1;
-        return ok(view(row));
+        return ok(viewOf(store, row));
       }),
     ),
 
@@ -412,7 +460,7 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
         if (!row) return fail(E.notFound);
         if (stale(store, row, Number(raw))) return staleAt(E.versionConflict, row.version);
         if (row.status !== "draft") return fail(E.stateConflict);
-        if (store.policyOf(row.id)) return fail(E.referenced);
+        if (historyBlocks(store, row)) return fail(E.referenced);
         store.remove(row.id);
         return ok();
       }),

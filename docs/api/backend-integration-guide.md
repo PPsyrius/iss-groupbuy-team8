@@ -2,6 +2,25 @@
 
 [`contracts/openapi.json`](../../contracts/openapi.json) is authoritative. Run `pnpm gen:api` after it changes and use the generated client. This guide adds behavior OpenAPI does not express; correct it in the same PR if it conflicts with the contract.
 
+## Generated operation names (2026-10-01, #253)
+
+The local #253 implementation renames ten OpenAPI operation IDs without changing HTTP paths, methods, requests, responses or authorization. The SDK function uses the operation ID; generated query options, mutation options and query keys append `Options`, `Mutation` and `QueryKey` where applicable. Regenerate with `cd frontend && pnpm gen:api` and migrate imports, cache-key helpers and operation-keyed MSW overrides together. Merge and notification to @limjiechao remain pending; [verification and limits](../agile/sprint-03/log/2026-10-01.md) record the local state.
+
+| Endpoint | Previous operation ID | New operation ID |
+| --- | --- | --- |
+| `GET /api/v1/admin/products` | `page` | `pageAdminListings` |
+| `GET /api/v1/admin/products/{productId}` | `get` | `getAdminListing` |
+| `POST /api/v1/admin/products` | `create` | `createAdminListing` |
+| `PUT /api/v1/admin/products/{productId}` | `revise` | `reviseAdminListing` |
+| `PUT /api/v1/admin/products/{productId}/status` | `changeStatus` | `changeAdminListingStatus` |
+| `DELETE /api/v1/admin/products/{productId}` | `delete` (SDK `delete_`) | `deleteAdminListing` |
+| `GET /api/v1/products/{productId}/team-price-policy` | `getPolicy` | `getTeamPricePolicy` |
+| `PUT /api/v1/products/{productId}/team-price-policy` | `configure` | `configureTeamPricePolicy` |
+| `POST /api/v1/team-price-quotes` | `issue` | `issueTeamPriceQuote` |
+| `GET /api/v1/team-price-quotes/{quoteId}` | `getQuote` | `getTeamPriceQuote` |
+
+Java controller and application-service method names are unchanged; older dated evidence can therefore retain names such as `getPolicy` and `getQuote`. The admin `counts` and `configureTeamTerms` operation IDs are unchanged.
+
 ## Transport and authentication
 
 - The API base path is `/api/v1`; requests remain relative to the page origin.
@@ -93,6 +112,24 @@ Automatic expiry and refund execution are deployment-opt-in under `BLOCBUY_SCHED
 A product without group terms cannot start a team: `POST /payments/intents` returns `CATALOG_409_006`. Joining an existing configured team may still work.
 
 ## Errors requiring specific handling
+
+### Catalog field errors (2026-10-01, #251)
+
+Field-specific `CATALOG_400_001` (invalid team-price policy) and `CATALOG_400_002` (invalid listing) failures carry `errors` as an array of `{field, message}`, matching request-body Bean Validation's `COMMON_400_002`. Use the request JSON path to attach the safe message to an input; do not infer a field from the error code alone. Non-field failures may omit `errors`.
+
+```json
+{
+  "code": "CATALOG_400_001",
+  "message": "Invalid team price policy",
+  "errors": [{ "field": "amount", "message": "Must be strictly below the solo price" }]
+}
+```
+
+- Standalone `PUT /products/{productId}/team-price-policy`: `amount`, `currency`, `validFrom` or `validUntil`; an end time not after the start names `validUntil`, as does an already-expired end time.
+- Admin listing content: `listing.title`, `listing.subtitle`, `listing.description`, `listing.coverImage`, `listing.images`, `listing.category`, `listing.originalPrice`, `listing.currency` or `listing.stock`. Invalid product numbers name the top-level `productNo`.
+- Admin team-terms writes: policy fields are prefixed with `teamPrice.`, for example `teamPrice.amount` or `teamPrice.validUntil`.
+
+The business exception carries an explicit immutable field-error list separately from its existing map details; the global handler serializes that list directly. This preserves map-shaped version-precondition details such as `errors: {"currentVersion": 2}` and keeps the domain independent of web DTOs. Existing domain rejection rules, HTTP statuses and error codes are retained.
 
 | Code | Meaning | Frontend behavior |
 | --- | --- | --- |

@@ -38,7 +38,13 @@ import tools.jackson.databind.annotation.JsonDeserialize;
         description = "First-team price policies and immutable quotations; not checkout")
 @RequiredArgsConstructor
 @ApiResponse(responseCode = "200", description = "Success in Result envelope")
-@ApiResponse(responseCode = "400", description = "Invalid request or policy")
+@ApiResponse(
+        responseCode = "400",
+        description =
+                "Invalid request or policy. Field-specific CATALOG_400_001 errors use an array of "
+                        + "{field, message}, matching COMMON_400_002 Bean Validation errors. "
+                        + "field is the request JSON path (amount, currency, validFrom or validUntil); "
+                        + "message is safe to display. Non-field domain failures may omit errors.")
 @ApiResponse(responseCode = "401", description = "Login required")
 @ApiResponse(responseCode = "403", description = "Permission denied or account disabled")
 @ApiResponse(responseCode = "404", description = "Resource not found")
@@ -55,6 +61,7 @@ public class TeamPriceController {
 
     @PutMapping("/products/{productId}/team-price-policy")
     @Operation(
+            operationId = "configureTeamPricePolicy",
             summary = "Configure first-team pricing",
             description =
                     "Requires catalog:product:write. "
@@ -78,6 +85,7 @@ public class TeamPriceController {
 
     @GetMapping("/products/{productId}/team-price-policy")
     @Operation(
+            operationId = "getTeamPricePolicy",
             summary = "Read latest first-team price policy",
             description =
                     "Requires catalog:product:write, including on this otherwise-public product path.")
@@ -89,6 +97,7 @@ public class TeamPriceController {
 
     @PostMapping("/team-price-quotes")
     @Operation(
+            operationId = "issueTeamPriceQuote",
             summary = "Issue a first-team quote",
             description =
                     "Authenticated, non-idempotent snapshot creation: "
@@ -100,6 +109,7 @@ public class TeamPriceController {
 
     @GetMapping("/team-price-quotes/{quoteId}")
     @Operation(
+            operationId = "getTeamPriceQuote",
             summary = "Read your quote snapshot",
             description =
                     "Owner-scoped historical read, including expired quotes. "

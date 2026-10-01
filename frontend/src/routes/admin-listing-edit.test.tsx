@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 
+import { OK_CODE } from "@/api/envelope";
 import type { createAdminStore } from "@/test/admin-msw";
 import { server } from "@/test/msw";
 import { renderRoute, serveAdmin } from "@/test/render-route";
@@ -322,7 +323,7 @@ describe("/admin/listings/$productId", () => {
     const status = await screen.findByRole("region", { name: "Status" });
     expect(
       within(status).getByText(
-        "Not available. This listing has been published; take it off sale instead.",
+        "Not available. This listing has been published and has 26 bloc records, 61 quotes and 3 price rules.",
       ),
     ).toBeVisible();
     expect(within(status).queryByRole("button", { name: /Delete/ })).not.toBeInTheDocument();
@@ -336,6 +337,49 @@ describe("/admin/listings/$productId", () => {
         name: "Put back on sale",
       }),
     ).toBeVisible();
+  });
+});
+
+// Delete eligibility (admin plan A3-05, #300): the single read's `references` and `deletable`.
+describe("/admin/listings/$productId delete eligibility", () => {
+  it("keeps the plain published reason when the listing has no history", async () => {
+    const store = serveAdmin();
+    const detergent = rowOf(store, "BB-100479");
+    renderRoute(`/admin/listings/${detergent.id}`);
+    const status = await screen.findByRole("region", { name: "Status" });
+    expect(
+      within(status).getByText(
+        "Not available. This listing has been published; take it off sale instead.",
+      ),
+    ).toBeVisible();
+  });
+
+  it("shows the reason instead of Delete draft on a draft with history", async () => {
+    const store = serveAdmin();
+    const milk = rowOf(store, "BB-100472");
+    store.addHistory(milk.id, { quotes: 1 });
+    renderRoute(`/admin/listings/${milk.id}`);
+    const status = await screen.findByRole("region", { name: "Status" });
+    expect(await within(status).findByText("Not available. This draft has 1 quote.")).toBeVisible();
+    expect(within(status).queryByRole("button", { name: "Delete draft" })).not.toBeInTheDocument();
+    expect(within(status).queryByText("Danger zone")).not.toBeInTheDocument();
+  });
+
+  it("keeps Delete draft when the read carries no eligibility", async () => {
+    const store = serveAdmin();
+    const milk = rowOf(store, "BB-100472");
+    server.use(
+      http.get(`*/api/v1/admin/products/${milk.id}`, () =>
+        HttpResponse.json({
+          code: OK_CODE,
+          message: "ok",
+          data: { ...milk, teamTerms: { configured: false } },
+        }),
+      ),
+    );
+    renderRoute(`/admin/listings/${milk.id}`);
+    const status = await screen.findByRole("region", { name: "Status" });
+    expect(await within(status).findByRole("button", { name: "Delete draft" })).toBeVisible();
   });
 });
 

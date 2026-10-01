@@ -107,6 +107,67 @@ describe("admin reads", () => {
     expect(created.data.teamTerms).toEqual(unset);
   });
 
+  it("carries references and deletable on the single read only (#300)", async () => {
+    const store = serveAdmin();
+    const [rice] = store.rows;
+    expect((await call("GET", `/admin/products/${rice?.id}`)).data).toMatchObject({
+      references: { deals: 26, quotes: 61, policies: 3 },
+      deletable: false,
+    });
+    const milk = store.rows.find((r) => r.productNo === "BB-100472");
+    expect((await call("GET", `/admin/products/${milk?.id}`)).data).toMatchObject({
+      references: { deals: 0, quotes: 0, policies: 0 },
+      deletable: true,
+    });
+
+    const page = await call("GET", "/admin/products?page=1&size=100");
+    expect(
+      page.data.items.some(
+        (r: object) => Object.hasOwn(r, "references") || Object.hasOwn(r, "deletable"),
+      ),
+    ).toBe(false);
+    const created = await call("POST", "/admin/products", { listing: content() });
+    expect(created.data).not.toHaveProperty("references");
+    expect(created.data).not.toHaveProperty("deletable");
+  });
+
+  it("carries the latest policy on every admin read and write, null without one (#293)", async () => {
+    const store = serveAdmin();
+    const [rice, durian] = store.rows;
+    const page = await call("GET", "/admin/products?page=1&size=100");
+    const items: { id: string; latestPolicy?: unknown }[] = page.data.items;
+    expect(items.every((r) => Object.hasOwn(r, "latestPolicy"))).toBe(true);
+    const ruleOf = (id: string | undefined) => items.find((r) => r.id === id)?.latestPolicy;
+    const { productId: _rice, ...riceRule } = store.policyOf(rice?.id ?? "") ?? {};
+    expect(ruleOf(rice?.id)).toEqual(riceRule);
+    expect(ruleOf(rice?.id)).toMatchObject({ amount: "71.00", currency: "sgd", version: 3 });
+    expect(ruleOf(durian?.id)).toMatchObject({ amount: "32.00", version: 2 });
+    expect(ruleOf(rice?.id)).not.toHaveProperty("productId");
+    const milk = store.rows.find((r) => r.productNo === "BB-100472");
+    expect(ruleOf(milk?.id)).toBeNull();
+
+    expect((await call("GET", `/admin/products/${rice?.id}`)).data.latestPolicy).toEqual(riceRule);
+    const revised = await call("PUT", `/admin/products/${rice?.id}`, {
+      expectedVersion: rice?.version,
+      listing: rice?.listing,
+    });
+    expect(revised.data.latestPolicy).toEqual(riceRule);
+    const created = await call("POST", "/admin/products", { listing: content() });
+    expect(created.data.latestPolicy).toBeNull();
+  });
+
+  it("shows a new rule revision on the next page read", async () => {
+    const store = serveAdmin();
+    const live = await unruled(store);
+    const rule = { amount: "1.00", currency: "sgd", validFrom: future(0), validUntil: future(7) };
+    await call("PUT", `/products/${live.id}/team-price-policy`, { ...rule, expectedVersion: 0 });
+    const page = await call("GET", "/admin/products?page=1&size=100&status=on_sale");
+    expect(page.data.items.find((r: { id: string }) => r.id === live.id).latestPolicy).toEqual({
+      ...rule,
+      version: 1,
+    });
+  });
+
   it("rejects bad paging with 400 COMMON_400_001", async () => {
     serveAdmin();
     expect(await call("GET", "/admin/products?page=0")).toMatchObject({
@@ -353,6 +414,36 @@ describe("delete", () => {
     expect(await call("DELETE", `/admin/products/${draft.id}`)).toMatchObject({
       status: 400,
       code: "COMMON_400_001",
+    });
+  });
+
+  it("reads a draft with history as not deletable and refuses it with 409 CATALOG_409_004", async () => {
+    const store = serveAdmin();
+    const draft = await firstOf("draft");
+    store.addHistory(draft.id, { quotes: 2 });
+    expect((await call("GET", `/admin/products/${draft.id}`)).data).toMatchObject({
+      references: { deals: 0, quotes: 2, policies: 0 },
+      deletable: false,
+    });
+    expect(
+      await call("DELETE", `/admin/products/${draft.id}?expectedVersion=${draft.version}`),
+    ).toMatchObject({ status: 409, code: "CATALOG_409_004" });
+  });
+
+  it("counts every policy revision as a reference", async () => {
+    const store = serveAdmin();
+    const listing = await unruled(store);
+    await call("PUT", `/products/${listing.id}/team-price-policy`, {
+      amount: "1.00",
+      currency: "sgd",
+      validFrom: future(1),
+      validUntil: future(2),
+      expectedVersion: 0,
+    });
+    expect((await call("GET", `/admin/products/${listing.id}`)).data.references).toEqual({
+      deals: 0,
+      quotes: 0,
+      policies: 1,
     });
   });
 });

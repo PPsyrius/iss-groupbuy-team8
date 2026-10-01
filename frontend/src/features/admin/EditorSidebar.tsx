@@ -84,16 +84,19 @@ export function EditorSidebar({
 
 // The sidebar's actions for the state the listing is in (admin plan A1-07, artboards 4b.2 and
 // 4b.3). Publish sits in the page header; this card carries the reversible status change and
-// Delete. On a published listing Delete is replaced by its reason, never a greyed button.
+// Delete. On a published listing, or a draft with history, Delete is replaced by its reason
+// (`deleteBlockedReason`), never a greyed button.
 // While the conflict banner shows, every action is disabled (A1-08): each would carry the stale
 // version and meet the same 412.
 export function SidebarActions({
   actions,
   onOpen,
+  blockedReason,
   isDisabled = false,
 }: Readonly<{
   actions: LifecycleAction[];
   onOpen: (kind: DialogKind) => void;
+  blockedReason: string;
   isDisabled?: boolean;
 }>) {
   return (
@@ -149,9 +152,7 @@ export function SidebarActions({
                 <span className="text-muted text-xs font-medium tracking-wide uppercase">
                   Delete
                 </span>
-                <p className="text-muted">
-                  Not available. This listing has been published; take it off sale instead.
-                </p>
+                <p className="text-muted">{blockedReason}</p>
               </div>
             );
           default:
