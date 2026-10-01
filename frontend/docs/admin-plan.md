@@ -135,7 +135,7 @@ Columns match `plan.md` §3. `FE` = `frontend/`, `A` = `FE/src/features/admin/`.
 | A3-04 | A3 | Group terms panel (seats per bloc, bloc lifetime) on the editor page, with its own write (`configureTeamTerms`), not `ListingForm` fields; the backend blocker (BA-7) is cleared by #242, design is not | `A/admin-api.ts` (`useConfigureTeamTerms`), `A/team-terms.schema.ts`, `A/TeamTermsPanel.tsx`, `FE/src/routes/_authenticated/admin/listings.$productId.tsx`, `FE/src/test/admin-msw.ts` (terms endpoint), tests | as above | design (§11 D6) | BA-7 |
 | A3-05 | A3 | Delete-blocked reason with counts from `references`; Delete draft offered only when `deletable` | `A/EditorSidebar.tsx`, `A/lifecycle.ts`, `FE/src/test/admin-msw.ts` (`references` and `deletable` on the single read), tests | `cd frontend && pnpm vitest run src/features/admin src/test/admin-msw.test.ts src/routes/admin-listing-edit.test.tsx` | A1-07, #300 (BA-5, merged) | BA-5 |
 | A3-06 | A3 | Payments needing attention (read-only table) | `FE/src/routes/_authenticated/admin/payments.tsx`, `A/AttentionQueue.tsx`, tests | as above | BA-8 | BA-8 |
-| A3-07 | A3 | Attach domain 400s to fields through `fieldViolations` | `A/listing-errors.ts`, `A/PricePolicyPanel.tsx`, tests | as above | #323 (BA-6, merged) | BA-6 |
+| A3-07 | A3 | Attach domain 400s to fields through `fieldViolations` | `A/listing-errors.ts`, `A/PricePolicyPanel.tsx`, tests | as above | #323 (BA-6, merged); A2-01 for the `PricePolicyPanel.tsx` part | BA-6 |
 | A3-08 | A3 | Remove the product number field from create | `A/listing-form.schema.ts`, `A/ListingForm.tsx`, tests | as above | A1-05, #288 (BA-2, merged) | BA-2 · merged in #319 |
 | A3-09 | A3 | 412 banner reads `currentVersion` from the error | `FE/src/api/envelope.ts` (typed reader beside `fieldViolations`), `FE/src/api/envelope.test.ts`, `A/use-listing-mutations.ts`, `A/ConflictBanner.tsx`, `FE/src/test/admin-msw.ts` (412 bodies carry `currentVersion`), `FE/src/test/admin-msw.test.ts`, `FE/src/routes/admin-listing-edit.test.tsx` | `cd frontend && pnpm vitest run src/features/admin src/api src/test/admin-msw.test.ts src/routes/admin-listing-edit.test.tsx` | A1-08, #286 (BA-12, merged) | BA-12 · merged in #320 |
 
@@ -292,7 +292,7 @@ Note (#242): a team-terms write also increments the product `version`, so a term
 - [x] Step 2: `admin-api.ts` gains `adminCountsOptions()` (`countsOptions`, `unwrapResult`, `adminRetry`); `forgetListingPages` also refreshes the counts. The admin mock answers `counts` ahead of `/:productId`. (2026-09-30)
 - [x] Step 3: `use-status-counts.ts` reads `counts`; All is `draft + onSale + offSale` (the backend counts the same non-deleted rows the page filters use). A missing field reads as 0; the tabs stay hidden until the read arrives. (2026-09-30)
 
-Next stack (2026-10-01): A3-05, then A3-03 (subline only), then A2-02. Each is one PR on `dev`. A3-07 is the next candidate after A2-02 now that #323 has merged.
+Next stack (2026-10-01): A3-05, then A3-03 (subline only), then A2-02. Each is one PR on `dev`. A3-07 is the next candidate after A2-02 now that #323 has merged: its listing-form part can go first, and its `PricePolicyPanel.tsx` part waits for A2-01, which creates that panel.
 
 ### A3-05: Delete-blocked reason with counts (BA-5, #300)
 
