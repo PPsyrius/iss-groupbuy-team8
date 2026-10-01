@@ -1,9 +1,10 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { OK_CODE } from "@/api/envelope";
+import { queryClient } from "@/api/query-client";
 import type { createAdminStore } from "@/test/admin-msw";
 import { server } from "@/test/msw";
 import { renderRoute, serveAdmin } from "@/test/render-route";
@@ -695,4 +696,48 @@ describe("/admin/listings/$productId conflicts and refusals", () => {
       await screen.findByRole("heading", { name: "You don’t have access to the admin console" }),
     ).toBeVisible();
   });
+
+  it("shows Access denied when a refetch of the listing answers 403", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const store = serveAdmin();
+    const rice = rowOf(store, "BB-100481");
+    renderRoute(`/admin/listings/${rice.id}`);
+    await screen.findByRole("textbox", { name: "Title" });
+    // The role goes away after the editor loaded, with the listing still cached.
+    server.use(forbiddenRead());
+    await queryClient.refetchQueries();
+    expect(
+      await screen.findByRole("heading", { name: "You don’t have access to the admin console" }),
+    ).toBeVisible();
+  });
+
+  it("shows Access denied when the conflict banner's version read answers 403", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const rice = rowOf(store, "BB-100481");
+    renderRoute(`/admin/listings/${rice.id}`);
+    const title = await screen.findByRole("textbox", { name: "Title" });
+    // A 412 that names no version sends the background read, which the revoked role refuses.
+    server.use(
+      http.put("*/api/v1/admin/products/:productId", () =>
+        HttpResponse.json(
+          { code: "CATALOG_412_002", message: "Listing version precondition failed" },
+          { status: 412 },
+        ),
+      ),
+      forbiddenRead(),
+    );
+    await user.type(title, " (my edit)");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(
+      await screen.findByRole("heading", { name: "You don’t have access to the admin console" }),
+    ).toBeVisible();
+  });
 });
+
+function forbiddenRead() {
+  return http.get("*/api/v1/admin/products/:productId", () =>
+    HttpResponse.json({ code: "COMMON_403_001", message: "Permission denied" }, { status: 403 }),
+  );
+}

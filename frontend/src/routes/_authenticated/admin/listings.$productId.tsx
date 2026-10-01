@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { ApiError } from "@/api/envelope";
 import { adminListingOptions, adminServerVersionOptions } from "@/features/admin/admin-api";
-import { AdminChildError } from "@/features/admin/AdminShell";
+import { AdminChildError, isAdminDenied } from "@/features/admin/AdminShell";
 import { ConflictBanner, ProblemsCard } from "@/features/admin/ConflictBanner";
 import { EditorSidebar, SidebarActions } from "@/features/admin/EditorSidebar";
 import { actionsFor, deleteBlockedReason } from "@/features/admin/lifecycle";
@@ -49,7 +49,7 @@ const FORM_ID = "edit-listing";
 
 function EditListingPage() {
   const { productId } = Route.useParams();
-  const { data: listing } = useSuspenseQuery(adminListingOptions(productId));
+  const { data: listing, error: listingError } = useSuspenseQuery(adminListingOptions(productId));
   const version = listing.version ?? 0;
   const published = listing.status !== "draft";
   const { save, isPending } = useSaveListing(productId, version);
@@ -63,10 +63,14 @@ function EditListingPage() {
   const [reloadFailed, setReloadFailed] = useState(false);
   const toBoundary = useRouteBoundary();
   const qc = useQueryClient();
-  const { data: readVersion } = useQuery({
+  const { data: readVersion, error: versionError } = useQuery({
     ...adminServerVersionOptions(productId),
     enabled: conflict !== null && conflict.serverVersion === null,
   });
+  // A refetch keeps the cached listing and does not throw, so a role revoked after the editor
+  // loaded is rethrown here to reach Access denied (as on the listings table and the dashboard).
+  if (isAdminDenied(listingError)) throw listingError;
+  if (isAdminDenied(versionError)) throw versionError;
   const serverVersion = conflict?.serverVersion ?? readVersion;
   // Reload writes the fresh read into the editor's entry and remounts the form from it; the
   // counter remounts it even if the version did not move. A failed read keeps the banner and
