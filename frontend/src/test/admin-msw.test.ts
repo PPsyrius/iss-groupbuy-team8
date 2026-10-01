@@ -77,6 +77,18 @@ describe("admin reads", () => {
     expect(drafts.data.total).toBe(drafts.data.items.length);
   });
 
+  it("counts listings per status and the open blocs in one read (#290)", async () => {
+    serveAdmin(createAdminStore(adminSeed(), { openDeals: 26 }));
+    expect(await call("GET", "/admin/products/counts")).toMatchObject({
+      status: 200,
+      code: OK_CODE,
+      data: { draft: 14, onSale: 34, offSale: 14, openDeals: 26 },
+    });
+    const draft = await firstOf("draft");
+    await call("DELETE", `/admin/products/${draft.id}?expectedVersion=${draft.version}`);
+    expect((await call("GET", "/admin/products/counts")).data).toMatchObject({ draft: 13 });
+  });
+
   it("carries the unconfigured team terms on every admin read and write response", async () => {
     serveAdmin();
     const unset = { targetSize: null, lifetimeSeconds: null, configured: false };
@@ -119,6 +131,7 @@ describe("admin reads", () => {
       (
         [
           ["GET", "/admin/products?page=1&size=1"],
+          ["GET", "/admin/products/counts"],
           ["GET", `/admin/products/${id}`],
           ["POST", "/admin/products"],
           ["PUT", `/admin/products/${id}`],

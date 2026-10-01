@@ -13,6 +13,9 @@ import { renderRoute, serveAdmin } from "@/test/render-route";
 describe("/admin/listings", () => {
   it("shows the first page with the tab counts and the pager", async () => {
     serveAdmin();
+    const urls: string[] = [];
+    const listen = ({ request }: { request: Request }) => void urls.push(request.url);
+    server.events.on("request:start", listen);
     renderRoute("/admin/listings");
     expect(await screen.findByRole("heading", { name: "Listings" })).toBeVisible();
     expect(screen.getByText("62 listings · page size 20")).toBeVisible();
@@ -27,6 +30,10 @@ describe("/admin/listings", () => {
           .map((t) => t.textContent),
       ).toEqual(["All62", "Draft14", "On sale34", "Off sale14"]),
     );
+    server.events.removeListener("request:start", listen);
+    // One `counts` read (#290) instead of a one-row page per tab.
+    expect(urls.filter((u) => u.includes("/admin/products/counts"))).toHaveLength(1);
+    expect(urls.filter((u) => u.includes("size=1&") || u.endsWith("size=1"))).toHaveLength(0);
     expect(within(tabs).getByRole("tab", { name: /All/ })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("link", { name: "Listings" })).toHaveAttribute(
       "href",
@@ -122,6 +129,14 @@ describe("/admin/listings", () => {
     expect(await within(row).findByText("Off sale")).toBeVisible();
     expect(within(row).getByText("v5")).toBeVisible();
     expect(store.rows[0]).toMatchObject({ status: "off_sale", version: 5 });
+    const tabs = screen.getByRole("tablist", { name: "Listing status" });
+    await waitFor(() =>
+      expect(
+        within(tabs)
+          .getAllByRole("tab")
+          .map((t) => t.textContent),
+      ).toEqual(["All62", "Draft14", "On sale33", "Off sale15"]),
+    );
   });
 
   it("refreshes a stale row after a 412 from its menu, with no banner to raise", async () => {
