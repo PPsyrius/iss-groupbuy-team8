@@ -94,6 +94,24 @@ A product without group terms cannot start a team: `POST /payments/intents` retu
 
 ## Errors requiring specific handling
 
+### Catalog field errors (2026-10-01, #251)
+
+Field-specific `CATALOG_400_001` (invalid team-price policy) and `CATALOG_400_002` (invalid listing) failures carry `errors` as an array of `{field, message}`, matching request-body Bean Validation's `COMMON_400_002`. Use the request JSON path to attach the safe message to an input; do not infer a field from the error code alone. Non-field failures may omit `errors`.
+
+```json
+{
+  "code": "CATALOG_400_001",
+  "message": "Invalid team price policy",
+  "errors": [{ "field": "amount", "message": "Must be strictly below the solo price" }]
+}
+```
+
+- Standalone `PUT /products/{productId}/team-price-policy`: `amount`, `currency`, `validFrom` or `validUntil`; an end time not after the start names `validUntil`, as does an already-expired end time.
+- Admin listing content: `listing.title`, `listing.subtitle`, `listing.description`, `listing.coverImage`, `listing.images`, `listing.category`, `listing.originalPrice`, `listing.currency` or `listing.stock`. Invalid product numbers name the top-level `productNo`.
+- Admin team-terms writes: policy fields are prefixed with `teamPrice.`, for example `teamPrice.amount` or `teamPrice.validUntil`.
+
+The business exception carries an explicit immutable field-error list separately from its existing map details; the global handler serializes that list directly. This preserves map-shaped version-precondition details such as `errors: {"currentVersion": 2}` and keeps the domain independent of web DTOs. Existing domain rejection rules, HTTP statuses and error codes are retained.
+
 | Code | Meaning | Frontend behavior |
 | --- | --- | --- |
 | `COMMON_401_001` | No authenticated session | Treat user as anonymous |

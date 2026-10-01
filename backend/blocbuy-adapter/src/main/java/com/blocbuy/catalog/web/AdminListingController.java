@@ -66,7 +66,14 @@ import tools.jackson.databind.annotation.JsonDeserialize;
         name = "admin-listings",
         description = "API-only listing management; admin role and catalog:product:write required")
 @ApiResponse(responseCode = "200", description = "Success in the established Result envelope")
-@ApiResponse(responseCode = "400", description = "Invalid input")
+@ApiResponse(
+        responseCode = "400",
+        description =
+                "Invalid input. Field-specific CATALOG_400_002 and CATALOG_400_001 errors use an array "
+                        + "of {field, message}, matching COMMON_400_002 Bean Validation errors. "
+                        + "field is the request JSON path: listing.<field> for listing content, productNo "
+                        + "for the product number, or teamPrice.<field> for nested price policy input. "
+                        + "message is safe to display; non-field domain failures may omit errors.")
 @ApiResponse(responseCode = "401", description = "Login required")
 @ApiResponse(
         responseCode = "403",

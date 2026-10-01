@@ -217,7 +217,10 @@ public final class Product {
      */
     public static Product draft(UUID id, String productNo, ListingDetails details) {
         if (productNo == null || !productNo.matches("[A-Za-z0-9][A-Za-z0-9._-]{0,63}")) {
-            throw new BizException(CatalogErrorCode.PRODUCT_INVALID);
+            throw BizException.forField(
+                    CatalogErrorCode.PRODUCT_INVALID,
+                    "productNo",
+                    "Must be 1 to 64 letters, digits, dots, underscores or hyphens, starting with a letter or digit");
         }
         return reconstitute(
                 id,

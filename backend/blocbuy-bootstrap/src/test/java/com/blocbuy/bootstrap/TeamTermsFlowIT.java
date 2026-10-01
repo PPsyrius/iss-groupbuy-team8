@@ -304,7 +304,7 @@ class TeamTermsFlowIT {
 
     /**
      * Price rules live only in the team price policy, so a bad price gets the standalone endpoint's
-     * CATALOG_400_001 without field errors, and the terms roll back with it.
+     * CATALOG_400_001 with the nested request field, and the terms roll back with it.
      */
     @Test
     void teamPriceNotBelowTheOriginalPriceIsRejectedByThePolicy() throws Exception {
@@ -313,13 +313,16 @@ class TeamTermsFlowIT {
         write(id, adminToken, body(0, 3, 7200, price(ORIGINAL_PRICE, 0)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath(CODE).value(TEAM_PRICE_INVALID))
-                .andExpect(jsonPath(ERRORS).doesNotExist());
+                .andExpect(jsonPath("$.errors[0].field").value("teamPrice.amount"))
+                .andExpect(
+                        jsonPath("$.errors[0].message")
+                                .value("Must be strictly below the solo price"));
         assertNothingWritten(id);
     }
 
     /** A price window the policy cannot hold is CATALOG_400_001 and writes nothing. */
     @Test
-    void badTeamPriceWindowIsRejectedWithoutFieldErrors() throws Exception {
+    void badTeamPriceWindowIsRejectedWithNestedFieldErrors() throws Exception {
         UUID id = product(ON_SALE);
         Instant now = Instant.now().truncatedTo(ChronoUnit.SECONDS);
 
@@ -336,7 +339,8 @@ class TeamTermsFlowIT {
                                         now.minus(1, ChronoUnit.DAYS))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath(CODE).value(TEAM_PRICE_INVALID))
-                .andExpect(jsonPath(ERRORS).doesNotExist());
+                .andExpect(jsonPath("$.errors[0].field").value("teamPrice.validUntil"))
+                .andExpect(jsonPath("$.errors[0].message").value("Must be in the future"));
         write(
                         id,
                         adminToken,
@@ -347,7 +351,8 @@ class TeamTermsFlowIT {
                                 price(TEAM_PRICE, now.plusSeconds(3600), now.plusSeconds(3600))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath(CODE).value(TEAM_PRICE_INVALID))
-                .andExpect(jsonPath(ERRORS).doesNotExist());
+                .andExpect(jsonPath("$.errors[0].field").value("teamPrice.validUntil"))
+                .andExpect(jsonPath("$.errors[0].message").value("Must be after the start"));
         assertNothingWritten(id);
     }
 
