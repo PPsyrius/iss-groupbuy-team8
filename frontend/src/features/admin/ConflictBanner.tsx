@@ -3,8 +3,8 @@ import { Alert, Button } from "@heroui/react";
 // The 412 banner (admin plan A1-08, artboard 4b.4), pinned above the editor. A warning, not an
 // error: the server holds a newer, valid version and nothing was lost there. There is no merge
 // and no retry (§12 note 7); Reload is the one way out, and it drops the unsaved edits. The
-// server's version comes from a background read that leaves the form alone (BA-12: the 412 body
-// carries no version), so until it answers the line only says the server is newer.
+// server's version comes with the 412 (#286); a 412 without one falls back to a background read
+// that leaves the form alone, and until it answers the line only says the server is newer.
 export function ConflictBanner({
   loadedVersion,
   serverVersion,

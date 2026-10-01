@@ -21,7 +21,8 @@ export type DialogKind = LifecycleChange;
 // other three are not drawn; their copy is the §11 D2 proposal. Every dialog is pessimistic: it
 // stays open while the request runs and closes only once the server agreed. A refusal stays in
 // the dialog in plain words (A1-08), except a 412: the dialog closes and `onConflict` raises the
-// page's conflict banner, and a 403, which goes to the route boundary.
+// page's conflict banner with the server's version from the 412 (#286), and a 403, which goes to
+// the route boundary.
 const copy: Record<
   DialogKind,
   {
@@ -73,7 +74,7 @@ export function LifecycleDialog({
   kind: DialogKind | null;
   listing: AdminListingResponse;
   onClose: () => void;
-  onConflict?: () => void;
+  onConflict?: (serverVersion: number | null) => void;
 }>) {
   const navigate = useNavigate();
   const toBoundary = useRouteBoundary();
@@ -97,7 +98,7 @@ export function LifecycleDialog({
         case "conflict":
           if (onConflict) {
             close();
-            onConflict();
+            onConflict(refusal.serverVersion);
           } else {
             setProblem(staleRow);
             forgetListingPages(qc);

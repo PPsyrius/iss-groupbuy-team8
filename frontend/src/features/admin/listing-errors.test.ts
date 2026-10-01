@@ -9,8 +9,15 @@ function apiError(status: number, code: string, errors?: unknown) {
 }
 
 describe("refusalOf", () => {
-  it("turns a stale listing version into the conflict", () => {
-    expect(refusalOf(apiError(412, "CATALOG_412_002"))).toEqual({ kind: "conflict" });
+  it("turns a stale listing version into the conflict, with the server's version when sent", () => {
+    expect(refusalOf(apiError(412, "CATALOG_412_002", { currentVersion: 5 }))).toEqual({
+      kind: "conflict",
+      serverVersion: 5,
+    });
+    expect(refusalOf(apiError(412, "CATALOG_412_002"))).toEqual({
+      kind: "conflict",
+      serverVersion: null,
+    });
   });
 
   it("asks for a reload when the listing changed state", () => {

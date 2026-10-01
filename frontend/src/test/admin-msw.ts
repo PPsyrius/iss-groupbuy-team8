@@ -52,6 +52,9 @@ const fail = (e: Failure, errors?: unknown) =>
     { code: e.code, message: e.message, ...(errors === undefined ? {} : { errors }) },
     { status: e.status },
   );
+// A 412 names the version the server holds now (#286): the listing's for CATALOG_412_002, the
+// latest policy revision's (0 if none) for CATALOG_412_001.
+const staleAt = (e: Failure, currentVersion: number) => fail(e, { currentVersion });
 const ok = (data?: unknown) =>
   HttpResponse.json(
     data === undefined ? { code: OK_CODE, message: "ok" } : { code: OK_CODE, message: "ok", data },
@@ -346,7 +349,7 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
         if (errors.length > 0 || !next) return fail(E.badRequest, errors);
         const row = store.find(param(params.productId));
         if (!row) return fail(E.notFound);
-        if (stale(store, row, body.expectedVersion)) return fail(E.versionConflict);
+        if (stale(store, row, body.expectedVersion)) return staleAt(E.versionConflict, row.version);
         if (
           row.status !== "draft" &&
           (!sameCents(next.originalPrice, row.listing.originalPrice) ||
@@ -368,7 +371,7 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
         const body = await bodyOf<{ status: string; expectedVersion: number }>(request);
         const row = store.find(param(params.productId));
         if (!row) return fail(E.notFound);
-        if (stale(store, row, body.expectedVersion)) return fail(E.versionConflict);
+        if (stale(store, row, body.expectedVersion)) return staleAt(E.versionConflict, row.version);
         const allowed =
           (body.status === "on_sale" && row.status !== "on_sale") ||
           (body.status === "off_sale" && row.status === "on_sale");
@@ -390,7 +393,7 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
           return fail(E.badRequest, ["expectedVersion must not be null"]);
         const row = store.find(param(params.productId));
         if (!row) return fail(E.notFound);
-        if (stale(store, row, Number(raw))) return fail(E.versionConflict);
+        if (stale(store, row, Number(raw))) return staleAt(E.versionConflict, row.version);
         if (row.status !== "draft") return fail(E.stateConflict);
         if (store.policyOf(row.id)) return fail(E.referenced);
         store.remove(row.id);
@@ -428,7 +431,7 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
         const conflicted = store.takeConflict();
         if (conflicted && current) current.version += 1;
         if (conflicted || body.expectedVersion !== (current?.version ?? 0))
-          return fail(E.policyVersionConflict);
+          return staleAt(E.policyVersionConflict, current?.version ?? 0);
         const amount = typeof body.amount === "string" ? toCents(body.amount) : null;
         const price = toCents(row.listing.originalPrice) ?? 0n;
         const from = Date.parse(body.validFrom ?? "");

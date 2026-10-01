@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ApiError, fieldViolations, unwrapResult } from "./envelope";
+import { ApiError, conflictVersion, fieldViolations, unwrapResult } from "./envelope";
 
 describe("unwrapResult", () => {
   it("returns data when code is OK", () => {
@@ -81,5 +81,37 @@ describe("fieldViolations", () => {
       fieldViolations(new ApiError({ code: "X", message: "m", errors: { field: "a" } })),
     ).toEqual({});
     expect(fieldViolations(new Error("boom"))).toEqual({});
+  });
+});
+
+function conflict(errors: unknown, over: { code?: string; status?: number } = {}) {
+  return new ApiError({
+    code: over.code ?? "CATALOG_412_002",
+    message: "Listing version precondition failed",
+    status: over.status ?? 412,
+    errors,
+  });
+}
+
+describe("conflictVersion", () => {
+  it("reads currentVersion from a listing or policy 412", () => {
+    expect(conflictVersion(conflict({ currentVersion: 5 }))).toBe(5);
+    expect(conflictVersion(conflict({ currentVersion: 0 }, { code: "CATALOG_412_001" }))).toBe(0);
+  });
+  it("reads it from the code when the 412 arrived inside a 200 envelope", () => {
+    expect(conflictVersion(conflict({ currentVersion: 3 }, { status: 200 }))).toBe(3);
+  });
+  it("is null without a usable version", () => {
+    expect(conflictVersion(conflict(undefined))).toBeNull();
+    expect(conflictVersion(conflict({ currentVersion: "5" }))).toBeNull();
+    expect(conflictVersion(conflict({ currentVersion: -1 }))).toBeNull();
+    expect(conflictVersion(conflict({ currentVersion: 1.5 }))).toBeNull();
+    expect(conflictVersion(conflict([{ currentVersion: 5 }]))).toBeNull();
+  });
+  it("is null for anything but a 412", () => {
+    expect(
+      conflictVersion(conflict({ currentVersion: 5 }, { code: "CATALOG_409_002", status: 409 })),
+    ).toBeNull();
+    expect(conflictVersion(new Error("boom"))).toBeNull();
   });
 });

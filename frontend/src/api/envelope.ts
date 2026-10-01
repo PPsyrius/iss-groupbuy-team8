@@ -18,8 +18,9 @@ export class ApiError extends Error {
   readonly code: string;
   readonly status: number;
   readonly traceId: string | undefined;
-  // The envelope's `errors` as sent (a `FieldViolation[]` on a 400 validation failure); left
-  // `unknown` because only `fieldViolations` below reads it, and it checks every entry.
+  // The envelope's `errors` as sent (a `FieldViolation[]` on a 400 validation failure,
+  // `{currentVersion}` on a 412); left `unknown` because only `fieldViolations` and
+  // `conflictVersion` below read it, and they check every value.
   readonly errors: unknown;
   constructor(args: {
     code: string;
@@ -50,6 +51,23 @@ export function fieldViolations(error: unknown): Record<string, string> {
     out[field.replace(/^listing\./, "")] = message;
   }
   return out;
+}
+
+// The version the server holds now, from a 412 (#286): `errors` is `{currentVersion: <int>}`, the
+// listing version for `CATALOG_412_002` and the policy version (0 if none) for `CATALOG_412_001`.
+// The code is read as well as the status, because an envelope unwrapped from a 200 has no status.
+// Anything else, or a malformed version, is `null`, and the caller asks the server instead.
+export function conflictVersion(error: unknown): number | null {
+  if (!(error instanceof ApiError)) return null;
+  if (error.status !== 412 && !/_412_/.test(error.code)) return null;
+  const { errors } = error;
+  if (!errors || typeof errors !== "object" || Array.isArray(errors)) return null;
+  const { currentVersion } = errors as { currentVersion?: unknown };
+  return typeof currentVersion === "number" &&
+    Number.isInteger(currentVersion) &&
+    currentVersion >= 0
+    ? currentVersion
+    : null;
 }
 
 export function unwrapResult<T>(

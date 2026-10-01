@@ -450,6 +450,62 @@ describe("/admin/listings/$productId conflicts and refusals", () => {
     ).toBeVisible();
   });
 
+  it("names the server's version from the 412 itself, without another read (#286)", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const rice = rowOf(store, "BB-100481");
+    renderRoute(`/admin/listings/${rice.id}`);
+    const title = await screen.findByRole("textbox", { name: "Title" });
+    // The 412 names v7 while a read would still say v4, so the banner's number can only come from
+    // the error.
+    let readsAfterSave = 0;
+    server.use(
+      http.put("*/api/v1/admin/products/:productId", () =>
+        HttpResponse.json(
+          {
+            code: "CATALOG_412_002",
+            message: "Listing version precondition failed",
+            errors: { currentVersion: 7 },
+          },
+          { status: 412 },
+        ),
+      ),
+      http.get("*/api/v1/admin/products/:productId", () => {
+        readsAfterSave += 1;
+      }),
+    );
+    await user.type(title, " (my edit)");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(
+      await screen.findByText(
+        "You loaded v4; the server now has v7. Reload to see the latest version — your unsaved changes will be lost.",
+      ),
+    ).toBeVisible();
+    expect(readsAfterSave).toBe(0);
+  });
+
+  it("falls back to reading the server's version when the 412 names none", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const rice = rowOf(store, "BB-100481");
+    renderRoute(`/admin/listings/${rice.id}`);
+    const title = await screen.findByRole("textbox", { name: "Title" });
+    rice.version = 5;
+    server.use(
+      http.put("*/api/v1/admin/products/:productId", () =>
+        HttpResponse.json(
+          { code: "CATALOG_412_002", message: "Listing version precondition failed" },
+          { status: 412 },
+        ),
+      ),
+    );
+    await user.type(title, " (my edit)");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(await screen.findByText(stale)).toBeVisible();
+  });
+
   it("closes a stale publish into the same banner", async () => {
     const user = userEvent.setup();
     const store = serveAdmin();

@@ -27,7 +27,9 @@ import {
 // from server data and leaves it clean.
 //
 // A 412 on a save, a lifecycle change or a delete raises the conflict banner (A1-08, artboard
-// 4b.4) and disables every write until Reload: no merge, no retry (§12 note 7).
+// 4b.4) and disables every write until Reload: no merge, no retry (§12 note 7). The banner names
+// the server's version from the 412 itself (#286, A3-09); only a 412 without one sends the
+// background read.
 export const Route = createFileRoute("/_authenticated/admin/listings/$productId")({
   loader: async ({ context, params }) => {
     try {
@@ -54,16 +56,18 @@ function EditListingPage() {
   const [dirty, setDirty] = useState(false);
   const [dialog, setDialog] = useState<DialogKind | null>(null);
   const [fieldProblems, setFieldProblems] = useState<FieldProblem[]>([]);
-  const [conflict, setConflict] = useState(false);
+  // `null` while there is no conflict; otherwise the server's version as the 412 named it.
+  const [conflict, setConflict] = useState<{ serverVersion: number | null } | null>(null);
   const [reloads, setReloads] = useState(0);
   const [reloading, setReloading] = useState(false);
   const [reloadFailed, setReloadFailed] = useState(false);
   const toBoundary = useRouteBoundary();
   const qc = useQueryClient();
-  const { data: serverVersion } = useQuery({
+  const { data: readVersion } = useQuery({
     ...adminServerVersionOptions(productId),
-    enabled: conflict,
+    enabled: conflict !== null && conflict.serverVersion === null,
   });
+  const serverVersion = conflict?.serverVersion ?? readVersion;
   // Reload writes the fresh read into the editor's entry and remounts the form from it; the
   // counter remounts it even if the version did not move. A failed read keeps the banner and
   // says so, so Reload can be tried again; a listing deleted meanwhile shows the not-found card,
@@ -75,7 +79,7 @@ function EditListingPage() {
       // No automatic retry: Reload is the user's own action and they can press it again.
       await qc.fetchQuery({ ...adminListingOptions(productId), staleTime: 0, retry: false });
       qc.removeQueries({ queryKey: adminServerVersionOptions(productId).queryKey });
-      setConflict(false);
+      setConflict(null);
       setFieldProblems([]);
       setReloads((n) => n + 1);
     } catch (error) {
@@ -101,7 +105,7 @@ function EditListingPage() {
       return undefined;
     } catch (error) {
       const refusal = refusalOf(error);
-      if (refusal.kind === "conflict") setConflict(true);
+      if (refusal.kind === "conflict") setConflict({ serverVersion: refusal.serverVersion });
       if (refusal.kind === "forbidden") toBoundary(error);
       return problemFor(refusal, "Your changes weren’t saved");
     }
@@ -146,7 +150,7 @@ function EditListingPage() {
               form={FORM_ID}
               variant={publish ? "tertiary" : "secondary"}
               className="min-h-11 px-[18px] text-sm"
-              isDisabled={isPending || conflict || fieldProblems.length > 0}
+              isDisabled={isPending || conflict !== null || fieldProblems.length > 0}
             >
               {published ? "Save changes" : "Save draft"}
             </Button>
@@ -154,7 +158,7 @@ function EditListingPage() {
               <Button
                 variant="secondary"
                 className="min-h-11 px-[18px] text-sm"
-                isDisabled={!publish.enabled || isPending || conflict}
+                isDisabled={!publish.enabled || isPending || conflict !== null}
                 onPress={() => setDialog("publish")}
               >
                 Publish
@@ -174,7 +178,7 @@ function EditListingPage() {
         kind={dialog}
         listing={listing}
         onClose={() => setDialog(null)}
-        onConflict={() => setConflict(true)}
+        onConflict={(named) => setConflict({ serverVersion: named })}
       />
       <div className="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-6">
         <ListingForm
@@ -190,9 +194,9 @@ function EditListingPage() {
         />
         <aside className="flex flex-col gap-4">
           <EditorSidebar status={listing.status} version={version} showLifecycle>
-            <SidebarActions actions={actions} onOpen={setDialog} isDisabled={conflict} />
+            <SidebarActions actions={actions} onOpen={setDialog} isDisabled={conflict !== null} />
           </EditorSidebar>
-          {conflict && fieldProblems.length > 0 ? (
+          {conflict !== null && fieldProblems.length > 0 ? (
             <ProblemsCard fieldProblems={fieldProblems} serverVersion={serverVersion} />
           ) : null}
         </aside>
