@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import com.blocbuy.catalog.exception.CatalogErrorCode;
 import com.blocbuy.catalog.model.ListingDetails;
+import com.blocbuy.catalog.model.PriceReferences;
 import com.blocbuy.catalog.model.PricingMode;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductStatus;
@@ -148,6 +149,7 @@ class AdminListingAppServiceImplTest {
     void getReturnsProductAfterActiveCheck() {
         Product stored = draft();
         when(products.findById(ID)).thenReturn(Optional.of(stored));
+        when(prices.countProductReferences(ID)).thenReturn(new PriceReferences(0, 0));
 
         assertThat(service.get(ID, ACTOR).product()).isEqualTo(stored);
         var order = inOrder(users, products);

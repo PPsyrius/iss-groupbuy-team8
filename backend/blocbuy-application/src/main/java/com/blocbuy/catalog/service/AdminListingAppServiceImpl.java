@@ -2,6 +2,7 @@ package com.blocbuy.catalog.service;
 
 import com.blocbuy.catalog.exception.CatalogErrorCode;
 import com.blocbuy.catalog.model.ListingDetails;
+import com.blocbuy.catalog.model.ListingReferences;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.catalog.repository.ProductRepository;
@@ -48,7 +49,13 @@ public class AdminListingAppServiceImpl implements AdminListingAppService {
         Product product =
                 products.findById(id)
                         .orElseThrow(() -> new BizException(CatalogErrorCode.PRODUCT_NOT_FOUND));
-        return withLatestPolicy(product);
+        var priceReferences = prices.countProductReferences(id);
+        var references =
+                new ListingReferences(
+                        deals.countProductReferences(id),
+                        priceReferences.quotes(),
+                        priceReferences.policies());
+        return new ManagedListing(product, prices.findLatestPolicy(id).orElse(null), references);
     }
 
     /** Keep count and data filters aligned and never query once per listing. */

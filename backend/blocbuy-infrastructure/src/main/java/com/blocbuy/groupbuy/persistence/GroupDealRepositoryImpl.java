@@ -34,6 +34,11 @@ public class GroupDealRepositoryImpl implements GroupDealRepository {
     }
 
     @Override
+    public long countProductReferences(UUID productId) {
+        return bizGroupDealMapper.countProductReferences(productId);
+    }
+
+    @Override
     public Optional<GroupDeal> findById(UUID id) {
         return Optional.ofNullable(
                 GroupDealConverter.toDomain(bizGroupDealMapper.selectActiveById(id)));

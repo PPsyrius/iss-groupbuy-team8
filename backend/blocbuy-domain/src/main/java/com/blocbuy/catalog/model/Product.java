@@ -292,18 +292,37 @@ public final class Product {
 
     /** Defend draft deletion; reference existence is a cross-aggregate application concern. */
     public void requireDeletable() {
-        status.requireDeletable();
-        if (soldCount != 0) {
-            throw new BizException(CatalogErrorCode.PRODUCT_REFERENCED);
+        CatalogErrorCode error = deletionError();
+        if (error != null) {
+            throw new BizException(error);
         }
+    }
+
+    /** Intrinsic lifecycle/sale rule only; the application also checks retained references. */
+    public boolean allowsDeletion() {
+        return deletionError() == null;
+    }
+
+    /** One rule for the read flag and command guard, preserving existing error precedence. */
+    private CatalogErrorCode deletionError() {
+        CatalogErrorCode stateError = status.deletionError();
+        if (stateError != null) {
+            return stateError;
+        }
+        return soldCount == 0 ? null : CatalogErrorCode.PRODUCT_REFERENCED;
     }
 
     /** Enforce client preconditions and reject version exhaustion before writing. */
     public void requireVersion(int expected) {
-        if (version != expected || version == Integer.MAX_VALUE) {
+        if (version != expected || !canAdvanceVersion()) {
             throw new BizException(
                     CatalogErrorCode.PRODUCT_VERSION_CONFLICT, Map.of("currentVersion", version));
         }
+    }
+
+    /** No conditional mutation can advance an exhausted revision token. */
+    public boolean canAdvanceVersion() {
+        return version < Integer.MAX_VALUE;
     }
 
     /**

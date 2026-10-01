@@ -1,5 +1,6 @@
 package com.blocbuy.catalog.repository;
 
+import com.blocbuy.catalog.model.PriceReferences;
 import com.blocbuy.catalog.pricing.TeamPricePolicy;
 import com.blocbuy.catalog.pricing.TeamPriceQuote;
 import java.time.Instant;
@@ -15,6 +16,9 @@ import java.util.UUID;
 public interface TeamPriceRepository {
     /** Any policy or quote history prevents deleting its product, including deleted revisions. */
     boolean hasProductReferences(UUID productId);
+
+    /** Count the same retained policy and quote rows used by the deletion veto. */
+    PriceReferences countProductReferences(UUID productId);
 
     Optional<TeamPricePolicy> findLatestPolicy(UUID productId);
 

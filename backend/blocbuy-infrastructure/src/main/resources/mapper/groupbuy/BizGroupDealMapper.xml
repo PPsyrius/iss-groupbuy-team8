@@ -9,8 +9,14 @@
           AND current_size &lt; target_size AND expire_time &gt; CURRENT_TIMESTAMP
     </select>
 
+    <sql id="productReferences">
+        FROM biz_group_deal WHERE product_id = #{productId,jdbcType=OTHER}
+    </sql>
     <select id="existsProductReference" resultType="boolean">
-        SELECT EXISTS (SELECT 1 FROM biz_group_deal WHERE product_id = #{productId,jdbcType=OTHER})
+        SELECT EXISTS (SELECT 1 <include refid="productReferences"/>)
+    </select>
+    <select id="countProductReferences" resultType="long">
+        SELECT COUNT(*) <include refid="productReferences"/>
     </select>
 
     <resultMap id="bizGroupDealMap" type="com.blocbuy.groupbuy.persistence.BizGroupDealDO">

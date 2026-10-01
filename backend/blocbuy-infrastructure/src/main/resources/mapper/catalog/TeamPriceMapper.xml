@@ -2,9 +2,20 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.blocbuy.catalog.persistence.TeamPriceMapper">
+    <!-- Counts and deletion veto share their all-history scope, including deleted rows. -->
+    <sql id="policyProductReferences">
+        FROM biz_team_price_policy WHERE product_id = #{productId,jdbcType=OTHER}
+    </sql>
+    <sql id="quoteProductReferences">
+        FROM biz_team_price_quote WHERE product_id = #{productId,jdbcType=OTHER}
+    </sql>
     <select id="existsProductReference" resultType="boolean">
-        SELECT EXISTS (SELECT 1 FROM biz_team_price_policy WHERE product_id = #{productId,jdbcType=OTHER})
-            OR EXISTS (SELECT 1 FROM biz_team_price_quote WHERE product_id = #{productId,jdbcType=OTHER})
+        SELECT EXISTS (SELECT 1 <include refid="policyProductReferences"/>)
+            OR EXISTS (SELECT 1 <include refid="quoteProductReferences"/>)
+    </select>
+    <select id="countProductReferences" resultType="com.blocbuy.catalog.persistence.PriceReferencesDO">
+        SELECT (SELECT COUNT(*) <include refid="quoteProductReferences"/>) AS quotes,
+               (SELECT COUNT(*) <include refid="policyProductReferences"/>) AS policies
     </select>
     <resultMap id="policyMap" type="com.blocbuy.catalog.persistence.TeamPricePolicyDO">
         <result column="product_id" property="productId" jdbcType="OTHER"/>

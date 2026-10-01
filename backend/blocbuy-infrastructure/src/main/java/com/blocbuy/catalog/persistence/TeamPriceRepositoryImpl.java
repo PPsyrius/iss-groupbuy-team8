@@ -1,5 +1,6 @@
 package com.blocbuy.catalog.persistence;
 
+import com.blocbuy.catalog.model.PriceReferences;
 import com.blocbuy.catalog.pricing.TeamPricePolicy;
 import com.blocbuy.catalog.pricing.TeamPriceQuote;
 import com.blocbuy.catalog.repository.TeamPriceRepository;
@@ -23,6 +24,12 @@ public class TeamPriceRepositoryImpl implements TeamPriceRepository {
     @Override
     public boolean hasProductReferences(UUID productId) {
         return mapper.existsProductReference(productId);
+    }
+
+    @Override
+    public PriceReferences countProductReferences(UUID productId) {
+        var counts = mapper.countProductReferences(productId);
+        return new PriceReferences(counts.getQuotes(), counts.getPolicies());
     }
 
     @Override

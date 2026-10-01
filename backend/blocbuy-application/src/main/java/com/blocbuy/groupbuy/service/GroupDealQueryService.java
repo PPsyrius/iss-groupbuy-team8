@@ -20,6 +20,9 @@ public interface GroupDealQueryService {
      */
     boolean hasProductReferences(UUID productId);
 
+    /** Historical reference count for the admin editor, with the deletion veto's scope. */
+    long countProductReferences(UUID productId);
+
     /**
      * Best open, unexpired deal per product: lowest {@code deal_price} wins (the "what joining
      * saves" headline number). One batch query for the whole collection — never per product.
