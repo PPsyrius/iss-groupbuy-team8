@@ -1,6 +1,8 @@
-import { Chip } from "@heroui/react";
+import { Button, Chip } from "@heroui/react";
 import type { ReactNode } from "react";
 
+import type { LifecycleAction } from "./lifecycle";
+import type { DialogKind } from "./LifecycleDialogs";
 import { statusLabel } from "./listing-status";
 
 // The lifecycle as a state trail (artboards 4b.2 and 4b.3): the one-way rule is shown before the
@@ -77,5 +79,64 @@ export function EditorSidebar({
       ) : null}
       {children}
     </section>
+  );
+}
+
+// The sidebar's actions for the state the listing is in (admin plan A1-07, artboards 4b.2 and
+// 4b.3). Publish sits in the page header; this card carries the reversible status change and
+// Delete. On a published listing Delete is replaced by its reason, never a greyed button.
+export function SidebarActions({
+  actions,
+  onOpen,
+}: Readonly<{
+  actions: LifecycleAction[];
+  onOpen: (kind: DialogKind) => void;
+}>) {
+  return (
+    <>
+      {actions.map(({ kind }) => {
+        switch (kind) {
+          case "takeOffSale":
+            return (
+              <Button key={kind} variant="tertiary" fullWidth onPress={() => onOpen(kind)}>
+                Take off sale
+              </Button>
+            );
+          case "putBackOnSale":
+            return (
+              <Button key={kind} variant="tertiary" fullWidth onPress={() => onOpen(kind)}>
+                Put back on sale
+              </Button>
+            );
+          case "delete":
+            return (
+              <div key={kind} className="border-border flex flex-col gap-2 border-t pt-4">
+                <span className="text-muted text-xs font-medium tracking-wide uppercase">
+                  Danger zone
+                </span>
+                <Button variant="danger-soft" fullWidth onPress={() => onOpen(kind)}>
+                  Delete draft
+                </Button>
+                <p className="text-muted">
+                  Allowed: never published, no bloc, quote or rule history.
+                </p>
+              </div>
+            );
+          case "deleteBlocked":
+            return (
+              <div key={kind} className="border-border flex flex-col gap-2 border-t pt-4">
+                <span className="text-muted text-xs font-medium tracking-wide uppercase">
+                  Delete
+                </span>
+                <p className="text-muted">
+                  Not available. This listing has been published; take it off sale instead.
+                </p>
+              </div>
+            );
+          default:
+            return null;
+        }
+      })}
+    </>
   );
 }

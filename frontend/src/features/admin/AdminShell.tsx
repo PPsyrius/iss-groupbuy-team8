@@ -1,4 +1,4 @@
-import { Avatar } from "@heroui/react";
+import { Avatar, Toast } from "@heroui/react";
 import { type ErrorComponentProps, Link, Outlet } from "@tanstack/react-router";
 
 import { ApiError } from "@/api/envelope";
@@ -49,6 +49,8 @@ export function AdminShell() {
       <main className="min-w-[1024px] flex-1 p-6 text-sm">
         <Outlet />
       </main>
+      {/* The console's toasts ("Draft deleted", A1-07); the storefront has none yet. */}
+      <Toast.Provider placement="bottom end" />
     </div>
   );
 }
