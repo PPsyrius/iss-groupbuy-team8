@@ -4,12 +4,19 @@ import { ApiError, unwrapResult } from "@/api/envelope";
 import {
   countsOptions,
   countsQueryKey,
-  getOptions,
-  getPolicyOptions,
-  pageOptions,
-  pageQueryKey,
+  getAdminListingOptions,
+  getTeamPricePolicyOptions,
+  pageAdminListingsOptions,
+  pageAdminListingsQueryKey,
 } from "@/api/generated/@tanstack/react-query.gen";
-import { changeStatus, configure, create, delete_, get, revise } from "@/api/generated/sdk.gen";
+import {
+  changeAdminListingStatus,
+  configureTeamPricePolicy,
+  createAdminListing,
+  deleteAdminListing,
+  getAdminListing,
+  reviseAdminListing,
+} from "@/api/generated/sdk.gen";
 import type {
   CreateListingRequest,
   ListingStatusRequest,
@@ -17,10 +24,8 @@ import type {
   UpdateListingRequest,
 } from "@/api/generated/types.gen";
 
-// The one file that knows the admin operations' generated names (`page`, `get`, `create`,
-// `revise`, `delete`, ...): the backend's operationIds are generic (BA-9), so feature code imports
-// these named wrappers instead and a rename after regeneration is fixed here once (admin plan §12
-// note 3). Every read unwraps the Result envelope with `select`; every write unwraps on success,
+// Admin data access wraps the resource-specific generated operations (#253, BA-9).
+// Every read unwraps the Result envelope with `select`; every write unwraps on success,
 // so an OK envelope with a failure code still rejects with an `ApiError`. Writes are pessimistic:
 // no wrapper touches the cache, the caller decides what to write back or invalidate.
 
@@ -34,7 +39,7 @@ export function adminRetry(failureCount: number, error: unknown) {
 
 export function adminListingsOptions(q: { page: number; size: number; status?: string }) {
   return queryOptions({
-    ...pageOptions({ query: q }),
+    ...pageAdminListingsOptions({ query: q }),
     select: (r) => unwrapResult(r, { allowVoid: false }),
     retry: adminRetry,
   });
@@ -51,18 +56,18 @@ export function adminCountsOptions() {
   });
 }
 
-// After a write: every page of the table shares the `page` key, and the counts move too. Pages on
+// After a write: every page shares the `pageAdminListings` key, and the counts move too. Pages on
 // screen refetch now; the others are dropped rather than marked stale, because the route loaders
 // read with `staleTime: 'static'`, which would serve an invalidated page as is.
 export function forgetListingPages(qc: QueryClient) {
-  void qc.invalidateQueries({ queryKey: pageQueryKey() });
-  qc.removeQueries({ queryKey: pageQueryKey(), type: "inactive" });
+  void qc.invalidateQueries({ queryKey: pageAdminListingsQueryKey() });
+  qc.removeQueries({ queryKey: pageAdminListingsQueryKey(), type: "inactive" });
   void qc.invalidateQueries({ queryKey: countsQueryKey() });
 }
 
 export function adminListingOptions(productId: string) {
   return queryOptions({
-    ...getOptions({ path: { productId } }),
+    ...getAdminListingOptions({ path: { productId } }),
     select: (r) => unwrapResult(r, { allowVoid: false }),
     retry: adminRetry,
   });
@@ -70,13 +75,13 @@ export function adminListingOptions(productId: string) {
 
 // The version the server holds now, for the conflict banner when a 412 does not name it (A1-08;
 // since #286 the 412 carries `currentVersion`, read by `conflictVersion`, so this is the
-// fallback). Its own key, never the editor's `get` entry: writing there would remount the form and
+// fallback). Its own key, never the editor's `getAdminListing` entry: writing there would remount the form and
 // drop the edits the banner warns about (§12 note 7).
 export function adminServerVersionOptions(productId: string) {
   return queryOptions({
     queryKey: ["admin", "listing-server-version", productId] as const,
     queryFn: async ({ signal }) =>
-      (await get({ path: { productId }, signal, throwOnError: true })).data,
+      (await getAdminListing({ path: { productId }, signal, throwOnError: true })).data,
     staleTime: 0,
     select: (r) => unwrapResult(r, { allowVoid: false }).version,
     retry: adminRetry,
@@ -85,7 +90,7 @@ export function adminServerVersionOptions(productId: string) {
 
 export function adminPolicyOptions(productId: string) {
   return queryOptions({
-    ...getPolicyOptions({ path: { productId } }),
+    ...getTeamPricePolicyOptions({ path: { productId } }),
     select: (r) => unwrapResult(r, { allowVoid: false }),
     retry: adminRetry,
   });
@@ -94,25 +99,33 @@ export function adminPolicyOptions(productId: string) {
 export function useCreateListing() {
   return useMutation({
     mutationFn: async (body: CreateListingRequest) =>
-      unwrapResult((await create({ body, throwOnError: true })).data, { allowVoid: false }),
+      unwrapResult((await createAdminListing({ body, throwOnError: true })).data, {
+        allowVoid: false,
+      }),
   });
 }
 
 export function useReviseListing() {
   return useMutation({
     mutationFn: async ({ productId, ...body }: { productId: string } & UpdateListingRequest) =>
-      unwrapResult((await revise({ path: { productId }, body, throwOnError: true })).data, {
-        allowVoid: false,
-      }),
+      unwrapResult(
+        (await reviseAdminListing({ path: { productId }, body, throwOnError: true })).data,
+        {
+          allowVoid: false,
+        },
+      ),
   });
 }
 
 export function useChangeStatus() {
   return useMutation({
     mutationFn: async ({ productId, ...body }: { productId: string } & ListingStatusRequest) =>
-      unwrapResult((await changeStatus({ path: { productId }, body, throwOnError: true })).data, {
-        allowVoid: false,
-      }),
+      unwrapResult(
+        (await changeAdminListingStatus({ path: { productId }, body, throwOnError: true })).data,
+        {
+          allowVoid: false,
+        },
+      ),
   });
 }
 
@@ -127,8 +140,13 @@ export function useDeleteListing() {
       expectedVersion: number;
     }) =>
       unwrapResult(
-        (await delete_({ path: { productId }, query: { expectedVersion }, throwOnError: true }))
-          .data,
+        (
+          await deleteAdminListing({
+            path: { productId },
+            query: { expectedVersion },
+            throwOnError: true,
+          })
+        ).data,
       ),
   });
 }
@@ -136,8 +154,11 @@ export function useDeleteListing() {
 export function useConfigurePolicy() {
   return useMutation({
     mutationFn: async ({ productId, ...body }: { productId: string } & PolicyRequest) =>
-      unwrapResult((await configure({ path: { productId }, body, throwOnError: true })).data, {
-        allowVoid: false,
-      }),
+      unwrapResult(
+        (await configureTeamPricePolicy({ path: { productId }, body, throwOnError: true })).data,
+        {
+          allowVoid: false,
+        },
+      ),
   });
 }
