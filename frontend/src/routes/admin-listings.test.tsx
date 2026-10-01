@@ -136,6 +136,33 @@ describe("/admin/listings", () => {
     }
   });
 
+  it.each([
+    ["the listings page", "*/api/v1/admin/products"],
+    ["the tab counts", "*/api/v1/admin/products/counts"],
+  ])("shows Access denied when a refetch of %s answers 403", async (_, path) => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    serveAdmin();
+    renderRoute("/admin/listings");
+    expect(await screen.findByText("Showing 1–20 of 62")).toBeVisible();
+    const tabs = screen.getByRole("tablist", { name: "Listing status" });
+    await waitFor(() =>
+      expect(within(tabs).getByRole("tab", { name: /All/ })).toHaveTextContent("All62"),
+    );
+    // The role goes away after the table loaded, with its data still cached.
+    server.use(
+      http.get(path, () =>
+        HttpResponse.json(
+          { code: "COMMON_403_001", message: "Permission denied" },
+          { status: 403 },
+        ),
+      ),
+    );
+    await queryClient.refetchQueries();
+    expect(
+      await screen.findByRole("heading", { name: "You don’t have access to the admin console" }),
+    ).toBeVisible();
+  });
+
   it("offers Edit and the one status change a listing allows from its row menu", async () => {
     const user = userEvent.setup();
     const store = serveAdmin();
