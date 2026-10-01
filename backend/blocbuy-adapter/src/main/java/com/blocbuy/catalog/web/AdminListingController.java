@@ -105,6 +105,7 @@ public class AdminListingController {
     /** Trusted identity and lifecycle are never accepted from the creation body. */
     @PostMapping
     @Operation(
+            operationId = "createAdminListing",
             summary = "Create a draft listing",
             description =
                     "Non-idempotent POST. Omit productNo or send null for a server-generated BB- number. "
@@ -120,6 +121,7 @@ public class AdminListingController {
     /** Separate admin route avoids changing the anonymously accessible buyer GET contract. */
     @GetMapping("/{productId}")
     @Operation(
+            operationId = "getAdminListing",
             summary = "Read a managed listing",
             description =
                     "Includes drafts and off-sale listings, never deleted rows. latestPolicy is "
@@ -134,6 +136,7 @@ public class AdminListingController {
     /** Explicit bounded pagination, stable ordering and optional stored-status filter. */
     @GetMapping
     @Operation(
+            operationId = "pageAdminListings",
             summary = "Page managed listings",
             description =
                     "Newest first, UUID tie-breaker. page starts at 1; size is 1-100. "
@@ -196,6 +199,7 @@ public class AdminListingController {
     /** A full content replacement leaves server-owned lifecycle and counters untouched. */
     @PutMapping("/{productId}")
     @Operation(
+            operationId = "reviseAdminListing",
             summary = "Replace listing content conditionally",
             description =
                     "Requires expectedVersion from the admin read. Stale retries return 412 without another mutation. "
@@ -216,6 +220,7 @@ public class AdminListingController {
     /** Lifecycle intent is resolved by the aggregate's State behavior. */
     @PutMapping("/{productId}/status")
     @Operation(
+            operationId = "changeAdminListingStatus",
             summary = "Publish or delist conditionally",
             description =
                     "draft -> on_sale <-> off_sale; returning to draft is forbidden. "
@@ -272,6 +277,7 @@ public class AdminListingController {
     /** Deletion keeps an audit row and never cascades to financial or business history. */
     @DeleteMapping("/{productId}")
     @Operation(
+            operationId = "deleteAdminListing",
             summary = "Soft-delete an unreferenced draft",
             description =
                     "Only never-published drafts with no business references may be deleted. "

@@ -7,7 +7,7 @@ import { server } from "@/test/msw";
 import { installAuthInterceptor } from "./client";
 import { ApiError, OK_CODE } from "./envelope";
 import { meOptions, meQueryKey } from "./generated/@tanstack/react-query.gen";
-import { create } from "./generated/sdk.gen";
+import { createAdminListing } from "./generated/sdk.gen";
 
 // `installAuthInterceptor` registers a response interceptor on the module-level generated
 // `client` (shared across the whole process), so it must be installed exactly once here rather
@@ -70,7 +70,7 @@ describe("installAuthInterceptor", () => {
 
     let caught: unknown;
     try {
-      await create({
+      await createAdminListing({
         body: {
           productNo: "BB-1",
           listing: { title: "t", originalPrice: "0", currency: "sgd", stock: 1 },

@@ -438,7 +438,7 @@ function openCheckout(purchase: Pick<Checkout, "n" | "deal">): string {
 const FULL_ON_JOIN = "deal-2";
 
 // First-team quotes (T3-01): the seed's bloc price, valid for 15 minutes; a listing without one
-// answers the backend's "team price unavailable" 409. Issued quotes are kept for `getQuote`.
+// answers the backend's "team price unavailable" 409. Issued quotes are kept for `getTeamPriceQuote`.
 const quotes = new Map<string, QuoteResponse>();
 
 function issueQuote(productId: string): QuoteResponse | null {
@@ -668,7 +668,7 @@ export async function startBrowserMsw() {
         },
         getPaymentCapabilities: () =>
           HttpResponse.json({ code: OK_CODE, message: "ok", data: { enabled: signedIn } }),
-        issue: async ({ request }) => {
+        issueTeamPriceQuote: async ({ request }) => {
           const body = (await request.json()) as { productId?: string };
           const quote = issueQuote(body.productId ?? "");
           return quote
@@ -678,7 +678,7 @@ export async function startBrowserMsw() {
                 { status: 409 },
               );
         },
-        getQuote: ({ params }) => {
+        getTeamPriceQuote: ({ params }) => {
           const quote = quotes.get(params.quoteId);
           return quote
             ? HttpResponse.json({ code: OK_CODE, message: "ok", data: quote })

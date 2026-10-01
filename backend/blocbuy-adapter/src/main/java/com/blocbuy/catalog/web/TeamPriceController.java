@@ -61,6 +61,7 @@ public class TeamPriceController {
 
     @PutMapping("/products/{productId}/team-price-policy")
     @Operation(
+            operationId = "configureTeamPricePolicy",
             summary = "Configure first-team pricing",
             description =
                     "Requires catalog:product:write. "
@@ -84,6 +85,7 @@ public class TeamPriceController {
 
     @GetMapping("/products/{productId}/team-price-policy")
     @Operation(
+            operationId = "getTeamPricePolicy",
             summary = "Read latest first-team price policy",
             description =
                     "Requires catalog:product:write, including on this otherwise-public product path.")
@@ -95,6 +97,7 @@ public class TeamPriceController {
 
     @PostMapping("/team-price-quotes")
     @Operation(
+            operationId = "issueTeamPriceQuote",
             summary = "Issue a first-team quote",
             description =
                     "Authenticated, non-idempotent snapshot creation: "
@@ -106,6 +109,7 @@ public class TeamPriceController {
 
     @GetMapping("/team-price-quotes/{quoteId}")
     @Operation(
+            operationId = "getTeamPriceQuote",
             summary = "Read your quote snapshot",
             description =
                     "Owner-scoped historical read, including expired quotes. "
