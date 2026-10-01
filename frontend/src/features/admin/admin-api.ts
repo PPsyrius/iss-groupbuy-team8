@@ -7,7 +7,7 @@ import {
   pageOptions,
   pageQueryKey,
 } from "@/api/generated/@tanstack/react-query.gen";
-import { changeStatus, configure, create, delete_, revise } from "@/api/generated/sdk.gen";
+import { changeStatus, configure, create, delete_, get, revise } from "@/api/generated/sdk.gen";
 import type {
   CreateListingRequest,
   ListingStatusRequest,
@@ -41,6 +41,19 @@ export function adminListingOptions(productId: string) {
   return queryOptions({
     ...getOptions({ path: { productId } }),
     select: (r) => unwrapResult(r, { allowVoid: false }),
+  });
+}
+
+// The version the server holds now, for the conflict banner (A1-08, BA-12: a 412 body carries no
+// version). Its own key, never the editor's `get` entry: writing there would remount the form and
+// drop the edits the banner warns about (§12 note 7).
+export function adminServerVersionOptions(productId: string) {
+  return queryOptions({
+    queryKey: ["admin", "listing-server-version", productId] as const,
+    queryFn: async ({ signal }) =>
+      (await get({ path: { productId }, signal, throwOnError: true })).data,
+    staleTime: 0,
+    select: (r) => unwrapResult(r, { allowVoid: false }).version,
   });
 }
 

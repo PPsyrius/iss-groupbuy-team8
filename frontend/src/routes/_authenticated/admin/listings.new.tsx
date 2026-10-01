@@ -1,72 +1,48 @@
-import { Button, buttonVariants, Chip } from "@heroui/react";
-import { useQueryClient } from "@tanstack/react-query";
+import { Button, buttonVariants } from "@heroui/react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 
-import { ApiError, fieldViolations, OK_CODE } from "@/api/envelope";
+import { AdminChildError } from "@/features/admin/AdminShell";
+import { EditorSidebar } from "@/features/admin/EditorSidebar";
+import { refusalOf } from "@/features/admin/listing-errors";
+import { emptyListingForm } from "@/features/admin/listing-form";
+import { type FieldProblem, ListingForm, type SubmitProblem } from "@/features/admin/ListingForm";
 import {
-  adminListingOptions,
-  forgetListingPages,
-  useCreateListing,
-} from "@/features/admin/admin-api";
-import { emptyListingForm, toListingContent } from "@/features/admin/listing-form";
-import { ListingForm, type SubmitProblem } from "@/features/admin/ListingForm";
+  problemFor,
+  useCreateDraft,
+  useRouteBoundary,
+} from "@/features/admin/use-listing-mutations";
 
 // The new-draft editor (admin plan A1-05, artboard 4b.1): the shared listing form beside a
 // sidebar that already teaches the lifecycle (Draft v0, Publish disabled with its precondition,
 // the price rule not yet available). The create is a non-idempotent POST, so Save is disabled
-// while it is in flight.
+// while it is in flight. A saved draft opens in the editor (A1-06).
 export const Route = createFileRoute("/_authenticated/admin/listings/new")({
   component: NewListingPage,
+  errorComponent: AdminChildError,
 });
 
 const FORM_ID = "new-listing";
-const notSaved = "The draft wasn’t saved";
-
-// Where a refused create goes: a taken product number and field violations onto their fields,
-// anything else into the form's alert. Raw codes never reach the screen.
-function problemFor(error: unknown): SubmitProblem {
-  if (error instanceof ApiError) {
-    if (error.code === "CATALOG_409_003")
-      return { fields: { productNo: "That product number is already in use." } };
-    const fields = fieldViolations(error);
-    if (Object.keys(fields).length > 0) return { fields };
-    if (error.status === 400)
-      return {
-        alert: {
-          title: notSaved,
-          description: "The server refused this listing. Check the fields and try again.",
-        },
-      };
-  }
-  return {
-    alert: { title: notSaved, description: "Something went wrong on our side. Try again." },
-  };
-}
 
 function NewListingPage() {
-  const qc = useQueryClient();
   const navigate = useNavigate();
-  const create = useCreateListing();
+  const create = useCreateDraft();
+  const toBoundary = useRouteBoundary();
+  // Save stays disabled while a field shows an error (A1-08, artboard 4b.4).
+  const [fieldProblems, setFieldProblems] = useState<FieldProblem[]>([]);
   const save = async (values: typeof emptyListingForm): Promise<SubmitProblem | undefined> => {
     try {
-      const listing = await create.mutateAsync({
-        productNo: values.productNo.trim(),
-        listing: toListingContent(values),
-      });
-      if (listing.id) {
-        qc.setQueryData(adminListingOptions(listing.id).queryKey, {
-          code: OK_CODE,
-          message: "ok",
-          data: listing,
-        });
-      }
-      forgetListingPages(qc);
-      // A1-06 adds the editor route; until then the new draft is shown at the top of the table
-      // (newest first).
-      await navigate({ to: "/admin/listings", replace: true });
+      const listing = await create.save(values);
+      await navigate(
+        listing.id
+          ? { to: "/admin/listings/$productId", params: { productId: listing.id }, replace: true }
+          : { to: "/admin/listings", replace: true },
+      );
       return undefined;
     } catch (error) {
-      return problemFor(error);
+      const refusal = refusalOf(error);
+      if (refusal.kind === "forbidden") toBoundary(error);
+      return problemFor(refusal, "The draft wasn’t saved");
     }
   };
   return (
@@ -99,30 +75,22 @@ function NewListingPage() {
             form={FORM_ID}
             variant="secondary"
             className="min-h-11 px-[18px] text-sm"
-            isDisabled={create.isPending}
+            isDisabled={create.isPending || fieldProblems.length > 0}
           >
             Save draft
           </Button>
         </div>
       </div>
       <div className="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-6">
-        <ListingForm id={FORM_ID} mode="create" defaultValues={emptyListingForm} onSubmit={save} />
+        <ListingForm
+          id={FORM_ID}
+          mode="create"
+          defaultValues={emptyListingForm}
+          onSubmit={save}
+          onProblemsChange={setFieldProblems}
+        />
         <aside className="flex flex-col gap-4">
-          <section
-            aria-labelledby="new-listing-status"
-            className="border-border bg-surface flex flex-col gap-4 rounded-lg border p-5"
-          >
-            <div className="flex items-center justify-between">
-              <h2 id="new-listing-status" className="font-semibold">
-                Status
-              </h2>
-              <div className="flex items-center gap-2">
-                <Chip size="sm" variant="soft">
-                  Draft
-                </Chip>
-                <span className="font-mono text-xs tabular-nums">v0</span>
-              </div>
-            </div>
+          <EditorSidebar version={0} showLifecycle={false}>
             <div className="flex flex-col gap-2">
               <span className="text-muted text-xs font-medium tracking-wide uppercase">
                 Available now
@@ -134,7 +102,7 @@ function NewListingPage() {
                 Publishing needs a positive price and positive stock. Fill those in and save first.
               </p>
             </div>
-          </section>
+          </EditorSidebar>
           <section
             aria-labelledby="new-listing-rule"
             className="border-border bg-surface flex flex-col gap-3 rounded-lg border p-5"

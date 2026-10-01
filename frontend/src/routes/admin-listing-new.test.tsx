@@ -48,7 +48,7 @@ describe("/admin/listings/new", () => {
     expect(screen.getByRole("textbox", { name: "Currency" })).toHaveAttribute("readonly");
   });
 
-  it("saves a draft at version 0 and lands on the listings with it on top", async () => {
+  it("saves a draft at version 0 and lands on its editor", async () => {
     const user = userEvent.setup();
     const store = serveAdmin();
     const { router } = renderRoute("/admin/listings/new");
@@ -61,7 +61,10 @@ describe("/admin/listings/new", () => {
       "https://cdn.example.com/milk.jpg",
     );
     await user.click(screen.getByRole("button", { name: "Save draft" }));
-    await waitFor(() => expect(router.state.location.pathname).toBe("/admin/listings"));
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/admin/listings/${store.rows[0]?.id ?? ""}`),
+    );
+    expect(await screen.findByText("BB-100490 · draft · v0")).toBeVisible();
     expect(store.rows[0]).toMatchObject({
       productNo: "BB-100490",
       status: "draft",
@@ -75,6 +78,9 @@ describe("/admin/listings/new", () => {
       },
     });
     expect(store.rows[0]?.listing).not.toHaveProperty("subtitle");
+    // The table pages were dropped on save, so the new draft is counted there on the way back.
+    const crumb = screen.getByRole("navigation", { name: "Breadcrumb" });
+    await user.click(within(crumb).getByRole("link", { name: "Listings" }));
     expect(await screen.findByText("Showing 1–20 of 63")).toBeVisible();
   });
 
