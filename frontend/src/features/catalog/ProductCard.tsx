@@ -12,7 +12,7 @@ import { Price } from "./Price";
 // "Start one →", which goes to the listing detail where the bloc actions live. The title link
 // stretches over the tile via `after:absolute after:inset-0`, so the tile is `relative` (its
 // containing block) and the start link is `relative` too, painting above the stretched overlay.
-export function ProductCard({ product }: { product: ProductSummaryResponse }) {
+export function ProductCard({ product }: Readonly<{ product: ProductSummaryResponse }>) {
   const {
     id,
     title,

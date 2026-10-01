@@ -18,10 +18,10 @@ export function Price({
   amount,
   currency,
   className,
-}: {
+}: Readonly<{
   amount: number;
   currency: string;
   className?: string;
-}) {
+}>) {
   return <span className={className}>{formatPrice(amount, currency)}</span>;
 }

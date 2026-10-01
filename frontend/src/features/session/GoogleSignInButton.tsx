@@ -9,11 +9,11 @@ export function GoogleSignInButton({
   returnTo,
   label = "Continue with Google",
   className = "",
-}: {
+}: Readonly<{
   returnTo: string;
   label?: string;
   className?: string;
-}) {
+}>) {
   return (
     <Button
       variant="outline"
