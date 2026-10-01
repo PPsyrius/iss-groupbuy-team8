@@ -3,7 +3,13 @@ import { useId, useSyncExternalStore } from "react";
 
 import type { ActiveDealResponse } from "@/api/generated/types.gen";
 
-import { formatCountdown, formatDeadline, hasEnded, parseDeadline } from "./deal-time";
+import {
+  type Countdown,
+  formatCountdown,
+  formatDeadline,
+  hasEnded,
+  parseDeadline,
+} from "./deal-time";
 
 // One open-bloc row from the Listing Detail artboards (docs/design-screens.md §4.2 "Deal
 // progress row"). The contract's `ActiveDealResponse` carries sizes and the deadline only, so the
@@ -41,7 +47,6 @@ export function DealProgress({
   member?: boolean;
 }>) {
   const now = useNow();
-  const reasonId = useId();
   if (!deal) return <NoOpenBloc />;
   const joined = deal.currentSize ?? 0;
   const target = Math.max(1, deal.targetSize ?? 1);
@@ -50,8 +55,7 @@ export function DealProgress({
   const countdown = expireMs === null ? null : formatCountdown(expireMs, now);
   const urgent = countdown?.urgent ?? false;
   const ended = hasEnded(deal.expireTime, now);
-  const blocked = joinBlockedReason({ ended, full: left === 0, member });
-  const join = onJoin && !blocked ? { onPress: onJoin } : { isDisabled: true };
+  const status = dealStatus({ ended, full: left === 0, urgent });
   return (
     <article
       aria-label="Open bloc"
@@ -59,35 +63,15 @@ export function DealProgress({
     >
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-semibold">Open bloc</span>
-        {ended ? (
-          <Chip color="default" variant="soft" size="sm">
-            Ended
-          </Chip>
-        ) : left === 0 ? (
-          <Chip color="default" variant="soft" size="sm">
-            Full
-          </Chip>
-        ) : urgent ? (
-          <Chip color="warning" variant="soft" size="sm">
-            Closing soon
-          </Chip>
-        ) : (
-          <Chip color="default" variant="soft" size="sm">
-            Filling
-          </Chip>
-        )}
+        <Chip color={status.color} variant="soft" size="sm">
+          {status.label}
+        </Chip>
       </div>
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-sm tabular-nums">
           {joined} of {target} joined
         </span>
-        <span
-          className={
-            left === 1 ? "text-sm font-semibold tabular-nums" : "text-muted text-sm tabular-nums"
-          }
-        >
-          {left === 1 ? "1 seat left" : `${left} seats left`}
-        </span>
+        <SeatsLeft left={left} />
       </div>
       <ProgressBar
         aria-label={`${joined} of ${target} joined`}
@@ -101,53 +85,102 @@ export function DealProgress({
           <ProgressBar.Fill className="rounded-full" />
         </ProgressBar.Track>
       </ProgressBar>
-      {target <= maxSeatDots ? (
-        <ul aria-hidden="true" className="flex gap-1.5">
-          {Array.from({ length: target }, (_, i) => (
-            <li
-              key={i}
-              className={
-                "border-border h-5 w-5 rounded-full border" +
-                (i < joined ? " bg-accent border-accent" : " bg-surface")
-              }
-            />
-          ))}
-        </ul>
-      ) : null}
+      {target <= maxSeatDots ? <SeatDots target={target} joined={joined} /> : null}
       <div className="flex items-center justify-between gap-3">
-        <div className="flex flex-col">
-          {countdown ? (
-            <span
-              className={
-                "text-sm font-semibold tabular-nums" +
-                (urgent ? " text-warning-soft-foreground" : "")
-              }
-            >
-              {countdown.text}
-            </span>
-          ) : null}
-          {expireMs === null ? null : (
-            <span className="text-muted text-xs">{formatDeadline(expireMs, now)}</span>
-          )}
-        </div>
-        <div className="flex flex-col items-end gap-1">
-          <Button
-            variant="outline"
-            className="min-h-11 px-4"
-            {...join}
-            {...(blocked ? { "aria-describedby": reasonId } : {})}
-          >
-            <span className="xl:hidden">Join</span>
-            <span className="hidden xl:inline">Join this bloc</span>
-          </Button>
-          {blocked ? (
-            <span id={reasonId} className="text-muted text-xs">
-              {blocked}
-            </span>
-          ) : null}
-        </div>
+        <Deadline countdown={countdown} expireMs={expireMs} now={now} />
+        <JoinControl
+          onJoin={onJoin}
+          blocked={joinBlockedReason({ ended, full: left === 0, member })}
+        />
       </div>
     </article>
+  );
+}
+
+// The row's status chip, in the same order as the Join reasons: ended, full, then closing soon.
+function dealStatus({
+  ended,
+  full,
+  urgent,
+}: Readonly<{ ended: boolean; full: boolean; urgent: boolean }>): {
+  label: string;
+  color: "default" | "warning";
+} {
+  if (ended) return { label: "Ended", color: "default" };
+  if (full) return { label: "Full", color: "default" };
+  if (urgent) return { label: "Closing soon", color: "warning" };
+  return { label: "Filling", color: "default" };
+}
+
+function SeatsLeft({ left }: Readonly<{ left: number }>) {
+  if (left === 1) return <span className="text-sm font-semibold tabular-nums">1 seat left</span>;
+  return <span className="text-muted text-sm tabular-nums">{`${left} seats left`}</span>;
+}
+
+function SeatDots({ target, joined }: Readonly<{ target: number; joined: number }>) {
+  return (
+    <ul aria-hidden="true" className="flex gap-1.5">
+      {Array.from({ length: target }, (_, i) => (
+        <li
+          key={i}
+          className={
+            "border-border h-5 w-5 rounded-full border" +
+            (i < joined ? " bg-accent border-accent" : " bg-surface")
+          }
+        />
+      ))}
+    </ul>
+  );
+}
+
+function Deadline({
+  countdown,
+  expireMs,
+  now,
+}: Readonly<{ countdown: Countdown | null; expireMs: number | null; now: number }>) {
+  return (
+    <div className="flex flex-col">
+      {countdown ? (
+        <span
+          className={
+            "text-sm font-semibold tabular-nums" +
+            (countdown.urgent ? " text-warning-soft-foreground" : "")
+          }
+        >
+          {countdown.text}
+        </span>
+      ) : null}
+      {expireMs === null ? null : (
+        <span className="text-muted text-xs">{formatDeadline(expireMs, now)}</span>
+      )}
+    </div>
+  );
+}
+
+// `blocked` names why Join is disabled and describes the button for assistive tech.
+function JoinControl({
+  onJoin,
+  blocked,
+}: Readonly<{ onJoin: (() => void) | undefined; blocked: string | null }>) {
+  const reasonId = useId();
+  const join = onJoin && !blocked ? { onPress: onJoin } : { isDisabled: true };
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <Button
+        variant="outline"
+        className="min-h-11 px-4"
+        {...join}
+        {...(blocked ? { "aria-describedby": reasonId } : {})}
+      >
+        <span className="xl:hidden">Join</span>
+        <span className="hidden xl:inline">Join this bloc</span>
+      </Button>
+      {blocked ? (
+        <span id={reasonId} className="text-muted text-xs">
+          {blocked}
+        </span>
+      ) : null}
+    </div>
   );
 }
 
