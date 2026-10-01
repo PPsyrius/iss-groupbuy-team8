@@ -131,6 +131,43 @@ describe("admin reads", () => {
     expect(created.data).not.toHaveProperty("deletable");
   });
 
+  it("carries the latest policy on every admin read and write, null without one (#293)", async () => {
+    const store = serveAdmin();
+    const [rice, durian] = store.rows;
+    const page = await call("GET", "/admin/products?page=1&size=100");
+    const items: { id: string; latestPolicy?: unknown }[] = page.data.items;
+    expect(items.every((r) => Object.hasOwn(r, "latestPolicy"))).toBe(true);
+    const ruleOf = (id: string | undefined) => items.find((r) => r.id === id)?.latestPolicy;
+    const { productId: _rice, ...riceRule } = store.policyOf(rice?.id ?? "") ?? {};
+    expect(ruleOf(rice?.id)).toEqual(riceRule);
+    expect(ruleOf(rice?.id)).toMatchObject({ amount: "71.00", currency: "sgd", version: 3 });
+    expect(ruleOf(durian?.id)).toMatchObject({ amount: "32.00", version: 2 });
+    expect(ruleOf(rice?.id)).not.toHaveProperty("productId");
+    const milk = store.rows.find((r) => r.productNo === "BB-100472");
+    expect(ruleOf(milk?.id)).toBeNull();
+
+    expect((await call("GET", `/admin/products/${rice?.id}`)).data.latestPolicy).toEqual(riceRule);
+    const revised = await call("PUT", `/admin/products/${rice?.id}`, {
+      expectedVersion: rice?.version,
+      listing: rice?.listing,
+    });
+    expect(revised.data.latestPolicy).toEqual(riceRule);
+    const created = await call("POST", "/admin/products", { listing: content() });
+    expect(created.data.latestPolicy).toBeNull();
+  });
+
+  it("shows a new rule revision on the next page read", async () => {
+    const store = serveAdmin();
+    const live = await unruled(store);
+    const rule = { amount: "1.00", currency: "sgd", validFrom: future(0), validUntil: future(7) };
+    await call("PUT", `/products/${live.id}/team-price-policy`, { ...rule, expectedVersion: 0 });
+    const page = await call("GET", "/admin/products?page=1&size=100&status=on_sale");
+    expect(page.data.items.find((r: { id: string }) => r.id === live.id).latestPolicy).toEqual({
+      ...rule,
+      version: 1,
+    });
+  });
+
   it("rejects bad paging with 400 COMMON_400_001", async () => {
     serveAdmin();
     expect(await call("GET", "/admin/products?page=0")).toMatchObject({

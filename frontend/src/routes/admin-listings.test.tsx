@@ -41,6 +41,34 @@ describe("/admin/listings", () => {
     );
   });
 
+  it("prints each row's latest bloc price rule under its title (#293)", async () => {
+    // Only `Date` is faked, so the seed's rule windows and the table read the same clock.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-16T02:00:00Z"));
+    try {
+      serveAdmin();
+      renderRoute("/admin/listings");
+      const rice = await screen.findByRole("link", { name: "Thai jasmine rice 10 kg" });
+      const riceRow = rice.closest('[role="row"]');
+      // The seed's rice rule ends 20 days on (6 Oct, 10.00 am SGT, exclusive).
+      expect(riceRow).toHaveTextContent("Bloc price S$71.00 · valid to 6 Oct");
+      const durianRow = screen
+        .getByRole("link", { name: "D24 durian, per kg" })
+        .closest('[role="row"]');
+      expect(durianRow).toHaveTextContent("Bloc price S$32.00 · expired 15 Sep");
+      const milkRow = screen
+        .getByRole("link", { name: "Hokkaido milk, 12 cartons" })
+        .closest('[role="row"]');
+      expect(milkRow).toHaveTextContent("Draft · not published");
+      const hepa = screen
+        .getByRole("link", { name: /Replacement HEPA filters/ })
+        .closest('[role="row"]');
+      expect(hepa).toHaveTextContent("No bloc price rule yet");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("filters by the tab in the URL and moves between tabs", async () => {
     const user = userEvent.setup();
     serveAdmin();

@@ -1,16 +1,19 @@
 import { Chip, Skeleton, Table } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
+import { useSyncExternalStore } from "react";
 
 import type { AdminListingResponse } from "@/api/generated/types.gen";
 import { categoryLabel } from "@/features/catalog/categories";
 
+import { blocRuleLine } from "./bloc-rule";
 import { statusLabel } from "./listing-status";
 import { formatSgd } from "./money";
 import { RowMenu } from "./RowMenu";
 
-// The 4a.2 table: exactly the admin DTO's columns, 44px rows, numbers right-aligned in tabular
-// figures, version on every row (the number a 412 later talks about). HeroUI `Table`, no
-// react-table and no sort indicators: the contract cannot sort or search (admin plan §12 note 4).
+// The 4a.2 table: exactly the admin DTO's columns, with the bloc price rule line under each title
+// (#293), 44px rows, numbers right-aligned in tabular figures, version on every row (the number a
+// 412 later talks about). HeroUI `Table`, no react-table and no sort indicators: the contract
+// cannot sort or search (admin plan §12 note 4).
 const heads = [
   { label: "PRODUCT NO.", end: false },
   { label: "TITLE", end: false },
@@ -45,7 +48,19 @@ function Head() {
   );
 }
 
+// The rule lines' clock: one tick a minute, read through `useSyncExternalStore` so `Date.now()`
+// stays out of render (React Compiler purity rule; the per-second `useNow` would redraw the table
+// every second for a line that changes at most once a day).
+function subscribeMinute(onTick: () => void) {
+  const id = setInterval(onTick, 60_000);
+  return () => clearInterval(id);
+}
+function currentMinute() {
+  return Math.floor(Date.now() / 60_000) * 60_000;
+}
+
 export function ListingsTable({ items }: Readonly<{ items: AdminListingResponse[] }>) {
+  const now = useSyncExternalStore(subscribeMinute, currentMinute, currentMinute);
   return (
     <Table>
       <Table.ScrollContainer>
@@ -64,6 +79,9 @@ export function ListingsTable({ items }: Readonly<{ items: AdminListingResponse[
                   >
                     {item.listing?.title}
                   </Link>
+                  <span className="text-muted block truncate text-xs">
+                    {blocRuleLine(item, now)}
+                  </span>
                 </Table.Cell>
                 <Table.Cell className="text-muted">
                   {item.listing?.category ? categoryLabel(item.listing.category) : "—"}
