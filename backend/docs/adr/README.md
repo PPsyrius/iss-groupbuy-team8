@@ -14,3 +14,4 @@ Locked stack decisions that predate this directory live in
 | 0002 | [A team's resolution is published, and its consequences run before the commit](0002-team-lifecycle-events.md) | Accepted (2026-09-22) |
 | 0003 | [Referral credit is a post-commit subscriber](0003-share-credit-post-commit-subscriber.md) | Accepted (2026-09-25) |
 | 0004 | [Retire the unused legacy PaymentIntent path](0004-retire-legacy-payment-intent-path.md) | Accepted (2026-09-28) |
+| 0005 | [Gate Stripe Checkout with a deployment property](0005-stripe-checkout-env-flag.md) | Accepted (2026-09-30) |

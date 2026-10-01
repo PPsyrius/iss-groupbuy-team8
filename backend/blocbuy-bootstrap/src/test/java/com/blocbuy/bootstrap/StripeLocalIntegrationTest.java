@@ -50,10 +50,13 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
             "spring.flyway.locations=classpath:db/migration,classpath:db/stripe-fixture",
             "spring.data.redis.host=127.0.0.1",
             "spring.data.redis.port=1",
+            "blocbuy.payment.stripe.checkout-enabled=true",
+            "blocbuy.payment.stripe.api-key=sk_test_fixture_placeholder",
+            "blocbuy.payment.stripe.webhook-secret=whsec_fixture_placeholder",
             "blocbuy.payment.checkout.success-url=https://shop.example/payments/return",
             "blocbuy.payment.checkout.cancel-url=https://shop.example/payments/return"
         })
-@ActiveProfiles({"local", "stripe-sprint2"})
+@ActiveProfiles("local")
 @Import(PaymentFixtureConfiguration.class)
 @AutoConfigureMockMvc
 @DirtiesContext

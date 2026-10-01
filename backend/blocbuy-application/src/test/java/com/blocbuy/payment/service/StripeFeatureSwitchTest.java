@@ -6,16 +6,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.common.exception.CommonErrorCode;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.env.MockEnvironment;
 
-/** Profile-gated payment switch: only the Stripe test profile enables checkout. */
+/** The per-deployment property controls the public Checkout gate. */
 class StripeFeatureSwitchTest {
     @Test
-    void defaultAndUnrelatedProfilesRemainOff() {
-        var environment = new MockEnvironment();
-        var feature = new StripeFeatureSwitch(environment);
-        assertThat(feature.enabled()).isFalse();
-        environment.setActiveProfiles("local", "docker", "ec2");
+    void missingPropertyAndExplicitFalseRemainOff() {
+        var feature = new StripeFeatureSwitch(false);
         assertThat(feature.enabled()).isFalse();
         assertThatThrownBy(feature::requireEnabled)
                 .isInstanceOf(BizException.class)
@@ -24,10 +20,8 @@ class StripeFeatureSwitchTest {
     }
 
     @Test
-    void explicitStripeProfileEnablesTheSameGate() {
-        var environment = new MockEnvironment();
-        environment.setActiveProfiles("local", "stripe-sprint2");
-        var feature = new StripeFeatureSwitch(environment);
+    void explicitFlagEnablesTheSameGate() {
+        var feature = new StripeFeatureSwitch(true);
         assertThat(feature.enabled()).isTrue();
         feature.requireEnabled();
     }

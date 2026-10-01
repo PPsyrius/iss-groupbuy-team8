@@ -74,7 +74,7 @@ blocbuy:
       lease: PT2M
       batch-size: 100
     refund-worker:
-      # one due obligation per tick; only wired with stripe-sprint2 and master opt-in
+      # one due obligation per tick; independent of Checkout and gated by master opt-in
       interval: PT30S
       initial-delay: PT45S
       lease: PT2M
@@ -86,7 +86,11 @@ blocbuy:
     # until the CloudFront cutover) override to false. Flips together with sa-token.cookie.secure.
     state-cookie-secure: true
   payment:
+    checkout:
+      success-url: ${BLOCBUY_PAYMENT_CHECKOUT_SUCCESS_URL:}
+      cancel-url: ${BLOCBUY_PAYMENT_CHECKOUT_CANCEL_URL:}
     stripe:
+      checkout-enabled: ${BLOCBUY_STRIPE_CHECKOUT_ENABLED:false}
       # secrets via environment only — never commit values
       api-key: ${STRIPE_API_KEY:}
       webhook-secret: ${STRIPE_WEBHOOK_SECRET:}

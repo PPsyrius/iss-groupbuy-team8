@@ -3,17 +3,14 @@ package com.blocbuy.payment.service;
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.common.exception.CommonErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
 
-/** Shared rollout decision; no database access and no change to the team's configuration files. */
-@Component
+/** Shared rollout decision from the bound deployment property; no database access. */
 @RequiredArgsConstructor
 public class StripeFeatureSwitch {
-    private final Environment environment;
+    private final boolean checkoutEnabled;
 
     public boolean enabled() {
-        return environment.matchesProfiles("stripe-sprint2");
+        return checkoutEnabled;
     }
 
     public void requireEnabled() {
