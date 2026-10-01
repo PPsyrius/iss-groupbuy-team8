@@ -6,7 +6,8 @@ import { client } from "./generated/client.gen";
 
 // Non-2xx: throw an ApiError with the envelope's code/message/traceId when the response body is
 // an object and each field is present as a string (an unsound body should not smuggle non-string
-// values into the error). 401 additionally settles the `me` query on an anonymous OK envelope
+// values into the error). `errors` is copied as-is and stays `unknown`: `fieldViolations` checks
+// every entry before a form shows it. 401 additionally settles the `me` query on an anonymous OK envelope
 // (never removes/invalidates/resets it: the `me` request's own 401 would just loop), so
 // `unwrapResult` resolves to `undefined` and the header falls back to the login link without the
 // query being left pending or refetching on every later root re-render. Because this interceptor
@@ -16,7 +17,7 @@ import { client } from "./generated/client.gen";
 export function installAuthInterceptor(queryClient: QueryClient) {
   client.interceptors.response.use(async (response) => {
     if (response.ok) return response;
-    let body: { code?: string; message?: string; traceId?: string } = {};
+    let body: { code?: string; message?: string; traceId?: string; errors?: unknown } = {};
     try {
       const parsed: unknown = await response.clone().json();
       if (parsed && typeof parsed === "object") {
@@ -28,6 +29,7 @@ export function installAuthInterceptor(queryClient: QueryClient) {
           ...(typeof candidate.code === "string" ? { code: candidate.code } : {}),
           ...(typeof candidate.message === "string" ? { message: candidate.message } : {}),
           ...(typeof candidate.traceId === "string" ? { traceId: candidate.traceId } : {}),
+          ...(candidate.errors === undefined ? {} : { errors: candidate.errors }),
         };
       }
     } catch {
@@ -46,6 +48,7 @@ export function installAuthInterceptor(queryClient: QueryClient) {
       message: body.message ?? response.statusText,
       status: response.status,
       ...(body.traceId === undefined ? {} : { traceId: body.traceId }),
+      ...(body.errors === undefined ? {} : { errors: body.errors }),
     });
   });
 }

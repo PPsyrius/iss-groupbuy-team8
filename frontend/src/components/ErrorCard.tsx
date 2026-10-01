@@ -113,7 +113,32 @@ export function NotFoundCard() {
   );
 }
 
-// §4.5 "500 Global error". "Browse listings" is a full navigation on purpose: after a crash the
+// §4.5 "403 Access denied" (Errors artboard, copy verbatim): a signed-in account without the
+// admin role opens /admin. Admin is assigned by hand, so the copy offers no request flow.
+export function AccessDeniedCard() {
+  return (
+    <ErrorCard
+      code="403"
+      title="You don’t have access to the admin console"
+      body="The admin console is for the team that publishes listings. Your BlocBuy account works normally everywhere else."
+      moneyLead="Nothing has been charged."
+      moneyDetail="Your blocs, payments and refunds are unaffected by this."
+      hint={{
+        title: "Should you have access?",
+        body: "Admin is assigned by hand, not requested in the app. Ask the team to add your account.",
+      }}
+    >
+      <Link to="/" className={primaryAction}>
+        Browse listings
+      </Link>
+      <Link to="/account" className={secondaryAction}>
+        My blocs
+      </Link>
+    </ErrorCard>
+  );
+}
+
+// §4.5 "500 Global error"."Browse listings" is a full navigation on purpose: after a crash the
 // safest catalogue is a fresh one, and this card also renders outside the router (the boundary
 // in main.tsx), where `Link` is unavailable.
 export function GlobalErrorCard({ onRetry }: { onRetry: () => void }) {

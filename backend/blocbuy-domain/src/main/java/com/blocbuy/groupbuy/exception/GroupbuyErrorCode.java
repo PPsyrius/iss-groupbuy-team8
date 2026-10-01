@@ -26,7 +26,8 @@ public enum GroupbuyErrorCode implements ErrorCode {
             "error.groupbuy.dealClosed"),
     ALREADY_MEMBER(
             "GROUPBUY_409_003", 409, "Buyer is already a member", "error.groupbuy.alreadyMember"),
-    DEAL_FULL("GROUPBUY_409_004", 409, "Group deal is full", "error.groupbuy.dealFull");
+    DEAL_FULL("GROUPBUY_409_004", 409, "Group deal is full", "error.groupbuy.dealFull"),
+    INVITE_NOT_FOUND("GROUPBUY_404_002", 404, "Invite not found", "error.groupbuy.inviteNotFound");
 
     private final String code;
     private final int httpStatus;

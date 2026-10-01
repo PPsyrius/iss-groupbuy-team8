@@ -58,4 +58,26 @@ class ShareInviteTest {
         assertThatThrownBy(() -> new ShareInvite(id, ref, DEAL, null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void aMintedReferenceIsWellFormed() {
+        assertThat(ShareInvite.isWellFormedRef(ShareInvite.mint(DEAL, SHARER, new Random(3)).ref()))
+                .isTrue();
+        assertThat(ShareInvite.isWellFormedRef("AAAAAAAAAAAAAAAAAAAAA-")).isTrue();
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(
+            strings = {
+                "",
+                "AAAAAAAAAAAAAAAAAAAAA",
+                "AAAAAAAAAAAAAAAAAAAAAAA",
+                "AAAAAAAAAAAAAAAAAAAAA+",
+                "AAAAAAAAAAAAAAAAAAAAA/",
+                "AAAAAAAAAAAAAAAAAAAAA="
+            })
+    void anythingElseIsNotAWellFormedReference(String ref) {
+        assertThat(ShareInvite.isWellFormedRef(ref)).isFalse();
+    }
 }

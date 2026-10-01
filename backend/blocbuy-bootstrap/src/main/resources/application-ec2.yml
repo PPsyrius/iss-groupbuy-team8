@@ -24,6 +24,10 @@ logging:
     com.blocbuy: info
 
 blocbuy:
+  web:
+    # CloudFront sets this header itself; getRemoteAddr() is the caller-controlled leftmost
+    # X-Forwarded-For value under the framework forward-headers strategy (#201)
+    client-address-header: CloudFront-Viewer-Address
   scheduling:
     # team-expiry sweep (#28); enable only after the deployment backlog check
     enabled: ${BLOCBUY_SCHEDULING_ENABLED:false}

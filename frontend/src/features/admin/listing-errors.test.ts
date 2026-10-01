@@ -1,0 +1,66 @@
+import { describe, expect, it } from "vitest";
+
+import { ApiError } from "@/api/envelope";
+
+import { refusalOf } from "./listing-errors";
+
+function apiError(status: number, code: string, errors?: unknown) {
+  return new ApiError({ status, code, message: "server message", errors });
+}
+
+describe("refusalOf", () => {
+  it("turns a stale listing version into the conflict", () => {
+    expect(refusalOf(apiError(412, "CATALOG_412_002"))).toEqual({ kind: "conflict" });
+  });
+
+  it("asks for a reload when the listing changed state", () => {
+    expect(refusalOf(apiError(409, "CATALOG_409_002"))).toEqual({
+      kind: "message",
+      message: "This listing changed state. Reload to see what you can do now.",
+    });
+  });
+
+  it("puts a taken product number on its field", () => {
+    expect(refusalOf(apiError(409, "CATALOG_409_003"))).toEqual({
+      kind: "fields",
+      fields: { productNo: "That product number is already in use." },
+    });
+  });
+
+  it("explains a draft that cannot be deleted", () => {
+    expect(refusalOf(apiError(409, "CATALOG_409_004"))).toEqual({
+      kind: "message",
+      message: "Not available. This draft already has price or bloc history.",
+    });
+  });
+
+  it("hands a revoked role to the route boundary", () => {
+    expect(refusalOf(apiError(403, "COMMON_403_001"))).toEqual({ kind: "forbidden" });
+  });
+
+  it("asks an expired session to sign in again", () => {
+    expect(refusalOf(apiError(401, "COMMON_401_001"))).toEqual({ kind: "session" });
+  });
+
+  it("maps field violations onto their fields", () => {
+    const error = apiError(400, "COMMON_400_002", [
+      { field: "listing.title", message: "must not be blank" },
+    ]);
+    expect(refusalOf(error)).toEqual({ kind: "fields", fields: { title: "must not be blank" } });
+  });
+
+  it("gives other refusals plain words, never a raw code", () => {
+    expect(refusalOf(apiError(400, "CATALOG_400_002"))).toEqual({
+      kind: "message",
+      message: "The server refused this listing. Check the fields and try again.",
+    });
+    expect(refusalOf(apiError(500, "COMMON_500_001"))).toEqual({
+      kind: "message",
+      message: "Something went wrong on our side. Try again.",
+    });
+    expect(refusalOf(new TypeError("Failed to fetch"))).toEqual({
+      kind: "message",
+      message: "Something went wrong on our side. Try again.",
+    });
+  });
+});

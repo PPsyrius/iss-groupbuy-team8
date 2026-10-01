@@ -18,6 +18,8 @@ Alternatives rejected: a generator transform stripping the envelope (hides `trac
 
 2026-09-16: `OK_CODE = 'COMMON_200_000'`, not the brief's `'0'` — confirmed against `backend/blocbuy-domain/.../CommonErrorCode.java` (`SUCCESS("COMMON_200_000", ...)`); `envelope.ts` and `envelope.test.ts` use the real value (T1-07, `48805af`).
 
+2026-09-29 (A1-01): `ApiError.errors` carries the envelope's `errors` as sent, still `unknown`; both `unwrapResult` and the interceptor copy it. Only `fieldViolations` reads it, keeping just `{field: string, message: string}` entries (the backend's safe `FieldViolation[]`) with the `listing.` prefix stripped, so a form never shows an unchecked value.
+
 ## Consequences
 
 Because the interceptor throws on every non-2xx, the generated client's `throwOnError: false` errors-as-values mode is unreachable for callers that go through it; error handling is `ApiError` everywhere. The generated `meQueryKey()` is not `DataTag`-branded, so the interceptor's `setQueryData` call is untyped against that overload and relies on the structural check against `ResultMeResponse` (comment in `client.ts`). `OK_CODE` started module-private (T1-07: knip flags unused exports and nothing consumed it) and was exported on 2026-09-17 (`2d040a2`) for the interceptor's anonymous envelope (ADR 0002). Since all envelope fields are optional, `unwrapResult` must keep its `undefined` fallbacks (`code ?? 'UNKNOWN'`, `message ?? 'Request failed'`); a contract change adding `required` would let those go. If the backend ever starts returning 200 with a failure `code`, the query lands in the error state through `select`, which is the intended path. Coverage: `envelope.test.ts` (3 tests) and `client.test.ts` at `2d040a2`, 7 tests in all.

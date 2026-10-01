@@ -13,10 +13,15 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedPaymentsPaymentIdRouteImport } from './routes/_authenticated/payments.$paymentId'
 import { Route as AuthenticatedPaymentsReturnRouteImport } from './routes/_authenticated/payments.return'
+import { Route as AuthenticatedAdminListingsIndexRouteImport } from './routes/_authenticated/admin/listings.index'
+import { Route as AuthenticatedAdminListingsProductIdRouteImport } from './routes/_authenticated/admin/listings.$productId'
+import { Route as AuthenticatedAdminListingsNewRouteImport } from './routes/_authenticated/admin/listings.new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -37,6 +42,11 @@ const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -46,6 +56,11 @@ const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
   id: '/products/$productId',
   path: '/products/$productId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
 const AuthenticatedPaymentsPaymentIdRoute =
   AuthenticatedPaymentsPaymentIdRouteImport.update({
@@ -59,15 +74,38 @@ const AuthenticatedPaymentsReturnRoute =
     path: '/payments/return',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminListingsIndexRoute =
+  AuthenticatedAdminListingsIndexRouteImport.update({
+    id: '/listings/',
+    path: '/listings/',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminListingsProductIdRoute =
+  AuthenticatedAdminListingsProductIdRouteImport.update({
+    id: '/listings/$productId',
+    path: '/listings/$productId',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminListingsNewRoute =
+  AuthenticatedAdminListingsNewRouteImport.update({
+    id: '/listings/new',
+    path: '/listings/new',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/payments/return': typeof AuthenticatedPaymentsReturnRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/listings/$productId': typeof AuthenticatedAdminListingsProductIdRoute
+  '/admin/listings/new': typeof AuthenticatedAdminListingsNewRoute
+  '/admin/listings/': typeof AuthenticatedAdminListingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -77,6 +115,10 @@ export interface FileRoutesByTo {
   '/products/$productId': typeof ProductsProductIdRoute
   '/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/payments/return': typeof AuthenticatedPaymentsReturnRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/listings/$productId': typeof AuthenticatedAdminListingsProductIdRoute
+  '/admin/listings/new': typeof AuthenticatedAdminListingsNewRoute
+  '/admin/listings': typeof AuthenticatedAdminListingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -84,10 +126,15 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/_authenticated/payments/$paymentId': typeof AuthenticatedPaymentsPaymentIdRoute
   '/_authenticated/payments/return': typeof AuthenticatedPaymentsReturnRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/listings/$productId': typeof AuthenticatedAdminListingsProductIdRoute
+  '/_authenticated/admin/listings/new': typeof AuthenticatedAdminListingsNewRoute
+  '/_authenticated/admin/listings/': typeof AuthenticatedAdminListingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -95,10 +142,15 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/account'
+    | '/admin'
     | '/auth/callback'
     | '/products/$productId'
     | '/payments/$paymentId'
     | '/payments/return'
+    | '/admin/'
+    | '/admin/listings/$productId'
+    | '/admin/listings/new'
+    | '/admin/listings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -108,16 +160,25 @@ export interface FileRouteTypes {
     | '/products/$productId'
     | '/payments/$paymentId'
     | '/payments/return'
+    | '/admin'
+    | '/admin/listings/$productId'
+    | '/admin/listings/new'
+    | '/admin/listings'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/login'
     | '/_authenticated/account'
+    | '/_authenticated/admin'
     | '/auth/callback'
     | '/products/$productId'
     | '/_authenticated/payments/$paymentId'
     | '/_authenticated/payments/return'
+    | '/_authenticated/admin/'
+    | '/_authenticated/admin/listings/$productId'
+    | '/_authenticated/admin/listings/new'
+    | '/_authenticated/admin/listings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -158,6 +219,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
@@ -171,6 +239,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/products/$productId'
       preLoaderRoute: typeof ProductsProductIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/payments/$paymentId': {
       id: '/_authenticated/payments/$paymentId'
@@ -186,17 +261,58 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPaymentsReturnRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/listings/': {
+      id: '/_authenticated/admin/listings/'
+      path: '/listings'
+      fullPath: '/admin/listings/'
+      preLoaderRoute: typeof AuthenticatedAdminListingsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/listings/$productId': {
+      id: '/_authenticated/admin/listings/$productId'
+      path: '/listings/$productId'
+      fullPath: '/admin/listings/$productId'
+      preLoaderRoute: typeof AuthenticatedAdminListingsProductIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/listings/new': {
+      id: '/_authenticated/admin/listings/new'
+      path: '/listings/new'
+      fullPath: '/admin/listings/new'
+      preLoaderRoute: typeof AuthenticatedAdminListingsNewRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminListingsProductIdRoute: typeof AuthenticatedAdminListingsProductIdRoute
+  AuthenticatedAdminListingsNewRoute: typeof AuthenticatedAdminListingsNewRoute
+  AuthenticatedAdminListingsIndexRoute: typeof AuthenticatedAdminListingsIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminListingsProductIdRoute:
+    AuthenticatedAdminListingsProductIdRoute,
+  AuthenticatedAdminListingsNewRoute: AuthenticatedAdminListingsNewRoute,
+  AuthenticatedAdminListingsIndexRoute: AuthenticatedAdminListingsIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedPaymentsPaymentIdRoute: typeof AuthenticatedPaymentsPaymentIdRoute
   AuthenticatedPaymentsReturnRoute: typeof AuthenticatedPaymentsReturnRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedPaymentsPaymentIdRoute: AuthenticatedPaymentsPaymentIdRoute,
   AuthenticatedPaymentsReturnRoute: AuthenticatedPaymentsReturnRoute,
 }

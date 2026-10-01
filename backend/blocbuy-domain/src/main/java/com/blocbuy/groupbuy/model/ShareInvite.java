@@ -17,17 +17,28 @@ import java.util.regex.Pattern;
  */
 public record ShareInvite(UUID id, String ref, UUID dealId, UUID sharerUserId) {
 
+    /**
+     * Format of every server-generated reference: 22 base64url characters. Public so the web
+     * adapter validates a path variable against the same rule.
+     */
+    public static final String REF_PATTERN = "[A-Za-z0-9_-]{22}";
+
     private static final int REF_BYTES = 16;
-    private static final Pattern REF_FORMAT = Pattern.compile("[A-Za-z0-9_-]{22}");
+    private static final Pattern REF_FORMAT = Pattern.compile(REF_PATTERN);
 
     /** Rejects a malformed invite; only server-generated references are ever stored. */
     public ShareInvite {
         if (id == null || dealId == null || sharerUserId == null) {
             throw new IllegalArgumentException("id, dealId and sharerUserId must not be null");
         }
-        if (ref == null || !REF_FORMAT.matcher(ref).matches()) {
+        if (!isWellFormedRef(ref)) {
             throw new IllegalArgumentException("ref must be 22 base64url characters");
         }
+    }
+
+    /** Whether the value could be a server-generated reference; null-safe. */
+    public static boolean isWellFormedRef(String ref) {
+        return ref != null && REF_FORMAT.matcher(ref).matches();
     }
 
     /**
