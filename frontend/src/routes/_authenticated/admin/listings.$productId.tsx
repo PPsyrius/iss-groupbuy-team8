@@ -180,7 +180,6 @@ function EditListingPage() {
         <ListingForm
           key={`${version}.${reloads}`}
           id={FORM_ID}
-          mode="edit"
           defaultValues={fromListing(listing)}
           onSubmit={onSubmit}
           frozen={published}

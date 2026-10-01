@@ -20,13 +20,6 @@ describe("refusalOf", () => {
     });
   });
 
-  it("puts a taken product number on its field", () => {
-    expect(refusalOf(apiError(409, "CATALOG_409_003"))).toEqual({
-      kind: "fields",
-      fields: { productNo: "That product number is already in use." },
-    });
-  });
-
   it("explains a draft that cannot be deleted", () => {
     expect(refusalOf(apiError(409, "CATALOG_409_004"))).toEqual({
       kind: "message",

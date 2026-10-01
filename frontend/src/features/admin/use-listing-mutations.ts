@@ -36,10 +36,8 @@ export function useCreateDraft() {
   return {
     isPending: create.isPending,
     save: async (values: ListingFormValues) => {
-      const listing = await create.mutateAsync({
-        productNo: values.productNo.trim(),
-        listing: toListingContent(values),
-      });
+      // No product number: the server assigns the next BB- number (#288).
+      const listing = await create.mutateAsync({ listing: toListingContent(values) });
       remember(qc, listing);
       return listing;
     },

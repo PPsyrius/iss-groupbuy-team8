@@ -8,12 +8,11 @@ import { renderRoute, serveAdmin } from "@/test/render-route";
 
 type User = ReturnType<typeof userEvent.setup>;
 
-async function fillRequired(user: User, productNo = "BB-100490") {
+async function fillRequired(user: User) {
   await user.type(
     await screen.findByRole("textbox", { name: "Title" }),
     "Hokkaido milk, 12 cartons",
   );
-  await user.type(screen.getByRole("textbox", { name: "Product number" }), productNo);
   await user.type(screen.getByRole("textbox", { name: "Solo price" }), "46.80");
 }
 
@@ -46,11 +45,21 @@ describe("/admin/listings/new", () => {
     expect(within(rule).getByRole("button", { name: "Add a rule" })).toBeDisabled();
     expect(screen.getByRole("textbox", { name: "Currency" })).toHaveValue("SGD");
     expect(screen.getByRole("textbox", { name: "Currency" })).toHaveAttribute("readonly");
+    // Artboard 4b.1: "the server assigns it on save" (#288).
+    expect(screen.queryByRole("textbox", { name: "Product number" })).not.toBeInTheDocument();
   });
 
   it("saves a draft at version 0 and lands on its editor", async () => {
     const user = userEvent.setup();
     const store = serveAdmin();
+    const sent: unknown[] = [];
+    server.events.on("request:start", ({ request }) => {
+      if (request.method === "POST")
+        void request
+          .clone()
+          .json()
+          .then((b) => sent.push(b));
+    });
     const { router } = renderRoute("/admin/listings/new");
     await fillRequired(user);
     const stock = screen.getByRole("textbox", { name: "Stock" });
@@ -64,9 +73,11 @@ describe("/admin/listings/new", () => {
     await waitFor(() =>
       expect(router.state.location.pathname).toBe(`/admin/listings/${store.rows[0]?.id ?? ""}`),
     );
-    expect(await screen.findByText("BB-100490 · draft · v0")).toBeVisible();
+    expect(await screen.findByText("BB-100001 · draft · v0")).toBeVisible();
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).not.toHaveProperty("productNo");
     expect(store.rows[0]).toMatchObject({
-      productNo: "BB-100490",
+      productNo: "BB-100001",
       status: "draft",
       version: 0,
       listing: {
@@ -92,24 +103,10 @@ describe("/admin/listings/new", () => {
     await user.type(screen.getByRole("textbox", { name: "Cover image URL" }), "http://x.test/a");
     await user.click(screen.getByRole("button", { name: "Save draft" }));
     expect(await screen.findByText("Enter a title.")).toBeVisible();
-    expect(screen.getByText("Enter a product number.")).toBeVisible();
     expect(screen.getByText("Enter a price above S$0.00")).toBeVisible();
     expect(screen.getByText("Use an https:// URL.")).toBeVisible();
     expect(screen.getByRole("textbox", { name: "Title" })).toHaveAttribute("aria-invalid", "true");
     expect(store.rows).toHaveLength(62);
-  });
-
-  it("puts a taken product number on its field", async () => {
-    const user = userEvent.setup();
-    serveAdmin();
-    renderRoute("/admin/listings/new");
-    await fillRequired(user, "BB-100481");
-    await user.click(screen.getByRole("button", { name: "Save draft" }));
-    expect(await screen.findByText("That product number is already in use.")).toBeVisible();
-    expect(screen.getByRole("textbox", { name: "Product number" })).toHaveAttribute(
-      "aria-invalid",
-      "true",
-    );
   });
 
   it("maps the server's field errors onto the form", async () => {

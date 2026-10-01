@@ -178,6 +178,9 @@ export function createAdminStore(seed: AdminRow[] = adminSeed()) {
   const policies = seedPolicies(rows);
   let conflictArmed = false;
   let created = 0;
+  // The backend's `seq_biz_product_product_no` (V21, #288): starts at 100001 and skips numbers
+  // already taken.
+  let sequence = 100_000;
   return {
     rows,
     policies,
@@ -194,6 +197,12 @@ export function createAdminStore(seed: AdminRow[] = adminSeed()) {
       return armed;
     },
     nextId: () => rowId(1000 + ++created),
+    nextProductNo: () => {
+      let no: string;
+      do no = `BB-${++sequence}`;
+      while (rows.some((r) => r.productNo === no));
+      return no;
+    },
     remove: (id: string) => {
       const i = rows.findIndex((r) => r.id === id);
       if (i >= 0) rows.splice(i, 1);
@@ -295,15 +304,18 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
     http.post(
       admin,
       guarded(async ({ request }) => {
-        const body = await bodyOf<{ productNo: string; listing: ListingContent }>(request);
+        const body = await bodyOf<{ productNo?: string | null; listing: ListingContent }>(request);
         const errors = listingViolations(body.listing);
-        if (typeof body.productNo !== "string" || !PRODUCT_NO.test(body.productNo))
+        // #288: an omitted or null number is generated; a supplied one is validated and unique.
+        const supplied = body.productNo ?? null;
+        if (supplied !== null && (typeof supplied !== "string" || !PRODUCT_NO.test(supplied)))
           errors.unshift({ field: "productNo", message: "must match the product number pattern" });
         if (errors.length > 0 || !body.listing) return fail(E.badRequest, errors);
-        if (store.rows.some((r) => r.productNo === body.productNo)) return fail(E.numberConflict);
+        if (supplied !== null && store.rows.some((r) => r.productNo === supplied))
+          return fail(E.numberConflict);
         const row: AdminRow = {
           id: store.nextId(),
-          productNo: body.productNo ?? "",
+          productNo: supplied ?? store.nextProductNo(),
           listing: body.listing,
           status: "draft",
           pricingMode: "dual",

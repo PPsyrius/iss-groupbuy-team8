@@ -31,8 +31,6 @@ export function refusalOf(error: unknown): Refusal {
   if (!(error instanceof ApiError))
     return { kind: "message", message: "Something went wrong on our side. Try again." };
   if (error.code === "CATALOG_412_002") return { kind: "conflict" };
-  if (error.code === "CATALOG_409_003")
-    return { kind: "fields", fields: { productNo: "That product number is already in use." } };
   const message = messages[error.code];
   if (message) return { kind: "message", message };
   const status = statusOf(error);
