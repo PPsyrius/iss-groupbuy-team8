@@ -246,7 +246,7 @@ public class AdminListingController {
                             + "policy version (0 for the first) and it must be below the original price. "
                             + "Errors: 400 COMMON_400_002 with a list of field errors for a missing or "
                             + "out-of-range expectedVersion, targetSize or lifetimeSeconds (Bean "
-                            + "Validation); 400 CATALOG_400_001 without field errors "
+                            + "Validation); 400 CATALOG_400_001 with teamPrice.<field> field errors "
                             + "for a bad teamPrice (price not below the original price, validFrom not "
                             + "before validUntil, or validUntil already past); 409 CATALOG_409_001 when "
                             + "teamPrice is sent for a listing that is not on sale. Any rejection changes "

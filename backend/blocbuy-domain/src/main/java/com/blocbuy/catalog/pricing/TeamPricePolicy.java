@@ -18,6 +18,8 @@ public record TeamPricePolicy(
         Instant validUntil,
         int version) {
 
+    private static final String AMOUNT_FIELD = "amount";
+
     public TeamPricePolicy {
         validFrom = validFrom == null ? null : validFrom.truncatedTo(ChronoUnit.MICROS);
         validUntil = validUntil == null ? null : validUntil.truncatedTo(ChronoUnit.MICROS);
@@ -46,7 +48,7 @@ public record TeamPricePolicy(
                 || amount.compareTo(new BigDecimal("9999999999999999.99")) > 0) {
             throw BizException.forField(
                     CatalogErrorCode.TEAM_PRICE_INVALID,
-                    "amount",
+                    AMOUNT_FIELD,
                     "Must be positive and at most 9999999999999999.99");
         }
         try {
@@ -54,7 +56,7 @@ public record TeamPricePolicy(
         } catch (ArithmeticException ex) {
             throw BizException.forField(
                     CatalogErrorCode.TEAM_PRICE_INVALID,
-                    "amount",
+                    AMOUNT_FIELD,
                     "Must have at most two decimal places");
         }
     }
@@ -76,7 +78,7 @@ public record TeamPricePolicy(
         if (amount.compareTo(product.originalPrice()) >= 0) {
             throw BizException.forField(
                     CatalogErrorCode.TEAM_PRICE_INVALID,
-                    "amount",
+                    AMOUNT_FIELD,
                     "Must be strictly below the solo price");
         }
     }

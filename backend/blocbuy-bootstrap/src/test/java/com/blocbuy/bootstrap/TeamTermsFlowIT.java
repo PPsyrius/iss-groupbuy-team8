@@ -74,7 +74,6 @@ class TeamTermsFlowIT {
     private static final String TEAM_PRICE_KEY = "teamPrice";
     private static final String TEAM_PRICE_AMOUNT = "teamPrice.amount";
     private static final String CODE = "$.code";
-    private static final String ERRORS = "$.errors";
     private static final String TEAM_PRICE_INVALID = "CATALOG_400_001";
     private static final String READ_TERMS =
             "SELECT team_target_size, team_lifetime_seconds, version FROM biz_product WHERE id = ?";

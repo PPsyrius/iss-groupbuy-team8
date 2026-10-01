@@ -33,8 +33,8 @@ class BizExceptionTest {
         assertThat(nested.fieldViolations())
                 .containsExactly(
                         new BizException.FieldViolation("teamPrice.amount", "Must be positive"));
-        assertThatThrownBy(() -> ex.fieldViolations().clear())
-                .isInstanceOf(UnsupportedOperationException.class);
+        var violations = ex.fieldViolations();
+        assertThatThrownBy(violations::clear).isInstanceOf(UnsupportedOperationException.class);
     }
 
     @Test
