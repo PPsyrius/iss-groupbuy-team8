@@ -26,6 +26,14 @@ class CheckoutPaymentRepositoryImplTest {
     private final CheckoutPaymentRepositoryImpl repository =
             new CheckoutPaymentRepositoryImpl(mapper);
 
+    @Test
+    void theExpiryGuardReadsAnySucceededAttempt() {
+        UUID intent = UUID.randomUUID();
+        when(mapper.hasSucceededIntent(intent)).thenReturn(false).thenReturn(true);
+        assertThat(repository.hasSucceededIntent(intent)).isFalse();
+        assertThat(repository.hasSucceededIntent(intent)).isTrue();
+    }
+
     private BizPaymentDO row() {
         Instant now = Instant.parse("2026-09-20T12:00:00Z");
         var row = new BizPaymentDO();

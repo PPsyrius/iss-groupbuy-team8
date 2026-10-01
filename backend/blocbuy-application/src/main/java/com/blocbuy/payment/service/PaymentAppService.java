@@ -1,7 +1,7 @@
 package com.blocbuy.payment.service;
 
 /**
- * Webhook entry port retained for the controller. Under {@code stripe-sprint2}, {@link
+ * Webhook entry port retained for the controller. With Checkout enabled, {@link
  * StripePaymentAppService} delegates to {@link StripeCheckoutService} for durable settlement;
  * otherwise {@link DisabledStripePaymentAppService} verifies but cannot settle Checkout events.
  * Checkout commands have their own application service.

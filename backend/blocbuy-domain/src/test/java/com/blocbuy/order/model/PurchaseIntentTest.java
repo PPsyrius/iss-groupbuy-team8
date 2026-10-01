@@ -18,6 +18,28 @@ import org.junit.jupiter.params.provider.ValueSource;
 /** Purchase intent invariants: the server's price commitment, its deadlines and its single use. */
 class PurchaseIntentTest {
 
+    @Test
+    void unpaidIntentExpiresAtItsQuoteDeadlineAndReplayIsANoOp() {
+        PurchaseIntent intent = issueWith(USER, PurchaseOperation.START, DEAL, PRODUCT);
+        Instant deadline = intent.quoteValidUntil();
+        assertThat(intent.expireAt(deadline.minusNanos(1000))).isSameAs(intent);
+        PurchaseIntent expired = intent.expireAt(deadline);
+        assertThat(expired.expiredAt()).isEqualTo(deadline);
+        assertThat(expired.fulfilled()).isFalse();
+        assertThat(expired.expireAt(deadline.plusSeconds(60))).isSameAs(expired);
+        UUID payment = UUID.randomUUID();
+        assertThatThrownBy(() -> expired.fulfilBy(payment))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void paidIntentDoesNotExpire() {
+        PurchaseIntent paid =
+                issueWith(USER, PurchaseOperation.JOIN, DEAL, PRODUCT).fulfilBy(UUID.randomUUID());
+        assertThat(paid.expireAt(paid.quoteValidUntil().plusSeconds(60))).isSameAs(paid);
+        assertThat(paid.expiredAt()).isNull();
+    }
+
     private static final Instant NOW = Instant.parse("2026-09-22T10:00:00Z");
     private static final UUID USER = UUID.randomUUID();
     private static final UUID DEAL = UUID.randomUUID();
@@ -281,7 +303,7 @@ class PurchaseIntentTest {
         assertThatThrownBy(
                         () ->
                                 PurchaseIntent.reconstitute(
-                                        id, terms, quoteValidUntil, null, null, NOW, 0))
+                                        id, terms, quoteValidUntil, null, null, null, null, NOW, 0))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -301,6 +323,8 @@ class PurchaseIntentTest {
                         NOW.plusSeconds(2400),
                         NOW.plusSeconds(86_400),
                         payment,
+                        null,
+                        null,
                         NOW,
                         4);
         assertThat(stored.id()).isEqualTo(id);
@@ -346,6 +370,7 @@ class PurchaseIntentTest {
                         NOW.plusSeconds(86_400),
                         null,
                         sharer,
+                        null,
                         NOW,
                         0);
 
@@ -375,6 +400,8 @@ class PurchaseIntentTest {
                                         quoteValidUntil,
                                         businessDeadline,
                                         null,
+                                        null,
+                                        null,
                                         NOW,
                                         0))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -386,6 +413,8 @@ class PurchaseIntentTest {
                                         quoteValidUntil,
                                         businessDeadline,
                                         null,
+                                        null,
+                                        null,
                                         NOW,
                                         -1))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -396,6 +425,8 @@ class PurchaseIntentTest {
                                         terms,
                                         null,
                                         businessDeadline,
+                                        null,
+                                        null,
                                         null,
                                         NOW,
                                         0))

@@ -13,6 +13,7 @@ readonly BLOCBUY_ENV_KEYS=(
     REDIS_PORT
     REDIS_PASSWORD
     BLOCBUY_SCHEDULING_ENABLED
+    BLOCBUY_STRIPE_CHECKOUT_ENABLED
     STRIPE_API_KEY
     STRIPE_WEBHOOK_SECRET
 )
@@ -86,9 +87,12 @@ import sys
 document = json.loads(os.environ["BLOCBUY_PARAMS_JSON"])
 prefix = os.environ["BLOCBUY_PARAM_PREFIX"]
 invalid = document.get("InvalidParameters") or []
-if invalid:
-    sys.exit("Missing SSM parameters: " + ", ".join(invalid))
+optional_flag = prefix + "/BLOCBUY_STRIPE_CHECKOUT_ENABLED"
+unexpected_missing = [name for name in invalid if name != optional_flag]
+if unexpected_missing:
+    sys.exit("Missing SSM parameters: " + ", ".join(unexpected_missing))
 values = {p["Name"][len(prefix) + 1:]: p["Value"] for p in document.get("Parameters", [])}
+values.setdefault("BLOCBUY_STRIPE_CHECKOUT_ENABLED", "false")
 required = [
     "DB_URL", "DB_USERNAME", "DB_PASSWORD", "REDIS_HOST", "REDIS_PORT",
     "REDIS_PASSWORD", "BLOCBUY_SCHEDULING_ENABLED", "STRIPE_API_KEY", "STRIPE_WEBHOOK_SECRET",
@@ -102,8 +106,10 @@ for key in required:
         sys.exit("Parameter %s contains a line break" % key)
 if values["BLOCBUY_SCHEDULING_ENABLED"].lower() not in ("true", "false"):
     sys.exit("Parameter BLOCBUY_SCHEDULING_ENABLED must be true or false")
+if values["BLOCBUY_STRIPE_CHECKOUT_ENABLED"].lower() not in ("true", "false"):
+    sys.exit("Parameter BLOCBUY_STRIPE_CHECKOUT_ENABLED must be true or false")
 with open(os.environ["BLOCBUY_ENV_TARGET"], "w", encoding="utf-8") as handle:
-    for key in required:
+    for key in [*required, "BLOCBUY_STRIPE_CHECKOUT_ENABLED"]:
         handle.write("%s=%s\n" % (key, values[key]))
 PY
 

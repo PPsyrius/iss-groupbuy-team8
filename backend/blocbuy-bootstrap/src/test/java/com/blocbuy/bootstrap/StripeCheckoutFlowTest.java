@@ -89,6 +89,7 @@ class StripeCheckoutFlowTest {
                 new DriverManagerDataSource(
                         testDatabase.url(), testDatabase.username(), testDatabase.password());
         Flyway.configure()
+                .configuration(Map.of("flyway.postgresql.transactional.lock", "false"))
                 .dataSource(ds)
                 .defaultSchema("domain")
                 .locations("classpath:db/migration")

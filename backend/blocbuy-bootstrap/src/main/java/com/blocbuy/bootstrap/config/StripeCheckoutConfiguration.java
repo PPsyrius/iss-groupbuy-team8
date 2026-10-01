@@ -4,21 +4,25 @@ import com.blocbuy.payment.gateway.CheckoutGateway;
 import com.blocbuy.payment.gateway.PaymentBusinessPort;
 import com.blocbuy.payment.repository.CheckoutPaymentRepository;
 import com.blocbuy.payment.service.StripeCheckoutService;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Provider wiring for checkout, still explicit opt-in. The business collaborator it needs now
- * exists unconditionally ({@link PaymentIntegrationConfiguration}), so the profile is no longer a
- * guard against a missing implementation — it is the rollout switch, the same profile {@code
- * StripeFeatureSwitch} reads, and it also gates the beans whose {@code success-url} / {@code
- * cancel-url} properties are only supplied where checkout is actually configured.
+ * Provider wiring for Checkout, explicitly opted in per deployment. Credentials and return URLs are
+ * validated only in this branch; disabled deployments need no Stripe configuration.
  */
 @Configuration
-@Profile("stripe-sprint2")
+@ConditionalOnProperty(
+        prefix = "blocbuy.payment.stripe",
+        name = "checkout-enabled",
+        havingValue = "true")
+@EnableConfigurationProperties({
+    StripeCheckoutRuntimeProperties.class,
+    CheckoutRedirectProperties.class
+})
 public class StripeCheckoutConfiguration {
     @Bean
     StripeCheckoutService stripeCheckoutService(
@@ -26,9 +30,13 @@ public class StripeCheckoutConfiguration {
             CheckoutGateway gateway,
             PaymentBusinessPort business,
             PlatformTransactionManager transactions,
-            @Value("${blocbuy.payment.checkout.success-url}") String successUrl,
-            @Value("${blocbuy.payment.checkout.cancel-url}") String cancelUrl) {
+            CheckoutRedirectProperties redirects) {
         return new StripeCheckoutService(
-                repository, gateway, business, transactions, successUrl, cancelUrl);
+                repository,
+                gateway,
+                business,
+                transactions,
+                redirects.successUrl(),
+                redirects.cancelUrl());
     }
 }

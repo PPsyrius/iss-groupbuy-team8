@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
@@ -11,6 +11,9 @@ import {
   adminListingOptions,
   adminListingsOptions,
   adminPolicyOptions,
+  adminRetry,
+  adminServerVersionOptions,
+  forgetListingPages,
   useChangeStatus,
   useConfigurePolicy,
   useCreateListing,
@@ -69,6 +72,14 @@ describe("admin reads", () => {
     expect(rule.select?.(await qc.fetchQuery(rule))).toEqual(policy);
   });
 
+  it("reads the server's version under its own key, away from the editor's entry", async () => {
+    server.use(http.get("*/api/v1/admin/products/:id", () => ok({ ...row, version: 5 })));
+    const qc = new QueryClient();
+    const peek = adminServerVersionOptions(productId);
+    expect(peek.select?.(await qc.fetchQuery(peek))).toBe(5);
+    expect(qc.getQueryData(adminListingOptions(productId).queryKey)).toBeUndefined();
+  });
+
   it("rejects a 403 with an ApiError the guard can read", async () => {
     server.use(
       http.get("*/api/v1/admin/products", () =>
@@ -79,6 +90,29 @@ describe("admin reads", () => {
     await expect(qc.fetchQuery(adminListingsOptions({ page: 1, size: 1 }))).rejects.toMatchObject({
       status: 403,
     });
+  });
+});
+
+const fail = (status: number) => new ApiError({ code: "X", message: "x", status });
+
+describe("admin read retries", () => {
+  it("never retries a 403: the role is gone, asking again cannot help", () => {
+    expect(adminRetry(0, fail(403))).toBe(false);
+    expect(adminRetry(0, fail(401))).toBe(false);
+    expect(adminRetry(0, fail(404))).toBe(false);
+  });
+
+  it("retries a server failure twice, as the app default does", () => {
+    expect(adminRetry(0, fail(500))).toBe(true);
+    expect(adminRetry(1, fail(500))).toBe(true);
+    expect(adminRetry(2, fail(500))).toBe(false);
+  });
+
+  it("applies to every admin read", () => {
+    expect(adminListingsOptions({ page: 1, size: 1 }).retry).toBe(adminRetry);
+    expect(adminListingOptions("p1").retry).toBe(adminRetry);
+    expect(adminServerVersionOptions("p1").retry).toBe(adminRetry);
+    expect(adminPolicyOptions("p1").retry).toBe(adminRetry);
   });
 });
 
@@ -158,5 +192,23 @@ describe("admin writes", () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(ApiError);
     expect(result.current.error).toMatchObject({ status: 412, code: "CATALOG_412_001" });
+  });
+
+  it("forgetListingPages refetches pages on screen and drops the rest", async () => {
+    let hits = 0;
+    server.use(
+      http.get("*/api/v1/admin/products", () => {
+        hits += 1;
+        return ok({ items: [row], total: 1, page: 1, size: 20 });
+      }),
+    );
+    const { qc, result } = hook(() => useQuery(adminListingsOptions({ page: 1, size: 20 })));
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    await qc.fetchQuery(adminListingsOptions({ page: 2, size: 20 }));
+    expect(hits).toBe(2);
+    forgetListingPages(qc);
+    await waitFor(() => expect(hits).toBe(3));
+    expect(qc.getQueryData(adminListingsOptions({ page: 2, size: 20 }).queryKey)).toBeUndefined();
+    expect(qc.getQueryData(adminListingsOptions({ page: 1, size: 20 }).queryKey)).toBeDefined();
   });
 });

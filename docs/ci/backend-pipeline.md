@@ -41,6 +41,14 @@ rollback-backend.yml  manual, confirmed, reasoned, environment-controlled SSM ro
 
 The security workflow also scans weekly on Monday at 02:17 UTC for newly disclosed issues in unchanged dependencies.
 
+## Runtime base image maintenance (2026-10-01)
+
+Both runtime Dockerfiles pin the same `eclipse-temurin:21-jre-noble` multi-architecture digest: Java 21, Ubuntu 24.04 and fixed base contents. Dependabot checks daily against `dev`, exempts Temurin from cooldown and retains the Java-major restriction. Base updates must pass the existing Trivy image gate and EC2-profile smoke test; update both Dockerfiles together.
+
+Temporary CVE-2026-84782 repair: `OPENSSL_FIXED_VERSION=3.0.13-0ubuntu3.16` is the minimum accepted version for `libssl3t64` and `openssl`. The build requires both packages to be installed, requests the exact repair version only for packages below that threshold, and checks both versions afterward. Already-fixed or newer packages skip APT; no downgrade is requested. Missing packages or an unavailable repair fail the build. Dependabot does not maintain the apt version, and the old base still depends on Ubuntu retaining those repair packages.
+
+Revert this temporary image-fix PR once an official Temurin image includes the fix and a fresh build with the PR reverted passes the same image scan and smoke gates. A changed digest alone is insufficient. Until then, refresh the repair deliberately if package availability or advisories change. [October 1 evidence](../agile/sprint-03/log/2026-10-01.md) records the failed candidate, conditional cases and passing builds/scans/smoke using the failed CI run's exact application JAR; linux/amd64 only, remote CI and deployment pending.
+
 ## Required PR checks
 
 The `dev` ruleset requires PRs, up-to-date branches and these checks:

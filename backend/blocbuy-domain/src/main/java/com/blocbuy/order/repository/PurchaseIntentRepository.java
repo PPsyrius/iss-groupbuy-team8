@@ -1,7 +1,9 @@
 package com.blocbuy.order.repository;
 
 import com.blocbuy.order.model.PurchaseIntent;
+import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,6 +36,20 @@ public interface PurchaseIntentRepository {
 
     /** {@code SELECT ... FOR UPDATE} on the active row; call after the group deal lock. */
     Optional<PurchaseIntent> lockById(UUID id);
+
+    /** Skips a row held by checkout/settlement; take the team lock first. */
+    Optional<PurchaseIntent> tryLockForExpiry(UUID id);
+
+    /** One bounded selection, excluding deferred retries. */
+    List<UUID> dueForExpiry(Instant now, int limit);
+
+    void markExpired(PurchaseIntent before, PurchaseIntent expired);
+
+    /** Called outside the per-intent transaction, after any rollback. */
+    void deferExpiryRetry(UUID id, Duration delay);
+
+    /** A terminal succeeded payment permanently leaves this job's candidate queue. */
+    void excludePaidFromExpiry(UUID id);
 
     /**
      * Compare-and-swap that records the payment which consumed the intent.

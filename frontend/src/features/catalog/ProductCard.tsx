@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
 import type { ProductSummaryResponse } from "@/api/generated/types.gen";
+import { ImageFallback } from "@/components/ImageFallback";
 
 import { Price } from "./Price";
 
@@ -25,14 +26,7 @@ export function ProductCard({ product }: { product: ProductSummaryResponse }) {
   const detail = id ? { to: "/products/$productId" as const, params: { productId: id } } : null;
   return (
     <article className="border-border bg-surface relative flex h-full flex-col overflow-hidden rounded-lg border">
-      <div
-        aria-hidden="true"
-        className="h-[150px] shrink-0 bg-[repeating-linear-gradient(135deg,var(--surface-secondary)_0_10px,var(--surface-tertiary)_10px_20px)] xl:h-[168px]"
-      >
-        {coverImage ? (
-          <img alt="" className="h-full w-full object-cover" loading="lazy" src={coverImage} />
-        ) : null}
-      </div>
+      <ImageFallback src={coverImage} className="h-[150px] shrink-0 xl:h-[168px]" />
       <div className="flex flex-1 flex-col gap-2.5 p-4">
         <div className="flex flex-col gap-0.5">
           <h3 className="line-clamp-2 text-base font-semibold">

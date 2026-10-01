@@ -1,6 +1,7 @@
 package com.blocbuy.order.persistence;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -24,6 +25,19 @@ public interface BizPurchaseIntentMapper {
      * PurchaseIntentRepository} for the fixed lock order.
      */
     BizPurchaseIntentDO lockById(@Param("id") UUID id);
+
+    BizPurchaseIntentDO tryLockForExpiry(@Param("id") UUID id);
+
+    List<UUID> dueForExpiry(@Param("now") Instant now, @Param("limit") int limit);
+
+    int markExpired(
+            @Param("id") UUID id,
+            @Param("now") Instant now,
+            @Param("expectedVersion") int expectedVersion);
+
+    int excludePaidFromExpiry(@Param("id") UUID id);
+
+    int deferExpiryRetry(@Param("id") UUID id, @Param("retryDelaySeconds") long seconds);
 
     /**
      * Claims an unfulfilled intent for one payment. Guarded on {@code fulfilled_payment_id IS NULL}

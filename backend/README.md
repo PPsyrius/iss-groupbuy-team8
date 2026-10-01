@@ -34,11 +34,11 @@ For the local Docker stack, put `DB_USERNAME`, `DB_PASSWORD`, and `REDIS_PASSWOR
 docker build -t blocbuy-backend .              # production image (Dockerfile at backend/)
 ```
 
-Profiles: `local` (default; localhost PG/Redis) · `docker` (compose service names) · `stripe-sprint2` (opt-in Sandbox Checkout) · `openapi-export` (build-only, no live infra). Payment rollout and pre-live gates: [Stripe release boundary](docs/payment/stripe-release-boundary.md).
+Profiles: `local` (default; localhost PG/Redis) · `docker` (compose service names) · `ec2` (host loopback) · `openapi-export` (build-only, no live infra). Set `BLOCBUY_STRIPE_CHECKOUT_ENABLED=true` with Sandbox credentials and return URLs to opt into Checkout; it defaults to `false` in every profile. `stripe-sprint2` remains a one-release compatibility alias. Payment rollout and pre-live gates: [Stripe release boundary](docs/payment/stripe-release-boundary.md).
 
 Secrets come from the environment, never from git: `DB_USERNAME`, `DB_PASSWORD`, `REDIS_PASSWORD`, `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`, `TYPESAFE_API_KEY`. Set `TYPESAFE_ENABLED=true` to allow opt-in Jev re-ranking for listing searches; model, endpoint, and timeout settings have safe defaults in `application.yml`.
 
-Scheduled jobs are deployment-opt-in. Before setting `BLOCBUY_SCHEDULING_ENABLED=true`, count overdue open teams and due refund obligations; the expiry sweep processes at most 100 teams per run and the refund worker attempts one due obligation per tick. This switch can move money through the configured Stripe gateway even under the EC2-only profile; the gateway requires a sandbox key. To change or pause scheduling, follow the [deployment recreation procedure](../deployment/backend/README.md#change-the-scheduling-flag); restarting an existing container does not reload its environment.
+Scheduled jobs are deployment-opt-in. Before setting `BLOCBUY_SCHEDULING_ENABLED=true`, count overdue open teams, overdue unfulfilled purchase intents (including paid refusal cases) and due refund obligations; the team and intent expiry sweeps each select at most 100 candidates per run and the refund worker attempts one due obligation per tick. This switch can move money through the configured Stripe gateway even under the EC2-only profile; the gateway requires a sandbox key. To change or pause scheduling, follow the [deployment recreation procedure](../deployment/backend/README.md#change-the-scheduling-flag); restarting an existing container does not reload its environment.
 
 Local datasource: `jdbc:postgresql://localhost:5432/Blocbuy?currentSchema=domain` — note the database name is case-sensitive if created quoted; verify `Blocbuy` vs `blocbuy` on first connect.
 
@@ -60,3 +60,5 @@ CI: `.github/workflows/ci-backend.yml` (build-quality → contract-check → son
 - Auth: Sa-Token, one token domain, Redis-backed sessions, RBAC from identity tables. Exception: `POST /api/v1/webhooks/stripe` is a public path; authenticity comes from Stripe signature verification in the gateway, not session auth.
 - Write endpoints define idempotency via the `Idempotency-Key` header.
 - Lists paginate with a 100-item page cap; cursor field reserved for keyset pagination.
+
+Unpaid-intent cleanup (#225) uses `blocbuy.scheduling.purchase-intent-expiry` (interval `PT1M`, initial delay `PT30S`, renewable lease `PT2M`, batch size `100` with a 1..500 bound). It soft-marks intents and never calls Stripe; late provider facts still use settlement/refund. Expiry, skipped and failed counts use `blocbuy.purchase.intent.expiry.intents` with the `result` tag. Busy candidates and failures defer for five minutes; confirmed paid candidates leave this job's queue permanently. Recovery writes have a three-second statement timeout so lock contention cannot freeze the leased run. See [ADR 0001](docs/adr/0001-payment-business-integration.md#addendum-2026-09-30-expire-unpaid-intents-225-us30) for locks, migration recovery and rollout.

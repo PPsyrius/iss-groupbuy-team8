@@ -22,7 +22,7 @@ public class TeamExpirySweepJob {
 
     private final LeasedJobRunner runner;
     private final GroupDealExpirySweeper sweeper;
-    private final SchedulingProperties.TeamExpiry settings;
+    private final SchedulingProperties.ExpirySweep settings;
     private final MeterRegistry meters;
 
     /** Fixed delay: a slow run delays the next one instead of overlapping it on this instance. */

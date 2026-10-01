@@ -1,17 +1,25 @@
 # Stripe release boundary
 
-Owner: Yorick. Updated: 28 September 2026. PRs #126 and #148; #216 legacy-path cleanup.
+Owner: Yorick. Updated: 30 September 2026. PRs #126 and #148; #216 legacy-path cleanup; issue #292 Checkout flag.
 
 This is the current deployment boundary for the Stripe work. Historical Sandbox evidence is in [stripe-sandbox-acceptance-20260920.md](stripe-sandbox-acceptance-20260920.md), and quality evidence is in [stripe-sonar-fixes-20260920.md](stripe-sonar-fixes-20260920.md).
 
 ## Current boundary
 
-- `stripe-sprint2` enables the buyer-facing intent, Checkout and receipt routes. Without it, `StripeFeatureSwitch` rejects them before business/database access; authenticated capabilities return `enabled=false` with `Cache-Control: no-store`. The frontend also keeps payment actions off when capabilities are missing or unavailable ([integration guide](../../../docs/api/backend-integration-guide.md)).
+- `BLOCBUY_STRIPE_CHECKOUT_ENABLED=true` enables the buyer-facing intent, Checkout and receipt routes. It defaults to `false` in every profile. Without it, `StripeFeatureSwitch` rejects payment commands before business/database access; authenticated capabilities return `enabled=false` with `Cache-Control: no-store`. The frontend also keeps payment actions off when capabilities are missing or unavailable ([integration guide](../../../docs/api/backend-integration-guide.md)). `stripe-sprint2` is a one-release local compatibility alias, not the dev deployment switch (backend ADR 0005).
 - Browser requests contain operation and business identifiers, not buyer or amount. Sa-Token owns identity, server-side ports own pricing, and Checkout retries reuse the intent and idempotency key.
 - Checkout currently requests `card` only, in Stripe Sandbox. Future eligible payment methods can be evaluated as separate Checkout work, using the existing settlement boundary rather than reviving the retired PaymentIntent pipeline.
-- The webhook controller keeps one `PaymentAppService` per profile: Checkout settles signed session events durably when enabled; when disabled, signed unrelated events are acknowledged but supported Checkout events and `payment_intent.*`, `charge.*`, `refund.*` return non-2xx without database access. The old PaymentIntent gateway, String-ID repository, stub and dev adapter are retired (backend ADR 0004).
+- The webhook controller keeps one `PaymentAppService` per flag state: Checkout settles signed session events durably when enabled; when disabled, signed unrelated events are acknowledged but supported Checkout events and `payment_intent.*`, `charge.*`, `refund.*` return non-2xx without database access. The old PaymentIntent gateway, String-ID repository, stub and dev adapter are retired (backend ADR 0004).
 - `PaymentIntegrationConfiguration` always binds the production `PaymentBusinessPort` and `PaymentIntentPort` (backend ADR 0001). The latter issues an order-owned purchase intent, not a provider PaymentIntent.
-- `TeamExpiryRefundSubscriber` records refund obligations in the lifecycle transaction. `RefundService` and `StripeRefundGateway` process them with provider checks, idempotency and leasing; both scheduled jobs require `BLOCBUY_SCHEDULING_ENABLED`, independently of `stripe-sprint2` even under `ec2`. Scheduling is off by default and the refund gateway still requires a sandbox key (backend ADR 0002).
+- `TeamExpiryRefundSubscriber` records refund obligations in the lifecycle transaction. `RefundService` and `StripeRefundGateway` process them with provider checks, idempotency and leasing; both scheduled jobs require `BLOCBUY_SCHEDULING_ENABLED`, independently of the Checkout flag even under `ec2`. Scheduling is off by default and the refund gateway still requires a sandbox key (backend ADR 0002).
+
+## Dev Sandbox enablement for #292
+
+1. Configure startable dev products through `PUT /api/v1/admin/products/{productId}/team-terms` with a valid team price policy. The `R__demo_catalog_seed.sql` migration is local-only and is not deployed under `ec2`; existing `UC9-SMOKE-*` rows must be configured or left off-sale.
+2. In the dev host's root-only `/etc/blocbuy/backend.env`, set `BLOCBUY_STRIPE_CHECKOUT_ENABLED=true`, a `sk_test_` key, the signing secret for this endpoint, and `BLOCBUY_PAYMENT_CHECKOUT_SUCCESS_URL` / `BLOCBUY_PAYMENT_CHECKOUT_CANCEL_URL` to the dev frontend's `/payments/return` route. Do not commit or send the values in a PR. The backend refuses startup if any required value is blank or the API key is not a test key.
+3. Subscribe the test-mode webhook at `https://<dev-host>/api/v1/webhooks/stripe` to `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed` and `checkout.session.expired`.
+4. Use an approved deployment that force-recreates the backend container. A plain `docker restart` does not reload the env file. Check authenticated capabilities, quote, Checkout and a test card payment; confirm the new team appears under `GET /api/v1/group-deals/me` as leader. Record the operator, time, payment ID and outcome without card or secret data.
+5. Keep production's flag `false`. Before disabling an enabled dev deployment, reconcile or drain open Checkouts because disabled money webhooks return non-2xx and automatic retries are finite.
 
 ## Removed before publication
 

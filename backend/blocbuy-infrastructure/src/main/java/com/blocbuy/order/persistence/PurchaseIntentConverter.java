@@ -27,6 +27,7 @@ final class PurchaseIntentConverter {
                 row.getBusinessDeadline(),
                 row.getFulfilledPaymentId(),
                 row.getSharerUserId(),
+                row.getExpiredAt(),
                 row.getCreateTime(),
                 row.getVersion() == null ? 0 : row.getVersion());
     }
@@ -47,6 +48,7 @@ final class PurchaseIntentConverter {
         row.setBusinessDeadline(intent.businessDeadline());
         row.setFulfilledPaymentId(intent.fulfilledPaymentId());
         row.setSharerUserId(intent.sharerUserId());
+        row.setExpiredAt(intent.expiredAt());
         row.setCreateTime(intent.createTime());
         row.setVersion(intent.version());
         return row;

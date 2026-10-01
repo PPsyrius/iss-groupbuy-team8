@@ -10,6 +10,8 @@ import org.apache.ibatis.annotations.Param;
 /** SQL bindings are in mapper/payment/PaymentMapper.xml. */
 @Mapper
 public interface PaymentMapper {
+    boolean hasSucceededIntent(@Param("intentId") UUID intentId);
+
     BizPaymentDO find(@Param("id") UUID id);
 
     BizPaymentDO receipt(@Param("id") UUID id);

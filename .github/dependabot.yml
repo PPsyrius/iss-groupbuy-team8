@@ -42,9 +42,12 @@ updates:
   - package-ecosystem: docker
     cooldown:
       default-days: 7
+      # Base-image rebuilds can carry OS security fixes without a Java version bump.
+      exclude: ['eclipse-temurin']
     directory: /backend
     schedule:
       interval: daily
+    target-branch: dev
     # Java upgrades are deliberate stack decisions; keep the backend on Java 21 LTS.
     ignore:
       - dependency-name: 'eclipse-temurin'

@@ -12,9 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 
-/**
- * The deployment scheduling switch activates refunds without enabling checkout's Stripe profile.
- */
+/** The deployment scheduling switch activates refunds without enabling Checkout. */
 @SpringBootTest(
         properties = {
             "blocbuy.scheduling.enabled=true",
@@ -36,11 +34,12 @@ class RefundWorkerWiringTest {
     @Autowired private ApplicationContext context;
 
     @Test
-    void schedulingWiresRefundsWithoutCheckoutProfile() {
+    void schedulingWiresRefundsWithoutCheckout() {
         assertThat(context.getBeansOfType(TeamExpirySweepJob.class)).hasSize(1);
         assertThat(context.getBeansOfType(RefundWorkerJob.class)).hasSize(1);
         assertThat(context.getBeansOfType(RefundService.class)).hasSize(1);
         assertThat(context.getBeansOfType(StripeCheckoutService.class)).isEmpty();
-        assertThat(context.getEnvironment().acceptsProfiles("stripe-sprint2")).isFalse();
+        assertThat(context.getEnvironment().getProperty("blocbuy.payment.stripe.checkout-enabled"))
+                .isEqualTo("false");
     }
 }

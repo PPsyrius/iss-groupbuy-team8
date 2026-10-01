@@ -88,6 +88,8 @@ class OrderFulfilmentAdapterTest {
                 NOW.plusSeconds(2400),
                 NOW.plusSeconds(7200),
                 fulfilledPayment,
+                null,
+                null,
                 NOW,
                 fulfilledPayment == null ? 0 : 1);
     }
@@ -149,6 +151,17 @@ class OrderFulfilmentAdapterTest {
         when(orders.save(any())).thenAnswer(call -> call.getArgument(0));
         when(settlement.linkOrder(any(), any(), any())).thenReturn(true);
         when(products.consumeOneUnit(PRODUCT)).thenReturn(true);
+    }
+
+    @Test
+    void aSoftExpiredIntentRefusesMoneyBeforeAnyBusinessWrite() {
+        PurchaseIntent expired =
+                intent(PurchaseOperation.START, null).expireAt(NOW.plusSeconds(2400));
+        when(intents.lockById(INTENT)).thenReturn(Optional.of(expired));
+
+        assertThat(adapter.fulfil(event(expired)).rejection()).isEqualTo("INTENT_EXPIRED");
+        verifyNoInteractions(orders, groups, products, users);
+        verify(intents, never()).markFulfilled(any(), any());
     }
 
     private static void assertRejected(ThrowingCallable call, ErrorCode expected) {
@@ -324,6 +337,7 @@ class OrderFulfilmentAdapterTest {
                         NOW.plusSeconds(7200),
                         null,
                         sharer,
+                        null,
                         NOW,
                         0);
         when(intents.lockById(INTENT)).thenReturn(Optional.of(stored));

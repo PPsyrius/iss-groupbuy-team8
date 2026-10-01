@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test;
 
 /** The timer hands the configured lease and batch to the runner and records what a run did. */
 class TeamExpirySweepJobTest {
-    private static final SchedulingProperties.TeamExpiry SETTINGS =
-            new SchedulingProperties.TeamExpiry(
+    private static final SchedulingProperties.ExpirySweep SETTINGS =
+            new SchedulingProperties.ExpirySweep(
                     Duration.ofMinutes(1), Duration.ofSeconds(30), Duration.ofMinutes(3), 42);
 
     private final LeasedJobRunner runner = mock(LeasedJobRunner.class);
