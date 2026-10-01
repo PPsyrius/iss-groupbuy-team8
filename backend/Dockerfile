@@ -7,15 +7,37 @@
 # Runtime profile is NOT baked in: compose/deploy sets SPRING_PROFILES_ACTIVE
 # (e.g. ec2).
 
-FROM eclipse-temurin:21-jre
+# Explicit OS line and multi-architecture digest; keep in sync with Dockerfile.ci.
+FROM eclipse-temurin:21-jre-noble@sha256:0c324fbe2e1455c3159184717440f3b52906ef82a39c4a6efc9edb401d31971a
+
+# Temporary CVE-2026-84782 repair until a verified upstream rebuild includes it.
+# Dependabot updates the base digest, not this package version; see the CI runbook.
+ARG OPENSSL_FIXED_VERSION=3.0.13-0ubuntu3.16
 
 WORKDIR /app
 
-# Base image ships pebble (Let's Encrypt's ACME test server) at /usr/bin/pebble —
-# a Go test tool the app never runs, and its stdlib CVEs trip the Trivy image gate.
-RUN rm -f /usr/bin/pebble \
- && groupadd --system blocbuy \
- && useradd --system --gid blocbuy blocbuy
+# Repair only older installed packages; newer bases skip APT and never downgrade.
+RUN set -eux; \
+    set --; \
+    for package in libssl3t64 openssl; do \
+        test "$(dpkg-query -W -f='${db:Status-Status}' "$package")" = installed; \
+        installed="$(dpkg-query -W -f='${Version}' "$package")"; \
+        if dpkg --compare-versions "$installed" lt "$OPENSSL_FIXED_VERSION"; then \
+            set -- "$@" "$package=$OPENSSL_FIXED_VERSION"; \
+        fi; \
+    done; \
+    if [ "$#" -gt 0 ]; then \
+        apt-get update; \
+        apt-get install -y --no-install-recommends --only-upgrade "$@"; \
+    fi; \
+    for package in libssl3t64 openssl; do \
+        installed="$(dpkg-query -W -f='${Version}' "$package")"; \
+        dpkg --compare-versions "$installed" ge "$OPENSSL_FIXED_VERSION"; \
+    done; \
+    rm -rf /var/lib/apt/lists/*; \
+    rm -f /usr/bin/pebble; \
+    groupadd --system blocbuy; \
+    useradd --system --gid blocbuy blocbuy
 
 # Produced by `./mvnw verify` in build-quality and restored into the Docker
 # build context by the docker job.
@@ -27,6 +49,5 @@ EXPOSE 8589
 
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"
 
-# No in-image HEALTHCHECK: JRE base has no curl/wget. Orchestrator probes
-# (compose healthcheck / k8s liveness) hit GET /actuator/health on :8589.
+# Health probes are orchestrator-owned and target GET /api/actuator/health on :8589.
 ENTRYPOINT ["java", "-jar", "app.jar"]
