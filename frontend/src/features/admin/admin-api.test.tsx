@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
@@ -11,6 +11,8 @@ import {
   adminListingOptions,
   adminListingsOptions,
   adminPolicyOptions,
+  adminServerVersionOptions,
+  forgetListingPages,
   useChangeStatus,
   useConfigurePolicy,
   useCreateListing,
@@ -67,6 +69,14 @@ describe("admin reads", () => {
     const rule = adminPolicyOptions(productId);
     expect(one.select?.(await qc.fetchQuery(one))).toEqual(row);
     expect(rule.select?.(await qc.fetchQuery(rule))).toEqual(policy);
+  });
+
+  it("reads the server's version under its own key, away from the editor's entry", async () => {
+    server.use(http.get("*/api/v1/admin/products/:id", () => ok({ ...row, version: 5 })));
+    const qc = new QueryClient();
+    const peek = adminServerVersionOptions(productId);
+    expect(peek.select?.(await qc.fetchQuery(peek))).toBe(5);
+    expect(qc.getQueryData(adminListingOptions(productId).queryKey)).toBeUndefined();
   });
 
   it("rejects a 403 with an ApiError the guard can read", async () => {
@@ -158,5 +168,23 @@ describe("admin writes", () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(ApiError);
     expect(result.current.error).toMatchObject({ status: 412, code: "CATALOG_412_001" });
+  });
+
+  it("forgetListingPages refetches pages on screen and drops the rest", async () => {
+    let hits = 0;
+    server.use(
+      http.get("*/api/v1/admin/products", () => {
+        hits += 1;
+        return ok({ items: [row], total: 1, page: 1, size: 20 });
+      }),
+    );
+    const { qc, result } = hook(() => useQuery(adminListingsOptions({ page: 1, size: 20 })));
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    await qc.fetchQuery(adminListingsOptions({ page: 2, size: 20 }));
+    expect(hits).toBe(2);
+    forgetListingPages(qc);
+    await waitFor(() => expect(hits).toBe(3));
+    expect(qc.getQueryData(adminListingsOptions({ page: 2, size: 20 }).queryKey)).toBeUndefined();
+    expect(qc.getQueryData(adminListingsOptions({ page: 1, size: 20 }).queryKey)).toBeDefined();
   });
 });

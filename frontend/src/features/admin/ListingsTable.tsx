@@ -1,10 +1,12 @@
 import { Chip, Skeleton, Table } from "@heroui/react";
+import { Link } from "@tanstack/react-router";
 
 import type { AdminListingResponse } from "@/api/generated/types.gen";
 import { categoryLabel } from "@/features/catalog/categories";
 
 import { statusLabel } from "./listing-status";
 import { formatSgd } from "./money";
+import { RowMenu } from "./RowMenu";
 
 // The 4a.2 table: exactly the admin DTO's columns, 44px rows, numbers right-aligned in tabular
 // figures, version on every row (the number a 412 later talks about). HeroUI `Table`, no
@@ -55,13 +57,13 @@ export function ListingsTable({ items }: Readonly<{ items: AdminListingResponse[
               <Table.Row key={item.id ?? i} id={item.id ?? i} className="h-11">
                 <Table.Cell className={mono}>{item.productNo}</Table.Cell>
                 <Table.Cell className="max-w-0 min-w-48">
-                  {/* A1-06 adds the editor route; a plain link until the route tree knows it. */}
-                  <a
-                    href={`/admin/listings/${item.id ?? ""}`}
+                  <Link
+                    to="/admin/listings/$productId"
+                    params={{ productId: item.id ?? "" }}
                     className="block truncate font-medium hover:underline"
                   >
                     {item.listing?.title}
-                  </a>
+                  </Link>
                 </Table.Cell>
                 <Table.Cell className="text-muted">
                   {item.listing?.category ? categoryLabel(item.listing.category) : "—"}
@@ -81,8 +83,9 @@ export function ListingsTable({ items }: Readonly<{ items: AdminListingResponse[
                   </Chip>
                 </Table.Cell>
                 <Table.Cell className={`${num} ${mono}`}>v{item.version}</Table.Cell>
-                {/* The row menu (Edit, lifecycle actions, Delete draft) lands with A1-07. */}
-                <Table.Cell>{null}</Table.Cell>
+                <Table.Cell>
+                  <RowMenu listing={item} />
+                </Table.Cell>
               </Table.Row>
             ))}
           </Table.Body>
