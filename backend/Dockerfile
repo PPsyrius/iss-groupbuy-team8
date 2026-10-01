@@ -11,14 +11,9 @@ FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-# Refresh the OpenSSL packages from Ubuntu security updates before the image scan.
-# The upstream JRE image can lag a fixable base-image CVE between tag rebuilds.
-# Base image also ships unused pebble (Let's Encrypt's ACME test server).
-RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --only-upgrade -y \
-      libssl3t64 openssl openssl-provider-legacy \
- && rm -rf /var/lib/apt/lists/* \
- && rm -f /usr/bin/pebble \
+# Base image ships pebble (Let's Encrypt's ACME test server) at /usr/bin/pebble —
+# a Go test tool the app never runs, and its stdlib CVEs trip the Trivy image gate.
+RUN rm -f /usr/bin/pebble \
  && groupadd --system blocbuy \
  && useradd --system --gid blocbuy blocbuy
 

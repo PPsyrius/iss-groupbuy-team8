@@ -6,13 +6,9 @@
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-# Keep in sync with Dockerfile: refresh fixable OpenSSL packages before Trivy,
-# then remove the unused pebble test server from the base image.
-RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --only-upgrade -y \
-      libssl3t64 openssl openssl-provider-legacy \
- && rm -rf /var/lib/apt/lists/* \
- && rm -f /usr/bin/pebble \
+# Keep in sync with Dockerfile: base image ships pebble (Let's Encrypt's ACME test
+# server) at /usr/bin/pebble — its stdlib CVEs trip the Trivy image gate.
+RUN rm -f /usr/bin/pebble \
  && groupadd --system blocbuy && useradd --system --gid blocbuy blocbuy
 USER blocbuy
 
