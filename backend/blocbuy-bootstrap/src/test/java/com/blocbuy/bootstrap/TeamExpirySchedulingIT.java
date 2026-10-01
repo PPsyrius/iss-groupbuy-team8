@@ -47,6 +47,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
             "spring.flyway.locations=classpath:db/migration,classpath:db/stripe-fixture",
             "spring.data.redis.host=127.0.0.1",
             "spring.data.redis.port=1",
+            "blocbuy.payment.stripe.checkout-enabled=true",
+            "blocbuy.payment.stripe.api-key=sk_test_fixture_placeholder",
+            "blocbuy.payment.stripe.webhook-secret=whsec_fixture_placeholder",
             "blocbuy.payment.checkout.success-url=https://shop.example/payments/return",
             "blocbuy.payment.checkout.cancel-url=https://shop.example/payments/return",
             "blocbuy.scheduling.enabled=true",
@@ -56,7 +59,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
             "blocbuy.scheduling.refund-worker.initial-delay=PT1H",
             "blocbuy.scheduling.refund-worker.interval=PT1H"
         })
-@ActiveProfiles({"local", "stripe-sprint2"})
+@ActiveProfiles("local")
 @Import(PaymentFixtureConfiguration.class)
 @DirtiesContext
 class TeamExpirySchedulingIT {
