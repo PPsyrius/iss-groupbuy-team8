@@ -37,6 +37,7 @@ public final class PurchaseIntent {
     private final Instant businessDeadline;
     private final UUID fulfilledPaymentId;
     private final UUID sharerUserId;
+    private final Instant expiredAt;
     private final Instant createTime;
     private final int version;
 
@@ -48,6 +49,7 @@ public final class PurchaseIntent {
             Instant businessDeadline,
             UUID fulfilledPaymentId,
             UUID sharerUserId,
+            Instant expiredAt,
             Instant createTime,
             int version) {
         requireTerms(terms);
@@ -72,6 +74,7 @@ public final class PurchaseIntent {
         this.businessDeadline = deadline;
         this.fulfilledPaymentId = fulfilledPaymentId;
         this.sharerUserId = sharerUserId;
+        this.expiredAt = expiredAt;
         this.createTime = createTime;
         this.version = version;
     }
@@ -102,7 +105,7 @@ public final class PurchaseIntent {
             throw new BizException(OrderErrorCode.PURCHASE_INTENT_TERMS_INVALID);
         }
         return new PurchaseIntent(
-                UuidV7.next(), terms, quoteValidUntil, businessDeadline, null, null, now, 0);
+                UuidV7.next(), terms, quoteValidUntil, businessDeadline, null, null, null, now, 0);
     }
 
     /**
@@ -123,26 +126,7 @@ public final class PurchaseIntent {
                 businessDeadline,
                 fulfilledPaymentId,
                 sharer,
-                createTime,
-                version);
-    }
-
-    /** Reconstitution factory for an unattributed row. */
-    public static PurchaseIntent reconstitute(
-            UUID id,
-            Terms terms,
-            Instant quoteValidUntil,
-            Instant businessDeadline,
-            UUID fulfilledPaymentId,
-            Instant createTime,
-            int version) {
-        return reconstitute(
-                id,
-                terms,
-                quoteValidUntil,
-                businessDeadline,
-                fulfilledPaymentId,
-                null,
+                expiredAt,
                 createTime,
                 version);
     }
@@ -156,6 +140,7 @@ public final class PurchaseIntent {
             Instant businessDeadline,
             UUID fulfilledPaymentId,
             UUID sharerUserId,
+            Instant expiredAt,
             Instant createTime,
             int version) {
         return new PurchaseIntent(
@@ -165,6 +150,7 @@ public final class PurchaseIntent {
                 businessDeadline,
                 fulfilledPaymentId,
                 sharerUserId,
+                expiredAt,
                 createTime,
                 version);
     }
@@ -180,6 +166,9 @@ public final class PurchaseIntent {
         if (paymentId == null) {
             throw new IllegalArgumentException("paymentId must not be null");
         }
+        if (expiredAt != null) {
+            throw new IllegalStateException("Expired purchase intent cannot be fulfilled");
+        }
         if (fulfilledPaymentId != null) {
             if (fulfilledPaymentId.equals(paymentId)) {
                 return this;
@@ -193,6 +182,7 @@ public final class PurchaseIntent {
                 businessDeadline,
                 paymentId,
                 sharerUserId,
+                expiredAt,
                 createTime,
                 version);
     }
@@ -215,6 +205,27 @@ public final class PurchaseIntent {
 
     public boolean fulfilled() {
         return fulfilledPaymentId != null;
+    }
+
+    /** Soft expiry preserves the frozen quote; replay and fulfilled intents are unchanged. */
+    public PurchaseIntent expireAt(Instant now) {
+        if (expiredAt != null || fulfilled() || !expiredAt(now)) {
+            return this;
+        }
+        return new PurchaseIntent(
+                id,
+                terms,
+                quoteValidUntil,
+                businessDeadline,
+                fulfilledPaymentId,
+                sharerUserId,
+                now.truncatedTo(ChronoUnit.MICROS),
+                createTime,
+                version);
+    }
+
+    public Instant expiredAt() {
+        return expiredAt;
     }
 
     private static void requireTerms(Terms terms) {

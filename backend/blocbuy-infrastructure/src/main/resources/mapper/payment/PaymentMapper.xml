@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.blocbuy.payment.persistence.PaymentMapper">
+    <select id="hasSucceededIntent" resultType="boolean" flushCache="true" useCache="false">
+        SELECT EXISTS (SELECT 1 FROM biz_payment
+            WHERE intent_id = #{intentId,jdbcType=OTHER} AND deleted = false AND status = 'succeeded')
+    </select>
   <sql id="columns">id,intent_id,user_id,operation,business_id,amount,currency,quote_valid_until,
     business_deadline,request_key,create_time,session_expires_at,success_url,cancel_url,
     checkout_session_id,checkout_url,provider_payment_intent_id,status,version</sql>

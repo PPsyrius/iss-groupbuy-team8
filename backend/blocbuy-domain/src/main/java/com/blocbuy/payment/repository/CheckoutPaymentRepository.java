@@ -37,6 +37,9 @@ public interface CheckoutPaymentRepository {
 
     Optional<CheckoutPayment> findBlockingAttempt(UUID intentId);
 
+    /** Any succeeded attempt, even when an older review case shadows the blocking-attempt read. */
+    boolean hasSucceededIntent(UUID intentId);
+
     CheckoutPayment lock(UUID id);
 
     void insert(CheckoutPayment payment);

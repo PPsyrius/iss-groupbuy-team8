@@ -110,6 +110,9 @@ public class OrderFulfilmentAdapter implements PaymentBusinessPort {
         if (intent.fulfilled()) {
             return replayOf(event, intent);
         }
+        if (intent.expiredAt() != null) {
+            return new Outcome(null, null, "INTENT_EXPIRED");
+        }
         if (rejects(() -> users.requireActive(quote.userId()))) {
             return new Outcome(null, null, "BUYER_INACTIVE");
         }

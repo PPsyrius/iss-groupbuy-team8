@@ -21,7 +21,7 @@ orders.forEach(order -> order.attachProduct(products.get(order.productId())));
 - Batch writes use MyBatis batch/multi-value insert or whatever the database handles well, controlling batch size and transaction memory.
 - MyBatis `resultMap` nested selects that cause implicit N+1 are forbidden; use a second batch query or a deliberate join.
 - If the requirement is naturally streaming, process in fixed-size batches with pagination/cursors and a fixed number of queries per batch; record batch size, totals, and the failure-recovery point.
-- The sole approved exception is `GroupDealExpirySweeper` (backend ADR 0002): one bounded candidate-ID query followed by a separate `GroupDealExpiryService.expireOne` transaction for each aggregate. One team's failure must not roll back the whole batch. This exception does not cover other jobs, collection enrichment or remote calls; obtain explicit user approval and record bounds, lock/write protocol, failure isolation and recovery before introducing another exception.
+- The approved exceptions are the team-expiry pattern and the explicitly requested #225 intent-expiry pattern in backend ADR 0001. `GroupDealExpirySweeper` (backend ADR 0002): one bounded candidate-ID query followed by a separate `GroupDealExpiryService.expireOne` transaction for each aggregate. One team's failure must not roll back the whole batch. These exceptions do not cover other jobs, collection enrichment or remote calls; obtain explicit user approval and record bounds, lock/write protocol, failure isolation and recovery before introducing another exception.
 
 ## MyBatis
 

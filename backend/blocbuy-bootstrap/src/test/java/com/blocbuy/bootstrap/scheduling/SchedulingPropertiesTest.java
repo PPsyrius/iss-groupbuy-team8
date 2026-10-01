@@ -23,9 +23,10 @@ class SchedulingPropertiesTest {
         SchedulingProperties properties = bind(Map.of());
 
         assertThat(properties.enabled()).isFalse();
+        assertThat(properties.purchaseIntentExpiry()).isEqualTo(properties.teamExpiry());
         assertThat(properties.teamExpiry())
                 .isEqualTo(
-                        new SchedulingProperties.TeamExpiry(
+                        new SchedulingProperties.ExpirySweep(
                                 Duration.ofMinutes(1),
                                 Duration.ofSeconds(30),
                                 Duration.ofMinutes(2),
@@ -63,6 +64,15 @@ class SchedulingPropertiesTest {
                 .isInstanceOf(BindException.class)
                 .rootCause()
                 .isInstanceOf(IllegalArgumentException.class);
+        Map<String, String> invalidPurchaseIntentValues =
+                Map.of("blocbuy.scheduling.purchase-intent-expiry.batch-size", "0");
+        assertThatThrownBy(() -> bind(invalidPurchaseIntentValues))
+                .isInstanceOf(BindException.class);
+        assertThat(
+                        bind(Map.of("blocbuy.scheduling.purchase-intent-expiry.batch-size", "7"))
+                                .purchaseIntentExpiry()
+                                .batchSize())
+                .isEqualTo(7);
     }
 
     @ParameterizedTest
@@ -95,7 +105,7 @@ class SchedulingPropertiesTest {
         assertInvalid(ok, ok, Duration.ofNanos(1), 1);
         assertInvalid(ok, ok, ok, 0);
         assertInvalid(ok, ok, ok, SchedulingProperties.MAX_BATCH_SIZE + 1);
-        assertThat(new SchedulingProperties.TeamExpiry(ok, Duration.ZERO, ok, 1).batchSize())
+        assertThat(new SchedulingProperties.ExpirySweep(ok, Duration.ZERO, ok, 1).batchSize())
                 .isEqualTo(1);
 
         assertRefundInvalid(null, ok, ok);
@@ -112,7 +122,7 @@ class SchedulingPropertiesTest {
             Duration interval, Duration initialDelay, Duration lease, int batchSize) {
         assertThatThrownBy(
                         () ->
-                                new SchedulingProperties.TeamExpiry(
+                                new SchedulingProperties.ExpirySweep(
                                         interval, initialDelay, lease, batchSize))
                 .isInstanceOf(IllegalArgumentException.class);
     }

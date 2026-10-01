@@ -46,12 +46,34 @@ class PurchaseIntentRepositoryImplTest {
                 NOW.plusSeconds(2400),
                 NOW.plusSeconds(86_400),
                 fulfilledPayment,
+                null,
+                null,
                 NOW,
                 version);
     }
 
     private BizPurchaseIntentDO row(UUID fulfilledPayment, int version) {
         return PurchaseIntentConverter.toRow(intent(fulfilledPayment, version));
+    }
+
+    @Test
+    void expiryRoundTripsTheMarkerAndRejectsALostGuard() {
+        PurchaseIntent before = intent(null, 0);
+        PurchaseIntent expired = before.expireAt(NOW.plusSeconds(2400));
+        BizPurchaseIntentDO stored = PurchaseIntentConverter.toRow(expired);
+        when(mapper.tryLockForExpiry(intentId)).thenReturn(stored).thenReturn(null);
+        assertThat(repository.tryLockForExpiry(intentId))
+                .hasValueSatisfying(
+                        value -> assertThat(value.expiredAt()).isEqualTo(expired.expiredAt()));
+        assertThat(repository.tryLockForExpiry(intentId)).isEmpty();
+        when(mapper.markExpired(intentId, expired.expiredAt(), 0)).thenReturn(1).thenReturn(0);
+        repository.markExpired(before, expired);
+        assertThatThrownBy(() -> repository.markExpired(before, expired))
+                .isInstanceOf(IllegalStateException.class);
+        when(mapper.dueForExpiry(NOW, 2)).thenReturn(java.util.List.of(intentId));
+        assertThat(repository.dueForExpiry(NOW, 2)).containsExactly(intentId);
+        repository.deferExpiryRetry(intentId, java.time.Duration.ofMinutes(5));
+        verify(mapper).deferExpiryRetry(intentId, 300);
     }
 
     @Test
@@ -157,6 +179,14 @@ class PurchaseIntentRepositoryImplTest {
 
         assertThat(repository.findById(intentId))
                 .hasValueSatisfying(found -> assertThat(found.version()).isZero());
+    }
+
+    @Test
+    void paidExclusionRequiresOneDurableRetryRow() {
+        when(mapper.excludePaidFromExpiry(intentId)).thenReturn(1).thenReturn(0);
+        repository.excludePaidFromExpiry(intentId);
+        assertThatThrownBy(() -> repository.excludePaidFromExpiry(intentId))
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test

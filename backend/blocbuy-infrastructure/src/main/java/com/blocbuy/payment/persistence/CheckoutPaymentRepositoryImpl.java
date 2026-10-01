@@ -53,6 +53,11 @@ public class CheckoutPaymentRepositoryImpl implements CheckoutPaymentRepository 
     }
 
     @Override
+    public boolean hasSucceededIntent(UUID intentId) {
+        return mapper.hasSucceededIntent(intentId);
+    }
+
+    @Override
     public CheckoutPayment lock(UUID id) {
         return optional(mapper.lock(id))
                 .orElseThrow(() -> new IllegalStateException("Missing payment"));
