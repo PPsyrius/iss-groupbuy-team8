@@ -89,7 +89,7 @@ describe("/admin/listings", () => {
     );
     // The app client retries a 500 twice with backoff; skip the wait, not the behaviour.
     const defaults = queryClient.getDefaultOptions();
-    queryClient.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, retry: false } });
+    queryClient.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, retryDelay: 0 } });
     try {
       renderRoute("/admin/listings");
       expect(await screen.findByText("We couldn’t load the listings")).toBeVisible();
