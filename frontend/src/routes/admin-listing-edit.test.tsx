@@ -135,6 +135,27 @@ describe("/admin/listings/$productId", () => {
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   });
 
+  it("keeps a stored category the fixed list does not name, and saves with it", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const milk = rowOf(store, "BB-100472");
+    milk.listing.category = "snacks";
+    renderRoute(`/admin/listings/${milk.id}`);
+    const title = await screen.findByRole("textbox", { name: "Title" });
+    expect(screen.getByRole("button", { name: /snacks/ })).toBeVisible();
+
+    await user.clear(title);
+    await user.type(title, "Hokkaido milk, 12 cartons (chilled)");
+    await user.click(screen.getByRole("button", { name: "Save draft" }));
+
+    expect(await screen.findByText("BB-100472 · draft · v1")).toBeVisible();
+    expect(screen.queryByText(/choose a category/i)).not.toBeInTheDocument();
+    expect(milk).toMatchObject({
+      version: 1,
+      listing: { title: "Hokkaido milk, 12 cartons (chilled)", category: "snacks" },
+    });
+  });
+
   it("asks before leaving with unsaved changes", async () => {
     const user = userEvent.setup();
     const store = serveAdmin();
