@@ -626,6 +626,36 @@ describe("/admin/listings/$productId conflicts and refusals", () => {
     expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled();
   });
 
+  // #323 (BA-6): a domain 400 on a save lands on the field its path names, and clears with it.
+  it("puts a catalog domain 400 on the field it names until that field changes", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const milk = rowOf(store, "BB-100472");
+    const refusal = "Must have at most two decimal places";
+    server.use(
+      http.put("*/api/v1/admin/products/:productId", () =>
+        HttpResponse.json(
+          {
+            code: "CATALOG_400_002",
+            message: "Invalid listing",
+            errors: [{ field: "listing.originalPrice", message: refusal }],
+          },
+          { status: 400 },
+        ),
+      ),
+    );
+    renderRoute(`/admin/listings/${milk.id}`);
+    await user.type(await screen.findByRole("textbox", { name: "Subtitle" }), "Chilled");
+    await user.click(screen.getByRole("button", { name: "Save draft" }));
+
+    const price = screen.getByRole("textbox", { name: "Solo price" });
+    expect((await screen.findAllByText(refusal)).length).toBeGreaterThan(0);
+    expect(price).toHaveAttribute("aria-invalid", "true");
+    expect(screen.queryByText("Some fields need another look")).not.toBeInTheDocument();
+    await user.type(price, "0");
+    await waitFor(() => expect(screen.queryByText(refusal)).not.toBeInTheDocument());
+  });
+
   it("lists a field error and a conflict together as two problems to clear", async () => {
     const user = userEvent.setup();
     const store = serveAdmin();

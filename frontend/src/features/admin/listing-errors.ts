@@ -38,6 +38,9 @@ export function refusalOf(error: unknown): Refusal {
   const status = statusOf(error);
   if (status === 403) return { kind: "forbidden" };
   if (status === 401) return { kind: "session" };
+  // Bean validation (`COMMON_400_002`) and, since #323, a field-specific `CATALOG_400_002` both
+  // name the request path of each field (BA-6). A path with no form field (top-level `productNo`)
+  // reaches the form's alert; a 400 without `errors` falls through to the message below.
   const fields = fieldViolations(error);
   if (Object.keys(fields).length > 0) return { kind: "fields", fields };
   if (status >= 400 && status < 500)

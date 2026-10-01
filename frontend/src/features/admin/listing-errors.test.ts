@@ -49,6 +49,28 @@ describe("refusalOf", () => {
     expect(refusalOf(error)).toEqual({ kind: "fields", fields: { title: "must not be blank" } });
   });
 
+  // #323 (BA-6): a field-specific domain 400 carries the same `{field, message}` entries as bean
+  // validation, so it lands on the same fields.
+  it("maps a catalog domain 400's field path onto its field", () => {
+    const error = apiError(400, "CATALOG_400_002", [
+      { field: "listing.originalPrice", message: "Must have at most two decimal places" },
+    ]);
+    expect(refusalOf(error)).toEqual({
+      kind: "fields",
+      fields: { originalPrice: "Must have at most two decimal places" },
+    });
+  });
+
+  it("keeps a top-level product number path for the form to show in its alert", () => {
+    const error = apiError(400, "CATALOG_400_002", [
+      { field: "productNo", message: "Must be 1 to 64 letters" },
+    ]);
+    expect(refusalOf(error)).toEqual({
+      kind: "fields",
+      fields: { productNo: "Must be 1 to 64 letters" },
+    });
+  });
+
   it("gives other refusals plain words, never a raw code", () => {
     expect(refusalOf(apiError(400, "CATALOG_400_002"))).toEqual({
       kind: "message",
