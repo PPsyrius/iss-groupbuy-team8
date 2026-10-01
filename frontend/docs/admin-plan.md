@@ -1,6 +1,6 @@
 # BlocBuy Admin Console Implementation Plan
 
-Buyer-side Sprint 2 tasks and recorded Tier 3 follow-ups live in [`plan.md`](plan.md); newer buyer tasks are indexed in [`backlog.md`](backlog.md) and tracked in GitHub issues. This admin plan remains a deferred scope proposal.
+Buyer-side Sprint 2 tasks and recorded Tier 3 follow-ups live in [`plan.md`](plan.md); newer buyer tasks are indexed in [`backlog.md`](backlog.md) and tracked in GitHub issues. As of 2026-10-01 every A1 and A2 row and the unblocked A3 rows are built and merged (stacks 1 to 3); the remaining work is blocked, as the "Next stack" paragraph in §4 lists.
 
 **Goal:** Build the UC9 admin console under `/admin`: dashboard, listings table, listing editor with lifecycle actions and version-conflict recovery, and the bloc price rule panel. Build it against the contract as it stands today. Record every artboard need the API cannot meet as a backend ask, not as frontend invention.
 
