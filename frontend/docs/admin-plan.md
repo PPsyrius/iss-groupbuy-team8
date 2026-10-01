@@ -121,7 +121,7 @@ Columns match `plan.md` §3. `FE` = `frontend/`, `A` = `FE/src/features/admin/`.
 | id | tier | purpose | files touched | verification command | depends-on | issue |
 |---|---|---|---|---|---|---|
 | A2-01 | A2 | Bloc price rule panel: none, scheduled, active, expired, conflict, unavailable (draft or off sale); revision form with SGT date pickers; replace-now warning | `A/policy.ts` (state derivation), `A/policy.test.ts`, `A/sgt.ts`, `A/sgt.test.ts`, `A/policy-form.schema.ts`, `A/policy-form.schema.test.ts`, `A/PricePolicyPanel.tsx`, `A/PricePolicyPanel.test.tsx`, `FE/src/routes/_authenticated/admin/listings.$productId.tsx`, `FE/package.json` (`@internationalized/date` 3.12.4) | `cd frontend && pnpm vitest run src/features/admin && pnpm knip` | A1-08 | new · L 2.5d · deferred (Q1) |
-| A2-02 | A2 | Dashboard: SGT date line, 4 stat cards (Open blocs reads `openDeals` from `counts`, #290), Recent listings (5), New listing, loading / empty | `FE/src/routes/_authenticated/admin/index.tsx`, `A/StatCards.tsx`, `A/StatCards.test.tsx`, `A/RecentListings.tsx`, `FE/src/routes/admin-dashboard.test.tsx` | `cd frontend && pnpm vitest run src/routes/admin-dashboard.test.tsx` | A1-04 | new · S 0.75d · deferred (Q1) |
+| A2-02 | A2 | Dashboard: SGT date line, 4 stat cards (Open blocs reads `openDeals` from `counts`, #290), Recent listings (5), New listing, loading / empty / error | `FE/src/routes/_authenticated/admin/index.tsx`, `A/StatCards.tsx`, `A/StatCards.test.tsx`, `A/RecentListings.tsx`, `A/ListingsTable.tsx` (`variant="recent"`), `A/sgt.ts` (`formatSgtDate`), `A/sgt.test.ts`, `A/use-minute-clock.ts`, `FE/src/routes/admin-dashboard.test.tsx` | `cd frontend && pnpm vitest run src/routes/admin-dashboard.test.tsx src/features/admin` | A1-04 | new · S 0.75d · stack 2 (2026-10-01) |
 | A2-03 | A2 | Playwright: anonymous → `/login`; non-admin → 403 card; stubbed admin create → publish → conflict; `@admin` real run on dev behind a storage state | `FE/e2e/admin.spec.ts`, `FE/e2e/README.md` | `cd frontend && pnpm build && pnpm e2e --grep admin`; `E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e --grep @admin` | A1-08, A2-01 | new · S 0.5d · deferred (Q1) |
 | A2-04 | A2 | Docs: `design-screens.md` §4.7 (admin, from the artboards), ADR 0015 (admin shell, probe guard, pessimistic writes), AGENTS.md layout line, sprint log | `FE/docs/design-screens.md`, `FE/docs/adr/0015-admin-console-shell-and-guard.md`, `FE/docs/adr/README.md`, `FE/AGENTS.md`, `docs/agile/sprint-03/log/…` | `grep -q '4.7' frontend/docs/design-screens.md && test -f frontend/docs/adr/0015-*.md` | A1-03 | new · S 0.5d · deferred (Q1) |
 
@@ -249,10 +249,10 @@ Note (#242): a team-terms write also increments the product `version`, so a term
 
 ### A2-02: Dashboard
 
-- [ ] Step 1: heading "Dashboard" + "{Weekday d Month yyyy} · all times SGT" (SGT formatter) + a secondary "New listing".
-- [ ] Step 2: `StatCards`: Drafts ("private until published"), On sale ("visible on the storefront"), Off sale ("delisted, no new blocs"); neutral surface panels, no accent, no trend. Open blocs reads `openDeals` from `counts` (#290); the artboard's "filling across N listings" detail has no source and is left out. Counts are withheld (skeleton) while loading.
-- [ ] Step 3: `RecentListings`: the table component with 7 columns, `page=1&size=5`, "View all" → `/admin/listings`.
-- [ ] Step 4: empty (total 0): "No listings yet" + "New listing" (§11 D4). Error: danger alert + retry.
+- [x] Step 1: heading "Dashboard" + "{Weekday d Month yyyy} · all times SGT" (`sgt.ts`, on the console's one-minute clock) + a secondary "New listing". (2026-10-01)
+- [x] Step 2: `StatCards`: Drafts ("private until published"), On sale ("visible on the storefront"), Off sale ("delisted, no new blocs"); neutral surface panels, no accent, no trend. Open blocs reads `openDeals` from `counts` (#290); the artboard's "filling across N listings" detail has no source and is left out. Counts are withheld (skeleton) while loading; a failed counts read shows "—". `withActivePolicy` has no card on 4a.1 and is not shown. (2026-10-01)
+- [x] Step 3: `RecentListings`: the table component with 7 columns (no SOLD, no rule line, no row menu), `page=1&size=5`, "View all" → `/admin/listings`. The loader waits for the five rows only; the counts fill in after. (2026-10-01)
+- [x] Step 4: empty (total 0): "No listings yet" + "New listing" (§11 D4), with the header's button dropped to outline. Error: danger alert + Try again. (2026-10-01)
 
 ### A2-03: Playwright
 
@@ -340,6 +340,7 @@ The MSW store implements the backend rules (§2.2), so the rules are tested at t
 4. **Table bloc-rule subline.** Omit until BA-4 (planned), or accept 20 `getTeamPricePolicy` calls per page?
    - Resolved by #293: page items carry `latestPolicy`, so A3-03 adds the subline with no extra calls.
 5. **Open blocs stat.** Omit the card (planned) or show "—" with a caption?
+   - Resolved by #290: the card reads `counts.openDeals` (A2-02); its "filling across N listings" detail has no source and is left out.
 6. **Policy on drafts.** The backend refuses rules unless the listing is on sale; the artboard implies drafts can have one. Accept the copy change (planned) or raise BA-11?
 7. **Undrawn dialogs.** Take off sale, put back on sale, delete, unsaved changes: approve the §11 D2 copy?
 8. **Description.** In the contract and brief, missing from the 4b.1 field list. Include it (planned)?
