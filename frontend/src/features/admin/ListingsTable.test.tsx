@@ -44,6 +44,16 @@ const ruled = [
   ...mixed.slice(1),
 ];
 
+// No id, category or sold count (optional in the contract) and a blank price.
+const bare: AdminListingResponse[] = [
+  {
+    productNo: "BB-1",
+    listing: { title: "Untitled", originalPrice: "", currency: "sgd", stock: 0 },
+    status: "on_sale",
+    version: 1,
+  },
+];
+
 const heads = ["PRODUCT NO.", "TITLE", "CATEGORY", "PRICE", "STOCK", "SOLD", "STATUS", "VER"];
 
 describe("ListingsTable", () => {
@@ -101,6 +111,24 @@ describe("ListingsTable", () => {
     expect(screen.getByText("Off sale").closest(".chip")).toHaveClass("chip--default");
     expect(screen.getByText("v0")).toBeInTheDocument();
   });
+
+  it("prints dashes and zeros for the fields the contract leaves optional", async () => {
+    await renderWithRouter(<ListingsTable items={bare} />);
+    const cells = (await screen.findAllByRole("row"))[1]?.querySelectorAll(
+      '[role="rowheader"], [role="gridcell"], td, th',
+    );
+    const text = Array.from(cells ?? [], (c) => c.textContent);
+    expect(text.slice(2, 6)).toEqual(["—", "—", "0", "0"]);
+  });
+
+  it("drops SOLD, the rule line and the row menu in the dashboard's recent variant", async () => {
+    await renderWithRouter(<ListingsTable items={ruled} variant="recent" />);
+    const columns = await screen.findAllByRole("columnheader");
+    expect(columns.map((c) => c.textContent)).toEqual(heads.filter((h) => h !== "SOLD"));
+    expect(screen.queryByText(/Bloc price/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("grid", { name: "Recent listings" })).toBeInTheDocument();
+  });
 });
 
 describe("ListingsTableSkeleton", () => {
@@ -108,6 +136,12 @@ describe("ListingsTableSkeleton", () => {
     await renderWithRouter(<ListingsTableSkeleton />);
     expect(await screen.findAllByRole("columnheader")).toHaveLength(9);
     expect(screen.getAllByRole("row")).toHaveLength(9);
+  });
+
+  it("draws the recent variant's seven columns and the asked-for rows", async () => {
+    await renderWithRouter(<ListingsTableSkeleton rows={5} variant="recent" />);
+    expect(await screen.findAllByRole("columnheader")).toHaveLength(7);
+    expect(screen.getAllByRole("row")).toHaveLength(6);
   });
 });
 
