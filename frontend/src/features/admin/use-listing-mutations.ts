@@ -1,6 +1,7 @@
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
-import { ApiError, fieldViolations, OK_CODE } from "@/api/envelope";
+import { OK_CODE } from "@/api/envelope";
 import type { AdminListingResponse } from "@/api/generated/types.gen";
 
 import {
@@ -11,6 +12,7 @@ import {
   useDeleteListing,
   useReviseListing,
 } from "./admin-api";
+import type { Refusal } from "./listing-errors";
 import { type ListingFormValues, toListingContent } from "./listing-form";
 import type { SubmitProblem } from "./ListingForm";
 
@@ -45,7 +47,7 @@ export function useCreateDraft() {
 }
 
 // A revise replaces the whole listing and carries the version the form was loaded at, so a
-// colleague who saved first wins with a 412 (A1-08 turns that into the conflict banner). Frozen
+// colleague who saved first wins with a 412, which the editor turns into the conflict banner. Frozen
 // fields are read-only in the form, so they go back exactly as the server sent them.
 export function useSaveListing(productId: string, expectedVersion: number) {
   const qc = useQueryClient();
@@ -96,23 +98,33 @@ export function useLifecycleChange(productId: string, expectedVersion: number) {
   };
 }
 
-// Where a refused write goes: a taken product number and field violations onto their fields,
-// anything else into the form's alert. Raw codes never reach the screen.
-export function problemFor(error: unknown, notSaved: string): SubmitProblem {
-  if (error instanceof ApiError) {
-    if (error.code === "CATALOG_409_003")
-      return { fields: { productNo: "That product number is already in use." } };
-    const fields = fieldViolations(error);
-    if (Object.keys(fields).length > 0) return { fields };
-    if (error.status === 400 || error.status === 409)
+// Where a refused write goes on the form (admin plan A1-08): field messages onto their fields, an
+// ended session and everything else into the form's alert. Raw codes never reach the screen. The
+// conflict and a revoked role are the page's to show (banner, route boundary), so they place
+// nothing here.
+export function problemFor(refusal: Refusal, notSaved: string): SubmitProblem {
+  switch (refusal.kind) {
+    case "conflict":
+    case "forbidden":
+      return {};
+    case "session":
       return {
-        alert: {
-          title: notSaved,
-          description: "The server refused this listing. Check the fields and try again.",
-        },
+        alert: { title: notSaved, description: "Your session ended. Sign in again to save." },
+        signIn: true,
       };
+    case "fields":
+      return { fields: refusal.fields };
+    case "message":
+      return { alert: { title: notSaved, description: refusal.message } };
+    default:
+      return {};
   }
-  return {
-    alert: { title: notSaved, description: "Something went wrong on our side. Try again." },
-  };
+}
+
+// A 403 on a write means the admin role went away mid-session (§12 note 2). Thrown from render,
+// it reaches the route boundary, which hands it up to the console's Access denied screen.
+export function useRouteBoundary() {
+  const [error, setError] = useState<{ value: unknown }>();
+  if (error) throw error.value;
+  return (value: unknown) => setError({ value });
 }

@@ -85,12 +85,16 @@ export function EditorSidebar({
 // The sidebar's actions for the state the listing is in (admin plan A1-07, artboards 4b.2 and
 // 4b.3). Publish sits in the page header; this card carries the reversible status change and
 // Delete. On a published listing Delete is replaced by its reason, never a greyed button.
+// While the conflict banner shows, every action is disabled (A1-08): each would carry the stale
+// version and meet the same 412.
 export function SidebarActions({
   actions,
   onOpen,
+  isDisabled = false,
 }: Readonly<{
   actions: LifecycleAction[];
   onOpen: (kind: DialogKind) => void;
+  isDisabled?: boolean;
 }>) {
   return (
     <>
@@ -98,13 +102,25 @@ export function SidebarActions({
         switch (kind) {
           case "takeOffSale":
             return (
-              <Button key={kind} variant="tertiary" fullWidth onPress={() => onOpen(kind)}>
+              <Button
+                key={kind}
+                variant="tertiary"
+                fullWidth
+                onPress={() => onOpen(kind)}
+                isDisabled={isDisabled}
+              >
                 Take off sale
               </Button>
             );
           case "putBackOnSale":
             return (
-              <Button key={kind} variant="tertiary" fullWidth onPress={() => onOpen(kind)}>
+              <Button
+                key={kind}
+                variant="tertiary"
+                fullWidth
+                onPress={() => onOpen(kind)}
+                isDisabled={isDisabled}
+              >
                 Put back on sale
               </Button>
             );
@@ -114,7 +130,12 @@ export function SidebarActions({
                 <span className="text-muted text-xs font-medium tracking-wide uppercase">
                   Danger zone
                 </span>
-                <Button variant="danger-soft" fullWidth onPress={() => onOpen(kind)}>
+                <Button
+                  variant="danger-soft"
+                  fullWidth
+                  onPress={() => onOpen(kind)}
+                  isDisabled={isDisabled}
+                >
                   Delete draft
                 </Button>
                 <p className="text-muted">

@@ -225,11 +225,11 @@ export async function requireAdmin(qc: QueryClient) {
 
 ### A1-08: Conflict and error mapping
 
-- [ ] Step 1: `listing-errors.ts` maps codes to copy: `CATALOG_412_002` → conflict; `CATALOG_409_002` → "This listing changed state. Reload to see what you can do now."; `CATALOG_409_003`, `409_004` as above; `COMMON_403_*` → rethrow to the route boundary (S1); 401 → "Your session ended. Sign in again to save." with a link to `/login?returnTo=` (the form stays in memory).
-- [ ] Step 2: `ConflictBanner`: `Alert status="warning"` pinned at the top of the editor: "This listing was updated by someone else" / "You loaded v{loaded}; the server now has v{server}. Reload to see the latest version — your unsaved changes will be lost." + "Reload". `server` comes from a background `fetchQuery` of the admin read that does **not** touch the form (BA-12); until it answers, the line reads "…the server has a newer version."
-- [ ] Step 3: while the banner shows, Save and lifecycle actions are disabled; Reload writes the fresh read to the cache and remounts the form.
-- [ ] Step 4: with a field error and a conflict together, the side card "Two problems to clear" lists both (4b.4).
-- [ ] Step 5: tests for 412 on save, publish and delete; 409 state; and the pair.
+- [x] Step 1: `listing-errors.ts` maps codes to copy: `CATALOG_412_002` → conflict; `CATALOG_409_002` → "This listing changed state. Reload to see what you can do now."; `CATALOG_409_003`, `409_004` as above; `COMMON_403_*` → rethrow to the route boundary (S1); 401 → "Your session ended. Sign in again to save." with a link to `/login?returnTo=` (the form stays in memory). (2026-09-29)
+- [x] Step 2: `ConflictBanner`: `Alert status="warning"` pinned at the top of the editor: "This listing was updated by someone else" / "You loaded v{loaded}; the server now has v{server}. Reload to see the latest version — your unsaved changes will be lost." + "Reload". `server` comes from a background `fetchQuery` of the admin read that does **not** touch the form (BA-12); until it answers, the line reads "…the server has a newer version." (2026-09-29)
+- [x] Step 3: while the banner shows, Save and lifecycle actions are disabled; Reload writes the fresh read to the cache and remounts the form. (2026-09-29)
+- [x] Step 4: with a field error and a conflict together, the side card "Two problems to clear" lists both (4b.4). (2026-09-29)
+- [x] Step 5: tests for 412 on save, publish and delete; 409 state; and the pair. (2026-09-29)
 
 Note (#242): a team-terms write also increments the product `version`, so a terms edit made elsewhere surfaces here as the ordinary 412 `CATALOG_412_002`; no extra mapping is needed.
 

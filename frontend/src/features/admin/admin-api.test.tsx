@@ -11,6 +11,7 @@ import {
   adminListingOptions,
   adminListingsOptions,
   adminPolicyOptions,
+  adminServerVersionOptions,
   forgetListingPages,
   useChangeStatus,
   useConfigurePolicy,
@@ -68,6 +69,14 @@ describe("admin reads", () => {
     const rule = adminPolicyOptions(productId);
     expect(one.select?.(await qc.fetchQuery(one))).toEqual(row);
     expect(rule.select?.(await qc.fetchQuery(rule))).toEqual(policy);
+  });
+
+  it("reads the server's version under its own key, away from the editor's entry", async () => {
+    server.use(http.get("*/api/v1/admin/products/:id", () => ok({ ...row, version: 5 })));
+    const qc = new QueryClient();
+    const peek = adminServerVersionOptions(productId);
+    expect(peek.select?.(await qc.fetchQuery(peek))).toBe(5);
+    expect(qc.getQueryData(adminListingOptions(productId).queryKey)).toBeUndefined();
   });
 
   it("rejects a 403 with an ApiError the guard can read", async () => {

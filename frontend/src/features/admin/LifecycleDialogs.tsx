@@ -1,12 +1,18 @@
 import { Alert, AlertDialog, Button, toast } from "@heroui/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { ApiError } from "@/api/envelope";
 import type { AdminListingResponse } from "@/api/generated/types.gen";
 
+import { forgetListingPages } from "./admin-api";
+import { refusalOf } from "./listing-errors";
 import { formatSgd } from "./money";
-import { type LifecycleChange, useLifecycleChange } from "./use-listing-mutations";
+import {
+  type LifecycleChange,
+  useLifecycleChange,
+  useRouteBoundary,
+} from "./use-listing-mutations";
 
 export type DialogKind = LifecycleChange;
 
@@ -14,7 +20,8 @@ export type DialogKind = LifecycleChange;
 // fields that freeze with their *saved* values, so the admin confirms numbers, not intent. The
 // other three are not drawn; their copy is the §11 D2 proposal. Every dialog is pessimistic: it
 // stays open while the request runs and closes only once the server agreed. A refusal stays in
-// the dialog (A1-08 turns a 412 into the conflict banner).
+// the dialog in plain words (A1-08), except a 412: the dialog closes and `onConflict` raises the
+// page's conflict banner, and a 403, which goes to the route boundary.
 const copy: Record<
   DialogKind,
   {
@@ -52,27 +59,25 @@ const copy: Record<
   },
 };
 
-// A refused change in plain words; raw codes never reach the screen.
-function refusal(error: unknown): string {
-  if (error instanceof ApiError) {
-    if (error.code === "CATALOG_409_004")
-      return "Not available. This draft already has price or bloc history.";
-    if (error.status < 500)
-      return "The server refused this change. Reload the listing and try again.";
-  }
-  return "Something went wrong on our side. Try again.";
-}
+// Where no page banner listens (the table's row menu), a 412 reads as a message and the table's
+// rows are fetched again, so a second try works from the fresh version.
+const staleRow =
+  "Someone else changed this listing while the table was open. Its row has been refreshed; try again.";
 
 export function LifecycleDialog({
   kind,
   listing,
   onClose,
+  onConflict,
 }: Readonly<{
   kind: DialogKind | null;
   listing: AdminListingResponse;
   onClose: () => void;
+  onConflict?: () => void;
 }>) {
   const navigate = useNavigate();
+  const toBoundary = useRouteBoundary();
+  const qc = useQueryClient();
   const { run, isPending } = useLifecycleChange(listing.id ?? "", listing.version ?? 0);
   const [problem, setProblem] = useState<string>();
   const close = () => {
@@ -84,8 +89,30 @@ export function LifecycleDialog({
     try {
       await run(current);
     } catch (error) {
-      setProblem(refusal(error));
-      return;
+      const refusal = refusalOf(error);
+      switch (refusal.kind) {
+        case "forbidden":
+          toBoundary(error);
+          return;
+        case "conflict":
+          if (onConflict) {
+            close();
+            onConflict();
+          } else {
+            setProblem(staleRow);
+            forgetListingPages(qc);
+          }
+          return;
+        case "session":
+          setProblem("Your session ended. Sign in again to change this listing.");
+          return;
+        case "fields":
+          setProblem("The server refused this change. Reload the listing and try again.");
+          return;
+        case "message":
+          setProblem(refusal.message);
+          return;
+      }
     }
     if (current === "delete") {
       toast.success("Draft deleted");

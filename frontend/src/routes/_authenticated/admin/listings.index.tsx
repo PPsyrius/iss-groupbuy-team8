@@ -11,6 +11,7 @@ import {
 
 import type { AdminListingResponse } from "@/api/generated/types.gen";
 import { adminListingsOptions } from "@/features/admin/admin-api";
+import { isAdminDenied } from "@/features/admin/AdminShell";
 import {
   type ListingsSearch,
   type ListingTab,
@@ -183,8 +184,11 @@ function ListingsLoading() {
 }
 
 // Not drawn (admin plan §2.1 S3): the catalog's error Alert in the console's words.
-function ListingsError({ reset }: Readonly<{ reset: () => void }>) {
+// A 403 here (a role revoked mid-session, or from a row menu's change) goes up to the console's
+// Access denied screen (A1-08).
+function ListingsError({ error, reset }: Readonly<{ error: unknown; reset: () => void }>) {
   const router = useRouter();
+  if (isAdminDenied(error)) throw error;
   return (
     <div className="flex flex-col gap-5">
       <ListingsHeader />
