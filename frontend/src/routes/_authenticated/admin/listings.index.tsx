@@ -72,16 +72,16 @@ const emptyCopy: Record<ListingTab, { heading: string; body: string }> = {
   },
 };
 
-// A1-05 adds the new-draft route; a plain link until the route tree knows it. The header button
-// drops to outline when the empty state carries its own (4a.3), so one primary stays on screen.
+// The header button drops to outline when the empty state carries its own (4a.3), so one primary
+// stays on screen.
 function NewListing({ variant }: Readonly<{ variant: "secondary" | "outline" }>) {
   return (
-    <a
-      href="/admin/listings/new"
+    <Link
+      to="/admin/listings/new"
       className={buttonVariants({ variant }) + " min-h-11 px-[18px] text-sm"}
     >
       New listing
-    </a>
+    </Link>
   );
 }
 

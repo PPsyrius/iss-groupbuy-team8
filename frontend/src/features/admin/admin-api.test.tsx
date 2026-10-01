@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
@@ -11,6 +11,7 @@ import {
   adminListingOptions,
   adminListingsOptions,
   adminPolicyOptions,
+  forgetListingPages,
   useChangeStatus,
   useConfigurePolicy,
   useCreateListing,
@@ -158,5 +159,23 @@ describe("admin writes", () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(ApiError);
     expect(result.current.error).toMatchObject({ status: 412, code: "CATALOG_412_001" });
+  });
+
+  it("forgetListingPages refetches pages on screen and drops the rest", async () => {
+    let hits = 0;
+    server.use(
+      http.get("*/api/v1/admin/products", () => {
+        hits += 1;
+        return ok({ items: [row], total: 1, page: 1, size: 20 });
+      }),
+    );
+    const { qc, result } = hook(() => useQuery(adminListingsOptions({ page: 1, size: 20 })));
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    await qc.fetchQuery(adminListingsOptions({ page: 2, size: 20 }));
+    expect(hits).toBe(2);
+    forgetListingPages(qc);
+    await waitFor(() => expect(hits).toBe(3));
+    expect(qc.getQueryData(adminListingsOptions({ page: 2, size: 20 }).queryKey)).toBeUndefined();
+    expect(qc.getQueryData(adminListingsOptions({ page: 1, size: 20 }).queryKey)).toBeDefined();
   });
 });
