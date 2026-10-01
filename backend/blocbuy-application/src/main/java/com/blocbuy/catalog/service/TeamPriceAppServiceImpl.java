@@ -54,7 +54,8 @@ public class TeamPriceAppServiceImpl implements TeamPriceAppService {
                         currentVersion + 1);
         policy.requireCompatible(product);
         if (!now.isBefore(policy.validUntil())) {
-            throw new BizException(CatalogErrorCode.TEAM_PRICE_INVALID);
+            throw BizException.forField(
+                    CatalogErrorCode.TEAM_PRICE_INVALID, "validUntil", "Must be in the future");
         }
         prices.appendPolicy(policy, actorId, now);
         return policy;

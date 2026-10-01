@@ -66,7 +66,14 @@ import tools.jackson.databind.annotation.JsonDeserialize;
         name = "admin-listings",
         description = "API-only listing management; admin role and catalog:product:write required")
 @ApiResponse(responseCode = "200", description = "Success in the established Result envelope")
-@ApiResponse(responseCode = "400", description = "Invalid input")
+@ApiResponse(
+        responseCode = "400",
+        description =
+                "Invalid input. Field-specific CATALOG_400_002 and CATALOG_400_001 errors use an array "
+                        + "of {field, message}, matching COMMON_400_002 Bean Validation errors. "
+                        + "field is the request JSON path: listing.<field> for listing content, productNo "
+                        + "for the product number, or teamPrice.<field> for nested price policy input. "
+                        + "message is safe to display; non-field domain failures may omit errors.")
 @ApiResponse(responseCode = "401", description = "Login required")
 @ApiResponse(
         responseCode = "403",
@@ -239,7 +246,7 @@ public class AdminListingController {
                             + "policy version (0 for the first) and it must be below the original price. "
                             + "Errors: 400 COMMON_400_002 with a list of field errors for a missing or "
                             + "out-of-range expectedVersion, targetSize or lifetimeSeconds (Bean "
-                            + "Validation); 400 CATALOG_400_001 without field errors "
+                            + "Validation); 400 CATALOG_400_001 with teamPrice.<field> field errors "
                             + "for a bad teamPrice (price not below the original price, validFrom not "
                             + "before validUntil, or validUntil already past); 409 CATALOG_409_001 when "
                             + "teamPrice is sent for a listing that is not on sale. Any rejection changes "

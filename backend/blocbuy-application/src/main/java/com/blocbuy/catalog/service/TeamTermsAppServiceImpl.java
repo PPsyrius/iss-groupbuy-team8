@@ -41,7 +41,12 @@ public class TeamTermsAppServiceImpl implements TeamTermsAppService {
         products.updateTeamTerms(revised, command.expectedVersion(), actorId);
 
         // Joins this transaction and owns every price rule; a rejected policy rolls the terms back.
-        TeamPricePolicy policy = price == null ? null : prices.configure(productId, actorId, price);
+        TeamPricePolicy policy;
+        try {
+            policy = price == null ? null : prices.configure(productId, actorId, price);
+        } catch (BizException ex) {
+            throw ex.withFieldPrefix("teamPrice.");
+        }
         products.appendTeamTermsLog(
                 new TeamTermsChange(
                         productId,
