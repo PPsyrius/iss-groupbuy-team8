@@ -294,6 +294,8 @@ Note (#242): a team-terms write also increments the product `version`, so a term
 
 Next stack (2026-10-01): A3-05, then A3-03 (subline only), then A2-02. Each is one PR on `dev`. A3-07 is the next candidate after A2-02 now that #323 has merged: its listing-form part can go first, and its `PricePolicyPanel.tsx` part waits for A2-01, which creates that panel.
 
+Follow-up FU-01 (2026-10-01, not an A-row; PR pending): the listings route (A1-04) now rethrows a 403 from a refetch of the page or the tab counts, and the editor (A1-06) one from a refetch of the listing or the conflict banner's version read, as the dashboard does since #328, so a role revoked after the page loaded reaches Access denied instead of leaving stale data on screen. Tests: `routes/admin-listings.test.tsx`, `routes/admin-listing-edit.test.tsx`.
+
 ### A3-05: Delete-blocked reason with counts (BA-5, #300)
 
 - [x] Step 1: failing tests. `admin-msw.test.ts`: the single read carries `references` and `deletable`; page items do not. `admin-listing-edit.test.tsx`: a published listing reads 4b.3's "Not available. This listing has been published and has 26 bloc records, 61 quotes and 3 price rules." and, with no history, keeps "…has been published; take it off sale instead."; a draft with history shows the reason instead of Delete draft ("Not available. This draft has 1 quote."); a clean draft keeps Delete draft. (2026-10-01)
