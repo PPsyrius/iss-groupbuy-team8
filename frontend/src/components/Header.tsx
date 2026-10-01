@@ -23,9 +23,10 @@ export function Header() {
         <span className="text-muted hidden text-sm xl:inline">
           Bringing people together to buy better
         </span>
-        {session.status === "authenticated" ? (
+        {session.status === "authenticated" && (
           <SignedIn name={session.nickname ?? session.userId} avatarUrl={session.avatarUrl} />
-        ) : onLoginPage ? null : (
+        )}
+        {session.status !== "authenticated" && !onLoginPage && (
           <Link
             to="/login"
             search={{ returnTo: href }}
@@ -42,7 +43,7 @@ export function Header() {
   );
 }
 
-function SignedIn({ name, avatarUrl }: { name: string; avatarUrl: string | null }) {
+function SignedIn({ name, avatarUrl }: Readonly<{ name: string; avatarUrl: string | null }>) {
   const logout = useLogout();
   return (
     // No artboard draws a signed-in storefront header or a logout control (Q16). Until design

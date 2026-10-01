@@ -105,13 +105,13 @@ function ProductsPage() {
   );
 }
 
-function CatalogHero({ total }: { total?: number }) {
+function CatalogHero({ total }: Readonly<{ total?: number }>) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-6">
       <div className="flex max-w-[560px] flex-col gap-1 xl:gap-1.5">
         <h1 className="text-xl font-semibold tracking-tight xl:text-4xl">Buy better together</h1>
         <p className="text-muted text-sm xl:text-base">
-          Fill a bloc with your neighbours and the lower price unlocks.
+          {"Fill a bloc with your neighbours and the lower price unlocks."}
           <span className="hidden xl:inline">
             {" "}
             Pay once, get refunded in full if the bloc doesn’t fill.
@@ -137,44 +137,72 @@ function CatalogEmpty({
   size,
   category,
   keyword,
-}: {
+}: Readonly<{
   size: number;
   category: string | undefined;
   keyword: string | undefined;
-}) {
-  const heading = keyword
-    ? `No listings match “${keyword}”`
-    : category
-      ? `Nothing in ${categoryLabel(category)} yet`
-      : "Nothing on sale yet";
-  const body = keyword
-    ? "Try a different word, or clear the search to see everything on sale."
-    : category
-      ? "This category has no listings on sale right now. Try another category, where most blocs are filling."
-      : "No listings are on sale right now. Check back soon.";
+}>) {
+  const { heading, body } = catalogEmptyCopy(category, keyword);
   return (
     <div className="border-border bg-surface flex flex-col items-center gap-3 rounded-lg border px-6 py-8 text-center xl:px-8 xl:py-16">
       <h2 className="text-lg font-semibold xl:text-xl">{heading}</h2>
       <p className="text-muted max-w-[46ch] text-sm text-pretty xl:text-base">{body}</p>
-      {keyword ? (
-        <Link
-          to="/"
-          search={{ page: 1, size, ...(category === undefined ? {} : { category }) }}
-          className={buttonVariants({ variant: "secondary" }) + " mt-1 min-h-11 px-5"}
-        >
-          Clear search
-        </Link>
-      ) : category ? (
-        <Link
-          to="/"
-          search={{ page: 1, size }}
-          className={buttonVariants({ variant: "secondary" }) + " mt-1 min-h-11 px-5"}
-        >
-          Browse all listings
-        </Link>
-      ) : null}
+      <CatalogEmptyRecovery size={size} category={category} keyword={keyword} />
     </div>
   );
+}
+
+function catalogEmptyCopy(
+  category: string | undefined,
+  keyword: string | undefined,
+): { heading: string; body: string } {
+  if (keyword) {
+    return {
+      heading: `No listings match “${keyword}”`,
+      body: "Try a different word, or clear the search to see everything on sale.",
+    };
+  }
+  if (category) {
+    return {
+      heading: `Nothing in ${categoryLabel(category)} yet`,
+      body: "This category has no listings on sale right now. Try another category, where most blocs are filling.",
+    };
+  }
+  return {
+    heading: "Nothing on sale yet",
+    body: "No listings are on sale right now. Check back soon.",
+  };
+}
+
+function CatalogEmptyRecovery({
+  size,
+  category,
+  keyword,
+}: Readonly<{
+  size: number;
+  category: string | undefined;
+  keyword: string | undefined;
+}>) {
+  const className = buttonVariants({ variant: "secondary" }) + " mt-1 min-h-11 px-5";
+  if (keyword) {
+    return (
+      <Link
+        to="/"
+        search={{ page: 1, size, ...(category === undefined ? {} : { category }) }}
+        className={className}
+      >
+        Clear search
+      </Link>
+    );
+  }
+  if (category) {
+    return (
+      <Link to="/" search={{ page: 1, size }} className={className}>
+        Browse all listings
+      </Link>
+    );
+  }
+  return null;
 }
 
 // Artboard `loading`: three chip skeletons (36×72/96/88 on phone, 40×80/104/96/88 at 1280) and
@@ -217,7 +245,7 @@ function CatalogLoading() {
 
 // Artboard `error`: Alert variant danger with a retry; the reassurance about existing blocs is
 // deliberate. `router.invalidate()` re-runs the loader; `reset` clears the error boundary.
-function CatalogError({ reset }: { reset: () => void }) {
+function CatalogError({ reset }: Readonly<{ reset: () => void }>) {
   const router = useRouter();
   return (
     <main className={shell}>

@@ -10,11 +10,11 @@ export function GatedActionSheet({
   isOpen,
   onOpenChange,
   returnTo,
-}: {
+}: Readonly<{
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   returnTo: string;
-}) {
+}>) {
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
       <Modal.Backdrop isDismissable>

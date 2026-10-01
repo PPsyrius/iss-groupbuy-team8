@@ -1,7 +1,7 @@
 import { Alert, Button, buttonVariants, Skeleton } from "@heroui/react";
 import { queryOptions, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, notFound, redirect, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 import { ApiError, unwrapResult } from "@/api/envelope";
 import { getListingOptions } from "@/api/generated/@tanstack/react-query.gen";
@@ -9,8 +9,16 @@ import type { ProductDetailResponse } from "@/api/generated/types.gen";
 import { NotFoundCard } from "@/components/ErrorCard";
 import { blocFilter } from "@/features/blocs/bloc-status";
 import { myTeamsQuery } from "@/features/blocs/my-teams-query";
-import { formatDeadlineShort, hasEnded, parseDeadline } from "@/features/catalog/deal-time";
+import { formatDeadlineShort } from "@/features/catalog/deal-time";
 import { DealProgress, useNow } from "@/features/catalog/DealProgress";
+import {
+  blocHeadline,
+  chooseJoin,
+  chooseStart,
+  inviteView,
+  type ListingDealView,
+  listingDealView,
+} from "@/features/catalog/listing-view";
 import { formatPrice, Price } from "@/features/catalog/Price";
 import { ProductGallery } from "@/features/catalog/ProductGallery";
 import { listingSearchSchema } from "@/features/catalog/products-search";
@@ -103,18 +111,10 @@ function ProductDetailPage() {
   const invite = Route.useLoaderData();
   const { data: p } = useSuspenseQuery(detailOptions(productId));
   const now = useNow();
-  // Same clock and rule as the DealProgress row's "Ended" chip, so the header never calls an
-  // expired bloc "filling" (CodeRabbit r4042898931).
-  const ended = hasEnded(p.deal?.expireTime, now);
-  // Same rule as the row's "Full" chip, so a JOIN that lost the last seat does not leave the
-  // header saying "filling" over a disabled Join (CodeRabbit, PR #200). A listing without a bloc
-  // carries `deal: null` (#243), so test truthiness.
-  const full = p.deal ? (p.deal.currentSize ?? 0) >= Math.max(1, p.deal.targetSize ?? 1) : false;
-  const closesMs = parseDeadline(p.deal?.expireTime);
+  const view = listingDealView(p.deal, now);
   const currency = p.currency ?? "sgd";
   const groupPrice = p.groupPrice ?? undefined;
   const category = p.category ? titleCase(p.category) : undefined;
-  const images = galleryImages(p);
   // Keep the existing sign-in gate; the server derives buyer identity and price.
   const session = useSession();
   const [gateOpen, setGateOpen] = useState(false);
@@ -125,71 +125,26 @@ function ProductDetailPage() {
   const checkout = useCheckout(buyerId, () => {
     void queryClient.invalidateQueries({ queryKey: detailOptions(productId).queryKey });
   });
-  // START goes through the quote sheet first (T3-01); JOIN has no quote and pays directly.
-  // The sheet belongs to the buyer and listing it was opened for: this component stays mounted
-  // across `$productId` changes, so a new listing starts with the sheet closed (CodeRabbit
-  // r4102738802).
-  const quoting = useQuote(buyerId, productId);
-  const sheetFor = `${buyerId ?? ""}/${productId}`;
-  const [openFor, setOpenFor] = useState<string | null>(null);
-  const quoteOpen = openFor === sheetFor;
-  const setQuoteOpen = (open: boolean) => setOpenFor(open ? sheetFor : null);
-  // The quote the server refused at START (US26): the sheet stays open on "Get a new price", and
-  // a fresh quote has a new id, so it is no longer marked.
-  const [rejectedQuote, setRejectedQuote] = useState<string | null>(null);
-  const shownQuote = quoting.state.status === "ready" ? quoting.state.quote.id : null;
-  // Success leaves for Stripe; a failure closes the sheet so the page-level alert shows, except a
-  // refused quote, which keeps the sheet open for a new price.
-  async function continueWithQuote(quoteId: string) {
-    const outcome = await checkout.begin("START", productId, quoteId);
-    if (outcome === "quote-rejected") setRejectedQuote(quoteId);
-    else setQuoteOpen(false);
-  }
-  const onStart =
-    onGated ??
-    (checkout.enabled
-      ? () => {
-          setQuoteOpen(true);
-          void quoting.load();
-        }
-      : undefined);
-  // UC7 share block: a signed-in buyer who is in this listing's open bloc, while it can still
-  // take members. Membership comes from `GET /group-deals/me` (the My blocs query), re-read on
-  // every visit: a buyer who just paid comes back here and must see the block at once.
-  const teams = useQuery({ ...myTeamsQuery, staleTime: 0, enabled: buyerId !== undefined });
-  const dealId = p.deal?.dealId;
-  const seatsLeft = Math.max(0, (p.deal?.targetSize ?? 0) - (p.deal?.currentSize ?? 0));
-  const myTeam = dealId
-    ? teams.data?.items?.find((t) => t.dealId === dealId && blocFilter(t.status) === "active")
-    : undefined;
-  const shareable = buyerId !== undefined && myTeam !== undefined && !ended && seatsLeft > 0;
-  const listingOpen = dealId !== undefined && !ended && seatsLeft > 0;
-  const invitedOpen = listingOpen && invite?.dealId === dealId;
-  // A member of the open bloc has no Join (FB-20): the server would refuse it with
-  // GROUPBUY_409_003, and `DealProgress` names the reason instead. Join also waits while that
-  // membership read is in flight (CodeRabbit, PR #271); a failed read leaves Join on, since the
-  // server's refusal charges nothing and a broken side query should not block every buyer.
-  const membershipPending = buyerId !== undefined && teams.isPending;
-  const onJoin =
-    onGated ??
-    (checkout.enabled &&
-    !membershipPending &&
-    myTeam === undefined &&
-    p.deal?.dealId &&
-    !ended &&
-    (p.deal.currentSize ?? 0) < (p.deal.targetSize ?? 0)
-      ? () => {
-          void checkout.begin("JOIN", p.deal!.dealId!);
-        }
-      : undefined);
-  // An invite to this listing's open bloc makes its Join the visit's primary action (Invite
-  // artboard 5b.1: one button, under the lead); "Start a bloc" steps down a rank. A closed or
-  // full invited bloc, or no invite, leaves the listing's own order.
-  const inviteJoin = invitedOpen && !shareable;
-  const joinLabel =
-    groupPrice === undefined
-      ? "Join this bloc"
-      : `Join this bloc · ${formatPrice(groupPrice, currency)}`;
+  const start = useStartFlow(buyerId, productId, checkout);
+  const onStart = chooseStart({ onGated, enabled: checkout.enabled, openQuote: start.open });
+  const { myTeam, membershipPending } = useMyOpenBloc(buyerId, view.dealId);
+  const invited = inviteView({
+    view,
+    signedIn: buyerId !== undefined,
+    member: myTeam !== undefined,
+    inviteDealId: invite?.dealId,
+    hasInvite: invite !== null,
+  });
+  const onJoin = chooseJoin({
+    onGated,
+    enabled: checkout.enabled,
+    membershipPending,
+    member: myTeam !== undefined,
+    view,
+    join: (dealId) => {
+      void checkout.begin("JOIN", dealId);
+    },
+  });
   const joinPress = checkout.isPending ? undefined : onJoin;
   return (
     <main className={shell}>
@@ -199,30 +154,30 @@ function ProductDetailPage() {
         returnTo={`/products/${productId}`}
       />
       <QuoteSheet
-        isOpen={quoteOpen}
-        onOpenChange={setQuoteOpen}
-        state={quoting.state}
+        isOpen={start.isOpen}
+        onOpenChange={start.setOpen}
+        state={start.quoting.state}
         now={now}
         isPaying={checkout.isPending}
-        isRejected={shownQuote !== null && shownQuote === rejectedQuote}
+        isRejected={start.isRejected}
         onContinue={(quoteId) => {
-          void continueWithQuote(quoteId);
+          void start.continueWithQuote(quoteId);
         }}
         onRefresh={() => {
-          void quoting.refresh();
+          void start.quoting.refresh();
         }}
         onRetry={() => {
-          void quoting.load();
+          void start.quoting.load();
         }}
       />
       <CrumbRow category={category} title={p.title} />
-      {invite && !shareable ? (
+      {invited.showBanner ? (
         <InviteBanner
-          open={invitedOpen}
-          hasOtherBloc={listingOpen}
+          open={invited.invitedOpen}
+          hasOtherBloc={invited.listingOpen}
           signedIn={buyerId !== undefined}
           join={{
-            label: joinLabel,
+            label: joinLabel(groupPrice, currency),
             onPress: joinPress,
             isPending: checkout.isPending,
           }}
@@ -235,94 +190,41 @@ function ProductDetailPage() {
       ) : null}
       <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[620px_minmax(0,1fr)] xl:gap-8">
         <div className="flex min-w-0 flex-col gap-4 xl:gap-6">
-          <ProductGallery key={productId} images={images} />
+          <ProductGallery key={productId} images={galleryImages(p)} />
           <AboutCard product={p} category={category} className="hidden xl:flex" />
         </div>
         <div className="flex flex-col gap-4 xl:gap-6">
-          <section className={"flex flex-col gap-3 xl:gap-4 xl:p-6 " + card + " max-xl:border-0"}>
-            <div className="flex flex-col gap-1">
-              <h1 className="text-2xl font-semibold tracking-tight xl:text-3xl">{p.title}</h1>
-              {p.subtitle ? <p className="text-muted text-base">{p.subtitle}</p> : null}
-            </div>
-            <div className="flex flex-wrap items-baseline gap-3">
-              {groupPrice !== undefined ? (
-                <>
-                  <Price
-                    amount={groupPrice}
-                    currency={currency}
-                    className="text-accent-soft-foreground text-4xl font-semibold tracking-tight tabular-nums"
-                  />
-                  {p.individualPrice === undefined ? null : (
-                    <Price
-                      amount={p.individualPrice}
-                      currency={currency}
-                      className="text-muted text-lg tabular-nums line-through"
-                    />
-                  )}
-                </>
-              ) : p.individualPrice === undefined ? null : (
-                <Price
-                  amount={p.individualPrice}
-                  currency={currency}
-                  className="text-4xl font-semibold tracking-tight tabular-nums"
-                />
-              )}
-            </div>
-            {groupPrice !== undefined && p.deal?.targetSize ? (
-              <p className="text-muted text-sm">
-                Bloc price when a bloc fills · {p.deal.targetSize} seats per bloc
-              </p>
-            ) : null}
-            <StockLine product={p} />
-            {groupPrice !== undefined && closesMs !== null ? (
-              <TrustTriptych payNow={formatPrice(groupPrice, currency)} closesMs={closesMs} />
-            ) : null}
+          <SummaryCard product={p} currency={currency} closesMs={view.closesMs}>
             <Actions
               product={p}
               currency={currency}
               onGated={onGated}
               onStart={onStart}
               isPending={checkout.isPending}
-              demoted={inviteJoin}
+              demoted={invited.inviteJoin}
               className="hidden xl:flex"
             />
-          </section>
+          </SummaryCard>
           <section className="flex flex-col gap-3">
-            {p.deal ? (
-              <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-lg font-semibold xl:text-xl">Open blocs</h2>
-                <span className="text-muted text-sm">
-                  {ended ? (
-                    "This bloc has ended"
-                  ) : full ? (
-                    "This bloc has filled up"
-                  ) : (
-                    <>
-                      <span className="xl:hidden">Join one, or start your own</span>
-                      <span className="hidden xl:inline">1 filling now</span>
-                    </>
-                  )}
-                </span>
-              </div>
-            ) : null}
+            {p.deal ? <OpenBlocsHeading view={view} /> : null}
             <DealProgress
               deal={p.deal ?? undefined}
-              onJoin={checkout.isPending ? undefined : onJoin}
+              onJoin={joinPress}
               member={myTeam !== undefined}
             />
           </section>
-          {shareable && buyerId && dealId ? (
+          {invited.shareable && myTeam && buyerId && view.dealId ? (
             <ShareBlock
               userId={buyerId}
-              dealId={dealId}
+              dealId={view.dealId}
               productId={productId}
               leader={myTeam.role?.toLowerCase() === "leader"}
               title={p.title ?? "this listing"}
               groupPrice={groupPrice}
               individualPrice={p.individualPrice}
               currency={currency}
-              seatsLeft={seatsLeft}
-              closesMs={closesMs}
+              seatsLeft={view.seatsLeft}
+              closesMs={view.closesMs}
             />
           ) : null}
           <AboutCard product={p} category={category} className="flex xl:hidden" />
@@ -334,20 +236,163 @@ function ProductDetailPage() {
         onGated={onGated}
         onStart={onStart}
         isPending={checkout.isPending}
-        demoted={inviteJoin}
+        demoted={invited.inviteJoin}
         className="bg-surface border-border sticky bottom-0 -mx-4 flex border-t px-4 py-3 xl:hidden"
       />
     </main>
   );
 }
 
+function joinLabel(groupPrice: number | undefined, currency: string): string {
+  if (groupPrice === undefined) return "Join this bloc";
+  return `Join this bloc · ${formatPrice(groupPrice, currency)}`;
+}
+
+// START goes through the quote sheet first (T3-01); JOIN has no quote and pays directly.
+// The sheet belongs to the buyer and listing it was opened for: the page stays mounted across
+// `$productId` changes, so a new listing starts with the sheet closed (CodeRabbit r4102738802).
+function useStartFlow(
+  buyerId: string | undefined,
+  productId: string,
+  checkout: ReturnType<typeof useCheckout>,
+) {
+  const quoting = useQuote(buyerId, productId);
+  const sheetFor = `${buyerId ?? ""}/${productId}`;
+  const [openFor, setOpenFor] = useState<string | null>(null);
+  const setOpen = (open: boolean) => setOpenFor(open ? sheetFor : null);
+  // The quote the server refused at START (US26): the sheet stays open on "Get a new price", and
+  // a fresh quote has a new id, so it is no longer marked.
+  const [rejectedQuote, setRejectedQuote] = useState<string | null>(null);
+  const shownQuote = quoting.state.status === "ready" ? quoting.state.quote.id : null;
+  // Success leaves for Stripe; a failure closes the sheet so the page-level alert shows, except a
+  // refused quote, which keeps the sheet open for a new price.
+  async function continueWithQuote(quoteId: string) {
+    const outcome = await checkout.begin("START", productId, quoteId);
+    if (outcome === "quote-rejected") setRejectedQuote(quoteId);
+    else setOpen(false);
+  }
+  return {
+    quoting,
+    isOpen: openFor === sheetFor,
+    setOpen,
+    isRejected: shownQuote !== null && shownQuote === rejectedQuote,
+    continueWithQuote,
+    open: () => {
+      setOpen(true);
+      void quoting.load();
+    },
+  };
+}
+
+// UC7 share block: a signed-in buyer who is in this listing's open bloc. Membership comes from
+// `GET /group-deals/me` (the My blocs query), re-read on every visit: a buyer who just paid comes
+// back here and must see the block at once.
+function useMyOpenBloc(buyerId: string | undefined, dealId: string | undefined) {
+  const teams = useQuery({ ...myTeamsQuery, staleTime: 0, enabled: buyerId !== undefined });
+  const myTeam = dealId
+    ? teams.data?.items?.find((t) => t.dealId === dealId && blocFilter(t.status) === "active")
+    : undefined;
+  return { myTeam, membershipPending: buyerId !== undefined && teams.isPending };
+}
+
+function SummaryCard({
+  product: p,
+  currency,
+  closesMs,
+  children,
+}: Readonly<{
+  product: ProductDetailResponse;
+  currency: string;
+  closesMs: number | null;
+  children: ReactNode;
+}>) {
+  const groupPrice = p.groupPrice ?? undefined;
+  return (
+    <section className={"flex flex-col gap-3 xl:gap-4 xl:p-6 " + card + " max-xl:border-0"}>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold tracking-tight xl:text-3xl">{p.title}</h1>
+        {p.subtitle ? <p className="text-muted text-base">{p.subtitle}</p> : null}
+      </div>
+      <PriceRow groupPrice={groupPrice} individualPrice={p.individualPrice} currency={currency} />
+      {groupPrice !== undefined && p.deal?.targetSize ? (
+        <p className="text-muted text-sm">
+          Bloc price when a bloc fills · {p.deal.targetSize} seats per bloc
+        </p>
+      ) : null}
+      <StockLine product={p} />
+      {groupPrice !== undefined && closesMs !== null ? (
+        <TrustTriptych payNow={formatPrice(groupPrice, currency)} closesMs={closesMs} />
+      ) : null}
+      {children}
+    </section>
+  );
+}
+
+// The bloc price leads with the individual price struck through; without a bloc price the
+// individual price takes the lead size.
+function PriceRow({
+  groupPrice,
+  individualPrice,
+  currency,
+}: Readonly<{
+  groupPrice: number | undefined;
+  individualPrice: number | undefined;
+  currency: string;
+}>) {
+  if (groupPrice === undefined) {
+    return (
+      <div className="flex flex-wrap items-baseline gap-3">
+        {individualPrice === undefined ? null : (
+          <Price
+            amount={individualPrice}
+            currency={currency}
+            className="text-4xl font-semibold tracking-tight tabular-nums"
+          />
+        )}
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-wrap items-baseline gap-3">
+      <Price
+        amount={groupPrice}
+        currency={currency}
+        className="text-accent-soft-foreground text-4xl font-semibold tracking-tight tabular-nums"
+      />
+      {individualPrice === undefined ? null : (
+        <Price
+          amount={individualPrice}
+          currency={currency}
+          className="text-muted text-lg tabular-nums line-through"
+        />
+      )}
+    </div>
+  );
+}
+
+function OpenBlocsHeading({ view }: Readonly<{ view: ListingDealView }>) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <h2 className="text-lg font-semibold xl:text-xl">Open blocs</h2>
+      <span className="text-muted text-sm">
+        {blocHeadline(view) ?? (
+          <>
+            <span className="xl:hidden">Join one, or start your own</span>
+            <span className="hidden xl:inline">1 filling now</span>
+          </>
+        )}
+      </span>
+    </div>
+  );
+}
+
 function CrumbRow({
   category,
   title,
-}: {
+}: Readonly<{
   category: string | undefined;
   title: string | undefined;
-}) {
+}>) {
   return (
     <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm">
       <Link
@@ -395,7 +440,7 @@ function CrumbRow({
   );
 }
 
-function StockLine({ product: p }: { product: ProductDetailResponse }) {
+function StockLine({ product: p }: Readonly<{ product: ProductDetailResponse }>) {
   if (p.soldCount === undefined && p.stock === undefined) return null;
   return (
     <p className="text-sm tabular-nums">
@@ -408,7 +453,7 @@ function StockLine({ product: p }: { product: ProductDetailResponse }) {
   );
 }
 
-function TrustTriptych({ payNow, closesMs }: { payNow: string; closesMs: number }) {
+function TrustTriptych({ payNow, closesMs }: Readonly<{ payNow: string; closesMs: number }>) {
   const cell = "flex flex-col gap-0.5 rounded-lg border-border border p-3";
   return (
     <dl className="grid grid-cols-3 gap-2">
@@ -492,11 +537,11 @@ function AboutCard({
   product: p,
   category,
   className,
-}: {
+}: Readonly<{
   product: ProductDetailResponse;
   category: string | undefined;
   className: string;
-}) {
+}>) {
   return (
     <section className={card + " flex-col gap-2 p-4 xl:gap-3 xl:p-6 " + className}>
       <h2 className="text-base font-semibold xl:text-lg">About this listing</h2>
@@ -545,7 +590,7 @@ function DetailLoading() {
 }
 
 // Artboard `error`: the copy says explicitly that nothing was charged.
-function DetailError({ reset }: { reset: () => void }) {
+function DetailError({ reset }: Readonly<{ reset: () => void }>) {
   const router = useRouter();
   return (
     <main className={shell}>

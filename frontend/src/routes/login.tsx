@@ -53,12 +53,12 @@ function BackLink({
   fromListing,
   label,
   className,
-}: {
+}: Readonly<{
   returnTo: string;
   fromListing: boolean;
   label: string;
   className?: string;
-}) {
+}>) {
   const navigate = useNavigate();
   if (!fromListing) {
     return (
@@ -81,7 +81,10 @@ function BackLink({
   );
 }
 
-function DefaultBody({ returnTo, fromListing }: { returnTo: string; fromListing: boolean }) {
+function DefaultBody({
+  returnTo,
+  fromListing,
+}: Readonly<{ returnTo: string; fromListing: boolean }>) {
   return (
     <>
       <div className="flex flex-col gap-3">
@@ -112,7 +115,7 @@ function DefaultBody({ returnTo, fromListing }: { returnTo: string; fromListing:
   );
 }
 
-function ErrorBody({ returnTo, backLabel }: { returnTo: string; backLabel: string }) {
+function ErrorBody({ returnTo, backLabel }: Readonly<{ returnTo: string; backLabel: string }>) {
   const fromListing = returnTo.startsWith("/products/");
   return (
     <>
