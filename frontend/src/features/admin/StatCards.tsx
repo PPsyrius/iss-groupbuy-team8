@@ -12,6 +12,16 @@ const cards = [
   { label: "Open blocs", key: "openDeals", detail: undefined },
 ] as const;
 
+// A failed read wins over the last counts: TanStack Query keeps a refetch's previous data on error.
+function shown(
+  counts: ListingCountsResponse | undefined,
+  key: (typeof cards)[number]["key"],
+  failed: boolean,
+) {
+  if (failed) return "—";
+  return counts?.[key] ?? 0;
+}
+
 export function StatCards({
   counts,
   failed = false,
@@ -30,7 +40,7 @@ export function StatCards({
             {loading ? (
               <Skeleton aria-hidden className="my-1 h-8 w-16 rounded-md" />
             ) : (
-              (counts?.[c.key] ?? (failed ? "—" : 0))
+              shown(counts, c.key, failed)
             )}
           </dd>
           {c.detail === undefined ? null : <dd className="text-muted text-xs">{c.detail}</dd>}

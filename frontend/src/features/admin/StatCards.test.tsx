@@ -48,4 +48,13 @@ describe("StatCards", () => {
     for (const label of ["Drafts", "On sale", "Off sale", "Open blocs"])
       expect(within(card(label)).getByText("—")).toBeVisible();
   });
+
+  it("shows a dash, not the last counts, when a refetch failed", () => {
+    // TanStack Query keeps the last data when a later refetch fails; the failure wins.
+    const counts = { draft: 14, onSale: 34, offSale: 14, openDeals: 26, withActivePolicy: 0 };
+    const { container } = render(<StatCards counts={counts} failed />);
+    expect(container).not.toHaveTextContent(/\d/);
+    for (const label of ["Drafts", "On sale", "Off sale", "Open blocs"])
+      expect(within(card(label)).getByText("—")).toBeVisible();
+  });
 });

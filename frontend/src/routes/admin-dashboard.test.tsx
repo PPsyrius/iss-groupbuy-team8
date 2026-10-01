@@ -152,6 +152,30 @@ describe("/admin (dashboard)", () => {
     expect(screen.queryByText("We couldn’t load the dashboard")).toBeNull();
   });
 
+  it.each([
+    ["the recent listings", "*/api/v1/admin/products"],
+    ["the counts", "*/api/v1/admin/products/counts"],
+  ])("shows Access denied when a refetch of %s answers 403", async (_, path) => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    serveAdmin();
+    renderRoute("/admin");
+    await screen.findByRole("link", { name: "Thai jasmine rice 10 kg" });
+    expect(await within(stat("Open blocs")).findByText("26")).toBeVisible();
+    // The role goes away after the dashboard loaded, with its data still cached.
+    server.use(
+      http.get(path, () =>
+        HttpResponse.json(
+          { code: "COMMON_403_001", message: "Permission denied" },
+          { status: 403 },
+        ),
+      ),
+    );
+    await queryClient.refetchQueries();
+    expect(
+      await screen.findByRole("heading", { name: "You don’t have access to the admin console" }),
+    ).toBeVisible();
+  });
+
   it("offers Try again when the recent listings fail to load", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     const user = userEvent.setup();

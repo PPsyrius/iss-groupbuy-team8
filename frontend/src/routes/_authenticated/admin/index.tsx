@@ -53,8 +53,12 @@ function DashboardHeader({ cta }: Readonly<{ cta?: "secondary" | "outline" }>) {
 }
 
 function AdminDashboard() {
-  const { data } = useSuspenseQuery(recentOptions());
+  const { data, error } = useSuspenseQuery(recentOptions());
   const counts = useQuery(adminCountsOptions());
+  // A refetch keeps the cached data and does not throw, so a role revoked after the dashboard
+  // loaded is rethrown here to reach Access denied; other counts failures stay on the cards.
+  if (isAdminDenied(error)) throw error;
+  if (isAdminDenied(counts.error)) throw counts.error;
   const items = data.items ?? noRows;
   const empty = items.length === 0;
   return (
