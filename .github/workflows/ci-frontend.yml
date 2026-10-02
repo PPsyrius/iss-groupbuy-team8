@@ -330,7 +330,9 @@ jobs:
 
   e2e-preview:
     # Smoke the validated dist/ through `vite preview` (playwright.config.ts starts it when
-    # E2E_BASE_URL is unset). Only the home test runs here; the dev-target tests skip.
+    # E2E_BASE_URL is unset). Every spec runs here: smoke, and the login, buyer-journey,
+    # join-refusal, quote, product-gallery and admin specs on `page.route` stubs; the @auth and
+    # @admin cases (no storage state) and the dev-only smoke test skip.
     # `frontend-check` also succeeds when it was "not applicable", so gate on the filter too.
     needs:
       - detect-changes
