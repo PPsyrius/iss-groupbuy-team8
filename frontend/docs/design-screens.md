@@ -201,7 +201,7 @@ Progress shows joined/target, seats left, progress bar, and deadline/countdown. 
 
 Anonymous paid actions open the sign-in sheet. Signed-in Start opens the quote sheet (T3-01), and START is charged the quoted price (US26); JOIN starts a server-owned purchase intent (T3-04), but full and ended blocs disable the button with a reason. Buy alone uses the same checkout boundary (ADR 0014).
 
-**Invite landing and sharing (T3-05, #30):** A share link uses `/products/$productId?deal={dealId}&ref={ref}`; the listing is the landing because there is no invite-resolution endpoint. Validated `deal` and `ref` are parked in `sessionStorage` (last link wins), then removed from the URL; an invalid new link clears the parked invitation. The reference is sent only with JOIN for that bloc and remains available if the buyer must replace a stale intent. A matching open bloc displays an invite card with primary "Join this bloc" and downgrades Start a bloc to an outline action; a closed invitation offers recovery. No sharer name is shown because the contract lacks one (#201).
+**Invite landing and sharing (T3-05, #30):** A share link uses `/products/$productId?deal={dealId}&ref={ref}`; the listing stays the landing. Validated `deal` and `ref` are parked in `sessionStorage` (last link wins), then removed from the URL; an invalid new link clears the parked invitation. The reference is used twice: on page load the listing resolves it through `GET /api/v1/invites/{ref}` (display only), and the purchase flow sends it with JOIN for that bloc only, where it remains available if the buyer must replace a stale intent. A matching open bloc displays an invite card with primary "Join this bloc" and downgrades Start a bloc to an outline action; a closed invitation offers recovery. Since FB-19 that page-load resolution (#201) runs beside the listing request, and the loader waits for it at most 1.5 s: with a nickname the card leads with the sharer's initials avatar and "{nickname} started this bloc / and invited you to join it" (5b.1), and a closed invitation reads "{nickname}’s bloc has closed"; no nickname, a ref for another bloc or listing, a failed call, or one past the deadline keeps the generic lead.
 
 A signed-in member of the listing's open bloc sees a share block below Open blocs: a link field, Copy with inline confirmation, and Share where the browser supports `navigator.share`. The link is minted by `POST /group-deals/{dealId}/invites`; closed/full blocs do not offer sharing. The share block distinguishes a non-member (404), a bloc no longer taking members (409), and other retryable failures.
 
@@ -420,7 +420,6 @@ Remaining design/contract gaps:
 - listing detail does not expose off-sale status;
 - the API exposes one active deal rather than a list with starter metadata;
 - My Blocs starter/refund detail and notifications need further data or implementation;
-- the implemented invite UI still needs backend #201 to show the sharer's nickname (backlog FB-19);
 - the signed-in storefront menu/header is still provisional;
 - CSP still permits HTTPS listing and avatar image hosts until those sources are narrowed; Inter is already self-hosted.
 
