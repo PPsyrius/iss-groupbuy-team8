@@ -49,6 +49,14 @@ describe("QuoteSheet", () => {
     expect(props.onContinue).toHaveBeenCalledExactlyOnceWith("q-1");
   });
 
+  // FB-10: the controlled sheet has no trigger, so it must not mount react-aria's PressResponder.
+  it.each([true, false])("mounts without a PressResponder warning (open: %s)", async (isOpen) => {
+    const warn = vi.spyOn(console, "warn");
+    renderSheet(ready(now + 60_000), { isOpen });
+    if (isOpen) await screen.findByRole("dialog");
+    expect(warn).not.toHaveBeenCalledWith(expect.stringContaining("PressResponder"));
+  });
+
   it("blocks payment once the quote expires and offers a new price", async () => {
     const props = renderSheet(ready(now - 1));
     expect(await screen.findByText("This price has expired")).toBeInTheDocument();

@@ -27,6 +27,17 @@ describe("GatedActionSheet", () => {
     expect(startGoogleLogin).toHaveBeenCalledWith("/products/1");
   });
 
+  // FB-10: a controlled sheet has no trigger, so it must not mount react-aria's PressResponder
+  // (the HeroUI `Modal` root does), which warns that it has no pressable child.
+  it.each([true, false])("mounts without a PressResponder warning (open: %s)", async (isOpen) => {
+    const warn = vi.spyOn(console, "warn");
+    render(<GatedActionSheet isOpen={isOpen} onOpenChange={() => {}} returnTo="/products/1" />);
+    if (isOpen) await screen.findByRole("dialog");
+    const warnings = warn.mock.calls.flat();
+    warn.mockRestore();
+    expect(warnings).not.toContainEqual(expect.stringContaining("PressResponder"));
+  });
+
   it("renders nothing while closed", () => {
     render(<GatedActionSheet isOpen={false} onOpenChange={() => {}} returnTo="/products/1" />);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
