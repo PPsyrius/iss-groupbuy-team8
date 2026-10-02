@@ -124,7 +124,17 @@ function ProductDetailPage() {
   // Keep the existing sign-in gate; the server derives buyer identity and price.
   const session = useSession();
   const [gateOpen, setGateOpen] = useState(false);
-  const onGated = session.status === "authenticated" ? undefined : () => setGateOpen(true);
+  // Which action opened the gate: the trust triptych's bloc price and refund promise only hold for
+  // Start and Join, so the Buy alone gate leaves it out (FB-11). Kept apart from `gateOpen` so the
+  // sheet's content does not change while it animates out.
+  const [gateForBloc, setGateForBloc] = useState(true);
+  const anonymous = session.status !== "authenticated";
+  const openGate = (forBloc: boolean) => {
+    setGateForBloc(forBloc);
+    setGateOpen(true);
+  };
+  const onGated = anonymous ? () => openGate(true) : undefined;
+  const onGatedAlone = anonymous ? () => openGate(false) : undefined;
   const buyerId = session.status === "authenticated" ? session.userId : undefined;
   // A refused JOIN (full, closed or gone) refetches the listing so the bloc row shows why.
   const queryClient = useQueryClient();
@@ -153,17 +163,17 @@ function ProductDetailPage() {
     },
   });
   const joinPress = checkout.isPending ? undefined : onJoin;
+  const blocTrust =
+    groupPrice === undefined || view.closesMs === null
+      ? undefined
+      : { payNow: formatPrice(groupPrice, currency), closesMs: view.closesMs };
   return (
     <main className={shell}>
       <GatedActionSheet
         isOpen={gateOpen}
         onOpenChange={setGateOpen}
         returnTo={`/products/${productId}`}
-        trust={
-          groupPrice === undefined || view.closesMs === null
-            ? undefined
-            : { payNow: formatPrice(groupPrice, currency), closesMs: view.closesMs }
-        }
+        trust={gateForBloc ? blocTrust : undefined}
       />
       <QuoteSheet
         isOpen={start.isOpen}
@@ -211,7 +221,7 @@ function ProductDetailPage() {
             <Actions
               product={p}
               currency={currency}
-              onGated={onGated}
+              onGatedAlone={onGatedAlone}
               onStart={onStart}
               isPending={checkout.isPending}
               demoted={invited.inviteJoin}
@@ -246,7 +256,7 @@ function ProductDetailPage() {
       <Actions
         product={p}
         currency={currency}
-        onGated={onGated}
+        onGatedAlone={onGatedAlone}
         onStart={onStart}
         isPending={checkout.isPending}
         demoted={invited.inviteJoin}
@@ -473,7 +483,7 @@ function StockLine({ product: p }: Readonly<{ product: ProductDetailResponse }>)
 function Actions({
   product: p,
   currency,
-  onGated,
+  onGatedAlone,
   onStart,
   isPending,
   demoted,
@@ -481,7 +491,7 @@ function Actions({
 }: Readonly<{
   product: ProductDetailResponse;
   currency: string;
-  onGated: (() => void) | undefined;
+  onGatedAlone: (() => void) | undefined;
   onStart: (() => void) | undefined;
   isPending: boolean;
   demoted: boolean;
@@ -489,7 +499,7 @@ function Actions({
 }>) {
   const groupPrice = p.groupPrice ?? undefined;
   // `exactOptionalPropertyTypes`: an absent handler is no prop at all, not `onPress={undefined}`.
-  const press = onGated ? { onPress: onGated } : { isDisabled: true };
+  const press = onGatedAlone ? { onPress: onGatedAlone } : { isDisabled: true };
   return (
     <div className={"flex-col gap-2 " + className}>
       <Button

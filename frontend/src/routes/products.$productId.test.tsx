@@ -238,6 +238,29 @@ describe("/products/$productId gated actions", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  // FB-11: the triptych's bloc price and refund promise are bloc terms; an individual purchase
+  // has neither, so the Buy alone gate leaves them out.
+  it("keeps the bloc terms off the sheet opened by Buy alone", async () => {
+    serveAnonymous();
+    serveListing(listing());
+    renderRoute(`/products/${knownId}`);
+    const [alone] = await screen.findAllByRole("button", { name: /Buy alone/ });
+    await userEvent.click(alone!);
+    const dialog = await screen.findByRole("dialog", { name: "Sign in to hold your seat" });
+    expect(within(dialog).queryByRole("term")).toBeNull();
+    expect(within(dialog).queryByText("S$71.00")).toBeNull();
+    expect(within(dialog).queryByText("Refunded in full")).toBeNull();
+  });
+
+  it("shows the bloc terms on the sheet opened by Join", async () => {
+    serveAnonymous();
+    serveListing(listing());
+    renderRoute(`/products/${knownId}`);
+    await userEvent.click(await screen.findByRole("button", { name: /^Join/ }));
+    const dialog = await screen.findByRole("dialog", { name: "Sign in to hold your seat" });
+    expect(within(dialog).getByText("Refunded in full")).toBeVisible();
+  });
+
   it("opens the sign-in sheet from the open bloc's Join as well", async () => {
     serveAnonymous();
     serveListing(listing());
