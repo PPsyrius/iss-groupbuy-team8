@@ -862,3 +862,89 @@ describe("/products/$productId invite link (UC7)", () => {
     expect(screen.queryByRole("heading", { name: "Share your bloc" })).toBeNull();
   });
 });
+
+function serveInvite(response: () => Response) {
+  const asked: string[] = [];
+  server.use(
+    http.get("*/api/v1/invites/:ref", ({ params }) => {
+      asked.push(String(params.ref));
+      return response();
+    }),
+  );
+  return asked;
+}
+
+const resolved = (data: Record<string, unknown>) => () =>
+  HttpResponse.json({
+    code: OK_CODE,
+    message: "ok",
+    data: { dealId: "deal-1", productId: knownId, expiresAt: "2099-01-01T00:00:00Z", ...data },
+  });
+
+// FB-19 (#230): the invite banner names the sharer from `GET /api/v1/invites/{ref}` (#201).
+describe("/products/$productId invite sharer (FB-19)", () => {
+  const ref = "Qm9vbS1pbnZpdGUtcmVm_-";
+
+  it("leads with the sharer's nickname for the parked ref", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(listing());
+    const asked = serveInvite(resolved({ sharerNickname: "Sarah Lim" }));
+    renderRoute(`/products/${knownId}?deal=deal-1&ref=${ref}`);
+    const invite = await screen.findByRole("region", { name: "Invite" });
+    expect(
+      within(invite).getByRole("heading", { name: "Sarah Lim started this bloc" }),
+    ).toBeInTheDocument();
+    expect(within(invite).getByText("and invited you to join it")).toBeInTheDocument();
+    expect(within(invite).getByText("SL")).toBeInTheDocument();
+    expect(asked).toContain(ref);
+  });
+
+  it("names the sharer when the invited bloc has closed", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(listing());
+    serveInvite(resolved({ dealId: "deal-0", sharerNickname: "Sarah Lim" }));
+    renderRoute(`/products/${knownId}?deal=deal-0&ref=${ref}`);
+    expect(
+      await screen.findByRole("heading", { name: "Sarah Lim’s bloc has closed" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/joining the open bloc below/)).toBeInTheDocument();
+  });
+
+  it.each([
+    ["the nickname is null", resolved({ sharerNickname: null })],
+    ["the nickname is blank", resolved({ sharerNickname: "   " })],
+    ["the ref resolves to another bloc", resolved({ dealId: "deal-9", sharerNickname: "Sarah" })],
+    [
+      "the ref is unknown",
+      () =>
+        HttpResponse.json(
+          { code: "GROUPBUY_404_002", message: "Invite not found" },
+          { status: 404 },
+        ),
+    ],
+    ["the call fails", () => HttpResponse.error()],
+  ])("keeps the generic lead when %s", async (_case, response) => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(listing());
+    const asked = serveInvite(response);
+    renderRoute(`/products/${knownId}?deal=deal-1&ref=${ref}`);
+    expect(
+      await screen.findByRole("heading", { name: "You’ve been invited to join this bloc" }),
+    ).toBeInTheDocument();
+    expect(asked).toContain(ref);
+    expect(screen.queryByText(/started this bloc/)).toBeNull();
+  });
+
+  it("does not resolve anything without an invite", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(listing());
+    const asked = serveInvite(resolved({ sharerNickname: "Sarah Lim" }));
+    renderRoute(`/products/${knownId}`);
+    await screen.findByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" });
+    expect(asked).toEqual([]);
+  });
+});

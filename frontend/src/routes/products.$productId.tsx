@@ -28,6 +28,7 @@ import { useQuote } from "@/features/payment/use-quote";
 import { GatedActionSheet } from "@/features/session/GatedActionSheet";
 import { useSession } from "@/features/session/use-session";
 import { discardInvite, parkInvite, readParkedInvite } from "@/features/share/invite-ref";
+import { inviteSharerOptions, useInviteSharer } from "@/features/share/invite-sharer";
 import { InviteBanner } from "@/features/share/InviteBanner";
 import { ShareBlock } from "@/features/share/ShareBlock";
 
@@ -69,6 +70,14 @@ export const Route = createFileRoute("/products/$productId")({
     throw redirect({ to: "/products/$productId", params, search: {}, replace: true });
   },
   loader: async ({ context, params }) => {
+    // The invite this buyer arrived with, if it was for this listing (drives the banner). Its
+    // sharer is resolved beside the listing so the banner's lead does not flip once the page is
+    // up; a failed resolve is swallowed here and leaves the generic lead (FB-19).
+    const parked = readParkedInvite();
+    const invite = parked?.productId === params.productId ? parked : null;
+    const sharer = invite
+      ? context.queryClient.query(inviteSharerOptions(invite.ref)).catch(() => undefined)
+      : undefined;
     try {
       await context.queryClient.query({
         ...detailOptions(params.productId),
@@ -78,9 +87,8 @@ export const Route = createFileRoute("/products/$productId")({
       if (isListingNotFound(error)) throw notFound();
       throw error;
     }
-    // The invite this buyer arrived with, if it was for this listing (drives the banner).
-    const invite = readParkedInvite();
-    return invite?.productId === params.productId ? invite : null;
+    await sharer;
+    return invite;
   },
   pendingComponent: DetailLoading,
   errorComponent: DetailError,
@@ -135,6 +143,7 @@ function ProductDetailPage() {
     inviteDealId: invite?.dealId,
     hasInvite: invite !== null,
   });
+  const sharer = useInviteSharer(invite);
   const onJoin = chooseJoin({
     onGated,
     enabled: checkout.enabled,
@@ -174,6 +183,7 @@ function ProductDetailPage() {
       {invited.showBanner ? (
         <InviteBanner
           open={invited.invitedOpen}
+          sharer={sharer}
           hasOtherBloc={invited.listingOpen}
           signedIn={buyerId !== undefined}
           join={{
