@@ -796,8 +796,7 @@ class StripeCheckoutFlowTest {
         assertThat(repository.findById(younger.id()).orElseThrow().status())
                 .isEqualTo(CheckoutPayment.Status.CANCELED);
         assertThat(service.expireDueSessions()).isZero();
-        verify(failingReviews, times(2))
-                .review(stuck.id(), "EXPIRY_FAILED", "system");
+        verify(failingReviews, times(2)).review(stuck.id(), "EXPIRY_FAILED", "system");
     }
 
     @Test
