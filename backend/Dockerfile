@@ -8,7 +8,7 @@
 # (e.g. ec2).
 
 # Explicit OS line and multi-architecture digest; keep in sync with Dockerfile.ci.
-FROM eclipse-temurin:21-jre-noble@sha256:0c324fbe2e1455c3159184717440f3b52906ef82a39c4a6efc9edb401d31971a
+FROM eclipse-temurin:21-jre-noble@sha256:22138efd69393501fccd8176ae16b01791ed71ff801b28f0359415389b17c766
 
 # Temporary CVE-2026-84782 repair until a verified upstream rebuild includes it.
 # Dependabot updates the base digest, not this package version; see the CI runbook.
