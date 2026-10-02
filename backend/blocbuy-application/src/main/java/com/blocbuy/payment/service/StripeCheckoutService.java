@@ -6,6 +6,7 @@ import com.blocbuy.payment.event.PaymentSucceeded;
 import com.blocbuy.payment.exception.PaymentErrorCode;
 import com.blocbuy.payment.gateway.CheckoutGateway;
 import com.blocbuy.payment.gateway.PaymentBusinessPort;
+import com.blocbuy.payment.gateway.StripeSandbox;
 import com.blocbuy.payment.model.CheckoutPayment;
 import com.blocbuy.payment.model.PaymentReviewCase;
 import com.blocbuy.payment.repository.CheckoutPaymentRepository;
@@ -169,7 +170,7 @@ public final class StripeCheckoutService {
             return;
         }
         var event = verified.get();
-        if (event.liveMode() || event.account() != null) {
+        if (!StripeSandbox.isSandboxMode(event.liveMode()) || event.account() != null) {
             throw new BizException(PaymentErrorCode.PAYMENT_WEBHOOK_SIGNATURE_INVALID);
         }
         // Fetch via this account's API key. Do not trust callback metadata as a payment lookup
@@ -194,8 +195,7 @@ public final class StripeCheckoutService {
         outsideTransaction();
         CheckoutPayment payment = require(paymentId);
         String sessionId = candidateSessionId == null ? payment.sessionId() : candidateSessionId;
-        if (sessionId == null
-                || !sessionId.matches("cs_test_[A-Za-z0-9_-]{1,240}")
+        if (!isSandboxSessionId(sessionId)
                 || (payment.sessionId() != null && !payment.sessionId().equals(sessionId))) {
             throw conflict();
         }
@@ -274,9 +274,7 @@ public final class StripeCheckoutService {
                         repository.lock(paymentId);
                         repository.review(paymentId, "RECOVERY_FAILED", operator);
                         String hint =
-                                candidateSessionId != null
-                                                && candidateSessionId.matches(
-                                                        "cs_test_[A-Za-z0-9_-]{1,240}")
+                                isSandboxSessionId(candidateSessionId)
                                         ? candidateSessionId
                                         : "none-or-invalid";
                         repository.recordRecovery(
@@ -463,20 +461,30 @@ public final class StripeCheckoutService {
                 && evidence == PaymentBusinessPort.FulfilmentEvidence.NONE;
     }
 
-    /** Bounded local operations hook. Failures leave CREATED for the next run/manual recovery. */
+    /** Bounded local operations hook; each failed row is parked for operator review. */
     public int expireDueSessions() {
         outsideTransaction();
         int processed = 0;
-        for (CheckoutPayment payment : repository.pendingBefore(repository.now(), 100)) {
-            if (!payment.quote().expiredAt(repository.now()) || payment.sessionId() == null) {
-                continue;
+        for (CheckoutPayment payment : repository.dueForExpiry(repository.now(), 100)) {
+            try {
+                var current = gateway.retrieveCheckoutSession(payment.sessionId());
+                if ("open".equals(current.status())) {
+                    current = gateway.expireCheckoutSession(current.id());
+                }
+                apply(current, "expiry-" + UuidV7.next(), "session.cleanup", SYSTEM);
+                processed++;
+            } catch (RuntimeException failure) {
+                log.warn(
+                        "Checkout expiry failed for payment {}; operator review required",
+                        payment.id());
+                try {
+                    tx.executeWithoutResult(
+                            status -> repository.review(payment.id(), "EXPIRY_FAILED", SYSTEM));
+                } catch (RuntimeException reviewFailure) {
+                    log.warn(
+                            "Could not record checkout expiry review for payment {}", payment.id());
+                }
             }
-            var current = gateway.retrieveCheckoutSession(payment.sessionId());
-            if ("open".equals(current.status())) {
-                current = gateway.expireCheckoutSession(current.id());
-            }
-            apply(current, "expiry-" + UuidV7.next(), "session.cleanup", SYSTEM);
-            processed++;
         }
         return processed;
     }
@@ -526,7 +534,7 @@ public final class StripeCheckoutService {
     }
 
     private boolean matches(CheckoutPayment payment, CheckoutGateway.Session session) {
-        return !session.liveMode()
+        return StripeSandbox.isSandboxMode(session.liveMode())
                 && payment.id().toString().equals(session.paymentId())
                 && payment.quote().intentId().toString().equals(session.intentId())
                 && payment.quote().amount().movePointRight(2).longValueExact()
@@ -546,6 +554,10 @@ public final class StripeCheckoutService {
 
     private static BizException conflict() {
         return new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID);
+    }
+
+    private static boolean isSandboxSessionId(String sessionId) {
+        return sessionId != null && sessionId.matches("cs_test_[A-Za-z0-9_-]{1,240}");
     }
 
     private static void outsideTransaction() {

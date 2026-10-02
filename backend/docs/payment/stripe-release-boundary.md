@@ -39,7 +39,11 @@ The `211cfb7` source/contract snapshot guard is historical evidence, not a curre
 2. Refund worker and expiry notifications are wired (#29). Before enabling `BLOCBUY_SCHEDULING_ENABLED` on dev (#223), count overdue teams and due refunds, name a recovery owner and monitor both jobs; the switch can issue sandbox refunds without enabling Checkout. The checked-in EC2 deployment leaves scheduling off.
 3. Keep test fixtures and `db/stripe-fixture` outside every deployment Flyway location.
 4. ~~Rebuild account history against `/api/v1/orders/me`~~ — shipped in the contract and `/account` (#128).
-5. Remove the gateways' `sk_test_` restriction only with live-key rotation, a live webhook endpoint, reconciliation controls and renewed payment/refund acceptance.
+5. Revisit the `StripeProperties.sandbox()` gate in `StripeClientProvider` only with live-key rotation, a live webhook endpoint, reconciliation controls and renewed payment/refund acceptance. Keep provider-reported live-mode checks and session-hint validation aligned with that rollout.
 6. Drain or reconcile in-flight Checkout and refund work before disabling an enabled deployment. Feature-off rejects signed Checkout settlement, PaymentIntent, charge and refund events; Stripe retries are finite and cannot replace operator-owned reconciliation. Keep the endpoint subscribed to all four supported Checkout session event types.
 
 Local and Sandbox evidence does not establish Google OAuth, shared AWS deployment, public TLS or live Stripe readiness.
+
+## Checkout expiry isolation — 2026-10-02 (#130, #134)
+
+The shared Stripe client now rejects non-test or missing keys at access time; Checkout and refund gateways cannot bypass it. Provider-reported live-mode facts are still rejected independently of the key. The explicit Checkout expiry hook uses a dedicated bounded `dueForExpiry` read (created, bound, quote-expired, not in open review), leaving the broader `pendingBefore` queue for operator scans. We chose a separate query rather than reprioritizing the shared scan: review-only or succeeded rows must not consume expiry slots, while failures need a durable operator case so the next run can reach younger payments. Each candidate's provider I/O remains outside transactions; settlement and failed-row review writes each run in their own short transaction. A failure is logged by payment ID and never aborts later candidates; if the review write also fails, the row may be retried next run and requires operator attention from logs.

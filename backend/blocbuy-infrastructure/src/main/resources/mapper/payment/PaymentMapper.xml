@@ -131,4 +131,12 @@
         OR EXISTS(SELECT 1 FROM biz_payment_review_case r WHERE r.payment_id=biz_payment.id AND r.status='open'))
     ORDER BY create_time,id LIMIT #{limit}
   </select>
+  <select id="dueForExpiry" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
+    SELECT <include refid="columns"/> FROM biz_payment WHERE intent_id IS NOT NULL AND NOT deleted
+      AND status='created' AND create_time &lt; #{now} AND checkout_session_id IS NOT NULL
+      AND (quote_valid_until &lt;= #{now} OR business_deadline &lt;= #{now})
+      AND NOT EXISTS(SELECT 1 FROM biz_payment_review_case r
+        WHERE r.payment_id=biz_payment.id AND r.status='open')
+    ORDER BY create_time,id LIMIT #{limit}
+  </select>
 </mapper>

@@ -711,6 +711,24 @@ class StripeCheckoutFlowTest {
     }
 
     @Test
+    void expiryPageExcludesOpenReviewCasesEvenWhenTheyAreOldest() {
+        CheckoutPayment reviewed = prepare();
+        CheckoutPayment eligible = prepare();
+        jdbc.update(
+                "UPDATE biz_payment SET business_deadline=clock_timestamp()-interval '1 second' WHERE id IN (?,?)",
+                reviewed.id(),
+                eligible.id());
+        service.assignReview(reviewed.id(), "test", Instant.now().plusSeconds(900));
+
+        assertThat(repository.dueForExpiry(repository.now(), 1))
+                .extracting(CheckoutPayment::id)
+                .containsExactly(eligible.id());
+        assertThat(repository.pendingBefore(repository.now(), 100))
+                .extracting(CheckoutPayment::id)
+                .contains(reviewed.id());
+    }
+
+    @Test
     void simultaneousDeliveryOfSameEventCommitsOneReceipt() throws Exception {
         CheckoutPayment payment = prepare();
         paid(payment);

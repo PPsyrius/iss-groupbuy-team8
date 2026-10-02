@@ -153,6 +153,14 @@ public class CheckoutPaymentRepositoryImpl implements CheckoutPaymentRepository 
         return mapper.pending(threshold, limit).stream().map(PaymentConverter::fromRow).toList();
     }
 
+    @Override
+    public List<CheckoutPayment> dueForExpiry(Instant now, int limit) {
+        if (limit < 1 || limit > 100) {
+            throw new IllegalArgumentException("Limit must be 1..100");
+        }
+        return mapper.dueForExpiry(now, limit).stream().map(PaymentConverter::fromRow).toList();
+    }
+
     private static Optional<CheckoutPayment> optional(BizPaymentDO row) {
         return Optional.ofNullable(PaymentConverter.fromRow(row));
     }

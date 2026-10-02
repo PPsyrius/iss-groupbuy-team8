@@ -169,8 +169,11 @@ class CheckoutPaymentRepositoryImplTest {
     void memberAndPendingScansMapRowsToPayments() {
         Instant threshold = Instant.now();
         when(mapper.pending(any(), anyInt())).thenReturn(List.of(row()));
+        when(mapper.dueForExpiry(any(), anyInt())).thenReturn(List.of(row()));
         when(mapper.reviewCases(any(), anyInt())).thenReturn(List.of());
         assertThat(repository.pendingBefore(threshold, 10)).hasSize(1);
+        assertThat(repository.dueForExpiry(threshold, 10)).hasSize(1);
+        verify(mapper).dueForExpiry(threshold, 10);
         assertThat(repository.reviewCases(null, 10)).isEmpty();
     }
 
@@ -193,6 +196,8 @@ class CheckoutPaymentRepositoryImplTest {
         for (int limit : new int[] {0, 101}) {
             var exceptionInput1 = Instant.now();
             assertThatThrownBy(() -> repository.pendingBefore(exceptionInput1, limit))
+                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> repository.dueForExpiry(exceptionInput1, limit))
                     .isInstanceOf(IllegalArgumentException.class);
             assertThatThrownBy(() -> repository.reviewCases(null, limit))
                     .isInstanceOf(IllegalArgumentException.class);

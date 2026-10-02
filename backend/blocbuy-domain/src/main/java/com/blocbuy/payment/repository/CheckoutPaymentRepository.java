@@ -72,4 +72,7 @@ public interface CheckoutPaymentRepository {
     void requireRefundsForExpiredTeam(UUID dealId, String reason, String eventId);
 
     List<CheckoutPayment> pendingBefore(Instant threshold, int limit);
+
+    /** Expired, bound, created attempts not already parked in operator review. */
+    List<CheckoutPayment> dueForExpiry(Instant now, int limit);
 }

@@ -13,9 +13,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "blocbuy.payment.stripe")
 public record StripeProperties(String apiKey, String webhookSecret) {
+    public static final String SANDBOX_KEY_PREFIX = "sk_test_";
 
-    /** True when the minimum configuration for live calls is present. */
+    /** True when an API key is present. */
     public boolean configured() {
         return apiKey != null && !apiKey.isBlank();
+    }
+
+    /** Only test keys may be used for provider API calls. */
+    public boolean sandbox() {
+        return configured() && apiKey.startsWith(SANDBOX_KEY_PREFIX);
     }
 }

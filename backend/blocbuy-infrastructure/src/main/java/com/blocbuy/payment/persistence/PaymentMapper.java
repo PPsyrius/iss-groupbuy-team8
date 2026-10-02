@@ -76,4 +76,6 @@ public interface PaymentMapper {
             @Param("eventId") String eventId);
 
     List<BizPaymentDO> pending(@Param("threshold") Instant threshold, @Param("limit") int limit);
+
+    List<BizPaymentDO> dueForExpiry(@Param("now") Instant now, @Param("limit") int limit);
 }
