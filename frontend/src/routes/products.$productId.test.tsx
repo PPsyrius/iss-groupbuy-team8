@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { OK_CODE } from "@/api/envelope";
 import { getListingQueryKey } from "@/api/generated/@tanstack/react-query.gen";
 import type { ProductDetailResponse } from "@/api/generated/types.gen";
+import { SHARER_DEADLINE_MS } from "@/features/share/invite-sharer";
 import { server } from "@/test/msw";
 import { renderRoute, serveAnonymous, serveSignedIn } from "@/test/render-route";
 
@@ -917,6 +918,10 @@ describe("/products/$productId invite sharer (FB-19)", () => {
     ["the nickname is blank", resolved({ sharerNickname: "   " })],
     ["the ref resolves to another bloc", resolved({ dealId: "deal-9", sharerNickname: "Sarah" })],
     [
+      "the ref resolves to another listing",
+      resolved({ productId: "5b1b9d5c-1a11-4e1e-9a10-000000000099", sharerNickname: "Sarah" }),
+    ],
+    [
       "the ref is unknown",
       () =>
         HttpResponse.json(
@@ -936,6 +941,32 @@ describe("/products/$productId invite sharer (FB-19)", () => {
     ).toBeInTheDocument();
     expect(asked).toContain(ref);
     expect(screen.queryByText(/started this bloc/)).toBeNull();
+  });
+
+  it("shows the listing with the generic lead when the lookup outlasts its deadline", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(listing());
+    const asked: string[] = [];
+    server.use(
+      http.get("*/api/v1/invites/:ref", async ({ params }) => {
+        asked.push(String(params.ref));
+        await new Promise(() => {});
+        return HttpResponse.error();
+      }),
+    );
+    renderRoute(`/products/${knownId}?deal=deal-1&ref=${ref}`);
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: "You’ve been invited to join this bloc" },
+        { timeout: SHARER_DEADLINE_MS + 2_000 },
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Thai jasmine rice 10 kg" }),
+    ).toBeVisible();
+    expect(asked).toContain(ref);
   });
 
   it("does not resolve anything without an invite", async () => {

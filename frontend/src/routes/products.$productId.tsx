@@ -28,7 +28,7 @@ import { useQuote } from "@/features/payment/use-quote";
 import { GatedActionSheet } from "@/features/session/GatedActionSheet";
 import { useSession } from "@/features/session/use-session";
 import { discardInvite, parkInvite, readParkedInvite } from "@/features/share/invite-ref";
-import { inviteSharerOptions, useInviteSharer } from "@/features/share/invite-sharer";
+import { awaitSharer, useInviteSharer } from "@/features/share/invite-sharer";
 import { InviteBanner } from "@/features/share/InviteBanner";
 import { ShareBlock } from "@/features/share/ShareBlock";
 
@@ -72,12 +72,10 @@ export const Route = createFileRoute("/products/$productId")({
   loader: async ({ context, params }) => {
     // The invite this buyer arrived with, if it was for this listing (drives the banner). Its
     // sharer is resolved beside the listing so the banner's lead does not flip once the page is
-    // up; a failed resolve is swallowed here and leaves the generic lead (FB-19).
+    // up; a failed or slow resolve (past `SHARER_DEADLINE_MS`) leaves the generic lead (FB-19).
     const parked = readParkedInvite();
     const invite = parked?.productId === params.productId ? parked : null;
-    const sharer = invite
-      ? context.queryClient.query(inviteSharerOptions(invite.ref)).catch(() => undefined)
-      : undefined;
+    const sharer = invite ? awaitSharer(context.queryClient, invite.ref) : undefined;
     try {
       await context.queryClient.query({
         ...detailOptions(params.productId),
