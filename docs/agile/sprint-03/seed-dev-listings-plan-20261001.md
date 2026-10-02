@@ -133,6 +133,8 @@ Not yet proven: anything on dev (V-A0, V-A1, V-A3, V-A4, V-A5), and Phase B. No 
 ## 6. Security and privacy (AC4)
 
 - Token and admin email only in the operator's shell; the script reads the token from env and never prints it; `set -x` is never enabled.
+- The token travels only over HTTPS: curl is restricted with `--proto`, and plain HTTP is accepted only for an explicit loopback root (local verification).
+- Register row: [NFR-48](../../quality/nfr-register.md) (token handling, HTTPS only, no tracing, no personal data committed).
 - The day log names the admin by GitHub handle, not email; no user ids beyond the grant row id.
 - Listing data is synthetic. The JSON file holds no URLs to third-party assets.
 - Sandbox only: Phase B uses Stripe test mode on dev; no live keys (ADR 0005).

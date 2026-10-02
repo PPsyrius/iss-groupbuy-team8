@@ -7,7 +7,8 @@
 #   scripts/seed-dev-demo-listings.sh --check   # no admin writes: summary plus one quote per listing
 #
 # Optional environment:
-#   BLOCBUY_BASE_URL     API root, default the dev CloudFront entry (…/api/v1)
+#   BLOCBUY_BASE_URL     API root, default the dev CloudFront entry (…/api/v1); https only, or
+#                        http to localhost, 127.0.0.1 or [::1] for a local backend
 #   BLOCBUY_SEED_FILE    listing definitions, default scripts/dev-demo-listings.json
 #   BLOCBUY_POLICY_DAYS  validity of a newly appended team price policy, default 30
 #
@@ -41,6 +42,16 @@ if ! [[ "$POLICY_DAYS" =~ ^[0-9]+$ && "$REFRESH_DAYS" =~ ^[0-9]+$ ]] \
   echo "need integer days with BLOCBUY_POLICY_DAYS > BLOCBUY_REFRESH_DAYS >= 1" >&2
   exit 2
 fi
+# The token is a credential: curl may speak HTTPS only, or plain HTTP to an explicit loopback root.
+LOOPBACK_HTTP='^http://(localhost|127\.0\.0\.1|\[::1\])(:[0-9]+)?(/|$)'
+if [[ "$BASE" =~ $LOOPBACK_HTTP ]]; then
+  PROTO==http
+elif [[ "$BASE" == https://* ]]; then
+  PROTO==https
+else
+  echo "BLOCBUY_BASE_URL must be https://, or http:// to localhost, 127.0.0.1 or [::1]" >&2
+  exit 2
+fi
 
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
@@ -50,7 +61,7 @@ WRITES=0
 # The cookie goes through a curl config on a file descriptor, so the token is never in argv.
 api() {
   local method=$1 path=$2 body=${3-} status
-  local args=(-sS -o "$WORK/response" -w '%{http_code}' -X "$method" -H 'Accept: application/json')
+  local args=(-sS --proto "$PROTO" -o "$WORK/response" -w '%{http_code}' -X "$method" -H 'Accept: application/json')
   if [[ -n "$body" ]]; then
     args+=(-H 'Content-Type: application/json' --data-binary @-)
   fi
@@ -152,10 +163,17 @@ converge() {
 }
 
 # --check: a quote exercises the same pricing path START uses (policy in force, undercut, terms).
+# The quote does not echo the terms, so they are compared first and a mismatch skips the quote.
 check_quote() {
   local want=$1 listing id amount
   listing=$(listing_by_no "$(jq -r '.productNo' <<<"$want")")
   [[ -n "$listing" ]] || { echo "$(jq -r '.productNo' <<<"$want"): missing" >&2; return 1; }
+  if [[ "$(jq -n --argjson l "$listing" --argjson w "$want" \
+      '$l.teamTerms.targetSize == $w.targetSize and $l.teamTerms.lifetimeSeconds == $w.lifetimeSeconds')" \
+      != true ]]; then
+    echo "$(jq -r '.productNo' <<<"$want"): team terms differ from the seed; no quote requested" >&2
+    return 1
+  fi
   id=$(jq -r '.id' <<<"$listing")
   amount=$(api POST /team-price-quotes "$(jq -cn --arg id "$id" '{productId: $id}')" | jq -r '.amount')
   if [[ "$(jq -n --arg a "$amount" --arg w "$(jq -r '.teamPrice' <<<"$want")" \
