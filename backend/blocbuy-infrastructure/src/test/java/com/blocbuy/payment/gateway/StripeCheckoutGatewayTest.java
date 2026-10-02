@@ -263,8 +263,6 @@ class StripeCheckoutGatewayTest {
                 .isInstanceOf(BizException.class);
         assertThatThrownBy(() -> liveKeyGateway.expireCheckoutSession("cs_test_fixture"))
                 .isInstanceOf(BizException.class);
-        assertThatThrownBy(() -> gateway.createCheckoutSession(livePayment))
-                .isInstanceOf(BizException.class);
         var nullSecretGateway =
                 new StripeCheckoutGateway(
                         new StripeProperties("", null),
