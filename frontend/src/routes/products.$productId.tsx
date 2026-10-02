@@ -5,11 +5,10 @@ import { type ReactNode, useState } from "react";
 
 import { ApiError, unwrapResult } from "@/api/envelope";
 import { getListingOptions } from "@/api/generated/@tanstack/react-query.gen";
-import type { ProductDetailResponse } from "@/api/generated/types.gen";
+import type { MyTeamResponse, ProductDetailResponse } from "@/api/generated/types.gen";
 import { NotFoundCard } from "@/components/ErrorCard";
 import { blocFilter } from "@/features/blocs/bloc-status";
 import { myTeamsQuery } from "@/features/blocs/my-teams-query";
-import { formatDeadlineShort } from "@/features/catalog/deal-time";
 import { DealProgress, useNow } from "@/features/catalog/DealProgress";
 import {
   blocHeadline,
@@ -22,11 +21,13 @@ import {
 import { formatPrice, Price } from "@/features/catalog/Price";
 import { ProductGallery } from "@/features/catalog/ProductGallery";
 import { listingSearchSchema } from "@/features/catalog/products-search";
+import { TrustTriptych } from "@/features/catalog/TrustTriptych";
 import { QuoteSheet } from "@/features/payment/QuoteSheet";
 import { useCheckout } from "@/features/payment/use-checkout";
 import { useQuote } from "@/features/payment/use-quote";
 import { GatedActionSheet } from "@/features/session/GatedActionSheet";
 import { useSession } from "@/features/session/use-session";
+import { useSignInGate } from "@/features/session/use-sign-in-gate";
 import { discardInvite, parkInvite, readParkedInvite } from "@/features/share/invite-ref";
 import { awaitSharer, useInviteSharer } from "@/features/share/invite-sharer";
 import { InviteBanner } from "@/features/share/InviteBanner";
@@ -120,12 +121,12 @@ function ProductDetailPage() {
   const view = listingDealView(p.deal, now);
   const currency = p.currency ?? "sgd";
   const groupPrice = p.groupPrice ?? undefined;
-  const category = p.category ? titleCase(p.category) : undefined;
+  const category = categoryLabel(p);
   // Keep the existing sign-in gate; the server derives buyer identity and price.
   const session = useSession();
-  const [gateOpen, setGateOpen] = useState(false);
-  const onGated = session.status === "authenticated" ? undefined : () => setGateOpen(true);
   const buyerId = session.status === "authenticated" ? session.userId : undefined;
+  const gate = useSignInGate(buyerId === undefined, blocTrust(groupPrice, currency, view.closesMs));
+  const { onGated, onGatedAlone } = gate;
   // A refused JOIN (full, closed or gone) refetches the listing so the bloc row shows why.
   const queryClient = useQueryClient();
   const checkout = useCheckout(buyerId, () => {
@@ -153,13 +154,10 @@ function ProductDetailPage() {
     },
   });
   const joinPress = checkout.isPending ? undefined : onJoin;
+  const share = shareTarget(invited.shareable, myTeam, buyerId, view.dealId);
   return (
     <main className={shell}>
-      <GatedActionSheet
-        isOpen={gateOpen}
-        onOpenChange={setGateOpen}
-        returnTo={`/products/${productId}`}
-      />
+      <GatedActionSheet {...gate.sheet} returnTo={`/products/${productId}`} />
       <QuoteSheet
         isOpen={start.isOpen}
         onOpenChange={start.setOpen}
@@ -206,7 +204,7 @@ function ProductDetailPage() {
             <Actions
               product={p}
               currency={currency}
-              onGated={onGated}
+              onGatedAlone={onGatedAlone}
               onStart={onStart}
               isPending={checkout.isPending}
               demoted={invited.inviteJoin}
@@ -221,12 +219,12 @@ function ProductDetailPage() {
               member={myTeam !== undefined}
             />
           </section>
-          {invited.shareable && myTeam && buyerId && view.dealId ? (
+          {share ? (
             <ShareBlock
-              userId={buyerId}
-              dealId={view.dealId}
+              userId={share.userId}
+              dealId={share.dealId}
               productId={productId}
-              leader={myTeam.role?.toLowerCase() === "leader"}
+              leader={share.leader}
               title={p.title ?? "this listing"}
               groupPrice={groupPrice}
               individualPrice={p.individualPrice}
@@ -241,7 +239,7 @@ function ProductDetailPage() {
       <Actions
         product={p}
         currency={currency}
-        onGated={onGated}
+        onGatedAlone={onGatedAlone}
         onStart={onStart}
         isPending={checkout.isPending}
         demoted={invited.inviteJoin}
@@ -249,6 +247,28 @@ function ProductDetailPage() {
       />
     </main>
   );
+}
+
+function categoryLabel(p: ProductDetailResponse): string | undefined {
+  return p.category ? titleCase(p.category) : undefined;
+}
+
+// The gated sheet's trust triptych (FB-11): the bloc price and the open bloc's deadline, or none
+// when the listing has no bloc price or no open bloc.
+function blocTrust(groupPrice: number | undefined, currency: string, closesMs: number | null) {
+  if (groupPrice === undefined || closesMs === null) return undefined;
+  return { payNow: formatPrice(groupPrice, currency), closesMs };
+}
+
+// The share block shows for a signed-in member of the listing's open bloc.
+function shareTarget(
+  shareable: boolean,
+  myTeam: MyTeamResponse | undefined,
+  userId: string | undefined,
+  dealId: string | undefined,
+) {
+  if (!shareable || !myTeam || !userId || !dealId) return undefined;
+  return { userId, dealId, leader: myTeam.role?.toLowerCase() === "leader" };
 }
 
 function joinLabel(groupPrice: number | undefined, currency: string): string {
@@ -461,26 +481,6 @@ function StockLine({ product: p }: Readonly<{ product: ProductDetailResponse }>)
   );
 }
 
-function TrustTriptych({ payNow, closesMs }: Readonly<{ payNow: string; closesMs: number }>) {
-  const cell = "flex flex-col gap-0.5 rounded-lg border-border border p-3";
-  return (
-    <dl className="grid grid-cols-3 gap-2">
-      <div className={cell}>
-        <dt className="text-muted text-xs">You pay now</dt>
-        <dd className="text-accent-soft-foreground text-sm font-semibold tabular-nums">{payNow}</dd>
-      </div>
-      <div className={cell}>
-        <dt className="text-muted text-xs">Bloc closes</dt>
-        <dd className="text-sm font-semibold tabular-nums">{formatDeadlineShort(closesMs)}</dd>
-      </div>
-      <div className={cell}>
-        <dt className="text-muted text-xs">If it doesn’t fill</dt>
-        <dd className="text-success-soft-foreground text-sm font-semibold">Refunded in full</dd>
-      </div>
-    </dl>
-  );
-}
-
 // Both actions are the artboard's, in its order of prominence (Start a bloc outranks Buy alone).
 // Buy alone stays separate and disabled for authenticated buyers until its own flow exists.
 // `demoted` (an invite to the open bloc) drops Start a bloc to the `outline` rank, 44px, so the
@@ -488,7 +488,7 @@ function TrustTriptych({ payNow, closesMs }: Readonly<{ payNow: string; closesMs
 function Actions({
   product: p,
   currency,
-  onGated,
+  onGatedAlone,
   onStart,
   isPending,
   demoted,
@@ -496,7 +496,7 @@ function Actions({
 }: Readonly<{
   product: ProductDetailResponse;
   currency: string;
-  onGated: (() => void) | undefined;
+  onGatedAlone: (() => void) | undefined;
   onStart: (() => void) | undefined;
   isPending: boolean;
   demoted: boolean;
@@ -504,7 +504,7 @@ function Actions({
 }>) {
   const groupPrice = p.groupPrice ?? undefined;
   // `exactOptionalPropertyTypes`: an absent handler is no prop at all, not `onPress={undefined}`.
-  const press = onGated ? { onPress: onGated } : { isDisabled: true };
+  const press = onGatedAlone ? { onPress: onGatedAlone } : { isDisabled: true };
   return (
     <div className={"flex-col gap-2 " + className}>
       <Button

@@ -1,19 +1,26 @@
 import { Button, Modal } from "@heroui/react";
 
+import { TrustTriptych } from "@/features/catalog/TrustTriptych";
+
 import { GoogleSignInButton } from "./GoogleSignInButton";
 
 // The gate sits at the paid action, never at the door (flow map "Gate", docs/design-screens.md
 // §4.3): an anonymous buyer who presses Start a bloc / Buy alone gets this sheet over the listing,
 // which stays visible behind it. `placement="auto"` is the bottom sheet on phone and the centred
 // 520px modal on desktop, both dismissible by tap-outside and Escape; "Not now" is a real exit.
+// `trust` is the listing's trust triptych (artboard 3c.4 / 3c.7, FB-11), so the price and the
+// deadline stay in view through sign-in; it is left out when the listing has no bloc price or no
+// open bloc deadline, as on the listing itself.
 export function GatedActionSheet({
   isOpen,
   onOpenChange,
   returnTo,
+  trust,
 }: Readonly<{
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   returnTo: string;
+  trust?: { payNow: string; closesMs: number } | undefined;
 }>) {
   return (
     <Modal.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} isDismissable>
@@ -28,6 +35,7 @@ export function GatedActionSheet({
               to share. Sign in and we’ll bring you right back here.
             </p>
           </Modal.Header>
+          {trust ? <TrustTriptych payNow={trust.payNow} closesMs={trust.closesMs} /> : null}
           <Modal.Footer className="flex flex-col gap-2 xl:flex-row-reverse">
             <GoogleSignInButton returnTo={returnTo} className="xl:flex-1" />
             <Button
