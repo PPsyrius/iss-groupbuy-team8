@@ -15,3 +15,4 @@ Locked stack decisions that predate this directory live in
 | 0003 | [Referral credit is a post-commit subscriber](0003-share-credit-post-commit-subscriber.md) | Accepted (2026-09-25) |
 | 0004 | [Retire the unused legacy PaymentIntent path](0004-retire-legacy-payment-intent-path.md) | Accepted (2026-09-28) |
 | 0005 | [Gate Stripe Checkout with a deployment property](0005-stripe-checkout-env-flag.md) | Accepted (2026-09-30) |
+| 0006 | [Payment owns the admin compensation-attention read model](0006-payment-attention-read-model.md) | Accepted (2026-10-02) |
