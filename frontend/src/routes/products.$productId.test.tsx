@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { OK_CODE } from "@/api/envelope";
 import { getListingQueryKey } from "@/api/generated/@tanstack/react-query.gen";
 import type { ProductDetailResponse } from "@/api/generated/types.gen";
+import { formatDeadlineShort } from "@/features/catalog/deal-time";
 import { SHARER_DEADLINE_MS } from "@/features/share/invite-sharer";
 import { server } from "@/test/msw";
 import { renderRoute, serveAnonymous, serveSignedIn } from "@/test/render-route";
@@ -223,8 +224,41 @@ describe("/products/$productId gated actions", () => {
     await userEvent.click(start!);
     const dialog = await screen.findByRole("dialog", { name: "Sign in to hold your seat" });
     expect(dialog).toBeVisible();
+    // FB-11: the sheet carries the listing's trust triptych (artboard 3c.4 / 3c.7).
+    expect(
+      within(dialog)
+        .getAllByRole("definition")
+        .map((d) => d.textContent),
+    ).toEqual([
+      "S$71.00",
+      formatDeadlineShort(Date.parse("2099-01-01T00:00:00Z")),
+      "Refunded in full",
+    ]);
     await userEvent.click(screen.getByRole("button", { name: "Not now" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  // FB-11: the triptych's bloc price and refund promise are bloc terms; an individual purchase
+  // has neither, so the Buy alone gate leaves them out.
+  it("keeps the bloc terms off the sheet opened by Buy alone", async () => {
+    serveAnonymous();
+    serveListing(listing());
+    renderRoute(`/products/${knownId}`);
+    const [alone] = await screen.findAllByRole("button", { name: /Buy alone/ });
+    await userEvent.click(alone!);
+    const dialog = await screen.findByRole("dialog", { name: "Sign in to hold your seat" });
+    expect(within(dialog).queryByRole("term")).toBeNull();
+    expect(within(dialog).queryByText("S$71.00")).toBeNull();
+    expect(within(dialog).queryByText("Refunded in full")).toBeNull();
+  });
+
+  it("shows the bloc terms on the sheet opened by Join", async () => {
+    serveAnonymous();
+    serveListing(listing());
+    renderRoute(`/products/${knownId}`);
+    await userEvent.click(await screen.findByRole("button", { name: /^Join/ }));
+    const dialog = await screen.findByRole("dialog", { name: "Sign in to hold your seat" });
+    expect(within(dialog).getByText("Refunded in full")).toBeVisible();
   });
 
   it("opens the sign-in sheet from the open bloc's Join as well", async () => {
