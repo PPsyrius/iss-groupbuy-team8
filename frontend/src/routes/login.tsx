@@ -27,6 +27,7 @@ function LoginPage() {
   const backLabel = fromListing ? "Back to the listing" : "Back to browse";
   return (
     <main className="mx-auto flex max-w-[1280px] flex-col gap-6 px-6 py-8 xl:items-center xl:px-8 xl:py-16">
+      <title>Sign in · BlocBuy</title>
       {/* The error state carries its own exit beside the retry, so the crumb steps aside. */}
       {error ? null : (
         <nav className="text-sm font-medium xl:self-end">

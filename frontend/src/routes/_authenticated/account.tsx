@@ -126,7 +126,12 @@ function AccountPage() {
 // One header, as on the artboard: the site header already shows who is signed in, and §4.4 never
 // shows the nickname as a profile here.
 function AccountHeader() {
-  return <h1 className="text-lg font-semibold xl:text-2xl">My blocs</h1>;
+  return (
+    <>
+      <title>My blocs · BlocBuy</title>
+      <h1 className="text-lg font-semibold xl:text-2xl">My blocs</h1>
+    </>
+  );
 }
 
 // §4.4 empty: a buyer with no bloc and no order. The refund promise is repeated because this is

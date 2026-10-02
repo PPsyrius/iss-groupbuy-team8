@@ -148,6 +148,7 @@ function ProductDetailPage() {
   const joinPress = checkout.isPending ? undefined : onJoin;
   return (
     <main className={shell}>
+      <title>{`${p.title ?? "Listing"} · BlocBuy`}</title>
       <GatedActionSheet
         isOpen={gateOpen}
         onOpenChange={setGateOpen}
@@ -566,6 +567,7 @@ function AboutCard({
 function DetailLoading() {
   return (
     <main className={shell} aria-busy="true">
+      <title>Listing · BlocBuy</title>
       <Skeleton className="h-5 w-40 rounded-full" />
       <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[620px_minmax(0,1fr)] xl:gap-8">
         <div className="flex flex-col gap-3">
@@ -594,6 +596,7 @@ function DetailError({ reset }: Readonly<{ reset: () => void }>) {
   const router = useRouter();
   return (
     <main className={shell}>
+      <title>Listing · BlocBuy</title>
       <Alert status="danger" className="xl:px-6 xl:py-5">
         <Alert.Content>
           <Alert.Title className="text-base xl:text-lg">We couldn’t load this listing</Alert.Title>

@@ -41,6 +41,7 @@ describe("/admin/listings/$productId", () => {
     expect(screen.getByText("BB-100472 · draft · v0")).toBeVisible();
     expect(screen.getByRole("button", { name: "Save draft" })).toBeEnabled();
     expect(screen.getByRole("textbox", { name: "Title" })).toHaveValue("Hokkaido milk, 12 cartons");
+    expect(document.title).toBe("Edit Hokkaido milk, 12 cartons · BlocBuy");
     expect(screen.getByRole("textbox", { name: "Solo price" })).not.toHaveAttribute("readonly");
     expect(screen.getByRole("textbox", { name: "Stock" })).not.toHaveAttribute("readonly");
     expect(screen.queryByText("Frozen")).not.toBeInTheDocument();

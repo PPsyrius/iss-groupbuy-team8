@@ -56,6 +56,7 @@ describe("/ (products list) loader", () => {
     );
     await renderAt("/");
     expect(await screen.findByText("Listing 1")).toBeInTheDocument();
+    expect(document.title).toBe("Listings · BlocBuy");
     expect(screen.getByRole("link", { name: "Sign in" })).toBeInTheDocument();
   });
 
