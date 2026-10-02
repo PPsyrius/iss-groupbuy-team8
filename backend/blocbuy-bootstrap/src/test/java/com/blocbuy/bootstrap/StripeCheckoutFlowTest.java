@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -795,7 +796,7 @@ class StripeCheckoutFlowTest {
         assertThat(repository.findById(younger.id()).orElseThrow().status())
                 .isEqualTo(CheckoutPayment.Status.CANCELED);
         assertThat(service.expireDueSessions()).isZero();
-        verify(failingReviews, org.mockito.Mockito.times(2))
+        verify(failingReviews, times(2))
                 .review(stuck.id(), "EXPIRY_FAILED", "system");
     }
 
