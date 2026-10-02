@@ -499,10 +499,11 @@ class StripeCheckoutServiceTest {
         doThrow(new IllegalStateException("timeout")).when(gateway).createCheckoutSession(any());
         assertThatThrownBy(() -> service.prepare(BUYER, INTENT, "key"))
                 .isInstanceOf(IllegalStateException.class);
-        when(repository.dueForExpiry(any(), anyInt())).thenReturn(List.of(saved));
+        when(repository.dueForExpiry(any(), anyInt())).thenReturn(List.of());
         assertThat(service.expireDueSessions()).isZero();
         when(repository.now()).thenReturn(NOW.plusSeconds(8000));
         assertThat(service.expireDueSessions()).isZero();
+        verify(gateway, never()).retrieveCheckoutSession(any());
         UUID id = saved.id();
         assertThatThrownBy(() -> service.expireRequestedSession(id))
                 .isInstanceOf(BizException.class);

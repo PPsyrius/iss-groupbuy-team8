@@ -17,6 +17,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import org.springframework.dao.DataAccessException;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -473,16 +474,19 @@ public final class StripeCheckoutService {
                 }
                 apply(current, "expiry-" + UuidV7.next(), "session.cleanup", SYSTEM);
                 processed++;
-            } catch (RuntimeException failure) {
+            } catch (BizException | IllegalStateException | DataAccessException failure) {
                 log.warn(
                         "Checkout expiry failed for payment {}; operator review required",
-                        payment.id());
+                        payment.id(),
+                        failure);
                 try {
                     tx.executeWithoutResult(
                             status -> repository.review(payment.id(), "EXPIRY_FAILED", SYSTEM));
-                } catch (RuntimeException reviewFailure) {
+                } catch (IllegalStateException | DataAccessException reviewFailure) {
                     log.warn(
-                            "Could not record checkout expiry review for payment {}", payment.id());
+                            "Could not record checkout expiry review for payment {}",
+                            payment.id(),
+                            reviewFailure);
                 }
             }
         }
