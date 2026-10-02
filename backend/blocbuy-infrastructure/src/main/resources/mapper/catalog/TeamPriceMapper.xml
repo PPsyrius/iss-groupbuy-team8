@@ -41,6 +41,18 @@
         WHERE product_id = #{productId,jdbcType=OTHER} AND deleted = false
         ORDER BY version DESC LIMIT 1
     </select>
+    <sql id="policyRevisionPopulation">
+        FROM biz_team_price_policy
+        WHERE product_id = #{productId,jdbcType=OTHER} AND deleted = false
+    </sql>
+    <select id="countPolicyRevisions" resultType="long">
+        SELECT COUNT(*) <include refid="policyRevisionPopulation"/>
+    </select>
+    <select id="selectPolicyRevisions" resultMap="policyMap">
+        SELECT product_id, amount, currency, valid_from, valid_until, version
+        <include refid="policyRevisionPopulation"/>
+        ORDER BY version DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
     <select id="selectLatestPolicies" resultMap="policyMap">
         SELECT DISTINCT ON (product_id) product_id, amount, currency, valid_from, valid_until, version
         FROM biz_team_price_policy
