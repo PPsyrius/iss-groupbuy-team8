@@ -15,8 +15,8 @@ import org.springframework.validation.annotation.Validated;
  * @param failureRedirectUri where the browser lands after a failed login; an optional {@code
  *     {errorCode}} placeholder is replaced with the business error code
  * @param stateCookieSecure whether the OAuth state-binding cookie carries the Secure attribute;
- *     mirrors {@code sa-token.cookie.secure} — on for HTTPS deployments, off on the plain-HTTP
- *     local/docker/ec2 profiles until the CloudFront cutover
+ *     mirrors {@code sa-token.cookie.secure} — on for HTTPS deployments (including ec2 behind
+ *     CloudFront), off on the plain-HTTP local/docker profiles
  */
 @Validated
 @ConfigurationProperties(prefix = "blocbuy.frontend")
