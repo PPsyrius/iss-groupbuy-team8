@@ -91,3 +91,8 @@ See `AGENTS.md` for the complete implementation conventions.
 - `docs/blueprint.md` and `docs/blueprint-review.md` — planning provenance
 
 Deployment procedures are in `../docs/deploy/dev-cloudfront-deployment.md`.
+
+## Third-party marks
+
+- Google and the Google logo are trademarks of Google LLC.
+- `public/google-g.svg` is Google's "G" from the Sign in with Google brand assets (https://developers.google.com/identity/branding-guidelines, pack https://developers.google.com/static/identity/images/signin-assets.zip, file `Android + Web/SVG/Light/Theme=Light, Show text=No, Shape=Pill, Platform=Android+Web.svg`), cropped to the G (circle removed); geometry and colours unchanged. Do not redraw, recolour or resize it; Google's rules keep it at 20px on a white, neutral or dark button.
