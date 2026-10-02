@@ -101,6 +101,7 @@ public class AdminListingController {
 
     private final AdminListingAppService listings;
     private final TeamTermsAppService teamTerms;
+    private final TeamPriceAppService prices;
 
     /** Trusted identity and lifecycle are never accepted from the creation body. */
     @PostMapping
@@ -156,6 +157,34 @@ public class AdminListingController {
         return Result.ok(
                 new PageResult<>(
                         result.items().stream().map(AdminListingResponse::from).toList(),
+                        result.total(),
+                        result.page(),
+                        result.size(),
+                        result.nextCursor()));
+    }
+
+    /** Historical revisions are protocol views, never an edit/delete surface. */
+    @GetMapping("/{productId}/team-price-policy/revisions")
+    @Operation(
+            operationId = "pageAdminTeamPricePolicyRevisions",
+            summary = "Page a listing's team-price policy revisions",
+            description =
+                    "Requires admin role, catalog:product:write and an active account. "
+                            + "Non-deleted revisions only, including expired and future policies, "
+                            + "ordered by version descending. Existing listing with no policy returns an empty page; "
+                            + "missing/deleted listing returns 404. page starts at 1; size is 1-100 (default 20). "
+                            + "Read-only snapshot; latest-policy authority and historical quotes are unchanged.")
+    public Result<PageResult<TeamPriceController.PolicyResponse>> policyRevisions(
+            @PathVariable UUID productId,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(PageQuery.MAX_SIZE) int size) {
+        var result =
+                prices.pagePolicyRevisions(productId, administrator(), new PageQuery(page, size));
+        return Result.ok(
+                new PageResult<>(
+                        result.items().stream()
+                                .map(TeamPriceController.PolicyResponse::from)
+                                .toList(),
                         result.total(),
                         result.page(),
                         result.size(),

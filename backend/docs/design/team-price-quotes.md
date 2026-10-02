@@ -167,6 +167,12 @@ V1 quotes support SGD only, exact positive cents fitting `numeric(18,2)`, strict
 
 Quote lifetime is an explicit v1 rule: at most **15 minutes**, clipped to policy expiry. Expiry is exclusive. Policy edits never alter old snapshots or extend their deadlines. A START intent accepts a quote only under the product row lock, after rechecking that the product is sellable and startable, that the quote belongs to this buyer and product, and that it is unexpired on the database clock read after the lock (`CatalogPurchaseSupport.lockQuotedStart`). It does not consult the latest policy. Quotes are not single-use: each acceptance issues a new intent, and each intent is consumed by at most one payment.
 
+## Admin revision history — 2026-10-02 (#254)
+
+`GET /api/v1/admin/products/{productId}/team-price-policy/revisions` (`pageAdminTeamPricePolicyRevisions`) returns the existing `PolicyResponse` items in a `Result<PageResult<PolicyResponse>>` envelope. It uses the other admin listing reads' login, admin-role, `catalog:product:write` and active-account checks. A missing or soft-deleted listing returns `CATALOG_404_001`; an existing listing without policies returns an empty page, including drafts and off-sale listings.
+
+The catalog-owned history query includes every non-deleted revision, regardless of expiry or future validity, ordered by version descending. `(product_id, version)` uniqueness makes this order deterministic and supports product-scoped reads through the existing V6 index. Legacy soft-deleted revisions are excluded consistently with the latest-policy read; this endpoint adds no deletion operation. Pagination is 1-based, default size 20, maximum 100, with a long offset. Count and items share a read-only repeatable-read transaction so concurrent revision appends cannot create mismatched totals. No row locks, per-item queries, new migration, provider calls or write side effects are introduced. Latest-policy authority, quote issuance and retained quote snapshots are unchanged.
+
 ## Persistence, authorization, and concurrency
 
 PostgreSQL 18 `domain` schema is authoritative; no new middleware or runtime dependencies. V6 adds new tables only. IDs are native UUIDv7, with the repository's existing application generator for quotes and PostgreSQL default for revision row IDs. DOs and mapper XML remain infrastructure-only.

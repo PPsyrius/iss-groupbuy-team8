@@ -3,6 +3,8 @@ package com.blocbuy.catalog.repository;
 import com.blocbuy.catalog.model.PriceReferences;
 import com.blocbuy.catalog.pricing.TeamPricePolicy;
 import com.blocbuy.catalog.pricing.TeamPriceQuote;
+import com.blocbuy.common.model.PageQuery;
+import com.blocbuy.common.model.PageResult;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Map;
@@ -21,6 +23,9 @@ public interface TeamPriceRepository {
     PriceReferences countProductReferences(UUID productId);
 
     Optional<TeamPricePolicy> findLatestPolicy(UUID productId);
+
+    /** Non-deleted revisions, including expired/future policies, ordered by version descending. */
+    PageResult<TeamPricePolicy> pagePolicyRevisions(UUID productId, PageQuery page);
 
     /**
      * Latest non-deleted revision per requested product in one batch; missing policies are absent.

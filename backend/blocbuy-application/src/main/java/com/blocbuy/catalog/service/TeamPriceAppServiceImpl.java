@@ -7,6 +7,8 @@ import com.blocbuy.catalog.pricing.TeamPriceQuote;
 import com.blocbuy.catalog.repository.ProductRepository;
 import com.blocbuy.catalog.repository.TeamPriceRepository;
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.common.model.PageQuery;
+import com.blocbuy.common.model.PageResult;
 import com.blocbuy.common.util.UuidV7;
 import com.blocbuy.identity.service.UserAppService;
 import java.time.Duration;
@@ -16,6 +18,7 @@ import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 /** Product-first short transactions keep each quote coherent with one policy revision. */
@@ -67,6 +70,19 @@ public class TeamPriceAppServiceImpl implements TeamPriceAppService {
         users.requireActive(actorId);
         return prices.findLatestPolicy(productId)
                 .orElseThrow(() -> new BizException(CatalogErrorCode.TEAM_PRICE_UNAVAILABLE));
+    }
+
+    /**
+     * Retain expired revisions without making them eligible for quotation or changing authority.
+     */
+    @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public PageResult<TeamPricePolicy> pagePolicyRevisions(
+            UUID productId, UUID actorId, PageQuery page) {
+        users.requireActive(actorId);
+        products.findById(productId)
+                .orElseThrow(() -> new BizException(CatalogErrorCode.PRODUCT_NOT_FOUND));
+        return prices.pagePolicyRevisions(productId, page);
     }
 
     @Override

@@ -4,6 +4,8 @@ import com.blocbuy.catalog.model.PriceReferences;
 import com.blocbuy.catalog.pricing.TeamPricePolicy;
 import com.blocbuy.catalog.pricing.TeamPriceQuote;
 import com.blocbuy.catalog.repository.TeamPriceRepository;
+import com.blocbuy.common.model.PageQuery;
+import com.blocbuy.common.model.PageResult;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Map;
@@ -36,6 +38,17 @@ public class TeamPriceRepositoryImpl implements TeamPriceRepository {
     public Optional<TeamPricePolicy> findLatestPolicy(UUID productId) {
         return Optional.ofNullable(
                 TeamPriceConverter.toDomain(mapper.selectLatestPolicy(productId)));
+    }
+
+    /** Count and data use the same predicate and the application's read snapshot. */
+    @Override
+    public PageResult<TeamPricePolicy> pagePolicyRevisions(UUID productId, PageQuery page) {
+        long total = mapper.countPolicyRevisions(productId);
+        var items =
+                mapper.selectPolicyRevisions(productId, page.size(), page.offset()).stream()
+                        .map(TeamPriceConverter::toDomain)
+                        .toList();
+        return PageResult.of(items, total, page);
     }
 
     @Override

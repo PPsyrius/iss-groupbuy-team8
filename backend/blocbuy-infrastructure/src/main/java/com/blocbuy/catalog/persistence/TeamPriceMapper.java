@@ -18,6 +18,13 @@ public interface TeamPriceMapper {
 
     TeamPricePolicyDO selectLatestPolicy(@Param("productId") UUID productId);
 
+    long countPolicyRevisions(@Param("productId") UUID productId);
+
+    List<TeamPricePolicyDO> selectPolicyRevisions(
+            @Param("productId") UUID productId,
+            @Param("limit") int limit,
+            @Param("offset") long offset);
+
     /** One latest revision per product; caller guards empty input. */
     List<TeamPricePolicyDO> selectLatestPolicies(@Param("productIds") Collection<UUID> productIds);
 
