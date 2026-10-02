@@ -273,24 +273,38 @@ test.describe("admin on dev @admin", () => {
 
   test("loads the listings, then creates a draft and deletes it", async ({ page }) => {
     const title = `E2E draft ${Date.now()}`;
-    await page.goto("/admin/listings");
-    await expect(page.getByRole("heading", { level: 1, name: "Listings" })).toBeVisible();
-    await expect(page.getByText(/^Showing \d+–\d+ of \d+$/u)).toBeVisible();
+    // The draft is real and the dev DB is shared, so a failure before the UI deletes it falls
+    // back to deleting it through the API.
+    let productId: string | undefined;
+    let deleted = false;
+    try {
+      await page.goto("/admin/listings");
+      await expect(page.getByRole("heading", { level: 1, name: "Listings" })).toBeVisible();
+      await expect(page.getByText(/^Showing \d+–\d+ of \d+$/u)).toBeVisible();
 
-    await page.goto("/admin/listings/new");
-    await page.getByRole("textbox", { name: "Title", exact: true }).fill(title);
-    await page.getByRole("textbox", { name: "Solo price" }).fill("1.00");
-    await page.getByRole("button", { name: "Save draft" }).click();
-    await expect(page.getByText(/· draft · v0$/u)).toBeVisible();
+      await page.goto("/admin/listings/new");
+      await page.getByRole("textbox", { name: "Title", exact: true }).fill(title);
+      await page.getByRole("textbox", { name: "Solo price" }).fill("1.00");
+      await page.getByRole("button", { name: "Save draft" }).click();
+      await expect(page.getByText(/· draft · v0$/u)).toBeVisible();
+      productId = /\/admin\/listings\/([^/?#]+)$/u.exec(new URL(page.url()).pathname)?.[1];
 
-    await page
-      .getByRole("region", { name: "Status" })
-      .getByRole("button", { name: "Delete draft" })
-      .click();
-    const dialog = page.getByRole("alertdialog", { name: "Delete this draft?" });
-    await dialog.getByRole("button", { name: "Delete draft" }).click();
-    await expect(page.getByText("Draft deleted")).toBeVisible();
-    await expect(page).toHaveURL(/\/admin\/listings$/u);
-    await expect(page.getByText(title)).toHaveCount(0);
+      await page
+        .getByRole("region", { name: "Status" })
+        .getByRole("button", { name: "Delete draft" })
+        .click();
+      const dialog = page.getByRole("alertdialog", { name: "Delete this draft?" });
+      await dialog.getByRole("button", { name: "Delete draft" }).click();
+      await expect(page.getByText("Draft deleted")).toBeVisible();
+      deleted = true;
+      await expect(page).toHaveURL(/\/admin\/listings$/u);
+      await expect(page.getByText(title)).toHaveCount(0);
+    } finally {
+      if (productId && !deleted) {
+        await page.request
+          .delete(`/api/v1/admin/products/${productId}?expectedVersion=0`)
+          .catch(() => undefined);
+      }
+    }
   });
 });
