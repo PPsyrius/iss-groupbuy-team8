@@ -146,50 +146,27 @@ export function PricePolicyPanel({
     isReloading: reloading,
     failed: reloadFailed,
   };
+  const serverVersion = serverRead.data;
   let body: ReactNode;
-  let version = rule ? `v${rule.version ?? 0}` : "—";
   if (stop?.kind === "conflict") {
-    const server = stop.serverVersion ?? serverRead.data;
-    version = `v${stop.loaded} → ${server === undefined ? "…" : `v${server}`}`;
     body = (
       <ConflictBody
         amount={stop.amount}
         loaded={stop.loaded}
-        server={server}
+        server={stop.serverVersion ?? serverVersion}
         originalPrice={originalPrice}
         {...reloadProps}
       />
     );
   } else if (stop?.kind === "unavailable") {
-    body = (
-      <>
-        <p className="text-warning-soft-foreground">
-          This listing changed state and can’t take a rule now. Reload to see what you can do.
-        </p>
-        <ReloadAction {...reloadProps} />
-      </>
-    );
-  } else if (isDraft) {
-    body = <RuleBody state={state} timing="none" rule={null} originalPrice={originalPrice} />;
-  } else if (policy.isPending) {
-    body = <Skeleton className="h-24 rounded-md" />;
-  } else if (policy.isError) {
-    body = (
-      <>
-        <p className="text-muted">We couldn’t load the bloc price rule.</p>
-        <Button
-          variant="outline"
-          fullWidth
-          className="min-h-11"
-          onPress={() => void policy.refetch()}
-        >
-          Reload
-        </Button>
-      </>
-    );
+    body = <UnavailableBody {...reloadProps} />;
   } else {
     body = (
-      <RuleBody
+      <CurrentRule
+        isDraft={isDraft}
+        isPending={policy.isPending}
+        isError={policy.isError}
+        onRetry={() => void policy.refetch()}
         state={state}
         timing={timing}
         rule={rule}
@@ -207,9 +184,10 @@ export function PricePolicyPanel({
             onDirtyChange={onDirtyChange}
           />
         ) : null}
-      </RuleBody>
+      </CurrentRule>
     );
   }
+  const version = versionLabel(rule, stop, serverVersion);
 
   return (
     <section
@@ -224,6 +202,83 @@ export function PricePolicyPanel({
       </div>
       {body}
     </section>
+  );
+}
+
+// The header's version: the loaded revision, or during a conflict both versions ("v3 → v4"), the
+// server's as "…" until the background read answers.
+function versionLabel(
+  rule: PolicyResponse | null,
+  stop: Stop | null,
+  serverVersion: number | undefined,
+): string {
+  if (stop?.kind !== "conflict") return rule ? `v${rule.version ?? 0}` : "—";
+  const server = stop.serverVersion ?? serverVersion;
+  const serverLabel = server === undefined ? "…" : `v${server}`;
+  return `v${stop.loaded} → ${serverLabel}`;
+}
+
+// The panel without a refused revision: a draft's unavailable copy, the rule read's pending and
+// failed states, or the latest rule with the revision form as children.
+function CurrentRule({
+  isDraft,
+  isPending,
+  isError,
+  onRetry,
+  state,
+  timing,
+  rule,
+  originalPrice,
+  onRevise,
+  children,
+}: Readonly<{
+  isDraft: boolean;
+  isPending: boolean;
+  isError: boolean;
+  onRetry: () => void;
+  state: PolicyState;
+  timing: RuleTiming;
+  rule: PolicyResponse | null;
+  originalPrice: string;
+  onRevise: (() => void) | undefined;
+  children: ReactNode;
+}>) {
+  if (isDraft)
+    return <RuleBody state={state} timing="none" rule={null} originalPrice={originalPrice} />;
+  if (isPending) return <Skeleton className="h-24 rounded-md" />;
+  if (isError)
+    return (
+      <>
+        <p className="text-muted">We couldn’t load the bloc price rule.</p>
+        <Button variant="outline" fullWidth className="min-h-11" onPress={onRetry}>
+          Reload
+        </Button>
+      </>
+    );
+  return (
+    <RuleBody
+      state={state}
+      timing={timing}
+      rule={rule}
+      originalPrice={originalPrice}
+      onRevise={onRevise}
+    >
+      {children}
+    </RuleBody>
+  );
+}
+
+// 4b.5's unavailable state after a 409: the listing left on sale while the form was open.
+function UnavailableBody(
+  reload: Readonly<{ onReload: () => void; isReloading: boolean; failed: boolean }>,
+) {
+  return (
+    <>
+      <p className="text-warning-soft-foreground">
+        This listing changed state and can’t take a rule now. Reload to see what you can do.
+      </p>
+      <ReloadAction {...reload} />
+    </>
   );
 }
 
@@ -266,6 +321,8 @@ function RuleBody({
   const window = rule ? formatWindow(rule.validFrom, rule.validUntil) : null;
   // The action shows unless the form is open; on a draft or off sale it stays, disabled, as 4b.1.
   const showAction = onRevise !== undefined || unavailable;
+  const actionVariant = state === "active" || state === "scheduled" ? "outline" : "secondary";
+  const pressProps = onRevise ? { onPress: onRevise } : {};
   return (
     <>
       {rule?.amount ? (
@@ -285,11 +342,11 @@ function RuleBody({
       <p className="text-muted">{bodies[state]}</p>
       {showAction ? (
         <Button
-          variant={state === "active" || state === "scheduled" ? "outline" : "secondary"}
+          variant={actionVariant}
           fullWidth
           className="min-h-11"
           isDisabled={unavailable}
-          {...(onRevise ? { onPress: onRevise } : {})}
+          {...pressProps}
         >
           {rule ? "New revision" : "Add a rule"}
         </Button>
