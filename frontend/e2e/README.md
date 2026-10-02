@@ -6,6 +6,10 @@
 
 The production build drops `?msw=1`, so a spec that needs data imports `test` and `expect` from `./fixtures/api` and asks for the `api` fixture. It answers every `/api/v1` call from a per-test `api.state` (signed-in `me`, payments switch, listings, quotes, My blocs, orders, intents, checkout sessions with a fixed UUID payment id, receipt reads), records each call for `api.calls()`, and takes per-test handlers through `api.override()`. Unserved paths answer 501 `E2E_501_UNSTUBBED`. Tests that do not ask for `api` reach the real backend, which keeps the `@auth` half honest on dev.
 
+### Against dev (`E2E_TARGET=dev`)
+
+The specs that take the `api` fixture (login's anonymous half, buyer-journey, join-refusal, quote, admin) stay on stubs against dev too: the catch-all route matches the `/api/v1/` path on any host and is registered before the first `goto`, so no request reaches the real backend, and an unserved path answers 501 instead of falling through. The buyer journey also routes `https://checkout.stripe.com/**`, so no Checkout Session is opened. In the `e2e-dev` job they make no writes on dev; only `smoke.spec.ts` and the `@auth`/`@admin` cases (which skip without a storage state) talk to the real backend.
+
 ## Buyer journey (`buyer-journey.spec.ts`)
 
 A signed-in buyer, all on stubs: catalog → listing → quote sheet → Continue to payment → Stripe (a routed 302 back to `/payments/return`) → receipt Waiting then Paid → My blocs. It asserts that START carries the sheet's quote id (US26). It runs on every target and proves the frontend's part only.
