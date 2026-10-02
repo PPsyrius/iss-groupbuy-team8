@@ -462,11 +462,13 @@ public final class StripeCheckoutService {
                 && evidence == PaymentBusinessPort.FulfilmentEvidence.NONE;
     }
 
-    /** Bounded local operations hook; each failed row is parked for operator review. */
+    /** Bounded local operations hook; reserve a durable page before provider I/O. */
     public int expireDueSessions() {
         outsideTransaction();
+        List<CheckoutPayment> page =
+                tx.execute(status -> repository.nextExpiryPage(repository.now(), 100));
         int processed = 0;
-        for (CheckoutPayment payment : repository.dueForExpiry(repository.now(), 100)) {
+        for (CheckoutPayment payment : Objects.requireNonNull(page)) {
             try {
                 var current = gateway.retrieveCheckoutSession(payment.sessionId());
                 if ("open".equals(current.status())) {

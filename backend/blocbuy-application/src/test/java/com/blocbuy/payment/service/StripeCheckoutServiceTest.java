@@ -412,7 +412,7 @@ class StripeCheckoutServiceTest {
                 session("expired", kind.equals("paid") ? "paid" : "unpaid", "pi_x", "processing");
         when(gateway.retrieveCheckoutSession(any())).thenReturn(snapshot);
         service.expireRequestedSession(id);
-        when(repository.dueForExpiry(any(), anyInt())).thenReturn(List.of(saved));
+        when(repository.nextExpiryPage(any(), anyInt())).thenReturn(List.of(saved));
         when(repository.now()).thenReturn(NOW.plusSeconds(8000));
         assertThat(service.expireDueSessions()).isEqualTo(1);
         verify(gateway, never()).expireCheckoutSession(any());
@@ -499,7 +499,7 @@ class StripeCheckoutServiceTest {
         doThrow(new IllegalStateException("timeout")).when(gateway).createCheckoutSession(any());
         assertThatThrownBy(() -> service.prepare(BUYER, INTENT, "key"))
                 .isInstanceOf(IllegalStateException.class);
-        when(repository.dueForExpiry(any(), anyInt())).thenReturn(List.of());
+        when(repository.nextExpiryPage(any(), anyInt())).thenReturn(List.of());
         assertThat(service.expireDueSessions()).isZero();
         when(repository.now()).thenReturn(NOW.plusSeconds(8000));
         assertThat(service.expireDueSessions()).isZero();
@@ -693,7 +693,7 @@ class StripeCheckoutServiceTest {
     void expiryCollectorExpiresOpenSessionsAndObservesClosedOnes() {
         UUID id = prepare();
         when(repository.now()).thenReturn(NOW.plusSeconds(8000));
-        when(repository.dueForExpiry(any(), anyInt())).thenReturn(List.of(saved));
+        when(repository.nextExpiryPage(any(), anyInt())).thenReturn(List.of(saved));
         when(gateway.retrieveCheckoutSession(any()))
                 .thenReturn(session("open", "unpaid", null, null));
         when(gateway.expireCheckoutSession(any()))
@@ -741,7 +741,7 @@ class StripeCheckoutServiceTest {
                         CheckoutPayment.Status.CREATED,
                         0);
         when(repository.now()).thenReturn(NOW.plusSeconds(8000));
-        when(repository.dueForExpiry(any(), anyInt())).thenReturn(List.of(first, second, third));
+        when(repository.nextExpiryPage(any(), anyInt())).thenReturn(List.of(first, second, third));
         when(repository.findById(any()))
                 .thenAnswer(
                         call -> {

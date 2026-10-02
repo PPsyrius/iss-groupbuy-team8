@@ -75,4 +75,7 @@ public interface CheckoutPaymentRepository {
 
     /** Expired, bound, created attempts not already parked in operator review. */
     List<CheckoutPayment> dueForExpiry(Instant now, int limit);
+
+    /** Reserve the next page in the caller's short transaction; wrap at the end of the queue. */
+    List<CheckoutPayment> nextExpiryPage(Instant now, int limit);
 }
