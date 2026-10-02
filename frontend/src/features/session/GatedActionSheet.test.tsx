@@ -1,6 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+
+import { formatDeadlineShort } from "@/features/catalog/deal-time";
 
 import { GatedActionSheet } from "./GatedActionSheet";
 
@@ -53,6 +55,38 @@ describe("GatedActionSheet", () => {
     await screen.findByRole("dialog");
     await userEvent.click(document.body);
     expect(onOpenChange).toHaveBeenCalledExactlyOnceWith(false);
+  });
+
+  // FB-11: artboard 3c.4 / 3c.7 carry the listing's trust triptych between the copy and the actions.
+  it("shows the trust triptych when the listing has a price and a deadline", async () => {
+    const closesMs = Date.UTC(2026, 9, 2, 12, 15);
+    render(
+      <GatedActionSheet
+        isOpen
+        onOpenChange={() => {}}
+        returnTo="/products/1"
+        trust={{ payNow: "S$71.00", closesMs }}
+      />,
+    );
+    const dialog = await screen.findByRole("dialog", { name: "Sign in to hold your seat" });
+    const terms = within(dialog).getAllByRole("term");
+    expect(terms.map((t) => t.textContent)).toEqual([
+      "You pay now",
+      "Bloc closes",
+      "If it doesn’t fill",
+    ]);
+    const values = within(dialog).getAllByRole("definition");
+    expect(values.map((d) => d.textContent)).toEqual([
+      "S$71.00",
+      formatDeadlineShort(closesMs),
+      "Refunded in full",
+    ]);
+  });
+
+  it("leaves the triptych out without a price and a deadline", async () => {
+    render(<GatedActionSheet isOpen onOpenChange={() => {}} returnTo="/products/1" />);
+    const dialog = await screen.findByRole("dialog", { name: "Sign in to hold your seat" });
+    expect(within(dialog).queryByRole("term")).toBeNull();
   });
 
   it("renders nothing while closed", () => {

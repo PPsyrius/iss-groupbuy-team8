@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { OK_CODE } from "@/api/envelope";
 import { getListingQueryKey } from "@/api/generated/@tanstack/react-query.gen";
 import type { ProductDetailResponse } from "@/api/generated/types.gen";
+import { formatDeadlineShort } from "@/features/catalog/deal-time";
 import { SHARER_DEADLINE_MS } from "@/features/share/invite-sharer";
 import { server } from "@/test/msw";
 import { renderRoute, serveAnonymous, serveSignedIn } from "@/test/render-route";
@@ -223,6 +224,16 @@ describe("/products/$productId gated actions", () => {
     await userEvent.click(start!);
     const dialog = await screen.findByRole("dialog", { name: "Sign in to hold your seat" });
     expect(dialog).toBeVisible();
+    // FB-11: the sheet carries the listing's trust triptych (artboard 3c.4 / 3c.7).
+    expect(
+      within(dialog)
+        .getAllByRole("definition")
+        .map((d) => d.textContent),
+    ).toEqual([
+      "S$71.00",
+      formatDeadlineShort(Date.parse("2099-01-01T00:00:00Z")),
+      "Refunded in full",
+    ]);
     await userEvent.click(screen.getByRole("button", { name: "Not now" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });

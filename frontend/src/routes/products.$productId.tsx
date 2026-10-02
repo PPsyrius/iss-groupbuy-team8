@@ -9,7 +9,6 @@ import type { ProductDetailResponse } from "@/api/generated/types.gen";
 import { NotFoundCard } from "@/components/ErrorCard";
 import { blocFilter } from "@/features/blocs/bloc-status";
 import { myTeamsQuery } from "@/features/blocs/my-teams-query";
-import { formatDeadlineShort } from "@/features/catalog/deal-time";
 import { DealProgress, useNow } from "@/features/catalog/DealProgress";
 import {
   blocHeadline,
@@ -22,6 +21,7 @@ import {
 import { formatPrice, Price } from "@/features/catalog/Price";
 import { ProductGallery } from "@/features/catalog/ProductGallery";
 import { listingSearchSchema } from "@/features/catalog/products-search";
+import { TrustTriptych } from "@/features/catalog/TrustTriptych";
 import { QuoteSheet } from "@/features/payment/QuoteSheet";
 import { useCheckout } from "@/features/payment/use-checkout";
 import { useQuote } from "@/features/payment/use-quote";
@@ -159,6 +159,11 @@ function ProductDetailPage() {
         isOpen={gateOpen}
         onOpenChange={setGateOpen}
         returnTo={`/products/${productId}`}
+        trust={
+          groupPrice === undefined || view.closesMs === null
+            ? undefined
+            : { payNow: formatPrice(groupPrice, currency), closesMs: view.closesMs }
+        }
       />
       <QuoteSheet
         isOpen={start.isOpen}
@@ -458,26 +463,6 @@ function StockLine({ product: p }: Readonly<{ product: ProductDetailResponse }>)
       ) : null}
       {p.stock === undefined ? null : <span className="text-muted">{p.stock} in stock</span>}
     </p>
-  );
-}
-
-function TrustTriptych({ payNow, closesMs }: Readonly<{ payNow: string; closesMs: number }>) {
-  const cell = "flex flex-col gap-0.5 rounded-lg border-border border p-3";
-  return (
-    <dl className="grid grid-cols-3 gap-2">
-      <div className={cell}>
-        <dt className="text-muted text-xs">You pay now</dt>
-        <dd className="text-accent-soft-foreground text-sm font-semibold tabular-nums">{payNow}</dd>
-      </div>
-      <div className={cell}>
-        <dt className="text-muted text-xs">Bloc closes</dt>
-        <dd className="text-sm font-semibold tabular-nums">{formatDeadlineShort(closesMs)}</dd>
-      </div>
-      <div className={cell}>
-        <dt className="text-muted text-xs">If it doesn’t fill</dt>
-        <dd className="text-success-soft-foreground text-sm font-semibold">Refunded in full</dd>
-      </div>
-    </dl>
   );
 }
 
