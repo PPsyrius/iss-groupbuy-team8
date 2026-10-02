@@ -13,6 +13,7 @@ import { toCents } from "@/features/admin/money";
 
 const E = {
   badRequest: { code: "COMMON_400_001", status: 400, message: "Invalid request" },
+  validationFailed: { code: "COMMON_400_002", status: 400, message: "Request validation failed" },
   forbidden: { code: "COMMON_403_001", status: 403, message: "Permission denied" },
   notFound: { code: "CATALOG_404_001", status: 404, message: "Product not found" },
   productInvalid: { code: "CATALOG_400_002", status: 400, message: "Invalid listing" },
@@ -269,7 +270,8 @@ const detail = (store: AdminStore, row: AdminRow) => ({
 const PRODUCT_NO = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 
 // Bean validation on `ListingContent`, reported the way GlobalExceptionHandler does: 400
-// COMMON_400_001 with `errors: [{field, message}]` under the request's field path.
+// COMMON_400_002 with `errors: [{field, message}]` under the request's field path. The domain's
+// own CATALOG_400_002 (#323) repeats these rules with the same paths, so it is not reached here.
 function listingViolations(listing: Partial<ListingContent> | undefined) {
   const errors: { field: string; message: string }[] = [];
   const add = (field: string, message: string) =>
@@ -364,7 +366,7 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
         const supplied = body.productNo ?? null;
         if (supplied !== null && (typeof supplied !== "string" || !PRODUCT_NO.test(supplied)))
           errors.unshift({ field: "productNo", message: "must match the product number pattern" });
-        if (errors.length > 0 || !body.listing) return fail(E.badRequest, errors);
+        if (errors.length > 0 || !body.listing) return fail(E.validationFailed, errors);
         if (supplied !== null && store.rows.some((r) => r.productNo === supplied))
           return fail(E.numberConflict);
         const row: AdminRow = {
@@ -411,7 +413,7 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
         const body = await bodyOf<{ listing: ListingContent; expectedVersion: number }>(request);
         const next = body.listing;
         const errors = listingViolations(next);
-        if (errors.length > 0 || !next) return fail(E.badRequest, errors);
+        if (errors.length > 0 || !next) return fail(E.validationFailed, errors);
         const row = store.find(param(params.productId));
         if (!row) return fail(E.notFound);
         if (stale(store, row, body.expectedVersion)) return staleAt(E.versionConflict, row.version);

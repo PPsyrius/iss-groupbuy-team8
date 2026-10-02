@@ -246,13 +246,13 @@ describe("create", () => {
     ).toMatchObject({ status: 409, code: "CATALOG_409_003" });
   });
 
-  it("reports bean-validation failures as field violations", async () => {
+  it("reports bean-validation failures as field violations with 400 COMMON_400_002", async () => {
     serveAdmin();
     const res = await call("POST", "/admin/products", {
       productNo: "bad no!",
       listing: content({ title: " ", originalPrice: "0" }),
     });
-    expect(res).toMatchObject({ status: 400, code: "COMMON_400_001" });
+    expect(res).toMatchObject({ status: 400, code: "COMMON_400_002" });
     expect(res.errors).toEqual(
       expect.arrayContaining([
         { field: "productNo", message: expect.any(String) },

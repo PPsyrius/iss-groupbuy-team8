@@ -116,8 +116,8 @@ describe("/admin/listings/new", () => {
       http.post("*/api/v1/admin/products", () =>
         HttpResponse.json(
           {
-            code: "COMMON_400_001",
-            message: "Invalid request",
+            code: "COMMON_400_002",
+            message: "Request validation failed",
             errors: [{ field: "listing.subtitle", message: "size must be between 0 and 256" }],
           },
           { status: 400 },
@@ -132,6 +132,65 @@ describe("/admin/listings/new", () => {
       "aria-invalid",
       "true",
     );
+  });
+
+  // #323 (BA-6): a domain 400 names the request path of the field it refuses.
+  it("puts a catalog domain 400 on the field it names", async () => {
+    const user = userEvent.setup();
+    serveAdmin();
+    server.use(
+      http.post("*/api/v1/admin/products", () =>
+        HttpResponse.json(
+          {
+            code: "CATALOG_400_002",
+            message: "Invalid listing",
+            errors: [
+              { field: "listing.originalPrice", message: "Must have at most two decimal places" },
+            ],
+          },
+          { status: 400 },
+        ),
+      ),
+    );
+    renderRoute("/admin/listings/new");
+    await fillRequired(user);
+    await user.click(screen.getByRole("button", { name: "Save draft" }));
+    expect(await screen.findByText("Must have at most two decimal places")).toBeVisible();
+    expect(screen.getByRole("textbox", { name: "Solo price" })).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    expect(screen.queryByText("Some fields need another look")).not.toBeInTheDocument();
+  });
+
+  // The form has no product number field since A3-08, so that path, like any path without a
+  // field, is read in the form's alert; a named field still gets its own message.
+  it("reads a domain 400 on a path without a field in the form's alert", async () => {
+    const user = userEvent.setup();
+    serveAdmin();
+    server.use(
+      http.post("*/api/v1/admin/products", () =>
+        HttpResponse.json(
+          {
+            code: "CATALOG_400_002",
+            message: "Invalid listing",
+            errors: [
+              { field: "productNo", message: "Must start with a letter or digit." },
+              { field: "listing.title", message: "Must be nonblank and at most 256 characters" },
+            ],
+          },
+          { status: 400 },
+        ),
+      ),
+    );
+    renderRoute("/admin/listings/new");
+    await fillRequired(user);
+    await user.click(screen.getByRole("button", { name: "Save draft" }));
+    const alert = await screen.findByRole("alert");
+    expect(within(alert).getByText("Some fields need another look")).toBeVisible();
+    expect(within(alert).getByText("Must start with a letter or digit.")).toBeVisible();
+    expect(screen.getByText("Must be nonblank and at most 256 characters")).toBeVisible();
+    expect(screen.getByRole("textbox", { name: "Title" })).toHaveAttribute("aria-invalid", "true");
   });
 
   it("says so when the server refuses the listing as a whole", async () => {
