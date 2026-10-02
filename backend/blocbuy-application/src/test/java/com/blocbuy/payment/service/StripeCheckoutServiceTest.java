@@ -708,8 +708,9 @@ class StripeCheckoutServiceTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void expiryFailureParksSecondRowAndContinuesToThird(boolean reviewWriteFails) {
+    @CsvSource({"provider,false", "null,true", "arithmetic,true", "argument,true"})
+    void expiryFailureParksSecondRowAndContinuesToThird(
+            String failureType, boolean reviewWriteFails) {
         prepare();
         CheckoutPayment first = saved;
         CheckoutPayment second =
@@ -763,10 +764,22 @@ class StripeCheckoutServiceTest {
                 .thenAnswer(
                         call -> {
                             String sessionId = call.getArgument(0);
-                            if (sessionId.equals(second.sessionId()))
-                                throw new BizException(
-                                        com.blocbuy.payment.exception.PaymentErrorCode
-                                                .PAYMENT_PROVIDER_ERROR);
+                            if (sessionId.equals(second.sessionId())) {
+                                switch (failureType) {
+                                    case "provider" ->
+                                            throw new BizException(
+                                                    com.blocbuy.payment.exception.PaymentErrorCode
+                                                            .PAYMENT_PROVIDER_ERROR);
+                                    case "null" -> {
+                                        return null;
+                                    }
+                                    case "arithmetic" ->
+                                            throw new ArithmeticException("bad amount");
+                                    case "argument" ->
+                                            throw new IllegalArgumentException("bad state");
+                                    default -> throw new AssertionError("Unexpected failure type");
+                                }
+                            }
                             CheckoutPayment payment =
                                     sessionId.equals(first.sessionId()) ? first : third;
                             return new CheckoutGateway.Session(
@@ -783,7 +796,7 @@ class StripeCheckoutServiceTest {
                                     payment.sessionExpiresAt());
                         });
         if (reviewWriteFails) {
-            doThrow(new IllegalStateException("review unavailable"))
+            doThrow(new IllegalArgumentException("review unavailable"))
                     .when(repository)
                     .review(second.id(), "EXPIRY_FAILED", "system");
         }
