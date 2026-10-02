@@ -175,6 +175,9 @@ importers:
       '@heroui/styles':
         specifier: 3.2.6
         version: 3.2.6(tailwind-merge@3.4.0)(tailwindcss@4.3.3)
+      '@internationalized/date':
+        specifier: 3.12.4
+        version: 3.12.4
       '@tanstack/react-form':
         specifier: 1.33.5
         version: 1.33.5(react-dom@19.3.0(react@19.3.0))(react@19.3.0)

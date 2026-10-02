@@ -5,7 +5,7 @@ import {
   countsOptions,
   countsQueryKey,
   getAdminListingOptions,
-  getTeamPricePolicyOptions,
+  getTeamPricePolicyQueryKey,
   pageAdminListingsOptions,
   pageAdminListingsQueryKey,
 } from "@/api/generated/@tanstack/react-query.gen";
@@ -15,14 +15,18 @@ import {
   createAdminListing,
   deleteAdminListing,
   getAdminListing,
+  getTeamPricePolicy,
   reviseAdminListing,
 } from "@/api/generated/sdk.gen";
 import type {
   CreateListingRequest,
   ListingStatusRequest,
   PolicyRequest,
+  PolicyResponse,
   UpdateListingRequest,
 } from "@/api/generated/types.gen";
+
+import { isNoRule } from "./policy";
 
 // Admin data access wraps the resource-specific generated operations (#253, BA-9).
 // Every read unwraps the Result envelope with `select`; every write unwraps on success,
@@ -88,10 +92,34 @@ export function adminServerVersionOptions(productId: string) {
   });
 }
 
+// The listing's latest bloc price rule (A2-01), or `null` when it has none: the read answers 409
+// `CATALOG_409_001` for that, not 404, and the panel shows "No rule yet" rather than an error.
+async function readPolicy(productId: string, signal: AbortSignal): Promise<PolicyResponse | null> {
+  try {
+    const { data } = await getTeamPricePolicy({ path: { productId }, signal, throwOnError: true });
+    return unwrapResult(data, { allowVoid: false });
+  } catch (error) {
+    if (isNoRule(error)) return null;
+    throw error;
+  }
+}
+
 export function adminPolicyOptions(productId: string) {
   return queryOptions({
-    ...getTeamPricePolicyOptions({ path: { productId } }),
-    select: (r) => unwrapResult(r, { allowVoid: false }),
+    queryKey: getTeamPricePolicyQueryKey({ path: { productId } }),
+    queryFn: ({ signal }) => readPolicy(productId, signal),
+    retry: adminRetry,
+  });
+}
+
+// The rule version the server holds now (0 when there is no rule), for the panel's conflict line
+// when a 412 leaves the version out (A2-01 step 6). Its own key, so the panel keeps showing what
+// the admin loaded until they press Reload.
+export function adminPolicyVersionOptions(productId: string) {
+  return queryOptions({
+    queryKey: ["admin", "policy-server-version", productId] as const,
+    queryFn: async ({ signal }) => (await readPolicy(productId, signal))?.version ?? 0,
+    staleTime: 0,
     retry: adminRetry,
   });
 }
