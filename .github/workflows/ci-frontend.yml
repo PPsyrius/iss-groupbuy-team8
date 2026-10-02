@@ -265,7 +265,7 @@ jobs:
             -Dsonar.tests=src
             -Dsonar.test.inclusions=src/**/*.test.ts,src/**/*.test.tsx,src/test/**
             -Dsonar.exclusions=src/**/*.test.ts,src/**/*.test.tsx,src/test/**,src/api/generated/**,src/routeTree.gen.ts
-            -Dsonar.coverage.exclusions=src/**/*.test.ts,src/**/*.test.tsx,src/test/**,src/api/generated/**,src/routeTree.gen.ts
+            -Dsonar.coverage.exclusions=src/**/*.test.ts,src/**/*.test.tsx,src/test/**,src/api/generated/**,src/routeTree.gen.ts,src/main.tsx,src/router.tsx,src/dev/**
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.typescript.tsconfigPaths=tsconfig.json
 
