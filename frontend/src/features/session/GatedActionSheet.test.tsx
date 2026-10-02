@@ -38,6 +38,23 @@ describe("GatedActionSheet", () => {
     expect(warnings).not.toContainEqual(expect.stringContaining("PressResponder"));
   });
 
+  // Dismissal now runs through `Modal.Backdrop`'s own `onOpenChange` (FB-10).
+  it("closes on Escape", async () => {
+    const onOpenChange = vi.fn<(open: boolean) => void>();
+    render(<GatedActionSheet isOpen onOpenChange={onOpenChange} returnTo="/products/1" />);
+    await screen.findByRole("dialog");
+    await userEvent.keyboard("{Escape}");
+    expect(onOpenChange).toHaveBeenCalledExactlyOnceWith(false);
+  });
+
+  it("closes on a press outside the dialog (isDismissable)", async () => {
+    const onOpenChange = vi.fn<(open: boolean) => void>();
+    render(<GatedActionSheet isOpen onOpenChange={onOpenChange} returnTo="/products/1" />);
+    await screen.findByRole("dialog");
+    await userEvent.click(document.body);
+    expect(onOpenChange).toHaveBeenCalledExactlyOnceWith(false);
+  });
+
   it("renders nothing while closed", () => {
     render(<GatedActionSheet isOpen={false} onOpenChange={() => {}} returnTo="/products/1" />);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

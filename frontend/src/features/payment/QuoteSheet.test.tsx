@@ -57,6 +57,21 @@ describe("QuoteSheet", () => {
     expect(warn).not.toHaveBeenCalledWith(expect.stringContaining("PressResponder"));
   });
 
+  // Dismissal now runs through `Modal.Backdrop`'s own `onOpenChange` (FB-10).
+  it("closes on Escape", async () => {
+    const props = renderSheet(ready(now + 60_000));
+    await screen.findByRole("dialog");
+    await userEvent.keyboard("{Escape}");
+    expect(props.onOpenChange).toHaveBeenCalledExactlyOnceWith(false);
+  });
+
+  it("closes on a press outside the dialog (isDismissable)", async () => {
+    const props = renderSheet(ready(now + 60_000));
+    await screen.findByRole("dialog");
+    await userEvent.click(document.body);
+    expect(props.onOpenChange).toHaveBeenCalledExactlyOnceWith(false);
+  });
+
   it("blocks payment once the quote expires and offers a new price", async () => {
     const props = renderSheet(ready(now - 1));
     expect(await screen.findByText("This price has expired")).toBeInTheDocument();
