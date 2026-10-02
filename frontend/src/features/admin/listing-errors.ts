@@ -28,7 +28,11 @@ function statusOf(error: ApiError): number {
   return fromCode ? Number(fromCode) : error.status;
 }
 
-export function refusalOf(error: unknown): Refusal {
+// `refused` is the message for a 4xx with nothing more specific; the rule panel names its rule.
+export function refusalOf(
+  error: unknown,
+  refused = "The server refused this listing. Check the fields and try again.",
+): Refusal {
   if (!(error instanceof ApiError))
     return { kind: "message", message: "Something went wrong on our side. Try again." };
   if (error.code === "CATALOG_412_002")
@@ -38,12 +42,11 @@ export function refusalOf(error: unknown): Refusal {
   const status = statusOf(error);
   if (status === 403) return { kind: "forbidden" };
   if (status === 401) return { kind: "session" };
+  // Bean validation (`COMMON_400_002`) and, since #323, a field-specific `CATALOG_400_002` both
+  // name the request path of each field (BA-6). A path with no form field (top-level `productNo`)
+  // reaches the form's alert; a 400 without `errors` falls through to the message below.
   const fields = fieldViolations(error);
   if (Object.keys(fields).length > 0) return { kind: "fields", fields };
-  if (status >= 400 && status < 500)
-    return {
-      kind: "message",
-      message: "The server refused this listing. Check the fields and try again.",
-    };
+  if (status >= 400 && status < 500) return { kind: "message", message: refused };
   return { kind: "message", message: "Something went wrong on our side. Try again." };
 }

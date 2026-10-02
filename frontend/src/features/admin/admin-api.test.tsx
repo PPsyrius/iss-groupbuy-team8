@@ -12,6 +12,7 @@ import {
   adminListingOptions,
   adminListingsOptions,
   adminPolicyOptions,
+  adminPolicyVersionOptions,
   adminRetry,
   adminServerVersionOptions,
   forgetListingPages,
@@ -76,9 +77,42 @@ describe("admin reads", () => {
     );
     const qc = new QueryClient();
     const one = adminListingOptions(productId);
-    const rule = adminPolicyOptions(productId);
     expect(one.select?.(await qc.fetchQuery(one))).toEqual(row);
-    expect(rule.select?.(await qc.fetchQuery(rule))).toEqual(policy);
+    expect(await qc.fetchQuery(adminPolicyOptions(productId))).toEqual(policy);
+  });
+
+  it("reads no rule yet (409 CATALOG_409_001, not 404) as null", async () => {
+    server.use(
+      http.get("*/api/v1/products/:id/team-price-policy", () =>
+        HttpResponse.json({ code: "CATALOG_409_001", message: "none" }, { status: 409 }),
+      ),
+    );
+    const qc = new QueryClient();
+    expect(await qc.fetchQuery(adminPolicyOptions(productId))).toBeNull();
+    expect(await qc.fetchQuery(adminPolicyVersionOptions(productId))).toBe(0);
+  });
+
+  it("reads the rule's server version under its own key, away from the panel's entry", async () => {
+    server.use(
+      http.get("*/api/v1/products/:id/team-price-policy", () =>
+        ok({ productId, amount: "46.80", currency: "sgd", version: 4 }),
+      ),
+    );
+    const qc = new QueryClient();
+    expect(await qc.fetchQuery(adminPolicyVersionOptions(productId))).toBe(4);
+    expect(qc.getQueryData(adminPolicyOptions(productId).queryKey)).toBeUndefined();
+  });
+
+  it("rejects any other policy read failure", async () => {
+    server.use(
+      http.get("*/api/v1/products/:id/team-price-policy", () =>
+        HttpResponse.json({ code: "CATALOG_404_001", message: "gone" }, { status: 404 }),
+      ),
+    );
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    await expect(qc.fetchQuery(adminPolicyOptions(productId))).rejects.toMatchObject({
+      status: 404,
+    });
   });
 
   it("reads the server's version under its own key, away from the editor's entry", async () => {
@@ -122,6 +156,7 @@ describe("admin read retries", () => {
     expect(adminListingOptions("p1").retry).toBe(adminRetry);
     expect(adminServerVersionOptions("p1").retry).toBe(adminRetry);
     expect(adminPolicyOptions("p1").retry).toBe(adminRetry);
+    expect(adminPolicyVersionOptions("p1").retry).toBe(adminRetry);
   });
 });
 

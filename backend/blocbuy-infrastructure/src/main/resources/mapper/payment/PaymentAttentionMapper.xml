@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blocbuy.payment.persistence.PaymentAttentionMapper">
+    <!-- Payment owns this explicit read model, not the joined aggregates (backend ADR 0006). -->
+    <sql id="attentionPopulation">
+        FROM biz_group_participation_receipt receipt
+        JOIN biz_payment payment ON payment.id = receipt.payment_id
+            AND NOT payment.deleted AND payment.status = 'succeeded'
+        LEFT JOIN biz_refund refund ON refund.payment_id = payment.id AND NOT refund.deleted
+        WHERE receipt.outcome = 'compensation_required' AND NOT receipt.deleted
+            AND (refund.status IS NULL OR refund.status != 'succeeded')
+    </sql>
+    <select id="countAttention" resultType="long">
+        SELECT count(*) <include refid="attentionPopulation"/>
+    </select>
+    <select id="pageAttention" resultType="com.blocbuy.payment.model.PaymentAttention">
+        WITH attention AS (
+            SELECT payment.id AS payment_id, payment.user_id,
+                COALESCE(receipt.deal_id,
+                    CASE WHEN payment.operation = 'JOIN' THEN payment.business_id END) AS deal_id,
+                receipt.reason_code, payment.amount, payment.currency,
+                COALESCE(refund.status, 'pending') AS refund_status,
+                receipt.create_time AS occurred_at
+            <include refid="attentionPopulation"/>
+            ORDER BY receipt.create_time DESC, payment.id DESC
+            LIMIT #{limit} OFFSET #{offset}
+        )
+        SELECT attention.payment_id,
+            CASE WHEN NULLIF(trim(buyer.nickname), '') IS NOT NULL
+                AND strpos(buyer.nickname, '@') = 0
+                AND (buyer.email IS NULL OR lower(trim(buyer.nickname)) != lower(split_part(buyer.email, '@', 1)))
+                THEN buyer.nickname ELSE 'Unknown buyer' END AS buyer_nickname,
+            attention.deal_id, deal.deal_no, attention.reason_code, attention.amount,
+            attention.currency, attention.refund_status, attention.occurred_at
+        FROM attention
+        LEFT JOIN sys_user buyer ON buyer.id = attention.user_id AND NOT buyer.deleted
+        LEFT JOIN biz_group_deal deal ON deal.id = attention.deal_id
+        ORDER BY attention.occurred_at DESC, attention.payment_id DESC
+    </select>
+</mapper>

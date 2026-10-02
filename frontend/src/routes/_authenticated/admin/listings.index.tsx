@@ -107,8 +107,11 @@ const pagerButton = buttonVariants({ variant: "outline" }) + " min-h-11 px-4 tex
 function ListingsPage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
-  const { data } = useSuspenseQuery(listOptions(search));
+  const { data, error } = useSuspenseQuery(listOptions(search));
   const counts = useStatusCounts();
+  // A refetch keeps the cached page and does not throw, so a role revoked after the table loaded
+  // is rethrown here to reach Access denied (as on the dashboard, #328).
+  if (isAdminDenied(error)) throw error;
   const items = data.items ?? noRows;
   const total = data.total ?? 0;
   const lastPage = Math.max(1, Math.ceil(total / search.size));

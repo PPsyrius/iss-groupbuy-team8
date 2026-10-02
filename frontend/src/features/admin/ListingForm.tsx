@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 
 import { CATEGORIES, categoryLabel } from "@/features/catalog/categories";
 
+import { messageOf } from "./field-message";
 import { FrozenLabel, frozenInput } from "./FrozenField";
 import { ImageUrlsField } from "./ImageUrlsField";
 import type { ListingFormValues } from "./listing-form";
@@ -58,18 +59,6 @@ function isFieldName(name: string): name is FieldName {
   return fieldNames.has(name) || /^images\[\d+\]$/.test(name);
 }
 
-// TanStack Form keeps every validator's errors: valibot issues from the schema, or the plain
-// strings a failed save puts there.
-function messageOf(errors: readonly unknown[]): string | undefined {
-  const messages = errors.flatMap((e) => {
-    if (typeof e === "string") return [e];
-    if (e && typeof e === "object" && "message" in e && typeof e.message === "string")
-      return [e.message];
-    return [];
-  });
-  return messages.length > 0 ? messages.join(" ") : undefined;
-}
-
 function labelOf(name: string): string {
   const row = /^images\[(\d+)\]$/.exec(name)?.[1];
   return row === undefined ? (fieldLabels[name] ?? name) : `Image URL ${Number(row) + 1}`;
@@ -100,6 +89,8 @@ const fixedCategories = CATEGORIES.flatMap((c) => (c.value === null ? [] : [c]))
 // In the editor (A1-06) a published listing passes `frozen`: Solo price, Currency and Stock turn
 // read-only with their 4b.3 reasons and the server's Sold count joins them. `guardUnsaved` asks
 // before a navigation would drop unsaved edits; a navigation made by the save itself passes.
+// `unsavedElsewhere` puts other unsaved edits on the page (the bloc price rule form) behind the
+// same prompt, so the page has one guard.
 export function ListingForm({
   id,
   defaultValues,
@@ -107,6 +98,7 @@ export function ListingForm({
   frozen = false,
   soldCount,
   guardUnsaved = false,
+  unsavedElsewhere = false,
   onDirtyChange,
   onProblemsChange,
 }: Readonly<{
@@ -116,6 +108,7 @@ export function ListingForm({
   frozen?: boolean;
   soldCount?: number | undefined;
   guardUnsaved?: boolean;
+  unsavedElsewhere?: boolean;
   onDirtyChange?: (dirty: boolean) => void;
   onProblemsChange?: (problems: FieldProblem[]) => void;
 }>) {
@@ -178,7 +171,7 @@ export function ListingForm({
   // would cancel the request. A successful save remounts the form (keyed by version), so the guard
   // never stands in front of our own navigation; any that must leave a dirty form passes
   // `ignoreBlocker`.
-  const hasUnsavedChanges = () => form.state.isDirty;
+  const hasUnsavedChanges = () => form.state.isDirty || unsavedElsewhere;
   // `enableBeforeUnload` defaults to `true`, which the browser history treats as "always prompt on
   // reload or tab close"; give it the same predicate so a clean form never prompts.
   const blocker = useBlocker({

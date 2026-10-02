@@ -246,13 +246,13 @@ describe("create", () => {
     ).toMatchObject({ status: 409, code: "CATALOG_409_003" });
   });
 
-  it("reports bean-validation failures as field violations", async () => {
+  it("reports bean-validation failures as field violations with 400 COMMON_400_002", async () => {
     serveAdmin();
     const res = await call("POST", "/admin/products", {
       productNo: "bad no!",
       listing: content({ title: " ", originalPrice: "0" }),
     });
-    expect(res).toMatchObject({ status: 400, code: "COMMON_400_001" });
+    expect(res).toMatchObject({ status: 400, code: "COMMON_400_002" });
     expect(res.errors).toEqual(
       expect.arrayContaining([
         { field: "productNo", message: expect.any(String) },
@@ -515,15 +515,58 @@ describe("team price policy", () => {
       validUntil: future(7),
       expectedVersion: 0,
     };
-    const replies = await Promise.all(
+    const cases: [Record<string, unknown>, string, string][] = [
       [
         { ...rule, amount: live.listing.originalPrice },
-        { ...rule, amount: "0.50", validFrom: future(8) },
+        "amount",
+        "Must be strictly below the solo price",
+      ],
+      [{ ...rule, amount: "0.00" }, "amount", "Must be positive and at most 9999999999999999.99"],
+      [{ ...rule, amount: "0.50", validFrom: future(8) }, "validUntil", "Must be after the start"],
+      [{ ...rule, amount: "0.50", validFrom: "" }, "validFrom", "Start time is required"],
+      [
         { ...rule, amount: "0.50", validFrom: future(-9), validUntil: future(-1) },
-      ].map((bad) => call("PUT", path, bad)),
-    );
-    for (const reply of replies) {
-      expect(reply).toMatchObject({ status: 400, code: "CATALOG_400_001" });
+        "validUntil",
+        "Must be in the future",
+      ],
+      [{ ...rule, amount: "0.50", currency: "usd" }, "currency", "Must be SGD (sgd)"],
+    ];
+    const replies = await Promise.all(cases.map(([bad]) => call("PUT", path, bad)));
+    // Field-specific domain 400s name the request path since #323 (BA-6).
+    for (const [i, [, field, message]] of cases.entries()) {
+      expect(replies[i]).toMatchObject({
+        status: 400,
+        code: "CATALOG_400_001",
+        errors: [{ field, message }],
+      });
     }
+  });
+
+  it("refuses a malformed amount through bean validation, before the rule's own checks", async () => {
+    const store = serveAdmin();
+    const live = await unruled(store);
+    expect(
+      await call("PUT", `/products/${live.id}/team-price-policy`, {
+        amount: "1.234",
+        currency: "sgd",
+        validFrom: future(0),
+        validUntil: future(7),
+        expectedVersion: 0,
+      }),
+    ).toMatchObject({ status: 400, code: "COMMON_400_002", errors: [{ field: "amount" }] });
+  });
+
+  it("checks the version before whether the listing is on sale, as the backend does", async () => {
+    serveAdmin();
+    const draft = await firstOf("draft");
+    expect(
+      await call("PUT", `/products/${draft.id}/team-price-policy`, {
+        amount: "1.00",
+        currency: "sgd",
+        validFrom: future(0),
+        validUntil: future(7),
+        expectedVersion: 2,
+      }),
+    ).toMatchObject({ status: 412, code: "CATALOG_412_001", errors: { currentVersion: 0 } });
   });
 });
