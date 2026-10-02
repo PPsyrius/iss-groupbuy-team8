@@ -1,12 +1,14 @@
 import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 
 import { OK_CODE } from "@/api/envelope";
 import type { ProductSummaryResponse } from "@/api/generated/types.gen";
+import { queryClient } from "@/api/query-client";
 import { keywordTerms, matchesKeyword } from "@/test/keyword-match";
 import { server } from "@/test/msw";
-import { renderRoute } from "@/test/render-route";
+import { renderRoute, serveAnonymous } from "@/test/render-route";
 
 const listing = (n: number): ProductSummaryResponse => ({
   id: `5b1b9d5c-1a11-4e1e-9a10-${String(n).padStart(12, "0")}`,
@@ -109,5 +111,48 @@ describe("/ (products list) loader", () => {
     expect(await screen.findByText("Listing 3")).toBeInTheDocument();
     expect(router.state.location.search).toEqual({ page: 2, size: 2 });
     expect(screen.getByText(/Page 2 of 2/)).toBeInTheDocument();
+  });
+});
+
+describe("/ (products list) errors", () => {
+  it("shows the listings alert on a 500, and Try again recovers", async () => {
+    serveListings([listing(1)]);
+    let failing = true;
+    server.use(
+      http.get("*/api/v1/products", () =>
+        failing
+          ? HttpResponse.json({ code: "COMMON_500_000", message: "boom" }, { status: 500 })
+          : HttpResponse.json({
+              code: OK_CODE,
+              message: "ok",
+              data: { items: [listing(1)], total: 1, page: 1, size: 20 },
+            }),
+      ),
+    );
+    // The app client retries a 500 twice with backoff; skip the wait, not the behaviour.
+    const defaults = queryClient.getDefaultOptions();
+    queryClient.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, retry: false } });
+    try {
+      await renderAt("/");
+      expect(await screen.findByText("We couldn’t load the listings")).toBeVisible();
+      expect(
+        screen.getByText(/Your account and any bloc you have joined are unaffected/),
+      ).toBeVisible();
+      expect(screen.queryByText("Listing 1")).toBeNull();
+      failing = false;
+      await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+      expect(await screen.findByText("Listing 1")).toBeVisible();
+      expect(screen.queryByText("We couldn’t load the listings")).toBeNull();
+    } finally {
+      queryClient.setDefaultOptions(defaults);
+    }
+  });
+
+  it("renders the 404 card through the route tree for an unknown path", async () => {
+    serveAnonymous();
+    await renderAt("/no-such-page");
+    expect(await screen.findByRole("heading", { name: "We can’t find that page" })).toBeVisible();
+    expect(screen.getByText("Nothing has been charged.")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Browse listings" })).toHaveAttribute("href", "/");
   });
 });

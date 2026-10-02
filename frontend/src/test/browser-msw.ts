@@ -666,6 +666,31 @@ export async function startBrowserMsw() {
             },
           });
         },
+        // FB-19: a ref resolves to its bloc and the sharer, the sample buyer (the only one who
+        // can mint here). A fresh tab has no minted refs yet, so the ref parked from the link it
+        // opened resolves to the bloc that link named; anything else is an unknown ref.
+        resolveInvite: ({ params }) => {
+          const parked = readParkedInvite();
+          const minted = [...invites].find(([, ref]) => ref === params.ref)?.[0];
+          const dealId = minted ?? (parked?.ref === params.ref ? parked.dealId : undefined);
+          const team = teams.find((t) => t.dealId === dealId);
+          if (!dealId || !team) {
+            return HttpResponse.json(
+              { code: "GROUPBUY_404_002", message: "Invite not found" },
+              { status: 404 },
+            );
+          }
+          return HttpResponse.json({
+            code: OK_CODE,
+            message: "ok",
+            data: {
+              dealId,
+              productId: team.productId,
+              sharerNickname: "Ada Lim",
+              expiresAt: team.expireTime,
+            },
+          });
+        },
         getPaymentCapabilities: () =>
           HttpResponse.json({ code: OK_CODE, message: "ok", data: { enabled: signedIn } }),
         issueTeamPriceQuote: async ({ request }) => {

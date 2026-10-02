@@ -54,8 +54,8 @@ React 19.3 CSR, Vite 8, TanStack Router (file-based via `@tanstack/router-plugin
 
 ## Layout
 
-- `src/routes/` — one file per route, TanStack flat naming: `__root.tsx`, `index.tsx` (`/`), `products.$productId.tsx`, `_authenticated.tsx` (pathless guard layout) + `_authenticated/account.tsx`, `auth.callback.tsx`. Files starting with `-` are ignored by the route generator. `src/routeTree.gen.ts` is generated: commit it, never edit it.
-- `src/features/<feature>/` — components, hooks, schemas, tests for one feature (`catalog`, `session`). Colocate tests as `Name.test.tsx` next to `Name.tsx`.
+- `src/routes/` — one file per route, TanStack flat naming: `__root.tsx`, `index.tsx` (`/`), `products.$productId.tsx`, `_authenticated.tsx` (pathless guard layout) + `_authenticated/account.tsx`, `auth.callback.tsx`. The admin console is the `_authenticated/admin.tsx` layout plus `_authenticated/admin/*` (`index.tsx`, `listings.index.tsx`, `listings.new.tsx`, `listings.$productId.tsx`), a second shell marked `staticData: { shell: 'admin' }` (ADR 0015). Files starting with `-` are ignored by the route generator. `src/routeTree.gen.ts` is generated: commit it, never edit it.
+- `src/features/<feature>/` — components, hooks, schemas, tests for one feature (`catalog`, `session`, `admin` for the console: `admin-api.ts` is its only importer of generated admin operations). Colocate tests as `Name.test.tsx` next to `Name.tsx`.
 - `src/components/` — shared presentational components (`Header`, `ErrorCard` with the §4.5 404/500 presets and `RouteErrorCard`, `AppErrorBoundary`).
 - `src/api/` — `envelope.ts` (Result unwrap, `ApiError`), `client.ts` (401 interceptor), `query-client.ts`, `hey-api.ts` (runtime config, `baseUrl: '/'`), `generated/` (gitignored output).
 - `src/test/` — Vitest setup and MSW server (`msw.ts`), browser MSW behind `?msw=1` (`browser-msw.ts`).
