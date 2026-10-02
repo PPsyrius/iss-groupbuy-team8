@@ -14,6 +14,7 @@ import { refusalOf } from "@/features/admin/listing-errors";
 import { fromListing } from "@/features/admin/listing-form";
 import { statusLabel } from "@/features/admin/listing-status";
 import { type FieldProblem, ListingForm, type SubmitProblem } from "@/features/admin/ListingForm";
+import { PricePolicyPanel } from "@/features/admin/PricePolicyPanel";
 import {
   problemFor,
   useRouteBoundary,
@@ -54,6 +55,8 @@ function EditListingPage() {
   const published = listing.status !== "draft";
   const { save, isPending } = useSaveListing(productId, version);
   const [dirty, setDirty] = useState(false);
+  // The bloc price rule form's unsaved edits share the listing form's leave prompt.
+  const [ruleDirty, setRuleDirty] = useState(false);
   const [dialog, setDialog] = useState<DialogKind | null>(null);
   const [fieldProblems, setFieldProblems] = useState<FieldProblem[]>([]);
   // `null` while there is no conflict; otherwise the server's version as the 412 named it.
@@ -194,6 +197,7 @@ function EditListingPage() {
           frozen={published}
           soldCount={published ? (listing.soldCount ?? 0) : undefined}
           guardUnsaved
+          unsavedElsewhere={ruleDirty}
           onDirtyChange={setDirty}
           onProblemsChange={setFieldProblems}
         />
@@ -209,6 +213,12 @@ function EditListingPage() {
           {conflict !== null && fieldProblems.length > 0 ? (
             <ProblemsCard fieldProblems={fieldProblems} serverVersion={serverVersion} />
           ) : null}
+          <PricePolicyPanel
+            productId={productId}
+            status={listing.status}
+            originalPrice={listing.listing?.originalPrice ?? ""}
+            onDirtyChange={setRuleDirty}
+          />
         </aside>
       </div>
     </div>
