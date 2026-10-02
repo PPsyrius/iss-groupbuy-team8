@@ -5,7 +5,7 @@ import { type ReactNode, useState } from "react";
 
 import { ApiError, unwrapResult } from "@/api/envelope";
 import { getListingOptions } from "@/api/generated/@tanstack/react-query.gen";
-import type { ProductDetailResponse } from "@/api/generated/types.gen";
+import type { MyTeamResponse, ProductDetailResponse } from "@/api/generated/types.gen";
 import { NotFoundCard } from "@/components/ErrorCard";
 import { blocFilter } from "@/features/blocs/bloc-status";
 import { myTeamsQuery } from "@/features/blocs/my-teams-query";
@@ -27,6 +27,7 @@ import { useCheckout } from "@/features/payment/use-checkout";
 import { useQuote } from "@/features/payment/use-quote";
 import { GatedActionSheet } from "@/features/session/GatedActionSheet";
 import { useSession } from "@/features/session/use-session";
+import { useSignInGate } from "@/features/session/use-sign-in-gate";
 import { discardInvite, parkInvite, readParkedInvite } from "@/features/share/invite-ref";
 import { awaitSharer, useInviteSharer } from "@/features/share/invite-sharer";
 import { InviteBanner } from "@/features/share/InviteBanner";
@@ -120,22 +121,12 @@ function ProductDetailPage() {
   const view = listingDealView(p.deal, now);
   const currency = p.currency ?? "sgd";
   const groupPrice = p.groupPrice ?? undefined;
-  const category = p.category ? titleCase(p.category) : undefined;
+  const category = categoryLabel(p);
   // Keep the existing sign-in gate; the server derives buyer identity and price.
   const session = useSession();
-  const [gateOpen, setGateOpen] = useState(false);
-  // Which action opened the gate: the trust triptych's bloc price and refund promise only hold for
-  // Start and Join, so the Buy alone gate leaves it out (FB-11). Kept apart from `gateOpen` so the
-  // sheet's content does not change while it animates out.
-  const [gateForBloc, setGateForBloc] = useState(true);
-  const anonymous = session.status !== "authenticated";
-  const openGate = (forBloc: boolean) => {
-    setGateForBloc(forBloc);
-    setGateOpen(true);
-  };
-  const onGated = anonymous ? () => openGate(true) : undefined;
-  const onGatedAlone = anonymous ? () => openGate(false) : undefined;
   const buyerId = session.status === "authenticated" ? session.userId : undefined;
+  const gate = useSignInGate(buyerId === undefined, blocTrust(groupPrice, currency, view.closesMs));
+  const { onGated, onGatedAlone } = gate;
   // A refused JOIN (full, closed or gone) refetches the listing so the bloc row shows why.
   const queryClient = useQueryClient();
   const checkout = useCheckout(buyerId, () => {
@@ -163,18 +154,10 @@ function ProductDetailPage() {
     },
   });
   const joinPress = checkout.isPending ? undefined : onJoin;
-  const blocTrust =
-    groupPrice === undefined || view.closesMs === null
-      ? undefined
-      : { payNow: formatPrice(groupPrice, currency), closesMs: view.closesMs };
+  const share = shareTarget(invited.shareable, myTeam, buyerId, view.dealId);
   return (
     <main className={shell}>
-      <GatedActionSheet
-        isOpen={gateOpen}
-        onOpenChange={setGateOpen}
-        returnTo={`/products/${productId}`}
-        trust={gateForBloc ? blocTrust : undefined}
-      />
+      <GatedActionSheet {...gate.sheet} returnTo={`/products/${productId}`} />
       <QuoteSheet
         isOpen={start.isOpen}
         onOpenChange={start.setOpen}
@@ -236,12 +219,12 @@ function ProductDetailPage() {
               member={myTeam !== undefined}
             />
           </section>
-          {invited.shareable && myTeam && buyerId && view.dealId ? (
+          {share ? (
             <ShareBlock
-              userId={buyerId}
-              dealId={view.dealId}
+              userId={share.userId}
+              dealId={share.dealId}
               productId={productId}
-              leader={myTeam.role?.toLowerCase() === "leader"}
+              leader={share.leader}
               title={p.title ?? "this listing"}
               groupPrice={groupPrice}
               individualPrice={p.individualPrice}
@@ -264,6 +247,28 @@ function ProductDetailPage() {
       />
     </main>
   );
+}
+
+function categoryLabel(p: ProductDetailResponse): string | undefined {
+  return p.category ? titleCase(p.category) : undefined;
+}
+
+// The gated sheet's trust triptych (FB-11): the bloc price and the open bloc's deadline, or none
+// when the listing has no bloc price or no open bloc.
+function blocTrust(groupPrice: number | undefined, currency: string, closesMs: number | null) {
+  if (groupPrice === undefined || closesMs === null) return undefined;
+  return { payNow: formatPrice(groupPrice, currency), closesMs };
+}
+
+// The share block shows for a signed-in member of the listing's open bloc.
+function shareTarget(
+  shareable: boolean,
+  myTeam: MyTeamResponse | undefined,
+  userId: string | undefined,
+  dealId: string | undefined,
+) {
+  if (!shareable || !myTeam || !userId || !dealId) return undefined;
+  return { userId, dealId, leader: myTeam.role?.toLowerCase() === "leader" };
 }
 
 function joinLabel(groupPrice: number | undefined, currency: string): string {
