@@ -151,6 +151,7 @@ class StripeLocalIntegrationTest {
                 .isEqualTo(jdbc.queryForObject("SELECT id FROM biz_order", UUID.class));
         assertThat(receipt.dealId()).isEqualTo(deal());
         assertThat(receipt.dealId()).isNotEqualTo(product);
+        assertThat(receipt.productId()).isEqualTo(product);
         assertThat(receipt.refundPending()).isFalse();
         var exceptionInput1 = UUID.randomUUID();
         var exceptionInput2 = p.id();
@@ -661,7 +662,12 @@ class StripeLocalIntegrationTest {
         UUID user = buyer();
         UUID intent = browser.createIntent(user, "START", product, null);
         var result = browser.prepare(user, intent, "browser-native-test");
-        assertThat(browser.receipt(user, result.paymentId()).status()).isEqualTo("CREATED");
+        // A pending START has no team or order yet; the intent still names its listing (#284).
+        var pending = browser.receipt(user, result.paymentId());
+        assertThat(pending.status()).isEqualTo("CREATED");
+        assertThat(pending.orderId()).isNull();
+        assertThat(pending.dealId()).isNull();
+        assertThat(pending.productId()).isEqualTo(product);
         assertThatThrownBy(() -> browser.createIntent(user, "INVALID", product, null))
                 .isInstanceOf(com.blocbuy.common.exception.BizException.class);
         assertThatThrownBy(() -> browser.prepare(user, intent, ""))

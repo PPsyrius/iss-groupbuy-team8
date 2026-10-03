@@ -32,16 +32,8 @@ public class StripeCheckoutGateway implements CheckoutGateway {
         this.clients = clients;
     }
 
-    /** Sandbox-only until the joint groupbuy/order integration is accepted. */
-    private void requireSandbox() {
-        if (!properties.configured() || !properties.apiKey().startsWith("sk_test_")) {
-            throw new BizException(PaymentErrorCode.PAYMENT_PROVIDER_ERROR);
-        }
-    }
-
     @Override
     public CheckoutGateway.Session createCheckoutSession(CheckoutPayment payment) {
-        requireSandbox();
         try {
             var session =
                     clients.client()
@@ -90,7 +82,6 @@ public class StripeCheckoutGateway implements CheckoutGateway {
 
     @Override
     public CheckoutGateway.Session retrieveCheckoutSession(String sessionId) {
-        requireSandbox();
         try {
             return snapshot(
                     clients.client()
@@ -108,7 +99,6 @@ public class StripeCheckoutGateway implements CheckoutGateway {
 
     @Override
     public CheckoutGateway.Session expireCheckoutSession(String sessionId) {
-        requireSandbox();
         try {
             clients.client().checkout().sessions().expire(sessionId);
             return retrieveCheckoutSession(sessionId);

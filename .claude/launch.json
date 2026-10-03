@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "frontend", "dev", "--port", "5174", "--strictPort"],
+      "port": 5174,
+      "autoPort": false
+    }
+  ]
+}
