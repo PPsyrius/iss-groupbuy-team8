@@ -43,6 +43,7 @@ describe("/admin (dashboard)", () => {
       server.events.on("request:start", listen);
       renderRoute("/admin");
       expect(await screen.findByRole("heading", { name: "Dashboard" })).toBeVisible();
+      expect(document.title).toBe("Dashboard · BlocBuy");
       expect(screen.getByText("Wednesday 16 September 2026 · all times SGT")).toBeVisible();
       expect(screen.getByRole("link", { name: "New listing" })).toHaveAttribute(
         "href",
