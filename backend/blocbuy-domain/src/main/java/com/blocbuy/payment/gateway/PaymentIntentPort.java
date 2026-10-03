@@ -1,8 +1,9 @@
 package com.blocbuy.payment.gateway;
 
+import java.util.Optional;
 import java.util.UUID;
 
-/** Server-owned purchase intent preparation, within the caller's short transaction. */
+/** Server-owned purchase intent preparation and read-back, within the caller's transaction. */
 public interface PaymentIntentPort {
 
     /**
@@ -24,4 +25,12 @@ public interface PaymentIntentPort {
     default UUID createIntent(UUID user, String operation, UUID businessId) {
         return createIntent(user, operation, businessId, null);
     }
+
+    /**
+     * Reads back the product an issued intent was priced for, for the buyer's receipt.
+     *
+     * @return the product id, or empty when the intent does not exist or belongs to another user; a
+     *     receipt must still be answered without it
+     */
+    Optional<UUID> purchasedProduct(UUID user, UUID intentId);
 }

@@ -413,14 +413,16 @@ The original artboard review ended with 22 open questions. T2-01 through T2-06 r
   -----------------------------------------------------------------------
 ```
 
-Remaining design/contract gaps:
+Remaining design/contract gaps (audited 2026-10-02, FB-18, against `frontend/src/` and `contracts/openapi.json`):
 
-- category values are not contract-driven;
-- listing summary does not expose bloc progress;
-- listing detail does not expose off-sale status;
-- the API exposes one active deal rather than a list with starter metadata;
-- My Blocs starter/refund detail and notifications need further data or implementation;
-- the signed-in storefront menu/header is still provisional;
-- CSP still permits HTTPS listing and avatar image hosts until those sources are narrowed; Inter is already self-hosted.
+- category values are not contract-driven: `category` is a free string on both listing schemas and there is no dictionary endpoint; `features/catalog/categories.ts` holds the mapping (ask CR-10 in [`admin-plan.md`](admin-plan.md), no issue yet);
+- listing summary does not expose bloc progress (`ProductSummaryResponse` has no size fields): backend #245 (CR-11, open), frontend FB-16;
+- listing detail does not expose off-sale status (`ProductDetailResponse` has no `status`): no owner yet;
+- the API exposes one active deal (`ActiveDealResponse`: id, sizes, expiry) rather than a list with starter metadata; only an invite link names its sharer (FB-19, #201): no owner yet;
+- My Blocs shows Active / Completed / Refunded from `GET /group-deals/me`, but `MyTeamResponse` carries only the buyer's own `role`, not the starter; no owner yet. Notifications wait on backend #215 (first persisted use case, open);
+- the refund-pending receipt still reads "Payment received": FB-15 (design owner);
+- the gated sheet's copy is written for Start a bloc ("Starting a bloc means paying first") and is reused for Buy alone, which no artboard draws (the bloc terms are kept off that sheet, FB-11): no owner yet;
+- the signed-in storefront menu/header is still provisional (a neutral Sign out button, `plan.md` T2-05; no artboard draws a menu): no owner yet;
+- CSP still permits HTTPS listing and avatar image hosts (`img-src 'self' https:`, ADR 0002) until the contract pins an image host; Inter is already self-hosted (#158): no owner yet.
 
 When a later design or API contract resolves one of these gaps, update this document and the owning ADR/contract rather than preserving the old workaround as historical narrative.

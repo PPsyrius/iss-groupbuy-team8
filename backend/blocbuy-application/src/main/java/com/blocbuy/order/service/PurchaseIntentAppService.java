@@ -11,6 +11,7 @@ import com.blocbuy.order.model.PurchaseOperation;
 import com.blocbuy.order.repository.PurchaseIntentRepository;
 import com.blocbuy.payment.gateway.PaymentIntentPort;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Propagation;
@@ -45,6 +46,22 @@ public class PurchaseIntentAppService implements PaymentIntentPort {
     private final GroupDealPurchaseSupport deals;
     private final UserAppService users;
     private final PurchaseIntentRepository intents;
+
+    /**
+     * The product an intent was priced for, for the buyer's receipt. Joins the receipt's read-only
+     * snapshot; the intent's product is immutable once issued. Ownership is re-checked here even
+     * though payment already scoped the receipt to its buyer.
+     */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
+    public Optional<UUID> purchasedProduct(UUID user, UUID intentId) {
+        if (user == null || intentId == null) {
+            return Optional.empty();
+        }
+        return intents.findById(intentId)
+                .filter(intent -> user.equals(intent.userId()))
+                .map(PurchaseIntent::productId);
+    }
 
     /**
      * Issues one intent and returns its id.

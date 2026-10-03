@@ -17,22 +17,14 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class StripeRefundGateway implements RefundGateway {
     private static final String OBLIGATION_ID = "obligation_id";
-    private final StripeProperties properties;
     private final StripeClientProvider clients;
-
-    private void requireSandbox() {
-        if (!properties.configured() || !properties.apiKey().startsWith("sk_test_")) {
-            throw new BizException(PaymentErrorCode.PAYMENT_PROVIDER_ERROR);
-        }
-    }
 
     @Override
     public Snapshot createRefund(RefundWork work) {
-        requireSandbox();
         try {
             StripeClient stripe = clients.client();
             var payment = stripe.paymentIntents().retrieve(work.providerIntentId());
-            if (Boolean.TRUE.equals(payment.getLivemode())
+            if (!StripeSandbox.isSandboxMode(payment.getLivemode())
                     || !"succeeded".equals(payment.getStatus())
                     || !work.currency().equals(payment.getCurrency())
                     || payment.getAmountReceived() == null
@@ -62,7 +54,6 @@ public class StripeRefundGateway implements RefundGateway {
 
     @Override
     public Snapshot retrieveRefund(String providerId) {
-        requireSandbox();
         try {
             return snapshot(clients.client().refunds().retrieve(providerId));
         } catch (StripeException failure) {
@@ -72,7 +63,6 @@ public class StripeRefundGateway implements RefundGateway {
 
     @Override
     public Snapshot findRefund(RefundWork work) {
-        requireSandbox();
         try {
             var results =
                     clients.client()

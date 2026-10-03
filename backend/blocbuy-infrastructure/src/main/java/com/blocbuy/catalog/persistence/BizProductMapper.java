@@ -66,9 +66,6 @@ public interface BizProductMapper {
      */
     List<BizProductDisplayDO> selectDisplaysByIds(@Param("ids") Collection<UUID> ids);
 
-    /** Team terms only; the listing snapshot is not needed to decide whether a team can start. */
-    BizProductTeamTermsDO selectTeamTerms(@Param("id") UUID id);
-
     /**
      * Conditional stock take: one statement, guarded on {@code stock > 0} and the on-sale status,
      * so concurrent settlements can never oversell. Never paired with a preceding read.
