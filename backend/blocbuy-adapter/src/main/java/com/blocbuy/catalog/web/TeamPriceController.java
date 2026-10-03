@@ -124,9 +124,11 @@ public class TeamPriceController {
         return UUID.fromString(StpUtil.getLoginIdAsString());
     }
 
+    // The regex is published verbatim as the OpenAPI pattern; rewriting it breaks contract-check.
+    @SuppressWarnings("java:S6353")
     public record PolicyRequest(
             @NotNull
-                    @Pattern(regexp = "\\d{1,16}(\\.\\d{1,2})?")
+                    @Pattern(regexp = "[0-9]{1,16}(\\.[0-9]{1,2})?")
                     @JsonDeserialize(using = DecimalStringDeserializer.class)
                     @Schema(
                             example = "89.00",
