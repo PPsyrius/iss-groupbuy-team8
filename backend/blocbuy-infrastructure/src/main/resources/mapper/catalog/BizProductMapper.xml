@@ -146,19 +146,6 @@
         </foreach>
     </select>
 
-    <resultMap id="bizProductTeamTermsMap"
-               type="com.blocbuy.catalog.persistence.BizProductTeamTermsDO">
-        <id column="id" property="productId" jdbcType="OTHER"/>
-        <result column="team_target_size" property="teamTargetSize"/>
-        <result column="team_lifetime_seconds" property="teamLifetimeSeconds"/>
-    </resultMap>
-
-    <select id="selectTeamTerms" resultMap="bizProductTeamTermsMap">
-        SELECT id, team_target_size, team_lifetime_seconds
-        FROM biz_product
-        WHERE id = #{id,jdbcType=OTHER} AND deleted = false
-    </select>
-
     <!-- Guarded on stock and status in the same statement: two settlements racing for the last
          unit cannot both win, and no read precedes the write. -->
     <update id="consumeOneUnit">

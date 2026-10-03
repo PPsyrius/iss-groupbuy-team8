@@ -141,6 +141,10 @@ Plan: `docs/agile/sprint-03/team-terms-plan-20260929.md`. V14 gave a product its
 5. **No clearing in v1.** Both terms are required on every write. Delisting is the kill switch for START.
 6. **Audited by history, not just a stamp.** Each write also appends one immutable row to `log_product_team_terms` (V20: product, resulting version, terms before and after, policy version, actor) in the same transaction, because the columns are overwritten in place.
 
+## Addendum (2026-10-03): START uses the locked product's terms (#263)
+
+`CatalogPurchaseSupportImpl.lockStartable` reads `Product.teamTerms()` from the product already returned by `lockById`. The locked row and converter carry both team columns, so the separate terms query and its unused repository method, mapper projection and DO are removed. Quoted and unquoted START share this path: missing product remains 404, sellability is checked first, and unset or invalid terms remain `CATALOG_409_006`. The product-first lock order, quote ownership, price checks and frozen intent terms remain unchanged. This removes one SQL statement per START without claiming a measured latency improvement.
+
 ## Addendum (2026-09-30): expire unpaid intents (#225, US30)
 
 **State and scope.** Order owns nullable `expired_at` (V22). An overdue, unfulfilled, unpaid intent transitions once; the frozen terms, attribution, reserved team ID and row remain auditable. The quote deadline is no later than the business deadline, so selecting `quote_valid_until <= database_now` covers either expired deadline. Fulfilment rejects the marker before business writes; it still permits ordinary fulfilled replays. No public contract or provider cancellation changes.
