@@ -137,7 +137,13 @@ const previewHeaders = {
 
 export default defineConfig(({ command }) => ({
   plugins: [
-    tanstackRouter({ target: "react", autoCodeSplitting: true }),
+    // Route tests sit next to their routes; the generator matches the pattern against each file
+    // and directory name under src/routes and skips the matches without a "no Route" warning.
+    tanstackRouter({
+      target: "react",
+      autoCodeSplitting: true,
+      routeFileIgnorePattern: String.raw`\.test\.tsx$`,
+    }),
     react(),
     babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),

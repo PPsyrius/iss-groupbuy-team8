@@ -105,9 +105,7 @@ public class CatalogPurchaseSupportImpl implements CatalogPurchaseSupport {
                         .orElseThrow(() -> new BizException(CatalogErrorCode.PRODUCT_NOT_FOUND));
         requireSellable(product);
 
-        ProductTeamTerms terms =
-                products.findTeamTerms(productId)
-                        .orElseThrow(() -> new BizException(CatalogErrorCode.PRODUCT_NOT_FOUND));
+        ProductTeamTerms terms = product.teamTerms();
         if (!terms.configured()) {
             throw new BizException(CatalogErrorCode.PRODUCT_NOT_STARTABLE);
         }

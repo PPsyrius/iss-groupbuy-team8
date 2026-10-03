@@ -9,7 +9,9 @@ import com.blocbuy.payment.service.PaymentBrowserService;
 import com.blocbuy.payment.service.StripeCheckoutService;
 import com.blocbuy.payment.service.StripeFeatureSwitch;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -81,6 +83,11 @@ public class StripeCheckoutController {
     @Operation(
             operationId = "createPaymentIntent",
             summary = "Freeze a server-owned group purchase intent")
+    @ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
+    @ApiResponse(
+            responseCode = "429",
+            description = "JOIN requests exceed the user and deal allowance (COMMON_429_001)",
+            content = @Content(schema = @Schema(ref = "#/components/schemas/ResultVoid")))
     public Result<IntentResponse> intent(
             @RequestHeader("X-BlocBuy-Request") String csrf,
             @Valid @RequestBody IntentRequest request) {
@@ -100,6 +107,11 @@ public class StripeCheckoutController {
     @Operation(
             operationId = "createPaymentCheckout",
             summary = "Create or reuse an idempotent Stripe Hosted Checkout")
+    @ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
+    @ApiResponse(
+            responseCode = "429",
+            description = "Checkout requests exceed the user allowance (COMMON_429_001)",
+            content = @Content(schema = @Schema(ref = "#/components/schemas/ResultVoid")))
     public Result<StripeCheckoutService.CheckoutResult> checkout(
             @RequestHeader("X-BlocBuy-Request") String csrf,
             @RequestHeader("Idempotency-Key") @Pattern(regexp = "[A-Za-z0-9._-]{1,128}") String key,

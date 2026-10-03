@@ -4,7 +4,6 @@ import com.blocbuy.catalog.model.ListingStatusCounts;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductDisplay;
 import com.blocbuy.catalog.model.ProductStatus;
-import com.blocbuy.catalog.model.ProductTeamTerms;
 import com.blocbuy.catalog.model.TeamTermsChange;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
@@ -63,13 +62,6 @@ public interface ProductRepository {
      * from the result; empty input returns an empty list.
      */
     List<ProductDisplay> findDisplaysByIds(Collection<UUID> ids);
-
-    /**
-     * Team terms of an active product: how big a team started on it must be and how long it stays
-     * open. Empty when the product itself is gone; a present value may still be {@link
-     * ProductTeamTerms#configured() not configured} when the columns were never configured.
-     */
-    Optional<ProductTeamTerms> findTeamTerms(UUID id);
 
     /**
      * Takes one unit off an on-sale product and counts the sale, as a single conditional update —

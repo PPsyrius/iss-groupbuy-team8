@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import com.blocbuy.common.gateway.RateLimitGateway.RateLimit;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -48,7 +49,9 @@ class RedisRateLimitGatewayIT {
         redis = new StringRedisTemplate(connections);
         gateway =
                 new RedisRateLimitGateway(
-                        redis, new MockEnvironment().withProperty("spring.profiles.active", "it"));
+                        redis,
+                        new MockEnvironment().withProperty("spring.profiles.active", "it"),
+                        new SimpleMeterRegistry());
     }
 
     @AfterAll
