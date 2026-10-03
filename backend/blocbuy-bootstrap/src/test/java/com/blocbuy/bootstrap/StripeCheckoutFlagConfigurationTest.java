@@ -94,7 +94,7 @@ class StripeCheckoutFlagConfigurationTest {
         assertBadSetting("blocbuy.payment.stripe.api-key=", "STRIPE_API_KEY must be set");
         assertBadSetting(
                 "blocbuy.payment.stripe.api-key=sk_live_not_allowed",
-                "STRIPE_API_KEY must start with sk_test_");
+                "STRIPE_API_KEY must be a Stripe test key");
         assertBadSetting(
                 "blocbuy.payment.stripe.webhook-secret=", "STRIPE_WEBHOOK_SECRET must be set");
         assertBadSetting(

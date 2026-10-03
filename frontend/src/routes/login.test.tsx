@@ -16,6 +16,7 @@ describe("/login", () => {
     serveAnonymous();
     renderRoute("/login?returnTo=/products/abc");
     expect(await screen.findByRole("heading", { name: "Sign in to hold your seat" })).toBeVisible();
+    expect(document.title).toBe("Sign in · BlocBuy");
     expect(screen.getByRole("link", { name: "Back to the listing" })).toHaveAttribute(
       "href",
       "/products/abc",
@@ -36,6 +37,7 @@ describe("/login", () => {
     serveAnonymous();
     renderRoute("/login?error=access_denied&returnTo=/products/abc");
     expect(await screen.findByText("Google couldn’t sign you in")).toBeVisible();
+    expect(document.title).toBe("Sign in · BlocBuy");
     // One page heading, as on the default variant, so a screen reader can land on the page;
     // it stays visually hidden because the artboard leads this card with the alert.
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);

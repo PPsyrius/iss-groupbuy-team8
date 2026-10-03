@@ -370,6 +370,7 @@ describe("backend-confirmed payment result", () => {
     );
     renderRoute(`/payments/${paymentId}`);
     expect(await screen.findByRole("heading", { name: "Payment received" })).toBeVisible();
+    expect(document.title).toBe("Payment received · BlocBuy");
     expect(screen.getByText("Paid")).toBeInTheDocument();
     expect(screen.getByText("S$17.89 paid.")).toBeInTheDocument();
     expect(await screen.findByText("Paid · 16 Sep, 7.46 pm")).toBeInTheDocument();

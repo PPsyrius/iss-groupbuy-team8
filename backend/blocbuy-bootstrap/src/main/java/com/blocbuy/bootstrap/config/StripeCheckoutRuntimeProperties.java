@@ -1,5 +1,6 @@
 package com.blocbuy.bootstrap.config;
 
+import com.blocbuy.payment.gateway.StripeProperties;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -10,6 +11,8 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "blocbuy.payment.stripe")
 public record StripeCheckoutRuntimeProperties(
         @NotBlank(message = "STRIPE_API_KEY must be set")
-                @Pattern(regexp = "sk_test_.+", message = "STRIPE_API_KEY must start with sk_test_")
+                @Pattern(
+                        regexp = StripeProperties.SANDBOX_KEY_PREFIX + ".+",
+                        message = "STRIPE_API_KEY must be a Stripe test key")
                 String apiKey,
         @NotBlank(message = "STRIPE_WEBHOOK_SECRET must be set") String webhookSecret) {}

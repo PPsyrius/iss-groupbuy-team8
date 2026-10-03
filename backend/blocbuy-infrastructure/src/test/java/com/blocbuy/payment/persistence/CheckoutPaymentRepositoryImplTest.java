@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 
 /** Checkout repository guards: absent rows, page bounds and write conflicts. */
@@ -169,9 +170,103 @@ class CheckoutPaymentRepositoryImplTest {
     void memberAndPendingScansMapRowsToPayments() {
         Instant threshold = Instant.now();
         when(mapper.pending(any(), anyInt())).thenReturn(List.of(row()));
+        when(mapper.dueForExpiry(any(), any(), any(), anyInt())).thenReturn(List.of(row()));
         when(mapper.reviewCases(any(), anyInt())).thenReturn(List.of());
         assertThat(repository.pendingBefore(threshold, 10)).hasSize(1);
+        assertThat(repository.dueForExpiry(threshold, 10)).hasSize(1);
+        verify(mapper).dueForExpiry(threshold, null, null, 10);
         assertThat(repository.reviewCases(null, 10)).isEmpty();
+    }
+
+    @Test
+    void expiryCursorAdvancesAndWrapsAfterTheLastEligibleRow() {
+        BizPaymentDO row = row();
+        UUID cursorId = UUID.randomUUID();
+        Instant now = row.getCreateTime().plusSeconds(3600);
+        when(mapper.lockExpiryCursor())
+                .thenReturn(new PaymentMapper.ExpiryCursor(cursorId, null, null))
+                .thenReturn(
+                        new PaymentMapper.ExpiryCursor(cursorId, row.getCreateTime(), row.getId()));
+        when(mapper.dueForExpiry(now, null, null, 1)).thenReturn(List.of(row));
+        when(mapper.dueForExpiry(now, row.getCreateTime(), row.getId(), 1)).thenReturn(List.of());
+        when(mapper.advanceExpiryCursor(cursorId, row.getCreateTime(), row.getId())).thenReturn(1);
+
+        assertThat(repository.nextExpiryPage(now, 1))
+                .extracting(CheckoutPayment::id)
+                .containsExactly(row.getId());
+        assertThat(repository.nextExpiryPage(now, 1))
+                .extracting(CheckoutPayment::id)
+                .containsExactly(row.getId());
+        verify(mapper).dueForExpiry(now, row.getCreateTime(), row.getId(), 1);
+    }
+
+    @Test
+    void aFullFailedExpiryPageYieldsToTheNextCandidateOnTheNextRun() {
+        Instant now = Instant.parse("2026-09-21T12:00:00Z");
+        UUID cursorId = UUID.randomUUID();
+        List<BizPaymentDO> oldest =
+                IntStream.range(0, 100)
+                        .mapToObj(
+                                index -> {
+                                    BizPaymentDO payment = row();
+                                    payment.setCreateTime(
+                                            payment.getCreateTime().plusSeconds(index));
+                                    return payment;
+                                })
+                        .toList();
+        BizPaymentDO younger = row();
+        younger.setCreateTime(younger.getCreateTime().plusSeconds(100));
+        BizPaymentDO last = oldest.getLast();
+        when(mapper.lockExpiryCursor())
+                .thenReturn(new PaymentMapper.ExpiryCursor(cursorId, null, null))
+                .thenReturn(
+                        new PaymentMapper.ExpiryCursor(
+                                cursorId, last.getCreateTime(), last.getId()));
+        when(mapper.dueForExpiry(now, null, null, 100)).thenReturn(oldest);
+        when(mapper.dueForExpiry(now, last.getCreateTime(), last.getId(), 100))
+                .thenReturn(List.of(younger));
+        when(mapper.advanceExpiryCursor(any(), any(), any())).thenReturn(1);
+
+        assertThat(repository.nextExpiryPage(now, 100)).hasSize(100);
+        assertThat(repository.nextExpiryPage(now, 100))
+                .extracting(CheckoutPayment::id)
+                .containsExactly(younger.getId());
+    }
+
+    @Test
+    void emptyExpiryPageResetsCursorForFuturePayments() {
+        UUID cursorId = UUID.randomUUID();
+        Instant now = Instant.now();
+        Instant after = now.minusSeconds(3600);
+        when(mapper.lockExpiryCursor())
+                .thenReturn(new PaymentMapper.ExpiryCursor(cursorId, after, UUID.randomUUID()));
+        when(mapper.dueForExpiry(eq(now), any(), any(), eq(1))).thenReturn(List.of());
+        when(mapper.dueForExpiry(now, null, null, 1)).thenReturn(List.of());
+        when(mapper.advanceExpiryCursor(cursorId, null, null)).thenReturn(1);
+
+        assertThat(repository.nextExpiryPage(now, 1)).isEmpty();
+        verify(mapper).advanceExpiryCursor(cursorId, null, null);
+    }
+
+    @Test
+    void missingExpiryCursorCannotReserveWork() {
+        Instant now = Instant.now();
+        assertThatThrownBy(() -> repository.nextExpiryPage(now, 1))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void emptyExpiryQueueWithInitialCursorDoesNotWriteIt() {
+        Instant now = Instant.now();
+        UUID cursorId = UUID.randomUUID();
+        when(mapper.lockExpiryCursor())
+                .thenReturn(new PaymentMapper.ExpiryCursor(cursorId, null, null));
+        when(mapper.dueForExpiry(now, null, null, 100)).thenReturn(List.of());
+
+        assertThat(repository.nextExpiryPage(now, 100)).isEmpty();
+        verify(mapper).lockExpiryCursor();
+        verify(mapper).dueForExpiry(now, null, null, 100);
+        verifyNoMoreInteractions(mapper);
     }
 
     @Test
@@ -193,6 +288,10 @@ class CheckoutPaymentRepositoryImplTest {
         for (int limit : new int[] {0, 101}) {
             var exceptionInput1 = Instant.now();
             assertThatThrownBy(() -> repository.pendingBefore(exceptionInput1, limit))
+                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> repository.dueForExpiry(exceptionInput1, limit))
+                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> repository.nextExpiryPage(exceptionInput1, limit))
                     .isInstanceOf(IllegalArgumentException.class);
             assertThatThrownBy(() -> repository.reviewCases(null, limit))
                     .isInstanceOf(IllegalArgumentException.class);
