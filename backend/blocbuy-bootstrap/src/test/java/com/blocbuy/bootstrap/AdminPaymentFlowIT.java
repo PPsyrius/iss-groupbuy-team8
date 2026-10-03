@@ -157,8 +157,16 @@ class AdminPaymentFlowIT {
     void stablePaginationIncludesOutstandingStatesButNotAppliedDeletedOrReviewOnlyRows()
             throws Exception {
         final UUID oldest = payment("compensation_required", "failed", WHEN);
-        final UUID middle = payment("compensation_required", "processing", WHEN.plusSeconds(1));
-        final UUID newest = payment("compensation_required", "review", WHEN.plusSeconds(1));
+        // Equal receipt times fall back to payment id DESC. UuidV7 is random within one
+        // millisecond, so rank the two ids the way PostgreSQL does (unsigned bytes, the same as
+        // lowercase hex order) instead of trusting generation order.
+        UUID first = UuidV7.next();
+        UUID second = UuidV7.next();
+        boolean firstIsHigher = first.toString().compareTo(second.toString()) > 0;
+        final UUID newest = firstIsHigher ? first : second;
+        final UUID middle = firstIsHigher ? second : first;
+        payment(middle, "compensation_required", "processing", WHEN.plusSeconds(1));
+        payment(newest, "compensation_required", "review", WHEN.plusSeconds(1));
         payment("applied", "pending", WHEN.plusSeconds(2));
         UUID reviewOnly = payment("applied", null, WHEN.plusSeconds(3));
         jdbc.update(
@@ -297,7 +305,10 @@ class AdminPaymentFlowIT {
 
     /** Fixture-only writes, rolled back after each test. No provider or settlement changes. */
     private UUID payment(String outcome, String refundStatus, Instant at) {
-        UUID id = UuidV7.next();
+        return payment(UuidV7.next(), outcome, refundStatus, at);
+    }
+
+    private UUID payment(UUID id, String outcome, String refundStatus, Instant at) {
         UUID intent = UuidV7.next();
         jdbc.update(
                 "INSERT INTO biz_payment(id,payment_no,user_id,provider,amount,currency,status,"
