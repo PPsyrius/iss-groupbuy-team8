@@ -134,7 +134,12 @@ BlocBuy is designed as a two-sided platform rather than a single online shop. It
 - *Reusable common services.* Identity, payment settlement and notification are capabilities that other group-buying scenarios can reuse, for example event tickets, bulk subscriptions or neighbourhood produce boxes, without rebuilding them.
 
 == Relationship to Prior Work
-The functional baseline of BlocBuy (use cases UC1–UC9, listed in @scope-use-cases) was built as a COLA modular monolith for the SWE5006 practice module. The SWE5001 project *extends the same codebase on the same trunk* rather than forking it. The microservice deployment is added alongside the monolith and selected at deployment time, so every business feature is written once and runs in both shapes. The effort in this proposal targets the SWE5001 learning outcomes: platform architecture, microservice decomposition, scalability, cloud-native design on AWS, infrastructure as code and DevSecOps. It does not re-implement the business features.
+The functional baseline of BlocBuy (use cases UC1–UC9, listed in @scope-use-cases) was built as a COLA modular monolith for the SWE5006 practice module. SWE5001 does not fork that codebase. Both courses work in one repository on one trunk, and SWE5001 adds a second *deployment shape* to the same code:
+
+- *Monolith shape* (SWE5006): a single deployable on Amazon EC2. It stays the default and is not changed by SWE5001.
+- *Distributed shape* (SWE5001): the same modules assembled as three services on Amazon ECS.
+
+Each service is an *assembly*: an entry point plus configuration that selects which bounded contexts the process loads. A deployment-time setting selects, for each cross-service seam, either the existing in-process adapter or a remote one (HTTP call or queued event). Business features are therefore written once and run in both shapes. The effort in this proposal targets the SWE5001 learning outcomes: platform architecture, microservice decomposition, scalability, cloud-native design on AWS, infrastructure as code and DevSecOps. It does not re-implement the business features.
 
 // ---------------------------------------------------------------- 5
 = General Architecture
@@ -156,7 +161,7 @@ The functional baseline of BlocBuy (use cases UC1–UC9, listed in @scope-use-ca
 )
 
 == Logical Architecture
-The platform is decomposed into three services: two *platform services* that any business seed can reuse, and one *business application service* that owns the group-buying transaction.
+In the distributed shape, the platform is decomposed into three services: two *platform services* that any business seed can reuse, and one *business application service* that owns the group-buying transaction.
 
 #figure(
   diagram(
@@ -212,7 +217,8 @@ The decomposition follows *transactional consistency boundaries*, not one servic
 - *So these four contexts stay together.* Separating catalog, groupbuy, order and payment would require sagas and compensation, which the effort budget does not allow; they remain in `commerce-svc`.
 - *Identity has a narrow interface.* Other contexts use identity through one active-user check only.
 - *Notification is independent.* It has no inbound dependencies.
-- *No cross-context SQL joins.* Both can therefore be extracted with clean data ownership.
+- *No cross-context SQL joins.* Both can therefore run as separate services with clean data ownership.
+- *No code moves.* Services are cut by assembly, not by relocating source directories, so SWE5006 feature work on the same modules continues without merge conflicts.
 
 We evaluated a five-service split (identity, catalog, trade, payment, notification) and rejected it on effort grounds. It remains a documented evolution path: payment can be extracted later through the same outbox mechanism plus a saga.
 
@@ -222,7 +228,7 @@ We evaluated a five-service split (identity, catalog, trade, payment, notificati
 - *Authentication.* The session store is a shared ElastiCache (Valkey) instance. Every service validates the same token; roles are stored in the session, so authorisation needs no per-request call to `identity-svc`.
 
 == Physical Architecture
-The solution is deployed on AWS in `ap-southeast-1`.
+The distributed shape is deployed on AWS in `ap-southeast-1`. It uses its own Terraform stacks, CloudFront distribution and deployment roles; the SWE5006 EC2 deployment runs separately and is left unchanged.
 
 #figure(
   diagram(
@@ -278,7 +284,7 @@ The solution is deployed on AWS in `ap-southeast-1`.
 )
 
 == Persistence Design
-Each service owns its tables and its Flyway migrations:
+The monolith shape keeps its single database. In the distributed shape, each service owns its tables and its Flyway migrations:
 
 - `identity-svc`: the `sys_user*`, `sys_role`, `sys_permission` and `rel_*` tables;
 - `notification-svc`: `biz_notification`;
@@ -306,14 +312,14 @@ Services never read another service's database; they cross boundaries only throu
 )
 
 == Use Cases in Scope <scope-use-cases>
-The business use cases below are carried over from the functional baseline and are assigned to their owning service. The SWE5001 work makes them run on the new architecture and adds event-driven notifications.
+The business use cases below are carried over from the functional baseline and are assigned to their owning service. The SWE5001 work makes them also run in the distributed shape, without changing their behaviour in the monolith, and adds event-driven notifications.
 
 #figure(
   table(
     columns: (0.5fr, 2.2fr, 1.1fr, 2.2fr),
     [ID], [Use case], [Owning service], [SWE5001 change],
     [UC1], [Browse and search team-priced products], [commerce], [Primary target for HTTP auto-scaling demonstration],
-    [UC2], [Sign in with Google], [identity], [Extracted service; shared session across services],
+    [UC2], [Sign in with Google], [identity], [Separate service; shared session across services],
     [UC3], [Initiate a team by paying for the first membership], [commerce], [Remote active-user check],
     [UC4], [Join an existing team by paying], [commerce], [Remote active-user check; publishes `PaymentSucceeded`],
     [UC5], [Resolve a team to succeeded or expired], [commerce], [Publishes `TeamSucceeded` / `TeamExpired`],
@@ -340,7 +346,7 @@ The following demonstrations are scripted and repeatable. Throughput and latency
 - *Disposable environment.* The runtime environment is created before use and destroyed afterwards, with deterministic seed data. It runs at about US\$0.20 per hour and costs about US\$1–3 per month while idle, against about US\$125 per month for running continuously. Rebuilding from zero is itself demonstrated.
 
 == DevOps and DevSecOps
-- *Source and artifacts.* One repository and one trunk (`dev`), shared with SWE5006. SWE5001 work lands through short-lived topic branches and pull-request review. The monolith and the three service images are built from the same commit, pushed to Amazon ECR and deployed by immutable digest.
+- *Source and artifacts.* One repository and one trunk (`dev`), shared with SWE5006. SWE5001 work lands through short-lived topic branches and pull-request review. The monolith and the three service images are built from the same commit, pushed to Amazon ECR and deployed by immutable digest. Existing SWE5006 pipelines are extended with new jobs, not duplicated, and its EC2 deployment workflow is left unchanged.
 - *Infrastructure as code.* Terraform only, in three layered stacks:
   - `foundation` (persistent): state, GitHub OIDC roles, ECR, parameters, budgets;
   - `edge` (persistent): CloudFront, S3;
@@ -357,6 +363,8 @@ The following demonstrations are scripted and repeatable. Throughput and latency
 
 == Out of Scope
 - Extracting payment or catalog into separate services (documented as the evolution path).
+- Moving service code into separate source trees; this is deferred until SWE5006 feature work ends.
+- Replacing or changing the SWE5006 monolith deployment.
 - Multi-region deployment and database read replicas.
 - A native mobile application.
 - A production launch with real payments; Stripe runs in test mode throughout.
@@ -377,16 +385,16 @@ The guideline is about ten person-days per member, 50 person-days in total. The 
     [2.1], [`blocbuy-platform-starter` shared library], [3],
     [2.2], [Transactional outbox, SNS/SQS publishing, idempotent consumption], [3.5],
     [3], [*Service decomposition*], [*13.5*],
-    [3.1], [Extract `notification-svc` and add event consumers], [3],
-    [3.2], [Extract `identity-svc`; HTTP active-user adapter; shared session], [4],
-    [3.3], [Package `commerce-svc` and wire event publishing], [2],
-    [3.4], [Split databases and Flyway migrations per service], [3],
+    [3.1], [Assemble `notification-svc` and add event consumers], [3],
+    [3.2], [Assemble `identity-svc`; topology-selected HTTP active-user adapter; shared session], [4],
+    [3.3], [Assemble `commerce-svc` and wire event publishing], [2],
+    [3.4], [Per-service databases and Flyway migrations for the distributed shape], [3],
     [3.5], [Demo seed data and bulk load-test data], [1.5],
     [4], [*Infrastructure as code*], [*11*],
     [4.1], [`foundation` stack: state, OIDC roles, ECR, parameters, budgets], [2],
     [4.2], [Network, ECS cluster and `ecs-service` golden-path module], [4],
     [4.3], [RDS, ElastiCache and messaging modules], [2],
-    [4.4], [`edge` stack: CloudFront and S3 rewiring], [1],
+    [4.4], [`edge` stack: separate CloudFront distribution and S3 bucket], [1],
     [4.5], [Auto-scaling policies, dashboard and alarms], [2],
     [5], [*DevSecOps pipeline*], [*6*],
     [5.1], [Per-service CI: build, test, SonarCloud, Trivy], [2],
@@ -408,9 +416,9 @@ The guideline is about ten person-days per member, 50 person-days in total. The 
   table(
     columns: (1.1fr, 3fr),
     [Period], [Milestone],
-    [28 Sep – 4 Oct], [Proposal submitted. `foundation` stack, network and ECS cluster. The unchanged application runs on Fargate as the first strangler step.],
-    [5 – 11 Oct], [Platform starter library. Outbox and messaging. `notification-svc` extracted with event consumers.],
-    [12 – 18 Oct], [`identity-svc` extracted. Databases split. Load-balancer routing and auto-scaling policies in place.],
+    [28 Sep – 4 Oct], [Proposal submitted. `foundation` stack, network and ECS cluster. The monolith assembly runs unchanged on Fargate as the first step of the distributed shape.],
+    [5 – 11 Oct], [Platform starter library. Outbox and messaging. `notification-svc` assembled with event consumers.],
+    [12 – 18 Oct], [`identity-svc` assembled. Per-service databases. Load-balancer routing and auto-scaling policies in place.],
     [19 – 22 Oct], [k6 load tests, dashboard, resilience drills, full rehearsal.],
     [23 Oct], [Project presentation (Team 8, 4.15 pm).],
     [by 16 Nov], [Project report submitted; all cloud resources destroyed.],
@@ -430,6 +438,7 @@ The guideline is about ten person-days per member, 50 person-days in total. The 
     [The cloud budget is exceeded.], [The disposable runtime environment, AWS Budgets alerts and a nightly automatic teardown.],
     [`commerce-svc` is perceived as too coarse.], [The consistency-boundary rationale is recorded as an architecture decision, with the payment-extraction evolution path.],
     [The functional baseline changes during the project.], [Both courses share one trunk, so baseline changes reach the services without a sync step. CI builds the monolith and every service on each pull request, and architecture tests reject new cross-service calls that bypass ports or events.],
+    [SWE5001 changes on the shared trunk break SWE5006 work or its deployment.], [Changes are additive only. The monolith stays the default shape, the SWE5006 required checks stay required, and the SWE5006 EC2 stack and workflows are not modified.],
   ),
   caption: [Key risks and mitigations],
 )
