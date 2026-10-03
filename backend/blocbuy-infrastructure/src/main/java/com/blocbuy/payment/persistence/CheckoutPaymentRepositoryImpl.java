@@ -34,7 +34,8 @@ public class CheckoutPaymentRepositoryImpl implements CheckoutPaymentRepository 
                         row.getCurrency(),
                         row.getFulfilmentResult(),
                         row.getFulfilledDealId(),
-                        row.getOrderId()));
+                        row.getOrderId(),
+                        row.getIntentId()));
     }
 
     @Override

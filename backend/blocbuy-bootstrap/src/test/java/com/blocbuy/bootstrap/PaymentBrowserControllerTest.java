@@ -49,6 +49,7 @@ class PaymentBrowserControllerTest {
     private static final UUID BUSINESS = UUID.fromString("00000000-0000-4000-8000-000000000010");
     private static final UUID INTENT = UUID.fromString("00000000-0000-4000-8000-000000000020");
     private static final UUID PAYMENT = UUID.fromString("00000000-0000-4000-8000-000000000030");
+    private static final UUID PRODUCT = UUID.fromString("00000000-0000-4000-8000-000000000040");
     private static final String INTENTS = "/api/v1/payments/intents";
     private static final String CHECKOUT = "/api/v1/payments/checkout-sessions";
     @Autowired private MockMvc mvc;
@@ -272,11 +273,13 @@ class PaymentBrowserControllerTest {
                                 BUSINESS,
                                 INTENT,
                                 false,
-                                "NONE"));
+                                "NONE",
+                                PRODUCT));
         mvc.perform(get("/api/v1/payments/" + PAYMENT).cookie(cookie))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.data.orderId").value(INTENT.toString()))
+                .andExpect(jsonPath("$.data.productId").value(PRODUCT.toString()))
                 .andExpect(jsonPath("$.data.checkoutUrl").doesNotExist())
                 .andExpect(jsonPath("$.data.providerPaymentIntentId").doesNotExist());
         when(payments.receipt(USER, PAYMENT))
