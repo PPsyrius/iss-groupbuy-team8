@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.common.gateway.RateLimitGateway.RateLimit;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.RedisConnectionFailureException;
@@ -22,8 +23,9 @@ class RedisRateLimitGatewayTest {
             new RateLimit("invite-resolve", 1, Duration.ofMinutes(1));
 
     private final StringRedisTemplate redis = mock(StringRedisTemplate.class);
+    private final SimpleMeterRegistry meters = new SimpleMeterRegistry();
     private final RedisRateLimitGateway gateway =
-            new RedisRateLimitGateway(redis, new MockEnvironment());
+            new RedisRateLimitGateway(redis, new MockEnvironment(), meters);
 
     @Test
     @SuppressWarnings("unchecked")
@@ -32,6 +34,8 @@ class RedisRateLimitGatewayTest {
                 .thenThrow(new RedisConnectionFailureException("down"));
 
         assertThat(gateway.tryAcquire(LIMIT, "198.51.100.10")).isTrue();
+        assertThat(meters.counter("blocbuy.rate_limit.fail_open", "scope", LIMIT.scope()).count())
+                .isEqualTo(1);
     }
 
     @Test
@@ -40,6 +44,8 @@ class RedisRateLimitGatewayTest {
         when(redis.execute(any(RedisScript.class), anyList(), anyString())).thenReturn(null);
 
         assertThat(gateway.tryAcquire(LIMIT, "198.51.100.10")).isTrue();
+        assertThat(meters.counter("blocbuy.rate_limit.fail_open", "scope", LIMIT.scope()).count())
+                .isEqualTo(1);
     }
 
     @Test
@@ -48,5 +54,13 @@ class RedisRateLimitGatewayTest {
         when(redis.execute(any(RedisScript.class), anyList(), anyString())).thenReturn(2L);
 
         assertThat(gateway.tryAcquire(LIMIT, "198.51.100.10")).isFalse();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void aCountAtTheLimitAllowsTheRequestWithoutDegradation() {
+        when(redis.execute(any(RedisScript.class), anyList(), anyString())).thenReturn(1L);
+        assertThat(gateway.tryAcquire(LIMIT, "198.51.100.10")).isTrue();
+        assertThat(meters.find("blocbuy.rate_limit.fail_open").counter()).isNull();
     }
 }

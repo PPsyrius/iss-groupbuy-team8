@@ -28,10 +28,13 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.SimpleTransactionStatus;
 
 /**
  * UC7 minting: members only, open teams only, and one invite per team and member. Resolving: any
@@ -50,9 +53,26 @@ class ShareInviteAppServiceTest {
     private final ShareInviteRepository invites = mock(ShareInviteRepository.class);
     private final RateLimitGateway rateLimits = mock(RateLimitGateway.class);
     private final UserAppService users = mock(UserAppService.class);
+    private final PlatformTransactionManager transactions = mock(PlatformTransactionManager.class);
     private final ShareInviteAppService service =
-            new ShareInviteAppService(deals, participation, invites, rateLimits, users);
+            new ShareInviteAppService(
+                    deals, participation, invites, rateLimits, users, transactions);
     private static final String CLIENT = "198.51.100.10";
+
+    @BeforeEach
+    void allowMinting() {
+        when(transactions.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
+        when(rateLimits.tryAcquire(ShareInviteAppService.MINT_LIMIT, MEMBER.toString()))
+                .thenReturn(true);
+    }
+
+    @Test
+    void mintingOverTheUserLimitDoesNoBusinessWork() {
+        when(rateLimits.tryAcquire(ShareInviteAppService.MINT_LIMIT, MEMBER.toString()))
+                .thenReturn(false);
+        assertRejected(() -> service.mint(MEMBER, DEAL), CommonErrorCode.RATE_LIMITED);
+        verifyNoInteractions(deals, participation, invites, transactions);
+    }
 
     private static GroupDeal deal(DealStatus status, Instant expireTime) {
         return GroupDeal.reconstitute(
