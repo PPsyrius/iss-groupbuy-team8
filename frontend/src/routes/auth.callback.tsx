@@ -25,6 +25,7 @@ export const Route = createFileRoute("/auth/callback")({
 function SigningIn() {
   return (
     <main className="flex flex-col items-center gap-3 p-16" aria-live="polite">
+      <title>Signing in · BlocBuy</title>
       <Spinner aria-label="Signing you in" />
       <p className="text-sm text-zinc-600">Signing you in…</p>
     </main>

@@ -60,6 +60,7 @@ describe("/products/$productId loader", () => {
     serveListing(listing());
     renderRoute(`/products/${unknownId}`);
     expect(await screen.findByText(/can’t find that page/)).toBeInTheDocument();
+    expect(document.title).toBe("We can’t find that page · BlocBuy");
     expect(screen.queryByText(/couldn’t load this listing/)).not.toBeInTheDocument();
   });
 
@@ -182,12 +183,13 @@ describe("/products/$productId gallery", () => {
     }
   });
 
-  it("starts at the first shot when navigating to another product", async () => {
+  it("updates the title and starts at the first shot when navigating to another product", async () => {
     const images = ["https://example.test/rice-1.jpg", "https://example.test/rice-2.jpg"];
     serveAnonymous();
     serveListing(listing({ images }));
     const { container, router } = renderRoute(`/products/${knownId}`);
     await screen.findByText("product shot 1 of 2");
+    expect(document.title).toBe("Thai jasmine rice 10 kg · BlocBuy");
     await userEvent.click(screen.getAllByRole("button", { name: "Show product shot 2" })[0]!);
     expect(screen.getByText("product shot 2 of 2")).toBeInTheDocument();
 
@@ -197,6 +199,7 @@ describe("/products/$productId gallery", () => {
     );
 
     await screen.findByRole("heading", { level: 1, name: "Another rice listing" });
+    expect(document.title).toBe("Another rice listing · BlocBuy");
     expect(screen.getByText("product shot 1 of 2")).toBeInTheDocument();
     expect(container.querySelector("main img")).toHaveAttribute("src", images[0]);
   });

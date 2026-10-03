@@ -110,6 +110,7 @@ describe("/account behind the _authenticated guard", () => {
     expect(screen.queryByRole("heading", { name: "No orders yet" })).toBeNull();
     expect(screen.queryByRole("group", { name: "Show blocs" })).toBeNull();
     expect(screen.getByRole("heading", { name: "My blocs" })).toBeVisible();
+    expect(document.title).toBe("My blocs · BlocBuy");
     // The site header names the buyer (userId when the nickname is null); the page adds no second
     // name row (§4.4).
     expect(screen.getByTestId("session-user")).toHaveTextContent("u1");

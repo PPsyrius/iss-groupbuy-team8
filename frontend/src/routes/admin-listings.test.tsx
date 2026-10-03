@@ -18,6 +18,7 @@ describe("/admin/listings", () => {
     server.events.on("request:start", listen);
     renderRoute("/admin/listings");
     expect(await screen.findByRole("heading", { name: "Listings" })).toBeVisible();
+    expect(document.title).toBe("Manage listings · BlocBuy");
     expect(screen.getByText("62 listings · page size 20")).toBeVisible();
     expect(await screen.findByText("Showing 1–20 of 62")).toBeVisible();
     expect(screen.getByText("Page 1 of 4")).toBeVisible();
