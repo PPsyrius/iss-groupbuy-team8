@@ -99,8 +99,8 @@ public class AuthController {
                 ResponseCookie.from(OAUTH_STATE_COOKIE, authorize.stateBinding())
                         .httpOnly(true)
                         .sameSite("Lax")
-                        // mirrors sa-token.cookie.secure: on for HTTPS deployments, off for the
-                        // plain-HTTP local/docker/ec2 profiles until the CloudFront cutover (B3)
+                        // mirrors sa-token.cookie.secure: on for HTTPS deployments (ec2 behind
+                        // CloudFront, B3), off for the plain-HTTP local/docker profiles
                         .secure(authWebProperties.stateCookieSecure())
                         // context-path (e.g. /api on dev) is part of the browser-visible path;
                         // without it the cookie is never sent back to the callback

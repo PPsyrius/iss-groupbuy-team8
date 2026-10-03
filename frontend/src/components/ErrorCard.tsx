@@ -43,6 +43,7 @@ export function ErrorCard({
 }: Readonly<ErrorCardProps>) {
   return (
     <main className="mx-auto flex max-w-[1280px] justify-center p-6 xl:py-16">
+      <title>{`${title} · BlocBuy`}</title>
       <div className={card + " flex w-full max-w-[560px] flex-col gap-3 p-6 xl:p-10"}>
         {/* One live region for everything a poll can change: a refund moving to review keeps the
             title, so announcing the heading alone would miss it. An error is announced by the
