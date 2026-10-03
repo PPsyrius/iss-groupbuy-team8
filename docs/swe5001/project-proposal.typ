@@ -284,11 +284,16 @@ The distributed shape is deployed on AWS in `ap-southeast-1`. It uses its own Te
 )
 
 == Persistence Design
-The monolith shape keeps its single database. In the distributed shape, each service owns its tables and its Flyway migrations:
+The monolith shape keeps its single database. In the distributed shape, each service has its own database and owns these tables:
 
 - `identity-svc`: the `sys_user*`, `sys_role`, `sys_permission` and `rel_*` tables;
 - `notification-svc`: `biz_notification`;
 - `commerce-svc`: all other business tables (products, team price policies and quotes, group deals and members, purchase intents, orders, payments, refunds, and webhook and refund logs).
+
+Migrations follow the shared trunk in two stages:
+
+- *While SWE5006 feature work continues*, every service database applies the full shared `db/migration` stream. Ownership is enforced by grants: each service's runtime role can reach only its own tables, so the other tables exist but stay empty and unreachable.
+- *After that work stops*, each service uses its own Flyway migration location with a fresh baseline for its tables only.
 
 Services never read another service's database; they cross boundaries only through APIs and events. Outbox and consumed-message tables live in the database of the producing and consuming service respectively.
 
