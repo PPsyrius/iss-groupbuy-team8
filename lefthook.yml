@@ -13,6 +13,7 @@ pre-commit:
           "frontend/src/routeTree.gen.ts",
           "frontend/docs/**",
           "frontend/README.md",
+          "frontend/**/README.md",
           "frontend/AGENTS.md",
           "frontend/CLAUDE.md",
         ]

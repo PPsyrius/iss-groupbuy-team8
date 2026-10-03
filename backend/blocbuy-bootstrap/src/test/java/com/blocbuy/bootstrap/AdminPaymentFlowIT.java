@@ -180,15 +180,22 @@ class AdminPaymentFlowIT {
                 deletedReceipt);
         UUID unpaid = payment("compensation_required", "pending", WHEN.plusSeconds(6));
         jdbc.update("UPDATE biz_payment SET status='created' WHERE id=?", unpaid);
+        // UUIDv7 suffixes are random within a millisecond; tied receipts sort by payment ID.
+        UUID firstTie = newest.compareTo(middle) > 0 ? newest : middle;
+        UUID secondTie = firstTie.equals(newest) ? middle : newest;
         mvc.perform(get(PATH).param("size", "1").header(HEADER, adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.total").value(3))
-                .andExpect(jsonPath("$.data.items[0].refundStatus").value("review"))
-                .andExpect(jsonPath("$.data.items[0].paymentId").value(newest.toString()));
+                .andExpect(
+                        jsonPath("$.data.items[0].refundStatus")
+                                .value(firstTie.equals(newest) ? "review" : "processing"))
+                .andExpect(jsonPath("$.data.items[0].paymentId").value(firstTie.toString()));
         mvc.perform(get(PATH).param("page", "2").param("size", "1").header(HEADER, adminToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.items[0].refundStatus").value("processing"))
-                .andExpect(jsonPath("$.data.items[0].paymentId").value(middle.toString()));
+                .andExpect(
+                        jsonPath("$.data.items[0].refundStatus")
+                                .value(secondTie.equals(newest) ? "review" : "processing"))
+                .andExpect(jsonPath("$.data.items[0].paymentId").value(secondTie.toString()));
         mvc.perform(get(PATH).param("page", "3").param("size", "1").header(HEADER, adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.items[0].refundStatus").value("failed"))

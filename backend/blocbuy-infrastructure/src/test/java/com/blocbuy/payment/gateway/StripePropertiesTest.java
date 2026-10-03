@@ -10,6 +10,8 @@ class StripePropertiesTest {
     @Test
     void nonblankApiKeyIsConfigured() {
         assertThat(new StripeProperties("sk_test_123", "whsec_123").configured()).isTrue();
+        assertThat(new StripeProperties("sk_test_123", "whsec_123").sandbox()).isTrue();
+        assertThat(new StripeProperties("sk_live_123", "whsec_123").sandbox()).isFalse();
     }
 
     @Test
@@ -17,5 +19,6 @@ class StripePropertiesTest {
         assertThat(new StripeProperties(null, "whsec_123").configured()).isFalse();
         assertThat(new StripeProperties("", "whsec_123").configured()).isFalse();
         assertThat(new StripeProperties("  ", "whsec_123").configured()).isFalse();
+        assertThat(new StripeProperties(null, "whsec_123").sandbox()).isFalse();
     }
 }

@@ -154,6 +154,43 @@ public class CheckoutPaymentRepositoryImpl implements CheckoutPaymentRepository 
         return mapper.pending(threshold, limit).stream().map(PaymentConverter::fromRow).toList();
     }
 
+    @Override
+    public List<CheckoutPayment> dueForExpiry(Instant now, int limit) {
+        if (limit < 1 || limit > 100) {
+            throw new IllegalArgumentException("Limit must be 1..100");
+        }
+        return expiryPage(now, null, null, limit);
+    }
+
+    @Override
+    public List<CheckoutPayment> nextExpiryPage(Instant now, int limit) {
+        if (limit < 1 || limit > 100) {
+            throw new IllegalArgumentException("Limit must be 1..100");
+        }
+        var cursor = mapper.lockExpiryCursor();
+        if (cursor == null) {
+            throw new IllegalStateException("Missing Checkout expiry cursor");
+        }
+        var page = expiryPage(now, cursor.lastCreateTime(), cursor.lastPaymentId(), limit);
+        if (page.isEmpty() && cursor.lastPaymentId() != null) {
+            page = expiryPage(now, null, null, limit);
+        }
+        if (!page.isEmpty()) {
+            var last = page.getLast();
+            changed(mapper.advanceExpiryCursor(cursor.id(), last.createdAt(), last.id()));
+        } else if (cursor.lastPaymentId() != null) {
+            changed(mapper.advanceExpiryCursor(cursor.id(), null, null));
+        }
+        return page;
+    }
+
+    private List<CheckoutPayment> expiryPage(
+            Instant now, Instant afterTime, UUID afterId, int limit) {
+        return mapper.dueForExpiry(now, afterTime, afterId, limit).stream()
+                .map(PaymentConverter::fromRow)
+                .toList();
+    }
+
     private static Optional<CheckoutPayment> optional(BizPaymentDO row) {
         return Optional.ofNullable(PaymentConverter.fromRow(row));
     }
