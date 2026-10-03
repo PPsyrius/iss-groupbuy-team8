@@ -1,9 +1,14 @@
 package com.blocbuy.payment.service;
 
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.common.exception.CommonErrorCode;
+import com.blocbuy.common.gateway.RateLimitGateway;
+import com.blocbuy.common.gateway.RateLimitGateway.RateLimit;
+import com.blocbuy.order.model.PurchaseOperation;
 import com.blocbuy.payment.exception.PaymentErrorCode;
 import com.blocbuy.payment.gateway.PaymentIntentPort;
 import com.blocbuy.payment.repository.CheckoutPaymentRepository;
+import java.time.Duration;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
@@ -22,6 +27,11 @@ public class PaymentBrowserService {
     private final CheckoutPaymentRepository repository;
     private final com.blocbuy.payment.repository.RefundRepository refunds;
     private final PlatformTransactionManager transactions;
+    private final RateLimitGateway rateLimits;
+
+    static final RateLimit JOIN_LIMIT = new RateLimit("join-intent", 60, Duration.ofMinutes(1));
+    static final RateLimit CHECKOUT_LIMIT =
+            new RateLimit("payment-initiation", 60, Duration.ofMinutes(1));
 
     public UUID createIntent(UUID user, String operation, UUID businessId, String inviteRef) {
         return createIntent(user, operation, businessId, inviteRef, null);
@@ -32,6 +42,10 @@ public class PaymentBrowserService {
             UUID user, String operation, UUID businessId, String inviteRef, UUID quoteId) {
         PaymentIntentPort port = intents.getIfAvailable();
         if (port == null) throw new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID);
+        if (PurchaseOperation.JOIN.code().equals(operation)
+                && !rateLimits.tryAcquire(JOIN_LIMIT, user + ":" + businessId)) {
+            throw new BizException(CommonErrorCode.RATE_LIMITED);
+        }
         TransactionTemplate tx = new TransactionTemplate(transactions);
         tx.setTimeout(10);
         try {
@@ -45,6 +59,9 @@ public class PaymentBrowserService {
     public StripeCheckoutService.CheckoutResult prepare(UUID user, UUID intent, String requestKey) {
         StripeCheckoutService service = checkout.getIfAvailable();
         if (service == null) throw new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID);
+        if (!rateLimits.tryAcquire(CHECKOUT_LIMIT, user.toString())) {
+            throw new BizException(CommonErrorCode.RATE_LIMITED);
+        }
         try {
             return service.prepare(user, intent, requestKey);
         } catch (IllegalArgumentException failure) {

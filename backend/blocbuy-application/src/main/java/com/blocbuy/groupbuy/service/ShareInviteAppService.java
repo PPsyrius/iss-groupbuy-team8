@@ -21,7 +21,8 @@ import java.util.UUID;
 import java.util.random.RandomGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * UC7: a member of an open team mints — or gets back — their invite into it. Idempotent by design:
@@ -43,6 +44,7 @@ public class ShareInviteAppService {
     private final ShareInviteRepository invites;
     private final RateLimitGateway rateLimits;
     private final UserAppService users;
+    private final PlatformTransactionManager transactions;
     private final RandomGenerator random = new SecureRandom();
 
     /**
@@ -52,6 +54,8 @@ public class ShareInviteAppService {
     static final RateLimit RESOLVE_LIMIT =
             new RateLimit("invite-resolve", 60, Duration.ofMinutes(1));
 
+    static final RateLimit MINT_LIMIT = new RateLimit("invite-create", 60, Duration.ofMinutes(1));
+
     /**
      * Returns the caller's invite into the team, minting it on first use.
      *
@@ -60,11 +64,19 @@ public class ShareInviteAppService {
      *     learns nothing about the team; {@code DEAL_CLOSED} when the team no longer accepts
      *     members
      */
-    @Transactional(timeout = 10)
     public ShareInviteView mint(UUID userId, UUID dealId) {
         if (userId == null || dealId == null) {
             throw new BizException(GroupbuyErrorCode.GROUPBUY_PLACEHOLDER);
         }
+        if (!rateLimits.tryAcquire(MINT_LIMIT, userId.toString())) {
+            throw new BizException(CommonErrorCode.RATE_LIMITED);
+        }
+        TransactionTemplate tx = new TransactionTemplate(transactions);
+        tx.setTimeout(10);
+        return tx.execute(status -> mintAllowed(userId, dealId));
+    }
+
+    private ShareInviteView mintAllowed(UUID userId, UUID dealId) {
         GroupDeal deal =
                 deals.findById(dealId)
                         .orElseThrow(

@@ -5,10 +5,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.common.exception.CommonErrorCode;
+import com.blocbuy.common.gateway.RateLimitGateway;
 import com.blocbuy.payment.gateway.PaymentIntentPort;
 import com.blocbuy.payment.model.CheckoutPayment;
 import com.blocbuy.payment.model.CheckoutQuote;
@@ -27,6 +30,38 @@ import org.springframework.transaction.support.SimpleTransactionStatus;
 /** Customer-facing orchestration: intents, checkout preparation and receipt mapping. */
 class PaymentBrowserServiceTest {
     @Test
+    void rejectedWritesDoNotStartTransactionsOrReachPaymentPorts() {
+        var beans = new DefaultListableBeanFactory();
+        var tx = mock(PlatformTransactionManager.class);
+        var port = mock(PaymentIntentPort.class);
+        var checkout = mock(StripeCheckoutService.class);
+        var limits = mock(RateLimitGateway.class);
+        beans.registerSingleton("port", port);
+        beans.registerSingleton("checkout", checkout);
+        var service =
+                new PaymentBrowserService(
+                        beans.getBeanProvider(PaymentIntentPort.class),
+                        beans.getBeanProvider(StripeCheckoutService.class),
+                        mock(CheckoutPaymentRepository.class),
+                        mock(RefundRepository.class),
+                        tx,
+                        limits);
+        UUID user = UUID.randomUUID();
+        UUID deal = UUID.randomUUID();
+        assertThatThrownBy(() -> service.createIntent(user, "JOIN", deal, null))
+                .isInstanceOf(BizException.class)
+                .extracting(thrown -> ((BizException) thrown).errorCode())
+                .isEqualTo(CommonErrorCode.RATE_LIMITED);
+        assertThatThrownBy(() -> service.prepare(user, deal, "retry"))
+                .isInstanceOf(BizException.class)
+                .extracting(thrown -> ((BizException) thrown).errorCode())
+                .isEqualTo(CommonErrorCode.RATE_LIMITED);
+        verify(limits).tryAcquire(PaymentBrowserService.JOIN_LIMIT, user + ":" + deal);
+        verify(limits).tryAcquire(PaymentBrowserService.CHECKOUT_LIMIT, user.toString());
+        verifyNoInteractions(tx, port, checkout);
+    }
+
+    @Test
     void receiptMapsLowercaseDatabaseRefundStateToApiVocabulary() {
         var repository = mock(CheckoutPaymentRepository.class);
         var refunds = mock(RefundRepository.class);
@@ -39,7 +74,8 @@ class PaymentBrowserServiceTest {
                         beans.getBeanProvider(StripeCheckoutService.class),
                         repository,
                         refunds,
-                        tx);
+                        tx,
+                        (limit, subject) -> true);
         UUID userId = UUID.randomUUID();
         UUID id = UUID.randomUUID();
         var quote =
@@ -106,13 +142,16 @@ class PaymentBrowserServiceTest {
         var checkout = mock(StripeCheckoutService.class);
         beans.registerSingleton("port", port);
         beans.registerSingleton("checkout", checkout);
+        var limits = mock(RateLimitGateway.class);
+        when(limits.tryAcquire(any(), any())).thenReturn(true);
         var service =
                 new PaymentBrowserService(
                         beans.getBeanProvider(PaymentIntentPort.class),
                         beans.getBeanProvider(StripeCheckoutService.class),
                         mock(CheckoutPaymentRepository.class),
                         mock(RefundRepository.class),
-                        tx);
+                        tx,
+                        limits);
         UUID user = UUID.randomUUID();
         UUID intent = UUID.randomUUID();
         UUID paymentId = UUID.randomUUID();
@@ -123,11 +162,13 @@ class PaymentBrowserServiceTest {
         UUID quoted = UUID.randomUUID();
         when(port.createIntent(user, "START", intent, null, quote)).thenReturn(quoted);
         assertThat(service.createIntent(user, "START", intent, null, quote)).isEqualTo(quoted);
+        verifyNoInteractions(limits);
         var result =
                 new StripeCheckoutService.CheckoutResult(
                         paymentId, "https://checkout.stripe.com/c/pay/test", "CREATED");
         when(checkout.prepare(user, intent, "key")).thenReturn(result);
         assertThat(service.prepare(user, intent, "key")).isSameAs(result);
+        verify(limits).tryAcquire(PaymentBrowserService.CHECKOUT_LIMIT, user.toString());
     }
 
     @Test
@@ -143,7 +184,8 @@ class PaymentBrowserServiceTest {
                         beans.getBeanProvider(StripeCheckoutService.class),
                         mock(CheckoutPaymentRepository.class),
                         mock(RefundRepository.class),
-                        tx);
+                        tx,
+                        (limit, subject) -> true);
         UUID id = UUID.randomUUID();
         when(port.createIntent(any(), any(), any(), any(), any()))
                 .thenThrow(new IllegalArgumentException("invalid"));
@@ -164,7 +206,8 @@ class PaymentBrowserServiceTest {
                         beans.getBeanProvider(StripeCheckoutService.class),
                         repository,
                         refunds,
-                        tx);
+                        tx,
+                        (limit, subject) -> true);
         UUID userId = UUID.randomUUID();
         UUID id = UUID.randomUUID();
         var quote =
@@ -220,7 +263,8 @@ class PaymentBrowserServiceTest {
                         beans.getBeanProvider(StripeCheckoutService.class),
                         repository,
                         refunds,
-                        tx);
+                        tx,
+                        (limit, subject) -> true);
         UUID userId = UUID.randomUUID();
         UUID id = UUID.randomUUID();
         var quote =
@@ -279,7 +323,8 @@ class PaymentBrowserServiceTest {
                         beans.getBeanProvider(StripeCheckoutService.class),
                         mock(CheckoutPaymentRepository.class),
                         mock(RefundRepository.class),
-                        tx);
+                        tx,
+                        (limit, subject) -> true);
         UUID id = UUID.randomUUID();
         assertThatThrownBy(() -> service.createIntent(id, "START", id, null))
                 .isInstanceOf(BizException.class);
