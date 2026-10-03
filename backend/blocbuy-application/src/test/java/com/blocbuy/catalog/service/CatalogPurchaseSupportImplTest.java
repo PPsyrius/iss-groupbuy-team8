@@ -67,9 +67,31 @@ class CatalogPurchaseSupportImplTest {
     }
 
     private void given(Product product, ProductTeamTerms terms, TeamPricePolicy policy) {
-        when(products.lockById(PRODUCT)).thenReturn(Optional.ofNullable(product));
-        when(products.findTeamTerms(PRODUCT)).thenReturn(Optional.ofNullable(terms));
+        when(products.lockById(PRODUCT)).thenReturn(Optional.ofNullable(withTerms(product, terms)));
         when(teamPrices.findLatestPolicy(PRODUCT)).thenReturn(Optional.ofNullable(policy));
+    }
+
+    private static Product withTerms(Product product, ProductTeamTerms terms) {
+        if (product == null) {
+            return null;
+        }
+        return Product.reconstitute(
+                product.id(),
+                product.productNo(),
+                product.title(),
+                product.subtitle(),
+                product.description(),
+                product.coverImage(),
+                product.images(),
+                product.category(),
+                product.originalPrice(),
+                product.currency(),
+                product.stock(),
+                product.soldCount(),
+                product.status(),
+                product.pricingMode(),
+                product.version(),
+                terms);
     }
 
     private static ProductTeamTerms terms(Integer targetSize, Integer lifetimeSeconds) {
@@ -95,13 +117,8 @@ class CatalogPurchaseSupportImplTest {
     }
 
     @Test
-    void aMissingProductOrMissingTermsRowIsNotFound() {
+    void aMissingProductIsNotFound() {
         given(null, terms(3, 7200), policy("40.00", NOW.minusSeconds(60), NOW.plusSeconds(9999)));
-        assertThatThrownBy(() -> support.lockStartQuote(PRODUCT, NOW))
-                .isInstanceOf(BizException.class)
-                .hasMessageContaining(CatalogErrorCode.PRODUCT_NOT_FOUND.defaultMessage());
-
-        given(onSale(), null, policy("40.00", NOW.minusSeconds(60), NOW.plusSeconds(9999)));
         assertThatThrownBy(() -> support.lockStartQuote(PRODUCT, NOW))
                 .isInstanceOf(BizException.class)
                 .hasMessageContaining(CatalogErrorCode.PRODUCT_NOT_FOUND.defaultMessage());
@@ -127,7 +144,7 @@ class CatalogPurchaseSupportImplTest {
     @ParameterizedTest
     @CsvSource(
             nullValues = "null",
-            value = {"null, 7200", "3, null", "1, 7200", "3, 2399", "3, 86401"})
+            value = {"null, null", "null, 7200", "3, null", "1, 7200", "3, 2399", "3, 86401"})
     void aProductWithoutUsableTeamTermsCannotStartATeam(Integer target, Integer lifetime) {
         given(
                 onSale(),
@@ -243,8 +260,7 @@ class CatalogPurchaseSupportImplTest {
     }
 
     private void givenQuoted(Product product, ProductTeamTerms terms, TeamPriceQuote quote) {
-        when(products.lockById(PRODUCT)).thenReturn(Optional.ofNullable(product));
-        when(products.findTeamTerms(PRODUCT)).thenReturn(Optional.ofNullable(terms));
+        when(products.lockById(PRODUCT)).thenReturn(Optional.ofNullable(withTerms(product, terms)));
         when(teamPrices.currentTime()).thenReturn(NOW);
         when(teamPrices.findQuoteForOwner(QUOTE, BUYER)).thenReturn(Optional.ofNullable(quote));
     }

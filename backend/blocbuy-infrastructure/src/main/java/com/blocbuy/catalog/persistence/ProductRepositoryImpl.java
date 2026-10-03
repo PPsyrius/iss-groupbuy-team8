@@ -5,7 +5,6 @@ import com.blocbuy.catalog.model.ListingStatusCounts;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductDisplay;
 import com.blocbuy.catalog.model.ProductStatus;
-import com.blocbuy.catalog.model.ProductTeamTerms;
 import com.blocbuy.catalog.model.TeamTermsChange;
 import com.blocbuy.catalog.repository.ProductRepository;
 import com.blocbuy.common.exception.BizException;
@@ -122,18 +121,6 @@ public class ProductRepositoryImpl implements ProductRepository {
                                 new ProductDisplay(
                                         row.getProductId(), row.getTitle(), row.getCoverImage()))
                 .toList();
-    }
-
-    @Override
-    public Optional<ProductTeamTerms> findTeamTerms(UUID id) {
-        BizProductTeamTermsDO row = bizProductMapper.selectTeamTerms(id);
-        return row == null
-                ? Optional.empty()
-                : Optional.of(
-                        new ProductTeamTerms(
-                                row.getProductId(),
-                                row.getTeamTargetSize(),
-                                row.getTeamLifetimeSeconds()));
     }
 
     @Override
