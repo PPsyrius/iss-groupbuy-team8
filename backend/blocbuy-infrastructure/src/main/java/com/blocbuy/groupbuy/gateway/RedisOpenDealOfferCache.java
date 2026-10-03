@@ -30,6 +30,8 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @Component
 public class RedisOpenDealOfferCache implements OpenDealOfferCache {
+    private static final String ACTIVE_PROFILE_PROPERTY = "spring.profiles.active";
+    private static final String DEFAULT_PROFILE = "local";
     private static final RedisScript<Long> POPULATE =
             RedisScript.of(
                     """
@@ -58,7 +60,7 @@ public class RedisOpenDealOfferCache implements OpenDealOfferCache {
         if (productIds.isEmpty()) return new Lookup(Map.of(), true);
         List<UUID> ids = productIds.stream().distinct().toList();
         try {
-            String profile = environment.getProperty("spring.profiles.active", "local");
+            String profile = environment.getProperty(ACTIVE_PROFILE_PROPERTY, DEFAULT_PROFILE);
             List<String> values =
                     redis.opsForValue().multiGet(ids.stream().map(id -> key(profile, id)).toList());
             if (values == null) return new Lookup(Map.of(), false);
@@ -66,22 +68,8 @@ public class RedisOpenDealOfferCache implements OpenDealOfferCache {
             Instant now = Instant.now();
             for (int i = 0; i < ids.size(); i++) {
                 String value = values.get(i);
-                if (value == null) continue;
-                try {
-                    Entry entry = json.readValue(value, Entry.class);
-                    if (entry == null || entry.version() != 1) continue;
-                    OpenDealOffer offer = entry.offer();
-                    if (offer != null
-                            && (!ids.get(i).equals(offer.productId())
-                                    || !now.isBefore(offer.expireTime())
-                                    || offer.currentSize() >= offer.targetSize())) {
-                        continue;
-                    }
-                    hits.put(ids.get(i), Optional.ofNullable(offer));
-                } catch (JacksonException malformed) {
-                    log.warn(
-                            "Invalid best-offer cache value; loading from PostgreSQL (cause={})",
-                            malformed.getClass().getSimpleName());
+                if (value != null) {
+                    addValidHit(hits, ids.get(i), value, now);
                 }
             }
             return new Lookup(hits, true);
@@ -91,11 +79,30 @@ public class RedisOpenDealOfferCache implements OpenDealOfferCache {
         }
     }
 
+    private void addValidHit(
+            Map<UUID, Optional<OpenDealOffer>> hits, UUID productId, String value, Instant now) {
+        try {
+            Entry entry = json.readValue(value, Entry.class);
+            if (entry == null || entry.version() != 1) return;
+            OpenDealOffer offer = entry.offer();
+            if (offer == null
+                    || (productId.equals(offer.productId())
+                            && now.isBefore(offer.expireTime())
+                            && offer.currentSize() < offer.targetSize())) {
+                hits.put(productId, Optional.ofNullable(offer));
+            }
+        } catch (JacksonException malformed) {
+            log.warn(
+                    "Invalid best-offer cache value; loading from PostgreSQL (cause={})",
+                    malformed.getClass().getSimpleName());
+        }
+    }
+
     @Override
     public void putAll(Map<UUID, Optional<OpenDealOffer>> offers) {
         if (offers.isEmpty()) return;
         try {
-            String profile = environment.getProperty("spring.profiles.active", "local");
+            String profile = environment.getProperty(ACTIVE_PROFILE_PROPERTY, DEFAULT_PROFILE);
             List<String> keys = new ArrayList<>(offers.size());
             List<String> arguments = new ArrayList<>(offers.size() * 2);
             for (var item : offers.entrySet()) {
@@ -119,7 +126,7 @@ public class RedisOpenDealOfferCache implements OpenDealOfferCache {
     public void evict(Collection<UUID> productIds) {
         if (productIds.isEmpty()) return;
         try {
-            String profile = environment.getProperty("spring.profiles.active", "local");
+            String profile = environment.getProperty(ACTIVE_PROFILE_PROPERTY, DEFAULT_PROFILE);
             redis.delete(productIds.stream().distinct().map(id -> key(profile, id)).toList());
         } catch (DataAccessException unavailable) {
             unavailable("evict", unavailable);
