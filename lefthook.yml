@@ -17,7 +17,9 @@ pre-commit:
           "frontend/AGENTS.md",
           "frontend/CLAUDE.md",
         ]
-      run: pnpm exec oxfmt {staged_files}
+      # oxfmt's own ignorePatterns (e.g. README.md at any depth) can leave it no file to format;
+      # that is a skip, not an error.
+      run: pnpm exec oxfmt --no-error-on-unmatched-pattern {staged_files}
       stage_fixed: true
     frontend-lint:
       root: "frontend/"
