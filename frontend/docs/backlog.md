@@ -90,7 +90,7 @@ Preconditions: `jq` on `PATH` (the PostToolUse and Stop scripts exit 0 without i
 
 ### FB-22: Verify `Secure` on the auth cookies (backend #96)
 
-- [ ] Step 1: after #96 merges and deploys (the `ec2` profile sets both `sa-token.cookie.secure: true` and `blocbuy.frontend.state-cookie-secure: true`), `curl -sSI https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google | grep -i set-cookie` shows `Secure` on `blocbuy-oauth-state`.
+- [x] Step 1 (2026-10-03): after #96 merges and deploys (the `ec2` profile sets both `sa-token.cookie.secure: true` and `blocbuy.frontend.state-cookie-secure: true`), `curl -sSI https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google | grep -i set-cookie` shows `Secure` on `blocbuy-oauth-state`.
 - [ ] Step 2: after a Google login on dev, the `blocbuy-token` cookie shows `Secure` in DevTools; note both results in the sprint log.
 
 ## 3. Blocked / external
