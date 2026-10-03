@@ -77,6 +77,7 @@ class CheckoutPaymentRepositoryImplTest {
         assertThat(receipt.outcome()).isEqualTo("FULFILLED");
         assertThat(receipt.dealId()).isEqualTo(row.getFulfilledDealId());
         assertThat(receipt.orderId()).isEqualTo(row.getOrderId());
+        assertThat(receipt.intentId()).isEqualTo(row.getIntentId());
         verify(mapper).receipt(row.getId());
         verifyNoMoreInteractions(mapper);
     }
