@@ -158,8 +158,8 @@ Each task ends with `pnpm check` green, a screenshot or Playwright trace on the 
 ### A0-00: Commit the plan, file the asks
 
 - [x] Step 1: add `frontend/docs/admin-plan.md`. (on `dev`)
-- [ ] Step 2: file BA-1..BA-12 from §10 (label `backend`; body cites the artboard and the contract line) and D1..D8 from §11 (label `design`); link them from the "Admin console (UC9 GUI)" issue. Status 2026-10-01: BA-1..BA-6 and BA-8..BA-12 are filed as #246–#256 (BA-7 was answered by #242 before filing); D1..D8 and the umbrella issue are not filed yet.
-- [ ] Step 3: `git commit -m "docs(frontend): admin console plan"`.
+- [x] Step 2 (2026-10-02): file BA-1..BA-12 from §10 (label `backend`; body cites the artboard and the contract line) and D1..D8 from §11 (label `design`); link them from the "Admin console (UC9 GUI)" issue. BA-1..BA-6 and BA-8..BA-12 were filed as #246–#256 (BA-7 was answered by #242 before filing; all eleven closed by 2026-10-02); D1..D8 are #345–#352, and the umbrella issue #353 links every BA and D item. All nine new issues are on the project board in Backlog.
+- [x] Step 3 (2026-10-02): `git commit -m "docs(frontend): admin console plan"`. The plan has been on `dev` since `d45bc6c` (#202, 2026-09-27).
 
 ### A1-01: Admin API layer
 
@@ -416,14 +416,14 @@ Each body is **Ask / Why (artboard + contract line) / Acceptance / Frontend fall
 
 ## 11. Design gaps for the design owner
 
-- **D1** Rail counts (Bloc price rules 18, Payments 2). Payments has a data source since #333 (BA-8), but its page (A3-06) is not built, so the item stays hidden. Since #293 Bloc price rules could show `counts.withActivePolicy` (listings with a rule valid now), but its page is not drawn (Q3), so the item stays hidden. The Open blocs stat has a source since #290.
-- **D2** Undrawn dialogs, proposed copy. *Take off sale:* "Take this listing off sale?" / "Buyers can no longer start or join blocs on it. Blocs already filled keep their orders. You can put it back on sale later." / "Take off sale". *Put back on sale:* "Put this listing back on sale?" / "It becomes visible on the storefront again. Price, currency and stock are unchanged." *Delete draft:* "Delete this draft?" / "It disappears from the console. This cannot be undone." (danger). *Unsaved:* "Discard your changes?"
-- **D3** Scheduled rule state (validFrom in the future) and the replace-now warning.
-- **D4** Dashboard loading and empty; table error; All / On sale / Off sale empty.
-- **D5** Unsaved-changes prompt; toast after save or delete.
-- **D6** Group terms panel on the editor page (BA-7, answered by #242): a separate panel with its own save (A3-04), not `ListingForm` fields.
-- **D7** The Description field is missing from 4b.1.
-- **D8** The copy change "Add a rule after you publish" (BA-11). The product number field on create (BA-2 fallback) is no longer needed: #288 answered BA-2, and A3-08 removes the field.
+- **D1** (#345) Rail counts (Bloc price rules 18, Payments 2). Payments has a data source since #333 (BA-8), but its page (A3-06) is not built, so the item stays hidden. Since #293 Bloc price rules could show `counts.withActivePolicy` (listings with a rule valid now), but its page is not drawn (Q3), so the item stays hidden. The Open blocs stat has a source since #290.
+- **D2** (#346) Undrawn dialogs, proposed copy. *Take off sale:* "Take this listing off sale?" / "Buyers can no longer start or join blocs on it. Blocs already filled keep their orders. You can put it back on sale later." / "Take off sale". *Put back on sale:* "Put this listing back on sale?" / "It becomes visible on the storefront again. Price, currency and stock are unchanged." *Delete draft:* "Delete this draft?" / "It disappears from the console. This cannot be undone." (danger). *Unsaved:* "Discard your changes?"
+- **D3** (#347) Scheduled rule state (validFrom in the future) and the replace-now warning.
+- **D4** (#348) Dashboard loading and empty; table error; All / On sale / Off sale empty.
+- **D5** (#349) Unsaved-changes prompt; toast after save or delete.
+- **D6** (#350) Group terms panel on the editor page (BA-7, answered by #242): a separate panel with its own save (A3-04), not `ListingForm` fields.
+- **D7** (#351) The Description field is missing from 4b.1.
+- **D8** (#352) The copy change "Add a rule after you publish" (BA-11). The product number field on create (BA-2 fallback) is no longer needed: #288 answered BA-2, and A3-08 removes the field.
 
 ## 12. Decision notes
 
