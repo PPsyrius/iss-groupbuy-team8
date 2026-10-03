@@ -2,6 +2,7 @@ package com.blocbuy.order.service;
 
 import com.blocbuy.catalog.service.CatalogPurchaseSupport;
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.common.model.PurchaseQuoteWindow;
 import com.blocbuy.common.util.UuidV7;
 import com.blocbuy.groupbuy.service.GroupDealPurchaseSupport;
 import com.blocbuy.identity.service.UserAppService;
@@ -34,13 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @RequiredArgsConstructor
 public class PurchaseIntentAppService implements PaymentIntentPort {
-
-    /**
-     * How long a buyer has to complete a checkout on the price we just quoted. Matches {@code
-     * CatalogPurchaseSupportImpl.QUOTE_WINDOW_SECONDS}, which refuses to quote a START unless the
-     * price revision covers this whole window.
-     */
-    private static final long QUOTE_WINDOW_SECONDS = 2400;
 
     private final CatalogPurchaseSupport products;
     private final GroupDealPurchaseSupport deals;
@@ -125,7 +119,7 @@ public class PurchaseIntentAppService implements PaymentIntentPort {
                         quote.targetSize());
         return PurchaseIntent.issue(
                 terms,
-                now.plusSeconds(QUOTE_WINDOW_SECONDS),
+                now.plusSeconds(PurchaseQuoteWindow.SECONDS),
                 now.plusSeconds(quote.lifetimeSeconds()),
                 now);
     }
@@ -151,7 +145,8 @@ public class PurchaseIntentAppService implements PaymentIntentPort {
                         team.currency(),
                         team.targetSize());
         // A quote must never outlive the team it buys into, so the team's own deadline caps it.
-        Instant quoteValidUntil = earlier(now.plusSeconds(QUOTE_WINDOW_SECONDS), team.expireTime());
+        Instant quoteValidUntil =
+                earlier(now.plusSeconds(PurchaseQuoteWindow.SECONDS), team.expireTime());
         UUID sharer = deals.resolveSharer(inviteRef, team.dealId(), user).orElse(null);
         return PurchaseIntent.issue(terms, quoteValidUntil, team.expireTime(), now)
                 .attributedTo(sharer);

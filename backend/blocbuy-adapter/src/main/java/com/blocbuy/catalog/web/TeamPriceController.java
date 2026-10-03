@@ -66,7 +66,9 @@ public class TeamPriceController {
             description =
                     "Requires catalog:product:write. "
                             + "expectedVersion 0 creates the first revision; later writes must match the latest version. "
-                            + "Stale retries return 412 without another revision. Latest policy always replaces older policy.")
+                            + "Stale retries return 412 without another revision. Latest policy always replaces older policy. "
+                            + "validUntil must be more than 2400 seconds after the later of validFrom and database "
+                            + "time, so a team can be started on it; otherwise 400 CATALOG_400_001 on validUntil.")
     public Result<PolicyResponse> configure(
             @PathVariable UUID productId, @Valid @RequestBody PolicyRequest request) {
         StpUtil.checkPermission(WRITE_PERMISSION);
@@ -122,6 +124,8 @@ public class TeamPriceController {
         return UUID.fromString(StpUtil.getLoginIdAsString());
     }
 
+    // The regex is published verbatim as the OpenAPI pattern; rewriting it breaks contract-check.
+    @SuppressWarnings("java:S6353")
     public record PolicyRequest(
             @NotNull
                     @Pattern(regexp = "[0-9]{1,16}(\\.[0-9]{1,2})?")

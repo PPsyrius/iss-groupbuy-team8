@@ -219,11 +219,56 @@ class TeamPriceAppServiceImplTest {
                 new TeamPriceAppService.ConfigurePolicy(
                         new BigDecimal("20"), "sgd", NOW.minusSeconds(3600), NOW, 0);
 
+        // A past end keeps its own message: it is checked before the purchase window.
         assertThatThrownBy(() -> service.configure(PRODUCT, OWNER, command))
-                .isInstanceOf(BizException.class)
-                .extracting(ex -> ((BizException) ex).errorCode())
-                .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex -> {
+                            assertThat(ex.errorCode())
+                                    .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID);
+                            assertThat(ex.fieldViolations())
+                                    .extracting(BizException.FieldViolation::message)
+                                    .containsExactly("Must be in the future");
+                        });
         verify(prices, never()).appendPolicy(any(), any(), any());
+    }
+
+    /** #264: a window START can never use is refused before anything is written. */
+    @Test
+    void configureRejectsWindowShorterThanThePurchaseWindowWithoutWriting() {
+        stubProduct();
+        when(prices.currentTime()).thenReturn(NOW);
+        var command =
+                new TeamPriceAppService.ConfigurePolicy(
+                        new BigDecimal("20"),
+                        "sgd",
+                        NOW.minusSeconds(60),
+                        NOW.plusSeconds(2400),
+                        0);
+
+        assertThatThrownBy(() -> service.configure(PRODUCT, OWNER, command))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex ->
+                                assertThat(ex.fieldViolations())
+                                        .extracting(BizException.FieldViolation::field)
+                                        .containsExactly("validUntil"));
+        verify(prices, never()).appendPolicy(any(), any(), any());
+    }
+
+    /** #264: a scheduled price stays allowed when its own window covers the purchase window. */
+    @Test
+    void configureAcceptsScheduledWindowCoveringThePurchaseWindow() {
+        stubProduct();
+        when(prices.currentTime()).thenReturn(NOW);
+        Instant from = NOW.plusSeconds(86_400);
+        var command =
+                new TeamPriceAppService.ConfigurePolicy(
+                        new BigDecimal("20"), "sgd", from, from.plusSeconds(2401), 0);
+
+        var configured = service.configure(PRODUCT, OWNER, command);
+
+        verify(prices).appendPolicy(configured, OWNER, NOW);
     }
 
     @Test

@@ -310,6 +310,43 @@ class TeamPriceFlowIT {
                 .isZero();
     }
 
+    /** #264: a window no START could use is refused on validUntil and writes nothing. */
+    @Test
+    void windowStartCannotUseIsRejectedWithoutWritingPolicy() throws Exception {
+        validUntil = Instant.now().plusSeconds(1800).truncatedTo(ChronoUnit.SECONDS);
+        expectWindowRejected();
+
+        // A scheduled price is judged from its own start, so this boundary does not drift.
+        validFrom = Instant.now().plusSeconds(3600).truncatedTo(ChronoUnit.SECONDS);
+        validUntil = validFrom.plusSeconds(2400);
+        expectWindowRejected();
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM biz_team_price_policy WHERE product_id = ?",
+                                Long.class,
+                                product))
+                .isZero();
+
+        validUntil = validFrom.plusSeconds(2401);
+        configure("89.00", 0);
+    }
+
+    private void expectWindowRejected() throws Exception {
+        mvc.perform(
+                        put(policyPath())
+                                .header("blocbuy-token", adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(policyBody("89.00", 0)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("CATALOG_400_001"))
+                .andExpect(jsonPath("$.errors.length()").value(1))
+                .andExpect(jsonPath("$.errors[0].field").value("validUntil"))
+                .andExpect(
+                        jsonPath("$.errors[0].message")
+                                .value(
+                                        "Must end more than 40 minutes after the rule takes effect"));
+    }
+
     /**
      * #254: append through the real PUT three times and return the exact stored protocol values.
      */

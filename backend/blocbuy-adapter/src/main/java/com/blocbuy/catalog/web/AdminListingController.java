@@ -282,7 +282,8 @@ public class AdminListingController {
                             + "out-of-range expectedVersion, targetSize or lifetimeSeconds (Bean "
                             + "Validation); 400 CATALOG_400_001 with teamPrice.<field> field errors "
                             + "for a bad teamPrice (price not below the original price, validFrom not "
-                            + "before validUntil, or validUntil already past); 409 CATALOG_409_001 when "
+                            + "before validUntil, validUntil already past, or validUntil not more than "
+                            + "2400 seconds after the later of validFrom and now); 409 CATALOG_409_001 when "
                             + "teamPrice is sent for a listing that is not on sale. Any rejection changes "
                             + "nothing. Not replay-idempotent: a replay carries a stale version. Each "
                             + "write is audited.")

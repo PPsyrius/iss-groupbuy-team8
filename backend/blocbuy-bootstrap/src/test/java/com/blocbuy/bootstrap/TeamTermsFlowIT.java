@@ -355,6 +355,30 @@ class TeamTermsFlowIT {
         assertNothingWritten(id);
     }
 
+    /** #264: a teamPrice no START could use rolls the terms back with it. */
+    @Test
+    void teamPriceWindowStartCannotUseIsRejectedAndRollsBackTerms() throws Exception {
+        UUID id = product(ON_SALE);
+        Instant now = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+
+        write(
+                        id,
+                        adminToken,
+                        body(
+                                0,
+                                3,
+                                7200,
+                                price(TEAM_PRICE, now.minusSeconds(60), now.plusSeconds(1800))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath(CODE).value(TEAM_PRICE_INVALID))
+                .andExpect(jsonPath("$.errors[0].field").value("teamPrice.validUntil"))
+                .andExpect(
+                        jsonPath("$.errors[0].message")
+                                .value(
+                                        "Must end more than 40 minutes after the rule takes effect"));
+        assertNothingWritten(id);
+    }
+
     private void assertNothingWritten(UUID id) {
         assertThat(jdbc.queryForMap(READ_TERMS, id))
                 .containsEntry("team_target_size", null)
