@@ -27,7 +27,8 @@ public interface CheckoutPaymentRepository {
             String currency,
             String outcome,
             UUID dealId,
-            UUID orderId) {}
+            UUID orderId,
+            UUID intentId) {}
 
     Optional<CheckoutPayment> findById(UUID id);
 
@@ -72,4 +73,10 @@ public interface CheckoutPaymentRepository {
     void requireRefundsForExpiredTeam(UUID dealId, String reason, String eventId);
 
     List<CheckoutPayment> pendingBefore(Instant threshold, int limit);
+
+    /** Expired, bound, created attempts not already parked in operator review. */
+    List<CheckoutPayment> dueForExpiry(Instant now, int limit);
+
+    /** Reserve the next page in the caller's short transaction; wrap at the end of the queue. */
+    List<CheckoutPayment> nextExpiryPage(Instant now, int limit);
 }

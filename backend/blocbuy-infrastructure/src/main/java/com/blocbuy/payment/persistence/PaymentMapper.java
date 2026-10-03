@@ -10,6 +10,8 @@ import org.apache.ibatis.annotations.Param;
 /** SQL bindings are in mapper/payment/PaymentMapper.xml. */
 @Mapper
 public interface PaymentMapper {
+    record ExpiryCursor(UUID id, Instant lastCreateTime, UUID lastPaymentId) {}
+
     boolean hasSucceededIntent(@Param("intentId") UUID intentId);
 
     BizPaymentDO find(@Param("id") UUID id);
@@ -76,4 +78,17 @@ public interface PaymentMapper {
             @Param("eventId") String eventId);
 
     List<BizPaymentDO> pending(@Param("threshold") Instant threshold, @Param("limit") int limit);
+
+    List<BizPaymentDO> dueForExpiry(
+            @Param("now") Instant now,
+            @Param("afterTime") Instant afterTime,
+            @Param("afterId") UUID afterId,
+            @Param("limit") int limit);
+
+    ExpiryCursor lockExpiryCursor();
+
+    int advanceExpiryCursor(
+            @Param("id") UUID id,
+            @Param("afterTime") Instant afterTime,
+            @Param("afterId") UUID afterId);
 }

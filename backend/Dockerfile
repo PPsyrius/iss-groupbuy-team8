@@ -8,36 +8,14 @@
 # (e.g. ec2).
 
 # Explicit OS line and multi-architecture digest; keep in sync with Dockerfile.ci.
-FROM eclipse-temurin:21-jre-noble@sha256:0c324fbe2e1455c3159184717440f3b52906ef82a39c4a6efc9edb401d31971a
-
-# Temporary CVE-2026-84782 repair until a verified upstream rebuild includes it.
-# Dependabot updates the base digest, not this package version; see the CI runbook.
-ARG OPENSSL_FIXED_VERSION=3.0.13-0ubuntu3.16
+FROM eclipse-temurin:21-jre-noble@sha256:22138efd69393501fccd8176ae16b01791ed71ff801b28f0359415389b17c766
 
 WORKDIR /app
 
-# Repair only older installed packages; newer bases skip APT and never downgrade.
-RUN set -eux; \
-    set --; \
-    for package in libssl3t64 openssl; do \
-        test "$(dpkg-query -W -f='${db:Status-Status}' "$package")" = installed; \
-        installed="$(dpkg-query -W -f='${Version}' "$package")"; \
-        if dpkg --compare-versions "$installed" lt "$OPENSSL_FIXED_VERSION"; then \
-            set -- "$@" "$package=$OPENSSL_FIXED_VERSION"; \
-        fi; \
-    done; \
-    if [ "$#" -gt 0 ]; then \
-        apt-get update; \
-        apt-get install -y --no-install-recommends --only-upgrade "$@"; \
-    fi; \
-    for package in libssl3t64 openssl; do \
-        installed="$(dpkg-query -W -f='${Version}' "$package")"; \
-        dpkg --compare-versions "$installed" ge "$OPENSSL_FIXED_VERSION"; \
-    done; \
-    rm -rf /var/lib/apt/lists/*; \
-    rm -f /usr/bin/pebble; \
-    groupadd --system blocbuy; \
-    useradd --system --gid blocbuy blocbuy
+# Remove the unused pebble test server; its Go runtime is outside our dependency updates.
+RUN rm -f /usr/bin/pebble \
+ && groupadd --system blocbuy \
+ && useradd --system --gid blocbuy blocbuy
 
 # Produced by `./mvnw verify` in build-quality and restored into the Docker
 # build context by the docker job.

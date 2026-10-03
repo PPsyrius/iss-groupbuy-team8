@@ -412,7 +412,7 @@ class StripeCheckoutServiceTest {
                 session("expired", kind.equals("paid") ? "paid" : "unpaid", "pi_x", "processing");
         when(gateway.retrieveCheckoutSession(any())).thenReturn(snapshot);
         service.expireRequestedSession(id);
-        when(repository.pendingBefore(any(), anyInt())).thenReturn(List.of(saved));
+        when(repository.nextExpiryPage(any(), anyInt())).thenReturn(List.of(saved));
         when(repository.now()).thenReturn(NOW.plusSeconds(8000));
         assertThat(service.expireDueSessions()).isEqualTo(1);
         verify(gateway, never()).expireCheckoutSession(any());
@@ -499,10 +499,11 @@ class StripeCheckoutServiceTest {
         doThrow(new IllegalStateException("timeout")).when(gateway).createCheckoutSession(any());
         assertThatThrownBy(() -> service.prepare(BUYER, INTENT, "key"))
                 .isInstanceOf(IllegalStateException.class);
-        when(repository.pendingBefore(any(), anyInt())).thenReturn(List.of(saved));
+        when(repository.nextExpiryPage(any(), anyInt())).thenReturn(List.of());
         assertThat(service.expireDueSessions()).isZero();
         when(repository.now()).thenReturn(NOW.plusSeconds(8000));
         assertThat(service.expireDueSessions()).isZero();
+        verify(gateway, never()).retrieveCheckoutSession(any());
         UUID id = saved.id();
         assertThatThrownBy(() -> service.expireRequestedSession(id))
                 .isInstanceOf(BizException.class);
@@ -692,7 +693,7 @@ class StripeCheckoutServiceTest {
     void expiryCollectorExpiresOpenSessionsAndObservesClosedOnes() {
         UUID id = prepare();
         when(repository.now()).thenReturn(NOW.plusSeconds(8000));
-        when(repository.pendingBefore(any(), anyInt())).thenReturn(List.of(saved));
+        when(repository.nextExpiryPage(any(), anyInt())).thenReturn(List.of(saved));
         when(gateway.retrieveCheckoutSession(any()))
                 .thenReturn(session("open", "unpaid", null, null));
         when(gateway.expireCheckoutSession(any()))
@@ -704,6 +705,106 @@ class StripeCheckoutServiceTest {
         assertThat(service.expireDueSessions()).isEqualTo(1);
         verify(gateway).expireCheckoutSession(any());
         assertThat(id).isNotNull();
+    }
+
+    @ParameterizedTest
+    @CsvSource({"provider,false", "null,true", "arithmetic,true", "argument,true"})
+    void expiryFailureParksSecondRowAndContinuesToThird(
+            String failureType, boolean reviewWriteFails) {
+        prepare();
+        CheckoutPayment first = saved;
+        CheckoutPayment second =
+                new CheckoutPayment(
+                        UUID.randomUUID(),
+                        first.quote(),
+                        "second",
+                        first.createdAt(),
+                        first.sessionExpiresAt(),
+                        first.successUrl(),
+                        first.cancelUrl(),
+                        "cs_test_second",
+                        null,
+                        null,
+                        CheckoutPayment.Status.CREATED,
+                        0);
+        CheckoutPayment third =
+                new CheckoutPayment(
+                        UUID.randomUUID(),
+                        first.quote(),
+                        "third",
+                        first.createdAt(),
+                        first.sessionExpiresAt(),
+                        first.successUrl(),
+                        first.cancelUrl(),
+                        "cs_test_third",
+                        null,
+                        null,
+                        CheckoutPayment.Status.CREATED,
+                        0);
+        when(repository.now()).thenReturn(NOW.plusSeconds(8000));
+        when(repository.nextExpiryPage(any(), anyInt())).thenReturn(List.of(first, second, third));
+        when(repository.findById(any()))
+                .thenAnswer(
+                        call -> {
+                            UUID id = call.getArgument(0);
+                            return List.of(first, second, third).stream()
+                                    .filter(p -> p.id().equals(id))
+                                    .findFirst();
+                        });
+        when(repository.lock(any()))
+                .thenAnswer(
+                        call -> {
+                            UUID id = call.getArgument(0);
+                            return List.of(first, second, third).stream()
+                                    .filter(p -> p.id().equals(id))
+                                    .findFirst()
+                                    .orElseThrow();
+                        });
+        when(gateway.retrieveCheckoutSession(any()))
+                .thenAnswer(
+                        call -> {
+                            String sessionId = call.getArgument(0);
+                            if (sessionId.equals(second.sessionId())) {
+                                switch (failureType) {
+                                    case "provider" ->
+                                            throw new BizException(
+                                                    com.blocbuy.payment.exception.PaymentErrorCode
+                                                            .PAYMENT_PROVIDER_ERROR);
+                                    case "null" -> {
+                                        return null;
+                                    }
+                                    case "arithmetic" ->
+                                            throw new ArithmeticException("bad amount");
+                                    case "argument" ->
+                                            throw new IllegalArgumentException("bad state");
+                                    default -> throw new AssertionError("Unexpected failure type");
+                                }
+                            }
+                            CheckoutPayment payment =
+                                    sessionId.equals(first.sessionId()) ? first : third;
+                            return new CheckoutGateway.Session(
+                                    sessionId,
+                                    payment.id().toString(),
+                                    INTENT.toString(),
+                                    null,
+                                    1000,
+                                    "sgd",
+                                    "expired",
+                                    "unpaid",
+                                    false,
+                                    null,
+                                    payment.sessionExpiresAt());
+                        });
+        if (reviewWriteFails) {
+            doThrow(new IllegalArgumentException("review unavailable"))
+                    .when(repository)
+                    .review(second.id(), "EXPIRY_FAILED", "system");
+        }
+
+        assertThat(service.expireDueSessions()).isEqualTo(2);
+        verify(repository).review(second.id(), "EXPIRY_FAILED", "system");
+        verify(repository).finishEvent(any(), eq(first.id()), eq("OBSERVE"));
+        verify(repository).finishEvent(any(), eq(third.id()), eq("OBSERVE"));
     }
 
     @Test

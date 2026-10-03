@@ -370,4 +370,27 @@ class PurchaseIntentAppServiceTest {
         assertRejected(() -> service.createIntent(USER, "START", PRODUCT, null, QUOTE), refusal);
         verify(intents, never()).save(any());
     }
+
+    @Test
+    void theReceiptReadsBackTheProductOnlyForTheIntentsOwner() {
+        clockReads();
+        productQuotes(7200);
+        UUID id = service.createIntent(USER, "START", PRODUCT);
+        PurchaseIntent intent = saved();
+        when(intents.findById(id)).thenReturn(Optional.of(intent));
+
+        assertThat(service.purchasedProduct(USER, id)).contains(PRODUCT);
+        assertThat(service.purchasedProduct(UUID.randomUUID(), id)).isEmpty();
+    }
+
+    @Test
+    void aMissingIntentOrIdentifierReadsBackNoProduct() {
+        UUID unknown = UUID.randomUUID();
+        when(intents.findById(unknown)).thenReturn(Optional.empty());
+
+        assertThat(service.purchasedProduct(USER, unknown)).isEmpty();
+        assertThat(service.purchasedProduct(null, unknown)).isEmpty();
+        assertThat(service.purchasedProduct(USER, null)).isEmpty();
+        verify(intents, times(1)).findById(any());
+    }
 }

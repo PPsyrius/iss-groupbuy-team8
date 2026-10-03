@@ -21,16 +21,15 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
-/** The two group-buy reads added to the product repository: team terms and the stock take. */
+/** Locked-product terms and the conditional stock take. */
 class ProductTeamTermsPersistenceTest {
 
     private final BizProductMapper mapper = mock(BizProductMapper.class);
     private final ProductRepositoryImpl repository = new ProductRepositoryImpl(mapper);
     private final UUID productId = UUID.randomUUID();
 
-    private BizProductTeamTermsDO row(Integer targetSize, Integer lifetimeSeconds) {
-        BizProductTeamTermsDO row = new BizProductTeamTermsDO();
-        row.setProductId(productId);
+    private BizProductDO row(Integer targetSize, Integer lifetimeSeconds) {
+        BizProductDO row = ProductConverter.toRow(configuredProduct());
         row.setTeamTargetSize(targetSize);
         row.setTeamLifetimeSeconds(lifetimeSeconds);
         return row;
@@ -38,11 +37,12 @@ class ProductTeamTermsPersistenceTest {
 
     @Test
     void configuredTermsComeBackAsAStartableValue() {
-        when(mapper.selectTeamTerms(productId)).thenReturn(row(3, 7200));
+        when(mapper.selectActiveByIdForUpdate(productId)).thenReturn(row(3, 7200));
 
-        assertThat(repository.findTeamTerms(productId))
+        assertThat(repository.lockById(productId))
                 .hasValueSatisfying(
-                        terms -> {
+                        product -> {
+                            ProductTeamTerms terms = product.teamTerms();
                             assertThat(terms.productId()).isEqualTo(productId);
                             assertThat(terms.targetSize()).isEqualTo(3);
                             assertThat(terms.lifetimeSeconds()).isEqualTo(7200);
@@ -52,17 +52,18 @@ class ProductTeamTermsPersistenceTest {
 
     @Test
     void anUnconfiguredProductCarriesNullTermsRatherThanNoRow() {
-        when(mapper.selectTeamTerms(productId)).thenReturn(row(null, null));
+        when(mapper.selectActiveByIdForUpdate(productId)).thenReturn(row(null, null));
 
-        assertThat(repository.findTeamTerms(productId))
-                .hasValueSatisfying(terms -> assertThat(terms.configured()).isFalse());
+        assertThat(repository.lockById(productId))
+                .hasValueSatisfying(
+                        product -> assertThat(product.teamTerms().configured()).isFalse());
     }
 
     @Test
-    void aMissingProductHasNoTerms() {
-        when(mapper.selectTeamTerms(productId)).thenReturn(null);
+    void aMissingProductCannotBeLocked() {
+        when(mapper.selectActiveByIdForUpdate(productId)).thenReturn(null);
 
-        assertThat(repository.findTeamTerms(productId)).isEmpty();
+        assertThat(repository.lockById(productId)).isEmpty();
     }
 
     @Test

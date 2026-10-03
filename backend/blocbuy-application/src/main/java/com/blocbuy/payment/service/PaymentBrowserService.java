@@ -78,7 +78,8 @@ public class PaymentBrowserService {
             UUID dealId,
             UUID orderId,
             boolean refundPending,
-            String refundStatus) {}
+            String refundStatus,
+            UUID productId) {}
 
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ, timeout = 5)
     public Receipt receipt(UUID user, UUID id) {
@@ -89,6 +90,10 @@ public class PaymentBrowserService {
                         .orElseThrow(() -> new BizException(PaymentErrorCode.PAYMENT_NOT_FOUND));
         // Database lifecycle codes are lowercase (V2); the API vocabulary stays uppercase.
         String refundStatus = refunds.status(id);
+        // Display-only: a receipt without its listing link is still the buyer's payment truth.
+        PaymentIntentPort port = intents.getIfAvailable();
+        UUID productId =
+                port == null ? null : port.purchasedProduct(user, snapshot.intentId()).orElse(null);
         return new Receipt(
                 id,
                 snapshot.status().name(),
@@ -98,6 +103,7 @@ public class PaymentBrowserService {
                 snapshot.dealId(),
                 snapshot.orderId(),
                 "pending".equals(refundStatus) || "processing".equals(refundStatus),
-                refundStatus == null ? "NONE" : refundStatus.toUpperCase(java.util.Locale.ROOT));
+                refundStatus == null ? "NONE" : refundStatus.toUpperCase(java.util.Locale.ROOT),
+                productId);
     }
 }

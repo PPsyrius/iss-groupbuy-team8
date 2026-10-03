@@ -13,7 +13,7 @@
     WHERE id=#{id} AND intent_id IS NOT NULL AND NOT deleted
   </select>
   <select id="receipt" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
-    SELECT user_id,status,amount,currency,fulfilment_result,order_id,fulfilled_deal_id FROM biz_payment
+    SELECT user_id,status,amount,currency,fulfilment_result,order_id,fulfilled_deal_id,intent_id FROM biz_payment
     WHERE id=#{id} AND intent_id IS NOT NULL AND NOT deleted
   </select>
   <select id="lock" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
@@ -131,4 +131,24 @@
         OR EXISTS(SELECT 1 FROM biz_payment_review_case r WHERE r.payment_id=biz_payment.id AND r.status='open'))
     ORDER BY create_time,id LIMIT #{limit}
   </select>
+  <select id="dueForExpiry" resultType="com.blocbuy.payment.persistence.BizPaymentDO">
+    SELECT <include refid="columns"/> FROM biz_payment WHERE intent_id IS NOT NULL AND NOT deleted
+      AND status='created' AND create_time &lt; #{now} AND checkout_session_id IS NOT NULL
+      AND (quote_valid_until &lt;= #{now} OR business_deadline &lt;= #{now})
+      AND NOT EXISTS(SELECT 1 FROM biz_payment_review_case r
+        WHERE r.payment_id=biz_payment.id AND r.status='open')
+      <if test="afterTime != null and afterId != null">
+        AND (create_time,id) &gt; (#{afterTime},#{afterId})
+      </if>
+    ORDER BY create_time,id LIMIT #{limit}
+  </select>
+  <select id="lockExpiryCursor" resultType="com.blocbuy.payment.persistence.PaymentMapper$ExpiryCursor">
+    SELECT id,last_create_time,last_payment_id FROM sys_checkout_expiry_cursor
+    WHERE job_name='checkout.expiry' AND NOT deleted FOR UPDATE
+  </select>
+  <update id="advanceExpiryCursor">
+    UPDATE sys_checkout_expiry_cursor SET last_create_time=#{afterTime,jdbcType=TIMESTAMP_WITH_TIMEZONE},
+      last_payment_id=#{afterId,jdbcType=OTHER},update_time=clock_timestamp()
+    WHERE id=#{id} AND NOT deleted
+  </update>
 </mapper>

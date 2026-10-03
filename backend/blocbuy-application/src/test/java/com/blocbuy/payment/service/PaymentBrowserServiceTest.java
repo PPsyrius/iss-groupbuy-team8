@@ -112,6 +112,7 @@ class PaymentBrowserServiceTest {
                                         quote.currency(),
                                         null,
                                         null,
+                                        null,
                                         null)));
         when(refunds.status(id)).thenReturn("processing");
         var receipt = service.receipt(userId, id);
@@ -123,6 +124,8 @@ class PaymentBrowserServiceTest {
         assertThat(receipt.currency()).isEqualTo("sgd");
         assertThat(receipt.refundPending()).isTrue();
         assertThat(receipt.refundStatus()).isEqualTo("PROCESSING");
+        // No PaymentIntentPort bean: the receipt is still answered, without a listing link.
+        assertThat(receipt.productId()).isNull();
         when(refunds.status(id)).thenReturn("pending");
         assertThat(service.receipt(userId, id).refundPending()).isTrue();
         when(refunds.status(id)).thenReturn("succeeded");
@@ -244,6 +247,7 @@ class PaymentBrowserServiceTest {
                                         quote.currency(),
                                         null,
                                         null,
+                                        null,
                                         null)));
         UUID stranger = UUID.randomUUID();
         assertThatThrownBy(() -> service.receipt(stranger, id)).isInstanceOf(BizException.class);
@@ -293,6 +297,11 @@ class PaymentBrowserServiceTest {
                         0);
         UUID dealId = UUID.randomUUID();
         UUID orderId = UUID.randomUUID();
+        UUID intentId = UUID.randomUUID();
+        UUID productId = UUID.randomUUID();
+        var intents = mock(PaymentIntentPort.class);
+        beans.registerSingleton("intents", intents);
+        when(intents.purchasedProduct(userId, intentId)).thenReturn(Optional.of(productId));
         when(repository.receipt(id))
                 .thenReturn(
                         Optional.of(
@@ -303,13 +312,21 @@ class PaymentBrowserServiceTest {
                                         quote.currency(),
                                         "FULFILLED",
                                         dealId,
-                                        orderId)));
+                                        orderId,
+                                        intentId)));
         when(refunds.status(id)).thenReturn(null);
         var receipt = service.receipt(userId, id);
         assertThat(receipt.outcome()).isEqualTo("FULFILLED");
         assertThat(receipt.dealId()).isEqualTo(dealId);
         assertThat(receipt.orderId()).isEqualTo(orderId);
         assertThat(receipt.refundPending()).isFalse();
+        assertThat(receipt.productId()).isEqualTo(productId);
+        verify(intents).purchasedProduct(userId, intentId);
+        // An intent the order side cannot attribute to this buyer still answers the receipt.
+        when(intents.purchasedProduct(userId, intentId)).thenReturn(Optional.empty());
+        var unlinked = service.receipt(userId, id);
+        assertThat(unlinked.productId()).isNull();
+        assertThat(unlinked.orderId()).isEqualTo(orderId);
     }
 
     @Test

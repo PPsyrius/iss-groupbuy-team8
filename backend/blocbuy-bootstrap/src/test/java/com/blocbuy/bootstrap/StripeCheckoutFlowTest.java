@@ -7,6 +7,8 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -36,6 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -125,6 +128,8 @@ class StripeCheckoutFlowTest {
         jdbc.execute(
                 "TRUNCATE biz_payment,log_payment_webhook_event,biz_refund,log_payment_review,biz_payment_review_case,"
                         + "stripe_test_orders,stripe_test_team");
+        jdbc.update(
+                "UPDATE sys_checkout_expiry_cursor SET last_create_time=NULL,last_payment_id=NULL");
         jdbc.update("INSERT INTO stripe_test_team VALUES (?,1,false)", TEAM);
         gateway = mock(CheckoutGateway.class);
         when(gateway.createCheckoutSession(any()))
@@ -708,6 +713,90 @@ class StripeCheckoutFlowTest {
         assertThat(repository.findById(payment.id()).orElseThrow().status())
                 .isEqualTo(CheckoutPayment.Status.CANCELED);
         assertThat(count("stripe_test_orders")).isZero();
+    }
+
+    @Test
+    void expiryPageExcludesOpenReviewCasesEvenWhenTheyAreOldest() {
+        CheckoutPayment reviewed = prepare();
+        CheckoutPayment eligible = prepare();
+        jdbc.update(
+                "UPDATE biz_payment SET business_deadline=clock_timestamp()-interval '1 second' WHERE id IN (?,?)",
+                reviewed.id(),
+                eligible.id());
+        service.assignReview(reviewed.id(), "test", Instant.now().plusSeconds(900));
+
+        assertThat(repository.dueForExpiry(repository.now(), 1))
+                .extracting(CheckoutPayment::id)
+                .containsExactly(eligible.id());
+        assertThat(repository.pendingBefore(repository.now(), 100))
+                .extracting(CheckoutPayment::id)
+                .contains(reviewed.id());
+    }
+
+    @Test
+    void expiryCursorPersistsAcrossRunsAndWrapsForFailedReviewWrites() {
+        CheckoutPayment first = prepare();
+        CheckoutPayment second = prepare();
+        CheckoutPayment third = prepare();
+        jdbc.update(
+                "UPDATE biz_payment SET business_deadline=clock_timestamp()-interval '1 second' WHERE id IN (?,?,?)",
+                first.id(),
+                second.id(),
+                third.id());
+        assertThat(reserveExpiryPage()).extracting(CheckoutPayment::id).containsExactly(first.id());
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT last_payment_id FROM sys_checkout_expiry_cursor",
+                                UUID.class))
+                .isEqualTo(first.id());
+        // No review write succeeds; each subsequent invocation must still reach a younger row.
+        assertThat(reserveExpiryPage())
+                .extracting(CheckoutPayment::id)
+                .containsExactly(second.id());
+        assertThat(reserveExpiryPage()).extracting(CheckoutPayment::id).containsExactly(third.id());
+        assertThat(reserveExpiryPage()).extracting(CheckoutPayment::id).containsExactly(first.id());
+    }
+
+    private List<CheckoutPayment> reserveExpiryPage() {
+        return new TransactionTemplate(transactions)
+                .execute(status -> repository.nextExpiryPage(repository.now(), 1));
+    }
+
+    @Test
+    void failedReviewWriteCannotCrowdOutPaymentCreatedAfterFirstRun() {
+        CheckoutPayment stuck = prepare();
+        jdbc.update(
+                "UPDATE biz_payment SET business_deadline=clock_timestamp()-interval '1 second' WHERE id=?",
+                stuck.id());
+        var failingReviews = spy(repository);
+        doThrow(new IllegalStateException("review unavailable"))
+                .when(failingReviews)
+                .review(stuck.id(), "EXPIRY_FAILED", "system");
+        when(gateway.retrieveCheckoutSession(stuck.sessionId()))
+                .thenThrow(new IllegalStateException("provider unavailable"));
+        service =
+                new StripeCheckoutService(
+                        failingReviews,
+                        gateway,
+                        new TestBusiness(),
+                        transactions,
+                        "http://localhost:5173/payment/success",
+                        "http://localhost:5173/payment/cancel");
+
+        assertThat(service.expireDueSessions()).isZero();
+        assertThat(repository.findById(stuck.id()).orElseThrow().status())
+                .isEqualTo(CheckoutPayment.Status.CREATED);
+        CheckoutPayment younger = prepare();
+        jdbc.update(
+                "UPDATE biz_payment SET business_deadline=clock_timestamp()-interval '1 second' WHERE id=?",
+                younger.id());
+        sessions.put(younger.sessionId(), expired(session(younger, false)));
+
+        assertThat(service.expireDueSessions()).isEqualTo(1);
+        assertThat(repository.findById(younger.id()).orElseThrow().status())
+                .isEqualTo(CheckoutPayment.Status.CANCELED);
+        assertThat(service.expireDueSessions()).isZero();
+        verify(failingReviews, times(2)).review(stuck.id(), "EXPIRY_FAILED", "system");
     }
 
     @Test
