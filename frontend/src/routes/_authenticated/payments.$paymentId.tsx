@@ -57,9 +57,9 @@ function MyBlocsLink({ className }: Readonly<{ className: string }>) {
   );
 }
 
-// The receipt names the order and the bloc but not the product or a paid time, so both come from
+// The receipt names its product in every state (#284) but carries no paid time, which comes from
 // the buyer's own order (GET /orders/{orderId}). No order yet, or one the buyer cannot read, means
-// no listing link and no paid line; "Back to listings" always remains.
+// no paid line; the listing link depends only on the receipt.
 function useReceiptOrder(orderId: string | undefined, userTag: string) {
   const options = myOrderOptions({ path: { orderId: orderId ?? "" } });
   return useQuery({
@@ -119,7 +119,7 @@ function PaymentReceiptForId({ paymentId }: Readonly<{ paymentId: string }>) {
   // Refresh leads while the answer can still change; a settled receipt leads to My blocs (Q25 A).
   const refreshFirst =
     query.isError || !receipt || receipt.status === "CREATED" || Boolean(receipt.refundPending);
-  const productId = order.data?.productId;
+  const productId = receipt?.productId;
   return (
     <ErrorCard
       code={view.chip.label}

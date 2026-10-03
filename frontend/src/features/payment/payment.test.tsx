@@ -380,19 +380,39 @@ describe("backend-confirmed payment result", () => {
     expect(screen.queryByRole("button", { name: "Refresh status" })).not.toBeInTheDocument();
   });
 
-  it("links a saved order's receipt back to its listing through the order's product", async () => {
+  it("links a paid receipt back to its listing through the receipt's own product", async () => {
     const orderId = "00000000-0000-4000-8000-000000000060";
     serveSignedIn();
-    receipt({ status: "SUCCEEDED", orderId, dealId });
-    server.use(http.get(`*/api/v1/orders/${orderId}`, () => ok({ orderId, dealId, productId })));
+    receipt({ status: "SUCCEEDED", orderId, dealId, productId });
+    // The order is read for its paid time only; it no longer supplies the product.
+    server.use(
+      http.get(`*/api/v1/orders/${orderId}`, () =>
+        ok({ orderId, dealId, paidTime: "2026-09-16T11:46:00Z" }),
+      ),
+    );
     renderRoute(`/payments/${paymentId}`);
     expect(await screen.findByRole("link", { name: "See the listing" })).toHaveAttribute(
       "href",
       `/products/${productId}`,
     );
+    expect(await screen.findByText("Paid · 16 Sep, 7.46 pm")).toBeInTheDocument();
   });
 
-  it("offers no listing link while the receipt has no order, or the order cannot be read", async () => {
+  it("links a waiting receipt with no order back to its listing without reading an order", async () => {
+    const read = vi.fn<() => Response>(() => ok({}));
+    serveSignedIn();
+    server.use(http.get("*/api/v1/orders/:orderId", read));
+    receipt({ status: "CREATED", productId });
+    renderRoute(`/payments/${paymentId}`);
+    await screen.findByRole("heading", { name: "Waiting for payment confirmation" });
+    expect(screen.getByRole("link", { name: "See the listing" })).toHaveAttribute(
+      "href",
+      `/products/${productId}`,
+    );
+    expect(read).not.toHaveBeenCalled();
+  });
+
+  it("offers no listing link while the receipt names no product, even with an order", async () => {
     const orderId = "00000000-0000-4000-8000-000000000061";
     serveSignedIn();
     receipt({ status: "CREATED" });

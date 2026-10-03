@@ -138,6 +138,148 @@ const seeds: Seed[] = [
     soldCount: 96,
     deal: { joined: 6, target: 10, endsIn: 8 * 3600 + 30 * 60 },
   },
+  // FB-14: enough listings for a second page at the default size of 20. They sit before seeds 9
+  // and 10 so page 2 shows those two, as the artboard's last page does ("Bak kwa", "Dish soap
+  // refill"). Numbers 11 to 22 are new; existing numbers stay, since the bloc seeds use them.
+  {
+    n: 11,
+    title: "Pandan kaya 380 g, twin pack",
+    subtitle: "Nonya style, no preservatives",
+    category: "groceries",
+    individualPrice: 13.6,
+    groupPrice: 10.9,
+    description:
+      "Two jars of pandan kaya cooked with fresh coconut milk and eggs. Refrigerate once opened.",
+    stock: 90,
+    soldCount: 134,
+    deal: { joined: 2, target: 6, endsIn: 11 * 3600 },
+  },
+  {
+    n: 12,
+    title: "Japanese short-grain rice 5 kg",
+    subtitle: "Koshihikari, 2026 crop",
+    category: "groceries",
+    individualPrice: 24.9,
+    groupPrice: 19.9,
+    description:
+      "Niigata koshihikari, polished this season. Sold by the 5 kg bag, one bag per seat.",
+    stock: 40,
+    soldCount: 58,
+    deal: { joined: 3, target: 6, endsIn: 26 * 3600 },
+  },
+  {
+    n: 13,
+    title: "Kitchen towels, 12 rolls",
+    subtitle: "Two-ply, extra absorbent",
+    category: "home",
+    individualPrice: 15.9,
+    description: "Twelve rolls of two-ply kitchen towel, 60 sheets each.",
+    stock: 120,
+    soldCount: 77,
+  },
+  {
+    n: 14,
+    title: "Microfibre flat mop with 3 refills",
+    subtitle: "360° swivel head",
+    category: "home",
+    individualPrice: 39,
+    groupPrice: 31,
+    description: "Aluminium handle, swivel head and three washable microfibre pads.",
+    stock: 35,
+    soldCount: 22,
+    deal: { joined: 1, target: 5, endsIn: 40 * 3600 },
+  },
+  {
+    n: 15,
+    title: "65 W USB-C GaN charger",
+    subtitle: "Two USB-C, one USB-A",
+    category: "electronics",
+    individualPrice: 59,
+    groupPrice: 47,
+    description:
+      "Compact GaN charger that powers a laptop and a phone at once. Singapore three-pin plug.",
+    stock: 50,
+    soldCount: 63,
+    deal: { joined: 2, target: 5, endsIn: 14 * 3600 + 20 * 60 },
+  },
+  {
+    n: 16,
+    title: "Noise-cancelling wireless earbuds",
+    subtitle: "Up to 30 h with the case",
+    category: "electronics",
+    individualPrice: 129,
+    description: "Bluetooth 5.3 earbuds with active noise cancelling and a wireless charging case.",
+    stock: 15,
+    soldCount: 11,
+  },
+  {
+    n: 17,
+    title: "Sunscreen SPF50+ PA++++, 2 × 50 ml",
+    subtitle: "Light gel, no white cast",
+    category: "beauty",
+    individualPrice: 34,
+    groupPrice: 27.5,
+    description: "Water-resistant gel sunscreen for daily wear, two 50 ml tubes.",
+    stock: 70,
+    soldCount: 152,
+    deal: { joined: 4, target: 6, endsIn: 6 * 3600 },
+  },
+  {
+    n: 18,
+    title: "Micellar cleansing water 400 ml, twin pack",
+    subtitle: "Sensitive skin",
+    category: "beauty",
+    individualPrice: 21.9,
+    description: "Fragrance-free micellar water that removes make-up without rinsing.",
+    stock: 85,
+    soldCount: 40,
+  },
+  {
+    n: 19,
+    title: "Hydrating sheet masks, box of 10",
+    subtitle: "Hyaluronic acid",
+    category: "beauty",
+    individualPrice: 18,
+    groupPrice: 14,
+    description: "Ten single-use cotton sheet masks soaked in a hyaluronic acid serum.",
+    stock: 100,
+    soldCount: 95,
+    deal: { joined: 3, target: 10, endsIn: 21 * 3600 },
+  },
+  {
+    n: 20,
+    title: "Kids’ insulated water bottle 500 ml",
+    subtitle: "Leak-proof straw lid",
+    category: "kids",
+    individualPrice: 22,
+    groupPrice: 17.5,
+    description: "Double-walled stainless bottle that keeps water cold for the school day.",
+    stock: 55,
+    soldCount: 31,
+    deal: { joined: 1, target: 4, endsIn: 50 * 3600 },
+  },
+  {
+    n: 21,
+    title: "Picture book set, 6 titles",
+    subtitle: "Ages 3 to 6",
+    category: "kids",
+    individualPrice: 45,
+    description: "Six hardcover picture books by local authors, in a slipcase.",
+    stock: 25,
+    soldCount: 14,
+  },
+  {
+    n: 22,
+    title: "Fresh eggs, tray of 30",
+    subtitle: "Local farm, grade A",
+    category: "groceries",
+    individualPrice: 11.4,
+    groupPrice: 9.6,
+    description: "Thirty grade A eggs from a Lim Chu Kang farm, packed the day they are laid.",
+    stock: 60,
+    soldCount: 210,
+    deal: { joined: 5, target: 10, endsIn: 2 * 3600 + 40 * 60 },
+  },
   {
     n: 9,
     title: "Bak kwa, 500 g",
@@ -354,6 +496,7 @@ const receiptFor = (order: OrderSummaryResponse | undefined) => ({
   currency: order?.currency ?? "sgd",
   dealId: order?.dealId ?? "",
   orderId: order?.orderId ?? "",
+  productId: order?.productId ?? "",
 });
 
 const settledReceipts: Receipt[] = [
@@ -423,7 +566,13 @@ function readCheckout(paymentId: string, c: Checkout): Receipt {
   if (!c.order && ++c.reads > WAITING_READS) c.order = settle(c);
   return c.order
     ? { paymentId, status: "SUCCEEDED", ...receiptFor(c.order), refundStatus: "NONE" }
-    : { paymentId, status: "CREATED", amount: unitPriceOf(c.n).toFixed(2), currency: "sgd" };
+    : {
+        paymentId,
+        status: "CREATED",
+        amount: unitPriceOf(c.n).toFixed(2),
+        currency: "sgd",
+        productId: id(c.n),
+      };
 }
 
 function openCheckout(purchase: Pick<Checkout, "n" | "deal">): string {
@@ -496,10 +645,11 @@ const invites = new Map<string, string>();
 
 function mintRef(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
-  return btoa(String.fromCharCode(...bytes))
+  // Base64 uses "=" only as trailing padding, so dropping every "=" strips just the padding.
+  return btoa(String.fromCodePoint(...bytes))
     .replaceAll("+", "-")
     .replaceAll("/", "_")
-    .replace(/=+$/, "");
+    .replaceAll("=", "");
 }
 
 export async function startBrowserMsw() {

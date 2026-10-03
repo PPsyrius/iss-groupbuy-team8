@@ -27,7 +27,8 @@ public interface CheckoutPaymentRepository {
             String currency,
             String outcome,
             UUID dealId,
-            UUID orderId) {}
+            UUID orderId,
+            UUID intentId) {}
 
     Optional<CheckoutPayment> findById(UUID id);
 
