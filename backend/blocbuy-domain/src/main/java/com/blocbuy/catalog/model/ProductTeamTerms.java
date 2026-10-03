@@ -1,5 +1,6 @@
 package com.blocbuy.catalog.model;
 
+import com.blocbuy.common.model.PurchaseQuoteWindow;
 import java.util.UUID;
 
 /**
@@ -17,8 +18,8 @@ import java.util.UUID;
  */
 public record ProductTeamTerms(UUID productId, Integer targetSize, Integer lifetimeSeconds) {
 
-    /** Shortest team life the quote window fits inside; a quote is valid for 2400 seconds. */
-    public static final int MIN_LIFETIME_SECONDS = 2400;
+    /** Shortest team life the purchase window fits inside: {@link PurchaseQuoteWindow#SECONDS}. */
+    public static final int MIN_LIFETIME_SECONDS = PurchaseQuoteWindow.SECONDS;
 
     /** Longest team life, one day. */
     public static final int MAX_LIFETIME_SECONDS = 86_400;

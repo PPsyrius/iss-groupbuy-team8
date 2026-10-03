@@ -60,6 +60,7 @@ public class TeamPriceAppServiceImpl implements TeamPriceAppService {
             throw BizException.forField(
                     CatalogErrorCode.TEAM_PRICE_INVALID, "validUntil", "Must be in the future");
         }
+        policy.requireStartableWindow(now);
         prices.appendPolicy(policy, actorId, now);
         return policy;
     }

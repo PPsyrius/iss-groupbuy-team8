@@ -22,12 +22,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CatalogPurchaseSupportImpl implements CatalogPurchaseSupport {
 
-    /**
-     * A quote stays valid for this long, so a price revision must cover the whole window: a policy
-     * expiring inside it could otherwise price a checkout the buyer completes after it lapsed.
-     */
-    private static final long QUOTE_WINDOW_SECONDS = 2400;
-
     private static final String SUPPORTED_CURRENCY = "sgd";
 
     private final ProductRepository products;
@@ -126,10 +120,13 @@ public class CatalogPurchaseSupportImpl implements CatalogPurchaseSupport {
         }
     }
 
-    /** The revision must already be in force and still be in force when the quote lapses. */
+    /**
+     * The revision must already be in force and still be in force when the purchase window closes:
+     * a policy expiring inside it could otherwise price a checkout the buyer completes after it
+     * lapsed. Configuration refuses revisions that never satisfy this (#264).
+     */
     private static void requireCoversQuoteWindow(TeamPricePolicy policy, Instant now) {
-        if (now.isBefore(policy.validFrom())
-                || !now.plusSeconds(QUOTE_WINDOW_SECONDS).isBefore(policy.validUntil())) {
+        if (!policy.startableAt(now)) {
             throw new BizException(CatalogErrorCode.TEAM_PRICE_UNAVAILABLE);
         }
     }

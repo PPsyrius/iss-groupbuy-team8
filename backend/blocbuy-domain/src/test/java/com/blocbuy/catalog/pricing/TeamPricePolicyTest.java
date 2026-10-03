@@ -103,6 +103,58 @@ class TeamPricePolicyTest {
                                         .isEqualTo(CatalogErrorCode.TEAM_PRICE_UNAVAILABLE));
     }
 
+    /** START needs the revision in force now and still in force 2400 s later, end exclusive. */
+    @Test
+    void startableOnlyWhenInForceForTheWholePurchaseWindow() {
+        TeamPricePolicy policy = policy("20", "sgd", NOW, NOW.plusSeconds(2401));
+
+        assertThat(policy.startableAt(NOW)).isTrue();
+        assertThat(policy.startableAt(NOW.minusNanos(1000))).isFalse();
+        assertThat(policy.startableAt(NOW.plusSeconds(1))).isFalse();
+    }
+
+    /** #264: an in-force revision must leave more than 2400 s from now. */
+    @Test
+    void inForceWindowMustOutlastThePurchaseWindowFromNow() {
+        Instant from = NOW.minusSeconds(60);
+
+        assertWindowRefused(policy("20", "sgd", from, NOW.plusSeconds(2400)), NOW);
+        policy("20", "sgd", from, NOW.plusSeconds(2401)).requireStartableWindow(NOW);
+    }
+
+    /** #264: a scheduled revision is judged from its own start, not from now. */
+    @Test
+    void scheduledWindowMustOutlastThePurchaseWindowFromItsStart() {
+        Instant from = NOW.plusSeconds(86_400);
+
+        assertWindowRefused(policy("20", "sgd", from, from.plusSeconds(2400)), NOW);
+        policy("20", "sgd", from, from.plusSeconds(2401)).requireStartableWindow(NOW);
+    }
+
+    @Test
+    void startableWindowNeedsAClock() {
+        TeamPricePolicy policy = policy("20", "sgd", NOW, NOW.plusSeconds(3600));
+
+        assertThatThrownBy(() -> policy.requireStartableWindow(null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    private static void assertWindowRefused(TeamPricePolicy policy, Instant now) {
+        assertThatThrownBy(() -> policy.requireStartableWindow(now))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        ex -> {
+                            assertThat(ex.errorCode())
+                                    .isEqualTo(CatalogErrorCode.TEAM_PRICE_INVALID);
+                            assertThat(ex.fieldViolations())
+                                    .containsExactly(
+                                            new BizException.FieldViolation(
+                                                    "validUntil",
+                                                    "Must end more than 40 minutes after the rule"
+                                                            + " takes effect"));
+                        });
+    }
+
     @Test
     void rejectsCurrencyMismatchAndPriceNotBelowOriginal() {
         Instant validUntil = NOW.plusSeconds(60);

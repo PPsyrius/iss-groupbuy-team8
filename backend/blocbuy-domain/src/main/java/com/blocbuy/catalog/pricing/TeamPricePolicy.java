@@ -3,6 +3,7 @@ package com.blocbuy.catalog.pricing;
 import com.blocbuy.catalog.exception.CatalogErrorCode;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.common.model.PurchaseQuoteWindow;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -88,6 +89,33 @@ public record TeamPricePolicy(
         requireCompatible(product);
         if (now.isBefore(validFrom) || !now.isBefore(validUntil)) {
             throw new BizException(CatalogErrorCode.TEAM_PRICE_UNAVAILABLE);
+        }
+    }
+
+    /**
+     * A START without a quote can use this revision at {@code at}: it is already in force and still
+     * will be when the purchase window opened then closes.
+     */
+    public boolean startableAt(Instant at) {
+        return !at.isBefore(validFrom)
+                && at.plusSeconds(PurchaseQuoteWindow.SECONDS).isBefore(validUntil);
+    }
+
+    /**
+     * Refuses a revision that START could never use: one that is not startable at the moment it
+     * takes effect, the later of {@code now} and {@code validFrom}. A scheduled price is judged on
+     * its own window.
+     */
+    public void requireStartableWindow(Instant now) {
+        if (now == null) {
+            throw new IllegalArgumentException("now must not be null");
+        }
+        Instant takesEffect = now.isAfter(validFrom) ? now : validFrom;
+        if (!startableAt(takesEffect)) {
+            throw BizException.forField(
+                    CatalogErrorCode.TEAM_PRICE_INVALID,
+                    "validUntil",
+                    "Must end more than 40 minutes after the rule takes effect");
         }
     }
 }
