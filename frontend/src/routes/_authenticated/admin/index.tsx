@@ -43,6 +43,7 @@ function DashboardHeader({ cta }: Readonly<{ cta?: "secondary" | "outline" }>) {
   const now = useMinuteClock();
   return (
     <div className="flex items-end justify-between gap-6">
+      <title>Dashboard · BlocBuy</title>
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
         <p className="text-muted">{formatSgtDate(now)} · all times SGT</p>

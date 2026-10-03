@@ -108,6 +108,7 @@ function ProductsPage() {
 function CatalogHero({ total }: Readonly<{ total?: number }>) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-6">
+      <title>Listings · BlocBuy</title>
       <div className="flex max-w-[560px] flex-col gap-1 xl:gap-1.5">
         <h1 className="text-xl font-semibold tracking-tight xl:text-4xl">Buy better together</h1>
         <p className="text-muted text-sm xl:text-base">
@@ -249,6 +250,7 @@ function CatalogError({ reset }: Readonly<{ reset: () => void }>) {
   const router = useRouter();
   return (
     <main className={shell}>
+      <title>Listings · BlocBuy</title>
       <Alert status="danger" className="xl:px-6 xl:py-5">
         <Alert.Content>
           <Alert.Title className="text-base xl:text-lg">We couldn’t load the listings</Alert.Title>

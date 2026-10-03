@@ -22,6 +22,7 @@ describe("/admin/listings/new", () => {
     serveAdmin();
     renderRoute("/admin/listings/new");
     expect(await screen.findByRole("heading", { name: "New listing" })).toBeVisible();
+    expect(document.title).toBe("New listing · BlocBuy");
     expect(
       screen.getByText(
         "Saved as a draft at version 0. Nothing is visible on the storefront until you publish.",

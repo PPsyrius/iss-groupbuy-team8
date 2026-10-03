@@ -89,8 +89,10 @@ test("a signed-in buyer starts a bloc at the quoted price and sees it paid under
   });
 
   await page.goto("/");
+  await expect(page).toHaveTitle("Listings · BlocBuy");
   await page.locator(`a[href="/products/${PRODUCT_ID}"]`).first().click();
   await expect(page).toHaveURL(new RegExp(`/products/${PRODUCT_ID}$`));
+  await expect(page).toHaveTitle(`${TITLE} · BlocBuy`);
   await page
     .getByRole("button", { name: /^Start a bloc/ })
     .filter({ visible: true })
@@ -112,14 +114,17 @@ test("a signed-in buyer starts a bloc at the quoted price and sees it paid under
   await expect(
     page.getByRole("heading", { name: "Waiting for payment confirmation" }),
   ).toBeVisible();
+  await expect(page).toHaveTitle("Waiting for payment confirmation · BlocBuy");
   // The receipt polls every 2 s; the second read is Stripe's confirmation.
   await expect(page.getByRole("heading", { name: "Payment received" })).toBeVisible({
     timeout: 10_000,
   });
   await expect(page.getByText(`S$${PRICE} paid.`)).toBeVisible();
+  await expect(page).toHaveTitle("Payment received · BlocBuy");
 
   await page.getByRole("link", { name: "My blocs" }).first().click();
   await expect(page).toHaveURL(/\/account$/);
+  await expect(page).toHaveTitle("My blocs · BlocBuy");
   await expect(
     page.getByRole("list", { name: "My blocs" }).getByRole("heading", { name: TITLE }),
   ).toBeVisible();

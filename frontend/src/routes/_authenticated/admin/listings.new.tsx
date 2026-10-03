@@ -47,6 +47,7 @@ function NewListingPage() {
   };
   return (
     <div className="flex flex-col gap-6">
+      <title>New listing · BlocBuy</title>
       <nav aria-label="Breadcrumb" className="text-muted flex items-center gap-2">
         <Link to="/admin/listings" className="hover:text-foreground">
           Listings

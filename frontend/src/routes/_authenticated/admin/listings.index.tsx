@@ -92,6 +92,7 @@ function ListingsHeader({
 }: Readonly<{ subtitle?: string; cta?: "secondary" | "outline" }>) {
   return (
     <div className="flex items-end justify-between gap-6">
+      <title>Manage listings · BlocBuy</title>
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Listings</h1>
         {subtitle === undefined ? null : <p className="text-muted">{subtitle}</p>}

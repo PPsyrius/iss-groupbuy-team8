@@ -110,6 +110,7 @@ describe("/account behind the _authenticated guard", () => {
     expect(screen.queryByRole("heading", { name: "No orders yet" })).toBeNull();
     expect(screen.queryByRole("group", { name: "Show blocs" })).toBeNull();
     expect(screen.getByRole("heading", { name: "My blocs" })).toBeVisible();
+    expect(document.title).toBe("My blocs · BlocBuy");
     // The site header names the buyer (userId when the nickname is null); the page adds no second
     // name row (§4.4).
     expect(screen.getByTestId("session-user")).toHaveTextContent("u1");
@@ -288,5 +289,39 @@ describe("/account my blocs (T3-03, #31)", () => {
     } finally {
       queryClient.setDefaultOptions(defaults);
     }
+  });
+});
+
+describe("/account loading (§4.4)", () => {
+  it("shows the header with bloc and order skeletons while the lists load", async () => {
+    serveSignedIn();
+    serveTeams([team(1)]);
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    server.use(
+      http.get("*/api/v1/orders/me", async () => {
+        await held;
+        return HttpResponse.json({
+          code: OK_CODE,
+          message: "ok",
+          data: { items: [order(1)], total: 1, page: 1, size: 10 },
+        });
+      }),
+    );
+    renderRoute("/account");
+    // The router shows a pending component after its default 1 s pending delay.
+    const main = await screen.findByRole("main", { busy: true }, { timeout: 3000 });
+    expect(within(main).getByRole("heading", { name: "My blocs" })).toBeVisible();
+    // AccountLoading: BlocsSkeleton's two bloc rows, then two order rows.
+    const lists = within(main).getAllByRole("list");
+    expect(lists).toHaveLength(2);
+    expect(within(lists[0]!).getAllByRole("listitem")).toHaveLength(2);
+    expect(within(lists[1]!).getAllByRole("listitem")).toHaveLength(2);
+    expect(screen.queryByText("Order product 1")).toBeNull();
+    release();
+    expect(await screen.findByRole("list", { name: "My orders" })).toBeVisible();
+    expect(screen.queryByRole("main", { busy: true })).toBeNull();
   });
 });

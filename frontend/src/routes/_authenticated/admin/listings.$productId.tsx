@@ -126,6 +126,7 @@ function EditListingPage() {
   ];
   return (
     <div className="flex flex-col gap-6">
+      <title>{`Edit ${listing.listing?.title ?? "listing"} · BlocBuy`}</title>
       {conflict ? (
         <ConflictBanner
           loadedVersion={version}
@@ -230,6 +231,7 @@ function EditListingPage() {
 function ListingNotFound() {
   return (
     <section className="border-border bg-surface mx-auto mt-12 flex max-w-md flex-col items-start gap-3 rounded-lg border p-6">
+      <title>Listing not found · BlocBuy</title>
       <h1 className="text-lg font-semibold">This listing no longer exists</h1>
       <p className="text-muted">
         It may have been deleted, or the link is wrong. Deleted drafts cannot be recovered.

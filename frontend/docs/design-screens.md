@@ -4,7 +4,7 @@ This document is the implementation reference for the buyer-facing Claude Design
 
 **Design snapshot:** Claude Design project `BlocBuy Prototype`, local export dated 2026-09-17 and reviewed on 2026-09-18. The raw export was copied to `.claude/design-artboards/` for implementation work and is intentionally not tracked. If the upstream design changes, update this document rather than depending on the old export.
 
-Admin, checkout, invite, raw component assets, thumbnails, and generated icon/assets files were outside the buyer-screen pass.
+The admin canvases are covered in §4.7 (added 2026-10-01, admin plan A2-04). Checkout, invite, raw component assets, thumbnails, and generated icon/assets files were outside the buyer-screen pass.
 
 ## 1. Prototype structure
 
@@ -201,7 +201,7 @@ Progress shows joined/target, seats left, progress bar, and deadline/countdown. 
 
 Anonymous paid actions open the sign-in sheet. Signed-in Start opens the quote sheet (T3-01), and START is charged the quoted price (US26); JOIN starts a server-owned purchase intent (T3-04), but full and ended blocs disable the button with a reason. Buy alone uses the same checkout boundary (ADR 0014).
 
-**Invite landing and sharing (T3-05, #30):** A share link uses `/products/$productId?deal={dealId}&ref={ref}`; the listing is the landing because there is no invite-resolution endpoint. Validated `deal` and `ref` are parked in `sessionStorage` (last link wins), then removed from the URL; an invalid new link clears the parked invitation. The reference is sent only with JOIN for that bloc and remains available if the buyer must replace a stale intent. A matching open bloc displays an invite card with primary "Join this bloc" and downgrades Start a bloc to an outline action; a closed invitation offers recovery. No sharer name is shown because the contract lacks one (#201).
+**Invite landing and sharing (T3-05, #30):** A share link uses `/products/$productId?deal={dealId}&ref={ref}`; the listing stays the landing. Validated `deal` and `ref` are parked in `sessionStorage` (last link wins), then removed from the URL; an invalid new link clears the parked invitation. The reference is used twice: on page load the listing resolves it through `GET /api/v1/invites/{ref}` (display only), and the purchase flow sends it with JOIN for that bloc only, where it remains available if the buyer must replace a stale intent. A matching open bloc displays an invite card with primary "Join this bloc" and downgrades Start a bloc to an outline action; a closed invitation offers recovery. Since FB-19 that page-load resolution (#201) runs beside the listing request, and the loader waits for it at most 1.5 s: with a nickname the card leads with the sharer's initials avatar and "{nickname} started this bloc / and invited you to join it" (5b.1), and a closed invitation reads "{nickname}’s bloc has closed"; no nickname, a ref for another bloc or listing, a failed call, or one past the deadline keeps the generic lead.
 
 A signed-in member of the listing's open bloc sees a share block below Open blocs: a link field, Copy with inline confirmation, and Share where the browser supports `navigator.share`. The link is minted by `POST /group-deals/{dealId}/invites`; closed/full blocs do not offer sharing. The share block distinguishes a non-member (404), a bloc no longer taking members (409), and other retryable failures.
 
@@ -243,6 +243,59 @@ The buyer error composition is shared across 404, 403, and 500 states: compact c
 The payment slice shipped in PR #126 without a dedicated receipt artboard. On 2026-09-24 the design owner answered Q23–Q26 for T3-06: use §4.5's terminal card for the receipt, with a payment-status chip (`Paid`, `Waiting`, `Failed`, `Closed`, `Refund pending`, `Refunded`, `Needs review` or `Unavailable`) and Payment reference, Order reference and Bloc reference rows when those IDs are available. The money line carries the amount and the buyer order's `paidTime` (the receipt has no issue time), or the fixed refund window (usually 5–10 business days). The contract supplies no Stripe `pi_…` reference.
 
 While `CREATED`, copy says the seat is held once Stripe confirms and provides "Refresh status"; the receipt continues to poll backend state. A settled receipt leads with "My blocs" and can link back to its listing via the buyer's order. The return page redirects to the receipt when a valid reference exists; otherwise its §4.5 fallback uses a neutral `Payment` chip and says not to pay again to check status. ADR 0014 owns the payment behavior; the dated Sprint 2 log records the verification limits.
+
+### 4.7 Admin console (`/admin`, `/admin/listings`, `/admin/listings/new`, `/admin/listings/$productId`)
+
+Implemented in admin plan A1-01 to A1-08, A2-01 to A2-03 and A3-01 to A3-09 (`admin-plan.md`; ADR 0015). Spec: `BlocBuy Admin Console.dc.html` (batch 4a) and `BlocBuy Admin Editor.dc.html` (batch 4b), plus the admin parts of `BlocBuy Flow Maps.dc.html` (Flow 2) and `BlocBuy Buyer Errors.dc.html`. Where the artboards and the brief differ, the artboards win. Citations below read `file › artboard`.
+
+**Shell and access** (`Admin Console › 4a.1`, `Buyer Errors › Access denied`)
+
+- The console is a second shell in the same SPA: a 240px rail on `background-inverse` with the isologo, an `ADMIN` tag, Dashboard and Listings links, and the user block (initials, `nickname ?? userId`, "Admin" from `me.roles`). The storefront header is hidden through route `staticData.shell`.
+- Desktop only and dense: the content column keeps 1024px and scrolls sideways below that (Q12). All times are SGT.
+- Anonymous visitors go to `/login?returnTo=%2Fadmin`. A signed-in session without the `admin` role gets the Access denied card in place at `/admin` ("You don’t have access to the admin console", Browse listings / My blocs), under a wordmark-only bar. A 403 from any later admin read (a role revoked mid-session) reaches the same card, from the dashboard, the listings table, the tab counts and the editor (FU-01). The guard is UX only; the backend checks the role on every call.
+- Not built: the "Bloc price rules" rail item (no page, Q3) and "Payments" (BA-8, artboard 4b.6), so the rail shows no counts (D1).
+
+**Dashboard** (`Admin Console › 4a.1`)
+
+- "Dashboard", the date line "Wednesday 16 September 2026 · all times SGT" on a one-minute clock, and a secondary "New listing".
+- Four neutral stat cards from the `counts` read: Drafts, On sale, Off sale, Open blocs (`openDeals`). No accent, no trend; the artboard's "filling across N listings" has no source and is left out. Counts show a skeleton while loading and "—" if the read fails.
+- Recent listings: the listings table in a seven-column variant (no Sold, no rule line, no row menu), five newest rows, "View all" into the table.
+- Empty: "No listings yet" with "New listing" (D4). Error: "We couldn’t load the dashboard" with Try again.
+
+**Listings table** (`Admin Console › 4a.2`, `4a.3`, `4a.4`)
+
+- Tabs All / Draft / On sale / Off sale with counts from one `counts` read; server pagination (`page`, `size` 20) with "Showing 1–8 of 62 · Page 1 of 4"; no sorting.
+- Each title carries the latest bloc price rule from `latestPolicy`: "Bloc price S$71.00 · valid to 30 Sep", "… · expired 14 Sep", "… · starts 1 Oct", "No bloc price rule yet" on a published listing and "Draft · not published" on a draft. The day is the SGT day of the last valid minute.
+- The row menu (HeroUI `Dropdown`) offers Edit plus the one lifecycle action the status allows, reusing the editor's dialogs (Q14).
+- Loading: skeleton rows with the tab counts withheld (4a.4). Empty per tab: "No drafts" (4a.3, the header CTA drops to outline), "Nothing on sale", "Nothing off sale", "No listings yet" (D4). Error: "We couldn’t load the listings" with Try again.
+
+**Listing form and editor** (`Admin Editor › 4b.1`, `4b.2`, `4b.3`)
+
+- New draft (4b.1): Title, Subtitle, Category, Description (D7), Solo price, Stock, Cover image URL and up to 20 Image URLs (`https://` only). The server assigns the `BB-` product number on save (#288).
+- Editor (4b.2): header "BB-100472 · draft · v0", Save draft and Publish, a sidebar with the status, version and lifecycle trail. The editor reads fresh and the form is keyed by version.
+- Published (4b.3): Solo price, Currency and Stock are frozen with a chip and reason; Sold is read-only. "Take off sale" and "Put back on sale" use confirm dialogs with the D2 copy.
+- Delete: a clean draft offers "Delete draft" ("Delete this draft?", danger); otherwise the reason reads with counts from `references`, for example "Not available. This listing has been published and has 26 bloc records, 61 quotes and 3 price rules."
+- Leaving with unsaved edits, in the listing form or the rule form, asks "Discard your changes?" (D5). A deleted draft raises a "Draft deleted" toast.
+
+**Errors and conflicts** (`Admin Editor › 4b.4`)
+
+- Bean-validation and domain 400s that name a field (`COMMON_400_002`, `CATALOG_400_001`/`_002` since #323) attach their message to that field; a path with no form field, or a 400 without `errors`, reads in the form alert ("Some fields need another look").
+- A 412 shows the page-level warning "This listing was updated by someone else" with "You loaded v4; the server now has v5" (from the error's `currentVersion`, #286) and Reload. There is no merge and no auto-retry.
+- A 409 on a lifecycle action maps its code to copy ("The listing was not changed").
+
+**Bloc price rule panel** (`Admin Editor › 4b.5`, `4b.3` footnote, `4b.4` field errors)
+
+- Under the Status card in the editor sidebar. States: No rule yet, Scheduled ("Starts 1 Oct", D3), Active, Expired, conflict ("Not saved", Reload) and unavailable. A draft reads "Add a rule after you publish. The bloc price must be strictly below the solo price." (D8, BA-11) and an off-sale listing "Put the listing back on sale to add a revision."
+- The bloc price shows in `accent-soft-foreground` over the struck solo price, with the window "Valid 1 Sep 2026, 12.00 am → 30 Sep 2026, 11.59 pm SGT" (4b.3's full form, so a start that is not midnight keeps its time).
+- "Add a rule" or "New revision" opens the inline form: Bloc price, Valid from and Valid until as minute-granularity SGT date pickers. The amount must be strictly below the solo price and the end after the start and in the future. The footnote reads "Saving appends a revision. Prices already locked into a quote never change."
+- Q13: the backend's `validUntil` is exclusive. The form sends the exact end instant and every display, the Valid until picker included, shows it minus 1 minute (4b.4's "11.59 pm").
+- Q15: when a rule is active and the new start is in the future, the form warns "Saving replaces the active rule now. Buyers see no bloc price until …". There is no blocking confirm.
+- A 412 (`CATALOG_412_001`) turns the panel to the conflict state; a 409 to the unavailable state; a domain 400 lands on `amount`, `validFrom` or `validUntil`, else the form alert.
+
+**Design gaps still open** (`admin-plan.md` §11)
+
+- D1 rail counts (Bloc price rules has no page, Payments no data); D2 dialog copy is the proposed text, not approved (Q7); D3 the scheduled state and replace-now warning are undrawn; D4 dashboard and per-tab empty, table error; D5 unsaved prompt and toasts; D6 the group terms panel (A3-04 waits on it); D7 Description is missing from 4b.1; D8 the "Add a rule after you publish" copy waits on BA-11.
+- Not built: Payments needing attention (4b.6, BA-8), the "Bloc price rules" page (Q3), policy history (BA-10), policy on drafts (BA-11), and the group terms panel (A3-04, D6).
 
 ## 5. Component guidance
 
@@ -367,7 +420,6 @@ Remaining design/contract gaps:
 - listing detail does not expose off-sale status;
 - the API exposes one active deal rather than a list with starter metadata;
 - My Blocs starter/refund detail and notifications need further data or implementation;
-- the implemented invite UI still needs backend #201 to show the sharer's nickname (backlog FB-19);
 - the signed-in storefront menu/header is still provisional;
 - CSP still permits HTTPS listing and avatar image hosts until those sources are narrowed; Inter is already self-hosted.
 

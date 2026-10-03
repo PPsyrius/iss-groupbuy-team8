@@ -1,14 +1,36 @@
 # Playwright journeys
 
-`pnpm e2e` runs against `vite preview` of `dist/` (rebuilt when missing; see `playwright.config.ts`). `E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e` runs against the dev distribution. The current specs cover smoke, login and the stubbed buyer journey (ADR 0011).
+`pnpm e2e` runs against `vite preview` of `dist/` (rebuilt when missing; see `playwright.config.ts`). `E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e` runs against the dev distribution. The current specs cover smoke, login, the stubbed buyer journey and the admin console (ADR 0011).
 
 ## Shared API stubs (`fixtures/api.ts`)
 
 The production build drops `?msw=1`, so a spec that needs data imports `test` and `expect` from `./fixtures/api` and asks for the `api` fixture. It answers every `/api/v1` call from a per-test `api.state` (signed-in `me`, payments switch, listings, quotes, My blocs, orders, intents, checkout sessions with a fixed UUID payment id, receipt reads), records each call for `api.calls()`, and takes per-test handlers through `api.override()`. Unserved paths answer 501 `E2E_501_UNSTUBBED`. Tests that do not ask for `api` reach the real backend, which keeps the `@auth` half honest on dev.
 
+### Against dev (`E2E_TARGET=dev`)
+
+The specs that take the `api` fixture (login's anonymous half, buyer-journey, join-refusal, quote, admin) stay on stubs against dev too: the catch-all route matches the `/api/v1/` path on any host and is registered before the first `goto`, so no request reaches the real backend, and an unserved path answers 501 instead of falling through. The buyer journey also routes `https://checkout.stripe.com/**`, so no Checkout Session is opened. In the `e2e-dev` job they make no writes on dev; only `smoke.spec.ts` and the `@auth`/`@admin` cases (which skip without a storage state) talk to the real backend.
+
 ## Buyer journey (`buyer-journey.spec.ts`)
 
 A signed-in buyer, all on stubs: catalog → listing → quote sheet → Continue to payment → Stripe (a routed 302 back to `/payments/return`) → receipt Waiting then Paid → My blocs. It asserts that START carries the sheet's quote id (US26). It runs on every target and proves the frontend's part only.
+
+## Admin console (`admin.spec.ts`)
+
+Three journeys run on every target on the shared `api` stubs: an anonymous visitor at `/admin` goes to `/login?returnTo=%2Fadmin`; a signed-in buyer (`me` without the `admin` role) gets the 403 card without the storefront header; and a stubbed admin creates a draft, publishes it (the dialog names price, currency and stock), then meets the conflict banner after another admin's save and reloads. The admin endpoints answer from a small versioned store inside the spec; a request it does not serve answers 501 and fails the test.
+
+The `@admin` half needs a real admin session on dev. The admin role must be granted in the dev DB (#68: grants do not travel with git); none is granted today (admin plan §6 Q11), so it skips. Once a Google account holds the role:
+
+1. From `frontend/`, seed its storage state:
+
+   ```bash
+   pnpm exec playwright codegen --save-storage=e2e/.auth/admin.json https://d1b3np88z657cp.cloudfront.net/login
+   ```
+
+2. Run it; it loads the listings, creates one draft and deletes it again:
+
+   ```bash
+   E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e --grep @admin
+   ```
 
 ## Login journey (`login.spec.ts`)
 
