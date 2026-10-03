@@ -60,9 +60,16 @@ jobs:
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         with:
+          # Keep required jobs present on every PR but exclude documentation from
+          # app validation and deployment; Intent still checks AGENTS and its manifest.
+          predicate-quantifier: some-with-excludes
           filters: |
             frontend:
               - 'frontend/**'
+              - '!frontend/docs/**'
+              - '!frontend/README.md'
+              - '!frontend/AGENTS.md'
+              - '!frontend/CLAUDE.md'
               - 'contracts/**'
               - 'lefthook.yml'
               - '.github/workflows/ci-frontend.yml'
