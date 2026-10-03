@@ -1,0 +1,22 @@
+# Best open-deal display cache
+
+Issue #275 adds cache-aside reads in front of #205's bounded best-offer query. It serves the same offer consumed by catalog pricing and the future #245 card-progress work; it adds no card UI or new admission rule.
+
+`OpenDealOffer` is now a framework-free domain projection, shared by the application read service and the infrastructure cache through `OpenDealOfferCache`. Infrastructure does not depend on application types. PostgreSQL still chooses one eligible deal per product by lowest price and ascending UUID for ties.
+
+The application deduplicates the requested IDs, performs one cache batch, and queries PostgreSQL once for missing IDs only. A cache hit can contain an offer or an explicit absence. Empty/null input does no cache or SQL work. A failed lookup reports unavailability, allowing the source result to return without a second Redis wait to populate the failed store. The cached read method adds no database transaction: its source is one snapshot-consistent SQL statement. Existing outer catalog transactions remain unchanged.
+
+The existing local, Docker and EC2 profiles set the shared Redis command timeout to 3 seconds. A stalled lookup can consume that budget before fallback; this change adds no cache-specific timeout or measured latency guarantee. Source fallback also does not establish availability of Redis-backed authentication sessions during a shared-store outage.
+
+| Value | TTL | Key |
+|---|---|---|
+| Offer | Random 15-25 seconds | `blocbuy:{env}:groupbuy:best-open-deal:{productId}` |
+| No eligible offer | Random 5-10 seconds | Same product key |
+
+Groupbuy owns the keys. Cardinality is at most one key per distinct product requested in the last 25 seconds, with no page, user, deal or search variants. Normal callers pass at most 100 distinct IDs from a catalog page, or one existing detail product. Every key expires; invalidation deletes it earlier. TTL jitter spreads rebuilds, and short absence TTLs prevent repeated empty reads. The existing bounded SQL remains the rebuild path; no distributed rebuild lock or additional correctness authority is introduced.
+
+Infrastructure uses one `MGET` and one bounded Lua population call for the batch. Every Lua `SET` includes `PX`, so no entry can persist without a TTL. Values are JSON entries with schema version 1. Malformed or unsupported values, mismatched product IDs, expired offers and offers without seats become misses. Cache expiry is checked against the application clock; deployment clock synchronization remains operationally necessary. Cache read/write/delete failures log only the operation and safe exception class and preserve the PostgreSQL result or already committed fact.
+
+`MemberJoined`, `TeamSucceeded` and `TeamExpired` subscribers delete the product key at `AFTER_COMMIT`. Rollbacks and facts published outside a transaction do not invalidate it. Durable order/refund consequences keep their existing commit phase. A process crash, failed eviction or an in-flight old read populating after deletion can leave display data stale until its short TTL expires; a new team can also remain hidden behind a cached absence for at most 10 seconds. These are accepted display delays. A cached price/progress value never participates in `lockJoinTerms`, membership insertion, payment idempotency or seat admission, which continue under PostgreSQL row locks.
+
+Real PostgreSQL/Redis integration tests prove population, warm reads, expiry reloads, negative entries, all three commit/rollback event boundaries and unreachable-store fallback with identical offers. A failed post-commit eviction cannot undo the committed database fact. Unit tests prove one batched lookup, one source query for partial misses, deduplication, payload-version/error handling and best-effort writes/deletes. Full backend verification retains the existing paid-admission concurrency tests and domain dependency checks; no latency improvement is claimed without a measured benchmark. The HTTP contract is unchanged.

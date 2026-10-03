@@ -107,3 +107,9 @@ The bean requires both the `stripe-sprint2` profile and `blocbuy.scheduling.enab
 ## Addendum (2026-09-25): make the EC2 scheduling opt-in effective (#29)
 
 Move `RefundService` wiring out of the `stripe-sprint2` checkout configuration and remove that profile condition from `RefundWorkerJob`. Both jobs now require only the deployment's existing `blocbuy.scheduling.enabled` switch; the refund worker stays inactive when it is false, and enabling it under `ec2` no longer enables Checkout. Operators must inspect overdue teams and due refund obligations before setting the switch because it can send sandbox refunds through the existing provider gateway. A context test under `ec2` verifies the worker is present without `stripe-sprint2`; a real-lease-runner test verifies runtime failures are recorded rather than propagated.
+
+## Addendum (2026-10-03): derived listing-offer invalidation (#275)
+
+`OpenDealOfferCacheSubscriber` evicts the product's display offer on `MemberJoined`, `TeamSucceeded` and `TeamExpired` at `AFTER_COMMIT`. This derived cache consequence has a different consistency requirement from durable order confirmation and refund obligations, whose existing `BEFORE_COMMIT` ordering stays intact. Evicting before commit would let another reader repopulate from the old database state and would invalidate on rollback. No-transaction events retain the default discard behavior.
+
+Cache eviction is best effort: failure cannot undo the committed team fact, and positive entries expire within 25 seconds. An in-flight read can still populate an old offer after deletion; this bounded display staleness is accepted because PostgreSQL row locks remain the purchase-admission authority. The cache port and immutable projection are framework-free domain types; Redis lives in infrastructure. Key ownership, TTLs, batch bounds, fallback behavior and integration evidence are recorded in [the owning cache design](../design/best-open-deal-cache.md).
