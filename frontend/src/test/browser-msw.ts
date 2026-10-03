@@ -354,6 +354,7 @@ const receiptFor = (order: OrderSummaryResponse | undefined) => ({
   currency: order?.currency ?? "sgd",
   dealId: order?.dealId ?? "",
   orderId: order?.orderId ?? "",
+  productId: order?.productId ?? "",
 });
 
 const settledReceipts: Receipt[] = [
@@ -423,7 +424,13 @@ function readCheckout(paymentId: string, c: Checkout): Receipt {
   if (!c.order && ++c.reads > WAITING_READS) c.order = settle(c);
   return c.order
     ? { paymentId, status: "SUCCEEDED", ...receiptFor(c.order), refundStatus: "NONE" }
-    : { paymentId, status: "CREATED", amount: unitPriceOf(c.n).toFixed(2), currency: "sgd" };
+    : {
+        paymentId,
+        status: "CREATED",
+        amount: unitPriceOf(c.n).toFixed(2),
+        currency: "sgd",
+        productId: id(c.n),
+      };
 }
 
 function openCheckout(purchase: Pick<Checkout, "n" | "deal">): string {
@@ -496,10 +503,11 @@ const invites = new Map<string, string>();
 
 function mintRef(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
-  return btoa(String.fromCharCode(...bytes))
+  // Base64 uses "=" only as trailing padding, so dropping every "=" strips just the padding.
+  return btoa(String.fromCodePoint(...bytes))
     .replaceAll("+", "-")
     .replaceAll("/", "_")
-    .replace(/=+$/, "");
+    .replaceAll("=", "");
 }
 
 export async function startBrowserMsw() {
