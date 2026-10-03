@@ -2,6 +2,7 @@ package com.blocbuy.common.gateway;
 
 import com.blocbuy.common.config.RedisKeys;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
@@ -43,12 +44,15 @@ public class RedisRateLimitGateway implements RateLimitGateway {
 
     private final StringRedisTemplate redis;
     private final Environment environment;
+    private final MeterRegistry meters;
 
     // Spring-managed collaborators, not external mutable input — defensive copies impossible/wrong
     @SuppressFBWarnings("EI_EXPOSE_REP2")
-    public RedisRateLimitGateway(StringRedisTemplate redis, Environment environment) {
+    public RedisRateLimitGateway(
+            StringRedisTemplate redis, Environment environment, MeterRegistry meters) {
         this.redis = redis;
         this.environment = environment;
+        this.meters = meters;
     }
 
     @Override
@@ -61,14 +65,22 @@ public class RedisRateLimitGateway implements RateLimitGateway {
                             COUNT,
                             List.of(key(limit, subject)),
                             Long.toString(limit.window().toMillis()));
-            return count == null || count <= limit.maxRequests();
+            if (count == null) {
+                return allowWithoutStore(limit, "MissingScriptResult");
+            }
+            return count <= limit.maxRequests();
         } catch (DataAccessException ex) {
-            log.warn(
-                    "Rate limit store unavailable; allowing the request (scope={}, cause={})",
-                    limit.scope(),
-                    ex.getClass().getSimpleName());
-            return true;
+            return allowWithoutStore(limit, ex.getClass().getSimpleName());
         }
+    }
+
+    private boolean allowWithoutStore(RateLimit limit, String cause) {
+        log.warn(
+                "Rate limit store unavailable; allowing the request (scope={}, cause={})",
+                limit.scope(),
+                cause);
+        meters.counter("blocbuy.rate_limit.fail_open", "scope", limit.scope()).increment();
+        return true;
     }
 
     private String key(RateLimit limit, String subject) {

@@ -12,6 +12,7 @@ import com.blocbuy.groupbuy.query.ShareInviteView;
 import com.blocbuy.groupbuy.service.GroupDealAppService;
 import com.blocbuy.groupbuy.service.ShareInviteAppService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -127,6 +128,10 @@ public class GroupDealController {
     @ApiResponse(responseCode = "403", description = "Wrong X-BlocBuy-Request marker")
     @ApiResponse(responseCode = "404", description = "No such team, or caller is not a member")
     @ApiResponse(responseCode = "409", description = "Team no longer accepts members")
+    @ApiResponse(
+            responseCode = "429",
+            description = "Invite requests exceed the user allowance (COMMON_429_001)",
+            content = @Content(schema = @Schema(ref = "#/components/schemas/ResultVoid")))
     @PostMapping("/{dealId}/invites")
     public Result<ShareInviteResponse> createInvite(
             @RequestHeader("X-BlocBuy-Request") String csrf,
