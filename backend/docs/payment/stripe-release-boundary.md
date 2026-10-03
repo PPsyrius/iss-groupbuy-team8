@@ -1,6 +1,6 @@
 # Stripe release boundary
 
-Owner: Yorick. Updated: 30 September 2026. PRs #126 and #148; #216 legacy-path cleanup; issue #292 Checkout flag.
+Owner: Yorick. Updated: 3 October 2026. PRs #126 and #148; #216 legacy-path cleanup; issue #292 Checkout flag.
 
 This is the current deployment boundary for the Stripe work. Historical Sandbox evidence is in [stripe-sandbox-acceptance-20260920.md](stripe-sandbox-acceptance-20260920.md), and quality evidence is in [stripe-sonar-fixes-20260920.md](stripe-sonar-fixes-20260920.md).
 
@@ -35,12 +35,12 @@ The `211cfb7` source/contract snapshot guard is historical evidence, not a curre
 
 ## Pre-live checklist
 
-1. ~~Supply production business and purchase-intent ports~~ — PR #147, backend ADR 0001. The legacy gateway/repository retirement is implemented locally in #216 (backend ADR 0004); merge it and verify Checkout lock/transaction ordering with PostgreSQL integration tests before enabling Checkout on dev (#223).
-2. Refund worker and expiry notifications are wired (#29). Before enabling `BLOCBUY_SCHEDULING_ENABLED` on dev (#223), count overdue teams and due refunds, name a recovery owner and monitor both jobs; the switch can issue sandbox refunds without enabling Checkout. The checked-in EC2 deployment leaves scheduling off.
+1. ~~Supply production business and purchase-intent ports~~ — PR #147, backend ADR 0001. The legacy gateway/repository retirement (#216, backend ADR 0004) merged in PR #234. Verify the deployed image and Checkout lock/transaction ordering with PostgreSQL tests before enabling Checkout on dev (#223).
+2. Refund worker and expiry notifications are wired (#29). Before enabling `BLOCBUY_SCHEDULING_ENABLED` on dev (#223), count overdue teams and due refunds, name a recovery owner and monitor both jobs; the switch can issue sandbox refunds without enabling Checkout. The checked-in EC2 deployment leaves scheduling off. The [rollout runbook](stripe-rollout-runbook.md) supplies read-only counts and ownership; local tests do not complete this item.
 3. Keep test fixtures and `db/stripe-fixture` outside every deployment Flyway location.
 4. ~~Rebuild account history against `/api/v1/orders/me`~~ — shipped in the contract and `/account` (#128).
 5. Revisit the `StripeProperties.sandbox()` gate in `StripeClientProvider` only with live-key rotation, a live webhook endpoint, reconciliation controls and renewed payment/refund acceptance. Keep provider-reported live-mode checks and session-hint validation aligned with that rollout.
-6. Drain or reconcile in-flight Checkout and refund work before disabling an enabled deployment. Feature-off rejects signed Checkout settlement, PaymentIntent, charge and refund events; Stripe retries are finite and cannot replace operator-owned reconciliation. Keep the endpoint subscribed to all four supported Checkout session event types.
+6. Drain or reconcile in-flight Checkout and refund work before disabling an enabled deployment, following the [disable-and-drain procedure](stripe-rollout-runbook.md#disable-and-drain). Feature-off rejects signed Checkout settlement, PaymentIntent, charge and refund events; Stripe retries are finite and cannot replace operator-owned reconciliation. Keep the endpoint subscribed to all four supported Checkout session event types. Shared-dev execution remains unverified.
 
 Local and Sandbox evidence does not establish Google OAuth, shared AWS deployment, public TLS or live Stripe readiness.
 
