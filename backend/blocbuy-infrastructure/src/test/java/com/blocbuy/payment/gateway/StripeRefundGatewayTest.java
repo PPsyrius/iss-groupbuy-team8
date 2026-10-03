@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 class StripeRefundGatewayTest {
     private final StripeRefundGateway gateway =
             new StripeRefundGateway(
-                    new StripeProperties("sk_test_fixture_not_real", "test"),
                     new StripeClientProvider(
                             new StripeProperties("sk_test_fixture_not_real", "test")));
     private final RefundWork work =
@@ -59,7 +58,6 @@ class StripeRefundGatewayTest {
         assertThatThrownBy(
                         () ->
                                 new StripeRefundGateway(
-                                                new StripeProperties("sk_live_test", "x"),
                                                 new StripeClientProvider(
                                                         new StripeProperties("sk_live_test", "x")))
                                         .createRefund(work))
@@ -67,10 +65,16 @@ class StripeRefundGatewayTest {
         assertThatThrownBy(
                         () ->
                                 new StripeRefundGateway(
-                                                new StripeProperties("", "x"),
                                                 new StripeClientProvider(
                                                         new StripeProperties("", "x")))
                                         .retrieveRefund("re_test"))
+                .isInstanceOf(BizException.class);
+        assertThatThrownBy(
+                        () ->
+                                new StripeRefundGateway(
+                                                new StripeClientProvider(
+                                                        new StripeProperties("sk_live_test", "x")))
+                                        .findRefund(work))
                 .isInstanceOf(BizException.class);
     }
 
