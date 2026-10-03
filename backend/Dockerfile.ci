@@ -4,35 +4,13 @@
 # Local builds use Dockerfile with the same prebuilt JAR (backend/docker-compose.yaml).
 
 # Explicit OS line and multi-architecture digest; keep in sync with Dockerfile.
-FROM eclipse-temurin:21-jre-noble@sha256:0c324fbe2e1455c3159184717440f3b52906ef82a39c4a6efc9edb401d31971a
-
-# Temporary CVE-2026-84782 repair until a verified upstream rebuild includes it.
-# Dependabot updates the base digest, not this package version; see the CI runbook.
-ARG OPENSSL_FIXED_VERSION=3.0.13-0ubuntu3.16
+FROM eclipse-temurin:21-jre-noble@sha256:22138efd69393501fccd8176ae16b01791ed71ff801b28f0359415389b17c766
 WORKDIR /app
 
-# Keep the conditional repair, post-checks and runtime user in sync with Dockerfile.
-RUN set -eux; \
-    set --; \
-    for package in libssl3t64 openssl; do \
-        test "$(dpkg-query -W -f='${db:Status-Status}' "$package")" = installed; \
-        installed="$(dpkg-query -W -f='${Version}' "$package")"; \
-        if dpkg --compare-versions "$installed" lt "$OPENSSL_FIXED_VERSION"; then \
-            set -- "$@" "$package=$OPENSSL_FIXED_VERSION"; \
-        fi; \
-    done; \
-    if [ "$#" -gt 0 ]; then \
-        apt-get update; \
-        apt-get install -y --no-install-recommends --only-upgrade "$@"; \
-    fi; \
-    for package in libssl3t64 openssl; do \
-        installed="$(dpkg-query -W -f='${Version}' "$package")"; \
-        dpkg --compare-versions "$installed" ge "$OPENSSL_FIXED_VERSION"; \
-    done; \
-    rm -rf /var/lib/apt/lists/*; \
-    rm -f /usr/bin/pebble; \
-    groupadd --system blocbuy; \
-    useradd --system --gid blocbuy blocbuy
+# Keep the runtime user and unused pebble removal in sync with Dockerfile.
+RUN rm -f /usr/bin/pebble \
+ && groupadd --system blocbuy \
+ && useradd --system --gid blocbuy blocbuy
 USER blocbuy
 
 # finalName is blocbuy-backend (blocbuy-bootstrap/pom.xml) — the same jar the
