@@ -303,7 +303,7 @@ infra/swe5001/
 | **Runtime total** | **about $0.17–0.20** |
 
 - **Persistent layer while idle:** about $1–3/month (ECR storage, S3, SSM; CloudFront is near zero without traffic).
-- **Usage pattern:** two promotion runs of about one hour (Sprint 3 and Sprint 4) plus about 12 hours of manual sessions (baseline about 3 h, rehearsal about 3 h, presentation day about 6 h) come to about 14 runtime hours, or **under US$5 in total** for the course, compared with about $125/month for running 24/7.
+- **Usage pattern:** two promotion runs of about one hour (Sprint 3 and Sprint 4) plus about 12 hours of manual sessions (baseline about 3 h, rehearsal about 3 h, presentation day about 6 h) come to about 14 runtime hours, or **under US$5 in runtime charges** for the course, compared with about $125/month for running 24/7. The persistent layer above is billed separately.
 - **Guardrails:** every promotion run destroys `runtime` in an always-run final step; `env-status.sh` fails if any resource tagged `Stack=runtime` remains; the nightly `env-down` catches a forgotten manual session; AWS Budgets alerts at $20 and $50; `terraform destroy` of every stack after the report deadline.
 
 ### 3.4 DevOps and DevSecOps

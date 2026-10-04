@@ -203,10 +203,10 @@ Every stack PR shows a clean `terraform plan` in `infra-swe5001.yml` and passes 
 ## 9. Cost guardrails
 
 - Hourly runtime estimate about US$0.17–0.20 (plan section 3.3); persistent layer about US$1–3 per month.
-- Runtime hours: about 14 for the whole course (two one-hour promotion runs and about 12 hours of manual sessions), so under US$5 in total.
+- Runtime hours: about 14 for the whole course (two one-hour promotion runs and about 12 hours of manual sessions), so under US$5 in runtime charges for the course. The persistent layer is billed separately at about US$1–3 per month.
 - Every promotion run ends with `env-down.sh` and `env-status.sh`, also on failure.
 - `ENABLE_SWE5001_NIGHTLY_DOWN` destroys `runtime` at 23:00 SGT if a manual session was left running.
-- Budget alerts at US$50 and US$100.
+- Budget alerts at US$20 and US$50.
 - After 16 Nov: destroy `runtime`, `edge`, then `foundation` (empty ECR first), and remove the GitHub variables and environments.
 
 ## 10. Risks
