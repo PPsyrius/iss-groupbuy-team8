@@ -108,8 +108,26 @@ class ProductControllerTest {
                 .andExpect(jsonPath("$.code").value("COMMON_200_000"))
                 .andExpect(jsonPath("$.data.page").value(1))
                 .andExpect(jsonPath("$.data.size").value(PageQuery.DEFAULT_SIZE))
-                .andExpect(jsonPath("$.data.items[0].id").value(PRODUCT.toString()));
+                .andExpect(jsonPath("$.data.items[0].id").value(PRODUCT.toString()))
+                .andExpect(jsonPath("$.data.items[0].deal.dealId").value(DEAL.toString()))
+                .andExpect(jsonPath("$.data.items[0].deal.targetSize").value(5))
+                .andExpect(jsonPath("$.data.items[0].deal.currentSize").value(2))
+                .andExpect(
+                        jsonPath("$.data.items[0].deal.expireTime").value("2027-12-31T23:59:59Z"));
         verify(products).pageListings(null, null, null);
+    }
+
+    /** A listing without an open deal keeps today's price-only card: null deal and group price. */
+    @Test
+    void browseListingWithoutDealHasNullDeal() throws Exception {
+        when(products.pageListings(null, null, null))
+                .thenReturn(
+                        PageResult.of(List.of(listingWithoutDeal()), 1, PageQuery.of(null, null)));
+        mvc.perform(get(PRODUCTS_PATH))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items[0].id").value(PRODUCT.toString()))
+                .andExpect(jsonPath("$.data.items[0].groupPrice").doesNotExist())
+                .andExpect(jsonPath("$.data.items[0].deal").doesNotExist());
     }
 
     @Test
@@ -136,7 +154,9 @@ class ProductControllerTest {
                 .andExpect(jsonPath("$.data.total").value(6))
                 .andExpect(jsonPath("$.data.page").value(2))
                 .andExpect(jsonPath("$.data.size").value(5))
-                .andExpect(jsonPath("$.data.items[0].id").value(PRODUCT.toString()));
+                .andExpect(jsonPath("$.data.items[0].id").value(PRODUCT.toString()))
+                .andExpect(jsonPath("$.data.items[0].deal.targetSize").value(5))
+                .andExpect(jsonPath("$.data.items[0].deal.currentSize").value(2));
         verify(products).search(query);
         verifyNoMoreInteractions(products);
     }
@@ -296,7 +316,21 @@ class ProductControllerTest {
                 "electronics",
                 new BigDecimal("129.00"),
                 new BigDecimal("99.00"),
-                "sgd");
+                "sgd",
+                new ActiveDealView(DEAL, 5, 2, Instant.parse("2027-12-31T23:59:59Z")));
+    }
+
+    private static ListingView listingWithoutDeal() {
+        return new ListingView(
+                PRODUCT,
+                "Mechanical keyboard",
+                "Hot-swap",
+                "https://img.example/cover.png",
+                "electronics",
+                new BigDecimal("129.00"),
+                null,
+                "sgd",
+                null);
     }
 
     @TestConfiguration(proxyBeanMethods = false)

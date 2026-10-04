@@ -18,8 +18,8 @@ import java.util.UUID;
 public interface ProductAppService {
 
     /**
-     * Buyer listing browse: one page of on-sale products, each with its resolved dual price. {@code
-     * category} null/blank lists all categories.
+     * Buyer listing browse: one page of on-sale products, each with its resolved dual price and the
+     * open deal's progress (null when none). {@code category} null/blank lists all categories.
      */
     PageResult<ListingView> pageListings(Integer page, Integer size, String category);
 
