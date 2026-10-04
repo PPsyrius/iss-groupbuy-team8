@@ -122,13 +122,7 @@ public class ProductAppServiceImpl implements ProductAppService {
                 price.currency(),
                 product.stock(),
                 product.soldCount(),
-                deal == null
-                        ? null
-                        : new ActiveDealView(
-                                deal.dealId(),
-                                deal.targetSize(),
-                                deal.currentSize(),
-                                deal.expireTime()));
+                toActiveDeal(deal));
     }
 
     /** One batch deal lookup for a page of products. */
@@ -147,7 +141,19 @@ public class ProductAppServiceImpl implements ProductAppService {
                 product.category(),
                 price.individualPrice(),
                 price.groupPrice(),
-                price.currency());
+                price.currency(),
+                toActiveDeal(deal));
+    }
+
+    /**
+     * Deal progress for both the grid and the detail page, present whenever an open deal exists —
+     * even if the pricing strategy ignored it — so the two views never disagree.
+     */
+    private static ActiveDealView toActiveDeal(OpenDealOffer deal) {
+        return deal == null
+                ? null
+                : new ActiveDealView(
+                        deal.dealId(), deal.targetSize(), deal.currentSize(), deal.expireTime());
     }
 
     /** Strategy selection is column-driven: the product's pricing mode picks the strategy. */

@@ -14,6 +14,7 @@ import com.blocbuy.catalog.model.PricingMode;
 import com.blocbuy.catalog.model.Product;
 import com.blocbuy.catalog.model.ProductStatus;
 import com.blocbuy.catalog.pricing.DualPricingStrategy;
+import com.blocbuy.catalog.query.ActiveDealView;
 import com.blocbuy.catalog.query.ListingQuery;
 import com.blocbuy.catalog.query.ListingView;
 import com.blocbuy.catalog.repository.ProductRepository;
@@ -65,7 +66,11 @@ class ProductAppServiceImplTest {
         assertThat(result.total()).isEqualTo(2);
         assertThat(result.items().get(0).individualPrice()).isEqualByComparingTo("129.00");
         assertThat(result.items().get(0).groupPrice()).isEqualByComparingTo("89.00");
+        assertThat(result.items().get(0).deal())
+                .isEqualTo(
+                        new ActiveDealView(DEAL_ID, 5, 2, Instant.parse("2027-12-31T23:59:59Z")));
         assertThat(result.items().get(1).groupPrice()).isNull();
+        assertThat(result.items().get(1).deal()).isNull();
         // one batch call for the whole page — never per item
         verify(groupDealQueryService).findBestOpenDealsByProductIds(List.of(PRODUCT_ID, otherId));
     }
@@ -164,8 +169,42 @@ class ProductAppServiceImplTest {
 
         assertThat(result.total()).isEqualTo(1);
         assertThat(result.items().get(0).groupPrice()).isEqualByComparingTo("89.00");
+        assertThat(result.items().get(0).deal().dealId()).isEqualTo(DEAL_ID);
+        assertThat(result.items().get(0).deal().currentSize()).isEqualTo(2);
         verify(groupDealQueryService).findBestOpenDealsByProductIds(List.of(PRODUCT_ID));
         verifyNoInteractions(listingSearchReranker);
+    }
+
+    /**
+     * A deal in another currency cannot price the card, but its progress still matches the detail
+     * page for the same listing.
+     */
+    @Test
+    void currencyMismatchedDealKeepsProgressOnGridAndDetail() {
+        Product product = product(PRODUCT_ID, "129.00", ProductStatus.ON_SALE);
+        OpenDealOffer usd =
+                new OpenDealOffer(
+                        DEAL_ID,
+                        PRODUCT_ID,
+                        new BigDecimal("89.00"),
+                        "usd",
+                        5,
+                        3,
+                        Instant.parse("2027-12-31T23:59:59Z"));
+        when(productRepository.pageOnSale(any(PageQuery.class), any()))
+                .thenReturn(PageResult.of(List.of(product), 1, new PageQuery(1, 20)));
+        when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.of(product));
+        when(pricingStrategyResolver.strategyFor(PricingMode.DUAL))
+                .thenReturn(new DualPricingStrategy());
+        when(groupDealQueryService.findBestOpenDealsByProductIds(List.of(PRODUCT_ID)))
+                .thenReturn(Map.of(PRODUCT_ID, usd));
+
+        ListingView card = service.pageListings(null, null, null).items().get(0);
+        var detail = service.getListingDetail(PRODUCT_ID);
+
+        assertThat(card.groupPrice()).isNull();
+        assertThat(card.deal()).isNotNull().isEqualTo(detail.deal());
+        assertThat(card.deal().currentSize()).isEqualTo(3);
     }
 
     /** Verifies that semantic order is applied before batched listing enrichment. */
@@ -196,13 +235,15 @@ class ProductAppServiceImplTest {
         when(pricingStrategyResolver.strategyFor(PricingMode.DUAL))
                 .thenReturn(new DualPricingStrategy());
         when(groupDealQueryService.findBestOpenDealsByProductIds(List.of(secondId, PRODUCT_ID)))
-                .thenReturn(Map.of());
+                .thenReturn(Map.of(PRODUCT_ID, offer(PRODUCT_ID, "89.00")));
 
         PageResult<ListingView> result = service.search(query);
 
         assertThat(result.items())
                 .extracting(ListingView::id)
                 .containsExactly(secondId, PRODUCT_ID);
+        assertThat(result.items().get(0).deal()).isNull();
+        assertThat(result.items().get(1).deal().dealId()).isEqualTo(DEAL_ID);
         verify(groupDealQueryService).findBestOpenDealsByProductIds(List.of(secondId, PRODUCT_ID));
     }
 
