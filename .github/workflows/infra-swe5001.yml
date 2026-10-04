@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        stack: [foundation]
+        stack: [foundation, runtime]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -50,6 +50,17 @@ jobs:
         run: |
           terraform -chdir="infra/swe5001/${STACK}" init -backend=false -input=false -lockfile=readonly
           terraform -chdir="infra/swe5001/${STACK}" validate
+
+      # Offline plan with mocked AWS provider (infra/swe5001/runtime/tests).
+      - name: terraform test
+        env:
+          STACK: ${{ matrix.stack }}
+        run: |
+          if [ -d "infra/swe5001/${STACK}/tests" ]; then
+            terraform -chdir="infra/swe5001/${STACK}" test
+          else
+            echo "No tests for ${STACK}."
+          fi
 
       - name: checkov
         env:
@@ -75,7 +86,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        stack: [foundation]
+        stack: [foundation, runtime]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
