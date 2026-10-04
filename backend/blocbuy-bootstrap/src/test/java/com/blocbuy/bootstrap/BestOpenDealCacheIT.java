@@ -3,6 +3,7 @@ package com.blocbuy.bootstrap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import com.blocbuy.catalog.service.ProductAppService;
 import com.blocbuy.common.util.UuidV7;
 import com.blocbuy.groupbuy.event.MemberJoined;
 import com.blocbuy.groupbuy.event.TeamExpired;
@@ -67,6 +68,7 @@ class BestOpenDealCacheIT {
     }
 
     @Autowired private GroupDealQueryService query;
+    @Autowired private ProductAppService products;
     @Autowired private JdbcTemplate jdbc;
     @Autowired private StringRedisTemplate redis;
     @Autowired private ApplicationEventPublisher events;
@@ -171,6 +173,36 @@ class BestOpenDealCacheIT {
                         });
         assertThat(redis.hasKey(key())).isTrue();
         assertThat(query.findBestOpenDealsByProductIds(List.of(product))).isEqualTo(first);
+    }
+
+    /** Issue #245: a committed join refreshes the catalog card's progress on the next read. */
+    @Test
+    void committedJoinRefreshesCatalogCardProgress() {
+        String category = "cache-" + product;
+        jdbc.update(
+                """
+                INSERT INTO biz_product (id, product_no, title, original_price, currency, stock,
+                    status, category)
+                VALUES (?, ?, 'Cached tea', 120.00, 'sgd', 5, 'on_sale', ?)
+                """,
+                product,
+                category,
+                category);
+        assertThat(products.pageListings(1, 20, category).items().get(0).deal().currentSize())
+                .isEqualTo(1);
+        assertThat(redis.hasKey(key())).isTrue();
+        new TransactionTemplate(transactions)
+                .executeWithoutResult(
+                        status -> {
+                            jdbc.update(
+                                    "UPDATE biz_group_deal SET current_size = 2 WHERE id = ?",
+                                    deal);
+                            events.publishEvent(event(Change.JOINED));
+                        });
+        assertThat(redis.hasKey(key())).isFalse();
+        var card = products.pageListings(1, 20, category).items().get(0);
+        assertThat(card.deal().dealId()).isEqualTo(deal);
+        assertThat(card.deal().currentSize()).isEqualTo(2);
     }
 
     @Test

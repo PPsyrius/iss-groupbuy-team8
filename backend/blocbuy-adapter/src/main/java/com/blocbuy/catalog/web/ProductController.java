@@ -1,5 +1,6 @@
 package com.blocbuy.catalog.web;
 
+import com.blocbuy.catalog.query.ActiveDealView;
 import com.blocbuy.catalog.query.ListingDetailView;
 import com.blocbuy.catalog.query.ListingQuery;
 import com.blocbuy.catalog.query.ListingView;
@@ -101,7 +102,8 @@ public class ProductController {
                 view.category(),
                 view.individualPrice(),
                 view.groupPrice(),
-                view.currency());
+                view.currency(),
+                toDealResponse(view.deal()));
     }
 
     private static ProductDetailResponse toDetail(ListingDetailView view) {
@@ -118,16 +120,21 @@ public class ProductController {
                 view.currency(),
                 view.stock(),
                 view.soldCount(),
-                view.deal() == null
-                        ? null
-                        : new ActiveDealResponse(
-                                view.deal().dealId(),
-                                view.deal().targetSize(),
-                                view.deal().currentSize(),
-                                view.deal().expireTime()));
+                toDealResponse(view.deal()));
     }
 
-    /** Listing summary for the browse grid; {@code groupPrice} null when no open deal. */
+    /** Shared by the grid and the detail page so both render the same deal progress. */
+    private static ActiveDealResponse toDealResponse(ActiveDealView deal) {
+        return deal == null
+                ? null
+                : new ActiveDealResponse(
+                        deal.dealId(), deal.targetSize(), deal.currentSize(), deal.expireTime());
+    }
+
+    /**
+     * Listing summary for the browse grid; {@code groupPrice} and {@code deal} null when no open
+     * deal. {@code deal} matches the detail page's deal for the same listing.
+     */
     public record ProductSummaryResponse(
             UUID id,
             String title,
@@ -136,7 +143,8 @@ public class ProductController {
             @Schema(nullable = true) String category,
             BigDecimal individualPrice,
             @Schema(nullable = true) BigDecimal groupPrice,
-            String currency) {}
+            String currency,
+            @Schema(nullable = true) ActiveDealResponse deal) {}
 
     /** Full listing for the detail page; {@code deal} null when no open deal. */
     public record ProductDetailResponse(
