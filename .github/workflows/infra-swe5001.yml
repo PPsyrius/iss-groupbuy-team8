@@ -1,0 +1,155 @@
+# SWE5001 Terraform checks (docs/swe5001/impl-github-configuration.md, section 6).
+# Plan only: nothing is applied from a PR. `static` needs no AWS access; `plan` runs
+# once an operator has applied `foundation` and set the swe5001-plan environment and
+# repository variables (infra/swe5001/README.md).
+name: infra-swe5001
+
+on:
+  pull_request:
+    branches: [dev, prod]
+    paths:
+      - "infra/swe5001/**"
+      - ".github/workflows/infra-swe5001.yml"
+
+concurrency:
+  group: infra-swe5001-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+env:
+  TERRAFORM_VERSION: 1.16.4
+  CHECKOV_VERSION: 3.3.22
+
+jobs:
+  static:
+    name: static (${{ matrix.stack }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: [foundation, runtime]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive infra/swe5001
+
+      - name: terraform init and validate (no backend)
+        env:
+          STACK: ${{ matrix.stack }}
+        run: |
+          terraform -chdir="infra/swe5001/${STACK}" init -backend=false -input=false -lockfile=readonly
+          terraform -chdir="infra/swe5001/${STACK}" validate
+
+      # Offline plan with mocked AWS provider (infra/swe5001/runtime/tests).
+      - name: terraform test
+        env:
+          STACK: ${{ matrix.stack }}
+        run: |
+          if [ -d "infra/swe5001/${STACK}/tests" ]; then
+            terraform -chdir="infra/swe5001/${STACK}" test
+          else
+            echo "No tests for ${STACK}."
+          fi
+
+      - name: checkov
+        env:
+          STACK: ${{ matrix.stack }}
+        run: |
+          pipx run "checkov==${CHECKOV_VERSION}" -d "infra/swe5001/${STACK}" \
+            --framework terraform --quiet --compact
+
+  plan:
+    name: plan (${{ matrix.stack }})
+    needs: static
+    # Same-repository PRs only (fork PRs get no OIDC token), and only once the
+    # operator has set the state bucket variable after the first foundation apply.
+    # Runtime state holds secrets and must never be read by this PR-assumable role.
+    if: >-
+      vars.SWE5001_TF_STATE_BUCKET != '' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    environment: swe5001-plan
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: [foundation]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.SWE5001_TF_PLAN_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      # The plan role is read-only, so the plan runs without taking the state lock.
+      - name: terraform plan
+        env:
+          STACK: ${{ matrix.stack }}
+          STATE_BUCKET: ${{ vars.SWE5001_TF_STATE_BUCKET }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+        run: |
+          dir="infra/swe5001/${STACK}"
+          terraform -chdir="$dir" init -input=false -lockfile=readonly \
+            -backend-config="bucket=${STATE_BUCKET}" -backend-config="region=${AWS_REGION}"
+          terraform -chdir="$dir" plan -input=false -lock=false -no-color \
+            -var-file=../envs/demo.tfvars -out=tfplan > /dev/null
+
+      # Only resource addresses and actions are published: the full plan can carry
+      # secret-bearing values and is never printed or uploaded.
+      - name: Summarise plan
+        env:
+          STACK: ${{ matrix.stack }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          dir="infra/swe5001/${STACK}"
+          changes=$(terraform -chdir="$dir" show -json tfplan |
+            jq -r '.resource_changes[]
+              | select(.change.actions != ["no-op"] and .change.actions != ["read"])
+              | "| \(.change.actions | join(", ")) | `\(.address)` |"')
+          marker="<!-- infra-swe5001-plan:${STACK} -->"
+          {
+            echo "$marker"
+            echo "### terraform plan: \`${STACK}\`"
+            echo
+            if [ -z "$changes" ]; then
+              echo "No changes."
+            else
+              echo "| Action | Resource |"
+              echo "| --- | --- |"
+              echo "$changes"
+            fi
+            echo
+            echo "_Commit ${GITHUB_SHA::7}. Addresses and actions only; the full plan is not published._"
+          } > summary.md
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+          comment_id=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" --paginate \
+            --jq ".[] | select(.body | startswith(\"${marker}\")) | .id" | head -n1)
+          if [ -n "$comment_id" ]; then
+            gh api -X PATCH "repos/${REPO}/issues/comments/${comment_id}" -F body=@summary.md > /dev/null
+          else
+            gh api -X POST "repos/${REPO}/issues/${PR_NUMBER}/comments" -F body=@summary.md > /dev/null
+          fi

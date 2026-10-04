@@ -2,7 +2,18 @@
 
 Detailed plan for proving the architecture works, for the [refactoring plan](microservice-refactoring-plan.md), section 3.2. Companion plans: [backend architecture](impl-backend-architecture.md), [GitHub configuration](impl-github-configuration.md), [AWS infrastructure](impl-aws-infrastructure.md).
 
-Status: **Draft, 2026-09-29.** Numeric targets are provisional until the baseline run (V2) is recorded.
+Status: **Draft, revised 2026-10-04** (first draft 2026-09-29; 2026-10-04: validation split into a simple per-promotion check and a one-off final demonstration). Numeric targets are provisional until the baseline run (V2) is recorded.
+
+## 0. Validation scope
+
+The ECS environment exists only for about one hour per sprint and for a few manual sessions (refactoring plan, section 3.4), so validation is kept to two levels:
+
+| Level | When | What runs | Evidence |
+| --- | --- | --- | --- |
+| Promotion validation | Every `dev` → `prod` promotion run (once per sprint: 9 Oct, 20 Oct) | Smoke suite V1 through CloudFront, plus ECS steady state on the new digests | Workflow artifact: smoke output, service events, digests, step timings (including create and destroy durations for V8) |
+| Final demonstration | Manual sessions created with `env-up.sh`: one baseline session, the rehearsal on 22 Oct and the presentation on 23 Oct | V2–V7 | Files under `docs/swe5001/evidence/`, the rehearsal recording |
+
+No k6 run or drill is part of a promotion run.
 
 ---
 
@@ -15,7 +26,7 @@ Status: **Draft, 2026-09-29.** Numeric targets are provisional until the baselin
 | A lost task causes no failed requests | Task stop during steady load, zero non-2xx in k6 (V5) | new row: self-healing |
 | A bad release rolls back automatically | Broken image deploy, circuit-breaker rollback event (V6) | new row: safe deployment |
 | Events are applied exactly once | Duplicate-delivery and DLQ tests (backend WP-B7) plus a live DLQ drill (V7) | new row: event reliability |
-| The environment is reproducible | `env-cycle` durations over at least three runs (V8) | new row: reproducibility |
+| The environment is reproducible | Create and destroy durations from the promotion runs, the rehearsal and the presentation session (V8) | new row: reproducibility |
 | Both deployment shapes behave the same | Same smoke suite passes on the monolith (EC2) and the services (ECS) (V1) | new row: topology parity |
 
 New rows are added to `docs/quality/nfr-register.md` in the PR that produces the evidence, following the register's existing format.
@@ -27,7 +38,7 @@ New rows are added to `docs/quality/nfr-register.md` in the PR that produces the
 | Tool | Location | Notes |
 | --- | --- | --- |
 | k6 | `perf/k6/` | Scenarios as ES modules; thresholds in each script; results exported as JSON and summary |
-| Smoke suite | `perf/smoke/smoke.sh` | `curl`-based; takes a base URL; used by `env-up`, `env-cycle` and the parity check |
+| Smoke suite | `perf/smoke/smoke.sh` | `curl`-based; takes a base URL; used by `env-up.sh`, the promotion run and the parity check |
 | Drill scripts | `perf/drills/` | AWS CLI scripts for task stop, broken deploy and DLQ injection |
 | Results | `docs/swe5001/evidence/<yyyymmdd>-<scenario>/` | k6 summary, dashboard screenshot, CLI output; referenced from the NFR register |
 
@@ -52,7 +63,7 @@ Pass on both shapes is the topology-parity evidence.
 
 ## 4. Scenarios
 
-### V2 Baseline (first development week)
+### V2 Baseline (manual session after the Sprint 3 promotion)
 
 - 1 task per service, autoscaling suspended (`aws application-autoscaling register-scalable-target --suspended-state`).
 - k6 `browse.js`: constant arrival rate on `GET /api/v1/products` (70%), `GET /api/v1/products/{id}` (30%), stepping 10 → 200 RPS over 10 minutes.
@@ -78,8 +89,8 @@ Pass on both shapes is the topology-parity evidence.
 
 ### V6 Safe deployment
 
-- Deploy an image built with `BLOCBUY_FAIL_HEALTH=true` (a demo-only switch that makes the health endpoint return DOWN; guarded by profile `demo`, with a test asserting it is ignored otherwise).
-- Expected: circuit breaker triggers, service rolls back to the previous task definition, no user-visible errors.
+- Through a manual `swe5001-deploy.yml` run on `prod` with input `drill=broken-health`, never through a promotion merge, deploy an image built with `BLOCBUY_FAIL_HEALTH=true` (a demo-only switch that makes the health endpoint return DOWN; guarded by profile `demo`, with a test asserting it is ignored otherwise).
+- Expected: circuit breaker triggers, service rolls back to the previous task definition, no user-visible errors, and `/blocbuy/swe5001/release/commerce-svc` still holds the previous digest.
 
 ### V7 Poison message
 
@@ -88,8 +99,8 @@ Pass on both shapes is the topology-parity evidence.
 
 ### V8 Rebuild from zero
 
-- `env-cycle` at least three times before 22 Oct.
-- Record apply, smoke and destroy durations; target full up in under 30 minutes.
+- No separate cycle runs: every promotion run, the rehearsal and the presentation session are full creates from zero followed by a destroy.
+- Record create, smoke and destroy durations from at least three of them; target full up in under 30 minutes and no resource left after `env-status.sh`.
 
 ---
 
@@ -133,11 +144,11 @@ Pass on both shapes is the topology-parity evidence.
 | V-c | k6 scripts, baseline run V2, targets fixed | 6.1 | AWS S0 |
 | V-d | V3 and V4 runs with evidence | 6.1 | backend B6–B7, AWS R6 |
 | V-e | Drills V5–V7 | 6.2 | V-b |
-| V-f | V8 cycle runs and final rehearsal on 22 Oct | 6.3 | GitHub G5 |
+| V-f | V8 durations from the promotion runs, and the final rehearsal on 22 Oct | 6.3 | GitHub G5, AWS S1 |
 
 ## 7. Presentation-day checklist (23 Oct)
 
-- `env-up` before 12:00; smoke suite green; `ENABLE_SWE5001_NIGHTLY_DOWN=false`.
+- `env-up.sh` before 12:00 (release digests from the Sprint 4 promotion); smoke suite green.
 - Dashboard open with a 1-hour window; k6 scripts ready on a laptop with the base URL set.
 - Fallback: screen recording of V3 and V4 from the rehearsal on 22 Oct.
-- After the presentation: re-enable nightly teardown.
+- After the presentation: `env-down.sh`, and confirm `env-status.sh` reports nothing left.
