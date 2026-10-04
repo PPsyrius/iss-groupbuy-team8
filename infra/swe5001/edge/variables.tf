@@ -21,8 +21,15 @@ variable "aws_region" {
 }
 
 variable "tf_state_bucket" {
-  description = "Terraform state bucket; the ALB DNS name is read from swe5001/runtime.tfstate in it"
+  description = "Unused here; shared with foundation through ../envs/demo.tfvars"
   type        = string
+  default     = null
+}
+
+variable "runtime_alb_dns_name" {
+  description = "Non-secret ALB DNS name passed by env-up.sh after runtime is created; null during initial edge bootstrap"
+  type        = string
+  default     = null
 }
 
 # Declared so the shared var file applies without warnings; unused by this stack.

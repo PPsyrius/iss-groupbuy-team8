@@ -83,6 +83,9 @@ jobs:
       - name: shellcheck
         run: shellcheck -x infra/swe5001/scripts/*.sh perf/smoke/smoke.sh
 
+      - name: Verify teardown status fails closed
+        run: bash infra/swe5001/scripts/test-env-status.sh
+
   plan:
     name: plan (${{ matrix.stack }})
     needs: static

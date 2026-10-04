@@ -204,6 +204,20 @@ data "aws_iam_policy_document" "apply" {
     resources = [local.state_objects_arn]
   }
 
+  # The shared state bucket uses SSE-KMS. Reads and writes both need KMS, but
+  # S3 object access above is limited to this course's state keys.
+  statement {
+    sid       = "UseSwe5001StateKeyViaS3"
+    actions   = ["kms:Decrypt", "kms:GenerateDataKey"]
+    resources = ["arn:aws:kms:${var.aws_region}:${var.aws_account_id}:key/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "kms:ViaService"
+      values   = ["s3.${var.aws_region}.amazonaws.com"]
+    }
+  }
+
   statement {
     sid = "ManageSpaBucket"
     actions = [

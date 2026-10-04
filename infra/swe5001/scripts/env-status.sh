@@ -21,17 +21,19 @@ guard_account
 
 # Deregistered task definitions stay tagged but cost nothing and cannot be deleted while
 # referenced; terminated instances stay listed for a while. Neither counts as left over.
-arns=$(aws resourcegroupstaggingapi get-resources \
+all_arns=$(aws resourcegroupstaggingapi get-resources \
   --tag-filters Key=Course,Values=swe5001 Key=Stack,Values=runtime \
-  --query 'ResourceTagMappingList[].ResourceARN' --output text | tr '\t' '\n' |
-  grep -v ':task-definition/' || true)
+  --query 'ResourceTagMappingList[].ResourceARN' --output text) ||
+  die "cannot list tagged runtime resources"
+arns=$(printf '%s\n' "$all_arns" | tr '\t' '\n' | { grep -v ':task-definition/' || true; })
 
 remaining=""
 for arn in $arns; do
   case "$arn" in
     arn:aws:ec2:*:instance/*)
       state=$(aws ec2 describe-instances --instance-ids "${arn##*/}" \
-        --query 'Reservations[0].Instances[0].State.Name' --output text 2> /dev/null || echo terminated)
+        --query 'Reservations[0].Instances[0].State.Name' --output text) ||
+        die "cannot inspect runtime instance ${arn##*/}"
       [ "$state" = terminated ] && continue
       ;;
   esac
@@ -47,7 +49,10 @@ else
 fi
 
 # shellcheck disable=SC2016 # JMESPath literal, not a shell expansion
-if aws ecs describe-clusters --clusters "$CLUSTER" --query 'clusters[?status==`ACTIVE`]' --output text | grep -q .; then
+active_clusters=$(aws ecs describe-clusters --clusters "$CLUSTER" \
+  --query 'clusters[?status==`ACTIVE`].clusterArn' --output text) ||
+  die "cannot inspect ECS cluster $CLUSTER"
+if [ -n "$active_clusters" ] && [ "$active_clusters" != None ]; then
   service_arns=$(aws ecs list-services --cluster "$CLUSTER" --query 'serviceArns' --output text)
   if [ -n "$service_arns" ] && [ "$service_arns" != None ]; then
     # shellcheck disable=SC2086 # one word per service ARN

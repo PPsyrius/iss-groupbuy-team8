@@ -1,5 +1,5 @@
-# Offline plan of the edge stack with a mocked AWS provider and an overridden runtime
-# state. Run: terraform -chdir=infra/swe5001/edge test
+# Offline plan of the edge stack with a mocked AWS provider; the first apply
+# has no runtime state. Run: terraform -chdir=infra/swe5001/edge test
 
 mock_provider "aws" {
   override_data {
@@ -32,13 +32,6 @@ variables {
 run "runtime_absent" {
   command = plan
 
-  override_data {
-    target = data.terraform_remote_state.runtime
-    values = {
-      outputs = {}
-    }
-  }
-
   assert {
     condition     = local.api_origin_domain == var.absent_alb_domain
     error_message = "Without runtime, /api/* must point at the unresolvable placeholder."
@@ -53,13 +46,8 @@ run "runtime_absent" {
 run "runtime_present" {
   command = plan
 
-  override_data {
-    target = data.terraform_remote_state.runtime
-    values = {
-      outputs = {
-        alb_dns_name = "blocbuy-swe5001-123456789.ap-southeast-1.elb.amazonaws.com"
-      }
-    }
+  variables {
+    runtime_alb_dns_name = "blocbuy-swe5001-123456789.ap-southeast-1.elb.amazonaws.com"
   }
 
   assert {

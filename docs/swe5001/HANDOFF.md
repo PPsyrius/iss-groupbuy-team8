@@ -48,7 +48,7 @@ Nothing exists in AWS yet: no SWE5001 role, repository, budget or runtime resour
 - Secrets: operator-seeded SSM values are never Terraform inputs. Database passwords are ephemeral and written through write-only arguments, so they never reach state. `ORIGIN_SECRET` and the Valkey AUTH token do reach the `runtime` state (no write-only path), accepted because they exist only while `runtime` does.
 - Apply role guardrails: managed policies per service; IAM only under `/swe5001/` with the mandatory workload permissions boundary; tag-conditioned denies for non-SWE5001 EC2, ELB, CloudFront, RDS and ElastiCache resources (including snapshots and retained automated backups); name-based denies for log groups outside `/blocbuy/swe5001/*` and SNS topics or SQS queues not named `blocbuy-swe5001-*`.
 - `runtime` selects its services by `topology` (`runtime/services.tf`): `none`, or `monolith` (strangler step 0: the SWE5006 image as one service on `/api/*`, own database `monolith`, profile `ec2`, demo seed). PR 9 adds `distributed` with the three services.
-- `edge` is created once by an operator; the `prod`-only apply role only reads it and updates the distribution tagged `Course=swe5001`, because CloudFront origin access controls and response headers policies cannot be scoped by name or tag.
+- `edge` is created once by an operator with a placeholder origin and no runtime state read; `env-up.sh` explicitly passes the new ALB DNS name when the `prod`-only apply role updates the distribution tagged `Course=swe5001`. CloudFront origin access controls and response headers policies cannot be scoped by name or tag.
 - The PR-assumable plan role can read the foundation state only, not the secret-bearing runtime state; explicit S3 and SSM denies retain that boundary if future grants are added. Runtime plans must be made by an operator or a reviewed `prod`-only workflow, so there is no pre-merge account-backed runtime plan today. The `edge` state also holds `ORIGIN_SECRET`, so the plan role cannot read it either.
 
 ## Known gaps and risks
@@ -57,9 +57,10 @@ Nothing exists in AWS yet: no SWE5001 role, repository, budget or runtime resour
 | --- | --- |
 | No plan or apply has run against the account; trust policies, guardrail denies and the `plan` job are unexercised | Operator bootstrap (next action 2); test allowed foundation reads and denied runtime/other-SSM reads without fetching any secret value |
 | The plan role's KMS decrypt is limited to calls via S3 but currently accepts any key in this account; its S3 GetObject deny limits readable data to foundation state | Check the state bucket's encryption key without printing state and scope the key ARN before enabling account-backed PR plans, then test the foundation plan |
+| The apply role now has `kms:Decrypt` and `kms:GenerateDataKey` through S3 for course state keys, but no live KMS authorization has been checked | Simulate access to the actual state key and perform the first private runtime apply/destroy; tighten the key ARN after reading bucket encryption metadata |
 | The apply role can update only the tagged distribution; whether that covers every call an `edge` re-apply makes is unproven | First `env-up.sh` run; add the missing read action if the apply fails with AccessDenied |
 | CloudFront may reject the placeholder origin `runtime-absent.blocbuy-swe5001.invalid` | First `edge` creation; if rejected, override `absent_alb_domain` |
-| `env-status.sh` may list stopped-task or other short-lived ARNs from the tagging API after a clean destroy | First `env-down.sh`; extend its ignore list only for free, self-expiring types |
+| `env-status.sh` may list stopped-task or other short-lived ARNs from the tagging API after a clean destroy; failed EC2 or tagging lookups now fail closed instead of assuming a terminated instance or an empty environment | First `env-down.sh`; investigate stale ARNs rather than suppressing API errors, and extend its ignore list only for confirmed free, self-expiring types |
 | The apply role must strip the rules of the VPC default security group; this relies on the provider tagging it before revoking | First `runtime` apply |
 | `db-init`, the monolith on ECS (Flyway as the owner role, Valkey TLS) and the scripts have only been checked offline | First `env-up.sh` run |
 | `CloudWatchFullAccessV2` can still change alarms and dashboards outside SWE5001 | Open; fence before PR 10 adds alarms |
@@ -76,8 +77,9 @@ terraform -chdir=infra/swe5001/runtime test
 terraform -chdir=infra/swe5001/edge init -backend=false
 terraform -chdir=infra/swe5001/edge test
 shellcheck -x infra/swe5001/scripts/*.sh perf/smoke/smoke.sh
+bash infra/swe5001/scripts/test-env-status.sh
 checkov -d infra/swe5001 --framework terraform --quiet --compact
 trivy config --severity HIGH,CRITICAL --exit-code 1 infra/swe5001
 ```
 
-Last local result (2026-10-04): `validate` OK for both stacks, `terraform test` 3 passed, checkov 344 passed / 0 failed / 29 documented skips, Trivy 0 HIGH/CRITICAL, actionlint 0.
+Prior local results (2026-10-04): all three stacks validated; edge tests 2 passed and runtime tests 4 passed before the edge/KMS fix. The teardown status fixture now passes seven mocked AWS cases (three API failures, an empty result, only a task definition, a terminated instance and a running instance); Git Bash syntax and `git diff --check` passed. The current changed head still needs fresh Terraform tests, static scans and a live IAM simulation before any AWS apply.

@@ -25,23 +25,9 @@ locals {
   name_prefix     = "blocbuy-swe5001"
   spa_bucket_name = "${local.name_prefix}-spa-${var.aws_account_id}"
 
-  # Empty while runtime has never been applied or has been destroyed.
-  runtime_alb_dns_name = try(data.terraform_remote_state.runtime.outputs.alb_dns_name, null)
-  api_origin_domain    = coalesce(local.runtime_alb_dns_name, var.absent_alb_domain)
-}
-
-data "terraform_remote_state" "runtime" {
-  backend = "s3"
-
-  config = {
-    bucket = var.tf_state_bucket
-    key    = "swe5001/runtime.tfstate"
-    region = var.aws_region
-  }
-
-  defaults = {
-    alb_dns_name = null
-  }
+  # The first edge apply precedes runtime state. env-up.sh explicitly supplies the
+  # non-secret ALB DNS name after creating runtime; no state snapshot is shared.
+  api_origin_domain = coalesce(var.runtime_alb_dns_name, var.absent_alb_domain)
 }
 
 # Operator-seeded (../README.md). CloudFront sends it to the ALB, so the value is in the

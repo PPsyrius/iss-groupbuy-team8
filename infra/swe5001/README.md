@@ -8,7 +8,7 @@ Infrastructure for the SWE5001 distributed deployment shape on Amazon ECS. It is
 | [`edge/`](edge/) | Persistent | `swe5001/edge.tfstate` | Created once by an operator; afterwards the promotion run and `env-up.sh` only re-point the distribution at the new ALB | Code ready (PR 5 in #376); not applied |
 | [`runtime/`](runtime/) | Exists only during a promotion run or a manual session | `swe5001/runtime.tfstate` | Promotion run and `env-up.sh` / `env-down.sh` | Code ready (PRs 3–4 in #376); not applied. Messaging, scaling and alarms follow in PRs 8 and 10 |
 
-All stacks use Terraform `~> 1.16.4`, AWS provider `~> 5.100`, the existing state bucket `blocbuy-tfstate-402178232802` and S3-native locking (`use_lockfile = true`). Non-secret inputs are in [`envs/demo.tfvars`](envs/demo.tfvars). Secrets are never Terraform inputs or state: an operator seeds them in SSM Parameter Store under `/blocbuy/swe5001/`.
+All stacks use Terraform `~> 1.16.4`, AWS provider `~> 5.100`, the existing state bucket `blocbuy-tfstate-402178232802` and S3-native locking (`use_lockfile = true`). Non-secret inputs are in [`envs/demo.tfvars`](envs/demo.tfvars). Operators seed application secrets in SSM Parameter Store under `/blocbuy/swe5001/`. The origin secret is also held in the private `edge` and `runtime` Terraform states for CloudFront/ALB routing; the Valkey AUTH token is held in `runtime` state. The PR plan role cannot read either state.
 
 Unlike the SWE5006 stacks, CI will apply `edge` and `runtime` only from the `prod` branch through the `swe5001-demo` environment. Pull requests run offline validation on all three stacks, but the optional account-backed plan runs only for `foundation` ([`infra-swe5001.yml`](../../.github/workflows/infra-swe5001.yml)); the PR-assumable plan role cannot read the secret-bearing `edge` and `runtime` states. The `prod`-only apply role may read `edge` and update only the distribution tagged `Course=swe5001`; it cannot create or change CloudFront functions, origin access controls or response headers policies, so an operator creates `edge`.
 
@@ -27,6 +27,7 @@ terraform -chdir=infra/swe5001/edge init -backend=false
 terraform -chdir=infra/swe5001/edge validate
 terraform -chdir=infra/swe5001/edge test
 shellcheck -x infra/swe5001/scripts/*.sh perf/smoke/smoke.sh
+bash infra/swe5001/scripts/test-env-status.sh
 checkov -d infra/swe5001 --framework terraform --quiet --compact
 trivy config --severity HIGH,CRITICAL --exit-code 1 infra/swe5001
 ```
@@ -152,7 +153,7 @@ Secrets in state: the RDS master and role passwords are ephemeral values written
 
 ## `edge` creation (one time, operator)
 
-Needs `foundation` applied and `ORIGIN_SECRET` seeded. `edge` reads the ALB address from the `runtime` state; while `runtime` does not exist, `/api/*` points at an unresolvable placeholder and returns 502.
+Needs `foundation` applied and `ORIGIN_SECRET` seeded. The first `edge` apply does not read `runtime` state: `/api/*` points at an unresolvable placeholder and returns 502 until `env-up.sh` supplies the new ALB DNS name as the non-secret `runtime_alb_dns_name` input.
 
 ```bash
 terraform -chdir=infra/swe5001/edge init \
@@ -176,9 +177,9 @@ The SPA bucket stays empty until the deploy workflow (PR 7) syncs the frontend; 
 
 | Script | Does | Exit 0 when |
 | --- | --- | --- |
-| `env-up.sh [--release\|--candidate]` | Reads the digests from SSM, applies `runtime` with services stopped, runs `db-init`, starts the services, re-applies `edge`, waits for a stable service and runs [`perf/smoke/smoke.sh`](../../perf/smoke/smoke.sh) through CloudFront (up to five attempts). Re-running converges | The smoke suite passes |
+| `env-up.sh [--release\|--candidate]` | Reads the digests from SSM, applies `runtime` with services stopped, runs `db-init`, starts the services, reads the ALB DNS output and passes it to `edge` without sharing runtime state, waits for a stable service and runs [`perf/smoke/smoke.sh`](../../perf/smoke/smoke.sh) through CloudFront (up to five attempts). Re-running converges | The smoke suite passes |
 | `env-down.sh` | Destroys `runtime` (one retry, usually for the Service Connect namespace), then runs `env-status.sh` | Nothing tagged `Stack=runtime` remains |
-| `env-status.sh [--expect-up]` | Lists resources tagged `Course=swe5001,Stack=runtime` (ignoring deregistered task definitions and terminated instances) and the ECS service counts | Nothing remains (or, with `--expect-up`, something does) |
+| `env-status.sh [--expect-up]` | Lists resources tagged `Course=swe5001,Stack=runtime` (ignoring deregistered task definitions and confirmed terminated instances) and the ECS service counts; AWS lookup failures stop verification instead of reporting a clean destroy | Nothing remains (or, with `--expect-up`, something does), and every lookup succeeded |
 
 ```bash
 export AWS_PROFILE=<operator profile> AWS_REGION=ap-southeast-1 SWE5001_TF_STATE_BUCKET=blocbuy-tfstate-402178232802

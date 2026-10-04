@@ -65,7 +65,7 @@ infra/swe5001/
 | --- | --- |
 | S3 bucket `blocbuy-swe5001-spa-<account>` | Private, OAC access only, SSE-S3, versioning off, `force_destroy = true` (safe to rebuild from CI) |
 | CloudFront distribution | Default behaviour → S3 (SPA fallback function: the same `deployment/frontend/cloudfront/spa-fallback.js` as `frontend-stack`). Behaviour `/api/*` → ALB origin over HTTP with custom header `X-Origin-Secret` from SSM; managed `CachingDisabled` and `AllViewerExceptHostHeader` policies (cookies, query strings and every viewer header, including `Authorization` and `Stripe-Signature`); all methods. Response-headers policy `blocbuy-swe5001-security-headers` mirrors the dev policy JSON. `PriceClass_200` |
-| ALB origin | Read from `runtime` remote state (`alb_dns_name`). Before the first `runtime` apply, the origin is the unresolvable placeholder `runtime-absent.blocbuy-swe5001.invalid` (`absent_alb_domain`); after `env-down.sh` it still names the deleted ALB. Either way `/api/*` returns 502 |
+| ALB origin | `edge` initially uses the unresolvable placeholder `runtime-absent.blocbuy-swe5001.invalid` (`absent_alb_domain`) without loading a missing runtime state snapshot. After runtime creation, `env-up.sh` reads the non-secret `alb_dns_name` output and passes `runtime_alb_dns_name` to the edge apply. After `env-down.sh` the edge still names the deleted ALB; either unavailable case returns 502 on `/api/*` |
 | Ownership | An operator creates the stack once (`infra/swe5001/README.md`). The `prod`-only apply role re-applies it in `env-up.sh`, which only changes the distribution's ALB origin: origin access controls and response headers policies cannot be scoped by name or tag, so the role has no write access to them and cannot reach the SWE5006 ones. The `edge` state holds `ORIGIN_SECRET` (custom header), so the PR plan role cannot read it |
 
 Origin TLS: the ALB listener is HTTP because there is no custom domain for an ACM certificate. This is the same limitation as SWE5006 NFR-37. The upgrade path is a CloudFront VPC origin to an internal ALB, which removes the public ALB entirely; it is recorded as a considered option, not in scope.
@@ -160,7 +160,7 @@ Steps 1–5 are `env-up.sh`; the destroy row is `env-down.sh`. The promotion run
 | 1 | `terraform -chdir=infra/swe5001/runtime apply` (network, ALB, ECS cluster, RDS, Valkey, messaging, services at desired count 0) | 12–18 min |
 | 2 | `aws ecs run-task` for `db-init`; wait for exit code 0 | 1–2 min |
 | 3 | Set desired count to 1 per service (second `apply` with `-var services_enabled=true`) | 3–5 min |
-| 4 | `terraform -chdir=infra/swe5001/edge apply` (origin DNS update) | 3–5 min |
+| 4 | `terraform -chdir=infra/swe5001/edge apply -var="runtime_alb_dns_name=<runtime ALB output>"` (origin DNS update, no runtime state read by edge) | 3–5 min |
 | 5 | Smoke test through CloudFront (verification plan, section 3) | 1 min |
 | Destroy | `terraform -chdir=infra/swe5001/runtime destroy`, retried once on Service Connect namespace errors | 10–15 min |
 
@@ -173,7 +173,7 @@ Destroy rules from plan section 3.3 apply unchanged (no customer-managed KMS key
 | `lib.sh` | Sourced by the others. Fails unless `aws sts get-caller-identity` returns account `402178232802` and `AWS_REGION` is `ap-southeast-1`; runs `terraform init` with `-backend-config bucket=$SWE5001_TF_STATE_BUCKET` | — |
 | `env-up.sh [--release\|--candidate]` | Steps 1–5 above. Reads image digests from SSM `/blocbuy/swe5001/release/*` (default) or `/candidate/*`, the topology from `SWE5001_TOPOLOGY` (default `monolith`) and the frontend URL from the `edge` output; waits for stable services before the smoke suite (up to five attempts). Safe to re-run: a second run on an existing environment converges instead of failing. `SWE5001_TIMINGS_FILE` records step durations | 0 when the smoke suite passes |
 | `env-down.sh` | `terraform destroy` of `runtime`, one retry on Service Connect namespace errors, then `env-status.sh` | 0 when nothing remains |
-| `env-status.sh` | Lists resources tagged `Course=swe5001,Stack=runtime` (Resource Groups Tagging API; deregistered task definitions and terminated instances are ignored, as they cost nothing and stay listed for a while) and the ECS service desired and running counts | 0 when no runtime resource exists, 1 otherwise; with `--expect-up` the check is inverted for use after `env-up.sh` |
+| `env-status.sh` | Lists resources tagged `Course=swe5001,Stack=runtime` (Resource Groups Tagging API; deregistered task definitions and confirmed terminated instances are ignored, as they cost nothing and stay listed for a while) and the ECS service desired and running counts; tagging, EC2 and ECS lookup errors fail closed | 0 only when every lookup succeeds and no runtime resource exists, 1 otherwise; with `--expect-up` the resource check is inverted for use after `env-up.sh` |
 
 Local use, with the operator's own AWS credentials:
 

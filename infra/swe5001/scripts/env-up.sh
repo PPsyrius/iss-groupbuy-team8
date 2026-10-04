@@ -72,7 +72,9 @@ step "apply runtime (services started)"
 apply_runtime true
 
 step "apply edge (point /api/* at the ALB)"
-tf edge apply -input=false -auto-approve -var-file="$VAR_FILE"
+runtime_alb_dns_name=$(tf runtime output -raw alb_dns_name)
+tf edge apply -input=false -auto-approve -var-file="$VAR_FILE" \
+  -var "runtime_alb_dns_name=$runtime_alb_dns_name"
 
 if [ -z "$services" ]; then
   step_done
