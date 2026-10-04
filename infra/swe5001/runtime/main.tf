@@ -24,9 +24,13 @@ locals {
   # policies; a missing boundary fails the first CreateRole call.
   workload_boundary_arn = "arn:aws:iam::${var.aws_account_id}:policy/${local.name_prefix}-workload-boundary"
 
-  # Execution-role reads: shared values plus one scope per database (which is also the
-  # service's scope for its own secrets, e.g. /blocbuy/swe5001/identity/GOOGLE_CLIENT_ID).
-  parameter_scopes = distinct(concat(["shared"], var.databases))
+  # Execution-role reads: shared values, one scope per database (role passwords) and the
+  # scopes of the services' own secrets (e.g. /blocbuy/swe5001/identity/GOOGLE_CLIENT_ID).
+  parameter_scopes = distinct(concat(
+    ["shared"],
+    local.databases,
+    flatten([for s in values(local.services) : [for p in values(s.secrets) : split("/", p)[0]]]),
+  ))
 }
 
 # Operator-seeded (../README.md). The value is in the runtime state, as in the SWE5006

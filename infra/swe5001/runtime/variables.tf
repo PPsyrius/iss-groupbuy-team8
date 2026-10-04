@@ -64,41 +64,32 @@ variable "valkey_version" {
   default     = "8.0"
 }
 
-variable "databases" {
-  description = "Databases (and SSM scopes) created by db-init, each with an owner and an app role"
-  type        = list(string)
-  default     = ["identity", "commerce", "notification"]
+variable "topology" {
+  description = "Service map from services.tf: none (network and data stores only) or monolith (strangler step 0)"
+  type        = string
+  default     = "none"
+
+  validation {
+    condition     = contains(["none", "monolith"], var.topology)
+    error_message = "topology must be none or monolith."
+  }
+}
+
+variable "frontend_url" {
+  description = "https:// URL of the edge distribution; services use it for FRONTEND_URL and OAuth redirects"
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.topology == "none" || can(regex("^https://[a-z0-9.-]+$", var.frontend_url))
+    error_message = "frontend_url must be https://<domain> without a trailing slash when services run."
+  }
 }
 
 variable "db_init_image" {
   description = "Image for the one-off db-init task; its psql major version must match the server"
   type        = string
   default     = "public.ecr.aws/docker/library/postgres:18-alpine"
-}
-
-variable "services" {
-  description = <<-EOT
-    ECS services behind the ALB. Empty until strangler step 0 adds the monolith
-    (#376, PR 6); the service split replaces it with identity-svc, commerce-svc and
-    notification-svc (PR 9). The golden-path module supplies DB_*, SPRING_FLYWAY_*
-    and REDIS_* from the service's database; `secrets` maps an environment variable to
-    a parameter name under /blocbuy/swe5001/.
-  EOT
-  type = map(object({
-    repository        = string
-    database          = string
-    listener_priority = number
-    path_patterns     = list(string)
-    environment       = optional(map(string), {})
-    secrets           = optional(map(string), {})
-    task_policy_json  = optional(string)
-  }))
-  default = {}
-
-  validation {
-    condition     = alltrue([for s in values(var.services) : s.listener_priority > 5])
-    error_message = "Priorities up to 5 are reserved for the /internal/* block rule."
-  }
 }
 
 variable "image_digests" {

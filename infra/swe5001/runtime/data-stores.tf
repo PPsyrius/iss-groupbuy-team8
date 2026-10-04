@@ -5,7 +5,7 @@ module "postgres" {
   engine_major_version = var.postgres_major_version
   subnet_ids           = module.network.private_subnet_ids
   security_group_ids   = [aws_security_group.rds.id]
-  databases            = var.databases
+  databases            = local.databases
   ssm_prefix           = local.ssm_prefix
 }
 

@@ -9,6 +9,7 @@ on:
     branches: [dev, prod]
     paths:
       - "infra/swe5001/**"
+      - "perf/smoke/**"
       - ".github/workflows/infra-swe5001.yml"
 
 concurrency:
@@ -30,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        stack: [foundation, runtime]
+        stack: [foundation, edge, runtime]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -51,7 +52,7 @@ jobs:
           terraform -chdir="infra/swe5001/${STACK}" init -backend=false -input=false -lockfile=readonly
           terraform -chdir="infra/swe5001/${STACK}" validate
 
-      # Offline plan with mocked AWS provider (infra/swe5001/runtime/tests).
+      # Offline plan with a mocked AWS provider (infra/swe5001/<stack>/tests).
       - name: terraform test
         env:
           STACK: ${{ matrix.stack }}
@@ -68,6 +69,19 @@ jobs:
         run: |
           pipx run "checkov==${CHECKOV_VERSION}" -d "infra/swe5001/${STACK}" \
             --framework terraform --quiet --compact
+
+  # Environment scripts and the smoke suite they call (shellcheck is preinstalled).
+  scripts:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: shellcheck
+        run: shellcheck -x infra/swe5001/scripts/*.sh perf/smoke/smoke.sh
 
   plan:
     name: plan (${{ matrix.stack }})

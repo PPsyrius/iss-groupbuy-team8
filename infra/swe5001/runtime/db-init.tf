@@ -44,7 +44,7 @@ resource "aws_ecs_task_definition" "db_init" {
       { name = "PGUSER", value = module.postgres.master_username },
       { name = "PGDATABASE", value = "postgres" },
       { name = "PGSSLMODE", value = "require" },
-      { name = "DATABASES", value = join(" ", var.databases) },
+      { name = "DATABASES", value = join(" ", local.databases) },
     ]
 
     secrets = [for k in sort(keys(local.db_init_secrets)) : { name = k, valueFrom = local.db_init_secrets[k] }]

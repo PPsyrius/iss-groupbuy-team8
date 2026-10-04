@@ -10,17 +10,21 @@ module "cluster" {
 
 locals {
   # Settings every service gets from its database and the shared cache (backend plan,
-  # section 7); a service's own `environment` and `secrets` are merged on top.
-  service_environment = { for name, s in var.services : name => merge({
+  # section 7); a service's own `environment` and `secrets` are merged on top, with
+  # "{frontend_url}" in a value replaced by var.frontend_url.
+  service_environment = { for name, s in local.services : name => merge({
     DB_URL             = "jdbc:postgresql://${module.postgres.address}:${module.postgres.port}/${s.database}?currentSchema=domain&sslmode=require"
     DB_USERNAME        = "blocbuy_${s.database}_app"
     SPRING_FLYWAY_USER = "blocbuy_${s.database}_owner"
     REDIS_HOST         = module.cache.address
     REDIS_PORT         = tostring(module.cache.port)
     REDIS_SSL          = "true"
-  }, s.environment) }
+    # Valkey requires TLS (transit encryption); Spring Boot's own switch for Lettuce.
+    SPRING_DATA_REDIS_SSL_ENABLED = "true"
+    FRONTEND_URL                  = var.frontend_url
+  }, { for k, v in s.environment : k => replace(v, "{frontend_url}", var.frontend_url) }) }
 
-  service_secrets = { for name, s in var.services : name => merge({
+  service_secrets = { for name, s in local.services : name => merge({
     DB_PASSWORD            = module.postgres.role_password_arns["${s.database}/APP"]
     SPRING_FLYWAY_PASSWORD = module.postgres.role_password_arns["${s.database}/OWNER"]
     REDIS_PASSWORD         = module.cache.auth_token_arn
@@ -29,7 +33,7 @@ locals {
 
 module "service" {
   source   = "../modules/ecs-service"
-  for_each = var.services
+  for_each = local.services
 
   name                     = each.key
   name_prefix              = local.name_prefix

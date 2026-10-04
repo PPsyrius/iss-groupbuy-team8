@@ -60,12 +60,12 @@ variables {
   aws_region     = "ap-southeast-1"
 }
 
-run "empty_service_map" {
+run "topology_none" {
   command = plan
 
   assert {
-    condition     = length(module.service) == 0
-    error_message = "No service should be planned until a service map is passed."
+    condition     = length(module.service) == 0 && length(local.databases) == 0
+    error_message = "Topology none plans no service and no database."
   }
 
   assert {
@@ -74,22 +74,13 @@ run "empty_service_map" {
   }
 }
 
-run "monolith_service" {
+run "monolith_topology" {
   command = plan
 
   variables {
+    topology         = "monolith"
     services_enabled = true
-    databases        = ["monolith"]
-    services = {
-      monolith = {
-        repository        = "monolith"
-        database          = "monolith"
-        listener_priority = 10
-        path_patterns     = ["/api/*"]
-        environment       = { SPRING_PROFILES_ACTIVE = "ec2" }
-        secrets           = { STRIPE_API_KEY = "commerce/STRIPE_API_KEY" }
-      }
-    }
+    frontend_url     = "https://d111111abcdef8.cloudfront.net"
     image_digests = {
       monolith = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
     }
@@ -101,13 +92,23 @@ run "monolith_service" {
   }
 
   assert {
-    condition     = local.service_environment["monolith"]["DB_USERNAME"] == "blocbuy_monolith_app"
-    error_message = "The service must connect with its database's app role."
+    condition     = tolist(local.databases) == tolist(["monolith"])
+    error_message = "Strangler step 0 uses one database, monolith."
   }
 
   assert {
-    condition     = local.service_environment["monolith"]["SPRING_PROFILES_ACTIVE"] == "ec2"
-    error_message = "Service-specific environment must be merged on top of the golden-path defaults."
+    condition     = local.service_environment["monolith"]["DB_USERNAME"] == "blocbuy_monolith_app" && local.service_environment["monolith"]["SPRING_FLYWAY_USER"] == "blocbuy_monolith_owner"
+    error_message = "The service must connect with its database's app role and migrate with the owner role."
+  }
+
+  assert {
+    condition     = local.service_environment["monolith"]["GOOGLE_REDIRECT_URI"] == "https://d111111abcdef8.cloudfront.net/api/v1/auth/oauth2/google/callback"
+    error_message = "{frontend_url} must be replaced in service settings."
+  }
+
+  assert {
+    condition     = local.service_environment["monolith"]["SPRING_DATA_REDIS_SSL_ENABLED"] == "true"
+    error_message = "Valkey requires TLS."
   }
 
   assert {
@@ -116,24 +117,35 @@ run "monolith_service" {
   }
 
   assert {
+    condition     = toset(local.parameter_scopes) == toset(["shared", "monolith", "identity", "commerce"])
+    error_message = "The execution role must read the database scope and every scope the service's secrets use."
+  }
+
+  assert {
     condition     = toset(keys(local.db_init_secrets)) == toset(["PGPASSWORD", "MONOLITH_OWNER_PASSWORD", "MONOLITH_APP_PASSWORD"])
     error_message = "db-init must receive the master password and both role passwords per database."
   }
+}
+
+run "requires_frontend_url" {
+  command = plan
+
+  variables {
+    topology = "monolith"
+    image_digests = {
+      monolith = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+
+  expect_failures = [var.frontend_url]
 }
 
 run "rejects_unpinned_image" {
   command = plan
 
   variables {
-    databases = ["monolith"]
-    services = {
-      monolith = {
-        repository        = "monolith"
-        database          = "monolith"
-        listener_priority = 10
-        path_patterns     = ["/api/*"]
-      }
-    }
+    topology     = "monolith"
+    frontend_url = "https://d111111abcdef8.cloudfront.net"
     image_digests = {
       monolith = "latest"
     }
