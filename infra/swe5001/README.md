@@ -5,12 +5,12 @@ Infrastructure for the SWE5001 distributed deployment shape on Amazon ECS. It is
 | Stack | Lifecycle | State key | Applied by | Status |
 | --- | --- | --- | --- | --- |
 | [`foundation/`](foundation/) | Persistent | `swe5001/foundation.tfstate` | An operator, from a workstation (it creates the roles CI assumes) | Code ready; not applied |
-| `edge/` | Persistent | `swe5001/edge.tfstate` | Promotion run and `env-up.sh` | Not started (PR 5 in #376) |
+| [`edge/`](edge/) | Persistent | `swe5001/edge.tfstate` | Created once by an operator; afterwards the promotion run and `env-up.sh` only re-point the distribution at the new ALB | Code ready (PR 5 in #376); not applied |
 | [`runtime/`](runtime/) | Exists only during a promotion run or a manual session | `swe5001/runtime.tfstate` | Promotion run and `env-up.sh` / `env-down.sh` | Code ready (PRs 3–4 in #376); not applied. Messaging, scaling and alarms follow in PRs 8 and 10 |
 
-All stacks use Terraform `~> 1.16.4`, AWS provider `~> 5.100`, the existing state bucket `blocbuy-tfstate-402178232802` and S3-native locking (`use_lockfile = true`). Non-secret inputs are in [`envs/demo.tfvars`](envs/demo.tfvars). Secrets are never Terraform inputs or state: an operator seeds them in SSM Parameter Store under `/blocbuy/swe5001/`.
+All stacks use Terraform `~> 1.16.4`, AWS provider `~> 5.100`, the existing state bucket `blocbuy-tfstate-402178232802` and S3-native locking (`use_lockfile = true`). Non-secret inputs are in [`envs/demo.tfvars`](envs/demo.tfvars). Operators seed application secrets in SSM Parameter Store under `/blocbuy/swe5001/`. The origin secret is also held in the private `edge` and `runtime` Terraform states for CloudFront/ALB routing; the Valkey AUTH token is held in `runtime` state. The PR plan role cannot read either state.
 
-Unlike the SWE5006 stacks, CI will apply `edge` and `runtime` only from the `prod` branch through the `swe5001-demo` environment. Pull requests run offline validation on both existing stacks, but the optional account-backed plan runs only for `foundation` ([`infra-swe5001.yml`](../../.github/workflows/infra-swe5001.yml)); the PR-assumable plan role cannot read secret-bearing `runtime` state. The future `edge` PR must grant narrowly scoped CloudFront permissions to the `prod`-only apply role before that stack can be applied.
+Unlike the SWE5006 stacks, CI will apply `edge` and `runtime` only from the `prod` branch through the `swe5001-demo` environment. Pull requests run offline validation on all three stacks, but the optional account-backed plan runs only for `foundation` ([`infra-swe5001.yml`](../../.github/workflows/infra-swe5001.yml)); the PR-assumable plan role cannot read the secret-bearing `edge` and `runtime` states. The `prod`-only apply role may read `edge` and update only the distribution tagged `Course=swe5001`; it cannot create or change CloudFront functions, origin access controls or response headers policies, so an operator creates `edge`.
 
 ## Offline checks
 
@@ -23,6 +23,11 @@ terraform -chdir=infra/swe5001/foundation validate
 terraform -chdir=infra/swe5001/runtime init -backend=false
 terraform -chdir=infra/swe5001/runtime validate
 terraform -chdir=infra/swe5001/runtime test
+terraform -chdir=infra/swe5001/edge init -backend=false
+terraform -chdir=infra/swe5001/edge validate
+terraform -chdir=infra/swe5001/edge test
+shellcheck -x infra/swe5001/scripts/*.sh perf/smoke/smoke.sh
+bash infra/swe5001/scripts/test-env-status.sh
 checkov -d infra/swe5001 --framework terraform --quiet --compact
 trivy config --severity HIGH,CRITICAL --exit-code 1 infra/swe5001
 ```
@@ -134,14 +139,63 @@ Shared modules live in [`modules/`](modules/): `network` (VPC, subnets, S3 gatew
 
 | Input | Default | Set by |
 | --- | --- | --- |
-| `services` | `{}`: no ECS service | PR 6 adds the monolith (strangler step 0); PR 9 replaces it with the three services |
+| `topology` | `none`: no ECS service, no database | `env-up.sh` (`SWE5001_TOPOLOGY`, default `monolith`). The service maps are in [`runtime/services.tf`](runtime/services.tf): `monolith` runs the SWE5006 image as one service on `/api/*` with database `monolith` (strangler step 0); PR 9 adds `distributed` |
+| `frontend_url` | `""` | `env-up.sh`, from the `edge` output `url`; required when services run (`FRONTEND_URL`, Google redirect URI) |
 | `image_digests` | `{}` | `env-up.sh`, from SSM `/blocbuy/swe5001/release/*` or `/candidate/*` |
 | `services_enabled` | `false`: desired count 0 | `env-up.sh` sets `true` after `db-init` has succeeded |
-| `databases` | `identity`, `commerce`, `notification` | Each gets an owner role (Flyway) and an app role (runtime) |
 | `postgres_major_version` | `18` | Set `17` if RDS does not offer 18 in the region |
 
 Prerequisites: `foundation` applied (the workload permissions boundary must exist) and `/blocbuy/swe5001/shared/ORIGIN_SECRET` seeded (step 2 above).
 
 Secrets in state: the RDS master and role passwords are ephemeral values written through write-only arguments (`password_wo`, `value_wo`), so they never reach the state. Two values do: `ORIGIN_SECRET`, because an ALB rule condition needs the literal value (as in the SWE5006 `backend-app-stack`), and the Valkey AUTH token, because the replication group has no write-only argument in provider 5.x. Both live only while `runtime` exists; the PR plan role cannot read that state object. Do not print, upload or attach a runtime plan made with trusted `prod` credentials.
 
-`terraform test` plans the stack with a mocked AWS provider, so it needs no credentials. Applying and destroying `runtime` is the job of the environment scripts (PR 6 in #376); until they land, apply only from an operator workstation, with `-var-file=../envs/demo.tfvars`, and destroy in the same session.
+`terraform test` plans the stack with a mocked AWS provider, so it needs no credentials. Apply and destroy `runtime` only through the environment scripts below.
+
+## `edge` creation (one time, operator)
+
+Needs `foundation` applied and `ORIGIN_SECRET` seeded. The first `edge` apply does not read `runtime` state: `/api/*` points at an unresolvable placeholder and returns 502 until `env-up.sh` supplies the new ALB DNS name as the non-secret `runtime_alb_dns_name` input.
+
+```bash
+terraform -chdir=infra/swe5001/edge init \
+  -backend-config=bucket=blocbuy-tfstate-402178232802 -backend-config=region=ap-southeast-1
+terraform -chdir=infra/swe5001/edge plan -var-file=../envs/demo.tfvars -out=edge.tfplan
+terraform -chdir=infra/swe5001/edge apply edge.tfplan
+rm infra/swe5001/edge/edge.tfplan
+terraform -chdir=infra/swe5001/edge output -raw url
+```
+
+Expect only creates: the SPA bucket with its public access block, ownership controls, encryption and policy; the origin access control, SPA fallback function, response headers policy and distribution. The distribution domain is permanent; then:
+
+1. Add `<url>/api/v1/auth/oauth2/google/callback` to the Google OAuth client's authorised redirect URIs.
+2. Register a Stripe test-mode webhook endpoint at `<url>/api/v1/webhooks/stripe` and store its signing secret in `/blocbuy/swe5001/commerce/STRIPE_WEBHOOK_SECRET` (`--overwrite`).
+
+The SPA bucket stays empty until the deploy workflow (PR 7) syncs the frontend; until then the SPA routes return an S3 error and the API works.
+
+## Environment sessions
+
+[`scripts/`](scripts/) create and destroy `runtime` for a manual session; the promotion run calls the same scripts. Each one checks the account and region before doing anything.
+
+| Script | Does | Exit 0 when |
+| --- | --- | --- |
+| `env-up.sh [--release\|--candidate]` | Reads the digests from SSM, applies `runtime` with services stopped, runs `db-init`, starts the services, reads the ALB DNS output and passes it to `edge` without sharing runtime state, waits for a stable service and runs [`perf/smoke/smoke.sh`](../../perf/smoke/smoke.sh) through CloudFront (up to five attempts). Re-running converges | The smoke suite passes |
+| `env-down.sh` | Destroys `runtime` (one retry, usually for the Service Connect namespace), then runs `env-status.sh` | Nothing tagged `Stack=runtime` remains |
+| `env-status.sh [--expect-up]` | Lists resources tagged `Course=swe5001,Stack=runtime` (ignoring deregistered task definitions and confirmed terminated instances) and the ECS service counts; AWS lookup failures stop verification instead of reporting a clean destroy | Nothing remains (or, with `--expect-up`, something does), and every lookup succeeded |
+
+```bash
+export AWS_PROFILE=<operator profile> AWS_REGION=ap-southeast-1 SWE5001_TF_STATE_BUCKET=blocbuy-tfstate-402178232802
+infra/swe5001/scripts/env-up.sh --candidate   # about 20-25 minutes; prints the CloudFront URL
+infra/swe5001/scripts/env-down.sh             # about 10-15 minutes; fails if anything is left
+```
+
+Set `SWE5001_TIMINGS_FILE=<path>` to record each step's duration (promotion evidence, verification plan V8). Until the image workflow (PR 7) writes candidate digests, push the monolith image by hand once per commit (ECR tags are immutable):
+
+```bash
+registry=402178232802.dkr.ecr.ap-southeast-1.amazonaws.com
+tag=manual-$(git rev-parse --short HEAD)
+(cd backend && ./mvnw -B -q -DskipTests package)
+aws ecr get-login-password | docker login --username AWS --password-stdin "$registry"
+docker buildx build --platform linux/arm64 -f backend/Dockerfile.ci -t "$registry/swe5001/monolith:$tag" --push backend
+digest=$(aws ecr describe-images --repository-name swe5001/monolith --image-ids imageTag="$tag" \
+  --query 'imageDetails[0].imageDigest' --output text)
+aws ssm put-parameter --name /blocbuy/swe5001/candidate/monolith --type String --value "$digest" --overwrite
+```

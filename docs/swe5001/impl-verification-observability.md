@@ -53,11 +53,11 @@ Runs against any base URL (EC2 CloudFront, SWE5001 CloudFront, or local Compose)
 | `GET /api/actuator/health` | 200 `UP` (through the ALB default path; commerce) |
 | `GET /api/v1/products?page=1&size=20` | 200, `Result` envelope, non-empty list (demo seed) |
 | `GET /api/v1/auth/me` without cookie | 401 envelope (served by identity) |
-| `GET /api/v1/notifications` without cookie | 401 envelope (served by notification) |
+| `GET /api/v1/notifications` without cookie | 401 envelope (served by notification). Not in `smoke.sh` yet: the controller has no `GET` handler today; add the check with `notification-svc` (PR 9) |
 | `GET /internal/users/<uuid>/active` through CloudFront | never reaches a service: CloudFront forwards only `/api/*` to the ALB, so the response is the SPA fallback page, not JSON |
 | Response header `X-Trace-Id` | present on every response |
 
-Pass on both shapes is the topology-parity evidence.
+Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke/smoke.sh`](../../perf/smoke/smoke.sh): `X-Trace-Id` is checked on the API responses (the SPA and S3 responses do not carry it), and the internal-path check accepts any non-JSON answer, because the SPA bucket is empty until the deploy workflow syncs it. On 2026-10-04 it passed against the SWE5006 dev CloudFront (EC2 shape).
 
 ---
 

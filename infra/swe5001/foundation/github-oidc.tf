@@ -166,9 +166,9 @@ resource "aws_iam_role_policy" "github_plan" {
 }
 
 # ---------------------------------------------------------------- apply role
-# Creates and destroys `runtime` (promotion run, env-up.sh, env-down.sh). The future
-# edge stack must add scoped CloudFront permissions before the first edge apply.
-# Service access comes from AWS managed policies, one per service the
+# Creates and destroys `runtime` and updates the `edge` distribution (promotion run,
+# env-up.sh, env-down.sh). An operator creates `edge` once; this role only reads it and
+# updates the tagged distribution. Service access comes from AWS managed policies, one per service the
 # stacks use; IAM, SSM, S3 and state access are scoped inline. Tag-level narrowing is
 # a follow-up once the first runtime apply shows the exact action set.
 
@@ -202,6 +202,20 @@ data "aws_iam_policy_document" "apply" {
     sid       = "ReadWriteSwe5001State"
     actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
     resources = [local.state_objects_arn]
+  }
+
+  # The shared state bucket uses SSE-KMS. Reads and writes both need KMS, but
+  # S3 object access above is limited to this course's state keys.
+  statement {
+    sid       = "UseSwe5001StateKeyViaS3"
+    actions   = ["kms:Decrypt", "kms:GenerateDataKey"]
+    resources = ["arn:aws:kms:${var.aws_region}:${var.aws_account_id}:key/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "kms:ViaService"
+      values   = ["s3.${var.aws_region}.amazonaws.com"]
+    }
   }
 
   statement {
@@ -353,6 +367,49 @@ data "aws_iam_policy_document" "apply" {
       "ssm:RemoveTagsFromResource",
     ]
     resources = ["${local.ssm_arn}/*"]
+  }
+
+  # edge: the distribution is created by an operator. This role re-points /api/* at a new
+  # ALB (UpdateDistribution, tag-scoped) and refreshes the rest of the stack read-only.
+  # Origin access controls and response headers policies have no name or tag scoping, so
+  # the role cannot change them, and so cannot reach the SWE5006 ones either.
+  statement {
+    sid = "UpdateSwe5001Distribution"
+    actions = [
+      "cloudfront:GetDistribution",
+      "cloudfront:GetDistributionConfig",
+      "cloudfront:ListTagsForResource",
+      "cloudfront:UpdateDistribution",
+    ]
+    resources = ["arn:aws:cloudfront::${var.aws_account_id}:distribution/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/Course"
+      values   = ["swe5001"]
+    }
+  }
+
+  statement {
+    sid       = "ReadSwe5001EdgeFunction"
+    actions   = ["cloudfront:DescribeFunction", "cloudfront:GetFunction"]
+    resources = ["arn:aws:cloudfront::${var.aws_account_id}:function/${local.name_prefix}-*"]
+  }
+
+  statement {
+    sid     = "ReadEdgePolicies"
+    actions = ["cloudfront:GetOriginAccessControl", "cloudfront:GetResponseHeadersPolicy"]
+    resources = [
+      "arn:aws:cloudfront::${var.aws_account_id}:origin-access-control/*",
+      "arn:aws:cloudfront::${var.aws_account_id}:response-headers-policy/*",
+    ]
+  }
+
+  # env-status.sh lists what is left of runtime by its Stack tag.
+  statement {
+    sid       = "FindRuntimeResources"
+    actions   = ["tag:GetResources"]
+    resources = ["*"]
   }
 
   # Guardrail for the shared account: the managed policies above would also reach the
