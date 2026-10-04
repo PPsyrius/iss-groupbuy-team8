@@ -34,7 +34,7 @@ Nothing exists in AWS yet: no SWE5001 role, repository, budget or runtime resour
 
 1. Wait for #377's CI to pass on the combined code, mark it ready (`gh pr ready 377`), get a review and squash-merge it into `dev`.
 2. Start every later PR from `dev` after that merge, not from the #377 branch.
-3. Operator: bootstrap `foundation` (README steps 1–5): activate the `Course` cost tag, seed the SSM parameters, apply, read back the trust policies, create the environments and variables. Set `SWE5001_TF_STATE_BUCKET` last; the next infra PR must then show a `No changes.` plan for `foundation`.
+3. Operator: bootstrap `foundation` (README steps 1–5): activate the `Course` cost tag, seed the SSM parameters, apply, read back the trust policies, create the environments and variables. Set `SWE5001_TF_STATE_BUCKET` last; the next infra PR must then show a `No changes.` plan for `foundation` only. Confirm the plan role cannot read `swe5001/runtime.tfstate` or unrelated SSM parameters before allowing account-backed PR plans.
 4. Before the first `runtime` apply, confirm in `ap-southeast-1`: PostgreSQL 18 on RDS (else set `postgres_major_version = "17"`), Valkey 8.0 on ElastiCache, and the fck-nat arm64 AMI.
 5. PR 5 (`edge`) and PR 6 (scripts and monolith service) can start in parallel; PR 6 is on the critical path.
 
@@ -44,12 +44,15 @@ Nothing exists in AWS yet: no SWE5001 role, repository, budget or runtime resour
 - Secrets: operator-seeded SSM values are never Terraform inputs. Database passwords are ephemeral and written through write-only arguments, so they never reach state. `ORIGIN_SECRET` and the Valkey AUTH token do reach the `runtime` state (no write-only path), accepted because they exist only while `runtime` does.
 - Apply role guardrails: managed policies per service; IAM only under `/swe5001/` with the mandatory workload permissions boundary; tag-conditioned denies for non-SWE5001 EC2, ELB, CloudFront, RDS and ElastiCache resources (including snapshots and retained automated backups); name-based denies for log groups outside `/blocbuy/swe5001/*` and SNS topics or SQS queues not named `blocbuy-swe5001-*`.
 - `runtime` ships with an empty `services` map; PR 6 adds the monolith (strangler step 0), PR 9 swaps in the three services.
+- The PR-assumable plan role can read the foundation state only, not the secret-bearing runtime state; explicit S3 and SSM denies retain that boundary if future grants are added. Runtime plans must be made by an operator or a reviewed `prod`-only workflow, so there is no pre-merge account-backed runtime plan today. The apply role has no CloudFront mutation permission until the edge PR adds a resource-scoped policy.
 
 ## Known gaps and risks
 
 | Gap | When it closes |
 | --- | --- |
-| No plan or apply has run against the account; trust policies, guardrail denies and the `plan` job are unexercised | Operator bootstrap (next action 3) |
+| No plan or apply has run against the account; trust policies, guardrail denies and the `plan` job are unexercised | Operator bootstrap (next action 3); test allowed foundation reads and denied runtime/other-SSM reads without fetching any secret value |
+| The plan role's KMS decrypt is limited to calls via S3 but currently accepts any key in this account; its S3 GetObject deny limits readable data to foundation state | Check the state bucket's encryption key without printing state and scope the key ARN before enabling account-backed PR plans, then test the foundation plan |
+| No CloudFront mutation permission for the apply role; `edge` cannot be applied yet | Add and verify SWE5001-only permissions in PR 5 before an edge apply |
 | The apply role must strip the rules of the VPC default security group; this relies on the provider tagging it before revoking | First `runtime` apply |
 | `db-init` has only been checked with shellcheck, not run against PostgreSQL | First `env-up.sh` run (PR 6) |
 | `CloudWatchFullAccessV2` can still change alarms and dashboards outside SWE5001 | Open; fence before PR 10 adds alarms |

@@ -10,7 +10,7 @@ Infrastructure for the SWE5001 distributed deployment shape on Amazon ECS. It is
 
 All stacks use Terraform `~> 1.16.4`, AWS provider `~> 5.100`, the existing state bucket `blocbuy-tfstate-402178232802` and S3-native locking (`use_lockfile = true`). Non-secret inputs are in [`envs/demo.tfvars`](envs/demo.tfvars). Secrets are never Terraform inputs or state: an operator seeds them in SSM Parameter Store under `/blocbuy/swe5001/`.
 
-Unlike the SWE5006 stacks, CI applies `edge` and `runtime`, but only from the `prod` branch through the `swe5001-demo` environment. Pull requests only plan ([`infra-swe5001.yml`](../../.github/workflows/infra-swe5001.yml)).
+Unlike the SWE5006 stacks, CI will apply `edge` and `runtime` only from the `prod` branch through the `swe5001-demo` environment. Pull requests run offline validation on both existing stacks, but the optional account-backed plan runs only for `foundation` ([`infra-swe5001.yml`](../../.github/workflows/infra-swe5001.yml)); the PR-assumable plan role cannot read secret-bearing `runtime` state. The future `edge` PR must grant narrowly scoped CloudFront permissions to the `prod`-only apply role before that stack can be applied.
 
 ## Offline checks
 
@@ -83,6 +83,24 @@ done
 
 `plan` must show `...:environment:swe5001-plan`; `apply` and `deploy` must show `...:environment:swe5001-demo`.
 
+After `foundation` has been applied, simulate the plan and apply roles without reading a state object or parameter value. The foundation state and the budget-recipient parameter must evaluate `allowed`; the runtime state, origin secret and an existing SWE5006 CloudFront function must evaluate `implicitDeny` or `explicitDeny`. Replace only the function name placeholder with the existing function's non-secret name. IAM simulation is not a substitute for the first account-backed foundation plan.
+
+```bash
+account=402178232802
+bucket=blocbuy-tfstate-402178232802
+plan_role="arn:aws:iam::$account:role/blocbuy-swe5001-gh-plan"
+apply_role="arn:aws:iam::$account:role/blocbuy-swe5001-gh-apply"
+aws iam simulate-principal-policy --policy-source-arn "$plan_role" --action-names s3:GetObject \
+  --resource-arns "arn:aws:s3:::$bucket/swe5001/foundation.tfstate" "arn:aws:s3:::$bucket/swe5001/runtime.tfstate" \
+  --query 'EvaluationResults[].{Resource:EvalResourceName,Decision:EvalDecision}' --output table
+aws iam simulate-principal-policy --policy-source-arn "$plan_role" --action-names ssm:GetParameter \
+  --resource-arns "arn:aws:ssm:ap-southeast-1:$account:parameter/blocbuy/swe5001/shared/BUDGET_ALERT_EMAILS" "arn:aws:ssm:ap-southeast-1:$account:parameter/blocbuy/swe5001/shared/ORIGIN_SECRET" \
+  --query 'EvaluationResults[].{Resource:EvalResourceName,Decision:EvalDecision}' --output table
+aws iam simulate-principal-policy --policy-source-arn "$apply_role" --action-names cloudfront:UpdateFunction \
+  --resource-arns "arn:aws:cloudfront::$account:function/<existing-SWE5006-function-name>" \
+  --query 'EvaluationResults[].{Resource:EvalResourceName,Decision:EvalDecision}' --output table
+```
+
 ### 5. GitHub settings
 
 Create the environments. `swe5001-demo` admits only the `prod` branch, even before that branch exists:
@@ -108,7 +126,7 @@ gh variable set ENABLE_SWE5001_DEPLOY --body false
 gh variable set SWE5001_TF_STATE_BUCKET --body "$(out tf_state_bucket)"
 ```
 
-Set `SWE5001_TF_STATE_BUCKET` last: it switches on the `plan` job of `infra-swe5001.yml`. The next PR touching `infra/swe5001/**` should then show a `No changes.` plan comment for `foundation`, which proves the plan role, its trust policy and the state access end to end.
+Set `SWE5001_TF_STATE_BUCKET` last: it switches on the foundation-only `plan` job of `infra-swe5001.yml`. The next PR touching `infra/swe5001/**` should then show a `No changes.` plan comment for `foundation`, which proves the plan role, its trust policy and the foundation state access end to end. The role can read only that state object, SWE5001 foundation metadata and the non-secret budget-recipient parameter; explicit denies protect unrelated S3 objects and SSM parameters against later policy changes. A reviewed `prod`-only workflow or an operator must plan `runtime` and `edge` separately; until that workflow exists, there is no account-backed pre-merge plan for those stacks.
 
 ## `runtime` stack
 
@@ -124,6 +142,6 @@ Shared modules live in [`modules/`](modules/): `network` (VPC, subnets, S3 gatew
 
 Prerequisites: `foundation` applied (the workload permissions boundary must exist) and `/blocbuy/swe5001/shared/ORIGIN_SECRET` seeded (step 2 above).
 
-Secrets in state: the RDS master and role passwords are ephemeral values written through write-only arguments (`password_wo`, `value_wo`), so they never reach the state. Two values do: `ORIGIN_SECRET`, because an ALB rule condition needs the literal value (as in the SWE5006 `backend-app-stack`), and the Valkey AUTH token, because the replication group has no write-only argument in provider 5.x. Both live only while `runtime` exists and protect resources that only CloudFront or the service security group can reach.
+Secrets in state: the RDS master and role passwords are ephemeral values written through write-only arguments (`password_wo`, `value_wo`), so they never reach the state. Two values do: `ORIGIN_SECRET`, because an ALB rule condition needs the literal value (as in the SWE5006 `backend-app-stack`), and the Valkey AUTH token, because the replication group has no write-only argument in provider 5.x. Both live only while `runtime` exists; the PR plan role cannot read that state object. Do not print, upload or attach a runtime plan made with trusted `prod` credentials.
 
 `terraform test` plans the stack with a mocked AWS provider, so it needs no credentials. Applying and destroying `runtime` is the job of the environment scripts (PR 6 in #376); until they land, apply only from an operator workstation, with `-var-file=../envs/demo.tfvars`, and destroy in the same session.

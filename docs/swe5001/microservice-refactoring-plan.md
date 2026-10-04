@@ -229,7 +229,7 @@ Validation is deliberately split in two, to keep runtime hours low:
 2. **Queue scaling:** a burst of team expiries grows the SQS backlog; `notification-svc` scales out and drains it.
 3. **Self-healing:** with `commerce-svc` held at two tasks (minimum raised to 2 for the run), stopping one task manually; the ALB keeps routing to the healthy task while ECS replaces the stopped one, with no failed requests. With a single task the ALB has no healthy target during replacement and returns 503.
 4. **Safe deployment:** deploying a deliberately broken image; the circuit breaker rolls back.
-5. **Pipeline:** a `dev` → `prod` promotion PR showing the release gate (service images, Trivy, `terraform plan` comment), the review approval, and the merge whose run creates the environment, rolls the new images onto ECS, validates them and destroys the environment again.
+5. **Pipeline:** a `dev` → `prod` promotion PR showing the release gate (service images, Trivy, offline runtime validation and a foundation-only `terraform plan` comment), the review approval, and the merge whose trusted `prod` run privately plans and creates the runtime, rolls the new images onto ECS, validates them and destroys the environment again.
 
 k6 scripts live under `perf/` and run through `workflow_dispatch` or locally.
 
@@ -359,8 +359,8 @@ The scripts are idempotent and refuse to run unless the caller is in account `40
 | Workflow | Trigger | Steps |
 | --- | --- | --- |
 | `ci-backend.yml` (extended) | Existing triggers (PRs into `dev`, `dev` pushes, `v*` tags) | Existing gates unchanged. New: calls the reusable `swe5001-service-images.yml` to build and smoke-boot every assembly image (monolith and the three services) and scan each with Trivy, without pushing. New modules join the existing JaCoCo aggregate and SonarCloud project. |
-| `infra-swe5001.yml` (new) | PRs into `dev` or `prod` touching `infra/swe5001/**` | `terraform fmt`/`validate`/`plan` per stack, checkov; the plan is posted as a PR comment. Plan only: nothing is applied from a PR or a `dev` push. |
-| `swe5001-release-gate.yml` (new) | PRs into `prod` | `promotion-source` (fails unless the head branch is `dev` in this repository), `service-images` (same reusable workflow), `infra-plan` (plan of `edge` and, when it is up, `runtime`, posted as a PR comment). These are the required checks on `prod`. |
+| `infra-swe5001.yml` (new) | PRs into `dev` or `prod` touching `infra/swe5001/**` | `terraform fmt`/`validate` and mocked tests for both existing stacks, checkov; the account-backed PR plan and redacted comment cover `foundation` only. No PR role reads `runtime.tfstate` or applies infrastructure. |
+| `swe5001-release-gate.yml` (new) | PRs into `prod` | `promotion-source` (fails unless the head branch is `dev` in this repository), `service-images` (same reusable workflow), `infra-plan` (offline `edge`/`runtime` validation and foundation-only plan). These are the required checks on `prod`; secret-bearing account-backed plans run privately after promotion under the `prod`-only role or by an operator. |
 | `swe5001-deploy.yml` (new) | Push to `prod` (each promotion merge); manual on the `prod` ref only for the V6 drill | The promotion run above: build, create, deploy, validate, evidence, destroy. |
 | `swe5001-env.yml` (new): `up`, `down`, `status` | Manual, dispatched on the `prod` ref | Wrappers around `env-up.sh`, `env-down.sh` and `env-status.sh` for manual sessions. |
 | `swe5001-env.yml` (new): nightly `down` | Nightly at 23:00 SGT | Safety net: destroys `runtime` if a manual session was left running; a no-op when nothing exists. |

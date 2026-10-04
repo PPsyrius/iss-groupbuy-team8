@@ -1,7 +1,7 @@
 # GitHub OIDC roles for SWE5001 (AWS plan, section 4; GitHub plan, sections 3-4).
 # The account-wide OIDC provider already exists from the SWE5006 bootstrap; this stack
 # only looks it up. Each role trusts exactly one GitHub environment subject:
-#   - swe5001-plan: any branch (PRs into dev or prod), read-only;
+#   - swe5001-plan: any branch (PRs into dev or prod), foundation-only read;
 #   - swe5001-demo: the prod branch only (environment branch policy), apply and deploy.
 #
 # The roles themselves live at the root IAM path, while everything the apply role may
@@ -40,54 +40,135 @@ data "aws_iam_policy_document" "github_trust" {
 
 data "aws_iam_policy_document" "plan" {
   statement {
-    sid       = "ListSwe5001StateKeys"
+    sid       = "ListFoundationStateKey"
     actions   = ["s3:ListBucket"]
     resources = [local.state_bucket_arn]
 
     condition {
       test     = "StringLike"
       variable = "s3:prefix"
-      values   = ["swe5001/*"]
+      values   = ["swe5001/", "swe5001/foundation.tfstate*"]
     }
   }
 
   statement {
-    sid       = "ReadSwe5001State"
+    sid       = "ReadFoundationState"
     actions   = ["s3:GetObject"]
-    resources = [local.state_objects_arn]
+    resources = ["${local.state_bucket_arn}/swe5001/foundation.tfstate"]
   }
 
-  # ReadOnlyAccess can read any S3 object, including the SWE5006 state files. PRs from
-  # any branch can assume this role, so object reads are limited to the SWE5001 state.
+  # Preserve the isolation even if another identity or bucket policy later
+  # grants wider access to this PR-assumable role.
   statement {
-    sid           = "DenyOtherObjectReads"
+    sid           = "DenyOtherStateReads"
     effect        = "Deny"
     actions       = ["s3:GetObject", "s3:GetObjectVersion"]
-    not_resources = [local.state_objects_arn]
+    not_resources = ["${local.state_bucket_arn}/swe5001/foundation.tfstate"]
+  }
+
+  # The shared state bucket uses SSE-KMS. This key permission cannot grant access
+  # to another state object: S3 GetObject above is limited to foundation.tfstate.
+  statement {
+    sid       = "DecryptFoundationStateViaS3"
+    actions   = ["kms:Decrypt"]
+    resources = ["arn:aws:kms:${var.aws_region}:${var.aws_account_id}:key/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "kms:ViaService"
+      values   = ["s3.${var.aws_region}.amazonaws.com"]
+    }
+  }
+
+  # This role is reachable by same-repository PRs. In particular, it must not read
+  # runtime.tfstate: that short-lived state contains the origin secret and Valkey token.
+  statement {
+    sid       = "ReadFoundationOidcProvider"
+    actions   = ["iam:ListOpenIDConnectProviders"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "InspectFoundationOidcProvider"
+    actions   = ["iam:GetOpenIDConnectProvider"]
+    resources = ["arn:aws:iam::${var.aws_account_id}:oidc-provider/token.actions.githubusercontent.com"]
+  }
+
+  statement {
+    sid = "InspectFoundationRoles"
+    actions = [
+      "iam:GetRole",
+      "iam:GetRolePolicy",
+      "iam:ListAttachedRolePolicies",
+      "iam:ListRolePolicies",
+      "iam:ListRoleTags",
+    ]
+    resources = ["arn:aws:iam::${var.aws_account_id}:role/${local.name_prefix}-gh-*"]
+  }
+
+  statement {
+    sid = "InspectWorkloadBoundary"
+    actions = [
+      "iam:GetPolicy",
+      "iam:GetPolicyVersion",
+      "iam:ListPolicyVersions",
+      "iam:ListPolicyTags",
+    ]
+    resources = ["arn:aws:iam::${var.aws_account_id}:policy/${local.name_prefix}-workload-boundary"]
+  }
+
+  statement {
+    sid = "InspectFoundationRepositories"
+    actions = [
+      "ecr:DescribeRepositories",
+      "ecr:GetLifecyclePolicy",
+      "ecr:ListTagsForResource",
+    ]
+    resources = ["arn:aws:ecr:${var.aws_region}:${var.aws_account_id}:repository/swe5001/*"]
+  }
+
+  statement {
+    sid = "InspectFoundationBudget"
+    actions = [
+      "budgets:DescribeBudget",
+      "budgets:DescribeNotificationsForBudget",
+      "budgets:DescribeSubscribersForNotification",
+      "budgets:ListTagsForResource",
+    ]
+    resources = ["arn:aws:budgets::${var.aws_account_id}:budget/${local.name_prefix}-monthly"]
+  }
+
+  statement {
+    sid       = "ReadBudgetAlertRecipients"
+    actions   = ["ssm:GetParameter"]
+    resources = ["${local.ssm_arn}/shared/BUDGET_ALERT_EMAILS"]
+  }
+
+  statement {
+    sid           = "DenyOtherParameterReads"
+    effect        = "Deny"
+    actions       = ["ssm:GetParameter*"]
+    not_resources = ["${local.ssm_arn}/shared/BUDGET_ALERT_EMAILS"]
   }
 }
 
 resource "aws_iam_role" "github_plan" {
   name                 = "${local.name_prefix}-gh-plan"
-  description          = "GitHub OIDC role (swe5001-plan): read-only terraform plan for the SWE5001 stacks"
+  description          = "GitHub OIDC role (swe5001-plan): foundation-only Terraform plan"
   assume_role_policy   = data.aws_iam_policy_document.github_trust["swe5001-plan"].json
   max_session_duration = 3600
 }
 
-resource "aws_iam_role_policy_attachment" "github_plan_read_only" {
-  role       = aws_iam_role.github_plan.name
-  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
-}
-
 resource "aws_iam_role_policy" "github_plan" {
-  name   = "swe5001-state-read"
+  name   = "swe5001-foundation-plan"
   role   = aws_iam_role.github_plan.id
   policy = data.aws_iam_policy_document.plan.json
 }
 
 # ---------------------------------------------------------------- apply role
-# Creates and destroys `runtime` and re-applies `edge` (promotion run, env-up.sh,
-# env-down.sh). Service access comes from AWS managed policies, one per service the
+# Creates and destroys `runtime` (promotion run, env-up.sh, env-down.sh). The future
+# edge stack must add scoped CloudFront permissions before the first edge apply.
+# Service access comes from AWS managed policies, one per service the
 # stacks use; IAM, SSM, S3 and state access are scoped inline. Tag-level narrowing is
 # a follow-up once the first runtime apply shows the exact action set.
 
@@ -101,7 +182,6 @@ locals {
     "AmazonSQSFullAccess",         # consumer queues and DLQs
     "CloudWatchFullAccessV2",      # log groups, dashboard, alarms
     "AWSCloudMapFullAccess",       # Service Connect namespace
-    "CloudFrontFullAccess",        # edge distribution and functions
   ])
 }
 

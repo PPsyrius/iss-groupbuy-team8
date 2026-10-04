@@ -60,7 +60,7 @@ All are **non-secret**. Values come from `foundation` Terraform outputs (see the
 
 | Variable | Purpose |
 | --- | --- |
-| `SWE5001_TF_PLAN_ROLE_ARN` | Read-only role: `ReadOnlyAccess` plus state read under `swe5001/`; plans run with `-lock=false` |
+| `SWE5001_TF_PLAN_ROLE_ARN` | Foundation-only PR plan role: no managed `ReadOnlyAccess`; read `foundation.tfstate`, foundation metadata and the non-secret budget-recipient parameter only; plans run with `-lock=false` |
 
 ### Environment `swe5001-demo`
 
@@ -112,8 +112,8 @@ Merging also requires the base to be up to date, which always holds because `pro
 | --- | --- | --- | --- | --- |
 | `swe5001-service-images.yml` | new, reusable (`workflow_call`) | called by `ci-backend.yml` and `swe5001-release-gate.yml` | none | Matrix `[identity-svc, commerce-svc, notification-svc]`; builds the ARM64 image with `ARG MODULE`, boots it against service containers (PostgreSQL, Redis) with `topology=distributed` stubs, Trivy scan. Builds only; never pushes |
 | `ci-backend.yml` | extended | existing (PRs into `dev`, `dev` pushes, `v*` tags) | none | New job `service-images`, needs `build-quality`, calls the reusable workflow above. Existing jobs unchanged except the `-exec` jar path (backend plan WP-B2) |
-| `infra-swe5001.yml` | new | PRs into `dev` or `prod` on `infra/swe5001/**` | `swe5001-plan` | `fmt -check`, `init`, `validate`, `plan` per stack, checkov, plan summary posted as a sticky PR comment. Never applies |
-| `swe5001-release-gate.yml` | new | PRs into `prod` (`opened`, `synchronize`, `reopened`) | `swe5001-plan` for `infra-plan` only | `promotion-source`: fail unless `github.head_ref == 'dev'` and the head repository is this repository. `service-images`: the reusable workflow. `infra-plan`: plan `edge`, and `runtime` when its ECS cluster exists, posted as a sticky PR comment. No path filters, so the required checks always report |
+| `infra-swe5001.yml` | new | PRs into `dev` or `prod` on `infra/swe5001/**` | `swe5001-plan` for foundation only | `fmt -check`, offline `init`, `validate` and tests for both implemented stacks; `foundation` account-backed plan/checkov with a redacted plan summary once the operator bootstraps it. Never plans secret-bearing runtime state or applies |
+| `swe5001-release-gate.yml` | planned | PRs into `prod` (`opened`, `synchronize`, `reopened`) | `swe5001-plan` for foundation only | `promotion-source`: fail unless `github.head_ref == 'dev'` and the head repository is this repository. `service-images`: the reusable workflow. `infra-plan`: static/mocked validation for `edge` and `runtime`, and foundation plan only; any account-backed `edge`/`runtime` plan must run after promotion with the protected `prod` role or by an operator, without uploading a secret-bearing plan. No path filters, so required checks report |
 | `swe5001-deploy.yml` | new | push to `prod` (one promotion per sprint); manual on the `prod` ref only with input `drill=broken-health` (verification plan V6, run inside a manual session) | `swe5001-demo` | The promotion run (refactoring plan, section 3.4). `images`: build ARM64 images from the merge commit, push by digest, write `/blocbuy/swe5001/candidate/<service>`. `up`: `env-up.sh --release` (`--candidate` on the first run, when no release digest exists). `deploy`: render task definitions with the candidate digests and roll them out with the circuit breaker, wait for steady state. `validate`: smoke suite through CloudFront; on success copy the candidates to `/blocbuy/swe5001/release/<service>`; SPA build, S3 sync and CloudFront invalidation if `frontend/**` or `contracts/**` changed since the previous `prod` commit. `evidence`: upload smoke output, ECS service events, digests and step timings as an artifact. `down` (`if: always()`, needs all previous jobs): `env-down.sh`, then `env-status.sh`, which fails the run if any runtime resource remains |
 | `swe5001-env.yml` | new | manual (`up`, `down`, `status`) on the `prod` ref; schedule 23:00 SGT (`down`) | `swe5001-demo` (except `dispatch`) | Thin wrappers around `infra/swe5001/scripts/env-up.sh`, `env-down.sh` and `env-status.sh` for manual sessions; `up` writes the CloudFront URL to the job summary. `dispatch` (schedule only, runs on `dev`, no AWS access, `actions: write`): `gh workflow run swe5001-env.yml --ref prod -f action=down`; a no-op when `runtime` does not exist |
 | `swe5001-perf.yml` | new | manual on the `prod` ref | `swe5001-demo` | Run k6 scenarios against `SWE5001_FRONTEND_URL`; upload results (see verification plan) |
@@ -158,7 +158,7 @@ The CloudFront domain is stable because `edge` is never destroyed, so these are 
 | WP | Content | WBS | Depends on |
 | --- | --- | --- | --- |
 | G1 | Environments `swe5001-plan`, `swe5001-demo` (branch policy `prod`); repository variables with placeholder values; `ENABLE_SWE5001_*` set to `false` | 5.2 | none |
-| G2 | `infra-swe5001.yml` (plan only). Job `static` (fmt, validate, checkov) needs no AWS access; job `plan` starts once `SWE5001_TF_STATE_BUCKET` is set | 5.2 | AWS F1 (plan role, state bucket) |
+| G2 | `infra-swe5001.yml` (plan only). Job `static` (fmt, validate, checkov) needs no AWS access; its foundation-only `plan` starts once `SWE5001_TF_STATE_BUCKET` is set | 5.2 | AWS F1 (plan role, state bucket) |
 | G3 | Reusable `swe5001-service-images.yml` and the `service-images` job in `ci-backend.yml` | 5.1 | backend WP-B2 |
 | G3a | `swe5001-release-gate.yml`; create `prod` from `dev`; ruleset `prod-release` | 5.3 | G2, G3 |
 | G4 | `swe5001-deploy.yml` (push to `prod`) | 5.3 | G3a, AWS F1 (ECR, deploy role) |

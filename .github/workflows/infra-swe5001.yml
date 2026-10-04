@@ -74,6 +74,7 @@ jobs:
     needs: static
     # Same-repository PRs only (fork PRs get no OIDC token), and only once the
     # operator has set the state bucket variable after the first foundation apply.
+    # Runtime state holds secrets and must never be read by this PR-assumable role.
     if: >-
       vars.SWE5001_TF_STATE_BUCKET != '' &&
       github.event.pull_request.head.repo.full_name == github.repository
@@ -86,7 +87,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        stack: [foundation, runtime]
+        stack: [foundation]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
