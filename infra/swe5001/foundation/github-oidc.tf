@@ -162,13 +162,14 @@ data "aws_iam_policy_document" "apply" {
     ]
   }
 
+  # Roles under /swe5001/ (task, execution and fck-nat roles) are bounded by
+  # aws_iam_policy.workload_boundary, so the apply role cannot mint a role more powerful
+  # than a SWE5001 workload and pass it to a task or instance.
   statement {
     sid = "ManageSwe5001Roles"
     actions = [
       "iam:AddRoleToInstanceProfile",
-      "iam:AttachRolePolicy",
       "iam:CreateInstanceProfile",
-      "iam:CreateRole",
       "iam:DeleteInstanceProfile",
       "iam:DeleteRole",
       "iam:DeleteRolePolicy",
@@ -179,8 +180,6 @@ data "aws_iam_policy_document" "apply" {
       "iam:ListAttachedRolePolicies",
       "iam:ListInstanceProfilesForRole",
       "iam:ListRolePolicies",
-      "iam:PassRole",
-      "iam:PutRolePolicy",
       "iam:RemoveRoleFromInstanceProfile",
       "iam:TagInstanceProfile",
       "iam:TagRole",
@@ -192,6 +191,55 @@ data "aws_iam_policy_document" "apply" {
       "arn:aws:iam::${var.aws_account_id}:role${local.iam_role_path}*",
       "arn:aws:iam::${var.aws_account_id}:instance-profile${local.iam_role_path}*",
     ]
+  }
+
+  statement {
+    sid       = "CreateBoundedSwe5001Roles"
+    actions   = ["iam:CreateRole", "iam:PutRolePolicy"]
+    resources = ["arn:aws:iam::${var.aws_account_id}:role${local.iam_role_path}*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PermissionsBoundary"
+      values   = [aws_iam_policy.workload_boundary.arn]
+    }
+  }
+
+  statement {
+    sid       = "AttachAllowlistedPolicies"
+    actions   = ["iam:AttachRolePolicy"]
+    resources = ["arn:aws:iam::${var.aws_account_id}:role${local.iam_role_path}*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PermissionsBoundary"
+      values   = [aws_iam_policy.workload_boundary.arn]
+    }
+
+    condition {
+      test     = "ArnEquals"
+      variable = "iam:PolicyARN"
+      values   = local.workload_attachable_policies
+    }
+  }
+
+  statement {
+    sid       = "PassSwe5001Roles"
+    actions   = ["iam:PassRole"]
+    resources = ["arn:aws:iam::${var.aws_account_id}:role${local.iam_role_path}*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PassedToService"
+      values   = ["ec2.amazonaws.com", "ecs-tasks.amazonaws.com"]
+    }
+  }
+
+  statement {
+    sid       = "DenyBoundaryChanges"
+    effect    = "Deny"
+    actions   = ["iam:DeleteRolePermissionsBoundary", "iam:PutRolePermissionsBoundary"]
+    resources = ["*"]
   }
 
   statement {
@@ -263,6 +311,40 @@ data "aws_iam_policy_document" "apply" {
       "elasticloadbalancing:RegisterTargets",
     ]
     resources = ["*"]
+
+    condition {
+      test     = "StringNotEquals"
+      variable = "aws:ResourceTag/Course"
+      values   = ["swe5001"]
+    }
+  }
+
+  # Same guardrail for RDS and ElastiCache. Resources are limited to instances, clusters
+  # and replication groups: AWS-created default option and parameter groups carry no
+  # tags and take part in Modify calls, so a "*" deny would block SWE5001's own changes.
+  statement {
+    sid    = "DenyDataStoreChangesOutsideSwe5001"
+    effect = "Deny"
+    actions = [
+      "elasticache:DeleteCacheCluster",
+      "elasticache:DeleteReplicationGroup",
+      "elasticache:ModifyCacheCluster",
+      "elasticache:ModifyReplicationGroup",
+      "elasticache:RebootCacheCluster",
+      "rds:DeleteDBCluster",
+      "rds:DeleteDBInstance",
+      "rds:ModifyDBCluster",
+      "rds:ModifyDBInstance",
+      "rds:RebootDBInstance",
+      "rds:StopDBCluster",
+      "rds:StopDBInstance",
+    ]
+    resources = [
+      "arn:aws:elasticache:${var.aws_region}:${var.aws_account_id}:cluster:*",
+      "arn:aws:elasticache:${var.aws_region}:${var.aws_account_id}:replicationgroup:*",
+      "arn:aws:rds:${var.aws_region}:${var.aws_account_id}:cluster:*",
+      "arn:aws:rds:${var.aws_region}:${var.aws_account_id}:db:*",
+    ]
 
     condition {
       test     = "StringNotEquals"

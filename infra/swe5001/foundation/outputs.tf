@@ -24,3 +24,8 @@ output "tf_state_bucket" {
   description = "SWE5001_TF_STATE_BUCKET"
   value       = var.tf_state_bucket
 }
+
+output "workload_permissions_boundary_arn" {
+  description = "Permissions boundary every runtime role under /swe5001/ must set"
+  value       = aws_iam_policy.workload_boundary.arn
+}

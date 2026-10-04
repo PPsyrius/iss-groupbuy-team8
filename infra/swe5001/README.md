@@ -65,7 +65,7 @@ terraform -chdir=infra/swe5001/foundation apply foundation.tfplan
 rm infra/swe5001/foundation/foundation.tfplan
 ```
 
-Expect only creates on the first apply: 4 ECR repositories and lifecycle policies, 3 IAM roles with their policies and attachments, 1 budget.
+Expect only creates on the first apply: 4 ECR repositories and lifecycle policies, 3 IAM roles with their policies and attachments, the workload permissions boundary policy, 1 budget.
 
 ### 4. Read back the trust policies
 
