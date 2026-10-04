@@ -3,6 +3,8 @@
 set -euo pipefail
 
 status_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/env-status.sh"
+# check() overrides this for each child; declare it here so static analysis sees it.
+SCENARIO=${SCENARIO:-}
 
 aws() {
   case "$1 $2" in
