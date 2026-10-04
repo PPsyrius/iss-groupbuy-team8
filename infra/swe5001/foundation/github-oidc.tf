@@ -340,6 +340,43 @@ data "aws_iam_policy_document" "apply" {
     not_resources = ["arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/blocbuy/swe5001/*"]
   }
 
+  # AmazonSNSFullAccess and AmazonSQSFullAccess grant sns:* and sqs:* on every topic and
+  # queue in the account. Topics and queues are matched by the blocbuy-swe5001- name
+  # prefix, which works whether or not another stack tags its own. Only actions scoped to
+  # a topic or queue are listed: a deny on an action without a resource type would also
+  # block SWE5001's own calls.
+  statement {
+    sid    = "DenyMessagingChangesOutsideSwe5001"
+    effect = "Deny"
+    actions = [
+      "sns:AddPermission",
+      "sns:DeleteTopic",
+      "sns:Publish",
+      "sns:PutDataProtectionPolicy",
+      "sns:RemovePermission",
+      "sns:SetTopicAttributes",
+      "sns:Subscribe",
+      "sns:TagResource",
+      "sns:UntagResource",
+      "sqs:AddPermission",
+      "sqs:ChangeMessageVisibility",
+      "sqs:DeleteMessage",
+      "sqs:DeleteQueue",
+      "sqs:PurgeQueue",
+      "sqs:ReceiveMessage",
+      "sqs:RemovePermission",
+      "sqs:SendMessage",
+      "sqs:SetQueueAttributes",
+      "sqs:StartMessageMoveTask",
+      "sqs:TagQueue",
+      "sqs:UntagQueue",
+    ]
+    not_resources = [
+      "arn:aws:sns:${var.aws_region}:${var.aws_account_id}:${local.name_prefix}-*",
+      "arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${local.name_prefix}-*",
+    ]
+  }
+
   # Same guardrail for RDS and ElastiCache. Resources are limited to instances, clusters,
   # replication groups and snapshots: AWS-created default option and parameter groups
   # carry no tags and take part in Modify calls, so a "*" deny would block SWE5001's own
