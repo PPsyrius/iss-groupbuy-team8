@@ -50,7 +50,7 @@ All are **non-secret**. Values come from `foundation` Terraform outputs (see the
 | Variable | Example value | Used by |
 | --- | --- | --- |
 | `SWE5001_TF_STATE_BUCKET` | `blocbuy-tfstate-<account>` | all Terraform jobs |
-| `SWE5001_ECR_REPOSITORY_PREFIX` | `swe5001` (repos `swe5001/identity-svc`, `swe5001/commerce-svc`, `swe5001/notification-svc`) | image build and publish |
+| `SWE5001_ECR_REPOSITORY_PREFIX` | `swe5001` (repos `swe5001/monolith`, `swe5001/identity-svc`, `swe5001/commerce-svc`, `swe5001/notification-svc`) | image build and publish |
 | `ENABLE_SWE5001_DEPLOY` | `false` until `foundation` exists, then `true`; while `false`, a promotion merge runs no deploy job | `swe5001-deploy.yml` |
 | `ENABLE_SWE5001_NIGHTLY_DOWN` | `true` (safety net for forgotten manual sessions) | `swe5001-env.yml` schedule |
 
@@ -60,7 +60,7 @@ All are **non-secret**. Values come from `foundation` Terraform outputs (see the
 
 | Variable | Purpose |
 | --- | --- |
-| `SWE5001_TF_PLAN_ROLE_ARN` | Read-only role: `ReadOnlyAccess` plus state-bucket read and lock-file write |
+| `SWE5001_TF_PLAN_ROLE_ARN` | Read-only role: `ReadOnlyAccess` plus state read under `swe5001/`; plans run with `-lock=false` |
 
 ### Environment `swe5001-demo`
 
@@ -158,7 +158,7 @@ The CloudFront domain is stable because `edge` is never destroyed, so these are 
 | WP | Content | WBS | Depends on |
 | --- | --- | --- | --- |
 | G1 | Environments `swe5001-plan`, `swe5001-demo` (branch policy `prod`); repository variables with placeholder values; `ENABLE_SWE5001_*` set to `false` | 5.2 | none |
-| G2 | `infra-swe5001.yml` (plan only) | 5.2 | AWS F1 (plan role, state bucket) |
+| G2 | `infra-swe5001.yml` (plan only). Job `static` (fmt, validate, checkov) needs no AWS access; job `plan` starts once `SWE5001_TF_STATE_BUCKET` is set | 5.2 | AWS F1 (plan role, state bucket) |
 | G3 | Reusable `swe5001-service-images.yml` and the `service-images` job in `ci-backend.yml` | 5.1 | backend WP-B2 |
 | G3a | `swe5001-release-gate.yml`; create `prod` from `dev`; ruleset `prod-release` | 5.3 | G2, G3 |
 | G4 | `swe5001-deploy.yml` (push to `prod`) | 5.3 | G3a, AWS F1 (ECR, deploy role) |

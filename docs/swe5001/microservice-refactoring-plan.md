@@ -241,7 +241,7 @@ The environment is **disposable**: the runtime layer is normally absent, is crea
 
 | Stack | Contents | Lifecycle |
 | --- | --- | --- |
-| `foundation` | Terraform state keys under `swe5001/` in the existing state bucket (`use_lockfile = true`), GitHub OIDC roles (the existing OIDC provider is reused), ECR repositories (lifecycle: keep the last 10 images), SSM parameters (Stripe test keys, Google client secret, Stripe webhook secret, origin secret), AWS Budgets alerts | Persistent |
+| `foundation` | Terraform state keys under `swe5001/` in the existing state bucket (`use_lockfile = true`), GitHub OIDC roles (the existing OIDC provider is reused), ECR repositories (lifecycle: keep the last 10 images), AWS Budgets alerts. Secret SSM parameters (Stripe test keys, Google client secret, Stripe webhook secret, origin secret) are seeded by an operator, not by Terraform | Persistent |
 | `edge` | S3 SPA bucket, CloudFront distribution; reads the ALB DNS name from `runtime` remote state | Persistent (re-applied after each `runtime` apply) |
 | `runtime` | VPC, fck-nat, ALB, ECS cluster and services, RDS, Valkey, SNS/SQS, Service Connect namespace, CloudWatch log groups, dashboard, alarms | Created by a promotion run or `env-up.sh`; destroyed at the end of the run or by `env-down.sh` |
 
