@@ -340,22 +340,30 @@ data "aws_iam_policy_document" "apply" {
     not_resources = ["arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/blocbuy/swe5001/*"]
   }
 
-  # Same guardrail for RDS and ElastiCache. Resources are limited to instances, clusters
-  # and replication groups: AWS-created default option and parameter groups carry no
-  # tags and take part in Modify calls, so a "*" deny would block SWE5001's own changes.
+  # Same guardrail for RDS and ElastiCache. Resources are limited to instances, clusters,
+  # replication groups and snapshots: AWS-created default option and parameter groups
+  # carry no tags and take part in Modify calls, so a "*" deny would block SWE5001's own
+  # changes. Snapshots are covered because deleting or sharing one cannot be undone.
   statement {
     sid    = "DenyDataStoreChangesOutsideSwe5001"
     effect = "Deny"
     actions = [
       "elasticache:DeleteCacheCluster",
       "elasticache:DeleteReplicationGroup",
+      "elasticache:DeleteSnapshot",
       "elasticache:ModifyCacheCluster",
       "elasticache:ModifyReplicationGroup",
       "elasticache:RebootCacheCluster",
       "rds:DeleteDBCluster",
+      "rds:DeleteDBClusterSnapshot",
       "rds:DeleteDBInstance",
+      "rds:DeleteDBSnapshot",
+      "rds:FailoverDBCluster",
       "rds:ModifyDBCluster",
+      "rds:ModifyDBClusterSnapshotAttribute",
       "rds:ModifyDBInstance",
+      "rds:ModifyDBSnapshotAttribute",
+      "rds:RebootDBCluster",
       "rds:RebootDBInstance",
       "rds:StopDBCluster",
       "rds:StopDBInstance",
@@ -363,8 +371,11 @@ data "aws_iam_policy_document" "apply" {
     resources = [
       "arn:aws:elasticache:${var.aws_region}:${var.aws_account_id}:cluster:*",
       "arn:aws:elasticache:${var.aws_region}:${var.aws_account_id}:replicationgroup:*",
+      "arn:aws:elasticache:${var.aws_region}:${var.aws_account_id}:snapshot:*",
       "arn:aws:rds:${var.aws_region}:${var.aws_account_id}:cluster:*",
+      "arn:aws:rds:${var.aws_region}:${var.aws_account_id}:cluster-snapshot:*",
       "arn:aws:rds:${var.aws_region}:${var.aws_account_id}:db:*",
+      "arn:aws:rds:${var.aws_region}:${var.aws_account_id}:snapshot:*",
     ]
 
     condition {
