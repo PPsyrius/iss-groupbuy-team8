@@ -147,3 +147,6 @@ infra/terraform/frontend-stack/generated.tf
 # away from a stray `git add -A`. To commit either one, drop its line here or use `git add -f`.
 scripts/create_sprint2_issues.py
 backend/blocbuy-bootstrap/src/main/resources/META-INF/additional-spring-configuration-metadata.json
+
+# SWE5001 Terraform working directories; .terraform.lock.hcl stays committed
+infra/swe5001/**/.terraform/
