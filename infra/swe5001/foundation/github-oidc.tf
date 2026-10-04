@@ -319,6 +319,27 @@ data "aws_iam_policy_document" "apply" {
     }
   }
 
+  # CloudWatchFullAccessV2 also reaches the SWE5006 log groups (/blocbuy/backend/*).
+  # Log groups carry no Course tag in the SWE5006 stacks, so this deny goes by name:
+  # only /blocbuy/swe5001/* may be deleted or reconfigured.
+  statement {
+    sid    = "DenyLogGroupChangesOutsideSwe5001"
+    effect = "Deny"
+    actions = [
+      "logs:AssociateKmsKey",
+      "logs:DeleteLogGroup",
+      "logs:DeleteLogStream",
+      "logs:DeleteMetricFilter",
+      "logs:DeleteRetentionPolicy",
+      "logs:DeleteSubscriptionFilter",
+      "logs:DisassociateKmsKey",
+      "logs:PutMetricFilter",
+      "logs:PutRetentionPolicy",
+      "logs:PutSubscriptionFilter",
+    ]
+    not_resources = ["arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/blocbuy/swe5001/*"]
+  }
+
   # Same guardrail for RDS and ElastiCache. Resources are limited to instances, clusters
   # and replication groups: AWS-created default option and parameter groups carry no
   # tags and take part in Modify calls, so a "*" deny would block SWE5001's own changes.
