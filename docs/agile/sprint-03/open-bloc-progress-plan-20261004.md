@@ -83,7 +83,7 @@ Coverage target: 100% of new/changed lines and branches on touched main files â€
 | --- | --- | --- |
 | V1 | `cd backend && ./mvnw -B -pl blocbuy-bootstrap -am test -Dtest='ProductAppServiceImplTest,ProductControllerTest' -Dsurefire.failIfNoSpecifiedTests=false` | Focused unit/slice tests. |
 | V2 | `cd backend && ./mvnw -B verify` on JDK 21, then the JaCoCo aggregate missed-line script from the backend skill | Spotless, Checkstyle, ArchUnit (no new cross-module dependency), SpotBugs, T5â€“T7 via Testcontainers, coverage on touched files. |
-| V3 | `./mvnw -B verify -Popenapi-export -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true`, commit, then `git diff --exit-code -- contracts/` from repo root | AC6 drift gate; CI `contract-check` openapi-diff confirms additive-only. |
+| V3 | From the repo root: `(cd backend && ./mvnw -B verify -Popenapi-export -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true)` to export, then `(cd backend && ./mvnw -B verify -Popenapi-export)` unskipped (CONTRIBUTING); commit, then `git diff --exit-code -- contracts/` from the repo root | AC6 drift gate; CI `contract-check` openapi-diff confirms additive-only. |
 | V4 | `cd frontend && pnpm gen:api && pnpm check` | Additive property leaves the current client and tests green. |
 
 ## 7. Risks and consistency
