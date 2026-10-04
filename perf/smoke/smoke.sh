@@ -15,11 +15,12 @@ pass() { printf 'PASS  %s\n' "$1"; }
 fail() { printf 'FAIL  %s: %s\n' "$1" "$2"; failures=$((failures + 1)); }
 
 # fetch <name> <path>: body in $work/<name>.body, headers in $work/<name>.headers,
-# status code on stdout.
+# status code on stdout (curl writes 000 itself when the request fails).
 fetch() {
+  : > "$work/$1.headers"
   curl --silent --show-error --max-time 20 \
     --output "$work/$1.body" --dump-header "$work/$1.headers" \
-    --write-out '%{http_code}' "$base_url$2" || echo 000
+    --write-out '%{http_code}' "$base_url$2" || true
 }
 
 header() { grep -i "^$2:" "$work/$1.headers" | tail -n 1 | cut -d: -f2- | tr -d ' \r' || true; }
@@ -56,12 +57,18 @@ fi
 check_trace_id auth_me
 
 # 4. Service-to-service paths never reach a service: CloudFront sends only /api/* to the
-#    ALB, so the answer is the SPA (or an S3 error before the SPA is uploaded), not JSON.
+#    ALB, so the answer is the SPA (200) or, before the SPA is uploaded, an S3 error
+#    (403 or 404). JSON means a service answered; any other status means the edge is broken.
 status=$(fetch internal /internal/users/00000000-0000-0000-0000-000000000000/active)
 content_type=$(header internal Content-Type)
 case "$content_type" in
   application/json*) fail internal "status $status answered with JSON; an internal endpoint is exposed" ;;
-  *) pass "internal path is not served by a service (status $status, ${content_type:-no content type})" ;;
+  *)
+    case "$status" in
+      200 | 403 | 404) pass "internal path is not served by a service (status $status, ${content_type:-no content type})" ;;
+      *) fail internal "unexpected status $status (${content_type:-no content type}); expected the SPA or an S3 error" ;;
+    esac
+    ;;
 esac
 
 if [ "$failures" -gt 0 ]; then
