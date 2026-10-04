@@ -378,9 +378,10 @@ data "aws_iam_policy_document" "apply" {
   }
 
   # Same guardrail for RDS and ElastiCache. Resources are limited to instances, clusters,
-  # replication groups and snapshots: AWS-created default option and parameter groups
-  # carry no tags and take part in Modify calls, so a "*" deny would block SWE5001's own
-  # changes. Snapshots are covered because deleting or sharing one cannot be undone.
+  # replication groups, snapshots and retained automated backups: AWS-created default
+  # option and parameter groups carry no tags and take part in Modify calls, so a "*" deny
+  # would block SWE5001's own changes. Snapshots and backups are covered because deleting
+  # or sharing one cannot be undone.
   statement {
     sid    = "DenyDataStoreChangesOutsideSwe5001"
     effect = "Deny"
@@ -392,8 +393,10 @@ data "aws_iam_policy_document" "apply" {
       "elasticache:ModifyReplicationGroup",
       "elasticache:RebootCacheCluster",
       "rds:DeleteDBCluster",
+      "rds:DeleteDBClusterAutomatedBackup",
       "rds:DeleteDBClusterSnapshot",
       "rds:DeleteDBInstance",
+      "rds:DeleteDBInstanceAutomatedBackup",
       "rds:DeleteDBSnapshot",
       "rds:FailoverDBCluster",
       "rds:ModifyDBCluster",
@@ -409,7 +412,9 @@ data "aws_iam_policy_document" "apply" {
       "arn:aws:elasticache:${var.aws_region}:${var.aws_account_id}:cluster:*",
       "arn:aws:elasticache:${var.aws_region}:${var.aws_account_id}:replicationgroup:*",
       "arn:aws:elasticache:${var.aws_region}:${var.aws_account_id}:snapshot:*",
+      "arn:aws:rds:${var.aws_region}:${var.aws_account_id}:auto-backup:*",
       "arn:aws:rds:${var.aws_region}:${var.aws_account_id}:cluster:*",
+      "arn:aws:rds:${var.aws_region}:${var.aws_account_id}:cluster-auto-backup:*",
       "arn:aws:rds:${var.aws_region}:${var.aws_account_id}:cluster-snapshot:*",
       "arn:aws:rds:${var.aws_region}:${var.aws_account_id}:db:*",
       "arn:aws:rds:${var.aws_region}:${var.aws_account_id}:snapshot:*",

@@ -18,9 +18,9 @@ Last updated: 2026-10-04.
 
 | # | Item | State |
 | --- | --- | --- |
-| 1 | Plan docs | In [#377](https://github.com/PPsyrius/iss-groupbuy-team8/pull/377), awaiting review |
+| 1 | Plan docs | In [#377](https://github.com/PPsyrius/iss-groupbuy-team8/pull/377) (draft until its CI is green on the combined code), awaiting review |
 | 2 | `foundation` stack, plan-only `infra-swe5001.yml` | In #377 (merged into it from #378); code ready, **not applied** |
-| 3 | `runtime` part 1: network, security groups, ECS cluster, `ecs-service` module, ALB | Code ready on `feature/swe5001-deployment-runtime-202701004`, stacked on #377; **not applied** |
+| 3 | `runtime` part 1: network, security groups, ECS cluster, `ecs-service` module, ALB | In #377 (merged into it from #379); code ready, **not applied** |
 | 4 | `runtime` part 2: RDS, `db-init`, Valkey | Same branch as item 3 |
 | 5 | `edge` stack: CloudFront and SPA bucket | Not started |
 | 6 | `env-up.sh`, `env-down.sh`, `env-status.sh`, `lib.sh`; monolith as one ECS service; first up/down proof | Not started |
@@ -32,8 +32,8 @@ Nothing exists in AWS yet: no SWE5001 role, repository, budget or runtime resour
 
 ## Next actions
 
-1. Review and merge #377 into `dev` (squash).
-2. Rebase the runtime branch onto `dev` after that squash (`git rebase --onto origin/dev <last #377 commit>`), then retarget its PR to `dev` so CI runs.
+1. Wait for #377's CI to pass on the combined code, mark it ready (`gh pr ready 377`), get a review and squash-merge it into `dev`.
+2. Start every later PR from `dev` after that merge, not from the #377 branch.
 3. Operator: bootstrap `foundation` (README steps 1–5): activate the `Course` cost tag, seed the SSM parameters, apply, read back the trust policies, create the environments and variables. Set `SWE5001_TF_STATE_BUCKET` last; the next infra PR must then show a `No changes.` plan for `foundation`.
 4. Before the first `runtime` apply, confirm in `ap-southeast-1`: PostgreSQL 18 on RDS (else set `postgres_major_version = "17"`), Valkey 8.0 on ElastiCache, and the fck-nat arm64 AMI.
 5. PR 5 (`edge`) and PR 6 (scripts and monolith service) can start in parallel; PR 6 is on the critical path.
@@ -42,7 +42,7 @@ Nothing exists in AWS yet: no SWE5001 role, repository, budget or runtime resour
 
 - ECS runs only from `prod`, once per two-week sprint; every run creates `runtime`, validates it and destroys it (`if: always()`).
 - Secrets: operator-seeded SSM values are never Terraform inputs. Database passwords are ephemeral and written through write-only arguments, so they never reach state. `ORIGIN_SECRET` and the Valkey AUTH token do reach the `runtime` state (no write-only path), accepted because they exist only while `runtime` does.
-- Apply role guardrails: managed policies per service; IAM only under `/swe5001/` with the mandatory workload permissions boundary; tag-conditioned denies for non-SWE5001 EC2, ELB, CloudFront, RDS and ElastiCache resources (including snapshots); name-based denies for log groups outside `/blocbuy/swe5001/*` and SNS topics or SQS queues not named `blocbuy-swe5001-*`.
+- Apply role guardrails: managed policies per service; IAM only under `/swe5001/` with the mandatory workload permissions boundary; tag-conditioned denies for non-SWE5001 EC2, ELB, CloudFront, RDS and ElastiCache resources (including snapshots and retained automated backups); name-based denies for log groups outside `/blocbuy/swe5001/*` and SNS topics or SQS queues not named `blocbuy-swe5001-*`.
 - `runtime` ships with an empty `services` map; PR 6 adds the monolith (strangler step 0), PR 9 swaps in the three services.
 
 ## Known gaps and risks
