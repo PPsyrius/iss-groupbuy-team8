@@ -1,7 +1,7 @@
 import { HttpResponse, http } from "msw";
 
 import { OK_CODE } from "@/api/envelope";
-import type { ListingContent, PolicyResponse } from "@/api/generated/types.gen";
+import type { ListingContent, PolicyResponse, TeamTermsView } from "@/api/generated/types.gen";
 import { toCents } from "@/features/admin/money";
 
 // A stateful stand-in for the admin catalog API (admin plan A1-02), shared by the Vitest route
@@ -75,14 +75,19 @@ interface AdminRow {
 
 type Policy = Required<PolicyResponse>;
 
-// #242 added `teamTerms` to every admin listing response. The terms endpoint itself is not mocked
-// yet (admin plan A3-04), so every listing reads as never configured, the backend default. #293
-// added `latestPolicy`: the latest rule revision without its `productId`, or null when none.
-const view = (row: AdminRow, policy: Policy | undefined) => {
+type Terms = { targetSize: number; lifetimeSeconds: number };
+
+const UNSET_TERMS: TeamTermsView = { targetSize: null, lifetimeSeconds: null, configured: false };
+
+// #242 added `teamTerms` to every admin listing response: a listing never configured reads both as
+// null, the backend default. Terms the mock stores were checked on the way in, so they are
+// configured. #293 added `latestPolicy`: the latest rule revision without its `productId`, or null
+// when none.
+const view = (row: AdminRow, policy: Policy | undefined, terms: Terms | undefined) => {
   const { productId: _productId, ...latestPolicy } = policy ?? {};
   return {
     ...row,
-    teamTerms: { targetSize: null, lifetimeSeconds: null, configured: false },
+    teamTerms: terms ? { ...terms, configured: true } : UNSET_TERMS,
     latestPolicy: policy ? latestPolicy : null,
   };
 };
@@ -182,6 +187,15 @@ function seedPolicies(rows: AdminRow[]) {
   return policies;
 }
 
+// The 4b.3 rice listing starts blocs of 5 that stay open 2 hours; every other row was never
+// configured, so the group terms panel shows both states.
+function seedTerms(rows: AdminRow[]) {
+  const terms = new Map<string, Terms>();
+  const [rice] = rows;
+  if (rice?.productNo === "BB-100481") terms.set(rice.id, { targetSize: 5, lifetimeSeconds: 7200 });
+  return terms;
+}
+
 type History = { deals: number; quotes: number };
 
 // The bloc and quote rows the mock does not model, as counts per listing (#300): the 4b.3 rice
@@ -198,6 +212,7 @@ function seedHistory(rows: AdminRow[]) {
 export function createAdminStore(seed: AdminRow[] = adminSeed(), { openDeals = 26 } = {}) {
   const rows = seed.map((r) => ({ ...r, listing: { ...r.listing } }));
   const policies = seedPolicies(rows);
+  const terms = seedTerms(rows);
   const history = seedHistory(rows);
   // Every retained row the backend's DELETE veto counts; each policy revision is one rule.
   const references = (id: string) => ({
@@ -215,6 +230,8 @@ export function createAdminStore(seed: AdminRow[] = adminSeed(), { openDeals = 2
     policies,
     openDeals,
     policyOf: (id: string) => policies.get(id),
+    terms,
+    termsOf: (id: string) => terms.get(id),
     references,
     // Tests give a listing bloc or quote history the mock cannot create itself.
     addHistory: (id: string, more: Partial<History>) => {
@@ -259,7 +276,8 @@ function historyBlocks(store: AdminStore, row: AdminRow) {
 
 // The single admin read adds the retained history and the snapshot eligibility (#300); page and
 // mutation responses omit both.
-const viewOf = (store: AdminStore, row: AdminRow) => view(row, store.policyOf(row.id));
+const viewOf = (store: AdminStore, row: AdminRow) =>
+  view(row, store.policyOf(row.id), store.termsOf(row.id));
 
 const detail = (store: AdminStore, row: AdminRow) => ({
   ...viewOf(store, row),
@@ -328,6 +346,25 @@ function policyProblem(
   if (amount <= 0n)
     return { field: "amount", message: "Must be positive and at most 9999999999999999.99" };
   return null;
+}
+
+const whole = (n: unknown): n is number => Number.isInteger(n);
+
+// Bean validation on `TeamTermsRequest` (AdminListingController), reported as
+// GlobalExceptionHandler does: 400 COMMON_400_002 with the request's field paths.
+function termsViolations(
+  body: Partial<{ expectedVersion: unknown; targetSize: unknown; lifetimeSeconds: unknown }>,
+) {
+  const errors: { field: string; message: string }[] = [];
+  if (!whole(body.expectedVersion) || body.expectedVersion < 0)
+    errors.push({ field: "expectedVersion", message: "must be greater than or equal to 0" });
+  if (!whole(body.targetSize) || body.targetSize < 2)
+    errors.push({ field: "targetSize", message: "must be greater than or equal to 2" });
+  if (!whole(body.lifetimeSeconds) || body.lifetimeSeconds < 2400)
+    errors.push({ field: "lifetimeSeconds", message: "must be greater than or equal to 2400" });
+  else if (body.lifetimeSeconds > 86_400)
+    errors.push({ field: "lifetimeSeconds", message: "must be less than or equal to 86400" });
+  return errors;
 }
 
 export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "buyer" }) {
@@ -482,6 +519,41 @@ export function adminHandlers(store: AdminStore, { role }: { role: "admin" | "bu
         if (historyBlocks(store, row)) return fail(E.referenced);
         store.remove(row.id);
         return ok();
+      }),
+    ),
+
+    // Group terms (#242): allowed in every lifecycle state, and they bump the listing version. The
+    // backend's order (TeamTermsAppServiceImpl.configure): bean validation, the listing, the
+    // version, then the optional team price. The console never sends `teamPrice` (the rule panel
+    // owns rules), so the mock models only its off-sale refusal and turns an on-sale one away
+    // rather than pretend to append a revision.
+    http.put(
+      `${admin}/:productId/team-terms`,
+      guarded(async ({ request, params }) => {
+        const body = await bodyOf<{
+          expectedVersion: number;
+          targetSize: number;
+          lifetimeSeconds: number;
+          teamPrice: unknown;
+        }>(request);
+        const errors = termsViolations(body);
+        if (errors.length > 0) return fail(E.validationFailed, errors);
+        const row = store.find(param(params.productId));
+        if (!row) return fail(E.notFound);
+        if (stale(store, row, body.expectedVersion)) return staleAt(E.versionConflict, row.version);
+        if (body.teamPrice !== undefined && body.teamPrice !== null)
+          return row.status === "on_sale" ? fail(E.badRequest) : fail(E.policyUnavailable);
+        const next = {
+          targetSize: body.targetSize ?? 0,
+          lifetimeSeconds: body.lifetimeSeconds ?? 0,
+        };
+        store.terms.set(row.id, next);
+        row.version += 1;
+        return ok({
+          productId: row.id,
+          version: row.version,
+          teamTerms: { ...next, configured: true },
+        });
       }),
     ),
 
