@@ -46,35 +46,44 @@ describe("TeamTermsPanel", () => {
     const user = userEvent.setup();
     const store = serveAdmin();
     const sent = vi.fn<(body: unknown) => void>();
-    server.events.on("request:start", ({ request }) => {
+    const listen = ({ request }: { request: Request }) => {
       if (request.method === "PUT" && request.url.endsWith("/team-terms"))
         void request
           .clone()
           .json()
           .then((body) => sent(body));
-    });
-    const { row, panel } = await openPanel(store, "BB-100472");
-    expect(within(panel).getByText("Not set")).toBeVisible();
-    expect(
-      within(panel).getByText("Buyers can’t start a bloc on this listing until both are set."),
-    ).toBeVisible();
-    expect(field(panel, "Seats per bloc")).toHaveValue("");
-    expect(field(panel, "Hours")).toHaveValue("");
+    };
+    server.events.on("request:start", listen);
+    // Removed even when an assertion fails, so no later test hears this one's requests.
+    try {
+      const { row, panel } = await openPanel(store, "BB-100472");
+      expect(within(panel).getByText("Not set")).toBeVisible();
+      expect(
+        within(panel).getByText("Buyers can’t start a bloc on this listing until both are set."),
+      ).toBeVisible();
+      expect(field(panel, "Seats per bloc")).toHaveValue("");
+      expect(field(panel, "Hours")).toHaveValue("");
 
-    await user.type(field(panel, "Seats per bloc"), "4");
-    await user.type(field(panel, "Hours"), "0");
-    await user.clear(field(panel, "Minutes"));
-    await user.type(field(panel, "Minutes"), "40");
-    await user.click(within(panel).getByRole("button", { name: "Save terms" }));
+      await user.type(field(panel, "Seats per bloc"), "4");
+      await user.type(field(panel, "Hours"), "0");
+      await user.clear(field(panel, "Minutes"));
+      await user.type(field(panel, "Minutes"), "40");
+      await user.click(within(panel).getByRole("button", { name: "Save terms" }));
 
-    expect(await within(panel).findByText("Ready to start blocs")).toBeVisible();
-    expect(within(panel).getByText("Terms saved.")).toBeVisible();
-    expect(sent).toHaveBeenCalledWith({ expectedVersion: 0, targetSize: 4, lifetimeSeconds: 2400 });
-    expect(store.termsOf(row.id)).toEqual({ targetSize: 4, lifetimeSeconds: 2400 });
-    // The write bumped the listing version, which the editor shows and its next save sends.
-    expect(await screen.findByText("BB-100472 · draft · v1")).toBeVisible();
-    expect(field(panel, "Minutes")).toHaveValue("40");
-    server.events.removeAllListeners();
+      expect(await within(panel).findByText("Ready to start blocs")).toBeVisible();
+      expect(within(panel).getByText("Terms saved.")).toBeVisible();
+      expect(sent).toHaveBeenCalledWith({
+        expectedVersion: 0,
+        targetSize: 4,
+        lifetimeSeconds: 2400,
+      });
+      expect(store.termsOf(row.id)).toEqual({ targetSize: 4, lifetimeSeconds: 2400 });
+      // The write bumped the listing version, which the editor shows and its next save sends.
+      expect(await screen.findByText("BB-100472 · draft · v1")).toBeVisible();
+      expect(field(panel, "Minutes")).toHaveValue("40");
+    } finally {
+      server.events.removeListener("request:start", listen);
+    }
   });
 
   it("checks the terms before sending", async () => {
