@@ -300,7 +300,7 @@ Implemented in admin plan A1-01 to A1-08, A2-01 to A2-03 and A3-01 to A3-09 (`ad
 
 **Design gaps still open** (`admin-plan.md` §11)
 
-- D1 rail counts (Bloc price rules links to the filtered listings once BA-13, #382, merges; Payments has no page); D2 dialog copy is the proposed text, not approved (Q7); D3 the scheduled state and replace-now warning are undrawn; D4 dashboard and per-tab empty, table error; D5 unsaved prompt and toasts; D6 the group terms panel (decided 2026-10-05: a card below the price rule panel; built in A3-04, #PRNUM); D7 Description is missing from 4b.1; D8 the "Add a rule after you publish" copy waits on BA-11.
+- D1 rail counts (Bloc price rules links to the filtered listings once BA-13, #382, merges; Payments has no page); D2 dialog copy is the proposed text, not approved (Q7); D3 the scheduled state and replace-now warning are undrawn; D4 dashboard and per-tab empty, table error; D5 unsaved prompt and toasts; D6 the group terms panel (decided 2026-10-05: a card below the price rule panel; built in A3-04, #399); D7 Description is missing from 4b.1; D8 the "Add a rule after you publish" copy waits on BA-11.
 - Not built: Payments needing attention (4b.6, BA-8), the "Bloc price rules" rail link (Q3, BA-13), policy history (BA-10) and policy on drafts (BA-11).
 
 ## 5. Component guidance
