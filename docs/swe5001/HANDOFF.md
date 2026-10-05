@@ -24,15 +24,15 @@ Last updated: 2026-10-05.
 | 4 | `runtime` part 2: RDS, `db-init`, Valkey | Merged in #377 (from #379); **not applied** |
 | 5 | `edge` stack: CloudFront and SPA bucket | Merged in [#380](https://github.com/PPsyrius/iss-groupbuy-team8/pull/380); **not applied** |
 | 6 | `env-up.sh`, `env-down.sh`, `env-status.sh`, `lib.sh`; monolith as one ECS service; first up/down proof | Merged in #380; smoke suite passes against SWE5006 dev; **up/down proof not run** |
-| 7 | CI: `swe5001-service-images.yml`, `swe5001-release-gate.yml`, `swe5001-deploy.yml`, `swe5001-env.yml`; create `prod` and its ruleset | Workflows and the ruleset file in review on `feature/swe5001-release-workflows-20261005`; **no run yet**; `prod` and the ruleset not created |
+| 7 | CI: `swe5001-service-images.yml`, `swe5001-release-gate.yml`, `swe5001-deploy.yml`, `swe5001-env.yml`; create `prod` and its ruleset | Workflows and the ruleset file merged in [#384](https://github.com/PPsyrius/iss-groupbuy-team8/pull/384); **no promotion run yet**; `prod` and the ruleset not created |
 | — | Sprint 3 promotion, Fri 2026-10-09 | Moves to Sprint 4 if item 6 is not green by Wed 2026-10-07 |
 | 8–10 | Messaging, service split, scaling and alarms | Phase B, after the backend service split |
 
-Nothing exists in AWS yet: no SWE5001 role, repository, budget or runtime resource. GitHub has no `swe5001-*` environment, no `prod` branch and no SWE5001 variable.
+Operator bootstrap still needs verification evidence. GitHub now exposes the `swe5001-plan` and `swe5001-demo` environment names; their protection and secrets settings, and the AWS role, repositories, budget and runtime state require operator evidence. `prod` and its release ruleset are not created, and no promotion workflow has run.
 
 ## Next actions
 
-1. Review and merge the PR 7 branch into `dev`.
+1. PR 7 is merged as #384. Complete the operator bootstrap and release configuration below before the first promotion.
 2. Operator, with admin credentials (the developer IAM users lack these permissions):
    1. Activate the `Course` cost tag now; it takes up to 24 hours.
    2. Check the state bucket's encryption (`aws s3api get-bucket-encryption --bucket blocbuy-tfstate-402178232802`); if it uses a customer-managed key, scope the plan role's `DecryptFoundationStateViaS3` to that key ARN in a small PR first.
@@ -89,3 +89,27 @@ trivy config --severity HIGH,CRITICAL --exit-code 1 infra/swe5001
 ```
 
 Prior local results (2026-10-04): all three stacks validated; edge tests 2 passed and runtime tests 4 passed before the edge/KMS fix. The teardown status fixture now passes seven mocked AWS cases (three API failures, an empty result, only a task definition, a terminated instance and a running instance); Git Bash syntax and `git diff --check` passed. The current changed head still needs fresh Terraform tests, static scans and a live IAM simulation before any AWS apply.
+
+## Delivery checkpoint — 2026-10-05 (#393)
+
+The Team 8 scheduling notification moves the SWE5001 presentation to **21 October 2026, 16:15–16:55 SGT (UTC+08)**, two days earlier. The submitted proposal is retained as historical evidence; its 23 October presentation and 22 October rehearsal are superseded by the living [timeline](microservice-refactoring-plan.md#4-effort-estimates-and-timeline) and [presentation checklist](impl-verification-observability.md). Confirm a rehearsal slot before 21 October. The existing 20 October promotion target now allows one day for recovery and needs a tested fallback recording.
+
+| Deliverable | Current date | Calendar days from 2026-10-05 | Basis |
+| --- | --- | --- | --- |
+| SWE5001 presentation | 2026-10-21, 16:15–16:55 SGT | 16 | Team 8 notification supplied on 2026-10-05 |
+| SWE5006 presentation | 2026-11-03 / 2026-11-04 | 29 / 30 | [Sprint 3 calendar](../agile/sprint-03/plan.md#1-calendar) |
+| SWE5006 final report | 2026-11-10 | 36 | Sprint 3 calendar |
+| SWE5001 final report | 2026-11-16 | 42 | [Submitted proposal](project-proposal.typ), milestone table |
+
+Readiness is assessed from `dev` at `a55afa5` and explicit GitHub reads on 2026-10-05. GitHub now lists `swe5001-plan` and `swe5001-demo`; their protection and secrets settings were not verified, and [#397](https://github.com/PPsyrius/iss-groupbuy-team8/issues/397) remains open. `branches/prod` still returns 404; only `dev-require-review` and `main-no-forcepush` rulesets exist; `swe5001-deploy.yml` has no runs. AWS state was not independently checked.
+
+| Area | Implemented or evidenced | Remaining delivery work |
+| --- | --- | --- |
+| SWE5006 buyer chain | Quote-aware Checkout, orders, team resolution, local refund/recovery tests, invites and admin APIs are on `dev` | [#223](https://github.com/PPsyrius/iss-groupbuy-team8/issues/223) shared-dev expiry and real Sandbox refund; [#224](https://github.com/PPsyrius/iss-groupbuy-team8/issues/224) deployed crash/replay proof; [#229](https://github.com/PPsyrius/iss-groupbuy-team8/issues/229) authenticated buyer acceptance |
+| SWE5006 release and security | CI/contract/security gates and governed deployment code; local 100-VU baseline | [#226](https://github.com/PPsyrius/iss-groupbuy-team8/issues/226) production apply/release/rollback; [#227](https://github.com/PPsyrius/iss-groupbuy-team8/issues/227) origin TLS decision; deployed performance remains unmeasured |
+| SWE5001 foundation | Terraform foundation/runtime/edge, monolith ECS topology, smoke suite and release/up/down workflows | Operator bootstrap, release configuration, first successful create/validate/destroy, and a failed-promotion teardown proof ([#376](https://github.com/PPsyrius/iss-groupbuy-team8/issues/376)); a planned promotion date is not completion evidence |
+| SWE5001 distributed runtime | Plans describe identity, commerce and notification services | Three service assemblies/platform starter, remote identity/RBAC, outbox/relay, SNS/SQS/DLQ, idempotent consumer and per-service data grants are absent from the audited tree; runtime supports only `none`/`monolith` |
+| SWE5001 demonstration | `perf/smoke/smoke.sh` exists | Queue/HTTP scaling, dashboard/alarms, k6 and resilience drill tools, live results and fallback recording; no `perf/k6/`, `perf/drills/` or SWE5001 evidence directory exists in the audited tree |
+| Architecture discipline | Existing COLA/DDD rules and backend ADR index govern the monolith | Approve the distributed exceptions and synchronize constraints before implementation; the backend plan's proposed ADR 0005/0006 numbers are already occupied by payment records and must not be reused |
+
+The immediate sequence is operator bootstrap and monolith ECS up/down proof (7 October checkpoint), then the 9 October promotion, service/message/scaling implementation and acceptance, and a full rehearsal before 21 October. The 9 October milestone proves strangler step 0; it cannot prove three-service behavior whose identity assembly is planned for 12–18 October. Existing owners keep their assigned work; the new independent frontend issues #392 and #394 do not close this critical path. Notification functionality remains a separate, assigned scope decision under [#215](https://github.com/PPsyrius/iss-groupbuy-team8/issues/215).
