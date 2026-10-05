@@ -311,7 +311,8 @@ test.describe("admin on a real backend @admin", () => {
       await dialog.getByRole("button", { name: "Delete draft" }).click();
       await expect(page.getByText("Draft deleted")).toBeVisible();
       deleted = true;
-      await expect(page).toHaveURL(/\/admin\/listings$/u);
+      // A deleted draft lands on the Draft tab (A1-07); only default search values are stripped.
+      await expect(page).toHaveURL(/\/admin\/listings\?tab=draft$/u);
       await expect(page.getByText(title)).toHaveCount(0);
     } finally {
       if (productId && !deleted) {
