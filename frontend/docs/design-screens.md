@@ -253,7 +253,7 @@ Implemented in admin plan A1-01 to A1-08, A2-01 to A2-03 and A3-01 to A3-09 (`ad
 - The console is a second shell in the same SPA: a 240px rail on `background-inverse` with the isologo, an `ADMIN` tag, Dashboard and Listings links, and the user block (initials, `nickname ?? userId`, "Admin" from `me.roles`). The storefront header is hidden through route `staticData.shell`.
 - Desktop only and dense: the content column keeps 1024px and scrolls sideways below that (Q12). All times are SGT.
 - Anonymous visitors go to `/login?returnTo=%2Fadmin`. A signed-in session without the `admin` role gets the Access denied card in place at `/admin` ("You don’t have access to the admin console", Browse listings / My blocs), under a wordmark-only bar. A 403 from any later admin read (a role revoked mid-session) reaches the same card, from the dashboard, the listings table, the tab counts and the editor (FU-01). The guard is UX only; the backend checks the role on every call.
-- Not built: the "Bloc price rules" rail item (no page, Q3) and "Payments" (BA-8, artboard 4b.6), so the rail shows no counts (D1).
+- Not built: the "Bloc price rules" rail item (Q3, decided 2026-10-05: a count and a link to the listings filtered to an active rule, waiting on BA-13, #382) and "Payments" (BA-8, artboard 4b.6), so the rail shows no counts (D1).
 
 **Dashboard** (`Admin Console › 4a.1`)
 
@@ -294,8 +294,8 @@ Implemented in admin plan A1-01 to A1-08, A2-01 to A2-03 and A3-01 to A3-09 (`ad
 
 **Design gaps still open** (`admin-plan.md` §11)
 
-- D1 rail counts (Bloc price rules has no page, Payments no data); D2 dialog copy is the proposed text, not approved (Q7); D3 the scheduled state and replace-now warning are undrawn; D4 dashboard and per-tab empty, table error; D5 unsaved prompt and toasts; D6 the group terms panel (A3-04 waits on it); D7 Description is missing from 4b.1; D8 the "Add a rule after you publish" copy waits on BA-11.
-- Not built: Payments needing attention (4b.6, BA-8), the "Bloc price rules" page (Q3), policy history (BA-10), policy on drafts (BA-11), and the group terms panel (A3-04, D6).
+- D1 rail counts (Bloc price rules links to the filtered listings once BA-13, #382, merges; Payments has no page); D2 dialog copy is the proposed text, not approved (Q7); D3 the scheduled state and replace-now warning are undrawn; D4 dashboard and per-tab empty, table error; D5 unsaved prompt and toasts; D6 the group terms panel (decided 2026-10-05: a card below the price rule panel; A3-04 is unblocked); D7 Description is missing from 4b.1; D8 the "Add a rule after you publish" copy waits on BA-11.
+- Not built: Payments needing attention (4b.6, BA-8), the "Bloc price rules" rail link (Q3, BA-13), policy history (BA-10), policy on drafts (BA-11), and the group terms panel (A3-04, D6 decided).
 
 ## 5. Component guidance
 
@@ -416,11 +416,11 @@ The original artboard review ended with 22 open questions. T2-01 through T2-06 r
 Remaining design/contract gaps (audited 2026-10-02, FB-18, against `frontend/src/` and `contracts/openapi.json`):
 
 - category values are not contract-driven: `category` is a free string on both listing schemas and there is no dictionary endpoint; `features/catalog/categories.ts` holds the mapping (ask CR-10 in [`admin-plan.md`](admin-plan.md), no issue yet);
-- listing summary does not expose bloc progress (`ProductSummaryResponse` has no size fields): backend #245 (CR-11, open), frontend FB-16;
+- listing summary does not expose bloc progress (`ProductSummaryResponse` has no size fields): backend #245 (CR-11) closed 2026-10-04 via #375; the card UI is FB-16;
 - listing detail does not expose off-sale status (`ProductDetailResponse` has no `status`): no owner yet;
 - the API exposes one active deal (`ActiveDealResponse`: id, sizes, expiry) rather than a list with starter metadata; only an invite link names its sharer (FB-19, #201): no owner yet;
 - My Blocs shows Active / Completed / Refunded from `GET /group-deals/me`, but `MyTeamResponse` carries only the buyer's own `role`, not the starter; no owner yet. Notifications wait on backend #215 (first persisted use case, open);
-- the refund-pending receipt still reads "Payment received": FB-15 (design owner);
+- the refund-pending receipt still reads "Payment received"; the design owner chose "Refund on its way" on 2026-10-05: FB-15;
 - the gated sheet's copy is written for Start a bloc ("Starting a bloc means paying first") and is reused for Buy alone, which no artboard draws (the bloc terms are kept off that sheet, FB-11): no owner yet;
 - the signed-in storefront menu/header is still provisional (a neutral Sign out button, `plan.md` T2-05; no artboard draws a menu): no owner yet;
 - CSP still permits HTTPS listing and avatar image hosts (`img-src 'self' https:`, ADR 0002) until the contract pins an image host; Inter is already self-hosted (#158): no owner yet.
