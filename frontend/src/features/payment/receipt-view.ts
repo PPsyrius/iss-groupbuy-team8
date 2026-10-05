@@ -74,7 +74,7 @@ export function receiptView({
   if (receipt.refundPending)
     return {
       chip: { label: "Refund pending", color: "danger" },
-      title: "Payment received",
+      title: "Refund on its way",
       body: "A refund is pending. Payment was received, but this purchase could not be fulfilled or the bloc expired. This is not confirmation that the refund has been sent.",
       moneyLead: amount ? `${amount} to be refunded.` : "Refund pending.",
       moneyDetail: bankWindow,
