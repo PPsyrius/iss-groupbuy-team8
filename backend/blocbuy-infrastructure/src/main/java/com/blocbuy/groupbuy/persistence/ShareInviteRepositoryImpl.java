@@ -2,6 +2,7 @@ package com.blocbuy.groupbuy.persistence;
 
 import com.blocbuy.groupbuy.model.ShareInvite;
 import com.blocbuy.groupbuy.repository.ShareInviteRepository;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +17,18 @@ public class ShareInviteRepositoryImpl implements ShareInviteRepository {
 
     @Override
     public Optional<ShareInvite> findByRef(String ref) {
-        return Optional.ofNullable(toDomain(mapper.selectByRef(ref)));
+        return findByRefWithDeadline(ref).map(InviteWithDeadline::invite);
     }
+
+    /** A single PostgreSQL lookup supplies the immutable invite and its team's cache deadline. */
+    Optional<InviteWithDeadline> findByRefWithDeadline(String ref) {
+        BizShareInviteDO row = mapper.selectByRef(ref);
+        return row == null
+                ? Optional.empty()
+                : Optional.of(new InviteWithDeadline(toDomain(row), row.getDealExpireTime()));
+    }
+
+    record InviteWithDeadline(ShareInvite invite, Instant expireTime) {}
 
     @Override
     public Optional<ShareInvite> findByDealAndSharer(UUID dealId, UUID sharerUserId) {

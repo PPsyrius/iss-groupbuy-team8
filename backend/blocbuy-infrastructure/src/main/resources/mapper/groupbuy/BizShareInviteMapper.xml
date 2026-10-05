@@ -7,6 +7,7 @@
         <result column="invite_ref" property="inviteRef"/>
         <result column="deal_id" property="dealId" jdbcType="OTHER"/>
         <result column="sharer_user_id" property="sharerUserId" jdbcType="OTHER"/>
+        <result column="deal_expire_time" property="dealExpireTime"/>
     </resultMap>
 
     <!-- No conflict target: either partial unique index (team + sharer, or reference) makes this a
@@ -20,9 +21,11 @@
     </insert>
 
     <select id="selectByRef" resultMap="bizShareInviteMap" flushCache="true" useCache="false">
-        SELECT id, invite_ref, deal_id, sharer_user_id
-        FROM biz_share_invite
-        WHERE invite_ref = #{ref} AND deleted = false
+        SELECT i.id, i.invite_ref, i.deal_id, i.sharer_user_id,
+               d.expire_time AS deal_expire_time
+        FROM biz_share_invite i
+        LEFT JOIN biz_group_deal d ON d.id = i.deal_id AND d.deleted = false
+        WHERE i.invite_ref = #{ref} AND i.deleted = false
     </select>
 
     <select id="selectByDealAndSharer" resultMap="bizShareInviteMap" flushCache="true" useCache="false">
