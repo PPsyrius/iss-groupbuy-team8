@@ -163,7 +163,7 @@ Cards use a bordered 8px surface, image/fallback area, title/subtitle, and price
 - Open bloc: bloc price is prominent in `accent-soft-foreground`; solo price is struck through.
 - No open bloc: solo price is prominent and the secondary line says "Buying alone".
 - No percent-off badges or countdowns on the catalog grid.
-- Open bloc progress (FB-16): "N of M joined", seats left (the last seat in semibold) and a 10px accent bar, from the summary's nullable `deal` (#375); no row when `deal` is null. No countdown on the grid.
+- Open bloc progress (FB-16): "N of M joined", seats left (the last seat in semibold) and a 10px accent bar, from the summary's nullable `deal` (#375); no row when `deal` is null. No countdown on the grid. Missing, fractional, negative or non-finite sizes do not produce invented counts; the progress row remains part of the card's detail-link click area.
 
 SGD is displayed as `S$` with two decimals.
 

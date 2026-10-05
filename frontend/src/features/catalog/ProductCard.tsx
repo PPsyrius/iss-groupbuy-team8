@@ -95,11 +95,20 @@ export function ProductCard({ product }: Readonly<{ product: ProductSummaryRespo
 // §4.1 progress row: "N of M joined", seats left (the last one emphasised) and a 10px bar, as on
 // the listing detail's Open bloc row but without its countdown, dots or Join.
 function CardProgress({ deal }: Readonly<{ deal: ActiveDealResponse }>) {
-  const joined = deal.currentSize ?? 0;
-  const target = Math.max(1, deal.targetSize ?? 1);
+  const { currentSize: joined, targetSize: target } = deal;
+  if (
+    typeof joined !== "number" ||
+    !Number.isInteger(joined) ||
+    joined < 0 ||
+    typeof target !== "number" ||
+    !Number.isInteger(target) ||
+    target <= 0
+  ) {
+    return null;
+  }
   const label = `${joined} of ${target} joined`;
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="pointer-events-none flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-sm tabular-nums">{label}</span>
         <SeatsLeft left={Math.max(0, target - joined)} />

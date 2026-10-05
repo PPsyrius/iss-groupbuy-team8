@@ -84,6 +84,58 @@ describe("ProductCard", () => {
     expect(screen.queryByText(/joined$/u)).not.toBeInTheDocument();
   });
 
+  it.each([
+    [0, 5],
+    [3, 5],
+    [2, 8],
+    [5, 5],
+    [6, 5],
+  ])("shows the API's %i of %i joined with a bounded accessible bar", async (joined, target) => {
+    await renderWithRouter(
+      <ProductCard product={{ ...product, deal: { currentSize: joined, targetSize: target } }} />,
+    );
+    expect(screen.getByText(`${joined} of ${target} joined`)).toBeInTheDocument();
+    const bar = screen.getByRole("progressbar", { name: `${joined} of ${target} joined` });
+    expect(bar).toHaveAttribute("aria-valuenow", String(Math.min(joined, target)));
+    expect(bar).toHaveAttribute("aria-valuemax", String(target));
+    expect(screen.queryByText("No open bloc yet")).not.toBeInTheDocument();
+  });
+
+  it("does not call an API-provided bloc absent when its price is missing", async () => {
+    const { groupPrice: _omitted, ...solo } = product;
+    await renderWithRouter(
+      <ProductCard product={{ ...solo, deal: { currentSize: 2, targetSize: 8 } }} />,
+    );
+    expect(screen.getByText("S$89.00")).toBeInTheDocument();
+    expect(screen.getByRole("progressbar", { name: "2 of 8 joined" })).toBeInTheDocument();
+    expect(screen.queryByText("No open bloc yet")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /start one/i })).not.toBeInTheDocument();
+  });
+  it.each([
+    undefined,
+    null,
+    {},
+    { currentSize: 3 },
+    { targetSize: 5 },
+    { currentSize: 3, targetSize: 0 },
+    { currentSize: -1, targetSize: 5 },
+    { currentSize: 3, targetSize: -5 },
+    { currentSize: 1.5, targetSize: 5 },
+    { currentSize: 3, targetSize: 5.5 },
+    { currentSize: Number.NaN, targetSize: 5 },
+    { currentSize: 3, targetSize: Number.POSITIVE_INFINITY },
+  ])("omits progress when sizes are missing or invalid: %j", async (deal) => {
+    await renderWithRouter(
+      <ProductCard product={{ ...product, ...(deal === undefined ? {} : { deal }) }} />,
+    );
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+    expect(screen.queryByText(/of .* joined/)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: product.title })).toHaveAttribute(
+      "href",
+      `/products/${product.id}`,
+    );
+  });
+
   // The title link stretches over the tile with an absolutely positioned pseudo-element; the
   // tile must be the containing block, or the overlay covers the whole page (CodeRabbit
   // r4043389594). The start link is positioned too so it paints above that overlay.
