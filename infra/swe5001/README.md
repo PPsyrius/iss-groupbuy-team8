@@ -128,10 +128,11 @@ gh variable set SWE5001_TF_APPLY_ROLE_ARN --env swe5001-demo --body "$(out apply
 gh variable set SWE5001_DEPLOY_ROLE_ARN   --env swe5001-demo --body "$(out deploy_role_arn)"
 gh variable set SWE5001_ECR_REPOSITORY_PREFIX --body swe5001
 gh variable set ENABLE_SWE5001_DEPLOY --body false
+gh variable set ENABLE_SWE5001_NIGHTLY_DOWN --body true
 gh variable set SWE5001_TF_STATE_BUCKET --body "$(out tf_state_bucket)"
 ```
 
-Set `SWE5001_TF_STATE_BUCKET` last: it switches on the foundation-only `plan` job of `infra-swe5001.yml`. The next PR touching `infra/swe5001/**` should then show a `No changes.` plan comment for `foundation`, which proves the plan role, its trust policy and the foundation state access end to end. The role can read only that state object, SWE5001 foundation metadata and the non-secret budget-recipient parameter; explicit denies protect unrelated S3 objects and SSM parameters against later policy changes. A reviewed `prod`-only workflow or an operator must plan `runtime` and `edge` separately; until that workflow exists, there is no account-backed pre-merge plan for those stacks.
+Set `SWE5001_TF_STATE_BUCKET` last: it switches on the foundation-only `plan` job of `infra-swe5001.yml`. The next PR touching `infra/swe5001/**` should then show a `No changes.` plan comment for `foundation`, which proves the plan role, its trust policy and the foundation state access end to end. The role can read only that state object, SWE5001 foundation metadata and the non-secret budget-recipient parameter; explicit denies protect unrelated S3 objects and SSM parameters against later policy changes. No workflow plans `runtime` or `edge` against the account before a merge: the promotion run applies them after the merge to `prod`, and an operator plans them by hand when needed.
 
 ## `runtime` stack
 
@@ -168,8 +169,16 @@ Expect only creates: the SPA bucket with its public access block, ownership cont
 
 1. Add `<url>/api/v1/auth/oauth2/google/callback` to the Google OAuth client's authorised redirect URIs.
 2. Register a Stripe test-mode webhook endpoint at `<url>/api/v1/webhooks/stripe` and store its signing secret in `/blocbuy/swe5001/commerce/STRIPE_WEBHOOK_SECRET` (`--overwrite`).
+3. Copy the `edge` outputs into the `swe5001-demo` environment, for the workflows below:
 
-The SPA bucket stays empty until the deploy workflow (PR 7) syncs the frontend; until then the SPA routes return an S3 error and the API works.
+   ```bash
+   edge() { terraform -chdir=infra/swe5001/edge output -raw "$1"; }
+   gh variable set SWE5001_FRONTEND_URL       --env swe5001-demo --body "$(edge url)"
+   gh variable set SWE5001_SPA_BUCKET         --env swe5001-demo --body "$(edge spa_bucket)"
+   gh variable set SWE5001_CLOUDFRONT_DIST_ID --env swe5001-demo --body "$(edge distribution_id)"
+   ```
+
+The SPA bucket stays empty until the first promotion run syncs the frontend; until then the SPA routes return an S3 error and the API works.
 
 ## Environment sessions
 
@@ -187,7 +196,9 @@ infra/swe5001/scripts/env-up.sh --candidate   # about 20-25 minutes; prints the 
 infra/swe5001/scripts/env-down.sh             # about 10-15 minutes; fails if anything is left
 ```
 
-Set `SWE5001_TIMINGS_FILE=<path>` to record each step's duration (promotion evidence, verification plan V8). Until the image workflow (PR 7) writes candidate digests, push the monolith image by hand once per commit (ECR tags are immutable):
+Set `SWE5001_TIMINGS_FILE=<path>` to record each step's duration (promotion evidence, verification plan V8). `env-up.sh` never prints the `edge` plan, because the origin diff carries `ORIGIN_SECRET` in clear; on failure it shows only Terraform's diagnostics.
+
+The same sessions run from GitHub with [`swe5001-env.yml`](../../.github/workflows/swe5001-env.yml) (next section). Before the first promotion has written any digest, push the monolith image by hand once per commit (ECR tags are immutable):
 
 ```bash
 registry=402178232802.dkr.ecr.ap-southeast-1.amazonaws.com
@@ -199,3 +210,30 @@ digest=$(aws ecr describe-images --repository-name swe5001/monolith --image-ids 
   --query 'imageDetails[0].imageDigest' --output text)
 aws ssm put-parameter --name /blocbuy/swe5001/candidate/monolith --type String --value "$digest" --overwrite
 ```
+
+## Workflows and the `prod` branch
+
+ECS runs only from the `prod` branch, which moves only by a `dev` → `prod` promotion PR (merge commit), once per sprint. Workflow settings and rules: [GitHub configuration plan](../../docs/swe5001/impl-github-configuration.md), sections 5 and 6.
+
+| Workflow | Trigger | Does |
+| --- | --- | --- |
+| [`swe5001-release-gate.yml`](../../.github/workflows/swe5001-release-gate.yml) | PRs into `prod` | Required checks `promotion-source` (head must be this repository's `dev`), `service-images` (ARM64 image build and Trivy scan, no push) and `infra-plan` (`infra-swe5001.yml` for every stack, unfiltered) |
+| [`swe5001-deploy.yml`](../../.github/workflows/swe5001-deploy.yml) | Push to `prod` while `ENABLE_SWE5001_DEPLOY` is `true`; manual on `prod` with `force_failure` | `images` → `publish` (push the scanned images, write `/blocbuy/swe5001/candidate/*`) → `up` (`env-up.sh --candidate`) → `release` (copy to `/blocbuy/swe5001/release/*`, publish the SPA) → `down` (`env-down.sh`, always) → `evidence` (one artifact `swe5001-promotion-<sha>`: digests, logs with the smoke output, step timings, ECS service events) |
+| [`swe5001-env.yml`](../../.github/workflows/swe5001-env.yml) | Manual on `prod` (`up`, `down`, `status`); daily 23:00 SGT | Runs the scripts above with the apply role. The schedule runs on `dev` with no AWS access and only dispatches `down` on `prod` while `ENABLE_SWE5001_NIGHTLY_DOWN` is `true` |
+| [`swe5001-service-images.yml`](../../.github/workflows/swe5001-service-images.yml) | Called by the two workflows above | Builds and scans the runtime images; only the monolith until PR 9 |
+
+Runs that write Terraform state share the concurrency group `swe5001-tfstate` and are never cancelled. GitHub keeps one running and one pending run per group, so a third queued run replaces the pending one; start a manual session only when no promotion is running.
+
+### Create `prod` (one time, operator)
+
+After the PR that adds these workflows is merged, with repository admin rights:
+
+```bash
+git fetch origin
+git push origin origin/dev:refs/heads/prod
+gh api -X POST repos/PPsyrius/iss-groupbuy-team8/rulesets --input infra/swe5001/github/prod-release-ruleset.json
+```
+
+[`github/prod-release-ruleset.json`](github/prod-release-ruleset.json) blocks deletion and force pushes, requires one CODEOWNERS approval with resolved threads, allows merge commits only and requires the three gate checks on an up-to-date branch. Its bypass list is empty.
+
+Set `ENABLE_SWE5001_DEPLOY=true` only after a manual `env-up.sh --candidate` and `env-down.sh` have both succeeded. Then open the promotion PR (head `dev`, base `prod`, title `chore(release): promote dev to prod (<yyyy-mm-dd>)`) and merge it with a merge commit.
