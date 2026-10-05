@@ -416,7 +416,7 @@ The original artboard review ended with 22 open questions. T2-01 through T2-06 r
 Remaining design/contract gaps (audited 2026-10-02, FB-18, against `frontend/src/` and `contracts/openapi.json`):
 
 - category values are not contract-driven: `category` is a free string on both listing schemas and there is no dictionary endpoint; `features/catalog/categories.ts` holds the mapping (ask CR-10 in [`admin-plan.md`](admin-plan.md), no issue yet);
-- listing summary does not expose bloc progress (`ProductSummaryResponse` has no size fields): backend #245 (CR-11) closed 2026-10-04 via #375; the card UI is FB-16;
+- listing summary exposes bloc progress since #375 (nullable `ProductSummaryResponse.deal`, closing #245, CR-11); the card UI is FB-16;
 - listing detail does not expose off-sale status (`ProductDetailResponse` has no `status`): no owner yet;
 - the API exposes one active deal (`ActiveDealResponse`: id, sizes, expiry) rather than a list with starter metadata; only an invite link names its sharer (FB-19, #201): no owner yet;
 - My Blocs shows Active / Completed / Refunded from `GET /group-deals/me`, but `MyTeamResponse` carries only the buyer's own `role`, not the starter; no owner yet. Notifications wait on backend #215 (first persisted use case, open);
