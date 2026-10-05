@@ -335,7 +335,7 @@ topic branch ──PR──▶ dev ──promotion PR──▶ prod ──push�
 | --- | --- | --- |
 | 1. Build | Build the ARM64 service images from the merge commit (the monolith image until the service split), scan them, push them to ECR by digest, record them as candidates in SSM `/blocbuy/swe5001/candidate/<service>` | 10 min |
 | 2. Create and deploy | `env-up.sh --candidate`: apply `runtime` from zero with the candidate digests, run the DB-init task with the demo seed, start the services behind the deployment circuit breaker, apply `edge`, wait for steady state, run the smoke suite through CloudFront ([verification plan](impl-verification-observability.md), section 3) | 20–25 min |
-| 3. Release | Only after a green step 2: copy the candidates to `/blocbuy/swe5001/release/<service>` (last known good) and publish the SWE5001 SPA | 3 min |
+| 3. Release | Only after a green step 2: publish the SWE5001 SPA, then copy the candidates to `/blocbuy/swe5001/release/<service>` (last known good) | 3 min |
 | 4. Evidence | Upload the smoke output, ECS service events, deployed digests and step timings as a workflow artifact, because the log groups are destroyed with `runtime` | 1 min |
 | 5. Destroy | `env-down.sh` then `env-status.sh`; runs with `if: always()`, so a failed build, deploy or smoke test still tears the environment down. The run fails if any runtime resource remains | 10–15 min |
 

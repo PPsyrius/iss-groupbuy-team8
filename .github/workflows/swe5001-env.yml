@@ -44,9 +44,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
         run: |
-          if ! gh api "repos/${REPO}/branches/prod" --silent 2> /dev/null; then
-            echo "No prod branch yet; nothing to destroy."
-            exit 0
+          set -euo pipefail
+          if ! error=$(gh api "repos/${REPO}/branches/prod" --silent 2>&1); then
+            if grep -q 'HTTP 404' <<< "$error"; then
+              echo "No prod branch yet; nothing to destroy."
+              exit 0
+            fi
+            echo "::error::prod branch lookup failed: ${error}"
+            exit 1
           fi
           gh workflow run swe5001-env.yml --repo "$REPO" --ref prod -f action=down
 
@@ -56,9 +61,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 75
     # up and down write Terraform state and queue behind a promotion run; status does not.
+    # queue: max keeps every pending run, so a later dispatch cannot replace a queued down.
     concurrency:
       group: ${{ inputs.action == 'status' && format('swe5001-status-{0}', github.run_id) || 'swe5001-tfstate' }}
       cancel-in-progress: false
+      queue: max
     environment:
       name: swe5001-demo
       url: ${{ vars.SWE5001_FRONTEND_URL }}

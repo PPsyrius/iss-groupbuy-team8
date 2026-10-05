@@ -22,6 +22,7 @@ on:
 concurrency:
   group: swe5001-tfstate
   cancel-in-progress: false
+  queue: max
 
 permissions: {}
 
@@ -229,20 +230,9 @@ jobs:
           allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
           role-session-name: SWE5001-Release-${{ github.run_id }}
 
-      - name: Promote candidate digests to release
-        env:
-          SERVICES: ${{ needs.images.outputs.services }}
-        run: |
-          set -euo pipefail
-          for service in $SERVICES; do
-            digest=$(aws ssm get-parameter --name "/blocbuy/swe5001/candidate/${service}" \
-              --query Parameter.Value --output text)
-            aws ssm put-parameter --name "/blocbuy/swe5001/release/${service}" \
-              --type String --value "$digest" --overwrite > /dev/null
-            echo "${service}: ${digest}"
-          done
-
       # Same publication order as ci-frontend: immutable hashed assets, then index.html.
+      # No --delete: an index.html still cached by CloudFront or an open tab keeps loading
+      # the hashed assets of the previous build.
       - name: Publish SPA
         working-directory: frontend
         env:
@@ -250,11 +240,45 @@ jobs:
           DISTRIBUTION_ID: ${{ vars.SWE5001_CLOUDFRONT_DIST_ID }}
         run: |
           set -euo pipefail
-          aws s3 sync dist/ "s3://${BUCKET}" --delete --exclude index.html --exclude "*.map" \
+          aws s3 sync dist/ "s3://${BUCKET}" --exclude index.html --exclude "*.map" \
             --cache-control "public,max-age=31536000,immutable"
           aws s3 cp dist/index.html "s3://${BUCKET}/index.html" \
             --cache-control no-cache --content-type text/html
           aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths /index.html > /dev/null
+
+      # Last, so a failed SPA publication leaves the previous release digests in place.
+      # A failed write restores the digests already promoted in this step.
+      - name: Promote candidate digests to release
+        env:
+          SERVICES: ${{ needs.images.outputs.services }}
+        run: |
+          set -euo pipefail
+          prefix=/blocbuy/swe5001
+          declare -A candidate previous
+          for service in $SERVICES; do
+            candidate[$service]=$(aws ssm get-parameter --name "${prefix}/candidate/${service}" \
+              --query Parameter.Value --output text)
+            previous[$service]=$(aws ssm get-parameter --name "${prefix}/release/${service}" \
+              --query Parameter.Value --output text 2> /dev/null || true)
+          done
+          promoted=()
+          # The first promotion has nothing to restore (and the role cannot delete).
+          restore() {
+            for service in "${promoted[@]}"; do
+              [ -n "${previous[$service]}" ] || continue
+              aws ssm put-parameter --name "${prefix}/release/${service}" \
+                --type String --value "${previous[$service]}" --overwrite > /dev/null || true
+              echo "::warning::restored ${prefix}/release/${service} to ${previous[$service]}"
+            done
+          }
+          trap restore ERR
+          for service in $SERVICES; do
+            aws ssm put-parameter --name "${prefix}/release/${service}" \
+              --type String --value "${candidate[$service]}" --overwrite > /dev/null
+            promoted+=("$service")
+            echo "${service}: ${candidate[$service]}"
+          done
+          trap - ERR
 
   # Always runs, so a failed or cancelled promotion never leaves runtime behind.
   # env-down.sh ends with env-status.sh, which fails if anything tagged Stack=runtime remains.

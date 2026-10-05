@@ -218,7 +218,7 @@ ECS runs only from the `prod` branch, which moves only by a `dev` → `prod` pro
 | Workflow | Trigger | Does |
 | --- | --- | --- |
 | [`swe5001-release-gate.yml`](../../.github/workflows/swe5001-release-gate.yml) | PRs into `prod` | Required checks `promotion-source` (head must be this repository's `dev`), `service-images` (ARM64 image build and Trivy scan, no push) and `infra-plan` (`infra-swe5001.yml` for every stack, unfiltered) |
-| [`swe5001-deploy.yml`](../../.github/workflows/swe5001-deploy.yml) | Push to `prod` while `ENABLE_SWE5001_DEPLOY` is `true`; manual on `prod` with `force_failure` | `images` → `publish` (push the scanned images, write `/blocbuy/swe5001/candidate/*`) → `up` (`env-up.sh --candidate`) → `release` (copy to `/blocbuy/swe5001/release/*`, publish the SPA) → `down` (`env-down.sh`, always) → `evidence` (one artifact `swe5001-promotion-<sha>`: digests, logs with the smoke output, step timings, ECS service events) |
+| [`swe5001-deploy.yml`](../../.github/workflows/swe5001-deploy.yml) | Push to `prod` while `ENABLE_SWE5001_DEPLOY` is `true`; manual on `prod` with `force_failure` | `images` → `publish` (push the scanned images, write `/blocbuy/swe5001/candidate/*`) → `up` (`env-up.sh --candidate`) → `release` (publish the SPA, then copy to `/blocbuy/swe5001/release/*`) → `down` (`env-down.sh`, always) → `evidence` (one artifact `swe5001-promotion-<sha>`: digests, logs with the smoke output, step timings, ECS service events) |
 | [`swe5001-env.yml`](../../.github/workflows/swe5001-env.yml) | Manual on `prod` (`up`, `down`, `status`); daily 23:00 SGT | Runs the scripts above with the apply role. The schedule runs on `dev` with no AWS access and only dispatches `down` on `prod` while `ENABLE_SWE5001_NIGHTLY_DOWN` is `true` |
 | [`swe5001-service-images.yml`](../../.github/workflows/swe5001-service-images.yml) | Called by the two workflows above | Builds and scans the runtime images; only the monolith until PR 9 |
 
@@ -234,6 +234,6 @@ git push origin origin/dev:refs/heads/prod
 gh api -X POST repos/PPsyrius/iss-groupbuy-team8/rulesets --input infra/swe5001/github/prod-release-ruleset.json
 ```
 
-[`github/prod-release-ruleset.json`](github/prod-release-ruleset.json) blocks deletion and force pushes, requires one CODEOWNERS approval with resolved threads, allows merge commits only and requires the three gate checks on an up-to-date branch. Its bypass list is empty.
+[`github/prod-release-ruleset.json`](github/prod-release-ruleset.json) blocks deletion and force pushes, requires one CODEOWNERS approval with resolved threads, allows merge commits only and requires the three gate checks. The branch need not be up to date with `prod`: after a promotion `prod` holds a merge commit that `dev` lacks, and the `pull_request` checks already run on the merge result. Its bypass list is empty.
 
 Set `ENABLE_SWE5001_DEPLOY=true` only after a manual `env-up.sh --candidate` and `env-down.sh` have both succeeded. Then open the promotion PR (head `dev`, base `prod`, title `chore(release): promote dev to prod (<yyyy-mm-dd>)`) and merge it with a merge commit.

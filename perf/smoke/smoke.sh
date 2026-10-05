@@ -15,12 +15,17 @@ pass() { printf 'PASS  %s\n' "$1"; }
 fail() { printf 'FAIL  %s: %s\n' "$1" "$2"; failures=$((failures + 1)); }
 
 # fetch <name> <path>: body in $work/<name>.body, headers in $work/<name>.headers,
-# status code on stdout (curl writes 000 itself when the request fails).
+# status code on stdout; 000 when the transfer fails, even after a status line arrived.
 fetch() {
+  local status
   : > "$work/$1.headers"
-  curl --silent --show-error --max-time 20 \
+  if status=$(curl --silent --show-error --max-time 20 \
     --output "$work/$1.body" --dump-header "$work/$1.headers" \
-    --write-out '%{http_code}' "$base_url$2" || true
+    --write-out '%{http_code}' "$base_url$2"); then
+    printf '%s' "$status"
+  else
+    printf '000'
+  fi
 }
 
 header() { grep -i "^$2:" "$work/$1.headers" | tail -n 1 | cut -d: -f2- | tr -d ' \r' || true; }
