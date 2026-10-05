@@ -1,5 +1,4 @@
 import {
-  Alert,
   Description,
   FieldError,
   Input,
@@ -12,12 +11,13 @@ import {
   TextField,
 } from "@heroui/react";
 import { revalidateLogic, useForm, useStore } from "@tanstack/react-form";
-import { Link, useBlocker, useLocation } from "@tanstack/react-router";
+import { useBlocker } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { CATEGORIES, categoryLabel } from "@/features/catalog/categories";
 
-import { messageOf } from "./field-message";
+import { type FormAlertState, messageOf, placeProblem } from "./field-message";
+import { FormAlert } from "./FormAlert";
 import { FrozenLabel, frozenInput } from "./FrozenField";
 import { ImageUrlsField } from "./ImageUrlsField";
 import type { ListingFormValues } from "./listing-form";
@@ -120,8 +120,7 @@ export function ListingForm({
   const categories = loadedCategory
     ? [...fixedCategories, { value: loadedCategory, label: categoryLabel(loadedCategory) }]
     : fixedCategories;
-  const [alert, setAlert] = useState<SubmitProblem["alert"] & { signIn?: boolean }>();
-  const { href } = useLocation();
+  const [alert, setAlert] = useState<FormAlertState>();
   const form = useForm({
     defaultValues,
     validationLogic: revalidateLogic(),
@@ -146,24 +145,16 @@ export function ListingForm({
       setAlert(undefined);
       const problem = await onSubmit(value);
       if (!problem) return;
-      const unplaced: string[] = [];
-      for (const [name, message] of Object.entries(problem.fields ?? {})) {
-        if (isFieldName(name) && formApi.getFieldMeta(name)) {
+      setAlert(
+        placeProblem(problem, (name, message) => {
+          if (!isFieldName(name) || !formApi.getFieldMeta(name)) return false;
           formApi.setFieldMeta(name, (prev) => ({
             ...prev,
             errorMap: { ...prev.errorMap, onServer: message },
           }));
-        } else {
-          unplaced.push(message);
-        }
-      }
-      if (problem.alert || unplaced.length > 0) {
-        setAlert({
-          title: problem.alert?.title ?? "Some fields need another look",
-          description: [problem.alert?.description, ...unplaced].filter(Boolean).join(" "),
-          ...(problem.signIn ? { signIn: true } : {}),
-        });
-      }
+          return true;
+        }),
+      );
     },
   });
 
@@ -213,23 +204,7 @@ export function ListingForm({
         onKeepEditing={() => blocker.reset?.()}
         onDiscard={() => blocker.proceed?.()}
       />
-      {alert ? (
-        <Alert status="danger" role="alert">
-          <Alert.Content>
-            <Alert.Title>{alert.title}</Alert.Title>
-            {alert.description ? <Alert.Description>{alert.description}</Alert.Description> : null}
-            {alert.signIn ? (
-              <Link
-                to="/login"
-                search={{ returnTo: href }}
-                className="font-medium underline underline-offset-4"
-              >
-                Sign in
-              </Link>
-            ) : null}
-          </Alert.Content>
-        </Alert>
-      ) : null}
+      <FormAlert alert={alert} />
 
       <form.Field name="title">
         {(field) => (

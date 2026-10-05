@@ -1,14 +1,14 @@
-import { Alert, Button, Chip, Description, FieldError, Label, NumberField } from "@heroui/react";
+import { Button, Chip, Description, FieldError, Label, NumberField } from "@heroui/react";
 import { revalidateLogic, useForm, useStore } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { OK_CODE } from "@/api/envelope";
 import type { AdminListingResponse, TeamTermsView } from "@/api/generated/types.gen";
 
 import { adminListingOptions, forgetListingPages, useConfigureTeamTerms } from "./admin-api";
-import { messageOf } from "./field-message";
+import { type FormAlertState, messageOf, placeProblem } from "./field-message";
+import { FormAlert } from "./FormAlert";
 import type { SubmitProblem } from "./ListingForm";
 import {
   type TeamTermsFormValues,
@@ -147,8 +147,7 @@ function TermsForm({
   onSubmit: (values: TeamTermsFormValues) => Promise<SubmitProblem | undefined>;
   onDirtyChange?: ((dirty: boolean) => void) | undefined;
 }>) {
-  const [alert, setAlert] = useState<SubmitProblem["alert"] & { signIn?: boolean }>();
-  const { href } = useLocation();
+  const [alert, setAlert] = useState<FormAlertState>();
   const form = useForm({
     defaultValues: termsFormDefaults(terms),
     validationLogic: revalidateLogic(),
@@ -168,24 +167,16 @@ function TermsForm({
       setAlert(undefined);
       const problem = await onSubmit(value);
       if (!problem) return;
-      const unplaced: string[] = [];
-      for (const [name, message] of Object.entries(problem.fields ?? {})) {
-        if (isFieldName(name)) {
+      setAlert(
+        placeProblem(problem, (name, message) => {
+          if (!isFieldName(name)) return false;
           formApi.setFieldMeta(name, (prev) => ({
             ...prev,
             errorMap: { ...prev.errorMap, onServer: message },
           }));
-        } else {
-          unplaced.push(message);
-        }
-      }
-      if (problem.alert || unplaced.length > 0) {
-        setAlert({
-          title: problem.alert?.title ?? "Some fields need another look",
-          description: [problem.alert?.description, ...unplaced].filter(Boolean).join(" "),
-          ...(problem.signIn ? { signIn: true } : {}),
-        });
-      }
+          return true;
+        }),
+      );
     },
   });
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
@@ -205,23 +196,7 @@ function TermsForm({
         void form.handleSubmit();
       }}
     >
-      {alert ? (
-        <Alert status="danger" role="alert">
-          <Alert.Content>
-            <Alert.Title>{alert.title}</Alert.Title>
-            {alert.description ? <Alert.Description>{alert.description}</Alert.Description> : null}
-            {alert.signIn ? (
-              <Link
-                to="/login"
-                search={{ returnTo: href }}
-                className="font-medium underline underline-offset-4"
-              >
-                Sign in
-              </Link>
-            ) : null}
-          </Alert.Content>
-        </Alert>
-      ) : null}
+      <FormAlert alert={alert} />
 
       <form.Field name="seats">
         {(field) => (
