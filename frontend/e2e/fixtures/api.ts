@@ -82,6 +82,7 @@ const SUMMARY_FIELDS = [
   "individualPrice",
   "groupPrice",
   "currency",
+  "deal",
 ] as const satisfies readonly (keyof ProductSummaryResponse)[];
 
 // The fields `GET /products` shares with the detail; absent ones stay absent.

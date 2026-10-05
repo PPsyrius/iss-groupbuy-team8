@@ -46,6 +46,44 @@ describe("ProductCard", () => {
     expect(screen.queryByText(/S\$0/)).not.toBeInTheDocument();
   });
 
+  // §4.1 "Card anatomy": the open bloc's progress row, from the summary's `deal` (#375, FB-16).
+  it("shows the open bloc's progress, seats left and a bar", async () => {
+    const deal = {
+      dealId: "d1",
+      currentSize: 3,
+      targetSize: 5,
+      expireTime: "2099-01-01T00:00:00Z",
+    };
+    await renderWithRouter(<ProductCard product={{ ...product, deal }} />);
+    expect(screen.getByText("3 of 5 joined")).toBeInTheDocument();
+    expect(screen.getByText("2 seats left")).toBeInTheDocument();
+    const bar = screen.getByRole("progressbar", { name: "3 of 5 joined" });
+    expect(bar).toHaveAttribute("aria-valuenow", "3");
+    expect(bar).toHaveAttribute("aria-valuemax", "5");
+    expect(screen.queryByText("No open bloc yet")).not.toBeInTheDocument();
+    // No countdown on the grid (§4.1).
+    expect(screen.queryByText(/\d+h \d+m left|\d\d:\d\d left/u)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Ends /u)).not.toBeInTheDocument();
+  });
+
+  it("emphasises the last seat and never counts below zero", async () => {
+    const last = { dealId: "d1", currentSize: 4, targetSize: 5 };
+    const { unmount } = await renderWithRouter(
+      <ProductCard product={{ ...product, deal: last }} />,
+    );
+    expect(screen.getByText("1 seat left")).toHaveClass("font-semibold");
+    unmount();
+    const over = { dealId: "d1", currentSize: 6, targetSize: 5 };
+    await renderWithRouter(<ProductCard product={{ ...product, deal: over }} />);
+    expect(screen.getByText("0 seats left")).toBeInTheDocument();
+  });
+
+  it("shows no progress row when the summary has no open bloc", async () => {
+    await renderWithRouter(<ProductCard product={{ ...product, deal: null }} />);
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+    expect(screen.queryByText(/joined$/u)).not.toBeInTheDocument();
+  });
+
   // The title link stretches over the tile with an absolutely positioned pseudo-element; the
   // tile must be the containing block, or the overlay covers the whole page (CodeRabbit
   // r4043389594). The start link is positioned too so it paints above that overlay.
