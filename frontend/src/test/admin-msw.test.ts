@@ -89,16 +89,18 @@ describe("admin reads", () => {
     expect((await call("GET", "/admin/products/counts")).data).toMatchObject({ draft: 13 });
   });
 
-  it("carries the unconfigured team terms on every admin read and write response", async () => {
+  it("carries team terms on every admin read and write response, unset unless seeded", async () => {
     serveAdmin();
     const unset = { targetSize: null, lifetimeSeconds: null, configured: false };
     const page = await call("GET", "/admin/products?page=1&size=100");
     expect(page.data.items.every((r: { teamTerms?: unknown }) => r.teamTerms !== undefined)).toBe(
       true,
     );
-    const [first] = page.data.items;
-    expect(first.teamTerms).toEqual(unset);
-    const one = await call("GET", `/admin/products/${first.id}`);
+    // The 4b.3 rice listing starts blocs of 5 for 2 hours; every other row was never configured.
+    const [rice, durian] = page.data.items;
+    expect(rice.teamTerms).toEqual({ targetSize: 5, lifetimeSeconds: 7200, configured: true });
+    expect(durian.teamTerms).toEqual(unset);
+    const one = await call("GET", `/admin/products/${durian.id}`);
     expect(one.data.teamTerms).toEqual(unset);
     const created = await call("POST", "/admin/products", {
       productNo: "BB-200009",
@@ -568,5 +570,115 @@ describe("team price policy", () => {
         expectedVersion: 2,
       }),
     ).toMatchObject({ status: 412, code: "CATALOG_412_001", errors: { currentVersion: 0 } });
+  });
+});
+
+const terms = (id: string) => `/admin/products/${id}/team-terms`;
+
+describe("team terms", () => {
+  it("sets both terms on a draft, bumps the listing version and reads them back (#242)", async () => {
+    serveAdmin();
+    const draft = await firstOf("draft");
+    expect(
+      await call("PUT", terms(draft.id), {
+        expectedVersion: draft.version,
+        targetSize: 4,
+        lifetimeSeconds: 2400,
+      }),
+    ).toMatchObject({
+      status: 200,
+      code: OK_CODE,
+      data: {
+        productId: draft.id,
+        version: draft.version + 1,
+        teamTerms: { targetSize: 4, lifetimeSeconds: 2400, configured: true },
+      },
+    });
+    const one = await call("GET", `/admin/products/${draft.id}`);
+    expect(one.data).toMatchObject({
+      version: draft.version + 1,
+      teamTerms: { targetSize: 4, lifetimeSeconds: 2400, configured: true },
+    });
+  });
+
+  it("refuses out-of-range terms through bean validation, before the version", async () => {
+    serveAdmin();
+    const listing = await firstOf("on_sale");
+    expect(
+      await call("PUT", terms(listing.id), {
+        expectedVersion: 999,
+        targetSize: 1,
+        lifetimeSeconds: 86_401,
+      }),
+    ).toMatchObject({
+      status: 400,
+      code: "COMMON_400_002",
+      errors: [{ field: "targetSize" }, { field: "lifetimeSeconds" }],
+    });
+  });
+
+  it("answers a stale version with 412 CATALOG_412_002 and the server's version", async () => {
+    const store = serveAdmin();
+    const listing = await firstOf("on_sale");
+    expect(
+      await call("PUT", terms(listing.id), {
+        expectedVersion: listing.version - 1,
+        targetSize: 5,
+        lifetimeSeconds: 3600,
+      }),
+    ).toMatchObject({
+      status: 412,
+      code: "CATALOG_412_002",
+      errors: { currentVersion: listing.version },
+    });
+    store.conflictOnNextWrite();
+    expect(
+      await call("PUT", terms(listing.id), {
+        expectedVersion: listing.version,
+        targetSize: 5,
+        lifetimeSeconds: 3600,
+      }),
+    ).toMatchObject({ status: 412, errors: { currentVersion: listing.version + 1 } });
+  });
+
+  it("answers 404 for an unknown listing", async () => {
+    serveAdmin();
+    expect(
+      await call("PUT", terms("0192f0a0-0000-7000-a000-999999999999"), {
+        expectedVersion: 0,
+        targetSize: 5,
+        lifetimeSeconds: 3600,
+      }),
+    ).toMatchObject({ status: 404, code: "CATALOG_404_001" });
+  });
+
+  it("refuses a team price with the terms off sale with 409 CATALOG_409_001", async () => {
+    serveAdmin();
+    const draft = await firstOf("draft");
+    expect(
+      await call("PUT", terms(draft.id), {
+        expectedVersion: draft.version,
+        targetSize: 5,
+        lifetimeSeconds: 3600,
+        teamPrice: {
+          amount: "1.00",
+          currency: "sgd",
+          validFrom: future(0),
+          validUntil: future(7),
+          expectedVersion: 0,
+        },
+      }),
+    ).toMatchObject({ status: 409, code: "CATALOG_409_001" });
+  });
+
+  it("is refused to a buyer like every admin write", async () => {
+    serveNonAdmin();
+    expect(
+      await call("PUT", terms("0192f0a0-0000-7000-a000-000000000001"), {
+        expectedVersion: 0,
+        targetSize: 5,
+        lifetimeSeconds: 3600,
+      }),
+    ).toMatchObject({ status: 403, code: "COMMON_403_001" });
   });
 });

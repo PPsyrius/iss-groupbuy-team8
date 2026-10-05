@@ -292,10 +292,16 @@ Implemented in admin plan A1-01 to A1-08, A2-01 to A2-03 and A3-01 to A3-09 (`ad
 - Q15: when a rule is active and the new start is in the future, the form warns "Saving replaces the active rule now. Buyers see no bloc price until …". There is no blocking confirm.
 - A 412 (`CATALOG_412_001`) turns the panel to the conflict state; a 409 to the unavailable state; a domain 400 lands on `amount`, `validFrom` or `validUntil`, else the form alert.
 
+**Group terms panel** (no artboard; §11 D6, decided 2026-10-05, A3-04)
+
+- A "Group terms" card under the bloc price rule panel, on every status. The chip reads "Ready to start blocs" when both terms are set (`configured`), else "Not set"; the body reads "New blocs use these terms. Blocs already started keep theirs." or "Buyers can’t start a bloc on this listing until both are set."
+- Fields: Seats per bloc ("Paid members a bloc needs to complete. At least 2.") and Bloc lifetime as Hours and Minutes ("40 minutes to 24 hours, from the bloc’s start."), sent as `lifetimeSeconds`. Save terms writes through `configureTeamTerms` with the listing version and never sends `teamPrice`; "Terms saved." confirms it.
+- The write bumps the listing version, so Save waits while the listing form has unsaved edits ("Save your listing changes first."), and a 412 raises the page's conflict banner. Field 400s land on Seats per bloc or Hours.
+
 **Design gaps still open** (`admin-plan.md` §11)
 
-- D1 rail counts (Bloc price rules links to the filtered listings once BA-13, #382, merges; Payments has no page); D2 dialog copy is the proposed text, not approved (Q7); D3 the scheduled state and replace-now warning are undrawn; D4 dashboard and per-tab empty, table error; D5 unsaved prompt and toasts; D6 the group terms panel (decided 2026-10-05: a card below the price rule panel; A3-04 is unblocked); D7 Description is missing from 4b.1; D8 the "Add a rule after you publish" copy waits on BA-11.
-- Not built: Payments needing attention (4b.6, BA-8), the "Bloc price rules" rail link (Q3, BA-13), policy history (BA-10), policy on drafts (BA-11), and the group terms panel (A3-04, D6 decided).
+- D1 rail counts (Bloc price rules links to the filtered listings once BA-13, #382, merges; Payments has no page); D2 dialog copy is the proposed text, not approved (Q7); D3 the scheduled state and replace-now warning are undrawn; D4 dashboard and per-tab empty, table error; D5 unsaved prompt and toasts; D6 the group terms panel (decided 2026-10-05: a card below the price rule panel; built in A3-04, #PRNUM); D7 Description is missing from 4b.1; D8 the "Add a rule after you publish" copy waits on BA-11.
+- Not built: Payments needing attention (4b.6, BA-8), the "Bloc price rules" rail link (Q3, BA-13), policy history (BA-10) and policy on drafts (BA-11).
 
 ## 5. Component guidance
 
