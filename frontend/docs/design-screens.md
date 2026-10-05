@@ -163,7 +163,7 @@ Cards use a bordered 8px surface, image/fallback area, title/subtitle, and price
 - Open bloc: bloc price is prominent in `accent-soft-foreground`; solo price is struck through.
 - No open bloc: solo price is prominent and the secondary line says "Buying alone".
 - No percent-off badges or countdowns on the catalog grid.
-- The current summary DTO does not provide bloc size/progress, so the artboard progress cue cannot be contract-driven yet.
+- Open bloc progress (FB-16): "N of M joined", seats left (the last seat in semibold) and a 10px accent bar, from the summary's nullable `deal` (#375); no row when `deal` is null. No countdown on the grid.
 
 SGD is displayed as `S$` with two decimals.
 
@@ -368,8 +368,8 @@ The original artboard review ended with 22 open questions. T2-01 through T2-06 r
   Card prices                         `S$` formatting; bloc price +
                                       struck solo price
 
-  Card progress                       Omitted until the summary contract
-                                      provides size/progress
+  Card progress                       Joined/target, seats left and bar
+                                      from the summary `deal` (FB-16)
 
   Detail hierarchy                    Artboard hierarchy/copy implemented
 
@@ -416,7 +416,6 @@ The original artboard review ended with 22 open questions. T2-01 through T2-06 r
 Remaining design/contract gaps (audited 2026-10-02, FB-18, against `frontend/src/` and `contracts/openapi.json`):
 
 - category values are not contract-driven: `category` is a free string on both listing schemas and there is no dictionary endpoint; `features/catalog/categories.ts` holds the mapping (ask CR-10 in [`admin-plan.md`](admin-plan.md), no issue yet);
-- listing summary exposes bloc progress since #375 (nullable `ProductSummaryResponse.deal`, closing #245, CR-11); the card UI is FB-16;
 - listing detail does not expose off-sale status (`ProductDetailResponse` has no `status`): no owner yet;
 - the API exposes one active deal (`ActiveDealResponse`: id, sizes, expiry) rather than a list with starter metadata; only an invite link names its sharer (FB-19, #201): no owner yet;
 - My Blocs shows Active / Completed / Refunded from `GET /group-deals/me`, but `MyTeamResponse` carries only the buyer's own `role`, not the starter; no owner yet. Notifications wait on backend #215 (first persisted use case, open);
