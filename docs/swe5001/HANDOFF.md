@@ -19,32 +19,33 @@ Last updated: 2026-10-05.
 | # | Item | State |
 | --- | --- | --- |
 | 1 | Plan docs | Merged in [#377](https://github.com/PPsyrius/iss-groupbuy-team8/pull/377) |
-| 2 | `foundation` stack, plan-only `infra-swe5001.yml` | Merged in #377; **not applied** |
+| 2 | `foundation` stack, plan-only `infra-swe5001.yml` | Merged in #377; operator applied on 2026-10-05 with local optional-budget change: **23 creates, zero drift**; optional-budget change not merged, OIDC plan not run |
 | 3 | `runtime` part 1: network, security groups, ECS cluster, `ecs-service` module, ALB | Merged in #377 (from #379); **not applied** |
 | 4 | `runtime` part 2: RDS, `db-init`, Valkey | Merged in #377 (from #379); **not applied** |
 | 5 | `edge` stack: CloudFront and SPA bucket | Merged in [#380](https://github.com/PPsyrius/iss-groupbuy-team8/pull/380); **not applied** |
 | 6 | `env-up.sh`, `env-down.sh`, `env-status.sh`, `lib.sh`; monolith as one ECS service; first up/down proof | Merged in #380; smoke suite passes against SWE5006 dev; **up/down proof not run** |
-| 7 | CI: `swe5001-service-images.yml`, `swe5001-release-gate.yml`, `swe5001-deploy.yml`, `swe5001-env.yml`; create `prod` and its ruleset | Workflows and the ruleset file in review on `feature/swe5001-release-workflows-20261005`; **no run yet**; `prod` and the ruleset not created |
+| 7 | CI: `swe5001-service-images.yml`, `swe5001-release-gate.yml`, `swe5001-deploy.yml`, `swe5001-env.yml`; create `prod` and its ruleset | Workflows and the ruleset file merged in #384; **no AWS-connected run initiated in this bootstrap session**; `prod` and the ruleset not created |
 | — | Sprint 3 promotion, Fri 2026-10-09 | Moves to Sprint 4 if item 6 is not green by Wed 2026-10-07 |
 | 8–10 | Messaging, service split, scaling and alarms | Phase B, after the backend service split |
 
-Nothing exists in AWS yet: no SWE5001 role, repository, budget or runtime resource. GitHub has no `swe5001-*` environment, no `prod` branch and no SWE5001 variable.
+Operator-provided CloudShell evidence on 2026-10-05 confirms foundation exists in account `402178232802`: four ECR repositories, three GitHub roles and their policies, lifecycle policies and workload boundary; no budget was created. The state bucket defaults to the enabled AWS-managed S3 KMS key. The agent created and read back both GitHub environments (plan unrestricted, demo only branch `prod`, no reviewers), three role ARN variables and repository variables `SWE5001_ECR_REPOSITORY_PREFIX=swe5001`, `ENABLE_SWE5001_DEPLOY=false`, `ENABLE_SWE5001_NIGHTLY_DOWN=true`. `SWE5001_TF_STATE_BUCKET` and edge variables remain unset; `prod` and its ruleset remain pending. AWS verification and mutations were performed by the operator, not the agent.
 
 ## Next actions
 
-1. Review and merge the PR 7 branch into `dev`.
+1. Review and merge `chore/swe5001-billing-free-bootstrap-397`: budget creation and budget-recipient SSM reads default to disabled. The CloudShell apply used these local changes; unmodified `dev` still expects budget recipients.
 2. Operator, with admin credentials (the developer IAM users lack these permissions):
-   1. Activate the `Course` cost tag now; it takes up to 24 hours.
-   2. Check the state bucket's encryption (`aws s3api get-bucket-encryption --bucket blocbuy-tfstate-402178232802`); if it uses a customer-managed key, scope the plan role's `DecryptFoundationStateViaS3` to that key ARN in a small PR first.
-   3. Bootstrap `foundation` (README steps 1–5) and run the IAM simulation. Set `SWE5001_TF_STATE_BUCKET` last; the next infra PR must show a `No changes.` plan for `foundation`.
+   1. Skip billing for the demo. If opting in later, ask the organisation management/payer account to activate `Course` (up to 24 hours), seed budget recipients, and set `enable_budget = true` in `envs/demo.tfvars`.
+   2. Complete the remaining IAM checks: origin-secret denial and apply-role protection of existing SWE5006 resources. Principal simulation reported an organization-level denial for foundation state; isolated S3 identity-policy checks passed, so effective access still needs end-to-end verification.
+   3. After the optional-budget change is merged, set `SWE5001_TF_STATE_BUCKET` last when ready to initiate an AWS-connected PR plan. A `No changes.` foundation plan must verify OIDC/state/KMS access; investigate any effective organization denial with the account owner.
    4. Create `edge` once (README, "`edge` creation"), then register the Google redirect URI and the Stripe webhook against its URL and copy its outputs into the `swe5001-demo` variables.
    5. Confirm in `ap-southeast-1`: PostgreSQL 18 on RDS (else `postgres_major_version = "17"`), Valkey 8.0 and the fck-nat arm64 AMI.
 3. First up/down proof (#376 acceptance criterion), by Wed 2026-10-07 for the Sprint 3 promotion: push the monolith image by hand (README, "Environment sessions"), run `env-up.sh --candidate`, then `env-down.sh`; keep the timings and both exit codes as evidence.
-4. After PR 7 is merged: create `prod` from `dev` and the `prod-release` ruleset (README, "Create `prod`"). Optionally prove the workflows before the promotion with `swe5001-env.yml` `status`, then `up` (`candidate`) and `down` on `prod`.
+4. Create `prod` from the reviewed remote `dev` and the `prod-release` ruleset (README, "Create `prod`"). Optionally prove the workflows before the promotion with `swe5001-env.yml` `status`, then `up` (`candidate`) and `down` on `prod`.
 5. Set `ENABLE_SWE5001_DEPLOY=true` once item 3 is green, then open the Sprint 3 promotion PR (`dev` → `prod`, merge commit) on Fri 2026-10-09. Optionally run `swe5001-deploy.yml` once with `force_failure` first, for the "failed promotion still destroys runtime" criterion.
 
 ## Decisions already made
 
+- 2026-10-05 (#397): budget creation is opt-in (`enable_budget = false` by default), because the operator's linked account cannot activate cost-allocation tags. Foundation bootstrap skips both AWS Budgets and the budget-recipient SSM read; deployment does not depend on billing access. No budget alerts are provided while disabled; ephemeral runtime teardown remains the operational cost control. AWS commands are executed by the human operator only.
 - ECS runs only from `prod`, once per two-week sprint; every run creates `runtime`, validates it and destroys it (`if: always()`).
 - Secrets: operator-seeded SSM values are never Terraform inputs. Database passwords are ephemeral and written through write-only arguments, so they never reach state. `ORIGIN_SECRET` and the Valkey AUTH token do reach the `runtime` state (no write-only path), accepted because they exist only while `runtime` does.
 - Apply role guardrails: managed policies per service; IAM only under `/swe5001/` with the mandatory workload permissions boundary; tag-conditioned denies for non-SWE5001 EC2, ELB, CloudFront, RDS and ElastiCache resources (including snapshots and retained automated backups); name-based denies for log groups outside `/blocbuy/swe5001/*` and SNS topics or SQS queues not named `blocbuy-swe5001-*`.
@@ -58,7 +59,7 @@ Nothing exists in AWS yet: no SWE5001 role, repository, budget or runtime resour
 
 | Gap | When it closes |
 | --- | --- |
-| No plan or apply has run against the account; trust policies, guardrail denies and the `plan` job are unexercised | Operator bootstrap (next action 2); test allowed foundation reads and denied runtime/other-SSM reads without fetching any secret value |
+| Foundation apply and post-apply plan passed; trust subjects and selected S3 identity-policy boundary verified, but principal simulation reports an organization denial and the GitHub plan has not run | Operator-initiated foundation plan after merging the optional-budget change; verify effective OIDC, state and KMS access, origin-secret denial and apply-role guardrails |
 | The plan role's KMS decrypt is limited to calls via S3 but currently accepts any key in this account; its S3 GetObject deny limits readable data to foundation state | Check the state bucket's encryption key without printing state and scope the key ARN before enabling account-backed PR plans, then test the foundation plan |
 | The apply role now has `kms:Decrypt` and `kms:GenerateDataKey` through S3 for course state keys, but no live KMS authorization has been checked | Simulate access to the actual state key and perform the first private runtime apply/destroy; tighten the key ARN after reading bucket encryption metadata |
 | The apply role can update only the tagged distribution; whether that covers every call an `edge` re-apply makes is unproven | First `env-up.sh` run; add the missing read action if the apply fails with AccessDenied |
@@ -70,7 +71,7 @@ Nothing exists in AWS yet: no SWE5001 role, repository, budget or runtime resour
 | The SWE5001 workflows have only passed `actionlint` and `zizmor`; GitHub reads the `prod` copy of a workflow for promotion and manual runs, so a workflow fix needs a promotion | First `swe5001-env.yml` run on `prod`, then the Sprint 3 promotion |
 | The ARM64 image is built under QEMU without a Maven cache (no cache poisoning of a published image); build time is unmeasured | First release gate run; an arm64 runner is the fallback if it exceeds the 30-minute job timeout |
 | GitHub keeps one pending run per concurrency group, so a third queued `swe5001-tfstate` run replaces the pending one | Accepted; start manual sessions only when no promotion is running |
-| NFR-51 (AWS isolation) is implemented but unverified in the account | Operator bootstrap and IAM simulation |
+| NFR-51 (AWS isolation) is partially verified: selected S3 identity-policy checks passed; effective organization/OIDC access, SSM denial and apply-role guardrails remain unverified | Operator verification and end-to-end GitHub plan |
 
 ## Verification commands
 

@@ -4,7 +4,7 @@ Infrastructure for the SWE5001 distributed deployment shape on Amazon ECS. It is
 
 | Stack | Lifecycle | State key | Applied by | Status |
 | --- | --- | --- | --- | --- |
-| [`foundation/`](foundation/) | Persistent | `swe5001/foundation.tfstate` | An operator, from a workstation (it creates the roles CI assumes) | Code ready; not applied |
+| [`foundation/`](foundation/) | Persistent | `swe5001/foundation.tfstate` | An operator, from a workstation or CloudShell (it creates the roles CI assumes) | Operator applied 2026-10-05 without billing: 23 creates, post-apply plan exit 0; GitHub OIDC plan verification pending |
 | [`edge/`](edge/) | Persistent | `swe5001/edge.tfstate` | Created once by an operator; afterwards the promotion run and `env-up.sh` only re-point the distribution at the new ALB | Code ready (PR 5 in #376); not applied |
 | [`runtime/`](runtime/) | Exists only during a promotion run or a manual session | `swe5001/runtime.tfstate` | Promotion run and `env-up.sh` / `env-down.sh` | Code ready (PRs 3–4 in #376); not applied. Messaging, scaling and alarms follow in PRs 8 and 10 |
 
@@ -36,9 +36,11 @@ trivy config --severity HIGH,CRITICAL --exit-code 1 infra/swe5001
 
 Run with your own AWS credentials in account `402178232802`, region `ap-southeast-1`. Never paste a full plan, a parameter value or a decrypted response into a PR, issue or chat; share resource addresses and actions only.
 
+In CloudShell, the persistent home directory may not fit the AWS provider. Set `export TF_DATA_DIR="$(mktemp -d /tmp/swe5001-foundation.XXXXXX)"` before `init` to keep provider and backend working data on the temporary filesystem. Keep the same session and variable through plan/apply; after a session reset, create a new directory and reinitialize. Configuration remains in the clone and remote state remains in S3.
+
 ### 1. Activate the cost allocation tag
 
-The budget filters on the `Course` tag, which Billing ignores until it is activated (it can take up to 24 hours to apply):
+Optional: `enable_budget` defaults to `false`, so bootstrap requires no billing access or budget-recipient parameter. Skip this step for the demo. To enable the budget later, the organisation management/payer account must activate the `Course` tag, which Billing ignores until it is activated (it can take up to 24 hours to apply):
 
 ```bash
 aws ce update-cost-allocation-tags-status --cost-allocation-tags-status TagKey=Course,Status=Active
@@ -46,11 +48,15 @@ aws ce update-cost-allocation-tags-status --cost-allocation-tags-status TagKey=C
 
 ### 2. Seed the parameters
 
-`BUDGET_ALERT_EMAILS` must exist before the first plan, because the budget reads it. The secrets are needed by `runtime` later and can be seeded now. Use `read -rs` so values stay out of shell history; add `--overwrite` to rotate a value.
+Only when `enable_budget = true`, seed the non-secret budget recipients before planning:
 
 ```bash
 aws ssm put-parameter --name /blocbuy/swe5001/shared/BUDGET_ALERT_EMAILS --type String --value '<a@example.com>,<b@example.com>'
+```
 
+The secrets are needed by `runtime` later and can be seeded now; they are not required for the foundation plan. Use `read -rs` so values stay out of shell history; add `--overwrite` to rotate a value.
+
+```bash
 for name in identity/GOOGLE_CLIENT_ID identity/GOOGLE_CLIENT_SECRET commerce/STRIPE_API_KEY commerce/STRIPE_WEBHOOK_SECRET; do
   read -rsp "$name: " value; echo
   aws ssm put-parameter --name "/blocbuy/swe5001/$name" --type SecureString --value "$value" > /dev/null
@@ -73,7 +79,7 @@ terraform -chdir=infra/swe5001/foundation apply foundation.tfplan
 rm infra/swe5001/foundation/foundation.tfplan
 ```
 
-Expect only creates on the first apply: 4 ECR repositories and lifecycle policies, 3 IAM roles with their policies and attachments, the workload permissions boundary policy, 1 budget.
+Expect only creates on the first apply: 4 ECR repositories and lifecycle policies, 3 IAM roles with their policies and attachments, and the workload permissions boundary policy. No budget or budget-recipient SSM read is planned by default. To opt in later, complete the billing prerequisites and set `enable_budget = true` in `envs/demo.tfvars`, keeping operator and CI plans consistent; an existing budget must retain that setting to avoid its deletion.
 
 ### 4. Read back the trust policies
 
@@ -89,6 +95,8 @@ done
 `plan` must show `...:environment:swe5001-plan`; `apply` and `deploy` must show `...:environment:swe5001-demo`.
 
 After `foundation` has been applied, simulate the plan and apply roles without reading a state object or parameter value. The foundation state and the budget-recipient parameter must evaluate `allowed`; the runtime state, origin secret and an existing SWE5006 CloudFront function must evaluate `implicitDeny` or `explicitDeny`. Replace only the function name placeholder with the existing function's non-secret name. IAM simulation is not a substitute for the first account-backed foundation plan.
+
+2026-10-05 operator verification: role trust policies matched all three immutable-ID subjects. The principal simulation reported `AllowedByOrganizations = false` even for foundation state; selected S3 statements passed an isolated custom-policy simulation (foundation allowed, runtime/edge explicitly denied). This proves the selected identity-policy boundary only, not effective SCP, bucket, KMS or OIDC access. Inspect `ResourceSpecificResults` for multi-resource principal simulations. For custom simulations, pass a JSON request with `PolicyInputList` containing JSON-encoded policy strings via `--cli-input-json`; supplying a bare policy document through a list-valued `file://` argument caused input errors in CloudShell.
 
 ```bash
 account=402178232802
@@ -133,6 +141,8 @@ gh variable set SWE5001_TF_STATE_BUCKET --body "$(out tf_state_bucket)"
 ```
 
 Set `SWE5001_TF_STATE_BUCKET` last: it switches on the foundation-only `plan` job of `infra-swe5001.yml`. The next PR touching `infra/swe5001/**` should then show a `No changes.` plan comment for `foundation`, which proves the plan role, its trust policy and the foundation state access end to end. The role can read only that state object, SWE5001 foundation metadata and the non-secret budget-recipient parameter; explicit denies protect unrelated S3 objects and SSM parameters against later policy changes. No workflow plans `runtime` or `edge` against the account before a merge: the promotion run applies them after the merge to `prod`, and an operator plans them by hand when needed.
+
+2026-10-05 GitHub configuration is complete for both environments (plan unrestricted, demo admits only branch `prod`, no reviewers), the three role ARN variables, ECR prefix `swe5001`, deploy switch `false` and nightly-down switch `true`. The state-bucket variable remains unset until the optional-budget change is merged and the operator is ready to initiate the AWS-connected plan; edge variables and `prod`/its ruleset remain pending.
 
 ## `runtime` stack
 
