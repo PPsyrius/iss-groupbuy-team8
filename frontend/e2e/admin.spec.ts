@@ -10,12 +10,24 @@ import { expect, test } from "./fixtures/api";
 // preview` in CI included, on the shared `api` stubs: anonymous → /login, a buyer → the 403 card,
 // and an admin (stubbed) through create → publish → a stale save → Reload. The jsdom route tests
 // pin each screen against the MSW admin mock; these prove the same journey through the built app.
-// The fourth, @admin, needs a real admin session on dev and skips until one is seeded (§6 Q11).
-const isDev = process.env.E2E_TARGET === "dev";
-const ADMIN_STATE = "e2e/.auth/admin.json";
-const hasAdminState = existsSync(ADMIN_STATE);
-const CODEGEN =
-  "pnpm exec playwright codegen --save-storage=e2e/.auth/admin.json https://d1b3np88z657cp.cloudfront.net/login";
+// The fourth, @admin, needs a real admin session on dev or on the local full stack
+// (`fullstack-localhost/`, admin plan FU-02) and skips until one is seeded (§6 Q11).
+// Each target keeps its own storage state, so a dev cookie never reaches localhost or back.
+const ADMIN_TARGETS = {
+  dev: { state: "e2e/.auth/admin.json", origin: "https://d1b3np88z657cp.cloudfront.net" },
+  local: { state: "e2e/.auth/admin-local.json", origin: "http://localhost:8080" },
+} as const;
+const target = process.env.E2E_TARGET;
+// Cookies ignore the port, so a localhost state would also reach `vite preview` on :4173; the run
+// needs the matching base URL as well as the target.
+const adminTarget =
+  (target === "dev" || target === "local") &&
+  process.env.E2E_BASE_URL?.replace(/\/$/u, "") === ADMIN_TARGETS[target].origin
+    ? ADMIN_TARGETS[target]
+    : undefined;
+const hasAdminState = adminTarget !== undefined && existsSync(adminTarget.state);
+const codegen = ({ state, origin }: { state: string; origin: string }) =>
+  `pnpm exec playwright codegen --save-storage=${state} ${origin}/login`;
 
 const OK = "COMMON_200_000";
 const ACCESS_DENIED = "You don’t have access to the admin console";
@@ -258,22 +270,24 @@ test.describe("admin, stubbed", () => {
   });
 });
 
-// A real admin on the dev distribution. It needs a storage state from a Google account that holds
-// the admin role in the dev DB (README.md); none is granted today (§6 Q11), so it skips.
-test.describe("admin on dev @admin", () => {
+// A real admin on the dev distribution or the local full stack. It needs a storage state from a
+// Google account that holds the admin role in that target's DB (README.md), so it skips without one.
+test.describe("admin on a real backend @admin", () => {
   test.skip(
-    !hasAdminState,
-    `no ${ADMIN_STATE}: grant admin on the dev DB, then seed it with \`${CODEGEN}\``,
+    adminTarget === undefined,
+    `needs a real backend: run with E2E_TARGET=local E2E_BASE_URL=${ADMIN_TARGETS.local.origin} or E2E_TARGET=dev E2E_BASE_URL=${ADMIN_TARGETS.dev.origin}`,
   );
   test.skip(
-    !isDev,
-    "the storage state carries the dev CloudFront cookie; run with E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net",
+    adminTarget !== undefined && !hasAdminState,
+    adminTarget
+      ? `no ${adminTarget.state}: grant admin in the ${target} DB, then seed it with \`${codegen(adminTarget)}\``
+      : "",
   );
-  test.use(hasAdminState ? { storageState: ADMIN_STATE } : {});
+  test.use(hasAdminState && adminTarget ? { storageState: adminTarget.state } : {});
 
   test("loads the listings, then creates a draft and deletes it", async ({ page }) => {
     const title = `E2E draft ${Date.now()}`;
-    // The draft is real and the dev DB is shared, so a failure before the UI deletes it falls
+    // The draft is real (and the dev DB is shared), so a failure before the UI deletes it falls
     // back to deleting it through the API.
     let productId: string | undefined;
     let deleted = false;
