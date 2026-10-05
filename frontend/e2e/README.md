@@ -18,19 +18,34 @@ A signed-in buyer, all on stubs: catalog → listing → quote sheet → Continu
 
 Three journeys run on every target on the shared `api` stubs: an anonymous visitor at `/admin` goes to `/login?returnTo=%2Fadmin`; a signed-in buyer (`me` without the `admin` role) gets the 403 card without the storefront header; and a stubbed admin creates a draft, publishes it (the dialog names price, currency and stock), then meets the conflict banner after another admin's save and reloads. The admin endpoints answer from a small versioned store inside the spec; a request it does not serve answers 501 and fails the test.
 
-The `@admin` half needs a real admin session on dev. The admin role must be granted in the dev DB (#68: grants do not travel with git); none is granted today (admin plan §6 Q11), so it skips. Once a Google account holds the role:
+The `@admin` half needs a real admin session, on the local full stack (`fullstack-localhost/`, admin plan FU-02) or on dev. It loads the listings, creates one draft and deletes it again. It skips unless `E2E_TARGET` and `E2E_BASE_URL` name the same target and that target's storage state exists: `e2e/.auth/admin-local.json` for local, `e2e/.auth/admin.json` for dev. Role grants are data, not migrations (#68), so each database needs its own.
 
-1. From `frontend/`, seed its storage state:
+Local run (no AWS access needed):
 
-   ```bash
-   pnpm exec playwright codegen --save-storage=e2e/.auth/admin.json https://d1b3np88z657cp.cloudfront.net/login
-   ```
-
-2. Run it; it loads the listings, creates one draft and deletes it again:
+1. Put the Google OAuth credentials in `fullstack-localhost/.env` (see its `.env.example`); the OAuth client must list `http://localhost:8080/api/v1/auth/oauth2/google/callback` as an authorised redirect URI. From `frontend/`, start the stack and leave it running: `pnpm stack:prod`.
+2. Sign in once at <http://localhost:8080/login> with the Google account that becomes admin, so its account row exists.
+3. From the repository root, grant the role in the local database (`Blocbuy`, schema `domain`, user `blocbuy` unless `DB_USERNAME` overrides it in `.env`); the script prints `granted = 1` on the first run and `already_admin = 1` on a rerun:
 
    ```bash
-   E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e --grep @admin
+   read -r -p 'admin email: ' ADMIN_EMAIL
+   docker compose -f fullstack-localhost/compose.yaml exec -T postgres \
+     psql -U blocbuy -d Blocbuy -v admin_email="$ADMIN_EMAIL" -f - < scripts/grant-dev-admin.sql
+   unset ADMIN_EMAIL
    ```
+
+4. From `frontend/`, seed the storage state; finish the Google login and close the browser:
+
+   ```bash
+   pnpm exec playwright codegen --save-storage=e2e/.auth/admin-local.json http://localhost:8080/login
+   ```
+
+5. Run it:
+
+   ```bash
+   E2E_TARGET=local E2E_BASE_URL=http://localhost:8080 pnpm e2e --grep @admin
+   ```
+
+Dev run: the admin role must be granted in the dev DB through the SSM tunnel (`docs/deploy/backend-dev-api-agent-verification.md` §1); none is granted today (admin plan §6 Q11). Then seed `e2e/.auth/admin.json` with `pnpm exec playwright codegen --save-storage=e2e/.auth/admin.json https://d1b3np88z657cp.cloudfront.net/login` and run `E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e --grep @admin`.
 
 ## Login journey (`login.spec.ts`)
 
