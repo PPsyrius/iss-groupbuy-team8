@@ -89,7 +89,7 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 
 ### V6 Safe deployment
 
-- Through a manual `swe5001-deploy.yml` run on `prod` with input `drill=broken-health`, never through a promotion merge, deploy an image built with `BLOCBUY_FAIL_HEALTH=true` (a demo-only switch that makes the health endpoint return DOWN; guarded by profile `demo`, with a test asserting it is ignored otherwise).
+- Inside a manual session started by `swe5001-env.yml` (`up` on `prod`), never through a promotion merge, roll onto the running service an image built with `BLOCBUY_FAIL_HEALTH=true` (a demo-only switch that makes the health endpoint return DOWN; guarded by profile `demo`, with a test asserting it is ignored otherwise). The drill's workflow input is added in Phase B of #376, before the baseline session; the promotion run itself has no rolling deployment.
 - Expected: circuit breaker triggers, service rolls back to the previous task definition, no user-visible errors, and `/blocbuy/swe5001/release/commerce-svc` still holds the previous digest.
 
 ### V7 Poison message

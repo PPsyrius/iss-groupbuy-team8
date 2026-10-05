@@ -333,12 +333,13 @@ topic branch ──PR──▶ dev ──promotion PR──▶ prod ──push�
 
 | Step | Action | Approx. time |
 | --- | --- | --- |
-| 1. Build | Build the three ARM64 service images from the merge commit, push to ECR by digest, record them as candidates in SSM `/blocbuy/swe5001/candidate/<service>` | 10 min |
-| 2. Create | `env-up.sh`: apply `runtime` from zero with the last known good digests (the candidates on the first run), run the DB-init task with the demo seed, apply `edge`, wait for healthy targets | 20–25 min |
-| 3. Deploy | Roll the candidate digests onto ECS with the deployment circuit breaker, wait for steady state on the new task definitions. This exercises a real rolling deployment rather than a first install | 5 min |
-| 4. Validate | Smoke suite through CloudFront ([verification plan](impl-verification-observability.md), section 3); on success copy the candidates to `/blocbuy/swe5001/release/<service>` (last known good). Publish the SWE5001 SPA if `frontend/**` or `contracts/**` changed | 2 min |
-| 5. Evidence | Upload the smoke output, ECS service events, deployed digests and step timings as a workflow artifact, because the log groups are destroyed with `runtime` | 1 min |
-| 6. Destroy | `env-down.sh` then `env-status.sh`; runs with `if: always()`, so a failed build, deploy or smoke test still tears the environment down. The run fails if any runtime resource remains | 10–15 min |
+| 1. Build | Build the ARM64 service images from the merge commit (the monolith image until the service split), scan them, push them to ECR by digest, record them as candidates in SSM `/blocbuy/swe5001/candidate/<service>` | 10 min |
+| 2. Create and deploy | `env-up.sh --candidate`: apply `runtime` from zero with the candidate digests, run the DB-init task with the demo seed, start the services behind the deployment circuit breaker, apply `edge`, wait for steady state, run the smoke suite through CloudFront ([verification plan](impl-verification-observability.md), section 3) | 20–25 min |
+| 3. Release | Only after a green step 2: publish the SWE5001 SPA, then copy the candidates to `/blocbuy/swe5001/release/<service>` (last known good) | 3 min |
+| 4. Evidence | Upload the smoke output, ECS service events, deployed digests and step timings as a workflow artifact, because the log groups are destroyed with `runtime` | 1 min |
+| 5. Destroy | `env-down.sh` then `env-status.sh`; runs with `if: always()`, so a failed build, deploy or smoke test still tears the environment down. The run fails if any runtime resource remains | 10–15 min |
+
+The first draft created the environment on the release digests and then rolled the candidates onto it. Because every run starts from zero, that rollout added about five minutes without guarding anything the circuit breaker and smoke suite do not already guard; the rolling-deployment and rollback drill runs in a manual session instead ([verification plan](impl-verification-observability.md), V6).
 
 A failed deploy or smoke test leaves the release digests unchanged and fails the run; the fix lands on `dev` and is promoted again. Each promotion run is also a full rebuild-from-zero, so it replaces the periodic `env-cycle` the first draft had.
 
@@ -359,9 +360,9 @@ The scripts are idempotent and refuse to run unless the caller is in account `40
 | Workflow | Trigger | Steps |
 | --- | --- | --- |
 | `ci-backend.yml` (extended) | Existing triggers (PRs into `dev`, `dev` pushes, `v*` tags) | Existing gates unchanged. New: calls the reusable `swe5001-service-images.yml` to build and smoke-boot every assembly image (monolith and the three services) and scan each with Trivy, without pushing. New modules join the existing JaCoCo aggregate and SonarCloud project. |
-| `infra-swe5001.yml` (new) | PRs into `dev` or `prod` touching `infra/swe5001/**` | `terraform fmt`/`validate` and mocked tests for both existing stacks, checkov; the account-backed PR plan and redacted comment cover `foundation` only. No PR role reads `runtime.tfstate` or applies infrastructure. |
+| `infra-swe5001.yml` (new) | PRs into `dev` touching `infra/swe5001/**`; called unfiltered by the release gate on PRs into `prod` | `terraform fmt`/`validate` and mocked tests for both existing stacks, checkov; the account-backed PR plan and redacted comment cover `foundation` only. No PR role reads `runtime.tfstate` or applies infrastructure. |
 | `swe5001-release-gate.yml` (new) | PRs into `prod` | `promotion-source` (fails unless the head branch is `dev` in this repository), `service-images` (same reusable workflow), `infra-plan` (offline `edge`/`runtime` validation and foundation-only plan). These are the required checks on `prod`; secret-bearing account-backed plans run privately after promotion under the `prod`-only role or by an operator. |
-| `swe5001-deploy.yml` (new) | Push to `prod` (each promotion merge); manual on the `prod` ref only for the V6 drill | The promotion run above: build, create, deploy, validate, evidence, destroy. |
+| `swe5001-deploy.yml` (new) | Push to `prod` (each promotion merge); manual on the `prod` ref only, optionally with `force_failure` to prove the always-run destroy | The promotion run above: build, create and deploy, release, evidence, destroy. |
 | `swe5001-env.yml` (new): `up`, `down`, `status` | Manual, dispatched on the `prod` ref | Wrappers around `env-up.sh`, `env-down.sh` and `env-status.sh` for manual sessions. |
 | `swe5001-env.yml` (new): nightly `down` | Nightly at 23:00 SGT | Safety net: destroys `runtime` if a manual session was left running; a no-op when nothing exists. |
 

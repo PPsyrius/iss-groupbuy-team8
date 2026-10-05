@@ -2,7 +2,7 @@
 
 Detailed GitHub work for the [refactoring plan](microservice-refactoring-plan.md), section 3.4. Companion plans: [backend architecture](impl-backend-architecture.md), [AWS infrastructure](impl-aws-infrastructure.md), [verification and observability](impl-verification-observability.md).
 
-Status: **Draft, revised 2026-10-04** (first draft 2026-09-29; 2026-10-04: deployment moved from `dev` pushes to one `dev` → `prod` merge per sprint, and each promotion run creates, validates and destroys the runtime environment). Current settings were read with `gh` on 2026-09-29 and rechecked on 2026-10-04 (names only; no values).
+Status: **Draft, revised 2026-10-05** (first draft 2026-09-29; 2026-10-04: deployment moved from `dev` pushes to one `dev` → `prod` merge per sprint, and each promotion run creates, validates and destroys the runtime environment; 2026-10-05: the four SWE5001 workflows are implemented, see section 6). Current settings were read with `gh` on 2026-09-29 and rechecked on 2026-10-04 (names only; no values).
 
 ---
 
@@ -92,17 +92,17 @@ All are **non-secret**. Values come from `foundation` Terraform outputs (see the
 | Merge method | Merge commit only. Squash or rebase would rewrite the `dev` commits on `prod`, so every later promotion would conflict |
 | Hotfixes | None on `prod`. Fix on `dev` through a normal PR, then promote |
 
-Ruleset `prod-release` (branch, target `refs/heads/prod`, enforcement active):
+Ruleset `prod-release` (branch, target `refs/heads/prod`, enforcement active), committed as [`infra/swe5001/github/prod-release-ruleset.json`](../../infra/swe5001/github/prod-release-ruleset.json) and created with one `gh api` call ([`infra/swe5001/README.md`](../../infra/swe5001/README.md), "Create `prod`"):
 
 | Rule | Value |
 | --- | --- |
 | Restrict deletions | on |
 | Block force pushes | on |
 | Require a pull request | 1 approval from CODEOWNERS, dismiss stale approvals, allowed merge methods: `merge` |
-| Required status checks | `promotion-source`, `service-images`, `infra-plan` (from `swe5001-release-gate.yml`), strict (head up to date) |
+| Required status checks | `promotion-source`, `service-images`, `infra-plan` (from `swe5001-release-gate.yml`), not strict (head need not be up to date) |
 | Bypass list | empty |
 
-Merging also requires the base to be up to date, which always holds because `prod` only moves by promotion merges.
+The checks are not strict: each promotion leaves a merge commit on `prod` that `dev` never receives, so a strict policy would block every promotion after the first. The `pull_request` checks already run on the merge result of `dev` into `prod`.
 
 ---
 
@@ -110,12 +110,12 @@ Merging also requires the base to be up to date, which always holds because `pro
 
 | File | Status | Trigger | Environment | Jobs |
 | --- | --- | --- | --- | --- |
-| `swe5001-service-images.yml` | new, reusable (`workflow_call`) | called by `ci-backend.yml` and `swe5001-release-gate.yml` | none | Matrix `[identity-svc, commerce-svc, notification-svc]`; builds the ARM64 image with `ARG MODULE`, boots it against service containers (PostgreSQL, Redis) with `topology=distributed` stubs, Trivy scan. Builds only; never pushes |
-| `ci-backend.yml` | extended | existing (PRs into `dev`, `dev` pushes, `v*` tags) | none | New job `service-images`, needs `build-quality`, calls the reusable workflow above. Existing jobs unchanged except the `-exec` jar path (backend plan WP-B2) |
-| `infra-swe5001.yml` | new | PRs into `dev` or `prod` on `infra/swe5001/**` | `swe5001-plan` for foundation only | `fmt -check`, offline `init`, `validate` and tests for `foundation`, `edge` and `runtime`, and shellcheck for the environment scripts and the smoke suite; `foundation` account-backed plan/checkov with a redacted plan summary once the operator bootstraps it. Never plans secret-bearing runtime state or applies |
-| `swe5001-release-gate.yml` | planned | PRs into `prod` (`opened`, `synchronize`, `reopened`) | `swe5001-plan` for foundation only | `promotion-source`: fail unless `github.head_ref == 'dev'` and the head repository is this repository. `service-images`: the reusable workflow. `infra-plan`: static/mocked validation for `edge` and `runtime`, and foundation plan only; any account-backed `edge`/`runtime` plan must run after promotion with the protected `prod` role or by an operator, without uploading a secret-bearing plan. No path filters, so required checks report |
-| `swe5001-deploy.yml` | new | push to `prod` (one promotion per sprint); manual on the `prod` ref only with input `drill=broken-health` (verification plan V6, run inside a manual session) | `swe5001-demo` | The promotion run (refactoring plan, section 3.4). `images`: build ARM64 images from the merge commit, push by digest, write `/blocbuy/swe5001/candidate/<service>`. `up`: `env-up.sh --release` (`--candidate` on the first run, when no release digest exists). `deploy`: render task definitions with the candidate digests and roll them out with the circuit breaker, wait for steady state. `validate`: smoke suite through CloudFront; on success copy the candidates to `/blocbuy/swe5001/release/<service>`; SPA build, S3 sync and CloudFront invalidation if `frontend/**` or `contracts/**` changed since the previous `prod` commit. `evidence`: upload smoke output, ECS service events, digests and step timings as an artifact. `down` (`if: always()`, needs all previous jobs): `env-down.sh`, then `env-status.sh`, which fails the run if any runtime resource remains |
-| `swe5001-env.yml` | new | manual (`up`, `down`, `status`) on the `prod` ref; schedule 23:00 SGT (`down`) | `swe5001-demo` (except `dispatch`) | Thin wrappers around `infra/swe5001/scripts/env-up.sh`, `env-down.sh` and `env-status.sh` for manual sessions; `up` writes the CloudFront URL to the job summary. `dispatch` (schedule only, runs on `dev`, no AWS access, `actions: write`): `gh workflow run swe5001-env.yml --ref prod -f action=down`; a no-op when `runtime` does not exist |
+| `swe5001-service-images.yml` | implemented, reusable (`workflow_call`) | called by `swe5001-release-gate.yml` and `swe5001-deploy.yml` | none | Matrix of runtime images (strangler step 0: `monolith` only; PR 9 adds `identity-svc`, `commerce-svc`, `notification-svc`). Packages the jar without a dependency cache, builds the ARM64 image with QEMU, Trivy scan (HIGH and CRITICAL, unfixed ignored), uploads the image as artifact `swe5001-image-<service>`. Builds only; never pushes |
+| `ci-backend.yml` | unchanged for now | existing (PRs into `dev`, `dev` pushes, `v*` tags) | none | Gains a `service-images` job in PR 9, once the service assemblies exist; until then the monolith image is already built and smoke-tested by its `docker` job, and the SWE5006 path stays untouched |
+| `infra-swe5001.yml` | implemented, also reusable | PRs into `dev` on `infra/swe5001/**`, `perf/smoke/**` or the workflow itself; `workflow_call` from the release gate | `swe5001-plan` for foundation only | `fmt -check`, offline `init`, `validate` and tests for `foundation`, `edge` and `runtime`, and shellcheck for the environment scripts and the smoke suite; `foundation` account-backed plan/checkov with a redacted plan summary once the operator bootstraps it. Never plans secret-bearing runtime state or applies |
+| `swe5001-release-gate.yml` | implemented | PRs into `prod` (`opened`, `synchronize`, `reopened`) | `swe5001-plan` for foundation only (through `infra-swe5001.yml`) | `promotion-source`: fail unless `github.head_ref == 'dev'` and the head repository is this repository. `images` calls the reusable image workflow and `infra` calls `infra-swe5001.yml`; the jobs `service-images` and `infra-plan` (`if: always()`) turn their results into checks with fixed names for the ruleset. No path filters, so required checks report |
+| `swe5001-deploy.yml` | implemented | push to `prod` (one promotion per sprint); manual on the `prod` ref only, with input `force_failure` | `swe5001-demo` | The promotion run (refactoring plan, section 3.4), all jobs gated by `ENABLE_SWE5001_DEPLOY` and the `prod` ref. `images`: the reusable workflow on the merge commit. `publish` (deploy role): push the scanned images as `prod-<sha>-run-<attempt>`, write `/blocbuy/swe5001/candidate/<service>`. `up` (apply role): `env-up.sh --candidate` creates `runtime` from zero with the candidate digests, so the services start behind the circuit breaker; the script waits for steady state and runs the smoke suite through CloudFront. `release` (deploy role, only after a green `up`): build the SPA and publish it on every promotion (S3 sync without `--delete`, so earlier hashed assets stay reachable; `index.html`; CloudFront invalidation), then copy the candidates to `/blocbuy/swe5001/release/<service>`; a failed SPA publication leaves the previous release digests, and a failed digest write restores those already promoted. `down` (apply role, `if: always()`): `env-down.sh`, which ends with `env-status.sh` and fails the run if any runtime resource remains. `evidence` (`if: always()`): merges digests, `env-up` and `env-down` logs (smoke output included), step timings and ECS service events into artifact `swe5001-promotion-<sha>` (90 days). `force_failure` fails `up` after the environment is up, to prove that `down` still runs. A separate rolling deploy and the `broken-health` drill are not part of a promotion; they run in manual sessions |
+| `swe5001-env.yml` | implemented | manual (`status`, `up`, `down`; `up` takes `release` or `candidate` digests) on the `prod` ref; schedule 23:00 SGT | `swe5001-demo` (except `dispatch`) | Thin wrappers around `infra/swe5001/scripts/env-up.sh`, `env-down.sh` and `env-status.sh` for manual sessions; `up` writes the CloudFront URL and step timings to the job summary. `status` is green only when nothing tagged `Stack=runtime` remains. `dispatch` (schedule only, runs on `dev`, no AWS access, `actions: write`, gated by `ENABLE_SWE5001_NIGHTLY_DOWN`): `gh workflow run swe5001-env.yml --ref prod -f action=down`; skipped while `prod` does not exist, and a quick no-op destroy when `runtime` does not exist |
 | `swe5001-perf.yml` | new | manual on the `prod` ref | `swe5001-demo` | Run k6 scenarios against `SWE5001_FRONTEND_URL`; upload results (see verification plan) |
 
 Rules for all new workflows:
@@ -123,7 +123,9 @@ Rules for all new workflows:
 - `permissions: {}` at the top; each job grants only `contents: read`, `id-token: write` where it assumes a role, `pull-requests: write` for plan comments, and `actions: write` for the scheduled `dispatch` job.
 - Every job that assumes `swe5001-demo` roles also checks `github.ref == 'refs/heads/prod'`, so a manual run on another ref fails fast instead of waiting on the environment branch policy. Scheduled runs execute on the default branch (`dev`), which is why they only dispatch.
 - Actions pinned by commit SHA, as in the existing workflows.
-- `concurrency: swe5001-tfstate` (no cancel) for every run that writes Terraform state, so a promotion run and a manual `up` or `down` never overlap. Local script runs are serialised against them by the Terraform S3 state lock.
+- `concurrency: swe5001-tfstate` (no cancel) for every run that writes Terraform state, so a promotion run and a manual `up` or `down` never overlap. Local script runs are serialised against them by the Terraform S3 state lock. GitHub keeps only one pending run per group, so a third queued run replaces the pending one; start manual sessions only when no promotion is running.
+- No dependency cache in jobs whose output is published (images, SPA), so a cache written by a PR run cannot poison a release (zizmor `cache-poisoning`).
+- No secret-bearing Terraform output in logs or artifacts: `env-up.sh` suppresses the `edge` plan, whose origin diff carries `ORIGIN_SECRET` in clear, and `runtime` marks its secrets sensitive.
 - No `v*` tag triggers. Milestone tags `swe5001-*` trigger nothing.
 - Cron uses UTC: 23:00 SGT = `0 15 * * *`.
 
@@ -159,7 +161,7 @@ The CloudFront domain is stable because `edge` is never destroyed, so these are 
 | --- | --- | --- | --- |
 | G1 | Environments `swe5001-plan`, `swe5001-demo` (branch policy `prod`); repository variables with placeholder values; `ENABLE_SWE5001_*` set to `false` | 5.2 | none |
 | G2 | `infra-swe5001.yml` (plan only). Job `static` (fmt, validate, checkov) needs no AWS access; its foundation-only `plan` starts once `SWE5001_TF_STATE_BUCKET` is set | 5.2 | AWS F1 (plan role, state bucket) |
-| G3 | Reusable `swe5001-service-images.yml` and the `service-images` job in `ci-backend.yml` | 5.1 | backend WP-B2 |
+| G3 | Reusable `swe5001-service-images.yml` (done, monolith only); the `service-images` job in `ci-backend.yml` and the service images (PR 9) | 5.1 | backend WP-B2 |
 | G3a | `swe5001-release-gate.yml`; create `prod` from `dev`; ruleset `prod-release` | 5.3 | G2, G3 |
 | G4 | `swe5001-deploy.yml` (push to `prod`) | 5.3 | G3a, AWS F1 (ECR, deploy role) |
 | G5 | `swe5001-env.yml` with the scheduled `dispatch` job; `up` and `down` jobs in `swe5001-deploy.yml`; both call the AWS plan's environment scripts | 5.3 | AWS R1–R6, AWS S1 |

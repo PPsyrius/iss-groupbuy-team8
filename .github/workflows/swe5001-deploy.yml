@@ -1,0 +1,361 @@
+# SWE5001 promotion run (refactoring plan, section 3.4; GitHub plan, section 6).
+# A dev → prod merge builds the images, creates runtime from Terraform with the new
+# digests, validates it through CloudFront, records the release, uploads the evidence
+# and destroys runtime again, whether or not anything before it failed.
+#
+# Each promotion creates runtime from zero, so env-up.sh --candidate is the deployment:
+# the services start on the candidate digests behind the ECS circuit breaker and the
+# smoke suite gates the release. Rollback drills run in manual sessions (swe5001-env.yml).
+name: swe5001-deploy
+
+on:
+  push:
+    branches: [prod]
+  workflow_dispatch:
+    inputs:
+      force_failure:
+        description: Fail after the environment is up, to prove that down still runs
+        type: boolean
+        default: false
+
+# Shared with swe5001-env.yml: one Terraform writer at a time, never cancelled.
+concurrency:
+  group: swe5001-tfstate
+  cancel-in-progress: false
+  queue: max
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  TERRAFORM_VERSION: 1.16.4
+
+jobs:
+  images:
+    if: vars.ENABLE_SWE5001_DEPLOY == 'true' && github.ref == 'refs/heads/prod'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/swe5001-service-images.yml
+
+  # Pushes the exact images that passed the Trivy scan and records their digests.
+  publish:
+    needs: images
+    if: vars.ENABLE_SWE5001_DEPLOY == 'true' && github.ref == 'refs/heads/prod'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: swe5001-demo
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: swe5001-image-*
+          path: ${{ runner.temp }}/images
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.SWE5001_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+          role-session-name: SWE5001-Publish-${{ github.run_id }}
+
+      - id: login-ecr
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
+
+      # ECR tags are immutable; the run attempt keeps re-runs from colliding.
+      - name: Push images and record candidate digests
+        env:
+          SERVICES: ${{ needs.images.outputs.services }}
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY_PREFIX: ${{ vars.SWE5001_ECR_REPOSITORY_PREFIX }}
+          IMAGE_TAG: prod-${{ github.sha }}-run-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/evidence"
+          for service in $SERVICES; do
+            repository="${REPOSITORY_PREFIX}/${service}"
+            image="${REGISTRY}/${repository}:${IMAGE_TAG}"
+            gunzip --stdout "$RUNNER_TEMP/images/swe5001-image-${service}/image.tgz" | docker load
+            docker tag "swe5001-${service}:${GITHUB_SHA}" "$image"
+            docker push "$image"
+
+            digest=$(aws ecr describe-images --repository-name "$repository" \
+              --image-ids "imageTag=${IMAGE_TAG}" --query 'imageDetails[0].imageDigest' --output text)
+            [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]] || { echo "::error::no digest for $image"; exit 1; }
+
+            aws ssm put-parameter --name "/blocbuy/swe5001/candidate/${service}" \
+              --type String --value "$digest" --overwrite > /dev/null
+            echo "${service} ${digest} ${IMAGE_TAG}" | tee -a "$RUNNER_TEMP/evidence/digests.txt"
+          done
+
+      - name: Log out of Amazon ECR
+        if: always() && steps.login-ecr.outcome == 'success'
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: docker logout "$REGISTRY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: swe5001-evidence-publish
+          path: ${{ runner.temp }}/evidence
+          retention-days: 2
+          if-no-files-found: ignore
+
+  # Create runtime on the candidate digests, wait for steady state, run the smoke suite.
+  up:
+    needs: publish
+    if: vars.ENABLE_SWE5001_DEPLOY == 'true' && github.ref == 'refs/heads/prod'
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    environment:
+      name: swe5001-demo
+      url: ${{ vars.SWE5001_FRONTEND_URL }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      SWE5001_TF_STATE_BUCKET: ${{ vars.SWE5001_TF_STATE_BUCKET }}
+      TF_IN_AUTOMATION: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.SWE5001_TF_APPLY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+          role-session-name: SWE5001-Up-${{ github.run_id }}
+          role-duration-seconds: 7200
+
+      - id: env-up
+        name: env-up.sh --candidate
+        env:
+          SWE5001_TIMINGS_FILE: ${{ runner.temp }}/evidence/timings-up.txt
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/evidence"
+          infra/swe5001/scripts/env-up.sh --candidate 2>&1 | tee "$RUNNER_TEMP/evidence/env-up.log"
+
+      - name: Record ECS services and events
+        if: always() && steps.env-up.outcome != 'skipped'
+        run: |
+          set -uo pipefail
+          services=$(aws ecs list-services --cluster blocbuy-swe5001 --query 'serviceArns' --output text 2> /dev/null)
+          if [ -n "$services" ] && [ "$services" != None ]; then
+            # shellcheck disable=SC2086 # one word per service ARN
+            aws ecs describe-services --cluster blocbuy-swe5001 --services $services \
+              --query 'services[].{service: serviceName, desired: desiredCount, running: runningCount, taskDefinition: taskDefinition, deployments: deployments, events: events[:25]}' \
+              > "$RUNNER_TEMP/evidence/ecs-services.json" || true
+          fi
+
+      - name: Summarise
+        if: always() && steps.env-up.outcome != 'skipped'
+        env:
+          FRONTEND_URL: ${{ vars.SWE5001_FRONTEND_URL }}
+          OUTCOME: ${{ steps.env-up.outcome }}
+        run: |
+          {
+            echo "### SWE5001 environment up: ${OUTCOME}"
+            echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "- URL: ${FRONTEND_URL}"
+            echo
+            echo '| Step | Seconds |'
+            echo '| --- | --- |'
+            sed -E 's/^(.*) ([0-9]+)$/| \1 | \2 |/' "$RUNNER_TEMP/evidence/timings-up.txt" 2> /dev/null || true
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail on request (force_failure)
+        if: inputs.force_failure
+        run: |
+          echo "::error::force_failure is set; the down job must still destroy runtime"
+          exit 1
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: swe5001-evidence-up
+          path: ${{ runner.temp }}/evidence
+          retention-days: 2
+          if-no-files-found: ignore
+
+  # Only after a green smoke suite: release digests and the SPA.
+  release:
+    needs: [images, up]
+    if: vars.ENABLE_SWE5001_DEPLOY == 'true' && github.ref == 'refs/heads/prod'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: swe5001-demo
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: frontend/package.json
+
+      # No dependency cache for a published build (cache poisoning).
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: frontend/.nvmrc
+
+      # The SPA reads no build-time environment, so the same build serves any domain.
+      - name: Build SPA
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+          test -f dist/index.html
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.SWE5001_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+          role-session-name: SWE5001-Release-${{ github.run_id }}
+
+      # Same publication order as ci-frontend: immutable hashed assets, then index.html.
+      # No --delete: an index.html still cached by CloudFront or an open tab keeps loading
+      # the hashed assets of the previous build.
+      - name: Publish SPA
+        working-directory: frontend
+        env:
+          BUCKET: ${{ vars.SWE5001_SPA_BUCKET }}
+          DISTRIBUTION_ID: ${{ vars.SWE5001_CLOUDFRONT_DIST_ID }}
+        run: |
+          set -euo pipefail
+          aws s3 sync dist/ "s3://${BUCKET}" --exclude index.html --exclude "*.map" \
+            --cache-control "public,max-age=31536000,immutable"
+          aws s3 cp dist/index.html "s3://${BUCKET}/index.html" \
+            --cache-control no-cache --content-type text/html
+          aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths /index.html > /dev/null
+
+      # Last, so a failed SPA publication leaves the previous release digests in place.
+      # A failed write restores the digests already promoted in this step.
+      - name: Promote candidate digests to release
+        env:
+          SERVICES: ${{ needs.images.outputs.services }}
+        run: |
+          set -euo pipefail
+          prefix=/blocbuy/swe5001
+          declare -A candidate previous
+          for service in $SERVICES; do
+            candidate[$service]=$(aws ssm get-parameter --name "${prefix}/candidate/${service}" \
+              --query Parameter.Value --output text)
+            previous[$service]=$(aws ssm get-parameter --name "${prefix}/release/${service}" \
+              --query Parameter.Value --output text 2> /dev/null || true)
+          done
+          promoted=()
+          # The first promotion has nothing to restore (and the role cannot delete).
+          restore() {
+            for service in "${promoted[@]}"; do
+              [ -n "${previous[$service]}" ] || continue
+              aws ssm put-parameter --name "${prefix}/release/${service}" \
+                --type String --value "${previous[$service]}" --overwrite > /dev/null || true
+              echo "::warning::restored ${prefix}/release/${service} to ${previous[$service]}"
+            done
+          }
+          trap restore ERR
+          for service in $SERVICES; do
+            aws ssm put-parameter --name "${prefix}/release/${service}" \
+              --type String --value "${candidate[$service]}" --overwrite > /dev/null
+            promoted+=("$service")
+            echo "${service}: ${candidate[$service]}"
+          done
+          trap - ERR
+
+  # Always runs, so a failed or cancelled promotion never leaves runtime behind.
+  # env-down.sh ends with env-status.sh, which fails if anything tagged Stack=runtime remains.
+  down:
+    needs: [images, publish, up, release]
+    if: always() && vars.ENABLE_SWE5001_DEPLOY == 'true' && github.ref == 'refs/heads/prod'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: swe5001-demo
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      SWE5001_TF_STATE_BUCKET: ${{ vars.SWE5001_TF_STATE_BUCKET }}
+      TF_IN_AUTOMATION: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.SWE5001_TF_APPLY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+          role-session-name: SWE5001-Down-${{ github.run_id }}
+          role-duration-seconds: 7200
+
+      - id: env-down
+        name: env-down.sh
+        env:
+          SWE5001_TIMINGS_FILE: ${{ runner.temp }}/evidence/timings-down.txt
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/evidence"
+          infra/swe5001/scripts/env-down.sh 2>&1 | tee "$RUNNER_TEMP/evidence/env-down.log"
+
+      - name: Summarise
+        if: always()
+        env:
+          OUTCOME: ${{ steps.env-down.outcome }}
+        run: |
+          {
+            echo "### SWE5001 environment down: ${OUTCOME}"
+            echo
+            echo '| Step | Seconds |'
+            echo '| --- | --- |'
+            sed -E 's/^(.*) ([0-9]+)$/| \1 | \2 |/' "$RUNNER_TEMP/evidence/timings-down.txt" 2> /dev/null || true
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: swe5001-evidence-down
+          path: ${{ runner.temp }}/evidence
+          retention-days: 2
+          if-no-files-found: ignore
+
+  # One artifact per promotion (verification plan, V8): digests, env-up and env-down
+  # logs (smoke output included), step timings and ECS service events.
+  evidence:
+    needs: [publish, up, down]
+    if: always() && vars.ENABLE_SWE5001_DEPLOY == 'true' && github.ref == 'refs/heads/prod'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - uses: actions/upload-artifact/merge@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: swe5001-promotion-${{ github.sha }}
+          pattern: swe5001-evidence-*
+          separate-directories: true
+          delete-merged: true
+          retention-days: 90

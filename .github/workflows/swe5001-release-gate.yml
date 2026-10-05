@@ -1,0 +1,78 @@
+# Required checks of the prod-release ruleset (docs/swe5001/impl-github-configuration.md,
+# section 5): promotion-source, service-images and infra-plan. No path filters, so every
+# promotion PR reports all three. Nothing here can reach the swe5001-demo roles.
+name: swe5001-release-gate
+
+on:
+  pull_request:
+    branches: [prod]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: swe5001-release-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  # prod only moves by dev → prod promotions from this repository.
+  promotion-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Check head branch and repository
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "$HEAD_REF" != dev ] || [ "$HEAD_REPO" != "$REPO" ]; then
+            echo "::error::A PR into prod must come from ${REPO}:dev (got ${HEAD_REPO}:${HEAD_REF})"
+            exit 1
+          fi
+          echo "Promotion from ${HEAD_REPO}:${HEAD_REF}"
+
+  images:
+    needs: promotion-source
+    permissions:
+      contents: read
+    uses: ./.github/workflows/swe5001-service-images.yml
+
+  infra:
+    needs: promotion-source
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    uses: ./.github/workflows/infra-swe5001.yml
+
+  # Checks from a called workflow are named "<caller> / <job> (<matrix>)"; these jobs
+  # give the ruleset fixed names that report even when a dependency fails.
+  service-images:
+    needs: images
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require a green image build
+        env:
+          RESULT: ${{ needs.images.result }}
+        run: |
+          echo "images: $RESULT"
+          [ "$RESULT" = success ]
+
+  infra-plan:
+    needs: infra
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require green Terraform checks
+        env:
+          RESULT: ${{ needs.infra.result }}
+        run: |
+          echo "infra: $RESULT"
+          [ "$RESULT" = success ]
