@@ -62,6 +62,12 @@ variable "images" {
   default     = ["monolith", "identity-svc", "commerce-svc", "notification-svc"]
 }
 
+variable "enable_budget" {
+  description = "Create the optional cost budget; requires payer-account activation of the Course tag and budget recipients in SSM"
+  type        = bool
+  default     = false
+}
+
 variable "monthly_budget_usd" {
   description = "Monthly cost budget for resources tagged Course=swe5001"
   type        = number
