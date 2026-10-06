@@ -20,9 +20,47 @@ esac
 guard_account
 
 # Deregistered task definitions stay tagged but cost nothing and cannot be deleted while
-# referenced, so they never count as left over. The tagging API also keeps listing deleted
-# resources for over an hour after a destroy, so each EC2 and ECS cluster ARN is checked
-# against its own service: a resource counts only while that service still reports it.
+# referenced, so they never count as left over. The tagging API, and EC2's own tag index,
+# keep listing deleted resources for over an hour after a destroy, so each EC2 and ECS ARN
+# is checked with its own describe call: a resource counts only while that call returns it.
+# Not-found errors mean deleted; any other error fails closed. Other types always count.
+
+# Runs a describe call and prints its output, or None when the resource (or its ECS
+# cluster) no longer exists.
+lookup() {
+  local what=$1 out
+  shift
+  if out=$(aws "$@" 2>&1); then
+    printf '%s\n' "$out"
+    return
+  fi
+  case "$out" in
+    *.NotFound* | *ClusterNotFoundException*) printf '%s\n' None ;;
+    *) die "cannot inspect $what" ;;
+  esac
+}
+
+# Prints how many of the EC2 resource still exist (0 or 1); unknown types print 1, so
+# they are reported rather than assumed deleted.
+ec2_count() {
+  local type=$1 id=$2 what="runtime resource $2"
+  case "$type" in
+    vpc) lookup "$what" ec2 describe-vpcs --vpc-ids "$id" --query 'length(Vpcs)' --output text ;;
+    subnet) lookup "$what" ec2 describe-subnets --subnet-ids "$id" --query 'length(Subnets)' --output text ;;
+    route-table) lookup "$what" ec2 describe-route-tables --route-table-ids "$id" --query 'length(RouteTables)' --output text ;;
+    internet-gateway) lookup "$what" ec2 describe-internet-gateways --internet-gateway-ids "$id" --query 'length(InternetGateways)' --output text ;;
+    security-group) lookup "$what" ec2 describe-security-groups --group-ids "$id" --query 'length(SecurityGroups)' --output text ;;
+    security-group-rule) lookup "$what" ec2 describe-security-group-rules --security-group-rule-ids "$id" --query 'length(SecurityGroupRules)' --output text ;;
+    network-interface) lookup "$what" ec2 describe-network-interfaces --network-interface-ids "$id" --query 'length(NetworkInterfaces)' --output text ;;
+    volume) lookup "$what" ec2 describe-volumes --volume-ids "$id" --query 'length(Volumes)' --output text ;;
+    elastic-ip) lookup "$what" ec2 describe-addresses --allocation-ids "$id" --query 'length(Addresses)' --output text ;;
+    launch-template) lookup "$what" ec2 describe-launch-templates --launch-template-ids "$id" --query 'length(LaunchTemplates)' --output text ;;
+    vpc-endpoint) lookup "$what" ec2 describe-vpc-endpoints --vpc-endpoint-ids "$id" --query "length(VpcEndpoints[?State!='deleted' && State!='Deleted'])" --output text ;;
+    natgateway) lookup "$what" ec2 describe-nat-gateways --nat-gateway-ids "$id" --query "length(NatGateways[?State!='deleted'])" --output text ;;
+    *) printf '%s\n' 1 ;;
+  esac
+}
+
 all_arns=$(aws resourcegroupstaggingapi get-resources \
   --tag-filters Key=Course,Values=swe5001 Key=Stack,Values=runtime \
   --query 'ResourceTagMappingList[].ResourceARN' --output text) ||
@@ -34,29 +72,33 @@ for arn in $arns; do
   id=${arn##*/}
   case "$arn" in
     arn:aws:ec2:*:instance/*)
-      # Terminated instances keep their tags for a while; long-gone ones return no
-      # reservation or InvalidInstanceID.NotFound. Any other error fails closed.
-      if ! state=$(aws ec2 describe-instances --instance-ids "$id" \
-        --query 'Reservations[0].Instances[0].State.Name' --output text 2>&1); then
-        case "$state" in
-          *InvalidInstanceID.NotFound*) state=None ;;
-          *) die "cannot inspect runtime instance $id" ;;
-        esac
-      fi
+      # Terminated instances stay listed for a while.
+      state=$(lookup "runtime instance $id" ec2 describe-instances --instance-ids "$id" \
+        --query 'Reservations[0].Instances[0].State.Name' --output text) || exit 1
       case "$state" in terminated | None) continue ;; esac
       ;;
     arn:aws:ec2:*)
-      # EC2's own tag index drops a resource as soon as it is deleted.
-      tags=$(aws ec2 describe-tags --filters "Name=resource-id,Values=$id" \
-        --query 'length(Tags)' --output text) ||
-        die "cannot inspect runtime resource $id"
-      [ "$tags" = 0 ] && continue
+      resource=${arn##*:}
+      count=$(ec2_count "${resource%%/*}" "$id") || exit 1
+      case "$count" in 0 | None) continue ;; esac
       ;;
     arn:aws:ecs:*:cluster/*)
-      cluster_status=$(aws ecs describe-clusters --clusters "$arn" \
-        --query 'clusters[0].status' --output text) ||
-        die "cannot inspect ECS cluster $id"
+      cluster_status=$(lookup "ECS cluster $id" ecs describe-clusters --clusters "$arn" \
+        --query 'clusters[0].status' --output text) || exit 1
       case "$cluster_status" in INACTIVE | None) continue ;; esac
+      ;;
+    arn:aws:ecs:*:service/*)
+      cluster=${arn#*:service/}
+      service_status=$(lookup "ECS service $id" ecs describe-services --cluster "${cluster%%/*}" \
+        --services "$id" --query 'services[0].status' --output text) || exit 1
+      case "$service_status" in INACTIVE | None) continue ;; esac
+      ;;
+    arn:aws:ecs:*:task/*)
+      # Stopped tasks cost nothing and expire on their own.
+      cluster=${arn#*:task/}
+      task_status=$(lookup "ECS task $id" ecs describe-tasks --cluster "${cluster%%/*}" \
+        --tasks "$id" --query 'tasks[0].lastStatus' --output text) || exit 1
+      case "$task_status" in STOPPED | None) continue ;; esac
       ;;
   esac
   remaining="$remaining$arn"$'\n'
