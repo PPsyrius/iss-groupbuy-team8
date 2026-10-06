@@ -234,7 +234,7 @@ ECS runs only from the `prod` branch, which moves only by a `dev` → `prod` pro
 | [`swe5001-env.yml`](../../.github/workflows/swe5001-env.yml) | Manual on `prod` (`up`, `down`, `status`); daily 23:00 SGT | Runs the scripts above with the apply role. The schedule runs on `dev` with no AWS access and only dispatches `down` on `prod` while `ENABLE_SWE5001_NIGHTLY_DOWN` is `true` |
 | [`swe5001-service-images.yml`](../../.github/workflows/swe5001-service-images.yml) | Called by the two workflows above | Builds and scans the runtime images; only the monolith until PR 9 |
 
-Runs that write Terraform state share the concurrency group `swe5001-tfstate` and are never cancelled. GitHub keeps one running and one pending run per group, so a third queued run replaces the pending one; start a manual session only when no promotion is running.
+Runs that write Terraform state share the concurrency group `swe5001-tfstate` with `cancel-in-progress: false` and `queue: max`. Pending runs are retained up to the queue limit, so a later dispatch does not supersede a queued `down`, which can destroy runtime when it eventually executes. Check for and cancel stale queued `down` runs before starting a new manual session, and wait until no promotion is running.
 
 ### Create `prod` (one time, operator)
 

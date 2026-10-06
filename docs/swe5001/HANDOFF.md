@@ -71,7 +71,7 @@ Operator-provided CloudShell evidence on 2026-10-05 confirms foundation exists i
 | `CloudWatchFullAccessV2` can still change alarms and dashboards outside SWE5001 | Open; fence before PR 10 adds alarms |
 | Foundation infra workflow passed all static/script checks and the OIDC plan; release gate and runtime/promotion workflows remain unexercised; workflow fixes on `dev` need promotion to affect `prod` runs | First operator-initiated `swe5001-env.yml` run on `prod`, then the Sprint 3 promotion |
 | The ARM64 image is built under QEMU without a Maven cache (no cache poisoning of a published image); build time is unmeasured | First release gate run; an arm64 runner is the fallback if it exceeds the 30-minute job timeout |
-| GitHub keeps one pending run per concurrency group, so a third queued `swe5001-tfstate` run replaces the pending one | Accepted; start manual sessions only when no promotion is running |
+| `queue: max` retains pending `swe5001-tfstate` runs up to the queue limit, so a queued `down` can execute later instead of being replaced | Check for and cancel stale queued `down` runs before starting a new manual session; wait until no promotion is running |
 | NFR-51 (AWS isolation) is partially verified: selected S3 identity-policy checks and actual foundation OIDC plan passed; SSM denial and apply-role guardrails remain unverified | Remaining operator IAM checks and runtime proof |
 
 ## Verification commands
