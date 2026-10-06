@@ -1,0 +1,7 @@
+# actionlint 1.7.12 does not know the documented `concurrency.queue` key yet
+# (rhysd/actionlint#654). Ignore only that message, only where `queue: max` keeps a
+# pending SWE5001 teardown from being replaced by a later run.
+paths:
+  .github/workflows/swe5001-{deploy,env}.yml:
+    ignore:
+      - 'unexpected key "queue" for "concurrency" section'

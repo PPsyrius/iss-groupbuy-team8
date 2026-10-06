@@ -73,8 +73,18 @@ apply_runtime true
 
 step "apply edge (point /api/* at the ALB)"
 runtime_alb_dns_name=$(tf runtime output -raw alb_dns_name)
-tf edge apply -input=false -auto-approve -var-file="$VAR_FILE" \
-  -var "runtime_alb_dns_name=$runtime_alb_dns_name"
+# The origin diff carries ORIGIN_SECRET in clear (edge/cloudfront.tf marks it
+# nonsensitive), so the plan is never printed; workflow logs are readable by every
+# collaborator. On failure only Terraform's diagnostics are shown.
+edge_log=$(mktemp)
+trap 'rm -f "$run_vars" "$edge_log"' EXIT
+if tf edge apply -input=false -auto-approve -no-color -var-file="$VAR_FILE" \
+  -var "runtime_alb_dns_name=$runtime_alb_dns_name" > "$edge_log" 2>&1; then
+  grep '^Apply complete' "$edge_log" >&2 || true
+else
+  sed -n '/^Error:/,$p' "$edge_log" >&2
+  die "edge apply failed"
+fi
 
 if [ -z "$services" ]; then
   step_done

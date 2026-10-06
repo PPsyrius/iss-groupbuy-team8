@@ -163,7 +163,7 @@ Cards use a bordered 8px surface, image/fallback area, title/subtitle, and price
 - Open bloc: bloc price is prominent in `accent-soft-foreground`; solo price is struck through.
 - No open bloc: solo price is prominent and the secondary line says "Buying alone".
 - No percent-off badges or countdowns on the catalog grid.
-- The current summary DTO does not provide bloc size/progress, so the artboard progress cue cannot be contract-driven yet.
+- Open bloc progress (FB-16): "N of M joined", seats left (the last seat in semibold) and a 10px accent bar, from the summary's nullable `deal` (#375); no row when `deal` is null. No countdown on the grid.
 
 SGD is displayed as `S$` with two decimals.
 
@@ -292,10 +292,16 @@ Implemented in admin plan A1-01 to A1-08, A2-01 to A2-03 and A3-01 to A3-09 (`ad
 - Q15: when a rule is active and the new start is in the future, the form warns "Saving replaces the active rule now. Buyers see no bloc price until …". There is no blocking confirm.
 - A 412 (`CATALOG_412_001`) turns the panel to the conflict state; a 409 to the unavailable state; a domain 400 lands on `amount`, `validFrom` or `validUntil`, else the form alert.
 
+**Group terms panel** (no artboard; §11 D6, decided 2026-10-05, A3-04)
+
+- A "Group terms" card under the bloc price rule panel, on every status. The chip reads "Ready to start blocs" when both terms are set (`configured`), else "Not set"; the body reads "New blocs use these terms. Blocs already started keep theirs." or "Buyers can’t start a bloc on this listing until both are set."
+- Fields: Seats per bloc ("Paid members a bloc needs to complete. At least 2.") and Bloc lifetime as Hours and Minutes ("40 minutes to 24 hours, from the bloc’s start."), sent as `lifetimeSeconds`. Save terms writes through `configureTeamTerms` with the listing version and never sends `teamPrice`; "Terms saved." confirms it.
+- The write bumps the listing version, so Save waits while the listing form has unsaved edits ("Save your listing changes first."), and a 412 raises the page's conflict banner. Field 400s land on Seats per bloc or Hours.
+
 **Design gaps still open** (`admin-plan.md` §11)
 
-- D1 rail counts (Bloc price rules links to the filtered listings once BA-13, #382, merges; Payments has no page); D2 dialog copy is the proposed text, not approved (Q7); D3 the scheduled state and replace-now warning are undrawn; D4 dashboard and per-tab empty, table error; D5 unsaved prompt and toasts; D6 the group terms panel (decided 2026-10-05: a card below the price rule panel; A3-04 is unblocked); D7 Description is missing from 4b.1; D8 the "Add a rule after you publish" copy waits on BA-11.
-- Not built: Payments needing attention (4b.6, BA-8), the "Bloc price rules" rail link (Q3, BA-13), policy history (BA-10), policy on drafts (BA-11), and the group terms panel (A3-04, D6 decided).
+- D1 rail counts (Bloc price rules links to the filtered listings once BA-13, #382, merges; Payments has no page); D2 dialog copy is the proposed text, not approved (Q7); D3 the scheduled state and replace-now warning are undrawn; D4 dashboard and per-tab empty, table error; D5 unsaved prompt and toasts; D6 the group terms panel (decided 2026-10-05: a card below the price rule panel; built in A3-04, #399); D7 Description is missing from 4b.1; D8 the "Add a rule after you publish" copy waits on BA-11.
+- Not built: Payments needing attention (4b.6, BA-8), the "Bloc price rules" rail link (Q3, BA-13), policy history (BA-10) and policy on drafts (BA-11).
 
 ## 5. Component guidance
 
@@ -368,8 +374,8 @@ The original artboard review ended with 22 open questions. T2-01 through T2-06 r
   Card prices                         `S$` formatting; bloc price +
                                       struck solo price
 
-  Card progress                       Omitted until the summary contract
-                                      provides size/progress
+  Card progress                       Joined/target, seats left and bar
+                                      from the summary `deal` (FB-16)
 
   Detail hierarchy                    Artboard hierarchy/copy implemented
 
@@ -416,7 +422,6 @@ The original artboard review ended with 22 open questions. T2-01 through T2-06 r
 Remaining design/contract gaps (audited 2026-10-02, FB-18, against `frontend/src/` and `contracts/openapi.json`):
 
 - category values are not contract-driven: `category` is a free string on both listing schemas and there is no dictionary endpoint; `features/catalog/categories.ts` holds the mapping (ask CR-10 in [`admin-plan.md`](admin-plan.md), no issue yet);
-- listing summary exposes bloc progress since #375 (nullable `ProductSummaryResponse.deal`, closing #245, CR-11); the card UI is FB-16;
 - listing detail does not expose off-sale status (`ProductDetailResponse` has no `status`): no owner yet;
 - the API exposes one active deal (`ActiveDealResponse`: id, sizes, expiry) rather than a list with starter metadata; only an invite link names its sharer (FB-19, #201): no owner yet;
 - My Blocs shows Active / Completed / Refunded from `GET /group-deals/me`, but `MyTeamResponse` carries only the buyer's own `role`, not the starter; no owner yet. Notifications wait on backend #215 (first persisted use case, open);

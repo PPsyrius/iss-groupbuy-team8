@@ -112,7 +112,8 @@ function dealStatus({
   return { label: "Filling", color: "default" };
 }
 
-function SeatsLeft({ left }: Readonly<{ left: number }>) {
+// Shared with the catalog card's progress row (ProductCard, FB-16): the last seat is emphasised.
+export function SeatsLeft({ left }: Readonly<{ left: number }>) {
   if (left === 1) return <span className="text-sm font-semibold tabular-nums">1 seat left</span>;
   return <span className="text-muted text-sm tabular-nums">{`${left} seats left`}</span>;
 }

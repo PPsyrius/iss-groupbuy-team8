@@ -12,6 +12,7 @@ import {
 import {
   changeAdminListingStatus,
   configureTeamPricePolicy,
+  configureTeamTerms,
   createAdminListing,
   deleteAdminListing,
   getAdminListing,
@@ -23,6 +24,7 @@ import type {
   ListingStatusRequest,
   PolicyRequest,
   PolicyResponse,
+  TeamTermsRequest,
   UpdateListingRequest,
 } from "@/api/generated/types.gen";
 
@@ -184,6 +186,20 @@ export function useConfigurePolicy() {
     mutationFn: async ({ productId, ...body }: { productId: string } & PolicyRequest) =>
       unwrapResult(
         (await configureTeamPricePolicy({ path: { productId }, body, throwOnError: true })).data,
+        {
+          allowVoid: false,
+        },
+      ),
+  });
+}
+
+// The group terms write (A3-04, #242). It carries and bumps the listing's version, and answers
+// with the new version and terms only, not the whole listing.
+export function useConfigureTeamTerms() {
+  return useMutation({
+    mutationFn: async ({ productId, ...body }: { productId: string } & TeamTermsRequest) =>
+      unwrapResult(
+        (await configureTeamTerms({ path: { productId }, body, throwOnError: true })).data,
         {
           allowVoid: false,
         },

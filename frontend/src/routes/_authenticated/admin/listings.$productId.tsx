@@ -15,6 +15,7 @@ import { fromListing } from "@/features/admin/listing-form";
 import { statusLabel } from "@/features/admin/listing-status";
 import { type FieldProblem, ListingForm, type SubmitProblem } from "@/features/admin/ListingForm";
 import { PricePolicyPanel } from "@/features/admin/PricePolicyPanel";
+import { TeamTermsPanel } from "@/features/admin/TeamTermsPanel";
 import {
   problemFor,
   useRouteBoundary,
@@ -55,8 +56,10 @@ function EditListingPage() {
   const published = listing.status !== "draft";
   const { save, isPending } = useSaveListing(productId, version);
   const [dirty, setDirty] = useState(false);
-  // The bloc price rule form's unsaved edits share the listing form's leave prompt.
+  // The bloc price rule form's and the group terms form's unsaved edits share the listing form's
+  // leave prompt.
   const [ruleDirty, setRuleDirty] = useState(false);
+  const [termsDirty, setTermsDirty] = useState(false);
   const [dialog, setDialog] = useState<DialogKind | null>(null);
   const [fieldProblems, setFieldProblems] = useState<FieldProblem[]>([]);
   // `null` while there is no conflict; otherwise the server's version as the 412 named it.
@@ -198,7 +201,7 @@ function EditListingPage() {
           frozen={published}
           soldCount={published ? (listing.soldCount ?? 0) : undefined}
           guardUnsaved
-          unsavedElsewhere={ruleDirty}
+          unsavedElsewhere={ruleDirty || termsDirty}
           onDirtyChange={setDirty}
           onProblemsChange={setFieldProblems}
         />
@@ -219,6 +222,16 @@ function EditListingPage() {
             status={listing.status}
             originalPrice={listing.listing?.originalPrice ?? ""}
             onDirtyChange={setRuleDirty}
+          />
+          <TeamTermsPanel
+            productId={productId}
+            version={version}
+            terms={listing.teamTerms}
+            reloads={reloads}
+            isDisabled={conflict !== null}
+            listingDirty={dirty}
+            onConflict={(named) => setConflict({ serverVersion: named })}
+            onDirtyChange={setTermsDirty}
           />
         </aside>
       </div>
