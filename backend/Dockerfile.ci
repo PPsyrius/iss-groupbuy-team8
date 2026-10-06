@@ -17,6 +17,11 @@ USER blocbuy
 # backend-application artifact carries and Dockerfile copies.
 COPY blocbuy-bootstrap/target/blocbuy-backend.jar app.jar
 
+# The root filesystem is read-only in both deployments; Tomcat and the JVM write only to
+# /tmp. Compose mounts a tmpfs there; an ECS Fargate scratch volume copies the
+# permissions of a declared VOLUME (1777 here) and is otherwise root-owned 0755.
+VOLUME ["/tmp"]
+
 EXPOSE 8589
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"
 
