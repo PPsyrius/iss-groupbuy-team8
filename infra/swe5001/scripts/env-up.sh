@@ -24,8 +24,11 @@ esac
 guard_account
 topology=${SWE5001_TOPOLOGY:-monolith}
 services=$(services_for_topology "$topology")
-run_vars=$(mktemp)
-trap 'rm -f "$run_vars"' EXIT
+# Terraform parses a variable file as JSON only when its name ends in .json, and BSD
+# mktemp cannot add a suffix, so the files live in a private temporary directory.
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+run_vars="$work/run.tfvars.json"
 
 step "read edge URL"
 tf_init edge
@@ -76,8 +79,7 @@ runtime_alb_dns_name=$(tf runtime output -raw alb_dns_name)
 # The origin diff carries ORIGIN_SECRET in clear (edge/cloudfront.tf marks it
 # nonsensitive), so the plan is never printed; workflow logs are readable by every
 # collaborator. On failure only Terraform's diagnostics are shown.
-edge_log=$(mktemp)
-trap 'rm -f "$run_vars" "$edge_log"' EXIT
+edge_log="$work/edge.log"
 if tf edge apply -input=false -auto-approve -no-color -var-file="$VAR_FILE" \
   -var "runtime_alb_dns_name=$runtime_alb_dns_name" > "$edge_log" 2>&1; then
   grep '^Apply complete' "$edge_log" >&2 || true
