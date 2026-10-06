@@ -51,6 +51,18 @@ run "security_group_rule_guardrail" {
   }
 
   assert {
+    condition = alltrue([
+      for s in data.aws_iam_policy_document.apply.statement :
+      try(length(setintersection(s.actions, toset([
+        "ec2:AuthorizeSecurityGroupEgress",
+        "ec2:AuthorizeSecurityGroupIngress",
+      ]))), 0) == 0
+      if s.effect == "Deny" && anytrue(try([for r in s.resources : strcontains(r, ":security-group-rule/")], []))
+    ])
+    error_message = "Authorize actions must not be denied on security-group-rule resources: new rules are untagged when authorised."
+  }
+
+  assert {
     condition = anytrue([
       for s in data.aws_iam_policy_document.apply.statement :
       s.sid == "DenyRuleChangesOutsideSwe5001" && s.effect == "Deny" &&
