@@ -156,7 +156,8 @@ jobs:
         if: always() && steps.env-up.outcome != 'skipped'
         run: |
           set -uo pipefail
-          services=$(aws ecs list-services --cluster blocbuy-swe5001 --query 'serviceArns' --output text 2> /dev/null)
+          # No cluster when env-up.sh failed before the runtime apply.
+          services=$(aws ecs list-services --cluster blocbuy-swe5001 --query 'serviceArns' --output text 2> /dev/null || true)
           if [ -n "$services" ] && [ "$services" != None ]; then
             # shellcheck disable=SC2086 # one word per service ARN
             aws ecs describe-services --cluster blocbuy-swe5001 --services $services \
