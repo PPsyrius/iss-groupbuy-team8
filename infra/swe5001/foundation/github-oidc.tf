@@ -354,6 +354,13 @@ data "aws_iam_policy_document" "apply" {
     }
   }
 
+  # DescribeParameters supports no resource scoping and returns metadata only, never a value.
+  statement {
+    sid       = "DescribeParameters"
+    actions   = ["ssm:DescribeParameters"]
+    resources = ["*"]
+  }
+
   statement {
     sid = "ManageSwe5001Parameters"
     actions = [
@@ -422,18 +429,13 @@ data "aws_iam_policy_document" "apply" {
     actions = [
       "cloudfront:DeleteDistribution",
       "cloudfront:UpdateDistribution",
-      "ec2:AuthorizeSecurityGroupEgress",
-      "ec2:AuthorizeSecurityGroupIngress",
       "ec2:DeleteInternetGateway",
       "ec2:DeleteRouteTable",
       "ec2:DeleteSecurityGroup",
       "ec2:DeleteSubnet",
       "ec2:DeleteVpc",
       "ec2:ModifyInstanceAttribute",
-      "ec2:ModifySecurityGroupRules",
       "ec2:RebootInstances",
-      "ec2:RevokeSecurityGroupEgress",
-      "ec2:RevokeSecurityGroupIngress",
       "ec2:StopInstances",
       "ec2:TerminateInstances",
       "elasticloadbalancing:DeleteListener",
@@ -448,6 +450,29 @@ data "aws_iam_policy_document" "apply" {
       "elasticloadbalancing:RegisterTargets",
     ]
     resources = ["*"]
+
+    condition {
+      test     = "StringNotEquals"
+      variable = "aws:ResourceTag/Course"
+      values   = ["swe5001"]
+    }
+  }
+
+  # Security group rule actions are also authorised against the security-group-rule
+  # resource, which is untagged when a rule is created, so a "*" deny would block every
+  # new rule. Scoped to the parent group instead: rules on an untagged (SWE5006) group
+  # stay denied.
+  statement {
+    sid    = "DenyRuleChangesOutsideSwe5001"
+    effect = "Deny"
+    actions = [
+      "ec2:AuthorizeSecurityGroupEgress",
+      "ec2:AuthorizeSecurityGroupIngress",
+      "ec2:ModifySecurityGroupRules",
+      "ec2:RevokeSecurityGroupEgress",
+      "ec2:RevokeSecurityGroupIngress",
+    ]
+    resources = ["arn:aws:ec2:*:${var.aws_account_id}:security-group/*"]
 
     condition {
       test     = "StringNotEquals"

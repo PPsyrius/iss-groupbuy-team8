@@ -20,7 +20,9 @@ esac
 guard_account
 
 # Deregistered task definitions stay tagged but cost nothing and cannot be deleted while
-# referenced; terminated instances stay listed for a while. Neither counts as left over.
+# referenced, so they never count as left over. The tagging API also keeps listing deleted
+# resources for over an hour after a destroy, so each EC2 and ECS cluster ARN is checked
+# against its own service: a resource counts only while that service still reports it.
 all_arns=$(aws resourcegroupstaggingapi get-resources \
   --tag-filters Key=Course,Values=swe5001 Key=Stack,Values=runtime \
   --query 'ResourceTagMappingList[].ResourceARN' --output text) ||
@@ -29,12 +31,32 @@ arns=$(printf '%s\n' "$all_arns" | tr '\t' '\n' | { grep -v ':task-definition/' 
 
 remaining=""
 for arn in $arns; do
+  id=${arn##*/}
   case "$arn" in
     arn:aws:ec2:*:instance/*)
-      state=$(aws ec2 describe-instances --instance-ids "${arn##*/}" \
-        --query 'Reservations[0].Instances[0].State.Name' --output text) ||
-        die "cannot inspect runtime instance ${arn##*/}"
-      [ "$state" = terminated ] && continue
+      # Terminated instances keep their tags for a while; long-gone ones return no
+      # reservation or InvalidInstanceID.NotFound. Any other error fails closed.
+      if ! state=$(aws ec2 describe-instances --instance-ids "$id" \
+        --query 'Reservations[0].Instances[0].State.Name' --output text 2>&1); then
+        case "$state" in
+          *InvalidInstanceID.NotFound*) state=None ;;
+          *) die "cannot inspect runtime instance $id" ;;
+        esac
+      fi
+      case "$state" in terminated | None) continue ;; esac
+      ;;
+    arn:aws:ec2:*)
+      # EC2's own tag index drops a resource as soon as it is deleted.
+      tags=$(aws ec2 describe-tags --filters "Name=resource-id,Values=$id" \
+        --query 'length(Tags)' --output text) ||
+        die "cannot inspect runtime resource $id"
+      [ "$tags" = 0 ] && continue
+      ;;
+    arn:aws:ecs:*:cluster/*)
+      cluster_status=$(aws ecs describe-clusters --clusters "$arn" \
+        --query 'clusters[0].status' --output text) ||
+        die "cannot inspect ECS cluster $id"
+      case "$cluster_status" in INACTIVE | None) continue ;; esac
       ;;
   esac
   remaining="$remaining$arn"$'\n'
