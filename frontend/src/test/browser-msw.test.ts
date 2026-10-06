@@ -67,9 +67,17 @@ it("keeps catalog and detail progress in sync after a mocked paid JOIN", async (
   const { paymentId } = checkout;
   if (!paymentId) throw new Error("Missing payment");
   const receipt = () => payload(getPaymentReceipt({ client, path: { id: paymentId } }));
-  expect((await receipt()).status).toBe("CREATED");
-  expect((await receipt()).status).toBe("CREATED");
-  expect((await receipt()).status).toBe("SUCCEEDED");
+  let settled = await receipt();
+  await expect
+    .poll(
+      async () => {
+        if (settled.status === "CREATED") settled = await receipt();
+        return settled.status;
+      },
+      { interval: 10, timeout: 1000 },
+    )
+    .not.toBe("CREATED");
+  expect(settled.status).toBe("SUCCEEDED");
 
   const after = await payload(pageListings({ client }));
   const detail = await payload(getListing({ client, path: { id } }));

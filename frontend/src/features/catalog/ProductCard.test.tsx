@@ -16,6 +16,21 @@ const product = {
   currency: "sgd",
 };
 
+const invalidDeals = [
+  undefined,
+  null,
+  {},
+  { currentSize: 3 },
+  { targetSize: 5 },
+  { currentSize: 3, targetSize: 0 },
+  { currentSize: -1, targetSize: 5 },
+  { currentSize: 3, targetSize: -5 },
+  { currentSize: 1.5, targetSize: 5 },
+  { currentSize: 3, targetSize: 5.5 },
+  { currentSize: Number.NaN, targetSize: 5 },
+  { currentSize: 3, targetSize: Number.POSITIVE_INFINITY },
+];
+
 describe("ProductCard", () => {
   it("shows the title and links to the listing detail", async () => {
     await renderWithRouter(<ProductCard product={product} />);
@@ -106,31 +121,34 @@ describe("ProductCard", () => {
     await renderWithRouter(
       <ProductCard product={{ ...solo, deal: { currentSize: 2, targetSize: 8 } }} />,
     );
-    expect(screen.getByText("S$89.00")).toBeInTheDocument();
+    expect(screen.getByText("S$89.00")).not.toHaveClass("line-through");
     expect(screen.getByRole("progressbar", { name: "2 of 8 joined" })).toBeInTheDocument();
+    expect(screen.queryByText("Buying alone")).not.toBeInTheDocument();
     expect(screen.queryByText("No open bloc yet")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /start one/i })).not.toBeInTheDocument();
   });
-  it.each([
-    undefined,
-    null,
-    {},
-    { currentSize: 3 },
-    { targetSize: 5 },
-    { currentSize: 3, targetSize: 0 },
-    { currentSize: -1, targetSize: 5 },
-    { currentSize: 3, targetSize: -5 },
-    { currentSize: 1.5, targetSize: 5 },
-    { currentSize: 3, targetSize: 5.5 },
-    { currentSize: Number.NaN, targetSize: 5 },
-    { currentSize: 3, targetSize: Number.POSITIVE_INFINITY },
-  ])("omits progress when sizes are missing or invalid: %j", async (deal) => {
+  it.each(invalidDeals)("omits progress when sizes are missing or invalid: %j", async (deal) => {
     await renderWithRouter(
       <ProductCard product={{ ...product, ...(deal === undefined ? {} : { deal }) }} />,
     );
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
     expect(screen.queryByText(/of .* joined/)).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: product.title })).toHaveAttribute(
+      "href",
+      `/products/${product.id}`,
+    );
+  });
+
+  it.each(invalidDeals)("keeps the solo fallback when progress is invalid: %j", async (deal) => {
+    const { groupPrice: _omitted, ...solo } = product;
+    await renderWithRouter(
+      <ProductCard product={{ ...solo, ...(deal === undefined ? {} : { deal }) }} />,
+    );
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+    expect(screen.getByText("S$89.00")).not.toHaveClass("line-through");
+    expect(screen.getByText("Buying alone")).toBeInTheDocument();
+    expect(screen.getByText("No open bloc yet")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /start one/i })).toHaveAttribute(
       "href",
       `/products/${product.id}`,
     );

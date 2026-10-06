@@ -161,9 +161,9 @@ Category values are mapped centrally because the API contract does not publish a
 Cards use a bordered 8px surface, image/fallback area, title/subtitle, and price block.
 
 - Open bloc: bloc price is prominent in `accent-soft-foreground`; solo price is struck through.
-- No open bloc: solo price is prominent and the secondary line says "Buying alone".
+- Neither a bloc price nor valid open-bloc progress: solo price is prominent and the secondary line says "Buying alone". With valid progress but no bloc price, keep the solo price unstruck and omit "Buying alone"; do not invent a bloc price.
 - No percent-off badges or countdowns on the catalog grid.
-- Open bloc progress (FB-16): "N of M joined", seats left (the last seat in semibold) and a 10px accent bar, from the summary's nullable `deal` (#375); no row when `deal` is null. No countdown on the grid. Missing, fractional, negative or non-finite sizes do not produce invented counts; the progress row remains part of the card's detail-link click area.
+- Open bloc progress (FB-16): "N of M joined", seats left (the last seat in semibold) and a 10px accent bar, from the summary's nullable `deal` (#375); no row when `deal` is null. No countdown on the grid. Missing, fractional, negative or non-finite sizes do not produce invented counts or suppress the no-bloc fallback when there is no bloc price; the progress row remains part of the card's detail-link click area.
 
 SGD is displayed as `S$` with two decimals.
 

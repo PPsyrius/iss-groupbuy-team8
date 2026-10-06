@@ -10,9 +10,9 @@ import { Price } from "./Price";
 // Catalog tile from the Claude Design artboards (docs/design-screens.md §4.1 "Card anatomy"):
 // a sanctioned custom composition, not a HeroUI Card, so the media block can bleed to the edges.
 // An open bloc adds the artboard's progress row ("3 of 5 joined", seats left, bar) from the
-// summary's `deal` (#375, CR-11); the grid shows no countdown. With no bloc price the card reads
-// "Buying alone" and offers "Start one →", which goes to the listing detail where the bloc
-// actions live. The title link
+// summary's `deal` (#375, CR-11); the grid shows no countdown. With neither a bloc price nor
+// valid progress the card reads "Buying alone" and offers "Start one →", which goes to the
+// listing detail where the bloc actions live. The title link
 // stretches over the tile via `after:absolute after:inset-0`, so the tile is `relative` (its
 // containing block) and the start link is `relative` too, painting above the stretched overlay.
 export function ProductCard({ product }: Readonly<{ product: ProductSummaryResponse }>) {
@@ -26,7 +26,8 @@ export function ProductCard({ product }: Readonly<{ product: ProductSummaryRespo
     currency = "sgd",
     deal,
   } = product;
-  const hasBloc = groupPrice !== undefined && groupPrice !== null;
+  const hasBlocPrice = groupPrice !== undefined && groupPrice !== null;
+  const progress = validProgress(deal);
   const detail = id ? { to: "/products/$productId" as const, params: { productId: id } } : null;
   return (
     <article className="border-border bg-surface relative flex h-full flex-col overflow-hidden rounded-lg border">
@@ -45,7 +46,7 @@ export function ProductCard({ product }: Readonly<{ product: ProductSummaryRespo
           {subtitle ? <p className="text-muted text-sm">{subtitle}</p> : null}
         </div>
         <div className="mt-auto flex flex-wrap items-baseline gap-2.5">
-          {hasBloc ? (
+          {hasBlocPrice ? (
             <>
               <Price
                 amount={groupPrice}
@@ -69,12 +70,12 @@ export function ProductCard({ product }: Readonly<{ product: ProductSummaryRespo
                   className="text-2xl font-semibold tabular-nums"
                 />
               )}
-              <span className="text-muted text-sm">Buying alone</span>
+              {progress ? null : <span className="text-muted text-sm">Buying alone</span>}
             </>
           )}
         </div>
-        {deal ? <CardProgress deal={deal} /> : null}
-        {hasBloc || deal ? null : (
+        {progress ? <CardProgress progress={progress} /> : null}
+        {hasBlocPrice || progress ? null : (
           <div className="flex items-center justify-between gap-2">
             <span className="text-muted text-sm">No open bloc yet</span>
             {detail ? (
@@ -94,7 +95,8 @@ export function ProductCard({ product }: Readonly<{ product: ProductSummaryRespo
 
 // §4.1 progress row: "N of M joined", seats left (the last one emphasised) and a 10px bar, as on
 // the listing detail's Open bloc row but without its countdown, dots or Join.
-function CardProgress({ deal }: Readonly<{ deal: ActiveDealResponse }>) {
+function validProgress(deal: ActiveDealResponse | null | undefined) {
+  if (!deal) return null;
   const { currentSize: joined, targetSize: target } = deal;
   if (
     typeof joined !== "number" ||
@@ -106,6 +108,12 @@ function CardProgress({ deal }: Readonly<{ deal: ActiveDealResponse }>) {
   ) {
     return null;
   }
+  return { joined, target };
+}
+
+function CardProgress({
+  progress: { joined, target },
+}: Readonly<{ progress: { joined: number; target: number } }>) {
   const label = `${joined} of ${target} joined`;
   return (
     <div className="pointer-events-none flex flex-col gap-1.5">
