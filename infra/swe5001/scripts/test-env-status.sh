@@ -12,16 +12,38 @@ aws() {
     'resourcegroupstaggingapi get-resources')
       case "$SCENARIO" in
         tag_error) return 41 ;;
-        instance_error | terminated | running) printf '%s\n' 'arn:aws:ec2:ap-southeast-1:402178232802:instance/i-demo' ;;
+        instance_error | terminated | instance_gone | running) printf '%s\n' 'arn:aws:ec2:ap-southeast-1:402178232802:instance/i-demo' ;;
+        ec2_error | ec2_deleted | ec2_live) printf '%s\n' 'arn:aws:ec2:ap-southeast-1:402178232802:security-group/sg-demo' ;;
+        cluster_error | cluster_inactive | cluster_active) printf '%s\n' 'arn:aws:ecs:ap-southeast-1:402178232802:cluster/blocbuy-swe5001' ;;
         task_only) printf '%s\n' 'arn:aws:ecs:ap-southeast-1:402178232802:task-definition/demo:1' ;;
       esac
       ;;
     'ec2 describe-instances')
-      if [ "$SCENARIO" = instance_error ]; then return 42; fi
-      if [ "$SCENARIO" = terminated ]; then printf '%s\n' terminated; else printf '%s\n' running; fi
+      case "$SCENARIO" in
+        instance_error) return 42 ;;
+        terminated) printf '%s\n' terminated ;;
+        instance_gone) printf '%s\n' None ;;
+        *) printf '%s\n' running ;;
+      esac
+      ;;
+    'ec2 describe-tags')
+      case "$SCENARIO" in
+        ec2_error) return 45 ;;
+        ec2_deleted) printf '%s\n' 0 ;;
+        *) printf '%s\n' 2 ;;
+      esac
       ;;
     'ecs describe-clusters')
-      if [ "$SCENARIO" = ecs_error ]; then return 43; fi
+      # Status lookup of a tagged cluster ARN; the later ACTIVE filter prints nothing.
+      if [[ "$*" == *'clusters[0].status'* ]]; then
+        case "$SCENARIO" in
+          cluster_error) return 46 ;;
+          cluster_inactive) printf '%s\n' INACTIVE ;;
+          *) printf '%s\n' ACTIVE ;;
+        esac
+      elif [ "$SCENARIO" = ecs_error ]; then
+        return 43
+      fi
       ;;
     *) printf 'unexpected AWS call: %s\n' "$*" >&2; return 44 ;;
   esac
@@ -51,4 +73,11 @@ check ecs_error failure 'cannot inspect ECS cluster'
 check empty success 'no runtime resource tagged Stack=runtime'
 check task_only success 'no runtime resource tagged Stack=runtime'
 check terminated success 'no runtime resource tagged Stack=runtime'
+check instance_gone success 'no runtime resource tagged Stack=runtime'
 check running failure 'runtime resources remain'
+check ec2_error failure 'cannot inspect runtime resource sg-demo'
+check ec2_deleted success 'no runtime resource tagged Stack=runtime'
+check ec2_live failure 'runtime resources remain'
+check cluster_error failure 'cannot inspect ECS cluster blocbuy-swe5001'
+check cluster_inactive success 'no runtime resource tagged Stack=runtime'
+check cluster_active failure 'runtime resources remain'
