@@ -34,7 +34,7 @@ Development and release are separated. All work merges into `dev`; the distribut
 | DevSecOps pipeline scripts are deliverables | Infrastructure is Terraform-only, and deployment runs through GitHub Actions with OIDC. |
 | Demo project with no real traffic; cost must stay minimal | The runtime environment is disposable and normally absent. It exists only during a sprint promotion run (about one hour) or a manual session (baseline measurement, rehearsal, presentation), and is destroyed afterwards ([section 3.4](#34-devops-and-devsecops)). |
 | SWE5006 feature work continues on the same trunk | SWE5001 changes are additive: they must not move or rewrite code that SWE5006 is still changing, and must keep the monolith deployment and its tests green ([section 2.3](#23-implementation-approach-split-by-assembly-not-by-relocation)). |
-| Key dates: proposal 4 Oct, presentation 23 Oct (Team 8, 16:15), report 16 Nov | See the timeline in [section 4](#4-effort-estimates-and-timeline). |
+| Key dates: proposal 4 Oct, presentation 21 Oct (Team 8, 16:15–16:55 SGT), report 16 Nov | See the timeline in [section 4](#4-effort-estimates-and-timeline). |
 
 ### 1.3 Deliberate deviations from SWE5006 rules (distributed shape only)
 
@@ -223,7 +223,7 @@ Seed, producers, consumers, the core interaction and the use-case-to-service map
 Validation is deliberately split in two, to keep runtime hours low:
 
 - **Per promotion (each sprint):** only a simple validation. The smoke suite runs through CloudFront against the freshly created environment, and the run checks that every ECS service reached steady state on the new images. Nothing below runs in a promotion.
-- **Final presentation:** the demonstrations below run only in manual sessions (one baseline measurement, the rehearsal on 22 Oct and the presentation on 23 Oct), each created and destroyed with the manual scripts.
+- **Final presentation:** the demonstrations below run only in manual sessions (one baseline measurement, a rehearsal before 21 Oct and the presentation on 21 Oct), each created and destroyed with the manual scripts.
 
 1. **HTTP scaling:** k6 ramps load on `GET /api/v1/products`. The dashboard shows `commerce-svc` scaling from 1 task to N and p95 latency recovering.
 2. **Queue scaling:** a burst of team expiries grows the SQS backlog; `notification-svc` scales out and drains it.
@@ -324,7 +324,7 @@ topic branch ──PR──▶ dev ──promotion PR──▶ prod ──push�
 - **`prod` is the SWE5001 release branch.** It is created once from `dev` and only ever advances by a promotion PR whose head is `dev`. No topic branch targets `prod`, and there are no direct pushes or hotfixes on it: a fix lands on `dev` and is promoted.
 - **Promotion merges with a merge commit**, never squash or rebase. `prod` then stays an ancestor-compatible snapshot of `dev`, and the next promotion PR shows exactly the `dev` commits not yet released, without conflicts.
 - **The merge is the only deployment trigger.** Nothing else deploys to ECS automatically. The push to `prod` starts one self-contained **promotion run** (below).
-- **Cadence: once per sprint.** One promotion at the end of each two-week sprint: Sprint 3 on Fri 9 Oct (after the 8 Oct code freeze) and Sprint 4 on Tue 20 Oct (before the 22 Oct rehearsal). An extra promotion is the exception and needs the team's agreement, because each one costs a full environment build.
+- **Cadence: once per sprint.** One promotion at the end of each two-week sprint: Sprint 3 on Fri 9 Oct (after the 8 Oct code freeze) and Sprint 4 on Tue 20 Oct (one day before the 21 Oct presentation; rehearse before the presentation). An extra promotion is the exception and needs the team's agreement, because each one costs a full environment build.
 - **Separate from SWE5006 production.** The `prod` branch is not the SWE5006 `backend-prod` environment. No existing workflow triggers on `prod` (they listen to `dev` pushes, PRs into `dev` and `v*` tags), so promotion cannot start an EC2 release, and `v*` tags cannot start an ECS release.
 
 #### Promotion run (one per sprint)
@@ -391,7 +391,7 @@ SWE5001 follows the repository's existing rules in `CONTRIBUTING.md`: PRs target
 | Topic branches | The repository's existing pattern, with `swe5001` in the name, for example `feature/swe5001-identity-svc-20261012` or `chore/swe5001-foundation-stack-20261001` |
 | Commits | Conventional Commits with the service or stack as scope, for example `feat(identity-svc): ...` or `chore(infra-runtime): ...` |
 | Promotion PRs | Head `dev`, base `prod`, title `chore(release): promote dev to prod (<yyyy-mm-dd>)`; the body lists the included PRs and links the release-gate plan comment |
-| Milestone tags | `swe5001-demo-20261023`, `swe5001-report-20261116`, on `prod` commits |
+| Milestone tags | `swe5001-demo-20261021`, `swe5001-report-20261116`, on `prod` commits |
 
 **Coexistence rules:**
 
@@ -411,6 +411,8 @@ SWE5001 follows the repository's existing rules in `CONTRIBUTING.md`: PRs target
 
 ## 4. Effort Estimates and Timeline
 
+2026-10-05 scheduling update (#393): the Team 8 notification rescheduled the presentation to **21 October 2026, 16:15–16:55 SGT (UTC+08)**. This supersedes the 23 October presentation and 22 October rehearsal dates in the submitted proposal. The report date remains 16 November. The 20 October promotion target is unchanged and now leaves one day for recovery; the team must confirm a rehearsal slot before the presentation and record a tested fallback.
+
 The authoritative work breakdown is the proposal's Table 7 (50 person-days); PRs record actual hours against the same WBS numbers (section 3.6). The mapping below shows where the plan sections land.
 
 | WBS | Work item | Plan section |
@@ -429,9 +431,9 @@ The authoritative work breakdown is the proposal's Table 7 (50 person-days); PRs
 | 28 Sep – 4 Oct | Proposal. `dev` → `prod` release flow agreed. ADRs for section 1.3. `foundation`, `network` and `ecs-cluster` modules. Run the monolith assembly (`topology=monolith`) on Fargate: strangler step 0. |
 | 5 – 11 Oct | `blocbuy-platform-starter` and the `blocbuy.topology` switch. Outbox, SNS and SQS. `notification-svc` assembly with event consumers. |
 | 12 – 18 Oct | `identity-svc` assembly (HTTP `UserAppService` adapter, shared session). Per-service databases and grants. ALB routing. Scaling policies. |
-| 9 Oct | Sprint 3 promotion run: first deployment of the distributed shape (create, validate, destroy). |
-| 19 – 22 Oct | Sprint 4 promotion run on Tue 20 Oct. Manual session for the baseline measurement if not done earlier. Rehearsal on 22 Oct in a manual session: k6, dashboard, self-healing and rollback drills, fallback recording, then `env-down.sh`. |
-| 23 Oct | `env-up.sh` before noon; presentation at 16:15; `env-down.sh` and `env-status.sh` after it. |
+| 9 Oct | Sprint 3 promotion run: the monolith on ECS (strangler step 0; create, validate, destroy). Three-service deployment follows the backend assemblies and Phase B. |
+| 19 – 20 Oct | Sprint 4 promotion target remains Tue 20 Oct. Complete the baseline and a full rehearsal before 21 Oct: k6, dashboard, self-healing and rollback drills, fallback recording, then `env-down.sh`. The exact rehearsal slot needs team confirmation. |
+| 21 Oct | `env-up.sh` before noon; presentation 16:15–16:55 SGT; `env-down.sh` and `env-status.sh` after it. |
 | by 16 Nov | Per-service Flyway baselines once SWE5006 feature work stops. Report; final `terraform destroy`. |
 
 ---
@@ -443,7 +445,7 @@ The authoritative work breakdown is the proposal's Table 7 (50 person-days); PRs
 | A promotion run fails half-way and leaves billable resources | The destroy step runs with `if: always()` and is followed by `env-status.sh`, which fails the run if anything tagged `Stack=runtime` remains; the nightly `down` is the second line of defence. |
 | Only two promotions happen, so a broken distributed shape is found late | `service-images` builds and smoke-boots every service on each `dev` PR; the Sprint 3 promotion is scheduled early enough (9 Oct) to fix issues before the Sprint 4 promotion. |
 | `prod` diverges from `dev` (squash merge, direct push, hotfix on `prod`) | The `prod` ruleset blocks direct and force pushes and allows only merge commits; the `promotion-source` check rejects any head other than `dev`. |
-| The `env-up.sh` apply fails on presentation day | Every promotion run and the 22 Oct rehearsal are full rebuilds with the same script; apply before noon on 23 Oct; a recorded fallback video of the scaling demo. |
+| The `env-up.sh` apply fails on presentation day | Every promotion run and the rehearsal before 21 Oct are full rebuilds with the same script; apply before noon on 21 Oct; a recorded fallback video of the scaling demo. |
 | SWE5001 changes on the shared trunk break SWE5006 work, its deployment or its evidence | Additive changes only; the monolith stays the default topology; CI builds the monolith and the SWE5006 required checks stay required; the EC2 stack and workflows are not touched (section 3.6). |
 | The SWE5006 team does not agree to SNS/SQS and the new modules on `dev` | Agree the section 1.3 ADRs at the next stand-up, before the first code PR. |
 | Synchronous `requireActive` inside the webhook transaction | 1–2 s timeout; a timeout or `5xx` fails the webhook with 500 instead of taking the `BUYER_INACTIVE` reject path, so Stripe retries (section 2.4). |

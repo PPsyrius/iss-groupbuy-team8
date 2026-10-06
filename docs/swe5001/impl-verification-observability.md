@@ -1,8 +1,10 @@
 # SWE5001 Implementation Plan: Verification, Performance Testing and Observability
 
+2026-10-05 scheduling update (#393): Team 8 presents on **21 October 2026, 16:15–16:55 SGT (UTC+08)**. Complete the rehearsal and fallback recording before that slot; its exact date is pending team confirmation. The former 22 October rehearsal is superseded. The 20 October promotion target remains, with only one day of recovery margin.
+
 Detailed plan for proving the architecture works, for the [refactoring plan](microservice-refactoring-plan.md), section 3.2. Companion plans: [backend architecture](impl-backend-architecture.md), [GitHub configuration](impl-github-configuration.md), [AWS infrastructure](impl-aws-infrastructure.md).
 
-Status: **Draft, revised 2026-10-04** (first draft 2026-09-29; 2026-10-04: validation split into a simple per-promotion check and a one-off final demonstration). Numeric targets are provisional until the baseline run (V2) is recorded.
+Status: **Draft, revised 2026-10-05** (first draft 2026-09-29; 2026-10-05: presentation moved to 21 October; 2026-10-04: validation split into a simple per-promotion check and a one-off final demonstration). Numeric targets are provisional until the baseline run (V2) is recorded.
 
 ## 0. Validation scope
 
@@ -11,7 +13,7 @@ The ECS environment exists only for about one hour per sprint and for a few manu
 | Level | When | What runs | Evidence |
 | --- | --- | --- | --- |
 | Promotion validation | Every `dev` → `prod` promotion run (once per sprint: 9 Oct, 20 Oct) | Smoke suite V1 through CloudFront, plus ECS steady state on the new digests | Workflow artifact: smoke output, service events, digests, step timings (including create and destroy durations for V8) |
-| Final demonstration | Manual sessions created with `env-up.sh`: one baseline session, the rehearsal on 22 Oct and the presentation on 23 Oct | V2–V7 | Files under `docs/swe5001/evidence/`, the rehearsal recording |
+| Final demonstration | Manual sessions created with `env-up.sh`: one baseline session, a rehearsal before 21 Oct and the presentation on 21 Oct | V2–V7 | Files under `docs/swe5001/evidence/`, the rehearsal recording |
 
 No k6 run or drill is part of a promotion run.
 
@@ -144,11 +146,11 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 | V-c | k6 scripts, baseline run V2, targets fixed | 6.1 | AWS S0 |
 | V-d | V3 and V4 runs with evidence | 6.1 | backend B6–B7, AWS R6 |
 | V-e | Drills V5–V7 | 6.2 | V-b |
-| V-f | V8 durations from the promotion runs, and the final rehearsal on 22 Oct | 6.3 | GitHub G5, AWS S1 |
+| V-f | V8 durations from the promotion runs, and the final rehearsal before 21 Oct (slot pending team confirmation) | 6.3 | GitHub G5, AWS S1 |
 
-## 7. Presentation-day checklist (23 Oct)
+## 7. Presentation-day checklist (21 Oct, 16:15–16:55 SGT)
 
 - `env-up.sh` before 12:00 (release digests from the Sprint 4 promotion); smoke suite green.
 - Dashboard open with a 1-hour window; k6 scripts ready on a laptop with the base URL set.
-- Fallback: screen recording of V3 and V4 from the rehearsal on 22 Oct.
+- Fallback: screen recording of V3 and V4 from the rehearsal completed before 21 Oct.
 - After the presentation: `env-down.sh`, and confirm `env-status.sh` reports nothing left.
