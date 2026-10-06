@@ -1,6 +1,9 @@
--- Grant the admin role to one signed-in account on dev (US34, #222). Manual, one-time, idempotent.
--- Grants never travel through Flyway (#68). Run through the SSM 5432 tunnel:
+-- Grant the admin role to one signed-in account on dev or the local full stack (US34, #222).
+-- Manual, one-time, idempotent. Grants never travel through Flyway (#68). On dev (database BlocBuy)
+-- run through the SSM 5432 tunnel:
 --   psql -h 127.0.0.1 -p 5432 -U <db user> -d BlocBuy -v admin_email='<google email>' -f scripts/grant-dev-admin.sql
+-- On the local full stack (database Blocbuy, fullstack-localhost/compose.yaml), from the repository root:
+--   docker compose -f fullstack-localhost/compose.yaml exec -T postgres psql -U blocbuy -d Blocbuy -v admin_email='<google email>' -f - < scripts/grant-dev-admin.sql
 -- The account must have signed in once. First run: granted = 1, already_admin = 0. Rerun:
 -- granted = 0, already_admin = 1. A missing or inactive account changes nothing.
 -- Revoke (soft delete, keeps the audit row):
@@ -13,7 +16,7 @@ FROM domain.sys_user
 WHERE email = :'admin_email' AND deleted = false AND status = 'active' \gset
 \if :account_found
 \else
-  \echo 'No single active account with that email; sign in once on dev first.'
+  \echo 'No single active account with that email; sign in once first.'
   ROLLBACK;
   \quit
 \endif

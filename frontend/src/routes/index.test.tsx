@@ -62,6 +62,17 @@ describe("/ (products list) loader", () => {
     expect(screen.getByRole("link", { name: "Sign in" })).toBeInTheDocument();
   });
 
+  // FB-16: the summary's `deal` (#375) reaches the card through the list query.
+  it("shows each card's open-bloc progress from the listing summary", async () => {
+    serveListings([
+      { ...listing(1), deal: { dealId: "d1", currentSize: 3, targetSize: 5 } },
+      { ...listing(2), deal: null },
+    ]);
+    await renderAt("/");
+    expect(await screen.findByText("3 of 5 joined")).toBeInTheDocument();
+    expect(screen.getAllByRole("progressbar")).toHaveLength(1);
+  });
+
   it("redirects a page past the last one to the last page, keeping size and category", async () => {
     serveListings([listing(1), listing(2), listing(3)]);
     const router = await renderAt("/?page=999&size=20&category=groceries");

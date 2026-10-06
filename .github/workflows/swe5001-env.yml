@@ -1,0 +1,130 @@
+# Manual SWE5001 sessions (GitHub plan, section 6; AWS plan, section 7): thin wrappers
+# around infra/swe5001/scripts. Run from the prod ref; the swe5001-demo environment
+# rejects any other branch. A nightly safety net destroys a forgotten session.
+name: swe5001-env
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "up: create runtime and smoke-test it; down: destroy it; status: green only when nothing is left"
+        type: choice
+        options: [status, up, down]
+        default: status
+      digests:
+        description: Image digests for up (candidate only before the first promotion)
+        type: choice
+        options: [release, candidate]
+        default: release
+  schedule:
+    - cron: "0 15 * * *" # 23:00 SGT
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  TERRAFORM_VERSION: 1.16.4
+
+jobs:
+  # Scheduled runs execute on the default branch (dev), which cannot reach the
+  # swe5001-demo roles, so this job only starts a down run on the prod ref.
+  dispatch:
+    if: github.event_name == 'schedule' && vars.ENABLE_SWE5001_NIGHTLY_DOWN == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Dispatch down on prod
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if ! error=$(gh api "repos/${REPO}/branches/prod" --silent 2>&1); then
+            if grep -q 'HTTP 404' <<< "$error"; then
+              echo "No prod branch yet; nothing to destroy."
+              exit 0
+            fi
+            echo "::error::prod branch lookup failed: ${error}"
+            exit 1
+          fi
+          gh workflow run swe5001-env.yml --repo "$REPO" --ref prod -f action=down
+
+  session:
+    name: ${{ inputs.action }}
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/prod'
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    # up and down write Terraform state and queue behind a promotion run; status does not.
+    # queue: max keeps every pending run, so a later dispatch cannot replace a queued down.
+    concurrency:
+      group: ${{ inputs.action == 'status' && format('swe5001-status-{0}', github.run_id) || 'swe5001-tfstate' }}
+      cancel-in-progress: false
+      queue: max
+    environment:
+      name: swe5001-demo
+      url: ${{ vars.SWE5001_FRONTEND_URL }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      SWE5001_TF_STATE_BUCKET: ${{ vars.SWE5001_TF_STATE_BUCKET }}
+      TF_IN_AUTOMATION: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.SWE5001_TF_APPLY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+          role-session-name: SWE5001-Env-${{ github.run_id }}
+          role-duration-seconds: 7200
+
+      - name: Run ${{ inputs.action }}
+        env:
+          ACTION: ${{ inputs.action }}
+          DIGESTS: ${{ inputs.digests }}
+          SWE5001_TIMINGS_FILE: ${{ runner.temp }}/timings.txt
+        run: |
+          set -euo pipefail
+          scripts=infra/swe5001/scripts
+          case "$ACTION" in
+            up) "$scripts/env-up.sh" "--${DIGESTS}" ;;
+            down) "$scripts/env-down.sh" ;;
+            status) "$scripts/env-status.sh" ;;
+            *) echo "::error::unknown action ${ACTION}"; exit 1 ;;
+          esac
+
+      - name: Summarise
+        if: always()
+        env:
+          ACTION: ${{ inputs.action }}
+          FRONTEND_URL: ${{ vars.SWE5001_FRONTEND_URL }}
+        run: |
+          {
+            echo "### SWE5001 ${ACTION}"
+            if [ "$ACTION" = up ]; then
+              echo "- URL: ${FRONTEND_URL}"
+              echo "- The nightly down run destroys it at 23:00 SGT; run \`down\` when the session ends."
+            fi
+            if [ -s "$RUNNER_TEMP/timings.txt" ]; then
+              echo
+              echo '| Step | Seconds |'
+              echo '| --- | --- |'
+              sed -E 's/^(.*) ([0-9]+)$/| \1 | \2 |/' "$RUNNER_TEMP/timings.txt"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

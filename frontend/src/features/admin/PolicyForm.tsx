@@ -12,12 +12,12 @@ import {
 } from "@heroui/react";
 import type { ZonedDateTime } from "@internationalized/date";
 import { revalidateLogic, useForm, useStore } from "@tanstack/react-form";
-import { Link, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import type { PolicyResponse } from "@/api/generated/types.gen";
 
-import { messageOf } from "./field-message";
+import { type FormAlertState, messageOf, placeProblem } from "./field-message";
+import { FormAlert } from "./FormAlert";
 import type { SubmitProblem } from "./ListingForm";
 import { formatSgd } from "./money";
 import { replacesActiveNow, type RuleTiming } from "./policy";
@@ -51,8 +51,7 @@ export function PolicyForm({
   onCancel: () => void;
   onDirtyChange?: ((dirty: boolean) => void) | undefined;
 }>) {
-  const [alert, setAlert] = useState<SubmitProblem["alert"] & { signIn?: boolean }>();
-  const { href } = useLocation();
+  const [alert, setAlert] = useState<FormAlertState>();
   const form = useForm({
     defaultValues: policyFormDefaults(rule, nowMs),
     validationLogic: revalidateLogic(),
@@ -71,24 +70,16 @@ export function PolicyForm({
       setAlert(undefined);
       const problem = await onSubmit(value);
       if (!problem) return;
-      const unplaced: string[] = [];
-      for (const [name, message] of Object.entries(problem.fields ?? {})) {
-        if (isFieldName(name)) {
+      setAlert(
+        placeProblem(problem, (name, message) => {
+          if (!isFieldName(name)) return false;
           formApi.setFieldMeta(name, (prev) => ({
             ...prev,
             errorMap: { ...prev.errorMap, onServer: message },
           }));
-        } else {
-          unplaced.push(message);
-        }
-      }
-      if (problem.alert || unplaced.length > 0) {
-        setAlert({
-          title: problem.alert?.title ?? "Some fields need another look",
-          description: [problem.alert?.description, ...unplaced].filter(Boolean).join(" "),
-          ...(problem.signIn ? { signIn: true } : {}),
-        });
-      }
+          return true;
+        }),
+      );
     },
   });
   const validFrom = useStore(form.store, (state) => state.values.validFrom);
@@ -111,23 +102,7 @@ export function PolicyForm({
         void form.handleSubmit();
       }}
     >
-      {alert ? (
-        <Alert status="danger" role="alert">
-          <Alert.Content>
-            <Alert.Title>{alert.title}</Alert.Title>
-            {alert.description ? <Alert.Description>{alert.description}</Alert.Description> : null}
-            {alert.signIn ? (
-              <Link
-                to="/login"
-                search={{ returnTo: href }}
-                className="font-medium underline underline-offset-4"
-              >
-                Sign in
-              </Link>
-            ) : null}
-          </Alert.Content>
-        </Alert>
-      ) : null}
+      <FormAlert alert={alert} />
 
       {/* A text field, not a NumberField: the price is a decimal string and never a float. */}
       <form.Field name="amount">

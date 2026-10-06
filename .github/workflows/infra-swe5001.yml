@@ -1,19 +1,23 @@
 # SWE5001 Terraform checks (docs/swe5001/impl-github-configuration.md, section 6).
 # Plan only: nothing is applied from a PR. `static` needs no AWS access; `plan` runs
 # once an operator has applied `foundation` and set the swe5001-plan environment and
-# repository variables (infra/swe5001/README.md).
+# repository variables (infra/swe5001/README.md). PRs into prod run it unfiltered
+# through swe5001-release-gate.yml (required check infra-plan).
 name: infra-swe5001
 
 on:
   pull_request:
-    branches: [dev, prod]
+    branches: [dev]
     paths:
       - "infra/swe5001/**"
       - "perf/smoke/**"
       - ".github/workflows/infra-swe5001.yml"
+  workflow_call:
 
+# github.workflow is the caller's name when called, so a direct run and a gate run on
+# the same ref never cancel each other.
 concurrency:
-  group: infra-swe5001-${{ github.ref }}
+  group: infra-swe5001-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions: {}

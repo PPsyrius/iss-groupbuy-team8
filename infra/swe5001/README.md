@@ -4,8 +4,8 @@ Infrastructure for the SWE5001 distributed deployment shape on Amazon ECS. It is
 
 | Stack | Lifecycle | State key | Applied by | Status |
 | --- | --- | --- | --- | --- |
-| [`foundation/`](foundation/) | Persistent | `swe5001/foundation.tfstate` | An operator, from a workstation (it creates the roles CI assumes) | Code ready; not applied |
-| [`edge/`](edge/) | Persistent | `swe5001/edge.tfstate` | Created once by an operator; afterwards the promotion run and `env-up.sh` only re-point the distribution at the new ALB | Code ready (PR 5 in #376); not applied |
+| [`foundation/`](foundation/) | Persistent | `swe5001/foundation.tfstate` | An operator, from a workstation or CloudShell (it creates the roles CI assumes) | Operator applied 2026-10-05 without billing: 23 creates, post-apply plan exit 0; GitHub OIDC plan passed with `No changes.` on 2026-10-06 |
+| [`edge/`](edge/) | Persistent | `swe5001/edge.tfstate` | Created once by an operator; afterwards the promotion run and `env-up.sh` only re-point the distribution at the new ALB | Operator applied from `605c8e27` on 2026-10-06: 9 creates, post-apply plan exit 0; edge variables configured |
 | [`runtime/`](runtime/) | Exists only during a promotion run or a manual session | `swe5001/runtime.tfstate` | Promotion run and `env-up.sh` / `env-down.sh` | Code ready (PRs 3–4 in #376); not applied. Messaging, scaling and alarms follow in PRs 8 and 10 |
 
 All stacks use Terraform `~> 1.16.4`, AWS provider `~> 5.100`, the existing state bucket `blocbuy-tfstate-402178232802` and S3-native locking (`use_lockfile = true`). Non-secret inputs are in [`envs/demo.tfvars`](envs/demo.tfvars). Operators seed application secrets in SSM Parameter Store under `/blocbuy/swe5001/`. The origin secret is also held in the private `edge` and `runtime` Terraform states for CloudFront/ALB routing; the Valkey AUTH token is held in `runtime` state. The PR plan role cannot read either state.
@@ -36,9 +36,11 @@ trivy config --severity HIGH,CRITICAL --exit-code 1 infra/swe5001
 
 Run with your own AWS credentials in account `402178232802`, region `ap-southeast-1`. Never paste a full plan, a parameter value or a decrypted response into a PR, issue or chat; share resource addresses and actions only.
 
+In CloudShell, the persistent home directory may not fit the AWS provider. Set `export TF_DATA_DIR="$(mktemp -d /tmp/swe5001-foundation.XXXXXX)"` before `init` to keep provider and backend working data on the temporary filesystem. Keep the same session and variable through plan/apply; after a session reset, create a new directory and reinitialize. Configuration remains in the clone and remote state remains in S3.
+
 ### 1. Activate the cost allocation tag
 
-The budget filters on the `Course` tag, which Billing ignores until it is activated (it can take up to 24 hours to apply):
+Optional: `enable_budget` defaults to `false`, so bootstrap requires no billing access or budget-recipient parameter. Skip this step for the demo. To enable the budget later, the organisation management/payer account must activate the `Course` tag, which Billing ignores until it is activated (it can take up to 24 hours to apply):
 
 ```bash
 aws ce update-cost-allocation-tags-status --cost-allocation-tags-status TagKey=Course,Status=Active
@@ -46,11 +48,15 @@ aws ce update-cost-allocation-tags-status --cost-allocation-tags-status TagKey=C
 
 ### 2. Seed the parameters
 
-`BUDGET_ALERT_EMAILS` must exist before the first plan, because the budget reads it. The secrets are needed by `runtime` later and can be seeded now. Use `read -rs` so values stay out of shell history; add `--overwrite` to rotate a value.
+Only when `enable_budget = true`, seed the non-secret budget recipients before planning:
 
 ```bash
 aws ssm put-parameter --name /blocbuy/swe5001/shared/BUDGET_ALERT_EMAILS --type String --value '<a@example.com>,<b@example.com>'
+```
 
+The secrets are needed by `runtime` later and can be seeded now; they are not required for the foundation plan. Use `read -rs` so values stay out of shell history; add `--overwrite` to rotate a value.
+
+```bash
 for name in identity/GOOGLE_CLIENT_ID identity/GOOGLE_CLIENT_SECRET commerce/STRIPE_API_KEY commerce/STRIPE_WEBHOOK_SECRET; do
   read -rsp "$name: " value; echo
   aws ssm put-parameter --name "/blocbuy/swe5001/$name" --type SecureString --value "$value" > /dev/null
@@ -73,7 +79,7 @@ terraform -chdir=infra/swe5001/foundation apply foundation.tfplan
 rm infra/swe5001/foundation/foundation.tfplan
 ```
 
-Expect only creates on the first apply: 4 ECR repositories and lifecycle policies, 3 IAM roles with their policies and attachments, the workload permissions boundary policy, 1 budget.
+Expect only creates on the first apply: 4 ECR repositories and lifecycle policies, 3 IAM roles with their policies and attachments, and the workload permissions boundary policy. No budget or budget-recipient SSM read is planned by default. To opt in later, complete the billing prerequisites and set `enable_budget = true` in `envs/demo.tfvars`, keeping operator and CI plans consistent; an existing budget must retain that setting to avoid its deletion.
 
 ### 4. Read back the trust policies
 
@@ -89,6 +95,8 @@ done
 `plan` must show `...:environment:swe5001-plan`; `apply` and `deploy` must show `...:environment:swe5001-demo`.
 
 After `foundation` has been applied, simulate the plan and apply roles without reading a state object or parameter value. The foundation state and the budget-recipient parameter must evaluate `allowed`; the runtime state, origin secret and an existing SWE5006 CloudFront function must evaluate `implicitDeny` or `explicitDeny`. Replace only the function name placeholder with the existing function's non-secret name. IAM simulation is not a substitute for the first account-backed foundation plan.
+
+2026-10-05 operator verification: role trust policies matched all three immutable-ID subjects. The principal simulation reported `AllowedByOrganizations = false` even for foundation state; selected S3 statements passed an isolated custom-policy simulation (foundation allowed, runtime/edge explicitly denied). This proves the selected identity-policy boundary only, not effective SCP, bucket, KMS or OIDC access. Inspect `ResourceSpecificResults` for multi-resource principal simulations. For custom simulations, pass a JSON request with `PolicyInputList` containing JSON-encoded policy strings via `--cli-input-json`; supplying a bare policy document through a list-valued `file://` argument caused input errors in CloudShell.
 
 ```bash
 account=402178232802
@@ -128,10 +136,15 @@ gh variable set SWE5001_TF_APPLY_ROLE_ARN --env swe5001-demo --body "$(out apply
 gh variable set SWE5001_DEPLOY_ROLE_ARN   --env swe5001-demo --body "$(out deploy_role_arn)"
 gh variable set SWE5001_ECR_REPOSITORY_PREFIX --body swe5001
 gh variable set ENABLE_SWE5001_DEPLOY --body false
+gh variable set ENABLE_SWE5001_NIGHTLY_DOWN --body true
 gh variable set SWE5001_TF_STATE_BUCKET --body "$(out tf_state_bucket)"
 ```
 
-Set `SWE5001_TF_STATE_BUCKET` last: it switches on the foundation-only `plan` job of `infra-swe5001.yml`. The next PR touching `infra/swe5001/**` should then show a `No changes.` plan comment for `foundation`, which proves the plan role, its trust policy and the foundation state access end to end. The role can read only that state object, SWE5001 foundation metadata and the non-secret budget-recipient parameter; explicit denies protect unrelated S3 objects and SSM parameters against later policy changes. A reviewed `prod`-only workflow or an operator must plan `runtime` and `edge` separately; until that workflow exists, there is no account-backed pre-merge plan for those stacks.
+Set `SWE5001_TF_STATE_BUCKET` last: it switches on the foundation-only `plan` job of `infra-swe5001.yml`. The next PR touching `infra/swe5001/**` should then show a `No changes.` plan comment for `foundation`, which proves the plan role, its trust policy and the foundation state access end to end. The role can read only that state object, SWE5001 foundation metadata and the non-secret budget-recipient parameter; explicit denies protect unrelated S3 objects and SSM parameters against later policy changes. No workflow plans `runtime` or `edge` against the account before a merge: the promotion run applies them after the merge to `prod`, and an operator plans them by hand when needed.
+
+2026-10-05 GitHub configuration is complete for both environments (plan unrestricted, demo admits only branch `prod`, no reviewers), the three role ARN variables, ECR prefix `swe5001`, deploy switch `false` and nightly-down switch `true`. The state-bucket variable remains unset until the optional-budget change is merged and the operator is ready to initiate the AWS-connected plan; edge variables and `prod`/its ruleset remain pending.
+
+2026-10-06: #402 merged; the operator set `SWE5001_TF_STATE_BUCKET` and reran [37328651064](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37328651064), including the successful foundation OIDC plan ([No changes](https://github.com/PPsyrius/iss-groupbuy-team8/pull/402#issuecomment-6007800394)). The earlier organization-aware simulation denial did not prevent actual plan-role access. `prod` exists at `605c8e27` with active ruleset `24551375`. Operator edge apply added 9 resources and its post-apply plan returned 0; all edge variables are configured and read back. URL: `https://d3lvq02o2e7tcn.cloudfront.net`; bucket: `blocbuy-swe5001-spa-402178232802`; distribution: `E3N39GHVFV6CT3`. Configuration in #397 is complete; deployment stays disabled pending the first runtime proof.
 
 ## `runtime` stack
 
@@ -168,8 +181,16 @@ Expect only creates: the SPA bucket with its public access block, ownership cont
 
 1. Add `<url>/api/v1/auth/oauth2/google/callback` to the Google OAuth client's authorised redirect URIs.
 2. Register a Stripe test-mode webhook endpoint at `<url>/api/v1/webhooks/stripe` and store its signing secret in `/blocbuy/swe5001/commerce/STRIPE_WEBHOOK_SECRET` (`--overwrite`).
+3. Copy the `edge` outputs into the `swe5001-demo` environment, for the workflows below:
 
-The SPA bucket stays empty until the deploy workflow (PR 7) syncs the frontend; until then the SPA routes return an S3 error and the API works.
+   ```bash
+   edge() { terraform -chdir=infra/swe5001/edge output -raw "$1"; }
+   gh variable set SWE5001_FRONTEND_URL       --env swe5001-demo --body "$(edge url)"
+   gh variable set SWE5001_SPA_BUCKET         --env swe5001-demo --body "$(edge spa_bucket)"
+   gh variable set SWE5001_CLOUDFRONT_DIST_ID --env swe5001-demo --body "$(edge distribution_id)"
+   ```
+
+The SPA bucket stays empty until the first promotion run syncs the frontend; until then the SPA routes return an S3 error and the API works.
 
 ## Environment sessions
 
@@ -187,7 +208,9 @@ infra/swe5001/scripts/env-up.sh --candidate   # about 20-25 minutes; prints the 
 infra/swe5001/scripts/env-down.sh             # about 10-15 minutes; fails if anything is left
 ```
 
-Set `SWE5001_TIMINGS_FILE=<path>` to record each step's duration (promotion evidence, verification plan V8). Until the image workflow (PR 7) writes candidate digests, push the monolith image by hand once per commit (ECR tags are immutable):
+Set `SWE5001_TIMINGS_FILE=<path>` to record each step's duration (promotion evidence, verification plan V8). `env-up.sh` never prints the `edge` plan, because the origin diff carries `ORIGIN_SECRET` in clear; on failure it shows only Terraform's diagnostics.
+
+The same sessions run from GitHub with [`swe5001-env.yml`](../../.github/workflows/swe5001-env.yml) (next section). Before the first promotion has written any digest, push the monolith image by hand once per commit (ECR tags are immutable):
 
 ```bash
 registry=402178232802.dkr.ecr.ap-southeast-1.amazonaws.com
@@ -199,3 +222,30 @@ digest=$(aws ecr describe-images --repository-name swe5001/monolith --image-ids 
   --query 'imageDetails[0].imageDigest' --output text)
 aws ssm put-parameter --name /blocbuy/swe5001/candidate/monolith --type String --value "$digest" --overwrite
 ```
+
+## Workflows and the `prod` branch
+
+ECS runs only from the `prod` branch, which moves only by a `dev` → `prod` promotion PR (merge commit), once per sprint. Workflow settings and rules: [GitHub configuration plan](../../docs/swe5001/impl-github-configuration.md), sections 5 and 6.
+
+| Workflow | Trigger | Does |
+| --- | --- | --- |
+| [`swe5001-release-gate.yml`](../../.github/workflows/swe5001-release-gate.yml) | PRs into `prod` | Required checks `promotion-source` (head must be this repository's `dev`), `service-images` (ARM64 image build and Trivy scan, no push) and `infra-plan` (`infra-swe5001.yml` for every stack, unfiltered) |
+| [`swe5001-deploy.yml`](../../.github/workflows/swe5001-deploy.yml) | Push to `prod` while `ENABLE_SWE5001_DEPLOY` is `true`; manual on `prod` with `force_failure` | `images` → `publish` (push the scanned images, write `/blocbuy/swe5001/candidate/*`) → `up` (`env-up.sh --candidate`) → `release` (publish the SPA, then copy to `/blocbuy/swe5001/release/*`) → `down` (`env-down.sh`, always) → `evidence` (one artifact `swe5001-promotion-<sha>`: digests, logs with the smoke output, step timings, ECS service events) |
+| [`swe5001-env.yml`](../../.github/workflows/swe5001-env.yml) | Manual on `prod` (`up`, `down`, `status`); daily 23:00 SGT | Runs the scripts above with the apply role. The schedule runs on `dev` with no AWS access and only dispatches `down` on `prod` while `ENABLE_SWE5001_NIGHTLY_DOWN` is `true` |
+| [`swe5001-service-images.yml`](../../.github/workflows/swe5001-service-images.yml) | Called by the two workflows above | Builds and scans the runtime images; only the monolith until PR 9 |
+
+Runs that write Terraform state share the concurrency group `swe5001-tfstate` with `cancel-in-progress: false` and `queue: max`. Pending runs are retained up to the queue limit, so a later dispatch does not supersede a queued `down`, which can destroy runtime when it eventually executes. Check for and cancel stale queued `down` runs before starting a new manual session, and wait until no promotion is running.
+
+### Create `prod` (one time, operator)
+
+After the PR that adds these workflows is merged, with repository admin rights:
+
+```bash
+git fetch origin
+git push origin origin/dev:refs/heads/prod
+gh api -X POST repos/PPsyrius/iss-groupbuy-team8/rulesets --input infra/swe5001/github/prod-release-ruleset.json
+```
+
+[`github/prod-release-ruleset.json`](github/prod-release-ruleset.json) blocks deletion and force pushes, requires one CODEOWNERS approval with resolved threads, allows merge commits only and requires the three gate checks. The branch need not be up to date with `prod`: after a promotion `prod` holds a merge commit that `dev` lacks, and the `pull_request` checks already run on the merge result. Its bypass list is empty.
+
+Set `ENABLE_SWE5001_DEPLOY=true` only after a manual `env-up.sh --candidate` and `env-down.sh` have both succeeded. Then open the promotion PR (head `dev`, base `prod`, title `chore(release): promote dev to prod (<yyyy-mm-dd>)`) and merge it with a merge commit.

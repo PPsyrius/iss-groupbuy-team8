@@ -336,6 +336,8 @@ const toSummary = (s: Seed): ProductSummaryResponse => ({
   individualPrice: s.individualPrice,
   ...(s.groupPrice === undefined ? {} : { groupPrice: s.groupPrice }),
   currency: "sgd",
+  // `GET /products` carries the open bloc's progress since #375, as the detail does (FB-16).
+  deal: details.find((d) => d.id === id(s.n))?.deal ?? null,
 });
 
 // The sample buyer's blocs for the §4.4 My blocs chips (`?msw=1&me=1`), after the artboard's
