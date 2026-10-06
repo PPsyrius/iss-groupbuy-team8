@@ -425,7 +425,7 @@ Remaining design/contract gaps (audited 2026-10-02, FB-18, against `frontend/src
 - listing detail does not expose off-sale status (`ProductDetailResponse` has no `status`): no owner yet;
 - the API exposes one active deal (`ActiveDealResponse`: id, sizes, expiry) rather than a list with starter metadata; only an invite link names its sharer (FB-19, #201): no owner yet;
 - My Blocs shows Active / Completed / Refunded from `GET /group-deals/me`, but `MyTeamResponse` carries only the buyer's own `role`, not the starter; no owner yet. Notifications wait on backend #215 (first persisted use case, open);
-- the refund-pending receipt still reads "Payment received"; the design owner chose "Refund on its way" on 2026-10-05: FB-15;
+- the refund-pending receipt heading is "Refund on its way", as decided by the design owner on 2026-10-05 (FB-15, #392); completed refunds retain "Refund sent" and failed/reviewed refunds retain "Payment received";
 - the gated sheet's copy is written for Start a bloc ("Starting a bloc means paying first") and is reused for Buy alone, which no artboard draws (the bloc terms are kept off that sheet, FB-11): no owner yet;
 - the signed-in storefront menu/header is still provisional (a neutral Sign out button, `plan.md` T2-05; no artboard draws a menu): no owner yet;
 - CSP still permits HTTPS listing and avatar image hosts (`img-src 'self' https:`, ADR 0002) until the contract pins an image host; Inter is already self-hosted (#158): no owner yet.
