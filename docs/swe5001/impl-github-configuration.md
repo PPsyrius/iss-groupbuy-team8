@@ -39,6 +39,8 @@ Status: **Draft, revised 2026-10-05** (first draft 2026-09-29; 2026-10-04: deplo
 
 Environment-scoped subjects keep the plan role usable from PRs into `dev` and `prod`, while the apply and deploy roles are reachable only from runs on `prod`.
 
+2026-10-05 (#397): both environments were created and read back through `gh`; `swe5001-plan` has no branch policy or reviewers, and `swe5001-demo` has exactly one selected branch policy (`prod`) and no reviewers. The three environment role ARNs and repository ECR prefix (`swe5001`), deploy switch (`false`) and nightly-down switch (`true`) are configured. The state-bucket switch remains unset until the optional-budget change is merged and the operator initiates the end-to-end AWS plan; edge variables, `prod` and its ruleset remain pending. The operator owns all AWS execution.
+
 ---
 
 ## 4. Variables
