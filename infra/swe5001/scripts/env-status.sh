@@ -34,10 +34,15 @@ for arn in $arns; do
   id=${arn##*/}
   case "$arn" in
     arn:aws:ec2:*:instance/*)
-      # Terminated instances keep their tags for a while; long-gone ones return no reservation.
-      state=$(aws ec2 describe-instances --instance-ids "$id" \
-        --query 'Reservations[0].Instances[0].State.Name' --output text) ||
-        die "cannot inspect runtime instance $id"
+      # Terminated instances keep their tags for a while; long-gone ones return no
+      # reservation or InvalidInstanceID.NotFound. Any other error fails closed.
+      if ! state=$(aws ec2 describe-instances --instance-ids "$id" \
+        --query 'Reservations[0].Instances[0].State.Name' --output text 2>&1); then
+        case "$state" in
+          *InvalidInstanceID.NotFound*) state=None ;;
+          *) die "cannot inspect runtime instance $id" ;;
+        esac
+      fi
       case "$state" in terminated | None) continue ;; esac
       ;;
     arn:aws:ec2:*)

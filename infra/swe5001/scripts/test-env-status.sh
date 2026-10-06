@@ -12,7 +12,7 @@ aws() {
     'resourcegroupstaggingapi get-resources')
       case "$SCENARIO" in
         tag_error) return 41 ;;
-        instance_error | terminated | instance_gone | running) printf '%s\n' 'arn:aws:ec2:ap-southeast-1:402178232802:instance/i-demo' ;;
+        instance_error | instance_notfound | terminated | instance_gone | running) printf '%s\n' 'arn:aws:ec2:ap-southeast-1:402178232802:instance/i-demo' ;;
         ec2_error | ec2_deleted | ec2_live) printf '%s\n' 'arn:aws:ec2:ap-southeast-1:402178232802:security-group/sg-demo' ;;
         cluster_error | cluster_inactive | cluster_active) printf '%s\n' 'arn:aws:ecs:ap-southeast-1:402178232802:cluster/blocbuy-swe5001' ;;
         task_only) printf '%s\n' 'arn:aws:ecs:ap-southeast-1:402178232802:task-definition/demo:1' ;;
@@ -20,7 +20,14 @@ aws() {
       ;;
     'ec2 describe-instances')
       case "$SCENARIO" in
-        instance_error) return 42 ;;
+        instance_error)
+          printf '%s\n' 'An error occurred (UnauthorizedOperation) when calling the DescribeInstances operation' >&2
+          return 42
+          ;;
+        instance_notfound)
+          printf '%s\n' "An error occurred (InvalidInstanceID.NotFound) when calling the DescribeInstances operation: The instance ID 'i-demo' does not exist" >&2
+          return 254
+          ;;
         terminated) printf '%s\n' terminated ;;
         instance_gone) printf '%s\n' None ;;
         *) printf '%s\n' running ;;
@@ -74,6 +81,7 @@ check empty success 'no runtime resource tagged Stack=runtime'
 check task_only success 'no runtime resource tagged Stack=runtime'
 check terminated success 'no runtime resource tagged Stack=runtime'
 check instance_gone success 'no runtime resource tagged Stack=runtime'
+check instance_notfound success 'no runtime resource tagged Stack=runtime'
 check running failure 'runtime resources remain'
 check ec2_error failure 'cannot inspect runtime resource sg-demo'
 check ec2_deleted success 'no runtime resource tagged Stack=runtime'
