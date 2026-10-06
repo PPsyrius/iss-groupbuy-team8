@@ -41,6 +41,8 @@ Environment-scoped subjects keep the plan role usable from PRs into `dev` and `p
 
 2026-10-05 (#397): both environments were created and read back through `gh`; `swe5001-plan` has no branch policy or reviewers, and `swe5001-demo` has exactly one selected branch policy (`prod`) and no reviewers. The three environment role ARNs and repository ECR prefix (`swe5001`), deploy switch (`false`) and nightly-down switch (`true`) are configured. The state-bucket switch remains unset until the optional-budget change is merged and the operator initiates the end-to-end AWS plan; edge variables, `prod` and its ruleset remain pending. The operator owns all AWS execution.
 
+2026-10-06 (#397 completion): state-bucket variable set by the operator, successful [foundation OIDC plan](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37328651064) with `No changes.`, `prod` at merged `dev` SHA `605c8e27`, active `prod-release` ruleset `24551375`, and all three edge variables configured and read back after the operator's edge apply (9 creates, zero drift). The configured URL is `https://d3lvq02o2e7tcn.cloudfront.net`, SPA bucket `blocbuy-swe5001-spa-402178232802`, distribution `E3N39GHVFV6CT3`. Live settings match the requested configuration; deployment remains `false`, nightly teardown `true`; Google/Stripe registration and runtime proof belong to the subsequent #376 work.
+
 ---
 
 ## 4. Variables
