@@ -165,6 +165,21 @@ jobs:
               > "$RUNNER_TEMP/evidence/ecs-services.json" || true
           fi
 
+      # The service log groups belong to runtime, so down deletes them with the stack. The
+      # db-init log is left out: psql echoes a failing statement, which may hold a password.
+      - name: Record service logs
+        if: always() && steps.env-up.outcome != 'skipped'
+        run: |
+          set -uo pipefail
+          services=$(aws ecs list-services --cluster blocbuy-swe5001 --query 'serviceArns' --output text 2> /dev/null || true)
+          if [ -n "$services" ] && [ "$services" != None ]; then
+            for arn in $services; do
+              service=${arn##*/}
+              aws logs tail "/blocbuy/swe5001/${service}" --since 2h \
+                > "$RUNNER_TEMP/evidence/logs-${service}.txt" 2>&1 || true
+            done
+          fi
+
       - name: Summarise
         if: always() && steps.env-up.outcome != 'skipped'
         env:
