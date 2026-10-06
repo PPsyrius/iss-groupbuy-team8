@@ -41,6 +41,8 @@ Environment-scoped subjects keep the plan role usable from PRs into `dev` and `p
 
 2026-10-05 (#397): both environments were created and read back through `gh`; `swe5001-plan` has no branch policy or reviewers, and `swe5001-demo` has exactly one selected branch policy (`prod`) and no reviewers. The three environment role ARNs and repository ECR prefix (`swe5001`), deploy switch (`false`) and nightly-down switch (`true`) are configured. The state-bucket switch remains unset until the optional-budget change is merged and the operator initiates the end-to-end AWS plan; edge variables, `prod` and its ruleset remain pending. The operator owns all AWS execution.
 
+2026-10-06 (#397 completion): state-bucket variable set by the operator, successful [foundation OIDC plan](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37328651064) with `No changes.`, `prod` at merged `dev` SHA `605c8e27`, active `prod-release` ruleset `24551375`, and all three edge variables configured and read back after the operator's edge apply (9 creates, zero drift). The configured URL is `https://d3lvq02o2e7tcn.cloudfront.net`, SPA bucket `blocbuy-swe5001-spa-402178232802`, distribution `E3N39GHVFV6CT3`. Live settings match the requested configuration; deployment remains `false`, nightly teardown `true`; Google/Stripe registration and runtime proof belong to the subsequent #376 work.
+
 ---
 
 ## 4. Variables
@@ -125,7 +127,7 @@ Rules for all new workflows:
 - `permissions: {}` at the top; each job grants only `contents: read`, `id-token: write` where it assumes a role, `pull-requests: write` for plan comments, and `actions: write` for the scheduled `dispatch` job.
 - Every job that assumes `swe5001-demo` roles also checks `github.ref == 'refs/heads/prod'`, so a manual run on another ref fails fast instead of waiting on the environment branch policy. Scheduled runs execute on the default branch (`dev`), which is why they only dispatch.
 - Actions pinned by commit SHA, as in the existing workflows.
-- `concurrency: swe5001-tfstate` (no cancel) for every run that writes Terraform state, so a promotion run and a manual `up` or `down` never overlap. Local script runs are serialised against them by the Terraform S3 state lock. GitHub keeps only one pending run per group, so a third queued run replaces the pending one; start manual sessions only when no promotion is running.
+- `concurrency: swe5001-tfstate` with `cancel-in-progress: false` and `queue: max` serialises promotion and manual `up`/`down` jobs. Local script runs use the Terraform S3 state lock. Pending runs are retained up to the queue limit, so a later dispatch does not supersede a queued `down`; check for and cancel stale queued `down` runs before starting a new manual session, and wait until no promotion is running.
 - No dependency cache in jobs whose output is published (images, SPA), so a cache written by a PR run cannot poison a release (zizmor `cache-poisoning`).
 - No secret-bearing Terraform output in logs or artifacts: `env-up.sh` suppresses the `edge` plan, whose origin diff carries `ORIGIN_SECRET` in clear, and `runtime` marks its secrets sensitive.
 - No `v*` tag triggers. Milestone tags `swe5001-*` trigger nothing.
