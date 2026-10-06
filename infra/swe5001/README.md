@@ -4,8 +4,8 @@ Infrastructure for the SWE5001 distributed deployment shape on Amazon ECS. It is
 
 | Stack | Lifecycle | State key | Applied by | Status |
 | --- | --- | --- | --- | --- |
-| [`foundation/`](foundation/) | Persistent | `swe5001/foundation.tfstate` | An operator, from a workstation or CloudShell (it creates the roles CI assumes) | Operator applied 2026-10-05 without billing: 23 creates, post-apply plan exit 0; GitHub OIDC plan verification pending |
-| [`edge/`](edge/) | Persistent | `swe5001/edge.tfstate` | Created once by an operator; afterwards the promotion run and `env-up.sh` only re-point the distribution at the new ALB | Code ready (PR 5 in #376); not applied |
+| [`foundation/`](foundation/) | Persistent | `swe5001/foundation.tfstate` | An operator, from a workstation or CloudShell (it creates the roles CI assumes) | Operator applied 2026-10-05 without billing: 23 creates, post-apply plan exit 0; GitHub OIDC plan passed with `No changes.` on 2026-10-06 |
+| [`edge/`](edge/) | Persistent | `swe5001/edge.tfstate` | Created once by an operator; afterwards the promotion run and `env-up.sh` only re-point the distribution at the new ALB | Operator applied from `605c8e27` on 2026-10-06: 9 creates, post-apply plan exit 0; edge variables configured |
 | [`runtime/`](runtime/) | Exists only during a promotion run or a manual session | `swe5001/runtime.tfstate` | Promotion run and `env-up.sh` / `env-down.sh` | Code ready (PRs 3–4 in #376); not applied. Messaging, scaling and alarms follow in PRs 8 and 10 |
 
 All stacks use Terraform `~> 1.16.4`, AWS provider `~> 5.100`, the existing state bucket `blocbuy-tfstate-402178232802` and S3-native locking (`use_lockfile = true`). Non-secret inputs are in [`envs/demo.tfvars`](envs/demo.tfvars). Operators seed application secrets in SSM Parameter Store under `/blocbuy/swe5001/`. The origin secret is also held in the private `edge` and `runtime` Terraform states for CloudFront/ALB routing; the Valkey AUTH token is held in `runtime` state. The PR plan role cannot read either state.
@@ -144,6 +144,8 @@ Set `SWE5001_TF_STATE_BUCKET` last: it switches on the foundation-only `plan` jo
 
 2026-10-05 GitHub configuration is complete for both environments (plan unrestricted, demo admits only branch `prod`, no reviewers), the three role ARN variables, ECR prefix `swe5001`, deploy switch `false` and nightly-down switch `true`. The state-bucket variable remains unset until the optional-budget change is merged and the operator is ready to initiate the AWS-connected plan; edge variables and `prod`/its ruleset remain pending.
 
+2026-10-06: #402 merged; the operator set `SWE5001_TF_STATE_BUCKET` and reran [37328651064](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37328651064), including the successful foundation OIDC plan ([No changes](https://github.com/PPsyrius/iss-groupbuy-team8/pull/402#issuecomment-6007800394)). The earlier organization-aware simulation denial did not prevent actual plan-role access. `prod` exists at `605c8e27` with active ruleset `24551375`. Operator edge apply added 9 resources and its post-apply plan returned 0; all edge variables are configured and read back. URL: `https://d3lvq02o2e7tcn.cloudfront.net`; bucket: `blocbuy-swe5001-spa-402178232802`; distribution: `E3N39GHVFV6CT3`. Configuration in #397 is complete; deployment stays disabled pending the first runtime proof.
+
 ## `runtime` stack
 
 Shared modules live in [`modules/`](modules/): `network` (VPC, subnets, S3 gateway endpoint, fck-nat), `ecs-cluster` (cluster, Service Connect namespace, shared execution role), `ecs-service` (the golden path for one service), `rds-postgres` and `cache`. The root stack adds the security groups, the ALB and the [`db-init`](db-init/init.sh) task definition.
@@ -232,7 +234,7 @@ ECS runs only from the `prod` branch, which moves only by a `dev` → `prod` pro
 | [`swe5001-env.yml`](../../.github/workflows/swe5001-env.yml) | Manual on `prod` (`up`, `down`, `status`); daily 23:00 SGT | Runs the scripts above with the apply role. The schedule runs on `dev` with no AWS access and only dispatches `down` on `prod` while `ENABLE_SWE5001_NIGHTLY_DOWN` is `true` |
 | [`swe5001-service-images.yml`](../../.github/workflows/swe5001-service-images.yml) | Called by the two workflows above | Builds and scans the runtime images; only the monolith until PR 9 |
 
-Runs that write Terraform state share the concurrency group `swe5001-tfstate` and are never cancelled. GitHub keeps one running and one pending run per group, so a third queued run replaces the pending one; start a manual session only when no promotion is running.
+Runs that write Terraform state share the concurrency group `swe5001-tfstate` with `cancel-in-progress: false` and `queue: max`. Pending runs are retained up to the queue limit, so a later dispatch does not supersede a queued `down`, which can destroy runtime when it eventually executes. Check for and cancel stale queued `down` runs before starting a new manual session, and wait until no promotion is running.
 
 ### Create `prod` (one time, operator)
 
