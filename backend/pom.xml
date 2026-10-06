@@ -49,10 +49,10 @@
     <!-- Google OIDC client (id_token verification); verified against Maven Central 2026-09-07 -->
     <google-api-client.version>2.9.1</google-api-client.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
-    <checkstyle.version>14.1.0</checkstyle.version>
+    <checkstyle.version>14.3.0</checkstyle.version>
     <maven-enforcer-plugin.version>3.6.3</maven-enforcer-plugin.version>
     <!-- quality gates: versions verified against Maven Central 2026-08-31 -->
-    <spotless-maven-plugin.version>3.10.2</spotless-maven-plugin.version>
+    <spotless-maven-plugin.version>3.10.3</spotless-maven-plugin.version>
     <google-java-format.version>1.36.1</google-java-format.version>
     <spotbugs-maven-plugin.version>4.10.4.1</spotbugs-maven-plugin.version>
     <spotbugs.version>4.10.4</spotbugs.version>
