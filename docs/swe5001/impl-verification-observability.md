@@ -150,6 +150,8 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 
 ## 7. Presentation-day checklist (21 Oct, 16:15–16:55 SGT)
 
+Commands and failure handling: [environment session runbook](runbook-environment-session.md).
+
 - `env-up.sh` before 12:00 (release digests from the Sprint 4 promotion); smoke suite green.
 - Dashboard open with a 1-hour window; k6 scripts ready on a laptop with the base URL set.
 - Fallback: screen recording of V3 and V4 from the rehearsal completed before 21 Oct.

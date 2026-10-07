@@ -2,7 +2,7 @@
 
 Current state of the SWE5001 distributed deployment (Amazon ECS, released by `dev` → `prod` promotion). Read this before picking up any item of [#376](https://github.com/PPsyrius/iss-groupbuy-team8/issues/376). Update it in the same PR whenever a step lands.
 
-Last updated: 2026-10-06.
+Last updated: 2026-10-07.
 
 ## Where to read the design
 
@@ -12,6 +12,7 @@ Last updated: 2026-10-06.
 | Stacks, network, ECS, data stores, scripts, cost | [AWS infrastructure plan](impl-aws-infrastructure.md) |
 | Environments, `prod` ruleset, workflows | [GitHub configuration plan](impl-github-configuration.md) |
 | Smoke suite, drills, presentation checklist | [Verification plan](impl-verification-observability.md) |
+| Start, check and destroy a session (demo, presentation) | [Environment session runbook](runbook-environment-session.md) |
 | Operator commands (bootstrap, offline checks, `runtime` inputs) | [`infra/swe5001/README.md`](../../infra/swe5001/README.md) |
 
 ## Progress against the #376 PR breakdown
