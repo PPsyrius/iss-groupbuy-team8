@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -21,12 +22,15 @@ import com.blocbuy.groupbuy.exception.ParticipationErrorCode;
 import com.blocbuy.groupbuy.model.DealStatus;
 import com.blocbuy.groupbuy.model.GroupDeal;
 import com.blocbuy.groupbuy.model.NewDealTerms;
+import com.blocbuy.groupbuy.model.PaidGroupDealCreator;
 import com.blocbuy.groupbuy.model.PaidParticipation;
 import com.blocbuy.groupbuy.model.ParticipationReceipt;
 import com.blocbuy.groupbuy.model.ParticipationResult;
 import com.blocbuy.groupbuy.model.StandardPaidGroupDealCreator;
 import com.blocbuy.groupbuy.repository.PaidGroupDealRepository;
 import java.math.BigDecimal;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,7 +42,8 @@ import org.springframework.context.ApplicationEventPublisher;
 class PaidGroupDealServiceTest {
     private final PaidGroupDealRepository repository = mock(PaidGroupDealRepository.class);
     private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
-    private final PaidGroupDealService service = new PaidGroupDealService(repository, events);
+    private final PaidGroupDealService service =
+            new PaidGroupDealService(repository, events, new StandardPaidGroupDealCreator());
     private final Instant now = Instant.parse("2026-09-09T00:00:00Z");
     private final PaidParticipation paid =
             new PaidParticipation(
@@ -52,6 +57,38 @@ class PaidGroupDealServiceTest {
                     "sgd",
                     2,
                     now.plusSeconds(60));
+
+    /** A configured creator can supply initiation behavior without changing the service. */
+    @Test
+    void startUsesTheInjectedCreator() {
+        var creator = mock(PaidGroupDealCreator.class);
+        var configured = new PaidGroupDealService(repository, events, creator);
+        var deal = new StandardPaidGroupDealCreator().initiate(terms, paid, now);
+        when(repository.reserveAndLock(eq(paid.paymentId()), any(), eq(paid.userId())))
+                .thenAnswer(
+                        invocation -> new ParticipationReceipt(invocation.getArgument(1), null));
+        when(repository.currentTime()).thenReturn(now);
+        when(creator.initiate(terms, paid, now)).thenReturn(deal);
+
+        assertThat(configured.startConfirmed(terms, paid))
+                .isEqualTo(ParticipationResult.applied(deal));
+        verify(creator).initiate(terms, paid, now);
+        verify(repository).insertStartedDeal(deal, paid, now);
+    }
+
+    /** A missing required hash algorithm fails before reserving a payment receipt. */
+    @Test
+    void unavailableReceiptHashFailsBeforePersistence() {
+        var unavailable = new NoSuchAlgorithmException("SHA-256 unavailable");
+        try (var digests = mockStatic(MessageDigest.class)) {
+            digests.when(() -> MessageDigest.getInstance("SHA-256")).thenThrow(unavailable);
+            assertThatThrownBy(() -> service.startConfirmed(terms, paid))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Required SHA-256 unavailable")
+                    .hasCause(unavailable);
+            verify(repository, never()).reserveAndLock(any(), any(), any());
+        }
+    }
 
     /**
      * Verifies initiation requests both paid-leader persistence and the matching terminal receipt.
@@ -67,6 +104,48 @@ class PaidGroupDealServiceTest {
         assertThat(result.currentSize()).isEqualTo(1);
         verify(repository).insertStartedDeal(any(), eq(paid), eq(now));
         verify(repository).complete(paid.paymentId(), result, paid.userId(), now);
+    }
+
+    /** Golden values protect persisted v1 receipt hashes, including UTF-16 length prefixes. */
+    @Test
+    void historicalStartAndJoinFingerprintsRemainByteCompatible() {
+        var fixedPaid =
+                new PaidParticipation(
+                        UUID.fromString("11111111-1111-7111-8111-111111111111"),
+                        UUID.fromString("22222222-2222-7222-8222-222222222222"),
+                        new BigDecimal("12.00"),
+                        "sgd");
+        var fixedTerms =
+                new NewDealTerms(
+                        UUID.fromString("44444444-4444-7444-8444-444444444444"),
+                        "DEAL:\uD83C\uDF1F|1",
+                        UUID.fromString("33333333-3333-7333-8333-333333333333"),
+                        new BigDecimal("12.00"),
+                        "sgd",
+                        2,
+                        now.plusSeconds(60));
+        when(repository.reserveAndLock(eq(fixedPaid.paymentId()), any(), eq(fixedPaid.userId())))
+                .thenAnswer(
+                        invocation -> new ParticipationReceipt(invocation.getArgument(1), null));
+        when(repository.currentTime()).thenReturn(now);
+        var leader =
+                new PaidParticipation(
+                        UUID.randomUUID(), UUID.randomUUID(), fixedPaid.amount(), "sgd");
+        when(repository.lockDeal(fixedTerms.id()))
+                .thenReturn(
+                        Optional.of(
+                                new StandardPaidGroupDealCreator()
+                                        .initiate(fixedTerms, leader, now)));
+        service.startConfirmed(fixedTerms, fixedPaid);
+        service.joinConfirmed(fixedTerms.id(), fixedPaid, null);
+        var fingerprints = ArgumentCaptor.forClass(String.class);
+        verify(repository, times(2))
+                .reserveAndLock(
+                        eq(fixedPaid.paymentId()), fingerprints.capture(), eq(fixedPaid.userId()));
+        assertThat(fingerprints.getAllValues())
+                .containsExactly(
+                        "d9c4a206d5a1fb08f2fe0f362241b9995043d66722499577f4201bcc069c3d8d",
+                        "3f47c9a4c28b26025ad53f91d9d7f91e028830e4dcecaa6a9c64461d72659e15");
     }
 
     /** Verifies a completed receipt short-circuits clock reads and initiation writes. */

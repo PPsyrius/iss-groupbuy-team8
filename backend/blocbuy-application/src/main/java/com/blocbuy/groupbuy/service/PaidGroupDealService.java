@@ -12,13 +12,8 @@ import com.blocbuy.groupbuy.model.PaidGroupDealCreator;
 import com.blocbuy.groupbuy.model.PaidParticipation;
 import com.blocbuy.groupbuy.model.ParticipationReceipt;
 import com.blocbuy.groupbuy.model.ParticipationResult;
-import com.blocbuy.groupbuy.model.StandardPaidGroupDealCreator;
 import com.blocbuy.groupbuy.repository.PaidGroupDealRepository;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
-import java.util.HexFormat;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -44,7 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PaidGroupDealService {
     private final PaidGroupDealRepository repository;
     private final ApplicationEventPublisher events;
-    private final PaidGroupDealCreator creator = new StandardPaidGroupDealCreator();
+    private final PaidGroupDealCreator creator;
 
     /**
      * Applies trusted, preverified payment to accepted initiation terms in a transaction. Identical
@@ -57,17 +52,7 @@ public class PaidGroupDealService {
         if (terms == null || paid == null) {
             throw new BizException(GroupbuyErrorCode.INVALID_PARTICIPATION);
         }
-        String fingerprint =
-                fingerprint(
-                        "start-v1",
-                        paid,
-                        terms.id(),
-                        terms.dealNo(),
-                        terms.productId(),
-                        terms.price().toPlainString(),
-                        terms.currency(),
-                        terms.targetSize(),
-                        terms.expireTime());
+        String fingerprint = ParticipationFingerprint.start(terms, paid);
         var receipt = reserve(paid, fingerprint);
         if (receipt.result() != null) {
             return receipt.result();
@@ -104,7 +89,7 @@ public class PaidGroupDealService {
         if (dealId == null || paid == null) {
             throw new BizException(GroupbuyErrorCode.INVALID_PARTICIPATION);
         }
-        var receipt = reserve(paid, fingerprint("join-v1", paid, dealId));
+        var receipt = reserve(paid, ParticipationFingerprint.join(dealId, paid));
         if (receipt.result() != null) {
             return receipt.result();
         }
@@ -164,35 +149,5 @@ public class PaidGroupDealService {
         var result = ParticipationResult.compensation(dealId, rejection.errorCode().code());
         repository.complete(paid.paymentId(), result, paid.userId(), now);
         return result;
-    }
-
-    /**
-     * Hashes versioned payment and intent fields so a receipt cannot be reused for changed terms.
-     */
-    private static String fingerprint(String operation, PaidParticipation paid, Object... terms) {
-        // Length-prefix every field; delimiter characters in dealNo cannot alias other requests.
-        var canonical = new StringBuilder();
-        append(canonical, operation);
-        append(canonical, paid.paymentId());
-        append(canonical, paid.userId());
-        append(canonical, paid.amount().toPlainString());
-        append(canonical, paid.currency());
-        for (Object term : terms) {
-            append(canonical, term);
-        }
-        try {
-            return HexFormat.of()
-                    .formatHex(
-                            MessageDigest.getInstance("SHA-256")
-                                    .digest(canonical.toString().getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException impossible) {
-            throw new IllegalStateException("Required SHA-256 unavailable", impossible);
-        }
-    }
-
-    /** Length-prefixes a canonical field so delimiter characters cannot alias another request. */
-    private static void append(StringBuilder target, Object value) {
-        String text = value.toString();
-        target.append(text.length()).append(':').append(text);
     }
 }

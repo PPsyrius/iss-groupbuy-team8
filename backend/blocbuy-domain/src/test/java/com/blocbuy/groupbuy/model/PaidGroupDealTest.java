@@ -601,6 +601,31 @@ class PaidGroupDealTest {
         assertMalformed(() -> deal.expire(null));
     }
 
+    /** Shared quote guards reject missing facts and paid admission retains membership priority. */
+    @Test
+    void admissionGuardsRejectMissingFactsAndPreservePaidRejectionPriority() {
+        var deal = start(2);
+        assertThatThrownBy(() -> deal.requireJoinWindow(null))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        error ->
+                                assertThat(error.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION));
+        assertThatThrownBy(() -> deal.requireNewMember(null, false))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        error ->
+                                assertThat(error.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.INVALID_PARTICIPATION));
+        var closed = reconstituteWith(DealStatus.EXPIRED);
+        assertThatThrownBy(() -> closed.joinPaid(payment(LEADER, "10.00"), false, NOW))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        error ->
+                                assertThat(error.errorCode())
+                                        .isEqualTo(GroupbuyErrorCode.ALREADY_MEMBER));
+    }
+
     /** Rebuilds a stored snapshot in an arbitrary lifecycle state, as the converter would. */
     private static GroupDeal reconstituteWith(DealStatus status) {
         return GroupDeal.reconstitute(
