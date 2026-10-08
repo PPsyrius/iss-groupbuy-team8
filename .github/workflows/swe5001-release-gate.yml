@@ -38,6 +38,8 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/swe5001-service-images.yml
+    with:
+      upload-images: false
 
   infra:
     needs: promotion-source

@@ -41,6 +41,30 @@ rollback-backend.yml  manual, confirmed, reasoned, environment-controlled SSM ro
 
 The security workflow also scans weekly on Monday at 02:17 UTC for newly disclosed issues in unchanged dependencies.
 
+## Actions storage controls (2026-10-08)
+
+Decision: `.github/actions/trivy-image-db` manages an image-only trusted default-branch database baseline, avoiding both per-run duplication and the Trivy action's shared config/dependency key. It caches only `.cache/trivy-image/db` and `.cache/trivy-image/java-db` under `trivy-image-db-shared-v1-v0.74.0-<OS>-<architecture>-<UTC date>`. A new namespace prevents reuse of legacy PR-written DB entries. GitHub's default-branch cache visibility allows other PRs to restore the baseline without copying it into their own refs. Binary caching is retained separately; the image scan's built-in cache/setup are disabled. Database freshness checks and vulnerability gates remain enabled.
+
+An existing `sonar-backend` runner seeds the baseline after successful coverage on code/build-relevant trusted `dev` pushes; there is no additional scheduled warmup job. Both the caller and composite guard restrict publication to default-branch pushes. An exact daily lookup skips binary setup and payload transfer on later producer calls. On a miss, restore the latest compatible baseline, download/check both DBs, validate payload/metadata structure and save immediately rather than losing valid DB downloads to later scan failures. Seeding is advisory and does not block Sonar if a registry/cache operation fails. PR/merge-group/tag image jobs are restore-only for these DBs, although separate binary and other dependency caches retain their original behavior. Before initial seeding, after eviction or when metadata expires, normal Trivy downloads still run; an immutable daily baseline is not refreshed again on the same day. Legacy caches expire through eviction or closed-PR cleanup, not a blanket purge.
+
+`cleanup-pr-caches.yml` deletes only exact `refs/pull/<number>/merge` caches whose PR is closed at the state check. Closure events clean promptly; the daily 04:43 UTC sweep reconciles late writes and missed events. Manual sweeps default to dry run and, like scheduled sweeps, must run on the default branch. Branch, tag and open-PR caches are preserved; workflow runs, artifacts and evidence are never deleted. All inventory pages are read before deletion. API failures fail the job except deletion 404s for already-removed caches. State checks do not atomically lock reopening, so a concurrent reopen can lose a disposable PR cache. Separate PR concurrency groups avoid dropping another PR's pending cleanup.
+
+The cleanup module is loaded from an explicit `github.sha` checkout with `persist-credentials: false`. For `pull_request_target`, this is trusted base-branch source, never PR head/merge code. Permissions are `contents: read`, `actions: write` and `pull-requests: read`; event/default-branch guards also run inside the module.
+
+Once merged into the default branch, closure and scheduled cleanup are automatic. To preview or run an additional sweep:
+
+```bash
+gh workflow run cleanup-pr-caches.yml --ref dev -f dry_run=true
+# After reviewing the completed dry-run summary:
+gh workflow run cleanup-pr-caches.yml --ref dev -f dry_run=false
+```
+
+SWE5001 PR validation builds and scans images but skips export/upload: the release gate passes `upload-images=false`, and the reusable workflow also rejects PR/merge-group export regardless of that input. Only deployment callers need the same-run `swe5001-image-<service>` handoff; their default upload behavior and two-day publication/retry window remain unchanged. No count-based pruning or AWS/ECR change is included. Deployment evidence, SARIF and test-report retention are unchanged. After a deployment image expires, rerun the full promotion rather than only downstream publication.
+
+One-time removal of existing unused PR images must review exact artifact IDs and confirm the owning run's path is `.github/workflows/swe5001-release-gate.yml`, event is `pull_request` and status is `completed`; do not infer safety from a `dev` branch label alone. Never delete deployment-run images, reports, evidence or running-job artifacts. The [October 8 log](../agile/sprint-03/log/2026-10-08.md) records the authorized four-artifact cleanup and verified remaining inventory. Deletion stops future storage accrual, not already-recorded charges; workflow prevention takes effect only after merge.
+
+Verify locally with `node --test .github/tests/cleanup-pr-caches.test.cjs`, `python3 -m unittest discover -s .github/tests -p '*_test.py'` and the pinned CI actionlint Docker image. Tests cover cleanup behavior, trusted publication/restore-only policy and structural DB validation without live writes. [The local Docker benchmark](trivy-cache-benchmark-20261008.md) measured 99–104 s cold scans versus approximately 5 s with warm DBs, but local archive extraction adds approximately 9.5 s and GitHub transfer/producer costs remain unmeasured. [The sprint log](../agile/sprint-03/log/2026-10-08.md) records inventory and verification. After merge, compare cache summaries and total producer/consumer durations before claiming measured savings. Cleanup adds runner overhead; storage reductions are not automatically minute or billing savings.
+
 ## Runtime base image maintenance (2026-10-01)
 
 Both runtime Dockerfiles pin the same `eclipse-temurin:21-jre-noble` multi-architecture digest: Java 21, Ubuntu 24.04 and fixed base contents. Dependabot checks daily against `dev`, exempts Temurin from cooldown and retains the Java-major restriction. Base updates must pass the existing Trivy image gate and EC2-profile smoke test; update both Dockerfiles together.
