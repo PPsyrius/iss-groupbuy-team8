@@ -27,7 +27,11 @@ export function BlocRow({
   team,
   userId,
 }: Readonly<{ team: MyTeamResponse; userId?: string | undefined }>) {
-  const now = useNow();
+  // The row follows the shared clock only as far as its text can change: a filled bloc prints
+  // nothing relative to the clock, any other row sleeps until its countdown (or, once ended, the
+  // day) can change (`clockReading`), so a long list does not redraw every row every second.
+  const filled = blocFilter(team.status) === "completed";
+  const now = useNow(filled ? null : parseDeadline(team.expireTime));
   const price = Number(team.dealPrice);
   const target = Math.max(1, team.targetSize ?? 1);
   const facts: RowFacts = {

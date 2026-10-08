@@ -1,10 +1,12 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
+import { Profiler } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { OK_CODE } from "@/api/envelope";
 import type { MyTeamResponse } from "@/api/generated/types.gen";
+import { formatCountdown } from "@/features/catalog/deal-time";
 import { server } from "@/test/msw";
 import { renderWithRouter } from "@/test/render";
 
@@ -206,5 +208,161 @@ describe("BlocRow share", () => {
   it("offers no share without a signed-in buyer", async () => {
     await renderWithRouter(<BlocRow team={rice} />);
     expect(screen.queryByRole("button", { name: "Share invite link" })).toBeNull();
+  });
+});
+
+// The My blocs list shows up to 100 rows: they share one interval, and a row redraws only when
+// the text it prints changes. The router keeps its real timers; only the clock is faked.
+describe("BlocRow clock", () => {
+  const second = 1000;
+  const hour = 3_600_000;
+  const tickOneSecond = () => {
+    act(() => {
+      vi.advanceTimersByTime(second);
+    });
+  };
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date", "setInterval", "clearInterval"] });
+    vi.setSystemTime(now);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("runs one interval for a list of 100 rows and clears it when the list unmounts", async () => {
+    const started = vi.spyOn(globalThis, "setInterval");
+    const cleared = vi.spyOn(globalThis, "clearInterval");
+    const teams = Array.from({ length: 100 }, (_, i) => ({
+      ...rice,
+      dealId: `deal-${i}`,
+      expireTime: inMinutes(30 + i * 7),
+    }));
+    const { unmount } = await renderWithRouter(
+      <ul>
+        {teams.map((team) => (
+          <li key={team.dealId}>
+            <BlocRow team={team} />
+          </li>
+        ))}
+      </ul>,
+    );
+    expect(screen.getAllByRole("article")).toHaveLength(100);
+    expect(started.mock.calls.filter(([, delay]) => delay === second)).toHaveLength(1);
+    expect(vi.getTimerCount()).toBe(1);
+
+    unmount();
+    expect(cleared).toHaveBeenCalledWith(started.mock.results[0]?.value);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("redraws only the rows whose text changes: final hour every second, far rows by the minute, the rest never", async () => {
+    const commits = { near: 0, far: 0, ended: 0, filled: 0, closed: 0 };
+    const counting = (row: keyof typeof commits) => () => {
+      commits[row] += 1;
+    };
+    await renderWithRouter(
+      <>
+        <Profiler id="near" onRender={counting("near")}>
+          <BlocRow team={{ ...rice, dealId: "near", expireTime: inMinutes(30) }} />
+        </Profiler>
+        <Profiler id="far" onRender={counting("far")}>
+          <BlocRow team={{ ...rice, dealId: "far", expireTime: inMinutes(5 * 60 + 12) }} />
+        </Profiler>
+        <Profiler id="ended" onRender={counting("ended")}>
+          <BlocRow team={{ ...rice, dealId: "ended", expireTime: inMinutes(-3) }} />
+        </Profiler>
+        <Profiler id="filled" onRender={counting("filled")}>
+          <BlocRow
+            team={{
+              ...rice,
+              dealId: "filled",
+              status: "succeeded",
+              currentSize: 5,
+              expireTime: inMinutes(30),
+            }}
+          />
+        </Profiler>
+        <Profiler id="closed" onRender={counting("closed")}>
+          <BlocRow
+            team={{ ...rice, dealId: "closed", status: "expired", expireTime: inMinutes(-90) }}
+          />
+        </Profiler>
+      </>,
+    );
+    await act(async () => {});
+    const before = { ...commits };
+
+    for (let s = 0; s < 120; s += 1) tickOneSecond();
+
+    expect(commits.near - before.near).toBe(120);
+    // "5h 12m left" becomes "5h 11m left" a second in, then "5h 10m left" a minute after that.
+    expect(commits.far - before.far).toBe(2);
+    expect(commits.ended - before.ended).toBe(0);
+    expect(commits.filled - before.filled).toBe(0);
+    expect(commits.closed - before.closed).toBe(0);
+    expect(screen.getByText("28:00 left")).toBeVisible();
+    expect(screen.getByText("5h 10m left")).toBeVisible();
+  });
+
+  it("prints hours and minutes at exactly one hour left and mm:ss one second later", async () => {
+    await renderWithRouter(<BlocRow team={{ ...rice, expireTime: inMinutes(60) }} />);
+    expect(screen.getByText("1h 0m left")).toBeVisible();
+    expect(screen.getByText("Filling")).toBeVisible();
+    tickOneSecond();
+    expect(screen.getByText("59:59 left")).toBeVisible();
+    expect(screen.getByText("Closing soon")).toBeVisible();
+  });
+
+  it("prints days and hours at exactly one day left and hours and minutes one second later", async () => {
+    await renderWithRouter(<BlocRow team={{ ...rice, expireTime: inMinutes(24 * 60) }} />);
+    expect(screen.getByText("1d 0h left")).toBeVisible();
+    tickOneSecond();
+    expect(screen.getByText("23h 59m left")).toBeVisible();
+  });
+
+  it("counts down to the deadline, then shows Ended with no countdown and stays so", async () => {
+    await renderWithRouter(
+      <BlocRow team={{ ...rice, expireTime: new Date(now + 2 * second).toISOString() }} />,
+    );
+    expect(screen.getByText("00:02 left")).toBeVisible();
+    tickOneSecond();
+    expect(screen.getByText("00:01 left")).toBeVisible();
+    expect(screen.getByText("Closing soon")).toBeVisible();
+    tickOneSecond();
+    expect(screen.getByText("Ended")).toBeVisible();
+    expect(screen.queryByText(/^(\d+[dh] \d+[hm]|\d\d:\d\d) left$/)).toBeNull();
+    for (let s = 0; s < 600; s += 1) tickOneSecond();
+    expect(screen.getByText("Ended")).toBeVisible();
+    expect(screen.queryByText(/^(\d+[dh] \d+[hm]|\d\d:\d\d) left$/)).toBeNull();
+  });
+
+  it("dates a closed row once its deadline passes, as it did on the one-second clock", async () => {
+    await renderWithRouter(
+      <BlocRow
+        team={{
+          ...rice,
+          status: "expired",
+          expireTime: new Date(now + 2 * second).toISOString(),
+        }}
+      />,
+    );
+    expect(screen.queryByText("Closed 17 Sep")).toBeNull();
+    expect(screen.getAllByText("Closed")).toHaveLength(2);
+    tickOneSecond();
+    expect(screen.queryByText("Closed 17 Sep")).toBeNull();
+    tickOneSecond();
+    expect(screen.getByText("Closed 17 Sep")).toBeVisible();
+  });
+
+  it("keeps a row's text equal to the real clock's at every second for a deadline off the minute", async () => {
+    const deadline = now + 2 * hour + 30 * second;
+    await renderWithRouter(
+      <BlocRow team={{ ...rice, expireTime: new Date(deadline).toISOString() }} />,
+    );
+    for (let s = 0; s < 200; s += 1) {
+      expect(screen.getByText(formatCountdown(deadline, Date.now()).text)).toBeVisible();
+      tickOneSecond();
+    }
   });
 });
