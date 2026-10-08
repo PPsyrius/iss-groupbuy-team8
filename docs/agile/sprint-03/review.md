@@ -6,7 +6,7 @@ Status: draft written at code freeze on 2026-10-08 from GitHub issue state, the 
 
 From the container issue #232: by 2026-10-09, on the **deployed dev environment**, a buyer can open an invite link that names the sharer, start or join a bloc on a real admin-configured listing, pay through Stripe Sandbox exactly the quoted price, see the order and bloc on `/account`, and be refunded automatically when the bloc expires. Key actions have a measured p95 at 100 concurrent users, and the first production release is cut from a tag with a rehearsed rollback.
 
-**At freeze: not met on dev.** Every code path in the goal is merged and tested on `dev`, but Checkout and scheduling are still off on dev (#223), dev has no admin-configured startable listing (#222 reopened), and production has not been applied (#226). The p95 part is met on a local stack (#180).
+**At freeze: not met on dev.** Every code path in the goal is merged and tested on `dev`, but Checkout and scheduling are still off on dev (#223), dev had no admin-configured startable listing until the US34 seed ran on the freeze evening (#222 Phase B still open), and production has not been applied (#226). The p95 part is met on a local stack (#180).
 
 ## Plan vs actual
 
@@ -15,7 +15,7 @@ Planned hours are the container issue's. The board Estimate field was not filled
 | Work item | Owner | Planned h | Remaining h at freeze | Status | Evidence |
 |---|---|---|---|---|---|
 | US25 admin team terms and price policy | @l0sgAi | 12 | 0 | Done | #221, PR #242 |
-| US34 demo listings and admin on dev | @l0sgAi | 4 | 2 | Reopened: scripts merged, never run on dev | #222, PR #325 |
+| US34 demo listings and admin on dev | @l0sgAi | 4 | 1 | Open: Phase A done on dev 2026-10-08 (4 `US34-*` listings, quotes match); Phase B (paid START and JOIN) waits for #223 | #222, PR #325 |
 | US29 retire legacy payment paths | @PPsyrius | 8 | 0 | Done | #216, PR #234 |
 | US13 Checkout, scheduling, refunds on dev | @Yorick-Yu | 12 | 7 | Open: runbook and local rehearsal only | #223, [log 2026-10-03](log/2026-10-03.md) |
 | US26 charge the quoted price | @l0sgAi, @limjiechao | 8 | 0 | Done (not yet shown on dev) | #183, PR #235 |
@@ -33,7 +33,7 @@ Planned hours are the container issue's. The board Estimate field was not filled
 | US37 login heading and document titles | @limjiechao | 2 | 0 | Done | #231, PRs #272, #337 |
 | SM Scrum Master duties | @limjiechao | 10 | 1 | Review and retro on 2026-10-09 | #232 |
 | EV evidence | others | 8 | 1 | Retro and progress report | — |
-| **Total** | | **150** | **34** | | |
+| **Total** | | **150** | **33** | | |
 
 Unplanned work that landed in the sprint: Redis caching and rate limits (#208, #274–#276), the admin console backend asks BA-1 to BA-12 (#246–#256), catalog listing progress (#245), receipt refund wording (#392), and the SWE5001 ECS release pipeline (#376). #376's first promotion ([run 37470479078](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37470479078)) and a manual `up` and `down` on 2026-10-07 passed; the Sprint 3 promotion is due on 2026-10-09.
 
@@ -43,7 +43,7 @@ Unplanned work that landed in the sprint: Redis caching and rate limits (#208, #
 |---|---|---|
 | dev health | `curl -s https://d1b3np88z657cp.cloudfront.net/api/actuator/health` | 200 `{"status":"UP"}` (2026-10-08) |
 | dev page | `curl -s -o /dev/null -w '%{http_code}' https://d1b3np88z657cp.cloudfront.net/` | 200 |
-| dev catalog | `curl -s 'https://d1b3np88z657cp.cloudfront.net/api/v1/products?page=1&size=50'` | 10 listings, none of `US34-01..04`; the 5 with a team price carry old `DEMO-D-*` deals |
+| dev catalog | `curl -s 'https://d1b3np88z657cp.cloudfront.net/api/v1/products?page=1&size=50'` | 14 listings after the US34 seed: 4 `US34-*` plus 10 old `DEMO-P-*`; the `DEMO-D-*` deals on 5 of them have fewer member rows than `current_size` |
 | backend CI | `gh run list --workflow ci-backend.yml --branch dev --limit 10` | 10 success |
 | frontend CI | `gh run list --workflow ci-frontend.yml --branch dev --limit 10` | 10 success |
 | security CI | `gh run list --workflow security.yml --branch dev --limit 10` | 10 success |
