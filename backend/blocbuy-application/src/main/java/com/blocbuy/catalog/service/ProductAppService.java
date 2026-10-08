@@ -14,6 +14,10 @@ import java.util.UUID;
  * <p>Listing browse resolves the displayed price pair per view through the pricing strategy
  * selected by the product's pricing mode; deal data arrives via the groupbuy query port, never from
  * groupbuy mappers/DOs.
+ *
+ * <p>Buyer browse and detail carry no method-level transaction: the implementation opens a
+ * read-only transaction around the product reads only and commits it before the best-offer lookup,
+ * so a slow cache never holds a database connection.
  */
 public interface ProductAppService {
 

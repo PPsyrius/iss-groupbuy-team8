@@ -18,6 +18,8 @@ on:
       - "contracts/**"
       - "deployment/backend/**"
       - ".github/workflows/ci-backend.yml"
+      - ".github/actions/trivy-image-db/**"
+      - ".github/scripts/validate-trivy-db.py"
   pull_request:
     # labeled/unlabeled: applying or removing `contract-change-approved` must
     # re-run the contract gate — the label is only visible in a fresh event.
@@ -57,6 +59,8 @@ jobs:
               - 'backend/**'
               - 'deployment/backend/**'
               - '.github/workflows/ci-backend.yml'
+              - '.github/actions/trivy-image-db/**'
+              - '.github/scripts/validate-trivy-db.py'
             contracts:
               - 'backend/**'
               - 'contracts/**'
@@ -68,6 +72,8 @@ jobs:
               - 'backend/mvnw'
               - 'backend/mvnw.cmd'
               - '.github/workflows/ci-backend.yml'
+              - '.github/actions/trivy-image-db/**'
+              - '.github/scripts/validate-trivy-db.py'
 
   build-quality:
     needs: detect-changes
@@ -337,6 +343,18 @@ jobs:
           -Dcheckstyle.skip=true
           -Dspotbugs.skip=true
 
+      # Reuse an existing trusted dev runner rather than adding a scheduled warmup job.
+      # Seeding is advisory; a miss still performs a normal, freshness-checked PR scan.
+      - name: Seed shared Trivy image databases (trusted dev only)
+        if: >-
+          github.event_name == 'push' &&
+          github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+          needs.detect-changes.outputs.sonar == 'true'
+        continue-on-error: true
+        uses: ./.github/actions/trivy-image-db
+        with:
+          publish: 'true'
+
       # The PR/tag artifact's paths are relative to backend/ (upload-artifact strips the
       # common ancestor), so restore into backend/ or the scanner misses coverage.
       - name: Download Sonar inputs (PR and release only)
@@ -514,17 +532,12 @@ jobs:
             exit 1
           fi
 
-      # Keep the Trivy DB between runs so repeat scans avoid downloading it again.
-      - name: Cache Trivy vulnerability DB
+      # PR/merge-group/tag jobs restore shared DBs but never save image DB caches.
+      - name: Restore shared Trivy image databases
         if: >-
           needs.detect-changes.outputs.backend == 'true' ||
           (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ github.workspace }}/.cache/trivy
-          key: trivy-db-${{ runner.os }}-${{ github.run_id }}
-          restore-keys: |
-            trivy-db-${{ runner.os }}-
+        uses: ./.github/actions/trivy-image-db
 
       - name: Trivy image scan
         if: >-
@@ -533,6 +546,9 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           version: v0.74.0
+          skip-setup-trivy: true
+          cache: false
+          cache-dir: ${{ github.workspace }}/.cache/trivy-image
           scan-type: image
           image-ref: blocbuy-backend:ci-${{ github.sha }}
           scanners: vuln
