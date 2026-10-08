@@ -3,6 +3,8 @@ package com.blocbuy.catalog.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -31,9 +33,15 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.SimpleTransactionStatus;
 
 /** Listing browse: dual price per view, batch deal lookup, no existence leak for off-sale rows. */
 @ExtendWith(MockitoExtension.class)
@@ -46,6 +54,7 @@ class ProductAppServiceImplTest {
     @Mock private GroupDealQueryService groupDealQueryService;
     @Mock private PricingStrategyResolver pricingStrategyResolver;
     @Mock private ListingSearchReranker listingSearchReranker;
+    @Mock private PlatformTransactionManager transactions;
 
     @InjectMocks private ProductAppServiceImpl service;
 
@@ -150,6 +159,99 @@ class ProductAppServiceImplTest {
                 .isInstanceOf(BizException.class)
                 .extracting(e -> ((BizException) e).errorCode())
                 .isEqualTo(CatalogErrorCode.PRODUCT_NOT_FOUND);
+    }
+
+    /**
+     * A slow best-offer lookup must not hold a database connection: the read-only transaction that
+     * loads the page commits before the lookup starts.
+     */
+    @Test
+    void pageCommitsItsReadOnlyTransactionBeforeTheDealLookup() {
+        TransactionStatus txStatus = new SimpleTransactionStatus();
+        when(transactions.getTransaction(any(TransactionDefinition.class))).thenReturn(txStatus);
+        when(productRepository.pageOnSale(new PageQuery(1, 20), null))
+                .thenReturn(
+                        PageResult.of(
+                                List.of(product(PRODUCT_ID, "129.00", ProductStatus.ON_SALE)),
+                                1,
+                                new PageQuery(1, 20)));
+        when(pricingStrategyResolver.strategyFor(PricingMode.DUAL))
+                .thenReturn(new DualPricingStrategy());
+        when(groupDealQueryService.findBestOpenDealsByProductIds(List.of(PRODUCT_ID)))
+                .thenReturn(Map.of());
+
+        service.pageListings(1, 20, null);
+
+        ArgumentCaptor<TransactionDefinition> definition =
+                ArgumentCaptor.forClass(TransactionDefinition.class);
+        InOrder order = inOrder(transactions, productRepository, groupDealQueryService);
+        order.verify(transactions).getTransaction(definition.capture());
+        order.verify(productRepository).pageOnSale(new PageQuery(1, 20), null);
+        order.verify(transactions).commit(txStatus);
+        order.verify(groupDealQueryService).findBestOpenDealsByProductIds(List.of(PRODUCT_ID));
+        assertThat(definition.getValue().isReadOnly()).isTrue();
+        verify(transactions, never()).rollback(any());
+    }
+
+    /** The detail path releases its connection before the best-offer lookup, like the page path. */
+    @Test
+    void detailCommitsItsReadOnlyTransactionBeforeTheDealLookup() {
+        TransactionStatus txStatus = new SimpleTransactionStatus();
+        when(transactions.getTransaction(any(TransactionDefinition.class))).thenReturn(txStatus);
+        when(productRepository.findById(PRODUCT_ID))
+                .thenReturn(Optional.of(product(PRODUCT_ID, "129.00", ProductStatus.ON_SALE)));
+        when(pricingStrategyResolver.strategyFor(PricingMode.DUAL))
+                .thenReturn(new DualPricingStrategy());
+        when(groupDealQueryService.findBestOpenDealsByProductIds(List.of(PRODUCT_ID)))
+                .thenReturn(Map.of(PRODUCT_ID, offer(PRODUCT_ID, "89.00")));
+
+        service.getListingDetail(PRODUCT_ID);
+
+        ArgumentCaptor<TransactionDefinition> definition =
+                ArgumentCaptor.forClass(TransactionDefinition.class);
+        InOrder order = inOrder(transactions, productRepository, groupDealQueryService);
+        order.verify(transactions).getTransaction(definition.capture());
+        order.verify(productRepository).findById(PRODUCT_ID);
+        order.verify(transactions).commit(txStatus);
+        order.verify(groupDealQueryService).findBestOpenDealsByProductIds(List.of(PRODUCT_ID));
+        assertThat(definition.getValue().isReadOnly()).isTrue();
+        verify(transactions, never()).rollback(any());
+    }
+
+    /**
+     * A missing product is decided after the read committed, and no cache lookup is spent on it.
+     */
+    @Test
+    void detailNotFoundCommitsTheReadAndSkipsTheDealLookup() {
+        TransactionStatus txStatus = new SimpleTransactionStatus();
+        when(transactions.getTransaction(any(TransactionDefinition.class))).thenReturn(txStatus);
+        when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.getListingDetail(PRODUCT_ID))
+                .isInstanceOf(BizException.class)
+                .extracting(e -> ((BizException) e).errorCode())
+                .isEqualTo(CatalogErrorCode.PRODUCT_NOT_FOUND);
+
+        verify(transactions).commit(txStatus);
+        verify(transactions, never()).rollback(any());
+        verifyNoInteractions(groupDealQueryService);
+    }
+
+    /** A failed product read rolls its transaction back and never reaches the cache lookup. */
+    @Test
+    void pageRollsBackAndSkipsTheDealLookupWhenTheProductReadFails() {
+        TransactionStatus txStatus = new SimpleTransactionStatus();
+        when(transactions.getTransaction(any(TransactionDefinition.class))).thenReturn(txStatus);
+        when(productRepository.pageOnSale(any(PageQuery.class), any()))
+                .thenThrow(new IllegalStateException("database unavailable"));
+
+        assertThatThrownBy(() -> service.pageListings(1, 20, null))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("database unavailable");
+
+        verify(transactions).rollback(txStatus);
+        verify(transactions, never()).commit(any());
+        verifyNoInteractions(groupDealQueryService);
     }
 
     /** Verifies keyword/category delegation and one batched deal enrichment query. */
