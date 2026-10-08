@@ -1,7 +1,8 @@
 # SWE5001 service images (docs/swe5001/impl-github-configuration.md, section 6).
 # Reusable and AWS-free: builds each runtime image for ARM64 (the ECS task platform),
-# scans it with Trivy and uploads it as artifact swe5001-image-<service>. It never
-# pushes; swe5001-deploy.yml publishes the exact scanned image.
+# scans it with Trivy. Deployment callers export/upload swe5001-image-<service>;
+# PR validation keeps the build/scan but never uploads unused image archives.
+# It never pushes; swe5001-deploy.yml publishes the exact scanned image.
 #
 # Strangler step 0: only the monolith image. PR 9 of #376 adds identity-svc,
 # commerce-svc and notification-svc to the matrix.
@@ -9,9 +10,14 @@ name: swe5001-service-images
 
 on:
   workflow_call:
+    inputs:
+      upload-images:
+        description: Export scanned images for same-run deployment publication
+        type: boolean
+        default: true
     outputs:
       services:
-        description: Space-separated service names, one swe5001-image-<service> artifact each
+        description: Space-separated service names; deployment calls upload one image artifact each
         value: ${{ jobs.build.outputs.services }}
 
 permissions: {}
@@ -84,11 +90,14 @@ jobs:
           format: table
 
       - name: Export image
+        if: inputs.upload-images && github.event_name != 'pull_request' && github.event_name != 'merge_group'
         env:
           SERVICE: ${{ matrix.service }}
         run: docker save "swe5001-${SERVICE}:${GITHUB_SHA}" | gzip --stdout > "${RUNNER_TEMP}/swe5001-image-${SERVICE}.tgz"
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - name: Upload verified image
+        if: inputs.upload-images && github.event_name != 'pull_request' && github.event_name != 'merge_group'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: swe5001-image-${{ matrix.service }}
           path: ${{ runner.temp }}/swe5001-image-${{ matrix.service }}.tgz

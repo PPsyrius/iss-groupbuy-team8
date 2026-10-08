@@ -1,0 +1,101 @@
+# Shared cache publication is restricted to trusted default-branch pushes.
+name: Trivy image database cache
+description: Restore image databases; optionally seed a trusted default-branch daily cache
+inputs:
+  publish:
+    description: Download, validate and publish databases on a default-branch push only
+    default: 'false'
+outputs:
+  cache-hit:
+    description: Whether the current day's trusted database cache was restored
+    value: ${{ steps.lookup.outputs.cache-hit == 'true' || steps.restore.outputs.cache-hit == 'true' }}
+runs:
+  using: composite
+  steps:
+    - name: Require trusted cache publication scope
+      if: inputs.publish == 'true'
+      shell: bash
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+        REF: ${{ github.ref }}
+        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+      run: |
+        if [ "$EVENT_NAME" != push ] || [ "$REF" != "refs/heads/$DEFAULT_BRANCH" ]; then
+          echo '::error::Trivy DB publication requires a trusted default-branch push'
+          exit 1
+        fi
+
+    - name: Set UTC cache date
+      id: date
+      shell: bash
+      run: echo "date=$(date -u +%F)" >> "$GITHUB_OUTPUT"
+
+    # Repeated dev pushes must not download a ~1 GB cache just to learn it exists.
+    - name: Look up today's trusted database cache
+      id: lookup
+      if: inputs.publish == 'true'
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        lookup-only: true
+        path: |
+          ${{ github.workspace }}/.cache/trivy-image/db
+          ${{ github.workspace }}/.cache/trivy-image/java-db
+        key: trivy-image-db-shared-v1-v0.74.0-${{ runner.os }}-${{ runner.arch }}-${{ steps.date.outputs.date }}
+
+    - name: Install Trivy (retain binary caching)
+      if: inputs.publish != 'true' || steps.lookup.outputs.cache-hit != 'true'
+      uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
+      with:
+        version: v0.74.0
+        cache: true
+
+    - name: Restore trusted image databases
+      id: restore
+      if: inputs.publish != 'true' || steps.lookup.outputs.cache-hit != 'true'
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ${{ github.workspace }}/.cache/trivy-image/db
+          ${{ github.workspace }}/.cache/trivy-image/java-db
+        key: trivy-image-db-shared-v1-v0.74.0-${{ runner.os }}-${{ runner.arch }}-${{ steps.date.outputs.date }}
+        restore-keys: |
+          trivy-image-db-shared-v1-v0.74.0-${{ runner.os }}-${{ runner.arch }}-
+
+    - name: Download current databases
+      if: inputs.publish == 'true' && steps.lookup.outputs.cache-hit != 'true' && steps.restore.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        CACHE_DIR: ${{ github.workspace }}/.cache/trivy-image
+      run: |
+        trivy image --cache-dir "$CACHE_DIR" --timeout 5m --no-progress --download-db-only
+        trivy image --cache-dir "$CACHE_DIR" --timeout 5m --no-progress --download-java-db-only
+
+    - name: Validate downloaded databases before publication
+      if: inputs.publish == 'true' && steps.lookup.outputs.cache-hit != 'true' && steps.restore.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        WORKSPACE: ${{ github.workspace }}
+      run: python3 "$WORKSPACE/.github/scripts/validate-trivy-db.py" "$WORKSPACE/.cache/trivy-image"
+
+    # Save immediately after successful download/validation, independently of later gates.
+    - name: Publish trusted image databases
+      if: inputs.publish == 'true' && steps.lookup.outputs.cache-hit != 'true' && steps.restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ${{ github.workspace }}/.cache/trivy-image/db
+          ${{ github.workspace }}/.cache/trivy-image/java-db
+        key: ${{ steps.restore.outputs.cache-primary-key }}
+
+    - name: Record database cache outcome
+      shell: bash
+      env:
+        PUBLISH: ${{ inputs.publish }}
+        CACHE_HIT: ${{ steps.lookup.outputs.cache-hit == 'true' || steps.restore.outputs.cache-hit == 'true' }}
+        MATCHED_KEY: ${{ steps.lookup.outputs.cache-matched-key || steps.restore.outputs.cache-matched-key }}
+      run: |
+        {
+          echo '### Trivy image DB cache'
+          printf 'Publication requested: `%s`; current-day cache hit: `%s`.\n' "$PUBLISH" "${CACHE_HIT:-false}"
+          printf 'Matched key: `%s`. Normal scan freshness checks remain enabled.\n' "${MATCHED_KEY:-none}"
+        } >> "$GITHUB_STEP_SUMMARY"
