@@ -33,8 +33,10 @@ public interface GroupDealPurchaseSupport {
     /**
      * Resolves a UC7 invite reference presented with a JOIN into the sharer to freeze on the
      * intent. Never fails the purchase: a missing, unknown, other-team or self-referring reference
-     * resolves to empty, and the join simply goes unattributed. Call after {@link #lockJoinTerms},
-     * which has already refused a closed team.
+     * resolves to empty, and the join simply goes unattributed. It reads only the immutable invite
+     * and takes no lock, so call it before {@link #lockJoinTerms}, keeping its I/O out of the
+     * window in which the team row is held; {@code lockJoinTerms} still alone decides whether the
+     * buyer may pay into the team.
      */
     Optional<UUID> resolveSharer(String inviteRef, UUID dealId, UUID buyerId);
 
