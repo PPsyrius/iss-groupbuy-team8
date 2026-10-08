@@ -45,7 +45,7 @@
     <springdoc.version>3.1.1</springdoc.version>
     <springdoc-maven-plugin.version>1.5</springdoc-maven-plugin.version>
     <archunit.version>1.5.1</archunit.version>
-    <stripe-java.version>33.4.2</stripe-java.version>
+    <stripe-java.version>34.0.0</stripe-java.version>
     <!-- Google OIDC client (id_token verification); verified against Maven Central 2026-09-07 -->
     <google-api-client.version>2.9.1</google-api-client.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
