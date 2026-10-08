@@ -4,6 +4,8 @@ Use enforced or observed evidence, not intended process. Every ceremony claim ne
 
 ## Progress report
 
+How the report is written and structured (template sections, no tracker IDs, Contribution Summary Table with Analysis, Design and Design Pattern per member): [`progress-report-rules.md`](progress-report-rules.md).
+
 | Report section | Sources | Assembly |
 |---|---|---|
 | Project methodology | `CONTRIBUTING.md`, quality gates, agile README, GitHub templates and workflows | Cite enforced practice. |
