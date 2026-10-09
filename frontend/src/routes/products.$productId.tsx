@@ -9,7 +9,7 @@ import type { MyTeamResponse, ProductDetailResponse } from "@/api/generated/type
 import { NotFoundCard } from "@/components/ErrorCard";
 import { blocFilter } from "@/features/blocs/bloc-status";
 import { myTeamsQuery } from "@/features/blocs/my-teams-query";
-import { DealProgress, useNow } from "@/features/catalog/DealProgress";
+import { DealProgress } from "@/features/catalog/DealProgress";
 import {
   blocHeadline,
   chooseJoin,
@@ -18,6 +18,7 @@ import {
   type ListingDealView,
   listingDealView,
 } from "@/features/catalog/listing-view";
+import { useNow } from "@/features/catalog/page-clock";
 import { formatPrice, Price } from "@/features/catalog/Price";
 import { ProductGallery } from "@/features/catalog/ProductGallery";
 import { listingSearchSchema } from "@/features/catalog/products-search";

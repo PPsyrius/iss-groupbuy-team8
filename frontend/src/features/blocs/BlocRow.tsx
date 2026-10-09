@@ -8,7 +8,7 @@ import {
   parseDeadline,
   type Countdown,
 } from "@/features/catalog/deal-time";
-import { useNow } from "@/features/catalog/DealProgress";
+import { useNow } from "@/features/catalog/page-clock";
 import { formatPrice } from "@/features/catalog/Price";
 import { RowShare } from "@/features/share/RowShare";
 

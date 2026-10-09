@@ -1,51 +1,21 @@
 import { Button, Chip, ProgressBar } from "@heroui/react";
-import { useId, useSyncExternalStore } from "react";
+import { useId } from "react";
 
 import type { ActiveDealResponse } from "@/api/generated/types.gen";
 
 import {
-  clockReading,
   type Countdown,
   formatCountdown,
   formatDeadline,
   hasEnded,
   parseDeadline,
 } from "./deal-time";
+import { useNow } from "./page-clock";
 
 // One open-bloc row from the Listing Detail artboards (docs/design-screens.md §4.2 "Deal
 // progress row"). The contract's `ActiveDealResponse` carries sizes and the deadline only, so the
 // row has no starter, bloc number or avatar (CR: open-team list); it is labelled "Open bloc".
 // With no deal the artboard's "no open bloc" copy renders instead (plan §12 note 41).
-
-// The page clock. `useSyncExternalStore` calls `subscribe` once for every hook instance, so each
-// instance only registers a listener here: the first one starts the page's single 1 s interval and
-// the last one to unsubscribe clears it, however many rows are mounted (My blocs shows up to 100).
-// The interval wakes every listener each second, but a component re-renders only when its own
-// snapshot changed. `useNow()` reads the real clock to the second (the quote sheet's countdown);
-// `useNow(deadlineMs)` reads `clockReading`, which holds still while a deadline row's text cannot
-// change, so a row hours from its deadline, or past it, sleeps through the ticks. Reading
-// `Date.now()` in a snapshot keeps it out of render (React Compiler purity rule).
-const listeners = new Set<() => void>();
-let timer: ReturnType<typeof setInterval> | undefined;
-
-function tick() {
-  for (const notify of listeners) notify();
-}
-function subscribe(onTick: () => void) {
-  listeners.add(onTick);
-  timer ??= setInterval(tick, 1000);
-  return () => {
-    listeners.delete(onTick);
-    if (listeners.size === 0 && timer !== undefined) {
-      clearInterval(timer);
-      timer = undefined;
-    }
-  };
-}
-export function useNow(deadlineMs?: number | null) {
-  const read = () => clockReading(deadlineMs, Date.now());
-  return useSyncExternalStore(subscribe, read, read);
-}
 
 const maxSeatDots = 10;
 
