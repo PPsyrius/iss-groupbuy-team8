@@ -47,6 +47,16 @@ export function subscribePageClock(onTick: () => void) {
   };
 }
 
+// Tests only: forget every listener and the pending timer, so a test that counts timers does not
+// depend on what an earlier test in the same worker left subscribed. Rows still mounted after this
+// unsubscribe harmlessly (their listener is already gone).
+export function resetPageClockForTests() {
+  if (timer !== undefined) clearTimeout(timer);
+  listeners.clear();
+  timer = undefined;
+  current = undefined;
+}
+
 // `useNow()` reads the real clock to the second (the quote sheet's countdown); `useNow(deadlineMs)`
 // reads `clockReading`, which holds still while a deadline row's text cannot change, so a row hours
 // from its deadline, or past it, sleeps through the ticks.

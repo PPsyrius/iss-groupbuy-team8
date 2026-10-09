@@ -1,18 +1,22 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import { Profiler } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { formatCountdown } from "./deal-time";
 import { DealProgress } from "./DealProgress";
+import { resetPageClockForTests } from "./page-clock";
 
 const now = Date.parse("2026-09-17T11:00:00+08:00");
 
 describe("DealProgress", () => {
   beforeEach(() => {
+    resetPageClockForTests();
     vi.useFakeTimers();
     vi.setSystemTime(now);
   });
   afterEach(() => {
+    // Unmount while the fake timers are installed, so the page clock clears its own timer.
+    cleanup();
     vi.useRealTimers();
   });
 
@@ -180,10 +184,13 @@ describe("DealProgress clock", () => {
   };
 
   beforeEach(() => {
+    resetPageClockForTests();
     vi.useFakeTimers();
     vi.setSystemTime(now);
   });
   afterEach(() => {
+    // Unmount while the fake timers are installed, so the page clock clears its own timer.
+    cleanup();
     vi.useRealTimers();
   });
 

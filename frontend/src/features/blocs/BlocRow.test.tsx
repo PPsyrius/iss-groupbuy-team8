@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { Profiler } from "react";
@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OK_CODE } from "@/api/envelope";
 import type { MyTeamResponse } from "@/api/generated/types.gen";
 import { formatCountdown } from "@/features/catalog/deal-time";
+import { resetPageClockForTests } from "@/features/catalog/page-clock";
 import { server } from "@/test/msw";
 import { renderWithRouter } from "@/test/render";
 
@@ -223,10 +224,13 @@ describe("BlocRow clock", () => {
   };
 
   beforeEach(() => {
+    resetPageClockForTests();
     vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
     vi.setSystemTime(now);
   });
   afterEach(() => {
+    // Unmount while the fake timers are installed, so the page clock clears its own timer.
+    cleanup();
     vi.useRealTimers();
   });
 

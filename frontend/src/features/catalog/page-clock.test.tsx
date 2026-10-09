@@ -1,7 +1,7 @@
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { readPageClock, useNow } from "./page-clock";
+import { readPageClock, resetPageClockForTests, useNow } from "./page-clock";
 
 const now = Date.parse("2026-09-17T11:00:00+08:00");
 
@@ -17,6 +17,7 @@ const advance = (ms: number) => {
 
 describe("page clock", () => {
   beforeEach(() => {
+    resetPageClockForTests();
     vi.useFakeTimers();
     vi.setSystemTime(now);
   });
