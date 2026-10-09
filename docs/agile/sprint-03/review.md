@@ -6,7 +6,7 @@ Status: draft written at code freeze on 2026-10-08 from GitHub issue state, the 
 
 From the container issue #232: by 2026-10-09, on the **deployed dev environment**, a buyer can open an invite link that names the sharer, start or join a bloc on a real admin-configured listing, pay through Stripe Sandbox exactly the quoted price, see the order and bloc on `/account`, and be refunded automatically when the bloc expires. Key actions have a measured p95 at 100 concurrent users, and the first production release is cut from a tag with a rehearsed rollback.
 
-**At freeze: not met on dev.** Every code path in the goal is merged and tested on `dev`, but Checkout and scheduling are still off on dev (#223), dev had no admin-configured startable listing until the US34 seed ran on the freeze evening (#222 Phase B still open), and production has not been applied (#226). The p95 part is met on a local stack (#180).
+**At freeze: not met on dev.** Every code path in the goal is merged into the `dev` branch and passes its automated tests there. On the deployed dev environment only the catalog, the admin team-terms API with its quotes (US34 seed, 2026-10-08) and the session cookie have been exercised. The quoted-price START (US26), Checkout and refunds (US13) and refund replay and crash recovery (US14) were verified only locally, because Checkout and scheduling are still off on dev (#223) and dev had no admin-configured startable listing until the freeze evening (#222 Phase B still open). Production has not been applied (#226). The p95 part is met on a local stack (#180).
 
 ## Plan vs actual
 
@@ -27,7 +27,7 @@ Planned hours are the container issue's. The board Estimate field was not filled
 | US33 buyer-journey, refusal, quote e2e | @limjiechao | 10 | 0 | Done | #228 |
 | US32 signed-in journey on dev | @limjiechao | 4 | 4 | Open: waits for #223 and #222 | #229 |
 | US28a payment findings | @Yorick-Yu | 8 | 0 | Done | #130, #134, PR #339 |
-| US28b security findings | @l0sgAi, @PPsyrius | 6 | 1 | Open: NFR-37 decision; #96 done (NFR-01 enforced 2026-10-08) | #227, #96 |
+| US28b security findings | @l0sgAi, @PPsyrius | 6 | 1 | Open: NFR-37 decision; #96 done (NFR-01 verified on dev 2026-10-08) | #227, #96 |
 | US35 catalog read performance | @EricWang1358 | 6 | 0 | Done | #205, #204 |
 | US36 Sonar literals and TODO triage | @PPsyrius | 2 | 0 | Done | PR #218 |
 | US37 login heading and document titles | @limjiechao | 2 | 0 | Done | #231, PRs #272, #337 |
