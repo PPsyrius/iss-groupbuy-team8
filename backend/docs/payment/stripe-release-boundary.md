@@ -29,6 +29,12 @@ The payment-branch `GET /api/v1/orders` was removed in favour of the order team'
 
 ## Migration and compatibility status
 
+### Stripe Java 34 migration — 2026-10-09 (#433)
+
+Stripe Java 34.0.0 pins provider API version `2026-09-30.endive` and removes Checkout's `payment_method_types` parameter ([official release notes](https://github.com/stripe/stripe-java/blob/v34.0.0/CHANGELOG.md)). `StripeCheckoutGateway` now sends only `allowed_payment_method_types=[card]`. This filters dynamically eligible methods rather than forcing a static list: card payments must also be eligible in the configured Sandbox account. Do not remove the filter to make a checkout succeed; additional payment methods require separate acceptance.
+
+Before deploying this SDK upgrade to an enabled Checkout environment, the payment operator must review the provider API changes, confirm card eligibility and the endpoint's event API version matches `Stripe.API_VERSION`, and coordinate any endpoint version migration with in-flight sessions and pending webhook retries. The gateway still rejects supported events whose API version cannot be safely deserialized; do not bypass this guard or acknowledge those events without processing. Verify a real Sandbox checkout, signed delivery, settlement and refund/replay behavior before declaring rollout accepted. Local tests generate compatible signed fixtures and retain mismatch rejection, but do not verify or change the live Stripe account or endpoint configuration. The application's HTTP contract, feature flags, idempotency keys and database transactions are unchanged.
+
 The payment schema uses the standard Flyway path (V9–V11); local `intent_id` is distinct from Stripe's PaymentIntent ID. See backend ADR 0001 for the order/payment boundary.
 
 The `211cfb7` source/contract snapshot guard is historical evidence, not a current CI or contract gate ([quality record](stripe-sonar-fixes-20260920.md)).
