@@ -63,7 +63,8 @@ public class StripeCheckoutGateway implements CheckoutGateway {
                         .build();
         return SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
+                // Stripe 34 filters dynamically eligible methods; never broaden beyond cards.
+                .addAllowedPaymentMethodType(SessionCreateParams.AllowedPaymentMethodType.CARD)
                 .setAdaptivePricing(
                         SessionCreateParams.AdaptivePricing.builder().setEnabled(false).build())
                 .setClientReferenceId(payment.id().toString())
