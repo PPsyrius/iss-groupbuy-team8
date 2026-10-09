@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-import { clockReading } from "./deal-time";
+import { type ClockNeed, clockReading } from "./deal-time";
 
 // The page clock. `useSyncExternalStore` calls `subscribe` once for every hook instance, so each
 // instance only registers a listener here: the first one starts the page's single timer and the
@@ -57,10 +57,10 @@ export function resetPageClockForTests() {
   current = undefined;
 }
 
-// `useNow()` reads the real clock to the second (the quote sheet's countdown); `useNow(deadlineMs)`
-// reads `clockReading`, which holds still while a deadline row's text cannot change, so a row hours
-// from its deadline, or past it, sleeps through the ticks.
-export function useNow(deadlineMs?: number | null) {
-  const read = () => clockReading(deadlineMs, readPageClock());
+// `useNow()` reads the real clock to the second; `useNow(deadlineMs, need)` reads `clockReading`,
+// which holds still while the caller's text cannot change, so a row hours from its deadline, or
+// past it, sleeps through the ticks.
+export function useNow(deadlineMs?: number | null, need?: ClockNeed) {
+  const read = () => clockReading(deadlineMs, readPageClock(), need);
   return useSyncExternalStore(subscribePageClock, read, read);
 }

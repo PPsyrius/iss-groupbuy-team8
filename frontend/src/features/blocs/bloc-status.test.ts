@@ -87,21 +87,50 @@ describe("blocCountdown", () => {
   });
 });
 
-// A row renders with `clockReading(deadline, realNow)` instead of the real clock; its chip and
-// countdown must not notice, including at the one-day and one-hour lines and at the deadline.
+// An open row renders with `clockReading(deadline, realNow, "day-countdown")` instead of the real
+// clock; its chip and countdown must not notice, including at the one-day and one-hour lines and
+// at the deadline, and the reading moves only when the printed text can.
 describe("blocChip and blocCountdown at the row's clock reading", () => {
+  const hour = 3_600_000;
+  const deadlineMs = now + 2 * hour * 24 + 17_000;
+  const open = team({ expireTime: new Date(deadlineMs).toISOString() });
+
   it.each([
-    ["the one-day line", 24 * 3_600_000],
-    ["the one-hour line", 3_600_000],
+    ["the one-day line", 24 * hour],
+    ["the one-hour line", hour],
     ["the deadline", 0],
   ])("print what the real time prints for two minutes either side of %s", (_, beforeMs) => {
-    const deadlineMs = now + 2 * 3_600_000 * 24 + 17_000;
-    const open = team({ expireTime: new Date(deadlineMs).toISOString() });
     for (let sec = -120; sec <= 120; sec += 1) {
       const at = deadlineMs - beforeMs + sec * 1000;
-      const reading = clockReading(deadlineMs, at);
+      const reading = clockReading(deadlineMs, at, "day-countdown");
       expect(blocCountdown(open, reading)).toEqual(blocCountdown(open, at));
       expect(blocChip(open, reading)).toEqual(blocChip(open, at));
     }
+  });
+
+  it("moves once an hour while a day or more is left, and at the one-day line", () => {
+    const readings = new Set<number>();
+    // From 2 d out to 59 s inside the last day, one second at a time: "2d 0h", "1d 23h" to
+    // "1d 0h", then "23h 59m", so 26 texts and as many readings.
+    for (let at = now + 17_000; at <= deadlineMs - 24 * hour + 59_000; at += 1000) {
+      const reading = clockReading(deadlineMs, at, "day-countdown");
+      readings.add(reading);
+      expect(blocCountdown(open, reading)).toEqual(blocCountdown(open, at));
+    }
+    expect(readings.size).toBe(26);
+    expect(
+      blocCountdown(open, clockReading(deadlineMs, deadlineMs - 24 * hour, "day-countdown")),
+    ).toEqual({ text: "1d 0h left", urgent: false });
+    expect(
+      blocCountdown(open, clockReading(deadlineMs, deadlineMs - 24 * hour + 1000, "day-countdown")),
+    ).toEqual({ text: "23h 59m left", urgent: false });
+  });
+
+  it("holds still after the deadline, Singapore midnight included", () => {
+    const readings = new Set<number>();
+    for (let at = deadlineMs + 1000; at <= deadlineMs + 24 * hour; at += 60_000) {
+      readings.add(clockReading(deadlineMs, at, "day-countdown"));
+    }
+    expect([...readings]).toEqual([deadlineMs]);
   });
 });

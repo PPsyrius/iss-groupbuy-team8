@@ -305,6 +305,74 @@ describe("BlocRow clock", () => {
     expect(screen.getByText("5h 10m left")).toBeVisible();
   });
 
+  // Counts the commits of each row while the real clock ticks `seconds` times, one second each.
+  async function commitsOver(rows: Record<string, MyTeamResponse>, seconds: number) {
+    const commits: Record<string, number> = {};
+    await renderWithRouter(
+      <>
+        {Object.entries(rows).map(([id, team]) => (
+          <Profiler
+            key={id}
+            id={id}
+            onRender={() => {
+              commits[id] = (commits[id] ?? 0) + 1;
+            }}
+          >
+            <BlocRow team={team} />
+          </Profiler>
+        ))}
+      </>,
+    );
+    await act(async () => {});
+    const before = { ...commits };
+    for (let s = 0; s < seconds; s += 1) tickOneSecond();
+    return Object.fromEntries(
+      Object.keys(rows).map((id) => [id, (commits[id] ?? 0) - (before[id] ?? 0)]),
+    );
+  }
+
+  it("never redraws a closed row whose deadline is still ahead (closed early)", async () => {
+    const closed = { ...rice, status: "canceled" };
+    const commits = await commitsOver(
+      {
+        soon: { ...closed, dealId: "soon", expireTime: inMinutes(50) },
+        later: { ...closed, dealId: "later", expireTime: inMinutes(3 * 24 * 60) },
+      },
+      600,
+    );
+    expect(commits).toEqual({ soon: 0, later: 0 });
+    expect(screen.getAllByText("Closed")).toHaveLength(4);
+  });
+
+  it("redraws a row more than a day out once an hour, when its days-and-hours text changes", async () => {
+    // "3d 0h left" until 30 minutes in, then "2d 23h left", then "2d 22h left" at 90 minutes.
+    const commits = await commitsOver(
+      { far: { ...rice, dealId: "far", expireTime: inMinutes(3 * 24 * 60 + 30) } },
+      2 * 3600,
+    );
+    expect(commits).toEqual({ far: 2 });
+    expect(screen.getByText("2d 22h left")).toBeVisible();
+  });
+
+  it("never redraws a filled or closed row across Singapore midnight", async () => {
+    vi.setSystemTime(Date.parse("2026-09-17T23:59:00+08:00"));
+    const commits = await commitsOver(
+      {
+        filled: { ...rice, dealId: "filled", status: "succeeded", currentSize: 5 },
+        filledLate: {
+          ...rice,
+          dealId: "filledLate",
+          status: "succeeded",
+          currentSize: 5,
+          expireTime: "2026-09-17T12:00:00Z",
+        },
+        closed: { ...rice, dealId: "closed", status: "expired", expireTime: inMinutes(-90) },
+      },
+      120,
+    );
+    expect(commits).toEqual({ filled: 0, filledLate: 0, closed: 0 });
+  });
+
   it("prints hours and minutes at exactly one hour left and mm:ss one second later", async () => {
     await renderWithRouter(<BlocRow team={{ ...rice, expireTime: inMinutes(60) }} />);
     expect(screen.getByText("1h 0m left")).toBeVisible();

@@ -259,4 +259,23 @@ describe("clockReading", () => {
     );
     expect(mismatches).toEqual([]);
   });
+
+  // A "deadline" reader prints only whether the deadline has passed, so its reading moves once.
+  it('holds one reading before the deadline and one after it for a "deadline" reader', () => {
+    const deadline = sgt("2026-09-16T14:30:00.500");
+    const iso = new Date(deadline).toISOString();
+    const readings = new Set<number>();
+    for (let at = deadline - 3 * 24 * hour; at < deadline + 24 * hour; at += 61 * second) {
+      const reading = clockReading(deadline, at, "deadline");
+      readings.add(reading);
+      expect(hasEnded(iso, reading)).toBe(hasEnded(iso, real(at)));
+    }
+    expect([...readings]).toEqual([deadline - 1, deadline]);
+  });
+
+  it('never moves for a "deadline" reader without a readable deadline, midnight included', () => {
+    const midnight = sgt("2026-09-17T00:00:00");
+    expect(clockReading(null, midnight - second, "deadline")).toBe(0);
+    expect(clockReading(null, midnight, "deadline")).toBe(0);
+  });
 });
