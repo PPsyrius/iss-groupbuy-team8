@@ -89,5 +89,6 @@ The advisory commit hook in `.claude/settings.json` runs `scripts/commit-evidenc
 - `references/templates.md`: log, register, ADR, issue, PR, review, and retrospective templates.
 - `references/nfr-scenarios.md`: quality-scenario format and examples.
 - `references/report-mapping.md`: report sections mapped to evidence.
+- `references/progress-report-rules.md`: structure, audience and honesty rules for the sprint progress report.
 - `scripts/snapshot-board.sh`: board snapshot and summary.
 - `scripts/commit-evidence-hook.sh`: advisory evidence hook; set `AGILE_EVIDENCE_HOOK_MODE=enforce` to block.
