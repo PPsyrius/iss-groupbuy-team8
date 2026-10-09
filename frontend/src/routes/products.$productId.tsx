@@ -1,7 +1,7 @@
 import { Alert, Button, buttonVariants, Skeleton } from "@heroui/react";
 import { queryOptions, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, notFound, redirect, useRouter } from "@tanstack/react-router";
-import { type ReactNode, useState } from "react";
+import { type ComponentProps, type ReactNode, useState } from "react";
 
 import { ApiError, unwrapResult } from "@/api/envelope";
 import { getListingOptions } from "@/api/generated/@tanstack/react-query.gen";
@@ -9,6 +9,7 @@ import type { MyTeamResponse, ProductDetailResponse } from "@/api/generated/type
 import { NotFoundCard } from "@/components/ErrorCard";
 import { blocFilter } from "@/features/blocs/bloc-status";
 import { myTeamsQuery } from "@/features/blocs/my-teams-query";
+import { parseDeadline } from "@/features/catalog/deal-time";
 import { DealProgress } from "@/features/catalog/DealProgress";
 import {
   blocHeadline,
@@ -118,7 +119,9 @@ function ProductDetailPage() {
   const { productId } = Route.useParams();
   const invite = Route.useLoaderData();
   const { data: p } = useSuspenseQuery(detailOptions(productId));
-  const now = useNow();
+  // The page prints nothing relative to the clock but whether the bloc has ended, so it re-renders
+  // once, at the deadline; the countdowns follow the clock themselves (DealProgress, the sheet).
+  const now = useNow(parseDeadline(p.deal?.expireTime), "deadline");
   const view = listingDealView(p.deal, now);
   const currency = p.currency ?? "sgd";
   const groupPrice = p.groupPrice ?? undefined;
@@ -160,11 +163,10 @@ function ProductDetailPage() {
     <main className={shell}>
       <title>{`${p.title ?? "Listing"} · BlocBuy`}</title>
       <GatedActionSheet {...gate.sheet} returnTo={`/products/${productId}`} />
-      <QuoteSheet
+      <LiveQuoteSheet
         isOpen={start.isOpen}
         onOpenChange={start.setOpen}
         state={start.quoting.state}
-        now={now}
         isPaying={checkout.isPending}
         isRejected={start.isRejected}
         onContinue={(quoteId) => {
@@ -249,6 +251,14 @@ function ProductDetailPage() {
       />
     </main>
   );
+}
+
+// The quote's "valid for" countdown is the one text here that moves every second (mm:ss under an
+// hour), so only the sheet follows the clock that closely, and only while it holds a quote.
+function LiveQuoteSheet(props: Readonly<Omit<ComponentProps<typeof QuoteSheet>, "now">>) {
+  const quote = props.state.status === "ready" ? props.state.quote : null;
+  const now = useNow(quote?.expiresMs ?? null, quote ? "countdown" : "deadline");
+  return <QuoteSheet {...props} now={now} />;
 }
 
 function categoryLabel(p: ProductDetailResponse): string | undefined {
