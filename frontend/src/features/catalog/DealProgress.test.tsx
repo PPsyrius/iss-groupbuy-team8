@@ -160,7 +160,8 @@ describe("DealProgress", () => {
   });
 });
 
-// The page clock: one interval for every row, and a row redraws only when its text changes.
+// The page clock: one timer for every row, and a row redraws only when its text changes (the
+// timer's own behaviour is in page-clock.test.tsx).
 const dealAt = (aheadMs: number, dealId = "d1") => ({
   dealId,
   currentSize: 3,
@@ -186,28 +187,15 @@ describe("DealProgress clock", () => {
     vi.useRealTimers();
   });
 
-  it("runs one interval for every mounted row and clears it when the last one unmounts", () => {
-    const started = vi.spyOn(globalThis, "setInterval");
-    const cleared = vi.spyOn(globalThis, "clearInterval");
+  it("runs one timer for every mounted row and clears it when the last one unmounts", () => {
     const rows = Array.from({ length: 25 }, (_, i) =>
       render(<DealProgress deal={dealAt((i + 1) * hour, `d${i}`)} />),
     );
-    expect(started.mock.calls.filter(([, delay]) => delay === second)).toHaveLength(1);
     expect(vi.getTimerCount()).toBe(1);
-
     for (const row of rows.slice(0, -1)) row.unmount();
-    expect(cleared).not.toHaveBeenCalled();
     expect(vi.getTimerCount()).toBe(1);
-
     rows.at(-1)?.unmount();
-    expect(cleared).toHaveBeenCalledTimes(1);
-    expect(cleared).toHaveBeenCalledWith(started.mock.results[0]?.value);
     expect(vi.getTimerCount()).toBe(0);
-
-    // A row mounted later starts a fresh interval.
-    render(<DealProgress deal={dealAt(hour)} />);
-    expect(started.mock.calls.filter(([, delay]) => delay === second)).toHaveLength(2);
-    expect(vi.getTimerCount()).toBe(1);
   });
 
   it("redraws a row in its last hour every second and a row hours away only when its text changes", () => {

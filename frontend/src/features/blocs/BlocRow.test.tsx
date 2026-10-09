@@ -211,8 +211,8 @@ describe("BlocRow share", () => {
   });
 });
 
-// The My blocs list shows up to 100 rows: they share one interval, and a row redraws only when
-// the text it prints changes. The router keeps its real timers; only the clock is faked.
+// The My blocs list shows up to 100 rows: they share one timer, and a row redraws only when the
+// text it prints changes.
 describe("BlocRow clock", () => {
   const second = 1000;
   const hour = 3_600_000;
@@ -223,16 +223,14 @@ describe("BlocRow clock", () => {
   };
 
   beforeEach(() => {
-    vi.useFakeTimers({ toFake: ["Date", "setInterval", "clearInterval"] });
+    vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
     vi.setSystemTime(now);
   });
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  it("runs one interval for a list of 100 rows and clears it when the list unmounts", async () => {
-    const started = vi.spyOn(globalThis, "setInterval");
-    const cleared = vi.spyOn(globalThis, "clearInterval");
+  it("runs one timer for a list of 100 rows and clears it when the list unmounts", async () => {
     const teams = Array.from({ length: 100 }, (_, i) => ({
       ...rice,
       dealId: `deal-${i}`,
@@ -248,11 +246,9 @@ describe("BlocRow clock", () => {
       </ul>,
     );
     expect(screen.getAllByRole("article")).toHaveLength(100);
-    expect(started.mock.calls.filter(([, delay]) => delay === second)).toHaveLength(1);
     expect(vi.getTimerCount()).toBe(1);
 
     unmount();
-    expect(cleared).toHaveBeenCalledWith(started.mock.results[0]?.value);
     expect(vi.getTimerCount()).toBe(0);
   });
 
