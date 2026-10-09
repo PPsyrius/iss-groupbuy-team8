@@ -1,0 +1,46 @@
+# Only trusted base/default-branch source is checked out, never PR head/merge code.
+name: cleanup-pr-caches
+
+on:
+  pull_request_target:
+    types: [closed]
+  schedule:
+    - cron: '43 4 * * *' # reconcile caches saved after a PR's close-event snapshot
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: List closed-PR caches without deleting them
+        type: boolean
+        default: true
+
+permissions: {}
+
+concurrency:
+  group: cleanup-pr-caches-${{ github.event.pull_request.number || 'manual' }}
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    if: >-
+      github.event_name == 'pull_request_target' ||
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    steps:
+      - name: Check out trusted workflow source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # For pull_request_target, github.sha is the trusted base-branch commit.
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Remove caches scoped to closed pull requests
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const cleanup = require('./.github/scripts/cleanup-pr-caches.cjs');
+            await cleanup({ github, context, core });

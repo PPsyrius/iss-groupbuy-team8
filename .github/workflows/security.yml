@@ -49,6 +49,9 @@ jobs:
           filters: |
             workflow:
               - '.github/workflows/**'
+              - '.github/tests/**'
+              - '.github/scripts/**'
+              - '.github/actions/trivy-image-db/**'
             deployment:
               - 'deployment/**'
             dependencies:
@@ -74,6 +77,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Test closed-PR cache cleanup safety
+        run: node --test .github/tests/cleanup-pr-caches.test.cjs
+
+      - name: Test Trivy database publication validation
+        run: python3 -m unittest discover -s .github/tests -p '*_test.py'
 
       - name: Lint GitHub Actions and embedded shell
         run: >-
