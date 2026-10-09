@@ -194,13 +194,13 @@ The SPA bucket stays empty until the first promotion run syncs the frontend; unt
 
 ## Environment sessions
 
-[`scripts/`](scripts/) create and destroy `runtime` for a manual session; the promotion run calls the same scripts. Each one checks the account and region before doing anything.
+[`scripts/`](scripts/) create and destroy `runtime` for a manual session; the promotion run calls the same scripts. Each one checks the account and region before doing anything. Step-by-step session procedure (start, check, destroy, failures, cost): [environment session runbook](../../docs/swe5001/runbook-environment-session.md).
 
 | Script | Does | Exit 0 when |
 | --- | --- | --- |
 | `env-up.sh [--release\|--candidate]` | Reads the digests from SSM, applies `runtime` with services stopped, runs `db-init`, starts the services, reads the ALB DNS output and passes it to `edge` without sharing runtime state, waits for a stable service and runs [`perf/smoke/smoke.sh`](../../perf/smoke/smoke.sh) through CloudFront (up to five attempts). Re-running converges | The smoke suite passes |
 | `env-down.sh` | Destroys `runtime` (one retry, usually for the Service Connect namespace), then runs `env-status.sh` | Nothing tagged `Stack=runtime` remains |
-| `env-status.sh [--expect-up]` | Lists resources tagged `Course=swe5001,Stack=runtime` (ignoring deregistered task definitions and confirmed terminated instances) and the ECS service counts; AWS lookup failures stop verification instead of reporting a clean destroy | Nothing remains (or, with `--expect-up`, something does), and every lookup succeeded |
+| `env-status.sh [--expect-up]` | Lists resources tagged `Course=swe5001,Stack=runtime` and the ECS service counts. Deregistered task definitions are ignored; each EC2 and ECS ARN counts only while its own describe call still returns it, since the tagging API lists deleted resources for over an hour. AWS lookup failures stop verification instead of reporting a clean destroy | Nothing remains (or, with `--expect-up`, something does), and every lookup succeeded |
 
 ```bash
 export AWS_PROFILE=<operator profile> AWS_REGION=ap-southeast-1 SWE5001_TF_STATE_BUCKET=blocbuy-tfstate-402178232802
