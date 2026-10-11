@@ -14,7 +14,7 @@ Sprint 4 is shared by two courses on one trunk: SWE5006 (this sprint's backlog a
 | Sprint 3 review, retrospective and progress report (#451); tag `v0.1.0-sprint3` pushed at `414ee79a` on 2026-10-11 | by Tue 2026-10-13 |
 | US13 Checkout, scheduling and refunds on dev (#223): critical path | by Wed 2026-10-14 |
 | #455 service assemblies merged (identity runtime follows by 10-16) | Wed 2026-10-14 |
-| Mid-sprint check (owner vs actual, rebalance); **identity go/no-go** (§6 item 5) | Thu 2026-10-15 |
+| Mid-sprint check (owner vs actual, rebalance); **identity go/no-go** (§6 item 5); priority-tier reductions if the split is behind (§6 item 6) | Thu 2026-10-15 |
 | **SWE5001 code freeze** (everything the presentation needs merged into `dev`) | Fri 2026-10-16 EOD |
 | SWE5001 Sprint 4 promotion `dev` → `prod`; evidence session (V2–V7) and fallback recording | Mon 2026-10-19 |
 | SWE5001 full rehearsal; promotion fallback day | Tue 2026-10-20 |
@@ -55,6 +55,7 @@ By 2026-10-23, on the **deployed dev environment**, a buyer can start or join a 
 
 ## 4. Scope decisions for Sprint 4
 
+0. **The microservice split comes before the notification system** (decided 2026-10-11). The three-service deployment on `prod` ECS (#455, #456, #467, #468, #469) is finished first; notification work (#215, #443–#449) takes the remaining capacity. Reviews, help and any rebalancing go to the split first, and when time runs short notification scope is cut or deferred first, in the order in §6 item 6.
 1. **No new SWE5006 features beyond notifications.** Sprint 4 is closure and demo readiness, plus the notification use case.
 2. **Notifications serve both courses.** The notification use case (#215, #444–#446, #449) is the SWE5006 feature and the SWE5001 event-driven core: the consumer runs inside the monolith on EC2 dev with ElasticMQ, and inside `notification-svc` on ECS with SNS (ADR 0007).
 3. **The SWE5001 distributed shape is the proposal's three services: `identity-svc`, `commerce-svc` and `notification-svc`.** Amended 2026-10-11: the first draft deferred `identity-svc`; three services are a hard requirement, so the deferral was reversed the same day. The identity work adds about 45 h (#467, #468, #469 and the identity parts of #455, #456, #459, #460), recorded in ADR 0008 under #455.
@@ -138,10 +139,11 @@ Acceptance criteria live in each issue; the sprint-level conditions are in §8.
 3. **#446 does not wait for #445's relay:** it is built against Testcontainers ElasticMQ by sending envelopes directly; it waits only for #215 persistence.
 4. **#455 by 10-14, then #456; #447 before #456.** The distributed runtime is created only once both are merged.
 5. **Identity work runs in parallel and has a go/no-go.** #467, #468 and #469 are built in the existing code base without waiting for #455: B4 runs in both topologies and B5 is tested with WireMock. At the 10-15 mid-sprint check, if #468's tests are not green, the identity runtime moves to 10-18 and joins the 10-19 promotion; if it is still not green on 10-18, the presentation runs two services and explains identity as a limitation with the evidence so far.
-6. **V2 baseline on the monolith topology by 10-15**, so the V3 target is known before the code freeze.
-7. **SWE5001 code freeze 10-16 EOD.** After it, only fixes found in the 10-19 session merge, and every change stays additive to the monolith (§8).
-8. **10-19:** promotion, then one evidence session for V3–V7 and the identity outage drill, the E2E run (#460) and the fallback recording; `env-down.sh` and a clean `env-status.sh` after it.
-9. **Every PR stays below about 1,500 changed lines** and is reviewed within one working day.
+6. **Priority tiers when work collides (§4 item 0).** Tier 1, never traded away before 10-21: the split (#455, #456, #467, #468, #469), scaling and observability (#457), the V2/V3 runs (#458) and the V5/V6 and identity outage drills (#459). Tier 2, the SWE5001 event-driven core needed by V4, V7 and the fan-out demo: #443, #444, #445, #446 and #215 persistence, #447. Tier 3, SWE5006-only: #215 read endpoints and #449 bell. If the 10-15 check finds tier 1 behind, the reductions are, in order: (a) drop the audit-queue fan-out from #447; (b) defer tier 3 to the 10-19 to 10-22 window, still inside the SWE5006 freeze; (c) as a last resort, stop tier 2, present events, V4 and V7 as design only, and finish the notification chain for SWE5006 by 10-22.
+7. **V2 baseline on the monolith topology by 10-15**, so the V3 target is known before the code freeze.
+8. **SWE5001 code freeze 10-16 EOD.** After it, only fixes found in the 10-19 session merge, and every change stays additive to the monolith (§8).
+9. **10-19:** promotion, then one evidence session for V3–V7 and the identity outage drill, the E2E run (#460) and the fallback recording; `env-down.sh` and a clean `env-status.sh` after it.
+10. **Every PR stays below about 1,500 changed lines** and is reviewed within one working day.
 
 ## 7. Burndown baseline
 
@@ -177,7 +179,7 @@ The Sprint 3 Definition of Done carries forward, with these additions for the tw
 
 | Risk | Impact | Mitigation | Owner |
 |---|---|---|---|
-| The messaging chain (#444 → #445 → #446) slips past 10-16 | No event-driven demo on 10-21; SWE5006 notifications late | #446 starts on 10-13 against ElasticMQ directly; mid-sprint check on 10-15 decides whether the audit-queue fan-out is cut first | @l0sgAi |
+| The messaging chain (#444 → #445 → #446) slips past 10-16 | No event-driven demo on 10-21; SWE5006 notifications late | #446 starts on 10-13 against ElasticMQ directly; the split keeps priority (§4 item 0), so the 10-15 check applies the reductions in §6 item 6, starting with the audit-queue fan-out | @l0sgAi |
 | #223 slips past 10-14 | SWE5006 paid demo only on a local stack | Highest priority for its owner; reviewer booked; backlog counts recorded before switching | @Yorick-Yu |
 | ECS session fails on presentation day | No live demo | `env-up.sh` before noon; fallback recording from 10-19; rehearsal on 10-20 | @limjiechao |
 | WP-B2 packaging breaks the SWE5006 image build | EC2 dev deploy red | Separate PR for the `exec` classifier and Dockerfile changes, merged with the deploy watched | @l0sgAi |
