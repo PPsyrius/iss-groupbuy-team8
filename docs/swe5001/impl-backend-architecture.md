@@ -92,8 +92,8 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
 
 ### WP-B0 Decision records (WBS 1.1)
 
-- `backend/docs/adr/0005-dual-deployment-topology.md`: two shapes from one codebase, `blocbuy.topology`, split by assembly.
-- `backend/docs/adr/0006-cross-service-events-sns-sqs.md`: outbox, SNS/SQS, at-least-once plus idempotent consumer; amends the "no message broker" rule for the distributed shape only.
+- `backend/docs/adr/0008-dual-deployment-topology.md` (next free number; 0005 and 0006 were taken by payment decisions): two shapes from one codebase, `blocbuy.topology`, split by assembly.
+- [`backend/docs/adr/0007-cross-service-events-sns-sqs.md`](../../backend/docs/adr/0007-cross-service-events-sns-sqs.md) (#443, 2026-10-11): outbox, one SNS topic with filter policies, SQS + DLQ per consumer, at-least-once plus idempotent consumer. Amends the "no message broker" rule for both shapes: `blocbuy.events.transport` selects ElasticMQ (`sqs`) for local, CI and EC2, and SNS for ECS. Implementation is tracked in #450.
 - Amend `.claude/skills/backend-constraints-skill/SKILL.md` and `references/messaging-consistency.md` to point at both ADRs.
 - **Done when:** SWE5006 team agrees at stand-up; ADRs merged before WP-B6.
 
@@ -126,7 +126,7 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
 
 - At login (`AuthController` Google callback), after `StpUtil.login`, write `roles` and `permissions` into `StpUtil.getSession()`. Runs in both topologies (harmless for the monolith).
 - `SessionStpInterface` reads those keys; active when `topology=distributed` and identity is not scanned.
-- Role changes take effect at next login. Record this in ADR 0005.
+- Role changes take effect at next login. Record this in the dual-topology ADR (0008).
 - **Done when:** a test logs in, then resolves roles through `SessionStpInterface` with no identity repository in the context.
 
 ### WP-B5 Remote identity check (WBS 3.2)
@@ -223,5 +223,5 @@ B0 ADRs ─┬─ B1 guardrails ── B2 packaging ─┬─ B3 platform ─┬
 | --- | --- |
 | Classifier change breaks the SWE5006 image build or EC2 deploy | Separate small PR (B2 part 1); watch the first `dev` deploy; revert is one line |
 | Spring Cloud AWS not yet compatible with Spring Boot 4 | Fallback: AWS SDK v2 `SqsClient` polling loop in `blocbuy-platform-starter` |
-| Session roles go stale after an admin role change | Accept for demo; documented in ADR 0005; logout forces refresh |
+| Session roles go stale after an admin role change | Accept for demo; documented in the dual-topology ADR (0008); logout forces refresh |
 | Outbox relay lag adds notification latency | 2 s poll; measured in the queue-scaling demo |

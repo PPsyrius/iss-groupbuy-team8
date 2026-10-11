@@ -1,6 +1,6 @@
-# RabbitMQ, Transactional Consistency, and Idempotency — DEFERRED
+# Event Messaging, Transactional Consistency, and Idempotency
 
-> **No message broker is in the v1 stack (user decision 2026-08-30).** Read this file only if the user explicitly approves introducing RabbitMQ. Until then: no MQ producers/consumers, no Outbox tables for messaging, no event contracts. Cross-aggregate consistency uses in-process calls within local transactions; deferred/compensation work uses idempotent scheduled jobs with database state as the backstop. The idempotency, state-machine, and scheduled-job sections below still apply to HTTP write endpoints, future payment callbacks, and batch jobs — adapt "duplicate message" to "duplicate request/job run".
+> **Messaging is limited to [backend ADR 0007](../../../../backend/docs/adr/0007-cross-service-events-sns-sqs.md) (2026-10-11):** transactional outbox → one SNS topic → one SQS queue per consumer with a DLQ; ElasticMQ replaces SNS/SQS locally, in CI and on the EC2 Compose stack (`blocbuy.events.transport`). RabbitMQ stays out of the stack (decision 2026-08-30). Within one service, cross-aggregate consistency still uses in-process calls within local transactions, and deferred/compensation work uses idempotent scheduled jobs with database state as the backstop. The idempotency, state-machine, and scheduled-job sections below also apply to HTTP write endpoints, payment callbacks, and batch jobs — adapt "duplicate message" to "duplicate request/job run".
 
 Read this when working with event publishing, consumption, scheduled compensation, cross-resource consistency, or callbacks.
 
@@ -12,20 +12,20 @@ Read this when working with event publishing, consumption, scheduled compensatio
 
 ## Publishing Reliability
 
-- Exchanges/queues are durable and messages persistent; declare DLQ/DLX, expiry, and queue capacity policies.
-- Enable publisher confirms and returns/mandatory; distinguish broker-unconfirmed from unroutable; record correlation/eventId and handle nack/return.
+- Every queue declares a DLQ (`maxReceiveCount`), retention, visibility timeout and server-side encryption; queue policies accept messages only from the owning topic.
+- The relay marks a row published only after a successful SNS/SQS response; batch calls report per-entry failures, which are retried individually by `eventId`.
 - Business database writes and message publishing use a Transactional Outbox: the same PostgreSQL local transaction writes business data and the outbox; a separate publisher sends and marks on confirmation. "Commit the DB then fire-and-forget the send" is forbidden.
 - Outbox publishing may duplicate, so consumers must be idempotent. The publisher uses bounded backoff, state/lock leases, failure alerting, and replay; cleaning published records preserves an audit window.
-- Do not claim RabbitMQ transactions plus database transactions form XA; if you choose best-effort, the loss/duplication window and compensation must be explicit.
+- SNS/SQS and PostgreSQL never form one transaction; if you choose best-effort anywhere, the loss/duplication window and compensation must be explicit.
 
 ## Consumption Reliability
 
-- Default to at-least-once semantics. Consumers complete the idempotency check and business transaction before ack; failures nack/reject by type. Never ack before processing.
-- Build an inbox/consumption-record unique constraint on `eventId + consumerName`, or achieve idempotency with a natural business unique key; "check-then-insert" must be backstopped by a unique constraint.
-- Recoverable transient errors go to a retry queue with bounded attempts and exponential backoff; unrecoverable format/business errors go straight to DLQ with an alert. Infinite immediate requeue hot-loops are forbidden.
+- Default to at-least-once semantics. Consumers complete the idempotency check and business transaction before deleting the message; never delete before processing.
+- Build an inbox/consumption-record unique constraint on `eventId + consumerName` (envelope `eventId`, never the SQS `MessageId`), or achieve idempotency with a natural business unique key; "check-then-insert" must be backstopped by a unique constraint.
+- Failed messages are left undeleted so the visibility timeout spaces retries and redrive moves them to the DLQ after `maxReceiveCount` receives; the DLQ is alarmed. Unknown event types or versions are logged and deleted for forward compatibility. Immediate requeue hot-loops are forbidden.
 - Every retry must be safe; external side effects use the counterparty's idempotency key. After retries are exhausted, provide manual inspection, repair, and replay processes.
 - When one aggregate requires ordering, use consistent routing/single-active consumption or business-version rejection of out-of-order messages; do not assume global ordering across queues.
-- Consumers set sensible prefetch, concurrency, processing timeout, and graceful shutdown; in-flight messages finish or requeue. Prefer backpressure over unbounded memory buildup.
+- Consumers set sensible batch size, concurrency, visibility timeout, and graceful shutdown; in-flight messages finish or become visible again. Prefer backpressure over unbounded memory buildup.
 
 ## BlocBuy Consistency Rules
 
