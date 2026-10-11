@@ -1,16 +1,22 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
+import { Profiler } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { formatCountdown } from "./deal-time";
 import { DealProgress } from "./DealProgress";
+import { resetPageClockForTests } from "./page-clock";
 
 const now = Date.parse("2026-09-17T11:00:00+08:00");
 
 describe("DealProgress", () => {
   beforeEach(() => {
+    resetPageClockForTests();
     vi.useFakeTimers();
     vi.setSystemTime(now);
   });
   afterEach(() => {
+    // Unmount while the fake timers are installed, so the page clock clears its own timer.
+    cleanup();
     vi.useRealTimers();
   });
 
@@ -155,5 +161,114 @@ describe("DealProgress", () => {
       />,
     );
     expect(screen.getByRole("button", { name: /join/i })).not.toHaveAccessibleDescription();
+  });
+});
+
+// The page clock: one timer for every row, and a row redraws only when its text changes (the
+// timer's own behaviour is in page-clock.test.tsx).
+const dealAt = (aheadMs: number, dealId = "d1") => ({
+  dealId,
+  currentSize: 3,
+  targetSize: 5,
+  expireTime: new Date(now + aheadMs).toISOString(),
+});
+
+describe("DealProgress clock", () => {
+  const second = 1000;
+  const minute = 60_000;
+  const hour = 3_600_000;
+  const tickOneSecond = () => {
+    act(() => {
+      vi.advanceTimersByTime(second);
+    });
+  };
+
+  beforeEach(() => {
+    resetPageClockForTests();
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+  });
+  afterEach(() => {
+    // Unmount while the fake timers are installed, so the page clock clears its own timer.
+    cleanup();
+    vi.useRealTimers();
+  });
+
+  it("runs one timer for every mounted row and clears it when the last one unmounts", () => {
+    const rows = Array.from({ length: 25 }, (_, i) =>
+      render(<DealProgress deal={dealAt((i + 1) * hour, `d${i}`)} />),
+    );
+    expect(vi.getTimerCount()).toBe(1);
+    for (const row of rows.slice(0, -1)) row.unmount();
+    expect(vi.getTimerCount()).toBe(1);
+    rows.at(-1)?.unmount();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("redraws a row in its last hour every second and a row hours away only when its text changes", () => {
+    const commits = { near: 0, far: 0, over: 0 };
+    const counting = (row: keyof typeof commits) => () => {
+      commits[row] += 1;
+    };
+    render(
+      <>
+        <Profiler id="near" onRender={counting("near")}>
+          <DealProgress deal={dealAt(30 * minute, "near")} />
+        </Profiler>
+        <Profiler id="far" onRender={counting("far")}>
+          <DealProgress deal={dealAt(5 * hour + 12 * minute, "far")} />
+        </Profiler>
+        <Profiler id="over" onRender={counting("over")}>
+          <DealProgress deal={dealAt(-3 * minute, "over")} />
+        </Profiler>
+      </>,
+    );
+    const before = { ...commits };
+    for (let s = 0; s < 120; s += 1) tickOneSecond();
+    expect(commits.near - before.near).toBe(120);
+    // "5h 12m left" becomes "5h 11m left" a second in, then "5h 10m left" a minute after that.
+    expect(commits.far - before.far).toBe(2);
+    expect(commits.over - before.over).toBe(0);
+    expect(screen.getByText("5h 10m left")).toBeInTheDocument();
+    expect(screen.getByText("28:00 left")).toBeInTheDocument();
+  });
+
+  it("prints what the real clock prints at every second, for a deadline off the minute", () => {
+    const deal = dealAt(3 * hour + 30 * second);
+    const deadline = Date.parse(deal.expireTime);
+    render(<DealProgress deal={deal} />);
+    for (let s = 0; s < 200; s += 1) {
+      expect(screen.getByText(formatCountdown(deadline, Date.now()).text)).toBeInTheDocument();
+      tickOneSecond();
+    }
+  });
+
+  it("prints hours and minutes at exactly one hour left and mm:ss one second later", () => {
+    render(<DealProgress deal={dealAt(hour)} />);
+    expect(screen.getByText("1h 0m left")).toBeInTheDocument();
+    expect(screen.getByText("Filling")).toBeInTheDocument();
+    tickOneSecond();
+    expect(screen.getByText("59:59 left")).toBeInTheDocument();
+    expect(screen.getByText("Closing soon")).toBeInTheDocument();
+  });
+
+  it("counts down to the deadline, says Ended at zero and stays ended", () => {
+    render(<DealProgress deal={dealAt(2 * second)} onJoin={() => {}} />);
+    expect(screen.getByText("00:02 left")).toBeInTheDocument();
+    tickOneSecond();
+    expect(screen.getByText("00:01 left")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /join/i })).toBeEnabled();
+    tickOneSecond();
+    expect(screen.getAllByText("Ended")).toHaveLength(2);
+    expect(screen.getByRole("button", { name: /join/i })).toBeDisabled();
+    for (let s = 0; s < 600; s += 1) tickOneSecond();
+    expect(screen.getAllByText("Ended")).toHaveLength(2);
+    expect(screen.queryByText(/^(\d+h \d+m|\d\d:\d\d) left$/)).not.toBeInTheDocument();
+  });
+
+  it("starts ended for a deadline that has already passed", () => {
+    render(<DealProgress deal={dealAt(-hour)} />);
+    expect(screen.getAllByText("Ended")).toHaveLength(2);
+    expect(screen.getByText("Ends today, 10.00 am SGT")).toBeInTheDocument();
   });
 });

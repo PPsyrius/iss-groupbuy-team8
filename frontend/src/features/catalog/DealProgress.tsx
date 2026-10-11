@@ -1,5 +1,5 @@
 import { Button, Chip, ProgressBar } from "@heroui/react";
-import { useId, useSyncExternalStore } from "react";
+import { useId } from "react";
 
 import type { ActiveDealResponse } from "@/api/generated/types.gen";
 
@@ -10,24 +10,12 @@ import {
   hasEnded,
   parseDeadline,
 } from "./deal-time";
+import { useNow } from "./page-clock";
 
 // One open-bloc row from the Listing Detail artboards (docs/design-screens.md §4.2 "Deal
 // progress row"). The contract's `ActiveDealResponse` carries sizes and the deadline only, so the
 // row has no starter, bloc number or avatar (CR: open-team list); it is labelled "Open bloc".
 // With no deal the artboard's "no open bloc" copy renders instead (plan §12 note 41).
-
-// Live clock, one tick per second, shared by every row on the page. `useSyncExternalStore`
-// keeps `Date.now()` out of render (React Compiler purity rule).
-function subscribe(onTick: () => void) {
-  const id = setInterval(onTick, 1000);
-  return () => clearInterval(id);
-}
-function getNow() {
-  return Math.floor(Date.now() / 1000) * 1000;
-}
-export function useNow() {
-  return useSyncExternalStore(subscribe, getNow, getNow);
-}
 
 const maxSeatDots = 10;
 
@@ -46,12 +34,12 @@ export function DealProgress({
   onJoin?: (() => void) | undefined;
   member?: boolean;
 }>) {
-  const now = useNow();
+  const expireMs = parseDeadline(deal?.expireTime);
+  const now = useNow(expireMs);
   if (!deal) return <NoOpenBloc />;
   const joined = deal.currentSize ?? 0;
   const target = Math.max(1, deal.targetSize ?? 1);
   const left = Math.max(0, target - joined);
-  const expireMs = parseDeadline(deal.expireTime);
   const countdown = expireMs === null ? null : formatCountdown(expireMs, now);
   const urgent = countdown?.urgent ?? false;
   const ended = hasEnded(deal.expireTime, now);

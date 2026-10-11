@@ -134,6 +134,27 @@ describe("/products/$productId open-bloc header", () => {
     expect(screen.queryByText("Join one, or start your own")).not.toBeInTheDocument();
   });
 
+  // The page reads the clock only as "has the deadline passed", so it must still flip on time.
+  it("turns the header to ended when the deadline passes while the page is open", async () => {
+    serveAnonymous();
+    serveListing(
+      listing({
+        deal: {
+          dealId: "deal-1",
+          currentSize: 3,
+          targetSize: 5,
+          expireTime: new Date(Date.now() + 1500).toISOString(),
+        },
+      }),
+    );
+    renderRoute(`/products/${knownId}`);
+    expect(await screen.findByText("1 filling now")).toBeInTheDocument();
+    expect(
+      await screen.findByText("This bloc has ended", undefined, { timeout: 4000 }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("1 filling now")).not.toBeInTheDocument();
+  });
+
   it("does not describe a full bloc as filling or joinable", async () => {
     serveAnonymous();
     serveListing(
