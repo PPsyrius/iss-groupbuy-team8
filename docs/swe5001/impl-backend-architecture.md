@@ -93,7 +93,7 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
 ### WP-B0 Decision records (WBS 1.1)
 
 - `backend/docs/adr/0008-dual-deployment-topology.md` (next free number; 0005 and 0006 were taken by payment decisions): two shapes from one codebase, `blocbuy.topology`, split by assembly.
-- [`backend/docs/adr/0007-cross-service-events-sns-sqs.md`](../../backend/docs/adr/0007-cross-service-events-sns-sqs.md) (#443, 2026-10-11): outbox, one SNS topic with filter policies, SQS + DLQ per consumer, at-least-once plus idempotent consumer. Amends the "no message broker" rule for both shapes: `blocbuy.events.transport` selects ElasticMQ (`sqs`) for local, CI and EC2, and SNS for ECS. Implementation is tracked in #450.
+- [`backend/docs/adr/0007-cross-service-events-sns-sqs.md`](../../backend/docs/adr/0007-cross-service-events-sns-sqs.md) (#443, 2026-10-11): outbox, one SNS topic with filter policies, SQS + DLQ per consumer, at-least-once plus idempotent consumer. Amends the "no message broker" rule for both shapes: `blocbuy.events.transport` selects ElasticMQ (`sqs`) for local and CI, and SNS for ECS; the EC2 `dev` stack keeps the relay and consumer off. Implementation is tracked in #450.
 - Amend `.claude/skills/backend-constraints-skill/SKILL.md` and `references/messaging-consistency.md` to point at both ADRs.
 - **Done when:** SWE5006 team agrees at stand-up; ADRs merged before WP-B6.
 

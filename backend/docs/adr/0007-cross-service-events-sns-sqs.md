@@ -26,7 +26,7 @@ Cost is a constraint. The SWE5001 ECS runtime is ephemeral and costs about US$0.
 
 **Consumer.** Delivery is at-least-once. The handler records `(eventId, consumer)` in `sys_consumed_message` and writes its effects in one transaction, then deletes the message; a duplicate `eventId` is a no-op. SQS `MessageId` is never the idempotency key, because a relay retry or SNS redelivery produces a new one. Unknown `eventType` or `version` is logged and acknowledged for forward compatibility; malformed or failing messages are left for redrive to the DLQ. The consumer restores `traceId` into MDC.
 
-**Transport switch.** `blocbuy.events.transport` selects `sqs` or `sns`, independently of the deployment topology. Local, CI and the SWE5006 EC2 Compose stack use `sqs` against ElasticMQ, which implements the SQS API including DLQ redrive. The SWE5001 ECS shape uses `sns` against real SNS and SQS. Raw message delivery makes the consumer's input identical on both paths, so only the relay's send call differs. The consumer is enabled by property and runs inside the monolith until `notification-svc` exists.
+**Transport switch.** `blocbuy.events.transport` selects `sqs` or `sns`, independently of the deployment topology. Local development and CI use `sqs` against ElasticMQ, which implements the SQS API including DLQ redrive. The SWE5001 ECS shape uses `sns` against real SNS and SQS. Raw message delivery makes the consumer's input identical on both paths, so only the relay's send call differs. The relay and the consumer are enabled by property; the SWE5006 EC2 `dev` stack leaves both off and runs no broker (Sprint 4 scope decision, 2026-10-11: notifications serve SWE5001 only).
 
 ## Consequences
 
@@ -36,7 +36,7 @@ The full path except the SNS hop is exercised by ElasticMQ integration tests in 
 
 Adding a consumer means adding a queue and a subscription; the producer does not change. Consumers scale on queue backlog per task. The relay is a single active instance under its lease; its throughput (about 50 events per second at 100 rows per 2 s tick) exceeds expected load, and the evolution path is lease sharding by `aggregate_id` or change data capture.
 
-The stack gains the AWS SDK v2 (or Spring Cloud AWS if its Boot 4 line is available), two tables, one scheduled relay, one retention job and an ElasticMQ container in Compose. The backend-constraints skill and its messaging reference are amended to point here.
+The stack gains the AWS SDK v2 (or Spring Cloud AWS if its Boot 4 line is available), two tables, one scheduled relay, one retention job and an ElasticMQ container for local development and CI. The backend-constraints skill and its messaging reference are amended to point here.
 
 ## Alternatives rejected
 
