@@ -16,7 +16,7 @@ Init `backend/` skeleton. Spring Boot 3.5.15 + JDK 21 + Maven COLA multi-module 
 | D2 | groupId `com.blocbuy`, artifact prefix `blocbuy-` |
 | D3 | Backend self-contained under `backend/`; no repo-root pom |
 | D4 | Domains: `identity`, `groupbuy`, `order`, `catalog`, `notification`; amended 2026-08-31: + `payment` (Stripe) |
-| D5 | Middleware: PostgreSQL 18 + Redis 8.10.0 only. No MQ, no ES |
+| D5 | Middleware: PostgreSQL 18 + Redis 8.10.0 only. No MQ, no ES; amended 2026-10-11: + SNS/SQS (ElasticMQ outside AWS) for cross-service events only, backend ADR 0007 |
 | D6 | Sa-Token session Redis-backed (`sa-token-redis-jackson`) |
 | D7 | One token domain; RBAC roles/permissions loaded from user SQL tables via `StpInterface` |
 | D8 | JDBC `jdbc:postgresql://localhost:5432/Blocbuy`; PG schema = `domain` |

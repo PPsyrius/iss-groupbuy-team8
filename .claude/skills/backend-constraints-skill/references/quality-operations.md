@@ -51,7 +51,7 @@ For a job that changes durable business state, identify the database-owned recov
 ## Metrics, Tracing, and Health Checks
 
 - Use Spring Boot Actuator/Micrometer; correlate logs, metrics, and traces via traceId/business ID.
-- RED: request Rate, Errors, Duration; add resources - connection pools, threads/virtual threads, GC, heap, Redis/PG latency. (RabbitMQ backlog / ES lag metrics apply only if those are later introduced.)
+- RED: request Rate, Errors, Duration; add resources - connection pools, threads/virtual threads, GC, heap, Redis/PG latency. For SNS/SQS (backend ADR 0007): outbox unpublished/failed rows, queue visible messages and oldest-message age, DLQ depth.
 - Business metrics include order placement, payment success rate, group-completion latency, refund backlog, and scheduled-job success/failure counts.
 - Metric labels use only low-cardinality dimensions; userId/orderId/eventId as metric tags are forbidden.
 - Liveness only reflects whether the process is alive; readiness reflects whether it can take traffic. Do not let transient downstream failures trigger liveness restart storms.
