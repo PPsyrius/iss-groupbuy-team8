@@ -58,3 +58,4 @@ Board snapshots need `read:project`: `gh auth refresh -s read:project`. The sche
 | 1 | 2026-09-02 to 2026-09-12 | #49 |
 | 2 | 2026-09-14 to 2026-09-25 | #93 (`[T1] Sprint 2`) |
 | 3 | 2026-09-28 to 2026-10-09 | #232 (`[T1] Sprint 3`) |
+| 4 | 2026-10-12 to 2026-10-23 | #465 (`[T1] Sprint 4`) |
