@@ -11,13 +11,13 @@ Sprint 4 is shared by two courses on one trunk: SWE5006 (this sprint's backlog a
 | Item | Date |
 |---|---|
 | Sprint Planning; ADR 0007 accepted at stand-up; NFR-37 decision (#227) | Mon 2026-10-12 |
-| Sprint 3 review, retrospective, progress report and tag `v0.1.0-sprint3` (#451) | by Tue 2026-10-13 |
+| Sprint 3 review, retrospective and progress report (#451); tag `v0.1.0-sprint3` pushed at `414ee79a` on 2026-10-11 | by Tue 2026-10-13 |
 | US13 Checkout, scheduling and refunds on dev (#223): critical path | by Wed 2026-10-14 |
 | Mid-sprint check (owner vs actual, rebalance) | Thu 2026-10-15 |
 | **SWE5001 code freeze** (everything the presentation needs merged into `dev`) | Fri 2026-10-16 EOD |
 | SWE5001 Sprint 4 promotion `dev` → `prod`; evidence session (V2–V7) and fallback recording | Mon 2026-10-19 |
 | SWE5001 full rehearsal; promotion fallback day | Tue 2026-10-20 |
-| **SWE5001 presentation** (Team 8; #393 notice; the published schedule PDF still says 23 Oct, confirm) | Wed 2026-10-21, 16:15–16:55 SGT |
+| **SWE5001 presentation** (Team 8; #393 notice, confirmed on 2026-10-11; supersedes 23 Oct in the published schedule) | Wed 2026-10-21, 16:15–16:55 SGT |
 | SWE5006 code freeze | Thu 2026-10-22 EOD |
 | Sprint 4 Review, Retrospective, progress report; tag `v0.1.0-sprint4` | Fri 2026-10-23 |
 | SWE5006 report: use-case and design-problem drafts (#463) | Wed 2026-10-28 |
@@ -48,7 +48,7 @@ By 2026-10-23, on the **deployed dev environment**, a buyer can start or join a 
 | Notifications | Placeholder domain (#215); ADR 0007 drafted on this branch (#443) | Outbox, relay, consumer, read API and bell (#450 epic) |
 | SWE5001 | Phase A green: monolith as one ECS service, promotion and up/down workflows (#376) | Phase B: two service assemblies, messaging, scaling, observability, drills |
 | Admin console design gaps | D1–D8 open (#345–#352) | Triage; implement only what fits, defer the rest as documented gaps |
-| Sprint 3 records | Review drafted at freeze; no retro, no progress report, no `v0.1.0-sprint3` tag | Close #232 through #451 |
+| Sprint 3 records | Review drafted at freeze; no retro, no progress report; tag `v0.1.0-sprint3` pushed on 2026-10-11 | Close #232 through #451 |
 
 ## 4. Scope decisions for Sprint 4
 
@@ -168,7 +168,6 @@ The Sprint 3 Definition of Done carries forward, with these additions for the tw
 |---|---|---|---|
 | The messaging chain (#444 → #445 → #446) slips past 10-16 | No event-driven demo on 10-21; SWE5006 notifications late | #446 starts on 10-13 against ElasticMQ directly; mid-sprint check on 10-15 decides whether the audit-queue fan-out is cut first | @l0sgAi |
 | #223 slips past 10-14 | SWE5006 paid demo only on a local stack | Highest priority for its owner; reviewer booked; backlog counts recorded before switching | @Yorick-Yu |
-| Presentation date is 23 Oct, not 21 Oct | Plan dates shift by two days | Confirm with the lecturers on 10-12; the plan keeps 21 Oct until then | @limjiechao |
 | ECS session fails on presentation day | No live demo | `env-up.sh` before noon; fallback recording from 10-19; rehearsal on 10-20 | @limjiechao |
 | WP-B2 packaging breaks the SWE5006 image build | EC2 dev deploy red | Separate PR for the `exec` classifier and Dockerfile changes, merged with the deploy watched | @l0sgAi |
 | Two courses compete for the same ten days | Burnout, cliff-shaped burndown | 45 h cap per member; SWE5006 adds no feature beyond notifications; the D1–D8 design gaps are deferred | SM |
