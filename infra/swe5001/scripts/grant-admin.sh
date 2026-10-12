@@ -58,10 +58,24 @@ aws ecs wait tasks-stopped --cluster "$CLUSTER" --tasks "$task_arn"
 exit_code=$(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "$task_arn" \
   --query 'tasks[0].containers[0].exitCode' --output text)
 
-# awslogs stream: <prefix>/<container>/<task id>
-aws logs get-log-events --log-group-name /blocbuy/swe5001/db-init \
-  --log-stream-name "db-init/db-init/${task_arn##*/}" --start-from-head \
-  --query 'events[].message' --output text 2> /dev/null | tr '\t' '\n' >&2 || true
+# awslogs stream: <prefix>/<container>/<task id>. CloudWatch Logs can trail the stopped
+# task by a few seconds, so poll briefly; the output is informational, the exit code decides.
+messages=""
+for attempt in 1 2 3 4 5; do
+  messages=$(aws logs get-log-events --log-group-name /blocbuy/swe5001/db-init \
+    --log-stream-name "db-init/db-init/${task_arn##*/}" --start-from-head \
+    --query 'events[].message' --output text 2> /dev/null || true)
+  if [ -n "$messages" ] && [ "$messages" != None ]; then
+    break
+  fi
+  messages=""
+  if [ "$attempt" -lt 5 ]; then sleep 3; fi
+done
+if [ -n "$messages" ]; then
+  printf '%s\n' "$messages" | tr '\t' '\n' >&2
+else
+  log "no grant output in the log yet; see log group /blocbuy/swe5001/db-init"
+fi
 case "$exit_code" in
   0) ;;
   3) die "no single active account with that email; sign in once through the session first" ;;
