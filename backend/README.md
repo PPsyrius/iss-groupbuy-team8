@@ -52,6 +52,10 @@ Local datasource: `jdbc:postgresql://localhost:5432/Blocbuy?currentSchema=domain
 
 Distributed HTTP requests reuse one validated authorization snapshot for all role/permission checks in that request; concurrent refreshes are visible on subsequent requests. Callback failure logs intentionally retain only safe exception types, not SDK/Redis details that may contain token keys.
 
+## Notifications (#215)
+
+`GET /api/v1/notifications` lists the signed-in recipient's active notifications, newest first (`page` default 1, `size` default 20, maximum 100), in the standard paginated Result envelope with `Cache-Control: no-store`. No unread count or mark-as-read API is included. Event consumption is #446; the EC2 dev stack still runs no broker. The internal `NotificationAppService.recordBatch` seam joins the caller transaction and writes at most 1000 immutable effects in one SQL batch, retaining the original row on event-recipient replay. Design and migration ordering: [notification persistence](docs/design/notification-persistence.md).
+
 ## Build gates
 
 - Maven Enforcer: Java [21,22), Maven [3.9,), dependency convergence.
