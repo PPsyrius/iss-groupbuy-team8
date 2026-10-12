@@ -1,9 +1,14 @@
 package com.blocbuy.architecture;
 
+import static com.tngtech.archunit.base.DescribedPredicate.not;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.belongToAnyOf;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 
+import com.blocbuy.identity.service.UserAppService;
+import com.tngtech.archunit.core.domain.JavaAnnotation;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.domain.JavaParameter;
@@ -14,8 +19,13 @@ import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -207,5 +217,220 @@ final class ArchitectureTest {
                 }
             }
         };
+    }
+
+    // ---- Service boundaries of the SWE5001 split (backend ADR 0008, WP-B1). The monolith keeps
+    // them too, so code that would break the three-service assembly fails on dev first.
+
+    private static final String IDENTITY = "com.blocbuy.identity..";
+    private static final String NOTIFICATION = "com.blocbuy.notification..";
+    private static final String[] COMMERCE = {
+        "com.blocbuy.catalog..",
+        "com.blocbuy.groupbuy..",
+        "com.blocbuy.order..",
+        "com.blocbuy.payment.."
+    };
+    private static final String INTERNAL_WEB = "..web.internal..";
+    private static final String INTERNAL_PATH = "/internal";
+    private static final String CONDITIONAL_ON_PROPERTY =
+            "org.springframework.boot.autoconfigure.condition.ConditionalOnProperty";
+
+    /** Commerce reaches identity only through the remote-capable {@code UserAppService} port. */
+    @ArchTest
+    static final ArchRule commerce_reaches_identity_only_through_user_port =
+            noClasses()
+                    .that()
+                    .resideInAnyPackage(COMMERCE)
+                    .should()
+                    .dependOnClassesThat(
+                            resideInAPackage(IDENTITY)
+                                    .and(not(belongToAnyOf(UserAppService.class))))
+                    .because(
+                            "commerce-svc has no identity code or data; UserAppService has an HTTP"
+                                    + " adapter (#468)");
+
+    /** {@code currentUser} has no remote implementation, so only identity may call it. */
+    @ArchTest
+    static final ArchRule only_identity_reads_current_user =
+            noClasses()
+                    .that()
+                    .resideOutsideOfPackage(IDENTITY)
+                    .should()
+                    .callMethod(UserAppService.class, "currentUser", UUID.class)
+                    .because("the remote UserAppService refuses currentUser (#468)");
+
+    /** Notification is reached by events only (backend ADR 0007). */
+    @ArchTest
+    static final ArchRule nothing_depends_on_notification =
+            noClasses()
+                    .that()
+                    .resideOutsideOfPackage(NOTIFICATION)
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage(NOTIFICATION)
+                    .because("notification-svc is deployed apart and reached by events only");
+
+    /** Notification stays independently deployable. */
+    @ArchTest
+    static final ArchRule notification_depends_on_no_other_service =
+            noClasses()
+                    .that()
+                    .resideInAPackage(NOTIFICATION)
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(concat(COMMERCE, IDENTITY))
+                    .because("notification-svc has neither commerce nor identity code or data");
+
+    /** Each service's persistence uses only its own mappers: tables stay with their owner. */
+    @ArchTest
+    static final ArchRule identity_persistence_is_owned =
+            persistenceOwnedBy("identity", persistenceOf(IDENTITY), concat(COMMERCE, NOTIFICATION));
+
+    @ArchTest
+    static final ArchRule commerce_persistence_is_owned =
+            persistenceOwnedBy("commerce", persistenceOf(COMMERCE), IDENTITY, NOTIFICATION);
+
+    @ArchTest
+    static final ArchRule notification_persistence_is_owned =
+            persistenceOwnedBy(
+                    "notification", persistenceOf(NOTIFICATION), concat(COMMERCE, IDENTITY));
+
+    /**
+     * Internal controllers are hidden from the contract and exist only in the distributed topology,
+     * so the dev monolith never serves an unauthenticated {@code /internal/**} (backend ADR 0008).
+     */
+    @ArchTest
+    static final ArchRule internal_controllers_are_hidden_and_distributed_only =
+            classes()
+                    .that()
+                    .resideInAPackage(INTERNAL_WEB)
+                    .and()
+                    .areAnnotatedWith(RestController.class)
+                    .should()
+                    .beAnnotatedWith("io.swagger.v3.oas.annotations.Hidden")
+                    .andShould(beConditionalOnDistributedTopology())
+                    .allowEmptyShould(true)
+                    .because(
+                            "/internal/** relies on network isolation only; it must not exist on"
+                                    + " the monolith or in contracts/openapi.json");
+
+    /** {@code /internal} paths are declared only by internal controllers. */
+    @ArchTest
+    static final ArchRule internal_paths_live_in_internal_controllers =
+            classes()
+                    .that()
+                    .areAnnotatedWith(RestController.class)
+                    .and()
+                    .resideOutsideOfPackage(INTERNAL_WEB)
+                    .should(notMapInternalPaths())
+                    .because(
+                            "only ..web.internal.. controllers carry the internal-endpoint guards");
+
+    private static ArchRule persistenceOwnedBy(
+            String service, String[] ownPersistence, String... foreignContexts) {
+        return noClasses()
+                .that()
+                .resideInAnyPackage(ownPersistence)
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage(persistenceOf(foreignContexts))
+                .because(service + "-svc reads and writes only the tables it owns");
+    }
+
+    private static String[] persistenceOf(String... contexts) {
+        String[] packages = new String[contexts.length];
+        for (int i = 0; i < contexts.length; i++) {
+            packages[i] = contexts[i].replace("..", ".persistence..");
+        }
+        return packages;
+    }
+
+    private static String[] concat(String[] first, String... rest) {
+        List<String> all = new ArrayList<>(List.of(first));
+        all.addAll(List.of(rest));
+        return all.toArray(String[]::new);
+    }
+
+    private static ArchCondition<JavaClass> beConditionalOnDistributedTopology() {
+        return new ArchCondition<>("be @ConditionalOnProperty(blocbuy.topology=distributed)") {
+            @Override
+            public void check(JavaClass controller, ConditionEvents events) {
+                Optional<JavaAnnotation<JavaClass>> condition =
+                        controller.tryGetAnnotationOfType(CONDITIONAL_ON_PROPERTY);
+                boolean distributedOnly =
+                        condition.isPresent()
+                                && propertyNames(condition.get()).contains("blocbuy.topology")
+                                && "distributed"
+                                        .equals(condition.get().get("havingValue").orElse(""));
+                if (!distributedOnly) {
+                    events.add(
+                            SimpleConditionEvent.violated(
+                                    controller,
+                                    controller.getName()
+                                            + " is not conditional on blocbuy.topology=distributed"));
+                }
+            }
+        };
+    }
+
+    private static List<String> propertyNames(JavaAnnotation<?> condition) {
+        String prefix = (String) condition.get("prefix").orElse("");
+        List<String> names = new ArrayList<>();
+        for (String attribute : List.of("name", "value")) {
+            for (Object name : (Object[]) condition.get(attribute).orElse(new Object[0])) {
+                names.add(prefix.isEmpty() ? (String) name : prefix + "." + name);
+            }
+        }
+        return names;
+    }
+
+    private static ArchCondition<JavaClass> notMapInternalPaths() {
+        return new ArchCondition<>("not map paths under " + INTERNAL_PATH) {
+            @Override
+            public void check(JavaClass controller, ConditionEvents events) {
+                List<String> prefixes = mappedPaths(controller.getAnnotations());
+                List<String> paths = new ArrayList<>(prefixes);
+                if (prefixes.isEmpty()) {
+                    prefixes = List.of("");
+                }
+                for (JavaMethod method : controller.getMethods()) {
+                    for (String prefix : prefixes) {
+                        for (String path : mappedPaths(method.getAnnotations())) {
+                            paths.add(prefix + path);
+                        }
+                    }
+                }
+                for (String path : paths) {
+                    if (path.equals(INTERNAL_PATH) || path.startsWith(INTERNAL_PATH + "/")) {
+                        events.add(
+                                SimpleConditionEvent.violated(
+                                        controller,
+                                        controller.getName()
+                                                + " maps "
+                                                + path
+                                                + " outside "
+                                                + INTERNAL_WEB));
+                    }
+                }
+            }
+        };
+    }
+
+    /** Paths of {@code @RequestMapping} and its composed variants ({@code @GetMapping}, ...). */
+    private static List<String> mappedPaths(Set<? extends JavaAnnotation<?>> annotations) {
+        List<String> paths = new ArrayList<>();
+        for (JavaAnnotation<?> annotation : annotations) {
+            JavaClass type = annotation.getRawType();
+            if (!type.isEquivalentTo(RequestMapping.class)
+                    && !type.isAnnotatedWith(RequestMapping.class)) {
+                continue;
+            }
+            for (String attribute : List.of("value", "path")) {
+                for (Object path : (Object[]) annotation.get(attribute).orElse(new Object[0])) {
+                    paths.add((String) path);
+                }
+            }
+        }
+        return paths;
     }
 }

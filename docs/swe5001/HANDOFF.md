@@ -41,7 +41,7 @@ Steps and dependencies: [split execution plan](../agile/sprint-04/microservice-s
 | Step | Content | Issue | Owner | Due | State |
 | --- | --- | --- | --- | --- | --- |
 | A1 | `exec` classifier; consumers on `blocbuy-backend-exec.jar`; boot-JAR guard | #455 | @l0sgAi | 10-12 | In review: implemented per the [exec-jar-classifier plan](../agile/sprint-04/exec-jar-classifier-plan-20261012.md), local V1–V5 green ([log](../agile/sprint-04/log/2026-10-12.md)); `dev` deploy check after merge pending |
-| A2 | ADR 0008; ArchUnit guardrails; `RoleCode` to a shared package | #455 | @l0sgAi | 10-13 | Not started |
+| A2 | ADR 0008; ArchUnit guardrails; `RoleCode` to a shared package | #455 | @l0sgAi | 10-13 | In review, same PR as A1: [backend ADR 0008](../../backend/docs/adr/0008-dual-deployment-topology.md) (Proposed), nine `ArchitectureTest` rules, `InternalPathsContractTest`, `RoleCode` in `com.blocbuy.common.model` |
 | A3 | Three service modules; `MyBatisConfig` for the monolith only; thin starter | #455 | @l0sgAi | 10-14 | Not started |
 | A4 | Per-service roles and grants (service profiles only) | #455 | @l0sgAi | 10-14 | Not started |
 | B1 | Session roles outside identity | #467 | @PPsyrius | 10-15 | Not started |
@@ -59,7 +59,7 @@ Operator-provided CloudShell evidence on 2026-10-05 confirms foundation exists i
 
 ## Next actions
 
-1. Merge A1 (the JAR classifier) after review, then watch the first `dev` deploy of `ci-backend.yml` and check `/api/actuator/health` through the dev CloudFront.
+1. Merge the A1 + A2 PR (JAR classifier, ADR 0008, guardrails) after review, then watch the first `dev` deploy of `ci-backend.yml` and check `/api/actuator/health` through the dev CloudFront.
 2. Tracks A and B in parallel (split plan §2): A2–A4 by 10-14; B1 and B2 by 10-15; B3 by 10-16 with the identity go/no-go at the 10-15 mid-sprint check.
 3. C1–C4 by 10-16. Before the promotion, `prod` has no distributed images: the operator pushes the three images by hand, writes `/blocbuy/swe5001/candidate/<service>` ([README](../../infra/swe5001/README.md), "Environment sessions") and runs `SWE5001_TOPOLOGY=distributed env-up.sh --candidate`, then `env-down.sh`. Record timings and exit codes.
 4. Sprint 4 promotion on Mon 2026-10-19 (`dev` → `prod`, merge commit), then the evidence session (V2–V5, V7, identity outage) and the fallback recording; rehearsal 10-20; presentation 10-21 16:15 SGT (`env-up.sh` before 12:00, `env-down.sh` and `env-status.sh` after).
