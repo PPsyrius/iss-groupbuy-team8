@@ -12,6 +12,7 @@ import com.blocbuy.bootstrap.fixture.StripeTestDatabase;
 import com.blocbuy.bootstrap.scheduling.RefundWorkerJob;
 import com.blocbuy.bootstrap.scheduling.TeamExpirySweepJob;
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.groupbuy.event.TeamSucceeded;
 import com.blocbuy.payment.exception.PaymentErrorCode;
 import com.blocbuy.payment.gateway.CheckoutGateway;
 import com.blocbuy.payment.gateway.RefundGateway;
@@ -20,6 +21,7 @@ import com.blocbuy.payment.model.RefundWork;
 import com.blocbuy.payment.repository.CheckoutPaymentRepository;
 import com.blocbuy.payment.service.PaymentBrowserService;
 import com.blocbuy.payment.service.StripeCheckoutService;
+import com.jayway.jsonpath.JsonPath;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +30,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
@@ -35,6 +38,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * The scheduled team-expiry path end to end (#28, NFR-32): lease, sweeper, per-team transactions
@@ -52,6 +57,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
             "blocbuy.payment.stripe.webhook-secret=whsec_fixture_placeholder",
             "blocbuy.payment.checkout.success-url=https://shop.example/payments/return",
             "blocbuy.payment.checkout.cancel-url=https://shop.example/payments/return",
+            "blocbuy.events.enabled=true",
             "blocbuy.scheduling.enabled=true",
             "blocbuy.scheduling.team-expiry.initial-delay=PT1H",
             "blocbuy.scheduling.team-expiry.interval=PT1H",
@@ -80,6 +86,8 @@ class TeamExpirySchedulingIT {
     @Autowired private StripeCheckoutService payments;
     @Autowired private CheckoutPaymentRepository repository;
     @Autowired private JdbcTemplate jdbc;
+    @Autowired private ApplicationEventPublisher events;
+    @Autowired private PlatformTransactionManager transactions;
     @MockitoBean private CheckoutGateway gateway;
     @MockitoBean private RefundGateway refundGateway;
     private final Map<String, CheckoutGateway.Session> sessions = new ConcurrentHashMap<>();
@@ -88,7 +96,11 @@ class TeamExpirySchedulingIT {
     @BeforeEach
     void setup() {
         jdbc.execute(
-                "TRUNCATE sys_scheduled_item_retry,sys_scheduler_lock,log_refund_attempt,biz_payment,log_payment_webhook_event,biz_refund,log_payment_review,biz_payment_review_case,biz_purchase_intent,stripe_local_expiry_request,biz_order,biz_group_member,biz_group_deal,biz_group_participation_receipt,biz_team_price_policy,biz_product,sys_user");
+                "TRUNCATE sys_outbox,sys_scheduled_item_retry,sys_scheduler_lock,log_refund_attempt,"
+                        + "biz_payment,log_payment_webhook_event,biz_refund,log_payment_review,"
+                        + "biz_payment_review_case,biz_purchase_intent,stripe_local_expiry_request,"
+                        + "biz_order,biz_group_member,biz_group_deal,biz_group_participation_receipt,"
+                        + "biz_team_price_policy,biz_product,sys_user");
         product = UUID.randomUUID();
         jdbc.update(
                 "INSERT INTO biz_product(id,product_no,title,original_price,currency,stock,status,team_target_size,team_lifetime_seconds) VALUES(?,?,'Expiry test product',20,'sgd',100,'on_sale',2,7200)",
@@ -140,6 +152,64 @@ class TeamExpirySchedulingIT {
         assertThat(dealStatus(overdue)).isEqualTo("expired");
         assertThat(refunds(overdue)).isEqualTo(1);
         assertThat(dealStatus(running)).isEqualTo("open");
+    }
+
+    @Test
+    void committedTeamSuccessWritesOneOutboxEventWithEveryMember() {
+        UUID deal = paidTeam();
+        UUID leader = member(deal);
+        UUID joiner = buyer();
+        UUID intent = coordinator.intent(joiner, "JOIN", deal);
+        var prepared = payments.prepare(joiner, intent, UUID.randomUUID().toString());
+        CheckoutPayment payment = repository.findById(prepared.paymentId()).orElseThrow();
+        sessions.put(payment.sessionId(), session(payment, "complete", "paid"));
+
+        payments.recover(payment.id(), "test-operator", true);
+
+        assertThat(dealStatus(deal)).isEqualTo("succeeded");
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM sys_outbox"
+                                        + " WHERE event_type='TeamSucceeded' AND aggregate_id=?",
+                                Long.class,
+                                deal))
+                .isEqualTo(1);
+        String payload =
+                jdbc.queryForObject(
+                        "SELECT payload::text FROM sys_outbox"
+                                + " WHERE event_type='TeamSucceeded' AND aggregate_id=?",
+                        String.class,
+                        deal);
+        assertThat(JsonPath.<java.util.List<String>>read(payload, "$.recipientUserIds"))
+                .containsExactlyInAnyOrder(leader.toString(), joiner.toString());
+    }
+
+    @Test
+    void rolledBackTeamSuccessWritesNoOutboxEvent() {
+        UUID deal = UUID.randomUUID();
+        TransactionTemplate transaction = new TransactionTemplate(transactions);
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                        () ->
+                                transaction.executeWithoutResult(
+                                        status -> {
+                                            events.publishEvent(
+                                                    new TeamSucceeded(
+                                                            deal,
+                                                            UUID.randomUUID(),
+                                                            2,
+                                                            java.time.Instant.now()));
+                                            throw new IllegalStateException("force rollback");
+                                        }))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("force rollback");
+
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM sys_outbox WHERE aggregate_id=?",
+                                Long.class,
+                                deal))
+                .isZero();
     }
 
     /**
@@ -296,6 +366,13 @@ class TeamExpirySchedulingIT {
                 "SELECT deal_id FROM biz_group_member WHERE payment_id=?",
                 UUID.class,
                 payment.id());
+    }
+
+    private UUID member(UUID deal) {
+        return jdbc.queryForObject(
+                "SELECT user_id FROM biz_group_member WHERE deal_id=? AND member_role='leader'",
+                UUID.class,
+                deal);
     }
 
     /** Moves a deadline into the past; older deadlines are swept first. */

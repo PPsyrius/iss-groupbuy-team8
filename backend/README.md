@@ -44,6 +44,8 @@ Secrets come from the environment, never from git: `DB_USERNAME`, `DB_PASSWORD`,
 
 Scheduled jobs are deployment-opt-in. Before setting `BLOCBUY_SCHEDULING_ENABLED=true`, count overdue open teams, overdue unfulfilled purchase intents (including paid refusal cases) and due refund obligations; the team and intent expiry sweeps each select at most 100 candidates per run and the refund worker attempts one due obligation per tick. This switch can move money through the configured Stripe gateway even under the EC2-only profile; the gateway requires a sandbox key. To change or pause scheduling, follow the [deployment recreation procedure](../deployment/backend/README.md#change-the-scheduling-flag); restarting an existing container does not reload its environment.
 
+Cross-service outbox writes are separately opt-in with `BLOCBUY_EVENTS_ENABLED=true`; the default is off and the SWE5006 `ec2` profile keeps it off. The migration may run in every profile, but the writer is active only when opted in. Outbox retention is a scheduled job and therefore also requires `BLOCBUY_SCHEDULING_ENABLED=true`; it removes published rows older than seven days in bounded batches and does not remove unpublished or failed rows. The later relay is separate work (#445).
+
 Local datasource: `jdbc:postgresql://localhost:5432/Blocbuy?currentSchema=domain` — note the database name is case-sensitive if created quoted; verify `Blocbuy` vs `blocbuy` on first connect.
 
 ## Build gates

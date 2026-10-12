@@ -12,17 +12,24 @@ locals {
   # Settings every service gets from its database and the shared cache (backend plan,
   # section 7); a service's own `environment` and `secrets` are merged on top, with
   # "{frontend_url}" in a value replaced by var.frontend_url.
-  service_environment = { for name, s in local.services : name => merge({
-    DB_URL             = "jdbc:postgresql://${module.postgres.address}:${module.postgres.port}/${s.database}?currentSchema=domain&sslmode=require"
-    DB_USERNAME        = "blocbuy_${s.database}_app"
-    SPRING_FLYWAY_USER = "blocbuy_${s.database}_owner"
-    REDIS_HOST         = module.cache.address
-    REDIS_PORT         = tostring(module.cache.port)
-    REDIS_SSL          = "true"
-    # Valkey requires TLS (transit encryption); Spring Boot's own switch for Lettuce.
-    SPRING_DATA_REDIS_SSL_ENABLED = "true"
-    FRONTEND_URL                  = var.frontend_url
-  }, { for k, v in s.environment : k => replace(v, "{frontend_url}", var.frontend_url) }) }
+  service_environment = {
+    for name, s in local.services : name => merge(
+      {
+        DB_URL             = "jdbc:postgresql://${module.postgres.address}:${module.postgres.port}/${s.database}?currentSchema=domain&sslmode=require"
+        DB_USERNAME        = "blocbuy_${s.database}_app"
+        SPRING_FLYWAY_USER = "blocbuy_${s.database}_owner"
+        REDIS_HOST         = module.cache.address
+        REDIS_PORT         = tostring(module.cache.port)
+        REDIS_SSL          = "true"
+        # Valkey requires TLS (transit encryption); Spring Boot's own switch for Lettuce.
+        SPRING_DATA_REDIS_SSL_ENABLED = "true"
+        FRONTEND_URL                  = var.frontend_url
+      },
+      { for k, v in s.environment : k => replace(v, "{frontend_url}", var.frontend_url) },
+      # This final map prevents any other service definition from enabling the outbox.
+      { BLOCBUY_EVENTS_ENABLED = name == "commerce-svc" ? "true" : "false" },
+    )
+  }
 
   service_secrets = { for name, s in local.services : name => merge({
     DB_PASSWORD            = module.postgres.role_password_arns["${s.database}/APP"]
