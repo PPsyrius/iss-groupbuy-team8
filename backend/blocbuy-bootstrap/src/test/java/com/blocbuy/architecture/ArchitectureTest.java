@@ -20,6 +20,7 @@ import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -28,6 +29,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
+import org.springframework.web.util.pattern.PathPatternParser;
 
 /**
  * Machine-enforced module boundaries (skill hard gate). Layers are Maven modules; these rules guard
@@ -357,11 +360,14 @@ final class ArchitectureTest {
             public void check(JavaClass controller, ConditionEvents events) {
                 Optional<JavaAnnotation<JavaClass>> condition =
                         controller.tryGetAnnotationOfType(CONDITIONAL_ON_PROPERTY);
+                // matchIfMissing=true would activate the controller in the default monolith.
                 boolean distributedOnly =
                         condition.isPresent()
                                 && propertyNames(condition.get()).contains("blocbuy.topology")
                                 && "distributed"
-                                        .equals(condition.get().get("havingValue").orElse(""));
+                                        .equals(condition.get().get("havingValue").orElse(""))
+                                && !Boolean.TRUE.equals(
+                                        condition.get().get("matchIfMissing").orElse(false));
                 if (!distributedOnly) {
                     events.add(
                             SimpleConditionEvent.violated(
@@ -388,19 +394,7 @@ final class ArchitectureTest {
         return new ArchCondition<>("not map paths under " + INTERNAL_PATH) {
             @Override
             public void check(JavaClass controller, ConditionEvents events) {
-                List<String> prefixes = mappedPaths(controller.getAnnotations());
-                List<String> paths = new ArrayList<>(prefixes);
-                if (prefixes.isEmpty()) {
-                    prefixes = List.of("");
-                }
-                for (JavaMethod method : controller.getMethods()) {
-                    for (String prefix : prefixes) {
-                        for (String path : mappedPaths(method.getAnnotations())) {
-                            paths.add(prefix + path);
-                        }
-                    }
-                }
-                for (String path : paths) {
+                for (String path : registeredPaths(controller)) {
                     if (path.equals(INTERNAL_PATH) || path.startsWith(INTERNAL_PATH + "/")) {
                         events.add(
                                 SimpleConditionEvent.violated(
@@ -416,21 +410,46 @@ final class ArchitectureTest {
         };
     }
 
-    /** Paths of {@code @RequestMapping} and its composed variants ({@code @GetMapping}, ...). */
-    private static List<String> mappedPaths(Set<? extends JavaAnnotation<?>> annotations) {
-        List<String> paths = new ArrayList<>();
+    /**
+     * The paths Spring MVC registers for the controller: class and method mappings parsed and
+     * combined by Spring's own {@link RequestMappingInfo}, so {@code "internal/users"} counts as
+     * {@code /internal/users} exactly as at run time.
+     */
+    private static Set<String> registeredPaths(JavaClass controller) {
+        RequestMappingInfo type =
+                mapping(controller.getAnnotations()).orElseGet(() -> mappingInfo(List.of()));
+        Set<String> paths = new LinkedHashSet<>(type.getPatternValues());
+        for (JavaMethod method : controller.getMethods()) {
+            mapping(method.getAnnotations())
+                    .ifPresent(info -> paths.addAll(type.combine(info).getPatternValues()));
+        }
+        return paths;
+    }
+
+    /** {@code @RequestMapping} or a composed variant ({@code @GetMapping}, ...), if present. */
+    private static Optional<RequestMappingInfo> mapping(
+            Set<? extends JavaAnnotation<?>> annotations) {
         for (JavaAnnotation<?> annotation : annotations) {
             JavaClass type = annotation.getRawType();
             if (!type.isEquivalentTo(RequestMapping.class)
                     && !type.isAnnotatedWith(RequestMapping.class)) {
                 continue;
             }
+            List<String> paths = new ArrayList<>();
             for (String attribute : List.of("value", "path")) {
                 for (Object path : (Object[]) annotation.get(attribute).orElse(new Object[0])) {
                     paths.add((String) path);
                 }
             }
+            return Optional.of(mappingInfo(paths));
         }
-        return paths;
+        return Optional.empty();
+    }
+
+    private static RequestMappingInfo mappingInfo(List<String> paths) {
+        RequestMappingInfo.BuilderConfiguration options =
+                new RequestMappingInfo.BuilderConfiguration();
+        options.setPatternParser(PathPatternParser.defaultInstance);
+        return RequestMappingInfo.paths(paths.toArray(String[]::new)).options(options).build();
     }
 }
