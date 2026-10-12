@@ -19,6 +19,8 @@ public class SaTokenConfig implements WebMvcConfigurer {
 
     /** Paths that never require authentication. */
     private static final String[] PUBLIC_PATHS = {
+        // Distributed internal endpoints rely on peer-only network isolation (ADR 0008).
+        "/internal/**",
         // Google OAuth2 is the sole login channel (redirect start + provider callback)
         ApiConstants.API_V1 + "/auth/oauth2/**",
         // provider callbacks authenticate by signature verification, not by session

@@ -11,6 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.blocbuy.identity.repository.RoleRepository;
+import com.blocbuy.identity.service.LoginAuthorizationService;
+import com.blocbuy.identity.service.LoginAuthorizationService.Snapshot;
 import com.blocbuy.identity.service.OAuthLoginAppService;
 import com.blocbuy.identity.service.OAuthLoginAppService.OAuthLoginResult;
 import com.blocbuy.payment.repository.CheckoutPaymentRepository;
@@ -61,6 +63,7 @@ class StripeDisabledHttpTest {
     @MockitoBean private CheckoutPaymentRepository checkoutPayments;
     @MockitoBean private OAuthLoginAppService oauth;
     @MockitoBean private RoleRepository roles;
+    @MockitoBean private LoginAuthorizationService authorization;
 
     @Autowired
     private java.util.List<
@@ -229,6 +232,8 @@ class StripeDisabledHttpTest {
     }
 
     private Cookie login() throws Exception {
+        when(authorization.snapshot(UUID.fromString(ID)))
+                .thenReturn(new Snapshot(java.util.List.of(), java.util.List.of()));
         when(oauth.loginWithGoogle(any(), any(), any()))
                 .thenReturn(new OAuthLoginResult(UUID.fromString(ID), "Test buyer", null));
         return mvc.perform(

@@ -12,11 +12,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.dao.SaTokenDao;
 import cn.dev33.satoken.dao.SaTokenDaoDefaultImpl;
+import cn.dev33.satoken.session.SaSession;
+import cn.dev33.satoken.stp.StpUtil;
+import com.blocbuy.common.constant.SessionRbac;
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.identity.exception.IdentityErrorCode;
+import com.blocbuy.identity.gateway.LoginSnapshotGateway;
 import com.blocbuy.identity.repository.RoleRepository;
+import com.blocbuy.identity.service.LoginAuthorizationService;
+import com.blocbuy.identity.service.LoginAuthorizationService.Snapshot;
 import com.blocbuy.identity.service.OAuthLoginAppService;
 import com.blocbuy.identity.service.OAuthLoginAppService.GoogleAuthorizeUrl;
 import com.blocbuy.identity.service.OAuthLoginAppService.OAuthLoginResult;
@@ -24,7 +31,10 @@ import com.blocbuy.identity.service.UserAppService;
 import com.blocbuy.identity.service.UserAppService.CurrentUser;
 import jakarta.servlet.http.Cookie;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -69,11 +79,21 @@ class AuthControllerTest {
     @MockitoBean private OAuthLoginAppService oAuthLogin;
     @MockitoBean private UserAppService users;
     @MockitoBean private RoleRepository roles;
+    @MockitoBean private LoginAuthorizationService authorization;
+
+    @BeforeEach
+    void defaultAuthorization() {
+        when(authorization.snapshot(USER)).thenReturn(new Snapshot(List.of(), List.of()));
+    }
 
     @Test
     void callbackSuccessOpensSessionAndRedirectsToFrontend() throws Exception {
         when(oAuthLogin.loginWithGoogle("code", "state", "binding-123"))
                 .thenReturn(new OAuthLoginResult(USER, "Tester", "https://img.example/a.png"));
+        when(roles.findRoleCodesByUserId(USER)).thenReturn(List.of("buyer"));
+        when(roles.findPermissionCodesByUserId(USER)).thenReturn(List.of("order:read"));
+        when(authorization.snapshot(USER))
+                .thenReturn(new Snapshot(List.of("buyer"), List.of("order:read")));
 
         MvcResult callback =
                 mvc.perform(
@@ -89,6 +109,8 @@ class AuthControllerTest {
 
         Cookie session = callback.getResponse().getCookie("blocbuy-token");
         assertThat(session).as("Sa-Token session cookie issued on login").isNotNull();
+        assertThat(authorizationSession(USER).get(SessionRbac.SNAPSHOT))
+                .isEqualTo(Map.of("roles", List.of("buyer"), "permissions", List.of("order:read")));
 
         when(users.currentUser(USER))
                 .thenReturn(new CurrentUser(USER, "Tester", "https://img.example/a.png"));
@@ -113,6 +135,55 @@ class AuthControllerTest {
                         header().string(
                                         HttpHeaders.LOCATION,
                                         FRONTEND + "/login?error=IDENTITY_401_001"));
+    }
+
+    @Test
+    void authorizationFailureNeverOpensASession() throws Exception {
+        when(oAuthLogin.loginWithGoogle("code", "state", null))
+                .thenReturn(new OAuthLoginResult(UUID.randomUUID(), "Tester", null));
+        when(authorization.snapshot(any()))
+                .thenThrow(new IllegalStateException("snapshot unavailable"));
+        var response =
+                mvc.perform(get(CALLBACK_PATH).param("code", "code").param("state", "state"))
+                        .andExpect(status().isFound())
+                        .andExpect(
+                                header().string(
+                                                HttpHeaders.LOCATION,
+                                                FRONTEND + "/login?error=COMMON_500_001"))
+                        .andReturn()
+                        .getResponse();
+        assertThat(response.getCookie("blocbuy-token")).isNull();
+    }
+
+    @Test
+    void nextLoginReplacesTheSharedAccountSnapshotForExistingTokens() throws Exception {
+        UUID user = UUID.randomUUID();
+        when(oAuthLogin.loginWithGoogle("code", "state", null))
+                .thenReturn(new OAuthLoginResult(user, "Tester", null));
+        when(authorization.snapshot(user))
+                .thenReturn(new Snapshot(List.of("admin"), List.of("payment:read")));
+        var first =
+                mvc.perform(get(CALLBACK_PATH).param("code", "code").param("state", "state"))
+                        .andExpect(status().isFound())
+                        .andReturn()
+                        .getResponse()
+                        .getCookie("blocbuy-token");
+        var session = authorizationSession(user);
+        assertThat(session.get(SessionRbac.SNAPSHOT))
+                .isEqualTo(
+                        Map.of("roles", List.of("admin"), "permissions", List.of("payment:read")));
+        when(authorization.snapshot(user)).thenReturn(new Snapshot(List.of("buyer"), List.of()));
+        var second =
+                mvc.perform(get(CALLBACK_PATH).param("code", "code").param("state", "state"))
+                        .andExpect(status().isFound())
+                        .andReturn()
+                        .getResponse()
+                        .getCookie("blocbuy-token");
+        assertThat(second.getValue()).isNotEqualTo(first.getValue());
+        assertThat(StpUtil.getLoginIdByToken(first.getValue()).toString())
+                .isEqualTo(user.toString());
+        assertThat(authorizationSession(user).get(SessionRbac.SNAPSHOT))
+                .isEqualTo(Map.of("roles", List.of("buyer"), "permissions", List.of()));
     }
 
     /** Consent denial arrives as ?error=access_denied with no code — still a browser 302. */
@@ -276,5 +347,51 @@ class AuthControllerTest {
         SaTokenDao testSessionDao() {
             return new SaTokenDaoDefaultImpl();
         }
+
+        @Bean
+        @Primary
+        LoginSnapshotGateway testSnapshots(SaTokenDao sessions) {
+            return new LoginSnapshotGateway() {
+                private final Map<UUID, String> refreshes = new ConcurrentHashMap<>();
+
+                @Override
+                public String beginRefresh(UUID userId) {
+                    String refresh = UUID.randomUUID().toString();
+                    refreshes.put(userId, refresh);
+                    return refresh;
+                }
+
+                @Override
+                public synchronized boolean publish(
+                        UUID userId,
+                        String refresh,
+                        List<String> roles,
+                        List<String> permissions,
+                        long timeout) {
+                    if (!refreshes.remove(userId, refresh)) {
+                        return false;
+                    }
+                    var session =
+                            new SaSession(
+                                    SessionRbac.sessionId(
+                                            StpUtil.getTokenName(),
+                                            StpUtil.getLoginType(),
+                                            userId));
+                    session.getDataMap()
+                            .put(
+                                    SessionRbac.SNAPSHOT,
+                                    Map.of("roles", roles, "permissions", permissions));
+                    sessions.setSession(session, timeout);
+                    return true;
+                }
+            };
+        }
+    }
+
+    private static SaSession authorizationSession(UUID user) {
+        return SaManager.getSaTokenDao()
+                .getSession(
+                        SessionRbac.sessionId(
+                                StpUtil.getTokenName(), StpUtil.getLoginType(), user));
     }
 }

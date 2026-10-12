@@ -134,6 +134,8 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
 - Role changes take effect at next login. Record this in the dual-topology ADR (0008).
 - **Done when:** a test logs in, then resolves roles through `SessionStpInterface` with no identity repository in the context.
 
+- **2026-10-12 (#467, including review fixes):** `LoginAuthorizationService` reads roles and permissions in a read-only REPEATABLE READ transaction; `LoginSessionPublisher` creates an unpublished fresh token, then `RedisLoginSnapshotGateway` atomically fences and persists a dedicated per-account Sa-Token authorization session before publishing the browser cookie/header. The fence lasts 120 s; newer attempts supersede older callbacks, and the snapshot inherits the account session's remaining TTL. Both mandatory lists must be valid or all RBAC is denied. SQL remains authoritative in monolith/identity; distributed services without `RoleRepository` use this shared account snapshot without SQL fallback. Failed callbacks redirect and revoke only the new token, preserving existing logins. Service IT role mocks are removed; the commerce user-service mock remains for #468. Permanent Redis tests cover callback failures, old-token preservation, partial corruption and delayed concurrent callbacks. Design: [ADR 0008](../../backend/docs/adr/0008-dual-deployment-topology.md); verification limits: [day log](../agile/sprint-04/log/2026-10-12.md).
+
 ### WP-B5 Remote identity check (WBS 3.2)
 
 - `identity-svc`: `InternalUserController` `GET /internal/users/{id}/active` → `204` when active, `404` when missing, `409` when disabled; delegates to `UserAppServiceImpl.requireActive`.

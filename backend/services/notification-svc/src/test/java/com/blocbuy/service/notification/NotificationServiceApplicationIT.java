@@ -6,8 +6,8 @@ import static org.mockito.Mockito.mockStatic;
 import com.blocbuy.catalog.persistence.BizProductMapper;
 import com.blocbuy.catalog.web.ProductController;
 import com.blocbuy.common.config.MyBatisConfig;
+import com.blocbuy.common.config.SessionStpInterface;
 import com.blocbuy.identity.persistence.SysUserMapper;
-import com.blocbuy.identity.repository.RoleRepository;
 import com.blocbuy.identity.web.AuthController;
 import com.blocbuy.notification.web.NotificationController;
 import com.blocbuy.platform.TopologyProperties;
@@ -20,7 +20,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -53,11 +52,6 @@ class NotificationServiceApplicationIT {
         properties.add("spring.datasource.password", POSTGRES::getPassword);
     }
 
-    /**
-     * Not provided by this assembly until #467 (session roles); delete this mock when that lands.
-     */
-    @MockitoBean private RoleRepository roleRepository;
-
     @Autowired private ApplicationContext context;
 
     @Test
@@ -68,6 +62,7 @@ class NotificationServiceApplicationIT {
         assertThat(context.getBeanNamesForType(SysUserMapper.class)).isEmpty();
         assertThat(context.getBeanNamesForType(BizProductMapper.class)).isEmpty();
         assertThat(context.getBeanNamesForType(MyBatisConfig.class)).isEmpty();
+        assertThat(context.getBeanNamesForType(SessionStpInterface.class)).hasSize(1);
         assertThat(context.getBean(TopologyProperties.class).topology())
                 .isEqualTo(TopologyProperties.Mode.DISTRIBUTED);
     }
