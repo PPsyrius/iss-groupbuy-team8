@@ -13,7 +13,8 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 /**
  * The global mapper scan belongs to the monolith only (backend ADR 0008). An empty in-memory {@link
- * SqlSessionFactory} lets the scanned mappers initialise without a database.
+ * SqlSessionFactory} lets the scanned mappers initialise without a database. {@link TopologyCheck}
+ * turns an unknown topology into a startup failure instead of a silently skipped scan.
  */
 class MyBatisConfigTest {
 
@@ -23,7 +24,7 @@ class MyBatisConfigTest {
     private final ApplicationContextRunner runner =
             new ApplicationContextRunner()
                     .withBean(SqlSessionFactory.class, MyBatisConfigTest::unconnectedSessionFactory)
-                    .withUserConfiguration(MyBatisConfig.class);
+                    .withUserConfiguration(TopologyCheck.class, MyBatisConfig.class);
 
     @Test
     void scansEveryMapperWhenTheTopologyIsUnset() {
@@ -49,6 +50,31 @@ class MyBatisConfigTest {
                             assertThat(context).doesNotHaveBean(MyBatisConfig.class);
                             assertThat(context.containsBeanDefinition(IDENTITY_MAPPER)).isFalse();
                         });
+    }
+
+    @Test
+    void refusesToStartWithAMisspelledTopology() {
+        runner.withPropertyValues("blocbuy.topology=monolit")
+                .run(
+                        context ->
+                                assertThat(context)
+                                        .getFailure()
+                                        .isInstanceOf(IllegalStateException.class)
+                                        .hasMessage(
+                                                "blocbuy.topology must be monolith or distributed,"
+                                                        + " not 'monolit'"));
+    }
+
+    @Test
+    void refusesToStartWithAnEmptyTopology() {
+        runner.withPropertyValues("blocbuy.topology=")
+                .run(context -> assertThat(context).hasFailed());
+    }
+
+    @Test
+    void acceptsTheTopologyInAnyCase() {
+        runner.withPropertyValues("blocbuy.topology=Monolith")
+                .run(context -> assertThat(context).hasSingleBean(MyBatisConfig.class));
     }
 
     /** Never opens a connection: the data source is only consulted when a statement runs. */
