@@ -25,8 +25,10 @@ fail() {
 
 [ -s "$jar" ] || fail 'missing or empty'
 
-# Capture first: grep -q on a pipe would close it early and trip pipefail.
-manifest=$(unzip -p "$jar" META-INF/MANIFEST.MF | tr -d '\r') ||
+# Capture first: grep -q on a pipe would close it early and trip pipefail. Manifest lines wrap at
+# 72 bytes with a leading-space continuation (long Start-Class names do), so join them first.
+manifest=$(unzip -p "$jar" META-INF/MANIFEST.MF | tr -d '\r' |
+  awk 'NR > 1 && /^ / { line = line substr($0, 2); next } NR > 1 { print line } { line = $0 } END { print line }') ||
   fail 'not a JAR or no META-INF/MANIFEST.MF'
 entries=$(unzip -Z1 "$jar") || fail 'cannot list entries'
 

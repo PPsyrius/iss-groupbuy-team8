@@ -4,7 +4,9 @@ Date: 2026-10-12
 
 ## Status
 
-Proposed (#455; Sprint 4 plan §4 items 0–3 and 8). Becomes Accepted when the PR that adds it is reviewed and merged. Complements ADR 0007, which covers the events between the services.
+Accepted (2026-10-12; proposed in #470, merged into `dev` at `c8f529ac`; #455, Sprint 4 plan §4 items 0–3 and 8). Complements ADR 0007, which covers the events between the services.
+
+Amended 2026-10-12 (#455 step A4): the grants are a Flyway `afterMigrate` callback instead of the repeatable migration first planned, because `db-init`'s default privileges grant every table a later migration adds to all runtime roles and only a callback re-checks them on every start.
 
 ## Context
 
@@ -24,7 +26,7 @@ The code is one Maven reactor of COLA modules (`blocbuy-client` … `blocbuy-boo
 | `commerce-svc` | catalog, groupbuy, order, payment | everything else except `biz_notification` |
 | `notification-svc` | notification | `biz_notification`, `sys_consumed_message` |
 
-**Data.** Each service has its own database on the shared RDS instance and its own runtime role, granted only on the tables it owns. Every database applies the full Flyway stream while SWE5006 still adds migrations; the grants (`R__swe5001_grants.sql`) load only from service-profile locations, never in the monolith.
+**Data.** Each service has its own database on the shared RDS instance and its own runtime role, granted only on the tables it owns. Every database applies the full Flyway stream while SWE5006 still adds migrations; the grants (`blocbuy-platform`, `db/swe5001/afterMigrate__service_grants.sql`) load only from service-profile locations and are not on the monolith's classpath.
 
 **Roles travel in the session.** Login in identity writes roles and permissions into the Sa-Token session, which all services share through Valkey. Outside identity, `StpInterface` reads the session and never calls identity per request. A role change takes effect at the user's next login. `RoleCode` moves from `com.blocbuy.identity.model` to `com.blocbuy.common.model`, so no commerce class imports identity's model.
 

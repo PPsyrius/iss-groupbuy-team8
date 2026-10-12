@@ -25,6 +25,11 @@
     <module>blocbuy-adapter</module>
     <module>blocbuy-infrastructure</module>
     <module>blocbuy-bootstrap</module>
+    <!-- SWE5001 service assemblies (backend ADR 0008); the monolith above never depends on them -->
+    <module>blocbuy-platform</module>
+    <module>services/identity-svc</module>
+    <module>services/commerce-svc</module>
+    <module>services/notification-svc</module>
   </modules>
 
   <properties>
@@ -59,8 +64,13 @@
     <jacoco.version>0.8.15</jacoco.version>
     <!-- SonarCloud CI-based analysis: project key and coverage path -->
     <sonar.projectKey>blocbuy-backend</sonar.projectKey>
+    <!-- the monolith aggregate plus the per-module reports of modules the monolith does not depend on -->
     <sonar.coverage.jacoco.xmlReportPaths>
-      ${maven.multiModuleProjectDirectory}/blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml
+      ${maven.multiModuleProjectDirectory}/blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml,
+      ${maven.multiModuleProjectDirectory}/blocbuy-platform/target/site/jacoco/jacoco.xml,
+      ${maven.multiModuleProjectDirectory}/services/identity-svc/target/site/jacoco/jacoco.xml,
+      ${maven.multiModuleProjectDirectory}/services/commerce-svc/target/site/jacoco/jacoco.xml,
+      ${maven.multiModuleProjectDirectory}/services/notification-svc/target/site/jacoco/jacoco.xml
     </sonar.coverage.jacoco.xmlReportPaths>
   </properties>
 
@@ -97,6 +107,17 @@
       <dependency>
         <groupId>com.blocbuy</groupId>
         <artifactId>blocbuy-infrastructure</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <!-- plain library JAR (exec classifier holds the runnable monolith) -->
+      <dependency>
+        <groupId>com.blocbuy</groupId>
+        <artifactId>blocbuy-bootstrap</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.blocbuy</groupId>
+        <artifactId>blocbuy-platform</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -221,7 +242,7 @@
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-maven-plugin</artifactId>
           <configuration>
-            <!-- only blocbuy-bootstrap assembles a runnable app; run/start/stop skip elsewhere -->
+            <!-- only blocbuy-bootstrap and services/* assemble a runnable app; run/start/stop skip elsewhere -->
             <skip>true</skip>
           </configuration>
         </plugin>
