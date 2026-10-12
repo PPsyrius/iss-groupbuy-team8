@@ -212,6 +212,81 @@ class TeamExpirySchedulingIT {
                 .isZero();
     }
 
+    @Test
+    void outboxInsertFailureDuringCommitRollsBackSettlementAndTeamSuccess() {
+        UUID deal = paidTeam();
+        UUID joiner = buyer();
+        UUID intent = coordinator.intent(joiner, "JOIN", deal);
+        var prepared = payments.prepare(joiner, intent, UUID.randomUUID().toString());
+        CheckoutPayment payment = repository.findById(prepared.paymentId()).orElseThrow();
+        sessions.put(payment.sessionId(), session(payment, "complete", "paid"));
+        Long rowsBefore = jdbc.queryForObject("SELECT count(*) FROM sys_outbox", Long.class);
+        Integer stockBefore =
+                jdbc.queryForObject(
+                        "SELECT stock FROM biz_product WHERE id = ?", Integer.class, product);
+        var paymentStatusBefore = payment.status();
+        UUID paymentId = payment.id();
+        jdbc.execute(
+                """
+                CREATE FUNCTION test_fail_team_outbox() RETURNS trigger LANGUAGE plpgsql AS
+                $$ BEGIN RAISE EXCEPTION 'injected outbox commit failure'; END $$
+                """);
+        jdbc.execute(
+                """
+                CREATE TRIGGER test_fail_team_outbox BEFORE INSERT ON sys_outbox
+                FOR EACH ROW WHEN (NEW.event_type = 'TeamSucceeded')
+                EXECUTE FUNCTION test_fail_team_outbox()
+                """);
+        try {
+            org.assertj.core.api.Assertions.assertThatThrownBy(
+                            () -> payments.recover(paymentId, "test-operator", true))
+                    .isInstanceOf(org.springframework.dao.DataAccessException.class)
+                    .hasStackTraceContaining("injected outbox commit failure");
+        } finally {
+            jdbc.execute("DROP TRIGGER test_fail_team_outbox ON sys_outbox");
+            jdbc.execute("DROP FUNCTION test_fail_team_outbox()");
+        }
+        assertThat(dealStatus(deal)).isEqualTo("open");
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT current_size FROM biz_group_deal WHERE id = ?",
+                                Integer.class,
+                                deal))
+                .isEqualTo(1);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM biz_group_member WHERE deal_id = ?",
+                                Long.class,
+                                deal))
+                .isEqualTo(1);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM biz_order WHERE deal_id = ?",
+                                Long.class,
+                                deal))
+                .isEqualTo(1);
+        assertThat(orderStatus(deal)).isEqualTo("pending");
+        assertThat(repository.findById(payment.id()).orElseThrow().status())
+                .isEqualTo(paymentStatusBefore);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT stock FROM biz_product WHERE id = ?",
+                                Integer.class,
+                                product))
+                .isEqualTo(stockBefore);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM sys_outbox", Long.class))
+                .isEqualTo(rowsBefore);
+        // Retry after recovery must commit exactly one team-success effect.
+        payments.recover(payment.id(), "test-operator", true);
+        assertThat(dealStatus(deal)).isEqualTo("succeeded");
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM sys_outbox WHERE event_type = 'TeamSucceeded' AND aggregate_id = ?",
+                                Long.class,
+                                deal))
+                .isEqualTo(1);
+    }
+
     /**
      * A test trigger makes the middle team's expiry UPDATE fail inside its own transaction. Only
      * that team rolls back and receives durable backoff. The next run bypasses it and resolves the

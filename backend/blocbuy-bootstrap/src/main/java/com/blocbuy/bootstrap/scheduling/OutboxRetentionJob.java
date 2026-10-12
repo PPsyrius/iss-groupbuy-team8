@@ -1,6 +1,6 @@
 package com.blocbuy.bootstrap.scheduling;
 
-import com.blocbuy.integration.outbox.OutboxMapper;
+import com.blocbuy.common.repository.OutboxRetentionRepository;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.function.BooleanSupplier;
@@ -16,10 +16,9 @@ public class OutboxRetentionJob {
     static final String JOB = "outbox-retention";
     private static final Duration RETENTION = Duration.ofDays(7);
     private static final Duration LEASE = Duration.ofMinutes(5);
-    private static final int BATCH_SIZE = 500;
 
     private final LeasedJobRunner runner;
-    private final OutboxMapper outbox;
+    private final OutboxRetentionRepository outbox;
 
     @Scheduled(
             fixedDelayString = "${blocbuy.events.retention.interval:PT6H}",
@@ -29,16 +28,12 @@ public class OutboxRetentionJob {
     }
 
     private void deleteExpired(BooleanSupplier leaseValid) {
+        if (!leaseValid.getAsBoolean()) {
+            return;
+        }
         Instant cutoff = Instant.now().minus(RETENTION);
-        int deleted = 0;
-        int batch;
-        do {
-            if (!leaseValid.getAsBoolean()) {
-                break;
-            }
-            batch = outbox.deletePublishedBefore(cutoff, BATCH_SIZE);
-            deleted += batch;
-        } while (batch == BATCH_SIZE);
+        // A full batch leaves the remainder for the next tick, not another SQL call in this run.
+        int deleted = outbox.deletePublishedBefore(cutoff);
         if (deleted > 0) {
             log.info("Outbox retention removed {} published events", deleted);
         }

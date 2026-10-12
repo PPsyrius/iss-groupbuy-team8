@@ -5,12 +5,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.blocbuy.integration.outbox.OutboxMapper;
+import com.blocbuy.common.repository.OutboxRetentionRepository;
 import java.time.Duration;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
@@ -19,12 +18,12 @@ import org.mockito.ArgumentCaptor;
 class OutboxRetentionJobTest {
 
     private final LeasedJobRunner runner = mock(LeasedJobRunner.class);
-    private final OutboxMapper outbox = mock(OutboxMapper.class);
+    private final OutboxRetentionRepository outbox = mock(OutboxRetentionRepository.class);
     private final OutboxRetentionJob job = new OutboxRetentionJob(runner, outbox);
 
     @Test
-    void deletesPublishedRowsInBoundedBatchesUnderTheExistingLease() {
-        when(outbox.deletePublishedBefore(any(), eq(500))).thenReturn(500, 7);
+    void fullBatchDoesNotDrainTheBacklogWithinTheSameRun() {
+        when(outbox.deletePublishedBefore(any())).thenReturn(500);
         doAnswer(
                         call -> {
                             call.<LeasedJobRunner.LeaseAwareWork>getArgument(2).run(() -> true);
@@ -36,10 +35,9 @@ class OutboxRetentionJobTest {
         job.run();
 
         ArgumentCaptor<Instant> cutoff = ArgumentCaptor.forClass(Instant.class);
-        verify(outbox, times(2)).deletePublishedBefore(cutoff.capture(), eq(500));
-        assertThat(Duration.between(cutoff.getAllValues().get(0), Instant.now()))
+        verify(outbox).deletePublishedBefore(cutoff.capture());
+        assertThat(Duration.between(cutoff.getValue(), Instant.now()))
                 .isBetween(Duration.ofDays(7).minusSeconds(2), Duration.ofDays(7).plusSeconds(2));
-        assertThat(cutoff.getAllValues().get(1)).isEqualTo(cutoff.getAllValues().get(0));
     }
 
     @Test
@@ -59,7 +57,7 @@ class OutboxRetentionJobTest {
 
     @Test
     void handlesAnEmptyRetentionBatch() {
-        when(outbox.deletePublishedBefore(any(), eq(500))).thenReturn(0);
+        when(outbox.deletePublishedBefore(any())).thenReturn(0);
         doAnswer(
                         call -> {
                             call.<LeasedJobRunner.LeaseAwareWork>getArgument(2).run(() -> true);
@@ -70,6 +68,6 @@ class OutboxRetentionJobTest {
 
         job.run();
 
-        verify(outbox).deletePublishedBefore(any(), eq(500));
+        verify(outbox).deletePublishedBefore(any());
     }
 }

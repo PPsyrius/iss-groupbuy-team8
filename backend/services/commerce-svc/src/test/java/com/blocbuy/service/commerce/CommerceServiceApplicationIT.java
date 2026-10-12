@@ -3,6 +3,7 @@ package com.blocbuy.service.commerce;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mockStatic;
 
+import com.blocbuy.bootstrap.scheduling.OutboxRetentionJob;
 import com.blocbuy.catalog.persistence.BizProductMapper;
 import com.blocbuy.catalog.web.ProductController;
 import com.blocbuy.common.config.MyBatisConfig;
@@ -10,6 +11,8 @@ import com.blocbuy.common.config.SessionStpInterface;
 import com.blocbuy.identity.persistence.SysUserMapper;
 import com.blocbuy.identity.service.UserAppService;
 import com.blocbuy.identity.web.AuthController;
+import com.blocbuy.integration.outbox.IntegrationOutboxWriter;
+import com.blocbuy.integration.outbox.OutboxMapper;
 import com.blocbuy.notification.web.NotificationController;
 import com.blocbuy.order.persistence.BizOrderMapper;
 import com.blocbuy.platform.TopologyProperties;
@@ -34,7 +37,12 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  */
 @SpringBootTest(
         classes = CommerceServiceApplication.class,
-        properties = {"spring.data.redis.host=localhost", "spring.data.redis.port=1"})
+        properties = {
+            "spring.data.redis.host=localhost",
+            "spring.data.redis.port=1",
+            "blocbuy.events.enabled=false",
+            "blocbuy.scheduling.enabled=false"
+        })
 @ActiveProfiles({"local", "commerce"})
 @Testcontainers
 class CommerceServiceApplicationIT {
@@ -73,6 +81,9 @@ class CommerceServiceApplicationIT {
         assertThat(context.getBeanNamesForType(NotificationController.class)).isEmpty();
         assertThat(context.getBeanNamesForType(MyBatisConfig.class)).isEmpty();
         assertThat(context.getBeanNamesForType(SessionStpInterface.class)).hasSize(1);
+        assertThat(context.getBeanNamesForType(OutboxMapper.class)).hasSize(1);
+        assertThat(context.getBeanNamesForType(IntegrationOutboxWriter.class)).isEmpty();
+        assertThat(context.getBeanNamesForType(OutboxRetentionJob.class)).isEmpty();
         assertThat(context.getBean(TopologyProperties.class).topology())
                 .isEqualTo(TopologyProperties.Mode.DISTRIBUTED);
     }

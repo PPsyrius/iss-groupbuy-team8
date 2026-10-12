@@ -102,7 +102,10 @@ class OutboxMapperIT {
                 "UPDATE sys_outbox SET published_at = ? WHERE id = ?",
                 Timestamp.from(cutoff.plusSeconds(1)),
                 recentPublished);
-        jdbc.update("UPDATE sys_outbox SET failed_at = CURRENT_TIMESTAMP WHERE id = ?", failed);
+        jdbc.update(
+                "UPDATE sys_outbox SET failed_at = CURRENT_TIMESTAMP, published_at = ? WHERE id = ?",
+                Timestamp.from(cutoff.minusSeconds(1)),
+                failed);
 
         try (SqlSession session = sessions.openSession(true)) {
             assertThat(session.getMapper(OutboxMapper.class).deletePublishedBefore(cutoff, 100))

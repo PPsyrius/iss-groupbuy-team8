@@ -2,7 +2,7 @@ package com.blocbuy.bootstrap.config;
 
 import com.blocbuy.bootstrap.scheduling.LeasedJobRunner;
 import com.blocbuy.bootstrap.scheduling.OutboxRetentionJob;
-import com.blocbuy.integration.outbox.OutboxMapper;
+import com.blocbuy.common.repository.OutboxRetentionRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +16,8 @@ public class OutboxRetentionConfiguration {
 
     @Bean
     @ConditionalOnBooleanProperty("blocbuy.scheduling.enabled")
-    OutboxRetentionJob outboxRetentionJob(LeasedJobRunner runner, OutboxMapper outbox) {
+    OutboxRetentionJob outboxRetentionJob(
+            LeasedJobRunner runner, OutboxRetentionRepository outbox) {
         return new OutboxRetentionJob(runner, outbox);
     }
 }

@@ -13,7 +13,7 @@
         WITH candidates AS (
             SELECT id
             FROM sys_outbox
-            WHERE published_at IS NOT NULL AND published_at &lt; #{cutoff}
+            WHERE published_at IS NOT NULL AND failed_at IS NULL AND published_at &lt; #{cutoff}
             ORDER BY published_at, id
             LIMIT #{limit}
             FOR UPDATE SKIP LOCKED
