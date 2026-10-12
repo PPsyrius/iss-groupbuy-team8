@@ -49,12 +49,14 @@ tf_init() {
     -backend-config="region=$EXPECTED_REGION" > /dev/null
 }
 
-# Service names per runtime topology; keep in sync with runtime/services.tf.
+# Service names per runtime topology; keep in sync with runtime/services.tf. Each name is
+# also the ECR repository suffix and the SSM digest name (/release/<name>, /candidate/<name>).
 services_for_topology() {
   case "$1" in
     none) echo "" ;;
     monolith) echo "monolith" ;;
-    *) die "unknown topology '$1' (none or monolith)" ;;
+    distributed) echo "identity-svc commerce-svc notification-svc" ;;
+    *) die "unknown topology '$1' (none, monolith or distributed)" ;;
   esac
 }
 

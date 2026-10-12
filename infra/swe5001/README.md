@@ -152,7 +152,7 @@ Shared modules live in [`modules/`](modules/): `network` (VPC, subnets, S3 gatew
 
 | Input | Default | Set by |
 | --- | --- | --- |
-| `topology` | `none`: no ECS service, no database | `env-up.sh` (`SWE5001_TOPOLOGY`, default `monolith`). The service maps are in [`runtime/services.tf`](runtime/services.tf): `monolith` runs the SWE5006 image as one service on `/api/*` with database `monolith` (strangler step 0); PR 9 adds `distributed` |
+| `topology` | `none`: no ECS service, no database | `env-up.sh` (`SWE5001_TOPOLOGY`, default `monolith`; both workflows pass `distributed` unless told otherwise). The service maps are in [`runtime/services.tf`](runtime/services.tf): `distributed` runs `identity-svc` (`/api/v1/auth/*`, `/api/v1/users/*`, priority 10), `notification-svc` (`/api/v1/notifications*`, 20) and `commerce-svc` (the remaining `/api/*`, 30) with databases `identity`, `notification` and `commerce`, Service Connect `identity-svc:8589` for commerce, Google secrets on identity, Stripe secrets, the catalogue seed and scheduling on commerce ([backend ADR 0008](../../backend/docs/adr/0008-dual-deployment-topology.md), #456); `monolith`, the fallback, runs the SWE5006 image as one service on `/api/*` with database `monolith` (strangler step 0) |
 | `frontend_url` | `""` | `env-up.sh`, from the `edge` output `url`; required when services run (`FRONTEND_URL`, Google redirect URI) |
 | `image_digests` | `{}` | `env-up.sh`, from SSM `/blocbuy/swe5001/release/*` or `/candidate/*` |
 | `services_enabled` | `false`: desired count 0 | `env-up.sh` sets `true` after `db-init` has succeeded |
@@ -200,6 +200,7 @@ The SPA bucket stays empty until the first promotion run syncs the frontend; unt
 | --- | --- | --- |
 | `env-up.sh [--release\|--candidate]` | Reads the digests from SSM, applies `runtime` with services stopped, runs `db-init`, starts the services, reads the ALB DNS output and passes it to `edge` without sharing runtime state, waits for a stable service and runs [`perf/smoke/smoke.sh`](../../perf/smoke/smoke.sh) through CloudFront (up to five attempts). Re-running converges | The smoke suite passes |
 | `env-down.sh` | Destroys `runtime` (one retry, usually for the Service Connect namespace), then runs `env-status.sh` | Nothing tagged `Stack=runtime` remains |
+| `grant-admin.sh <google-email>` | Runs [`scripts/grant-dev-admin.sql`](../../scripts/grant-dev-admin.sql) once as the `db-init` task (container overrides, no Terraform change) against the `identity` database of a running `distributed` session and prints the result. The account must have signed in once and must sign in again afterwards (roles travel in the session) | The grant succeeded or already existed |
 | `env-status.sh [--expect-up]` | Lists resources tagged `Course=swe5001,Stack=runtime` and the ECS service counts. Deregistered task definitions are ignored; each EC2 and ECS ARN counts only while its own describe call still returns it, since the tagging API lists deleted resources for over an hour. AWS lookup failures stop verification instead of reporting a clean destroy | Nothing remains (or, with `--expect-up`, something does), and every lookup succeeded |
 
 ```bash
@@ -210,7 +211,7 @@ infra/swe5001/scripts/env-down.sh             # about 10-15 minutes; fails if an
 
 Set `SWE5001_TIMINGS_FILE=<path>` to record each step's duration (promotion evidence, verification plan V8). `env-up.sh` never prints the `edge` plan, because the origin diff carries `ORIGIN_SECRET` in clear; on failure it shows only Terraform's diagnostics.
 
-The same sessions run from GitHub with [`swe5001-env.yml`](../../.github/workflows/swe5001-env.yml) (next section). Before the first promotion has written any digest, push the monolith image by hand once per commit (ECR tags are immutable):
+The same sessions run from GitHub with [`swe5001-env.yml`](../../.github/workflows/swe5001-env.yml) (next section). Before the first promotion has written a digest for a service, push its image by hand once per commit (ECR tags are immutable). The monolith:
 
 ```bash
 registry=402178232802.dkr.ecr.ap-southeast-1.amazonaws.com
@@ -223,6 +224,19 @@ digest=$(aws ecr describe-images --repository-name swe5001/monolith --image-ids 
 aws ssm put-parameter --name /blocbuy/swe5001/candidate/monolith --type String --value "$digest" --overwrite
 ```
 
+The three services of `distributed` (same login; one `Dockerfile.ci`, each with its own boot JAR), then `SWE5001_TOPOLOGY=distributed env-up.sh --candidate`:
+
+```bash
+for service in identity-svc commerce-svc notification-svc; do
+  docker buildx build --platform linux/arm64 -f backend/Dockerfile.ci \
+    --build-arg "JAR=services/${service}/target/${service}.jar" \
+    -t "$registry/swe5001/${service}:$tag" --push backend
+  digest=$(aws ecr describe-images --repository-name "swe5001/${service}" --image-ids imageTag="$tag" \
+    --query 'imageDetails[0].imageDigest' --output text)
+  aws ssm put-parameter --name "/blocbuy/swe5001/candidate/${service}" --type String --value "$digest" --overwrite
+done
+```
+
 ## Workflows and the `prod` branch
 
 ECS runs only from the `prod` branch, which moves only by a `dev` → `prod` promotion PR (merge commit), once per sprint. Workflow settings and rules: [GitHub configuration plan](../../docs/swe5001/impl-github-configuration.md), sections 5 and 6.
@@ -230,9 +244,9 @@ ECS runs only from the `prod` branch, which moves only by a `dev` → `prod` pro
 | Workflow | Trigger | Does |
 | --- | --- | --- |
 | [`swe5001-release-gate.yml`](../../.github/workflows/swe5001-release-gate.yml) | PRs into `prod` | Required checks `promotion-source` (head must be this repository's `dev`), `service-images` (ARM64 image build and Trivy scan, no push) and `infra-plan` (`infra-swe5001.yml` for every stack, unfiltered) |
-| [`swe5001-deploy.yml`](../../.github/workflows/swe5001-deploy.yml) | Push to `prod` while `ENABLE_SWE5001_DEPLOY` is `true`; manual on `prod` with `force_failure` | `images` → `publish` (push the scanned images, write `/blocbuy/swe5001/candidate/*`) → `up` (`env-up.sh --candidate`) → `release` (publish the SPA, then copy to `/blocbuy/swe5001/release/*`) → `down` (`env-down.sh`, always) → `evidence` (one artifact `swe5001-promotion-<sha>`: digests, logs with the smoke output, step timings, ECS service events) |
-| [`swe5001-env.yml`](../../.github/workflows/swe5001-env.yml) | Manual on `prod` (`up`, `down`, `status`); daily 23:00 SGT | Runs the scripts above with the apply role. The schedule runs on `dev` with no AWS access and only dispatches `down` on `prod` while `ENABLE_SWE5001_NIGHTLY_DOWN` is `true` |
-| [`swe5001-service-images.yml`](../../.github/workflows/swe5001-service-images.yml) | Called by the two workflows above | Builds and scans the runtime images; only the monolith until PR 9 |
+| [`swe5001-deploy.yml`](../../.github/workflows/swe5001-deploy.yml) | Push to `prod` while `ENABLE_SWE5001_DEPLOY` is `true`; manual on `prod` with `force_failure` | `images` → `publish` (push the scanned images, write `/blocbuy/swe5001/candidate/*`) → `up` (`env-up.sh --candidate` with topology `vars.SWE5001_TOPOLOGY`, default `distributed`; set the variable to `monolith` only for the fallback) → `release` (publish the SPA, then copy to `/blocbuy/swe5001/release/*`) → `down` (`env-down.sh`, always) → `evidence` (one artifact `swe5001-promotion-<sha>`: digests, logs with the smoke output, step timings, ECS service events) |
+| [`swe5001-env.yml`](../../.github/workflows/swe5001-env.yml) | Manual on `prod` (`up`, `down`, `status`; `topology` for `up`, default `distributed`); daily 23:00 SGT | Runs the scripts above with the apply role. The schedule runs on `dev` with no AWS access and only dispatches `down` on `prod` while `ENABLE_SWE5001_NIGHTLY_DOWN` is `true` |
+| [`swe5001-service-images.yml`](../../.github/workflows/swe5001-service-images.yml) | Called by the two workflows above | Builds and scans the four runtime images (`monolith`, `identity-svc`, `commerce-svc`, `notification-svc`) from one `Dockerfile.ci`; also runs, without exporting, on PRs into `dev` that change its inputs |
 
 Runs that write Terraform state share the concurrency group `swe5001-tfstate` with `cancel-in-progress: false` and `queue: max`. Pending runs are retained up to the queue limit, so a later dispatch does not supersede a queued `down`, which can destroy runtime when it eventually executes. Check for and cancel stale queued `down` runs before starting a new manual session, and wait until no promotion is running.
 

@@ -123,6 +123,8 @@ Target groups: type `ip`, port 8589, health check `GET /api/actuator/health`, ma
 | `identity-svc` | 1 / 1 / 3 | CPU 50% |
 | `notification-svc` | 1 / 1 / 4 | Target tracking on a metric-math expression: `ApproximateNumberOfMessagesVisible` / `RunningTaskCount`, target 50 |
 
+2026-10-12 (#456, split plan C1–C3): the `distributed` map in `runtime/services.tf` implements the rules above (priorities 10/20/30, `/internal/*` blocked at 5) with desired count 1 per service and no scaling policy yet; all scaling rows, including `identity-svc`, are delivered with #457. Each service runs profiles `ec2,<service>,aws`; only `commerce-svc` sets `SPRING_FLYWAY_LOCATIONS` (adds `db/seed`, keeps `db/swe5001`), `IDENTITY_BASE_URL` and scheduling. The task roles stay empty until the events work adds SNS and SQS permissions.
+
 IAM per service (all under path `/swe5001/` with `permissions_boundary` set to the foundation output `workload_permissions_boundary_arn`): one shared **execution role** (ECR pull, CloudWatch Logs, `ssm:GetParameters` on `/blocbuy/swe5001/<service>/*` and `/blocbuy/swe5001/shared/*`) and a **task role** per service: commerce `sns:Publish` on `blocbuy-swe5001-*` topics; notification `sqs:ReceiveMessage`, `DeleteMessage`, `ChangeMessageVisibility`, `GetQueueAttributes` on its queue; identity none. All roles enable ECS Exec only if `enable_exec = true` (default false).
 
 ### 6.5 Data stores

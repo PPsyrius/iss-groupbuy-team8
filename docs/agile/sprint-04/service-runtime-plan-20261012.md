@@ -2,7 +2,7 @@
 
 Date: 2026-10-12 · Branch: `feature/microservice-c1c3-20261012` from `dev` at `45324227` (#471 merged) · Issue: #456 (Sprint 4 container #465) · Owner: @l0sgAi · Related: steps C1–C3 of the [microservice split plan](microservice-split-plan-20261012.md), [backend ADR 0008](../../../backend/docs/adr/0008-dual-deployment-topology.md), [SWE5001 AWS plan](../../swe5001/impl-aws-infrastructure.md) sections 6.3–6.5, [A3/A4 plan](service-assemblies-plan-20261012.md)
 
-> **Status (2026-10-12): draft for review. Nothing implemented yet.**
+> **Status (2026-10-12): reviewed (all §9 defaults accepted) and implemented on `feature/microservice-c1c3-20261012`. Results: [day log](log/2026-10-12.md).**
 
 ## 1. Goal and acceptance criteria
 
@@ -28,7 +28,7 @@ Non-goals: events (`BLOCBUY_EVENTS_TRANSPORT`, topic ARN, queue URL and the task
 | Images | `swe5001-service-images.yml` matrix has one entry, `monolith`, `Dockerfile.ci` copying `blocbuy-bootstrap/target/blocbuy-backend-exec.jar`; output `services: monolith` is a literal | Three entries, a JAR per entry, output from the matrix |
 | Build context | `backend/.dockerignore` excludes `**/target/` except the exec JAR | `services/*/target/<service>.jar` must be admitted, nothing else |
 | Image CI | The reusable workflow runs only from `swe5001-release-gate.yml` (PRs into `prod`) and `swe5001-deploy.yml` (push to `prod`) | A matrix change would first run at the 10-19 promotion |
-| ECR | `foundation/ecr.tf` default `images` already has `monolith`, `identity-svc`, `commerce-svc`, `notification-svc` | None (confirm the applied state in the session, §6) |
+| ECR | `foundation/ecr.tf` default `images` already has `monolith`, `identity-svc`, `commerce-svc`, `notification-svc` | None: the 2026-10-05 operator evidence in the handoff lists the four repositories |
 | Runtime | `services.tf` maps `none` and `monolith`; `variables.tf` validates `none | monolith` | `distributed` map and validation |
 | Golden path | `ecs-service` already has Service Connect (port name `http`, DNS = service name), a target group, a listener rule with the origin header and up to four paths, a circuit breaker and the read-only root with `/tmp` | None |
 | Cluster | `ecs-cluster` creates namespace `blocbuy-swe5001.local` and one execution role reading `/blocbuy/swe5001/<scope>/*` for every scope in `parameter_scopes` | None |
