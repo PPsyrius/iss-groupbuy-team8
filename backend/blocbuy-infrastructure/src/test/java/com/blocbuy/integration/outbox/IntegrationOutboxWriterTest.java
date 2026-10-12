@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.common.constant.ApiConstants;
@@ -122,12 +123,10 @@ class IntegrationOutboxWriterTest {
         when(brokenJson.writeValueAsString(any())).thenThrow(mock(JacksonException.class));
         var brokenWriter = new IntegrationOutboxWriter(outbox, recipients, brokenJson);
 
-        assertThatThrownBy(
-                        () ->
-                                brokenWriter.onTeamExpired(
-                                        new TeamExpired(dealId, UUID.randomUUID(), Instant.now())))
+        var event = new TeamExpired(dealId, UUID.randomUUID(), Instant.now());
+        assertThatThrownBy(() -> brokenWriter.onTeamExpired(event))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Could not serialize outbox event TeamExpired");
-        org.mockito.Mockito.verifyNoInteractions(outbox);
+        verifyNoInteractions(outbox);
     }
 }

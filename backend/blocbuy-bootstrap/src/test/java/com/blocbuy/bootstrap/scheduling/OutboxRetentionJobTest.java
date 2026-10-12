@@ -5,7 +5,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.integration.outbox.OutboxMapper;
@@ -34,8 +36,7 @@ class OutboxRetentionJobTest {
         job.run();
 
         ArgumentCaptor<Instant> cutoff = ArgumentCaptor.forClass(Instant.class);
-        verify(outbox, org.mockito.Mockito.times(2))
-                .deletePublishedBefore(cutoff.capture(), eq(500));
+        verify(outbox, times(2)).deletePublishedBefore(cutoff.capture(), eq(500));
         assertThat(Duration.between(cutoff.getAllValues().get(0), Instant.now()))
                 .isBetween(Duration.ofDays(7).minusSeconds(2), Duration.ofDays(7).plusSeconds(2));
         assertThat(cutoff.getAllValues().get(1)).isEqualTo(cutoff.getAllValues().get(0));
@@ -53,7 +54,7 @@ class OutboxRetentionJobTest {
 
         job.run();
 
-        org.mockito.Mockito.verifyNoInteractions(outbox);
+        verifyNoInteractions(outbox);
     }
 
     @Test
