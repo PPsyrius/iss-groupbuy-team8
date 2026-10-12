@@ -6,8 +6,8 @@ import static org.mockito.Mockito.mockStatic;
 import com.blocbuy.catalog.persistence.BizProductMapper;
 import com.blocbuy.catalog.web.ProductController;
 import com.blocbuy.common.config.MyBatisConfig;
+import com.blocbuy.common.config.SessionStpInterface;
 import com.blocbuy.identity.persistence.SysUserMapper;
-import com.blocbuy.identity.repository.RoleRepository;
 import com.blocbuy.identity.service.UserAppService;
 import com.blocbuy.identity.web.AuthController;
 import com.blocbuy.notification.web.NotificationController;
@@ -56,11 +56,6 @@ class CommerceServiceApplicationIT {
     }
 
     /**
-     * Not provided by this assembly until #467 (session roles); delete this mock when that lands.
-     */
-    @MockitoBean private RoleRepository roleRepository;
-
-    /**
      * Not provided by this assembly until #468 (remote identity check); delete this mock when that
      * lands.
      */
@@ -77,6 +72,7 @@ class CommerceServiceApplicationIT {
         assertThat(context.getBeanNamesForType(SysUserMapper.class)).isEmpty();
         assertThat(context.getBeanNamesForType(NotificationController.class)).isEmpty();
         assertThat(context.getBeanNamesForType(MyBatisConfig.class)).isEmpty();
+        assertThat(context.getBeanNamesForType(SessionStpInterface.class)).hasSize(1);
         assertThat(context.getBean(TopologyProperties.class).topology())
                 .isEqualTo(TopologyProperties.Mode.DISTRIBUTED);
     }
