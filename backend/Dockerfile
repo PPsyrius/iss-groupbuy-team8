@@ -1,6 +1,6 @@
 # BlocBuy backend image. Context: backend/.
 #
-# The executable Spring Boot JAR is built, tested, and verified by the
+# The executable Spring Boot JAR (blocbuy-backend-exec.jar) is built, tested, and verified by the
 # ci-backend build-quality job before this image is created.
 # Docker packages that exact verified artifact instead of rebuilding source.
 #
@@ -19,7 +19,7 @@ RUN rm -f /usr/bin/pebble \
 
 # Produced by `./mvnw verify` in build-quality and restored into the Docker
 # build context by the docker job.
-COPY blocbuy-bootstrap/target/blocbuy-backend.jar app.jar
+COPY blocbuy-bootstrap/target/blocbuy-backend-exec.jar app.jar
 
 USER blocbuy
 

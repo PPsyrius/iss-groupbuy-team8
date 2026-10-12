@@ -1,10 +1,12 @@
 target/
 **/target/
 
-# Allow only the verified application JAR into the Docker build context.
+# Allow only the verified executable JAR into the Docker build context. The plain
+# blocbuy-backend.jar (library for services/*-svc) stays out, so a Dockerfile that
+# still copies it fails with "not found" instead of shipping a non-runnable image.
 !blocbuy-bootstrap/target/
 blocbuy-bootstrap/target/*
-!blocbuy-bootstrap/target/blocbuy-backend.jar
+!blocbuy-bootstrap/target/blocbuy-backend-exec.jar
 
 docs/
 *.md
@@ -12,7 +14,3 @@ docs/
 .env.*
 docker-compose.yaml
 .mvn/wrapper/maven-wrapper.jar.sha512
-
-# Dockerfile.ci (CI pipeline) copies the prebuilt boot jar downloaded from the
-# build-quality job — re-include it despite the target/ exclusions above.
-!blocbuy-bootstrap/target/blocbuy-bootstrap-*.jar

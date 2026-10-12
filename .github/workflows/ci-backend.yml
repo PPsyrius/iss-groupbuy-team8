@@ -20,6 +20,7 @@ on:
       - ".github/workflows/ci-backend.yml"
       - ".github/actions/trivy-image-db/**"
       - ".github/scripts/validate-trivy-db.py"
+      - ".github/scripts/assert-boot-jar.sh"
   pull_request:
     # labeled/unlabeled: applying or removing `contract-change-approved` must
     # re-run the contract gate — the label is only visible in a fresh event.
@@ -61,6 +62,7 @@ jobs:
               - '.github/workflows/ci-backend.yml'
               - '.github/actions/trivy-image-db/**'
               - '.github/scripts/validate-trivy-db.py'
+              - '.github/scripts/assert-boot-jar.sh'
             contracts:
               - 'backend/**'
               - 'contracts/**'
@@ -155,6 +157,14 @@ jobs:
             backend/**/target/failsafe-reports/**
           if-no-files-found: error
 
+      # blocbuy-backend.jar is the plain library JAR (exec classifier, #455);
+      # only the executable -exec JAR may be uploaded and packaged.
+      - name: Assert executable backend JAR
+        if: >-
+          needs.detect-changes.outputs.backend == 'true' ||
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+        run: ../.github/scripts/assert-boot-jar.sh blocbuy-bootstrap/target/blocbuy-backend-exec.jar
+
       # Docker packages this exact verified binary instead of rebuilding the
       # application from source.
       - name: Upload verified backend application
@@ -165,7 +175,7 @@ jobs:
         with:
           name: backend-application
           retention-days: 1
-          path: backend/blocbuy-bootstrap/target/blocbuy-backend.jar
+          path: backend/blocbuy-bootstrap/target/blocbuy-backend-exec.jar
           if-no-files-found: error
 
       # Export OpenAPI from the verified JAR rather than rebuilding.
@@ -175,7 +185,7 @@ jobs:
           (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
         run: |
           set -Eeuo pipefail
-          jar='blocbuy-bootstrap/target/blocbuy-backend.jar'
+          jar='blocbuy-bootstrap/target/blocbuy-backend-exec.jar'
           test -s "$jar"
           java -jar "$jar" --spring.profiles.active=openapi-export >"${RUNNER_TEMP}/openapi-app.log" 2>&1 &
           app_pid=$!
@@ -442,7 +452,7 @@ jobs:
         if: >-
           needs.detect-changes.outputs.backend == 'true' ||
           (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
-        run: test -f blocbuy-bootstrap/target/blocbuy-backend.jar
+        run: ../.github/scripts/assert-boot-jar.sh blocbuy-bootstrap/target/blocbuy-backend-exec.jar
 
       - name: Set up Docker Buildx
         if: >-
@@ -625,11 +635,14 @@ jobs:
           -Dspotbugs.skip=true
           -Djacoco.skip=true
 
+      - name: Assert executable backend JAR
+        run: ../.github/scripts/assert-boot-jar.sh blocbuy-bootstrap/target/blocbuy-backend-exec.jar
+
       - name: Upload packaged backend application
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: backend-application-dev-${{ github.sha }}
-          path: backend/blocbuy-bootstrap/target/blocbuy-backend.jar
+          path: backend/blocbuy-bootstrap/target/blocbuy-backend-exec.jar
           retention-days: 1
           if-no-files-found: error
 
