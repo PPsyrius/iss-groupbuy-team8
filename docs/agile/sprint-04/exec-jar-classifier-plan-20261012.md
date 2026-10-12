@@ -2,7 +2,7 @@
 
 Date: 2026-10-12 · Branch: `feature/microservice-20261011` · Issue: #455 (Sprint 4 container #465, task P2) · Owner: los gai · Related: step A1 of the [microservice split plan](microservice-split-plan-20261012.md), [Sprint 4 plan §4 item 3, §8, §9](plan.md), [SWE5001 handoff](../../swe5001/HANDOFF.md), [SWE5001 backend plan WP-B2 and risk table](../../swe5001/impl-backend-architecture.md), finding F1 in the same document
 
-> **Status (2026-10-12): draft for review. Nothing implemented yet.**
+> **Status (2026-10-12): implemented as planned on `feature/microservice-20261011` with the default answers to §9 (keep `blocbuy-backend-exec.jar`; a separate guard script added to the `ci-backend.yml` path filters; stale `.dockerignore` exception dropped). V1–V5 run locally; V6 is the PR CI and V7 the `dev` deploy after merge. Results: [day log 2026-10-12](log/2026-10-12.md).**
 
 ## 1. Goal and acceptance criteria
 

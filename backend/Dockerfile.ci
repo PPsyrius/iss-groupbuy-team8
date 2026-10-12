@@ -13,9 +13,10 @@ RUN rm -f /usr/bin/pebble \
  && useradd --system --gid blocbuy blocbuy
 USER blocbuy
 
-# finalName is blocbuy-backend (blocbuy-bootstrap/pom.xml) — the same jar the
-# backend-application artifact carries and Dockerfile copies.
-COPY blocbuy-bootstrap/target/blocbuy-backend.jar app.jar
+# The exec-classifier boot jar (blocbuy-bootstrap/pom.xml) — the same jar the
+# backend-application artifact carries and Dockerfile copies. The plain
+# blocbuy-backend.jar is a library and is kept out of the context (.dockerignore).
+COPY blocbuy-bootstrap/target/blocbuy-backend-exec.jar app.jar
 
 # The root filesystem is read-only in both deployments; Tomcat and the JVM write only to
 # /tmp. Compose mounts a tmpfs there; an ECS Fargate scratch volume copies the

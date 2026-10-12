@@ -37,7 +37,7 @@ jobs:
         include:
           - service: monolith
             dockerfile: Dockerfile.ci
-            jar: blocbuy-bootstrap/target/blocbuy-backend.jar
+            jar: blocbuy-bootstrap/target/blocbuy-backend-exec.jar
     defaults:
       run:
         working-directory: backend
@@ -59,7 +59,7 @@ jobs:
           JAR: ${{ matrix.jar }}
         run: |
           ./mvnw -B -q -DskipTests package
-          test -f "$JAR"
+          ../.github/scripts/assert-boot-jar.sh "$JAR"
 
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
         with:

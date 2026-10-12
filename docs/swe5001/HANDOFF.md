@@ -40,7 +40,7 @@ Steps and dependencies: [split execution plan](../agile/sprint-04/microservice-s
 
 | Step | Content | Issue | Owner | Due | State |
 | --- | --- | --- | --- | --- | --- |
-| A1 | `exec` classifier; consumers on `blocbuy-backend-exec.jar`; boot-JAR guard | #455 | @l0sgAi | 10-12 | Plan for review: [exec-jar-classifier plan](../agile/sprint-04/exec-jar-classifier-plan-20261012.md) |
+| A1 | `exec` classifier; consumers on `blocbuy-backend-exec.jar`; boot-JAR guard | #455 | @l0sgAi | 10-12 | In review: implemented per the [exec-jar-classifier plan](../agile/sprint-04/exec-jar-classifier-plan-20261012.md), local V1–V5 green ([log](../agile/sprint-04/log/2026-10-12.md)); `dev` deploy check after merge pending |
 | A2 | ADR 0008; ArchUnit guardrails; `RoleCode` to a shared package | #455 | @l0sgAi | 10-13 | Not started |
 | A3 | Three service modules; `MyBatisConfig` for the monolith only; thin starter | #455 | @l0sgAi | 10-14 | Not started |
 | A4 | Per-service roles and grants (service profiles only) | #455 | @l0sgAi | 10-14 | Not started |

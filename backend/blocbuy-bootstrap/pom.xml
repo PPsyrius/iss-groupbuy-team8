@@ -99,11 +99,14 @@
     <finalName>blocbuy-backend</finalName>
 
     <plugins>
+      <!-- WP-B2: the plain main artifact (blocbuy-backend.jar) is a library for services/*-svc;
+           every image runs the executable blocbuy-backend-exec.jar. -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
           <skip>false</skip>
+          <classifier>exec</classifier>
           <excludes>
             <exclude>
               <groupId>org.projectlombok</groupId>

@@ -24,7 +24,7 @@ Package the existing code as three services (`identity-svc`, `commerce-svc`, `no
 
 | # | Finding (at `c66bb40`) | Consequence |
 | --- | --- | --- |
-| F1 | `blocbuy-bootstrap` is a repackaged Spring Boot jar (`finalName` `blocbuy-backend`) that also holds `db/migration`, `application*.yml`, Stripe configuration (`config/Stripe*`, `PaymentIntegrationConfiguration`), scheduling (`scheduling/*`) and `TraceIdFilter` | Service modules cannot depend on it as a library until the repackaged jar gets a classifier (WP-B2) |
+| F1 | `blocbuy-bootstrap` is a repackaged Spring Boot jar (`finalName` `blocbuy-backend`) that also holds `db/migration`, `application*.yml`, Stripe configuration (`config/Stripe*`, `PaymentIntegrationConfiguration`), scheduling (`scheduling/*`) and `TraceIdFilter` | Service modules cannot depend on it as a library until the repackaged jar gets a classifier (WP-B2). **Resolved 2026-10-12 (#455 step A1):** the main artifact is now the plain `blocbuy-backend.jar` and the executable is `blocbuy-backend-exec.jar` |
 | F2 | `StpInterfaceImpl` (`blocbuy-infrastructure`, `com.blocbuy.common.config`) reads roles and permissions from `RoleRepository` on every request | Outside `identity-svc` there is no identity database, so roles must come from the shared Sa-Token session (WP-B4) |
 | F3 | `MyBatisConfig` uses `@MapperScan(basePackages = "com.blocbuy")` | Every service would register every mapper. Scope it per assembly (WP-B2) |
 | F4 | Outside identity, `UserAppService` is called only through `requireActive` (catalog `AdminListingAppServiceImpl`, `TeamPriceAppServiceImpl`; order `PurchaseIntentAppService`, `OrderFulfilmentAdapter`). `currentUser` is called only by identity's `AuthController` | The remote adapter needs one real method; `currentUser` can refuse (WP-B5) |
@@ -107,6 +107,7 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
 
 - `blocbuy-bootstrap/pom.xml`: set `spring-boot-maven-plugin` `<classifier>exec</classifier>`; the fat jar becomes `blocbuy-backend-exec.jar`.
 - Update `backend/Dockerfile` and `backend/Dockerfile.ci` `COPY` to the `-exec` jar. **This touches the SWE5006 image build: coordinate the merge and confirm the EC2 deploy after merge.**
+- **Done 2026-10-12 (#455 step A1, [plan](../agile/sprint-04/exec-jar-classifier-plan-20261012.md)):** classifier set; every consumer (both backend Dockerfiles, `fullstack-localhost/backend.Dockerfile`, `ci-backend.yml`, `swe5001-service-images.yml`) uses the `-exec` jar; `backend/.dockerignore` admits only that jar and `.github/scripts/assert-boot-jar.sh` rejects a non-executable jar before upload. The `dev` deploy check after merge is still owed.
 - Make `MyBatisConfig` `@ConditionalOnProperty(name = "blocbuy.topology", havingValue = "monolith", matchIfMissing = true)`.
 - Add `services/*-svc` modules with entry classes, `application-<service>.yml`, per-service `@MapperScan`, and a context-load test per service against Testcontainers PostgreSQL and Redis.
 - One Dockerfile with `ARG MODULE` for all three services (see the GitHub plan for the build matrix).

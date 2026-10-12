@@ -25,7 +25,7 @@ WORKDIR /app
 RUN rm -f /usr/bin/pebble \
  && groupadd --system blocbuy \
  && useradd --system --gid blocbuy blocbuy
-COPY --from=build /build/blocbuy-bootstrap/target/blocbuy-backend.jar app.jar
+COPY --from=build /build/blocbuy-bootstrap/target/blocbuy-backend-exec.jar app.jar
 USER blocbuy
 EXPOSE 8589
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"
