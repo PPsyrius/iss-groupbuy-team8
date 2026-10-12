@@ -13,6 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.identity.repository.RoleRepository;
+import com.blocbuy.identity.service.LoginAuthorizationService;
+import com.blocbuy.identity.service.LoginAuthorizationService.Snapshot;
 import com.blocbuy.identity.service.OAuthLoginAppService;
 import com.blocbuy.identity.service.OAuthLoginAppService.OAuthLoginResult;
 import com.blocbuy.payment.exception.PaymentErrorCode;
@@ -57,6 +59,7 @@ class PaymentBrowserControllerTest {
     @MockitoBean private StripeFeatureSwitch feature;
     @MockitoBean private OAuthLoginAppService oauth;
     @MockitoBean private RoleRepository roles;
+    @MockitoBean private LoginAuthorizationService authorization;
 
     @Test
     void enabledCapabilitiesUseTheSameSwitchAsTheBrowserEndpoints() throws Exception {
@@ -68,6 +71,8 @@ class PaymentBrowserControllerTest {
     }
 
     private Cookie login() throws Exception {
+        when(authorization.snapshot(USER))
+                .thenReturn(new Snapshot(java.util.List.of(), java.util.List.of()));
         when(oauth.loginWithGoogle(any(), any(), any()))
                 .thenReturn(new OAuthLoginResult(USER, "Local buyer", null));
         var result =

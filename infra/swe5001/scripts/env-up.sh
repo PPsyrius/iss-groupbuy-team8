@@ -7,8 +7,10 @@
 #   --candidate  digests from /blocbuy/swe5001/candidate/<service> (first promotion)
 #
 # Environment: AWS credentials for account 402178232802, AWS_REGION=ap-southeast-1,
-# SWE5001_TF_STATE_BUCKET; optional SWE5001_TOPOLOGY (monolith, default; or none) and
-# SWE5001_TIMINGS_FILE. The edge stack must already exist (created once by an operator).
+# SWE5001_TF_STATE_BUCKET; optional SWE5001_TOPOLOGY (monolith, default; distributed for
+# identity-svc, commerce-svc and notification-svc; or none) and SWE5001_TIMINGS_FILE. The
+# workflows pass the topology explicitly. The edge stack must already exist (created once
+# by an operator).
 # Exit status 0 when the smoke suite passes.
 
 # shellcheck source=./lib.sh source-path=SCRIPTDIR

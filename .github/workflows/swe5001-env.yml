@@ -16,6 +16,11 @@ on:
         type: choice
         options: [release, candidate]
         default: release
+      topology:
+        description: Service map for up (infra/swe5001/runtime/services.tf); monolith is the fallback
+        type: choice
+        options: [distributed, monolith, none]
+        default: distributed
   schedule:
     - cron: "0 15 * * *" # 23:00 SGT
 
@@ -98,6 +103,7 @@ jobs:
         env:
           ACTION: ${{ inputs.action }}
           DIGESTS: ${{ inputs.digests }}
+          SWE5001_TOPOLOGY: ${{ inputs.topology }}
           SWE5001_TIMINGS_FILE: ${{ runner.temp }}/timings.txt
         run: |
           set -euo pipefail
@@ -114,11 +120,13 @@ jobs:
         env:
           ACTION: ${{ inputs.action }}
           FRONTEND_URL: ${{ vars.SWE5001_FRONTEND_URL }}
+          TOPOLOGY: ${{ inputs.topology }}
         run: |
           {
             echo "### SWE5001 ${ACTION}"
             if [ "$ACTION" = up ]; then
               echo "- URL: ${FRONTEND_URL}"
+              echo "- Topology: ${TOPOLOGY}"
               echo "- The nightly down run destroys it at 23:00 SGT; run \`down\` when the session ends."
             fi
             if [ -s "$RUNNER_TEMP/timings.txt" ]; then

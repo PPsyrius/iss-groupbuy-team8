@@ -132,6 +132,12 @@ variable "desired_count" {
   default     = 0
 }
 
+variable "after_services" {
+  description = "Service Connect endpoints this service calls; the service is created only after them, because a task resolves only endpoints that existed when its deployment was created"
+  type        = list(string)
+  default     = []
+}
+
 variable "enable_exec" {
   description = "Allow ECS Exec into the tasks"
   type        = bool

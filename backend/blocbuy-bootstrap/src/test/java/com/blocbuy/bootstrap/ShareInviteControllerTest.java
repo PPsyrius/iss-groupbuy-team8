@@ -16,6 +16,8 @@ import com.blocbuy.groupbuy.exception.GroupbuyErrorCode;
 import com.blocbuy.groupbuy.query.ShareInviteView;
 import com.blocbuy.groupbuy.service.ShareInviteAppService;
 import com.blocbuy.identity.repository.RoleRepository;
+import com.blocbuy.identity.service.LoginAuthorizationService;
+import com.blocbuy.identity.service.LoginAuthorizationService.Snapshot;
 import com.blocbuy.identity.service.OAuthLoginAppService;
 import com.blocbuy.identity.service.OAuthLoginAppService.OAuthLoginResult;
 import jakarta.servlet.http.Cookie;
@@ -54,8 +56,11 @@ class ShareInviteControllerTest {
     @MockitoBean private ShareInviteAppService invites;
     @MockitoBean private OAuthLoginAppService oauth;
     @MockitoBean private RoleRepository roles;
+    @MockitoBean private LoginAuthorizationService authorization;
 
     private Cookie login() throws Exception {
+        when(authorization.snapshot(USER))
+                .thenReturn(new Snapshot(java.util.List.of(), java.util.List.of()));
         when(oauth.loginWithGoogle(any(), any(), any()))
                 .thenReturn(new OAuthLoginResult(USER, "Local buyer", null));
         var result =
