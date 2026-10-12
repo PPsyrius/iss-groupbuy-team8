@@ -180,8 +180,7 @@ class AuthControllerTest {
                         .getResponse()
                         .getCookie("blocbuy-token");
         assertThat(second.getValue()).isNotEqualTo(first.getValue());
-        assertThat(StpUtil.getLoginIdByToken(first.getValue()).toString())
-                .isEqualTo(user.toString());
+        assertThat(StpUtil.getLoginIdByToken(first.getValue())).hasToString(user.toString());
         assertThat(authorizationSession(user).get(SessionRbac.SNAPSHOT))
                 .isEqualTo(Map.of("roles", List.of("buyer"), "permissions", List.of()));
     }

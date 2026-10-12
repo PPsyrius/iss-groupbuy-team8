@@ -22,7 +22,8 @@ class LoginAuthorizationServiceTest {
         var snapshot = service.snapshot(user);
         assertThat(snapshot.roles()).containsExactly("admin");
         assertThat(snapshot.permissions()).containsExactly("payment:read");
-        assertThatThrownBy(() -> snapshot.roles().add("buyer"))
+        var snapshotRoles = snapshot.roles();
+        assertThatThrownBy(() -> snapshotRoles.add("buyer"))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 }
