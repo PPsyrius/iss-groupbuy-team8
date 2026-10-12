@@ -59,16 +59,18 @@ exit_code=$(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "$task_arn" \
   --query 'tasks[0].containers[0].exitCode' --output text)
 
 # awslogs stream: <prefix>/<container>/<task id>. CloudWatch Logs can trail the stopped
-# task by a few seconds, so poll briefly; the output is informational, the exit code decides.
+# task by a few seconds and deliver the output in parts (BEGIN before the result row), so
+# poll until psql's last line (COMMIT, ROLLBACK or an ERROR) has arrived; the output is
+# informational, the exit code decides.
 messages=""
 for attempt in 1 2 3 4 5; do
   messages=$(aws logs get-log-events --log-group-name /blocbuy/swe5001/db-init \
     --log-stream-name "db-init/db-init/${task_arn##*/}" --start-from-head \
     --query 'events[].message' --output text 2> /dev/null || true)
-  if [ -n "$messages" ] && [ "$messages" != None ]; then
-    break
-  fi
-  messages=""
+  [ "$messages" != None ] || messages=""
+  case "$messages" in
+    *COMMIT* | *ROLLBACK* | *ERROR*) break ;;
+  esac
   if [ "$attempt" -lt 5 ]; then sleep 3; fi
 done
 if [ -n "$messages" ]; then

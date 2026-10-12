@@ -29,11 +29,11 @@ Non-goals: events (`BLOCBUY_EVENTS_TRANSPORT`, topic ARN, queue URL and the task
 | Build context | `backend/.dockerignore` excludes `**/target/` except the exec JAR | `services/*/target/<service>.jar` must be admitted, nothing else |
 | Image CI | The reusable workflow runs only from `swe5001-release-gate.yml` (PRs into `prod`) and `swe5001-deploy.yml` (push to `prod`) | A matrix change would first run at the 10-19 promotion |
 | ECR | `foundation/ecr.tf` default `images` already has `monolith`, `identity-svc`, `commerce-svc`, `notification-svc` | None: the 2026-10-05 operator evidence in the handoff lists the four repositories |
-| Runtime | `services.tf` maps `none` and `monolith`; `variables.tf` validates `none | monolith` | `distributed` map and validation |
+| Runtime | `services.tf` maps `none` and `monolith`; `variables.tf` validates `none \| monolith` | `distributed` map and validation |
 | Golden path | `ecs-service` already has Service Connect (port name `http`, DNS = service name), a target group, a listener rule with the origin header and up to four paths, a circuit breaker and the read-only root with `/tmp` | None |
 | Cluster | `ecs-cluster` creates namespace `blocbuy-swe5001.local` and one execution role reading `/blocbuy/swe5001/<scope>/*` for every scope in `parameter_scopes` | None |
 | Data stores | `rds-postgres` creates an owner and app password per entry in `local.databases`; `db-init` creates every database in `DATABASES` | None: three map entries give three databases automatically |
-| Scripts | `services_for_topology` knows `none | monolith`; `env-up.sh` defaults to `monolith`; `swe5001-env.yml` has no topology input; `swe5001-deploy.yml` sets none | `distributed` everywhere |
+| Scripts | `services_for_topology` knows `none \| monolith`; `env-up.sh` defaults to `monolith`; `swe5001-env.yml` has no topology input; `swe5001-deploy.yml` sets none | `distributed` everywhere |
 | Smoke | Health and products (commerce), `auth/me` 401 (identity), `/internal/...` not served | Covers identity and commerce; notification has no endpoint until #215 (§3.6) |
 | Seed | `db/seed/R__demo_catalog_seed.sql`: 10 products, 6 deals, policies, no users, no team terms | Commerce only; START needs team terms |
 | Admin grant | `scripts/grant-dev-admin.sql` (psql, idempotent), run by hand on `dev` through an SSM tunnel | No path into the private RDS on ECS |
