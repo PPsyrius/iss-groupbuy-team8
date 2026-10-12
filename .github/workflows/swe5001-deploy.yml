@@ -6,6 +6,9 @@
 # Each promotion creates runtime from zero, so env-up.sh --candidate is the deployment:
 # the services start on the candidate digests behind the ECS circuit breaker and the
 # smoke suite gates the release. Rollback drills run in manual sessions (swe5001-env.yml).
+#
+# Topology: distributed (identity-svc, commerce-svc, notification-svc; backend ADR 0008)
+# unless the repository variable SWE5001_TOPOLOGY says otherwise; monolith is the fallback.
 name: swe5001-deploy
 
 on:
@@ -124,6 +127,7 @@ jobs:
     env:
       AWS_REGION: ${{ vars.AWS_REGION }}
       SWE5001_TF_STATE_BUCKET: ${{ vars.SWE5001_TF_STATE_BUCKET }}
+      SWE5001_TOPOLOGY: ${{ vars.SWE5001_TOPOLOGY || 'distributed' }}
       TF_IN_AUTOMATION: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

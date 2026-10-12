@@ -65,13 +65,13 @@ variable "valkey_version" {
 }
 
 variable "topology" {
-  description = "Service map from services.tf: none (network and data stores only) or monolith (strangler step 0)"
+  description = "Service map from services.tf: none (network and data stores only), monolith (strangler step 0, fallback) or distributed (identity-svc, commerce-svc, notification-svc)"
   type        = string
   default     = "none"
 
   validation {
-    condition     = contains(["none", "monolith"], var.topology)
-    error_message = "topology must be none or monolith."
+    condition     = contains(["none", "monolith", "distributed"], var.topology)
+    error_message = "topology must be none, monolith or distributed."
   }
 }
 
@@ -104,7 +104,7 @@ variable "image_digests" {
 }
 
 variable "services_enabled" {
-  description = "false: services exist with desired count 0 (before db-init); true: desired count 1"
+  description = "false: services exist with desired count 0 (before db-init); true: desired count 1 each"
   type        = bool
   default     = false
 }

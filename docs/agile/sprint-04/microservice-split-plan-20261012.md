@@ -31,7 +31,7 @@ Every PR stays below about 1,500 changed lines and is reviewed within one workin
 | A1 | `exec` classifier on the bootstrap JAR; all consumers moved to `blocbuy-backend-exec.jar`; `assert-boot-jar.sh` guard | #455 | — | 10-12 | [plan](exec-jar-classifier-plan-20261012.md) |
 | A2 | Backend ADR 0008 (dual topology, three services, session roles, fail-closed identity call); ArchUnit rules of WP-B1; `RoleCode` moved to a shared package; `/internal/**` absent from the contract | #455 | A1 | 10-13 | WP-B0, WP-B1 |
 | A3 | `services/identity-svc`, `commerce-svc`, `notification-svc` modules: entry class, `application-<svc>.yml` with per-service component scan and `@MapperScan`, context-load test each; `MyBatisConfig` only for `topology=monolith`; thin starter pieces (`TopologyProperties`, `application-aws.yml` with the Redis SSL switch and JSON logs, trace propagation) | #455 | A1 | 10-14 | WP-B2, WP-B3 |
-| A4 | Per-service runtime roles and `R__swe5001_grants.sql`, loaded only by service profiles; ITs: commerce denied on `sys_user`, notification denied on a commerce table, monolith does not load the grants | #455 | A3 | 10-14 | WP-B8 |
+| A4 | Per-service runtime roles and grants, loaded only by service profiles (an `afterMigrate` callback, not the `R__swe5001_grants.sql` first planned; ADR 0008 amendment); ITs: commerce denied on `sys_user`, notification denied on a commerce table, monolith does not load the grants | #455 | A3 | 10-14 | WP-B8 |
 
 ### Track B — identity outside its service (parallel from day 1)
 

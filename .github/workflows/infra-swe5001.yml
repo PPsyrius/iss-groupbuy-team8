@@ -90,6 +90,9 @@ jobs:
       - name: Verify teardown status fails closed
         run: bash infra/swe5001/scripts/test-env-status.sh
 
+      - name: Verify topology service names
+        run: bash infra/swe5001/scripts/test-lib.sh
+
   plan:
     name: plan (${{ matrix.stack }})
     needs: static

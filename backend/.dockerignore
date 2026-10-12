@@ -8,6 +8,11 @@ target/
 blocbuy-bootstrap/target/*
 !blocbuy-bootstrap/target/blocbuy-backend-exec.jar
 
+# SWE5001 service images (Dockerfile.ci with JAR=..., #456): only each service's boot JAR.
+!services/*/target/
+services/*/target/*
+!services/*/target/*-svc.jar
+
 docs/
 *.md
 .env

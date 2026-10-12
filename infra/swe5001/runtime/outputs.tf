@@ -10,12 +10,12 @@ output "cluster_name" {
 
 output "service_names" {
   description = "ECS service names"
-  value       = [for s in module.service : s.service_name]
+  value       = [for s in merge(module.service, module.client_service) : s.service_name]
 }
 
 output "task_definition_families" {
   description = "Task definition family per service; the deploy workflow registers new revisions in them"
-  value       = { for k, s in module.service : k => s.task_definition_family }
+  value       = { for k, s in merge(module.service, module.client_service) : k => s.task_definition_family }
 }
 
 output "db_init_task_definition" {

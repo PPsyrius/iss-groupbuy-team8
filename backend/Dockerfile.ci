@@ -16,7 +16,10 @@ USER blocbuy
 # The exec-classifier boot jar (blocbuy-bootstrap/pom.xml) — the same jar the
 # backend-application artifact carries and Dockerfile copies. The plain
 # blocbuy-backend.jar is a library and is kept out of the context (.dockerignore).
-COPY blocbuy-bootstrap/target/blocbuy-backend-exec.jar app.jar
+# SWE5001 service images pass JAR=services/<service>/target/<service>.jar (#456, C1);
+# every other caller keeps the default and gets the monolith image.
+ARG JAR=blocbuy-bootstrap/target/blocbuy-backend-exec.jar
+COPY ${JAR} app.jar
 
 # The root filesystem is read-only in both deployments; Tomcat and the JVM write only to
 # /tmp. Compose mounts a tmpfs there; an ECS Fargate scratch volume copies the
