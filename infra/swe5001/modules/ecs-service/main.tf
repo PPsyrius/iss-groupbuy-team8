@@ -177,6 +177,12 @@ resource "aws_lb_listener_rule" "this" {
   }
 }
 
+# Orders creation after the services in var.after_services (their names are module outputs
+# of the caller), so their Service Connect endpoints exist in this service's first deployment.
+resource "terraform_data" "after" {
+  input = var.after_services
+}
+
 resource "aws_ecs_service" "this" {
   name                              = var.name
   cluster                           = var.cluster_name
@@ -234,5 +240,5 @@ resource "aws_ecs_service" "this" {
   }
 
   # The target group must be attached to the listener before the service registers.
-  depends_on = [aws_lb_listener_rule.this]
+  depends_on = [aws_lb_listener_rule.this, terraform_data.after]
 }

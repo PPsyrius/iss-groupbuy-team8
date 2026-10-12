@@ -1,7 +1,8 @@
 # Service maps per topology (`var.topology`). The ecs-service golden path supplies DB_*,
 # SPRING_FLYWAY_*, REDIS_* and FRONTEND_URL from the service's database and the shared
 # cache (ecs.tf); entries here add the service's own settings. `secrets` maps an
-# environment variable to a parameter name under /blocbuy/swe5001/.
+# environment variable to a parameter name under /blocbuy/swe5001/. `connects_to` lists the
+# Service Connect endpoints a service calls; ecs.tf creates those services first.
 #
 #   none         network, ALB, cluster and data stores only
 #   monolith     strangler step 0: the SWE5006 monolith image as one ECS service on /api/*
@@ -20,6 +21,7 @@ locals {
         listener_priority = 100
         path_patterns     = ["/api/*"]
         task_policy_json  = null
+        connects_to       = []
 
         environment = {
           # Same profile as the EC2 host: CloudFront client address header, env-only secrets.
@@ -53,6 +55,7 @@ locals {
         listener_priority = 10
         path_patterns     = ["/api/v1/auth/*", "/api/v1/users/*"]
         task_policy_json  = null
+        connects_to       = []
 
         environment = {
           SPRING_PROFILES_ACTIVE     = "ec2,identity,aws"
@@ -72,6 +75,7 @@ locals {
         listener_priority = 20
         path_patterns     = ["/api/v1/notifications*"]
         task_policy_json  = null
+        connects_to       = []
 
         environment = {
           SPRING_PROFILES_ACTIVE     = "ec2,notification,aws"
@@ -88,6 +92,7 @@ locals {
         listener_priority = 30
         path_patterns     = ["/api/*"]
         task_policy_json  = null
+        connects_to       = ["identity-svc"]
 
         environment = {
           SPRING_PROFILES_ACTIVE = "ec2,commerce,aws"

@@ -46,6 +46,20 @@ mock_provider "aws" {
     }
   }
 
+  override_data {
+    target = module.client_service.data.aws_region.current
+    values = {
+      name = "ap-southeast-1"
+    }
+  }
+
+  override_data {
+    target = module.client_service.data.aws_caller_identity.current
+    values = {
+      account_id = "402178232802"
+    }
+  }
+
   # Mocked policy documents return random strings, which the IAM resources reject.
   mock_data "aws_iam_policy_document" {
     defaults = {
@@ -64,7 +78,7 @@ run "topology_none" {
   command = plan
 
   assert {
-    condition     = length(module.service) == 0 && length(local.databases) == 0
+    condition     = length(module.service) == 0 && length(module.client_service) == 0 && length(local.databases) == 0
     error_message = "Topology none plans no service and no database."
   }
 
@@ -169,8 +183,13 @@ run "distributed_topology" {
   }
 
   assert {
-    condition     = toset(keys(module.service)) == toset(["identity-svc", "commerce-svc", "notification-svc"])
-    error_message = "The distributed topology plans the three services of backend ADR 0008."
+    condition     = toset(keys(module.service)) == toset(["identity-svc", "notification-svc"]) && toset(keys(module.client_service)) == toset(["commerce-svc"])
+    error_message = "The distributed topology plans the three services of backend ADR 0008; commerce-svc calls identity-svc, so it is a client created after it."
+  }
+
+  assert {
+    condition     = alltrue([for name, s in local.clients : length(s.connects_to) > 0 && alltrue([for target in s.connects_to : contains(keys(local.servers), target)])]) && local.clients["commerce-svc"].connects_to == ["identity-svc"]
+    error_message = "A client may only call services of the first module call, so their Service Connect endpoints exist before its first deployment."
   }
 
   assert {
