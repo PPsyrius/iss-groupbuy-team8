@@ -140,7 +140,8 @@ jobs:
             backend/**/target/checkstyle-result.xml
           if-no-files-found: ignore
 
-      # Sonar uses only the aggregate JaCoCo report.
+      # Sonar uses the monolith's aggregate JaCoCo report plus the per-module reports of the
+      # SWE5001 platform and service modules, which the monolith does not depend on.
       - name: Upload Sonar inputs
         if: >-
           needs.detect-changes.outputs.backend == 'true' ||
@@ -153,6 +154,8 @@ jobs:
             backend/**/target/classes/**
             backend/**/target/test-classes/**
             backend/blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml
+            backend/blocbuy-platform/target/site/jacoco/jacoco.xml
+            backend/services/*/target/site/jacoco/jacoco.xml
             backend/**/target/surefire-reports/**
             backend/**/target/failsafe-reports/**
           if-no-files-found: error

@@ -114,6 +114,7 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
 - Add `services/*-svc` modules with entry classes, `application-<service>.yml`, per-service `@MapperScan`, and a context-load test per service against Testcontainers PostgreSQL and Redis.
 - One Dockerfile with `ARG MODULE` for all three services (see the GitHub plan for the build matrix).
 - **Done when:** three service jars boot locally with `topology=distributed` stubs, and the monolith image and EC2 deploy are unchanged in behaviour.
+- **2026-10-12 (#455 A3, [plan](../agile/sprint-04/service-assemblies-plan-20261012.md)):** `services/identity-svc`, `commerce-svc` and `notification-svc` (package `com.blocbuy.service.<service>`) with per-service scans, mapper XML locations and a Testcontainers context IT each; `MyBatisConfig` is monolith-only through the `Topology` constants in `blocbuy-client`. The commerce and notification ITs mock `RoleRepository` and `UserAppService` until #467 and #468; the shared Dockerfile with `ARG MODULE` moves to C1 (#456).
 
 ### WP-B3 Platform library (WBS 2.1)
 
@@ -124,6 +125,7 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
 - Internal-call authentication: `/internal/**` requires header `X-Internal-Token` equal to SSM parameter `/blocbuy/swe5001/shared/INTERNAL_TOKEN`; Sa-Token route excluded for `/internal/**`, custom filter enforces the token. Network isolation (security groups) is the primary control; the token is defence in depth.
 - Trace propagation: outbound `RestClient` interceptor copies `X-Trace-Id`; SQS messages carry `traceId` as a message attribute and the consumer restores MDC.
 - **Done when:** unit tests cover token accept/reject and trace propagation.
+- **2026-10-12 (#455 A3), as rescoped on 2026-10-11:** the library is `blocbuy-platform` (not a starter the monolith loads; only `services/*` depend on it) with `TopologyProperties` (enum binding, fail-fast unless `distributed`), a `RestClientCustomizer` that copies the MDC trace id into `X-Trace-Id`, and `application-aws.yml` (Redis TLS). JSON logs are a `springProfile name="aws"` block in bootstrap's `logback-spring.xml`. No internal-call token. Outbox, SQS trace attributes, session `StpInterface` and the remote adapter stay with D, #467 and #468.
 
 ### WP-B4 Session-based authorisation (WBS 3.2)
 
@@ -163,6 +165,7 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
 - Repeatable migration `R__swe5001_grants.sql` in a location loaded only by service profiles (`classpath:db/grants/<service>`): grants the service's runtime role `SELECT, INSERT, UPDATE, DELETE` on owned tables only.
 - Each service connects at runtime as its own role (`blocbuy_identity_app`, `blocbuy_commerce_app`, `blocbuy_notification_app`); Flyway uses the owner credentials (`SPRING_FLYWAY_USER`/`PASSWORD`).
 - **Done when:** IT proves `commerce` role gets `permission denied` on `sys_user` and `biz_notification`.
+- **Amended 2026-10-12 (#455 A4):** implemented as a Flyway `afterMigrate` callback, `blocbuy-platform/src/main/resources/db/swe5001/afterMigrate__service_grants.sql`, not `R__swe5001_grants.sql`: `db-init`'s default privileges grant every new table to the runtime role, and only a callback re-checks them on every start. One file for all services (placeholders `service` and `approle`); `ServiceGrantsIT` proves the denials (`biz_notification` does not exist yet, so commerce is checked on `sys_user` and `rel_user_role`) and the re-convergence after a later table.
 
 ### WP-B9 Demo seed data (WBS 3.5)
 

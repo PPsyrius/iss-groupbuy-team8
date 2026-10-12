@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.blocbuy</groupId>
+    <artifactId>blocbuy-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>commerce-svc</artifactId>
+  <name>commerce-svc</name>
+  <description>commerce-svc: catalog, group buying, orders and payments; the transactional core (backend ADR 0008)</description>
+
+  <dependencies>
+    <!-- the COLA modules, migrations and shared configuration, through the plain bootstrap library JAR -->
+    <dependency>
+      <groupId>com.blocbuy</groupId>
+      <artifactId>blocbuy-bootstrap</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.blocbuy</groupId>
+      <artifactId>blocbuy-platform</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>commerce-svc</finalName>
+    <plugins>
+      <!-- executable commerce-svc.jar; nothing depends on a service, so no classifier. Only repackage is
+           enabled: run/start/stop stay skipped, so a root `./mvnw spring-boot:run` still runs the monolith. -->
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>repackage</id>
+            <configuration>
+              <skip>false</skip>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Per-module report: blocbuy-bootstrap's aggregate cannot see this module. -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>jacoco-report</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

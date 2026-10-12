@@ -13,7 +13,9 @@ Locked decisions and rationale: [docs/design/backend-skeleton-plan.md](docs/desi
 | `blocbuy-application` | Commands/queries, use-case services (transaction boundary), assemblers |
 | `blocbuy-adapter` | Web controllers, global exception handler; protocol adaptation only |
 | `blocbuy-infrastructure` | MyBatis mappers/DOs, repository impls, hand-written converters, Redis, Sa-Token RBAC, Stripe gateway (only module referencing `com.stripe`) |
-| `blocbuy-bootstrap` | `BlocBuyApplication`, `application*.yml`, final assembly |
+| `blocbuy-bootstrap` | `BlocBuyApplication`, `application*.yml`, final assembly; publishes the plain `blocbuy-backend.jar` (a library for the services) and the runnable `blocbuy-backend-exec.jar` (the monolith) |
+| `blocbuy-platform` | SWE5001 service support: topology guard, outbound trace propagation, `application-aws.yml`, per-service grants (`db/swe5001`); never on the monolith's classpath |
+| `services/identity-svc`, `commerce-svc`, `notification-svc` | SWE5001 service assemblies: entry class, `application-<service>.yml`, own component and mapper scan ([backend ADR 0008](docs/adr/0008-dual-deployment-topology.md)) |
 
 Domains (v1): `identity`, `groupbuy`, `order`, `catalog`, `notification`, `payment` (Stripe; added 2026-08-31).
 
@@ -34,7 +36,9 @@ For the local Docker stack, put `DB_USERNAME`, `DB_PASSWORD`, and `REDIS_PASSWOR
 docker build -t blocbuy-backend .              # production image (Dockerfile at backend/)
 ```
 
-Profiles: `local` (default; localhost PG/Redis) · `docker` (compose service names) · `ec2` (host loopback) · `openapi-export` (build-only, no live infra). Set `BLOCBUY_STRIPE_CHECKOUT_ENABLED=true` with Sandbox credentials and return URLs to opt into Checkout; it defaults to `false` in every profile. `stripe-sprint2` remains a one-release compatibility alias. Payment rollout and pre-live gates: [Stripe release boundary](docs/payment/stripe-release-boundary.md).
+Profiles: `local` (default; localhost PG/Redis) · `docker` (compose service names) · `ec2` (host loopback) · `openapi-export` (build-only, no live infra) · `identity` / `commerce` / `notification` (service assemblies only) · `aws` (ECS services: Redis TLS, JSON logs). Set `BLOCBUY_STRIPE_CHECKOUT_ENABLED=true` with Sandbox credentials and return URLs to opt into Checkout; it defaults to `false` in every profile. `stripe-sprint2` remains a one-release compatibility alias. Payment rollout and pre-live gates: [Stripe release boundary](docs/payment/stripe-release-boundary.md).
+
+The monolith is the default topology everywhere and the SWE5006 `dev` system. The SWE5001 services set `blocbuy.topology=distributed` in their own profile and refuse to start otherwise. Run one locally after `./mvnw -DskipTests package`, for example `java -jar services/identity-svc/target/identity-svc.jar --spring.profiles.active=local,identity` with the same environment variables as the monolith. Until #467 and #468 land, only `identity-svc` starts on its own: `commerce-svc` and `notification-svc` still need the session-role lookup and the remote identity check.
 
 Secrets come from the environment, never from git: `DB_USERNAME`, `DB_PASSWORD`, `REDIS_PASSWORD`, `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`, `TYPESAFE_API_KEY`. Set `TYPESAFE_ENABLED=true` to allow opt-in Jev re-ranking for listing searches; model, endpoint, and timeout settings have safe defaults in `application.yml`.
 
@@ -48,7 +52,7 @@ Local datasource: `jdbc:postgresql://localhost:5432/Blocbuy?currentSchema=domain
 - Spotless (`spotless-maven-plugin`): google-java-format **AOSP** (4-space indent) — the single source of truth for formatting; checked at `validate`, fixed with `./mvnw spotless:apply`.
 - Checkstyle: Google checks, 120-column line length, AOSP indentation values (`checkstyle.xml`); enforces only what the formatter does not own (naming, imports, Javadoc, blocks).
 - SpotBugs: effort Max, threshold Medium, exclusions with written reasons in `spotbugs-excludes.xml`.
-- JaCoCo: aggregate-only report at `blocbuy-bootstrap/target/site/jacoco-aggregate/`; coverage gate (≥80% on new code) lives in the SonarQube quality gate, not Maven.
+- JaCoCo: aggregate report at `blocbuy-bootstrap/target/site/jacoco-aggregate/` plus per-module reports for `blocbuy-platform` and `services/*`, which the monolith does not depend on; coverage gate (≥80% on new code) lives in the SonarQube quality gate, not Maven.
 - ArchUnit (`blocbuy-bootstrap/src/test/.../architecture/`): layer direction, framework-free domain, no controller→mapper, persistence internals stay internal, no field injection.
 - Tests: JUnit 5; repository `*IT` suites spin a real PostgreSQL 18 via Testcontainers.
 
