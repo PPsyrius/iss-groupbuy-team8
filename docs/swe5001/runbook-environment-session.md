@@ -31,12 +31,12 @@ A promotion run (`dev` → `prod` merge) creates `runtime`, smoke-tests it, publ
 | When | Do |
 | --- | --- |
 | At least one day before | Full rehearsal: sections 4–6, then section 7 |
-| T − 30 min | Section 4 (start) |
+| T − 60 min | Section 4 (start; includes the 15-minute SNS readiness wait and recipient confirmation) |
 | T − 15 min | Section 5 (check) |
 | T | Present; follow section 6 |
 | Right after | Section 7 (destroy) |
 
-T − 30 min is the minimum lead time. For 21 October (16:15–16:55 SGT) the [verification plan](impl-verification-observability.md), section 7, starts the session before 12:00, which leaves time for a second `up` after a failure and gives the dashboard a full hour of data.
+T − 60 min is the minimum planning allowance for distributed sessions after #447 adds the 15-minute routing-readiness wait; the historical monolith timings below do not include it. The original V8 under-30-minute up target is now unproven, not an acceptance claim. For 21 October (16:15–16:55 SGT) the [verification plan](impl-verification-observability.md), section 7, starts the session before 12:00, which leaves time for a second `up` after a failure and gives the dashboard a full hour of data.
 
 ## 4. Start
 
@@ -86,6 +86,26 @@ SWE5001_TOPOLOGY=distributed infra/swe5001/scripts/env-up.sh --candidate
   ```
 
   Expect `"status":"UP"`.
+
+### Messaging fan-out check (#447)
+
+Run only in an explicitly authorised distributed session, after reviewing the private runtime plan (share addresses/actions only) and applying the foundation's narrow SNS/KMS permission amendment. No customer-managed key is introduced: the domain topic uses `alias/aws/sns`; the alarm-metadata topic has the documented no-CMK exception. Configure team recipients as described in the [Terraform README](../../infra/swe5001/README.md#messaging-447). The automated `env-up.sh` gate keeps the relay off and services stopped until it passes; confirm the SNS emails during its 900-second propagation wait. Empty recipient input fails before any apply; unconfirmed subscriptions fail the gate.
+
+For a separate check against an existing quiet session, run from the same reviewed checkout and operator environment:
+
+```bash
+bash infra/swe5001/scripts/verify-messaging.sh
+```
+
+This changes no Terraform configuration. It snapshots desired counts, scaling bounds and all three suspension flags for **both commerce and notification**, suspends their targets, stops their tasks and waits for zero running counts. After the 900-second filter-settle bound, it requires confirmed email recipients and no visible/in-flight/delayed messages before publishing. The latter protects business messages' receive/redrive budgets: defer a busy-session drill, never purge retained messages. Approximate queue counts are not a proof of absolute emptiness, so unrelated receipts encountered defensively are retained privately and released on exit without deletion. Do not run a concurrent Terraform apply, environment workflow, or business workload during the check; manual CloudShell commands do not share GitHub's concurrency lock.
+
+The script publishes unique ID-only envelopes with unsupported version `2147483647`, checks raw bodies and `eventType` attributes, and deletes only matching probes. ADR 0007 requires consumers to acknowledge unknown versions without effects, so delayed/duplicate probes carry no real notification recipients; #446 must preserve that rule. TeamSucceeded must reach both queues. PaymentSucceeded must reach notification and remain absent from audit across three 20-second long polls. Each receive search also has a 200-batch/180-second bound; exhaustion is inconclusive and fails, not proof of a missing event. The payment exclusion observation is bounded, not a guarantee about every future delivery.
+
+EXIT/INT/TERM handlers release held receipts and restore both services' original counts and scaling flags on success or failure. If restoration fails, the script returns failure and retains private recovery records rather than claiming success; SIGKILL/runner loss cannot run a trap. Record the SHA, target, routing/readiness output and restoration in the daily log, and wait for services to reach steady state afterwards. Queue scaling, actual email delivery and poison-message acceptance remain separate V4/V7 drills (#448/#459); confirmed subscriptions alone do not prove receipt of an alarm email.
+
+Bootstrap verification invoked by `env-up.sh` differs: only the nested verifier receives `--bootstrap`; it expects services already stopped and relay disabled, and never resumes them itself. An up failure after infrastructure changes explicitly stops services again and retains private snapshots (including after an edge/smoke failure). Rerun from the same checkout or tear down; do not restore an old publisher blindly after a failed routing gate. Recovery snapshots can retain pre-pause scaled counts that a later retry sees as zero; restore those counts only after readiness succeeds, using the reviewed `restore_services` helper and the private snapshot. Keep paths/receipt handles private and never attach the full state or a secret-bearing plan.
+
+After the session, `env-down.sh` deletes the topic, four queues, subscriptions, alarms and scalable target. `env-status.sh` treats stale tagged SNS/SQS/alarm ARNs as deleted only after successful type-specific lookup or a recognised not-found response; access-denied/network failures remain failures. Save evidence before down: there is no persistent event archive.
 
 ### Demo data (distributed)
 

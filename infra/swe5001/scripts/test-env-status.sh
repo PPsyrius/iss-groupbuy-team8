@@ -20,6 +20,9 @@ aws() {
         service_*) printf '%s\n' "$ecs_prefix:service/blocbuy-swe5001/monolith" ;;
         task_*) printf '%s\n' "$ecs_prefix:task/blocbuy-swe5001/0123abcd" ;;
         taskdef_only) printf '%s\n' "$ecs_prefix:task-definition/demo:1" ;;
+        sqs_*) printf '%s\n' 'arn:aws:sqs:ap-southeast-1:402178232802:blocbuy-swe5001-notification' ;;
+        sns_*) printf '%s\n' 'arn:aws:sns:ap-southeast-1:402178232802:blocbuy-swe5001-domain-events' ;;
+        alarm_*) printf '%s\n' 'arn:aws:cloudwatch:ap-southeast-1:402178232802:alarm:blocbuy-swe5001-notification-queue-age' ;;
       esac
       ;;
     'ec2 describe-instances')
@@ -65,6 +68,28 @@ aws() {
         task_expired) printf '%s\n' None ;;
         task_stopped) printf '%s\n' STOPPED ;;
         *) printf '%s\n' RUNNING ;;
+      esac
+      ;;
+    'sqs get-queue-url')
+      case "$SCENARIO" in
+        sqs_error) denied GetQueueUrl ;;
+        sqs_notfound) not_found QueueDoesNotExist GetQueueUrl ;;
+        sqs_legacy_notfound) not_found AWS.SimpleQueueService.NonExistentQueue GetQueueUrl ;;
+        *) printf '%s\n' 'https://sqs.ap-southeast-1.amazonaws.com/402178232802/blocbuy-swe5001-notification' ;;
+      esac
+      ;;
+    'sns get-topic-attributes')
+      case "$SCENARIO" in
+        sns_error) denied GetTopicAttributes ;;
+        sns_notfound) not_found NotFound GetTopicAttributes ;;
+        *) printf '%s\n' 'arn:aws:sns:ap-southeast-1:402178232802:blocbuy-swe5001-domain-events' ;;
+      esac
+      ;;
+    'cloudwatch describe-alarms')
+      case "$SCENARIO" in
+        alarm_error) denied DescribeAlarms ;;
+        alarm_gone) printf '%s\n' 0 ;;
+        *) printf '%s\n' 1 ;;
       esac
       ;;
     *) printf 'unexpected AWS call: %s\n' "$*" >&2; return 44 ;;
@@ -123,3 +148,13 @@ check task_error failure 'cannot inspect ECS task 0123abcd'
 check task_expired success 'no runtime resource tagged Stack=runtime'
 check task_stopped success 'no runtime resource tagged Stack=runtime'
 check task_running failure 'runtime resources remain'
+check sqs_error failure 'cannot inspect SQS queue'
+check sqs_notfound success 'no runtime resource tagged Stack=runtime'
+check sqs_legacy_notfound success 'no runtime resource tagged Stack=runtime'
+check sqs_live failure 'runtime resources remain'
+check sns_error failure 'cannot inspect SNS topic'
+check sns_notfound success 'no runtime resource tagged Stack=runtime'
+check sns_live failure 'runtime resources remain'
+check alarm_error failure 'cannot inspect CloudWatch alarm'
+check alarm_gone success 'no runtime resource tagged Stack=runtime'
+check alarm_live failure 'runtime resources remain'

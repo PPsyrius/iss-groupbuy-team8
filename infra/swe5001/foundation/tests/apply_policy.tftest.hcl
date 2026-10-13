@@ -82,3 +82,30 @@ run "security_group_rule_guardrail" {
     error_message = "Rule actions must stay denied on security groups not tagged Course=swe5001 (the SWE5006 groups)."
   }
 }
+
+run "domain_event_key_boundary" {
+  command = plan
+  assert {
+    condition = anytrue([
+      for s in data.aws_iam_policy_document.workload_boundary.statement :
+      s.sid == "UseDomainEventKeyViaSns" &&
+      toset(s.actions) == toset(["kms:GenerateDataKey*", "kms:Decrypt"]) &&
+      toset(s.resources) == toset(["arn:aws:kms:ap-southeast-1:402178232802:key/*"]) &&
+      anytrue([for c in s.condition : c.variable == "kms:ViaService" && toset(c.values) == toset(["sns.ap-southeast-1.amazonaws.com"])]) &&
+      anytrue([for c in s.condition : c.variable == "kms:EncryptionContext:aws:sns:topicArn" && toset(c.values) == toset(["arn:aws:sns:ap-southeast-1:402178232802:blocbuy-swe5001-domain-events"])])
+    ])
+    error_message = "The boundary must allow KMS only through SNS for the exact domain-topic context."
+  }
+
+  assert {
+    condition = anytrue([
+      for s in data.aws_iam_policy_document.apply.statement :
+      s.sid == "VerifyDomainEventKeyViaSns" &&
+      toset(s.actions) == toset(["kms:GenerateDataKey*", "kms:Decrypt"]) &&
+      toset(s.resources) == toset(["arn:aws:kms:ap-southeast-1:402178232802:key/*"]) &&
+      anytrue([for c in s.condition : c.variable == "kms:ViaService" && toset(c.values) == toset(["sns.ap-southeast-1.amazonaws.com"])]) &&
+      anytrue([for c in s.condition : c.variable == "kms:EncryptionContext:aws:sns:topicArn" && toset(c.values) == toset(["arn:aws:sns:ap-southeast-1:402178232802:blocbuy-swe5001-domain-events"])])
+    ])
+    error_message = "The apply-role probe publisher needs the same restricted KMS constraints."
+  }
+}

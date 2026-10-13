@@ -21,7 +21,7 @@ guard_account
 
 # Deregistered task definitions stay tagged but cost nothing and cannot be deleted while
 # referenced, so they never count as left over. The tagging API, and EC2's own tag index,
-# keep listing deleted resources for over an hour after a destroy, so each EC2 and ECS ARN
+# keep listing deleted resources for over an hour after a destroy, so EC2, ECS and messaging ARNs
 # is checked with its own describe call: a resource counts only while that call returns it.
 # Not-found errors mean deleted; any other error fails closed. Other types always count.
 
@@ -35,7 +35,7 @@ lookup() {
     return
   fi
   case "$out" in
-    *.NotFound* | *ClusterNotFoundException*) printf '%s\n' None ;;
+    *.NotFound* | *ClusterNotFoundException* | *'(NotFound)'* | *'(QueueDoesNotExist)'* | *AWS.SimpleQueueService.NonExistentQueue*) printf '%s\n' None ;;
     *) die "cannot inspect $what" ;;
   esac
 }
@@ -99,6 +99,23 @@ for arn in $arns; do
       task_status=$(lookup "ECS task $id" ecs describe-tasks --cluster "${cluster%%/*}" \
         --tasks "$id" --query 'tasks[0].lastStatus' --output text) || exit 1
       case "$task_status" in STOPPED | None) continue ;; esac
+      ;;
+    arn:aws:sqs:*)
+      queue_name=${arn##*:}
+      queue_url=$(lookup "SQS queue $queue_name" sqs get-queue-url --queue-name "$queue_name" \
+        --query QueueUrl --output text) || exit 1
+      case "$queue_url" in None) continue ;; esac
+      ;;
+    arn:aws:sns:*)
+      topic=$(lookup "SNS topic $arn" sns get-topic-attributes --topic-arn "$arn" \
+        --query Attributes.TopicArn --output text) || exit 1
+      case "$topic" in None) continue ;; esac
+      ;;
+    arn:aws:cloudwatch:*:alarm:*)
+      alarm_name=${arn#*:alarm:}
+      count=$(lookup "CloudWatch alarm $alarm_name" cloudwatch describe-alarms --alarm-names "$alarm_name" \
+        --query 'length(MetricAlarms)' --output text) || exit 1
+      case "$count" in 0) continue ;; esac
       ;;
   esac
   remaining="$remaining$arn"$'\n'

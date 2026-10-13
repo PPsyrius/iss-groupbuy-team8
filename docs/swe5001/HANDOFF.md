@@ -2,7 +2,7 @@
 
 Current state of the SWE5001 distributed deployment (Amazon ECS, released by `dev` → `prod` promotion). Read this before picking up any item of [#376](https://github.com/PPsyrius/iss-groupbuy-team8/issues/376). Update it in the same PR whenever a step lands.
 
-Last updated: 2026-10-12. Phase A (the monolith on ECS) is done; Phase B (the three-service split) starts in Sprint 4 under the [split execution plan](../agile/sprint-04/microservice-split-plan-20261012.md).
+Last updated: 2026-10-13. Phase A (the monolith on ECS) is done; Phase B (the three-service split) starts in Sprint 4 under the [split execution plan](../agile/sprint-04/microservice-split-plan-20261012.md).
 
 ## Where to read the design
 
@@ -30,7 +30,7 @@ Last updated: 2026-10-12. Phase A (the monolith on ECS) is done; Phase B (the th
 | 6 | `env-up.sh`, `env-down.sh`, `env-status.sh`, `lib.sh`; monolith as one ECS service; first up/down proof | Merged in #380 and fixes #405–#417; **done**: promotion #418 → [run 37470479078](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37470479078) green end to end (2026-10-06); manual `swe5001-env` up [37569411094](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37569411094) and down [37571726284](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37571726284) green (2026-10-07) |
 | 7 | CI: `swe5001-service-images.yml`, `swe5001-release-gate.yml`, `swe5001-deploy.yml`, `swe5001-env.yml`; create `prod` and its ruleset | Merged in [#384](https://github.com/PPsyrius/iss-groupbuy-team8/pull/384); foundation OIDC plan passed; operator created `prod` at `605c8e27` and active `prod-release` ruleset `24551375`; release gate and promotion exercised by #418; nightly `down` green 2026-10-09 to 2026-10-11 ([37983414307](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37983414307), [38078270152](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/38078270152), [38167284298](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/38167284298)) |
 | — | Sprint 3 promotion, Fri 2026-10-09 | **Not run**; `prod` is still at #418 (`6c7a99ab`). The next promotion is the Sprint 4 one on Mon 2026-10-19 |
-| 8 | Messaging: SNS topic, notification and audit queues, DLQ, DLQ alarm | [#447](https://github.com/PPsyrius/iss-groupbuy-team8/issues/447); tier 2 behind the split; planned |
+| 8 | Messaging: SNS topic, notification and audit queues, DLQs, alarms and backlog scaling | [#447](https://github.com/PPsyrius/iss-groupbuy-team8/issues/447); local implementation/review fixes on `feature/447-messaging-infrastructure`, runtime-only; encrypted domain topic and narrow foundation KMS amendments, stopped-service routing/confirmed-email gate, explicit pause/restore and failure recovery; [offline evidence](../agile/sprint-04/log/2026-10-13.md). Operator foundation plan/apply, PR/CI and live fan-out/up/down remain pending; the gate adds a 15-minute wait |
 | 9 | Service split: `identity-svc`, `commerce-svc`, `notification-svc` | #455, #456, #467, #468, #469; see Phase B progress below |
 | 10 | Scaling and dashboard (alarms reduced to the DLQ alarm on 2026-10-11) | [#457](https://github.com/PPsyrius/iss-groupbuy-team8/issues/457); planned |
 

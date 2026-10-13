@@ -47,7 +47,7 @@ locals {
     # Profiles: ec2 maps DB_* and REDIS_* (as for the monolith), <service> selects the
     # assembly's scans, topology and grants callback, aws switches Redis TLS and JSON logs.
     # A service that sets SPRING_FLYWAY_LOCATIONS must keep classpath:db/swe5001 (grants).
-    # Events (track D) add BLOCBUY_EVENTS_* and the task policies; scaling is #457.
+    # Events and notification backlog scaling are #447; HTTP scaling is #457.
     distributed = {
       identity-svc = {
         repository        = "identity-svc"
@@ -74,12 +74,15 @@ locals {
         database          = "notification"
         listener_priority = 20
         path_patterns     = ["/api/v1/notifications*"]
-        task_policy_json  = null
+        task_policy_json  = local.notification_event_policy
         connects_to       = []
 
         environment = {
-          SPRING_PROFILES_ACTIVE     = "ec2,notification,aws"
-          BLOCBUY_SCHEDULING_ENABLED = "false"
+          SPRING_PROFILES_ACTIVE       = "ec2,notification,aws"
+          BLOCBUY_SCHEDULING_ENABLED   = "false"
+          AWS_REGION                   = var.aws_region
+          BLOCBUY_EVENTS_TRANSPORT     = "sns"
+          BLOCBUY_EVENTS_SQS_QUEUE_URL = local.messaging.notification_url
         }
 
         secrets = {}
@@ -91,7 +94,7 @@ locals {
         database          = "commerce"
         listener_priority = 30
         path_patterns     = ["/api/*"]
-        task_policy_json  = null
+        task_policy_json  = local.commerce_event_policy
         connects_to       = ["identity-svc"]
 
         environment = {
@@ -104,6 +107,10 @@ locals {
           BLOCBUY_SCHEDULING_ENABLED      = "true"
           BLOCBUY_STRIPE_CHECKOUT_ENABLED = "false"
           TYPESAFE_ENABLED                = "false"
+          AWS_REGION                      = var.aws_region
+          BLOCBUY_EVENTS_TRANSPORT        = "sns"
+          BLOCBUY_EVENTS_RELAY_ENABLED    = tostring(var.services_enabled && var.messaging_verified)
+          BLOCBUY_EVENTS_SNS_TOPIC_ARN    = local.messaging.topic_arn
         }
 
         secrets = {
