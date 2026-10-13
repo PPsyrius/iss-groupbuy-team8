@@ -3,11 +3,13 @@ package com.blocbuy.service.commerce;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mockStatic;
 
+import com.blocbuy.bootstrap.scheduling.OutboxRelayJob;
 import com.blocbuy.bootstrap.scheduling.OutboxRetentionJob;
 import com.blocbuy.catalog.persistence.BizProductMapper;
 import com.blocbuy.catalog.web.ProductController;
 import com.blocbuy.common.config.MyBatisConfig;
 import com.blocbuy.common.config.SessionStpInterface;
+import com.blocbuy.common.gateway.OutboxEventTransport;
 import com.blocbuy.identity.persistence.SysUserMapper;
 import com.blocbuy.identity.service.UserAppService;
 import com.blocbuy.identity.web.AuthController;
@@ -81,6 +83,8 @@ class CommerceServiceApplicationIT {
         assertThat(context.getBeanNamesForType(OutboxMapper.class)).hasSize(1);
         assertThat(context.getBeanNamesForType(IntegrationOutboxWriter.class)).isEmpty();
         assertThat(context.getBeanNamesForType(OutboxRetentionJob.class)).isEmpty();
+        assertThat(context.getBeanNamesForType(OutboxRelayJob.class)).isEmpty();
+        assertThat(context.getBeanNamesForType(OutboxEventTransport.class)).isEmpty();
         assertThat(context.getBean(TopologyProperties.class).topology())
                 .isEqualTo(TopologyProperties.Mode.DISTRIBUTED);
     }
