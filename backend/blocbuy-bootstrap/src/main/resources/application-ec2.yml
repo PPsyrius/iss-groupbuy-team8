@@ -20,6 +20,9 @@ logging:
     com.blocbuy: info
 
 blocbuy:
+  events:
+    # The SWE5006 dev host has no broker or relay; migration is harmless and the writer stays off.
+    enabled: ${BLOCBUY_EVENTS_ENABLED:false}
   web:
     # CloudFront sets this header itself; getRemoteAddr() is the caller-controlled leftmost
     # X-Forwarded-For value under the framework forward-headers strategy (#201)

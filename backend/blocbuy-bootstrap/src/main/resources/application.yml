@@ -67,6 +67,9 @@ springdoc:
     path: /api/swagger-ui.html
 
 blocbuy:
+  events:
+    # Cross-service event persistence is opt-in; SWE5006 EC2 stays off, SWE5001 commerce may opt in.
+    enabled: ${BLOCBUY_EVENTS_ENABLED:false}
   scheduling:
     # master switch, off by default everywhere; deployments opt in after their backlog check
     enabled: false

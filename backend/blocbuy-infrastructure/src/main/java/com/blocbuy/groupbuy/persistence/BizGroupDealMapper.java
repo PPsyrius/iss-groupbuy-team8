@@ -42,4 +42,9 @@ public interface BizGroupDealMapper {
 
     /** Total rows matching the My Teams owner filter; same predicates as the page query. */
     long countMembershipsByUserId(@Param("userId") UUID userId);
+
+    /**
+     * Active recipient IDs for an integration event; callers run this in the lifecycle transaction.
+     */
+    List<UUID> selectActiveMemberIdsByDealId(@Param("dealId") UUID dealId);
 }

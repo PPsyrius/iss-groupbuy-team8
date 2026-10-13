@@ -14,7 +14,7 @@ spring:
 
 mybatis:
   # this service's mapper XML only; the interfaces come from the entry class's @MapperScan
-  mapper-locations: classpath*:mapper/catalog/**/*.xml,classpath*:mapper/groupbuy/**/*.xml,classpath*:mapper/order/**/*.xml,classpath*:mapper/payment/**/*.xml,classpath*:mapper/common/**/*.xml
+  mapper-locations: classpath*:mapper/catalog/**/*.xml,classpath*:mapper/groupbuy/**/*.xml,classpath*:mapper/order/**/*.xml,classpath*:mapper/payment/**/*.xml,classpath*:mapper/common/**/*.xml,classpath*:mapper/integration/**/*.xml
 
 blocbuy:
   topology: distributed

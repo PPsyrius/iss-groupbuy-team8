@@ -28,6 +28,8 @@ Cost is a constraint. The SWE5001 ECS runtime is ephemeral and costs about US$0.
 
 **Transport switch.** `blocbuy.events.transport` selects `sqs` or `sns`, independently of the deployment topology. Local development and CI use `sqs` against ElasticMQ, which implements the SQS API including DLQ redrive. The SWE5001 ECS shape uses `sns` against real SNS and SQS. Raw message delivery makes the consumer's input identical on both paths, so only the relay's send call differs. The relay and the consumer are enabled by property; the SWE5006 EC2 `dev` stack leaves both off and runs no broker (Sprint 4 scope decision, 2026-10-11: notifications serve SWE5001 only).
 
+Review amendment 2026-10-13 (#444 / PR #473): commerce explicitly includes the outbox component, mapper and XML packages in its assembly. Retention uses a domain-side technical port and one SQL delete per run (maximum 500 rows, 3 s transaction timeout, `SKIP LOCKED`); it does not loop until the backlog is drained. The default six-hour interval gives a nominal 2000-row/day budget per continuously running instance, not a cluster-wide cap or drain guarantee; independent task schedules and restarts may add sequential runs. Operators must choose an interval appropriate to the published backlog. A renewable lease provides single-flight execution, not a total run-time bound. Enabled/disabled commerce assembly tests and an injected outbox insertion failure during `BEFORE_COMMIT` verify wiring and rollback of settlement, membership, stock and order effects.
+
 ## Consequences
 
 Business commits and event publication can no longer diverge: an event exists only if its transaction committed, and it is delivered at least once. Notifications lag commits by the relay interval, about 2 s.

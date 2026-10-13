@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blocbuy.integration.outbox.OutboxMapper">
+
+    <insert id="insert" parameterType="com.blocbuy.integration.outbox.OutboxInsert">
+        INSERT INTO sys_outbox (event_type, event_version, aggregate_id, payload, trace_id)
+        VALUES (#{eventType}, #{eventVersion}, #{aggregateId,jdbcType=OTHER},
+                CAST(#{payload} AS jsonb), #{traceId})
+    </insert>
+
+    <delete id="deletePublishedBefore">
+        WITH candidates AS (
+            SELECT id
+            FROM sys_outbox
+            WHERE published_at IS NOT NULL AND failed_at IS NULL AND published_at &lt; #{cutoff}
+            ORDER BY published_at, id
+            LIMIT #{limit}
+            FOR UPDATE SKIP LOCKED
+        )
+        DELETE FROM sys_outbox o USING candidates c WHERE o.id = c.id
+    </delete>
+</mapper>

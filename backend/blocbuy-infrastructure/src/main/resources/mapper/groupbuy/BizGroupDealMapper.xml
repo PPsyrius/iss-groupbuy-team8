@@ -100,4 +100,11 @@
         <include refid="membershipsOfUser"/>
     </select>
 
+    <select id="selectActiveMemberIdsByDealId" resultType="java.util.UUID">
+        SELECT user_id
+        FROM biz_group_member
+        WHERE deal_id = #{dealId,jdbcType=OTHER} AND deleted = false
+        ORDER BY user_id
+    </select>
+
 </mapper>
