@@ -144,17 +144,9 @@ public final class GroupDeal {
             throw new BizException(GroupbuyErrorCode.INVALID_PARTICIPATION);
         }
         payment.requirePrice(dealPrice, currency);
-        if (alreadyMember || leaderUserId.equals(payment.userId())) {
-            throw new BizException(GroupbuyErrorCode.ALREADY_MEMBER);
-        }
-        if (!status.canTransitionTo(DealStatus.SUCCEEDED)
-                || now.isBefore(startTime)
-                || !now.isBefore(expireTime)) {
-            throw new BizException(GroupbuyErrorCode.DEAL_CLOSED);
-        }
-        if (currentSize < 1 || currentSize >= targetSize) {
-            throw new BizException(GroupbuyErrorCode.DEAL_FULL);
-        }
+        requireNewMember(payment.userId(), alreadyMember);
+        requireJoinWindow(now);
+        requireAvailableSeat();
         int nextSize = currentSize + 1;
         boolean succeeded = nextSize == targetSize;
         return new PaidAdmission(
@@ -172,6 +164,35 @@ public final class GroupDeal {
                         expireTime,
                         succeeded ? now : null),
                 succeeded);
+    }
+
+    /** Checks the lifecycle and admission window using a clock read after locking this deal. */
+    public void requireJoinWindow(Instant now) {
+        if (now == null) {
+            throw new BizException(GroupbuyErrorCode.INVALID_PARTICIPATION);
+        }
+        if (!status.canTransitionTo(DealStatus.SUCCEEDED)
+                || now.isBefore(startTime)
+                || !now.isBefore(expireTime)) {
+            throw new BizException(GroupbuyErrorCode.DEAL_CLOSED);
+        }
+    }
+
+    /** Rejects full deals and corrupt legacy snapshots without their initial paid leader. */
+    public void requireAvailableSeat() {
+        if (currentSize < 1 || currentSize >= targetSize) {
+            throw new BizException(GroupbuyErrorCode.DEAL_FULL);
+        }
+    }
+
+    /** Checks the buyer against membership read under the deal lock; does not reserve a seat. */
+    public void requireNewMember(UUID buyerId, boolean alreadyMember) {
+        if (buyerId == null) {
+            throw new BizException(GroupbuyErrorCode.INVALID_PARTICIPATION);
+        }
+        if (alreadyMember || leaderUserId.equals(buyerId)) {
+            throw new BizException(GroupbuyErrorCode.ALREADY_MEMBER);
+        }
     }
 
     /**

@@ -22,6 +22,7 @@ import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** Which teams groupbuy will let an unpaid checkout be quoted against. */
 class GroupDealPurchaseSupportImplTest {
@@ -122,6 +123,24 @@ class GroupDealPurchaseSupportImplTest {
         stored(deal(DealStatus.OPEN, 3, NOW.minusSeconds(600), NOW.plusSeconds(3600)));
 
         assertRejected(() -> support.lockJoinTerms(DEAL, BUYER), GroupbuyErrorCode.DEAL_FULL);
+    }
+
+    /** A corrupt legacy count must be rejected before accepting the buyer's payment. */
+    @ParameterizedTest
+    @ValueSource(ints = {0, -1})
+    void aTeamWithoutItsPaidLeaderCannotBeQuoted(int currentSize) {
+        stored(deal(DealStatus.OPEN, currentSize, NOW.minusSeconds(600), NOW.plusSeconds(3600)));
+        assertRejected(() -> support.lockJoinTerms(DEAL, BUYER), GroupbuyErrorCode.DEAL_FULL);
+        verifyNoInteractions(invites);
+    }
+
+    /** Sharing the domain guards keeps the existing pre-payment error priority. */
+    @Test
+    void closedAndFullTeamsAreRejectedBeforeDuplicateMembership() {
+        stored(deal(DealStatus.EXPIRED, 3, NOW.minusSeconds(600), NOW));
+        assertRejected(() -> support.lockJoinTerms(DEAL, LEADER), GroupbuyErrorCode.DEAL_CLOSED);
+        stored(deal(DealStatus.OPEN, 3, NOW.minusSeconds(600), NOW.plusSeconds(3600)));
+        assertRejected(() -> support.lockJoinTerms(DEAL, LEADER), GroupbuyErrorCode.DEAL_FULL);
     }
 
     @Test
