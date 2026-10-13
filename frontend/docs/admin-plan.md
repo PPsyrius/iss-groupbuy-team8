@@ -367,9 +367,9 @@ The MSW store implements the backend rules (§2.2), so the rules are tested at t
    - Answered 2026-10-13 (@limjiechao): horizontal scroll, as shipped in A1-02 step 5 (`min-w-[1024px]`); no notice.
 13. **Rule end time.** The backend's `validUntil` is exclusive. Should the picker ask for "last minute valid" (UI adds 1 minute) or the exact end instant (planned: exact instant, displayed minus 1 minute)?
 14. **Row menu contents.** Not specified. Plan: Edit plus the one allowed lifecycle action.
-   - Answered 2026-10-13 (@limjiechao): Edit plus the one allowed lifecycle action, as shipped in A1-05 step 5.
+   - Answered 2026-10-13 (@limjiechao): keep the menu as shipped in A1-05 step 5, Edit plus the dialog actions `actionsFor` allows: a draft row offers Publish and Delete draft, an `on_sale` row Take off sale, an `off_sale` row Put back on sale.
 15. **#183 interaction.** START re-prices from the latest policy, so a new revision changes what buyers mid-checkout pay. Is the replace-now warning enough, or should the admin form block revisions while quotes are live?
-   - Answered 2026-10-13 (@limjiechao): the replace-now warning is enough, as shipped in A2-01 (#332); no block and no backend ask for live quote counts.
+   - Answered 2026-10-13 (@limjiechao): on the admin side the replace-now warning is enough, as shipped in A2-01 (#332); no block and no backend ask for live quote counts. A buyer holding an unexpired quote is not re-priced: `CatalogPurchaseSupportImpl.lockQuotedStart` charges the quote's amount and does not read the latest policy.
 
 ## 7. Risks
 

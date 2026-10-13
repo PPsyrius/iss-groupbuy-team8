@@ -266,7 +266,7 @@ Implemented in admin plan A1-01 to A1-08, A2-01 to A2-03 and A3-01 to A3-09 (`ad
 
 - Tabs All / Draft / On sale / Off sale with counts from one `counts` read; server pagination (`page`, `size` 20) with "Showing 1–8 of 62 · Page 1 of 4"; no sorting.
 - Each title carries the latest bloc price rule from `latestPolicy`: "Bloc price S$71.00 · valid to 30 Sep", "… · expired 14 Sep", "… · starts 1 Oct", "No bloc price rule yet" on a published listing and "Draft · not published" on a draft. The day is the SGT day of the last valid minute.
-- The row menu (HeroUI `Dropdown`) offers Edit plus the one lifecycle action the status allows, reusing the editor's dialogs (Q14).
+- The row menu (HeroUI `Dropdown`) offers Edit plus the lifecycle actions the status allows (Publish and Delete draft on a draft, one action on a published row), reusing the editor's dialogs (Q14).
 - Loading: skeleton rows with the tab counts withheld (4a.4). Empty per tab: "No drafts" (4a.3, the header CTA drops to outline), "Nothing on sale", "Nothing off sale", "No listings yet" (D4). Error: "We couldn’t load the listings" with Try again.
 
 **Listing form and editor** (`Admin Editor › 4b.1`, `4b.2`, `4b.3`)
