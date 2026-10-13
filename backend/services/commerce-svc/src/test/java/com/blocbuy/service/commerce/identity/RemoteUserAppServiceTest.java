@@ -47,13 +47,23 @@ class RemoteUserAppServiceTest {
     private static final UUID USER = UUID.fromString("a0000000-0000-7000-8000-000000000001");
     private static final String ACTIVE = "/internal/users/" + USER + "/active";
     private static final String NICKNAME = "/internal/users/" + USER + "/public-nickname";
-    private static final Duration READ_TIMEOUT = Duration.ofMillis(300);
+
+    /** Production budget: every status test gets the headroom a cold CI runner needs. */
+    private static final Duration CONNECT_TIMEOUT = Duration.ofMillis(500);
+
+    private static final Duration READ_TIMEOUT = Duration.ofMillis(1_500);
+
+    /** Only the timeout test waits on purpose, so only it uses a short read timeout. */
+    private static final Duration SHORT_READ_TIMEOUT = Duration.ofMillis(300);
+
+    private static final int SLOW_IDENTITY_MILLIS = 3_000;
 
     @RegisterExtension
     static final WireMockExtension IDENTITY =
             WireMockExtension.newInstance().options(wireMockConfig().dynamicPort()).build();
 
-    private final RemoteUserAppService service = clientOf(URI.create(IDENTITY.baseUrl()));
+    private final RemoteUserAppService service =
+            clientOf(URI.create(IDENTITY.baseUrl()), READ_TIMEOUT);
 
     @AfterEach
     void clearTrace() {
@@ -129,14 +139,19 @@ class RemoteUserAppServiceTest {
 
     @Test
     void aSlowIdentityTimesOutWithinTheReadTimeout() {
-        stub(ACTIVE, envelope(200, CommonErrorCode.SUCCESS, null).withFixedDelay(2_000));
+        stub(
+                ACTIVE,
+                envelope(200, CommonErrorCode.SUCCESS, null).withFixedDelay(SLOW_IDENTITY_MILLIS));
+        RemoteUserAppService impatient =
+                clientOf(URI.create(IDENTITY.baseUrl()), SHORT_READ_TIMEOUT);
 
         long started = System.nanoTime();
-        assertThatThrownBy(() -> service.requireActive(USER))
+        assertThatThrownBy(() -> impatient.requireActive(USER))
                 .isInstanceOf(IdentityUnavailableException.class)
                 .hasCauseInstanceOf(ResourceAccessException.class);
+        // well below the stub's delay: the client gave up, the stub did not finish
         assertThat(Duration.ofNanos(System.nanoTime() - started))
-                .isLessThan(READ_TIMEOUT.plusMillis(1_000));
+                .isLessThan(Duration.ofMillis(SLOW_IDENTITY_MILLIS - 1_000));
     }
 
     @Test
@@ -152,7 +167,8 @@ class RemoteUserAppServiceTest {
         try (ServerSocket socket = new ServerSocket(0)) {
             closedPort = socket.getLocalPort();
         }
-        RemoteUserAppService unreachable = clientOf(URI.create("http://localhost:" + closedPort));
+        RemoteUserAppService unreachable =
+                clientOf(URI.create("http://localhost:" + closedPort), READ_TIMEOUT);
 
         assertThatThrownBy(() -> unreachable.requireActive(USER))
                 .isInstanceOf(IdentityUnavailableException.class)
@@ -222,14 +238,13 @@ class RemoteUserAppServiceTest {
     }
 
     /** Built the way the configuration builds it, plus the platform's trace interceptor. */
-    private static RemoteUserAppService clientOf(URI baseUrl) {
+    private static RemoteUserAppService clientOf(URI baseUrl, Duration readTimeout) {
         RestClient.Builder builder =
                 RestClient.builder().requestInterceptor(new TraceIdPropagationInterceptor());
         return new RemoteUserAppService(
                 RemoteIdentityConfiguration.identityClient(
                         builder,
-                        new IdentityClientProperties(
-                                baseUrl, Duration.ofMillis(500), READ_TIMEOUT)));
+                        new IdentityClientProperties(baseUrl, CONNECT_TIMEOUT, readTimeout)));
     }
 
     private static void stub(String path, ResponseDefinitionBuilder response) {
