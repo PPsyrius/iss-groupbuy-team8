@@ -30,6 +30,13 @@ Cost is a constraint. The SWE5001 ECS runtime is ephemeral and costs about US$0.
 
 Review amendment 2026-10-13 (#444 / PR #473): commerce explicitly includes the outbox component, mapper and XML packages in its assembly. Retention uses a domain-side technical port and one SQL delete per run (maximum 500 rows, 3 s transaction timeout, `SKIP LOCKED`); it does not loop until the backlog is drained. The default six-hour interval gives a nominal 2000-row/day budget per continuously running instance, not a cluster-wide cap or drain guarantee; independent task schedules and restarts may add sequential runs. Operators must choose an interval appropriate to the published backlog. A renewable lease provides single-flight execution, not a total run-time bound. Enabled/disabled commerce assembly tests and an injected outbox insertion failure during `BEFORE_COMMIT` verify wiring and rollback of settlement, membership, stock and order effects.
 
+Review amendment 2026-10-13 (#445, relay from PR #477 ported onto `dev`):
+- **Batch calls.** The relay sends one tick's due rows (at most 100) as `SendMessageBatch` or `PublishBatch` calls split at the provider's 10-entry limit, so a tick makes at most 10 calls. This is a recorded exception to the backend rule against remote calls in loops: the calls are the provider's batch API, bounded by the tick size, never one call per row.
+- **One retry budget.** `OutboxRelayService` owns the budget (10 attempts) and passes it to the single `UPDATE` that records results. That statement opens no transaction of its own, and no transaction spans provider I/O.
+- **Region and target.** The Region comes from `blocbuy.events.region` or the AWS SDK default chain (`AWS_REGION` on ECS), never a guessed default. An enabled relay with a blank queue URL or topic ARN, or a transport other than `sqs` or `sns`, fails startup, so committed events are not moved to `failed_at` by a misconfiguration.
+- **Ownership.** `com.blocbuy.integration` is part of commerce in `ArchitectureTest`. Identity and notification assemblies start with no relay, transport or writer, even with the switches on.
+- **Switching it on for ECS (#447).** Set, on `commerce-svc` only, `BLOCBUY_EVENTS_RELAY_ENABLED=true` and `BLOCBUY_EVENTS_SNS_TOPIC_ARN`, and grant its task role `sns:Publish` on that topic. The commerce profile already selects `sns`.
+
 ## Consequences
 
 Business commits and event publication can no longer diverge: an event exists only if its transaction committed, and it is delivered at least once. Notifications lag commits by the relay interval, about 2 s.
