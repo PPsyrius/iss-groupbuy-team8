@@ -1,7 +1,6 @@
 package com.blocbuy.integration.outbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.blocbuy.common.model.OutboxEvent;
 import java.net.URI;
@@ -68,8 +67,9 @@ class OutboxRelayElasticMqIT {
                                     () -> new AssertionError("Compose queue was not configured"));
             List<OutboxEvent> events = events(3);
             var unavailable = new SqsOutboxEventTransport(unavailableClient, queueUrl, json);
-            assertThatThrownBy(() -> unavailable.publish(events))
-                    .isInstanceOf(RuntimeException.class);
+            assertThat(unavailable.publish(events))
+                    .hasSize(3)
+                    .allMatch(result -> result.attempted() && !result.published());
 
             var recovered = new SqsOutboxEventTransport(realClient, queueUrl, json);
             assertThat(recovered.publish(events)).hasSize(3).allMatch(result -> result.published());

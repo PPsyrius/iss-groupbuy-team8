@@ -2,6 +2,8 @@
 
 The relay is at-least-once. A crash after the broker accepts an event but before PostgreSQL records `published_at` can cause a redelivery; event consumers must deduplicate by `eventId`.
 
+Provider exceptions affect only their ten-entry batch; successful earlier batches are recorded and later batches continue while the lease is valid. On lease renewal loss, the old owner stops starting new calls. Rows it did not attempt remain pending with unchanged retry state; do not replay or reset them. An already in-flight call may complete after lease loss and overlap a successor, so the lease does not replace consumer deduplication. AWS calls are bounded to 5 s per attempt and 15 s total including SDK retries.
+
 ## Inspect a failed event
 
 1. Find the `Outbox relay` ERROR log and record its `eventId` and `traceId`.

@@ -33,6 +33,10 @@ class OutboxTransportConfigurationTest {
                             assertThat(context).hasSingleBean(SqsClient.class);
                             assertThat(context).hasSingleBean(SqsOutboxEventTransport.class);
                             assertThat(context).doesNotHaveBean(SnsClient.class);
+                            assertTimeouts(
+                                    context.getBean(SqsClient.class)
+                                            .serviceClientConfiguration()
+                                            .overrideConfiguration());
                         });
     }
 
@@ -61,6 +65,10 @@ class OutboxTransportConfigurationTest {
                             assertThat(context).hasSingleBean(SnsClient.class);
                             assertThat(context).hasSingleBean(SnsOutboxEventTransport.class);
                             assertThat(context).doesNotHaveBean(SqsClient.class);
+                            assertTimeouts(
+                                    context.getBean(SnsClient.class)
+                                            .serviceClientConfiguration()
+                                            .overrideConfiguration());
                         });
     }
 
@@ -151,6 +159,12 @@ class OutboxTransportConfigurationTest {
                                                 "blocbuy.events.transport must be sqs or sns when"
                                                         + " the outbox relay is enabled, not"
                                                         + " 'kafka'"));
+    }
+
+    private static void assertTimeouts(
+            software.amazon.awssdk.core.client.config.ClientOverrideConfiguration configuration) {
+        assertThat(configuration.apiCallTimeout()).contains(java.time.Duration.ofSeconds(15));
+        assertThat(configuration.apiCallAttemptTimeout()).contains(java.time.Duration.ofSeconds(5));
     }
 
     @Configuration(proxyBeanMethods = false)

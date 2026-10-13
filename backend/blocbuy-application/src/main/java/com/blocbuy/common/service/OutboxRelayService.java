@@ -6,6 +6,7 @@ import com.blocbuy.common.model.OutboxPublishResult;
 import com.blocbuy.common.repository.OutboxRelayRepository;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,6 +24,10 @@ public class OutboxRelayService {
     private final OutboxEventTransport transport;
 
     public int relayBatch() {
+        return relayBatch(() -> true);
+    }
+
+    public int relayBatch(BooleanSupplier leaseValid) {
         List<OutboxEvent> events = repository.findDue(BATCH_SIZE);
         if (events.isEmpty()) {
             return 0;
@@ -30,7 +35,7 @@ public class OutboxRelayService {
 
         List<OutboxPublishResult> results;
         try {
-            results = transport.publish(events);
+            results = transport.publish(events, leaseValid);
             if (results == null || results.size() != events.size()) {
                 throw new IllegalStateException("Transport returned an incomplete result batch");
             }
@@ -45,11 +50,16 @@ public class OutboxRelayService {
             results = failedResults(events, failure.getClass().getSimpleName());
         }
 
-        int updated = repository.recordResults(results, MAX_ATTEMPTS);
+        List<OutboxPublishResult> attempted =
+                results.stream().filter(OutboxPublishResult::attempted).toList();
+        if (attempted.isEmpty()) {
+            return 0;
+        }
+        int updated = repository.recordResults(attempted, MAX_ATTEMPTS);
         for (int index = 0; index < events.size(); index++) {
             OutboxEvent event = events.get(index);
             OutboxPublishResult result = results.get(index);
-            if (!result.published() && event.attempts() + 1 >= MAX_ATTEMPTS) {
+            if (result.attempted() && !result.published() && event.attempts() + 1 >= MAX_ATTEMPTS) {
                 log.error(
                         "Outbox event exhausted retries: eventId={} traceId={}",
                         event.id(),

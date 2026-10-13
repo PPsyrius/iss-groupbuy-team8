@@ -31,11 +31,11 @@ class OutboxRelayJobTest {
 
     @Test
     void relaysOneBatchWhenTheLeaseIsValid() {
-        when(relay.relayBatch()).thenReturn(3);
+        when(relay.relayBatch(any())).thenReturn(3);
 
         job.run();
 
-        verify(relay).relayBatch();
+        verify(relay).relayBatch(any());
     }
 
     @Test
@@ -50,15 +50,15 @@ class OutboxRelayJobTest {
 
         job.run();
 
-        verify(relay, never()).relayBatch();
+        verify(relay, never()).relayBatch(any());
     }
 
     @Test
     void logsNoWorkWhenBatchIsEmpty() {
-        when(relay.relayBatch()).thenReturn(0);
+        when(relay.relayBatch(any())).thenReturn(0);
 
         job.run();
 
-        verify(relay).relayBatch();
+        verify(relay).relayBatch(any());
     }
 }

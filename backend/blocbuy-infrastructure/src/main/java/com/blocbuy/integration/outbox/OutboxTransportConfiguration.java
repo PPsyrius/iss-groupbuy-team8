@@ -1,6 +1,7 @@
 package com.blocbuy.integration.outbox;
 
 import java.net.URI;
+import java.time.Duration;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -9,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -86,6 +88,12 @@ public class OutboxTransportConfiguration {
      * AWS_REGION} on ECS); never a guessed default Region.
      */
     static <B extends AwsClientBuilder<B, ?>> B withRegion(B builder, String region) {
+        // Includes SDK retries; one in-flight call stays well below the two-minute lease.
+        builder.overrideConfiguration(
+                ClientOverrideConfiguration.builder()
+                        .apiCallAttemptTimeout(Duration.ofSeconds(5))
+                        .apiCallTimeout(Duration.ofSeconds(15))
+                        .build());
         if (!region.isBlank()) {
             builder.region(Region.of(region));
         }

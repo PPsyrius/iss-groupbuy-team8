@@ -24,7 +24,7 @@ public class OutboxRelayJob {
                 LEASE,
                 leaseValid -> {
                     if (leaseValid.getAsBoolean()) {
-                        int updated = relay.relayBatch();
+                        int updated = relay.relayBatch(leaseValid);
                         if (updated > 0) {
                             log.info("Outbox relay recorded {} delivery results", updated);
                         }

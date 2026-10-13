@@ -1,6 +1,8 @@
 package com.blocbuy.common.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -39,12 +41,12 @@ class OutboxRelayServiceTest {
                         OutboxPublishResult.published(first.id()),
                         OutboxPublishResult.failed(second.id(), "Unavailable"));
         when(repository.findDue(100)).thenReturn(events);
-        when(transport.publish(events)).thenReturn(results);
+        when(transport.publish(eq(events), any())).thenReturn(results);
         when(repository.recordResults(results, OutboxRelayService.MAX_ATTEMPTS)).thenReturn(2);
 
         assertThat(service.relayBatch()).isEqualTo(2);
 
-        verify(transport).publish(events);
+        verify(transport).publish(eq(events), any());
         verify(repository).recordResults(results, OutboxRelayService.MAX_ATTEMPTS);
     }
 
@@ -54,7 +56,8 @@ class OutboxRelayServiceTest {
         var second = event(9);
         List<OutboxEvent> events = List.of(first, second);
         when(repository.findDue(100)).thenReturn(events);
-        when(transport.publish(events)).thenThrow(new IllegalStateException("unavailable"));
+        when(transport.publish(eq(events), any()))
+                .thenThrow(new IllegalStateException("unavailable"));
         when(repository.recordResults(
                         org.mockito.ArgumentMatchers.anyList(),
                         org.mockito.ArgumentMatchers.eq(OutboxRelayService.MAX_ATTEMPTS)))
@@ -80,7 +83,7 @@ class OutboxRelayServiceTest {
         var event = event(0);
         List<OutboxEvent> events = List.of(event);
         when(repository.findDue(100)).thenReturn(events);
-        when(transport.publish(events)).thenReturn(List.of());
+        when(transport.publish(eq(events), any())).thenReturn(List.of());
         when(repository.recordResults(
                         org.mockito.ArgumentMatchers.anyList(),
                         org.mockito.ArgumentMatchers.eq(OutboxRelayService.MAX_ATTEMPTS)))
@@ -105,7 +108,7 @@ class OutboxRelayServiceTest {
         var event = event(0);
         List<OutboxEvent> events = List.of(event);
         when(repository.findDue(100)).thenReturn(events);
-        when(transport.publish(events)).thenReturn(null);
+        when(transport.publish(eq(events), any())).thenReturn(null);
         when(repository.recordResults(
                         org.mockito.ArgumentMatchers.anyList(),
                         org.mockito.ArgumentMatchers.eq(OutboxRelayService.MAX_ATTEMPTS)))
@@ -130,7 +133,7 @@ class OutboxRelayServiceTest {
         var event = event(0);
         List<OutboxEvent> events = List.of(event);
         when(repository.findDue(100)).thenReturn(events);
-        when(transport.publish(events))
+        when(transport.publish(eq(events), any()))
                 .thenReturn(List.of(OutboxPublishResult.published(UUID.randomUUID())));
         when(repository.recordResults(
                         org.mockito.ArgumentMatchers.anyList(),
@@ -149,6 +152,40 @@ class OutboxRelayServiceTest {
         assertThat(results)
                 .singleElement()
                 .satisfies(result -> assertThat(result.published()).isFalse());
+    }
+
+    @Test
+    void leaseLossLeavesUnattemptedRowsOutOfTheUpdate() {
+        var sent = event(0);
+        var failed = event(0);
+        var skipped = event(9);
+        var events = List.of(sent, failed, skipped);
+        var success = OutboxPublishResult.published(sent.id());
+        var failure = OutboxPublishResult.failed(failed.id(), "Unavailable");
+        java.util.function.BooleanSupplier lease = () -> false;
+        when(repository.findDue(100)).thenReturn(events);
+        when(transport.publish(events, lease))
+                .thenReturn(List.of(success, failure, OutboxPublishResult.skipped(skipped.id())));
+        when(repository.recordResults(List.of(success, failure), 10)).thenReturn(2);
+
+        assertThat(service.relayBatch(lease)).isEqualTo(2);
+
+        verify(repository).recordResults(List.of(success, failure), 10);
+        verify(transport).publish(events, lease);
+    }
+
+    @Test
+    void entirelySkippedBatchDoesNotUpdateAttempts() {
+        var event = event(9);
+        var events = List.of(event);
+        when(repository.findDue(100)).thenReturn(events);
+        when(transport.publish(eq(events), any()))
+                .thenReturn(List.of(OutboxPublishResult.skipped(event.id())));
+
+        assertThat(service.relayBatch(() -> false)).isZero();
+
+        verify(repository, org.mockito.Mockito.never())
+                .recordResults(any(), org.mockito.ArgumentMatchers.anyInt());
     }
 
     private static OutboxEvent event(int attempts) {
