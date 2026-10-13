@@ -357,15 +357,19 @@ The MSW store implements the backend rules (§2.2), so the rules are tested at t
    - Resolved by #290: the card reads `counts.openDeals` (A2-02); its "filling across N listings" detail has no source and is left out.
 6. **Policy on drafts.** The backend refuses rules unless the listing is on sale; the artboard implies drafts can have one. Accept the copy change (planned) or raise BA-11? Answered on #255 (2026-10-02): on sale only is intentional, so the planned copy stands (A2-01, #332).
 7. **Undrawn dialogs.** Take off sale, put back on sale, delete, unsaved changes: approve the §11 D2 copy?
+   - Answered 2026-10-13 (@limjiechao): the D2 copy is approved as shipped in A1-05 step 3; no change. #346 had been closed as not planned on 2026-10-11 by the Sprint 4 scope decision, before any approval.
 8. **Description.** In the contract and brief, missing from the 4b.1 field list. Include it (planned)?
 9. **Group terms** (seats per bloc, lifetime): a listing cannot start a bloc without them (NFR-29). Who designs the fields, and is PR-H (BA-7) scheduled?
 10. **HeroUI Pro.** The brief puts Pro blocks first (`app-layout`, `sidebar`, `kpi`, `data-grid` exist). The package is not installed. Is there a licence and a registry token for CI? The plan assumes OSS only.
 11. **Admin account on dev.** Who grants the `admin` role on the dev DB, and for which Google account (demo and `@admin` E2E)? Still open on 2026-09-26: #68 was closed on 2026-09-24 without recording a grant on the dev DB.
    - Answered 2026-10-05: the `@admin` run moves to the local full stack (`fullstack-localhost/`), where the grant needs no AWS access (FU-02). The dev grant is no longer needed for the E2E run; only a demo on dev still needs it.
 12. **Below 1024px.** Horizontal scroll (planned) or a "use a wider screen" notice?
+   - Answered 2026-10-13 (@limjiechao): horizontal scroll, as shipped in A1-02 step 5 (`min-w-[1024px]`); no notice.
 13. **Rule end time.** The backend's `validUntil` is exclusive. Should the picker ask for "last minute valid" (UI adds 1 minute) or the exact end instant (planned: exact instant, displayed minus 1 minute)?
 14. **Row menu contents.** Not specified. Plan: Edit plus the one allowed lifecycle action.
+   - Answered 2026-10-13 (@limjiechao): keep the menu as shipped in A1-05 step 5, Edit plus the dialog actions `actionsFor` allows: a draft row offers Publish and Delete draft, an `on_sale` row Take off sale, an `off_sale` row Put back on sale.
 15. **#183 interaction.** START re-prices from the latest policy, so a new revision changes what buyers mid-checkout pay. Is the replace-now warning enough, or should the admin form block revisions while quotes are live?
+   - Answered 2026-10-13 (@limjiechao): on the admin side the replace-now warning is enough, as shipped in A2-01 (#332); no block and no backend ask for live quote counts. A buyer holding an unexpired quote is not re-priced: `CatalogPurchaseSupportImpl.lockQuotedStart` charges the quote's amount and does not read the latest policy.
 
 ## 7. Risks
 
@@ -426,7 +430,7 @@ Each body is **Ask / Why (artboard + contract line) / Acceptance / Frontend fall
 ## 11. Design gaps for the design owner
 
 - **D1** (#345) Rail counts (Bloc price rules 18, Payments 2). Decided 2026-10-05 for Bloc price rules: count plus a link to the filtered listings table (Q3), waiting on BA-13 (#382). Payments has a data source since #333 (BA-8), but its page (A3-06) is not built, so the item stays hidden. The Bloc price rules count is `counts.withActivePolicy` (#293, listings with a rule valid now). The Open blocs stat has a source since #290.
-- **D2** (#346) Undrawn dialogs, proposed copy. *Take off sale:* "Take this listing off sale?" / "Buyers can no longer start or join blocs on it. Blocs already filled keep their orders. You can put it back on sale later." / "Take off sale". *Put back on sale:* "Put this listing back on sale?" / "It becomes visible on the storefront again. Price, currency and stock are unchanged." *Delete draft:* "Delete this draft?" / "It disappears from the console. This cannot be undone." (danger). *Unsaved:* "Discard your changes?"
+- **D2** (#346) Undrawn dialogs, copy approved 2026-10-13 (§6 Q7). *Take off sale:* "Take this listing off sale?" / "Buyers can no longer start or join blocs on it. Blocs already filled keep their orders. You can put it back on sale later." / "Take off sale". *Put back on sale:* "Put this listing back on sale?" / "It becomes visible on the storefront again. Price, currency and stock are unchanged." *Delete draft:* "Delete this draft?" / "It disappears from the console. This cannot be undone." (danger). *Unsaved:* "Discard your changes?"
 - **D3** (#347) Scheduled rule state (validFrom in the future) and the replace-now warning.
 - **D4** (#348) Dashboard loading and empty; table error; All / On sale / Off sale empty.
 - **D5** (#349) Unsaved-changes prompt; toast after save or delete.
