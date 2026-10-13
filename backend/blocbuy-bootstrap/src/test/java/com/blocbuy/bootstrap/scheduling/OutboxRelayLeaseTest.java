@@ -2,6 +2,8 @@ package com.blocbuy.bootstrap.scheduling;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.common.model.OutboxEvent;
@@ -170,7 +172,7 @@ class OutboxRelayLeaseTest {
         assertThat(firstCalls).hasValue(1);
         assertThat(secondCalls).hasValue(2);
         var recorded = org.mockito.ArgumentCaptor.forClass(java.util.List.class);
-        org.mockito.Mockito.verify(repository, org.mockito.Mockito.times(2))
+        verify(repository, times(2))
                 .recordResults(recorded.capture(), org.mockito.ArgumentMatchers.eq(10));
         assertThat(recorded.getAllValues())
                 .extracting(java.util.List::size)

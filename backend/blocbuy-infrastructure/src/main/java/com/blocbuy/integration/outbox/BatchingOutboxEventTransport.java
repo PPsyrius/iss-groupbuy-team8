@@ -47,19 +47,7 @@ abstract class BatchingOutboxEventTransport<E> implements OutboxEventTransport {
             if (entries.isEmpty() || !leaseValid.getAsBoolean()) {
                 continue;
             }
-            try {
-                for (OutboxPublishResult result : send(sendable, entries)) {
-                    results.put(result.eventId(), result);
-                }
-            } catch (RuntimeException failure) {
-                log.warn("Outbox provider batch failed for {} events", sendable.size(), failure);
-                for (OutboxEvent event : sendable) {
-                    results.put(
-                            event.id(),
-                            OutboxPublishResult.failed(
-                                    event.id(), failure.getClass().getSimpleName()));
-                }
-            }
+            publishBatch(sendable, entries, results);
         }
         return events.stream()
                 .map(
@@ -67,6 +55,22 @@ abstract class BatchingOutboxEventTransport<E> implements OutboxEventTransport {
                                 results.getOrDefault(
                                         event.id(), OutboxPublishResult.skipped(event.id())))
                 .toList();
+    }
+
+    private void publishBatch(
+            List<OutboxEvent> events, List<E> entries, Map<UUID, OutboxPublishResult> results) {
+        try {
+            for (OutboxPublishResult result : send(events, entries)) {
+                results.put(result.eventId(), result);
+            }
+        } catch (RuntimeException failure) {
+            log.warn("Outbox provider batch failed for {} events", events.size(), failure);
+            for (OutboxEvent event : events) {
+                results.put(
+                        event.id(),
+                        OutboxPublishResult.failed(event.id(), failure.getClass().getSimpleName()));
+            }
+        }
     }
 
     protected abstract E entry(OutboxEvent event);
