@@ -11,11 +11,13 @@ import com.blocbuy.common.config.SessionStpInterface;
 import com.blocbuy.identity.persistence.SysUserMapper;
 import com.blocbuy.identity.service.UserAppService;
 import com.blocbuy.identity.web.AuthController;
+import com.blocbuy.identity.web.internal.InternalUserController;
 import com.blocbuy.integration.outbox.IntegrationOutboxWriter;
 import com.blocbuy.integration.outbox.OutboxMapper;
 import com.blocbuy.notification.web.NotificationController;
 import com.blocbuy.order.persistence.BizOrderMapper;
 import com.blocbuy.platform.TopologyProperties;
+import com.blocbuy.service.commerce.identity.RemoteUserAppService;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +27,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -40,6 +41,8 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
         properties = {
             "spring.data.redis.host=localhost",
             "spring.data.redis.port=1",
+            // never contacted while the context starts; the remote client only stores it
+            "blocbuy.identity.base-url=http://identity-svc.invalid:8589",
             "blocbuy.events.enabled=false",
             "blocbuy.scheduling.enabled=false"
         })
@@ -63,12 +66,6 @@ class CommerceServiceApplicationIT {
         properties.add("spring.datasource.password", POSTGRES::getPassword);
     }
 
-    /**
-     * Not provided by this assembly until #468 (remote identity check); delete this mock when that
-     * lands.
-     */
-    @MockitoBean private UserAppService userAppService;
-
     @Autowired private ApplicationContext context;
 
     @Test
@@ -86,6 +83,17 @@ class CommerceServiceApplicationIT {
         assertThat(context.getBeanNamesForType(OutboxRetentionJob.class)).isEmpty();
         assertThat(context.getBean(TopologyProperties.class).topology())
                 .isEqualTo(TopologyProperties.Mode.DISTRIBUTED);
+    }
+
+    /**
+     * Identity is answered by identity-svc over HTTP; this assembly serves no /internal/** (#468).
+     */
+    @Test
+    void asksIdentityRemotely() {
+        assertThat(context.getBeansOfType(UserAppService.class).values())
+                .singleElement()
+                .isInstanceOf(RemoteUserAppService.class);
+        assertThat(context.getBeanNamesForType(InternalUserController.class)).isEmpty();
     }
 
     @Test

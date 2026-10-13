@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.blocbuy.bootstrap.fixture.StripeTestDatabase;
 import com.blocbuy.common.persistence.UuidTypeHandler;
 import com.blocbuy.common.web.GlobalExceptionHandler;
+import com.blocbuy.identity.exception.IdentityUnavailableException;
 import com.blocbuy.payment.event.PaymentSucceeded;
 import com.blocbuy.payment.gateway.CheckoutGateway;
 import com.blocbuy.payment.gateway.PaymentBusinessPort;
@@ -81,6 +82,7 @@ class StripeCheckoutFlowTest {
     private final Map<UUID, CheckoutQuote> quotes = new ConcurrentHashMap<>();
     private final Map<String, CheckoutGateway.Session> sessions = new ConcurrentHashMap<>();
     private final AtomicBoolean failFulfilment = new AtomicBoolean();
+    private final AtomicBoolean identityOutage = new AtomicBoolean();
     private CheckoutGateway gateway;
     private StripeCheckoutService service;
     private TeamExpiryRefundService expiryRefunds;
@@ -352,6 +354,42 @@ class StripeCheckoutFlowTest {
                                 .content(body))
                 .andExpect(status().isOk());
         assertThat(count("stripe_test_orders")).isEqualTo(1);
+    }
+
+    /**
+     * #468: identity unreachable from commerce-svc during settlement. Stripe gets a 500, nothing of
+     * the attempt survives (no event receipt, no outcome, no refund), and the redelivery settles.
+     */
+    @Test
+    void identityOutageAnswers500WithoutOutcomeAndRedeliverySettles() throws Exception {
+        CheckoutPayment payment = prepare();
+        paid(payment);
+        MockMvc mvc = signedHttp();
+        String body =
+                signedEvent("evt_identity_down", "checkout.session.completed", payment.sessionId());
+        identityOutage.set(true);
+        mvc.perform(
+                        post(HTTP_PATH)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("Stripe-Signature", sign(body))
+                                .content(body))
+                .andExpect(status().isInternalServerError());
+        assertThat(count("log_payment_webhook_event")).isZero();
+        assertThat(repository.outcome(payment.id())).isNull();
+        assertThat(count("biz_refund")).isZero();
+        assertThat(repository.findById(payment.id()).orElseThrow().status())
+                .isEqualTo(CheckoutPayment.Status.CREATED);
+
+        identityOutage.set(false);
+        mvc.perform(
+                        post(HTTP_PATH)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("Stripe-Signature", sign(body))
+                                .content(body))
+                .andExpect(status().isOk());
+        assertThat(repository.outcome(payment.id())).isEqualTo("FULFILLED");
+        assertThat(count("stripe_test_orders")).isEqualTo(1);
+        assertThat(count("biz_refund")).isZero();
     }
 
     @Test
@@ -1127,6 +1165,10 @@ class StripeCheckoutFlowTest {
         @Override
         public Outcome fulfil(PaymentSucceeded event) {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
+            if (identityOutage.get()) {
+                // what commerce-svc's remote requireActive throws before any business write (#468)
+                throw new IdentityUnavailableException("identity requireActive failed", null);
+            }
             if (Boolean.TRUE.equals(
                     jdbc.queryForObject(
                             "SELECT expired FROM stripe_test_team WHERE id=?",

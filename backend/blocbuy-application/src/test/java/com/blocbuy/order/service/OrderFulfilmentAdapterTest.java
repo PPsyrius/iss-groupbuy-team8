@@ -23,6 +23,7 @@ import com.blocbuy.groupbuy.service.GroupDealPurchaseSupport;
 import com.blocbuy.groupbuy.service.GroupDealSettlementSupport;
 import com.blocbuy.groupbuy.service.PaidGroupDealService;
 import com.blocbuy.identity.exception.IdentityErrorCode;
+import com.blocbuy.identity.exception.IdentityUnavailableException;
 import com.blocbuy.identity.service.UserAppService;
 import com.blocbuy.order.exception.OrderErrorCode;
 import com.blocbuy.order.model.Order;
@@ -402,6 +403,22 @@ class OrderFulfilmentAdapterTest {
 
         assertThat(adapter.fulfil(event(stored)).rejection()).isEqualTo("BUYER_INACTIVE");
         assertNothingWasWritten();
+    }
+
+    /**
+     * An identity outage in commerce-svc (#468) is not a refusal: it must leave the webhook
+     * transaction rather than record BUYER_INACTIVE and refund a buyer nobody checked.
+     */
+    @Test
+    void anIdentityOutageIsNotABuyerRejection() {
+        PurchaseIntent stored = locked(PurchaseOperation.JOIN, null);
+        IdentityUnavailableException outage =
+                new IdentityUnavailableException("identity requireActive failed", null);
+        doThrow(outage).when(users).requireActive(USER);
+
+        assertThatThrownBy(() -> adapter.fulfil(event(stored))).isSameAs(outage);
+        assertNothingWasWritten();
+        verifyNoInteractions(products);
     }
 
     @Test

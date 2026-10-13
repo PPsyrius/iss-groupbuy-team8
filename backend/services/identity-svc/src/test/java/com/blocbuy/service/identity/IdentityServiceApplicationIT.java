@@ -7,7 +7,10 @@ import com.blocbuy.catalog.persistence.BizProductMapper;
 import com.blocbuy.catalog.web.ProductController;
 import com.blocbuy.common.config.MyBatisConfig;
 import com.blocbuy.identity.persistence.SysUserMapper;
+import com.blocbuy.identity.service.UserAppService;
+import com.blocbuy.identity.service.UserAppServiceImpl;
 import com.blocbuy.identity.web.AuthController;
+import com.blocbuy.identity.web.internal.InternalUserController;
 import com.blocbuy.notification.web.NotificationController;
 import com.blocbuy.platform.TopologyProperties;
 import org.junit.jupiter.api.Test;
@@ -63,6 +66,13 @@ class IdentityServiceApplicationIT {
         assertThat(context.getBeanNamesForType(MyBatisConfig.class)).isEmpty();
         assertThat(context.getBean(TopologyProperties.class).topology())
                 .isEqualTo(TopologyProperties.Mode.DISTRIBUTED);
+    }
+
+    /** Peers ask identity over /internal/users, answered by the local implementation (#468). */
+    @Test
+    void servesTheInternalUserEndpointsFromTheLocalImplementation() {
+        assertThat(context.getBeanNamesForType(InternalUserController.class)).hasSize(1);
+        assertThat(context.getBean(UserAppService.class)).isInstanceOf(UserAppServiceImpl.class);
     }
 
     @Test

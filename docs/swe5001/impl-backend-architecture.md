@@ -144,6 +144,7 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
   - timeouts and `5xx` throw `IdentityUnavailableException` (unchecked, not a `BizException`), so `OrderFulfilmentAdapter.rejects` does not turn them into `BUYER_INACTIVE`: the webhook transaction rolls back, the global handler answers 500 and Stripe redelivers; user requests fail closed with 500;
   - `currentUser` throws `UnsupportedOperationException` (only `AuthController` uses it, and it runs in `identity-svc`).
 - **Done when:** contract test runs the same `requireActive` cases against both implementations; WireMock test covers timeout and `5xx`; a webhook test proves a timeout returns 500, writes no `BUYER_INACTIVE` outcome and succeeds on redelivery.
+- **Amended 2026-10-13 (#468, [plan](../agile/sprint-04/remote-identity-plan-20261013.md)):** the endpoints use the `Result` envelope, so disabled is 403 `IDENTITY_403_001` (not 409) and the adapter maps refusals by status and identity code together; a route 404 is an outage. `GET /internal/users/{id}/public-nickname` answers 200 with a nullable nickname. The adapter lives in `services/commerce-svc` (`com.blocbuy.service.commerce.identity`), bound to `blocbuy.identity.base-url` = `IDENTITY_BASE_URL`, not in the platform starter. The batch nickname endpoint follows #469's port method.
 
 ### WP-B6 Transactional outbox and publisher (WBS 2.2)
 

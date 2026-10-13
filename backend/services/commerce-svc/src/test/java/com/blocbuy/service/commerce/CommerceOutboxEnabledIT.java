@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.blocbuy.bootstrap.scheduling.OutboxRetentionJob;
 import com.blocbuy.common.repository.OutboxRetentionRepository;
 import com.blocbuy.groupbuy.event.TeamSucceeded;
-import com.blocbuy.identity.service.UserAppService;
 import com.blocbuy.integration.outbox.IntegrationOutboxWriter;
 import com.blocbuy.integration.outbox.OutboxMapper;
 import java.time.Instant;
@@ -20,7 +19,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.junit.jupiter.Container;
@@ -33,6 +31,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
         properties = {
             "spring.data.redis.host=localhost",
             "spring.data.redis.port=1",
+            "blocbuy.identity.base-url=http://identity-svc.invalid:8589",
             "blocbuy.events.enabled=true",
             "blocbuy.scheduling.enabled=true",
             "blocbuy.events.retention.initial-delay=PT24H",
@@ -60,8 +59,6 @@ class CommerceOutboxEnabledIT {
         properties.add("spring.datasource.password", POSTGRES::getPassword);
     }
 
-    // Retain only the agreed #468 dependency mock; the writer, mapper and retention are real.
-    @MockitoBean private UserAppService users;
     @Autowired private ApplicationContext context;
     @Autowired private ApplicationEventPublisher events;
     @Autowired private PlatformTransactionManager transactions;
