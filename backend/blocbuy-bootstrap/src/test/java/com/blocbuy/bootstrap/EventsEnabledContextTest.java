@@ -2,7 +2,9 @@ package com.blocbuy.bootstrap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.blocbuy.bootstrap.scheduling.OutboxRelayJob;
 import com.blocbuy.bootstrap.scheduling.OutboxRetentionJob;
+import com.blocbuy.common.service.OutboxRelayService;
 import com.blocbuy.integration.outbox.IntegrationOutboxWriter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,5 +33,7 @@ class EventsEnabledContextTest {
     void eventWriterIsOptedInWithoutAccidentallyStartingScheduledJobs() {
         assertThat(context.getBeansOfType(IntegrationOutboxWriter.class)).hasSize(1);
         assertThat(context.getBeansOfType(OutboxRetentionJob.class)).isEmpty();
+        assertThat(context.getBeansOfType(OutboxRelayService.class)).isEmpty();
+        assertThat(context.getBeansOfType(OutboxRelayJob.class)).isEmpty();
     }
 }

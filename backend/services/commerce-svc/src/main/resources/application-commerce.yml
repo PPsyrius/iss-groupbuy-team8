@@ -22,3 +22,7 @@ blocbuy:
     # identity-svc over ECS Service Connect (infra/swe5001/runtime/services.tf); no default, so a
     # missing value fails startup. Timeouts default to 500 ms connect and 1500 ms read (#468).
     base-url: ${IDENTITY_BASE_URL}
+  events:
+    # The distributed commerce assembly publishes to the shared SNS topic; the relay remains
+    # explicitly opt-in until the runtime supplies its topic ARN and IAM permissions.
+    transport: ${BLOCBUY_EVENTS_TRANSPORT:sns}
