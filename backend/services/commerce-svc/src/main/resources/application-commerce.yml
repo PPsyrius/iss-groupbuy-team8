@@ -18,3 +18,7 @@ mybatis:
 
 blocbuy:
   topology: distributed
+  identity:
+    # identity-svc over ECS Service Connect (infra/swe5001/runtime/services.tf); no default, so a
+    # missing value fails startup. Timeouts default to 500 ms connect and 1500 ms read (#468).
+    base-url: ${IDENTITY_BASE_URL}
