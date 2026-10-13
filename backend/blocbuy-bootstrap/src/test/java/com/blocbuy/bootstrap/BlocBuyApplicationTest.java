@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mockStatic;
 
 import com.blocbuy.bootstrap.scheduling.LeasedJobRunner;
+import com.blocbuy.bootstrap.scheduling.OutboxRelayJob;
 import com.blocbuy.bootstrap.scheduling.OutboxRetentionJob;
 import com.blocbuy.bootstrap.scheduling.PurchaseIntentExpiryJob;
 import com.blocbuy.bootstrap.scheduling.RefundWorkerJob;
 import com.blocbuy.bootstrap.scheduling.TeamExpirySweepJob;
+import com.blocbuy.common.service.OutboxRelayService;
 import com.blocbuy.identity.service.UserAppService;
 import com.blocbuy.identity.service.UserAppServiceImpl;
 import com.blocbuy.identity.web.internal.InternalUserController;
@@ -51,6 +53,8 @@ class BlocBuyApplicationTest {
         assertThat(context.getBeansOfType(LeasedJobRunner.class)).isEmpty();
         assertThat(context.getBeansOfType(IntegrationOutboxWriter.class)).isEmpty();
         assertThat(context.getBeansOfType(OutboxRetentionJob.class)).isEmpty();
+        assertThat(context.getBeansOfType(OutboxRelayService.class)).isEmpty();
+        assertThat(context.getBeansOfType(OutboxRelayJob.class)).isEmpty();
     }
 
     /** The monolith answers identity in process and never serves /internal/** (ADR 0008, #468). */

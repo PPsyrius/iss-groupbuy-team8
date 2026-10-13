@@ -3,14 +3,17 @@ package com.blocbuy.service.identity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mockStatic;
 
+import com.blocbuy.bootstrap.scheduling.OutboxRelayJob;
 import com.blocbuy.catalog.persistence.BizProductMapper;
 import com.blocbuy.catalog.web.ProductController;
 import com.blocbuy.common.config.MyBatisConfig;
+import com.blocbuy.common.gateway.OutboxEventTransport;
 import com.blocbuy.identity.persistence.SysUserMapper;
 import com.blocbuy.identity.service.UserAppService;
 import com.blocbuy.identity.service.UserAppServiceImpl;
 import com.blocbuy.identity.web.AuthController;
 import com.blocbuy.identity.web.internal.InternalUserController;
+import com.blocbuy.integration.outbox.IntegrationOutboxWriter;
 import com.blocbuy.notification.web.NotificationController;
 import com.blocbuy.platform.TopologyProperties;
 import org.junit.jupiter.api.Test;
@@ -33,7 +36,13 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  */
 @SpringBootTest(
         classes = IdentityServiceApplication.class,
-        properties = {"spring.data.redis.host=localhost", "spring.data.redis.port=1"})
+        properties = {
+            "spring.data.redis.host=localhost",
+            "spring.data.redis.port=1",
+            // switched on to prove the outbox relay stays a commerce-only assembly (ADR 0007)
+            "blocbuy.events.enabled=true",
+            "blocbuy.events.relay.enabled=true"
+        })
 @ActiveProfiles({"local", "identity"})
 @Testcontainers
 class IdentityServiceApplicationIT {
@@ -64,6 +73,9 @@ class IdentityServiceApplicationIT {
         assertThat(context.getBeanNamesForType(BizProductMapper.class)).isEmpty();
         assertThat(context.getBeanNamesForType(NotificationController.class)).isEmpty();
         assertThat(context.getBeanNamesForType(MyBatisConfig.class)).isEmpty();
+        assertThat(context.getBeanNamesForType(OutboxRelayJob.class)).isEmpty();
+        assertThat(context.getBeanNamesForType(OutboxEventTransport.class)).isEmpty();
+        assertThat(context.getBeanNamesForType(IntegrationOutboxWriter.class)).isEmpty();
         assertThat(context.getBean(TopologyProperties.class).topology())
                 .isEqualTo(TopologyProperties.Mode.DISTRIBUTED);
     }

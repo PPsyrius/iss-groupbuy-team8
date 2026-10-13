@@ -70,6 +70,17 @@ blocbuy:
   events:
     # Cross-service event persistence is opt-in; SWE5006 EC2 stays off, SWE5001 commerce may opt in.
     enabled: ${BLOCBUY_EVENTS_ENABLED:false}
+    relay:
+      # Delivery is independently opt-in; the EC2 dev profile has no broker and leaves this off.
+      enabled: ${BLOCBUY_EVENTS_RELAY_ENABLED:false}
+    transport: ${BLOCBUY_EVENTS_TRANSPORT:sqs}
+    # Empty: the AWS SDK default region chain (AWS_REGION on ECS). Never a guessed Region.
+    region: ${BLOCBUY_EVENTS_REGION:}
+    sqs:
+      endpoint: ${BLOCBUY_EVENTS_SQS_ENDPOINT:}
+      queue-url: ${BLOCBUY_EVENTS_SQS_QUEUE_URL:}
+    sns:
+      topic-arn: ${BLOCBUY_EVENTS_SNS_TOPIC_ARN:}
   scheduling:
     # master switch, off by default everywhere; deployments opt in after their backlog check
     enabled: false

@@ -20,4 +20,33 @@
         )
         DELETE FROM sys_outbox o USING candidates c WHERE o.id = c.id
     </delete>
+
+    <select id="findDue" resultType="com.blocbuy.common.model.OutboxEvent">
+        SELECT id, event_type, event_version, aggregate_id, payload::text AS payload_json,
+               trace_id, created_at, attempts
+        FROM sys_outbox
+        WHERE published_at IS NULL AND failed_at IS NULL AND next_attempt_at &lt;= CURRENT_TIMESTAMP
+        ORDER BY next_attempt_at, created_at, id
+        LIMIT #{limit}
+    </select>
+
+    <update id="recordResults">
+        UPDATE sys_outbox AS outbox
+        SET published_at = CASE WHEN result.published THEN CURRENT_TIMESTAMP ELSE outbox.published_at END,
+            attempts = CASE WHEN result.published THEN outbox.attempts ELSE outbox.attempts + 1 END,
+            next_attempt_at = CASE
+                WHEN result.published THEN outbox.next_attempt_at
+                ELSE CURRENT_TIMESTAMP + LEAST(300, POWER(2, LEAST(outbox.attempts, 9))) * INTERVAL '1 second'
+            END,
+            failed_at = CASE
+                WHEN result.published OR outbox.attempts + 1 &lt; #{maxAttempts} THEN outbox.failed_at
+                ELSE CURRENT_TIMESTAMP
+            END
+        FROM (VALUES
+            <foreach collection="results" item="result" separator=",">
+                (#{result.eventId,jdbcType=OTHER}::uuid, #{result.published})
+            </foreach>
+        ) AS result(id, published)
+        WHERE outbox.id = result.id AND outbox.published_at IS NULL AND outbox.failed_at IS NULL
+    </update>
 </mapper>
