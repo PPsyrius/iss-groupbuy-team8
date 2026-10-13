@@ -88,7 +88,10 @@ receive_probe() {
     fi
     batches=$((batches + 1))
   done
-  [ "$expected" = absent ] && [ "$empty_polls" -ge 3 ] || { log "$event_type/$queue probe was inconclusive within the bounded receive budget"; return 1; }
+  if [ "$expected" != absent ] || [ "$empty_polls" -lt 3 ]; then
+    log "$event_type/$queue probe was inconclusive within the bounded receive budget"
+    return 1
+  fi
   log "$event_type absent from $queue in three 20-second long polls (bounded observation)"
 }
 
