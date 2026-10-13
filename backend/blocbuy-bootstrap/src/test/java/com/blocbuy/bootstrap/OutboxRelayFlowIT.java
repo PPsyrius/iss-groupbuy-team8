@@ -89,8 +89,7 @@ class OutboxRelayFlowIT {
     }
 
     @Test
-    void committedRowsSurviveBrokerOutageAndArePublishedWithAttributesAfterRecovery()
-            throws InterruptedException {
+    void committedRowsSurviveBrokerOutageAndArePublishedWithAttributesAfterRecovery() {
         String endpoint =
                 "http://%s:%d".formatted(ELASTICMQ.getHost(), ELASTICMQ.getMappedPort(9324));
         var credentials =
@@ -157,11 +156,24 @@ class OutboxRelayFlowIT {
                                         Integer.class))
                         .isEqualTo(3);
 
-                Thread.sleep(1_100);
                 OutboxEventTransport recovered =
                         new SqsOutboxEventTransport(
                                 realClient, queueUrl, JsonMapper.builder().build());
                 OutboxRelayService recoveredRelay = new OutboxRelayService(repository, recovered);
+                // the failure scheduled a backoff: nothing is due yet, so nothing is sent early
+                assertThat(
+                                jdbc.queryForObject(
+                                        "SELECT count(*) FROM sys_outbox WHERE next_attempt_at > CURRENT_TIMESTAMP",
+                                        Integer.class))
+                        .isEqualTo(3);
+                assertThat(recoveredRelay.relayBatch()).isZero();
+
+                // let the backoff elapse without waiting for it
+                jdbc.update(
+                        "UPDATE sys_outbox SET next_attempt_at = CURRENT_TIMESTAMP - INTERVAL '1 second'");
+                // the empty poll above sits in this session's local cache; Spring opens a fresh
+                // session per transaction, so production never reuses it
+                relaySession.clearCache();
                 assertThat(recoveredRelay.relayBatch()).isEqualTo(3);
 
                 var messages =

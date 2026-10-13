@@ -27,7 +27,8 @@ class OutboxMessageFactoryTest {
 
     @Test
     void rejectsAnInvalidStoredPayload() {
-        assertThatThrownBy(() -> OutboxMessageFactory.body(event("not-json"), json))
+        OutboxEvent invalid = event("not-json");
+        assertThatThrownBy(() -> OutboxMessageFactory.body(invalid, json))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Could not serialize outbox event");
     }

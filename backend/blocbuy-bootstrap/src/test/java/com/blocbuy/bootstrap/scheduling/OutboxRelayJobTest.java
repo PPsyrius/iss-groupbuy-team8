@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -49,7 +50,7 @@ class OutboxRelayJobTest {
 
         job.run();
 
-        verify(relay, org.mockito.Mockito.never()).relayBatch();
+        verify(relay, never()).relayBatch();
     }
 
     @Test

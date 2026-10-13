@@ -33,7 +33,8 @@ class OutboxRelayRepositoryImplTest {
     void validatesResultBatchAndDelegatesValidBatch() {
         assertThatThrownBy(() -> repository.recordResults(null, 10))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> repository.recordResults(List.of(), 10))
+        List<OutboxPublishResult> none = List.of();
+        assertThatThrownBy(() -> repository.recordResults(none, 10))
                 .isInstanceOf(IllegalArgumentException.class);
         var tooMany =
                 java.util.stream.IntStream.range(0, 101)
@@ -43,7 +44,8 @@ class OutboxRelayRepositoryImplTest {
                 .isInstanceOf(IllegalArgumentException.class);
 
         var result = OutboxPublishResult.published(UUID.randomUUID());
-        assertThatThrownBy(() -> repository.recordResults(List.of(result), 0))
+        List<OutboxPublishResult> one = List.of(result);
+        assertThatThrownBy(() -> repository.recordResults(one, 0))
                 .isInstanceOf(IllegalArgumentException.class);
         when(mapper.recordResults(List.of(result), 10)).thenReturn(1);
         assertThat(repository.recordResults(List.of(result), 10)).isEqualTo(1);
