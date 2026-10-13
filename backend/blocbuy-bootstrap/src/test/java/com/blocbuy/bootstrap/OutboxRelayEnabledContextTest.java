@@ -24,6 +24,7 @@ import software.amazon.awssdk.services.sqs.SqsClient;
             "blocbuy.events.enabled=true",
             "blocbuy.events.relay.enabled=true",
             "blocbuy.events.transport=sqs",
+            "blocbuy.events.region=us-east-1",
             "blocbuy.events.sqs.endpoint=http://localhost:9324",
             "blocbuy.events.sqs.queue-url=http://localhost:9324/queue"
         })

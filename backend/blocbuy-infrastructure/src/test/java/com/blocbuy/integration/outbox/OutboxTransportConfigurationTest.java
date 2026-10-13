@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import tools.jackson.databind.ObjectMapper;
@@ -24,6 +25,7 @@ class OutboxTransportConfigurationTest {
                         "blocbuy.events.enabled=true",
                         "blocbuy.events.relay.enabled=true",
                         "blocbuy.events.transport=sqs",
+                        "blocbuy.events.region=us-east-1",
                         "blocbuy.events.sqs.endpoint=http://localhost:9324",
                         "blocbuy.events.sqs.queue-url=http://localhost:9324/queue")
                 .run(
@@ -40,6 +42,7 @@ class OutboxTransportConfigurationTest {
                         "blocbuy.events.enabled=true",
                         "blocbuy.events.relay.enabled=true",
                         "blocbuy.events.transport=sqs",
+                        "blocbuy.events.region=ap-southeast-1",
                         "blocbuy.events.sqs.endpoint=",
                         "blocbuy.events.sqs.queue-url=https://sqs.us-east-1.amazonaws.com/123/events")
                 .run(context -> assertThat(context).hasSingleBean(SqsClient.class));
@@ -72,6 +75,82 @@ class OutboxTransportConfigurationTest {
                             assertThat(context).doesNotHaveBean(SqsClient.class);
                             assertThat(context).doesNotHaveBean(SnsClient.class);
                         });
+    }
+
+    @Test
+    void usesTheSdkDefaultRegionChainWhenNoRegionIsConfigured() {
+        String previous = System.getProperty("aws.region");
+        System.setProperty("aws.region", "ap-southeast-1");
+        try {
+            runner.withPropertyValues(
+                            "blocbuy.events.enabled=true",
+                            "blocbuy.events.relay.enabled=true",
+                            "blocbuy.events.transport=sns",
+                            "blocbuy.events.region=",
+                            "blocbuy.events.sns.topic-arn=arn:aws:sns:ap-southeast-1:000000000000:e")
+                    .run(
+                            context ->
+                                    assertThat(
+                                                    context.getBean(SnsClient.class)
+                                                            .serviceClientConfiguration()
+                                                            .region())
+                                            .isEqualTo(Region.AP_SOUTHEAST_1));
+        } finally {
+            if (previous == null) {
+                System.clearProperty("aws.region");
+            } else {
+                System.setProperty("aws.region", previous);
+            }
+        }
+    }
+
+    @Test
+    void refusesToStartWithoutATopicArn() {
+        runner.withPropertyValues(
+                        "blocbuy.events.enabled=true",
+                        "blocbuy.events.relay.enabled=true",
+                        "blocbuy.events.transport=sns",
+                        "blocbuy.events.region=ap-southeast-1",
+                        "blocbuy.events.sns.topic-arn=")
+                .run(
+                        context ->
+                                assertThat(context)
+                                        .getFailure()
+                                        .hasRootCauseMessage(
+                                                "blocbuy.events.sns.topic-arn must be set when the"
+                                                        + " outbox relay is enabled"));
+    }
+
+    @Test
+    void refusesToStartWithoutAQueueUrl() {
+        runner.withPropertyValues(
+                        "blocbuy.events.enabled=true",
+                        "blocbuy.events.relay.enabled=true",
+                        "blocbuy.events.transport=sqs",
+                        "blocbuy.events.region=us-east-1")
+                .run(
+                        context ->
+                                assertThat(context)
+                                        .getFailure()
+                                        .hasRootCauseMessage(
+                                                "blocbuy.events.sqs.queue-url must be set when the"
+                                                        + " outbox relay is enabled"));
+    }
+
+    @Test
+    void refusesToStartWithAnUnknownTransport() {
+        runner.withPropertyValues(
+                        "blocbuy.events.enabled=true",
+                        "blocbuy.events.relay.enabled=true",
+                        "blocbuy.events.transport=kafka")
+                .run(
+                        context ->
+                                assertThat(context)
+                                        .getFailure()
+                                        .hasRootCauseMessage(
+                                                "blocbuy.events.transport must be sqs or sns when"
+                                                        + " the outbox relay is enabled, not"
+                                                        + " 'kafka'"));
     }
 
     @Configuration(proxyBeanMethods = false)
