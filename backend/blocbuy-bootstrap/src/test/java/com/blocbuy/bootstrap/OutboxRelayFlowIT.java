@@ -160,7 +160,11 @@ class OutboxRelayFlowIT {
                         new SqsOutboxEventTransport(
                                 realClient, queueUrl, JsonMapper.builder().build());
                 OutboxRelayService recoveredRelay = new OutboxRelayService(repository, recovered);
-                // the failure scheduled a backoff: nothing is due yet, so nothing is sent early
+                // Fix eligibility independently of the one-second backoff and runner pauses.
+                jdbc.update(
+                        "UPDATE sys_outbox SET next_attempt_at = CURRENT_TIMESTAMP + INTERVAL '1 hour'");
+                relaySession.clearCache();
+                // Future-dated rows must not be sent before their retry deadline.
                 assertThat(
                                 jdbc.queryForObject(
                                         "SELECT count(*) FROM sys_outbox WHERE next_attempt_at > CURRENT_TIMESTAMP",
