@@ -18,6 +18,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
             "com.blocbuy.groupbuy",
             "com.blocbuy.order",
             "com.blocbuy.payment",
+            "com.blocbuy.integration.outbox",
             "com.blocbuy.common",
             "com.blocbuy.bootstrap.config",
             "com.blocbuy.bootstrap.scheduling"
@@ -28,6 +29,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
             "com.blocbuy.groupbuy.persistence",
             "com.blocbuy.order.persistence",
             "com.blocbuy.payment.persistence",
+            "com.blocbuy.integration.outbox",
             "com.blocbuy.common.persistence"
         },
         annotationClass = Mapper.class)

@@ -4,9 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mockStatic;
 
 import com.blocbuy.bootstrap.scheduling.LeasedJobRunner;
+import com.blocbuy.bootstrap.scheduling.OutboxRetentionJob;
 import com.blocbuy.bootstrap.scheduling.PurchaseIntentExpiryJob;
 import com.blocbuy.bootstrap.scheduling.RefundWorkerJob;
 import com.blocbuy.bootstrap.scheduling.TeamExpirySweepJob;
+import com.blocbuy.integration.outbox.IntegrationOutboxWriter;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +46,8 @@ class BlocBuyApplicationTest {
         assertThat(context.getBeansOfType(PurchaseIntentExpiryJob.class)).isEmpty();
         assertThat(context.getBeansOfType(RefundWorkerJob.class)).isEmpty();
         assertThat(context.getBeansOfType(LeasedJobRunner.class)).isEmpty();
+        assertThat(context.getBeansOfType(IntegrationOutboxWriter.class)).isEmpty();
+        assertThat(context.getBeansOfType(OutboxRetentionJob.class)).isEmpty();
     }
 
     @Test

@@ -49,11 +49,20 @@ class ServiceGrantsIT {
         assertDenied("commerce", "select count(*) from domain.rel_user_role");
         assertAllowed("commerce", "select count(*) from domain.biz_product");
         assertAllowed("commerce", "select count(*) from domain.sys_scheduler_lock");
+        assertDenied("commerce", "select count(*) from domain.biz_notification");
         assertAllowed("commerce", "select nextval('domain.seq_biz_product_product_no')");
     }
 
     @Test
     void notificationRuntimeRoleIsDeniedCommerceAndIdentityTables() throws SQLException {
+        assertAllowed("notification", "select count(*) from domain.biz_notification");
+        assertAllowed(
+                "notification",
+                """
+                insert into domain.biz_notification (event_id, user_id, reference_id, notification_type, title, content)
+                values (uuidv7(), uuidv7(), uuidv7(), 'TeamSucceeded', 'Team succeeded', 'Your team succeeded.')
+                returning id
+                """);
         assertDenied("notification", "select count(*) from domain.biz_product");
         assertDenied("notification", "select count(*) from domain.biz_order");
         assertDenied("notification", "select count(*) from domain.sys_user");
@@ -65,6 +74,7 @@ class ServiceGrantsIT {
         assertAllowed("identity", "select count(*) from domain.sys_user");
         assertAllowed("identity", "select count(*) from domain.rel_role_permission");
         assertDenied("identity", "select count(*) from domain.biz_order");
+        assertDenied("identity", "select count(*) from domain.biz_notification");
         assertDenied("identity", "select count(*) from domain.sys_scheduler_lock");
     }
 

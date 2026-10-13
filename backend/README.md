@@ -46,9 +46,15 @@ Secrets come from the environment, never from git: `DB_USERNAME`, `DB_PASSWORD`,
 
 Scheduled jobs are deployment-opt-in. Before setting `BLOCBUY_SCHEDULING_ENABLED=true`, count overdue open teams, overdue unfulfilled purchase intents (including paid refusal cases) and due refund obligations; the team and intent expiry sweeps each select at most 100 candidates per run and the refund worker attempts one due obligation per tick. This switch can move money through the configured Stripe gateway even under the EC2-only profile; the gateway requires a sandbox key. To change or pause scheduling, follow the [deployment recreation procedure](../deployment/backend/README.md#change-the-scheduling-flag); restarting an existing container does not reload its environment.
 
+Cross-service outbox writes are separately opt-in with `BLOCBUY_EVENTS_ENABLED=true`; the default is off and the SWE5006 `ec2` profile keeps it off. The migration may run in every profile, but the writer is active only when opted in. Commerce explicitly scans the outbox components, mapper and XML. Retention also requires `BLOCBUY_SCHEDULING_ENABLED=true`: each run performs one short transaction deleting at most 500 published rows older than seven days, skips locked rows and leaves the remainder for the next tick. Its default interval is six hours (`blocbuy.events.retention.interval`), a nominal 2000-row/day budget per continuously running instance; the lease prevents overlapping runs, not additional sequential runs from other instances or restarts. This is not a backlog-drain guarantee. Unpublished and failed rows remain untouched, even if a failed row has a publication timestamp. The later relay is separate work (#445).
+
 Local datasource: `jdbc:postgresql://localhost:5432/Blocbuy?currentSchema=domain` — note the database name is case-sensitive if created quoted; verify `Blocbuy` vs `blocbuy` on first connect.
 
 Distributed HTTP requests reuse one validated authorization snapshot for all role/permission checks in that request; concurrent refreshes are visible on subsequent requests. Callback failure logs intentionally retain only safe exception types, not SDK/Redis details that may contain token keys.
+
+## Notifications (#215)
+
+`GET /api/v1/notifications` lists the signed-in recipient's active notifications, newest first (`page` default 1, `size` default 20, maximum 100), in the standard paginated Result envelope with `Cache-Control: no-store`. No unread count or mark-as-read API is included. Event consumption is #446; the EC2 dev stack still runs no broker. The internal `NotificationAppService.recordBatch` seam joins the caller transaction and writes at most 1000 immutable effects in one SQL batch, retaining the original row on event-recipient replay. Design and migration ordering: [notification persistence](docs/design/notification-persistence.md).
 
 ## Build gates
 

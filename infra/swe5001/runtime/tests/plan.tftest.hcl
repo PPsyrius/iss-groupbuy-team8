@@ -126,6 +126,11 @@ run "monolith_topology" {
   }
 
   assert {
+    condition     = local.service_environment["monolith"]["BLOCBUY_EVENTS_ENABLED"] == "false"
+    error_message = "The ECS monolith must not produce cross-service outbox events."
+  }
+
+  assert {
     condition     = local.service_secrets["monolith"]["STRIPE_API_KEY"] == "arn:aws:ssm:ap-southeast-1:402178232802:parameter/blocbuy/swe5001/commerce/STRIPE_API_KEY"
     error_message = "Service secrets must resolve to parameter ARNs under /blocbuy/swe5001/."
   }

@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.payment.event.PaymentSucceeded;
 import com.blocbuy.payment.gateway.CheckoutGateway;
 import com.blocbuy.payment.gateway.PaymentBusinessPort;
 import com.blocbuy.payment.model.CheckoutPayment;
@@ -26,6 +27,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.SimpleTransactionStatus;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -613,6 +616,32 @@ class StripeCheckoutServiceTest {
         verify(repository).recordOutcome(id, BUYER, INTENT, "FULFILLED");
         verify(repository, never()).requireRefund(any(), any(), any());
         verify(repository).finishEvent("evt_fulfil", id, "FULFILLED");
+    }
+
+    @Test
+    void verifiedPaidSettlementPublishesPaymentFactInsideTheTransactionPath() {
+        UUID id = prepare();
+        when(gateway.retrieveCheckoutSession(any()))
+                .thenReturn(session("complete", "paid", "pi_original", "succeeded"));
+        stubVerifiedWebhook("evt_publish", "cs_test_fixture");
+        ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
+        var withEvents =
+                new StripeCheckoutService(
+                        repository,
+                        gateway,
+                        business,
+                        transactions,
+                        "https://shop.example/return",
+                        "https://shop.example/return",
+                        events);
+
+        withEvents.handleWebhook("body", "sig");
+
+        ArgumentCaptor<PaymentSucceeded> published =
+                ArgumentCaptor.forClass(PaymentSucceeded.class);
+        verify(events).publishEvent(published.capture());
+        assertThat(published.getValue().paymentId()).isEqualTo(id);
+        assertThat(published.getValue().quote()).isEqualTo(saved.quote());
     }
 
     @Test
