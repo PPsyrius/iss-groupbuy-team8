@@ -227,11 +227,13 @@ final class ArchitectureTest {
 
     private static final String IDENTITY = "com.blocbuy.identity..";
     private static final String NOTIFICATION = "com.blocbuy.notification..";
+    /** The outbox writer and relay ({@code integration}) belong to commerce (backend ADR 0007). */
     private static final String[] COMMERCE = {
         "com.blocbuy.catalog..",
         "com.blocbuy.groupbuy..",
         "com.blocbuy.order..",
-        "com.blocbuy.payment.."
+        "com.blocbuy.payment..",
+        "com.blocbuy.integration.."
     };
     private static final String INTERNAL_WEB = "..web.internal..";
     private static final String INTERNAL_PATH = "/internal";
