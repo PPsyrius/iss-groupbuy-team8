@@ -13,7 +13,7 @@ Package the existing code as three services (`identity-svc`, `commerce-svc`, `no
 | Invariant | Check |
 | --- | --- |
 | `blocbuy.topology` defaults to `monolith`; the monolith behaves exactly as today | Existing `./mvnw verify` suite (unit tests and PostgreSQL ITs) stays green on every PR |
-| No file in the shared COLA modules is moved or renamed | PR review; `git diff --name-status` shows no `R` entries under `backend/blocbuy-*` |
+| No file in the shared COLA modules is moved or renamed | PR review; `git diff --name-status` shows no `R` entries under `backend/blocbuy-*`. One deliberate exception (2026-10-12, #455 A2): `RoleCode` moved from `com.blocbuy.identity.model` to `com.blocbuy.common.model` so commerce controllers stop importing identity's model |
 | The public API contract is unchanged | `contract-check` job; `contracts/openapi.json` diff is empty unless a feature adds endpoints |
 | `/internal/**` never appears in `contracts/openapi.json` | Test in `blocbuy-bootstrap` asserts no `/internal` path in the exported contract |
 | No business write spans two services | ArchUnit rules (section 6) |
@@ -24,7 +24,7 @@ Package the existing code as three services (`identity-svc`, `commerce-svc`, `no
 
 | # | Finding (at `c66bb40`) | Consequence |
 | --- | --- | --- |
-| F1 | `blocbuy-bootstrap` is a repackaged Spring Boot jar (`finalName` `blocbuy-backend`) that also holds `db/migration`, `application*.yml`, Stripe configuration (`config/Stripe*`, `PaymentIntegrationConfiguration`), scheduling (`scheduling/*`) and `TraceIdFilter` | Service modules cannot depend on it as a library until the repackaged jar gets a classifier (WP-B2) |
+| F1 | `blocbuy-bootstrap` is a repackaged Spring Boot jar (`finalName` `blocbuy-backend`) that also holds `db/migration`, `application*.yml`, Stripe configuration (`config/Stripe*`, `PaymentIntegrationConfiguration`), scheduling (`scheduling/*`) and `TraceIdFilter` | Service modules cannot depend on it as a library until the repackaged jar gets a classifier (WP-B2). **Resolved 2026-10-12 (#455 step A1):** the main artifact is now the plain `blocbuy-backend.jar` and the executable is `blocbuy-backend-exec.jar` |
 | F2 | `StpInterfaceImpl` (`blocbuy-infrastructure`, `com.blocbuy.common.config`) reads roles and permissions from `RoleRepository` on every request | Outside `identity-svc` there is no identity database, so roles must come from the shared Sa-Token session (WP-B4) |
 | F3 | `MyBatisConfig` uses `@MapperScan(basePackages = "com.blocbuy")` | Every service would register every mapper. Scope it per assembly (WP-B2) |
 | F4 | Outside identity, `UserAppService` is called only through `requireActive` (catalog `AdminListingAppServiceImpl`, `TeamPriceAppServiceImpl`; order `PurchaseIntentAppService`, `OrderFulfilmentAdapter`). `currentUser` is called only by identity's `AuthController` | The remote adapter needs one real method; `currentUser` can refuse (WP-B5) |
@@ -92,25 +92,29 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
 
 ### WP-B0 Decision records (WBS 1.1)
 
-- `backend/docs/adr/0005-dual-deployment-topology.md`: two shapes from one codebase, `blocbuy.topology`, split by assembly.
-- `backend/docs/adr/0006-cross-service-events-sns-sqs.md`: outbox, SNS/SQS, at-least-once plus idempotent consumer; amends the "no message broker" rule for the distributed shape only.
+- `backend/docs/adr/0008-dual-deployment-topology.md` (next free number; 0005 and 0006 were taken by payment decisions): two shapes from one codebase, `blocbuy.topology`, split by assembly.
+- [`backend/docs/adr/0007-cross-service-events-sns-sqs.md`](../../backend/docs/adr/0007-cross-service-events-sns-sqs.md) (#443, 2026-10-11): outbox, one SNS topic with filter policies, SQS + DLQ per consumer, at-least-once plus idempotent consumer. Amends the "no message broker" rule for both shapes: `blocbuy.events.transport` selects ElasticMQ (`sqs`) for local and CI, and SNS for ECS; the EC2 `dev` stack keeps the relay and consumer off. Implementation is tracked in #450.
 - Amend `.claude/skills/backend-constraints-skill/SKILL.md` and `references/messaging-consistency.md` to point at both ADRs.
 - **Done when:** SWE5006 team agrees at stand-up; ADRs merged before WP-B6.
+- **2026-10-12 (#455 A2):** [backend ADR 0008](../../backend/docs/adr/0008-dual-deployment-topology.md) written as Proposed and indexed; the backend-constraints skill points at it.
 
 ### WP-B1 Architecture guardrails first (WBS 2.1)
 
 - ArchUnit rules in the existing `ArchitectureTest` (section 6).
 - Test that `/internal/**` is absent from the exported OpenAPI contract.
 - **Done when:** rules pass on current code, so later PRs cannot regress.
+- **Done 2026-10-12 (#455 A2):** nine rules added to `ArchitectureTest` (section 6, as amended) and `InternalPathsContractTest`; each rule except the notification-inbound and two persistence-ownership rules was also shown to fail on a deliberate violation.
 
 ### WP-B2 Packaging: library bootstrap and service modules (WBS 3.3)
 
 - `blocbuy-bootstrap/pom.xml`: set `spring-boot-maven-plugin` `<classifier>exec</classifier>`; the fat jar becomes `blocbuy-backend-exec.jar`.
 - Update `backend/Dockerfile` and `backend/Dockerfile.ci` `COPY` to the `-exec` jar. **This touches the SWE5006 image build: coordinate the merge and confirm the EC2 deploy after merge.**
+- **Done 2026-10-12 (#455 step A1, [plan](../agile/sprint-04/exec-jar-classifier-plan-20261012.md)):** classifier set; every consumer (both backend Dockerfiles, `fullstack-localhost/backend.Dockerfile`, `ci-backend.yml`, `swe5001-service-images.yml`) uses the `-exec` jar; `backend/.dockerignore` admits only that jar and `.github/scripts/assert-boot-jar.sh` rejects a non-executable jar before upload. The `dev` deploy check after merge is still owed.
 - Make `MyBatisConfig` `@ConditionalOnProperty(name = "blocbuy.topology", havingValue = "monolith", matchIfMissing = true)`.
 - Add `services/*-svc` modules with entry classes, `application-<service>.yml`, per-service `@MapperScan`, and a context-load test per service against Testcontainers PostgreSQL and Redis.
 - One Dockerfile with `ARG MODULE` for all three services (see the GitHub plan for the build matrix).
 - **Done when:** three service jars boot locally with `topology=distributed` stubs, and the monolith image and EC2 deploy are unchanged in behaviour.
+- **2026-10-12 (#455 A3, [plan](../agile/sprint-04/service-assemblies-plan-20261012.md)):** `services/identity-svc`, `commerce-svc` and `notification-svc` (package `com.blocbuy.service.<service>`) with per-service scans, mapper XML locations and a Testcontainers context IT each; `MyBatisConfig` is monolith-only through the `Topology` constants in `blocbuy-client`. The commerce and notification ITs mock `RoleRepository` and `UserAppService` until #467 and #468; the shared Dockerfile with `ARG MODULE` moves to C1 (#456).
 
 ### WP-B3 Platform library (WBS 2.1)
 
@@ -121,13 +125,16 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
 - Internal-call authentication: `/internal/**` requires header `X-Internal-Token` equal to SSM parameter `/blocbuy/swe5001/shared/INTERNAL_TOKEN`; Sa-Token route excluded for `/internal/**`, custom filter enforces the token. Network isolation (security groups) is the primary control; the token is defence in depth.
 - Trace propagation: outbound `RestClient` interceptor copies `X-Trace-Id`; SQS messages carry `traceId` as a message attribute and the consumer restores MDC.
 - **Done when:** unit tests cover token accept/reject and trace propagation.
+- **2026-10-12 (#455 A3), as rescoped on 2026-10-11:** the library is `blocbuy-platform` (not a starter the monolith loads; only `services/*` depend on it) with `TopologyProperties` (enum binding, fail-fast unless `distributed`), a `RestClientCustomizer` that copies the MDC trace id into `X-Trace-Id`, and `application-aws.yml` (Redis TLS). JSON logs are a `springProfile name="aws"` block in bootstrap's `logback-spring.xml`. No internal-call token. Outbox, SQS trace attributes, session `StpInterface` and the remote adapter stay with D, #467 and #468.
 
 ### WP-B4 Session-based authorisation (WBS 3.2)
 
 - At login (`AuthController` Google callback), after `StpUtil.login`, write `roles` and `permissions` into `StpUtil.getSession()`. Runs in both topologies (harmless for the monolith).
 - `SessionStpInterface` reads those keys; active when `topology=distributed` and identity is not scanned.
-- Role changes take effect at next login. Record this in ADR 0005.
+- Role changes take effect at next login. Record this in the dual-topology ADR (0008).
 - **Done when:** a test logs in, then resolves roles through `SessionStpInterface` with no identity repository in the context.
+
+- **2026-10-12 (#467, including review fixes):** `LoginAuthorizationService` reads roles and permissions in a read-only REPEATABLE READ transaction; `LoginSessionPublisher` creates an unpublished fresh token, then `RedisLoginSnapshotGateway` atomically fences and persists a dedicated per-account Sa-Token authorization session before publishing the browser cookie/header. The fence lasts 120 s; newer attempts supersede older callbacks, and the snapshot inherits the account session's remaining TTL. Both mandatory lists must be valid or all RBAC is denied. SQL remains authoritative in monolith/identity; distributed services without `RoleRepository` use this shared account snapshot without SQL fallback. Failed callbacks redirect and revoke only the new token, preserving existing logins. Service IT role mocks are removed; the commerce user-service mock remains for #468. Permanent Redis tests cover callback failures, old-token preservation, partial corruption and delayed concurrent callbacks. Design: [ADR 0008](../../backend/docs/adr/0008-dual-deployment-topology.md); verification limits: [day log](../agile/sprint-04/log/2026-10-12.md).
 
 ### WP-B5 Remote identity check (WBS 3.2)
 
@@ -137,6 +144,7 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
   - timeouts and `5xx` throw `IdentityUnavailableException` (unchecked, not a `BizException`), so `OrderFulfilmentAdapter.rejects` does not turn them into `BUYER_INACTIVE`: the webhook transaction rolls back, the global handler answers 500 and Stripe redelivers; user requests fail closed with 500;
   - `currentUser` throws `UnsupportedOperationException` (only `AuthController` uses it, and it runs in `identity-svc`).
 - **Done when:** contract test runs the same `requireActive` cases against both implementations; WireMock test covers timeout and `5xx`; a webhook test proves a timeout returns 500, writes no `BUYER_INACTIVE` outcome and succeeds on redelivery.
+- **Amended 2026-10-13 (#468, [plan](../agile/sprint-04/remote-identity-plan-20261013.md)):** the endpoints use the `Result` envelope, so disabled is 403 `IDENTITY_403_001` (not 409) and the adapter maps refusals by status and identity code together; a route 404 is an outage. `GET /internal/users/{id}/public-nickname` answers 200 with a nullable nickname. The adapter lives in `services/commerce-svc` (`com.blocbuy.service.commerce.identity`), bound to `blocbuy.identity.base-url` = `IDENTITY_BASE_URL`, not in the platform starter. The batch nickname endpoint follows #469's port method.
 
 ### WP-B6 Transactional outbox and publisher (WBS 2.2)
 
@@ -160,6 +168,7 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
 - Repeatable migration `R__swe5001_grants.sql` in a location loaded only by service profiles (`classpath:db/grants/<service>`): grants the service's runtime role `SELECT, INSERT, UPDATE, DELETE` on owned tables only.
 - Each service connects at runtime as its own role (`blocbuy_identity_app`, `blocbuy_commerce_app`, `blocbuy_notification_app`); Flyway uses the owner credentials (`SPRING_FLYWAY_USER`/`PASSWORD`).
 - **Done when:** IT proves `commerce` role gets `permission denied` on `sys_user` and `biz_notification`.
+- **Amended 2026-10-12 (#455 A4):** implemented as a Flyway `afterMigrate` callback, `blocbuy-platform/src/main/resources/db/swe5001/afterMigrate__service_grants.sql`, not `R__swe5001_grants.sql`: `db-init`'s default privileges grant every new table to the runtime role, and only a callback re-checks them on every start. One file for all services (placeholders `service` and `approle`); `ServiceGrantsIT` proves the denials (`biz_notification` does not exist yet, so commerce is checked on `sys_user` and `rel_user_role`) and the re-convergence after a later table.
 
 ### WP-B9 Demo seed data (WBS 3.5)
 
@@ -173,11 +182,11 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
 | Rule | Why |
 | --- | --- |
 | Classes in `catalog`, `groupbuy`, `order`, `payment` must not depend on `com.blocbuy.identity..` except `com.blocbuy.identity.service.UserAppService` | Only the remote-capable port crosses the boundary |
-| Commerce classes may call only `UserAppService.requireActive` | `currentUser` has no remote implementation |
+| Commerce classes may call only `UserAppService.requireActive` | `currentUser` has no remote implementation. **Amended 2026-10-12:** implemented as "no class outside identity calls `currentUser`", because `publicNickname` (and the batch lookup of #469) also get a remote implementation in #468 |
 | No class outside `com.blocbuy.notification..` depends on `com.blocbuy.notification..` | Notification is reached by events only |
 | `com.blocbuy.notification..` depends on no commerce or identity package | Keeps notification independently deployable |
-| Classes under `..web.internal..` are annotated with the internal-token guard | `/internal/**` is never public |
-| Mappers of one service's tables are only used from that service's packages | Enforces data ownership before the database split |
+| Classes under `..web.internal..` are annotated with the internal-token guard | `/internal/**` is never public. **Amended 2026-10-12:** the token was cut on 2026-10-11, so internal controllers must instead be `@Hidden` and `@ConditionalOnProperty(blocbuy.topology=distributed)`, and no other controller may map an `/internal` path (ADR 0008) |
+| Mappers of one service's tables are only used from that service's packages | Enforces data ownership before the database split. Implemented as three rules on `..persistence..` packages; SQL joins inside mapper XML are out of ArchUnit's reach (#469 records a `grep`) |
 
 ---
 
@@ -223,5 +232,5 @@ B0 ADRs ─┬─ B1 guardrails ── B2 packaging ─┬─ B3 platform ─┬
 | --- | --- |
 | Classifier change breaks the SWE5006 image build or EC2 deploy | Separate small PR (B2 part 1); watch the first `dev` deploy; revert is one line |
 | Spring Cloud AWS not yet compatible with Spring Boot 4 | Fallback: AWS SDK v2 `SqsClient` polling loop in `blocbuy-platform-starter` |
-| Session roles go stale after an admin role change | Accept for demo; documented in ADR 0005; logout forces refresh |
+| Session roles go stale after an admin role change | Accept for demo; documented in the dual-topology ADR (0008); logout forces refresh |
 | Outbox relay lag adds notification latency | 2 s poll; measured in the queue-scaling demo |

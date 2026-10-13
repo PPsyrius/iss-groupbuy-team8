@@ -18,7 +18,8 @@ Read this only when framework behavior, version compatibility, or specific confi
 Deferred — not in the v1 stack, consult only if the user approves introducing them:
 
 - Elasticsearch Java Client: <https://www.elastic.co/docs/reference/elasticsearch/clients/java>
-- Spring AMQP: <https://docs.spring.io/spring-amqp/reference/>
-- RabbitMQ Reliability: <https://www.rabbitmq.com/docs/reliability>
+- Amazon SQS dead-letter queues: <https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html>
+- Amazon SNS message filtering: <https://docs.aws.amazon.com/sns/latest/dg/sns-message-filtering.html>
+- Spring Cloud AWS: <https://docs.awspring.io/spring-cloud-aws/docs/current/reference/html/index.html>
 
 When verifying versions, record: the project's current version, the target documentation version, the compatibility conclusion, and any deprecation/migration requirements. Without user authorization, discovering a new version never widens the current change's scope.

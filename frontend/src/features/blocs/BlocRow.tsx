@@ -8,7 +8,7 @@ import {
   parseDeadline,
   type Countdown,
 } from "@/features/catalog/deal-time";
-import { useNow } from "@/features/catalog/DealProgress";
+import { useNow } from "@/features/catalog/page-clock";
 import { formatPrice } from "@/features/catalog/Price";
 import { RowShare } from "@/features/share/RowShare";
 
@@ -27,7 +27,16 @@ export function BlocRow({
   team,
   userId,
 }: Readonly<{ team: MyTeamResponse; userId?: string | undefined }>) {
-  const now = useNow();
+  // The row follows the shared clock only as far as its text can change (`clockReading`), so a
+  // long list does not redraw every row every second: a filled bloc prints nothing relative to the
+  // clock and never re-renders; a closed bloc only swaps "Closed" for "Closed 15 Sep" when its
+  // deadline passes; an open row sleeps until its "1d 4h" / "5h 12m" / mm:ss countdown can change.
+  const filter = blocFilter(team.status);
+  const deadline = parseDeadline(team.expireTime);
+  const now = useNow(
+    filter === "completed" ? null : deadline,
+    filter === "active" ? "day-countdown" : "deadline",
+  );
   const price = Number(team.dealPrice);
   const target = Math.max(1, team.targetSize ?? 1);
   const facts: RowFacts = {
@@ -39,11 +48,7 @@ export function BlocRow({
     chip: blocChip(team, now),
     userId,
   };
-  return blocFilter(team.status) === "refunded" ? (
-    <ClosedBlocRow {...facts} />
-  ) : (
-    <OpenBlocRow {...facts} />
-  );
+  return filter === "refunded" ? <ClosedBlocRow {...facts} /> : <OpenBlocRow {...facts} />;
 }
 
 type RowFacts = Readonly<{

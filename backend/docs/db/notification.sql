@@ -1,52 +1,34 @@
--- notification.sql — notification domain DDL (schema: domain, PostgreSQL 18).
--- Conventions: no FK / no CHECK — reference validity, allowed status values, and concurrency
--- rules are application-managed (pgsql-ddl conventions); primary keys are native uuid with
--- UUIDv7 via uuidv7() (PG18+); instants timestamptz (UTC).
-
--- In-app notifications to users (deal success/failure, payment result, shipment).
+-- Canonical notification schema (PostgreSQL 18, schema domain), implemented by V27__notification.sql.
+-- #215 scope amendment 2026-10-13: immutable event effects and one list API; no unread state.
 CREATE TABLE biz_notification (
-    id           uuid         NOT NULL DEFAULT uuidv7(),
-    user_id      uuid         NOT NULL,
-    type         varchar(32)  NOT NULL,
-    title        varchar(128) NOT NULL,
-    content      varchar(1024) NOT NULL,
-    biz_ref_type varchar(32),
-    biz_ref_id   uuid,
-    has_read     boolean      NOT NULL DEFAULT false,
-    read_time    timestamptz,
-    create_time  timestamptz  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    create_by    uuid,
-    update_time  timestamptz  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    update_by    uuid,
-    deleted      boolean      NOT NULL DEFAULT false,
-    CONSTRAINT pk_biz_notification PRIMARY KEY (id)
+    id uuid NOT NULL DEFAULT uuidv7(),
+    event_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    reference_id uuid NOT NULL,
+    notification_type varchar(32) NOT NULL,
+    title varchar(128) NOT NULL,
+    content varchar(1024) NOT NULL,
+    create_time timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    create_by uuid,
+    update_time timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_by uuid,
+    deleted boolean NOT NULL DEFAULT false,
+    CONSTRAINT pk_biz_notification PRIMARY KEY (id),
+    CONSTRAINT uq_biz_notification_event_user UNIQUE (event_id, user_id)
 );
-
-COMMENT ON TABLE  biz_notification IS 'In-app user notifications; created by domain events, marked read by the user.';
-COMMENT ON COLUMN biz_notification.user_id IS 'Recipient user; validity enforced by the application.';
-COMMENT ON COLUMN biz_notification.type IS 'Notification type (e.g. deal_succeeded, deal_failed, payment_succeeded); allowed values enforced by the application.';
-COMMENT ON COLUMN biz_notification.biz_ref_type IS 'Kind of the referenced business object (e.g. group_deal, order); null when not applicable.';
-COMMENT ON COLUMN biz_notification.biz_ref_id IS 'Referenced business object id; no FK, lookup only.';
-COMMENT ON COLUMN biz_notification.has_read IS 'Read flag; set by the application together with read_time.';
-COMMENT ON COLUMN biz_notification.read_time IS 'Instant the user read the notification; UTC.';
-
-CREATE INDEX idx_biz_notification_user_unread
-    ON biz_notification (user_id, create_time DESC)
-    WHERE deleted = false AND has_read = false;
-
-CREATE INDEX idx_biz_notification_user_id
-    ON biz_notification (user_id, create_time DESC)
-    WHERE deleted = false;
-
-CREATE INDEX idx_biz_notification_biz_ref
-    ON biz_notification (biz_ref_type, biz_ref_id)
-    WHERE deleted = false;
+COMMENT ON TABLE biz_notification IS 'Immutable in-app event notifications; no read-state API in Sprint 4.';
+COMMENT ON COLUMN biz_notification.event_id IS 'Integration envelope eventId; never an SQS MessageId. Retained uniqueness includes deleted rows to prevent replay resurrection.';
+COMMENT ON COLUMN biz_notification.user_id IS 'Recipient resolved by commerce; no identity query from notification.';
+COMMENT ON COLUMN biz_notification.reference_id IS 'Team ID for team events or payment ID for payment events; validity managed by the producer.';
+COMMENT ON COLUMN biz_notification.notification_type IS 'TeamSucceeded, TeamExpired or PaymentSucceeded; validated by the domain.';
+COMMENT ON COLUMN biz_notification.create_by IS 'Null for system event creation; no interactive write endpoint.';
+CREATE INDEX idx_biz_notification_user_time ON biz_notification (user_id, create_time DESC, id DESC) WHERE deleted = false;
 
 -- Application obligations:
--- * Creation is driven by in-process domain events (no MQ in the stack); the creating use case
---   runs in the same local transaction as the business state change.
--- * Mark-read updates has_read + read_time together; scoped to the owning user (object-level
---   authorization server-side).
--- * Delivery to external channels (email/push), if added later, is a separate idempotent job;
---   this table remains the source of truth.
--- * Retention/purge: application-orchestrated archival of old read rows; soft delete otherwise.
+-- * #446 validates the event envelope and producer-resolved recipients; no cross-service joins.
+-- * Store the consumed-message marker and recordBatch effects in one local transaction, then ack.
+-- * One SQL insert batch, at most 1000 rows, joins the caller transaction; retries retain old effects.
+-- * IDs supplied by the consumer must be generated with UuidV7; uuidv7() is the database default.
+-- * A type identifies whether reference_id belongs to a team or payment; no reference lookup here.
+-- * No write/update/delete HTTP API; reads carry the session user ID and exclude deleted rows.
+-- * Retention and soft deletion are not implemented; event-recipient uniqueness survives deletion.

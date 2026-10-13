@@ -1,0 +1,11 @@
+# aws: ECS service assemblies only (backend ADR 0008), activated last as
+# SPRING_PROFILES_ACTIVE=ec2,<service>,aws. ec2 maps the task definition's DB_*, REDIS_*, FRONTEND_URL and
+# BLOCBUY_SCHEDULING_ENABLED variables (infra/swe5001/runtime/ecs.tf) exactly as for the ECS monolith;
+# <service> selects the assembly; aws adds only what differs on ECS.
+# JSON console logs for this profile are configured in blocbuy-bootstrap's logback-spring.xml.
+spring:
+  data:
+    redis:
+      ssl:
+        # ElastiCache (Valkey) has in-transit encryption on; the EC2 dev Redis does not
+        enabled: ${REDIS_SSL:false}

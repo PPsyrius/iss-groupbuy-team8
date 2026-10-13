@@ -18,6 +18,9 @@ on:
       - "contracts/**"
       - "deployment/backend/**"
       - ".github/workflows/ci-backend.yml"
+      - ".github/actions/trivy-image-db/**"
+      - ".github/scripts/validate-trivy-db.py"
+      - ".github/scripts/assert-boot-jar.sh"
   pull_request:
     # labeled/unlabeled: applying or removing `contract-change-approved` must
     # re-run the contract gate — the label is only visible in a fresh event.
@@ -57,6 +60,9 @@ jobs:
               - 'backend/**'
               - 'deployment/backend/**'
               - '.github/workflows/ci-backend.yml'
+              - '.github/actions/trivy-image-db/**'
+              - '.github/scripts/validate-trivy-db.py'
+              - '.github/scripts/assert-boot-jar.sh'
             contracts:
               - 'backend/**'
               - 'contracts/**'
@@ -68,6 +74,8 @@ jobs:
               - 'backend/mvnw'
               - 'backend/mvnw.cmd'
               - '.github/workflows/ci-backend.yml'
+              - '.github/actions/trivy-image-db/**'
+              - '.github/scripts/validate-trivy-db.py'
 
   build-quality:
     needs: detect-changes
@@ -132,7 +140,8 @@ jobs:
             backend/**/target/checkstyle-result.xml
           if-no-files-found: ignore
 
-      # Sonar uses only the aggregate JaCoCo report.
+      # Sonar uses the monolith's aggregate JaCoCo report plus the per-module reports of the
+      # SWE5001 platform and service modules, which the monolith does not depend on.
       - name: Upload Sonar inputs
         if: >-
           needs.detect-changes.outputs.backend == 'true' ||
@@ -145,9 +154,19 @@ jobs:
             backend/**/target/classes/**
             backend/**/target/test-classes/**
             backend/blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml
+            backend/blocbuy-platform/target/site/jacoco/jacoco.xml
+            backend/services/*/target/site/jacoco/jacoco.xml
             backend/**/target/surefire-reports/**
             backend/**/target/failsafe-reports/**
           if-no-files-found: error
+
+      # blocbuy-backend.jar is the plain library JAR (exec classifier, #455);
+      # only the executable -exec JAR may be uploaded and packaged.
+      - name: Assert executable backend JAR
+        if: >-
+          needs.detect-changes.outputs.backend == 'true' ||
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+        run: ../.github/scripts/assert-boot-jar.sh blocbuy-bootstrap/target/blocbuy-backend-exec.jar
 
       # Docker packages this exact verified binary instead of rebuilding the
       # application from source.
@@ -159,7 +178,7 @@ jobs:
         with:
           name: backend-application
           retention-days: 1
-          path: backend/blocbuy-bootstrap/target/blocbuy-backend.jar
+          path: backend/blocbuy-bootstrap/target/blocbuy-backend-exec.jar
           if-no-files-found: error
 
       # Export OpenAPI from the verified JAR rather than rebuilding.
@@ -169,7 +188,7 @@ jobs:
           (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
         run: |
           set -Eeuo pipefail
-          jar='blocbuy-bootstrap/target/blocbuy-backend.jar'
+          jar='blocbuy-bootstrap/target/blocbuy-backend-exec.jar'
           test -s "$jar"
           java -jar "$jar" --spring.profiles.active=openapi-export >"${RUNNER_TEMP}/openapi-app.log" 2>&1 &
           app_pid=$!
@@ -337,6 +356,18 @@ jobs:
           -Dcheckstyle.skip=true
           -Dspotbugs.skip=true
 
+      # Reuse an existing trusted dev runner rather than adding a scheduled warmup job.
+      # Seeding is advisory; a miss still performs a normal, freshness-checked PR scan.
+      - name: Seed shared Trivy image databases (trusted dev only)
+        if: >-
+          github.event_name == 'push' &&
+          github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+          needs.detect-changes.outputs.sonar == 'true'
+        continue-on-error: true
+        uses: ./.github/actions/trivy-image-db
+        with:
+          publish: 'true'
+
       # The PR/tag artifact's paths are relative to backend/ (upload-artifact strips the
       # common ancestor), so restore into backend/ or the scanner misses coverage.
       - name: Download Sonar inputs (PR and release only)
@@ -424,7 +455,7 @@ jobs:
         if: >-
           needs.detect-changes.outputs.backend == 'true' ||
           (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
-        run: test -f blocbuy-bootstrap/target/blocbuy-backend.jar
+        run: ../.github/scripts/assert-boot-jar.sh blocbuy-bootstrap/target/blocbuy-backend-exec.jar
 
       - name: Set up Docker Buildx
         if: >-
@@ -514,17 +545,12 @@ jobs:
             exit 1
           fi
 
-      # Keep the Trivy DB between runs so repeat scans avoid downloading it again.
-      - name: Cache Trivy vulnerability DB
+      # PR/merge-group/tag jobs restore shared DBs but never save image DB caches.
+      - name: Restore shared Trivy image databases
         if: >-
           needs.detect-changes.outputs.backend == 'true' ||
           (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ github.workspace }}/.cache/trivy
-          key: trivy-db-${{ runner.os }}-${{ github.run_id }}
-          restore-keys: |
-            trivy-db-${{ runner.os }}-
+        uses: ./.github/actions/trivy-image-db
 
       - name: Trivy image scan
         if: >-
@@ -533,6 +559,9 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           version: v0.74.0
+          skip-setup-trivy: true
+          cache: false
+          cache-dir: ${{ github.workspace }}/.cache/trivy-image
           scan-type: image
           image-ref: blocbuy-backend:ci-${{ github.sha }}
           scanners: vuln
@@ -609,11 +638,14 @@ jobs:
           -Dspotbugs.skip=true
           -Djacoco.skip=true
 
+      - name: Assert executable backend JAR
+        run: ../.github/scripts/assert-boot-jar.sh blocbuy-bootstrap/target/blocbuy-backend-exec.jar
+
       - name: Upload packaged backend application
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: backend-application-dev-${{ github.sha }}
-          path: backend/blocbuy-bootstrap/target/blocbuy-backend.jar
+          path: backend/blocbuy-bootstrap/target/blocbuy-backend-exec.jar
           retention-days: 1
           if-no-files-found: error
 

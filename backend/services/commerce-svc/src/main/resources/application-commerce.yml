@@ -1,0 +1,28 @@
+# commerce: the commerce-svc assembly (backend ADR 0008). Always after a connection profile:
+# ec2,commerce,aws on ECS, local,commerce on a workstation. blocbuy-bootstrap's application.yml
+# stays the shared base, so only what differs from the monolith is set here.
+spring:
+  application:
+    name: commerce-svc
+  flyway:
+    # the full migration stream, then the per-service grants callback (blocbuy-platform)
+    locations: classpath:db/migration,classpath:db/swe5001
+    placeholders:
+      service: commerce
+      # runtime role restricted by the grants; the callback skips when it is empty or the Flyway user
+      approle: ${DB_USERNAME:}
+
+mybatis:
+  # this service's mapper XML only; the interfaces come from the entry class's @MapperScan
+  mapper-locations: classpath*:mapper/catalog/**/*.xml,classpath*:mapper/groupbuy/**/*.xml,classpath*:mapper/order/**/*.xml,classpath*:mapper/payment/**/*.xml,classpath*:mapper/common/**/*.xml,classpath*:mapper/integration/**/*.xml
+
+blocbuy:
+  topology: distributed
+  identity:
+    # identity-svc over ECS Service Connect (infra/swe5001/runtime/services.tf); no default, so a
+    # missing value fails startup. Timeouts default to 500 ms connect and 1500 ms read (#468).
+    base-url: ${IDENTITY_BASE_URL}
+  events:
+    # The distributed commerce assembly publishes to the shared SNS topic; the relay remains
+    # explicitly opt-in until the runtime supplies its topic ARN and IAM permissions.
+    transport: ${BLOCBUY_EVENTS_TRANSPORT:sns}

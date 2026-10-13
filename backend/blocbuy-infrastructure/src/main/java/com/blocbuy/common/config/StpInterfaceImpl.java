@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 /**
  * RBAC source for Sa-Token (D7): roles and permissions are loaded from the identity SQL tables
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Component;
  * {@code catalog:product:write}.
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class StpInterfaceImpl implements StpInterface {
 

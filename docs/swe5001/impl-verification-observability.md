@@ -55,7 +55,7 @@ Runs against any base URL (EC2 CloudFront, SWE5001 CloudFront, or local Compose)
 | `GET /api/actuator/health` | 200 `UP` (through the ALB default path; commerce) |
 | `GET /api/v1/products?page=1&size=20` | 200, `Result` envelope, non-empty list (demo seed) |
 | `GET /api/v1/auth/me` without cookie | 401 envelope (served by identity) |
-| `GET /api/v1/notifications` without cookie | 401 envelope (served by notification). Not in `smoke.sh` yet: the controller has no `GET` handler today; add the check with `notification-svc` (PR 9) |
+| `GET /api/v1/notifications` without cookie | 401 envelope (served by notification). Not in `smoke.sh` yet: the controller has no `GET` handler today; add the check when #215 adds the handler (`notification-svc` already runs in `distributed`, #456) |
 | `GET /internal/users/<uuid>/active` through CloudFront | never reaches a service: CloudFront forwards only `/api/*` to the ALB, so the response is the SPA fallback page, not JSON |
 | Response header `X-Trace-Id` | present on every response |
 
@@ -149,6 +149,8 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 | V-f | V8 durations from the promotion runs, and the final rehearsal before 21 Oct (slot pending team confirmation) | 6.3 | GitHub G5, AWS S1 |
 
 ## 7. Presentation-day checklist (21 Oct, 16:15–16:55 SGT)
+
+Commands and failure handling: [environment session runbook](runbook-environment-session.md).
 
 - `env-up.sh` before 12:00 (release digests from the Sprint 4 promotion); smoke suite green.
 - Dashboard open with a 1-hour window; k6 scripts ready on a laptop with the base URL set.

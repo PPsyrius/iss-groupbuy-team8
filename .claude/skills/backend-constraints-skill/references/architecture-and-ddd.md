@@ -28,7 +28,7 @@ com.blocbuy
 └── payment        (added 2026-08-31; Stripe-backed)
 ```
 
-Do not create packages for inventory, merchant, marketing, fulfillment, or search — they are out of scope for v1 and there is no MQ/ES in the stack to back them. New domains require explicit user approval.
+Do not create packages for inventory, merchant, marketing, fulfillment, or search — they are out of scope for v1 and there is no ES in the stack and messaging is limited to the backend ADR 0007 event path. New domains require explicit user approval.
 
 Example: `blocbuy-domain/.../groupbuy/model/aggregate/GroupDeal.java`, `blocbuy-application/.../groupbuy/command/CreateGroupDealCommand.java`. The actual business domains are decided by domain modeling; do not create empty modules in advance just because they appear in this list.
 

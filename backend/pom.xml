@@ -25,6 +25,11 @@
     <module>blocbuy-adapter</module>
     <module>blocbuy-infrastructure</module>
     <module>blocbuy-bootstrap</module>
+    <!-- SWE5001 service assemblies (backend ADR 0008); the monolith above never depends on them -->
+    <module>blocbuy-platform</module>
+    <module>services/identity-svc</module>
+    <module>services/commerce-svc</module>
+    <module>services/notification-svc</module>
   </modules>
 
   <properties>
@@ -45,7 +50,10 @@
     <springdoc.version>3.1.1</springdoc.version>
     <springdoc-maven-plugin.version>1.5</springdoc-maven-plugin.version>
     <archunit.version>1.5.1</archunit.version>
-    <stripe-java.version>33.4.2</stripe-java.version>
+    <!-- HTTP stub for the commerce-svc identity client tests; the standalone artifact shades its Jetty and Jackson -->
+    <wiremock.version>3.13.2</wiremock.version>
+    <stripe-java.version>34.0.0</stripe-java.version>
+    <aws-sdk.version>2.55.8</aws-sdk.version>
     <!-- Google OIDC client (id_token verification); verified against Maven Central 2026-09-07 -->
     <google-api-client.version>2.9.1</google-api-client.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
@@ -59,13 +67,25 @@
     <jacoco.version>0.8.15</jacoco.version>
     <!-- SonarCloud CI-based analysis: project key and coverage path -->
     <sonar.projectKey>blocbuy-backend</sonar.projectKey>
+    <!-- the monolith aggregate plus the per-module reports of modules the monolith does not depend on -->
     <sonar.coverage.jacoco.xmlReportPaths>
-      ${maven.multiModuleProjectDirectory}/blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml
+      ${maven.multiModuleProjectDirectory}/blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml,
+      ${maven.multiModuleProjectDirectory}/blocbuy-platform/target/site/jacoco/jacoco.xml,
+      ${maven.multiModuleProjectDirectory}/services/identity-svc/target/site/jacoco/jacoco.xml,
+      ${maven.multiModuleProjectDirectory}/services/commerce-svc/target/site/jacoco/jacoco.xml,
+      ${maven.multiModuleProjectDirectory}/services/notification-svc/target/site/jacoco/jacoco.xml
     </sonar.coverage.jacoco.xmlReportPaths>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>bom</artifactId>
+        <version>${aws-sdk.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       <!-- Override Testcontainers transitive commons-compress 1.24.0 (CVE hotspot) -->
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -97,6 +117,17 @@
       <dependency>
         <groupId>com.blocbuy</groupId>
         <artifactId>blocbuy-infrastructure</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <!-- plain library JAR (exec classifier holds the runnable monolith) -->
+      <dependency>
+        <groupId>com.blocbuy</groupId>
+        <artifactId>blocbuy-bootstrap</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.blocbuy</groupId>
+        <artifactId>blocbuy-platform</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -147,7 +178,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>33.7.1-jre</version>
+        <version>33.7.2-jre</version>
       </dependency>
       <dependency>
         <groupId>com.google.errorprone</groupId>
@@ -162,7 +193,7 @@
       <dependency>
         <groupId>org.checkerframework</groupId>
         <artifactId>checker-qual</artifactId>
-        <version>4.2.3</version>
+        <version>4.3.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.j2objc</groupId>
@@ -179,6 +210,12 @@
         <groupId>com.tngtech.archunit</groupId>
         <artifactId>archunit-junit5</artifactId>
         <version>${archunit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.wiremock</groupId>
+        <artifactId>wiremock-standalone</artifactId>
+        <version>${wiremock.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
@@ -221,7 +258,7 @@
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-maven-plugin</artifactId>
           <configuration>
-            <!-- only blocbuy-bootstrap assembles a runnable app; run/start/stop skip elsewhere -->
+            <!-- only blocbuy-bootstrap and services/* assemble a runnable app; run/start/stop skip elsewhere -->
             <skip>true</skip>
           </configuration>
         </plugin>

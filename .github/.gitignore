@@ -1,0 +1,2 @@
+# Python validation and benchmark tooling must not add interpreter bytecode.
+__pycache__/
