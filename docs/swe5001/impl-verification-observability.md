@@ -96,7 +96,7 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 
 ### V7 Poison message
 
-- Publish a malformed envelope to `blocbuy-swe5001-domain-events` with SNS message attribute `eventType=TeamExpired` (ADR 0007, #447); a missing routing attribute is filtered out before SQS and cannot test redrive.
+- Publish a malformed envelope to `blocbuy-swe5001-domain-events` with SNS message attribute `eventType=PaymentSucceeded` (ADR 0007, #447), routing only to notification and excluding audit; a missing routing attribute is filtered out before SQS and cannot test redrive.
 - Expected: 5 receives, then the message is in the DLQ; the DLQ alarm fires; other messages are unaffected.
 
 ### V8 Rebuild from zero
