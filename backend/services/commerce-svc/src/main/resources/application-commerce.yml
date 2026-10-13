@@ -18,3 +18,7 @@ mybatis:
 
 blocbuy:
   topology: distributed
+  events:
+    # The distributed commerce assembly publishes to the shared SNS topic; the relay remains
+    # explicitly opt-in until the runtime supplies its topic ARN and IAM permissions.
+    transport: ${BLOCBUY_EVENTS_TRANSPORT:sns}
