@@ -79,8 +79,13 @@ aws() {
       if [ "$SCENARIO" = pending_email ]; then enabled=true; else enabled=false; fi
       jq -nc --arg pending "$enabled" '{Attributes:{Protocol:"email",PendingConfirmation:$pending}}' ;;
     'sqs get-queue-attributes')
+      # CloudWatch's visible-message metric is NOT a valid SQS API attribute.
+      if [[ "$*" == *ApproximateNumberOfMessagesVisible* ]]; then
+        printf 'InvalidAttributeName: Unknown Attribute ApproximateNumberOfMessagesVisible\n' >&2
+        return 1
+      fi
       if [ "$SCENARIO" = backlog ]; then enabled=1; else enabled=0; fi
-      jq -nc --arg n "$enabled" '{Attributes:{ApproximateNumberOfMessagesVisible:$n,ApproximateNumberOfMessagesNotVisible:"0",ApproximateNumberOfMessagesDelayed:"0"}}' ;;
+      jq -nc --arg n "$enabled" '{Attributes:{ApproximateNumberOfMessages:$n,ApproximateNumberOfMessagesNotVisible:"0",ApproximateNumberOfMessagesDelayed:"0"}}' ;;
     'sns publish')
       [ "$SCENARIO" != publish_error ] || return 1
       body=$(arg_value --message "$@")
@@ -98,6 +103,9 @@ aws() {
       resource=$(arg_value --queue-url "$@")
       queue=${resource##*/}
       queue=${queue#blocbuy-swe5001-}
+      if [ "$SCENARIO" = empty_stdout ] && [ "$(jq --arg q "$queue" '[.queues[$q][] | select(.hidden != true)] | length' "$CLOUD_STATE")" = 0 ]; then
+        return 0
+      fi
       if [ "$SCENARIO" = missing_delivery ]; then
         printf '{}\n'
       else
@@ -211,6 +219,10 @@ pass 'invalid recovery snapshot fails closed without mutating service counts'
 reset
 fails check_alert_recipients '{"alert_subscription_arns":[]}'
 pass 'no configured recipients fails readiness'
+reset
+fails aws sqs get-queue-attributes --queue-url test --attribute-names ApproximateNumberOfMessagesVisible
+grep -q InvalidAttributeName "$work/output"
+pass 'mock rejects the CloudWatch metric name as an SQS API attribute'
 for fault in pending_email alert_error backlog publish_error receive_error delete_error missing_delivery bad_filter malformed_response openssl_error; do
   reset
   SCENARIO=$fault
@@ -225,6 +237,13 @@ jq -e '.queues.notification == [] and .queues.audit == []' "$CLOUD_STATE" > /dev
 [ "$(grep -c 'sqs receive-message.*audit' "$CLOUD_CALLS")" = 4 ]
 grep -q 'sleep 900' "$CLOUD_CALLS"
 pass 'settle gate, raw fan-out, payment exclusion and probe deletion'
+
+reset
+SCENARIO=empty_stdout
+check_messaging_routes "$targets" > "$work/output" 2>&1
+[ "$(grep -c 'sqs receive-message.*audit' "$CLOUD_CALLS")" = 4 ]
+grep -q 'PaymentSucceeded absent from audit in three 20-second long polls' "$work/output"
+pass 'AWS CLI successful empty stdout counts as an empty poll, not a failure'
 
 reset
 save_state '.queues.notification=[{Body:"{\"real\":true}",ReceiptHandle:"business",MessageAttributes:{}}]'

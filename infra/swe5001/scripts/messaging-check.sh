@@ -24,8 +24,8 @@ check_queues_empty() {
   # receipt guard below is defence in depth for arrivals not yet reflected here.
   for queue in notification audit; do
     attributes=$(aws sqs get-queue-attributes --queue-url "$(jq -r ".queues.$queue" <<< "$targets")" \
-      --attribute-names ApproximateNumberOfMessagesVisible ApproximateNumberOfMessagesNotVisible ApproximateNumberOfMessagesDelayed --output json) || return 1
-    jq -e '.Attributes | .ApproximateNumberOfMessagesVisible == "0" and .ApproximateNumberOfMessagesNotVisible == "0" and .ApproximateNumberOfMessagesDelayed == "0"' <<< "$attributes" > /dev/null || {
+      --attribute-names ApproximateNumberOfMessages ApproximateNumberOfMessagesNotVisible ApproximateNumberOfMessagesDelayed --output json) || return 1
+    jq -e '.Attributes | .ApproximateNumberOfMessages == "0" and .ApproximateNumberOfMessagesNotVisible == "0" and .ApproximateNumberOfMessagesDelayed == "0"' <<< "$attributes" > /dev/null || {
       log "$queue has retained messages; defer the readiness drill, never purge or spend their receive budget"
       return 1
     }
@@ -57,7 +57,10 @@ receive_probe() {
   while [ "$batches" -lt 200 ] && [ "$empty_polls" -lt 3 ] && [ "$(date +%s)" -lt "$deadline" ]; do
     response=$(aws sqs receive-message --queue-url "$(jq -r ".queues.$queue" <<< "$targets")" \
       --wait-time-seconds 20 --visibility-timeout 300 --max-number-of-messages 10 --message-attribute-names All --output json) || return 1
-    # AWS returns {} on an empty receive. Reject malformed mock/API output.
+    # AWS CLI v2's JSONFormatter suppresses an empty {} response entirely. Only
+    # normalize successful empty stdout; a failed API call already returned above.
+    [ -n "$response" ] || response='{}'
+    # Reject malformed non-empty output rather than interpreting it as absence.
     jq -e 'type == "object" and ((.Messages // []) | type == "array" and all(.[]; (.Body | type == "string") and (.ReceiptHandle | type == "string" and length > 0)))' <<< "$response" > /dev/null || return 1
     while IFS= read -r message; do
       body=$(jq -r .Body <<< "$message")

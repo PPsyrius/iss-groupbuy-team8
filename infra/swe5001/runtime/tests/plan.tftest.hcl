@@ -367,3 +367,22 @@ run "distributed_unverified_keeps_relay_off" {
     error_message = "Enabling services alone must not bypass the routing-readiness gate."
   }
 }
+
+# A controlled infrastructure-only drill can verify SNS/SQS before candidate images
+# exist. Never use its partial plan to claim a running distributed environment.
+run "messaging_only_without_service_images" {
+  command = plan
+  plan_options {
+    target = [module.messaging]
+  }
+  variables {
+    topology         = "distributed"
+    services_enabled = false
+    frontend_url     = "https://d111111abcdef8.cloudfront.net"
+    image_digests    = {}
+  }
+  assert {
+    condition     = length(module.messaging) == 1
+    error_message = "A targeted messaging-only plan must not require ECS image digests."
+  }
+}
