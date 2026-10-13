@@ -40,12 +40,12 @@ class OutboxRelayServiceTest {
                         OutboxPublishResult.failed(second.id(), "Unavailable"));
         when(repository.findDue(100)).thenReturn(events);
         when(transport.publish(events)).thenReturn(results);
-        when(repository.recordResults(results)).thenReturn(2);
+        when(repository.recordResults(results, OutboxRelayService.MAX_ATTEMPTS)).thenReturn(2);
 
         assertThat(service.relayBatch()).isEqualTo(2);
 
         verify(transport).publish(events);
-        verify(repository).recordResults(results);
+        verify(repository).recordResults(results, OutboxRelayService.MAX_ATTEMPTS);
     }
 
     @Test
@@ -55,12 +55,18 @@ class OutboxRelayServiceTest {
         List<OutboxEvent> events = List.of(first, second);
         when(repository.findDue(100)).thenReturn(events);
         when(transport.publish(events)).thenThrow(new IllegalStateException("unavailable"));
-        when(repository.recordResults(org.mockito.ArgumentMatchers.anyList())).thenReturn(2);
+        when(repository.recordResults(
+                        org.mockito.ArgumentMatchers.anyList(),
+                        org.mockito.ArgumentMatchers.eq(OutboxRelayService.MAX_ATTEMPTS)))
+                .thenReturn(2);
 
         assertThat(service.relayBatch()).isEqualTo(2);
 
         var captor = org.mockito.ArgumentCaptor.forClass(List.class);
-        verify(repository).recordResults(captor.capture());
+        verify(repository)
+                .recordResults(
+                        captor.capture(),
+                        org.mockito.ArgumentMatchers.eq(OutboxRelayService.MAX_ATTEMPTS));
         @SuppressWarnings("unchecked")
         List<OutboxPublishResult> results = captor.getValue();
         assertThat(results)
@@ -75,12 +81,18 @@ class OutboxRelayServiceTest {
         List<OutboxEvent> events = List.of(event);
         when(repository.findDue(100)).thenReturn(events);
         when(transport.publish(events)).thenReturn(List.of());
-        when(repository.recordResults(org.mockito.ArgumentMatchers.anyList())).thenReturn(1);
+        when(repository.recordResults(
+                        org.mockito.ArgumentMatchers.anyList(),
+                        org.mockito.ArgumentMatchers.eq(OutboxRelayService.MAX_ATTEMPTS)))
+                .thenReturn(1);
 
         assertThat(service.relayBatch()).isEqualTo(1);
 
         var captor = org.mockito.ArgumentCaptor.forClass(List.class);
-        verify(repository).recordResults(captor.capture());
+        verify(repository)
+                .recordResults(
+                        captor.capture(),
+                        org.mockito.ArgumentMatchers.eq(OutboxRelayService.MAX_ATTEMPTS));
         @SuppressWarnings("unchecked")
         List<OutboxPublishResult> results = captor.getValue();
         assertThat(results)
@@ -94,12 +106,18 @@ class OutboxRelayServiceTest {
         List<OutboxEvent> events = List.of(event);
         when(repository.findDue(100)).thenReturn(events);
         when(transport.publish(events)).thenReturn(null);
-        when(repository.recordResults(org.mockito.ArgumentMatchers.anyList())).thenReturn(1);
+        when(repository.recordResults(
+                        org.mockito.ArgumentMatchers.anyList(),
+                        org.mockito.ArgumentMatchers.eq(OutboxRelayService.MAX_ATTEMPTS)))
+                .thenReturn(1);
 
         assertThat(service.relayBatch()).isEqualTo(1);
 
         var captor = org.mockito.ArgumentCaptor.forClass(List.class);
-        verify(repository).recordResults(captor.capture());
+        verify(repository)
+                .recordResults(
+                        captor.capture(),
+                        org.mockito.ArgumentMatchers.eq(OutboxRelayService.MAX_ATTEMPTS));
         @SuppressWarnings("unchecked")
         List<OutboxPublishResult> results = captor.getValue();
         assertThat(results)
@@ -114,12 +132,18 @@ class OutboxRelayServiceTest {
         when(repository.findDue(100)).thenReturn(events);
         when(transport.publish(events))
                 .thenReturn(List.of(OutboxPublishResult.published(UUID.randomUUID())));
-        when(repository.recordResults(org.mockito.ArgumentMatchers.anyList())).thenReturn(1);
+        when(repository.recordResults(
+                        org.mockito.ArgumentMatchers.anyList(),
+                        org.mockito.ArgumentMatchers.eq(OutboxRelayService.MAX_ATTEMPTS)))
+                .thenReturn(1);
 
         assertThat(service.relayBatch()).isEqualTo(1);
 
         var captor = org.mockito.ArgumentCaptor.forClass(List.class);
-        verify(repository).recordResults(captor.capture());
+        verify(repository)
+                .recordResults(
+                        captor.capture(),
+                        org.mockito.ArgumentMatchers.eq(OutboxRelayService.MAX_ATTEMPTS));
         @SuppressWarnings("unchecked")
         List<OutboxPublishResult> results = captor.getValue();
         assertThat(results)

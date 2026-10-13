@@ -9,5 +9,9 @@ public interface OutboxRelayRepository {
 
     List<OutboxEvent> findDue(int limit);
 
-    int recordResults(List<OutboxPublishResult> results);
+    /**
+     * Records one batch of delivery results; a failure that reaches {@code maxAttempts} marks the
+     * row failed.
+     */
+    int recordResults(List<OutboxPublishResult> results, int maxAttempts);
 }

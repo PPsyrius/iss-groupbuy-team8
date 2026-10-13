@@ -17,5 +17,7 @@ public interface OutboxMapper {
 
     List<OutboxEvent> findDue(@Param("limit") int limit);
 
-    int recordResults(@Param("results") List<OutboxPublishResult> results);
+    int recordResults(
+            @Param("results") List<OutboxPublishResult> results,
+            @Param("maxAttempts") int maxAttempts);
 }

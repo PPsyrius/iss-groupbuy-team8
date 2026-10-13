@@ -155,7 +155,8 @@ class OutboxMapperIT {
                             mapper.recordResults(
                                     List.of(
                                             OutboxPublishResult.published(successId),
-                                            OutboxPublishResult.failed(terminalId, "unavailable"))))
+                                            OutboxPublishResult.failed(terminalId, "unavailable")),
+                                    10))
                     .isEqualTo(2);
         }
 
@@ -193,12 +194,31 @@ class OutboxMapperIT {
             assertThat(
                             session.getMapper(OutboxMapper.class)
                                     .recordResults(
-                                            List.of(OutboxPublishResult.failed(retryId, "again"))))
+                                            List.of(OutboxPublishResult.failed(retryId, "again")),
+                                            10))
                     .isEqualTo(1);
         }
         assertThat(
                         jdbc.queryForObject(
                                 "SELECT attempts = 1 AND failed_at IS NULL AND next_attempt_at > CURRENT_TIMESTAMP FROM sys_outbox WHERE id = ?",
+                                Boolean.class,
+                                retryId))
+                .isTrue();
+
+        // The retry budget is the caller's: the same row with a budget of 2 becomes terminal.
+        jdbc.update(
+                "UPDATE sys_outbox SET next_attempt_at = CURRENT_TIMESTAMP WHERE id = ?", retryId);
+        try (SqlSession session = sessions.openSession(true)) {
+            assertThat(
+                            session.getMapper(OutboxMapper.class)
+                                    .recordResults(
+                                            List.of(OutboxPublishResult.failed(retryId, "last")),
+                                            2))
+                    .isEqualTo(1);
+        }
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT attempts = 2 AND failed_at IS NOT NULL FROM sys_outbox WHERE id = ?",
                                 Boolean.class,
                                 retryId))
                 .isTrue();

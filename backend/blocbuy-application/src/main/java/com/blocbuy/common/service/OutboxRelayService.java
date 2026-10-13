@@ -45,7 +45,7 @@ public class OutboxRelayService {
             results = failedResults(events, failure.getClass().getSimpleName());
         }
 
-        int updated = repository.recordResults(results);
+        int updated = repository.recordResults(results, MAX_ATTEMPTS);
         for (int index = 0; index < events.size(); index++) {
             OutboxEvent event = events.get(index);
             OutboxPublishResult result = results.get(index);

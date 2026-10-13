@@ -39,7 +39,7 @@
                 ELSE CURRENT_TIMESTAMP + LEAST(300, POWER(2, LEAST(outbox.attempts, 9))) * INTERVAL '1 second'
             END,
             failed_at = CASE
-                WHEN result.published OR outbox.attempts + 1 &lt; 10 THEN outbox.failed_at
+                WHEN result.published OR outbox.attempts + 1 &lt; #{maxAttempts} THEN outbox.failed_at
                 ELSE CURRENT_TIMESTAMP
             END
         FROM (VALUES

@@ -6,7 +6,6 @@ import com.blocbuy.common.repository.OutboxRelayRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 /** MyBatis/PostgreSQL adapter for bounded outbox relay reads and status updates. */
 @Repository
@@ -23,12 +22,15 @@ public class OutboxRelayRepositoryImpl implements OutboxRelayRepository {
         return mapper.findDue(limit);
     }
 
+    /** One statement, atomic on its own; the relay holds no transaction across provider I/O. */
     @Override
-    @Transactional
-    public int recordResults(List<OutboxPublishResult> results) {
+    public int recordResults(List<OutboxPublishResult> results, int maxAttempts) {
         if (results == null || results.isEmpty() || results.size() > 100) {
             throw new IllegalArgumentException("Outbox result batch must contain 1 to 100 items");
         }
-        return mapper.recordResults(results);
+        if (maxAttempts < 1) {
+            throw new IllegalArgumentException("Outbox relay maxAttempts must be positive");
+        }
+        return mapper.recordResults(results, maxAttempts);
     }
 }
