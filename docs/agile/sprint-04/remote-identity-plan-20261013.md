@@ -2,7 +2,7 @@
 
 Date: 2026-10-13 · Branch: `feature/468-remote-identity-20261013` from `dev` at `22536866` (#473 merged) · Issue: #468 (Sprint 4 container #465) · Owner: @l0sgAi (reassigned from @EricWang1358 on 2026-10-13) · Reviewer: @Yorick-Yu · Related: step B3 of the [microservice split plan](microservice-split-plan-20261012.md), [backend ADR 0008](../../../backend/docs/adr/0008-dual-deployment-topology.md), [backend implementation plan](../../swe5001/impl-backend-architecture.md) WP-B5, [refactoring plan](../../swe5001/microservice-refactoring-plan.md) §2.4 "Synchronous calls", [C1–C3 plan](service-runtime-plan-20261012.md)
 
-> **Status (2026-10-13): reviewed (all §10 defaults accepted) and implemented on `feature/468-remote-identity-20261013` without the batch endpoint, which follows #469 (Q3). Results: [day log](log/2026-10-13.md).**
+> **Status (2026-10-13): reviewed (all §10 defaults accepted) and implemented on `feature/468-remote-identity-20261013` without the batch endpoint, which follows #469 (Q3). Results: [day log](log/2026-10-13.md). 2026-10-14: the batch endpoint and remote `publicNicknames` are delivered in the #469 PR ([plan](attention-nicknames-plan-20261014.md)).**
 
 ## 1. Goal and acceptance criteria
 

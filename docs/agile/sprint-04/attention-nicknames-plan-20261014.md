@@ -2,7 +2,7 @@
 
 Date: 2026-10-14 · Branch: `refactor/469-attention-nicknames-identity-port` from `dev` at `439edcfe` (#488 merged, #468 merged as #479) · Issue: #469 (Sprint 4 container #465) · Owners: @Yorick-Yu (scope 1–3) and @l0sgAi (batch endpoint and remote side), pairing on one branch · Reviewer: @PPsyrius · Related: step B2 of the [microservice split plan](microservice-split-plan-20261012.md), [remote identity plan](remote-identity-plan-20261013.md) §3 and §7 Q3, [backend ADR 0006](../../../backend/docs/adr/0006-payment-attention-read-model.md), [backend ADR 0008](../../../backend/docs/adr/0008-dual-deployment-topology.md), NFR-47
 
-> **Status (2026-10-14): reviewed (all §10 defaults accepted); implementation in progress on `refactor/469-attention-nicknames-identity-port`.**
+> **Status (2026-10-14): reviewed (all §10 defaults accepted) and implemented on `refactor/469-attention-nicknames-identity-port`; T10 needed no edit. Results: [day log](log/2026-10-14.md).**
 
 ## 1. Goal and acceptance criteria
 
@@ -169,7 +169,7 @@ The controller Javadoc lists the third endpoint and says it is always 200 for a 
 | T7 | `RemoteUserAppServiceTest` (commerce-svc, WireMock): the request is a POST to `/internal/users/public-nicknames` with JSON `userIds`; the response map returned; empty set → zero requests (`IDENTITY.verify(0, ...)`); 150 ids → two requests of 100 and 50 whose union is the input, merged map; second slice 503 → `IdentityUnavailableException`; 400 / 500 / 503 → unavailable with `answered <status>`; 200 without `data` and 200 with `data.nicknames` null → unavailable; unreadable body → unavailable; `X-Trace-Id` travels on the POST. Existing GET cases unchanged | AC6 | @l0sgAi |
 | T8 | `UserAppServiceContractTest` (commerce-svc): new contract cases run against local and remote. `{ACTIVE, DISABLED, EMAIL_PREFIX, UNKNOWN, EMAIL_SHAPED}` → exactly `{ACTIVE: "Tester"}`; empty set → empty map; plus a single `publicNickname` case for the new `EMAIL_SHAPED` user, so both methods agree | AC6; local = remote for the batch | @l0sgAi |
 | T9 | `IdentityTablesStayInIdentityMappersTest` (new, infrastructure, plain JUnit): scans `classpath*:mapper/**/*.xml`; any file outside `mapper/identity/` whose SQL matches `\b(sys_user\|sys_user_oauth\|sys_role\|sys_permission\|rel_[a-z_]+)\b` fails, naming the file. The table list matches `identity_tables` in the grants callback | AC3 as a regression guard, closing the gap `impl-backend-architecture.md` line 189 notes (ArchUnit cannot see SQL) (Q4) | @Yorick-Yu |
-| T10 | `DistributedRbacTest`: the mocked `pageAttention` returns `PageResult<AttentionItem>`; assertions unchanged | Compile follow-up | @Yorick-Yu |
+| T10 | `DistributedRbacTest`: the mocked `pageAttention` returns `PageResult<AttentionItem>`; assertions unchanged. **As built:** no edit needed, the empty `PageResult` is inferred | Compile follow-up | @Yorick-Yu |
 | T11 | Existing `ArchitectureTest` (`commerce_reaches_identity_only_through_user_port`, `internal_controllers_are_hidden_and_distributed_only`, persistence ownership), `InternalPathsContractTest`, `CommerceServiceApplicationIT`, `IdentityServiceApplicationIT` | No rule change needed; all stay green | both |
 
 Coverage: T2–T6 and T9 count in the bootstrap JaCoCo aggregate; T7 and T8 in commerce-svc's report. New production code is about 120 lines, every branch exercised.
