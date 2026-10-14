@@ -165,35 +165,15 @@ The disposable `blocbuy-swe5001` dashboard implements only Edge, Services and Me
 
 ## 7. Apply and destroy order
 
-Steps 1–5 are `env-up.sh`; the destroy row is `env-down.sh`. The promotion run and `swe5001-env.yml` call the same scripts.
+Operator prerequisites/commands are maintained in the [Terraform README](../../infra/swe5001/README.md#environment-sessions); session start/check/destroy and failure recovery are maintained in the [runbook](runbook-environment-session.md#4-start). Do not execute the architecture plan as a parallel operational checklist.
 
-| Step | Command | Expected time |
-| --- | --- | --- |
-| 1 | `terraform -chdir=infra/swe5001/runtime apply` (network, ALB, ECS cluster, RDS, Valkey, messaging, services at desired count 0) | 12–18 min |
-| 2 | `aws ecs run-task` for `db-init`; wait for exit code 0 | 1–2 min |
-| 3 | Set desired count to 1 per service (second `apply` with `-var services_enabled=true`) | 3–5 min |
-| 4 | `terraform -chdir=infra/swe5001/edge apply -var="runtime_alb_dns_name=<runtime ALB output>"` (origin DNS update, no runtime state read by edge) | 3–5 min |
-| 5 | Smoke test through CloudFront (verification plan, section 3) | 1 min |
-| Destroy | `terraform -chdir=infra/swe5001/runtime destroy`, retried once on Service Connect namespace errors | 10–15 min |
+The design order is stopped provisioning → database initialisation → distributed routing/recipient readiness → service enablement at configured minima → edge origin update → stable-service/smoke checks. Teardown removes runtime and verifies absence; foundation and edge persist. Producer/consumer readiness and explicit pause/restore controls prevent tasks or stale messages from bypassing bootstrap. Earlier timing estimates predate the 900-second filter wait; actual durations and V8 acceptance require session evidence.
 
 Destroy rules from plan section 3.3 apply unchanged (no customer-managed KMS keys, explicit log groups, `force_destroy` buckets, ECR outside `runtime`).
 
 ### Environment scripts (`infra/swe5001/scripts/`)
 
-| Script | Behaviour | Exit status |
-| --- | --- | --- |
-| `lib.sh` | Sourced by the others. Fails unless `aws sts get-caller-identity` returns account `402178232802` and `AWS_REGION` is `ap-southeast-1`; runs `terraform init` with `-backend-config bucket=$SWE5001_TF_STATE_BUCKET` | — |
-| `env-up.sh [--release\|--candidate]` | Steps 1–5 above. Reads image digests from SSM `/blocbuy/swe5001/release/*` (default) or `/candidate/*`, the topology from `SWE5001_TOPOLOGY` (default `monolith`) and the frontend URL from the `edge` output; waits for stable services before the smoke suite (up to five attempts). Safe to re-run: a second run on an existing environment converges instead of failing. `SWE5001_TIMINGS_FILE` records step durations | 0 when the smoke suite passes |
-| `env-down.sh` | `terraform destroy` of `runtime`, one retry on Service Connect namespace errors, then `env-status.sh` | 0 when nothing remains |
-| `env-status.sh` | Lists resources tagged `Course=swe5001,Stack=runtime` (Resource Groups Tagging API; deregistered task definitions are ignored, as they cost nothing; because the tagging API and EC2's tag index keep listing deleted resources for over an hour, each EC2 resource, ECS cluster, service and task counts only while its own describe call still returns it, and terminated instances, `INACTIVE` clusters and services and `STOPPED` tasks do not count; not-found errors mean deleted, and other resource types always count) and the ECS service desired and running counts; tagging, EC2 and ECS lookup errors fail closed | 0 only when every lookup succeeds and no runtime resource exists, 1 otherwise; with `--expect-up` the resource check is inverted for use after `env-up.sh` |
-
-Local use, with the operator's own AWS credentials:
-
-```bash
-export AWS_PROFILE=<operator profile> AWS_REGION=ap-southeast-1 SWE5001_TF_STATE_BUCKET=<bucket>
-infra/swe5001/scripts/env-up.sh      # before a session; prints the CloudFront URL
-infra/swe5001/scripts/env-down.sh    # after the session; fails if anything is left
-```
+The promotion workflow and manual-session workflow call the same scripts; they do not implement competing lifecycle paths. Account/Region guards, image-source selection, bootstrap recovery and teardown behavior are defined by the scripts and documented in the [session runbook](runbook-environment-session.md). The [README](../../infra/swe5001/README.md#environment-sessions) owns invocation/configuration; this section retains its heading for existing design citations.
 
 ---
 

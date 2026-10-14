@@ -159,7 +159,7 @@ Frontend analysis runs independently as `sonar-frontend` (`SonarCloud Frontend`)
 - **`backend/Dockerfile`** — multi-stage: `maven:3.9-eclipse-temurin-21` builds `blocbuy-bootstrap` (`-am`, tests skipped — they ran in `build-quality`); runtime `eclipse-temurin:21-jre`, non-root user, port 8589, `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0`. No in-image HEALTHCHECK (JRE image has no curl); orchestrator probes hit `/api/actuator/health` (management base-path, already exposed). Profile `docker` selected by compose via `SPRING_PROFILES_ACTIVE`, not baked in. Used by local `docker compose` builds.
 - **`backend/Dockerfile.ci`** — runtime-only twin used by the `docker` CI job: successful `build-quality` uploads the boot jar packaged by `mvn verify`; `docker` downloads that exact artifact and assembles the image without repeating an in-container Maven build. The current `docker` job requires `build-quality` success, so it does not use a multi-stage fallback when that artifact is absent.
 - **`.github/workflows/security.yml`** — pull requests and merge groups affecting backend, deployment, or workflow files; production `v*` tag pushes; weekly scheduled and manual scans; plus Gitleaks-only `dev` pushes:
-  - **Gitleaks** full-history secret scan. `.gitleaks.toml` extends defaults and allowlists reviewed placeholders.
+  - **Gitleaks** event-selected secret scan with full history available. `.gitleaks.toml` extends defaults and allowlists reviewed placeholders; the full-history target is not established by event-scoped green runs.
   - **Trivy** separates Maven vulnerability and deployment-configuration gates at HIGH/CRITICAL.
   - **Actionlint/ShellCheck** validates workflows, embedded shell and EC2 lifecycle scripts.
   - **Deployment policy** enforces one backend service and an exact non-secret SSM archive allowlist.
@@ -167,6 +167,8 @@ Frontend analysis runs independently as `sonar-frontend` (`SonarCloud Frontend`)
 - **Dependabot** (Step 2) closes the loop on remediation.
 
 Trivy SARIF reports are preserved as workflow artifacts even when a Trivy gate fails. Security-tab ingestion is enabled only when the repository's Code Scanning capability is available; the Trivy exit code remains the CI gate independently of SARIF ingestion.
+
+2026-10-14 reconciliation: earlier rollout notes described Gitleaks as full-history enforcement, but observed dev execution selected one commit (`--log-opts=-1`); separate full-history scans found unresolved historical matches. The [quality-gate checkpoint](../quality/quality-gates.md#secret-scan-scope-checkpoint--2026-10-14) records the unchanged target and current gap. This is a documentation correction, not a new exception or CI policy change.
 
 ## Step 5 — Pipeline Hardening (implemented 2026-09-02)
 

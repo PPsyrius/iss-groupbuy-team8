@@ -6,7 +6,7 @@ Infrastructure for the SWE5001 distributed deployment shape on Amazon ECS. It is
 | --- | --- | --- | --- | --- |
 | [`foundation/`](foundation/) | Persistent | `swe5001/foundation.tfstate` | An operator, from a workstation or CloudShell (it creates the roles CI assumes) | Operator applied 2026-10-05 without billing: 23 creates, post-apply plan exit 0; GitHub OIDC plan passed with `No changes.` on 2026-10-06 |
 | [`edge/`](edge/) | Persistent | `swe5001/edge.tfstate` | Created once by an operator; afterwards the promotion run and `env-up.sh` only re-point the distribution at the new ALB | Operator applied from `605c8e27` on 2026-10-06: 9 creates, post-apply plan exit 0; edge variables configured |
-| [`runtime/`](runtime/) | Exists only during a promotion run or a manual session | `swe5001/runtime.tfstate` | Promotion run and `env-up.sh` / `env-down.sh` | Code ready (PRs 3–4 in #376); not applied. Messaging, scaling and alarms follow in PRs 8 and 10 |
+| [`runtime/`](runtime/) | Exists only during a promotion run or a manual session | `swe5001/runtime.tfstate` | Promotion run and `env-up.sh` / `env-down.sh` | Monolith sessions applied/destroyed since October 6; distributed map, messaging and dashboard/scaling merged in #472/#487/#489. Broker-only routing/alarm drill and cleanup passed; full distributed runtime/AZ/scaling acceptance remains pending ([handoff](../../docs/swe5001/HANDOFF.md)) |
 
 All stacks use Terraform `~> 1.16.4`, AWS provider `~> 5.100`, the existing state bucket `blocbuy-tfstate-402178232802` and S3-native locking (`use_lockfile = true`). Non-secret inputs are in [`envs/demo.tfvars`](envs/demo.tfvars). Operators seed application secrets in SSM Parameter Store under `/blocbuy/swe5001/`. The origin secret is also held in the private `edge` and `runtime` Terraform states for CloudFront/ALB routing; the Valkey AUTH token is held in `runtime` state. The PR plan role cannot read either state.
 
@@ -20,6 +20,7 @@ Run these before opening a PR; `infra-swe5001.yml` runs the same checks.
 terraform fmt -check -recursive infra/swe5001
 terraform -chdir=infra/swe5001/foundation init -backend=false
 terraform -chdir=infra/swe5001/foundation validate
+terraform -chdir=infra/swe5001/foundation test
 terraform -chdir=infra/swe5001/runtime init -backend=false
 terraform -chdir=infra/swe5001/runtime validate
 terraform -chdir=infra/swe5001/runtime test

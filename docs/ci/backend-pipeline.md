@@ -6,6 +6,8 @@ This runbook covers PR validation, `dev` analysis and delivery, releases, and ro
 
 PR checks against current `dev` are authoritative before merge. Code-relevant `dev` pushes refresh Sonar baselines on the merged SHA; every `dev` push runs Gitleaks, while packaging and deployment run separately when enabled. `merge_group` validation is configured for future Merge Queue use.
 
+2026-10-14 scope correction: Gitleaks runs on every applicable event but selects revisions through its action, not merely through checkout depth. The observed dev scan checked one commit; the [full-history target and unresolved historical findings](../quality/quality-gates.md#secret-scan-scope-checkpoint--2026-10-14) are tracked separately. Green PR/dev checks do not establish a clean full history or deployed acceptance.
+
 ```text
 ci-backend.yml
 ├── build-quality     PR/tag: Spotless -> Checkstyle -> Maven verify -> reports + Sonar inputs + OpenAPI candidate
@@ -25,7 +27,7 @@ security.yml
 ├── dev push          Gitleaks only (updates the Security badge)
 ├── workflow-lint     Actionlint + ShellCheck for embedded workflow shell
 ├── deployment-bundle ShellCheck + backend-only Compose + exact archive policy
-├── gitleaks          full-history secret scan
+├── gitleaks          event-selected secret scan (full history available, not necessarily scanned)
 ├── trivy-deps        Maven HIGH/CRITICAL vulnerability gate
 ├── trivy-config      Docker/config HIGH/CRITICAL misconfiguration gate
 └── codeql            Java SAST when ENABLE_CODEQL=true and Code Scanning is available
