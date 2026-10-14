@@ -57,6 +57,26 @@ data "aws_iam_policy_document" "workload_boundary" {
     resources = ["arn:aws:sns:${var.aws_region}:${var.aws_account_id}:${local.name_prefix}-*"]
   }
 
+  # SNS's AWS-managed key; no CMK lifecycle. Only SNS may use the key on behalf of
+  # a publisher, and only with the exact course domain-topic encryption context.
+  statement {
+    sid       = "UseDomainEventKeyViaSns"
+    actions   = ["kms:GenerateDataKey*", "kms:Decrypt"]
+    resources = ["arn:aws:kms:${var.aws_region}:${var.aws_account_id}:key/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "kms:ViaService"
+      values   = ["sns.${var.aws_region}.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "kms:EncryptionContext:aws:sns:topicArn"
+      values   = ["arn:aws:sns:${var.aws_region}:${var.aws_account_id}:${local.name_prefix}-domain-events"]
+    }
+  }
+
   statement {
     sid = "ConsumeSwe5001Events"
     actions = [

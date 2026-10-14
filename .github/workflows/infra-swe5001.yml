@@ -73,6 +73,22 @@ jobs:
         run: |
           pipx run "checkov==${CHECKOV_VERSION}" -d "infra/swe5001/${STACK}" \
             --framework terraform --quiet --compact
+          # Default topology=none omits messaging from root scans; scan it directly too.
+          if [ "$STACK" = runtime ]; then
+            pipx run "checkov==${CHECKOV_VERSION}" -d infra/swe5001/modules/messaging \
+              --framework terraform --quiet --compact
+          fi
+
+      - name: Trivy messaging configuration
+        if: matrix.stack == 'runtime'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.74.0
+          scan-type: config
+          scan-ref: infra/swe5001/modules/messaging
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          format: table
 
   # Environment scripts and the smoke suite they call (shellcheck is preinstalled).
   scripts:
@@ -92,6 +108,9 @@ jobs:
 
       - name: Verify topology service names
         run: bash infra/swe5001/scripts/test-lib.sh
+
+      - name: Verify service controls, messaging readiness and bootstrap sequencing
+        run: bash infra/swe5001/scripts/test-messaging-readiness.sh
 
   plan:
     name: plan (${{ matrix.stack }})

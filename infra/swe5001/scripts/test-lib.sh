@@ -29,3 +29,26 @@ fi
   exit 1
 }
 printf 'PASS unknown topology rejected\n'
+
+updates=$(mktemp)
+trap 'rm -f "$updates"' EXIT
+aws() {
+  case "$2" in
+    describe-services) printf '%s\n' "$mock_desired" ;;
+    update-service) printf '%s\n' "$*" >> "$updates" ;;
+    *) return 1 ;;
+  esac
+}
+mock_desired=0
+start_stopped_services notification-svc
+[ "$(wc -l < "$updates")" -eq 1 ] || exit 1
+mock_desired=4
+start_stopped_services notification-svc
+[ "$(wc -l < "$updates")" -eq 1 ] || exit 1
+printf 'PASS start zero-count service without resetting scaled count\n'
+mock_desired=None
+if (start_stopped_services notification-svc) 2>/dev/null; then
+  printf 'FAIL missing service accepted\n' >&2
+  exit 1
+fi
+printf 'PASS missing service fails closed\n'

@@ -186,6 +186,26 @@ locals {
 }
 
 data "aws_iam_policy_document" "apply" {
+  # The stopped-service readiness gate publishes ID-only probes to the encrypted
+  # domain topic. Same narrow KMS constraints as the bounded commerce publisher.
+  statement {
+    sid       = "VerifyDomainEventKeyViaSns"
+    actions   = ["kms:GenerateDataKey*", "kms:Decrypt"]
+    resources = ["arn:aws:kms:${var.aws_region}:${var.aws_account_id}:key/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "kms:ViaService"
+      values   = ["sns.${var.aws_region}.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "kms:EncryptionContext:aws:sns:topicArn"
+      values   = ["arn:aws:sns:${var.aws_region}:${var.aws_account_id}:${local.name_prefix}-domain-events"]
+    }
+  }
+
   statement {
     sid       = "ListSwe5001StateKeys"
     actions   = ["s3:ListBucket"]

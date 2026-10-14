@@ -78,6 +78,11 @@ run "topology_none" {
   command = plan
 
   assert {
+    condition     = length(module.messaging) == 0 && length(aws_appautoscaling_target.notification) == 0
+    error_message = "Topology none must not create messaging or consumer scaling."
+  }
+
+  assert {
     condition     = length(module.service) == 0 && length(module.client_service) == 0 && length(local.databases) == 0
     error_message = "Topology none plans no service and no database."
   }
@@ -98,6 +103,11 @@ run "monolith_topology" {
     image_digests = {
       monolith = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
     }
+  }
+
+  assert {
+    condition     = length(module.messaging) == 0 && length(aws_appautoscaling_target.notification) == 0 && local.services["monolith"].task_policy_json == null
+    error_message = "The monolith fallback gets no messaging resources or grants."
   }
 
   assert {
@@ -176,15 +186,58 @@ run "rejects_unpinned_image" {
 run "distributed_topology" {
   command = plan
 
+  override_module {
+    target = module.messaging[0]
+    outputs = {
+      topic_arn               = "arn:aws:sns:ap-southeast-1:402178232802:blocbuy-swe5001-domain-events"
+      queue_arns              = { notification = "arn:aws:sqs:ap-southeast-1:402178232802:blocbuy-swe5001-notification" }
+      queue_urls              = { notification = "https://sqs.ap-southeast-1.amazonaws.com/402178232802/blocbuy-swe5001-notification" }
+      queue_names             = { notification = "blocbuy-swe5001-notification" }
+      dlq_urls                = { notification = "https://sqs.ap-southeast-1.amazonaws.com/402178232802/blocbuy-swe5001-notification-dlq" }
+      alert_subscription_arns = ["arn:aws:sns:ap-southeast-1:402178232802:blocbuy-swe5001-alerts:test"]
+    }
+  }
+
   variables {
-    topology         = "distributed"
-    services_enabled = true
-    frontend_url     = "https://d111111abcdef8.cloudfront.net"
+    topology           = "distributed"
+    services_enabled   = true
+    messaging_verified = true
+    frontend_url       = "https://d111111abcdef8.cloudfront.net"
     image_digests = {
       identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
       commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
       notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
     }
+  }
+
+  assert {
+    condition     = jsondecode(local.services["commerce-svc"].task_policy_json).Statement[0].Action == ["sns:Publish"] && jsondecode(local.services["commerce-svc"].task_policy_json).Statement[0].Resource == ["arn:aws:sns:ap-southeast-1:402178232802:blocbuy-swe5001-domain-events"] && toset(jsondecode(local.services["notification-svc"].task_policy_json).Statement[0].Action) == toset(["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:ChangeMessageVisibility", "sqs:GetQueueAttributes"]) && jsondecode(local.services["notification-svc"].task_policy_json).Statement[0].Resource == ["arn:aws:sqs:ap-southeast-1:402178232802:blocbuy-swe5001-notification"]
+    error_message = "Commerce publishes only to the domain topic; notification consumes only its queue, with no send or audit access."
+  }
+
+  assert {
+    condition     = toset(jsondecode(local.services["commerce-svc"].task_policy_json).Statement[1].Action) == toset(["kms:GenerateDataKey*", "kms:Decrypt"]) && jsondecode(local.services["commerce-svc"].task_policy_json).Statement[1].Condition.StringEquals["kms:ViaService"] == "sns.ap-southeast-1.amazonaws.com" && jsondecode(local.services["commerce-svc"].task_policy_json).Statement[1].Condition.StringEquals["kms:EncryptionContext:aws:sns:topicArn"] == "arn:aws:sns:ap-southeast-1:402178232802:blocbuy-swe5001-domain-events"
+    error_message = "Only SNS can use KMS for the exact domain topic, not arbitrary keys via other services."
+  }
+
+  assert {
+    condition     = local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_SNS_TOPIC_ARN"] == "arn:aws:sns:ap-southeast-1:402178232802:blocbuy-swe5001-domain-events" && local.service_environment["notification-svc"]["BLOCBUY_EVENTS_SQS_QUEUE_URL"] == "https://sqs.ap-southeast-1.amazonaws.com/402178232802/blocbuy-swe5001-notification"
+    error_message = "Task definitions get the provisioned topic ARN and notification queue URL."
+  }
+
+  assert {
+    condition     = length(module.messaging) == 1 && length(aws_appautoscaling_target.notification) == 1 && aws_appautoscaling_target.notification[0].min_capacity == 1 && aws_appautoscaling_target.notification[0].max_capacity == 4
+    error_message = "Distributed notification scales from one to four tasks only when services are enabled."
+  }
+
+  assert {
+    condition     = aws_appautoscaling_policy.notification_backlog[0].target_tracking_scaling_policy_configuration[0].target_value == 50 && one([for m in aws_appautoscaling_policy.notification_backlog[0].target_tracking_scaling_policy_configuration[0].customized_metric_specification[0].metrics : m.expression if m.return_data]) == "backlog / IF(tasks > 0, tasks, 1)"
+    error_message = "Scaling tracks backlog per running task, protects division by zero and uses target 50."
+  }
+
+  assert {
+    condition     = local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_ENABLED"] == "true" && local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_TRANSPORT"] == "sns" && local.service_environment["commerce-svc"]["AWS_REGION"] == "ap-southeast-1" && local.service_environment["notification-svc"]["BLOCBUY_EVENTS_TRANSPORT"] == "sns" && local.services["identity-svc"].task_policy_json == null
+    error_message = "Only commerce enables the relay; identity has no messaging grant and AWS gets an explicit region."
   }
 
   assert {
@@ -275,5 +328,61 @@ run "distributed_topology" {
   assert {
     condition     = length(local.db_init_secrets) == 7 && contains(keys(local.db_init_secrets), "NOTIFICATION_APP_PASSWORD")
     error_message = "db-init receives the master password and both role passwords of all three databases."
+  }
+}
+
+run "distributed_before_db_init" {
+  command = plan
+  variables {
+    topology         = "distributed"
+    services_enabled = false
+    frontend_url     = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+
+  assert {
+    condition     = length(module.messaging) == 1 && aws_appautoscaling_target.notification[0].min_capacity == 0 && aws_appautoscaling_target.notification[0].suspended_state[0].dynamic_scaling_in_suspended && aws_appautoscaling_target.notification[0].suspended_state[0].dynamic_scaling_out_suspended && aws_appautoscaling_target.notification[0].suspended_state[0].scheduled_scaling_suspended && local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_ENABLED"] == "false"
+    error_message = "Before db-init, scaling is fully suspended with min 0 and the relay is off."
+  }
+}
+
+run "distributed_unverified_keeps_relay_off" {
+  command = plan
+  variables {
+    topology         = "distributed"
+    services_enabled = true
+    frontend_url     = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  assert {
+    condition     = local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_ENABLED"] == "false"
+    error_message = "Enabling services alone must not bypass the routing-readiness gate."
+  }
+}
+
+# A controlled infrastructure-only drill can verify SNS/SQS before candidate images
+# exist. Never use its partial plan to claim a running distributed environment.
+run "messaging_only_without_service_images" {
+  command = plan
+  plan_options {
+    target = [module.messaging]
+  }
+  variables {
+    topology         = "distributed"
+    services_enabled = false
+    frontend_url     = "https://d111111abcdef8.cloudfront.net"
+    image_digests    = {}
+  }
+  assert {
+    condition     = length(module.messaging) == 1
+    error_message = "A targeted messaging-only plan must not require ECS image digests."
   }
 }
