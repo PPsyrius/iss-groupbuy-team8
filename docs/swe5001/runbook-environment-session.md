@@ -66,7 +66,7 @@ T − 60 min is the minimum planning allowance for distributed sessions after #4
    gh run watch --repo PPsyrius/iss-groupbuy-team8 $(gh run list --repo PPsyrius/iss-groupbuy-team8 --workflow swe5001-env.yml --limit 1 --json databaseId --jq '.[0].databaseId')
    ```
 
-The run is green only after every service is stable and the smoke suite passed through CloudFront (health, product list, unauthenticated `/auth/me`, trace header, internal path blocked). With `distributed`, health and the product list come from `commerce-svc` and `/auth/me` from `identity-svc`; `notification-svc` is covered by the stable-service wait and its target group until it has an endpoint (#215). The job summary shows the URL, the topology and the step timings.
+The run is green only after every service is stable and the smoke suite passed through CloudFront (health, product list, unauthenticated `/auth/me` and `/notifications`, trace header, internal path blocked). With `distributed`, health and the product list come from `commerce-svc`, `/auth/me` from `identity-svc` and `/notifications` from `notification-svc`; `commerce-svc` does not serve the notification route and would answer 404, so that check also proves the priority-20 rule. The job summary shows the URL, the topology and the step timings.
 
 **First distributed session (before the first promotion after #456).** `prod` and the release digests do not have the three services yet, so an operator runs the session from a `dev` checkout instead of the workflow: push the three images by hand and write their candidate digests ([README](../../infra/swe5001/README.md#environment-sessions)), then:
 
@@ -74,7 +74,7 @@ The run is green only after every service is stable and the smoke suite passed t
 SWE5001_TOPOLOGY=distributed infra/swe5001/scripts/env-up.sh --candidate
 ```
 
-`commerce-svc` and `notification-svc` start only once session roles (#467) and the remote identity check (#468) are merged; before that the run stops at the stable-service wait. Destroy with `env-down.sh` from the same checkout (section 8, fallback destroy).
+Plan for 25–40 minutes: the messaging gate (#447) waits 900 seconds and fails unless the SNS email subscriptions are confirmed, so have the recipients ready to confirm during that wait ([messaging check](#messaging-fan-out-check-447)). Then follow [demo data](#demo-data-distributed) and [acceptance evidence](#acceptance-evidence-456). Destroy with `env-down.sh` from the same checkout (section 8, fallback destroy). The step list and pass criteria of the first session are in the [#456 session plan](../agile/sprint-04/distributed-session-plan-20261014.md), Phase B.
 
 ## 5. Check
 
@@ -138,7 +138,34 @@ Each service has its own database. The demo catalogue (10 products, deals, polic
    BLOCBUY_BASE_URL=https://d3lvq02o2e7tcn.cloudfront.net/api/v1 BLOCBUY_TOKEN=<cookie value> scripts/seed-dev-demo-listings.sh
    ```
 
-   It is idempotent and prints a summary; `--check` makes no writes. A buyer account can then START a deal on one of those listings.
+   It is idempotent and prints a summary; `--check` makes no writes. A buyer account can then START a deal on one of those listings; the START also exercises the actor check from `commerce-svc` to `identity-svc` over Service Connect (#468).
+
+### Acceptance evidence (#456)
+
+`session-report.sh` runs fixed, read-only SQL once as the `db-init` task (no arguments; the report holds no emails or tokens):
+
+```bash
+infra/swe5001/scripts/session-report.sh
+```
+
+It prints, per database, the catalogue row count and whether the `R__demo_catalog_seed.sql` migration ran (expected only in `commerce`), the number of accounts holding the admin role in `identity` (1 after the grant), and the `sys_scheduler_lock` rows in `commerce` (`lock_key`, `owner`, `locked_until`, `version`). Run it before the grant and again at the end.
+
+One runner per job with two `commerce-svc` tasks (the default floor):
+
+1. Confirm both tasks are `RUNNING` for the whole check (`aws ecs list-tasks --cluster blocbuy-swe5001 --service-name commerce-svc`, then `describe-tasks` for their AZs).
+2. Make work due, so a run logs at `INFO` (a skipped run logs at `DEBUG` only): START a team on a listing with a short lifetime and let it expire, or leave a purchase intent unpaid past its expiry.
+3. After at least five minutes, in CloudWatch Logs Insights on `/blocbuy/swe5001/commerce-svc`:
+
+   ```text
+   fields @timestamp, @logStream, @message
+   | filter @message like /Team expiry sweep|Intent expiry sweep|Refund worker/
+   | sort @timestamp asc
+   ```
+
+   Each run's line appears in exactly one task's log stream.
+4. Run `session-report.sh` twice a few minutes apart: each `lock_key` has one `owner`, the host name of one commerce task, and `version` grows between the reports.
+
+Record the outputs (redacted) and the Logs Insights result in the day log before `down`.
 
 ## 6. During the session
 

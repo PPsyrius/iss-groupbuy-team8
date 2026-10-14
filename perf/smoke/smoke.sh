@@ -61,7 +61,18 @@ else
 fi
 check_trace_id auth_me
 
-# 4. Service-to-service paths never reach a service: CloudFront sends only /api/* to the
+# 4. The notification list without a session answers 401 with the envelope. The monolith
+#    serves it; with the distributed topology only notification-svc does (commerce-svc does
+#    not scan the notification module and would answer 404), so this also proves its ALB rule.
+status=$(fetch notifications '/api/v1/notifications?page=1&size=1')
+if [ "$status" = 401 ] && jq -e '.code | type == "string"' "$work/notifications.body" > /dev/null 2>&1; then
+  pass "notifications without a session is 401"
+else
+  fail notifications "status $status, body $(head -c 200 "$work/notifications.body" 2> /dev/null)"
+fi
+check_trace_id notifications
+
+# 5. Service-to-service paths never reach a service: CloudFront sends only /api/* to the
 #    ALB, so the answer is the SPA (200) or, before the SPA is uploaded, an S3 error
 #    (403 or 404). JSON means a service answered; any other status means the edge is broken.
 status=$(fetch internal /internal/users/00000000-0000-0000-0000-000000000000/active)

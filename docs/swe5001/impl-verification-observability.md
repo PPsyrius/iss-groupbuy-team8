@@ -55,7 +55,7 @@ Runs against any base URL (EC2 CloudFront, SWE5001 CloudFront, or local Compose)
 | `GET /api/actuator/health` | 200 `UP` (through the ALB default path; commerce) |
 | `GET /api/v1/products?page=1&size=20` | 200, `Result` envelope, non-empty list (demo seed) |
 | `GET /api/v1/auth/me` without cookie | 401 envelope (served by identity) |
-| `GET /api/v1/notifications` without cookie | 401 envelope (served by notification). The owner-scoped GET handler merged in #478 (#215), but this check is not yet in `smoke.sh`; add and exercise it in the distributed acceptance session |
+| `GET /api/v1/notifications` without cookie | 401 envelope (served by notification; `commerce-svc` does not serve the route and would answer 404, so a 401 also proves the ALB rule). In `smoke.sh` since 2026-10-14; passed that day against the SWE5006 dev CloudFront (monolith) |
 | `GET /internal/users/<uuid>/active` through CloudFront | never reaches a service: CloudFront forwards only `/api/*` to the ALB, so the response is the SPA fallback page, not JSON |
 | Response header `X-Trace-Id` | present on every response |
 

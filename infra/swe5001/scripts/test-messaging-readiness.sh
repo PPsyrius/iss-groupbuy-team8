@@ -186,6 +186,7 @@ curl() {
     *'/health') body='{"status":"UP"}' ;;
     *'/products?'*) body='{"code":"COMMON_200_000","data":{"items":[{}]}}' ;;
     *'/auth/me') body='{"code":"IDENTITY_401_001"}'; status=401 ;;
+    *'/notifications?'*) body='{"code":"COMMON_401_000"}'; status=401 ;;
     *) body='<html>SPA</html>' ;;
   esac
   printf '%s' "$body" > "$output"
