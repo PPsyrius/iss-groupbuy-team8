@@ -47,7 +47,7 @@ Environment-scoped subjects keep the plan role usable from PRs into `dev` and `p
 
 ## 4. Variables
 
-All are **non-secret**. Values come from `foundation` Terraform outputs (see the AWS plan, section 4).
+All are **non-secret**. Values come from Terraform outputs or operator-selected session settings (see the AWS plan, section 4).
 
 ### Repository level
 
@@ -75,6 +75,10 @@ All are **non-secret**. Values come from `foundation` Terraform outputs (see the
 | `SWE5001_FRONTEND_URL` | `https://<swe5001 distribution>.cloudfront.net`, used by smoke tests and the frontend build |
 | `SWE5001_SPA_BUCKET` | SWE5001 SPA bucket name |
 | `SWE5001_CLOUDFRONT_DIST_ID` | SWE5001 distribution ID |
+| `SWE5001_COMMERCE_MIN_CAPACITY` | `2` for demo/promotion; optionally `1` for baseline sessions, restoring `2` before V5/presentation. Both session and promotion workflows pass it to Terraform/startup; defaults to `2` if unset |
+| `SWE5001_COMMERCE_REQUESTS_PER_TARGET` | Measured V2 target in requests per target per minute; both workflows pass this calibration on every up. Defaults provisionally to `200` if unset; not a measured capacity claim |
+
+2026-10-14 (#457): these commerce settings are wired in code, not claimed configured in GitHub. Environment values override repository values. For a CloudShell baseline, use the corresponding `TF_VAR_*` exports; after V2, an operator must persist the calibrated request target here before subsequent workflow sessions/promotions. Do not change deployment enablement merely to configure these non-secret values.
 
 ### Secrets
 

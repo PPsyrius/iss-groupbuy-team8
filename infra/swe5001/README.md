@@ -34,9 +34,17 @@ checkov -d infra/swe5001/foundation --framework terraform --quiet --compact
 checkov -d infra/swe5001/edge --framework terraform --quiet --compact
 checkov -d infra/swe5001/runtime --framework terraform --quiet --compact
 checkov -d infra/swe5001/modules/messaging --framework terraform --quiet --compact
+checkov -d infra/swe5001/modules/observability --framework terraform --quiet --compact
 trivy config --severity HIGH,CRITICAL --exit-code 1 infra/swe5001
 trivy config --severity HIGH,CRITICAL --exit-code 1 infra/swe5001/modules/messaging
+trivy config --severity HIGH,CRITICAL --exit-code 1 infra/swe5001/modules/observability
 ```
+
+## HTTP scaling and dashboard (#457)
+
+Distributed runtime adds commerce ALB-request target tracking (max 6), a `blocbuy-swe5001` dashboard with Edge/Services/Messaging rows, and no additional explicit alarms. `commerce_min_capacity` defaults to 2 for demo availability; export `TF_VAR_commerce_min_capacity=1` for baseline sessions. `commerce_requests_per_target` is requests per target per minute, provisionally 200 until V2 calibrates it. Startup reads `cloudfront_distribution_id` from edge; direct full distributed plans must supply it. CPU/identity scaling is out of scope. [Session checks and evidence requirements](../../docs/swe5001/runbook-environment-session.md#http-scaling-and-dashboard-457) cover live metrics, two-AZ placement and calibration; offline tests do not prove them.
+
+Both GitHub up workflows consume `SWE5001_COMMERCE_MIN_CAPACITY` (default `2`) and `SWE5001_COMMERCE_REQUESTS_PER_TARGET` (provisional default `200`) from the `swe5001-demo` environment or repository variables. Persist V2 calibration there; CloudShell exports do not affect later workflow runs. Commerce's regular-Fargate base equals its floor, with weighted Spot allocation above it. The three dashboard rows contain seven unit-separated charts, not three overloaded graphs.
 
 ## `foundation` bootstrap (one time)
 

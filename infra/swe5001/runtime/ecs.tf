@@ -97,7 +97,8 @@ module "client_service" {
   listener_priority        = each.value.listener_priority
   path_patterns            = each.value.path_patterns
   origin_secret            = data.aws_ssm_parameter.origin_secret.value
-  desired_count            = var.services_enabled ? 1 : 0
+  desired_count            = var.services_enabled ? var.commerce_min_capacity : 0
+  fargate_base_capacity    = var.commerce_min_capacity
   enable_exec              = var.enable_exec
   after_services           = [for name in each.value.connects_to : module.service[name].service_name]
 }
