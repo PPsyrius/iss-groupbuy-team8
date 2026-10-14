@@ -29,6 +29,13 @@ esac
 guard_account
 topology=${SWE5001_TOPOLOGY:-monolith}
 services=$(services_for_topology "$topology")
+# Resolve once and pass explicitly so Terraform and imperative startup use the
+# same floor even if shared variable files later contain different defaults.
+export TF_VAR_commerce_min_capacity=${TF_VAR_commerce_min_capacity:-2}
+export TF_VAR_commerce_requests_per_target=${TF_VAR_commerce_requests_per_target:-200}
+case "$TF_VAR_commerce_min_capacity" in 1 | 2) ;; *) die "TF_VAR_commerce_min_capacity must be 1 or 2" ;; esac
+jq -e 'type == "number" and . > 0' <<< "$TF_VAR_commerce_requests_per_target" > /dev/null ||
+  die "TF_VAR_commerce_requests_per_target must be a positive JSON number"
 if [ "$topology" = distributed ]; then
   command -v openssl > /dev/null || die "openssl is not installed"
   jq -e 'type == "array" and length > 0 and all(.[]; type == "string" and length > 0)' \
@@ -73,6 +80,7 @@ tf_init edge
 frontend_url=$(tf edge output -raw url 2> /dev/null) ||
   die "edge has no outputs; an operator must create it first (infra/swe5001/README.md)"
 log "edge: $frontend_url"
+distribution_id=$(tf edge output -raw distribution_id)
 
 step "read $digest_source image digests"
 digests='{}'
@@ -83,8 +91,10 @@ for service in $services; do
   log "$service: $digest"
   digests=$(jq --arg s "$service" --arg d "$digest" '. + {($s): $d}' <<< "$digests")
 done
-jq -n --arg t "$topology" --arg u "$frontend_url" --argjson d "$digests" \
-  '{topology: $t, frontend_url: $u, image_digests: $d}' > "$run_vars"
+jq -n --arg t "$topology" --arg u "$frontend_url" --arg id "$distribution_id" --argjson d "$digests" \
+  --argjson min "$TF_VAR_commerce_min_capacity" --argjson requests "$TF_VAR_commerce_requests_per_target" \
+  '{topology: $t, frontend_url: $u, cloudfront_distribution_id: $id, image_digests: $d,
+    commerce_min_capacity: $min, commerce_requests_per_target: $requests}' > "$run_vars"
 
 apply_runtime() {
   tf runtime apply -input=false -auto-approve -var-file="$VAR_FILE" \
@@ -122,7 +132,13 @@ fi
 step "apply runtime (services started only after db-init and readiness)"
 apply_runtime true "$verified"
 # Restore prior scaled counts, rather than replacing them with a hard-coded 1.
-restore_services "$snapshot" || die "cannot restore previous service counts/scaling"
+# A previous baseline's min 1 must not undo this session's selected demo floor.
+jq --argjson min "${TF_VAR_commerce_min_capacity:-2}" \
+  'map(if .service == "commerce-svc" then
+    .desired = ([.desired, $min] | max) |
+    if .scaling != null then .scaling.MinCapacity = $min | .scaling.MaxCapacity = 6 else . end
+  else . end)' "$snapshot" > "$work/restore-services.json"
+restore_services "$work/restore-services.json" || die "cannot restore previous service counts/scaling"
 # shellcheck disable=SC2086 # one word per service name
 start_stopped_services $services
 

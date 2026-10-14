@@ -104,9 +104,42 @@ variable "image_digests" {
 }
 
 variable "services_enabled" {
-  description = "Bootstrap switch: new service count 0/1, consumer scaling suspended/enabled. Scripts own counts after creation and explicitly pause existing services before db-init."
+  description = "Bootstrap switch: services stopped/started at their minimum, scaling suspended/enabled. Scripts own counts after creation and explicitly pause existing services before db-init."
   type        = bool
   default     = false
+}
+
+variable "commerce_min_capacity" {
+  description = "Commerce task minimum: 2 for the demo/V5; set 1 for V2/V3 baseline sessions"
+  type        = number
+  default     = 2
+
+  validation {
+    condition     = contains([1, 2], var.commerce_min_capacity)
+    error_message = "commerce_min_capacity must be 1 (baseline) or 2 (availability demo)."
+  }
+}
+
+variable "commerce_requests_per_target" {
+  description = "ALB requests per target per minute; provisional 200 until replaced by the measured V2 knee"
+  type        = number
+  default     = 200
+
+  validation {
+    condition     = var.commerce_requests_per_target > 0
+    error_message = "commerce_requests_per_target must be positive."
+  }
+}
+
+variable "cloudfront_distribution_id" {
+  description = "Persistent edge distribution ID for the runtime dashboard; supplied by env-up.sh"
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.topology != "distributed" || can(regex("^[A-Z0-9]+$", var.cloudfront_distribution_id))
+    error_message = "Distributed runtime requires the edge cloudfront_distribution_id."
+  }
 }
 
 variable "enable_exec" {

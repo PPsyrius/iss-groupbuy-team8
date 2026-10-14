@@ -193,6 +193,7 @@ resource "aws_ecs_service" "this" {
   health_check_grace_period_seconds = 120
   propagate_tags                    = "SERVICE"
   enable_ecs_managed_tags           = true
+  availability_zone_rebalancing     = "ENABLED"
 
   deployment_minimum_healthy_percent = 100
   deployment_maximum_percent         = 200
@@ -211,7 +212,7 @@ resource "aws_ecs_service" "this" {
 
   capacity_provider_strategy {
     capacity_provider = "FARGATE"
-    base              = 1
+    base              = var.fargate_base_capacity
     weight            = 1
   }
 

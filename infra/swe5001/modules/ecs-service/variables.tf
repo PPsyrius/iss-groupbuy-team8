@@ -133,9 +133,20 @@ variable "origin_secret" {
 }
 
 variable "desired_count" {
-  description = "Running task count; 0 while the environment is created, 1 once the database is initialised"
+  description = "Initial task count; 0 during bootstrap, the service minimum after database initialisation"
   type        = number
   default     = 0
+}
+
+variable "fargate_base_capacity" {
+  description = "Tasks placed on regular Fargate before weighted Spot allocation; commerce uses its configured minimum"
+  type        = number
+  default     = 1
+
+  validation {
+    condition     = contains([1, 2], var.fargate_base_capacity)
+    error_message = "fargate_base_capacity must be 1 or 2 for the baseline/demo floor."
+  }
 }
 
 variable "after_services" {

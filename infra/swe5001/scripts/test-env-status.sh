@@ -92,6 +92,12 @@ aws() {
         *) printf '%s\n' 1 ;;
       esac
       ;;
+    'cloudwatch list-dashboards')
+      case "$SCENARIO" in
+        dashboard_error) denied ListDashboards ;;
+        dashboard_live) printf '%s\n' 'arn:aws:cloudwatch::402178232802:dashboard/blocbuy-swe5001' ;;
+      esac
+      ;;
     *) printf 'unexpected AWS call: %s\n' "$*" >&2; return 44 ;;
   esac
 }
@@ -158,3 +164,5 @@ check sns_live failure 'runtime resources remain'
 check alarm_error failure 'cannot inspect CloudWatch alarm'
 check alarm_gone success 'no runtime resource tagged Stack=runtime'
 check alarm_live failure 'runtime resources remain'
+check dashboard_error failure 'cannot inspect runtime dashboard'
+check dashboard_live failure 'runtime resources remain'

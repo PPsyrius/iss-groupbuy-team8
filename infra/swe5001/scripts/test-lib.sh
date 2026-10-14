@@ -52,3 +52,31 @@ if (start_stopped_services notification-svc) 2>/dev/null; then
   exit 1
 fi
 printf 'PASS missing service fails closed\n'
+
+unset TF_VAR_commerce_min_capacity
+mock_desired=1
+start_stopped_services commerce-svc
+grep -q -- '--service commerce-svc --desired-count 2' "$updates"
+printf 'PASS commerce demo enforces two-task floor\n'
+: > "$updates"
+mock_desired=4
+start_stopped_services commerce-svc
+[ ! -s "$updates" ]
+printf 'PASS commerce preserves higher scaled counts\n'
+TF_VAR_commerce_min_capacity=1
+mock_desired=0
+start_stopped_services commerce-svc
+grep -q -- '--service commerce-svc --desired-count 1' "$updates"
+printf 'PASS commerce baseline uses one-task floor\n'
+TF_VAR_commerce_min_capacity=3
+if (start_stopped_services commerce-svc) 2>/dev/null; then
+  printf 'FAIL invalid commerce minimum accepted\n' >&2
+  exit 1
+fi
+printf 'PASS invalid commerce minimum fails closed\n'
+
+for workflow in swe5001-env.yml swe5001-deploy.yml; do
+  grep -Fq "TF_VAR_commerce_min_capacity: \${{ vars.SWE5001_COMMERCE_MIN_CAPACITY || '2' }}" "$REPO_ROOT/.github/workflows/$workflow"
+  grep -Fq "TF_VAR_commerce_requests_per_target: \${{ vars.SWE5001_COMMERCE_REQUESTS_PER_TARGET || '200' }}" "$REPO_ROOT/.github/workflows/$workflow"
+  printf 'PASS %s preserves the configured commerce floor and calibrated request target\n' "$workflow"
+done

@@ -109,6 +109,16 @@ Bootstrap verification invoked by `env-up.sh` differs: only the nested verifier 
 
 After the session, `env-down.sh` deletes the topic, four queues, subscriptions, alarms and scalable target. `env-status.sh` treats stale tagged SNS/SQS/alarm ARNs as deleted only after successful type-specific lookup or a recognised not-found response; access-denied/network failures remain failures. Save evidence before down: there is no persistent event archive.
 
+### HTTP scaling and dashboard (#457)
+
+Distributed sessions default to a commerce minimum of two tasks; identity and notification start at one. For V2/V3, export `TF_VAR_commerce_min_capacity=1` before `env-up.sh`; restore it to 2 for V5 and the presentation. Export `TF_VAR_commerce_requests_per_target` with the measured V2 per-task request rate converted to requests/minute; the default 200 is provisional. These Terraform environment variables must remain set consistently for the session. `env-up.sh` reads the edge distribution ID automatically; a direct full distributed runtime plan must supply `cloudfront_distribution_id` too.
+
+Open the runtime `dashboard_name` output (`blocbuy-swe5001`) in CloudWatch. Capture Edge, Services and Messaging rows with live data, plus ECS task ENIs/subnet AZs proving commerce placement in both AZs; two desired tasks and enabled AZ rebalancing alone do not prove placement. Existing scaled counts above the selected floor are preserved on reruns. The dashboard is runtime-only and `env-status.sh` checks its exact name because dashboards cannot be tagged.
+
+Before using GitHub workflow sessions after V2, persist `SWE5001_COMMERCE_REQUESTS_PER_TARGET` in the `swe5001-demo` environment; both manual and promotion up consume it. `SWE5001_COMMERCE_MIN_CAPACITY` defaults to 2 and can be set to 1 for a workflow baseline, but restore 2 before V5/presentation. These are non-secret settings, not deployment switches. CloudShell exports alone do not persist calibration into later GitHub runs. The commerce floor runs on regular Fargate to avoid independent Fargate/Spot spreading; actual two-AZ placement remains a live check. Dashboard rows use separate charts for incompatible units, retaining a one-minute period.
+
+Selecting minimum 1 does not reduce an existing scaled count: use a fresh baseline session, or separately perform V2's authorised suspend/scale-to-one procedure before measuring. Startup deliberately preserves higher counts rather than silently undoing autoscaling.
+
 ### Demo data (distributed)
 
 Each service has its own database. The demo catalogue (10 products, deals, policies) is seeded only into `commerce`; `identity` starts without users and admins. For admin or START/JOIN demos, after section 5:

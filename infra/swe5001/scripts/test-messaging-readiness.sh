@@ -134,12 +134,14 @@ openssl() {
   command openssl "$@"
 }
 terraform() {
+  local argument runtime_vars=""
   printf 'terraform %s\n' "$*" >> "$CLOUD_CALLS"
   case "$2" in
     init) : ;;
     output)
       case "${*: -1}" in
         url) printf 'https://example.invalid\n' ;;
+        distribution_id) printf 'E123EXAMPLE\n' ;;
         messaging)
           jq -n --argjson relay "$(jq .relay "$CLOUD_STATE")" \
             '{topic_arn:"arn:aws:sns:ap-southeast-1:402178232802:blocbuy-swe5001-domain-events",queues:{notification:"https://sqs.ap-southeast-1.amazonaws.com/402178232802/blocbuy-swe5001-notification",audit:"https://sqs.ap-southeast-1.amazonaws.com/402178232802/blocbuy-swe5001-audit"},alert_subscription_arns:["arn:aws:sns:ap-southeast-1:402178232802:blocbuy-swe5001-alerts:test"],relay_enabled:$relay}' ;;
@@ -149,17 +151,28 @@ terraform() {
         *) return 1 ;;
       esac ;;
     apply)
+      if [[ "$1" == *'/runtime' ]]; then
+        for argument in "$@"; do
+          case "$argument" in -var-file=*.tfvars.json) runtime_vars=${argument#-var-file=} ;; esac
+        done
+        [ -n "$runtime_vars" ] || return 1
+        jq -e '.cloudfront_distribution_id == "E123EXAMPLE" and
+          .topology == env.SWE5001_TOPOLOGY and
+          .commerce_min_capacity == (env.TF_VAR_commerce_min_capacity | tonumber) and
+          .commerce_requests_per_target == (env.TF_VAR_commerce_requests_per_target | tonumber)' \
+          "$runtime_vars" > /dev/null || return 1
+      fi
       if [[ "$1" == *'/edge' ]]; then
         [ "$SCENARIO" != edge_error ] || { printf 'Error: test failure\n' >&2; return 1; }
         printf 'Apply complete\n'
       elif [[ "$*" == *services_enabled=false* ]]; then
-        save_state '.active=true | .relay=false | .services["notification-svc"].scaling={MinCapacity:0,MaxCapacity:4,SuspendedState:{DynamicScalingInSuspended:true,DynamicScalingOutSuspended:true,ScheduledScalingSuspended:true}}'
+        save_state '.active=true | .relay=false | .services["notification-svc"].scaling={MinCapacity:0,MaxCapacity:4,SuspendedState:{DynamicScalingInSuspended:true,DynamicScalingOutSuspended:true,ScheduledScalingSuspended:true}} | .services["commerce-svc"].scaling={MinCapacity:0,MaxCapacity:6,SuspendedState:{DynamicScalingInSuspended:true,DynamicScalingOutSuspended:true,ScheduledScalingSuspended:true}}'
       else
         if [ "$SWE5001_TOPOLOGY" = distributed ]; then
           [[ "$*" == *messaging_verified=true* ]] || return 1
           grep -q 'sns publish' "$CLOUD_CALLS" || return 1
         fi
-        save_state '.relay=true | .services["notification-svc"].scaling={MinCapacity:1,MaxCapacity:4,SuspendedState:{DynamicScalingInSuspended:false,DynamicScalingOutSuspended:false,ScheduledScalingSuspended:false}}'
+        save_state --argjson min "${TF_VAR_commerce_min_capacity:-2}" '.relay=true | .services["notification-svc"].scaling={MinCapacity:1,MaxCapacity:4,SuspendedState:{DynamicScalingInSuspended:false,DynamicScalingOutSuspended:false,ScheduledScalingSuspended:false}} | .services["commerce-svc"].scaling={MinCapacity:$min,MaxCapacity:6,SuspendedState:{DynamicScalingInSuspended:false,DynamicScalingOutSuspended:false,ScheduledScalingSuspended:false}}'
       fi ;;
     *) return 1 ;;
   esac
@@ -278,13 +291,39 @@ pass 'standalone verification restores both services/scaling after an API failur
 reset
 save_state '.active=false | .services |= with_entries(.value.desired=0 | .value.running=0 | .value.scaling=null)'
 bash "$SWE5001_DIR/scripts/env-up.sh" > "$work/output" 2>&1 || { cat "$work/output"; exit 1; }
-jq -e '.relay == true and all(.services[]; .desired == 1)' "$CLOUD_STATE" > /dev/null
+jq -e '.relay == true and .services["commerce-svc"].desired == 2 and .services["identity-svc"].desired == 1 and .services["notification-svc"].desired == 1 and .services["commerce-svc"].scaling.MinCapacity == 2' "$CLOUD_STATE" > /dev/null
 pass 'full fresh bootstrap: stopped provisioning, db-init, readiness then relay/services'
 
 reset
 bash "$SWE5001_DIR/scripts/env-up.sh" > "$work/output" 2>&1 || { cat "$work/output"; exit 1; }
 jq -e '.services["commerce-svc"].desired == 4 and .services["notification-svc"].desired == 2 and .services["identity-svc"].desired == 1' "$CLOUD_STATE" > /dev/null
 pass 'full rerun pauses first and preserves previous scaled counts'
+
+reset
+save_state '.services["commerce-svc"].desired=1 | .services["commerce-svc"].running=1 | .services["commerce-svc"].scaling.MinCapacity=1'
+bash "$SWE5001_DIR/scripts/env-up.sh" > "$work/output" 2>&1
+jq -e '.services["commerce-svc"].desired == 2 and .services["commerce-svc"].scaling.MinCapacity == 2 and .services["commerce-svc"].scaling.MaxCapacity == 6 and (.services["commerce-svc"].scaling.SuspendedState.DynamicScalingOutSuspended | not)' "$CLOUD_STATE" > /dev/null
+pass 'old baseline snapshot cannot undo the selected demo minimum'
+
+reset
+save_state '.active=false | .services |= with_entries(.value.desired=0 | .value.running=0 | .value.scaling=null)'
+TF_VAR_commerce_min_capacity=1 bash "$SWE5001_DIR/scripts/env-up.sh" > "$work/output" 2>&1
+jq -e '.services["commerce-svc"].desired == 1 and .services["commerce-svc"].scaling.MinCapacity == 1' "$CLOUD_STATE" > /dev/null
+pass 'fresh baseline bootstrap starts one commerce task with minimum one'
+
+reset
+TF_VAR_commerce_requests_per_target=600 bash "$SWE5001_DIR/scripts/env-up.sh" > "$work/output" 2>&1
+pass 'calibrated request target and edge ID reach both runtime applies through the variable file'
+
+reset
+printf '{}\n' > "$work/missing-edge.tfvars.json"
+fails terraform -chdir="$SWE5001_DIR/runtime" apply -var-file="$work/missing-edge.tfvars.json" -var services_enabled=false
+pass 'bootstrap mock rejects a missing edge ID or scaling configuration'
+
+reset
+fails env TF_VAR_commerce_requests_per_target=0 bash "$SWE5001_DIR/scripts/env-up.sh"
+if grep -q 'terraform .*apply\|ecs update-service' "$CLOUD_CALLS"; then exit 1; fi
+pass 'invalid request target fails before service or infrastructure mutation'
 
 for fault in db_init_error pending_email publish_error edge_error; do
   reset
