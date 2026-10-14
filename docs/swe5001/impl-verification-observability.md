@@ -96,7 +96,7 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 
 ### V7 Poison message
 
-- Publish a malformed envelope to `blocbuy-swe5001-team-expired`.
+- Publish a malformed envelope to `blocbuy-swe5001-domain-events` with SNS message attribute `eventType=PaymentSucceeded` (ADR 0007, #447), routing only to notification and excluding audit; a missing routing attribute is filtered out before SQS and cannot test redrive.
 - Expected: 5 receives, then the message is in the DLQ; the DLQ alarm fires; other messages are unaffected.
 
 ### V8 Rebuild from zero
@@ -119,6 +119,8 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 | Application | Outbox pending rows and relay lag (custom metric from `OutboxRelay`, namespace `BlocBuy/SWE5001`) |
 
 ### Alarms (SNS topic `blocbuy-swe5001-alerts` to the team email list)
+
+2026-10-13 (#447): messaging implements notification DLQ-visible >0 and notification oldest-message-age >60 s alarms, as retained in that issue's scope; other alarms in the original table below are outside #447 and were cut by #457's 2026-10-11 rescope. Distributed up requires operator-supplied recipients before any apply and confirmed subscriptions in its readiness gate. Actual email receipt still needs a live drill. Notification scaling uses the queue's visible backlog divided by Container Insights `RunningTaskCount`, target 50, active bounds 1–4; before bootstrap/readiness, its target is suspended in all directions with min 0. Capture real metric series and scale-out in V4, because mocked Terraform tests prove only configuration. The [automated fan-out check](runbook-environment-session.md#messaging-fan-out-check-447) gates relay enablement separately from consumer correctness.
 
 | Alarm | Condition |
 | --- | --- |

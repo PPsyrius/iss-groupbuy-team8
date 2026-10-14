@@ -59,6 +59,7 @@ module "service" {
   environment              = local.service_environment[each.key]
   secrets                  = local.service_secrets[each.key]
   task_policy_json         = each.value.task_policy_json
+  task_policy_enabled      = contains(["commerce-svc", "notification-svc"], each.key)
   execution_role_arn       = module.cluster.execution_role_arn
   role_path                = local.iam_role_path
   permissions_boundary_arn = local.workload_boundary_arn
@@ -85,6 +86,7 @@ module "client_service" {
   environment              = local.service_environment[each.key]
   secrets                  = local.service_secrets[each.key]
   task_policy_json         = each.value.task_policy_json
+  task_policy_enabled      = contains(["commerce-svc", "notification-svc"], each.key)
   execution_role_arn       = module.cluster.execution_role_arn
   role_path                = local.iam_role_path
   permissions_boundary_arn = local.workload_boundary_arn

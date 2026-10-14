@@ -51,7 +51,7 @@ resource "aws_iam_role" "task" {
 }
 
 resource "aws_iam_role_policy" "task" {
-  count = var.task_policy_json == null ? 0 : 1
+  count = var.task_policy_enabled ? 1 : 0
 
   name   = "service"
   role   = aws_iam_role.task.id
@@ -87,6 +87,7 @@ resource "aws_ecs_task_definition" "this" {
   memory                   = var.memory
   execution_role_arn       = var.execution_role_arn
   task_role_arn            = aws_iam_role.task.arn
+  depends_on               = [aws_iam_role_policy.task, aws_iam_role_policy.exec]
 
   runtime_platform {
     cpu_architecture        = "ARM64"
@@ -195,6 +196,13 @@ resource "aws_ecs_service" "this" {
 
   deployment_minimum_healthy_percent = 100
   deployment_maximum_percent         = 200
+
+  # Terraform supplies the initial count only. Environment scripts own subsequent
+  # counts for every topology: pause explicitly before db-init, restore afterwards;
+  # target tracking may then adjust counts. This avoids Terraform undoing scaling.
+  lifecycle {
+    ignore_changes = [desired_count]
+  }
 
   deployment_circuit_breaker {
     enable   = true

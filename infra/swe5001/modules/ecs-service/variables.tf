@@ -70,6 +70,12 @@ variable "task_policy_json" {
   default     = null
 }
 
+variable "task_policy_enabled" {
+  description = "Plan-time switch for an inline policy whose resource ARNs may not be known yet"
+  type        = bool
+  default     = false
+}
+
 variable "execution_role_arn" {
   description = "Shared execution role from the ecs-cluster module"
   type        = string
