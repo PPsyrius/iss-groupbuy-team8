@@ -145,6 +145,7 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
   - `currentUser` throws `UnsupportedOperationException` (only `AuthController` uses it, and it runs in `identity-svc`).
 - **Done when:** contract test runs the same `requireActive` cases against both implementations; WireMock test covers timeout and `5xx`; a webhook test proves a timeout returns 500, writes no `BUYER_INACTIVE` outcome and succeeds on redelivery.
 - **Amended 2026-10-13 (#468, [plan](../agile/sprint-04/remote-identity-plan-20261013.md)):** the endpoints use the `Result` envelope, so disabled is 403 `IDENTITY_403_001` (not 409) and the adapter maps refusals by status and identity code together; a route 404 is an outage. `GET /internal/users/{id}/public-nickname` answers 200 with a nullable nickname. The adapter lives in `services/commerce-svc` (`com.blocbuy.service.commerce.identity`), bound to `blocbuy.identity.base-url` = `IDENTITY_BASE_URL`, not in the platform starter. The batch nickname endpoint follows #469's port method.
+- **Amended 2026-10-14 (#469, [plan](../agile/sprint-04/attention-nicknames-plan-20261014.md)):** `POST /internal/users/public-nicknames` serves `UserAppService.publicNicknames` (1–100 IDs, otherwise 400); `RemoteUserAppService` skips the call for an empty set, sends slices of at most 100 and maps any answer other than 200 to `IdentityUnavailableException`. The admin attention page uses it once per page instead of a `sys_user` join.
 
 ### WP-B6 Transactional outbox and publisher (WBS 2.2)
 
@@ -186,7 +187,7 @@ Each package is one PR to `dev`. WBS numbers refer to the proposal's Table 7.
 | No class outside `com.blocbuy.notification..` depends on `com.blocbuy.notification..` | Notification is reached by events only |
 | `com.blocbuy.notification..` depends on no commerce or identity package | Keeps notification independently deployable |
 | Classes under `..web.internal..` are annotated with the internal-token guard | `/internal/**` is never public. **Amended 2026-10-12:** the token was cut on 2026-10-11, so internal controllers must instead be `@Hidden` and `@ConditionalOnProperty(blocbuy.topology=distributed)`, and no other controller may map an `/internal` path (ADR 0008) |
-| Mappers of one service's tables are only used from that service's packages | Enforces data ownership before the database split. Implemented as three rules on `..persistence..` packages; SQL joins inside mapper XML are out of ArchUnit's reach (#469 records a `grep`) |
+| Mappers of one service's tables are only used from that service's packages | Enforces data ownership before the database split. Implemented as three rules on `..persistence..` packages; SQL joins inside mapper XML are out of ArchUnit's reach (#469 records a `grep`). **Amended 2026-10-14 (#469):** `IdentityTablesStayInIdentityMappersTest` now fails any mapper XML outside `mapper/identity/` that names an identity table |
 
 ---
 

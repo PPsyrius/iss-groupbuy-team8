@@ -1,6 +1,8 @@
 package com.blocbuy.identity.service;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -25,6 +27,13 @@ public interface UserAppService {
      * @return empty when the user is unknown or not active, or has no nickname to show
      */
     Optional<String> publicNickname(UUID userId);
+
+    /**
+     * Showable public nicknames by user id; ids without one are absent. Never throws for unknown or
+     * inactive users. The same rule as {@link #publicNickname(UUID)}, answered in one batch, for
+     * example once per admin page.
+     */
+    Map<UUID, String> publicNicknames(Set<UUID> userIds);
 
     /**
      * Display facts of the current session's account; never carries credentials or provider data.

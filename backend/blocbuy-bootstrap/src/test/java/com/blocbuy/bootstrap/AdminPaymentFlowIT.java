@@ -229,7 +229,17 @@ class AdminPaymentFlowIT {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", " ", "private", "PRIVATE", "private@example.com"})
+    @ValueSource(
+            strings = {
+                "",
+                " ",
+                "private",
+                "PRIVATE",
+                " private ",
+                "Private ",
+                "private@example.com",
+                "someone@else.com"
+            })
     void blankAndEmailDerivedNicknamesNeverLeakContactInformation(String nickname)
             throws Exception {
         payment("compensation_required", "pending", WHEN);
@@ -237,6 +247,24 @@ class AdminPaymentFlowIT {
         mvc.perform(get(PATH).header(HEADER, adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.items[0].buyerNickname").value("Unknown buyer"));
+    }
+
+    @Test
+    void twoBuyersOnOnePageEachKeepTheirOwnNickname() throws Exception {
+        UUID other = UuidV7.next();
+        jdbc.update(
+                "INSERT INTO sys_user(id,register_source,status,nickname,email) "
+                        + "VALUES (?,'google','active','Coffee buyer','coffee@example.com')",
+                other);
+        paymentBy(buyer, "compensation_required", "pending", WHEN);
+        paymentBy(other, "compensation_required", "pending", WHEN.plusSeconds(1));
+        paymentBy(buyer, "compensation_required", "pending", WHEN.plusSeconds(2));
+        mvc.perform(get(PATH).header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.total").value(3))
+                .andExpect(jsonPath("$.data.items[0].buyerNickname").value("Tea buyer"))
+                .andExpect(jsonPath("$.data.items[1].buyerNickname").value("Coffee buyer"))
+                .andExpect(jsonPath("$.data.items[2].buyerNickname").value("Tea buyer"));
     }
 
     @Test
@@ -248,10 +276,31 @@ class AdminPaymentFlowIT {
                 .andExpect(jsonPath("$.data.items[0].buyerNickname").value("Unknown buyer"));
     }
 
+    /** #469: identity status is now part of the one public-nickname rule (backend ADR 0006). */
+    @Test
+    void disabledBuyerUsesFallbackWithoutDroppingFinancialRow() throws Exception {
+        UUID payment = payment("compensation_required", "pending", WHEN);
+        jdbc.update("UPDATE sys_user SET status='disabled' WHERE id=?", buyer);
+        mvc.perform(get(PATH).header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.total").value(1))
+                .andExpect(jsonPath("$.data.items[0].paymentId").value(payment.toString()))
+                .andExpect(jsonPath("$.data.items[0].buyerNickname").value("Unknown buyer"));
+    }
+
     @Test
     void pageHasFixedQueryCountAndDoesNotWriteFinancialState() throws Exception {
+        UUID other = UuidV7.next();
+        jdbc.update(
+                "INSERT INTO sys_user(id,register_source,status,nickname,email) "
+                        + "VALUES (?,'google','active','Coffee buyer',NULL)",
+                other);
         for (int i = 0; i < 20; i++) {
-            payment("compensation_required", "pending", WHEN.plusSeconds(i));
+            paymentBy(
+                    i % 2 == 0 ? buyer : other,
+                    "compensation_required",
+                    "pending",
+                    WHEN.plusSeconds(i));
         }
         List<String> small = capture(1);
         List<String> large = capture(20);
@@ -262,9 +311,18 @@ class AdminPaymentFlowIT {
                                         statement ->
                                                 statement.contains(
                                                         "biz_group_participation_receipt")))
-                .hasSize(2);
+                .hasSize(2)
+                .noneMatch(statement -> statement.contains("sys_user"));
+        // #469: one identity batch per page, whatever the page size or buyer count.
+        for (List<String> page : List.of(small, large)) {
+            assertThat(page).filteredOn(AdminPaymentFlowIT::isNicknameBatch).hasSize(1);
+        }
         assertThat(large)
                 .noneMatch(statement -> statement.matches("(?is).*\\b(insert|update|delete)\\b.*"));
+    }
+
+    private static boolean isNicknameBatch(String statement) {
+        return statement.matches("(?is).*\\bfrom\\s+sys_user\\s+where\\s+id\\s+in\\b.*");
     }
 
     private List<String> capture(int size) throws Exception {
@@ -316,13 +374,21 @@ class AdminPaymentFlowIT {
     }
 
     private UUID payment(UUID id, String outcome, String refundStatus, Instant at) {
+        return payment(id, buyer, outcome, refundStatus, at);
+    }
+
+    private UUID paymentBy(UUID payer, String outcome, String refundStatus, Instant at) {
+        return payment(UuidV7.next(), payer, outcome, refundStatus, at);
+    }
+
+    private UUID payment(UUID id, UUID payer, String outcome, String refundStatus, Instant at) {
         UUID intent = UuidV7.next();
         jdbc.update(
                 "INSERT INTO biz_payment(id,payment_no,user_id,provider,amount,currency,status,"
                         + "intent_id,operation,business_id) VALUES (?,?,?,'stripe',12,'sgd','succeeded',?,'JOIN',?)",
                 id,
                 id.toString(),
-                buyer,
+                payer,
                 intent,
                 deal);
         jdbc.update(
@@ -333,8 +399,8 @@ class AdminPaymentFlowIT {
                 deal,
                 outcome,
                 java.sql.Timestamp.from(at),
-                buyer,
-                buyer);
+                payer,
+                payer);
         if (refundStatus != null) {
             jdbc.update(
                     "INSERT INTO biz_refund(payment_id,intent_id,deal_id,amount,currency,reason,"

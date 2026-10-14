@@ -4,6 +4,8 @@ Date: 2026-10-02
 Status: Accepted
 Issue: #252
 
+Amended 2026-10-14 (#469, [plan](../../../docs/agile/sprint-04/attention-nicknames-plan-20261014.md)): the projection no longer joins `sys_user`, which `commerce-svc` cannot read (ADR 0008). The mapper selects the buyer's user ID into `PaymentAttention`, and `AdminPaymentAppService` resolves nicknames in exactly one `UserAppService.publicNicknames` call per page. Locally that is one `sys_user` read in the same snapshot; in `commerce-svc` it is one `POST /internal/users/public-nicknames` to `identity-svc`. The masking rule lives only in `User.publicNickname`: it hides blank, email-shaped and email-local-part nicknames (case- and whitespace-insensitive), and now also hides **inactive** accounts, so a disabled buyer reads `Unknown buyer` while their financial row stays listed. The HTTP response and `contracts/openapi.json` are unchanged and still carry no buyer ID. A page is two payment reads plus one identity lookup; an identity outage fails the page closed with 500.
+
 ## Context
 
 The read-only admin table needs payment amounts, groupbuy compensation reasons, bloc references, buyer nicknames and refund progress in a single paged snapshot. Ordinary aggregate repositories must not reach into another domain's persistence internals.

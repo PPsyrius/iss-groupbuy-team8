@@ -8,13 +8,22 @@ import com.blocbuy.identity.exception.IdentityUnavailableException;
 import com.blocbuy.identity.service.UserAppService;
 import com.blocbuy.identity.web.internal.InternalUserController;
 import com.blocbuy.identity.web.internal.InternalUserController.PublicNicknameView;
+import com.blocbuy.identity.web.internal.InternalUserController.PublicNicknamesQuery;
+import com.blocbuy.identity.web.internal.InternalUserController.PublicNicknamesView;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -25,7 +34,9 @@ import org.springframework.web.client.RestClientException;
  * implementation throws, recognised by their error code and status together, so a 404 from a
  * missing route is never read as "user not found". Everything else, timeouts included, is an {@link
  * IdentityUnavailableException}: the caller fails closed with 500, and the Stripe webhook rolls
- * back so the provider redelivers instead of the buyer being refunded as inactive. No retry, no
+ * back so the provider redelivers instead of the buyer being refunded as inactive. The batch
+ * nickname lookup (#469) sends at most {@link InternalUserController#MAX_BATCH} ids per call and
+ * fails as a whole when any call fails, so a caller never sees a partial answer. No retry, no
  * cache. Nothing is logged here; the global handler logs the failure once.
  */
 public class RemoteUserAppService implements UserAppService {
@@ -41,6 +52,8 @@ public class RemoteUserAppService implements UserAppService {
             new ParameterizedTypeReference<>() {};
     private static final ParameterizedTypeReference<Result<PublicNicknameView>> NICKNAME =
             new ParameterizedTypeReference<>() {};
+    private static final ParameterizedTypeReference<Result<PublicNicknamesView>> NICKNAMES =
+            new ParameterizedTypeReference<>() {};
 
     private final RestClient identity;
 
@@ -54,8 +67,12 @@ public class RemoteUserAppService implements UserAppService {
         Reply<Void> reply =
                 exchange(
                         "requireActive",
-                        InternalUserController.PATH + InternalUserController.ACTIVE,
-                        userId,
+                        () ->
+                                identity.get()
+                                        .uri(
+                                                InternalUserController.PATH
+                                                        + InternalUserController.ACTIVE,
+                                                userId),
                         NO_DATA);
         if (reply.isSuccess()) {
             return;
@@ -79,8 +96,12 @@ public class RemoteUserAppService implements UserAppService {
         Reply<PublicNicknameView> reply =
                 exchange(
                         "publicNickname",
-                        InternalUserController.PATH + InternalUserController.PUBLIC_NICKNAME,
-                        userId,
+                        () ->
+                                identity.get()
+                                        .uri(
+                                                InternalUserController.PATH
+                                                        + InternalUserController.PUBLIC_NICKNAME,
+                                                userId),
                         NICKNAME);
         if (!reply.isSuccess() || reply.body().data() == null) {
             throw unexpected("publicNickname", reply);
@@ -88,20 +109,55 @@ public class RemoteUserAppService implements UserAppService {
         return Optional.ofNullable(reply.body().data().nickname());
     }
 
+    /** An empty set answers without a call; larger sets go out in slices of at most 100 ids. */
+    @Override
+    public Map<UUID, String> publicNicknames(Set<UUID> userIds) {
+        if (userIds.isEmpty()) {
+            return Map.of();
+        }
+        List<UUID> ids = new ArrayList<>(userIds);
+        Map<UUID, String> nicknames = new HashMap<>();
+        for (int from = 0; from < ids.size(); from += InternalUserController.MAX_BATCH) {
+            List<UUID> slice =
+                    ids.subList(
+                            from, Math.min(from + InternalUserController.MAX_BATCH, ids.size()));
+            nicknames.putAll(publicNicknamesOf(new LinkedHashSet<>(slice)));
+        }
+        return Map.copyOf(nicknames);
+    }
+
+    private Map<UUID, String> publicNicknamesOf(Set<UUID> slice) {
+        Reply<PublicNicknamesView> reply =
+                exchange(
+                        "publicNicknames",
+                        () ->
+                                identity.post()
+                                        .uri(
+                                                InternalUserController.PATH
+                                                        + InternalUserController.PUBLIC_NICKNAMES)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .body(new PublicNicknamesQuery(slice)),
+                        NICKNAMES);
+        if (!reply.isSuccess()
+                || reply.body().data() == null
+                || reply.body().data().nicknames() == null) {
+            throw unexpected("publicNicknames", reply);
+        }
+        return reply.body().data().nicknames();
+    }
+
     /**
-     * One GET. The body is read only for the statuses identity answers on purpose; any other
+     * One request. The body is read only for the statuses identity answers on purpose; any other
      * status, an unreadable body and every transport failure end here as identity being
      * unavailable.
      */
     private <T> Reply<T> exchange(
             String operation,
-            String path,
-            UUID userId,
+            Supplier<RestClient.RequestHeadersSpec<?>> call,
             ParameterizedTypeReference<Result<T>> type) {
         long started = System.nanoTime();
         try {
-            return identity.get()
-                    .uri(path, userId)
+            return call.get()
                     .exchange(
                             (request, response) -> {
                                 int status = response.getStatusCode().value();
