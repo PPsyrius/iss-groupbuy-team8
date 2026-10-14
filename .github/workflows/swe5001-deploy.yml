@@ -128,6 +128,7 @@ jobs:
       AWS_REGION: ${{ vars.AWS_REGION }}
       SWE5001_TF_STATE_BUCKET: ${{ vars.SWE5001_TF_STATE_BUCKET }}
       SWE5001_TOPOLOGY: ${{ vars.SWE5001_TOPOLOGY || 'distributed' }}
+      TF_VAR_alert_email_addresses: ${{ vars.SWE5001_ALERT_EMAIL_ADDRESSES || '[]' }}
       TF_IN_AUTOMATION: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

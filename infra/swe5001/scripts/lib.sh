@@ -80,3 +80,17 @@ step_done() {
   fi
   STEP_NAME=""
 }
+
+start_stopped_services() {
+  # Terraform ignores desired_count after creation so it cannot reset autoscaling.
+  # Only start zero-count services, after db-init; preserve any existing scaled count.
+  local service desired
+  for service in "$@"; do
+    desired=$(aws ecs describe-services --cluster "$CLUSTER" --services "$service" \
+      --query 'services[0].desiredCount' --output text) || die "cannot read desired count for $service"
+    [[ "$desired" =~ ^[0-9]+$ ]] || die "invalid desired count for $service: $desired"
+    if [ "$desired" = 0 ]; then
+      aws ecs update-service --cluster "$CLUSTER" --service "$service" --desired-count 1 > /dev/null
+    fi
+  done
+}

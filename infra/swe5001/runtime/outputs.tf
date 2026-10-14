@@ -35,3 +35,14 @@ output "nat_public_ip" {
   description = "Egress IP of the private subnets"
   value       = module.network.nat_public_ip
 }
+
+output "messaging" {
+  description = "Non-secret fan-out verification targets; null outside the distributed topology"
+  value = var.topology == "distributed" ? {
+    topic_arn               = module.messaging[0].topic_arn
+    queues                  = module.messaging[0].queue_urls
+    dlqs                    = module.messaging[0].dlq_urls
+    alert_subscription_arns = module.messaging[0].alert_subscription_arns
+    relay_enabled           = var.services_enabled && var.messaging_verified
+  } : null
+}

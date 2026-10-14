@@ -28,8 +28,14 @@ terraform -chdir=infra/swe5001/edge validate
 terraform -chdir=infra/swe5001/edge test
 shellcheck -x infra/swe5001/scripts/*.sh perf/smoke/smoke.sh
 bash infra/swe5001/scripts/test-env-status.sh
-checkov -d infra/swe5001 --framework terraform --quiet --compact
+bash infra/swe5001/scripts/test-lib.sh
+bash infra/swe5001/scripts/test-messaging-readiness.sh
+checkov -d infra/swe5001/foundation --framework terraform --quiet --compact
+checkov -d infra/swe5001/edge --framework terraform --quiet --compact
+checkov -d infra/swe5001/runtime --framework terraform --quiet --compact
+checkov -d infra/swe5001/modules/messaging --framework terraform --quiet --compact
 trivy config --severity HIGH,CRITICAL --exit-code 1 infra/swe5001
+trivy config --severity HIGH,CRITICAL --exit-code 1 infra/swe5001/modules/messaging
 ```
 
 ## `foundation` bootstrap (one time)
@@ -155,7 +161,8 @@ Shared modules live in [`modules/`](modules/): `network` (VPC, subnets, S3 gatew
 | `topology` | `none`: no ECS service, no database | `env-up.sh` (`SWE5001_TOPOLOGY`, default `monolith`; both workflows pass `distributed` unless told otherwise). The service maps are in [`runtime/services.tf`](runtime/services.tf): `distributed` runs `identity-svc` (`/api/v1/auth/*`, `/api/v1/users/*`, priority 10), `notification-svc` (`/api/v1/notifications*`, 20) and `commerce-svc` (the remaining `/api/*`, 30) with databases `identity`, `notification` and `commerce`, Service Connect `identity-svc:8589` for commerce, Google secrets on identity, Stripe secrets, the catalogue seed and scheduling on commerce ([backend ADR 0008](../../backend/docs/adr/0008-dual-deployment-topology.md), #456); `monolith`, the fallback, runs the SWE5006 image as one service on `/api/*` with database `monolith` (strangler step 0) |
 | `frontend_url` | `""` | `env-up.sh`, from the `edge` output `url`; required when services run (`FRONTEND_URL`, Google redirect URI) |
 | `image_digests` | `{}` | `env-up.sh`, from SSM `/blocbuy/swe5001/release/*` or `/candidate/*` |
-| `services_enabled` | `false`: desired count 0 | `env-up.sh` sets `true` after `db-init` has succeeded |
+| `services_enabled` | `false`: new services start at 0, notification scaling suspended at min 0 | `env-up.sh` explicitly stops existing services; sets `true` only after `db-init` and readiness. Scripts/scaling own counts after creation |
+| `messaging_verified` | `false`: commerce relay off | `env-up.sh` sets `true` only after the stopped-service routing/recipient gate; do not bypass it by setting the variable manually |
 | `postgres_major_version` | `18` | Set `17` if RDS does not offer 18 in the region |
 
 Prerequisites: `foundation` applied (the workload permissions boundary must exist) and `/blocbuy/swe5001/shared/ORIGIN_SECRET` seeded (step 2 above).
@@ -163,6 +170,16 @@ Prerequisites: `foundation` applied (the workload permissions boundary must exis
 Secrets in state: the RDS master and role passwords are ephemeral values written through write-only arguments (`password_wo`, `value_wo`), so they never reach the state. Two values do: `ORIGIN_SECRET`, because an ALB rule condition needs the literal value (as in the SWE5006 `backend-app-stack`), and the Valkey AUTH token, because the replication group has no write-only argument in provider 5.x. Both live only while `runtime` exists; the PR plan role cannot read that state object. Do not print, upload or attach a runtime plan made with trusted `prod` credentials.
 
 `terraform test` plans the stack with a mocked AWS provider, so it needs no credentials. Apply and destroy `runtime` only through the environment scripts below.
+
+### Messaging (#447)
+
+Only `distributed` creates [`modules/messaging`](modules/messaging/): one AWS-managed-key encrypted SNS domain topic, raw filtered notification/audit subscriptions, SSE-SQS queues and per-queue DLQs, notification age/DLQ alarms, and notification backlog-per-task scaling (active bounds 1–4, target 50). Messaging is disposable with the databases; `env-down.sh` removes all messages and subscriptions. Preserve drill evidence before teardown. The [placement and encryption decisions](../../docs/swe5001/impl-aws-infrastructure.md#66-messaging-modulesmessaging) trace the no-CMK rule to the proposal's implementation plan and merged PR #379; only the alarm-metadata topic remains unencrypted because CloudWatch needs a CMK for encrypted alarm delivery.
+
+Supply team recipients without committing addresses: local operators export `TF_VAR_alert_email_addresses` as a JSON array; GitHub operators set the `swe5001-demo` environment variable `SWE5001_ALERT_EMAIL_ADDRESSES` to that JSON array. Both up workflows pass it to Terraform. Distributed up rejects an empty list before any apply. Each session recreates the email subscriptions: confirm the SNS emails during the 15-minute filter-settle window. Unconfirmed subscriptions fail readiness instead of reporting a demo-ready session. `TF_VAR_notification_oldest_message_age_seconds` overrides the local age threshold (default 60 s).
+
+**Before the first encrypted session:** an operator must review and apply the updated `foundation` policy. The workload boundary and apply role permit KMS GenerateDataKey/Decrypt only via regional SNS with the exact domain-topic encryption context; commerce's inline policy has the same constraint. No customer-managed key is created. Run the documented foundation plan privately and review only resource addresses/actions, then perform an authorised apply; a local mock is not effective-IAM evidence.
+
+Non-secret targets are available with `terraform -chdir=infra/swe5001/runtime output -json messaging`. The consumer code is #446; provisioning and routing do not prove notification persistence or effectively-once delivery. `env-up.sh` suspends all existing scaling targets, snapshots/stops services, applies with the relay off, runs `db-init`, invokes `bash scripts/verify-messaging.sh --bootstrap`, and only then applies `services_enabled=true,messaging_verified=true`. Terraform owns initial desired counts only; script-controlled pauses/resumes preserve prior scaled counts and suspension flags. A failed up after infrastructure changes leaves services stopped and private recovery records for a retry or teardown; it does not resume an unverified producer. Standalone `bash infra/swe5001/scripts/verify-messaging.sh` pauses/restores commerce and notification with EXIT/signal handlers. The routing drill needs a quiet window with no retained messages, never a queue purge; see the [session procedure](../../docs/swe5001/runbook-environment-session.md#messaging-fan-out-check-447).
 
 ## `edge` creation (one time, operator)
 

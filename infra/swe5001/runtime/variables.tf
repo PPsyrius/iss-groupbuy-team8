@@ -104,7 +104,7 @@ variable "image_digests" {
 }
 
 variable "services_enabled" {
-  description = "false: services exist with desired count 0 (before db-init); true: desired count 1 each"
+  description = "Bootstrap switch: new service count 0/1, consumer scaling suspended/enabled. Scripts own counts after creation and explicitly pause existing services before db-init."
   type        = bool
   default     = false
 }
@@ -113,4 +113,22 @@ variable "enable_exec" {
   description = "Allow ECS Exec into service tasks for debugging"
   type        = bool
   default     = false
+}
+
+variable "messaging_verified" {
+  description = "Set true only after the stopped-service fan-out gate passes; false keeps the commerce relay off"
+  type        = bool
+  default     = false
+}
+
+variable "alert_email_addresses" {
+  description = "Operator-supplied team alarm recipients; confirm subscriptions on every distributed session"
+  type        = set(string)
+  default     = []
+}
+
+variable "notification_oldest_message_age_seconds" {
+  description = "Notification age alarm threshold (seconds)"
+  type        = number
+  default     = 60
 }
