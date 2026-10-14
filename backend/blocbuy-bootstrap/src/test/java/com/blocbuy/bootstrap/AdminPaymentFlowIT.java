@@ -276,10 +276,31 @@ class AdminPaymentFlowIT {
                 .andExpect(jsonPath("$.data.items[0].buyerNickname").value("Unknown buyer"));
     }
 
+    /** #469: identity status is now part of the one public-nickname rule (backend ADR 0006). */
+    @Test
+    void disabledBuyerUsesFallbackWithoutDroppingFinancialRow() throws Exception {
+        UUID payment = payment("compensation_required", "pending", WHEN);
+        jdbc.update("UPDATE sys_user SET status='disabled' WHERE id=?", buyer);
+        mvc.perform(get(PATH).header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.total").value(1))
+                .andExpect(jsonPath("$.data.items[0].paymentId").value(payment.toString()))
+                .andExpect(jsonPath("$.data.items[0].buyerNickname").value("Unknown buyer"));
+    }
+
     @Test
     void pageHasFixedQueryCountAndDoesNotWriteFinancialState() throws Exception {
+        UUID other = UuidV7.next();
+        jdbc.update(
+                "INSERT INTO sys_user(id,register_source,status,nickname,email) "
+                        + "VALUES (?,'google','active','Coffee buyer',NULL)",
+                other);
         for (int i = 0; i < 20; i++) {
-            payment("compensation_required", "pending", WHEN.plusSeconds(i));
+            paymentBy(
+                    i % 2 == 0 ? buyer : other,
+                    "compensation_required",
+                    "pending",
+                    WHEN.plusSeconds(i));
         }
         List<String> small = capture(1);
         List<String> large = capture(20);
@@ -290,9 +311,18 @@ class AdminPaymentFlowIT {
                                         statement ->
                                                 statement.contains(
                                                         "biz_group_participation_receipt")))
-                .hasSize(2);
+                .hasSize(2)
+                .noneMatch(statement -> statement.contains("sys_user"));
+        // #469: one identity batch per page, whatever the page size or buyer count.
+        for (List<String> page : List.of(small, large)) {
+            assertThat(page).filteredOn(AdminPaymentFlowIT::isNicknameBatch).hasSize(1);
+        }
         assertThat(large)
                 .noneMatch(statement -> statement.matches("(?is).*\\b(insert|update|delete)\\b.*"));
+    }
+
+    private static boolean isNicknameBatch(String statement) {
+        return statement.matches("(?is).*\\bfrom\\s+sys_user\\s+where\\s+id\\s+in\\b.*");
     }
 
     private List<String> capture(int size) throws Exception {

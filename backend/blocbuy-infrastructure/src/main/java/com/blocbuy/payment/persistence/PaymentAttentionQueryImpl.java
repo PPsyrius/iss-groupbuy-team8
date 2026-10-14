@@ -7,7 +7,10 @@ import com.blocbuy.payment.repository.PaymentAttentionQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-/** Two bounded-result reads in the caller's repeatable-read snapshot; no per-row enrichment. */
+/**
+ * Two bounded-result reads in the caller's repeatable-read snapshot; no per-row enrichment. Buyer
+ * nicknames are the application's single batch lookup, not a join here.
+ */
 @Repository
 @RequiredArgsConstructor
 public class PaymentAttentionQueryImpl implements PaymentAttentionQuery {
