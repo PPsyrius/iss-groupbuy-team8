@@ -2,7 +2,7 @@
 
 Current state of the SWE5001 distributed deployment (Amazon ECS, released by `dev` → `prod` promotion). Read this before picking up any item of [#376](https://github.com/PPsyrius/iss-groupbuy-team8/issues/376). Update it in the same PR whenever a step lands.
 
-Last updated: 2026-10-14. Phase A (the monolith on ECS) is done; Phase B (the three-service split) starts in Sprint 4 under the [split execution plan](../agile/sprint-04/microservice-split-plan-20261012.md).
+Last reconciled: 2026-10-14 against merged `dev` at `7c19a59b` and explicit GitHub readbacks (`prod` remains `6c7a99ab`). Phase A (monolith on ECS) is verified; Phase B's service map, messaging and scaling/dashboard code is merged, but full distributed AWS acceptance remains pending. Dated checkpoints below remain historical, not current status.
 
 ## Where to read the design
 
@@ -30,9 +30,9 @@ Last updated: 2026-10-14. Phase A (the monolith on ECS) is done; Phase B (the th
 | 6 | `env-up.sh`, `env-down.sh`, `env-status.sh`, `lib.sh`; monolith as one ECS service; first up/down proof | Merged in #380 and fixes #405–#417; **done**: promotion #418 → [run 37470479078](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37470479078) green end to end (2026-10-06); manual `swe5001-env` up [37569411094](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37569411094) and down [37571726284](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37571726284) green (2026-10-07) |
 | 7 | CI: `swe5001-service-images.yml`, `swe5001-release-gate.yml`, `swe5001-deploy.yml`, `swe5001-env.yml`; create `prod` and its ruleset | Merged in [#384](https://github.com/PPsyrius/iss-groupbuy-team8/pull/384); foundation OIDC plan passed; operator created `prod` at `605c8e27` and active `prod-release` ruleset `24551375`; release gate and promotion exercised by #418; nightly `down` green 2026-10-09 to 2026-10-11 ([37983414307](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37983414307), [38078270152](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/38078270152), [38167284298](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/38167284298)) |
 | — | Sprint 3 promotion, Fri 2026-10-09 | **Not run**; `prod` is still at #418 (`6c7a99ab`). The next promotion is the Sprint 4 one on Mon 2026-10-19 |
-| 8 | Messaging: SNS topic, notification and audit queues, DLQs, alarms and backlog scaling | [#447](https://github.com/PPsyrius/iss-groupbuy-team8/issues/447); branch `feature/447-messaging-infrastructure`. [Combined evidence](../agile/sprint-04/log/2026-10-14.md#2026-10-14---ppsyrius---aws-messaging-infrastructure-447): foundation zero drift; broker raw fan-out, bounded filtering and synthetic alarm email passed; all 16 broker resources destroyed, runtime absence exit 0. Images missing; ECS/consumer/redrive/scaling unverified; CI/merge not checked, no issue completion |
+| 8 | Messaging: SNS topic, notification and audit queues, DLQs, alarms and backlog scaling | Merged in [#487](https://github.com/PPsyrius/iss-groupbuy-team8/pull/487) for #447; [infra CI passed](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/38439878254). [Broker-only evidence](../agile/sprint-04/log/2026-10-14.md#2026-10-14---ppsyrius---aws-messaging-infrastructure-447): foundation zero drift, raw fan-out/filtering and synthetic alarm email; all 16 resources destroyed, absence exit 0. ECS permissions, consumer/redrive and backlog scaling remain unverified |
 | 9 | Service split: `identity-svc`, `commerce-svc`, `notification-svc` | #455, #456, #467, #468, #469; see Phase B progress below |
-| 10 | Commerce HTTP scaling and three-row dashboard; no additional explicit alarms | [#457](https://github.com/PPsyrius/iss-groupbuy-team8/issues/457); local branch `feature/457-http-scaling-dashboard`, [23 Terraform runs/88 shell scenarios and workflow/config checks passed](../agile/sprint-04/log/2026-10-14.md#2026-10-14---ppsyrius---http-scaling-and-demo-dashboard-457). Separate history-secret scan flagged pre-existing findings; PR/CI and live dashboard/AZ/scaling evidence pending |
+| 10 | Commerce HTTP scaling and three-row dashboard; no additional explicit alarms | Merged in [#489](https://github.com/PPsyrius/iss-groupbuy-team8/pull/489) for #457; [infra CI passed](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/38512811066). [Local evidence](../agile/sprint-04/log/2026-10-14.md#2026-10-14---ppsyrius---http-scaling-and-demo-dashboard-457): 23 Terraform runs/88 shell scenarios and workflow/config checks. Live dashboard/AZ/scaling and V2 calibration pending; separate history-secret findings remain undispositioned |
 
 ## Phase B progress (microservice split)
 
@@ -42,16 +42,16 @@ Steps and dependencies: [split execution plan](../agile/sprint-04/microservice-s
 | --- | --- | --- | --- | --- | --- |
 | A1 | `exec` classifier; consumers on `blocbuy-backend-exec.jar`; boot-JAR guard | #455 | @l0sgAi | 10-12 | Merged in #470 (`c8f529ac`): implemented per the [exec-jar-classifier plan](../agile/sprint-04/exec-jar-classifier-plan-20261012.md), local V1–V5 green ([log](../agile/sprint-04/log/2026-10-12.md)); `dev` health `UP` after merge |
 | A2 | ADR 0008; ArchUnit guardrails; `RoleCode` to a shared package | #455 | @l0sgAi | 10-13 | Merged in #470: [backend ADR 0008](../../backend/docs/adr/0008-dual-deployment-topology.md) (Accepted in #471), nine `ArchitectureTest` rules, `InternalPathsContractTest`, `RoleCode` in `com.blocbuy.common.model` |
-| A3 | Three service modules; `MyBatisConfig` for the monolith only; thin starter | #455 | @l0sgAi | 10-14 | Merged in #471 (`45324227`): [service-assemblies plan](../agile/sprint-04/service-assemblies-plan-20261012.md); `blocbuy-platform` and `services/*`; only `identity-svc` boots on its own until B1 and B3 |
+| A3 | Three service modules; `MyBatisConfig` for the monolith only; thin starter | #455 | @l0sgAi | 10-14 | Merged in #471 (`45324227`): [service-assemblies plan](../agile/sprint-04/service-assemblies-plan-20261012.md); `blocbuy-platform` and `services/*`. B1/B3 dependencies are now merged; deployed isolation/acceptance remains separate |
 | A4 | Per-service roles and grants (service profiles only) | #455 | @l0sgAi | 10-14 | Merged in #471: `afterMigrate` grants callback, `ServiceGrantsIT`; C2 sets `SPRING_PROFILES_ACTIVE=ec2,<service>,aws` and keeps `classpath:db/swe5001` in the one `SPRING_FLYWAY_LOCATIONS` it sets (commerce; asserted by `terraform test`) |
 | B1 | Session roles outside identity | #467 | @PPsyrius | 10-15 | Merged in #474 (`653fa5cc`): full Docker-backed verify/OpenAPI export passed: 1,699 tests, zero failures/errors, one skipped; permanent Redis regressions cover cookie failures, token preservation, malformed snapshots and concurrent refreshes; CI and post-merge dev login/admin checks pending ([log](../agile/sprint-04/log/2026-10-12.md)) |
-| B2 | Nickname port; attention query without `sys_user` | #469 | @Yorick-Yu | 10-15 | Not started |
-| B3 | Remote identity check, fail closed | #468 | @l0sgAi (from @EricWang1358, 10-13) | 10-16 | In review: [remote-identity plan](../agile/sprint-04/remote-identity-plan-20261013.md); `InternalUserController` (active, public nickname) in identity, `RemoteUserAppService` in `commerce-svc`; `commerce-svc` boots and answers identity over HTTP locally; batch nicknames follow #469 |
-| C1 | Image matrix for three services; per-service digests | #456 | @l0sgAi | 10-15 | In review: [service-runtime plan](../agile/sprint-04/service-runtime-plan-20261012.md); four images (monolith kept as fallback) from one `Dockerfile.ci` with `ARG JAR`; the image workflow also runs on PRs into `dev` that change its inputs |
-| C2 | `distributed` topology in `runtime`, ALB rules, Service Connect, scripts | #456 | @l0sgAi | 10-16 | In review, same PR as C1: `distributed` map (priorities 10/20/30), `terraform test` run, `lib.sh` and both workflows accept it (promotion default `distributed`, fallback via `vars.SWE5001_TOPOLOGY=monolith`); identity scaling left to C4. The session needs B1 and B3 |
-| C3 | Demo data per database; admin grant in identity | #456 | @l0sgAi | 10-16 | In review, same PR as C1: seed only in `commerce`; `grant-admin.sh` runs `grant-dev-admin.sql` as the `db-init` task; listings made startable with `seed-dev-demo-listings.sh` ([runbook](runbook-environment-session.md)); smoke gets a notification check once #215 adds an endpoint |
-| C4 | Commerce ALB-request scaling (demo min 2, baseline min 1), three-row dashboard; CPU/identity scaling excluded by #457 rescope | #457 | @PPsyrius | 10-16 | Offline checks passed locally; PR/CI and live evidence pending |
-| D | Outbox (switch default off), relay, consumer, SNS/SQS | #443–#448 | several | 10-16 | Outbox merged (#473); notification persistence and read API merged (#478); relay (#445) in review: @Yorick-Yu's PR #477 ported onto `dev` with fixes, ElasticMQ delivery verified locally, off on EC2 and ECS until #447 sets the topic ARN, `sns:Publish` and `BLOCBUY_EVENTS_RELAY_ENABLED=true` on `commerce-svc` (ADR 0007 amendment); consumer (#446) and SNS/SQS (#447) not merged |
+| B2 | Nickname port; attention query without `sys_user` | #469 | @Yorick-Yu | 10-15 | Issue remains open at October 14 readback; completion/merge not observed |
+| B3 | Remote identity check, fail closed | #468 | @l0sgAi (from @EricWang1358, 10-13) | 10-16 | Merged in [#479](https://github.com/PPsyrius/iss-groupbuy-team8/pull/479) (`afec4e83`); [remote-identity plan](../agile/sprint-04/remote-identity-plan-20261013.md). Batch nicknames remain #469; live identity-outage evidence remains separate |
+| C1 | Image matrix for three services; per-service digests | #456 | @l0sgAi | 10-15 | Merged in [#472](https://github.com/PPsyrius/iss-groupbuy-team8/pull/472) (`25f1bfcc`): four image builds with monolith fallback. Candidate parameters were missing in the broker-only session; current AWS image availability not rechecked |
+| C2 | `distributed` topology in `runtime`, ALB rules, Service Connect, scripts | #456 | @l0sgAi | 10-16 | Merged in #472: priorities 10/20/30, Service Connect and distributed workflow/script support; B1/B3 now merged. Full distributed AWS session still pending; no identity scaling in C4 |
+| C3 | Demo data per database; admin grant in identity | #456 | @l0sgAi | 10-16 | Merged in #472: commerce seed, admin-grant and listing scripts ([runbook](runbook-environment-session.md)). #215's notification endpoint merged in #478, but `smoke.sh` still lacks its unauthenticated check |
+| C4 | Commerce ALB-request scaling (demo min 2, baseline min 1), three-row dashboard; CPU/identity scaling excluded by #457 rescope | #457 | @PPsyrius | 10-16 | Merged in #489 with relevant infra/security checks passed; live dashboard/AZ/scaling and calibrated target pending |
+| D | Outbox (switch default off), relay, consumer, SNS/SQS | #443–#448 | several | 10-16 | Outbox #473, notification persistence/read API #478, relay fixes #485 and messaging #487 merged. Commerce relay is configured only after readiness; EC2 stays off. Consumer #446 remains open; consumer effects/redrive/scaling are not established by broker-only probes |
 
 Operator-provided CloudShell evidence on 2026-10-05 confirms foundation exists in account `402178232802`: four ECR repositories, three GitHub roles and their policies, lifecycle policies and workload boundary; no budget was created. The state bucket defaults to the enabled AWS-managed S3 KMS key. The agent created and read back both GitHub environments (plan unrestricted, demo only branch `prod`, no reviewers), three role ARN variables and repository variables `SWE5001_ECR_REPOSITORY_PREFIX=swe5001`, `ENABLE_SWE5001_DEPLOY=false`, `ENABLE_SWE5001_NIGHTLY_DOWN=true`. `SWE5001_TF_STATE_BUCKET` and edge variables remain unset; `prod` and its ruleset remain pending. AWS verification and mutations were performed by the operator, not the agent.
 
@@ -59,9 +59,9 @@ Operator-provided CloudShell evidence on 2026-10-05 confirms foundation exists i
 
 ## Next actions
 
-1. Merge the C1–C3 PR after review; check `dev` health after merge (it builds nothing new for `dev`).
-2. Track B (split plan §2): B1 and B2 by 10-15; B3 by 10-16 with the identity go/no-go at the 10-15 mid-sprint check. B1 and B3 remove the `RoleRepository` and `UserAppService` mocks from the commerce and notification ITs.
-3. C4 by 10-16. Before the promotion, `prod` has no distributed images: the operator pushes the three images by hand, writes `/blocbuy/swe5001/candidate/<service>` ([README](../../infra/swe5001/README.md), "Environment sessions") and runs `SWE5001_TOPOLOGY=distributed env-up.sh --candidate`, then `env-down.sh`. Record timings and exit codes.
+1. Complete/verify the remaining nickname port (#469), notification consumer (#446) and notification UI work; merged PRs are not proof of deployed acceptance.
+2. Recheck candidate/release image parameters and the `prod` ref before planning a distributed session. If images are missing, use the reviewed operator build/publish procedure in the [Terraform README](../../infra/swe5001/README.md); do not infer availability from a merged image workflow.
+3. Review the private runtime plan, run the authorised distributed session, capture dashboard/two-AZ/task-role/consumer evidence, calibrate V2 and persist its target for V3. Add the missing notification smoke assertion; teardown and absence checks remain mandatory.
 4. Sprint 4 promotion on Mon 2026-10-19 (`dev` → `prod`, merge commit), then the evidence session (V2–V5, V7, identity outage) and the fallback recording; rehearsal 10-20; presentation 10-21 16:15 SGT (`env-up.sh` before 12:00, `env-down.sh` and `env-status.sh` after).
 5. Phase A leftovers, operator with admin credentials (unchanged from 2026-10-07, still open):
    1. Skip billing for the demo. If opting in later, ask the organisation management/payer account to activate `Course` (up to 24 hours), seed budget recipients, and set `enable_budget = true` in `envs/demo.tfvars`.
@@ -80,82 +80,41 @@ Operator-provided CloudShell evidence on 2026-10-05 confirms foundation exists i
 - `env-up.sh` never prints the `edge` plan: its origin diff carries `ORIGIN_SECRET` in clear, and workflow logs and artifacts are readable by every collaborator.
 - The PR-assumable plan role can read the foundation state only, not the secret-bearing runtime state; explicit S3 and SSM denies retain that boundary if future grants are added. Runtime plans must be made by an operator or a reviewed `prod`-only workflow, so there is no pre-merge account-backed runtime plan today. The `edge` state also holds `ORIGIN_SECRET`, so the plan role cannot read it either.
 - 2026-10-11 (Sprint 4 plan §4): the distributed shape is the proposal's three services (`identity-svc` reinstated as a hard requirement after a same-day deferral); the split ranks above the notification chain; `dev` (single EC2 host) serves SWE5006 and `prod` (ECS) serves SWE5001, so no EC2 production is built; notifications serve SWE5001 only (no broker or outbox writer on `dev`).
-- 2026-10-11, grade-driven cuts: no V6 broken-image drill and no forced-failure promotion run; no `X-Internal-Token` (network isolation only for `/internal/**`); dashboard reduced to Edge, Services and Messaging with only the DLQ alarm; `CloudWatchFullAccessV2` is not fenced; RDS Multi-AZ, Valkey replicas and a second NAT are reported as cost-driven limitations; `commerce-svc` runs at least two tasks across both AZs in demo sessions.
+- 2026-10-11, grade-driven cuts: no V6 broken-image drill and no forced-failure promotion run; no `X-Internal-Token` (network isolation only for `/internal/**`); dashboard reduced to Edge, Services and Messaging; `CloudWatchFullAccessV2` is not fenced; RDS Multi-AZ, Valkey replicas and a second NAT are reported as cost-driven limitations. The retained #447 scope includes DLQ and queue-age alarms; commerce's two-AZ demo minimum is configured, with placement still requiring live proof.
 - 2026-10-12: `blocbuy-bootstrap` is repackaged with the `exec` classifier so the plain JAR can be a dependency of the service modules (WP-B2, split plan step A1).
 
 ## Known gaps and risks
 
 | Gap | When it closes |
 | --- | --- |
-| No distributed image, runtime map or session exists yet; `prod` is at #418 | Split plan steps A3, C1–C3; first manual distributed session by 10-16; promotion 10-19 |
+| Distributed runtime/image-build code is merged, but a full distributed AWS session is not verified; current images not rechecked and `prod` still at `6c7a99ab` | Recheck operator prerequisites, run/review the first full session and collect acceptance evidence before promotion |
 | Payment webhooks call `identity-svc` synchronously; an identity outage fails checkout closed | By design (#468): 500 and Stripe redelivery; demonstrated by the identity outage drill (#459); reported as an architectural limitation |
 | `/internal/**` relies on network isolation only (no service token) | Accepted 2026-10-11; report as a limitation |
 | RDS single-AZ, single-node Valkey and one fck-nat instance | Accepted for cost on 2026-10-11; report under availability |
 | Foundation OIDC/state/KMS access verified by a successful account-backed plan; origin-secret denial and apply-role guardrails still lack dedicated live evidence | Operator-owned IAM checks and first runtime up/down proof |
 | The plan role's KMS decrypt is limited to calls via S3 but currently accepts any key in this account; its S3 GetObject deny limits readable data to foundation state | Check the state bucket's encryption key without printing state and scope the key ARN before enabling account-backed PR plans, then test the foundation plan |
-| The apply role now has `kms:Decrypt` and `kms:GenerateDataKey` through S3 for course state keys, but no live KMS authorization has been checked | Simulate access to the actual state key and perform the first private runtime apply/destroy; tighten the key ARN after reading bucket encryption metadata |
+| State-key KMS authorization lacks a dedicated IAM simulation/key-ARN tightening record; earlier runtime plan/apply/destroy succeeded | Do not equate missing dedicated simulation with no successful apply; any tightening still needs reviewed key metadata and a fresh plan |
 | The apply role can update only the tagged distribution; whether that covers every call an `edge` re-apply makes is unproven | Closed: `env-up.sh` re-applied `edge` with the new ALB origin in [run 37470479078](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37470479078) |
 | CloudFront placeholder origin `runtime-absent.blocbuy-swe5001.invalid` accepted during initial edge creation | Verified by operator edge apply and zero-drift plan on 2026-10-06; API remains unavailable until runtime exists |
 | `env-status.sh` may list ARNs of deleted resources from the tagging API after a clean destroy. Seen twice on 2026-10-06: EC2 resources, the `INACTIVE` cluster, its service and stopped tasks, still listed by the tagging API, and a deleted VPC endpoint still returned by `ec2 describe-tags`. Each EC2 and ECS ARN is now checked with its type's own describe call; lookup errors other than not-found still fail closed | First green CI teardown with this check; a type it does not know always counts, so add its describe call if one stays listed |
 | The apply role must strip the rules of the VPC default security group; this relies on the provider tagging it before revoking | Closed: the first `runtime` apply in [run 37470479078](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37470479078) succeeded |
 | `db-init`, the monolith on ECS (Flyway as the owner role, Valkey TLS) and the scripts have only been checked offline | Closed for the monolith: [run 37470479078](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37470479078) ran `db-init`, started the service and passed the smoke suite. The three-service shape is unproven until split plan step C2 |
-| `CloudWatchFullAccessV2` can still change alarms and dashboards outside SWE5001 | Accepted on 2026-10-11 (#457 rescoped): only the DLQ alarm and one dashboard are added; report as a limitation |
-| Foundation infra workflow passed all static/script checks and the OIDC plan; release gate and runtime/promotion workflows remain unexercised; workflow fixes on `dev` need promotion to affect `prod` runs | First operator-initiated `swe5001-env.yml` run on `prod`, then the Sprint 3 promotion |
+| `CloudWatchFullAccessV2` can still change alarms and dashboards outside SWE5001 | Accepted rescope limitation; the delivered scope is notification DLQ/age alarms and one dashboard, not a narrower IAM fence |
+| Distributed promotion/session workflows remain unverified; monolith promotion/manual sessions were exercised in October | Promote the reviewed distributed code to `prod` and capture fresh session evidence; do not reuse monolith results as distributed proof |
 | The ARM64 image is built under QEMU without a Maven cache (no cache poisoning of a published image); build time is unmeasured | First release gate run; an arm64 runner is the fallback if it exceeds the 30-minute job timeout |
 | `queue: max` retains pending `swe5001-tfstate` runs up to the queue limit, so a queued `down` can execute later instead of being replaced | Check for and cancel stale queued `down` runs before starting a new manual session; wait until no promotion is running |
 | NFR-51 (AWS isolation) is partially verified: selected S3 identity-policy checks and actual foundation OIDC plan passed; SSM denial and apply-role guardrails remain unverified | Remaining operator IAM checks and runtime proof |
 
 ## Verification commands
 
-Offline, no AWS credentials:
+Offline commands are maintained in the [Terraform README](../../infra/swe5001/README.md#offline-checks); use its per-stack/module scans rather than aggregate Checkov. No AWS credentials are needed.
 
-```bash
-terraform fmt -check -recursive infra/swe5001
-terraform -chdir=infra/swe5001/runtime init -backend=false
-terraform -chdir=infra/swe5001/runtime test
-terraform -chdir=infra/swe5001/edge init -backend=false
-terraform -chdir=infra/swe5001/edge test
-shellcheck -x infra/swe5001/scripts/*.sh perf/smoke/smoke.sh
-bash infra/swe5001/scripts/test-env-status.sh
-checkov -d infra/swe5001 --framework terraform --quiet --compact
-trivy config --severity HIGH,CRITICAL --exit-code 1 infra/swe5001
-```
-
-Prior local results (2026-10-04): all three stacks validated; edge tests 2 passed and runtime tests 4 passed before the edge/KMS fix. The teardown status fixture now passes seven mocked AWS cases (three API failures, an empty result, only a task definition, a terminated instance and a running instance); Git Bash syntax and `git diff --check` passed. The current changed head still needs fresh Terraform tests, static scans and a live IAM simulation before any AWS apply.
+Latest recorded offline evidence: [October 14](../agile/sprint-04/log/2026-10-14.md#2026-10-14---ppsyrius---http-scaling-and-demo-dashboard-457), 23 Terraform runs and 88 shell scenarios, workflow-policy checks and scoped scans passed; #489's relevant CI also passed. Historical October 4 counts are not the current baseline. Account-backed runtime review and live distributed acceptance remain separate.
 
 ## Delivery checkpoint — 2026-10-12
 
-| Deliverable | Date |
-| --- | --- |
-| SWE5001 code freeze (split and scaling merged into `dev`) | Fri 2026-10-16 |
-| Sprint 4 promotion and evidence session | Mon 2026-10-19 |
-| SWE5001 rehearsal | Tue 2026-10-20 |
-| SWE5001 presentation | Wed 2026-10-21, 16:15–16:55 SGT (confirmed 2026-10-11) |
-| SWE5001 written examination | Tue 2026-11-03, 18:30 |
-| SWE5001 final report and final `terraform destroy` | Mon 2026-11-16 |
-
-State on `dev` at `3a0f6908`: Phase A complete as recorded above; Phase B not started apart from ADR 0007 (Proposed) and the A1 plan. The SWE5006 dates in the 2026-10-05 table below are superseded: the SWE5006 presentation is on 2026-10-26 and its report on 2026-11-10 ([Sprint 4 plan §1](../agile/sprint-04/plan.md#1-calendar)).
+Historical checkpoint moved to [dated evidence](evidence/deployment-checkpoints-20261005-20261012.md#delivery-checkpoint--2026-10-12). This heading remains for existing links; use the current status above and [Sprint 4 calendar](../agile/sprint-04/plan.md#1-calendar), not the archived readiness assessment.
 
 ## Delivery checkpoint — 2026-10-05 (#393)
 
-The Team 8 scheduling notification moves the SWE5001 presentation to **21 October 2026, 16:15–16:55 SGT (UTC+08)**, two days earlier. The submitted proposal is retained as historical evidence; its 23 October presentation and 22 October rehearsal are superseded by the living [timeline](microservice-refactoring-plan.md#4-effort-estimates-and-timeline) and [presentation checklist](impl-verification-observability.md). Confirm a rehearsal slot before 21 October. The existing 20 October promotion target now allows one day for recovery and needs a tested fallback recording.
-
-| Deliverable | Current date | Calendar days from 2026-10-05 | Basis |
-| --- | --- | --- | --- |
-| SWE5001 presentation | 2026-10-21, 16:15–16:55 SGT | 16 | Team 8 notification supplied on 2026-10-05 |
-| SWE5006 presentation | 2026-11-03 / 2026-11-04 | 29 / 30 | [Sprint 3 calendar](../agile/sprint-03/plan.md#1-calendar) |
-| SWE5006 final report | 2026-11-10 | 36 | Sprint 3 calendar |
-| SWE5001 final report | 2026-11-16 | 42 | [Submitted proposal](project-proposal.typ), milestone table |
-
-Readiness is assessed from `dev` at `a55afa5` and explicit GitHub reads on 2026-10-05. GitHub now lists `swe5001-plan` and `swe5001-demo`; their protection and secrets settings were not verified, and [#397](https://github.com/PPsyrius/iss-groupbuy-team8/issues/397) remains open. `branches/prod` still returns 404; only `dev-require-review` and `main-no-forcepush` rulesets exist; `swe5001-deploy.yml` has no runs. AWS state was not independently checked.
-
-| Area | Implemented or evidenced | Remaining delivery work |
-| --- | --- | --- |
-| SWE5006 buyer chain | Quote-aware Checkout, orders, team resolution, local refund/recovery tests, invites and admin APIs are on `dev` | [#223](https://github.com/PPsyrius/iss-groupbuy-team8/issues/223) shared-dev expiry and real Sandbox refund; [#224](https://github.com/PPsyrius/iss-groupbuy-team8/issues/224) deployed crash/replay proof; [#229](https://github.com/PPsyrius/iss-groupbuy-team8/issues/229) authenticated buyer acceptance |
-| SWE5006 release and security | CI/contract/security gates and governed deployment code; local 100-VU baseline | [#226](https://github.com/PPsyrius/iss-groupbuy-team8/issues/226) production apply/release/rollback; [#227](https://github.com/PPsyrius/iss-groupbuy-team8/issues/227) origin TLS decision; deployed performance remains unmeasured |
-| SWE5001 foundation | Terraform foundation/runtime/edge, monolith ECS topology, smoke suite and release/up/down workflows | Operator bootstrap, release configuration, first successful create/validate/destroy, and a failed-promotion teardown proof ([#376](https://github.com/PPsyrius/iss-groupbuy-team8/issues/376)); a planned promotion date is not completion evidence |
-| SWE5001 distributed runtime | Plans describe identity, commerce and notification services | Three service assemblies/platform starter, remote identity/RBAC, outbox/relay, SNS/SQS/DLQ, idempotent consumer and per-service data grants are absent from the audited tree; runtime supports only `none`/`monolith` |
-| SWE5001 demonstration | `perf/smoke/smoke.sh` exists | Queue/HTTP scaling, dashboard/alarms, k6 and resilience drill tools, live results and fallback recording; no `perf/k6/`, `perf/drills/` or SWE5001 evidence directory exists in the audited tree |
-| Architecture discipline | Existing COLA/DDD rules and backend ADR index govern the monolith | Approve the distributed exceptions and synchronize constraints before implementation; the backend plan's proposed ADR 0005/0006 numbers are already occupied by payment records and must not be reused |
-
-The immediate sequence is operator bootstrap and monolith ECS up/down proof (7 October checkpoint), then the 9 October promotion, service/message/scaling implementation and acceptance, and a full rehearsal before 21 October. The 9 October milestone proves strangler step 0; it cannot prove three-service behavior whose identity assembly is planned for 12–18 October. Existing owners keep their assigned work; the new independent frontend issues #392 and #394 do not close this critical path. Notification functionality remains a separate, assigned scope decision under [#215](https://github.com/PPsyrius/iss-groupbuy-team8/issues/215).
+Historical checkpoint moved to [dated evidence](evidence/deployment-checkpoints-20261005-20261012.md#delivery-checkpoint--2026-10-05-393). This compatibility heading preserves prior citations; the archived dates, open issues and absent-resource claims describe October 5 only.

@@ -55,7 +55,7 @@ Runs against any base URL (EC2 CloudFront, SWE5001 CloudFront, or local Compose)
 | `GET /api/actuator/health` | 200 `UP` (through the ALB default path; commerce) |
 | `GET /api/v1/products?page=1&size=20` | 200, `Result` envelope, non-empty list (demo seed) |
 | `GET /api/v1/auth/me` without cookie | 401 envelope (served by identity) |
-| `GET /api/v1/notifications` without cookie | 401 envelope (served by notification). Not in `smoke.sh` yet: the controller has no `GET` handler today; add the check when #215 adds the handler (`notification-svc` already runs in `distributed`, #456) |
+| `GET /api/v1/notifications` without cookie | 401 envelope (served by notification). The owner-scoped GET handler merged in #478 (#215), but this check is not yet in `smoke.sh`; add and exercise it in the distributed acceptance session |
 | `GET /internal/users/<uuid>/active` through CloudFront | never reaches a service: CloudFront forwards only `/api/*` to the ALB, so the response is the SPA fallback page, not JSON |
 | Response header `X-Trace-Id` | present on every response |
 
@@ -120,7 +120,7 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 
 ### Alarms (SNS topic `blocbuy-swe5001-alerts` to the team email list)
 
-2026-10-13 (#447): messaging implements notification DLQ-visible >0 and notification oldest-message-age >60 s alarms, as retained in that issue's scope; other alarms in the original table below are outside #447 and were cut by #457's 2026-10-11 rescope. Distributed up requires operator-supplied recipients before any apply and confirmed subscriptions in its readiness gate. Actual email receipt still needs a live drill. Notification scaling uses the queue's visible backlog divided by Container Insights `RunningTaskCount`, target 50, active bounds 1–4; before bootstrap/readiness, its target is suspended in all directions with min 0. Capture real metric series and scale-out in V4, because mocked Terraform tests prove only configuration. The [automated fan-out check](runbook-environment-session.md#messaging-fan-out-check-447) gates relay enablement separately from consumer correctness.
+2026-10-14 reconciliation (#447/#457): merged messaging provides the notification DLQ-visible >0 and oldest-message-age >60 s alarms below; other original alarms were cut by the October 11 rescope. Distributed up requires operator recipients and confirmed subscriptions. The [broker-only drill](../agile/sprint-04/log/2026-10-14.md#2026-10-14---ppsyrius---aws-messaging-infrastructure-447) verified synthetic CloudWatch→SNS→email delivery, not actual DLQ detection/redrive. Notification target tracking uses visible backlog / Container Insights running tasks, target 50, bounds 1–4, suspended with min 0 before readiness. Live V4 metric/scale-out evidence is pending; [fan-out readiness](runbook-environment-session.md#messaging-fan-out-check-447) does not prove consumer correctness.
 
 | Alarm | Condition |
 | --- | --- |
@@ -150,9 +150,9 @@ No additional explicit alarms belong to #457; target tracking creates/manages it
 
 ## 7. Presentation-day checklist (21 Oct, 16:15–16:55 SGT)
 
-Commands and failure handling: [environment session runbook](runbook-environment-session.md).
+Commands, timing and failure handling: [presentation timeline](runbook-environment-session.md#3-timeline-for-a-presentation), [session start](runbook-environment-session.md#4-start) and [teardown](runbook-environment-session.md#7-destroy). This plan owns acceptance/evidence, not a second operational checklist.
 
-- `env-up.sh` before 12:00 (release digests from the Sprint 4 promotion); smoke suite green.
+- Follow the runbook's early-start allowance with reviewed release digests; capture a green smoke suite.
 - Dashboard open with a 1-hour window; k6 scripts ready on a laptop with the base URL set.
 - Fallback: screen recording of V3 and V4 from the rehearsal completed before 21 Oct.
-- After the presentation: `env-down.sh`, and confirm `env-status.sh` reports nothing left.
+- After the presentation, capture successful teardown and runtime absence using the runbook procedure.

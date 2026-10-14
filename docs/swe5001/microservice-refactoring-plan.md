@@ -195,9 +195,11 @@ Messaging        : SNS topics → SQS queues (+ DLQs) → notification-svc
 
 | Service | Policy | Min / max |
 | --- | --- | --- |
-| `commerce-svc` | Target tracking on `ALBRequestCountPerTarget`, with CPU at 50% as a fallback; scale-out cooldown 60 s | 1 / 6 |
-| `identity-svc` | Target tracking on CPU at 50% | 1 / 3 |
-| `notification-svc` | Step scaling on SQS backlog per task (`ApproximateNumberOfMessagesVisible` divided by the running task count) | 1 / 4 |
+| `commerce-svc` | Target tracking on `ALBRequestCountPerTarget`; provisional 200 requests/target/minute until V2; cooldowns 60 s out / 180 s in | 2 / 6 for demo; 1 / 6 for baseline |
+| `identity-svc` | Fixed count; CPU scaling excluded by the October 11 rescope | 1 / 1 |
+| `notification-svc` | Target tracking on visible SQS backlog / running task count, target 50; zero-task denominator protected | 1 / 4 |
+
+2026-10-14 reconciliation: this table reflects merged #447/#457 (#487/#489), superseding the initial CPU-fallback/identity and step-scaling proposals. Scaling is suspended with min 0 during bootstrap; commerce's active minimum runs on regular Fargate. Configuration and broker-only evidence do not prove live task permissions, two-AZ placement, consumer processing or scaling. [Implementation decisions](impl-aws-infrastructure.md#64-ecs-modulesecs-cluster-modulesecs-service) and [verification status](HANDOFF.md) are canonical.
 
 ### 2.6 Persistence design
 
