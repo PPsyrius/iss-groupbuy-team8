@@ -55,7 +55,7 @@ Runs against any base URL (EC2 CloudFront, SWE5001 CloudFront, or local Compose)
 | `GET /api/actuator/health` | 200 `UP` (through the ALB default path; commerce) |
 | `GET /api/v1/products?page=1&size=20` | 200, `Result` envelope, non-empty list (demo seed) |
 | `GET /api/v1/auth/me` without cookie | 401 envelope (served by identity) |
-| `GET /api/v1/notifications` without cookie | 401 envelope (served by notification; `commerce-svc` does not serve the route and would answer 404, so a 401 also proves the ALB rule). In `smoke.sh` since 2026-10-14; passed that day against the SWE5006 dev CloudFront (monolith) |
+| `GET /api/v1/notifications` without cookie | 401 envelope. In `smoke.sh` since 2026-10-14; passed that day against the SWE5006 dev CloudFront (monolith). Not routing evidence: every assembly's Sa-Token interceptor answers 401 for any unauthenticated `/api/v1` path, owned or not (the same holds for `/auth/me`). Routing to `identity-svc` and `notification-svc` is checked signed in, where an unowned route answers 404 ([runbook](runbook-environment-session.md#acceptance-evidence-456)) |
 | `GET /internal/users/<uuid>/active` through CloudFront | never reaches a service: CloudFront forwards only `/api/*` to the ALB, so the response is the SPA fallback page, not JSON |
 | Response header `X-Trace-Id` | present on every response |
 

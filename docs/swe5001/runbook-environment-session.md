@@ -66,7 +66,7 @@ T − 60 min is the minimum planning allowance for distributed sessions after #4
    gh run watch --repo PPsyrius/iss-groupbuy-team8 $(gh run list --repo PPsyrius/iss-groupbuy-team8 --workflow swe5001-env.yml --limit 1 --json databaseId --jq '.[0].databaseId')
    ```
 
-The run is green only after every service is stable and the smoke suite passed through CloudFront (health, product list, unauthenticated `/auth/me` and `/notifications`, trace header, internal path blocked). With `distributed`, health and the product list come from `commerce-svc`, `/auth/me` from `identity-svc` and `/notifications` from `notification-svc`; `commerce-svc` does not serve the notification route and would answer 404, so that check also proves the priority-20 rule. The job summary shows the URL, the topology and the step timings.
+The run is green only after every service is stable and the smoke suite passed through CloudFront (health, product list, unauthenticated `/auth/me` and `/notifications`, trace header, internal path blocked). With `distributed`, health and the product list come from `commerce-svc`. The two 401 checks prove the authentication envelope, not routing: every service answers 401 for any unauthenticated `/api/v1` path, including routes it does not own. Routing to `identity-svc` and `notification-svc` is checked signed in ([acceptance evidence](#acceptance-evidence-456)). The job summary shows the URL, the topology and the step timings.
 
 **First distributed session (before the first promotion after #456).** `prod` and the release digests do not have the three services yet, so an operator runs the session from a `dev` checkout instead of the workflow: push the three images by hand and write their candidate digests ([README](../../infra/swe5001/README.md#environment-sessions)), then:
 
@@ -141,6 +141,8 @@ Each service has its own database. The demo catalogue (10 products, deals, polic
    It is idempotent and prints a summary; `--check` makes no writes. A buyer account can then START a deal on one of those listings; the START also exercises the actor check from `commerce-svc` to `identity-svc` over Service Connect (#468).
 
 ### Acceptance evidence (#456)
+
+Routing per service, signed in (the smoke suite cannot prove it): with the `blocbuy-token` cookie after the first Google sign-in, `GET /api/v1/auth/me` and `GET /api/v1/notifications?page=1&size=1` both answer 200. Once the session passes Sa-Token, a service that does not own a route answers 404 (`NoResourceFoundException`), so the two 200s prove the ALB rules to `identity-svc` (priority 10) and `notification-svc` (priority 20); the admin product list answering from `commerce-svc` covers the catch-all.
 
 `session-report.sh` runs fixed, read-only SQL once as the `db-init` task (no arguments; the report holds no emails or tokens):
 

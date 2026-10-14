@@ -86,7 +86,9 @@ fi
 printf 'PASS report reads three databases, read-only, under the 8 KiB override limit\n'
 
 TASK_ARN=$task EXIT_CODE=0 LOG_TEXT='' \
-  check 'report notes a late log' ok 'no report in the log yet' session-report.sh
+  check 'report fails when the log is empty' fail 'report incomplete in the log so far' session-report.sh
+TASK_ARN=$task EXIT_CODE=0 LOG_TEXT="database | catalogue_products${tab}identity | 0" \
+  check 'report fails on a partial log' fail 'report incomplete in the log so far' session-report.sh
 TASK_ARN=$task EXIT_CODE=1 LOG_TEXT='ERROR:  relation "domain.biz_product" does not exist' \
   check 'report fails when the task fails' fail "report task exited with '1'" session-report.sh
 TASK_ARN=None EXIT_CODE=0 LOG_TEXT='' \

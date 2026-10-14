@@ -61,11 +61,16 @@ overrides=$(jq -nc --arg command "$command" \
 
 step "session report"
 run_db_init_task "$overrides" 'session-report: done|ERROR'
-if [ -n "$DB_INIT_OUTPUT" ]; then
-  printf '%s\n' "$DB_INIT_OUTPUT"
-else
-  log "no report in the log yet; see log group /blocbuy/swe5001/db-init"
-fi
-[ "$DB_INIT_EXIT_CODE" = 0 ] ||
+if [ "$DB_INIT_EXIT_CODE" != 0 ]; then
+  [ -z "$DB_INIT_OUTPUT" ] || printf '%s\n' "$DB_INIT_OUTPUT" >&2
   die "report task exited with '$DB_INIT_EXIT_CODE'; see log group /blocbuy/swe5001/db-init"
+fi
+# CloudWatch can deliver the rows in parts; never pass off a partial report as complete.
+case "$DB_INIT_OUTPUT" in
+  *'session-report: done'*) printf '%s\n' "$DB_INIT_OUTPUT" ;;
+  *)
+    [ -z "$DB_INIT_OUTPUT" ] || printf '%s\n' "$DB_INIT_OUTPUT" >&2
+    die "report incomplete in the log so far; read the full output in log group /blocbuy/swe5001/db-init"
+    ;;
+esac
 step_done

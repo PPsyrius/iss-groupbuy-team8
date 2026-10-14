@@ -48,7 +48,7 @@ Checked 2026-10-14: the local IAM user `blocbuy-dev-losgai` is denied `ssm:GetPa
 ### 2.4 Facts the plan relies on (verified in code)
 
 - `env-up.sh` (after #447) applies `runtime` with services stopped and the relay off, runs `db-init`, runs `verify-messaging.sh --bootstrap` (a 900-second filter wait, **confirmed email subscriptions required**), then starts services. A session therefore takes about 25–40 minutes, not the historical 13–15.
-- `commerce-svc` scans no `com.blocbuy.notification` package (`CommerceServiceApplication`). So `GET /api/v1/notifications` answers 404 on commerce and 401 on `notification-svc` or the monolith. A 401 through CloudFront proves the ALB rule at priority 20 routes to `notification-svc`.
+- `commerce-svc` scans no `com.blocbuy.notification` package (`CommerceServiceApplication`), but every assembly scans `SaTokenConfig`, whose interceptor runs on all `/api/v1/**` before handler lookup. Without a session every service answers 401 for any `/api/v1` path, owned or not (verified 2026-10-14 on a local `identity-svc` container: `/api/v1/notifications` and `/api/v1/no-such-route` both 401 `COMMON_401_001`; PR #492 review). Signed in, an unowned route answers 404 (`NoResourceFoundException` in `GlobalExceptionHandler`). So routing evidence needs a signed-in request.
 - `LeasedJobRunner` logs a skipped run at `DEBUG` only. JSON logs run at `INFO`, so a skip is invisible in CloudWatch. A completed job logs at `INFO` only when it did work (for example `TeamExpirySweepJob` with something due). The lease owner is `$HOSTNAME/<uuid>`; on Fargate (`awsvpc`) the host name is per task.
 - `grant-admin.sh` already runs fixed SQL as a one-off `db-init` task with container overrides (master credentials, private subnets, log group `/blocbuy/swe5001/db-init`). Its pattern can be reused for read-only reports.
 - The image (`eclipse-temurin:21-jre-noble`) runs read-only; ECS Exec is off by default (`enable_exec = false`).
@@ -60,7 +60,7 @@ Checked 2026-10-14: the local IAM user `blocbuy-dev-losgai` is denied `ssm:GetPa
 Add check 5 to `perf/smoke/smoke.sh`: `GET /api/v1/notifications?page=1&size=1` without a session must answer 401 with the `Result` envelope and an `X-Trace-Id` header. Same shape as the `auth/me` check.
 
 - Holds for every target the suite runs against: the `dev` EC2 monolith and the SWE5001 `monolith` both include `NotificationController`; `distributed` routes it to `notification-svc`.
-- Discriminating (§2.4): if the ALB rule were missing, commerce would answer 404 and the check would fail.
+- Not a routing check (§2.4): commerce would also answer 401. It proves the authentication envelope and trace id only. Routing to `identity-svc` and `notification-svc` is checked signed in during B5.
 - The script stays read-only and credential-free.
 - `env-up.sh` and both workflows call the same script, so nothing else changes.
 
@@ -115,7 +115,7 @@ AC-S1 says "`swe5001-env.yml` up on `prod`". `prod` cannot run `distributed` bef
 | A7 | `docs/swe5001/impl-aws-infrastructure.md` | Q1 outcome as a dated paragraph in §6.4 |
 | A8 | `docs/agile/sprint-04/log/2026-10-14.md`, this plan | Day log, status |
 
-Offline checks: `shellcheck`, `test-session-report.sh`, existing `test-lib.sh` / `test-env-status.sh` / `test-messaging-readiness.sh`, `actionlint`, `smoke.sh` against local Compose (monolith: 401) and against a local `commerce-svc` container (404 on the notification path, so check 5 fails as intended).
+Offline checks: `shellcheck`, `test-session-report.sh`, existing `test-lib.sh` / `test-env-status.sh` / `test-messaging-readiness.sh`, `actionlint`, `smoke.sh` against the dev CloudFront (monolith: 401).
 
 ### Phase B — operator session, 10-16, est. 4–5 h including teardown and write-up (6–8 h with one `env-up` retry)
 
@@ -128,7 +128,7 @@ Run from a clean `dev` checkout at the merged Phase A SHA. Every step's output g
 | B2 | Private `runtime` plan review (`topology=distributed`); share only resource addresses and actions | No unexpected destroy; three ECS services, three databases, two scaling targets |
 | B3 | `SWE5001_TOPOLOGY=distributed SWE5001_TIMINGS_FILE=… infra/swe5001/scripts/env-up.sh --candidate`; confirm the SNS subscription emails during the 900-second wait | Exit 0; smoke (now five checks) green through CloudFront; step timings saved |
 | B4 | `describe-services`: identity 1, notification 1, commerce 2 running, all `COMPLETED` rollout; commerce tasks in two AZs; commerce log has no `UnknownHostException: identity-svc` | All true |
-| B5 | Google sign-in in the browser; `GET /api/v1/auth/me` 200 (identity); `GET /api/v1/admin/products` as a non-admin → 403 from `commerce-svc` (session roles, #467) | Sign-in works; the 403 carries a commerce trace id |
+| B5 | Google sign-in in the browser; with the cookie, `GET /api/v1/auth/me` 200 and `GET /api/v1/notifications?page=1&size=1` 200 (an unowned route would answer 404 once signed in, so these prove the identity and notification ALB rules); `GET /api/v1/admin/products` as a non-admin → 403 from `commerce-svc` (session roles, #467) | Sign-in works; routing to all three services shown signed in; the 403 carries a commerce trace id |
 | B6 | `session-report.sh` (seed only in commerce) → `grant-admin.sh '<email>'` (`granted = 1`) → sign out and in → `GET /api/v1/admin/products` 200 → `seed-dev-demo-listings.sh` → **immediately** START on `US34-04` and note the time (actor check over Service Connect to `identity-svc`, #468; also starts B7's 40-minute clock) → `session-report.sh` (admin count 1) | AC-S2; the START also proves commerce → identity |
 | B7 | §3.4: first `session-report.sh` snapshot right after the START; second snapshot and Logs Insights by `@logStream` once at least 45 minutes have passed since the START (the 2400 s lifetime/quote window plus one sweep interval and log delivery) | AC-S3 |
 | B8 | `env-down.sh`, then `env-status.sh` exit 0; confirm no queued nightly `down` against a later session | AC-S1 teardown |
