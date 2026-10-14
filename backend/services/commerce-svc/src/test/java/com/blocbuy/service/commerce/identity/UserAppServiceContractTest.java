@@ -17,7 +17,10 @@ import com.blocbuy.identity.repository.UserRepository;
 import com.blocbuy.identity.service.UserAppService;
 import com.blocbuy.identity.service.UserAppServiceImpl;
 import com.blocbuy.identity.web.internal.InternalUserController;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -26,10 +29,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.client.RestClient;
 
 /**
- * One set of identity answers, run against both {@link UserAppService} implementations (#468): the
- * local one the monolith and identity-svc use, and commerce-svc's remote one talking to the real
- * {@link InternalUserController} and global exception handler in process. A caller cannot tell
- * which one it has.
+ * One set of identity answers, run against both {@link UserAppService} implementations (#468,
+ * #469): the local one the monolith and identity-svc use, and commerce-svc's remote one talking to
+ * the real {@link InternalUserController} and global exception handler in process. A caller cannot
+ * tell which one it has.
  */
 class UserAppServiceContractTest {
 
@@ -37,18 +40,25 @@ class UserAppServiceContractTest {
     private static final UUID DISABLED = UUID.fromString("a0000000-0000-7000-8000-000000000002");
     private static final UUID EMAIL_PREFIX =
             UUID.fromString("a0000000-0000-7000-8000-000000000003");
+    private static final UUID EMAIL_SHAPED =
+            UUID.fromString("a0000000-0000-7000-8000-000000000004");
     private static final UUID UNKNOWN = UUID.fromString("a0000000-0000-7000-8000-000000000009");
 
     /** The same identity data behind both implementations. */
     private static UserAppService local() {
         UserRepository users = mock(UserRepository.class);
-        when(users.findById(ACTIVE))
-                .thenReturn(Optional.of(user(ACTIVE, UserStatus.ACTIVE, "Tester")));
-        when(users.findById(DISABLED))
-                .thenReturn(Optional.of(user(DISABLED, UserStatus.DISABLED, "Gone")));
-        when(users.findById(EMAIL_PREFIX))
-                .thenReturn(Optional.of(user(EMAIL_PREFIX, UserStatus.ACTIVE, "buyer")));
+        List<User> known =
+                List.of(
+                        user(ACTIVE, UserStatus.ACTIVE, "Tester"),
+                        user(DISABLED, UserStatus.DISABLED, "Gone"),
+                        user(EMAIL_PREFIX, UserStatus.ACTIVE, "buyer"),
+                        user(EMAIL_SHAPED, UserStatus.ACTIVE, "someone@example.invalid"));
+        for (User user : known) {
+            when(users.findById(user.id())).thenReturn(Optional.of(user));
+        }
         when(users.findById(UNKNOWN)).thenReturn(Optional.empty());
+        when(users.findAllById(Set.of(ACTIVE, DISABLED, EMAIL_PREFIX, EMAIL_SHAPED, UNKNOWN)))
+                .thenReturn(known);
         return new UserAppServiceImpl(users);
     }
 
@@ -114,6 +124,29 @@ class UserAppServiceContractTest {
         @Test
         void anEmailPrefixNicknameIsNotShown() {
             assertThat(users().publicNickname(EMAIL_PREFIX)).isEmpty();
+        }
+
+        @Test
+        void anEmailShapedNicknameIsNotShown() {
+            assertThat(users().publicNickname(EMAIL_SHAPED)).isEmpty();
+        }
+
+        @Test
+        void theBatchLookupShowsOnlyShowableNicknames() {
+            assertThat(
+                            users().publicNicknames(
+                                            Set.of(
+                                                    ACTIVE,
+                                                    DISABLED,
+                                                    EMAIL_PREFIX,
+                                                    EMAIL_SHAPED,
+                                                    UNKNOWN)))
+                    .isEqualTo(Map.of(ACTIVE, "Tester"));
+        }
+
+        @Test
+        void anEmptyBatchShowsNothing() {
+            assertThat(users().publicNicknames(Set.of())).isEmpty();
         }
 
         private void assertRefusedWith(UUID id, IdentityErrorCode expected) {

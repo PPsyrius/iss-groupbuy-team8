@@ -1,6 +1,8 @@
 package com.blocbuy.identity.persistence;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -14,6 +16,9 @@ public interface SysUserMapper {
 
     /** Active user by primary key. */
     SysUserDO selectActiveById(@Param("id") UUID id);
+
+    /** Active users among these ids, in one statement; callers never pass an empty collection. */
+    List<SysUserDO> selectActiveByIds(@Param("ids") Collection<UUID> ids);
 
     /** Active user by canonical email (OAuth account-resolution lookup). */
     SysUserDO selectActiveByEmail(@Param("email") String email);

@@ -1,9 +1,15 @@
 package com.blocbuy.service.commerce.identity;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.anyRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,8 +29,15 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URI;
 import java.time.Duration;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -38,15 +51,18 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
 /**
- * The commerce-svc identity client against a stub identity on a real socket (#468): identity's two
- * business refusals map to the local error codes, and every other answer or transport failure,
- * timeouts included, is an {@link IdentityUnavailableException}.
+ * The commerce-svc identity client against a stub identity on a real socket (#468, #469):
+ * identity's two business refusals map to the local error codes, and every other answer or
+ * transport failure, timeouts included, is an {@link IdentityUnavailableException}.
  */
 class RemoteUserAppServiceTest {
 
     private static final UUID USER = UUID.fromString("a0000000-0000-7000-8000-000000000001");
     private static final String ACTIVE = "/internal/users/" + USER + "/active";
     private static final String NICKNAME = "/internal/users/" + USER + "/public-nickname";
+    private static final String NICKNAMES = "/internal/users/public-nicknames";
+    private static final Pattern ID =
+            Pattern.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
 
     /** Production budget: every status test gets the headroom a cold CI runner needs. */
     private static final Duration CONNECT_TIMEOUT = Duration.ofMillis(500);
@@ -216,6 +232,109 @@ class RemoteUserAppServiceTest {
     }
 
     @Test
+    void theBatchLookupPostsTheIdsAndReturnsTheMap() {
+        UUID other = UUID.fromString("a0000000-0000-7000-8000-000000000002");
+        stubBatch(envelope(200, CommonErrorCode.SUCCESS, nicknames(Map.of(USER, "Tester"))));
+
+        assertThat(service.publicNicknames(Set.of(USER, other))).isEqualTo(Map.of(USER, "Tester"));
+
+        IDENTITY.verify(
+                1,
+                postRequestedFor(urlEqualTo(NICKNAMES))
+                        .withHeader("Content-Type", containing("application/json"))
+                        .withRequestBody(
+                                equalToJson(
+                                        "{\"userIds\":[\"" + USER + "\",\"" + other + "\"]}",
+                                        true,
+                                        false)));
+    }
+
+    @Test
+    void anEmptyBatchAnswersWithoutACall() {
+        assertThat(service.publicNicknames(Set.of())).isEmpty();
+
+        IDENTITY.verify(0, anyRequestedFor(anyUrl()));
+    }
+
+    @Test
+    void aLargeBatchIsSplitIntoCallsOfAtMostOneHundred() {
+        List<UUID> ids = ids(150);
+        stubBatch(envelope(200, CommonErrorCode.SUCCESS, nicknames(Map.of(ids.get(0), "First"))));
+        IDENTITY.stubFor(
+                post(urlEqualTo(NICKNAMES))
+                        .withRequestBody(containing(ids.get(149).toString()))
+                        .willReturn(
+                                envelope(
+                                        200,
+                                        CommonErrorCode.SUCCESS,
+                                        nicknames(Map.of(ids.get(149), "Last")))));
+
+        assertThat(service.publicNicknames(new LinkedHashSet<>(ids)))
+                .isEqualTo(Map.of(ids.get(0), "First", ids.get(149), "Last"));
+
+        List<Set<UUID>> sent =
+                IDENTITY.findAll(postRequestedFor(urlEqualTo(NICKNAMES))).stream()
+                        .map(request -> idsIn(request.getBodyAsString()))
+                        .toList();
+        assertThat(sent).extracting(Set::size).containsExactlyInAnyOrder(100, 50);
+        assertThat(sent.stream().flatMap(Set::stream).collect(Collectors.toSet()))
+                .containsExactlyInAnyOrderElementsOf(ids);
+    }
+
+    @Test
+    void aFailedSliceFailsTheWholeBatch() {
+        List<UUID> ids = ids(150);
+        stubBatch(envelope(200, CommonErrorCode.SUCCESS, nicknames(Map.of())));
+        IDENTITY.stubFor(
+                post(urlEqualTo(NICKNAMES))
+                        .withRequestBody(containing(ids.get(149).toString()))
+                        .willReturn(aResponse().withStatus(503)));
+
+        assertUnavailable(() -> service.publicNicknames(new LinkedHashSet<>(ids)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {400, 404, 500, 503})
+    void aBatchAnswerOtherThan200IsAnOutage(int status) {
+        stubBatch(envelope(status, CommonErrorCode.BAD_REQUEST, null));
+
+        assertThatThrownBy(() -> service.publicNicknames(Set.of(USER)))
+                .isInstanceOf(IdentityUnavailableException.class)
+                .hasMessageContaining("answered " + status);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "{\"nicknames\":null}"})
+    void aBatchAnswerWithoutTheMapIsAnOutage(String data) {
+        stubBatch(envelope(200, CommonErrorCode.SUCCESS, data.isEmpty() ? null : data));
+
+        assertUnavailable(() -> service.publicNicknames(Set.of(USER)));
+    }
+
+    @Test
+    void anUnreadableBatchAnswerIsAnOutage() {
+        stubBatch(
+                aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{not json"));
+
+        assertUnavailable(() -> service.publicNicknames(Set.of(USER)));
+    }
+
+    @Test
+    void theCurrentTraceIdTravelsWithTheBatchCall() {
+        stubBatch(envelope(200, CommonErrorCode.SUCCESS, nicknames(Map.of())));
+        MDC.put(ApiConstants.TRACE_ID_MDC_KEY, "trace-469");
+
+        service.publicNicknames(Set.of(USER));
+
+        IDENTITY.verify(
+                postRequestedFor(urlEqualTo(NICKNAMES))
+                        .withHeader(ApiConstants.TRACE_ID_HEADER, equalTo("trace-469")));
+    }
+
+    @Test
     void theSessionProfileIsNotServedRemotely() {
         assertThatThrownBy(() -> service.currentUser(USER))
                 .isInstanceOf(UnsupportedOperationException.class);
@@ -249,6 +368,31 @@ class RemoteUserAppServiceTest {
 
     private static void stub(String path, ResponseDefinitionBuilder response) {
         IDENTITY.stubFor(get(urlEqualTo(path)).willReturn(response));
+    }
+
+    private static void stubBatch(ResponseDefinitionBuilder response) {
+        IDENTITY.stubFor(post(urlEqualTo(NICKNAMES)).willReturn(response));
+    }
+
+    private static String nicknames(Map<UUID, String> nicknames) {
+        return nicknames.entrySet().stream()
+                .map(entry -> "\"" + entry.getKey() + "\":\"" + entry.getValue() + "\"")
+                .collect(Collectors.joining(",", "{\"nicknames\":{", "}}"));
+    }
+
+    private static List<UUID> ids(int count) {
+        return IntStream.range(0, count)
+                .mapToObj(i -> UUID.fromString(String.format("b0000000-0000-7000-8000-%012d", i)))
+                .toList();
+    }
+
+    private static Set<UUID> idsIn(String body) {
+        Matcher matcher = ID.matcher(body);
+        Set<UUID> found = new LinkedHashSet<>();
+        while (matcher.find()) {
+            found.add(UUID.fromString(matcher.group()));
+        }
+        return found;
     }
 
     private static ResponseDefinitionBuilder envelope(int status, ErrorCode code, String data) {

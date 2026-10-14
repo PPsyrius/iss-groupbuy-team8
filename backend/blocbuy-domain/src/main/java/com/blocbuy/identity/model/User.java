@@ -110,16 +110,21 @@ public final class User {
     }
 
     /**
-     * The nickname other people may see, for example on an invite landing page that anyone with the
-     * link can open. Empty for an account that is not active, and for a nickname that is only the
-     * email local part (the OAuth fallback when the provider gives no display name), so a public
-     * page never reveals an email prefix.
+     * The nickname other people may see: on an invite landing page that anyone with the link can
+     * open, and on the admin payments-needing-attention page. Empty for an account that is not
+     * active, for a nickname that looks like an email address, and for a nickname that is only the
+     * email local part ignoring case and surrounding whitespace (the OAuth fallback when the
+     * provider gives no display name), so no display ever reveals contact information. A showable
+     * nickname is returned exactly as stored.
      */
     public Optional<String> publicNickname() {
         if (status != UserStatus.ACTIVE || nickname == null || nickname.isBlank()) {
             return Optional.empty();
         }
-        if (email != null && nickname.equalsIgnoreCase(emailLocalPart(email))) {
+        if (nickname.indexOf('@') >= 0) {
+            return Optional.empty();
+        }
+        if (email != null && nickname.strip().equalsIgnoreCase(emailLocalPart(email))) {
             return Optional.empty();
         }
         return Optional.of(nickname);

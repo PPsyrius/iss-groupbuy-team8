@@ -38,7 +38,7 @@ Every PR stays below about 1,500 changed lines and is reviewed within one workin
 | Step | PR content | Issue | Owner | Depends on | Due |
 | --- | --- | --- | --- | --- | --- |
 | B1 | Roles and permissions written into the Sa-Token session at login; `SessionStpInterface` for `topology=distributed`; `/internal/**` excluded from the Sa-Token route interceptor | #467 | @PPsyrius | — | 10-15 |
-| B2 | `UserAppService.publicNicknames(Set<UUID>)`; `PaymentAttentionMapper` without the `sys_user` join; masking rule moved into identity | #469 | @Yorick-Yu | — | 10-15 |
+| B2 | `UserAppService.publicNicknames(Set<UUID>)`; `PaymentAttentionMapper` without the `sys_user` join; masking rule moved into identity. **2026-10-14:** delivered with the batch endpoint and remote `publicNicknames` from B3 in one pairing PR, owners @Yorick-Yu and @l0sgAi ([plan](attention-nicknames-plan-20261014.md)) | #469 | @Yorick-Yu, @l0sgAi | — | 10-15 |
 | B3 | `InternalUserController` (active, public nickname, batch nicknames) in identity; `RemoteUserAppService` in commerce (500 ms / 1,500 ms timeouts, 404/403 with the identity code → identity errors, anything else → `IdentityUnavailableException` → 500 and Stripe redelivery; [plan](remote-identity-plan-20261013.md)) | #468 | @l0sgAi (reassigned 10-13) | B2 port method (batch only) | 10-16 |
 
 B1–B3 are built in the existing modules and selected by `blocbuy.topology`, so they do not wait for A3; A3 only wires them into the assemblies.

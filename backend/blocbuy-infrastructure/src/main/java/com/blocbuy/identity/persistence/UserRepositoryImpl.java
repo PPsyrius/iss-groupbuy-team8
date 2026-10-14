@@ -4,7 +4,9 @@ import com.blocbuy.common.exception.BizException;
 import com.blocbuy.identity.exception.IdentityErrorCode;
 import com.blocbuy.identity.model.User;
 import com.blocbuy.identity.repository.UserRepository;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -22,6 +24,15 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Optional<User> findById(UUID id) {
         return Optional.ofNullable(UserConverter.toDomain(sysUserMapper.selectActiveById(id)));
+    }
+
+    /** An empty set reads nothing: {@code IN ()} is not valid SQL. */
+    @Override
+    public List<User> findAllById(Set<UUID> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return sysUserMapper.selectActiveByIds(ids).stream().map(UserConverter::toDomain).toList();
     }
 
     @Override
