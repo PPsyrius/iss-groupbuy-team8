@@ -48,7 +48,7 @@ Checked 2026-10-14: the local IAM user `blocbuy-dev-losgai` is denied `ssm:GetPa
 ### 2.4 Facts the plan relies on (verified in code)
 
 - `env-up.sh` (after #447) applies `runtime` with services stopped and the relay off, runs `db-init`, runs `verify-messaging.sh --bootstrap` (a 900-second filter wait, **confirmed email subscriptions required**), then starts services. A session therefore takes about 25–40 minutes, not the historical 13–15.
-- `commerce-svc` scans no `com.blocbuy.notification` package (`CommerceServiceApplication`), but every assembly scans `SaTokenConfig`, whose interceptor runs on all `/api/v1/**` before handler lookup. Without a session every service answers 401 for any `/api/v1` path, owned or not (verified 2026-10-14 on a local `identity-svc` container: `/api/v1/notifications` and `/api/v1/no-such-route` both 401 `COMMON_401_001`; PR #492 review). Signed in, an unowned route answers 404 (`NoResourceFoundException` in `GlobalExceptionHandler`). So routing evidence needs a signed-in request.
+- `commerce-svc` scans no `com.blocbuy.notification` package (`CommerceServiceApplication`), but every assembly scans `SaTokenConfig`, whose interceptor runs on protected `/api/v1/**` paths before handler lookup. Without a session every service answers 401 for protected paths, owned or not (verified 2026-10-14 on a local `identity-svc` container: `/api/v1/notifications` and `/api/v1/no-such-route` both 401 `COMMON_401_001`; PR #492 review). Signed in, an unowned route answers 404 (`NoResourceFoundException` in `GlobalExceptionHandler`). So routing evidence needs a signed-in request.
 - `LeasedJobRunner` logs a skipped run at `DEBUG` only. JSON logs run at `INFO`, so a skip is invisible in CloudWatch. A completed job logs at `INFO` only when it did work (for example `TeamExpirySweepJob` with something due). The lease owner is `$HOSTNAME/<uuid>`; on Fargate (`awsvpc`) the host name is per task.
 - `grant-admin.sh` already runs fixed SQL as a one-off `db-init` task with container overrides (master credentials, private subnets, log group `/blocbuy/swe5001/db-init`). Its pattern can be reused for read-only reports.
 - The image (`eclipse-temurin:21-jre-noble`) runs read-only; ECS Exec is off by default (`enable_exec = false`).
@@ -66,7 +66,7 @@ Add check 5 to `perf/smoke/smoke.sh`: `GET /api/v1/notifications?page=1&size=1` 
 
 ### 3.2 Read-only session report (`session-report.sh`)
 
-New `infra/swe5001/scripts/session-report.sh`, built on the `grant-admin.sh` pattern: one `db-init` task per database, **fixed SQL only, no arguments that reach SQL**. Output goes to stdout (and the `db-init` log group).
+New `infra/swe5001/scripts/session-report.sh`, built on the `grant-admin.sh` pattern: one `db-init` task connecting to all three databases, **fixed SQL only, no arguments that reach SQL**. Output goes to stdout (and the `db-init` log group); success requires exit 0 and the final `session-report: done` marker. Missing or partial logs fail with a pointer to the log group.
 
 | Database | Query | Proves |
 | --- | --- | --- |
@@ -107,7 +107,7 @@ AC-S1 says "`swe5001-env.yml` up on `prod`". `prod` cannot run `distributed` bef
 | Id | File | Change |
 | --- | --- | --- |
 | A1 | `perf/smoke/smoke.sh` | Check 5 (§3.1); header comment lists five checks |
-| A2 | `infra/swe5001/scripts/session-report.sh` (new) | §3.2; `guard_account`, fixed SQL, waits for each task, fails on non-zero exit |
+| A2 | `infra/swe5001/scripts/session-report.sh` (new) | §3.2; `guard_account`, fixed SQL, waits for the task, fails on non-zero exit or missing completion marker |
 | A3 | `infra/swe5001/scripts/test-db-init-task.sh` (new), `lib.sh`, `grant-admin.sh` | Offline: stubbed `aws`/`terraform`, asserts override size < 8 KiB, three databases, read-only connections, no write statements, no arguments; also covers `grant-admin.sh`, which now shares the `db-init` runner (`run_db_init_task` in `lib.sh`); wired into `infra-swe5001.yml` next to `test-lib.sh` |
 | A4 | `docs/swe5001/runbook-environment-session.md` | §4 "First distributed session": drop the stale "starts only once #467/#468 are merged" note; add the messaging recipients prerequisite and the 25–40 min estimate; §5 add notification smoke check, `session-report.sh` and the lease steps of §3.4 |
 | A5 | `infra/swe5001/README.md` | Script table row for `session-report.sh` |
@@ -115,7 +115,7 @@ AC-S1 says "`swe5001-env.yml` up on `prod`". `prod` cannot run `distributed` bef
 | A7 | `docs/swe5001/impl-aws-infrastructure.md` | Q1 outcome as a dated paragraph in §6.4 |
 | A8 | `docs/agile/sprint-04/log/2026-10-14.md`, this plan | Day log, status |
 
-Offline checks: `shellcheck`, `test-session-report.sh`, existing `test-lib.sh` / `test-env-status.sh` / `test-messaging-readiness.sh`, `actionlint`, `smoke.sh` against the dev CloudFront (monolith: 401).
+Offline checks: `shellcheck`, `test-db-init-task.sh` (including empty/partial logs and delayed completion), existing `test-lib.sh` / `test-env-status.sh` / `test-messaging-readiness.sh`, `actionlint`, `smoke.sh` against the dev CloudFront (monolith: 401). The credential-free smoke suite checks the 401 envelope only; authenticated checks in the session verify routing.
 
 ### Phase B — operator session, 10-16, est. 4–5 h including teardown and write-up (6–8 h with one `env-up` retry)
 
@@ -128,7 +128,7 @@ Run from a clean `dev` checkout at the merged Phase A SHA. Every step's output g
 | B2 | Private `runtime` plan review (`topology=distributed`); share only resource addresses and actions | No unexpected destroy; three ECS services, three databases, two scaling targets |
 | B3 | `SWE5001_TOPOLOGY=distributed SWE5001_TIMINGS_FILE=… infra/swe5001/scripts/env-up.sh --candidate`; confirm the SNS subscription emails during the 900-second wait | Exit 0; smoke (now five checks) green through CloudFront; step timings saved |
 | B4 | `describe-services`: identity 1, notification 1, commerce 2 running, all `COMPLETED` rollout; commerce tasks in two AZs; commerce log has no `UnknownHostException: identity-svc` | All true |
-| B5 | Google sign-in in the browser; with the cookie, `GET /api/v1/auth/me` 200 and `GET /api/v1/notifications?page=1&size=1` 200 (an unowned route would answer 404 once signed in, so these prove the identity and notification ALB rules); `GET /api/v1/admin/products` as a non-admin → 403 from `commerce-svc` (session roles, #467) | Sign-in works; routing to all three services shown signed in; the 403 carries a commerce trace id |
+| B5 | Google sign-in in the browser; with the cookie, `GET /api/v1/auth/me` 200 and `GET /api/v1/notifications?page=1&size=1` 200 with `COMMON_200_000` and `data.items` array (an unowned route would answer 404 once signed in, so these prove the identity and notification ALB rules); `GET /api/v1/admin/products` as a non-admin → 403 from `commerce-svc` (session roles, #467) | Sign-in works; routing to all three services shown signed in; correlate trace ids with service logs; do not record cookies |
 | B6 | `session-report.sh` (seed only in commerce) → `grant-admin.sh '<email>'` (`granted = 1`) → sign out and in → `GET /api/v1/admin/products` 200 → `seed-dev-demo-listings.sh` → **immediately** START on `US34-04` and note the time (actor check over Service Connect to `identity-svc`, #468; also starts B7's 40-minute clock) → `session-report.sh` (admin count 1) | AC-S2; the START also proves commerce → identity |
 | B7 | §3.4: first `session-report.sh` snapshot right after the START; second snapshot and Logs Insights by `@logStream` once at least 45 minutes have passed since the START (the 2400 s lifetime/quote window plus one sweep interval and log delivery) | AC-S3 |
 | B8 | `env-down.sh`, then `env-status.sh` exit 0; confirm no queued nightly `down` against a later session | AC-S1 teardown |

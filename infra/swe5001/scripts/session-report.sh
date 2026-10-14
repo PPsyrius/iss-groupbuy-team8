@@ -7,7 +7,7 @@
 # Usage: session-report.sh
 #   Expect: catalogue rows and one seed migration in commerce only; admin_accounts 1 after
 #   grant-admin.sh; one owner per lease key, each a commerce task's host name, with version
-#   growing between two reports (one runner per job across tasks).
+#   growing between two reports (supporting evidence, not proof of exclusive execution).
 #
 # Environment: as env-up.sh. The report (no emails or tokens) is also in the db-init log group.
 
@@ -66,11 +66,9 @@ if [ "$DB_INIT_EXIT_CODE" != 0 ]; then
   die "report task exited with '$DB_INIT_EXIT_CODE'; see log group /blocbuy/swe5001/db-init"
 fi
 # CloudWatch can deliver the rows in parts; never pass off a partial report as complete.
-case "$DB_INIT_OUTPUT" in
-  *'session-report: done'*) printf '%s\n' "$DB_INIT_OUTPUT" ;;
-  *)
-    [ -z "$DB_INIT_OUTPUT" ] || printf '%s\n' "$DB_INIT_OUTPUT" >&2
-    die "report incomplete in the log so far; read the full output in log group /blocbuy/swe5001/db-init"
-    ;;
-esac
+if ! grep -Fxq 'session-report: done' <<< "$DB_INIT_OUTPUT"; then
+  [ -z "$DB_INIT_OUTPUT" ] || printf '%s\n' "$DB_INIT_OUTPUT" >&2
+  die "report output is incomplete; see log group /blocbuy/swe5001/db-init"
+fi
+printf '%s\n' "$DB_INIT_OUTPUT"
 step_done

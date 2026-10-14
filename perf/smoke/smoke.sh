@@ -63,7 +63,7 @@ check_trace_id auth_me
 
 # 4. The notification list without a session answers 401 with the envelope. This checks the
 #    authentication envelope only, not routing: every assembly's Sa-Token interceptor answers
-#    401 for any unauthenticated /api/v1 path, owned or not. Routing per service needs a
+#    401 for protected unauthenticated /api/v1 paths, owned or not. Routing per service needs a
 #    signed-in request (session runbook, "Acceptance evidence (#456)").
 status=$(fetch notifications '/api/v1/notifications?page=1&size=1')
 if [ "$status" = 401 ] && jq -e '.code | type == "string"' "$work/notifications.body" > /dev/null 2>&1; then

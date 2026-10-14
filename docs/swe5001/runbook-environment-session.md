@@ -66,7 +66,7 @@ T − 60 min is the minimum planning allowance for distributed sessions after #4
    gh run watch --repo PPsyrius/iss-groupbuy-team8 $(gh run list --repo PPsyrius/iss-groupbuy-team8 --workflow swe5001-env.yml --limit 1 --json databaseId --jq '.[0].databaseId')
    ```
 
-The run is green only after every service is stable and the smoke suite passed through CloudFront (health, product list, unauthenticated `/auth/me` and `/notifications`, trace header, internal path blocked). With `distributed`, health and the product list come from `commerce-svc`. The two 401 checks prove the authentication envelope, not routing: every service answers 401 for any unauthenticated `/api/v1` path, including routes it does not own. Routing to `identity-svc` and `notification-svc` is checked signed in ([acceptance evidence](#acceptance-evidence-456)). The job summary shows the URL, the topology and the step timings.
+The run is green only after every service is stable and the smoke suite passed through CloudFront (health, product list, unauthenticated `/auth/me` and `/notifications`, trace header, internal path blocked). With `distributed`, health and the product list come from `commerce-svc`. The two 401 checks prove the authentication envelope, not routing: every service answers 401 for protected unauthenticated `/api/v1` paths, including routes it does not own. Routing to `identity-svc` and `notification-svc` is checked signed in ([acceptance evidence](#acceptance-evidence-456)). The job summary shows the URL, the topology and the step timings.
 
 **First distributed session (before the first promotion after #456).** `prod` and the release digests do not have the three services yet, so an operator runs the session from a `dev` checkout instead of the workflow: push the three images by hand and write their candidate digests ([README](../../infra/swe5001/README.md#environment-sessions)), then:
 
@@ -142,7 +142,7 @@ Each service has its own database. The demo catalogue (10 products, deals, polic
 
 ### Acceptance evidence (#456)
 
-Routing per service, signed in (the smoke suite cannot prove it): with the `blocbuy-token` cookie after the first Google sign-in, `GET /api/v1/auth/me` and `GET /api/v1/notifications?page=1&size=1` both answer 200. Once the session passes Sa-Token, a service that does not own a route answers 404 (`NoResourceFoundException`), so the two 200s prove the ALB rules to `identity-svc` (priority 10) and `notification-svc` (priority 20); the admin product list answering from `commerce-svc` covers the catch-all.
+Routing per service, signed in (the smoke suite cannot prove it): use the browser's authenticated session through CloudFront after the first Google sign-in; `GET /api/v1/auth/me` and `GET /api/v1/notifications?page=1&size=1` both answer 200. For notifications also require `code = COMMON_200_000`, a `data.items` array (which may be empty), and `X-Trace-Id`; correlate the trace with `notification-svc` logs. Once the session passes Sa-Token, a service that does not own a route answers 404 (`NoResourceFoundException`), so the two 200s prove the ALB rules to `identity-svc` (priority 10) and `notification-svc` (priority 20); the admin product list answering from `commerce-svc` covers the catch-all. Record status and trace only, never the session cookie or private notification contents.
 
 `session-report.sh` runs fixed, read-only SQL once as the `db-init` task (no arguments; the report holds no emails or tokens):
 
@@ -151,6 +151,8 @@ infra/swe5001/scripts/session-report.sh
 ```
 
 It prints, per database, the catalogue row count and whether the `R__demo_catalog_seed.sql` migration ran (expected only in `commerce`), the number of accounts holding the admin role in `identity` (1 after the grant), and the `sys_scheduler_lock` rows in `commerce` (`lock_key`, `owner`, `locked_until`, `version`). Run it before the grant and again at the end.
+
+Success requires task exit 0 and the final `session-report: done` marker. If log delivery is incomplete, the script exits non-zero; any printed rows are partial evidence only. Read the complete task stream in `/blocbuy/swe5001/db-init` before recording the report.
 
 One runner per job with two `commerce-svc` tasks (the default floor):
 

@@ -12,7 +12,9 @@ export WORK=$work
 TASK_ARN=${TASK_ARN:-}
 EXIT_CODE=${EXIT_CODE:-}
 LOG_TEXT=${LOG_TEXT:-}
+export LOG_LATE_TEXT=${LOG_LATE_TEXT:-}
 
+# Stub only the AWS operations used by the runner; retain overrides for assertions.
 aws() {
   case "$1 $2" in
     'sts get-caller-identity') printf '%s\n' 402178232802 ;;
@@ -25,10 +27,18 @@ aws() {
       ;;
     'ecs wait') ;;
     'ecs describe-tasks') printf '%s\n' "$EXIT_CODE" ;;
-    'logs get-log-events') printf '%s\n' "$LOG_TEXT" ;;
+    'logs get-log-events')
+      if [ -f "$WORK/log-polled" ] && [ -n "$LOG_LATE_TEXT" ]; then
+        printf '%s\n' "$LOG_LATE_TEXT"
+      else
+        touch "$WORK/log-polled"
+        printf '%s\n' "$LOG_TEXT"
+      fi
+      ;;
     *) return 1 ;;
   esac
 }
+# Supply the existing db-init task and private network without reading Terraform state.
 terraform() {
   case "$*" in
     *'output -raw db_init_task_definition'*) printf '%s\n' 'arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-db-init:1' ;;
@@ -36,6 +46,7 @@ terraform() {
     *) ;;
   esac
 }
+# Keep bounded CloudWatch retry tests offline and instantaneous.
 sleep() { :; }
 export -f aws terraform sleep
 
@@ -46,7 +57,7 @@ tab=$(printf '\t')
 check() {
   local name=$1 expect=$2 needle=$3 output status=0
   shift 3
-  rm -f "$work/overrides.json"
+  rm -f "$work/overrides.json" "$work/log-polled"
   output=$(AWS_REGION=ap-southeast-1 SWE5001_TF_STATE_BUCKET=test bash "$dir/$1" "${@:2}" 2>&1) || status=$?
   if { [ "$expect" = ok ] && [ "$status" -ne 0 ]; } || { [ "$expect" = fail ] && [ "$status" -eq 0 ]; }; then
     printf 'FAIL %s: exit %s\n%s\n' "$name" "$status" "$output" >&2
@@ -86,9 +97,17 @@ fi
 printf 'PASS report reads three databases, read-only, under the 8 KiB override limit\n'
 
 TASK_ARN=$task EXIT_CODE=0 LOG_TEXT='' \
-  check 'report fails when the log is empty' fail 'report incomplete in the log so far' session-report.sh
-TASK_ARN=$task EXIT_CODE=0 LOG_TEXT="database | catalogue_products${tab}identity | 0" \
-  check 'report fails on a partial log' fail 'report incomplete in the log so far' session-report.sh
+  check 'report fails on an empty log' fail 'report output is incomplete' session-report.sh
+TASK_ARN=$task EXIT_CODE=0 LOG_TEXT='None' \
+  check 'report fails on an undelivered log' fail 'report output is incomplete' session-report.sh
+TASK_ARN=$task EXIT_CODE=0 LOG_TEXT='identity | 0 | 0' \
+  check 'report fails on partial output' fail 'report output is incomplete' session-report.sh
+TASK_ARN=$task EXIT_CODE=0 LOG_TEXT='identity | 0 | 0' LOG_LATE_TEXT="commerce | 10 | 1${tab}session-report: done" \
+  check 'report waits for the completion marker' ok 'commerce | 10 | 1' session-report.sh
+TASK_ARN=$task EXIT_CODE=0 LOG_TEXT='not session-report: done' \
+  check 'report rejects an embedded marker' fail 'report output is incomplete' session-report.sh
+TASK_ARN=$task EXIT_CODE=1 LOG_TEXT='session-report: done' \
+  check 'completion marker cannot override task failure' fail "report task exited with '1'" session-report.sh
 TASK_ARN=$task EXIT_CODE=1 LOG_TEXT='ERROR:  relation "domain.biz_product" does not exist' \
   check 'report fails when the task fails' fail "report task exited with '1'" session-report.sh
 TASK_ARN=None EXIT_CODE=0 LOG_TEXT='' \

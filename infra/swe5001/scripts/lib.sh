@@ -110,7 +110,7 @@ run_db_init_task() {
 
   # awslogs stream: <prefix>/<container>/<task id>. CloudWatch Logs can trail the stopped
   # task by a few seconds and deliver the output in parts, so poll until the last line has
-  # arrived; the output is informational, the exit code decides.
+  # arrived; callers decide whether complete output is required in addition to exit 0.
   DB_INIT_OUTPUT=""
   for attempt in 1 2 3 4 5; do
     DB_INIT_OUTPUT=$(aws logs get-log-events --log-group-name /blocbuy/swe5001/db-init \
