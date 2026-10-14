@@ -153,8 +153,8 @@ It prints, per database, the catalogue row count and whether the `R__demo_catalo
 One runner per job with two `commerce-svc` tasks (the default floor):
 
 1. Confirm both tasks are `RUNNING` for the whole check (`aws ecs list-tasks --cluster blocbuy-swe5001 --service-name commerce-svc`, then `describe-tasks` for their AZs).
-2. Make work due, so a run logs at `INFO` (a skipped run logs at `DEBUG` only): START a team on a listing with a short lifetime and let it expire, or leave a purchase intent unpaid past its expiry.
-3. After at least five minutes, in CloudWatch Logs Insights on `/blocbuy/swe5001/commerce-svc`:
+2. Make work due, so a run logs at `INFO` (a skipped run logs at `DEBUG` only). Nothing becomes due sooner than 40 minutes: the minimum team lifetime and the purchase quote window are both 2400 s. Right after the admin grant and listing seed, START on `US34-04` (target 2, lifetime 2400 s) and leave it unpaid; note the time and keep the session up for at least 45 minutes after it.
+3. At least 45 minutes after the START, in CloudWatch Logs Insights on `/blocbuy/swe5001/commerce-svc`:
 
    ```text
    fields @timestamp, @logStream, @message
@@ -163,7 +163,7 @@ One runner per job with two `commerce-svc` tasks (the default floor):
    ```
 
    Each run's line appears in exactly one task's log stream.
-4. Run `session-report.sh` twice a few minutes apart: each `lock_key` has one `owner`, the host name of one commerce task, and `version` grows between the reports.
+4. Run `session-report.sh` right after the START and again after step 3: each `lock_key` has one `owner`, the host name of one commerce task, and `version` grows between the reports.
 
 Record the outputs (redacted) and the Logs Insights result in the day log before `down`.
 

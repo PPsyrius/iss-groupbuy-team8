@@ -86,7 +86,7 @@ Two options, Q1 decides:
 ### 3.4 Lease evidence (AC-S3) without code changes
 
 1. Default session: commerce at 2 tasks (`TF_VAR_commerce_min_capacity=2`), regular Fargate base, two AZs (#489).
-2. Make work due so a run logs at `INFO`: on a listing seeded with a short lifetime, start a team and let it expire, or leave a purchase intent unpaid past its expiry.
+2. Make work due so a run logs at `INFO`. Nothing can be due sooner than 40 minutes: the minimum team lifetime is `ProductTeamTerms.MIN_LIFETIME_SECONDS` = `PurchaseQuoteWindow.SECONDS` = 2400 s, and a purchase intent lives for the same quote window. So START on `US34-04` (`scripts/dev-demo-listings.json`: target 2, lifetime 2400 s) as early as possible, right after the grant in B6, and leave it unpaid (checkout is off). About 40 minutes later the unpaid intent or the unfilled team becomes due and one commerce task logs the sweep at `INFO`. Do B6's remaining checks and B4/B5 evidence meanwhile.
 3. Evidence:
    - CloudWatch Logs Insights on `/blocbuy/swe5001/commerce-svc`: lines from `TeamExpirySweepJob` / `PurchaseIntentExpiryJob`, grouped by `@logStream`. Each run's line appears in exactly one task stream.
    - Two `session-report.sh` snapshots a few minutes apart: `sys_scheduler_lock.owner` names one of the two task host names per key; `version` grows.
@@ -117,7 +117,7 @@ AC-S1 says "`swe5001-env.yml` up on `prod`". `prod` cannot run `distributed` bef
 
 Offline checks: `shellcheck`, `test-session-report.sh`, existing `test-lib.sh` / `test-env-status.sh` / `test-messaging-readiness.sh`, `actionlint`, `smoke.sh` against local Compose (monolith: 401) and against a local `commerce-svc` container (404 on the notification path, so check 5 fails as intended).
 
-### Phase B — operator session, 10-16, est. 3–4 h including teardown
+### Phase B — operator session, 10-16, est. 4–5 h including teardown and write-up (6–8 h with one `env-up` retry)
 
 Run from a clean `dev` checkout at the merged Phase A SHA. Every step's output goes into the day log (redacted: no emails, tokens, recipients or state).
 
@@ -129,8 +129,8 @@ Run from a clean `dev` checkout at the merged Phase A SHA. Every step's output g
 | B3 | `SWE5001_TOPOLOGY=distributed SWE5001_TIMINGS_FILE=… infra/swe5001/scripts/env-up.sh --candidate`; confirm the SNS subscription emails during the 900-second wait | Exit 0; smoke (now five checks) green through CloudFront; step timings saved |
 | B4 | `describe-services`: identity 1, notification 1, commerce 2 running, all `COMPLETED` rollout; commerce tasks in two AZs; commerce log has no `UnknownHostException: identity-svc` | All true |
 | B5 | Google sign-in in the browser; `GET /api/v1/auth/me` 200 (identity); `GET /api/v1/admin/products` as a non-admin → 403 from `commerce-svc` (session roles, #467) | Sign-in works; the 403 carries a commerce trace id |
-| B6 | `session-report.sh` (seed only in commerce) → `grant-admin.sh '<email>'` (`granted = 1`) → sign out and in → `GET /api/v1/admin/products` 200 → `seed-dev-demo-listings.sh` → START a team on one listing (actor check over Service Connect to `identity-svc`, #468) → `session-report.sh` (admin count 1) | AC-S2; the START also proves commerce → identity |
-| B7 | §3.4: make a run due, wait ≥ 5 minutes, Logs Insights by `@logStream`, two `session-report.sh` snapshots | AC-S3 |
+| B6 | `session-report.sh` (seed only in commerce) → `grant-admin.sh '<email>'` (`granted = 1`) → sign out and in → `GET /api/v1/admin/products` 200 → `seed-dev-demo-listings.sh` → **immediately** START on `US34-04` and note the time (actor check over Service Connect to `identity-svc`, #468; also starts B7's 40-minute clock) → `session-report.sh` (admin count 1) | AC-S2; the START also proves commerce → identity |
+| B7 | §3.4: first `session-report.sh` snapshot right after the START; second snapshot and Logs Insights by `@logStream` once at least 45 minutes have passed since the START (the 2400 s lifetime/quote window plus one sweep interval and log delivery) | AC-S3 |
 | B8 | `env-down.sh`, then `env-status.sh` exit 0; confirm no queued nightly `down` against a later session | AC-S1 teardown |
 
 Abort rule: if B3 fails twice, or B4/B5 fail without a fix inside 60 minutes, run `env-down.sh`, record the failure, and decide the fallback (§6) at the 10-17 stand-up.
@@ -166,7 +166,7 @@ Abort rule: if B3 fails twice, or B4/B5 fail without a fix inside 60 minutes, ru
 | Service Connect endpoint not registered when commerce starts | Terraform orders commerce after identity; runbook fix is `--force-new-deployment` on `commerce-svc` |
 | `commerce-svc` fails closed when identity is down | By design (#468); B5 proves the healthy path; the outage drill is #459 |
 | RDS connections: identity 1 + notification 1 + commerce 2 tasks, default Hikari 10 each ≈ 40 + `db-init` | Record `DatabaseConnections` from the dashboard in B4 |
-| No `INFO` line during B7 because nothing was due | Step 2 of §3.4 makes work due on purpose; lock snapshots cover it anyway |
+| No `INFO` line during B7 because nothing was due, or the session is torn down before the 40-minute lifetime ends | START on `US34-04` right after the grant (§3.4 step 2); do not run B8 before 45 minutes after the START; the lock snapshots are evidence even without an `INFO` line |
 | Hand-pushed images differ from what the promotion builds | Same `Dockerfile.ci`, same SHA; Phase C rebuilds and rescans in CI anyway |
 | Admin email in the `db-init` log group | 7-day retention, operator-only; never copied into the day log |
 | Session left running (cost) | B8 is mandatory; nightly `down` is the safety net |
