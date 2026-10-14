@@ -2,6 +2,8 @@ package com.blocbuy.identity.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -12,6 +14,8 @@ import com.blocbuy.identity.model.User;
 import com.blocbuy.identity.model.UserProfile;
 import com.blocbuy.identity.model.UserStatus;
 import java.time.Instant;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,6 +50,22 @@ class UserRepositoryImplTest {
         when(mapper.selectActiveById(ID)).thenReturn(null);
 
         assertThat(repository.findById(ID)).isEmpty();
+    }
+
+    @Test
+    void findAllByIdConvertsEveryRowFromOneSelect() {
+        when(mapper.selectActiveByIds(Set.of(ID))).thenReturn(List.of(row()));
+
+        var result = repository.findAllById(Set.of(ID));
+
+        assertThat(result).extracting(User::id).containsExactly(ID);
+        verify(mapper).selectActiveByIds(Set.of(ID));
+    }
+
+    @Test
+    void findAllByIdOfAnEmptySetSkipsTheSelect() {
+        assertThat(repository.findAllById(Set.of())).isEmpty();
+        verify(mapper, never()).selectActiveByIds(any());
     }
 
     @Test
