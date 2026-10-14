@@ -229,7 +229,17 @@ class AdminPaymentFlowIT {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", " ", "private", "PRIVATE", "private@example.com"})
+    @ValueSource(
+            strings = {
+                "",
+                " ",
+                "private",
+                "PRIVATE",
+                " private ",
+                "Private ",
+                "private@example.com",
+                "someone@else.com"
+            })
     void blankAndEmailDerivedNicknamesNeverLeakContactInformation(String nickname)
             throws Exception {
         payment("compensation_required", "pending", WHEN);
@@ -237,6 +247,24 @@ class AdminPaymentFlowIT {
         mvc.perform(get(PATH).header(HEADER, adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.items[0].buyerNickname").value("Unknown buyer"));
+    }
+
+    @Test
+    void twoBuyersOnOnePageEachKeepTheirOwnNickname() throws Exception {
+        UUID other = UuidV7.next();
+        jdbc.update(
+                "INSERT INTO sys_user(id,register_source,status,nickname,email) "
+                        + "VALUES (?,'google','active','Coffee buyer','coffee@example.com')",
+                other);
+        paymentBy(buyer, "compensation_required", "pending", WHEN);
+        paymentBy(other, "compensation_required", "pending", WHEN.plusSeconds(1));
+        paymentBy(buyer, "compensation_required", "pending", WHEN.plusSeconds(2));
+        mvc.perform(get(PATH).header(HEADER, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.total").value(3))
+                .andExpect(jsonPath("$.data.items[0].buyerNickname").value("Tea buyer"))
+                .andExpect(jsonPath("$.data.items[1].buyerNickname").value("Coffee buyer"))
+                .andExpect(jsonPath("$.data.items[2].buyerNickname").value("Tea buyer"));
     }
 
     @Test
@@ -316,13 +344,21 @@ class AdminPaymentFlowIT {
     }
 
     private UUID payment(UUID id, String outcome, String refundStatus, Instant at) {
+        return payment(id, buyer, outcome, refundStatus, at);
+    }
+
+    private UUID paymentBy(UUID payer, String outcome, String refundStatus, Instant at) {
+        return payment(UuidV7.next(), payer, outcome, refundStatus, at);
+    }
+
+    private UUID payment(UUID id, UUID payer, String outcome, String refundStatus, Instant at) {
         UUID intent = UuidV7.next();
         jdbc.update(
                 "INSERT INTO biz_payment(id,payment_no,user_id,provider,amount,currency,status,"
                         + "intent_id,operation,business_id) VALUES (?,?,?,'stripe',12,'sgd','succeeded',?,'JOIN',?)",
                 id,
                 id.toString(),
-                buyer,
+                payer,
                 intent,
                 deal);
         jdbc.update(
@@ -333,8 +369,8 @@ class AdminPaymentFlowIT {
                 deal,
                 outcome,
                 java.sql.Timestamp.from(at),
-                buyer,
-                buyer);
+                payer,
+                payer);
         if (refundStatus != null) {
             jdbc.update(
                     "INSERT INTO biz_refund(payment_id,intent_id,deal_id,amount,currency,reason,"
