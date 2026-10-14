@@ -17,3 +17,17 @@ output "target_group_arn" {
   description = "Target group ARN"
   value       = aws_lb_target_group.this.arn
 }
+
+output "target_group_arn_suffix" {
+  description = "ALB metric dimension and target-tracking resource label suffix"
+  value       = aws_lb_target_group.this.arn_suffix
+}
+
+output "initial_capacity" {
+  description = "Initial ECS count and placement configuration for offline wiring checks; not a live placement claim"
+  value = {
+    desired_count                 = aws_ecs_service.this.desired_count
+    availability_zone_rebalancing = aws_ecs_service.this.availability_zone_rebalancing
+    capacity_provider_strategy    = aws_ecs_service.this.capacity_provider_strategy
+  }
+}

@@ -121,9 +121,20 @@ for arn in $arns; do
   remaining="$remaining$arn"$'\n'
 done
 
+# Dashboards cannot carry runtime tags, so inspect the exact course-owned name too.
+# shellcheck disable=SC2016 # JMESPath literal
+dashboard=$(aws cloudwatch list-dashboards --dashboard-name-prefix "$CLUSTER" \
+  --query 'DashboardEntries[?DashboardName==`blocbuy-swe5001`].DashboardArn' --output text) ||
+  die "cannot inspect runtime dashboard"
+if [ -n "$dashboard" ] && [ "$dashboard" != None ]; then
+  remaining="$remaining$dashboard"$'\n'
+else
+  log "no runtime dashboard"
+fi
+
 if [ -n "$remaining" ]; then
   count=$(printf '%s' "$remaining" | grep -c .)
-  log "$count runtime resource(s) tagged Stack=runtime:"
+  log "$count runtime resource(s) (tagged Stack=runtime or course dashboard):"
   printf '%s' "$remaining"
 else
   log "no runtime resource tagged Stack=runtime"

@@ -70,16 +70,17 @@ mock_provider "aws" {
 
 
 variables {
-  aws_account_id = "402178232802"
-  aws_region     = "ap-southeast-1"
+  aws_account_id             = "402178232802"
+  aws_region                 = "ap-southeast-1"
+  cloudfront_distribution_id = "E123EXAMPLE"
 }
 
 run "topology_none" {
   command = plan
 
   assert {
-    condition     = length(module.messaging) == 0 && length(aws_appautoscaling_target.notification) == 0
-    error_message = "Topology none must not create messaging or consumer scaling."
+    condition     = length(module.messaging) == 0 && length(aws_appautoscaling_target.notification) == 0 && length(aws_appautoscaling_target.commerce) == 0 && length(module.observability) == 0
+    error_message = "Topology none must not create messaging, scaling or the dashboard."
   }
 
   assert {
@@ -106,7 +107,7 @@ run "monolith_topology" {
   }
 
   assert {
-    condition     = length(module.messaging) == 0 && length(aws_appautoscaling_target.notification) == 0 && local.services["monolith"].task_policy_json == null
+    condition     = length(module.messaging) == 0 && length(aws_appautoscaling_target.notification) == 0 && length(aws_appautoscaling_target.commerce) == 0 && length(module.observability) == 0 && local.services["monolith"].task_policy_json == null
     error_message = "The monolith fallback gets no messaging resources or grants."
   }
 
@@ -186,13 +187,30 @@ run "rejects_unpinned_image" {
 run "distributed_topology" {
   command = plan
 
+  override_resource {
+    target          = aws_lb.this
+    override_during = plan
+    values = {
+      arn        = "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:loadbalancer/app/blocbuy-swe5001/1234567890abcdef"
+      arn_suffix = "app/blocbuy-swe5001/1234567890abcdef"
+    }
+  }
+  override_resource {
+    target          = module.client_service["commerce-svc"].aws_lb_target_group.this
+    override_during = plan
+    values = {
+      arn        = "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:targetgroup/commerce/1234567890abcdef"
+      arn_suffix = "targetgroup/commerce/1234567890abcdef"
+    }
+  }
+
   override_module {
     target = module.messaging[0]
     outputs = {
       topic_arn               = "arn:aws:sns:ap-southeast-1:402178232802:blocbuy-swe5001-domain-events"
       queue_arns              = { notification = "arn:aws:sqs:ap-southeast-1:402178232802:blocbuy-swe5001-notification" }
       queue_urls              = { notification = "https://sqs.ap-southeast-1.amazonaws.com/402178232802/blocbuy-swe5001-notification" }
-      queue_names             = { notification = "blocbuy-swe5001-notification" }
+      queue_names             = { notification = "blocbuy-swe5001-notification", audit = "blocbuy-swe5001-audit" }
       dlq_urls                = { notification = "https://sqs.ap-southeast-1.amazonaws.com/402178232802/blocbuy-swe5001-notification-dlq" }
       alert_subscription_arns = ["arn:aws:sns:ap-southeast-1:402178232802:blocbuy-swe5001-alerts:test"]
     }
@@ -228,6 +246,19 @@ run "distributed_topology" {
   assert {
     condition     = length(module.messaging) == 1 && length(aws_appautoscaling_target.notification) == 1 && aws_appautoscaling_target.notification[0].min_capacity == 1 && aws_appautoscaling_target.notification[0].max_capacity == 4
     error_message = "Distributed notification scales from one to four tasks only when services are enabled."
+  }
+
+  assert {
+    condition     = aws_appautoscaling_target.commerce[0].min_capacity == 2 && aws_appautoscaling_target.commerce[0].max_capacity == 6 && !aws_appautoscaling_target.commerce[0].suspended_state[0].dynamic_scaling_out_suspended && length(module.observability) == 1
+    error_message = "The demo enables commerce scaling at two to six tasks and creates its dashboard."
+  }
+  assert {
+    condition     = module.client_service["commerce-svc"].initial_capacity.desired_count == 2 && module.client_service["commerce-svc"].initial_capacity.availability_zone_rebalancing == "ENABLED" && one([for p in module.client_service["commerce-svc"].initial_capacity.capacity_provider_strategy : p.base if p.capacity_provider == "FARGATE"]) == 2 && alltrue([for s in values(module.service) : s.initial_capacity.desired_count == 1])
+    error_message = "The demo starts two commerce tasks on the same regular-Fargate provider with AZ rebalancing; other services start one."
+  }
+  assert {
+    condition     = aws_appautoscaling_policy.commerce_requests[0].target_tracking_scaling_policy_configuration[0].predefined_metric_specification[0].resource_label == "app/blocbuy-swe5001/1234567890abcdef/targetgroup/commerce/1234567890abcdef" && aws_appautoscaling_policy.commerce_requests[0].target_tracking_scaling_policy_configuration[0].predefined_metric_specification[0].predefined_metric_type == "ALBRequestCountPerTarget" && aws_appautoscaling_policy.commerce_requests[0].target_tracking_scaling_policy_configuration[0].target_value == 200
+    error_message = "HTTP scaling must use the exact ALB/commerce target-group label and provisional target 200."
   }
 
   assert {
@@ -348,6 +379,14 @@ run "distributed_before_db_init" {
     condition     = length(module.messaging) == 1 && aws_appautoscaling_target.notification[0].min_capacity == 0 && aws_appautoscaling_target.notification[0].suspended_state[0].dynamic_scaling_in_suspended && aws_appautoscaling_target.notification[0].suspended_state[0].dynamic_scaling_out_suspended && aws_appautoscaling_target.notification[0].suspended_state[0].scheduled_scaling_suspended && local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_ENABLED"] == "false"
     error_message = "Before db-init, scaling is fully suspended with min 0 and the relay is off."
   }
+  assert {
+    condition     = aws_appautoscaling_target.commerce[0].min_capacity == 0 && aws_appautoscaling_target.commerce[0].suspended_state[0].dynamic_scaling_in_suspended && aws_appautoscaling_target.commerce[0].suspended_state[0].dynamic_scaling_out_suspended && aws_appautoscaling_target.commerce[0].suspended_state[0].scheduled_scaling_suspended
+    error_message = "Commerce cannot start tasks through scaling before db-init/readiness."
+  }
+  assert {
+    condition     = module.client_service["commerce-svc"].initial_capacity.desired_count == 0 && alltrue([for s in values(module.service) : s.initial_capacity.desired_count == 0])
+    error_message = "Every distributed ECS service must initially stay stopped during bootstrap."
+  }
 }
 
 run "distributed_unverified_keeps_relay_off" {
@@ -385,4 +424,55 @@ run "messaging_only_without_service_images" {
     condition     = length(module.messaging) == 1
     error_message = "A targeted messaging-only plan must not require ECS image digests."
   }
+}
+
+run "commerce_baseline" {
+  command = plan
+  variables {
+    topology                     = "distributed"
+    services_enabled             = true
+    commerce_min_capacity        = 1
+    commerce_requests_per_target = 600
+    frontend_url                 = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  assert {
+    condition     = aws_appautoscaling_target.commerce[0].min_capacity == 1 && aws_appautoscaling_policy.commerce_requests[0].target_tracking_scaling_policy_configuration[0].target_value == 600
+    error_message = "Baseline sessions can select one task and a calibrated per-minute request target."
+  }
+  assert {
+    condition     = module.client_service["commerce-svc"].initial_capacity.desired_count == 1 && one([for p in module.client_service["commerce-svc"].initial_capacity.capacity_provider_strategy : p.base if p.capacity_provider == "FARGATE"]) == 1
+    error_message = "The baseline must start one commerce task on regular Fargate."
+  }
+}
+
+run "reject_commerce_minimum" {
+  command = plan
+  variables { commerce_min_capacity = 3 }
+  expect_failures = [var.commerce_min_capacity]
+}
+
+run "reject_commerce_target" {
+  command = plan
+  variables { commerce_requests_per_target = 0 }
+  expect_failures = [var.commerce_requests_per_target]
+}
+
+run "requires_edge_distribution" {
+  command = plan
+  variables {
+    topology                   = "distributed"
+    cloudfront_distribution_id = ""
+    frontend_url               = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  expect_failures = [var.cloudfront_distribution_id]
 }

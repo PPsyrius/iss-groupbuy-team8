@@ -8,6 +8,11 @@ output "cluster_name" {
   value       = module.cluster.cluster_name
 }
 
+output "dashboard_name" {
+  description = "Disposable three-row demo dashboard; null outside distributed topology"
+  value       = var.topology == "distributed" ? module.observability[0].dashboard_name : null
+}
+
 output "service_names" {
   description = "ECS service names"
   value       = [for s in merge(module.service, module.client_service) : s.service_name]

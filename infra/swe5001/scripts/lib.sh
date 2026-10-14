@@ -83,14 +83,19 @@ step_done() {
 
 start_stopped_services() {
   # Terraform ignores desired_count after creation so it cannot reset autoscaling.
-  # Only start zero-count services, after db-init; preserve any existing scaled count.
-  local service desired
+  # Enforce the configured floor after db-init; preserve higher scaled counts.
+  local service desired minimum
   for service in "$@"; do
     desired=$(aws ecs describe-services --cluster "$CLUSTER" --services "$service" \
       --query 'services[0].desiredCount' --output text) || die "cannot read desired count for $service"
     [[ "$desired" =~ ^[0-9]+$ ]] || die "invalid desired count for $service: $desired"
-    if [ "$desired" = 0 ]; then
-      aws ecs update-service --cluster "$CLUSTER" --service "$service" --desired-count 1 > /dev/null
+    minimum=1
+    if [ "$service" = commerce-svc ]; then
+      minimum=${TF_VAR_commerce_min_capacity:-2}
+      case "$minimum" in 1 | 2) ;; *) die "TF_VAR_commerce_min_capacity must be 1 or 2" ;; esac
+    fi
+    if [ "$desired" -lt "$minimum" ]; then
+      aws ecs update-service --cluster "$CLUSTER" --service "$service" --desired-count "$minimum" > /dev/null
     fi
   done
 }

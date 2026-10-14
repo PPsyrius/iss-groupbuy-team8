@@ -115,8 +115,8 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 | Edge | CloudFront requests and 5xx rate; ALB `RequestCount`, `HTTPCode_Target_5XX_Count`, `TargetResponseTime` p50/p95 per target group |
 | Services | Running task count, CPU and memory utilisation per service (Container Insights) |
 | Messaging | Per topic `NumberOfMessagesPublished`; queue `ApproximateNumberOfMessagesVisible`, `ApproximateAgeOfOldestMessage`; DLQ visible messages |
-| Data | RDS CPU, `DatabaseConnections`, `FreeableMemory`; Valkey CPU and `CurrConnections` |
-| Application | Outbox pending rows and relay lag (custom metric from `OutboxRelay`, namespace `BlocBuy/SWE5001`) |
+
+2026-10-14 (#457): the October 11 rescope retains only these three rows; Data/Application rows and CPU/identity scaling are excluded. CloudFront metrics use us-east-1 and Region=Global; task counts use Container Insights while CPU/memory percentages use AWS/ECS. Commerce defaults to two tasks for demo/V5, with `TF_VAR_commerce_min_capacity=1` for V2/V3; calibrate `TF_VAR_commerce_requests_per_target` from V2 in requests per target per minute (not RPS). The default 200 is provisional, not measured capacity.
 
 ### Alarms (SNS topic `blocbuy-swe5001-alerts` to the team email list)
 
@@ -124,12 +124,10 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 
 | Alarm | Condition |
 | --- | --- |
-| Target 5xx | > 5 per minute for 3 minutes on any target group |
-| Unhealthy hosts | `UnHealthyHostCount` > 0 for 3 minutes |
-| DLQ not empty | `ApproximateNumberOfMessagesVisible` > 0 |
-| Outbox lag | oldest pending outbox row > 60 s |
-| RDS CPU | > 80% for 5 minutes |
-| fck-nat status | `StatusCheckFailed` > 0 |
+| Notification DLQ not empty (#447) | `ApproximateNumberOfMessagesVisible` > 0 |
+| Notification queue age (#447) | `ApproximateAgeOfOldestMessage` > 60 s by default |
+
+No additional explicit alarms belong to #457; target tracking creates/manages its own CloudWatch alarms. The original target-5xx, unhealthy-host, outbox-lag, RDS and NAT alarm proposals are superseded by the October 11 rescope.
 
 ### Tracing
 
