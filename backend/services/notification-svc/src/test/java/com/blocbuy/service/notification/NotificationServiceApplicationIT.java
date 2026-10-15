@@ -13,6 +13,7 @@ import com.blocbuy.identity.persistence.SysUserMapper;
 import com.blocbuy.identity.web.AuthController;
 import com.blocbuy.integration.outbox.IntegrationOutboxWriter;
 import com.blocbuy.notification.event.NotificationEventHandler;
+import com.blocbuy.notification.messaging.SqsNotificationEventConsumer;
 import com.blocbuy.notification.web.NotificationController;
 import com.blocbuy.platform.TopologyProperties;
 import org.junit.jupiter.api.Test;
@@ -68,6 +69,8 @@ class NotificationServiceApplicationIT {
     void wiresOnlyThisServicesContexts() {
         assertThat(context.getBeanNamesForType(NotificationController.class)).hasSize(1);
         assertThat(context.getBeanNamesForType(NotificationEventHandler.class)).hasSize(1);
+        // the SQS consumer is opt-in (blocbuy.events.consumer.enabled), off by default
+        assertThat(context.getBeanNamesForType(SqsNotificationEventConsumer.class)).isEmpty();
         assertThat(context.getBeanNamesForType(AuthController.class)).isEmpty();
         assertThat(context.getBeanNamesForType(ProductController.class)).isEmpty();
         assertThat(context.getBeanNamesForType(SysUserMapper.class)).isEmpty();

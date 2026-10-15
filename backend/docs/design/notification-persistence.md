@@ -38,3 +38,21 @@ Layering: the application module has no Jackson dependency and the infrastructur
 
 Empty recipient list: commerce resolves recipients before publishing, so an empty list is a valid fact with nobody to tell, not poison. The handler marks the event consumed, writes no notification, logs a WARN with the eventId and type, and returns `APPLIED`; redelivery is then a cheap `DUPLICATE`. Duplicate recipient IDs are collapsed in their original order.
 
+## SQS consumer (#446)
+
+`SqsNotificationEventConsumer` (infrastructure, `com.blocbuy.notification.messaging`) is an AWS SDK v2 long-poll loop, because Spring Cloud AWS has no Spring Boot 4.1 line. It is assembled by `NotificationConsumerConfiguration` only when `blocbuy.events.consumer.enabled=true`; the package is scanned by the monolith and notification-svc, never by commerce-svc or identity-svc. It owns its `SqsClient` (attempt timeout wait + 10 s, call timeout wait + 25 s) instead of reusing the relay's 15 s client or publishing a second `SqsClient` bean, and reads the queue URL, Region and endpoint from `blocbuy.events.*`.
+
+One poller thread acquires a free-worker permit before every receive and asks for at most as many messages as there are free workers (`concurrency`, default 4; at most 10 per call), so nothing waits in memory and a slow database applies back-pressure to SQS. Each receive requests the 20 s wait, a 60 s visibility timeout (set explicitly; ElasticMQ's queue default is 30 s), `ApproximateReceiveCount` and all message attributes. A worker restores `traceId` into MDC from the message attribute (sanitised like `TraceIdFilter`), otherwise from the envelope, otherwise a new one, and clears it afterwards.
+
+| Outcome | Action |
+|---|---|
+| `APPLIED`, `DUPLICATE` (handler committed) | delete |
+| unsupported `eventType`/`version` | WARN, delete, no effect |
+| `MalformedIntegrationEventException` | WARN with messageId, eventId, receiveCount and reason; not deleted |
+| any other exception (database, timeout) | WARN with the exception; not deleted |
+| delete fails after commit | WARN; redelivery is a `DUPLICATE` |
+
+Undeleted messages reappear after the visibility timeout, so failures never hot-loop; after five receives the queue's redrive policy moves them to the DLQ. Logs carry IDs and the failed check only, never payload values. `SmartLifecycle.stop` ends receiving, lets in-flight messages finish for up to `shutdown-timeout` (15 s, inside the 20 s scheduler await and the 30 s Compose grace period), then makes the unfinished ones and any received but undispatched ones visible again with `ChangeMessageVisibility(0)`; idempotency makes their redelivery safe. A long poll in progress is not interruptible by the Apache HTTP client; messages it returns after stop are released the same way, or reappear after the visibility timeout if the client is already closed.
+
+ElasticMQ integration tests in the monolith context cover the acceptance criteria: one envelope sent three times creates one notification per recipient and one ledger row; a malformed `PaymentSucceeded` is decoded five times and then found in `notification-events-dlq` while valid messages sent alongside are applied; a `version=2147483647` probe is deleted without effect.
+
