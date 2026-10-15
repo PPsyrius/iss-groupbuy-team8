@@ -1,6 +1,7 @@
 package com.blocbuy.notification.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.blocbuy.common.persistence.UuidTypeHandler;
 import com.blocbuy.common.util.UuidV7;
@@ -11,7 +12,9 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
@@ -137,6 +140,44 @@ class ConsumedMessageRepositoryIT {
                     .containsExactlyInAnyOrder(true, false);
         }
         assertThat(count(event)).isEqualTo(1);
+    }
+
+    @Test
+    void secondDeliveryBlocksOnTheUncommittedFirstAndSeesItsOutcome() throws Exception {
+        assertThat(secondMarkAfterFirst(true)).isFalse();
+        assertThat(secondMarkAfterFirst(false)).isTrue();
+    }
+
+    /**
+     * Holds a first marker uncommitted, proves a second insert of the same key blocks on it, then
+     * ends the first transaction and returns what the second insert reported.
+     */
+    private static boolean secondMarkAfterFirst(boolean commitFirst) throws Exception {
+        UUID event = UuidV7.next();
+        try (var executor = Executors.newSingleThreadExecutor();
+                var first = sessions.openSession()) {
+            assertThat(repository(first).markConsumed(event, CONSUMER)).isTrue();
+            Future<Boolean> second =
+                    executor.submit(
+                            () -> {
+                                try (var session = sessions.openSession()) {
+                                    boolean inserted =
+                                            repository(session).markConsumed(event, CONSUMER);
+                                    session.commit();
+                                    return inserted;
+                                }
+                            });
+            assertThatThrownBy(() -> second.get(1, TimeUnit.SECONDS))
+                    .isInstanceOf(TimeoutException.class);
+            if (commitFirst) {
+                first.commit();
+            } else {
+                first.rollback();
+            }
+            boolean inserted = second.get(20, TimeUnit.SECONDS);
+            assertThat(count(event)).isEqualTo(1);
+            return inserted;
+        }
     }
 
     private static ConsumedMessageRepositoryImpl repository(SqlSession session) {

@@ -3,7 +3,8 @@ package com.blocbuy.bootstrap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.reset;
 
 import com.blocbuy.common.util.UuidV7;
 import com.blocbuy.notification.event.NotificationEventHandler;
@@ -16,6 +17,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -83,21 +85,28 @@ class NotificationEventHandlingIT {
     @Test
     void failureInsideTheTransactionLeavesNeitherMarkerNorNotificationsAndRetrySucceeds() {
         var event =
-                new NotificationEvent.PaymentSucceeded(
-                        UuidV7.next(), UuidV7.next(), UuidV7.next(), true);
-        doThrow(new IllegalStateException("injected write failure"))
+                new NotificationEvent.TeamExpired(
+                        UuidV7.next(), UuidV7.next(), List.of(UuidV7.next(), UuidV7.next()));
+        AtomicInteger writtenBeforeFailure = new AtomicInteger(-1);
+        // Fail after the real batch insert ran inside the handler's transaction.
+        doAnswer(
+                        call -> {
+                            writtenBeforeFailure.set((Integer) call.callRealMethod());
+                            throw new IllegalStateException("injected failure after insert");
+                        })
                 .when(notifications)
                 .recordBatch(anyList());
 
         assertThatThrownBy(() -> handler.handle(CONSUMER, event))
                 .isInstanceOf(IllegalStateException.class);
+        assertThat(writtenBeforeFailure.get()).isEqualTo(2);
         assertThat(markers(event.eventId())).isZero();
         assertThat(notificationsFor(event.eventId())).isZero();
 
-        org.mockito.Mockito.reset(notifications);
+        reset(notifications);
         assertThat(handler.handle(CONSUMER, event)).isEqualTo(ConsumeOutcome.APPLIED);
         assertThat(markers(event.eventId())).isEqualTo(1);
-        assertThat(notificationsFor(event.eventId())).isEqualTo(1);
+        assertThat(notificationsFor(event.eventId())).isEqualTo(2);
     }
 
     @Test

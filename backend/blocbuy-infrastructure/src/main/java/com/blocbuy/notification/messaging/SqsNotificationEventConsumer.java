@@ -224,8 +224,9 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
                 message.attributes().get(MessageSystemAttributeName.APPROXIMATE_RECEIVE_COUNT);
         String traceId = sanitize(attribute(message, TRACE_ATTRIBUTE));
         MDC.put(ApiConstants.TRACE_ID_MDC_KEY, traceId == null ? newTraceId() : traceId);
+        IntegrationEventDecoder.Decoded decoded = null;
         try {
-            IntegrationEventDecoder.Decoded decoded = decoder.decode(message.body());
+            decoded = decoder.decode(message.body());
             if (traceId == null && sanitize(decoded.traceId()) != null) {
                 MDC.put(ApiConstants.TRACE_ID_MDC_KEY, decoded.traceId());
             }
@@ -258,9 +259,11 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
         } catch (RuntimeException exception) {
             log.warn(
                     "Integration event handling failed; left for retry messageId={}"
-                            + " receiveCount={}",
+                            + " receiveCount={} eventId={} eventType={}",
                     message.messageId(),
                     receiveCount,
+                    decoded == null ? null : decoded.eventId(),
+                    decoded == null ? null : decoded.eventType(),
                     exception);
         } finally {
             MDC.remove(ApiConstants.TRACE_ID_MDC_KEY);

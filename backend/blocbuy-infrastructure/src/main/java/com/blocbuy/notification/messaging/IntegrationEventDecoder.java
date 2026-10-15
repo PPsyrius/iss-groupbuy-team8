@@ -66,6 +66,10 @@ public final class IntegrationEventDecoder {
         if (!version.isIntegralNumber() || !version.canConvertToInt()) {
             throw new MalformedIntegrationEventException(eventId, "version is not an integer");
         }
+        if (version.intValue() < 1 && isSupportedType(type.stringValue())) {
+            // Every contract version starts at 1, so this is a broken envelope, not a future one.
+            throw new MalformedIntegrationEventException(eventId, "version is not positive");
+        }
         var binder = supported.get(key(type.stringValue(), version.intValue()));
         if (binder == null) {
             return new Decoded(eventId, type.stringValue(), version.intValue(), null, null);
@@ -79,12 +83,14 @@ public final class IntegrationEventDecoder {
                     root.path("traceId").asString(),
                     event);
         } catch (JacksonException | IllegalArgumentException | BizException exception) {
-            // Constructor validation failures arrive wrapped in a JacksonException; the message
-            // can echo payload values, so only the exception type is reported.
+            // Constructor validation failures arrive wrapped in a JacksonException whose message
+            // can echo payload values, so only the failed field path and exception type are kept.
             throw new MalformedIntegrationEventException(
                     eventId,
                     "envelope or payload does not match "
                             + key(type.stringValue(), version.intValue())
+                            + " at "
+                            + fieldPath(exception)
                             + " ("
                             + exception.getClass().getSimpleName()
                             + ")");
@@ -126,6 +132,31 @@ public final class IntegrationEventDecoder {
                 .with(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
                 .with(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES)
                 .readValue(root);
+    }
+
+    private static boolean isSupportedType(String eventType) {
+        return TEAM_SUCCEEDED.equals(eventType)
+                || TEAM_EXPIRED.equals(eventType)
+                || PAYMENT_SUCCEEDED.equals(eventType);
+    }
+
+    /** Field names and indexes only, e.g. {@code payload.recipientUserIds[0]}; never values. */
+    static String fieldPath(Exception exception) {
+        if (!(exception instanceof JacksonException jackson) || jackson.getPath().isEmpty()) {
+            return "(no field path)";
+        }
+        StringBuilder path = new StringBuilder();
+        for (JacksonException.Reference reference : jackson.getPath()) {
+            if (reference.getPropertyName() != null) {
+                if (!path.isEmpty()) {
+                    path.append('.');
+                }
+                path.append(reference.getPropertyName());
+            } else if (reference.getIndex() >= 0) {
+                path.append('[').append(reference.getIndex()).append(']');
+            }
+        }
+        return path.isEmpty() ? "(no field path)" : path.toString();
     }
 
     private static UUID eventIdOrNull(JsonNode root) {

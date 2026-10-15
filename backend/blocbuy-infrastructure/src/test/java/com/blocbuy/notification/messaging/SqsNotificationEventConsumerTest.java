@@ -139,6 +139,32 @@ class SqsNotificationEventConsumerTest {
     }
 
     @Test
+    void unexpectedDecoderFailureLeavesTheMessage() {
+        IntegrationEventDecoder failing = mock(IntegrationEventDecoder.class);
+        when(failing.decode(any())).thenThrow(new IllegalStateException("decoder bug"));
+        var withFailingDecoder =
+                new SqsNotificationEventConsumer(
+                        sqs,
+                        QUEUE,
+                        failing,
+                        handler,
+                        new NotificationConsumerProperties(
+                                true,
+                                "notification",
+                                1,
+                                10,
+                                Duration.ofSeconds(1),
+                                Duration.ofSeconds(30),
+                                Duration.ofSeconds(1),
+                                Duration.ofMillis(10)));
+
+        withFailingDecoder.process(message("m-10", "r-10", valid(), "t"));
+
+        verifyNoInteractions(handler);
+        verify(sqs, never()).deleteMessage(any(DeleteMessageRequest.class));
+    }
+
+    @Test
     void failedDeleteAfterCommitIsLoggedNotThrown() {
         when(handler.handle(any(), any())).thenReturn(ConsumeOutcome.APPLIED);
         when(sqs.deleteMessage(any(DeleteMessageRequest.class)))

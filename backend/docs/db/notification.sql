@@ -36,7 +36,7 @@ CREATE TABLE sys_consumed_message (
 COMMENT ON TABLE sys_consumed_message IS 'Integration events already applied by a consumer; a duplicate (event_id, consumer) is a no-op. No retention job yet.';
 COMMENT ON COLUMN sys_consumed_message.event_id IS 'Integration envelope eventId (producer outbox UUIDv7); never an SQS MessageId.';
 COMMENT ON COLUMN sys_consumed_message.consumer IS 'Logical consumer name, e.g. notification; one ledger per consumer sharing the table.';
-COMMENT ON COLUMN sys_consumed_message.consumed_at IS 'Commit-transaction start time of the first successful application.';
+COMMENT ON COLUMN sys_consumed_message.consumed_at IS 'Start time of the transaction that first applied the event (CURRENT_TIMESTAMP).';
 
 -- Application obligations:
 -- * #446 validates the event envelope and producer-resolved recipients; no cross-service joins.
