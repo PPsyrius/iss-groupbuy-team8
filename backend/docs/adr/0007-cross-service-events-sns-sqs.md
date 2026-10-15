@@ -42,7 +42,7 @@ Review amendment 2026-10-13 (#445, relay from PR #477 ported onto `dev`):
 
 Business commits and event publication can no longer diverge: an event exists only if its transaction committed, and it is delivered at least once. Notifications lag commits by the relay interval, about 2 s.
 
-The full path except the SNS hop is exercised by ElasticMQ integration tests in CI and by every dev deployment, at no AWS cost. The SNS hop, filter policies, IAM and alarms are verified only in a SWE5001 ECS session, so that session must include a fan-out check and a DLQ drill.
+The full path except the SNS hop is exercised by ElasticMQ integration tests in CI and by every dev deployment, at no AWS cost. The SNS hop, filter policies, IAM and alarms are verified only in a SWE5001 ECS session, so that session must include a fan-out check and a DLQ drill. DLQ inspection and redrive (`start-message-move-task`) follow the [notification DLQ runbook](../operations/notification-dlq-redrive.md).
 
 Adding a consumer means adding a queue and a subscription; the producer does not change. Consumers scale on queue backlog per task. The relay is a single active instance under its lease; its throughput (about 50 events per second at 100 rows per 2 s tick) exceeds expected load, and the evolution path is lease sharding by `aggregate_id` or change data capture.
 
