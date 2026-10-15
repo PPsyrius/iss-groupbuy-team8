@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -23,8 +24,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -260,20 +263,62 @@ class SqsNotificationEventConsumerTest {
     }
 
     @Test
-    void messagesReceivedAfterStopAreReleasedInBatchesOfTen() throws Exception {
+    void messagesALongPollReturnsAfterStopAreReleasedAtOnceFromTheUninterruptedPoller()
+            throws Exception {
         consumer = consumer(64, Duration.ofSeconds(1));
-        var messages =
-                java.util.stream.IntStream.range(0, 10)
-                        .mapToObj(i -> message("m" + i, "r" + i, valid(), "t"))
-                        .toList();
-        when(sqs.receiveMessage(any(ReceiveMessageRequest.class))).thenReturn(response(messages));
+        AtomicBoolean interrupted = longPollThatReturnsTenMessagesAfterStop();
+
+        ArgumentCaptor<ChangeMessageVisibilityBatchRequest> release =
+                ArgumentCaptor.forClass(ChangeMessageVisibilityBatchRequest.class);
+        verify(sqs, timeout(5000)).changeMessageVisibilityBatch(release.capture());
+        assertThat(interrupted.get()).isFalse();
+        assertThat(release.getValue().queueUrl()).isEqualTo(QUEUE);
+        assertThat(release.getValue().entries())
+                .hasSize(10)
+                .allSatisfy(entry -> assertThat(entry.visibilityTimeout()).isZero());
+        verifyNoInteractions(handler);
+        verify(sqs, times(1)).receiveMessage(any(ReceiveMessageRequest.class));
+    }
+
+    @Test
+    void failedReleaseAfterStopIsLoggedAndThePollerStillExits() throws Exception {
+        consumer = consumer(64, Duration.ofSeconds(1));
         when(sqs.changeMessageVisibilityBatch(any(ChangeMessageVisibilityBatchRequest.class)))
                 .thenThrow(SdkClientException.create("closed"));
+        longPollThatReturnsTenMessagesAfterStop();
 
-        consumer.pollOnce(); // never started: not running, so nothing is dispatched
-
-        verify(sqs).changeMessageVisibilityBatch(any(ChangeMessageVisibilityBatchRequest.class));
+        verify(sqs, timeout(5000))
+                .changeMessageVisibilityBatch(any(ChangeMessageVisibilityBatchRequest.class));
+        consumer.destroy(); // joins the poller, then closes the client
+        verify(sqs).close();
         verifyNoInteractions(handler);
+    }
+
+    /** Starts the consumer, stops it while a receive is open, then lets that receive return. */
+    private AtomicBoolean longPollThatReturnsTenMessagesAfterStop() throws Exception {
+        var messages =
+                IntStream.range(0, 10)
+                        .mapToObj(i -> message("m" + i, "r" + i, valid(), "t"))
+                        .toList();
+        CountDownLatch polling = new CountDownLatch(1);
+        CountDownLatch stopped = new CountDownLatch(1);
+        AtomicBoolean interrupted = new AtomicBoolean();
+        when(sqs.receiveMessage(any(ReceiveMessageRequest.class)))
+                .thenAnswer(
+                        call -> {
+                            polling.countDown();
+                            if (!stopped.await(5, TimeUnit.SECONDS)) {
+                                throw new IllegalStateException("stop never happened");
+                            }
+                            interrupted.set(Thread.currentThread().isInterrupted());
+                            return response(messages);
+                        });
+        consumer.start();
+        assertThat(polling.await(5, TimeUnit.SECONDS)).isTrue();
+        consumer.stop(); // returns while the long poll is still open
+        assertThat(consumer.isRunning()).isFalse();
+        stopped.countDown();
+        return interrupted;
     }
 
     @Test
@@ -289,7 +334,12 @@ class SqsNotificationEventConsumerTest {
         assertThat(SqsNotificationEventConsumer.sanitize(" ")).isNull();
         assertThat(SqsNotificationEventConsumer.sanitize("a".repeat(65))).isNull();
         assertThat(SqsNotificationEventConsumer.sanitize("a/b")).isNull();
-        assertThat(SqsNotificationEventConsumer.sanitize("é")).isNull();
+        assertThat(SqsNotificationEventConsumer.sanitize("é")).isEqualTo("é");
+        assertThat(SqsNotificationEventConsumer.sanitize("a b")).isNull();
+        assertThat(SqsNotificationEventConsumer.sanitize("a" + (char) 10 + "b")).isNull();
+        assertThat(SqsNotificationEventConsumer.loggable("TeamSucceeded"))
+                .isEqualTo("TeamSucceeded");
+        assertThat(SqsNotificationEventConsumer.loggable("x".repeat(65))).isEqualTo("(invalid)");
         assertThat(SqsNotificationEventConsumer.sanitize("a".repeat(64))).hasSize(64);
     }
 

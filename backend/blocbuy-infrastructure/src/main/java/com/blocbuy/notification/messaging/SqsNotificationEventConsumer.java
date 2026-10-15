@@ -4,12 +4,14 @@ import com.blocbuy.common.constant.ApiConstants;
 import com.blocbuy.notification.event.NotificationEventHandler;
 import com.blocbuy.notification.event.NotificationEventHandler.ConsumeOutcome;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -42,14 +44,22 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
  * maxReceiveCount} receives, the DLQ. The SQS {@code MessageId} is logged but never used for
  * idempotency.
  *
- * <p>Stopping ends receiving, waits up to {@code shutdownTimeout} for in-flight messages and then
- * makes any still unfinished ones visible again; idempotency makes their redelivery safe.
+ * <p>Stopping never interrupts the poller: an interrupted SDK call is aborted, and so would be the
+ * release of anything it received. Instead the poller sees the stop flag, makes any messages a long
+ * poll returns after the stop visible again itself, and exits. In-flight messages get up to {@code
+ * shutdownTimeout} to finish; unfinished ones are then made visible again. {@link #destroy()} waits
+ * briefly for the poller before closing the client, which aborts a long poll still in progress (its
+ * messages, if any, reappear after the visibility timeout). Idempotency makes every redelivery
+ * safe.
  */
 @Slf4j
 public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableBean {
     static final String TRACE_ATTRIBUTE = "traceId";
     private static final int MAX_TRACE_ID_LENGTH = 64;
     private static final int SQS_BATCH_LIMIT = 10;
+    private static final long PERMIT_POLL_MILLIS = 200;
+    private static final long WORKER_EXIT_MILLIS = 3_000;
+    private static final long POLLER_JOIN_MILLIS = 2_000;
 
     private final SqsClient sqs;
     private final String queueUrl;
@@ -61,6 +71,7 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
     private final AtomicBoolean running = new AtomicBoolean();
     private volatile ExecutorService workers;
     private volatile Thread poller;
+    private volatile CountDownLatch stopSignal = new CountDownLatch(0);
 
     @SuppressFBWarnings("EI_EXPOSE_REP2") // Owns the client; the rest are shared thread-safe beans.
     public SqsNotificationEventConsumer(
@@ -82,6 +93,7 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
         if (!running.compareAndSet(false, true)) {
             return;
         }
+        stopSignal = new CountDownLatch(1);
         AtomicInteger sequence = new AtomicInteger();
         workers =
                 Executors.newFixedThreadPool(
@@ -106,17 +118,10 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
         if (!running.compareAndSet(true, false)) {
             return;
         }
-        poller.interrupt();
+        // No poller.interrupt(): it would abort the SDK call and any release on that thread.
+        stopSignal.countDown();
         workers.shutdown();
-        boolean finished = false;
-        try {
-            finished =
-                    workers.awaitTermination(
-                            settings.shutdownTimeout().toMillis(), TimeUnit.MILLISECONDS);
-        } catch (InterruptedException exception) {
-            Thread.currentThread().interrupt();
-        }
-        if (!finished) {
+        if (!awaitWorkers(settings.shutdownTimeout().toMillis())) {
             // Snapshot first: interrupted workers remove themselves from the in-flight set.
             List<Message> unfinished = List.copyOf(inFlight);
             workers.shutdownNow();
@@ -124,8 +129,20 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
                     "Notification consumer stopped with {} unfinished messages; releasing them",
                     unfinished.size());
             release(unfinished);
+            if (!awaitWorkers(WORKER_EXIT_MILLIS)) {
+                log.warn("Notification consumer workers still running after interruption");
+            }
         }
         log.info("Notification consumer stopped consumer={}", settings.name());
+    }
+
+    private boolean awaitWorkers(long millis) {
+        try {
+            return workers.awaitTermination(millis, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 
     @Override
@@ -136,6 +153,19 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
     @Override
     public void destroy() {
         stop();
+        Thread current = poller;
+        if (current != null) {
+            try {
+                current.join(POLLER_JOIN_MILLIS);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+            }
+            if (current.isAlive()) {
+                log.info(
+                        "Closing the SQS client aborts the long poll in progress; anything it"
+                                + " received reappears after the visibility timeout");
+            }
+        }
         sqs.close();
     }
 
@@ -146,16 +176,52 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
             } catch (InterruptedException exception) {
                 Thread.currentThread().interrupt();
                 return;
+            } catch (RuntimeException exception) {
+                // Last resort: the poller must not die silently while isRunning() is true.
+                log.error(
+                        "Notification consumer poll loop failed; retrying in {}",
+                        settings.errorBackoff(),
+                        exception);
+                if (pause(settings.errorBackoff())) {
+                    return;
+                }
             }
         }
     }
 
-    /** One receive call sized to the free workers, then dispatch. */
-    void pollOnce() throws InterruptedException {
-        freeWorkers.acquire();
+    /** Waits for a stop or the timeout; returns {@code true} when stopped. */
+    private boolean pause(Duration duration) {
+        try {
+            return stopSignal.await(duration.toMillis(), TimeUnit.MILLISECONDS);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            return true;
+        }
+    }
+
+    /** At least one free worker, plus any others up to {@code maxMessages}; 0 once stopped. */
+    private int acquireWorkers() throws InterruptedException {
+        while (!freeWorkers.tryAcquire(PERMIT_POLL_MILLIS, TimeUnit.MILLISECONDS)) {
+            if (!running.get()) {
+                return 0;
+            }
+        }
+        if (!running.get()) {
+            freeWorkers.release();
+            return 0;
+        }
         int granted = 1;
         while (granted < settings.maxMessages() && freeWorkers.tryAcquire()) {
             granted++;
+        }
+        return granted;
+    }
+
+    /** One receive call sized to the free workers, then dispatch. */
+    void pollOnce() throws InterruptedException {
+        int granted = acquireWorkers();
+        if (granted == 0) {
+            return;
         }
         List<Message> messages;
         try {
@@ -170,13 +236,15 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
                     "Notification consumer receive failed; retrying in {}",
                     settings.errorBackoff(),
                     exception);
-            Thread.sleep(settings.errorBackoff().toMillis());
+            pause(settings.errorBackoff());
             return;
         }
         freeWorkers.release(granted - messages.size());
         for (int i = 0; i < messages.size(); i++) {
             Message message = messages.get(i);
             if (!running.get() || !dispatch(message)) {
+                // Received after stop (or rejected by the stopped pool): visible again now, from
+                // this non-interrupted thread, instead of after the visibility timeout.
                 List<Message> rest = messages.subList(i, messages.size());
                 freeWorkers.release(rest.size());
                 release(rest);
@@ -234,7 +302,7 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
                 log.warn(
                         "Acknowledging unsupported integration event without effect eventType={}"
                                 + " version={} eventId={} messageId={}",
-                        decoded.eventType(),
+                        loggable(decoded.eventType()),
                         decoded.version(),
                         decoded.eventId(),
                         message.messageId());
@@ -324,25 +392,27 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
         return value == null ? null : value.stringValue();
     }
 
-    /** Same rule as the HTTP {@code TraceIdFilter}: 1-64 of {@code [A-Za-z0-9-_.]}. */
+    /**
+     * Same rule as the HTTP {@code TraceIdFilter}: 1-64 characters, each a letter or digit ({@link
+     * Character#isLetterOrDigit(char)}) or one of {@code - _ .}; otherwise {@code null}.
+     */
     static String sanitize(String value) {
         if (value == null || value.isBlank() || value.length() > MAX_TRACE_ID_LENGTH) {
             return null;
         }
         for (int i = 0; i < value.length(); i++) {
             char c = value.charAt(i);
-            boolean allowed =
-                    (c >= 'a' && c <= 'z')
-                            || (c >= 'A' && c <= 'Z')
-                            || (c >= '0' && c <= '9')
-                            || c == '-'
-                            || c == '_'
-                            || c == '.';
-            if (!allowed) {
+            if (!Character.isLetterOrDigit(c) && c != '-' && c != '_' && c != '.') {
                 return null;
             }
         }
         return value;
+    }
+
+    /** Untrusted envelope text for a log line: the trace-id rule, else a fixed placeholder. */
+    static String loggable(String value) {
+        String safe = sanitize(value);
+        return safe == null ? "(invalid)" : safe;
     }
 
     private static String newTraceId() {

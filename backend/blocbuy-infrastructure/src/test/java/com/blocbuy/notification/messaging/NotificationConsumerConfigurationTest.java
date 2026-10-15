@@ -67,6 +67,9 @@ class NotificationConsumerConfigurationTest {
                         () -> properties("n", 1, 0, s, s, s, s),
                         () -> properties("n", 1, 11, s, s, s, s),
                         () -> properties("n", 1, 10, Duration.ofSeconds(21), s, s, s),
+                        () -> properties("n", 1, 10, Duration.ZERO, s, s, s),
+                        () -> properties("n", 1, 10, Duration.ofMillis(1500), s, s, s),
+                        () -> properties("n", 1, 10, s, Duration.ofMillis(1500), s, s),
                         () -> properties("n", 1, 10, null, s, s, s),
                         () -> properties("n", 1, 10, s, Duration.ZERO, s, s),
                         () -> properties("n", 1, 10, s, s, Duration.ofMinutes(6), s),
@@ -76,8 +79,7 @@ class NotificationConsumerConfigurationTest {
                         assertThatThrownBy(construct::run)
                                 .isInstanceOf(IllegalArgumentException.class)
                                 .hasMessageStartingWith("blocbuy.events.consumer: "));
-        assertThat(properties("n", 64, 10, Duration.ZERO, s, Duration.ZERO, s).concurrency())
-                .isEqualTo(64);
+        assertThat(properties("n", 64, 10, s, s, Duration.ZERO, s).concurrency()).isEqualTo(64);
     }
 
     private static NotificationConsumerProperties defaults() {
