@@ -1,4 +1,5 @@
--- Canonical notification schema (PostgreSQL 18, schema domain), implemented by V27__notification.sql.
+-- Canonical notification schema (PostgreSQL 18, schema domain), implemented by V27__notification.sql
+-- and V28__sys_consumed_message.sql.
 -- #215 scope amendment 2026-10-13: immutable event effects and one list API; no unread state.
 CREATE TABLE biz_notification (
     id uuid NOT NULL DEFAULT uuidv7(),
@@ -24,6 +25,19 @@ COMMENT ON COLUMN biz_notification.notification_type IS 'TeamSucceeded, TeamExpi
 COMMENT ON COLUMN biz_notification.create_by IS 'Null for system event creation; no interactive write endpoint.';
 CREATE INDEX idx_biz_notification_user_time ON biz_notification (user_id, create_time DESC, id DESC) WHERE deleted = false;
 
+-- #446: consumer idempotency ledger. Immutable system log with a reduced column set (no surrogate id,
+-- audit actors, update time or soft delete); deleting a row would re-enable replay of that event.
+CREATE TABLE sys_consumed_message (
+    event_id    uuid        NOT NULL,
+    consumer    varchar(64) NOT NULL,
+    consumed_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_sys_consumed_message PRIMARY KEY (event_id, consumer)
+);
+COMMENT ON TABLE sys_consumed_message IS 'Integration events already applied by a consumer; a duplicate (event_id, consumer) is a no-op. No retention job yet.';
+COMMENT ON COLUMN sys_consumed_message.event_id IS 'Integration envelope eventId (producer outbox UUIDv7); never an SQS MessageId.';
+COMMENT ON COLUMN sys_consumed_message.consumer IS 'Logical consumer name, e.g. notification; one ledger per consumer sharing the table.';
+COMMENT ON COLUMN sys_consumed_message.consumed_at IS 'Commit-transaction start time of the first successful application.';
+
 -- Application obligations:
 -- * #446 validates the event envelope and producer-resolved recipients; no cross-service joins.
 -- * Store the consumed-message marker and recordBatch effects in one local transaction, then ack.
@@ -32,3 +46,9 @@ CREATE INDEX idx_biz_notification_user_time ON biz_notification (user_id, create
 -- * A type identifies whether reference_id belongs to a team or payment; no reference lookup here.
 -- * No write/update/delete HTTP API; reads carry the session user ID and exclude deleted rows.
 -- * Retention and soft deletion are not implemented; event-recipient uniqueness survives deletion.
+-- * sys_consumed_message: insert (event_id, consumer) with ON CONFLICT DO NOTHING before the effects;
+--   0 rows means already consumed, so the consumer skips its effects and acknowledges the message.
+-- * The ledger insert and the effects commit or roll back together; a rollback leaves the event
+--   unconsumed so redelivery (and finally the DLQ) handles it. Concurrent first deliveries serialize
+--   on the primary key: the second waits for the first transaction and then sees the conflict.
+-- * No retention: rows are tiny and must outlive the SQS retention window plus any DLQ redrive.
