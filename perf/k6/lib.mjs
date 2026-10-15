@@ -112,6 +112,64 @@ export function plateauForIteration(iteration, stageSeconds = 60) {
   return BASELINE_RATES.length - 1;
 }
 
+function validateRoute(snapshot, current, service) {
+  const route = snapshot.routing;
+  const edge = route?.edge;
+  const reject = () => { throw new Error('Unverified CloudFront/ALB route to the observed ECS service'); };
+  // Validate the declared one-behavior topology, not a partial simulation of
+  // arbitrary CloudFront matching/rewrites. Extra behaviors fail closed.
+  if (edge?.id !== 'E3N39GHVFV6CT3' || edge.status !== 'Deployed' || edge.enabled !== true ||
+      `https://${edge.domainName}` !== snapshot.baseUrl || edge.behaviors?.length !== 1) reject();
+  const behavior = edge.behaviors[0];
+  if (behavior.pathPattern !== '/api/*' || behavior.targetOriginId !== 'alb-runtime' ||
+      behavior.functions !== 0 || behavior.lambdas !== 0 ||
+      behavior.cachePolicyId !== '4135ea2d-6df8-44a3-9df3-4b5a84be39ad') reject();
+  const origins = edge.origins?.filter(o => o.id === behavior.targetOriginId);
+  if (origins?.length !== 1 || (origins[0].path ?? '') !== '') reject();
+  const origin = origins[0];
+  const attachment = current.loadBalancers?.[0];
+  if (current.loadBalancers?.length !== 1 || attachment.containerName !== service || !attachment.targetGroupArn ||
+      !Number.isInteger(attachment.containerPort) || attachment.containerPort < 1 || attachment.containerPort > 65535) reject();
+  const group = route.targetGroups?.[0];
+  if (route.targetGroups?.length !== 1 || group.arn !== attachment.targetGroupArn ||
+      group.port !== attachment.containerPort || group.loadBalancerArns?.length !== 1) reject();
+  const alb = route.loadBalancers?.[0];
+  if (route.loadBalancers?.length !== 1 || alb.arn !== group.loadBalancerArns[0] ||
+      alb.type !== 'application' || alb.state !== 'active' || typeof alb.dnsName !== 'string' ||
+      typeof origin.domainName !== 'string' || alb.dnsName.toLowerCase() !== origin.domainName.toLowerCase()) reject();
+  const protocol = origin.protocolPolicy === 'http-only' ? 'HTTP'
+    : ['https-only', 'match-viewer'].includes(origin.protocolPolicy) ? 'HTTPS' : null;
+  const port = protocol === 'HTTP' ? origin.httpPort : origin.httpsPort;
+  const listeners = route.listeners?.filter(l => l.loadBalancerArn === alb.arn && l.protocol === protocol && l.port === port);
+  if (!protocol || !Number.isInteger(port) || listeners?.length !== 1 ||
+      listeners[0].arn !== route.rulesListenerArn || !Array.isArray(route.rules) ||
+      route.rules.filter(r => r.isDefault === true).length !== 1) reject();
+  const forwardsToGroup = rule => {
+    if (rule.actions?.length !== 1 || rule.actions[0].type !== 'forward') return false;
+    const action = rule.actions[0];
+    if (action.targetGroupArn && action.targetGroupArn !== group.arn) return false;
+    const groups = action.forwardGroups;
+    if (groups?.length) return groups.length === 1 && groups[0].arn === group.arn && (groups[0].weight ?? 1) > 0;
+    return action.targetGroupArn === group.arn;
+  };
+  const matches = route.rules.filter(r => r.isDefault === false && r.hasTransforms === false && r.hasPathRegex === false &&
+    r.pathPatterns?.length === 1 && r.pathPatterns[0] === '/api/*' &&
+    r.conditionFields?.length === 2 && r.conditionFields.includes('path-pattern') &&
+    r.conditionFields.includes('http-header') && r.originHeaderMatches === true && forwardsToGroup(r));
+  if (matches.length !== 1) reject();
+  // Other declared service routes cannot match any public product-list/detail
+  // path. Reject unknown/overlapping patterns (even lower-priority ones) rather
+  // than guessing around headers, regex, weighted forwards or URL rewrites.
+  const disjointPaths = ['/internal/*', '/api/internal/*', '/api/v1/auth/*', '/api/v1/users/*', '/api/v1/notifications*'];
+  for (const rule of route.rules) {
+    if (rule.isDefault === true || rule === matches[0]) continue;
+    if (rule.isDefault !== false || rule.hasPathRegex !== false || !rule.conditionFields?.includes('path-pattern') ||
+        !rule.pathPatterns?.length || !rule.pathPatterns.every(path => disjointPaths.includes(path))) reject();
+  }
+  if (typeof alb.arn !== 'string' || !alb.arn.includes(':loadbalancer/') || !group.arn.includes(':targetgroup/')) reject();
+  return { resourceLabel: `${alb.arn.split(':loadbalancer/')[1]}/${group.arn.split(':').pop()}` };
+}
+
 export function validatePreflight(snapshot, config, now = Date.now()) {
   if (!config.remote) return null;
   if (!snapshot || snapshot.schema !== 1 || snapshot.account !== '402178232802' ||
@@ -140,6 +198,7 @@ export function validatePreflight(snapshot, config, now = Date.now()) {
   if (containers?.length !== 1 || containers[0].imageDigest !== config.expectedImageDigest) {
     throw new Error('Live task digest does not match the reviewed image');
   }
+  const routing = validateRoute(snapshot, current, service);
   const resourceId = `service/blocbuy-swe5001/${service}`;
   const targets = snapshot.targets?.ScalableTargets;
   const policies = snapshot.policies?.ScalingPolicies;
@@ -157,6 +216,7 @@ export function validatePreflight(snapshot, config, now = Date.now()) {
         target.SuspendedState?.ScheduledScalingSuspended !== false || policies.length !== 1 ||
         policy.ResourceId !== resourceId || policy.PolicyType !== 'TargetTrackingScaling' ||
         tracking?.PredefinedMetricSpecification?.PredefinedMetricType !== 'ALBRequestCountPerTarget' ||
+        tracking?.PredefinedMetricSpecification?.ResourceLabel !== routing.resourceLabel ||
         tracking?.TargetValue !== config.knee * 60) throw new Error('V3 requires active 1..6 HTTP scaling at the calibrated target');
   }
   return { service, taskArn: task.taskArn, imageDigest: containers[0].imageDigest, collectedAt: snapshot.collectedAt };

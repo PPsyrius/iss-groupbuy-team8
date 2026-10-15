@@ -140,17 +140,33 @@ const remoteEnv = { ...env, BASE_URL: 'https://shop.example', CONFIRM_TARGET: 'h
 function preflight(mode = 'v2') {
   const service = mode === 'v2' ? 'monolith' : 'commerce-svc';
   const resourceId = `service/blocbuy-swe5001/${service}`;
+  const alb = 'arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:loadbalancer/app/blocbuy-swe5001/123';
+  const group = `arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:targetgroup/${service}/456`;
+  const listener = 'arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:listener/app/blocbuy-swe5001/123/789';
   return { schema: 1, account: '402178232802', region: 'ap-southeast-1', cluster: 'blocbuy-swe5001',
     mode, baseUrl: remoteEnv.BASE_URL, collectedAt: new Date().toISOString(), toolingSha: env.TEST_SHA,
     services: { failures: [], services: [{ serviceName: service, status: 'ACTIVE', desiredCount: 1, runningCount: 1,
-      pendingCount: 0, taskDefinition: 'task-definition:1', deployments: [{ rolloutState: 'COMPLETED' }] }] },
+      pendingCount: 0, taskDefinition: 'task-definition:1', deployments: [{ rolloutState: 'COMPLETED' }],
+      loadBalancers: [{ containerName: service, containerPort: 8589, targetGroupArn: group }] }] },
     tasks: { failures: [], tasks: [{ taskArn: 'task:1', taskDefinitionArn: 'task-definition:1', lastStatus: 'RUNNING', desiredStatus: 'RUNNING',
       containers: [{ name: service, imageDigest: remoteEnv.EXPECTED_IMAGE_DIGEST }] }] },
     targets: { ScalableTargets: mode === 'v2' ? [] : [{ ResourceId: resourceId, MinCapacity: 1, MaxCapacity: 6,
       SuspendedState: { DynamicScalingInSuspended: false, DynamicScalingOutSuspended: false, ScheduledScalingSuspended: false } }] },
     policies: { ScalingPolicies: mode === 'v2' ? [] : [{ ResourceId: resourceId, PolicyType: 'TargetTrackingScaling',
       TargetTrackingScalingPolicyConfiguration: { TargetValue: 3000,
-        PredefinedMetricSpecification: { PredefinedMetricType: 'ALBRequestCountPerTarget' } } }] } };
+        PredefinedMetricSpecification: { PredefinedMetricType: 'ALBRequestCountPerTarget',
+          ResourceLabel: `app/blocbuy-swe5001/123/targetgroup/${service}/456` } } }] },
+    routing: { edge: { id: 'E3N39GHVFV6CT3', domainName: 'shop.example', status: 'Deployed', enabled: true,
+      behaviors: [{ pathPattern: '/api/*', targetOriginId: 'alb-runtime', functions: 0, lambdas: 0,
+        cachePolicyId: '4135ea2d-6df8-44a3-9df3-4b5a84be39ad' }],
+      origins: [{ id: 'alb-runtime', domainName: 'runtime.elb.amazonaws.com', path: '', protocolPolicy: 'http-only', httpPort: 80, httpsPort: 443 }] },
+    targetGroups: [{ arn: group, loadBalancerArns: [alb], port: 8589, protocol: 'HTTP' }],
+    loadBalancers: [{ arn: alb, dnsName: 'runtime.elb.amazonaws.com', type: 'application', state: 'active' }],
+    listeners: [{ arn: listener, loadBalancerArn: alb, port: 80, protocol: 'HTTP' }], rulesListenerArn: listener,
+    rules: [{ priority: '100', isDefault: false, hasTransforms: false, hasPathRegex: false,
+      pathPatterns: ['/api/*'], conditionFields: ['path-pattern', 'http-header'], originHeaderMatches: true,
+      actions: [{ type: 'forward', targetGroupArn: group, forwardGroups: [{ arn: group, weight: 1 }] }] },
+    { priority: 'default', isDefault: true, actions: [{ type: 'fixed-response' }] }] } };
 }
 test('AWS preflight accepts only the stable observed task and reviewed digest', () => {
   const config = configure(remoteEnv);
@@ -186,10 +202,64 @@ test('V3 verifies the active bounds, metric and calibrated per-minute target', (
   for (const mutate of [p => p.targets.ScalableTargets[0].MinCapacity = 2,
     p => p.targets.ScalableTargets[0].SuspendedState.DynamicScalingOutSuspended = true,
     p => p.policies.ScalingPolicies[0].TargetTrackingScalingPolicyConfiguration.TargetValue = 200,
+    p => p.policies.ScalingPolicies[0].TargetTrackingScalingPolicyConfiguration.PredefinedMetricSpecification.ResourceLabel = 'app/other/targetgroup/other',
     p => p.policies.ScalingPolicies = []]) {
     const p = preflight('v3'); mutate(p);
     assert.throws(() => validatePreflight(p, config));
   }
+});
+test('preflight binds CloudFront API origin, ALB listener and ECS target group', () => {
+  for (const mutate of [p => delete p.routing,
+    p => p.routing.edge.behaviors[0].targetOriginId = 'other-origin',
+    p => p.routing.edge.origins[0].domainName = 'other-runtime.elb.amazonaws.com',
+    p => p.routing.edge.origins[0].path = '/other-deployment',
+    p => p.routing.targetGroups[0].loadBalancerArns[0] = 'other-alb',
+    p => p.services.services[0].loadBalancers[0].targetGroupArn = 'other-group',
+    p => p.routing.listeners[0].port = 443,
+    p => p.routing.rulesListenerArn = 'other-listener',
+    p => p.routing.rules[0].actions[0].targetGroupArn = 'other-group',
+    p => p.routing.rules[0].originHeaderMatches = false]) {
+    const p = preflight(); mutate(p);
+    assert.throws(() => validatePreflight(p, configure(remoteEnv)), /route/);
+  }
+});
+test('routing rejects overrides, rewrites, caching and weighted alternate destinations', () => {
+  for (const mutate of [p => p.routing.edge.status = 'InProgress',
+    p => p.routing.edge.behaviors.unshift({ pathPattern: '/api/v1/products*', targetOriginId: 'other' }),
+    p => p.routing.edge.behaviors[0].functions = 1,
+    p => p.routing.edge.behaviors[0].lambdas = 1,
+    p => p.routing.edge.behaviors[0].cachePolicyId = 'cached',
+    p => p.routing.rules[0].hasTransforms = true,
+    p => p.routing.rules[0].hasPathRegex = true,
+    p => p.routing.rules[0].actions[0].forwardGroups.push({ arn: 'other-group', weight: 1 }),
+    p => p.routing.rules.push({ isDefault: false, priority: '1', hasPathRegex: false,
+      conditionFields: ['path-pattern'], pathPatterns: ['/api/v1/products*'], actions: [{ type: 'forward', targetGroupArn: 'other-group' }] })]) {
+    const p = preflight(); mutate(p);
+    assert.throws(() => validatePreflight(p, configure(remoteEnv)), /route/);
+  }
+});
+test('declared disjoint service routes cannot intercept the catalogue route', () => {
+  const p = preflight('v3');
+  p.routing.rules.unshift({ isDefault: false, priority: '5', hasPathRegex: false,
+    conditionFields: ['path-pattern'], pathPatterns: ['/internal/*', '/api/internal/*'] });
+  p.routing.rules.unshift({ isDefault: false, priority: '10', hasPathRegex: false,
+    conditionFields: ['path-pattern', 'http-header'], pathPatterns: ['/api/v1/auth/*', '/api/v1/users/*'] });
+  p.routing.rules.unshift({ isDefault: false, priority: '20', hasPathRegex: false,
+    conditionFields: ['path-pattern', 'http-header'], pathPatterns: ['/api/v1/notifications*'] });
+  validatePreflight(p, configure({ ...remoteEnv, MODE: 'v3', TOPOLOGY: 'distributed', KNEE_RPS: '50' }));
+});
+test('direct and single-group forwards remain bound to the actual origin protocol/port', () => {
+  const p = preflight();
+  delete p.routing.rules[0].actions[0].forwardGroups;
+  validatePreflight(p, configure(remoteEnv));
+  p.routing.edge.origins[0].protocolPolicy = 'https-only';
+  p.routing.listeners[0].protocol = 'HTTPS';
+  p.routing.listeners[0].port = 443;
+  validatePreflight(p, configure(remoteEnv));
+  p.routing.edge.origins[0].protocolPolicy = 'match-viewer';
+  validatePreflight(p, configure(remoteEnv));
+  p.routing.rules[0].actions[0].forwardGroups = [{ arn: 'other-group', weight: 1 }];
+  assert.throws(() => validatePreflight(p, configure(remoteEnv)), /route/);
 });
 test('remote calibration refuses missing preflight/timing and retains the reviewed digest', () => {
   const now = Date.now();

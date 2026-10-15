@@ -75,6 +75,8 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 
 ### V3 HTTP auto-scaling
 
+2026-10-16 (#506 review): public distribution hostname and ECS observations alone did not establish the load route. Preflight now binds the deployed, uncached CloudFront `/api/*` behavior to the ECS-attached target group, ALB DNS/listener and header-matching forwarding rule; V3's scaling resource label must identify that same ALB/group. The guard rejects unsupported behavior overrides, rewrites, overlapping paths and weighted alternate targets rather than simulating arbitrary AWS routing. Header values are compared only in private temporary inputs and omitted from snapshots. [Verification evidence](../agile/sprint-04/log/2026-10-16.md) distinguishes offline regressions from still-pending live route/capacity checks.
+
 - Autoscaling on; k6 ramps from 20% to 300% of the baseline knee over 15 minutes, holds 10 minutes, ramps down.
 - Thresholds: error rate < 1%; p95 < 800 ms outside the 3 minutes after each scale-out.
 - Expected: `commerce-svc` scales from 1 towards 6 tasks; throughput from 1 to 4 tasks within 80% of linear.

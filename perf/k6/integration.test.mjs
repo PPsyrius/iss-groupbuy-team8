@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync, spawn } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { setTimeout } from 'node:timers/promises';
@@ -90,6 +90,29 @@ test('real k6 refuses a broken setup envelope', { timeout: 120000 }, async () =>
     const result = await run([...args, '--env', 'MODE=smoke', '--env', 'TOPOLOGY=local-fixture', '/repo/perf/k6/browse.js']);
     assert.notEqual(result.status, 0);
     assert.match(result.output, /no usable Result/);
+  });
+});
+test('real k6 rejects an unbound remote route before its first HTTP request', { timeout: 120000 }, async () => {
+  await fixture('good', async ({ name, output, args }) => {
+    const digest = `sha256:${'c'.repeat(64)}`;
+    const baseUrl = 'https://d3lvq02o2e7tcn.cloudfront.net';
+    writeFileSync(join(output, 'preflight.json'), JSON.stringify({ schema: 1,
+      account: '402178232802', region: 'ap-southeast-1', cluster: 'blocbuy-swe5001', mode: 'v2',
+      baseUrl, collectedAt: new Date().toISOString(), toolingSha: 'a'.repeat(40),
+      services: { failures: [], services: [{ serviceName: 'monolith', status: 'ACTIVE', desiredCount: 1,
+        runningCount: 1, pendingCount: 0, taskDefinition: 'task-definition:1', deployments: [{ rolloutState: 'COMPLETED' }] }] },
+      tasks: { failures: [], tasks: [{ taskArn: 'task:1', taskDefinitionArn: 'task-definition:1', lastStatus: 'RUNNING',
+        desiredStatus: 'RUNNING', containers: [{ name: 'monolith', imageDigest: digest }] }] },
+    }));
+    const remote = args.map(arg => arg === 'BASE_URL=http://localhost:8080' ? `BASE_URL=${baseUrl}` : arg);
+    const result = await run([...remote, '--env', `CONFIRM_TARGET=${baseUrl}`, '--env', `EXPECTED_IMAGE_DIGEST=${digest}`,
+      '--env', 'PREFLIGHT_PATH=/results/preflight.json', '--env', 'MODE=v2', '--env', 'TOPOLOGY=monolith', '/repo/perf/k6/browse.js']);
+    assert.notEqual(result.status, 0);
+    assert.match(result.output, /Unverified CloudFront\/ALB route/);
+    const report = JSON.parse(readFileSync(join(output, 'summary.json'), 'utf8'));
+    assert.equal(report.summary.metrics.http_reqs?.values?.count ?? 0, 0);
+    const stats = JSON.parse(docker(['exec', name, 'node', '-e', 'fetch("http://localhost:8080/stats").then(r=>r.text()).then(console.log)']));
+    assert.deepEqual(stats, { list: 0, detail: 0, other: 0 });
   });
 });
 test('real k6 fails thresholds for 200 error envelopes during the workload', { timeout: 120000 }, async () => {
