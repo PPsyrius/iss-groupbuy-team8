@@ -130,3 +130,29 @@ TASK_ARN=$task EXIT_CODE=2 LOG_TEXT='ERROR:  boom' \
   check 'grant fails when the task fails' fail "grant task exited with '2'" grant-admin.sh admin@example.com
 TASK_ARN=$task EXIT_CODE=0 LOG_TEXT='' \
   check 'grant rejects a non-email' fail 'not an email address' grant-admin.sh "x' or '1'='1"
+
+# connection-budget.sh reads fixed settings through the same private reporting task.
+budget='{"maxConnections":150,"reservedConnections":3}'
+TASK_ARN=$task EXIT_CODE=0 LOG_TEXT="$budget${tab}connection-budget: done" \
+  check 'budget prints observed JSON only' ok "$budget" connection-budget.sh
+command=$(jq -r '.containerOverrides[0].command[2]' "$work/overrides.json")
+[[ "$command" == *"current_setting('max_connections')"* && "$command" == *"current_setting('reserved_connections')"* ]]
+if grep -Eiq '\b(insert|update|delete|truncate|drop|alter|create|grant|revoke)\b' <<< "$command"; then
+  printf 'FAIL budget SQL must be read-only\n' >&2
+  exit 1
+fi
+jq -e '.containerOverrides[0].environment | any(.name == "PGOPTIONS" and .value == "-c default_transaction_read_only=on")' \
+  "$work/overrides.json" > /dev/null
+printf 'PASS budget uses fixed read-only settings SQL\n'
+TASK_ARN=$task EXIT_CODE=0 LOG_TEXT="$budget" \
+  check 'budget rejects partial output' fail 'output is incomplete' connection-budget.sh
+TASK_ARN=$task EXIT_CODE=1 LOG_TEXT="$budget${tab}connection-budget: done" \
+  check 'budget completion cannot hide task failure' fail 'task failed' connection-budget.sh
+TASK_ARN=$task EXIT_CODE=0 LOG_TEXT='connection-budget: done' \
+  check 'budget requires data as well as completion' fail 'invalid connection-budget report' connection-budget.sh
+TASK_ARN=$task EXIT_CODE=0 LOG_TEXT="{}${tab}connection-budget: done" \
+  check 'budget rejects missing settings' fail 'invalid connection-budget report' connection-budget.sh
+TASK_ARN=$task EXIT_CODE=0 LOG_TEXT="$budget${tab}$budget${tab}connection-budget: done" \
+  check 'budget rejects duplicate reports' fail 'invalid connection-budget report' connection-budget.sh
+TASK_ARN=$task EXIT_CODE=0 LOG_TEXT='' \
+  check 'budget accepts no SQL arguments' fail 'usage: connection-budget.sh' connection-budget.sh 'injected SQL'
