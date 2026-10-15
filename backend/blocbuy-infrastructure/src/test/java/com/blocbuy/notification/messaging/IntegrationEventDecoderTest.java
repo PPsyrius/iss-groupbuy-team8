@@ -143,6 +143,44 @@ class IntegrationEventDecoderTest {
         assertMalformed(emptyPayload.toString(), EVENT);
     }
 
+    @Test
+    void nonPositiveVersionOfASupportedTypeIsMalformedButOfAnUnknownTypeIsIgnored() {
+        assertMalformed(
+                "{\"eventId\":\"" + EVENT + "\",\"eventType\":\"TeamSucceeded\",\"version\":0}",
+                EVENT);
+        assertMalformed("{\"eventType\":\"PaymentSucceeded\",\"version\":-1}", null);
+        assertThat(decoder.decode("{\"eventType\":\"OrderShipped\",\"version\":0}").supported())
+                .isFalse();
+    }
+
+    @Test
+    void malformedReasonsNameTheFieldPathButNeverTheValue() {
+        ObjectNode badOperation = tree(envelope("PaymentSucceeded", 1, payment("START")));
+        ((ObjectNode) badOperation.get("payload")).put("operation", "SECRET-VALUE");
+        assertThatThrownBy(() -> decoder.decode(badOperation.toString()))
+                .isInstanceOf(MalformedIntegrationEventException.class)
+                .hasMessageStartingWith(
+                        "envelope or payload does not match PaymentSucceeded v1 at payload")
+                .hasMessageNotContaining("SECRET-VALUE");
+
+        ObjectNode badRecipient =
+                tree(
+                        envelope(
+                                "TeamExpired",
+                                1,
+                                new TeamExpiredV1(TEAM, UUID.randomUUID(), AT, List.of(A))));
+        ((ObjectNode) badRecipient.get("payload"))
+                .putArray("recipientUserIds")
+                .add("not-a-uuid-SECRET");
+        assertThatThrownBy(() -> decoder.decode(badRecipient.toString()))
+                .isInstanceOf(MalformedIntegrationEventException.class)
+                .hasMessageContaining("payload.recipientUserIds[0]")
+                .hasMessageNotContaining("SECRET");
+
+        assertThat(IntegrationEventDecoder.fieldPath(new IllegalArgumentException("x")))
+                .isEqualTo("(no field path)");
+    }
+
     private void assertMalformed(String body, UUID expectedEventId) {
         assertThatThrownBy(() -> decoder.decode(body))
                 .isInstanceOfSatisfying(
