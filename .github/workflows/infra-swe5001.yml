@@ -125,6 +125,9 @@ jobs:
       - name: Verify one-off db-init scripts (session report, admin grant)
         run: bash infra/swe5001/scripts/test-db-init-task.sh
 
+      - name: Verify read-only HTTP preflight capture
+        run: bash infra/swe5001/scripts/test-http-preflight.sh
+
       - name: Verify service controls, messaging readiness and bootstrap sequencing
         run: bash infra/swe5001/scripts/test-messaging-readiness.sh
 
