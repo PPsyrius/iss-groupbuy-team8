@@ -157,7 +157,8 @@ class IntegrationEventDecoderTest {
     void malformedReasonsNameTheFieldPathButNeverTheValue() {
         ObjectNode badOperation = tree(envelope("PaymentSucceeded", 1, payment("START")));
         ((ObjectNode) badOperation.get("payload")).put("operation", "SECRET-VALUE");
-        assertThatThrownBy(() -> decoder.decode(badOperation.toString()))
+        String badOperationJson = badOperation.toString();
+        assertThatThrownBy(() -> decoder.decode(badOperationJson))
                 .isInstanceOf(MalformedIntegrationEventException.class)
                 .hasMessageStartingWith(
                         "envelope or payload does not match PaymentSucceeded v1 at payload")
@@ -172,7 +173,8 @@ class IntegrationEventDecoderTest {
         ((ObjectNode) badRecipient.get("payload"))
                 .putArray("recipientUserIds")
                 .add("not-a-uuid-SECRET");
-        assertThatThrownBy(() -> decoder.decode(badRecipient.toString()))
+        String badRecipientJson = badRecipient.toString();
+        assertThatThrownBy(() -> decoder.decode(badRecipientJson))
                 .isInstanceOf(MalformedIntegrationEventException.class)
                 .hasMessageContaining("payload.recipientUserIds[0]")
                 .hasMessageNotContaining("SECRET");

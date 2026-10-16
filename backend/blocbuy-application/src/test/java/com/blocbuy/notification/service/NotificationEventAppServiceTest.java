@@ -113,7 +113,8 @@ class NotificationEventAppServiceTest {
         when(ledger.markConsumed(EVENT, CONSUMER)).thenReturn(true);
         when(notifications.recordBatch(anyList())).thenThrow(new IllegalStateException("db down"));
 
-        assertThatThrownBy(() -> service.handle(CONSUMER, teamSucceeded(List.of(A))))
+        NotificationEvent event = teamSucceeded(List.of(A));
+        assertThatThrownBy(() -> service.handle(CONSUMER, event))
                 .isInstanceOf(IllegalStateException.class);
     }
 

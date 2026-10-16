@@ -19,6 +19,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.DisposableBean;
@@ -69,9 +70,11 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
     private final Semaphore freeWorkers;
     private final Set<Message> inFlight = ConcurrentHashMap.newKeySet();
     private final AtomicBoolean running = new AtomicBoolean();
-    private volatile ExecutorService workers;
-    private volatile Thread poller;
-    private volatile CountDownLatch stopSignal = new CountDownLatch(0);
+    // Set on start() and read from the poller, the workers and stop()/destroy().
+    private final AtomicReference<ExecutorService> workers = new AtomicReference<>();
+    private final AtomicReference<Thread> poller = new AtomicReference<>();
+    private final AtomicReference<CountDownLatch> stopSignal =
+            new AtomicReference<>(new CountDownLatch(0));
 
     @SuppressFBWarnings("EI_EXPOSE_REP2") // Owns the client; the rest are shared thread-safe beans.
     public SqsNotificationEventConsumer(
@@ -93,17 +96,18 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
         if (!running.compareAndSet(false, true)) {
             return;
         }
-        stopSignal = new CountDownLatch(1);
+        stopSignal.set(new CountDownLatch(1));
         AtomicInteger sequence = new AtomicInteger();
-        workers =
+        workers.set(
                 Executors.newFixedThreadPool(
                         settings.concurrency(),
                         task ->
                                 new Thread(
                                         task,
-                                        "notification-consumer-" + sequence.incrementAndGet()));
-        poller = new Thread(this::pollUntilStopped, "notification-consumer-poller");
-        poller.start();
+                                        "notification-consumer-" + sequence.incrementAndGet())));
+        Thread pollerThread = new Thread(this::pollUntilStopped, "notification-consumer-poller");
+        poller.set(pollerThread);
+        pollerThread.start();
         log.info(
                 "Notification consumer started consumer={} concurrency={} waitTime={}"
                         + " visibilityTimeout={}",
@@ -119,12 +123,12 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
             return;
         }
         // No poller.interrupt(): it would abort the SDK call and any release on that thread.
-        stopSignal.countDown();
-        workers.shutdown();
+        stopSignal.get().countDown();
+        workers.get().shutdown();
         if (!awaitWorkers(settings.shutdownTimeout().toMillis())) {
             // Snapshot first: interrupted workers remove themselves from the in-flight set.
             List<Message> unfinished = List.copyOf(inFlight);
-            workers.shutdownNow();
+            workers.get().shutdownNow();
             log.warn(
                     "Notification consumer stopped with {} unfinished messages; releasing them",
                     unfinished.size());
@@ -138,7 +142,7 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
 
     private boolean awaitWorkers(long millis) {
         try {
-            return workers.awaitTermination(millis, TimeUnit.MILLISECONDS);
+            return workers.get().awaitTermination(millis, TimeUnit.MILLISECONDS);
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             return false;
@@ -153,7 +157,7 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
     @Override
     public void destroy() {
         stop();
-        Thread current = poller;
+        Thread current = poller.get();
         if (current != null) {
             try {
                 current.join(POLLER_JOIN_MILLIS);
@@ -192,7 +196,7 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
     /** Waits for a stop or the timeout; returns {@code true} when stopped. */
     private boolean pause(Duration duration) {
         try {
-            return stopSignal.await(duration.toMillis(), TimeUnit.MILLISECONDS);
+            return stopSignal.get().await(duration.toMillis(), TimeUnit.MILLISECONDS);
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             return true;
@@ -270,15 +274,16 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
     private boolean dispatch(Message message) {
         inFlight.add(message);
         try {
-            workers.execute(
-                    () -> {
-                        try {
-                            process(message);
-                        } finally {
-                            inFlight.remove(message);
-                            freeWorkers.release();
-                        }
-                    });
+            workers.get()
+                    .execute(
+                            () -> {
+                                try {
+                                    process(message);
+                                } finally {
+                                    inFlight.remove(message);
+                                    freeWorkers.release();
+                                }
+                            });
             return true;
         } catch (RejectedExecutionException exception) {
             inFlight.remove(message);
