@@ -1,0 +1,16 @@
+[
+    {
+        "task": "arn:aws:ecs:ap-southeast-1:402178232802:task/blocbuy-swe5001/4ca5adf3b61a4807b2e411c9d8edcf42",
+        "AZ": "ap-southeast-1a",
+        "status": "RUNNING",
+        "health": "HEALTHY",
+        "revision": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:4"
+    },
+    {
+        "task": "arn:aws:ecs:ap-southeast-1:402178232802:task/blocbuy-swe5001/c44898cbb6824982bc2e0ccec60cb23c",
+        "AZ": "ap-southeast-1b",
+        "status": "RUNNING",
+        "health": "HEALTHY",
+        "revision": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:4"
+    }
+]
