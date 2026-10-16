@@ -14,6 +14,8 @@ import com.blocbuy.identity.service.UserAppServiceImpl;
 import com.blocbuy.identity.web.AuthController;
 import com.blocbuy.identity.web.internal.InternalUserController;
 import com.blocbuy.integration.outbox.IntegrationOutboxWriter;
+import com.blocbuy.notification.event.NotificationEventHandler;
+import com.blocbuy.notification.messaging.SqsNotificationEventConsumer;
 import com.blocbuy.notification.web.NotificationController;
 import com.blocbuy.platform.TopologyProperties;
 import org.junit.jupiter.api.Test;
@@ -41,7 +43,9 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
             "spring.data.redis.port=1",
             // switched on to prove the outbox relay stays a commerce-only assembly (ADR 0007)
             "blocbuy.events.enabled=true",
-            "blocbuy.events.relay.enabled=true"
+            "blocbuy.events.relay.enabled=true",
+            // and the notification consumer: identity never scans notification packages
+            "blocbuy.events.consumer.enabled=true"
         })
 @ActiveProfiles({"local", "identity"})
 @Testcontainers
@@ -72,6 +76,8 @@ class IdentityServiceApplicationIT {
         assertThat(context.getBeanNamesForType(ProductController.class)).isEmpty();
         assertThat(context.getBeanNamesForType(BizProductMapper.class)).isEmpty();
         assertThat(context.getBeanNamesForType(NotificationController.class)).isEmpty();
+        assertThat(context.getBeanNamesForType(NotificationEventHandler.class)).isEmpty();
+        assertThat(context.getBeanNamesForType(SqsNotificationEventConsumer.class)).isEmpty();
         assertThat(context.getBeanNamesForType(MyBatisConfig.class)).isEmpty();
         assertThat(context.getBeanNamesForType(OutboxRelayJob.class)).isEmpty();
         assertThat(context.getBeanNamesForType(OutboxEventTransport.class)).isEmpty();
