@@ -1,0 +1,68 @@
+---
+title: "Process level - UC3 initiate / UC4 join: purchase intent, checkout and webhook settlement"
+---
+flowchart LR
+  classDef event fill:#FFA040,stroke:#B85C00,color:#1A1A1A
+  classDef eventRec fill:#FFA040,stroke:#5C2E00,stroke-width:4px,color:#1A1A1A,font-weight:bold
+  classDef proposed fill:#FFE3C2,stroke:#B85C00,stroke-dasharray:6 4,color:#1A1A1A
+  classDef cmd fill:#6FB4F2,stroke:#1565C0,color:#1A1A1A
+  classDef actor fill:#FFEF5A,stroke:#A38F00,color:#1A1A1A
+  classDef agg fill:#FFF6C2,stroke:#A38F00,color:#1A1A1A
+  classDef policy fill:#D7B4F3,stroke:#6A1B9A,color:#1A1A1A
+  classDef rm fill:#A8DDA8,stroke:#2E7D32,color:#1A1A1A
+  classDef ext fill:#F7B6D2,stroke:#9C1A5A,color:#1A1A1A
+  classDef hot fill:#D81B60,stroke:#7A0036,color:#FFFFFF
+
+  subgraph S1["A. Quote the purchase - synchronous, browser-driven"]
+    RM_L[/"Listing detail:<br/>team price, open team,<br/>seats left, deadline"/]:::rm
+    Buyer(["Buyer<br/>(leader or joiner)"]):::actor
+    C_Intent["Create Purchase Intent<br/>POST /payments/intents<br/>START productId | JOIN dealId"]:::cmd
+    A_Intent["PurchaseIntent<br/>(order)"]:::agg
+    E_Intent["Purchase Intent Issued<br/>amount, size, deadlines frozen"]:::event
+    C_Checkout["Create Checkout Session<br/>POST /payments/checkout-sessions"]:::cmd
+    A_Pay["CheckoutPayment<br/>(payment) CREATED"]:::agg
+    E_Session["Checkout Session Created"]:::event
+  end
+
+  subgraph S2["B. Settle the payment - one local transaction, locks team, intent, order, payment"]
+    Stripe[["Stripe hosted<br/>checkout"]]:::ext
+    C_Hook["Handle Stripe Event<br/>POST /webhooks/stripe<br/>signature verified"]:::cmd
+    P_Dedup["Policy: claim event id<br/>once, else acknowledge"]:::policy
+    A_Pay2["CheckoutPayment<br/>succeed()"]:::agg
+    E_Paid["PaymentSucceeded"]:::eventRec
+    P_Fulfil["Policy: whenever a payment<br/>succeeds, fulfil its intent<br/>(PaymentBusinessPort.fulfil)"]:::policy
+    A_Deal["GroupDeal<br/>startPaid / joinPaid"]:::agg
+    E_Started["Team Started"]:::event
+    E_Joined["Member Joined"]:::event
+    A_Order["Order.create<br/>(pending)"]:::agg
+    E_Order["Order Placed"]:::event
+    E_Fulfilled["Purchase Intent<br/>Fulfilled"]:::event
+    A_Product["Product<br/>consume one unit"]:::agg
+    E_Stock["Stock Unit Consumed"]:::event
+    E_Succ["TeamSucceeded<br/>(when size = target)"]:::eventRec
+    E_Rej["Fulfilment Rejected<br/>BUSINESS_EXPIRED | GROUP_REJECTED |<br/>BUYER_INACTIVE | PRODUCT_UNAVAILABLE"]:::event
+    P_Refund["Policy: whenever fulfilment<br/>is rejected, owe a refund"]:::policy
+    E_Owed["Refund Obligation Recorded"]:::event
+    E_Link["Invite Link Issued"]:::proposed
+  end
+
+  RM_P[/"Payment receipt<br/>GET /payments/id"/]:::rm
+  H1["HOT SPOT: last-slot race -<br/>row lock on team; loser is<br/>rejected and refunded"]:::hot
+  H2["HOT SPOT: replayed webhook -<br/>event claim + one order<br/>per payment index"]:::hot
+  H3["HOT SPOT: stock gone at commit -<br/>throw, roll back, Stripe retries"]:::hot
+
+  RM_L --> Buyer --> C_Intent --> A_Intent --> E_Intent --> C_Checkout --> A_Pay --> E_Session --> Stripe
+  Stripe --> C_Hook --> P_Dedup --> A_Pay2 --> E_Paid --> P_Fulfil
+  P_Fulfil --> A_Deal
+  A_Deal --> E_Started
+  A_Deal --> E_Joined
+  E_Started --> A_Order
+  E_Joined --> A_Order
+  A_Order --> E_Order --> E_Fulfilled --> A_Product --> E_Stock
+  E_Joined --> E_Succ
+  P_Fulfil --> E_Rej --> P_Refund --> E_Owed
+  E_Started -.-> E_Link
+  E_Stock --> RM_P
+  H1 -.- A_Deal
+  H2 -.- P_Dedup
+  H3 -.- A_Product

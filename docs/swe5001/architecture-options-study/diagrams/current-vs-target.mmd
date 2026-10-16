@@ -1,0 +1,44 @@
+---
+title: Current modular monolith vs target (strangler) deployables
+---
+flowchart LR
+  subgraph CUR["Current: one deployable (COLA modular monolith)"]
+    direction TB
+    m["blocbuy-bootstrap.jar on EC2 t3.medium"]
+    m --- ci["identity"]
+    m --- cc["catalog"]
+    m --- cg["groupbuy"]
+    m --- co["order"]
+    m --- cp["payment"]
+    m --- cn["notification (stub)"]
+    pg[("PostgreSQL container<br/>schema domain, 22 tables")]
+    rd[("Redis container")]
+    m --> pg
+    m --> rd
+  end
+
+  subgraph TGT["Target on ECS Fargate (names from 06 §6)"]
+    direction TB
+    ti["identity-service<br/>(stretch P5.2)"]
+    tc["catalog-service<br/>(P3)"]
+    subgraph TPC["team-purchase-service container until P5.1"]
+      tm["team-purchase-service<br/>groupbuy + order"]
+      tp["payment-service<br/>(module, own schema;<br/>extracted in P5.1)"]
+    end
+    tn["notification-service<br/>(P2)"]
+    tg["growth-service<br/>analytics half: Firehose + Athena (P2)"]
+    ev{{"SNS + SQS<br/>via transactional outbox"}}
+    db[("RDS PostgreSQL<br/>schema per service")]
+    ec[("ElastiCache<br/>shared sessions")]
+    ti & tc & TPC & tn --> db
+    ti & tc & TPC & tn --> ec
+    ti & tc & TPC --> ev
+    ev --> tc & TPC & tn & tg
+  end
+
+  ci ==> ti
+  cc ==> tc
+  cg ==>|one context| tm
+  co ==>|one context| tm
+  cp ==> tp
+  cn ==> tn

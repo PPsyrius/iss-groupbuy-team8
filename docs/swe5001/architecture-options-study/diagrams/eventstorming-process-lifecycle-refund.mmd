@@ -1,0 +1,74 @@
+---
+title: "Process level - UC5 team lifecycle and UC6 refund on expiry"
+---
+flowchart LR
+  classDef event fill:#FFA040,stroke:#B85C00,color:#1A1A1A
+  classDef eventRec fill:#FFA040,stroke:#5C2E00,stroke-width:4px,color:#1A1A1A,font-weight:bold
+  classDef proposed fill:#FFE3C2,stroke:#B85C00,stroke-dasharray:6 4,color:#1A1A1A
+  classDef cmd fill:#6FB4F2,stroke:#1565C0,color:#1A1A1A
+  classDef actor fill:#FFEF5A,stroke:#A38F00,color:#1A1A1A
+  classDef agg fill:#FFF6C2,stroke:#A38F00,color:#1A1A1A
+  classDef policy fill:#D7B4F3,stroke:#6A1B9A,color:#1A1A1A
+  classDef rm fill:#A8DDA8,stroke:#2E7D32,color:#1A1A1A
+  classDef ext fill:#F7B6D2,stroke:#9C1A5A,color:#1A1A1A
+  classDef hot fill:#D81B60,stroke:#7A0036,color:#FFFFFF
+  classDef time fill:#E1D5F5,stroke:#6A1B9A,stroke-dasharray:3 3,color:#1A1A1A
+
+  subgraph R1["A. Resolve the team - groupbuy publishes inside the transition transaction"]
+    T_Sweep(("TeamExpirySweepJob<br/>every 1 min,<br/>DB lease")):::time
+    RM_Due[/"Due teams: open and<br/>expire_time passed<br/>(max 100, retry backoff)"/]:::rm
+    C_Expire["Expire Team<br/>GroupDealExpiryService.expireOne"]:::cmd
+    A_Deal["GroupDeal.expire(now)<br/>DealStatus OPEN to EXPIRED"]:::agg
+    E_Exp["TeamExpired"]:::eventRec
+    FromJoin(("from settlement:<br/>last seat filled")):::time
+    E_Succ["TeamSucceeded"]:::eventRec
+  end
+
+  subgraph R2["B. Consequences - BEFORE_COMMIT subscribers, order 10 then payment 20"]
+    P_Confirm["Policy (order):<br/>whenever a team succeeds,<br/>confirm its orders"]:::policy
+    P_Cancel["Policy (order):<br/>whenever a team expires,<br/>cancel its orders"]:::policy
+    A_Order["Order<br/>confirm / cancel"]:::agg
+    E_Conf["Orders Confirmed"]:::event
+    E_Canc["Orders Cancelled"]:::event
+    P_Owe["Policy (payment):<br/>whenever a team expires,<br/>owe each paid member a refund"]:::policy
+    C_Record["Record Expired Team<br/>TeamExpiryRefundService"]:::cmd
+    A_Ref["Refund obligation<br/>(biz_refund, one per payment)"]:::agg
+    E_Owed["Refund Obligation Recorded"]:::event
+  end
+
+  subgraph R3["C. Execute the refund - payment worker, provider I/O outside DB transactions"]
+    T_Worker(("RefundWorkerJob<br/>one claim per tick")):::time
+    C_Proc["Process Next Refund<br/>RefundService.processNext"]:::cmd
+    A_Ref2["RefundWork<br/>pending to processing"]:::agg
+    Stripe[["Stripe Refunds API<br/>idempotency key"]]:::ext
+    E_Done["Refund Succeeded"]:::event
+    E_Retry["Refund Attempt Failed<br/>retry due"]:::event
+    E_Rev["Refund Sent to Review"]:::event
+    RM_Rev[/"Payment review queue"/]:::rm
+    Op(["Operator"]):::actor
+    C_Recon["Reconcile Refund<br/>(verify existing re_ id only)"]:::cmd
+    E_Notify["Buyer Notified"]:::proposed
+  end
+
+  RM_Mine[/"My orders<br/>GET /orders/me"/]:::rm
+  H1["HOT SPOT: sweeper and webhook<br/>race on one team - both lock<br/>the team row first"]:::hot
+  H2["HOT SPOT: after 23 h never<br/>create a refund again, search<br/>then send to review"]:::hot
+  H3["HOT SPOT: switch off by default;<br/>obligations wait in pending"]:::hot
+
+  T_Sweep --> RM_Due --> C_Expire --> A_Deal --> E_Exp
+  FromJoin --> E_Succ --> P_Confirm --> A_Order
+  E_Exp --> P_Cancel --> A_Order
+  A_Order --> E_Conf
+  A_Order --> E_Canc
+  E_Exp --> P_Owe --> C_Record --> A_Ref --> E_Owed
+  E_Owed --> T_Worker --> C_Proc --> A_Ref2 --> Stripe
+  Stripe --> E_Done
+  Stripe --> E_Retry -.-> T_Worker
+  Stripe --> E_Rev --> RM_Rev --> Op --> C_Recon --> A_Ref2
+  E_Conf --> RM_Mine
+  E_Canc --> RM_Mine
+  E_Done -.-> E_Notify
+  E_Conf -.-> E_Notify
+  H1 -.- A_Deal
+  H2 -.- E_Retry
+  H3 -.- T_Worker
