@@ -377,14 +377,42 @@ data "aws_iam_policy_document" "apply" {
   # AmazonECS_FullAccess covers RegisterScalableTarget but no tagging actions. Provider
   # default_tags make RegisterScalableTarget also authorise TagResource, and the provider
   # reads the tags back after create. Scalable-target ARNs carry a random ID, not a name,
-  # so the scope is the Course tag the stacks apply at creation.
+  # so the scope is the Course tag the stacks apply at creation. TagResource overwrites
+  # an existing value, so a request tag alone would let the role relabel another course's
+  # target: tagging needs either no Course tag yet (creation) or Course=swe5001 already.
   statement {
-    sid       = "TagSwe5001ScalableTargets"
+    sid       = "TagNewSwe5001ScalableTargets"
     actions   = ["application-autoscaling:TagResource"]
     resources = ["arn:aws:application-autoscaling:${var.aws_region}:${var.aws_account_id}:scalable-target/*"]
 
     condition {
       test     = "StringEquals"
+      variable = "aws:RequestTag/Course"
+      values   = ["swe5001"]
+    }
+
+    condition {
+      test     = "Null"
+      variable = "aws:ResourceTag/Course"
+      values   = ["true"]
+    }
+  }
+
+  # Tag updates on an existing SWE5001 target usually omit the unchanged Course tag;
+  # IfExists still stops them from changing it.
+  statement {
+    sid       = "RetagSwe5001ScalableTargets"
+    actions   = ["application-autoscaling:TagResource"]
+    resources = ["arn:aws:application-autoscaling:${var.aws_region}:${var.aws_account_id}:scalable-target/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/Course"
+      values   = ["swe5001"]
+    }
+
+    condition {
+      test     = "StringEqualsIfExists"
       variable = "aws:RequestTag/Course"
       values   = ["swe5001"]
     }
