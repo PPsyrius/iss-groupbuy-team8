@@ -22,7 +22,7 @@ Status: **Draft, revised 2026-10-04** (first draft 2026-09-29; 2026-10-04: apply
 | --- | --- |
 | GitHub OIDC provider `token.actions.githubusercontent.com` | `data "aws_iam_openid_connect_provider"`, as `backend-app-stack/github-oidc.tf` does. An account allows one provider per URL, so SWE5001 must not create another |
 | Terraform state bucket (passed with `-backend-config bucket=...`) | New keys `swe5001/foundation.tfstate`, `swe5001/edge.tfstate`, `swe5001/runtime.tfstate`, with `use_lockfile = true` (S3-native locking; no DynamoDB table needed) |
-| Organisation SCP | Denies `access-analyzer:ValidatePolicy`; IAM changes go through Terraform or the CLI, not the console policy editor |
+| Organisation SCPs | Root: `Org-Baseline` and `Region-Pin`; Sandbox OU: `Sandbox-Guardrails` (cost caps). `Region-Pin` denies everything outside `ap-southeast-1` except global services, so the console policy editor's `access-analyzer:ValidatePolicy` call is denied; IAM changes go through Terraform or the CLI. Add any region exception (for example CloudFront metrics in `us-east-1`) to `Region-Pin` only; layout and history in the [2026-10-16 evidence](evidence/20261016-scp-consolidation/README.md) |
 
 ---
 
