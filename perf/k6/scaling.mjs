@@ -139,15 +139,16 @@ export function analyzeV4(seed, observations, report) {
   while (quietIndex > 0 && empty(values[quietIndex - 1]) && times[quietIndex - 1] >= expires) quietIndex--;
   const drainObserved = backlogObserved && quietIndex > backlogIndex && values.length - quietIndex >= 3 &&
     times.at(-1) - times[quietIndex] >= 30000;
+  const drainAfterScale = scaleIndex >= 0 && quietIndex > scaleIndex;
   const sourceAndEffectsMatch = ['teams', 'expiredTeams', 'outboxEvents', 'publishedEvents', 'notifications', 'consumedEvents']
     .map(key => count(report[key], key)).every(value => value === 2000) && count(report.failedEvents, 'failed outbox events') === 0;
   const dlqStayedEmpty = values.every(dlqEmpty);
   return { schema: 1, runLabel: seed.runLabel, toolingSha: seed.toolingSha, quietStart, sourceAndEffectsMatch,
     hasAwsDeploymentEvidence: seed.account === '402178232802' && seed.region === 'ap-southeast-1' && seed.cluster === 'blocbuy-swe5001' &&
       seed.profile === 'demo' && /^sha256:[0-9a-f]{64}$/.test(seed.commerceDigest || '') && typeof seed.commerceRevision === 'string' && !!seed.commerceRevision,
-    backlogObserved, scaleToFourObserved, drainObserved, dlqStayedEmpty,
+    backlogObserved, scaleToFourObserved, drainObserved, drainAfterScale, dlqStayedEmpty,
     queueAgeCoverageComplete: values.every(q => q.oldestAgeSeconds !== null),
     drainSecondsUpperBound: drainObserved ? (times[quietIndex] - expires) / 1000 : null,
-    passed: quietStart && sourceAndEffectsMatch && backlogObserved && scaleToFourObserved && drainObserved && dlqStayedEmpty,
+    passed: quietStart && sourceAndEffectsMatch && backlogObserved && scaleToFourObserved && drainObserved && drainAfterScale && dlqStayedEmpty,
     note: 'Queue attributes are approximate sampled observations, not a guarantee of future emptiness; retain source/effect reports, task graphs and original CloudWatch evidence.' };
 }

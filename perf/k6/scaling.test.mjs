@@ -139,6 +139,21 @@ test('V4 quiet confirmation restarts on delayed or in-flight messages', () => {
     assert.equal(analyze4(input).drainObserved, false);
   }
 });
+test('V4 requires four tasks before the final quiet suffix begins', () => {
+  assert.equal(analyze4(v4()).drainAfterScale, true);
+  for (const firstFour of [7, 8]) {
+    const input = v4();
+    input.observations.forEach((row, i) => row.notificationTasks = i >= firstFour ? 4 : 1);
+    const result = analyze4(input);
+    assert.equal(result.scaleToFourObserved, true);
+    assert.equal(result.drainObserved, true);
+    assert.equal(result.drainAfterScale, false);
+    assert.equal(result.passed, false);
+  }
+  const noScale = v4();
+  noScale.observations.forEach(row => row.notificationTasks = 1);
+  assert.equal(analyze4(noScale).drainAfterScale, false);
+});
 test('V4 refuses missing counters, malformed timestamps, wrong labels and partial observations', () => {
   for (const mutate of [x => x.seed.teams = 0, x => x.seed.toolingSha = 'wrong', x => x.seed.expiresAt = at(61),
     x => x.report.observedAt = at(30), x => x.report.runLabel = 'other',

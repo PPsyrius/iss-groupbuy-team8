@@ -47,6 +47,8 @@ The analyzer requires exact 2,000 source teams/expired teams/outbox events/publi
 
 ## Local verification and limits
 
+Scale-out must be observed before the final quiet interval starts (`drainAfterScale`); first reaching four tasks during or after that interval fails acceptance, even if the queue drains and all source/effect counts match. If scale-out and the first quiet sample coincide, sampling cannot establish that order and the analyzer fails closed.
+
 ```bash
 node --test perf/k6/lib.test.mjs perf/k6/scaling.test.mjs
 bash infra/swe5001/scripts/test-v4-expiry-seed.sh
