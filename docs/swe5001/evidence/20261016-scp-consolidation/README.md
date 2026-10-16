@@ -70,7 +70,7 @@ Problems found:
 | Readability | ~40 exemptions overridden by another policy | Every statement in force as written |
 | Cost caps | RDS restore/replica bypass; no `aoss:*` | Both closed |
 | Identity Center roles | Unprotected | Create, modify, delete and tag denied for member-account principals; Identity Center provisions through its service-linked role, which SCPs do not restrict |
-| Root user | Not covered by any SCP | Covered by centralized root access (no member root credentials; see Verification), so no SCP is needed |
+| Root user | No dedicated root-user deny | Still no dedicated deny: member root users remain subject to every inherited SCP, and centralized root access has removed their credentials (see Verification), so root is usable only through management-account `sts:AssumeRoot` tasks, which a root deny would block |
 
 ## Change sequence
 
