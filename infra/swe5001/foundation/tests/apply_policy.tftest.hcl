@@ -83,6 +83,77 @@ run "security_group_rule_guardrail" {
   }
 }
 
+run "scalable_target_tagging" {
+  command = plan
+
+  assert {
+    condition = anytrue([
+      for s in data.aws_iam_policy_document.apply.statement :
+      s.sid == "TagNewSwe5001ScalableTargets" && s.effect != "Deny" &&
+      toset(s.actions) == toset(["application-autoscaling:TagResource"]) &&
+      toset(s.resources) == toset(["arn:aws:application-autoscaling:ap-southeast-1:402178232802:scalable-target/*"]) &&
+      anytrue([
+        for c in s.condition :
+        c.test == "StringEquals" && c.variable == "aws:RequestTag/Course" && toset(c.values) == toset(["swe5001"])
+      ]) &&
+      anytrue([
+        for c in s.condition :
+        c.test == "Null" && c.variable == "aws:ResourceTag/Course" && toset(c.values) == toset(["true"])
+      ])
+    ])
+    error_message = "Tagging a scalable target without a Course tag needs Course=swe5001 in the request."
+  }
+
+  assert {
+    condition = anytrue([
+      for s in data.aws_iam_policy_document.apply.statement :
+      s.sid == "RetagSwe5001ScalableTargets" && s.effect != "Deny" &&
+      toset(s.actions) == toset(["application-autoscaling:TagResource"]) &&
+      toset(s.resources) == toset(["arn:aws:application-autoscaling:ap-southeast-1:402178232802:scalable-target/*"]) &&
+      anytrue([
+        for c in s.condition :
+        c.test == "StringEquals" && c.variable == "aws:ResourceTag/Course" && toset(c.values) == toset(["swe5001"])
+      ]) &&
+      anytrue([
+        for c in s.condition :
+        c.test == "StringEqualsIfExists" && c.variable == "aws:RequestTag/Course" && toset(c.values) == toset(["swe5001"])
+      ])
+    ])
+    error_message = "Retagging is limited to targets tagged Course=swe5001 and must not change that tag."
+  }
+
+  # TagResource overwrites values, so no allow may rest on the request tag alone: that
+  # would let the role relabel another course's target.
+  assert {
+    condition = alltrue([
+      for s in data.aws_iam_policy_document.apply.statement :
+      anytrue([
+        for c in s.condition :
+        c.variable == "aws:ResourceTag/Course" && (
+          (c.test == "StringEquals" && toset(c.values) == toset(["swe5001"])) ||
+          (c.test == "Null" && toset(c.values) == toset(["true"]))
+        )
+      ])
+      if s.effect != "Deny" && contains(try(s.actions, []), "application-autoscaling:TagResource")
+    ])
+    error_message = "Every TagResource allow must also check the target's current Course tag."
+  }
+
+  assert {
+    condition = anytrue([
+      for s in data.aws_iam_policy_document.apply.statement :
+      s.sid == "ReadAndUntagSwe5001ScalableTargets" && s.effect != "Deny" &&
+      toset(s.actions) == toset(["application-autoscaling:ListTagsForResource", "application-autoscaling:UntagResource"]) &&
+      toset(s.resources) == toset(["arn:aws:application-autoscaling:ap-southeast-1:402178232802:scalable-target/*"]) &&
+      anytrue([
+        for c in s.condition :
+        c.test == "StringEquals" && c.variable == "aws:ResourceTag/Course" && toset(c.values) == toset(["swe5001"])
+      ])
+    ])
+    error_message = "The apply role may read or remove tags only on scalable targets tagged Course=swe5001."
+  }
+}
+
 run "domain_event_key_boundary" {
   command = plan
   assert {
