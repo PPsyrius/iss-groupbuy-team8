@@ -1,0 +1,22 @@
+[
+    {
+        "resource": "service/blocbuy-swe5001/commerce-svc",
+        "min": 2,
+        "max": 6,
+        "suspended": {
+            "DynamicScalingInSuspended": true,
+            "DynamicScalingOutSuspended": true,
+            "ScheduledScalingSuspended": true
+        }
+    },
+    {
+        "resource": "service/blocbuy-swe5001/notification-svc",
+        "min": 0,
+        "max": 4,
+        "suspended": {
+            "DynamicScalingInSuspended": true,
+            "DynamicScalingOutSuspended": true,
+            "ScheduledScalingSuspended": true
+        }
+    }
+]

@@ -47,6 +47,8 @@ Distributed runtime adds commerce ALB-request target tracking (max 6), a `blocbu
 
 Both GitHub up workflows consume `SWE5001_COMMERCE_MIN_CAPACITY` (default `2`) and `SWE5001_COMMERCE_REQUESTS_PER_TARGET` (provisional default `200`) from the `swe5001-demo` environment or repository variables. Persist V2 calibration there; CloudShell exports do not affect later workflow runs. Commerce's regular-Fargate base equals its floor, with weighted Spot allocation above it. The three dashboard rows contain seven unit-separated charts, not three overloaded graphs.
 
+2026-10-16: the [manual AWS baseline/dashboard record](../../docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md) captures the persisted environment target `12000` and demo floor `2`, without changing the checked-in fallbacks. All rates through 200 RPS passed, so the target is an operator-approved lower-bound candidate, not a located saturation knee or V3 proof. The session exposed an interrupted-bootstrap retry restoring suspended scaling settings after successful startup; explicit operator repair enabled commerce 2–6 and notification 1–4, but the script defect is not fixed. Check live bounds/suspension flags after recovery. A later CloudFront metric SCP denial remains unresolved. Teardown destroyed 113 resources in 784 s and independent runtime absence passed, both exit 0.
+
 ## `foundation` bootstrap (one time)
 
 Run with your own AWS credentials in account `402178232802`, region `ap-southeast-1`. Never paste a full plan, a parameter value or a decrypted response into a PR, issue or chat; share resource addresses and actions only.
