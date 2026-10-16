@@ -1,0 +1,79 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "OneRegionOnly",
+      "Effect": "Deny",
+      "NotAction": [
+        "iam:*",
+        "organizations:*",
+        "sts:*",
+        "budgets:*",
+        "ce:*",
+        "support:*",
+        "cloudfront:*",
+        "route53:*",
+        "s3:GetBucketLocation",
+        "wafv2:*",
+        "cloudwatch:GetMetricData",
+        "cloudwatch:ListMetrics"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:RequestedRegion": [
+            "ap-southeast-1"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "WafHomeRegionOrCloudFrontScope",
+      "Effect": "Deny",
+      "Action": "wafv2:*",
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:RequestedRegion": [
+            "ap-southeast-1",
+            "us-east-1"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyMetricReadsOutsideApse1AndUse1",
+      "Effect": "Deny",
+      "Action": [
+        "cloudwatch:GetMetricData",
+        "cloudwatch:ListMetrics"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:RequestedRegion": [
+            "ap-southeast-1",
+            "us-east-1"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyUse1MetricReadsExceptTeam8",
+      "Effect": "Deny",
+      "Action": [
+        "cloudwatch:GetMetricData",
+        "cloudwatch:ListMetrics"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "us-east-1"
+        },
+        "StringNotEquals": {
+          "aws:PrincipalAccount": "402178232802"
+        }
+      }
+    }
+  ]
+}
