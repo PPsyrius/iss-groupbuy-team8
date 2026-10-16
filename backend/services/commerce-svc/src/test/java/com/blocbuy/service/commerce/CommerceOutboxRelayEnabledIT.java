@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.blocbuy.bootstrap.scheduling.OutboxRelayJob;
 import com.blocbuy.common.gateway.OutboxEventTransport;
 import com.blocbuy.integration.outbox.SnsOutboxEventTransport;
+import com.blocbuy.notification.messaging.SqsNotificationEventConsumer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,6 +34,8 @@ import software.amazon.awssdk.services.sqs.SqsClient;
             "blocbuy.identity.base-url=http://identity-svc.invalid:8589",
             "blocbuy.events.enabled=true",
             "blocbuy.events.relay.enabled=true",
+            // commerce never scans notification packages, so this switch has no effect here
+            "blocbuy.events.consumer.enabled=true",
             "blocbuy.events.region=ap-southeast-1",
             "blocbuy.events.sns.topic-arn=arn:aws:sns:ap-southeast-1:000000000000:events",
             "blocbuy.scheduling.enabled=true",
@@ -73,5 +76,6 @@ class CommerceOutboxRelayEnabledIT {
         assertThat(context.getBean(SnsClient.class).serviceClientConfiguration().region())
                 .isEqualTo(Region.AP_SOUTHEAST_1);
         assertThat(context.getBeanNamesForType(SqsClient.class)).isEmpty();
+        assertThat(context.getBeanNamesForType(SqsNotificationEventConsumer.class)).isEmpty();
     }
 }

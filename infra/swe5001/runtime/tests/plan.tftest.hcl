@@ -272,6 +272,11 @@ run "distributed_topology" {
   }
 
   assert {
+    condition     = local.service_environment["notification-svc"]["BLOCBUY_EVENTS_CONSUMER_ENABLED"] == "true" && !contains(keys(local.service_environment["commerce-svc"]), "BLOCBUY_EVENTS_CONSUMER_ENABLED") && !contains(keys(local.service_environment["identity-svc"]), "BLOCBUY_EVENTS_CONSUMER_ENABLED")
+    error_message = "Only notification-svc runs the SQS consumer, and only once messaging is verified."
+  }
+
+  assert {
     condition     = toset(keys(module.service)) == toset(["identity-svc", "notification-svc"]) && toset(keys(module.client_service)) == toset(["commerce-svc"])
     error_message = "The distributed topology plans the three services of backend ADR 0008; commerce-svc calls identity-svc, so it is a client created after it."
   }
@@ -376,8 +381,8 @@ run "distributed_before_db_init" {
   }
 
   assert {
-    condition     = length(module.messaging) == 1 && aws_appautoscaling_target.notification[0].min_capacity == 0 && aws_appautoscaling_target.notification[0].suspended_state[0].dynamic_scaling_in_suspended && aws_appautoscaling_target.notification[0].suspended_state[0].dynamic_scaling_out_suspended && aws_appautoscaling_target.notification[0].suspended_state[0].scheduled_scaling_suspended && local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_ENABLED"] == "false"
-    error_message = "Before db-init, scaling is fully suspended with min 0 and the relay is off."
+    condition     = length(module.messaging) == 1 && aws_appautoscaling_target.notification[0].min_capacity == 0 && aws_appautoscaling_target.notification[0].suspended_state[0].dynamic_scaling_in_suspended && aws_appautoscaling_target.notification[0].suspended_state[0].dynamic_scaling_out_suspended && aws_appautoscaling_target.notification[0].suspended_state[0].scheduled_scaling_suspended && local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_ENABLED"] == "false" && local.service_environment["notification-svc"]["BLOCBUY_EVENTS_CONSUMER_ENABLED"] == "false"
+    error_message = "Before db-init, scaling is fully suspended with min 0 and the relay and consumer are off."
   }
   assert {
     condition     = aws_appautoscaling_target.commerce[0].min_capacity == 0 && aws_appautoscaling_target.commerce[0].suspended_state[0].dynamic_scaling_in_suspended && aws_appautoscaling_target.commerce[0].suspended_state[0].dynamic_scaling_out_suspended && aws_appautoscaling_target.commerce[0].suspended_state[0].scheduled_scaling_suspended
@@ -402,8 +407,8 @@ run "distributed_unverified_keeps_relay_off" {
     }
   }
   assert {
-    condition     = local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_ENABLED"] == "false"
-    error_message = "Enabling services alone must not bypass the routing-readiness gate."
+    condition     = local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_ENABLED"] == "false" && local.service_environment["notification-svc"]["BLOCBUY_EVENTS_CONSUMER_ENABLED"] == "false"
+    error_message = "Enabling services alone must not bypass the routing-readiness gate for the relay or the consumer."
   }
 }
 

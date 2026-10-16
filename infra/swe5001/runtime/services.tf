@@ -83,6 +83,9 @@ locals {
           AWS_REGION                   = var.aws_region
           BLOCBUY_EVENTS_TRANSPORT     = "sns"
           BLOCBUY_EVENTS_SQS_QUEUE_URL = local.messaging.notification_url
+          # Same gate as the commerce relay: the consumer stays off until env-up's
+          # routing check has passed, so it never deletes the verifier's probes.
+          BLOCBUY_EVENTS_CONSUMER_ENABLED = tostring(var.services_enabled && var.messaging_verified)
         }
 
         secrets = {}
