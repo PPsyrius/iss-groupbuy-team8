@@ -16,6 +16,8 @@ export TMPDIR="$work" CLOUD_STATE="$work/cloud.json" CLOUD_CALLS="$work/calls"
 export AWS_REGION=ap-southeast-1 SWE5001_TF_STATE_BUCKET=test SWE5001_TOPOLOGY=distributed
 export TF_VAR_alert_email_addresses='["team@example.invalid"]'
 export SCENARIO=normal
+# The enforcing default is under test; an operator's shell must not relax it.
+unset SWE5001_ALLOW_UNCONFIRMED_ALERTS
 PROBE_RECEIPTS="$work/held-messages.json"
 
 arg_value() {
@@ -38,7 +40,7 @@ JSON
 
 aws() {
   printf 'aws %s\n' "$*" >> "$CLOUD_CALLS"
-  local service query resource queue body attrs id message enabled
+  local service query resource queue body attrs id message enabled protocol
   service=$(arg_value --service "$@")
   [ -n "$service" ] || service=$(arg_value --services "$@")
   query=$(arg_value --query "$@")
@@ -77,7 +79,8 @@ aws() {
     'sns get-subscription-attributes')
       [ "$SCENARIO" != alert_error ] || return 1
       if [ "$SCENARIO" = pending_email ]; then enabled=true; else enabled=false; fi
-      jq -nc --arg pending "$enabled" '{Attributes:{Protocol:"email",PendingConfirmation:$pending}}' ;;
+      if [ "$SCENARIO" = sms_subscription ]; then protocol=sms; else protocol=email; fi
+      jq -nc --arg pending "$enabled" --arg protocol "$protocol" '{Attributes:{Protocol:$protocol,PendingConfirmation:$pending}}' ;;
     'sqs get-queue-attributes')
       # CloudWatch's visible-message metric is NOT a valid SQS API attribute.
       if [[ "$*" == *ApproximateNumberOfMessagesVisible* ]]; then
@@ -237,7 +240,7 @@ reset
 fails aws sqs get-queue-attributes --queue-url test --attribute-names ApproximateNumberOfMessagesVisible
 grep -q InvalidAttributeName "$work/output"
 pass 'mock rejects the CloudWatch metric name as an SQS API attribute'
-for fault in pending_email alert_error backlog publish_error receive_error delete_error missing_delivery bad_filter malformed_response openssl_error; do
+for fault in pending_email sms_subscription alert_error backlog publish_error receive_error delete_error missing_delivery bad_filter malformed_response openssl_error; do
   reset
   SCENARIO=$fault
   fails check_messaging_routes "$targets"
@@ -251,6 +254,28 @@ jq -e '.queues.notification == [] and .queues.audit == []' "$CLOUD_STATE" > /dev
 [ "$(grep -c 'sqs receive-message.*audit' "$CLOUD_CALLS")" = 4 ]
 grep -q 'sleep 900' "$CLOUD_CALLS"
 pass 'settle gate, raw fan-out, payment exclusion and probe deletion'
+
+reset
+SCENARIO=pending_email
+SWE5001_ALLOW_UNCONFIRMED_ALERTS=true check_messaging_routes "$targets" > "$work/output" 2>&1
+grep -q 'WARNING: an alarm subscription is not confirmed' "$work/output"
+grep -q 'sns publish' "$CLOUD_CALLS"
+pass 'opt-out downgrades a pending alarm email to a warning and still runs the routing drill'
+
+for fault in alert_error sms_subscription; do
+  reset
+  SCENARIO=$fault
+  SWE5001_ALLOW_UNCONFIRMED_ALERTS=true fails check_alert_recipients "$targets"
+  pass "opt-out still rejects $fault"
+done
+reset
+SWE5001_ALLOW_UNCONFIRMED_ALERTS=true check_alert_recipients "$targets"
+[ -z "${SWE5001_ALLOW_UNCONFIRMED_ALERTS:-}" ]
+pass 'opt-out accepts a confirmed email subscription and does not leak into later checks'
+
+reset
+SWE5001_ALLOW_UNCONFIRMED_ALERTS=true fails check_alert_recipients '{"alert_subscription_arns":[]}'
+pass 'opt-out still requires configured recipients'
 
 reset
 SCENARIO=empty_stdout
@@ -342,6 +367,19 @@ for fault in pending_email edge_error; do
   jq -e 'all(.services[]; .desired == 0 and .running == 0)' "$CLOUD_STATE" > /dev/null
   pass "failed fresh bootstrap $fault also leaves new services stopped"
 done
+
+reset
+SCENARIO=pending_email
+SWE5001_ALLOW_UNCONFIRMED_ALERTS=true bash "$SWE5001_DIR/scripts/env-up.sh" > "$work/output" 2>&1 || { cat "$work/output"; exit 1; }
+jq -e '.relay == true and .services["commerce-svc"].desired == 4 and .services["notification-svc"].desired == 2' "$CLOUD_STATE" > /dev/null
+grep -q 'alarm-recipient confirmation was not enforced' "$work/output"
+pass 'testing opt-out lets a full bootstrap start services with a pending alarm email'
+
+reset
+fails env SWE5001_ALLOW_UNCONFIRMED_ALERTS=yes bash "$SWE5001_DIR/scripts/env-up.sh"
+grep -q 'must be true or false' "$work/output"
+if grep -q 'terraform.*apply\|ecs update-service' "$CLOUD_CALLS"; then exit 1; fi
+pass 'invalid opt-out value rejected before any apply or service mutation'
 
 reset
 fails env TF_VAR_alert_email_addresses='[]' bash "$SWE5001_DIR/scripts/env-up.sh"
