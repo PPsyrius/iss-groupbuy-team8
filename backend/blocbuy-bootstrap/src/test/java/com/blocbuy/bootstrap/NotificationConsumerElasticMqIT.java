@@ -1,6 +1,7 @@
 package com.blocbuy.bootstrap;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.times;
@@ -305,17 +306,8 @@ class NotificationConsumerElasticMqIT {
     }
 
     private static void awaitUntil(BooleanSupplier condition) {
-        long deadline = System.nanoTime() + DEADLINE.toNanos();
-        while (!condition.getAsBoolean()) {
-            if (System.nanoTime() > deadline) {
-                throw new AssertionError("condition not met within " + DEADLINE);
-            }
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException exception) {
-                Thread.currentThread().interrupt();
-                throw new AssertionError("interrupted while waiting", exception);
-            }
-        }
+        await().atMost(DEADLINE)
+                .pollInterval(Duration.ofMillis(100))
+                .until(condition::getAsBoolean);
     }
 }

@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.LockSupport;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -192,8 +193,7 @@ class SqsNotificationEventConsumerTest {
                             if (calls.get() == 2) {
                                 return response(message("m-8", "r-8", valid(), "t"));
                             }
-                            Thread.sleep(20);
-                            return response();
+                            return emptyLongPoll();
                         });
 
         consumer.start();
@@ -241,8 +241,7 @@ class SqsNotificationEventConsumerTest {
                             if (calls.incrementAndGet() == 1) {
                                 return response(message("m-9", "r-9", valid(), "t"));
                             }
-                            Thread.sleep(20);
-                            return response();
+                            return emptyLongPoll();
                         });
         consumer.start();
         assertThat(handling.await(5, TimeUnit.SECONDS)).isTrue();
@@ -413,5 +412,11 @@ class SqsNotificationEventConsumerTest {
 
     private static ReceiveMessageResponse response(List<Message> messages) {
         return ReceiveMessageResponse.builder().messages(messages).build();
+    }
+
+    /** An empty long poll that takes a little time, so the poller loop does not spin. */
+    private static ReceiveMessageResponse emptyLongPoll() {
+        LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(20));
+        return response();
     }
 }

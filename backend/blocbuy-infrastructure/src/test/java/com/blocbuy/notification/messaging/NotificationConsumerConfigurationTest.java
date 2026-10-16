@@ -17,16 +17,14 @@ class NotificationConsumerConfigurationTest {
 
     @Test
     void enabledConsumerWithoutAQueueUrlRefusesToStart() {
+        NotificationConsumerProperties settings = defaults();
+        IntegrationEventDecoder decoder =
+                configuration.integrationEventDecoder(JsonMapper.builder().build());
+        NotificationEventHandler handler = mock(NotificationEventHandler.class);
         assertThatThrownBy(
                         () ->
                                 configuration.sqsNotificationEventConsumer(
-                                        defaults(),
-                                        configuration.integrationEventDecoder(
-                                                JsonMapper.builder().build()),
-                                        mock(NotificationEventHandler.class),
-                                        " ",
-                                        "us-east-1",
-                                        ""))
+                                        settings, decoder, handler, " ", "us-east-1", ""))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("blocbuy.events.sqs.queue-url");
     }
