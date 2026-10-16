@@ -158,6 +158,11 @@ test('compressed local V2 exercises all plateaus but cannot produce deployment c
     assert.equal(result.status, 0, `${result.output}\n${counts(output)}`);
     const reportPath = join(output, 'summary.json');
     const report = JSON.parse(readFileSync(reportPath, 'utf8'));
+    const expected = 960 * Number(process.env.CONTRACT_STAGE_SECONDS || 1);
+    assert.equal(report.summary.metrics.browse_requests.values.count, expected);
+    assert.equal(report.summary.metrics.http_reqs.values.count, expected + 1); // One setup request.
+    assert.equal(report.summary.metrics.dropped_iterations.values.count, 0);
+    assert.ok(report.summary.metrics.iterations.values.count > expected, 'guard arrivals must execute without HTTP');
     const candidate = baselineResult(report);
     assert.equal(candidate.plateaus.length, 10);
     assert.equal(candidate.hasAwsPreflight, false);

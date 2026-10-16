@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BASELINE_RATES, configure, productIds, validResponse, browseChoice, plateauForIteration, validatePreflight, baselineResult, connectionBudget } from './lib.mjs';
+import { BASELINE_RATES, configure, productIds, validResponse, browseChoice, plateauForIteration, baselineRequestLimit, validatePreflight, baselineResult, connectionBudget } from './lib.mjs';
 
 const env = { BASE_URL: 'http://localhost:8080', TEST_SHA: 'a'.repeat(40), IMAGE_SHA: 'b'.repeat(40), RUN_LABEL: 'test', TOPOLOGY: 'monolith' };
 const uuid = '00000000-0000-7000-8000-000000000001';
@@ -24,6 +24,14 @@ test('V2 uses one bounded VU pool and retains all ten step plateaus', () => {
   assert.deepEqual(scenarios[0].stages.filter(s => s.duration === '60s').map(s => s.target), BASELINE_RATES);
   assert.equal(scenarios[0].stages.filter(s => s.duration === '0s').length, 9);
   assert.equal(Object.keys(config.options.thresholds).length, 33);
+});
+test('V2 terminal scheduler guard retains an exact bounded HTTP budget', () => {
+  for (const seconds of [1, 2, 60]) {
+    const config = configure({ ...env, FIXTURE_STAGE_SECONDS: String(seconds) });
+    assert.deepEqual(config.options.scenarios.baseline.stages.at(-1), { target: 200, duration: '1s' });
+    assert.equal(baselineRequestLimit(seconds), 960 * seconds);
+    assert.deepEqual(config.options.thresholds.browse_requests, [`count>=${960 * seconds}`, `count<=${960 * seconds}`]);
+  }
 });
 test('V3 ramps to three times the knee and holds ten minutes', () => {
   const c = configure({ ...env, MODE: 'v3', TOPOLOGY: 'distributed', KNEE_RPS: '50' });

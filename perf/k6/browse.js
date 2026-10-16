@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { check, fail } from 'k6';
 import exec from 'k6/execution';
 import { Counter, Rate, Trend } from 'k6/metrics';
-import { configure, productIds, validResponse, browseChoice, plateauForIteration, validatePreflight } from './lib.mjs';
+import { configure, productIds, validResponse, browseChoice, plateauForIteration, baselineRequestLimit, validatePreflight } from './lib.mjs';
 
 const config = configure(__ENV);
 const preflight = config.remote ? JSON.parse(open(__ENV.PREFLIGHT_PATH || fail('Remote load requires PREFLIGHT_PATH'))) : null;
@@ -24,6 +24,9 @@ export function setup() {
 export default function (data) {
   // Deterministic 70/30 list/detail mix within each scenario, across all VUs.
   const iteration = exec.scenario.iterationInTest;
+  // The terminal scheduler guard is not an extra load plateau. Surplus arrivals
+  // perform no HTTP and emit no browse samples; missing requests/drops still fail.
+  if (config.mode === 'v2' && iteration >= baselineRequestLimit(config.stageSeconds)) return;
   const { detail, id } = browseChoice(iteration, data.ids);
   const path = detail ? `/api/v1/products/${id}` : '/api/v1/products?page=1&size=20';
   const start = Date.now();

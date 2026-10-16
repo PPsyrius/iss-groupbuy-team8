@@ -49,6 +49,9 @@ export function configure(env) {
     const stages = BASELINE_RATES.flatMap((rps, index) => index === 0
       ? [{ target: rps, duration: `${stageSeconds}s` }]
       : [{ target: rps, duration: '0s' }, { target: rps, duration: `${stageSeconds}s` }]);
+    // k6 can stop just before the final arrival without reporting a drop.
+    // Keep its scheduler alive briefly; browse.js caps HTTP at the exact budget.
+    stages.push({ target: BASELINE_RATES[BASELINE_RATES.length - 1], duration: '1s' });
     scenarios = { baseline: { ...common, executor: 'ramping-arrival-rate', startRate: BASELINE_RATES[0], stages } };
   } else if (mode === 'smoke') {
     scenarios = { smoke: { ...common, executor: 'constant-arrival-rate', rate, duration: '10s', tags: { plateau: '0' } } };
@@ -66,8 +69,8 @@ export function configure(env) {
       thresholds[`browse_errors{plateau:${index}}`] = ['rate<0.01'];
       thresholds[`browse_requests{plateau:${index}}`] = [`count>=${rps * stageSeconds}`];
     });
-    const expected = BASELINE_RATES.reduce((sum, rps) => sum + rps * stageSeconds, 0);
-    thresholds.browse_requests = [`count>=${expected}`, `count<=${expected + 1}`];
+    const expected = baselineRequestLimit(stageSeconds);
+    thresholds.browse_requests = [`count>=${expected}`, `count<=${expected}`];
   }
   return { baseUrl, mode, topology, knee, remote, stageSeconds,
     generator: { preAllocatedVUs, maxVUs },
@@ -110,6 +113,10 @@ export function plateauForIteration(iteration, stageSeconds = 60) {
     if (iteration < boundary) return index;
   }
   return BASELINE_RATES.length - 1;
+}
+
+export function baselineRequestLimit(stageSeconds = 60) {
+  return BASELINE_RATES.reduce((sum, rps) => sum + rps * stageSeconds, 0);
 }
 
 function validateRoute(snapshot, current, service) {
