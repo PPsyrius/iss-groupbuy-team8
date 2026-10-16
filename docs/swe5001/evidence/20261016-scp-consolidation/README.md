@@ -2,6 +2,21 @@
 
 Date: 2026-10-15 to 2026-10-16. Owner: @limjiechao. Requested by @PPsyrius. No issue; NFR-67. Scope: the AWS Organizations service control policies (SCPs) over the member accounts 402178232802 (`swe5006-team8`) and 161877660123 (`swe5001-poc`), both in the `Sandbox` OU. The management account is outside SCP scope by AWS design. All changes were made live with the AWS CLI; no Terraform manages these policies.
 
+## Ownership and access model
+
+@limjiechao set up and administers the AWS organization and its IAM Identity Center. The project's AWS accounts are member accounts under that administration:
+
+| Component | Role | Administered by |
+| --- | --- | --- |
+| Management account (named `jiechao`) | Organization created 2026-08-25 with all features enabled; owns the SCPs and other organization policies and the IAM Identity Center instance; SCPs never restrict it. No delegated administrators, so all administration happens here | @limjiechao |
+| IAM Identity Center (BlocBuy access portal) | Instance `jiechao-aws` created in the management account on 2026-08-25; trusted organization service (`sso.amazonaws.com`); signs team members into member accounts through permission sets, which appear there as `AWSReservedSSO_*` roles | @limjiechao |
+| `Sandbox` OU → 402178232802 (`swe5006-team8`) | Created by the organization on 2026-08-25; member account for BlocBuy development and the SWE5001 deployment; receives the SCPs and Identity Center assignments | Workloads: the team; guardrails and access: @limjiechao |
+| `Sandbox` OU → 161877660123 (`swe5001-poc`) | Created by the organization on 2026-09-30; member account for the SWE5001 proof of concept; same inheritance | Workloads: the team; guardrails and access: @limjiechao |
+
+Source: `organizations describe-organization` and `list-accounts`, `sso-admin list-instances` and `organizations list-delegated-administrators`, read on 2026-10-16.
+
+Because the guardrails are set centrally, a team member's request to relax one (such as the CloudFront-metrics request below) goes to the organization administrator; it cannot be fixed by IAM changes inside a member account, since an SCP deny overrides any IAM allow there.
+
 ## Why
 
 The SWE5001 CloudFront dashboard could not read CloudFront metrics, which AWS serves only from `us-east-1`. The request named one SCP, but two SCPs each pinned the Sandbox OU to `ap-southeast-1`, so the call stayed denied until both had the same exception. The `cloudwatch:ListMetrics` follow-up needed the same pair of edits again. The audit that followed found further duplication, dead rules and cost-cap gaps.
