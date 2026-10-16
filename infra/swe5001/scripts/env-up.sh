@@ -8,7 +8,9 @@
 #
 # Environment: AWS credentials for account 402178232802, AWS_REGION=ap-southeast-1,
 # SWE5001_TF_STATE_BUCKET; optional SWE5001_TOPOLOGY (monolith, default; distributed for
-# identity-svc, commerce-svc and notification-svc; or none) and SWE5001_TIMINGS_FILE. The
+# identity-svc, commerce-svc and notification-svc; or none), SWE5001_TIMINGS_FILE and
+# SWE5001_ALLOW_UNCONFIRMED_ALERTS (false by default; true lets a testing session pass the
+# messaging gate while alarm email subscriptions are still pending confirmation). The
 # workflows pass the topology explicitly. The edge stack must already exist (created once
 # by an operator).
 # Exit status 0 when the smoke suite passes.
@@ -40,6 +42,11 @@ if [ "$topology" = distributed ]; then
   command -v openssl > /dev/null || die "openssl is not installed"
   jq -e 'type == "array" and length > 0 and all(.[]; type == "string" and length > 0)' \
     <<< "${TF_VAR_alert_email_addresses:-[]}" > /dev/null || die "distributed up requires team alarm recipients in TF_VAR_alert_email_addresses"
+  case "${SWE5001_ALLOW_UNCONFIRMED_ALERTS:-false}" in
+    false) ;;
+    true) log "WARNING: SWE5001_ALLOW_UNCONFIRMED_ALERTS=true; unconfirmed alarm emails will not block the messaging gate" ;;
+    *) die "SWE5001_ALLOW_UNCONFIRMED_ALERTS must be true or false" ;;
+  esac
 fi
 # Terraform parses a variable file as JSON only when its name ends in .json, and BSD
 # mktemp cannot add a suffix, so the files live in a private temporary directory.
