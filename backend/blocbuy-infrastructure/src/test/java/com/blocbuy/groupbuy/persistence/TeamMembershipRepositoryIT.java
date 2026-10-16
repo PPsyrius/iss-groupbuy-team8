@@ -233,6 +233,20 @@ class TeamMembershipRepositoryIT {
         }
     }
 
+    @Test
+    void recipientLookupIncludesOnlyNonDeletedMembersInStableOrder() {
+        try (SqlSession session = sessions.openSession()) {
+            assertThat(
+                            session.getMapper(BizGroupDealMapper.class)
+                                    .selectActiveMemberIdsByDealId(LED_DEAL))
+                    .containsExactly(BUYER, OTHER);
+            assertThat(
+                            session.getMapper(BizGroupDealMapper.class)
+                                    .selectActiveMemberIdsByDealId(LEFT_DEAL))
+                    .isEmpty();
+        }
+    }
+
     private static GroupDealRepositoryImpl repository(SqlSession session) {
         return new GroupDealRepositoryImpl(session.getMapper(BizGroupDealMapper.class));
     }

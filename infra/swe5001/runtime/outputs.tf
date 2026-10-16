@@ -8,14 +8,19 @@ output "cluster_name" {
   value       = module.cluster.cluster_name
 }
 
+output "dashboard_name" {
+  description = "Disposable three-row demo dashboard; null outside distributed topology"
+  value       = var.topology == "distributed" ? module.observability[0].dashboard_name : null
+}
+
 output "service_names" {
   description = "ECS service names"
-  value       = [for s in module.service : s.service_name]
+  value       = [for s in merge(module.service, module.client_service) : s.service_name]
 }
 
 output "task_definition_families" {
   description = "Task definition family per service; the deploy workflow registers new revisions in them"
-  value       = { for k, s in module.service : k => s.task_definition_family }
+  value       = { for k, s in merge(module.service, module.client_service) : k => s.task_definition_family }
 }
 
 output "db_init_task_definition" {
@@ -34,4 +39,15 @@ output "db_init_network" {
 output "nat_public_ip" {
   description = "Egress IP of the private subnets"
   value       = module.network.nat_public_ip
+}
+
+output "messaging" {
+  description = "Non-secret fan-out verification targets; null outside the distributed topology"
+  value = var.topology == "distributed" ? {
+    topic_arn               = module.messaging[0].topic_arn
+    queues                  = module.messaging[0].queue_urls
+    dlqs                    = module.messaging[0].dlq_urls
+    alert_subscription_arns = module.messaging[0].alert_subscription_arns
+    relay_enabled           = var.services_enabled && var.messaging_verified
+  } : null
 }

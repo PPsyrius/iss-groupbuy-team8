@@ -31,6 +31,8 @@ import java.util.UUID;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
@@ -283,9 +285,107 @@ class PurchaseIntentAppServiceTest {
         service.createIntent(USER, "JOIN", DEAL, "ref-1");
 
         assertThat(saved().sharerUserId()).isEqualTo(sharer);
-        var order = inOrder(deals);
-        order.verify(deals).lockJoinTerms(DEAL, USER);
+        // The invite lookup leaves the lock window: it runs before the team row is taken, and the
+        // intent is only written afterwards.
+        var order = inOrder(deals, intents);
         order.verify(deals).resolveSharer("ref-1", DEAL, USER);
+        order.verify(deals).lockJoinTerms(DEAL, USER);
+        order.verify(intents).save(any());
+    }
+
+    /** The lookup must not precede the buyer check, which is the cheapest rejection there is. */
+    @Test
+    void theInviteIsOnlyLookedUpForAnActiveBuyer() {
+        doThrow(new BizException(IdentityErrorCode.USER_NOT_FOUND)).when(users).requireActive(USER);
+
+        assertRejected(
+                () -> service.createIntent(USER, "JOIN", DEAL, "ref-1"),
+                IdentityErrorCode.USER_NOT_FOUND);
+        verifyNoInteractions(deals, products);
+    }
+
+    /**
+     * The invite is resolved before the team lock, so a JOIN the lock then refuses has already paid
+     * for a lookup. The client must still see the team's refusal and nothing else, whatever the
+     * reference would have resolved to: attribution never changes which error wins.
+     */
+    @ParameterizedTest
+    @CsvSource({
+        "GROUPBUY_PLACEHOLDER,true",
+        "GROUPBUY_PLACEHOLDER,false",
+        "INVALID_PARTICIPATION,true",
+        "INVALID_PARTICIPATION,false",
+        "DEAL_CLOSED,true",
+        "DEAL_CLOSED,false",
+        "DEAL_FULL,true",
+        "DEAL_FULL,false",
+        "ALREADY_MEMBER,true",
+        "ALREADY_MEMBER,false"
+    })
+    void theTeamsRefusalWinsWhateverTheInviteResolvesTo(
+            GroupbuyErrorCode refusal, boolean attributing) {
+        clockReads();
+        Optional<UUID> resolved = attributing ? Optional.of(UUID.randomUUID()) : Optional.empty();
+        when(deals.resolveSharer("ref-1", DEAL, USER)).thenReturn(resolved);
+        when(deals.lockJoinTerms(DEAL, USER)).thenThrow(new BizException(refusal));
+
+        assertRejected(() -> service.createIntent(USER, "JOIN", DEAL, "ref-1"), refusal);
+
+        var order = inOrder(deals);
+        order.verify(deals).resolveSharer("ref-1", DEAL, USER);
+        order.verify(deals).lockJoinTerms(DEAL, USER);
+        verifyNoInteractions(products);
+        verify(intents, never()).save(any());
+    }
+
+    /** A catalog refusal that follows the lock keeps its place after the team's own checks. */
+    @Test
+    void anUnsellableProductStillStopsAJoinThatCarriesAnInvite() {
+        clockReads();
+        teamQuotes("9.90", "sgd", NOW.plusSeconds(86_400));
+        when(deals.resolveSharer("ref-1", DEAL, USER)).thenReturn(Optional.of(UUID.randomUUID()));
+        when(products.requirePurchasable(PRODUCT))
+                .thenThrow(new BizException(CatalogErrorCode.PRODUCT_NOT_PURCHASABLE));
+
+        assertRejected(
+                () -> service.createIntent(USER, "JOIN", DEAL, "ref-1"),
+                CatalogErrorCode.PRODUCT_NOT_PURCHASABLE);
+        verify(intents, never()).save(any());
+    }
+
+    /**
+     * A lookup that fails outright (the groupbuy facade turns every unusable reference into an
+     * empty result, so this is an infrastructure fault) is raised before any lock is taken, and the
+     * team row is never held for a request that cannot finish.
+     */
+    @Test
+    void aFailingInviteLookupTakesNoTeamLock() {
+        clockReads();
+        IllegalStateException fault = new IllegalStateException("invite store unavailable");
+        when(deals.resolveSharer("ref-1", DEAL, USER)).thenThrow(fault);
+
+        assertThatThrownBy(() -> service.createIntent(USER, "JOIN", DEAL, "ref-1")).isSameAs(fault);
+        verify(deals, never()).lockJoinTerms(any(), any());
+        verifyNoInteractions(products);
+        verify(intents, never()).save(any());
+    }
+
+    /** Without a reference nothing is attributed and the lock path is exactly as before. */
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" "})
+    void aJoinWithoutAnInviteReferenceIsPricedAndLockedAsBefore(String inviteRef) {
+        clockReads();
+        teamQuotes("9.90", "sgd", NOW.plusSeconds(86_400));
+
+        service.createIntent(USER, "JOIN", DEAL, inviteRef);
+
+        PurchaseIntent intent = saved();
+        assertThat(intent.sharerUserId()).isNull();
+        assertThat(intent.amount()).isEqualByComparingTo("9.90");
+        assertThat(intent.dealId()).isEqualTo(DEAL);
+        verify(deals).lockJoinTerms(DEAL, USER);
+        verify(products).requirePurchasable(PRODUCT);
     }
 
     /** A reference groupbuy cannot attribute leaves the JOIN unattributed, never failed. */

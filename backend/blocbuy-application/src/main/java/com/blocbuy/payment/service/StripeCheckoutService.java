@@ -17,6 +17,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -35,15 +36,12 @@ public final class StripeCheckoutService {
     private final CheckoutPaymentRepository repository;
     private final CheckoutGateway gateway;
     private final PaymentBusinessPort business;
+    private final ApplicationEventPublisher events;
     private final TransactionTemplate tx;
     private final String successUrl;
     private final String cancelUrl;
 
     /** Configure bounded local transactions and fixed server-owned return URLs. */
-    @SuppressFBWarnings(
-            value = "EI_EXPOSE_REP2",
-            justification =
-                    "Injected repository port is intentionally shared; it is not caller-owned data to copy.")
     public StripeCheckoutService(
             CheckoutPaymentRepository repository,
             CheckoutGateway gateway,
@@ -51,9 +49,28 @@ public final class StripeCheckoutService {
             PlatformTransactionManager transactions,
             String successUrl,
             String cancelUrl) {
+        this(repository, gateway, business, transactions, successUrl, cancelUrl, event -> {});
+    }
+
+    /**
+     * Configure bounded transactions and publish payment facts inside their settlement transaction.
+     */
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification =
+                    "Injected repository and event publisher are shared infrastructure collaborators.")
+    public StripeCheckoutService(
+            CheckoutPaymentRepository repository,
+            CheckoutGateway gateway,
+            PaymentBusinessPort business,
+            PlatformTransactionManager transactions,
+            String successUrl,
+            String cancelUrl,
+            ApplicationEventPublisher events) {
         this.repository = repository;
         this.gateway = gateway;
         this.business = business;
+        this.events = events;
         this.tx = new TransactionTemplate(transactions);
         this.tx.setTimeout(10);
         this.tx.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
@@ -385,10 +402,12 @@ public final class StripeCheckoutService {
         String outcome = repository.outcome(payment.id());
         if (outcome != null) return outcome;
         Instant now = repository.now();
+        var succeeded = new PaymentSucceeded(payment.id(), payment.quote(), now);
+        events.publishEvent(succeeded);
         var value =
                 payment.quote().expiredAt(now)
                         ? new PaymentBusinessPort.Outcome(null, null, "BUSINESS_EXPIRED")
-                        : business.fulfil(new PaymentSucceeded(payment.id(), payment.quote(), now));
+                        : business.fulfil(succeeded);
         if (!value.accepted()) repository.requireRefund(payment, value.rejection(), eventId);
         outcome = value.accepted() ? "FULFILLED" : "REFUND_REQUIRED";
         repository.recordOutcome(payment.id(), value.dealId(), value.orderId(), outcome);

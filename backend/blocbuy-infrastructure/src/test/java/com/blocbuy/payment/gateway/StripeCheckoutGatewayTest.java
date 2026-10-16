@@ -122,6 +122,19 @@ class StripeCheckoutGatewayTest {
     }
 
     @Test
+    void checkoutRequestAllowsOnlyEligibleCardsWithStripe34WireName() {
+        var params = StripeCheckoutGateway.checkoutParams(payment());
+
+        assertThat(params.getAllowedPaymentMethodTypes())
+                .containsExactly(SessionCreateParams.AllowedPaymentMethodType.CARD);
+        assertThat(params.toMap())
+                .containsEntry("allowed_payment_method_types", java.util.List.of("card"))
+                .doesNotContainKey("payment_method_types");
+        assertThat(params.getMode()).isEqualTo(SessionCreateParams.Mode.PAYMENT);
+        assertThat(params.getAdaptivePricing().getEnabled()).isFalse();
+    }
+
+    @Test
     void mapsFrozenPriceExpiryAndMetadataWithoutCustomerCardFields() {
         Instant now = Instant.now();
         var quote =

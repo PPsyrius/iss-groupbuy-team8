@@ -70,6 +70,12 @@ variable "task_policy_json" {
   default     = null
 }
 
+variable "task_policy_enabled" {
+  description = "Plan-time switch for an inline policy whose resource ARNs may not be known yet"
+  type        = bool
+  default     = false
+}
+
 variable "execution_role_arn" {
   description = "Shared execution role from the ecs-cluster module"
   type        = string
@@ -127,9 +133,26 @@ variable "origin_secret" {
 }
 
 variable "desired_count" {
-  description = "Running task count; 0 while the environment is created, 1 once the database is initialised"
+  description = "Initial task count; 0 during bootstrap, the service minimum after database initialisation"
   type        = number
   default     = 0
+}
+
+variable "fargate_base_capacity" {
+  description = "Tasks placed on regular Fargate before weighted Spot allocation; commerce uses its configured minimum"
+  type        = number
+  default     = 1
+
+  validation {
+    condition     = contains([1, 2], var.fargate_base_capacity)
+    error_message = "fargate_base_capacity must be 1 or 2 for the baseline/demo floor."
+  }
+}
+
+variable "after_services" {
+  description = "Service Connect endpoints this service calls; the service is created only after them, because a task resolves only endpoints that existed when its deployment was created"
+  type        = list(string)
+  default     = []
 }
 
 variable "enable_exec" {

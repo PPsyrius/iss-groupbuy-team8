@@ -1,17 +1,31 @@
 # SWE5001 service images (docs/swe5001/impl-github-configuration.md, section 6).
 # Reusable and AWS-free: builds each runtime image for ARM64 (the ECS task platform),
-# scans it with Trivy and uploads it as artifact swe5001-image-<service>. It never
-# pushes; swe5001-deploy.yml publishes the exact scanned image.
+# scans it with Trivy. Deployment callers export/upload swe5001-image-<service>;
+# PR validation keeps the build/scan but never uploads unused image archives.
+# It never pushes; swe5001-deploy.yml publishes the exact scanned image.
 #
-# Strangler step 0: only the monolith image. PR 9 of #376 adds identity-svc,
-# commerce-svc and notification-svc to the matrix.
+# Four images from one Dockerfile.ci (#456, C1): the three service assemblies of backend
+# ADR 0008 and the monolith, kept as the fallback topology. The service name is also the
+# ECR repository suffix and the runtime map key (infra/swe5001/runtime/services.tf).
+# PRs into dev that touch the image inputs run the build and scan only.
 name: swe5001-service-images
 
 on:
+  pull_request:
+    branches: [dev]
+    paths:
+      - .github/workflows/swe5001-service-images.yml
+      - backend/Dockerfile.ci
+      - backend/.dockerignore
   workflow_call:
+    inputs:
+      upload-images:
+        description: Export scanned images for same-run deployment publication
+        type: boolean
+        default: true
     outputs:
       services:
-        description: Space-separated service names, one swe5001-image-<service> artifact each
+        description: Space-separated service names; deployment calls upload one image artifact each
         value: ${{ jobs.build.outputs.services }}
 
 permissions: {}
@@ -23,15 +37,25 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
+    # Keep in sync with the matrix below.
     outputs:
-      services: monolith
+      services: monolith identity-svc commerce-svc notification-svc
     strategy:
       fail-fast: false
       matrix:
         include:
           - service: monolith
-            dockerfile: Dockerfile.ci
-            jar: blocbuy-bootstrap/target/blocbuy-backend.jar
+            module: blocbuy-bootstrap
+            jar: blocbuy-bootstrap/target/blocbuy-backend-exec.jar
+          - service: identity-svc
+            module: services/identity-svc
+            jar: services/identity-svc/target/identity-svc.jar
+          - service: commerce-svc
+            module: services/commerce-svc
+            jar: services/commerce-svc/target/commerce-svc.jar
+          - service: notification-svc
+            module: services/notification-svc
+            jar: services/notification-svc/target/notification-svc.jar
     defaults:
       run:
         working-directory: backend
@@ -50,10 +74,11 @@ jobs:
       # Tests ran on the PRs into dev; this only packages the merged source.
       - name: Package
         env:
+          MODULE: ${{ matrix.module }}
           JAR: ${{ matrix.jar }}
         run: |
-          ./mvnw -B -q -DskipTests package
-          test -f "$JAR"
+          ./mvnw -B -q -DskipTests -pl "$MODULE" -am package
+          ../.github/scripts/assert-boot-jar.sh "$JAR"
 
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
         with:
@@ -65,7 +90,8 @@ jobs:
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ./backend
-          file: ./backend/${{ matrix.dockerfile }}
+          file: ./backend/Dockerfile.ci
+          build-args: JAR=${{ matrix.jar }}
           platforms: linux/arm64
           load: true
           tags: swe5001-${{ matrix.service }}:${{ github.sha }}
@@ -84,11 +110,14 @@ jobs:
           format: table
 
       - name: Export image
+        if: inputs.upload-images && github.event_name != 'pull_request' && github.event_name != 'merge_group'
         env:
           SERVICE: ${{ matrix.service }}
         run: docker save "swe5001-${SERVICE}:${GITHUB_SHA}" | gzip --stdout > "${RUNNER_TEMP}/swe5001-image-${SERVICE}.tgz"
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - name: Upload verified image
+        if: inputs.upload-images && github.event_name != 'pull_request' && github.event_name != 'merge_group'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: swe5001-image-${{ matrix.service }}
           path: ${{ runner.temp }}/swe5001-image-${{ matrix.service }}.tgz

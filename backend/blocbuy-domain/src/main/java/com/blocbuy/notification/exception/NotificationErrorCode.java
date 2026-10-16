@@ -8,7 +8,9 @@ import com.blocbuy.common.exception.ErrorCode;
  */
 public enum NotificationErrorCode implements ErrorCode {
     NOTIFICATION_PLACEHOLDER(
-            "NOTIFICATION_404_001", 404, "Notification not found", "error.notification.notFound");
+            "NOTIFICATION_404_001", 404, "Notification not found", "error.notification.notFound"),
+    NOTIFICATION_INVALID(
+            "NOTIFICATION_400_001", 400, "Invalid notification", "error.notification.invalid");
 
     private final String code;
     private final int httpStatus;

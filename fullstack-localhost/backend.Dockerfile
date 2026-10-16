@@ -6,7 +6,8 @@
 FROM maven:3.9.16-eclipse-temurin-21 AS build
 WORKDIR /build
 # Only what the Maven reactor reads, never the whole context: the root pom, the files its plugin
-# configuration names, and the six modules it lists.
+# configuration names, and every module it lists. Only the monolith is built below, but Maven
+# resolves the whole reactor, so the SWE5001 platform and service modules must be present too.
 COPY pom.xml checkstyle.xml spotbugs-excludes.xml ./
 COPY blocbuy-client blocbuy-client
 COPY blocbuy-domain blocbuy-domain
@@ -14,6 +15,8 @@ COPY blocbuy-application blocbuy-application
 COPY blocbuy-adapter blocbuy-adapter
 COPY blocbuy-infrastructure blocbuy-infrastructure
 COPY blocbuy-bootstrap blocbuy-bootstrap
+COPY blocbuy-platform blocbuy-platform
+COPY services services
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -B -q package -pl blocbuy-bootstrap -am \
       -DskipTests -Djacoco.skip=true \
@@ -25,7 +28,7 @@ WORKDIR /app
 RUN rm -f /usr/bin/pebble \
  && groupadd --system blocbuy \
  && useradd --system --gid blocbuy blocbuy
-COPY --from=build /build/blocbuy-bootstrap/target/blocbuy-backend.jar app.jar
+COPY --from=build /build/blocbuy-bootstrap/target/blocbuy-backend-exec.jar app.jar
 USER blocbuy
 EXPOSE 8589
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"

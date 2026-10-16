@@ -235,6 +235,7 @@ BlocBuy is the group project of **NUS-ISS Team 8** for the **SWE5006 Designing M
 - [First-deploy one-time bootstrap checklist](docs/deploy/backend-first-deploy-bootstrap.md)
 - [Dev CloudFront + ALB entry-layer deployment](docs/deploy/dev-cloudfront-deployment.md)
 - [Terraform stacks and state ownership](infra/terraform/README.md)
+- [SWE5001 ECS deployment status and remaining acceptance](docs/swe5001/HANDOFF.md)
 - [Production backend deployment guide (Terraform IaC)](docs/deploy/prod/backend-prod-terraform-deployment.md)
 - [EC2 backend runtime bundle](deployment/backend/README.md)
 
@@ -244,4 +245,4 @@ The backend pipeline deploys a scanned ECR image to EC2 through SSM. The dev bac
 
 **NUS-ISS Team 8**
 
-Team member details and responsibilities will be added once confirmed.
+Current responsibilities are maintained in the [Sprint 4 member-by-use-case plan](docs/agile/sprint-04/plan.md) and the [report ownership issue](https://github.com/PPsyrius/iss-groupbuy-team8/issues/463), rather than duplicated here.

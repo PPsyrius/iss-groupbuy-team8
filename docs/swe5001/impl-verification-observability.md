@@ -55,7 +55,7 @@ Runs against any base URL (EC2 CloudFront, SWE5001 CloudFront, or local Compose)
 | `GET /api/actuator/health` | 200 `UP` (through the ALB default path; commerce) |
 | `GET /api/v1/products?page=1&size=20` | 200, `Result` envelope, non-empty list (demo seed) |
 | `GET /api/v1/auth/me` without cookie | 401 envelope (served by identity) |
-| `GET /api/v1/notifications` without cookie | 401 envelope (served by notification). Not in `smoke.sh` yet: the controller has no `GET` handler today; add the check with `notification-svc` (PR 9) |
+| `GET /api/v1/notifications` without cookie | 401 envelope. In `smoke.sh` since 2026-10-14; passed that day against the SWE5006 dev CloudFront (monolith). Not routing evidence: every assembly's Sa-Token interceptor answers 401 for protected unauthenticated `/api/v1` paths, owned or not (the same holds for `/auth/me`). Routing to `identity-svc` and `notification-svc` is checked signed in, where an unowned route answers 404 ([runbook](runbook-environment-session.md#acceptance-evidence-456)) |
 | `GET /internal/users/<uuid>/active` through CloudFront | never reaches a service: CloudFront forwards only `/api/*` to the ALB, so the response is the SPA fallback page, not JSON |
 | Response header `X-Trace-Id` | present on every response |
 
@@ -71,7 +71,15 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 - k6 `browse.js`: constant arrival rate on `GET /api/v1/products` (70%), `GET /api/v1/products/{id}` (30%), stepping 10 → 200 RPS over 10 minutes.
 - Record the knee: highest RPS with p95 < 500 ms and error rate < 1%. This value sets the target-tracking target (AWS plan 6.4) and the V3 thresholds.
 
+2026-10-15/16 (#458 HTTP tooling slice and self-review corrections): the [k6 operator guide](../../perf/k6/README.md) follows the issue's explicit monolith V2 baseline rather than interpreting the original "one task per service" as distributed V2. A single shared VU pool drives ten one-minute plateaus with instantaneous rate steps and at most fifteen seconds final grace; executor arrival-ordinal tags retain scheduled phase membership despite clock-boundary skew or late completion. Missing/nonzero dropped counts, any stage shortfall, inconsistent totals and incomplete runs cannot calibrate; only one extra trailing arrival is allowed, and sub-second execution-timer precision is bounded separately from strict sample completion. Remote setup checks a fresh read-only AWS snapshot's origin, tooling SHA, stable one-task revision/digest and scaling configuration before HTTP, but during/after-run observations remain operator evidence. The result is a monolith-derived candidate in requests/target/minute, not measured distributed capacity; V3 must validate its transfer. The all-run V3 p95 gate is only a diagnostic screen, not exact acceptance analysis of the three-minute post-scale-out exclusion windows. HTTP tooling/fixture verification does not complete AWS measurement or the subsequent V4 seed/burst slice.
+
+2026-10-16 (#506 CI follow-up): the compressed V2 fixture completed 959/960 requests with zero reported drops, failing the unchanged strict count gate. Add a fixed one-second terminal scheduling guard and cap HTTP by arrival ordinal at the exact original request budget; surplus guard iterations perform no HTTP and emit no browse samples. This avoids depending on the executor scheduling the final arrival before its nominal cutoff, without allowing stage shortfalls or retries. New runner thresholds require the exact total; analysis retains the earlier one-extra-sample allowance only for existing reports. Actual live timing still needs operator review; a guard is not proof of a perfectly timed offered-rate stream.
+
 ### V3 HTTP auto-scaling
+
+2026-10-16 live checkpoint (#457/#458): the [manual V2/session record](evidence/20261016-http-baseline-dashboard/README.md) retains two complete monolith baselines, repeat generator/service observations, the persisted 12000 requests/target/minute candidate, and distributed two-AZ/policy/dashboard receipts. All rates through 200 RPS passed; saturation was not observed, so the candidate is a tested lower bound rather than a located knee. The distributed target was enabled by an explicit operator repair after successful startup restored suspended bootstrap settings; retry-safe startup and the later CloudFront metric SCP denial remain unresolved. Teardown destroyed 113 resources in 784 s and the independent absence check passed at 06:37:51 UTC, both exit 0. No V3 scale-out, event-relative latency, throughput linearity, connection-budget result or V4 acceptance is implied.
+
+2026-10-16 (#506 review): public distribution hostname and ECS observations alone did not establish the load route. Preflight now binds the deployed, uncached CloudFront `/api/*` behavior to the ECS-attached target group, ALB DNS/listener and header-matching forwarding rule; V3's scaling resource label must identify that same ALB/group. The guard rejects unsupported behavior overrides, rewrites, overlapping paths and weighted alternate targets rather than simulating arbitrary AWS routing. Header values are compared only in private temporary inputs and omitted from snapshots. [Verification evidence](../agile/sprint-04/log/2026-10-16.md) distinguishes offline regressions from still-pending live route/capacity checks.
 
 - Autoscaling on; k6 ramps from 20% to 300% of the baseline knee over 15 minutes, holds 10 minutes, ramps down.
 - Thresholds: error rate < 1%; p95 < 800 ms outside the 3 minutes after each scale-out.
@@ -83,6 +91,10 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 - Seed script creates 2,000 open teams due to expire within one minute (`db/seed/load`), with scheduling on.
 - Expected: the expiry sweep publishes about 2,000 `TeamExpired` events; queue backlog rises; `notification-svc` scales to 4; backlog drains to zero; DLQ stays empty.
 - Captured: backlog and task-count graph, drain time, notification row count equals expected.
+
+#### V3/V4 local preparation amendment — 2026-10-16
+
+The [operator preparation guide](../../perf/k6/SCALING.md) documents local preparation, the event-relative V3 analyzer and guarded V4 seed/burst/report tools. V4 explicitly opts into `v4_demo_enabled=true` on distributed runtime only: commerce receives the demo profile and a bounded 500-item/one-second expiry sweep, never automatic fixture insertion. Explicit YAML bridges bind the Terraform environment names; tests verify effective application settings, not just task-definition strings. The ordinary 100-item/minute default would spread expiry across about twenty sweeps; the override does not bypass leases, relay limits or messaging readiness. Use an existing active identity and demo product, generate 2,000 UUIDv7 teams plus one unpaid membership each, and let real expiry/outbox/consumer code produce effects; direct SNS injection would not verify this scenario. V4 analysis requires a quiet one-task start, post-expiry backlog followed by observed growth to four tasks and a contiguous final empty interval spanning at least thirty seconds; a closely spaced final sample cannot invalidate that interval. Restore the default-off flag before HTTP measurements. V3 keeps all-run error/zero-drop gates while analyzing p95 outside the three-minute scale-out windows; one-to-four achieved-throughput linearity, observed connection budgets and AWS acceptance remain separate obligations. Local query fixtures, an actual scheduled expiry/relay/consumer rehearsal on ElasticMQ, stubbed scripts and mocked plans are preparation evidence only, not live V3/V4 results.
 
 ### V5 Self-healing
 
@@ -96,7 +108,7 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 
 ### V7 Poison message
 
-- Publish a malformed envelope to `blocbuy-swe5001-team-expired`.
+- Publish a malformed envelope to `blocbuy-swe5001-domain-events` with SNS message attribute `eventType=PaymentSucceeded` (ADR 0007, #447), routing only to notification and excluding audit; a missing routing attribute is filtered out before SQS and cannot test redrive.
 - Expected: 5 receives, then the message is in the DLQ; the DLQ alarm fires; other messages are unaffected.
 
 ### V8 Rebuild from zero
@@ -115,19 +127,19 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 | Edge | CloudFront requests and 5xx rate; ALB `RequestCount`, `HTTPCode_Target_5XX_Count`, `TargetResponseTime` p50/p95 per target group |
 | Services | Running task count, CPU and memory utilisation per service (Container Insights) |
 | Messaging | Per topic `NumberOfMessagesPublished`; queue `ApproximateNumberOfMessagesVisible`, `ApproximateAgeOfOldestMessage`; DLQ visible messages |
-| Data | RDS CPU, `DatabaseConnections`, `FreeableMemory`; Valkey CPU and `CurrConnections` |
-| Application | Outbox pending rows and relay lag (custom metric from `OutboxRelay`, namespace `BlocBuy/SWE5001`) |
+
+2026-10-14 (#457): the October 11 rescope retains only these three rows; Data/Application rows and CPU/identity scaling are excluded. CloudFront metrics use us-east-1 and Region=Global; task counts use Container Insights while CPU/memory percentages use AWS/ECS. Commerce defaults to two tasks for demo/V5, with `TF_VAR_commerce_min_capacity=1` for V2/V3; calibrate `TF_VAR_commerce_requests_per_target` from V2 in requests per target per minute (not RPS). The default 200 is provisional, not measured capacity.
 
 ### Alarms (SNS topic `blocbuy-swe5001-alerts` to the team email list)
 
+2026-10-14 reconciliation (#447/#457): merged messaging provides the notification DLQ-visible >0 and oldest-message-age >60 s alarms below; other original alarms were cut by the October 11 rescope. Distributed up requires operator recipients and confirmed subscriptions. The [broker-only drill](../agile/sprint-04/log/2026-10-14.md#2026-10-14---ppsyrius---aws-messaging-infrastructure-447) verified synthetic CloudWatch→SNS→email delivery, not actual DLQ detection/redrive. Notification target tracking uses visible backlog / Container Insights running tasks, target 50, bounds 1–4, suspended with min 0 before readiness. Live V4 metric/scale-out evidence is pending; [fan-out readiness](runbook-environment-session.md#messaging-fan-out-check-447) does not prove consumer correctness.
+
 | Alarm | Condition |
 | --- | --- |
-| Target 5xx | > 5 per minute for 3 minutes on any target group |
-| Unhealthy hosts | `UnHealthyHostCount` > 0 for 3 minutes |
-| DLQ not empty | `ApproximateNumberOfMessagesVisible` > 0 |
-| Outbox lag | oldest pending outbox row > 60 s |
-| RDS CPU | > 80% for 5 minutes |
-| fck-nat status | `StatusCheckFailed` > 0 |
+| Notification DLQ not empty (#447) | `ApproximateNumberOfMessagesVisible` > 0 |
+| Notification queue age (#447) | `ApproximateAgeOfOldestMessage` > 60 s by default |
+
+No additional explicit alarms belong to #457; target tracking creates/manages its own CloudWatch alarms. The original target-5xx, unhealthy-host, outbox-lag, RDS and NAT alarm proposals are superseded by the October 11 rescope.
 
 ### Tracing
 
@@ -150,7 +162,9 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 
 ## 7. Presentation-day checklist (21 Oct, 16:15–16:55 SGT)
 
-- `env-up.sh` before 12:00 (release digests from the Sprint 4 promotion); smoke suite green.
+Commands, timing and failure handling: [presentation timeline](runbook-environment-session.md#3-timeline-for-a-presentation), [session start](runbook-environment-session.md#4-start) and [teardown](runbook-environment-session.md#7-destroy). This plan owns acceptance/evidence, not a second operational checklist.
+
+- Follow the runbook's early-start allowance with reviewed release digests; capture a green smoke suite.
 - Dashboard open with a 1-hour window; k6 scripts ready on a laptop with the base URL set.
 - Fallback: screen recording of V3 and V4 from the rehearsal completed before 21 Oct.
-- After the presentation: `env-down.sh`, and confirm `env-status.sh` reports nothing left.
+- After the presentation, capture successful teardown and runtime absence using the runbook procedure.

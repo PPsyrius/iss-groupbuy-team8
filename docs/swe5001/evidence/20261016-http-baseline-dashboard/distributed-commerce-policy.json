@@ -1,0 +1,33 @@
+{
+    "ScalingPolicies": [
+        {
+            "PolicyARN": "arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:8a01720e-45da-4d48-ac74-14fe33da5701:resource/ecs/service/blocbuy-swe5001/commerce-svc:policyName/blocbuy-swe5001-commerce-requests-per-target",
+            "PolicyName": "blocbuy-swe5001-commerce-requests-per-target",
+            "ServiceNamespace": "ecs",
+            "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+            "ScalableDimension": "ecs:service:DesiredCount",
+            "PolicyType": "TargetTrackingScaling",
+            "TargetTrackingScalingPolicyConfiguration": {
+                "TargetValue": 12000.0,
+                "PredefinedMetricSpecification": {
+                    "PredefinedMetricType": "ALBRequestCountPerTarget",
+                    "ResourceLabel": "app/blocbuy-swe5001/9a49700c03879168/targetgroup/blocbuy-swe5001-commerce-svc/26e58926af9f8450"
+                },
+                "ScaleOutCooldown": 60,
+                "ScaleInCooldown": 180,
+                "DisableScaleIn": false
+            },
+            "Alarms": [
+                {
+                    "AlarmName": "TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmHigh-17c1d187-f545-439a-8838-4f6f560099f2",
+                    "AlarmARN": "arn:aws:cloudwatch:ap-southeast-1:402178232802:alarm:TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmHigh-17c1d187-f545-439a-8838-4f6f560099f2"
+                },
+                {
+                    "AlarmName": "TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmLow-827a18b1-2e38-45d2-8e2c-9623069e10bf",
+                    "AlarmARN": "arn:aws:cloudwatch:ap-southeast-1:402178232802:alarm:TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmLow-827a18b1-2e38-45d2-8e2c-9623069e10bf"
+                }
+            ],
+            "CreationTime": "2026-10-16T05:28:27.159000+00:00"
+        }
+    ]
+}

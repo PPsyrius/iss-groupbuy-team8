@@ -128,8 +128,15 @@ public class PurchaseIntentAppService implements PaymentIntentPort {
      * JOIN: the business id is an open team, whose frozen price is the one the buyer pays. An
      * invite reference that names this team and another member freezes that member as the sharer
      * (UC7); any other reference is ignored rather than failing the purchase.
+     *
+     * <p>The sharer is resolved before the team lock is taken. The lookup reads only the immutable
+     * invite row (Redis first, then PostgreSQL), needs nothing the lock protects, and never
+     * rejects, so doing it first keeps its I/O out of the window in which concurrent JOINs queue on
+     * the team row without changing which rejection a client sees. A JOIN that the lock then
+     * refuses has paid one lookup it did not need.
      */
     private PurchaseIntent join(UUID user, UUID dealId, String inviteRef, Instant now) {
+        UUID sharer = deals.resolveSharer(inviteRef, dealId, user).orElse(null);
         GroupDealPurchaseSupport.JoinTerms team = deals.lockJoinTerms(dealId, user);
         CatalogPurchaseSupport.PurchasableProduct product =
                 products.requirePurchasable(team.productId());
@@ -147,7 +154,6 @@ public class PurchaseIntentAppService implements PaymentIntentPort {
         // A quote must never outlive the team it buys into, so the team's own deadline caps it.
         Instant quoteValidUntil =
                 earlier(now.plusSeconds(PurchaseQuoteWindow.SECONDS), team.expireTime());
-        UUID sharer = deals.resolveSharer(inviteRef, team.dealId(), user).orElse(null);
         return PurchaseIntent.issue(terms, quoteValidUntil, team.expireTime(), now)
                 .attributedTo(sharer);
     }

@@ -161,9 +161,9 @@ Category values are mapped centrally because the API contract does not publish a
 Cards use a bordered 8px surface, image/fallback area, title/subtitle, and price block.
 
 - Open bloc: bloc price is prominent in `accent-soft-foreground`; solo price is struck through.
-- No open bloc: solo price is prominent and the secondary line says "Buying alone".
+- Neither a bloc price nor valid open-bloc progress: solo price is prominent and the secondary line says "Buying alone". With valid progress but no bloc price, keep the solo price unstruck and omit "Buying alone"; do not invent a bloc price.
 - No percent-off badges or countdowns on the catalog grid.
-- Open bloc progress (FB-16): "N of M joined", seats left (the last seat in semibold) and a 10px accent bar, from the summary's nullable `deal` (#375); no row when `deal` is null. No countdown on the grid.
+- Open bloc progress (FB-16): "N of M joined", seats left (the last seat in semibold) and a 10px accent bar, from the summary's nullable `deal` (#375); no row when `deal` is null. No countdown on the grid. Missing, fractional, negative or non-finite sizes do not produce invented counts or suppress the no-bloc fallback when there is no bloc price; the progress row remains part of the card's detail-link click area.
 
 SGD is displayed as `S$` with two decimals.
 
@@ -266,7 +266,7 @@ Implemented in admin plan A1-01 to A1-08, A2-01 to A2-03 and A3-01 to A3-09 (`ad
 
 - Tabs All / Draft / On sale / Off sale with counts from one `counts` read; server pagination (`page`, `size` 20) with "Showing 1–8 of 62 · Page 1 of 4"; no sorting.
 - Each title carries the latest bloc price rule from `latestPolicy`: "Bloc price S$71.00 · valid to 30 Sep", "… · expired 14 Sep", "… · starts 1 Oct", "No bloc price rule yet" on a published listing and "Draft · not published" on a draft. The day is the SGT day of the last valid minute.
-- The row menu (HeroUI `Dropdown`) offers Edit plus the one lifecycle action the status allows, reusing the editor's dialogs (Q14).
+- The row menu (HeroUI `Dropdown`) offers Edit plus the lifecycle actions the status allows (Publish and Delete draft on a draft, one action on a published row), reusing the editor's dialogs (Q14).
 - Loading: skeleton rows with the tab counts withheld (4a.4). Empty per tab: "No drafts" (4a.3, the header CTA drops to outline), "Nothing on sale", "Nothing off sale", "No listings yet" (D4). Error: "We couldn’t load the listings" with Try again.
 
 **Listing form and editor** (`Admin Editor › 4b.1`, `4b.2`, `4b.3`)
@@ -300,7 +300,7 @@ Implemented in admin plan A1-01 to A1-08, A2-01 to A2-03 and A3-01 to A3-09 (`ad
 
 **Design gaps still open** (`admin-plan.md` §11)
 
-- D1 rail counts (Bloc price rules links to the filtered listings once BA-13, #382, merges; Payments has no page); D2 dialog copy is the proposed text, not approved (Q7); D3 the scheduled state and replace-now warning are undrawn; D4 dashboard and per-tab empty, table error; D5 unsaved prompt and toasts; D6 the group terms panel (decided 2026-10-05: a card below the price rule panel; built in A3-04, #399); D7 Description is missing from 4b.1; D8 the "Add a rule after you publish" copy waits on BA-11.
+- D1 rail counts (Bloc price rules links to the filtered listings once BA-13, #382, merges; Payments has no page); D2 dialog copy was approved as shipped on 2026-10-13 (Q7); D3 the scheduled state and replace-now warning are undrawn; D4 dashboard and per-tab empty, table error; D5 unsaved prompt and toasts; D6 the group terms panel (decided 2026-10-05: a card below the price rule panel; built in A3-04, #399); D7 Description is missing from 4b.1; D8 the "Add a rule after you publish" copy waits on BA-11.
 - Not built: Payments needing attention (4b.6, BA-8), the "Bloc price rules" rail link (Q3, BA-13), policy history (BA-10) and policy on drafts (BA-11).
 
 ## 5. Component guidance
@@ -425,7 +425,7 @@ Remaining design/contract gaps (audited 2026-10-02, FB-18, against `frontend/src
 - listing detail does not expose off-sale status (`ProductDetailResponse` has no `status`): no owner yet;
 - the API exposes one active deal (`ActiveDealResponse`: id, sizes, expiry) rather than a list with starter metadata; only an invite link names its sharer (FB-19, #201): no owner yet;
 - My Blocs shows Active / Completed / Refunded from `GET /group-deals/me`, but `MyTeamResponse` carries only the buyer's own `role`, not the starter; no owner yet. Notifications wait on backend #215 (first persisted use case, open);
-- the refund-pending receipt still reads "Payment received"; the design owner chose "Refund on its way" on 2026-10-05: FB-15;
+- the refund-pending receipt heading is "Refund on its way", as decided by the design owner on 2026-10-05 (FB-15, #392); completed refunds retain "Refund sent" and failed/reviewed refunds retain "Payment received";
 - the gated sheet's copy is written for Start a bloc ("Starting a bloc means paying first") and is reused for Buy alone, which no artboard draws (the bloc terms are kept off that sheet, FB-11): no owner yet;
 - the signed-in storefront menu/header is still provisional (a neutral Sign out button, `plan.md` T2-05; no artboard draws a menu): no owner yet;
 - CSP still permits HTTPS listing and avatar image hosts (`img-src 'self' https:`, ADR 0002) until the contract pins an image host; Inter is already self-hosted (#158): no owner yet.

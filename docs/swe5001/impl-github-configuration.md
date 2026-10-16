@@ -47,7 +47,7 @@ Environment-scoped subjects keep the plan role usable from PRs into `dev` and `p
 
 ## 4. Variables
 
-All are **non-secret**. Values come from `foundation` Terraform outputs (see the AWS plan, section 4).
+All are **non-secret**. Values come from Terraform outputs or operator-selected session settings (see the AWS plan, section 4).
 
 ### Repository level
 
@@ -75,6 +75,10 @@ All are **non-secret**. Values come from `foundation` Terraform outputs (see the
 | `SWE5001_FRONTEND_URL` | `https://<swe5001 distribution>.cloudfront.net`, used by smoke tests and the frontend build |
 | `SWE5001_SPA_BUCKET` | SWE5001 SPA bucket name |
 | `SWE5001_CLOUDFRONT_DIST_ID` | SWE5001 distribution ID |
+| `SWE5001_COMMERCE_MIN_CAPACITY` | `2` for demo/promotion; optionally `1` for baseline sessions, restoring `2` before V5/presentation. Both session and promotion workflows pass it to Terraform/startup; defaults to `2` if unset |
+| `SWE5001_COMMERCE_REQUESTS_PER_TARGET` | Measured V2 target in requests per target per minute; both workflows pass this calibration on every up. Defaults provisionally to `200` if unset; not a measured capacity claim |
+
+2026-10-14 (#457): these commerce settings are wired in code, not claimed configured in GitHub. Environment values override repository values. For a CloudShell baseline, use the corresponding `TF_VAR_*` exports; after V2, an operator must persist the calibrated request target here before subsequent workflow sessions/promotions. Do not change deployment enablement merely to configure these non-secret values.
 
 ### Secrets
 
@@ -114,8 +118,8 @@ The checks are not strict: each promotion leaves a merge commit on `prod` that `
 
 | File | Status | Trigger | Environment | Jobs |
 | --- | --- | --- | --- | --- |
-| `swe5001-service-images.yml` | implemented, reusable (`workflow_call`) | called by `swe5001-release-gate.yml` and `swe5001-deploy.yml` | none | Matrix of runtime images (strangler step 0: `monolith` only; PR 9 adds `identity-svc`, `commerce-svc`, `notification-svc`). Packages the jar without a dependency cache, builds the ARM64 image with QEMU, Trivy scan (HIGH and CRITICAL, unfixed ignored), uploads the image as artifact `swe5001-image-<service>`. Builds only; never pushes |
-| `ci-backend.yml` | unchanged for now | existing (PRs into `dev`, `dev` pushes, `v*` tags) | none | Gains a `service-images` job in PR 9, once the service assemblies exist; until then the monolith image is already built and smoke-tested by its `docker` job, and the SWE5006 path stays untouched |
+| `swe5001-service-images.yml` | implemented, reusable (`workflow_call`) | called by `swe5001-release-gate.yml` and `swe5001-deploy.yml` | none | Matrix of runtime images: `monolith` (fallback), `identity-svc`, `commerce-svc`, `notification-svc` (#456), one `Dockerfile.ci` with a `JAR` build argument. Also runs on PRs into `dev` that change the workflow, `backend/Dockerfile.ci` or `backend/.dockerignore`. Packages each module's jar without a dependency cache, builds ARM64 with QEMU and scans with Trivy (HIGH/CRITICAL, unfixed ignored). `upload-images` defaults true for deployment handoff; PR/merge-group validation never exports/uploads images, and the release gate passes false. Deployment image artifacts retain two days. Never pushes |
+| `ci-backend.yml` | unchanged for now | existing (PRs into `dev`, `dev` pushes, `v*` tags) | none | No `service-images` job: the image workflow's own `pull_request` trigger (#456) builds the service images when their inputs change, and the SWE5006 path stays untouched |
 | `infra-swe5001.yml` | implemented, also reusable | PRs into `dev` on `infra/swe5001/**`, `perf/smoke/**` or the workflow itself; `workflow_call` from the release gate | `swe5001-plan` for foundation only | `fmt -check`, offline `init`, `validate` and tests for `foundation`, `edge` and `runtime`, and shellcheck for the environment scripts and the smoke suite; `foundation` account-backed plan/checkov with a redacted plan summary once the operator bootstraps it. Never plans secret-bearing runtime state or applies |
 | `swe5001-release-gate.yml` | implemented | PRs into `prod` (`opened`, `synchronize`, `reopened`) | `swe5001-plan` for foundation only (through `infra-swe5001.yml`) | `promotion-source`: fail unless `github.head_ref == 'dev'` and the head repository is this repository. `images` calls the reusable image workflow and `infra` calls `infra-swe5001.yml`; the jobs `service-images` and `infra-plan` (`if: always()`) turn their results into checks with fixed names for the ruleset. No path filters, so required checks report |
 | `swe5001-deploy.yml` | implemented | push to `prod` (one promotion per sprint); manual on the `prod` ref only, with input `force_failure` | `swe5001-demo` | The promotion run (refactoring plan, section 3.4), all jobs gated by `ENABLE_SWE5001_DEPLOY` and the `prod` ref. `images`: the reusable workflow on the merge commit. `publish` (deploy role): push the scanned images as `prod-<sha>-run-<attempt>`, write `/blocbuy/swe5001/candidate/<service>`. `up` (apply role): `env-up.sh --candidate` creates `runtime` from zero with the candidate digests, so the services start behind the circuit breaker; the script waits for steady state and runs the smoke suite through CloudFront. `release` (deploy role, only after a green `up`): build the SPA and publish it on every promotion (S3 sync without `--delete`, so earlier hashed assets stay reachable; `index.html`; CloudFront invalidation), then copy the candidates to `/blocbuy/swe5001/release/<service>`; a failed SPA publication leaves the previous release digests, and a failed digest write restores those already promoted. `down` (apply role, `if: always()`): `env-down.sh`, which ends with `env-status.sh` and fails the run if any runtime resource remains. `evidence` (`if: always()`): merges digests, `env-up` and `env-down` logs (smoke output included), step timings, ECS service events and the service logs (saved by `up` before `down` deletes their log groups; `db-init` excluded, as psql echoes a failing statement) into artifact `swe5001-promotion-<sha>` (90 days). `force_failure` fails `up` after the environment is up, to prove that `down` still runs. A separate rolling deploy and the `broken-health` drill are not part of a promotion; they run in manual sessions |
@@ -165,7 +169,7 @@ The CloudFront domain is stable because `edge` is never destroyed, so these are 
 | --- | --- | --- | --- |
 | G1 | Environments `swe5001-plan`, `swe5001-demo` (branch policy `prod`); repository variables with placeholder values; `ENABLE_SWE5001_*` set to `false` | 5.2 | none |
 | G2 | `infra-swe5001.yml` (plan only). Job `static` (fmt, validate, checkov) needs no AWS access; its foundation-only `plan` starts once `SWE5001_TF_STATE_BUCKET` is set | 5.2 | AWS F1 (plan role, state bucket) |
-| G3 | Reusable `swe5001-service-images.yml` (done, monolith only); the `service-images` job in `ci-backend.yml` and the service images (PR 9) | 5.1 | backend WP-B2 |
+| G3 | Reusable `swe5001-service-images.yml` with the monolith and the three service images (done, #456; a `pull_request` trigger replaces the planned `ci-backend.yml` job) | 5.1 | backend WP-B2 |
 | G3a | `swe5001-release-gate.yml`; create `prod` from `dev`; ruleset `prod-release` | 5.3 | G2, G3 |
 | G4 | `swe5001-deploy.yml` (push to `prod`) | 5.3 | G3a, AWS F1 (ECR, deploy role) |
 | G5 | `swe5001-env.yml` with the scheduled `dispatch` job; `up` and `down` jobs in `swe5001-deploy.yml`; both call the AWS plan's environment scripts | 5.3 | AWS R1–R6, AWS S1 |

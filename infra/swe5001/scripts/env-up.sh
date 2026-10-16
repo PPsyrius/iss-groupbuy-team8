@@ -7,12 +7,17 @@
 #   --candidate  digests from /blocbuy/swe5001/candidate/<service> (first promotion)
 #
 # Environment: AWS credentials for account 402178232802, AWS_REGION=ap-southeast-1,
-# SWE5001_TF_STATE_BUCKET; optional SWE5001_TOPOLOGY (monolith, default; or none) and
-# SWE5001_TIMINGS_FILE. The edge stack must already exist (created once by an operator).
+# SWE5001_TF_STATE_BUCKET; optional SWE5001_TOPOLOGY (monolith, default; distributed for
+# identity-svc, commerce-svc and notification-svc; or none) and SWE5001_TIMINGS_FILE. The
+# workflows pass the topology explicitly. The edge stack must already exist (created once
+# by an operator).
 # Exit status 0 when the smoke suite passes.
 
 # shellcheck source=./lib.sh source-path=SCRIPTDIR
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+# shellcheck source=./service-control.sh source-path=SCRIPTDIR
+source "$SWE5001_DIR/scripts/service-control.sh"
+umask 077
 
 digest_source=release
 case "${1:-}" in
@@ -24,10 +29,50 @@ esac
 guard_account
 topology=${SWE5001_TOPOLOGY:-monolith}
 services=$(services_for_topology "$topology")
+# Resolve once and pass explicitly so Terraform and imperative startup use the
+# same floor even if shared variable files later contain different defaults.
+export TF_VAR_commerce_min_capacity=${TF_VAR_commerce_min_capacity:-2}
+export TF_VAR_commerce_requests_per_target=${TF_VAR_commerce_requests_per_target:-200}
+case "$TF_VAR_commerce_min_capacity" in 1 | 2) ;; *) die "TF_VAR_commerce_min_capacity must be 1 or 2" ;; esac
+jq -e 'type == "number" and . > 0' <<< "$TF_VAR_commerce_requests_per_target" > /dev/null ||
+  die "TF_VAR_commerce_requests_per_target must be a positive JSON number"
+if [ "$topology" = distributed ]; then
+  command -v openssl > /dev/null || die "openssl is not installed"
+  jq -e 'type == "array" and length > 0 and all(.[]; type == "string" and length > 0)' \
+    <<< "${TF_VAR_alert_email_addresses:-[]}" > /dev/null || die "distributed up requires team alarm recipients in TF_VAR_alert_email_addresses"
+fi
 # Terraform parses a variable file as JSON only when its name ends in .json, and BSD
 # mktemp cannot add a suffix, so the files live in a private temporary directory.
 work=$(mktemp -d)
-trap 'rm -rf "$work"' EXIT
+snapshot="$work/services.json"
+printf '[]\n' > "$snapshot"
+infra_started=false
+completed=false
+cleanup() {
+  local result=$?
+  trap - EXIT INT TERM
+  if [ "$completed" = false ]; then
+    if [ "$infra_started" = false ] && [ "$(jq length "$snapshot")" -gt 0 ]; then
+      restore_services "$snapshot" || { log "restoration failed; private snapshot retained at $snapshot"; exit 1; }
+    elif [ "$infra_started" = true ]; then
+      # A later failure (edge/smoke/restore) may occur after the second apply started
+      # tasks. Explicitly pause again; never merely assume counts are still zero.
+      # shellcheck disable=SC2086 # known topology names
+      if pause_services "$work/failed-services.json" $services; then
+        log "up failed after infrastructure changes; services are paused until a successful retry"
+      else
+        log "up failed and service stop could not be confirmed; inspect the cluster before retrying"
+      fi
+      log "rerun env-up.sh or run env-down.sh; private recovery snapshot retained at $snapshot"
+      exit "$result"
+    fi
+  fi
+  rm -rf "$work"
+  exit "$result"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 run_vars="$work/run.tfvars.json"
 
 step "read edge URL"
@@ -35,6 +80,7 @@ tf_init edge
 frontend_url=$(tf edge output -raw url 2> /dev/null) ||
   die "edge has no outputs; an operator must create it first (infra/swe5001/README.md)"
 log "edge: $frontend_url"
+distribution_id=$(tf edge output -raw distribution_id)
 
 step "read $digest_source image digests"
 digests='{}'
@@ -45,17 +91,23 @@ for service in $services; do
   log "$service: $digest"
   digests=$(jq --arg s "$service" --arg d "$digest" '. + {($s): $d}' <<< "$digests")
 done
-jq -n --arg t "$topology" --arg u "$frontend_url" --argjson d "$digests" \
-  '{topology: $t, frontend_url: $u, image_digests: $d}' > "$run_vars"
+jq -n --arg t "$topology" --arg u "$frontend_url" --arg id "$distribution_id" --argjson d "$digests" \
+  --argjson min "$TF_VAR_commerce_min_capacity" --argjson requests "$TF_VAR_commerce_requests_per_target" \
+  '{topology: $t, frontend_url: $u, cloudfront_distribution_id: $id, image_digests: $d,
+    commerce_min_capacity: $min, commerce_requests_per_target: $requests}' > "$run_vars"
 
 apply_runtime() {
   tf runtime apply -input=false -auto-approve -var-file="$VAR_FILE" \
-    -var-file="$run_vars" -var "services_enabled=$1"
+    -var-file="$run_vars" -var "services_enabled=$1" -var "messaging_verified=$2"
 }
 
-step "apply runtime (services stopped)"
+step "pause existing services and scaling before changing runtime"
 tf_init runtime
-apply_runtime false
+# shellcheck disable=SC2086 # one word per known topology service
+pause_services "$snapshot" $services || die "cannot safely pause existing services"
+infra_started=true
+step "apply runtime (services stopped, relay off, scaling suspended)"
+apply_runtime false false
 
 step "run db-init"
 task_definition=$(tf runtime output -raw db_init_task_definition)
@@ -71,8 +123,24 @@ exit_code=$(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "$task_arn" \
 [ "$exit_code" = 0 ] ||
   die "db-init exited with '$exit_code'; see log group /blocbuy/swe5001/db-init"
 
-step "apply runtime (services started)"
-apply_runtime true
+verified=false
+if [ "$topology" = distributed ]; then
+  step "verify messaging before enabling the commerce relay"
+  bash "$SWE5001_DIR/scripts/verify-messaging.sh" --bootstrap || die "messaging gate failed; services remain stopped"
+  verified=true
+fi
+step "apply runtime (services started only after db-init and readiness)"
+apply_runtime true "$verified"
+# Restore prior scaled counts, rather than replacing them with a hard-coded 1.
+# A previous baseline's min 1 must not undo this session's selected demo floor.
+jq --argjson min "${TF_VAR_commerce_min_capacity:-2}" \
+  'map(if .service == "commerce-svc" then
+    .desired = ([.desired, $min] | max) |
+    if .scaling != null then .scaling.MinCapacity = $min | .scaling.MaxCapacity = 6 else . end
+  else . end)' "$snapshot" > "$work/restore-services.json"
+restore_services "$work/restore-services.json" || die "cannot restore previous service counts/scaling"
+# shellcheck disable=SC2086 # one word per service name
+start_stopped_services $services
 
 step "apply edge (point /api/* at the ALB)"
 runtime_alb_dns_name=$(tf runtime output -raw alb_dns_name)
@@ -89,6 +157,7 @@ else
 fi
 
 if [ -z "$services" ]; then
+  completed=true
   step_done
   log "topology none: no service to wait for or smoke-test"
   exit 0
@@ -108,4 +177,5 @@ until "$REPO_ROOT/perf/smoke/smoke.sh" "$frontend_url"; do
 done
 step_done
 
+completed=true
 log "Environment is up: $frontend_url"

@@ -1,0 +1,18 @@
+Operator-transcribed CloudShell output supplied on 2026-10-16; not the raw teardown log.
+Session checkout: 767d980ba2c358c1e80caf69a3c7703b76700a61
+Account: 402178232802; Region: ap-southeast-1
+
+Detached env-down.sh:
+[06:21:34] == destroy runtime
+Destroy complete! Resources: 113 destroyed.
+[06:34:38] == destroy runtime done in 784s
+[06:35:02] no runtime dashboard
+[06:35:02] no runtime resource tagged Stack=runtime
+Teardown exit: 0
+
+Independent bash infra/swe5001/scripts/env-status.sh:
+[06:37:51] no runtime dashboard
+[06:37:51] no runtime resource tagged Stack=runtime
+Independent absence-check exit: 0
+
+All times UTC. Persistent edge/foundation were intentionally retained.

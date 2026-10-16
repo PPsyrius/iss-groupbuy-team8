@@ -1,11 +1,11 @@
 package com.blocbuy.identity.service;
 
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.common.model.RoleCode;
 import com.blocbuy.identity.exception.IdentityErrorCode;
 import com.blocbuy.identity.gateway.OAuthIdentityGateway.OAuthProfile;
 import com.blocbuy.identity.model.OAuthIdentity;
 import com.blocbuy.identity.model.RegisterSource;
-import com.blocbuy.identity.model.RoleCode;
 import com.blocbuy.identity.model.User;
 import com.blocbuy.identity.repository.RoleRepository;
 import com.blocbuy.identity.repository.UserOAuthRepository;

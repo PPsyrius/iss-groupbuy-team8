@@ -4,10 +4,10 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.blocbuy.common.constant.ApiConstants;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
+import com.blocbuy.common.model.RoleCode;
 import com.blocbuy.common.web.Result;
-import com.blocbuy.identity.model.RoleCode;
-import com.blocbuy.payment.model.PaymentAttention;
 import com.blocbuy.payment.service.AdminPaymentAppService;
+import com.blocbuy.payment.service.AdminPaymentAppService.AttentionItem;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -92,7 +92,7 @@ public class AdminPaymentController {
                     String refundStatus,
             @Schema(description = "Time the participation compensation result was recorded")
                     Instant occurredAt) {
-        static PaymentAttentionResponse from(PaymentAttention item) {
+        static PaymentAttentionResponse from(AttentionItem item) {
             return new PaymentAttentionResponse(
                     item.paymentId(),
                     item.buyerNickname(),

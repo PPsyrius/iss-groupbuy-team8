@@ -6,7 +6,7 @@ Infrastructure for the SWE5001 distributed deployment shape on Amazon ECS. It is
 | --- | --- | --- | --- | --- |
 | [`foundation/`](foundation/) | Persistent | `swe5001/foundation.tfstate` | An operator, from a workstation or CloudShell (it creates the roles CI assumes) | Operator applied 2026-10-05 without billing: 23 creates, post-apply plan exit 0; GitHub OIDC plan passed with `No changes.` on 2026-10-06 |
 | [`edge/`](edge/) | Persistent | `swe5001/edge.tfstate` | Created once by an operator; afterwards the promotion run and `env-up.sh` only re-point the distribution at the new ALB | Operator applied from `605c8e27` on 2026-10-06: 9 creates, post-apply plan exit 0; edge variables configured |
-| [`runtime/`](runtime/) | Exists only during a promotion run or a manual session | `swe5001/runtime.tfstate` | Promotion run and `env-up.sh` / `env-down.sh` | Code ready (PRs 3–4 in #376); not applied. Messaging, scaling and alarms follow in PRs 8 and 10 |
+| [`runtime/`](runtime/) | Exists only during a promotion run or a manual session | `swe5001/runtime.tfstate` | Promotion run and `env-up.sh` / `env-down.sh` | Monolith sessions applied/destroyed since October 6; distributed map, messaging and dashboard/scaling merged in #472/#487/#489. Broker-only routing/alarm drill and cleanup passed; full distributed runtime/AZ/scaling acceptance remains pending ([handoff](../../docs/swe5001/HANDOFF.md)) |
 
 All stacks use Terraform `~> 1.16.4`, AWS provider `~> 5.100`, the existing state bucket `blocbuy-tfstate-402178232802` and S3-native locking (`use_lockfile = true`). Non-secret inputs are in [`envs/demo.tfvars`](envs/demo.tfvars). Operators seed application secrets in SSM Parameter Store under `/blocbuy/swe5001/`. The origin secret is also held in the private `edge` and `runtime` Terraform states for CloudFront/ALB routing; the Valkey AUTH token is held in `runtime` state. The PR plan role cannot read either state.
 
@@ -20,6 +20,7 @@ Run these before opening a PR; `infra-swe5001.yml` runs the same checks.
 terraform fmt -check -recursive infra/swe5001
 terraform -chdir=infra/swe5001/foundation init -backend=false
 terraform -chdir=infra/swe5001/foundation validate
+terraform -chdir=infra/swe5001/foundation test
 terraform -chdir=infra/swe5001/runtime init -backend=false
 terraform -chdir=infra/swe5001/runtime validate
 terraform -chdir=infra/swe5001/runtime test
@@ -28,9 +29,25 @@ terraform -chdir=infra/swe5001/edge validate
 terraform -chdir=infra/swe5001/edge test
 shellcheck -x infra/swe5001/scripts/*.sh perf/smoke/smoke.sh
 bash infra/swe5001/scripts/test-env-status.sh
-checkov -d infra/swe5001 --framework terraform --quiet --compact
+bash infra/swe5001/scripts/test-lib.sh
+bash infra/swe5001/scripts/test-messaging-readiness.sh
+checkov -d infra/swe5001/foundation --framework terraform --quiet --compact
+checkov -d infra/swe5001/edge --framework terraform --quiet --compact
+checkov -d infra/swe5001/runtime --framework terraform --quiet --compact
+checkov -d infra/swe5001/modules/messaging --framework terraform --quiet --compact
+checkov -d infra/swe5001/modules/observability --framework terraform --quiet --compact
 trivy config --severity HIGH,CRITICAL --exit-code 1 infra/swe5001
+trivy config --severity HIGH,CRITICAL --exit-code 1 infra/swe5001/modules/messaging
+trivy config --severity HIGH,CRITICAL --exit-code 1 infra/swe5001/modules/observability
 ```
+
+## HTTP scaling and dashboard (#457)
+
+Distributed runtime adds commerce ALB-request target tracking (max 6), a `blocbuy-swe5001` dashboard with Edge/Services/Messaging rows, and no additional explicit alarms. `commerce_min_capacity` defaults to 2 for demo availability; export `TF_VAR_commerce_min_capacity=1` for baseline sessions. `commerce_requests_per_target` is requests per target per minute, provisionally 200 until V2 calibrates it. Startup reads `cloudfront_distribution_id` from edge; direct full distributed plans must supply it. CPU/identity scaling is out of scope. [Session checks and evidence requirements](../../docs/swe5001/runbook-environment-session.md#http-scaling-and-dashboard-457) cover live metrics, two-AZ placement and calibration; offline tests do not prove them.
+
+Both GitHub up workflows consume `SWE5001_COMMERCE_MIN_CAPACITY` (default `2`) and `SWE5001_COMMERCE_REQUESTS_PER_TARGET` (provisional default `200`) from the `swe5001-demo` environment or repository variables. Persist V2 calibration there; CloudShell exports do not affect later workflow runs. Commerce's regular-Fargate base equals its floor, with weighted Spot allocation above it. The three dashboard rows contain seven unit-separated charts, not three overloaded graphs.
+
+2026-10-16: the [manual AWS baseline/dashboard record](../../docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md) captures the persisted environment target `12000` and demo floor `2`, without changing the checked-in fallbacks. All rates through 200 RPS passed, so the target is an operator-approved lower-bound candidate, not a located saturation knee or V3 proof. The session exposed an interrupted-bootstrap retry restoring suspended scaling settings after successful startup; explicit operator repair enabled commerce 2–6 and notification 1–4, but the script defect is not fixed. Check live bounds/suspension flags after recovery. A later CloudFront metric SCP denial remains unresolved. Teardown destroyed 113 resources in 784 s and independent runtime absence passed, both exit 0.
 
 ## `foundation` bootstrap (one time)
 
@@ -152,10 +169,11 @@ Shared modules live in [`modules/`](modules/): `network` (VPC, subnets, S3 gatew
 
 | Input | Default | Set by |
 | --- | --- | --- |
-| `topology` | `none`: no ECS service, no database | `env-up.sh` (`SWE5001_TOPOLOGY`, default `monolith`). The service maps are in [`runtime/services.tf`](runtime/services.tf): `monolith` runs the SWE5006 image as one service on `/api/*` with database `monolith` (strangler step 0); PR 9 adds `distributed` |
+| `topology` | `none`: no ECS service, no database | `env-up.sh` (`SWE5001_TOPOLOGY`, default `monolith`; both workflows pass `distributed` unless told otherwise). The service maps are in [`runtime/services.tf`](runtime/services.tf): `distributed` runs `identity-svc` (`/api/v1/auth/*`, `/api/v1/users/*`, priority 10), `notification-svc` (`/api/v1/notifications*`, 20) and `commerce-svc` (the remaining `/api/*`, 30) with databases `identity`, `notification` and `commerce`, Service Connect `identity-svc:8589` for commerce, Google secrets on identity, Stripe secrets, the catalogue seed and scheduling on commerce ([backend ADR 0008](../../backend/docs/adr/0008-dual-deployment-topology.md), #456); `monolith`, the fallback, runs the SWE5006 image as one service on `/api/*` with database `monolith` (strangler step 0) |
 | `frontend_url` | `""` | `env-up.sh`, from the `edge` output `url`; required when services run (`FRONTEND_URL`, Google redirect URI) |
 | `image_digests` | `{}` | `env-up.sh`, from SSM `/blocbuy/swe5001/release/*` or `/candidate/*` |
-| `services_enabled` | `false`: desired count 0 | `env-up.sh` sets `true` after `db-init` has succeeded |
+| `services_enabled` | `false`: new services start at 0, notification scaling suspended at min 0 | `env-up.sh` explicitly stops existing services; sets `true` only after `db-init` and readiness. Scripts/scaling own counts after creation |
+| `messaging_verified` | `false`: commerce relay off | `env-up.sh` sets `true` only after the stopped-service routing/recipient gate; do not bypass it by setting the variable manually |
 | `postgres_major_version` | `18` | Set `17` if RDS does not offer 18 in the region |
 
 Prerequisites: `foundation` applied (the workload permissions boundary must exist) and `/blocbuy/swe5001/shared/ORIGIN_SECRET` seeded (step 2 above).
@@ -163,6 +181,16 @@ Prerequisites: `foundation` applied (the workload permissions boundary must exis
 Secrets in state: the RDS master and role passwords are ephemeral values written through write-only arguments (`password_wo`, `value_wo`), so they never reach the state. Two values do: `ORIGIN_SECRET`, because an ALB rule condition needs the literal value (as in the SWE5006 `backend-app-stack`), and the Valkey AUTH token, because the replication group has no write-only argument in provider 5.x. Both live only while `runtime` exists; the PR plan role cannot read that state object. Do not print, upload or attach a runtime plan made with trusted `prod` credentials.
 
 `terraform test` plans the stack with a mocked AWS provider, so it needs no credentials. Apply and destroy `runtime` only through the environment scripts below.
+
+### Messaging (#447)
+
+Only `distributed` creates [`modules/messaging`](modules/messaging/): one AWS-managed-key encrypted SNS domain topic, raw filtered notification/audit subscriptions, SSE-SQS queues and per-queue DLQs, notification age/DLQ alarms, and notification backlog-per-task scaling (active bounds 1–4, target 50). Messaging is disposable with the databases; `env-down.sh` removes all messages and subscriptions. Preserve drill evidence before teardown. The [placement and encryption decisions](../../docs/swe5001/impl-aws-infrastructure.md#66-messaging-modulesmessaging) trace the no-CMK rule to the proposal's implementation plan and merged PR #379; only the alarm-metadata topic remains unencrypted because CloudWatch needs a CMK for encrypted alarm delivery.
+
+Supply team recipients without committing addresses: local operators export `TF_VAR_alert_email_addresses` as a JSON array; GitHub operators set the `swe5001-demo` environment variable `SWE5001_ALERT_EMAIL_ADDRESSES` to that JSON array. Both up workflows pass it to Terraform. Distributed up rejects an empty list before any apply. Each session recreates the email subscriptions: confirm the SNS emails during the 15-minute filter-settle window. Unconfirmed subscriptions fail readiness instead of reporting a demo-ready session. `TF_VAR_notification_oldest_message_age_seconds` overrides the local age threshold (default 60 s).
+
+**Before the first encrypted session:** an operator must review and apply the updated `foundation` policy. The workload boundary and apply role permit KMS GenerateDataKey/Decrypt only via regional SNS with the exact domain-topic encryption context; commerce's inline policy has the same constraint. No customer-managed key is created. Run the documented foundation plan privately and review only resource addresses/actions, then perform an authorised apply; a local mock is not effective-IAM evidence.
+
+Non-secret targets are available with `terraform -chdir=infra/swe5001/runtime output -json messaging`. The consumer code is #446; provisioning and routing do not prove notification persistence or effectively-once delivery. `env-up.sh` suspends all existing scaling targets, snapshots/stops services, applies with the relay off, runs `db-init`, invokes `bash scripts/verify-messaging.sh --bootstrap`, and only then applies `services_enabled=true,messaging_verified=true`. Terraform owns initial desired counts only; script-controlled pauses/resumes preserve prior scaled counts and suspension flags. A failed up after infrastructure changes leaves services stopped and private recovery records for a retry or teardown; it does not resume an unverified producer. Standalone `bash infra/swe5001/scripts/verify-messaging.sh` pauses/restores commerce and notification with EXIT/signal handlers. The routing drill needs a quiet window with no retained messages, never a queue purge; see the [session procedure](../../docs/swe5001/runbook-environment-session.md#messaging-fan-out-check-447).
 
 ## `edge` creation (one time, operator)
 
@@ -194,13 +222,17 @@ The SPA bucket stays empty until the first promotion run syncs the frontend; unt
 
 ## Environment sessions
 
-[`scripts/`](scripts/) create and destroy `runtime` for a manual session; the promotion run calls the same scripts. Each one checks the account and region before doing anything.
+[`scripts/`](scripts/) create and destroy `runtime` for a manual session; the promotion run calls the same scripts. Each one checks the account and region before doing anything. Step-by-step session procedure (start, check, destroy, failures, cost): [environment session runbook](../../docs/swe5001/runbook-environment-session.md).
 
 | Script | Does | Exit 0 when |
 | --- | --- | --- |
 | `env-up.sh [--release\|--candidate]` | Reads the digests from SSM, applies `runtime` with services stopped, runs `db-init`, starts the services, reads the ALB DNS output and passes it to `edge` without sharing runtime state, waits for a stable service and runs [`perf/smoke/smoke.sh`](../../perf/smoke/smoke.sh) through CloudFront (up to five attempts). Re-running converges | The smoke suite passes |
 | `env-down.sh` | Destroys `runtime` (one retry, usually for the Service Connect namespace), then runs `env-status.sh` | Nothing tagged `Stack=runtime` remains |
-| `env-status.sh [--expect-up]` | Lists resources tagged `Course=swe5001,Stack=runtime` (ignoring deregistered task definitions and confirmed terminated instances) and the ECS service counts; AWS lookup failures stop verification instead of reporting a clean destroy | Nothing remains (or, with `--expect-up`, something does), and every lookup succeeded |
+| `grant-admin.sh <google-email>` | Runs [`scripts/grant-dev-admin.sql`](../../scripts/grant-dev-admin.sql) once as the `db-init` task (container overrides, no Terraform change) against the `identity` database of a running `distributed` session and prints the result. The account must have signed in once and must sign in again afterwards (roles travel in the session) | The grant succeeded or already existed |
+| `session-report.sh` | Runs fixed, read-only SQL once as the `db-init` task against all three databases of a running `distributed` session: catalogue rows and the seed migration per database, the admin-role count in `identity`, the `sys_scheduler_lock` rows in `commerce` (#456 acceptance; [runbook](../../docs/swe5001/runbook-environment-session.md#acceptance-evidence-456)). Takes no arguments | The report task exited 0 and its completion marker arrived; empty or partial logs fail |
+| `connection-budget.sh` | Starts one billed, read-only `db-init` report task for RDS maximum/reserved connections (#458); works with either topology, takes no SQL arguments; [HTTP load guide](../../perf/k6/README.md#connection-budget-before-v3) | Task exit 0, exact completion marker and exactly one valid settings JSON object; no migrations or configuration changes |
+| `http-preflight.sh v2\|v3` | Read-only, selected AWS observations for the k6 setup guard: fixed CloudFront origin, service/task counts, image digest and scaling state; [load guide](../../perf/k6/README.md#capture-and-validate-the-deployment-before-http). Requires a clean tooling checkout; starts no tasks | Capture calls succeeded and exactly one task was observed; k6 separately validates all deployment/scaling conditions before HTTP; snapshot is not continuous monitoring |
+| `env-status.sh [--expect-up]` | Lists resources tagged `Course=swe5001,Stack=runtime` and the ECS service counts. Deregistered task definitions are ignored; each EC2 and ECS ARN counts only while its own describe call still returns it, since the tagging API lists deleted resources for over an hour. AWS lookup failures stop verification instead of reporting a clean destroy | Nothing remains (or, with `--expect-up`, something does), and every lookup succeeded |
 
 ```bash
 export AWS_PROFILE=<operator profile> AWS_REGION=ap-southeast-1 SWE5001_TF_STATE_BUCKET=blocbuy-tfstate-402178232802
@@ -210,7 +242,7 @@ infra/swe5001/scripts/env-down.sh             # about 10-15 minutes; fails if an
 
 Set `SWE5001_TIMINGS_FILE=<path>` to record each step's duration (promotion evidence, verification plan V8). `env-up.sh` never prints the `edge` plan, because the origin diff carries `ORIGIN_SECRET` in clear; on failure it shows only Terraform's diagnostics.
 
-The same sessions run from GitHub with [`swe5001-env.yml`](../../.github/workflows/swe5001-env.yml) (next section). Before the first promotion has written any digest, push the monolith image by hand once per commit (ECR tags are immutable):
+The same sessions run from GitHub with [`swe5001-env.yml`](../../.github/workflows/swe5001-env.yml) (next section). Before the first promotion has written a digest for a service, push its image by hand once per commit (ECR tags are immutable). The monolith:
 
 ```bash
 registry=402178232802.dkr.ecr.ap-southeast-1.amazonaws.com
@@ -223,6 +255,19 @@ digest=$(aws ecr describe-images --repository-name swe5001/monolith --image-ids 
 aws ssm put-parameter --name /blocbuy/swe5001/candidate/monolith --type String --value "$digest" --overwrite
 ```
 
+The three services of `distributed` (same login; one `Dockerfile.ci`, each with its own boot JAR), then `SWE5001_TOPOLOGY=distributed env-up.sh --candidate`:
+
+```bash
+for service in identity-svc commerce-svc notification-svc; do
+  docker buildx build --platform linux/arm64 -f backend/Dockerfile.ci \
+    --build-arg "JAR=services/${service}/target/${service}.jar" \
+    -t "$registry/swe5001/${service}:$tag" --push backend
+  digest=$(aws ecr describe-images --repository-name "swe5001/${service}" --image-ids imageTag="$tag" \
+    --query 'imageDetails[0].imageDigest' --output text)
+  aws ssm put-parameter --name "/blocbuy/swe5001/candidate/${service}" --type String --value "$digest" --overwrite
+done
+```
+
 ## Workflows and the `prod` branch
 
 ECS runs only from the `prod` branch, which moves only by a `dev` → `prod` promotion PR (merge commit), once per sprint. Workflow settings and rules: [GitHub configuration plan](../../docs/swe5001/impl-github-configuration.md), sections 5 and 6.
@@ -230,9 +275,9 @@ ECS runs only from the `prod` branch, which moves only by a `dev` → `prod` pro
 | Workflow | Trigger | Does |
 | --- | --- | --- |
 | [`swe5001-release-gate.yml`](../../.github/workflows/swe5001-release-gate.yml) | PRs into `prod` | Required checks `promotion-source` (head must be this repository's `dev`), `service-images` (ARM64 image build and Trivy scan, no push) and `infra-plan` (`infra-swe5001.yml` for every stack, unfiltered) |
-| [`swe5001-deploy.yml`](../../.github/workflows/swe5001-deploy.yml) | Push to `prod` while `ENABLE_SWE5001_DEPLOY` is `true`; manual on `prod` with `force_failure` | `images` → `publish` (push the scanned images, write `/blocbuy/swe5001/candidate/*`) → `up` (`env-up.sh --candidate`) → `release` (publish the SPA, then copy to `/blocbuy/swe5001/release/*`) → `down` (`env-down.sh`, always) → `evidence` (one artifact `swe5001-promotion-<sha>`: digests, logs with the smoke output, step timings, ECS service events) |
-| [`swe5001-env.yml`](../../.github/workflows/swe5001-env.yml) | Manual on `prod` (`up`, `down`, `status`); daily 23:00 SGT | Runs the scripts above with the apply role. The schedule runs on `dev` with no AWS access and only dispatches `down` on `prod` while `ENABLE_SWE5001_NIGHTLY_DOWN` is `true` |
-| [`swe5001-service-images.yml`](../../.github/workflows/swe5001-service-images.yml) | Called by the two workflows above | Builds and scans the runtime images; only the monolith until PR 9 |
+| [`swe5001-deploy.yml`](../../.github/workflows/swe5001-deploy.yml) | Push to `prod` while `ENABLE_SWE5001_DEPLOY` is `true`; manual on `prod` with `force_failure` | `images` → `publish` (push the scanned images, write `/blocbuy/swe5001/candidate/*`) → `up` (`env-up.sh --candidate` with topology `vars.SWE5001_TOPOLOGY`, default `distributed`; set the variable to `monolith` only for the fallback) → `release` (publish the SPA, then copy to `/blocbuy/swe5001/release/*`) → `down` (`env-down.sh`, always) → `evidence` (one artifact `swe5001-promotion-<sha>`: digests, logs with the smoke output, step timings, ECS service events) |
+| [`swe5001-env.yml`](../../.github/workflows/swe5001-env.yml) | Manual on `prod` (`up`, `down`, `status`; `topology` for `up`, default `distributed`); daily 23:00 SGT | Runs the scripts above with the apply role. The schedule runs on `dev` with no AWS access and only dispatches `down` on `prod` while `ENABLE_SWE5001_NIGHTLY_DOWN` is `true` |
+| [`swe5001-service-images.yml`](../../.github/workflows/swe5001-service-images.yml) | Called by the two workflows above | Builds and scans the four runtime images (`monolith`, `identity-svc`, `commerce-svc`, `notification-svc`) from one `Dockerfile.ci`; also runs, without exporting, on PRs into `dev` that change its inputs |
 
 Runs that write Terraform state share the concurrency group `swe5001-tfstate` with `cancel-in-progress: false` and `queue: max`. Pending runs are retained up to the queue limit, so a later dispatch does not supersede a queued `down`, which can destroy runtime when it eventually executes. Check for and cancel stale queued `down` runs before starting a new manual session, and wait until no promotion is running.
 

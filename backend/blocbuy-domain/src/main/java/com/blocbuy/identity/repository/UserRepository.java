@@ -1,7 +1,9 @@
 package com.blocbuy.identity.repository;
 
 import com.blocbuy.identity.model.User;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -13,6 +15,12 @@ public interface UserRepository {
 
     /** Active (non-deleted) user by primary key. */
     Optional<User> findById(UUID id);
+
+    /**
+     * Active (non-deleted) users among these ids, in one read and in no particular order; unknown
+     * and deleted ids are simply absent.
+     */
+    List<User> findAllById(Set<UUID> ids);
 
     /** Active user by canonical email; the OAuth account-resolution lookup. */
     Optional<User> findActiveByEmail(String email);

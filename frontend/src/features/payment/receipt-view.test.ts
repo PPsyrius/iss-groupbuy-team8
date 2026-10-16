@@ -42,7 +42,7 @@ describe("receiptView", () => {
 
   it("marks a sent refund as Refunded with the bank window", () => {
     const view = receiptView({
-      receipt: { ...paid, refundStatus: "SUCCEEDED", orderId: "o" },
+      receipt: { ...paid, refundStatus: "SUCCEEDED", refundPending: true, orderId: "o" },
       isError: false,
     });
     expect(view.chip).toEqual({ label: "Refunded", color: "success" });
@@ -55,13 +55,18 @@ describe("receiptView", () => {
   it("marks a pending refund without claiming it was sent", () => {
     const view = receiptView({ receipt: { ...paid, refundPending: true }, isError: false });
     expect(view.chip).toEqual({ label: "Refund pending", color: "danger" });
+    expect(view.title).toBe("Refund on its way");
     expect(view.body).toMatch(/not confirmation that the refund has been sent/);
   });
 
   it("sends a failed or reviewed refund to support", () => {
     for (const refundStatus of ["FAILED", "REVIEW"]) {
-      const view = receiptView({ receipt: { ...paid, refundStatus }, isError: false });
+      const view = receiptView({
+        receipt: { ...paid, refundStatus, refundPending: true },
+        isError: false,
+      });
       expect(view.chip).toEqual({ label: "Needs review", color: "danger" });
+      expect(view.title).toBe("Payment received");
       expect(view.body).toMatch(/Keep your payment reference for support\.$/);
     }
   });

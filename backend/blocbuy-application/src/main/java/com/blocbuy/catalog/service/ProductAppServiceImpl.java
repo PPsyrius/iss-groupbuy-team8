@@ -21,14 +21,22 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * Default {@link ProductAppService}. Read-only browse: one page query plus one batch deal query,
  * then per-item price resolution through the strategy selected by {@code pricing_mode} — no
  * per-item queries (N+1 forbidden).
+ *
+ * <p>Only the product reads run in a database transaction. It commits, and its connection returns
+ * to the pool, before the best-offer lookup starts, so a slow Redis cannot pin a connection while
+ * browse and detail requests wait on it. Each read statement sees its own READ COMMITTED snapshot
+ * either way, and nothing here needs the product rows and the offers to come from one snapshot: the
+ * offers are display data from a short-lived cache.
  */
 @Service
 @RequiredArgsConstructor
@@ -38,13 +46,17 @@ public class ProductAppServiceImpl implements ProductAppService {
     private final GroupDealQueryService groupDealQueryService;
     private final PricingStrategyResolver pricingStrategyResolver;
     private final ListingSearchReranker listingSearchReranker;
+    private final PlatformTransactionManager transactions;
 
-    /** Browses the deterministic on-sale catalog and assembles listing prices in one batch. */
+    /**
+     * Browses the deterministic on-sale catalog and assembles listing prices in one batch. The page
+     * and count queries share one read-only transaction that ends before the deal lookup.
+     */
     @Override
-    @Transactional(readOnly = true)
     public PageResult<ListingView> pageListings(Integer page, Integer size, String category) {
         PageQuery query = PageQuery.of(page, size);
-        PageResult<Product> products = productRepository.pageOnSale(query, category);
+        PageResult<Product> products =
+                inReadOnlyTransaction(() -> productRepository.pageOnSale(query, category));
         return toPageResult(products, query);
     }
 
@@ -96,12 +108,14 @@ public class ProductAppServiceImpl implements ProductAppService {
         return PageResult.of(items, products.total(), query);
     }
 
+    /**
+     * Resolves one on-sale listing. The product read is the only database transaction; the
+     * not-found decision and the deal lookup both happen after it has committed.
+     */
     @Override
-    @Transactional(readOnly = true)
     public ListingDetailView getListingDetail(UUID productId) {
         Product product =
-                productRepository
-                        .findById(productId)
+                inReadOnlyTransaction(() -> productRepository.findById(productId))
                         .filter(Product::isOnSale)
                         .orElseThrow(() -> new BizException(CatalogErrorCode.PRODUCT_NOT_FOUND));
         OpenDealOffer deal =
@@ -123,6 +137,16 @@ public class ProductAppServiceImpl implements ProductAppService {
                 product.stock(),
                 product.soldCount(),
                 toActiveDeal(deal));
+    }
+
+    /**
+     * Runs a repository read in its own read-only transaction, which has committed and released its
+     * connection by the time this returns. The caller must not start slow work inside {@code read}.
+     */
+    private <T> T inReadOnlyTransaction(Supplier<T> read) {
+        TransactionTemplate tx = new TransactionTemplate(transactions);
+        tx.setReadOnly(true);
+        return tx.execute(status -> read.get());
     }
 
     /** One batch deal lookup for a page of products. */

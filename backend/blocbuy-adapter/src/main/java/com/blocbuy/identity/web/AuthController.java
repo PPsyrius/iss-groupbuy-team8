@@ -22,6 +22,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -50,12 +51,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(ApiConstants.API_V1 + "/auth")
 @RequiredArgsConstructor
+@Slf4j
 @EnableConfigurationProperties(AuthWebProperties.class)
 public class AuthController {
 
     private final OAuthLoginAppService oAuthLoginAppService;
     private final UserAppService userAppService;
     private final AuthWebProperties authWebProperties;
+    private final LoginSessionPublisher loginSessionPublisher;
 
     /**
      * Binds the one-time OAuth state to the initiating browser; HttpOnly + SameSite=Lax so it rides
@@ -165,10 +168,15 @@ public class AuthController {
         OAuthLoginResult result;
         try {
             result = oAuthLoginAppService.loginWithGoogle(code, state, stateBinding);
+            loginSessionPublisher.login(result.userId());
         } catch (BizException ex) {
             return redirect(authWebProperties.failureRedirectUri(ex.errorCode().code()));
+        } catch (RuntimeException ex) {
+            // SDK/Redis exception details may contain token keys; retain only the safe type.
+            log.error("oauth callback session establishment failed: {}", ex.getClass().getName());
+            return redirect(
+                    authWebProperties.failureRedirectUri(CommonErrorCode.INTERNAL_ERROR.code()));
         }
-        StpUtil.login(result.userId());
         return redirect(authWebProperties.successRedirectUri());
     }
 

@@ -2,7 +2,10 @@ package com.blocbuy.identity.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.common.exception.BizException;
@@ -12,7 +15,10 @@ import com.blocbuy.identity.model.User;
 import com.blocbuy.identity.model.UserProfile;
 import com.blocbuy.identity.model.UserStatus;
 import com.blocbuy.identity.repository.UserRepository;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -90,6 +96,40 @@ class UserAppServiceImplTest {
     @Test
     void publicNicknameIsEmptyForAnUnknownUser() {
         assertThat(service.publicNickname(ID)).isEmpty();
+    }
+
+    @Test
+    void publicNicknamesKeepsOnlyShowableNicknamesFromOneRead() {
+        UUID disabled = UUID.fromString("a0000000-0000-7000-8000-000000000002");
+        UUID masked = UUID.fromString("a0000000-0000-7000-8000-000000000003");
+        UUID unknown = UUID.fromString("a0000000-0000-7000-8000-000000000009");
+        Set<UUID> ids = Set.of(ID, disabled, masked, unknown);
+        when(users.findAllById(ids))
+                .thenReturn(
+                        List.of(
+                                user(ID, UserStatus.ACTIVE, "Sarah Tan"),
+                                user(disabled, UserStatus.DISABLED, "Gone"),
+                                user(masked, UserStatus.ACTIVE, "test")));
+
+        assertThat(service.publicNicknames(ids)).isEqualTo(Map.of(ID, "Sarah Tan"));
+        verify(users).findAllById(ids);
+    }
+
+    @Test
+    void publicNicknamesOfAnEmptySetReadsNothing() {
+        assertThat(service.publicNicknames(Set.of())).isEmpty();
+        verify(users, never()).findAllById(any());
+    }
+
+    private static User user(UUID id, UserStatus status, String nickname) {
+        return User.reconstitute(
+                id,
+                null,
+                "test@example.invalid",
+                RegisterSource.GOOGLE,
+                status,
+                new UserProfile(nickname, null),
+                null);
     }
 
     private static User user(UserStatus status) {

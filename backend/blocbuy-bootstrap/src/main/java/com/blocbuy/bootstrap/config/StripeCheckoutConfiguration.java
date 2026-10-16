@@ -6,6 +6,7 @@ import com.blocbuy.payment.repository.CheckoutPaymentRepository;
 import com.blocbuy.payment.service.StripeCheckoutService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -30,13 +31,15 @@ public class StripeCheckoutConfiguration {
             CheckoutGateway gateway,
             PaymentBusinessPort business,
             PlatformTransactionManager transactions,
-            CheckoutRedirectProperties redirects) {
+            CheckoutRedirectProperties redirects,
+            ApplicationEventPublisher events) {
         return new StripeCheckoutService(
                 repository,
                 gateway,
                 business,
                 transactions,
                 redirects.successUrl(),
-                redirects.cancelUrl());
+                redirects.cancelUrl(),
+                events);
     }
 }

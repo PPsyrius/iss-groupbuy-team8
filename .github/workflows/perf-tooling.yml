@@ -1,0 +1,47 @@
+name: perf-tooling
+
+on:
+  pull_request:
+    branches: [dev]
+    paths:
+      - 'perf/k6/**'
+      - 'infra/swe5001/scripts/connection-budget.sh'
+      - 'infra/swe5001/scripts/http-preflight.sh'
+      - 'infra/swe5001/scripts/test-http-preflight.sh'
+      - 'infra/swe5001/scripts/v4-*.sh'
+      - 'infra/swe5001/scripts/test-v4-expiry-seed.sh'
+      - 'infra/swe5001/scripts/test-v4-expiry-tools.sh'
+      - 'infra/swe5001/scripts/http-observe.sh'
+      - 'backend/blocbuy-bootstrap/src/main/resources/db/seed/load/**'
+      - 'backend/blocbuy-bootstrap/src/main/resources/db/migration/**'
+      - '.github/workflows/perf-tooling.yml'
+
+permissions: {}
+
+jobs:
+  generator-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - name: Pure configuration, calibration and budget tests
+        run: node --test perf/k6/lib.test.mjs perf/k6/scaling.test.mjs
+      - name: Read-only AWS capture contract (stubbed, no credentials)
+        run: |
+          bash infra/swe5001/scripts/test-http-preflight.sh
+          bash infra/swe5001/scripts/test-v4-expiry-seed.sh
+          bash infra/swe5001/scripts/test-v4-expiry-tools.sh
+      - name: Pull disposable fixture tools before isolating their network
+        run: |
+          docker pull node:24-bookworm
+          docker pull postgres:18
+          docker pull grafana/k6:1.6.1@sha256:a5ad6bc089a08d77c3ec49f3db8c6fa7a148e4073efcac44c675dbaf3568d8e1
+      - name: Real k6 runner against an isolated local fixture (no AWS)
+        run: node --test perf/k6/integration.test.mjs perf/k6/seed.integration.test.mjs perf/k6/monitor.integration.test.mjs

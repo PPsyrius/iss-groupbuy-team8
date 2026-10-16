@@ -8,6 +8,16 @@ of payment, inventory, order or invitation work. See the original [design plan's
 and [UC5–UC8 analysis](backend-skeleton-plan.md#16-uc5-lifecycle-and-observer-integration).
 Snapshot: 2026-09-11, code at `8fe3d14`; real payment end-to-end completion is not claimed.
 
+## Reuse and receipt compatibility amendment (2026-10-07)
+
+This local change builds on `dev` at `4cc1f6f`; the integrated purchase-intent and refund paths described below already exist and are not reimplemented. UC3's existing Factory Method is constructor-injected, with `StandardPaidGroupDealCreator` wired in application configuration. The service depends on the creator abstraction, while the domain remains free of Spring.
+
+`GroupDeal` now supplies reusable admission guards for the lifecycle/time window, capacity and duplicate membership. Quote validation calls window, capacity and membership guards; paid admission calls price validation, membership, window and capacity guards. This intentionally preserves existing rejection priorities and the leader membership-query short circuit. Quotes reject reconstructed counts below one, matching paid admission. Both paths still read current database time after locking; a quote reserves neither a seat nor payment, so paid admission must recheck.
+
+`ParticipationFingerprint.start` and `.join` encode explicit operation-specific terms while sharing payment fields. Historical `start-v1` and `join-v1` tags, field order, `BigDecimal.toPlainString()` scale, UTF-16 `String.length()` prefixes, UTF-8 bytes and SHA-256 hex output are unchanged. Sharer attribution remains outside the fingerprint because it is frozen in the purchase intent. Golden tests captured before extraction include delimiter characters and a supplementary Unicode character to protect receipt replay compatibility.
+
+These changes reuse Factory Method, the aggregate's lifecycle policy and existing receipt persistence; shared guards and the fingerprint helper are not additional GoF patterns. Observer event ordering, transaction deadlines, lock order, schema and public API remain unchanged. [October 7 evidence](../../../docs/agile/sprint-03/log/2026-10-07.md) records local verification; it does not claim merge, deployment or Stripe end-to-end verification.
+
 ## Current bounded-context design (2026-09-25)
 
 The sections below preserve the original Eric-owned UC3/UC4 design and its course-pattern evidence, but their 2026-09-11 integration caveats are superseded by this current-state section and [ADR 0001](../adr/0001-payment-business-integration.md) / [ADR 0002](../adr/0002-team-lifecycle-events.md). The groupbuy domain still owns team admission and lifecycle, while catalog owns product terms and pricing, order owns the purchase intent and order, and payment owns Stripe settlement and refunds.

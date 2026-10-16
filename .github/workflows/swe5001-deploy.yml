@@ -6,6 +6,9 @@
 # Each promotion creates runtime from zero, so env-up.sh --candidate is the deployment:
 # the services start on the candidate digests behind the ECS circuit breaker and the
 # smoke suite gates the release. Rollback drills run in manual sessions (swe5001-env.yml).
+#
+# Topology: distributed (identity-svc, commerce-svc, notification-svc; backend ADR 0008)
+# unless the repository variable SWE5001_TOPOLOGY says otherwise; monolith is the fallback.
 name: swe5001-deploy
 
 on:
@@ -53,7 +56,7 @@ jobs:
     steps:
       # One file per service, merged into one directory: a pattern that matches a single
       # artifact extracts it without the per-artifact subdirectory.
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: swe5001-image-*
           path: ${{ runner.temp }}/images
@@ -101,7 +104,7 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: docker logout "$REGISTRY"
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: swe5001-evidence-publish
@@ -124,6 +127,10 @@ jobs:
     env:
       AWS_REGION: ${{ vars.AWS_REGION }}
       SWE5001_TF_STATE_BUCKET: ${{ vars.SWE5001_TF_STATE_BUCKET }}
+      SWE5001_TOPOLOGY: ${{ vars.SWE5001_TOPOLOGY || 'distributed' }}
+      TF_VAR_alert_email_addresses: ${{ vars.SWE5001_ALERT_EMAIL_ADDRESSES || '[]' }}
+      TF_VAR_commerce_min_capacity: ${{ vars.SWE5001_COMMERCE_MIN_CAPACITY || '2' }}
+      TF_VAR_commerce_requests_per_target: ${{ vars.SWE5001_COMMERCE_REQUESTS_PER_TARGET || '200' }}
       TF_IN_AUTOMATION: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -202,7 +209,7 @@ jobs:
           echo "::error::force_failure is set; the down job must still destroy runtime"
           exit 1
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: swe5001-evidence-up
@@ -230,7 +237,7 @@ jobs:
           package_json_file: frontend/package.json
 
       # No dependency cache for a published build (cache poisoning).
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: frontend/.nvmrc
 
@@ -354,7 +361,7 @@ jobs:
             sed -E 's/^(.*) ([0-9]+)$/| \1 | \2 |/' "$RUNNER_TEMP/evidence/timings-down.txt" 2> /dev/null || true
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: swe5001-evidence-down
@@ -371,7 +378,7 @@ jobs:
     timeout-minutes: 5
     permissions: {}
     steps:
-      - uses: actions/upload-artifact/merge@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact/merge@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: swe5001-promotion-${{ github.sha }}
           pattern: swe5001-evidence-*

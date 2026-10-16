@@ -4,11 +4,25 @@
   <property name="PATTERN"
             value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level [%X{traceId:-}] %logger{36} - %msg%n"/>
 
-  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-      <pattern>${PATTERN}</pattern>
-    </encoder>
-  </appender>
+  <!-- aws: ECS service assemblies only (SPRING_PROFILES_ACTIVE=<service>,aws, backend ADR 0008).
+       One ECS JSON document per line for CloudWatch Logs; MDC traceId is a field. -->
+  <springProfile name="aws">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder class="org.springframework.boot.logging.logback.StructuredLogEncoder">
+        <format>ecs</format>
+        <charset>UTF-8</charset>
+      </encoder>
+    </appender>
+  </springProfile>
+
+  <!-- every other profile, including ec2 on dev and the ECS monolith: unchanged text lines -->
+  <springProfile name="!aws">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder>
+        <pattern>${PATTERN}</pattern>
+      </encoder>
+    </appender>
+  </springProfile>
 
   <root level="INFO">
     <appender-ref ref="CONSOLE"/>

@@ -167,6 +167,27 @@ class UserTest {
                 .isEmpty();
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {" sarah.tan93 ", "SARAH.TAN93\t", "\u2003sarah.tan93"})
+    void publicNicknameHidesAPaddedEmailLocalPart(String nickname) {
+        assertThat(user(UserStatus.ACTIVE, "sarah.tan93@gmail.com", nickname).publicNickname())
+                .isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"sarah@example.com", "someone@else.com", "a@b", "@sarah", "sarah@"})
+    void publicNicknameHidesAnEmailShapedNickname(String nickname) {
+        assertThat(user(UserStatus.ACTIVE, "sarah@example.com", nickname).publicNickname())
+                .isEmpty();
+        assertThat(user(UserStatus.ACTIVE, null, nickname).publicNickname()).isEmpty();
+    }
+
+    @Test
+    void publicNicknameReturnsAShowableNicknameUntrimmed() {
+        assertThat(user(UserStatus.ACTIVE, "sarah@example.com", " Sarah Tan ").publicNickname())
+                .contains(" Sarah Tan ");
+    }
+
     @Test
     void publicNicknameKeepsANicknameThatOnlyContainsTheEmailLocalPart() {
         assertThat(

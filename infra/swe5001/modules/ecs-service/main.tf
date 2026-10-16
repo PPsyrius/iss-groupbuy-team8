@@ -51,7 +51,7 @@ resource "aws_iam_role" "task" {
 }
 
 resource "aws_iam_role_policy" "task" {
-  count = var.task_policy_json == null ? 0 : 1
+  count = var.task_policy_enabled ? 1 : 0
 
   name   = "service"
   role   = aws_iam_role.task.id
@@ -87,6 +87,7 @@ resource "aws_ecs_task_definition" "this" {
   memory                   = var.memory
   execution_role_arn       = var.execution_role_arn
   task_role_arn            = aws_iam_role.task.arn
+  depends_on               = [aws_iam_role_policy.task, aws_iam_role_policy.exec]
 
   runtime_platform {
     cpu_architecture        = "ARM64"
@@ -177,6 +178,12 @@ resource "aws_lb_listener_rule" "this" {
   }
 }
 
+# Orders creation after the services in var.after_services (their names are module outputs
+# of the caller), so their Service Connect endpoints exist in this service's first deployment.
+resource "terraform_data" "after" {
+  input = var.after_services
+}
+
 resource "aws_ecs_service" "this" {
   name                              = var.name
   cluster                           = var.cluster_name
@@ -186,9 +193,17 @@ resource "aws_ecs_service" "this" {
   health_check_grace_period_seconds = 120
   propagate_tags                    = "SERVICE"
   enable_ecs_managed_tags           = true
+  availability_zone_rebalancing     = "ENABLED"
 
   deployment_minimum_healthy_percent = 100
   deployment_maximum_percent         = 200
+
+  # Terraform supplies the initial count only. Environment scripts own subsequent
+  # counts for every topology: pause explicitly before db-init, restore afterwards;
+  # target tracking may then adjust counts. This avoids Terraform undoing scaling.
+  lifecycle {
+    ignore_changes = [desired_count]
+  }
 
   deployment_circuit_breaker {
     enable   = true
@@ -197,7 +212,7 @@ resource "aws_ecs_service" "this" {
 
   capacity_provider_strategy {
     capacity_provider = "FARGATE"
-    base              = 1
+    base              = var.fargate_base_capacity
     weight            = 1
   }
 
@@ -234,5 +249,5 @@ resource "aws_ecs_service" "this" {
   }
 
   # The target group must be attached to the listener before the service registers.
-  depends_on = [aws_lb_listener_rule.this]
+  depends_on = [aws_lb_listener_rule.this, terraform_data.after]
 }

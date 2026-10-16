@@ -2,7 +2,6 @@ package com.blocbuy.groupbuy.service;
 
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.groupbuy.exception.GroupbuyErrorCode;
-import com.blocbuy.groupbuy.model.DealStatus;
 import com.blocbuy.groupbuy.model.GroupDeal;
 import com.blocbuy.groupbuy.model.ShareInvite;
 import com.blocbuy.groupbuy.repository.PaidGroupDealRepository;
@@ -18,11 +17,10 @@ import org.springframework.stereotype.Service;
  * Reads only groupbuy's own aggregate through its own port and hands the order module a validated
  * snapshot — no {@link GroupDeal} leaves this class.
  *
- * <p>The admission rules deliberately repeat {@link GroupDeal#joinPaid}: this runs before the buyer
- * pays, so it fails fast and cheaply, while {@code joinPaid} remains the authority once money has
- * moved. A team that passes here can still be rejected there if it filled up in between — that is
- * the intended order, because rejecting a quote costs nothing and rejecting a payment costs a
- * refund.
+ * <p>Shared domain guards run before the buyer pays and again in {@link GroupDeal#joinPaid}, which
+ * remains the authority once money has moved. A team that passes here can still be rejected there
+ * if it filled up in between — that is the intended order, because rejecting a quote costs nothing
+ * and rejecting a payment costs a refund.
  */
 @Slf4j
 @Service
@@ -44,17 +42,11 @@ public class GroupDealPurchaseSupportImpl implements GroupDealPurchaseSupport {
         // Read the clock after the lock, so the window check cannot use a time from before a
         // concurrent writer committed.
         Instant now = deals.currentTime();
-        if (deal.status() != DealStatus.OPEN
-                || now.isBefore(deal.startTime())
-                || !now.isBefore(deal.expireTime())) {
-            throw new BizException(GroupbuyErrorCode.DEAL_CLOSED);
-        }
-        if (deal.currentSize() >= deal.targetSize()) {
-            throw new BizException(GroupbuyErrorCode.DEAL_FULL);
-        }
-        if (buyerId.equals(deal.leaderUserId()) || deals.hasActiveMember(dealId, buyerId)) {
-            throw new BizException(GroupbuyErrorCode.ALREADY_MEMBER);
-        }
+        deal.requireJoinWindow(now);
+        deal.requireAvailableSeat();
+        deal.requireNewMember(
+                buyerId,
+                buyerId.equals(deal.leaderUserId()) || deals.hasActiveMember(dealId, buyerId));
         return new JoinTerms(
                 deal.id(),
                 deal.productId(),

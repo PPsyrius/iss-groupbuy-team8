@@ -65,13 +65,13 @@ variable "valkey_version" {
 }
 
 variable "topology" {
-  description = "Service map from services.tf: none (network and data stores only) or monolith (strangler step 0)"
+  description = "Service map from services.tf: none (network and data stores only), monolith (strangler step 0, fallback) or distributed (identity-svc, commerce-svc, notification-svc)"
   type        = string
   default     = "none"
 
   validation {
-    condition     = contains(["none", "monolith"], var.topology)
-    error_message = "topology must be none or monolith."
+    condition     = contains(["none", "monolith", "distributed"], var.topology)
+    error_message = "topology must be none, monolith or distributed."
   }
 }
 
@@ -103,14 +103,76 @@ variable "image_digests" {
   }
 }
 
-variable "services_enabled" {
-  description = "false: services exist with desired count 0 (before db-init); true: desired count 1"
+variable "v4_demo_enabled" {
+  description = "Explicit V4-only commerce demo profile and bounded faster expiry sweep; never seeds data automatically. Keep false for V2/V3 and normal sessions."
   type        = bool
   default     = false
+
+  validation {
+    condition     = !var.v4_demo_enabled || var.topology == "distributed"
+    error_message = "v4_demo_enabled requires the distributed topology."
+  }
+}
+
+variable "services_enabled" {
+  description = "Bootstrap switch: services stopped/started at their minimum, scaling suspended/enabled. Scripts own counts after creation and explicitly pause existing services before db-init."
+  type        = bool
+  default     = false
+}
+
+variable "commerce_min_capacity" {
+  description = "Commerce task minimum: 2 for the demo/V5; set 1 for V2/V3 baseline sessions"
+  type        = number
+  default     = 2
+
+  validation {
+    condition     = contains([1, 2], var.commerce_min_capacity)
+    error_message = "commerce_min_capacity must be 1 (baseline) or 2 (availability demo)."
+  }
+}
+
+variable "commerce_requests_per_target" {
+  description = "ALB requests per target per minute; provisional 200 until replaced by the measured V2 knee"
+  type        = number
+  default     = 200
+
+  validation {
+    condition     = var.commerce_requests_per_target > 0
+    error_message = "commerce_requests_per_target must be positive."
+  }
+}
+
+variable "cloudfront_distribution_id" {
+  description = "Persistent edge distribution ID for the runtime dashboard; supplied by env-up.sh"
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.topology != "distributed" || can(regex("^[A-Z0-9]+$", var.cloudfront_distribution_id))
+    error_message = "Distributed runtime requires the edge cloudfront_distribution_id."
+  }
 }
 
 variable "enable_exec" {
   description = "Allow ECS Exec into service tasks for debugging"
   type        = bool
   default     = false
+}
+
+variable "messaging_verified" {
+  description = "Set true only after the stopped-service fan-out gate passes; false keeps the commerce relay off"
+  type        = bool
+  default     = false
+}
+
+variable "alert_email_addresses" {
+  description = "Operator-supplied team alarm recipients; confirm subscriptions on every distributed session"
+  type        = set(string)
+  default     = []
+}
+
+variable "notification_oldest_message_age_seconds" {
+  description = "Notification age alarm threshold (seconds)"
+  type        = number
+  default     = 60
 }

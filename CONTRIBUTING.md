@@ -36,7 +36,7 @@ Summary ≤ 72 chars, imperative. Body only when the *why* is not obvious.
 - CI must be green: `build-quality`, `contract-check` (backend) and `frontend-check` (frontend) are required checks. Red pipelines don't merge.
 - Formatting-only changes land as their own commit (`style:`), never mixed with behavior changes.
 - CODEOWNERS review required. PRs touching `.github/**`, `backend/Dockerfile`, or pipeline config need the devsecops label owner.
-- New secrets/config: environment variables only, documented in `backend/README.md`. Never committed values (Gitleaks gates full history).
+- New secrets/config: environment variables only, documented in `backend/README.md`. Never commit secrets; Gitleaks gates event-selected revisions, with the full-history enforcement gap recorded in [quality gates](docs/quality/quality-gates.md#secret-scan-scope-checkpoint--2026-10-14).
 
 ## Evidence
 
