@@ -101,11 +101,12 @@ blocbuy:
     # master switch, off by default everywhere; deployments opt in after their backlog check
     enabled: false
     team-expiry:
-      interval: PT1M
+      # Explicit bridges: TEAM_EXPIRY/BATCH_SIZE are not ConfigurationProperties env names.
+      interval: ${BLOCBUY_SCHEDULING_TEAM_EXPIRY_INTERVAL:PT1M}
       initial-delay: PT30S
       # a crashed holder blocks other instances no longer than this
       lease: PT2M
-      batch-size: 100
+      batch-size: ${BLOCBUY_SCHEDULING_TEAM_EXPIRY_BATCH_SIZE:100}
     purchase-intent-expiry:
       interval: PT1M
       initial-delay: PT30S
