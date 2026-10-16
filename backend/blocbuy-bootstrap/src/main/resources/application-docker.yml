@@ -21,6 +21,8 @@ blocbuy:
     enabled: ${BLOCBUY_EVENTS_ENABLED:false}
     relay:
       enabled: ${BLOCBUY_EVENTS_RELAY_ENABLED:false}
+    consumer:
+      enabled: ${BLOCBUY_EVENTS_CONSUMER_ENABLED:false}
     transport: ${BLOCBUY_EVENTS_TRANSPORT:sqs}
     sqs:
       endpoint: ${BLOCBUY_EVENTS_SQS_ENDPOINT:http://elasticmq:9324}
