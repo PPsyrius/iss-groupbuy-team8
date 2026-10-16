@@ -47,16 +47,23 @@ test.describe("anonymous visitor", () => {
   test("Continue with Google starts the backend OAuth flow and parks the return path", async ({
     page,
   }) => {
-    // Answer the top-level navigation with 204 so the browser stays put: the test proves the
-    // target without ever reaching Google.
+    // Answer the top-level navigation with a same-origin stub page: the test proves the target
+    // without ever reaching Google, and `sessionStorage` (per tab and origin) survives the hop.
+    // A 204 used to leave the browser put, but from Chromium 156 (Playwright 1.64) it leaves the
+    // page mid-navigation and `page.evaluate` never resolves.
     let started: string | undefined;
     await page.route(`**${LOGIN_START}*`, async (route) => {
       started = new URL(route.request().url()).pathname;
-      await route.fulfill({ status: 204 });
+      await route.fulfill({
+        status: 200,
+        contentType: "text/html",
+        body: "<!doctype html><title>OAuth stub</title>",
+      });
     });
     await page.goto("/login");
     await page.getByRole("button", { name: "Continue with Google" }).click();
-    await expect.poll(() => started).toBe(LOGIN_START);
+    await expect(page).toHaveURL(new RegExp(`${LOGIN_START}$`));
+    expect(started).toBe(LOGIN_START);
     expect(await page.evaluate(() => sessionStorage.getItem("blocbuy.returnTo"))).toBe("/account");
   });
 
