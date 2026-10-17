@@ -453,12 +453,55 @@ run "commerce_baseline" {
     condition     = module.client_service["commerce-svc"].initial_capacity.desired_count == 1 && one([for p in module.client_service["commerce-svc"].initial_capacity.capacity_provider_strategy : p.base if p.capacity_provider == "FARGATE"]) == 1
     error_message = "The baseline must start one commerce task on regular Fargate."
   }
+  assert {
+    condition     = local.service_environment["commerce-svc"]["SPRING_PROFILES_ACTIVE"] == "ec2,commerce,aws" && !contains(keys(local.service_environment["commerce-svc"]), "BLOCBUY_SCHEDULING_TEAM_EXPIRY_BATCH_SIZE")
+    error_message = "V3/normal sessions retain the ordinary expiry settings and never opt into demo implicitly."
+  }
 }
 
 run "reject_commerce_minimum" {
   command = plan
   variables { commerce_min_capacity = 3 }
   expect_failures = [var.commerce_min_capacity]
+}
+
+run "v4_demo_is_explicit_and_bounded" {
+  command = plan
+
+  variables {
+    topology         = "distributed"
+    v4_demo_enabled  = true
+    services_enabled = false
+    frontend_url     = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+
+  assert {
+    condition     = local.service_environment["commerce-svc"]["SPRING_PROFILES_ACTIVE"] == "ec2,commerce,aws,demo" && local.service_environment["commerce-svc"]["BLOCBUY_SCHEDULING_TEAM_EXPIRY_BATCH_SIZE"] == "500" && local.service_environment["commerce-svc"]["BLOCBUY_SCHEDULING_TEAM_EXPIRY_INTERVAL"] == "PT1S"
+    error_message = "V4 explicitly adds demo and accelerates bounded expiry ticks without lifting the 500-item cap."
+  }
+
+  assert {
+    condition     = local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_ENABLED"] == "false" && local.service_environment["notification-svc"]["BLOCBUY_EVENTS_CONSUMER_ENABLED"] == "false"
+    error_message = "The V4 flag must not bypass messaging bootstrap readiness."
+  }
+
+  assert {
+    condition     = local.service_environment["identity-svc"]["SPRING_PROFILES_ACTIVE"] == "ec2,identity,aws" && local.service_environment["notification-svc"]["SPRING_PROFILES_ACTIVE"] == "ec2,notification,aws"
+    error_message = "The V4 demo profile belongs only to commerce."
+  }
+}
+
+run "reject_v4_on_non_distributed" {
+  command = plan
+  variables {
+    v4_demo_enabled = true
+  }
+  expect_failures = [var.v4_demo_enabled]
 }
 
 run "reject_commerce_target" {

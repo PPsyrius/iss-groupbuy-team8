@@ -105,6 +105,8 @@ Exit 0 means the proposed maximum fits with the specified headroom; exit 2 means
 
 ## V3 and evidence closure
 
+See [V3/V4 operator preparation](SCALING.md) for event-relative latency analysis, resource monitoring, connection-budget prerequisites and the guarded 2,000-team demo expiry driver. Live execution requires fresh authorization; local fixtures do not satisfy AWS acceptance.
+
 Reuse the V2 Docker command with `MODE=v3`, `TOPOLOGY=distributed`, a new `RUN_LABEL`, `KNEE_RPS=<measured-knee>` and a fresh results directory containing the V3 preflight. Pass `--env KNEE_RPS` or a literal `--env KNEE_RPS=...` to the runner. The ramp goes from 20% to 100% of the candidate over five minutes, reaches 300% over the next ten minutes, holds ten minutes, then ramps to zero over five minutes. Rates are bounded by the reviewed V2 range (maximum 600 RPS in V3). Error rate <1% and zero generator drops are gates; the all-run p95 <800 ms gate is a diagnostic screen, not an implementation of the event-relative acceptance exclusion.
 
 For exact V3 acceptance, correlate raw samples with real scale-out timestamps and evaluate p95 <800 ms outside the three minutes after each scale-out, with error rate <1% throughout. Retain the original failing all-run screen when reporting an event-filtered result; never relabel it green. Capture the task-count graph, ALB throughput/p95, k6 summary and ECS events on the same UTC interval; show observed one-to-four-task throughput within 80% of linear where measured, or state the missing observation. Neither a successful fixture nor the ramp's offered rate proves scaling or throughput linearity.

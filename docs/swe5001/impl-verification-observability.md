@@ -92,6 +92,10 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 - Expected: the expiry sweep publishes about 2,000 `TeamExpired` events; queue backlog rises; `notification-svc` scales to 4; backlog drains to zero; DLQ stays empty.
 - Captured: backlog and task-count graph, drain time, notification row count equals expected.
 
+#### V3/V4 local preparation amendment — 2026-10-16
+
+The [operator preparation guide](../../perf/k6/SCALING.md) documents local preparation, the event-relative V3 analyzer and guarded V4 seed/burst/report tools. V4 explicitly opts into `v4_demo_enabled=true` on distributed runtime only: commerce receives the demo profile and a bounded 500-item/one-second expiry sweep, never automatic fixture insertion. Explicit YAML bridges bind the Terraform environment names; tests verify effective application settings, not just task-definition strings. The ordinary 100-item/minute default would spread expiry across about twenty sweeps; the override does not bypass leases, relay limits or messaging readiness. Use an existing active identity and demo product, generate 2,000 UUIDv7 teams plus one unpaid membership each, and let real expiry/outbox/consumer code produce effects; direct SNS injection would not verify this scenario. V4 analysis requires a quiet one-task start, post-expiry backlog followed by observed growth to four tasks and a contiguous final empty interval spanning at least thirty seconds; a closely spaced final sample cannot invalidate that interval. Restore the default-off flag before HTTP measurements. V3 keeps all-run error/zero-drop gates while analyzing p95 outside the three-minute scale-out windows; one-to-four achieved-throughput linearity, observed connection budgets and AWS acceptance remain separate obligations. Local query fixtures, an actual scheduled expiry/relay/consumer rehearsal on ElasticMQ, stubbed scripts and mocked plans are preparation evidence only, not live V3/V4 results.
+
 ### V5 Self-healing
 
 - Under steady load at 50% of the knee with 2 `commerce-svc` tasks, stop one task with `aws ecs stop-task`.

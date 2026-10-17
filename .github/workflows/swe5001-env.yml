@@ -81,6 +81,9 @@ jobs:
       AWS_REGION: ${{ vars.AWS_REGION }}
       SWE5001_TF_STATE_BUCKET: ${{ vars.SWE5001_TF_STATE_BUCKET }}
       TF_VAR_alert_email_addresses: ${{ vars.SWE5001_ALERT_EMAIL_ADDRESSES || '[]' }}
+      # Testing phase: pending alarm-email confirmation only warns. Set the swe5001-demo
+      # variable SWE5001_ALLOW_UNCONFIRMED_ALERTS to false to enforce it for the graded demo.
+      SWE5001_ALLOW_UNCONFIRMED_ALERTS: ${{ vars.SWE5001_ALLOW_UNCONFIRMED_ALERTS || 'true' }}
       TF_VAR_commerce_min_capacity: ${{ vars.SWE5001_COMMERCE_MIN_CAPACITY || '2' }}
       TF_VAR_commerce_requests_per_target: ${{ vars.SWE5001_COMMERCE_REQUESTS_PER_TARGET || '200' }}
       TF_IN_AUTOMATION: "1"

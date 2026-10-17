@@ -54,6 +54,11 @@ class DemoCatalogSeedIT {
     }
 
     private void assertReady() {
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM biz_group_deal WHERE deal_no LIKE 'V4-EXPIRY-%'",
+                                Integer.class))
+                .isZero();
         Integer ready =
                 jdbc.queryForObject(
                         """
