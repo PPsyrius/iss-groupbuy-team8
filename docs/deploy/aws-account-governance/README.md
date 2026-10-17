@@ -41,13 +41,13 @@ The project account trusts `token.actions.githubusercontent.com`. GitHub Actions
 
 ## Guardrails: service control policies
 
-SCPs bind every principal in a member account, including AdministratorAccess sessions and the member root user, so a project administrator cannot lift them. They do not apply to the management account.
+SCPs bind the IAM users and roles in a member account, including AdministratorAccess sessions and the member root user, so a project administrator cannot lift them. They do not apply to service-linked roles (which is how Identity Center still provisions its roles) or to the management account.
 
 | SCP | Attached to | Effect | Document |
 | --- | --- | --- | --- |
 | `FullAWSAccess` (AWS managed) | Root, Sandbox OU, every account | Baseline allow that the denies below narrow | AWS managed |
 | `Org-Baseline` (`p-tveef62a`) | Root | Member accounts cannot leave the organization or close themselves, cannot create their own Identity Center instance, and cannot create, change or delete the Identity Center roles under `aws-reserved/sso.amazonaws.com/` | [org-baseline.json](scp/org-baseline.json) |
-| `Region-Pin` (`p-4hlb2c8g`) | Root | Denies everything outside ap-southeast-1 except global services (IAM, Organizations, STS, Budgets, Cost Explorer, Support, CloudFront, Route 53); WAF only in ap-southeast-1 and us-east-1; CloudWatch metric reads in us-east-1 only for the project account (CloudFront metrics) | [region-pin.json](scp/region-pin.json) |
+| `Region-Pin` (`p-4hlb2c8g`) | Root | Denies everything outside ap-southeast-1 except global services (IAM, Organizations, STS, Budgets, Cost Explorer, Support, CloudFront, Route 53) and `s3:GetBucketLocation`; WAF only in ap-southeast-1 and us-east-1; CloudWatch metric reads in us-east-1 only for the project account (CloudFront metrics) | [region-pin.json](scp/region-pin.json) |
 | `Sandbox-Guardrails` (`p-8hwmgw9u`) | Sandbox OU | Cost guardrail by service and size: denies expensive services (for example SageMaker, Bedrock, Redshift, EKS, EMR, Kendra) and allows only `t3`, `t3a` and `t4g` EC2 and `db.t3`/`db.t4g` RDS classes; it does not set a spending limit | [sandbox-guardrails.json](scp/sandbox-guardrails.json) |
 
 This layout dates from @limjiechao's 2026-10-16 consolidation of four overlapping policies; the before and after, the change sequence, the Access Analyzer and offline equivalence checks and the live probes are in the [SCP consolidation evidence](../../swe5001/evidence/20261016-scp-consolidation/README.md) (#530, NFR-67). CloudTrail independently shows `CreatePolicy` ×2 and `AttachPolicy` ×2 at 10:50–10:51 and `DetachPolicy` ×3 at 11:03–11:06. Region exceptions go in `Region-Pin` only. The same evidence records that the member accounts' root users have no password, access keys or MFA devices, because centralised root access manages them.
