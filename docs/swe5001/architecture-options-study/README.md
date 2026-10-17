@@ -85,4 +85,11 @@ Status: proposal of 2026-09-25, partly adopted. The study was written on 25–26
 | Service decomposition: catalog-service first, team-purchase-service, stock reservation and a settlement saga (02) | Replaced on 30 Sep by identity-svc, commerce-svc (catalog, groupbuy, order, payment) and notification-svc, so that no business write spans two services | [refactoring plan](../microservice-refactoring-plan.md), [ADR 0008](../../../backend/docs/adr/0008-dual-deployment-topology.md) |
 | WAF, X-Ray tracing, Firehose/Athena analytics, the k3s side demo | Not built (cost and scope cuts of 11 Oct) | [Sprint 4 plan](../../agile/sprint-04/plan.md) |
 
-The diagrams that draw the study's own target design (`logical-architecture`, `logical-sequence-*`, `physical-deployment`, `context-map-target`, `current-vs-target`) show the proposal of 25 Sep, not the as-built services.
+The diagrams that draw the study's own target design (`logical-architecture`, `logical-sequence-*`, `physical-deployment`, `context-map-target`, `current-vs-target`) show the proposal of 25 Sep, not the as-built services. Review comments on that proposal's reservation and saga flows (lock scope around the catalog call, acknowledging Stripe before a rejection commits, the reservation lifecycle and its key) apply to the replaced decomposition and are left unchanged here; the as-built settlement runs in one commerce-svc transaction.
+
+Errata, recorded here rather than edited into the 25 Sep text:
+
+- 01, 03, 04 and 07 cite `05-effort-estimate.md` or "05 §N"; that file is not committed (see above), and the adopted effort plan is the proposal's 50 person-day WBS (`docs/swe5001/project-proposal.typ` §7).
+- 04 §1 and §3: the Variant A line items sum to USD 220.79, not 220.77 (rounding); the module-window total of USD 271.93 is unaffected.
+- 06, diagram appendix: the sources are in [`diagrams/`](diagrams/) of this folder, not `docs/SWE5001/architecture-study/diagrams/`.
+- 07 §1: "the levers in 04 (§10)" means 04 §8, "Cost-optimisation levers".
