@@ -1,0 +1,69 @@
+---
+title: "BlocBuy EventStorming - Big Picture, board 2 of 2: team resolution, refund and growth loop"
+---
+flowchart LR
+  classDef event fill:#FFA040,stroke:#B85C00,color:#1A1A1A
+  classDef eventRec fill:#FFA040,stroke:#5C2E00,stroke-width:4px,color:#1A1A1A,font-weight:bold
+  classDef proposed fill:#FFE3C2,stroke:#B85C00,stroke-dasharray:6 4,color:#1A1A1A
+  classDef actor fill:#FFEF5A,stroke:#A38F00,color:#1A1A1A
+  classDef ext fill:#F7B6D2,stroke:#9C1A5A,color:#1A1A1A
+  classDef hot fill:#D81B60,stroke:#7A0036,color:#FFFFFF
+  classDef rm fill:#A8DDA8,stroke:#2E7D32,color:#1A1A1A
+  classDef time fill:#E1D5F5,stroke:#6A1B9A,stroke-dasharray:3 3,color:#1A1A1A
+
+  From1(["from board 1:<br/>Member Joined /<br/>Team Started /<br/>Fulfilment Rejected"]):::time
+
+  subgraph P4["4 Team resolution - Groupbuy publishes, Order and Payment react"]
+    Clock(("Time:<br/>window<br/>lapses")):::time
+    E_Succeeded["TeamSucceeded"]:::eventRec
+    E_Expired["TeamExpired"]:::eventRec
+    E_Confirmed["Orders<br/>Confirmed"]:::event
+    E_Cancelled["Orders<br/>Cancelled"]:::event
+    E_Obligation["Refund Obligation<br/>Recorded"]:::event
+    H_Commit["HOT SPOT<br/>BEFORE_COMMIT listeners,<br/>one local txn, no outbox"]:::hot
+    H_SweepRace["HOT SPOT<br/>sweeper vs settling<br/>webhook on one team"]:::hot
+  end
+
+  subgraph P5["5 Refund - Payment"]
+    StripeR[["Stripe<br/>Refunds API"]]:::ext
+    Operator(["Operator"]):::actor
+    E_Claimed["Refund<br/>Claimed"]:::event
+    E_Refunded["Refund<br/>Succeeded"]:::event
+    E_Retry["Refund Attempt<br/>Failed, Retry Due"]:::event
+    E_RReview["Refund Sent<br/>to Review"]:::event
+    H_Refund["HOT SPOT<br/>provider failure,<br/>24 h idempotency window"]:::hot
+    H_Switch["HOT SPOT<br/>scheduling switch off<br/>by default"]:::hot
+  end
+
+  subgraph P6["6 Growth loop and after-sales - proposed"]
+    Buyer(["Buyer"]):::actor
+    RM_Mine[/"My orders /<br/>my teams"/]:::rm
+    E_Credited["Join Credited<br/>to Sharer"]:::proposed
+    E_Notified["Buyer Notified<br/>(in-app)"]:::proposed
+    E_Fact["Group-buy Fact<br/>Recorded"]:::proposed
+    RM_Board[/"Sharer leaderboard,<br/>seller dashboard"/]:::rm
+  end
+
+  From1 ==>|"quota filled"| E_Succeeded
+  Clock --> E_Expired
+  H_SweepRace -.- E_Expired
+  E_Succeeded --> E_Confirmed
+  E_Expired --> E_Cancelled --> E_Obligation
+  From1 -->|"rejected payment"| E_Obligation
+  H_Commit -.- E_Cancelled
+  E_Obligation ==> E_Claimed --> StripeR
+  StripeR --> E_Refunded
+  StripeR --> E_Retry -.-> E_Claimed
+  StripeR --> E_RReview --> Operator
+  H_Refund -.- E_Retry
+  H_Switch -.- E_Claimed
+  From1 -.-> E_Credited
+  E_Confirmed --> RM_Mine
+  E_Cancelled --> RM_Mine
+  RM_Mine --> Buyer
+  E_Confirmed -.-> E_Notified
+  E_Refunded -.-> E_Notified
+  E_Notified -.-> Buyer
+  E_Confirmed -.-> E_Fact
+  E_Credited -.-> E_Fact
+  E_Fact -.-> RM_Board
