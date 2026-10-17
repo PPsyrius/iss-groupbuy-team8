@@ -93,3 +93,7 @@ Errata, recorded here rather than edited into the 25 Sep text:
 - 04 §1 and §3: the Variant A line items sum to USD 220.79, not 220.77 (rounding); the module-window total of USD 271.93 is unaffected.
 - 06, diagram appendix: the sources are in [`diagrams/`](diagrams/) of this folder, not `docs/SWE5001/architecture-study/diagrams/`.
 - 07 §1: "the levers in 04 (§10)" means 04 §8, "Cost-optimisation levers".
+
+## Amendment 2026-10-17: proof of concept
+
+After this study, @limjiechao proved its target platform on AWS in a separate member account (27 Sep–1 Oct): the stack came up from an empty account in about 20 minutes and was torn down cleanly, and seven of its infrastructure elements reappear in the team implementation. The timeline, measurements, AWS cost evidence and a file-level inventory of what reached the team build are in [poc.md](poc.md).
