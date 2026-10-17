@@ -1,0 +1,41 @@
+---
+title: "BlocBuy context map - recommended service boundaries (proposal, needs broker and outbox approval)"
+---
+flowchart LR
+  classDef core fill:#FFD9A8,stroke:#B85C00,stroke-width:3px,color:#1A1A1A
+  classDef supporting fill:#CFE3FA,stroke:#1565C0,color:#1A1A1A
+  classDef generic fill:#E6E6E6,stroke:#555555,color:#1A1A1A
+  classDef proposed fill:#FFFFFF,stroke:#777777,stroke-dasharray:6 4,color:#1A1A1A
+  classDef ext fill:#F7B6D2,stroke:#9C1A5A,color:#1A1A1A
+  classDef bus fill:#FFF6C2,stroke:#A38F00,color:#1A1A1A
+
+  Google[["Google OAuth 2.0"]]:::ext
+  Stripe[["Stripe"]]:::ext
+  TypeSafe[["TypeSafe reranker"]]:::ext
+  BUS{{"Event bus: integration events<br/>via transactional outbox,<br/>at-least-once, idempotent consumers"}}:::bus
+
+  IDS["identity-service<br/>Identity and Access<br/>generic"]:::generic
+  CATS["catalog-service<br/>Catalog and Pricing<br/>+ listing read model<br/>supporting"]:::supporting
+  TPS["team-purchase-service<br/>Group-buy + Ordering<br/>CORE"]:::core
+  PAYS["payment-service<br/>Payment and Refund<br/>supporting"]:::supporting
+  NOTS["notification-service<br/>proposed, generic"]:::proposed
+  GROW["growth-service<br/>Share Attribution + Analytics<br/>proposed, core"]:::proposed
+
+  Google -->|"ACL"| IDS
+  TypeSafe -->|"ACL, fail-open"| CATS
+  Stripe -->|"ACL, webhooks"| PAYS
+
+  IDS -->|"OHS: token / session<br/>introspection, UserStatusChanged"| TPS
+  CATS -->|"OHS REST: product snapshot,<br/>team terms, idempotent<br/>ReserveUnit(paymentId)"| TPS
+  TPS -->|"OHS REST (sync): frozen<br/>CheckoutQuote for an intent"| PAYS
+
+  PAYS -->|"PaymentSucceeded"| BUS
+  PAYS -->|"RefundSucceeded, RefundFailed"| BUS
+  TPS -->|"TeamStarted, MemberJoined,<br/>FulfilmentRejected,<br/>TeamSucceeded, TeamExpired"| BUS
+  CATS -->|"ProductPublished, ProductDelisted"| BUS
+
+  BUS -->|"PaymentSucceeded (conformist)"| TPS
+  BUS -->|"TeamExpired, FulfilmentRejected<br/>(conformist)"| PAYS
+  BUS -->|"TeamStarted, MemberJoined,<br/>TeamSucceeded, TeamExpired<br/>(listing projection)"| CATS
+  BUS -.->|"all business events"| NOTS
+  BUS -.->|"MemberJoined, TeamSucceeded"| GROW

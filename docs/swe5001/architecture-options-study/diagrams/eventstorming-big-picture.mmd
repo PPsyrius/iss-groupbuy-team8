@@ -1,0 +1,75 @@
+---
+title: "BlocBuy EventStorming - Big Picture, board 1 of 2: listing set-up to paid team membership"
+---
+flowchart LR
+  classDef event fill:#FFA040,stroke:#B85C00,color:#1A1A1A
+  classDef eventRec fill:#FFA040,stroke:#5C2E00,stroke-width:4px,color:#1A1A1A,font-weight:bold
+  classDef proposed fill:#FFE3C2,stroke:#B85C00,stroke-dasharray:6 4,color:#1A1A1A
+  classDef actor fill:#FFEF5A,stroke:#A38F00,color:#1A1A1A
+  classDef ext fill:#F7B6D2,stroke:#9C1A5A,color:#1A1A1A
+  classDef hot fill:#D81B60,stroke:#7A0036,color:#FFFFFF
+  classDef rm fill:#A8DDA8,stroke:#2E7D32,color:#1A1A1A
+
+  subgraph P1["1 Listing set-up - Catalog (producer side)"]
+    Admin(["Administrator<br/>for the seller"]):::actor
+    E_Drafted["Product<br/>Drafted"]:::event
+    E_Policy["Team Price Policy<br/>Configured"]:::event
+    E_Terms["Team Terms<br/>Seeded"]:::event
+    E_Published["Product<br/>Published"]:::event
+    E_Delisted["Product<br/>Delisted"]:::event
+    H_Terms["HOT SPOT<br/>no API for team terms,<br/>DB seed only"]:::hot
+  end
+
+  subgraph P2["2 Access and discovery - Identity, Catalog (consumer side)"]
+    Buyer(["Buyer"]):::actor
+    Google[["Google<br/>OAuth 2.0"]]:::ext
+    TypeSafe[["TypeSafe<br/>reranker"]]:::ext
+    E_Registered["Buyer<br/>Registered"]:::event
+    E_SignedIn["Buyer<br/>Signed In"]:::event
+    RM_Listing[/"Listing view:<br/>two prices +<br/>open teams"/]:::rm
+    E_Quoted["Team Price<br/>Quote Issued"]:::event
+  end
+
+  subgraph P3["3 Team formation, pay first - Order, Payment, Groupbuy"]
+    Leader(["Team leader<br/>(organiser)"]):::actor
+    Joiner(["Joiner"]):::actor
+    Stripe[["Stripe<br/>Checkout"]]:::ext
+    E_Intent["Purchase Intent<br/>Issued"]:::event
+    E_Session["Checkout Session<br/>Created"]:::event
+    E_Webhook["Stripe Event<br/>Received"]:::event
+    E_Unpaid["Checkout Expired<br/>Unpaid"]:::event
+    E_Review["Payment Review<br/>Case Opened"]:::event
+    E_Paid["PaymentSucceeded"]:::eventRec
+    E_TeamStarted["Team<br/>Started"]:::event
+    E_Joined["Member<br/>Joined"]:::event
+    E_Rejected["Fulfilment Rejected,<br/>Refund Required"]:::event
+    E_Order["Order Placed<br/>(pending)"]:::event
+    E_Stock["Stock Unit<br/>Consumed"]:::event
+    E_Invite["Invite Link<br/>Issued"]:::proposed
+    H_Dup["HOT SPOT<br/>duplicate webhooks"]:::hot
+    H_Race["HOT SPOT<br/>last-slot race"]:::hot
+    H_Late["HOT SPOT<br/>paid after team<br/>expired"]:::hot
+  end
+
+  Admin --> E_Drafted --> E_Policy --> E_Terms --> E_Published -.-> E_Delisted
+  H_Terms -.- E_Terms
+  Buyer --> Google --> E_Registered --> E_SignedIn
+  E_Published ==> RM_Listing
+  TypeSafe -.-> RM_Listing
+  E_SignedIn --> RM_Listing --> E_Quoted
+  E_Quoted --> Leader
+  RM_Listing --> Joiner
+  Leader --> E_Intent
+  Joiner --> E_Intent
+  E_Intent --> E_Session --> Stripe --> E_Webhook
+  H_Dup -.- E_Webhook
+  E_Webhook --> E_Paid
+  E_Webhook --> E_Unpaid
+  E_Webhook --> E_Review
+  E_Paid --> E_TeamStarted --> E_Order
+  E_Paid --> E_Joined --> E_Order
+  E_Paid --> E_Rejected
+  E_Order --> E_Stock
+  E_TeamStarted -.-> E_Invite
+  H_Race -.- E_Joined
+  H_Late -.- E_Rejected

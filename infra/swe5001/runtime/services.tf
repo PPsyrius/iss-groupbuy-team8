@@ -100,7 +100,7 @@ locals {
         task_policy_json  = local.commerce_event_policy
         connects_to       = ["identity-svc"]
 
-        environment = {
+        environment = merge({
           SPRING_PROFILES_ACTIVE = "ec2,commerce,aws"
           # The demo catalogue lives only in the commerce database.
           SPRING_FLYWAY_LOCATIONS = "classpath:db/migration,classpath:db/swe5001,classpath:db/seed"
@@ -114,7 +114,11 @@ locals {
           BLOCBUY_EVENTS_TRANSPORT        = "sns"
           BLOCBUY_EVENTS_RELAY_ENABLED    = tostring(var.services_enabled && var.messaging_verified)
           BLOCBUY_EVENTS_SNS_TOPIC_ARN    = local.messaging.topic_arn
-        }
+          }, var.v4_demo_enabled ? {
+          SPRING_PROFILES_ACTIVE                    = "ec2,commerce,aws,demo"
+          BLOCBUY_SCHEDULING_TEAM_EXPIRY_BATCH_SIZE = "500"
+          BLOCBUY_SCHEDULING_TEAM_EXPIRY_INTERVAL   = "PT1S"
+        } : {})
 
         secrets = {
           STRIPE_API_KEY        = "commerce/STRIPE_API_KEY"

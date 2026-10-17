@@ -3,6 +3,17 @@
 # ADR 0007 requires consumers to acknowledge unknown versions without effects, so
 # a rare delayed/duplicate probe remains harmless after stopped services resume.
 
+# SWE5001_ALLOW_UNCONFIRMED_ALERTS=true downgrades a pending email confirmation to a
+# warning for testing sessions. Recipients must still be configured, and an API
+# failure or a non-email subscription still fails readiness.
+allow_unconfirmed_alerts() {
+  case "${SWE5001_ALLOW_UNCONFIRMED_ALERTS:-false}" in
+    true) return 0 ;;
+    false) return 1 ;;
+    *) die "SWE5001_ALLOW_UNCONFIRMED_ALERTS must be true or false" ;;
+  esac
+}
+
 check_alert_recipients() {
   local targets=$1 arn attributes
   jq -e '.alert_subscription_arns | type == "array" and length > 0' <<< "$targets" > /dev/null || {
@@ -11,10 +22,17 @@ check_alert_recipients() {
   }
   while IFS= read -r arn; do
     attributes=$(aws sns get-subscription-attributes --subscription-arn "$arn" --output json) || return 1
-    jq -e '.Attributes | .PendingConfirmation == "false" and .Protocol == "email"' <<< "$attributes" > /dev/null || {
-      log "an alarm subscription is not confirmed; confirm the SNS email before continuing"
+    jq -e '.Attributes.Protocol == "email"' <<< "$attributes" > /dev/null || {
+      log "an alarm subscription is not an email subscription"
       return 1
     }
+    jq -e '.Attributes.PendingConfirmation == "false"' <<< "$attributes" > /dev/null && continue
+    if allow_unconfirmed_alerts; then
+      log "WARNING: an alarm subscription is not confirmed; continuing because SWE5001_ALLOW_UNCONFIRMED_ALERTS=true (alarms will not reach that recipient)"
+    else
+      log "an alarm subscription is not confirmed; confirm the SNS email before continuing"
+      return 1
+    fi
   done < <(jq -r '.alert_subscription_arns[]' <<< "$targets")
 }
 
