@@ -19,6 +19,7 @@ One exception is recorded rather than hidden: the project account still contains
 ## Evidence map for the report editor (exclude from the submitted report)
 
 - Account structure, Identity Center assignments, SCP documents, timeline, exceptions and verification: `docs/deploy/aws-account-governance/README.md` and `docs/deploy/aws-account-governance/scp/`.
+- SCP consolidation before/after, change sequence and probes: `docs/swe5001/evidence/20261016-scp-consolidation/README.md` (#530, NFR-67).
 - GitHub OIDC roles used by the SWE5006 pipelines: `docs/deploy/backend-ec2-pipeline-operator-guide.md`, `docs/deploy/dev-cloudfront-deployment.md`.
 - Earlier SCP effects on SWE5006 operations: `docs/deploy/backend-log-observability.md` (troubleshooting table), `docs/agile/sprint-02/log/2026-09-23.md`.
 - Accuracy limits: CloudTrail attributes the organisation and Identity Center setup to the management account's root user, not a named person; the guardrails limit services and instance sizes, not spend; AWS Budgets was not checked.

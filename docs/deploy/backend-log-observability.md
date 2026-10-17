@@ -221,7 +221,7 @@ aws ssm describe-instance-information \
 | `docker logs` empty after a deploy | Expected — local buffer is recreated with the container; use CloudWatch for history |
 | No events in `/blocbuy/backend/dev` after deploy | Instance role missing `BlocBuyEc2CloudWatchLogs`; check `aws logs describe-log-streams --log-group-name /blocbuy/backend/dev` and the role's attached policies |
 | `MalformedPolicyDocument` when creating policies in CloudShell | Heredoc/paste mangled the JSON; pass the policy as a single-line inline string instead |
-| Console policy editor fails with `access-analyzer:ValidatePolicy` denied | The org SCP blocks Access Analyzer validation; apply IAM changes via CLI (`aws iam create-policy-version`) instead of the console editor. The SCPs were consolidated on 2026-10-16 (see [AWS account governance](aws-account-governance/README.md)); this denial was not rechecked |
+| Console policy editor fails with `access-analyzer:ValidatePolicy` denied | The org SCP blocks Access Analyzer validation; apply IAM changes via CLI (`aws iam create-policy-version`) instead of the console editor. Since the 2026-10-16 consolidation the denial comes from the root `Region-Pin` SCP (see [AWS account governance](aws-account-governance/README.md)) |
 
 ## Cost guardrails
 

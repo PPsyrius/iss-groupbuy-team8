@@ -1,6 +1,6 @@
 # AWS account governance
 
-This page records the AWS account structure, human and machine access, and organisation guardrails under which both BlocBuy deployments run: the SWE5006 `dev` environment (single EC2 host, S3 and CloudFront) and the SWE5001 `prod` environment (ECS on Fargate). It is the canonical record; the SWE5001 and SWE5006 documents link here instead of restating it.
+This page records the AWS account structure, human and machine access, and organisation guardrails under which both BlocBuy deployments run: the SWE5006 `dev` environment (single EC2 host, S3 and CloudFront) and the SWE5001 `prod` environment (ECS on Fargate). It is the canonical record of accounts and access; the SWE5001 and SWE5006 documents link here instead of restating it. The history of the SCP consolidation lives in its [dated evidence](../../swe5001/evidence/20261016-scp-consolidation/README.md).
 
 Owner: @limjiechao, who created the AWS Organization, the project member account and IAM Identity Center on 2026-08-25 and administers them from the management account. Teammates work inside the member account only.
 
@@ -50,7 +50,7 @@ SCPs bind every principal in a member account, including AdministratorAccess ses
 | `Region-Pin` (`p-4hlb2c8g`) | Root | Denies everything outside ap-southeast-1 except global services (IAM, Organizations, STS, Budgets, Cost Explorer, Support, CloudFront, Route 53); WAF only in ap-southeast-1 and us-east-1; CloudWatch metric reads in us-east-1 only for the project account (CloudFront metrics) | [region-pin.json](scp/region-pin.json) |
 | `Sandbox-Guardrails` (`p-8hwmgw9u`) | Sandbox OU | Cost guardrail by service and size: denies expensive services (for example SageMaker, Bedrock, Redshift, EKS, EMR, Kendra) and allows only `t3`, `t3a` and `t4g` EC2 and `db.t3`/`db.t4g` RDS classes; it does not set a spending limit | [sandbox-guardrails.json](scp/sandbox-guardrails.json) |
 
-2026-10-16 consolidation: @limjiechao replaced four overlapping SCPs (`DenyAllOutsideApSoutheast1`, `DenyLeaveAndCloseAccount`, `DenyMemberAccountInstances`, `Sandbox-Freeze`) with `Org-Baseline` and `Region-Pin` at the root and kept `Sandbox-Guardrails` on the OU. Two region pins had forced every regional exception to be made twice, and the first CloudFront-metrics exception had silently had no effect; region exceptions now go in `Region-Pin` only. CloudTrail shows `CreatePolicy` ×2 and `AttachPolicy` ×2 at 10:50–10:51 and `DetachPolicy` ×3 at 11:03–11:06. The four old policies are detached, not deleted; deletion is planned after 2026-10-23.
+This layout dates from @limjiechao's 2026-10-16 consolidation of four overlapping policies; the before and after, the change sequence, the Access Analyzer and offline equivalence checks and the live probes are in the [SCP consolidation evidence](../../swe5001/evidence/20261016-scp-consolidation/README.md) (#530, NFR-67). CloudTrail independently shows `CreatePolicy` ×2 and `AttachPolicy` ×2 at 10:50–10:51 and `DetachPolicy` ×3 at 11:03–11:06. Region exceptions go in `Region-Pin` only. The same evidence records that the member accounts' root users have no password, access keys or MFA devices, because centralised root access manages them.
 
 ## Accepted exceptions
 
