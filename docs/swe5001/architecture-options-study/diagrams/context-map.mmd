@@ -1,0 +1,42 @@
+---
+title: "BlocBuy context map - today (one modular monolith, in-process facades and events)"
+---
+flowchart LR
+  classDef core fill:#FFD9A8,stroke:#B85C00,stroke-width:3px,color:#1A1A1A
+  classDef supporting fill:#CFE3FA,stroke:#1565C0,color:#1A1A1A
+  classDef generic fill:#E6E6E6,stroke:#555555,color:#1A1A1A
+  classDef proposed fill:#FFFFFF,stroke:#777777,stroke-dasharray:6 4,color:#1A1A1A
+  classDef ext fill:#F7B6D2,stroke:#9C1A5A,color:#1A1A1A
+  classDef kernel fill:#F3F3F3,stroke:#999999,stroke-dasharray:2 2,color:#1A1A1A
+
+  Google[["Google OAuth 2.0"]]:::ext
+  Stripe[["Stripe"]]:::ext
+  TypeSafe[["TypeSafe reranker"]]:::ext
+
+  subgraph Mono["blocbuy-bootstrap: one JVM, one PostgreSQL schema, one transaction manager"]
+    IDN["Identity and Access<br/>generic"]:::generic
+    CAT["Catalog and Pricing<br/>supporting"]:::supporting
+    subgraph TP["Team Purchase - one consistency boundary today"]
+      GB["Group-buy (Team)<br/>CORE"]:::core
+      ORD["Ordering<br/>(PurchaseIntent, Order)<br/>core"]:::core
+    end
+    PAY["Payment and Refund<br/>supporting"]:::supporting
+    NOTI["Notification<br/>stub - proposed"]:::proposed
+    ATTR["Share Attribution<br/>proposed - core"]:::proposed
+    COM["common<br/>shared kernel"]:::kernel
+  end
+
+  Google -->|"U/D: Identity is ACL<br/>(OAuthIdentityGateway)"| IDN
+  TypeSafe -->|"U/D: ACL, fail-open<br/>(ListingSearchReranker)"| CAT
+  Stripe -->|"U/D: ACL<br/>(CheckoutGateway, RefundGateway)"| PAY
+
+  IDN -->|"Customer-Supplier<br/>UserAppService.requireActive"| ORD
+  CAT -->|"Customer-Supplier<br/>CatalogPurchaseSupport<br/>(price START, take one unit)"| ORD
+  GB -->|"Customer-Supplier + translation<br/>GroupDealQueryService to GroupDealOffer"| CAT
+  GB <-->|"Partnership, same txn<br/>Purchase/SettlementSupport;<br/>TeamSucceeded, TeamExpired"| ORD
+  PAY -->|"Payment owns the port contract;<br/>Order conforms: PaymentIntentPort,<br/>PaymentBusinessPort, PaymentSucceeded"| ORD
+  GB -->|"Published language: TeamExpired<br/>(BEFORE_COMMIT subscriber)"| PAY
+  GB -.->|"proposed: Member Joined"| ATTR
+  GB -.->|"proposed: team events"| NOTI
+  PAY -.->|"proposed: Refund Succeeded"| NOTI
+  COM -.-|"Shared kernel: ErrorCode,<br/>PageQuery, UuidV7, scheduler lease"| Mono

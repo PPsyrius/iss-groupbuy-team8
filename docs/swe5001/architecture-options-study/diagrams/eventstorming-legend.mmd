@@ -1,0 +1,30 @@
+---
+title: "EventStorming colour legend used on every BlocBuy board"
+---
+flowchart LR
+  classDef event fill:#FFA040,stroke:#B85C00,color:#1A1A1A
+  classDef eventRec fill:#FFA040,stroke:#5C2E00,stroke-width:4px,color:#1A1A1A,font-weight:bold
+  classDef proposed fill:#FFE3C2,stroke:#B85C00,stroke-dasharray:6 4,color:#1A1A1A
+  classDef cmd fill:#6FB4F2,stroke:#1565C0,color:#1A1A1A
+  classDef actor fill:#FFEF5A,stroke:#A38F00,color:#1A1A1A
+  classDef agg fill:#FFF6C2,stroke:#A38F00,color:#1A1A1A
+  classDef policy fill:#D7B4F3,stroke:#6A1B9A,color:#1A1A1A
+  classDef rm fill:#A8DDA8,stroke:#2E7D32,color:#1A1A1A
+  classDef ext fill:#F7B6D2,stroke:#9C1A5A,color:#1A1A1A
+  classDef hot fill:#D81B60,stroke:#7A0036,color:#FFFFFF
+  classDef time fill:#E1D5F5,stroke:#6A1B9A,stroke-dasharray:3 3,color:#1A1A1A
+
+  L1["Domain event<br/>(orange)"]:::event
+  L2["Domain event that exists<br/>as a Java record (bold border)"]:::eventRec
+  L3["Proposed event,<br/>not built (dashed)"]:::proposed
+  L4["Command<br/>(blue)"]:::cmd
+  L5(["Actor / role<br/>(yellow)"]):::actor
+  L6["Aggregate<br/>(pale yellow)"]:::agg
+  L7["Policy: whenever X<br/>then Y (lilac)"]:::policy
+  L8[/"Read model<br/>(green)"/]:::rm
+  L9[["External system<br/>(pink)"]]:::ext
+  L10["Hot spot<br/>(magenta)"]:::hot
+  L11(("Time trigger /<br/>board link")):::time
+
+  L1 ~~~ L2 ~~~ L3 ~~~ L4 ~~~ L5 ~~~ L6
+  L7 ~~~ L8 ~~~ L9 ~~~ L10 ~~~ L11

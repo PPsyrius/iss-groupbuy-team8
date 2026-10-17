@@ -48,4 +48,8 @@ for service in commerce-svc notification-svc; do
   jq -e '.desired == 0 and .running == 0' <<< "$stopped" > /dev/null || die "$service is not stopped"
 done
 check_messaging_routes "$targets" || die "messaging readiness failed; relay enablement is not authorised"
-log "messaging routing and confirmed alarm-recipient readiness passed"
+if allow_unconfirmed_alerts; then
+  log "messaging routing readiness passed; alarm-recipient confirmation was not enforced"
+else
+  log "messaging routing and confirmed alarm-recipient readiness passed"
+fi

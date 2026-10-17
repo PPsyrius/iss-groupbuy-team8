@@ -1,0 +1,231 @@
+---
+title: "BlocBuy tactical model - aggregates, value objects and domain events per bounded context"
+---
+classDiagram
+  direction LR
+
+  namespace Identity {
+    class User {
+      <<AggregateRoot>>
+      UUID id
+      String email
+      UserStatus status
+      registerViaOAuth()
+      touchLogin(at)
+      ensureActive()
+      disable()
+    }
+    class OAuthIdentity {
+      <<Entity>>
+      OAuthProvider provider
+      String providerUserId
+    }
+    class UserStatus {
+      <<Enumeration>>
+      ACTIVE
+      DISABLED
+    }
+  }
+
+  namespace Catalog {
+    class Product {
+      <<AggregateRoot>>
+      UUID id
+      BigDecimal originalPrice
+      int stock
+      ProductStatus status
+      PricingMode pricingMode
+      draft()
+      revise()
+      publish()
+      delist()
+      requireDeletable()
+    }
+    class ProductStatus {
+      <<State>>
+      DRAFT
+      ON_SALE
+      OFF_SALE
+    }
+    class ProductTeamTerms {
+      <<ValueObject>>
+      Integer targetSize
+      Integer lifetimeSeconds
+      startable()
+    }
+    class TeamPricePolicy {
+      <<AggregateRoot>>
+      BigDecimal amount
+      Instant validFrom
+      Instant validUntil
+      requireQuotable(product, now)
+    }
+    class TeamPriceQuote {
+      <<ValueObject>>
+      UUID ownerId
+      BigDecimal amount
+    }
+    class DualPricingStrategy {
+      <<DomainService>>
+      resolve(product, offer) ListingPrice
+    }
+    class GroupDealOffer {
+      <<ValueObject>>
+      UUID dealId
+      BigDecimal dealPrice
+      int currentSize
+      int targetSize
+    }
+  }
+
+  namespace Groupbuy {
+    class GroupDeal {
+      <<AggregateRoot>>
+      UUID id
+      UUID productId
+      UUID leaderUserId
+      BigDecimal dealPrice
+      int targetSize
+      int currentSize
+      DealStatus status
+      Instant expireTime
+      joinPaid(payment, alreadyMember, now)
+      expire(now)
+    }
+    class DealStatus {
+      <<State>>
+      OPEN
+      SUCCEEDED
+      FAILED
+      EXPIRED
+      CANCELED
+      canTransitionTo(target)
+    }
+    class PaidParticipation {
+      <<ValueObject>>
+      UUID paymentId
+      UUID userId
+      BigDecimal amount
+    }
+    class NewDealTerms {
+      <<ValueObject>>
+    }
+    class PaidGroupDealCreator {
+      <<FactoryMethod>>
+      initiate(terms, payment, now) GroupDeal
+    }
+    class ParticipationReceipt {
+      <<Entity>>
+      String fingerprint
+      ParticipationResult result
+    }
+    class TeamSucceeded {
+      <<DomainEvent>>
+      UUID dealId
+      UUID productId
+      int size
+      Instant at
+    }
+    class TeamExpired {
+      <<DomainEvent>>
+      UUID dealId
+      UUID productId
+      Instant at
+    }
+  }
+
+  namespace Ordering {
+    class PurchaseIntent {
+      <<AggregateRoot>>
+      UUID id
+      UUID userId
+      PurchaseOperation operation
+      UUID dealId
+      BigDecimal amount
+      Instant quoteValidUntil
+      Instant businessDeadline
+      UUID fulfilledPaymentId
+      fulfilBy(paymentId)
+      requireOwner(user)
+      expiredAt(now)
+    }
+    class Order {
+      <<AggregateRoot>>
+      UUID id
+      UUID paymentId
+      UUID dealId
+      UUID userId
+      String productTitle
+      BigDecimal totalAmount
+      OrderStatus status
+      create(terms, paidAt)
+      confirm()
+      cancel(at)
+    }
+    class OrderStatus {
+      <<State>>
+      PENDING
+      CONFIRMED
+      CANCELLED
+    }
+  }
+
+  namespace Payment {
+    class CheckoutPayment {
+      <<AggregateRoot>>
+      UUID id
+      CheckoutQuote quote
+      Status status
+      String providerSessionId
+      bind()
+      succeed()
+      cancelUnpaid()
+      failTerminalUnpaid()
+    }
+    class CheckoutQuote {
+      <<ValueObject>>
+      UUID intentId
+      String operation
+      UUID businessId
+      BigDecimal amount
+      expiredAt(now)
+    }
+    class RefundWork {
+      <<AggregateRoot>>
+      UUID paymentId
+      BigDecimal amount
+      String providerRefundId
+      int version
+      valid()
+    }
+    class PaymentReviewCase {
+      <<AggregateRoot>>
+      String reason
+    }
+    class PaymentSucceeded {
+      <<DomainEvent>>
+      UUID paymentId
+      CheckoutQuote quote
+      Instant confirmedAt
+    }
+  }
+
+  Product *-- ProductTeamTerms
+  Product --> ProductStatus
+  TeamPricePolicy ..> TeamPriceQuote : issues
+  DualPricingStrategy ..> GroupDealOffer : reads
+  GroupDeal --> DealStatus
+  PaidGroupDealCreator ..> GroupDeal : creates
+  PaidGroupDealCreator ..> NewDealTerms
+  GroupDeal ..> PaidParticipation : admits
+  GroupDeal ..> TeamSucceeded : raises
+  GroupDeal ..> TeamExpired : raises
+  Order --> OrderStatus
+  CheckoutPayment *-- CheckoutQuote
+  CheckoutPayment ..> PaymentSucceeded : raises
+  User *-- OAuthIdentity
+  User --> UserStatus
+  PurchaseIntent ..> CheckoutQuote : becomes
+  Order ..> GroupDeal : dealId only
+  RefundWork ..> CheckoutPayment : paymentId only
+  GroupDeal ..> Product : productId only

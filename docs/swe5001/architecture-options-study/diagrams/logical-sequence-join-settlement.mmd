@@ -1,0 +1,60 @@
+---
+title: Logical view (UML sequence) - join a team by paying, conduct-window cut (reservation + local settlement + outbox)
+---
+sequenceDiagram
+  autonumber
+  actor B as Buyer (SPA)
+  participant GW as ALB / API router
+  participant COM as team-purchase-service<br/>(+ payment module until P5.1)
+  participant CAT as catalog-service
+  participant S as Stripe
+  participant OB as team-purchase outbox relay
+  participant BUS as SNS topic + SQS queues
+  participant NTF as notification-service
+
+  B->>GW: POST /api/v1/payments/intents {operation: JOIN, dealId}
+  GW->>COM: forward (Sa-Token cookie)
+  COM->>COM: validate session (shared Redis), lock team, check joinable
+  COM->>CAT: POST /internal/reservations {key: intentId, productId, ttl}
+  Note over CAT: one local txn: status and stock checked,<br/>stock -1, reservation HELD (idempotent on key)
+  CAT-->>COM: 201 {reservationId, unitPrice, terms snapshot}
+  COM->>COM: freeze purchase intent (price, deadlines from DB clock)
+  COM-->>B: 201 intent
+  B->>GW: POST /api/v1/payments/checkout-sessions {intentId}
+  GW->>COM: forward
+  COM->>S: create Checkout Session (idempotency key, outside DB txn)
+  S-->>COM: session URL
+  COM-->>B: 303 to Stripe hosted checkout
+  B->>S: pays
+  S->>GW: POST /api/v1/webhooks/stripe (signed)
+  GW->>COM: forward
+  COM->>COM: verify signature, dedup event id
+
+  rect rgba(120,160,220,0.15)
+    Note over COM: ONE local transaction (unchanged from ADR 0001/0002)<br/>lock order: team -> intent -> order -> payment
+    COM->>COM: payment SUCCEEDED
+    COM->>COM: check user and product replicas, join team, create order
+    alt team becomes full
+      COM->>COM: TeamSucceeded (BEFORE_COMMIT) -> confirm all team orders
+    end
+    COM->>COM: INSERT outbox rows: MemberJoined, OrderPlaced,<br/>[TeamSucceeded, OrderConfirmed x n]
+  end
+  COM-->>S: 2xx
+
+  alt business rejection (team full / expired / quote expired)
+    COM->>COM: same txn: record refund obligation + outbox FulfilmentRejected
+  end
+
+  loop every 1 s (leased, at-least-once)
+    OB->>COM: claim unpublished outbox rows (FOR UPDATE SKIP LOCKED)
+    OB->>BUS: Publish(event, attributes: type, aggregateId, version)
+    OB->>COM: mark published
+  end
+
+  par catalog consumer
+    BUS->>CAT: MemberJoined / TeamSucceeded / FulfilmentRejected
+    CAT->>CAT: inbox dedup (eventId), reservation CONSUMED or RELEASED,<br/>update open-team projection (version guard)
+  and notification consumer
+    BUS->>NTF: OrderConfirmed
+    NTF->>NTF: inbox dedup, store notice, send email
+  end

@@ -1,0 +1,83 @@
+---
+title: BlocBuy target logical architecture (UML component view)
+---
+flowchart TB
+  buyer(["&lt;&lt;actor&gt;&gt;<br/>Buyer / Team leader"])
+  seller(["&lt;&lt;actor&gt;&gt;<br/>Seller / Admin"])
+
+  subgraph PRES["&lt;&lt;tier&gt;&gt; Presentation"]
+    spa["&lt;&lt;component&gt;&gt; BlocBuy SPA<br/>React 19 + generated API client"]
+  end
+
+  subgraph EDGE["&lt;&lt;tier&gt;&gt; Edge / API gateway"]
+    direction LR
+    cdn["&lt;&lt;component&gt;&gt; CDN + WAF<br/>static assets, TLS, rate limits"]
+    gw["&lt;&lt;component&gt;&gt; API router<br/>path routing /api/v1/*"]
+    cdn --> gw
+  end
+
+  subgraph SVC["&lt;&lt;tier&gt;&gt; Services (each keeps COLA layers: adapter / application / domain / infrastructure)"]
+    direction LR
+    idn["&lt;&lt;service&gt;&gt; identity-service (stretch P5.2)<br/>login, session, RBAC<br/>publishes UserDisabled"]
+    cat["&lt;&lt;service&gt;&gt; catalog-service<br/>listings, pricing, inventory reservations,<br/>open-team read model"]
+    subgraph TPC["&lt;&lt;deployable&gt;&gt; team-purchase container (until P5.1)"]
+      com["&lt;&lt;service&gt;&gt; team-purchase-service<br/>groupbuy + order<br/>intents, teams, orders, expiry sweeper"]
+      pay["&lt;&lt;service&gt;&gt; payment-service<br/>checkout, webhook, refund worker<br/>own schema; extracted in P5.1"]
+      com <-->|"ports, one local txn"| pay
+    end
+    ntf["&lt;&lt;service&gt;&gt; notification-service<br/>in-app + email notices"]
+    grw["&lt;&lt;service&gt;&gt; growth-service (proposed)<br/>analytics now; UC7 attribution later"]
+    com -. "sync REST: purchase terms,<br/>reserve unit" .-> cat
+  end
+
+  subgraph INT["&lt;&lt;tier&gt;&gt; Integration"]
+    direction TB
+    relay["&lt;&lt;component&gt;&gt; Outbox relay<br/>(inside each producer)"]
+    bus["&lt;&lt;topic&gt;&gt; blocbuy-domain-events"]
+    q["&lt;&lt;queue&gt;&gt; per-consumer queues + DLQs"]
+    ana["&lt;&lt;component&gt;&gt; Firehose + S3 + Athena<br/>event archive + SQL"]
+    relay --> bus --> q
+    bus --> ana
+    ana --- grw
+  end
+
+  subgraph DATA["&lt;&lt;tier&gt;&gt; Data"]
+    direction LR
+    sess[("&lt;&lt;data store&gt;&gt; Session store<br/>Sa-Token sessions, OAuth state")]
+    dbi[("&lt;&lt;schema&gt;&gt; identity")]
+    dbc[("&lt;&lt;schema&gt;&gt; catalog")]
+    dbm[("&lt;&lt;schemas&gt;&gt; purchase + payment")]
+    dbn[("&lt;&lt;schema&gt;&gt; notification")]
+  end
+
+  subgraph EXT["&lt;&lt;external systems&gt;&gt;"]
+    direction LR
+    google["Google OAuth2"]
+    stripe["Stripe<br/>Checkout, webhooks, refunds"]
+    ts["TypeSafe reranker<br/>(optional, fail-open)"]
+    mail["Email provider"]
+  end
+
+  buyer --> spa
+  seller --> spa
+  spa -->|HTTPS| cdn
+  gw -->|"/auth"| idn
+  gw -->|"/products, /team-price-*"| cat
+  gw -->|"/orders, /group-deals, /payments/intents"| com
+  gw -->|"/payments, /webhooks"| pay
+  gw -->|"/notifications"| ntf
+
+  SVC -->|sessions| sess
+  idn --> dbi
+  cat --> dbc
+  TPC --> dbm
+  ntf --> dbn
+
+  SVC -->|outbox| relay
+  q -->|subscribed events| SVC
+
+  idn --> google
+  pay --> stripe
+  stripe -->|signed webhook| cdn
+  cat -.-> ts
+  ntf --> mail
