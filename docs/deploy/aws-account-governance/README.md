@@ -12,7 +12,7 @@ Verified: 2026-10-16/17 (SGT) with read-only Organizations, IAM Identity Center,
 | --- | --- | --- | --- | --- | --- |
 | Root | 592877955899 | `jiechao` | Management account: Organizations, Identity Center, SCPs; runs no workloads | Active | Organization created 2026-08-25 14:32 |
 | Sandbox (`ou-5yu3-t4qga7jk`, created 2026-08-29) | 402178232802 | `nus-iss-mtech-se34-ft-swe5006-team8` | The BlocBuy project account: SWE5006 `dev` and SWE5001 `prod` | Active | Created by the organization 2026-08-25 15:06; moved into Sandbox when the OU was created |
-| Sandbox | 161877660123 | `nus-iss-mtech-se34-ft-swe5001-poc` | Short-lived SWE5001 proof-of-concept account | Suspended (closed) | Created 2026-09-30 06:29 |
+| Sandbox | 161877660123 | `nus-iss-mtech-se34-ft-swe5001-poc` | Short-lived SWE5001 proof-of-concept account; ran the [POC](../../swe5001/architecture-options-study/poc.md) stack on 2026-10-01 | Suspended (closed 2026-10-16) | Created 2026-09-30 06:29 |
 
 Organization `o-37mek1w37u` uses all features (not consolidated billing only). The root has the SCP, RCP and S3 policy types enabled. Trusted access is enabled for IAM Identity Center (`sso.amazonaws.com`, 2026-08-25 16:32) and IAM (`iam.amazonaws.com`, 2026-08-25 22:36), with centralised root access management (root credentials management and root sessions).
 
