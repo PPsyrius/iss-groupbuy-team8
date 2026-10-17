@@ -9,6 +9,7 @@ Last reconciled: 2026-10-16 for #457/#458 against session tooling/infra `767d980
 | Topic | Document |
 | --- | --- |
 | Options analysis before the proposal (viability scoring, Kubernetes vs ECS, AWS and DigitalOcean cost, EventStorming) and what was adopted | [Architecture options study](architecture-options-study/README.md), amendment of 2026-10-16 |
+| AWS Organization, project member account, IAM Identity Center access and SCP guardrails | [AWS account governance](../deploy/aws-account-governance/README.md) |
 | Release flow, ephemeral runtime, validation split | [Refactoring plan](microservice-refactoring-plan.md), sections 3.2–3.4 |
 | Stacks, network, ECS, data stores, scripts, cost | [AWS infrastructure plan](impl-aws-infrastructure.md) |
 | Environments, `prod` ruleset, workflows | [GitHub configuration plan](impl-github-configuration.md) |
