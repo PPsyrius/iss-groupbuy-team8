@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import com.blocbuy.bootstrap.config.StripeCheckoutConfiguration;
+import com.blocbuy.bootstrap.config.StripeCheckoutRuntimeProperties;
 import com.blocbuy.bootstrap.config.StripePaymentFacadeConfiguration;
 import com.blocbuy.payment.gateway.CheckoutGateway;
 import com.blocbuy.payment.gateway.PaymentBusinessPort;
@@ -146,6 +147,20 @@ class StripeCheckoutFlagConfigurationTest {
                         "blocbuy.payment.stripe.checkout-enabled=false",
                         "blocbuy.payment.stripe.api-key=" + LIVE_FIXTURE)
                 .run(context -> assertThat(context).hasNotFailed());
+    }
+
+    @Test
+    void sandboxKeyCheckMatchesTheFormerTestKeyPattern() {
+        // Same acceptance as the former @Pattern("sk_test_.+"); a missing key is @NotBlank's job.
+        assertThat(sandboxKey(null)).isTrue();
+        assertThat(sandboxKey("sk_test_" + "abc")).isTrue();
+        assertThat(sandboxKey("sk_test_")).isFalse();
+        assertThat(sandboxKey(LIVE_FIXTURE)).isFalse();
+        assertThat(sandboxKey("")).isFalse();
+    }
+
+    private static boolean sandboxKey(String apiKey) {
+        return new StripeCheckoutRuntimeProperties(apiKey, "whsec").isSandboxKey();
     }
 
     @Test
