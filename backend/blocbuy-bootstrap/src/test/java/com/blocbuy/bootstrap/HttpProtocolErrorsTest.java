@@ -135,6 +135,19 @@ class HttpProtocolErrorsTest {
                 .andExpect(jsonPath("$.code").value("COMMON_415_001"));
     }
 
+    /** The Stripe-scoped advice must also write JSON when Accept excludes it. */
+    @Test
+    void webhookMissingSignatureWithXmlAcceptIs400JsonEnvelope() throws Exception {
+        mvc.perform(
+                        post(STRIPE_WEBHOOK_PATH)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("Accept", XML)
+                                .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("COMMON_400_001"));
+    }
+
     /** Test-only session store: keeps Sa-Token off a developer's Redis. */
     @TestConfiguration(proxyBeanMethods = false)
     static class SessionStore {
