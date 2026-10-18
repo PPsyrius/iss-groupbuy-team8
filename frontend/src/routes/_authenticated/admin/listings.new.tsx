@@ -33,10 +33,16 @@ function NewListingPage() {
   const save = async (values: typeof emptyListingForm): Promise<SubmitProblem | undefined> => {
     try {
       const listing = await create.save(values);
+      // The form is still dirty after the save, so its own navigation must pass the leave prompt.
       await navigate(
         listing.id
-          ? { to: "/admin/listings/$productId", params: { productId: listing.id }, replace: true }
-          : { to: "/admin/listings", replace: true },
+          ? {
+              to: "/admin/listings/$productId",
+              params: { productId: listing.id },
+              replace: true,
+              ignoreBlocker: true,
+            }
+          : { to: "/admin/listings", replace: true, ignoreBlocker: true },
       );
       return undefined;
     } catch (error) {
@@ -86,6 +92,7 @@ function NewListingPage() {
         <ListingForm
           id={FORM_ID}
           defaultValues={emptyListingForm}
+          guardUnsaved
           onSubmit={save}
           onProblemsChange={setFieldProblems}
         />
