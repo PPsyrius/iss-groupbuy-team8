@@ -8,6 +8,17 @@ import { renderRoute, serveAdmin } from "@/test/render-route";
 
 type User = ReturnType<typeof userEvent.setup>;
 
+// The browser history's `beforeunload` handler (@tanstack/history) blocks when any blocker's
+// `enableBeforeUnload` is `true` (the default) or a function returning `true`. The memory history
+// used here never listens for `beforeunload`, so apply the same rule to its blockers directly.
+function blocksUnload(router: ReturnType<typeof renderRoute>["router"]) {
+  // oxlint-disable-next-line no-underscore-dangle -- the history's only (typed) way to list blockers
+  return router.history._getBlockers().some((b) => {
+    const enable = b.enableBeforeUnload ?? true;
+    return enable === true || (typeof enable === "function" && enable());
+  });
+}
+
 async function fillRequired(user: User) {
   await user.type(
     await screen.findByRole("textbox", { name: "Title" }),
@@ -75,6 +86,8 @@ describe("/admin/listings/new", () => {
       expect(router.state.location.pathname).toBe(`/admin/listings/${store.rows[0]?.id ?? ""}`),
     );
     expect(await screen.findByText("BB-100001 · draft · v0")).toBeVisible();
+    // The save's own navigation leaves a dirty form without the leave prompt.
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     expect(sent).toHaveLength(1);
     expect(sent[0]).not.toHaveProperty("productNo");
     expect(store.rows[0]).toMatchObject({
@@ -215,5 +228,55 @@ describe("/admin/listings/new", () => {
     const { router } = renderRoute("/admin/listings/new");
     await user.click(await screen.findByRole("link", { name: "Cancel" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/admin/listings"));
+  });
+
+  it("asks before the breadcrumb drops a typed title, and keeps it on Keep editing", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const { router } = renderRoute("/admin/listings/new");
+    await user.type(await screen.findByRole("textbox", { name: "Title" }), "Hokkaido milk");
+    const crumb = screen.getByRole("navigation", { name: "Breadcrumb" });
+
+    await user.click(within(crumb).getByRole("link", { name: "Listings" }));
+    const dialog = await screen.findByRole("alertdialog");
+    expect(within(dialog).getByRole("heading", { name: "Discard your changes?" })).toBeVisible();
+    await user.click(within(dialog).getByRole("button", { name: "Keep editing" }));
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+    expect(router.state.location.pathname).toBe("/admin/listings/new");
+    expect(screen.getByRole("textbox", { name: "Title" })).toHaveValue("Hokkaido milk");
+    expect(store.rows).toHaveLength(62);
+  });
+
+  it("leaves for the listings once the unsaved draft is discarded", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    const { router } = renderRoute("/admin/listings/new");
+    await user.type(await screen.findByRole("textbox", { name: "Title" }), "Hokkaido milk");
+
+    await user.click(screen.getByRole("link", { name: "Cancel" }));
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Discard" }),
+    );
+    await waitFor(() => expect(router.state.location.pathname).toBe("/admin/listings"));
+    expect(store.rows).toHaveLength(62);
+  });
+
+  it("never asks while the form is untouched", async () => {
+    const user = userEvent.setup();
+    serveAdmin();
+    const { router } = renderRoute("/admin/listings/new");
+    await user.click(await screen.findByRole("link", { name: "Cancel" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/admin/listings"));
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  it("asks before a reload or tab close only once something is typed", async () => {
+    const user = userEvent.setup();
+    serveAdmin();
+    const { router } = renderRoute("/admin/listings/new");
+    const title = await screen.findByRole("textbox", { name: "Title" });
+    expect(blocksUnload(router)).toBe(false);
+    await user.type(title, "Hokkaido milk");
+    expect(blocksUnload(router)).toBe(true);
   });
 });
