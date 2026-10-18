@@ -21,4 +21,25 @@ class StripePropertiesTest {
         assertThat(new StripeProperties("  ", "whsec_123").configured()).isFalse();
         assertThat(new StripeProperties(null, "whsec_123").sandbox()).isFalse();
     }
+
+    @Test
+    void toStringNeverRevealsSecrets() {
+        StripeProperties properties = new StripeProperties("sk_test_123", "whsec_123");
+
+        assertThat(properties.toString())
+                .doesNotContain("sk_test_123")
+                .doesNotContain("whsec_123")
+                .contains("apiKey=<redacted>")
+                .contains("webhookSecret=<redacted>");
+    }
+
+    @Test
+    void toStringMarksAbsentSecretsAsUnset() {
+        assertThat(new StripeProperties(null, null).toString())
+                .contains("apiKey=<unset>")
+                .contains("webhookSecret=<unset>");
+        assertThat(new StripeProperties(" ", "").toString())
+                .contains("apiKey=<unset>")
+                .contains("webhookSecret=<unset>");
+    }
 }

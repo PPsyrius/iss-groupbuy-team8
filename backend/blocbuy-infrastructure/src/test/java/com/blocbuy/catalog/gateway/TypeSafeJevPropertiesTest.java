@@ -50,4 +50,40 @@ class TypeSafeJevPropertiesTest {
         assertThat(properties.connectTimeoutMillis()).isEqualTo(2);
         assertThat(properties.readTimeoutMillis()).isEqualTo(3);
     }
+
+    /** Verifies the API key never appears in toString. */
+    @Test
+    void toStringNeverRevealsApiKey() {
+        TypeSafeJevProperties properties =
+                new TypeSafeJevProperties(
+                        true, "tsj-key-9c1e", "http://localhost", "jev-test", 2, 3);
+
+        assertThat(properties.toString())
+                .doesNotContain("tsj-key-9c1e")
+                .contains("apiKey=<redacted>");
+    }
+
+    /** Verifies an absent API key is shown as unset in toString. */
+    @Test
+    void toStringMarksAbsentApiKeyAsUnset() {
+        assertThat(new TypeSafeJevProperties(false, null, null, null, 0, 0).toString())
+                .contains("apiKey=<unset>");
+        assertThat(new TypeSafeJevProperties(false, " ", null, null, 0, 0).toString())
+                .contains("apiKey=<unset>");
+    }
+
+    /** Verifies non-secret settings remain visible in toString. */
+    @Test
+    void toStringKeepsNonSecretSettingsVisible() {
+        TypeSafeJevProperties properties =
+                new TypeSafeJevProperties(
+                        true, "tsj-key-9c1e", "http://localhost", "jev-test", 2, 3);
+
+        assertThat(properties.toString())
+                .contains("enabled=true")
+                .contains("endpoint=http://localhost")
+                .contains("model=jev-test")
+                .contains("connectTimeoutMillis=2")
+                .contains("readTimeoutMillis=3");
+    }
 }

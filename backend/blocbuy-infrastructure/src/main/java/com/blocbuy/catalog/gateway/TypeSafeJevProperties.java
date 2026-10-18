@@ -31,4 +31,25 @@ public record TypeSafeJevProperties(
                     "TYPESAFE_API_KEY must be configured when TypeSafe search is enabled");
         }
     }
+
+    @Override
+    public String toString() {
+        return "TypeSafeJevProperties[enabled="
+                + enabled
+                + ", apiKey="
+                + mask(apiKey)
+                + ", endpoint="
+                + endpoint
+                + ", model="
+                + model
+                + ", connectTimeoutMillis="
+                + connectTimeoutMillis
+                + ", readTimeoutMillis="
+                + readTimeoutMillis
+                + "]";
+    }
+
+    private static String mask(String secret) {
+        return secret == null || secret.isBlank() ? "<unset>" : "<redacted>";
+    }
 }
