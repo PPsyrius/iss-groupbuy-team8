@@ -1,0 +1,281 @@
+package com.blocbuy.bootstrap;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import cn.dev33.satoken.dao.SaTokenDao;
+import cn.dev33.satoken.dao.SaTokenDaoDefaultImpl;
+import com.blocbuy.catalog.exception.CatalogErrorCode;
+import com.blocbuy.catalog.service.ProductAppService;
+import com.blocbuy.common.exception.BizException;
+import com.blocbuy.common.exception.CommonErrorCode;
+import com.blocbuy.common.model.PageQuery;
+import com.blocbuy.common.model.PageResult;
+import com.blocbuy.groupbuy.service.ShareInviteAppService;
+import com.blocbuy.identity.exception.IdentityErrorCode;
+import com.blocbuy.identity.repository.RoleRepository;
+import com.blocbuy.identity.service.OAuthLoginAppService;
+import com.blocbuy.payment.service.PaymentAppService;
+import com.jayway.jsonpath.JsonPath;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.regex.Pattern;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+
+/**
+ * Pins the anonymous API surface (issue #536). Every handler registered under {@code /api/v1} is
+ * called with no session; each must answer 401 {@code COMMON_401_001} unless it is on the explicit
+ * {@link #ANONYMOUS_ALLOW_LIST}. A new endpoint that is public by accident therefore fails this
+ * test, whether the leak comes from {@code SaTokenConfig} (the interceptor lets GETs under {@code
+ * /api/v1/products/**} through) or from a missing in-controller check.
+ *
+ * <p>Only the {@code /api/v1/**} prefix is guarded by the Sa-Token interceptor, so a second test
+ * requires every project controller to sit under it. Springdoc, the actuator and {@code /error} are
+ * served outside the prefix and are not covered here (issue #536, non-goals). Only the application
+ * services behind the allow-listed endpoints and the RBAC repository are mocked, and the test-only
+ * session store never connects to Redis, so no Docker is needed.
+ */
+@SpringBootTest(
+        properties = {
+            "spring.flyway.enabled=false",
+            "spring.datasource.url=jdbc:postgresql://localhost:1/blocbuy_placeholder?currentSchema=domain",
+            "spring.datasource.username=test",
+            "spring.datasource.password=test",
+            "spring.data.redis.host=localhost",
+            "spring.data.redis.port=1"
+        })
+@AutoConfigureMockMvc
+@Import(EndpointAuthSurfaceTest.SessionStore.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+class EndpointAuthSurfaceTest {
+    private static final String API_V1 = "/api/v1/";
+    private static final Pattern PATH_VARIABLE = Pattern.compile("\\{[^/}]+}");
+    private static final String SAMPLE_ID = "00000000-0000-7000-8000-000000000001";
+    private static final String UNAUTHENTICATED = "COMMON_401_001";
+
+    /**
+     * Endpoints that may answer a caller with no session, each with the reason it is public. This
+     * list is derived from {@code SaTokenConfig} ({@code ANONYMOUS_GET_PATHS}, {@code
+     * PUBLIC_PATHS}) and the controllers. Add an entry only for an endpoint that is meant to be
+     * public; everything else must stay behind login.
+     */
+    private static final Map<String, String> ANONYMOUS_ALLOW_LIST =
+            new TreeMap<>(
+                    Map.of(
+                            "GET /api/v1/products",
+                            "anonymous catalog browse (ANONYMOUS_GET_PATHS)",
+                            "GET /api/v1/products/{id}",
+                            "anonymous listing detail (ANONYMOUS_GET_PATHS)",
+                            "GET /api/v1/invites/{ref}",
+                            "invite resolve before sign-in (ANONYMOUS_GET_PATHS, #201)",
+                            "GET /api/v1/auth/oauth2/google",
+                            "starts the Google login redirect (PUBLIC_PATHS oauth2/**)",
+                            "GET /api/v1/auth/oauth2/google/callback",
+                            "provider callback opens the session (PUBLIC_PATHS oauth2/**)",
+                            "POST /api/v1/webhooks/stripe",
+                            "Stripe callback, signature-verified (PUBLIC_PATHS webhooks/**)"));
+
+    @Autowired
+    @Qualifier("requestMappingHandlerMapping")
+    private RequestMappingHandlerMapping mappings;
+
+    @Autowired private MockMvc mvc;
+    @MockitoBean private RoleRepository roles;
+    @MockitoBean private ProductAppService products;
+    @MockitoBean private ShareInviteAppService invites;
+    @MockitoBean private OAuthLoginAppService oauth;
+    @MockitoBean private PaymentAppService payments;
+
+    @BeforeEach
+    void stubAllowListedBusinessCalls() {
+        when(products.pageListings(any(), any(), any()))
+                .thenReturn(PageResult.of(List.of(), 0, PageQuery.of(null, null)));
+        when(products.getListingDetail(any()))
+                .thenThrow(new BizException(CatalogErrorCode.PRODUCT_NOT_FOUND));
+        when(invites.resolve(any(), any())).thenThrow(new BizException(CommonErrorCode.NOT_FOUND));
+        when(oauth.createGoogleAuthorizeUrl())
+                .thenThrow(new BizException(IdentityErrorCode.OAUTH_PROVIDER_ERROR));
+    }
+
+    @Test
+    void everyApiV1EndpointRejectsAnonymousCallersUnlessAllowListed() {
+        List<Endpoint> protectedEndpoints =
+                apiV1Endpoints().stream()
+                        .filter(endpoint -> !ANONYMOUS_ALLOW_LIST.containsKey(endpoint.key()))
+                        .toList();
+        // guards against a vacuous pass if enumeration ever returns nothing
+        assertThat(protectedEndpoints).isNotEmpty();
+
+        List<String> offenders = new ArrayList<>();
+        for (Endpoint endpoint : protectedEndpoints) {
+            try {
+                MvcResult result = mvc.perform(endpoint.request()).andReturn();
+                int httpStatus = result.getResponse().getStatus();
+                String code = errorCode(result);
+                if (httpStatus != 401 || !UNAUTHENTICATED.equals(code)) {
+                    offenders.add(endpoint.key() + " -> " + httpStatus + " " + code);
+                }
+            } catch (Exception ex) {
+                offenders.add(endpoint.key() + " -> threw " + ex);
+            }
+        }
+        assertThat(offenders)
+                .as("anonymous calls that were not rejected with 401 %s", UNAUTHENTICATED)
+                .isEmpty();
+    }
+
+    @Test
+    void allowListedEndpointsAreReachableAnonymously() {
+        List<String> offenders = new ArrayList<>();
+        for (Endpoint endpoint : apiV1Endpoints()) {
+            if (!ANONYMOUS_ALLOW_LIST.containsKey(endpoint.key())) {
+                continue;
+            }
+            try {
+                int httpStatus =
+                        mvc.perform(endpoint.request()).andReturn().getResponse().getStatus();
+                if (httpStatus == 401) {
+                    offenders.add(endpoint.key() + " -> 401");
+                }
+            } catch (Exception ex) {
+                offenders.add(endpoint.key() + " -> threw " + ex);
+            }
+        }
+        assertThat(offenders)
+                .as("allow-listed endpoints that demanded a login: %s", ANONYMOUS_ALLOW_LIST)
+                .isEmpty();
+    }
+
+    @Test
+    void allowListMatchesRegisteredEndpoints() {
+        Set<String> registered = new TreeSet<>();
+        apiV1Endpoints().forEach(endpoint -> registered.add(endpoint.key()));
+
+        Set<String> stale = new TreeSet<>(ANONYMOUS_ALLOW_LIST.keySet());
+        stale.removeAll(registered);
+        assertThat(stale).as("allow-list entries with no matching endpoint").isEmpty();
+    }
+
+    @Test
+    void noProjectControllerIsMappedOutsideTheGuardedPrefix() {
+        List<String> offenders = new ArrayList<>();
+        mappings.getHandlerMethods()
+                .forEach(
+                        (info, handler) -> {
+                            String type = handler.getBeanType().getName();
+                            for (String pattern : patterns(info)) {
+                                boolean inPrefix = pattern.startsWith(API_V1);
+                                boolean framework =
+                                        type.startsWith("org.springdoc.")
+                                                || type.startsWith("org.springframework.boot.");
+                                boolean project = type.startsWith("com.blocbuy.");
+                                if (project ? !inPrefix : !(framework || inPrefix)) {
+                                    offenders.add(pattern + " (" + type + ")");
+                                }
+                            }
+                        });
+        assertThat(offenders)
+                .as("controllers outside /api/v1, which the Sa-Token interceptor does not cover")
+                .isEmpty();
+    }
+
+    @Test
+    void teamPricePolicyReadIsProtectedByTheControllerNotTheInterceptor() throws Exception {
+        // GET /api/v1/products/** is anonymous in SaTokenConfig.ANONYMOUS_GET_PATHS, so only the
+        // checkLogin() inside TeamPriceController.getPolicy keeps this admin read behind login.
+        mvc.perform(get(API_V1 + "products/" + SAMPLE_ID + "/team-price-policy"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(UNAUTHENTICATED));
+    }
+
+    private List<Endpoint> apiV1Endpoints() {
+        List<Endpoint> endpoints = new ArrayList<>();
+        mappings.getHandlerMethods()
+                .forEach(
+                        (info, handler) -> {
+                            Set<String> methods = new TreeSet<>();
+                            info.getMethodsCondition()
+                                    .getMethods()
+                                    .forEach(method -> methods.add(method.name()));
+                            if (methods.isEmpty()) {
+                                methods.add("GET");
+                            }
+                            for (String pattern : patterns(info)) {
+                                if (pattern.startsWith(API_V1)) {
+                                    methods.forEach(
+                                            method -> endpoints.add(new Endpoint(method, pattern)));
+                                }
+                            }
+                        });
+        endpoints.forEach(endpoint -> assertThat(endpoint.path()).doesNotContain("{"));
+        return endpoints;
+    }
+
+    private static Set<String> patterns(RequestMappingInfo info) {
+        return info.getPathPatternsCondition().getPatternValues();
+    }
+
+    private static String errorCode(MvcResult result) {
+        try {
+            return JsonPath.read(result.getResponse().getContentAsString(), "$.code");
+        } catch (Exception ex) {
+            return "<no code in body>";
+        }
+    }
+
+    /** One mapped HTTP method on one path pattern. */
+    private record Endpoint(String method, String pattern) {
+        String key() {
+            return method + " " + pattern;
+        }
+
+        String path() {
+            return PATH_VARIABLE.matcher(pattern).replaceAll(SAMPLE_ID);
+        }
+
+        MockHttpServletRequestBuilder request() {
+            // JSON body for every method also satisfies consumes=JSON (the Stripe webhook); the
+            // signature header is only read by that one handler and is ignored elsewhere.
+            return MockMvcRequestBuilders.request(HttpMethod.valueOf(method), path())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{}")
+                    .header("Stripe-Signature", "t=1,v1=anonymous-probe");
+        }
+    }
+
+    @TestConfiguration(proxyBeanMethods = false)
+    static class SessionStore {
+        @Bean(initMethod = "init", destroyMethod = "destroy")
+        @Primary
+        SaTokenDao testSessionDao() {
+            return new SaTokenDaoDefaultImpl();
+        }
+    }
+}
