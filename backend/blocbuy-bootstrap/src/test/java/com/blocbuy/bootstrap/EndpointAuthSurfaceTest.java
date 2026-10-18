@@ -2,6 +2,7 @@ package com.blocbuy.bootstrap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -61,6 +62,10 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  * served outside the prefix and are not covered here (issue #536, non-goals). Only the application
  * services behind the allow-listed endpoints and the RBAC repository are mocked, and the test-only
  * session store never connects to Redis, so no Docker is needed.
+ *
+ * <p>Scope limits: this is the monolith topology, so {@code InternalUserController} ({@code
+ * /internal/users/**}, distributed topology only) is not in this context. Router functions are not
+ * enumerated, and a mapping with no HTTP method is probed with GET only, not the other methods.
  */
 @SpringBootTest(
         properties = {
@@ -130,8 +135,9 @@ class EndpointAuthSurfaceTest {
                 apiV1Endpoints().stream()
                         .filter(endpoint -> !ANONYMOUS_ALLOW_LIST.containsKey(endpoint.key()))
                         .toList();
-        // guards against a vacuous pass if enumeration ever returns nothing
-        assertThat(protectedEndpoints).isNotEmpty();
+        // a floor (25 at the time of writing) rather than a count: it catches a partial or empty
+        // enumeration, which would otherwise pass vacuously, without failing on every new endpoint
+        assertThat(protectedEndpoints).hasSizeGreaterThanOrEqualTo(25);
 
         List<String> offenders = new ArrayList<>();
         for (Endpoint endpoint : protectedEndpoints) {
@@ -149,6 +155,8 @@ class EndpointAuthSurfaceTest {
         assertThat(offenders)
                 .as("anonymous calls that were not rejected with 401 %s", UNAUTHENTICATED)
                 .isEmpty();
+        // the rejection happens before the mocked services behind the allow-listed endpoints
+        verifyNoInteractions(products, invites, oauth, payments);
     }
 
     @Test
