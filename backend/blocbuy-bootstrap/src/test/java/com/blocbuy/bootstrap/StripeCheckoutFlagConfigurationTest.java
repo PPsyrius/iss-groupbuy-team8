@@ -13,21 +13,35 @@ import com.blocbuy.payment.service.PaymentAppService;
 import com.blocbuy.payment.service.StripeCheckoutService;
 import com.blocbuy.payment.service.StripeFeatureSwitch;
 import com.blocbuy.payment.service.StripePaymentAppService;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.diagnostics.FailureAnalysis;
+import org.springframework.boot.diagnostics.FailureAnalyzer;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.validation.autoconfigure.ValidationAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.io.support.SpringFactoriesLoader;
+import org.springframework.core.io.support.SpringFactoriesLoader.ArgumentResolver;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /** Rollout flags select one facade; invalid enabled deployments fail before accepting payments. */
 class StripeCheckoutFlagConfigurationTest {
+    // A fake live-mode key, assembled at runtime so the source never holds a token-shaped literal
+    // that secret scanners (gitleaks stripe-access-token) would flag.
+    private static final String LIVE_FIXTURE = String.join("_", "sk", "live", "GATEPROBE123");
+    private static final String NOT_TEST_KEY = "STRIPE_API_KEY must be a Stripe test key";
     private static final String[] VALID = {
         "blocbuy.payment.stripe.checkout-enabled=true",
         "blocbuy.payment.stripe.api-key=sk_test_local_fixture",
@@ -106,6 +120,35 @@ class StripeCheckoutFlagConfigurationTest {
     }
 
     @Test
+    void rejectedLiveKeyIsNeverEchoedByTheStartupFailure() {
+        runner.withPropertyValues(VALID)
+                .withPropertyValues("blocbuy.payment.stripe.api-key=" + LIVE_FIXTURE)
+                .run(
+                        context -> {
+                            assertThat(context).hasFailed();
+                            Throwable failure = context.getStartupFailure();
+                            assertThat(causeMessages(failure)).contains(NOT_TEST_KEY);
+                            FailureAnalysis analysis = analyze(failure);
+                            assertThat(analysis).isNotNull();
+                            assertThat(analysis.getDescription()).contains(NOT_TEST_KEY);
+                            assertThat(causeMessages(failure)).doesNotContain(LIVE_FIXTURE);
+                            assertThat(analysis.getDescription()).doesNotContain(LIVE_FIXTURE);
+                            assertThat(analysis.getAction()).doesNotContain(LIVE_FIXTURE);
+                            assertThat(stackTrace(failure)).doesNotContain(LIVE_FIXTURE);
+                        });
+    }
+
+    @Test
+    void keyIsNotCheckedUnlessCheckoutIsEnabled() {
+        runner.withPropertyValues("blocbuy.payment.stripe.api-key=" + LIVE_FIXTURE)
+                .run(context -> assertThat(context).hasNotFailed());
+        runner.withPropertyValues(
+                        "blocbuy.payment.stripe.checkout-enabled=false",
+                        "blocbuy.payment.stripe.api-key=" + LIVE_FIXTURE)
+                .run(context -> assertThat(context).hasNotFailed());
+    }
+
+    @Test
     void legacyProfileEnablesTheSameCheckoutGate() {
         runner.withInitializer(new ConfigDataApplicationContextInitializer())
                 .withPropertyValues(Arrays.copyOfRange(VALID, 1, VALID.length))
@@ -127,6 +170,27 @@ class StripeCheckoutFlagConfigurationTest {
                             assertThat(causeMessages(context.getStartupFailure()))
                                     .contains(expected);
                         });
+    }
+
+    /** Runs the analyzers Spring Boot registers, as it does when the application fails to start. */
+    private static FailureAnalysis analyze(Throwable failure) {
+        ArgumentResolver arguments =
+                ArgumentResolver.of(BeanFactory.class, new DefaultListableBeanFactory())
+                        .and(Environment.class, new StandardEnvironment());
+        return SpringFactoriesLoader.forDefaultResourceLocation(
+                        StripeCheckoutFlagConfigurationTest.class.getClassLoader())
+                .load(FailureAnalyzer.class, arguments)
+                .stream()
+                .map(analyzer -> analyzer.analyze(failure))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private static String stackTrace(Throwable failure) {
+        StringWriter out = new StringWriter();
+        failure.printStackTrace(new PrintWriter(out));
+        return out.toString();
     }
 
     private static String causeMessages(Throwable failure) {
