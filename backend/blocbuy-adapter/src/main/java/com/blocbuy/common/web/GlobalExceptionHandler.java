@@ -11,9 +11,14 @@ import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -117,6 +122,33 @@ public class GlobalExceptionHandler {
         return toResponse(CommonErrorCode.NOT_FOUND, null);
     }
 
+    /** Wrong HTTP method on a known path → 405, keeping the {@code Allow} header (RFC 9110). */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Result<Void>> handleMethodNotAllowed(
+            HttpRequestMethodNotSupportedException ex) {
+        return toResponse(CommonErrorCode.METHOD_NOT_ALLOWED, null, ex.getHeaders());
+    }
+
+    /** Request {@code Content-Type} the endpoint cannot consume → 415, keeping {@code Accept}. */
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<Result<Void>> handleUnsupportedMediaType(
+            HttpMediaTypeNotSupportedException ex) {
+        return toResponse(CommonErrorCode.UNSUPPORTED_MEDIA_TYPE, null, ex.getHeaders());
+    }
+
+    /**
+     * {@code Accept} excludes every representation the endpoint produces → 406. The body is still
+     * the JSON envelope: the explicit {@code Content-Type} stops Spring re-negotiating against the
+     * caller's {@code Accept}, which would fail again and leave a bare 406 (RFC 9110 allows it).
+     */
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    public ResponseEntity<Result<Void>> handleNotAcceptable(
+            HttpMediaTypeNotAcceptableException ex) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return toResponse(CommonErrorCode.NOT_ACCEPTABLE, null, headers);
+    }
+
     /** Last resort: one ERROR log with traceId; client receives a generic 500. */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Result<Void>> handleUnknown(Exception ex) {
@@ -130,6 +162,13 @@ public class GlobalExceptionHandler {
      */
     private static ResponseEntity<Result<Void>> toResponse(ErrorCode errorCode, Object errors) {
         return ResponseEntity.status(errorCode.httpStatus()).body(Result.error(errorCode, errors));
+    }
+
+    private static ResponseEntity<Result<Void>> toResponse(
+            ErrorCode errorCode, Object errors, HttpHeaders headers) {
+        return ResponseEntity.status(errorCode.httpStatus())
+                .headers(headers)
+                .body(Result.error(errorCode, errors));
     }
 
     private static FieldViolation toViolation(FieldError error) {
