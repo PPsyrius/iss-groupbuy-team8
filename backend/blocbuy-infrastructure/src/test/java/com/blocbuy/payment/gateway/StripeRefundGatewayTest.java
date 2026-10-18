@@ -4,10 +4,25 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.common.exception.ErrorCode;
+import com.blocbuy.payment.exception.PaymentErrorCode;
 import com.blocbuy.payment.model.RefundWork;
 import com.stripe.StripeClient;
+import com.stripe.exception.ApiConnectionException;
 import com.stripe.exception.ApiException;
+import com.stripe.exception.AuthenticationException;
+import com.stripe.exception.CardException;
+import com.stripe.exception.IdempotencyException;
+import com.stripe.exception.InvalidRequestException;
+import com.stripe.exception.PermissionException;
+import com.stripe.exception.RateLimitException;
+import com.stripe.exception.SignatureVerificationException;
+import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.Refund;
 import com.stripe.model.RefundCollection;
@@ -16,13 +31,40 @@ import com.stripe.param.RefundCreateParams;
 import com.stripe.param.RefundListParams;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.LoggerFactory;
 
 /** Provider refund gateway: key guards, creation and retrieval. */
 class StripeRefundGatewayTest {
+    private static final String PRIVATE = "private provider data";
+    private final Logger classifierLog =
+            (Logger) LoggerFactory.getLogger(StripeFailureClassifier.class);
+    private final ListAppender<ILoggingEvent> logs = new ListAppender<>();
+
+    @BeforeEach
+    void captureLogs() {
+        logs.start();
+        classifierLog.addAppender(logs);
+        classifierLog.setLevel(Level.DEBUG);
+    }
+
+    @AfterEach
+    void releaseLogs() {
+        classifierLog.detachAppender(logs);
+        classifierLog.setLevel(null);
+        logs.stop();
+    }
+
     private final StripeRefundGateway gateway =
             new StripeRefundGateway(
                     new StripeClientProvider(
@@ -158,6 +200,173 @@ class StripeRefundGatewayTest {
             assertThatThrownBy(() -> gateway.findRefund(work))
                     .isInstanceOf(BizException.class)
                     .hasMessageNotContaining("private provider");
+        }
+    }
+
+    /**
+     * Real stripe-java 34 constructors, in the shapes {@code LiveStripeResponseGetter} builds them
+     * from an HTTP status. A refusal that asking again cannot change becomes {@code
+     * PAYMENT_PROVIDER_REJECTED} (the worker parks it for review); anything that can heal on its
+     * own stays {@code PAYMENT_PROVIDER_ERROR} (the worker retries under the same durable key).
+     */
+    static Stream<Arguments> providerFailures() {
+        var rejected = PaymentErrorCode.PAYMENT_PROVIDER_REJECTED;
+        var retry = PaymentErrorCode.PAYMENT_PROVIDER_ERROR;
+        return Stream.of(
+                Arguments.of(
+                        new AuthenticationException(PRIVATE, "req_1", "api_key_expired", 401),
+                        rejected),
+                Arguments.of(
+                        new PermissionException(PRIVATE, "req_2", "secret_key_required", 403),
+                        rejected),
+                Arguments.of(
+                        new InvalidRequestException(
+                                PRIVATE, "payment_intent", "req_3", "resource_missing", 404, null),
+                        rejected),
+                Arguments.of(
+                        new InvalidRequestException(
+                                PRIVATE, "charge", "req_4", "charge_already_refunded", 400, null),
+                        rejected),
+                Arguments.of(
+                        new CardException(
+                                PRIVATE, "req_5", "card_declined", null, null, null, 402, null),
+                        rejected),
+                Arguments.of(new IdempotencyException(PRIVATE, "req_6", null, 400), rejected),
+                Arguments.of(
+                        new RateLimitException(PRIVATE, null, "req_7", "rate_limit", 429, null),
+                        retry),
+                Arguments.of(new ApiConnectionException(PRIVATE), retry),
+                Arguments.of(new ApiException(PRIVATE, "req_8", "api_error", 500, null), retry),
+                Arguments.of(new ApiException(PRIVATE, "req_9", null, 503, null), retry),
+                Arguments.of(
+                        new ApiException(PRIVATE, "req_10", "idempotency_key_in_use", 409, null),
+                        retry),
+                Arguments.of(
+                        new InvalidRequestException(
+                                PRIVATE, null, "req_11", "lock_timeout", 400, null),
+                        retry),
+                // A StripeException subtype the classifier has no rule for defaults to retry.
+                Arguments.of(new SignatureVerificationException(PRIVATE, "sig_header"), retry));
+    }
+
+    @ParameterizedTest
+    @MethodSource("providerFailures")
+    void providerFailuresMapToTheRightDisposition(
+            StripeException failure, PaymentErrorCode expected) throws Exception {
+        withFailingClient(
+                failure,
+                () -> {
+                    assertThat(refusal(() -> gateway.createRefund(work))).isEqualTo(expected);
+                    assertThat(refusal(() -> gateway.retrieveRefund("re_test")))
+                            .isEqualTo(expected);
+                    assertThat(refusal(() -> gateway.findRefund(work))).isEqualTo(expected);
+                });
+
+        String disposition =
+                expected == PaymentErrorCode.PAYMENT_PROVIDER_REJECTED ? "review" : "retry";
+        assertThat(logs.list)
+                .extracting(ILoggingEvent::getFormattedMessage)
+                .containsExactly(
+                        safeLine("createRefund", failure, disposition),
+                        safeLine("retrieveRefund", failure, disposition),
+                        safeLine("findRefund", failure, disposition));
+        assertThat(logs.list).allSatisfy(StripeRefundGatewayTest::carriesNoProviderData);
+    }
+
+    /**
+     * The line an operator reads names the failure; the provider's message and body never appear.
+     */
+    @Test
+    void logsOnlySafeMetadata() throws Exception {
+        withFailingClient(
+                new AuthenticationException(PRIVATE, "req_1", "api_key_expired", 401),
+                () -> refusal(() -> gateway.retrieveRefund("re_test")));
+        // The provider caches its client, so the second failure needs a gateway of its own.
+        var second =
+                new StripeRefundGateway(
+                        new StripeClientProvider(
+                                new StripeProperties("sk_test_fixture_not_real", "test")));
+        withFailingClient(
+                new ApiConnectionException(PRIVATE), () -> refusal(() -> second.findRefund(work)));
+
+        assertThat(logs.list).hasSize(2).allSatisfy(StripeRefundGatewayTest::carriesNoProviderData);
+        assertThat(logs.list.get(0).getLevel()).isEqualTo(Level.WARN);
+        assertThat(logs.list.get(0).getFormattedMessage())
+                .isEqualTo(
+                        "Stripe call failed: operation=retrieveRefund, type=AuthenticationException,"
+                                + " status=401, code=api_key_expired, requestId=req_1, disposition=review");
+        // stripe-java 34 gives a transport failure status 0 and no code or request id.
+        assertThat(logs.list.get(1).getFormattedMessage())
+                .isEqualTo(
+                        "Stripe call failed: operation=findRefund, type=ApiConnectionException,"
+                                + " status=0, code=null, requestId=null, disposition=retry");
+    }
+
+    /** No provider data reaches callers either: the business exception carries no cause or text. */
+    @Test
+    void refusalCarriesNoProviderCause() throws Exception {
+        withFailingClient(
+                new InvalidRequestException(
+                        PRIVATE, "charge", "req_3", "resource_missing", 404, null),
+                () ->
+                        assertThatThrownBy(() -> gateway.retrieveRefund("re_test"))
+                                .isInstanceOf(BizException.class)
+                                .hasNoCause()
+                                .hasMessageNotContaining(PRIVATE));
+    }
+
+    private static String safeLine(String operation, StripeException failure, String disposition) {
+        return "Stripe call failed: operation="
+                + operation
+                + ", type="
+                + failure.getClass().getSimpleName()
+                + ", status="
+                + failure.getStatusCode()
+                + ", code="
+                + failure.getCode()
+                + ", requestId="
+                + failure.getRequestId()
+                + ", disposition="
+                + disposition;
+    }
+
+    private static void carriesNoProviderData(ILoggingEvent event) {
+        assertThat(event.getFormattedMessage()).doesNotContain(PRIVATE);
+        assertThat(event.getMessage()).doesNotContain(PRIVATE);
+        assertThat(event.getThrowableProxy()).isNull();
+        assertThat(event.getArgumentArray())
+                .noneMatch(Throwable.class::isInstance)
+                .noneMatch(arg -> String.valueOf(arg).contains(PRIVATE));
+        assertThat(Arrays.toString(event.getArgumentArray())).doesNotContain(PRIVATE);
+    }
+
+    private static ErrorCode refusal(Runnable call) {
+        try {
+            call.run();
+        } catch (BizException refused) {
+            return refused.errorCode();
+        }
+        throw new AssertionError("expected a BizException");
+    }
+
+    /** Every provider call the gateway makes fails with {@code failure}, except the PI lookup. */
+    private void withFailingClient(StripeException failure, Runnable calls) throws Exception {
+        StripeClient client = mock(StripeClient.class, RETURNS_DEEP_STUBS);
+        var builder = mock(StripeClient.StripeClientBuilder.class, RETURNS_SELF);
+        when(builder.build()).thenReturn(client);
+        try (var factory = mockStatic(StripeClient.class)) {
+            factory.when(StripeClient::builder).thenReturn(builder);
+            PaymentIntent payment = new PaymentIntent();
+            payment.setLivemode(false);
+            payment.setStatus("succeeded");
+            payment.setCurrency("sgd");
+            payment.setAmountReceived(1000L);
+            when(client.paymentIntents().retrieve("pi_test")).thenReturn(payment);
+            when(client.refunds().create(any(RefundCreateParams.class), any(RequestOptions.class)))
+                    .thenThrow(failure);
+            when(client.refunds().retrieve("re_test")).thenThrow(failure);
+            when(client.refunds().list(any(RefundListParams.class))).thenThrow(failure);
+            calls.run();
         }
     }
 }

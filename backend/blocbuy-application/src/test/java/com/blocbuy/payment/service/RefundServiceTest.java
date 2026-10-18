@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.payment.exception.PaymentErrorCode;
 import com.blocbuy.payment.gateway.RefundGateway;
@@ -13,9 +16,12 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.SimpleTransactionStatus;
 
@@ -51,8 +57,23 @@ class RefundServiceTest {
     private final PlatformTransactionManager transactions = mock(PlatformTransactionManager.class);
     private final RefundService service = new RefundService(repository, gateway, transactions);
 
+    private final Logger serviceLog = (Logger) LoggerFactory.getLogger(RefundService.class);
+    private final ListAppender<ILoggingEvent> reviewWarnings = new ListAppender<>();
+
     RefundServiceTest() {
         when(transactions.getTransaction(any())).thenAnswer(a -> new SimpleTransactionStatus());
+    }
+
+    @BeforeEach
+    void captureLogs() {
+        reviewWarnings.start();
+        serviceLog.addAppender(reviewWarnings);
+    }
+
+    @AfterEach
+    void releaseLogs() {
+        serviceLog.detachAppender(reviewWarnings);
+        reviewWarnings.stop();
     }
 
     private RefundWork work(String ref, int ageHours) {
@@ -224,6 +245,72 @@ class RefundServiceTest {
         assertThat(service.reconcile(work.paymentId(), "re_test")).isTrue();
 
         verify(repository).finish(work, null, "review", "OPERATOR_PROVIDER_STATE_MISMATCH");
+    }
+
+    /**
+     * An expired key or a 400/404 from Stripe does not heal by asking again. It is parked for an
+     * operator on the first refusal, with a reason distinct from a PaymentIntent state mismatch,
+     * instead of retrying every 30 seconds for 23 hours (#539).
+     */
+    @Test
+    void permanentProviderRejectionParksForReviewAndStopsCallingStripe() {
+        RefundWork work = work(null, 0);
+        when(gateway.createRefund(work))
+                .thenThrow(new BizException(PaymentErrorCode.PAYMENT_PROVIDER_REJECTED));
+
+        assertThat(service.processNext()).isTrue();
+
+        verify(repository).finish(work, null, "review", "PROVIDER_REJECTED");
+        verify(repository, never()).finish(any(), any(), eq("processing"), any());
+        verify(gateway, times(1)).createRefund(work);
+        verify(gateway, never()).retrieveRefund(any());
+        verify(gateway, never()).findRefund(any());
+        assertThat(reviewWarnings.list)
+                .extracting(ILoggingEvent::getFormattedMessage)
+                .containsExactly(
+                        "Refund needs operator review: paymentId="
+                                + work.paymentId()
+                                + ", state=review, result=PROVIDER_REJECTED");
+    }
+
+    /** A rejection while re-reading a known refund keeps that refund id on the parked row. */
+    @Test
+    void permanentRejectionOnKnownRefundParks() {
+        RefundWork work = work("re_test", 72);
+        when(gateway.retrieveRefund("re_test"))
+                .thenThrow(new BizException(PaymentErrorCode.PAYMENT_PROVIDER_REJECTED));
+
+        assertThat(service.processNext()).isTrue();
+
+        verify(repository).finish(work, "re_test", "review", "PROVIDER_REJECTED");
+        verify(gateway, never()).createRefund(any());
+        verify(gateway, never()).findRefund(any());
+    }
+
+    /** Past the creation cutoff, a rejected metadata search parks the row too, never creating. */
+    @Test
+    void permanentRejectionAfterCutoffParksWithoutCreating() {
+        RefundWork work = work(null, 24);
+        when(gateway.findRefund(work))
+                .thenThrow(new BizException(PaymentErrorCode.PAYMENT_PROVIDER_REJECTED));
+
+        assertThat(service.processNext()).isTrue();
+
+        verify(repository).finish(work, null, "review", "PROVIDER_REJECTED");
+        verify(gateway, never()).createRefund(any());
+    }
+
+    /** Under operator recovery the row stays in review; only the recorded reason changes. */
+    @Test
+    void permanentProviderRejectionUnderRecoveryIsNamedAsSuch() {
+        RefundWork work = work(null, 24);
+        when(repository.claimReview(work.paymentId())).thenReturn(work);
+        when(gateway.retrieveRefund("re_test"))
+                .thenThrow(new BizException(PaymentErrorCode.PAYMENT_PROVIDER_REJECTED));
+
+        assertThat(service.reconcile(work.paymentId(), "re_test")).isTrue();
+
+        verify(repository).finish(work, null, "review", "OPERATOR_PROVIDER_REJECTED");
     }
 
     @Test

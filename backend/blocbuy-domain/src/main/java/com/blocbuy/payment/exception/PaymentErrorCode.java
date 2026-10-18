@@ -23,7 +23,17 @@ public enum PaymentErrorCode implements ErrorCode {
             "PAYMENT_502_001",
             502,
             "Payment provider request failed",
-            "error.payment.providerError");
+            "error.payment.providerError"),
+    /**
+     * The provider refused the request in a way that asking again cannot change: rejected
+     * credentials, a request it considers invalid, or an idempotency key reused with different
+     * parameters. Unlike {@link #PAYMENT_PROVIDER_ERROR}, it is not retried.
+     */
+    PAYMENT_PROVIDER_REJECTED(
+            "PAYMENT_502_002",
+            502,
+            "Payment provider rejected the request",
+            "error.payment.providerRejected");
 
     private final String code;
     private final int httpStatus;
