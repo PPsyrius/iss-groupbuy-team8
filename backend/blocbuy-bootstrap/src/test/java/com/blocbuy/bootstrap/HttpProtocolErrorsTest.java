@@ -13,11 +13,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import cn.dev33.satoken.dao.SaTokenDao;
 import cn.dev33.satoken.dao.SaTokenDaoDefaultImpl;
+import com.blocbuy.catalog.exception.CatalogErrorCode;
 import com.blocbuy.catalog.service.ProductAppService;
+import com.blocbuy.common.exception.BizException;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
 import com.blocbuy.identity.repository.RoleRepository;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -52,6 +55,9 @@ import org.springframework.test.web.servlet.MockMvc;
 class HttpProtocolErrorsTest {
     private static final String PRODUCTS_PATH = "/api/v1/products";
     private static final String STRIPE_WEBHOOK_PATH = "/api/v1/webhooks/stripe";
+    private static final String ORDERS_ME_PATH = "/api/v1/orders/me";
+    private static final String XML = "application/xml";
+    private static final UUID PRODUCT = UUID.fromString("01990000-0000-7000-8000-000000000001");
 
     @Autowired private MockMvc mvc;
     @MockitoBean private ProductAppService products;
@@ -87,6 +93,46 @@ class HttpProtocolErrorsTest {
                 .andExpect(status().isNotAcceptable())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.code").value("COMMON_406_001"));
+    }
+
+    /** Writing the envelope must not depend on Accept: an XML-only caller still gets JSON. */
+    @Test
+    void anonymousProtectedGetWithXmlAcceptIs401JsonEnvelope() throws Exception {
+        mvc.perform(get(ORDERS_ME_PATH).header("Accept", XML))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("COMMON_401_001"));
+    }
+
+    @Test
+    void businessErrorWithXmlAcceptIs404JsonEnvelope() throws Exception {
+        when(products.getListingDetail(PRODUCT))
+                .thenThrow(new BizException(CatalogErrorCode.PRODUCT_NOT_FOUND));
+        mvc.perform(get(PRODUCTS_PATH + "/" + PRODUCT).header("Accept", XML))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("CATALOG_404_001"));
+    }
+
+    @Test
+    void wrongMethodWithXmlAcceptIs405JsonEnvelope() throws Exception {
+        mvc.perform(delete(PRODUCTS_PATH).header("Accept", XML))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(header().string("Allow", containsString("GET")))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("COMMON_405_001"));
+    }
+
+    @Test
+    void unsupportedContentTypeWithXmlAcceptIs415JsonEnvelope() throws Exception {
+        mvc.perform(
+                        post(STRIPE_WEBHOOK_PATH)
+                                .contentType(MediaType.TEXT_PLAIN)
+                                .header("Accept", XML)
+                                .content("x"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("COMMON_415_001"));
     }
 
     /** Test-only session store: keeps Sa-Token off a developer's Redis. */
