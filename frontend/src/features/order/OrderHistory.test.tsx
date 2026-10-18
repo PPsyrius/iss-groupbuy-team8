@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import type { OrderSummaryResponse } from "@/api/generated/types.gen";
@@ -75,5 +75,20 @@ describe("OrderHistory", () => {
   it("leaves out a paid line the order does not have", async () => {
     await renderWithRouter(<OrderHistory orders={unpaidOnly} />);
     expect(screen.queryByText(/^Paid/)).toBeNull();
+  });
+
+  it("draws the thumbnail over the striped tile, and only when the order has one", async () => {
+    const { container } = await renderWithRouter(<OrderHistory orders={both} />);
+    expect(container.querySelectorAll("[data-image-fallback]")).toHaveLength(2);
+    const images = container.querySelectorAll("img");
+    expect(images).toHaveLength(1);
+    expect(images[0]).toHaveAttribute("src", rice.productImage);
+  });
+
+  it("drops a thumbnail that fails to load and keeps the striped tile", async () => {
+    const { container } = await renderWithRouter(<OrderHistory orders={riceOnly} />);
+    fireEvent.error(container.querySelector("img")!);
+    expect(container.querySelector("img")).toBeNull();
+    expect(container.querySelectorAll("[data-image-fallback]")).toHaveLength(1);
   });
 });
