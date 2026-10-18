@@ -213,12 +213,14 @@ class StripeRefundGatewayTest {
         var rejected = PaymentErrorCode.PAYMENT_PROVIDER_REJECTED;
         var retry = PaymentErrorCode.PAYMENT_PROVIDER_ERROR;
         return Stream.of(
+                // 401/403 are rejected before Stripe executes anything, so nothing is saved under
+                // the idempotency key; once the key is fixed the next tick creates one refund.
                 Arguments.of(
                         new AuthenticationException(PRIVATE, "req_1", "api_key_expired", 401),
-                        rejected),
+                        retry),
                 Arguments.of(
                         new PermissionException(PRIVATE, "req_2", "secret_key_required", 403),
-                        rejected),
+                        retry),
                 Arguments.of(
                         new InvalidRequestException(
                                 PRIVATE, "payment_intent", "req_3", "resource_missing", 404, null),
@@ -235,6 +237,9 @@ class StripeRefundGatewayTest {
                 Arguments.of(
                         new RateLimitException(PRIVATE, null, "req_7", "rate_limit", 429, null),
                         retry),
+                // No code: retried because of its type, not because of the code guard.
+                Arguments.of(
+                        new RateLimitException(PRIVATE, null, "req_7b", null, 429, null), retry),
                 Arguments.of(new ApiConnectionException(PRIVATE), retry),
                 Arguments.of(new ApiException(PRIVATE, "req_8", "api_error", 500, null), retry),
                 Arguments.of(new ApiException(PRIVATE, "req_9", null, 503, null), retry),
@@ -279,7 +284,8 @@ class StripeRefundGatewayTest {
     @Test
     void logsOnlySafeMetadata() throws Exception {
         withFailingClient(
-                new AuthenticationException(PRIVATE, "req_1", "api_key_expired", 401),
+                new InvalidRequestException(
+                        PRIVATE, "payment_intent", "req_1", "resource_missing", 404, null),
                 () -> refusal(() -> gateway.retrieveRefund("re_test")));
         // The provider caches its client, so the second failure needs a gateway of its own.
         var second =
@@ -293,13 +299,54 @@ class StripeRefundGatewayTest {
         assertThat(logs.list.get(0).getLevel()).isEqualTo(Level.WARN);
         assertThat(logs.list.get(0).getFormattedMessage())
                 .isEqualTo(
-                        "Stripe call failed: operation=retrieveRefund, type=AuthenticationException,"
-                                + " status=401, code=api_key_expired, requestId=req_1, disposition=review");
+                        "Stripe call failed: operation=retrieveRefund, type=InvalidRequestException,"
+                                + " status=404, code=resource_missing, requestId=req_1,"
+                                + " disposition=review");
         // stripe-java 34 gives a transport failure status 0 and no code or request id.
         assertThat(logs.list.get(1).getFormattedMessage())
                 .isEqualTo(
                         "Stripe call failed: operation=findRefund, type=ApiConnectionException,"
                                 + " status=0, code=null, requestId=null, disposition=retry");
+    }
+
+    static Stream<Arguments> paymentLookupFailures() {
+        return Stream.of(
+                Arguments.of(
+                        new InvalidRequestException(
+                                PRIVATE, "intent", "req_pi", "resource_missing", 404, null),
+                        PaymentErrorCode.PAYMENT_PROVIDER_REJECTED,
+                        "review"),
+                Arguments.of(
+                        new ApiConnectionException(PRIVATE),
+                        PaymentErrorCode.PAYMENT_PROVIDER_ERROR,
+                        "retry"));
+    }
+
+    /**
+     * The PaymentIntent lookup that guards creation is classified the same way, under the {@code
+     * createRefund} operation, and a failed lookup never reaches the refund call.
+     */
+    @ParameterizedTest
+    @MethodSource("paymentLookupFailures")
+    void paymentLookupFailureInsideCreateIsClassified(
+            StripeException failure, PaymentErrorCode expected, String disposition)
+            throws Exception {
+        StripeClient client = mock(StripeClient.class, RETURNS_DEEP_STUBS);
+        var builder = mock(StripeClient.StripeClientBuilder.class, RETURNS_SELF);
+        when(builder.build()).thenReturn(client);
+        try (var factory = mockStatic(StripeClient.class)) {
+            factory.when(StripeClient::builder).thenReturn(builder);
+            when(client.paymentIntents().retrieve("pi_test")).thenThrow(failure);
+
+            assertThat(refusal(() -> gateway.createRefund(work))).isEqualTo(expected);
+
+            verify(client.refunds(), never())
+                    .create(any(RefundCreateParams.class), any(RequestOptions.class));
+        }
+        assertThat(logs.list)
+                .extracting(ILoggingEvent::getFormattedMessage)
+                .containsExactly(safeLine("createRefund", failure, disposition));
+        assertThat(logs.list).allSatisfy(StripeRefundGatewayTest::carriesNoProviderData);
     }
 
     /** No provider data reaches callers either: the business exception carries no cause or text. */

@@ -22,12 +22,24 @@ import lombok.extern.slf4j.Slf4j;
  * RateLimitException}; every other status, including 409 and all 5xx, {@code ApiException}; and a
  * transport failure {@code ApiConnectionException}.
  *
- * <p>Permanent refusals map to {@link PaymentErrorCode#PAYMENT_PROVIDER_REJECTED}. A request
- * replayed under the same idempotency key gets the same answer from Stripe, so a credential,
- * validation, card or idempotency-parameter refusal cannot heal by itself. Everything else,
- * including any subtype not named here, maps to {@link PaymentErrorCode#PAYMENT_PROVIDER_ERROR} and
- * stays retryable. A few error codes always mean "try later", whatever the type; they are checked
- * first.
+ * <p>Permanent refusals map to {@link PaymentErrorCode#PAYMENT_PROVIDER_REJECTED}. They are the
+ * ones that fail the same way however often the worker asks, because its request never changes: the
+ * refund's PaymentIntent, amount and metadata are frozen per obligation. A 400/404 invalid request
+ * is a verdict on those frozen parameters or ids. A 402 comes from a POST that Stripe executed, and
+ * Stripe replays an executed POST's saved result for the same idempotency key. An {@link
+ * IdempotencyException} is a key reused with different parameters, which no retry can resolve. Only
+ * executed POSTs are replayed: GETs carry no idempotency key, and a request rejected before it
+ * executes saves nothing under the key.
+ *
+ * <p>That last point is why 401 and 403 ({@link AuthenticationException} and its subclass) stay
+ * retryable. They depend on the configured key rather than on the request, and Stripe rejects them
+ * before executing, so nothing is saved under the idempotency key. Once an operator fixes the key,
+ * the next tick creates exactly one refund. The WARN line records why it keeps retrying, and the
+ * worker's 23 h creation cutoff still bounds how long it tries to create.
+ *
+ * <p>Everything else, including any subtype not named here, maps to {@link
+ * PaymentErrorCode#PAYMENT_PROVIDER_ERROR} and stays retryable. A few error codes always mean "try
+ * later", whatever the type; they are checked first.
  *
  * <p>The provider's message and response body can carry customer or account data, so the log line
  * holds only the operation, the exception's simple class name, HTTP status, Stripe error code,
@@ -68,13 +80,15 @@ final class StripeFailureClassifier {
                         : PaymentErrorCode.PAYMENT_PROVIDER_ERROR);
     }
 
-    /** Whether asking Stripe again, with the same request and key, cannot change the answer. */
+    /**
+     * Whether asking Stripe again with the same request cannot change the answer. Credential
+     * failures (401/403) are deliberately not permanent; see the class comment.
+     */
     static boolean permanent(StripeException failure) {
         if (failure.getCode() != null && RETRYABLE_CODES.contains(failure.getCode())) {
             return false;
         }
-        return failure instanceof AuthenticationException
-                || failure instanceof InvalidRequestException
+        return failure instanceof InvalidRequestException
                 || failure instanceof IdempotencyException
                 || failure instanceof CardException;
     }

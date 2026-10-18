@@ -127,11 +127,13 @@ public final class RefundService {
      * amount, currency or mode does not match this obligation. Nothing about that changes by asking
      * again, so retrying it every 30 seconds would burn a provider call per cycle for as long as
      * the obligation lives and bury real failures in the log; it belongs to an operator instead.
-     * {@code PAYMENT_PROVIDER_REJECTED} is the same verdict from the provider itself: rejected
-     * credentials, a request it considers invalid, or an idempotency key reused with different
-     * parameters. Stripe replays the same answer for the same key, so it is parked too. {@code
-     * PAYMENT_PROVIDER_ERROR} is a transport, rate-limit or availability failure, which is exactly
-     * what retrying is for — the idempotency key keeps a retry from sending money twice.
+     * {@code PAYMENT_PROVIDER_REJECTED} is the same verdict from the provider itself: a request it
+     * considers invalid, a declined refund, or an idempotency key reused with different parameters.
+     * The worker's request for an obligation never changes, so asking again fails the same way, and
+     * it is parked too. {@code PAYMENT_PROVIDER_ERROR} is a transport, rate-limit, availability or
+     * credential failure (401/403 are rejected before Stripe executes anything, so a fixed key lets
+     * the next attempt proceed), which is exactly what retrying is for — the idempotency key keeps
+     * a retry from sending money twice.
      */
     private static boolean permanent(BizException refused) {
         return refused.errorCode() == PaymentErrorCode.PAYMENT_STATE_INVALID
