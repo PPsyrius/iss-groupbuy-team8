@@ -151,12 +151,15 @@ class StripeCheckoutFlagConfigurationTest {
 
     @Test
     void sandboxKeyCheckMatchesTheFormerTestKeyPattern() {
-        // Same acceptance as the former @Pattern("sk_test_.+"); a missing key is @NotBlank's job.
+        // Same acceptance as the former @Pattern("sk_test_.+"); a null key is @NotBlank's job.
         assertThat(sandboxKey(null)).isTrue();
         assertThat(sandboxKey("sk_test_" + "abc")).isTrue();
         assertThat(sandboxKey("sk_test_")).isFalse();
         assertThat(sandboxKey(LIVE_FIXTURE)).isFalse();
         assertThat(sandboxKey("")).isFalse();
+        // Whole-string match: a trailing line terminator (env file, secret store) still fails fast.
+        assertThat(sandboxKey("sk_test_" + "abc\n")).isFalse();
+        assertThat(sandboxKey("sk_test_" + (char) 0x2028)).isFalse(); // LINE SEPARATOR
     }
 
     private static boolean sandboxKey(String apiKey) {
