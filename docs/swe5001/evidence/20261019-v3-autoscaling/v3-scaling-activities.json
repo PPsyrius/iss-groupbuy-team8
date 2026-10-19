@@ -1,0 +1,100 @@
+{
+    "ScalingActivities": [
+        {
+            "ActivityId": "671137e1-9a64-448b-bceb-fc9cfe3304df",
+            "ServiceNamespace": "ecs",
+            "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+            "ScalableDimension": "ecs:service:DesiredCount",
+            "Description": "Setting desired count to 3.",
+            "Cause": "monitor alarm TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmHigh-13d6e24e-0215-42aa-9173-35640c497092 in state ALARM triggered policy blocbuy-swe5001-commerce-requests-per-target",
+            "StartTime": "2026-10-19T15:58:02.680000+08:00",
+            "EndTime": "2026-10-19T15:59:05.020000+08:00",
+            "StatusCode": "Successful",
+            "StatusMessage": "Successfully set desired count to 3. Change successfully fulfilled by ecs."
+        },
+        {
+            "ActivityId": "d0f2f5dc-b157-46d7-af6b-e8e294a18b31",
+            "ServiceNamespace": "ecs",
+            "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+            "ScalableDimension": "ecs:service:DesiredCount",
+            "Description": "Setting desired count to 2.",
+            "Cause": "monitor alarm TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmHigh-13d6e24e-0215-42aa-9173-35640c497092 in state ALARM triggered policy blocbuy-swe5001-commerce-requests-per-target",
+            "StartTime": "2026-10-19T15:55:02.684000+08:00",
+            "EndTime": "2026-10-19T15:56:08.199000+08:00",
+            "StatusCode": "Successful",
+            "StatusMessage": "Successfully set desired count to 2. Change successfully fulfilled by ecs."
+        },
+        {
+            "ActivityId": "7d191788-2dab-483b-8667-f0d72da74526",
+            "ServiceNamespace": "ecs",
+            "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+            "ScalableDimension": "ecs:service:DesiredCount",
+            "Description": "Setting desired count to 2.",
+            "Cause": "minimum capacity was set to 2",
+            "StartTime": "2026-10-19T12:36:37.764000+08:00",
+            "EndTime": "2026-10-19T12:37:46.135000+08:00",
+            "StatusCode": "Successful",
+            "StatusMessage": "Successfully set desired count to 2. Change successfully fulfilled by ecs."
+        },
+        {
+            "ActivityId": "a780898a-c184-41b1-835d-e86980777294",
+            "ServiceNamespace": "ecs",
+            "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+            "ScalableDimension": "ecs:service:DesiredCount",
+            "Description": "Setting desired count to 2.",
+            "Cause": "minimum capacity was set to 2",
+            "StartTime": "2026-10-18T17:27:56.115000+08:00",
+            "EndTime": "2026-10-18T17:29:03.593000+08:00",
+            "StatusCode": "Successful",
+            "StatusMessage": "Successfully set desired count to 2. Change successfully fulfilled by ecs."
+        },
+        {
+            "ActivityId": "de215b5d-a6af-4a3e-a0b2-d3b23cda9794",
+            "ServiceNamespace": "ecs",
+            "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+            "ScalableDimension": "ecs:service:DesiredCount",
+            "Description": "Setting desired count to 2.",
+            "Cause": "minimum capacity was set to 2",
+            "StartTime": "2026-10-17T16:00:12.096000+08:00",
+            "EndTime": "2026-10-17T16:01:15.439000+08:00",
+            "StatusCode": "Successful",
+            "StatusMessage": "Successfully set desired count to 2. Change successfully fulfilled by ecs."
+        },
+        {
+            "ActivityId": "f530cdd2-6248-4bf9-b7f9-4b09699147c7",
+            "ServiceNamespace": "ecs",
+            "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+            "ScalableDimension": "ecs:service:DesiredCount",
+            "Description": "Setting desired count to 2.",
+            "Cause": "minimum capacity was set to 2",
+            "StartTime": "2026-10-17T14:32:01.918000+08:00",
+            "EndTime": "2026-10-17T14:33:12.354000+08:00",
+            "StatusCode": "Successful",
+            "StatusMessage": "Successfully set desired count to 2. Change successfully fulfilled by ecs."
+        },
+        {
+            "ActivityId": "2c0c77db-6577-4f6f-ac13-5db77f1ff6a3",
+            "ServiceNamespace": "ecs",
+            "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+            "ScalableDimension": "ecs:service:DesiredCount",
+            "Description": "Setting desired count to 2.",
+            "Cause": "minimum capacity was set to 2",
+            "StartTime": "2026-10-16T14:06:21.344000+08:00",
+            "EndTime": "2026-10-16T14:07:27.768000+08:00",
+            "StatusCode": "Successful",
+            "StatusMessage": "Successfully set desired count to 2. Change successfully fulfilled by ecs."
+        },
+        {
+            "ActivityId": "a274f54c-ac7b-4c04-ad36-58bd0e0798e4",
+            "ServiceNamespace": "ecs",
+            "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+            "ScalableDimension": "ecs:service:DesiredCount",
+            "Description": "Setting desired count to 2.",
+            "Cause": "minimum capacity was set to 2",
+            "StartTime": "2026-10-15T22:11:25.021000+08:00",
+            "EndTime": "2026-10-15T22:12:32.454000+08:00",
+            "StatusCode": "Successful",
+            "StatusMessage": "Successfully set desired count to 2. Change successfully fulfilled by ecs."
+        }
+    ]
+}
