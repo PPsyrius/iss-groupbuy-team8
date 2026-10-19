@@ -55,8 +55,7 @@ const SEGMENTS = [
     } },
 ];
 
-// slot in seconds; null = Q&A. Draft outline: each segment's subagent replaces the stub wording.
-const stub = '{{FILL:draft wording}}';
+// slot in seconds; null = Q&A.
 const SLIDES = [
   { n: 1, seg: 1, item: '1a', speaker: 'Lim', slot: 15, title: 'BlocBuy',
     say: "Good afternoon, we're Team 8, and this is BlocBuy. I'll cover the problem and how we ran the project; then come design, testing, our pipeline, and a live demo.",
@@ -154,9 +153,12 @@ const SLIDES = [
     handover: 'Now let me show you one change going through.' },
   { n: 20, seg: 4, item: '4b', speaker: 'Pan', slot: 15, title: 'Live: one change from pull request to dev',
     say: "Now live: one small frontend change. Checks take about five minutes; after approval and a squash merge, it's on dev in under three. The backend run and a fallback are recorded.",
-    cues: ['Opens the live pipeline demo (about 405 s, run book in the script). {{CONFIRM:the demo change, its author and the approving code owner (frontend → Lim)}} Open the PR before 16:42 so its checks finish during slides 15–19.', 'Numbers: frontend PR checks median 289 s (19 runs, 16–19 Oct); merge → e2e-dev green median 159 s (94 runs); backend merge → deployed median 186 s (88 runs). Recorded backend run: 39133506399 (18 Oct).', 'Item 4e: {{FILL:fallback recording link and date (due 25 Oct, open item 2)}}'],
+    cues: ['Opens the live pipeline demo (about 405 s, run book in the script). {{CONFIRM:the demo change, its author and the approving code owner (frontend → Lim)}} Open the PR before 16:42 so its checks finish during slides 15–19.', 'Numbers: frontend PR checks median 289 s (19 runs, 16–19 Oct); merge → e2e-dev green median 159 s (94 runs); backend merge → deployed median 186 s (88 runs). Recorded backend run: 39133506399 (18 Oct).', 'Item 4e: {{FILL:fallback recording link and date (due 25 Oct, open item 19)}}'],
     handover: '(demo) "Here is the pull request."' },
-  { n: 21, seg: 5, item: '5a', speaker: 'Eric', slot: 20, title: 'Live demo: one bloc from invite to refund', say: stub },
+  { n: 21, seg: 5, item: '5a', speaker: 'Eric', slot: 20, title: 'Live demo: one bloc from invite to refund',
+    say: "Next, one bloc's life on our dev site: a buyer starts it and shares an invite, a friend joins and pays in Stripe Sandbox, both see it under My blocs, and a bloc we started at 16:05 expires and refunds. Then the quality attributes.",
+    cues: ["16:53:00: Eric is sharing (switch from Pan at the hand-over); his window shows swe5006-presentation.html#21. Follow the demo run book in the script step by step; Yorik follows on the same page and posts cue words in the backchannel.", 'Storyline from #464: invite → START/JOIN with Stripe Sandbox → /account orders and blocs → expiry refund. Steps 1–4 are UC2–UC8 on dev; step 5 shows 5b with each environment named (dev, SWE5001 prod on ECS, or local).', '{{CONFIRM:footer: keep "Live on dev; recorded steps are marked" only after the 23 Oct go/no-go (#223, #517); with a NO-GO, say "the payment steps are recorded" here}}'],
+    handover: 'First, our leader starts a bloc.' },
   { n: 22, seg: 5, item: '5b', speaker: 'Lim', slot: null, title: 'Thank you', say: "Thank you. We're happy to take your questions." },
 ];
 
@@ -196,6 +198,15 @@ const QA = {
     ['What stops a bad deploy?', 'Before merge: six required checks on an up-to-date branch and a code-owner approval. After merge: the image URI must be an ECR digest in the expected repository, the host health check with automatic rollback, the public health check, and the e2e-dev smoke through CloudFront. ENABLE_EC2_DEPLOY and ENABLE_S3_DEPLOY freeze delivery. Limitation: the delivered image is rebuilt after merge and not rescanned by Trivy (ECR scans on push), and the deploy environments have no required reviewer.', 'Pan'],
     ['How do you manage dependencies?', 'Dependabot checks Maven, npm, Docker and GitHub Actions daily with a 7-day cooldown and groups (Spring, test, TanStack, HeroUI); majors of Spring, Java, React and TypeScript are ignored on purpose. Every update passes the same required checks; 70 Dependabot PRs merged. Trivy scans dependencies on change and weekly. Actions are pinned to commit SHAs, so Dependabot bumps the SHA.', 'Pan → Lim'],
   ] },
+  5: { window: '17:10–17:15', rows: [
+    ['Why is there no auto-scaling on dev?', 'Decision: dev is one EC2 host running the monolith in Docker Compose, with PostgreSQL and Redis on the host (backend ADR 0008). Reason: SWE5006 needs one complete, always-on system at low cost; auto-scaling is the SWE5001 topology on ECS, where commerce scales 2–6 tasks on ALB requests per target (policy read back 16 Oct, B16). Limitation: the dev host is a single point of failure and a deploy restarts the API (502 on 3–4 Oct).', 'Eric → Pan'],
+    ['Is the refund real?', 'It is a real Stripe Sandbox refund: the Refund API in test mode, so no money moves. Locally on 20 Sep, refund re_3UHbeV… reached succeeded and a recheck created no duplicate (B15). On dev: {{FILL:Sandbox refund id from the 24 Oct dry run, or say "not yet proven on dev" (#223, #517)}}. The receipt reads BlocBuy\'s own record, which the worker writes only after Stripe answers.', 'Yorik'],
+    ['What happens if Stripe is down?', 'Nothing is admitted without a verified webhook: if Checkout cannot open, no payment exists and the quote simply expires. A missed webhook is recovered by the operator commands inspect and recover, from Stripe\'s own facts (20 Sep acceptance). Refunds stay as durable obligations; the worker retries every 30 s with the same idempotency key, and after 23 hours it only searches Stripe and hands mismatches to a person. Limitation: webhook recovery is an operator step, not a scheduled job.', 'Yorik'],
+    ['How do you avoid a double payment?', 'Three guards. A repeated Checkout request with the same buyer, intent and Idempotency-Key reuses the payment and its Checkout link. Webhook events are stored by event ID, so a replay changes nothing (StripeLocalIntegrationTest.eightConcurrentWebhookReplaysStillProduceOneMemberAndOneOrder). A purchase intent is fulfilled by one payment only; when two paid buyers race for the last seat, one gets it and the other gets a refund obligation (StripeCheckoutFlowTest.concurrentPaidBuyersCannotBothTakeLastSeat). Tests run locally and in CI, not on dev.', 'Yorik → Eric'],
+    ['Can you show that step again?', 'Yes, if it only reads: we reopen the tab (My blocs, the receipt, the pull request or the run). We do not repeat a payment or change data live; every step is also in the recordings of 25 Oct. {{FILL:recording folder link}}', 'Eric'],
+    ['Why did the demo not show notifications?', 'By decision: the dev host runs no message broker, so the outbox writer, relay and consumer are off (application-ec2.yml; ADR 0007 scope decision, 11 Oct). Notifications run on SWE5001 prod through SNS and SQS, and locally and in CI against ElasticMQ (slide 11).', 'Pan'],
+    ['(Questions parked during the talk)', 'Lim reads each parked question from the backchannel list in one line and names the owner; those come first, before new questions. Answer each in 30–45 s: decision, reason, evidence or limitation.', 'Lim'],
+  ] },
 };
 
 // Backup index rows: [id, title, what it answers]
@@ -214,6 +225,8 @@ const BACKUPS = [
   ['B12', 'Workflows, required checks and timings', 'What runs when, how long, and how often is it green?'],
   ['B13', 'Production topology (SWE5001)', 'What does prod look like on ECS?'],
   ['B14', 'Known gaps and limitations', 'What is not done yet in the pipeline and on dev?'],
+  ['B15', 'Stripe Sandbox refund, local evidence (20 Sep)', 'Is the refund real, and where has it been proven?'],
+  ['B16', 'Scale-out and load results (SWE5001 prod + dev baseline)', 'How does it scale, and how fast is it?'],
 ];
 
 // Open items: [#, item, owner, blocks slide]
@@ -237,6 +250,10 @@ const OPEN_ITEMS = [
   [17, 'Document or remove the media CloudFront dcsjrkmummxi7 and bucket blocbuy-media-dev-402178232802 (nothing in the repository names them)', 'Pan', '18'],
   [18, 'Reconcile frontend ADR 0004 and the EC2 operator guide with the post-merge rebuild in ci-frontend.yml and ci-backend.yml; CONTRIBUTING.md still lists contract-check as required', 'Pan, Lim', '15, 16, B14'],
   [19, 'Fallback recording link for the pipeline demo (item 4e), part of open item 2', 'Pan', '20'],
+  [20, 'Fallback recordings of the system demo on dev, one clip per step (item 5c), part of open item 2; link in the Q&A answer', 'Yorik, Eric', '21, Q&A 5'],
+  [21, 'SWE5001 scale-out and load results from the 19 Oct session (V3 tasks, p95, error rate; V4 drain) for B16', 'Pan', 'B16'],
+  [22, 'Two Google buyer accounts (leader, joiner), their display names on screen, and the admin grant for the listings check', 'Yorik', '21'],
+  [23, 'Footer of slide 21 after the go/no-go; Sandbox payment and refund ids from the 24 Oct dry run for the Q&A', 'Yorik', '21, Q&A 5'],
 ];
 
 module.exports = { SPEAKERS, SEGMENTS, SLIDES, QA, BACKUPS, OPEN_ITEMS };

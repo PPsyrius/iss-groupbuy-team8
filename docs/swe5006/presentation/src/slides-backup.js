@@ -165,6 +165,47 @@ const b14 = () => dt(['Gap', 'Effect', 'Status'], [
   ['Gitleaks scans selected commits', '24 historical matches still to decide', 'docs/quality/quality-gates.md, 14 Oct'],
 ], { fs: 15, w: [250, 450], pad: '6px 10px' });
 
+// ---- B15–B16: segment 5, system demo ----
+// B15 embeds two screenshots from the 20 Sep local Sandbox acceptance (JPEG data despite the .png names).
+const fs = require('fs');
+const path = require('path');
+const EVID = path.join(__dirname, '../../../../backend/docs/payment/evidence/20260920');
+const shot = (file, cap) => `<div style="flex:1"><div style="height:226px;overflow:hidden;border:1px solid #DDD5C8;border-radius:8px;background:#F2F2F2"><img src="data:image/jpeg;base64,${fs.readFileSync(path.join(EVID, file)).toString('base64')}" style="width:100%;display:block"></div>
+ <div style="font:400 15px/1.3 Inter;color:var(--muted);margin-top:5px">${cap}</div></div>`;
+const b15 = () => `<div style="display:flex;gap:20px">
+ ${shot('frontend-refunded-order.png', 'My orders: the expired bloc’s order is refunded (UI of 20 Sep, since redesigned)')}
+ ${shot('frontend-refund-receipt.png', 'Receipt: “Refund sent”, payment 01a0bce8…, SGD 10.00')}
+</div>
+<div style="margin-top:12px">${dt(['Scenario', 'Result on 20 Sep (Team8 Stripe Sandbox, livemode=false)'], [
+  ['START and JOIN', 'two SGD 10 payments → one member and one order each; the bloc reached succeeded, 2 of 2'],
+  ['Webhook replay', 'replayed valid events changed nothing; a modified payload with the old signature got 400'],
+  ['Expiry', 'an under-filled bloc expired → one SGD 10 refund obligation; its unpaid Checkout session expired'],
+  ['Refund', `one full Sandbox refund ${mo('re_3UHbeV5iEVLN2uQJ1V71krwQ')}, succeeded; a recheck created no duplicate`],
+], { fs: 15, w: [170], pad: '5px 10px' })}</div>
+<div style="margin-top:10px;border-radius:8px;background:#FDEFEC;padding:9px 16px;font:400 15.5px/1.35 Inter"><b style="color:var(--orange-d)">Local, not dev:</b> real Stripe Sandbox calls from a local backend and PostgreSQL; no Google sign-in, no deployed environment. On dev the refund waits for #223 and #517. Source: ${mo('backend/docs/payment/stripe-sandbox-acceptance-20260920.md')}</div>`;
+
+const rCard = (head, env, inner, tone = '#3E5CD9') => `<div class="card" style="flex:1;padding:14px 16px;display:flex;flex-direction:column">
+ <div style="font:600 13px Inter;letter-spacing:.04em;color:${tone}">${env}</div>
+ <div class="serif" style="font-size:21px;margin:4px 0 8px">${head}</div>${inner}</div>`;
+const li = t => `<li style="margin-bottom:6px">${t}</li>`;
+const b16 = () => `<div style="display:flex;gap:14px;align-items:stretch">
+ ${rCard('Scale-out', 'SWE5001 PROD · ECS FARGATE', `<ul class="b" style="font:400 15.5px/1.35 Inter;margin:0">
+  ${li('Target tracking on ALB requests per target: 12,000 a minute, scale-out cooldown 60 s')}
+  ${li('commerce 2–6 tasks in two AZs, notification 1–4 (read back 16 Oct)')}
+  ${li(`V3 scale-out under k6: ${mk('FILL', 'max commerce tasks, p95, error rate from the 19 Oct session')}`)}
+  ${li(`V4 queue drain: ${mk('FILL', 'backlog peak, notification tasks, drain time (19 Oct)')}`)}</ul>`)}
+ ${rCard('Load, one task', 'SWE5001 V2 · ECS, 16 OCT', `<ul class="b" style="font:400 15.5px/1.35 Inter;margin:0">
+  ${li('k6, ten one-minute plateaus from 10 to 200 requests a second, through CloudFront')}
+  ${li('57,600 requests, <b>0 errors</b>, run twice')}
+  ${li('p95 between 23 and 57 ms on every plateau (target under 500 ms)')}
+  ${li('No saturation reached: 200 a second is a tested lower bound, not a limit')}</ul>`)}
+ ${rCard('Workload baseline', 'DEV CODE · LOCAL RUN, 30 SEP', `${dt(['100 users each', 'p95', 'Errors'], [
+  ['Browse (list + detail)', '24 ms', '0'], ['JOIN, one hot team', '57 ms', '0'], ['My Orders', '18 ms', '0'],
+ ], { fs: 15, pad: '4px 8px' })}<div style="font:400 15px/1.35 Inter;margin-top:8px">30 paid teams expired within 58 s of their deadlines under that load. One laptop with real HTTP, PostgreSQL and Redis; <b>not a deployed result</b>.</div>`, 'var(--orange-d)')}
+</div>
+<div style="margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter"><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out is shown on SWE5001 prod.</div>
+<div style="margin-top:8px;font:italic 400 14.5px/1.35 Inter;color:var(--muted)">Sources: docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md (V2, scaling policy); docs/perf/sprint3-baseline.md (local workload).</div>`;
+
 // Backup slides follow the last main slide; press B in the deck for the index (BX). Rows link with data-go.
 // Each segment adds its backups to BACKUPS (content.js) and a matching entry below, in index order.
 function list() {
@@ -189,6 +230,8 @@ function list() {
   B.push({ id: 'B12', title: 'Workflows, required checks and timings', speaker: 'Pan', body: b12() });
   B.push({ id: 'B13', title: 'Production topology (SWE5001)', speaker: 'Pan', body: b13() });
   B.push({ id: 'B14', title: 'Known gaps and limitations', speaker: 'Pan', body: b14() });
+  B.push({ id: 'B15', title: 'Stripe Sandbox refund, local evidence (20 Sep)', speaker: 'Yorik', body: b15() });
+  B.push({ id: 'B16', title: 'Scale-out and load results (SWE5001 prod + dev baseline)', speaker: 'Eric', body: b16() });
   return B;
 }
 

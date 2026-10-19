@@ -574,12 +574,45 @@ const s20 = () => `
  <div style="flex:1;border-radius:8px;background:#fff;border:1px solid #DDD5C8;padding:14px 20px"><div style="font:700 19px Inter">Watch for</div><div style="font:400 16px/1.35 Inter;margin-top:4px">the required checks turning green, the merge, then the new version on <span class="mono" style="font-size:15px">d1b3np88z657cp.cloudfront.net</span> ${mk('CONFIRM', 'the demo change')}</div></div>
 </div>`;
 
+// ---------- slide 21 (pattern: SWE5001 slide 23) ----------
+// Steps 1–4 run live on dev (cobalt, platform); step 5 shows labelled evidence (accent soft). Accent fills carry no text.
+const dStep = (n, t, uc, env, qa, tone = 'live') => {
+  const [bg, fg] = tone === 'live' ? ['#E3E8FB', '#3E5CD9'] : ['var(--orange-l)', 'var(--orange-d)'];
+  return `<div class="card" style="flex:1;height:352px;padding:20px 16px;display:flex;flex-direction:column">
+ <div class="dot" style="width:56px;height:56px;background:${bg};color:${fg};border:1.4px solid ${fg};font:700 25px Inter">${n}</div>
+ <div style="font:700 20.5px/1.25 Inter;margin-top:14px">${t}</div>
+ <div style="font:400 15.5px/1.3 Inter;color:var(--muted);margin-top:6px">${uc}</div>
+ <div style="flex:1"></div>
+ <div style="font:600 13.5px Inter;letter-spacing:.04em;color:${fg};margin-bottom:8px">${env}</div>
+ <div style="border-radius:8px;background:var(--default);padding:8px 10px;font:600 16.5px/1.3 Inter">${qa}</div></div>`;
+};
+const s21 = () => `
+<div style="display:flex;gap:6px;align-items:stretch;margin-top:4px">
+ ${dStep(1, 'Start a bloc and share the invite', 'UC2 sign in · UC3 start · UC7 invite · Stripe Sandbox', 'LIVE ON DEV', 'Functionality, security')}${dArr()}
+ ${dStep(2, 'A friend joins through the invite and pays', 'UC4 join · UC7 credit to the sharer · Stripe Sandbox', 'LIVE ON DEV', 'Consistency')}${dArr()}
+ ${dStep(3, 'My blocs and my orders', 'UC8 · Active, Completed, Refunded', 'LIVE ON DEV', 'Functionality')}${dArr()}
+ ${dStep(4, 'The bloc started at 16:05 expires and refunds', 'UC5 resolve · UC6 refund · receipt', 'LIVE ON DEV', 'Reliability, consistency')}${dArr()}
+ ${dStep(5, 'Quality attributes', 'one refund per payment · ECS scale-out · load tests · the pipeline', 'LABELLED EVIDENCE', 'Scalability, performance, maintainability', 'evidence')}
+</div>
+<div style="display:flex;justify-content:space-between;margin-top:22px;font:400 17px/1.35 Inter;color:var(--muted)">
+ <span><b style="color:#3E5CD9">Live on dev:</b> one EC2 host, Stripe Sandbox test cards, no real money</span>
+ <span><b style="color:var(--orange-d)">Labelled:</b> SWE5001 prod on ECS or a local run, named on screen</span>
+</div>
+<div style="margin-top:18px;border-radius:8px;background:#FBDFD9;padding:12px 22px;font:700 19px Inter;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="color:var(--red);font-size:14px">●</span> Live on dev; recorded steps are marked ${mk('CONFIRM', 'go/no-go for the live payment steps on 23 Oct (#223, #517)')}</div>`;
+
 // ---------- slide 22 ----------
 const s22 = () => `
 <div style="position:absolute;left:76px;top:96px;font:700 120px/1 Inter;color:#fff">Thank you</div>
 <div style="position:absolute;left:80px;top:236px;font:500 32px Inter;color:#fff">Questions?</div>
-<div style="position:absolute;left:80px;top:604px;font:400 17px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:10px;align-items:center"><span style="font-size:20px">${icon('github')}</span> github.com/PPsyrius/iss-groupbuy-team8</div>`;
+<div style="position:absolute;left:80px;top:304px;font:700 16px Inter;letter-spacing:.14em;color:#FFB01F">WHAT WE HOPE YOU REMEMBER</div>
+<div style="position:absolute;left:80px;top:338px;width:1060px;display:grid;grid-template-columns:1fr 1fr;gap:14px 20px">
+ ${['Pay first; refunded automatically if the team fails', 'A refund is never paid twice, even after a crash', 'One codebase, two topologies: EC2 and ECS', 'Pull request to dev in minutes, every gate green'].map(t => `<div style="height:52px;border-radius:26px;background:#fff;color:var(--teal-d);font:700 19px/52px Inter;text-align:center">${t}</div>`).join('')}
+</div>
+<div style="position:absolute;left:80px;top:486px;width:1060px;display:flex;gap:20px">
+ ${[['99.2%', 'backend coverage on new code (SonarCloud, 19 Oct)'], ['1,931', 'backend tests, 0 failed (16 Oct)'], ['≈ 2.7 min', 'frontend merge → live and smoke-tested (median)']].map(n => `<div style="flex:1;border-radius:8px;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);padding:10px 18px"><div style="font:700 30px/1.2 Inter;color:#fff">${n[0]}</div><div style="font:400 15.5px Inter;color:#E6DFD3">${n[1]}</div></div>`).join('')}
+</div>
+<div style="position:absolute;left:80px;top:604px;font:400 17px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:10px;align-items:center"><span style="font-size:20px">${icon('github')}</span> github.com/PPsyrius/iss-groupbuy-team8 · d1b3np88z657cp.cloudfront.net</div>`;
 
-const S = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s12, 13: s13, 14: s14, 15: s15, 16: s16, 17: s17, 18: s18, 19: s19, 20: s20, 22: s22 };
+const S = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s12, 13: s13, 14: s14, 15: s15, 16: s16, 17: s17, 18: s18, 19: s19, 20: s20, 21: s21, 22: s22 };
 for (let n = 2; n <= 21; n++) if (!S[n]) S[n] = todo(n);
 module.exports = S;
