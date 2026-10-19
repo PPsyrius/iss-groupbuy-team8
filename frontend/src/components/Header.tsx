@@ -1,13 +1,14 @@
 import { Avatar, Button, buttonVariants } from "@heroui/react";
 import { Link, useLocation } from "@tanstack/react-router";
 
+import { BrandLogo } from "@/components/BrandMark";
 import { initials } from "@/features/session/initials";
 import { useLogout } from "@/features/session/use-logout";
 import { useSession } from "@/features/session/use-session";
 
 // Storefront header per the artboards (docs/design-screens.md §3): 56px on phone, 64px at 1280,
-// `surface` with a hairline border; wordmark left (text until the SVG asset lands, CR-7); right,
-// either the neutral "Sign in" control (`Button variant="secondary"` look, accent-soft-foreground
+// `surface` with a hairline border; the SVG logo left (CR-7), 36px / 40px tall because it carries
+// the tagline under the wordmark (the artboards' 22-24px was a text-only wordmark); right, either the neutral "Sign in" control (`Button variant="secondary"` look, accent-soft-foreground
 // label, no accent fill: CR-8) or the avatar + name once signed in. No logout control is drawn
 // on any artboard; T2-05 adds it in the signed-in slot.
 export function Header() {
@@ -16,8 +17,8 @@ export function Header() {
   const onLoginPage = useLocation({ select: (l) => l.pathname === "/login" });
   return (
     <header className="bg-surface border-border flex h-14 items-center justify-between gap-4 border-b px-4 xl:h-16 xl:px-8">
-      <Link to="/" className="text-lg font-bold tracking-tight xl:text-xl">
-        BlocBuy
+      <Link to="/" className="shrink-0">
+        <BrandLogo className="h-9 w-auto xl:h-10" />
       </Link>
       <div className="flex items-center gap-4">
         <span className="text-muted hidden text-sm xl:inline">

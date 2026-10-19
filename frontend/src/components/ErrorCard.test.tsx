@@ -10,10 +10,28 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AppErrorBoundary } from "./AppErrorBoundary";
-import { AccessDeniedCard, NotFoundCard, RouteErrorCard } from "./ErrorCard";
+import { AccessDeniedCard, ErrorCard, NotFoundCard, RouteErrorCard } from "./ErrorCard";
 
 afterEach(() => {
   vi.restoreAllMocks();
+});
+
+function receiptCard(props: { mark?: true }) {
+  return (
+    <ErrorCard code="Paid" title="Payment received" body="Saved." moneyLead="$10 paid." {...props}>
+      <span />
+    </ErrorCard>
+  );
+}
+
+describe("ErrorCard", () => {
+  // The mark is decorative (alt=""), which hides it from role queries.
+  it("draws the brand mark only when asked", () => {
+    const { container, rerender } = render(receiptCard({ mark: true }));
+    expect(container.querySelector("img")).toBeInTheDocument();
+    rerender(receiptCard({}));
+    expect(container.querySelector("img")).toBeNull();
+  });
 });
 
 describe("NotFoundCard", () => {
@@ -113,5 +131,6 @@ describe("AppErrorBoundary", () => {
     );
     expect(screen.getByRole("heading", { name: "Something went wrong on our side" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "BlocBuy" }).closest("a")).toHaveAttribute("href", "/");
   });
 });
