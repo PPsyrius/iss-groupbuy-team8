@@ -126,7 +126,7 @@ Nothing in the buyer UI should be smaller than `xs`.
 ## 3. Shared chrome
 
 - Buyer artboards have no footer.
-- Catalog header is 56px on phone and 64px on desktop, with the BlocBuy wordmark on the left.
+- Catalog header is 56px on phone and 64px on desktop, with the BlocBuy logo on the left (`BrandLogo`, `h-9` on phone and `h-10` on desktop: taller than the artboard's 22–24px because the shipped logo carries the tagline; CR-7, 2026-10-19).
 - Signed-out state uses **Sign in**, styled as a neutral/secondary control with accent-soft-foreground text.
 - Signed-in state uses avatar/name in the current implementation. Notification/bell UI waits for contract-backed notification data.
 - Sub-pages use a back/crumb pattern on phone and breadcrumbs on desktop where appropriate.
@@ -250,7 +250,7 @@ Implemented in admin plan A1-01 to A1-08, A2-01 to A2-03 and A3-01 to A3-09 (`ad
 
 **Shell and access** (`Admin Console › 4a.1`, `Buyer Errors › Access denied`)
 
-- The console is a second shell in the same SPA: a 240px rail on `background-inverse` with the isologo, an `ADMIN` tag, Dashboard and Listings links, and the user block (initials, `nickname ?? userId`, "Admin" from `me.roles`). The storefront header is hidden through route `staticData.shell`.
+- The console is a second shell in the same SPA: a 240px rail on `background-inverse` with the dark isologo (`BrandIsologo tone="dark"`, SVG since CR-7), an `ADMIN` tag, Dashboard and Listings links, and the user block (initials, `nickname ?? userId`, "Admin" from `me.roles`). The storefront header is hidden through route `staticData.shell`.
 - Desktop only and dense: the content column keeps 1024px and scrolls sideways below that (Q12). All times are SGT.
 - Anonymous visitors go to `/login?returnTo=%2Fadmin`. A signed-in session without the `admin` role gets the Access denied card in place at `/admin` ("You don’t have access to the admin console", Browse listings / My blocs), under a wordmark-only bar. A 403 from any later admin read (a role revoked mid-session) reaches the same card, from the dashboard, the listings table, the tab counts and the editor (FU-01). The guard is UX only; the backend checks the role on every call.
 - Not built: the "Bloc price rules" rail item (Q3, decided 2026-10-05: a count and a link to the listings filtered to an active rule, waiting on BA-13, #382) and "Payments" (BA-8, artboard 4b.6), so the rail shows no counts (D1).
@@ -350,7 +350,7 @@ The raw export includes generated icon components, but the frontend should use m
 
 Buyer-screen icon needs include back, close, bell, copy, and external/share. The catalog card's arrow is text.
 
-Wordmark/logo and Google branding should use approved project assets. Do not redraw the Google mark.
+Wordmark/logo and Google branding should use approved project assets. Do not redraw the Google mark. Since CR-7 (2026-10-19) the BlocBuy logo and isologo are SVGs in `frontend/src/assets/brand/`, rendered as `<img>` through `frontend/src/components/BrandMark.tsx`; the favicon and touch icon are generated from the isologo. The brand mark is the one approved exception to "no illustration": a decorative isologo may sit on empty states and the payment success receipt.
 
 ## 7. Implemented decisions and remaining limitations
 
