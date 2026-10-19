@@ -17,6 +17,8 @@ describe("/login", () => {
     renderRoute("/login?returnTo=/products/abc");
     expect(await screen.findByRole("heading", { name: "Sign in to hold your seat" })).toBeVisible();
     expect(document.title).toBe("Sign in · BlocBuy");
+    // The card's mark (phone logo, desktop isologo; both render in happy-dom) beside the header's.
+    expect(screen.getAllByRole("img", { name: "BlocBuy" }).length).toBeGreaterThanOrEqual(2);
     expect(screen.getByRole("link", { name: "Back to the listing" })).toHaveAttribute(
       "href",
       "/products/abc",

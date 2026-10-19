@@ -3,6 +3,7 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 
 import type { AdminListingResponse } from "@/api/generated/types.gen";
+import { BrandIsologo } from "@/components/BrandMark";
 import { adminCountsOptions, adminListingsOptions } from "@/features/admin/admin-api";
 import { isAdminDenied } from "@/features/admin/AdminShell";
 import { RecentListings } from "@/features/admin/RecentListings";
@@ -69,6 +70,8 @@ function AdminDashboard() {
       {empty ? (
         // Not drawn (admin plan §11 D4): the listings table's All empty state.
         <div className="border-border bg-surface flex flex-col items-center gap-3 rounded-lg border px-8 py-16 text-center">
+          {/* The brand mark is the only decoration allowed on an empty state (CR-7). */}
+          <BrandIsologo alt="" className="h-10 w-auto opacity-80" />
           <h2 className="text-lg font-semibold">No listings yet</h2>
           <p className="text-muted max-w-[52ch] text-pretty">
             A new listing starts as a draft at version 0 and stays private until you publish it.
