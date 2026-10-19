@@ -1,4 +1,4 @@
-const { icon, md, mk, svg } = require('./lib');
+const { icon, md, mk, svg } = require('../../../presentation-kit/lib');
 const C = require('./content');
 
 const tbl = (head, rows, opts = {}) => `<table class="t" style="font-size:${opts.fs || 16}px">

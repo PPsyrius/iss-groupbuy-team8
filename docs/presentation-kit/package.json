@@ -1,0 +1,20 @@
+{
+  "name": "@blocbuy/presentation-kit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared build pipeline, styles and diagrams for the BlocBuy course presentations (HTML deck, PDF deck, PDF speaker script).",
+  "bin": {
+    "presentation-kit": "bin/build.js"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@fontsource/fraunces": "^5.3.0",
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "inter-ui": "^4.1.1"
+  },
+  "devDependencies": {
+    "playwright": "1.64.0"
+  }
+}

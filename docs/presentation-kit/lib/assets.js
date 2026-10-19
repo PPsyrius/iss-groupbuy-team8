@@ -1,4 +1,4 @@
-// Shared helpers: fonts, icons, markers.
+// Fonts and icons, inlined so the HTML deck and script work offline.
 const fs = require('fs');
 const path = require('path');
 const NM = path.join(__dirname, '..', 'node_modules');
@@ -26,6 +26,7 @@ function fontCSS() {
 }
 
 const iconCache = {};
+// Font Awesome Free by name (https://fontawesome.com/search?ic=free): solid, then regular, then brands.
 function icon(name, cls = 'ic') {
   if (!iconCache[name]) {
     let f = null;
@@ -39,21 +40,4 @@ function icon(name, cls = 'ic') {
   return iconCache[name].replace('<svg ', `<svg class="${cls}" `);
 }
 
-const MK = { FILL: 'mk-fill', VERIFY: 'mk-verify', CONFIRM: 'mk-confirm' };
-function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-// {{FILL:x}} -> chip. Text outside markers is HTML-escaped.
-function md(s) {
-  if (s == null) return '';
-  const parts = String(s).split(/(\{\{(?:FILL|VERIFY|CONFIRM):[^}]*\}\})/);
-  return parts.map(p => {
-    const m = p.match(/^\{\{(FILL|VERIFY|CONFIRM):([^}]*)\}\}$/);
-    if (m) return `<span class="mk ${MK[m[1]]}">[${m[1] === 'FILL' ? 'FILL 19 Oct' : m[1]}${m[2] ? ': ' + esc(m[2]) : ''}]</span>`;
-    return esc(p);
-  }).join('');
-}
-function mk(kind, text = '') { return md(`{{${kind}:${text}}}`); }
-function words(s) { return String(s).replace(/\{\{(?:FILL|VERIFY|CONFIRM):([^}]*)\}\}/g, 'x').replace(/\[click\]/g, '').split(/\s+/).filter(Boolean).length; }
-function svg(name) {
-  return fs.readFileSync(path.join(__dirname, 'diagrams', name + '.svg'), 'utf8').replace(/<\?xml[^>]*>/, '');
-}
-module.exports = { fontCSS, icon, md, mk, esc, words, svg };
+module.exports = { fontCSS, icon };

@@ -1,101 +1,6 @@
-// node src/script.js -> dist/swe5001-presentation-script.html (+ pdf via render-script.js)
-const fs = require('fs');
-const path = require('path');
-const { fontCSS, md, esc, words } = require('./lib');
-const C = require('./content');
-
-const hms = s => { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}`; };
-const toS = t => { const [h, m, s] = t.split(':').map(Number); return h * 3600 + m * 60 + s; };
-const short = t => t.replace(/:00$/, '');
-
-// clock per slide
-const clock = {};
-for (const seg of C.SEGMENTS) {
-  let t = toS(seg.start);
-  for (const s of C.SLIDES.filter(x => x.seg === seg.n)) { if (!s.slot) { clock[s.n] = [toS(seg.start) + seg.talk * 60, null]; continue; } clock[s.n] = [t, t + s.slot]; t += s.slot; }
-  seg.talkEnd = t;
-}
-const est = s => Math.round(words(s.say) / 130 * 60);
-let markers = { FILL: 0, VERIFY: 0, CONFIRM: 0 };
-const countM = str => { for (const m of String(str).matchAll(/\{\{(FILL|VERIFY|CONFIRM):/g)) markers[m[1]]++; };
-
-const CSS = `
-/* BlocBuy design tokens (design-screens.md §2): Inter, light-only, 8px surfaces / 12px overlays, full-radius chips. */
-:root{--background:#F6F2EC;--surface:#FFFFFF;--surface-secondary:#EFE9DF;--surface-tertiary:#E7E0D4;--foreground:#1B1A18;--muted:#6B655C;--border:#DDD5C8;--default:#ECE6DC;--accent:#E8402A;--accent-soft:#FBDFD9;--accent-soft-foreground:#B02E1B;--success-soft:#E3E8FB;--success-soft-foreground:#3E5CD9;--warning-soft:#FFEDC7;--warning-soft-foreground:#7A5C20;--danger-soft:#EFE9DF;--danger-soft-foreground:#8C2414}
-@page{size:A4;margin:18mm 17mm 18mm 17mm}
-body{font:10.4pt/1.5 Inter,"Helvetica Neue",Helvetica,Arial,sans-serif;color:var(--foreground);margin:0;font-variant-numeric:tabular-nums}
-h1{font:700 21pt/1.2 Inter;letter-spacing:-.02em;color:var(--foreground);margin:0 0 8pt;padding-top:6pt;position:relative}
-h1:before{content:'';display:block;width:34pt;height:4pt;border-radius:99px;background:var(--accent);margin-bottom:8pt}
-h2{font:600 13.5pt Inter;letter-spacing:-.01em;color:var(--foreground);margin:16pt 0 6pt;break-after:avoid;page-break-after:avoid}
-h3{font:600 11pt Inter;color:var(--foreground);margin:12pt 0 5pt;break-after:avoid;page-break-after:avoid}
-.chap{page-break-before:always;break-before:page}
-table{border-collapse:separate;border-spacing:0;width:100%;margin:4pt 0 8pt;font-size:8.9pt;line-height:1.38;border:1px solid var(--border);border-radius:8px;overflow:hidden}
-th{background:var(--surface-secondary);text-align:left;padding:4.5pt 6pt;border-bottom:1px solid var(--border);font-weight:600}
-td{padding:4.5pt 6pt;border-top:1px solid var(--border);vertical-align:top}
-tr:nth-child(2) td{border-top:none}
-td.n,th.n{white-space:nowrap}
-table.meta{border:none;border-radius:0}.meta td{border:none;padding:2pt 8pt 2pt 0}.meta td:first-child{font-weight:600;white-space:nowrap;width:90pt}
-.box{border:1px solid var(--border);background:var(--surface-secondary);padding:7pt 10pt;margin:8pt 0;border-radius:8px}
-.box.req{background:var(--surface-secondary)}.box.tip{background:var(--success-soft);border-color:#C5CFF4}.box.warn{background:var(--danger-soft);border-color:#CDBFB0}
-.box b.h{display:block;margin-bottom:2pt;font-weight:600}
-.box.tip b.h{color:var(--success-soft-foreground)}.box.warn b.h{color:var(--danger-soft-foreground)}.box.req b.h{color:var(--foreground)}
-.seghead{background:var(--surface-secondary);border-radius:8px;padding:6pt 10pt;font-size:9.6pt}
-.card{border:1px solid var(--border);border-radius:8px;margin:9pt 0;break-inside:avoid;page-break-inside:avoid;background:var(--surface);overflow:hidden}
-.card .hd{background:var(--foreground);color:#fff;font-weight:600;padding:5pt 9pt;display:flex;justify-content:space-between}
-.card.demo .hd{background:var(--accent-soft);color:var(--accent-soft-foreground)}
-.card .hd small{font-weight:400}
-.card .bd{padding:6pt 9pt}
-.row{display:grid;grid-template-columns:62pt 1fr;gap:0 8pt;margin:2pt 0}
-.lab{font-weight:600;color:var(--foreground)}.lab.say{color:var(--success-soft-foreground)}.lab.cue{color:var(--foreground)}.lab.ho{color:var(--accent-soft-foreground)}.lab.fb{color:var(--danger-soft-foreground)}
-.say{font-style:italic}
-.meter{font-size:8.3pt;color:var(--muted)}.over{color:var(--danger-soft-foreground);font-weight:600}
-ul{margin:2pt 0 2pt 0;padding-left:14pt}li{margin:1pt 0}
-code,.mono{font:8.6pt 'JetBrains Mono',monospace}
-pre{font:8pt/1.45 'JetBrains Mono',monospace;background:var(--surface-secondary);border:1px solid var(--border);border-radius:8px;padding:7pt 9pt;white-space:pre-wrap;word-break:break-all;margin:4pt 0 8pt}
-.mk{display:inline-block;font:600 7.8pt/1.3 'JetBrains Mono',monospace;border-radius:99px;padding:0 4pt}
-.mk-fill{background:var(--danger-soft);color:var(--danger-soft-foreground);border:1px dashed var(--danger-soft-foreground)}.mk-verify{background:var(--warning-soft);color:var(--warning-soft-foreground);border:1px dashed var(--warning-soft-foreground)}.mk-confirm{background:var(--default);color:var(--foreground);border:1px dashed var(--muted)}
-.clk{color:var(--accent-soft-foreground);font-style:normal}
-.small{font-size:8.6pt;color:var(--muted)}
-`;
-
-const box = (cls, h, inner) => `<div class="box ${cls}"><b class="h">${h}</b>${inner}</div>`;
-const tbl = (head, rows, cls = '') => `<table class="${cls}"><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</table>`;
-
-function slideCard(s) {
-  countM(s.say); (s.cues || []).forEach(countM);
-  const [a, b] = clock[s.n];
-  const time = s.slot ? `${hms(a)}–${hms(b)} · ${s.slot} s` : `${short(hms(a))} · Q&amp;A`;
-  const w = words(s.say), e = est(s), over = s.slot && e > s.slot;
-  const say = md(s.say).replace(/\[click\]/g, '<b class="clk">[click]</b>');
-  return `<div class="card"><div class="hd"><span>Slide ${s.n} &nbsp; ${esc(s.title)}</span><small>${time}</small></div><div class="bd">
-  <div class="row"><span class="lab">Speaker</span><span>${esc(s.speaker)} · covers guideline item <b>${s.item}</b></span></div>
-  <div class="row"><span class="lab say">Say</span><span class="say">${say}</span></div>
-  <div class="row"><span></span><span class="meter">≈ ${w} words · ≈ ${e} s at 130 wpm${s.slot ? ' · slot ' + s.slot + ' s' : ''}${over ? ` <span class="over">· over by ${e - s.slot} s: rehearse at pace or trim${s.trim ? ' — ' + esc(s.trim) : ''}</span>` : (s.trim ? ` · if short of time: ${esc(s.trim)}` : '')}</span></div>
-  ${s.cues && s.cues.length ? `<div class="row"><span class="lab cue">Cues</span><ul>${s.cues.map(c => `<li>${md(c)}</li>`).join('')}</ul></div>` : ''}
-  ${s.handover ? `<div class="row"><span class="lab ho">Hand-over</span><span>${/^\(/.test(s.handover) ? md(s.handover) : '<i>"' + md(s.handover) + '"</i>'}</span></div>` : ''}
-  </div></div>`;
-}
-
-function qaTable(seg) {
-  const q = C.QA[seg]; q.rows.forEach(r => countM(r[1]));
-  return `<h3>Q&amp;A (${q.window})</h3>` + tbl(['Likely question', 'Answer: decision → reason → evidence or limitation (30–45 s)', 'Owner'], q.rows.map(r => [esc(r[0]), md(r[1]), esc(r[2])]));
-}
-
-function segment(seg, extra = {}) {
-  const sl = C.SLIDES.filter(s => s.seg === seg.n);
-  const st = toS(seg.start), talkEnd = st + seg.talk * 60, end = st + (seg.talk + seg.qa) * 60;
-  return `<section class="chap"><h1>${seg.n} ${esc(seg.name)} (${seg.talk}+${seg.qa} minutes)</h1>
-  <div class="seghead"><table class="meta"><tr><td>Clock</td><td>${hms(st)} – ${hms(end)} (${seg.talk} min talk + ${seg.qa} min Q&amp;A; talk ends ${hms(talkEnd)})</td></tr><tr><td>Owner</td><td>${esc(seg.owner)}</td></tr><tr><td>Slides</td><td>${sl.map(s => s.n).join(', ')}</td></tr></table></div>
-  ${box('req', 'Guideline requirement (V2.8)', Object.entries(seg.items).map(([k, v]) => `<b>${k}</b> — ${esc(v)}`).join('<br>'))}
-  ${extra.tip ? box('tip', 'Tip', extra.tip) : ''}
-  ${sl.map(slideCard).join('')}
-  ${extra.warn ? box('warn', 'Watch out', extra.warn) : ''}
-  ${C.QA[seg.n] && seg.n !== 6 ? qaTable(seg.n) : ''}
-  </section>`;
-}
-
-const runRows = C.SLIDES.map(s => { const e = est(s); return [short(hms(clock[s.n][0])), s.slot ? s.slot + ' s' : 'Q&amp;A', s.n, esc(s.title), s.speaker, s.item, s.slot ? (e > s.slot ? `<span class="over" style="white-space:nowrap">${e} s</span>` : `<span style="white-space:nowrap">${e} s</span>`) : '']; });
-const segTotals = C.SEGMENTS.map(seg => { const sl = C.SLIDES.filter(s => s.seg === seg.n && s.slot); return [seg.n, seg.talk * 60, sl.reduce((a, s) => a + s.slot, 0), sl.reduce((a, s) => a + est(s), 0)]; });
+// SWE5001 speaker script and demo run book: the chapters of dist/swe5001-presentation-script.html.
+// The kit (docs/presentation-kit/script/build.js) supplies the helpers, wraps this body and writes dist/.
+const { C, md, esc, markers, box, tbl, pre, reqBox, slideCard, qaTable, segment, cover, runSheet } = require('../../../presentation-kit/script/build').helpers();
 
 const coverage = [
   ['1a', 'Explain the context and the business problem that the solution as a whole is trying to achieve.', '1, 2', 'Lim'],
@@ -143,7 +48,7 @@ const demoCard = d => `<div class="card demo"><div class="hd"><span>Step ${d.n} 
 
 const demo = `<section class="chap"><h1>6 Demo (8+2 minutes)</h1>
 <div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:45:00 – 16:55:00 (8 min talk + 2 min Q&amp;A; talk ends 16:53:00)</td></tr><tr><td>Owner</td><td>Eric and Yorik (drive), Pan (pipeline)</td></tr><tr><td>Slides</td><td>23, 24</td></tr></table></div>
-${box('req', 'Guideline requirement (V2.8)', Object.entries(C.SEGMENTS[5].items).map(([k, v]) => `<b>${k}</b> — ${esc(v)}`).join('<br>'))}
+${reqBox(C.SEGMENTS[5])}
 <h2>How the demo meets 6a and 6b</h2>
 ${tbl(['Step', 'Shows', 'Quality attribute (guideline 6b wording)', 'Evidence on screen'], demoSteps.slice(0, 6).map(d => [d.n, esc(d.t), d.proves.split(' · ')[0], esc(d.exp)]))}
 <p>Scalability is shown twice (HTTP auto-scaling in step 2 and queue scaling in step 5), performance through the scripted k6 test in step 2, and maintainability through the pipeline in step 6, as the guideline asks. Steps 3–4 add availability and consistency, which are central to the decisions on slide 8.</p>
@@ -248,7 +153,6 @@ ${tbl(['Member', 'Person-days', 'Main area'], eff)}
 </section>`;
 }
 
-const pre = s => `<pre>${esc(s)}</pre>`;
 const appendix = `<section class="chap"><h1>A Appendix — operator commands</h1>
 <p>Run from an operator environment with the reviewed checkout (see the environment session runbook). Never paste outputs containing parameter values into chat or onto the shared screen.</p>
 <h3>A.1 Nothing queued that could destroy the session</h3>${pre(`gh run list --repo PPsyrius/iss-groupbuy-team8 --workflow swe5001-env.yml --limit 5
@@ -306,40 +210,28 @@ const segs = [
   segment(C.SEGMENTS[4], { warn: 'At 16:44:30 Lim stops sharing and Eric starts sharing the demo window, even if a question is still being answered. The answer continues over Eric’s screen.', tip: 'Segment 5 now has five slides in the same 6 minutes: 18 (65 s) + 19 (70 s) + 20 (95 s) + 21 (75 s) + 22 (55 s) = 360 s. The hand-over to the demo moved from slide 21 to slide 22.' }),
 ];
 const demoHtml = demo;
-const overs = C.SLIDES.filter(s => s.slot && est(s) > s.slot);
 
-const cover = `<section>
-<div style="height:4pt"></div>
-<div style="color:var(--muted);font-size:11pt">SWE5001 Practice Project · Graduate Certificate in Architecting Scalable Systems</div>
-<h1 style="font-size:28pt;margin-top:18pt">Speaker Script and Live Demo Run Book</h1>
-<div style="font-size:15pt;color:var(--accent-soft-foreground);margin:10pt 0 20pt">BlocBuy — Team 8 · Wednesday 21 October 2026, 16:15–16:55 SGT (Zoom)</div>
-<hr style="border:none;border-top:1px solid var(--border);margin-bottom:14pt">
-<table class="meta">
-<tr><td>Responsible</td><td>Lim Jiechao (presentation lead, #461); reviewer Liu Jin.</td></tr>
-<tr><td>Companion files</td><td><code>swe5001-presentation.html</code> — the deck (24 slides + backups BX, B1–B15; open in Chrome or Edge; <b>S</b> notes window with this script and a timer, <b>T</b> start timer, <b>O</b> overview, <b>F</b> fullscreen, <b>B</b> backup index) · <code>swe5001-presentation.pdf</code> — the same deck as a PDF (41 pages: 24 main, then backups).</td></tr>
-<tr><td>Single source</td><td><code>src/content.js</code> holds wording, timings, cues, Q&amp;A and open items; <code>src/slides-main.js</code> and <code>src/slides-backup.js</code> hold the slide layouts; <code>src/diagrams/*.svg</code> the UML diagrams. From <code>docs/swe5001/presentation/</code> run <code>npm ci</code> once, then <code>npm run all</code> to rebuild everything in <code>dist/</code>.</td></tr>
-<tr><td>Facts as of</td><td>18 Oct 2026. Evidence from 17 Oct; everything that depends on the 19 Oct session is marked and must be resolved Monday evening (§9).</td></tr>
-</table>
-${box('', 'How to use this document', `<ul><li><b>Speakers:</b> read your segment (§1–§5) aloud against a timer at least twice. Each slide card shows the slot and the estimated speaking time of the sample wording at 130 words a minute. Cards marked <span class="over">over by N s</span> need either a faster read or the listed trim. Rephrase in your own words; never read the slide.</li><li><b>Demo team:</b> §6 is the run book: preconditions, the Plan A/B decision, screen layout, then every step with what to operate, what to say, what you should see and when to switch to the fallback. §7 adds Plan C.</li><li><b>Lead:</b> the run sheet and coverage check below, the contingencies in §7, the day timeline in §8 and the open items in §9 are yours.</li></ul>`)}
+const coverHtml = cover({
+  kicker: 'SWE5001 Practice Project · Graduate Certificate in Architecting Scalable Systems',
+  title: 'Speaker Script and Live Demo Run Book',
+  subtitle: 'BlocBuy — Team 8 · Wednesday 21 October 2026, 16:15–16:55 SGT (Zoom)',
+  meta: [
+    ['Responsible', 'Lim Jiechao (presentation lead, #461); reviewer Liu Jin.'],
+    ['Companion files', '<code>swe5001-presentation.html</code> — the deck (24 slides + backups BX, B1–B15; open in Chrome or Edge; <b>S</b> notes window with this script and a timer, <b>T</b> start timer, <b>O</b> overview, <b>F</b> fullscreen, <b>B</b> backup index) · <code>swe5001-presentation.pdf</code> — the same deck as a PDF (41 pages: 24 main, then backups).'],
+    ['Single source', '<code>src/content.js</code> holds wording, timings, cues, Q&amp;A and open items; <code>src/slides-main.js</code> and <code>src/slides-backup.js</code> hold the slide layouts; <code>src/diagrams/*.svg</code> the UML diagrams. From <code>docs/swe5001/presentation/</code> run <code>npm ci</code> once, then <code>npm run all</code> to rebuild everything in <code>dist/</code>.'],
+    ['Facts as of', '18 Oct 2026. Evidence from 17 Oct; everything that depends on the 19 Oct session is marked and must be resolved Monday evening (§9).'],
+  ],
+  after: `${box('', 'How to use this document', `<ul><li><b>Speakers:</b> read your segment (§1–§5) aloud against a timer at least twice. Each slide card shows the slot and the estimated speaking time of the sample wording at 130 words a minute. Cards marked <span class="over">over by N s</span> need either a faster read or the listed trim. Rephrase in your own words; never read the slide.</li><li><b>Demo team:</b> §6 is the run book: preconditions, the Plan A/B decision, screen layout, then every step with what to operate, what to say, what you should see and when to switch to the fallback. §7 adds Plan C.</li><li><b>Lead:</b> the run sheet and coverage check below, the contingencies in §7, the day timeline in §8 and the open items in §9 are yours.</li></ul>`)}
 ${box('', 'Markers', `${md('{{FILL:}}')} value only exists after the Monday evidence session; do not present a guess · ${md('{{VERIFY:}}')} claim unconfirmed or conflicting between sources; check the repo or run log · ${md('{{CONFIRM:}}')} needs team agreement. They are visible on the slides on purpose and must all be gone after Tuesday's rehearsal.`)}
-<p class="small" style="margin-top:8pt">Structure follows “04 Project Presentation Guidelines &amp; Schedule” V2.8 exactly: one chapter per segment (1 Overview, 2 Project Conduct, 3 Logical, 4 Physical, 5 DevOps, 6 Demo), each opening with the guideline’s own sub-items.</p>
-</section>
-<section class="chap"><h1>Run sheet and coverage check</h1>
-<h2>Slide-by-slide run sheet</h2>
-${tbl(['Clock', 'Slot', 'Slide', 'Title', 'Speaker', 'Item', 'Est.'], runRows)}
-<p class="small">Segment talk budget vs slots vs estimated speaking time: ${segTotals.map(([n, b, sl, e]) => `§${n} ${b} s / ${sl} s / ${e} s`).join(' · ')} (§6 talk is the demo itself).</p>
-${overs.length ? box('warn', 'Timing check', `${overs.length} slides read longer than their slot at 130 wpm: ${overs.map(s => `slide ${s.n} (${est(s)} s / ${s.slot} s)`).join(', ')}. Each card lists what to trim if the rehearsal runs long.`) : ''}
-<p>Q&amp;A windows (inside the 40 minutes): 16:17–16:18 · 16:19:30–16:20 · 16:27–16:29 · 16:36–16:38 · 16:44–16:45 · 16:53–16:55. Background actions: <b>16:28</b> Yorik starts k6 V3 · <b>16:40</b> expiry-burst decision point (§6) · <b>16:44:30</b> screen-share switch Lim → Eric.</p>
+<p class="small" style="margin-top:8pt">Structure follows “04 Project Presentation Guidelines &amp; Schedule” V2.8 exactly: one chapter per segment (1 Overview, 2 Project Conduct, 3 Logical, 4 Physical, 5 DevOps, 6 Demo), each opening with the guideline’s own sub-items.</p>`,
+});
+
+const runSheetHtml = runSheet(`<p>Q&amp;A windows (inside the 40 minutes): 16:17–16:18 · 16:19:30–16:20 · 16:27–16:29 · 16:36–16:38 · 16:44–16:45 · 16:53–16:55. Background actions: <b>16:28</b> Yorik starts k6 V3 · <b>16:40</b> expiry-burst decision point (§6) · <b>16:44:30</b> screen-share switch Lim → Eric.</p>
 <h2>Every guideline item has slides and a speaker</h2>
 ${tbl(['Item', 'Guideline requirement', 'Slides', 'Speaker'], coverage.map(r => [`<b>${r[0]}</b>`, esc(r[1]), r[2], r[3]]))}
 <h2>Every briefing question has an answer on a slide</h2>
 ${tbl(['Briefing', 'Where'], briefing)}
 <h2>Cue words in the team backchannel (never the Zoom chat)</h2>
-${tbl(['Message', 'Meaning', 'Sent by'], cueWords.map(r => [`<code>${r[0]}</code>`, r[1], r[2]]))}
-</section>`;
+${tbl(['Message', 'Meaning', 'Sent by'], cueWords.map(r => [`<code>${r[0]}</code>`, r[1], r[2]]))}`);
 
-const body = cover + segs.join('') + demoHtml + contingencies + timeline + openItems() + appendix;
-const html = `<!doctype html><html><head><meta charset="utf-8"><title>BlocBuy · Speaker script and demo run book</title><style>${fontCSS()}${CSS}</style></head><body>${body}</body></html>`;
-fs.mkdirSync(path.join(__dirname, '..', 'dist'), { recursive: true });
-fs.writeFileSync(path.join(__dirname, '..', 'dist', 'swe5001-presentation-script.html'), html);
-console.log('markers', markers, 'over:', overs.map(s => `${s.n}:${est(s)}/${s.slot}`).join(' '));
+module.exports = coverHtml + '\n' + runSheetHtml + segs.join('') + demoHtml + contingencies + timeline + openItems() + appendix;

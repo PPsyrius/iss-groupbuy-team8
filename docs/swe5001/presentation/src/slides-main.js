@@ -1,4 +1,4 @@
-const { icon, md, mk, svg } = require('./lib');
+const { icon, md, mk, svg } = require('../../../presentation-kit/lib');
 // Accent fills never carry text (design-screens.md §2.1): accent -> accent-soft + accent-soft-foreground; grey -> default + foreground.
 const F = bg => bg === 'var(--orange)' ? { bg: 'var(--orange-l)', fg: 'var(--orange-d)', sub: 'var(--orange-d)' } : bg === '#6B655C' ? { bg: 'var(--default)', fg: 'var(--foreground)', sub: 'var(--muted)' } : { bg, fg: '#fff', sub: 'rgba(255,255,255,.85)' };
 
