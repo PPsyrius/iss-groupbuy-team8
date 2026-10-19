@@ -383,7 +383,7 @@ ${dBand('UC8 · A buyer sees their blocs (Active, Completed, Refunded) and order
 const tRun = t => `<span style="display:inline-block;font:600 14.5px/1 Inter;color:#1B1A18;background:#ECE6DC;border-radius:999px;padding:4px 9px;white-space:nowrap;margin-right:6px">${t}</span>`;
 const tRows = [
   ['Performance', 'ev', 150, '3', 'load scenarios', 'Node workload · k6', ['by hand'], 'backend/perf/workload.mjs', '100 users each, p95 24–57 ms (local, 30 Sep)'],
-  ['End-to-end', 'plat', 175, '7', 'specs · 18 tests', 'Playwright', ['every PR', 'after deploy'], 'buyer-journey.spec.ts', 'listing → quote → Stripe (stubbed) → Paid in My blocs'],
+  ['End-to-end', 'plat', 175, '7', 'specs · 18 in code', 'Playwright', ['every PR', 'after deploy'], 'buyer-journey.spec.ts', 'listing → quote → Stripe (stubbed) → Paid in My blocs'],
   ['Component', 'plat', 200, '76', 'files · 799 tests', 'Vitest · Testing Library · MSW', ['every PR'], 'account.test.tsx', 'a chip switches ?blocs= without refetching'],
   ['API contract', 'n', 225, '1', 'OpenAPI file', 'export · git diff · openapi-diff', ['every PR'], 'contracts/openapi.json', 'drift or a breaking change fails the build'],
   ['Architecture', 'biz', 250, '18', 'ArchUnit rules', 'ArchUnit', ['every PR'], 'ArchitectureTest', 'domain_is_framework_free, nothing_depends_on_notification'],
@@ -438,7 +438,7 @@ const s14 = () => `
 </div>
 <div style="position:absolute;left:0;top:416px;width:556px;height:74px;display:flex;gap:12px">
  <div style="flex:1;border-radius:8px;background:#fff;border:1px solid #DDD5C8;padding:8px 14px"><div><span class="serif" style="font-size:26px">1,931</span> <span style="font:700 15.5px Inter">backend tests</span></div><div style="font:400 14.5px Inter;color:#6B655C">0 failed, 1 opt-in skip · log 16 Oct</div></div>
- <div style="flex:1;border-radius:8px;background:#fff;border:1px solid #DDD5C8;padding:8px 14px"><div><span class="serif" style="font-size:26px">799</span> <span style="font:700 15.5px Inter">frontend tests</span></div><div style="font:400 14.5px Inter;color:#6B655C">e2e 17 passed, 5 skipped · 19 Oct</div></div>
+ <div style="flex:1;border-radius:8px;background:#fff;border:1px solid #DDD5C8;padding:8px 14px"><div><span class="serif" style="font-size:26px">799</span> <span style="font:700 15.5px Inter">frontend tests</span></div><div style="font:400 14.5px Inter;color:#6B655C">e2e run 19 Oct: 17 pass, 5 skip</div></div>
 </div>
 <div class="frag" data-frag="1" style="position:absolute;left:576px;top:0;width:588px">
  ${dK('What tests caught before production', '#B02E1B')}

@@ -224,7 +224,7 @@ ${tbl(['Condition (Yorik decides with Lim; posted in #464)', 'GO: live on dev', 
   ['Full dry run on dev on Sat 24 Oct passes in order, timed', 'Rehearse at the real clock times on 25 Oct', 'Only the NO-GO path is rehearsed'],
   ['Late fix (24–25 Oct)', 'GO only if the dry run and the recordings are done by Sun 25 Oct 12:00', 'After 12:00 on 25 Oct the NO-GO stands; no switch is changed on dev on 26 Oct'],
 ])}
-${box('warn', 'Watch out', mh('No refund has ever been proven on dev (19 Oct): every dev payment and refund in this run book is conditional on the dry run. A GO for steps 1–3 with a NO-GO for step 4 is allowed; then only step 4 uses B15. {{CONFIRM:go/no-go result of 23 Oct and the slide 21 footer (open items 1, 24)}}'))}
+${box('warn', 'Watch out', mh('No refund has ever been proven on dev (19 Oct): every dev payment and refund in this run book is conditional on the dry run. A GO for steps 1–3 with a NO-GO for step 4 is allowed; then only step 4 uses B15. {{CONFIRM:go/no-go result of 23 Oct and the slide 21 footer (open items 1, 23)}}'))}
 <h2>Demo preconditions (checked at 15:30 by Eric and Yorik)</h2>
 <ul><li>Health <code>UP</code> (A.1); latest <code>ci-backend</code> and <code>ci-frontend</code> runs on <code>dev</code> green; merge freeze in force.</li>
 <li>Checkout and scheduling enabled on dev (#223) ${m('{{VERIFY:how to read the flags on the day without SSM: the capabilities endpoint (A.4) or the operator’s day-log entry}}')}; listings converged: <code>scripts/seed-dev-demo-listings.sh --check</code> passes for all four <code>US34-*</code> listings (A.2, Yorik, admin token).</li>
