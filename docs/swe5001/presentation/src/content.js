@@ -3,7 +3,7 @@
 // Leave a marker in place until the fact behind it is resolved (see "Markers" in the speaker script).
 
 const SPEAKERS = {
-  Lim: { full: 'Lim Jiechao', init: 'LJ' },
+  Lim: { full: 'Lim Jiechao', init: 'JC' },
   Eric: { full: 'Wang Ziang (Eric)', init: 'WZ' },
   'Liu Jin': { full: 'Liu Jin', init: 'LJ' },
   Yorik: { full: 'Yu Qianshuo (Yorik)', init: 'YQ' },
