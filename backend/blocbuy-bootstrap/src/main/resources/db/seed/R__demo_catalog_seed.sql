@@ -1,6 +1,9 @@
--- R__demo_catalog_seed.sql — demo catalog data for the local profile only (repeatable migration;
--- location db/seed is added to spring.flyway.locations in application-local.yml, never in docker/
--- ec2). Idempotent fixed ids and policies, safe to re-run on checksum change.
+-- R__demo_catalog_seed.sql — demo catalog data (repeatable migration). Location db/seed is added
+-- to spring.flyway.locations in application-local.yml and, through SPRING_FLYWAY_LOCATIONS, on the
+-- SWE5001 ECS services (infra/swe5001/runtime/services.tf); never on the dev EC2 host.
+-- Idempotent fixed ids and policies, safe to re-run on checksum change.
+-- Cover images are the same files the dev site serves from its media CloudFront host
+-- (products/<product_no>/cover.jpg), so every environment seeded here shows real images (#557).
 -- 10 on_sale products across 3 categories; 6 open deals on 5 of them (product ...0001 carries two
 -- open deals to exercise the lowest-deal-price rule; products ...0008..0010 have no deal, so the
 -- listing shows groupPrice = null).
@@ -11,45 +14,56 @@ INSERT INTO biz_product (id, product_no, title, subtitle, description, cover_ima
 VALUES
     ('a0000000-0000-7000-8000-000000000001', 'DEMO-P-0001', 'Wireless Noise-Cancelling Headphones',
      'Over-ear, 40h battery', 'Demo product: flagship headphones.',
-     'https://cdn.example.com/demo/p1-cover.jpg', '["https://cdn.example.com/demo/p1-1.jpg"]',
+     'https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0001/cover.jpg', NULL,
      'electronics', 129.00, 'sgd', 50, 12, 'on_sale', 'dual'),
     ('a0000000-0000-7000-8000-000000000002', 'DEMO-P-0002', 'Mechanical Keyboard 75%',
      'Hot-swappable, RGB', 'Demo product: compact mechanical keyboard.',
-     'https://cdn.example.com/demo/p2-cover.jpg', '["https://cdn.example.com/demo/p2-1.jpg"]',
+     'https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0002/cover.jpg', NULL,
      'electronics', 89.00, 'sgd', 80, 31, 'on_sale', 'dual'),
     ('a0000000-0000-7000-8000-000000000003', 'DEMO-P-0003', 'USB-C GaN Charger 65W',
      'Two-port fast charger', 'Demo product: travel GaN charger.',
-     'https://cdn.example.com/demo/p3-cover.jpg', NULL,
+     'https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0003/cover.jpg', NULL,
      'electronics', 45.00, 'sgd', 200, 150, 'on_sale', 'dual'),
     ('a0000000-0000-7000-8000-000000000004', 'DEMO-P-0004', 'Smart Speaker Mini',
      'Voice assistant, Wi-Fi', 'Demo product: entry smart speaker.',
-     'https://cdn.example.com/demo/p4-cover.jpg', NULL,
+     'https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0004/cover.jpg', NULL,
      'electronics', 59.00, 'sgd', 120, 44, 'on_sale', 'dual'),
     ('a0000000-0000-7000-8000-000000000005', 'DEMO-P-0005', 'Stainless Steel Cookware Set',
      '5-piece, induction-ready', 'Demo product: kitchen cookware bundle.',
-     'https://cdn.example.com/demo/p5-cover.jpg', '["https://cdn.example.com/demo/p5-1.jpg"]',
+     'https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0005/cover.jpg', NULL,
      'home', 159.00, 'sgd', 40, 8, 'on_sale', 'dual'),
     ('a0000000-0000-7000-8000-000000000006', 'DEMO-P-0006', 'Robot Vacuum Cleaner',
      'LiDAR navigation', 'Demo product: mid-range robot vacuum.',
-     'https://cdn.example.com/demo/p6-cover.jpg', NULL,
+     'https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0006/cover.jpg', NULL,
      'home', 299.00, 'sgd', 25, 17, 'on_sale', 'dual'),
     ('a0000000-0000-7000-8000-000000000007', 'DEMO-P-0007', 'Ergonomic Office Chair',
      'Mesh back, lumbar support', 'Demo product: home-office chair.',
-     'https://cdn.example.com/demo/p7-cover.jpg', NULL,
+     'https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0007/cover.jpg', NULL,
      'home', 219.00, 'sgd', 30, 5, 'on_sale', 'dual'),
     ('a0000000-0000-7000-8000-000000000008', 'DEMO-P-0008', 'Vitamin C Serum 30ml',
      'Brightening, fragrance-free', 'Demo product: skincare serum.',
-     'https://cdn.example.com/demo/p8-cover.jpg', NULL,
+     'https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0008/cover.jpg', NULL,
      'beauty', 39.00, 'sgd', 300, 210, 'on_sale', 'dual'),
     ('a0000000-0000-7000-8000-000000000009', 'DEMO-P-0009', 'Sunscreen SPF50+ 50ml',
      'Lightweight, no white cast', 'Demo product: daily sunscreen.',
-     'https://cdn.example.com/demo/p9-cover.jpg', NULL,
+     'https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0009/cover.jpg', NULL,
      'beauty', 25.00, 'sgd', 500, 420, 'on_sale', 'dual'),
     ('a0000000-0000-7000-8000-000000000010', 'DEMO-P-0010', 'Hair Dryer Ionic',
      '1600W, cool shot', 'Demo product: ionic hair dryer.',
-     'https://cdn.example.com/demo/p10-cover.jpg', NULL,
+     'https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0010/cover.jpg', NULL,
      'beauty', 79.00, 'sgd', 60, 23, 'on_sale', 'dual')
 ON CONFLICT (id) DO NOTHING;
+
+-- Rows seeded before #557 still point at cdn.example.com, a reserved domain that serves nothing.
+-- Only those untouched seed values are repointed; an image an admin has changed stays as it is.
+UPDATE biz_product
+SET cover_image = 'https://dcsjrkmummxi7.cloudfront.net/products/' || product_no || '/cover.jpg',
+    images = NULL,
+    update_time = CURRENT_TIMESTAMP,
+    update_by = 'c0000000-0000-7000-8000-000000000001',
+    version = version + 1
+WHERE product_no LIKE 'DEMO-P-%'
+  AND cover_image LIKE 'https://cdn.example.com/%';
 
 -- Existing local demo rows receive terms only when at least one term is missing.
 UPDATE biz_product
