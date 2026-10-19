@@ -122,7 +122,7 @@ const SLIDES = [
     handover: 'First, the use cases.' },
   { n: 24, seg: 6, item: '6b', speaker: 'Lim', slot: null, title: 'Thank you',
     say: "Thank you. We're happy to take your questions.",
-    cues: ['16:55:00 — end. Lim thanks the assessors. Liu Jin tears the environment down only after the meeting ends.', 'Backup slides B1–B15 follow this slide (press → or B for the index). Never show them unasked.'] },
+    cues: ['16:55:00 — end. Lim thanks the assessors. Liu Jin tears the environment down only after the meeting ends.', 'Backup slides B1–B15 follow this slide (press → or B for the index). Never show them unasked.', 'If V3 failed: replace the first headline number with “200 req/s per task, 0 errors (one task, 16 Oct)”.'] },
 ];
 
 // Q&A tables per segment: [question, answer, owner]

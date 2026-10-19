@@ -444,9 +444,8 @@ const s24 = () => `
  ${['Split where no transaction crosses', 'Events never lost or doubled', 'Fails safe when identity is down', 'Rebuilt from scratch every release'].map(t => `<div style="height:52px;border-radius:26px;background:#fff;color:var(--teal-d);font:700 19px/52px Inter;text-align:center">${t}</div>`).join('')}
 </div>
 <div style="position:absolute;left:80px;top:486px;width:980px;display:flex;gap:20px">
- ${[[mk('FILL', 'N tasks at X req/s'), 'p95 ' + mk('FILL', 'Y') + ' ms (V3)'], ['US$0.49', 'for 7 full environment sessions'], ['51 min', 'approved PR → released, tested, destroyed']].map(n => `<div style="flex:1;border-radius:8px;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);padding:10px 18px"><div style="font:700 30px/1.2 Inter;color:#fff">${n[0]}</div><div style="font:400 15.5px Inter;color:#E6DFD3">${n[1]}</div></div>`).join('')}
+ ${[[mk('FILL', 'N tasks at X req/s'), 'p95 ' + mk('FILL', 'Y') + ' ms (V3)'], ['US$0.49', 'runtime database, cache and containers, 7 sessions'], ['51 min', 'approved PR → released, tested, destroyed']].map(n => `<div style="flex:1;border-radius:8px;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);padding:10px 18px"><div style="font:700 30px/1.2 Inter;color:#fff">${n[0]}</div><div style="font:400 15.5px Inter;color:#E6DFD3">${n[1]}</div></div>`).join('')}
 </div>
-<div style="position:absolute;left:80px;top:604px;font:400 17px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:10px;align-items:center"><span style="font-size:20px">${icon('github')}</span> github.com/PPsyrius/iss-groupbuy-team8 · d3lvq02o2e7tcn.cloudfront.net</div>
-<div style="position:absolute;left:80px;top:640px;font:italic 400 14px Inter;color:#B5ADA1">If V3 failed: replace the first number with “200 req/s per task, 0 errors (one task, 16 Oct)”.</div>`;
+<div style="position:absolute;left:80px;top:604px;font:400 17px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:10px;align-items:center"><span style="font-size:20px">${icon('github')}</span> github.com/PPsyrius/iss-groupbuy-team8 · d3lvq02o2e7tcn.cloudfront.net</div>`;
 
 module.exports = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s12, 13: s13, 14: s14, 15: s15, 16: s16, 17: s17, 18: s18, 19: s19, 20: s20, 21: s21, 22: s22, 23: s23, 24: s24 };

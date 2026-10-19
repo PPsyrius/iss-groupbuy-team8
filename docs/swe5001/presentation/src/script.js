@@ -165,8 +165,8 @@ aws application-autoscaling describe-scalable-targets --service-namespace ecs \\
 aws ecs stop-task --cluster blocbuy-swe5001 --task <task-arn> --reason "V5 drill"
 aws ecs describe-services --cluster blocbuy-swe5001 --services commerce-svc \\
   --query 'services[0].events[:5]'`)}
-<h3>A.4 Identity outage drill — stop and restore</h3>${pre(`aws ecs update-service --cluster blocbuy-swe5001 --service identity-svc --desired-count 0
-aws ecs update-service --cluster blocbuy-swe5001 --service identity-svc --desired-count 1`)}
+<h3>A.4 Identity outage drill — stop and restore</h3><p>Stop identity (demo step 4) and wait until it reports 0 running tasks before the admin write:</p>${pre(`aws ecs update-service --cluster blocbuy-swe5001 --service identity-svc --desired-count 0
+aws ecs describe-services --cluster blocbuy-swe5001 --services identity-svc --query 'services[0].runningCount'`)}<p>Restore it as soon as the admin write has failed:</p>${pre(`aws ecs update-service --cluster blocbuy-swe5001 --service identity-svc --desired-count 1`)}
 <h3>A.5 Demo admin and startable listings</h3>${pre(`infra/swe5001/scripts/grant-admin.sh '<demo google email>'
 BLOCBUY_BASE_URL=https://d3lvq02o2e7tcn.cloudfront.net/api/v1 \\
   BLOCBUY_TOKEN=<cookie value> scripts/seed-dev-demo-listings.sh`)}
