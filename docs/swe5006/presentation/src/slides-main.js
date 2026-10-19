@@ -378,12 +378,84 @@ ${dBand('UC8 · A buyer sees their blocs (Active, Completed, Refunded) and order
  <div style="font:400 14.5px/1.35 Inter;color:#6B655C;margin-top:6px">Limit: only the latest 100 blocs; a closed bloc reads “Closed”, as this endpoint carries no refund data</div>
 </div>`;
 
+// ---------- segment 3 helpers (testing; t* names) ----------
+// Pyramid rows: [kind, tone, bar width, count, count unit, tools, runs, example class, behaviour]
+const tRun = t => `<span style="display:inline-block;font:600 14.5px/1 Inter;color:#1B1A18;background:#ECE6DC;border-radius:999px;padding:4px 9px;white-space:nowrap;margin-right:6px">${t}</span>`;
+const tRows = [
+  ['Performance', 'ev', 150, '3', 'load scenarios', 'Node workload · k6', ['by hand'], 'backend/perf/workload.mjs', '100 users each, p95 24–57 ms (local, 30 Sep)'],
+  ['End-to-end', 'plat', 175, '7', 'specs · 18 tests', 'Playwright', ['every PR', 'after deploy'], 'buyer-journey.spec.ts', 'listing → quote → Stripe (stubbed) → Paid in My blocs'],
+  ['Component', 'plat', 200, '76', 'files · 799 tests', 'Vitest · Testing Library · MSW', ['every PR'], 'account.test.tsx', 'a chip switches ?blocs= without refetching'],
+  ['API contract', 'n', 225, '1', 'OpenAPI file', 'export · git diff · openapi-diff', ['every PR'], 'contracts/openapi.json', 'drift or a breaking change fails the build'],
+  ['Architecture', 'biz', 250, '18', 'ArchUnit rules', 'ArchUnit', ['every PR'], 'ArchitectureTest', 'domain_is_framework_free, nothing_depends_on_notification'],
+  ['Integration', 'biz', 275, '49', 'classes', 'Spring Boot · Testcontainers', ['every PR'], 'OrderRepositoryIT · StripeRolloutAcceptanceIT', 'PostgreSQL 18 rejects a duplicate payment; paid start to refund'],
+  ['Unit', 'biz', 300, '182', 'classes', 'JUnit Jupiter · Mockito', ['every PR'], 'RefundServiceTest · PaidGroupDealTest', 'a lost Stripe response reuses its key; 24 paid-team rules'],
+];
+const tRow = ([k, tone, w, n, unit, tool, runs, cls, why], i) => {
+  const [b, bg, fg] = dTone[tone];
+  return `<div style="display:flex;align-items:center;height:68px;border-top:1px solid #EFE9DF">
+  <div style="width:300px;flex:none;display:flex;justify-content:center"><div style="width:${w}px;height:54px;border-radius:6px;border:1.4px solid ${b};background:${bg};display:flex;align-items:center;justify-content:center;font:700 17px Inter;color:${fg}">${k}</div></div>
+  <div style="width:150px;flex:none;padding-left:18px"><div style="font:700 26px/1 Inter">${n}</div><div style="font:400 14.5px/1.2 Inter;color:#6B655C;margin-top:3px">${unit}</div></div>
+  <div style="width:270px;flex:none"><div style="font:600 16px/1.25 Inter">${tool}</div><div style="margin-top:5px">${runs.map(tRun).join('')}</div></div>
+  <div style="flex:1;min-width:0"><div>${cn(cls, 14.5)}</div><div style="font:400 15.5px/1.3 Inter;margin-top:3px">${why}</div></div></div>`;
+};
+const tHead = t => `<div style="font:700 14.5px Inter;letter-spacing:.05em;text-transform:uppercase;color:#6B655C">${t}</div>`;
+
+// ---------- slide 13 ----------
+const s13 = () => `
+<div style="display:flex;align-items:flex-end;height:24px;margin-top:-6px">
+ <div style="width:300px;flex:none;text-align:center">${tHead('Kind of test')}</div><div style="width:150px;flex:none;padding-left:18px">${tHead('Count')}</div>
+ <div style="width:270px;flex:none">${tHead('Tool · when it runs')}</div><div style="flex:1">${tHead('Example: complex behaviour under test (3b)')}</div></div>
+<div class="frag" data-frag="1">${tRows.slice(0, 3).map(tRow).join('')}</div>
+<div>${tRows.slice(3).map((r, i) => tRow(r, i + 3)).join('')}</div>
+<div style="display:flex;gap:22px;align-items:center;border-top:1px solid #EFE9DF;padding-top:8px;font:400 15px Inter;color:#6B655C">
+ <span><i style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#FDEFEC;border:1.4px solid #E8402A;vertical-align:-2px"></i> backend</span>
+ <span><i style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#F1F4FD;border:1.4px solid #3E5CD9;vertical-align:-2px"></i> frontend</span>
+ <span style="margin-left:auto">Counted in the repository, 19 Oct · security scans (gitleaks, Trivy): Pan’s segment</span></div>`;
+
+// ---------- slide 14 ----------
+const tReq = t => `<div style="display:flex;gap:9px;align-items:center;font:500 16.5px Inter"><span style="color:var(--green);font-size:19px">${icon('circle-check')}</span>${t}</div>`;
+const tCov = (side, nw, all, when) => `<div style="flex:1;border-radius:8px;background:#E3E8FB;padding:10px 14px"><div style="font:700 14.5px Inter;letter-spacing:.05em;text-transform:uppercase;color:#3E5CD9">${side}</div>
+  <div style="margin-top:2px"><span class="serif" style="font-size:32px">${nw}</span> <span style="font:600 15.5px Inter">on new code</span></div><div style="font:400 15px/1.3 Inter;color:#6B655C">${all} overall · ${when}</div></div>`;
+const tCaught = (ic, tone, kind, head, body, src) => {
+  const [b, bg, fg] = dTone[tone];
+  return `<div class="card" style="height:146px;padding:12px 18px;display:flex;gap:14px">
+  <div style="width:46px;height:46px;flex:none;border-radius:50%;background:${bg};border:1.4px solid ${b};color:${fg};font-size:20px;display:flex;align-items:center;justify-content:center">${icon(ic)}</div>
+  <div style="flex:1"><div style="font:700 14.5px Inter;letter-spacing:.05em;text-transform:uppercase;color:${fg}">${kind}</div>
+   <div style="font:700 17px/1.3 Inter;margin-top:2px">${head}</div><div style="font:400 15.5px/1.35 Inter;margin-top:3px">${body}</div>
+   <div style="font:400 14.5px Inter;color:#6B655C;margin-top:4px">${src}</div></div></div>`;
+};
+const s14 = () => `
+<div class="card" style="position:absolute;left:0;top:0;width:556px;height:196px;padding:12px 20px">
+ <div style="display:flex;align-items:baseline;justify-content:space-between"><div class="serif" style="font-size:21px">Required to merge into dev</div>${dTag('ruleset, strict')}</div>
+ <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:12px">
+  ${tReq('build-quality: every test')}${tReq('SonarCloud Backend')}${tReq('docker: image boots')}${tReq('SonarCloud Frontend')}${tReq('gitleaks')}${tReq('frontend-check: Vitest')}</div>
+ <div style="font:400 15px/1.3 Inter;color:#6B655C;margin-top:12px">Branch up to date · 1 approval · threads resolved · squash only</div>
+</div>
+<div class="card" style="position:absolute;left:0;top:208px;width:556px;height:196px;padding:12px 20px">
+ <div style="display:flex;align-items:baseline;justify-content:space-between"><div class="serif" style="font-size:21px">SonarCloud gate on dev, 19 Oct</div>${dTag('NFR-06')}</div>
+ <div style="font:400 15.5px Inter;margin:4px 0 10px">Fails under <b>80%</b> coverage or over <b>3%</b> duplication on new code</div>
+ <div style="display:flex;gap:12px">${tCov('Backend', '99.2%', '99.4%', 'JaCoCo, 16 Oct')}${tCov('Frontend', '96.2%', '96.1%', 'Vitest V8, 19 Oct')}</div>
+</div>
+<div style="position:absolute;left:0;top:416px;width:556px;height:74px;display:flex;gap:12px">
+ <div style="flex:1;border-radius:8px;background:#fff;border:1px solid #DDD5C8;padding:8px 14px"><div><span class="serif" style="font-size:26px">1,931</span> <span style="font:700 15.5px Inter">backend tests</span></div><div style="font:400 14.5px Inter;color:#6B655C">0 failed, 1 opt-in skip · log 16 Oct</div></div>
+ <div style="flex:1;border-radius:8px;background:#fff;border:1px solid #DDD5C8;padding:8px 14px"><div><span class="serif" style="font-size:26px">799</span> <span style="font:700 15.5px Inter">frontend tests</span></div><div style="font:400 14.5px Inter;color:#6B655C">e2e 17 passed, 5 skipped · 19 Oct</div></div>
+</div>
+<div class="frag" data-frag="1" style="position:absolute;left:576px;top:0;width:588px">
+ ${dK('What tests caught before production', '#B02E1B')}
+ <div style="display:flex;flex-direction:column;gap:10px">
+ ${tCaught('vial', 'biz', 'Unit · red first', 'A team with no members passed the quote', 'The buyer could pay, then be refunded. Two red tests reproduced it before the fix (slide 9).', 'GroupDealPurchaseSupportImplTest · 7 Oct · #422')}
+ ${tCaught('shield-halved', 'plat', 'Architecture', 'A new controller skipped input validation', '<span class="mono" style="font-size:14.5px">controllers_are_validated</span> failed the build until it had <span class="mono" style="font-size:14.5px">@Validated</span>.', 'ArchitectureTest · 13 Oct · #468')}
+ ${tCaught('globe', 'ev', 'End-to-end after deploy', 'Dev answered 502 during a deploy', 'The smoke test ran while the single backend host restarted: dev deploys are not zero-downtime.', 'e2e-dev · 3 and 4 Oct · runs 37102432667, 37182996807')}
+ </div>
+</div>
+<div style="position:absolute;left:0;right:0;top:502px;font:italic 400 15.5px/1.35 Inter;color:#6B655C"><b style="font-style:normal">Limits:</b> test-first only for selected changes · no automated mutation testing (hand probes only) · load tests by hand, not in CI · CodeQL wired but off (ENABLE_CODEQL=false) · contract, e2e and Trivy run on PRs but are not required</div>`;
+
 // ---------- slide 22 ----------
 const s22 = () => `
 <div style="position:absolute;left:76px;top:96px;font:700 120px/1 Inter;color:#fff">Thank you</div>
 <div style="position:absolute;left:80px;top:236px;font:500 32px Inter;color:#fff">Questions?</div>
 <div style="position:absolute;left:80px;top:604px;font:400 17px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:10px;align-items:center"><span style="font-size:20px">${icon('github')}</span> github.com/PPsyrius/iss-groupbuy-team8</div>`;
 
-const S = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s12, 22: s22 };
+const S = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s12, 13: s13, 14: s14, 22: s22 };
 for (let n = 2; n <= 21; n++) if (!S[n]) S[n] = todo(n);
 module.exports = S;

@@ -130,6 +130,17 @@ const b8 = () => `<div style="display:flex;gap:18px">
   ['0015', 'Admin console shell, roles guard, versioned writes'],
  ], { fs: 14.5, w: [56], pad: '4px 10px' })}</div></div>`;
 
+// ---- B10: test inventory (segment 3), counted in the repository on 19 Oct at 8bcb38dd ----
+const b10 = () => dt(['Kind', 'Tools', 'Count by module', 'Example classes', 'Runs'], [
+  ['<b>Unit</b>', 'JUnit Jupiter, Mockito', '182 classes: domain 42, application 41, infrastructure 47, bootstrap 43, adapter 4, platform 2, commerce-svc 2, client 1', `${mo('RefundServiceTest')}, ${mo('PaidGroupDealTest')}, ${mo('ProductStatusTest')}`, 'every PR (build-quality)'],
+  ['<b>Integration</b>', 'Testcontainers: PostgreSQL 18, Redis 8.10, ElasticMQ', '49 classes: bootstrap 24, infrastructure 15, services 9, platform 1', `${mo('OrderRepositoryIT')}, ${mo('ServiceGrantsIT')}, ${mo('OutboxRelayElasticMqIT')}, ${mo('StripeRolloutAcceptanceIT')} (acceptance)`, 'every PR (build-quality)'],
+  ['<b>Architecture</b>', 'ArchUnit', '18 rules in 1 class', `${mo('ArchitectureTest')}`, 'every PR (build-quality)'],
+  ['<b>API contract</b>', 'springdoc export, git diff, openapi-diff 2.1.7', '1 file', `${mo('contracts/openapi.json')}`, 'backend PRs (contract-check, not required)'],
+  ['<b>Component</b>', 'Vitest, Testing Library, MSW', '76 files: features 58, routes 10, components 3, test 3, api 2 · 799 tests', `${mo('account.test.tsx')}, ${mo('admin-listing-edit.test.tsx')}`, 'every PR (frontend-check)'],
+  ['<b>End-to-end</b>', 'Playwright, Chromium', '7 specs, 18 test declarations', `${mo('buyer-journey.spec.ts')}, ${mo('quote.spec.ts')}`, 'PR (e2e-preview), after deploy (e2e-dev)'],
+  ['<b>Performance</b>', 'Node workload; k6 (SWE5001)', '3 scenarios; 5 k6 tooling test files', `${mo('backend/perf/workload.mjs')}, ${mo('perf/k6/')}`, 'by hand (tooling tested in CI)'],
+], { fs: 14.5, w: [112, 190, 300, 330], pad: '5px 10px' }) + `<div style="margin-top:8px;font:400 15px/1.35 Inter">Counted 19 Oct at 8bcb38dd: 183 <span class="mono" style="font-size:14.5px">*Test.java</span> (182 + ArchitectureTest), 49 <span class="mono" style="font-size:14.5px">*IT.java</span> (45 start containers). Last full runs: backend 1,931 (16 Oct log), frontend 799 (19 Oct log).</div>`;
+
 // Backup slides follow the last main slide; press B in the deck for the index (BX). Rows link with data-go.
 // Each segment adds its backups to BACKUPS (content.js) and a matching entry below, in index order.
 function list() {
@@ -149,6 +160,7 @@ function list() {
   B.push({ id: 'B7', title: 'Transition from analysis to design', speaker: 'Eric', body: b7() });
   B.push({ id: 'B8', title: 'ADR index', speaker: 'Eric', body: b8() });
   B.push({ id: 'B9', title: 'Logical view (ECS topology)', speaker: 'Eric', body: b9() });
+  B.push({ id: 'B10', title: 'Test inventory', speaker: 'Liu Jin', body: b10() });
   B.push({ id: 'B11', title: 'Sprint 2 and 3 burndowns', speaker: 'Lim', body: b11() });
   return B;
 }
