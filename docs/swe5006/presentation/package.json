@@ -1,0 +1,17 @@
+{
+  "name": "@blocbuy/swe5006-presentation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SWE5006 Team 8 BlocBuy slide deck and speaker script, built into dist/ by docs/presentation-kit.",
+  "scripts": {
+    "build:deck": "node ../../presentation-kit/bin/build.js . deck",
+    "build:script": "node ../../presentation-kit/bin/build.js . script",
+    "build": "node ../../presentation-kit/bin/build.js . deck script",
+    "render:deck": "node ../../presentation-kit/bin/build.js . deck-pdf",
+    "render:script": "node ../../presentation-kit/bin/build.js . script-pdf",
+    "render": "node ../../presentation-kit/bin/build.js . deck-pdf script-pdf",
+    "screenshots": "node ../../presentation-kit/bin/build.js . screenshots",
+    "all": "node ../../presentation-kit/bin/build.js . all"
+  },
+  "license": "ISC"
+}
