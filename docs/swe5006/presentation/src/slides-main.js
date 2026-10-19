@@ -528,7 +528,7 @@ const s17 = () => `
  <div style="height:8px"></div>${dNote('key', 'App secrets only in a root-only file on the host (0600)', '#3E5CD9')}
  <div style="height:8px"></div>${dNote('building', 'AWS Organization SCPs pin the region and cap costs; Identity Center, 1-hour sessions', '#3E5CD9')}
 </div>
-<div style="position:absolute;left:0;right:0;top:504px;font:italic 400 15.5px/1.35 Inter;color:#6B655C"><b style="font-style:normal">Not yet:</b> CodeQL wired but off (ENABLE_CODEQL=false) · CloudFront → ALB hop is HTTP (NFR-37, #227) · dev EBS volume not encrypted · dev secrets in a host env file · full list B14</div>`;
+<div style="position:absolute;left:0;right:0;top:504px;font:italic 400 15.5px/1.35 Inter;color:#6B655C"><b style="font-style:normal">Not yet:</b> CodeQL wired but off (ENABLE_CODEQL=false) · CloudFront → ALB hop is HTTP (NFR-37, #227) · dev host: SSH open to the internet, EBS not encrypted, secrets in an env file · full list B14</div>`;
 
 // ---------- slide 18 ----------
 const s18 = () => `<div class="dia" style="margin-top:-12px">${svg('dev-deployment')}</div>`;
