@@ -1,0 +1,5 @@
+# The built deck and script are kept as a record, so re-include dist/ (ignored repo-wide).
+!dist/
+
+# Per-slide screenshots from `npm run screenshots`, used only to check overflow.
+png/
