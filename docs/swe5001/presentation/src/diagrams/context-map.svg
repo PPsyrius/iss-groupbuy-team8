@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="680" viewBox="0 0 600 680" font-family="Inter, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="cmextFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#ECE6DC"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="600" height="680" fill="#FFFFFF"/>
+
+  <!-- identity-svc boundary -->
+  <rect x="20" y="16" width="332" height="136" fill="#F1F4FD" stroke="#3E5CD9" stroke-width="1.6" stroke-dasharray="6 4"/>
+  <text x="36" y="38" font-size="14.5" fill="#1B1A18">«service»</text>
+  <text x="36" y="58" font-size="17" font-weight="bold" fill="#1B1A18">identity-svc</text>
+  <rect x="36" y="72" width="80" height="20" fill="#FFFFFF" stroke="#6B655C" stroke-width="1"/>
+  <text x="46" y="87" font-size="15" font-weight="bold" fill="#1B1A18">identity</text>
+  <rect x="36" y="92" width="300" height="46" fill="#FFFFFF" stroke="#6B655C" stroke-width="1"/>
+  <text x="48" y="120" font-size="15" fill="#1B1A18">User · OAuthIdentity · sessions</text>
+
+  <!-- Google OAuth external -->
+  <rect x="440" y="40" width="148" height="88" fill="url(#cmextFill)" stroke="#6B655C" stroke-width="1.5"/>
+  <text x="514" y="72" text-anchor="middle" font-size="14.5" fill="#1B1A18">«external»</text>
+  <text x="514" y="96" text-anchor="middle" font-size="17" font-weight="bold" fill="#1B1A18">Google OAuth</text>
+  <text x="514" y="146" text-anchor="middle" font-size="14.5" fill="#1B1A18">via OAuthIdentity-</text>
+  <text x="514" y="162" text-anchor="middle" font-size="14.5" fill="#1B1A18">Gateway port</text>
+  <line x1="352" y1="84" x2="440" y2="84" stroke="#1B1A18" stroke-width="1.4"/>
+  <polygon points="440,84 428,78 428,90" fill="#1B1A18"/>
+  <rect x="378" y="74" width="36" height="20" fill="#FFFFFF"/>
+  <text x="396" y="89" text-anchor="middle" font-size="15" font-weight="bold" fill="#1B1A18">ACL</text>
+
+  <!-- commerce -> identity: Customer/Supplier -->
+  <line x1="186" y1="232" x2="186" y2="152" stroke="#1B1A18" stroke-width="1.4"/>
+  <polygon points="186,152 180,164 192,164" fill="#1B1A18"/>
+  <text x="172" y="168" text-anchor="end" font-size="14.5" fill="#1B1A18">U</text>
+  <text x="172" y="228" text-anchor="end" font-size="14.5" fill="#1B1A18">D</text>
+  <text x="202" y="188" font-size="15" font-weight="bold" fill="#1B1A18">Customer/Supplier</text>
+  <text x="202" y="207" font-size="15" fill="#1B1A18">sync HTTP · UserAppService port</text>
+
+  <!-- commerce-svc boundary -->
+  <rect x="20" y="232" width="332" height="268" fill="#FDEFEC" stroke="#E8402A" stroke-width="1.6" stroke-dasharray="6 4"/>
+  <text x="36" y="254" font-size="14.5" fill="#1B1A18">«service»</text>
+  <text x="36" y="274" font-size="17" font-weight="bold" fill="#1B1A18">commerce-svc</text>
+
+  <!-- catalog -->
+  <rect x="36" y="286" width="76" height="20" fill="#FFFFFF" stroke="#6B655C" stroke-width="1"/>
+  <text x="46" y="301" font-size="15" font-weight="bold" fill="#1B1A18">catalog</text>
+  <rect x="36" y="306" width="146" height="70" fill="#FFFFFF" stroke="#6B655C" stroke-width="1"/>
+  <text x="48" y="334" font-size="15" fill="#1B1A18">Product</text>
+  <text x="48" y="354" font-size="15" fill="#1B1A18">TeamTerms</text>
+
+  <!-- groupbuy -->
+  <rect x="192" y="286" width="88" height="20" fill="#FFFFFF" stroke="#6B655C" stroke-width="1"/>
+  <text x="202" y="301" font-size="15" font-weight="bold" fill="#1B1A18">groupbuy</text>
+  <rect x="192" y="306" width="146" height="70" fill="#FFFFFF" stroke="#6B655C" stroke-width="1"/>
+  <text x="204" y="334" font-size="15" fill="#1B1A18">GroupDeal (team)</text>
+  <text x="204" y="354" font-size="15" fill="#1B1A18">ShareInvite</text>
+
+  <!-- order -->
+  <rect x="36" y="388" width="64" height="20" fill="#FFFFFF" stroke="#6B655C" stroke-width="1"/>
+  <text x="46" y="403" font-size="15" font-weight="bold" fill="#1B1A18">order</text>
+  <rect x="36" y="408" width="146" height="70" fill="#FFFFFF" stroke="#6B655C" stroke-width="1"/>
+  <text x="48" y="436" font-size="15" fill="#1B1A18">PurchaseIntent</text>
+  <text x="48" y="456" font-size="15" fill="#1B1A18">Order</text>
+
+  <!-- payment -->
+  <rect x="192" y="388" width="84" height="20" fill="#FFFFFF" stroke="#6B655C" stroke-width="1"/>
+  <text x="202" y="403" font-size="15" font-weight="bold" fill="#1B1A18">payment</text>
+  <rect x="192" y="408" width="146" height="70" fill="#FFFFFF" stroke="#6B655C" stroke-width="1"/>
+  <text x="204" y="436" font-size="15" fill="#1B1A18">CheckoutPayment</text>
+  <text x="204" y="456" font-size="15" fill="#1B1A18">RefundWork</text>
+
+  <!-- Stripe external -->
+  <rect x="440" y="389" width="148" height="88" fill="url(#cmextFill)" stroke="#6B655C" stroke-width="1.5"/>
+  <text x="514" y="421" text-anchor="middle" font-size="14.5" fill="#1B1A18">«external»</text>
+  <text x="514" y="445" text-anchor="middle" font-size="17" font-weight="bold" fill="#1B1A18">Stripe</text>
+  <text x="514" y="495" text-anchor="middle" font-size="14.5" fill="#1B1A18">Checkout + Refund</text>
+  <text x="514" y="511" text-anchor="middle" font-size="14.5" fill="#1B1A18">gateways · webhook</text>
+  <line x1="338" y1="433" x2="440" y2="433" stroke="#1B1A18" stroke-width="1.4"/>
+  <polygon points="440,433 428,427 428,439" fill="#1B1A18"/>
+  <rect x="371" y="423" width="36" height="20" fill="#FFFFFF"/>
+  <text x="389" y="438" text-anchor="middle" font-size="15" font-weight="bold" fill="#1B1A18">ACL</text>
+
+  <!-- commerce -> notification: Published Language (async) -->
+  <line x1="186" y1="500" x2="186" y2="580" stroke="#1B1A18" stroke-width="1.4"/>
+  <polyline points="178,567 186,580 194,567" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text x="172" y="516" text-anchor="end" font-size="14.5" fill="#1B1A18">U</text>
+  <text x="172" y="572" text-anchor="end" font-size="14.5" fill="#1B1A18">D</text>
+  <text x="202" y="536" font-size="15" font-weight="bold" fill="#1B1A18">Published Language</text>
+  <text x="202" y="555" font-size="15" fill="#1B1A18">integration events V1 · SNS → SQS</text>
+
+  <!-- notification-svc boundary -->
+  <rect x="20" y="580" width="332" height="84" fill="#F1F4FD" stroke="#3E5CD9" stroke-width="1.6" stroke-dasharray="6 4"/>
+  <text x="36" y="602" font-size="14.5" fill="#1B1A18">«service»</text>
+  <text x="36" y="622" font-size="17" font-weight="bold" fill="#1B1A18">notification-svc</text>
+  <rect x="196" y="594" width="98" height="20" fill="#FFFFFF" stroke="#6B655C" stroke-width="1"/>
+  <text x="206" y="609" font-size="15" font-weight="bold" fill="#1B1A18">notification</text>
+  <rect x="196" y="614" width="142" height="38" fill="#FFFFFF" stroke="#6B655C" stroke-width="1"/>
+  <text x="208" y="638" font-size="15" fill="#1B1A18">Notification</text>
+</svg>

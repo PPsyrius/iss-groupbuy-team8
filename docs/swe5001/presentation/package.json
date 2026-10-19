@@ -1,0 +1,27 @@
+{
+  "name": "@blocbuy/swe5001-presentation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Builds the SWE5001 Team 8 BlocBuy slide deck and speaker script into dist/.",
+  "scripts": {
+    "build:deck": "node src/deck.js",
+    "build:script": "node src/script.js",
+    "build": "npm run build:deck && npm run build:script",
+    "render:deck": "node src/render.js pdf",
+    "render:script": "node src/render-script.js",
+    "render": "npm run render:deck && npm run render:script",
+    "screenshots": "node src/render.js png",
+    "all": "npm run build && npm run render"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@fontsource/fraunces": "^5.3.0",
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "inter-ui": "^4.1.1"
+  },
+  "devDependencies": {
+    "playwright": "1.64.0"
+  }
+}
