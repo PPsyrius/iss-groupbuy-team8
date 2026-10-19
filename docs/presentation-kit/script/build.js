@@ -107,7 +107,11 @@ function buildScript() {
   const S = scriptHelpers();
   const body = require(path.join(dir, 'src', 'script'));
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>${cfg.scriptTitle}</title><style>${fontCSS()}${CSS}</style></head><body>${body}</body></html>`;
-  if (process.env.SCRIPT_HTML) fs.writeFileSync(path.resolve(process.env.SCRIPT_HTML), html);
+  if (process.env.SCRIPT_HTML) {
+    const file = path.resolve(process.env.SCRIPT_HTML);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, html);
+  }
   console.log('markers', S.markers, 'over:', S.overs.map(s => `${s.n}:${S.est(s)}/${s.slot}`).join(' '));
   return html;
 }
