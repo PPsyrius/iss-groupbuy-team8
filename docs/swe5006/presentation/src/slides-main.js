@@ -149,12 +149,241 @@ const s6 = () => `
  </div>
 </div>`;
 
+// ---------- segment 2 helpers (design; d* names) ----------
+// Role colours follow docs/presentation-kit/diagrams/STYLE.md: [stroke, soft fill, text].
+const dTone = {
+  biz: ['#E8402A', '#FDEFEC', '#B02E1B'], plat: ['#3E5CD9', '#F1F4FD', '#3E5CD9'], ev: ['#7A5C20', '#FFF6E2', '#7A5C20'],
+  n: ['#6B655C', '#FFFFFF', '#1B1A18'], bad: ['#8C2414', '#EFE9DF', '#8C2414'],
+};
+const cn = (t, sz = 15.5) => `<span class="mono" style="font-size:${sz}px;font-weight:500">${t}</span>`;
+const dK = (t, c = '#6B655C') => `<div style="font:700 14.5px Inter;letter-spacing:.05em;text-transform:uppercase;color:${c};margin-bottom:5px">${t}</div>`;
+const dTo = '<span style="color:#E8402A;font-weight:700"> → </span>';
+const dArr = (c = '#6B655C', w = 14) => `<div style="flex:none;display:flex;align-items:center"><div style="width:${w}px;height:2px;background:${c}"></div><div style="border-left:9px solid ${c};border-top:6px solid transparent;border-bottom:6px solid transparent"></div></div>`;
+const dBox = (kind, top, main, sub, style = '', msz = 15) => {
+  const [b, bg, fg] = dTone[kind];
+  return `<div style="border-radius:8px;border:1.4px solid ${b};background:${bg};padding:7px 11px;${style}">${top ? `<div style="font:700 14.5px/1.25 Inter;color:${fg}">${top}</div>` : ''}${main ? `<div style="font:500 ${msz}px/1.35 'JetBrains Mono',monospace;margin-top:2px">${main}</div>` : ''}${sub ? `<div style="font:400 14.5px/1.3 Inter;color:#6B655C;margin-top:3px">${sub}</div>` : ''}</div>`;
+};
+const dBand = (uc, a2d, prob) => `<div style="position:absolute;left:0;top:0;width:1164px;height:124px;display:flex;gap:12px">
+ <div class="card" style="width:322px;padding:10px 16px">${dK('Use case · analysis')}<div style="font:400 17.5px/1.3 Inter">${uc}</div></div>
+ <div class="card" style="width:432px;padding:10px 16px">${dK('Analysis → design')}<div style="font:400 15.5px/1.55 Inter">${a2d}</div></div>
+ <div style="flex:1;border-radius:8px;background:#FDEFEC;padding:10px 16px">${dK('Design problem', '#B02E1B')}<div style="font:500 17.5px/1.3 Inter">${prob}</div></div></div>`;
+const dPat = (name, kind, src) => `<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px"><div style="font:700 21px Inter;white-space:nowrap">${name}</div><div style="font:500 15px Inter;color:#6B655C;white-space:nowrap">${kind}</div>${src ? `<div style="margin-left:auto;white-space:nowrap">${cn(src, 14.5)}</div>` : ''}</div>`;
+const dTag = t => `<span style="display:inline-block;font:600 14.5px/1 Inter;color:#1B1A18;background:#ECE6DC;border-radius:999px;padding:5px 10px;white-space:nowrap">${t}</span>`;
+const dNote = (ic, t, c = '#6B655C') => `<div style="display:flex;gap:10px;align-items:flex-start;font:400 16px/1.35 Inter"><span style="color:${c};font-size:18px;flex:none">${icon(ic)}</span><span>${t}</span></div>`;
+
+// ---------- slide 7 ----------
+const dMod = (m, t) => `<div style="display:flex;align-items:center;height:37px;border-top:1px solid #EFE9DF"><div style="width:230px;flex:none">${cn(m, 15.5)}</div><div style="font:400 16.5px Inter">${t}</div></div>`;
+const dCtx = (t, k) => { const [b, bg, fg] = dTone[k]; return `<span style="display:inline-block;font:600 16px/1 Inter;color:${fg};background:${bg};border:1.4px solid ${b};border-radius:999px;padding:6px 12px">${t}</span>`; };
+const dRule = (a, d) => `<div style="flex:1;border-radius:8px;background:#fff;border:1px solid #DDD5C8;padding:8px 12px"><div style="font:600 16.5px/1.25 Inter">${a}</div><div style="font:400 16px/1.3 Inter;color:#B02E1B;margin-top:3px">→ ${d}</div></div>`;
+const s7 = () => `
+<div class="card" style="position:absolute;left:0;top:0;width:566px;height:398px;padding:14px 20px">
+ <div style="display:flex;align-items:baseline;justify-content:space-between"><div class="serif" style="font-size:21px">One codebase: five COLA modules</div>${dTag('modular monolith')}</div>
+ <div style="margin-top:8px">
+  ${dMod('blocbuy-adapter', 'REST controllers, Result envelope')}
+  ${dMod('blocbuy-application', 'use-case services, subscribers')}
+  ${dMod('blocbuy-domain', 'aggregates, events, ports; no Spring')}
+  ${dMod('blocbuy-infrastructure', 'MyBatis, Stripe, Redis, SQS, SNS')}
+  ${dMod('blocbuy-client', 'DTOs, integration event contracts')}
+ </div>
+ <div style="font:600 16.5px Inter;margin:12px 0 8px">Each bounded context is a package in every module</div>
+ <div style="display:flex;flex-wrap:wrap;gap:8px">${dCtx('identity', 'plat')}${dCtx('catalog', 'biz')}${dCtx('groupbuy', 'biz')}${dCtx('order', 'biz')}${dCtx('payment', 'biz')}${dCtx('notification', 'plat')}</div>
+ <div style="margin-top:14px">${dNote('shield-halved', '<b>18 ArchUnit rules</b> fail the build on a wrong dependency', '#3E5CD9')}</div>
+</div>
+<div class="card" style="position:absolute;left:584px;top:0;width:580px;height:398px;padding:14px 20px">
+ <div style="display:flex;align-items:baseline;justify-content:space-between"><div class="serif" style="font-size:21px">Two topologies from one build</div>${dTag('ADR 0008')}</div>
+ <div style="margin-top:12px">${dK('dev · SWE5006 · one EC2 host, Docker Compose')}
+  ${dBox('biz', 'Monolith: all six contexts in one process', null, 'events in-process, no broker')}</div>
+ <div style="margin-top:14px">${dK('prod · SWE5001 · Amazon ECS')}
+  <div style="display:flex;gap:8px">${dBox('plat', 'identity-svc', null, null, 'flex:1')}${dBox('biz', 'commerce-svc', null, 'catalog · groupbuy · order · payment', 'flex:1.9')}${dBox('plat', 'notification-svc', null, null, 'flex:1.15')}</div>
+  <div style="margin-top:8px">${dBox('ev', 'Events: outbox → SNS → SQS (ADR 0007)', null, null)}</div></div>
+ <div style="margin-top:14px;border-radius:8px;background:#FDEFEC;padding:9px 14px;font:400 16.5px/1.3 Inter"><b style="color:#B02E1B">Split only where no transaction crosses:</b> pay, join, order and stock commit together, so they stay in commerce</div>
+</div>
+<div style="position:absolute;left:0;top:414px;width:1164px">
+ <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px"><div class="serif" style="font-size:20px">Analysis → design: our transition rule</div><div style="font:400 15.5px Inter;color:#6B655C">use cases: slide 3 · worked examples: B7</div></div>
+ <div style="display:flex;gap:10px">${dRule('Bounded context', 'package in each module')}${dRule('Analysis entity', 'aggregate + repository port')}${dRule('External actor (Google, Stripe)', 'gateway port + adapter (ACL)')}${dRule('Use case', 'application service + endpoint')}</div>
+</div>`;
+
+// ---------- slide 8 ----------
+const dState = () => {
+  const node = (x, t) => `<rect x="${x}" y="22" width="150" height="46" rx="23" fill="url(#s8g)" stroke="#E8402A" stroke-width="1.4"/><text x="${x + 75}" y="51" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15.5" font-weight="700" fill="#B02E1B">${t}</text>`;
+  const lab = (x, y, t) => `<text x="${x}" y="${y}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14.5" fill="#1B1A18">${t}</text>`;
+  return `<svg width="700" height="96" viewBox="0 0 700 96" font-family="Inter, Helvetica, Arial, sans-serif">
+  <defs><linearGradient id="s8g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FBDFD9"/></linearGradient>
+  <marker id="s8ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B1A18"/></marker></defs>
+  <circle cx="8" cy="45" r="7" fill="#1B1A18"/><line x1="15" y1="45" x2="38" y2="45" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#s8ah)"/>
+  ${node(40, 'DRAFT')}${node(300, 'ON_SALE')}${node(548, 'OFF_SALE')}
+  <line x1="190" y1="45" x2="298" y2="45" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#s8ah)"/>${lab(245, 37, 'publish()')}
+  <line x1="450" y1="36" x2="546" y2="36" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#s8ah)"/>${lab(499, 28, 'delist()')}
+  <line x1="548" y1="56" x2="452" y2="56" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#s8ah)"/>${lab(499, 76, 'publish()')}
+  <text x="115" y="90" text-anchor="middle" font-size="14.5" fill="#6B655C">only state that may be deleted</text></svg>`;
+};
+const dSchema = [
+  ['identity', 'plat', 'sys_user, sys_role +4'], ['catalog', 'biz', 'biz_product +3'], ['groupbuy', 'biz', 'biz_group_deal +4'],
+  ['order', 'biz', 'biz_order, biz_purchase_intent'], ['payment', 'biz', 'biz_payment, biz_refund +4'],
+  ['notification', 'plat', 'biz_notification, sys_consumed_message'], ['jobs', 'biz', 'sys_outbox +3'],
+];
+const s8 = () => `
+${dBand('UC9 · An admin drafts, publishes and delists listings and sets team terms',
+  `listing${dTo}${cn('Product')} «aggregate»<br>listing status${dTo}${cn('ProductStatus')} (State)<br>listing store${dTo}${cn('ProductRepository')} port`,
+  'Legal moves depend on the status, and two admins can edit the same listing')}
+<div class="card" style="position:absolute;left:0;top:138px;width:744px;height:200px;padding:12px 20px">
+ ${dPat('State', 'GoF · behavioural', 'ProductStatus.java')}
+ ${dState()}
+ <div style="font:400 16px/1.3 Inter;margin-top:2px">Each constant overrides only its legal moves; every other move is refused with <b>409</b></div>
+</div>
+<div class="card" style="position:absolute;left:0;top:350px;width:744px;height:198px;padding:12px 20px">
+ ${dPat('Optimistic Offline Lock', 'Fowler, PoEAA', 'Product.requireVersion')}
+ <div style="display:flex;align-items:center;gap:6px">
+  ${dBox('n', 'Admin reads', 'version 4', null, 'width:128px', 14.5)}${dArr()}
+  ${dBox('n', 'Write sends', 'expectedVersion=4', null, 'width:180px', 14.5)}${dArr()}
+  ${dBox('biz', 'Guarded UPDATE', 'WHERE version=4', null, 'width:162px', 14.5)}${dArr()}
+  <div style="display:flex;flex-direction:column;gap:6px;flex:1">${dBox('plat', null, '1 row: v5', null, '', 14.5)}${dBox('bad', null, '0 rows: 412', null, '', 14.5)}</div>
+ </div>
+ <div style="font:400 16px/1.3 Inter;margin-top:10px">A stale write changes nothing: <b>412</b>, and the console offers Reload (frontend ADR 0015)</div>
+</div>
+<div class="card" style="position:absolute;left:760px;top:138px;width:404px;height:410px;padding:12px 18px">
+ <div class="serif" style="font-size:20px">Database schema</div>
+ <div style="font:400 15px Inter;color:#6B655C;margin:2px 0 8px">29 tables · 28 Flyway migrations</div>
+ ${dSchema.map(([g, k, t]) => `<div style="display:flex;gap:10px;align-items:baseline;padding:4px 0 4px 10px;border-left:4px solid ${dTone[k][0]};margin-bottom:5px"><div style="width:90px;flex:none;font:700 15px Inter;color:${dTone[k][2]}">${g}</div><div class="mono" style="font-size:14.5px;line-height:1.3">${t}</div></div>`).join('')}
+ <div style="font:400 14.5px/1.35 Inter;color:#6B655C;margin-top:8px">UUID keys, timestamptz, numeric money; UNIQUE keys make retries safe · full list B5</div>
+</div>`;
+
+// ---------- slide 9 ----------
+const dFactory = () => {
+  const cls = (x, y, w, name, stereo, ops) => {
+    const h = 46 + (stereo ? 18 : 0) + (ops ? ops.length * 22 + 8 : 0), ny = y + (stereo ? 40 : 29);
+    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#s9g)" stroke="#E8402A" stroke-width="1.4"/>
+    ${stereo ? `<text x="${x + w / 2}" y="${y + 19}" text-anchor="middle" font-size="14.5" fill="#1B1A18">${stereo}</text>` : ''}
+    <text x="${x + w / 2}" y="${ny}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700" fill="#B02E1B"${stereo ? ' font-style="italic"' : ''}>${name}</text>
+    ${ops ? `<line x1="${x}" y1="${ny + 12}" x2="${x + w}" y2="${ny + 12}" stroke="#E8402A" stroke-width="1.2"/>` + ops.map((o, i) => `<text x="${x + 12}" y="${ny + 34 + i * 22}" font-family="JetBrains Mono, monospace" font-size="14.5" fill="#1B1A18">${o}</text>`).join('') : ''}`;
+  };
+  return `<svg width="556" height="224" viewBox="0 0 556 224" font-family="Inter, Helvetica, Arial, sans-serif">
+  <defs><linearGradient id="s9g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FBDFD9"/></linearGradient>
+  <marker id="s9ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B1A18"/></marker>
+  <marker id="s9op" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10" fill="none" stroke="#1B1A18" stroke-width="1.4"/></marker>
+  <marker id="s9tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="14" markerHeight="14" orient="auto-start-reverse"><path d="M0,0 L12,6 L0,12 z" fill="#fff" stroke="#1B1A18" stroke-width="1.2"/></marker></defs>
+  ${cls(0, 22, 206, 'PaidGroupDealService', null, null)}
+  ${cls(282, 0, 274, 'PaidGroupDealCreator', '«abstract»', ['+ initiate()  {final}', '# createGroupDeal()'])}
+  ${cls(270, 170, 286, 'StandardPaidGroupDealCreator', null, null)}
+  ${cls(0, 170, 150, 'GroupDeal', null, null)}
+  <line x1="206" y1="45" x2="280" y2="45" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#s9ah)"/><text x="243" y="70" text-anchor="middle" font-size="14.5" fill="#6B655C">injected</text>
+  <line x1="419" y1="170" x2="419" y2="124" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#s9tri)"/>
+  <line x1="270" y1="193" x2="152" y2="193" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#s9op)"/><text x="211" y="185" text-anchor="middle" font-size="14.5" fill="#6B655C">creates</text></svg>`;
+};
+const s9 = () => `
+${dBand('UC3/UC4 · A buyer pays first to start a team, or pays to join an open one',
+  `team${dTo}${cn('GroupDeal')} «aggregate»<br>accepted join${dTo}${cn('PaidAdmission')}<br>team store${dTo}${cn('PaidGroupDealRepository')} port`,
+  'Join rules were written twice, for the quote and after payment, and drifted: a buyer could pay, then be refunded')}
+<div class="card" style="position:absolute;left:0;top:138px;width:596px;height:410px;padding:12px 20px">
+ ${dPat('Factory Method', 'GoF · creational')}
+ ${dFactory()}
+ <div style="font:400 16px/1.35 Inter;margin-top:10px">${cn('initiate()', 15)} is final: it checks terms and price, then calls ${cn('createGroupDeal()', 15)}, so it is also a Template Method</div>
+ <div style="margin-top:8px">${dNote('circle-info', 'One creator, wired at build time by <span class="mono" style="font-size:14.5px">GroupDealCreationConfig</span> (#421): a seam, not runtime-pluggable')}</div>
+</div>
+<div class="card" style="position:absolute;left:612px;top:138px;width:552px;height:410px;padding:12px 20px">
+ ${dPat('Shared guards on the aggregate', 'domain methods, not GoF')}
+ ${dK('Before PR #424')}
+ <div style="display:flex;gap:8px">${dBox('n', 'Quote', 'lockJoinTerms', 'own inline checks', 'flex:1')}${dBox('n', 'After payment', 'joinPaid', 'own inline checks', 'flex:1')}</div>
+ <div style="margin-top:6px">${dBox('bad', 'Team with 0 members: quote OK, DEAL_FULL after payment, refund', null, null)}</div>
+ <div style="margin-top:12px">${dK('After (#422, merged 13 Oct)')}</div>
+ <div style="display:flex;align-items:center;gap:6px">
+  <div style="display:flex;flex-direction:column;gap:6px;width:150px">${dBox('n', null, 'lockJoinTerms', null, '', 14.5)}${dBox('n', null, 'joinPaid', null, '', 14.5)}</div>${dArr()}
+  ${dBox('biz', 'GroupDeal', 'requireJoinWindow()<br>requireAvailableSeat()<br>requireNewMember()', null, 'flex:1', 14.5)}
+ </div>
+ <div style="font:400 15px/1.3 Inter;color:#6B655C;margin-top:6px">Each path keeps its own lock and check order</div>
+</div>`;
+
+// ---------- slide 10 ----------
+const dCrash = () => {
+  const xs = { w: 64, s: 240, d: 380 };
+  const msg = (x1, x2, y, t, c = '#1B1A18', dash = false) => `<line x1="${x1}" y1="${y}" x2="${x2 + (x2 > x1 ? -2 : 2)}" y2="${y}" stroke="${c}" stroke-width="${c === '#1B1A18' ? 1.4 : 2}"${dash ? ' stroke-dasharray="6 4"' : ''} marker-end="url(#s10${c === '#1B1A18' ? 'a' : 'r'})"/><text x="${(x1 + x2) / 2}" y="${y - 8}" text-anchor="middle" font-size="15" fill="${c}">${t}</text>`;
+  const head = (x, t) => `<rect x="${x - 58}" y="0" width="116" height="36" fill="#fff" stroke="#6B655C" stroke-width="1.4"/><text x="${x}" y="24" text-anchor="middle" font-size="15.5" font-weight="700" fill="#1B1A18">${t}</text><line x1="${x}" y1="36" x2="${x}" y2="300" stroke="#6B655C" stroke-width="1.2" stroke-dasharray="5 4"/>`;
+  return `<svg width="440" height="300" viewBox="0 0 440 300" font-family="Inter, Helvetica, Arial, sans-serif">
+  <defs><marker id="s10a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B1A18"/></marker>
+  <marker id="s10r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8402A"/></marker></defs>
+  ${head(xs.w, 'Worker')}${head(xs.s, 'Stripe')}${head(xs.d, 'Database')}
+  ${msg(xs.w, xs.s, 76, '1 create refund')}${msg(xs.s, xs.w, 116, '2 accepted', '#1B1A18', true)}
+  <path d="M${xs.w - 9},${139} l18,18 M${xs.w + 9},${139} l-18,18" stroke="#8C2414" stroke-width="3"/><text x="${xs.w + 18}" y="${153}" font-size="15" font-weight="700" fill="#8C2414">3 crash, result not saved</text>
+  ${msg(xs.d, xs.w, 200, '4 restart: still pending', '#1B1A18', true)}
+  ${msg(xs.w, xs.s, 246, '5 create refund again', '#E8402A')}
+  <text x="${xs.s + 10}" y="${280}" font-size="15" font-weight="700" fill="#B02E1B">6 a second refund</text></svg>`;
+};
+const dSol = (name, body) => `<div style="display:flex;gap:14px;padding:8px 0;border-top:1px solid #EFE9DF"><div style="width:150px;flex:none;font:700 16.5px/1.3 Inter">${name}</div><div style="font:400 16px/1.4 Inter">${body}</div></div>`;
+const s10 = () => `
+${dBand('UC6 · When a team expires, every paid member is refunded automatically',
+  `refund owed${dTo}${cn('biz_refund')} + ${cn('RefundWork')}<br>payment provider${dTo}${cn('RefundGateway')} port<br>Stripe${dTo}${cn('StripeRefundGateway')} adapter`,
+  'Stripe accepts a refund and the process dies before saving it: a naive retry refunds twice')}
+<div class="card" style="position:absolute;left:0;top:138px;width:476px;height:410px;padding:12px 18px">
+ ${dK('The crash window', '#B02E1B')}
+ ${dCrash()}
+ <div style="font:400 15.5px/1.3 Inter;margin-top:6px">Without a stable request identity, the retry is a new refund</div>
+</div>
+<div class="card" style="position:absolute;left:492px;top:138px;width:672px;height:410px;padding:12px 20px">
+ ${dK('Solution')}
+ ${dSol('Idempotency Key', `${cn('RefundWork.providerKey()', 15)} = "blocbuy-refund-" + id, sent by ${cn('StripeRefundGateway', 15)}: a retry gets the same refund back`)}
+ ${dSol('Lease + version', 'A claim leases the row for 2 min and bumps its version; the result is saved only if the version still matches')}
+ ${dSol('Fixed retry', 'A failed call is due again after a fixed 30 s, not exponential backoff')}
+ ${dSol('Human review', 'Payment mismatch, permanent provider error, or no result after 23 h: parked for review, never a new refund')}
+ ${dSol('Observer', `${cn('TeamExpired', 15)} → order and refund subscribers, before the same commit (ADR 0002)`)}
+ <div style="margin-top:6px;border-radius:8px;background:#FFEDC7;padding:8px 14px">${dNote('flask', 'Proven locally with a Stripe substitute (3 Oct); no refund on dev yet (#223)', '#7A5C20')}</div>
+</div>`;
+
+// ---------- slide 11 ----------
+const s11 = () => `
+${dBand('Receive notifications · A buyer is told when their team succeeds or expires, or a payment succeeds',
+  `notice${dTo}${cn('Notification')} «aggregate»<br>commerce fact${dTo}${cn('TeamExpiredV1')} contract<br>queue message${dTo}${cn('NotificationEventHandler')} port`,
+  'Tell buyers without commerce calling notification, and never lose or repeat a notice')}
+<div class="card" style="position:absolute;left:0;top:138px;width:1164px;height:196px;padding:12px 18px">
+ <div style="display:flex;align-items:stretch;gap:6px">
+  <div style="width:160px">${dK('Observer', '#B02E1B')}${dBox('ev', 'domain event', 'TeamExpired', 'published in-process', 'height:112px', 14.5)}</div>${dArr()}
+  <div style="width:240px">${dK('Transactional Outbox', '#B02E1B')}${dBox('biz', 'BEFORE_COMMIT', 'IntegrationOutboxWriter', 'same transaction → sys_outbox', 'height:112px', 14.5)}</div>${dArr()}
+  <div style="width:184px">${dK('Relay')}${dBox('biz', 'every 2 s, leased', 'OutboxRelayJob', 'batches of 100, 10 tries', 'height:112px', 14.5)}</div>${dArr()}
+  <div style="width:170px">${dK('Transport')}${dBox('ev', 'at least once', 'SNS → SQS', 'DLQ after 5 receives', 'height:112px', 14.5)}</div>${dArr()}
+  <div style="flex:1">${dK('Idempotent Receiver', '#B02E1B')}${dBox('plat', 'one transaction', 'markConsumed', 'then biz_notification rows', 'height:112px', 14.5)}</div>
+ </div>
+ <div style="margin-top:12px">${dNote('shield-halved', 'Commerce never calls notification: the ArchUnit rule <span class="mono" style="font-size:14.5px">nothing_depends_on_notification</span> fails the build', '#3E5CD9')}</div>
+</div>
+<div class="card" style="position:absolute;left:0;top:350px;width:574px;height:198px;padding:12px 20px">
+ ${dK('Idempotent Receiver in SQL')}
+ <div style="background:#1B1A18;color:#F6F2EC;border-radius:8px;padding:10px 14px;font:500 15px/1.5 'JetBrains Mono',monospace">INSERT INTO sys_consumed_message<br>&nbsp;&nbsp;(event_id, consumer, …)<br>ON CONFLICT (event_id, consumer) DO NOTHING</div>
+ <div style="font:400 16px/1.3 Inter;margin-top:8px">0 rows inserted = a duplicate: nothing written, message deleted</div>
+</div>
+<div class="card" style="position:absolute;left:590px;top:350px;width:574px;height:198px;padding:12px 20px">
+ ${dK('Where it runs')}
+ ${[['dev · EC2', 'monolith: writer, relay and consumer off; no broker (ADR 0007)'], ['prod · ECS', 'commerce-svc → SNS → SQS → notification-svc'], ['local, CI', 'SQS on ElasticMQ: OutboxRelayElasticMqIT, NotificationConsumerElasticMqIT']].map(([a, b]) => `<div style="display:flex;gap:12px;padding:6px 0;border-top:1px solid #EFE9DF"><div style="width:96px;flex:none;font:700 16px Inter">${a}</div><div style="font:400 15.5px/1.35 Inter">${b}</div></div>`).join('')}
+</div>`;
+
+// ---------- slide 12 ----------
+const s12 = () => `
+${dBand('UC8 · A buyer sees their blocs (Active, Completed, Refunded) and orders on /account',
+  `My blocs${dTo}${cn('GET /group-deals/me')}, latest 100<br>My orders${dTo}${cn('GET /orders/me')}, paged<br>view state${dTo}URL ${cn('?blocs=&amp;page=&amp;size=')}`,
+  `A filter and a pager must survive reload, Back and a shared link; the API has no status filter <span style="white-space:nowrap">${mk('CONFIRM', 'Lim picks the problem')}</span>`)}
+<div class="card" style="position:absolute;left:0;top:138px;width:1164px;height:180px;padding:12px 18px">
+ ${dPat('URL as the single source of view state', 'router owns URL state, Query owns server state (frontend ADR 0001)')}
+ <div style="display:flex;align-items:stretch;gap:6px">
+  ${dBox('n', 'URL', '/account?<br>blocs=completed&amp;page=2', null, 'width:226px', 14.5)}${dArr()}
+  ${dBox('plat', 'validateSearch', 'accountSearchSchema', 'bad value → fallback; defaults stripped', 'flex:1', 14.5)}${dArr()}
+  ${dBox('plat', 'loader', 'orders + blocs', 'prefetched in parallel; past the last page → redirect', 'flex:1', 14.5)}${dArr()}
+  ${dBox('plat', 'chip click', '?blocs=', 'not a loader dependency: filters the cache, no refetch', 'flex:1', 14.5)}
+ </div>
+</div>
+<div class="card" style="position:absolute;left:0;top:332px;width:574px;height:216px;padding:12px 20px">
+ ${dPat('Adapter at one boundary', 'frontend ADR 0009')}
+ <div style="display:flex;align-items:center;gap:6px">${dBox('n', 'generated client', 'Result&lt;T&gt;', null, 'width:150px', 14.5)}${dArr()}${dBox('biz', 'select:', 'unwrapResult', null, 'width:160px', 14.5)}${dArr()}${dBox('plat', 'components', 'T or ApiError', null, 'flex:1', 14.5)}</div>
+ <div style="font:400 15.5px/1.35 Inter;margin-top:10px">One function knows the envelope; the client is generated from the contract (ADR 0003)</div>
+</div>
+<div class="card" style="position:absolute;left:590px;top:332px;width:574px;height:216px;padding:12px 20px">
+ ${dK('Evidence · account.test.tsx')}
+ <ul class="b" style="font:400 15.5px/1.35 Inter"><li>switches chips through ?blocs= without refetching</li><li>falls back to Active for an unknown ?blocs= value</li><li>sends a page past the last one to the last page</li></ul>
+ <div style="font:400 14.5px/1.35 Inter;color:#6B655C;margin-top:6px">Limit: only the latest 100 blocs; a closed bloc reads “Closed”, as this endpoint carries no refund data</div>
+</div>`;
+
 // ---------- slide 22 ----------
 const s22 = () => `
 <div style="position:absolute;left:76px;top:96px;font:700 120px/1 Inter;color:#fff">Thank you</div>
 <div style="position:absolute;left:80px;top:236px;font:500 32px Inter;color:#fff">Questions?</div>
 <div style="position:absolute;left:80px;top:604px;font:400 17px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:10px;align-items:center"><span style="font-size:20px">${icon('github')}</span> github.com/PPsyrius/iss-groupbuy-team8</div>`;
 
-const S = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 22: s22 };
+const S = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s12, 22: s22 };
 for (let n = 2; n <= 21; n++) if (!S[n]) S[n] = todo(n);
 module.exports = S;
