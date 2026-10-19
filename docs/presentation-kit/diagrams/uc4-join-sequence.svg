@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="470" viewBox="0 0 1180 470" font-family="Inter, Helvetica, Arial, sans-serif">
+<title>sd UC4 Join a team by paying</title>
+<desc>UML sequence diagram: a buyer joins a team by paying through Stripe Checkout; commerce-svc settles the webhook in one database transaction and the outbox relay notifies members through SNS and SQS.</desc>
+<defs><linearGradient id="u4gSw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FBDFD9"/></linearGradient><linearGradient id="u4gInfra" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EFE9DF"/></linearGradient><linearGradient id="u4gExt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#ECE6DC"/></linearGradient></defs>
+<rect x="0" y="0" width="1180" height="470" fill="#FFFFFF"/>
+<rect x="4" y="4" width="1172" height="462" fill="none" stroke="#6B655C" stroke-width="1.2"/>
+<path d="M4 4 H248.4 V21 L240.4 28 H4 Z" fill="#EFE9DF" stroke="#6B655C" stroke-width="1.2"/>
+<text x="11" y="21" font-size="15" text-anchor="start" font-weight="bold" fill="#1B1A18">sd UC4 Join a team by paying</text>
+<rect x="92" y="256" width="560" height="122" fill="#FBDFD9" stroke="#E8402A" stroke-width="1.2" stroke-dasharray="6 4"/>
+<circle cx="70" cy="41" r="7" fill="url(#u4gExt)" stroke="#6B655C" stroke-width="1.5"/>
+<path d="M70 48 V64 M59 54 H81 M70 64 L61 76 M70 64 L79 76" fill="none" stroke="#6B655C" stroke-width="1.5"/>
+<text x="86" y="64" font-size="17" text-anchor="start" font-weight="bold" fill="#1B1A18">Buyer</text>
+<rect x="280.0" y="36" width="160" height="46" fill="#FBDFD9" stroke="#E8402A" stroke-width="1.5"/>
+<text x="360" y="54" font-size="14.5" text-anchor="middle" font-weight="normal" fill="#1B1A18">«service»</text>
+<text x="360" y="73" font-size="17" text-anchor="middle" font-weight="bold" fill="#1B1A18">commerce-svc</text>
+<rect x="520.0" y="36" width="140" height="46" fill="#E3E8FB" stroke="#3E5CD9" stroke-width="1.5"/>
+<text x="590" y="54" font-size="14.5" text-anchor="middle" font-weight="normal" fill="#1B1A18">«service»</text>
+<text x="590" y="73" font-size="17" text-anchor="middle" font-weight="bold" fill="#1B1A18">identity-svc</text>
+<rect x="705.0" y="36" width="110" height="46" fill="url(#u4gExt)" stroke="#6B655C" stroke-width="1.5"/>
+<text x="760" y="54" font-size="14.5" text-anchor="middle" font-weight="normal" fill="#1B1A18">«external»</text>
+<text x="760" y="73" font-size="17" text-anchor="middle" font-weight="bold" fill="#1B1A18">Stripe</text>
+<rect x="825.0" y="36" width="130" height="46" fill="#FFEDC7" stroke="#7A5C20" stroke-width="1.5"/>
+<text x="890" y="54" font-size="14.5" text-anchor="middle" font-weight="normal" fill="#1B1A18">«topic» «queue»</text>
+<text x="890" y="73" font-size="17" text-anchor="middle" font-weight="bold" fill="#1B1A18">SNS → SQS</text>
+<rect x="960.0" y="36" width="160" height="46" fill="#E3E8FB" stroke="#3E5CD9" stroke-width="1.5"/>
+<text x="1040" y="54" font-size="14.5" text-anchor="middle" font-weight="normal" fill="#1B1A18">«service»</text>
+<text x="1040" y="73" font-size="17" text-anchor="middle" font-weight="bold" fill="#1B1A18">notification-svc</text>
+<line x1="70" y1="80" x2="70" y2="458" stroke="#6B655C" stroke-width="1.2" stroke-dasharray="6 4"/>
+<line x1="360" y1="82" x2="360" y2="458" stroke="#6B655C" stroke-width="1.2" stroke-dasharray="6 4"/>
+<line x1="590" y1="82" x2="590" y2="458" stroke="#6B655C" stroke-width="1.2" stroke-dasharray="6 4"/>
+<line x1="760" y1="82" x2="760" y2="458" stroke="#6B655C" stroke-width="1.2" stroke-dasharray="6 4"/>
+<line x1="890" y1="82" x2="890" y2="458" stroke="#6B655C" stroke-width="1.2" stroke-dasharray="6 4"/>
+<line x1="1040" y1="82" x2="1040" y2="458" stroke="#6B655C" stroke-width="1.2" stroke-dasharray="6 4"/>
+<rect x="355" y="100" width="10" height="100" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.2"/>
+<rect x="585" y="124" width="10" height="16" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.2"/>
+<rect x="755" y="164" width="10" height="16" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.2"/>
+<rect x="755" y="216" width="10" height="14" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.2"/>
+<rect x="355" y="218" width="10" height="160" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.2"/>
+<rect x="585" y="282" width="10" height="16" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.2"/>
+<rect x="355" y="394" width="10" height="14" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.2"/>
+<rect x="885" y="394" width="10" height="38" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.2"/>
+<rect x="1035" y="418" width="10" height="36" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.2"/>
+<line x1="70" y1="106" x2="354" y2="106" stroke="#1B1A18" stroke-width="1.4"/>
+<polygon points="355,106 345,101 345,111" fill="#1B1A18"/>
+<rect x="70.5" y="86" width="283.0" height="19" fill="#FFFFFF"/>
+<text x="212" y="100" font-size="15" text-anchor="middle" font-weight="normal" fill="#1B1A18">start / join: intent, then checkout</text>
+<line x1="365" y1="130" x2="584" y2="130" stroke="#1B1A18" stroke-width="1.4"/>
+<polygon points="585,130 575,125 575,135" fill="#1B1A18"/>
+<rect x="376.4" y="110" width="197.2" height="19" fill="#FFFFFF"/>
+<text x="475" y="124" font-size="15" text-anchor="middle" font-weight="normal" fill="#1B1A18">active-user check (sync)</text>
+<rect x="392.3" y="135" width="165.5" height="17" fill="#FFFFFF"/>
+<text x="475" y="147" font-size="14.5" text-anchor="middle" font-weight="normal" fill="#1B1A18">fails closed on timeout</text>
+<line x1="365" y1="172" x2="754" y2="172" stroke="#1B1A18" stroke-width="1.4"/>
+<polygon points="755,172 745,167 745,177" fill="#1B1A18"/>
+<rect x="380.3" y="152" width="189.4" height="19" fill="#FFFFFF"/>
+<text x="475" y="166" font-size="15" text-anchor="middle" font-weight="normal" fill="#1B1A18">create Checkout Session</text>
+<line x1="355" y1="196" x2="70" y2="196" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="6 4"/>
+<path d="M80 191 L70 196 L80 201" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+<rect x="101.7" y="176" width="220.6" height="19" fill="#FFFFFF"/>
+<text x="212" y="190" font-size="15" text-anchor="middle" font-weight="normal" fill="#1B1A18">redirect to Stripe Checkout</text>
+<line x1="755" y1="224" x2="365" y2="224" stroke="#1B1A18" stroke-width="1.4"/>
+<path d="M375 219 L365 224 L375 229" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+<rect x="407.6" y="204" width="134.8" height="19" fill="#FFFFFF"/>
+<text x="475" y="218" font-size="15" text-anchor="middle" font-weight="normal" fill="#1B1A18">webhook (signed)</text>
+<path d="M365 234 H387 V248 H366" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+<polygon points="365,248 375,243 375,253" fill="#1B1A18"/>
+<rect x="121.6" y="232" width="228.4" height="19" fill="#FFFFFF"/>
+<text x="345" y="246" font-size="15" text-anchor="end" font-weight="normal" fill="#1B1A18">verify signature, outside tx</text>
+<text x="102" y="272" font-size="15" text-anchor="start" font-weight="bold" fill="#1B1A18">one DB transaction</text>
+<text x="104" y="294" font-size="15" text-anchor="start" font-weight="normal" fill="#1B1A18">claim eventId (dedupe)</text>
+<text x="104" y="312" font-size="15" text-anchor="start" font-weight="normal" fill="#1B1A18">lock team → intent → payment</text>
+<text x="104" y="330" font-size="15" text-anchor="start" font-weight="normal" fill="#1B1A18">admit member, save order</text>
+<text x="104" y="348" font-size="15" text-anchor="start" font-weight="normal" fill="#1B1A18">stock −1; full → TeamSucceeded</text>
+<text x="104" y="366" font-size="15" text-anchor="start" font-weight="normal" fill="#1B1A18">outbox rows (before commit)</text>
+<line x1="365" y1="290" x2="584" y2="290" stroke="#1B1A18" stroke-width="1.4"/>
+<polygon points="585,290 575,285 575,295" fill="#1B1A18"/>
+<text x="475" y="284" font-size="15" text-anchor="middle" font-weight="normal" fill="#1B1A18">re-check active user</text>
+<text x="378" y="330" font-size="15" text-anchor="start" font-weight="normal" fill="#1B1A18">rejected →</text>
+<text x="378" y="348" font-size="15" text-anchor="start" font-weight="normal" fill="#1B1A18">REFUND_REQUIRED + refund work</text>
+<line x1="365" y1="402" x2="885" y2="402" stroke="#1B1A18" stroke-width="1.4"/>
+<path d="M875 397 L885 402 L875 407" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+<rect x="443.9" y="382" width="392.2" height="19" fill="#FFFFFF"/>
+<text x="640" y="396" font-size="15" text-anchor="middle" font-weight="normal" fill="#1B1A18">after commit: relay publishes (every 2 s, leased)</text>
+<line x1="895" y1="426" x2="1035" y2="426" stroke="#1B1A18" stroke-width="1.4"/>
+<path d="M1025 421 L1035 426 L1025 431" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+<rect x="890.8" y="407" width="148.3" height="18" fill="#FFFFFF"/>
+<text x="965" y="420" font-size="15" text-anchor="middle" font-weight="normal" fill="#1B1A18">receive (long poll)</text>
+<path d="M1045 432 H1067 V446 H1046" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+<polygon points="1045,446 1055,441 1055,451" fill="#1B1A18"/>
+<text x="1060" y="438" font-size="14.5" text-anchor="start" font-weight="normal" fill="#1B1A18">dedupe eventId,</text>
+<text x="1060" y="453" font-size="14.5" text-anchor="start" font-weight="normal" fill="#1B1A18">store notice</text>
+</svg>

@@ -16,6 +16,8 @@ export interface ReceiptView {
   body: string;
   moneyLead: string;
   moneyDetail?: string | undefined;
+  // Set only on the plain paid view: the one confirmation the receipt brands (CR-7).
+  confirmed?: true;
 }
 
 const doNotPayAgain = "Do not pay again to check the result.";
@@ -83,6 +85,7 @@ export function receiptView({
     case "SUCCEEDED":
       return {
         chip: { label: "Paid", color: "success" },
+        confirmed: true,
         title: "Payment received",
         body: receipt.orderId
           ? "Your order has been saved and your bloc membership is confirmed."

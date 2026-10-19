@@ -131,6 +131,8 @@ function PaymentReceiptForId({ paymentId }: Readonly<{ paymentId: string }>) {
       moneyLead={view.moneyLead}
       moneyDetail={view.moneyDetail}
       references={receiptReferences(receipt)}
+      // A refund, even a sent one, is not a confirmation worth branding.
+      mark={view.confirmed === true}
     >
       {refreshFirst ? (
         <Button
