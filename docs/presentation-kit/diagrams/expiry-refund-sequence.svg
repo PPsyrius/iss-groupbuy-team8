@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 500" width="1160" height="500" font-family="Inter, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="sqTeal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E3E8FB"/></linearGradient>
+    <linearGradient id="sqOrange" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FBDFD9"/></linearGradient>
+    <linearGradient id="sqYellow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF6E2"/><stop offset="1" stop-color="#FFEDC7"/></linearGradient>
+    <linearGradient id="sqGrey" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#ECE6DC"/></linearGradient>
+    <linearGradient id="sqSlate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EFE9DF"/></linearGradient>
+    <marker id="sqFill" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B1A18"/></marker>
+    <marker id="sqOpen" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#1B1A18" stroke-width="1.6"/></marker>
+  </defs>
+
+  <!-- frame -->
+  <rect x="1" y="1" width="1158" height="497" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.4"/>
+  <path d="M1,1 H292 V18 L280,30 H1 Z" fill="#EFE9DF" stroke="#6B655C" stroke-width="1.4"/>
+  <text x="12" y="22" font-size="16" font-weight="700" fill="#1B1A18">sd UC5/UC6 Team expiry &amp; refund</text>
+
+  <!-- lifelines -->
+  <g stroke="#A69E92" stroke-width="1.3" stroke-dasharray="6 5">
+    <line x1="175" y1="92" x2="175" y2="494"/>
+    <line x1="420" y1="92" x2="420" y2="494"/>
+    <line x1="615" y1="92" x2="615" y2="494"/>
+    <line x1="790" y1="92" x2="790" y2="494"/>
+    <line x1="980" y1="92" x2="980" y2="494"/>
+  </g>
+  <!-- heads -->
+  <rect x="75" y="38" width="200" height="54" fill="url(#sqOrange)" stroke="#E8402A" stroke-width="1.6"/>
+  <text x="175" y="58" font-size="15" fill="#6B655C" text-anchor="middle">«scheduler»</text>
+  <text x="175" y="81" font-size="18" font-weight="700" fill="#B02E1B" text-anchor="middle">commerce-svc</text>
+  <rect x="335" y="38" width="170" height="54" fill="url(#sqSlate)" stroke="#6B655C" stroke-width="1.6"/>
+  <text x="420" y="58" font-size="15" fill="#6B655C" text-anchor="middle">«database»</text>
+  <text x="420" y="81" font-size="18" font-weight="700" fill="#1B1A18" text-anchor="middle">commerce DB</text>
+  <rect x="552" y="38" width="126" height="54" fill="url(#sqGrey)" stroke="#6B655C" stroke-width="1.6"/>
+  <text x="615" y="58" font-size="15" fill="#6B655C" text-anchor="middle">«external»</text>
+  <text x="615" y="81" font-size="18" font-weight="700" fill="#1B1A18" text-anchor="middle">Stripe</text>
+  <rect x="710" y="38" width="160" height="54" fill="url(#sqYellow)" stroke="#7A5C20" stroke-width="1.6"/>
+  <text x="790" y="58" font-size="15" fill="#6B655C" text-anchor="middle">«topic» «queue»</text>
+  <text x="790" y="81" font-size="18" font-weight="700" fill="#1B1A18" text-anchor="middle">SNS → SQS</text>
+  <rect x="884" y="38" width="192" height="54" fill="url(#sqTeal)" stroke="#3E5CD9" stroke-width="1.6"/>
+  <text x="980" y="58" font-size="15" fill="#6B655C" text-anchor="middle">«service»</text>
+  <text x="980" y="81" font-size="18" font-weight="700" fill="#3E5CD9" text-anchor="middle">notification-svc</text>
+
+  <!-- ===== Click 1: the expiry transaction ===== -->
+  <g class="frag" data-frag="1">
+    <rect x="14" y="100" width="548" height="174" fill="none" stroke="#6B655C" stroke-width="1.3"/>
+    <path d="M14,100 H72 V114 L64,124 H14 Z" fill="#EFE9DF" stroke="#6B655C" stroke-width="1.3"/>
+    <text x="22" y="118" font-size="16" font-weight="700" fill="#1B1A18">loop</text>
+    <text x="84" y="119" font-size="15" fill="#6B655C">[TeamExpirySweepJob · every 1 min · leased]</text>
+    <rect x="26" y="130" width="526" height="136" fill="#FBDFD9" stroke="#E8402A" stroke-width="1.6" stroke-dasharray="7 4"/>
+    <circle cx="44" cy="150" r="12" fill="#E8402A"/><text x="44" y="155.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="62" y="156" font-size="16" font-weight="700" fill="#B02E1B">one DB</text><text x="36" y="176" font-size="16" font-weight="700" fill="#B02E1B">transaction</text>
+    <rect x="169" y="134" width="12" height="128" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.4"/>
+    <g stroke="#1B1A18" stroke-width="1.5" fill="none">
+      <line x1="181" y1="170" x2="412" y2="170" marker-end="url(#sqFill)"/>
+      <path d="M181,186 H211 V202 H185" marker-end="url(#sqFill)"/>
+      <line x1="181" y1="232" x2="412" y2="232" marker-end="url(#sqFill)"/>
+      <line x1="181" y1="256" x2="412" y2="256" marker-end="url(#sqFill)"/>
+    </g>
+    <rect x="414" y="164" width="12" height="12" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.3"/>
+    <rect x="414" y="226" width="12" height="12" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.3"/>
+    <rect x="414" y="250" width="12" height="12" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.3"/>
+    <text x="298" y="164" font-size="15" fill="#1B1A18" text-anchor="middle">lock overdue open team</text>
+    <text x="219" y="200" font-size="15" fill="#1B1A18">GroupDeal.expire() → TeamExpired</text>
+    <text x="310" y="226" font-size="15" fill="#1B1A18" text-anchor="middle">cancel orders, record refund work</text>
+    <text x="298" y="250" font-size="15" fill="#1B1A18" text-anchor="middle">outbox row TeamExpiredV1</text>
+  </g>
+
+  <!-- ===== Click 2: relay, SNS, SQS, consumer transaction ===== -->
+  <g class="frag" data-frag="2">
+    <rect x="169" y="290" width="12" height="14" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.4"/>
+    <line x1="181" y1="298" x2="782" y2="298" stroke="#1B1A18" stroke-width="1.5" marker-end="url(#sqOpen)"/>
+    <circle cx="207" cy="286" r="12" fill="#3E5CD9"/><text x="207" y="291.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="488" y="290" font-size="15" fill="#1B1A18" text-anchor="middle">after commit: relay publishes (every 2 s, leased)</text>
+    <circle cx="760" cy="286" r="12" fill="#3E5CD9"/><text x="760" y="291.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
+    <rect x="784" y="296" width="12" height="134" fill="#FFFFFF" stroke="#7A5C20" stroke-width="1.4"/>
+    <path d="M796,314 H826 V330 H800" stroke="#1B1A18" stroke-width="1.5" fill="none" marker-end="url(#sqFill)"/>
+    <circle cx="846" cy="322" r="12" fill="#3E5CD9"/><text x="846" y="327.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">4</text>
+    <text x="864" y="328" font-size="15" fill="#1B1A18">route to queue</text>
+    <line x1="796" y1="360" x2="972" y2="360" stroke="#1B1A18" stroke-width="1.5" marker-end="url(#sqOpen)"/>
+    <circle cx="818" cy="350" r="12" fill="#3E5CD9"/><text x="818" y="355.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">5</text>
+    <text x="900" y="353" font-size="15" fill="#1B1A18" text-anchor="middle">receive (long poll)</text>
+    <rect x="974" y="360" width="12" height="70" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.4"/>
+    <rect x="1008" y="364" width="148" height="56" fill="#E3E8FB" stroke="#3E5CD9" stroke-width="1.4" stroke-dasharray="6 3"/>
+    <path d="M986,376 H1004 V400 H990" stroke="#1B1A18" stroke-width="1.5" fill="none" marker-end="url(#sqFill)"/>
+    <circle cx="958" cy="390" r="12" fill="#E8402A"/><text x="958" y="395.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">6</text>
+    <text x="1014" y="383" font-size="15" font-weight="700" fill="#3E5CD9">one transaction:</text>
+    <text x="1014" y="402" font-size="15" fill="#1B1A18">dedupe eventId,</text>
+    <text x="1014" y="418" font-size="15" fill="#1B1A18">notify each member</text>
+    <line x1="974" y1="440" x2="798" y2="440" stroke="#1B1A18" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#sqOpen)"/>
+    <circle cx="818" cy="430" r="12" fill="#3E5CD9"/><text x="818" y="435.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">7</text>
+    <text x="900" y="433" font-size="15" fill="#1B1A18" text-anchor="middle">delete message</text>
+    <path d="M880,452 H1138 L1150,464 V492 H880 Z" fill="#FFF6E2" stroke="#7A5C20" stroke-width="1.3"/>
+    <path d="M1138,452 V464 H1150" fill="none" stroke="#7A5C20" stroke-width="1.3"/>
+    <circle cx="900" cy="472" r="12" fill="#3E5CD9"/><text x="900" y="477.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">8</text>
+    <text x="920" y="478" font-size="16" font-weight="700" fill="#1B1A18">members see it in the app</text>
+  </g>
+
+  <!-- ===== Click 3: refund worker ===== -->
+  <g class="frag" data-frag="3">
+    <rect x="14" y="320" width="690" height="172" fill="none" stroke="#6B655C" stroke-width="1.3"/>
+    <path d="M14,320 H72 V334 L64,344 H14 Z" fill="#EFE9DF" stroke="#6B655C" stroke-width="1.3"/>
+    <text x="22" y="338" font-size="16" font-weight="700" fill="#1B1A18">loop</text>
+    <text x="84" y="339" font-size="15" fill="#6B655C">[RefundWorkerJob · every 30 s · leased]</text>
+    <rect x="169" y="354" width="12" height="130" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.4"/>
+    <g stroke="#1B1A18" stroke-width="1.5" fill="none">
+      <line x1="181" y1="378" x2="412" y2="378" marker-end="url(#sqFill)"/>
+      <line x1="181" y1="406" x2="607" y2="406" marker-end="url(#sqFill)"/>
+      <line x1="607" y1="434" x2="185" y2="434" stroke-dasharray="6 4" marker-end="url(#sqOpen)"/>
+      <line x1="181" y1="472" x2="412" y2="472" marker-end="url(#sqFill)"/>
+    </g>
+    <rect x="414" y="372" width="12" height="12" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.3"/>
+    <rect x="609" y="400" width="12" height="38" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.3"/>
+    <rect x="414" y="466" width="12" height="12" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.3"/>
+    <text x="298" y="372" font-size="15" fill="#1B1A18" text-anchor="middle">claim next refund work</text>
+    <text x="395" y="400" font-size="15" fill="#1B1A18" text-anchor="middle">create refund (idempotency key)</text>
+    <text x="395" y="428" font-size="15" fill="#1B1A18" text-anchor="middle">refund status</text>
+    <text x="310" y="466" font-size="15" fill="#1B1A18" text-anchor="middle">save result; provider error → retry</text>
+  </g>
+</svg>

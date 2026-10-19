@@ -163,5 +163,8 @@ export default defineConfig(({ command }) => ({
     // No maps in the delivery artifact: they were synced to the public bucket with the code
     // (#155). Nothing consumes them (no error tracker); `vite dev` serves maps regardless.
     sourcemap: false,
+    // The CSP's `img-src 'self' https:` has no `data:`, so the brand SVGs (under the 4 KiB
+    // default) must ship as files, not inlined URIs the browser would refuse to load.
+    assetsInlineLimit: (file) => (file.endsWith(".svg") ? false : undefined),
   },
 }));

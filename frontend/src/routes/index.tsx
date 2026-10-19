@@ -4,6 +4,7 @@ import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-rout
 
 import { unwrapResult } from "@/api/envelope";
 import { pageListingsOptions } from "@/api/generated/@tanstack/react-query.gen";
+import { BrandIsologo } from "@/components/BrandMark";
 import { categoryLabel } from "@/features/catalog/categories";
 import { FilterForm } from "@/features/catalog/FilterForm";
 import { ProductCard } from "@/features/catalog/ProductCard";
@@ -146,6 +147,8 @@ function CatalogEmpty({
   const { heading, body } = catalogEmptyCopy(category, keyword);
   return (
     <div className="border-border bg-surface flex flex-col items-center gap-3 rounded-lg border px-6 py-8 text-center xl:px-8 xl:py-16">
+      {/* The brand mark is the only decoration allowed on an empty state (CR-7). */}
+      <BrandIsologo alt="" className="h-10 w-auto opacity-80" />
       <h2 className="text-lg font-semibold xl:text-xl">{heading}</h2>
       <p className="text-muted max-w-[46ch] text-sm text-pretty xl:text-base">{body}</p>
       <CatalogEmptyRecovery size={size} category={category} keyword={keyword} />
