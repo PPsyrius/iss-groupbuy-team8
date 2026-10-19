@@ -193,7 +193,8 @@ const b16 = () => `<div style="display:flex;gap:14px;align-items:stretch">
  ${rCard('Scale-out', 'SWE5001 PROD · ECS FARGATE', `<ul class="b" style="font:400 15.5px/1.35 Inter;margin:0">
   ${li('Target tracking on ALB requests per target: 12,000 a minute, scale-out cooldown 60 s')}
   ${li('commerce 2–6 tasks in two AZs, notification 1–4 (read back 16 Oct)')}
-  ${li(`V3 scale-out under k6: ${mk('FILL', 'max commerce tasks, p95, error rate from the 19 Oct session')}`)}
+  ${li('V3, 19 Oct: commerce <b>1 → 3 tasks</b> in about four minutes, no manual scaling; at 3 tasks ≈ 455 req/s, server p95 13–50 ms, 2 errors in 570,445')}
+  ${li('Not V3 acceptance: the workstation generator dropped iterations, so the analyzer rejects the run')}
   ${li(`V4 queue drain: ${mk('FILL', 'backlog peak, notification tasks, drain time (19 Oct)')}`)}</ul>`)}
  ${rCard('Load, one task', 'SWE5001 V2 · ECS, 16 OCT', `<ul class="b" style="font:400 15.5px/1.35 Inter;margin:0">
   ${li('k6, ten one-minute plateaus from 10 to 200 requests a second, through CloudFront')}
@@ -205,7 +206,7 @@ const b16 = () => `<div style="display:flex;gap:14px;align-items:stretch">
  ], { fs: 15, pad: '4px 8px' })}<div style="font:400 15px/1.35 Inter;margin-top:8px">30 paid teams expired within 58 s of their deadlines under that load. One laptop with real HTTP, PostgreSQL and Redis; <b>not a deployed result</b>.</div>`, 'var(--orange-d)')}
 </div>
 <div style="margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter"><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out is shown on SWE5001 prod.</div>
-<div style="margin-top:8px;font:italic 400 14.5px/1.35 Inter;color:var(--muted)">Sources: docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md (V2, scaling policy); docs/perf/sprint3-baseline.md (local workload).</div>`;
+<div style="margin-top:8px;font:italic 400 14.5px/1.35 Inter;color:var(--muted)">Sources: docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md (V2, scaling policy); docs/swe5001/evidence/20261019-v3-autoscaling/README.md (V3); docs/perf/sprint3-baseline.md (local workload).</div>`;
 
 // Backup slides follow the last main slide; press B in the deck for the index (BX). Rows link with data-go.
 // Each segment adds its backups to BACKUPS (content.js) and a matching entry below, in index order.

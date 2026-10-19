@@ -251,7 +251,7 @@ const OPEN_ITEMS = [
   [18, 'Reconcile frontend ADR 0004 and the EC2 operator guide with the post-merge rebuild in ci-frontend.yml and ci-backend.yml; CONTRIBUTING.md still lists contract-check as required', 'Pan, Lim', '15, 16, B14'],
   [19, 'Fallback recording link for the pipeline demo (item 4e), part of open item 2', 'Pan', '20'],
   [20, 'Fallback recordings of the system demo on dev, one clip per step (item 5c), part of open item 2; link in the Q&A answer', 'Yorik, Eric', '21, Q&A 5'],
-  [21, 'SWE5001 scale-out and load results from the 19 Oct session (V3 tasks, p95, error rate; V4 drain) for B16', 'Pan', 'B16'],
+  [21, 'SWE5001 V4 queue-drain result for B16 (V3 is in from docs/swe5001/evidence/20261019-v3-autoscaling)', 'Pan', 'B16'],
   [22, 'Two Google buyer accounts (leader, joiner), their display names on screen, and the admin grant for the listings check', 'Yorik', '21'],
   [23, 'Footer of slide 21 after the go/no-go; Sandbox payment and refund ids from the 24 Oct dry run for the Q&A', 'Yorik', '21, Q&A 5'],
 ];

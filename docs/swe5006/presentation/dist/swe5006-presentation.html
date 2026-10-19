@@ -2083,7 +2083,8 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
  <div class="serif" style="font-size:21px;margin:4px 0 8px">Scale-out</div><ul class="b" style="font:400 15.5px/1.35 Inter;margin:0">
   <li style="margin-bottom:6px">Target tracking on ALB requests per target: 12,000 a minute, scale-out cooldown 60 s</li>
   <li style="margin-bottom:6px">commerce 2–6 tasks in two AZs, notification 1–4 (read back 16 Oct)</li>
-  <li style="margin-bottom:6px">V3 scale-out under k6: <span class="mk mk-fill">[FILL: max commerce tasks, p95, error rate from the 19 Oct session]</span></li>
+  <li style="margin-bottom:6px">V3, 19 Oct: commerce <b>1 → 3 tasks</b> in about four minutes, no manual scaling; at 3 tasks ≈ 455 req/s, server p95 13–50 ms, 2 errors in 570,445</li>
+  <li style="margin-bottom:6px">Not V3 acceptance: the workstation generator dropped iterations, so the analyzer rejects the run</li>
   <li style="margin-bottom:6px">V4 queue drain: <span class="mk mk-fill">[FILL: backlog peak, notification tasks, drain time (19 Oct)]</span></li></ul></div>
  <div class="card" style="flex:1;padding:14px 16px;display:flex;flex-direction:column">
  <div style="font:600 13px Inter;letter-spacing:.04em;color:#3E5CD9">SWE5001 V2 · ECS, 16 OCT</div>
@@ -2098,7 +2099,7 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
 <tr><td style="padding:4px 8px">Browse (list + detail)</td><td style="padding:4px 8px">24 ms</td><td style="padding:4px 8px">0</td></tr><tr><td style="padding:4px 8px">JOIN, one hot team</td><td style="padding:4px 8px">57 ms</td><td style="padding:4px 8px">0</td></tr><tr><td style="padding:4px 8px">My Orders</td><td style="padding:4px 8px">18 ms</td><td style="padding:4px 8px">0</td></tr></table><div style="font:400 15px/1.35 Inter;margin-top:8px">30 paid teams expired within 58 s of their deadlines under that load. One laptop with real HTTP, PostgreSQL and Redis; <b>not a deployed result</b>.</div></div>
 </div>
 <div style="margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter"><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out is shown on SWE5001 prod.</div>
-<div style="margin-top:8px;font:italic 400 14.5px/1.35 Inter;color:var(--muted)">Sources: docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md (V2, scaling policy); docs/perf/sprint3-baseline.md (local workload).</div></div>
+<div style="margin-top:8px;font:italic 400 14.5px/1.35 Inter;color:var(--muted)">Sources: docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md (V2, scaling policy); docs/swe5001/evidence/20261019-v3-autoscaling/README.md (V3); docs/perf/sprint3-baseline.md (local workload).</div></div>
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5006</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B16</div></div>
 </section>
 </div>
