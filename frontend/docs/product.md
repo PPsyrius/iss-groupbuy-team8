@@ -57,6 +57,7 @@ Maintain clear information hierarchy, keyboard-accessible interactions, readable
 ## Product Context
 
 - Name: BlocBuy
+- In-repo brand assets (CR-7, 2026-10-19): `frontend/src/assets/brand/blocbuy-logo.svg`, `blocbuy-isologo.svg` and `blocbuy-isologo-dark.svg`, used through `frontend/src/components/BrandMark.tsx`. The PNG URLs below are the original HeroUI Pro hand-off, kept as the historical source.
 - Logo: https://api.heroui.pro/api/theme-assets/2a854899-bdc6-4dda-bfbe-550e9c176696/c2a9e43b-ed1b-4771-89e2-c01323ada009.png
 - Mark: https://api.heroui.pro/api/theme-assets/2a854899-bdc6-4dda-bfbe-550e9c176696/66f6fcb5-e066-4840-a6e2-8f0548fbfb1f.png
 - blocbuy-logo.png: https://api.heroui.pro/api/theme-assets/2a854899-bdc6-4dda-bfbe-550e9c176696/6c22f125-a7a4-4fc4-9b49-c3e08691b018.png
