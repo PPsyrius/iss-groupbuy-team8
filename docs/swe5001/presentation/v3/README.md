@@ -7,6 +7,8 @@ Team 8's deck and speaker script for the SWE5001 final presentation on Wednesday
 | `swe5001-presentation-v3.html` | The deck to present: 24 main slides and 17 backups (BX, B1a–B15), self-contained. Open it in Chrome or Edge. Keys: → / Space next, ← back, S speaker notes with a pace timer, B or X backup index, O overview, F fullscreen, `.` blank screen. |
 | `swe5001-presentation-v3.pdf` | The same deck as a 41-page PDF, typeset with Typst. A static fallback if the HTML cannot be shared, and the readable copy on GitHub. |
 | `swe5001-presentation-script-v3.pdf` | Speaker script and demo run book: run sheet, one card per slide with wording and timing, the demo steps, contingencies, timeline, open items, operator commands and the backup list. |
+| `speaker-script-eric.md` | Eric's segment 3 (slides 7–11) and demo (slide 23, steps 1–4) reworded for speaking: same facts, terms and slots, with transitions, callbacks and cues. Corrects two run-book lines (see "Corrections" below). |
+| `qa-eric.md` | Eric's Q&A prep for segment 3 and the demo: 26 likely questions with 30–45 s answers, the backup slide to open and the source of each answer. |
 
 ## State of the content (19 October)
 
@@ -21,3 +23,12 @@ Team 8's deck and speaker script for the SWE5001 final presentation on Wednesday
 The files come from a build outside this repository: one content file (wording, timings, cues and the results block), shared slide renderers that emit both the HTML and the Typst slides, and a Typst script that reads data exported by the HTML build. The UML diagrams are the ones in `docs/presentation-kit/diagrams/`. The generator in `../src/` is a separate, earlier source and does not reproduce these files.
 
 Commit a changed version only when the content changes (after the 20 October rehearsal, and once after the talk if anything is corrected). The PDFs and the HTML are binary for Git, so every commit adds about 3.5 MB to the history.
+
+## Corrections found while preparing the spoken script (19 October)
+
+These are in the built PDF and HTML, which are generated outside this repository, so the owners need to apply them at the next rebuild:
+
+- **Demo step 4 and slide 23** say the three failure drills were tested locally. The 15 October local rehearsal ([evidence](../../evidence/20261015-local-failure-rehearsal/README.md)) covered the identity outage and the poison message only; stopping a server (V5) is "not run on AWS" with no local result (slide 5, B12).
+- **Slide 8** ends with "We'll show you that live", **slide 17** says "You'll see the dead-letter queue in the demo", and the identity-outage answer says "We show this live". Those drills were cut from the live demo on 19 October.
+- **Demo step 3** says today's environment "was built from exactly these images". The environment was started by [run 39198123242](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39198123242) on `prod` at `5e83d63`; check that it matches the promotion in #534 before saying it.
+- **Demo step 1** expects at least one notification for the demo buyer. Checkout is off on the SWE5001 session (`BLOCBUY_STRIPE_CHECKOUT_ENABLED = "false"` in `infra/swe5001/runtime/services.tf`), so a purchase cannot create one; it has to be seeded, or the step skips the notifications view.
