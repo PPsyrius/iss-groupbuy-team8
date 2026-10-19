@@ -1,12 +1,12 @@
 # Demo product images on the SWE5001 session — 2026-10-19
 
-Observed while recording the demo fallback clips on the running SWE5001 distributed session. Every product image on the storefront fails to load. Demo step 1 opens on this page.
+Refs #557. Observed while recording the demo fallback clips on the running SWE5001 distributed session. Every product image on the storefront fails to load. Demo step 1 opens on this page.
 
 | Item | Observed value |
 | --- | --- |
 | Public target | `https://d3lvq02o2e7tcn.cloudfront.net` |
 | Environment | [environment run 39198123242](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39198123242) on `prod` at `5e83d63` |
-| Captured | 2026-10-19 17:20 SGT, headless Chromium at 1920x1080, signed out |
+| Captured | 2026-10-19 17:18 SGT, headless Chromium at 1920x1080, signed out |
 | Storefront images | 10 `<img>`, 10 broken, all on `cdn.example.com` |
 | SWE5006 dev storefront, same check | 15 `<img>`, 0 broken, 14 on the dev media CloudFront host |
 | `cdn.example.com/demo/p1-cover.jpg` | no connection from the capture workstation (curl status `000`) |
