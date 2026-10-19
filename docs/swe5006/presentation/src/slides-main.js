@@ -450,12 +450,136 @@ const s14 = () => `
 </div>
 <div style="position:absolute;left:0;right:0;top:502px;font:italic 400 15.5px/1.35 Inter;color:#6B655C"><b style="font-style:normal">Limits:</b> test-first only for selected changes · no automated mutation testing (hand probes only) · load tests by hand, not in CI · CodeQL wired but off (ENABLE_CODEQL=false) · contract, e2e and Trivy run on PRs but are not required</div>`;
 
+// ---------- segment 4 helpers (CI/CD; p* names) ----------
+const pChip = (t, k = 'n') => { const [b, bg, fg] = dTone[k]; return `<span style="display:inline-block;font:600 15px/1 Inter;color:${fg};background:${bg};border:1.4px solid ${b};border-radius:999px;padding:5px 11px;white-space:nowrap">${t}</span>`; };
+const pRule = t => `<div style="display:flex;gap:9px;align-items:flex-start;font:400 17px/1.3 Inter;margin-bottom:11px"><span style="color:var(--green);font-size:17px;flex:none;margin-top:1px">${icon('circle-check')}</span><span>${t}</span></div>`;
+const pArt = (ic, head, body) => `<div style="display:flex;gap:14px;padding:10px 0;border-top:1px solid #EFE9DF">
+  <div style="width:42px;height:42px;flex:none;border-radius:50%;background:#E3E8FB;border:1.4px solid #3E5CD9;color:#3E5CD9;font-size:18px;display:flex;align-items:center;justify-content:center">${icon(ic)}</div>
+  <div><div style="font:700 17px/1.3 Inter">${head}</div><div style="font:400 15.5px/1.35 Inter;margin-top:2px">${body}</div></div></div>`;
+
+// ---------- slide 15 ----------
+const pBranch = () => `<svg width="610" height="172" viewBox="0 0 610 172" font-family="Inter, Helvetica, Arial, sans-serif">
+ <defs><marker id="s15a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3E5CD9"/></marker>
+ <marker id="s15g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6B655C"/></marker>
+ <marker id="s15r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8402A"/></marker></defs>
+ <text x="0" y="18" font-size="15" fill="#6B655C">feature/*, fix/*, docs/* · one pull request each</text>
+ ${[110, 230, 350, 470].map(x => `<path d="M${x - 40},30 Q${x - 6},34 ${x},62" fill="none" stroke="#6B655C" stroke-width="1.6" marker-end="url(#s15g)"/>`).join('')}
+ <text x="0" y="74" font-size="20" font-weight="700" fill="#3E5CD9">dev</text>
+ <line x1="46" y1="68" x2="596" y2="68" stroke="#3E5CD9" stroke-width="4" marker-end="url(#s15a)"/>
+ ${[[150, 'sprint1'], [320, 'sprint2'], [490, 'sprint3']].map(([x, t]) => `<circle cx="${x}" cy="68" r="6" fill="#fff" stroke="#3E5CD9" stroke-width="2"/><text x="${x}" y="96" text-anchor="middle" font-size="14.5" font-family="JetBrains Mono, monospace" fill="#1B1A18">v0.1.0-${t}</text>`).join('')}
+ <text x="0" y="146" font-size="20" font-weight="700" fill="#B02E1B">prod</text>
+ <line x1="56" y1="140" x2="596" y2="140" stroke="#E8402A" stroke-width="2" stroke-dasharray="7 5"/>
+ ${[420, 570].map(x => `<line x1="${x}" y1="73" x2="${x}" y2="132" stroke="#E8402A" stroke-width="1.8" marker-end="url(#s15r)"/>`).join('')}
+ <text x="56" y="166" font-size="15" fill="#B02E1B">SWE5001 only: changed by a promotion PR from dev</text>
+</svg>`;
+const s15 = () => `
+<div class="card" style="position:absolute;left:0;top:0;width:650px;height:548px;padding:14px 20px">
+ <div style="display:flex;align-items:baseline;justify-content:space-between"><div class="serif" style="font-size:21px">Source: one trunk, squash only</div>${dTag('ruleset dev-require-review')}</div>
+ <div style="margin-top:8px">${pBranch()}</div>
+ <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 18px;margin-top:14px">
+  <div>${pRule('Squash merge only: linear history')}${pRule('1 approval by a code owner; stale approvals dismissed')}${pRule('Review threads resolved')}</div>
+  <div>${pRule('6 required checks, branch up to date')}${pRule('No force push, no branch deletion')}${pRule('Conventional Commits; PR template asks for evidence')}</div>
+ </div>
+ <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px"><span style="font:700 15px Inter;margin-right:2px">CODEOWNERS</span>${pChip('.github/ → Pan', 'n')}${pChip('backend/ → Liu Jin', 'biz')}${pChip('frontend/ → Lim', 'plat')}</div>
+ <div style="margin-top:16px">${dNote('robot', '<b>Dependabot</b>: Maven, npm, Docker, Actions · daily, 7-day cooldown · 70 PRs merged', '#6B655C')}</div>
+</div>
+<div class="card" style="position:absolute;left:666px;top:0;width:498px;height:548px;padding:14px 20px">
+ <div class="serif" style="font-size:21px;margin-bottom:6px">Artefacts</div>
+ ${pArt('cubes', 'Backend image in ECR <span class="mono" style="font-size:15px">dev/blocbuy</span>', 'Immutable tags, scanned on push, newest 30 kept; deployed as <span class="mono" style="font-size:14.5px">repo@sha256:…</span>, never by tag')}
+ ${pArt('window-maximize', 'Frontend <span class="mono" style="font-size:15px">dist/</span>', 'One static build, no per-environment settings (ADR 0004); hashed assets immutable, <span class="mono" style="font-size:14.5px">index.html</span> no-cache')}
+ ${pArt('file-code', 'API contract', '<span class="mono" style="font-size:14.5px">contracts/openapi.json</span> regenerated from code; drift fails CI; the client is generated, not committed (ADR 0003)')}
+ ${pArt('tag', 'Release tags', '<span class="mono" style="font-size:14.5px">v0.1.0-sprint1…3</span>; a tag runs the full gate chain')}
+ <div style="margin-top:8px;border-radius:8px;background:#EFE9DF;padding:8px 12px;font:400 15px/1.35 Inter">After merge, the jar, image and <span class="mono" style="font-size:14.5px">dist/</span> are rebuilt from the merged commit, then deployed (slide 16)</div>
+</div>`;
+
+// ---------- slide 16 ----------
+const s16 = () => `<div class="dia" style="margin-top:-12px">${svg('cicd-pipeline')}</div>`;
+
+// ---------- slide 17 ----------
+const pCtl = [
+  ['gitleaks', 'secrets in commits', 'PR + dev push', 'req'],
+  ['SonarCloud', 'bugs, hotspots, coverage', 'PR + dev', 'req'],
+  ['SpotBugs, ArchUnit', 'Java bugs, layering', 'every PR', 'req'],
+  ['Trivy image', 'fixable HIGH/CRITICAL', 'PR; ECR on push', 'req'],
+  ['Trivy deps, config', 'Maven, pnpm, IaC', 'on change, weekly', 'opt'],
+  ['actionlint, ShellCheck', 'workflows, scripts', 'on change', 'opt'],
+  ['Pinned actions', 'all 28 on commit SHAs', 'Dependabot daily', 'none'],
+];
+const pGate = k => ({ req: pChip('required', 'plat'), opt: '<span style="color:#6B655C">fails run</span>', none: '<span style="color:#6B655C">review</span>' })[k];
+const pRole = (name, trust, scope) => `<div style="padding:7px 0;border-top:1px solid #EFE9DF"><div>${cn(name, 15)}</div><div style="font:400 15.5px/1.3 Inter;margin-top:2px"><b>trust:</b> ${trust} · ${scope}</div></div>`;
+const s17 = () => `
+<div class="card" style="position:absolute;left:0;top:0;width:700px;height:490px;padding:12px 18px">
+ <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px"><div class="serif" style="font-size:21px">Shift-left controls</div>${dTag('security.yml · ci-backend.yml')}</div>
+ <table class="t" style="font-size:16px;table-layout:fixed;width:100%"><tr><th style="font-size:15px;padding:6px 10px;width:186px">Control</th><th style="font-size:15px;padding:6px 10px">Catches</th><th style="font-size:15px;padding:6px 10px;width:156px">Runs</th><th style="font-size:15px;padding:6px 10px;width:104px">Gate</th></tr>
+ ${pCtl.map(([c, w, r, g]) => `<tr><td style="padding:10px 10px;font-weight:600">${c}</td><td style="padding:10px 10px">${w}</td><td style="padding:10px 10px">${r}</td><td style="padding:10px 10px">${pGate(g)}</td></tr>`).join('')}</table>
+ <div style="font:400 15px/1.35 Inter;color:#6B655C;margin-top:8px">Trivy writes SARIF reports; path-filtered scans also run on tags and every Monday</div>
+</div>
+<div class="card" style="position:absolute;left:716px;top:0;width:448px;height:262px;padding:12px 18px">
+ <div style="display:flex;align-items:baseline;justify-content:space-between"><div class="serif" style="font-size:21px">No AWS keys in GitHub</div>${dTag('OIDC')}</div>
+ <div style="margin-top:6px">
+ ${pRole('BlocBuyGitHubEcrPush', 'dev branch', 'push to dev/blocbuy')}
+ ${pRole('BlocBuyGitHubBackendDeploy', 'backend-dev env', 'one SSM document, one instance')}
+ ${pRole('BlocBuyGitHubFrontendDeployDev', 'frontend-dev env', 'one bucket, one distribution')}
+ </div>
+</div>
+<div class="card" style="position:absolute;left:716px;top:276px;width:448px;height:214px;padding:12px 18px">
+ <div class="serif" style="font-size:21px;margin-bottom:8px">Runtime and account</div>
+ ${dNote('box', 'Container: read-only root, <span class="mono" style="font-size:14.5px">cap_drop: ALL</span>, no-new-privileges', '#3E5CD9')}
+ <div style="height:8px"></div>${dNote('key', 'App secrets only in a root-only file on the host (0600)', '#3E5CD9')}
+ <div style="height:8px"></div>${dNote('building', 'AWS Organization SCPs pin the region and cap costs; Identity Center, 1-hour sessions', '#3E5CD9')}
+</div>
+<div style="position:absolute;left:0;right:0;top:504px;font:italic 400 15.5px/1.35 Inter;color:#6B655C"><b style="font-style:normal">Not yet:</b> CodeQL wired but off (ENABLE_CODEQL=false) · CloudFront → ALB hop is HTTP (NFR-37, #227) · dev EBS volume not encrypted · dev secrets in a host env file · full list B14</div>`;
+
+// ---------- slide 18 ----------
+const s18 = () => `<div class="dia" style="margin-top:-12px">${svg('dev-deployment')}</div>`;
+
+// ---------- slide 19 ----------
+const pFind = (ic, tone, scope, head, what, fix, open, src) => {
+  const [b, bg, fg] = dTone[tone];
+  return `<div class="card" style="height:266px;padding:12px 18px;display:flex;flex-direction:column">
+  <div style="display:flex;gap:12px;align-items:center"><div style="width:42px;height:42px;flex:none;border-radius:50%;background:${bg};border:1.4px solid ${b};color:${fg};font-size:18px;display:flex;align-items:center;justify-content:center">${icon(ic)}</div>
+   <div><div style="font:700 14.5px Inter;letter-spacing:.05em;text-transform:uppercase;color:${fg}">${scope}</div><div style="font:700 18px/1.25 Inter">${head}</div></div></div>
+  <div style="font:400 17.5px/1.4 Inter;margin-top:10px">${what}</div>
+  <div style="margin-top:auto;border-radius:8px;background:${open ? '#FDEFEC' : '#E3E8FB'};padding:8px 12px;font:500 16px/1.35 Inter"><b style="color:${open ? '#B02E1B' : '#3E5CD9'}">${open === true ? 'Open' : open || 'Fix'}:</b> ${fix}</div>
+  <div style="font:400 14.5px Inter;color:#6B655C;margin-top:6px">${src}</div></div>`;
+};
+const s19 = () => `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+ ${pFind('credit-card', 'biz', 'dev · pipeline green, feature not', 'Payments never confirm on dev', 'Stripe Checkout opens and returns, but the webhook never moves the payment out of “waiting”. Deploys and health checks stay green.', 'find the endpoint, secret or event mismatch; go/no-go for the payment demo on 23 Oct', true, '#517, #223 · 16 Oct · Yorik')}
+ ${pFind('server', 'ev', 'dev · single host', 'A deploy answered 502', 'The e2e-dev smoke hit the API while the only backend container was being replaced.', 'dev deploys are not zero-downtime: one host, container replaced in place', 'Accepted', 'runs 37102432667, 37182996807 · 3–4 Oct')}
+ ${pFind('building-shield', 'plat', 'dev · operations', 'Guardrails also block operators', 'Organisation SCPs denied Access Analyzer and bucket-list views; scoped deploys still worked.', 'IAM changes through the CLI; four SCPs consolidated into three (#530)', false, 'day log 23 Sep · log observability guide · 16 Oct')}
+ ${pFind('cloud', 'n', 'SWE5001 · real cloud ≠ mocks', 'Tests passed, the real run failed', 'Terraform tests on mocks passed, then AWS refused a tag permission; a read-only root on Fargate left Tomcat no writable /tmp.', 'scoped TagResource grant (#527); <span class="mono" style="font-size:14.5px">VOLUME /tmp</span> in both Dockerfiles', false, 'PR #527 · 16 Oct · day log 6 Oct')}
+</div>`;
+
+// ---------- slide 20 ----------
+const pStep = (n, ic, t, s) => `<div style="flex:1;border-radius:8px;background:#fff;border:1px solid #DDD5C8;padding:16px 12px;text-align:center">
+  <div style="width:44px;height:44px;margin:0 auto;border-radius:50%;background:#E3E8FB;border:1.4px solid #3E5CD9;color:#3E5CD9;font-size:19px;display:flex;align-items:center;justify-content:center">${icon(ic)}</div>
+  <div style="font:700 17px/1.25 Inter;margin-top:8px">${n}. ${t}</div><div style="font:400 15px/1.3 Inter;color:#6B655C;margin-top:3px">${s}</div></div>`;
+const pBig = (big, unit, sub, tone = '#3E5CD9', bg = '#E3E8FB') => `<div style="flex:1;border-radius:8px;background:${bg};padding:16px 20px"><div><span class="serif" style="font-size:52px;color:${tone};white-space:nowrap">${big}</span> <span style="font:700 18px Inter">${unit}</span></div><div style="font:400 16px/1.35 Inter;margin-top:4px">${sub}</div></div>`;
+const s20 = () => `
+<div style="display:flex;gap:6px;align-items:stretch">
+ ${pStep(1, 'code-pull-request', 'Open PR', 'a small frontend change')}${dArr()}
+ ${pStep(2, 'list-check', 'Checks', 'required checks, e2e-preview')}${dArr()}
+ ${pStep(3, 'user-check', 'Approve', 'code owner')}${dArr()}
+ ${pStep(4, 'code-merge', 'Squash merge', 'into dev')}${dArr()}
+ ${pStep(5, 'cloud-arrow-up', 'Deliver', 'S3, CloudFront, smoke test')}${dArr()}
+ ${pStep(6, 'eye', 'See it', 'on the dev site')}
+</div>
+<div style="display:flex;gap:14px;margin-top:30px">
+ ${pBig('≈ 5', 'min', 'frontend PR checks (median 4.8 min, 19 runs, 16–19 Oct)')}
+ ${pBig('≈ 2.7', 'min', 'merge → live and smoke-tested (median, 94 runs)')}
+ ${pBig('≈ 3.1', 'min', 'backend merge → deployed (median, 88 runs); shown recorded', '#1B1A18', '#ECE6DC')}
+</div>
+<div style="display:flex;gap:14px;margin-top:30px">
+ <div style="flex:1;border-radius:8px;background:#FDEFEC;padding:16px 20px"><div style="font:700 19px Inter;color:#B02E1B">${icon('video')} Recorded fallback ready</div><div style="font:400 16px/1.35 Inter;margin-top:4px">If GitHub or AWS is slow, we switch to the recording (item 4e) ${mk('FILL', 'link, recorded by 25 Oct')}</div></div>
+ <div style="flex:1;border-radius:8px;background:#fff;border:1px solid #DDD5C8;padding:14px 20px"><div style="font:700 19px Inter">Watch for</div><div style="font:400 16px/1.35 Inter;margin-top:4px">the required checks turning green, the merge, then the new version on <span class="mono" style="font-size:15px">d1b3np88z657cp.cloudfront.net</span> ${mk('CONFIRM', 'the demo change')}</div></div>
+</div>`;
+
 // ---------- slide 22 ----------
 const s22 = () => `
 <div style="position:absolute;left:76px;top:96px;font:700 120px/1 Inter;color:#fff">Thank you</div>
 <div style="position:absolute;left:80px;top:236px;font:500 32px Inter;color:#fff">Questions?</div>
 <div style="position:absolute;left:80px;top:604px;font:400 17px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:10px;align-items:center"><span style="font-size:20px">${icon('github')}</span> github.com/PPsyrius/iss-groupbuy-team8</div>`;
 
-const S = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s12, 13: s13, 14: s14, 22: s22 };
+const S = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s12, 13: s13, 14: s14, 15: s15, 16: s16, 17: s17, 18: s18, 19: s19, 20: s20, 22: s22 };
 for (let n = 2; n <= 21; n++) if (!S[n]) S[n] = todo(n);
 module.exports = S;

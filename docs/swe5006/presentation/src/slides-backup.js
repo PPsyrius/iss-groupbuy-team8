@@ -141,6 +141,30 @@ const b10 = () => dt(['Kind', 'Tools', 'Count by module', 'Example classes', 'Ru
   ['<b>Performance</b>', 'Node workload; k6 (SWE5001)', '3 scenarios; 5 k6 tooling test files', `${mo('backend/perf/workload.mjs')}, ${mo('perf/k6/')}`, 'by hand (tooling tested in CI)'],
 ], { fs: 14.5, w: [112, 190, 300, 330], pad: '5px 10px' }) + `<div style="margin-top:8px;font:400 15px/1.35 Inter">Counted 19 Oct at 8bcb38dd: 183 <span class="mono" style="font-size:14.5px">*Test.java</span> (182 + ArchitectureTest), 49 <span class="mono" style="font-size:14.5px">*IT.java</span> (45 start containers). Last full runs: backend 1,931 (16 Oct log), frontend 799 (19 Oct log).</div>`;
 
+// ---- B12–B14: segment 4, CI/CD. gh read-only queries of 19 Oct; medians of successful runs ----
+const req = '<b style="color:#3E5CD9">required</b>';
+const b12 = () => dt(['Workflow · trigger', 'Jobs (required in blue)', 'Median', 'Green'], [
+  ['<b>ci-backend</b> · PR', `${req}: build-quality (13.1 min), docker (2.8 min), SonarCloud Backend; contract-check (12 s)`, '16.1 min to docker end (18 runs, 16–19 Oct)', '18 of 20 finished runs; 16 cancelled by a newer push'],
+  ['<b>ci-backend</b> · push to dev', 'package-dev 46 s → publish-ecr-dev 73 s → deploy-existing-ec2 40 s; SonarCloud Backend refreshes the dashboard', '3.1 min to deployed (88 runs)', 'deploy 88 of 97; all 9 failures 14–17 Sep (SSM: instance not in a valid state)'],
+  ['<b>ci-frontend</b> · PR', `${req}: frontend-check (3.4 min), SonarCloud Frontend; e2e-preview (69 s), intent-stale`, '4.8 min to e2e-preview end (19 runs)', '19 of 20 finished runs'],
+  ['<b>ci-frontend</b> · push to dev', 'package-dev 35 s → deploy-s3-dev 21 s → e2e-dev 82 s; SonarCloud Frontend', '2.7 min to e2e-dev green (94 runs)', 'deploy 97 of 97; e2e-dev 94 of 97 (3–4 Oct)'],
+  ['<b>security</b> · PR, dev, weekly', `${req}: gitleaks (10 s); trivy-deps (72 s), trivy-config, workflow-lint, deployment-bundle when their paths change`, '12 s on most PRs', 'PR 97 of 98 finished; dev push 100 of 100'],
+  ['<b>rollback-backend</b> · manual', 'validate, then SSM rollback to the recorded previous digest or a given one', '—', 'never run'],
+  ['<b>SWE5001</b> · prod branch', 'swe5001-release-gate, swe5001-deploy, infra-swe5001 (promotion PR; see the SWE5001 deck)', '—', '—'],
+], { fs: 15, w: [190, 470, 220], pad: '6px 10px' }) + `<div style="margin-top:8px;font:400 15px/1.4 Inter">Last 100 runs per workflow and event, read with <span class="mono" style="font-size:14.5px">gh run list</span> and the jobs API on 19 Oct. PR durations count only runs where the gated jobs ran (docs-only PRs skip them in about 10 s). Push medians run from the push run start, not the merge click.</div>`;
+const b13 = () => `<div class="dia" style="margin-top:-8px">${fit('physical-deployment', 1130)}</div>${topo('SWE5001 prod: the same code on ECS, rebuilt from scratch on every release and destroyed after it. SWE5006 dev is slide 18.')}`;
+const b14 = () => dt(['Gap', 'Effect', 'Status'], [
+  ['CodeQL off', 'no CodeQL SAST; SonarCloud and SpotBugs remain', 'ENABLE_CODEQL=false; code scanning not enabled on the repository'],
+  ['CloudFront → ALB over HTTP', '/api payloads and the origin header cross the AWS network unencrypted', 'NFR-37 unmet, #227 open; needs an origin hostname and ACM'],
+  ['Dev EBS volume not encrypted', 'database and host data at rest unencrypted', 'AWS read-only check, 19 Oct; not raised as an issue yet'],
+  ['Rollback never exercised', 'recovery path untested on the real host', 'rollback-backend.yml: 0 runs; no automatic rollback has fired'],
+  ['No dev alarms', 'failures are noticed by e2e-dev or by people', 'all six CloudWatch alarms belong to SWE5001'],
+  ['Dev not zero-downtime', 'a deploy restarts the only API container (502 on 3–4 Oct)', 'accepted for dev'],
+  ['Secrets in a host file', 'manual creation and rotation, root-only 0600', 'accepted for dev; prod uses Parameter Store'],
+  ['Rebuilt after merge', 'the deployed image and dist/ are not the PR-scanned artefacts; Trivy not re-run', 'strict up-to-date checks; ECR scans on push; ADR 0004 text to reconcile'],
+  ['Gitleaks scans selected commits', '24 historical matches still to decide', 'docs/quality/quality-gates.md, 14 Oct'],
+], { fs: 15, w: [250, 450], pad: '6px 10px' });
+
 // Backup slides follow the last main slide; press B in the deck for the index (BX). Rows link with data-go.
 // Each segment adds its backups to BACKUPS (content.js) and a matching entry below, in index order.
 function list() {
@@ -162,6 +186,9 @@ function list() {
   B.push({ id: 'B9', title: 'Logical view (ECS topology)', speaker: 'Eric', body: b9() });
   B.push({ id: 'B10', title: 'Test inventory', speaker: 'Liu Jin', body: b10() });
   B.push({ id: 'B11', title: 'Sprint 2 and 3 burndowns', speaker: 'Lim', body: b11() });
+  B.push({ id: 'B12', title: 'Workflows, required checks and timings', speaker: 'Pan', body: b12() });
+  B.push({ id: 'B13', title: 'Production topology (SWE5001)', speaker: 'Pan', body: b13() });
+  B.push({ id: 'B14', title: 'Known gaps and limitations', speaker: 'Pan', body: b14() });
   return B;
 }
 
