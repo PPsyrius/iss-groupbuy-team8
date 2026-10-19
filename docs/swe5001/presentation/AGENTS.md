@@ -2,6 +2,8 @@
 
 Team 8's BlocBuy presentation for SWE5001 (Graduate Certificate in Architecting Scalable Systems), tracked in issue #461. The build pipeline, styles and shared diagrams live in [`docs/presentation-kit/`](../../presentation-kit/AGENTS.md); read that file first for commands, file shapes and design rules. This file holds what is specific to this deck. All committed text is English.
 
+> **Superseded for presenting (19 October):** present from [`v3/`](v3/README.md), which carries the 19 October results, the three-step demo and the agreed effort split. `dist/` below predates those results and still shows "FILL 19 Oct" markers; `src/` does not build the `v3/` files. Do not present from `dist/`.
+
 ## Facts
 
 | | |

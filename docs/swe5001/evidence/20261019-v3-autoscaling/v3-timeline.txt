@@ -1,0 +1,4 @@
+floor lowered: 2026-10-19T07:43:42Z
+k6 start: 2026-10-19T07:44:43Z
+k6 end: 2026-10-19T08:14:44Z (exit 99: thresholds browse_latency, dropped_iterations crossed)
+floor restored: 2026-10-19T08:20:03Z
