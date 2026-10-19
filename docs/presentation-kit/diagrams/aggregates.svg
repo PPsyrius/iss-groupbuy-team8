@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="680" viewBox="0 0 540 680" font-family="Inter, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="agswFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#FBDFD9"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="540" height="680" fill="#FFFFFF"/>
+
+  <!-- ===== stm GroupDeal ===== -->
+  <rect x="10" y="10" width="520" height="440" fill="none" stroke="#6B655C" stroke-width="1"/>
+  <polygon points="10,10 142,10 142,24 132,34 10,34" fill="#FFFFFF" stroke="#6B655C" stroke-width="1"/>
+  <text x="18" y="27" font-size="15" font-weight="bold" fill="#1B1A18">stm GroupDeal</text>
+
+  <!-- initial -> OPEN -->
+  <circle cx="50" cy="64" r="9" fill="#1B1A18"/>
+  <line x1="50" y1="73" x2="50" y2="140" stroke="#1B1A18" stroke-width="1.4"/>
+  <polyline points="43,128 50,140 57,128" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text x="62" y="104" font-size="15" fill="#1B1A18">leader's</text>
+  <text x="62" y="121" font-size="15" fill="#1B1A18">PaymentSucceeded</text>
+
+  <!-- OPEN -->
+  <rect x="24" y="140" width="130" height="120" rx="12" ry="12" fill="url(#agswFill)" stroke="#E8402A" stroke-width="1.5"/>
+  <text x="89" y="206" text-anchor="middle" font-size="17" font-weight="bold" fill="#1B1A18">OPEN</text>
+
+  <!-- self-loop: member joins -->
+  <polyline points="50,260 50,294 112,294 112,260" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <polyline points="105,272 112,260 119,272" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text x="24" y="316" font-size="15" fill="#1B1A18">paid join [seats left]</text>
+  <text x="24" y="334" font-size="15" fill="#1B1A18">/ MemberJoined</text>
+
+  <!-- OPEN -> SUCCEEDED -->
+  <polyline points="154,160 196,160 196,80 340,80" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <polyline points="328,73 340,80 328,87" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text x="206" y="52" font-size="15" fill="#1B1A18">paid join [last seat]</text>
+  <text x="206" y="70" font-size="15" fill="#1B1A18">/ TeamSucceeded</text>
+
+  <!-- OPEN -> EXPIRED -->
+  <line x1="154" y1="200" x2="340" y2="200" stroke="#1B1A18" stroke-width="1.4"/>
+  <polyline points="328,193 340,200 328,207" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text x="206" y="172" font-size="15" fill="#1B1A18">after expireTime</text>
+  <text x="206" y="190" font-size="15" fill="#1B1A18">/ TeamExpired</text>
+
+  <!-- OPEN -> FAILED / CANCELED: allowed by the enum, no trigger in code -->
+  <polyline points="154,240 196,240 196,395 340,395" fill="none" stroke="#6B655C" stroke-width="1.4" stroke-dasharray="6 4"/>
+  <line x1="196" y1="315" x2="340" y2="315" stroke="#6B655C" stroke-width="1.4" stroke-dasharray="6 4"/>
+  <polyline points="328,308 340,315 328,322" fill="none" stroke="#6B655C" stroke-width="1.4"/>
+  <polyline points="328,388 340,395 328,402" fill="none" stroke="#6B655C" stroke-width="1.4"/>
+  <path d="M208,326 L322,326 L334,338 L334,384 L208,384 Z" fill="#FFF6E2" stroke="#6B655C" stroke-width="1"/>
+  <path d="M322,326 L322,338 L334,338" fill="none" stroke="#6B655C" stroke-width="1"/>
+  <text x="218" y="345" font-size="14.5" fill="#1B1A18">allowed by the</text>
+  <text x="218" y="361" font-size="14.5" fill="#1B1A18">status matrix; no</text>
+  <text x="218" y="377" font-size="14.5" fill="#1B1A18">trigger in code</text>
+
+  <!-- terminal states -->
+  <rect x="340" y="55" width="130" height="50" rx="12" ry="12" fill="url(#agswFill)" stroke="#E8402A" stroke-width="1.5"/>
+  <text x="405" y="86" text-anchor="middle" font-size="17" font-weight="bold" fill="#1B1A18">SUCCEEDED</text>
+  <rect x="340" y="175" width="130" height="50" rx="12" ry="12" fill="url(#agswFill)" stroke="#E8402A" stroke-width="1.5"/>
+  <text x="405" y="206" text-anchor="middle" font-size="17" font-weight="bold" fill="#1B1A18">EXPIRED</text>
+  <rect x="340" y="290" width="130" height="50" rx="12" ry="12" fill="url(#agswFill)" stroke="#6B655C" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="405" y="321" text-anchor="middle" font-size="17" font-weight="bold" fill="#6B655C">FAILED</text>
+  <rect x="340" y="370" width="130" height="50" rx="12" ry="12" fill="url(#agswFill)" stroke="#6B655C" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="405" y="401" text-anchor="middle" font-size="17" font-weight="bold" fill="#6B655C">CANCELED</text>
+
+  <!-- final states -->
+  <line x1="470" y1="80" x2="490" y2="80" stroke="#1B1A18" stroke-width="1.4"/>
+  <circle cx="502" cy="80" r="10" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+  <circle cx="502" cy="80" r="6" fill="#1B1A18"/>
+  <line x1="470" y1="200" x2="490" y2="200" stroke="#1B1A18" stroke-width="1.4"/>
+  <circle cx="502" cy="200" r="10" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+  <circle cx="502" cy="200" r="6" fill="#1B1A18"/>
+  <line x1="470" y1="315" x2="490" y2="315" stroke="#6B655C" stroke-width="1.4"/>
+  <circle cx="502" cy="315" r="10" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.4"/>
+  <circle cx="502" cy="315" r="6" fill="#6B655C"/>
+  <line x1="470" y1="395" x2="490" y2="395" stroke="#6B655C" stroke-width="1.4"/>
+  <circle cx="502" cy="395" r="10" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.4"/>
+  <circle cx="502" cy="395" r="6" fill="#6B655C"/>
+
+  <!-- ===== stm Order ===== -->
+  <rect x="10" y="462" width="520" height="208" fill="none" stroke="#6B655C" stroke-width="1"/>
+  <polygon points="10,462 104,462 104,476 94,486 10,486" fill="#FFFFFF" stroke="#6B655C" stroke-width="1"/>
+  <text x="18" y="479" font-size="15" font-weight="bold" fill="#1B1A18">stm Order</text>
+
+  <!-- initial -> PENDING -->
+  <circle cx="265" cy="490" r="9" fill="#1B1A18"/>
+  <line x1="265" y1="499" x2="265" y2="528" stroke="#1B1A18" stroke-width="1.4"/>
+  <polyline points="258,516 265,528 272,516" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text x="277" y="514" font-size="15" fill="#1B1A18">PaymentSucceeded</text>
+
+  <!-- PENDING -->
+  <rect x="205" y="528" width="120" height="44" rx="12" ry="12" fill="url(#agswFill)" stroke="#E8402A" stroke-width="1.5"/>
+  <text x="265" y="556" text-anchor="middle" font-size="17" font-weight="bold" fill="#1B1A18">PENDING</text>
+
+  <!-- PENDING -> CONFIRMED -->
+  <polyline points="205,550 120,550 120,600" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <polyline points="113,588 120,600 127,588" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text x="132" y="590" font-size="15" fill="#1B1A18">TeamSucceeded</text>
+
+  <!-- PENDING -> CANCELLED -->
+  <polyline points="325,550 410,550 410,600" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <polyline points="403,588 410,600 417,588" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text x="398" y="590" text-anchor="end" font-size="15" fill="#1B1A18">TeamExpired</text>
+
+  <!-- CONFIRMED / CANCELLED + finals -->
+  <rect x="60" y="600" width="130" height="44" rx="12" ry="12" fill="url(#agswFill)" stroke="#E8402A" stroke-width="1.5"/>
+  <text x="125" y="628" text-anchor="middle" font-size="17" font-weight="bold" fill="#1B1A18">CONFIRMED</text>
+  <line x1="190" y1="622" x2="210" y2="622" stroke="#1B1A18" stroke-width="1.4"/>
+  <circle cx="222" cy="622" r="10" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+  <circle cx="222" cy="622" r="6" fill="#1B1A18"/>
+  <rect x="345" y="600" width="130" height="44" rx="12" ry="12" fill="url(#agswFill)" stroke="#E8402A" stroke-width="1.5"/>
+  <text x="410" y="628" text-anchor="middle" font-size="17" font-weight="bold" fill="#1B1A18">CANCELLED</text>
+  <line x1="475" y1="622" x2="490" y2="622" stroke="#1B1A18" stroke-width="1.4"/>
+  <circle cx="502" cy="622" r="10" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+  <circle cx="502" cy="622" r="6" fill="#1B1A18"/>
+</svg>
