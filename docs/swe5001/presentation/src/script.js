@@ -1,4 +1,4 @@
-// SWE5001 speaker script and demo run book: the chapters of dist/swe5001-presentation-script.html.
+// SWE5001 speaker script and demo run book: the chapters of dist/swe5001-presentation-script.pdf.
 // The kit (docs/presentation-kit/script/build.js) supplies the helpers, wraps this body and writes dist/.
 const { C, md, esc, markers, box, tbl, pre, reqBox, slideCard, qaTable, segment, cover, runSheet } = require('../../../presentation-kit/script/build').helpers();
 

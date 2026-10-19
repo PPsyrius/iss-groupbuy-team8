@@ -1,4 +1,4 @@
-// SWE5006 speaker script and demo run book: the chapters of dist/swe5006-presentation-script.html.
+// SWE5006 speaker script and demo run book: the chapters of dist/swe5006-presentation-script.pdf.
 // The kit (docs/presentation-kit/script/build.js) supplies the helpers, wraps this body and writes dist/.
 // SCAFFOLD: docs/swe5001/presentation/src/script.js is the full worked example (demo cards, contingencies, timeline, appendix).
 const { C, md, esc, markers, countM, box, tbl, segment, cover, runSheet } = require('../../../presentation-kit/script/build').helpers();

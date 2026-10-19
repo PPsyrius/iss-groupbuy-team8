@@ -11,7 +11,7 @@ Team 8's BlocBuy presentation for SWE5001 (Graduate Certificate in Architecting 
 | Lead | Lim Jiechao (#461); reviewer Liu Jin |
 | Owners | 1–2 Lim · 3 Wang Ziang (Eric) · 4a–4c Liu Jin, 4d Yu Qianshuo (Yorik) · 5 Panpakorn Siripanich (Pan) · 6 Eric and Yorik drive, Pan for the pipeline step |
 | Deck | 24 main slides, then backups BX (index) and B1–B15; the PDF has 41 pages |
-| Outputs | `dist/swe5001-presentation.{html,pdf}`, `dist/swe5001-presentation-script.{html,pdf}` (committed) |
+| Outputs | `dist/swe5001-presentation.{html,pdf}`, `dist/swe5001-presentation-script.pdf` (all committed; the script has no HTML output) |
 
 ## Where things are
 
@@ -24,7 +24,7 @@ Team 8's BlocBuy presentation for SWE5001 (Graduate Certificate in Architecting 
 ## Rules for this deck
 
 - Never present a local result as an AWS one. Anything not run on AWS says “not run on AWS; local result: …” (slide 5 and B12).
-- `{{FILL:…}}` renders as “FILL 19 Oct”: values that only exist after the 19 October evidence session. Every marker must be gone after the Tuesday 20 October rehearsal; `npm run build:script` prints the remaining counts.
+- `{{FILL:…}}` renders as “FILL 19 Oct”: values that only exist after the 19 October evidence session. Every marker must be gone after the Tuesday 20 October rehearsal; `npm --prefix docs/swe5001/presentation run script` prints the remaining counts.
 - Speaking time is estimated at 130 words a minute. Keep each segment inside its talk budget; the run sheet shows budget vs slots vs estimate, and each card's `trim` says what to cut.
 - After the talk, write every assessor remark into #461.
 

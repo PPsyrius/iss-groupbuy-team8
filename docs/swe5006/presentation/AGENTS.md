@@ -12,7 +12,7 @@ Team 8's BlocBuy final presentation and demo for SWE5006, tracked in issue #464.
 | Contributors | Each report section owner supplies the matching slides (use cases and design problems, architecture, DevSecOps); drafts in `docs/swe5006/report-drafts/` and #463 |
 | Deadlines | slides draft 23 Oct; fallback recording on the deployed `dev` environment by 25 Oct; timed rehearsal 25 Oct |
 | Demo storyline (#464) | invite → START/JOIN with Stripe Sandbox → `/account` orders and blocs → expiry refund, live on deployed `dev`, with a fallback recording |
-| Outputs | `dist/swe5006-presentation.{html,pdf}` (PDF for submission, HTML for presenting), `dist/swe5006-presentation-script.{html,pdf}` (committed) |
+| Outputs | `dist/swe5006-presentation.{html,pdf}` (PDF for submission, HTML for presenting), `dist/swe5006-presentation-script.pdf` (all committed; the script has no HTML output) |
 
 ## Current state: scaffold
 

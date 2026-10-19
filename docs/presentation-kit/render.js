@@ -1,4 +1,4 @@
-// Prints the built HTML with Playwright Chromium: deck PDF (1280x720 pages), script PDF (A4 with header/footer),
+// Prints with Playwright Chromium: deck PDF from the built HTML deck (1280x720 pages), script PDF from the in-memory script (A4 with header/footer),
 // and per-slide PNG screenshots with an overflow report (elements reaching into the slide's bottom/right margin).
 const path = require('path'), fs = require('fs');
 const { chromium } = require('playwright');
@@ -42,11 +42,13 @@ async function screenshots(filter) {
   await b.close();
 }
 
-async function scriptPdf() {
+// html: the script document from script/build.js; it is self-contained (fonts inlined), so no file is needed.
+async function scriptPdf(html) {
   const { dir, cfg } = deck();
   const b = await chromium.launch(); const p = await b.newPage();
-  await p.goto('file://' + path.join(dir, 'dist', cfg.outputs.script));
+  await p.setContent(html, { waitUntil: 'load' });
   await p.evaluate(() => document.fonts.ready);
+  fs.mkdirSync(path.join(dir, 'dist'), { recursive: true });
   await p.pdf({ path: path.join(dir, 'dist', cfg.outputs.scriptPdf), format: 'A4', printBackground: true,
     displayHeaderFooter: true, margin: { top: '20mm', bottom: '18mm', left: '17mm', right: '17mm' },
     headerTemplate: `<div style="font:8px Helvetica;color:#6B655C;width:100%;padding:0 17mm;display:flex;justify-content:space-between"><span>${cfg.scriptHeader.left}</span><span>${cfg.scriptHeader.right}</span></div>`,

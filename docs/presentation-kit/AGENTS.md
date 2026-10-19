@@ -1,13 +1,12 @@
 # Presentation kit
 
-Shared engine for the BlocBuy course presentations. Each deck folder (`docs/swe5001/presentation/`, `docs/swe5006/presentation/`) holds only its content, slide layouts, speaker-script chapters and committed `dist/`; this kit turns them into the same four outputs with the same look:
+Shared engine for the BlocBuy course presentations. Each deck folder (`docs/swe5001/presentation/`, `docs/swe5006/presentation/`) holds only its content, slide layouts, speaker-script chapters and committed `dist/`; this kit turns them into the same three outputs with the same look:
 
 | Output | Use |
 |---|---|
 | `dist/<deck>.html` | live presentation in Chrome or Edge (presenter notes, timer, fragments, backup index) |
 | `dist/<deck>.pdf` | slide deck for submission, one 1280 × 720 page per slide, backups last |
-| `dist/<deck>-script.html` | speaker script and demo run book (source of the PDF) |
-| `dist/<deck>-script.pdf` | A4 speaker script with running header and page numbers |
+| `dist/<deck>-script.pdf` | A4 speaker script and demo run book with running header and page numbers; built in memory and printed straight to PDF, so there is no script HTML file |
 
 All committed text is English. Read the deck's own `AGENTS.md` before changing a deck.
 
@@ -18,15 +17,17 @@ Run every command from the repository root; each is a single command, so it work
 ```sh
 npm --prefix docs/presentation-kit ci   # only when docs/presentation-kit/node_modules is missing: fonts, Font Awesome, Playwright 1.64.0
 npm --prefix docs/presentation-kit exec -- playwright install chromium   # only if a render step reports a missing browser
-npm --prefix docs/<course>/presentation run all           # deck + script HTML, then both PDFs
+npm --prefix docs/<course>/presentation run all           # HTML deck, deck PDF, script PDF
 npm --prefix docs/<course>/presentation run build:deck    # HTML deck only (fast loop while editing slides)
+npm --prefix docs/<course>/presentation run render:deck   # deck PDF from the built HTML deck
+npm --prefix docs/<course>/presentation run script        # script PDF only (also prints the marker counts)
 npm --prefix docs/<course>/presentation run screenshots   # png/<slide id>.png (git-ignored) + overflow report
 npm --prefix docs/<course>/presentation run screenshots -- '^s1[0-9]$'   # only the matching slide ids
 ```
 
-Under the hood every script is `node ../../presentation-kit/bin/build.js . <steps>` with steps `deck`, `script`, `deck-pdf`, `script-pdf`, `screenshots [regex]` or `all`. A successful build prints `slides: N characters: M`, then `markers { FILL, VERIFY, CONFIRM } over: <slide:estimate/slot …>`, `pdf ok` and `script pdf ok`. A clean `screenshots` run prints nothing after the npm header; every printed line is a slide with overflow.
+Under the hood every script is `node ../../presentation-kit/bin/build.js . <steps>` with steps `deck`, `deck-pdf`, `script`, `screenshots [regex]` or `all`. A successful build prints `slides: N characters: M`, `pdf ok`, then `markers { FILL, VERIFY, CONFIRM } over: <slide:estimate/slot …>` and `script pdf ok`. A clean `screenshots` run prints nothing after the npm header; every printed line is a slide with overflow.
 
-Commit the regenerated `dist/` files with the source change. Chromium writes a timestamp into every PDF and its output size can vary slightly between runs, so judge by the HTML: when `git diff` shows no change to a deck's `.html` files, its PDFs carry no content change either; leave them out of the commit.
+Commit the regenerated `dist/` files with the source change. Chromium writes a timestamp into every PDF and its output size can vary slightly between runs, so judge by the HTML. Deck: when `git diff` shows no change to the deck `.html`, the deck PDF carries no content change either. Script: set `SCRIPT_HTML` to an absolute path outside `dist/` (the repository ignores `out/`) to also write the script HTML, and compare two builds of it, e.g. `SCRIPT_HTML=$PWD/out/script.html npm --prefix docs/<course>/presentation run script`. Leave a PDF without a content change out of the commit.
 
 ## Layout
 
@@ -40,7 +41,7 @@ Commit the regenerated `dist/` files with the source change. Chromium writes a t
 | `lib/brand.js` | `lockup()`: BlocBuy bag mark, wordmark and tagline for dark title slides |
 | `deck/css.js` | slide styles and BlocBuy tokens |
 | `deck/build.js`, `deck/runtime.js` | slide chrome (header, speaker chip, footer progress bar), notes data, presenter runtime |
-| `script/css.js`, `script/build.js` | A4 script styles and the helpers a deck's `src/script.js` uses |
+| `script/css.js`, `script/build.js` | A4 script styles, the helpers a deck's `src/script.js` uses, and the in-memory script document |
 | `render.js` | Playwright printing and screenshots |
 | `diagrams/` | shared UML SVGs; conventions in [`diagrams/STYLE.md`](diagrams/STYLE.md) |
 
@@ -56,7 +57,7 @@ src/script.js      exports the script body HTML (see below)
 src/diagrams/      optional per-deck diagram overrides
 ```
 
-`deck.config.js` fields: `title` (HTML title), `brand` (footer text after "BlocBuy"), `darkSlides` (slide numbers drawn full-bleed dark with no header or footer, e.g. title and thank-you), `fillLabel` (text of the FILL chip, e.g. `FILL 19 Oct`), `guidelineLabel` (heading of each segment's requirement box), `demoSegment` (segment number whose Q&A the deck's own demo chapter renders, or `null`), `outputs` (`deck`, `deckPdf`, `script`, `scriptPdf` file names), `scriptTitle`, `scriptHeader` (`left`, `right` text of the PDF running header).
+`deck.config.js` fields: `title` (HTML title), `brand` (footer text after "BlocBuy"), `darkSlides` (slide numbers drawn full-bleed dark with no header or footer, e.g. title and thank-you), `fillLabel` (text of the FILL chip, e.g. `FILL 19 Oct`), `guidelineLabel` (heading of each segment's requirement box), `demoSegment` (segment number whose Q&A the deck's own demo chapter renders, or `null`), `outputs` (`deck`, `deckPdf`, `scriptPdf` file names), `scriptTitle` (PDF document title), `scriptHeader` (`left`, `right` text of the PDF running header).
 
 `src/content.js` shapes:
 - `SEGMENTS[i] = { n, name, head, short, talk, qa, start: 'HH:MM:SS', owner, items: { '1a': guideline text } }`; minutes in `talk`/`qa`; `short` labels the footer.
@@ -92,7 +93,7 @@ Arrows, Space, Enter, PageUp/PageDown step through fragments (`<div class="frag"
 
 ## Changing the kit
 
-A kit change affects every deck. After any change here, rebuild every deck (`npm --prefix docs/swe5001/presentation run build`, then the same for each other deck) and diff its HTML against the committed `dist/` (`git diff --stat -- docs/swe5001/presentation/dist docs/swe5006/presentation/dist`); an HTML change in a deck you did not mean to change is a regression. The SWE5001 extraction was accepted only with byte-identical HTML, so keep that bar for pure refactors.
+A kit change affects every deck. After any change here, rebuild every deck and compare its HTML before and after: the deck HTML against the committed `dist/` (`npm --prefix docs/swe5001/presentation run build:deck`, then `git diff --stat -- docs/swe5001/presentation/dist`, and the same for each other deck), and the script HTML by writing it with `SCRIPT_HTML` before and after the change. An HTML change in a deck you did not mean to change is a regression. The SWE5001 extraction was accepted only with byte-identical HTML, so keep that bar for pure refactors.
 
 Chromium is pinned through `playwright` 1.64.0. A different Chromium version changes PDF anti-aliasing and file size, not content; compare HTML, page count and text rather than PDF bytes.
 

@@ -1,6 +1,6 @@
-// Builds <deck>/dist/<outputs.script>: the A4 speaker script. The deck's src/script.js takes the helpers below with
-// require('<relative path>/presentation-kit/script').helpers() and exports the body HTML; the kit wraps it, inlines fonts
-// and reports the marker counts.
+// Builds the A4 speaker script as an in-memory HTML document (render.js prints it to <deck>/dist/<outputs.scriptPdf>).
+// The deck's src/script.js takes the helpers below with require('<relative path>/presentation-kit/script/build').helpers()
+// and exports the body HTML; the kit wraps it, inlines fonts and reports the marker counts.
 const fs = require('fs');
 const path = require('path');
 const { deck } = require('../lib/context');
@@ -101,14 +101,15 @@ function scriptHelpers() {
   return shared;
 }
 
+// Returns the script HTML. SCRIPT_HTML=<file> also writes it there (outside dist/) to diff a kit change byte for byte.
 function buildScript() {
   const { dir, cfg } = deck();
   const S = scriptHelpers();
   const body = require(path.join(dir, 'src', 'script'));
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>${cfg.scriptTitle}</title><style>${fontCSS()}${CSS}</style></head><body>${body}</body></html>`;
-  fs.mkdirSync(path.join(dir, 'dist'), { recursive: true });
-  fs.writeFileSync(path.join(dir, 'dist', cfg.outputs.script), html);
+  if (process.env.SCRIPT_HTML) fs.writeFileSync(path.resolve(process.env.SCRIPT_HTML), html);
   console.log('markers', S.markers, 'over:', S.overs.map(s => `${s.n}:${S.est(s)}/${s.slot}`).join(' '));
+  return html;
 }
 
 module.exports = { buildScript, helpers: scriptHelpers };

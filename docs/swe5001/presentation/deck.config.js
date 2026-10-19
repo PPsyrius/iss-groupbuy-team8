@@ -9,7 +9,6 @@ module.exports = {
   outputs: {
     deck: 'swe5001-presentation.html',
     deckPdf: 'swe5001-presentation.pdf',
-    script: 'swe5001-presentation-script.html',
     scriptPdf: 'swe5001-presentation-script.pdf',
   },
   scriptTitle: 'BlocBuy · Speaker script and demo run book',
