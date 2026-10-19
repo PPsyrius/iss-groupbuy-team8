@@ -1,4 +1,4 @@
-// node script.js -> out/swe5001-presentation-script-v3.html (+ pdf via render-script.js)
+// node src/script.js -> dist/swe5001-presentation-script.html (+ pdf via render-script.js)
 const fs = require('fs');
 const path = require('path');
 const { fontCSS, md, esc, words } = require('./lib');
@@ -46,7 +46,7 @@ table.meta{border:none;border-radius:0}.meta td{border:none;padding:2pt 8pt 2pt 
 .card .hd small{font-weight:400}
 .card .bd{padding:6pt 9pt}
 .row{display:grid;grid-template-columns:62pt 1fr;gap:0 8pt;margin:2pt 0}
-.lab{font-weight:600;color:var(--foreground)}.lab.say{color:var(--success-soft-foreground)}.lab.cue{color:var(--foreground)}.lab.ho{color:var(--accent-soft-foreground)}.lab.fb{color:var(--danger-soft-foreground)}.lab.chg{color:var(--warning-soft-foreground)}
+.lab{font-weight:600;color:var(--foreground)}.lab.say{color:var(--success-soft-foreground)}.lab.cue{color:var(--foreground)}.lab.ho{color:var(--accent-soft-foreground)}.lab.fb{color:var(--danger-soft-foreground)}
 .say{font-style:italic}
 .meter{font-size:8.3pt;color:var(--muted)}.over{color:var(--danger-soft-foreground);font-weight:600}
 ul{margin:2pt 0 2pt 0;padding-left:14pt}li{margin:1pt 0}
@@ -69,7 +69,6 @@ function slideCard(s) {
   const say = md(s.say).replace(/\[click\]/g, '<b class="clk">[click]</b>');
   return `<div class="card"><div class="hd"><span>Slide ${s.n} &nbsp; ${esc(s.title)}</span><small>${time}</small></div><div class="bd">
   <div class="row"><span class="lab">Speaker</span><span>${esc(s.speaker)} · covers guideline item <b>${s.item}</b></span></div>
-  <div class="row"><span class="lab chg">v3</span><span class="small">${esc(s.change)}</span></div>
   <div class="row"><span class="lab say">Say</span><span class="say">${say}</span></div>
   <div class="row"><span></span><span class="meter">≈ ${w} words · ≈ ${e} s at 130 wpm${s.slot ? ' · slot ' + s.slot + ' s' : ''}${over ? ` <span class="over">· over by ${e - s.slot} s: rehearse at pace or trim${s.trim ? ' — ' + esc(s.trim) : ''}</span>` : (s.trim ? ` · if short of time: ${esc(s.trim)}` : '')}</span></div>
   ${s.cues && s.cues.length ? `<div class="row"><span class="lab cue">Cues</span><ul>${s.cues.map(c => `<li>${md(c)}</li>`).join('')}</ul></div>` : ''}
@@ -125,26 +124,7 @@ const briefing = [
 ];
 const cueWords = [['1 MIN', 'Speaker has one minute of talk left in the segment', 'Lim'], ['TIME', 'Stop talking; move to questions or the hand-over', 'Lim'], ['K6 GO / K6 UP', 'Start the V3 load / load is running and healthy', 'Lim / Yorik'], ['SCALED n', 'Commerce reached n running tasks (from the dashboard)', 'Eric'], ['PLAN A / PLAN B', 'Burst decision at 16:40 (§6)', 'Liu Jin'], ['ID BACK', 'identity-svc is running again after the outage drill', 'Yorik'], ['CLIP n', 'Live step n failed; Liu Jin is ready to share the recording for step n', 'Eric → Liu Jin'], ['SHARE', 'Next person: start screen sharing now', 'Lim']];
 
-const changeLog = [
-  ['5', 'Split into verified (17 Oct) / verified 19 Oct / still open', 'Guideline 2a; "end to end on AWS" not yet verified (#460)'],
-  ['6', 'Milestones to actual dates; "code freeze" removed; 17 Oct added; Lim and Eric role text expanded', 'PRs #530–#534 merged 17 Oct'],
-  ['3, 4', 'Future seeds line; evolution-path item in out of scope', 'Success criterion "more seeds"'],
-  ['7, 8', 'AD-02 · ADR 0008 tag; AD tags and cost strip on the cards', 'Cross-reference to report'],
-  ['9, 13, 16', 'UML diagrams replace the v2 box diagrams (recoloured to the v2 palette, text ≥ 15 px); v2 diagrams kept as B13–B15', 'Guideline 3b, 4b, 4d'],
-  ['11', 'Measured reuse table and the API contract', 'Q2, Q3; "robust API access"'],
-  ['12', 'Measured cost: US$0.49 for 7 sessions', 'Q6'],
-  ['14', 'Capacity statement: measured / projected / next bottleneck', 'Q4'],
-  ['15', 'Concurrency line (lock order, scheduler lease)', 'Guideline 4c'],
-  ['19', 'Pipeline metrics strip (5,252 runs)', 'Q7'],
-  ['20', 'Three-service timings: 51 min end to end (28 min was the 6 Oct single-service run)', 'Accuracy'],
-  ['22', 'NEW: account structure and access (SCPs, Identity Center, OIDC)', 'Briefing: minimally required security controls'],
-  ['24', 'Three headline numbers', 'Takeaways'],
-  ['B1–B15', 'Backup slides after slide 24 (index BX); Q&amp;A answers now point to them', 'AISS/AD IDs had no slide in v2'],
-  ['Q&amp;A', 'Single-zone RDS/Valkey is AISS-01 (v2 said AISS-02); new rows for API access, analytics, IAM users', 'Accuracy'],
-  ['Timing', 'Segment 5 re-timed: 18 (65) + 19 (70) + 20 (95) + 21 (75) + 22 (55) = 360 s', 'Absorbs the new slide'],
-];
-
-// ---- demo section (v2 §6, references updated) ----
+// ---- demo section ----
 const demoSteps = [
   { n: 1, t: 'Buy as a customer, across three services', time: '16:45:15 – 16:46:15', proves: 'Functionality · guideline <b>6a</b> · Eric', op: ['Tab 2: product list with team prices and countdowns (commerce).', 'Point at the signed-in user in the header (identity, Google sign-in).', 'Tab 3: admin product list (commerce reads the role from the shared session).', "Tab 4: refresh the buyer's notifications (notification service)."], say: "This is the buyer view: team prices and live countdowns, served by commerce. I'm signed in with Google through identity. This admin page works because commerce reads my role from the shared session, without calling identity. And these notifications were written by the notification service from events it received. Three services, one session.", exp: 'All four views load; at least one notification is listed.', fb: 'Screenshots from 19 Oct (fallback/1-use-cases).' },
   { n: 2, t: 'Auto-scaling under a load test', time: '16:46:15 – 16:47:45', proves: 'Scalability, performance · guideline <b>6b</b> · Eric (Yorik mirrors k6)', op: ['Tab 5: CloudWatch dashboard, Services row: commerce running tasks.', 'Edge row: request count and p95 response time.', 'Terminal: k6 live summary (requests per second, p95, error rate).'], say: 'Since 16:28 a k6 script has been ramping up browse traffic to three times our measured baseline, 600 requests a second. Commerce has scaled from two tasks to the number you see here. Response times rose while new tasks started and came back down once they joined, and the error rate stayed under one percent. (Read the task count, p95 and error rate off the screen.)', exp: 'Commerce running tasks above 2 (about 3–4 at 600 requests a second); k6 error rate below 1%.', fb: 'Recording of the 19 Oct load test (fallback/2-v3.mp4).' },
@@ -182,7 +162,7 @@ ${box('warn', 'Watch out', 'Why the 14 Oct guideline timing does not work: <code
 <h2>Screen layout (Eric's demo window)</h2>
 <p>One browser window, tabs left to right, plus one terminal. Share the window, not the desktop; notifications off; browser zoom 125%.</p>
 ${tbl(['Tab', 'Content', 'Prepared state'], [
-  ['1', 'HTML deck opened at slide 23 (<code>swe5001-presentation-v3.html#23</code>)', 'Also used for slide 24 at the end; backups B1–B15 one key away (B)'],
+  ['1', 'HTML deck opened at slide 23 (<code>swe5001-presentation.html#23</code>)', 'Also used for slide 24 at the end; backups B1–B15 one key away (B)'],
   ['2', 'SPA <code>https://d3lvq02o2e7tcn.cloudfront.net</code>', 'Product list loaded; signed in as the demo admin (Google)'],
   ['3', 'Admin product list in the SPA', 'Admin listing visible; one harmless admin write prepared for step 4'],
   ['4', '<code>/api/v1/notifications</code> for the demo buyer', 'JSON list with at least one notification'],
@@ -233,7 +213,7 @@ ${tbl(['Segment', 'Cut first', 'Saves'], [
 const timeline = `<section class="chap"><h1>8 Timeline before, on and after the day</h1>
 <h2>Before the day</h2>
 ${tbl(['Date', 'Do', 'Owner'], [
-  ['Sun 18 Oct', 'Each owner reviews their v3 slides and this script, and confirms their effort estimate on slide 6. Every marker has an owner in §9.', 'All; Lim collects'],
+  ['Sun 18 Oct', 'Each owner reviews their slides and this script, and confirms their effort estimate on slide 6. Every marker has an owner in §9.', 'All; Lim collects'],
   ['Mon 19 Oct', 'Sprint 4 promotion. Evidence session: V3, V4, V5, V7, identity outage, buyer E2E (#460), smoke on ECS. <b>Record every demo step</b> (screen + k6 terminal, 1080p, no secrets visible) into <code>fallback/1-use-cases</code> … <code>fallback/6-pipeline</code>. Capture the CloudWatch crops for slide 14 and B11. Save evidence under <code>docs/swe5001/evidence/</code>. <code>env-down</code> + clean <code>env-status</code>.', 'All; Liu Jin operates'],
   ['Mon 19 Oct evening', 'Resolve every [FILL 19 Oct] from the evidence folder; move anything not run to "Still open" on slide 5 and to B12 as "not run on AWS; local result: …". Rebuild deck, PDF and this script.', 'Lim, with segment owners'],
   ['Tue 20 Oct', '<b>Full rehearsal</b> in Zoom, timed against the run sheet, with both share switches and the real 16:28 / 16:40 cues on the clock. <b>Decide Plan A or Plan B</b>, slide 10 Option A/B and the slide 16 go/no-go. Every speaker answers their Q&amp;A rows in ≤ 45 s. No marker may remain after this rehearsal.', 'All; Lim times'],
@@ -260,7 +240,7 @@ const eff = [['Liu Jin', '12.5', 'AWS stacks, pipeline, service split'], ['Panpa
 
 function openItems() {
   return `<section class="chap"><h1>9 Open items before Tuesday's rehearsal</h1>
-<p>v3 carries ${markers.FILL} <span class="mk mk-fill">[FILL 19 Oct]</span>, ${markers.VERIFY} <span class="mk mk-verify">[VERIFY]</span> and ${markers.CONFIRM} <span class="mk mk-confirm">[CONFIRM]</span> markers across the deck and this script (counted in the script; the deck shows the same ones on the slides). They stay visible until resolved: <b>FILL</b> values only exist after the 19 Oct session, so never present a guess; <b>VERIFY</b> claims exist in one source but conflict with or are unconfirmed by another, so check the repo or run logs; <b>CONFIRM</b> needs team agreement.</p>
+<p>There are ${markers.FILL} <span class="mk mk-fill">[FILL 19 Oct]</span>, ${markers.VERIFY} <span class="mk mk-verify">[VERIFY]</span> and ${markers.CONFIRM} <span class="mk mk-confirm">[CONFIRM]</span> markers across the deck and this script (counted in the script; the deck shows the same ones on the slides). They stay visible until resolved: <b>FILL</b> values only exist after the 19 Oct session, so never present a guess; <b>VERIFY</b> claims exist in one source but conflict with or are unconfirmed by another, so check the repo or run logs; <b>CONFIRM</b> needs team agreement.</p>
 ${tbl(['#', 'Item', 'Owner', 'Blocks slide'], C.OPEN_ITEMS.map(r => r.map(esc)))}
 <h2>Effort per member ${md('{{CONFIRM:all five agree}}')}</h2>
 <p class="small">Estimated from the planned hours of the issues each person delivered, credited to whoever actually did the work. Total ≈ 50 person-days.</p>
@@ -322,7 +302,7 @@ const segs = [
   segment(C.SEGMENTS[0]),
   segment(C.SEGMENTS[1], { warn: 'Slide 5 must show the real state on 21 Oct. After the 19 Oct session, give a green tick only to items with evidence in <code>docs/swe5001/evidence/</code>; move everything else to “Still open”. Never claim a result that the evidence folder does not record.' }),
   segment(C.SEGMENTS[2], { tip: 'Slide 7 is the most important slide of the talk: it is the one decision assessors will remember. Rehearse it until it fits in 90 seconds without rushing.' }),
-  segment(C.SEGMENTS[3], { tip: 'Liu Jin owns slides 12–15 (about 4.5 minutes); Yorik owns 16–17 (about 2.7 minutes). The hand-over line is on slide 15. Yorik unmutes during the last sentence. Slide 16 is the UML version only if Yorik gives the go after rehearsing it; otherwise present B15 with the v2 wording.' }),
+  segment(C.SEGMENTS[3], { tip: 'Liu Jin owns slides 12–15 (about 4.5 minutes); Yorik owns 16–17 (about 2.7 minutes). The hand-over line is on slide 15. Yorik unmutes during the last sentence. Slide 16 is the UML version only if Yorik gives the go after rehearsing it; otherwise present B15 and talk through its numbered steps.' }),
   segment(C.SEGMENTS[4], { warn: 'At 16:44:30 Lim stops sharing and Eric starts sharing the demo window, even if a question is still being answered. The answer continues over Eric’s screen.', tip: 'Segment 5 now has five slides in the same 6 minutes: 18 (65 s) + 19 (70 s) + 20 (95 s) + 21 (75 s) + 22 (55 s) = 360 s. The hand-over to the demo moved from slide 21 to slide 22.' }),
 ];
 const demoHtml = demo;
@@ -331,28 +311,24 @@ const overs = C.SLIDES.filter(s => s.slot && est(s) > s.slot);
 const cover = `<section>
 <div style="height:4pt"></div>
 <div style="color:var(--muted);font-size:11pt">SWE5001 Practice Project · Graduate Certificate in Architecting Scalable Systems</div>
-<h1 style="font-size:28pt;margin-top:18pt">Speaker Script and Live Demo Run Book · v3</h1>
+<h1 style="font-size:28pt;margin-top:18pt">Speaker Script and Live Demo Run Book</h1>
 <div style="font-size:15pt;color:var(--accent-soft-foreground);margin:10pt 0 20pt">BlocBuy — Team 8 · Wednesday 21 October 2026, 16:15–16:55 SGT (Zoom)</div>
 <hr style="border:none;border-top:1px solid var(--border);margin-bottom:14pt">
 <table class="meta">
-<tr><td>Responsible</td><td>Lim Jiechao (presentation lead, #461); reviewer Liu Jin. v3 is built on Liu Jin's v2 deck and script, with the v3 change document applied.</td></tr>
-<tr><td>Companion files</td><td><code>swe5001-presentation-v3.html</code> — the deck (24 slides + backups BX, B1–B15; open in Chrome or Edge; <b>S</b> notes window with this script and a timer, <b>T</b> start timer, <b>O</b> overview, <b>F</b> fullscreen, <b>B</b> backup index) · <code>swe5001-presentation-v3.pdf</code> — the same deck as a PDF (41 pages: 24 main, then backups). v2 files are kept unchanged.</td></tr>
-<tr><td>Single source</td><td><code>build/content.js</code> holds wording, timings, cues, Q&amp;A and open items; <code>build/slides-main.js</code> and <code>slides-backup.js</code> hold the slide layouts; <code>build/diagrams/*.svg</code> the UML diagrams. From <code>build/</code> run <code>npm i</code> once, then <code>node deck.js &amp;&amp; node render.js pdf &amp;&amp; node script.js</code>.</td></tr>
+<tr><td>Responsible</td><td>Lim Jiechao (presentation lead, #461); reviewer Liu Jin.</td></tr>
+<tr><td>Companion files</td><td><code>swe5001-presentation.html</code> — the deck (24 slides + backups BX, B1–B15; open in Chrome or Edge; <b>S</b> notes window with this script and a timer, <b>T</b> start timer, <b>O</b> overview, <b>F</b> fullscreen, <b>B</b> backup index) · <code>swe5001-presentation.pdf</code> — the same deck as a PDF (41 pages: 24 main, then backups).</td></tr>
+<tr><td>Single source</td><td><code>src/content.js</code> holds wording, timings, cues, Q&amp;A and open items; <code>src/slides-main.js</code> and <code>src/slides-backup.js</code> hold the slide layouts; <code>src/diagrams/*.svg</code> the UML diagrams. From <code>docs/swe5001/presentation/</code> run <code>npm ci</code> once, then <code>npm run all</code> to rebuild everything in <code>dist/</code>.</td></tr>
 <tr><td>Facts as of</td><td>18 Oct 2026. Evidence from 17 Oct; everything that depends on the 19 Oct session is marked and must be resolved Monday evening (§9).</td></tr>
 </table>
-${box('', 'How to use this document', `<ul><li><b>Speakers:</b> read your segment (§1–§5) aloud against a timer at least twice. Each slide card shows the slot, what changed in v3, and the estimated speaking time of the sample wording at 130 words a minute. Cards marked <span class="over">over by N s</span> need either a faster read or the listed trim. Rephrase in your own words; never read the slide.</li><li><b>Demo team:</b> §6 is the run book: preconditions, the Plan A/B decision, screen layout, then every step with what to operate, what to say, what you should see and when to switch to the fallback. §7 adds Plan C.</li><li><b>Lead:</b> the run sheet and coverage check below, the contingencies in §7, the day timeline in §8 and the open items in §9 are yours.</li></ul>`)}
+${box('', 'How to use this document', `<ul><li><b>Speakers:</b> read your segment (§1–§5) aloud against a timer at least twice. Each slide card shows the slot and the estimated speaking time of the sample wording at 130 words a minute. Cards marked <span class="over">over by N s</span> need either a faster read or the listed trim. Rephrase in your own words; never read the slide.</li><li><b>Demo team:</b> §6 is the run book: preconditions, the Plan A/B decision, screen layout, then every step with what to operate, what to say, what you should see and when to switch to the fallback. §7 adds Plan C.</li><li><b>Lead:</b> the run sheet and coverage check below, the contingencies in §7, the day timeline in §8 and the open items in §9 are yours.</li></ul>`)}
 ${box('', 'Markers', `${md('{{FILL:}}')} value only exists after the Monday evidence session; do not present a guess · ${md('{{VERIFY:}}')} claim unconfirmed or conflicting between sources; check the repo or run log · ${md('{{CONFIRM:}}')} needs team agreement. They are visible on the slides on purpose and must all be gone after Tuesday's rehearsal.`)}
 <p class="small" style="margin-top:8pt">Structure follows “04 Project Presentation Guidelines &amp; Schedule” V2.8 exactly: one chapter per segment (1 Overview, 2 Project Conduct, 3 Logical, 4 Physical, 5 DevOps, 6 Demo), each opening with the guideline’s own sub-items.</p>
-</section>
-<section class="chap"><h1>What changed from v2</h1>
-${tbl(['Slides', 'Change', 'Why'], changeLog)}
-<p>Main deck: 24 slides (v2: 23). Segment timings unchanged from Guideline V2.8. The only content that is <i>not</i> from the v3 change document: segment 5 cut list in §7 and the timing flags on the slide cards, which the build computes.</p>
-${overs.length ? box('warn', 'Timing check', `${overs.length} slides read longer than their slot at 130 wpm: ${overs.map(s => `slide ${s.n} (${est(s)} s / ${s.slot} s)`).join(', ')}. The v3 change document added wording to these; each card lists what to trim if the rehearsal runs long.`) : ''}
 </section>
 <section class="chap"><h1>Run sheet and coverage check</h1>
 <h2>Slide-by-slide run sheet</h2>
 ${tbl(['Clock', 'Slot', 'Slide', 'Title', 'Speaker', 'Item', 'Est.'], runRows)}
 <p class="small">Segment talk budget vs slots vs estimated speaking time: ${segTotals.map(([n, b, sl, e]) => `§${n} ${b} s / ${sl} s / ${e} s`).join(' · ')} (§6 talk is the demo itself).</p>
+${overs.length ? box('warn', 'Timing check', `${overs.length} slides read longer than their slot at 130 wpm: ${overs.map(s => `slide ${s.n} (${est(s)} s / ${s.slot} s)`).join(', ')}. Each card lists what to trim if the rehearsal runs long.`) : ''}
 <p>Q&amp;A windows (inside the 40 minutes): 16:17–16:18 · 16:19:30–16:20 · 16:27–16:29 · 16:36–16:38 · 16:44–16:45 · 16:53–16:55. Background actions: <b>16:28</b> Yorik starts k6 V3 · <b>16:40</b> expiry-burst decision point (§6) · <b>16:44:30</b> screen-share switch Lim → Eric.</p>
 <h2>Every guideline item has slides and a speaker</h2>
 ${tbl(['Item', 'Guideline requirement', 'Slides', 'Speaker'], coverage.map(r => [`<b>${r[0]}</b>`, esc(r[1]), r[2], r[3]]))}
@@ -363,7 +339,7 @@ ${tbl(['Message', 'Meaning', 'Sent by'], cueWords.map(r => [`<code>${r[0]}</code
 </section>`;
 
 const body = cover + segs.join('') + demoHtml + contingencies + timeline + openItems() + appendix;
-const html = `<!doctype html><html><head><meta charset="utf-8"><title>BlocBuy · Speaker script and demo run book · v3</title><style>${fontCSS()}${CSS}</style></head><body>${body}</body></html>`;
+const html = `<!doctype html><html><head><meta charset="utf-8"><title>BlocBuy · Speaker script and demo run book</title><style>${fontCSS()}${CSS}</style></head><body>${body}</body></html>`;
 fs.mkdirSync(path.join(__dirname, '..', 'dist'), { recursive: true });
-fs.writeFileSync(path.join(__dirname, '..', 'dist', 'swe5001-presentation-script-v3.html'), html);
+fs.writeFileSync(path.join(__dirname, '..', 'dist', 'swe5001-presentation-script.html'), html);
 console.log('markers', markers, 'over:', overs.map(s => `${s.n}:${est(s)}/${s.slot}`).join(' '));

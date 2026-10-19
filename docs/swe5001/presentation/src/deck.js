@@ -1,4 +1,4 @@
-// node deck.js  -> out/swe5001-presentation-v3.html
+// node src/deck.js -> dist/swe5001-presentation.html
 const fs = require('fs');
 const path = require('path');
 const { fontCSS, md, esc, words } = require('./lib');
@@ -92,7 +92,7 @@ if(!window.__PRINT__){body.classList.add('present');fit();go(k>=0?k:0);}
 })();`;
 
 const html = `<!doctype html><html lang="en-SG"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BlocBuy · SWE5001 Team 8 · v3</title>
+<title>BlocBuy · SWE5001 Team 8</title>
 <style>${fontCSS()}\n${CSS}</style></head>
 <body><div class="deck">
 ${sections.join('\n')}
@@ -100,5 +100,5 @@ ${sections.join('\n')}
 <script>${RUNTIME}</script></body></html>`;
 
 fs.mkdirSync(path.join(__dirname, '..', 'dist'), { recursive: true });
-fs.writeFileSync(path.join(__dirname, '..', 'dist', 'swe5001-presentation-v3.html'), html);
+fs.writeFileSync(path.join(__dirname, '..', 'dist', 'swe5001-presentation.html'), html);
 console.log('slides:', sections.length, 'bytes:', html.length);

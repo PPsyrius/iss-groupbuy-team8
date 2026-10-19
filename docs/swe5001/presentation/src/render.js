@@ -6,10 +6,10 @@ const path = require('path'), fs = require('fs');
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
   await p.addInitScript(() => { window.__PRINT__ = true; });
-  await p.goto('file://' + path.join(__dirname, '..', 'dist', 'swe5001-presentation-v3.html'));
+  await p.goto('file://' + path.join(__dirname, '..', 'dist', 'swe5001-presentation.html'));
   await p.evaluate(() => document.fonts.ready);
   if (mode !== 'png') {
-    await p.pdf({ path: path.join(__dirname, '..', 'dist', 'swe5001-presentation-v3.pdf'), width: '1280px', height: '720px', printBackground: true, preferCSSPageSize: true });
+    await p.pdf({ path: path.join(__dirname, '..', 'dist', 'swe5001-presentation.pdf'), width: '1280px', height: '720px', printBackground: true, preferCSSPageSize: true });
     console.log('pdf ok');
   }
   if (mode !== 'pdf') {

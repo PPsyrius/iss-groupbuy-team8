@@ -5,7 +5,7 @@ const tbl = (head, rows, opts = {}) => `<table class="t" style="font-size:${opts
 <tr>${head.map((h, i) => `<th style="${opts.w && opts.w[i] ? 'width:' + opts.w[i] + 'px' : ''}">${h}</th>`).join('')}</tr>
 ${rows.map(r => `<tr>${r.map((c, i) => `<td class="${i === 0 && opts.id ? 'id' : ''}">${c}</td>`).join('')}</tr>`).join('')}</table>`;
 
-// ---- v2 diagrams recreated (B13–B15) ----
+// ---- simplified diagrams (B13–B15) ----
 const box = (x, y, w, h, html, st = '') => `<div style="position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;${st}">${html}</div>`;
 const wb = (x, y, w, h, t, extra = '') => box(x, y, w, h, `<div style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center;font:400 21px/1.2 Inter">${t}</div>`, `background:#fff;border:1px solid #DDD5C8;border-radius:8px;box-shadow:var(--shadow-surface);${extra}`);
 const db = (x, y, w, t) => `<svg style="position:absolute;left:${x}px;top:${y}px" width="${w}" height="86"><path d="M2,14 A${w / 2 - 2},12 0 0 1 ${w - 2},14 V70 A${w / 2 - 2},12 0 0 1 2,70 Z" fill="#EFE9DF" stroke="#6B655C" stroke-width="1.5"/><path d="M2,14 A${w / 2 - 2},12 0 0 0 ${w - 2},14" fill="none" stroke="#6B655C" stroke-width="1.5"/></svg><div style="position:absolute;left:${x}px;top:${y + 34}px;width:${w}px;text-align:center;font:400 20px Inter">${t}</div>`;
@@ -96,7 +96,7 @@ function list() {
     ['AISS-04', '/internal/** relies on network isolation only', 'Add a service token or mTLS'],
     ['AISS-05', 'One shared RDS instance', 'Move a DB to its own instance, no code change'],
     ['AISS-06', 'Distributed cold start ≈ 32 min (17 Oct, ×2), 15 min of it the SNS filter wait', 'Pre-warm on the day; edge stays persistent'],
-  ], { id: true, fs: 19, w: [110, 520] }) + `<div style="margin-top:14px;font:400 16px Inter;color:var(--muted)">Q&amp;A bank corrected in v3: single-zone RDS/Valkey is <b>AISS-01</b> (v2 said AISS-02).</div>` });
+  ], { id: true, fs: 19, w: [110, 520] }) });
   B.push({ id: 'B3', speaker: 'Eric', title: 'Context map', body: `<div style="display:flex;gap:30px;align-items:flex-start">
    <div style="width:470px;flex:none">${svg('context-map').replace('<svg ', '<svg style="width:470px;height:auto" ')}</div>
    <div style="flex:1;padding-top:6px"><ul class="b" style="font:400 19px/1.4 Inter">
@@ -193,9 +193,9 @@ function list() {
     R('Distributed up + smoke', '3 services stable, 9 smoke checks', '17 Oct ×2: tasks 2/2 · 1/1 · 1/1; 9/9 checks; SNS→SQS verified with synthetic events. Buyer E2E (#460): ' + mk('FILL')),
     R('Teardown', 'all resources destroyed, absence check clean', '115 resources, 709 s (17 Oct); 113, 784 s (16 Oct)'),
   ], { fs: 16, w: [200, 380] }) + `<div style="margin-top:10px;font:italic 400 15px Inter;color:var(--muted)">Anything not run on AWS stays “not run on AWS; local result: …”. Never upgrade a local result to an AWS one.</div>` });
-  B.push({ id: 'B13', speaker: 'Eric', title: 'Logical view, simplified (v2)', body: b13() });
-  B.push({ id: 'B14', speaker: 'Liu Jin', title: 'Physical view, simplified (v2)', body: b14() });
-  B.push({ id: 'B15', speaker: 'Yorik', title: 'Team expiry, numbered steps (v2 fallback for slide 16)', body: b15() });
+  B.push({ id: 'B13', speaker: 'Eric', title: 'Logical view, simplified', body: b13() });
+  B.push({ id: 'B14', speaker: 'Liu Jin', title: 'Physical view, simplified', body: b14() });
+  B.push({ id: 'B15', speaker: 'Yorik', title: 'Team expiry, numbered steps (fallback for slide 16)', body: b15() });
   return B;
 }
 module.exports = { list };
