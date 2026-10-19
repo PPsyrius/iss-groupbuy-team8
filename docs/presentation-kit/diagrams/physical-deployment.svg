@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 530" width="1160" height="530" font-family="Inter, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="pdTeal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E3E8FB"/></linearGradient>
+    <linearGradient id="pdOrange" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FBDFD9"/></linearGradient>
+    <linearGradient id="pdYellow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF6E2"/><stop offset="1" stop-color="#FFEDC7"/></linearGradient>
+    <linearGradient id="pdGrey" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#ECE6DC"/></linearGradient>
+    <linearGradient id="pdSlate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EFE9DF"/></linearGradient>
+    <linearGradient id="pdPerm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3E5CD9"/><stop offset="1" stop-color="#3E5CD9"/></linearGradient>
+    <marker id="pdFill" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B1A18"/></marker>
+    <marker id="pdOpen" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#1B1A18" stroke-width="1.6"/></marker>
+  </defs>
+
+  <!-- ===== AWS Cloud node ===== -->
+  <polygon points="96,14 106,4 1016,4 1006,14" fill="#EFE9DF" stroke="#6B655C" stroke-width="1.5"/>
+  <polygon points="1006,14 1016,4 1016,516 1006,526" fill="#DDD5C8" stroke="#6B655C" stroke-width="1.5"/>
+  <rect x="96" y="14" width="910" height="512" fill="#F6F2EC" stroke="#6B655C" stroke-width="1.5"/>
+  <text x="110" y="38" font-size="15" fill="#6B655C">«node»</text>
+  <text x="164" y="38" font-size="18" font-weight="700" fill="#1B1A18">AWS Cloud · ap-southeast-1 (Singapore)</text>
+
+  <!-- ===== PERMANENT: edge stack ===== -->
+  <rect x="108" y="50" width="206" height="252" rx="6" fill="#F1F4FD" stroke="#3E5CD9" stroke-width="2" stroke-dasharray="8 5"/>
+  <rect x="108" y="50" width="206" height="28" rx="6" fill="url(#pdPerm)"/>
+  <text x="120" y="70" font-size="15" font-weight="700" fill="#FFFFFF">PERMANENT · edge</text>
+  <!-- CloudFront -->
+  <polygon points="122,98 130,90 302,90 294,98" fill="#E3E8FB" stroke="#3E5CD9" stroke-width="1.4"/>
+  <polygon points="294,98 302,90 302,182 294,190" fill="#C5CFF4" stroke="#3E5CD9" stroke-width="1.4"/>
+  <rect x="122" y="98" width="172" height="92" fill="url(#pdTeal)" stroke="#3E5CD9" stroke-width="1.5"/>
+  <text x="208" y="118" font-size="15" fill="#6B655C" text-anchor="middle">«node»</text>
+  <text x="208" y="140" font-size="18" font-weight="700" fill="#3E5CD9" text-anchor="middle">CloudFront</text>
+  <text x="208" y="160" font-size="15" fill="#1B1A18" text-anchor="middle">the only way in</text>
+  <text x="208" y="179" font-size="15" fill="#1B1A18" text-anchor="middle">adds origin secret</text>
+  <!-- S3 -->
+  <polygon points="122,226 130,218 302,218 294,226" fill="#E3E8FB" stroke="#3E5CD9" stroke-width="1.4"/>
+  <polygon points="294,226 302,218 302,282 294,290" fill="#C5CFF4" stroke="#3E5CD9" stroke-width="1.4"/>
+  <rect x="122" y="226" width="172" height="64" fill="url(#pdTeal)" stroke="#3E5CD9" stroke-width="1.5"/>
+  <text x="208" y="252" font-size="18" font-weight="700" fill="#3E5CD9" text-anchor="middle">S3 · web app</text>
+  <text x="208" y="274" font-size="15" fill="#1B1A18" text-anchor="middle">private, via OAC</text>
+
+  <!-- ===== PERMANENT: foundation ===== -->
+  <rect x="108" y="314" width="206" height="200" rx="6" fill="#F1F4FD" stroke="#3E5CD9" stroke-width="2" stroke-dasharray="8 5"/>
+  <rect x="108" y="314" width="206" height="28" rx="6" fill="url(#pdPerm)"/>
+  <text x="120" y="334" font-size="15" font-weight="700" fill="#FFFFFF">PERMANENT · foundation</text>
+  <text x="122" y="368" font-size="15" fill="#1B1A18">ECR · images by digest</text>
+  <text x="122" y="392" font-size="15" fill="#1B1A18">GitHub OIDC roles</text>
+  <text x="122" y="416" font-size="15" fill="#1B1A18">Parameter Store secrets</text>
+  <text x="122" y="440" font-size="15" fill="#1B1A18">IAM boundary · budget</text>
+  <rect x="118" y="454" width="186" height="50" rx="4" fill="url(#pdTeal)" stroke="#3E5CD9" stroke-width="1.4"/>
+  <text x="211" y="475" font-size="16" font-weight="700" fill="#3E5CD9" text-anchor="middle">CloudWatch</text>
+  <text x="211" y="495" font-size="15" fill="#1B1A18" text-anchor="middle">dashboard · alarms</text>
+
+  <!-- ===== REBUILT EVERY RELEASE: runtime stack ===== -->
+  <rect x="328" y="50" width="668" height="464" rx="6" fill="#FFFFFF" stroke="#E8402A" stroke-width="2" stroke-dasharray="8 5"/>
+  <rect x="328" y="50" width="330" height="28" rx="6" fill="#E8402A"/>
+  <text x="340" y="70" font-size="15" font-weight="700" fill="#FFFFFF">REBUILT EVERY RELEASE · runtime</text>
+
+  <!-- VPC -->
+  <rect x="340" y="90" width="236" height="26" fill="#EFE9DF" stroke="#6B655C" stroke-width="1.3"/>
+  <text x="350" y="109" font-size="15" font-weight="700" fill="#1B1A18">VPC 10.50.0.0/16 · 2 AZs</text>
+  <rect x="340" y="116" width="482" height="388" fill="#F6F2EC" stroke="#6B655C" stroke-width="1.3"/>
+  <!-- public subnets -->
+  <rect x="352" y="128" width="458" height="96" fill="#EFE9DF" stroke="#A69E92" stroke-width="1.2"/>
+  <text x="362" y="147" font-size="15" fill="#6B655C">public subnets (AZ a · AZ b)</text>
+  <rect x="362" y="156" width="210" height="58" fill="url(#pdSlate)" stroke="#6B655C" stroke-width="1.5"/>
+  <text x="372" y="179" font-size="15" fill="#6B655C">«node»</text><text x="430" y="179" font-size="18" font-weight="700" fill="#1B1A18">ALB</text>
+  <text x="372" y="202" font-size="15" fill="#1B1A18">checks CloudFront secret</text>
+  <rect x="586" y="156" width="214" height="58" fill="url(#pdSlate)" stroke="#6B655C" stroke-width="1.5"/>
+  <text x="596" y="179" font-size="15" fill="#6B655C">«node»</text><text x="654" y="179" font-size="18" font-weight="700" fill="#1B1A18">NAT instance</text>
+  <text x="596" y="202" font-size="15" fill="#1B1A18">t4g.nano · outbound only</text>
+  <!-- private subnets -->
+  <rect x="352" y="236" width="458" height="258" fill="#EFE9DF" stroke="#A69E92" stroke-width="1.2"/>
+  <text x="362" y="255" font-size="15" fill="#6B655C">private subnets (AZ a · AZ b)</text>
+  <!-- RDS -->
+  <rect x="362" y="266" width="166" height="108" fill="url(#pdSlate)" stroke="#6B655C" stroke-width="1.5"/>
+  <text x="372" y="287" font-size="15" fill="#6B655C">«database» RDS</text>
+  <text x="372" y="309" font-size="18" font-weight="700" fill="#1B1A18">PostgreSQL 18</text>
+  <text x="372" y="330" font-size="15" fill="#1B1A18">db.t4g.micro · 1 AZ</text>
+  <text x="372" y="350" font-size="15" fill="#1B1A18">3 databases, one</text>
+  <text x="372" y="368" font-size="15" fill="#1B1A18">per service</text>
+  <!-- Valkey -->
+  <rect x="362" y="384" width="166" height="100" fill="url(#pdSlate)" stroke="#6B655C" stroke-width="1.5"/>
+  <text x="372" y="405" font-size="15" fill="#6B655C">«node» ElastiCache</text>
+  <text x="372" y="427" font-size="18" font-weight="700" fill="#1B1A18">Valkey 8</text>
+  <text x="372" y="448" font-size="15" fill="#1B1A18">cache.t4g.micro</text>
+  <text x="372" y="468" font-size="15" fill="#1B1A18">sessions only</text>
+  <!-- ECS cluster -->
+  <rect x="542" y="266" width="258" height="218" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.5"/>
+  <text x="552" y="287" font-size="15" fill="#6B655C">«node»</text><text x="610" y="287" font-size="18" font-weight="700" fill="#1B1A18">ECS cluster</text>
+  <text x="552" y="308" font-size="15" fill="#1B1A18">Fargate (+ Spot) · ARM64</text>
+  <rect x="552" y="318" width="238" height="48" fill="url(#pdTeal)" stroke="#3E5CD9" stroke-width="1.5"/>
+  <text x="562" y="338" font-size="16" font-weight="700" fill="#3E5CD9">identity-svc</text><text x="780" y="338" font-size="16" font-weight="700" fill="#3E5CD9" text-anchor="end">×1</text>
+  <text x="562" y="358" font-size="15" fill="#1B1A18">/auth/*, /users/* · fixed</text>
+  <rect x="552" y="372" width="238" height="48" fill="url(#pdOrange)" stroke="#E8402A" stroke-width="1.5"/>
+  <text x="562" y="392" font-size="16" font-weight="700" fill="#B02E1B">commerce-svc</text><text x="780" y="392" font-size="16" font-weight="700" fill="#B02E1B" text-anchor="end">×2–6</text>
+  <text x="562" y="412" font-size="15" fill="#1B1A18">/api/* · requests per task</text>
+  <rect x="552" y="426" width="238" height="48" fill="url(#pdTeal)" stroke="#3E5CD9" stroke-width="1.5"/>
+  <text x="562" y="446" font-size="16" font-weight="700" fill="#3E5CD9">notification-svc</text><text x="780" y="446" font-size="16" font-weight="700" fill="#3E5CD9" text-anchor="end">×1–4</text>
+  <text x="562" y="466" font-size="15" fill="#1B1A18">/notifications* · backlog</text>
+
+  <!-- ===== Messaging (regional, rebuilt) ===== -->
+  <rect x="836" y="196" width="148" height="308" fill="#FFF6E2" stroke="#7A5C20" stroke-width="1.3"/>
+  <text x="910" y="216" font-size="15" font-weight="700" fill="#7A5C20" text-anchor="middle">messaging</text>
+  <rect x="846" y="226" width="128" height="68" fill="url(#pdYellow)" stroke="#7A5C20" stroke-width="1.5"/>
+  <text x="910" y="246" font-size="15" fill="#6B655C" text-anchor="middle">«topic»</text>
+  <text x="910" y="268" font-size="18" font-weight="700" fill="#1B1A18" text-anchor="middle">SNS</text>
+  <text x="910" y="287" font-size="15" fill="#1B1A18" text-anchor="middle">domain events</text>
+  <rect x="846" y="314" width="118" height="68" fill="url(#pdYellow)" stroke="#7A5C20" stroke-width="1.5"/>
+  <text x="905" y="334" font-size="15" fill="#6B655C" text-anchor="middle">«queue» SQS</text>
+  <text x="905" y="355" font-size="16" font-weight="700" fill="#1B1A18" text-anchor="middle">notification</text>
+  <text x="905" y="374" font-size="15" fill="#1B1A18" text-anchor="middle">+ DLQ</text>
+  <rect x="846" y="400" width="118" height="68" fill="url(#pdYellow)" stroke="#7A5C20" stroke-width="1.5"/>
+  <text x="905" y="420" font-size="15" fill="#6B655C" text-anchor="middle">«queue» SQS</text>
+  <text x="905" y="441" font-size="16" font-weight="700" fill="#1B1A18" text-anchor="middle">audit</text>
+  <text x="905" y="460" font-size="15" fill="#1B1A18" text-anchor="middle">+ DLQ</text>
+
+  <!-- ===== Browser actor ===== -->
+  <g stroke="#6B655C" stroke-width="1.6" fill="none">
+    <circle cx="44" cy="106" r="11" fill="url(#pdGrey)"/>
+    <line x1="44" y1="117" x2="44" y2="150"/><line x1="26" y1="128" x2="62" y2="128"/>
+    <line x1="44" y1="150" x2="30" y2="174"/><line x1="44" y1="150" x2="58" y2="174"/>
+  </g>
+  <text x="44" y="198" font-size="18" font-weight="700" fill="#1B1A18" text-anchor="middle">Browser</text>
+
+  <!-- ===== Externals ===== -->
+  <rect x="1034" y="118" width="124" height="62" fill="url(#pdGrey)" stroke="#6B655C" stroke-width="1.5"/>
+  <text x="1096" y="140" font-size="15" fill="#6B655C" text-anchor="middle">«external»</text>
+  <text x="1096" y="164" font-size="18" font-weight="700" fill="#1B1A18" text-anchor="middle">Stripe</text>
+  <rect x="1034" y="196" width="124" height="62" fill="url(#pdGrey)" stroke="#6B655C" stroke-width="1.5"/>
+  <text x="1096" y="218" font-size="15" fill="#6B655C" text-anchor="middle">«external»</text>
+  <text x="1096" y="242" font-size="18" font-weight="700" fill="#1B1A18" text-anchor="middle">Google</text>
+
+  <!-- ===== Connectors ===== -->
+  <g stroke="#1B1A18" stroke-width="1.5" fill="none">
+    <line x1="66" y1="140" x2="120" y2="140" marker-end="url(#pdFill)"/>
+    <line x1="208" y1="190" x2="208" y2="216" marker-end="url(#pdFill)"/>
+    <path d="M294,124 H334 V185 H360" marker-end="url(#pdFill)"/>
+    <line x1="560" y1="214" x2="560" y2="264" marker-end="url(#pdFill)"/>
+    <line x1="700" y1="266" x2="700" y2="216" marker-end="url(#pdFill)"/>
+    <line x1="542" y1="320" x2="530" y2="320" marker-end="url(#pdFill)"/>
+    <line x1="542" y1="434" x2="530" y2="434" marker-end="url(#pdFill)"/>
+    <path d="M800,180 H1018 V149 H1032" marker-end="url(#pdFill)"/>
+    <path d="M1018,180 V227 H1032" marker-end="url(#pdFill)"/>
+  </g>
+  <g stroke="#1B1A18" stroke-width="1.5" fill="none">
+    <path d="M790,396 H818 V260 H844" marker-end="url(#pdOpen)"/>
+    <line x1="905" y1="294" x2="905" y2="312" marker-end="url(#pdOpen)"/>
+    <path d="M970,294 V434 H966" marker-end="url(#pdOpen)"/>
+    <path d="M846,348 H828 V450 H792" marker-end="url(#pdOpen)"/>
+  </g>
+  <rect x="68" y="116" width="48" height="18" fill="#FFFFFF"/>
+  <text x="92" y="130" font-size="15" fill="#1B1A18" text-anchor="middle">HTTPS</text>
+  <text x="218" y="210" font-size="15" fill="#1B1A18">/*</text>
+  <text x="908" y="172" font-size="15" fill="#6B655C" text-anchor="middle">egress</text>
+</svg>
