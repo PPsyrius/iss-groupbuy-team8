@@ -1,0 +1,19 @@
+{
+    "ScalableTargets": [
+        {
+            "ServiceNamespace": "ecs",
+            "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+            "ScalableDimension": "ecs:service:DesiredCount",
+            "MinCapacity": 2,
+            "MaxCapacity": 6,
+            "RoleARN": "arn:aws:iam::402178232802:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService",
+            "CreationTime": "2026-10-19T12:18:29.397000+08:00",
+            "SuspendedState": {
+                "DynamicScalingInSuspended": false,
+                "DynamicScalingOutSuspended": false,
+                "ScheduledScalingSuspended": false
+            },
+            "ScalableTargetARN": "arn:aws:application-autoscaling:ap-southeast-1:402178232802:scalable-target/0ec5169f4a47fde24236a6265055d1c2a538"
+        }
+    ]
+}
