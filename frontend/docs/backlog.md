@@ -34,6 +34,7 @@ Priority: P1 = presentation or submission, P2 = quality, P3 = nice-to-have. `FE`
 | FB-20 | P2 | Hide Join from a member of the open bloc (done 2026-09-29) | A buyer already in the open bloc (a `GET /group-deals/me` row matches `p.deal.dealId`; the listing computes `myTeam`) still sees an enabled "Join this bloc" on the Open bloc card beside "Share your bloc", because `onJoin` never checks `myTeam`; pressing it only earns `GROUPBUY_409_003` (no charge). With payments on, a member sees Join disabled with the reason "You're in this bloc" and no `POST /payments/intents` is sent; a non-member keeps an enabled Join. | `FE/src/routes/products.$productId.tsx`, `FE/src/features/catalog/DealProgress.tsx`, `FE/src/routes/products.$productId.test.tsx`, `FE/src/features/catalog/DealProgress.test.tsx` | `cd frontend && pnpm vitest run src/routes/products.\$productId.test.tsx src/features/catalog/DealProgress.test.tsx` | — |
 | FB-21 | P3 | In-session smoke of the Claude Code hooks (from `plan.md` T1-10 step 5) | The three frontend hooks in `.claude/settings.json` were only driven by piping their stdin payloads to the scripts (plan §12 note 31(a)); nobody has confirmed them in a real Claude Code session at the repo root. | `docs/agile/sprint-03/log/` (results only; no code change expected) | Claude Code session at the repo root, steps below | — |
 | FB-22 | P2 | Verify `Secure` on the auth cookies once backend #96 lands (from `plan.md` B3) | Until #336 (merged 2026-10-03) the `ec2` profile set `sa-token.cookie.secure: false` and `blocbuy.frontend.state-cookie-secure: false`, so on dev `blocbuy-oauth-state` (and `blocbuy-token`) went out without `Secure` although browsers reach the backend only over HTTPS. The fix was backend (#96, @l0sgAi); the frontend part is verification. | none in `FE/` (backend: `backend/blocbuy-bootstrap/src/main/resources/application-ec2.yml`) | `curl -sSI https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google \| grep -i set-cookie` shows `Secure` on `blocbuy-oauth-state` | — (backend #96 closed 2026-10-03 via #336) |
+| FB-23 | P2 | SVG wordmark and isologo (CR-7; done 2026-10-19, #553) | Ship the hand-off logo, isologo and dark isologo as SVGs (C2PA metadata stripped, text outlined so `<img>` needs no web font), render them through a shared `BrandMark` component on the storefront header, login, admin rail and error bar, `/auth/callback`, the crash screen, empty states and the payment success receipt, and regenerate the favicon and touch icon from the isologo so no logo sits on the accent fill. | `FE/src/assets/brand/` (new), `FE/src/components/BrandMark.tsx` (new), `FE/vite.config.ts`, `FE/public/favicon.svg`, `FE/public/favicon.ico`, `FE/public/apple-touch-icon.png` | `cd frontend && pnpm check && pnpm build` plus screenshots | — |
 
 ## 2. Steps
 
@@ -92,6 +93,10 @@ Preconditions: `jq` on `PATH` (the PostToolUse and Stop scripts exit 0 without i
 
 - [x] Step 1 (2026-10-03): after #96 merges and deploys (the `ec2` profile sets both `sa-token.cookie.secure: true` and `blocbuy.frontend.state-cookie-secure: true`), `curl -sSI https://d1b3np88z657cp.cloudfront.net/api/v1/auth/oauth2/google | grep -i set-cookie` shows `Secure` on `blocbuy-oauth-state`.
 - [ ] Step 2: after a Google login on dev, the `blocbuy-token` cookie shows `Secure` in DevTools; note both results in the sprint log.
+
+### FB-23: SVG wordmark and isologo (CR-7)
+
+- [x] Step 1 (2026-10-19): one step; the task row is the whole task. SVGs stay files, not `data:` URIs (`assetsInlineLimit`), because the CSP `img-src 'self' https:` allows no `data:`; they render as `<img>` because every file reuses the clipPath id `bag`.
 
 ## 3. Blocked / external
 

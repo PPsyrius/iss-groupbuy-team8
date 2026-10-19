@@ -1,6 +1,7 @@
 import { Skeleton } from "@heroui/react";
 
 import type { MyTeamResponse } from "@/api/generated/types.gen";
+import { BrandIsologo } from "@/components/BrandMark";
 
 import { blocCounts, blocFilter, blocFilters, type BlocFilter } from "./bloc-status";
 import { BlocFilterChips } from "./BlocFilterChips";
@@ -32,7 +33,11 @@ export function MyBlocs({
         <p className="text-xs text-zinc-600">Showing your latest {teams.length} blocs</p>
       ) : null}
       {shown.length === 0 ? (
-        <p className="text-sm text-zinc-600">No {label} blocs</p>
+        // The brand mark is the only decoration allowed on an empty state (CR-7).
+        <div className="flex flex-col items-center gap-2 py-6 text-center">
+          <BrandIsologo alt="" className="h-10 w-auto opacity-80" />
+          <p className="text-sm text-zinc-600">No {label} blocs</p>
+        </div>
       ) : (
         <ul aria-label="My blocs" className="flex flex-col gap-3">
           {shown.map((team) => (

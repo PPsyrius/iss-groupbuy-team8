@@ -1,0 +1,2 @@
+# The root .gitignore drops every bin/ (IDE build output); the kit's CLI lives in bin/, so re-include it.
+!bin/

@@ -19,6 +19,8 @@ describe("Header", () => {
     const signIn = await screen.findByRole("link", { name: "Sign in" });
     expect(signIn.getAttribute("href")).toMatch(/^\/login\?returnTo=/);
     expect(signIn.className).not.toMatch(/primary/);
+    // The SVG logo's alt names the home link (CR-7).
+    expect(screen.getByRole("link", { name: "BlocBuy" })).toHaveAttribute("href", "/");
     expect(screen.queryByTestId("session-user")).not.toBeInTheDocument();
   });
 
