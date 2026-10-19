@@ -29,7 +29,7 @@ function helpers(C, cfg) {
   const reqBox = seg => box('req', cfg.guidelineLabel, Object.entries(seg.items).map(([k, v]) => `<b>${k}</b> — ${esc(v)}`).join('<br>'));
 
   function slideCard(s) {
-    countM(s.say); (s.cues || []).forEach(countM);
+    countM(s.say); (s.cues || []).forEach(countM); if (s.handover) countM(s.handover);
     const [a, b] = clock[s.n];
     const time = s.slot ? `${hms(a)}–${hms(b)} · ${s.slot} s` : `${short(hms(a))} · Q&amp;A`;
     const w = words(s.say), e = est(s), over = s.slot && e > s.slot;

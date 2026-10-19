@@ -1,6 +1,7 @@
 // Prints with Playwright Chromium: deck PDF from the built HTML deck (1280x720 pages), script PDF from the in-memory script (A4 with header/footer),
 // and per-slide PNG screenshots with an overflow report (elements reaching into the slide's bottom/right margin).
 const path = require('path'), fs = require('fs');
+const { pathToFileURL } = require('url');
 const { chromium } = require('playwright');
 const { deck } = require('./lib/context');
 
@@ -8,7 +9,7 @@ async function deckPage(b) {
   const { dir, cfg } = deck();
   const p = await b.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
   await p.addInitScript(() => { window.__PRINT__ = true; });
-  await p.goto('file://' + path.join(dir, 'dist', cfg.outputs.deck));
+  await p.goto(pathToFileURL(path.join(dir, 'dist', cfg.outputs.deck)).href);
   await p.evaluate(() => document.fonts.ready);
   return p;
 }

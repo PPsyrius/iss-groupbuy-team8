@@ -11,8 +11,9 @@ module.exports = function buildDeck() {
   const { dir, cfg } = deck();
   const C = require(path.join(dir, 'src', 'content'));
   const MAIN = require(path.join(dir, 'src', 'slides-main'));
-  let BACK = {};
-  try { BACK = require(path.join(dir, 'src', 'slides-backup')); } catch (e) { if (!/Cannot find module/.test(e.message)) throw e; }
+  // Backups are optional: only a missing slides-backup.js is skipped; any error inside an existing one fails the build.
+  const backupFile = path.join(dir, 'src', 'slides-backup.js');
+  const BACK = fs.existsSync(backupFile) ? require(backupFile) : {};
 
   const TOTAL = C.SLIDES.length;
   const SEGMIN = C.SEGMENTS.map(s => s.talk + s.qa);
