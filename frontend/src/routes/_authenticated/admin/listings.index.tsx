@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-router";
 
 import type { AdminListingResponse } from "@/api/generated/types.gen";
+import { BrandIsologo } from "@/components/BrandMark";
 import { adminListingsOptions } from "@/features/admin/admin-api";
 import { isAdminDenied } from "@/features/admin/AdminShell";
 import {
@@ -132,6 +133,8 @@ function ListingsPage() {
       />
       {empty ? (
         <div className="border-border bg-surface flex flex-col items-center gap-3 rounded-lg border px-8 py-16 text-center">
+          {/* The brand mark is the only decoration allowed on an empty state (CR-7). */}
+          <BrandIsologo alt="" className="h-10 w-auto opacity-80" />
           <h2 className="text-lg font-semibold">{emptyCopy[search.tab].heading}</h2>
           <p className="text-muted max-w-[52ch] text-pretty">{emptyCopy[search.tab].body}</p>
           <div className="mt-2">

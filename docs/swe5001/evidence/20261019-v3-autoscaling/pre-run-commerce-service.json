@@ -1,0 +1,17 @@
+{
+    "desired": 2,
+    "running": 2,
+    "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:15",
+    "capacityProviderStrategy": [
+        {
+            "capacityProvider": "FARGATE",
+            "weight": 1,
+            "base": 2
+        },
+        {
+            "capacityProvider": "FARGATE_SPOT",
+            "weight": 3,
+            "base": 0
+        }
+    ]
+}
