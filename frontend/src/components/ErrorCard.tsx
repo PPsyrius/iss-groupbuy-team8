@@ -2,9 +2,13 @@ import { buttonVariants, Chip } from "@heroui/react";
 import { type ErrorComponentProps, Link, useRouter } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
+import { BrandIsologo } from "./BrandMark";
+
 // The one terminal-screen card of docs/design-screens.md §4.5 (Q11): code chip, heading, body,
 // separator, money line, actions, optional hint. Phone: full-width card, padding 24, stacked
-// actions; desktop: centred 560px, padding 40, actions side by side. No accent, no illustration.
+// actions; desktop: centred 560px, padding 40, actions side by side. No accent, no illustration;
+// the one exception is the brand mark (`mark`, CR-7), used only on the paid receipt so a success
+// reads as BlocBuy's confirmation. Error presets stay unmarked.
 // The payment receipt and return pages reuse it (§4.6, Q23/Q26 A): the chip carries the payment
 // status, `references` holds the §4.4 refund-statement rows, and `live` announces a polled change.
 const card = "border-border bg-surface rounded-lg border";
@@ -26,6 +30,7 @@ interface ErrorCardProps {
   references?: { label: string; value: string }[];
   children: ReactNode;
   hint?: { title: string; body: string };
+  mark?: boolean;
 }
 
 export function ErrorCard({
@@ -40,6 +45,7 @@ export function ErrorCard({
   references,
   children,
   hint,
+  mark = false,
 }: Readonly<ErrorCardProps>) {
   return (
     <main className="mx-auto flex max-w-[1280px] justify-center p-6 xl:py-16">
@@ -49,6 +55,7 @@ export function ErrorCard({
             title, so announcing the heading alone would miss it. An error is announced by the
             body's alert instead, so the status role steps aside rather than wrap it. */}
         <div className="flex flex-col gap-3" role={live && !alert ? "status" : undefined}>
+          {mark ? <BrandIsologo alt="" className="h-10 w-auto self-start" /> : null}
           <Chip color={color} variant="soft" size="sm" className="self-start font-mono">
             {code}
           </Chip>
