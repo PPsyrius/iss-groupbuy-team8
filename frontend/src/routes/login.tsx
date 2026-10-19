@@ -1,6 +1,7 @@
 import { Alert, buttonVariants } from "@heroui/react";
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 
+import { BrandIsologo, BrandLogo } from "@/components/BrandMark";
 import { GoogleSignInButton } from "@/features/session/GoogleSignInButton";
 import { loginSearchSchema } from "@/features/session/login-search";
 
@@ -35,7 +36,10 @@ function LoginPage() {
         </nav>
       )}
       <div className={card}>
-        <span className="text-[26px] leading-none font-bold tracking-tight">BlocBuy</span>
+        {/* Desktop uses the stacked isologo rather than the logo, since the card has vertical
+            room and the header already carries the wordmark (Sign In artboard note). */}
+        <BrandLogo className="h-10 w-auto self-start xl:hidden" />
+        <BrandIsologo className="hidden h-10 w-auto self-start xl:block" />
         {error ? (
           <ErrorBody returnTo={returnTo} backLabel={backLabel} />
         ) : (
