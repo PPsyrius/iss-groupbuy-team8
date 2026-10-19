@@ -66,5 +66,5 @@ ${sections.join('\n')}
 
   fs.mkdirSync(path.join(dir, 'dist'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'dist', cfg.outputs.deck), html);
-  console.log('slides:', sections.length, 'bytes:', html.length);
+  console.log('slides:', sections.length, 'characters:', html.length);
 };

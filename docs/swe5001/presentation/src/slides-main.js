@@ -1,11 +1,11 @@
-const { icon, md, mk, svg } = require('../../../presentation-kit/lib');
+const { icon, md, mk, svg, lockup } = require('../../../presentation-kit/lib');
 // Accent fills never carry text (design-screens.md §2.1): accent -> accent-soft + accent-soft-foreground; grey -> default + foreground.
 const F = bg => bg === 'var(--orange)' ? { bg: 'var(--orange-l)', fg: 'var(--orange-d)', sub: 'var(--orange-d)' } : bg === '#6B655C' ? { bg: 'var(--default)', fg: 'var(--foreground)', sub: 'var(--muted)' } : { bg, fg: '#fff', sub: 'rgba(255,255,255,.85)' };
 
 // ---------- slide 1 ----------
 const s1 = () => `
 <div style="position:absolute;left:80px;top:96px;font:600 16px Inter;letter-spacing:.1em;color:#FFB01F">SWE5001 PRACTICE PROJECT · TEAM 8</div>
-<div style="position:absolute;left:76px;top:132px;display:flex;align-items:flex-end;gap:18px"><svg width="102" height="128" viewBox="34 20 132 164" style="display:block"><defs><clipPath id="bagclip"><path d="M 70,58 L 130,58 Q 148,58 150,76 L 160,162 Q 162,180 144,180 L 56,180 Q 38,180 40,162 L 50,76 Q 52,58 70,58 Z"/></clipPath></defs><g clip-path="url(#bagclip)"><rect x="38" y="56" width="126" height="126" fill="#FFB01F"/><g transform="rotate(45 100 120)"><rect x="-160" y="72" width="420" height="6" fill="#F6F2EC"/><rect x="-160" y="78" width="420" height="36" fill="#E8402A"/><rect x="-160" y="114" width="420" height="6" fill="#F6F2EC"/><rect x="-160" y="120" width="420" height="36" fill="#3E5CD9"/><rect x="-160" y="156" width="420" height="6" fill="#F6F2EC"/></g></g><path d="M 78,72 C 78,24 122,24 122,72" fill="none" stroke="#F6F2EC" stroke-width="7" stroke-linecap="round"/><circle cx="78" cy="72" r="5.5" fill="#F6F2EC"/><circle cx="122" cy="72" r="5.5" fill="#F6F2EC"/></svg><div><div style="font:900 104px/0.9 Inter;letter-spacing:-2px;color:#F6F2EC">BLOC<span style="color:#E8402A">BUY</span></div><div style="font:600 17px Inter;letter-spacing:4px;color:#FFB01F;margin:12px 0 4px 4px">ONE FOR ALL • ALL FOR ONE</div></div></div>
+${lockup()}
 <div style="position:absolute;left:80px;top:300px;font:500 34px Inter;color:#fff">A scalable community group-buying platform</div>
 <div style="position:absolute;left:80px;top:368px;font:italic 400 26px Inter;color:#E6DFD3;display:flex;gap:16px;align-items:center">Three services <span style="color:#E8402A;font-size:20px">●</span> event-driven <span style="color:#E8402A;font-size:20px">●</span> rebuilt on every release</div>
 <div style="position:absolute;left:80px;top:516px;font:500 19px Inter;color:#fff">Lim Jiechao · Liu Jin · Panpakorn Siripanich · Wang Ziang · Yu Qianshuo</div>
