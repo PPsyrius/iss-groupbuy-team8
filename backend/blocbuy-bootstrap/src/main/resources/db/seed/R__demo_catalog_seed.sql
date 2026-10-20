@@ -55,10 +55,16 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- Rows seeded before #557 still point at cdn.example.com, a reserved domain that serves nothing.
--- Only those untouched seed values are repointed; an image an admin has changed stays as it is.
+-- Only those untouched seed values are repointed; an image an admin has changed stays as it is,
+-- so the gallery is cleared only while every URL in it is still a placeholder.
 UPDATE biz_product
 SET cover_image = 'https://dcsjrkmummxi7.cloudfront.net/products/' || product_no || '/cover.jpg',
-    images = NULL,
+    images = CASE
+                 WHEN jsonb_typeof(images) <> 'array' THEN images
+                 WHEN EXISTS (SELECT 1
+                              FROM jsonb_array_elements_text(images) AS url
+                              WHERE url NOT LIKE 'https://cdn.example.com/%') THEN images
+             END,
     update_time = CURRENT_TIMESTAMP,
     update_by = 'c0000000-0000-7000-8000-000000000001',
     version = version + 1

@@ -77,6 +77,14 @@ class DemoCatalogSeedIT {
         jdbc.update(
                 "UPDATE biz_product SET cover_image = 'https://media.example.org/edited.jpg'"
                         + " WHERE product_no = 'DEMO-P-0002'");
+        jdbc.update(
+                """
+                UPDATE biz_product
+                SET cover_image = 'https://cdn.example.com/demo/p3-cover.jpg',
+                    images = '["https://cdn.example.com/demo/p3-1.jpg",
+                               "https://media.example.org/gallery.jpg"]'::jsonb
+                WHERE product_no = 'DEMO-P-0003'
+                """);
         Integer legacyVersion =
                 jdbc.queryForObject(
                         "SELECT version FROM biz_product WHERE product_no = 'DEMO-P-0001'",
@@ -99,7 +107,19 @@ class DemoCatalogSeedIT {
                                 "SELECT cover_image FROM biz_product WHERE product_no = 'DEMO-P-0002'",
                                 String.class))
                 .isEqualTo("https://media.example.org/edited.jpg");
+        assertThat(
+                        jdbc.queryForMap(
+                                "SELECT cover_image, images::text AS images FROM biz_product"
+                                        + " WHERE product_no = 'DEMO-P-0003'"))
+                .containsEntry(
+                        "cover_image",
+                        "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0003/cover.jpg")
+                .containsEntry(
+                        "images",
+                        "[\"https://cdn.example.com/demo/p3-1.jpg\","
+                                + " \"https://media.example.org/gallery.jpg\"]");
 
+        jdbc.update("UPDATE biz_product SET images = NULL WHERE product_no = 'DEMO-P-0003'");
         jdbc.update(
                 "UPDATE biz_product SET cover_image = 'https://dcsjrkmummxi7.cloudfront.net/products/"
                         + "DEMO-P-0002/cover.jpg' WHERE product_no = 'DEMO-P-0002'");
