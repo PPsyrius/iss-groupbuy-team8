@@ -2,7 +2,7 @@
 
 This is Eric's part of the talk, reworded so it sounds natural when read aloud: segment 3 (slides 7 to 11) and the demo (slide 23, then steps 1 to 4). The facts, numbers, technical terms, timings and hand-overs are the same as in the source. Only the spoken glue changed: verbs, connectors, how sentences open, and how one slide leads into the next.
 
-- **Source:** `swe5001-presentation-script-v3.pdf` (speaker script and demo run book v3, 20 Oct 2026 update of PR #556), plus the deck `swe5001-presentation-v3.html` for what is on each slide.
+- **Source:** `dist/swe5001-presentation-script.pdf` (speaker script and demo run book v3, 20 Oct 2026 update of PR #556), plus the deck `dist/swe5001-presentation.html` for what is on each slide.
 - **Reading speed:** 130 words a minute. Estimated seconds = words ÷ 130 × 60. Numbers are counted the way you say them ("455" counts as four words).
 - **Target:** on slides 7–11 the spoken text fills about 75–85% of each slot, so there is time to point and pause. In demo steps 1–3 it fills about 50–60% of the slot, because switching tabs, waiting for pages and reading live numbers off the screen take the rest; step 4 has nothing to operate, so it is at 80%.
 - **Notation:** text in [square brackets] is a cue: do it, don't say it. "[Lim: next slide]" means Lim, who shares the deck during segments 1–5, moves to the next slide as you start that line.
@@ -177,7 +177,7 @@ Screen layout (one browser window, tabs left to right, plus one terminal; notifi
 
 | Tab | What's there |
 |---|---|
-| 1 | Deck at slide 23 (`swe5001-presentation-v3.html#23`); used again for slide 24 and the backups (press B) |
+| 1 | Deck at slide 23 (`dist/swe5001-presentation.html#23`); used again for slide 24 and the backups (press B) |
 | 2 | SPA product list, signed in as the demo admin (Google) |
 | 3 | Admin product list in the SPA |
 | 4 | `/api/v1/notifications` for the demo buyer (JSON) |

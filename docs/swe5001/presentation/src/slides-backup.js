@@ -1,5 +1,10 @@
-const { icon, md, mk, svg } = require('../../../presentation-kit/lib');
+const fs = require('fs');
+const path = require('path');
+const { icon, svg } = require('../../../presentation-kit/lib');
 const C = require('./content');
+
+// B11: crop of the CloudWatch dashboard, inlined so the HTML stays self-contained.
+const DASHBOARD = 'data:image/jpeg;base64,' + fs.readFileSync(path.join(__dirname, 'assets', 'b11-dashboard.jpg')).toString('base64');
 
 const tbl = (head, rows, opts = {}) => `<table class="t" style="font-size:${opts.fs || 16}px">
 <tr>${head.map((h, i) => `<th style="${opts.w && opts.w[i] ? 'width:' + opts.w[i] + 'px' : ''}">${h}</th>`).join('')}</tr>
@@ -60,142 +65,146 @@ const b15 = () => {
   ${L.map((t, i) => `<div style="position:absolute;left:${X(i) - 78}px;top:0;width:156px;height:66px;border-radius:8px;background:${col[i]};color:${fg[i]};font:700 19px/1.15 Inter;display:flex;align-items:center;justify-content:center;text-align:center">${t}</div><div style="position:absolute;left:${X(i)}px;top:66px;width:0;height:420px;border-left:1.5px dashed #A69E92"></div>`).join('')}
   ${steps.map(([a, b, n, t, o]) => { const y = 72 + n * 52, x1 = X(a), x2 = X(b), l = Math.min(x1, x2), w = Math.abs(x2 - x1), c = o ? 'var(--orange)' : 'var(--teal-d)';
     return `<div style="position:absolute;left:${l}px;top:${y + 26}px;width:${w}px;height:3px;background:${c}"></div><div style="position:absolute;left:${x2 > x1 ? x2 - 10 : x2}px;top:${y + 21}px;border-${x2 > x1 ? 'left' : 'right'}:11px solid ${c};border-top:6.5px solid transparent;border-bottom:6.5px solid transparent"></div><div style="position:absolute;left:${n === 6 ? 560 : Math.min(x1, x2) + 4}px;top:${y - 4}px;font:400 21px Inter;white-space:nowrap;background:rgba(246,242,236,.92);padding:0 4px">${t}</div>`; }).join('')}
-  <div style="position:absolute;left:4px;top:${72 + 8 * 52}px;font:700 21px Inter;color:var(--teal-d)">8 &nbsp;The team owner sees it in the app ${mk('VERIFY', 'owner or each member')}</div></div>`;
+  <div style="position:absolute;left:4px;top:${72 + 8 * 52}px;font:700 21px Inter;color:var(--teal-d)">8 &nbsp;Each member sees it in the app</div></div>`;
 };
 
 function list() {
   const B = [];
-  B.push({ id: 'BX', title: 'Backup slides: index', body: `
+  B.push({ id: 'BX', speaker: 'Lim', title: 'Backup slides', body: `
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 22px;margin-top:4px">
  ${C.BACKUPS.map(b => `<div data-go="${b[0]}" style="cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:8px 14px">
    <span class="tag" style="min-width:44px;text-align:center">${b[0]}</span><div><div style="font:600 17px Inter">${b[1]}</div><div style="font:400 14.5px Inter;color:var(--muted)">${b[2]}</div></div></div>`).join('')}
-</div><div style="margin-top:12px;font:italic 400 15px Inter;color:var(--muted)">Click a row (or type its number in the URL as #B6). Slide 24 stays up during Q&amp;A; open a backup only when a question needs it.</div>` });
+</div><div style="margin-top:12px;font:italic 400 15px Inter;color:var(--muted)">Click a row, or press B to come back here. Slide 24 stays up during questions; open a backup only when a question needs it.</div>` });
 
-  B.push({ id: 'B1a', speaker: 'Eric', title: 'Architecture decisions AD-01 to AD-06 (logical)', body: tbl(['ID', 'Decision', 'Trade-off / rationale'], [
-    ['AD-01', 'Strangler, not big bang: one codebase, two topologies (monolith on dev, distributed on ECS)', 'Commerce code churned in 46 commits in Sep → split by assembly, not relocation (ADR 0008)'],
-    ['AD-02', 'Split along transactional consistency boundaries, not nouns', 'Settlement and expiry stay single-transaction → no sagas. 5-service split rejected (50–55 person-days)'],
-    ['AD-03', 'Database per service, role per service', 'No cross-context joins; enforced by grants + ArchUnit'],
-    ['AD-04', 'Transactional outbox → SNS → SQS + DLQ, idempotent consumers (ADR 0007)', 'At-least-once + dedupe = effectively-once; no broker to operate'],
-    ['AD-05', 'Shared Sa-Token session in Valkey, roles in session', 'No per-request call to identity for authorisation'],
-    ['AD-06', 'One sync call commerce → identity, fail closed', 'Outage → 500 → Stripe redelivers; never wrongly rejects a buyer'],
-  ], { id: true, fs: 18, w: [90, 520] }) });
-  B.push({ id: 'B1b', speaker: 'Liu Jin', title: 'Architecture decisions AD-07 to AD-14 (physical)', body: tbl(['ID', 'Decision', 'Rationale'], [
-    ['AD-07', 'ECS Fargate ARM64, not EKS', 'EKS control plane ≈ US$73/mo, more than all Fargate compute; ARM ~20% cheaper than x86'],
-    ['AD-08', 'Fargate base + Spot (1 : 3) above the minimum', 'Cheap burst capacity, baseline protected'],
-    ['AD-09', 'CloudFront → ALB with origin-secret header; ALB default 403', 'TLS at the edge; ALB unusable except through CloudFront'],
-    ['AD-10', 'fck-nat t4g.nano instead of NAT Gateway', '≈ US$4 vs ≈ US$43 per month'],
-    ['AD-11', 'One RDS instance, three databases', 'Logical isolation at demo cost; own instance is the scale-out path, no code change'],
-    ['AD-12', 'Persistent foundation/edge, disposable runtime', '≈ US$0.12–0.20/h while up vs ≈ US$125/mo 24×7 (proposal estimate)'],
-    ['AD-13', 'No K8s / Argo CD', '8–12 days of setup before any feature work (study 03)'],
-    ['AD-14', 'Dedicated member account in an AWS Organization; Identity Center for people, OIDC for CI, SCP guardrails', 'Isolated blast radius and billing; short-lived credentials; limits the account admin can\'t lift'],
-  ], { id: true, fs: 16, w: [90, 480] }) });
-  B.push({ id: 'B2', speaker: 'Liu Jin', title: 'Known limitations AISS-01 to AISS-06', body: tbl(['ID', 'Limitation', 'Resolution path'], [
-    ['AISS-01', 'RDS single-AZ, single Valkey node, one fck-nat', 'Cost-driven; Multi-AZ, replicas, NAT per AZ'],
-    ['AISS-02', 'commerce-svc is coarse', 'Extract payment next, with a saga for fulfilment/refund'],
-    ['AISS-03', 'Identity outage fails checkout closed', 'By design; Stripe redelivery; cache or circuit breaker later'],
-    ['AISS-04', '/internal/** relies on network isolation only', 'Add a service token or mTLS'],
-    ['AISS-05', 'One shared RDS instance', 'Move a DB to its own instance, no code change'],
-    ['AISS-06', 'Distributed cold start ≈ 32 min (17 Oct, ×2), 15 min of it the SNS filter wait', 'Pre-warm on the day; edge stays persistent'],
+  B.push({ id: 'B1a', speaker: 'Eric', title: 'Logical decisions (AD-02 to AD-06)', body: tbl(['ID', 'Decision', 'Why'], [
+    ['AD-02', 'Split where no transaction crosses, not by nouns', 'Payment and expiry stay one transaction, so no sagas. Five services rejected (50–55 person-days)'],
+    ['AD-03', 'One database and one database role per service', 'No joins across services; enforced by grants and architecture tests'],
+    ['AD-04', 'Outbox → SNS → SQS with dead-letter queues; consumers skip duplicates', 'Events are never lost or applied twice, and there is no broker to run'],
+    ['AD-05', 'One shared login session in Valkey, roles inside it', 'Services check roles without calling identity on every request'],
+    ['AD-06', 'One direct call, commerce → identity, failing closed', 'An outage returns an error and Stripe retries; a buyer is never wrongly rejected'],
+  ], { id: true, fs: 20, w: [90, 500] }) });
+  B.push({ id: 'B1b', speaker: 'Liu Jin', title: 'Physical decisions (AD-07 to AD-14)', body: tbl(['ID', 'Decision', 'Why'], [
+    ['AD-07', 'Fargate on ARM, not Kubernetes (EKS)', 'The EKS control plane (≈ US$73/month) costs more than all our compute; ARM is ~20% cheaper'],
+    ['AD-08', 'Fargate Spot above the minimum (1 : 3)', 'Cheap extra capacity; the minimum stays on regular Fargate'],
+    ['AD-09', 'CloudFront → load balancer with a secret header', 'HTTPS at the edge; the load balancer refuses everything else (403)'],
+    ['AD-10', 'Small NAT instance, not a NAT Gateway', '≈ US$4 instead of ≈ US$43 a month'],
+    ['AD-11', 'One database server, three databases', 'Low cost; moving a database to its own server needs no code change'],
+    ['AD-12', 'Permanent edge, disposable runtime', '≈ US$0.12–0.20 an hour while up, instead of ≈ US$125 a month always on'],
+    ['AD-13', 'No Kubernetes or Argo CD', 'They would cost 8–12 days of set-up before any feature work'],
+    ['AD-14', 'Own account in an AWS Organization', 'Separate blast radius and bill; short-lived logins; guardrails the account admin cannot lift'],
+  ], { id: true, fs: 17, w: [90, 440] }) });
+  B.push({ id: 'B2', speaker: 'Liu Jin', title: 'Known limitations and the way out', body: tbl(['ID', 'Limitation', 'Way out'], [
+    ['AISS-01', 'Database, cache and NAT each run in one zone', 'A cost choice; production adds multi-zone and replicas'],
+    ['AISS-02', 'The commerce service is large', 'Move payments out next, with a saga for refunds'],
+    ['AISS-03', 'Checkout stops while identity is down', 'By design (no wrong refunds); later a cache or circuit breaker'],
+    ['AISS-04', 'Internal endpoints rely on network rules only', 'Add a service token or mutual TLS'],
+    ['AISS-05', 'One shared database server', 'Move a database to its own server; no code change'],
+    ['AISS-06', 'Building the environment takes ≈ 32 min, 15 of them waiting for SNS', 'Start it early on the day; the edge stays permanent'],
   ], { id: true, fs: 19, w: [110, 520] }) });
-  B.push({ id: 'B3', speaker: 'Eric', title: 'Context map', body: `<div style="display:flex;gap:30px;align-items:flex-start">
+  B.push({ id: 'B3', speaker: 'Eric', title: 'Context map: where service boundaries may go', body: `<div style="display:flex;gap:30px;align-items:flex-start">
    <div style="width:470px;flex:none">${svg('context-map').replace('<svg ', '<svg style="width:470px;height:auto" ')}</div>
    <div style="flex:1;padding-top:6px"><ul class="b" style="font:400 19px/1.4 Inter">
-    <li><b>identity → Google:</b> anti-corruption layer via the OAuthIdentityGateway port</li>
-    <li><b>identity → commerce:</b> Customer/Supplier, sync HTTP through the UserAppService port (the one direct call)</li>
-    <li><b>commerce → Stripe:</b> anti-corruption layer (Checkout and Refund gateways, webhook)</li>
-    <li><b>commerce → notification:</b> Published Language, integration events V1 over SNS → SQS</li></ul>
-    <div style="margin-top:14px;border-radius:8px;background:#E3E8FB;padding:14px 18px;font:400 17px/1.4 Inter">Four contexts share one service because they share transactions; the map shows where the network boundaries are allowed to be.</div></div></div>` });
-  B.push({ id: 'B4', speaker: 'Eric', title: 'Aggregates and state machines', body: `<div style="display:flex;gap:30px">
+    <li><b>Identity → Google:</b> anti-corruption layer (the OAuth gateway port)</li>
+    <li><b>Identity → commerce:</b> customer and supplier, one synchronous call (the user port)</li>
+    <li><b>Commerce → Stripe:</b> anti-corruption layer (checkout and refund gateways, webhook)</li>
+    <li><b>Commerce → notification:</b> published language: version 1 events over SNS → SQS</li></ul>
+    <div style="margin-top:14px;border-radius:8px;background:#E3E8FB;padding:14px 18px;font:400 17px/1.4 Inter">Four contexts share one service because they share transactions; the map shows where network boundaries are allowed to be.</div></div></div>` });
+  B.push({ id: 'B4', speaker: 'Eric', title: 'Aggregates and their life cycles', body: `<div style="display:flex;gap:30px">
    <div style="flex:1"><ul class="b" style="font:400 19px/1.4 Inter">
-    <li><b>GroupDeal (team):</b> only OPEN may move, once</li><li><b>Order:</b> PENDING → CONFIRMED | CANCELLED</li>
-    <li><b>PurchaseIntent</b> is the order-side aggregate (ADR 0001)</li><li>Also: CheckoutPayment, RefundWork, Product + TeamTerms, Notification</li>
+    <li><b>Team (GroupDeal):</b> only OPEN may change state, and only once</li><li><b>Order:</b> PENDING → CONFIRMED or CANCELLED</li>
+    <li><b>Purchase intent</b> is the order-side aggregate</li><li>Also: checkout payment, refund work, product with team terms, notification</li>
     <li>Domain events: MemberJoined, TeamSucceeded, TeamExpired, PaymentSucceeded</li>
-    <li>In-process subscribers run before commit (ADR 0002), so in the same transaction the outbox writer maps them to versioned integration events</li></ul>
-    <div style="margin-top:8px;border-radius:8px;background:#FDEFEC;padding:12px 16px;font:400 16.5px/1.4 Inter"><b style="color:var(--orange-d)">Be ready to explain:</b> FAILED and CANCELED are allowed by the status matrix but have no trigger in code.</div></div>
+    <li>In the same transaction, the outbox writer turns them into versioned integration events</li></ul>
+    <div style="margin-top:8px;border-radius:8px;background:#FDEFEC;padding:12px 16px;font:400 16.5px/1.4 Inter"><b style="color:var(--orange-d)">Be ready to explain:</b> FAILED and CANCELED are allowed by the status table, but nothing in the code triggers them yet.</div></div>
    <div style="width:430px;flex:none">${svg('aggregates').replace('<svg ', '<svg style="width:430px;height:auto" ')}</div></div>` });
-  B.push({ id: 'B5', speaker: 'Eric', title: 'Layers and enforced boundaries', body: tbl(['Layer', 'Module', 'Contains'], [
-    ['Client', '<span class="mono">blocbuy-client</span>', 'DTOs, integration event contracts (TeamSucceededV1, TeamExpiredV1, PaymentSucceededV1)'],
-    ['Adapter', '<span class="mono">blocbuy-adapter</span>', 'REST controllers, Result envelope, GlobalExceptionHandler'],
-    ['Application', '<span class="mono">blocbuy-application</span>', 'Commands, queries, app services, outbox relay'],
-    ['Domain', '<span class="mono">blocbuy-domain</span>', 'Aggregates, domain events, ports (framework-free)'],
+  B.push({ id: 'B5', speaker: 'Eric', title: 'Layers, and tests that keep boundaries in place', body: tbl(['Layer', 'Module', 'Contains'], [
+    ['Client', '<span class="mono">blocbuy-client</span>', 'DTOs and the integration event contracts (TeamSucceededV1, TeamExpiredV1, PaymentSucceededV1)'],
+    ['Adapter', '<span class="mono">blocbuy-adapter</span>', 'REST controllers, the result envelope, the global error handler'],
+    ['Application', '<span class="mono">blocbuy-application</span>', 'Commands, queries, application services, outbox relay'],
+    ['Domain', '<span class="mono">blocbuy-domain</span>', 'Aggregates, domain events, ports (no framework code)'],
     ['Infrastructure', '<span class="mono">blocbuy-infrastructure</span>', 'MyBatis, Stripe, Redis, SNS/SQS transports'],
-    ['Assemblies', '<span class="mono">services/*-svc</span>', 'Thin Spring Boot entry points that select contexts'],
-  ], { fs: 18, w: [150, 270] }) + `<div style="margin-top:18px;border-radius:8px;background:var(--inverse);color:#fff;padding:16px 22px;font:400 19px/1.4 Inter"><b style="color:#FFB01F">Boundaries are tested:</b> 18 ArchUnit rules, e.g. <span class="mono" style="font-size:16px">commerce_reaches_identity_only_through_user_port</span>, <span class="mono" style="font-size:16px">nothing_depends_on_notification</span></div>` });
-  B.push({ id: 'B6', speaker: 'Yorik', title: 'UC4: join a team by paying', body: `<div class="dia">${svg('uc4-join-sequence').replace('<svg ', '<svg style="width:1164px;height:auto" ')}</div>
-   <div class="cap" style="margin-top:8px">Signature verified outside the transaction; one transaction for dedupe, lock order, admit, order, stock and outbox; the active user is re-checked inside it.</div>` });
+    ['Assemblies', '<span class="mono">services/*-svc</span>', 'Thin Spring Boot entry points that pick which contexts to run'],
+  ], { fs: 18, w: [150, 270] }) + `<div style="margin-top:18px;border-radius:8px;background:var(--inverse);color:#fff;padding:16px 22px;font:400 19px/1.4 Inter"><b style="color:#FFB01F">Boundaries are tested:</b> 18 architecture rules run with the unit tests, e.g. <span class="mono" style="font-size:16px">commerce_reaches_identity_only_through_user_port</span></div>` });
+  B.push({ id: 'B6', speaker: 'Yorik', title: 'Joining a team by paying, step by step', body: `<div class="dia">${svg('uc4-join-sequence').replace('<svg ', '<svg style="width:1164px;height:auto" ')}</div>
+   <div class="cap" style="margin-top:8px">The signature is checked outside the transaction; one transaction then deduplicates, locks, admits the member, saves the order, takes stock and writes the outbox, re-checking that the user is active.</div>` });
   B.push({ id: 'B7', speaker: 'Liu Jin', title: 'Technology and services', body: tbl(['Concern', 'Choice'], [
-    ['Edge', 'CloudFront (persistent: OAuth redirect and Stripe webhook depend on its domain), S3 SPA bucket'],
-    ['Compute', 'ECS Fargate ARM64, 0.5 vCPU / 1 GB, circuit breaker + rollback, Service Connect'],
-    ['Scaling', 'commerce: ALB requests/target, min 2 / max 6, 60 s out / 180 s in · notification: SQS backlog per task (target 50), 1–4 · identity: fixed 1'],
-    ['Data', 'RDS PostgreSQL 18 db.t4g.micro (TLS forced) · ElastiCache Valkey 8 cache.t4g.micro (TLS + AUTH)'],
-    ['Messaging', 'SNS (KMS) → SQS (visibility 60 s) + DLQ (maxReceive 5), filter policy'],
-    ['Secrets', 'SSM Parameter Store SecureString; DB passwords via write-only arguments (never in state)'],
-    ['Observability', 'CloudWatch dashboard (Edge · Services · Messaging), DLQ > 0 and queue-age alarms, X-Trace-Id'],
-    ['App stack', 'Java 21, Spring Boot 4, MyBatis, Sa-Token, Stripe · React 19, TanStack, HeroUI v3'],
+    ['Edge', 'CloudFront (permanent: Google sign-in and the Stripe webhook depend on its address), S3 for the web app'],
+    ['Compute', 'ECS Fargate on ARM64, 0.5 vCPU / 1 GB per task, circuit breaker with rollback, Service Connect'],
+    ['Scaling', 'commerce: requests per target, 2–6, out after 60 s / in after 180 s · notification: backlog per task (50), 1–4 · identity: 1'],
+    ['Data', 'PostgreSQL 18 on RDS db.t4g.micro (TLS) · Valkey 8 on ElastiCache cache.t4g.micro (TLS and password)'],
+    ['Messaging', 'SNS (encrypted) → SQS (60 s visibility) with dead-letter queues after 5 receives, filter policies'],
+    ['Secrets', 'Parameter Store SecureString; database passwords never stored in Terraform state'],
+    ['Observability', 'CloudWatch dashboard (edge, services, messaging), dead-letter and queue-age alarms, trace ID on every request'],
+    ['App stack', 'Java 21, Spring Boot 4, MyBatis, Sa-Token, Stripe · React 19, TanStack, HeroUI'],
   ], { fs: 17, w: [150] }) });
-  B.push({ id: 'B8', speaker: 'Pan', title: 'Full findings list', body: tbl(['Finding', 'Fix / status'], [
-    ['First promotion: 5 failed runs (digests, tfvars, SG tag deny, early 503)', '#405–#417; green 6 Oct'],
-    ['Fargate read-only root FS crashed Tomcat on /tmp', 'VOLUME ["/tmp"]'],
-    ['Tagging API returns already-deleted ARNs', 'Per-type describe checks in env-status'],
-    ['Flyway default privileges exposed tables to all roles', 'afterMigrate grants + ServiceGrantsIT'],
-    ['Outbox relay marked unsent rows failed on a mid-batch error', 'Caught in review (#485)'],
-    ['Consumer flag never set on ECS → events unconsumed', '#512'],
-    ['RegisterScalableTarget AccessDenied: default tags also need TagResource', '#527, scoped to Course=swe5001; in effect 17 Oct'],
-    ['Fail-closed messaging gate stopped up twice: alarm email unconfirmed (#520, #528)', '#529 testing opt-out; green 17 Oct. Confirm emails, opt-out off (#515) ' + mk('FILL')],
-    ['Interrupted bootstrap restores suspended scaling', 'Manual repair only ' + mk('FILL', 'fix status')],
-    ['SCP denied CloudFront metrics (us-east-1)', '#530: SCPs consolidated, scoped exception'],
+  B.push({ id: 'B8', speaker: 'Pan', title: 'Everything the real cloud taught us', body: tbl(['What happened', 'What we did'], [
+    ['The first promotion failed five times (image digests, variables, a tag policy, an early 503)', 'Fixed one at a time; first green run on 6 Oct'],
+    ['A read-only container disk crashed the web server\'s temp folder', 'Mounted a writable /tmp'],
+    ['The AWS tagging API still lists resources that are already deleted', 'The teardown check asks each service directly'],
+    ['Default database privileges exposed tables to every role', 'Grants set after each migration, and tested'],
+    ['The outbox relay marked unsent rows as failed after a mid-batch error', 'Caught in code review and fixed'],
+    ['The notification consumer was never switched on in AWS', 'Now enabled together with messaging'],
+    ['Setting up scaling was denied: tags need an extra permission', 'Permission added, limited to this project (17 Oct)'],
+    ['The deploy stopped twice: alarm e-mails were not yet confirmed', 'Testing opt-out for now; confirm the e-mails before the final release'],
+    ['An interrupted start-up leaves auto-scaling paused', 'Repaired by hand; no fix yet'],
+    ['An organisation policy blocked CloudFront metrics (us-east-1)', 'Policies consolidated with a narrow exception'],
   ], { fs: 15.5, w: [640] }) });
-  B.push({ id: 'B9', speaker: 'Pan', title: 'Infrastructure as code and actual bill', body: tbl(['Stack', 'Lifetime', 'Contents'], [
-    ['foundation', 'persistent', 'state bucket, GitHub OIDC roles + permissions boundary, ECR, SSM'],
-    ['edge', 'persistent', 'CloudFront + S3 SPA (origin switched to the new ALB on each up)'],
-    ['runtime', 'disposable', 'VPC, ECS, ALB, RDS, Valkey, SNS/SQS, dashboard, alarms: 113–115 resources'],
+  B.push({ id: 'B9', speaker: 'Pan', title: 'Infrastructure as code, and the actual bill', body: tbl(['Stack', 'Lifetime', 'Contents'], [
+    ['foundation', 'permanent', 'state bucket, GitHub OIDC roles with a permissions boundary, ECR, Parameter Store'],
+    ['edge', 'permanent', 'CloudFront and the S3 web app (pointed at the new load balancer on every build)'],
+    ['runtime', 'disposable', 'network, ECS, load balancer, database, cache, SNS/SQS, dashboard, alarms: 113–115 resources'],
   ], { fs: 17, w: [140, 140] }) + `<ul class="b" style="font:400 17.5px/1.38 Inter;margin-top:16px">
-    <li><span class="mono" style="font-size:15px">env-up.sh / env-down.sh / env-status.sh</span> (absence check with per-type describe calls)</li>
-    <li>Up ≈ 13–15 min (monolith), ≈ 32 min (distributed, 17 Oct ×2); down ≈ 9–13 min (115 resources in 709 s on 17 Oct)</li>
+    <li><span class="mono" style="font-size:15px">env-up.sh / env-down.sh / env-status.sh</span> (status checks that nothing is left)</li>
+    <li>Up ≈ 32 min (17 Oct, twice); down ≈ 13 min (115 resources in 709 s)</li>
     <li>Golden-path <span class="mono" style="font-size:15px">ecs-service</span> module: a new service is one map entry</li>
-    <li>Apply-role guardrails: IAM only under <span class="mono" style="font-size:15px">/swe5001/</span>, tag- and name-conditioned denies</li></ul>
-   <div style="margin-top:6px;border-radius:8px;background:var(--inverse);color:#fff;padding:14px 20px;font:400 17.5px/1.4 Inter"><b style="color:#FFB01F">Actual AWS bill</b> (whole account, Cost Explorer): Sep US$78.51; 1–17 Oct ≈ US$65 (≈ US$4/day), mostly the always-on SWE5006 EC2 host + ALB. The SWE5001 runtime’s RDS + Valkey + ECS: <b>US$0.49</b> across 7 up/down sessions (15–17 Oct).</div>` });
+    <li>The apply role can only touch IAM under <span class="mono" style="font-size:15px">/swe5001/</span>, limited by tags and names</li></ul>
+   <div style="margin-top:6px;border-radius:8px;background:var(--inverse);color:#fff;padding:14px 20px;font:400 17.5px/1.4 Inter"><b style="color:#FFB01F">Actual AWS bill</b> (whole account, Cost Explorer): Sep US$78.51; 1–17 Oct ≈ US$65 (≈ US$4 a day), mostly the always-on development server. This project's runtime (database, cache, containers): <b>US$0.49</b> across 7 sessions.</div>` });
   B.push({ id: 'B10', speaker: 'Eric', title: 'API access for producers and consumers', body: `
    <div style="display:flex;align-items:stretch;gap:10px;height:150px">
-    ${[['users', 'Producers & consumers', 'web SPA, future partner clients', '#EFE9DF', 'var(--ink)'], ['shield-halved', 'CloudFront', 'the only way in; adds origin secret', 'var(--teal-l)', 'var(--teal-d)'], ['sitemap', 'ALB path rules', '/auth, /users, /notifications, /api/*; default 403', 'var(--teal-l)', 'var(--teal-d)'], ['cubes', 'Services', 'identity · commerce · notification', 'var(--orange-l)', 'var(--orange-d)']].map((c, i, a) => `<div style="flex:1;border-radius:8px;background:${c[3]};padding:14px 16px"><div style="font-size:24px;color:${c[4]}">${icon(c[0])}</div><div style="font:700 18px Inter;margin-top:6px">${c[1]}</div><div style="font:400 15.5px/1.3 Inter;color:var(--ink3)">${c[2]}</div></div>${i < a.length - 1 ? `<div style="display:flex;align-items:center;color:var(--muted)">${icon('arrow-right-long')}</div>` : ''}`).join('')}
+    ${[['users', 'Clients', 'the web app; future partner apps', '#EFE9DF', 'var(--ink)'], ['shield-halved', 'CloudFront', 'the only way in; adds the secret header', 'var(--teal-l)', 'var(--teal-d)'], ['sitemap', 'Load-balancer paths', '/auth, /users, /notifications, /api/*; anything else 403', 'var(--teal-l)', 'var(--teal-d)'], ['cubes', 'Services', 'identity · commerce · notification', 'var(--orange-l)', 'var(--orange-d)']].map((c, i, a) => `<div style="flex:1;border-radius:8px;background:${c[3]};padding:14px 16px"><div style="font-size:24px;color:${c[4]}">${icon(c[0])}</div><div style="font:700 18px Inter;margin-top:6px">${c[1]}</div><div style="font:400 15.5px/1.3 Inter;color:var(--ink3)">${c[2]}</div></div>${i < a.length - 1 ? `<div style="display:flex;align-items:center;color:var(--muted)">${icon('arrow-right-long')}</div>` : ''}`).join('')}
    </div>
    <div style="display:flex;gap:18px;margin-top:16px">
     <div class="card" style="flex:1;padding:16px 20px"><div class="serif" style="font-size:22px;color:var(--teal-d);margin-bottom:8px">Built</div><ul class="b" style="font:400 16.5px/1.38 Inter">
-     <li>Public contract <span class="mono" style="font-size:14px">contracts/openapi.json</span>, committed; TypeScript client generated, not committed; contract check on every PR</li>
-     <li>Integration events versioned (…V1); consumers ignore unknown versions; producers can add V2 without a lock-step release</li>
-     <li><span class="mono" style="font-size:14px">/internal/**</span> not routed by the ALB, peer security groups only, absent from the public contract (InternalPathsContractTest)</li></ul></div>
+     <li>Public contract <span class="mono" style="font-size:14px">contracts/openapi.json</span>, committed; TypeScript client generated; contract check on every pull request</li>
+     <li>Events versioned (V1): producers can add V2 without a joint release</li>
+     <li>Internal endpoints: not routed, peer services only, not in the public contract (tested)</li></ul></div>
     <div style="flex:1;border-radius:8px;background:#FDEFEC;padding:16px 20px"><div class="serif" style="font-size:22px;color:var(--orange-d);margin-bottom:8px">Not built (be upfront)</div><ul class="b" style="font:400 16.5px/1.38 Inter">
-     <li>API gateway, per-client keys, rate limiting</li><li>Service-to-service token or mTLS (AISS-04)</li>
-     <li><b>Path:</b> API Gateway, or ALB + WAF rate rules behind the CloudFront origin; a service token on <span class="mono" style="font-size:14px">/internal/**</span></li></ul></div>
+     <li>API gateway, per-client keys, rate limiting</li><li>Service-to-service token or mutual TLS (AISS-04)</li>
+     <li><b>Way forward:</b> API Gateway, or load-balancer and WAF rate rules behind CloudFront; a service token on internal endpoints</li></ul></div>
    </div>` });
   B.push({ id: 'B11', speaker: 'Lim', title: 'Analytics: what the platform measures', body: `
    <div style="display:flex;gap:18px">
     <div class="card" style="flex:1;padding:16px 20px"><div style="display:flex;gap:10px;align-items:center"><span style="color:var(--green);font-size:22px">${icon('chart-line')}</span><div class="serif" style="font-size:22px;color:var(--green)">Operational, in use</div></div>
-     <ul class="b" style="font:400 16.5px/1.38 Inter;margin-top:10px"><li>CloudWatch dashboard <span class="mono" style="font-size:14px">blocbuy-swe5001</span>: edge, services, messaging</li><li>V2 load results set the 12,000 req/target/min scaling target</li><li>DLQ and queue-age alarms</li></ul></div>
+     <ul class="b" style="font:400 16.5px/1.38 Inter;margin-top:10px"><li>CloudWatch dashboard: edge, services, messaging</li><li>The 16 Oct load results set the scaling target (12,000 requests per task per minute)</li><li>Dead-letter and queue-age alarms</li></ul></div>
     <div class="card" style="flex:1;padding:16px 20px"><div style="display:flex;gap:10px;align-items:center"><span style="color:var(--orange-d);font-size:22px">${icon('money-bill-trend-up')}</span><div class="serif" style="font-size:22px;color:var(--orange-d)">Business, in the data, not built</div></div>
-     <ul class="b" style="font:400 16.5px/1.38 Inter;margin-top:10px"><li>Team fill rate and time-to-fill per product</li><li>Referral attribution from share invites (UC7) ${mk('VERIFY', 'data in biz_* tables?')}</li><li>Conversion from team start to success; refund rate by product</li></ul></div>
+     <ul class="b" style="font:400 16.5px/1.38 Inter;margin-top:10px"><li>Team fill rate and time to fill, per product</li><li>Referrals from share invites (invites and credits are already stored)</li><li>Start-to-success conversion; refund rate per product</li></ul></div>
    </div>
-   <div style="display:flex;gap:18px;margin-top:16px;align-items:stretch">
-    <div style="flex:1.2;display:flex;align-items:center;gap:10px;border-radius:8px;background:#E3E8FB;padding:16px 18px">
-     <div style="font:700 15px Inter;letter-spacing:.08em;color:var(--teal-d);width:84px">NEXT STEP</div>
-     ${['Event bus', 'Analytics consumer', 'Reporting store'].map((t, i) => `<div style="flex:1;height:64px;border-radius:8px;background:${i === 0 ? 'var(--yellow)' : '#fff'};border:1.5px solid ${i === 0 ? 'var(--yellow)' : 'var(--teal)'};display:flex;align-items:center;justify-content:center;text-align:center;font:700 16px/1.2 Inter">${t}</div>${i < 2 ? `<span style="color:var(--teal-d)">${icon('arrow-right-long')}</span>` : ''}`).join('')}
+   <div style="display:flex;gap:18px;margin-top:16px;align-items:flex-start">
+    <div style="flex:1">
+     <div style="display:flex;align-items:center;gap:10px;border-radius:8px;background:#E3E8FB;padding:16px 18px">
+      <div style="font:700 15px Inter;letter-spacing:.08em;color:var(--teal-d);width:84px">Next step</div>
+      ${['Event bus', 'Analytics consumer', 'Reporting store'].map((t, i) => `<div style="flex:1;height:64px;border-radius:8px;background:${i === 0 ? 'var(--yellow)' : '#fff'};border:1.5px solid ${i === 0 ? 'var(--yellow)' : 'var(--teal)'};display:flex;align-items:center;justify-content:center;text-align:center;font:700 16px/1.2 Inter">${t}</div>${i < 2 ? `<span style="color:var(--teal-d)">${icon('arrow-right-long')}</span>` : ''}`).join('')}
+     </div>
+     <div style="margin-top:12px;font:400 15.5px/1.4 Inter;color:var(--muted)">A read-only consumer on the same event bus, the same pattern as the audit queue: no change to commerce.</div>
     </div>
-    <div style="flex:1;border:2px dashed #8C2414;border-radius:8px;background:#EFE9DF;padding:12px 16px;font:400 15px/1.35 Inter;color:#8C2414">${mk('FILL', 'dashboard crop')}<br>Crop of dashboard <b>blocbuy-swe5001</b>, all three rows, from the 19 Oct session.</div>
-   </div>
-   <div style="margin-top:12px;font:400 15.5px Inter;color:var(--muted)">A read-only consumer on the same bus, the same pattern as audit: no change to commerce.</div>` });
+    <div style="width:470px;flex:none">
+     <img alt="" src="${DASHBOARD}" style="display:block;width:470px;height:224px;object-fit:cover;border-radius:8px;outline:1.5px solid #E7E0D4">
+     <div style="margin-top:6px;text-align:center;font:italic 400 14px Inter;color:var(--muted)">CloudWatch dashboard blocbuy-swe5001, October test session</div>
+    </div>
+   </div>` });
   const R = (n, t, r) => [n, t, r];
-  B.push({ id: 'B12', speaker: 'Lim', title: 'Scale-out and resilience results', body: tbl(['Check', 'Target', 'Result'], [
-    R('V3 HTTP auto-scale', '≥ 80% of linear from 1 → 4 tasks; p95 &lt; 800 ms outside 3 min after scale-out', mk('FILL')),
-    R('V4 queue scaling', '2,000 TeamExpired → 4 tasks, drain, DLQ 0', mk('FILL') + ' local IT: 141 s end to end'),
-    R('V5 self-heal', 'stop 1 of 2 tasks, 0 non-2xx, replacement &lt; 2 min', mk('FILL')),
-    R('V7 poison message', '5 receives → DLQ → alarm', mk('FILL') + ' local: verified 15 Oct'),
-    R('Identity outage', 'browse 200; checkout 500 → redelivered once', mk('FILL') + ' local: verified'),
-    R('Distributed up + smoke', '3 services stable, 9 smoke checks', '17 Oct ×2: tasks 2/2 · 1/1 · 1/1; 9/9 checks; SNS→SQS verified with synthetic events. Buyer E2E (#460): ' + mk('FILL')),
-    R('Teardown', 'all resources destroyed, absence check clean', '115 resources, 709 s (17 Oct); 113, 784 s (16 Oct)'),
-  ], { fs: 16, w: [200, 380] }) + `<div style="margin-top:10px;font:italic 400 15px Inter;color:var(--muted)">Anything not run on AWS stays “not run on AWS; local result: …”. Never upgrade a local result to an AWS one.</div>` });
+  B.push({ id: 'B12', speaker: 'Lim', title: 'Scale-out and resilience results', body: tbl(['Check', 'Target', 'Result on AWS'], [
+    R('HTTP auto-scaling', '≥ 80% of linear from 1 → 4 tasks; p95 &lt; 800 ms except 3 min after a scale-out', 'commerce 1 → 3 tasks on its own; ≈ 455 req/s, server p95 &lt; 50 ms. Partial: the load laptop hit its limit first, so 4 tasks and linearity are not shown yet'),
+    R('Queue scaling', '2,000 expiries → up to 4 tasks, drained, dead-letter queue empty', 'not run on AWS · local test: 141 s end to end'),
+    R('Self-healing', 'Stop 1 of 2 tasks: no failed requests, replacement within 2 min', 'not run on AWS'),
+    R('Bad message', '5 receives → dead-letter queue → alarm', 'not run on AWS · local test: passed 15 Oct'),
+    R('Identity outage', 'Browsing works; checkout returns 500 and is redelivered once', 'not run on AWS · local test: passed'),
+    R('Build from nothing', '3 services stable, 9 smoke checks', '17 Oct, twice: tasks 2/2 · 1/1 · 1/1; 9/9 checks; SNS → SQS verified; buyer journey end to end: not run on AWS'),
+    R('Teardown', 'Everything destroyed, absence check clean', '115 resources in 709 s (17 Oct); 113 in 784 s (16 Oct)'),
+  ], { fs: 16, w: [190, 360] }) + `<div style="margin-top:10px;font:italic 400 15px Inter;color:var(--muted)">A local result is never presented as an AWS result.</div>` });
   B.push({ id: 'B13', speaker: 'Eric', title: 'Logical view, simplified', body: b13() });
   B.push({ id: 'B14', speaker: 'Liu Jin', title: 'Physical view, simplified', body: b14() });
-  B.push({ id: 'B15', speaker: 'Yorik', title: 'Team expiry, numbered steps (fallback for slide 16)', body: b15() });
+  B.push({ id: 'B15', speaker: 'Yorik', title: 'Team expiry, numbered steps', body: b15() });
   return B;
 }
 module.exports = { list };
