@@ -132,7 +132,7 @@ const b8 = () => `<div style="display:flex;gap:18px">
 
 // ---- B10: test inventory (segment 3), counted in the repository on 19 Oct at 8bcb38dd ----
 const b10 = () => dt(['Kind', 'Tools', 'Count by module', 'Example classes', 'Runs'], [
-  ['<b>Unit</b>', 'JUnit Jupiter, Mockito', '182 classes: domain 42, application 41, infrastructure 47, bootstrap 43, adapter 4, platform 2, commerce-svc 2, client 1', `${mo('RefundServiceTest')}, ${mo('PaidGroupDealTest')}, ${mo('ProductStatusTest')}`, 'every PR (build-quality)'],
+  ['<b>Unit</b>', 'JUnit Jupiter, Mockito', '182 *Test classes (by file name; 21 start Spring or a database): domain 42, application 41, infrastructure 47, bootstrap 43, adapter 4, platform 2, commerce-svc 2, client 1', `${mo('RefundServiceTest')}, ${mo('PaidGroupDealTest')}, ${mo('ProductStatusTest')}`, 'every PR (build-quality)'],
   ['<b>Integration</b>', 'Testcontainers: PostgreSQL 18, Redis 8.10, ElasticMQ', '49 classes: bootstrap 24, infrastructure 15, services 9, platform 1', `${mo('OrderRepositoryIT')}, ${mo('ServiceGrantsIT')}, ${mo('OutboxRelayElasticMqIT')}, ${mo('StripeRolloutAcceptanceIT')} (acceptance)`, 'every PR (build-quality)'],
   ['<b>Architecture</b>', 'ArchUnit', '18 rules in 1 class', `${mo('ArchitectureTest')}`, 'every PR (build-quality)'],
   ['<b>API contract</b>', 'springdoc export, git diff, openapi-diff 2.1.7', '1 file', `${mo('contracts/openapi.json')}`, 'backend PRs (contract-check, not required)'],
@@ -202,7 +202,7 @@ const b16 = () => `<div style="display:flex;gap:14px;align-items:stretch">
   ${li('p95 between 23 and 57 ms on every plateau (target under 500 ms)')}
   ${li('No saturation reached: 200 a second is a tested lower bound, not a limit')}</ul>`)}
  ${rCard('Workload baseline', 'DEV CODE · LOCAL RUN, 30 SEP', `${dt(['100 users each', 'p95', 'Errors'], [
-  ['Browse (list + detail)', '24 ms', '0'], ['JOIN, one hot team', '57 ms', '0'], ['My Orders', '18 ms', '0'],
+  ['Browse (list + detail)', '24 ms', '0'], ['JOIN intent, unpaid', '57 ms', '0'], ['My Orders', '18 ms', '0'],
  ], { fs: 15, pad: '4px 8px' })}<div style="font:400 15px/1.35 Inter;margin-top:8px">30 paid teams expired within 58 s of their deadlines under that load. One laptop with real HTTP, PostgreSQL and Redis; <b>not a deployed result</b>.</div>`, 'var(--orange-d)')}
 </div>
 <div style="margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter"><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out is shown on SWE5001 prod.</div>

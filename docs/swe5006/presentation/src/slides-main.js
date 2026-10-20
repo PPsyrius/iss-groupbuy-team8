@@ -387,8 +387,8 @@ const tRows = [
   ['Component', 'plat', 200, '76', 'files · 799 tests', 'Vitest · Testing Library · MSW', ['every PR'], 'account.test.tsx', 'a chip switches ?blocs= without refetching'],
   ['API contract', 'n', 225, '1', 'OpenAPI file', 'export · git diff · openapi-diff', ['every PR'], 'contracts/openapi.json', 'drift or a breaking change fails the build'],
   ['Architecture', 'biz', 250, '18', 'ArchUnit rules', 'ArchUnit', ['every PR'], 'ArchitectureTest', 'domain_is_framework_free, nothing_depends_on_notification'],
-  ['Integration', 'biz', 275, '49', 'classes', 'Spring Boot · Testcontainers', ['every PR'], 'OrderRepositoryIT · StripeRolloutAcceptanceIT', 'PostgreSQL 18 rejects a duplicate payment; paid start to refund'],
-  ['Unit', 'biz', 300, '182', 'classes', 'JUnit Jupiter · Mockito', ['every PR'], 'RefundServiceTest · PaidGroupDealTest', 'a lost Stripe response reuses its key; 24 paid-team rules'],
+  ['Integration', 'biz', 275, '49', '*IT classes', 'Spring Boot · Testcontainers', ['every PR'], 'OrderRepositoryIT · StripeRolloutAcceptanceIT', 'PostgreSQL 18 rejects a duplicate payment; paid start to refund'],
+  ['Unit', 'biz', 300, '182', '*Test classes', 'JUnit Jupiter · Mockito', ['every PR'], 'RefundServiceTest · PaidGroupDealTest', 'a lost Stripe response reuses its key; 24 paid-team rules'],
 ];
 const tRow = ([k, tone, w, n, unit, tool, runs, cls, why], i) => {
   const [b, bg, fg] = dTone[tone];
