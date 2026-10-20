@@ -14,12 +14,17 @@ public enum CommonErrorCode implements ErrorCode {
             "COMMON_401_001", 401, "Authentication required", "error.common.unauthenticated"),
     FORBIDDEN("COMMON_403_001", 403, "Permission denied", "error.common.forbidden"),
     NOT_FOUND("COMMON_404_001", 404, "Resource not found", "error.common.notFound"),
+    METHOD_NOT_ALLOWED(
+            "COMMON_405_001", 405, "Method not allowed", "error.common.methodNotAllowed"),
+    NOT_ACCEPTABLE("COMMON_406_001", 406, "Not acceptable", "error.common.notAcceptable"),
     STATE_CONFLICT("COMMON_409_001", 409, "State conflict", "error.common.stateConflict"),
     PRECONDITION_FAILED(
             "COMMON_412_001",
             412,
             "Concurrency precondition failed",
             "error.common.preconditionFailed"),
+    UNSUPPORTED_MEDIA_TYPE(
+            "COMMON_415_001", 415, "Unsupported media type", "error.common.unsupportedMediaType"),
     RATE_LIMITED("COMMON_429_001", 429, "Too many requests", "error.common.rateLimited"),
     INTERNAL_ERROR("COMMON_500_001", 500, "Internal server error", "error.common.internalError");
 
