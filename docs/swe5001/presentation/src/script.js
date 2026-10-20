@@ -221,9 +221,10 @@ export EXPECTED_IMAGE_DIGEST=sha256:<commerce digest> EXPECTED_NOTIFICATION_DIGE
 export CONFIRM_V4_SEED=2000 V4_RESULTS_DIR=<new empty private directory outside the checkout>
 bash infra/swe5001/scripts/v4-burst.sh`)}
 <p>Restore <code>v4_demo_enabled=false</code> with a reviewed apply after the talk (or let <code>down</code> remove the runtime).</p>
-<h3>A.9 Tear down and verify</h3>${pre(`gh workflow run swe5001-env.yml --repo PPsyrius/iss-groupbuy-team8 --ref prod -f action=down
-sleep 5   # let the run appear
-RUN=$(gh run list --workflow swe5001-env.yml --repo PPsyrius/iss-groupbuy-team8 --branch prod --limit 1 --json databaseId -q ".[0].databaseId")
+<h3>A.9 Tear down and verify</h3>${pre(`T=$(date -u +%Y-%m-%dT%H:%M:%SZ); ME=$(gh api user -q .login)
+gh workflow run swe5001-env.yml --repo PPsyrius/iss-groupbuy-team8 --ref prod -f action=down
+RUN=; until [ -n "$RUN" ]; do sleep 3   # the down run you just dispatched: yours, created after T
+  RUN=$(gh run list --workflow swe5001-env.yml --repo PPsyrius/iss-groupbuy-team8 --branch prod --user "$ME" --event workflow_dispatch --json databaseId,createdAt -q "[.[] | select(.createdAt >= \\"$T\\")] | last | .databaseId // empty"); done
 gh run watch "$RUN" --repo PPsyrius/iss-groupbuy-team8 --exit-status   # status has its own concurrency group: wait until down has succeeded
 gh workflow run swe5001-env.yml --repo PPsyrius/iss-groupbuy-team8 --ref prod -f action=status`)}
 </section>
