@@ -19,7 +19,7 @@ const coverage = [
   ['5b', 'Describe the DevOps pipeline and procedures.', '19, 20, 22', 'Pan'],
   ['5c', 'Highlight any technical findings and issues encountered.', '21', 'Pan'],
   ['6a', 'Demonstrate some of the significant use cases of the solution.', '23 + demo step 1', 'Eric'],
-  ['6b', 'Demonstrate how the solution deals with some of the important quality attributes e.g., scalability (such as demonstrating auto-scaling), performance (show using some scripted performance testing), maintainability (show/run the DevOps pipeline).', '24 + demo steps 2–3', 'Lim'],
+  ['6b', 'Demonstrate how the solution deals with some of the important quality attributes e.g., scalability (such as demonstrating auto-scaling), performance (show using some scripted performance testing), maintainability (show/run the DevOps pipeline).', 'demo steps 2–4 + 24', 'Eric, Pan, Lim'],
 ];
 const briefing = [
   ['Q1 Pain points', '2'], ['Q2 Platform, common services, reusable frameworks', '3, 9, 11; B5, B10'], ['Q3 Benefit of building on the platform, demonstrated', '11 (measured reuse)'],
