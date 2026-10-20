@@ -113,7 +113,7 @@ const s5 = () => `
 
 // ---------- slide 6 ----------
 const ms = [['4 Oct', 'Proposal submitted'], ['6 Oct', 'First promotion to AWS (one service)'], ['14 Oct', 'Split into three services; outbox, events'], ['16 Oct', 'Load baseline: 200 req/s per task'], ['17 Oct', 'First green three-service release'], ['19 Oct', 'Auto-scaling on AWS: 1 → 3 tasks']];
-const eff = [['Liu Jin', 12.5, 'AWS stacks, pipeline, service split', true], ['Panpakorn (Pan)', 11.5, 'Messaging, scaling, login, load tests'], ['Yu Qianshuo (Yorik)', 9, 'Event outbox and relay, failure drills'], ['Lim Jiechao', 8.5, 'Lead; AWS accounts and guardrails; architecture study; presentation'], ['Wang Ziang (Eric)', 8.5, 'Notification consumer, dead-letter redrive, demo lead']];
+const eff = [['Liu Jin', 12.5, 'AWS stacks, pipeline, service split', true], ['Panpakorn (Pan)', 11.5, 'Messaging, scaling, login, load tests'], ['Yu Qianshuo (Yorik)', 9, 'Event outbox and relay, failure drills'], ['Lim Jiechao', 8.5, 'Lead; AWS accounts and guardrails; architecture study and proof of concept; presentation'], ['Wang Ziang (Eric)', 8.5, 'Notification consumer, dead-letter redrive, demo lead']];
 const s6 = () => `
 <div style="position:absolute;left:10px;right:10px;top:52px;height:3px;background:var(--teal)"></div>
 ${ms.map((m, i) => {

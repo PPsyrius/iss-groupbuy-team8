@@ -154,7 +154,7 @@ ${tbl(['Time (SGT)', 'Do', 'Owner'], [
 <ul><li>Teardown verified (A.9); record both run links in the day log. Save evidence <b>before</b> teardown: log groups die with <code>runtime</code>.</li><li>Every assessor remark goes into #461 the same evening; each becomes a change or a justified non-change in the report (due 16 Nov).</li><li>Tag <code>swe5001-demo-20261021</code> on the <code>prod</code> commit that was shown (never a <code>v*</code> tag).</li></ul>
 </section>`;
 
-const eff = [['Liu Jin', '12.5', 'AWS stacks, pipeline, service split'], ['Panpakorn (Pan)', '11.5', 'Messaging, scaling, login, load tests'], ['Yu Qianshuo (Yorik)', '9', 'Event outbox and relay, failure drills'], ['Lim Jiechao', '8.5', 'Lead; AWS accounts and guardrails; architecture study; presentation'], ['Wang Ziang (Eric)', '8.5', 'Notification consumer, dead-letter redrive, demo lead']];
+const eff = [['Liu Jin', '12.5', 'AWS stacks, pipeline, service split'], ['Panpakorn (Pan)', '11.5', 'Messaging, scaling, login, load tests'], ['Yu Qianshuo (Yorik)', '9', 'Event outbox and relay, failure drills'], ['Lim Jiechao', '8.5', 'Lead; AWS accounts and guardrails; architecture study and proof of concept; presentation'], ['Wang Ziang (Eric)', '8.5', 'Notification consumer, dead-letter redrive, demo lead']];
 
 function openItems() {
   const left = markers.FILL + markers.VERIFY + markers.CONFIRM;
