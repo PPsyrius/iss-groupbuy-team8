@@ -28,6 +28,8 @@ async function screenshots(filter) {
   const { dir } = deck();
   const b = await chromium.launch();
   const p = await deckPage(b);
+  // Print media lays out every slide, like the PDF; a deck built outside the kit ignores __PRINT__ and shows only the current slide on screen.
+  await p.emulateMedia({ media: 'print' });
   fs.mkdirSync(path.join(dir, 'png'), { recursive: true });
   const ids = await p.$$eval('.slide', ss => ss.map(s => s.id));
   // report overflow: elements whose box exceeds the slide
