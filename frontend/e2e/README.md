@@ -14,6 +14,10 @@ The specs that take the `api` fixture (login's anonymous half, buyer-journey, jo
 
 A signed-in buyer, all on stubs: catalog → listing → quote sheet → Continue to payment → Stripe (a routed 302 back to `/payments/return`) → receipt Waiting then Paid → My blocs. It asserts that START carries the sheet's quote id (US26). It runs on every target and proves the frontend's part only.
 
+## Broken order thumbnails (`image-fallback.spec.ts`)
+
+A signed-in buyer opens `/account` with a stubbed order whose image request returns 404. At 390 px and 1280 px, Chromium must remove the failed image, keep the 56 px striped tile and avoid horizontal page overflow. Each case attaches a full-page screenshot to the Playwright report. Run `pnpm build` then `pnpm e2e image-fallback.spec.ts`; this verifies frontend rendering, not the live dev order snapshots in #514.
+
 ## Admin console (`admin.spec.ts`)
 
 Three journeys run on every target on the shared `api` stubs: an anonymous visitor at `/admin` goes to `/login?returnTo=%2Fadmin`; a signed-in buyer (`me` without the `admin` role) gets the 403 card without the storefront header; and a stubbed admin creates a draft, publishes it (the dialog names price, currency and stock), then meets the conflict banner after another admin's save and reloads. The admin endpoints answer from a small versioned store inside the spec; a request it does not serve answers 501 and fails the test.

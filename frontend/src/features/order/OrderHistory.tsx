@@ -2,6 +2,7 @@ import { Chip } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 
 import type { OrderSummaryResponse } from "@/api/generated/types.gen";
+import { ImageFallback } from "@/components/ImageFallback";
 import { formatDayTime, parseDeadline } from "@/features/catalog/deal-time";
 import { formatPrice } from "@/features/catalog/Price";
 
@@ -40,14 +41,7 @@ function OrderRow({ order }: Readonly<{ order: OrderSummaryResponse }>) {
   const seats = `${quantity} ${quantity === 1 ? "seat" : "seats"}`;
   return (
     <article className="border-border bg-surface flex gap-3 rounded-lg border p-3.5">
-      <div
-        aria-hidden="true"
-        className="size-14 shrink-0 overflow-hidden rounded-lg bg-[repeating-linear-gradient(135deg,var(--surface-secondary)_0_8px,var(--surface-tertiary)_8px_16px)]"
-      >
-        {productImage ? (
-          <img alt="" className="h-full w-full object-cover" loading="lazy" src={productImage} />
-        ) : null}
-      </div>
+      <ImageFallback src={productImage} className="size-14 shrink-0 overflow-hidden rounded-lg" />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-start justify-between gap-2">
           <h3 className="line-clamp-2 text-sm font-semibold">
