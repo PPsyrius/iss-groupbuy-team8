@@ -14,6 +14,6 @@ module.exports = {
   scriptTitle: 'BlocBuy · Speaker script and demo run book',
   scriptHeader: {
     left: 'Speaker script and demo run book · Team 8 BlocBuy · 21 Oct 2026, 16:15–16:55 SGT',
-    right: 'BlocBuy tokens · 2026-10-18',
+    right: 'BlocBuy tokens · 2026-10-20',
   },
 };
