@@ -31,6 +31,7 @@ For the local Docker stack, put `DB_USERNAME`, `DB_PASSWORD`, and `REDIS_PASSWOR
 ```bash
 ./mvnw spotless:apply                          # auto-format (google-java-format AOSP) — run before commit
 ./mvnw verify                                  # format check + compile + unit tests + ArchUnit + checkstyle + SpotBugs + JaCoCo + ITs
+./mvnw -T 2 verify -Pci                        # same gates; INFO test logs and two isolated bootstrap IT JVMs
 ./mvnw spring-boot:run                         # run app (root-safe; only bootstrap executes)
 ./mvnw verify -Popenapi-export                 # regenerate ../contracts/openapi.json
 docker build -t blocbuy-backend .              # production image (Dockerfile at backend/)
@@ -71,6 +72,8 @@ Notification events (#446) are consumed from SQS by an opt-in long-poll consumer
 - Tests: JUnit 5; repository `*IT` suites spin a real PostgreSQL 18 via Testcontainers.
 
 CI: `.github/workflows/ci-backend.yml` (build-quality → contract-check → sonar-backend → docker) and `security.yml` (Gitleaks + Trivy). Runbook: [../docs/ci/backend-pipeline.md](../docs/ci/backend-pipeline.md); thresholds: [../docs/quality/quality-gates.md](../docs/quality/quality-gates.md).
+
+The Maven `ci` profile is test-only, not a Spring runtime profile. It keeps every test and the existing coverage paths; default local verification stays serial with unchanged logging. `-Dtest.log.level=DEBUG` restores SQL diagnostics and `-Dbootstrap.it.forks=1` forces serial bootstrap ITs. The guarded private Stripe database (`STRIPE_TEST_DB_URL`) automatically selects one fork even with `-Pci`; do not force parallel forks against that shared database. Rationale and verification limits: [backend verification concurrency](../docs/ci/backend-pipeline.md#backend-verification-concurrency-2026-10-20).
 
 ## API conventions
 
