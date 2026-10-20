@@ -63,7 +63,7 @@
     <spotless-maven-plugin.version>3.10.3</spotless-maven-plugin.version>
     <google-java-format.version>1.36.1</google-java-format.version>
     <spotbugs-maven-plugin.version>4.10.4.1</spotbugs-maven-plugin.version>
-    <spotbugs.version>4.10.4</spotbugs.version>
+    <spotbugs.version>4.10.5</spotbugs.version>
     <jacoco.version>0.8.15</jacoco.version>
     <!-- SonarCloud CI-based analysis: project key and coverage path -->
     <sonar.projectKey>blocbuy-backend</sonar.projectKey>
