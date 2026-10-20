@@ -272,6 +272,11 @@ run "distributed_topology" {
   }
 
   assert {
+    condition     = local.service_environment["commerce-svc"]["BLOCBUY_STRIPE_CHECKOUT_ENABLED"] == "true" && local.service_environment["commerce-svc"]["BLOCBUY_PAYMENT_CHECKOUT_SUCCESS_URL"] == "https://d111111abcdef8.cloudfront.net/payments/return" && local.service_environment["commerce-svc"]["BLOCBUY_PAYMENT_CHECKOUT_CANCEL_URL"] == "https://d111111abcdef8.cloudfront.net/payments/return"
+    error_message = "Commerce enables Stripe test-mode Checkout with both mandatory return URLs on the deployed frontend."
+  }
+
+  assert {
     condition     = local.service_environment["notification-svc"]["BLOCBUY_EVENTS_CONSUMER_ENABLED"] == "true" && !contains(keys(local.service_environment["commerce-svc"]), "BLOCBUY_EVENTS_CONSUMER_ENABLED") && !contains(keys(local.service_environment["identity-svc"]), "BLOCBUY_EVENTS_CONSUMER_ENABLED")
     error_message = "Only notification-svc runs the SQS consumer, and only once messaging is verified."
   }
