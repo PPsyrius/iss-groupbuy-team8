@@ -1,7 +1,10 @@
 package com.blocbuy.bootstrap;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -16,6 +19,7 @@ import com.blocbuy.common.exception.BizException;
 import com.blocbuy.common.exception.CommonErrorCode;
 import com.blocbuy.common.model.PageQuery;
 import com.blocbuy.common.model.PageResult;
+import com.blocbuy.common.web.Result;
 import com.blocbuy.groupbuy.service.ShareInviteAppService;
 import com.blocbuy.identity.exception.IdentityErrorCode;
 import com.blocbuy.identity.repository.RoleRepository;
@@ -47,6 +51,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
@@ -55,7 +62,9 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  * called with no session; each must answer 401 {@code COMMON_401_001} unless it is on the explicit
  * {@link #ANONYMOUS_ALLOW_LIST}. A new endpoint that is public by accident therefore fails this
  * test, whether the leak comes from {@code SaTokenConfig} (the interceptor lets GETs under {@code
- * /api/v1/products/**} through) or from a missing in-controller check.
+ * /api/v1/products/**} through) or from a missing in-controller check. Each probe must resolve to
+ * its enumerated handler; conditional or overlapping mappings cannot silently reuse another
+ * handler's result.
  *
  * <p>Only the {@code /api/v1/**} prefix is guarded by the Sa-Token interceptor, so a second test
  * requires every project controller to sit under it. Springdoc, the actuator and {@code /error} are
@@ -69,6 +78,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  */
 @SpringBootTest(
         properties = {
+            "blocbuy.topology=monolith",
             "spring.flyway.enabled=false",
             "spring.datasource.url=jdbc:postgresql://localhost:1/blocbuy_placeholder?currentSchema=domain",
             "spring.datasource.username=test",
@@ -83,6 +93,7 @@ class EndpointAuthSurfaceTest {
     private static final String API_V1 = "/api/v1/";
     private static final Pattern PATH_VARIABLE = Pattern.compile("\\{[^/}]+}");
     private static final String SAMPLE_ID = "00000000-0000-7000-8000-000000000001";
+    private static final String SAMPLE_INVITE_REF = "a".repeat(22);
     private static final String UNAUTHENTICATED = "COMMON_401_001";
 
     /**
@@ -91,21 +102,31 @@ class EndpointAuthSurfaceTest {
      * PUBLIC_PATHS}) and the controllers. Add an entry only for an endpoint that is meant to be
      * public; everything else must stay behind login.
      */
-    private static final Map<String, String> ANONYMOUS_ALLOW_LIST =
+    private static final Map<String, AnonymousExpectation> ANONYMOUS_ALLOW_LIST =
             new TreeMap<>(
                     Map.of(
                             "GET /api/v1/products",
-                            "anonymous catalog browse (ANONYMOUS_GET_PATHS)",
+                            new AnonymousExpectation(
+                                    "anonymous catalog browse (ANONYMOUS_GET_PATHS)", 200),
                             "GET /api/v1/products/{id}",
-                            "anonymous listing detail (ANONYMOUS_GET_PATHS)",
+                            new AnonymousExpectation(
+                                    "anonymous listing detail (ANONYMOUS_GET_PATHS)", 404),
                             "GET /api/v1/invites/{ref}",
-                            "invite resolve before sign-in (ANONYMOUS_GET_PATHS, #201)",
+                            new AnonymousExpectation(
+                                    "invite resolve before sign-in (ANONYMOUS_GET_PATHS, #201)",
+                                    404),
                             "GET /api/v1/auth/oauth2/google",
-                            "starts the Google login redirect (PUBLIC_PATHS oauth2/**)",
+                            new AnonymousExpectation(
+                                    "starts the Google login redirect (PUBLIC_PATHS oauth2/**)",
+                                    302),
                             "GET /api/v1/auth/oauth2/google/callback",
-                            "provider callback opens the session (PUBLIC_PATHS oauth2/**)",
+                            new AnonymousExpectation(
+                                    "provider callback opens the session (PUBLIC_PATHS oauth2/**)",
+                                    302),
                             "POST /api/v1/webhooks/stripe",
-                            "Stripe callback, signature-verified (PUBLIC_PATHS webhooks/**)"));
+                            new AnonymousExpectation(
+                                    "Stripe callback, signature-verified (PUBLIC_PATHS webhooks/**)",
+                                    200)));
 
     @Autowired
     @Qualifier("requestMappingHandlerMapping")
@@ -145,7 +166,9 @@ class EndpointAuthSurfaceTest {
                 MvcResult result = mvc.perform(endpoint.request()).andReturn();
                 int httpStatus = result.getResponse().getStatus();
                 String code = errorCode(result);
-                if (httpStatus != 401 || !UNAUTHENTICATED.equals(code)) {
+                if (!endpoint.handles(result)) {
+                    offenders.add(endpoint.key() + " -> probe reached a different handler");
+                } else if (httpStatus != 401 || !UNAUTHENTICATED.equals(code)) {
                     offenders.add(endpoint.key() + " -> " + httpStatus + " " + code);
                 }
             } catch (Exception ex) {
@@ -167,17 +190,26 @@ class EndpointAuthSurfaceTest {
                 continue;
             }
             try {
-                int httpStatus =
-                        mvc.perform(endpoint.request()).andReturn().getResponse().getStatus();
-                if (httpStatus == 401) {
-                    offenders.add(endpoint.key() + " -> 401");
+                MvcResult result = mvc.perform(endpoint.request()).andReturn();
+                int httpStatus = result.getResponse().getStatus();
+                int expectedStatus = ANONYMOUS_ALLOW_LIST.get(endpoint.key()).status();
+                if (!endpoint.handles(result)) {
+                    offenders.add(endpoint.key() + " -> probe reached a different handler");
+                } else if (httpStatus != expectedStatus) {
+                    offenders.add(
+                            endpoint.key()
+                                    + " -> "
+                                    + httpStatus
+                                    + " (expected "
+                                    + expectedStatus
+                                    + ")");
                 }
             } catch (Exception ex) {
                 offenders.add(endpoint.key() + " -> threw " + ex);
             }
         }
         assertThat(offenders)
-                .as("allow-listed endpoints that demanded a login: %s", ANONYMOUS_ALLOW_LIST)
+                .as("allow-listed endpoints with unexpected responses: %s", ANONYMOUS_ALLOW_LIST)
                 .isEmpty();
     }
 
@@ -217,10 +249,51 @@ class EndpointAuthSurfaceTest {
     @Test
     void teamPricePolicyReadIsProtectedByTheControllerNotTheInterceptor() throws Exception {
         // GET /api/v1/products/** is anonymous in SaTokenConfig.ANONYMOUS_GET_PATHS, so only the
-        // checkLogin() inside TeamPriceController.getPolicy keeps this admin read behind login.
+        // controller login/permission checks keep this admin read behind login.
         mvc.perform(get(API_V1 + "products/" + SAMPLE_ID + "/team-price-policy"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(UNAUTHENTICATED));
+    }
+
+    @Test
+    void protectedSweepRejectsAProbeThatReachesAnotherHandler() throws Exception {
+        RequestMappingInfo variant =
+                RequestMappingInfo.paths(API_V1 + "products/{productId}/team-price-policy")
+                        .methods(RequestMethod.GET)
+                        .consumes(MediaType.TEXT_PLAIN_VALUE)
+                        .options(mappings.getBuilderConfiguration())
+                        .build();
+        mappings.registerMapping(
+                variant, new AnonymousVariant(), AnonymousVariant.class.getMethod("read"));
+        try {
+            mvc.perform(
+                            get(API_V1 + "products/" + SAMPLE_ID + "/team-price-policy")
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content("probe"))
+                    .andExpect(status().isOk());
+            assertThatThrownBy(this::everyApiV1EndpointRejectsAnonymousCallersUnlessAllowListed)
+                    .isInstanceOf(AssertionError.class)
+                    .hasMessageContaining("probe reached a different handler");
+        } finally {
+            mappings.unregisterMapping(variant);
+        }
+    }
+
+    @Test
+    void publicSweepRejectsServerErrorsInsteadOfCountingThemAsReachable() {
+        when(products.pageListings(any(), any(), any()))
+                .thenThrow(new IllegalStateException("public route failure fixture"));
+
+        assertThatThrownBy(this::allowListedEndpointsAreReachableAnonymously)
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("GET /api/v1/products -> 500");
+    }
+
+    @Test
+    void publicInviteProbeReachesTheServiceWithAValidReference() {
+        allowListedEndpointsAreReachableAnonymously();
+
+        verify(invites).resolve(eq(SAMPLE_INVITE_REF), any());
     }
 
     private List<Endpoint> apiV1Endpoints() {
@@ -238,7 +311,10 @@ class EndpointAuthSurfaceTest {
                             for (String pattern : patterns(info)) {
                                 if (pattern.startsWith(API_V1)) {
                                     methods.forEach(
-                                            method -> endpoints.add(new Endpoint(method, pattern)));
+                                            method ->
+                                                    endpoints.add(
+                                                            new Endpoint(
+                                                                    method, pattern, handler)));
                                 }
                             }
                         });
@@ -258,14 +334,25 @@ class EndpointAuthSurfaceTest {
         }
     }
 
-    /** One mapped HTTP method on one path pattern. */
-    private record Endpoint(String method, String pattern) {
+    /** Expected status for the controlled fixture, not a complete public endpoint contract. */
+    private record AnonymousExpectation(String reason, int status) {}
+
+    /** One mapped HTTP method and path, retaining the handler that the probe must select. */
+    private record Endpoint(String method, String pattern, HandlerMethod handler) {
         String key() {
             return method + " " + pattern;
         }
 
         String path() {
-            return PATH_VARIABLE.matcher(pattern).replaceAll(SAMPLE_ID);
+            return PATH_VARIABLE
+                    .matcher(pattern.replace("{ref}", SAMPLE_INVITE_REF))
+                    .replaceAll(SAMPLE_ID);
+        }
+
+        boolean handles(MvcResult result) {
+            return result.getHandler() instanceof HandlerMethod actual
+                    && handler.getBeanType().equals(actual.getBeanType())
+                    && handler.getMethod().equals(actual.getMethod());
         }
 
         MockHttpServletRequestBuilder request() {
@@ -275,6 +362,14 @@ class EndpointAuthSurfaceTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{}")
                     .header("Stripe-Signature", "t=1,v1=anonymous-probe");
+        }
+    }
+
+    /** Registered only by the shadow-handler regression, never by component scanning. */
+    static class AnonymousVariant {
+        @ResponseBody
+        public Result<Void> read() {
+            return Result.ok();
         }
     }
 
