@@ -11,9 +11,14 @@ import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -31,8 +36,13 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
  * HTTP status comes from the same enum; failures are never wrapped in HTTP 200. Never leaks SQL,
  * stack traces, internal paths, or raw third-party responses.
  *
- * <p>Logging policy: expected 4xx logged at WARN once here; unknown 5xx logged at ERROR once here.
- * Lower layers must not re-log the same exception.
+ * <p>Every error body is written as {@code application/json} whatever the caller's {@code Accept}
+ * says, so the envelope survives clients that do not accept JSON.
+ *
+ * <p>Logging policy: business rejections ({@link BizException}) are logged at WARN once here;
+ * unknown 5xx are logged at ERROR once here. The other mapped 4xx (validation, bad input,
+ * authentication, permission, not found, 405/406/415) are not logged, to keep scanner and
+ * malformed-request noise out of the logs. Lower layers must not re-log the same exception.
  */
 @Slf4j
 @RestControllerAdvice
@@ -117,6 +127,27 @@ public class GlobalExceptionHandler {
         return toResponse(CommonErrorCode.NOT_FOUND, null);
     }
 
+    /** Wrong HTTP method on a known path → 405, keeping the {@code Allow} header (RFC 9110). */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Result<Void>> handleMethodNotAllowed(
+            HttpRequestMethodNotSupportedException ex) {
+        return toResponse(CommonErrorCode.METHOD_NOT_ALLOWED, null, ex.getHeaders());
+    }
+
+    /** Request {@code Content-Type} the endpoint cannot consume → 415, keeping {@code Accept}. */
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<Result<Void>> handleUnsupportedMediaType(
+            HttpMediaTypeNotSupportedException ex) {
+        return toResponse(CommonErrorCode.UNSUPPORTED_MEDIA_TYPE, null, ex.getHeaders());
+    }
+
+    /** Unsupported {@code Accept} → 406, keeping the supported media types in {@code Accept}. */
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    public ResponseEntity<Result<Void>> handleNotAcceptable(
+            HttpMediaTypeNotAcceptableException ex) {
+        return toResponse(CommonErrorCode.NOT_ACCEPTABLE, null, ex.getHeaders());
+    }
+
     /** Last resort: one ERROR log with traceId; client receives a generic 500. */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Result<Void>> handleUnknown(Exception ex) {
@@ -126,10 +157,23 @@ public class GlobalExceptionHandler {
 
     /**
      * Error body + HTTP status from the same enum — {@link ResponseEntity} is used only here, at
-     * the protocol boundary, to apply the status; controllers never assemble error responses.
+     * the protocol boundary, to apply the status; controllers never assemble error responses. The
+     * explicit JSON {@code Content-Type} is deliberate: without it Spring negotiates the body
+     * against the caller's {@code Accept}, and an {@code Accept} that excludes JSON makes the write
+     * fail inside this handler, which abandons the original exception for a bare status or a 500.
      */
     private static ResponseEntity<Result<Void>> toResponse(ErrorCode errorCode, Object errors) {
-        return ResponseEntity.status(errorCode.httpStatus()).body(Result.error(errorCode, errors));
+        return ResponseEntity.status(errorCode.httpStatus())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Result.error(errorCode, errors));
+    }
+
+    private static ResponseEntity<Result<Void>> toResponse(
+            ErrorCode errorCode, Object errors, HttpHeaders headers) {
+        return ResponseEntity.status(errorCode.httpStatus())
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Result.error(errorCode, errors));
     }
 
     private static FieldViolation toViolation(FieldError error) {
