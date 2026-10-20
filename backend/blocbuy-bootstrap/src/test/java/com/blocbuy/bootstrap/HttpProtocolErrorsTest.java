@@ -91,6 +91,7 @@ class HttpProtocolErrorsTest {
                 .thenReturn(PageResult.of(List.of(), 0, PageQuery.of(null, null)));
         mvc.perform(get(PRODUCTS_PATH).header("Accept", "application/x-blocbuy-unsupported"))
                 .andExpect(status().isNotAcceptable())
+                .andExpect(header().string("Accept", containsString("application/json")))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.code").value("COMMON_406_001"));
     }

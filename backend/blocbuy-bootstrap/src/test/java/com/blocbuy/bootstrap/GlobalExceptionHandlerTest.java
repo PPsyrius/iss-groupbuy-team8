@@ -78,5 +78,6 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getStatusCode().value()).isEqualTo(406);
         assertThat(response.getBody().code()).isEqualTo("COMMON_406_001");
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
+        assertThat(response.getHeaders().getAccept()).containsExactly(MediaType.APPLICATION_JSON);
     }
 }

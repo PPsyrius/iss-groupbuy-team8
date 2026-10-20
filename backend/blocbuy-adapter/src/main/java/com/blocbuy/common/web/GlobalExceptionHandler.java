@@ -141,11 +141,11 @@ public class GlobalExceptionHandler {
         return toResponse(CommonErrorCode.UNSUPPORTED_MEDIA_TYPE, null, ex.getHeaders());
     }
 
-    /** {@code Accept} excludes every representation the endpoint produces → 406. */
+    /** Unsupported {@code Accept} → 406, keeping the supported media types in {@code Accept}. */
     @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
     public ResponseEntity<Result<Void>> handleNotAcceptable(
             HttpMediaTypeNotAcceptableException ex) {
-        return toResponse(CommonErrorCode.NOT_ACCEPTABLE, null);
+        return toResponse(CommonErrorCode.NOT_ACCEPTABLE, null, ex.getHeaders());
     }
 
     /** Last resort: one ERROR log with traceId; client receives a generic 500. */
