@@ -1,4 +1,4 @@
-const { icon, md, mk, svg, lockup } = require('../../../presentation-kit/lib');
+const { icon, md, svg, lockup } = require('../../../presentation-kit/lib');
 // Accent fills never carry text (design-screens.md §2.1): accent -> accent-soft + accent-soft-foreground; grey -> default + foreground.
 const F = bg => bg === 'var(--orange)' ? { bg: 'var(--orange-l)', fg: 'var(--orange-d)', sub: 'var(--orange-d)' } : bg === '#6B655C' ? { bg: 'var(--default)', fg: 'var(--foreground)', sub: 'var(--muted)' } : { bg, fg: '#fff', sub: 'rgba(255,255,255,.85)' };
 
@@ -7,7 +7,7 @@ const s1 = () => `
 <div style="position:absolute;left:80px;top:96px;font:600 16px Inter;letter-spacing:.1em;color:#FFB01F">SWE5001 PRACTICE PROJECT · TEAM 8</div>
 ${lockup()}
 <div style="position:absolute;left:80px;top:300px;font:500 34px Inter;color:#fff">A scalable community group-buying platform</div>
-<div style="position:absolute;left:80px;top:368px;font:italic 400 26px Inter;color:#E6DFD3;display:flex;gap:16px;align-items:center">Three services <span style="color:#E8402A;font-size:20px">●</span> event-driven <span style="color:#E8402A;font-size:20px">●</span> rebuilt on every release</div>
+<div style="position:absolute;left:80px;top:368px;font:italic 400 26px Inter;color:#E6DFD3;display:flex;gap:16px;align-items:center">Three services <span style="color:#E8402A">•</span> event-driven <span style="color:#E8402A">•</span> rebuilt on every release</div>
 <div style="position:absolute;left:80px;top:516px;font:500 19px Inter;color:#fff">Lim Jiechao · Liu Jin · Panpakorn Siripanich · Wang Ziang · Yu Qianshuo</div>
 <div style="position:absolute;left:80px;top:548px;font:400 18px Inter;color:#B5ADA1">Graduate Certificate in Architecting Scalable Systems · 21 October 2026</div>
 <div style="position:absolute;left:850px;top:190px;width:400px;height:340px">
@@ -76,11 +76,11 @@ ${col4('user-check', 'Identity service', 'var(--teal)', ['Sign in with Google', 
 ${col4('store', 'Commerce service', 'var(--orange)', ['Browse team offers', 'Start or join a team, and pay', 'Team succeeds, or expires with refunds', 'Share invites, order history', 'Admin listings'], 460)}
 ${col4('bell', 'Notification service', 'var(--teal)', ['Team succeeded or expired', 'Payment received'], 350)}
 </div>
-<div style="position:absolute;left:6px;right:0;top:462px;font:400 20px/1.35 Inter;color:var(--muted)"><b style="color:var(--muted)">Not in scope:</b> multi-region · real payments (Stripe test mode) · email or push · extracting payment or catalog into their own services (documented evolution path)</div>`;
+<div style="position:absolute;left:6px;right:0;top:462px;font:400 20px/1.35 Inter;color:var(--muted)"><b style="color:var(--muted)">Not in scope:</b> multi-region · real payments (Stripe test mode) · email or push · splitting payments into its own service (our documented next step)</div>`;
 
 // ---------- slide 5 ----------
 const tick = (t, sub, kind = 'ok') => {
-  const c = { ok: ['circle-check', 'var(--green)'], open: ['circle-exclamation', 'var(--orange)'], tbd: ['hourglass-half', '#6B655C'] }[kind];
+  const c = { ok: ['circle-check', 'var(--green)'], open: ['circle-exclamation', 'var(--orange)'], tbd: ['hourglass-half', '#6B655C'], not: ['circle-minus', '#6B655C'] }[kind];
   return `<div style="display:flex;gap:12px;margin-bottom:14px"><div style="color:${c[1]};font-size:24px;flex:none;margin-top:-1px">${icon(c[0])}</div>
   <div style="font:400 18px/1.3 Inter">${t}${sub ? `<div style="font:italic 400 15.5px/1.3 Inter;color:var(--muted);margin-top:2px">${sub}</div>` : ''}</div></div>`;
 };
@@ -88,34 +88,32 @@ const s5 = () => `
 <div style="display:flex;gap:20px;height:540px;margin-top:-6px">
  <div style="flex:1.12;background:#E3E8FB;border-radius:8px;padding:22px 22px">
    <div class="serif" style="font-size:25px;color:var(--green);margin-bottom:16px">Verified on AWS · 17 Oct</div>
-   ${tick('Built from nothing: 3 services healthy', 'commerce 2/2 · identity 1/1 · notification 1/1')}
+   ${tick('3 services built from nothing', 'tasks 2/2 · 1/1 · 1/1, all healthy')}
    ${tick('9/9 smoke checks through CloudFront')}
-   ${tick('SNS → SQS routing confirmed', 'with synthetic events')}
-   ${tick('Full teardown: 115 resources in 709 s', 'absence check clean')}
-   ${tick('One task load-tested: 200 req/s', '0 errors, p95 &lt; 60 ms (16 Oct)')}
+   ${tick('SNS → SQS routing confirmed', 'with test events')}
+   ${tick('Teardown: 115 resources in 709 s', 'nothing left behind')}
+   ${tick('One task: 200 req/s, 0 errors', 'p95 &lt; 60 ms (16 Oct)')}
  </div>
  <div style="flex:1;background:#EFE9DF;border:2px dashed #DDD5C8;border-radius:8px;padding:20px 22px">
-   <div class="serif" style="font-size:25px;color:var(--muted);margin-bottom:6px">Verified on 19 Oct</div>
-   <div style="margin-bottom:12px">${mk('FILL', 'green tick only with evidence in docs/swe5001/evidence/')}</div>
-   ${tick('Auto-scaling under load (V3)', null, 'tbd')}
-   ${tick('Queue scaling (V4)', null, 'tbd')}
-   ${tick('Self-healing (V5)', null, 'tbd')}
-   ${tick('Poison message to DLQ (V7)', null, 'tbd')}
-   ${tick('Identity outage drill', null, 'tbd')}
-   ${tick('Buyer journey end to end on ECS (#460)', null, 'tbd')}
+   <div class="serif" style="font-size:25px;color:var(--muted);margin-bottom:16px">Scaling and failure tests</div>
+   ${tick('Auto-scaling under load', 'commerce 1 → 3 tasks on its own; ≈ 455 req/s, server p95 &lt; 50 ms')}
+   ${tick('Queue scaling', 'not run on AWS · local test passed', 'not')}
+   ${tick('Self-healing: stop a task', 'not run on AWS', 'not')}
+   ${tick('Bad message to dead-letter queue', 'not run on AWS · local test passed', 'not')}
+   ${tick('Identity outage drill', 'not run on AWS · local test passed', 'not')}
+   ${tick('Buyer journey end to end', 'not run on AWS', 'not')}
  </div>
  <div style="flex:1.05;background:#FDEFEC;border-radius:8px;padding:22px 22px">
    <div class="serif" style="font-size:25px;color:var(--orange-d);margin-bottom:16px">Still open</div>
-   ${tick('An interrupted start-up can leave auto-scaling paused', 'manual repair in place ' + mk('VERIFY', 'fix PR open? if not, no "fix in progress"'), 'open')}
+   ${tick('An interrupted start-up can leave auto-scaling paused', 'repaired by hand; no fix yet', 'open')}
    ${tick('Database and cache in one zone', 'a cost choice; multi-zone for production', 'open')}
-   ${tick('Alarm email confirmation (#515)', null, 'open')}
-   <div style="font:italic 400 15.5px/1.35 Inter;color:var(--muted);margin-top:18px;border-top:1px solid #F6BFB5;padding-top:12px">Anything not run on 19 Oct moves here with one honest line, e.g. “V4 queue scaling: verified locally (141 s), not yet on AWS”.</div>
+   ${tick('Alarm e-mails to confirm before the final release', null, 'open')}
  </div>
 </div>`;
 
 // ---------- slide 6 ----------
-const ms = [['4 Oct', 'Proposal submitted'], ['6 Oct', 'First promotion to AWS (one service)'], ['14 Oct', 'Split into three services; outbox, events'], ['16 Oct', 'Load baseline: 200 req/s per task'], ['17 Oct', 'First green three-service release'], ['19 Oct', 'Evidence session: scaling, failure drills']];
-const eff = [['Liu Jin', 12.5, 'AWS stacks, pipeline, service split', true], ['Panpakorn (Pan)', 11.5, 'Messaging, scaling, login, load tests'], ['Yu Qianshuo (Yorik)', 9, 'Event outbox and relay, failure drills'], ['Lim Jiechao', 8.5, 'Lead; AWS Organization, Identity Center and guardrails; architecture study and proof of concept; presentation'], ['Wang Ziang (Eric)', 8.5, 'Notification consumer chain, DLQ redrive, demo lead']];
+const ms = [['4 Oct', 'Proposal submitted'], ['6 Oct', 'First promotion to AWS (one service)'], ['14 Oct', 'Split into three services; outbox, events'], ['16 Oct', 'Load baseline: 200 req/s per task'], ['17 Oct', 'First green three-service release'], ['19 Oct', 'Auto-scaling on AWS: 1 → 3 tasks']];
+const eff = [['Liu Jin', 12.5, 'AWS stacks, pipeline, service split', true], ['Panpakorn (Pan)', 11.5, 'Messaging, scaling, login, load tests'], ['Yu Qianshuo (Yorik)', 9, 'Event outbox and relay, failure drills'], ['Lim Jiechao', 8.5, 'Lead; AWS accounts and guardrails; architecture study and proof of concept; presentation'], ['Wang Ziang (Eric)', 8.5, 'Notification consumer, dead-letter redrive, demo lead']];
 const s6 = () => `
 <div style="position:absolute;left:10px;right:10px;top:52px;height:3px;background:var(--teal)"></div>
 ${ms.map((m, i) => {
@@ -124,8 +122,7 @@ ${ms.map((m, i) => {
   <div style="position:absolute;left:${x - 14}px;top:40px;width:28px;height:28px;border-radius:50%;border:2px solid var(--teal);background:#fff;padding:4px"><div style="width:100%;height:100%;border-radius:50%;background:${last ? 'var(--orange)' : 'var(--teal-d)'}"></div></div>
   <div style="position:absolute;left:${x - 96}px;width:192px;top:80px;text-align:center;font:400 17px/1.25 Inter">${m[1]}</div>`;
 }).join('')}
-<div style="position:absolute;left:${52 + 5 * 202 - 96}px;width:192px;top:126px;text-align:center">${mk('FILL', 'done, or what slipped')}</div>
-<div style="position:absolute;left:0;top:178px;display:flex;align-items:center;gap:14px"><div class="serif" style="font-size:23px;color:var(--teal-d)">Effort by member (person-days)</div>${mk('CONFIRM', 'by all five, 18 Oct')}</div>
+<div style="position:absolute;left:0;top:178px;display:flex;align-items:center;gap:14px"><div class="serif" style="font-size:23px;color:var(--teal-d)">Effort by member (person-days)</div></div>
 ${eff.map((e, i) => `<div style="position:absolute;left:0;top:${222 + i * 54}px;width:1164px;height:44px;display:flex;align-items:center">
   <div style="width:236px;font:700 19px Inter">${e[0]}</div>
   <div style="width:404px;display:flex;align-items:center;gap:10px"><div style="height:30px;border-radius:5px;width:${e[1] * 26}px;background:${e[3] ? 'var(--orange)' : 'var(--teal)'}"></div><div style="font:700 19px Inter;color:var(--teal-d)">${e[1]}</div></div>
@@ -151,7 +148,7 @@ const s7 = () => `
 <div style="position:absolute;left:756px;top:330px;width:408px;height:220px;border-radius:8px;background:#EFE9DF;border-left:6px solid #8C2414;padding:26px 26px;display:flex;gap:18px">
   <div class="dot" style="width:42px;height:42px;background:var(--red);font-size:36px">${icon('xmark')}</div>
   <div style="font:400 22px/1.32 Inter"><b>Rejected: five services</b><br>Sagas everywhere, about 50–55 person-days: our whole budget</div></div>
-<div class="ref" style="right:0;bottom:auto;top:16px">AD-02 · ADR 0008</div>`;
+<div class="ref" style="right:0;bottom:auto;top:16px">AD-02</div>`;
 
 // ---------- slide 8 ----------
 const dc = (ic, bg, t, s, ad) => `<div class="card" style="height:198px;padding:30px 28px;display:flex;gap:28px">
@@ -166,7 +163,7 @@ const s8 = () => `
  ${dc('shield-halved', 'var(--teal)', 'Fail safe when identity is down', 'Purchases are refused, never half-done', 'AD-06')}
 </div>
 <div style="margin-top:22px;border-radius:8px;background:#FDEFEC;padding:16px 24px;font:400 20px/1.3 Inter;display:flex;gap:14px;align-items:center">
- <span style="color:var(--orange-d);font-size:24px">${icon('scale-balanced')}</span><span><b style="color:var(--orange-d)">Cost of these choices:</b> notifications lag about 2 s (relay interval); purchases pause during an identity outage</span></div>`;
+ <span style="color:var(--orange-d);font-size:24px">${icon('scale-balanced')}</span><span><b style="color:var(--orange-d)">Cost of these choices:</b> notifications lag about 2 s; purchases pause while identity is down</span></div>`;
 
 // ---------- slide 9 ----------
 const s9 = () => `<div class="dia" style="margin-top:-8px">${svg('logical-view')}</div>
@@ -176,20 +173,20 @@ const s9 = () => `<div class="dia" style="margin-top:-8px">${svg('logical-view')
 const ctx = (n, s, c) => `<div style="background:#fff;border:2px solid ${c};border-radius:8px;padding:12px 18px;height:100%"><div style="font:700 25px Inter;color:${c === 'var(--orange)' ? 'var(--orange-d)' : c}">${n}</div><div style="font:400 20px Inter;margin-top:2px">${s}</div></div>`;
 const ev = (a, b) => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:18px"><div style="width:196px;height:54px;border-radius:27px;background:var(--default);color:var(--foreground);font:600 15.5px/54px Inter;text-align:center">${a}</div>${arr()}<div style="width:196px;height:54px;border-radius:27px;background:var(--orange-l);color:var(--orange-d);font:600 15.5px/54px Inter;text-align:center">${b}</div></div>`;
 const s10 = () => `
-<div style="position:absolute;left:0;top:50px;width:730px;height:296px;background:#FBDFD9;border-radius:8px;padding:14px 22px">
+<div style="position:absolute;left:0;top:20px;width:730px;height:296px;background:#FBDFD9;border-radius:8px;padding:14px 22px">
   <div style="font:700 25px Inter;color:var(--orange-d);margin-bottom:10px">Commerce service</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:106px 106px;gap:14px">
    ${ctx('Catalog', 'products, team prices', 'var(--orange)')}${ctx('Group buying', 'teams, members', 'var(--orange)')}${ctx('Orders', 'orders', 'var(--orange)')}${ctx('Payments', 'payments, refunds', 'var(--orange)')}</div></div>
-<div style="position:absolute;left:0;top:366px;width:356px;height:190px;background:#E3E8FB;border-radius:8px;padding:14px 22px">
+<div style="position:absolute;left:0;top:336px;width:356px;height:190px;background:#E3E8FB;border-radius:8px;padding:14px 22px">
   <div style="font:700 23px Inter;color:var(--teal-d);margin-bottom:10px">Identity service</div><div style="height:110px">${ctx('Identity', 'users, roles', 'var(--teal-d)')}</div></div>
-<div style="position:absolute;left:374px;top:366px;width:356px;height:190px;background:#E3E8FB;border-radius:8px;padding:14px 22px">
+<div style="position:absolute;left:374px;top:336px;width:356px;height:190px;background:#E3E8FB;border-radius:8px;padding:14px 22px">
   <div style="font:700 23px Inter;color:var(--teal-d);margin-bottom:10px">Notification service</div><div style="height:110px">${ctx('Notification', 'notifications', 'var(--teal-d)')}</div></div>
-<div style="position:absolute;left:750px;top:52px;width:414px">
+<div style="position:absolute;left:750px;top:22px;width:414px">
   <div class="serif" style="font-size:22.5px;color:var(--teal-d);margin-bottom:22px">Domain event → integration event</div>
   ${ev('TeamSucceeded', 'TeamSucceededV1')}${ev('TeamExpired', 'TeamExpiredV1')}${ev('PaymentSucceeded', 'PaymentSucceededV1')}
   <div class="card" style="padding:20px 22px;margin-top:4px"><ul class="b" style="font:400 21px/1.3 Inter"><li style="margin-bottom:12px">Inside a service: free to change</li><li style="margin-bottom:0">Between services: versioned, IDs only</li></ul></div>
 </div>
-<div style="position:absolute;left:750px;top:514px;width:414px">${mk('CONFIRM', 'Option A (this) or B: context map, Eric')}</div>`;
+`;
 
 // ---------- slide 11 ----------
 const plat = (t, s, bg, col = '#fff', sc = 'rgba(255,255,255,.85)') => `<div style="height:50px;border-radius:8px;background:${bg};padding:4px 18px;margin-bottom:6px"><div style="font:700 19px/1.15 Inter;color:${col}">${t}</div><div style="font:400 15.5px/1.2 Inter;color:${sc}">${s}</div></div>`;
@@ -210,10 +207,10 @@ const s11 = () => `
 <div style="position:absolute;left:836px;top:76px;transform:scaleX(-1)">${arr('var(--teal-d)')}</div>
 <div style="position:absolute;left:836px;top:188px">${arr('var(--teal-d)')}</div>
 <div style="position:absolute;left:0;top:232px;width:724px">
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><div class="serif" style="font-size:21px;color:var(--teal-d)">Measured reuse</div>${mk('FILL', 'from PR; drop row 1 if not found by Tue')}</div>
-  <table class="t" style="font-size:16.5px"><tr><th style="width:190px">Added to the platform</th><th>What it took</th><th style="width:150px">Commerce changes</th></tr>
-   <tr><td><b>Audit consumer</b></td><td>${mk('FILL', 'N')} lines in ${mk('FILL', 'M')} files, PR #${mk('FILL', '…')}</td><td style="font-weight:700;color:var(--green)">0</td></tr>
-   <tr><td><b>A new service</b></td><td>One entry in the Terraform services map (<span class="mono" style="font-size:14.5px">ecs-service</span> golden-path module)</td><td style="font-weight:700;color:var(--green)">0</td></tr></table>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><div class="serif" style="font-size:21px;color:var(--teal-d)">Measured reuse</div></div>
+  <table class="t" style="font-size:16.5px"><tr><th style="width:190px">Added to the platform</th><th>What it took</th><th style="width:150px">Commerce edits</th></tr>
+   <tr><td><b>Audit queue</b></td><td>2 lines of Terraform (a name and a filter)</td><td style="font-weight:700;color:var(--green)">0</td></tr>
+   <tr><td><b>A new service</b></td><td>1 entry in the services map (golden-path module)</td><td style="font-weight:700;color:var(--green)">0</td></tr></table>
 </div>
 <div class="card" style="position:absolute;left:744px;top:270px;width:420px;height:164px;padding:16px 20px">
   <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px"><span style="color:var(--teal);font-size:22px">${icon('file-code')}</span><div class="serif" style="font-size:21px;color:var(--teal-d)">One public contract</div></div>
@@ -221,7 +218,6 @@ const s11 = () => `
 <div style="position:absolute;left:0;right:0;top:456px;height:86px;border-radius:8px;background:var(--inverse);display:flex;align-items:center;padding:0 22px;gap:14px">
   <div style="font:700 19px/1.15 Inter;color:#E8402A;width:168px">Every new service starts with</div>
   ${['Login &amp; roles', 'Error format', 'Tracing', 'Outbox', 'Duplicate protection'].map(t => `<div style="background:#fff;border-radius:999px;height:44px;padding:0 18px;font:700 17px/44px Inter;color:var(--teal-d);white-space:nowrap">${t}</div>`).join('')}
-  <div class="mono" style="color:#B5ADA1;font-size:13.5px;line-height:1.2">blocbuy-<br>platform-starter</div>
 </div>`;
 
 // ---------- slide 12 ----------
@@ -230,18 +226,18 @@ const pc = (ic, bg, t, s, ad, w, h = 172) => `<div class="card" style="width:${w
   <div style="font:400 18px/1.32 Inter;color:var(--ink3)">${s}</div><span class="tag" style="position:absolute;right:14px;bottom:12px">${ad}</span></div>`;
 const s12 = () => `
 <div style="display:flex;gap:18px">
- ${pc('cubes', 'var(--teal)', 'Fargate containers on ARM', 'No servers or cluster to run · ~20% cheaper · EKS control plane alone ≈ US$73/month', 'AD-07 · 13', 376, 196)}
+ ${pc('cubes', 'var(--teal)', 'Fargate containers on ARM', 'No servers to manage · ~20% cheaper · a Kubernetes control plane alone ≈ US$73 a month', 'AD-07', 376, 196)}
  ${pc('recycle', 'var(--orange)', 'Disposable environment', 'Built per session or release, then destroyed', 'AD-12', 376, 196)}
- ${pc('database', 'var(--teal)', 'One database server', 'A database per service: isolation at low cost; own instance is the scale-out path', 'AD-11', 376, 196)}
+ ${pc('database', 'var(--teal)', 'One database server', 'A database per service: isolation at low cost; its own server is the scale-out path', 'AD-11', 376, 196)}
 </div>
 <div style="display:flex;gap:18px;margin-top:18px">
  ${pc('sitemap', 'var(--teal)', 'Small NAT instance', '≈ US$4 instead of US$43 a month', 'AD-10', 573, 150)}
- ${pc('key', 'var(--teal)', 'No stored cloud keys', 'Short-lived pipeline tokens · secrets in Parameter Store', 'AD-14', 573, 150)}
+ ${pc('key', 'var(--teal)', 'No stored cloud keys', 'Short-lived tokens · secrets in Parameter Store', 'AD-14', 573, 150)}
 </div>
 <div style="margin-top:18px;border-radius:8px;background:var(--inverse);padding:16px 26px;display:flex;align-items:center;gap:22px;color:#fff">
- <div style="font:700 15px Inter;letter-spacing:.1em;color:#FFB01F;width:120px;line-height:1.25">MEASURED, NOT ESTIMATED</div>
+ <div style="font:700 15px Inter;letter-spacing:.1em;color:#FFB01F;width:120px;line-height:1.25;text-transform:uppercase">Measured,<br>not estimated</div>
  <div style="font:700 50px/1 Inter">US$0.49</div>
- <div style="font:400 19px/1.35 Inter;flex:1">in total for the runtime’s database, cache and containers across <b>7 up/down sessions</b>, 15–17 Oct<div style="font:400 14.5px Inter;color:#B5ADA1">AWS Cost Explorer, filtered to the runtime services</div></div></div>
+ <div style="font:400 19px/1.35 Inter;flex:1">in total for the runtime's database, cache and containers across <b>7 up/down sessions</b>, 15–17 Oct<div style="font:400 14.5px Inter;color:#B5ADA1">AWS Cost Explorer, filtered to the runtime services</div></div></div>
 <div style="margin-top:12px;font:400 18px Inter;color:var(--muted)"><b style="color:var(--muted)">Trade-off:</b> less redundancy (one NAT, single-zone database), acceptable for this project</div>`;
 
 // ---------- slide 13 ----------
@@ -261,15 +257,15 @@ function chart() {
 const sig = (t, s, bg, c) => `<div style="border-radius:8px;background:${bg};padding:12px 18px;margin-bottom:10px"><div class="serif" style="font-size:22px;color:${c}">${t}</div><div style="font:400 17.5px/1.3 Inter;margin-top:2px">${s}</div></div>`;
 const s14 = () => `
 <div style="position:absolute;left:0;top:0;width:470px">
- ${sig('Commerce', 'ALB requests per task (target 12,000/min) → <b>2 to 6 tasks</b>', '#FBDFD9', 'var(--orange-d)')}
- ${sig('Notification', 'SQS backlog per task (target 50) → <b>1 to 4 tasks</b>', '#E3E8FB', 'var(--teal-d)')}
+ ${sig('Commerce', 'Requests per task (target 12,000/min) → <b>2 to 6 tasks</b>', '#FBDFD9', 'var(--orange-d)')}
+ ${sig('Notification', 'Queue backlog per task (target 50) → <b>1 to 4 tasks</b>', '#E3E8FB', 'var(--teal-d)')}
  ${sig('Identity', 'Fixed at <b>1 task</b>', '#EFE9DF', 'var(--ink2)')}
  <div class="card" style="padding:14px 18px;margin-top:14px;border:2px solid var(--teal-d)">
   <div class="serif" style="font-size:21px;color:var(--teal-d);margin-bottom:8px">Capacity statement</div>
   <div style="font:400 16.5px/1.38 Inter">
-   <div><b>Measured:</b> ${mk('FILL', 'req/s, three services')}</div>
-   <div><b>Projected</b> ceiling at max tasks: ≈ 6 × 200 = <b>1,200 req/s</b> for browse <span style="color:var(--orange-d);font-weight:700">(projection, not measured)</span></div>
-   <div><b>Next bottleneck:</b> the single database and the single outbox relay ${mk('VERIFY', '~50 events/s measured or estimated?')}</div></div></div>
+   <div><b>Measured:</b> 200 req/s on one task (16 Oct); ≈ 455 req/s on 3 tasks (19 Oct, three services)</div>
+   <div><b>Projected:</b> 6 tasks × 200 ≈ <b>1,200 req/s</b> for browsing <span style="color:var(--orange-d);font-weight:700">(projection, not measured)</span></div>
+   <div><b>Next limit:</b> the single database, then the single outbox relay (≈ 50 events/s, calculated)</div></div></div>
 </div>
 <div style="position:absolute;left:500px;top:0;width:664px">
  <div style="font:700 17px Inter;margin-bottom:2px">Load test, one task, 16 Oct: response time (p95, ms)</div>
@@ -278,8 +274,9 @@ const s14 = () => `
  <div style="display:flex;gap:12px">
   ${[['200', 'req/s', 'highest tested, not saturated'], ['&lt; 60', 'ms', '95% of responses'], ['0', 'errors', '57,600 requests']].map(s => `<div class="card" style="flex:1;padding:8px 10px;text-align:center"><div><span class="serif" style="font-size:34px;color:var(--teal-d)">${s[0]}</span> <span style="font:700 16px Inter;color:var(--teal-d)">${s[1]}</span></div><div style="font:400 14.5px Inter;color:var(--muted)">${s[2]}</div></div>`).join('')}
  </div>
- <div style="margin-top:12px;border:2px dashed #8C2414;border-radius:8px;background:#EFE9DF;padding:10px 16px;font:400 15.5px/1.35 Inter;color:#8C2414">
-  <b>Three-service shape, 19 Oct (V3):</b> ${mk('FILL', 'N tasks served X req/s at p95 Y ms, Z% errors')}<br>Place the CloudWatch crop here: “Services: task count” + “Edge: ALB latency” over the V3 window. If V3 did not run, delete this box.</div>
+ <div style="margin-top:12px;border-radius:8px;background:#E3E8FB;padding:10px 16px;display:flex;align-items:center;gap:14px">
+  <span style="color:var(--teal);font-size:26px;flex:none">${icon('chart-line')}</span>
+  <div style="font:400 16.5px/1.35 Inter"><b>Three services, 19 Oct</b><br>commerce 1 → 3 tasks on its own; ≈ 455 req/s, server p95 &lt; 50 ms</div></div>
 </div>`;
 
 // ---------- slide 15 ----------
@@ -290,15 +287,14 @@ const cal = (ic, t, w, bg = 'var(--teal)') => `<div class="card" style="width:${
 const s15 = () => `
 <div style="display:flex;justify-content:space-between">${cyl('Identity DB', 'users, roles', 'var(--teal-d)', '#E3E8FB')}${cyl('Commerce DB', 'products, teams, orders,<br>payments, outbox', 'var(--orange)', '#FBDFD9')}${cyl('Notification DB', 'notifications,<br>processed events', 'var(--teal-d)', '#E3E8FB')}</div>
 <div style="display:flex;gap:16px;margin-top:20px">
- ${cal('lock', 'Each service reads only its own tables<div style="font:400 15.5px/1.3 Inter;color:var(--ink3);margin-top:6px">per-service roles; enforced by grants and tested</div>', 238)}
+ ${cal('lock', 'Each service reads only its own tables<div style="font:400 15.5px/1.3 Inter;color:var(--ink3);margin-top:6px">per-service roles, enforced by grants and tested</div>', 238)}
  ${cal('bolt', 'The cache holds sessions only', 200)}
  ${cal('credit-card', 'No card data stored; events carry IDs only', 236)}
  ${cal('arrow-down-short-wide', 'Concurrency<div style="font:400 16px/1.35 Inter;color:var(--ink2);margin-top:6px">Row locks in a fixed order (<b>team → intent → payment</b>) settle the last-seat race. Scheduled jobs hold a database lease, so one task runs them however many are up.</div>', 442, 'var(--orange)')}
 </div>`;
 
 // ---------- slide 16 ----------
-const s16 = () => `<div class="dia" style="margin-top:-10px">${svg('expiry-refund-sequence')}</div>
-<div style="display:flex;gap:10px;margin-top:8px;justify-content:flex-end">${mk('VERIFY', 'step 8: each member or team owner?')}${mk('CONFIRM', 'swap go/no-go after Yorik rehearses; fallback B15')}</div>`;
+const s16 = () => `<div class="dia" style="margin-top:-10px">${svg('expiry-refund-sequence')}</div>`;
 
 // ---------- slide 17 ----------
 const fc = (ic, bg, t, s) => `<div class="card" style="flex:1;height:340px;padding:30px 30px">
@@ -342,12 +338,12 @@ const gc = (ic, bg, t, items) => `<div class="card" style="flex:1;height:350px;p
 const s19 = () => `
 <div style="display:flex;gap:16px">
  ${gc('gears', 'var(--teal)', 'Build &amp; test', ['Unit tests and API contract check', '≥ 80% coverage on new code (SonarCloud)'])}
- ${gc('cubes', 'var(--teal)', 'Container images', ['Build every service', 'Boot each one ' + mk('VERIFY')])}
- ${gc('user-shield', 'var(--orange)', 'Security', ['Secret scanning (gitleaks)', 'Dependency and image scanning (Trivy)', 'Static analysis ' + mk('VERIFY', 'CodeQL runs?')])}
- ${gc('server', 'var(--teal)', 'Infrastructure', ['Terraform fmt, validate, test', 'Policy checks (checkov)', 'Plan posted to the PR'])}
+ ${gc('cubes', 'var(--teal)', 'Containers', ['Build and scan every service image', 'Boot the app and check its health'])}
+ ${gc('user-shield', 'var(--orange)', 'Security', ['Secret scanning (gitleaks)', 'Dependency and image scans (Trivy)', 'Static analysis (SonarCloud)'])}
+ ${gc('server', 'var(--teal)', 'Infrastructure', ['Terraform format, validate, test', 'Policy checks (checkov)', 'Plan posted to the PR'])}
 </div>
 <div style="margin-top:16px;display:flex;gap:14px">
- ${[['5,252', 'workflow runs, 16 Sep – 16 Oct'], ['94% / 95%', 'backend / frontend green'], ['8.6 / 3.1 min', 'median run, backend / frontend']].map(m => `<div style="flex:1;border-radius:8px;background:var(--teal-ll);border:1px solid #DDD5C8;padding:10px 18px;display:flex;align-items:baseline;gap:12px"><span class="serif" style="font-size:30px;color:var(--teal-d);white-space:nowrap">${m[0]}</span><span style="font:400 16px/1.25 Inter;color:var(--ink3)">${m[1]}</span></div>`).join('')}
+ ${[['5,252', 'workflow runs, 16 Sep – 16 Oct'], ['94% / 95%', 'runs green, backend / frontend'], ['8.6 / 3.1 min', 'median run, backend / frontend']].map(m => `<div style="flex:1;border-radius:8px;background:var(--teal-ll);border:1px solid #DDD5C8;padding:10px 18px;display:flex;align-items:baseline;gap:12px"><span class="serif" style="font-size:30px;color:var(--teal-d);white-space:nowrap">${m[0]}</span><span style="font:400 16px/1.25 Inter;color:var(--ink3)">${m[1]}</span></div>`).join('')}
 </div>
 <div style="margin-top:14px;border-radius:8px;background:#EFE9DF;border-left:6px solid #8C2414;padding:14px 26px;font:700 23px Inter;color:var(--red)">If any check fails, the pull request cannot merge</div>`;
 
@@ -360,15 +356,15 @@ const chev = `<div style="width:20px;display:flex;align-items:center;justify-con
 const s20 = () => `
 <div style="display:flex;align-items:stretch">
  ${st('Approve', 'promotion pull request', '#6B655C', '', '')}${chev}
- ${st('Build', 'container images', 'var(--teal)', '<span style="font-size:15px">' + mk('VERIFY', 'run log') + '</span>', '2.5 min')}${chev}
+ ${st('Build', 'container images', 'var(--teal)', '≈ 5 min', '2.5 min')}${chev}
  ${st('Create + deploy', 'environment and smoke tests', 'var(--teal)', '≈ 32 min', '13 min')}${chev}
- ${st('Release', 'mark images as live', 'var(--teal)', '<span style="font-size:15px">' + mk('VERIFY', 'run log') + '</span>', '1 min')}${chev}
- ${st('Destroy', 'and check nothing is left', 'var(--orange)', '≈ 12 min', '10 min')}
+ ${st('Release', 'mark images as live', 'var(--teal)', '≈ 1 min', '1 min')}${chev}
+ ${st('Destroy', 'and check nothing is left', 'var(--orange)', '≈ 13 min', '10 min')}
 </div>
 <div style="display:flex;gap:16px;margin-top:18px">
  <div style="flex:1.25;border-radius:8px;background:#E3E8FB;padding:18px 22px">
-  <div style="display:flex;align-items:baseline;gap:12px"><span class="serif" style="font-size:44px;color:var(--teal-d);white-space:nowrap">51 min</span><span style="font:400 18px/1.25 Inter">end to end, three services, 17 Oct (#534)</span></div>
-  <div style="font:400 16.5px/1.35 Inter;color:var(--ink3);margin-top:4px">28 min on 6 Oct with one service. Includes queueing and approval gaps between jobs ${mk('VERIFY')}. 115 resources destroyed in 709 s.</div></div>
+  <div style="display:flex;align-items:baseline;gap:12px"><span class="serif" style="font-size:44px;color:var(--teal-d);white-space:nowrap">51 min</span><span style="font:400 18px/1.25 Inter">end to end, three services, 17 Oct</span></div>
+  <div style="font:400 16.5px/1.35 Inter;color:var(--ink3);margin-top:4px">28 min on 6 Oct with one service · 115 resources destroyed in 709 s</div></div>
  <div style="flex:1;border-radius:8px;background:#FBDFD9;padding:18px 22px"><div style="font:700 22px Inter">Destroy always runs</div><div style="font:400 17px/1.35 Inter;color:var(--ink3);margin-top:4px">even if an earlier step failed</div></div>
  <div style="flex:1;border-radius:8px;background:#E3E8FB;padding:18px 22px"><div style="font:700 22px Inter">Failed deploy rolls back</div><div style="font:400 17px/1.35 Inter;color:var(--ink3);margin-top:4px">the ECS circuit breaker restores the last good version</div></div>
 </div>
@@ -384,7 +380,7 @@ const lc = (n, bg, t, s, fix) => `<div class="card" style="flex:1;height:500px;p
  <div style="font:400 21px/1.35 Inter;color:var(--ink3);height:150px">${s}</div>
  <div style="border-radius:8px;background:#E3E8FB;padding:20px 20px;font:700 22px/1.25 Inter;color:var(--green);height:98px;display:flex;align-items:center">${fix}</div></div>`;
 const s21 = () => `<div style="display:flex;gap:18px">
- ${lc(1, 'var(--teal-d)', 'Mocks passed, the real deploy failed', 'Missing cloud permissions only showed up in a real run (#527)', 'Test permissions for real')}
+ ${lc(1, 'var(--teal-d)', 'Mocks passed, the real deploy failed', 'Missing cloud permissions only showed up in a real run', 'Test permissions for real')}
  ${lc(2, 'var(--teal-d)', 'Events lost right after deploy', 'New SNS subscriptions take up to 15 minutes to route; nothing errors, messages just go nowhere', 'Deploy now waits for routing')}
  ${lc(3, 'var(--orange)', 'Auto-scaling silently paused', 'A retried start-up reported success but left scaling suspended', "Check scaling, don't assume it")}
 </div>`;
@@ -397,26 +393,26 @@ const s22 = () => `
   <div style="font:400 16.5px/1.38 Inter">admins (3) · developers (2)<br>1-hour sessions</div></div>
  <div class="card" style="padding:16px 18px;margin-bottom:14px">
   <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px"><div class="dot" style="width:46px;height:46px;background:var(--teal);font-size:22px">${icon('robot')}</div><div><div style="font:700 19px Inter">Machines</div><div style="font:400 15.5px Inter;color:var(--ink3)">GitHub OIDC</div></div></div>
-  <div style="font:400 16.5px/1.38 Inter">separate plan / deploy / apply roles<br><b>no AWS keys in GitHub</b></div></div>
+  <div style="font:400 16.5px/1.38 Inter">plan / deploy / apply roles<br><b>no AWS keys in GitHub</b></div></div>
  <div style="border-radius:8px;background:#FDEFEC;border:1.5px solid #F6BFB5;padding:14px 18px">
   <div style="display:flex;gap:10px;align-items:center;font:700 17px Inter;color:var(--orange-d);margin-bottom:6px">${icon('triangle-exclamation')} Disclosed exception</div>
-  <div style="font:400 16px/1.35 Inter">2 IAM users for SSM port forwarding (1 active key), bounded by the SCPs</div></div>
+  <div style="font:400 16px/1.35 Inter">2 IAM users for port forwarding (1 active key), inside the same guardrails</div></div>
 </div>
 <svg style="position:absolute;left:334px;top:60px" width="70" height="300"><g stroke="#3E5CD9" stroke-width="3" fill="none"><path d="M4,40 H60"/><path d="M4,186 H60"/></g><path d="M58,32 L70,40 L58,48 Z" fill="#3E5CD9"/><path d="M58,178 L70,186 L58,194 Z" fill="#3E5CD9"/></svg>
 <div style="position:absolute;left:408px;top:0;width:756px;height:540px;border-radius:8px;border:2.5px solid var(--teal-d);background:#fff;padding:14px 18px">
  <div style="display:flex;align-items:center;gap:12px"><span style="font-size:24px;color:var(--teal-d)">${icon('building')}</span><div style="font:700 21px Inter;color:var(--teal-d)">AWS Organization</div><div style="font:400 16px Inter;color:var(--ink3)">management account runs no workloads</div></div>
  <div style="position:absolute;left:18px;right:18px;top:58px;bottom:16px;border-radius:8px;border:2px solid var(--teal);background:var(--teal-ll);padding:12px 16px">
-  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div style="font:700 19px Inter">Root</div><span class="tag">SCP · Org-Baseline</span><span class="tag">SCP · Region-Pin: ap-southeast-1 + global</span></div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div style="font:700 19px Inter">Root</div><span class="tag">SCP · Org-Baseline</span><span class="tag">SCP · Region-Pin: Singapore + global</span></div>
   <div style="position:absolute;left:16px;right:16px;top:54px;bottom:16px;border-radius:8px;border:2px solid var(--orange);background:var(--orange-ll);padding:12px 16px">
    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div style="font:700 19px Inter">Sandbox OU</div><span class="tag o">SCP · Sandbox-Guardrails</span></div>
    <div style="font:400 15.5px Inter;color:var(--ink3);margin-top:4px">no expensive services · small instance sizes only</div>
    <div style="position:absolute;left:16px;right:16px;top:84px;bottom:16px;border-radius:8px;border:2px solid var(--teal-d);background:#fff;padding:14px 18px">
-    <div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px;color:var(--teal-d)">${icon('server')}</span><div style="font:700 20px Inter">team8 project account</div></div>
+    <div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px;color:var(--teal-d)">${icon('server')}</span><div style="font:700 20px Inter">Team 8 project account</div></div>
     <div style="display:flex;gap:14px;margin-top:14px">
-     <div style="flex:1;border-radius:8px;background:#EFE9DF;padding:12px 14px"><div style="font:700 17px Inter">SWE5006 · dev</div><div style="font:400 15.5px Inter;color:var(--ink3)">EC2 host</div></div>
-     <div style="flex:1;border-radius:8px;background:#E3E8FB;padding:12px 14px"><div style="font:700 17px Inter;color:var(--teal-d)">SWE5001 · prod</div><div style="font:400 15.5px Inter;color:var(--ink3)">ECS runtime, rebuilt per release</div></div>
+     <div style="flex:1;border-radius:8px;background:#EFE9DF;padding:12px 14px"><div style="font:700 17px Inter">dev environment</div><div style="font:400 15.5px Inter;color:var(--ink3)">always-on EC2 host</div></div>
+     <div style="flex:1;border-radius:8px;background:#E3E8FB;padding:12px 14px"><div style="font:700 17px Inter;color:var(--teal-d)">prod environment</div><div style="font:400 15.5px Inter;color:var(--ink3)">ECS, rebuilt per release</div></div>
     </div>
-    <div style="margin-top:16px;border-radius:8px;background:var(--inverse);color:#fff;padding:12px 16px;font:400 16.5px/1.35 Inter"><b style="color:#FFB01F">Guardrails above the account:</b> SCPs bind even the account’s admins and root user</div>
+    <div style="margin-top:16px;border-radius:8px;background:var(--inverse);color:#fff;padding:12px 16px;font:400 16.5px/1.35 Inter"><b style="color:#FFB01F">Guardrails above the account:</b> they bind even its admins and root user</div>
    </div></div></div>
 </div>`;
 
@@ -427,24 +423,24 @@ const dt = (n, bg, t, q) => `<div class="card" style="height:206px;padding:24px 
 const s23 = () => `
 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:6px">
  ${dt(1, 'var(--teal-d)', 'Buy as a customer, across three services', 'Functionality')}
- ${dt(2, 'var(--orange)', 'Auto-scaling under a load test', 'Scalability, performance')}
- ${dt(3, 'var(--orange)', 'Stop a server, nothing breaks', 'Availability')}
- ${dt(4, 'var(--orange)', 'Identity goes down, payments stay safe', 'Consistency, security')}
- ${dt(5, 'var(--orange)', 'Event backlog and the dead-letter queue', 'Scalability, reliability')}
- ${dt(6, 'var(--orange)', 'The pipeline that deployed it', 'Maintainability')}
+ ${dt(2, 'var(--orange)', 'Auto-scaling, on the dashboard', 'Scalability, performance')}
+ ${dt(3, 'var(--orange)', 'The pipeline that deployed it', 'Maintainability')}
 </div>
-<div style="margin-top:20px;border-radius:8px;background:#FBDFD9;padding:12px 22px;font:700 19px Inter;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="color:var(--red);font-size:14px">●</span> Load test running since 16:28 · everything you see is live on AWS ${mk('CONFIRM', 'else "Live on AWS; recorded steps are marked"')}</div>`;
+<div class="card" style="margin-top:20px;padding:20px 24px;display:flex;align-items:center;gap:20px">
+ <div class="dot" style="width:64px;height:64px;background:var(--default);color:var(--foreground);font-size:28px;flex:none">${icon('flask')}</div>
+ <div><div style="font:700 23px/1.25 Inter">Failure handling: not shown live</div><div style="font:400 19px/1.35 Inter;color:var(--ink3);margin-top:4px">Identity outage · dead-letter queue: tested locally · stop a server: not run · results in B12</div></div></div>
+<div style="margin-top:20px;border-radius:8px;background:#FBDFD9;padding:12px 22px;font:700 19px Inter;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="color:var(--red);font-size:14px">●</span> Live on AWS · the scaling graphs are from our 19 October load test</div>`;
 
 // ---------- slide 24 ----------
 const s24 = () => `
 <div style="position:absolute;left:76px;top:96px;font:700 120px/1 Inter;color:#fff">Thank you</div>
 <div style="position:absolute;left:80px;top:236px;font:500 32px Inter;color:#fff">Questions?</div>
-<div style="position:absolute;left:80px;top:304px;font:700 16px Inter;letter-spacing:.14em;color:#FFB01F">WHAT WE HOPE YOU REMEMBER</div>
+<div style="position:absolute;left:80px;top:304px;font:700 16px Inter;letter-spacing:.14em;color:#FFB01F;text-transform:uppercase">What we hope you remember</div>
 <div style="position:absolute;left:80px;top:338px;width:980px;display:grid;grid-template-columns:1fr 1fr;gap:14px 20px">
  ${['Split where no transaction crosses', 'Events never lost or doubled', 'Fails safe when identity is down', 'Rebuilt from scratch every release'].map(t => `<div style="height:52px;border-radius:26px;background:#fff;color:var(--teal-d);font:700 19px/52px Inter;text-align:center">${t}</div>`).join('')}
 </div>
 <div style="position:absolute;left:80px;top:486px;width:980px;display:flex;gap:20px">
- ${[[mk('FILL', 'N tasks at X req/s'), 'p95 ' + mk('FILL', 'Y') + ' ms (V3)'], ['US$0.49', 'runtime database, cache and containers, 7 sessions'], ['51 min', 'approved PR → released, tested, destroyed']].map(n => `<div style="flex:1;border-radius:8px;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);padding:10px 18px"><div style="font:700 30px/1.2 Inter;color:#fff">${n[0]}</div><div style="font:400 15.5px Inter;color:#E6DFD3">${n[1]}</div></div>`).join('')}
+ ${[['1 → 3 tasks', 'auto-scaled at ≈ 455 req/s, 19 Oct'], ['US$0.49', 'runtime database, cache and containers, 7 sessions'], ['51 min', 'approved PR → released, tested, destroyed']].map(n => `<div style="flex:1;border-radius:8px;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);padding:10px 18px"><div style="font:700 30px/1.2 Inter;color:#fff">${n[0]}</div><div style="font:400 15.5px Inter;color:#E6DFD3">${n[1]}</div></div>`).join('')}
 </div>
 <div style="position:absolute;left:80px;top:604px;font:400 17px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:10px;align-items:center"><span style="font-size:20px">${icon('github')}</span> github.com/PPsyrius/iss-groupbuy-team8 · d3lvq02o2e7tcn.cloudfront.net</div>`;
 
