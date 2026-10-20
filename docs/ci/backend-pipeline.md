@@ -97,6 +97,16 @@ Other applicable jobs still run, but jobs absent on some PRs must not be require
 
 `typesafe-smoke` is non-required because Jev is optional and search has deterministic SQL fallback.
 
+### Observed CI failures and scoped repairs (2026-10-21)
+
+The [run-by-run audit](ci-failure-audit-20261021.md) distinguishes code defects, resolved dependency-update failures and external blockers. CodeQL is not usable in this repository: its September 15 ingestion failed, `ENABLE_CODEQL=false`, and the Code Scanning API still returns 403. The October 20 environment job never started because an Actions budget prevented use. Neither blocker is fixed by adding a required check; no ruleset, billing setting, deployment or credential was changed.
+
+The SpotBugs 4.10.5 engine requires BCEL 6.13.0, while plugin 4.10.4.1 supplies BCEL 6.12.0; [PR #559's failed run](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39463373272) and a local reproduction both fail with `NoClassDefFoundError: org/apache/bcel/classfile/PermittedSubclasses`. Use plugin 4.10.5.0 and engine/annotations 4.10.5 together, matching their published Maven Central POMs, rather than adding another transitive override or disabling a detector. Dependabot groups the SpotBugs artifacts. Cheap POM policy tests run in the existing `build-quality` job; POM changes do not allocate another workflow-lint runner. Actionlint/tooling tests cover every local composite action, Dependabot configuration and secret-scan configuration changes.
+
+The weekly Gitleaks report contains twenty provable SHA-256 file-digest false positives and four historical Sonar badge-token findings. `.gitleaksignore` records only the twenty exact commit/path/rule/line fingerprints, after recomputing their values from the baseline source commit. New findings in the same file remain detectable. The four badge-token findings are deliberately not ignored or declared safe without disposition; the weekly scan remains red. See the audit for commands and limits.
+
+Scope boundary: preserve existing required contexts, concurrency, scan parallelism, test selection, coverage paths and CodeQL opt-in behavior. This repair adds neither aggregate gates nor whole-workflow serialization. It is not a claim of measured hosted speedup or a fix for the historical Actions-budget rejection; current budget availability was not checked.
+
 Recommended `dev` ruleset protections also include at least one approval, stale-approval dismissal, approval of the latest reviewable push, CODEOWNERS review where ownership is intentional, conversation resolution, deletion restriction and force-push blocking. Do not use `Restrict updates` merely to force PRs; the pull-request requirement establishes that path.
 
 `deploy-existing-ec2` and `publish-ecr-*` are push-only, never required pre-merge checks. PR Sonar results are required; code-, test- and build-relevant `dev` pushes refresh the corresponding dashboard baseline.

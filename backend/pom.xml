@@ -62,8 +62,9 @@
     <!-- quality gates: versions verified against Maven Central 2026-08-31 -->
     <spotless-maven-plugin.version>3.10.4</spotless-maven-plugin.version>
     <google-java-format.version>1.36.1</google-java-format.version>
-    <spotbugs-maven-plugin.version>4.10.4.1</spotbugs-maven-plugin.version>
-    <spotbugs.version>4.10.4</spotbugs.version>
+    <!-- Verified on Maven Central 2026-10-21; upgrade together for the matching BCEL/ASM runtime (#559). -->
+    <spotbugs-maven-plugin.version>4.10.5.0</spotbugs-maven-plugin.version>
+    <spotbugs.version>4.10.5</spotbugs.version>
     <jacoco.version>0.8.15</jacoco.version>
     <!-- SonarCloud CI-based analysis: project key and coverage path -->
     <sonar.projectKey>blocbuy-backend</sonar.projectKey>

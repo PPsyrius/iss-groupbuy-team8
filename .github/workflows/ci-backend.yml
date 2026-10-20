@@ -102,6 +102,15 @@ jobs:
           needs.detect-changes.outputs.backend == 'true' ||
           (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
 
+      # Run cheap POM policy checks here, not in an extra workflow-lint runner
+      # for every Maven dependency PR.
+      - name: Test backend build policies
+        if: >-
+          needs.detect-changes.outputs.backend == 'true' ||
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+        working-directory: ${{ github.workspace }}
+        run: python3 -m unittest discover -s .github/tests -p 'backend*_test.py'
+
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         if: >-
           needs.detect-changes.outputs.backend == 'true' ||
