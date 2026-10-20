@@ -32,11 +32,10 @@ Team 8's BlocBuy presentation for SWE5001 (Graduate Certificate in Architecting 
 
 ## Rebuild and record
 
-From the repository root (setup and browser install: see the kit's “Setup and build”):
+Do not run `npm --prefix docs/swe5001/presentation run all` while `dist/` comes from the external build: it rebuilds from `src/` and overwrites `dist/` with the older deck (see the note at the top). The safe command, from the repository root (setup and browser install: see the kit's “Setup and build”):
 
 ```sh
-npm --prefix docs/swe5001/presentation run all
 npm --prefix docs/swe5001/presentation run screenshots
 ```
 
-`run all` rebuilds from `src/` and overwrites `dist/` (see the note at the top); `run screenshots` only reads the deck in `dist/` and writes per-slide PNGs to `png/`. Until `src/` catches up with the external build, update the deck by replacing the three files in `dist/` with that build's output under the same names. Commit the change only when the content changes (each commit adds about 3.5 MB of binary history), and add an entry to the day's sprint log under `docs/agile/sprint-04/log/` referencing #461 (see `.claude/skills/agile-evidence-capture/SKILL.md`).
+It only reads the deck in `dist/` and writes per-slide PNGs to `png/`. Until `src/` catches up with the external build, update the deck by replacing the three files in `dist/` with that build's output under the same names. Commit the change only when the content changes (each commit adds about 3.5 MB of binary history), and add an entry to the day's sprint log under `docs/agile/sprint-04/log/` referencing #461 (see `.claude/skills/agile-evidence-capture/SKILL.md`).
