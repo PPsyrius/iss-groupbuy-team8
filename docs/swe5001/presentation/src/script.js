@@ -56,7 +56,7 @@ const demoSteps = [
     op: ['Tab 7: promotion pull request #564 (19 Oct): required checks and approval.', 'Open its deploy run: build → create → release → destroy → evidence, with durations.', 'Open the evidence artifact list. Never click Merge.'],
     say: "Pan: Thanks, Eric. Remember, the only thing that deploys to production is merging a promotion pull request. This is the promotion that put today's code on AWS. It had to pass its required checks and get an approval before it could merge. Eric, could you open the deploy run? (Eric opens it.) So this is what that merge started. The run built the images, created the environment from scratch, tested it, released it and tore it down again. End to end, it took (read the total run time off the screen). And the evidence, please. (Eric opens the artifact list.) Here's the evidence it kept. So today's environment, the one you've just used, was built from exactly these images. Eric, back to you.",
     exp: 'Checks green; run green including destroy; artifact present.',
-    fb: 'Screenshots of the pull request and run (fallback/3-pipeline); Pan carries on with the same narration over them.',
+    fb: 'Screenshots of the pull request and run (fallback/3-pipeline); Pan carries on with the same narration over them.', planC: false,
     fbSay: "GitHub isn't cooperating, so here are the same pages from our recording. This part is recorded, not live." },
   { n: 4, t: 'Close the demo', time: '16:50:45 – 16:51:30', proves: 'Reliability (tested locally) · guideline <b>6b</b> · Eric, then Lim',
     op: ['Tab 1: back to the deck; open backup B12 if asked about failures.', 'Thank-you slide (slide 24) at 16:53.'],
@@ -71,7 +71,7 @@ const demoCard = d => `<div class="card demo"><div class="hd"><span>Step ${d.n} 
  <div class="row"><span class="lab">Expect</span><span>${esc(d.exp)}</span></div>
  <div class="row"><span class="lab fb">Fallback</span><span>${!d.fb ? '—' : d.clip === false
   ? `${esc(d.fb)} If the live view is not as expected within 20 seconds, Eric opens them himself and says: <i>“${esc(d.fbSay)}”</i>`
-  : `${esc(d.fb)} If the live view is not as expected within 20 seconds, Eric posts <code>CLIP ${d.n}</code> and says: <i>“${esc(d.fbSay)}”</i> With no recording for this step, use Plan C (§7).`}</span></div>
+  : `${esc(d.fb)} If the live view is not as expected within 20 seconds, Eric posts <code>CLIP ${d.n}</code> and says: <i>“${esc(d.fbSay)}”</i> ${d.planC === false ? 'With no recording, Eric shows those screenshots; never Plan C for this step.' : 'With no recording for this step, use Plan C (§7).'}`}</span></div>
  ${(d.ifs || []).map(([w, r]) => `<div class="row"><span class="lab">If</span><span><b>${esc(w)}:</b> ${esc(r)}</span></div>`).join('')}</div></div>`;
 
 const demo = `<section class="chap"><h1>6 Demo (8+2 minutes)</h1>
@@ -115,7 +115,7 @@ ${tbl(['Situation', 'Detected by', 'Response and words', 'Who'], [
   ['Lim cannot share', 'Black screen', 'Eric shares the HTML deck from tab 1 for segments 1–5 (PDF as a last resort).', 'Eric'],
   ['Live dashboard slow or empty', 'Tab 5', 'Go straight to tab 6 (the 19 Oct graphs); say the live view only shows today’s quiet baseline.', 'Eric'],
   ['GitHub slow or logged out', 'Tabs 6–7', 'Show the local graph PNGs (<code>fallback/2-v3</code>) and the pipeline screenshots.', 'Eric, Pan'],
-  ['<b>Plan C:</b> a step fails live and there is no recording for it', '—', 'Show the local integration-test result for that step and say: <i>“verified locally, not yet on AWS.”</i> Never present a local result as an AWS one.', 'Eric'],
+  ['<b>Plan C:</b> step 1 or 2 fails live and its fallback (§6 card) fails too', '—', 'Not for step 3: its screenshots (<code>fallback/3-pipeline</code>) are the fallback, and a local test cannot show checks, a deploy run or artifacts. Show the local integration-test result for that step and say: <i>“verified locally, not yet on AWS.”</i> Never present a local result as an AWS one.', 'Eric'],
   ['Assessor asks for something not prepared', '—', 'Offer to show it after the talk or in the report; do not improvise on the live environment. If a backup slide covers it, open it (B, then the row).', 'Lim'],
 ])}
 <h2>If the clock slips</h2>
@@ -222,6 +222,9 @@ export CONFIRM_V4_SEED=2000 V4_RESULTS_DIR=<new empty private directory outside 
 bash infra/swe5001/scripts/v4-burst.sh`)}
 <p>Restore <code>v4_demo_enabled=false</code> with a reviewed apply after the talk (or let <code>down</code> remove the runtime).</p>
 <h3>A.9 Tear down and verify</h3>${pre(`gh workflow run swe5001-env.yml --repo PPsyrius/iss-groupbuy-team8 --ref prod -f action=down
+sleep 5   # let the run appear
+RUN=$(gh run list --workflow swe5001-env.yml --repo PPsyrius/iss-groupbuy-team8 --branch prod --limit 1 --json databaseId -q ".[0].databaseId")
+gh run watch "$RUN" --repo PPsyrius/iss-groupbuy-team8 --exit-status   # status has its own concurrency group: wait until down has succeeded
 gh workflow run swe5001-env.yml --repo PPsyrius/iss-groupbuy-team8 --ref prod -f action=status`)}
 </section>
 <section class="chap"><h1>B Appendix — backup slides (Q&amp;A only)</h1>
