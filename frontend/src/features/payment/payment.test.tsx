@@ -523,6 +523,32 @@ describe("backend-confirmed payment result", () => {
     expect(router.state.location.pathname).toBe(`/payments/${paymentId}`);
   });
 
+  it("falls back to the stored reference when the return parameter is malformed", async () => {
+    serveSignedIn();
+    receipt({ status: "SUCCEEDED", orderId: "stored-order" });
+    sessionStorage.setItem(lastPaymentKey, paymentId);
+    const { router } = renderRoute("/payments/return?paymentId=nope");
+    expect(await screen.findByText("stored-order")).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(`/payments/${paymentId}`);
+  });
+
+  it("shows the unavailable card for a malformed parameter and nothing stored", async () => {
+    serveSignedIn();
+    renderRoute("/payments/return?paymentId=nope");
+    expect(
+      await screen.findByRole("heading", { name: "Payment reference unavailable" }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the unavailable card when the stored reference is malformed too", async () => {
+    serveSignedIn();
+    sessionStorage.setItem(lastPaymentKey, "not-a-uuid");
+    renderRoute("/payments/return?paymentId=nope");
+    expect(
+      await screen.findByRole("heading", { name: "Payment reference unavailable" }),
+    ).toBeInTheDocument();
+  });
+
   it("clears only the completed attempt, not another pending checkout", () => {
     const key = "blocbuy.payment.attempt.u1.START.product";
     sessionStorage.setItem(key, intentId);
