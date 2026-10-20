@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** Jev settings: safe defaults while disabled, API key required when enabled. */
 class TypeSafeJevPropertiesTest {
@@ -61,15 +64,19 @@ class TypeSafeJevPropertiesTest {
         assertThat(properties.toString())
                 .doesNotContain("tsj-key-9c1e")
                 .contains("apiKey=<redacted>");
+        assertThat(properties.apiKey()).isEqualTo("tsj-key-9c1e");
     }
 
     /** Verifies an absent API key is shown as unset in toString. */
-    @Test
-    void toStringMarksAbsentApiKeyAsUnset() {
-        assertThat(new TypeSafeJevProperties(false, null, null, null, 0, 0).toString())
-                .contains("apiKey=<unset>");
-        assertThat(new TypeSafeJevProperties(false, " ", null, null, 0, 0).toString())
-                .contains("apiKey=<unset>");
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "\t\r\n", "\u2003"})
+    void toStringMarksAbsentApiKeyAsUnset(String apiKey) {
+        TypeSafeJevProperties properties =
+                new TypeSafeJevProperties(false, apiKey, null, null, 0, 0);
+
+        assertThat(properties.toString()).contains("apiKey=<unset>");
+        assertThat(properties.apiKey()).isEqualTo(apiKey);
     }
 
     /** Verifies non-secret settings remain visible in toString. */
@@ -80,10 +87,9 @@ class TypeSafeJevPropertiesTest {
                         true, "tsj-key-9c1e", "http://localhost", "jev-test", 2, 3);
 
         assertThat(properties.toString())
-                .contains("enabled=true")
-                .contains("endpoint=http://localhost")
-                .contains("model=jev-test")
-                .contains("connectTimeoutMillis=2")
-                .contains("readTimeoutMillis=3");
+                .isEqualTo(
+                        "TypeSafeJevProperties[enabled=true, apiKey=<redacted>, "
+                                + "endpoint=http://localhost, model=jev-test, "
+                                + "connectTimeoutMillis=2, readTimeoutMillis=3]");
     }
 }

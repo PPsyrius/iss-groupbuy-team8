@@ -3,6 +3,9 @@ package com.blocbuy.identity.gateway;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** Client settings: explicit values preserved, endpoints and TTL defaulted, blanks unconfigured. */
 class GoogleOAuthPropertiesTest {
@@ -72,14 +75,18 @@ class GoogleOAuthPropertiesTest {
         assertThat(properties.toString())
                 .doesNotContain("gsec-test-7f3a")
                 .contains("clientSecret=<redacted>");
+        assertThat(properties.clientSecret()).isEqualTo("gsec-test-7f3a");
     }
 
-    @Test
-    void toStringMarksAbsentClientSecretAsUnset() {
-        assertThat(new GoogleOAuthProperties("cid", null, "https://cb", null, null, 0).toString())
-                .contains("clientSecret=<unset>");
-        assertThat(new GoogleOAuthProperties("cid", "  ", "https://cb", null, null, 0).toString())
-                .contains("clientSecret=<unset>");
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "\t\r\n", "\u2003"})
+    void toStringMarksAbsentClientSecretAsUnset(String clientSecret) {
+        GoogleOAuthProperties properties =
+                new GoogleOAuthProperties("cid", clientSecret, "https://cb", null, null, 0);
+
+        assertThat(properties.toString()).contains("clientSecret=<unset>");
+        assertThat(properties.clientSecret()).isEqualTo(clientSecret);
     }
 
     @Test
@@ -94,10 +101,10 @@ class GoogleOAuthPropertiesTest {
                         60);
 
         assertThat(properties.toString())
-                .contains("clientId=cid-visible")
-                .contains("redirectUri=https://cb.example/callback")
-                .contains("authorizeUrl=https://auth.example")
-                .contains("tokenUrl=https://token.example")
-                .contains("stateTtlSeconds=60");
+                .isEqualTo(
+                        "GoogleOAuthProperties[clientId=cid-visible, clientSecret=<redacted>, "
+                                + "redirectUri=https://cb.example/callback, "
+                                + "authorizeUrl=https://auth.example, "
+                                + "tokenUrl=https://token.example, stateTtlSeconds=60]");
     }
 }

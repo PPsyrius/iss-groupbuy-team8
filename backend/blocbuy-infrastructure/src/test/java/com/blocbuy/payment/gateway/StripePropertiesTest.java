@@ -3,6 +3,9 @@ package com.blocbuy.payment.gateway;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** Stripe settings require a nonblank server-side API key. */
 class StripePropertiesTest {
@@ -27,19 +30,38 @@ class StripePropertiesTest {
         StripeProperties properties = new StripeProperties("sk_test_123", "whsec_123");
 
         assertThat(properties.toString())
-                .doesNotContain("sk_test_123")
-                .doesNotContain("whsec_123")
-                .contains("apiKey=<redacted>")
-                .contains("webhookSecret=<redacted>");
+                .isEqualTo("StripeProperties[apiKey=<redacted>, webhookSecret=<redacted>]");
+        assertThat(properties.apiKey()).isEqualTo("sk_test_123");
+        assertThat(properties.webhookSecret()).isEqualTo("whsec_123");
     }
 
     @Test
     void toStringMarksAbsentSecretsAsUnset() {
         assertThat(new StripeProperties(null, null).toString())
-                .contains("apiKey=<unset>")
-                .contains("webhookSecret=<unset>");
+                .isEqualTo("StripeProperties[apiKey=<unset>, webhookSecret=<unset>]");
         assertThat(new StripeProperties(" ", "").toString())
-                .contains("apiKey=<unset>")
-                .contains("webhookSecret=<unset>");
+                .isEqualTo("StripeProperties[apiKey=<unset>, webhookSecret=<unset>]");
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "\t\r\n", "\u2003"})
+    void toStringMarksOnlyTheAbsentApiKeyAsUnset(String apiKey) {
+        StripeProperties properties = new StripeProperties(apiKey, "whsec_123");
+
+        assertThat(properties.toString())
+                .isEqualTo("StripeProperties[apiKey=<unset>, webhookSecret=<redacted>]");
+        assertThat(properties.apiKey()).isEqualTo(apiKey);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "\t\r\n", "\u2003"})
+    void toStringMarksOnlyTheAbsentWebhookSecretAsUnset(String webhookSecret) {
+        StripeProperties properties = new StripeProperties("sk_test_123", webhookSecret);
+
+        assertThat(properties.toString())
+                .isEqualTo("StripeProperties[apiKey=<redacted>, webhookSecret=<unset>]");
+        assertThat(properties.webhookSecret()).isEqualTo(webhookSecret);
     }
 }
