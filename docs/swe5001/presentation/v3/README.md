@@ -29,6 +29,7 @@ Commit a changed version only when the content changes (after the 20 October reh
 These are in the built PDF and HTML, which are generated outside this repository, so the owners need to apply them at the next rebuild:
 
 - **Demo step 4 and slide 23** say the three failure drills were tested locally. The 15 October local rehearsal ([evidence](../../evidence/20261015-local-failure-rehearsal/README.md)) covered the identity outage and the poison message only; stopping a server (V5) is "not run on AWS" with no local result (slide 5, B12).
-- **Slide 8** ends with "We'll show you that live", **slide 17** says "You'll see the dead-letter queue in the demo", and the identity-outage answer says "We show this live". Those drills were cut from the live demo on 19 October.
+- **Slide 8 and slide 17** promised drills "live"; the 20 October script update fixed both. The identity-outage Q&A answer ("We show this live") should get the same fix.
 - **Demo step 3** says today's environment "was built from exactly these images". The environment was started by [run 39198123242](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39198123242) on `prod` at `5e83d63`; check that it matches the promotion in #534 before saying it.
 - **Demo step 1** expects at least one notification for the demo buyer. Checkout is off on the SWE5001 session (`BLOCBUY_STRIPE_CHECKOUT_ENABLED = "false"` in `infra/swe5001/runtime/services.tf`), so a purchase cannot create one; it has to be seeded, or the step skips the notifications view.
+- **Demo step 2** now starts from one task (the 20 October update: floor lowered to 1 at 16:05 for the k6 preflight); `speaker-script-eric.md` follows that wording.

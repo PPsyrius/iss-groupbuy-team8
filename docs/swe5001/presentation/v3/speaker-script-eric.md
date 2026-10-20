@@ -2,7 +2,7 @@
 
 This is Eric's part of the talk, reworded so it sounds natural when read aloud: segment 3 (slides 7 to 11) and the demo (slide 23, then steps 1 to 4). The facts, numbers, technical terms, timings and hand-overs are the same as in the source. Only the spoken glue changed: verbs, connectors, how sentences open, and how one slide leads into the next.
 
-- **Source:** `swe5001-presentation-script-v3.pdf` (speaker script and demo run book v3, 19 Oct 2026, PR #556), plus the deck `swe5001-presentation-v3.html` for what is on each slide.
+- **Source:** `swe5001-presentation-script-v3.pdf` (speaker script and demo run book v3, 20 Oct 2026 update of PR #556), plus the deck `swe5001-presentation-v3.html` for what is on each slide.
 - **Reading speed:** 130 words a minute. Estimated seconds = words ÷ 130 × 60. Numbers are counted the way you say them ("455" counts as four words).
 - **Target:** on slides 7–11 the spoken text fills about 75–85% of each slot, so there is time to point and pause. In demo steps 1–3 it fills about 50–60% of the slot, because switching tabs, waiting for pages and reading live numbers off the screen take the rest; step 4 has nothing to operate, so it is at 80%.
 - **Notation:** text in [square brackets] is a cue: do it, don't say it. "[Lim: next slide]" means Lim, who shares the deck during segments 1–5, moves to the next slide as you start that line.
@@ -169,7 +169,7 @@ Clock 16:20:00–16:29:00 (7 min talk, then 2 min of questions from 16:27).
 
 # Between segments (backstage, muted)
 
-- **Slides 12–22:** keep an eye on the CloudWatch dashboard (Tab 5). When commerce reaches a new task count, post **SCALED n** in the team backchannel (never the Zoom chat). The run book expects the third task around 16:41–16:44.
+- **Slides 12–22:** keep an eye on the CloudWatch dashboard (Tab 5). When commerce reaches a new task count, post **SCALED n** in the team backchannel (never the Zoom chat). From 1 task (the test floor Liu Jin sets at 16:05), the run book expects 2 tasks around 16:39 and 3 around 16:42.
 - **16:44:30:** Lim stops sharing. Share the demo window (not the desktop), with Tab 1 on slide 23. Do it even if Pan is still answering a question; his answer carries on over your screen. Stay muted.
 - **Pan says *"Eric, over to you."*:** unmute and start.
 
@@ -231,7 +231,7 @@ For the whole demo: narrate results, not clicks ("task count went from two to th
 
 > [Tab 5: CloudWatch dashboard, Services row] Since 16:28, that test script has been sending browsing traffic, ramping up towards three times our measured baseline.
 >
-> [point at commerce running tasks] Commerce started with two tasks. As the traffic grew, it scaled up to what you see here: [read the task count off the screen] tasks.
+> [point at commerce running tasks] Commerce started with one task, the floor we use for this test. As the traffic grew, it scaled up to what you see here: [read the task count off the screen] tasks.
 >
 > [Edge row: point at the request count, then the p95 response time] [say this only if the graph shows it] And it stayed fast. Response times went up while the new tasks were starting, then came back down. Right now the server's p95 is [read it off the screen] milliseconds, and almost no requests failed.
 >
@@ -241,7 +241,7 @@ For the whole demo: narrate results, not clicks ("task count went from two to th
 >
 > [bridge] But how did that commerce code get onto AWS in the first place? That's the pipeline. Pan?
 
-**Expect:** commerce running tasks above 2 (it reached 3 on 19 Oct); server p95 back under 100 ms once the new tasks run; almost no errors. k6 may show about 0.5 s and dropped requests: that's the laptop's limit, not the service.
+**Expect:** commerce running tasks above 1 (3 expected, as on 19 Oct: 2 around 16:39, 3 around 16:42); server p95 back under 100 ms once the new tasks run; almost no errors. k6 may show about 0.5 s and dropped requests: that's the laptop's limit, not the service.
 
 **Fallback** (the live view isn't right within 20 seconds): [post **CLIP 2** in the backchannel; Liu Jin shares the clip]
 
@@ -249,9 +249,9 @@ For the whole demo: narrate results, not clicks ("task count went from two to th
 
 [If Liu Jin shows the 19 Oct dashboard graphs (evidence folder `20261019-v3-autoscaling`) instead of a clip, say "These are the saved graphs from our 19 October run, not live: commerce goes from one task to three, and here's the server response time."]
 
-**If commerce is still at two tasks at 16:46** (run book §7): show what is there honestly, then the 19 Oct graphs.
+**If commerce is below 3 tasks at 16:46** (run book §7): show what is there honestly, then the 19 Oct graphs.
 
-> Commerce is still at two tasks: the alarm needs three minutes of data before it acts. Here's what the same test did on 19 October: one task to three.
+> It has scaled from one to two so far: the alarm needs three minutes of data before it acts. Here's what the same test did on 19 October: one task to three.
 
 ## Step 3 — The pipeline that deployed it
 
@@ -283,7 +283,7 @@ For the whole demo: narrate results, not clicks ("task count went from two to th
 
 **Slot** 45 s (16:50:45–16:51:30) · **Words** 78 · **Est.** 36 s at 130 wpm (80% of slot) · reliability (not shown live; two drills tested locally)
 
-> [Tab 5: commerce task count] One last look: commerce is still at its peak, and when the load test ends, it'll scale back down to two tasks by itself.
+> [Tab 5: commerce task count] One last look: commerce is still at its peak, and when the load test ends, it'll scale back down by itself.
 >
 > What we didn't show live is failure handling. The identity outage from slide 8 and a bad message going to the dead-letter queue were tested locally, and the results are in our backup slides; stopping a server is still to run on AWS.
 >

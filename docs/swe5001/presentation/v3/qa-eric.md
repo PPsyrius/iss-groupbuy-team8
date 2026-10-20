@@ -9,7 +9,7 @@ How to use it:
 - "Open" is the backup slide to bring up (press B for the index, click the row). Open one only if it helps.
 - "Source" says where the answer comes from, so you can check it. Short names are listed below.
 - Where something is only tested locally, or not built, the answer says so. Keep that wording. The run book rule is: never present a local result as an AWS result.
-- State read for this file: run book and deck v3 (19 Oct, #556) and `dev` on 19 Oct.
+- State read for this file: run book and deck v3 (19 Oct, #556; 20 Oct update) and `dev` on 19 Oct.
 
 Source key:
 
@@ -247,7 +247,7 @@ Rehearse first (the rows the run book gives you): A1, A2, C1, B3, E2, E3, F1, F2
 
 - **Open:** slide 14 (capacity statement), B12.
 - **Source:** RB p. 20; EV-16OCT ("saturation was not observed, so this is a tested lower bound"; "transferring the candidate requires V3 validation"); EV-19OCT.
-- **If pushed on "why did the demo start at two tasks, but 19 Oct started at one?":** the floor was lowered to 1 for the 19 Oct run so it could show 1 to 3, then set back to 2 (the demo floor, for two-zone availability). EV-19OCT "What the operator changed"; AWS-PLAN 6.4.
+- **If asked "slide 14 says two to six, so why does the test start at one?" (run book Q&A, Liu Jin answers; your bridge: "Liu Jin set that up, Liu Jin?"):** two is the floor we normally run with, one task in each zone. The scaling test starts from one because our per-task figure, 200 requests a second, was measured on one task, and the test tool checks that before it sends traffic. So the floor goes to one for the test (16:05) and back to two afterwards. RB 20 Oct, A.7; `perf/k6/lib.mjs`.
 
 ### F2. Does adding tasks scale in a straight line?
 
@@ -293,7 +293,7 @@ Rehearse first (the rows the run book gives you): A1, A2, C1, B3, E2, E3, F1, F2
 
 ### F6. The product images are broken and the notification list is empty. Is the environment healthy?
 
-- **Run book:** not a listed row. Use only if it is still true on the day. [`speaker-script-eric.md`](speaker-script-eric.md) has the two short "If this happens" lines for the screen.
+- **Run book:** not a listed row. Use only if it is still true on the day. speaker-script-eric.md has the two short "If this happens" lines for the screen.
 
 > Fair point, and it's a data problem, not an outage. The images are broken because our demo seed points at placeholder image addresses on example dot com, which serves nothing. That's issue 557, and a teammate is migrating the data to fix it. The notification list is empty because notifications come from team and payment events, and with checkout off nobody can start a team here. We checked SNS-to-SQS routing on AWS with test events, and the full event-to-notification path locally. The full path hasn't run on AWS.
 
