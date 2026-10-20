@@ -10,6 +10,7 @@ import {
 
 import { unwrapResult } from "@/api/envelope";
 import { myOrdersOptions } from "@/api/generated/@tanstack/react-query.gen";
+import { BrandIsologo } from "@/components/BrandMark";
 import { accountSearchDefaults, accountSearchSchema } from "@/features/blocs/blocs-search";
 import { myTeamsQuery } from "@/features/blocs/my-teams-query";
 import { BlocsSkeleton, MyBlocs } from "@/features/blocs/MyBlocs";
@@ -165,6 +166,8 @@ function NoBlocs() {
 function NoOrders() {
   return (
     <section className="border-border bg-surface flex flex-col gap-3 rounded-lg border p-5 xl:max-w-[560px] xl:p-8">
+      {/* The brand mark is the only decoration allowed on an empty state (CR-7). */}
+      <BrandIsologo alt="" className="h-10 w-auto self-center opacity-80" />
       <h2 className="text-lg font-semibold">No orders yet</h2>
       <p className="text-base text-zinc-600">
         Orders appear here once a payment goes through. Every bloc either fills or refunds you in

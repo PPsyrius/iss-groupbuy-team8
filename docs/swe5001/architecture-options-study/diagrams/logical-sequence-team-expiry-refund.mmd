@@ -1,0 +1,57 @@
+---
+title: Logical view (UML sequence) - team expiry and refund, conduct-window cut (local resolution + outbox fan-out)
+---
+sequenceDiagram
+  autonumber
+  participant SW as TeamExpirySweepJob (team-purchase)
+  participant COM as team-purchase-service<br/>(+ payment module until P5.1)
+  participant DB as purchase + payment schemas
+  participant RW as RefundWorkerJob (payment module)
+  participant S as Stripe
+  participant OB as outbox relay
+  participant BUS as SNS topic + SQS queues
+  participant CAT as catalog-service
+  participant NTF as notification-service
+
+  loop every 60 s, DB lease (sys_scheduler_lock)
+    SW->>DB: select up to 100 overdue open teams (DB clock)
+    loop one transaction per team
+      rect rgba(120,160,220,0.15)
+        SW->>COM: expireOne(dealId)
+        COM->>DB: UPDATE deal SET status = expired WHERE status = open
+        COM->>DB: BEFORE_COMMIT order(10): cancel team orders
+        COM->>DB: BEFORE_COMMIT payment(20): upsert refund obligations (UNIQUE payment_id)
+        COM->>DB: INSERT outbox: TeamExpired, OrderCancelled x n, RefundRequested x n
+      end
+    end
+  end
+
+  loop every 1 s
+    OB->>DB: claim outbox rows
+    OB->>BUS: publish
+  end
+
+  par
+    BUS->>CAT: TeamExpired
+    CAT->>CAT: release HELD / CONSUMED reservations of the team (stock +n),<br/>remove team from open-team projection
+  and
+    BUS->>NTF: OrderCancelled
+    NTF->>NTF: notify buyer "team expired, refund on its way"
+  end
+
+  loop leased worker, one obligation per tick
+    RW->>DB: claim due refund obligation (version fencing)
+    RW->>S: create Refund (idempotency key = obligation id), outside DB txn
+    alt provider confirms
+      S-->>RW: refund succeeded
+      RW->>DB: txn: obligation SUCCEEDED + outbox RefundSucceeded
+    else failure / uncertain
+      S-->>RW: error or timeout
+      RW->>DB: backoff retry or operator review case
+    end
+  end
+
+  OB->>BUS: RefundSucceeded
+  BUS->>NTF: RefundSucceeded
+  NTF->>NTF: notify buyer "refund completed"
+  Note over BUS,NTF: failed deliveries retry, then move to a DLQ after 5 receives<br/>CloudWatch alarm when DLQ depth is above zero

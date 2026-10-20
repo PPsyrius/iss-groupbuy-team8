@@ -81,15 +81,32 @@ blocbuy:
       queue-url: ${BLOCBUY_EVENTS_SQS_QUEUE_URL:}
     sns:
       topic-arn: ${BLOCBUY_EVENTS_SNS_TOPIC_ARN:}
+    consumer:
+      # Notification SQS consumer (#446), independently opt-in; the EC2 dev stack runs no broker.
+      # Receives from blocbuy.events.sqs.queue-url with the region/endpoint above, whatever the
+      # relay transport. Runs in the monolith and in notification-svc, never in commerce/identity.
+      enabled: ${BLOCBUY_EVENTS_CONSUMER_ENABLED:false}
+      # ledger key in sys_consumed_message.consumer
+      name: notification
+      # messages handled at once; nothing more is received while all workers are busy
+      concurrency: ${BLOCBUY_EVENTS_CONSUMER_CONCURRENCY:4}
+      max-messages: 10
+      wait-time: 20s
+      # set on every receive (ElasticMQ's queue default is 30 s); matches the Terraform queue
+      visibility-timeout: 60s
+      # in-flight messages still unfinished after this are made visible again on shutdown
+      shutdown-timeout: 15s
+      error-backoff: 5s
   scheduling:
     # master switch, off by default everywhere; deployments opt in after their backlog check
     enabled: false
     team-expiry:
-      interval: PT1M
+      # Explicit bridges: TEAM_EXPIRY/BATCH_SIZE are not ConfigurationProperties env names.
+      interval: ${BLOCBUY_SCHEDULING_TEAM_EXPIRY_INTERVAL:PT1M}
       initial-delay: PT30S
       # a crashed holder blocks other instances no longer than this
       lease: PT2M
-      batch-size: 100
+      batch-size: ${BLOCBUY_SCHEDULING_TEAM_EXPIRY_BATCH_SIZE:100}
     purchase-intent-expiry:
       interval: PT1M
       initial-delay: PT30S

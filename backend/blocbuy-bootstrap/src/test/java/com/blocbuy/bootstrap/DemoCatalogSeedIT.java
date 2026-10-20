@@ -53,7 +53,84 @@ class DemoCatalogSeedIT {
         assertReady();
     }
 
+    @Test
+    void seedRepointsLegacyPlaceholderImagesButKeepsAdminEdits() {
+        assertThat(
+                        jdbc.queryForObject(
+                                """
+                                SELECT count(*) FROM biz_product
+                                WHERE product_no LIKE 'DEMO-P-%'
+                                  AND cover_image = 'https://dcsjrkmummxi7.cloudfront.net/products/'
+                                                    || product_no || '/cover.jpg'
+                                  AND images IS NULL
+                                """,
+                                Integer.class))
+                .isEqualTo(10);
+
+        jdbc.update(
+                """
+                UPDATE biz_product
+                SET cover_image = 'https://cdn.example.com/demo/p1-cover.jpg',
+                    images = '["https://cdn.example.com/demo/p1-1.jpg"]'::jsonb
+                WHERE product_no = 'DEMO-P-0001'
+                """);
+        jdbc.update(
+                "UPDATE biz_product SET cover_image = 'https://media.example.org/edited.jpg'"
+                        + " WHERE product_no = 'DEMO-P-0002'");
+        jdbc.update(
+                """
+                UPDATE biz_product
+                SET cover_image = 'https://cdn.example.com/demo/p3-cover.jpg',
+                    images = '["https://cdn.example.com/demo/p3-1.jpg",
+                               "https://media.example.org/gallery.jpg"]'::jsonb
+                WHERE product_no = 'DEMO-P-0003'
+                """);
+        Integer legacyVersion =
+                jdbc.queryForObject(
+                        "SELECT version FROM biz_product WHERE product_no = 'DEMO-P-0001'",
+                        Integer.class);
+
+        new ResourceDatabasePopulator(new ClassPathResource("db/seed/R__demo_catalog_seed.sql"))
+                .execute(dataSource);
+
+        assertThat(
+                        jdbc.queryForMap(
+                                "SELECT cover_image, images, version FROM biz_product"
+                                        + " WHERE product_no = 'DEMO-P-0001'"))
+                .containsEntry(
+                        "cover_image",
+                        "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0001/cover.jpg")
+                .containsEntry("images", null)
+                .containsEntry("version", legacyVersion + 1);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT cover_image FROM biz_product WHERE product_no = 'DEMO-P-0002'",
+                                String.class))
+                .isEqualTo("https://media.example.org/edited.jpg");
+        assertThat(
+                        jdbc.queryForMap(
+                                "SELECT cover_image, images::text AS images FROM biz_product"
+                                        + " WHERE product_no = 'DEMO-P-0003'"))
+                .containsEntry(
+                        "cover_image",
+                        "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0003/cover.jpg")
+                .containsEntry(
+                        "images",
+                        "[\"https://cdn.example.com/demo/p3-1.jpg\","
+                                + " \"https://media.example.org/gallery.jpg\"]");
+
+        jdbc.update("UPDATE biz_product SET images = NULL WHERE product_no = 'DEMO-P-0003'");
+        jdbc.update(
+                "UPDATE biz_product SET cover_image = 'https://dcsjrkmummxi7.cloudfront.net/products/"
+                        + "DEMO-P-0002/cover.jpg' WHERE product_no = 'DEMO-P-0002'");
+    }
+
     private void assertReady() {
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM biz_group_deal WHERE deal_no LIKE 'V4-EXPIRY-%'",
+                                Integer.class))
+                .isZero();
         Integer ready =
                 jdbc.queryForObject(
                         """

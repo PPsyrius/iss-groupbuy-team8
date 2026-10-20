@@ -188,7 +188,7 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-context</artifactId>
-        <version>1.84.0</version>
+        <version>1.84.1</version>
       </dependency>
       <dependency>
         <groupId>org.checkerframework</groupId>
@@ -379,6 +379,10 @@
             <goals>
               <goal>prepare-agent</goal>
             </goals>
+            <configuration>
+              <!-- JaCoCo locks append writes across test JVMs; keep the existing report paths. -->
+              <append>true</append>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -420,6 +424,37 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>ci</id>
+      <properties>
+        <test.log.level>INFO</test.log.level>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <systemPropertyVariables>
+                <logging.level.com.blocbuy>${test.log.level}</logging.level.com.blocbuy>
+              </systemPropertyVariables>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <systemPropertyVariables>
+                <logging.level.com.blocbuy>${test.log.level}</logging.level.com.blocbuy>
+              </systemPropertyVariables>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <!-- openapi-export profile lives in blocbuy-bootstrap/pom.xml (D12/D19): only the
        bootstrap module assembles a runnable app for spec generation. -->

@@ -103,6 +103,17 @@ variable "image_digests" {
   }
 }
 
+variable "v4_demo_enabled" {
+  description = "Explicit V4-only commerce demo profile and bounded faster expiry sweep; never seeds data automatically. Keep false for V2/V3 and normal sessions."
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.v4_demo_enabled || var.topology == "distributed"
+    error_message = "v4_demo_enabled requires the distributed topology."
+  }
+}
+
 variable "services_enabled" {
   description = "Bootstrap switch: services stopped/started at their minimum, scaling suspended/enabled. Scripts own counts after creation and explicitly pause existing services before db-init."
   type        = bool

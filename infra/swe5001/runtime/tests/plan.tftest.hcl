@@ -272,6 +272,16 @@ run "distributed_topology" {
   }
 
   assert {
+    condition     = local.service_environment["commerce-svc"]["BLOCBUY_STRIPE_CHECKOUT_ENABLED"] == "true" && local.service_environment["commerce-svc"]["BLOCBUY_PAYMENT_CHECKOUT_SUCCESS_URL"] == "https://d111111abcdef8.cloudfront.net/payments/return" && local.service_environment["commerce-svc"]["BLOCBUY_PAYMENT_CHECKOUT_CANCEL_URL"] == "https://d111111abcdef8.cloudfront.net/payments/return"
+    error_message = "Commerce enables Stripe test-mode Checkout with both mandatory return URLs on the deployed frontend."
+  }
+
+  assert {
+    condition     = local.service_environment["notification-svc"]["BLOCBUY_EVENTS_CONSUMER_ENABLED"] == "true" && !contains(keys(local.service_environment["commerce-svc"]), "BLOCBUY_EVENTS_CONSUMER_ENABLED") && !contains(keys(local.service_environment["identity-svc"]), "BLOCBUY_EVENTS_CONSUMER_ENABLED")
+    error_message = "Only notification-svc runs the SQS consumer, and only once messaging is verified."
+  }
+
+  assert {
     condition     = toset(keys(module.service)) == toset(["identity-svc", "notification-svc"]) && toset(keys(module.client_service)) == toset(["commerce-svc"])
     error_message = "The distributed topology plans the three services of backend ADR 0008; commerce-svc calls identity-svc, so it is a client created after it."
   }
@@ -376,8 +386,8 @@ run "distributed_before_db_init" {
   }
 
   assert {
-    condition     = length(module.messaging) == 1 && aws_appautoscaling_target.notification[0].min_capacity == 0 && aws_appautoscaling_target.notification[0].suspended_state[0].dynamic_scaling_in_suspended && aws_appautoscaling_target.notification[0].suspended_state[0].dynamic_scaling_out_suspended && aws_appautoscaling_target.notification[0].suspended_state[0].scheduled_scaling_suspended && local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_ENABLED"] == "false"
-    error_message = "Before db-init, scaling is fully suspended with min 0 and the relay is off."
+    condition     = length(module.messaging) == 1 && aws_appautoscaling_target.notification[0].min_capacity == 0 && aws_appautoscaling_target.notification[0].suspended_state[0].dynamic_scaling_in_suspended && aws_appautoscaling_target.notification[0].suspended_state[0].dynamic_scaling_out_suspended && aws_appautoscaling_target.notification[0].suspended_state[0].scheduled_scaling_suspended && local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_ENABLED"] == "false" && local.service_environment["notification-svc"]["BLOCBUY_EVENTS_CONSUMER_ENABLED"] == "false"
+    error_message = "Before db-init, scaling is fully suspended with min 0 and the relay and consumer are off."
   }
   assert {
     condition     = aws_appautoscaling_target.commerce[0].min_capacity == 0 && aws_appautoscaling_target.commerce[0].suspended_state[0].dynamic_scaling_in_suspended && aws_appautoscaling_target.commerce[0].suspended_state[0].dynamic_scaling_out_suspended && aws_appautoscaling_target.commerce[0].suspended_state[0].scheduled_scaling_suspended
@@ -402,8 +412,8 @@ run "distributed_unverified_keeps_relay_off" {
     }
   }
   assert {
-    condition     = local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_ENABLED"] == "false"
-    error_message = "Enabling services alone must not bypass the routing-readiness gate."
+    condition     = local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_ENABLED"] == "false" && local.service_environment["notification-svc"]["BLOCBUY_EVENTS_CONSUMER_ENABLED"] == "false"
+    error_message = "Enabling services alone must not bypass the routing-readiness gate for the relay or the consumer."
   }
 }
 
@@ -448,12 +458,55 @@ run "commerce_baseline" {
     condition     = module.client_service["commerce-svc"].initial_capacity.desired_count == 1 && one([for p in module.client_service["commerce-svc"].initial_capacity.capacity_provider_strategy : p.base if p.capacity_provider == "FARGATE"]) == 1
     error_message = "The baseline must start one commerce task on regular Fargate."
   }
+  assert {
+    condition     = local.service_environment["commerce-svc"]["SPRING_PROFILES_ACTIVE"] == "ec2,commerce,aws" && !contains(keys(local.service_environment["commerce-svc"]), "BLOCBUY_SCHEDULING_TEAM_EXPIRY_BATCH_SIZE")
+    error_message = "V3/normal sessions retain the ordinary expiry settings and never opt into demo implicitly."
+  }
 }
 
 run "reject_commerce_minimum" {
   command = plan
   variables { commerce_min_capacity = 3 }
   expect_failures = [var.commerce_min_capacity]
+}
+
+run "v4_demo_is_explicit_and_bounded" {
+  command = plan
+
+  variables {
+    topology         = "distributed"
+    v4_demo_enabled  = true
+    services_enabled = false
+    frontend_url     = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+
+  assert {
+    condition     = local.service_environment["commerce-svc"]["SPRING_PROFILES_ACTIVE"] == "ec2,commerce,aws,demo" && local.service_environment["commerce-svc"]["BLOCBUY_SCHEDULING_TEAM_EXPIRY_BATCH_SIZE"] == "500" && local.service_environment["commerce-svc"]["BLOCBUY_SCHEDULING_TEAM_EXPIRY_INTERVAL"] == "PT1S"
+    error_message = "V4 explicitly adds demo and accelerates bounded expiry ticks without lifting the 500-item cap."
+  }
+
+  assert {
+    condition     = local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_ENABLED"] == "false" && local.service_environment["notification-svc"]["BLOCBUY_EVENTS_CONSUMER_ENABLED"] == "false"
+    error_message = "The V4 flag must not bypass messaging bootstrap readiness."
+  }
+
+  assert {
+    condition     = local.service_environment["identity-svc"]["SPRING_PROFILES_ACTIVE"] == "ec2,identity,aws" && local.service_environment["notification-svc"]["SPRING_PROFILES_ACTIVE"] == "ec2,notification,aws"
+    error_message = "The V4 demo profile belongs only to commerce."
+  }
+}
+
+run "reject_v4_on_non_distributed" {
+  command = plan
+  variables {
+    v4_demo_enabled = true
+  }
+  expect_failures = [var.v4_demo_enabled]
 }
 
 run "reject_commerce_target" {

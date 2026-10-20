@@ -1,0 +1,70 @@
+---
+title: BlocBuy physical deployment on AWS ap-southeast-1 (UML deployment view)
+---
+flowchart LR
+  user(["&lt;&lt;device&gt;&gt;<br/>Browser"])
+  subgraph EXTS["&lt;&lt;external systems&gt;&gt;"]
+    stripe["Stripe<br/>Checkout, webhooks, refunds"]
+    google["Google OAuth2"]
+  end
+  gha["&lt;&lt;node&gt;&gt; GitHub Actions<br/>OIDC role, matrix build/deploy per service"]
+
+  subgraph GLOBAL["&lt;&lt;cloud&gt;&gt; AWS global edge"]
+    direction TB
+    r53["&lt;&lt;service&gt;&gt; Route 53<br/>(optional custom domain)"]
+    cf["&lt;&lt;service&gt;&gt; CloudFront<br/>/* -> S3, /api/* -> ALB<br/>X-Origin-Secret header"]
+    waf["&lt;&lt;service&gt;&gt; AWS WAF web ACL<br/>managed rules + rate limit"]
+    r53 --> cf
+    waf --- cf
+  end
+
+  subgraph REGION["&lt;&lt;region&gt;&gt; ap-southeast-1"]
+    direction TB
+    subgraph VPC["&lt;&lt;network&gt;&gt; VPC 10.20.0.0/16, 2 AZs"]
+      direction TB
+      subgraph PUB["&lt;&lt;subnet&gt;&gt; public subnets (AZ a, AZ b)"]
+        alb["&lt;&lt;load balancer&gt;&gt; ALB<br/>path rules -> 4 target groups"]
+        nat["&lt;&lt;gateway&gt;&gt; NAT (1, AZ a)"]
+      end
+      subgraph ECS["&lt;&lt;execution environment&gt;&gt; ECS cluster, Fargate ARM64, private app subnets"]
+        direction TB
+        idn["&lt;&lt;container&gt;&gt; identity-service (stretch P5.2)<br/>0.5 vCPU / 1 GB x 1"]
+        cat["&lt;&lt;container&gt;&gt; catalog-service<br/>0.5 vCPU / 1 GB x 1..4<br/>target tracking CPU 60%"]
+        com["&lt;&lt;container&gt;&gt; team-purchase-service<br/>(+ payment module until P5.1)<br/>1 vCPU / 2 GB x 1..3<br/>leased jobs, outbox relay"]
+        ntf["&lt;&lt;container&gt;&gt; notification-service<br/>0.25 vCPU / 0.5 GB x 0..2<br/>scale on queue depth"]
+        cm["&lt;&lt;service&gt;&gt; Service Connect /<br/>Cloud Map blocbuy.internal"]
+      end
+      subgraph DATAN["&lt;&lt;subnet&gt;&gt; private data subnets (AZ a, AZ b)"]
+        rds[("&lt;&lt;node&gt;&gt; RDS PostgreSQL<br/>db.t4g.small, single-AZ, 20 GB gp3<br/>schema per service")]
+        redis[("&lt;&lt;node&gt;&gt; ElastiCache Valkey<br/>cache.t4g.micro x 1<br/>Sa-Token sessions")]
+      end
+    end
+    subgraph MANAGED["&lt;&lt;regional managed services&gt;&gt;"]
+      direction TB
+      s3["&lt;&lt;bucket&gt;&gt; S3 SPA bucket (OAC)"]
+      sns["&lt;&lt;topic&gt;&gt; SNS blocbuy-domain-events"]
+      sqs["&lt;&lt;queue&gt;&gt; SQS x 3 + DLQ x 3"]
+      fh["&lt;&lt;service&gt;&gt; Firehose -> S3 + Athena"]
+      ecr["&lt;&lt;registry&gt;&gt; ECR, repo per service"]
+      ssm["&lt;&lt;service&gt;&gt; SSM Parameter Store / Secrets Manager"]
+      cw["&lt;&lt;service&gt;&gt; CloudWatch + X-Ray"]
+    end
+  end
+
+  user --> r53
+  cf -->|/*| s3
+  cf -->|/api/*| alb
+  stripe -->|signed webhook| cf
+  alb -->|path routing| ECS
+  com -->|"catalog.blocbuy.internal"| cat
+  ECS -->|JDBC, own schema| rds
+  ECS -->|sessions| redis
+  ECS -->|outbox relay| sns
+  sns --> sqs
+  sns --> fh
+  sqs -->|long poll| ECS
+  ECS -->|egress| nat
+  nat --> stripe
+  nat --> google
+  ECS -.->|images, secrets, logs| MANAGED
+  gha -->|push images, terraform, deploy| REGION

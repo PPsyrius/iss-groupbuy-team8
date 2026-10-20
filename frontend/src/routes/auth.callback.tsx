@@ -2,6 +2,7 @@ import { Spinner } from "@heroui/react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { meQueryKey } from "@/api/generated/@tanstack/react-query.gen";
+import { BrandIsologo } from "@/components/BrandMark";
 import { takeReturnTo } from "@/features/session/return-to";
 import { sessionFromQuery } from "@/features/session/session";
 
@@ -26,6 +27,8 @@ function SigningIn() {
   return (
     <main className="flex flex-col items-center gap-3 p-16" aria-live="polite">
       <title>Signing in · BlocBuy</title>
+      {/* The screen has no header, so the mark is the only sign the buyer is back on BlocBuy. */}
+      <BrandIsologo alt="" className="h-12 w-auto" />
       <Spinner aria-label="Signing you in" />
       <p className="text-sm text-zinc-600">Signing you in…</p>
     </main>
