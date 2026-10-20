@@ -14,7 +14,8 @@ Team 8's deck and speaker script for the SWE5001 final presentation on Wednesday
 - Queue scaling, self-healing, the poison message, the identity outage and the buyer journey end to end did not run on AWS. Slide 5 and backup B12 say "not run on AWS", with the local result where one exists ([15 October local rehearsal](../../evidence/20261015-local-failure-rehearsal/README.md)).
 - The live demo has three steps: use cases, auto-scaling under a k6 load test, and the promotion pipeline. Stopping a task, the identity outage and the event backlog were cut because they were not rehearsed on AWS; slide 23 says they were tested locally.
 - The effort split on slide 6 (12.5 / 11.5 / 9 / 8.5 / 8.5 person-days) is agreed by all five members.
-- Still open: fallback recordings for demo steps 1–3, the slide 16 choice (UML sequence or backup B15) at the 20 October rehearsal, and alarm e-mail confirmation (#515).
+- 20 October: no load test runs during the talk. Demo step 2 shows the live CloudWatch dashboard (commerce at its standing 2 tasks), then the graphs of the 19 October run on AWS; the slide 23 footer says so. A live V3 run would need the commerce floor lowered to 1 and a fresh preflight minutes before the load (k6 validates the snapshot in `perf/k6/lib.mjs`; `infra/swe5001/scripts/http-preflight.sh` only captures it), which the team judged too much to operate on air. Slide 23 is the only slide that changed. The script also rewords Liu Jin's slides 12–15 and the demo lines, adds Liu Jin's extended Q&A bank, and shows promotion #564. It carries three earlier wording fixes: the spoken text for slides 8, 17 and 22 no longer promises failure drills in the live demo.
+- Still open: fallback recordings for demo steps 1 and 3, the slide 16 choice (UML sequence or backup B15) at the 20 October rehearsal, and alarm e-mail confirmation (#515).
 
 ## How these files are built
 
