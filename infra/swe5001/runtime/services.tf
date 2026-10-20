@@ -107,13 +107,17 @@ locals {
           # identity-svc over Service Connect (#468); /internal/** is never routed by the ALB.
           IDENTITY_BASE_URL = "http://identity-svc:8589"
           # Leased jobs (LeasedJobRunner) run here only: one runner per job across tasks.
-          BLOCBUY_SCHEDULING_ENABLED      = "true"
-          BLOCBUY_STRIPE_CHECKOUT_ENABLED = "false"
-          TYPESAFE_ENABLED                = "false"
-          AWS_REGION                      = var.aws_region
-          BLOCBUY_EVENTS_TRANSPORT        = "sns"
-          BLOCBUY_EVENTS_RELAY_ENABLED    = tostring(var.services_enabled && var.messaging_verified)
-          BLOCBUY_EVENTS_SNS_TOPIC_ARN    = local.messaging.topic_arn
+          BLOCBUY_SCHEDULING_ENABLED = "true"
+          # Stripe test-mode Checkout for the demo: Start/Join need it, and payment and team
+          # events feed notifications. The return URLs are mandatory once it is on.
+          BLOCBUY_STRIPE_CHECKOUT_ENABLED      = "true"
+          BLOCBUY_PAYMENT_CHECKOUT_SUCCESS_URL = "{frontend_url}/payments/return"
+          BLOCBUY_PAYMENT_CHECKOUT_CANCEL_URL  = "{frontend_url}/payments/return"
+          TYPESAFE_ENABLED                     = "false"
+          AWS_REGION                           = var.aws_region
+          BLOCBUY_EVENTS_TRANSPORT             = "sns"
+          BLOCBUY_EVENTS_RELAY_ENABLED         = tostring(var.services_enabled && var.messaging_verified)
+          BLOCBUY_EVENTS_SNS_TOPIC_ARN         = local.messaging.topic_arn
           }, var.v4_demo_enabled ? {
           SPRING_PROFILES_ACTIVE                    = "ec2,commerce,aws,demo"
           BLOCBUY_SCHEDULING_TEAM_EXPIRY_BATCH_SIZE = "500"
