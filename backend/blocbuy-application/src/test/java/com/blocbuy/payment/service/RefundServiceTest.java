@@ -248,9 +248,8 @@ class RefundServiceTest {
     }
 
     /**
-     * An expired key or a 400/404 from Stripe does not heal by asking again. It is parked for an
-     * operator on the first refusal, with a reason distinct from a PaymentIntent state mismatch,
-     * instead of retrying every 30 seconds for 23 hours (#539).
+     * A permanent provider refusal parks for an operator with a reason distinct from a
+     * PaymentIntent state mismatch (#539). Credential failures remain retryable.
      */
     @Test
     void permanentProviderRejectionParksForReviewAndStopsCallingStripe() {

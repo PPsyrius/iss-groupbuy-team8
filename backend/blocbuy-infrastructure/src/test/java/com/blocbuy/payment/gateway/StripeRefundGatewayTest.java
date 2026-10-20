@@ -50,9 +50,11 @@ class StripeRefundGatewayTest {
     private final Logger classifierLog =
             (Logger) LoggerFactory.getLogger(StripeFailureClassifier.class);
     private final ListAppender<ILoggingEvent> logs = new ListAppender<>();
+    private Level previousClassifierLevel;
 
     @BeforeEach
     void captureLogs() {
+        previousClassifierLevel = classifierLog.getLevel();
         logs.start();
         classifierLog.addAppender(logs);
         classifierLog.setLevel(Level.DEBUG);
@@ -61,8 +63,25 @@ class StripeRefundGatewayTest {
     @AfterEach
     void releaseLogs() {
         classifierLog.detachAppender(logs);
-        classifierLog.setLevel(null);
+        classifierLog.setLevel(previousClassifierLevel);
         logs.stop();
+    }
+
+    @Test
+    void logCaptureRestoresAnExistingLoggerLevel() {
+        releaseLogs();
+        Level initialLevel = classifierLog.getLevel();
+        try {
+            classifierLog.setLevel(Level.ERROR);
+            captureLogs();
+            releaseLogs();
+
+            assertThat(classifierLog.getLevel()).isEqualTo(Level.ERROR);
+        } finally {
+            classifierLog.setLevel(initialLevel);
+            // Leave a balanced capture scope for the normal AfterEach hook to release.
+            captureLogs();
+        }
     }
 
     private final StripeRefundGateway gateway =
