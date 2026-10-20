@@ -36,4 +36,22 @@ describe("ImageFallback", () => {
     rerender(<ImageFallback src={other} />);
     expect(container.querySelector("img")).toHaveAttribute("src", other);
   });
+
+  it("retries a previously failed src after another image has loaded", () => {
+    const { container, rerender } = render(<ImageFallback src={cover} />);
+    fireEvent.error(container.querySelector("img")!);
+    rerender(<ImageFallback src={other} />);
+    fireEvent.load(container.querySelector("img")!);
+    rerender(<ImageFallback src={cover} />);
+    expect(container.querySelector("img")).toHaveAttribute("src", cover);
+  });
+
+  it.each([null, undefined, ""])("retries the same src after clearing it to %s", (empty) => {
+    const { container, rerender } = render(<ImageFallback src={cover} />);
+    fireEvent.error(container.querySelector("img")!);
+    rerender(<ImageFallback src={empty} />);
+    expect(container.querySelector("img")).toBeNull();
+    rerender(<ImageFallback src={cover} />);
+    expect(container.querySelector("img")).toHaveAttribute("src", cover);
+  });
 });
