@@ -15,7 +15,11 @@ describe("paymentsReturnSearchSchema", () => {
     expect(v.parse(paymentsReturnSearchSchema, { paymentId })).toEqual({ paymentId });
   });
 
-  it.each(["", "not-a-uuid", "550e8400e29b41d4a716446655440000", 42])("rejects %j", (paymentId) => {
-    expect(v.safeParse(paymentsReturnSearchSchema, { paymentId }).success).toBe(false);
-  });
+  it.each(["", "not-a-uuid", "550e8400e29b41d4a716446655440000", 42, null, true, {}])(
+    "drops the malformed paymentId %j instead of throwing",
+    (paymentId) => {
+      const parsed = v.parse(paymentsReturnSearchSchema, { paymentId });
+      expect(parsed.paymentId).toBeUndefined();
+    },
+  );
 });
