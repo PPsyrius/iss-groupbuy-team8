@@ -29,18 +29,18 @@ class StripePropertiesTest {
     void toStringNeverRevealsSecrets() {
         StripeProperties properties = new StripeProperties("sk_test_123", "whsec_123");
 
-        assertThat(properties.toString())
-                .isEqualTo("StripeProperties[apiKey=<redacted>, webhookSecret=<redacted>]");
+        assertThat(properties)
+                .hasToString("StripeProperties[apiKey=<redacted>, webhookSecret=<redacted>]");
         assertThat(properties.apiKey()).isEqualTo("sk_test_123");
         assertThat(properties.webhookSecret()).isEqualTo("whsec_123");
     }
 
     @Test
     void toStringMarksAbsentSecretsAsUnset() {
-        assertThat(new StripeProperties(null, null).toString())
-                .isEqualTo("StripeProperties[apiKey=<unset>, webhookSecret=<unset>]");
-        assertThat(new StripeProperties(" ", "").toString())
-                .isEqualTo("StripeProperties[apiKey=<unset>, webhookSecret=<unset>]");
+        assertThat(new StripeProperties(null, null))
+                .hasToString("StripeProperties[apiKey=<unset>, webhookSecret=<unset>]");
+        assertThat(new StripeProperties(" ", ""))
+                .hasToString("StripeProperties[apiKey=<unset>, webhookSecret=<unset>]");
     }
 
     @ParameterizedTest
@@ -49,8 +49,8 @@ class StripePropertiesTest {
     void toStringMarksOnlyTheAbsentApiKeyAsUnset(String apiKey) {
         StripeProperties properties = new StripeProperties(apiKey, "whsec_123");
 
-        assertThat(properties.toString())
-                .isEqualTo("StripeProperties[apiKey=<unset>, webhookSecret=<redacted>]");
+        assertThat(properties)
+                .hasToString("StripeProperties[apiKey=<unset>, webhookSecret=<redacted>]");
         assertThat(properties.apiKey()).isEqualTo(apiKey);
     }
 
@@ -60,8 +60,8 @@ class StripePropertiesTest {
     void toStringMarksOnlyTheAbsentWebhookSecretAsUnset(String webhookSecret) {
         StripeProperties properties = new StripeProperties("sk_test_123", webhookSecret);
 
-        assertThat(properties.toString())
-                .isEqualTo("StripeProperties[apiKey=<redacted>, webhookSecret=<unset>]");
+        assertThat(properties)
+                .hasToString("StripeProperties[apiKey=<redacted>, webhookSecret=<unset>]");
         assertThat(properties.webhookSecret()).isEqualTo(webhookSecret);
     }
 }

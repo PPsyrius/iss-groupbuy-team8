@@ -16,8 +16,8 @@ class StripeCheckoutRuntimePropertiesTest {
         StripeCheckoutRuntimeProperties properties =
                 new StripeCheckoutRuntimeProperties("sk_test_checkout_4d2b", "whsec_checkout_9e1a");
 
-        assertThat(properties.toString())
-                .isEqualTo(
+        assertThat(properties)
+                .hasToString(
                         "StripeCheckoutRuntimeProperties[apiKey=<redacted>,"
                                 + " webhookSecret=<redacted>]");
         assertThat(properties.apiKey()).isEqualTo("sk_test_checkout_4d2b");
@@ -27,8 +27,8 @@ class StripeCheckoutRuntimePropertiesTest {
     /** Verifies absent secrets are shown as unset in toString. */
     @Test
     void toStringMarksAbsentSecretsAsUnset() {
-        assertThat(new StripeCheckoutRuntimeProperties(null, null).toString())
-                .isEqualTo(
+        assertThat(new StripeCheckoutRuntimeProperties(null, null))
+                .hasToString(
                         "StripeCheckoutRuntimeProperties[apiKey=<unset>, webhookSecret=<unset>]");
     }
 
@@ -39,8 +39,8 @@ class StripeCheckoutRuntimePropertiesTest {
         StripeCheckoutRuntimeProperties properties =
                 new StripeCheckoutRuntimeProperties(apiKey, "whsec_checkout_9e1a");
 
-        assertThat(properties.toString())
-                .isEqualTo(
+        assertThat(properties)
+                .hasToString(
                         "StripeCheckoutRuntimeProperties[apiKey=<unset>,"
                                 + " webhookSecret=<redacted>]");
         assertThat(properties.apiKey()).isEqualTo(apiKey);
@@ -53,8 +53,8 @@ class StripeCheckoutRuntimePropertiesTest {
         StripeCheckoutRuntimeProperties properties =
                 new StripeCheckoutRuntimeProperties("sk_test_checkout_4d2b", webhookSecret);
 
-        assertThat(properties.toString())
-                .isEqualTo(
+        assertThat(properties)
+                .hasToString(
                         "StripeCheckoutRuntimeProperties[apiKey=<redacted>,"
                                 + " webhookSecret=<unset>]");
         assertThat(properties.webhookSecret()).isEqualTo(webhookSecret);

@@ -86,8 +86,8 @@ class TypeSafeJevPropertiesTest {
                 new TypeSafeJevProperties(
                         true, "tsj-key-9c1e", "http://localhost", "jev-test", 2, 3);
 
-        assertThat(properties.toString())
-                .isEqualTo(
+        assertThat(properties)
+                .hasToString(
                         "TypeSafeJevProperties[enabled=true, apiKey=<redacted>, "
                                 + "endpoint=http://localhost, model=jev-test, "
                                 + "connectTimeoutMillis=2, readTimeoutMillis=3]");

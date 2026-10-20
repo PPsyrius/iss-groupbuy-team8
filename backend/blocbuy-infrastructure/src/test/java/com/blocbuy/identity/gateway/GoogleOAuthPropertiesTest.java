@@ -100,8 +100,8 @@ class GoogleOAuthPropertiesTest {
                         "https://token.example",
                         60);
 
-        assertThat(properties.toString())
-                .isEqualTo(
+        assertThat(properties)
+                .hasToString(
                         "GoogleOAuthProperties[clientId=cid-visible, clientSecret=<redacted>, "
                                 + "redirectUri=https://cb.example/callback, "
                                 + "authorizeUrl=https://auth.example, "
