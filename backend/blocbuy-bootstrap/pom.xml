@@ -140,6 +140,39 @@
   <!-- D12/D19: export /v3/api-docs without live PG/Redis. CI uses the verified JAR; Maven remains the local/contracts-only path. -->
   <profiles>
     <profile>
+      <id>ci</id>
+      <properties>
+        <bootstrap.it.forks>2</bootstrap.it.forks>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <!-- Separate JVMs isolate Sa-Token and AWS static state; methods remain sequential. -->
+              <forkCount>${bootstrap.it.forks}</forkCount>
+              <reuseForks>true</reuseForks>
+              <!-- Start the real-time V4 rehearsal early so its deadline overlaps other ITs. -->
+              <runOrder>reversealphabetical</runOrder>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <!-- This explicit local opt-in shares a database, so it must stay serial even with -Pci. -->
+    <profile>
+      <id>private-stripe-test-db</id>
+      <activation>
+        <property>
+          <name>env.STRIPE_TEST_DB_URL</name>
+        </property>
+      </activation>
+      <properties>
+        <bootstrap.it.forks>1</bootstrap.it.forks>
+      </properties>
+    </profile>
+    <profile>
       <id>openapi-export</id>
       <build>
         <plugins>
