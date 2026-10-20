@@ -95,7 +95,7 @@ const s5 = () => `
    ${tick('One task: 200 req/s, 0 errors', 'p95 &lt; 60 ms (16 Oct)')}
  </div>
  <div style="flex:1;background:#EFE9DF;border:2px dashed #DDD5C8;border-radius:8px;padding:20px 22px">
-   <div class="serif" style="font-size:25px;color:var(--muted);margin-bottom:16px">Tested on 19 Oct</div>
+   <div class="serif" style="font-size:25px;color:var(--muted);margin-bottom:16px">Scaling and failure tests</div>
    ${tick('Auto-scaling under load', 'commerce 1 → 3 tasks on its own; ≈ 455 req/s, server p95 &lt; 50 ms')}
    ${tick('Queue scaling', 'not run on AWS · local test passed', 'not')}
    ${tick('Self-healing: stop a task', 'not run on AWS', 'not')}

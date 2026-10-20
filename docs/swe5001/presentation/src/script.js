@@ -43,14 +43,14 @@ const demoSteps = [
     exp: 'All four views load; at least one notification is listed.',
     fb: 'Screenshots taken before the talk (fallback/1-use-cases).',
     fbSay: "This one's not loading in time, so here's the same step from our recording instead. What you're seeing now is recorded, not live.",
-    ifs: [['No notifications for the demo account (tab 4)', 'Say: “This account has no notifications yet, because payments are switched off on this test environment, so here’s the same view from our recording.” Then post CLIP 1.'],
+    ifs: [['No notifications for the demo account (tab 4)', 'Say: “This account has no notifications yet, so here’s the same view from our recording.” Then post CLIP 1.'],
       ['Product images missing (striped tiles on tab 2)', 'Say: “The product images aren’t loading on this environment, so you’ll see placeholder tiles, but the team prices and live countdowns are what commerce serves, and that’s the part to look at.”'],
       ['Running late', 'Show only the product list (tab 2) and the notifications (tab 4).']] },
   { n: 2, t: 'Auto-scaling, on the dashboard', time: '16:46:45 – 16:49:15', proves: 'Scalability, performance · guideline <b>6b</b> · Eric',
     op: ["Tab 5: live CloudWatch dashboard. Services row: commerce at 2 running tasks, its normal floor; Edge row: today's traffic.", 'Tab 6: the 19 October run on AWS (evidence page): commerce task count 1 → 2 → 3, then load balancer traffic and response time.'],
     say: "This is the live dashboard for the environment you've just used. It's quiet right now, so commerce is sitting at its usual two tasks. Rather than run a load test in the middle of our talk, here's the one we ran on AWS on 19 October. These graphs are saved from that run, not live. As the traffic ramped up, commerce went from one task to two, then to three, all on its own. And it stayed fast: even at about 455 requests a second, 95 percent of responses came back in under 50 milliseconds. That was the limit of the laptop sending the load, not of the service. So this is what Liu Jin showed on slide 14: commerce adds tasks as requests per task rise, by itself. But how did that commerce code get onto AWS in the first place? That's the pipeline. Pan?",
     exp: 'Live dashboard loads with commerce at 2 running tasks; the 19 Oct graphs show the task count going 1 → 2 → 3 and server p95 under 50 ms.',
-    fb: 'The same 19 Oct graphs as local files (fallback/2-v3).',
+    fb: 'The same 19 Oct graphs as local files (fallback/2-v3).', clip: false,
     fbSay: "The live dashboard isn't loading in time, so let's go straight to the saved graphs from our 19 October run. These are recorded, not live." },
   { n: 3, t: 'The pipeline that deployed it', time: '16:49:15 – 16:50:45', proves: 'Maintainability · guideline <b>6b</b> · Pan narrates; Eric clicks',
     op: ['Tab 7: promotion pull request #564 (19 Oct): required checks and approval.', 'Open its deploy run: build → create → release → destroy → evidence, with durations.', 'Open the evidence artifact list. Never click Merge.'],
@@ -69,7 +69,9 @@ const demoCard = d => `<div class="card demo"><div class="hd"><span>Step ${d.n} 
  <div class="row"><span class="lab cue">Operate</span><ol style="margin:0;padding-left:14pt">${d.op.map(o => `<li>${esc(o)}</li>`).join('')}</ol></div>
  <div class="row"><span class="lab say">Say</span><span class="say">${esc(d.say)}</span></div>
  <div class="row"><span class="lab">Expect</span><span>${esc(d.exp)}</span></div>
- <div class="row"><span class="lab fb">Fallback</span><span>${d.fb ? `${esc(d.fb)} If the live view is not as expected within 20 seconds, Eric posts <code>CLIP ${d.n}</code> and says: <i>“${esc(d.fbSay)}”</i> With no recording for this step, use Plan C (§7).` : '—'}</span></div>
+ <div class="row"><span class="lab fb">Fallback</span><span>${!d.fb ? '—' : d.clip === false
+  ? `${esc(d.fb)} If the live view is not as expected within 20 seconds, Eric opens them himself and says: <i>“${esc(d.fbSay)}”</i>`
+  : `${esc(d.fb)} If the live view is not as expected within 20 seconds, Eric posts <code>CLIP ${d.n}</code> and says: <i>“${esc(d.fbSay)}”</i> With no recording for this step, use Plan C (§7).`}</span></div>
  ${(d.ifs || []).map(([w, r]) => `<div class="row"><span class="lab">If</span><span><b>${esc(w)}:</b> ${esc(r)}</span></div>`).join('')}</div></div>`;
 
 const demo = `<section class="chap"><h1>6 Demo (8+2 minutes)</h1>

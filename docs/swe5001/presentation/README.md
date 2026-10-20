@@ -28,4 +28,4 @@ Commit a changed version only when the content changes. The PDFs and the HTML ar
 ## Corrections still to check
 
 - **Demo step 3** says today's environment "was built from exactly these images". The environment was started by [run 39198123242](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39198123242) on `prod` at `5e83d63`; check that it matches the promotion in #564 before saying it.
-- **Demo step 1** expects at least one notification for the demo buyer. Checkout is off on the SWE5001 session (`BLOCBUY_STRIPE_CHECKOUT_ENABLED = "false"` in `infra/swe5001/runtime/services.tf`), so a purchase cannot create one; seed one, or use the run book's fallback line and recording.
+- **Demo step 1** expects at least one notification for the demo buyer. Since #565, Stripe test-mode Checkout is on for `commerce-svc` in the SWE5001 session (`infra/swe5001/runtime/services.tf`), so a test purchase before the talk creates one; check tab 4 at 15:30, or use the run book's fallback line and recording.

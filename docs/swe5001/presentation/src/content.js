@@ -43,7 +43,7 @@ const SLIDES = [
     cues: ['16:17:00 — questions (1 minute). Lim repeats each question in one line and names who answers.'],
     handover: '(after questions) "Now, where the project stands."' },
   { n: 5, seg: 2, item: '2a', speaker: 'Lim', slot: 45, title: 'Status: what is verified on AWS, and what is still open',
-    say: 'So where are we today? On 17 October we built the full three-service setup on AWS from nothing. All nine smoke tests passed, and teardown removed all 115 resources. On 19 October we ran the auto-scaling test on AWS, and commerce scaled itself from one task to three. The failure drills are tested locally only, as the middle column shows. Two things are still open. An interrupted start-up can leave auto-scaling switched off; for now we fix that by hand. And the database runs in one zone, a deliberate choice to save cost.',
+    say: 'So where are we today? On 17 October we built the full three-service setup on AWS from nothing. All nine smoke tests passed, and teardown removed all 115 resources. On 19 October we ran the auto-scaling test on AWS, and commerce scaled itself from one task to three. The other drills did not run on AWS; the middle column shows any local result. Two things are still open. An interrupted start-up can leave auto-scaling switched off; for now we fix that by hand. And the database runs in one zone, a deliberate choice to save cost.',
     cues: ['Say only what docs/swe5001/evidence/ records; the assessors may probe status claims.', 'The middle column says "not run on AWS" for every drill that was only tested locally; say it the same way.'],
     handover: 'And how we got here.' },
   { n: 6, seg: 2, item: '2b', speaker: 'Lim', slot: 45, title: 'On schedule, about 50 person-days across five people',
@@ -120,7 +120,7 @@ const SLIDES = [
     handover: 'First, the use cases.' },
   { n: 24, seg: 6, item: '6b', speaker: 'Lim', slot: null, title: 'Thank you',
     say: "Thank you. We're happy to take your questions.",
-    cues: ['16:55:00 — end. Lim thanks the assessors. Liu Jin tears the environment down only after the meeting ends.', 'Backup slides follow (press → or X for the index). Open one only when a question needs it.'] },
+    cues: ['16:55:00 — end. Lim thanks the assessors. Liu Jin tears the environment down only after the meeting ends.', 'Backup slides follow (press B for the index). Open one only when a question needs it.'] },
 ];
 
 // Q&A tables per segment: [question, answer, owner]
