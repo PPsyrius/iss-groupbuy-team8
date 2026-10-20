@@ -15,8 +15,8 @@ Source key:
 
 | Short name | File |
 |---|---|
-| RB | `swe5001-presentation-script-v3.pdf` (page numbers given) |
-| DECK | `swe5001-presentation-v3.html` (slide or backup number given) |
+| RB | `dist/swe5001-presentation-script.pdf` (page numbers given) |
+| DECK | `dist/swe5001-presentation.html` (slide or backup number given) |
 | ADR 0005, 0007, 0008 | `backend/docs/adr/0005-stripe-checkout-env-flag.md`, `0007-cross-service-events-sns-sqs.md`, `0008-dual-deployment-topology.md` |
 | PLAN | `docs/swe5001/microservice-refactoring-plan.md` |
 | BACKEND-PLAN | `docs/swe5001/impl-backend-architecture.md` |
