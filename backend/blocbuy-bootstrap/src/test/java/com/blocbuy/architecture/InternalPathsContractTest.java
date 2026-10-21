@@ -27,7 +27,9 @@ class InternalPathsContractTest {
         List<String> names =
                 StreamSupport.stream(paths.propertyNames().spliterator(), false).toList();
 
-        assertThat(names).isNotEmpty().allMatch(path -> path.startsWith("/api/"));
-        assertThat(names).noneMatch(path -> path.contains("/internal"));
+        assertThat(names)
+                .isNotEmpty()
+                .allMatch(path -> path.startsWith("/api/"))
+                .noneMatch(path -> path.contains("/internal"));
     }
 }

@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -132,7 +134,7 @@ class RedisCachedShareInviteRepositoryTest {
         for (String ignored : unusable) {
             assertThat(cache.findByRef(REF)).contains(INVITE);
         }
-        verify(source, org.mockito.Mockito.times(unusable.length)).findByRefWithDeadline(REF);
+        verify(source, times(unusable.length)).findByRefWithDeadline(REF);
     }
 
     @Test
@@ -154,7 +156,7 @@ class RedisCachedShareInviteRepositoryTest {
                         Optional.of(
                                 new ShareInviteRepositoryImpl.InviteWithDeadline(
                                         INVITE, Instant.now().plusSeconds(60))));
-        org.mockito.Mockito.doThrow(new RedisConnectionFailureException("private connection"))
+        doThrow(new RedisConnectionFailureException("private connection"))
                 .when(values)
                 .set(eq(KEY), anyString(), any(Duration.class));
         assertThat(cache.findByRef(REF)).contains(INVITE);
