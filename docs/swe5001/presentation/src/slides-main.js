@@ -95,7 +95,7 @@ const s5 = () => `
    ${tick('One task: 200 req/s, 0 errors', 'p95 &lt; 60 ms (16 Oct)')}
  </div>
  <div style="flex:1;background:#EFE9DF;border:2px dashed #DDD5C8;border-radius:8px;padding:20px 22px">
-   <div class="serif" style="font-size:25px;color:var(--muted);margin-bottom:16px">Scaling and failure tests</div>
+   <div class="serif" style="font-size:25px;color:var(--muted);margin-bottom:16px">Tested on 19 Oct</div>
    ${tick('Auto-scaling under load', 'commerce 1 → 3 tasks on its own; ≈ 455 req/s, server p95 &lt; 50 ms')}
    ${tick('Queue scaling', 'not run on AWS · local test passed', 'not')}
    ${tick('Self-healing: stop a task', 'not run on AWS', 'not')}
@@ -428,7 +428,7 @@ const s23 = () => `
 </div>
 <div class="card" style="margin-top:20px;padding:20px 24px;display:flex;align-items:center;gap:20px">
  <div class="dot" style="width:64px;height:64px;background:var(--default);color:var(--foreground);font-size:28px;flex:none">${icon('flask')}</div>
- <div><div style="font:700 23px/1.25 Inter">Failure handling: not shown live</div><div style="font:400 19px/1.35 Inter;color:var(--ink3);margin-top:4px">Identity outage · dead-letter queue: tested locally · stop a server: not run · results in B12</div></div></div>
+ <div><div style="font:700 23px/1.25 Inter">Failure handling</div><div style="font:400 19px/1.35 Inter;color:var(--ink3);margin-top:4px">Identity outage · dead-letter queue · stop a server: not run · results in B12</div></div></div>
 <div style="margin-top:20px;border-radius:8px;background:#FBDFD9;padding:12px 22px;font:700 19px Inter;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="color:var(--red);font-size:14px">●</span> Live on AWS · the scaling graphs are from our 19 October load test</div>`;
 
 // ---------- slide 24 ----------

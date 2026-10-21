@@ -74,7 +74,7 @@ function list() {
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 22px;margin-top:4px">
  ${C.BACKUPS.map(b => `<div data-go="${b[0]}" style="cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:8px 14px">
    <span class="tag" style="min-width:44px;text-align:center">${b[0]}</span><div><div style="font:600 17px Inter">${b[1]}</div><div style="font:400 14.5px Inter;color:var(--muted)">${b[2]}</div></div></div>`).join('')}
-</div><div style="margin-top:12px;font:italic 400 15px Inter;color:var(--muted)">Click a row, or press B to come back here. Slide 24 stays up during questions; open a backup only when a question needs it.</div>` });
+</div><div style="margin-top:12px;font:italic 400 15px Inter;color:var(--muted)">Click a row, or press X to come back here. Slide 24 stays up during questions; open a backup only when a question needs it.</div>` });
 
   B.push({ id: 'B1a', speaker: 'Eric', title: 'Logical decisions (AD-02 to AD-06)', body: tbl(['ID', 'Decision', 'Why'], [
     ['AD-02', 'Split where no transaction crosses, not by nouns', 'Payment and expiry stay one transaction, so no sagas. Five services rejected (50–55 person-days)'],
