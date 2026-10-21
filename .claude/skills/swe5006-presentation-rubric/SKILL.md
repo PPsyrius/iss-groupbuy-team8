@@ -22,7 +22,7 @@ description: Draft, edit or review BlocBuy's SWE5006 final presentation (deck, s
 4. Follow each row's Ruling for form: one example on the slide and the report section named for the rest (G8), one idea per slide (V1), the specific diagrams the row names (for example the team-formation statechart in 2.4, before/after diagrams in 2.5).
 5. Use the course vocabulary the rubric cites (EPAT DoD ladder, Agile Testing Quadrants, Continuous Delivery versus Deployment, GoF class-level patterns only). Wording that contradicts a row's Ruling is a defect even if it is true.
 6. Facts still come from merged code, issues, the board, AWS and recorded evidence (see the deck's AGENTS.md). If a row needs a fact that does not exist yet, use `{{FILL:…}}`; never fill a row with a guess to make it look covered.
-7. Open decisions 1–9 at the end of the rubric gate specific rows. Do not settle one silently: ask the person, or leave a `{{CONFIRM:…}}` marker and an `OPEN_ITEMS` row naming the decision number.
+7. Each open decision at the end of the rubric (1–9) holds back the rows that depend on it until it is settled: for example, decision 7 (performance tool and result) decides what 3.2 and 5.3 can show, and decision 8 (auto-scaling) decides whether 5.2 demonstrates scalability or states it as a trade-off. Never settle an open decision yourself: ask the person, or leave a `{{CONFIRM:…}}` marker on each affected slide and an `OPEN_ITEMS` row naming the decision number.
 
 ## Editing
 
