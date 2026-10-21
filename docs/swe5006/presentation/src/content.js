@@ -204,12 +204,53 @@ const SLIDES = [
     handover: '(demo) "Here is the pull request."' },
 
   // ---------- §5 Yorik, 720 s ----------
-  { n: 31, seg: 5, item: '5a', rubric: ['5.1', '5.2'], speaker: 'Yorik', slot: 30, title: 'System demo: one bloc from start to refund', say: PENDING },
-  { n: 32, seg: 5, item: '5a', rubric: ['5.1', '5.2', '5.5'], speaker: 'Yorik', slot: 510, title: 'Live: two buyers, one bloc', say: PENDING },
-  { n: 33, seg: 5, item: '5b', rubric: ['5.3'], speaker: 'Yorik', slot: 120, title: 'Performance against the target', say: PENDING },
-  { n: 34, seg: 5, item: '5b', rubric: ['5.2'], speaker: 'Yorik', slot: 30, title: 'Scalability: a stated trade-off', say: PENDING },
-  { n: 35, seg: 5, item: '5b', rubric: ['5.4'], speaker: 'Yorik', slot: 30, title: 'Maintainability: the pipeline you just saw', say: PENDING },
-  { n: 36, seg: 5, item: '5b', rubric: ['G1', 'G3'], speaker: 'Yorik', slot: null, title: 'Thank you', say: "Thank you. We're happy to take your questions." },
+  { n: 31, seg: 5, item: '5a', rubric: ['5.1', '5.2'], speaker: 'Yorik', slot: 30, title: 'System demo: two buyers, one bloc, and the qualities it shows',
+    say: "Thanks, Pan. I'm Yorik. Two buyers on our dev site: a leader starts a bloc and shares it, a friend joins, the team succeeds. A second bloc, started before the talk, expires and refunds itself. Then three checks you can't see in the flow: security, the last-seat race and performance. Every step says where it runs.",
+    cues: [
+      '16:52:00. Eric is sharing one screen with two Chrome profiles, “Leader” (account A) and “Joiner” (account B), and operates both; Yorik narrates (two users: SWE5001 feedback #590). Deck in the Leader window, tab 1, on slide 31.',
+      'Storyline from #464: invite → START/JOIN with Stripe Sandbox → /account orders and blocs → expiry refund. Use cases: UC1 browse, UC2 Google sign-in, UC3 start, UC7 invite, UC4 join (team of two succeeds, UC5), UC5 expiry, UC6 refund, UC8 My blocs. Quality attributes are slide 3’s: correctness under concurrency, refund idempotency, expiry ≤ 1 min, security, performance (slide 33), maintainability (§4, slide 35).',
+      'Environment column on the slide follows the 23 Oct go/no-go (open item 1): {{CONFIRM:GO or NO-GO for steps D1, D2 and D4; with NO-GO those rows read "recorded" or "local" and the say changes to "the payment steps are recorded"}}.',
+    ],
+    trim: 'If over time, drop "Every step says where it runs." (it is the slide’s right column).',
+    handover: 'Our leader is already signed in with Google.' },
+  { n: 32, seg: 5, item: '5c', rubric: ['5.1', '5.2', '5.5'], speaker: 'Yorik', slot: 510, title: 'Live: two buyers, one bloc',
+    say: "Steps D1 to D6 follow the run book. We narrate what changes, not what we click, and any step that stalls for twenty seconds switches to its recording.",
+    cues: [
+      'Opens the live system demo: steps D1–D6 in the script, §5 (16:52:30–17:01:00). Eric shares and operates both profiles; Yorik speaks. Go/no-go table and NO-GO path in the script.',
+      'D1 start (UC2, UC1, UC3, UC7) 120 s · D2 join, team succeeds (UC4, UC5, UC7) 120 s · D3 My blocs and orders (UC8) 75 s · D4 the 16:05 bloc expired and refunded (UC5, UC6; expiry ≤ 1 min, refund idempotency) 90 s · D5 security checks (401, 403, 400, HttpOnly) 60 s · D6 last-seat race, local test in the IDE (correctness under concurrency) 45 s.',
+      'Rubric 5.5: {{FILL:backup video link; clips D1–D6 recorded on dev by Sat 24 Oct, stored in the cloud and on a USB drive}}.',
+    ],
+    handover: '(demo) "Here is the listing our leader starts from."' },
+  { n: 33, seg: 5, item: '5b', rubric: ['5.3'], speaker: 'Yorik', slot: 120, title: 'Performance against the target: the scripted k6 run',
+    say: "Performance, with the scripted test from slide 24. A full run is ten one-minute steps, so we ran it before the talk and show its report; this is the SWE5001 ECS environment running the same code, not the dev host. Each row is one step of the arrival rate, from ten to two hundred requests a second, with its p95 latency, its error rate and dropped requests. The proposal's target is two seconds at a hundred concurrent users. By slide 24's conversion, a hundred users thinking half a second offer about a hundred and ninety requests a second, so the rows at and above that rate are the target load. Our gate is stricter: p95 under half a second on every step. Expiry within a minute comes from the one-minute sweep and the local measurement of 58 seconds. What we don't claim: authenticated paths such as join under load on a deployed environment, and anything about the dev host.",
+    cues: [
+      'Pre-run (rubric 5.3: a live run over ≈ 2 min is pre-run): k6 1.6.1 perf/k6/browse.js against the SWE5001 CloudFront d3lvq02o2e7tcn.cloudfront.net, ten 60 s plateaus 10 → 200 iterations/s (≈ 10 min plus setup). Run by Pan on Sat 24 Oct with the summary and dashboard export kept; re-run on Mon 26 Oct ≤ 14:00 only if the environment is up and the first run failed. {{FILL:run date, label and summary path of the 24 Oct pre-run}}',
+      'Results: {{FILL:p95 per plateau (ms), error rate, dropped iterations, VUs used at 200/s; pass or fail against p95 < 500 ms, errors < 1 %, zero dropped}}. Show the k6 summary or the dashboard tab, never a hand-typed number.',
+      'Environment prerequisite: the SWE5001 environment is applied per session and torn down nightly (research-aws.md; infra/swe5001 env-up.sh). Pan brings it up on 24 Oct for the pre-run (open item 16); it does not need to be up during the talk, because slide 33 shows the saved report. Never point k6 at the SWE5006 dev host (perf/k6/README.md: "Do not load-test shared SWE5006 dev").',
+      'Mapping (slide 24): Little’s law N = X(R + Z), N = 100, Z = 0.5 s (our assumption), R ≈ 0.03 s → X ≈ 189 requests/s. History, labelled: V2 baseline 16 Oct on ECS, every plateau p95 ≤ 57 ms, 0 errors in 57,600 requests (docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md); local Node workload 30 Sep, 100 closed-loop users, p95 browse 24 ms, JOIN intent 57 ms, My Orders 18 ms, 30 expiries with worst lag 58.18 s (docs/perf/sprint3-baseline.md).',
+      'Limits to say if asked: anonymous browse only (authenticated load needs 100 real Google sessions); one monolith task, so this is not a scaling result; the ECS environment is not the SWE5006 dev host.',
+    ],
+    trim: 'If over time, drop the last sentence ("What we don\'t claim…"); it is in the cues and Q&A.',
+    handover: 'Which brings us to scalability.' },
+  { n: 34, seg: 5, item: '5b', rubric: ['5.2'], speaker: 'Yorik', slot: 30, title: 'Scalability: a stated trade-off, not a claim',
+    say: "Scalability we state, not demonstrate. Dev is one EC2 host with its database beside it and no auto-scaling. That was deliberate: the course needs one complete system that is always on and cheap, and our proposal lists no scalability target. The same code scales out in our SWE5001 topology on ECS, but we don't claim it for this system.",
+    cues: [
+      'AWS read-only 21 Oct (orchestrator): dev EC2 i-0852b6c3475b19f05 t3.large; the only EC2 Auto Scaling group is blocbuy-swe5001-nat; Application Auto Scaling targets exist only for service/blocbuy-swe5001/commerce-svc (2–6) and notification-svc (1–4), created 21 Oct 09:16 SGT. PostgreSQL 18 and Redis 8 on 127.0.0.1 of the dev host (operator guide §1).',
+      'Why: backend ADR 0008 (one codebase, two topologies); proposal §6.3 lists maintainability, correctness under concurrency, performance, security, code quality and auditability, not scalability. Rubric 5.2: claim scalability only if auto-scaling is configured and can be triggered on stage; on dev it is neither.',
+      'Scale path, only if asked: B10 (SWE5001 production topology) and B12 (SWE5001 V3 run: commerce 1 → 3 tasks on 19 Oct, rejected as V3 acceptance because the generator dropped iterations).',
+    ],
+    trim: 'If over time, drop the last sentence.',
+    handover: 'And maintainability you have already seen.' },
+  { n: 35, seg: 5, item: '5b', rubric: ['5.4'], speaker: 'Yorik', slot: 30, title: 'Maintainability: the pipeline you just saw, and the seams in the code',
+    say: "Maintainability was the pipeline Pan ran twenty minutes ago: one change through six required checks, a code-owner review and a smoke test, live on this same site. In the code, our proposal's primary driver: a new pricing mode is a new strategy class, a new consequence of a team's outcome is a new subscriber, and existing domain logic stays untouched.",
+    cues: [
+      'Points back to slide 30 (rubric 5.4: do not repeat the run). If the §4 PR was not merged on air, say so and show its checks instead.',
+      'Seams: PricingStrategy + PricingStrategyResolver (slide 19; a duplicate PricingMode fails startup); TeamSucceeded / TeamExpired subscribers (slide 17); payment providers behind CheckoutGateway and RefundGateway (Adapter, slide 11). Proposal §6.3 "Maintainability & extensibility (primary design drivers)… new pricing schemes, payment providers, and team-resolution consequences must be addable without modifying existing domain logic". 18 ArchUnit rules keep the module boundaries on every build (ArchitectureTest.java).',
+    ],
+    trim: 'If over time, drop "and existing domain logic stays untouched".',
+    handover: 'Thank you.' },
+  { n: 36, seg: 5, item: '5b', rubric: ['G1', 'G3', 'G9'], speaker: 'Yorik', slot: null, title: 'Thank you', say: "Thank you. We're happy to take your questions.",
+    cues: ['17:04:00. The buffer to 17:10 answers questions parked during the talk first (Lim reads them from the backchannel and names the owner), then new ones. Hard stop 17:10 (rubric G1).', 'Scribe (rubric G9): {{CONFIRM:scribe name}} logs every lecturer question and remark verbatim; the log becomes #463 report tasks by 27 Oct.'] },
 ];
 
 // Q&A tables per segment number: { window, rows: [[question, answer, owner], ...] }
@@ -258,7 +299,10 @@ const QA = {
     ['Is the refund real?', 'A real Stripe Sandbox refund: the Refund API in test mode, so no money moves. Locally on 20 Sep, refund re_3UHbeV… reached succeeded and a recheck created no duplicate (B11). On dev: {{FILL:Sandbox refund id from the 24 Oct dry run, or say "not yet proven on dev" (#223, #517)}}.', 'Yorik'],
     ['What happens if Stripe is down?', 'The Checkout attempt is saved before Stripe is called, so a timeout leaves one recoverable attempt with a stable provider key, never a second payment (StripeCheckoutFlowTest). Refunds stay as durable obligations; the worker retries every 30 s with the same idempotency key, and after 23 hours it only searches Stripe and hands mismatches to a person.', 'Yorik'],
     ['How do you avoid a double payment?', 'A repeated Checkout request with the same buyer, intent and Idempotency-Key reuses the payment. Webhook events are stored by event ID, so a replay changes nothing (StripeLocalIntegrationTest.eightConcurrentWebhookReplaysStillProduceOneMemberAndOneOrder). When two paid buyers race for the last seat, one gets it and the other gets a refund obligation (StripeCheckoutFlowTest.concurrentPaidBuyersCannotBothTakeLastSeat).', 'Yorik → Eric'],
-    ['Why did the demo not show notifications?', 'By decision: the dev host runs no message broker, so the outbox writer, relay and consumer are off (application-ec2.yml; ADR 0007 scope decision, 11 Oct). Notifications run on SWE5001 prod through SNS and SQS, and locally and in CI against ElasticMQ (slide 18).', 'Pan'],
+    ['Why did the demo not show notifications?', 'By decision: the dev host runs no message broker, so the outbox writer, relay and consumer are off (application-ec2.yml; ADR 0007 scope decision, 11 Oct). Notifications run on the SWE5001 environment through SNS and SQS, and locally and in CI against ElasticMQ; slide 18 shows the relay’s Template Method.', 'Pan'],
+    ['Why not race two buyers for the last seat on dev?', 'Because a live race is not repeatable on shared dev and would leave a refund obligation on a real account. The race is a test that runs on every pull request: twenty paid buyers race for the last seat of a team of two through the production intent and fulfilment ports against PostgreSQL 18 in Testcontainers; the team ends with 2 members, 2 orders, current_size 2 and 19 refund obligations (StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist). It is a local test, and we say so (step D6).', 'Yorik → Eric'],
+    ['How do you know expiry happens within one minute on dev?', 'By design and by a local measurement, not by a dev timestamp. TeamExpirySweepJob runs every minute (fixedDelay PT1M) under a database lease and expires every open team whose deadline has passed; the local run of 30 Sep measured a worst lag of 58.18 s for 30 teams under 100-user load. On dev the demo shows the outcome: the 16:05 bloc, due ≈ 16:45, is refunded by the time we look. {{VERIFY:whether the bloc row or receipt shows the deadline and the closing time on dev}}', 'Yorik'],
+    ['Is 401 vs 403 vs 400 deliberate?', 'Yes. The Sa-Token interceptor checks login on every /api/v1 path except anonymous GETs of listings and invites, so no session is 401 COMMON_401_001; a signed-in buyer on an admin endpoint fails StpUtil.checkRole(ADMIN) and gets 403 COMMON_403_001; a money write without the X-BlocBuy-Request marker is 400 COMMON_400_001, and a wrong value is 403 (StripeCheckoutController.checkCsrf). Mapping: GlobalExceptionHandler.', 'Yorik → Liu Jin'],
     ['(Questions parked during the talk)', 'Lim reads each parked question from the backchannel in one line and names the owner; those come first. Answer each in 30–45 s: decision, reason, evidence or limitation.', 'Lim'],
   ] },
 };
@@ -296,10 +340,11 @@ const OPEN_ITEMS = [
   [13, 'Report section numbers for every member’s use case and design problem (rubric G8, checklist “names the report section”)', 'Lim', '6, 9–22'],
   [14, 'Choose the live demo change, its author and the approving code owner; open the PR before 16:42', 'Pan, Lim', '30'],
   [15, 'Two Google buyer accounts (leader, joiner), their display names on screen, and the admin grant for the listings check', 'Yorik', '32'],
-  [16, 'SWE5001 ECS environment up for the k6 pre-run on 24 Oct and during §5; keep the k6 summary for slide 33', 'Pan, Eric', '24, 33'],
+  [16, 'SWE5001 ECS environment up for the k6 pre-run on Sat 24 Oct (it is torn down nightly); keep the k6 summary and dashboard export for slide 33; it need not be up during the talk', 'Pan, Eric', '24, 33'],
   [17, 'Recount the test numbers for slide 23 on 25 Oct', 'Liu Jin', '23'],
   [18, 'Reconcile frontend ADR 0004 and the EC2 operator guide with the post-merge rebuild in ci-frontend.yml and ci-backend.yml', 'Pan, Lim', '25, 26'],
   [19, 'Add the media CloudFront dcsjrkmummxi7 (S3 blocbuy-media-dev-402178232802, WAF) to the deployment view: since #570 the demo listings load their covers from it', 'Pan', '28'],
+  [20, 'System demo preconditions for 26 Oct: Checkout and scheduling on for dev (BLOCBUY_SCHEDULING_ENABLED, #223); the 16:05 US34-04 bloc started by the Joiner account; both Google accounts signed in on Eric’s machine; IDE on a local checkout of dev with StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist pre-run green (Docker running); one go/no-go per step D1–D6', 'Yorik, Eric', '31, 32'],
 ];
 
 module.exports = { SPEAKERS, SEGMENTS, SLIDES, QA, BACKUPS, OPEN_ITEMS };

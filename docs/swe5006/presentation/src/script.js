@@ -37,6 +37,7 @@ const cueWords = [
   ['BEHIND n / AHEAD n', 'The talk is n seconds behind or ahead of the run sheet; the next speaker applies the trims', 'Lim'],
   ['SHARE', 'Next person: start screen sharing now', 'Lim'],
   ['CLIP n', 'Live step n failed; play the recording of step n', 'Pan or Yorik'],
+  ['EXPIRY OK / REFUND OK / REFUND LATE', 'State of the 16:05 expiry bloc (16:10 and 16:50)', 'Yorik'],
 ];
 
 const handovers = C.SLIDES.filter((s, i) => i > 0 && s.speaker !== C.SLIDES[i - 1].speaker && s.slot !== null)
@@ -131,6 +132,94 @@ ${qaTable(4)}
 </section>`;
 };
 
+// ---------- segment 5: system demo (rubric 5.1–5.5) ----------
+// Slide 31 16:52:00–16:52:30; live demo (slide 32) 16:52:30–17:01:00 (510 s); slides 33–35 17:01:00–17:04:00.
+// Eric shares one screen with two Chrome profiles and operates; Yorik speaks. US34-04 is a team of two with the
+// shortest allowed window (2,400 s = PurchaseQuoteWindow.SECONDS; scripts/dev-demo-listings.json).
+const demoSteps = [
+  { n: 'D1', t: 'Leader starts a bloc and shares the invite', time: '16:52:30 – 16:54:30', proves: 'Rubric <b>5.1</b> (UC2, UC1, UC3, UC7), <b>5.2</b> security · Eric operates, Yorik speaks',
+    op: ['Leader window (account A, signed in with Google), tab 2: listing <code>US34-04</code> “Universal Travel Adapter” (team of 2, 40 min; 29.00, team price 22.00).', '<b>Start a bloc</b> → the quote sheet shows the team price → <b>Continue to payment</b>.', 'Stripe Checkout with its Sandbox banner: test card 4242 4242 4242 4242, any future expiry, any CVC → Pay.', 'Back on BlocBuy: the receipt turns from “Waiting for payment confirmation” to paid; open the bloc: 1 of 2, countdown running.', 'Copy the invite link (<code>/products/{id}?deal={dealId}&amp;ref={ref}</code>).'],
+    say: "Our leader is signed in with Google. Every listing has two prices; she starts a bloc at the team price and pays first, on Stripe's own page, in Sandbox mode: a test card, no real money. Notice the receipt waits: BlocBuy believes a payment only when Stripe's signed webhook arrives, not when the browser comes back. Now the bloc exists, one of two, and she copies her invite link.",
+    exp: 'Receipt paid within one minute; bloc open at 1 of 2; invite link copied.',
+    fb: 'Checkout does not open within 20 s, or the receipt still waits after 60 s (the #517 symptom): Yorik posts <code>CLIP D1</code> and says “<i>That is the open issue on slide 4; here is the same step recorded on dev on 24 Oct.</i>” No dev recording: Plan C.' },
+  { n: 'D2', t: 'A friend joins through the invite: the team succeeds', time: '16:54:30 – 16:56:30', proves: 'Rubric <b>5.1</b> (UC4, UC5, UC7), <b>5.2</b> correctness under concurrency · Eric operates, Yorik speaks',
+    op: ['Joiner window (account B), tab 1: paste the invite link.', 'Point at the banner that names the sharer (account A’s display name).', '<b>Join</b> → quote → Stripe Checkout → 4242 card → Pay → receipt paid.', 'Product page or the receipt’s bloc link: 2 of 2, <b>succeeded</b>; both orders confirmed.'],
+    say: "A friend opens the link. The banner names who shared it, which is how the join is credited. She joins and pays the same way. The join rules run twice, at the quote and again after payment, inside the team, under a row lock: if the last seat had gone in between, she would get a refund obligation, never a seat that doesn't exist. Two of two: the team succeeded, and both orders are confirmed in the same transaction.",
+    exp: 'Sharer banner; receipt paid; bloc 2 of 2, succeeded.',
+    fb: '<code>CLIP D2</code> with the same sentence as D1. No recording: Plan C.' },
+  { n: 'D3', t: 'My blocs and my orders', time: '16:56:30 – 16:57:45', proves: 'Rubric <b>5.1</b> (UC8) · Eric',
+    op: ['Joiner window, tab 2: <code>/account</code>. My blocs → <b>Completed</b>: the bloc just filled.', 'My orders below: its confirmed order.', 'Click <b>Refunded</b>: the 16:05 bloc (D4); point at the URL (<code>?blocs=…</code>); reload: the chip survives.'],
+    say: "Her account page: My blocs on top, with Active, Completed and Refunded, and her orders below. The chip lives in the URL, so a reload, the Back button or a shared link keeps the view. Under Refunded, a bloc she started before the talk.",
+    exp: 'Completed shows the new bloc; My orders lists the confirmed order; the chip survives a reload.',
+    fb: 'Page empty: reload once; then <code>CLIP D3</code>. With a NO-GO this step runs live on an account that already has orders.' },
+  { n: 'D4', t: 'The 16:05 bloc expired and refunded itself', time: '16:57:45 – 16:59:15', proves: 'Rubric <b>5.1</b> (UC5, UC6), <b>5.2</b> expiry ≤ 1 min, refund idempotency · Eric operates, Yorik speaks',
+    op: ['Joiner window, tab 2, Refunded: the <code>US34-04</code> bloc started at ≈ 16:05, chip “Closed”; its order cancelled.', 'Tab 3: its receipt <code>/payments/{paymentId}</code> (bookmarked at 16:10), reloaded: the refund status.', `Point at the deadline (≈ 16:45). ${'{{VERIFY:whether the bloc row or receipt shows the deadline and the closing time}}'}`, 'Never open the Stripe dashboard on the shared screen.'],
+    say: "At five past four she started this bloc, a team of two with a forty-minute window, and nobody joined. At its deadline the expiry sweep, which runs every minute, closed it; in the same transaction the order was cancelled and exactly one refund obligation was written. A worker sent that refund to Stripe with an idempotency key built from the obligation, so a retry after a crash returns the same refund instead of a second one. We never touched the deadline; the timer did all of it.",
+    exp: 'Bloc under Refunded (“Closed”); order cancelled; the receipt shows the refund.',
+    fb: '<code>REFUND LATE</code> at 16:50 and still none now: Yorik says “the worker retries every 30 seconds; it may still be in flight”, then <code>CLIP D4</code>. No dev recording: open <b>B11</b> and say “<i>verified locally with a real Sandbox refund on 20 September, not yet on dev.</i>”' },
+  { n: 'D5', t: 'Security checks on the deployed API', time: '16:59:15 – 17:00:15', proves: 'Rubric <b>5.2</b> security (slide 3) · Eric operates, Yorik speaks',
+    op: [`Terminal (18 pt): <code>curl -s ${DEV}/api/v1/orders/me</code> → <code>401</code>, <code>COMMON_401_001</code> (Sa-Token interceptor, SaTokenConfig).`, `Joiner window, new tab: <code>${DEV}/api/v1/admin/products</code> → <code>403</code>, <code>COMMON_403_001</code> (a buyer fails <code>StpUtil.checkRole(ADMIN)</code>, AdminListingController).`, 'Joiner DevTools console: <code>document.cookie</code> → no <code>blocbuy-token</code> (HttpOnly). Never open the Application tab: it shows cookie values.', `Console: <code>fetch('/api/v1/payments/intents', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}'}).then(r =&gt; r.status)</code> → <code>400</code> (no <code>X-BlocBuy-Request</code> marker; GlobalExceptionHandler.handleMissingHeader).`],
+    say: "Three checks you can't see in the flow. No session: 401. A signed-in buyer on an admin endpoint: 403, because admin calls check the role and the permission. The session cookie is HttpOnly, so page scripts can't read it. And a money write without our custom header is refused: a cross-site form can't add that header.",
+    exp: '401, 403, no token in document.cookie, 400.',
+    fb: 'Any check differs: say what came back, one sentence, and move on; the Q&amp;A row “Is 401 vs 403 vs 400 deliberate?” has the mapping.' },
+  { n: 'D6', t: 'Twenty buyers, one last seat: the test', time: '17:00:15 – 17:01:00', proves: 'Rubric <b>5.2</b> correctness under concurrency; rubric G10 (IDE on hand) · Eric shows, Yorik speaks',
+    op: ['IDE (18 pt) on a local checkout of <code>dev</code>: <code>StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist</code>, already run green before the talk (Docker, PostgreSQL 18 in Testcontainers).', 'Show the assertions: 2 members, 2 orders, 19 refund obligations, <code>current_size</code> 2, stock 98.', 'One click to <code>PaidGroupDealMapper.xml</code>: <code>SELECT … FOR UPDATE</code> and the guarded <code>UPDATE … WHERE current_size = …</code>.'],
+    say: "The last seat we don't race on shared dev. This test does it on every pull request: twenty paid buyers race for the last seat of a team of two, through the production code against a real PostgreSQL. One wins; nineteen get a refund obligation, and capacity is never exceeded. The row lock and the guarded update are why. This is a local test, not a dev result.",
+    exp: 'Green test with its assertions visible; then back to the deck, slide 33.',
+    fb: 'IDE not ready: show the test on GitHub (read-only) and its last green CI run.' },
+];
+
+const seg5Html = () => {
+  const s5 = seg(5);
+  return `<section class="chap"><h1>5 ${esc(s5.name)} (${s5.talk} minutes, then ${s5.qa} minutes of buffer)</h1>
+<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:52:00 – 17:04:00 (slide 31 to 16:52:30; live demo on slide 32 to 17:01:00; slides 33–35 to 17:04:00) · 17:04–17:10 buffer for parked questions</td></tr><tr><td>Owner</td><td>${esc(s5.owner)}; Lim chairs the buffer</td></tr><tr><td>Slides</td><td>31, 32, 33, 34, 35, 36</td></tr></table></div>
+${reqBox(s5)}
+${box('tip', 'Tip', 'Eric shares one screen at 16:52:00 (<code>SHARE</code> from Pan) with the deck in the Leader window, tab 1, and operates every window; Yorik speaks throughout. The expiry bloc is started at 16:05 so that D4 shows a refund that no one triggered by hand.')}
+${slideCard(C.SLIDES.find(s => s.n === 31))}
+<h2>Decision: live or recorded payment steps (go/no-go, Fri 23 Oct, 18:00)</h2>
+${tbl(['Condition (Yorik decides with Lim; posted in #464)', 'GO: live on dev', 'NO-GO: recorded or local, said as such'], [
+  ['#517 fixed: a new START on dev reaches paid within one minute and shows under My blocs', 'D1, D2 live; fallback = the 24 Oct clips', 'D1, D2 from the 24 Oct clips if they exist, else from local evidence (B11), said as “verified locally, not yet on dev”'],
+  ['#223 done: Checkout and scheduling on for dev (<code>BLOCBUY_SCHEDULING_ENABLED</code>; default false in application-ec2.yml); a <code>US34-04</code> bloc started on 24 Oct expired within one sweep and refunded', 'D4 live with the 16:05 bloc', 'D4 from B11 (local); slide 31 rows read “recorded” or “local”'],
+  ['Full dry run on dev on Sat 24 Oct passes in order, timed, and is recorded', 'Rehearse at the real clock on 25 Oct', 'Only the NO-GO path is rehearsed'],
+  ['D3, D5, D6 do not depend on payments', 'live', 'live (D3 on an account that already has orders)'],
+])}
+${box('warn', 'Watch out', mh('No payment has been confirmed and no refund proven on dev as of 22 Oct (#517, #223 open). Every dev payment step here is conditional on the 24 Oct dry run. {{CONFIRM:go/no-go result of 23 Oct, per step D1, D2, D4 (open item 1)}}'))}
+<h2>Preconditions (checked at 15:30 by Eric and Yorik)</h2>
+<ul><li>Health <code>UP</code> (A.1); latest runs on <code>dev</code> green; merge freeze in force; the §4 demo PR is the only change that may land.</li>
+<li>Two Google buyer accounts signed in on Eric’s machine in two Chrome profiles, “Leader” (account A) and “Joiner” (account B); the same two on Yorik’s machine as standby. ${m('{{CONFIRM:which two accounts and the display names shown on screen (open item 15)}}')}</li>
+<li>At <b>≈ 16:05</b> (latest 16:15) Yorik, as account B, starts a bloc on <code>US34-04</code> and pays; nobody joins; receipt bookmarked in the Joiner window, tab 3. It is due ≈ 16:45; the sweep (every minute) expires it and the refund worker (every 30 s) refunds it ≈ 16:46–16:48. Post <code>EXPIRY OK</code> at 16:10 and <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.</li>
+<li>Listings converged: <code>scripts/seed-dev-demo-listings.sh --check</code> passes for the four <code>US34-*</code> listings (≤ 12:00, Yorik).</li>
+<li>Terminal with font ≥ 18 pt and the curl line ready (D5); Joiner DevTools closed until D5.</li>
+<li>IDE on a local checkout of <code>dev</code>, font ≥ 18 pt, with the D6 test run green after 15:00 and its file open; Docker running (rubric G10).</li>
+<li>Backup clips D1–D6 recorded on dev on Sat 24 Oct at 1080p, stored in the cloud and on a USB drive, open in a player on Eric’s machine (copy on Yorik’s), tested with Zoom “share sound” off (rubric G6, 5.5). ${m('{{FILL:clip folder link and USB holder}}')}</li>
+<li>Browser zoom 125–150 % (rubric V7); Do Not Disturb on; no password manager, email or bookmarks bar visible.</li></ul>
+<h2>Screen layout (Eric’s shared screen)</h2>
+${tbl(['Window · tab', 'Content', 'Prepared state'], [
+  ['Leader · 1', 'Deck <code>swe5006-presentation.html#31</code>', 'Slide 31; slides 33–36 follow'],
+  ['Leader · 2', `Listing <code>US34-04</code> on <code>${DEV}</code>`, 'Signed in as account A'],
+  ['Joiner · 1', 'Empty tab for the invite link', 'Signed in as account B'],
+  ['Joiner · 2', '<code>/account</code> (account B)', 'Loaded'],
+  ['Joiner · 3', 'Receipt of the 16:05 payment', 'Bookmarked at 16:10; reload before D4'],
+  ['Terminal', 'curl for D5', 'Command typed, not run'],
+  ['IDE', 'D6 test, green', 'Test file and PaidGroupDealMapper.xml open'],
+  ['Player', 'Clips D1–D6 (24 Oct)', 'Paused at clip D1'],
+])}
+<h2>Live system demo (16:52:30 – 17:01:00, 510 s)</h2>
+${tbl(['Step', 'Shows', 'Rubric'], demoSteps.map(d => [d.n, esc(d.t), d.proves.split(' · ')[0]]))}
+${slideCard(C.SLIDES.find(s => s.n === 32))}
+<h3>Step by step</h3>
+${demoSteps.map(demoCard).join('')}
+${box('warn', 'Never live', 'Editing any deadline, price or listing on shared dev; any SSM command, database client or AWS console on the shared screen; the Stripe dashboard (keys and webhook secrets live there); the DevTools Application or Network tab with cookies or headers visible; racing two buyers or replaying a webhook on dev; a second payment to “try again”; pointing k6 at dev.')}
+${box('tip', 'Plan C', 'A step fails live and has no recording: show its local evidence (B11 for payment and refund, the D6 test for the race, B12 for load) and say: <i>“verified locally, not yet on dev.”</i> Never present a local result as a dev one.')}
+<h2>After the demo (17:01:00 – 17:04:00)</h2>
+<h3>k6 pre-run for slide 33 (rubric 5.3)</h3>
+<ul><li><b>Sat 24 Oct</b>, Pan: bring up the SWE5001 environment (applied per session, torn down nightly; open item 16), run <code>perf/k6/browse.js</code> (k6 1.6.1 by digest; ten 60 s plateaus, 10 → 200 requests/s) against the SWE5001 CloudFront, keep the k6 summary and the dashboard export, write the run into the day log, tear the environment down. ${m('{{FILL:pre-run date, label and summary path}}')}</li>
+<li>Slide 33’s table is filled from that summary before the 25 Oct rehearsal; on the day the report file is opened from Eric’s machine if asked. Never point k6 at the SWE5006 dev host.</li></ul>
+${C.SLIDES.filter(s => s.n >= 33).map(slideCard).join('')}
+${qaTable(5)}
+</section>`;
+};
+
 // ---------- segments ----------
 const segsHtml = [
   segment(seg(1), {
@@ -146,10 +235,7 @@ const segsHtml = [
     warn: mh('Never present a local or SWE5001 result as a SWE5006 dev result: say where each number ran. {{FILL:segment 3 slides pending (slides 23–24)}}'),
   }),
   seg4Html(),
-  segment(seg(5), {
-    tip: 'Slide 31 opens the demo; slide 32 is the live two-user run (510 s); slides 33–35 cover performance, scalability and maintainability.',
-    warn: mh('{{FILL:system demo run book (go/no-go table, steps, preconditions, fallback clips) pending}}'),
-  }),
+  seg5Html(),
 ].join('');
 
 // ---------- timeline ----------
@@ -158,13 +244,14 @@ const timeline = `<section class="chap"><h1>6 Timeline before, on and after the 
 ${tbl(['Date', 'Do', 'Owner'], [
   ['Wed 21 Oct', 'Deck re-planned from the rubric; §1 drafted.', 'Lim'],
   ['Fri 23 Oct', '<b>Slides due</b> (#464). Each owner reviews their slides, cards and Q&amp;A rows; the Sprint 4 review and retro feed slides 5 and 7. <b>18:00 go/no-go</b> for the live payment steps, posted in #464.', 'All; Yorik decides with Lim'],
-  ['Sat 24 Oct', '<b>Backup videos</b> of both demos recorded on whatever is deployed then, 1080p, one clip per step, stored in the cloud and on a USB drive (rubric G6). k6 pre-run on the SWE5001 ECS environment; keep its summary.', 'Pan (pipeline); Yorik, Eric (system)'],
+  ['Sat 24 Oct', '<b>Full dry run on dev</b> of D1–D6 in order and timed: a <code>US34-04</code> bloc started ≈ 10:00 by account B expires and refunds (D4), START and JOIN on <code>US34-04</code> with both accounts (D1, D2); payment and refund ids in the day log (no secrets). <b>Backup videos</b> of both demos recorded on whatever is deployed then, 1080p, one clip per step, stored in the cloud and on a USB drive (rubric G6). <b>k6 pre-run</b> on the SWE5001 ECS environment; keep its summary for slide 33.', 'Yorik, Eric (system); Pan (pipeline, k6)'],
   ['Sun 25 Oct', '<b>Timed rehearsal</b> in Zoom at the real clock with injected questions; every rubric checklist box ticked; every marker resolved; rebuild deck and script.', 'All; Lim times'],
 ])}
 <h2>Presentation day (Mon 26 Oct)</h2>
 ${tbl(['Time (SGT)', 'Do', 'Owner'], [
-  ['≤ 12:00', `Health and recent runs (A.1); ${m('{{FILL:demo preconditions}}')}`, 'Yorik, Pan'],
+  ['≤ 12:00', 'Health and recent runs (A.1); listings check; §5 preconditions list started.', 'Yorik, Pan'],
   ['14:30', 'Tech check in a test Zoom: mic, camera, sharing, Do Not Disturb.', 'All'],
+  ['≈ 16:05 (≤ 16:15)', 'Start the expiry bloc on <code>US34-04</code> as account B and pay; bookmark the receipt. <code>EXPIRY OK</code> at 16:10, <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.', 'Yorik'],
   ['15:00', 'Merge freeze on <code>dev</code> until 17:15.', 'Lim'],
   ['16:30', 'Start; follow the run sheet. The scribe logs every remark verbatim (rubric G9).', 'Lim; scribe'],
   ['17:04 / 17:10', 'Slide 36; parked questions; end.', 'Lim'],

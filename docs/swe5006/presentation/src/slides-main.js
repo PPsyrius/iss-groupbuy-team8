@@ -340,7 +340,109 @@ const s30 = () => `
  <div class="card" style="padding:16px 20px">${kicker('Backup video', '#B02E1B')}<div style="font:400 17px/1.4 Inter">Recorded on dev by 24 Oct, one clip per step, in the cloud and on a USB drive. ${mk('FILL', 'link')}</div></div>
 </div>`;
 
-const out = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 23: s23, 24: s24, 25: s25, 26: s26, 27: s27, 28: s28, 29: s29, 30: s30 };
+// ---------- slide 31 (5.1, 5.2) ----------
+// Environment per step follows the 23 Oct go/no-go (open item 1); the NO-GO wording is in the run book.
+const env5 = (t, tone = 'ok') => {
+  const k = { ok: ['#E3E8FB', '#3E5CD9'], rec: ['#FFEDC7', '#7A5C20'], loc: ['#ECE6DC', '#1B1A18'], ecs: ['#FBDFD9', '#B02E1B'] }[tone];
+  return `<span style="display:inline-block;font:700 15px/1 Inter;background:${k[0]};color:${k[1]};border-radius:999px;padding:5px 10px;white-space:nowrap">${t}</span>`;
+};
+const plan5 = [
+  ['D1', 'Leader signs in, starts a bloc, pays in Stripe Sandbox, copies the invite', 'UC2 · UC1 · UC3 · UC7', 'security: only a signed webhook confirms a payment', env5('dev, if GO')],
+  ['D2', 'Joiner opens the invite, joins and pays: 2 of 2, the team succeeds', 'UC4 · UC5 · UC7', 'correctness: guards re-checked after payment', env5('dev, if GO')],
+  ['D3', 'My blocs and my orders, filtered by the URL', 'UC8', 'functionality', env5('dev')],
+  ['D4', 'The bloc started at 16:05 expired and refunded itself', 'UC5 · UC6', 'expiry ≤ 1 min · one refund per payment', env5('dev, if GO')],
+  ['D5', 'No session, a buyer on admin, a write without the marker', '—', 'security: 401 · 403 · 400 · HttpOnly', env5('dev')],
+  ['D6', 'Twenty paid buyers race for the last seat', 'UC4', 'correctness under concurrency', env5('local test', 'loc')],
+  ['33', 'Scripted k6 load, pre-run', 'UC1', 'performance: ≤ 2 s at 100 users', env5('SWE5001 ECS', 'ecs')],
+  ['35', 'Back to the §4 pipeline run', '—', 'maintainability', env5('dev')],
+];
+const s31 = () => `
+${tbl(['Step', 'What you see', 'Use cases', 'Quality attribute (slide 3)', 'Runs on'], plan5.map(r => [`<b>${r[0]}</b>`, r[1], `<span style="white-space:nowrap">${r[2]}</span>`, r[3], r[4]]), { fs: 17.5, w: [60, 400, 150, 300], pad: '8px 10px' })}
+<div style="position:absolute;left:0;right:0;top:486px;font:400 17px/1.35 Inter;color:var(--muted)">“dev, if GO”: live on deployed dev after the 23 Oct go/no-go (#517, #223); otherwise the 24 Oct recording of that step, said as recorded. A local result is never presented as a dev one.</div>`;
+
+// ---------- slide 32 (5.1, 5.2, 5.5) ----------
+const live5 = [
+  ['D1', 'Start a bloc and share the invite', '120 s'],
+  ['D2', 'A friend joins and pays: the team succeeds', '120 s'],
+  ['D3', 'My blocs and my orders', '75 s'],
+  ['D4', 'The 16:05 bloc: expired, order cancelled, refunded', '90 s'],
+  ['D5', 'Security: 401, 403, 400, HttpOnly cookie', '60 s'],
+  ['D6', 'Last-seat race: the test, in the IDE', '45 s'],
+];
+const s32 = () => `
+<div style="position:absolute;left:0;top:0;width:700px">
+ ${tbl(['Step', 'What you see', 'Time'], live5.map(l => [`<b>${l[0]}</b>`, l[1], l[2]]), { fs: 18, w: [70, null, 80], pad: '10px 12px' })}
+</div>
+<div style="position:absolute;left:724px;top:0;width:440px">
+ <div class="card" style="padding:16px 20px;margin-bottom:12px">${kicker('Two buyers, one screen')}<div style="font:400 17px/1.4 Inter">Two Chrome profiles, Leader and Joiner, both signed in with Google. Stripe Sandbox: a test card, no money moves.</div></div>
+ <div class="card" style="padding:16px 20px;margin-bottom:12px">${kicker('Started before the talk')}<div style="font:400 17px/1.4 Inter">A team of two on <span class="mono" style="font-size:16px">US34-04</span> at 16:05: its 40-minute window, the shortest allowed, ends ≈ 16:45.</div></div>
+ <div class="card" style="padding:16px 20px">${kicker('Backup video', '#B02E1B')}<div style="font:400 17px/1.4 Inter">Recorded on dev by 24 Oct, one clip per step, in the cloud and on a USB drive. ${mk('FILL', 'link')}</div></div>
+</div>`;
+
+// ---------- slide 33 (5.3) ----------
+const steps33 = [10, 20, 40, 60, 80, 100, 125, 150, 175, 200];
+const s33 = () => `
+<div style="position:absolute;left:0;top:0;width:600px">
+ ${kicker('k6 pre-run · SWE5001 ECS environment, same code · not the dev host', '#B02E1B')}
+ ${tbl(['Requests/s', 'p95 (ms)', 'Errors', 'Dropped', 'Step'], steps33.map(r => [`<b>${r}</b>${r >= 175 ? ' <span style="color:#B02E1B">●</span>' : ''}`, '—', '—', '—', '—']), { fs: 17, w: [130, 110, 100, 110], pad: '5px 12px' })}
+ <div style="font:400 16px/1.35 Inter;color:var(--muted);margin-top:6px"><span style="color:#B02E1B">●</span> at or above ≈ 190 requests/s, the proposal’s 100 users (slide 24) · results ${mk('FILL', 'from the 24 Oct pre-run')}</div>
+</div>
+<div style="position:absolute;left:624px;top:0;width:540px">
+ <div class="card" style="padding:16px 20px;margin-bottom:12px">
+  ${kicker('Target (proposal §6.3)', '#B02E1B')}
+  <div style="font:600 19px/1.35 Inter">≤ 2 s with up to 100 concurrent users</div>
+  <div style="font:400 18px/1.4 Inter;margin-top:8px">Our gate per step: p95 &lt; 500 ms, errors &lt; 1 %, no dropped requests</div>
+  <div style="font:700 18px/1.4 Inter;margin-top:8px">Verdict: ${mk('FILL', 'pass or fail per gate')}</div>
+ </div>
+ <div class="card" style="padding:16px 20px;margin-bottom:12px">
+  ${kicker('Expiry ≤ 1 min')}
+  <div style="font:400 18px/1.4 Inter">Sweep every minute under a lease; worst lag 58.2 s for 30 teams under 100-user load (<b>local</b>, 30 Sep)</div>
+ </div>
+ <div class="card" style="padding:16px 20px">
+  ${kicker('Not claimed')}
+  <div style="font:400 18px/1.4 Inter">Authenticated paths under load on a deployed system; anything about the dev host; scaling (one task)</div>
+ </div>
+</div>`;
+
+// ---------- slide 34 (5.2) ----------
+const s34 = () => `
+<div class="card" style="position:absolute;left:0;top:0;width:560px;height:240px;padding:18px 22px">
+ ${kicker('Dev, the system you saw')}
+ ${kv([
+   ['Compute', 'one EC2 t3.large, no Auto Scaling group'],
+   ['Data', 'PostgreSQL 18 and Redis 8 on the same host'],
+   ['Effect', 'one point of failure; a deploy restarts the API'],
+   ['Read', 'AWS, read-only, 21 Oct'],
+ ])}
+</div>
+<div class="card" style="position:absolute;left:584px;top:0;width:580px;height:240px;padding:18px 22px">
+ ${kicker('Why, deliberately', '#B02E1B')}
+ <ul class="b" style="font:400 18px/1.4 Inter;margin:0">
+  <li style="margin-bottom:8px">one complete system, always on, at low cost</li>
+  <li style="margin-bottom:8px">the proposal lists no scalability target (§6.3)</li>
+  <li>one codebase, two topologies (backend ADR 0008)</li>
+ </ul>
+</div>
+<div style="position:absolute;left:0;right:0;top:264px;border-radius:8px;background:#ECE6DC;padding:14px 18px;font:400 18px/1.4 Inter"><b>Scale path, not claimed here:</b> the same code on ECS in our SWE5001 topology, commerce 2–6 tasks on requests per target, notification 1–4 on queue backlog (backup B10).</div>`;
+
+// ---------- slide 35 (5.4) ----------
+const seams = [
+  ['New pricing mode', 'one more <span class="mono" style="font-size:16px">PricingStrategy</span>', 'Strategy · slide 19'],
+  ['New consequence of a team’s outcome', 'one more subscriber to <span class="mono" style="font-size:16px">TeamSucceeded</span> / <span class="mono" style="font-size:16px">TeamExpired</span>', 'Observer · slide 17'],
+  ['New payment provider', 'one more adapter behind <span class="mono" style="font-size:16px">CheckoutGateway</span>, <span class="mono" style="font-size:16px">RefundGateway</span>', 'Adapter · slide 11'],
+];
+const s35 = () => `
+<div class="card" style="position:absolute;left:0;top:0;width:420px;padding:18px 22px">
+ ${kicker('Shown in §4 (slide 30)')}
+ <div style="font:400 18px/1.45 Inter">One change, live on dev: six required checks, a code-owner review, an automatic deploy and a smoke test. 18 ArchUnit rules hold the module boundaries on every build.</div>
+</div>
+<div style="position:absolute;left:444px;top:0;width:720px">
+ ${kicker('Proposal §6.3: the primary design driver', '#B02E1B')}
+ ${tbl(['Change', 'Added as', 'Pattern'], seams.map(r => [`<b>${r[0]}</b>`, r[1], r[2]]), { fs: 17.5, w: [230, null, 190], pad: '10px 12px' })}
+ <div style="font:400 17px/1.35 Inter;color:var(--muted);margin-top:10px">Existing domain logic stays unedited in each case.</div>
+</div>`;
+
+const out = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 23: s23, 24: s24, 25: s25, 26: s26, 27: s27, 28: s28, 29: s29, 30: s30, 31: s31, 32: s32, 33: s33, 34: s34, 35: s35 };
 for (const s of C.SLIDES) if (!out[s.n]) out[s.n] = s.slot === null ? (() => '') : pending(s.n);
 // Closing slide (dark, full bleed).
 out[36] = () => `
