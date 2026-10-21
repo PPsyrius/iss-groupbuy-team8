@@ -46,4 +46,25 @@ public record GoogleOAuthProperties(
                 && redirectUri != null
                 && !redirectUri.isBlank();
     }
+
+    @Override
+    public String toString() {
+        return "GoogleOAuthProperties[clientId="
+                + clientId
+                + ", clientSecret="
+                + mask(clientSecret)
+                + ", redirectUri="
+                + redirectUri
+                + ", authorizeUrl="
+                + authorizeUrl
+                + ", tokenUrl="
+                + tokenUrl
+                + ", stateTtlSeconds="
+                + stateTtlSeconds
+                + "]";
+    }
+
+    private static String mask(String secret) {
+        return secret == null || secret.isBlank() ? "<unset>" : "<redacted>";
+    }
 }

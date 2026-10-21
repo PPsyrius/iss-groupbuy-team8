@@ -15,4 +15,18 @@ public record StripeCheckoutRuntimeProperties(
                         regexp = StripeProperties.SANDBOX_KEY_PREFIX + ".+",
                         message = "STRIPE_API_KEY must be a Stripe test key")
                 String apiKey,
-        @NotBlank(message = "STRIPE_WEBHOOK_SECRET must be set") String webhookSecret) {}
+        @NotBlank(message = "STRIPE_WEBHOOK_SECRET must be set") String webhookSecret) {
+
+    @Override
+    public String toString() {
+        return "StripeCheckoutRuntimeProperties[apiKey="
+                + mask(apiKey)
+                + ", webhookSecret="
+                + mask(webhookSecret)
+                + "]";
+    }
+
+    private static String mask(String secret) {
+        return secret == null || secret.isBlank() ? "<unset>" : "<redacted>";
+    }
+}
