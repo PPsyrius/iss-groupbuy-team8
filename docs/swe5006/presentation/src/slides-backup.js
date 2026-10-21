@@ -203,11 +203,11 @@ const bUc4 = () => `
  <div style="width:220px;font:400 16px/1.4 Inter">Both are vector: open <span class="mono" style="font-size:14px">src/diagrams/uc4-design-*.svg</span> in a browser tab and zoom. Every message carries its source line in the diagram spec. Report §3.4 (Eric).</div>
 </div>`;
 const bMembers = () => tbl(['Member', 'Use case (report §3.4)', 'Design problem (report §3.5)', 'On a slide'], [
-  ['Eric', 'UC3, UC4 start and join a team', 'Factory Method: team creation', 'UC4 models 13–14; pattern 16'],
-  ['Yorik', 'UC6 refund on team expiry', 'Observer: team outcome; refund idempotency as a mechanism (B6)', 'pattern 17; sequence B5'],
-  ['Pan', 'Receive notifications', 'Template Method: outbox transports', 'pattern 18'],
-  ['Lim', 'UC8 my orders and my teams (with UC7 frontend)', 'Strategy: UC1 pricing', 'pattern 19'],
-  ['Liu Jin', 'UC9 listing administration and team terms', 'State: listing lifecycle (full form)', 'patterns 20–21; statechart B13'],
+  ['Eric', 'UC3, UC4 start and join a team', 'Factory Method: team creation', 'UC4 models 13–16; pattern 17'],
+  ['Yorik', 'UC6 refund on team expiry', 'Observer: team outcome; refund idempotency as a mechanism (B6)', 'pattern 18; sequence B5'],
+  ['Pan', 'Receive notifications', 'Template Method: outbox transports', 'pattern 19'],
+  ['Lim', 'UC8 my orders and my teams (with UC7 frontend)', 'Strategy: UC1 pricing', 'pattern 20'],
+  ['Liu Jin', 'UC9 listing administration and team terms', 'State: listing lifecycle (full form)', 'patterns 21–22; statechart B13'],
 ], { fs: 16.5, w: [110, 330, 400] }) + `<div style="margin-top:12px;font:400 16px/1.4 Inter">Each member’s analysis class, analysis sequence, design class and design sequence diagrams are in their report section (template RT 3.4.1); the deck shows UC4 only (rubric G8). Owners: #463. ${mk('VERIFY', 'UC9 owner: #32 names Eric, #463 names Liu Jin (open item 12)')}</div>`;
 const b16erd = () => scroll('full-erd', 2320, 5038, 1150);
 

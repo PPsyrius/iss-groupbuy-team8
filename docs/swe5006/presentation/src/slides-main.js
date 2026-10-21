@@ -2,7 +2,8 @@ const { icon, mk, lockup, svg } = require('../../../presentation-kit/lib');
 const C = require('./content');
 // Accent fills never carry text: accent -> accent-soft + accent-soft-foreground; grey -> default + foreground.
 // Layout reference: docs/swe5001/presentation/src/slides-main.js has a worked example of every card, chip and diagram pattern.
-// Legibility (rubric V3): body and table text 17–18 px or larger on the 1280 × 720 canvas.
+// Legibility (rubric V3): labels at least 18 pt, which is 24 px on the 1280 × 720 canvas. Diagram crops meet it 1:1;
+// body and table text (15.5–19 px) does not yet, and the final layout pass raises it.
 
 // Placeholder for slides whose content a later drafting pass fills in.
 const pending = n => () => {
@@ -79,7 +80,9 @@ const s3 = () => `
 
 // ---------- slide 4 (1.3) ----------
 const pvd = [
-  ['UC1–UC9', chip('Delivered', 'ok') + 'admin console beyond scope', '#24–#32 · F-ADR 0015'],
+  ['UC1–UC9', chip('Delivered', 'ok') + 'all nine closed as completed', '#24–#32'],
+  ['UC9 admin API only, no GUI', chip('Changed', 'chg') + 'admin console built in Sprint 3', 'F-ADR 0015 · #305–#307'],
+  ['Adapter (UC6), Observer (UC7)', chip('Changed', 'chg') + 'gateway ports; Observer on UC5 → UC6', 'slides 10, 18 · <i>no ADR</i>'],
   ['Pay-first START, JOIN, refund on dev', chip('Open', 'open') + 'Checkout returns; webhook never confirms', '#517 · #223'],
   ['State for the team lifecycle', chip('Changed', 'chg') + 'transition table; State on listings', 'design doc · <i>no ADR (item 7)</i>'],
   ['Google sign-in with JWT', chip('Changed', 'chg') + 'Sa-Token session, HttpOnly cookie', 'D6/D7, F-ADR 0002 · <i>no backend ADR</i>'],
@@ -170,11 +173,11 @@ const s8 = () => `
  <div style="font:400 16px Inter;color:var(--muted);margin-top:6px">Design problem field: State, Optimistic Offline Lock</div>
 </div>
 <div style="position:absolute;left:564px;top:0;width:600px">
- ${kicker('Sprint 2 burndown · remaining hours, 15–26 Sep')}
+ ${kicker('Sprint 2 burndown · hours left · report period 15–26 Sep')}
  ${burndown()}
  <div style="font:400 16.5px/1.35 Inter;margin-top:2px">Flat for a week, then a cliff: work merged late in large PRs. Reconstructed from merge dates.</div>
 </div>
-<div style="position:absolute;left:0;right:0;top:450px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 17px/1.35 Inter"><b style="color:#3E5CD9">Practice (EPAT 03, 05):</b> two red tests reproduced a quote defect (7 Oct log), then PR #424 refactored admission into shared guards and a Factory Method. Full set of artefacts: backup B1.</div>`;
+<div style="position:absolute;left:0;right:0;top:450px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 17px/1.35 Inter"><b style="color:#3E5CD9">Practice (EPAT 03, 05):</b> two red tests reproduced a quote defect (7 Oct log), then PR #424 refactored admission into shared guards and injected the Factory Method’s creator. Full set of artefacts: backup B1.</div>`;
 
 // ---------- slide 24 (3.1, 3.3) ----------
 // Agile Testing Quadrants (EPAT 03 TDD p7), laid out as in the deck: business-facing on top, supporting the team on the left.
@@ -254,7 +257,7 @@ const nat = (name, W, H) => svg(name).replace('<svg ', `<svg style="display:bloc
 const cropLayer = (name, W, H, x, y, label, i, n, head = 0) => { const strip = head > 0 && y >= head; return `<div class="frag zcrop" data-frag="${i + 1}" style="position:absolute;left:0;top:0;width:1164px;height:548px;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8;z-index:10">
  <div style="position:absolute;left:${-x}px;top:${strip ? head - y : -y}px">${nat(name, W, H)}</div>
  ${strip ? `<div style="position:absolute;left:0;top:0;width:1164px;height:${head}px;overflow:hidden;background:#fff;border-bottom:2px dashed #A69E92"><div style="position:absolute;left:${-x}px;top:0">${nat(name, W, H)}</div></div>` : ''}
- <div style="position:absolute;right:10px;top:10px;font:700 15px/1 Inter;letter-spacing:.04em;background:#1B1A18;color:#fff;border-radius:999px;padding:6px 11px">${i + 1}/${n} · ${label}</div></div>`; };
+ <div style="position:absolute;right:10px;bottom:10px;font:700 15px/1 Inter;letter-spacing:.04em;background:#1B1A18;color:#fff;border-radius:999px;padding:6px 11px">${i + 1}/${n} · ${label}</div></div>`; };
 const zoom = (name, { W, H, view, at = 'left:0;top:0', crops }) => {
   const s = Math.min(view[0] / W, view[1] / H);
   return `<style>body:not(.present) .zcrop{display:none}</style>
@@ -282,7 +285,7 @@ const s9 = () => `
  ${report('Report §3.1 · Liu Jin, presented by Eric')}
 </div>
 ${walk([{ name: 'logical-layers', W: 2320, H: 1644, view: [774, 548], at: 'left:390px;top:0' }],
-  [['logical-layers', 1160, 0, 'adapter · contract'], ['logical-layers', 1160, 548, 'application'], ['logical-layers', 580, 1096, 'ports realised by infrastructure']])}`;
+  [['logical-layers', 1160, 0, 'adapter · contract'], ['logical-layers', 1160, 548, 'application'], ['logical-layers', 690, 1096, 'infrastructure depends on domain ports']])}`;
 
 // ---------- slide 10 (2.2) ----------
 const strat = [
@@ -314,13 +317,13 @@ ${walk([{ name: 'transition-pair', W: 2320, H: 2270, view: [560, 548], at: 'left
 
 // ---------- slide 12 (2.3) ----------
 const s12 = () => `<div style="position:absolute;left:0;top:520px">${report('Report §3.3 · use case diagram and specifications')}</div>` + walk([{ name: 'use-case', W: 2320, H: 1096, view: [1164, 514], at: 'left:0;top:0' }],
-  [['use-case', 0, 312, 'Buyer and the money path'], ['use-case', 560, 80, 'resolution: Scheduler, Stripe'], ['use-case', 1160, 52, 'out of scope']]);
+  [['use-case', 0, 312, 'Buyer and the money path'], ['use-case', 560, 40, 'resolution: Scheduler, Stripe'], ['use-case', 1160, 52, 'out of scope']]);
 
 // ---------- slide 13 (2.4) ----------
 const s13 = () => `
 <div style="position:absolute;left:0;top:520px">${report('Report §3.4 · Eric (UC4 analysis model)')}</div>
 ${walk([{ name: 'uc4-analysis-class', W: 1160, H: 1070, view: [560, 512], at: 'left:0;top:0' }, { name: 'uc4-analysis-seq', W: 2320, H: 2186, view: [584, 512], at: 'left:580px;top:0' }],
-  [['uc4-analysis-class', 0, 522, 'entities'], ['uc4-analysis-seq', 560, 920, 'seat available: join'], ['uc4-analysis-seq', 560, 1320, 'else: refund']])}`;
+  [['uc4-analysis-class', 0, 522, 'entities'], ['uc4-analysis-seq', 560, 1150, 'seat available: join', 160], ['uc4-analysis-seq', 1160, 1720, 'else: refund through the gateway', 160]])}`;
 
 // ---------- slide 14 (2.4) ----------
 const tagKey = [['Pres', 'presentation'], ['Dist', 'distribution'], ['Pers', 'persistence'], ['Ext', 'external interface'], ['Sec', 'security'], ['Conc', 'concurrency'], ['Sched', 'scheduling'], ['Event', 'domain events']];
@@ -372,10 +375,10 @@ const pslot = (rows, name, W, H, crops, rep) => `
 ${walk([{ name, W, H, view: [580, 548], at: 'left:584px;top:0' }], crops)}`;
 const s17 = () => pslot([
   ['Where it shows (class diagram)', `the «create» of ${mono('GroupDeal')}: start-team rules must stay fixed while how a team is built may vary; until #424 the Client also named ${mono('new StandardPaidGroupDealCreator()')}`],
-  ['Cause for redesign · what varies (SDP 05a p13, p15)', 'creating an object by specifying a class explicitly · “subclass of object that is instantiated”'],
+  ['Cause for redesign · what varies (SDP 05a p15)', `creating an object by specifying a class explicitly · the construction step varies while ${mono('initiate')} stays fixed (GoF p136: a template method calling a factory method)`],
   ['Candidates', 'Factory Method · static factory (static “forbids subclassing of the base factory class”, SDP 01a p34) · Builder · Abstract Factory'],
   ['Participants', `Creator ${mono('PaidGroupDealCreator')} (final ${mono('initiate')} validates, then abstract ${mono('createGroupDeal')}) · ConcreteCreator ${mono('StandardPaidGroupDealCreator')} · Product ${mono('GroupDeal')} · Client ${mono('PaidGroupDealService')}`],
-  ['Needed because · liability (SDP 05a p35)', 'every creator keeps the start rules (final initiate); a test or config swaps the creator without editing the service (#421) · one ConcreteCreator today, chosen in config'],
+  ['Needed because · liability (SDP 05a p35)', `every creator keeps the start rules (final initiate); a test or config swaps the creator without editing the service (#421) · one ConcreteCreator today, chosen in config; product class fixed (${mono('GroupDeal')} is final)`],
   ['Tests', `${mono('PaidGroupDealServiceTest.startUsesTheInjectedCreator')}`],
 ], 'fm-start', 1160, 1400, [['fm-start', 0, 0, 'Client · Creator'], ['fm-start', 0, 852, 'initiate → createGroupDeal']], 'Report §3.5 · Eric (UC3)');
 const s18 = () => pslot([
@@ -473,7 +476,7 @@ const s27 = () => zoom('cicd-pr-vs-merge', { W: 2320, H: 1096, view: [1164, 548]
 // Stages as in DSOEA 07 slide 3 (pre-commit, commit, build, test, deploy).
 const sec = [
   ['Pre-commit', 'Lefthook: format, lint, type-check (frontend)', 'style and type errors', ''],
-  ['Commit · PR', `<b>gitleaks</b> ${req2()} over full history; code-owner review; actionlint`, 'secrets, unsafe workflows', ''],
+  ['Commit · PR', `<b>gitleaks</b> ${req2()} on the PR’s commits, full history weekly; code-owner review; actionlint`, 'secrets, unsafe workflows', ''],
   ['Build', `SAST: <b>SonarCloud</b> ${req2()}, SpotBugs; SCA: Trivy deps, Dependabot daily`, 'code flaws, vulnerable libraries', 'CodeQL off: code scanning unavailable on this repository'],
   ['Test', `<b>Trivy image</b> ${req2()} (HIGH, CRITICAL); Trivy config, deployment-bundle rules`, 'image CVEs, IaC and Compose misconfiguration', 'no DAST against the running site'],
   ['Deploy', 'OIDC role per job; image by digest; read-only container, all capabilities dropped', 'stolen keys, swapped images', 'rebuilt after merge, not rescanned (ECR scans on push)'],
@@ -499,7 +502,7 @@ ${zoom('dev-deployment', { W: 2320, H: 1096, view: [756, 548], at: 'left:408px;t
 
 // ---------- slide 30 (4.5) ----------
 const finds = [
-  ['First dev deploys failed (5–17 Sep)', 'Hand-built environment drifted from its design: OIDC trust used the old subject format; the deploy policy kept a placeholder instance ID; port 8589 was opened wide', 'Fixed on dev by hand; the prod stack renders each value in Terraform, so a plan shows it. No deploy failed after 17 Sep (to 19 Oct)'],
+  ['First dev deploys failed (14–17 Sep)', 'Hand-built environment drifted from its design: OIDC trust used the old subject format; the deploy policy kept a placeholder instance ID; port 8589 was opened wide', 'Fixed on dev by hand; the prod stack renders each value in Terraform, so a plan shows it. No deploy failed after 17 Sep (to 19 Oct)'],
   ['build-quality red for two days (19–20 Oct)', 'Dependabot upgraded the SpotBugs engine without its Maven plugin; the plugin lacked the engine’s BCEL classes', 'Upgrade both together, one Dependabot group, a POM policy test (PR #580)'],
   ['Weekly full-history gitleaks failing (since 21 Sep)', '20 matches were SHA-256 file digests in a contract baseline, not secrets', 'Each digest re-hashed, then fingerprinted exactly (PR #580); 4 badge-token findings still open'],
 ];
@@ -535,7 +538,7 @@ const plan5 = [
   ['D1', 'Leader signs in, starts a bloc, pays in Stripe Sandbox, copies the invite', 'UC2 · UC1 · UC3 · UC7', 'security: only a signed webhook confirms a payment', env5('dev, if GO')],
   ['D2', 'Joiner opens the invite, joins and pays: 2 of 2, the team succeeds', 'UC4 · UC5 · UC7', 'correctness: guards re-checked after payment', env5('dev, if GO')],
   ['D3', 'My blocs and my orders, filtered by the URL', 'UC8', 'functionality', env5('dev')],
-  ['D4', 'The bloc started at 16:05 expired and refunded itself', 'UC5 · UC6', 'expiry ≤ 1 min · a refund recorded, once', env5('dev, if GO')],
+  ['D4', 'The bloc started at 16:05 expired and refunded itself', 'UC5 · UC6', 'unattended expiry and refund, recorded once; ≤ 1 min measured locally (slide 34)', env5('dev, if GO')],
   ['D5', 'No session, a buyer on admin, a write without the marker', '—', 'security: 401 · 403 · 400 · HttpOnly', env5('dev')],
   ['D6', 'Twenty paid buyers race for the last seat', 'UC4', 'correctness under concurrency', env5('local test', 'loc')],
   ['34', 'Scripted k6 load, pre-run', 'UC1', 'performance: ≤ 2 s at 100 users', env5('SWE5001 ECS', 'ecs')],
@@ -612,7 +615,7 @@ const s35 = () => `
 
 // ---------- slide 36 (5.4) ----------
 const seams = [
-  ['New pricing mode', 'one more <span class="mono" style="font-size:16px">PricingStrategy</span>', 'Strategy · slide 20'],
+  ['New pricing mode', 'one more <span class="mono" style="font-size:16px">PricingStrategy</span> and its <span class="mono" style="font-size:16px">PricingMode</span> constant', 'Strategy · slide 20'],
   ['New consequence of a team’s outcome', 'one more subscriber to <span class="mono" style="font-size:16px">TeamSucceeded</span> / <span class="mono" style="font-size:16px">TeamExpired</span>', 'Observer · slide 18'],
   ['New payment provider', 'one more adapter behind <span class="mono" style="font-size:16px">CheckoutGateway</span>, <span class="mono" style="font-size:16px">RefundGateway</span>', 'gateway port, external-interface strategy · slide 11'],
 ];
@@ -624,11 +627,24 @@ const s36 = () => `
 <div style="position:absolute;left:444px;top:0;width:720px">
  ${kicker('Proposal §6.3: the primary design driver', '#B02E1B')}
  ${tbl(['Change', 'Added as', 'Pattern'], seams.map(r => [`<b>${r[0]}</b>`, r[1], r[2]]), { fs: 17.5, w: [230, null, 190], pad: '10px 12px' })}
- <div style="font:400 17px/1.35 Inter;color:var(--muted);margin-top:10px">Existing domain logic stays unedited in each case.</div>
+ <div style="font:400 17px/1.35 Inter;color:var(--muted);margin-top:10px">Existing rules stay unedited: each change adds classes; a pricing mode also adds one enum constant.</div>
 </div>`;
 
 const out = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s12, 13: s13, 14: s14, 15: s15, 16: s16, 17: s17, 18: s18, 19: s19, 20: s20, 21: s21, 22: s22, 23: s23, 24: s24, 25: s25, 26: s26, 27: s27, 28: s28, 29: s29, 30: s30, 31: s31, 32: s32, 33: s33, 34: s34, 35: s35, 36: s36 };
 for (const s of C.SLIDES) if (!out[s.n]) out[s.n] = s.slot === null ? (() => '') : pending(s.n);
+// Rubric G8: every example slide names the report section holding the full set. §2 slides carry it in their layout;
+// the others get it in the gap under the title. Our section numbers follow #463 and stay FILL until it is final;
+// RT names the report template section the content answers.
+const repSec = {
+  3: 'scope, quality attributes · RT 1.4.1–1.4.3', 4: 'status, promised vs delivered · RT 1.4, 2.2', 5: 'milestones, effort · RT 2.3',
+  6: 'ownership · RT 2.1, 3.4, 3.5', 7: 'sprints, DoD, retrospectives', 8: 'appendix: agile artefacts',
+  24: 'types of testing', 25: 'performance test', 26: 'source control strategy · RT 4.1', 27: 'continuous integration · RT 4.2',
+  28: 'pipeline security · RT 4.2', 29: 'continuous delivery · RT 4.3', 30: 'technical findings',
+};
+for (const [n, t] of Object.entries(repSec)) {
+  const body = out[n];
+  out[n] = () => body() + `<div style="position:absolute;right:0;top:-27px;font:600 15px/1 Inter;color:#3E5CD9;display:flex;gap:6px;align-items:center">${icon('book')} Report ${mk('FILL', '§ (#463)')} · ${t}</div>`;
+}
 // Closing slide (dark, full bleed).
 out[37] = () => `
 <div style="position:absolute;left:76px;top:96px;font:700 120px/1 Inter;color:#fff">Thank you</div>

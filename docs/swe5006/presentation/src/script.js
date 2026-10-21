@@ -25,8 +25,8 @@ const rubricRows = ['1.1', '1.2', '1.3', '1.4', '1.5', '1.6', '1.7', '1.8', '2.1
 // Tips: the four "Presentation Tips" on page 2 of the guidelines (verbatim); none conflicts with page 1 (rubric open decision 1).
 const tips = [
   ['Summarize and highlight the significant achievements. Talk more about the significant and interesting parts of the solution and implementation. Your audience should remember the unique aspects of the solution and not similarities to other solutions.', 'Depth goes to what is unique: pay-first teams that refund themselves, money safety under concurrency and failure (UC4 design, statechart, design problems), and a pipeline from pull request to dev in minutes.'],
-  ['Manage your time well. Do not present too many slides. Remember that the audience can read the text in the slide so refrain from reading them.', '36 main slides in 34 minutes, two of them live demos; slots checked at 130 wpm in the table above; sample wording adds to the slide instead of reading it; details sit in backups B1–B12.'],
-  ['Explain your design in top-down manner. Make sure that your audience understands the requirements, the high-level design and the high-level decisions that you make before drilling into some details.', 'Problem, scope and quality attributes first (slides 2–3); then architecture (9), transition strategies (10–11), use cases (12), one use case from analysis to design (13–15), design problems (16–21), schema (22).'],
+  ['Manage your time well. Do not present too many slides. Remember that the audience can read the text in the slide so refrain from reading them.', '37 main slides in 34 minutes, two of them live demos; slots checked at 130 wpm in the table above; sample wording adds to the slide instead of reading it; details sit in backups B1–B16.'],
+  ['Explain your design in top-down manner. Make sure that your audience understands the requirements, the high-level design and the high-level decisions that you make before drilling into some details.', 'Problem, scope and quality attributes first (slides 2–3); then architecture (9), transition strategies (10–11), use cases (12), one use case from analysis to design with its statechart (13–16), design problems (17–22), schema (23).'],
   ['Ensure that the contents on the slides are readable from the distance at which your audience is sitting. This is particular true for face-to-face presentation.', 'Rubric V1–V7: one idea per slide, diagrams cropped to the part discussed, labels checked on a projector or TV before 26 Oct.'],
 ];
 
@@ -152,7 +152,7 @@ const demoSteps = [
     say: "Her account page: My blocs on top, with Active, Completed and Refunded, and her orders below. The chip lives in the URL, so a reload, the Back button or a shared link keeps the view. Under Refunded, a bloc she started before the talk.",
     exp: 'Completed shows the new bloc; My orders lists the confirmed order; the chip survives a reload.',
     fb: 'Page empty: reload once; then <code>CLIP D3</code>. With a NO-GO this step runs live on an account that already has orders.' },
-  { n: 'D4', t: 'The 16:05 bloc expired and refunded itself', time: '16:57:45 – 16:59:15', proves: 'Rubric <b>5.1</b> (UC5, UC6), <b>5.2</b> expiry ≤ 1 min, refund idempotency · Eric operates, Yorik speaks',
+  { n: 'D4', t: 'The 16:05 bloc expired and refunded itself', time: '16:57:45 – 16:59:15', proves: 'Rubric <b>5.1</b> (UC5, UC6), <b>5.2</b> unattended expiry and refund, recorded once (≤ 1 min is measured locally, slide 34) · Eric operates, Yorik speaks',
     op: ['Joiner window, tab 2, Refunded: the <code>US34-04</code> bloc started at ≈ 16:05, chip “Closed”; its order cancelled.', 'Tab 3: its receipt <code>/payments/{paymentId}</code> (bookmarked at 16:10), reloaded: the refund status.', `Point at the deadline (≈ 16:45). ${'{{VERIFY:whether the bloc row or receipt shows the deadline and the closing time}}'}`, 'Never open the Stripe dashboard on the shared screen.'],
     say: "At five past four she started this bloc, a team of two with a forty-minute window, and nobody joined. At its deadline the expiry sweep, which runs every minute, closed it; in the same transaction the order was cancelled and exactly one refund obligation was written. A worker sent that refund to Stripe with an idempotency key built from the obligation, so a retry after a crash returns the same refund instead of a second one. We never touched the deadline; the timer did all of it.",
     exp: 'Bloc under Refunded (“Closed”); order cancelled; the receipt shows the refund.',
@@ -228,7 +228,7 @@ const segsHtml = [
   }),
   segment(seg(2), {
     tip: 'Eric presents 2.1–2.4 and his own design problem; then Yorik, Pan and Lim each have one 20-second slide on their own problem; Liu Jin closes with the full-form State problem and the schema, and carries straight on into §3. The next speaker unmutes during the previous speaker’s last sentence.',
-    warn: mh('Segment 2 has no slack: answer design questions in one sentence and park the rest.'),
+    warn: mh('Handover allowance: speech is about 285 s of the 360 s slots, so the four handovers inside §2 (slides 18, 19, 20, 21) get 15–20 s each, rehearsed short: the next speaker unmutes and starts with their first line, no greeting beyond their name. Beyond that, segment 2 has no slack: answer design questions in one sentence and park the rest.'),
   }),
   segment(seg(3), {
     tip: 'Liu Jin continues from slide 23 without a handover.',
@@ -287,7 +287,7 @@ const coverHtml = cover({
   meta: [
     ['Responsible', 'Yu Qianshuo (Yorik), presentation lead and storyline (#464); Lim Jiechao, slide master.'],
     ['Specification', '<code>docs/swe5006/presentation/RUBRIC.md</code>: every slide records the rubric rows it covers; the coverage tables in the run sheet are derived from them.'],
-    ['Companion files', '<code>swe5006-presentation.html</code> — the deck (36 slides + backups BX, B1–B12; Chrome or Edge; <b>S</b> notes, <b>T</b> timer, <b>O</b> overview, <b>F</b> fullscreen, <b>B</b> backup index) · <code>swe5006-presentation.pdf</code> — the same deck for submission.'],
+    ['Companion files', '<code>swe5006-presentation.html</code> — the deck (37 slides + backups BX, B1–B16; Chrome or Edge; <b>S</b> notes, <b>T</b> timer, <b>O</b> overview, <b>F</b> fullscreen, <b>B</b> backup index) · <code>swe5006-presentation.pdf</code> — the same deck for submission.'],
     ['Facts as of', '21 Oct 2026. Dev health <code>UP</code>; #223 and #517 open, so no payment has been confirmed and no refund proven on dev yet.'],
   ],
   after: `${box('', 'Markers', `${md('{{FILL:}}')} value that does not exist yet; never present a guess · ${md('{{VERIFY:}}')} claim to check against the repository, report or run logs · ${md('{{CONFIRM:}}')} needs team agreement. They must all be gone after the 25 Oct rehearsal.`)}`,

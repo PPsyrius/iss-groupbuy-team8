@@ -103,9 +103,9 @@
 <rect x="492.0" y="1200.0" width="658.0" height="212.0" fill="none" stroke="#1B1A18" stroke-width="1.6"/>
 <path d="M492,1236 H535.1456000000001 L547.1456000000001,1224 V1200" fill="none" stroke="#1B1A18" stroke-width="1.6"/>
 <text x="502.0" y="1227.0" font-size="24" font-weight="700" fill="#1B1A18">alt</text>
-<text x="559.1" y="1227.0" font-size="24" fill="#1B1A18">[DRAFT or OFF_SALE]</text>
+<text x="559.1" y="1227.0" font-size="24" fill="#1B1A18">[override]</text><path d="M198 1206 H436 L456 1226 V1366 H198 Z" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.4"/><path d="M436 1206 V1226 H456" fill="none" stroke="#6B655C" stroke-width="1.4"/><text x="208" y="1236" font-size="24" fill="#1B1A18">override: DRAFT,</text><text x="208" y="1266" font-size="24" fill="#1B1A18">  OFF_SALE</text><text x="208" y="1296" font-size="24" fill="#1B1A18">default: ON_SALE</text><text x="208" y="1326" font-size="24" fill="#6B655C">dispatch picks the</text><text x="208" y="1356" font-size="24" fill="#6B655C">operand; no switch</text>
 <line x1="492.0" y1="1294.0" x2="1150.0" y2="1294.0" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="10 6"/>
-<text x="504.0" y="1322.0" font-size="24" fill="#1B1A18">[ON_SALE: inherited default]</text>
+<text x="504.0" y="1322.0" font-size="24" fill="#1B1A18">[inherited default]</text>
 <line x1="1027.0" y1="1250.0" x2="848.0" y2="1250.0" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#saOpen)"/>
 <text x="937.5" y="1241.0" font-size="24" text-anchor="middle" fill="#1B1A18">ON_SALE</text>
 <line x1="832.0" y1="1280.0" x2="478.0" y2="1280.0" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#saOpen)"/>

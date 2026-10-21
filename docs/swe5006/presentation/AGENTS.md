@@ -24,16 +24,16 @@ When the rubric and anything else in this folder disagree (this file, `SEGMENTS`
 | Demo storyline (#464) | invite → START/JOIN with Stripe Sandbox → `/account` orders and blocs → expiry refund, live on deployed `dev`, with a fallback recording |
 | Outputs | `dist/swe5006-presentation.{html,pdf}` (PDF for submission, HTML for presenting), `dist/swe5006-presentation-script.pdf` (all committed; the script has no HTML output) |
 
-## Current state: draft predating the rubric
+## Current state: rubric-based draft
 
-The deck was drafted in #566 (22 main slides, backups, script) from the lecturer's guideline before `RUBRIC.md` existed. `SLIDES` entries carry guideline item codes (`item: '1c'`) but no `rubric` rows yet, and the draft departs from the rubric in at least these places:
+The deck was re-planned from `RUBRIC.md` on 21–22 Oct 2026 (#464) and replaces the #566 draft: 37 main slides, backups B1–B16 and the script, with segments at the rubric's budgets (§1 3, §2 6, §3 3, §4 10, §5 12 min; 34 min scripted, 6 min buffer). Every `SLIDES` entry records its `rubric` rows. §2 follows 2.1 → 2.6 with UML diagrams in `src/diagrams/` (package view, transition pair, use cases, UC4 analysis and design models, team statechart, one 20 s GoF problem per member, State in full before/after form, ERD); large diagrams are shown scaled for orientation and stepped through 1:1 crops in presenter mode, so the PDF shows only the orientation views.
 
-- Timing: `SEGMENTS` budgets §4 11 min and §5 14 min plus 8 min Q&A (37 min of talk, ending 17:15); the rubric scripts 34 min (§4 10, §5 12) with a 6 min buffer inside a 40 min hard stop.
-- §1 order and coverage: the draft runs DoD (1.6) before milestones (1.4) and folds retrospectives (1.7) into the status slide; the rubric also asks for an ownership matrix (1.5) and a promised-versus-delivered table against the proposal (1.3).
-- §2: the draft gives each of five design problems its own slide and puts the transition rule on the architecture slide and backup B7; the rubric asks for a strategy table with a before/after pair (2.2), one use case taken from analysis to design with the team-formation statechart (2.4, not in the draft), and one design problem in full before/after form with the rest listed (2.5).
-- §3 and §5: the k6 performance baseline appears only as a testing-table row and a Q&A answer; the rubric introduces the scripted test in §3 (3.2) and runs it in §5 (5.3) against 2 s at 100 concurrent users.
+Still open, all needing the team rather than the repository (see `OPEN_ITEMS` in `src/content.js` and the rubric's checklist):
 
-Re-plan from the rubric (skill, Drafting) rather than patching these one by one; `OPEN_ITEMS` in `src/content.js` and the rubric's open decisions 1–9 list what still needs a person's answer.
+- Actual effort per member (1.4), owners of UC1, UC2, UC5 and UC7 (1.5, open decision 4), the Sprint 3 and Sprint 4 retrospectives and the Sprint 4 DoD step (1.6, 1.7).
+- The 23 Oct go/no-go for the paid flow on dev (#517, #223), the k6 pre-run on the SWE5001 ECS environment (5.3), and both backup videos by 24 Oct (G6, 4.6, 5.5).
+- Report section numbers (#463), ADRs for the changes marked "no ADR" on slide 4, the scribe (G9), the demo change and its approver (4.1), Identity Center MFA (4.2).
+- Body and table text is 15.5–19 px; the final layout pass raises it towards V3's 18 pt (24 px).
 
 ## Working on the deck
 
