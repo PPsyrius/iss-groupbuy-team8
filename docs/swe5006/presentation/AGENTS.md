@@ -26,14 +26,13 @@ When the rubric and anything else in this folder disagree (this file, `SEGMENTS`
 
 ## Current state: rubric-based draft
 
-The deck was re-planned from `RUBRIC.md` on 21–22 Oct 2026 (#464) and replaces the #566 draft: 37 main slides, backups B1–B16 and the script, with segments at the rubric's budgets (§1 3, §2 6, §3 3, §4 10, §5 12 min; 34 min scripted, 6 min buffer). Every `SLIDES` entry records its `rubric` rows. §2 follows 2.1 → 2.6 with UML diagrams in `src/diagrams/` (package view, transition pair, use cases, UC4 analysis and design models, team statechart, one 20 s GoF problem per member, State in full before/after form, ERD); large diagrams are shown scaled for orientation and stepped through 1:1 crops in presenter mode, so the PDF shows only the orientation views.
+The deck was re-planned from `RUBRIC.md` on 21–22 Oct 2026 (#464) and replaces the #566 draft: 37 main slides, backups B1–B16 and the script, with segments at the rubric's budgets (§1 3, §2 6, §3 3, §4 10, §5 12 min; 34 min scripted, 6 min buffer). Every `SLIDES` entry records its `rubric` rows. §2 follows 2.1 → 2.6 with UML diagrams in `src/diagrams/` (package view, transition pair, use cases, UC4 analysis and design models, team statechart, one 20 s GoF problem per member, State in full before/after form, ERD); large diagrams are shown scaled for orientation, with each crop outlined, and stepped through 1:1 crops in presenter mode; the PDF carries every crop 1:1 on a detail page after the backups (D9-1 … D29-3, generated from the crops each slide declares).
 
 Still open, all needing the team rather than the repository (see `OPEN_ITEMS` in `src/content.js` and the rubric's checklist):
 
 - Actual effort per member (1.4), owners of UC1, UC2, UC5 and UC7 (1.5, open decision 4), the Sprint 3 and Sprint 4 retrospectives and the Sprint 4 DoD step (1.6, 1.7).
 - The 23 Oct go/no-go for the paid flow on dev (#517, #223), the k6 pre-run on the SWE5001 ECS environment (5.3), and both backup videos by 24 Oct (G6, 4.6, 5.5).
 - Report section numbers (#463), ADRs for the changes marked "no ADR" on slide 4, the scribe (G9), the demo change and its approver (4.1), Identity Center MFA (4.2).
-- Body and table text is 15.5–19 px; the final layout pass raises it towards V3's 18 pt (24 px).
 
 ## Working on the deck
 

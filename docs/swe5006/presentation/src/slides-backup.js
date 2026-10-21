@@ -216,11 +216,11 @@ const b16erd = () => scroll('full-erd', 2320, 5038, 1150);
 function list() {
   const B = [];
   B.push({ id: 'BX', title: 'Backup slides: index', body: `
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 22px;margin-top:4px">
- ${C.BACKUPS.map(b => `<div data-go="${b[0]}" style="cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:8px 14px">
-   <span class="tag" style="min-width:44px;text-align:center">${b[0]}</span><div><div style="font:600 17px Inter">${b[1]}</div><div style="font:400 14.5px Inter;color:var(--muted)">${b[2]}</div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 22px;margin-top:0">
+ ${C.BACKUPS.map(b => `<div data-go="${b[0]}" style="cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:5px 14px">
+   <span class="tag" style="min-width:44px;text-align:center">${b[0]}</span><div><div style="font:600 17px Inter">${b[1]}</div><div style="font:400 15px/1.25 Inter;color:var(--muted)">${b[2]}</div></div>
  </div>`).join('')}
-</div><div style="margin-top:12px;font:italic 400 15px Inter;color:var(--muted)">Click a row (or type its number in the URL as #B6). Slide 37 stays up during questions; open a backup only when a question needs it.</div>` });
+</div><div style="margin-top:8px;font:italic 400 15px Inter;color:var(--muted)">Click a row (or type #B6 or #D14-2 in the URL). Slide 37 stays up during questions.</div>` });
   B.push({ id: 'B1', title: 'Agile artefacts appendix', speaker: 'Lim', body: b1() });
   B.push({ id: 'B2', title: 'Sprint 2 and 3 burndowns', speaker: 'Lim', body: b11() });
   B.push({ id: 'B3', title: 'ADR index', speaker: 'Eric', body: b8() });
@@ -237,6 +237,10 @@ function list() {
   B.push({ id: 'B14', title: 'UC4 design class and sequence diagrams, complete', speaker: 'Eric', body: bUc4() });
   B.push({ id: 'B15', title: 'Every member’s use case and design problem', speaker: 'Eric', body: bMembers() });
   B.push({ id: 'B16', title: 'Entity-relationship diagram, all 29 tables (scroll)', speaker: 'Liu Jin', body: b16erd() });
+  // D pages: each 1:1 crop the talk steps through, so the PDF carries readable diagrams (rubric V3).
+  for (const d of require('./slides-main').details()) {
+    B.push({ id: d.id, title: `Slide ${d.n} · detail ${d.k}/${d.of}: ${d.label}`, speaker: d.speaker, body: d.body });
+  }
   return B;
 }
 

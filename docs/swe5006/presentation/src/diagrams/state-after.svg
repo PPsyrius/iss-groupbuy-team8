@@ -31,34 +31,34 @@
 <text x="528.0" y="180.0" font-size="24" fill="#1B1A18">-status</text>
 <text x="528.0" y="220.0" font-size="24" fill="#1B1A18">0..*</text>
 <text x="610.0" y="220.0" font-size="24" text-anchor="end" fill="#1B1A18">1</text>
-<line x1="880.0" y1="400.0" x2="880.0" y2="344.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#saTri)"/>
-<rect x="20.0" y="455.0" width="430.0" height="184.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
-<text x="235.0" y="487.0" font-size="24" text-anchor="middle" fill="#1B1A18">«enum constant body»</text>
-<text x="235.0" y="521.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">DRAFT</text>
-<line x1="20.0" y1="531.0" x2="450.0" y2="531.0" stroke="#1B1A18" stroke-width="1.6"/>
-<text x="34.0" y="563.0" font-size="24" fill="#1B1A18">~publish(): ProductStatus</text>
-<text x="34.0" y="595.0" font-size="24" fill="#1B1A18">~deletionError(): CatalogErrorCode</text>
-<text x="34.0" y="627.0" font-size="24" fill="#1B1A18">~requireCommercialEdit(…): void</text>
-<rect x="20.0" y="421.0" width="212.7" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
-<text x="30.0" y="446.0" font-size="24" fill="#1B1A18">«ConcreteState»</text>
-<rect x="470.0" y="455.0" width="325.0" height="120.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
-<text x="632.5" y="487.0" font-size="24" text-anchor="middle" fill="#1B1A18">«enum constant body»</text>
-<text x="632.5" y="521.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">ON_SALE</text>
-<line x1="470.0" y1="531.0" x2="795.0" y2="531.0" stroke="#1B1A18" stroke-width="1.6"/>
-<text x="484.0" y="563.0" font-size="24" fill="#1B1A18">~delist(): ProductStatus</text>
-<rect x="470.0" y="421.0" width="212.7" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
-<text x="480.0" y="446.0" font-size="24" fill="#1B1A18">«ConcreteState»</text>
-<rect x="815.0" y="455.0" width="325.0" height="120.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
-<text x="977.5" y="487.0" font-size="24" text-anchor="middle" fill="#1B1A18">«enum constant body»</text>
-<text x="977.5" y="521.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">OFF_SALE</text>
-<line x1="815.0" y1="531.0" x2="1140.0" y2="531.0" stroke="#1B1A18" stroke-width="1.6"/>
-<text x="829.0" y="563.0" font-size="24" fill="#1B1A18">~publish(): ProductStatus</text>
-<rect x="815.0" y="421.0" width="212.7" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
-<text x="825.0" y="446.0" font-size="24" fill="#1B1A18">«ConcreteState»</text>
-<line x1="400.0" y1="400.0" x2="1090.0" y2="400.0" stroke="#1B1A18" stroke-width="1.6"/>
-<line x1="400.0" y1="400.0" x2="400.0" y2="455.0" stroke="#1B1A18" stroke-width="1.6"/>
-<line x1="745.0" y1="400.0" x2="745.0" y2="455.0" stroke="#1B1A18" stroke-width="1.6"/>
-<line x1="1090.0" y1="400.0" x2="1090.0" y2="455.0" stroke="#1B1A18" stroke-width="1.6"/>
+<line x1="880.0" y1="370" x2="880.0" y2="344.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#saTri)"/>
+<rect x="20.0" y="425" width="430.0" height="184.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="235.0" y="457" font-size="24" text-anchor="middle" fill="#1B1A18">«enum constant body»</text>
+<text x="235.0" y="491" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">DRAFT</text>
+<line x1="20.0" y1="501" x2="450.0" y2="501" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="533" font-size="24" fill="#1B1A18">~publish(): ProductStatus</text>
+<text x="34.0" y="565" font-size="24" fill="#1B1A18">~deletionError(): CatalogErrorCode</text>
+<text x="34.0" y="597" font-size="24" fill="#1B1A18">~requireCommercialEdit(…): void</text>
+<rect x="20.0" y="391" width="212.7" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="30.0" y="416" font-size="24" fill="#1B1A18">«ConcreteState»</text>
+<rect x="470.0" y="425" width="325.0" height="120.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="632.5" y="457" font-size="24" text-anchor="middle" fill="#1B1A18">«enum constant body»</text>
+<text x="632.5" y="491" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">ON_SALE</text>
+<line x1="470.0" y1="501" x2="795.0" y2="501" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="484.0" y="533" font-size="24" fill="#1B1A18">~delist(): ProductStatus</text>
+<rect x="470.0" y="391" width="212.7" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="480.0" y="416" font-size="24" fill="#1B1A18">«ConcreteState»</text>
+<rect x="815.0" y="425" width="325.0" height="120.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="977.5" y="457" font-size="24" text-anchor="middle" fill="#1B1A18">«enum constant body»</text>
+<text x="977.5" y="491" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">OFF_SALE</text>
+<line x1="815.0" y1="501" x2="1140.0" y2="501" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="829.0" y="533" font-size="24" fill="#1B1A18">~publish(): ProductStatus</text>
+<rect x="815.0" y="391" width="212.7" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="825.0" y="416" font-size="24" fill="#1B1A18">«ConcreteState»</text>
+<line x1="400.0" y1="370" x2="1090.0" y2="370" stroke="#1B1A18" stroke-width="1.6"/>
+<line x1="400.0" y1="370" x2="400.0" y2="425" stroke="#1B1A18" stroke-width="1.6"/>
+<line x1="745.0" y1="370" x2="745.0" y2="425" stroke="#1B1A18" stroke-width="1.6"/>
+<line x1="1090.0" y1="370" x2="1090.0" y2="425" stroke="#1B1A18" stroke-width="1.6"/>
 <path d="M20,662 H1122 L1140,680 V832 H20 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
 <path d="M1122,662 V680 H1140" fill="none" stroke="#1B1A18" stroke-width="1.6"/>
 <text x="34.0" y="694.0" font-size="24" font-weight="700" fill="#1B1A18">Implementation (ProductStatus.java, Product.java)</text>

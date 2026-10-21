@@ -2,8 +2,9 @@ const { icon, mk, lockup, svg } = require('../../../presentation-kit/lib');
 const C = require('./content');
 // Accent fills never carry text: accent -> accent-soft + accent-soft-foreground; grey -> default + foreground.
 // Layout reference: docs/swe5001/presentation/src/slides-main.js has a worked example of every card, chip and diagram pattern.
-// Legibility (rubric V3): labels at least 18 pt, which is 24 px on the 1280 × 720 canvas. Diagram crops meet it 1:1;
-// body and table text (15.5–19 px) does not yet, and the final layout pass raises it.
+// Legibility (rubric V3): labels at least 18 pt, which is 24 px on the 1280 × 720 canvas. Diagram crops meet it 1:1
+// (live, and on the D detail pages in the PDF); body and table text is 18 px or more, and uppercase labels and chips
+// 15 px or more (their cap height matches 18 px lower case).
 
 // Placeholder for slides whose content a later drafting pass fills in.
 const pending = n => () => {
@@ -12,19 +13,19 @@ const pending = n => () => {
 };
 
 // ---------- shared helpers ----------
-const th = (t, w) => `<th style="font-size:16px;padding:8px 12px${w ? ';width:' + w + 'px' : ''}">${t}</th>`;
-const tbl = (head, rows, { fs = 17, w = [], pad = '7px 12px' } = {}) => `<table class="t" style="font-size:${fs}px"><tr>${head.map((h, i) => th(h, w[i])).join('')}</tr>
+const th = (t, w) => `<th style="font-size:18px;padding:8px 12px${w ? ';width:' + w + 'px' : ''}">${t}</th>`;
+const tbl = (head, rows, { fs = 18, w = [], pad = '7px 12px' } = {}) => `<table class="t" style="font-size:${fs}px"><tr>${head.map((h, i) => th(h, w[i])).join('')}</tr>
 ${rows.map(r => `<tr>${r.map(c => `<td style="padding:${pad}">${c}</td>`).join('')}</tr>`).join('')}</table>`;
-const mo = (t, sz = 16) => `<span class="mono" style="font-size:${sz}px;font-variant-ligatures:none">${t}</span>`;
+const mo = (t, sz = 18) => `<span class="mono" style="font-size:${sz}px;font-variant-ligatures:none">${t}</span>`;
 const chip = (t, kind) => {
   const k = { ok: ['#E3E8FB', '#3E5CD9'], chg: ['#FFEDC7', '#7A5C20'], part: ['#ECE6DC', '#1B1A18'], drop: ['#EFE9DF', '#8C2414'], open: ['#FBDFD9', '#B02E1B'] }[kind];
-  return `<span style="display:inline-block;font:700 14.5px/1 Inter;letter-spacing:.03em;text-transform:uppercase;background:${k[0]};color:${k[1]};border-radius:999px;padding:5px 9px;margin-right:6px;white-space:nowrap">${t}</span>`;
+  return `<span style="display:inline-block;font:700 15px/1 Inter;letter-spacing:.03em;text-transform:uppercase;background:${k[0]};color:${k[1]};border-radius:999px;padding:5px 9px;margin-right:6px;white-space:nowrap">${t}</span>`;
 };
 const kicker = (t, c = '#6B655C') => `<div style="font:700 15px Inter;letter-spacing:.06em;text-transform:uppercase;color:${c};margin-bottom:8px">${t}</div>`;
 
 // ---------- slide 1 ----------
 const s1 = () => `
-<div style="position:absolute;left:80px;top:96px;font:600 16px Inter;letter-spacing:.1em;color:#FFB01F">SWE5006 PRACTICE PROJECT · TEAM 8</div>
+<div style="position:absolute;left:80px;top:96px;font:600 18px Inter;letter-spacing:.1em;color:#FFB01F">SWE5006 PRACTICE PROJECT · TEAM 8</div>
 ${lockup()}
 <div style="position:absolute;left:80px;top:300px;font:500 34px Inter;color:#fff">A community group-buying platform with pay-first teams</div>
 <div style="position:absolute;left:80px;top:368px;font:italic 400 26px Inter;color:#E6DFD3;display:flex;gap:16px;align-items:center">Two prices <span style="color:#E8402A;font-size:20px">●</span> pay first to team up <span style="color:#E8402A;font-size:20px">●</span> refunded if the team doesn’t fill</div>
@@ -69,13 +70,13 @@ const s3 = () => `
 <div class="card" style="position:absolute;left:0;top:0;width:372px;height:548px;padding:16px 20px">
  ${kicker('In scope · proposal §6.1')}
  ${ucs.map(u => `<div style="display:flex;gap:10px;font:400 18px/1.25 Inter;margin-bottom:7px"><b style="width:44px;flex:none">${u[0]}</b><span>${u[1]}</span></div>`).join('')}
- <div style="font:400 17px/1.3 Inter;color:var(--muted);margin:4px 0 12px">+ Receive notifications (Sprint 4, SWE5001; off on dev)</div>
+ <div style="font:400 18px/1.3 Inter;color:var(--muted);margin:4px 0 12px">+ Receive notifications (Sprint 4, SWE5001; off on dev)</div>
  ${kicker('Out of scope · proposal §6.2', '#B02E1B')}
- <div style="font:400 17px/1.35 Inter">Merchant self-service · analytics · recommendations · automatic team matching · email, SMS, push · native apps · live payments</div>
+ <div style="font:400 18px/1.35 Inter">Merchant self-service · analytics · recommendations · automatic team matching · email, SMS, push · native apps · live payments</div>
 </div>
 <div style="position:absolute;left:392px;top:0;width:772px">
  ${kicker('Quality attributes and targets · proposal §6.3')}
- ${tbl(['Attribute', 'Target', 'Shown in'], qas.map((q, i) => [`<b>${q[0]}</b>`, q[1], `<span style="white-space:nowrap${i < 3 ? ';color:#B02E1B;font-weight:700' : ''}">${q[2]}</span>`]), { fs: 17, w: [200, null, 140], pad: '7px 11px' })}
+ ${tbl(['Attribute', 'Target', 'Shown in'], qas.map((q, i) => [`<b>${q[0]}</b>`, q[1], `<span style="white-space:nowrap${i < 3 ? ';color:#B02E1B;font-weight:700' : ''}">${q[2]}</span>`]), { fs: 18, w: [200, null, 140], pad: '7px 11px' })}
 </div>`;
 
 // ---------- slide 4 (1.3) ----------
@@ -93,9 +94,17 @@ const pvd = [
   ['Gated prod, ECS circuit breaker', chip('Dropped', 'drop') + 'for SWE5006; built for SWE5001', '#226 · ADR 0008'],
   ['E2E, burndown, saved plans', chip('Partial', 'part') + 'stubs; daily data, no chart; manual', 'F-ADR 0011 · #229'],
 ];
+// Two views (rubric V1): what was delivered, left open or dropped first; the eight changes appear on the click.
+const pvdRow = r => `<div style="margin-bottom:12px"><div style="font:400 18px/1.3 Inter">${r[1].replace(/^(<span[^>]*>[^<]*<\/span>)/, '$1<b>' + r[0] + '</b><br>')}</div><div style="font:400 17px/1.3 Inter;color:var(--muted);margin-top:2px">${r[2]}</div></div>`;
 const s4 = () => `
-${tbl(['Promised (proposal)', 'Status on 21 Oct', 'Record'], pvd.map(r => [`<b>${r[0]}</b>`, r[1], `<span style="color:var(--muted)">${r[2]}</span>`]), { fs: 16.5, w: [330, null, 250], pad: '5px 10px' })}
-<div style="position:absolute;left:0;right:0;top:488px;border-radius:8px;background:#FDEFEC;padding:8px 16px;font:400 17px/1.3 Inter;display:flex;gap:10px;align-items:baseline">
+<div class="card" style="position:absolute;left:0;top:0;width:376px;height:470px;padding:14px 18px">
+ ${kicker('Delivered, open, dropped, partial')}
+ ${pvd.filter(r => !/Changed/.test(r[1])).map(pvdRow).join('')}
+</div>
+<div class="frag" data-frag="1" style="position:absolute;left:392px;top:0;width:772px">
+ ${tbl(['Changed: promised', 'Built', 'Record'], pvd.filter(r => /Changed/.test(r[1])).map(r => [`<b>${r[0]}</b>`, r[1].replace(/<span[^>]*>Changed<\/span>/, ''), `<span style="color:var(--muted)">${r[2]}</span>`]), { fs: 18, w: [250, 290], pad: '4px 9px' })}
+</div>
+<div style="position:absolute;left:0;right:0;top:486px;border-radius:8px;background:#FDEFEC;padding:8px 16px;font:400 18px/1.3 Inter;display:flex;gap:10px;align-items:baseline">
  <b style="color:#B02E1B;white-space:nowrap">Outstanding</b><span>#517 and #223 (go/no-go 23 Oct) · SSH 22 open on the dev host · CodeQL off · CloudFront → ALB over HTTP until 16 Nov (#227) · dev volume unencrypted</span>
 </div>`;
 
@@ -105,13 +114,13 @@ const mem = [['Liu Jin', 51], ['Yu Qianshuo', 48], ['Wang Ziang', 46], ['Panpako
 const s5 = () => `
 <div style="position:absolute;left:0;top:0;width:470px">
  ${kicker('Milestones achieved')}
- ${tbl(['Date', 'Milestone'], ms.map(m => [`<b style="white-space:nowrap">${m[0]}</b>`, m[1]]).concat([[`<b>23 Oct</b>`, `Sprint 4 tag ${mk('FILL', 'date')}`], ['—', `<span style="color:#B02E1B">Paid start, join, refund on dev: not yet</span>`]]), { fs: 17, w: [92], pad: '4px 11px' })}
+ ${tbl(['Date', 'Milestone'], ms.map(m => [`<b style="white-space:nowrap">${m[0]}</b>`, m[1]]).concat([[`<b>23 Oct</b>`, `Sprint 4 tag ${mk('FILL', 'date')}`], ['—', `<span style="color:#B02E1B">Paid start, join, refund on dev: not yet</span>`]]), { fs: 18, w: [92], pad: '4px 11px' })}
 </div>
 <div style="position:absolute;left:500px;top:0;width:664px">
  <div style="display:flex;align-items:baseline;gap:10px">${kicker('Effort per member · planned hours')}${mk('VERIFY', 'S4 split, PR #538')}</div>
- ${tbl(['Member', 'S1', 'S2', 'S3', 'S4', 'Planned', 'Actual'], mem.map(m => [`<b>${m[0]}</b>`, '—', '30', '30', m[1], `<b>${60 + m[1]}</b>`, mk('CONFIRM', 'agreed')]), { fs: 17.5, w: [150], pad: '7px 11px' })}
- <div style="font:400 17px/1.4 Inter;margin-top:12px">Sprint 1 hours were not recorded. Team done: S2 134 of 150 h, S3 117 of 150 h. Budget in the proposal: 10 man-days each (§7).</div>
- <div style="margin-top:10px;border-radius:8px;background:#FDEFEC;padding:10px 14px;font:400 17px/1.35 Inter"><b style="color:#B02E1B">Planned, not actual:</b> no member logged actual hours, and the progress reports carry none. ${mk('CONFIRM', 'actual effort agreed by all five')}</div>
+ ${tbl(['Member', 'S1', 'S2', 'S3', 'S4', 'Planned', 'Actual'], mem.map(m => [`<b>${m[0]}</b>`, '—', '30', '30', m[1], `<b>${60 + m[1]}</b>`, mk('CONFIRM', 'agreed')]), { fs: 18, w: [150], pad: '7px 11px' })}
+ <div style="font:400 18px/1.4 Inter;margin-top:12px">Sprint 1 hours were not recorded. Team done: S2 134 of 150 h, S3 117 of 150 h. Budget in the proposal: 10 man-days each (§7).</div>
+ <div style="margin-top:10px;border-radius:8px;background:#FDEFEC;padding:10px 14px;font:400 18px/1.35 Inter"><b style="color:#B02E1B">Planned, not actual:</b> no member logged actual hours, and the progress reports carry none. ${mk('CONFIRM', 'actual effort agreed by all five')}</div>
 </div>`;
 
 // ---------- slide 6 (1.5) ----------
@@ -126,12 +135,12 @@ const s6 = () => `
 ${tbl(['Member', 'Use case', 'Design problem → GoF pattern', 'Slide', 'Change from proposal §6.1'], own.map(o => [`<b>${o[0]}</b>`, o[1], o[2], o[3], `<span style="color:var(--muted)">${o[4]}</span>`]), { fs: 18, w: [196, 270, 330, 70], pad: '12px 12px' })}
 <div style="margin-top:14px">${kicker('Every use case has an owner · * proposed, not yet agreed')}</div>
 <div style="display:flex;flex-wrap:wrap;gap:8px 18px;font:400 18px/1.3 Inter">${[['UC1', 'Lim*'], ['UC2', 'Pan*'], ['UC3', 'Eric'], ['UC4', 'Eric'], ['UC5', 'Eric*'], ['UC6', 'Yorik'], ['UC7', 'Lim*'], ['UC8', 'Lim'], ['UC9', 'Liu Jin'], ['Notifications', 'Pan']].map(u => `<span><b>${u[0]}</b> ${u[1]}</span>`).join('')}${mk('CONFIRM', 'owners marked * (open decision 4)')}</div>
-<div style="margin-top:10px;font:400 17px/1.4 Inter">Each member presents their own design problem in section 2; the team statechart (UC4–UC6) goes with Eric’s UC4 design.</div>
-<div style="margin-top:12px;display:flex;gap:16px;align-items:center;font:400 17px Inter;color:var(--muted)">Report: use case in §3.4, design problem in §3.5 ${mk('FILL', 'section numbers (#463)')} ${mk('VERIFY', 'UC9 owner')}</div>`;
+<div style="margin-top:10px;font:400 18px/1.4 Inter">Each member presents their own design problem in section 2; the team statechart (UC4–UC6) goes with Eric’s UC4 design.</div>
+<div style="margin-top:12px;display:flex;gap:16px;align-items:center;font:400 18px Inter;color:var(--muted)">Report: use case in §3.4, design problem in §3.5 ${mk('FILL', 'section numbers (#463)')} ${mk('VERIFY', 'UC9 owner')}</div>`;
 
 // ---------- slide 7 (1.6, 1.7) ----------
 const steps = ['coded', 'tested', 'integrated', 'releasable', 'released'];
-const ladder = () => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span style="font:600 16px Inter;color:var(--muted);margin-right:6px">DoD ladder (EPAT 01 Agile p26)</span>${steps.map((s, i) => `<span style="font:600 17px/1 Inter;padding:7px 12px;border-radius:999px;background:${i === 2 ? '#E3E8FB' : '#ECE6DC'};color:${i === 2 ? '#3E5CD9' : '#1B1A18'}">${s}</span>${i < 4 ? '<span style="color:#A69E92">→</span>' : ''}`).join('')}</div>`;
+const ladder = () => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span style="font:600 18px Inter;color:var(--muted);margin-right:6px">DoD ladder (EPAT 01 Agile p26)</span>${steps.map((s, i) => `<span style="font:600 18px/1 Inter;padding:7px 12px;border-radius:999px;background:${i === 2 ? '#E3E8FB' : '#ECE6DC'};color:${i === 2 ? '#3E5CD9' : '#1B1A18'}">${s}</span>${i < 4 ? '<span style="color:#A69E92">→</span>' : ''}`).join('')}</div>`;
 const spr = [
   ['1 · 1–12 Sep', 'Walking skeleton: sign-in, browse, admin on dev', '<b>integrated</b>: backend on dev 5 Sep; no frontend, so not releasable'],
   ['2 · 15–26 Sep', 'Pay, join a team, see the order, replay-safe', '<b>integrated</b>: merged, tested, Checkout off on dev; 134 of 150 h'],
@@ -145,11 +154,11 @@ const retro = [
 ];
 const s7 = () => `
 ${ladder()}
-${tbl(['Sprint', 'Goal', 'Definition of Done reached by the goal increment'], spr.map(s => [`<b style="white-space:nowrap">${s[0]}</b>`, s[1], s[2]]), { fs: 17, w: [160, 450], pad: '6px 11px' })}
-<div style="font:400 15.5px/1.3 Inter;color:var(--muted);margin-top:6px">Same basis every sprint: integrated = merged to dev with every check green; releasable = shown working on deployed dev, our “on dev” rule</div>
+${tbl(['Sprint', 'Goal', 'Definition of Done reached by the goal increment'], spr.map(s => [`<b style="white-space:nowrap">${s[0]}</b>`, s[1], s[2]]), { fs: 18, w: [160, 450], pad: '6px 11px' })}
+<div style="font:400 18px/1.3 Inter;color:var(--muted);margin-top:6px">Same basis every sprint: integrated = merged to dev with every check green; releasable = shown working on deployed dev, our “on dev” rule</div>
 <div class="frag" data-frag="1" style="margin-top:12px;border-radius:8px;background:#FDEFEC;padding:10px 16px">
- <div style="font:700 17px Inter;color:#B02E1B;margin-bottom:6px">Retro improvement → change in the next sprint</div>
- ${retro.map(r => `<div style="display:flex;gap:12px;font:400 17px/1.35 Inter;margin-bottom:3px"><b style="width:52px;flex:none">${r[0]}</b><span style="width:330px;flex:none">${r[1]}</span><span><span style="color:#E8402A;font-weight:700">→</span> ${r[2]}</span></div>`).join('')}
+ <div style="font:700 18px Inter;color:#B02E1B;margin-bottom:6px">Retro improvement → change in the next sprint</div>
+ ${retro.map(r => `<div style="display:flex;gap:12px;font:400 18px/1.35 Inter;margin-bottom:3px"><b style="width:52px;flex:none">${r[0]}</b><span style="width:330px;flex:none">${r[1]}</span><span><span style="color:#E8402A;font-weight:700">→</span> ${r[2]}</span></div>`).join('')}
 </div>`;
 
 // ---------- slide 8 (1.8) ----------
@@ -167,55 +176,55 @@ function burndown() {
 const ac = ['Admin-only API; 403 non-admin, 401 anonymous', 'Size ≥ 2, lifetime in range, team price below individual; 400 with field errors', 'Stale expectedVersion → 412; writes audited', 'Configured listing is startable; START integration test', 'Contract changes additive, merged before the controller', 'Unit, PostgreSQL IT, authorization tests; ArchUnit green'];
 const s8 = () => `
 <div class="card" style="position:absolute;left:0;top:0;width:540px;padding:14px 20px 16px">
- <div style="display:flex;justify-content:space-between;align-items:baseline">${kicker('Story card · #221 (US25)')}<span style="font:600 16px Inter;color:var(--muted)">Liu Jin · PR #242</span></div>
+ <div style="display:flex;justify-content:space-between;align-items:baseline">${kicker('Story card · #221 (US25)')}<span style="font:600 18px Inter;color:var(--muted)">Liu Jin · PR #242</span></div>
  <div style="font:600 18px/1.3 Inter;margin-bottom:8px">As an admin, I can set a listing’s team size, lifetime and team price, so that buyers can start blocs on real listings.</div>
- ${ac.map(a => `<div style="display:flex;gap:8px;font:400 16.5px/1.3 Inter;margin-bottom:5px"><span style="color:#3E5CD9;flex:none">${icon('square-check')}</span><span>${a}</span></div>`).join('')}
- <div style="font:400 16px Inter;color:var(--muted);margin-top:6px">Design problem field: State, Optimistic Offline Lock</div>
+ ${ac.map(a => `<div style="display:flex;gap:8px;font:400 18px/1.3 Inter;margin-bottom:5px"><span style="color:#3E5CD9;flex:none">${icon('square-check')}</span><span>${a}</span></div>`).join('')}
+ <div style="font:400 18px Inter;color:var(--muted);margin-top:6px">Design problem field: State, Optimistic Offline Lock</div>
 </div>
 <div style="position:absolute;left:564px;top:0;width:600px">
  ${kicker('Sprint 2 burndown · hours left · report period 15–26 Sep')}
  ${burndown()}
- <div style="font:400 16.5px/1.35 Inter;margin-top:2px">Flat for a week, then a cliff: work merged late in large PRs. Reconstructed from merge dates.</div>
+ <div style="font:400 18px/1.35 Inter;margin-top:2px">Flat for a week, then a cliff: work merged late in large PRs. Reconstructed from merge dates.</div>
 </div>
-<div style="position:absolute;left:0;right:0;top:450px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 17px/1.35 Inter"><b style="color:#3E5CD9">Practice (EPAT 03, 05):</b> two red tests reproduced a quote defect (7 Oct log), then PR #424 refactored admission into shared guards and injected the Factory Method’s creator. Full set of artefacts: backup B1.</div>`;
+<div style="position:absolute;left:0;right:0;top:450px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 18px/1.35 Inter"><b style="color:#3E5CD9">Practice (EPAT 03, 05):</b> two red tests reproduced a quote defect (7 Oct log), then PR #424 refactored admission into shared guards and injected the Factory Method’s creator. Full set of artefacts: backup B1.</div>`;
 
 // ---------- slide 24 (3.1, 3.3) ----------
 // Agile Testing Quadrants (EPAT 03 TDD p7), laid out as in the deck: business-facing on top, supporting the team on the left.
-const lvl = t => `<span style="display:inline-block;font:600 14.5px/1 Inter;border:1.5px solid #6B655C;color:#1B1A18;border-radius:999px;padding:3px 8px;margin-left:6px;vertical-align:2px">${t}</span>`;
-const qrow = (name, level, rest) => `<div style="font:400 18px/1.3 Inter;margin-bottom:6px"><b>${name}</b>${lvl(level)} <span style="color:var(--muted)">·</span> ${rest}</div>`;
-const caught = t => `<div style="font:400 17px/1.3 Inter;margin-top:2px"><b style="color:#B02E1B">Caught:</b> ${t}</div>`;
-const runs = t => `<div style="font:400 17px/1.3 Inter;color:var(--muted);margin-bottom:2px">Runs in ${t}</div>`;
+const lvl = t => `<span style="display:inline-block;font:600 18px/1 Inter;border:1.5px solid #6B655C;color:#1B1A18;border-radius:999px;padding:3px 8px;margin-left:6px;vertical-align:2px">${t}</span>`;
+const qrow = (name, level, rest) => `<div style="font:400 18px/1.26 Inter;margin-bottom:4px"><b>${name}</b>${lvl(level)} <span style="color:var(--muted)">·</span> ${rest}</div>`;
+const caught = t => `<div style="font:400 18px/1.3 Inter;margin-top:2px"><b style="color:#B02E1B">Caught:</b> ${t}</div>`;
+const runs = t => `<div style="font:400 18px/1.3 Inter;color:var(--muted);margin-bottom:2px">Runs in ${t}</div>`;
 const quad = (q, axes, how, body, style, frag) => `<div class="card${frag ? ' frag' : ''}"${frag ? ` data-frag="${frag}"` : ''} style="position:absolute;${style};padding:9px 16px">
- <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px"><span style="font:700 18px Inter">${q} <span style="font-weight:500;color:var(--muted)">${axes}</span></span><span style="font:600 15px Inter;color:var(--muted)">${how}</span></div>
+ <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px"><span style="font:700 18px Inter">${q} <span style="font-weight:500;color:var(--muted)">${axes}</span></span><span style="font:600 18px Inter;color:var(--muted)">${how}</span></div>
  ${body}</div>`;
-const Q_H = 'height:198px', Q_W = 'width:574px';
+const Q_H = 'height:197px', Q_H2 = 'height:226px', Q_W = 'width:574px';
 const s24 = () => `
 ${quad('Q2', 'business-facing · supporting the team', 'automated', `
- ${qrow('Story acceptance', 'system', `${mo('StripeRolloutAcceptanceIT', 16)} · real HTTP, scheduler, signed webhooks`)}
+ ${qrow('Story acceptance', 'system', `${mo('StripeRolloutAcceptanceIT')} · real HTTP, scheduler, signed webhooks`)}
  ${qrow('End-to-end', 'system', 'Playwright · 8 specs, on the preview build and on dev')}
- ${runs(`${mo('build-quality', 15)}, ${mo('e2e-preview', 15)}, ${mo('e2e-dev', 15)}`)}
+ ${runs(`${mo('build-quality')}, ${mo('e2e-preview')}, ${mo('e2e-dev')}`)}
  ${caught('a 502 on e2e-dev during a deploy (3–4 Oct): one host')}`, `left:0;top:0;${Q_W};${Q_H}`, 1)}
 ${quad('Q3', 'business-facing · critiquing the product', 'manual', `
  ${qrow('Exploratory, acceptance', 'system', 'by hand, logged')}
  <div style="font:400 18px/1.3 Inter;margin-bottom:6px">Stripe Sandbox START and JOIN in a browser (20 Sep, local) · sign-in cookie Secure and HttpOnly on dev (8 Oct)</div>
  ${caught('no defect logged from these runs')}
- <div style="font:400 17px/1.3 Inter;color:#B02E1B;margin-top:4px">Not done: acceptance testing with outside users</div>`, `left:590px;top:0;${Q_W};${Q_H}`, 2)}
+ <div style="font:400 18px/1.3 Inter;color:#B02E1B;margin-top:4px">Not done: acceptance testing with outside users</div>`, `left:590px;top:0;${Q_W};${Q_H}`, 2)}
 ${quad('Q1', 'technology-facing · supporting the team', 'automated', `
  ${qrow('Unit, component', 'unit', 'JUnit: 162 of 185 *Test classes · Vitest 77 files')}
  ${qrow('Integration', 'integration', 'Testcontainers: 45 of 49 classes')}
  ${qrow('Contract, ArchUnit', 'integration', 'openapi-diff · 18 rules')}
- ${runs(`${mo('build-quality', 15)}, ${mo('frontend-check', 15)} (required), ${mo('contract-check', 15)}`)}
- ${caught('two red tests reproduced the join-quote defect (#422)')}`, `left:0;top:208px;${Q_W};${Q_H}`)}
+ ${runs(`${mo('build-quality')}, ${mo('frontend-check')} (required), ${mo('contract-check')}`)}
+ ${caught('two red tests reproduced the join-quote defect (#422)')}`, `left:0;top:205px;${Q_W};${Q_H2}`)}
 ${quad('Q4', 'technology-facing · critiquing the product', 'tools', `
  ${qrow('Performance, load', 'system', 'k6 on SWE5001 ECS, by hand')}
  ${qrow('Security scanning', 'types', 'SAST · dependencies (SCA) · image and IaC configuration · secrets')}
- <div style="font:400 17px/1.3 Inter;color:var(--muted);margin-bottom:2px">Load runs by hand, no CI job; the security scans gate the pipeline (slide 28)</div>
- ${caught('full-history gitleaks: 24 matches, 4 badge tokens still open (slide 30)')}`, `left:590px;top:208px;${Q_W};${Q_H}`, 3)}
-<div style="position:absolute;left:0;right:0;top:416px;border-radius:8px;background:#E3E8FB;padding:8px 16px">
- <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font:700 17px Inter;color:#3E5CD9">Complex classes under test (proposal §6.3)</span><span style="font:400 15px Inter;color:var(--muted)">Quadrants: EPAT 03 TDD p7 · levels: p5</span></div>
- ${[['Team state machine', `${mo('DealStatusTest', 16)}, ${mo('PaidGroupDealTest', 16)}`],
-    ['Last-seat capacity', `${mo('StripeLocalIntegrationTest.twentyBuyersRaceForLastSeat…', 16)} (integration)`],
-    ['Refund idempotency', `${mo('RefundServiceTest.lostResponseRetriesSameDurableKey', 16)}`]]
+ <div style="font:400 18px/1.3 Inter;color:var(--muted);margin-bottom:2px">Load by hand; the scans gate the pipeline (slide 28)</div>
+ ${caught('full-history gitleaks: 24 matches, 4 badge tokens still open (slide 30)')}`, `left:590px;top:205px;${Q_W};${Q_H2}`, 3)}
+<div style="position:absolute;left:0;right:0;top:439px;border-radius:8px;background:#E3E8FB;padding:4px 16px">
+ <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font:700 18px Inter;color:#3E5CD9">Complex classes under test (proposal §6.3)</span><span style="font:400 18px Inter;color:var(--muted)">Quadrants: EPAT 03 TDD p7 · levels: p5</span></div>
+ ${[['Team state machine', `${mo('DealStatusTest')}, ${mo('PaidGroupDealTest')}`],
+    ['Last-seat capacity', `${mo('StripeLocalIntegrationTest.twentyBuyersRaceForLastSeat…')} (integration)`],
+    ['Refund idempotency', `${mo('RefundServiceTest.lostResponseRetriesSameDurableKey')}`]]
    .map(r => `<div style="display:flex;gap:12px;font:400 18px/1.3 Inter"><b style="width:190px;flex:none">${r[0]}</b><span>${r[1]}</span></div>`).join('')}
 </div>`;
 
@@ -225,7 +234,7 @@ const s25 = () => `
 <div class="card" style="position:absolute;left:0;top:0;width:620px;height:536px;padding:18px 22px">
  ${kicker('The scripted test')}
  ${kv([
-   ['Tool', `k6 1.6.1, image pinned by digest · ${mo('perf/k6/browse.js', 16)}`],
+   ['Tool', `k6 1.6.1, image pinned by digest · ${mo('perf/k6/browse.js')}`],
    ['Target system', '<b>SWE5001 ECS environment, same code</b>: CloudFront → ALB → Fargate. Never the shared SWE5006 dev host, which also runs its database'],
    ['Load', 'open arrival rate 10 → 200 requests/s in ten 60 s steps; 100 VUs preallocated, 400 max'],
    ['Mix', '7 listing pages : 3 listing details, anonymous; no think time; 10 s timeout'],
@@ -237,31 +246,51 @@ const s25 = () => `
  <div class="card" style="padding:16px 20px;margin-bottom:12px">
   ${kicker('Proposal target (§6.3)', '#B02E1B')}
   <div style="font:600 19px/1.35 Inter">Interactive operations ≤ 2 s with up to 100 concurrent users</div>
-  <div style="font:400 18px/1.4 Inter;margin-top:10px">Little’s law <span class="mono" style="font-size:17px">N = X · (R + Z)</span>: 100 users, 0.5 s think, ~30 ms response → <b>X ≈ 190 requests/s</b>, inside the 200 driven, with a p95 gate four times stricter than 2 s</div>
-  <div style="font:400 16px/1.35 Inter;color:var(--muted);margin-top:6px">The 0.5 s think time is our assumption</div>
+  <div style="font:400 18px/1.4 Inter;margin-top:10px">Little’s law <span class="mono" style="font-size:18px">N = X · (R + Z)</span>: 100 users, 0.5 s think, ~30 ms response → <b>X ≈ 190 requests/s</b>, inside the 200 driven, with a p95 gate four times stricter than 2 s</div>
+  <div style="font:400 18px/1.35 Inter;color:var(--muted);margin-top:6px">The 0.5 s think time is our assumption</div>
  </div>
  <div class="card" style="padding:16px 20px">
   ${kicker('Expiry ≤ 1 min after the window', '#B02E1B')}
   <div style="font:400 18px/1.4 Inter">Measured <b>locally</b> under 100-user load (30 Sep): 30 teams, worst lag 58.2 s; one cohort waited a full one-minute sweep</div>
-  <div style="font:400 16px/1.35 Inter;color:var(--muted);margin-top:6px">On ECS: ${mk('FILL', 'V4 expiry burst, or "local only"')}</div>
+  <div style="font:400 18px/1.35 Inter;color:var(--muted);margin-top:6px">On ECS: ${mk('FILL', 'V4 expiry burst, or "local only"')}</div>
  </div>
 </div>`;
 
 // ---------- diagram walk-through (rubric V1, V3, V5) ----------
 // The full diagram, scaled to `view`, orients the audience; each crop is then shown 1:1 (labels ≥ 24 px) as an opaque
-// fragment layer stacked over the body in order. Only the live deck shows the crops: screenshots and the PDF keep the
-// orientation view, which stays vector and zoomable.
+// fragment layer stacked over the body in order. Screenshots and the PDF keep the orientation view, with each crop
+// outlined and numbered; the PDF carries every crop 1:1 on a detail page (D<slide>-<step>, built from CROPS).
 const nat = (name, W, H) => svg(name).replace('<svg ', `<svg style="display:block;width:${W}px;height:${H}px" `);
+// Every crop a slide steps through is also recorded here, so slides-backup.js can print each one 1:1 as a detail page
+// (the PDF cannot step through fragments). Detail ids are D<slide>.<crop>, e.g. D14.2.
+const CROPS = [];
+const CROP_H = 548;
 // One 1:1 crop layer. `head` repeats the diagram's top `head` px (a sequence diagram's lifeline headers) as a strip
 // above the cropped area, so every crop still names its lifelines. z-index keeps the crop above any side text.
-const cropLayer = (name, W, H, x, y, label, i, n, head = 0) => { const strip = head > 0 && y >= head; return `<div class="frag zcrop" data-frag="${i + 1}" style="position:absolute;left:0;top:0;width:1164px;height:548px;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8;z-index:10">
- <div style="position:absolute;left:${-x}px;top:${strip ? head - y : -y}px">${nat(name, W, H)}</div>
- ${strip ? `<div style="position:absolute;left:0;top:0;width:1164px;height:${head}px;overflow:hidden;background:#fff;border-bottom:2px dashed #A69E92"><div style="position:absolute;left:${-x}px;top:0">${nat(name, W, H)}</div></div>` : ''}
- <div style="position:absolute;right:10px;bottom:10px;font:700 15px/1 Inter;letter-spacing:.04em;background:#1B1A18;color:#fff;border-radius:999px;padding:6px 11px">${i + 1}/${n} · ${label}</div></div>`; };
+// A window onto the diagram at 1:1, cut with the root viewBox so nothing overflows the slide.
+const win = (name, x, y, w, h) => svg(name).replace(/<svg\b[^>]*>/, t => t.replace(/\s(width|height|viewBox)="[^"]*"/g, '')
+  .replace('<svg', `<svg width="${w}" height="${h}" viewBox="${x} ${y} ${w} ${h}" style="display:block"`));
+const cropView = (name, W, H, x, y, head = 0) => {
+  const strip = head > 0 && y >= head;
+  if (!strip) return win(name, x, y, 1164, CROP_H);
+  return `${win(name, x, 0, 1164, head)}<div style="border-top:2px dashed #A69E92"></div>${win(name, x, y, 1164, CROP_H - head - 2)}`;
+};
+// The step badge sits in the gap between the title and the body, outside the crop, so it never covers the diagram;
+// its cream band also hides the previous step's badge.
+const badge = (t, i) => `<div class="frag zcrop" data-frag="${i + 1}" style="position:absolute;left:420px;right:0;top:-31px;height:27px;background:var(--background);text-align:right;z-index:11"><span style="display:inline-block;font:700 16px/1 Inter;letter-spacing:.03em;background:#1B1A18;color:#fff;border-radius:999px;padding:5px 12px">${t}</span></div>`;
+const cropLayer = (name, W, H, x, y, label, i, n, head = 0) => {
+  CROPS.push({ name, W, H, x, y, label, i, n, head });
+  return `<div class="frag zcrop" data-frag="${i + 1}" style="position:absolute;left:0;top:0;width:1164px;height:${CROP_H}px;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 0 0 2px #1B1A18;z-index:10">${cropView(name, W, H, x, y, head)}</div>
+${badge(`${i + 1}/${n} · ${label}`, i)}`;
+};
+// Orientation view: the whole diagram, scaled, with a numbered dashed outline for each crop it will step through
+// (rubric V1: whole diagram first, then the part under discussion; V5: outline, not a laser pointer).
+const outlines = (crops, s) => crops.map(c => `<div style="position:absolute;left:${Math.round(c.x * s)}px;top:${Math.round(c.y * s)}px;width:${Math.round(1164 * s)}px;height:${Math.round(CROP_H * s)}px;border:2px dashed #E8402A;border-radius:3px;box-sizing:border-box"><span style="position:absolute;left:-2px;top:-2px;font:700 13px/1 Inter;background:#E8402A;color:#fff;padding:3px 6px;border-radius:3px 0 3px 0">${c.k}</span></div>`).join('');
+const orient = (name, W, H, s, at, crops) => { const w = Math.round(W * s), h = Math.round(H * s); return `<div style="position:absolute;${at};width:${w}px;height:${h}px">${nat(name, w, h)}${outlines(crops, s)}</div>`; };
 const zoom = (name, { W, H, view, at = 'left:0;top:0', crops }) => {
   const s = Math.min(view[0] / W, view[1] / H);
   return `<style>body:not(.present) .zcrop{display:none}</style>
-<div style="position:absolute;${at};width:${Math.round(W * s)}px;height:${Math.round(H * s)}px">${nat(name, Math.round(W * s), Math.round(H * s))}</div>
+${orient(name, W, H, s, at, crops.map(([x, y], k) => ({ x, y, k: k + 1 })))}
 ${crops.map(([x, y, label, head], i) => cropLayer(name, W, H, x, y, label, i, crops.length, head)).join('')}`;
 };
 
@@ -269,47 +298,54 @@ ${crops.map(([x, y, label, head], i) => cropLayer(name, W, H, x, y, label, i, cr
 // diagram 1:1 in the order given, like zoom().
 const fit = v => Math.min(v.view[0] / v.W, v.view[1] / v.H);
 const walk = (views, crops) => `<style>body:not(.present) .zcrop{display:none}</style>
-${views.map(v => { const s = fit(v), w = Math.round(v.W * s), h = Math.round(v.H * s); return `<div style="position:absolute;${v.at};width:${w}px;height:${h}px">${nat(v.name, w, h)}</div>`; }).join('')}
+${views.map(v => orient(v.name, v.W, v.H, fit(v), v.at, crops.map(([n, x, y], k) => ({ n, x, y, k: k + 1 })).filter(c => c.n === v.name))).join('')}
 ${crops.map(([name, x, y, label, head], i) => { const v = views.find(d => d.name === name); return cropLayer(name, v.W, v.H, x, y, label, i, crops.length, head); }).join('')}`;
-const report = t => `<div style="font:600 15px/1.3 Inter;color:#3E5CD9;margin-top:8px">${icon('book')} ${t}</div>`;
-const fact = (k, v, fs = 16.5) => `<div style="margin-bottom:7px"><div style="font:700 13.5px Inter;letter-spacing:.06em;text-transform:uppercase;color:#6B655C">${k}</div><div style="font:400 ${fs}px/1.33 Inter">${v}</div></div>`;
+const report = t => `<div style="font:600 18px/1.3 Inter;color:#3E5CD9;margin-top:8px">${icon('book')} ${t}</div>`;
+const fact = (k, v, fs = 18) => `<div style="margin-bottom:8px"><div style="font:700 15px Inter;letter-spacing:.06em;text-transform:uppercase;color:#6B655C">${k}</div><div style="font:400 ${fs}px/1.33 Inter">${v}</div></div>`;
 
 // ---------- slide 9 (2.1) ----------
+const dec9 = [['Modular monolith, COLA layers, six contexts', 'pre-ADR D1, D4'], ['Domain framework-free; 18 ArchUnit rules', 'pre-ADR D1 · no ADR'], ['Consequences run before the commit', 'ADR 0002'], ['Cross-service events through an outbox', 'ADR 0007'], ['One codebase, two topologies', 'ADR 0008'], ['Router owns URL state; generated client', 'F-ADR 0001 · 0003']];
 const s9 = () => `
-<div style="position:absolute;left:0;top:0;width:372px">
+<div style="position:absolute;left:0;top:0;width:520px">
  ${kicker('4+1 logical view · SAD 04a p24–29')}
- <div style="font:400 16.5px/1.35 Inter;margin-bottom:10px">Java 21 · Spring Boot 4 · MyBatis · PostgreSQL 18 · Redis 8 · Sa-Token · Stripe Checkout | React 19 · TanStack Router and Query · TypeScript | AWS EC2, S3, CloudFront</div>
- ${kicker('Decisions that shape it')}
- ${[['Modular monolith, COLA layers, six contexts', 'pre-ADR D1, D4'], ['Domain framework-free; 18 ArchUnit rules', 'pre-ADR D1 · no ADR'], ['Consequences run before the commit', 'ADR 0002'], ['Cross-service events through an outbox', 'ADR 0007'], ['One codebase, two topologies', 'ADR 0008'], ['Router owns URL state; generated client', 'F-ADR 0001 · 0003']].map(r => `<div style="display:flex;justify-content:space-between;gap:8px;font:400 16px/1.3 Inter;border-bottom:1px solid #E6DFD3;padding:5px 0"><span>${r[0]}</span><b style="white-space:nowrap;color:#6B655C">${r[1]}</b></div>`).join('')}
- <div style="font:400 15px/1.3 Inter;color:var(--muted);margin-top:6px">pre-ADR = locked decision table D1–D20 (skeleton plan, 30 Aug), written before numbered ADRs</div>
+ <div style="font:400 18px/1.4 Inter">Java 21 · Spring Boot 4 · MyBatis · PostgreSQL 18 · Redis 8 · Sa-Token · Stripe Checkout</div>
+ <div style="font:400 18px/1.4 Inter;margin-top:4px">React 19 · TanStack Router and Query · TypeScript</div>
+ <div style="font:400 18px/1.4 Inter;margin-top:4px">AWS EC2, S3, CloudFront</div>
+ <div style="font:400 18px/1.35 Inter;color:var(--muted);margin-top:14px">pre-ADR = the locked decision table D1–D20 (skeleton plan, 30 Aug), written before numbered ADRs</div>
  ${report('Report §3.1 · Liu Jin, presented by Eric')}
 </div>
-${walk([{ name: 'logical-layers', W: 2320, H: 1644, view: [774, 548], at: 'left:390px;top:0' }],
-  [['logical-layers', 1160, 0, 'adapter · contract'], ['logical-layers', 1160, 548, 'application'], ['logical-layers', 640, 1096, 'infrastructure realises the domain ports']])}`;
+${walk([{ name: 'logical-layers', W: 2320, H: 1644, view: [620, 368], at: 'left:544px;top:0' }],
+  [['logical-layers', 1160, 0, 'adapter · contract'], ['logical-layers', 1160, 548, 'application'], ['logical-layers', 640, 1096, 'infrastructure realises the domain ports']])}
+<div style="position:absolute;left:0;right:0;top:384px">
+ ${kicker('Decisions that shape it')}
+ <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 18px">${dec9.map(r => `<div style="font:400 18px/1.3 Inter;border-top:1.5px solid #DDD5C8;padding-top:5px">${r[0]}<br><b style="color:#6B655C">${r[1]}</b></div>`).join('')}</div>
+</div>`;
 
 // ---------- slide 10 (2.2) ----------
 const strat = [
-  ['Language, framework', 'maintainability', '«control», «entity» · all', 'Spring <span class="mono" style="font-size:14.5px">@Service</span> by constructor injection; domain stays plain Java', 'D1–D20, ArchUnit · <i>no ADR</i>'],
+  ['Language, framework', 'maintainability', '«control», «entity» · all', 'Spring <span class="mono" style="font-size:18px">@Service</span> by constructor injection; domain stays plain Java', 'D1–D20, ArchUnit · <i>no ADR</i>'],
   ['Presentation', 'usability', 'GUI «boundary» · UC1–UC9', 'TanStack route + component + Query hook', 'F-ADR 0001, 0009'],
-  ['Distribution', 'interoperability', '«control» behind a boundary · all', '<span class="mono" style="font-size:14.5px">@RestController</span> returning <span class="mono" style="font-size:14.5px">Result</span>; generated TS client is the stub', 'D11–D12, F-ADR 0003'],
+  ['Distribution', 'interoperability', '«control» behind a boundary · all', '<span class="mono" style="font-size:18px">@RestController</span> returning <span class="mono" style="font-size:18px">Result</span>; generated TS client is the stub', 'D11–D12, F-ADR 0003'],
   ['Persistence', 'integrity', '«entity» · all', 'aggregate + repository port ◁ RepositoryImpl, MyBatis mapper, DO', 'D1, D9 · <i>no ADR</i>'],
   ['External interface', 'provider isolation', 'system «boundary» · UC2–UC6', 'gateway port ◁ Stripe / Google adapter; signed webhook', 'ADR 0001, 0004, 0005'],
-  ['Security', 'security', 'every «control» · all', 'login interceptor; <span class="mono" style="font-size:14.5px">checkRole(ADMIN)</span>; CSRF header; rate limits', 'D6–D7, F-ADR 0002'],
-  ['Scheduling', 'expiry ≤ 1 min', 'Scheduler actor · UC5, UC6', '<span class="mono" style="font-size:14.5px">@Scheduled</span> job under a database lease, every minute', 'ADR 0002 · <i>job: no ADR</i>'],
+  ['Security', 'security', 'every «control» · all', 'login interceptor; <span class="mono" style="font-size:18px">checkRole(ADMIN)</span>; CSRF header; rate limits', 'D6–D7, F-ADR 0002'],
+  ['Scheduling', 'expiry ≤ 1 min', 'Scheduler actor · UC5, UC6', '<span class="mono" style="font-size:18px">@Scheduled</span> job under a database lease, every minute', 'ADR 0002 · <i>job: no ADR</i>'],
   ['Concurrency', 'no oversell', '«entity» with capacity · UC4', 'row locks in a fixed order + guarded UPDATE + unique indexes', 'ADR 0001 · <i>no ADR</i>'],
   ['Domain events', 'decoupling', '«control» → other contexts · UC5–UC7', 'event record + transactional listener; outbox across services', 'ADR 0002, 0003, 0007'],
 ];
+// Rows appear in three groups of three (rubric V1); the PDF shows all nine.
 const s10 = () => `
-${tbl(['Strategy', 'Concern', 'Analysis objects · use cases', 'Become in design', 'Record'], strat.map(r => [`<b>${r[0]}</b>`, r[1], r[2], r[3], `<span style="color:var(--muted)">${r[4]}</span>`]), { fs: 15.5, w: [150, 120, 230, null, 170], pad: '6px 9px' })}
-<div style="position:absolute;left:0;right:0;top:500px;display:flex;justify-content:space-between;font:400 15.5px Inter;color:var(--muted)"><span>Template: SAD 04a p37 (object types, use cases, static and dynamic change). Typical class and sequence changes: slide 11.</span>${report('Report §3.2 · Yorik, Eric').replace('margin-top:8px', 'margin:0')}</div>`;
+<table class="t" style="font-size:18px;line-height:1.24"><tr>${th('Strategy · concern', 218)}${th('Object types · use cases', 268)}${th('Become in design')}${th('Record', 200)}</tr>
+${strat.map((r, i) => `<tr${i >= 3 ? ` class="frag" data-frag="${Math.floor(i / 3)}"` : ''}><td style="padding:3px 9px"><b>${r[0]}</b><br><span style="color:var(--muted)">${r[1]}</span></td><td style="padding:3px 9px">${r[2]}</td><td style="padding:3px 9px">${r[3]}</td><td style="padding:3px 9px;color:var(--muted)">${r[4]}</td></tr>`).join('')}</table>
+<div style="position:absolute;right:0;top:-29px;display:flex;gap:16px;align-items:center;font:400 17px/1 Inter;color:var(--muted)">Template: SAD 04a p37 · typical class and sequence changes: slide 11 ${report('Report §3.2 · Yorik, Eric').replace('margin-top:8px', 'margin:0')}</div>`;
 
 // ---------- slide 11 (2.2) ----------
 const s11 = () => `
 <div style="position:absolute;left:0;top:0;width:580px">
- ${fact('Typical class-diagram change', '«boundary» → route, hook and generated client · «control» → REST controller and application service · «entity» → aggregate behind a domain repository port, implemented by a MyBatis mapper · external «boundary» → gateway port with an adapter', 17)}
- ${fact('Typical sequence-diagram change', 'control → entity.update() becomes service → repository.lockDeal() <span class="mono" style="font-size:15px">SELECT … FOR UPDATE</span> → aggregate.joinPaid() → guarded <span class="mono" style="font-size:15px">UPDATE</span>, in one transaction', 17)}
- ${fact('Rationale', 'the domain names its needs as interfaces; infrastructure supplies them (dependency inversion), so persistence and providers can change without touching the rules', 17)}
- <div style="font:400 15px/1.3 Inter;color:var(--muted)">Tags on the design side: Pres, Dist, Pers, Ext, Sec, Conc, Sched, Event (slide 10)</div>
+ ${fact('Typical class-diagram change', '«boundary» → route, hook and generated client · «control» → REST controller and application service · «entity» → aggregate behind a domain repository port, implemented by a MyBatis mapper · external «boundary» → gateway port with an adapter')}
+ ${fact('Typical sequence-diagram change', 'control → entity.update() becomes service → repository.lockDeal() <span class="mono" style="font-size:18px">SELECT … FOR UPDATE</span> → aggregate.joinPaid() → guarded <span class="mono" style="font-size:18px">UPDATE</span>, in one transaction')}
+ ${fact('Rationale', 'the domain names its needs as interfaces; infrastructure supplies them (dependency inversion), so persistence and providers can change without touching the rules')}
+ <div style="font:400 18px/1.3 Inter;color:var(--muted)">Tags on the design side: Pres, Dist, Pers, Ext, Sec, Conc, Sched, Event (slide 10)</div>
  ${report('Report §3.2 · transition strategies')}
 </div>
 ${walk([{ name: 'transition-pair', W: 2320, H: 2270, view: [560, 548], at: 'left:604px;top:0' }],
@@ -317,7 +353,7 @@ ${walk([{ name: 'transition-pair', W: 2320, H: 2270, view: [560, 548], at: 'left
 
 // ---------- slide 12 (2.3) ----------
 const s12 = () => `<div style="position:absolute;left:0;top:520px">${report('Report §3.3 · use case diagram and specifications')}</div>` + walk([{ name: 'use-case', W: 2320, H: 1096, view: [1164, 514], at: 'left:0;top:0' }],
-  [['use-case', 0, 312, 'Buyer and the money path'], ['use-case', 560, 40, 'resolution: Scheduler, Stripe'], ['use-case', 1160, 52, 'out of scope']]);
+  [['use-case', 0, 312, 'Buyer and the money path'], ['use-case', 560, 40, 'resolution: Scheduler, Stripe'], ['use-case', 1160, 30, 'out of scope']]);
 
 // ---------- slide 13 (2.4) ----------
 const s13 = () => `
@@ -329,24 +365,24 @@ ${walk([{ name: 'uc4-analysis-class', W: 1160, H: 1070, view: [560, 512], at: 'l
 const tagKey = [['Pres', 'presentation'], ['Dist', 'distribution'], ['Pers', 'persistence'], ['Ext', 'external interface'], ['Sec', 'security'], ['Conc', 'concurrency'], ['Sched', 'scheduling'], ['Event', 'domain events']];
 const s14 = () => `
 ${walk([{ name: 'uc4-design-class', W: 2320, H: 2314, view: [900, 548], at: 'left:0;top:0' }],
-  [['uc4-design-class', 1160, 0, 'payment meets groupbuy through a port'], ['uc4-design-class', 1160, 1096, 'aggregate behind its repository port'], ['uc4-design-class', 1160, 1652, 'MyBatis implementation of the port']])}
+  [['uc4-design-class', 1160, 0, 'payment meets groupbuy through a port'], ['uc4-design-class', 1160, 1096, 'aggregate behind its repository port'], ['uc4-design-class', 1160, 1700, 'MyBatis implementation of the port']])}
 <div style="position:absolute;left:924px;top:0;width:240px">
  ${kicker('Strategy tags · slide 10')}
  ${tagKey.map(t => `<div style="font:400 18px/1.45 Inter"><b>${t[0]}</b> ${t[1]}</div>`).join('')}
- <div style="font:400 17px/1.35 Inter;margin-top:10px">Typed signatures, visibility and multiplicities: SAD 01b p14–16</div>
+ <div style="font:400 18px/1.35 Inter;margin-top:10px">Typed signatures, visibility and multiplicities: SAD 01b p14–16</div>
  ${report('Report §3.4 · Eric')}
 </div>`;
 
 // ---------- slide 15 (2.4) ----------
 const s15 = () => `
 ${walk([{ name: 'uc4-design-seq', W: 2320, H: 3306, view: [380, 548], at: 'left:0;top:0' }],
-  [['uc4-design-seq', 700, 760, 'team row locked first', 180], ['uc4-design-seq', 1100, 1840, 'guarded update · last seat', 180], ['uc4-design-seq', 1100, 2500, 'loser: compensation, refund owed', 180]])}
+  [['uc4-design-seq', 700, 760, 'team row locked first', 176], ['uc4-design-seq', 1100, 1846, 'guarded update · last seat', 176], ['uc4-design-seq', 1100, 2500, 'loser: compensation, refund owed', 176]])}
 <div style="position:absolute;left:404px;top:0;width:760px">
- ${fact('Major flow', 'paid join confirmed by the Stripe webhook: signature checked outside the transaction, then one transaction (READ COMMITTED, 10 s), drawn as <span class="mono" style="font-size:17px">critical</span> because UML has no transaction fragment', 18)}
- ${fact('Concurrency strategy', 'lock order team row → intent → payment → receipt, each <span class="mono" style="font-size:17px">SELECT … FOR UPDATE</span>; a racing join waits on the team row', 18)}
- ${fact('Guarded update', '<span class="mono" style="font-size:17px">UPDATE … WHERE current_size = expected AND status = open</span>; the last seat publishes <span class="mono" style="font-size:17px">TeamSucceeded</span>', 18)}
- ${fact('Alternative', 'DEAL_FULL or DEAL_CLOSED: receipt <span class="mono" style="font-size:17px">compensation_required</span>, a refund obligation, never an extra member', 18)}
- ${fact('Evidence', '<span class="mono" style="font-size:17px">StripeLocalIntegrationTest</span> <span class="mono" style="font-size:17px">.twentyBuyersRaceForLastSeat…</span>: 20 paid joins, 1 seat, 19 refunds owed (local, PostgreSQL in Testcontainers)', 18)}
+ ${fact('Major flow', 'paid join confirmed by the Stripe webhook: signature checked outside the transaction, then one transaction (READ COMMITTED, 10 s), drawn as <span class="mono" style="font-size:18px">critical</span> because UML has no transaction fragment', 18)}
+ ${fact('Concurrency strategy', 'lock order team row → intent → payment → receipt, each <span class="mono" style="font-size:18px">SELECT … FOR UPDATE</span>; a racing join waits on the team row', 18)}
+ ${fact('Guarded update', '<span class="mono" style="font-size:18px">UPDATE … WHERE current_size = expected AND status = open</span>; the last seat publishes <span class="mono" style="font-size:18px">TeamSucceeded</span>', 18)}
+ ${fact('Alternative', 'DEAL_FULL or DEAL_CLOSED: receipt <span class="mono" style="font-size:18px">compensation_required</span>, a refund obligation, never an extra member', 18)}
+ ${fact('Evidence', '<span class="mono" style="font-size:18px">StripeLocalIntegrationTest</span> <span class="mono" style="font-size:18px">.twentyBuyersRaceForLastSeat…</span>: 20 paid joins, 1 seat, 19 refunds owed (local, PostgreSQL in Testcontainers)', 18)}
  ${report('Report §3.4 · Eric')}
 </div>`;
 
@@ -355,24 +391,26 @@ const s16 = () => `
 ${walk([{ name: 'team-statechart', W: 2320, H: 548, view: [1164, 280], at: 'left:0;top:0' }],
   [['team-statechart', 0, 0, 'OPEN and its joins'], ['team-statechart', 1160, 0, 'succeeded or expired']])}
 <div style="position:absolute;left:0;top:296px;width:1164px;display:grid;grid-template-columns:1fr 1fr;gap:12px 24px">
- ${fact('Why a statechart (SAD 03c p4, p11)', 'team state gates UC4, UC5, UC6 and UC8', 17)}
- ${fact('Code it matches', '<span class="mono" style="font-size:15px">DealStatus.canTransitionTo</span>: only OPEN moves, never to itself', 17)}
- ${fact('Guards', '<span class="mono" style="font-size:15px">GroupDeal.joinPaid</span>: price → new member → window → seat', 17)}
- ${fact('Time event', '<span class="mono" style="font-size:15px">at(expireTime)</span>, detected by <span class="mono" style="font-size:15px">TeamExpirySweepJob</span> every minute', 17)}
- ${fact('Greyed', 'FAILED and CANCELED are declared but never written', 17)}
+ ${fact('Why a statechart (SAD 03c p4, p11)', 'team state gates UC4, UC5, UC6 and UC8')}
+ ${fact('Code it matches', '<span class="mono" style="font-size:18px">DealStatus.canTransitionTo</span>: only OPEN moves, never to itself')}
+ ${fact('Guards', '<span class="mono" style="font-size:18px">GroupDeal.joinPaid</span>: price → new member → window → seat')}
+ ${fact('Time event', '<span class="mono" style="font-size:18px">at(expireTime)</span>, detected by <span class="mono" style="font-size:18px">TeamExpirySweepJob</span> every minute')}
+ ${fact('Greyed', 'FAILED and CANCELED are declared but never written')}
  <div>${report('Report §3.4 · Eric (team statechart)')}</div>
 </div>`;
 
 // ---------- slides 17–20 (2.5): one 20 s slot per member ----------
 // Each slot: the SDP fields (SDP 06 design case study p10) beside the after-diagram; crop 1 = class structure,
 // crop 2 = the collaboration (sequence), both 1:1.
-const mono = t => `<span class="mono" style="font-size:15px">${t}</span>`;
+const mono = t => `<span class="mono" style="font-size:18px">${t}</span>`;
+// Field labels run inline with their text so six SDP fields fit beside the orientation view at 18 px.
+const field = (k, v) => `<div style="font:400 18px/1.32 Inter;margin-bottom:9px"><span style="font:700 15px Inter;letter-spacing:.05em;text-transform:uppercase;color:#6B655C;margin-right:6px">${k}</span>${v}</div>`;
 const pslot = (rows, name, W, H, crops, rep) => `
-<div style="position:absolute;left:0;top:0;width:560px">
- ${rows.map(r => fact(r[0], r[1], 16)).join('')}
+<div style="position:absolute;left:0;top:0;width:680px">
+ ${rows.map(r => field(r[0], r[1])).join('')}
  ${report(rep)}
 </div>
-${walk([{ name, W, H, view: [580, 548], at: 'left:584px;top:0' }], crops)}`;
+${walk([{ name, W, H, view: [460, 548], at: 'left:704px;top:0' }], crops)}`;
 const s17 = () => pslot([
   ['Where it shows (class diagram)', `the «create» of ${mono('GroupDeal')}: start-team rules must stay fixed while how a team is built may vary; until #424 the Client also named ${mono('new StandardPaidGroupDealCreator()')}`],
   ['Cause for redesign · what varies (SDP 05a p13, p15)', `creating an object by specifying a class explicitly · “subclass of object that is instantiated”: a new ConcreteCreator decides which team class ${mono('initiate')} builds`],
@@ -409,26 +447,26 @@ const s20 = () => pslot([
 // ---------- slides 21–22 (2.5): the full-form problem ----------
 const s21 = () => `
 <div style="position:absolute;left:0;top:0;width:560px">
- ${fact('Problem (UC9)', 'publish, delist, revise and delete are legal in different lifecycle states', 17)}
- ${fact('Where it shows · brute-force design (RT 3.5)', 'the same <span class="mono" style="font-size:15px">switch (status)</span> in four operations of <span class="mono" style="font-size:15px">Product</span>; in the sequence, <span class="mono" style="font-size:15px">publish()</span> branches on status', 17)}
- ${fact('Why redesign (SDP 05a p4 wording)', 'hard to maintain: one rule in four places · hard to extend: a new state edits every switch · hard to reuse: the rule cannot be tested apart from Product', 17)}
- ${fact('What varies (SDP 05a p13)', '“states of an object”', 17)}
- ${fact('Candidates', '<b>State</b> · Strategy (nobody chooses; the state decides) · transition table, as on the team', 17)}
+ ${fact('Problem (UC9)', 'publish, delist, revise and delete are legal in different lifecycle states')}
+ ${fact('Where it shows · brute-force design (RT 3.5)', 'the same <span class="mono" style="font-size:18px">switch (status)</span> in four operations of <span class="mono" style="font-size:18px">Product</span>; in the sequence, <span class="mono" style="font-size:18px">publish()</span> branches on status')}
+ ${fact('Why redesign (SDP 05a p4 wording)', 'hard to maintain: one rule in four places · hard to extend: a new state edits every switch · hard to reuse: the rule cannot be tested apart from Product')}
+ ${fact('What varies (SDP 05a p13)', '“states of an object”')}
+ ${fact('Candidates', '<b>State</b> · Strategy (nobody chooses; the state decides) · transition table, as on the team')}
  ${report('Report §3.5 · Liu Jin (UC9)')}
 </div>
 ${walk([{ name: 'state-before', W: 1160, H: 1120, view: [586, 548], at: 'left:578px;top:0' }],
   [['state-before', 0, 0, 'brute force: class'], ['state-before', 0, 570, 'brute force: sequence']])}`;
 const s22 = () => `
 <div style="position:absolute;left:0;top:0;width:690px">
- ${fact('Participants', 'Context <span class="mono" style="font-size:15px">Product</span> · State <span class="mono" style="font-size:15px">ProductStatus</span> · ConcreteStates <span class="mono" style="font-size:15px">DRAFT</span>, <span class="mono" style="font-size:15px">ON_SALE</span>, <span class="mono" style="font-size:15px">OFF_SALE</span>: enum constants with bodies, each compiled to its own subclass · client <span class="mono" style="font-size:15px">AdminListingAppServiceImpl</span>', 16.5)}
- ${fact('Implementation decisions', 'the ConcreteState returns its successor and the Context applies it · default bodies refuse with 409 <span class="mono" style="font-size:15px">PRODUCT_STATE_CONFLICT</span> · stateless, shared states · each transition returns a new revision, version + 1; a stale write gets 412', 16.5)}
- ${fact('Liability', 'a new state still needs a constant, its overrides and tests; the app service keeps one switch that picks the command, not its legality', 16.5)}
- ${fact('Why the team uses a table instead', 'only OPEN has behaviour; SUCCEEDED and EXPIRED are final, so <span class="mono" style="font-size:15px">DealStatus.canTransitionTo</span> suffices (SDP 05a p35). The proposal promised State there: slide 4', 16.5)}
- ${fact('Tests', '<span class="mono" style="font-size:15px">ProductStatusTest.onSalePublishThrowsStateConflict</span>, <span class="mono" style="font-size:15px">ProductLifecycleTest</span>', 16.5)}
+ ${fact('Participants', 'Context <span class="mono" style="font-size:18px">Product</span> · State <span class="mono" style="font-size:18px">ProductStatus</span> · ConcreteStates <span class="mono" style="font-size:18px">DRAFT</span>, <span class="mono" style="font-size:18px">ON_SALE</span>, <span class="mono" style="font-size:18px">OFF_SALE</span>: enum constants with bodies, each compiled to its own subclass · client <span class="mono" style="font-size:18px">AdminListingAppServiceImpl</span>')}
+ ${fact('Implementation decisions', 'the ConcreteState returns its successor and the Context applies it · default bodies refuse with 409 <span class="mono" style="font-size:18px">PRODUCT_STATE_CONFLICT</span> · stateless, shared states · each transition returns a new revision, version + 1; a stale write gets 412')}
+ ${fact('Liability', 'a new state still needs a constant, its overrides and tests; the app service keeps one switch that picks the command, not its legality')}
+ ${fact('Why the team uses a table instead', 'only OPEN has behaviour; SUCCEEDED and EXPIRED are final, so <span class="mono" style="font-size:18px">DealStatus.canTransitionTo</span> suffices (SDP 05a p35). The proposal promised State there: slide 4')}
+ ${fact('Tests', '<span class="mono" style="font-size:18px">ProductStatusTest.onSalePublishThrowsStateConflict</span>, <span class="mono" style="font-size:18px">ProductLifecycleTest</span>')}
  ${report('Report §3.5 · Liu Jin (UC9)')}
 </div>
 ${walk([{ name: 'state-after', W: 1160, H: 1424, view: [450, 548], at: 'left:714px;top:0' }],
-  [['state-after', 0, 330, 'State · ConcreteStates'], ['state-after', 0, 870, 'after: publish delegates']])}`;
+  [['state-after', 0, 64, 'State · ConcreteStates'], ['state-after', 0, 870, 'after: publish delegates']])}`;
 
 // ---------- slide 23 (2.6) ----------
 const s23 = () => `
@@ -444,10 +482,10 @@ ${walk([{ name: 'core-erd', W: 2320, H: 1190, view: [720, 548], at: 'left:0;top:
 </div>`;
 
 // ---------- slide 26 (4.2) ----------
-const tree = [['backend/', 'Maven COLA modules; services/ for SWE5001'], ['frontend/', 'React SPA'], ['contracts/', 'openapi.json, the API contract'], ['deployment/', 'Compose, SSM bundle, deploy.sh'], ['infra/', 'Terraform: dev frontend, SWE5001'], ['perf/ · docs/', 'k6 · ADRs, sprint logs'], ['.github/', 'workflows, CODEOWNERS, Dependabot']];
+const tree = [['backend/', 'Maven COLA modules; SWE5001 services/'], ['frontend/', 'React SPA'], ['contracts/', 'openapi.json, the API contract'], ['deployment/', 'Compose, SSM bundle, deploy.sh'], ['infra/', 'Terraform: dev frontend, SWE5001'], ['perf/ · docs/', 'k6 · ADRs, sprint logs'], ['.github/', 'workflows, CODEOWNERS, Dependabot']];
 const art = [
-  ['Backend image', `${mo('git-&lt;sha&gt;-run-&lt;n&gt;', 15.5)}, deployed by ${mo('@sha256', 15.5)} digest`, 'ECR, immutable tags, newest 30 kept'],
-  ['API contract', `${mo('openapi.json', 15.5)} committed; drift fails CI`, 'repository'],
+  ['Backend image', `${mo('git-&lt;sha&gt;-run-&lt;n&gt;')}, deployed by ${mo('@sha256')} digest`, 'ECR, immutable tags, newest 30 kept'],
+  ['API contract', `${mo('openapi.json')} committed; drift fails CI`, 'repository'],
   ['TS client', 'generated from the contract, gitignored', 'build only (F-ADR 0003)'],
   ['Frontend bundle', 'content-hashed files, immutable cache', 'S3 behind CloudFront'],
   ['DB schema', 'Flyway V1–V28', 'repository'],
@@ -455,18 +493,18 @@ const art = [
   ['SBOM', '<span style="color:#B02E1B">not produced</span>', '—'],
 ];
 const s26 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:520px;height:548px;padding:14px 20px">
+<div class="card" style="position:absolute;left:0;top:0;width:610px;height:548px;padding:12px 18px">
  ${kicker('Source · one monorepo')}
- ${tree.map(t => `<div style="display:flex;gap:10px;font:400 17px/1.3 Inter;margin-bottom:3px">${mo(t[0], 16)}<span style="color:var(--muted)">${t[1]}</span></div>`).join('')}
- <div style="margin-top:12px">${kicker('Branching · EPAT 07 CI p41–44')}</div>
- <div style="font:400 17px/1.35 Inter"><b>Branch by Feature</b>: one short branch per story, a pull request, squash merge onto the trunk <b>dev</b>; linear history since 12 Sep. Instead of merging trunk daily, the branch must be up to date to merge.</div>
- <div style="margin-top:12px">${kicker('Who may change it')}</div>
- <div style="font:400 17px/1.35 Inter">GitHub: a <b>code owner</b> approves (backend Liu Jin, frontend Lim, pipelines Pan), six checks green. AWS: IAM Identity Center, one-hour sessions ${mk('VERIFY', 'MFA enforced')}. CI: one OIDC role per job, no AWS keys in GitHub.</div>
- <div style="font:400 16px/1.35 Inter;color:#B02E1B;margin-top:6px">Exception: two IAM users for SSM port forwarding, one with an access key</div>
+ ${tree.map(t => `<div style="display:flex;gap:10px;font:400 18px/1.28 Inter;margin-bottom:1px">${mo(t[0])}<span style="color:var(--muted)">${t[1]}</span></div>`).join('')}
+ <div style="margin-top:8px">${kicker('Branching · EPAT 07 CI p41–44')}</div>
+ <div style="font:400 18px/1.3 Inter"><b>Branch by Feature</b>: one short branch per story, a pull request, squash merge onto the trunk <b>dev</b>; linear history since 12 Sep. Instead of merging trunk daily, the branch must be up to date to merge.</div>
+ <div style="margin-top:8px">${kicker('Who may change it')}</div>
+ <div style="font:400 18px/1.3 Inter">GitHub: a <b>code owner</b> approves (backend Liu Jin, frontend Lim, pipelines Pan), six checks green. AWS: IAM Identity Center, one-hour sessions ${mk('VERIFY', 'MFA enforced')}. CI: one OIDC role per job, no AWS keys in GitHub.</div>
+ <div style="font:400 18px/1.3 Inter;color:#B02E1B;margin-top:6px">Exception: two IAM users for SSM port forwarding, one with an access key</div>
 </div>
-<div style="position:absolute;left:540px;top:0;width:624px">
+<div style="position:absolute;left:626px;top:0;width:538px">
  ${kicker('Artefacts · each traceable to a commit')}
- ${tbl(['Artefact', 'Identity', 'Stored in'], art.map(a => [`<b>${a[0]}</b>`, a[1], `<span style="color:var(--muted)">${a[2]}</span>`]), { fs: 16.5, w: [150, 270], pad: '7px 10px' })}
+ ${tbl(['Artefact', 'Identity', 'Stored in'], art.map(a => [`<b>${a[0]}</b>`, a[1], `<span style="color:var(--muted)">${a[2]}</span>`]), { fs: 18, w: [128, 220], pad: '5px 9px' })}
 </div>`;
 
 // ---------- slide 27 (4.3) ----------
@@ -481,10 +519,10 @@ const sec = [
   ['Test', `<b>Trivy image</b> ${req2()} (HIGH, CRITICAL); Trivy config, deployment-bundle rules`, 'image CVEs, IaC and Compose misconfiguration', 'no DAST against the running site'],
   ['Deploy', 'OIDC role per job; image by digest; read-only container, all capabilities dropped', 'stolen keys, swapped images', 'rebuilt after merge, not rescanned (ECR scans on push)'],
 ];
-function req2() { return '<span style="font:700 13.5px/1 Inter;color:#3E5CD9;border:1.5px solid #3E5CD9;border-radius:999px;padding:2px 6px;vertical-align:2px">required</span>'; }
+function req2() { return '<span style="font:700 15px/1 Inter;color:#3E5CD9;border:1.5px solid #3E5CD9;border-radius:999px;padding:2px 6px;vertical-align:2px">required</span>'; }
 const s28 = () => `
-${tbl(['Stage', 'Control', 'Catches', 'Gap'], sec.map(r => [`<b style="white-space:nowrap">${r[0]}</b>`, r[1], r[2], r[3] ? `<span style="color:#B02E1B">${r[3]}</span>` : '—']), { fs: 17, w: [130, 470, 240], pad: '9px 11px' })}
-<div style="position:absolute;left:0;right:0;top:470px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 17px/1.35 Inter"><b style="color:#3E5CD9">Types tested (slide 24, Q4):</b> static analysis, dependency (SCA), image and IaC configuration, secrets. Every third-party action is pinned to a commit SHA. Stages: DSOEA 07 slide 3.</div>`;
+${tbl(['Stage', 'Control', 'Catches', 'Gap'], sec.map(r => [`<b style="white-space:nowrap">${r[0]}</b>`, r[1], r[2], r[3] ? `<span style="color:#B02E1B">${r[3]}</span>` : '—']), { fs: 18, w: [130, 470, 240], pad: '9px 11px' })}
+<div style="position:absolute;left:0;right:0;top:470px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 18px/1.35 Inter"><b style="color:#3E5CD9">Types tested (slide 24, Q4):</b> static analysis, dependency (SCA), image and IaC configuration, secrets. Every third-party action is pinned to a commit SHA. Stages: DSOEA 07 slide 3.</div>`;
 
 // ---------- slide 29 (4.4) ----------
 const cd = [
@@ -496,7 +534,7 @@ const cd = [
 ];
 const s29 = () => `
 <div style="position:absolute;left:0;top:0;width:392px">
- ${cd.map(r => `<div style="margin-bottom:12px">${kicker(r[0])}<div style="font:400 17px/1.35 Inter;margin-top:-4px">${r[1]}</div></div>`).join('')}
+ ${cd.map(r => `<div style="margin-bottom:12px">${kicker(r[0])}<div style="font:400 18px/1.35 Inter;margin-top:-4px">${r[1]}</div></div>`).join('')}
 </div>
 ${zoom('dev-deployment', { W: 2320, H: 1096, view: [756, 548], at: 'left:408px;top:20px', crops: [[0, 20, 'request path'], [940, 300, 'one host'], [1160, 548, 'deploy path']] })}`;
 
@@ -507,8 +545,8 @@ const finds = [
   ['Weekly full-history gitleaks failing (since 21 Sep)', '20 matches were SHA-256 file digests in a contract baseline, not secrets', 'Each digest re-hashed, then fingerprinted exactly (PR #580); 4 badge-token findings still open'],
 ];
 const s30 = () => `
-${tbl(['Finding', 'Root cause', 'Fix'], finds.map(f => [`<b>${f[0]}</b>`, f[1], f[2]]), { fs: 17, w: [250, 470], pad: '11px 12px' })}
-<div style="position:absolute;left:0;right:0;top:440px;border-radius:8px;background:#FDEFEC;padding:10px 16px;font:400 17px/1.35 Inter"><b style="color:#B02E1B">Still open:</b> the Stripe webhook never confirms a payment on dev (#517), so a green pipeline is not yet a working paid flow. Sources: backend-prod-terraform-deployment.md, ci-failure-audit-20261021.md.</div>`;
+${tbl(['Finding', 'Root cause', 'Fix'], finds.map(f => [`<b>${f[0]}</b>`, f[1], f[2]]), { fs: 18, w: [250, 470], pad: '11px 12px' })}
+<div style="position:absolute;left:0;right:0;top:440px;border-radius:8px;background:#FDEFEC;padding:10px 16px;font:400 18px/1.35 Inter"><b style="color:#B02E1B">Still open:</b> the Stripe webhook never confirms a payment on dev (#517), so a green pipeline is not yet a working paid flow. Sources: backend-prod-terraform-deployment.md, ci-failure-audit-20261021.md.</div>`;
 
 // ---------- slide 31 (4.1, 4.6) ----------
 const live = [
@@ -524,8 +562,8 @@ const s31 = () => `
  ${tbl(['Step', 'What you see', 'Time'], live.map(l => [`<b>${l[0]}</b>`, l[1], l[2]]), { fs: 18, w: [70, null, 80], pad: '10px 12px' })}
 </div>
 <div style="position:absolute;left:724px;top:0;width:440px">
- <div class="card" style="padding:16px 20px;margin-bottom:12px">${kicker('Why the backend is pre-run')}<div style="font:400 17px/1.4 Inter">Backend PR checks take about 16 min, longer than the segment, so that run was triggered before the talk and we walk through it finished.</div></div>
- <div class="card" style="padding:16px 20px">${kicker('Backup video', '#B02E1B')}<div style="font:400 17px/1.4 Inter">Recorded on dev by 24 Oct, one clip per step, in the cloud and on a USB drive. ${mk('FILL', 'link')}</div></div>
+ <div class="card" style="padding:16px 20px;margin-bottom:12px">${kicker('Why the backend is pre-run')}<div style="font:400 18px/1.4 Inter">Backend PR checks take about 16 min, longer than the segment, so that run was triggered before the talk and we walk through it finished.</div></div>
+ <div class="card" style="padding:16px 20px">${kicker('Backup video', '#B02E1B')}<div style="font:400 18px/1.4 Inter">Recorded on dev by 24 Oct, one clip per step, in the cloud and on a USB drive. ${mk('FILL', 'link')}</div></div>
 </div>`;
 
 // ---------- slide 32 (5.1, 5.2) ----------
@@ -545,8 +583,8 @@ const plan5 = [
   ['36', 'Back to the §4 pipeline run', '—', 'maintainability', env5('dev')],
 ];
 const s32 = () => `
-${tbl(['Step', 'What you see', 'Use cases', 'Quality attribute (slide 3)', 'Runs on'], plan5.map(r => [`<b>${r[0]}</b>`, r[1], `<span style="white-space:nowrap">${r[2]}</span>`, r[3], r[4]]), { fs: 17.5, w: [60, 400, 150, 300], pad: '8px 10px' })}
-<div style="position:absolute;left:0;right:0;top:486px;font:400 17px/1.35 Inter;color:var(--muted)">“dev, if GO”: live on deployed dev after the 23 Oct go/no-go (#517, #223); otherwise the 24 Oct recording of that step, said as recorded. A local result is never presented as a dev one.</div>`;
+${tbl(['Step', 'What you see', 'Use cases', 'Quality attribute (slide 3)', 'Runs on'], plan5.map(r => [`<b>${r[0]}</b>`, r[1], `<span style="white-space:nowrap">${r[2]}</span>`, r[3], r[4]]), { fs: 18, w: [60, 400, 150, 300], pad: '8px 10px' })}
+<div style="position:absolute;left:0;right:0;top:486px;font:400 18px/1.35 Inter;color:var(--muted)">“dev, if GO”: live on deployed dev after the 23 Oct go/no-go (#517, #223); otherwise the 24 Oct recording of that step, said as recorded. A local result is never presented as a dev one.</div>`;
 
 // ---------- slide 33 (5.1, 5.2, 5.5) ----------
 const live5 = [
@@ -562,9 +600,9 @@ const s33 = () => `
  ${tbl(['Step', 'What you see', 'Time'], live5.map(l => [`<b>${l[0]}</b>`, l[1], l[2]]), { fs: 18, w: [70, null, 80], pad: '10px 12px' })}
 </div>
 <div style="position:absolute;left:724px;top:0;width:440px">
- <div class="card" style="padding:16px 20px;margin-bottom:12px">${kicker('Two buyers, one screen')}<div style="font:400 17px/1.4 Inter">Two Chrome profiles, Leader and Joiner, both signed in with Google. Stripe Sandbox: a test card, no money moves.</div></div>
- <div class="card" style="padding:16px 20px;margin-bottom:12px">${kicker('Started before the talk')}<div style="font:400 17px/1.4 Inter">A team of two on <span class="mono" style="font-size:16px">US34-04</span> at 16:05: its 40-minute window, the shortest allowed, ends ≈ 16:45.</div></div>
- <div class="card" style="padding:16px 20px">${kicker('Backup video', '#B02E1B')}<div style="font:400 17px/1.4 Inter">Recorded on dev by 24 Oct, one clip per step, in the cloud and on a USB drive. ${mk('FILL', 'link')}</div></div>
+ <div class="card" style="padding:16px 20px;margin-bottom:12px">${kicker('Two buyers, one screen')}<div style="font:400 18px/1.4 Inter">Two Chrome profiles, Leader and Joiner, both signed in with Google. Stripe Sandbox: a test card, no money moves.</div></div>
+ <div class="card" style="padding:16px 20px;margin-bottom:12px">${kicker('Started before the talk')}<div style="font:400 18px/1.4 Inter">A team of two on <span class="mono" style="font-size:18px">US34-04</span> at 16:05: its 40-minute window, the shortest allowed, ends ≈ 16:45.</div></div>
+ <div class="card" style="padding:16px 20px">${kicker('Backup video', '#B02E1B')}<div style="font:400 18px/1.4 Inter">Recorded on dev by 24 Oct, one clip per step, in the cloud and on a USB drive. ${mk('FILL', 'link')}</div></div>
 </div>`;
 
 // ---------- slide 34 (5.3) ----------
@@ -572,8 +610,8 @@ const steps33 = [10, 20, 40, 60, 80, 100, 125, 150, 175, 200];
 const s34 = () => `
 <div style="position:absolute;left:0;top:0;width:600px">
  ${kicker('k6 pre-run · SWE5001 ECS environment, same code · not the dev host', '#B02E1B')}
- ${tbl(['Requests/s', 'p95 (ms)', 'Errors', 'Dropped', 'Step'], steps33.map(r => [`<b>${r}</b>${r >= 175 ? ' <span style="color:#B02E1B">●</span>' : ''}`, '—', '—', '—', '—']), { fs: 17, w: [130, 110, 100, 110], pad: '5px 12px' })}
- <div style="font:400 16px/1.35 Inter;color:var(--muted);margin-top:6px"><span style="color:#B02E1B">●</span> at or above ≈ 190 requests/s, the proposal’s 100 users (slide 25) · results ${mk('FILL', 'from the 24 Oct pre-run')}</div>
+ ${tbl(['Requests/s', 'p95 (ms)', 'Errors', 'Dropped', 'Step'], steps33.map(r => [`<b>${r}</b>${r >= 175 ? ' <span style="color:#B02E1B">●</span>' : ''}`, '—', '—', '—', '—']), { fs: 18, w: [130, 110, 100, 110], pad: '5px 12px' })}
+ <div style="font:400 18px/1.35 Inter;color:var(--muted);margin-top:6px"><span style="color:#B02E1B">●</span> at or above ≈ 190 requests/s, the proposal’s 100 users (slide 25) · results ${mk('FILL', 'from the 24 Oct pre-run')}</div>
 </div>
 <div style="position:absolute;left:624px;top:0;width:540px">
  <div class="card" style="padding:16px 20px;margin-bottom:12px">
@@ -615,9 +653,9 @@ const s35 = () => `
 
 // ---------- slide 36 (5.4) ----------
 const seams = [
-  ['New pricing mode', 'one more <span class="mono" style="font-size:16px">PricingStrategy</span> and its <span class="mono" style="font-size:16px">PricingMode</span> constant', 'Strategy · slide 20'],
-  ['New consequence of a team’s outcome', 'one more subscriber to <span class="mono" style="font-size:16px">TeamSucceeded</span> / <span class="mono" style="font-size:16px">TeamExpired</span>', 'Observer · slide 18'],
-  ['New payment provider', 'one more adapter behind <span class="mono" style="font-size:16px">CheckoutGateway</span>, <span class="mono" style="font-size:16px">RefundGateway</span>', 'gateway port, external-interface strategy · slide 11'],
+  ['New pricing mode', 'one more <span class="mono" style="font-size:18px">PricingStrategy</span> and its <span class="mono" style="font-size:18px">PricingMode</span> constant', 'Strategy · slide 20'],
+  ['New consequence of a team’s outcome', 'one more subscriber to <span class="mono" style="font-size:18px">TeamSucceeded</span> / <span class="mono" style="font-size:18px">TeamExpired</span>', 'Observer · slide 18'],
+  ['New payment provider', 'one more adapter behind <span class="mono" style="font-size:18px">CheckoutGateway</span>, <span class="mono" style="font-size:18px">RefundGateway</span>', 'gateway port, external-interface strategy · slide 11'],
 ];
 const s36 = () => `
 <div class="card" style="position:absolute;left:0;top:0;width:420px;padding:18px 22px">
@@ -626,8 +664,8 @@ const s36 = () => `
 </div>
 <div style="position:absolute;left:444px;top:0;width:720px">
  ${kicker('Proposal §6.3: the primary design driver', '#B02E1B')}
- ${tbl(['Change', 'Added as', 'Pattern'], seams.map(r => [`<b>${r[0]}</b>`, r[1], r[2]]), { fs: 17.5, w: [230, null, 190], pad: '10px 12px' })}
- <div style="font:400 17px/1.35 Inter;color:var(--muted);margin-top:10px">Existing rules stay unedited: each change adds classes; a pricing mode also adds one enum constant.</div>
+ ${tbl(['Change', 'Added as', 'Pattern'], seams.map(r => [`<b>${r[0]}</b>`, r[1], r[2]]), { fs: 18, w: [230, null, 190], pad: '10px 12px' })}
+ <div style="font:400 18px/1.35 Inter;color:var(--muted);margin-top:10px">Existing rules stay unedited: each change adds classes; a pricing mode also adds one enum constant.</div>
 </div>`;
 
 const out = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s12, 13: s13, 14: s14, 15: s15, 16: s16, 17: s17, 18: s18, 19: s19, 20: s20, 21: s21, 22: s22, 23: s23, 24: s24, 25: s25, 26: s26, 27: s27, 28: s28, 29: s29, 30: s30, 31: s31, 32: s32, 33: s33, 34: s34, 35: s35, 36: s36 };
@@ -643,12 +681,33 @@ const repSec = {
 };
 for (const [n, t] of Object.entries(repSec)) {
   const body = out[n];
-  out[n] = () => body() + `<div style="position:absolute;right:0;top:-27px;font:600 15px/1 Inter;color:#3E5CD9;display:flex;gap:6px;align-items:center">${icon('book')} Report ${mk('FILL', '§ (#463)')} · ${t}</div>`;
+  out[n] = () => body() + `<div style="position:absolute;right:0;top:-27px;font:600 18px/1 Inter;color:#3E5CD9;display:flex;gap:6px;align-items:center">${icon('book')} Report ${mk('FILL', '§ (#463)')} · ${t}</div>`;
 }
 // Closing slide (dark, full bleed).
 out[37] = () => `
 <div style="position:absolute;left:76px;top:96px;font:700 120px/1 Inter;color:#fff">Thank you</div>
 <div style="position:absolute;left:80px;top:236px;font:500 32px Inter;color:#fff">Questions?</div>
-<div style="position:absolute;left:80px;top:604px;font:400 17px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:10px;align-items:center"><span style="font-size:20px">${icon('github')}</span> github.com/PPsyrius/iss-groupbuy-team8 · d1b3np88z657cp.cloudfront.net</div>`;
+<div style="position:absolute;left:80px;top:604px;font:400 18px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:10px;align-items:center"><span style="font-size:20px">${icon('github')}</span> github.com/PPsyrius/iss-groupbuy-team8 · d1b3np88z657cp.cloudfront.net</div>`;
+
+// A slide that steps through crops names its 1:1 detail pages under the title, so a reader of the PDF finds them.
+for (const s of C.SLIDES) {
+  if (s.slot === null) continue;
+  const f = out[s.n];
+  CROPS.length = 0;
+  f();
+  const k = CROPS.length;
+  if (k) out[s.n] = () => f() + `<div style="position:absolute;left:0;top:-29px;font:600 18px/1 Inter;color:#6B655C;display:flex;gap:7px;align-items:center">${icon('magnifying-glass')} 1:1 detail pages D${s.n}-1 to D${s.n}-${k} (backups)</div>`;
+}
+
+// Detail pages for the PDF (rubric V3): every 1:1 crop of every slide, in slide order, as a static backup body.
+// Non-enumerable, so the kit, which looks slides up by number, never sees it.
+Object.defineProperty(out, 'details', { value: () => C.SLIDES.filter(s => s.slot !== null).flatMap(s => {
+  CROPS.length = 0;
+  out[s.n]();
+  return CROPS.map(c => ({
+    id: `D${s.n}-${c.i + 1}`, n: s.n, k: c.i + 1, of: c.n, label: c.label, speaker: s.speaker, slideTitle: s.title,
+    body: `<div style="position:absolute;left:0;top:0;width:1164px;height:${CROP_H}px;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 0 0 2px #1B1A18">${cropView(c.name, c.W, c.H, c.x, c.y, c.head)}</div>`,
+  }));
+}) });
 
 module.exports = out;
