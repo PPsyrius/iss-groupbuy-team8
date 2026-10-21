@@ -53,3 +53,29 @@ Local and Sandbox evidence does not establish Google OAuth, shared AWS deploymen
 ## Checkout expiry isolation — 2026-10-02 (#130, #134)
 
 The shared Stripe client rejects missing or non-test keys at access time; Checkout and refund gateways cannot bypass it, and provider-reported live-mode facts remain independently guarded. The explicit `expire-open-sessions` hook selects only created, bound, quote-expired payments outside open review, leaving the broader `pendingBefore` query for operator scans; reprioritizing that shared query would let review-only or succeeded rows consume expiry slots. Because the hook runs in a short-lived command process, V25 seeds a durable `sys_checkout_expiry_cursor` row instead of using an in-memory cursor. A short `FOR UPDATE` transaction reserves at most 100 candidates and advances its `(create_time, id)` keyset before provider I/O, serializing concurrent invocations without holding a lock during Stripe calls. Each candidate settles in its own short transaction; a failure is logged by payment ID, its review write gets a separate short transaction, and later candidates continue. Even if review persistence fails, the next invocation advances beyond the failed page; at the end, reservation wraps to retry the oldest still-eligible payments. A crash after reservation also leaves those payments eligible for retry on wrap, whereas a failed reservation rolls back without making provider calls. The cursor stores no payment status and an operator can reset it to null to restart from the oldest candidate; review-case exclusions, settlement idempotency and operator ownership of failed rows remain the money-safety backstops.
+
+## Permanent refund provider refusals — 2026-10-18 (#539)
+
+Follow-up to #132. Until now `StripeRefundGateway` turned every `StripeException` into `PAYMENT_PROVIDER_ERROR`, so a 400 invalid request was retried every 30 s for up to 23 h, and no failure logged a reason. `StripeFailureClassifier` now splits the stripe-java 34 exception types:
+
+| Stripe failure | Code | Refund worker |
+|---|---|---|
+| `InvalidRequestException` (400/404), `CardException` (402), `IdempotencyException` (same key, different parameters) | `PAYMENT_PROVIDER_REJECTED` (`PAYMENT_502_002`) | `review` / `PROVIDER_REJECTED`; `OPERATOR_PROVIDER_REJECTED` under `reconcile` |
+| `AuthenticationException` (401), `PermissionException` (403) | `PAYMENT_PROVIDER_ERROR` | `processing` / `PROVIDER_RETRY` after 30 s, same idempotency key |
+| `RateLimitException` (429), `ApiConnectionException`, `ApiException` (5xx, 409 and any other status), any other `StripeException` | `PAYMENT_PROVIDER_ERROR` | `processing` / `PROVIDER_RETRY` after 30 s, same idempotency key |
+| any failure with code `rate_limit`, `lock_timeout` or `idempotency_key_in_use` | `PAYMENT_PROVIDER_ERROR` | retried, whatever the type |
+
+Every classified failure logs one WARN line with the operation, exception class, HTTP status, Stripe error code, request id and disposition. The provider message, response body and exception are never logged, and the business exception has no cause.
+
+Unchanged: the idempotency key, the 30 s backoff, the 23 h creation cutoff, `RefundMapper.xml` and the HTTP contract. The new code never reaches a controller.
+
+Permanent means the worker's request, frozen per obligation, fails the same way whenever it is asked. Stripe replays a saved result only for a POST it executed; GETs and requests rejected before execution save nothing under the key.
+
+- D1, decided in gate review: credential errors (401/403) stay retryable. Stripe rejects them before executing, so nothing is saved under the idempotency key; once the key is fixed, the next tick creates exactly one refund. The WARN line records why the row keeps retrying, and the 23 h creation cutoff still bounds creation.
+- D2: `IdempotencyException` is permanent, while a 409 concurrent same-key request stays retryable, because the first request under that key may already have moved money with other parameters.
+- A 404 on a read made with a key for the wrong Stripe account now parks the row as well.
+- The [runbook](stripe-rollout-runbook.md#recovery-responsibility) gives the recovery order for review rows with no stored refund id: search by `metadata.obligation_id` before considering any manual refund. It also covers `charge_already_refunded`.
+- A sandbox-gate refusal (missing or non-test key) still throws `PAYMENT_PROVIDER_ERROR` before any Stripe call, so it retries with no WARN line (#548).
+- Checkout's gateway still maps every failure to `PAYMENT_PROVIDER_ERROR`; applying the classifier there is separate work.
+
+Verification: unit tests use stubbed stripe-java exceptions. `StripeRolloutAcceptanceIT` parks both permanent codes in PostgreSQL and makes no second provider call on the next tick. Real Sandbox error responses are not exercised.
