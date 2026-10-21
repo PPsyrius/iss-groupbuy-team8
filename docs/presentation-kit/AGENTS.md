@@ -64,6 +64,7 @@ src/diagrams/      optional per-deck diagram overrides
 - `SLIDES[i] = { n, seg, item, speaker, slot, title, say, cues?, handover?, trim? }`; `slot` in seconds (`null` = Q&A); `speaker` is a `SPEAKERS` key `{ full, init }`. Titles over 58 characters render smaller.
 - `say` is the sample wording; `[click]` marks a fragment step. Speaking time is estimated at 130 words a minute, and the script flags slides that run over their slot.
 - `QA[segmentNumber] = { window, rows: [[question, answer, owner]] }`; `BACKUPS` rows `[id, title, answers]`; `OPEN_ITEMS` rows `[#, item, owner, blocks slide]`.
+- The kit reads only the fields above, so a deck may add its own to `SLIDES` without changing the built HTML; the SWE5006 deck adds `rubric` (the rubric rows a slide covers).
 
 ### Adding, removing or moving a slide
 
