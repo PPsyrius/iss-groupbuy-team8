@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const { icon, svg } = require('../../../presentation-kit/lib');
+const { icon } = require('../../../presentation-kit/lib');
+const { site, dg } = require('./site-geometry');
 const C = require('./content');
 
 // B11: crop of the CloudWatch dashboard, inlined so the HTML stays self-contained.
@@ -101,22 +102,22 @@ function list() {
     ['AISS-05', 'One shared database server', 'Move a database to its own server; no code change'],
     ['AISS-06', 'Building the environment takes ≈ 32 min, 15 of them waiting for SNS', 'Start it early on the day; the edge stays permanent'],
   ], { id: true, fs: 19, w: [110, 520] }) });
-  B.push({ id: 'B3', speaker: 'Eric', title: 'Context map: where service boundaries may go', body: `<div style="display:flex;gap:30px;align-items:flex-start">
-   <div style="width:470px;flex:none">${svg('context-map').replace('<svg ', '<svg style="width:470px;height:auto" ')}</div>
-   <div style="flex:1;padding-top:6px"><ul class="b" style="font:400 19px/1.4 Inter">
-    <li><b>Identity → Google:</b> anti-corruption layer (the OAuth gateway port)</li>
-    <li><b>Identity → commerce:</b> customer and supplier, one synchronous call (the user port)</li>
-    <li><b>Commerce → Stripe:</b> anti-corruption layer (checkout and refund gateways, webhook)</li>
-    <li><b>Commerce → notification:</b> published language: version 1 events over SNS → SQS</li></ul>
-    <div style="margin-top:14px;border-radius:8px;background:#E3E8FB;padding:14px 18px;font:400 17px/1.4 Inter">Four contexts share one service because they share transactions; the map shows where network boundaries are allowed to be.</div></div></div>` });
-  B.push({ id: 'B4', speaker: 'Eric', title: 'Aggregates and their life cycles', body: `<div style="display:flex;gap:30px">
-   <div style="flex:1"><ul class="b" style="font:400 19px/1.4 Inter">
-    <li><b>Team (GroupDeal):</b> only OPEN may change state, and only once</li><li><b>Order:</b> PENDING → CONFIRMED or CANCELLED</li>
-    <li><b>Purchase intent</b> is the order-side aggregate</li><li>Also: checkout payment, refund work, product with team terms, notification</li>
-    <li>Domain events: MemberJoined, TeamSucceeded, TeamExpired, PaymentSucceeded</li>
-    <li>In the same transaction, the outbox writer turns them into versioned integration events</li></ul>
-    <div style="margin-top:8px;border-radius:8px;background:#FDEFEC;padding:12px 16px;font:400 16.5px/1.4 Inter"><b style="color:var(--orange-d)">Be ready to explain:</b> FAILED and CANCELED are allowed by the status table, but nothing in the code triggers them yet.</div></div>
-   <div style="width:430px;flex:none">${svg('aggregates').replace('<svg ', '<svg style="width:430px;height:auto" ')}</div></div>` });
+  B.push({ id: 'B3', speaker: 'Eric', title: 'Context map: where service boundaries may go', body: `<div class="a" data-a="fade" style="${site(79, 184, 721, 815)};--d:200ms">${dg('context-map')}</div>
+   <ul class="b a" data-a="up" style="${site(871, 209, 958, 518)};margin:0;font:400 22.67px/1.3 Inter;--d:352ms">
+    <li style="margin-bottom:16px"><b>Identity → Google:</b> anti-corruption layer (the OAuth gateway port)</li>
+    <li style="margin-bottom:16px"><b>Identity → commerce:</b> customer and supplier, one synchronous call (the user port)</li>
+    <li style="margin-bottom:16px"><b>Commerce → Stripe:</b> anti-corruption layer (checkout and refund gateways, webhook)</li>
+    <li style="margin-bottom:16px"><b>Commerce → notification:</b> published language: version 1 events over SNS → SQS</li></ul>
+   <div class="a" data-a="fade" style="${site(871, 742, 962, 144)};border-radius:8px;background:#E3E8FB;--d:667ms"></div>
+   <div class="a" data-a="up" style="${site(900, 742, 907, 144)};display:flex;align-items:center;padding:4.67px;font:400 20px/1.2 Inter;--d:670ms">Four contexts share one service because they share transactions; the map shows where network boundaries are allowed to be.</div>` });
+  B.push({ id: 'B4', speaker: 'Eric', title: 'Aggregates and their life cycles', body: `<ul class="b a" data-a="up" style="${site(88, 209, 1037, 562)};margin:0;font:400 22px/1.3 Inter;--d:254ms">
+    <li style="margin-bottom:13.33px"><b>Team (GroupDeal):</b> only OPEN may change state, and only once</li><li style="margin-bottom:13.33px"><b>Order:</b> PENDING → CONFIRMED or CANCELLED</li>
+    <li style="margin-bottom:13.33px"><b>Purchase intent</b> is the order-side aggregate</li><li style="margin-bottom:13.33px">Also: checkout payment, refund work, product with team terms, notification</li>
+    <li style="margin-bottom:13.33px">Domain events: MemberJoined, TeamSucceeded, TeamExpired, PaymentSucceeded</li>
+    <li style="margin-bottom:13.33px">In the same transaction, the outbox writer turns them into versioned integration events</li></ul>
+   <div class="a" data-a="fade" style="${site(88, 785, 1037, 130)};border-radius:8px;background:#FDEFEC;--d:594ms"></div>
+   <div class="a" data-a="up" style="${site(115, 785, 994, 130)};display:flex;align-items:center;padding:4.67px;font:400 19.33px/1.2 Inter;--d:598ms"><div><b style="color:var(--orange-d)">Be ready to explain:</b> FAILED and CANCELED are allowed by the status table, but nothing in the code triggers them yet.</div></div>
+   <div class="a" data-a="fade" style="${site(1180, 184, 661, 828)};--d:200ms">${dg('aggregates')}</div>` });
   B.push({ id: 'B5', speaker: 'Eric', title: 'Layers, and tests that keep boundaries in place', body: tbl(['Layer', 'Module', 'Contains'], [
     ['Client', '<span class="mono">blocbuy-client</span>', 'DTOs and the integration event contracts (TeamSucceededV1, TeamExpiredV1, PaymentSucceededV1)'],
     ['Adapter', '<span class="mono">blocbuy-adapter</span>', 'REST controllers, the result envelope, the global error handler'],
@@ -125,8 +126,8 @@ function list() {
     ['Infrastructure', '<span class="mono">blocbuy-infrastructure</span>', 'MyBatis, Stripe, Redis, SNS/SQS transports'],
     ['Assemblies', '<span class="mono">services/*-svc</span>', 'Thin Spring Boot entry points that pick which contexts to run'],
   ], { fs: 18, w: [150, 270] }) + `<div style="margin-top:18px;border-radius:8px;background:var(--inverse);color:#fff;padding:16px 22px;font:400 19px/1.4 Inter"><b style="color:#FFB01F">Boundaries are tested:</b> 18 architecture rules run with the unit tests, e.g. <span class="mono" style="font-size:16px">commerce_reaches_identity_only_through_user_port</span></div>` });
-  B.push({ id: 'B6', speaker: 'Yorik', title: 'Joining a team by paying, step by step', body: `<div class="dia">${svg('uc4-join-sequence').replace('<svg ', '<svg style="width:1164px;height:auto" ')}</div>
-   <div class="cap" style="margin-top:8px">The signature is checked outside the transaction; one transaction then deduplicates, locks, admits the member, saves the order, takes stock and writes the outbox, re-checking that the user is active.</div>` });
+  B.push({ id: 'B6', speaker: 'Yorik', title: 'Joining a team by paying, step by step', body: `<div class="a" data-a="fade" style="${site(79, 184, 1762, 711)};--d:200ms">${dg('uc4-join-sequence')}</div>
+   <div class="cap a" data-a="up" style="${site(130, 907, 1656, 89)};font:400 20px/1.2 Inter;--d:672ms">The signature is checked outside the transaction; one transaction then deduplicates, locks, admits the member, saves the order, takes stock and writes the outbox, re-checking that the user is active.</div>` });
   B.push({ id: 'B7', speaker: 'Liu Jin', title: 'Technology and services', body: tbl(['Concern', 'Choice'], [
     ['Edge', 'CloudFront (permanent: Google sign-in and the Stripe webhook depend on its address), S3 for the web app'],
     ['Compute', 'ECS Fargate on ARM64, 0.5 vCPU / 1 GB per task, circuit breaker with rollback, Service Connect'],
