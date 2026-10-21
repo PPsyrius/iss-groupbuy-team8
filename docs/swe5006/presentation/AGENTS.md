@@ -19,7 +19,7 @@ When the rubric and anything else in this folder disagree (this file, `SEGMENTS`
 | When | Monday 26 October 2026, 16:30 SGT, Zoom (link in #464); 40 min hard stop including interruptions (rubric G1) |
 | Weight | 20% of the project mark (the report is 80%), so slides reuse report material rather than new content |
 | Lead | Yu Qianshuo (Yorik), storyline and demo script; slide master Lim Jiechao |
-| Contributors | Each report section owner supplies the matching slides (use cases and design problems, architecture, DevSecOps); one speaker per section (rubric G4); drafts in `docs/swe5006/report-drafts/` and #463 |
+| Contributors | Each report section owner supplies the matching slides (use cases and design problems, architecture, DevSecOps); one speaker per section except §2, where each member presents their own design problem (rubric G4, seven handovers); drafts in `docs/swe5006/report-drafts/` and #463 |
 | Deadlines | backup videos for §4 and §5 recorded by 24 Oct (rubric G6); every rubric checklist box ticked and open decision settled by 25 Oct; timed rehearsal 25 Oct |
 | Demo storyline (#464) | invite → START/JOIN with Stripe Sandbox → `/account` orders and blocs → expiry refund, live on deployed `dev`, with a fallback recording |
 | Outputs | `dist/swe5006-presentation.{html,pdf}` (PDF for submission, HTML for presenting), `dist/swe5006-presentation-script.pdf` (all committed; the script has no HTML output) |

@@ -16,7 +16,7 @@ const speakersOf = list => [...new Set(list.map(s => C.SPEAKERS[s.speaker].full.
 
 // ---------- run sheet: coverage of every guideline item and every rubric row, derived from SLIDES ----------
 const coverageRows = C.SEGMENTS.flatMap(s => Object.entries(s.items).map(([k, v]) => {
-  const sl = C.SLIDES.filter(x => x.item === k);
+  const sl = C.SLIDES.filter(x => x.item === k || (x.alsoItems || []).includes(k));
   return [`<b>${k}</b>`, esc(v), sl.map(x => x.n).join(', ') || '—', speakersOf(sl)];
 }));
 const rubricRows = ['1.1', '1.2', '1.3', '1.4', '1.5', '1.6', '1.7', '1.8', '2.1', '2.2', '2.3', '2.4', '2.5', '2.6', '3.1', '3.2', '3.3', '4.1', '4.2', '4.3', '4.4', '4.5', '4.6', '5.1', '5.2', '5.3', '5.4', '5.5']

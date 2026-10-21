@@ -133,8 +133,8 @@ ${tbl(['Member', 'Use case', 'Design problem → GoF pattern', 'Slide', 'Change 
 const steps = ['coded', 'tested', 'integrated', 'releasable', 'released'];
 const ladder = () => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span style="font:600 16px Inter;color:var(--muted);margin-right:6px">DoD ladder (EPAT 01 Agile p26)</span>${steps.map((s, i) => `<span style="font:600 17px/1 Inter;padding:7px 12px;border-radius:999px;background:${i === 2 ? '#E3E8FB' : '#ECE6DC'};color:${i === 2 ? '#3E5CD9' : '#1B1A18'}">${s}</span>${i < 4 ? '<span style="color:#A69E92">→</span>' : ''}`).join('')}</div>`;
 const spr = [
-  ['1 · 2–12 Sep', 'Walking skeleton: sign-in, browse, admin on dev', '<b>integrated</b>: backend on dev 5 Sep; no frontend, so not releasable'],
-  ['2 · 14–25 Sep', 'Pay, join a team, see the order, replay-safe', '<b>integrated</b>: merged, tested, Checkout off on dev; 134 of 150 h'],
+  ['1 · 1–12 Sep', 'Walking skeleton: sign-in, browse, admin on dev', '<b>integrated</b>: backend on dev 5 Sep; no frontend, so not releasable'],
+  ['2 · 15–26 Sep', 'Pay, join a team, see the order, replay-safe', '<b>integrated</b>: merged, tested, Checkout off on dev; 134 of 150 h'],
   ['3 · 28 Sep–9 Oct', 'Invite → pay → refund on deployed dev', '<b>integrated</b>; goal not met under our “on dev” rule; 117 of 150 h'],
   ['4 · 12–23 Oct', 'Complete system on dev; three services on ECS (SWE5001)', mk('FILL', 'step as of the 25 Oct rehearsal')],
 ];
@@ -201,7 +201,7 @@ ${quad('Q3', 'business-facing · critiquing the product', 'manual', `
  ${caught('no defect logged from these runs')}
  <div style="font:400 17px/1.3 Inter;color:#B02E1B;margin-top:4px">Not done: acceptance testing with outside users</div>`, `left:590px;top:0;${Q_W};${Q_H}`, 2)}
 ${quad('Q1', 'technology-facing · supporting the team', 'automated', `
- ${qrow('Unit, component', 'unit', 'JUnit 185 classes · Vitest 77 files')}
+ ${qrow('Unit, component', 'unit', 'JUnit: 162 of 185 *Test classes · Vitest 77 files')}
  ${qrow('Integration', 'integration', 'Testcontainers: 45 of 49 classes')}
  ${qrow('Contract, ArchUnit', 'integration', 'openapi-diff · 18 rules')}
  ${runs(`${mo('build-quality', 15)}, ${mo('frontend-check', 15)} (required), ${mo('contract-check', 15)}`)}
@@ -209,7 +209,7 @@ ${quad('Q1', 'technology-facing · supporting the team', 'automated', `
 ${quad('Q4', 'technology-facing · critiquing the product', 'tools', `
  ${qrow('Performance, load', 'system', 'k6 on SWE5001 ECS, by hand')}
  ${qrow('Security scanning', 'types', 'SAST · dependencies (SCA) · image and IaC configuration · secrets')}
- ${runs('by hand (load); security gates on slide 28')}
+ <div style="font:400 17px/1.3 Inter;color:var(--muted);margin-bottom:2px">Load runs by hand, no CI job; the security scans gate the pipeline (slide 28)</div>
  ${caught('full-history gitleaks: 24 matches, 4 badge tokens still open (slide 30)')}`, `left:590px;top:208px;${Q_W};${Q_H}`, 3)}
 <div style="position:absolute;left:0;right:0;top:416px;border-radius:8px;background:#E3E8FB;padding:8px 16px">
  <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font:700 17px Inter;color:#3E5CD9">Complex classes under test (proposal §6.3)</span><span style="font:400 15px Inter;color:var(--muted)">Quadrants: EPAT 03 TDD p7 · levels: p5</span></div>
@@ -285,7 +285,7 @@ const s9 = () => `
  ${report('Report §3.1 · Liu Jin, presented by Eric')}
 </div>
 ${walk([{ name: 'logical-layers', W: 2320, H: 1644, view: [774, 548], at: 'left:390px;top:0' }],
-  [['logical-layers', 1160, 0, 'adapter · contract'], ['logical-layers', 1160, 548, 'application'], ['logical-layers', 690, 1096, 'infrastructure depends on domain ports']])}`;
+  [['logical-layers', 1160, 0, 'adapter · contract'], ['logical-layers', 1160, 548, 'application'], ['logical-layers', 640, 1096, 'infrastructure realises the domain ports']])}`;
 
 // ---------- slide 10 (2.2) ----------
 const strat = [
@@ -375,20 +375,20 @@ const pslot = (rows, name, W, H, crops, rep) => `
 ${walk([{ name, W, H, view: [580, 548], at: 'left:584px;top:0' }], crops)}`;
 const s17 = () => pslot([
   ['Where it shows (class diagram)', `the «create» of ${mono('GroupDeal')}: start-team rules must stay fixed while how a team is built may vary; until #424 the Client also named ${mono('new StandardPaidGroupDealCreator()')}`],
-  ['Cause for redesign · what varies (SDP 05a p15)', `creating an object by specifying a class explicitly · the construction step varies while ${mono('initiate')} stays fixed (GoF p136: a template method calling a factory method)`],
+  ['Cause for redesign · what varies (SDP 05a p13, p15)', `creating an object by specifying a class explicitly · “subclass of object that is instantiated”: a new ConcreteCreator decides which team class ${mono('initiate')} builds`],
   ['Candidates', 'Factory Method · static factory (static “forbids subclassing of the base factory class”, SDP 01a p34) · Builder · Abstract Factory'],
   ['Participants', `Creator ${mono('PaidGroupDealCreator')} (final ${mono('initiate')} validates, then abstract ${mono('createGroupDeal')}) · ConcreteCreator ${mono('StandardPaidGroupDealCreator')} · Product ${mono('GroupDeal')} · Client ${mono('PaidGroupDealService')}`],
-  ['Needed because · liability (SDP 05a p35)', `every creator keeps the start rules (final initiate); a test or config swaps the creator without editing the service (#421) · one ConcreteCreator today, chosen in config; product class fixed (${mono('GroupDeal')} is final)`],
+  ['Needed because · liability (SDP 05a p35)', `proposal §6.3: a second team type without editing the service; every creator keeps the start rules (final ${mono('initiate')}) · not exercised yet: one product class (${mono('GroupDeal')} is final) and one ConcreteCreator, chosen in config`],
   ['Tests', `${mono('PaidGroupDealServiceTest.startUsesTheInjectedCreator')}`],
 ], 'fm-start', 1160, 1400, [['fm-start', 0, 0, 'Client · Creator'], ['fm-start', 0, 852, 'initiate → createGroupDeal']], 'Report §3.5 · Eric (UC3)');
 const s18 = () => pslot([
   ['Where it shows (sequence)', 'an expiry that called order and refund code inline: groupbuy would change for every new consequence (ADR 0002)'],
   ['Cause for redesign · what varies', 'tight coupling · “number of objects that depend on another object”'],
   ['Candidates', 'Observer · Mediator · direct facade calls · a message broker (ADR 0002)'],
-  ['Participants', `Subject (attach, notify): Spring’s ${mono('ApplicationEventPublisher')} and multicaster · Observer: the listener contract · ConcreteObservers ${mono('OrderLifecycleSubscriber')} @Order(10), ${mono('TeamExpiryRefundSubscriber')} @Order(20), before commit · event source ${mono('GroupDealExpiryService')}`],
+  ['Participants', `Subject (attach, notify): Spring’s ${mono('ApplicationEventPublisher')} and multicaster · Observer ${mono('ApplicationListener')} · ConcreteObserver: Spring’s ${mono('TransactionalApplicationListenerMethodAdapter')}, one per annotated method, invoking ${mono('OrderLifecycleSubscriber')} @Order(10), ${mono('TeamExpiryRefundSubscriber')} @Order(20) before commit · event source ${mono('GroupDealExpiryService')}`],
   ['Needed because · liability', 'proposal §6.3: new team consequences without editing domain logic · implicit control flow; a wrong phase is a silent bug'],
   ['Tests', `${mono('TeamExpiryRefundSubscriberTest')} (rolls the expiry back on failure)`],
-], 'observer-expiry', 1160, 1870, [['observer-expiry', 0, 600, 'Observer · ConcreteObservers'], ['observer-expiry', 0, 1316, 'publish → before commit, in order']], 'Report §3.5 · Yorik (UC6)');
+], 'observer-expiry', 1160, 1870, [['observer-expiry', 0, 600, 'Observer · ConcreteObserver adapter'], ['observer-expiry', 0, 1316, 'publish → before commit, in order']], 'Report §3.5 · Yorik (UC6)');
 const s19 = () => pslot([
   ['Where it shows (class diagram)', 'brute force: the SQS and SNS transports each copy the batch loop, lease checks and result mapping'],
   ['Cause for redesign · what varies', 'algorithmic dependencies · “steps of an algorithm”'],
