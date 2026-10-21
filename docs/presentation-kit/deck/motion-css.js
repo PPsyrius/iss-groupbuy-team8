@@ -9,6 +9,8 @@ module.exports = `
 .cdot{transform-box:fill-box;transform-origin:center}
 .cover{position:absolute;background:var(--surface);z-index:3;display:none}
 @media screen{
+  /* set by the runtime for one style flush while presenter mode starts: start states apply without transitions */
+  body.still *{transition:none!important}
   /* slide crossfade: visibility/opacity instead of display, so entrance transitions can run */
   body.present .slide{display:block;visibility:hidden;opacity:0;transition:opacity .45s var(--ease),visibility 0s linear .45s;pointer-events:none}
   body.present .slide.active{visibility:visible;opacity:1;transition:opacity .45s var(--ease);pointer-events:auto}

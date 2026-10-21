@@ -31,7 +31,10 @@ function openNotes(){notesWin=window.open('','blocbuy-notes','width=760,height=7
   notesWin.document.write('<title>Notes</title><style>body{font:17px/1.45 system-ui;margin:20px;background:#1B1A18;color:#EEF1FC}#h{font-weight:700;font-size:20px}#m{color:#A9B7EE;margin:4px 0 12px}#say{font-size:19px}#cues{color:#bcd;font-size:15px}#ho{color:#FFB01F;margin-top:10px}#clock{font:700 28px monospace;color:#FFB01F;float:right}.mk{font:700 13px monospace;border:1px dashed #f9a;border-radius:4px;padding:1px 4px;color:#fbc}.clk{color:#FFB01F}</style><div id="clock">--:--</div><div id="h"></div><div id="m"></div><div id="say"></div><ul id="cues"></ul><div id="ho"></div><p style="color:#789;font-size:13px">T starts/resets the timer (in the deck window).</p>');
   updNotes();}
 setInterval(()=>{if(notesWin&&!notesWin.closed&&t0){const s=Math.floor((Date.now()-t0)/1000);notesWin.document.getElementById('clock').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}},500);
-function present(j){body.classList.remove('overview');body.classList.add('present');fit();if(j!==undefined){i=j;frag=0;}shown=-1;paint();}
+// Entering presenter mode applies the hidden start states under .still (no transitions), so they take effect at
+// once instead of running their delayed hide transitions into the entrance that follows.
+function enter(){body.classList.add('still');body.classList.remove('overview');body.classList.add('present');fit();void body.offsetWidth;body.classList.remove('still');}
+function present(j){enter();if(j!==undefined){i=j;frag=0;}shown=-1;requestAnimationFrame(paint);}
 function backups(){const k=byId('BX');if(k>=0)go(k);}
 document.addEventListener('keydown',e=>{
   if(e.metaKey||e.ctrlKey||e.altKey)return;
@@ -60,7 +63,7 @@ document.addEventListener('click',ev=>{
 addEventListener('resize',()=>{if(body.classList.contains('present'))fit();});
 addEventListener('hashchange',()=>{const k=byId(decodeURIComponent(location.hash.slice(1)));if(k>=0&&k!==i&&body.classList.contains('present'))go(k);});
 const k=byId(decodeURIComponent(location.hash.slice(1)));
-if(!window.__PRINT__){body.classList.add('present');fit();void body.offsetWidth;
+if(!window.__PRINT__){enter();
   // first paint on the next frame so the opening slide plays its entrance too
   requestAnimationFrame(()=>go(k>=0?k:0));
   const h=document.querySelector('.hint');if(h){h.classList.add('show');setTimeout(()=>h.classList.remove('show'),4000);}}
