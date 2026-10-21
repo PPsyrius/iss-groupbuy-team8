@@ -21,7 +21,7 @@ Team 8's deck and speaker script for the SWE5001 final presentation on Wednesday
 
 ## How these files are built
 
-`src/` holds the content (wording, timings, cues, Q&A and open items in `src/content.js`), the slide layouts and the script chapters; `docs/presentation-kit/` renders the HTML deck and prints both PDFs. Until 20 October the v3 files came from Liu Jin's build outside this repository (HTML plus a Typst PDF); their content, with Eric's spoken wording on top, was then ported back into `src/`. On 21 October the v3 slide copy, diagrams and entrance motion were ported too, so the built deck matches the v3 deck on screen except for the slide 23 failure-handling line.
+`src/` holds the content (wording, timings, cues, Q&A and open items in `src/content.js`), the slide layouts and the script chapters; `docs/presentation-kit/` renders the HTML deck and prints both PDFs. Until 20 October the v3 files came from Liu Jin's build outside this repository (HTML plus a Typst PDF); their content, with Eric's spoken wording on top, was then ported back into `src/`. On 21 October the v3 slide copy, diagram placement and entrance motion were ported too, so the built deck matches the v3 deck on screen except for the slide 23 failure-handling line.
 
 Commit a changed version only when the content changes. The PDFs and the HTML are binary for Git, so every commit adds about 3.5 MB to the history.
 

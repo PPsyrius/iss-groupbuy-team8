@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const { icon } = require('../../../presentation-kit/lib');
-const { site, dg } = require('./site-geometry');
+const { icon, svg } = require('../../../presentation-kit/lib');
+const { site, fill } = require('./site-geometry');
 const C = require('./content');
 
 // B11: crop of the CloudWatch dashboard, inlined so the HTML stays self-contained.
@@ -122,7 +122,7 @@ function list() {
     ['AISS-05', 'One shared database server', 'Move a database to its own server; no code change'],
     ['AISS-06', 'Building the environment takes ≈ 32 min, 15 of them waiting for SNS', 'Start it early on the day; the edge stays permanent'],
   ], { id: true, fs: 19, w: [110, 520] }) });
-  B.push({ id: 'B3', speaker: 'Eric', title: 'Context map: where service boundaries may go', body: `<div class="a" data-a="fade" style="${site(79, 184, 721, 815)};--d:200ms">${dg('context-map')}</div>
+  B.push({ id: 'B3', speaker: 'Eric', title: 'Context map: where service boundaries may go', body: `<div class="a" data-a="fade" style="${site(79, 184, 721, 815)};--d:200ms">${fill(svg('context-map'), '-6.81 -6.81 613.6 693.6')}</div>
    <ul class="b a" data-a="up" style="${site(871, 209, 958, 518)};margin:0;font:400 22.67px/1.3 Inter;--d:352ms">
     <li style="margin-bottom:16px"><b>Identity → Google:</b> anti-corruption layer (the OAuth gateway port)</li>
     <li style="margin-bottom:16px"><b>Identity → commerce:</b> customer and supplier, one synchronous call (the user port)</li>
@@ -137,7 +137,7 @@ function list() {
     <li style="margin-bottom:13.33px">In the same transaction, the outbox writer turns them into versioned integration events</li></ul>
    <div class="a" data-a="fade" style="${site(88, 785, 1037, 130)};border-radius:8px;background:#FDEFEC;--d:594ms"></div>
    <div class="a" data-a="up" style="${site(115, 785, 994, 130)};display:flex;align-items:center;padding:4.67px;font:400 19.33px/1.2 Inter;--d:598ms"><div><b style="color:var(--orange-d)">Be ready to explain:</b> FAILED and CANCELED are allowed by the status table, but nothing in the code triggers them yet.</div></div>
-   <div class="a" data-a="fade" style="${site(1180, 184, 661, 828)};--d:200ms">${dg('aggregates')}</div>` });
+   <div class="a" data-a="fade" style="${site(1180, 184, 661, 828)};--d:200ms">${fill(svg('aggregates'), '-6.7 -6.7 553.38 693.38')}</div>` });
   B.push({ id: 'B5', speaker: 'Eric', title: 'Layers, and tests that keep boundaries in place', body: tbl(['Layer', 'Module', 'Contains'], [
     ['Client', '<span class="mono">blocbuy-client</span>', 'DTOs and the integration event contracts (TeamSucceededV1, TeamExpiredV1, PaymentSucceededV1)'],
     ['Adapter', '<span class="mono">blocbuy-adapter</span>', 'REST controllers, the result envelope, the global error handler'],
@@ -146,7 +146,7 @@ function list() {
     ['Infrastructure', '<span class="mono">blocbuy-infrastructure</span>', 'MyBatis, Stripe, Redis, SNS/SQS transports'],
     ['Assemblies', '<span class="mono">services/*-svc</span>', 'Thin Spring Boot entry points that pick which contexts to run'],
   ], { fs: 18, w: [150, 270] }) + `<div style="margin-top:18px;position:relative;border-radius:8px;color:#fff;padding:16px 22px;font:400 19px/1.4 Inter">${bgl('border-radius:8px;background:var(--inverse)', 0, 'fade', 560)}<div ${A('up', 565)}><b style="color:#FFB01F">Boundaries are tested:</b> 18 architecture rules run with the unit tests, e.g. <span class="mono" style="font-size:16px">commerce_reaches_identity_only_through_user_port</span></div></div>` });
-  B.push({ id: 'B6', speaker: 'Yorik', title: 'Joining a team by paying, step by step', body: `<div class="a" data-a="fade" style="${site(79, 184, 1762, 711)};--d:200ms">${dg('uc4-join-sequence')}</div>
+  B.push({ id: 'B6', speaker: 'Yorik', title: 'Joining a team by paying, step by step', body: `<div class="a" data-a="fade" style="${site(79, 184, 1762, 711)};--d:200ms">${fill(svg('uc4-join-sequence'), '-5.41 -5.41 1190.8 480.81')}</div>
    <div class="cap a" data-a="up" style="${site(130, 907, 1656, 89)};font:400 20px/1.2 Inter;--d:672ms">The signature is checked outside the transaction; one transaction then deduplicates, locks, admits the member, saves the order, takes stock and writes the outbox, re-checking that the user is active.</div>` });
   B.push({ id: 'B7', speaker: 'Liu Jin', title: 'Technology and services', body: tbl(['Concern', 'Choice'], [
     ['Edge', 'CloudFront (permanent: Google sign-in and the Stripe webhook depend on its address), S3 for the web app'],

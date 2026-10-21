@@ -1,5 +1,5 @@
-const { icon, md, lockup } = require('../../../presentation-kit/lib');
-const { r2, px, site, dg } = require('./site-geometry');
+const { icon, md, lockup, svg } = require('../../../presentation-kit/lib');
+const { site, fill } = require('./site-geometry');
 // Accent fills never carry text (design-screens.md §2.1): accent -> accent-soft + accent-soft-foreground; grey -> default + foreground.
 const F = bg => bg === 'var(--orange)' ? { bg: 'var(--orange-l)', fg: 'var(--orange-d)', sub: 'var(--orange-d)' } : bg === '#6B655C' ? { bg: 'var(--default)', fg: 'var(--foreground)', sub: 'var(--muted)' } : { bg, fg: '#fff', sub: 'rgba(255,255,255,.85)' };
 
@@ -189,7 +189,7 @@ const s8 = () => `
  <span class="a" data-a="pop" style="color:var(--orange-d);font-size:24px;--d:950ms">${icon('scale-balanced')}</span><span class="a" data-a="up" style="--d:980ms"><b style="color:var(--orange-d)">Cost of these choices:</b> notifications lag about 2 s; purchases pause while identity is down</span></div>`;
 
 // ---------- slide 9 ----------
-const s9 = () => `<div class="a" data-a="fade" style="${site(90, 184, 1745, 750)};--d:200ms">${dg('logical-view')}</div>
+const s9 = () => `<div class="a" data-a="fade" style="${site(90, 184, 1745, 750)};--d:200ms">${fill(svg('logical-view'), '-0.17 2.67 1163.51 500')}</div>
 <div class="cap a" data-a="up" style="${site(88, 953, 1745, 55)};font:400 22px/1.2 Inter;--d:900ms"><b style="color:var(--red)">One direct call</b> (commerce → identity); everything else by events.</div>`;
 
 // ---------- slide 10 ----------
@@ -271,7 +271,7 @@ const s12 = () => `
 <div class="a" data-a="up" style="margin-top:12px;font:400 18px Inter;color:var(--muted);--d:679ms"><b style="color:var(--muted)">Trade-off:</b> less redundancy (one NAT, single-zone database), acceptable for this project</div>`;
 
 // ---------- slide 13 ----------
-const s13 = () => `<div class="a" data-a="fade" style="${site(95, 172, 1740, 799)};--d:200ms">${dg('physical-deployment')}</div>`;
+const s13 = () => `<div class="a" data-a="fade" style="${site(95, 172, 1740, 799)};--d:200ms">${fill(svg('physical-deployment'), '3.33 -1.33 1160 532.67')}</div>`;
 
 // ---------- slide 14 ----------
 const p95a = [57, 34, 26, 43, 28, 26, 23, 26, 35, 49], p95b = [53, 39, 27, 28, 23, 23, 42, 23, 23, 23], xs = [10, 20, 40, 60, 80, 100, 125, 150, 175, 200];
@@ -328,21 +328,13 @@ const s15 = () => `
 </div>`;
 
 // ---------- slide 16 ----------
-// The v3 site hides parts of the diagram under white covers (data-f) that fade out on each click. Here the covers are
-// static white boxes inside the diagram wrapper, and each covered part is a .frag copy of the same drawing (<use> of
-// #exp-all) laid over its cover and revealed on click. Boxes are in site pixels; overlapping cover strips are trimmed,
-// and the last cover stops 1 px higher so the 2/3 scale does not hide the frame line.
-const S16_BOX = [84, 170, 1753, 761];
-const S16_PARTS = [[1, 317, 590, 838, 58], [1, 1155, 590, 672, 331], [1, 380, 587, 43, 3], [1, 1210, 587, 43, 3], [2, 101, 648, 1054, 273]];
-function s16() {
-  const raw = dg('expiry-refund-sequence').replace('</defs>', '</defs><g id="exp-all">').replace(/<\/svg>\s*$/, '</g></svg>');
-  const vb = raw.match(/viewBox="([^"]+)"/)[1];
-  const W = px(...S16_BOX), loc = ([, l, t, w, h]) => ({ l: r2((l - S16_BOX[0]) * 2 / 3), t: r2((t - S16_BOX[1]) * 2 / 3), w: r2(w * 2 / 3), h: r2(h * 2 / 3) });
-  const covers = S16_PARTS.map(p => { const b = loc(p); return `<div style="position:absolute;left:${b.l}px;top:${b.t}px;width:${b.w}px;height:${b.h}px;background:#fff"></div>`; }).join('');
-  const part = p => { const b = loc(p); return `<div class="frag" data-frag="${p[0]}" style="${site(...p.slice(1))};overflow:hidden"><svg class="dg" viewBox="${vb}" preserveAspectRatio="xMidYMid meet" style="position:absolute;left:${-b.l}px;top:${-b.t}px;width:${W.w}px;height:${W.h}px;display:block"><use href="#exp-all"/></svg></div>`; };
-  return `<div class="a" data-a="fade" style="${site(...S16_BOX)};--d:200ms">${raw}${covers}</div>
-${S16_PARTS.map(part).join('\n')}`;
-}
+// The kit drawing has three fragments; v3 shows the expiry transaction from the start and reveals the rest in two clicks.
+// So kit fragment 1 (expiry transaction) is always visible, fragment 2 (relay, SNS -> SQS, notification) comes at click 1
+// and fragment 3 (refund worker) at click 2. The kit file stays unchanged; SWE5006 uses all three steps.
+const s16 = () => `<div class="a" data-a="fade" style="${site(84, 170, 1753, 761)};--d:200ms">${fill(svg('expiry-refund-sequence'), '-4.33 -4.33 1168.67 507.67')
+  .replace('<g class="frag" data-frag="1">', '<g>')
+  .replace('<g class="frag" data-frag="2">', '<g class="frag" data-frag="1">')
+  .replace('<g class="frag" data-frag="3">', '<g class="frag" data-frag="2">')}</div>`;
 
 // ---------- slide 17 ----------
 // d = v3 delays [card up, icon pop, "If…" + title up, outcome up] and [band up, check pop, text up].
