@@ -48,7 +48,7 @@ public class StripeRefundGateway implements RefundGateway {
                                             .setIdempotencyKey(work.providerKey())
                                             .build()));
         } catch (StripeException failure) {
-            throw new BizException(PaymentErrorCode.PAYMENT_PROVIDER_ERROR);
+            throw StripeFailureClassifier.refusal("createRefund", failure);
         }
     }
 
@@ -57,7 +57,7 @@ public class StripeRefundGateway implements RefundGateway {
         try {
             return snapshot(clients.client().refunds().retrieve(providerId));
         } catch (StripeException failure) {
-            throw new BizException(PaymentErrorCode.PAYMENT_PROVIDER_ERROR);
+            throw StripeFailureClassifier.refusal("retrieveRefund", failure);
         }
     }
 
@@ -83,7 +83,7 @@ public class StripeRefundGateway implements RefundGateway {
                             .toList();
             return matches.size() == 1 ? snapshot(matches.getFirst()) : null;
         } catch (StripeException failure) {
-            throw new BizException(PaymentErrorCode.PAYMENT_PROVIDER_ERROR);
+            throw StripeFailureClassifier.refusal("findRefund", failure);
         }
     }
 
