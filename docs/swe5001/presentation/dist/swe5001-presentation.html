@@ -95,7 +95,11 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
 .dia{display:flex;justify-content:center}
 .dia svg{display:block}
 
-/* presentation runtime */
+/* presentation runtime: key hint (shown 4 s on load) and the "." blank overlay sit on the window, not the slide */
+.hint{position:fixed;z-index:10;right:18px;top:10px;font:400 12px Inter;color:#9a948b;opacity:0;transition:opacity .4s;pointer-events:none}
+.hint.show{opacity:.85}
+.blank{position:fixed;inset:0;background:#000;z-index:20;display:none}
+.blank.on{display:block}
 @media screen{
   body.present{overflow:hidden;height:100vh}
   body.present .slide{display:none;position:absolute;left:50%;top:50%;transform-origin:center center}
@@ -112,7 +116,54 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   html,body{background:#fff}
   .slide{page-break-after:always;break-after:page}
   .frag{opacity:1!important}
+  .hint,.blank{display:none!important}
 }
+
+:root{--ease:cubic-bezier(.2,.75,.2,1)}
+.cn{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.cdot{transform-box:fill-box;transform-origin:center}
+.cover{position:absolute;background:var(--surface);z-index:3;display:none}
+@media screen{
+  /* slide crossfade: visibility/opacity instead of display, so entrance transitions can run */
+  body.present .slide{display:block;visibility:hidden;opacity:0;transition:opacity .45s var(--ease),visibility 0s linear .45s;pointer-events:none}
+  body.present .slide.active{visibility:visible;opacity:1;transition:opacity .45s var(--ease);pointer-events:auto}
+  /* entrances: class a + data-a + inline --d */
+  body.present .a{opacity:0;transition:opacity .65s var(--ease),transform .65s var(--ease);transition-delay:var(--d,0ms)}
+  body.present .a[data-a=up]{transform:translateY(14.67px)}
+  body.present .a[data-a=left]{transform:translateX(-20px)}
+  body.present .a[data-a=right]{transform:translateX(20px)}
+  body.present .a[data-a=pop]{transform:scale(.88)}
+  body.present .a[data-a=grow]{transform:scaleX(0);transform-origin:left center}
+  body.present .a[data-a=fade]{transform:none}
+  body.present .a[data-a=rise]{transform:scaleY(0);transform-origin:bottom center;transition-duration:.9s}
+  body.present .a[data-a=drop]{transform:translateY(-18.67px)}
+  body.present .slide.active .a{opacity:1;transform:none}
+  /* fragments: unrevealed ones drop back without delay; plain fragments fade in .25s, .frag.a ones use their entrance */
+  body.present .frag:not(.a){transition:none}
+  body.present .slide.active .frag:not(.a){transition:opacity .25s var(--ease),transform .25s var(--ease)}
+  body.present .frag.hidden{opacity:0!important;transform:translateY(10.67px)!important;transition-delay:0ms!important}
+  /* covers: an opaque panel over content that fades away when its fragment is reached */
+  body.present .cover{display:block;opacity:1;transition:none}
+  body.present .slide.active .cover{transition:opacity .5s var(--ease)}
+  body.present .cover.on{opacity:0}
+  /* SVG connectors (pathLength="1") draw on; .dashed keeps its own dasharray and only fades in */
+  body.present .cn{stroke-dasharray:1 1;stroke-dashoffset:1;opacity:0;transition:stroke-dashoffset .9s var(--ease),opacity .3s;transition-delay:var(--d,0ms)}
+  body.present .cn.dashed{stroke-dashoffset:0}
+  body.present .slide.active .cn{stroke-dashoffset:0;opacity:1}
+  /* chart line and dots */
+  body.present .cline{stroke-dasharray:1 1;stroke-dashoffset:1;transition:stroke-dashoffset 1.4s var(--ease) var(--d,0ms)}
+  body.present .cdot{opacity:0;transform:scale(0);transition:all .4s var(--ease) var(--d,0ms)}
+  body.present .slide.active .cline{stroke-dashoffset:0}
+  body.present .slide.active .cdot{opacity:1;transform:none}
+  /* table rows */
+  body.present .trow{opacity:0;transform:translateY(5.33px);transition:all .5s var(--ease) var(--d,0ms)}
+  body.present .slide.active .trow{opacity:1;transform:none}
+  /* looping emphasis */
+  body.present .pulse{animation:pulse 3s var(--ease) infinite}
+  body.present .recdot{animation:rec 1.6s infinite}
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(27,26,24,.25)}50%{box-shadow:0 0 0 12px rgba(27,26,24,0)}}
+@keyframes rec{0%{box-shadow:0 0 0 0 rgba(184,50,31,.55)}100%{box-shadow:0 0 0 9.33px rgba(184,50,31,0)}}
 </style></head>
 <body><div class="deck">
 <section class="slide dark" id="s1" data-n="1">
@@ -132,9 +183,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
 </div>
 <div style="position:absolute;left:880px;top:544px;font:italic 400 19px Inter;color:#E6DFD3">The price drops as each member joins</div></section>
 <section class="slide" id="s2" data-n="2">
-  <div class="hdr">1 · Overview <span class="it">1a</span></div>
-  <div class="who"><span class="av">JC</span>Lim</div>
-  <div class="ttl" style="">Group buying only works if enough people join in time</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">1 · Overview <span class="it">1a</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">JC</span>Lim</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Group buying only works if enough people join in time</div>
   <div class="body">
 <div class="card" style="position:absolute;left:0;top:50px;width:560px;height:476px;padding:32px 34px">
   <div class="serif" style="font-size:30px;line-height:1.2;color:var(--muted);margin-bottom:22px">Today: chat groups and spreadsheets</div>
@@ -165,9 +216,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">1 · Overview</div><div class="bar"><span class="on" style="flex:3"></span><span class="" style="flex:2"></span><span class="" style="flex:9"></span><span class="" style="flex:9"></span><span class="" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">2<small>/24</small></div></div>
 </section>
 <section class="slide" id="s3" data-n="3">
-  <div class="hdr">1 · Overview <span class="it">1b</span></div>
-  <div class="who"><span class="av">JC</span>Lim</div>
-  <div class="ttl" style="font-size:30.5px;top:62px">A two-sided platform built around one interaction: forming a team</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">1 · Overview <span class="it">1b</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">JC</span>Lim</div>
+  <div class="ttl a" data-a="up" style="font-size:30.5px;top:62px;--d:60ms">A two-sided platform built around one interaction: forming a team</div>
   <div class="body">
 <div style="position:absolute;left:0;top:30px;width:360px;height:84px;border-radius:8px;background:#FFEDC7;padding:16px 22px;font:400 22px/1.3 Inter"><b>Seed</b>&nbsp; a few curated launch offers</div>
 <div style="position:absolute;right:0;top:30px;width:360px;height:84px;border-radius:8px;background:#FBDFD9;padding:16px 22px;font:400 22px/1.3 Inter"><b>Network effect</b>&nbsp; each new member lowers the price</div>
@@ -194,9 +245,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">1 · Overview</div><div class="bar"><span class="on" style="flex:3"></span><span class="" style="flex:2"></span><span class="" style="flex:9"></span><span class="" style="flex:9"></span><span class="" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">3<small>/24</small></div></div>
 </section>
 <section class="slide" id="s4" data-n="4">
-  <div class="hdr">1 · Overview <span class="it">1c</span></div>
-  <div class="who"><span class="av">JC</span>Lim</div>
-  <div class="ttl" style="">Scope: the full buying journey, on three services</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">1 · Overview <span class="it">1c</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">JC</span>Lim</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Scope: the full buying journey, on three services</div>
   <div class="body">
 <div style="display:flex;gap:26px;margin-top:20px">
 <div class="card" style="width:350px;height:420px;overflow:hidden">
@@ -219,9 +270,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">1 · Overview</div><div class="bar"><span class="on" style="flex:3"></span><span class="" style="flex:2"></span><span class="" style="flex:9"></span><span class="" style="flex:9"></span><span class="" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">4<small>/24</small></div></div>
 </section>
 <section class="slide" id="s5" data-n="5">
-  <div class="hdr">2 · Project conduct <span class="it">2a</span></div>
-  <div class="who"><span class="av">JC</span>Lim</div>
-  <div class="ttl" style="">Status: what is verified on AWS, and what is still open</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">2 · Project conduct <span class="it">2a</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">JC</span>Lim</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Status: what is verified on AWS, and what is still open</div>
   <div class="body">
 <div style="display:flex;gap:20px;height:540px;margin-top:-6px">
  <div style="flex:1.12;background:#E3E8FB;border-radius:8px;padding:22px 22px">
@@ -265,9 +316,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">2 · Project</div><div class="bar"><span class="done" style="flex:3"></span><span class="on" style="flex:2"></span><span class="" style="flex:9"></span><span class="" style="flex:9"></span><span class="" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">5<small>/24</small></div></div>
 </section>
 <section class="slide" id="s6" data-n="6">
-  <div class="hdr">2 · Project conduct <span class="it">2b</span></div>
-  <div class="who"><span class="av">JC</span>Lim</div>
-  <div class="ttl" style="">On schedule, about 50 person-days across five people</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">2 · Project conduct <span class="it">2b</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">JC</span>Lim</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">On schedule, about 50 person-days across five people</div>
   <div class="body">
 <div style="position:absolute;left:10px;right:10px;top:52px;height:3px;background:var(--teal)"></div>
 <div style="position:absolute;left:-38px;width:180px;top:0;text-align:center;font:700 21px Inter;color:var(--teal-d)">4 Oct</div>
@@ -304,9 +355,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">2 · Project</div><div class="bar"><span class="done" style="flex:3"></span><span class="on" style="flex:2"></span><span class="" style="flex:9"></span><span class="" style="flex:9"></span><span class="" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">6<small>/24</small></div></div>
 </section>
 <section class="slide" id="s7" data-n="7">
-  <div class="hdr">3 · Logical architecture &amp; design <span class="it">3a</span></div>
-  <div class="who"><span class="av">WZ</span>Eric</div>
-  <div class="ttl" style="">Why three services, not five</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">3 · Logical architecture &amp; design <span class="it">3a</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">WZ</span>Eric</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Why three services, not five</div>
   <div class="body">
 <div style="position:absolute;left:0;top:56px;width:726px;height:304px;border-radius:8px;background:#FBDFD9;padding:24px 34px">
   <div class="serif" style="font-size:29px;color:var(--orange-d);margin-bottom:22px">One payment = one database transaction</div>
@@ -327,9 +378,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">3 · Logical</div><div class="bar"><span class="done" style="flex:3"></span><span class="done" style="flex:2"></span><span class="on" style="flex:9"></span><span class="" style="flex:9"></span><span class="" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">7<small>/24</small></div></div>
 </section>
 <section class="slide" id="s8" data-n="8">
-  <div class="hdr">3 · Logical architecture &amp; design <span class="it">3a</span></div>
-  <div class="who"><span class="av">WZ</span>Eric</div>
-  <div class="ttl" style="">Four decisions shape the logical design</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">3 · Logical architecture &amp; design <span class="it">3a</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">WZ</span>Eric</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Four decisions shape the logical design</div>
   <div class="body">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:6px">
  <div class="card" style="height:198px;padding:30px 28px;display:flex;gap:28px">
@@ -354,9 +405,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">3 · Logical</div><div class="bar"><span class="done" style="flex:3"></span><span class="done" style="flex:2"></span><span class="on" style="flex:9"></span><span class="" style="flex:9"></span><span class="" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">8<small>/24</small></div></div>
 </section>
 <section class="slide" id="s9" data-n="9">
-  <div class="hdr">3 · Logical architecture &amp; design <span class="it">3b</span></div>
-  <div class="who"><span class="av">WZ</span>Eric</div>
-  <div class="ttl" style="">Logical view: one direct call, everything else by events</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">3 · Logical architecture &amp; design <span class="it">3b</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">WZ</span>Eric</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Logical view: one direct call, everything else by events</div>
   <div class="body"><div class="dia" style="margin-top:-8px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 520" width="1160" height="520" font-family="Inter, Helvetica, Arial, sans-serif">
   <defs>
     <linearGradient id="lvTeal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E3E8FB"/></linearGradient>
@@ -520,9 +571,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">3 · Logical</div><div class="bar"><span class="done" style="flex:3"></span><span class="done" style="flex:2"></span><span class="on" style="flex:9"></span><span class="" style="flex:9"></span><span class="" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">9<small>/24</small></div></div>
 </section>
 <section class="slide" id="s10" data-n="10">
-  <div class="hdr">3 · Logical architecture &amp; design <span class="it">3c</span></div>
-  <div class="who"><span class="av">WZ</span>Eric</div>
-  <div class="ttl" style="font-size:30.5px;top:62px">Bounded contexts decide the services; events are the contract</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">3 · Logical architecture &amp; design <span class="it">3c</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">WZ</span>Eric</div>
+  <div class="ttl a" data-a="up" style="font-size:30.5px;top:62px;--d:60ms">Bounded contexts decide the services; events are the contract</div>
   <div class="body">
 <div style="position:absolute;left:0;top:20px;width:730px;height:296px;background:#FBDFD9;border-radius:8px;padding:14px 22px">
   <div style="font:700 25px Inter;color:var(--orange-d);margin-bottom:10px">Commerce service</div>
@@ -541,9 +592,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">3 · Logical</div><div class="bar"><span class="done" style="flex:3"></span><span class="done" style="flex:2"></span><span class="on" style="flex:9"></span><span class="" style="flex:9"></span><span class="" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">10<small>/24</small></div></div>
 </section>
 <section class="slide" id="s11" data-n="11">
-  <div class="hdr">3 · Logical architecture &amp; design <span class="it">3c</span></div>
-  <div class="who"><span class="av">WZ</span>Eric</div>
-  <div class="ttl" style="font-size:30.5px;top:62px">How producers and consumers use the platform, and what reuse costs</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">3 · Logical architecture &amp; design <span class="it">3c</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">WZ</span>Eric</div>
+  <div class="ttl a" data-a="up" style="font-size:30.5px;top:62px;--d:60ms">How producers and consumers use the platform, and what reuse costs</div>
   <div class="body">
 <div class="card" style="position:absolute;left:0;top:0;width:300px;height:218px;padding:14px 22px">
   <div class="serif" style="font-size:25px;color:var(--teal-d);margin-bottom:10px">Producers</div>
@@ -576,9 +627,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">3 · Logical</div><div class="bar"><span class="done" style="flex:3"></span><span class="done" style="flex:2"></span><span class="on" style="flex:9"></span><span class="" style="flex:9"></span><span class="" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">11<small>/24</small></div></div>
 </section>
 <section class="slide" id="s12" data-n="12">
-  <div class="hdr">4 · Physical architecture &amp; design <span class="it">4a</span></div>
-  <div class="who"><span class="av">LJ</span>Liu Jin</div>
-  <div class="ttl" style="">Physical decisions: managed, disposable, low cost</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">4 · Physical architecture &amp; design <span class="it">4a</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">LJ</span>Liu Jin</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Physical decisions: managed, disposable, low cost</div>
   <div class="body">
 <div style="display:flex;gap:18px">
  <div class="card" style="width:376px;height:196px;padding:20px 22px">
@@ -607,9 +658,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">4 · Physical</div><div class="bar"><span class="done" style="flex:3"></span><span class="done" style="flex:2"></span><span class="done" style="flex:9"></span><span class="on" style="flex:9"></span><span class="" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">12<small>/24</small></div></div>
 </section>
 <section class="slide" id="s13" data-n="13">
-  <div class="hdr">4 · Physical architecture &amp; design <span class="it">4b</span></div>
-  <div class="who"><span class="av">LJ</span>Liu Jin</div>
-  <div class="ttl" style="font-size:30.5px;top:62px">Physical view: private services behind CloudFront, across two zones</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">4 · Physical architecture &amp; design <span class="it">4b</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">LJ</span>Liu Jin</div>
+  <div class="ttl a" data-a="up" style="font-size:30.5px;top:62px;--d:60ms">Physical view: private services behind CloudFront, across two zones</div>
   <div class="body"><div class="dia" style="margin-top:-12px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 530" width="1160" height="530" font-family="Inter, Helvetica, Arial, sans-serif">
   <defs>
     <linearGradient id="pdTeal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E3E8FB"/></linearGradient>
@@ -767,9 +818,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">4 · Physical</div><div class="bar"><span class="done" style="flex:3"></span><span class="done" style="flex:2"></span><span class="done" style="flex:9"></span><span class="on" style="flex:9"></span><span class="" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">13<small>/24</small></div></div>
 </section>
 <section class="slide" id="s14" data-n="14">
-  <div class="hdr">4 · Physical architecture &amp; design <span class="it">4b</span></div>
-  <div class="who"><span class="av">LJ</span>Liu Jin</div>
-  <div class="ttl" style="">Each service scales on its own signal, and how far it goes</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">4 · Physical architecture &amp; design <span class="it">4b</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">LJ</span>Liu Jin</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Each service scales on its own signal, and how far it goes</div>
   <div class="body">
 <div style="position:absolute;left:0;top:0;width:470px">
  <div style="border-radius:8px;background:#FBDFD9;padding:12px 18px;margin-bottom:10px"><div class="serif" style="font-size:22px;color:var(--orange-d)">Commerce</div><div style="font:400 17.5px/1.3 Inter;margin-top:2px">Requests per task (target 12,000/min) → <b>2 to 6 tasks</b></div></div>
@@ -799,9 +850,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">4 · Physical</div><div class="bar"><span class="done" style="flex:3"></span><span class="done" style="flex:2"></span><span class="done" style="flex:9"></span><span class="on" style="flex:9"></span><span class="" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">14<small>/24</small></div></div>
 </section>
 <section class="slide" id="s15" data-n="15">
-  <div class="hdr">4 · Physical architecture &amp; design <span class="it">4c</span></div>
-  <div class="who"><span class="av">LJ</span>Liu Jin</div>
-  <div class="ttl" style="">Each service owns its data</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">4 · Physical architecture &amp; design <span class="it">4c</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">LJ</span>Liu Jin</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Each service owns its data</div>
   <div class="body">
 <div style="display:flex;justify-content:space-between"><div style="position:relative;width:370px;height:190px">
  <svg width="370" height="190" style="position:absolute;left:0;top:0"><path d="M2,30 A183,28 0 0 1 368,30 V160 A183,28 0 0 1 2,160 Z" fill="#E3E8FB" stroke="var(--teal-d)" stroke-width="2"/><path d="M2,30 A183,28 0 0 0 368,30" fill="none" stroke="var(--teal-d)" stroke-width="2"/><ellipse cx="185" cy="30" rx="183" ry="28" fill="#E3E8FB" stroke="var(--teal-d)" stroke-width="2" fill-opacity=".6"/></svg>
@@ -819,9 +870,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">4 · Physical</div><div class="bar"><span class="done" style="flex:3"></span><span class="done" style="flex:2"></span><span class="done" style="flex:9"></span><span class="on" style="flex:9"></span><span class="" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">15<small>/24</small></div></div>
 </section>
 <section class="slide" id="s16" data-n="16">
-  <div class="hdr">4 · Physical architecture &amp; design <span class="it">4d</span></div>
-  <div class="who"><span class="av">YQ</span>Yorik</div>
-  <div class="ttl" style="font-size:30.5px;top:62px">Team expiry, end to end: one transaction in, one transaction out</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">4 · Physical architecture &amp; design <span class="it">4d</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">YQ</span>Yorik</div>
+  <div class="ttl a" data-a="up" style="font-size:30.5px;top:62px;--d:60ms">Team expiry, end to end: one transaction in, one transaction out</div>
   <div class="body"><div class="dia" style="margin-top:-10px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 500" width="1160" height="500" font-family="Inter, Helvetica, Arial, sans-serif">
   <defs>
     <linearGradient id="sqTeal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E3E8FB"/></linearGradient>
@@ -944,9 +995,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">4 · Physical</div><div class="bar"><span class="done" style="flex:3"></span><span class="done" style="flex:2"></span><span class="done" style="flex:9"></span><span class="on" style="flex:9"></span><span class="" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">16<small>/24</small></div></div>
 </section>
 <section class="slide" id="s17" data-n="17">
-  <div class="hdr">4 · Physical architecture &amp; design <span class="it">4d</span></div>
-  <div class="who"><span class="av">YQ</span>Yorik</div>
-  <div class="ttl" style="">Failures are expected, and handled</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">4 · Physical architecture &amp; design <span class="it">4d</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">YQ</span>Yorik</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Failures are expected, and handled</div>
   <div class="body">
 <div style="display:flex;gap:18px;margin-top:6px">
  <div class="card" style="flex:1;height:340px;padding:30px 30px">
@@ -966,9 +1017,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">4 · Physical</div><div class="bar"><span class="done" style="flex:3"></span><span class="done" style="flex:2"></span><span class="done" style="flex:9"></span><span class="on" style="flex:9"></span><span class="" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">17<small>/24</small></div></div>
 </section>
 <section class="slide" id="s18" data-n="18">
-  <div class="hdr">5 · DevOps and development lifecycle <span class="it">5a</span></div>
-  <div class="who"><span class="av">PS</span>Pan</div>
-  <div class="ttl" style="">One main branch; production changes only by promotion</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">5 · DevOps and development lifecycle <span class="it">5a</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">PS</span>Pan</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">One main branch; production changes only by promotion</div>
   <div class="body">
 <div style="position:absolute;left:0;top:0;width:760px;height:540px">
  <div style="position:absolute;left:0;top:6px;font:italic 400 20px Inter;color:var(--muted)">feature branches</div>
@@ -992,9 +1043,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">5 · DevOps</div><div class="bar"><span class="done" style="flex:3"></span><span class="done" style="flex:2"></span><span class="done" style="flex:9"></span><span class="done" style="flex:9"></span><span class="on" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">18<small>/24</small></div></div>
 </section>
 <section class="slide" id="s19" data-n="19">
-  <div class="hdr">5 · DevOps and development lifecycle <span class="it">5b</span></div>
-  <div class="who"><span class="av">PS</span>Pan</div>
-  <div class="ttl" style="">Every pull request is checked before it can merge</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">5 · DevOps and development lifecycle <span class="it">5b</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">PS</span>Pan</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Every pull request is checked before it can merge</div>
   <div class="body">
 <div style="display:flex;gap:16px">
  <div class="card" style="flex:1;height:350px;padding:22px 22px"><div class="dot" style="width:76px;height:76px;background:var(--teal);font-size:34px;margin-bottom:16px"><svg class="ic" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M308.5 135.3c7.1-6.3 9.9-16.2 6.2-25c-2.3-5.3-4.8-10.5-7.6-15.5L304 89.4c-3-5-6.3-9.9-9.8-14.6c-5.7-7.6-15.7-10.1-24.7-7.1l-28.2 9.3c-10.7-8.8-23-16-36.2-20.9L199 27.1c-1.9-9.3-9.1-16.7-18.5-17.8C173.9 8.4 167.2 8 160.4 8l-.7 0c-6.8 0-13.5 .4-20.1 1.2c-9.4 1.1-16.6 8.6-18.5 17.8L115 56.1c-13.3 5-25.5 12.1-36.2 20.9L50.5 67.8c-9-3-19-.5-24.7 7.1c-3.5 4.7-6.8 9.6-9.9 14.6l-3 5.3c-2.8 5-5.3 10.2-7.6 15.6c-3.7 8.7-.9 18.6 6.2 25l22.2 19.8C32.6 161.9 32 168.9 32 176s.6 14.1 1.7 20.9L11.5 216.7c-7.1 6.3-9.9 16.2-6.2 25c2.3 5.3 4.8 10.5 7.6 15.6l3 5.2c3 5.1 6.3 9.9 9.9 14.6c5.7 7.6 15.7 10.1 24.7 7.1l28.2-9.3c10.7 8.8 23 16 36.2 20.9l6.1 29.1c1.9 9.3 9.1 16.7 18.5 17.8c6.7 .8 13.5 1.2 20.4 1.2s13.7-.4 20.4-1.2c9.4-1.1 16.6-8.6 18.5-17.8l6.1-29.1c13.3-5 25.5-12.1 36.2-20.9l28.2 9.3c9 3 19 .5 24.7-7.1c3.5-4.7 6.8-9.5 9.8-14.6l3.1-5.4c2.8-5 5.3-10.2 7.6-15.5c3.7-8.7 .9-18.6-6.2-25l-22.2-19.8c1.1-6.8 1.7-13.8 1.7-20.9s-.6-14.1-1.7-20.9l22.2-19.8zM112 176a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zM504.7 500.5c6.3 7.1 16.2 9.9 25 6.2c5.3-2.3 10.5-4.8 15.5-7.6l5.4-3.1c5-3 9.9-6.3 14.6-9.8c7.6-5.7 10.1-15.7 7.1-24.7l-9.3-28.2c8.8-10.7 16-23 20.9-36.2l29.1-6.1c9.3-1.9 16.7-9.1 17.8-18.5c.8-6.7 1.2-13.5 1.2-20.4s-.4-13.7-1.2-20.4c-1.1-9.4-8.6-16.6-17.8-18.5L583.9 307c-5-13.3-12.1-25.5-20.9-36.2l9.3-28.2c3-9 .5-19-7.1-24.7c-4.7-3.5-9.6-6.8-14.6-9.9l-5.3-3c-5-2.8-10.2-5.3-15.6-7.6c-8.7-3.7-18.6-.9-25 6.2l-19.8 22.2c-6.8-1.1-13.8-1.7-20.9-1.7s-14.1 .6-20.9 1.7l-19.8-22.2c-6.3-7.1-16.2-9.9-25-6.2c-5.3 2.3-10.5 4.8-15.6 7.6l-5.2 3c-5.1 3-9.9 6.3-14.6 9.9c-7.6 5.7-10.1 15.7-7.1 24.7l9.3 28.2c-8.8 10.7-16 23-20.9 36.2L315.1 313c-9.3 1.9-16.7 9.1-17.8 18.5c-.8 6.7-1.2 13.5-1.2 20.4s.4 13.7 1.2 20.4c1.1 9.4 8.6 16.6 17.8 18.5l29.1 6.1c5 13.3 12.1 25.5 20.9 36.2l-9.3 28.2c-3 9-.5 19 7.1 24.7c4.7 3.5 9.5 6.8 14.6 9.8l5.4 3.1c5 2.8 10.2 5.3 15.5 7.6c8.7 3.7 18.6 .9 25-6.2l19.8-22.2c6.8 1.1 13.8 1.7 20.9 1.7s14.1-.6 20.9-1.7l19.8 22.2zM464 304a48 48 0 1 1 0 96 48 48 0 1 1 0-96z"/></svg></div><div class="serif" style="font-size:25px;margin-bottom:18px">Build &amp; test</div><div style="display:flex;gap:12px;margin-bottom:12px;font:400 19px/1.25 Inter"><span style="color:var(--green);font-size:22px;flex:none"><svg class="ic" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg></span><span>Unit tests and API contract check</span></div><div style="display:flex;gap:12px;margin-bottom:12px;font:400 19px/1.25 Inter"><span style="color:var(--green);font-size:22px;flex:none"><svg class="ic" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg></span><span>≥ 80% coverage on new code (SonarCloud)</span></div></div>
@@ -1009,9 +1060,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">5 · DevOps</div><div class="bar"><span class="done" style="flex:3"></span><span class="done" style="flex:2"></span><span class="done" style="flex:9"></span><span class="done" style="flex:9"></span><span class="on" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">19<small>/24</small></div></div>
 </section>
 <section class="slide" id="s20" data-n="20">
-  <div class="hdr">5 · DevOps and development lifecycle <span class="it">5b</span></div>
-  <div class="who"><span class="av">PS</span>Pan</div>
-  <div class="ttl" style="font-size:30.5px;top:62px">One promotion builds, deploys, tests and releases, then destroys it all</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">5 · DevOps and development lifecycle <span class="it">5b</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">PS</span>Pan</div>
+  <div class="ttl a" data-a="up" style="font-size:30.5px;top:62px;--d:60ms">One promotion builds, deploys, tests and releases, then destroys it all</div>
   <div class="body">
 <div style="display:flex;align-items:stretch">
  <div style="flex:1;height:226px;border-radius:8px;background:var(--default);color:var(--foreground);padding:22px 14px 0;text-align:center;position:relative">
@@ -1049,9 +1100,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">5 · DevOps</div><div class="bar"><span class="done" style="flex:3"></span><span class="done" style="flex:2"></span><span class="done" style="flex:9"></span><span class="done" style="flex:9"></span><span class="on" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">20<small>/24</small></div></div>
 </section>
 <section class="slide" id="s21" data-n="21">
-  <div class="hdr">5 · DevOps and development lifecycle <span class="it">5c</span></div>
-  <div class="who"><span class="av">PS</span>Pan</div>
-  <div class="ttl" style="">What the real cloud taught us</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">5 · DevOps and development lifecycle <span class="it">5c</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">PS</span>Pan</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">What the real cloud taught us</div>
   <div class="body"><div style="display:flex;gap:18px">
  <div class="card" style="flex:1;height:500px;padding:28px 28px">
  <div class="dot" style="width:70px;height:70px;background:var(--teal-d);color:#fff;font:700 30px Inter;margin-bottom:24px">1</div>
@@ -1072,9 +1123,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">5 · DevOps</div><div class="bar"><span class="done" style="flex:3"></span><span class="done" style="flex:2"></span><span class="done" style="flex:9"></span><span class="done" style="flex:9"></span><span class="on" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">21<small>/24</small></div></div>
 </section>
 <section class="slide" id="s22" data-n="22">
-  <div class="hdr">5 · DevOps and development lifecycle <span class="it">5b</span></div>
-  <div class="who"><span class="av">PS</span>Pan</div>
-  <div class="ttl" style="">No standing keys: who and what can touch AWS</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">5 · DevOps and development lifecycle <span class="it">5b</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">PS</span>Pan</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">No standing keys: who and what can touch AWS</div>
   <div class="body">
 <div style="position:absolute;left:0;top:0;width:330px">
  <div class="card" style="padding:16px 18px;margin-bottom:14px">
@@ -1107,9 +1158,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg">5 · DevOps</div><div class="bar"><span class="done" style="flex:3"></span><span class="done" style="flex:2"></span><span class="done" style="flex:9"></span><span class="done" style="flex:9"></span><span class="on" style="flex:7"></span><span class="" style="flex:10"></span></div><div class="pg">22<small>/24</small></div></div>
 </section>
 <section class="slide" id="s23" data-n="23">
-  <div class="hdr">6 · Demo <span class="it">6a</span></div>
-  <div class="who"><span class="av">WZ</span>Eric</div>
-  <div class="ttl" style="">Live demo</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">6 · Demo <span class="it">6a</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">WZ</span>Eric</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Live demo</div>
   <div class="body">
 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:6px">
  <div class="card" style="height:206px;padding:24px 24px;display:flex;flex-direction:column;justify-content:space-between">
@@ -1140,9 +1191,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
 </div>
 <div style="position:absolute;left:80px;top:604px;font:400 17px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:10px;align-items:center"><span style="font-size:20px"><svg class="ic" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span> github.com/PPsyrius/iss-groupbuy-team8 · d3lvq02o2e7tcn.cloudfront.net</div></section>
 <section class="slide backup" id="BX" data-n="BX">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">BX</span></div>
-  <div class="who"><span class="av">JC</span>Lim</div>
-  <div class="ttl">Backup slides</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">BX</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">JC</span>Lim</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Backup slides</div>
   <div class="body">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 22px;margin-top:4px">
  <div data-go="B1a" style="cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:8px 14px">
@@ -1166,36 +1217,36 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">BX</div></div>
 </section>
 <section class="slide backup" id="B1a" data-n="B1a">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">B1a</span></div>
-  <div class="who"><span class="av">WZ</span>Eric</div>
-  <div class="ttl">Logical decisions (AD-02 to AD-06)</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">B1a</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">WZ</span>Eric</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Logical decisions (AD-02 to AD-06)</div>
   <div class="body"><table class="t" style="font-size:20px">
 <tr><th style="width:90px">ID</th><th style="width:500px">Decision</th><th style="">Why</th></tr>
 <tr><td class="id">AD-02</td><td class="">Split where no transaction crosses, not by nouns</td><td class="">Payment and expiry stay one transaction, so no sagas. Five services rejected (50–55 person-days)</td></tr><tr><td class="id">AD-03</td><td class="">One database and one database role per service</td><td class="">No joins across services; enforced by grants and architecture tests</td></tr><tr><td class="id">AD-04</td><td class="">Outbox → SNS → SQS with dead-letter queues; consumers skip duplicates</td><td class="">Events are never lost or applied twice, and there is no broker to run</td></tr><tr><td class="id">AD-05</td><td class="">One shared login session in Valkey, roles inside it</td><td class="">Services check roles without calling identity on every request</td></tr><tr><td class="id">AD-06</td><td class="">One direct call, commerce → identity, failing closed</td><td class="">An outage returns an error and Stripe retries; a buyer is never wrongly rejected</td></tr></table></div>
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B1a</div></div>
 </section>
 <section class="slide backup" id="B1b" data-n="B1b">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">B1b</span></div>
-  <div class="who"><span class="av">LJ</span>Liu Jin</div>
-  <div class="ttl">Physical decisions (AD-07 to AD-14)</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">B1b</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">LJ</span>Liu Jin</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Physical decisions (AD-07 to AD-14)</div>
   <div class="body"><table class="t" style="font-size:17px">
 <tr><th style="width:90px">ID</th><th style="width:440px">Decision</th><th style="">Why</th></tr>
 <tr><td class="id">AD-07</td><td class="">Fargate on ARM, not Kubernetes (EKS)</td><td class="">The EKS control plane (≈ US$73/month) costs more than all our compute; ARM is ~20% cheaper</td></tr><tr><td class="id">AD-08</td><td class="">Fargate Spot above the minimum (1 : 3)</td><td class="">Cheap extra capacity; the minimum stays on regular Fargate</td></tr><tr><td class="id">AD-09</td><td class="">CloudFront → load balancer with a secret header</td><td class="">HTTPS at the edge; the load balancer refuses everything else (403)</td></tr><tr><td class="id">AD-10</td><td class="">Small NAT instance, not a NAT Gateway</td><td class="">≈ US$4 instead of ≈ US$43 a month</td></tr><tr><td class="id">AD-11</td><td class="">One database server, three databases</td><td class="">Low cost; moving a database to its own server needs no code change</td></tr><tr><td class="id">AD-12</td><td class="">Permanent edge, disposable runtime</td><td class="">≈ US$0.12–0.20 an hour while up, instead of ≈ US$125 a month always on</td></tr><tr><td class="id">AD-13</td><td class="">No Kubernetes or Argo CD</td><td class="">They would cost 8–12 days of set-up before any feature work</td></tr><tr><td class="id">AD-14</td><td class="">Own account in an AWS Organization</td><td class="">Separate blast radius and bill; short-lived logins; guardrails the account admin cannot lift</td></tr></table></div>
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B1b</div></div>
 </section>
 <section class="slide backup" id="B2" data-n="B2">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">B2</span></div>
-  <div class="who"><span class="av">LJ</span>Liu Jin</div>
-  <div class="ttl">Known limitations and the way out</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">B2</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">LJ</span>Liu Jin</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Known limitations and the way out</div>
   <div class="body"><table class="t" style="font-size:19px">
 <tr><th style="width:110px">ID</th><th style="width:520px">Limitation</th><th style="">Way out</th></tr>
 <tr><td class="id">AISS-01</td><td class="">Database, cache and NAT each run in one zone</td><td class="">A cost choice; production adds multi-zone and replicas</td></tr><tr><td class="id">AISS-02</td><td class="">The commerce service is large</td><td class="">Move payments out next, with a saga for refunds</td></tr><tr><td class="id">AISS-03</td><td class="">Checkout stops while identity is down</td><td class="">By design (no wrong refunds); later a cache or circuit breaker</td></tr><tr><td class="id">AISS-04</td><td class="">Internal endpoints rely on network rules only</td><td class="">Add a service token or mutual TLS</td></tr><tr><td class="id">AISS-05</td><td class="">One shared database server</td><td class="">Move a database to its own server; no code change</td></tr><tr><td class="id">AISS-06</td><td class="">Building the environment takes ≈ 32 min, 15 of them waiting for SNS</td><td class="">Start it early on the day; the edge stays permanent</td></tr></table></div>
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B2</div></div>
 </section>
 <section class="slide backup" id="B3" data-n="B3">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">B3</span></div>
-  <div class="who"><span class="av">WZ</span>Eric</div>
-  <div class="ttl">Context map: where service boundaries may go</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">B3</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">WZ</span>Eric</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Context map: where service boundaries may go</div>
   <div class="body"><div style="display:flex;gap:30px;align-items:flex-start">
    <div style="width:470px;flex:none"><svg style="width:470px;height:auto" xmlns="http://www.w3.org/2000/svg" width="600" height="680" viewBox="0 0 600 680" font-family="Inter, Helvetica, Arial, sans-serif">
   <defs>
@@ -1305,9 +1356,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B3</div></div>
 </section>
 <section class="slide backup" id="B4" data-n="B4">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">B4</span></div>
-  <div class="who"><span class="av">WZ</span>Eric</div>
-  <div class="ttl">Aggregates and their life cycles</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">B4</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">WZ</span>Eric</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Aggregates and their life cycles</div>
   <div class="body"><div style="display:flex;gap:30px">
    <div style="flex:1"><ul class="b" style="font:400 19px/1.4 Inter">
     <li><b>Team (GroupDeal):</b> only OPEN may change state, and only once</li><li><b>Order:</b> PENDING → CONFIRMED or CANCELLED</li>
@@ -1434,18 +1485,18 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B4</div></div>
 </section>
 <section class="slide backup" id="B5" data-n="B5">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">B5</span></div>
-  <div class="who"><span class="av">WZ</span>Eric</div>
-  <div class="ttl">Layers, and tests that keep boundaries in place</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">B5</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">WZ</span>Eric</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Layers, and tests that keep boundaries in place</div>
   <div class="body"><table class="t" style="font-size:18px">
 <tr><th style="width:150px">Layer</th><th style="width:270px">Module</th><th style="">Contains</th></tr>
 <tr><td class="">Client</td><td class=""><span class="mono">blocbuy-client</span></td><td class="">DTOs and the integration event contracts (TeamSucceededV1, TeamExpiredV1, PaymentSucceededV1)</td></tr><tr><td class="">Adapter</td><td class=""><span class="mono">blocbuy-adapter</span></td><td class="">REST controllers, the result envelope, the global error handler</td></tr><tr><td class="">Application</td><td class=""><span class="mono">blocbuy-application</span></td><td class="">Commands, queries, application services, outbox relay</td></tr><tr><td class="">Domain</td><td class=""><span class="mono">blocbuy-domain</span></td><td class="">Aggregates, domain events, ports (no framework code)</td></tr><tr><td class="">Infrastructure</td><td class=""><span class="mono">blocbuy-infrastructure</span></td><td class="">MyBatis, Stripe, Redis, SNS/SQS transports</td></tr><tr><td class="">Assemblies</td><td class=""><span class="mono">services/*-svc</span></td><td class="">Thin Spring Boot entry points that pick which contexts to run</td></tr></table><div style="margin-top:18px;border-radius:8px;background:var(--inverse);color:#fff;padding:16px 22px;font:400 19px/1.4 Inter"><b style="color:#FFB01F">Boundaries are tested:</b> 18 architecture rules run with the unit tests, e.g. <span class="mono" style="font-size:16px">commerce_reaches_identity_only_through_user_port</span></div></div>
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B5</div></div>
 </section>
 <section class="slide backup" id="B6" data-n="B6">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">B6</span></div>
-  <div class="who"><span class="av">YQ</span>Yorik</div>
-  <div class="ttl">Joining a team by paying, step by step</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">B6</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">YQ</span>Yorik</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Joining a team by paying, step by step</div>
   <div class="body"><div class="dia">
 <svg style="width:1164px;height:auto" xmlns="http://www.w3.org/2000/svg" width="1180" height="470" viewBox="0 0 1180 470" font-family="Inter, Helvetica, Arial, sans-serif">
 <title>sd UC4 Join a team by paying</title>
@@ -1544,27 +1595,27 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B6</div></div>
 </section>
 <section class="slide backup" id="B7" data-n="B7">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">B7</span></div>
-  <div class="who"><span class="av">LJ</span>Liu Jin</div>
-  <div class="ttl">Technology and services</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">B7</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">LJ</span>Liu Jin</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Technology and services</div>
   <div class="body"><table class="t" style="font-size:17px">
 <tr><th style="width:150px">Concern</th><th style="">Choice</th></tr>
 <tr><td class="">Edge</td><td class="">CloudFront (permanent: Google sign-in and the Stripe webhook depend on its address), S3 for the web app</td></tr><tr><td class="">Compute</td><td class="">ECS Fargate on ARM64, 0.5 vCPU / 1 GB per task, circuit breaker with rollback, Service Connect</td></tr><tr><td class="">Scaling</td><td class="">commerce: requests per target, 2–6, out after 60 s / in after 180 s · notification: backlog per task (50), 1–4 · identity: 1</td></tr><tr><td class="">Data</td><td class="">PostgreSQL 18 on RDS db.t4g.micro (TLS) · Valkey 8 on ElastiCache cache.t4g.micro (TLS and password)</td></tr><tr><td class="">Messaging</td><td class="">SNS (encrypted) → SQS (60 s visibility) with dead-letter queues after 5 receives, filter policies</td></tr><tr><td class="">Secrets</td><td class="">Parameter Store SecureString; database passwords never stored in Terraform state</td></tr><tr><td class="">Observability</td><td class="">CloudWatch dashboard (edge, services, messaging), dead-letter and queue-age alarms, trace ID on every request</td></tr><tr><td class="">App stack</td><td class="">Java 21, Spring Boot 4, MyBatis, Sa-Token, Stripe · React 19, TanStack, HeroUI</td></tr></table></div>
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B7</div></div>
 </section>
 <section class="slide backup" id="B8" data-n="B8">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">B8</span></div>
-  <div class="who"><span class="av">PS</span>Pan</div>
-  <div class="ttl">Everything the real cloud taught us</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">B8</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">PS</span>Pan</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Everything the real cloud taught us</div>
   <div class="body"><table class="t" style="font-size:15.5px">
 <tr><th style="width:640px">What happened</th><th style="">What we did</th></tr>
 <tr><td class="">The first promotion failed five times (image digests, variables, a tag policy, an early 503)</td><td class="">Fixed one at a time; first green run on 6 Oct</td></tr><tr><td class="">A read-only container disk crashed the web server's temp folder</td><td class="">Mounted a writable /tmp</td></tr><tr><td class="">The AWS tagging API still lists resources that are already deleted</td><td class="">The teardown check asks each service directly</td></tr><tr><td class="">Default database privileges exposed tables to every role</td><td class="">Grants set after each migration, and tested</td></tr><tr><td class="">The outbox relay marked unsent rows as failed after a mid-batch error</td><td class="">Caught in code review and fixed</td></tr><tr><td class="">The notification consumer was never switched on in AWS</td><td class="">Now enabled together with messaging</td></tr><tr><td class="">Setting up scaling was denied: tags need an extra permission</td><td class="">Permission added, limited to this project (17 Oct)</td></tr><tr><td class="">The deploy stopped twice: alarm e-mails were not yet confirmed</td><td class="">Testing opt-out for now; confirm the e-mails before the final release</td></tr><tr><td class="">An interrupted start-up leaves auto-scaling paused</td><td class="">Repaired by hand; no fix yet</td></tr><tr><td class="">An organisation policy blocked CloudFront metrics (us-east-1)</td><td class="">Policies consolidated with a narrow exception</td></tr></table></div>
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B8</div></div>
 </section>
 <section class="slide backup" id="B9" data-n="B9">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">B9</span></div>
-  <div class="who"><span class="av">PS</span>Pan</div>
-  <div class="ttl">Infrastructure as code, and the actual bill</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">B9</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">PS</span>Pan</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Infrastructure as code, and the actual bill</div>
   <div class="body"><table class="t" style="font-size:17px">
 <tr><th style="width:140px">Stack</th><th style="width:140px">Lifetime</th><th style="">Contents</th></tr>
 <tr><td class="">foundation</td><td class="">permanent</td><td class="">state bucket, GitHub OIDC roles with a permissions boundary, ECR, Parameter Store</td></tr><tr><td class="">edge</td><td class="">permanent</td><td class="">CloudFront and the S3 web app (pointed at the new load balancer on every build)</td></tr><tr><td class="">runtime</td><td class="">disposable</td><td class="">network, ECS, load balancer, database, cache, SNS/SQS, dashboard, alarms: 113–115 resources</td></tr></table><ul class="b" style="font:400 17.5px/1.38 Inter;margin-top:16px">
@@ -1576,9 +1627,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B9</div></div>
 </section>
 <section class="slide backup" id="B10" data-n="B10">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">B10</span></div>
-  <div class="who"><span class="av">WZ</span>Eric</div>
-  <div class="ttl">API access for producers and consumers</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">B10</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">WZ</span>Eric</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">API access for producers and consumers</div>
   <div class="body">
    <div style="display:flex;align-items:stretch;gap:10px;height:150px">
     <div style="flex:1;border-radius:8px;background:#EFE9DF;padding:14px 16px"><div style="font-size:24px;color:var(--ink)"><svg class="ic" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M144 0a80 80 0 1 1 0 160A80 80 0 1 1 144 0zM512 0a80 80 0 1 1 0 160A80 80 0 1 1 512 0zM0 298.7C0 239.8 47.8 192 106.7 192l42.7 0c15.9 0 31 3.5 44.6 9.7c-1.3 7.2-1.9 14.7-1.9 22.3c0 38.2 16.8 72.5 43.3 96c-.2 0-.4 0-.7 0L21.3 320C9.6 320 0 310.4 0 298.7zM405.3 320c-.2 0-.4 0-.7 0c26.6-23.5 43.3-57.8 43.3-96c0-7.6-.7-15-1.9-22.3c13.6-6.3 28.7-9.7 44.6-9.7l42.7 0C592.2 192 640 239.8 640 298.7c0 11.8-9.6 21.3-21.3 21.3l-213.3 0zM224 224a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zM128 485.3C128 411.7 187.7 352 261.3 352l117.3 0C452.3 352 512 411.7 512 485.3c0 14.7-11.9 26.7-26.7 26.7l-330.7 0c-14.7 0-26.7-11.9-26.7-26.7z"/></svg></div><div style="font:700 18px Inter;margin-top:6px">Clients</div><div style="font:400 15.5px/1.3 Inter;color:var(--ink3)">the web app; future partner apps</div></div><div style="display:flex;align-items:center;color:var(--muted)"><svg class="ic" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l370.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128z"/></svg></div><div style="flex:1;border-radius:8px;background:var(--teal-l);padding:14px 16px"><div style="font-size:24px;color:var(--teal-d)"><svg class="ic" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8s0 0 0 0z"/></svg></div><div style="font:700 18px Inter;margin-top:6px">CloudFront</div><div style="font:400 15.5px/1.3 Inter;color:var(--ink3)">the only way in; adds the secret header</div></div><div style="display:flex;align-items:center;color:var(--muted)"><svg class="ic" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l370.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128z"/></svg></div><div style="flex:1;border-radius:8px;background:var(--teal-l);padding:14px 16px"><div style="font-size:24px;color:var(--teal-d)"><svg class="ic" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M208 80c0-26.5 21.5-48 48-48l64 0c26.5 0 48 21.5 48 48l0 64c0 26.5-21.5 48-48 48l-8 0 0 40 152 0c30.9 0 56 25.1 56 56l0 32 8 0c26.5 0 48 21.5 48 48l0 64c0 26.5-21.5 48-48 48l-64 0c-26.5 0-48-21.5-48-48l0-64c0-26.5 21.5-48 48-48l8 0 0-32c0-4.4-3.6-8-8-8l-152 0 0 40 8 0c26.5 0 48 21.5 48 48l0 64c0 26.5-21.5 48-48 48l-64 0c-26.5 0-48-21.5-48-48l0-64c0-26.5 21.5-48 48-48l8 0 0-40-152 0c-4.4 0-8 3.6-8 8l0 32 8 0c26.5 0 48 21.5 48 48l0 64c0 26.5-21.5 48-48 48l-64 0c-26.5 0-48-21.5-48-48l0-64c0-26.5 21.5-48 48-48l8 0 0-32c0-30.9 25.1-56 56-56l152 0 0-40-8 0c-26.5 0-48-21.5-48-48l0-64z"/></svg></div><div style="font:700 18px Inter;margin-top:6px">Load-balancer paths</div><div style="font:400 15.5px/1.3 Inter;color:var(--ink3)">/auth, /users, /notifications, /api/*; anything else 403</div></div><div style="display:flex;align-items:center;color:var(--muted)"><svg class="ic" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l370.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128z"/></svg></div><div style="flex:1;border-radius:8px;background:var(--orange-l);padding:14px 16px"><div style="font-size:24px;color:var(--orange-d)"><svg class="ic" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M290.8 48.6l78.4 29.7L288 109.5 206.8 78.3l78.4-29.7c1.8-.7 3.8-.7 5.7 0zM136 92.5l0 112.2c-1.3 .4-2.6 .8-3.9 1.3l-96 36.4C14.4 250.6 0 271.5 0 294.7L0 413.9c0 22.2 13.1 42.3 33.5 51.3l96 42.2c14.4 6.3 30.7 6.3 45.1 0L288 457.5l113.5 49.9c14.4 6.3 30.7 6.3 45.1 0l96-42.2c20.3-8.9 33.5-29.1 33.5-51.3l0-119.1c0-23.3-14.4-44.1-36.1-52.4l-96-36.4c-1.3-.5-2.6-.9-3.9-1.3l0-112.2c0-23.3-14.4-44.1-36.1-52.4l-96-36.4c-12.8-4.8-26.9-4.8-39.7 0l-96 36.4C150.4 48.4 136 69.3 136 92.5zM392 210.6l-82.4 31.2 0-89.2L392 121l0 89.6zM154.8 250.9l78.4 29.7L152 311.7 70.8 280.6l78.4-29.7c1.8-.7 3.8-.7 5.7 0zm18.8 204.4l0-100.5L256 323.2l0 95.9-82.4 36.2zM421.2 250.9c1.8-.7 3.8-.7 5.7 0l78.4 29.7L424 311.7l-81.2-31.1 78.4-29.7zM523.2 421.2l-77.6 34.1 0-100.5L528 323.2l0 90.7c0 3.2-1.9 6-4.8 7.3z"/></svg></div><div style="font:700 18px Inter;margin-top:6px">Services</div><div style="font:400 15.5px/1.3 Inter;color:var(--ink3)">identity · commerce · notification</div></div>
@@ -1595,9 +1646,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B10</div></div>
 </section>
 <section class="slide backup" id="B11" data-n="B11">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">B11</span></div>
-  <div class="who"><span class="av">JC</span>Lim</div>
-  <div class="ttl">Analytics: what the platform measures</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">B11</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">JC</span>Lim</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Analytics: what the platform measures</div>
   <div class="body">
    <div style="display:flex;gap:18px">
     <div class="card" style="flex:1;padding:16px 20px"><div style="display:flex;gap:10px;align-items:center"><span style="color:var(--green);font-size:22px"><svg class="ic" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M64 64c0-17.7-14.3-32-32-32S0 46.3 0 64L0 400c0 44.2 35.8 80 80 80l400 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L80 416c-8.8 0-16-7.2-16-16L64 64zm406.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L320 210.7l-57.4-57.4c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L240 221.3l57.4 57.4c12.5 12.5 32.8 12.5 45.3 0l128-128z"/></svg></span><div class="serif" style="font-size:22px;color:var(--green)">Operational, in use</div></div>
@@ -1621,18 +1672,18 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B11</div></div>
 </section>
 <section class="slide backup" id="B12" data-n="B12">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">B12</span></div>
-  <div class="who"><span class="av">JC</span>Lim</div>
-  <div class="ttl">Scale-out and resilience results</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">B12</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">JC</span>Lim</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Scale-out and resilience results</div>
   <div class="body"><table class="t" style="font-size:16px">
 <tr><th style="width:190px">Check</th><th style="width:360px">Target</th><th style="">Result on AWS</th></tr>
 <tr><td class="">HTTP auto-scaling</td><td class="">≥ 80% of linear from 1 → 4 tasks; p95 &lt; 800 ms except 3 min after a scale-out</td><td class="">commerce 1 → 3 tasks on its own; ≈ 455 req/s, server p95 &lt; 50 ms. Partial: the load laptop hit its limit first, so 4 tasks and linearity are not shown yet</td></tr><tr><td class="">Queue scaling</td><td class="">2,000 expiries → up to 4 tasks, drained, dead-letter queue empty</td><td class="">not run on AWS · local test: 141 s end to end</td></tr><tr><td class="">Self-healing</td><td class="">Stop 1 of 2 tasks: no failed requests, replacement within 2 min</td><td class="">not run on AWS</td></tr><tr><td class="">Bad message</td><td class="">5 receives → dead-letter queue → alarm</td><td class="">not run on AWS · local test: passed 15 Oct</td></tr><tr><td class="">Identity outage</td><td class="">Browsing works; checkout returns 500 and is redelivered once</td><td class="">not run on AWS · local test: passed</td></tr><tr><td class="">Build from nothing</td><td class="">3 services stable, 9 smoke checks</td><td class="">17 Oct, twice: tasks 2/2 · 1/1 · 1/1; 9/9 checks; SNS → SQS verified; buyer journey end to end: not run on AWS</td></tr><tr><td class="">Teardown</td><td class="">Everything destroyed, absence check clean</td><td class="">115 resources in 709 s (17 Oct); 113 in 784 s (16 Oct)</td></tr></table><div style="margin-top:10px;font:italic 400 15px Inter;color:var(--muted)">A local result is never presented as an AWS result.</div></div>
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B12</div></div>
 </section>
 <section class="slide backup" id="B13" data-n="B13">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">B13</span></div>
-  <div class="who"><span class="av">WZ</span>Eric</div>
-  <div class="ttl">Logical view, simplified</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">B13</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">WZ</span>Eric</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Logical view, simplified</div>
   <div class="body"><div style="position:relative;width:1164px;height:548px">
 <svg style="position:absolute;left:0;top:0" width="1164" height="548"><defs><marker id="ah6B655C" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6B655C"/></marker><marker id="ah3E5CD9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3E5CD9"/></marker><marker id="ah8C2414" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8C2414"/></marker><marker id="ahE8402A" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#E8402A"/></marker></defs><polyline points="200,52 236,52" fill="none" stroke="#6B655C" stroke-width="2" marker-end="url(#ah6B655C)"/><polyline points="446,52 482,52" fill="none" stroke="#6B655C" stroke-width="2" marker-end="url(#ah6B655C)"/><polyline points="560,82 160,154" fill="none" stroke="#6B655C" stroke-width="2" marker-end="url(#ah6B655C)"/><polyline points="630,82 600,154" fill="none" stroke="#6B655C" stroke-width="2" marker-end="url(#ah6B655C)"/><polyline points="780,52 830,52 830,456 866,456" fill="none" stroke="#6B655C" stroke-width="2" marker-end="url(#ah6B655C)"/><polyline points="412,196 274,196" fill="none" stroke="#E8402A" stroke-width="3" marker-end="url(#ahE8402A)"/><polyline points="760,196 866,196" fill="none" stroke="#E8402A" stroke-width="3" marker-end="url(#ahE8402A)"/><polyline points="150,236 150,260" fill="none" stroke="#6B655C" stroke-width="2" marker-end="url(#ah6B655C)"/><polyline points="590,236 590,260" fill="none" stroke="#6B655C" stroke-width="2" marker-end="url(#ah6B655C)"/><polyline points="945,232 945,260" fill="none" stroke="#6B655C" stroke-width="2" marker-end="url(#ah6B655C)"/><polyline points="1098,232 1098,260" fill="none" stroke="#6B655C" stroke-width="2" marker-end="url(#ah6B655C)"/><polyline points="945,334 945,406" fill="none" stroke="#6B655C" stroke-width="2" marker-end="url(#ah6B655C)"/></svg>
 <div style="position:absolute;left:0px;top:22px;width:200px;height:60px;background:#fff;border:1px solid #DDD5C8;border-radius:8px;box-shadow:var(--shadow-surface);"><div style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center;font:400 21px/1.2 Inter">Browser</div></div><div style="position:absolute;left:244px;top:22px;width:200px;height:60px;background:#fff;border:1px solid #DDD5C8;border-radius:8px;box-shadow:var(--shadow-surface);"><div style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center;font:400 21px/1.2 Inter">CloudFront</div></div><div style="position:absolute;left:490px;top:22px;width:290px;height:60px;background:#fff;border:1px solid #DDD5C8;border-radius:8px;box-shadow:var(--shadow-surface);"><div style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center;font:400 21px/1.2 Inter">Load balancer</div></div>
@@ -1650,9 +1701,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B13</div></div>
 </section>
 <section class="slide backup" id="B14" data-n="B14">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">B14</span></div>
-  <div class="who"><span class="av">LJ</span>Liu Jin</div>
-  <div class="ttl">Physical view, simplified</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">B14</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">LJ</span>Liu Jin</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Physical view, simplified</div>
   <div class="body"><div style="position:relative;width:1164px;height:548px">
 <svg style="position:absolute;left:0;top:0" width="1164" height="548"><defs><marker id="ah6B655C" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6B655C"/></marker><marker id="ah3E5CD9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3E5CD9"/></marker><marker id="ah8C2414" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8C2414"/></marker><marker id="ahE8402A" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#E8402A"/></marker></defs><polyline points="115,82 115,118" fill="none" stroke="#6B655C" stroke-width="2" marker-end="url(#ah6B655C)"/><polyline points="230,150 296,150" fill="none" stroke="#3E5CD9" stroke-width="3" marker-end="url(#ah3E5CD9)"/><polyline points="115,200 115,236" fill="none" stroke="#6B655C" stroke-width="2" marker-end="url(#ah6B655C)"/><polyline points="470,180 470,226" fill="none" stroke="#3E5CD9" stroke-width="3" marker-end="url(#ah3E5CD9)"/><polyline points="900,312 980,312" fill="none" stroke="#E8402A" stroke-width="3" marker-end="url(#ahE8402A)"/></svg>
 <div style="position:absolute;left:0px;top:22px;width:230px;height:58px;background:#fff;border:1px solid #DDD5C8;border-radius:8px;box-shadow:var(--shadow-surface);"><div style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center;font:400 21px/1.2 Inter">Users</div></div>
@@ -1673,9 +1724,9 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B14</div></div>
 </section>
 <section class="slide backup" id="B15" data-n="B15">
-  <div class="hdr">Backup · Q&amp;A only <span class="it">B15</span></div>
-  <div class="who"><span class="av">YQ</span>Yorik</div>
-  <div class="ttl">Team expiry, numbered steps</div>
+  <div class="hdr a" data-a="fade" style="--d:0ms">Backup · Q&amp;A only <span class="it">B15</span></div>
+  <div class="who a" data-a="fade" style="--d:0ms"><span class="av">YQ</span>Yorik</div>
+  <div class="ttl a" data-a="up" style="--d:60ms">Team expiry, numbered steps</div>
   <div class="body"><div style="position:relative;width:1164px;height:548px">
   <div style="position:absolute;left:0px;top:0;width:156px;height:66px;border-radius:8px;background:var(--orange-l);color:var(--orange-d);font:700 19px/1.15 Inter;display:flex;align-items:center;justify-content:center;text-align:center">Expiry job</div><div style="position:absolute;left:78px;top:66px;width:0;height:420px;border-left:1.5px dashed #A69E92"></div><div style="position:absolute;left:168px;top:0;width:156px;height:66px;border-radius:8px;background:var(--orange-l);color:var(--orange-d);font:700 19px/1.15 Inter;display:flex;align-items:center;justify-content:center;text-align:center">Commerce DB</div><div style="position:absolute;left:246px;top:66px;width:0;height:420px;border-left:1.5px dashed #A69E92"></div><div style="position:absolute;left:336px;top:0;width:156px;height:66px;border-radius:8px;background:var(--orange-l);color:var(--orange-d);font:700 19px/1.15 Inter;display:flex;align-items:center;justify-content:center;text-align:center">Relay</div><div style="position:absolute;left:414px;top:66px;width:0;height:420px;border-left:1.5px dashed #A69E92"></div><div style="position:absolute;left:504px;top:0;width:156px;height:66px;border-radius:8px;background:var(--yellow);color:var(--warning-soft-foreground);font:700 19px/1.15 Inter;display:flex;align-items:center;justify-content:center;text-align:center">SNS topic</div><div style="position:absolute;left:582px;top:66px;width:0;height:420px;border-left:1.5px dashed #A69E92"></div><div style="position:absolute;left:672px;top:0;width:156px;height:66px;border-radius:8px;background:var(--yellow);color:var(--warning-soft-foreground);font:700 19px/1.15 Inter;display:flex;align-items:center;justify-content:center;text-align:center">Notification queue</div><div style="position:absolute;left:750px;top:66px;width:0;height:420px;border-left:1.5px dashed #A69E92"></div><div style="position:absolute;left:840px;top:0;width:156px;height:66px;border-radius:8px;background:var(--teal);color:#fff;font:700 19px/1.15 Inter;display:flex;align-items:center;justify-content:center;text-align:center">Notification service</div><div style="position:absolute;left:918px;top:66px;width:0;height:420px;border-left:1.5px dashed #A69E92"></div><div style="position:absolute;left:1008px;top:0;width:156px;height:66px;border-radius:8px;background:var(--teal);color:#fff;font:700 19px/1.15 Inter;display:flex;align-items:center;justify-content:center;text-align:center">Notification DB</div><div style="position:absolute;left:1086px;top:66px;width:0;height:420px;border-left:1.5px dashed #A69E92"></div>
   <div style="position:absolute;left:78px;top:150px;width:168px;height:3px;background:var(--orange)"></div><div style="position:absolute;left:236px;top:145px;border-left:11px solid var(--orange);border-top:6.5px solid transparent;border-bottom:6.5px solid transparent"></div><div style="position:absolute;left:82px;top:120px;font:400 21px Inter;white-space:nowrap;background:rgba(246,242,236,.92);padding:0 4px"><b style="color:var(--orange-d)">1 One transaction:</b> expire team · cancel orders · start refunds · save event</div><div style="position:absolute;left:246px;top:202px;width:168px;height:3px;background:var(--teal-d)"></div><div style="position:absolute;left:246px;top:197px;border-right:11px solid var(--teal-d);border-top:6.5px solid transparent;border-bottom:6.5px solid transparent"></div><div style="position:absolute;left:250px;top:172px;font:400 21px Inter;white-space:nowrap;background:rgba(246,242,236,.92);padding:0 4px"><b>2</b> pick up new events</div><div style="position:absolute;left:414px;top:254px;width:168px;height:3px;background:var(--teal-d)"></div><div style="position:absolute;left:572px;top:249px;border-left:11px solid var(--teal-d);border-top:6.5px solid transparent;border-bottom:6.5px solid transparent"></div><div style="position:absolute;left:418px;top:224px;font:400 21px Inter;white-space:nowrap;background:rgba(246,242,236,.92);padding:0 4px"><b>3</b> publish</div><div style="position:absolute;left:582px;top:306px;width:168px;height:3px;background:var(--teal-d)"></div><div style="position:absolute;left:740px;top:301px;border-left:11px solid var(--teal-d);border-top:6.5px solid transparent;border-bottom:6.5px solid transparent"></div><div style="position:absolute;left:586px;top:276px;font:400 21px Inter;white-space:nowrap;background:rgba(246,242,236,.92);padding:0 4px"><b>4</b> route to the notification queue</div><div style="position:absolute;left:750px;top:358px;width:168px;height:3px;background:var(--teal-d)"></div><div style="position:absolute;left:908px;top:353px;border-left:11px solid var(--teal-d);border-top:6.5px solid transparent;border-bottom:6.5px solid transparent"></div><div style="position:absolute;left:754px;top:328px;font:400 21px Inter;white-space:nowrap;background:rgba(246,242,236,.92);padding:0 4px"><b>5</b> receive</div><div style="position:absolute;left:918px;top:410px;width:168px;height:3px;background:var(--orange)"></div><div style="position:absolute;left:1076px;top:405px;border-left:11px solid var(--orange);border-top:6.5px solid transparent;border-bottom:6.5px solid transparent"></div><div style="position:absolute;left:560px;top:380px;font:400 21px Inter;white-space:nowrap;background:rgba(246,242,236,.92);padding:0 4px"><b style="color:var(--orange-d)">6 One transaction:</b> record event ID · create notifications</div><div style="position:absolute;left:750px;top:462px;width:168px;height:3px;background:var(--teal-d)"></div><div style="position:absolute;left:750px;top:457px;border-right:11px solid var(--teal-d);border-top:6.5px solid transparent;border-bottom:6.5px solid transparent"></div><div style="position:absolute;left:754px;top:432px;font:400 21px Inter;white-space:nowrap;background:rgba(246,242,236,.92);padding:0 4px"><b>7</b> delete message</div>
@@ -1683,20 +1734,26 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   <div class="foot"><div class="brand"><b>BlocBuy</b> Team 8 · SWE5001</div><div class="seg" style="width:auto;color:var(--foreground)">Backup · not presented unless asked</div><div class="bar"><span style="flex:1"></span></div><div class="pg">B15</div></div>
 </section>
 </div>
+<div class="hint">→ / Space next · ← back · S speaker notes · O overview · F fullscreen · B backup index · . blank · number + Enter to jump</div><div class="blank"></div>
 <script>
 (function(){
 const slides=[...document.querySelectorAll('.slide')];
 const NOTES={"1":{"title":"BlocBuy","speaker":"Lim","slot":15,"say":"Good afternoon, we're Team 8. This is BlocBuy, a group-buying platform built to scale on AWS. We'll cover the problem, the design and how we ship it, then show it live.","cues":["Lim opens swe5001-presentation.html in Chrome, presses S for the notes window (keep it off the shared screen) and T there at 16:15:00. In Zoom, share only the deck window.","Liu Jin watches ECS health on the dashboard, muted."],"handover":"So, what problem are we solving?","words":31},"2":{"title":"Group buying only works if enough people join in time","speaker":"Lim","slot":40,"say":"Group buying means people buy together to get a lower price. But it only works if enough people join before the deadline. Most groups run this in chat apps and spreadsheets. Buyers can't see how close a deal is. Organisers collect the money and do refunds by hand. And small sellers have nowhere to post a team price. With BlocBuy, you pay to join a team, the price drops as more people join, and if the team doesn't fill in time, everyone gets their money back automatically.","cues":[],"handover":"And we built it as a platform, not a shop.","words":87},"3":{"title":"A two-sided platform built around one interaction: forming a team","speaker":"Lim","slot":40,"say":"At the centre is one thing: forming a team at a team price. Sellers put up offers, and buyers browse and join them. When buyers start a team or share an invite, they bring in new people, so buyers help grow the platform too. Every new member makes the deal better for everyone; that's our network effect. We start it off with a few hand-picked offers. Sign-in, notifications and payments are shared, so a new kind of group buying, like event tickets, could reuse them.","cues":["The future seeds are on the slide (briefing success criterion \"support for more seeds in future\"); no need to list them all aloud."],"handover":"Here's what we actually built.","words":85},"4":{"title":"Scope: the full buying journey, on three services","speaker":"Lim","slot":25,"say":"We built the whole buying journey: sign in, browse, start or join a team, pay, and then the team either succeeds, or expires and everyone is refunded. It runs on three services. We left out multiple regions, real money and email. Moving payments into a service of its own is our planned next step.","cues":["16:17:00 — questions (1 minute). Lim repeats each question in one line and names who answers."],"handover":"(after questions) \"Now, where the project stands.\"","words":54},"5":{"title":"Status: what is verified on AWS, and what is still open","speaker":"Lim","slot":45,"say":"So where are we today? On 17 October we built the full three-service setup on AWS from nothing. All nine smoke tests passed, and teardown removed all 115 resources. On 19 October we ran the auto-scaling test on AWS, and commerce scaled itself from one task to three. The other drills did not run on AWS; the middle column shows any local result. Two things are still open. An interrupted start-up can leave auto-scaling switched off; for now we fix that by hand. And the database runs in one zone, a deliberate choice to save cost.","cues":["Say only what docs/swe5001/evidence/ records; the assessors may probe status claims.","The middle column says \"not run on AWS\" for every drill that was only tested locally; say it the same way."],"handover":"And how we got here.","words":96},"6":{"title":"On schedule, about 50 person-days across five people","speaker":"Lim","slot":45,"say":"We stayed on the plan from our proposal. We handed it in on 4 October, deployed to AWS for the first time two days later, split into three services by the 14th, measured our load baseline on the 16th, made the first clean three-service release on the 17th, and ran our test session on the 19th. In total that's about 50 person-days, in line with what the course expects. Each person's share is based on the issues they actually delivered.","cues":["16:19:30 — questions (30 seconds)."],"handover":"(after questions) \"Eric will take you through the logical architecture.\"","words":80},"7":{"title":"Why three services, not five","speaker":"Eric","slot":90,"say":"Thanks, Lim. I'm Eric. Our biggest decision was where to split the system. The obvious answer: one service per business area, like catalogue, orders and payments. But look at a Stripe payment. In one database transaction, we confirm the payment, create the order, take the stock and add the buyer to the team. Four steps, one commit. If any step fails, all of it is undone, and that's what keeps a buyer's money safe. Put those steps in separate services, and we'd need complicated undo logic everywhere. We estimated five services at 50 to 55 person-days, our whole budget, so we said no. So our rule: only split where no transaction crosses the line. Identity and notifications pass that test. Identity is used through one small interface, and nothing needs to call notifications. That leaves two reusable platform services, and one core service, commerce, that keeps the money flow together. Three services, not five.","cues":["Pause on the left box: this is the one decision assessors should remember.","Lim moves to the next slide as Eric starts each of slides 8–11. Eric's pointing cues for slides 7–11 and 23 are in notes/speaker-script-eric.md."],"handover":"But even this split raises three questions.","words":154},"8":{"title":"Four decisions shape the logical design","speaker":"Eric","slot":80,"say":"Top left is that rule. The other three answer those three questions. How do services talk without a shared transaction? Through events. We save each event in the same transaction as the change itself, which means an event only goes out if the change really happened. We never announce a payment that was rolled back. How does each service know who you are? All services share one login session, so any service can check your role without asking identity. What if commerce can't reach identity? It refuses the purchase, because a purchase is either fully done, or not done at all. The price we pay: notifications arrive about two seconds later, and purchases pause while identity is down. We tested that outage locally; it's in our backup slides.","cues":[],"handover":"That pause comes from our one direct call between services. Here's where it sits.","words":128},"9":{"title":"Logical view: one direct call, everything else by events","speaker":"Eric","slot":90,"say":"This is the logical view of those three services. The two shared platform services are at the top, the business application, commerce, is at the bottom, and the event system sits between them. Requests enter through CloudFront and a load balancer, which picks the right service. The red arrow is that direct call. Commerce asks identity, “is this user still active?” That's the one small interface from slide 7. It's the only place where one service waits for another, so it's the only place we had to plan for that failure. Everything else goes through events, so nothing else waits. Commerce saves each event in a small outbox table, a relay sends it to an SNS topic, and each listener gets its own queue. Today: notifications and an audit queue. Each service has its own database, and they all share one session store: that's the one login session from slide 8.","cues":["Walk the diagram top to bottom: platform services, the red direct call, the event bus.","The plainer v2 diagram is backup B13 if a simpler companion is needed in Q&amp;A."],"handover":"So why are the lines exactly there? The domain model.","words":151},"10":{"title":"Bounded contexts decide the services; events are the contract","speaker":"Eric","slot":75,"say":"We found those lines by following the life of a team. It's created, people join and pay, then it succeeds, or expires and gets refunded. That gave us six bounded contexts, in Domain-Driven Design terms. Then we applied the rule. Four of them, catalogue, group buying, orders and payments, share transactions, like the payment from slide 7. So they live together in commerce. Identity and notification each stand alone. Inside commerce, these areas talk through internal events, like “team expired”. When an event leaves the service, it becomes a public event with a version number: “team expired, version 1”. That's the contract between services. It only carries IDs, never names or emails, so personal data stays in identity. Any new service can listen to it without knowing how commerce works inside.","cues":["If asked for the relationships between contexts, open backup B3 (context map)."],"handover":"So who uses the platform?","words":131},"11":{"title":"How producers and consumers use the platform, and what reuse costs","speaker":"Eric","slot":85,"say":"Two sides. Producers: sellers and admins post listings, and buyers start and share teams. Consumers: they browse, join, track orders and get notified. Both sides use the same account. And because whatever happens in commerce becomes an event, reuse is cheap, and we can measure it. Remember the audit queue? Two lines of configuration, and no change to commerce. A whole new service is one entry in our infrastructure template, which sets up everything it needs to run. All clients use one published API description, and our web app's client code is generated from it. And every new service starts with login, error handling, tracing and duplicate protection already built in. So, back to where I started: where to split the system? Only where no transaction crosses the line. That gave us three services, not five, two of them reusable platform services. Happy to take questions.","cues":["16:27:00 — questions (2 minutes)."],"handover":"(after questions) \"Thanks. That's the logical side; Liu Jin will show how these three services run on AWS.\"","words":146},"12":{"title":"Physical decisions: managed, disposable, low cost","speaker":"Liu Jin","slot":85,"say":"Hi, I'm Liu Jin. Let's look at how this runs on AWS. Our containers run on Fargate, on ARM processors, so there are no servers to look after, scaling comes built in, and ARM is about twenty percent cheaper. We did look at Kubernetes, but its control plane alone would cost more than all of our computing. We also don't keep the environment running: we build it when we need it and tear it down afterwards. All three services share one database server, though each has its own database. And instead of AWS's NAT gateway, we run a small NAT instance: about four dollars a month instead of forty-three. Neither our pipeline nor our services use long-lived access keys. The catch is less redundancy, which is fine for a project this size. So what does it actually cost? We checked the bill: seven full sessions in mid-October came to forty-nine cents for the database, the cache and the containers.","cues":[],"handover":"Here's what that looks like.","words":159},"13":{"title":"Physical view: private services behind CloudFront, across two zones","speaker":"Liu Jin","slot":85,"say":"Everything runs in Singapore, spread across two availability zones. Only the load balancer and the NAT sit in public subnets; the services, the database and the cache are all private. CloudFront is the only way in. It serves the web app and passes API calls on to the load balancer, and the load balancer turns away anything that doesn't carry CloudFront's secret header. Around that, our images live in ECR, secrets in Parameter Store, events go through SNS and SQS, and CloudWatch keeps an eye on all of it. The blue boxes stay up all the time. Everything inside the red dashed box is rebuilt on every release. So security comes in layers: one way in, private services, no access keys in the pipeline, and no secrets in the code.","cues":["Point at the blue \"permanent\" boxes, then the red \"rebuilt every release\" box.","The plainer v2 diagram is backup B14."],"handover":"Each service scales on its own signal.","words":130},"14":{"title":"Each service scales on its own signal, and how far it goes","speaker":"Liu Jin","slot":45,"say":"Commerce adds tasks as requests per task go up, from two to six. Notification follows its queue, from one to four. On the sixteenth, one task handled 200 requests a second with room to spare. On the nineteenth, with all three services up, commerce grew from one task to three on its own, serving about 455 requests a second, 95 percent in under 50 milliseconds. That was all our laptop could send. Six tasks should manage around 1,200 a second, but that's an estimate. Beyond that, the single database is the limit.","cues":["Never present the projection as a measurement. 455 req/s was the laptop's limit, not the service's: if asked, say so."],"handover":"Now the data.","words":92},"15":{"title":"Each service owns its data","speaker":"Liu Jin","slot":45,"say":"Each service owns its data. They share one database server, but each has its own database, and permissions stop a service from reading anyone else's tables. The cache holds sessions and short-lived data; we never store card details. One tricky case: two buyers going for the last seat at the same time. We always lock in the same order, team, then purchase, then payment, so exactly one of them wins. Scheduled jobs take a database lock too, so only one copy runs. Yorik will now walk you through one use case.","cues":[],"handover":"Yorik, over to you.","words":91},"16":{"title":"Team expiry, end to end: one transaction in, one transaction out","speaker":"Yorik","slot":95,"say":"I'm Yorik. This is what happens when a team runs out of time. Every minute, a scheduled job looks for expired teams, and a database lock makes sure only one copy of it runs. In one transaction, it marks the team as expired, cancels the orders, records the refunds that are owed, and saves a \"team expired\" event. Either all of that happens, or none of it does. <b class=\"clk\">[click]</b> Once that's committed, the relay sends the event to SNS, which puts it on the notification queue. The notification service picks it up, checks the event ID so a duplicate is ignored, and creates a notification for each member, again in one transaction. Only then is the message deleted from the queue. <b class=\"clk\">[click]</b> Refunds run on their own. Every thirty seconds, a refund worker takes the next refund and sends it to Stripe with a unique key, so even if it retries, nobody is refunded twice. So: one transaction in commerce, one in notification, a queue in between, and refunds that are safe to retry.","cues":["Two clicks: the slide opens on the expiry transaction (step 1); click 1 shows relay → SNS → SQS → notification (steps 2–8); click 2 shows the refund worker loop.","Fallback if the UML version does not feel right in rehearsal: backup B15 (numbered steps) with the same words."],"handover":"And when things go wrong?","words":172},"17":{"title":"Failures are expected, and handled","speaker":"Yorik","slot":65,"say":"A queue can deliver the same message more than once, so we designed for that. If a message arrives twice, the second copy is ignored, because we've already recorded its ID. If a message keeps failing, after five tries it's moved aside into a dead-letter queue and an alarm goes off, while everything else keeps flowing. We tested this locally: a broken message was tried five times, then moved aside. And if sending an event fails, it simply stays in the outbox and is tried again. So no event is lost, nobody gets the same notification twice, and one bad message can't block the rest.","cues":["16:36:00 — questions (2 minutes). Liu Jin answers infrastructure and data; Yorik answers events and failures."],"handover":"(after questions) \"Pan will show how we build and ship it.\"","words":105},"18":{"title":"One main branch; production changes only by promotion","speaker":"Pan","slot":65,"say":"I'm Pan. All work happens on short-lived branches that merge into our main branch, dev, after a review and automated checks. Production lives on a separate branch, prod. The only way to change it is a promotion pull request from dev; nobody can push to it directly. For build outputs, we store each container image by its unique digest rather than by a name tag, keep a record of which images are live, and keep one API description file in the repository.","cues":[],"handover":"Every change is checked before it merges.","words":82},"19":{"title":"Every pull request is checked before it can merge","speaker":"Pan","slot":70,"say":"Every pull request goes through four groups of checks. First, build and test: unit tests, an API check, and at least 80 percent test coverage on new code. Second, containers: we build and scan every service image, and start the app to make sure it's healthy. Third, security: we scan for leaked secrets, check our libraries and images for known weaknesses, and run code analysis in SonarCloud. Fourth, infrastructure: we check and test our Terraform code and run policy checks. Over the past month that came to more than five thousand runs, about 95 percent passing, usually in under nine minutes. If any check fails, the change can't be merged.","cues":[],"handover":"And this is how a change reaches production.","words":110},"20":{"title":"One promotion builds, deploys, tests and releases, then destroys it all","speaker":"Pan","slot":95,"say":"This is the key part. The only thing that deploys to production is merging a promotion pull request. The pipeline then builds the images, creates the whole AWS environment from scratch, deploys the services and runs smoke tests through CloudFront. If a release fails its health checks, it rolls itself back. Then the pipeline marks those images as the new release, destroys everything, and checks that nothing was left behind. That last step always runs, even if something failed earlier. Because every release starts from nothing, every release is also a disaster-recovery test. Our first run on 6 October, with one service, took 28 minutes. The three-service run on 17 October took 51. About half an hour of that is creating the environment, and fifteen minutes of it is just waiting for new SNS subscriptions to start working. Which brings me to what we learned.","cues":["Timings from run 39008208244 (17 Oct): build 3 min + publish 2 min, create + deploy + smoke 32 min, release 1 min, destroy 13 min."],"handover":"Three lessons we learned on the way.","words":145},"21":{"title":"What the real cloud taught us","speaker":"Pan","slot":75,"say":"The real cloud taught us three things. First, our infrastructure tests passed with mock-ups, but the first real deployment failed because of missing permissions. Mocks only test what you tell them, so now we test permissions for real. Second, a new SNS subscription can take up to fifteen minutes to start delivering. Nothing shows an error; the messages just disappear. So our deploy now waits until delivery is confirmed. Third, a start-up that was interrupted and retried said it had succeeded, but left auto-scaling switched off. Deployed doesn't mean scaling, so now we check.","cues":["The full findings list is backup B8."],"handover":"And who and what can touch AWS.","words":94},"22":{"title":"No standing keys: who and what can touch AWS","speaker":"Pan","slot":55,"say":"Finally, who and what can touch our AWS account. Security starts above the account itself. It sits in an AWS Organization whose rules keep us in Singapore and block expensive services, and those rules apply even to our own admins. People sign in through Identity Center, with sessions that end after an hour. The pipeline gets short-lived access from GitHub, with separate roles to plan, deploy and apply, so no AWS keys are stored in GitHub. There's one exception, and we're open about it: two IAM users for database access, still under the same rules. Eric will now show the system live.","cues":["16:44:00 — questions (1 minute).","16:44:30 — Lim stops sharing; Eric starts sharing the demo window."],"handover":"(after questions) \"Eric, over to you.\"","words":102},"23":{"title":"Live demo","speaker":"Eric","slot":15,"say":"Thanks, Pan. Three things: the buying journey, how the system scaled under load, and the pipeline that deployed it.","cues":["Eric's tab 1 shows this slide (swe5001-presentation.html#23). Follow the demo run book step by step."],"handover":"First, the use cases.","words":19},"24":{"title":"Thank you","speaker":"Lim","slot":null,"say":"Thank you. We're happy to take your questions.","cues":["16:55:00 — end. Lim thanks the assessors. Liu Jin tears the environment down only after the meeting ends.","Backup slides follow (press B for the index). Open one only when a question needs it."],"handover":"","words":8}};
-let i=0, frag=0, t0=null, notesWin=null;
+let i=0, frag=0, t0=null, notesWin=null, jump='', shown=-1;
 const body=document.body;
+const byId=id=>slides.findIndex(s=>s.dataset.n===String(id));
 function fit(){const k=Math.min(innerWidth/1280,innerHeight/720);slides.forEach(s=>s.style.transform='translate(-50%,-50%) scale('+k+')');}
-function frags(){return [...slides[i].querySelectorAll('.frag')].map(f=>+f.dataset.frag).filter((v,j,a)=>a.indexOf(v)===j).sort((a,b)=>a-b);}
-function paint(){slides.forEach((s,j)=>s.classList.toggle('active',j===i));
-  slides[i].querySelectorAll('.frag').forEach(f=>f.classList.toggle('hidden',+f.dataset.frag>frag));
+function steps(s){return s.querySelectorAll('.frag,.cover[data-frag]');}
+function frags(){return [...steps(slides[i])].map(f=>+f.dataset.frag).filter((v,j,a)=>a.indexOf(v)===j).sort((a,b)=>a-b);}
+function applyFrags(){steps(slides[i]).forEach(f=>{const n=+f.dataset.frag;if(f.classList.contains('cover'))f.classList.toggle('on',n<=frag);else f.classList.toggle('hidden',n>frag);});}
+// On a slide change the fragment state is set while the slide is still inactive and styles are flushed, so
+// entrance transitions start from the right state; toggling .active then replays every entrance.
+function paint(){applyFrags();if(shown!==i){void slides[i].offsetWidth;shown=i;}
+  slides.forEach((s,j)=>s.classList.toggle('active',j===i));
   history.replaceState(null,'','#'+slides[i].dataset.n); updNotes();}
 function go(j,f){i=Math.max(0,Math.min(slides.length-1,j));frag=f===undefined?0:f;paint();}
 function next(){const fs=frags();if(frag<(fs.length?fs[fs.length-1]:0)){frag++;paint();}else go(i+1);}
-function prev(){if(frag>0){frag--;paint();}else{go(i-1);const fs=frags();frag=fs.length?fs[fs.length-1]:0;paint();}}
+function prev(){if(frag>0){frag--;paint();}else if(i>0){i--;const fs=frags();go(i,fs.length?fs[fs.length-1]:0);}}
 function updNotes(){if(!notesWin||notesWin.closed)return;const n=NOTES[slides[i].dataset.n];const d=notesWin.document;
   d.getElementById('h').textContent=n?('Slide '+slides[i].dataset.n+' · '+n.title):('Backup '+slides[i].dataset.n);
   d.getElementById('m').textContent=n?(n.speaker+' · slot '+(n.slot?n.slot+' s':'Q&A')+' · ≈ '+Math.round(n.words/130*60)+' s at 130 wpm'):'Q&A only';
@@ -1706,20 +1763,37 @@ function openNotes(){notesWin=window.open('','blocbuy-notes','width=760,height=7
   notesWin.document.write('<title>Notes</title><style>body{font:17px/1.45 system-ui;margin:20px;background:#1B1A18;color:#EEF1FC}#h{font-weight:700;font-size:20px}#m{color:#A9B7EE;margin:4px 0 12px}#say{font-size:19px}#cues{color:#bcd;font-size:15px}#ho{color:#FFB01F;margin-top:10px}#clock{font:700 28px monospace;color:#FFB01F;float:right}.mk{font:700 13px monospace;border:1px dashed #f9a;border-radius:4px;padding:1px 4px;color:#fbc}.clk{color:#FFB01F}</style><div id="clock">--:--</div><div id="h"></div><div id="m"></div><div id="say"></div><ul id="cues"></ul><div id="ho"></div><p style="color:#789;font-size:13px">T starts/resets the timer (in the deck window).</p>');
   updNotes();}
 setInterval(()=>{if(notesWin&&!notesWin.closed&&t0){const s=Math.floor((Date.now()-t0)/1000);notesWin.document.getElementById('clock').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}},500);
+function present(j){body.classList.remove('overview');body.classList.add('present');fit();if(j!==undefined){i=j;frag=0;}shown=-1;paint();}
+function backups(){const k=byId('BX');if(k>=0)go(k);}
 document.addEventListener('keydown',e=>{
-  if(body.classList.contains('overview')){if(e.key==='o'||e.key==='O'||e.key==='Escape'){body.classList.remove('overview');body.classList.add('present');fit();paint();}return;}
-  if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){e.preventDefault();next();}
-  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();prev();}
-  else if(e.key==='Home')go(0);else if(e.key==='End')go(23);
-  else if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();}
-  else if(e.key==='o'||e.key==='O'){body.classList.remove('present');body.classList.add('overview');slides.forEach(s=>s.style.transform='');slides[i].scrollIntoView({block:'center'});}
-  else if(e.key==='s'||e.key==='S')openNotes();
-  else if(e.key==='t'||e.key==='T')t0=Date.now();
-  else if(e.key==='b'||e.key==='B'){const k=slides.findIndex(s=>s.dataset.n==='BX');if(k>=0)go(k);}
+  if(e.metaKey||e.ctrlKey||e.altKey)return;
+  const k=e.key;
+  if(body.classList.contains('overview')){if(k==='o'||k==='O'||k==='Escape')present();return;}
+  if(/^[0-9]$/.test(k)){jump+=k;return;}
+  if(k==='Enter'&&jump){const j=byId(+jump);jump='';if(j>=0)go(j);return;}
+  jump='';
+  if(['ArrowRight','ArrowDown','PageDown',' ','Enter','n'].includes(k)){e.preventDefault();next();}
+  else if(['ArrowLeft','ArrowUp','PageUp','Backspace','p'].includes(k)){e.preventDefault();prev();}
+  else if(k==='Home')go(0);else if(k==='End')go(23);
+  else if(k==='f'||k==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();}
+  else if(k==='o'||k==='O'){body.classList.remove('present');body.classList.add('overview');slides.forEach(s=>s.style.transform='');slides[i].scrollIntoView({block:'center'});}
+  else if(k==='s'||k==='S')openNotes();
+  else if(k==='t'||k==='T')t0=Date.now();
+  else if(k==='b'||k==='B'||k==='x'||k==='X')backups();
+  else if(k==='.')document.querySelector('.blank').classList.toggle('on');
 });
-slides.forEach((s,j)=>s.addEventListener('click',ev=>{if(body.classList.contains('overview')){i=j;frag=0;body.classList.remove('overview');body.classList.add('present');fit();paint();}
-  else{const a=ev.target.closest('[data-go]');if(a){const k=slides.findIndex(x=>x.dataset.n===a.dataset.go);if(k>=0)go(k);}}}));
-addEventListener('resize',fit);
-const h=decodeURIComponent(location.hash.slice(1));const k=slides.findIndex(s=>s.dataset.n===h);
-if(!window.__PRINT__){body.classList.add('present');fit();go(k>=0?k:0);}
+document.addEventListener('click',ev=>{
+  if(body.classList.contains('overview')){const s=ev.target.closest('.slide');if(s)present(slides.indexOf(s));return;}
+  if(!body.classList.contains('present'))return;
+  const a=ev.target.closest('[data-go]');if(a){const k=byId(a.dataset.go);if(k>=0)go(k);return;}
+  if(ev.target.closest('a,button'))return;
+  ev.clientX<innerWidth/3?prev():next();
+});
+addEventListener('resize',()=>{if(body.classList.contains('present'))fit();});
+addEventListener('hashchange',()=>{const k=byId(decodeURIComponent(location.hash.slice(1)));if(k>=0&&k!==i&&body.classList.contains('present'))go(k);});
+const k=byId(decodeURIComponent(location.hash.slice(1)));
+if(!window.__PRINT__){body.classList.add('present');fit();void body.offsetWidth;
+  // first paint on the next frame so the opening slide plays its entrance too
+  requestAnimationFrame(()=>go(k>=0?k:0));
+  const h=document.querySelector('.hint');if(h){h.classList.add('show');setTimeout(()=>h.classList.remove('show'),4000);}}
 })();</script></body></html>
