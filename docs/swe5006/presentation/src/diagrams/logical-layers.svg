@@ -255,10 +255,10 @@
   <polyline points="1740,922 1740,1118" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llOpen)"/>
   <rect x="1748" y="1008" width="164" height="32" fill="#FFFFFF"/>
   <text fill="#1B1A18" x="1752" y="1030" font-size="24">«use» ports</text>
-  <polyline points="1090,1372 1218,1372" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llTri)"/>
+  <polyline points="1090,1372 1218,1372" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llOpen)"/>
   <rect x="1089" y="1334" width="132" height="32" fill="#FFFFFF"/>
-  <text fill="#1B1A18" x="1155" y="1356" font-size="24" text-anchor="middle">«realize»</text>
-  <polyline points="1090,1525 1218,1525" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llTri)"/>
+  <text fill="#1B1A18" x="1155" y="1356" font-size="24" text-anchor="middle">«use»</text>
+  <polyline points="1090,1525 1218,1525" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llOpen)"/>
   <rect x="1089" y="1487" width="132" height="32" fill="#FFFFFF"/>
-  <text fill="#1B1A18" x="1155" y="1509" font-size="24" text-anchor="middle">«realize»</text>
+  <text fill="#1B1A18" x="1155" y="1509" font-size="24" text-anchor="middle">«use»</text>
 </svg>

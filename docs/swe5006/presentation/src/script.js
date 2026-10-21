@@ -65,11 +65,11 @@ const demoCard = d => `<div class="card demo"><div class="hd"><span>Step ${d.n} 
  <div class="row"><span class="lab fb">Fallback</span><span>${mh(d.fb)}</span></div></div></div>`;
 
 // ---------- segment 4: CI/CD pipeline demo (rubric 4.1–4.6) ----------
-// Slides 25–29 run 16:42:00–16:46:30; the live part (slide 30) runs 16:46:30–16:52:00 (330 s).
+// Slides 26–30 run 16:42:00–16:46:30; the live part (slide 31) runs 16:46:30–16:52:00 (330 s).
 const pipeSteps = [
   { n: 'P1', t: 'The pull request and its required checks', time: '16:46:30 – 16:47:30', proves: 'Rubric <b>4.1</b>, <b>4.2</b> (branch, PR, Conventional Commit, code-owner rule), <b>4.3</b> (PR-time jobs) · Pan',
     op: ['Tab 1: the demo PR opened at 16:41 → <b>Files changed</b>: the one-line frontend change.', 'Switch to <b>Checks</b>: frontend-check, SonarCloud Frontend, gitleaks green; e2e-preview green; the backend jobs pass after skipping (no backend path changed).', 'Point at the merge box: review required from a code owner.'],
-    say: "This is the pull request I opened at 16:41: one line in the frontend, on a short branch with a Conventional Commit title. These are the required checks from slide 26: the frontend check with every unit test, SonarCloud, the secret scan, and Playwright against this build. The backend jobs see no backend change and pass straight through. The merge button stays locked until a code owner approves.",
+    say: "This is the pull request I opened at 16:41: one line in the frontend, on a short branch with a Conventional Commit title. These are the required checks from slide 27: the frontend check with every unit test, SonarCloud, the secret scan, and Playwright against this build. The backend jobs see no backend change and pass straight through. The merge button stays locked until a code owner approves.",
     exp: 'Checks green or finishing (median 4.8 min from 16:41, so ≈ 16:46); merge box asks for a code-owner review.',
     fb: 'Checks still running: talk through them and move on at 16:47:30 regardless. A check red: say what it caught in one sentence, then <code>CLIP P2</code>; leave the PR open and never merge it on air.' },
   { n: 'P2', t: 'Code-owner approval', time: '16:47:30 – 16:48:00', proves: 'Rubric <b>4.2</b>, <b>4.4</b> (who approves) · Pan; Lim approves',
@@ -102,9 +102,9 @@ const pipeSteps = [
 const seg4Html = () => {
   const s4 = seg(4);
   return `<section class="chap"><h1>4 ${esc(s4.name)} (${s4.talk} minutes)</h1>
-<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:42:00 – 16:52:00 (slides 25–29 until 16:46:30, then the live pipeline demo on slide 30 until 16:52:00)</td></tr><tr><td>Owner</td><td>${esc(s4.owner)}; Lim approves as the frontend code owner</td></tr><tr><td>Slides</td><td>25, 26, 27, 28, 29, 30</td></tr></table></div>
+<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:42:00 – 16:52:00 (slides 26–30 until 16:46:30, then the live pipeline demo on slide 31 until 16:52:00)</td></tr><tr><td>Owner</td><td>${esc(s4.owner)}; Lim approves as the frontend code owner</td></tr><tr><td>Slides</td><td>25, 26, 27, 28, 29, 30</td></tr></table></div>
 ${reqBox(s4)}
-${box('tip', 'Tip', 'Slides 25–29 take 270 s. Pan opens the demo pull request at 16:41, during slide 24, so its checks (median 4.8 min) are green when the live part starts at 16:46:30. A backend change cannot finish its 16-minute PR checks inside the segment, so a backend PR is opened at ≈ 16:20 and merged before 16:40; the demo walks through both of its finished runs (rubric 4.1).')}
+${box('tip', 'Tip', 'Slides 26–30 take 270 s. Pan opens the demo pull request at 16:41, during slide 25, so its checks (median 4.8 min) are green when the live part starts at 16:46:30. A backend change cannot finish its 16-minute PR checks inside the segment, so a backend PR is opened at ≈ 16:20 and merged before 16:40; the demo walks through both of its finished runs (rubric 4.1).')}
 ${C.SLIDES.filter(s => s.seg === 4).map(slideCard).join('')}
 <h2>Live pipeline demo (16:46:30 – 16:52:00, 330 s)</h2>
 ${tbl(['Step', 'Shows', 'Rubric'], pipeSteps.map(d => [d.n, esc(d.t), d.proves.split(' · ')[0]]))}
@@ -133,7 +133,7 @@ ${qaTable(4)}
 };
 
 // ---------- segment 5: system demo (rubric 5.1–5.5) ----------
-// Slide 31 16:52:00–16:52:30; live demo (slide 32) 16:52:30–17:01:00 (510 s); slides 33–35 17:01:00–17:04:00.
+// Slide 32 16:52:00–16:52:30; live demo (slide 33) 16:52:30–17:01:00 (510 s); slides 34–36 17:01:00–17:04:00.
 // Eric shares one screen with two Chrome profiles and operates; Yorik speaks. US34-04 is a team of two with the
 // shortest allowed window (2,400 s = PurchaseQuoteWindow.SECONDS; scripts/dev-demo-listings.json).
 const demoSteps = [
@@ -165,21 +165,21 @@ const demoSteps = [
   { n: 'D6', t: 'Twenty buyers, one last seat: the test', time: '17:00:15 – 17:01:00', proves: 'Rubric <b>5.2</b> correctness under concurrency; rubric G10 (IDE on hand) · Eric shows, Yorik speaks',
     op: ['IDE (18 pt) on a local checkout of <code>dev</code>: <code>StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist</code>, already run green before the talk (Docker, PostgreSQL 18 in Testcontainers).', 'Show the assertions: 2 members, 2 orders, 19 refund obligations, <code>current_size</code> 2, stock 98.', 'One click to <code>PaidGroupDealMapper.xml</code>: <code>SELECT … FOR UPDATE</code> and the guarded <code>UPDATE … WHERE current_size = …</code>.'],
     say: "The last seat we don't race on shared dev. This test does it on every pull request: twenty paid buyers race for the last seat of a team of two, through the production code against a real PostgreSQL. One wins; nineteen get a refund obligation, and capacity is never exceeded. The row lock and the guarded update are why. This is a local test, not a dev result.",
-    exp: 'Green test with its assertions visible; then back to the deck, slide 33.',
+    exp: 'Green test with its assertions visible; then back to the deck, slide 34.',
     fb: 'IDE not ready: show the test on GitHub (read-only) and its last green CI run.' },
 ];
 
 const seg5Html = () => {
   const s5 = seg(5);
   return `<section class="chap"><h1>5 ${esc(s5.name)} (${s5.talk} minutes, then ${s5.qa} minutes of buffer)</h1>
-<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:52:00 – 17:04:00 (slide 31 to 16:52:30; live demo on slide 32 to 17:01:00; slides 33–35 to 17:04:00) · 17:04–17:10 buffer for parked questions</td></tr><tr><td>Owner</td><td>${esc(s5.owner)}; Lim chairs the buffer</td></tr><tr><td>Slides</td><td>31, 32, 33, 34, 35, 36</td></tr></table></div>
+<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:52:00 – 17:04:00 (slide 32 to 16:52:30; live demo on slide 33 to 17:01:00; slides 34–36 to 17:04:00) · 17:04–17:10 buffer for parked questions</td></tr><tr><td>Owner</td><td>${esc(s5.owner)}; Lim chairs the buffer</td></tr><tr><td>Slides</td><td>31, 32, 33, 34, 35, 36</td></tr></table></div>
 ${reqBox(s5)}
 ${box('tip', 'Tip', 'Eric shares one screen at 16:52:00 (<code>SHARE</code> from Pan) with the deck in the Leader window, tab 1, and operates every window; Yorik speaks throughout. The expiry bloc is started at 16:05 so that D4 shows a refund that no one triggered by hand.')}
-${slideCard(C.SLIDES.find(s => s.n === 31))}
+${slideCard(C.SLIDES.find(s => s.n === 32))}
 <h2>Decision: live or recorded payment steps (go/no-go, Fri 23 Oct, 18:00)</h2>
 ${tbl(['Condition (Yorik decides with Lim; posted in #464)', 'GO: live on dev', 'NO-GO: recorded or local, said as such'], [
   ['#517 fixed: a new START on dev reaches paid within one minute and shows under My blocs', 'D1, D2 live; fallback = the 24 Oct clips', 'D1, D2 from the 24 Oct clips if they exist, else from local evidence (B11), said as “verified locally, not yet on dev”'],
-  ['#223 done: Checkout and scheduling on for dev (<code>BLOCBUY_SCHEDULING_ENABLED</code>; default false in application-ec2.yml); a <code>US34-04</code> bloc started on 24 Oct expired within one sweep and refunded', 'D4 live with the 16:05 bloc', 'D4 from B11 (local); slide 31 rows read “recorded” or “local”'],
+  ['#223 done: Checkout and scheduling on for dev (<code>BLOCBUY_SCHEDULING_ENABLED</code>; default false in application-ec2.yml); a <code>US34-04</code> bloc started on 24 Oct expired within one sweep and refunded', 'D4 live with the 16:05 bloc', 'D4 from B11 (local); slide 32 rows read “recorded” or “local”'],
   ['Full dry run on dev on Sat 24 Oct passes in order, timed, and is recorded', 'Rehearse at the real clock on 25 Oct', 'Only the NO-GO path is rehearsed'],
   ['D3, D5, D6 do not depend on payments', 'live', 'live (D3 on an account that already has orders)'],
 ])}
@@ -195,7 +195,7 @@ ${box('warn', 'Watch out', mh('No payment has been confirmed and no refund prove
 <li>Browser zoom 125–150 % (rubric V7); Do Not Disturb on; no password manager, email or bookmarks bar visible.</li></ul>
 <h2>Screen layout (Eric’s shared screen)</h2>
 ${tbl(['Window · tab', 'Content', 'Prepared state'], [
-  ['Leader · 1', 'Deck <code>swe5006-presentation.html#31</code>', 'Slide 31; slides 33–36 follow'],
+  ['Leader · 1', 'Deck <code>swe5006-presentation.html#32</code>', 'Slide 32; slides 34–37 follow'],
   ['Leader · 2', `Listing <code>US34-04</code> on <code>${DEV}</code>`, 'Signed in as account A'],
   ['Joiner · 1', 'Empty tab for the invite link', 'Signed in as account B'],
   ['Joiner · 2', '<code>/account</code> (account B)', 'Loaded'],
@@ -206,16 +206,16 @@ ${tbl(['Window · tab', 'Content', 'Prepared state'], [
 ])}
 <h2>Live system demo (16:52:30 – 17:01:00, 510 s)</h2>
 ${tbl(['Step', 'Shows', 'Rubric'], demoSteps.map(d => [d.n, esc(d.t), d.proves.split(' · ')[0]]))}
-${slideCard(C.SLIDES.find(s => s.n === 32))}
+${slideCard(C.SLIDES.find(s => s.n === 33))}
 <h3>Step by step</h3>
 ${demoSteps.map(demoCard).join('')}
 ${box('warn', 'Never live', 'Editing any deadline, price or listing on shared dev; any SSM command, database client or AWS console on the shared screen; the Stripe dashboard (keys and webhook secrets live there); the DevTools Application or Network tab with cookies or headers visible; racing two buyers or replaying a webhook on dev; a second payment to “try again”; pointing k6 at dev.')}
 ${box('tip', 'Plan C', 'A step fails live and has no recording: show its local evidence (B11 for payment and refund, the D6 test for the race, B12 for load) and say: <i>“verified locally, not yet on dev.”</i> Never present a local result as a dev one.')}
 <h2>After the demo (17:01:00 – 17:04:00)</h2>
-<h3>k6 pre-run for slide 33 (rubric 5.3)</h3>
+<h3>k6 pre-run for slide 34 (rubric 5.3)</h3>
 <ul><li><b>Sat 24 Oct</b>, Pan: bring up the SWE5001 environment (applied per session, torn down nightly; open item 16), run <code>perf/k6/browse.js</code> (k6 1.6.1 by digest; ten 60 s plateaus, 10 → 200 requests/s) against the SWE5001 CloudFront, keep the k6 summary and the dashboard export, write the run into the day log, tear the environment down. ${m('{{FILL:pre-run date, label and summary path}}')}</li>
-<li>Slide 33’s table is filled from that summary before the 25 Oct rehearsal; on the day the report file is opened from Eric’s machine if asked. Never point k6 at the SWE5006 dev host.</li></ul>
-${C.SLIDES.filter(s => s.n >= 33).map(slideCard).join('')}
+<li>Slide 34’s table is filled from that summary before the 25 Oct rehearsal; on the day the report file is opened from Eric’s machine if asked. Never point k6 at the SWE5006 dev host.</li></ul>
+${C.SLIDES.filter(s => s.n >= 34).map(slideCard).join('')}
 ${qaTable(5)}
 </section>`;
 };
@@ -228,11 +228,11 @@ const segsHtml = [
   }),
   segment(seg(2), {
     tip: 'Eric presents 2.1–2.4 and his own design problem; then Yorik, Pan and Lim each have one 20-second slide on their own problem; Liu Jin closes with the full-form State problem and the schema, and carries straight on into §3. The next speaker unmutes during the previous speaker’s last sentence.',
-    warn: mh('Segment 2 has no slack: answer design questions in one sentence and park the rest. {{FILL:segment 2 slides pending (slides 9–22)}}'),
+    warn: mh('Segment 2 has no slack: answer design questions in one sentence and park the rest.'),
   }),
   segment(seg(3), {
-    tip: 'Liu Jin continues from slide 22 without a handover.',
-    warn: mh('Never present a local or SWE5001 result as a SWE5006 dev result: say where each number ran. {{FILL:segment 3 slides pending (slides 23–24)}}'),
+    tip: 'Liu Jin continues from slide 23 without a handover.',
+    warn: mh('Never present a local or SWE5001 result as a SWE5006 dev result: say where each number ran.'),
   }),
   seg4Html(),
   seg5Html(),
@@ -244,8 +244,8 @@ const timeline = `<section class="chap"><h1>6 Timeline before, on and after the 
 ${tbl(['Date', 'Do', 'Owner'], [
   ['Wed 21 Oct', 'Deck re-planned from the rubric; §1 drafted.', 'Lim'],
   ['Fri 23 Oct', '<b>Slides due</b> (#464). Each owner reviews their slides, cards and Q&amp;A rows; the Sprint 4 review and retro feed slides 5 and 7. <b>18:00 go/no-go</b> for the live payment steps, posted in #464.', 'All; Yorik decides with Lim'],
-  ['Sat 24 Oct', '<b>Full dry run on dev</b> of D1–D6 in order and timed: a <code>US34-04</code> bloc started ≈ 10:00 by account B expires and refunds (D4), START and JOIN on <code>US34-04</code> with both accounts (D1, D2); payment and refund ids in the day log (no secrets). <b>Backup videos</b> of both demos recorded on whatever is deployed then, 1080p, one clip per step, stored in the cloud and on a USB drive (rubric G6). <b>k6 pre-run</b> on the SWE5001 ECS environment; keep its summary for slide 33.', 'Yorik, Eric (system); Pan (pipeline, k6)'],
-  ['Sun 25 Oct', '<b>Timed rehearsal</b> in Zoom at the real clock with injected questions; every rubric checklist box ticked; every marker resolved; rebuild deck and script.', 'All; Lim times'],
+  ['Sat 24 Oct', '<b>Full dry run on dev</b> of D1–D6 in order and timed: a <code>US34-04</code> bloc started ≈ 10:00 by account B expires and refunds (D4), START and JOIN on <code>US34-04</code> with both accounts (D1, D2); payment and refund ids in the day log (no secrets). <b>Backup videos</b> of both demos recorded on whatever is deployed then, 1080p, one clip per step, stored in the cloud and on a USB drive (rubric G6). <b>k6 pre-run</b> on the SWE5001 ECS environment; keep its summary for slide 34.', 'Yorik, Eric (system); Pan (pipeline, k6)'],
+  ['Sun 25 Oct', '<b>Timed rehearsal</b> in Zoom at the real clock with injected questions; every diagram slide and its crops checked on a projector or TV from across the room (rubric V7); every rubric checklist box ticked; every marker resolved; rebuild deck and script.', 'All; Lim times'],
 ])}
 <h2>Presentation day (Mon 26 Oct)</h2>
 ${tbl(['Time (SGT)', 'Do', 'Owner'], [
@@ -254,7 +254,7 @@ ${tbl(['Time (SGT)', 'Do', 'Owner'], [
   ['≈ 16:05 (≤ 16:15)', 'Start the expiry bloc on <code>US34-04</code> as account B and pay; bookmark the receipt. <code>EXPIRY OK</code> at 16:10, <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.', 'Yorik'],
   ['15:00', 'Merge freeze on <code>dev</code> until 17:15.', 'Lim'],
   ['16:30', 'Start; follow the run sheet. The scribe logs every remark verbatim (rubric G9).', 'Lim; scribe'],
-  ['17:04 / 17:10', 'Slide 36; parked questions; end.', 'Lim'],
+  ['17:04 / 17:10', 'Slide 37; parked questions; end.', 'Lim'],
 ])}
 <h2>After the presentation</h2>
 <ul><li>The same evening: every lecturer remark goes into #463 as a report task (by 27 Oct, rubric G9).</li><li>Day log under <code>docs/agile/sprint-04/log/</code>: the demo PR, run links and any payment or refund ids shown (no secrets).</li></ul>
@@ -275,7 +275,7 @@ gh run list --repo ${REPO} --workflow ci-backend.yml --branch dev --limit 3
 gh pr list --repo ${REPO} --base dev --state open      # what could still merge before the freeze`)}
 </section>
 <section class="chap"><h1>B Appendix — backup slides (questions only)</h1>
-<p>Backups follow slide 36 in the HTML deck and the PDF. In the deck press <b>B</b> for the index (BX) and click a row, or open <code>#B6</code> directly.</p>
+<p>Backups follow slide 37 in the HTML deck and the PDF. In the deck press <b>B</b> for the index (BX) and click a row, or open <code>#B6</code> directly.</p>
 ${tbl(['ID', 'Slide', 'Answers'], C.BACKUPS.map(b => b.map(esc)))}
 </section>`;
 

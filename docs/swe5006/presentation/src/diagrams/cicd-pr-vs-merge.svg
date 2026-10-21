@@ -40,7 +40,7 @@
 <line x1="193" y1="538" x2="193" y2="574" stroke="#1B1A18" stroke-width="1.8" marker-end="url(#cpmFill)"/>
 <rect x="378" y="556" width="1934" height="532" fill="#FFFFFF" stroke="#1B1A18" stroke-width="2"/>
 <text x="398" y="594" font-size="28" font-weight="700" text-anchor="start" fill="#1B1A18">2 · After squash merge: push to dev</text>
-<text x="960" y="594" font-size="24" text-anchor="start" fill="#1B1A18">Continuous Deployment to dev, no manual step</text>
+<text x="960" y="594" font-size="24" text-anchor="start" fill="#1B1A18">automatic deploy to dev (not production), no manual step</text>
 <text x="398" y="636" font-size="24" text-anchor="start" fill="#6B655C">backend/**, deployment/backend/** changed and ENABLE_EC2_DEPLOY = true</text>
 <rect x="398" y="656" width="300" height="180" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/><text x="412" y="690" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">package-dev</text><text x="412" y="722" font-size="24" text-anchor="start" fill="#1B1A18">mvnw package</text><text x="412" y="752" font-size="24" text-anchor="start" fill="#1B1A18">-DskipTests:</text><text x="412" y="782" font-size="24" text-anchor="start" fill="#1B1A18">merged commit</text>
 <rect x="738" y="656" width="404" height="180" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/><text x="752" y="690" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">publish-ecr-dev</text><text x="752" y="722" font-size="24" text-anchor="start" fill="#1B1A18">OIDC → ECR dev/blocbuy</text><text x="752" y="752" font-size="24" text-anchor="start" fill="#1B1A18">tag git-&lt;sha&gt;-run-&lt;n&gt;</text><text x="752" y="782" font-size="24" text-anchor="start" fill="#1B1A18">digest checked in ECR</text>

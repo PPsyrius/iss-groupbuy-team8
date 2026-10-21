@@ -10,7 +10,7 @@
     <marker id="ceZeroOne" viewBox="0 0 34 24" refX="33" refY="12" markerWidth="34" markerHeight="24" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M24,1 L24,23" fill="none" stroke="#1B1A18" stroke-width="1.8"/><circle cx="10" cy="12" r="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/></marker>
   </defs>
   <rect x="0" y="0" width="2320" height="1190" fill="#FFFFFF"/>
-  <text fill="#1B1A18" x="20" y="44" font-size="27" font-weight="700">erd Core schema (Flyway V2–V22, schema domain)</text>
+  <text fill="#1B1A18" x="20" y="44" font-size="27" font-weight="700">erd Core schema (Flyway V1–V28, schema domain)</text>
   <rect x="20" y="70" width="520" height="410" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
   <text fill="#1B1A18" x="280" y="105" font-size="27" font-weight="700" text-anchor="middle">biz_product</text>
   <polyline points="20,120 540,120" fill="none" stroke="#1B1A18" stroke-width="1.4"/>

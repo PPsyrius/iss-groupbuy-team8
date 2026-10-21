@@ -15,39 +15,39 @@
   <text fill="#1B1A18" x="29" y="47" font-size="26" font-weight="700">class UC4 Join Team: analysis (no platform)</text>
   <rect x="45" y="95" width="320" height="168" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
   <text fill="#1B1A18" x="205" y="133" font-size="24" text-anchor="middle">«boundary»</text>
-  <text fill="#1B1A18" x="205" y="169" font-size="27" font-weight="700" text-anchor="middle">JoinTeamPage</text>
+  <text fill="#1B1A18" x="205" y="169" font-size="27" font-weight="700" text-anchor="middle">JoinTeamUI</text>
   <polyline points="45,185 365,185" fill="none" stroke="#1B1A18" stroke-width="1.4400000000000002"/>
-  <text fill="#1B1A18" x="59" y="211" font-size="24">+showTeam()</text>
-  <text fill="#1B1A18" x="59" y="243" font-size="24">+confirmJoin()</text>
+  <text fill="#1B1A18" x="59" y="211" font-size="24">+join(team)</text>
+  <text fill="#1B1A18" x="59" y="243" font-size="24">+showJoined(status)</text>
   <rect x="420" y="95" width="375" height="168" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
   <text fill="#1B1A18" x="608" y="133" font-size="24" text-anchor="middle">«control»</text>
   <text fill="#1B1A18" x="608" y="169" font-size="27" font-weight="700" text-anchor="middle">JoinTeamControl</text>
   <polyline points="420,185 795,185" fill="none" stroke="#1B1A18" stroke-width="1.4400000000000002"/>
-  <text fill="#1B1A18" x="434" y="211" font-size="24">+joinTeam(teamId, buyer)</text>
-  <text fill="#1B1A18" x="434" y="243" font-size="24">+paymentConfirmed(payment)</text>
+  <text fill="#1B1A18" x="434" y="211" font-size="24">+requestJoin(buyer, team)</text>
+  <text fill="#1B1A18" x="434" y="243" font-size="24">+paymentConfirmed(ref, amt)</text>
   <rect x="845" y="75" width="285" height="310" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
   <text fill="#1B1A18" x="988" y="113" font-size="24" text-anchor="middle">«entity»</text>
   <text fill="#1B1A18" x="988" y="149" font-size="27" font-weight="700" text-anchor="middle">Team</text>
   <polyline points="845,165 1130,165" fill="none" stroke="#1B1A18" stroke-width="1.4400000000000002"/>
-  <text fill="#1B1A18" x="859" y="191" font-size="24">-targetSize: int</text>
-  <text fill="#1B1A18" x="859" y="223" font-size="24">-currentSize: int</text>
+  <text fill="#1B1A18" x="859" y="191" font-size="24">-targetSize: Integer</text>
+  <text fill="#1B1A18" x="859" y="223" font-size="24">-currentSize: Integer</text>
   <text fill="#1B1A18" x="859" y="255" font-size="24">-status: TeamStatus</text>
   <text fill="#1B1A18" x="859" y="287" font-size="24">-expireTime: DateTime</text>
   <polyline points="845,307 1130,307" fill="none" stroke="#1B1A18" stroke-width="1.4400000000000002"/>
-  <text fill="#1B1A18" x="859" y="333" font-size="24">+admit(buyer)</text>
-  <text fill="#1B1A18" x="859" y="365" font-size="24">+isFull(): bool</text>
+  <text fill="#1B1A18" x="859" y="333" font-size="24">+admit(…): Admission</text>
+  <text fill="#1B1A18" x="859" y="365" font-size="24">+checkAdmission(…)</text>
   <rect x="45" y="315" width="320" height="168" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
   <text fill="#1B1A18" x="205" y="353" font-size="24" text-anchor="middle">«boundary»</text>
-  <text fill="#1B1A18" x="205" y="389" font-size="27" font-weight="700" text-anchor="middle">Stripe</text>
+  <text fill="#1B1A18" x="205" y="389" font-size="27" font-weight="700" text-anchor="middle">PaymentGateway</text>
   <polyline points="45,405 365,405" fill="none" stroke="#1B1A18" stroke-width="1.4400000000000002"/>
-  <text fill="#1B1A18" x="59" y="431" font-size="24">+requestPayment()</text>
-  <text fill="#1B1A18" x="59" y="463" font-size="24">+notifyPaid()</text>
+  <text fill="#1B1A18" x="59" y="431" font-size="24">+requestPayment(…)</text>
+  <text fill="#1B1A18" x="59" y="463" font-size="24">+refund(payment)</text>
   <rect x="420" y="315" width="375" height="214" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
   <text fill="#1B1A18" x="608" y="353" font-size="24" text-anchor="middle">«entity»</text>
   <text fill="#1B1A18" x="608" y="389" font-size="27" font-weight="700" text-anchor="middle">Payment</text>
   <polyline points="420,405 795,405" fill="none" stroke="#1B1A18" stroke-width="1.4400000000000002"/>
   <text fill="#1B1A18" x="434" y="431" font-size="24">-amount: Money</text>
-  <text fill="#1B1A18" x="434" y="463" font-size="24">-status: PayStatus</text>
+  <text fill="#1B1A18" x="434" y="463" font-size="24">-status: PaymentStatus</text>
   <polyline points="420,483 795,483" fill="none" stroke="#1B1A18" stroke-width="1.4400000000000002"/>
   <text fill="#1B1A18" x="434" y="509" font-size="24">+confirm()</text>
   <polyline points="365,180 420,180" fill="none" stroke="#1B1A18" stroke-width="1.8"/>
@@ -68,7 +68,7 @@
   <rect x="1200" y="76" width="90" height="32" rx="7" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.4"/>
   <text fill="#1B1A18" x="1245" y="100" font-size="24" text-anchor="middle">[Pres]</text>
   <text fill="#1B1A18" x="1310" y="100" font-size="24">Presentation</text>
-  <text fill="#1B1A18" x="1590" y="100" font-size="24">JoinTeamPage → route + Query hook</text>
+  <text fill="#1B1A18" x="1590" y="100" font-size="24">JoinTeamUI → route + Query hook</text>
   <rect x="1200" y="122" width="84" height="32" rx="7" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.4"/>
   <text fill="#1B1A18" x="1242" y="146" font-size="24" text-anchor="middle">[Dist]</text>
   <text fill="#1B1A18" x="1310" y="146" font-size="24">Distribution</text>
@@ -80,11 +80,11 @@
   <rect x="1200" y="214" width="76" height="32" rx="7" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.4"/>
   <text fill="#1B1A18" x="1238" y="238" font-size="24" text-anchor="middle">[Ext]</text>
   <text fill="#1B1A18" x="1310" y="238" font-size="24">External interface</text>
-  <text fill="#1B1A18" x="1590" y="238" font-size="24">Stripe → CheckoutGateway ← adapter, webhook</text>
+  <text fill="#1B1A18" x="1590" y="238" font-size="24">PaymentGateway → CheckoutGateway ← adapter</text>
   <rect x="1200" y="260" width="90" height="32" rx="7" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.4"/>
   <text fill="#1B1A18" x="1245" y="284" font-size="24" text-anchor="middle">[Conc]</text>
   <text fill="#1B1A18" x="1310" y="284" font-size="24">Concurrency</text>
-  <text fill="#1B1A18" x="1590" y="284" font-size="24">joinTeam → lock order + guarded UPDATE</text>
+  <text fill="#1B1A18" x="1590" y="284" font-size="24">requestJoin → lock order + guarded UPDATE</text>
   <rect x="1200" y="306" width="76" height="32" rx="7" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.4"/>
   <text fill="#1B1A18" x="1238" y="330" font-size="24" text-anchor="middle">[Evt]</text>
   <text fill="#1B1A18" x="1310" y="330" font-size="24">Domain events</text>

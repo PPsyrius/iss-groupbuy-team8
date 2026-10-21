@@ -10,7 +10,7 @@
 <line x1="20.0" y1="186.0" x2="560.0" y2="186.0" stroke="#1B1A18" stroke-width="1.6"/>
 <text x="34.0" y="218.0" font-size="24" fill="#1B1A18">+expireOne(dealId: UUID): boolean</text>
 <rect x="20.0" y="62.0" width="238.4" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
-<text x="30.0" y="87.0" font-size="24" fill="#1B1A18">«ConcreteSubject»</text>
+<text x="30.0" y="87.0" font-size="24" fill="#1B1A18">«event source» (Subject’s client)</text>
 <rect x="600.0" y="96.0" width="540.0" height="198.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
 <text x="870.0" y="132.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">PaidGroupDealService</text>
 <line x1="600.0" y1="142.0" x2="1140.0" y2="142.0" stroke="#1B1A18" stroke-width="1.6"/>
@@ -20,7 +20,7 @@
 <text x="654.2" y="250.0" font-size="24" fill="#1B1A18">paid: PaidParticipation,</text>
 <text x="654.2" y="282.0" font-size="24" fill="#1B1A18">sharerUserId: UUID): ParticipationResult</text>
 <rect x="600.0" y="62.0" width="238.4" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
-<text x="610.0" y="87.0" font-size="24" fill="#1B1A18">«ConcreteSubject»</text>
+<text x="610.0" y="87.0" font-size="24" fill="#1B1A18">«event source» (Subject’s client)</text>
 <rect x="20.0" y="380.0" width="440.0" height="120.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
 <text x="240.0" y="412.0" font-size="24" text-anchor="middle" fill="#1B1A18">«interface» {Spring}</text>
 <text x="240.0" y="446.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">ApplicationEventPublisher</text>
