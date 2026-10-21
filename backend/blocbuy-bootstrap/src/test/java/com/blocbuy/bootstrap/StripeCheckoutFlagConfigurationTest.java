@@ -3,7 +3,13 @@ package com.blocbuy.bootstrap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.ThrowableProxyUtil;
+import ch.qos.logback.core.read.ListAppender;
 import com.blocbuy.bootstrap.config.StripeCheckoutConfiguration;
+import com.blocbuy.bootstrap.config.StripeCheckoutRuntimeProperties;
 import com.blocbuy.bootstrap.config.StripePaymentFacadeConfiguration;
 import com.blocbuy.payment.gateway.CheckoutGateway;
 import com.blocbuy.payment.gateway.PaymentBusinessPort;
@@ -13,25 +19,42 @@ import com.blocbuy.payment.service.PaymentAppService;
 import com.blocbuy.payment.service.StripeCheckoutService;
 import com.blocbuy.payment.service.StripeFeatureSwitch;
 import com.blocbuy.payment.service.StripePaymentAppService;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.diagnostics.FailureAnalysis;
+import org.springframework.boot.diagnostics.FailureAnalyzer;
+import org.springframework.boot.diagnostics.LoggingFailureAnalysisReporter;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.validation.autoconfigure.ValidationAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.io.support.SpringFactoriesLoader;
+import org.springframework.core.io.support.SpringFactoriesLoader.ArgumentResolver;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /** Rollout flags select one facade; invalid enabled deployments fail before accepting payments. */
 class StripeCheckoutFlagConfigurationTest {
+    // A fake live-mode key, assembled at runtime so the source never holds a token-shaped literal
+    // that secret scanners (gitleaks stripe-access-token) would flag.
+    private static final String LIVE_FIXTURE = String.join("_", "sk", "live", "GATEPROBE123");
+    private static final String WEBHOOK_FIXTURE = "whsec_local_fixture";
+    private static final String NOT_TEST_KEY = "STRIPE_API_KEY must be a Stripe test key";
     private static final String[] VALID = {
         "blocbuy.payment.stripe.checkout-enabled=true",
         "blocbuy.payment.stripe.api-key=sk_test_local_fixture",
-        "blocbuy.payment.stripe.webhook-secret=whsec_local_fixture",
+        "blocbuy.payment.stripe.webhook-secret=" + WEBHOOK_FIXTURE,
         "blocbuy.payment.checkout.success-url=https://example.test/payments/return",
         "blocbuy.payment.checkout.cancel-url=https://example.test/payments/return"
     };
@@ -106,6 +129,89 @@ class StripeCheckoutFlagConfigurationTest {
     }
 
     @Test
+    void rejectedLiveKeyIsNeverEchoedByTheStartupFailure() {
+        runner.withPropertyValues(VALID)
+                .withPropertyValues("blocbuy.payment.stripe.api-key=" + LIVE_FIXTURE)
+                .run(
+                        context -> {
+                            assertThat(context).hasFailed();
+                            Throwable failure = context.getStartupFailure();
+                            assertThat(causeMessages(failure)).contains(NOT_TEST_KEY);
+                            FailureAnalysis analysis = analyze(failure);
+                            assertThat(analysis).isNotNull();
+                            assertThat(analysis.getDescription()).contains(NOT_TEST_KEY);
+                            assertThat(causeMessages(failure)).doesNotContain(LIVE_FIXTURE);
+                            assertThat(analysis.getDescription()).doesNotContain(LIVE_FIXTURE);
+                            assertThat(analysis.getAction()).doesNotContain(LIVE_FIXTURE);
+                            assertThat(stackTrace(failure)).doesNotContain(LIVE_FIXTURE);
+                            assertThat(reportedFailure(analysis))
+                                    .contains(NOT_TEST_KEY)
+                                    .doesNotContain(LIVE_FIXTURE, WEBHOOK_FIXTURE);
+                        });
+    }
+
+    @Test
+    void simultaneousValidationErrorsDoNotRevealTheRejectedKey() {
+        runner.withPropertyValues(VALID)
+                .withPropertyValues(
+                        "blocbuy.payment.stripe.api-key=" + LIVE_FIXTURE,
+                        "blocbuy.payment.stripe.webhook-secret=")
+                .run(
+                        context -> {
+                            assertThat(context).hasFailed();
+                            FailureAnalysis analysis = analyze(context.getStartupFailure());
+                            assertThat(analysis).isNotNull();
+                            assertThat(reportedFailure(analysis))
+                                    .contains(NOT_TEST_KEY, "STRIPE_WEBHOOK_SECRET must be set")
+                                    .doesNotContain(LIVE_FIXTURE);
+                            assertThat(stackTrace(context.getStartupFailure()))
+                                    .doesNotContain(LIVE_FIXTURE);
+                        });
+    }
+
+    @Test
+    void configuredSandboxKeyFlagCannotBypassTheDerivedCheck() {
+        runner.withPropertyValues(VALID)
+                .withPropertyValues(
+                        "blocbuy.payment.stripe.api-key=" + LIVE_FIXTURE,
+                        "blocbuy.payment.stripe.sandbox-key=true")
+                .run(
+                        context -> {
+                            assertThat(context).hasFailed();
+                            assertThat(causeMessages(context.getStartupFailure()))
+                                    .contains(NOT_TEST_KEY)
+                                    .doesNotContain(LIVE_FIXTURE);
+                        });
+    }
+
+    @Test
+    void keyIsNotCheckedUnlessCheckoutIsEnabled() {
+        runner.withPropertyValues("blocbuy.payment.stripe.api-key=" + LIVE_FIXTURE)
+                .run(context -> assertThat(context).hasNotFailed());
+        runner.withPropertyValues(
+                        "blocbuy.payment.stripe.checkout-enabled=false",
+                        "blocbuy.payment.stripe.api-key=" + LIVE_FIXTURE)
+                .run(context -> assertThat(context).hasNotFailed());
+    }
+
+    @Test
+    void sandboxKeyCheckMatchesTheFormerTestKeyPattern() {
+        // Same acceptance as the former @Pattern("sk_test_.+"); a null key is @NotBlank's job.
+        assertThat(sandboxKey(null)).isTrue();
+        assertThat(sandboxKey("sk_test_" + "abc")).isTrue();
+        assertThat(sandboxKey("sk_test_")).isFalse();
+        assertThat(sandboxKey(LIVE_FIXTURE)).isFalse();
+        assertThat(sandboxKey("")).isFalse();
+        // Whole-string match: a trailing line terminator (env file, secret store) still fails fast.
+        assertThat(sandboxKey("sk_test_" + "abc\n")).isFalse();
+        assertThat(sandboxKey("sk_test_" + (char) 0x2028)).isFalse(); // LINE SEPARATOR
+    }
+
+    private static boolean sandboxKey(String apiKey) {
+        return new StripeCheckoutRuntimeProperties(apiKey, "whsec").isSandboxKey();
+    }
+
+    @Test
     void legacyProfileEnablesTheSameCheckoutGate() {
         runner.withInitializer(new ConfigDataApplicationContextInitializer())
                 .withPropertyValues(Arrays.copyOfRange(VALID, 1, VALID.length))
@@ -127,6 +233,54 @@ class StripeCheckoutFlagConfigurationTest {
                             assertThat(causeMessages(context.getStartupFailure()))
                                     .contains(expected);
                         });
+    }
+
+    /** Runs the analyzers Spring Boot registers, as it does when the application fails to start. */
+    private static FailureAnalysis analyze(Throwable failure) {
+        ArgumentResolver arguments =
+                ArgumentResolver.of(BeanFactory.class, new DefaultListableBeanFactory())
+                        .and(Environment.class, new StandardEnvironment());
+        return SpringFactoriesLoader.forDefaultResourceLocation(
+                        StripeCheckoutFlagConfigurationTest.class.getClassLoader())
+                .load(FailureAnalyzer.class, arguments)
+                .stream()
+                .map(analyzer -> analyzer.analyze(failure))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private static String stackTrace(Throwable failure) {
+        StringWriter out = new StringWriter();
+        failure.printStackTrace(new PrintWriter(out));
+        return out.toString();
+    }
+
+    /** Capture both the diagnostic message and the debug-level exception rendered by Boot. */
+    private static String reportedFailure(FailureAnalysis analysis) {
+        Logger logger = (Logger) LoggerFactory.getLogger(LoggingFailureAnalysisReporter.class);
+        Level previousLevel = logger.getLevel();
+        ListAppender<ILoggingEvent> events = new ListAppender<>();
+        events.start();
+        logger.addAppender(events);
+        logger.setLevel(Level.DEBUG);
+        try {
+            new LoggingFailureAnalysisReporter().report(analysis);
+            assertThat(events.list).extracting(ILoggingEvent::getLevel).contains(Level.ERROR);
+            return events.list.stream()
+                    .map(
+                            event ->
+                                    event.getFormattedMessage()
+                                            + (event.getThrowableProxy() == null
+                                                    ? ""
+                                                    : ThrowableProxyUtil.asString(
+                                                            event.getThrowableProxy())))
+                    .collect(Collectors.joining("\n"));
+        } finally {
+            logger.detachAppender(events);
+            logger.setLevel(previousLevel);
+            events.stop();
+        }
     }
 
     private static String causeMessages(Throwable failure) {
