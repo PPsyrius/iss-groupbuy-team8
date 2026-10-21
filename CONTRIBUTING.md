@@ -33,7 +33,7 @@ Summary ≤ 72 chars, imperative. Body only when the *why* is not obvious.
 ## Pull Requests
 
 - Target `dev`. Small PRs; one concern per PR.
-- CI must be green: `build-quality`, `contract-check` (backend) and `frontend-check` (frontend) are required checks. Red pipelines don't merge.
+- CI must be green: `build-quality`, `SonarCloud Backend`, `docker`, `gitleaks`, `frontend-check` and `SonarCloud Frontend` are the current required checks; see the [gate policy](docs/ci/backend-pipeline.md#required-pr-checks). Other applicable checks, including `contract-check`, must also be green before review approval. Red pipelines don't merge.
 - Formatting-only changes land as their own commit (`style:`), never mixed with behavior changes.
 - CODEOWNERS review required. PRs touching `.github/**`, `backend/Dockerfile`, or pipeline config need the devsecops label owner.
 - New secrets/config: environment variables only, documented in `backend/README.md`. Never commit secrets; Gitleaks gates event-selected revisions, with the full-history enforcement gap recorded in [quality gates](docs/quality/quality-gates.md#secret-scan-scope-checkpoint--2026-10-14).

@@ -81,6 +81,34 @@ class BackendQualityTest(unittest.TestCase):
         self.assertIsNone(agent.find("m:configuration/m:destFile", NS))
         self.assertIn("backend/blocbuy-bootstrap/target/site/jacoco-aggregate/jacoco.xml", self.workflow)
 
+    def test_spotbugs_engine_and_annotations_share_one_pin_and_updates_are_grouped(self):
+        spotbugs = self.parent.find(
+            "m:build/m:pluginManagement/m:plugins/m:plugin[m:artifactId='spotbugs-maven-plugin']", NS
+        )
+        self.assertIsNotNone(spotbugs)
+        self.assertEqual(spotbugs.findtext("m:version", namespaces=NS), "${spotbugs-maven-plugin.version}")
+        self.assertEqual(
+            spotbugs.findtext("m:dependencies/m:dependency[m:artifactId='spotbugs']/m:version", namespaces=NS),
+            "${spotbugs.version}",
+        )
+        self.assertEqual(
+            self.parent.findtext(
+                "m:dependencyManagement/m:dependencies/m:dependency[m:artifactId='spotbugs-annotations']/m:version",
+                namespaces=NS,
+            ),
+            "${spotbugs.version}",
+        )
+        dependabot = (ROOT / ".github/dependabot.yml").read_text(encoding="utf-8")
+        self.assertRegex(dependabot, r"spotbugs:\s*\n\s*patterns: \['com\.github\.spotbugs:\*'\]")
+
+    def test_pom_policy_checks_run_in_the_existing_backend_job(self):
+        build_quality = self.workflow.split("  build-quality:\n", 1)[1].split("  contract-check:", 1)[0]
+        self.assertIn("python3 -m unittest discover -s .github/tests -p 'backend*_test.py'", build_quality)
+        security = (ROOT / ".github/workflows/security.yml").read_text(encoding="utf-8")
+        workflow_filter = security.split("filters: |", 1)[1].split("deployment:", 1)[0]
+        self.assertNotIn("backend/pom.xml", workflow_filter)
+        self.assertNotIn("backend/**/pom.xml", workflow_filter)
+
 
 if __name__ == "__main__":
     unittest.main()

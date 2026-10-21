@@ -11,6 +11,9 @@ updates:
         patterns: ['org.springframework*']
       test:
         patterns: ['org.junit*', 'org.testcontainers*', 'com.tngtech.archunit*']
+      # The engine needs the plugin's matching BCEL/ASM dependencies (#559).
+      spotbugs:
+        patterns: ['com.github.spotbugs:*']
     # Spring majors ride deliberate upgrades, not Dependabot.
     ignore:
       - dependency-name: 'org.springframework*'

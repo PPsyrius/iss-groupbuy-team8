@@ -51,7 +51,10 @@ jobs:
               - '.github/workflows/**'
               - '.github/tests/**'
               - '.github/scripts/**'
-              - '.github/actions/trivy-image-db/**'
+              - '.github/actions/**'
+              - '.github/dependabot.yml'
+              - '.gitleaks.toml'
+              - '.gitleaksignore'
             deployment:
               - 'deployment/**'
             dependencies:
@@ -81,7 +84,7 @@ jobs:
       - name: Test closed-PR cache cleanup safety
         run: node --test .github/tests/cleanup-pr-caches.test.cjs
 
-      - name: Test Trivy database publication validation
+      - name: Test CI tooling policies
         run: python3 -m unittest discover -s .github/tests -p '*_test.py'
 
       - name: Lint GitHub Actions and embedded shell

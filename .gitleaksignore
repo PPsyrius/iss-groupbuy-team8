@@ -1,0 +1,24 @@
+# Reviewed SHA-256 file-content digests, not credentials: the source paths and
+# values were verified against the payment contract baseline and its base commit.
+# Exact historical fingerprints only; new commits and all other paths still scan.
+# Evidence: docs/ci/ci-failure-audit-20261021.md
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:11
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:12
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:44
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:46
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:67
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:79
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:117
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:118
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:119
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:120
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:126
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:155
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:156
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:167
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:168
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:169
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:174
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:175
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:177
+983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:178
