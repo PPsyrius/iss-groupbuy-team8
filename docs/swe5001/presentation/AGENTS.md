@@ -20,7 +20,8 @@ Team 8's BlocBuy presentation for SWE5001 (Graduate Certificate in Architecting 
 - `src/content.js` is the single source for speaker wording (`say`), cues, hand-overs, slot times, Q&A per segment (plus `QA_EXTENDED`, the extended bank for slides 12–15), the backup index, and the checked and open items (`CHECKED_ITEMS`, `OPEN_ITEMS`). Change wording here, never in the generated HTML.
 - `src/slides-main.js` has one function per main slide; `src/slides-backup.js` builds BX and B1a–B15 (B13–B15 are simplified diagrams drawn in HTML; B11 inlines `src/assets/b11-dashboard.jpg`).
 - `src/script.js` holds the script chapters: demo run book (§6), contingencies (§7), timeline (§8), open items (§9), operator commands (Appendix A) and the backup list (Appendix B), plus the coverage and briefing tables in the run sheet.
-- UML diagrams (slides 9, 13, 16 and backups B3, B4, B6) come from `docs/presentation-kit/diagrams/`. Copy a diagram into `src/diagrams/` before changing it for this deck only.
+- UML diagrams (slides 9, 13, 16 and backups B3, B4, B6) are the v3 drawings in `src/diagrams/` (text drawn as glyph paths), overriding the kit's `docs/presentation-kit/diagrams/`. `src/site-geometry.js` places them in their v3 boxes.
+- Motion is on (`motion: true` in `deck.config.js`): every slide carries the v3 entrance choreography in its `src/` markup. Keep it when changing a slide, and follow [`../../presentation-kit/MOTION.md`](../../presentation-kit/MOTION.md) for new elements; add any new or unique pattern there in the same commit.
 - Evidence behind every number on a slide is under `docs/swe5001/evidence/`; the live-environment procedure is `docs/swe5001/runbook-environment-session.md`.
 
 ## Rules for this deck

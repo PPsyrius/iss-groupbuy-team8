@@ -85,4 +85,58 @@ Choreography is authored per element, by a human or an AI agent. The engine does
 
 ## Hand-composed patterns
 
-Each entry names the pattern, the slides using it, the element roles, the `data-a` types and the delay rhythm (first `--d` and step). The entries are filled from the v3 deck.
+Each entry names the pattern, the slides using it, the element roles, the `data-a` types and the delay rhythm (first `--d` and step). The entries are filled from the v3 deck. Slide references are `<deck> <slide>`, e.g. `5001 12` or `5001 B13`. "d" is the element's own first delay; "+n" is relative to it.
+
+### Overall rhythm
+
+- Chrome at 0 / 60 ms; body choreography starts at about 150–300 ms.
+- Reading order drives the delays: top-left to bottom-right, column by column where a slide is built in columns.
+- Most slides settle by 700–1000 ms; busy slides run to about 1600 ms. A step of 30–60 ms reads as one gesture, 80–170 ms as a sequence.
+- A late footnote or caption closes the slide with `up` after everything else.
+- Connectors draw after both elements they join have arrived.
+
+### Reusable patterns
+
+| Pattern | Slides | Roles → `data-a` | Delay rhythm |
+|---|---|---|---|
+| Icon + text row | 5001 2, 5, 8, 18, 19 | dot or icon → `pop`; its text → `up` | text at the pop's d +6…+40; rows step 70–120 |
+| Icon card | 5001 8, 12, 15, 17, 21, 23, B10, B11 | card → `up`; icon or number → `pop`; title → `up`; body → `up`; tag chip → `pop`; optional fix panel → `fade` + text `up` | icon +23…+60, title +34…+90, body +91…+125, tag +110…+203; cards step 74–160 from about 200 |
+| Card column with header band | 5001 4 | card → `up`; band (+ square patch) → `fade`; band icon → `pop`; name → `up`; list → `up` | card d at 200, +120 per column; band d, icon d+60, name d+80, list d+160 |
+| Side columns | 5001 2, 5, 11, 18, 22 | left column → `left`; right column → `right`; middle column → `up`; heading → `up`; list → `up` | columns 200–300 (right column may come much later, e.g. 600); heading +12…+50; list +59…+65; tick rows inside: pop from 300–500, +80 per row, text +30 |
+| Box then text | 5001 3, 10, 11, 14, B5, B9, B11, B13, B14 | panel background → `fade`, `pop` or `left`; its text → `up` | text at the box's d +2…+12; sibling boxes step 30–90 |
+| Table with rows | 5001 11, B1a, B1b, B2, B5, B7, B8, B9, B12 | heading → `up`; table → `fade`; body rows → `trow` | table 246, rows 368 then +38.4 each (406, 445, 483, …); on slide 11 heading 449, table 485, rows 608 +38 |
+| Trailing callout | 5001 B5, B9, 19, 23 | dark panel → `fade` or `up`; bar or `recdot` → `fade`; text → `up` | at the end of what it comments on (after a table: 560–607; on a full slide: 1100); text +4…+50 |
+| Footnote or caption | 5001 3, 4, 6, 9, B6, B12, BX | closing line → `up` | last on the slide: 649–1500 |
+| Stat strip | 5001 14, 19, 20, 24 | box → `up`; value and caption → `up` | content +40…+50 (caption +46); boxes step 42–120, from 600–1000 |
+| Connector between elements | 5001 2, 3, 7, 10, 18, 20, 22, B10, B13, B14 | arrow → `cn` | after both ends have arrived; chains step +56…+90; pipeline stage arrows at stage +120 |
+| Process chain | 5001 7, 20, B11 | panel → `fade`; heading → `up`; steps → `pop` (stage) or `fade` + text `up`; connectors → `cn` | panel about 280–430, heading +4…+23; steps +29…+170 apart; each connector after its pair |
+| Bars and timeline | 5001 6 | rail → `cn`; milestone dot → `pop` + date `up`; label → `up`; bar → `grow`; value → `up` | rail 150; milestones 300 +110, label +40; bar rows 700 +110: name d, bar d+60, description d+100, value d+200 |
+| Band list | 5001 12, 17 | dark band → `up`; check or icon → `pop`; text → `up` | bands 800–900, step 50–150; icon +60, text +80 |
+| Diagram slide | 5001 9, 13, 16, B3, B4, B6 | diagram wrapper → `fade`; caption or side text → `up`; side box background → `fade` + text `up` | diagram 200; side list about 250–350; box 594–670; caption last (672–900) |
+| Index grid | 5001 BX | per row: card background → `up`, tag → `pop`, title → `up` | 100, +30 per row, all three at the same delay |
+
+### One-off patterns
+
+| Pattern | Slide | Recipe |
+|---|---|---|
+| Title lockup | 5001 1 | bag `pop` and wordmark `up` 200, kicker `up` 213, tagline 320, headline 420, subline 520, names `fade` 650, programme `fade` 700, caption `up` 1500 |
+| Bar and avatar chart | 5001 1 | bars `rise` 500 +160; each avatar `drop` 300 after its bar (800 +160) |
+| Hub with satellites | 5001 3 | note boxes `fade` (text +3…+4); side cards `left`/`right`; hub ring `pop` 380, disc `pop` + `pulse` 420, label 500, text 560; connectors `cn` 745 / 826 / 900; pill row `pop` 1000 +90; footnote 1300 |
+| Service panels with event mapping | 5001 10 | panels `fade` 254 / 535 / 605, header +9, inner card `fade` +42…+51, card text +2; mapping rows: domain pill `pop` 450 +64, integration pill `pop` 690 +64, arrow `cn` 728 +63 |
+| Pill ribbon | 5001 11 | dark band `up` 645, label +4, pills `pop` 1009 then about +90 |
+| Line chart | 5001 14 | chart `fade` 300; line 1 `cline` 500, dots `cdot` 600 +60; line 2 800, dots 900 +60 |
+| Stacked cylinders | 5001 15 | cylinder `up` 244 / 318 / 393, name +53, contents +98 |
+| Branch diagram | 5001 18 | main line `cn` 120, release line 300; feature arrows `cn` 200 +80 ×6; labels `up` 248–519 top to bottom; promotion arrows 700 / 950, each with a label +100; pills `pop` 564 / 634 |
+| Nested boundary boxes | 5001 22 | left cards `left` (200–400) with dot `pop` +18…+20; nested boxes `fade` 150 / 300 / 450 / 600, outer to inner, heading +20, tags `pop` +29…+125; inner tiles `fade` 700 / 760 / 850; arrows `cn` 587 / 718 |
+| Closing slide (dark) | 5001 24 | headline `up` 150, sub 300, kicker 420; takeaway pills `pop` 600 +110 ×4; stat strip from 1000; footer icon + text 1400 |
+| Click-revealed diagram | 5001 16 | static covers over the drawing fade in with it; each covered part is a `.frag[data-frag]` copy of the drawing, clipped to its box (v3 faded the covers out) |
+| Sequence lanes | 5001 B15 | lane headers `pop` 150 +70, text +20; lifelines `fade` 500; step arrows `grow` 60; labels 120; final line `up` 300 (v3 timings, arrows before headers) |
+
+### Authoring techniques
+
+- **Split a box from its content** when the background and the text enter differently. Use an absolute background layer plus a content layer that keeps the original border width as a transparent border, so the settled frame does not move. Nested `.a` children work too: transforms then combine during the entrance, but the settled frame is the same.
+- **Arrows that draw on** must be SVG. Turn CSS-border arrows into a `cn` path with a marker of the same geometry, e.g. `arrCn()` and `s18Line()` in `docs/swe5001/presentation/src/slides-main.js`. Set `stroke-linecap:butt` (or square) inline, because `.cn` sets round caps. The marker head shows while the shaft draws; v3 does the same.
+- **Filled icons** (Font Awesome arrows, chevrons) cannot draw on: `.cn` sets `fill:none`. Give the wrapper `grow` or `fade` at the connector delay instead (5001 B10, B11, 20).
+- **Placing elements from a 1920 × 1080 source:** `site(l, t, w, h)` in `docs/swe5001/presentation/src/site-geometry.js` converts a v3 box (× 2/3, minus the `.body` offset 58, 128).
+- **Shared helpers** take motion as an optional trailing parameter whose default keeps the old output (`row`, `tick`, `box`, `ln`); `tbl()` in `slides-backup.js` adds the standard table rhythm.
+- **Check a port** with a settled-frame pixel diff (`npm run screenshots` before and after) plus screenshots at 300 and 900 ms after arriving on the slide.
