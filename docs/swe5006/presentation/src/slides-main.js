@@ -172,7 +172,76 @@ const s8 = () => `
 </div>
 <div style="position:absolute;left:0;right:0;top:450px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 17px/1.35 Inter"><b style="color:#3E5CD9">Practice (EPAT 03, 05):</b> two red tests reproduced a quote defect (7 Oct log), then PR #424 refactored admission into shared guards and a Factory Method. Full set of artefacts: backup B1.</div>`;
 
-const out = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8 };
+// ---------- slide 23 (3.1, 3.3) ----------
+// Agile Testing Quadrants (EPAT 03 TDD p7), laid out as in the deck: business-facing on top, supporting the team on the left.
+const lvl = t => `<span style="display:inline-block;font:600 14.5px/1 Inter;border:1.5px solid #6B655C;color:#1B1A18;border-radius:999px;padding:3px 8px;margin-left:6px;vertical-align:2px">${t}</span>`;
+const qrow = (name, level, rest) => `<div style="font:400 18px/1.3 Inter;margin-bottom:6px"><b>${name}</b>${lvl(level)} <span style="color:var(--muted)">·</span> ${rest}</div>`;
+const caught = t => `<div style="font:400 17px/1.3 Inter;margin-top:2px"><b style="color:#B02E1B">Caught:</b> ${t}</div>`;
+const runs = t => `<div style="font:400 17px/1.3 Inter;color:var(--muted);margin-bottom:2px">Runs in ${t}</div>`;
+const quad = (q, axes, how, body, style, frag) => `<div class="card${frag ? ' frag' : ''}"${frag ? ` data-frag="${frag}"` : ''} style="position:absolute;${style};padding:9px 16px">
+ <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px"><span style="font:700 18px Inter">${q} <span style="font-weight:500;color:var(--muted)">${axes}</span></span><span style="font:600 15px Inter;color:var(--muted)">${how}</span></div>
+ ${body}</div>`;
+const Q_H = 'height:190px', Q_W = 'width:574px';
+const s23 = () => `
+${quad('Q2', 'business-facing · supporting the team', 'automated', `
+ ${qrow('Integration', 'integration', 'Testcontainers · 49 classes')}
+ ${qrow('Contract', 'integration', 'OpenAPI export + openapi-diff')}
+ ${qrow('End-to-end', 'system', 'Playwright · 8 specs')}
+ ${runs(`${mo('build-quality', 15)}, ${mo('contract-check', 15)}, ${mo('e2e-preview', 15)}, ${mo('e2e-dev', 15)}`)}
+ ${caught('a 502 on e2e-dev during a deploy (3–4 Oct): one host')}`, `left:0;top:0;${Q_W};${Q_H}`, 1)}
+${quad('Q3', 'business-facing · critiquing the product', 'manual', `
+ ${qrow('Exploratory, acceptance', 'system', 'by hand, logged')}
+ <div style="font:400 18px/1.3 Inter;margin-bottom:6px">Stripe Sandbox START and JOIN in a browser (20 Sep, local)</div>
+ <div style="font:400 18px/1.3 Inter;margin-bottom:6px">Sign-in cookie Secure and HttpOnly on dev (8 Oct)</div>
+ <div style="font:400 17px/1.3 Inter;color:#B02E1B">Not done: acceptance testing with outside users</div>`, `left:590px;top:0;${Q_W};${Q_H}`, 2)}
+${quad('Q1', 'technology-facing · supporting the team', 'automated', `
+ ${qrow('Unit', 'unit', 'JUnit 5, Mockito · 185 classes')}
+ ${qrow('Component', 'unit', 'Vitest, MSW · 77 files')}
+ ${qrow('Architecture', 'unit', 'ArchUnit · 18 rules')}
+ ${runs(`${mo('build-quality', 15)}, ${mo('frontend-check', 15)} (both required)`)}
+ ${caught('two red tests reproduced the join-quote defect (#422)')}`, `left:0;top:200px;${Q_W};${Q_H}`)}
+${quad('Q4', 'technology-facing · critiquing the product', 'tools', `
+ ${qrow('Performance, load', 'system', 'k6 on SWE5001 ECS, by hand')}
+ ${qrow('Security scanning', 'types', 'SAST · dependencies (SCA) · image and IaC configuration · secrets')}
+ ${runs('by hand (load); security gates on slide 27')}
+ ${caught('an expiry cohort used 58 s of its 60 s (local)')}`, `left:590px;top:200px;${Q_W};${Q_H}`, 3)}
+<div style="position:absolute;left:0;right:0;top:400px;border-radius:8px;background:#E3E8FB;padding:9px 16px">
+ <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font:700 17px Inter;color:#3E5CD9">Complex classes under test (proposal §6.3)</span><span style="font:400 15px Inter;color:var(--muted)">Quadrants: EPAT 03 TDD p7 · levels: p5</span></div>
+ ${[['Team state machine', `${mo('DealStatusTest', 16)}, ${mo('PaidGroupDealTest', 16)}`],
+    ['Last-seat capacity', `${mo('StripeCheckoutFlowTest.concurrentPaidBuyersCannotBothTakeLastSeat', 16)}`],
+    ['Refund idempotency', `${mo('RefundServiceTest.lostResponseRetriesSameDurableKey', 16)}`]]
+   .map(r => `<div style="display:flex;gap:12px;font:400 18px/1.35 Inter"><b style="width:190px;flex:none">${r[0]}</b><span>${r[1]}</span></div>`).join('')}
+</div>`;
+
+// ---------- slide 24 (3.2) ----------
+const kv = rows => rows.map(r => `<div style="display:flex;gap:14px;font:400 18px/1.35 Inter;margin-bottom:10px"><b style="width:118px;flex:none">${r[0]}</b><span>${r[1]}</span></div>`).join('');
+const s24 = () => `
+<div class="card" style="position:absolute;left:0;top:0;width:620px;height:536px;padding:18px 22px">
+ ${kicker('The scripted test')}
+ ${kv([
+   ['Tool', `k6 1.6.1, image pinned by digest · ${mo('perf/k6/browse.js', 16)}`],
+   ['Target system', '<b>SWE5001 ECS environment, same code</b>: CloudFront → ALB → Fargate. Never the shared SWE5006 dev host, which also runs its database'],
+   ['Load', 'open arrival rate 10 → 200 requests/s in ten 60 s steps; 100 VUs preallocated, 400 max'],
+   ['Mix', '7 listing pages : 3 listing details, anonymous; no think time; 10 s timeout'],
+   ['Pass, per step', 'p95 &lt; 500 ms · errors &lt; 1% · zero dropped requests'],
+   ['Result', `run in the system demo (slide 33) · ${mk('FILL', '5.3 pre-run label and date')}`],
+ ])}
+</div>
+<div style="position:absolute;left:640px;top:0;width:524px">
+ <div class="card" style="padding:16px 20px;margin-bottom:12px">
+  ${kicker('Proposal target (§6.3)', '#B02E1B')}
+  <div style="font:600 19px/1.35 Inter">Interactive operations ≤ 2 s with up to 100 concurrent users</div>
+  <div style="font:400 18px/1.4 Inter;margin-top:10px">Little’s law <span class="mono" style="font-size:17px">N = X · (R + Z)</span>: 100 users, 0.5 s think, ~30 ms response → <b>X ≈ 190 requests/s</b>, inside the 200 driven, with a p95 gate four times stricter than 2 s</div>
+  <div style="font:400 16px/1.35 Inter;color:var(--muted);margin-top:6px">The 0.5 s think time is our assumption</div>
+ </div>
+ <div class="card" style="padding:16px 20px">
+  ${kicker('Expiry ≤ 1 min after the window', '#B02E1B')}
+  <div style="font:400 18px/1.4 Inter">Measured <b>locally</b> under 100-user load (30 Sep): 30 teams, worst lag 58.2 s; one cohort waited a full one-minute sweep</div>
+  <div style="font:400 16px/1.35 Inter;color:var(--muted);margin-top:6px">On ECS: ${mk('FILL', 'V4 expiry burst, or "local only"')}</div>
+ </div>
+</div>`;
+
+const out = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 23: s23, 24: s24 };
 for (const s of C.SLIDES) if (!out[s.n]) out[s.n] = s.slot === null ? (() => '') : pending(s.n);
 // Closing slide (dark, full bleed).
 out[36] = () => `

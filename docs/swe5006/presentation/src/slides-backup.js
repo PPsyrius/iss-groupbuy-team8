@@ -112,16 +112,16 @@ const b8 = () => `<div style="display:flex;gap:18px">
   ['0015', 'Admin console shell, roles guard, versioned writes'],
  ], { fs: 14.5, w: [56], pad: '4px 10px' })}</div></div>`;
 
-// ---- B10: test inventory (segment 3), counted in the repository on 19 Oct at 8bcb38dd ----
-const b10 = () => dt(['Kind', 'Tools', 'Count by module', 'Example classes', 'Runs'], [
-  ['<b>Unit</b>', 'JUnit Jupiter, Mockito', '182 *Test classes (by file name; 21 start Spring or a database): domain 42, application 41, infrastructure 47, bootstrap 43, adapter 4, platform 2, commerce-svc 2, client 1', `${mo('RefundServiceTest')}, ${mo('PaidGroupDealTest')}, ${mo('ProductStatusTest')}`, 'every PR (build-quality)'],
-  ['<b>Integration</b>', 'Testcontainers: PostgreSQL 18, Redis 8.10, ElasticMQ', '49 classes: bootstrap 24, infrastructure 15, services 9, platform 1', `${mo('OrderRepositoryIT')}, ${mo('ServiceGrantsIT')}, ${mo('OutboxRelayElasticMqIT')}, ${mo('StripeRolloutAcceptanceIT')} (acceptance)`, 'every PR (build-quality)'],
-  ['<b>Architecture</b>', 'ArchUnit', '18 rules in 1 class', `${mo('ArchitectureTest')}`, 'every PR (build-quality)'],
-  ['<b>API contract</b>', 'springdoc export, git diff, openapi-diff 2.1.7', '1 file', `${mo('contracts/openapi.json')}`, 'backend PRs (contract-check, not required)'],
-  ['<b>Component</b>', 'Vitest, Testing Library, MSW', '76 files: features 58, routes 10, components 3, test 3, api 2 · 799 tests', `${mo('account.test.tsx')}, ${mo('admin-listing-edit.test.tsx')}`, 'every PR (frontend-check)'],
-  ['<b>End-to-end</b>', 'Playwright, Chromium', '7 specs, 18 test declarations', `${mo('buyer-journey.spec.ts')}, ${mo('quote.spec.ts')}`, 'PR (e2e-preview), after deploy (e2e-dev)'],
-  ['<b>Performance</b>', 'Node workload; k6 (SWE5001)', '3 scenarios; 5 k6 tooling test files', `${mo('backend/perf/workload.mjs')}, ${mo('perf/k6/')}`, 'by hand (tooling tested in CI)'],
-], { fs: 14.5, w: [112, 190, 300, 330], pad: '5px 10px' }) + `<div style="margin-top:8px;font:400 15px/1.35 Inter">Counted 19 Oct at 8bcb38dd: 183 <span class="mono" style="font-size:14.5px">*Test.java</span> (182 + ArchitectureTest), 49 <span class="mono" style="font-size:14.5px">*IT.java</span> (45 start containers). Last full runs: backend 1,931 (16 Oct log), frontend 799 (19 Oct log).</div>`;
+// ---- B10: test inventory (segment 3), counted in the repository on 22 Oct at a1c6ac6e ----
+const b10 = () => dt(['Kind · level', 'Tools', 'Count by module', 'Example classes', 'Runs'], [
+  ['<b>Unit</b> · unit', 'JUnit Jupiter, Mockito', '185 *Test classes, 1,329 test annotations: domain 42, application 41, infrastructure 47, bootstrap 46, adapter 4, platform 2, commerce-svc 2, client 1 (some, like StripeCheckoutFlowTest, use real PostgreSQL)', `${mo('RefundServiceTest')}, ${mo('PaidGroupDealTest')}, ${mo('DealStatusTest')}, ${mo('ProductStatusTest')}`, 'every PR (build-quality, required)'],
+  ['<b>Integration</b> · integration', 'Testcontainers: PostgreSQL 18, Redis 8.10, ElasticMQ', '49 *IT classes (45 start containers), 242 annotations: bootstrap 24, infrastructure 15, services 9, platform 1', `${mo('OrderRepositoryIT')}, ${mo('TeamExpirySchedulingIT')}, ${mo('StripeRolloutAcceptanceIT')} (acceptance)`, 'every PR (build-quality, required)'],
+  ['<b>Architecture</b> · unit', 'ArchUnit', '18 rules in 1 class', `${mo('ArchitectureTest')}`, 'every PR (build-quality, required)'],
+  ['<b>API contract</b> · integration', 'springdoc export, diff of contracts/, openapi-diff', '1 contract file', `${mo('contracts/openapi.json')}`, 'backend PRs (contract-check, not required)'],
+  ['<b>Component</b> · unit', 'Vitest, Testing Library, MSW', '77 files: features 58, routes 10, components 4, test 3, api 2', `${mo('account.test.tsx')}, ${mo('admin-listing-edit.test.tsx')}`, 'every PR (frontend-check, required)'],
+  ['<b>End-to-end</b> · system', 'Playwright, Chromium', '8 specs, 24 test declarations', `${mo('buyer-journey.spec.ts')}, ${mo('join-refusal.spec.ts')}, ${mo('smoke.spec.ts')}`, 'PR (e2e-preview); after deploy (e2e-dev)'],
+  ['<b>Performance</b> · system', 'k6 1.6.1 (SWE5001 ECS); Node workload (local)', 'k6 browse V2/V3; 3 local scenarios', `${mo('perf/k6/browse.js')}, ${mo('backend/perf/workload.mjs')}`, 'by hand (k6 tooling tested in CI)'],
+], { fs: 14.5, w: [112, 190, 300, 330], pad: '5px 10px' }) + `<div style="margin-top:8px;font:400 15px/1.35 Inter">Counted 22 Oct at a1c6ac6e: 186 <span class="mono" style="font-size:14.5px">*Test.java</span> (185 + ArchitectureTest), 49 <span class="mono" style="font-size:14.5px">*IT.java</span> (45 start containers). Latest full runs: backend 2,048 passed, 1 opt-in skip (21 Oct log, local); frontend 799 (19 Oct log).</div>`;
 
 // ---- B12–B14: segment 4, CI/CD. gh read-only queries of 19 Oct; medians of successful runs ----
 const req = '<b style="color:#3E5CD9">required</b>';
