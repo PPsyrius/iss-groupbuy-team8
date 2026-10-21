@@ -44,7 +44,7 @@ class ServiceGrantsIT {
     }
 
     @Test
-    void commerceRuntimeRoleIsDeniedIdentityTables() throws SQLException {
+    void commerceRuntimeRoleIsDeniedIdentityTables() {
         assertDenied("commerce", "select count(*) from domain.sys_user");
         assertDenied("commerce", "select count(*) from domain.rel_user_role");
         assertAllowed("commerce", "select count(*) from domain.biz_product");
@@ -55,7 +55,7 @@ class ServiceGrantsIT {
     }
 
     @Test
-    void notificationRuntimeRoleIsDeniedCommerceAndIdentityTables() throws SQLException {
+    void notificationRuntimeRoleIsDeniedCommerceAndIdentityTables() {
         assertAllowed("notification", "select count(*) from domain.biz_notification");
         assertAllowed(
                 "notification",
@@ -77,7 +77,7 @@ class ServiceGrantsIT {
     }
 
     @Test
-    void identityRuntimeRoleOwnsOnlyIdentityTables() throws SQLException {
+    void identityRuntimeRoleOwnsOnlyIdentityTables() {
         assertAllowed("identity", "select count(*) from domain.sys_user");
         assertAllowed("identity", "select count(*) from domain.rel_role_permission");
         assertDenied("identity", "select count(*) from domain.biz_order");
@@ -87,7 +87,7 @@ class ServiceGrantsIT {
     }
 
     @Test
-    void noRuntimeRoleTouchesTheMigrationHistory() throws SQLException {
+    void noRuntimeRoleTouchesTheMigrationHistory() {
         for (String service : SERVICES) {
             assertDenied(service, "select count(*) from domain.flyway_schema_history");
         }
