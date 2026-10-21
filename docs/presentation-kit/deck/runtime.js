@@ -61,8 +61,10 @@ document.addEventListener('click',ev=>{
   ev.clientX<innerWidth/3?prev():next();
 });
 addEventListener('resize',()=>{if(body.classList.contains('present'))fit();});
-addEventListener('hashchange',()=>{const k=byId(decodeURIComponent(location.hash.slice(1)));if(k>=0&&k!==i&&body.classList.contains('present'))go(k);});
-const k=byId(decodeURIComponent(location.hash.slice(1)));
+// a malformed hash (stray '%') must not abort the runtime
+const hashId=()=>{try{return decodeURIComponent(location.hash.slice(1));}catch{return '';}};
+addEventListener('hashchange',()=>{const k=byId(hashId());if(k>=0&&k!==i&&body.classList.contains('present'))go(k);});
+const k=byId(hashId());
 if(!window.__PRINT__){enter();
   // first paint on the next frame so the opening slide plays its entrance too
   requestAnimationFrame(()=>go(k>=0?k:0));
