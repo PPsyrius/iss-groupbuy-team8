@@ -6,6 +6,7 @@ module.exports = {
   fillLabel: 'FILL',
   guidelineLabel: 'Lecturer’s presentation sequence · Presentation Guidelines · Briefing deliverables (V1.0)',
   demoSegment: 5,
+  motion: true,
   outputs: {
     deck: 'swe5006-presentation.html',
     deckPdf: 'swe5006-presentation.pdf',

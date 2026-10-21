@@ -47,6 +47,7 @@ Re-plan from the rubric (skill, Drafting) rather than patching these one by one;
 
 - Facts on slides come from the report drafts, merged code, GitHub issues and the project board, AWS (read-only) or recorded evidence; never present a local result as one from a deployed environment.
 - Speaking time is estimated at 130 words a minute; keep each section inside the rubric's budget (the run sheet compares them).
+- Motion is on (`motion: true`): every slide carries entrance choreography in its `src/` markup. Give new or changed elements an entrance from the patterns in [`docs/presentation-kit/MOTION.md`](../../presentation-kit/MOTION.md), and add any new or unique pattern there in the same commit.
 - Do not change the SWE5001 deck (#461) from here. A kit change must leave the SWE5001 HTML unchanged unless that change is intended (see the kit's “Changing the kit”).
 
 ## Rebuild and record
