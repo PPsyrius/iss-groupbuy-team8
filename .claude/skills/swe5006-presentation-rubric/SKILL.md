@@ -17,7 +17,7 @@ description: Draft, edit or review BlocBuy's SWE5006 final presentation (deck, s
 ## Drafting
 
 1. Plan from the rubric, not from the current slides. Walk §1 to §5 in rubric order and list, for each row, what will cover it and where. Rows 1.1–5.5 each need at least one covering item; the G and V rows constrain all of them.
-2. Size every section to the rubric's time budget (§1 4 min, §2 5 min, §3 3 min, §4 10 min, §5 12 min, 34 min scripted, 6 min buffer) and every §1 and §2 item to its sub-budget. A slide's `slot` must fit inside its row's minutes.
+2. Size every section to the rubric's time budget (§1 3 min, §2 6 min, §3 3 min, §4 10 min, §5 12 min, 34 min scripted, 6 min buffer) and every §1 and §2 item to its sub-budget. A slide's `slot` must fit inside its row's minutes.
 3. Record the mapping on each `SLIDES` entry as `rubric: ['1.3', 'G8']` (the kit ignores the field, so the built HTML does not change). A slide that maps to no row is superfluous: cut it, move it to a backup slide, or record the team ruling that justifies it as an open item.
 4. Follow each row's Ruling for form: one example on the slide and the report section named for the rest (G8), one idea per slide (V1), the specific diagrams the row names (for example the team-formation statechart in 2.4, before/after diagrams in 2.5).
 5. Use the course vocabulary the rubric cites (EPAT DoD ladder, Agile Testing Quadrants, Continuous Delivery versus Deployment, GoF class-level patterns only). Wording that contradicts a row's Ruling is a defect even if it is true.
