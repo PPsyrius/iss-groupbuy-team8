@@ -24,4 +24,17 @@ public record StripeProperties(String apiKey, String webhookSecret) {
     public boolean sandbox() {
         return configured() && apiKey.startsWith(SANDBOX_KEY_PREFIX);
     }
+
+    @Override
+    public String toString() {
+        return "StripeProperties[apiKey="
+                + mask(apiKey)
+                + ", webhookSecret="
+                + mask(webhookSecret)
+                + "]";
+    }
+
+    private static String mask(String secret) {
+        return secret == null || secret.isBlank() ? "<unset>" : "<redacted>";
+    }
 }

@@ -26,4 +26,17 @@ public record StripeCheckoutRuntimeProperties(
     public boolean isSandboxKey() {
         return apiKey == null || SANDBOX_KEY.matcher(apiKey).matches();
     }
+
+    @Override
+    public String toString() {
+        return "StripeCheckoutRuntimeProperties[apiKey="
+                + mask(apiKey)
+                + ", webhookSecret="
+                + mask(webhookSecret)
+                + "]";
+    }
+
+    private static String mask(String secret) {
+        return secret == null || secret.isBlank() ? "<unset>" : "<redacted>";
+    }
 }
