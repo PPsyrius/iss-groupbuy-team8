@@ -107,9 +107,8 @@ Automatic expiry and refund execution are deployment-opt-in under `BLOCBUY_SCHED
 | Refund history | Only on individual payment receipts |
 | Order-to-payment navigation | Orders omit `paymentId` |
 | Catalog team history | Only the active team; buyer history is under `/group-deals/me` |
-| Admin group terms | No write endpoint for size or lifetime |
 
-A product without group terms cannot start a team: `POST /payments/intents` returns `CATALOG_409_006`. Joining an existing configured team may still work.
+A product without group terms cannot start a team: `POST /payments/intents` returns `CATALOG_409_006`. Joining an existing configured team may still work. An admin sets size and lifetime with `PUT /admin/products/{productId}/team-terms` (`configureTeamTerms`, #242).
 
 ## Errors requiring specific handling
 
