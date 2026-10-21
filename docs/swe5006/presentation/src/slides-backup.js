@@ -191,6 +191,26 @@ const b16 = () => `<div style="display:flex;gap:14px;align-items:stretch">
 <div style="margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter"><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out exists only in the SWE5001 topology and is not claimed for SWE5006 (slide 34).</div>
 <div style="margin-top:8px;font:italic 400 14.5px/1.35 Inter;color:var(--muted)">Sources: docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md (V2, scaling policy); docs/swe5001/evidence/20261019-v3-autoscaling/README.md (V3); docs/perf/sprint3-baseline.md (local workload).</div>`;
 
+// ---- §2 full diagrams (rubric G8, V1, V6): vector, so zoom in the browser or the PDF ----
+const sized = (name, w, h) => svg(name).replace('<svg ', `<svg style="display:block;width:${w}px;height:${h}px" `);
+const scroll = (name, W, H, w) => `<div style="position:absolute;left:0;top:0;width:1164px;height:548px;overflow:auto;background:#fff;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8">${sized(name, w, Math.round(H * w / W))}</div>`;
+const bLs = () => `
+<div style="position:absolute;left:0;top:0">${sized('listing-statechart', 1160, 548)}</div>`;
+const bUc4 = () => `
+<div style="position:absolute;left:0;top:0;width:1164px;height:548px;display:flex;gap:16px;align-items:flex-start">
+ <div>${sized('uc4-design-class', 500, 499)}<div style="font:400 14.5px Inter;color:var(--muted)">Design class diagram (2320 × 2314)</div></div>
+ <div>${sized('uc4-design-seq', 348, 496)}<div style="font:400 14.5px Inter;color:var(--muted)">Design sequence (2320 × 3306)</div></div>
+ <div style="width:220px;font:400 16px/1.4 Inter">Both are vector: open <span class="mono" style="font-size:14px">src/diagrams/uc4-design-*.svg</span> in a browser tab and zoom. Every message carries its source line in the diagram spec. Report §3.4 (Eric).</div>
+</div>`;
+const bMembers = () => tbl(['Member', 'Use case (report §3.4)', 'Design problem (report §3.5)', 'On a slide'], [
+  ['Eric', 'UC3, UC4 start and join a team', 'Factory Method: team creation', 'UC4 models 13–14; pattern 16'],
+  ['Yorik', 'UC6 refund on team expiry', 'Observer: team outcome; refund idempotency as a mechanism (B6)', 'pattern 17; sequence B5'],
+  ['Pan', 'Receive notifications', 'Template Method: outbox transports', 'pattern 18'],
+  ['Lim', 'UC8 my orders and my teams (with UC7 frontend)', 'Strategy: UC1 pricing', 'pattern 19'],
+  ['Liu Jin', 'UC9 listing administration and team terms', 'State: listing lifecycle (full form)', 'patterns 20–21; statechart B13'],
+], { fs: 16.5, w: [110, 330, 400] }) + `<div style="margin-top:12px;font:400 16px/1.4 Inter">Each member’s analysis class, analysis sequence, design class and design sequence diagrams are in their report section (template RT 3.4.1); the deck shows UC4 only (rubric G8). Owners: #463. ${mk('VERIFY', 'UC9 owner: #32 names Eric, #463 names Liu Jin (open item 12)')}</div>`;
+const b16erd = () => scroll('full-erd', 2320, 5038, 1150);
+
 // Backup slides follow the last main slide; press B in the deck for the index (BX). Rows link with data-go.
 // Each segment adds its backups to BACKUPS (content.js) and a matching entry below, in index order.
 function list() {
@@ -213,6 +233,10 @@ function list() {
   B.push({ id: 'B10', title: 'SWE5001 production topology', speaker: 'Pan', body: b13() });
   B.push({ id: 'B11', title: 'Stripe Sandbox refund, local evidence (20 Sep)', speaker: 'Yorik', body: b15() });
   B.push({ id: 'B12', title: 'Scale-out and load results (SWE5001 ECS + local baseline)', speaker: 'Yorik', body: b16() });
+  B.push({ id: 'B13', title: 'UC9 listing statechart', speaker: 'Liu Jin', body: bLs() });
+  B.push({ id: 'B14', title: 'UC4 design class and sequence diagrams, complete', speaker: 'Eric', body: bUc4() });
+  B.push({ id: 'B15', title: 'Every member’s use case and design problem', speaker: 'Eric', body: bMembers() });
+  B.push({ id: 'B16', title: 'Entity-relationship diagram, all 29 tables (scroll)', speaker: 'Liu Jin', body: b16erd() });
   return B;
 }
 

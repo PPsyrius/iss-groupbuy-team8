@@ -255,6 +255,165 @@ ${crops.map(([x, y, label], i) => `<div class="frag zcrop" data-frag="${i + 1}" 
  <div style="position:absolute;right:10px;top:10px;font:700 15px/1 Inter;letter-spacing:.04em;background:#1B1A18;color:#fff;border-radius:999px;padding:6px 11px">${i + 1}/${crops.length} · ${label}</div></div>`).join('')}`;
 };
 
+// Several diagrams on one slide: each view is a scaled orientation copy at its own place; the crops step through any
+// diagram 1:1 in the order given, like zoom().
+const fit = v => Math.min(v.view[0] / v.W, v.view[1] / v.H);
+const walk = (views, crops) => `<style>body:not(.present) .zcrop{display:none}</style>
+${views.map(v => { const s = fit(v), w = Math.round(v.W * s), h = Math.round(v.H * s); return `<div style="position:absolute;${v.at};width:${w}px;height:${h}px">${nat(v.name, w, h)}</div>`; }).join('')}
+${crops.map(([name, x, y, label], i) => { const v = views.find(d => d.name === name); return `<div class="frag zcrop" data-frag="${i + 1}" style="position:absolute;left:0;top:0;width:1164px;height:548px;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8">
+ <div style="position:absolute;left:${-x}px;top:${-y}px">${nat(name, v.W, v.H)}</div>
+ <div style="position:absolute;right:10px;top:10px;font:700 15px/1 Inter;letter-spacing:.04em;background:#1B1A18;color:#fff;border-radius:999px;padding:6px 11px">${i + 1}/${crops.length} · ${label}</div></div>`; }).join('')}`;
+const report = t => `<div style="font:600 15px/1.3 Inter;color:#3E5CD9;margin-top:8px">${icon('book')} ${t}</div>`;
+const fact = (k, v, fs = 16.5) => `<div style="margin-bottom:7px"><div style="font:700 13.5px Inter;letter-spacing:.06em;text-transform:uppercase;color:#6B655C">${k}</div><div style="font:400 ${fs}px/1.33 Inter">${v}</div></div>`;
+
+// ---------- slide 9 (2.1) ----------
+const s9 = () => `
+<div style="position:absolute;left:0;top:0;width:372px">
+ ${kicker('4+1 logical view · SAD 04a p24–29')}
+ <div style="font:400 16.5px/1.35 Inter;margin-bottom:10px">Java 21 · Spring Boot 4 · MyBatis · PostgreSQL 18 · Redis 8 · Sa-Token · Stripe Checkout | React 19 · TanStack Router and Query · TypeScript | AWS EC2, S3, CloudFront</div>
+ ${kicker('Decisions that shape it')}
+ ${[['Modular monolith, COLA layers, six contexts', 'D1 · D4'], ['Domain framework-free; 18 ArchUnit rules', 'ArchitectureTest'], ['Consequences run before the commit', 'ADR 0002'], ['Cross-service events through an outbox', 'ADR 0007'], ['One codebase, two topologies', 'ADR 0008'], ['Router owns URL state; generated client', 'F-ADR 0001 · 0003']].map(r => `<div style="display:flex;justify-content:space-between;gap:8px;font:400 16px/1.3 Inter;border-bottom:1px solid #E6DFD3;padding:5px 0"><span>${r[0]}</span><b style="white-space:nowrap;color:#6B655C">${r[1]}</b></div>`).join('')}
+ ${report('Report §3.1 · Liu Jin')}
+</div>
+${walk([{ name: 'logical-layers', W: 2320, H: 1644, view: [774, 548], at: 'left:390px;top:0' }],
+  [['logical-layers', 1160, 0, 'adapter · contract'], ['logical-layers', 1160, 548, 'application'], ['logical-layers', 580, 1096, 'ports realised by infrastructure']])}`;
+
+// ---------- slide 10 (2.2) ----------
+const strat = [
+  ['Language, framework', 'maintainability', '«control», «entity» · all', 'Spring <span class="mono" style="font-size:14.5px">@Service</span> by constructor injection; domain stays plain Java', 'D1–D20, ArchUnit · <i>no ADR</i>'],
+  ['Presentation', 'usability', 'GUI «boundary» · UC1–UC9', 'TanStack route + component + Query hook', 'F-ADR 0001, 0009'],
+  ['Distribution', 'interoperability', '«control» behind a boundary · all', '<span class="mono" style="font-size:14.5px">@RestController</span> returning <span class="mono" style="font-size:14.5px">Result</span>; generated TS client is the stub', 'D11–D12, F-ADR 0003'],
+  ['Persistence', 'integrity', '«entity» · all', 'aggregate + repository port ◁ RepositoryImpl, MyBatis mapper, DO', 'D1, D9 · <i>no ADR</i>'],
+  ['External interface', 'provider isolation', 'system «boundary» · UC2–UC6', 'gateway port ◁ Stripe / Google adapter; signed webhook', 'ADR 0001, 0004, 0005'],
+  ['Security', 'security', 'every «control» · all', 'login interceptor; <span class="mono" style="font-size:14.5px">checkRole(ADMIN)</span>; CSRF header; rate limits', 'D6–D7, F-ADR 0002'],
+  ['Scheduling', 'expiry ≤ 1 min', 'Scheduler actor · UC5, UC6', '<span class="mono" style="font-size:14.5px">@Scheduled</span> job under a database lease, every minute', 'ADR 0002 · <i>job: no ADR</i>'],
+  ['Concurrency', 'no oversell', '«entity» with capacity · UC4', 'row locks in a fixed order + guarded UPDATE + unique indexes', 'ADR 0001 · <i>no ADR</i>'],
+  ['Domain events', 'decoupling', '«control» → other contexts · UC5–UC7', 'event record + transactional listener; outbox across services', 'ADR 0002, 0003, 0007'],
+];
+const s10 = () => `
+${tbl(['Strategy', 'Concern', 'Analysis objects · use cases', 'Become in design', 'Record'], strat.map(r => [`<b>${r[0]}</b>`, r[1], r[2], r[3], `<span style="color:var(--muted)">${r[4]}</span>`]), { fs: 15.5, w: [150, 120, 230, null, 170], pad: '6px 9px' })}
+<div style="position:absolute;left:0;right:0;top:500px;display:flex;justify-content:space-between;font:400 15.5px Inter;color:var(--muted)"><span>Template: SAD 04a p37 (object types, use cases, static and dynamic change). Typical class and sequence changes: slide 11.</span>${report('Report §3.2 · Yorik, Eric').replace('margin-top:8px', 'margin:0')}</div>`;
+
+// ---------- slide 11 (2.2) ----------
+const s11 = () => `
+<div style="position:absolute;left:0;top:0;width:580px">
+ ${fact('Typical class-diagram change', '«boundary» → route, hook and generated client · «control» → REST controller and application service · «entity» → aggregate behind a domain repository port, implemented by a MyBatis mapper · external «boundary» → gateway port with an adapter', 17)}
+ ${fact('Typical sequence-diagram change', 'control → entity.update() becomes service → repository.lockDeal() <span class="mono" style="font-size:15px">SELECT … FOR UPDATE</span> → aggregate.joinPaid() → guarded <span class="mono" style="font-size:15px">UPDATE</span>, in one transaction', 17)}
+ ${fact('Rationale', 'the domain names its needs as interfaces; infrastructure supplies them (dependency inversion), so persistence and providers can change without touching the rules', 17)}
+ <div style="font:400 15px/1.3 Inter;color:var(--muted)">Tags on the design side: Pres, Dist, Pers, Ext, Sec, Conc, Sched, Event (slide 10)</div>
+</div>
+${walk([{ name: 'transition-pair', W: 2320, H: 2270, view: [560, 548], at: 'left:604px;top:0' }],
+  [['transition-pair', 0, 0, 'analysis: UC4'], ['transition-pair', 1160, 0, 'strategy key'], ['transition-pair', 580, 1700, 'persistence: port ◁ impl']])}`;
+
+// ---------- slide 12 (2.3) ----------
+const s12 = () => walk([{ name: 'use-case', W: 2320, H: 1096, view: [1164, 548], at: 'left:0;top:0' }],
+  [['use-case', 0, 312, 'Buyer and the money path'], ['use-case', 560, 80, 'resolution: Scheduler, Stripe'], ['use-case', 1160, 52, 'out of scope']]);
+
+// ---------- slide 13 (2.4) ----------
+const s13 = () => `
+${walk([{ name: 'uc4-analysis-class', W: 1160, H: 1070, view: [560, 548], at: 'left:0;top:0' }, { name: 'uc4-analysis-seq', W: 2320, H: 2186, view: [584, 548], at: 'left:580px;top:0' }],
+  [['uc4-analysis-class', 0, 522, 'entities'], ['uc4-analysis-seq', 560, 920, 'seat available: join'], ['uc4-analysis-seq', 560, 1320, 'else: refund']])}`;
+
+// ---------- slide 14 (2.4) ----------
+const tagKey = [['Pres', 'presentation'], ['Dist', 'distribution'], ['Pers', 'persistence'], ['Ext', 'external interface'], ['Sec', 'security'], ['Conc', 'concurrency'], ['Sched', 'scheduling'], ['Event', 'domain events']];
+const s14 = () => `
+${walk([{ name: 'uc4-design-class', W: 2320, H: 2314, view: [540, 540], at: 'left:0;top:0' }, { name: 'uc4-design-seq', W: 2320, H: 3306, view: [380, 548], at: 'left:556px;top:0' }],
+  [['uc4-design-class', 1160, 0, 'payment meets groupbuy through a port'], ['uc4-design-seq', 700, 760, 'team row locked first'], ['uc4-design-seq', 1100, 1820, 'guarded update, last seat']])}
+<div style="position:absolute;left:952px;top:0;width:212px">
+ ${kicker('Strategy tags')}
+ ${tagKey.map(t => `<div style="font:400 15.5px/1.5 Inter"><b>${t[0]}</b> ${t[1]}</div>`).join('')}
+ <div style="font:400 15px/1.35 Inter;margin-top:10px">One transaction, READ COMMITTED, 10 s timeout, drawn as <span class="mono" style="font-size:14px">critical</span></div>
+ ${report('Report §3.4 · Eric')}
+</div>`;
+
+// ---------- slide 15 (2.4) ----------
+const s15 = () => `
+${walk([{ name: 'team-statechart', W: 2320, H: 548, view: [1164, 280], at: 'left:0;top:0' }],
+  [['team-statechart', 0, 0, 'OPEN and its joins'], ['team-statechart', 1160, 0, 'succeeded or expired']])}
+<div style="position:absolute;left:0;top:296px;width:1164px;display:grid;grid-template-columns:1fr 1fr;gap:12px 24px">
+ ${fact('Why a statechart (SAD 03c p4, p11)', 'team state gates UC4, UC5, UC6 and UC8', 17)}
+ ${fact('Code it matches', '<span class="mono" style="font-size:15px">DealStatus.canTransitionTo</span>: only OPEN moves, never to itself', 17)}
+ ${fact('Guards', '<span class="mono" style="font-size:15px">GroupDeal.joinPaid</span>: price → new member → window → seat', 17)}
+ ${fact('Time event', '<span class="mono" style="font-size:15px">at(expireTime)</span>, detected by <span class="mono" style="font-size:15px">TeamExpirySweepJob</span> every minute', 17)}
+ ${fact('Greyed', 'FAILED and CANCELED are declared but never written', 17)}
+</div>`;
+
+// ---------- slides 16–19 (2.5): one 20 s slot per member ----------
+const pslot = (rows, name, W, H, crop, rep) => `
+<div style="position:absolute;left:0;top:0;width:560px">
+ ${rows.map(r => fact(r[0], r[1])).join('')}
+ ${report(rep)}
+</div>
+${walk([{ name, W, H, view: [580, 548], at: 'left:584px;top:0' }], [crop])}`;
+const s16 = () => pslot([
+  ['Where it shows', 'before #424, <span class="mono" style="font-size:15px">PaidGroupDealService</span> held <span class="mono" style="font-size:15px">new StandardPaidGroupDealCreator()</span>'],
+  ['Cause for redesign · what varies (SDP 05a p13–15)', 'creating an object by specifying a class explicitly · “subclass of object that is instantiated”'],
+  ['Candidates', 'Factory Method · static factory (not GoF, SDP 01a p32–34) · Builder · Abstract Factory'],
+  ['Participants', 'Creator <span class="mono" style="font-size:15px">PaidGroupDealCreator</span> (final <span class="mono" style="font-size:15px">initiate</span>, abstract <span class="mono" style="font-size:15px">createGroupDeal</span>) · ConcreteCreator <span class="mono" style="font-size:15px">StandardPaidGroupDealCreator</span> · Product <span class="mono" style="font-size:15px">GroupDeal</span>'],
+  ['Liability (SDP 05a p35)', 'one creator today, chosen at build time in <span class="mono" style="font-size:15px">GroupDealCreationConfig</span>'],
+  ['Tests', '<span class="mono" style="font-size:15px">PaidGroupDealServiceTest.startUsesTheInjectedCreator</span>'],
+], 'fm-start', 1160, 1400, ['fm-start', 0, 0, 'Creator · Client'], 'Report §3.5 · Eric (UC3)');
+const s17 = () => pslot([
+  ['Where it shows', 'an expiry that called order and payment code inline would make groupbuy edit itself for every new consequence (ADR 0002)'],
+  ['Cause for redesign · what varies', 'tight coupling · “number of objects that depend on another object”'],
+  ['Candidates', 'Observer · Mediator · direct facade calls · a message broker (ADR 0002)'],
+  ['Participants', 'ConcreteSubject <span class="mono" style="font-size:15px">GroupDealExpiryService</span>; Spring’s publisher and multicaster notify · ConcreteObservers <span class="mono" style="font-size:15px">OrderLifecycleSubscriber</span> @Order(10), <span class="mono" style="font-size:15px">TeamExpiryRefundSubscriber</span> @Order(20), both before commit'],
+  ['Liability', 'implicit control flow; a wrong phase annotation is a silent bug'],
+  ['Tests', '<span class="mono" style="font-size:15px">TeamExpiryRefundSubscriberTest</span> (rollback on failure), <span class="mono" style="font-size:15px">OrderLifecycleSubscriberTest</span>'],
+], 'observer-expiry', 1160, 1870, ['observer-expiry', 0, 600, 'Observer · ConcreteObservers'], 'Report §3.5 · Yorik (UC6)');
+const s18 = () => pslot([
+  ['Where it shows', 'brute force: SQS and SNS transports each copy the batch loop, lease checks and result mapping'],
+  ['Cause for redesign · what varies', 'algorithmic dependencies · “steps of an algorithm”'],
+  ['Candidates', 'Template Method · Strategy (the whole algorithm does not vary) · Adapter per SDK'],
+  ['Participants', 'AbstractClass <span class="mono" style="font-size:15px">BatchingOutboxEventTransport&lt;E&gt;</span>, final <span class="mono" style="font-size:15px">publish</span> · primitive operations <span class="mono" style="font-size:15px">entry</span>, <span class="mono" style="font-size:15px">send</span> · ConcreteClasses <span class="mono" style="font-size:15px">Sqs…</span>, <span class="mono" style="font-size:15px">SnsOutboxEventTransport</span>'],
+  ['Liability', 'inheritance: a subclass cannot change the loop'],
+  ['Tests', '<span class="mono" style="font-size:15px">OutboxBatchFailureTest</span> (6, both providers)'],
+], 'template-method-outbox', 1160, 1724, ['template-method-outbox', 0, 290, 'template method'], 'Report §3.5 · Pan (notifications)');
+const s19 = () => pslot([
+  ['Where it shows', 'brute force: browse and the team quote each switch on <span class="mono" style="font-size:15px">pricingMode</span> with the arithmetic inline'],
+  ['Cause for redesign · what varies', 'algorithmic dependencies · “an algorithm”'],
+  ['Candidates', 'Strategy · Template Method (no shared skeleton) · Decorator (no stacking rule)'],
+  ['Participants', 'Strategy <span class="mono" style="font-size:15px">PricingStrategy</span> · ConcreteStrategy <span class="mono" style="font-size:15px">DualPricingStrategy</span> · Contexts <span class="mono" style="font-size:15px">ProductAppServiceImpl</span>, <span class="mono" style="font-size:15px">TeamPriceAppServiceImpl</span> · registry <span class="mono" style="font-size:15px">PricingStrategyResolver</span>'],
+  ['Liability (SDP 05a p35)', 'one ConcreteStrategy today; kept because proposal §6.3 makes new pricing schemes a design driver'],
+  ['Tests', '<span class="mono" style="font-size:15px">PricingStrategyResolverTest</span> (duplicate mode fails startup), <span class="mono" style="font-size:15px">DualPricingStrategyTest</span>'],
+], 'strategy-pricing', 1160, 1770, ['strategy-pricing', 0, 300, 'resolver · Strategy'], 'Report §3.5 · Lim (UC1)');
+
+// ---------- slides 20–21 (2.5): the full-form problem ----------
+const s20 = () => `
+<div style="position:absolute;left:0;top:0;width:560px">
+ ${fact('Problem (UC9)', 'publish, delist, revise and delete are legal in different lifecycle states', 17)}
+ ${fact('Where it shows · brute-force design (RT 3.5)', 'the same <span class="mono" style="font-size:15px">switch (status)</span> in four operations of <span class="mono" style="font-size:15px">Product</span>; in the sequence, <span class="mono" style="font-size:15px">publish()</span> branches on status', 17)}
+ ${fact('Why redesign (SDP 05a p4 wording)', 'hard to maintain: one rule in four places · hard to extend: a new state edits every switch · hard to reuse: the rule cannot be tested apart from Product', 17)}
+ ${fact('What varies (SDP 05a p13)', '“states of an object”', 17)}
+ ${fact('Candidates', '<b>State</b> · Strategy (nobody chooses; the state decides) · transition table, as on the team', 17)}
+</div>
+${walk([{ name: 'state-before', W: 1160, H: 1120, view: [586, 548], at: 'left:578px;top:0' }],
+  [['state-before', 0, 0, 'brute force: class'], ['state-before', 0, 570, 'brute force: sequence']])}`;
+const s21 = () => `
+<div style="position:absolute;left:0;top:0;width:690px">
+ ${fact('Participants', 'Context <span class="mono" style="font-size:15px">Product</span> · State <span class="mono" style="font-size:15px">ProductStatus</span> · ConcreteStates <span class="mono" style="font-size:15px">DRAFT</span>, <span class="mono" style="font-size:15px">ON_SALE</span>, <span class="mono" style="font-size:15px">OFF_SALE</span>: enum constants with bodies, each compiled to its own subclass · client <span class="mono" style="font-size:15px">AdminListingAppServiceImpl</span>', 16.5)}
+ ${fact('Implementation decisions', 'the ConcreteState returns its successor and the Context applies it · default bodies refuse with 409 <span class="mono" style="font-size:15px">PRODUCT_STATE_CONFLICT</span> · stateless, shared states · each transition returns a new revision, version + 1; a stale write gets 412', 16.5)}
+ ${fact('Liability', 'a new state still needs a constant, its overrides and tests; the app service keeps one switch that picks the command, not its legality', 16.5)}
+ ${fact('Why the team uses a table instead', 'only OPEN has behaviour; SUCCEEDED and EXPIRED are final, so <span class="mono" style="font-size:15px">DealStatus.canTransitionTo</span> suffices (SDP 05a p35). The proposal promised State there: slide 4', 16.5)}
+ ${fact('Tests', '<span class="mono" style="font-size:15px">ProductStatusTest.onSalePublishThrowsStateConflict</span>, <span class="mono" style="font-size:15px">ProductLifecycleTest</span>', 16.5)}
+ ${report('Report §3.5 · Liu Jin (UC9)')}
+</div>
+${walk([{ name: 'state-after', W: 1160, H: 1424, view: [450, 548], at: 'left:714px;top:0' }],
+  [['state-after', 0, 330, 'State · ConcreteStates'], ['state-after', 0, 870, 'after: publish delegates']])}`;
+
+// ---------- slide 22 (2.6) ----------
+const s22 = () => `
+${walk([{ name: 'core-erd', W: 2320, H: 1190, view: [720, 548], at: 'left:0;top:0' }],
+  [['core-erd', 580, 40, 'deal · membership'], ['core-erd', 1160, 600, 'payment · refund']])}
+<div style="position:absolute;left:744px;top:0;width:420px">
+ ${kicker('Mapping decisions · SAD 04a p53–61')}
+ ${fact('Keys', 'UUIDv7 surrogate primary keys from PostgreSQL 18')}
+ ${fact('Associations', 'logical FK columns; integrity is checked by the application. No FK or CHECK constraints is our DDL convention, not a course rule')}
+ ${fact('Aggregates', 'one table per aggregate root; no class hierarchy is persisted, so no inheritance mapping')}
+ ${fact('Race backstops', 'unique (deal, user) membership · one refund per payment · one order per payment')}
+ ${report('Report §3.6 · Liu Jin · all tables: B4')}
+</div>`;
+
 // ---------- slide 25 (4.2) ----------
 const tree = [['backend/', 'Maven COLA modules; services/ for SWE5001'], ['frontend/', 'React SPA'], ['contracts/', 'openapi.json, the API contract'], ['deployment/', 'Compose, SSM bundle, deploy.sh'], ['infra/', 'Terraform: dev frontend, SWE5001'], ['perf/ · docs/', 'k6 · ADRs, sprint logs'], ['.github/', 'workflows, CODEOWNERS, Dependabot']];
 const art = [
@@ -442,7 +601,7 @@ const s35 = () => `
  <div style="font:400 17px/1.35 Inter;color:var(--muted);margin-top:10px">Existing domain logic stays unedited in each case.</div>
 </div>`;
 
-const out = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 23: s23, 24: s24, 25: s25, 26: s26, 27: s27, 28: s28, 29: s29, 30: s30, 31: s31, 32: s32, 33: s33, 34: s34, 35: s35 };
+const out = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s12, 13: s13, 14: s14, 15: s15, 16: s16, 17: s17, 18: s18, 19: s19, 20: s20, 21: s21, 22: s22, 23: s23, 24: s24, 25: s25, 26: s26, 27: s27, 28: s28, 29: s29, 30: s30, 31: s31, 32: s32, 33: s33, 34: s34, 35: s35 };
 for (const s of C.SLIDES) if (!out[s.n]) out[s.n] = s.slot === null ? (() => '') : pending(s.n);
 // Closing slide (dark, full bleed).
 out[36] = () => `
