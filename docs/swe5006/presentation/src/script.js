@@ -2,7 +2,7 @@
 // The kit (docs/presentation-kit/script/build.js) supplies the helpers, wraps this body and writes dist/.
 // Worked example and tone: docs/swe5001/presentation/src/script.js. The #566 run books (pipeline steps P1–P7,
 // system demo steps 1–8, contingencies) are in git history (379af301:docs/swe5006/presentation/src/script.js) for reuse.
-const { C, md, esc, markers, countM, box, tbl, pre, segment, cover, runSheet } = require('../../../presentation-kit/script/build').helpers();
+const { C, md, esc, markers, countM, box, tbl, pre, reqBox, slideCard, qaTable, segment, cover, runSheet } = require('../../../presentation-kit/script/build').helpers();
 
 // Markers written directly in this file are counted here; slide cards and Q&A tables count their own.
 // m(): plain text with markers (escaped); mh(): HTML that may contain markers (not escaped). Call each once per string.
@@ -55,6 +55,82 @@ ${tbl(['Tip (guidelines page 2)', 'How this deck meets it'], tips)}
 <h2>Cue words in the team backchannel (never the Zoom chat)</h2>
 ${tbl(['Message', 'Meaning', 'Sent by'], cueWords.map(r => [`<code>${r[0]}</code>`, r[1], r[2]]))}`);
 
+// ---------- demo step cards ----------
+const demoCard = d => `<div class="card demo"><div class="hd"><span>Step ${d.n} &nbsp; ${esc(d.t)}</span><small>${d.time}</small></div><div class="bd">
+ <div class="row"><span class="lab">Proves</span><span>${d.proves}</span></div>
+ <div class="row"><span class="lab cue">Operate</span><ol style="margin:0;padding-left:14pt">${d.op.map(o => `<li>${mh(o)}</li>`).join('')}</ol></div>
+ <div class="row"><span class="lab say">Say</span><span class="say">${m(d.say)}</span></div>
+ <div class="row"><span class="lab">Expect</span><span>${mh(d.exp)}</span></div>
+ <div class="row"><span class="lab fb">Fallback</span><span>${mh(d.fb)}</span></div></div></div>`;
+
+// ---------- segment 4: CI/CD pipeline demo (rubric 4.1–4.6) ----------
+// Slides 25–29 run 16:42:00–16:46:30; the live part (slide 30) runs 16:46:30–16:52:00 (330 s).
+const pipeSteps = [
+  { n: 'P1', t: 'The pull request and its required checks', time: '16:46:30 – 16:47:30', proves: 'Rubric <b>4.1</b>, <b>4.2</b> (branch, PR, Conventional Commit, code-owner rule), <b>4.3</b> (PR-time jobs) · Pan',
+    op: ['Tab 1: the demo PR opened at 16:41 → <b>Files changed</b>: the one-line frontend change.', 'Switch to <b>Checks</b>: frontend-check, SonarCloud Frontend, gitleaks green; e2e-preview green; the backend jobs pass after skipping (no backend path changed).', 'Point at the merge box: review required from a code owner.'],
+    say: "This is the pull request I opened at 16:41: one line in the frontend, on a short branch with a Conventional Commit title. These are the required checks from slide 26: the frontend check with every unit test, SonarCloud, the secret scan, and Playwright against this build. The backend jobs see no backend change and pass straight through. The merge button stays locked until a code owner approves.",
+    exp: 'Checks green or finishing (median 4.8 min from 16:41, so ≈ 16:46); merge box asks for a code-owner review.',
+    fb: 'Checks still running: talk through them and move on at 16:47:30 regardless. A check red: say what it caught in one sentence, then <code>CLIP P2</code>; leave the PR open and never merge it on air.' },
+  { n: 'P2', t: 'Code-owner approval', time: '16:47:30 – 16:48:00', proves: 'Rubric <b>4.2</b>, <b>4.4</b> (who approves) · Pan; Lim approves',
+    op: ['Pan posts <code>APPROVE</code> in the backchannel. Lim (not sharing) approves from his own GitHub session: <b>Review changes → Approve</b>, or <code>gh pr review &lt;n&gt; --approve</code>.', 'Tab 1: refresh; the approval from @limjiechao appears; the merge box turns green.'],
+    say: "Frontend files belong to Lim in CODEOWNERS, so his approval is the one that counts; mine would not. If anyone pushes again, the approval is dismissed and the checks run again.",
+    exp: 'One approving review by a code owner; all checks passed; squash merge enabled.',
+    fb: 'Lim cannot approve within 30 s: nobody else is a frontend code owner, so do not ask anyone else. <code>CLIP P2</code>.' },
+  { n: 'P3', t: 'Squash merge', time: '16:48:00 – 16:48:20', proves: 'Rubric <b>4.2</b> (linear history), <b>4.4</b> (the merge is the release) · Pan',
+    op: ['Tab 1: <b>Squash and merge</b>, keep the Conventional Commit title, confirm. Only this PR.', 'Say the merge time aloud.'],
+    say: "Squash merge: one commit on dev with the pull request number, so history stays linear. That push is the release; nothing manual follows.",
+    exp: 'PR merged; leave the branch-delete button alone.',
+    fb: '“Base branch was modified” (dev moved): do not update the branch on air, it would re-run five minutes of checks. <code>CLIP P3</code>; merge after 17:15.' },
+  { n: 'P4', t: 'Delivery runs; the backend PR and deploy, triggered beforehand', time: '16:48:20 – 16:49:50', proves: 'Rubric <b>4.1</b> (pre-triggered long run), <b>4.3</b> (post-merge jobs), <b>4.4</b> (digest, SSM, health check) · Pan',
+    op: ['Tab 2: Actions → <code>ci-frontend</code> → the new run on <code>dev</code>: package-dev → deploy-s3-dev → e2e-dev.', `Tab 3: the backend PR run triggered at ≈ 16:20 ${'{{FILL:run id}}'}: build-quality (test count in the summary), contract-check, docker boot and Trivy, SonarCloud gate.`, `Tab 4: its post-merge deploy run ${'{{FILL:run id}}'}: publish-ecr-dev (tag git-&lt;sha&gt;-run-&lt;n&gt;, digest checked), deploy-existing-ec2 (SSM, on-host health check, public health).`],
+    say: "Delivery rebuilds from the merged commit: the frontend goes to S3, index.html is invalidated, then Playwright smoke-tests the real site. While it runs, here is a backend change that went through earlier: sixteen minutes of checks with every test, the contract check and the image scan; after its merge the image went to ECR, was deployed by digest through SSM to the one host, and was health-checked, with automatic rollback if the check had failed.",
+    exp: 'Frontend run in progress (median 2.7 min from push to e2e-dev green); both backend runs green.',
+    fb: 'Frontend run not started within 60 s: refresh once; then <code>CLIP P4</code>. Backend runs missing: open the B8 timings and say the medians.' },
+  { n: 'P5', t: 'Verified: the change is live on dev', time: '16:49:50 – 16:51:20', proves: 'Rubric <b>4.4</b> (how a deployment is verified) · Pan',
+    op: ['Tab 2: e2e-dev green.', `Tab 5: <code>${DEV}</code> on the changed page → reload → the new text. ${'{{CONFIRM:the page and the copy change (open item 14)}}'}`, 'Read the elapsed time off the run: merge → e2e-dev green.'],
+    say: "Smoke test green, and here is the change on the dev site, about three minutes after the merge. That is the verification: the deploy job checks health, and Playwright checks the real site through CloudFront.",
+    exp: 'New text visible after a reload (index.html is served no-cache and invalidated); run green.',
+    fb: 'e2e-dev red: show the failed step honestly, it is the gate doing its job, then <code>CLIP P5</code>. Text not visible: one more reload, then <code>CLIP P5</code>.' },
+  { n: 'P6', t: 'Wrap up and hand over', time: '16:51:20 – 16:52:00', proves: 'Rubric <b>4.1–4.4</b> summary · Pan',
+    op: ['Stay on tab 5 (the dev site) while speaking.', 'At 16:52:00: stop sharing; Yorik starts sharing (<code>SHARE</code>).'],
+    say: "So one change went from pull request to dev in about ten minutes, past six required checks, a code-owner review and an automatic smoke test, with no AWS keys stored in GitHub. Yorik will now show what that system does for two buyers.",
+    exp: 'Hand-over on time.',
+    fb: 'If behind, say only the last sentence.' },
+];
+
+const seg4Html = () => {
+  const s4 = seg(4);
+  return `<section class="chap"><h1>4 ${esc(s4.name)} (${s4.talk} minutes)</h1>
+<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:42:00 – 16:52:00 (slides 25–29 until 16:46:30, then the live pipeline demo on slide 30 until 16:52:00)</td></tr><tr><td>Owner</td><td>${esc(s4.owner)}; Lim approves as the frontend code owner</td></tr><tr><td>Slides</td><td>25, 26, 27, 28, 29, 30</td></tr></table></div>
+${reqBox(s4)}
+${box('tip', 'Tip', 'Slides 25–29 take 270 s. Pan opens the demo pull request at 16:41, during slide 24, so its checks (median 4.8 min) are green when the live part starts at 16:46:30. A backend change cannot finish its 16-minute PR checks inside the segment, so a backend PR is opened at ≈ 16:20 and merged before 16:40; the demo walks through both of its finished runs (rubric 4.1).')}
+${C.SLIDES.filter(s => s.seg === 4).map(slideCard).join('')}
+<h2>Live pipeline demo (16:46:30 – 16:52:00, 330 s)</h2>
+${tbl(['Step', 'Shows', 'Rubric'], pipeSteps.map(d => [d.n, esc(d.t), d.proves.split(' · ')[0]]))}
+<h3>Preconditions (checked at 15:30 by Pan)</h3>
+<ul><li>Demo branch pushed and up to date with <code>origin/dev</code>; PR body ready; no PR opened yet. ${m('{{CONFIRM:the copy change, its page, its author and the approving code owner (open item 14)}}')}</li>
+<li>Backend pre-run: a small backend PR opened at ≈ 16:20 by its author, approved by Liu Jin (backend code owner) and squash-merged by 16:40 so its deploy finishes before the segment. ${m('{{CONFIRM:the backend change and its author}}')}</li>
+<li>Merge freeze in the team chat: nobody merges into <code>dev</code> from 15:00 to 17:15 except these two PRs. A moved <code>dev</code> makes the branch out of date and re-runs the checks (strict required checks).</li>
+<li>Latest <code>ci-frontend</code> and <code>ci-backend</code> runs on <code>dev</code> green (A.1); deploy switches <code>ENABLE_S3_DEPLOY</code> and <code>ENABLE_EC2_DEPLOY</code> unchanged; GitHub Actions budget not exhausted (a budget stop hit run 39442654274 on 20 Oct).</li>
+<li>Lim signed in to GitHub on his own machine with the PR list open; he is not sharing at 16:47.</li>
+<li>Backup video (rubric G6, 4.6): recorded on dev by Sat 24 Oct, 1080p, one clip per step P1–P6, stored in the cloud and on a USB drive, open in a player on Pan’s machine and tested with Zoom “share sound” off. ${m('{{FILL:recording link and USB holder}}')}</li></ul>
+<h3>Screen layout (Pan’s browser window, shared from 16:46:30; browser zoom 125–150 %, rubric V7)</h3>
+${tbl(['Tab', 'Content', 'Prepared state'], [
+  ['1', 'GitHub: the demo pull request', 'Opened at 16:41; Files changed tab ready'],
+  ['2', 'GitHub Actions: <code>ci-frontend</code> filtered to branch <code>dev</code>', 'Refresh after the merge to see the new run'],
+  ['3', 'GitHub Actions: the backend PR run (pre-triggered)', 'Run summary open; build-quality one click away'],
+  ['4', 'GitHub Actions: the backend push run on <code>dev</code> (deploy)', 'Run graph open; deploy job one click away'],
+  ['5', `Dev site <code>${DEV}</code>`, 'On the page the change touches; DevTools closed'],
+  ['Player', 'Clips P1–P6 (24 Oct)', 'Paused at the start of clip P1'],
+])}
+<h3>Step by step</h3>
+${pipeSteps.map(demoCard).join('')}
+${box('warn', 'Never live', 'Clicking Merge on anything other than the demo PR; “Update branch” on the demo PR; re-running a failed job; running <code>rollback-backend.yml</code> or any <code>workflow_dispatch</code>; opening Settings → Secrets and variables or the ruleset editor; pushing to <code>dev</code>; any AWS console or SSM session on the shared screen. If the PR is not merged by 16:49, leave it open and merge after 17:15, so a deploy never lands during the system demo.')}
+${box('tip', 'Tip', 'Narrate results, not clicks: “checks green in four minutes fifty”, not “now I click the checks tab”. No troubleshooting on air.')}
+${qaTable(4)}
+</section>`;
+};
+
 // ---------- segments ----------
 const segsHtml = [
   segment(seg(1), {
@@ -69,10 +145,7 @@ const segsHtml = [
     tip: 'Liu Jin continues from slide 22 without a handover.',
     warn: mh('Never present a local or SWE5001 result as a SWE5006 dev result: say where each number ran. {{FILL:segment 3 slides pending (slides 23–24)}}'),
   }),
-  segment(seg(4), {
-    tip: 'Slides 25–29 take 270 s; the live pipeline run fills slide 30 (330 s).',
-    warn: mh('{{FILL:pipeline run book (steps, preconditions, screen layout, fallback clips) pending}}'),
-  }),
+  seg4Html(),
   segment(seg(5), {
     tip: 'Slide 31 opens the demo; slide 32 is the live two-user run (510 s); slides 33–35 cover performance, scalability and maintainability.',
     warn: mh('{{FILL:system demo run book (go/no-go table, steps, preconditions, fallback clips) pending}}'),

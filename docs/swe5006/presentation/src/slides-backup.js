@@ -138,15 +138,16 @@ const b13 = () => `<div class="dia" style="margin-top:-8px">${fit('physical-depl
 const b14 = () => dt(['Gap', 'Effect', 'Status'], [
   ['CodeQL off', 'no CodeQL SAST; SonarCloud and SpotBugs remain', 'ENABLE_CODEQL=false; code scanning not enabled on the repository'],
   ['CloudFront → ALB over HTTP', '/api payloads and the origin header cross the AWS network unencrypted', 'NFR-37 TLS still unmet; accepted risk on dev until 16 Nov (#227, NFR register); fix needs an origin hostname and ACM'],
-  ['SSH open to the internet', 'port 22 from 0.0.0.0/0 on the dev host, which has a public IP; SSM sessions make it unnecessary', 'AWS read-only check, 19 Oct; open item 16'],
+  ['SSH open to the internet', 'port 22 from 0.0.0.0/0 on the dev host, which has a public IP; SSM sessions make it unnecessary', 'AWS read-only check, 21 Oct; open item 9'],
   ['Dev EBS volume not encrypted', 'database and host data at rest unencrypted', 'AWS read-only check, 19 Oct; not raised as an issue yet'],
   ['Rollback never exercised', 'recovery path untested on the real host', 'rollback-backend.yml: 0 runs; no automatic rollback has fired'],
   ['No dev alarms', 'failures are noticed by e2e-dev or by people', 'all six CloudWatch alarms belong to SWE5001'],
   ['Dev not zero-downtime', 'a deploy restarts the only API container (502 on 3–4 Oct)', 'accepted for dev'],
   ['Secrets in a host file', 'manual creation and rotation, root-only 0600', 'accepted for dev; prod uses Parameter Store'],
   ['Rebuilt after merge', 'the deployed image and dist/ are not the PR-scanned artefacts; Trivy not re-run', 'strict up-to-date checks; ECR scans on push; ADR 0004 text to reconcile'],
-  ['Gitleaks scans selected commits', '24 historical matches still to decide', 'docs/quality/quality-gates.md, 14 Oct'],
-], { fs: 15, w: [250, 450], pad: '6px 10px' });
+  ['Weekly full-history gitleaks red', '20 digest false positives fingerprinted; 4 badge-token findings still fail the scan', 'PR #580, ci-failure-audit-20261021.md'],
+  ['No DAST, no SBOM', 'no scan of the running site; no component inventory per image', 'not planned before 26 Oct'],
+], { fs: 15, w: [250, 450], pad: '5px 10px' });
 
 // ---- B15–B16: segment 5, system demo ----
 // B15 embeds two screenshots from the 20 Sep local Sandbox acceptance (JPEG data despite the .png names).

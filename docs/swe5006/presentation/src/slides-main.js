@@ -1,4 +1,4 @@
-const { icon, mk, lockup } = require('../../../presentation-kit/lib');
+const { icon, mk, lockup, svg } = require('../../../presentation-kit/lib');
 const C = require('./content');
 // Accent fills never carry text: accent -> accent-soft + accent-soft-foreground; grey -> default + foreground.
 // Layout reference: docs/swe5001/presentation/src/slides-main.js has a worked example of every card, chip and diagram pattern.
@@ -14,7 +14,7 @@ const pending = n => () => {
 const th = (t, w) => `<th style="font-size:16px;padding:8px 12px${w ? ';width:' + w + 'px' : ''}">${t}</th>`;
 const tbl = (head, rows, { fs = 17, w = [], pad = '7px 12px' } = {}) => `<table class="t" style="font-size:${fs}px"><tr>${head.map((h, i) => th(h, w[i])).join('')}</tr>
 ${rows.map(r => `<tr>${r.map(c => `<td style="padding:${pad}">${c}</td>`).join('')}</tr>`).join('')}</table>`;
-const mo = (t, sz = 16) => `<span class="mono" style="font-size:${sz}px">${t}</span>`;
+const mo = (t, sz = 16) => `<span class="mono" style="font-size:${sz}px;font-variant-ligatures:none">${t}</span>`;
 const chip = (t, kind) => {
   const k = { ok: ['#E3E8FB', '#3E5CD9'], chg: ['#FFEDC7', '#7A5C20'], part: ['#ECE6DC', '#1B1A18'], drop: ['#EFE9DF', '#8C2414'], open: ['#FBDFD9', '#B02E1B'] }[kind];
   return `<span style="display:inline-block;font:700 14.5px/1 Inter;letter-spacing:.03em;text-transform:uppercase;background:${k[0]};color:${k[1]};border-radius:999px;padding:5px 9px;margin-right:6px;white-space:nowrap">${t}</span>`;
@@ -241,7 +241,106 @@ const s24 = () => `
  </div>
 </div>`;
 
-const out = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 23: s23, 24: s24 };
+// ---------- diagram walk-through (rubric V1, V3, V5) ----------
+// The full diagram, scaled to `view`, orients the audience; each crop is then shown 1:1 (labels ≥ 24 px) as an opaque
+// fragment layer stacked over the body in order. Only the live deck shows the crops: screenshots and the PDF keep the
+// orientation view, which stays vector and zoomable.
+const nat = (name, W, H) => svg(name).replace('<svg ', `<svg style="display:block;width:${W}px;height:${H}px" `);
+const zoom = (name, { W, H, view, at = 'left:0;top:0', crops }) => {
+  const s = Math.min(view[0] / W, view[1] / H);
+  return `<style>body:not(.present) .zcrop{display:none}</style>
+<div style="position:absolute;${at};width:${Math.round(W * s)}px;height:${Math.round(H * s)}px">${nat(name, Math.round(W * s), Math.round(H * s))}</div>
+${crops.map(([x, y, label], i) => `<div class="frag zcrop" data-frag="${i + 1}" style="position:absolute;left:0;top:0;width:1164px;height:548px;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8">
+ <div style="position:absolute;left:${-x}px;top:${-y}px">${nat(name, W, H)}</div>
+ <div style="position:absolute;right:10px;top:10px;font:700 15px/1 Inter;letter-spacing:.04em;background:#1B1A18;color:#fff;border-radius:999px;padding:6px 11px">${i + 1}/${crops.length} · ${label}</div></div>`).join('')}`;
+};
+
+// ---------- slide 25 (4.2) ----------
+const tree = [['backend/', 'Maven COLA modules; services/ for SWE5001'], ['frontend/', 'React SPA'], ['contracts/', 'openapi.json, the API contract'], ['deployment/', 'Compose, SSM bundle, deploy.sh'], ['infra/', 'Terraform: dev frontend, SWE5001'], ['perf/ · docs/', 'k6 · ADRs, sprint logs'], ['.github/', 'workflows, CODEOWNERS, Dependabot']];
+const art = [
+  ['Backend image', `${mo('git-&lt;sha&gt;-run-&lt;n&gt;', 15.5)}, deployed by ${mo('@sha256', 15.5)} digest`, 'ECR, immutable tags, newest 30 kept'],
+  ['API contract', `${mo('openapi.json', 15.5)} committed; drift fails CI`, 'repository'],
+  ['TS client', 'generated from the contract, gitignored', 'build only (F-ADR 0003)'],
+  ['Frontend bundle', 'content-hashed files, immutable cache', 'S3 behind CloudFront'],
+  ['DB schema', 'Flyway V1–V28', 'repository'],
+  ['Infrastructure', 'Terraform; CI never applies it', 'S3 state, DynamoDB lock'],
+  ['SBOM', '<span style="color:#B02E1B">not produced</span>', '—'],
+];
+const s25 = () => `
+<div class="card" style="position:absolute;left:0;top:0;width:520px;height:548px;padding:14px 20px">
+ ${kicker('Source · one monorepo')}
+ ${tree.map(t => `<div style="display:flex;gap:10px;font:400 17px/1.3 Inter;margin-bottom:3px">${mo(t[0], 16)}<span style="color:var(--muted)">${t[1]}</span></div>`).join('')}
+ <div style="margin-top:12px">${kicker('Branching · EPAT 07 CI p41–44')}</div>
+ <div style="font:400 17px/1.35 Inter"><b>Branch by Feature</b>: one short branch per story, a pull request, squash merge onto the trunk <b>dev</b>; linear history since 12 Sep. Instead of merging trunk daily, the branch must be up to date to merge.</div>
+ <div style="margin-top:12px">${kicker('Who may change it')}</div>
+ <div style="font:400 17px/1.35 Inter">GitHub: a <b>code owner</b> approves (backend Liu Jin, frontend Lim, pipelines Pan), six checks green. AWS: IAM Identity Center, one-hour sessions ${mk('VERIFY', 'MFA enforced')}. CI: one OIDC role per job, no AWS keys in GitHub.</div>
+ <div style="font:400 16px/1.35 Inter;color:#B02E1B;margin-top:6px">Exception: two IAM users for SSM port forwarding, one with an access key</div>
+</div>
+<div style="position:absolute;left:540px;top:0;width:624px">
+ ${kicker('Artefacts · each traceable to a commit')}
+ ${tbl(['Artefact', 'Identity', 'Stored in'], art.map(a => [`<b>${a[0]}</b>`, a[1], `<span style="color:var(--muted)">${a[2]}</span>`]), { fs: 16.5, w: [150, 270], pad: '7px 10px' })}
+</div>`;
+
+// ---------- slide 26 (4.3) ----------
+const s26 = () => zoom('cicd-pr-vs-merge', { W: 2320, H: 1096, view: [1164, 548], crops: [[0, 0, 'PR · backend'], [1160, 0, 'PR · frontend, security'], [0, 548, 'gate · delivery'], [1160, 548, 'deploy · verification']] });
+
+// ---------- slide 27 (4.3, 3.3) ----------
+// Stages as in DSOEA 07 slide 3 (pre-commit, commit, build, test, deploy).
+const sec = [
+  ['Pre-commit', 'Lefthook: format, lint, type-check (frontend)', 'style and type errors', ''],
+  ['Commit · PR', `<b>gitleaks</b> ${req2()} over full history; code-owner review; actionlint`, 'secrets, unsafe workflows', ''],
+  ['Build', `SAST: <b>SonarCloud</b> ${req2()}, SpotBugs; SCA: Trivy deps, Dependabot daily`, 'code flaws, vulnerable libraries', 'CodeQL off: code scanning unavailable on this repository'],
+  ['Test', `<b>Trivy image</b> ${req2()} (HIGH, CRITICAL); Trivy config, deployment-bundle rules`, 'image CVEs, IaC and Compose misconfiguration', 'no DAST against the running site'],
+  ['Deploy', 'OIDC role per job; image by digest; read-only container, all capabilities dropped', 'stolen keys, swapped images', 'rebuilt after merge, not rescanned (ECR scans on push)'],
+];
+function req2() { return '<span style="font:700 13.5px/1 Inter;color:#3E5CD9;border:1.5px solid #3E5CD9;border-radius:999px;padding:2px 6px;vertical-align:2px">required</span>'; }
+const s27 = () => `
+${tbl(['Stage', 'Control', 'Catches', 'Gap'], sec.map(r => [`<b style="white-space:nowrap">${r[0]}</b>`, r[1], r[2], r[3] ? `<span style="color:#B02E1B">${r[3]}</span>` : '—']), { fs: 17, w: [130, 470, 240], pad: '9px 11px' })}
+<div style="position:absolute;left:0;right:0;top:470px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 17px/1.35 Inter"><b style="color:#3E5CD9">Types tested (slide 23, Q4):</b> static analysis, dependency (SCA), image and IaC configuration, secrets. Every third-party action is pinned to a commit SHA. Stages: DSOEA 07 slide 3.</div>`;
+
+// ---------- slide 28 (4.4) ----------
+const cd = [
+  ['Environments', 'one: <b>dev</b>. The SWE5006 prod stack was planned, not applied (#226)'],
+  ['Approver', 'the <b>code owner</b> on the pull request; the merge releases'],
+  ['Practice', '<b>Continuous Deployment</b> to dev: no manual step after merge. SWE5001 prod waits for an approved promotion PR: Continuous Delivery (EPAT 07 CI p34–35)'],
+  ['Verified by', 'on-host health check with <b>automatic rollback</b>; public health via CloudFront; Playwright smoke on dev'],
+  ['Trade-off', 'PostgreSQL and Redis on the app host: cheap and always on, one point of failure'],
+];
+const s28 = () => `
+<div style="position:absolute;left:0;top:0;width:392px">
+ ${cd.map(r => `<div style="margin-bottom:12px">${kicker(r[0])}<div style="font:400 17px/1.35 Inter;margin-top:-4px">${r[1]}</div></div>`).join('')}
+</div>
+${zoom('dev-deployment', { W: 2320, H: 1096, view: [756, 548], at: 'left:408px;top:20px', crops: [[0, 20, 'request path'], [940, 300, 'one host'], [1160, 548, 'deploy path']] })}`;
+
+// ---------- slide 29 (4.5) ----------
+const finds = [
+  ['First dev deploys failed (5–17 Sep)', 'Hand-built environment drifted from its design: OIDC trust used the old subject format; the deploy policy kept a placeholder instance ID; port 8589 was opened wide', 'Fixed on dev by hand; the prod stack renders each value in Terraform, so a plan shows it. No deploy failed after 17 Sep (to 19 Oct)'],
+  ['build-quality red for two days (19–20 Oct)', 'Dependabot upgraded the SpotBugs engine without its Maven plugin; the plugin lacked the engine’s BCEL classes', 'Upgrade both together, one Dependabot group, a POM policy test (PR #580)'],
+  ['Weekly full-history gitleaks failing (since 21 Sep)', '20 matches were SHA-256 file digests in a contract baseline, not secrets', 'Each digest re-hashed, then fingerprinted exactly (PR #580); 4 badge-token findings still open'],
+];
+const s29 = () => `
+${tbl(['Finding', 'Root cause', 'Fix'], finds.map(f => [`<b>${f[0]}</b>`, f[1], f[2]]), { fs: 17, w: [250, 470], pad: '11px 12px' })}
+<div style="position:absolute;left:0;right:0;top:440px;border-radius:8px;background:#FDEFEC;padding:10px 16px;font:400 17px/1.35 Inter"><b style="color:#B02E1B">Still open:</b> the Stripe webhook never confirms a payment on dev (#517), so a green pipeline is not yet a working paid flow. Sources: backend-prod-terraform-deployment.md, ci-failure-audit-20261021.md.</div>`;
+
+// ---------- slide 30 (4.1, 4.6) ----------
+const live = [
+  ['P1', 'The pull request: one frontend change, six required checks green', '60 s'],
+  ['P2', 'Lim approves as the frontend code owner', '30 s'],
+  ['P3', 'Squash merge: one commit on dev', '20 s'],
+  ['P4', 'Delivery runs; the backend PR and deploy, triggered beforehand', '90 s'],
+  ['P5', 'Verified: e2e-dev green, the change live on dev', '90 s'],
+  ['P6', 'Merge to live in minutes; hand-over', '40 s'],
+];
+const s30 = () => `
+<div style="position:absolute;left:0;top:0;width:700px">
+ ${tbl(['Step', 'What you see', 'Time'], live.map(l => [`<b>${l[0]}</b>`, l[1], l[2]]), { fs: 18, w: [70, null, 80], pad: '10px 12px' })}
+</div>
+<div style="position:absolute;left:724px;top:0;width:440px">
+ <div class="card" style="padding:16px 20px;margin-bottom:12px">${kicker('Why the backend is pre-run')}<div style="font:400 17px/1.4 Inter">Backend PR checks take about 16 min, longer than the segment, so that run was triggered before the talk and we walk through it finished.</div></div>
+ <div class="card" style="padding:16px 20px">${kicker('Backup video', '#B02E1B')}<div style="font:400 17px/1.4 Inter">Recorded on dev by 24 Oct, one clip per step, in the cloud and on a USB drive. ${mk('FILL', 'link')}</div></div>
+</div>`;
+
+const out = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 23: s23, 24: s24, 25: s25, 26: s26, 27: s27, 28: s28, 29: s29, 30: s30 };
 for (const s of C.SLIDES) if (!out[s.n]) out[s.n] = s.slot === null ? (() => '') : pending(s.n);
 // Closing slide (dark, full bleed).
 out[36] = () => `

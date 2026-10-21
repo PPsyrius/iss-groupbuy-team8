@@ -1,121 +1,66 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="540" viewBox="0 0 1160 540" font-family="Inter, Helvetica, Arial, sans-serif">
-<defs>
-<linearGradient id="ddCob" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E3E8FB"/></linearGradient>
-<linearGradient id="ddRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FBDFD9"/></linearGradient>
-<linearGradient id="ddGrey" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#ECE6DC"/></linearGradient>
-<linearGradient id="ddSlate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EFE9DF"/></linearGradient>
-<linearGradient id="ddAmb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF6E2"/><stop offset="1" stop-color="#FFEDC7"/></linearGradient>
-<marker id="ddFill" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B1A18"/></marker>
-<marker id="ddOpen" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#1B1A18" stroke-width="1.6"/></marker>
-</defs>
-<rect width="1160" height="540" fill="#FFFFFF"/>
-<polygon points="150,14 160,4 880,4 870,14" fill="#EFE9DF" stroke="#6B655C" stroke-width="1.4"/>
-<polygon points="870,14 880,4 880,520 870,530" fill="#DDD5C8" stroke="#6B655C" stroke-width="1.4"/>
-<rect x="150" y="14" width="720" height="516" fill="#F6F2EC" stroke="#6B655C" stroke-width="1.5"/>
-<text x="164" y="38" font-size="15" fill="#6B655C">«node»</text>
-<text x="226" y="38" font-size="18" font-weight="700" fill="#1B1A18">AWS Cloud · ap-southeast-1 · dev (SWE5006)</text>
-<polygon points="164,64 172,56 392,56 384,64" fill="#E3E8FB" stroke="#3E5CD9" stroke-width="1.4"/>
-<polygon points="384,64 392,56 392,184 384,192" fill="#C5CFF4" stroke="#3E5CD9" stroke-width="1.4"/>
-<rect x="164" y="64" width="220" height="128" fill="url(#ddCob)" stroke="#3E5CD9" stroke-width="1.5"/>
-<text x="274" y="84" font-size="15" fill="#6B655C" text-anchor="middle">«node»</text>
-<text x="274" y="106" font-size="18" font-weight="700" fill="#3E5CD9" text-anchor="middle">CloudFront</text>
-<text x="274" y="128" font-size="14.5" fill="#1B1A18" text-anchor="middle" font-family="JetBrains Mono, monospace">d1b3np88z657cp</text>
-<text x="274" y="150" font-size="15" fill="#1B1A18" text-anchor="middle">HTTP/2 · no WAF</text>
-<text x="274" y="172" font-size="15" fill="#1B1A18" text-anchor="middle">security headers policy</text>
-<rect x="164" y="222" width="220" height="98" rx="0" fill="url(#ddCob)" stroke="#3E5CD9" stroke-width="1.5"/>
-<text x="174" y="242" font-size="15" fill="#6B655C">«bucket» S3</text>
-<text x="174" y="264" font-size="17" font-weight="700" fill="#3E5CD9">web app (dist/)</text>
-<text x="174" y="286" font-size="15" fill="#1B1A18">private · OAC · path /*</text>
-<text x="174" y="308" font-size="15" fill="#1B1A18">immutable hashed assets</text>
-<rect x="164" y="334" width="220" height="96" rx="0" fill="url(#ddSlate)" stroke="#6B655C" stroke-width="1.5"/>
-<text x="174" y="354" font-size="15" fill="#6B655C">«registry» ECR</text>
-<text x="174" y="377" font-size="16" font-weight="700" fill="#1B1A18" font-family="JetBrains Mono, monospace">dev/blocbuy</text>
-<text x="174" y="399" font-size="15" fill="#1B1A18">immutable · scan on push</text>
-<text x="174" y="420" font-size="15" fill="#1B1A18">host pulls by digest</text>
-<rect x="164" y="444" width="220" height="66" rx="0" fill="url(#ddSlate)" stroke="#6B655C" stroke-width="1.5"/>
-<text x="174" y="464" font-size="15" fill="#6B655C">«logs» CloudWatch · 14 d</text>
-<text x="174" y="484" font-size="14.5" font-weight="500" fill="#1B1A18" font-family="JetBrains Mono, monospace">/blocbuy/backend/dev</text>
-<text x="174" y="503" font-size="15" fill="#1B1A18">awslogs from the container</text>
-<rect x="432" y="56" width="428" height="452" rx="6" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.5" stroke-dasharray="6 4"/>
-<text x="846" y="76" font-size="15" font-weight="700" fill="#6B655C" text-anchor="end">VPC</text>
-<rect x="446" y="86" width="400" height="110" rx="0" fill="url(#ddSlate)" stroke="#6B655C" stroke-width="1.5"/>
-<text x="456" y="108" font-size="15" fill="#6B655C">«node»</text>
-<text x="518" y="108" font-size="17" font-weight="700" fill="#1B1A18">ALB · blocbuy-dev-backend</text>
-<text x="456" y="130" font-size="15" fill="#1B1A18">internet-facing · 2 AZs · HTTP:80</text>
-<text x="456" y="152" font-size="15" fill="#1B1A18">default 403; forwards only with the</text>
-<text x="456" y="174" font-size="15" fill="#1B1A18">origin-secret header</text>
-<polygon points="446,232 454,224 844,224 836,232" fill="#EFE9DF" stroke="#6B655C" stroke-width="1.4"/>
-<polygon points="836,232 844,224 844,490 836,498" fill="#DDD5C8" stroke="#6B655C" stroke-width="1.4"/>
-<rect x="446" y="232" width="390" height="266" fill="url(#ddGrey)" stroke="#6B655C" stroke-width="1.5"/>
-<text x="456" y="254" font-size="15" fill="#6B655C">«node»</text>
-<text x="518" y="254" font-size="18" font-weight="700" fill="#1B1A18">EC2 · BlocBuy-dev</text>
-<text x="456" y="276" font-size="15" fill="#1B1A18">t3.large · Ubuntu 24.04 · AZ 1b</text>
-<text x="456" y="298" font-size="15" fill="#1B1A18">40 GB gp3 · SSM agent online</text>
-<rect x="458" y="310" width="366" height="82" rx="0" fill="url(#ddRed)" stroke="#E8402A" stroke-width="1.5"/>
-<text x="468" y="330" font-size="15" fill="#6B655C">«container» Docker Compose</text>
-<text x="468" y="352" font-size="16" font-weight="700" fill="#B02E1B" font-family="JetBrains Mono, monospace">blocbuy-backend :8589</text>
-<text x="468" y="374" font-size="15" fill="#1B1A18">read-only · cap_drop ALL · no-new-priv.</text>
-<rect x="458" y="402" width="178" height="86" rx="0" fill="url(#ddSlate)" stroke="#6B655C" stroke-width="1.5"/>
-<text x="468" y="422" font-size="15" fill="#6B655C">«database»</text>
-<text x="468" y="444" font-size="16" font-weight="700" fill="#1B1A18">PostgreSQL 18</text>
-<text x="468" y="464" font-size="14.5" fill="#1B1A18" font-family="JetBrains Mono, monospace">127.0.0.1:5432</text>
-<text x="468" y="482" font-size="14.5" fill="#6B655C">not pipeline-managed</text>
-<rect x="646" y="402" width="178" height="86" rx="0" fill="url(#ddSlate)" stroke="#6B655C" stroke-width="1.5"/>
-<text x="656" y="422" font-size="15" fill="#6B655C">«cache»</text>
-<text x="656" y="444" font-size="16" font-weight="700" fill="#1B1A18">Redis 8</text>
-<text x="656" y="464" font-size="14.5" fill="#1B1A18" font-family="JetBrains Mono, monospace">127.0.0.1:6379</text>
-<text x="656" y="482" font-size="14.5" fill="#6B655C">not pipeline-managed</text>
-<g stroke="#6B655C" stroke-width="1.6" fill="none"><circle cx="58" cy="86" r="11" fill="url(#ddGrey)"/><line x1="58" y1="97" x2="58" y2="130"/><line x1="40" y1="108" x2="76" y2="108"/><line x1="58" y1="130" x2="44" y2="154"/><line x1="58" y1="130" x2="72" y2="154"/></g>
-<text x="58" y="178" font-size="17" font-weight="700" fill="#1B1A18" text-anchor="middle">Browser</text>
-<rect x="6" y="330" width="132" height="104" rx="0" fill="url(#ddGrey)" stroke="#6B655C" stroke-width="1.5"/>
-<text x="72" y="350" font-size="15" fill="#6B655C" text-anchor="middle">«external»</text>
-<text x="72" y="372" font-size="17" font-weight="700" fill="#1B1A18" text-anchor="middle">GitHub</text>
-<text x="72" y="392" font-size="17" font-weight="700" fill="#1B1A18" text-anchor="middle">Actions</text>
-<text x="72" y="414" font-size="15" fill="#1B1A18" text-anchor="middle">OIDC roles,</text>
-<text x="72" y="430" font-size="15" fill="#1B1A18" text-anchor="middle">no AWS keys</text>
-<rect x="890" y="4" width="266" height="526" rx="6" fill="#FDEFEC" stroke="#E8402A" stroke-width="2" stroke-dasharray="8 5"/>
-<text x="904" y="30" font-size="17" font-weight="700" fill="#B02E1B">prod · SWE5001</text>
-<text x="904" y="52" font-size="15" fill="#1B1A18">same account, own stack;</text>
-<text x="904" y="72" font-size="15" fill="#1B1A18">rebuilt every release</text>
-<rect x="904" y="88" width="238" height="50" rx="0" fill="url(#ddSlate)" stroke="#6B655C" stroke-width="1.5"/>
-<text x="914" y="110" font-size="16" font-weight="700" fill="#1B1A18">CloudFront → ALB</text>
-<text x="914" y="130" font-size="15" fill="#1B1A18">same edge pattern</text>
-<rect x="904" y="150" width="238" height="152" rx="0" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.5"/>
-<text x="914" y="172" font-size="15" fill="#6B655C">«node» ECS Fargate</text>
-<rect x="914" y="182" width="218" height="32" rx="0" fill="url(#ddCob)" stroke="#3E5CD9" stroke-width="1.5"/>
-<text x="924" y="204" font-size="16" font-weight="700" fill="#3E5CD9">identity-svc</text>
-<rect x="914" y="220" width="218" height="32" rx="0" fill="url(#ddRed)" stroke="#E8402A" stroke-width="1.5"/>
-<text x="924" y="242" font-size="16" font-weight="700" fill="#B02E1B">commerce-svc</text>
-<rect x="914" y="258" width="218" height="32" rx="0" fill="url(#ddCob)" stroke="#3E5CD9" stroke-width="1.5"/>
-<text x="924" y="280" font-size="16" font-weight="700" fill="#3E5CD9">notification-svc</text>
-<rect x="904" y="314" width="238" height="50" rx="0" fill="url(#ddSlate)" stroke="#6B655C" stroke-width="1.5"/>
-<text x="914" y="334" font-size="15" fill="#6B655C">«database» RDS</text>
-<text x="914" y="355" font-size="16" font-weight="700" fill="#1B1A18">PostgreSQL 18</text>
-<rect x="904" y="376" width="238" height="50" rx="0" fill="url(#ddSlate)" stroke="#6B655C" stroke-width="1.5"/>
-<text x="914" y="396" font-size="15" fill="#6B655C">«cache» ElastiCache</text>
-<text x="914" y="417" font-size="16" font-weight="700" fill="#1B1A18">Valkey 8</text>
-<rect x="904" y="438" width="238" height="50" rx="0" fill="url(#ddAmb)" stroke="#7A5C20" stroke-width="1.5"/>
-<text x="914" y="458" font-size="15" fill="#6B655C">«topic» «queue»</text>
-<text x="914" y="479" font-size="16" font-weight="700" fill="#1B1A18">SNS → SQS + DLQ</text>
-<text x="1023" y="516" font-size="15" fill="#6B655C" text-anchor="middle">full diagram: backup B13</text>
-<path d="M80,128 H162" fill="none" stroke="#1B1A18" stroke-width="1.5" marker-end="url(#ddFill)"/>
-<rect x="96.0" y="105" width="50" height="20" fill="#FFFFFF"/>
-<text x="121" y="120" font-size="15" fill="#1B1A18" text-anchor="middle">HTTPS</text>
-<path d="M274,192 V220" fill="none" stroke="#1B1A18" stroke-width="1.5" marker-end="url(#ddFill)"/>
-<path d="M384,128 H444" fill="none" stroke="#1B1A18" stroke-width="1.5" marker-end="url(#ddFill)"/>
-<rect x="396.0" y="105" width="46" height="20" fill="#FFFFFF"/>
-<text x="419" y="120" font-size="15" fill="#1B1A18" text-anchor="middle">/api/*</text>
-<rect x="399.0" y="135" width="40" height="20" fill="#FFFFFF"/>
-<text x="419" y="150" font-size="15" fill="#1B1A18" text-anchor="middle">HTTP</text>
-<path d="M800,196 V308" fill="none" stroke="#1B1A18" stroke-width="1.5" marker-end="url(#ddFill)"/>
-<text x="790" y="220" font-size="15" fill="#1B1A18" text-anchor="end">TG HTTP 8589</text>
-<path d="M384,360 H420 V340 H456" fill="none" stroke="#1B1A18" stroke-width="1.5" marker-end="url(#ddOpen)"/>
-<path d="M458,380 H410 V478 H386" fill="none" stroke="#1B1A18" stroke-width="1.5" marker-end="url(#ddOpen)"/>
-<path d="M72,330 V270 H162" fill="none" stroke="#1B1A18" stroke-width="1.5" marker-end="url(#ddOpen)"/>
-<rect x="98.0" y="247" width="40" height="20" fill="#FFFFFF"/>
-<text x="118" y="262" font-size="15" fill="#1B1A18" text-anchor="middle">sync</text>
-<path d="M138,380 H162" fill="none" stroke="#1B1A18" stroke-width="1.5" marker-end="url(#ddOpen)"/>
-<path d="M72,434 V520 H640 V500" fill="none" stroke="#1B1A18" stroke-width="1.5" marker-end="url(#ddOpen)"/>
-<rect x="165.0" y="510" width="270" height="20" fill="#FFFFFF"/>
-<text x="300" y="525" font-size="15" fill="#1B1A18" text-anchor="middle">OIDC → SSM Run Command, by digest</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="2320" height="1096" viewBox="0 0 2320 1096" font-family="Inter, Helvetica, Arial, sans-serif">
+<defs><marker id="ddpOpen" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0,0 L12,6 L0,12" fill="none" stroke="#1B1A18" stroke-width="1.8"/></marker><marker id="ddpOpenRed" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0,0 L12,6 L0,12" fill="none" stroke="#E8402A" stroke-width="1.8"/></marker><marker id="ddpOpenGrey" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0,0 L12,6 L0,12" fill="none" stroke="#6B655C" stroke-width="1.8"/></marker><marker id="ddpFill" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0,0 L12,6 L0,12 Z" fill="#1B1A18"/></marker><marker id="ddpFillRed" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0,0 L12,6 L0,12 Z" fill="#E8402A"/></marker><marker id="ddpFillBlue" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0,0 L12,6 L0,12 Z" fill="#3E5CD9"/></marker></defs>
+<rect x="0" y="0" width="2320" height="1096" fill="#FFFFFF"/>
+<rect x="430" y="20" width="1870" height="872" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="10 6"/>
+<text x="450" y="56" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">AWS account 402178232802 · ap-southeast-1 · SWE5006 dev</text>
+<rect x="946" y="74" width="936" height="808" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="10 6"/>
+<text x="960" y="876" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">VPC</text>
+<path d="M24,60 L40,44 L366,44 L350,60 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><path d="M350,60 L366,44 L366,304 L350,320 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><rect x="24" y="60" width="326" height="260" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+<text x="38" y="92" font-size="24" text-anchor="start" fill="#6B655C">«device»</text><text x="38" y="122" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">Buyer’s device</text>
+<rect x="34" y="150" width="304" height="150" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/><text x="48" y="182" font-size="24" text-anchor="start" fill="#6B655C">«executionEnvironment»</text><text x="48" y="212" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">Web browser</text><text x="48" y="242" font-size="24" text-anchor="start" fill="#1B1A18">SPA (React)</text>
+<path d="M24,420 L40,404 L366,404 L350,420 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><path d="M350,420 L366,404 L366,534 L350,550 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><rect x="24" y="420" width="326" height="130" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><text x="38" y="452" font-size="24" text-anchor="start" fill="#6B655C">«node» external</text><text x="38" y="482" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">Stripe (test mode)</text><text x="38" y="512" font-size="24" text-anchor="start" fill="#1B1A18">Checkout, refunds</text>
+<path d="M24,620 L40,604 L366,604 L350,620 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><path d="M350,620 L366,604 L366,734 L350,750 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><rect x="24" y="620" width="326" height="130" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><text x="38" y="652" font-size="24" text-anchor="start" fill="#6B655C">«node» external</text><text x="38" y="682" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">Google OAuth 2.0</text><text x="38" y="712" font-size="24" text-anchor="start" fill="#1B1A18">sign-in provider</text>
+<path d="M1480,946 L1496,930 L2302,930 L2286,946 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><path d="M2286,946 L2302,930 L2302,1060 L2286,1076 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><rect x="1480" y="946" width="806" height="130" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><text x="1494" y="978" font-size="24" text-anchor="start" fill="#6B655C">«executionEnvironment» GitHub-hosted runner</text><text x="1494" y="1008" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">ci-backend / ci-frontend</text><text x="1494" y="1038" font-size="24" text-anchor="start" fill="#1B1A18">OIDC role per job; no stored AWS keys</text>
+<path d="M460,104 L476,88 L856,88 L840,104 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><path d="M840,104 L856,88 L856,314 L840,330 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><rect x="460" y="104" width="380" height="226" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><text x="474" y="136" font-size="24" text-anchor="start" fill="#6B655C">«node»</text><text x="474" y="166" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">CloudFront</text><text x="474" y="196" font-size="24" text-anchor="start" fill="#1B1A18">E3U5W7UWDL8LRV</text><text x="474" y="226" font-size="24" text-anchor="start" fill="#1B1A18">HTTPS to viewers, no WAF</text><text x="474" y="256" font-size="24" text-anchor="start" fill="#1B1A18">/* → S3, /api/* → ALB</text>
+<path d="M460,420 L476,404 L856,404 L840,420 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><path d="M840,420 L856,404 L856,634 L840,650 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><rect x="460" y="420" width="380" height="230" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><text x="474" y="452" font-size="24" text-anchor="start" fill="#6B655C">«node»</text><text x="474" y="482" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">S3 bucket (private)</text>
+<rect x="478" y="500" width="344" height="136" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/><path d="M792,510 L804,510 L810,516 L810,534 L792,534 Z M804,510 L804,516 L810,516" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/><text x="492" y="532" font-size="24" text-anchor="start" fill="#6B655C">«artifact»</text><text x="492" y="562" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">frontend bundle</text><text x="492" y="592" font-size="24" text-anchor="start" fill="#1B1A18">hashed assets immutable</text><text x="492" y="622" font-size="24" text-anchor="start" fill="#1B1A18">index.html no-cache</text>
+<path d="M976,110 L992,94 L1858,94 L1842,110 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><path d="M1842,110 L1858,94 L1858,244 L1842,260 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><rect x="976" y="110" width="866" height="150" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><text x="990" y="142" font-size="24" text-anchor="start" fill="#6B655C">«node»</text><text x="990" y="172" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">ALB blocbuy-dev-backend · HTTP :80, default 403</text><text x="990" y="202" font-size="24" text-anchor="start" fill="#1B1A18">SG: port 80 from the CloudFront prefix list only</text><text x="990" y="232" font-size="24" text-anchor="start" fill="#1B1A18">forwards /api/* only with the X-Origin-Secret header</text>
+<path d="M976,330 L992,314 L1858,314 L1842,330 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><path d="M1842,330 L1858,314 L1858,838 L1842,854 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><rect x="976" y="330" width="866" height="524" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+<text x="990" y="362" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">«device» EC2 BlocBuy-dev · i-0852b6c3475b19f05</text><text x="990" y="392" font-size="24" text-anchor="start" fill="#1B1A18">t3.large · Ubuntu 24.04 · 1b · one host, no ASG</text><text x="990" y="422" font-size="24" font-weight="600" text-anchor="start" fill="#1B1A18">SG: 8589 from ALB SG only; 22 open to 0.0.0.0/0</text>
+<rect x="990" y="450" width="838" height="200" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="1004" y="480" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">«executionEnvironment» Docker Engine + Compose</text>
+<rect x="1006" y="498" width="808" height="140" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/><path d="M1784,508 L1796,508 L1802,514 L1802,532 L1784,532 Z M1796,508 L1796,514 L1802,514" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/><text x="1020" y="530" font-size="24" text-anchor="start" fill="#6B655C">«artifact»</text><text x="1020" y="560" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">blocbuy-backend image, pulled @sha256 digest</text><text x="1020" y="590" font-size="24" text-anchor="start" fill="#1B1A18">host network :8589 · read-only · cap_drop ALL</text><text x="1020" y="620" font-size="24" text-anchor="start" fill="#1B1A18">secrets: /etc/blocbuy/backend.env (0600)</text>
+<rect x="990" y="682" width="838" height="160" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="6 4"/>
+<rect x="1006" y="696" width="396" height="132" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/><text x="1020" y="728" font-size="24" text-anchor="start" fill="#6B655C">«executionEnvironment»</text><text x="1020" y="758" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">PostgreSQL 18</text><text x="1020" y="788" font-size="24" text-anchor="start" fill="#1B1A18">127.0.0.1:5432</text>
+<rect x="1418" y="696" width="396" height="132" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/><text x="1432" y="728" font-size="24" text-anchor="start" fill="#6B655C">«executionEnvironment»</text><text x="1432" y="758" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">Redis 8</text><text x="1432" y="788" font-size="24" text-anchor="start" fill="#1B1A18">127.0.0.1:6379</text>
+<text x="1816" y="834" font-size="24" text-anchor="end" fill="#1B1A18"></text>
+<path d="M1916,104 L1932,88 L2248,88 L2232,104 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><path d="M2232,104 L2248,88 L2248,314 L2232,330 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><rect x="1916" y="104" width="316" height="226" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><text x="1930" y="136" font-size="24" text-anchor="start" fill="#6B655C">«node»</text><text x="1930" y="166" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">ECR dev/blocbuy</text><text x="1930" y="196" font-size="24" text-anchor="start" fill="#1B1A18">immutable tags</text><text x="1930" y="226" font-size="24" text-anchor="start" fill="#1B1A18">git-&lt;sha&gt;-run-&lt;n&gt;</text><text x="1930" y="256" font-size="24" text-anchor="start" fill="#1B1A18">scan on push</text>
+<path d="M1916,430 L1932,414 L2248,414 L2232,430 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><path d="M2232,430 L2248,414 L2248,564 L2232,580 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><rect x="1916" y="430" width="316" height="150" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><text x="1930" y="462" font-size="24" text-anchor="start" fill="#6B655C">«node»</text><text x="1930" y="492" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">CloudWatch Logs</text><text x="1930" y="522" font-size="24" text-anchor="start" fill="#1B1A18">/blocbuy/backend/dev</text>
+<path d="M1916,660 L1932,644 L2248,644 L2232,660 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><path d="M2232,660 L2248,644 L2248,840 L2232,856 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><rect x="1916" y="660" width="316" height="196" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/><text x="1930" y="692" font-size="24" text-anchor="start" fill="#6B655C">«node»</text><text x="1930" y="722" font-size="24" font-weight="700" text-anchor="start" fill="#1B1A18">Systems Manager</text><text x="1930" y="752" font-size="24" text-anchor="start" fill="#1B1A18">Run Command</text><text x="1930" y="782" font-size="24" text-anchor="start" fill="#1B1A18">Session Manager</text><text x="1930" y="812" font-size="24" text-anchor="start" fill="#1B1A18">agent polls, HTTPS</text>
+<path d="M350,200 L460,200" fill="none" stroke="#1B1A18" stroke-width="1.8"/>
+<text x="390" y="188" font-size="24" text-anchor="middle" fill="#1B1A18">HTTPS</text>
+<path d="M350,450 L390,450 L390,300 L460,300" fill="none" stroke="#1B1A18" stroke-width="1.8"/>
+<text x="384" y="384" font-size="24" text-anchor="end" fill="#1B1A18">webhook</text>
+<path d="M650,330 L650,404" fill="none" stroke="#1B1A18" stroke-width="1.8"/>
+<text x="664" y="378" font-size="24" text-anchor="start" fill="#1B1A18">HTTPS · OAC · /*</text>
+<path d="M840,200 L976,200" fill="none" stroke="#1B1A18" stroke-width="1.8"/>
+<text x="902" y="238" font-size="24" text-anchor="middle" fill="#1B1A18">HTTP</text>
+<text x="902" y="268" font-size="24" text-anchor="middle" fill="#1B1A18">:80</text>
+<path d="M1790,260 L1790,498" fill="none" stroke="#1B1A18" stroke-width="1.8"/>
+<text x="1776" y="304" font-size="24" text-anchor="end" fill="#1B1A18">HTTP :8589</text>
+<path d="M1200,638 L1200,696" fill="none" stroke="#1B1A18" stroke-width="1.8"/>
+<text x="1214" y="668" font-size="24" text-anchor="start" fill="#1B1A18">TCP 5432</text>
+<path d="M1620,638 L1620,696" fill="none" stroke="#1B1A18" stroke-width="1.8"/>
+<text x="1634" y="668" font-size="24" text-anchor="start" fill="#1B1A18">TCP 6379</text>
+<path d="M976,760 L370,760 L370,690 L350,690" fill="none" stroke="#1B1A18" stroke-width="1.8"/>
+<path d="M370,760 L370,520 L350,520" fill="none" stroke="#1B1A18" stroke-width="1.8"/>
+<text x="444" y="748" font-size="24" text-anchor="start" fill="#1B1A18">HTTPS out: Stripe API, Google</text>
+<path d="M1858,400 L1916,300" fill="none" stroke="#1B1A18" stroke-width="1.8"/>
+<text x="1940" y="368" font-size="24" text-anchor="start" fill="#1B1A18">HTTPS pull</text>
+<path d="M1858,520 L1916,520" fill="none" stroke="#1B1A18" stroke-width="1.8"/>
+<text x="1940" y="612" font-size="24" text-anchor="start" fill="#1B1A18">awslogs, HTTPS</text>
+<path d="M1916,780 L1858,780" fill="none" stroke="#E8402A" stroke-width="2.6"/>
+<path d="M2074,930 L2074,856" fill="none" stroke="#E8402A" stroke-width="2.6"/>
+<text x="2060" y="920" font-size="24" font-weight="700" text-anchor="end" fill="#E8402A">SendCommand</text>
+<path d="M2264,930 L2264,216 L2248,216" fill="none" stroke="#1B1A18" stroke-width="1.8"/>
+<text x="2254" y="624" font-size="24" text-anchor="end" fill="#1B1A18">push</text>
+<path d="M1480,1020 L800,1020 L800,650" fill="none" stroke="#1B1A18" stroke-width="1.8"/>
+<text x="820" y="1008" font-size="24" text-anchor="start" fill="#1B1A18">s3 sync + CloudFront invalidation, HTTPS</text>
+<line x1="24" y1="900" x2="104" y2="900" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="10 6"/>
+<text x="118" y="908" font-size="24" text-anchor="start" fill="#1B1A18">trust boundary</text>
+<line x1="24" y1="950" x2="104" y2="950" stroke="#E8402A" stroke-width="2.6"/>
+<text x="118" y="958" font-size="24" text-anchor="start" fill="#1B1A18">deploy path (CD)</text>
+<rect x="24" y="984" width="80" height="30" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="118" y="1008" font-size="24" text-anchor="start" fill="#1B1A18">loopback only</text>
+<text x="24" y="1060" font-size="24" text-anchor="start" fill="#6B655C">not pipeline-managed: DB, Redis, EC2, ALB</text>
 </svg>
