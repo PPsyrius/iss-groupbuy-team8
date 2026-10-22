@@ -30,7 +30,12 @@ function notify(){if(!notesWin||notesWin.closed)return;const fs=frags();
   notesWin.postMessage({type:'state',id:slides[i].dataset.n,frag,frags:fs.length?fs[fs.length-1]:0},ORIGIN);}
 function openNotes(){const u=new URL(location.href);u.hash='';u.search='?notes';
   notesWin=window.open(u.href,'blocbuy-notes','width=1180,height=860');}
-addEventListener('message',e=>{if(!notesWin||e.source!==notesWin)return;const m=e.data||{};
+// After a reload of this window, notesWin is gone but the companion still has this window as its opener: adopt it when
+// it says hello (opener is readable across origins).
+const ownsCompanion=w=>{try{return !!w&&w.opener===window;}catch{return false;}};
+addEventListener('message',e=>{const m=e.data||{};
+  if((!notesWin||notesWin.closed)&&m.type==='hello'&&ownsCompanion(e.source))notesWin=e.source;
+  if(!notesWin||e.source!==notesWin)return;
   if(m.type==='hello')notify();else if(m.type==='go')(m.delta>0?next:prev)();});
 // Entering presenter mode applies the hidden start states under .still (no transitions), so they take effect at
 // once instead of running their delayed hide transitions into the entrance that follows.

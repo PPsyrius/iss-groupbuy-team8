@@ -23,7 +23,7 @@ const root=$('notes');root.hidden=false;
 const KEY='blocbuy-talk-start';
 const load=()=>{try{const v=Number(sessionStorage.getItem(KEY));return v>0?v:null;}catch{return null;}};
 const save=v=>{try{v?sessionStorage.setItem(KEY,String(v)):sessionStorage.removeItem(KEY);}catch{/* storage off: the timer still runs */}};
-let cur=data.slides[0],frag=0,frags=0,slideAt=Date.now(),startedAt=load();
+let cur=data.slides[0],frag=0,frags=0,slideAt=Date.now(),startedAt=load(),heardAt=0;
 const fmt=sec=>{const neg=sec<0;sec=Math.abs(Math.round(sec));return (neg?'−':'')+String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');};
 function render(){
   const s=cur;
@@ -54,11 +54,17 @@ function tick(){
   delta.className=d>20?'over':d<-20?'ahead':'';
 }
 function toggleTimer(){startedAt=startedAt?null:Date.now();save(startedAt);tick();}
-function status(){$('n-status').textContent=deck&&!deck.closed?'':'The deck window is closed or was not found: open the deck and press S there.';}
+// The companion says hello every second and the deck answers with its state, so a reloaded deck picks the companion
+// up again; silence for 3 s means the deck is gone or no longer listening.
+function status(){
+  const msg=!deck||deck.closed?'The deck window is closed or was not found: open the deck and press S there.'
+    :Date.now()-heardAt>3000?'The deck is not answering: press S in the deck window.':'';
+  $('n-status').textContent=msg;
+}
 addEventListener('message',e=>{
   if(!deck||e.source!==deck)return;
   const m=e.data||{};
-  if(m.type==='state'&&byId.has(String(m.id))){const s=byId.get(String(m.id));if(s!==cur)slideAt=Date.now();cur=s;frag=+m.frag||0;frags=+m.frags||0;render();tick();}
+  if(m.type==='state'&&byId.has(String(m.id))){heardAt=Date.now();const s=byId.get(String(m.id));if(s!==cur)slideAt=Date.now();cur=s;frag=+m.frag||0;frags=+m.frags||0;render();tick();}
   else if(m.type==='timer')toggleTimer();
 });
 addEventListener('keydown',e=>{
@@ -74,5 +80,5 @@ $('n-nextb').onclick=()=>post({type:'go',delta:1});
 $('n-timer').onclick=toggleTimer;
 render();tick();status();
 setInterval(()=>{tick();status();},500);
-post({type:'hello'});
+post({type:'hello'});setInterval(()=>post({type:'hello'}),1000);
 })();`;

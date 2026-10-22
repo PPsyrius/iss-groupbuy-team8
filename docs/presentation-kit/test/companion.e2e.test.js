@@ -17,7 +17,11 @@ test('the companion follows the deck and drives it', async t => {
   fs.cpSync(path.join(__dirname, 'fixture'), dir, { recursive: true });
   execFileSync(process.execPath, [path.join(KIT, 'bin', 'build.js'), dir, 'deck'], { stdio: 'pipe' });
 
-  const browser = await chromium.launch();
+  let browser;
+  try { browser = await chromium.launch(); } catch {
+    t.skip('Chromium is not installed: npm --prefix docs/presentation-kit exec -- playwright install chromium');
+    return;
+  }
   t.after(() => browser.close());
   const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const deck = await context.newPage();
@@ -64,4 +68,13 @@ test('the companion follows the deck and drives it', async t => {
   assert.equal(await text('n-script'), 'Because it is simpler.');
   await notes.locator('#n-prev').click();
   await deck.waitForFunction(() => location.hash === '#BX');
+
+  // a reloaded deck picks the companion up again
+  await deck.reload();
+  await deck.waitForFunction(() => location.hash === '#BX');
+  await notes.waitForTimeout(1500); // one companion heartbeat (1 s): the deck adopts the companion on its hello
+  await notes.keyboard.press('ArrowRight');
+  await deck.waitForFunction(() => location.hash === '#B1');
+  await notes.waitForFunction(() => document.getElementById('n-label').textContent === 'Backup B1');
+  assert.equal(await text('n-status'), '');
 });
