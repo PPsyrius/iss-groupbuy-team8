@@ -7,7 +7,7 @@ const runtime = require('../deck/runtime');
 
 const page = `<!doctype html><style>.blank{display:none}.blank.on{display:block}</style><body>
 <div class="slide" data-n="1"></div><div class="slide" data-n="2"></div><div class="blank"></div>
-<script>${runtime({ notes: {}, total: 2 })}</script></body>`;
+<script>${runtime({ total: 2 })}</script></body>`;
 
 let browser;
 before(async () => { browser = await chromium.launch(); });

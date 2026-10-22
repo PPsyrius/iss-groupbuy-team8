@@ -8,7 +8,7 @@ const { C, md, esc, markers, countM, box, tbl, pre, reqBox, slideCard, qaTable, 
 const m = s => { countM(s); return md(s); };
 const mh = s => { countM(s); return String(s).replace(/\{\{(?:FILL|VERIFY|CONFIRM):[^}]*\}\}/g, x => md(x)); };
 
-const DEV = 'https://d1b3np88z657cp.cloudfront.net';
+const DEV = C.DEV;
 const REPO = 'PPsyrius/iss-groupbuy-team8';
 const slide = n => C.SLIDES.find(s => s.n === n);
 const seg = n => C.SEGMENTS.find(s => s.n === n);
@@ -95,43 +95,7 @@ const demoCard = d => `<div class="card demo"><div class="hd"><span>Step ${d.n} 
  <div class="row"><span class="lab fb">Fallback</span><span>${mh(d.fb)}</span></div></div></div>`;
 
 // ---------- segment 4: CI/CD pipeline demo ----------
-const pipeSteps = [
-  { n: 'P1', t: 'The pull request and its required checks', time: '16:46:15 – 16:47:15', proves: 'Items <b>4b</b> (procedure), <b>4a</b> (branch, PR, Conventional Commit) · Pan',
-    op: ['Tab 1: the demo PR opened at 16:41 → <b>Files changed</b>: the one-line frontend change.', 'Switch to <b>Checks</b>: frontend-check, SonarCloud Frontend, gitleaks, e2e-preview; the backend jobs report success after skipping (no backend path changed).', 'Point at the merge box: review required from a code owner.'],
-    say: "This is the pull request I opened at 16:41: one line in the frontend, on a short branch with a Conventional Commit title. These are the required checks from slide 16: the frontend check with all unit tests, SonarCloud, the secret scan, and Playwright against this build. The backend jobs see no backend change and pass straight through. The merge button stays locked until a code owner approves.",
-    exp: 'Checks green or finishing (median 4.8 min from 16:41, so ≈ 16:46); merge box asks for a code-owner review.',
-    fb: 'Checks still running: keep talking through them and move on at 16:47:15 regardless. A check red: say what it caught in one sentence, then <code>CLIP P2</code> (the 25 Oct recording from approval onwards); leave the PR open and never merge it on air.' },
-  { n: 'P2', t: 'Code-owner approval', time: '16:47:15 – 16:48:00', proves: 'Items <b>4a</b>, <b>4d</b> (review gate) · Pan; Lim approves',
-    op: ['Pan posts <code>APPROVE</code>. Lim (not sharing) approves from his own GitHub session: <b>Review changes → Approve</b>, or <code>gh pr review &lt;n&gt; --approve</code>.', 'Tab 1: refresh; the approval from @limjiechao appears; the merge box turns green once the checks are green.'],
-    say: "Frontend changes belong to Lim in CODEOWNERS, so his approval is the one required; mine would not count. If anyone pushes again, the approval is dismissed and the checks run again.",
-    exp: 'One approving review by a code owner; all checks passed; squash merge enabled.',
-    fb: 'Lim cannot approve within 30 s: nobody else is a frontend code owner, so do not ask anyone else. <code>CLIP P2</code>.' },
-  { n: 'P3', t: 'Squash merge', time: '16:48:00 – 16:48:30', proves: 'Item <b>4a</b> (linear history) · Pan',
-    op: ['Tab 1: <b>Squash and merge</b>, keep the Conventional Commit title, confirm. Only this PR.', 'Say the merge time aloud (≈ 16:48:15).'],
-    say: "Squash merge: one commit on dev carrying the pull request number, so history stays linear. That push starts delivery.",
-    exp: 'PR merged; leave the branch-delete button alone.',
-    fb: '“Base branch was modified” (dev moved): do not update the branch on air; it would re-run five minutes of checks. <code>CLIP P3</code>; merge after 17:15.' },
-  { n: 'P4', t: 'Delivery runs; the backend deploy, recorded', time: '16:48:30 – 16:50:00', proves: 'Items <b>4b</b>, <b>4d</b> (digest, SSM, health check) · Pan',
-    op: ['Tab 2: Actions → <code>ci-frontend</code> → the new run on <code>dev</code>: package-dev → deploy-s3-dev → e2e-dev.', 'Tab 3: the recorded backend run 39133506399 (18 Oct, 3 m 23 s): package-dev 55 s → publish-ecr-dev 1 m 28 s → deploy-existing-ec2 43 s. Open the deploy job: the image is pinned by digest.'],
-    say: "Delivery rebuilds from the merged commit. The frontend goes to S3, index.html is invalidated in CloudFront, then Playwright smoke-tests the real site. While it runs, here is a backend delivery from Sunday: the image is pushed to ECR, deployed by digest through SSM to the one EC2 host, health-checked, and rolled back automatically if the check fails. Three minutes twenty-three, start to finish.",
-    exp: 'Frontend run in progress (median 2.7 min from push to e2e-dev green); recorded backend run green.',
-    fb: 'Run not started within 60 s: refresh once; then <code>CLIP P4</code>.' },
-  { n: 'P5', t: 'Rollback, by design only', time: '16:50:00 – 16:50:30', proves: 'Item <b>4d</b> (recovery procedure, honest limit) · Pan',
-    op: ['Tab 4: <code>.github/workflows/rollback-backend.yml</code> on dev: its inputs (target, reason, confirmation) and the shared, non-cancellable concurrency group. Never open the Run workflow dialog.'],
-    say: "For a manual rollback there is this workflow: it needs a reason and a confirmation and shares the deploy lock. To be honest, it has never run, and no automatic rollback has fired yet. It is a design we have not exercised.",
-    exp: 'Workflow file visible; its Actions page lists no runs.',
-    fb: 'Skip if behind (saves 30 s): slide 19 and B14 already say it.' },
-  { n: 'P6', t: 'The change is live on dev', time: '16:50:30 – 16:52:15', proves: 'Item <b>4b</b> (push to live), maintainability · Pan',
-    op: ['Tab 2: e2e-dev green (≈ 16:51).', `Tab 5: <code>${DEV}</code> on the changed page → reload → the new text. {{CONFIRM:the page and the copy change (open item 15)}}`, 'Read the elapsed time off the run: merge → e2e-dev green.'],
-    say: "Smoke test green, and here is the change on the dev site, about three minutes after the merge. The same pipeline put the version you are about to see in the system demo on this host.",
-    exp: 'New text visible after a reload (index.html is served no-cache and invalidated); run green.',
-    fb: 'e2e-dev red: show the failed step honestly, it is the gate doing its job, then <code>CLIP P6</code>. Text not visible yet: one more reload, then <code>CLIP P6</code>.' },
-  { n: 'P7', t: 'Wrap up and hand over', time: '16:52:15 – 16:53:00', proves: 'Items <b>4a–4d</b> summary · Pan',
-    op: ['Stay on tab 5 (the dev site) while speaking.', 'At 16:53:00: stop sharing; Eric starts sharing (<code>SHARE</code>).'],
-    say: "So one change went from pull request to dev in about ten minutes, with six required checks, a code-owner review and an automatic smoke test, and no AWS keys stored in GitHub. Eric will now show what that system does for a buyer.",
-    exp: 'Hand-over on time.',
-    fb: 'If behind, say only the last sentence.' },
-];
+const pipeSteps = C.DEMOS[20];
 
 const seg4 = seg(4);
 const seg4Html = `<section class="chap"><h1>4 ${esc(seg4.name)} (${seg4.talk} minutes)</h1>
@@ -164,48 +128,7 @@ ${qaTable(4)}
 </section>`;
 
 // ---------- segment 5: system demo ----------
-const demoSteps = [
-  { n: 1, t: 'Start a bloc and share the invite', time: '16:53:20 – 16:55:20', proves: 'Functionality, security · <b>5a</b> (UC2, UC3, UC7) · Eric operates and narrates',
-    op: ['Window “Leader” (account A, signed in with Google), tab 2: listing <code>US34-02</code> (team of 3, 24 h; 39.00, team price 29.00).', '<b>Start a bloc</b> → the quote sheet shows the team price → <b>Continue to payment</b>.', 'Stripe Checkout with its Sandbox banner: test card 4242 4242 4242 4242, any future expiry, any CVC → Pay.', 'Back on BlocBuy: the receipt turns from “Waiting for payment confirmation” to paid; open the bloc: 1 of 3, countdown running.', 'Copy the invite link (<code>/products/{id}?deal={dealId}&amp;ref={ref}</code>).'],
-    say: "I'm signed in with Google as our leader. Every listing has two prices; I start a bloc at the team price and pay first, on Stripe's own page, in Sandbox mode: a test card, no real money. Notice the receipt waits: BlocBuy believes the payment only when Stripe's signed webhook arrives, not when the browser comes back. Now the bloc exists, one of three, and I copy my invite link.",
-    exp: 'Receipt paid within one minute; bloc open at 1 of 3; invite link copied.',
-    fb: 'Checkout does not open within 20 s, or the receipt still waits after 60 s (the #517 symptom): Eric posts <code>CLIP 1</code> and says “<i>That is the open issue on slide 6; here is the same step recorded on dev on 25 Oct.</i>” No recording: Plan C (§6).' },
-  { n: 2, t: 'A friend joins through the invite and pays', time: '16:55:20 – 16:57:20', proves: 'Consistency · <b>5a</b> (UC4, UC7) · Eric operates; Yorik narrates the guards',
-    op: ['Window “Joiner” (account B), tab 1: paste the invite link.', 'Point at the banner that names the sharer (account A’s display name).', '<b>Join</b> → quote → Stripe Checkout → 4242 card → Pay → receipt paid.', 'Product page: the bloc now shows 2 of 3.'],
-    say: "A friend opens my link. The banner names who shared it, which is how the join is credited to me. She joins and pays the same way. Behind this, the join rules run twice, at the quote and again after payment, inside the team aggregate: if the last seat had gone in between, she would get a refund obligation, never a seat that doesn't exist. Two of three.",
-    exp: 'Banner with the sharer’s name; receipt paid; bloc at 2 of 3.',
-    fb: '<code>CLIP 2</code> with the same sentence as step 1. No recording: Plan C.' },
-  { n: 3, t: 'My blocs and my orders', time: '16:57:20 – 16:58:50', proves: 'Functionality · <b>5a</b> (UC8) · Eric',
-    op: ['Joiner window, tab 2: <code>/account</code>. My blocs → <b>Active</b>: the bloc, 2 of 3, its countdown.', 'My orders below: the new order with its amount.', 'Click <b>Completed</b>, then <b>Refunded</b>; point at the URL (<code>?blocs=…</code>); reload: the chip survives (slide 12).'],
-    say: "Her account page: My blocs on top, with Active, Completed and Refunded, and her orders below. The chip lives in the URL, so a reload, the Back button or a shared link keeps the view, and switching chips filters what is already loaded instead of asking the server again.",
-    exp: 'Active shows the bloc; My orders lists the new order; the chip survives a reload.',
-    fb: 'Page empty: reload once; then <code>CLIP 3</code>. With a NO-GO this step runs live on an account that already has orders.' },
-  { n: 4, t: 'The 16:05 bloc expires and refunds', time: '16:58:50 – 17:01:20', proves: 'Reliability, consistency · <b>5a</b> (UC5, UC6), <b>5b</b> · Eric operates; Yorik narrates',
-    op: ['Leader window, tab 3: <code>/account</code> → <b>Refunded</b>: the <code>US34-04</code> bloc started at ≈ 16:05, chip “Closed”.', 'My orders: its order, cancelled.', 'Tab 4: its receipt <code>/payments/{paymentId}</code> (bookmarked at 16:10), reloaded: the refund status. Refund status is shown only on the receipt.', 'Never open the Stripe dashboard on the shared screen.'],
-    say: "At five past four our leader started a second bloc, a team of two that lives forty minutes, and nobody joined. At about 16:45 the scheduler, which sweeps every minute, expired it. In the same transaction the order was cancelled and one refund obligation was written. A worker, every thirty seconds, sent the refund to Stripe with an idempotency key built from that obligation. Here is the receipt: refunded. We never touched the deadline; the timer did all of it.",
-    exp: 'Bloc under Refunded (“Closed”); order cancelled; the receipt shows the refund.',
-    fb: '<code>REFUND LATE</code> at 16:50 and still no refund now: Yorik says one sentence (“the worker retries every 30 seconds; it may still be in flight”), Eric posts <code>CLIP 4</code>. No dev recording: open <b>B15</b> and say “<i>verified locally with a real Sandbox refund on 20 September, not yet on dev.</i>”' },
-  { n: 5, t: 'One seat, one refund: consistency under failure', time: '17:01:20 – 17:02:50', proves: 'Consistency, reliability · <b>5b</b> · Yorik narrates; Eric shows',
-    op: ['Deck tab 1, press B → <b>B4</b> (expiry and refund sequence) for about 20 s, then back to the receipt tab.', 'No live race and no webhook replay on dev: the tests below prove them.'],
-    say: "What you can't see is what didn't happen. Two buyers paying for the last seat at the same moment: one gets it, the other gets one refund obligation. Eight replays of the same Stripe webhook: still one member and one order. A crash after Stripe accepted a refund: the retry reuses the same key, so Stripe returns the first refund instead of making a second. Those are tests against a real PostgreSQL that run on every pull request; on dev you see the outcome, one refund per payment.",
-    exp: 'B4 shown briefly; the receipt with exactly one refund. Tests: StripeCheckoutFlowTest.concurrentPaidBuyersCannotBothTakeLastSeat, StripeLocalIntegrationTest.eightConcurrentWebhookReplaysStillProduceOneMemberAndOneOrder, RefundServiceTest.lostResponseRetriesSameDurableKey.',
-    fb: 'If behind (§6), say only the first and last sentences.' },
-  { n: 6, t: 'Scalability and performance, labelled', time: '17:02:50 – 17:05:20', proves: 'Scalability, performance · <b>5b</b> · Eric',
-    op: ['Deck tab 1, press B → <b>B16</b>.', 'Left: SWE5001 prod on ECS, the scaling policy and the scale-out result. Say the V3 result as labelled: commerce scaled 1 → 3 tasks on its own, about 455 requests a second at server p95 under 50 ms; the run failed its acceptance gate because the load generator dropped iterations (docs/swe5001/evidence/20261019-v3-autoscaling, task-count graph 20261019-v3-services-task-counts.png).', 'Middle: the V2 k6 run on ECS (16 Oct). Right: the local workload baseline (30 Sep).'],
-    say: "Auto-scaling isn't on dev: dev is one host by design. The same code runs in our SWE5001 production on ECS, where commerce scales from two to six tasks on requests per target; this is that scale-out under a scripted k6 load. For performance, k6 drove one task through CloudFront from ten to two hundred requests a second: 57,600 requests, no errors, p95 under 60 milliseconds, and it never saturated. On the right, our own workload on a laptop: a p95 of 57 milliseconds for creating join intents on one hot team, before any payment. Each number says where it ran.",
-    exp: 'B16 with every column labelled by environment; no claim of auto-scaling on dev.',
-    fb: 'Clip fails: stay on B16 and read the numbers.' },
-  { n: 7, t: 'Maintainability: the pipeline you just saw', time: '17:05:20 – 17:06:20', proves: 'Maintainability · <b>5b</b> · Eric',
-    op: ['Leader window, tab 5: Pan’s merged PR from segment 4 and the dev page with his change.'],
-    say: "Maintainability we showed you live a quarter of an hour ago: Pan's change went through six required checks, a code-owner review and an automatic smoke test, and it runs on the same site as this demo. Eighteen ArchUnit rules hold the module boundaries on every build, so a change in one context can't quietly reach into another.",
-    exp: 'The merged PR and the live change side by side.',
-    fb: 'PR not merged in §4: say so and show the 25 Oct recording frame instead.' },
-  { n: 8, t: 'Close', time: '17:06:20 – 17:07:00', proves: '<b>5a</b>, <b>5b</b> recap · Eric, then Lim',
-    op: ['Deck tab 1: slide 21 for the recap sentence, then slide 22.'],
-    say: "That's one bloc's whole life on dev: started, shared, joined, tracked, and refunded on time by the timer. Lim?",
-    exp: 'Slide 22 at 17:07:00.',
-    fb: 'If behind, skip straight to slide 22.' },
-];
+const demoSteps = C.DEMOS[21];
 
 const env = n => n <= 4 ? 'live on dev' : n === 5 ? 'dev outcome; races proven by tests' : n === 6 ? 'SWE5001 prod (ECS) and local, labelled' : 'live on dev (segment 4)';
 const seg5 = seg(5);
