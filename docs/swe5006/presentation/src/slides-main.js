@@ -26,8 +26,8 @@ const tbl = (head, rows, { fs = 20, w = [], pad = '7px 12px', m } = {}) => `<tab
 ${rows.map((r, j) => `<tr${r.ref ? ref(r.ref) : ''}${m ? ` class="trow" style="--d:${Math.round(m[1] + m[2] * j)}ms"` : ''}>${r.map(c => `<td style="padding:${pad}">${c}</td>`).join('')}</tr>`).join('')}</table>`;
 const withRef = (cells, t) => Object.assign(cells, { ref: t });
 const mo = (t, sz = 18) => `<span class="mono" style="font-size:${sz}px;font-variant-ligatures:none">${t}</span>`;
-// One point per line inside a cell or card.
-const lines = (a, gap = 2) => a.map(t => `<div style="margin-bottom:${gap}px">${t}</div>`).join('');
+// One point per line inside a cell or card. d, st (optional): each line rises from d ms, st ms apart.
+const lines = (a, gap = 2, d, st = 40) => a.map((t, i) => `<div ${d === undefined ? '' : `class="a" data-a="up" `}style="margin-bottom:${gap}px${d === undefined ? '' : `;--d:${d + st * i}ms`}">${t}</div>`).join('');
 // d (optional): the chip pops at d ms.
 const chip = (t, kind, d) => {
   const k = { ok: ['#E3E8FB', '#3E5CD9'], chg: ['#FFEDC7', '#7A5C20'], part: ['#ECE6DC', '#1B1A18'], drop: ['#EFE9DF', '#8C2414'], open: ['#FBDFD9', '#B02E1B'] }[kind];
@@ -599,10 +599,13 @@ ${QUADS.map(quadCard).join('')}</div>
 ${QUADS.map((d, i) => layer(quadDetail(d), `${d.q} · ${d.axes}`, i, QUADS.length)).join('')}`;
 
 // ---------- slide 26 (3.2) ----------
-const kv = rows => rows.map(r => `<div style="display:flex;gap:14px;font:400 21px/1.35 Inter;margin-bottom:14px"><b style="width:130px;flex:none">${r[0]}</b><div>${Array.isArray(r[1]) ? lines(r[1], 0) : r[1]}</div></div>`).join('');
+// d0, step (optional): each row rises from d0 ms, step ms apart.
+const kv = (rows, d0, step) => rows.map((r, i) => `<div ${d0 === undefined ? '' : `class="a" data-a="up" `}style="display:flex;gap:14px;font:400 21px/1.35 Inter;margin-bottom:14px${d0 === undefined ? '' : `;--d:${d0 + step * i}ms`}"><b style="width:130px;flex:none">${r[0]}</b><div>${Array.isArray(r[1]) ? lines(r[1], 0) : r[1]}</div></div>`).join('');
+// Side columns, Box then text (MOTION.md): left card 200, kicker 230, rows 270 +60; right cards from the right at 420
+// and 620, their text +20 then +30 each.
 const s26 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:640px;height:568px;padding:18px 22px">
- ${kicker('The scripted test')}
+<div class="card a" data-a="left" style="position:absolute;left:0;top:0;width:640px;height:568px;padding:18px 22px;--d:200ms">
+ ${gA(kicker('The scripted test'), 'up', 230)}
  ${kv([
    ['Tool', `<span${ref('perf/k6/browse.js · perf/k6/README.md §V2')}>k6 1.6.1, image pinned by digest</span>`],
    ['Target', ['<b>SWE5001 ECS</b>, dev image of 6 Oct: CloudFront → ALB → Fargate', 'Never the shared SWE5006 dev host, which also runs its database']],
@@ -610,38 +613,40 @@ const s26 = () => `
    ['Mix', ['7 listing pages : 3 listing details, anonymous', 'No think time; 10 s timeout']],
    ['Pass, per step', ['p95 &lt; 500 ms', 'Errors &lt; 1%', 'Zero dropped requests']],
    ['Result', `<span${ref('docs/swe5001/evidence/20261016-http-baseline-dashboard/ (#670)')}>Run 20261016-v2-monolith-repeat, 16 Oct; shown on slide 36</span>`],
- ])}
+ ], 270, 60)}
 </div>
 <div style="position:absolute;left:660px;top:0;width:504px">
- <div class="card" style="padding:18px 22px;margin-bottom:14px">
-  ${kicker('Proposal target (§6.3)', '#B02E1B')}
-  <div style="font:600 22px/1.35 Inter">Interactive operations ≤ 2 s with up to 100 concurrent users</div>
-  <div style="font:400 21px/1.4 Inter;margin-top:10px">Little’s law ${mo('N = X · (R + Z)', 20)}: 100 users, 0.5 s think, ~30 ms response → <b>X ≈ 190 requests/s</b></div>
-  <div style="font:400 21px/1.4 Inter;margin-top:6px">Inside the 200 driven, with a p95 gate four times stricter than 2 s</div>
-  <div style="font:400 20px/1.35 Inter;color:var(--muted);margin-top:6px">The 0.5 s think time is our assumption</div>
+ <div class="card a" data-a="right" style="padding:18px 22px;margin-bottom:14px;--d:420ms">
+  ${gA(kicker('Proposal target (§6.3)', '#B02E1B'), 'up', 440)}
+  <div ${A('up', 470, 'font:600 22px/1.35 Inter;')}>Interactive operations ≤ 2 s with up to 100 concurrent users</div>
+  <div ${A('up', 500, 'font:400 21px/1.4 Inter;margin-top:10px;')}>Little’s law ${mo('N = X · (R + Z)', 20)}: 100 users, 0.5 s think, ~30 ms response → <b>X ≈ 190 requests/s</b></div>
+  <div ${A('up', 530, 'font:400 21px/1.4 Inter;margin-top:6px;')}>Inside the 200 driven, with a p95 gate four times stricter than 2 s</div>
+  <div ${A('up', 560, 'font:400 20px/1.35 Inter;color:var(--muted);margin-top:6px;')}>The 0.5 s think time is our assumption</div>
  </div>
- <div class="card" style="padding:18px 22px">
-  ${kicker('Expiry ≤ 1 min after the window', '#B02E1B')}
-  <div style="font:400 21px/1.4 Inter"${ref('docs/perf/sprint3-baseline.md')}>Measured <b>locally</b> under 100-user load (30 Sep): 30 teams, worst lag 58.2 s</div>
-  <div style="font:400 20px/1.35 Inter;color:var(--muted);margin-top:6px">On ECS: not run, so this evidence is local only</div>
+ <div class="card a" data-a="right" style="padding:18px 22px;--d:620ms">
+  ${gA(kicker('Expiry ≤ 1 min after the window', '#B02E1B'), 'up', 640)}
+  <div ${A('up', 670, 'font:400 21px/1.4 Inter;')}${ref('docs/perf/sprint3-baseline.md')}>Measured <b>locally</b> under 100-user load (30 Sep): 30 teams, worst lag 58.2 s</div>
+  <div ${A('up', 700, 'font:400 20px/1.35 Inter;color:var(--muted);margin-top:6px;')}>On ECS: not run, so this evidence is local only</div>
  </div>
 </div>`;
 
 // ---------- slides 27–28 (4.2) ----------
 const tree = [['backend/', 'Maven COLA modules; SWE5001 services/'], ['frontend/', 'React SPA'], ['contracts/', 'openapi.json, the API contract'], ['deployment/', 'Compose, SSM bundle, deploy.sh'], ['infra/', 'Terraform: dev frontend, SWE5001'], ['perf/', 'k6 load tests'], ['docs/', 'ADRs, sprint logs'], ['.github/', 'workflows, CODEOWNERS, Dependabot']];
+// Side columns, Box then text (MOTION.md): left card 200, kicker 230, folders 260 +40; right cards from the right at 380
+// and 560, kicker +20, lines +50 then +40 each.
 const s27 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:520px;height:568px;padding:16px 22px">
- ${kicker('One monorepo')}
- ${tree.map(t => `<div style="display:flex;gap:12px;font:400 21px/1.3 Inter;margin-bottom:9px"><span style="width:160px;flex:none">${mo(t[0], 21)}</span><span style="color:var(--muted)">${t[1]}</span></div>`).join('')}
+<div class="card a" data-a="left" style="position:absolute;left:0;top:0;width:520px;height:568px;padding:16px 22px;--d:200ms">
+ ${gA(kicker('One monorepo'), 'up', 230)}
+ ${tree.map((t, i) => `<div ${A('up', 260 + 40 * i, 'display:flex;gap:12px;font:400 21px/1.3 Inter;margin-bottom:9px;')}><span style="width:160px;flex:none">${mo(t[0], 21)}</span><span style="color:var(--muted)">${t[1]}</span></div>`).join('')}
 </div>
 <div style="position:absolute;left:544px;top:0;width:620px">
- <div class="card" style="padding:16px 22px;margin-bottom:14px"${ref('EPAT 07 CI p41–44')}>
-  ${kicker('Branching: Branch by Feature')}
-  <div style="font:400 21px/1.35 Inter">${lines(['One short branch per story', 'A pull request, then a squash merge onto the trunk, <b>dev</b>', 'Linear history since 12 Sep', 'Up to date with dev before merging, instead of merging the trunk daily'], 4)}</div>
+ <div class="card a" data-a="right" style="padding:16px 22px;margin-bottom:14px;--d:380ms"${ref('EPAT 07 CI p41–44')}>
+  ${gA(kicker('Branching: Branch by Feature'), 'up', 400)}
+  <div style="font:400 21px/1.35 Inter">${lines(['One short branch per story', 'A pull request, then a squash merge onto the trunk, <b>dev</b>', 'Linear history since 12 Sep', 'Up to date with dev before merging, instead of merging the trunk daily'], 4, 430)}</div>
  </div>
- <div class="card" style="padding:16px 22px"${ref('ruleset 22734681 · CODEOWNERS (payment and groupbuy owners: PR #669, merged 23 Oct) · docs/deploy/aws-account-governance/README.md')}>
-  ${kicker('Who may change it')}
-  <div style="font:400 21px/1.35 Inter">${lines([`GitHub: a <b>code owner</b> approves; six checks green`, 'Owners: backend Liu Jin, frontend Lim, CI/CD Pan', 'Payments, refunds Yorik; group buying Eric', 'AWS: IAM Identity Center, MFA enforced, one-hour sessions', 'CI: one OIDC role per job, no AWS keys in GitHub', '<span style="color:#B02E1B">Exception: two IAM users for SSM port forwarding, one with an access key</span>'], 4)}</div>
+ <div class="card a" data-a="right" style="padding:16px 22px;--d:560ms"${ref('ruleset 22734681 · CODEOWNERS (payment and groupbuy owners: PR #669, merged 23 Oct) · docs/deploy/aws-account-governance/README.md')}>
+  ${gA(kicker('Who may change it'), 'up', 580)}
+  <div style="font:400 21px/1.35 Inter">${lines([`GitHub: a <b>code owner</b> approves; six checks green`, 'Owners: backend Liu Jin, frontend Lim, CI/CD Pan', 'Payments, refunds Yorik; group buying Eric', 'AWS: IAM Identity Center, MFA enforced, one-hour sessions', 'CI: one OIDC role per job, no AWS keys in GitHub', '<span style="color:#B02E1B">Exception: two IAM users for SSM port forwarding, one with an access key</span>'], 4, 610)}</div>
  </div>
 </div>`;
 const art = [
@@ -654,12 +659,13 @@ const art = [
   ['SBOM + licences', 'CycloneDX source-dependency SBOMs and licence inventories', 'Actions artefacts, kept 90 days', 'sbom.yml · #609 · source inventories, not of the deployed JAR, image or bundle'],
 ];
 const s28 = () => `
-${tbl(['Artefact', 'Identity', 'Stored in'], art.map(a => withRef([`<b>${a[0]}</b>`, a[1], `<span style="color:var(--muted)">${a[2]}</span>`], a[3] || '')), { fs: 22, w: [230, 560], pad: '12px 14px' })}`;
+${tbl(['Artefact', 'Identity', 'Stored in'], art.map(a => withRef([`<b>${a[0]}</b>`, a[1], `<span style="color:var(--muted)">${a[2]}</span>`], a[3] || '')), { fs: 22, w: [230, 560], pad: '12px 14px', m: [246, 368, 38.4] })}`;
 
 // ---------- slide 29 (4.3) ----------
 // A GitHub-Actions-style job graph (review of #605: "GitHub CI's own looks cleaner", "too much text"). It fits the body
 // at 1:1, so the steps highlight a part of the whole graph and grey out the rest (rubric V5) instead of cropping it.
 // The earlier step-by-step diagram (cicd-pr-vs-merge) stays as backup F16.
+// Diagram slide (MOTION.md): graph 200, note 600; the highlight layers stay plain fragments, like crop layers.
 const CJ_W = 1164, CJ_H = 522;
 const spot = (name, W, H, rects) => `<div style="position:relative;width:${W}px;height:${H}px">${svg(name)}
 <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="position:absolute;left:0;top:0"><path fill-rule="evenodd" fill="#FFFFFF" fill-opacity=".74" d="M0,0 H${W} V${H} H0 Z ${rects.map(([x, y, w, h]) => `M${x},${y} h${w} v${h} h-${w} Z`).join(' ')}"/>
@@ -671,8 +677,8 @@ const cj = [
   ['after merge', [[6, 350, 1152, 162]], ['After the merge', 'rebuild and deploy by digest with a health check; the frontend is smoke-tested']],
 ];
 const s29 = () => `<style>body:not(.present) .zcrop{display:none}</style>
-<div style="position:absolute;left:0;top:0;width:${CJ_W}px;height:${CJ_H}px">${svg('cicd-jobs')}</div>
-<div style="position:absolute;left:0;top:${CJ_H + 12}px;font:400 18px Inter;color:var(--muted)"${ref('job names as in .github/workflows/ci-backend.yml, ci-frontend.yml, security.yml · required checks: ruleset dev-require-review')}>Real job names; every step, trigger and path filter: backups B8 and F16</div>
+<div class="a" data-a="fade" style="position:absolute;left:0;top:0;width:${CJ_W}px;height:${CJ_H}px;--d:200ms">${svg('cicd-jobs')}</div>
+<div ${A('up', 600, `position:absolute;left:0;top:${CJ_H + 12}px;font:400 18px Inter;color:var(--muted);`)}${ref('job names as in .github/workflows/ci-backend.yml, ci-frontend.yml, security.yml · required checks: ruleset dev-require-review')}>Real job names; every step, trigger and path filter: backups B8 and F16</div>
 ${cj.map(([label, rects, cap], i) => layer(`<div style="flex:1;min-height:0;overflow:hidden">${spot('cicd-jobs', CJ_W, CJ_H, rects)}</div>${caption([cap])}`, label, i, cj.length)).join('')}`;
 
 // ---------- slide 30 (4.3, 3.3) ----------
@@ -686,15 +692,15 @@ const sec = [
   ['Deploy', ['OIDC role per job', 'Image by digest', 'Read-only container, all capabilities dropped', 'OWASP ZAP: passive, anonymous dev pages, advisory'], 'Stolen keys, swapped images, missing security headers', 'Dev delivery rebuilds the image without repeating the Trivy image gate; ZAP: no logins, payments or attacks'],
 ];
 const s30 = () => `
-${tbl(['Stage', 'Control', 'Catches', 'Gap'], sec.map(r => [`<b style="white-space:nowrap">${r[0]}</b>`, lines(r[1]), r[2], r[3] ? `<span style="color:#B02E1B">${r[3]}</span>` : '—']), { fs: 20, w: [140, 490, 250], pad: '5px 11px' })}
-<div style="position:absolute;left:0;right:0;top:494px;border-radius:8px;background:#E3E8FB;padding:8px 16px;font:400 20px/1.32 Inter"${ref('Stages: DSOEA 07 slide 3 · ECR scans on push (operator guide)')}>${lines(['<b style="color:#3E5CD9">Types tested (slide 25, Q4):</b> static analysis, dependencies, image and IaC configuration, secrets, passive DAST', 'Every third-party action is pinned to a commit SHA'])}</div>`;
+${tbl(['Stage', 'Control', 'Catches', 'Gap'], sec.map(r => [`<b style="white-space:nowrap">${r[0]}</b>`, lines(r[1]), r[2], r[3] ? `<span style="color:#B02E1B">${r[3]}</span>` : '—']), { fs: 20, w: [140, 490, 250], pad: '5px 11px', m: [246, 368, 38.4] })}
+<div ${A('up', 620, 'position:absolute;left:0;right:0;top:494px;border-radius:8px;background:#E3E8FB;padding:8px 16px;font:400 20px/1.32 Inter;')}${ref('Stages: DSOEA 07 slide 3 · ECR scans on push (operator guide)')}>${lines(['<b style="color:#3E5CD9">Types tested (slide 25, Q4):</b> static analysis, dependencies, image and IaC configuration, secrets, passive DAST', 'Every third-party action is pinned to a commit SHA'])}</div>`;
 
 // ---------- slide 31 (4.4) ----------
 const s31 = () => one('dev-deployment', 2320, 1096, [1164, 568], [
   [0, 20, 'request path', 0, [['One environment', 'dev; the SWE5006 production stack was planned, never applied'], ['Request path', 'the browser talks only to CloudFront: files from a private bucket, API calls to the load balancer']]],
   [940, 322, 'one host', 0, [['One host', 'the container runs by digest, beside PostgreSQL and Redis on loopback'], ['Trade-off', 'cheap and always on, but one point of failure']]],
   [1160, 636, 'deploy path', 0, [['Approver', 'the code owner on the pull request; the merge releases'], ['Practice', 'every merge deploys automatically to dev, not production; SWE5001 production is Continuous Delivery'], ['Verified by', 'on-host health check with automatic rollback, public health, Playwright smoke']]],
-], { axis: 'x' }) + `<span${ref('#226 · EPAT 07 CI p34–35 · deploy.sh:101-141')}></span>`;
+], { axis: 'x', ...WALK }) + `<span${ref('#226 · EPAT 07 CI p34–35 · deploy.sh:101-141')}></span>`;
 
 // ---------- slide 32 (4.5) ----------
 const finds = [
@@ -703,8 +709,8 @@ const finds = [
   ['Weekly full-history gitleaks failing (since 21 Sep)', ['20 matches were file digests in a contract baseline, not secrets'], ['Each digest re-hashed, then fingerprinted exactly', '4 badge-token findings still open'], 'docs/ci/ci-failure-audit-20261021.md · PR #580'],
 ];
 const s32 = () => `
-${tbl(['Finding', 'Root cause', 'Fix'], finds.map(f => withRef([`<b>${f[0]}</b>`, lines(f[1], 4), lines(f[2], 4)], f[3])), { fs: 20, w: [250, 440], pad: '11px 12px' })}
-<div style="position:absolute;left:0;right:0;top:472px;border-radius:8px;background:#FDEFEC;padding:12px 16px;font:400 20px/1.35 Inter"${ref('#664 · #590 · #517 · backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md')}><b style="color:#B02E1B">Still open:</b> a second buyer’s paid join on dev. Paid start and the expiry refund were shown on dev on 23 Oct, after a webhook configuration repair.</div>`;
+${tbl(['Finding', 'Root cause', 'Fix'], finds.map(f => withRef([`<b>${f[0]}</b>`, lines(f[1], 4), lines(f[2], 4)], f[3])), { fs: 20, w: [250, 440], pad: '11px 12px', m: [246, 368, 38.4] })}
+<div ${A('up', 560, 'position:absolute;left:0;right:0;top:472px;border-radius:8px;background:#FDEFEC;padding:12px 16px;font:400 20px/1.35 Inter;')}${ref('#664 · #590 · #517 · backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md')}><b style="color:#B02E1B">Still open:</b> a second buyer’s paid join on dev. Paid start and the expiry refund were shown on dev on 23 Oct, after a webhook configuration repair.</div>`;
 
 // ---------- slide 33 (4.1, 4.6) ----------
 const live = [
