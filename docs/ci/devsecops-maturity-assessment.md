@@ -13,7 +13,7 @@ Its appendix lists, per dimension and sub-dimension, the practices expected at e
 
 - A sub-dimension is at level *n* when every practice the course lists for level *n*, and below, has evidence in the repository or in Actions. Partial levels are marked "+" (some practices of the next level) or "−" (one practice of this level missing).
 - The SWE5001 ECS environment is mentioned only where it goes further than dev.
-- Items marked *on merge* depend on an open PR: #607 (DAST) and #609 (SBOM).
+- Items marked *on merge* depend on the open PR #609 (SBOM). The passive DAST scan (#607) is on `dev`.
 - This is the team's own reading, not an audit.
 
 ## Build and Deployment
@@ -28,7 +28,7 @@ Its appendix lists, per dimension and sub-dimension, the practices expected at e
 
 | Sub-dimension | Level | Evidence | Next step |
 |---|---|---|---|
-| Design | 1− | Security targets are communicated as NFR rows: NFR-01 to NFR-04, NFR-33 to NFR-37 and NFR-68 to NFR-70 (NFR-71 and NFR-72 on merge) in the [NFR register](../quality/nfr-register.md). No threat model of the SWE5006 system is in the repository (the SWE5001 report has a STRIDE table) | A simple technical threat model of the money path (checkout, webhook, refund) |
+| Design | 1− | Security targets are communicated as NFR rows: NFR-01 to NFR-04, NFR-33 to NFR-37 and NFR-68 to NFR-71 (NFR-72 on merge) in the [NFR register](../quality/nfr-register.md). No threat model of the SWE5006 system is in the repository (the SWE5001 report has a STRIDE table) | A simple technical threat model of the money path (checkout, webhook, refund) |
 | Education and Guidance | 1 | Security code review: every PR needs an approving review; `.github/CODEOWNERS` routes pipeline and infrastructure changes to their owner. The course modules served as security training | A named security champion; a short secure-coding checklist in `CONTRIBUTING.md` |
 | Process | 2 | **L1:** rollback defined (automatic on a failed health check; `rollback-backend.yml`). **L2:** every new version approved by review (`dev` ruleset); unauthorised installation prevented by AWS organisation guardrails ([SCPs](../deploy/aws-account-governance/README.md)). The SWE5001 track adds a promotion PR from `dev` to `prod` as a change process | Business continuity: database backup and restore for dev are outside the pipeline and not evidenced ([operator guide](../deploy/backend-ec2-pipeline-operator-guide.md)); run the rollback drill (#623) |
 
@@ -53,7 +53,7 @@ Its appendix lists, per dimension and sub-dimension, the practices expected at e
 |---|---|---|---|
 | Application tests | 2 | **L1:** security unit tests for important components: webhook signature, `EndpointAuthSurfaceTest`, cookie profile, redaction of secrets (NFR-69). **L2:** security integration tests: rate limits over HTTP, the 20-buyer last-seat race in `StripeLocalIntegrationTest`. Smoke tests: container boot in CI, `e2e-dev` after each frontend deploy | Higher coverage of security-relevant modules (L3) |
 | Consolidation | 2 | **L1:** quality gates defined ([quality gates](../quality/quality-gates.md)); false positives handled by the exception process. **L2:** HIGH and CRITICAL findings fail the build; findings visible in SonarCloud and SARIF artefacts; Dependabot PRs bring vulnerability fixes into normal development | **L3:** treat Medium findings; a vulnerability management view (GitHub code scanning is unavailable: [audit](ci-failure-audit-20261021.md)) |
-| Dynamic depth for applications | 1 on merge (0 today) | **L1:** simple scan: passive ZAP baseline of the SPA and API, weekly (`dast-baseline.yml`, #606, on merge) | **L2:** cover the client-side components and more than one role (an authenticated scan against a seeded test user) |
+| Dynamic depth for applications | 1 | **L1:** simple scan: one passive ZAP baseline session of the SPA and the catalog API on dev, weekly, with coverage checks (`dast-baseline.yml`, #606) | **L2:** cover the client-side components and more than one role (an authenticated scan against a seeded test user) |
 | Dynamic depth for infrastructure | 1 | **L1:** exposed services tested: the ALB refuses direct access without the origin header ([dev CloudFront guide](../deploy/dev-cloudfront-deployment.md)); internal endpoints are not routed on SWE5001. Load tests: baselines in `docs/perf/`, k6 on SWE5001 | **L2:** test network segmentation (NFR-70 is unmet on SWE5001); Checkov for the SWE5006 Terraform stacks (#622) |
 | Static depth for applications | 3+ | **L1:** server-side components with known vulnerabilities (Trivy on Maven). **L2:** static analysis of server-side code (SonarCloud, SpotBugs). **L3:** static analysis of client-side code (SonarCloud frontend); client-side components with known vulnerabilities (Trivy on the pnpm lockfile); duplication checked by SonarCloud. **L4, partly:** stylistic analysis (Spotless, Checkstyle, frontend lint); several analysers | CodeQL as a second analyser once code scanning is available; local security checks before commit |
 | Static depth for infrastructure | 1+ | **L1:** stored secrets checked (Gitleaks on PRs, dev pushes and weekly full history). **L3, partly:** deployment resources checked for SWE5001 (Checkov, Trivy config, `terraform test`) | **L2:** image lifetime check; the same IaC checks for `infra/terraform` (#622) |
@@ -63,7 +63,7 @@ Its appendix lists, per dimension and sub-dimension, the practices expected at e
 Overall the pipeline sits at **level 2**, *adoption of basic security practices*, with three exceptions:
 
 - Static application analysis and build reach level 3.
-- Threat modelling (Design) and dynamic application testing are at level 1 or below. Dynamic testing reaches level 1 once #607 merges.
+- Threat modelling (Design) and dynamic application testing are at level 1 or below. Dynamic testing reached level 1 with the passive ZAP baseline (#607).
 - The course expects only "minimal security considerations" for this project (briefing deck).
 
 **Accepted gaps, with their compensating controls.**
