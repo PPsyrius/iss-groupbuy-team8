@@ -443,7 +443,7 @@ const pipeSteps = [
     exp: 'New text visible after a reload (index.html is served no-cache and invalidated); run green.',
     fb: 'e2e-dev red: show the failed step honestly, it is the gate doing its job, then <code>CLIP P5</code>. Text not visible: one more reload, then <code>CLIP P5</code>.' },
   { n: 'P6', t: 'Wrap up and hand over', time: '16:51:20 – 16:52:00', proves: 'Rubric <b>4.1–4.4</b> summary · Pan',
-    op: ['Stay on tab 5 (the dev site) while speaking.', 'At 16:52:00: stop sharing; Yorik starts sharing (<code>SHARE</code>).'],
+    op: ['Stay on tab 5 (the dev site) while speaking.', 'At 16:52:00: stop sharing; Eric starts sharing (<code>SHARE</code>) and operates the system demo while Yorik speaks.'],
     say: "So one change went from pull request to dev in about ten minutes, past six required checks, a code-owner review and an automatic smoke test, with no AWS keys stored in GitHub. Yorik will now show what that system does for two buyers.",
     exp: 'Hand-over on time.',
     fb: 'If behind, say only the last sentence.' },
