@@ -109,6 +109,52 @@ HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Poli
 - **No hard Maven coverage check** (`jacoco:check`). Coverage judged on *new code* in SonarQube, where ratcheting is possible; a flat repo-wide number punishes the skeleton phase.
 - **No OWASP Dependency-Check**. Trivy fs covers Maven CVEs without NVD API-key friction.
 - **No in-image HEALTHCHECK**. JRE base carries no curl/wget; orchestrator probes use `/actuator/health` (port 8589).
+- **No licence gate (yet)**. `sbom.yml` produces backend/frontend source inventories on `v*` tags, weekly and on dispatch. PR scans require adding/re-adding `run-sbom`; normal PR pushes and `dev` merges do not scan. Licence findings stay advisory; invalid evidence fails the job. The team has not agreed a licence policy.
+
+### SBOM and licence inventory — 2026-10-22
+
+Data: artifact `sbom` of [run 39771223592](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39771223592) on PR #609.
+
+**Scope.** The backend SBOM lists the compile and runtime dependencies of `backend/pom.xml` and its ten modules: the seven modules of the monolith deployed to dev and the three SWE5001 services. Trivy leaves out test-scope and `optional` dependencies. The frontend SBOM lists the production dependency closure of `frontend/pnpm-lock.yaml`; Trivy leaves out devDependencies. Trivy lists a Maven library once for every module that uses it (659 library entries for 206 artifacts), so the counts below are distinct packages, without the project's own 11 Maven artifacts.
+
+**Completeness**, checked once against each package manager:
+
+- Backend: `mvn dependency:list` over the same modules resolves 198 third-party compile and runtime artifacts. The SBOM has 195 of them. The other three are declared `optional`: Lombok, SpotBugs annotations and Spring Boot DevTools. None of them is in the executable `blocbuy-backend-exec.jar`. Every one of the jar's 180 third-party libraries is in the SBOM, except `spring-boot-jarmode-tools`, which the Spring Boot plugin adds at packaging time.
+- Frontend: the production closure computed from the lockfile has 96 package versions of 94 packages, and the SBOM has exactly these. TypeScript is in it only as an optional peer dependency of `valibot`; it is a build tool and is not bundled.
+
+| Part | Third-party packages | With a licence finding | Restricted | Reciprocal | Notice | Unencumbered | Unknown |
+|---|---|---|---|---|---|---|---|
+| backend (Maven) | 195 | 195 | 4 | 4 | 190 | 1 | 1 |
+| frontend (pnpm) | 94 | 75 | 0 | 0 | 72 | 2 | 1 |
+
+A package counts under the category of each of its licences, so the columns add up to more than the packages. No package is in the forbidden category.
+
+- **Restricted and reciprocal**: the same four dual-licensed artifacts, usable under either licence: `logback-classic` and `logback-core` (EPL-2.0 or LGPL-2.1) and `jakarta.annotation-api` and `jakarta.servlet-api` (EPL-2.0 or GPL-2.0 with the Classpath Exception).
+- **Unencumbered**: `HdrHistogram` (CC0-1.0 or BSD-2-Clause), `isbot` (Unlicense) and `tslib` (0BSD).
+- **Unknown**: `reactive-streams` (MIT-0) and the `@fontsource/inter` font (OFL-1.1). Both allow use and redistribution, but Trivy does not classify them.
+- **No licence finding**: 19 frontend packages, all `@typescript/typescript-<os>-<arch>`, TypeScript's native compilers for other platforms. The lockfile lists them, but pnpm installs only the runner's own, so there is no `package.json` to read a licence from.
+- **Own artifacts**: Trivy reports them as Apache-2.0, inherited from the `spring-boot-starter-parent` POM. The project declares no licence, so they are left out of the counts.
+
+#### Validated source-inventory evidence — 2026-10-22
+
+Decision (PR #609), reconciled with Eric's `ea95e993`: retain his distinct third-party aggregation, ten-minute job cap, bounded preparation/scans and label-only PR trigger. Use two licence scans plus pinned Trivy 0.74.0 CycloneDX 1.7 conversions instead of four scans. Maven offline preparation, frozen/script-disabled pnpm installation, vulnerability gates and 90-day retention are unchanged. [`sbom-report.py`](../../.github/scripts/sbom-report.py) is the only reporting CLI; [`sbom-summary.py`](../../.github/scripts/sbom-summary.py) supplies aggregation and the shared category definition.
+
+Replay input is the four-file [baseline artifact](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39771223592/artifacts/12422157568), PR head `4567873c`, tested merge `593f0455`. Its archive SHA-256 matched GitHub: `bd6fa4e99bf448336ef463cfc970fb4a034743a1f4f5be46a23579daea0eb6f2`. The distinct-name view above is preserved; full coverage also retains repeated/version-specific and first-party occurrences:
+
+| Part | Package occurrences | Unique package URLs | Metadata present | Missing third-party | Missing first-party |
+|---|---:|---:|---:|---:|---:|
+| backend | 659 | 206 | 623 | 0 | 36 |
+| frontend | 96 | 96 | 77 | 19 | 0 |
+
+Distinct names, package versions, module occurrences and SBOM components are different counts; components also include application/manifest entries. The 36 backend gaps are first-party occurrences; the 19 frontend gaps are platform packages, separate from the unknown OFL-1.1 classification. Names beginning `com.blocbuy:` or `@blocbuy/` are excluded only from the labelled third-party view, never from full coverage. Missing/inherited metadata is not proof of shipping, licence absence or legal approval.
+
+Validation precedes derived evidence: reject missing/empty/ambiguous JSON, non-finite numbers, unsupported report versions, scanner mismatches, empty dependency inventories, inconsistent package/licence findings, differing name/version/package-URL occurrences, and missing/duplicate/unresolved or root-disconnected graph nodes. This is required-structure validation, not complete JSON-schema or legal validation. Missing metadata, forbidden categories and unfamiliar classifications remain advisory; unfamiliar strings map to unknown. First-party-only inventories remain valid. A fresh output directory is required.
+
+A successful artifact contains `backend-licences.json`, `frontend-licences.json`, `backend.cdx.json`, `frontend.cdx.json`, `inventory.json`, `summary.md` and `manifest.json`. The inventory/summary label both counting views, missing metadata and unknown classifications. The manifest records the tested revision/ref (`GITHUB_SHA`/`GITHUB_REF`, including PR merge revisions), run URL, scanner version, source scope and SHA-256/size of the other six files. Derived files use UTF-8/LF. Hashes are not attestation or release-package binding; diagnostic uploads on failed jobs are not completion evidence.
+
+Local final-review verification at `ea95e993` plus working changes: 46 SBOM regressions passed; the complete Python suite discovered 110 tests (106 passed, four opt-in ZAP tests skipped) on Windows and Linux/Python 3.11.2. Node policy tests passed 22/22; native/pinned-container actionlint 1.7.12 with ShellCheck, six embedded Bash syntax checks, documentation links and `git diff --check` passed. Network-disabled conversions preserved original component payloads and canonical graphs (671 backend nodes, 98 frontend nodes). Windows/Linux helper replays produced seven files with six verified hashes; 23 Windows CLI cases passed, including the reproduced name/version corruption regressions.
+
+Release scope remains a follow-up: the one-off package-manager/JAR comparisons above were not rerun and are not CI checks. Source selection does not bind the reports to an executable JAR, image or frontend bundle. The published `ea95e993` SBOM job passed in [run 39776023493](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39776023493), but that run does not test these uncommitted changes. After publishing, remove/re-add `run-sbom` to validate the final revision; ordinary pushes to a labelled PR do not rescan. A label records a request, not completion or the tested revision. No hosted run was triggered here; runtime/billing savings and signing/attestation remain unverified/separate work.
 
 ## Exception Process
 
