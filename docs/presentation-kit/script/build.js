@@ -5,21 +5,12 @@ const fs = require('fs');
 const path = require('path');
 const { deck } = require('../lib/context');
 const { fontCSS, md, esc, words } = require('../lib');
+const { hms, toS, est, slideClock } = require('../lib/schedule');
 const CSS = require('./css');
 
 function helpers(C, cfg) {
-  const hms = s => { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}`; };
-  const toS = t => { const [h, m, s] = t.split(':').map(Number); return h * 3600 + m * 60 + s; };
   const short = t => t.replace(/:00$/, '');
-
-  // clock per slide
-  const clock = {};
-  for (const seg of C.SEGMENTS) {
-    let t = toS(seg.start);
-    for (const s of C.SLIDES.filter(x => x.seg === seg.n)) { if (!s.slot) { clock[s.n] = [toS(seg.start) + seg.talk * 60, null]; continue; } clock[s.n] = [t, t + s.slot]; t += s.slot; }
-    seg.talkEnd = t;
-  }
-  const est = s => Math.round(words(s.say) / 130 * 60);
+  const clock = slideClock(C.SEGMENTS, C.SLIDES);
   const markers = { FILL: 0, VERIFY: 0, CONFIRM: 0 };
   const countM = str => { for (const m of String(str).matchAll(/\{\{(FILL|VERIFY|CONFIRM):/g)) markers[m[1]]++; };
 

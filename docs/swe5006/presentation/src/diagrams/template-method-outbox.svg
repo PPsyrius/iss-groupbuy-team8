@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="1724" viewBox="0 0 1160 1724" font-family="Inter, Helvetica, Arial, sans-serif">
+<!-- Outbox relay: Template Method BatchingOutboxEventTransport -->
+<rect x="0" y="0" width="1160" height="1724" fill="#FFFFFF"/>
+<defs><marker id="tmFill" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B1A18"/></marker><marker id="tmFillRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8402A"/></marker><marker id="tmOpen" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#1B1A18" stroke-width="1.6"/></marker><marker id="tmTri" viewBox="0 0 16 16" refX="15" refY="8" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1 L15,8 L1,15 z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/></marker></defs>
+<text x="20.0" y="36.0" font-size="26" font-weight="700" fill="#1B1A18">Template Method: one batching algorithm, two provider steps</text>
+<rect x="20.0" y="96.0" width="520.0" height="166.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="280.0" y="132.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">OutboxRelayService</text>
+<line x1="20.0" y1="142.0" x2="540.0" y2="142.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="174.0" font-size="24" fill="#1B1A18">-transport: OutboxEventTransport</text>
+<line x1="20.0" y1="186.0" x2="540.0" y2="186.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="218.0" font-size="24" fill="#1B1A18">+relayBatch(leaseValid: BooleanSupplier)</text>
+<text x="34.0" y="250.0" font-size="24" fill="#1B1A18">      : int</text>
+<rect x="20.0" y="62.0" width="114.2" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="30.0" y="87.0" font-size="24" fill="#1B1A18">«Client»</text>
+<rect x="600.0" y="96.0" width="540.0" height="184.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="870.0" y="128.0" font-size="24" text-anchor="middle" fill="#1B1A18">«interface»</text>
+<text x="870.0" y="162.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">OutboxEventTransport</text>
+<line x1="600.0" y1="172.0" x2="1140.0" y2="172.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="614.0" y="204.0" font-size="24" font-style="italic" fill="#1B1A18">+publish(events: List&lt;OutboxEvent&gt;,</text>
+<text x="654.2" y="236.0" font-size="24" font-style="italic" fill="#1B1A18">leaseValid: BooleanSupplier)</text>
+<text x="654.2" y="268.0" font-size="24" font-style="italic" fill="#1B1A18">: List&lt;OutboxPublishResult&gt;</text>
+<line x1="540.0" y1="200.0" x2="600.0" y2="200.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#tmOpen)"/>
+<text x="592.0" y="190.0" font-size="24" text-anchor="end" fill="#1B1A18">1</text>
+<rect x="600.0" y="364.0" width="540.0" height="358.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="870.0" y="400.0" font-size="26" font-weight="700" font-style="italic" text-anchor="middle" fill="#1B1A18">BatchingOutboxEventTransport</text>
+<line x1="600.0" y1="410.0" x2="1140.0" y2="410.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="614.0" y="442.0" font-size="24" text-decoration="underline" fill="#1B1A18">-PROVIDER_BATCH_SIZE: int = 10</text>
+<line x1="600.0" y1="454.0" x2="1140.0" y2="454.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="614.0" y="486.0" font-size="24" fill="#1B1A18">+publish(events: List&lt;OutboxEvent&gt;,</text>
+<text x="654.2" y="518.0" font-size="24" fill="#1B1A18">leaseValid: BooleanSupplier)</text>
+<text x="654.2" y="550.0" font-size="24" fill="#1B1A18">: List&lt;OutboxPublishResult&gt; {leaf}</text>
+<text x="614.0" y="582.0" font-size="24" fill="#1B1A18">-publishBatch(events, entries, results)</text>
+<text x="614.0" y="614.0" font-size="24" font-style="italic" fill="#1B1A18">#entry(event: OutboxEvent): E</text>
+<text x="614.0" y="646.0" font-size="24" font-style="italic" fill="#1B1A18">#send(events: List&lt;OutboxEvent&gt;,</text>
+<text x="654.2" y="678.0" font-size="24" font-style="italic" fill="#1B1A18">entries: List&lt;E&gt;)</text>
+<text x="654.2" y="710.0" font-size="24" font-style="italic" fill="#1B1A18">: List&lt;OutboxPublishResult&gt;</text>
+<rect x="600.0" y="330.0" width="207.0" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="610.0" y="355.0" font-size="24" fill="#1B1A18">«AbstractClass»</text>
+<rect x="1090.0" y="346.0" width="64.0" height="40.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="1122.0" y="374.0" font-size="24" text-anchor="middle" fill="#1B1A18">E</text>
+<line x1="870.0" y1="330.0" x2="870.0" y2="280.0" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#tmTri)"/>
+<path d="M20,364 H542 L560,382 V624 H20 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<path d="M542,364 V382 H560" fill="none" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="396.0" font-size="24" fill="#1B1A18">publish() is final (the template):</text>
+<text x="34.0" y="426.0" font-size="24" fill="#1B1A18">for each batch of 10 while the lease holds:</text>
+<text x="34.0" y="456.0" font-size="24" fill="#1B1A18">   entries += entry(event)    ← step 1</text>
+<text x="34.0" y="486.0" font-size="24" fill="#1B1A18">   if the lease still holds:</text>
+<text x="34.0" y="516.0" font-size="24" fill="#1B1A18">      send(batch, entries)    ← step 2</text>
+<text x="34.0" y="546.0" font-size="24" fill="#1B1A18">a bad row fails alone; a provider error</text>
+<text x="34.0" y="576.0" font-size="24" fill="#1B1A18">fails only its batch; rows never tried</text>
+<text x="34.0" y="606.0" font-size="24" fill="#1B1A18">return skipped.</text>
+<line x1="560.0" y1="434.0" x2="600.0" y2="434.0" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="6 4"/>
+<rect x="20.0" y="834.0" width="555.0" height="294.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="297.5" y="870.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">SnsOutboxEventTransport</text>
+<line x1="20.0" y1="880.0" x2="575.0" y2="880.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="912.0" font-size="24" fill="#1B1A18">-client: SnsClient</text>
+<text x="34.0" y="944.0" font-size="24" fill="#1B1A18">-topicArn: String</text>
+<line x1="20.0" y1="956.0" x2="575.0" y2="956.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="988.0" font-size="24" fill="#1B1A18">#entry(event: OutboxEvent)</text>
+<text x="74.2" y="1020.0" font-size="24" fill="#1B1A18">: PublishBatchRequestEntry</text>
+<text x="34.0" y="1052.0" font-size="24" fill="#1B1A18">#send(events: List&lt;OutboxEvent&gt;,</text>
+<text x="74.2" y="1084.0" font-size="24" fill="#1B1A18">entries: List&lt;PublishBatchRequestEntry&gt;)</text>
+<text x="74.2" y="1116.0" font-size="24" fill="#1B1A18">: List&lt;OutboxPublishResult&gt;</text>
+<rect x="20.0" y="800.0" width="216.9" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="30.0" y="825.0" font-size="24" fill="#1B1A18">«ConcreteClass»</text>
+<rect x="585.0" y="834.0" width="555.0" height="326.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="862.5" y="870.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">SqsOutboxEventTransport</text>
+<line x1="585.0" y1="880.0" x2="1140.0" y2="880.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="599.0" y="912.0" font-size="24" fill="#1B1A18">-client: SqsClient</text>
+<text x="599.0" y="944.0" font-size="24" fill="#1B1A18">-queueUrl: String</text>
+<line x1="585.0" y1="956.0" x2="1140.0" y2="956.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="599.0" y="988.0" font-size="24" fill="#1B1A18">#entry(event: OutboxEvent)</text>
+<text x="639.2" y="1020.0" font-size="24" fill="#1B1A18">: SendMessageBatchRequestEntry</text>
+<text x="599.0" y="1052.0" font-size="24" fill="#1B1A18">#send(events: List&lt;OutboxEvent&gt;,</text>
+<text x="639.2" y="1084.0" font-size="24" fill="#1B1A18">entries:</text>
+<text x="639.2" y="1116.0" font-size="24" fill="#1B1A18">List&lt;SendMessageBatchRequestEntry&gt;)</text>
+<text x="639.2" y="1148.0" font-size="24" fill="#1B1A18">: List&lt;OutboxPublishResult&gt;</text>
+<rect x="585.0" y="800.0" width="216.9" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="595.0" y="825.0" font-size="24" fill="#1B1A18">«ConcreteClass»</text>
+<line x1="870.0" y1="762.0" x2="870.0" y2="722.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#tmTri)"/>
+<line x1="515.0" y1="762.0" x2="1080.0" y2="762.0" stroke="#1B1A18" stroke-width="1.6"/>
+<line x1="515.0" y1="762.0" x2="515.0" y2="800.0" stroke="#1B1A18" stroke-width="1.6"/>
+<line x1="1080.0" y1="762.0" x2="1080.0" y2="800.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="503.0" y="792.0" font-size="24" text-anchor="end" fill="#1B1A18">«bind» E → PublishBatchRequestEntry</text>
+<text x="1068.0" y="792.0" font-size="24" text-anchor="end" fill="#1B1A18">«bind» E → SendMessageBatchRequestEntry</text>
+<rect x="10.0" y="1180.0" width="1145.0" height="540.0" fill="none" stroke="#1B1A18" stroke-width="1.6"/>
+<path d="M10,1218 H470.82919999999996 L484.82919999999996,1204 V1180" fill="none" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="20.0" y="1208.0" font-size="24" font-weight="700" fill="#1B1A18">sd relay one tick (SQS: local and CI)</text>
+<rect x="55.4" y="1226.0" width="209.1" height="80.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="160.0" y="1260.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">:OutboxRelay</text>
+<text x="160.0" y="1294.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">Service</text>
+<line x1="160.0" y1="1306.0" x2="160.0" y2="1714.0" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="7 5"/>
+<rect x="583.8" y="1226.0" width="232.4" height="80.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="700.0" y="1260.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">:SqsOutbox</text>
+<text x="700.0" y="1294.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">EventTransport</text>
+<line x1="700.0" y1="1306.0" x2="700.0" y2="1714.0" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="7 5"/>
+<rect x="937.9" y="1226.0" width="164.3" height="46.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="1020.0" y="1260.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">:SqsClient</text>
+<line x1="1020.0" y1="1272.0" x2="1020.0" y2="1714.0" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="7 5"/>
+<rect x="152.0" y="1340.0" width="16.0" height="362.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<circle cx="10" cy="1340" r="6" fill="#1B1A18"/>
+<line x1="10.0" y1="1340.0" x2="152.0" y2="1340.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#tmFill)"/>
+<text x="16.0" y="1331.0" font-size="24" fill="#1B1A18">relayBatch</text>
+<rect x="692.0" y="1384.0" width="16.0" height="294.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<line x1="168.0" y1="1384.0" x2="692.0" y2="1384.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#tmFill)"/>
+<text x="430.0" y="1375.0" font-size="24" text-anchor="middle" fill="#1B1A18">publish(events, leaseValid)</text>
+<rect x="200.0" y="1404.0" width="950.0" height="242.0" fill="none" stroke="#1B1A18" stroke-width="1.6"/>
+<path d="M200,1440 H266.164 L278.164,1428 V1404" fill="none" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="210.0" y="1431.0" font-size="24" font-weight="700" fill="#1B1A18">loop</text>
+<text x="290.2" y="1431.0" font-size="24" fill="#1B1A18">[batch of ≤ 10, lease valid]</text>
+<path d="M708,1458 H748 V1476 H712" fill="none" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#tmFill)"/>
+<text x="758.0" y="1466.0" font-size="24" fill="#1B1A18">entry(event) ×n</text>
+<path d="M708,1512 H748 V1530 H712" fill="none" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#tmFill)"/>
+<text x="758.0" y="1520.0" font-size="24" fill="#1B1A18">send(events, entries)</text>
+<line x1="708.0" y1="1586.0" x2="1012.0" y2="1586.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#tmFill)"/>
+<text x="760.0" y="1577.0" font-size="24" fill="#1B1A18">sendMessageBatch(…)</text>
+<line x1="1012.0" y1="1628.0" x2="708.0" y2="1628.0" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#tmOpen)"/>
+<text x="760.0" y="1619.0" font-size="24" fill="#1B1A18">per-entry results</text>
+<line x1="692.0" y1="1678.0" x2="168.0" y2="1678.0" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#tmOpen)"/>
+<text x="430.0" y="1669.0" font-size="24" text-anchor="middle" fill="#1B1A18">one result per event</text>
+</svg>
