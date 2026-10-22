@@ -36,6 +36,18 @@ The [October 14 local audit](../agile/sprint-04/log/2026-10-14.md#2026-10-14---p
 - **No hard Maven coverage check** (`jacoco:check`). Coverage judged on *new code* in SonarQube, where ratcheting is possible; a flat repo-wide number punishes the skeleton phase.
 - **No OWASP Dependency-Check**. Trivy fs covers Maven CVEs without NVD API-key friction.
 - **No in-image HEALTHCHECK**. JRE base carries no curl/wget; orchestrator probes use `/actuator/health` (port 8589).
+- **No licence gate (yet)**. `sbom.yml` produces CycloneDX SBOMs and Trivy licence inventories for `backend/` and `frontend/` on release tags, weekly and on dispatch, report-only. Which licence categories should fail a build is a team decision that this inventory informs.
+
+### SBOM and licence inventory — 2026-10-22
+
+First run: [PR #609 run](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39733676148), artifact `sbom` (90 days).
+
+| Part | Components | Licence entries by category (Trivy) |
+|---|---|---|
+| backend (Maven) | 670 | 593 notice, 28 reciprocal, 28 restricted, 4 unencumbered, 2 unknown |
+| frontend (pnpm) | 97 | 74 notice, 2 unencumbered, 1 unknown |
+
+Every reciprocal and restricted entry comes from four dual-licensed artifacts, counted once per module that depends on them: `logback-classic` and `logback-core` (EPL-2.0 or LGPL-2.1) and `jakarta.annotation-api` and `jakarta.servlet-api` (EPL-2.0 or GPL-2.0 with the Classpath Exception). The unknowns are `reactive-streams` (MIT-0) and the `@fontsource/inter` font (OFL-1.1), both permissive but outside Trivy's classification. No forbidden licence was found.
 
 ## Exception Process
 
