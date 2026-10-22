@@ -27,6 +27,7 @@ test('the companion follows the deck and drives it', async t => {
   const deck = await context.newPage();
   await deck.goto(pathToFileURL(path.join(dir, 'dist', 'fixture.html')).href);
   await deck.waitForFunction(() => location.hash === '#1');
+  await deck.keyboard.press('t'); // the talk timer starts in the deck before the companion exists
 
   const [notes] = await Promise.all([context.waitForEvent('page'), deck.keyboard.press('s')]);
   await notes.waitForLoadState();
@@ -36,7 +37,7 @@ test('the companion follows the deck and drives it', async t => {
   assert.equal(await notes.locator('.slide').count(), 0, 'the companion shows no slides');
   assert.equal(await text('n-title'), 'Fixture title');
   assert.equal(await text('n-script'), 'Hello </script> & welcome.');
-  assert.equal(await text('n-elapsed'), 'press T');
+  await notes.waitForFunction(() => document.getElementById('n-elapsed').textContent !== 'press T');
   assert.equal(await notes.locator('#n-cues-box').isHidden(), true);
 
   // companion → deck: arrow key and the Next button
@@ -55,7 +56,9 @@ test('the companion follows the deck and drives it', async t => {
   assert.equal(await notes.locator('#n-demo').isVisible(), true);
   assert.match(await text('n-demo'), /Step 1 · Open the app/);
   assert.equal(await text('n-next'), 'End of the talk; backups follow');
-  await deck.keyboard.press('t');
+  await notes.keyboard.press('t'); // T in the companion resets the deck's timer…
+  await notes.waitForFunction(() => document.getElementById('n-elapsed').textContent === 'press T');
+  await notes.keyboard.press('t'); // …and starts it again
   await notes.waitForFunction(() => document.getElementById('n-elapsed').textContent !== 'press T');
   assert.match(await text('n-delta'), /^ahead 0[23]:\d\d$/);
 

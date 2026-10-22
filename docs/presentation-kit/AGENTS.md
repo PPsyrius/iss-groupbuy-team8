@@ -106,7 +106,7 @@ S opens the same HTML file with `?notes` in a second window, the companion; keep
 - Header: `Slide n / total` (or `Backup B2`), the title, `segment · name · item · speaker`, and the planned start–end and slot from the shared slide clock.
 - Timers: clock, time on the slide (red once past its slot), talk elapsed (from T), and pace: talk elapsed against the slide's planned start, counted from the first segment's `start`, shown as ahead or behind and coloured beyond ±20 s.
 - Body: `say` with `[click]` marks, the reveal count, cues, the hand-over line (quoted unless it starts with a parenthesis), the next slide, and `DEMOS` steps on a slide that hosts a demo. A backup shows its `BACKUPS` row.
-- Keys in the companion: →/←, Space, N/P and the Back/Next buttons move the deck; T starts or resets the talk timer, which survives a reload of the companion (pressing S again reloads it); + / − change the text size.
+- Keys in the companion: →/←, Space, N/P and the Back/Next buttons move the deck; T starts or resets the talk timer; the deck window keeps it, so T works before the companion opens and the timer survives a reload of either window; + / − change the text size.
 
 The windows talk over `postMessage` and accept messages only from each other. The companion says hello every second, so a reloaded deck picks it up again; after 3 s without an answer it warns that the deck is not listening. A `file://` page has an opaque origin that cannot be targeted, so `'*'` is used there. Every field is built at deck build time by `deck/notes-data.js` from escaped content and inlined as JSON (`jsonForScript`); the runtime only places it.
 

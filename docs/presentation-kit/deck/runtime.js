@@ -26,8 +26,14 @@ function prev(){if(frag>0){frag--;paint();}else if(i>0){i--;const fs=frags();go(
 // still reports location.origin as 'file://'), so '*' is used there; the companion accepts messages only from this
 // window, and this window only from the companion.
 const ORIGIN=location.protocol==='file:'||location.origin==='null'?'*':location.origin;
+// The talk timer lives here, so T works before the companion opens; the tab's sessionStorage keeps it through a reload.
+const TKEY='blocbuy-talk-start';
+let talkStart=(()=>{try{const v=Number(sessionStorage.getItem(TKEY));return v>0?v:null;}catch{return null;}})();
+function toggleTimer(){talkStart=talkStart?null:Date.now();
+  try{talkStart?sessionStorage.setItem(TKEY,String(talkStart)):sessionStorage.removeItem(TKEY);}catch{/* storage off: the timer still runs */}
+  notify();}
 function notify(){if(!notesWin||notesWin.closed)return;const fs=frags();
-  notesWin.postMessage({type:'state',id:slides[i].dataset.n,frag,frags:fs.length?fs[fs.length-1]:0},ORIGIN);}
+  notesWin.postMessage({type:'state',id:slides[i].dataset.n,frag,frags:fs.length?fs[fs.length-1]:0,talkStart},ORIGIN);}
 function openNotes(){const u=new URL(location.href);u.hash='';u.search='?notes';
   notesWin=window.open(u.href,'blocbuy-notes','width=1180,height=860');}
 // After a reload of this window, notesWin is gone but the companion still has this window as its opener: adopt it when
@@ -36,7 +42,7 @@ const ownsCompanion=w=>{try{return !!w&&w.opener===window;}catch{return false;}}
 addEventListener('message',e=>{const m=e.data||{};
   if((!notesWin||notesWin.closed)&&m.type==='hello'&&ownsCompanion(e.source))notesWin=e.source;
   if(!notesWin||e.source!==notesWin)return;
-  if(m.type==='hello')notify();else if(m.type==='go')(m.delta>0?next:prev)();});
+  if(m.type==='hello')notify();else if(m.type==='go')(m.delta>0?next:prev)();else if(m.type==='timer')toggleTimer();});
 // Entering presenter mode applies the hidden start states under .still (no transitions), so they take effect at
 // once instead of running their delayed hide transitions into the entrance that follows.
 function enter(){body.classList.add('still');body.classList.remove('overview');body.classList.add('present');fit();void body.offsetWidth;body.classList.remove('still');}
@@ -56,7 +62,7 @@ document.addEventListener('keydown',e=>{
   // the overview clears the blank screen: overview mode swallows '.', so a blank screen would otherwise stick
   else if(k==='o'||k==='O'){document.querySelector('.blank').classList.remove('on');body.classList.remove('present');body.classList.add('overview');slides.forEach(s=>s.style.transform='');slides[i].scrollIntoView({block:'center'});}
   else if(k==='s'||k==='S')openNotes();
-  else if(k==='t'||k==='T'){if(notesWin&&!notesWin.closed)notesWin.postMessage({type:'timer'},ORIGIN);}
+  else if(k==='t'||k==='T')toggleTimer();
   else if(k==='b'||k==='B'||k==='x'||k==='X')backups();
   else if(k==='.')document.querySelector('.blank').classList.toggle('on');
 });
