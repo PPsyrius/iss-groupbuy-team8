@@ -40,9 +40,9 @@ const markup = ({ talkStart }) => `<div id="notes" hidden>
   <div class="box" id="n-cues-box"><h3>Cues</h3><ul id="n-cues"></ul></div>
   <div class="box"><h3>Hand-over / next line</h3><div class="hand" id="n-hand"></div></div>
   <div class="box" id="n-demo" hidden></div>
-  <div class="nav"><button type="button" id="n-prev">◀ Back</button><button type="button" id="n-nextb">Next ▶</button><button type="button" id="n-timer">Start / reset talk timer (T)</button><span id="n-next"></span></div>
+  <div class="nav"><button type="button" id="n-prev">◀ Back</button><button type="button" id="n-nextb">Next ▶</button><button type="button" id="n-timer">Start / restart talk timer (T)</button><span id="n-next"></span></div>
   <div class="status" id="n-status" role="status"></div>
-  <div class="keys">Keys here: → / ← move the deck · T start or reset the talk timer · + / − text size. Pace compares the talk timer with the planned start of the current slide (${esc(talkStart)} = 0).</div>
+  <div class="keys">Keys here: → / ← move the deck · Home / End first or last slide · B backup index · T start or restart the talk timer · + / − text size. Pace compares the talk timer with the planned start of the current slide (${esc(talkStart)} = 0).</div>
 </div>`;
 
 module.exports = { CSS, markup };

@@ -1,8 +1,8 @@
 // Speaker companion runtime, inlined into the HTML deck next to runtime.js. It runs only when the deck is opened with
 // ?notes (the S key in the deck does that): it removes the slides, shows #notes and follows the deck window that opened
-// it. Deck → companion: { type: 'state', id, frag, frags, talkStart }; companion → deck: { type: 'hello' | 'go' |
-// 'timer', delta? }. The deck owns the talk timer (T in either window toggles it there). Text goes in through
-// textContent; the HTML fields of
+// it. Deck → companion: { type: 'state', id, frag, frags, talkStart }; companion → deck: { type: 'hello' }, { type:
+// 'go', delta }, { type: 'jump', to: 'home' | 'end' | 'backups' } or { type: 'timer' }. The deck owns the talk timer
+// (T in either window starts or restarts it there). Text goes in through textContent; the HTML fields of
 // #notes-data (script, cues, handover, demo) are built by notes-data.js from escaped content.
 module.exports = () => `
 (function(){
@@ -50,8 +50,8 @@ function tick(){
   delta.textContent=(d>0?'behind ':'ahead ')+fmt(Math.abs(d));
   delta.className=d>20?'over':d<-20?'ahead':'';
 }
-// the deck toggles its timer and answers with a state message carrying the new start
-const toggleTimer=()=>post({type:'timer'});
+// the deck (re)starts its timer and answers with a state message carrying the new start
+const restartTimer=()=>post({type:'timer'});
 // The companion says hello every second and the deck answers with its state, so a reloaded deck picks the companion
 // up again; silence for 3 s means the deck is gone or no longer listening.
 function status(){
@@ -69,12 +69,15 @@ addEventListener('keydown',e=>{
   const k=e.key;
   if(['ArrowRight','ArrowDown','PageDown',' ','n'].includes(k)){e.preventDefault();post({type:'go',delta:1});}
   else if(['ArrowLeft','ArrowUp','PageUp','p'].includes(k)){e.preventDefault();post({type:'go',delta:-1});}
-  else if(k==='t'||k==='T')toggleTimer();
+  else if(k==='Home')post({type:'jump',to:'home'});
+  else if(k==='End')post({type:'jump',to:'end'});
+  else if(['b','B','x','X'].includes(k))post({type:'jump',to:'backups'});
+  else if(k==='t'||k==='T')restartTimer();
   else if(k==='+'||k==='='||k==='-'){const px=parseFloat(getComputedStyle(root).getPropertyValue('--n-size'))||20;root.style.setProperty('--n-size',Math.max(12,Math.min(40,px+(k==='-'?-2:2)))+'px');}
 });
 $('n-prev').onclick=()=>post({type:'go',delta:-1});
 $('n-nextb').onclick=()=>post({type:'go',delta:1});
-$('n-timer').onclick=toggleTimer;
+$('n-timer').onclick=restartTimer;
 render();tick();status();
 setInterval(()=>{tick();status();},500);
 post({type:'hello'});setInterval(()=>post({type:'hello'}),1000);

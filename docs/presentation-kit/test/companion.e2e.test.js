@@ -56,14 +56,19 @@ test('the companion follows the deck and drives it', async t => {
   assert.equal(await notes.locator('#n-demo').isVisible(), true);
   assert.match(await text('n-demo'), /Step 1 · Open the app/);
   assert.equal(await text('n-next'), 'End of the talk; backups follow');
-  await notes.keyboard.press('t'); // T in the companion resets the deck's timer…
-  await notes.waitForFunction(() => document.getElementById('n-elapsed').textContent === 'press T');
-  await notes.keyboard.press('t'); // …and starts it again
-  await notes.waitForFunction(() => document.getElementById('n-elapsed').textContent !== 'press T');
+  // a running timer restarts from zero on T in either window and on the button; it never stops
+  const restartsFrom = async press => {
+    await notes.waitForFunction(() => !['press T', '00:00'].includes(document.getElementById('n-elapsed').textContent));
+    await press();
+    await notes.waitForFunction(() => document.getElementById('n-elapsed').textContent === '00:00');
+  };
+  await restartsFrom(() => notes.keyboard.press('t'));
+  await restartsFrom(() => deck.keyboard.press('t'));
+  await restartsFrom(() => notes.locator('#n-timer').click());
   assert.match(await text('n-delta'), /^ahead 0[23]:\d\d$/);
 
-  // backups and the Back button
-  await deck.keyboard.press('b');
+  // backups and the Back button; B in the companion opens the backup index, as the hand-over says
+  await notes.keyboard.press('b');
   await notes.waitForFunction(() => document.getElementById('n-label').textContent === 'Backup BX');
   assert.equal(await text('n-delta'), '—');
   await notes.locator('#n-nextb').click();
@@ -83,4 +88,11 @@ test('the companion follows the deck and drives it', async t => {
   assert.equal(await deck.evaluate(() => location.hash), '#B1');
   await notes.waitForFunction(() => document.getElementById('n-label').textContent === 'Backup B1');
   assert.equal(await text('n-status'), '');
+
+  // the backup hand-over's way back works from the companion: End to the last main slide, Home to the first
+  assert.equal(await text('n-hand'), 'Back to slide 3: press End, or B for the index.');
+  await notes.keyboard.press('End');
+  await deck.waitForFunction(() => location.hash === '#3');
+  await notes.keyboard.press('Home');
+  await deck.waitForFunction(() => location.hash === '#1');
 });
