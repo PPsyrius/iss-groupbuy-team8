@@ -7,6 +7,7 @@ This directory is the durable record of how the team worked, sprint by sprint. G
 ```
 docs/agile/
 ├── README.md              this file
+├── definition-of-done.md  the current Definition of Done, rule by rule, and the done ladder per sprint
 ├── sprint-01/README.md    pointer to the Sprint 1 container issue and report
 ├── sprint-NN/log/         running log for each sprint from Sprint 2 on, one file per day: one dated entry per PR per author
 ├── sprint-NN/log.md       index of the day files
