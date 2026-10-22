@@ -231,3 +231,7 @@ Deployment and rollback share one non-cancellable concurrency group. A rollback 
 - Do not deploy mutable image tags.
 - Do not add PostgreSQL/Redis services or volumes to the backend deployment bundle.
 - Record any approved exception, deploy approval and rollback reason in durable project evidence.
+
+## Delivery metrics (DORA)
+
+Deployment frequency, lead time, change success rate and time to recover of dev are measured from Actions history by `.github/scripts/dora-metrics.py`; the [22 October snapshot](dora-metrics-20261022.md) holds the definitions, results, proposed targets and limits.
