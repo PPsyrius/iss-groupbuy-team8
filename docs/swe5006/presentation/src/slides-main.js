@@ -75,8 +75,6 @@ const hAt = (h, a, d) => {
   t = /style="/.test(t) ? t.replace(/style="([^"]*)"/, (m, s) => `style="${s.replace(/;?\s*$/, '')}${s.trim() ? ';' : ''}--d:${d}ms"`) : t + ` style="--d:${d}ms"`;
   return t + r;
 };
-// hIn does the same for the tag containing needle.
-const hIn = (h, needle, a, d) => { const s = h.lastIndexOf('<', h.indexOf(needle)); return h.slice(0, s) + hAt(h.slice(s), a, d); };
 // A: entrance attributes for an element without its own class: `<div ${A('up', 300, 'margin-top:8px;')}>`.
 const A = (a, d, st = '') => `class="a" data-a="${a}" style="${st}--d:${d}ms"`;
 
