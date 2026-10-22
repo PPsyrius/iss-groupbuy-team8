@@ -102,7 +102,7 @@ const pipeSteps = [
 const seg4Html = () => {
   const s4 = seg(4);
   return `<section class="chap"><h1>4 ${esc(s4.name)} (${s4.talk} minutes)</h1>
-<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:42:00 – 16:52:00 (slides 26–30 until 16:46:30, then the live pipeline demo on slide 31 until 16:52:00)</td></tr><tr><td>Owner</td><td>${esc(s4.owner)}; Lim approves as the frontend code owner</td></tr><tr><td>Slides</td><td>25, 26, 27, 28, 29, 30</td></tr></table></div>
+<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:42:00 – 16:52:00 (slides 26–30 until 16:46:30, then the live pipeline demo on slide 31 until 16:52:00)</td></tr><tr><td>Owner</td><td>${esc(s4.owner)}; Lim approves as the frontend code owner</td></tr><tr><td>Slides</td><td>${C.SLIDES.filter(s => s.seg === 4).map(s => s.n).join(', ')}</td></tr></table></div>
 ${reqBox(s4)}
 ${box('tip', 'Tip', 'Slides 26–30 take 270 s. Pan opens the demo pull request at 16:41, during slide 25, so its checks (median 4.8 min) are green when the live part starts at 16:46:30. A backend change cannot finish its 16-minute PR checks inside the segment, so a backend PR is opened at ≈ 16:20 and merged before 16:40; the demo walks through both of its finished runs (rubric 4.1).')}
 ${C.SLIDES.filter(s => s.seg === 4).map(slideCard).join('')}
@@ -172,7 +172,7 @@ const demoSteps = [
 const seg5Html = () => {
   const s5 = seg(5);
   return `<section class="chap"><h1>5 ${esc(s5.name)} (${s5.talk} minutes, then ${s5.qa} minutes of buffer)</h1>
-<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:52:00 – 17:04:00 (slide 32 to 16:52:30; live demo on slide 33 to 17:01:00; slides 34–36 to 17:04:00) · 17:04–17:10 buffer for parked questions</td></tr><tr><td>Owner</td><td>${esc(s5.owner)}; Lim chairs the buffer</td></tr><tr><td>Slides</td><td>31, 32, 33, 34, 35, 36</td></tr></table></div>
+<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:52:00 – 17:04:00 (slide 32 to 16:52:30; live demo on slide 33 to 17:01:00; slides 34–36 to 17:04:00) · 17:04–17:10 buffer for parked questions</td></tr><tr><td>Owner</td><td>${esc(s5.owner)}; Lim chairs the buffer</td></tr><tr><td>Slides</td><td>${C.SLIDES.filter(s => s.seg === 5).map(s => s.n).join(', ')}</td></tr></table></div>
 ${reqBox(s5)}
 ${box('tip', 'Tip', 'Eric shares one screen at 16:52:00 (<code>SHARE</code> from Pan) with the deck in the Leader window, tab 1, and operates every window; Yorik speaks throughout. The expiry bloc is started at 16:05 so that D4 shows a refund that no one triggered by hand.')}
 ${slideCard(C.SLIDES.find(s => s.n === 32))}
@@ -251,8 +251,9 @@ ${tbl(['Date', 'Do', 'Owner'], [
 ${tbl(['Time (SGT)', 'Do', 'Owner'], [
   ['≤ 12:00', 'Health and recent runs (A.1); listings check; §5 preconditions list started.', 'Yorik, Pan'],
   ['14:30', 'Tech check in a test Zoom: mic, camera, sharing, Do Not Disturb.', 'All'],
-  ['≈ 16:05 (≤ 16:15)', 'Start the expiry bloc on <code>US34-04</code> as account B and pay; bookmark the receipt. <code>EXPIRY OK</code> at 16:10, <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.', 'Yorik'],
   ['15:00', 'Merge freeze on <code>dev</code> until 17:15.', 'Lim'],
+  ['15:30', 'Check the §4 and §5 preconditions lists.', 'Pan (§4); Eric, Yorik (§5)'],
+  ['≈ 16:05 (≤ 16:15)', 'Start the expiry bloc on <code>US34-04</code> as account B and pay; bookmark the receipt. <code>EXPIRY OK</code> at 16:10, <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.', 'Yorik'],
   ['16:30', 'Start; follow the run sheet. The scribe logs every remark verbatim (rubric G9).', 'Lim; scribe'],
   ['17:04 / 17:10', 'Slide 37; parked questions; end.', 'Lim'],
 ])}
