@@ -33,7 +33,58 @@ The [October 14 local audit](../agile/sprint-04/log/2026-10-14.md#2026-10-14---p
 
 ## Dynamic application security testing (DAST)
 
-`dast-baseline.yml` runs a passive OWASP ZAP 2.17.0 baseline (`zap-baseline.py`, image pinned by digest) against the dev site at `vars.FRONTEND_URL_DEV`: the SPA (`/`) and the backend behind the same CloudFront origin (`/api/v1/products`). It runs weekly (Monday 03:41 UTC), on dispatch and on PRs that edit the workflow. It is **advisory**: the spider runs for at most 3 minutes, alerts come only from inspecting responses, nothing is attacked, and no result fails a check. Reports (HTML, JSON, Markdown) are kept 30 days as `zap-web` and `zap-api` artifacts and the Markdown report appears in the job summary.
+`dast-baseline.yml` runs one passive OWASP ZAP 2.17.0 session (image pinned by digest) against the dev site at `vars.FRONTEND_URL_DEV`. [The helper](../../.github/scripts/dast-baseline.py) validates the target before pulling ZAP, generates a native automation plan for ten required anonymous GET checks, and verifies recorded responses plus passive processing after the scan. It runs weekly (Monday 03:41 UTC), on dispatch and on PRs that edit the workflow, helper or DAST tests. Findings are **advisory**, not a required merge gate; broken targets, scanner failures and incomplete coverage fail the job. Preflight has a 30-second wall-clock deadline (TERM, then KILL after 5 seconds) and a one-minute step backstop; the form-disabled static crawl and passive-queue wait are each limited to 3 minutes, the container to 10 minutes, and the job to 20 minutes.
+
+2026-10-22 deduplication: the [API job in run 39733851080](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39733851080/job/119674860951) already included both `/api/v1/products` and `/` in its generated `zap.yaml`. Both matrix jobs crawled the root and reported the same six Medium/Low alert types. Initial deduplication retained one API-seeded invocation rather than a second image pull and overlapping crawl; the coverage hardening below replaces that wrapper with an explicit plan. The job-count reduction itself is not a newly measured billing saving or broader DAST coverage.
+
+2026-10-22 coverage hardening: replace discovery-only baseline wrapping with an explicit ZAP automation plan, retaining one scanner process and passive analysis. Preflight uses two redirect-free GETs within its wall-clock deadline: `/` must return the SPA mount/module HTML and `/api/v1/products` must return the successful `Result` catalog envelope. A nonempty catalog must provide a product with a valid UUID and title. A healthy empty catalog still starts ZAP with eight probes; both existing-product checks remain `UNAVAILABLE` and overall coverage remains incomplete (8/10 at best), without inventing a fixture or claiming those checks passed. No data is seeded or changed by the scanner. Keyword probes use `ai=false` to avoid paid semantic re-ranking.
+
+| Required GET | Expected response |
+|---|---|
+| `/` | 200, SPA HTML |
+| `/api/v1/products` | 200, `COMMON_200_000` catalog page |
+| `/api/v1/products?page=2&size=1` | 200, page 2 with size 1 (items may be empty) |
+| `/api/v1/products?category=...` | 200, catalog page; product category or `dast-unlisted-category` when absent/empty |
+| `/api/v1/products?keyword=...&ai=false` | 200, catalog page; product-title keyword or `BlocBuy` when empty |
+| `/api/v1/products/{existingId}` | 200, detail for that product; unavailable if the catalog is empty |
+| `/products/{existingId}` | 200, SPA deep-link HTML; unavailable if the catalog is empty |
+| `/api/v1/products?page=0` | 400, `COMMON_400_002` without successful data |
+| `/api/v1/orders/me` | 401, `COMMON_401_001` without successful data |
+| `/api/v1/admin/products` | 401, `COMMON_401_001` without successful data |
+
+The static spider has a separate allowlist for the SPA, product pages and assets; it cannot discover arbitrary API/OAuth/payment paths, and form processing/POST submission are disabled. The requestor alone sends the selected API probes. `coverage.json` lists checks plus actual visited URLs, methods, statuses and content types from ZAP's HAR export; static assets and unfetched site-tree nodes never substitute for a required request. A missing request, wrong status/content type/envelope, wrong detail/pagination, non-GET traffic or scanner/report failure makes the run `INCOMPLETE`. Findings remain advisory even when coverage is complete: `PASS` means the required HTTP response was observed, not that an application security property was exhaustively proved.
+
+2026-10-22 self-review fixes: bound preflight independently of urllib's socket-inactivity timeout; preserve useful partial scanning for an empty catalog; and require runtime evidence rather than treating report presence or zero alerts as proof of passive analysis. The plan explicitly enables the minimum cookie/header/CSP/disclosure policy (rule IDs 10010, 10011, 10015, 10020, 10021, 10035, 10036, 10038, 10054, 10055, 10063 and 90004). Standalone scripts in the same ZAP process snapshot installed/enabled rules before requests and after the queue wait. Completion requires all minimum rules enabled, unchanged enabled-rule thresholds, fresh per-rule `stats.pscan.<id>.time` counters for every initially enabled rule, a drained queue, no recorded passive-scanner errors and no body-size skips. Set `maxAlertsPerRule: 0` because a positive cap automatically disables rules after enough findings; runtime remains bounded by the existing scan deadlines. A present zero-millisecond counter is valid; a missing counter is not. This proves rule invocation and process completion, not that every rule applies to every response or finds all vulnerabilities. A scan with no alerts can still pass; disabled rules cannot masquerade as a clean scan.
+
+The `zap-baseline` artifact retains HTML/JSON/Markdown findings, `coverage.json`/`coverage.md`, `passive-start.json`/`passive-finish.json`, preflight metadata, the request manifest and the generated plan for 30 days. Raw HAR response bodies/headers/cookies are not uploaded and are removed after verification. The summary distinguishes incomplete coverage and unverified passive processing from advisory alert counts. SPA HTML checks do not execute JavaScript, search/filter checks validate responses rather than full query semantics, anonymous denials do not verify authenticated ownership/RBAC, and no active, authenticated or payment-provider testing is claimed. Runtime `pscanrulesBeta` installation remains unpinned; the image digest alone does not pin every add-on.
+
+2026-10-22 local verification after self-review fixes: the Python suite passed 60 fast tests, with four opt-in native ZAP tests skipped; the workflow runs its fast DAST subset before contacting the live target. A real slow-drip preflight was terminated using a scaled two-second GNU timeout and produced no scan plan. Running the four [native tests](../../.github/tests/dast_runtime_test.py) explicitly against the checksum-verified ZAP 2.17.0 bundle passed in 69 s on Windows/Java 25: complete 10/10 coverage with passive execution verified; useful empty-catalog scanning at 8/10 with both details unavailable; rejection of an HTTP-200 HTML API fallback; and rejection of disabled passive rules even with ZAP exit 0 and ten valid responses. No OAuth link/form submission occurred. These are harness checks, not measurements of the deployed application, the Linux container or hosted billing. Native tests are opt-in so ordinary policy checks do not install/start ZAP:
+
+```powershell
+$env:DAST_ZAP_HOME = '<path to the ZAP_2.17.0 cross-platform bundle>'
+python -B -m unittest discover -s .github/tests -p 'dast_runtime_test.py' -v
+```
+
+2026-10-22 Docker revalidation: after the Linux daemon became available, the exact workflow image `ghcr.io/zaproxy/zaproxy@sha256:5ccfff9a411743ab2615136a2edd7416bec9ce41572fa94e935df38c14adb2b6` passed 39 fast DAST tests (four runtime tests initially skipped) and, separately, all four committed runtime tests in 60 s. Environment: Docker Desktop 29.8.2, Linux x86_64, ZAP's Java 17/Python 3.11.2 and unprivileged `zap` UID 1000. Six additional loopback-only smoke cases used the workflow's preflight/verify CLIs, `/zap/wrk` paths and `zap.sh -cmd -addoninstall pscanrulesBeta -autorun /zap/wrk/zap-plan.yaml` command; no production code changes were needed.
+
+| Linux smoke case | Observed result |
+|---|---|
+| Healthy fixture | ZAP/verification exit 0; 10/10 responses; 67/67 enabled passive rules ran; queue drained |
+| Empty catalog | ZAP exit 0, verification exit 1; 8/10 responses; both details unavailable; passive processing verified |
+| API HTML fallback | ZAP exit 0, verification exit 1; 9/10 valid responses |
+| All passive rules disabled | ZAP exit 0, verification exit 1 despite 10/10 responses and zero alerts |
+| Invalid script engine | ZAP/verification exit 1; incomplete scan, not a false clean result |
+| Slowly streaming preflight | Actual 30-second deadline: exit 124 after 30.02 s; no scan plan; verification exit 1 |
+
+Additional Linux operational checks passed: a root-owned mode-777 work directory accepted writes from `zap` UID 1000; a TERM-resistant worker hit a scaled three-second container deadline plus one-second kill grace, and the workflow-equivalent EXIT trap removed the surviving container. These test-only shortened bounds exercise termination/cleanup, not a measured ten-minute timeout. Reports and summaries were retained in the approved local temporary directory, raw HAR was removed, and the checked-in sources were mounted read-only. Fixture alerts are not new deployed findings. GitHub Actions triggers/artifact upload, deployed application behavior and hosted costs remain unverified after hardening.
+
+Reproduce the committed runtime suite inside the pinned image from the repository root (PowerShell):
+
+```powershell
+$github = Join-Path (Get-Location).Path '.github'
+$image = 'ghcr.io/zaproxy/zaproxy@sha256:5ccfff9a411743ab2615136a2edd7416bec9ce41572fa94e935df38c14adb2b6'
+docker run --rm --init --mount "type=bind,source=$github,target=/workspace/.github,readonly" --workdir /workspace --env DAST_ZAP_HOME=/zap $image python3 -B -m unittest discover -s .github/tests -p 'dast_runtime_test.py' -v
+```
 
 2026-10-22 first run ([PR #607 run](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39733450177)), identical for both surfaces because CloudFront applies one response-headers policy (`infra/terraform/frontend-stack/cloudfront.tf`, `aws_cloudfront_response_headers_policy.security`):
 
