@@ -87,3 +87,10 @@ test('jsonForScript cannot end its script element early and round-trips', () => 
   assert.doesNotMatch(out, /[<>&\u2028\u2029]/);
   assert.deepEqual(JSON.parse(out), v);
 });
+
+test('a numbered click mark is highlighted and not counted as words', () => {
+  const { clicks, words } = require('../lib/text');
+  assert.equal(clicks('Intro. [click 2/3] Next.'), 'Intro. <b class="clk">[click 2/3]</b> Next.');
+  assert.equal(clicks('[click] x'), '<b class="clk">[click]</b> x');
+  assert.equal(words('One [click 1/2] two [click] three.'), 3);
+});

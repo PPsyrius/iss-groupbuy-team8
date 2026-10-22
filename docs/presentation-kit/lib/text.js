@@ -14,6 +14,9 @@ function md(s) {
   }).join('');
 }
 function mk(kind, text = '') { return md(`{{${kind}:${text}}}`); }
-function words(s) { return String(s).replace(/\{\{(?:FILL|VERIFY|CONFIRM):([^}]*)\}\}/g, 'x').replace(/\[click\]/g, '').split(/\s+/).filter(Boolean).length; }
+// A fragment step in `say`: [click], or numbered as [click 2/3] (step 2 of the slide's 3).
+const CLICK = /\[click(?: \d+\/\d+)?\]/g;
+const clicks = html => String(html).replace(CLICK, '<b class="clk">$&</b>');
+function words(s) { return String(s).replace(/\{\{(?:FILL|VERIFY|CONFIRM):([^}]*)\}\}/g, 'x').replace(CLICK, '').split(/\s+/).filter(Boolean).length; }
 
-module.exports = { esc, md, mk, words };
+module.exports = { esc, md, mk, words, clicks };
