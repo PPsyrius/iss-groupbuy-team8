@@ -11,17 +11,11 @@ on:
   schedule:
     - cron: '53 3 * * 1' # weekly Monday 03:53 UTC
   workflow_dispatch:
-  # Run when the inventory's implementation changes, so a PR shows its own output.
+  # On a pull request it runs only on request: add the `run-sbom` label. The label stays on the PR,
+  # so `gh pr list --label run-sbom --state all` lists every PR it ran for.
   pull_request:
     branches: [dev]
-    paths:
-      - '.github/workflows/sbom.yml'
-      - '.github/scripts/sbom-summary.py'
-      - '.github/tests/sbom_summary_test.py'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    types: [labeled]
 
 permissions:
   contents: read
@@ -31,6 +25,11 @@ env:
 
 jobs:
   sbom:
+    if: github.event_name != 'pull_request' || github.event.label.name == 'run-sbom'
+    # Job-level, so that adding some other label (a skipped run) cannot cancel a running inventory.
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 10 # a full run takes about 70 s
     steps:

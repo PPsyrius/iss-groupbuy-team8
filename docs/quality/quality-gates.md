@@ -109,7 +109,7 @@ HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Poli
 - **No hard Maven coverage check** (`jacoco:check`). Coverage judged on *new code* in SonarQube, where ratcheting is possible; a flat repo-wide number punishes the skeleton phase.
 - **No OWASP Dependency-Check**. Trivy fs covers Maven CVEs without NVD API-key friction.
 - **No in-image HEALTHCHECK**. JRE base carries no curl/wget; orchestrator probes use `/actuator/health` (port 8589).
-- **No licence gate (yet)**. `sbom.yml` produces CycloneDX SBOMs and Trivy licence inventories for `backend/` and `frontend/` on release tags, weekly and on dispatch. Licence categories are report-only; the job fails only when an inventory is missing or empty. Which licence categories should fail a build is a team decision that this inventory informs.
+- **No licence gate (yet)**. `sbom.yml` produces CycloneDX SBOMs and Trivy licence inventories for `backend/` and `frontend/` on release tags, weekly and on dispatch; on a pull request only when it carries the `run-sbom` label, so `gh pr list --label run-sbom --state all` lists the PRs it ran for. Licence categories are report-only; the job fails only when an inventory is missing or empty. Which licence categories should fail a build is a team decision that this inventory informs.
 
 ### SBOM and licence inventory — 2026-10-22
 

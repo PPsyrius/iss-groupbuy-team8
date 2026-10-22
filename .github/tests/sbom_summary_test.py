@@ -101,6 +101,14 @@ class SbomWorkflowTest(unittest.TestCase):
         self.assertIn("python3 .github/scripts/sbom-summary.py --dir sbom", self.workflow)
         self.assertIn("--part backend=com.blocbuy: --part frontend", self.workflow)
 
+    def test_pull_requests_run_it_only_when_labelled(self):
+        trigger = self.workflow.split("  pull_request:\n", 1)[1].split("\npermissions:", 1)[0]
+        self.assertIn("types: [labeled]", trigger)
+        self.assertNotIn("paths:", trigger)
+        self.assertIn("if: github.event_name != 'pull_request' || github.event.label.name == 'run-sbom'",
+                      self.workflow)
+        self.assertLess(self.workflow.index("    concurrency:"), self.workflow.index("    runs-on:"))
+
     def test_licences_stay_report_only(self):
         self.assertEqual(self.workflow.count("exit-code: '0' # report only"), 2)
 
