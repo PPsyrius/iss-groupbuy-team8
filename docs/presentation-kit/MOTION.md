@@ -85,7 +85,7 @@ Choreography is authored per element, by a human or an AI agent. The engine does
 
 ## Hand-composed patterns
 
-Each entry names the pattern, the slides using it, the element roles, the `data-a` types and the delay rhythm (first `--d` and step). The entries are filled from the v3 deck. Slide references are `<deck> <slide>`, e.g. `5001 12` or `5001 B13`. "d" is the element's own first delay; "+n" is relative to it. `5006` references point to the 22-slide #566 deck that #597 choreographed; the rubric re-plan (#600) replaced those slides, so the patterns stay valid but the slide numbers no longer match, and the new slides' choreography is pending (SWE5006 open item 22).
+Each entry names the pattern, the slides using it, the element roles, the `data-a` types and the delay rhythm (first `--d` and step). The entries are filled from the v3 deck. Slide references are `<deck> <slide>`, e.g. `5001 12` or `5001 B13`. "d" is the element's own first delay; "+n" is relative to it. `5006` references are the current 39-slide deck of the rubric re-plan (#600); a row whose slides read — was used only by the retired 22-slide #566 deck that #597 choreographed, and stays as a recipe.
 
 ### Overall rhythm
 
@@ -99,41 +99,41 @@ Each entry names the pattern, the slides using it, the element roles, the `data-
 
 | Pattern | Slides | Roles → `data-a` | Delay rhythm |
 |---|---|---|---|
-| Icon + text row | 5001 2, 5, 8, 18, 19, 5006 2, 14, 15 | dot or icon → `pop`; its text → `up` | text at the pop's d +6…+40; rows step 70–120 |
-| Icon card | 5001 8, 12, 15, 17, 21, 23, B10, B11, 5006 4, 19, 21 | card → `up`; icon or number → `pop`; title → `up`; body → `up`; tag chip → `pop`; optional fix panel → `fade` + text `up` | icon +23…+60, title +34…+90, body +91…+125, tag +110…+203; cards step 74–160 from about 200 |
+| Icon + text row | 5001 2, 5, 8, 18, 19, 5006 2 | dot or icon → `pop`; its text → `up` | text at the pop's d +6…+40; rows step 70–120 |
+| Icon card | 5001 8, 12, 15, 17, 21, 23, B10, B11, 5006 4 | card → `up`; icon or number → `pop`; title → `up`; body → `up`; tag chip → `pop`; optional fix panel → `fade` + text `up` | icon +23…+60, title +34…+90, body +91…+125, tag +110…+203; cards step 74–160 from about 200 |
 | Card column with header band | 5001 4 | card → `up`; band (+ square patch) → `fade`; band icon → `pop`; name → `up`; list → `up` | card d at 200, +120 per column; band d, icon d+60, name d+80, list d+160 |
-| Side columns | 5001 2, 5, 11, 18, 22, 5006 2, 6, 15 | left column → `left`; right column → `right`; middle column → `up`; heading → `up`; list → `up` | columns 200–300 (right column may come much later, e.g. 600); heading +12…+50; list +59…+65; tick rows inside: pop from 300–500, +80 per row, text +30 |
-| Box then text | 5001 3, 10, 11, 14, B5, B9, B11, B13, B14, 5006 4, 7, B1, B2, B15, B16 | panel background → `fade`, `pop` or `left`; its text → `up` | text at the box's d +2…+12; sibling boxes step 30–90 |
-| Table with rows | 5001 11, B1a, B1b, B2, B5, B7, B8, B9, B12, 5006 5, 17, B5, B6, B7, B8, B10, B12, B14, B15 | heading → `up`; table → `fade`; body rows → `trow` | table 246, rows 368 then +38.4 each (406, 445, 483, …); on slide 11 heading 449, table 485, rows 608 +38 |
-| Trailing callout | 5001 B5, B9, 19, 23, 5006 10, 20, 21, B15, B16 | dark panel → `fade` or `up`; bar or `recdot` → `fade`; text → `up` | at the end of what it comments on (after a table: 560–607; on a full slide: 1100); text +4…+50 |
-| Footnote or caption | 5001 3, 4, 6, 9, B6, B12, BX, 5006 3, 14, 17, B5, B10, B12 | closing line → `up` | last on the slide: 649–1500 |
-| Stat strip | 5001 14, 19, 20, 24, 5006 4, 14, 20, 22 | box → `up`; value and caption → `up` | content +40…+50 (caption +46); boxes step 42–120, from 600–1000 |
-| Connector between elements | 5001 2, 3, 7, 10, 18, 20, 22, B10, B13, B14, 5006 2, 8, 9, 11, 12, 15, 20, 21 | arrow → `cn` | after both ends have arrived; chains step +56…+90; pipeline stage arrows at stage +120 |
-| Process chain | 5001 7, 20, B11, 5006 8, 9, 11, 12, 20 | panel → `fade`; heading → `up`; steps → `pop` (stage) or `fade` + text `up`; connectors → `cn` | panel about 280–430, heading +4…+23; steps +29…+170 apart; each connector after its pair |
-| Bars and timeline | 5001 6, 5006 5 | rail → `cn`; milestone dot → `pop` + date `up`; label → `up`; bar → `grow`; value → `up` | rail 150; milestones 300 +110, label +40; bar rows 700 +110: name d, bar d+60, description d+100, value d+200 |
+| Side columns | 5001 2, 5, 11, 18, 22, 5006 2, 3, 4 | left column → `left`; right column → `right`; middle column → `up`; heading → `up`; list → `up` | columns 200–300 (right column may come much later, e.g. 600); heading +12…+50; list +59…+65; tick rows inside: pop from 300–500, +80 per row, text +30 |
+| Box then text | 5001 3, 10, 11, 14, B5, B9, B11, B13, B14 | panel background → `fade`, `pop` or `left`; its text → `up` | text at the box's d +2…+12; sibling boxes step 30–90 |
+| Table with rows | 5001 11, B1a, B1b, B2, B5, B7, B8, B9, B12, 5006 3, 5 | heading → `up`; table → `fade`; body rows → `trow` | table 246, rows 368 then +38.4 each (406, 445, 483, …); on slide 11 heading 449, table 485, rows 608 +38 |
+| Trailing callout | 5001 B5, B9, 19, 23, 5006 5 | dark panel → `fade` or `up`; bar or `recdot` → `fade`; text → `up` | at the end of what it comments on (after a table: 560–607; on a full slide: 1100); text +4…+50 |
+| Footnote or caption | 5001 3, 4, 6, 9, B6, B12, BX | closing line → `up` | last on the slide: 649–1500 |
+| Stat strip | 5001 14, 19, 20, 24 | box → `up`; value and caption → `up` | content +40…+50 (caption +46); boxes step 42–120, from 600–1000 |
+| Connector between elements | 5001 2, 3, 7, 10, 18, 20, 22, B10, B13, B14, 5006 2 | arrow → `cn` | after both ends have arrived; chains step +56…+90; pipeline stage arrows at stage +120 |
+| Process chain | 5001 7, 20, B11 | panel → `fade`; heading → `up`; steps → `pop` (stage) or `fade` + text `up`; connectors → `cn` | panel about 280–430, heading +4…+23; steps +29…+170 apart; each connector after its pair |
+| Bars and timeline | 5001 6 | rail → `cn`; milestone dot → `pop` + date `up`; label → `up`; bar → `grow`; value → `up` | rail 150; milestones 300 +110, label +40; bar rows 700 +110: name d, bar d+60, description d+100, value d+200 |
 | Band list | 5001 12, 17 | dark band → `up`; check or icon → `pop`; text → `up` | bands 800–900, step 50–150; icon +60, text +80 |
-| Diagram slide | 5001 9, 13, 16, B3, B4, B6, 5006 3, 16, 18, B1, B2, B3, B4, B9, B13 | diagram wrapper → `fade`; caption or side text → `up`; side box background → `fade` + text `up` | diagram 200; side list about 250–350; box 594–670; caption last (672–900) |
-| Index grid | 5001 BX, 5006 BX | per row: card background → `up`, tag → `pop`, title → `up` | 100, +30 per row, all three at the same delay |
-| Use case band | 5006 8, 9, 10, 11 | three band cards (use case, analysis → design, design problem) → `up` | 150, +80 each; the slide's cards follow from about 400 |
-| Line chart | 5001 14, 5006 5, 5006 B11 | chart → `fade`; solid series → `cline`; dots → `cdot`; dashed (ideal) series → `fade`; legend → `up` | chart d; dashed series +40…+250; solid line +100…+350; dots after the line, +50…+60 each; two charts side by side start 150 apart |
+| Diagram slide | 5001 9, 13, 16, B3, B4, B6 | diagram wrapper → `fade`; caption or side text → `up`; side box background → `fade` + text `up` | diagram 200; side list about 250–350; box 594–670; caption last (672–900) |
+| Index grid | 5001 BX | per row: card background → `up`, tag → `pop`, title → `up` | 100, +30 per row, all three at the same delay |
+| Use case band | — | three band cards (use case, analysis → design, design problem) → `up` | 150, +80 each; the slide's cards follow from about 400 |
+| Line chart | 5001 14 | chart → `fade`; solid series → `cline`; dots → `cdot`; dashed (ideal) series → `fade`; legend → `up` | chart d; dashed series +40…+250; solid line +100…+350; dots after the line, +50…+60 each; two charts side by side start 150 apart |
 
 ### One-off patterns
 
 | Pattern | Slide | Recipe |
 |---|---|---|
-| Title lockup | 5001 1, 5006 1 | bag `pop` and wordmark `up` 200, kicker `up` 213, tagline 320, headline 420, subline 520, names `fade` 650, programme `fade` 700, caption `up` 1500 |
+| Title lockup | 5001 1, 5006 1 | bag `pop` and wordmark `up` 200, kicker `up` 213, tagline 320, headline 420, subline 520, names `fade` 650, programme `fade` 700, caption `up` 1500; 5006 1 adds its section roadmap `fade` 600 and runs names 680, programme 740 |
 | Bar and avatar chart | 5001 1 | bars `rise` 500 +160; each avatar `drop` 300 after its bar (800 +160) |
 | Hub with satellites | 5001 3 | note boxes `fade` (text +3…+4); side cards `left`/`right`; hub ring `pop` 380, disc `pop` + `pulse` 420, label 500, text 560; connectors `cn` 745 / 826 / 900; pill row `pop` 1000 +90; footnote 1300 |
 | Service panels with event mapping | 5001 10 | panels `fade` 254 / 535 / 605, header +9, inner card `fade` +42…+51, card text +2; mapping rows: domain pill `pop` 450 +64, integration pill `pop` 690 +64, arrow `cn` 728 +63 |
 | Pill ribbon | 5001 11 | dark band `up` 645, label +4, pills `pop` 1009 then about +90 |
 | Two-series line chart | 5001 14 | chart `fade` 300; line 1 `cline` 500, dots `cdot` 600 +60; line 2 800, dots 900 +60 |
-| Inline state diagram | 5006 8 | SVG with its nodes `fade` 440; each transition `<line>` `cn` 540, then +60…+80; transition labels `fade` at their line +60 |
-| Sequence draw-on | 5006 10 | SVG with lifeline heads `fade` 480; solid messages `cn` 600 +100; dashed messages, crash mark and labels `fade` at their message +60; final note last (1100) |
-| Twin burndown charts | 5006 B11 | per column (150 / 300): heading `up`, subtitle +50, chart `fade` +150, dashed ideal +250, actual `cline` +350, dots `cdot` +450 then +50, legend +550, comment card +1000, source +1150 |
+| Inline state diagram | — | SVG with its nodes `fade` 440; each transition `<line>` `cn` 540, then +60…+80; transition labels `fade` at their line +60 |
+| Sequence draw-on | — | SVG with lifeline heads `fade` 480; solid messages `cn` 600 +100; dashed messages, crash mark and labels `fade` at their message +60; final note last (1100) |
+| Twin burndown charts | — | per column (150 / 300): heading `up`, subtitle +50, chart `fade` +150, dashed ideal +250, actual `cline` +350, dots `cdot` +450 then +50, legend +550, comment card +1000, source +1150 |
 | Stacked cylinders | 5001 15 | cylinder `up` 244 / 318 / 393, name +53, contents +98 |
-| Branch diagram | 5001 18, 5006 15 | main line `cn` 120, release line 300; feature arrows `cn` 200 +80 ×6; labels `up` 248–519 top to bottom; promotion arrows 700 / 950, each with a label +100; pills `pop` 564 / 634 |
+| Branch diagram | 5001 18 | main line `cn` 120, release line 300; feature arrows `cn` 200 +80 ×6; labels `up` 248–519 top to bottom; promotion arrows 700 / 950, each with a label +100; pills `pop` 564 / 634 |
 | Nested boundary boxes | 5001 22 | left cards `left` (200–400) with dot `pop` +18…+20; nested boxes `fade` 150 / 300 / 450 / 600, outer to inner, heading +20, tags `pop` +29…+125; inner tiles `fade` 700 / 760 / 850; arrows `cn` 587 / 718 |
-| Closing slide (dark) | 5001 24, 5006 22 | headline `up` 150, sub 300, kicker 420; takeaway pills `pop` 600 +110 ×4; stat strip from 1000; footer icon + text 1400 |
+| Closing slide (dark) | 5001 24, 5006 39 | headline `up` 150, sub 300, kicker 420; takeaway pills `pop` 600 +110 ×4; stat strip from 1000; footer icon + text 1400; 5006 39, shortened: headline 150, sub 300, footer `up` with its icon `pop` 520 |
 | Click-revealed diagram | 5001 16 | the kit SVG's own `.frag` groups, renumbered when the slide is built (the kit file is unchanged): fragment 1 loses its `frag` class and fades in with the drawing, fragments 2 and 3 become click 1 and 2 to match the two `[click]` markers (v3 faded white covers out) |
 | Sequence lanes | 5001 B15 | lane headers `pop` 150 +70, text +20; lifelines `fade` 500; step arrows `grow` 60; labels 120; final line `up` 300 (v3 timings, arrows before headers) |
 

@@ -28,9 +28,10 @@ const withRef = (cells, t) => Object.assign(cells, { ref: t });
 const mo = (t, sz = 18) => `<span class="mono" style="font-size:${sz}px;font-variant-ligatures:none">${t}</span>`;
 // One point per line inside a cell or card.
 const lines = (a, gap = 2) => a.map(t => `<div style="margin-bottom:${gap}px">${t}</div>`).join('');
-const chip = (t, kind) => {
+// d (optional): the chip pops at d ms.
+const chip = (t, kind, d) => {
   const k = { ok: ['#E3E8FB', '#3E5CD9'], chg: ['#FFEDC7', '#7A5C20'], part: ['#ECE6DC', '#1B1A18'], drop: ['#EFE9DF', '#8C2414'], open: ['#FBDFD9', '#B02E1B'] }[kind];
-  return `<span style="display:inline-block;font:700 15px/1 Inter;letter-spacing:.03em;text-transform:uppercase;background:${k[0]};color:${k[1]};border-radius:999px;padding:5px 9px;margin-right:8px;white-space:nowrap">${t}</span>`;
+  return `<span${d === undefined ? '' : ' class="a" data-a="pop"'} style="display:inline-block;font:700 15px/1 Inter;letter-spacing:.03em;text-transform:uppercase;background:${k[0]};color:${k[1]};border-radius:999px;padding:5px 9px;margin-right:8px;white-space:nowrap${d === undefined ? '' : `;--d:${d}ms`}">${t}</span>`;
 };
 const kicker = (t, c = '#6B655C') => `<div style="font:700 16px Inter;letter-spacing:.06em;text-transform:uppercase;color:${c};margin-bottom:8px">${t}</div>`;
 const report = t => `<div style="font:600 20px/1.3 Inter;color:#3E5CD9;margin-top:8px">${icon('book')} ${t}</div>`;
@@ -80,37 +81,40 @@ const hIn = (h, needle, a, d) => { const s = h.lastIndexOf('<', h.indexOf(needle
 const A = (a, d, st = '') => `class="a" data-a="${a}" style="${st}--d:${d}ms"`;
 
 // ---------- slide 1 ----------
+// Title lockup (MOTION.md): kicker 213, bag and wordmark 200, tagline 320, headline 420, subline 520, roadmap 600,
+// names 680, programme 740.
 const s1 = () => `${DECK_CSS}
-<div style="position:absolute;left:80px;top:96px;font:600 18px Inter;letter-spacing:.1em;color:#FFB01F">SWE5006 PRACTICE PROJECT · TEAM 8</div>
-${lockup()}
-<div style="position:absolute;left:80px;top:300px;font:500 34px Inter;color:#fff">A community group-buying platform with pay-first teams</div>
-<div style="position:absolute;left:80px;top:368px;font:italic 400 26px Inter;color:#E6DFD3;display:flex;gap:16px;align-items:center">Two prices: solo &amp; team <span style="color:#E8402A;font-size:20px">●</span> Pay first to team up <span style="color:#E8402A;font-size:20px">●</span> Full refund if the team size is not met</div>
-<div style="position:absolute;left:80px;top:448px;font:500 19px Inter;color:#FFB01F;display:flex;gap:30px">${['1 Introduction', '2 Analysis, design, patterns', '3 Testing', '4 CI/CD demo', '5 System demo'].map(t => `<span>${t}</span>`).join('')}</div>
-<div style="position:absolute;left:80px;top:516px;font:500 19px Inter;color:#fff;display:flex;gap:28px">${['Lim Jiechao', 'Liu Jin', 'Panpakorn Siripanich', 'Wang Ziang', 'Yu Qianshuo'].map(t => `<span>${t}</span>`).join('')}</div>
-<div style="position:absolute;left:80px;top:552px;font:400 18px Inter;color:#B5ADA1">Graduate Certificate in Designing Modern Software Systems, 26 October 2026</div>`;
+<div ${A('up', 213, 'position:absolute;left:80px;top:96px;font:600 18px Inter;letter-spacing:.1em;color:#FFB01F;')}>SWE5006 PRACTICE PROJECT · TEAM 8</div>
+${lockupA()}
+<div ${A('up', 420, 'position:absolute;left:80px;top:300px;font:500 34px Inter;color:#fff;')}>A community group-buying platform with pay-first teams</div>
+<div ${A('up', 520, 'position:absolute;left:80px;top:368px;font:italic 400 26px Inter;color:#E6DFD3;display:flex;gap:16px;align-items:center;')}>Two prices: solo &amp; team <span style="color:#E8402A;font-size:20px">●</span> Pay first to team up <span style="color:#E8402A;font-size:20px">●</span> Full refund if the team size is not met</div>
+<div ${A('fade', 600, 'position:absolute;left:80px;top:448px;font:500 19px Inter;color:#FFB01F;display:flex;gap:30px;')}>${['1 Introduction', '2 Analysis, design, patterns', '3 Testing', '4 CI/CD demo', '5 System demo'].map(t => `<span>${t}</span>`).join('')}</div>
+<div ${A('fade', 680, 'position:absolute;left:80px;top:516px;font:500 19px Inter;color:#fff;display:flex;gap:28px;')}>${['Lim Jiechao', 'Liu Jin', 'Panpakorn Siripanich', 'Wang Ziang', 'Yu Qianshuo'].map(t => `<span>${t}</span>`).join('')}</div>
+<div ${A('fade', 740, 'position:absolute;left:80px;top:552px;font:400 18px Inter;color:#B5ADA1;')}>Graduate Certificate in Designing Modern Software Systems, 26 October 2026</div>`;
 
 // ---------- slide 2 (1.1) ----------
 // m (optional): [pop, up] delays for the icon and its text (Icon + text row).
 const row = (ic, txt, bg, col = 'var(--ink)', sz = 64, fs = 22, mb = 22, m) => `<div style="display:flex;align-items:center;gap:22px;margin-bottom:${mb}px">
   <div class="dot${m ? ' a' : ''}"${m ? ' data-a="pop"' : ''} style="width:${sz}px;height:${sz}px;background:${bg};font-size:${sz / 2}px;flex:none${m ? `;--d:${m[0]}ms` : ''}">${icon(ic)}</div>
   <div${m ? ' class="a" data-a="up"' : ''} style="font:400 ${fs}px/1.3 Inter;color:${col}${m ? `;--d:${m[1]}ms` : ''}">${txt}</div></div>`;
+// Side columns with icon + text rows; the arrow draws on between the cards (MOTION.md: Side columns, Icon + text row,
+// Connector): problem 150, left card 260 (rows 380 +90), right card 560 (rows 680 +70), arrow 700, note 1000.
 const s2 = () => `
-<div style="position:absolute;left:0;top:0;width:1164px;border-left:6px solid #E8402A;padding:6px 0 6px 18px;font:600 25px/1.3 Inter">Small merchants can discount only against committed volume, but no single buyer can reach it: demand exists, but no buyer commits first.</div>
-<div class="card" style="position:absolute;left:0;top:118px;width:520px;height:410px;padding:28px 32px">
-  <div class="serif" style="font-size:28px;color:var(--muted);margin-bottom:24px">Today</div>
-  ${row('store', 'Merchants discount only when volume is predictable', '#6B655C')}
-  ${row('user', 'One buyer can never reach a bulk price', '#6B655C')}
-  ${row('bullhorn', 'Advertising is costly and not tied to real purchases', '#6B655C', 'var(--ink)', 64, 22, 0)}
+<div ${A('up', 150, 'position:absolute;left:0;top:0;width:1164px;border-left:6px solid #E8402A;padding:6px 0 6px 18px;font:600 25px/1.3 Inter;')}>Small merchants can discount only against committed volume, but no single buyer can reach it: demand exists, but no buyer commits first.</div>
+<div class="card a" data-a="left" style="position:absolute;left:0;top:118px;width:520px;height:410px;padding:28px 32px;--d:260ms">
+  <div class="serif a" data-a="up" style="font-size:28px;color:var(--muted);margin-bottom:24px;--d:300ms">Today</div>
+  ${row('store', 'Merchants discount only when volume is predictable', '#6B655C', undefined, undefined, undefined, undefined, [380, 410])}
+  ${row('user', 'One buyer can never reach a bulk price', '#6B655C', undefined, undefined, undefined, undefined, [470, 500])}
+  ${row('bullhorn', 'Advertising is costly and not tied to real purchases', '#6B655C', 'var(--ink)', 64, 22, 0, [560, 590])}
 </div>
-<div style="position:absolute;left:534px;top:318px;width:62px;height:3px;background:var(--orange)"></div>
-<div style="position:absolute;left:588px;top:312px;border-left:12px solid var(--orange);border-top:7px solid transparent;border-bottom:7px solid transparent"></div>
-<div class="card" style="position:absolute;left:614px;top:118px;width:550px;height:410px;padding:26px 32px;background:var(--inverse);border:none">
-  <div class="serif" style="font-size:28px;color:#E8402A;margin-bottom:20px">BlocBuy: pay-first teams</div>
-  ${row('tags', 'Two prices: solo and team', 'var(--orange)', '#fff', 54, 21, 18)}
-  ${row('credit-card', 'Pay upfront to start a team, then share the invite link', 'var(--orange)', '#fff', 54, 21, 18)}
-  ${row('users', 'Friends join by paying upfront too', 'var(--orange)', '#fff', 54, 21, 18)}
-  ${row('arrows-rotate', 'Fills in time: team price. Expires: everyone refunded automatically', 'var(--orange)', '#fff', 54, 21, 0)}
-  <div style="margin-top:14px;font:italic 400 18px Inter;color:#B5ADA1"${ref('proposal §6.1')}>Stripe test mode only</div>
+${gSvg(gAh('s2ah', 'var(--orange)', 12, 14, 7.5) + gCn('M534,319.5 L588,319.5', 'var(--orange)', 3, 700, 's2ah'))}
+<div class="card a" data-a="right" style="position:absolute;left:614px;top:118px;width:550px;height:410px;padding:26px 32px;background:var(--inverse);border:none;--d:560ms">
+  <div class="serif a" data-a="up" style="font-size:28px;color:#E8402A;margin-bottom:20px;--d:600ms">BlocBuy: pay-first teams</div>
+  ${row('tags', 'Two prices: solo and team', 'var(--orange)', '#fff', 54, 21, 18, [680, 710])}
+  ${row('credit-card', 'Pay upfront to start a team, then share the invite link', 'var(--orange)', '#fff', 54, 21, 18, [750, 780])}
+  ${row('users', 'Friends join by paying upfront too', 'var(--orange)', '#fff', 54, 21, 18, [820, 850])}
+  ${row('arrows-rotate', 'Fills in time: team price. Expires: everyone refunded automatically', 'var(--orange)', '#fff', 54, 21, 0, [890, 920])}
+  <div ${A('up', 1000, 'margin-top:14px;font:italic 400 18px Inter;color:#B5ADA1;')}${ref('proposal §6.1')}>Stripe test mode only</div>
 </div>`;
 
 // ---------- slide 3 (1.2) ----------
@@ -124,17 +128,18 @@ const qas = [
   ['Code quality', ['SonarCloud gate on every PR', 'Unit tests on the complex classes'], ['§3', '§4']],
   ['Auditability', ['Every payment, refund and transition traceable', 'Every artefact traceable to a commit'], ['§4']],
 ];
+// Side columns (MOTION.md): left card 200, its list 260 +30; right kicker 420, table [450, 560, 38.4].
 const s3 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:380px;height:568px;padding:14px 20px">
- ${kicker('In scope · proposal §6.1')}
- ${ucs.map(u => `<div style="display:flex;gap:10px;font:400 20px/1.2 Inter;margin-bottom:5px"><b style="width:48px;flex:none">${u[0]}</b><span>${u[1]}</span></div>`).join('')}
- <div style="font:italic 400 20px/1.25 Inter;margin:2px 0 12px">+ Receive notifications (Sprint 4, SWE5001; off on dev)</div>
- ${kicker('Out of scope · proposal §6.2', '#B02E1B')}
- <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 14px;font:400 18px/1.25 Inter;color:var(--muted)">${outScope.map(t => `<span>${t}</span>`).join('')}</div>
+<div class="card a" data-a="left" style="position:absolute;left:0;top:0;width:380px;height:568px;padding:14px 20px;--d:200ms">
+ ${gA(kicker('In scope · proposal §6.1'), 'up', 230)}
+ ${ucs.map((u, i) => `<div ${A('up', 260 + 30 * i, 'display:flex;gap:10px;font:400 20px/1.2 Inter;margin-bottom:5px;')}><b style="width:48px;flex:none">${u[0]}</b><span>${u[1]}</span></div>`).join('')}
+ <div ${A('up', 530, 'font:italic 400 20px/1.25 Inter;margin:2px 0 12px;')}>+ Receive notifications (Sprint 4, SWE5001; off on dev)</div>
+ ${gA(kicker('Out of scope · proposal §6.2', '#B02E1B'), 'up', 560)}
+ <div ${A('up', 590, 'display:grid;grid-template-columns:1fr 1fr;gap:3px 14px;font:400 18px/1.25 Inter;color:var(--muted);')}>${outScope.map(t => `<span>${t}</span>`).join('')}</div>
 </div>
 <div style="position:absolute;left:398px;top:0;width:766px">
- ${kicker('Quality attributes and targets · proposal §6.3')}
- ${tbl(['Attribute', 'Target', 'Shown in'], qas.map((q, i) => [`<b>${q[0]}</b>`, lines(q[1]), `<div style="${i < 3 ? 'color:#B02E1B;font-weight:700' : ''}">${lines(q[2])}</div>`]), { fs: 18, w: [186, null, 108], pad: '5px 10px' })}
+ ${gA(kicker('Quality attributes and targets · proposal §6.3'), 'up', 420)}
+ ${tbl(['Attribute', 'Target', 'Shown in'], qas.map((q, i) => [`<b>${q[0]}</b>`, lines(q[1]), `<div style="${i < 3 ? 'color:#B02E1B;font-weight:700' : ''}">${lines(q[2])}</div>`]), { fs: 18, w: [186, null, 108], pad: '5px 10px', m: [450, 560, 38.4] })}
 </div>`;
 
 // ---------- slide 4 (1.3) ----------
@@ -156,11 +161,13 @@ const changed4 = [
   ['Blocking OWASP and IaC scans', 'Trivy, not required; 3 per-job roles', 'security.yml, ruleset 22734681 · no ADR'],
 ];
 const gaps4 = [['SSH port 22 open on the dev host', 'AWS read-only, 21 Oct'], ['CloudFront → ALB over HTTP until 16 Nov', '#227'], ['Dev volume unencrypted', 'AWS read-only, 19 Oct']];
+// Side columns, Icon card (MOTION.md): card 200, status blocks 240 +70 with the chip popping +30, Outstanding 550,
+// gaps 580 +35. The changes table is a plain fragment (its children cannot stagger after the click).
 const s4 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:420px;padding:12px 20px 14px">
- ${status4.map(r => `<div style="margin-bottom:10px"${ref(r[4])}><div style="font:600 19px/1.25 Inter">${chip(r[0], r[1])}${r[2]}</div><div style="font:400 19px/1.28 Inter;margin-top:2px">${r[3]}</div></div>`).join('')}
- <div style="margin-top:4px">${kicker('Outstanding', '#B02E1B')}</div>
- ${gaps4.map(g => `<div style="font:400 19px/1.28 Inter;margin-bottom:2px"${ref(g[1])}>${g[0]}</div>`).join('')}
+<div class="card a" data-a="left" style="position:absolute;left:0;top:0;width:420px;padding:12px 20px 14px;--d:200ms">
+ ${status4.map((r, i) => `<div ${A('up', 240 + 70 * i, 'margin-bottom:10px;')}${ref(r[4])}><div style="font:600 19px/1.25 Inter">${chip(r[0], r[1], 270 + 70 * i)}${r[2]}</div><div style="font:400 19px/1.28 Inter;margin-top:2px">${r[3]}</div></div>`).join('')}
+ <div ${A('up', 550, 'margin-top:4px;')}>${kicker('Outstanding', '#B02E1B')}</div>
+ ${gaps4.map((g, i) => `<div ${A('up', 580 + 35 * i, 'font:400 19px/1.28 Inter;margin-bottom:2px;')}${ref(g[1])}>${g[0]}</div>`).join('')}
 </div>
 <div class="frag" data-frag="1" style="position:absolute;left:438px;top:0;width:726px">
  ${tbl(['Changed: promised', 'Built'], changed4.map(r => withRef([`<b>${r[0]}</b>`, r[1]], r[2])), { fs: 20, w: [312], pad: '6px 12px' })}
@@ -170,16 +177,18 @@ const s4 = () => `
 // ---------- slide 5 (1.4) ----------
 const ms = [['27 Aug', 'Proposal submitted'], ['5 Sep', 'Backend pipeline live on dev'], ['14 Sep', 'Sprint 1 tag'], ['20 Sep', 'Stripe Sandbox acceptance (local)'], ['22 Sep', 'Web app live on dev'], ['27 Sep', 'Sprint 2 tag'], ['30 Sep', 'Admin console merged', '#305–#307'], ['11 Oct', 'Sprint 3 tag'], ['20 Oct', 'SWE5001 production release on ECS', 'promotion PR #574 · deploy run 39435280952 · three services since PR #534 (17 Oct)'], ['23 Oct', 'Paid start and refund on dev', 'PR #664 · stripe-dev-recovery-acceptance-20261023.md']];
 const mem = [['Liu Jin', 51, 12.5], ['Yu Qianshuo', 48, 9], ['Wang Ziang', 46, 8.5], ['Panpakorn', 41.5, 11.5], ['Lim Jiechao', 38, 8.5]];
+// Table with rows twice, then the lines and a trailing callout (MOTION.md): kicker 200, milestones [240, 340, 30];
+// effort kicker 400, table [430, 520, 38.4]; lines 760, callout 860.
 const s5 = () => `
 <div style="position:absolute;left:0;top:0;width:480px">
- ${kicker('Milestones achieved')}
- ${tbl(['Date', 'Milestone'], ms.map(m => withRef([`<b style="white-space:nowrap">${m[0]}</b>`, m[1]], m[2] || '')).concat([['—', `Sprint 4 tag ${mk('FILL', 'date, once cut (open item 6)')}`]]), { fs: 20, w: [96], pad: '8px 12px' })}
+ ${gA(kicker('Milestones achieved'), 'up', 200)}
+ ${tbl(['Date', 'Milestone'], ms.map(m => withRef([`<b style="white-space:nowrap">${m[0]}</b>`, m[1]], m[2] || '')).concat([['—', `Sprint 4 tag ${mk('FILL', 'date, once cut (open item 6)')}`]]), { fs: 20, w: [96], pad: '8px 12px', m: [240, 340, 30] })}
 </div>
 <div style="position:absolute;left:510px;top:0;width:654px">
- <div style="display:flex;align-items:baseline;gap:10px">${kicker('Effort per member')}${mk('VERIFY', 'S4 split, PR #538')}</div>
- ${tbl(['Member', 'S1', 'S2', 'S3', 'S4', 'Planned h', 'Actual days'], mem.map(m => [`<b>${m[0]}</b>`, '—', '30', '30', m[1], `<b>${60 + m[1]}</b>`, `<b style="color:#3E5CD9">${m[2]}</b>`]), { fs: 20, w: [150], pad: '9px 11px' })}
- <div style="font:400 20px/1.4 Inter;margin-top:14px">${lines(['Sprint 1 hours were not recorded', 'Team done: Sprint 2 134 of 150 h; Sprint 3 117 of 150 h', `<span${ref('proposal §7')}>Proposal budget: 10 person-days each</span>`], 4)}</div>
- <div style="margin-top:12px;border-radius:8px;background:#E3E8FB;padding:12px 16px;font:400 20px/1.35 Inter"${ref('SWE5001 deck slide 6 (docs/swe5001/presentation/src/slides-main.js eff), presented 21 Oct')}><b style="color:#3E5CD9">Actual, ≈ 50 person-days:</b> the split the team agreed for the joint SWE5001 and SWE5006 project, estimated from the issues each person delivered; no one logged hours.</div>
+ <div ${A('up', 400, 'display:flex;align-items:baseline;gap:10px;')}>${kicker('Effort per member')}${mk('VERIFY', 'S4 split, PR #538')}</div>
+ ${tbl(['Member', 'S1', 'S2', 'S3', 'S4', 'Planned h', 'Actual days'], mem.map(m => [`<b>${m[0]}</b>`, '—', '30', '30', m[1], `<b>${60 + m[1]}</b>`, `<b style="color:#3E5CD9">${m[2]}</b>`]), { fs: 20, w: [150], pad: '9px 11px', m: [430, 520, 38.4] })}
+ <div ${A('up', 760, 'font:400 20px/1.4 Inter;margin-top:14px;')}>${lines(['Sprint 1 hours were not recorded', 'Team done: Sprint 2 134 of 150 h; Sprint 3 117 of 150 h', `<span${ref('proposal §7')}>Proposal budget: 10 person-days each</span>`], 4)}</div>
+ <div ${A('up', 860, 'margin-top:12px;border-radius:8px;background:#E3E8FB;padding:12px 16px;font:400 20px/1.35 Inter;')}${ref('SWE5001 deck slide 6 (docs/swe5001/presentation/src/slides-main.js eff), presented 21 Oct')}><b style="color:#3E5CD9">Actual, ≈ 50 person-days:</b> the split the team agreed for the joint SWE5001 and SWE5006 project, estimated from the issues each person delivered; no one logged hours.</div>
 </div>`;
 
 // ---------- slide 6 (1.5) ----------
@@ -797,11 +806,11 @@ for (const [n, [t, rt]] of Object.entries(repSec)) {
   const body = out[n];
   out[n] = () => body() + repTop(`<span${rt ? ref(rt) : ''}>Report ${mk('FILL', '§ (#463)')} · ${t}</span>`);
 }
-// Closing slide (dark, full bleed).
+// Closing slide (dark, full bleed; MOTION.md, shortened): headline 150, sub 300, footer up and its icon pop 520.
 out[39] = () => `
-<div style="position:absolute;left:76px;top:96px;font:700 120px/1 Inter;color:#fff">Thank you</div>
-<div style="position:absolute;left:80px;top:236px;font:500 32px Inter;color:#fff">Questions?</div>
-<div style="position:absolute;left:80px;top:604px;font:400 18px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:28px;align-items:center"><span style="display:flex;gap:10px;align-items:center"><span style="font-size:20px">${icon('github')}</span> github.com/PPsyrius/iss-groupbuy-team8</span><span>d1b3np88z657cp.cloudfront.net</span></div>`;
+<div ${A('up', 150, 'position:absolute;left:76px;top:96px;font:700 120px/1 Inter;color:#fff;')}>Thank you</div>
+<div ${A('up', 300, 'position:absolute;left:80px;top:236px;font:500 32px Inter;color:#fff;')}>Questions?</div>
+<div ${A('up', 520, "position:absolute;left:80px;top:604px;font:400 18px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:28px;align-items:center;")}><span style="display:flex;gap:10px;align-items:center"><span ${A('pop', 520, 'font-size:20px;')}>${icon('github')}</span> github.com/PPsyrius/iss-groupbuy-team8</span><span>d1b3np88z657cp.cloudfront.net</span></div>`;
 
 // Header strip per slide: the report line, and the detail pages a reader of the PDF needs (hidden while presenting,
 // where the crops themselves step in).
