@@ -1,9 +1,10 @@
 const { icon, md, mk, svg } = require('../../../presentation-kit/lib');
 const C = require('./content');
 
-const tbl = (head, rows, opts = {}) => `<table class="t" style="font-size:${opts.fs || 16}px">
+// opts.m (optional): [table, first row, step] in ms, as dt() below.
+const tbl = (head, rows, opts = {}) => `<table class="t${opts.m ? ' a" data-a="fade' : ''}" style="font-size:${opts.fs || 16}px${opts.m ? `;--d:${opts.m[0]}ms` : ''}">
 <tr>${head.map((h, i) => `<th style="${opts.w && opts.w[i] ? 'width:' + opts.w[i] + 'px' : ''}">${h}</th>`).join('')}</tr>
-${rows.map(r => `<tr>${r.map((c, i) => `<td class="${i === 0 && opts.id ? 'id' : ''}">${c}</td>`).join('')}</tr>`).join('')}</table>`;
+${rows.map((r, j) => `<tr${opts.m ? ` class="trow" style="--d:${Math.round(opts.m[1] + opts.m[2] * j)}ms"` : ''}>${r.map((c, i) => `<td class="${i === 0 && opts.id ? 'id' : ''}">${c}</td>`).join('')}</tr>`).join('')}</table>`;
 
 // ---- B11: Sprint 2 and 3 burndowns (segment 1) ----
 // m (ms, optional): Line chart motion. The chart fades in at m, a dashed series fades at m + 100, a solid series draws on
@@ -153,7 +154,7 @@ const b12 = () => dt(['Workflow · trigger', 'Jobs (required in blue)', 'Median'
   ['<b>rollback-backend</b> · manual', 'validate, then SSM rollback to the recorded previous digest or a given one', '—', 'never run'],
   ['<b>SWE5001</b> · prod branch', 'swe5001-release-gate, swe5001-deploy, infra-swe5001 (promotion PR; see the SWE5001 deck)', '—', '—'],
 ], { fs: 15, w: [190, 470, 220], pad: '6px 10px', m: quick(7) }) + `<div class="a" data-a="up" style="--d:${after(7)}ms;margin-top:8px;font:400 15px/1.4 Inter">Last 100 runs per workflow and event, read with <span class="mono" style="font-size:14.5px">gh run list</span> and the jobs API on 19 Oct. PR durations count only runs where the gated jobs ran (docs-only PRs skip them in about 10 s). Push medians run from the push run start, not the merge click.</div>`;
-const b13 = () => `<div class="dia" style="margin-top:-8px">${fit('physical-deployment', 1130)}</div>${topo('SWE5001 prod: the same code on ECS, rebuilt from scratch on every release and destroyed after it. SWE5006 dev is slide 31.')}`;
+const b13 = () => `<div class="dia a" data-a="fade" style="margin-top:-8px;--d:150ms">${fit('physical-deployment', 1130)}</div>${topo('SWE5001 prod: the same code on ECS, rebuilt from scratch on every release and destroyed after it. SWE5006 dev is slide 31.', 450)}`;
 const b14 = () => dt(['Gap', 'Effect', 'Status'], [
   ['CloudFront → ALB over HTTP', '/api payloads and the origin header cross the AWS network unencrypted', 'NFR-37 TLS still unmet; accepted risk on dev until 16 Nov (#227, NFR register); fix needs an origin hostname and ACM'],
   ['SSH open to the internet', 'port 22 from 0.0.0.0/0 on the dev host, which has a public IP; SSM sessions make it unnecessary', 'AWS read-only check, 21 Oct; open item 9'],
@@ -165,28 +166,30 @@ const b14 = () => dt(['Gap', 'Effect', 'Status'], [
   ['Delivery image rebuilt', 'dev delivery rebuilds the backend JAR and image without repeating the Trivy image gate, so the deployed image is not the PR-scanned one; SonarCloud, deploy health checks and the frontend smoke still run', 'artifact-assurance limit; ECR scans on push (not a gate); ADR 0004 text to reconcile (open item 18)'],
   ['Weekly full-history gitleaks red', '20 digest false positives fingerprinted; 4 badge-token findings still fail the scan', 'PR #580, ci-failure-audit-20261021.md'],
   ['Passive DAST; SBOM not per image', 'OWASP ZAP of dev is anonymous and passive: no logins, payments or active attacks; advisory, 2 Medium, 4 Low CSP and header findings (22 Oct), fixes in #610; the CycloneDX SBOMs list the backend Maven and frontend pnpm source dependencies, not the exact deployed JAR, image or bundle; licence findings advisory', '#607, #610, #609'],
-], { fs: 15, w: [250, 450], pad: '5px 10px' });
+], { fs: 15, w: [250, 450], pad: '5px 10px', m: quick(11) });
 
 // ---- B15–B16: segment 5, system demo ----
 // B15 embeds two screenshots from the 20 Sep local Sandbox acceptance (JPEG data despite the .png names).
 const fs = require('fs');
 const path = require('path');
 const EVID = path.join(__dirname, '../../../../backend/docs/payment/evidence/20260920');
-const shot = (file, cap) => `<div style="flex:1"><div style="height:226px;overflow:hidden;border:1px solid #DDD5C8;border-radius:8px;background:#F2F2F2"><img src="data:image/jpeg;base64,${fs.readFileSync(path.join(EVID, file)).toString('base64')}" style="width:100%;display:block"></div>
+// d (optional): the screenshot and its caption rise at d ms.
+const shot = (file, cap, d) => `<div ${d === undefined ? '' : `class="a" data-a="up" `}style="flex:1${d === undefined ? '' : `;--d:${d}ms`}"><div style="height:226px;overflow:hidden;border:1px solid #DDD5C8;border-radius:8px;background:#F2F2F2"><img src="data:image/jpeg;base64,${fs.readFileSync(path.join(EVID, file)).toString('base64')}" style="width:100%;display:block"></div>
  <div style="font:400 15px/1.3 Inter;color:var(--muted);margin-top:5px">${cap}</div></div>`;
 const b15 = () => `<div style="display:flex;gap:20px">
- ${shot('frontend-refunded-order.png', 'My orders: the expired bloc’s order is refunded (UI of 20 Sep, since redesigned)')}
- ${shot('frontend-refund-receipt.png', 'Receipt: “Refund sent”, payment 01a0bce8…, SGD 10.00')}
+ ${shot('frontend-refunded-order.png', 'My orders: the expired bloc’s order is refunded (UI of 20 Sep, since redesigned)', 150)}
+ ${shot('frontend-refund-receipt.png', 'Receipt: “Refund sent”, payment 01a0bce8…, SGD 10.00', 230)}
 </div>
 <div style="margin-top:12px">${dt(['Scenario', 'Result on 20 Sep (Team8 Stripe Sandbox, livemode=false)'], [
   ['START and JOIN', 'two SGD 10 payments → one member and one order each; the bloc reached succeeded, 2 of 2'],
   ['Webhook replay', 'replayed valid events changed nothing; a modified payload with the old signature got 400'],
   ['Expiry', 'an under-filled bloc expired → one SGD 10 refund obligation; its unpaid Checkout session expired'],
   ['Refund', `one full Sandbox refund ${mo('re_3UHbeV5iEVLN2uQJ1V71krwQ')}, succeeded; a recheck created no duplicate`],
-], { fs: 15, w: [170], pad: '5px 10px' })}</div>
-<div style="margin-top:10px;border-radius:8px;background:#FDEFEC;padding:9px 16px;font:400 15.5px/1.35 Inter"><b style="color:var(--orange-d)">Local, not dev:</b> real Stripe Sandbox calls from a local backend and PostgreSQL; no Google sign-in, no deployed environment. On dev the refund waits for #223 and #517. Source: ${mo('backend/docs/payment/stripe-sandbox-acceptance-20260920.md')}</div>`;
+], { fs: 15, w: [170], pad: '5px 10px', m: quick(4, 300, 350) })}</div>
+<div class="a" data-a="up" style="--d:${after(4, 350)}ms;margin-top:10px;border-radius:8px;background:#FDEFEC;padding:9px 16px;font:400 15.5px/1.35 Inter"><b style="color:var(--orange-d)">Local, not dev:</b> real Stripe Sandbox calls from a local backend and PostgreSQL; no Google sign-in, no deployed environment. On dev the refund waits for #223 and #517. Source: ${mo('backend/docs/payment/stripe-sandbox-acceptance-20260920.md')}</div>`;
 
-const rCard = (head, env, inner, tone = '#3E5CD9') => `<div class="card" style="flex:1;padding:14px 16px;display:flex;flex-direction:column">
+// d (optional): the card rises at d ms (Icon card).
+const rCard = (head, env, inner, tone = '#3E5CD9', d) => `<div class="card${d === undefined ? '' : ' a" data-a="up'}" style="flex:1;padding:14px 16px;display:flex;flex-direction:column${d === undefined ? '' : `;--d:${d}ms`}">
  <div style="font:600 13px Inter;letter-spacing:.04em;color:${tone}">${env}</div>
  <div class="serif" style="font-size:21px;margin:4px 0 8px">${head}</div>${inner}</div>`;
 const li = t => `<li style="margin-bottom:6px">${t}</li>`;
@@ -196,29 +199,29 @@ const b16 = () => `<div style="display:flex;gap:14px;align-items:stretch">
   ${li('commerce 2–6 tasks in two AZs, notification 1–4 (read back 16 Oct)')}
   ${li('V3, 19 Oct: commerce <b>1 → 3 tasks</b> in about four minutes, no manual scaling; at 3 tasks ≈ 455 req/s, server p95 13–50 ms, 2 errors in 570,445')}
   ${li('Not V3 acceptance: the workstation generator dropped iterations, so the analyzer rejects the run')}
-  ${li(`V4 queue drain: ${mk('FILL', 'backlog peak, notification tasks, drain time (19 Oct)')}`)}</ul>`)}
+  ${li(`V4 queue drain: ${mk('FILL', 'backlog peak, notification tasks, drain time (19 Oct)')}`)}</ul>`, undefined, 150)}
  ${rCard('Load, one task', 'SWE5001 V2 · ECS, 16 OCT', `<ul class="b" style="font:400 15.5px/1.35 Inter;margin:0">
   ${li('k6, ten one-minute plateaus from 10 to 200 requests a second, through CloudFront')}
   ${li('57,600 requests, <b>0 errors</b>, run twice')}
   ${li('p95 between 23 and 57 ms on every plateau (target under 500 ms)')}
-  ${li('No saturation reached: 200 a second is a tested lower bound, not a limit')}</ul>`)}
+  ${li('No saturation reached: 200 a second is a tested lower bound, not a limit')}</ul>`, undefined, 230)}
  ${rCard('Workload baseline', 'DEV CODE · LOCAL RUN, 30 SEP', `${dt(['100 users each', 'p95', 'Errors'], [
   ['Browse (list + detail)', '24 ms', '0'], ['JOIN intent, unpaid', '57 ms', '0'], ['My Orders', '18 ms', '0'],
- ], { fs: 15, pad: '4px 8px' })}<div style="font:400 15px/1.35 Inter;margin-top:8px">30 paid teams expired within 58 s of their deadlines under that load. One laptop with real HTTP, PostgreSQL and Redis; <b>not a deployed result</b>.</div>`, 'var(--orange-d)')}
+ ], { fs: 15, pad: '4px 8px' })}<div style="font:400 15px/1.35 Inter;margin-top:8px">30 paid teams expired within 58 s of their deadlines under that load. One laptop with real HTTP, PostgreSQL and Redis; <b>not a deployed result</b>.</div>`, 'var(--orange-d)', 310)}
 </div>
-<div style="margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter"><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out exists only in the SWE5001 topology and is not claimed for SWE5006 (slide 37).</div>
-<div style="margin-top:8px;font:italic 400 14.5px/1.35 Inter;color:var(--muted)">Sources: docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md (V2, scaling policy); docs/swe5001/evidence/20261019-v3-autoscaling/README.md (V3); docs/perf/sprint3-baseline.md (local workload).</div>`;
+<div ${A('up', 560, 'margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter;')}><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out exists only in the SWE5001 topology and is not claimed for SWE5006 (slide 37).</div>
+<div ${A('up', 680, 'margin-top:8px;font:italic 400 14.5px/1.35 Inter;color:var(--muted);')}>Sources: docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md (V2, scaling policy); docs/swe5001/evidence/20261019-v3-autoscaling/README.md (V3); docs/perf/sprint3-baseline.md (local workload).</div>`;
 
 // ---- §2 full diagrams (rubric G8, V1, V6): vector, so zoom in the browser or the PDF ----
 const sized = (name, w, h) => svg(name).replace('<svg ', `<svg style="display:block;width:${w}px;height:${h}px" `);
-const scroll = (name, W, H, w) => `<div data-scroll style="position:absolute;left:0;top:0;width:1164px;height:568px;overflow:auto;background:#fff;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8">${sized(name, w, Math.round(H * w / W))}</div>`;
+const scroll = (name, W, H, w) => `<div data-scroll class="a" data-a="fade" style="--d:150ms;position:absolute;left:0;top:0;width:1164px;height:568px;overflow:auto;background:#fff;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8">${sized(name, w, Math.round(H * w / W))}</div>`;
 const bLs = () => `
-<div style="position:absolute;left:0;top:0">${sized('listing-statechart', 1160, 548)}</div>`;
+<div ${A('fade', 150, 'position:absolute;left:0;top:0;')}>${sized('listing-statechart', 1160, 548)}</div>`;
 const bUc4 = () => `
 <div style="position:absolute;left:0;top:0;width:1164px;height:568px;display:flex;gap:16px;align-items:flex-start">
- <div>${sized('uc4-design-class', 500, 499)}<div style="font:400 14.5px Inter;color:var(--muted)">Design class diagram (2320 × 2314)</div></div>
- <div>${sized('uc4-design-seq', 348, 496)}<div style="font:400 14.5px Inter;color:var(--muted)">Design sequence (2320 × 3306)</div></div>
- <div style="width:220px;font:400 16px/1.4 Inter">Both are vector: open <span class="mono" style="font-size:14px">src/diagrams/uc4-design-*.svg</span> in a browser tab and zoom. Every message carries its source line in the diagram spec. Report §3.4 (Eric).</div>
+ <div ${A('fade', 150)}>${sized('uc4-design-class', 500, 499)}<div style="font:400 14.5px Inter;color:var(--muted)">Design class diagram (2320 × 2314)</div></div>
+ <div ${A('fade', 260)}>${sized('uc4-design-seq', 348, 496)}<div style="font:400 14.5px Inter;color:var(--muted)">Design sequence (2320 × 3306)</div></div>
+ <div ${A('up', 450, 'width:220px;font:400 16px/1.4 Inter;')}>Both are vector: open <span class="mono" style="font-size:14px">src/diagrams/uc4-design-*.svg</span> in a browser tab and zoom. Every message carries its source line in the diagram spec. Report §3.4 (Eric).</div>
 </div>`;
 const bMembers = () => tbl(['Member', 'Use case (report §3.4)', 'Design problem (report §3.5)', 'On a slide'], [
   ['Eric', 'UC3, UC4 start and join a team', 'Factory Method: team creation', 'UC4 models 14–16, statechart 17; pattern 18'],
@@ -226,7 +229,7 @@ const bMembers = () => tbl(['Member', 'Use case (report §3.4)', 'Design problem
   ['Pan', 'Receive notifications', 'Template Method: outbox transports', 'pattern 20'],
   ['Lim', 'UC8 my orders and my teams (with UC7 frontend)', 'Strategy: UC1 pricing', 'pattern 21'],
   ['Liu Jin', 'UC9 listing administration and team terms', 'State: listing lifecycle (full form)', 'patterns 22–23; statechart B13'],
-], { fs: 16.5, w: [110, 330, 400] }) + `<div style="margin-top:12px;font:400 16px/1.4 Inter">Each member’s analysis class, analysis sequence, design class and design sequence diagrams are in their report section (template RT 3.4.1); the deck shows UC4 only (rubric G8). Owners: #463. ${mk('VERIFY', 'UC9 owner: #32 names Eric, #463 names Liu Jin (open item 12)')}</div>`;
+], { fs: 16.5, w: [110, 330, 400], m: quick(5) }) + `<div class="a" data-a="up" style="--d:${after(5)}ms;margin-top:12px;font:400 16px/1.4 Inter">Each member’s analysis class, analysis sequence, design class and design sequence diagrams are in their report section (template RT 3.4.1); the deck shows UC4 only (rubric G8). Owners: #463. ${mk('VERIFY', 'UC9 owner: #32 names Eric, #463 names Liu Jin (open item 12)')}</div>`;
 const b16erd = () => scroll('full-erd', 2320, 5038, 1150);
 // B16 prints only its first viewport, so the PDF also carries the ERD 1:1 (labels 24 px, rubric V3): each context
 // frame of full-erd.svg cut into 1164 × 568 windows, left to right then top to bottom, as pages B16-1 … B16-n.
@@ -305,28 +308,30 @@ const fvBtn = (z, ic, label, tip) => `<button data-z="${z}" title="${tip}">${ico
 // the toolbar. The bar is data-scroll and its controls are buttons, so the runtime never treats a press as a step.
 const fullView = (name, i) => {
   const [W, H] = viewBox(name), id = `fv${i}`, k = Math.min((1280 - 2 * FV_PAD) / W, (FV_H - 2 * FV_PAD) / H);
-  return `<div id="${id}-bar" class="fvbar" data-scroll>
+  return `<div id="${id}-bar" class="fvbar a" data-a="fade" style="--d:60ms" data-scroll>
  ${fvBtn('fit', 'compress', 'Fit', 'Fit the whole diagram')}${fvBtn('1', 'up-right-and-down-left-from-center', 'Actual size', 'Actual size (1:1)')}${fvBtn('-', 'magnifying-glass-minus', '', 'Zoom out')}${fvBtn('+', 'magnifying-glass-plus', '', 'Zoom in')}
  <span data-pct>${Math.round(k * 100)}%</span>
 </div>
-<div id="${id}" class="fv" data-scroll><div>${svg(name).replace('<svg ', `<svg style="width:${Math.round(W * k)}px;height:${Math.round(H * k)}px" `)}</div></div>
+<div id="${id}" class="fv a" data-a="fade" style="--d:120ms" data-scroll><div>${svg(name).replace('<svg ', `<svg style="width:${Math.round(W * k)}px;height:${Math.round(H * k)}px" `)}</div></div>
 <script>if (window.fvZoom) fvZoom('${id}', ${W}, ${H});</script>`;
 };
 const where = n => (typeof n === 'number' ? `slide ${n}` : n);
-const menu = (rows, note) => `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 16px">${rows.join('')}</div><div style="margin-top:10px;font:italic 400 15px Inter;color:var(--muted)">${note}</div>`;
-const menuRow = (go, tag, title, sub) => `<div data-go="${go}" style="min-width:0;cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:5px 14px">
-   <span class="tag" style="min-width:44px;text-align:center">${tag}</span><div><div style="font:600 17px Inter">${title}</div><div style="font:400 15px/1.25 Inter;color:var(--muted)">${sub}</div></div></div>`;
-const fx = () => menu(FULL.map(([, t, n], i) => menuRow(`F${i + 1}`, `F${i + 1}`, t, where(n))),
+// Index grid (MOTION.md): rows of three from 100, +30 per row; the note closes 80 ms after the last row.
+const gridD = i => 100 + 30 * Math.floor(i / 3), noteD = n => gridD(n - 1) + 80;
+const menu = (rows, note) => `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 16px">${rows.join('')}</div><div ${A('up', noteD(rows.length), 'margin-top:10px;font:italic 400 15px Inter;color:var(--muted);')}>${note}</div>`;
+const menuRow = (go, tag, title, sub, d) => `<div data-go="${go}" ${A('up', d, 'min-width:0;cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:5px 14px;')}>
+   <span class="tag a" data-a="pop" style="min-width:44px;text-align:center;--d:${d}ms">${tag}</span><div ${A('up', d)}><div style="font:600 17px Inter">${title}</div><div style="font:400 15px/1.25 Inter;color:var(--muted)">${sub}</div></div></div>`;
+const fx = () => menu(FULL.map(([, t, n], i) => menuRow(`F${i + 1}`, `F${i + 1}`, t, where(n), gridD(i))),
   'Click a diagram. It opens fitted; the toolbar switches to actual size or zooms; scroll with the trackpad or mouse wheel (arrow keys still change slides). Press B for the backup index.');
 // DX: the 1:1 crops, one row per slide, one chip per crop. In the HTML deck they repeat the crops the slides step
 // through; the PDF, which cannot step, carries them only here (rubric V3).
 const dx = details => {
   const by = [];
   for (const d of details) { const g = by.find(x => x.n === d.n); if (g) g.d.push(d); else by.push({ n: d.n, t: d.slideTitle, d: [d] }); }
-  return `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 16px">${by.map(g => `<div style="min-width:0;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:5px 12px">
+  return `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 16px">${by.map((g, i) => `<div ${A('up', gridD(i), 'min-width:0;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:5px 12px;')}>
    <div style="font:600 15px/1.25 Inter;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Slide ${g.n} · ${g.t}</div>
-   <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${g.d.map(d => `<span data-go="${d.id}" class="tag" style="cursor:pointer">${d.id}</span>`).join('')}</div></div>`).join('')}</div>
-<div style="margin-top:8px;font:italic 400 15px Inter;color:var(--muted)">Each page is one crop at 1:1 with its caption: the same view the slide steps to while presenting.</div>`;
+   <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${g.d.map(d => `<span data-go="${d.id}" class="tag a" data-a="pop" style="cursor:pointer;--d:${gridD(i)}ms">${d.id}</span>`).join('')}</div></div>`).join('')}</div>
+<div ${A('up', noteD(by.length), 'margin-top:8px;font:italic 400 15px Inter;color:var(--muted);')}>Each page is one crop at 1:1 with its caption: the same view the slide steps to while presenting.</div>`;
 };
 
 // Backup slides follow the last main slide; press B in the deck for the index (BX). Rows link with data-go.
