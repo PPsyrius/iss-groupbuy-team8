@@ -227,7 +227,7 @@ const coverHtml = cover({
   meta: [
     ['Responsible', 'Yu Qianshuo (Yorik), presentation lead and storyline (#464); Lim Jiechao, slide master.'],
     ['Specification', '<code>docs/swe5006/presentation/RUBRIC.md</code>: every slide records the rubric rows it covers; the coverage tables in the run sheet are derived from them.'],
-    ['Companion files', '<code>swe5006-presentation.html</code> — the deck (39 slides + backups BX, B1–B16 and the 1:1 diagram detail pages D9-1 … D31-3; Chrome or Edge; <b>S</b> notes, <b>T</b> timer, <b>O</b> overview, <b>F</b> fullscreen, <b>B</b> backup index) · <code>swe5006-presentation.pdf</code> — the same deck for submission.'],
+    ['Companion files', '<code>swe5006-presentation.html</code> — the deck (39 slides + backups BX, B1–B16, the 1:1 diagram detail pages D9-1 … D31-3 (index DX) and the full-size diagrams F1–F21 (index FX); Chrome or Edge; <b>S</b> notes, <b>T</b> timer, <b>O</b> overview, <b>F</b> fullscreen, <b>B</b> backup index) · <code>swe5006-presentation.pdf</code> — the same deck for submission.'],
     ['Facts as of', '21 Oct 2026. Dev health <code>UP</code>; #223 and #517 open, so no payment has been confirmed and no refund proven on dev yet.'],
   ],
   after: `${box('', 'Markers', `${md('{{FILL:}}')} value that does not exist yet; never present a guess · ${md('{{VERIFY:}}')} claim to check against the repository, report or run logs · ${md('{{CONFIRM:}}')} needs team agreement. They must all be gone after the 25 Oct rehearsal.`)}`,

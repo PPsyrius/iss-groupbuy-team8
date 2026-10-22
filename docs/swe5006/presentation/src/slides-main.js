@@ -122,7 +122,7 @@ const changed4 = [
 ];
 const gaps4 = [['Paid flow on dev: go/no-go 23 Oct', '#517 · #223'], ['SSH port 22 open on the dev host', 'AWS read-only, 21 Oct'], ['CodeQL off', 'ENABLE_CODEQL=false'], ['CloudFront → ALB over HTTP until 16 Nov', '#227'], ['Dev volume unencrypted', 'AWS read-only, 19 Oct']];
 const s4 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:420px;height:568px;padding:12px 20px">
+<div class="card" style="position:absolute;left:0;top:0;width:420px;padding:12px 20px 14px">
  ${status4.map(r => `<div style="margin-bottom:10px"${ref(r[4])}><div style="font:600 19px/1.25 Inter">${chip(r[0], r[1])}${r[2]}</div><div style="font:400 19px/1.28 Inter;margin-top:2px">${r[3]}</div></div>`).join('')}
  <div style="margin-top:4px">${kicker('Outstanding', '#B02E1B')}</div>
  ${gaps4.map(g => `<div style="font:400 19px/1.28 Inter;margin-bottom:2px"${ref(g[1])}>${g[0]}</div>`).join('')}
@@ -210,7 +210,7 @@ const s8 = () => `
  ${burndown()}
  <div style="font:400 20px/1.35 Inter;margin-top:2px">${lines(['Flat for a week, then a cliff: work merged late in large PRs', 'Reconstructed from merge dates'], 4)}</div>
 </div>
-<div style="position:absolute;left:0;right:0;top:470px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 20px/1.35 Inter"${ref('EPAT 03 TDD, EPAT 05 refactoring · sprint-03/log/2026-10-07.md · PR #424 · full set: backup B1')}><b style="color:#3E5CD9">Test first, then refactor:</b> two failing tests reproduced a price-quote bug before the fix; then team admission was refactored into shared checks.</div>`;
+<div style="position:absolute;left:0;right:0;top:490px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 20px/1.35 Inter"${ref('EPAT 03 TDD, EPAT 05 refactoring · sprint-03/log/2026-10-07.md · PR #424 · full set: backup B1')}><b style="color:#3E5CD9">Test first, then refactor:</b> two failing tests reproduced a price-quote bug before the fix; then team admission was refactored into shared checks.</div>`;
 
 // ---------- diagram walk-through (rubric V1, V3, V5) ----------
 // The whole diagram sits in a pane for orientation; each crop is then shown 1:1 (labels ≥ 24 px) as an opaque fragment
@@ -235,8 +235,8 @@ const cropView = (name, x, y, head = 0) => {
 const caption = cap => (cap && cap.length ? `<div style="flex:none;border-top:2px solid #3E5CD9;background:#E3E8FB;padding:8px 18px;font:400 20px/1.35 Inter">${cap.map(l => `<div>${Array.isArray(l) ? `<b>${l[0]}:</b> ${l[1]}` : l}</div>`).join('')}</div>` : '');
 const cropInner = (name, x, y, head, cap) => `<div style="flex:1;min-height:0;overflow:hidden">${cropView(name, x, y, head)}</div>${caption(cap)}`;
 const frame = inner => `<div style="position:absolute;left:0;top:0;width:1164px;height:${CROP_H}px;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 0 0 2px #1B1A18;display:flex;flex-direction:column">${inner}</div>`;
-// The step badge sits in the gap between the title and the body, outside the crop, so it never covers the diagram;
-// its cream band also hides the previous step's badge.
+// The step badge sits in the header row, left of the speaker chip, outside the crop, so it never covers the diagram;
+// its cream band hides the header strip and the previous step's badge while stepping.
 const badge = (t, i) => `<div class="frag zcrop" data-frag="${i + 1}" style="position:absolute;left:470px;right:__BR__;top:${20 - BODY_TOP}px;height:30px;line-height:30px;background:var(--background);text-align:right;z-index:11"><span style="display:inline-block;vertical-align:middle;font:700 16px/1 Inter;letter-spacing:.03em;background:#1B1A18;color:#fff;border-radius:999px;padding:5px 12px">${t}</span></div>`;
 // A detail layer: step i of n, covering the body while presenting; recorded for its D page.
 const layer = (inner, label, i, n) => {
@@ -257,7 +257,7 @@ const pane = ({ name, W, H, box, at = 'left:0;top:0', axis = 'y' }, crops) => {
   const id = `pane${++paneN}`, other = axis === 'y' ? 'x' : 'y';
   return `<style>.${id}{width:${fw}px;height:${fh}px;overflow:hidden}.${id}>div{width:${fw}px;height:${fh}px}
 body.present .${id}{width:${Math.min(box[0], pw)}px;height:${Math.min(box[1], ph)}px;overflow-${axis}:auto;overflow-${other}:hidden}body.present .${id}>div{width:${pw}px;height:${ph}px}</style>
-<div class="${id}" data-scroll style="position:absolute;${at};background:#fff;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8"><div style="position:relative">${svg(name).replace('<svg ', '<svg style="display:block;width:100%;height:100%" ')}${outlines(crops, W, H)}</div></div>`;
+<div class="${id}" style="position:absolute;${at};background:#fff;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8"><div style="position:relative">${svg(name).replace('<svg ', '<svg style="display:block;width:100%;height:100%" ')}${outlines(crops, W, H)}</div></div>`;
 };
 // Diagrams on a slide: each view is a pane; crops [name, x, y, label, head, caption] step through any of them 1:1 in
 // the order given.
@@ -303,14 +303,14 @@ ${repTop('Report §3.2 · Yorik, Eric')}`;
 // ---------- slide 11 (2.2) ----------
 const typ = [['GUI «boundary»', 'Route, component and Query hook'], ['«control»', 'REST controller + application service, called through the generated client'], ['«entity»', 'Aggregate behind a repository port, implemented with MyBatis'], ['External «boundary»', 'Gateway port + adapter']];
 const s11 = () => `
-${kicker('Class diagrams: each analysis type becomes design classes')}
+<div style="height:8px"></div>${kicker('Class diagrams: each analysis type becomes design classes')}
 ${typ.map(t => `<div style="display:flex;gap:16px;align-items:baseline;font:400 22px/1.3 Inter;margin-bottom:10px"><b style="width:250px;flex:none">${t[0]}</b><span style="color:#E8402A;font-weight:700">→</span><span>${t[1]}</span></div>`).join('')}
 <div class="frag" data-frag="1" style="margin-top:22px">
  ${kicker('Sequence diagrams: a plain call becomes a guarded transaction')}
  <div style="display:flex;gap:16px;align-items:baseline;font:400 22px/1.4 Inter;margin-bottom:8px"><b style="width:250px;flex:none">Analysis</b>${mo('control → entity.update()', 21)}</div>
  <div style="display:flex;gap:16px;align-items:baseline;font:400 22px/1.4 Inter"><b style="width:250px;flex:none">Design</b><div>${lines([mo('service → repository.lockDeal()', 21) + ' <span style="color:var(--muted)">(SELECT … FOR UPDATE)</span>', mo('→ aggregate.joinPaid() → guarded UPDATE', 21), 'all in one transaction'], 2)}</div></div>
 </div>
-<div class="frag" data-frag="2" style="position:absolute;left:0;right:0;top:450px;border-radius:8px;background:#E3E8FB;padding:12px 18px;font:400 22px/1.35 Inter"><b style="color:#3E5CD9">Why:</b> the domain names its needs as interfaces and infrastructure supplies them, so persistence and providers can change without touching the rules.</div>
+<div class="frag" data-frag="2" style="position:absolute;left:0;right:0;top:470px;border-radius:8px;background:#E3E8FB;padding:12px 18px;font:400 22px/1.35 Inter"><b style="color:#3E5CD9">Why:</b> the domain names its needs as interfaces and infrastructure supplies them, so persistence and providers can change without touching the rules.</div>
 ${repTop('Report §3.2 · transition strategies')}`;
 
 // ---------- slide 12 (2.2) ----------
@@ -591,7 +591,7 @@ const sec = [
 ];
 const s30 = () => `
 ${tbl(['Stage', 'Control', 'Catches', 'Gap'], sec.map(r => [`<b style="white-space:nowrap">${r[0]}</b>`, lines(r[1]), r[2], r[3] ? `<span style="color:#B02E1B">${r[3]}</span>` : '—']), { fs: 20, w: [140, 490, 250], pad: '5px 11px' })}
-<div style="position:absolute;left:0;right:0;top:474px;border-radius:8px;background:#E3E8FB;padding:8px 16px;font:400 20px/1.32 Inter"${ref('Stages: DSOEA 07 slide 3 · ECR scans on push (operator guide)')}>${lines(['<b style="color:#3E5CD9">Types tested (slide 25, Q4):</b> static analysis, dependencies, image and IaC configuration, secrets', 'Every third-party action is pinned to a commit SHA'])}</div>`;
+<div style="position:absolute;left:0;right:0;top:494px;border-radius:8px;background:#E3E8FB;padding:8px 16px;font:400 20px/1.32 Inter"${ref('Stages: DSOEA 07 slide 3 · ECR scans on push (operator guide)')}>${lines(['<b style="color:#3E5CD9">Types tested (slide 25, Q4):</b> static analysis, dependencies, image and IaC configuration, secrets', 'Every third-party action is pinned to a commit SHA'])}</div>`;
 
 // ---------- slide 31 (4.4) ----------
 const s31 = () => one('dev-deployment', 2320, 1096, [1164, 568], [
@@ -608,7 +608,7 @@ const finds = [
 ];
 const s32 = () => `
 ${tbl(['Finding', 'Root cause', 'Fix'], finds.map(f => withRef([`<b>${f[0]}</b>`, lines(f[1], 4), lines(f[2], 4)], f[3])), { fs: 20, w: [250, 440], pad: '11px 12px' })}
-<div style="position:absolute;left:0;right:0;top:452px;border-radius:8px;background:#FDEFEC;padding:12px 16px;font:400 20px/1.35 Inter"${ref('#517')}><b style="color:#B02E1B">Still open:</b> the Stripe webhook never confirms a payment on dev, so a green pipeline is not yet a working paid flow.</div>`;
+<div style="position:absolute;left:0;right:0;top:472px;border-radius:8px;background:#FDEFEC;padding:12px 16px;font:400 20px/1.35 Inter"${ref('#517')}><b style="color:#B02E1B">Still open:</b> the Stripe webhook never confirms a payment on dev, so a green pipeline is not yet a working paid flow.</div>`;
 
 // ---------- slide 33 (4.1, 4.6) ----------
 const live = [
@@ -647,7 +647,7 @@ const plan5 = [
 ];
 const s34 = () => `
 ${tbl(['Step', 'What you see', '<span style="white-space:nowrap">Use cases</span>', 'Quality attribute (slide 3)', 'Runs on'], plan5.map(r => [`<b>${r[0]}</b>`, r[1], ucList(r[2]), r[3], r[4]]), { fs: 20, w: [60, 400, 118, null, 138], pad: '5px 10px' })}
-<div style="position:absolute;left:0;right:0;top:500px;font:400 18px/1.3 Inter;color:var(--muted)"${ref('#517 · #223')}>“dev, if GO”: live on dev after the 23 Oct go/no-go, otherwise its 24 Oct recording; a local result is never shown as dev</div>`;
+<div style="position:absolute;left:0;right:0;top:520px;font:400 18px/1.3 Inter;color:var(--muted)"${ref('#517 · #223')}>“dev, if GO”: live on dev after the 23 Oct go/no-go, otherwise its 24 Oct recording; a local result is never shown as dev</div>`;
 
 // ---------- slide 35 (5.1, 5.2, 5.5) ----------
 const live5 = [
@@ -760,7 +760,7 @@ for (const s of C.SLIDES) {
     const html = f().replace(/<!--rep([\s\S]*?)-->/, (m, r) => { rp = r; return ''; }).replace(/__BR__/g, `${chipRight(s.speaker)}px`);
     const items = [];
     if (k) items.push(`<span class="pdfonly" style="font:600 13px Inter;color:#6B655C;display:flex;gap:5px;align-items:center">${icon('magnifying-glass')} Details D${s.n}-1 to D${s.n}-${k} in the backups</span>`);
-    if (rp) items.push(`<span style="font:600 15px Inter;color:#3E5CD9;display:flex;gap:6px;align-items:center">${icon('book')} ${rp}</span>`);
+    if (rp) items.push(`<span style="font:600 16px Inter;color:#3E5CD9;display:flex;gap:6px;align-items:center">${icon('book')} ${rp}</span>`);
     return html + (items.length ? hdrStrip(s.speaker, items) : '');
   };
 }

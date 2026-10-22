@@ -97,7 +97,7 @@ src/diagrams/      optional per-deck diagram overrides
 
 ## Presenter runtime (HTML deck)
 
-Arrows (including Up/Down), Space, Enter, PageUp/PageDown, N/P step through fragments (`<div class="frag" data-frag="1">`) and slides; a slide number then Enter jumps to that main slide; Home/End; S opens the speaker companion (below); T starts the talk timer or restarts it from zero; O toggles the overview grid; F fullscreen; B or X jumps to the backup index; `.` blanks the screen to black (O also clears it). A click advances, a click in the left third of the window goes back; clicks on links, buttons, `data-go` elements and anything inside a `data-scroll` element (a scrollable diagram) do not step. `data-go="B6"` on any element links to that slide; `#23` or `#B6` in the URL opens a slide directly, also when the hash changes later. A key hint fades in for 4 s when the deck opens.
+Arrows (including Up/Down), Space, Enter, PageUp/PageDown, N/P step through fragments (`<div class="frag" data-frag="1">`) and slides; a slide number then Enter jumps to that main slide; Home/End; S opens the speaker companion (below); T starts the talk timer or restarts it from zero; O toggles the overview grid; F fullscreen; B or X jumps to the backup index; `.` blanks the screen to black (O also clears it). A click advances, a click in the left third of the window goes back; clicks on links, buttons, `data-go` elements and anything inside a `data-scroll` element (a full-size diagram that scrolls) do not step. `data-go="B6"` on any element links to that slide; `#23` or `#B6` in the URL opens a slide directly, also when the hash changes later. A key hint fades in for 4 s when the deck opens.
 
 ### Speaker companion
 

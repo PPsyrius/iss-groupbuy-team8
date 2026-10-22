@@ -74,7 +74,7 @@ document.addEventListener('click',ev=>{
   if(body.classList.contains('overview')){const s=ev.target.closest('.slide');if(s)present(slides.indexOf(s));return;}
   if(!body.classList.contains('present'))return;
   const a=ev.target.closest('[data-go]');if(a){const k=byId(a.dataset.go);if(k>=0)go(k);return;}
-  // a click inside a scrollable diagram (data-scroll) scrolls or drags it, never steps the deck
+  // a click inside a full-size scrolling diagram (data-scroll) scrolls or drags it, never steps the deck
   if(ev.target.closest('a,button,[data-scroll]'))return;
   ev.clientX<innerWidth/3?prev():next();
 });

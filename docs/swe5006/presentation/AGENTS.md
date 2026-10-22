@@ -32,7 +32,7 @@ Still open, all needing the team rather than the repository (see `OPEN_ITEMS` in
 
 - Actual effort per member (1.4), owners of UC1, UC2, UC5 and UC7 (1.5, open decision 4), the Sprint 3 and Sprint 4 retrospectives and the Sprint 4 DoD step (1.6, 1.7).
 - The 23 Oct go/no-go for the paid flow on dev (#517, #223), the k6 pre-run on the SWE5001 ECS environment (5.3), and both backup videos by 24 Oct (G6, 4.6, 5.5).
-- Report section numbers (#463), ADRs for the changes marked "no ADR" on slide 4, the scribe (G9), the demo change and its approver (4.1), Identity Center MFA (4.2).
+- Report section numbers (#463), ADRs for the six changes on slide 4 that have none (listed in its `data-ref`), the scribe (G9), the demo change and its approver (4.1), Identity Center MFA (4.2).
 
 ## Working on the deck
 

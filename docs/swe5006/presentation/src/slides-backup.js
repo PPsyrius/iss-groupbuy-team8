@@ -193,11 +193,11 @@ const b16 = () => `<div style="display:flex;gap:14px;align-items:stretch">
 
 // ---- §2 full diagrams (rubric G8, V1, V6): vector, so zoom in the browser or the PDF ----
 const sized = (name, w, h) => svg(name).replace('<svg ', `<svg style="display:block;width:${w}px;height:${h}px" `);
-const scroll = (name, W, H, w) => `<div style="position:absolute;left:0;top:0;width:1164px;height:548px;overflow:auto;background:#fff;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8">${sized(name, w, Math.round(H * w / W))}</div>`;
+const scroll = (name, W, H, w) => `<div data-scroll style="position:absolute;left:0;top:0;width:1164px;height:568px;overflow:auto;background:#fff;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8">${sized(name, w, Math.round(H * w / W))}</div>`;
 const bLs = () => `
 <div style="position:absolute;left:0;top:0">${sized('listing-statechart', 1160, 548)}</div>`;
 const bUc4 = () => `
-<div style="position:absolute;left:0;top:0;width:1164px;height:548px;display:flex;gap:16px;align-items:flex-start">
+<div style="position:absolute;left:0;top:0;width:1164px;height:568px;display:flex;gap:16px;align-items:flex-start">
  <div>${sized('uc4-design-class', 500, 499)}<div style="font:400 14.5px Inter;color:var(--muted)">Design class diagram (2320 × 2314)</div></div>
  <div>${sized('uc4-design-seq', 348, 496)}<div style="font:400 14.5px Inter;color:var(--muted)">Design sequence (2320 × 3306)</div></div>
  <div style="width:220px;font:400 16px/1.4 Inter">Both are vector: open <span class="mono" style="font-size:14px">src/diagrams/uc4-design-*.svg</span> in a browser tab and zoom. Every message carries its source line in the diagram spec. Report §3.4 (Eric).</div>
@@ -211,7 +211,7 @@ const bMembers = () => tbl(['Member', 'Use case (report §3.4)', 'Design problem
 ], { fs: 16.5, w: [110, 330, 400] }) + `<div style="margin-top:12px;font:400 16px/1.4 Inter">Each member’s analysis class, analysis sequence, design class and design sequence diagrams are in their report section (template RT 3.4.1); the deck shows UC4 only (rubric G8). Owners: #463. ${mk('VERIFY', 'UC9 owner: #32 names Eric, #463 names Liu Jin (open item 12)')}</div>`;
 const b16erd = () => scroll('full-erd', 2320, 5038, 1150);
 // B16 prints only its first viewport, so the PDF also carries the ERD 1:1 (labels 24 px, rubric V3): each context
-// frame of full-erd.svg cut into 1164 × 548 windows, left to right then top to bottom, as pages B16-1 … B16-n.
+// frame of full-erd.svg cut into 1164 × 568 windows, left to right then top to bottom, as pages B16-1 … B16-n.
 const ERD_FRAMES = [['identity', 12, 80, 2296, 844], ['catalog', 12, 974, 2296, 486], ['groupbuy + share', 12, 1510, 2296, 1016],
   ['payment', 12, 2576, 2296, 1172], ['order', 12, 3798, 1136, 648], ['notification', 1172, 3798, 1136, 418],
   ['integration · scheduling', 12, 4496, 2296, 482]];
@@ -221,12 +221,12 @@ const steps = (at, len, view, max) => {
   return Array.from({ length: n }, (_, i) => Math.round(at + i * (len - view) / (n - 1)));
 };
 const erdWin = (x, y) => svg('full-erd').replace(/<svg\b[^>]*>/, t => t.replace(/\s(width|height|viewBox)="[^"]*"/g, '')
-  .replace('<svg', `<svg width="1164" height="548" viewBox="${x} ${y} 1164 548" style="display:block"`));
+  .replace('<svg', `<svg width="1164" height="568" viewBox="${x} ${y} 1164 568" style="display:block"`));
 const erdPages = () => ERD_FRAMES.flatMap(([ctx, fx, fy, fw, fh]) => {
-  const xs = steps(fx, fw, 1164, 2320), ys = steps(fy, fh, 548, 5038);
+  const xs = steps(fx, fw, 1164, 2320), ys = steps(fy, fh, 568, 5038);
   return ys.flatMap((y, r) => xs.map((x, c) => ({ ctx, part: [xs.length > 1 ? ['left', 'right'][c] : '', ys.length > 1 ? `part ${r + 1}/${ys.length}` : ''].filter(Boolean).join(', '), x, y })));
 }).map((w, i, all) => ({ id: `B16-${i + 1}`, title: `ERD 1:1 · ${w.ctx}${w.part ? ` (${w.part})` : ''} · ${i + 1}/${all.length}`,
-  body: `<div style="position:absolute;left:0;top:0;width:1164px;height:548px;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 0 0 2px #1B1A18">${erdWin(w.x, w.y)}</div>` }));
+  body: `<div style="position:absolute;left:0;top:0;width:1164px;height:568px;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 0 0 2px #1B1A18">${erdWin(w.x, w.y)}</div>` }));
 
 // ---- FX, F1…: every unique diagram at full size (review round 5) ----
 // Presenting, the diagram is 1:1 (labels 24 px, as in the crops) in a viewport that runs to the slide's left, right and
@@ -255,7 +255,7 @@ const menu = (rows, note) => `<div style="display:grid;grid-template-columns:rep
 const menuRow = (go, tag, title, sub) => `<div data-go="${go}" style="min-width:0;cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:5px 14px">
    <span class="tag" style="min-width:44px;text-align:center">${tag}</span><div><div style="font:600 17px Inter">${title}</div><div style="font:400 15px/1.25 Inter;color:var(--muted)">${sub}</div></div></div>`;
 const fx = () => menu(FULL.map(([, t, n], i) => menuRow(`F${i + 1}`, `F${i + 1}`, t, where(n))),
-  'Click a diagram. Presenting, it opens at full size: scroll both ways. Press B for the backup index.');
+  'Click a diagram. Presenting, it opens at 1:1: scroll both ways with the trackpad or mouse wheel (arrow keys still change slides). Press B for the backup index.');
 // DX: the 1:1 crops, one row per slide, one chip per crop. In the HTML deck they repeat the crops the slides step
 // through; the PDF, which cannot step, carries them only here (rubric V3).
 const dx = details => {
