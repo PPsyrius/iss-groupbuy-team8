@@ -41,7 +41,7 @@ Every factual claim is one of four kinds. Say which, every time.
 
 ### Claims that are easy to get wrong
 
-Checked against the repository on 21 October 2026. Recheck if the code changes.
+Initially checked against the repository on 21 October 2026; the lock-order clarification was rechecked on 22 October 2026. Recheck if the code changes.
 
 | Topic | Correct statement |
 |---|---|
@@ -52,7 +52,7 @@ Checked against the repository on 21 October 2026. Recheck if the code changes.
 | Scaling target | 12,000 requests per target per minute (200 req/s), set in the `swe5001-demo` environment; the checked-in fallback is 200 |
 | Capacity | One 0.5 vCPU commerce task saturates at about 280 req/s; three tasks served about 455 req/s, the generator's limit; linear scaling not proven |
 | Event relay | About 50 events/s, calculated; one copy only, because it runs under the scheduler lease |
-| Lock order | Team → purchase intent → order → payment (ADR 0002) |
+| Lock order | UC4 webhook settlement: team → purchase intent → payment, then fulfilment and order writes (`OrderFulfilmentAdapter.lockForSettlement`, `StripeCheckoutService.settle`; [ADR 0001](../../../backend/docs/adr/0001-payment-business-integration.md)). Expiry's `BEFORE_COMMIT` subscribers run order(10) → payment(20) ([ADR 0002](../../../backend/docs/adr/0002-team-lifecycle-events.md)); subscriber invocation order is not the webhook's row-lock order |
 | SNS wait | The 15 minutes in a rebuild is a deliberate wait for subscription filter policies to apply, not for the topic |
 | Data tier | One `db.t4g.micro`, single zone, no backups; one Valkey node; each service has its own database and roles |
 | Table ownership | Every service database runs the full Flyway migration stream; the runtime role gets data access only to its service's tables (`afterMigrate__service_grants.sql`). Do not write "each database contains only its service's tables" |
