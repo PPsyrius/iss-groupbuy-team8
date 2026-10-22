@@ -20,7 +20,6 @@ ADR(s) implemented or affected: <!-- frontend: `frontend/docs/adr/NNNN-...md`; b
 
 ## Checklist
 
-- [ ] Meets the [Definition of Done](https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/agile/definition-of-done.md)
 - [ ] Small PR, one concern
 - [ ] No secrets committed; new environment variables documented in the area README
 - [ ] Generated files not committed (`frontend/src/api/generated/`); `routeTree.gen.ts` regenerated, not hand-edited

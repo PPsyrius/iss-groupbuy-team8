@@ -33,6 +33,7 @@ Summary ≤ 72 chars, imperative. Body only when the *why* is not obvious.
 ## Pull Requests
 
 - Target `dev`. Small PRs; one concern per PR.
+- A story or task is done when it meets the [Definition of Done](docs/agile/definition-of-done.md).
 - CI must be green: `build-quality`, `SonarCloud Backend`, `docker`, `gitleaks`, `frontend-check` and `SonarCloud Frontend` are the current required checks; see the [gate policy](docs/ci/backend-pipeline.md#required-pr-checks). Other applicable checks, including `contract-check`, must also be green before review approval. Red pipelines don't merge.
 - Formatting-only changes land as their own commit (`style:`), never mixed with behavior changes.
 - CODEOWNERS review required. PRs touching `.github/**`, `backend/Dockerfile`, or pipeline config need the devsecops label owner.
@@ -42,7 +43,6 @@ Summary ≤ 72 chars, imperative. Body only when the *why* is not obvious.
 
 The course grades the report, so the paper trail is part of the work. See `docs/agile/README.md`.
 
-- Work counts as done only when it meets the [Definition of Done](docs/agile/definition-of-done.md).
 - Every PR links its issue (`Closes #N` or `Refs #N`) and adds an entry to `docs/agile/sprint-NN/log/YYYY-MM-DD.md` in the same PR, creating the day's file if needed (`log.md` indexes the day files). `style:` and `chore(deps):` are exempt.
 - Non-functional work (security, performance, availability, observability, cost, maintainability, CI, config, infra) adds or updates a row in `docs/quality/nfr-register.md`.
 - A real choice between alternatives is written down when it is made. Frontend decisions use `frontend/docs/adr/`; backend architecture decisions use numbered `backend/docs/adr/` records and its index. Locked backend stack decisions stay in `backend/docs/design/backend-skeleton-plan.md`, and focused backend design decisions stay in their owning `backend/docs/design/*.md`; amend an existing owning record rather than duplicating it. Cross-cutting decisions (CI, deploy, quality gates, process) go in a dated paragraph of the owning doc under `docs/`.
