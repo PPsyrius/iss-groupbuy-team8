@@ -1,0 +1,90 @@
+# DAST: one passive OWASP ZAP session against the running dev environment.
+# Selected anonymous GETs and a scoped, form-disabled crawl; no active attacks or login sessions.
+# Findings are advisory. Wrong targets, incomplete traffic and scanner failures fail the job.
+name: dast-baseline
+
+on:
+  schedule:
+    - cron: '41 3 * * 1' # weekly Monday 03:41 UTC, after the weekly dependency scan
+  workflow_dispatch:
+    inputs:
+      base-url:
+        description: Base URL to scan (default vars.FRONTEND_URL_DEV)
+        required: false
+        type: string
+  # Run when the scan's implementation changes, not on ordinary application PRs.
+  pull_request:
+    branches: [dev]
+    paths:
+      - '.github/workflows/dast-baseline.yml'
+      - '.github/scripts/dast-baseline.py'
+      - '.github/tests/dast*_test.py'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  zap-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        id: checkout
+        with:
+          persist-credentials: false
+
+      - name: Test DAST preparation and coverage checks
+        timeout-minutes: 1
+        run: python3 -B -m unittest discover -s .github/tests -p 'dast*_test.py'
+
+      - name: Validate the live target and prepare required requests
+        timeout-minutes: 1
+        env:
+          BASE_URL: ${{ inputs.base-url || vars.FRONTEND_URL_DEV }}
+        # Socket timeouts alone do not stop a slowly streaming response.
+        run: timeout --signal=TERM --kill-after=5s 30s python3 .github/scripts/dast-baseline.py preflight --output "$RUNNER_TEMP/zap-baseline"
+
+      - name: Run ZAP baseline (passive only)
+        id: zap
+        run: |
+          set -Eeuo pipefail
+          work="${RUNNER_TEMP}/zap-baseline"
+          chmod 777 "$work" # the ZAP image runs as the unprivileged user "zap"
+          container="dast-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          trap 'docker rm -f "$container" >/dev/null 2>&1 || true' EXIT
+          # Same ZAP 2.17.0 image and beta passive rules as the original baseline wrapper.
+          # One process; three-minute crawl/wait bounds and a ten-minute container deadline.
+          timeout --signal=TERM --kill-after=30s 10m docker run --rm --init --name "$container" \
+            --volume "${work}:/zap/wrk:rw" \
+            ghcr.io/zaproxy/zaproxy@sha256:5ccfff9a411743ab2615136a2edd7416bec9ce41572fa94e935df38c14adb2b6 \
+            zap.sh -cmd -addoninstall pscanrulesBeta -autorun /zap/wrk/zap-plan.yaml
+
+      - name: Verify recorded coverage and summarise findings
+        if: always() && steps.checkout.outcome == 'success'
+        env:
+          SCAN_OUTCOME: ${{ steps.zap.outcome }}
+        run: >-
+          python3 .github/scripts/dast-baseline.py verify
+          --output "$RUNNER_TEMP/zap-baseline"
+          --scan-outcome "$SCAN_OUTCOME"
+          --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload ZAP reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: zap-baseline
+          # Do not publish the raw HAR: it contains response bodies and headers/cookies.
+          path: |
+            ${{ runner.temp }}/zap-baseline/report.*
+            ${{ runner.temp }}/zap-baseline/coverage.*
+            ${{ runner.temp }}/zap-baseline/preflight.json
+            ${{ runner.temp }}/zap-baseline/requests.json
+            ${{ runner.temp }}/zap-baseline/zap-plan.yaml
+            ${{ runner.temp }}/zap-baseline/passive-*.json
+          retention-days: 30
+          if-no-files-found: warn
