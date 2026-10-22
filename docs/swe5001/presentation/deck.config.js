@@ -6,6 +6,7 @@ module.exports = {
   fillLabel: 'FILL 19 Oct',
   guidelineLabel: 'Guideline requirement (V2.8)',
   demoSegment: 6,
+  motion: true,
   outputs: {
     deck: 'swe5001-presentation.html',
     deckPdf: 'swe5001-presentation.pdf',

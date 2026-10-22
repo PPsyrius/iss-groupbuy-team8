@@ -1,618 +1,713 @@
-const { icon, md, mk, svg, lockup } = require('../../../presentation-kit/lib');
-// Accent fills never carry text (design-screens.md §2.1): accent -> accent-soft + accent-soft-foreground; grey -> default + foreground.
+const { icon, mk, lockup, svg } = require('../../../presentation-kit/lib');
+const C = require('./content');
+// Accent fills never carry text: accent -> accent-soft + accent-soft-foreground; grey -> default + foreground.
 // Layout reference: docs/swe5001/presentation/src/slides-main.js has a worked example of every card, chip and diagram pattern.
+// Legibility (rubric V3): labels at least 18 pt, which is 24 px on the 1280 × 720 canvas. Diagram crops meet it 1:1
+// (live, and on the D detail pages in the PDF); body and table text is 18 px or more, and uppercase labels and chips
+// 15 px or more (their cap height matches 18 px lower case).
 
-const todo = n => () => `<div style="margin-top:40px">${mk('FILL', 'slide ' + n + ' layout')}</div>`;
+// Placeholder for slides whose content a later drafting pass fills in.
+const pending = n => () => {
+  const s = C.SLIDES.find(x => x.n === n);
+  return `<div style="margin-top:40px;font:400 20px/1.4 Inter">Rubric rows: <b>${s.rubric.join(', ')}</b></div><div style="margin-top:16px">${mk('FILL', 'slide ' + n + ' draft pending')}</div>`;
+};
+
+// ---------- shared helpers ----------
+const th = (t, w) => `<th style="font-size:18px;padding:8px 12px${w ? ';width:' + w + 'px' : ''}">${t}</th>`;
+const tbl = (head, rows, { fs = 18, w = [], pad = '7px 12px' } = {}) => `<table class="t" style="font-size:${fs}px"><tr>${head.map((h, i) => th(h, w[i])).join('')}</tr>
+${rows.map(r => `<tr>${r.map(c => `<td style="padding:${pad}">${c}</td>`).join('')}</tr>`).join('')}</table>`;
+const mo = (t, sz = 18) => `<span class="mono" style="font-size:${sz}px;font-variant-ligatures:none">${t}</span>`;
+const chip = (t, kind) => {
+  const k = { ok: ['#E3E8FB', '#3E5CD9'], chg: ['#FFEDC7', '#7A5C20'], part: ['#ECE6DC', '#1B1A18'], drop: ['#EFE9DF', '#8C2414'], open: ['#FBDFD9', '#B02E1B'] }[kind];
+  return `<span style="display:inline-block;font:700 15px/1 Inter;letter-spacing:.03em;text-transform:uppercase;background:${k[0]};color:${k[1]};border-radius:999px;padding:5px 9px;margin-right:6px;white-space:nowrap">${t}</span>`;
+};
+const kicker = (t, c = '#6B655C') => `<div style="font:700 15px Inter;letter-spacing:.06em;text-transform:uppercase;color:${c};margin-bottom:8px">${t}</div>`;
 
 // ---------- slide 1 ----------
 const s1 = () => `
-<div style="position:absolute;left:80px;top:96px;font:600 16px Inter;letter-spacing:.1em;color:#FFB01F">SWE5006 PRACTICE PROJECT · TEAM 8</div>
+<div style="position:absolute;left:80px;top:96px;font:600 18px Inter;letter-spacing:.1em;color:#FFB01F">SWE5006 PRACTICE PROJECT · TEAM 8</div>
 ${lockup()}
-<div style="position:absolute;left:80px;top:300px;font:500 34px Inter;color:#fff">A scalable community group-buying platform</div>
+<div style="position:absolute;left:80px;top:300px;font:500 34px Inter;color:#fff">A community group-buying platform with pay-first teams</div>
 <div style="position:absolute;left:80px;top:368px;font:italic 400 26px Inter;color:#E6DFD3;display:flex;gap:16px;align-items:center">Two prices <span style="color:#E8402A;font-size:20px">●</span> pay first to team up <span style="color:#E8402A;font-size:20px">●</span> refunded if the team doesn’t fill</div>
+<div style="position:absolute;left:80px;top:448px;font:500 19px Inter;color:#FFB01F">1 Introduction · 2 Analysis, design, patterns · 3 Testing · 4 CI/CD demo · 5 System demo</div>
 <div style="position:absolute;left:80px;top:516px;font:500 19px Inter;color:#fff">Lim Jiechao · Liu Jin · Panpakorn Siripanich · Wang Ziang · Yu Qianshuo</div>
 <div style="position:absolute;left:80px;top:548px;font:400 18px Inter;color:#B5ADA1">Graduate Certificate in Designing Modern Software Systems · 26 October 2026</div>`;
 
-// ---------- segment 1 helpers (patterns from docs/swe5001/presentation/src/slides-main.js) ----------
-const row = (ic, txt, bg, col = 'var(--ink)', sz = 80, fs = 25, mb = 30) => `<div style="display:flex;align-items:center;gap:26px;margin-bottom:${mb}px">
-  <div class="dot" style="width:${sz}px;height:${sz}px;background:${bg};font-size:${sz / 2}px">${icon(ic)}</div>
+// ---------- slide 2 (1.1) ----------
+const row = (ic, txt, bg, col = 'var(--ink)', sz = 64, fs = 22, mb = 22) => `<div style="display:flex;align-items:center;gap:22px;margin-bottom:${mb}px">
+  <div class="dot" style="width:${sz}px;height:${sz}px;background:${bg};font-size:${sz / 2}px;flex:none">${icon(ic)}</div>
   <div style="font:400 ${fs}px/1.3 Inter;color:${col}">${txt}</div></div>`;
-const tick = (t, sub, kind = 'ok') => {
-  const c = { ok: ['circle-check', 'var(--green)'], open: ['circle-exclamation', 'var(--orange)'], tbd: ['hourglass-half', '#6B655C'] }[kind];
-  return `<div style="display:flex;gap:12px;margin-bottom:14px"><div style="color:${c[1]};font-size:24px;flex:none;margin-top:-1px">${icon(c[0])}</div>
-  <div style="font:400 18px/1.3 Inter">${t}${sub ? `<div style="font:italic 400 15.5px/1.3 Inter;color:var(--muted);margin-top:2px">${sub}</div>` : ''}</div></div>`;
-};
-
-// ---------- slide 2 ----------
 const s2 = () => `
-<div style="position:absolute;left:0;top:4px;font:italic 400 18px Inter;color:var(--muted)">A market coordination failure, solved with a pay-first team purchase modelled on the early Pinduoduo playbook (proposal §4)</div>
-<div class="card" style="position:absolute;left:0;top:50px;width:520px;height:476px;padding:32px 34px">
-  <div class="serif" style="font-size:30px;line-height:1.2;color:var(--muted);margin-bottom:26px">Today</div>
-  ${row('store', 'Merchants can discount only when volume is predictable', '#6B655C', 'var(--ink)', 76, 24)}
-  ${row('user', 'One buyer can never reach a bulk price', '#6B655C', 'var(--ink)', 76, 24)}
-  ${row('bullhorn', 'Advertising is costly and not tied to real purchases', '#6B655C', 'var(--ink)', 76, 24)}
+<div style="position:absolute;left:0;top:0;width:1164px;border-left:6px solid #E8402A;padding:6px 0 6px 18px;font:600 25px/1.3 Inter">Small merchants can discount only against committed volume, and no single buyer can reach it: demand exists, but nobody commits first.</div>
+<div class="card" style="position:absolute;left:0;top:118px;width:520px;height:410px;padding:28px 32px">
+  <div class="serif" style="font-size:28px;color:var(--muted);margin-bottom:24px">Today</div>
+  ${row('store', 'Merchants discount only when volume is predictable', '#6B655C')}
+  ${row('user', 'One buyer can never reach a bulk price', '#6B655C')}
+  ${row('bullhorn', 'Advertising is costly and not tied to real purchases', '#6B655C', 'var(--ink)', 64, 22, 0)}
 </div>
-<div style="position:absolute;left:534px;top:288px;width:62px;height:3px;background:var(--orange)"></div>
-<div style="position:absolute;left:588px;top:282px;border-left:12px solid var(--orange);border-top:7px solid transparent;border-bottom:7px solid transparent"></div>
-<div class="card" style="position:absolute;left:614px;top:50px;width:550px;height:476px;padding:30px 34px;background:var(--inverse);border:none">
-  <div class="serif" style="font-size:30px;color:#E8402A;margin-bottom:24px">With BlocBuy: pay-first teams</div>
-  ${row('tags', 'Two prices: individual and team', 'var(--orange)', '#fff', 62, 22, 22)}
-  ${row('credit-card', 'Pay upfront to start a team, then share the invite link', 'var(--orange)', '#fff', 62, 22, 22)}
-  ${row('users', 'Friends join by paying upfront too', 'var(--orange)', '#fff', 62, 22, 22)}
-  ${row('arrows-rotate', 'Fills in time: team price.<br>Expires: everyone refunded automatically', 'var(--orange)', '#fff', 62, 22, 0)}
-  <div style="margin-top:20px;font:italic 400 16px Inter;color:#B5ADA1">Stripe test mode only: no live money moves</div>
+<div style="position:absolute;left:534px;top:318px;width:62px;height:3px;background:var(--orange)"></div>
+<div style="position:absolute;left:588px;top:312px;border-left:12px solid var(--orange);border-top:7px solid transparent;border-bottom:7px solid transparent"></div>
+<div class="card" style="position:absolute;left:614px;top:118px;width:550px;height:410px;padding:26px 32px;background:var(--inverse);border:none">
+  <div class="serif" style="font-size:28px;color:#E8402A;margin-bottom:20px">BlocBuy: pay-first teams</div>
+  ${row('tags', 'Two prices: individual and team', 'var(--orange)', '#fff', 54, 21, 18)}
+  ${row('credit-card', 'Pay upfront to start a team, then share the invite link', 'var(--orange)', '#fff', 54, 21, 18)}
+  ${row('users', 'Friends join by paying upfront too', 'var(--orange)', '#fff', 54, 21, 18)}
+  ${row('arrows-rotate', 'Fills in time: team price. Expires: everyone refunded automatically', 'var(--orange)', '#fff', 54, 21, 0)}
+  <div style="margin-top:14px;font:italic 400 18px Inter;color:#B5ADA1">Stripe test mode only (proposal §6.1)</div>
 </div>`;
 
-// ---------- slide 3 ----------
-const s3 = () => `<div class="dia" style="margin-top:-8px">${svg('use-case')}</div>
-<div style="position:absolute;left:0;right:0;top:500px;font:400 16.5px/1.3 Inter"><b>Out of scope:</b> merchant self-service GUI · analytics · recommendations · automatic team matching · email, SMS or push · native apps · live payments</div>`;
+// ---------- slide 3 (1.2) ----------
+const ucs = [['UC1', 'Browse and view listings'], ['UC2', 'Register / authenticate'], ['UC3', 'Initiate a team (pay first)'], ['UC4', 'Join a team'], ['UC5', 'Team lifecycle resolution'], ['UC6', 'Refund on team expiry'], ['UC7', 'Share attribution'], ['UC8', 'View my orders and teams'], ['UC9', 'Admin listing management']];
+const qas = [
+  ['Correctness under concurrency', 'team capacity never exceeded; no payment double-charged or double-refunded', '§5 demo · §3'],
+  ['Performance', 'interactive operations ≤ 2 s at 100 concurrent users; expiry resolved ≤ 1 min after the window', '§5 k6 run · §3'],
+  ['Security', 'Google sign-in; role-based admin; signed Stripe webhooks; no credentials in code', '§5 demo · §4'],
+  ['Maintainability, extensibility', 'new pricing, payment provider or team consequence without editing domain logic', '§2 patterns · §4'],
+  ['Code quality', 'SonarCloud gate on every PR; unit tests on the complex classes', '§3 · §4'],
+  ['Auditability', 'every payment, refund and transition traceable; every artefact traceable to a commit', '§4'],
+];
+const s3 = () => `
+<div class="card" style="position:absolute;left:0;top:0;width:372px;height:548px;padding:16px 20px">
+ ${kicker('In scope · proposal §6.1')}
+ ${ucs.map(u => `<div style="display:flex;gap:10px;font:400 18px/1.25 Inter;margin-bottom:7px"><b style="width:44px;flex:none">${u[0]}</b><span>${u[1]}</span></div>`).join('')}
+ <div style="font:400 18px/1.3 Inter;color:var(--muted);margin:4px 0 12px">+ Receive notifications (Sprint 4, SWE5001; off on dev)</div>
+ ${kicker('Out of scope · proposal §6.2', '#B02E1B')}
+ <div style="font:400 18px/1.35 Inter">Merchant self-service · analytics · recommendations · automatic team matching · email, SMS, push · native apps · live payments</div>
+</div>
+<div style="position:absolute;left:392px;top:0;width:772px">
+ ${kicker('Quality attributes and targets · proposal §6.3')}
+ ${tbl(['Attribute', 'Target', 'Shown in'], qas.map((q, i) => [`<b>${q[0]}</b>`, q[1], `<span style="white-space:nowrap${i < 3 ? ';color:#B02E1B;font-weight:700' : ''}">${q[2]}</span>`]), { fs: 18, w: [200, null, 140], pad: '7px 11px' })}
+</div>`;
 
-// ---------- slide 4 ----------
-const sprint = (n, dates, goal, result, stat, tone) => `<div class="card" style="flex:1;height:196px;padding:14px 18px;border-top:5px solid ${tone}">
-  <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font:700 21px Inter">Sprint ${n}</div><div style="font:600 16px Inter;color:var(--muted)">${dates}</div></div>
-  <div style="font:400 17.5px/1.3 Inter;margin-top:8px;height:69px">${goal}</div>
-  <div style="font:700 16px/1.3 Inter;margin-top:6px;color:var(--orange-d)">${result}</div>
-  <div style="font:400 15.5px Inter;color:var(--muted);margin-top:4px">${stat}</div></div>`;
-const cer = (ic, t, a) => `<div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center"><div class="dot" style="width:46px;height:46px;background:var(--teal);font-size:22px">${icon(ic)}</div>
-  <div style="font:700 17px Inter;margin-top:6px">${t}</div><div style="font:400 15px/1.25 Inter;margin-top:2px">${a}</div></div>`;
-const stat = (big, unit, sub) => `<div class="card" style="flex:1;padding:12px 16px"><div><span class="serif" style="font-size:34px">${big}</span> <span style="font:700 17px Inter">${unit}</span></div><div style="font:400 15.5px/1.3 Inter;color:var(--muted);margin-top:2px">${sub}</div></div>`;
+// ---------- slide 4 (1.3) ----------
+const pvd = [
+  ['UC1–UC9', chip('Delivered', 'ok') + 'all nine closed as completed', '#24–#32'],
+  ['UC9 admin API only, no GUI', chip('Changed', 'chg') + 'admin console built in Sprint 3', 'F-ADR 0015 · #305–#307'],
+  ['Adapter (UC6), Observer (UC7)', chip('Changed', 'chg') + 'gateway ports; Observer on UC5 → UC6', 'slides 10, 18 · <i>no ADR</i>'],
+  ['Pay-first START, JOIN, refund on dev', chip('Open', 'open') + 'Checkout returns; webhook never confirms', '#517 · #223'],
+  ['State for the team lifecycle', chip('Changed', 'chg') + 'transition table; State on listings', 'design doc · <i>no ADR (item 7)</i>'],
+  ['Google sign-in with JWT', chip('Changed', 'chg') + 'Sa-Token session, HttpOnly cookie', 'D6/D7, F-ADR 0002 · <i>no backend ADR</i>'],
+  ['Spring Data JPA', chip('Changed', 'chg') + 'MyBatis behind repository ports', 'D1/D9 · <i>no ADR (item 7)</i>'],
+  ['Dev on ECS Fargate and RDS', chip('Changed', 'chg') + 'one EC2 host, Compose, DB on host', 'ADR 0008'],
+  ['Secrets Manager, no static keys', chip('Changed', 'chg') + 'SSM and a root-only env file; 2 IAM users, 1 key', 'operator guide §7 · <i>no ADR</i>'],
+  ['Blocking OWASP and IaC scans', chip('Changed', 'chg') + 'Trivy deps and config, not required; 3 per-job roles', 'security.yml, ruleset · <i>no ADR</i>'],
+  ['Gated prod, ECS circuit breaker', chip('Dropped', 'drop') + 'for SWE5006; built for SWE5001', '#226 · ADR 0008'],
+  ['E2E, burndown, saved plans', chip('Partial', 'part') + 'stubs; daily data, no chart; manual', 'F-ADR 0011 · #229'],
+];
+// Two views (rubric V1): what was delivered, left open or dropped first; the eight changes appear on the click.
+const pvdRow = r => `<div style="margin-bottom:12px"><div style="font:400 18px/1.3 Inter">${r[1].replace(/^(<span[^>]*>[^<]*<\/span>)/, '$1<b>' + r[0] + '</b><br>')}</div><div style="font:400 17px/1.3 Inter;color:var(--muted);margin-top:2px">${r[2]}</div></div>`;
 const s4 = () => `
-<div style="display:flex;gap:18px">
- ${sprint(1, '2–12 Sep', 'Walking skeleton: CI/CD and dev live on 5 Sep; sign-in, browse, admin', 'Pipeline live; features late', '35 team PRs · 3 issues closed', '#6B655C')}
- ${sprint(2, '14–25 Sep', 'One idempotent chain: payment → team → order', '9 of 11 stories · 134 of 150 h', '64 team PRs · 47 issues closed', 'var(--teal)')}
- ${sprint(3, '28 Sep–9 Oct', 'Invite → pay → refund on the deployed dev site', 'Not met on dev · 117 of 150 h', '126 team PRs · 67 issues closed', 'var(--orange)')}
- ${sprint(4, '12–23 Oct', 'Complete system on dev; three services on ECS for SWE5001', mk('FILL', 'result, 23 Oct'), '38 team PRs · 17 closed so far', '#FFB01F')}
+<div class="card" style="position:absolute;left:0;top:0;width:376px;height:470px;padding:14px 18px">
+ ${kicker('Delivered, open, dropped, partial')}
+ ${pvd.filter(r => !/Changed/.test(r[1])).map(pvdRow).join('')}
 </div>
-<div style="position:absolute;left:0;top:214px;width:640px;height:124px;border-radius:8px;background:#E3E8FB;padding:12px 10px;display:flex">
- ${cer('calendar-check', 'Planning', 'plan.md, hours')}${cer('clock', 'Day log', '35 dated logs')}${cer('scale-balanced', 'Mid-sprint', 'check, S3–S4')}${cer('magnifying-glass', 'Review', 'review, report')}${cer('comments', 'Retro', 'in the report')}
+<div class="frag" data-frag="1" style="position:absolute;left:392px;top:0;width:772px">
+ ${tbl(['Changed: promised', 'Built', 'Record'], pvd.filter(r => /Changed/.test(r[1])).map(r => [`<b>${r[0]}</b>`, r[1].replace(/<span[^>]*>Changed<\/span>/, ''), `<span style="color:var(--muted)">${r[2]}</span>`]), { fs: 18, w: [250, 290], pad: '4px 9px' })}
 </div>
-<div style="position:absolute;left:660px;top:214px;width:504px;display:flex;gap:12px">
- ${stat('159', 'cards', 'on the board: 132 Done, 7 in progress, 20 to do')}
- ${stat('356', 'PRs', 'merged: 263 team, 70 Dependabot, 23 snapshot')}
-</div>
-<div style="position:absolute;left:0;top:356px;width:640px;height:192px;border-radius:8px;background:#fff;border:1px solid #DDD5C8;padding:14px 20px" class="on-surface">
- <div class="serif" style="font-size:21px;margin-bottom:8px">Definition of Done, Sprints 3–4 (highlights)</div>
- <ul class="b" style="font:400 17px/1.3 Inter"><li style="margin-bottom:5px">Acceptance criteria met; contract before controller</li><li style="margin-bottom:5px">Every gate green: Maven verify, ArchUnit, Gitleaks, Trivy, SonarCloud, <span class="mono" style="font-size:15.5px">pnpm check</span></li><li style="margin-bottom:5px"><b>“On dev” means deployed</b>: a local run does not count</li><li style="margin-bottom:0">PR under ~1,500 lines; remaining hours on the board daily</li></ul>
-</div>
-<div style="position:absolute;left:660px;top:356px;width:504px;height:192px;border-radius:8px;background:#FDEFEC;padding:14px 20px">
- <div class="serif" style="font-size:21px;margin-bottom:10px;color:var(--orange-d)">Was it met?</div>
- ${tick('Required gates block every merge', null)}
- ${tick('Sprint 3 not counted: Checkout off on dev', null, 'open')}
- ${tick('Daily remaining hours not kept', null, 'open')}
+<div style="position:absolute;left:0;right:0;top:486px;border-radius:8px;background:#FDEFEC;padding:8px 16px;font:400 18px/1.3 Inter;display:flex;gap:10px;align-items:baseline">
+ <b style="color:#B02E1B;white-space:nowrap">Outstanding</b><span>#517 and #223 (go/no-go 23 Oct) · SSH 22 open on the dev host · CodeQL off · CloudFront → ALB over HTTP until 16 Nov (#227) · dev volume unencrypted</span>
 </div>`;
 
-// ---------- slide 5 ----------
-const ms = [['27 Aug', 'Proposal'], ['5 Sep', 'Backend live on dev'], ['14 Sep', 'Sprint 1 tag'], ['22 Sep', 'Web app live on dev'], ['27 Sep', 'Sprint 2 tag'], ['8 Oct', 'Startable listings on dev'], ['11 Oct', 'Sprint 3 tag'], ['15 Oct', 'Three services merged'], ['23 Oct', 'Sprint 4 tag']];
-const bdIdeal = [224.5, 202.1, 179.6, 157.2, 134.7, 112.3, 89.8, 67.4, 44.9, 22.5, 0], bdAct = [224.5, 224.5, 218.5, 184.5, 123.5, 123.5, 106.5];
-const bdX = ['start', '12', '13', '14', '15', '16', '19', '20', '21', '22', '23'];
-function burndown() {
-  const W = 560, H = 196, L = 44, R = 548, T = 10, B = 168;
-  const X = i => L + 14 + i * ((R - L - 24) / 10), Y = v => B - (v / 240) * (B - T);
-  const line = (d, c, dash) => `<polyline points="${d.map((v, i) => `${X(i)},${Y(v)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="3"${dash ? ' stroke-dasharray="7 5"' : ''}/>` + (dash ? '' : d.map((v, i) => `<circle cx="${X(i)}" cy="${Y(v)}" r="4.5" fill="${c}" stroke="#fff" stroke-width="1.5"/>`).join(''));
-  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Inter">
-   ${[0, 60, 120, 180, 240].map(v => `<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v ? '#EFE9DF' : '#A69E92'}" stroke-width="1"/><text x="${L - 8}" y="${Y(v) + 5}" font-size="14.5" fill="#6B655C" text-anchor="end">${v}</text>`).join('')}
-   ${bdX.map((x, i) => `<text x="${X(i)}" y="${B + 22}" font-size="14.5" fill="#6B655C" text-anchor="middle">${x}</text>`).join('')}
-   ${line(bdIdeal, '#A69E92', true)}${line(bdAct, '#3E5CD9')}
-   <text x="${X(6) + 10}" y="${Y(106.5) - 10}" font-size="15" font-weight="700" fill="#3E5CD9">106.5 h left</text></svg>`;
-}
-const mem = [['Liu Jin', 51, 39], ['Yu Qianshuo', 48, 8], ['Wang Ziang', 46, 17], ['Panpakorn', 41.5, 29], ['Lim Jiechao', 38, 29]];
-const hrs = [['S1', null, null], ['S2', 150, 134], ['S3', 150, 117], ['S4', 224.5, 118]];
+// ---------- slide 5 (1.4) ----------
+const ms = [['27 Aug', 'Proposal submitted'], ['5 Sep', 'Backend pipeline live on dev'], ['14 Sep', 'Sprint 1 tag'], ['20 Sep', 'Stripe Sandbox acceptance (local)'], ['22 Sep', 'Web app live on dev'], ['27 Sep', 'Sprint 2 tag'], ['30 Sep', 'Admin console merged (#305–#307)'], ['11 Oct', 'Sprint 3 tag']];
+const mem = [['Liu Jin', 51], ['Yu Qianshuo', 48], ['Wang Ziang', 46], ['Panpakorn', 41.5], ['Lim Jiechao', 38]];
 const s5 = () => `
-<div style="position:absolute;left:10px;right:10px;top:48px;height:3px;background:var(--teal)"></div>
-${ms.map((m, i) => {
-  const x = 52 + i * 132.5, last = i === ms.length - 1;
-  return `<div style="position:absolute;left:${x - 66}px;width:132px;top:0;text-align:center;font:700 18px Inter">${m[0]}</div>
-  <div style="position:absolute;left:${x - 12}px;top:38px;width:24px;height:24px;border-radius:50%;border:2px solid var(--teal);background:#fff;padding:4px"><div style="width:100%;height:100%;border-radius:50%;background:${last ? '#ECE6DC' : 'var(--teal)'}"></div></div>
-  <div style="position:absolute;left:${x - 66}px;width:132px;top:70px;text-align:center;font:400 15.5px/1.2 Inter">${m[1]}${last ? `<div style="margin-top:2px">${mk('FILL', 'date')}</div>` : ''}</div>`;
-}).join('')}
-<div style="position:absolute;left:0;top:150px;width:560px">
- <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div class="serif" style="font-size:21px">Planned hours per member</div>${mk('VERIFY', 'S4 split, PR #538')}</div>
- <table class="t" style="font-size:17px"><tr><th>Member</th><th style="text-align:right">S2</th><th style="text-align:right">S3</th><th style="text-align:right">S4</th><th style="text-align:right">Board items Done</th></tr>
- ${mem.map(m => `<tr><td style="font-weight:600">${m[0]}</td><td style="text-align:right">30</td><td style="text-align:right">30</td><td style="text-align:right">${m[1]}</td><td style="text-align:right">${m[2]}</td></tr>`).join('')}</table>
- <div style="font:italic 400 15.5px/1.35 Inter;margin-top:8px">S1 hours were not recorded. Board items are delivery evidence, not effort. Planned S2–S4: 98–111 h each; guideline ≈ 10 man-days each (proposal §7)</div>
- <div style="margin-top:8px">${mk('CONFIRM', 'actual effort per member, agreed by all five')}</div>
+<div style="position:absolute;left:0;top:0;width:470px">
+ ${kicker('Milestones achieved')}
+ ${tbl(['Date', 'Milestone'], ms.map(m => [`<b style="white-space:nowrap">${m[0]}</b>`, m[1]]).concat([[`<b>23 Oct</b>`, `Sprint 4 tag ${mk('FILL', 'date')}`], ['—', `<span style="color:#B02E1B">Paid start, join, refund on dev: not yet</span>`]]), { fs: 18, w: [92], pad: '4px 11px' })}
 </div>
-<div style="position:absolute;left:600px;top:150px;width:564px">
- <div class="serif" style="font-size:21px;margin-bottom:2px">Sprint 4 burndown to 19 Oct: plan hours not Done</div>
- ${burndown()}
- <div style="display:flex;gap:22px;font:400 15px Inter;margin:-2px 0 8px 44px"><span><i style="display:inline-block;width:22px;height:0;border-top:3px dashed #A69E92;vertical-align:4px"></i> Ideal (plan §7)</span><span><i style="display:inline-block;width:22px;height:3px;background:var(--teal);vertical-align:4px"></i> Daily board snapshot</span></div>
- ${hrs.map(h => `<div style="display:flex;align-items:center;height:30px;gap:10px"><div style="width:30px;font:700 16px Inter">${h[0]}</div>
-   <div style="position:relative;width:220px;height:18px">${h[1] ? `<div style="position:absolute;left:0;top:0;height:18px;width:${h[1] / 224.5 * 220}px;background:#ECE6DC;border-radius:4px"></div>` : ''}${h[2] ? `<div style="position:absolute;left:0;top:0;height:18px;width:${h[2] / 224.5 * 220}px;background:var(--teal);border-radius:4px"></div>` : ''}</div>
-   <div style="font:400 16px Inter">${!h[1] ? mk('FILL', 'S1 hours') : h[0] === 'S4' ? `<b>${h[2]}</b> of ${h[1]} h ${mk('FILL', 'final')}` : `<b>${h[2]}</b> of ${h[1]} h`}</div></div>`).join('')}
+<div style="position:absolute;left:500px;top:0;width:664px">
+ <div style="display:flex;align-items:baseline;gap:10px">${kicker('Effort per member · planned hours')}${mk('VERIFY', 'S4 split, PR #538')}</div>
+ ${tbl(['Member', 'S1', 'S2', 'S3', 'S4', 'Planned', 'Actual'], mem.map(m => [`<b>${m[0]}</b>`, '—', '30', '30', m[1], `<b>${60 + m[1]}</b>`, mk('CONFIRM', 'agreed')]), { fs: 18, w: [150], pad: '7px 11px' })}
+ <div style="font:400 18px/1.4 Inter;margin-top:12px">Sprint 1 hours were not recorded. Team done: S2 134 of 150 h, S3 117 of 150 h. Budget in the proposal: 10 man-days each (§7).</div>
+ <div style="margin-top:10px;border-radius:8px;background:#FDEFEC;padding:10px 14px;font:400 18px/1.35 Inter"><b style="color:#B02E1B">Planned, not actual:</b> no member logged actual hours, and the progress reports carry none. ${mk('CONFIRM', 'actual effort agreed by all five')}</div>
 </div>`;
 
-// ---------- slide 6 ----------
-const rc = (s, was, now) => `<div style="margin-bottom:12px"><div style="font:700 16px Inter;color:var(--orange-d)">${s}</div><div style="font:400 16.5px/1.3 Inter">${was}${now ? ` <span style="color:var(--orange)">→</span> ${now}` : ''}</div></div>`;
+// ---------- slide 6 (1.5) ----------
+const own = [
+  ['Liu Jin', 'UC9 admin listings and team terms', 'Listing lifecycle → <b>State</b> (full form)', '21–22', 'was UC5 State, UC9'],
+  ['Wang Ziang (Eric)', 'UC3 start, UC4 join', 'Team creation → <b>Factory Method</b>', '17', 'unchanged; UC4 race is a transition strategy'],
+  ['Yu Qianshuo (Yorik)', 'UC6 refund on expiry', 'Team outcome consequences → <b>Observer</b>', '18', 'was Adapter'],
+  ['Panpakorn (Pan)', 'Receive notifications', 'Outbox transports → <b>Template Method</b>', '19', 'was UC1 Strategy, UC2'],
+  ['Lim Jiechao', 'UC8 my orders and teams', 'Pricing → <b>Strategy</b>', '20', 'was UC7 Observer, UC8'],
+];
 const s6 = () => `
-<div style="display:flex;gap:18px;height:540px;margin-top:-6px">
- <div style="flex:1;background:#E3E8FB;border-radius:8px;padding:20px 20px">
-   <div class="serif" style="font-size:24px;color:var(--green);margin-bottom:6px">Live on dev · 19 Oct</div>
-   <div style="margin-bottom:12px">${mk('VERIFY', 're-check on 25 Oct')}</div>
-   ${tick('API health UP; web app loads', 'checked 19 Oct, 14:14 SGT')}
-   ${tick('14 listings in the catalog', 'startable listings set through the admin API (8 Oct)')}
-   ${tick('Google sign-in, Secure session cookie', 'NFR-01 verified on dev, 8 Oct')}
-   ${tick('Stripe Checkout opens and returns', 'Sandbox, 16 Oct (#517)')}
- </div>
- <div style="flex:1;background:#FDEFEC;border-radius:8px;padding:20px 20px">
-   <div class="serif" style="font-size:24px;color:var(--orange-d);margin-bottom:16px">Still open</div>
-   ${tick('Webhook never confirms: payments stay “waiting”', '#517 · Yorik', 'open')}
-   ${tick('Scheduling and expiry refunds off on dev', '#223 · Yorik · go/no-go for the live payment demo', 'open')}
-   ${tick('Payment hardening in progress', '#539, #548, #550 · Eric', 'open')}
-   ${tick('Sprint 3 review and retro not yet written', '#451 · Lim', 'open')}
- </div>
- <div class="card" style="flex:1.12;padding:20px 20px">
-   <div class="serif" style="font-size:24px;margin-bottom:14px">Retro → next sprint</div>
-   ${rc('Sprint 1 → 2', 'No burndown kept', 'daily board snapshots, hours per story')}
-   ${rc('Sprint 2 → 3', 'A 10,000-line PR, cliff burndown, owners drifted', 'PRs under 1,500 lines, mid-sprint check, hours daily')}
-   ${rc('Sprint 3 → 4', mk('FILL', 'retro, #451'), 'review: goal not met on dev, so #223 became the critical path')}
-   ${rc('Sprint 4', mk('FILL', 'retro on 23 Oct'), '')}
- </div>
-</div>`;
+${tbl(['Member', 'Use case', 'Design problem → GoF pattern', 'Slide', 'Change from proposal §6.1'], own.map(o => [`<b>${o[0]}</b>`, o[1], o[2], o[3], `<span style="color:var(--muted)">${o[4]}</span>`]), { fs: 18, w: [196, 270, 330, 70], pad: '12px 12px' })}
+<div style="margin-top:14px">${kicker('Every use case has an owner · * proposed, not yet agreed')}</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px 18px;font:400 18px/1.3 Inter">${[['UC1', 'Lim*'], ['UC2', 'Pan*'], ['UC3', 'Eric'], ['UC4', 'Eric'], ['UC5', 'Eric*'], ['UC6', 'Yorik'], ['UC7', 'Lim*'], ['UC8', 'Lim'], ['UC9', 'Liu Jin'], ['Notifications', 'Pan']].map(u => `<span><b>${u[0]}</b> ${u[1]}</span>`).join('')}${mk('CONFIRM', 'owners marked * (open decision 4)')}</div>
+<div style="margin-top:10px;font:400 18px/1.4 Inter">Each member presents their own design problem in section 2; the team statechart (UC4–UC6) goes with Eric’s UC4 design.</div>
+<div style="margin-top:12px;display:flex;gap:16px;align-items:center;font:400 18px Inter;color:var(--muted)">Report: use case in §3.4, design problem in §3.5 ${mk('FILL', 'section numbers (#463)')} ${mk('VERIFY', 'UC9 owner')}</div>`;
 
-// ---------- segment 2 helpers (design; d* names) ----------
-// Role colours follow docs/presentation-kit/diagrams/STYLE.md: [stroke, soft fill, text].
-const dTone = {
-  biz: ['#E8402A', '#FDEFEC', '#B02E1B'], plat: ['#3E5CD9', '#F1F4FD', '#3E5CD9'], ev: ['#7A5C20', '#FFF6E2', '#7A5C20'],
-  n: ['#6B655C', '#FFFFFF', '#1B1A18'], bad: ['#8C2414', '#EFE9DF', '#8C2414'],
-};
-const cn = (t, sz = 15.5) => `<span class="mono" style="font-size:${sz}px;font-weight:500">${t}</span>`;
-const dK = (t, c = '#6B655C') => `<div style="font:700 14.5px Inter;letter-spacing:.05em;text-transform:uppercase;color:${c};margin-bottom:5px">${t}</div>`;
-const dTo = '<span style="color:#E8402A;font-weight:700"> → </span>';
-const dArr = (c = '#6B655C', w = 14) => `<div style="flex:none;display:flex;align-items:center"><div style="width:${w}px;height:2px;background:${c}"></div><div style="border-left:9px solid ${c};border-top:6px solid transparent;border-bottom:6px solid transparent"></div></div>`;
-const dBox = (kind, top, main, sub, style = '', msz = 15) => {
-  const [b, bg, fg] = dTone[kind];
-  return `<div style="border-radius:8px;border:1.4px solid ${b};background:${bg};padding:7px 11px;${style}">${top ? `<div style="font:700 14.5px/1.25 Inter;color:${fg}">${top}</div>` : ''}${main ? `<div style="font:500 ${msz}px/1.35 'JetBrains Mono',monospace;margin-top:2px">${main}</div>` : ''}${sub ? `<div style="font:400 14.5px/1.3 Inter;color:#6B655C;margin-top:3px">${sub}</div>` : ''}</div>`;
-};
-const dBand = (uc, a2d, prob) => `<div style="position:absolute;left:0;top:0;width:1164px;height:124px;display:flex;gap:12px">
- <div class="card" style="width:322px;padding:10px 16px">${dK('Use case · analysis')}<div style="font:400 17.5px/1.3 Inter">${uc}</div></div>
- <div class="card" style="width:432px;padding:10px 16px">${dK('Analysis → design')}<div style="font:400 15.5px/1.55 Inter">${a2d}</div></div>
- <div style="flex:1;border-radius:8px;background:#FDEFEC;padding:10px 16px">${dK('Design problem', '#B02E1B')}<div style="font:500 17.5px/1.3 Inter">${prob}</div></div></div>`;
-const dPat = (name, kind, src) => `<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px"><div style="font:700 21px Inter;white-space:nowrap">${name}</div><div style="font:500 15px Inter;color:#6B655C;white-space:nowrap">${kind}</div>${src ? `<div style="margin-left:auto;white-space:nowrap">${cn(src, 14.5)}</div>` : ''}</div>`;
-const dTag = t => `<span style="display:inline-block;font:600 14.5px/1 Inter;color:#1B1A18;background:#ECE6DC;border-radius:999px;padding:5px 10px;white-space:nowrap">${t}</span>`;
-const dNote = (ic, t, c = '#6B655C') => `<div style="display:flex;gap:10px;align-items:flex-start;font:400 16px/1.35 Inter"><span style="color:${c};font-size:18px;flex:none">${icon(ic)}</span><span>${t}</span></div>`;
-
-// ---------- slide 7 ----------
-const dMod = (m, t) => `<div style="display:flex;align-items:center;height:37px;border-top:1px solid #EFE9DF"><div style="width:230px;flex:none">${cn(m, 15.5)}</div><div style="font:400 16.5px Inter">${t}</div></div>`;
-const dCtx = (t, k) => { const [b, bg, fg] = dTone[k]; return `<span style="display:inline-block;font:600 16px/1 Inter;color:${fg};background:${bg};border:1.4px solid ${b};border-radius:999px;padding:6px 12px">${t}</span>`; };
-const dRule = (a, d) => `<div style="flex:1;border-radius:8px;background:#fff;border:1px solid #DDD5C8;padding:8px 12px"><div style="font:600 16.5px/1.25 Inter">${a}</div><div style="font:400 16px/1.3 Inter;color:#B02E1B;margin-top:3px">→ ${d}</div></div>`;
+// ---------- slide 7 (1.6, 1.7) ----------
+const steps = ['coded', 'tested', 'integrated', 'releasable', 'released'];
+const ladder = () => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span style="font:600 18px Inter;color:var(--muted);margin-right:6px">DoD ladder (EPAT 01 Agile p26)</span>${steps.map((s, i) => `<span style="font:600 18px/1 Inter;padding:7px 12px;border-radius:999px;background:${i === 2 ? '#E3E8FB' : '#ECE6DC'};color:${i === 2 ? '#3E5CD9' : '#1B1A18'}">${s}</span>${i < 4 ? '<span style="color:#A69E92">→</span>' : ''}`).join('')}</div>`;
+const spr = [
+  ['1 · 1–12 Sep', 'Walking skeleton: sign-in, browse, admin on dev', '<b>integrated</b>: backend on dev 5 Sep; no frontend, so not releasable'],
+  ['2 · 15–26 Sep', 'Pay, join a team, see the order, replay-safe', '<b>integrated</b>: merged, tested, Checkout off on dev; 134 of 150 h'],
+  ['3 · 28 Sep–9 Oct', 'Invite → pay → refund on deployed dev', '<b>integrated</b>; goal not met under our “on dev” rule; 117 of 150 h'],
+  ['4 · 12–23 Oct', 'Complete system on dev; three services on ECS (SWE5001)', mk('FILL', 'step recorded at the 23 Oct review')],
+];
+const retro = [
+  ['1 → 2', 'No burndown, no hours', 'daily board snapshots, dated day logs'],
+  ['2 → 3', 'A 10,000-line PR; cliff burndown', 'PRs under 1,500 lines, mid-sprint check, “on dev” rule in the DoD'],
+  ['3 → 4', mk('FILL', 'retro #451'), 'owners keep board estimates current, checked mid-sprint'],
+];
 const s7 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:566px;height:398px;padding:14px 20px">
- <div style="display:flex;align-items:baseline;justify-content:space-between"><div class="serif" style="font-size:21px">One codebase: five COLA modules</div>${dTag('modular monolith')}</div>
- <div style="margin-top:8px">
-  ${dMod('blocbuy-adapter', 'REST controllers, Result envelope')}
-  ${dMod('blocbuy-application', 'use-case services, subscribers')}
-  ${dMod('blocbuy-domain', 'aggregates, events, ports; no Spring')}
-  ${dMod('blocbuy-infrastructure', 'MyBatis, Stripe, Redis, SQS, SNS')}
-  ${dMod('blocbuy-client', 'DTOs, integration event contracts')}
- </div>
- <div style="font:600 16.5px Inter;margin:12px 0 8px">Each bounded context is a package in every module</div>
- <div style="display:flex;flex-wrap:wrap;gap:8px">${dCtx('identity', 'plat')}${dCtx('catalog', 'biz')}${dCtx('groupbuy', 'biz')}${dCtx('order', 'biz')}${dCtx('payment', 'biz')}${dCtx('notification', 'plat')}</div>
- <div style="margin-top:14px">${dNote('shield-halved', '<b>18 ArchUnit rules</b> fail the build on a wrong dependency', '#3E5CD9')}</div>
-</div>
-<div class="card" style="position:absolute;left:584px;top:0;width:580px;height:398px;padding:14px 20px">
- <div style="display:flex;align-items:baseline;justify-content:space-between"><div class="serif" style="font-size:21px">Two topologies from one build</div>${dTag('ADR 0008')}</div>
- <div style="margin-top:12px">${dK('dev · SWE5006 · one EC2 host, Docker Compose')}
-  ${dBox('biz', 'Monolith: all six contexts in one process', null, 'events in-process, no broker')}</div>
- <div style="margin-top:14px">${dK('prod · SWE5001 · Amazon ECS')}
-  <div style="display:flex;gap:8px">${dBox('plat', 'identity-svc', null, null, 'flex:1')}${dBox('biz', 'commerce-svc', null, 'catalog · groupbuy · order · payment', 'flex:1.9')}${dBox('plat', 'notification-svc', null, null, 'flex:1.15')}</div>
-  <div style="margin-top:8px">${dBox('ev', 'Events: outbox → SNS → SQS (ADR 0007)', null, null)}</div></div>
- <div style="margin-top:14px;border-radius:8px;background:#FDEFEC;padding:9px 14px;font:400 16.5px/1.3 Inter"><b style="color:#B02E1B">Split only where no transaction crosses:</b> pay, join, order and stock commit together, so they stay in commerce</div>
-</div>
-<div style="position:absolute;left:0;top:414px;width:1164px">
- <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px"><div class="serif" style="font-size:20px">Analysis → design: our transition rule</div><div style="font:400 15.5px Inter;color:#6B655C">use cases: slide 3 · worked examples: B7</div></div>
- <div style="display:flex;gap:10px">${dRule('Bounded context', 'package in each module')}${dRule('Analysis entity', 'aggregate + repository port')}${dRule('External actor (Google, Stripe)', 'gateway port + adapter (ACL)')}${dRule('Use case', 'application service + endpoint')}</div>
+${ladder()}
+${tbl(['Sprint', 'Goal', 'Definition of Done reached by the goal increment'], spr.map(s => [`<b style="white-space:nowrap">${s[0]}</b>`, s[1], s[2]]), { fs: 18, w: [160, 450], pad: '6px 11px' })}
+<div style="font:400 18px/1.3 Inter;color:var(--muted);margin-top:6px">Same basis every sprint: integrated = merged to dev with every check green; releasable = shown working on deployed dev, our “on dev” rule</div>
+<div class="frag" data-frag="1" style="margin-top:12px;border-radius:8px;background:#FDEFEC;padding:10px 16px">
+ <div style="font:700 18px Inter;color:#B02E1B;margin-bottom:6px">Retro improvement → change in the next sprint</div>
+ ${retro.map(r => `<div style="display:flex;gap:12px;font:400 18px/1.35 Inter;margin-bottom:3px"><b style="width:52px;flex:none">${r[0]}</b><span style="width:330px;flex:none">${r[1]}</span><span><span style="color:#E8402A;font-weight:700">→</span> ${r[2]}</span></div>`).join('')}
 </div>`;
 
-// ---------- slide 8 ----------
-const dState = () => {
-  const node = (x, t) => `<rect x="${x}" y="22" width="150" height="46" rx="23" fill="url(#s8g)" stroke="#E8402A" stroke-width="1.4"/><text x="${x + 75}" y="51" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15.5" font-weight="700" fill="#B02E1B">${t}</text>`;
-  const lab = (x, y, t) => `<text x="${x}" y="${y}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14.5" fill="#1B1A18">${t}</text>`;
-  return `<svg width="700" height="96" viewBox="0 0 700 96" font-family="Inter, Helvetica, Arial, sans-serif">
-  <defs><linearGradient id="s8g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FBDFD9"/></linearGradient>
-  <marker id="s8ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B1A18"/></marker></defs>
-  <circle cx="8" cy="45" r="7" fill="#1B1A18"/><line x1="15" y1="45" x2="38" y2="45" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#s8ah)"/>
-  ${node(40, 'DRAFT')}${node(300, 'ON_SALE')}${node(548, 'OFF_SALE')}
-  <line x1="190" y1="45" x2="298" y2="45" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#s8ah)"/>${lab(245, 37, 'publish()')}
-  <line x1="450" y1="36" x2="546" y2="36" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#s8ah)"/>${lab(499, 28, 'delist()')}
-  <line x1="548" y1="56" x2="452" y2="56" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#s8ah)"/>${lab(499, 76, 'publish()')}
-  <text x="115" y="90" text-anchor="middle" font-size="14.5" fill="#6B655C">only state that may be deleted</text></svg>`;
-};
-const dSchema = [
-  ['identity', 'plat', 'sys_user, sys_role +4'], ['catalog', 'biz', 'biz_product +3'], ['groupbuy', 'biz', 'biz_group_deal +4'],
-  ['order', 'biz', 'biz_order, biz_purchase_intent'], ['payment', 'biz', 'biz_payment, biz_refund +4'],
-  ['notification', 'plat', 'biz_notification, sys_consumed_message'], ['jobs', 'biz', 'sys_outbox +3'],
-];
+// ---------- slide 8 (1.8) ----------
+function burndown() {
+  const xs = ['start', '15', '16', '17', '18', '19', '22', '23', '24', '25', '26'];
+  const ideal = [150, 135, 120, 105, 90, 75, 60, 45, 30, 15, 0], act = [150, 150, 150, 150, 150, 150, 124, 74, 40, 16, 16];
+  const W = 600, H = 250, L = 48, R = W - 12, T = 12, B = H - 32;
+  const X = i => L + 14 + i * ((R - L - 24) / (xs.length - 1)), Y = v => B - (v / 150) * (B - T);
+  const pl = (d, c, dash) => `<polyline points="${d.map((v, i) => `${X(i)},${Y(v)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="3"${dash ? ' stroke-dasharray="7 5"' : ''}/>` + (dash ? '' : d.map((v, i) => `<circle cx="${X(i)}" cy="${Y(v)}" r="4.5" fill="${c}" stroke="#fff" stroke-width="1.5"/>`).join(''));
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Inter">
+   ${[0, 50, 100, 150].map(v => `<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v ? '#EFE9DF' : '#A69E92'}" stroke-width="1"/><text x="${L - 8}" y="${Y(v) + 6}" font-size="17" fill="#6B655C" text-anchor="end">${v}</text>`).join('')}
+   ${xs.map((x, i) => `<text x="${X(i)}" y="${B + 24}" font-size="17" fill="#6B655C" text-anchor="middle">${x}</text>`).join('')}
+   ${pl(ideal, '#A69E92', true)}${pl(act, '#3E5CD9')}</svg>`;
+}
+const ac = ['Admin-only API; 403 non-admin, 401 anonymous', 'Size ≥ 2, lifetime in range, team price below individual; 400 with field errors', 'Stale expectedVersion → 412; writes audited', 'Configured listing is startable; START integration test', 'Contract changes additive, merged before the controller', 'Unit, PostgreSQL IT, authorization tests; ArchUnit green'];
 const s8 = () => `
-${dBand('UC9 · An admin drafts, publishes and delists listings and sets team terms',
-  `listing${dTo}${cn('Product')} «aggregate»<br>listing status${dTo}${cn('ProductStatus')} (State)<br>listing store${dTo}${cn('ProductRepository')} port`,
-  'Legal moves depend on the status, and two admins can edit the same listing')}
-<div class="card" style="position:absolute;left:0;top:138px;width:744px;height:200px;padding:12px 20px">
- ${dPat('State', 'GoF · behavioural', 'ProductStatus.java')}
- ${dState()}
- <div style="font:400 16px/1.3 Inter;margin-top:2px">Each constant overrides only its legal moves; every other move is refused with <b>409</b></div>
+<div class="card" style="position:absolute;left:0;top:0;width:540px;padding:14px 20px 16px">
+ <div style="display:flex;justify-content:space-between;align-items:baseline">${kicker('Story card · #221 (US25)')}<span style="font:600 18px Inter;color:var(--muted)">Liu Jin · PR #242</span></div>
+ <div style="font:600 18px/1.3 Inter;margin-bottom:8px">As an admin, I can set a listing’s team size, lifetime and team price, so that buyers can start blocs on real listings.</div>
+ ${ac.map(a => `<div style="display:flex;gap:8px;font:400 18px/1.3 Inter;margin-bottom:5px"><span style="color:#3E5CD9;flex:none">${icon('square-check')}</span><span>${a}</span></div>`).join('')}
+ <div style="font:400 18px Inter;color:var(--muted);margin-top:6px">Design problem field: State, Optimistic Offline Lock</div>
 </div>
-<div class="card" style="position:absolute;left:0;top:350px;width:744px;height:198px;padding:12px 20px">
- ${dPat('Optimistic Offline Lock', 'Fowler, PoEAA', 'Product.requireVersion')}
- <div style="display:flex;align-items:center;gap:6px">
-  ${dBox('n', 'Admin reads', 'version 4', null, 'width:128px', 14.5)}${dArr()}
-  ${dBox('n', 'Write sends', 'expectedVersion=4', null, 'width:180px', 14.5)}${dArr()}
-  ${dBox('biz', 'Guarded UPDATE', 'WHERE version=4', null, 'width:162px', 14.5)}${dArr()}
-  <div style="display:flex;flex-direction:column;gap:6px;flex:1">${dBox('plat', null, '1 row: v5', null, '', 14.5)}${dBox('bad', null, '0 rows: 412', null, '', 14.5)}</div>
- </div>
- <div style="font:400 16px/1.3 Inter;margin-top:10px">A stale write changes nothing: <b>412</b>, and the console offers Reload (frontend ADR 0015)</div>
+<div style="position:absolute;left:564px;top:0;width:600px">
+ ${kicker('Sprint 2 burndown · hours left · report period 15–26 Sep')}
+ ${burndown()}
+ <div style="font:400 18px/1.35 Inter;margin-top:2px">Flat for a week, then a cliff: work merged late in large PRs. Reconstructed from merge dates.</div>
 </div>
-<div class="card" style="position:absolute;left:760px;top:138px;width:404px;height:410px;padding:12px 18px">
- <div class="serif" style="font-size:20px">Database schema</div>
- <div style="font:400 15px Inter;color:#6B655C;margin:2px 0 8px">29 tables · 28 Flyway migrations</div>
- ${dSchema.map(([g, k, t]) => `<div style="display:flex;gap:10px;align-items:baseline;padding:4px 0 4px 10px;border-left:4px solid ${dTone[k][0]};margin-bottom:5px"><div style="width:90px;flex:none;font:700 15px Inter;color:${dTone[k][2]}">${g}</div><div class="mono" style="font-size:14.5px;line-height:1.3">${t}</div></div>`).join('')}
- <div style="font:400 14.5px/1.35 Inter;color:#6B655C;margin-top:8px">UUID keys, timestamptz, numeric money; UNIQUE keys make retries safe · full list B5</div>
+<div style="position:absolute;left:0;right:0;top:450px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 18px/1.35 Inter"><b style="color:#3E5CD9">Practice (EPAT 03, 05):</b> two red tests reproduced a quote defect (7 Oct log), then PR #424 refactored admission into shared guards and injected the Factory Method’s creator. Full set of artefacts: backup B1.</div>`;
+
+// ---------- slide 24 (3.1, 3.3) ----------
+// Agile Testing Quadrants (EPAT 03 TDD p7), laid out as in the deck: business-facing on top, supporting the team on the left.
+const lvl = t => `<span style="display:inline-block;font:600 18px/1 Inter;border:1.5px solid #6B655C;color:#1B1A18;border-radius:999px;padding:3px 8px;margin-left:6px;vertical-align:2px">${t}</span>`;
+const qrow = (name, level, rest) => `<div style="font:400 18px/1.26 Inter;margin-bottom:4px"><b>${name}</b>${lvl(level)} <span style="color:var(--muted)">·</span> ${rest}</div>`;
+const caught = t => `<div style="font:400 18px/1.3 Inter;margin-top:2px"><b style="color:#B02E1B">Caught:</b> ${t}</div>`;
+const runs = t => `<div style="font:400 18px/1.3 Inter;color:var(--muted);margin-bottom:2px">Runs in ${t}</div>`;
+const quad = (q, axes, how, body, style, frag) => `<div class="card${frag ? ' frag' : ''}"${frag ? ` data-frag="${frag}"` : ''} style="position:absolute;${style};padding:9px 16px">
+ <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px"><span style="font:700 18px Inter">${q} <span style="font-weight:500;color:var(--muted)">${axes}</span></span><span style="font:600 18px Inter;color:var(--muted)">${how}</span></div>
+ ${body}</div>`;
+const Q_H = 'height:197px', Q_H2 = 'height:226px', Q_W = 'width:574px';
+const s24 = () => `
+${quad('Q2', 'business-facing · supporting the team', 'automated', `
+ ${qrow('Story acceptance', 'system', `${mo('StripeRolloutAcceptanceIT')} · real HTTP, scheduler, signed webhooks`)}
+ ${qrow('End-to-end', 'system', 'Playwright · 8 specs, on the preview build and on dev')}
+ ${runs(`${mo('build-quality')}, ${mo('e2e-preview')}, ${mo('e2e-dev')}`)}
+ ${caught('a 502 on e2e-dev during a deploy (3–4 Oct): one host')}`, `left:0;top:0;${Q_W};${Q_H}`, 1)}
+${quad('Q3', 'business-facing · critiquing the product', 'manual', `
+ ${qrow('Exploratory, acceptance', 'system', 'by hand, logged')}
+ <div style="font:400 18px/1.3 Inter;margin-bottom:6px">Stripe Sandbox START and JOIN in a browser (20 Sep, local) · sign-in cookie Secure and HttpOnly on dev (8 Oct)</div>
+ ${caught('no defect logged from these runs')}
+ <div style="font:400 18px/1.3 Inter;color:#B02E1B;margin-top:4px">Not done: acceptance testing with outside users</div>`, `left:590px;top:0;${Q_W};${Q_H}`, 2)}
+${quad('Q1', 'technology-facing · supporting the team', 'automated', `
+ ${qrow('Unit, component', 'unit', 'JUnit: 162 of 185 *Test classes · Vitest 77 files')}
+ ${qrow('Integration', 'integration', 'Testcontainers: 45 of 49 classes')}
+ ${qrow('Contract, ArchUnit', 'integration', 'openapi-diff · 18 rules')}
+ ${runs(`${mo('build-quality')}, ${mo('frontend-check')} (required), ${mo('contract-check')}`)}
+ ${caught('two red tests reproduced the join-quote defect (#422)')}`, `left:0;top:205px;${Q_W};${Q_H2}`)}
+${quad('Q4', 'technology-facing · critiquing the product', 'tools', `
+ ${qrow('Performance, load', 'system', 'k6 on SWE5001 ECS, by hand')}
+ ${qrow('Security scanning', 'types', 'SAST · dependencies (SCA) · image and IaC configuration · secrets')}
+ <div style="font:400 18px/1.3 Inter;color:var(--muted);margin-bottom:2px">Load by hand; the scans gate the pipeline (slide 28)</div>
+ ${caught('full-history gitleaks: 24 matches, 4 badge tokens still open (slide 30)')}`, `left:590px;top:205px;${Q_W};${Q_H2}`, 3)}
+<div style="position:absolute;left:0;right:0;top:439px;border-radius:8px;background:#E3E8FB;padding:4px 16px">
+ <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font:700 18px Inter;color:#3E5CD9">Complex classes under test (proposal §6.3)</span><span style="font:400 18px Inter;color:var(--muted)">Quadrants: EPAT 03 TDD p7 · levels: p5</span></div>
+ ${[['Team state machine', `${mo('DealStatusTest')}, ${mo('PaidGroupDealTest')}`],
+    ['Last-seat capacity', `${mo('StripeLocalIntegrationTest.twentyBuyersRaceForLastSeat…')} (integration)`],
+    ['Refund idempotency', `${mo('RefundServiceTest.lostResponseRetriesSameDurableKey')}`]]
+   .map(r => `<div style="display:flex;gap:12px;font:400 18px/1.3 Inter"><b style="width:190px;flex:none">${r[0]}</b><span>${r[1]}</span></div>`).join('')}
 </div>`;
 
-// ---------- slide 9 ----------
-const dFactory = () => {
-  const cls = (x, y, w, name, stereo, ops) => {
-    const h = 46 + (stereo ? 18 : 0) + (ops ? ops.length * 22 + 8 : 0), ny = y + (stereo ? 40 : 29);
-    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#s9g)" stroke="#E8402A" stroke-width="1.4"/>
-    ${stereo ? `<text x="${x + w / 2}" y="${y + 19}" text-anchor="middle" font-size="14.5" fill="#1B1A18">${stereo}</text>` : ''}
-    <text x="${x + w / 2}" y="${ny}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700" fill="#B02E1B"${stereo ? ' font-style="italic"' : ''}>${name}</text>
-    ${ops ? `<line x1="${x}" y1="${ny + 12}" x2="${x + w}" y2="${ny + 12}" stroke="#E8402A" stroke-width="1.2"/>` + ops.map((o, i) => `<text x="${x + 12}" y="${ny + 34 + i * 22}" font-family="JetBrains Mono, monospace" font-size="14.5" fill="#1B1A18">${o}</text>`).join('') : ''}`;
-  };
-  return `<svg width="556" height="224" viewBox="0 0 556 224" font-family="Inter, Helvetica, Arial, sans-serif">
-  <defs><linearGradient id="s9g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FBDFD9"/></linearGradient>
-  <marker id="s9ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B1A18"/></marker>
-  <marker id="s9op" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10" fill="none" stroke="#1B1A18" stroke-width="1.4"/></marker>
-  <marker id="s9tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="14" markerHeight="14" orient="auto-start-reverse"><path d="M0,0 L12,6 L0,12 z" fill="#fff" stroke="#1B1A18" stroke-width="1.2"/></marker></defs>
-  ${cls(0, 22, 206, 'PaidGroupDealService', null, null)}
-  ${cls(282, 0, 274, 'PaidGroupDealCreator', '«abstract»', ['+ initiate()  {final}', '# createGroupDeal()'])}
-  ${cls(270, 170, 286, 'StandardPaidGroupDealCreator', null, null)}
-  ${cls(0, 170, 150, 'GroupDeal', null, null)}
-  <line x1="206" y1="45" x2="280" y2="45" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#s9ah)"/><text x="243" y="70" text-anchor="middle" font-size="14.5" fill="#6B655C">injected</text>
-  <line x1="419" y1="170" x2="419" y2="124" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#s9tri)"/>
-  <line x1="270" y1="193" x2="152" y2="193" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#s9op)"/><text x="211" y="185" text-anchor="middle" font-size="14.5" fill="#6B655C">creates</text></svg>`;
+// ---------- slide 25 (3.2) ----------
+const kv = rows => rows.map(r => `<div style="display:flex;gap:14px;font:400 18px/1.35 Inter;margin-bottom:10px"><b style="width:118px;flex:none">${r[0]}</b><span>${r[1]}</span></div>`).join('');
+const s25 = () => `
+<div class="card" style="position:absolute;left:0;top:0;width:620px;height:536px;padding:18px 22px">
+ ${kicker('The scripted test')}
+ ${kv([
+   ['Tool', `k6 1.6.1, image pinned by digest · ${mo('perf/k6/browse.js')}`],
+   ['Target system', '<b>SWE5001 ECS environment, same code</b>: CloudFront → ALB → Fargate. Never the shared SWE5006 dev host, which also runs its database'],
+   ['Load', 'open arrival rate 10 → 200 requests/s in ten 60 s steps; 100 VUs preallocated, 400 max'],
+   ['Mix', '7 listing pages : 3 listing details, anonymous; no think time; 10 s timeout'],
+   ['Pass, per step', 'p95 &lt; 500 ms · errors &lt; 1% · zero dropped requests'],
+   ['Result', `run in the system demo (slide 34) · ${mk('FILL', '5.3 pre-run label and date')}`],
+ ])}
+</div>
+<div style="position:absolute;left:640px;top:0;width:524px">
+ <div class="card" style="padding:16px 20px;margin-bottom:12px">
+  ${kicker('Proposal target (§6.3)', '#B02E1B')}
+  <div style="font:600 19px/1.35 Inter">Interactive operations ≤ 2 s with up to 100 concurrent users</div>
+  <div style="font:400 18px/1.4 Inter;margin-top:10px">Little’s law <span class="mono" style="font-size:18px">N = X · (R + Z)</span>: 100 users, 0.5 s think, ~30 ms response → <b>X ≈ 190 requests/s</b>, inside the 200 driven, with a p95 gate four times stricter than 2 s</div>
+  <div style="font:400 18px/1.35 Inter;color:var(--muted);margin-top:6px">The 0.5 s think time is our assumption</div>
+ </div>
+ <div class="card" style="padding:16px 20px">
+  ${kicker('Expiry ≤ 1 min after the window', '#B02E1B')}
+  <div style="font:400 18px/1.4 Inter">Measured <b>locally</b> under 100-user load (30 Sep): 30 teams, worst lag 58.2 s; one cohort waited a full one-minute sweep</div>
+  <div style="font:400 18px/1.35 Inter;color:var(--muted);margin-top:6px">On ECS: ${mk('FILL', 'V4 expiry burst, or "local only"')}</div>
+ </div>
+</div>`;
+
+// ---------- diagram walk-through (rubric V1, V3, V5) ----------
+// The full diagram, scaled to `view`, orients the audience; each crop is then shown 1:1 (labels ≥ 24 px) as an opaque
+// fragment layer stacked over the body in order. Screenshots and the PDF keep the orientation view, with each crop
+// outlined and numbered; the PDF carries every crop 1:1 on a detail page (D<slide>-<step>, built from CROPS).
+const nat = (name, W, H) => svg(name).replace('<svg ', `<svg style="display:block;width:${W}px;height:${H}px" `);
+// Every crop a slide steps through is also recorded here, so slides-backup.js can print each one 1:1 as a detail page
+// (the PDF cannot step through fragments). Detail ids are D<slide>.<crop>, e.g. D14.2.
+const CROPS = [];
+const CROP_H = 548;
+// One 1:1 crop layer. `head` repeats the diagram's top `head` px (a sequence diagram's lifeline headers) as a strip
+// above the cropped area, so every crop still names its lifelines. z-index keeps the crop above any side text.
+// A window onto the diagram at 1:1, cut with the root viewBox so nothing overflows the slide.
+const win = (name, x, y, w, h) => svg(name).replace(/<svg\b[^>]*>/, t => t.replace(/\s(width|height|viewBox)="[^"]*"/g, '')
+  .replace('<svg', `<svg width="${w}" height="${h}" viewBox="${x} ${y} ${w} ${h}" style="display:block"`));
+const cropView = (name, W, H, x, y, head = 0) => {
+  const strip = head > 0 && y >= head;
+  if (!strip) return win(name, x, y, 1164, CROP_H);
+  return `${win(name, x, 0, 1164, head)}<div style="border-top:2px dashed #A69E92"></div>${win(name, x, y, 1164, CROP_H - head - 2)}`;
 };
+// The step badge sits in the gap between the title and the body, outside the crop, so it never covers the diagram;
+// its cream band also hides the previous step's badge.
+const badge = (t, i) => `<div class="frag zcrop" data-frag="${i + 1}" style="position:absolute;left:420px;right:0;top:-31px;height:27px;background:var(--background);text-align:right;z-index:11"><span style="display:inline-block;font:700 16px/1 Inter;letter-spacing:.03em;background:#1B1A18;color:#fff;border-radius:999px;padding:5px 12px">${t}</span></div>`;
+const cropLayer = (name, W, H, x, y, label, i, n, head = 0) => {
+  CROPS.push({ name, W, H, x, y, label, i, n, head });
+  return `<div class="frag zcrop" data-frag="${i + 1}" style="position:absolute;left:0;top:0;width:1164px;height:${CROP_H}px;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 0 0 2px #1B1A18;z-index:10">${cropView(name, W, H, x, y, head)}</div>
+${badge(`${i + 1}/${n} · ${label}`, i)}`;
+};
+// Orientation view: the whole diagram, scaled, with a numbered dashed outline for each crop it will step through
+// (rubric V1: whole diagram first, then the part under discussion; V5: outline, not a laser pointer).
+const outlines = (crops, s) => crops.map(c => `<div style="position:absolute;left:${Math.round(c.x * s)}px;top:${Math.round(c.y * s)}px;width:${Math.round(1164 * s)}px;height:${Math.round(CROP_H * s)}px;border:2px dashed #E8402A;border-radius:3px;box-sizing:border-box"><span style="position:absolute;left:-2px;top:-2px;font:700 13px/1 Inter;background:#E8402A;color:#fff;padding:3px 6px;border-radius:3px 0 3px 0">${c.k}</span></div>`).join('');
+const orient = (name, W, H, s, at, crops) => { const w = Math.round(W * s), h = Math.round(H * s); return `<div style="position:absolute;${at};width:${w}px;height:${h}px">${nat(name, w, h)}${outlines(crops, s)}</div>`; };
+const zoom = (name, { W, H, view, at = 'left:0;top:0', crops }) => {
+  const s = Math.min(view[0] / W, view[1] / H);
+  return `<style>body:not(.present) .zcrop{display:none}</style>
+${orient(name, W, H, s, at, crops.map(([x, y], k) => ({ x, y, k: k + 1 })))}
+${crops.map(([x, y, label, head], i) => cropLayer(name, W, H, x, y, label, i, crops.length, head)).join('')}`;
+};
+
+// Several diagrams on one slide: each view is a scaled orientation copy at its own place; the crops step through any
+// diagram 1:1 in the order given, like zoom().
+const fit = v => Math.min(v.view[0] / v.W, v.view[1] / v.H);
+const walk = (views, crops) => `<style>body:not(.present) .zcrop{display:none}</style>
+${views.map(v => orient(v.name, v.W, v.H, fit(v), v.at, crops.map(([n, x, y], k) => ({ n, x, y, k: k + 1 })).filter(c => c.n === v.name))).join('')}
+${crops.map(([name, x, y, label, head], i) => { const v = views.find(d => d.name === name); return cropLayer(name, v.W, v.H, x, y, label, i, crops.length, head); }).join('')}`;
+const report = t => `<div style="font:600 18px/1.3 Inter;color:#3E5CD9;margin-top:8px">${icon('book')} ${t}</div>`;
+const fact = (k, v, fs = 18) => `<div style="margin-bottom:8px"><div style="font:700 15px Inter;letter-spacing:.06em;text-transform:uppercase;color:#6B655C">${k}</div><div style="font:400 ${fs}px/1.33 Inter">${v}</div></div>`;
+
+// ---------- slide 9 (2.1) ----------
+const dec9 = [['Modular monolith, COLA layers, six contexts', 'pre-ADR D1, D4'], ['Domain framework-free; 18 ArchUnit rules', 'pre-ADR D1 · no ADR'], ['Consequences run before the commit', 'ADR 0002'], ['Cross-service events through an outbox', 'ADR 0007'], ['One codebase, two topologies', 'ADR 0008'], ['Router owns URL state; generated client', 'F-ADR 0001 · 0003']];
 const s9 = () => `
-${dBand('UC3/UC4 · A buyer pays first to start a team, or pays to join an open one',
-  `team${dTo}${cn('GroupDeal')} «aggregate»<br>accepted join${dTo}${cn('PaidAdmission')}<br>team store${dTo}${cn('PaidGroupDealRepository')} port`,
-  'Join rules were written twice, for the quote and after payment, and drifted: a buyer could pay, then be refunded')}
-<div class="card" style="position:absolute;left:0;top:138px;width:596px;height:410px;padding:12px 20px">
- ${dPat('Factory Method', 'GoF · creational')}
- ${dFactory()}
- <div style="font:400 16px/1.35 Inter;margin-top:10px">${cn('initiate()', 15)} is final: it checks terms and price, then calls ${cn('createGroupDeal()', 15)}, so it is also a Template Method</div>
- <div style="margin-top:8px">${dNote('circle-info', 'One creator, wired at build time by <span class="mono" style="font-size:14.5px">GroupDealCreationConfig</span> (#421): a seam, not runtime-pluggable')}</div>
+<div style="position:absolute;left:0;top:0;width:520px">
+ ${kicker('4+1 logical view · SAD 04a p24–29')}
+ <div style="font:400 18px/1.4 Inter">Java 21 · Spring Boot 4 · MyBatis · PostgreSQL 18 · Redis 8 · Sa-Token · Stripe Checkout</div>
+ <div style="font:400 18px/1.4 Inter;margin-top:4px">React 19 · TanStack Router and Query · TypeScript</div>
+ <div style="font:400 18px/1.4 Inter;margin-top:4px">AWS EC2, S3, CloudFront</div>
+ <div style="font:400 18px/1.35 Inter;color:var(--muted);margin-top:14px">pre-ADR = the locked decision table D1–D20 (skeleton plan, 30 Aug), written before numbered ADRs</div>
+ ${report('Report §3.1 · Liu Jin, presented by Eric')}
 </div>
-<div class="card" style="position:absolute;left:612px;top:138px;width:552px;height:410px;padding:12px 20px">
- ${dPat('Shared guards on the aggregate', 'domain methods, not GoF')}
- ${dK('Before PR #424')}
- <div style="display:flex;gap:8px">${dBox('n', 'Quote', 'lockJoinTerms', 'own inline checks', 'flex:1')}${dBox('n', 'After payment', 'joinPaid', 'own inline checks', 'flex:1')}</div>
- <div style="margin-top:6px">${dBox('bad', 'Team with 0 members: quote OK, DEAL_FULL after payment, refund', null, null)}</div>
- <div style="margin-top:12px">${dK('After (#422, merged 13 Oct)')}</div>
- <div style="display:flex;align-items:center;gap:6px">
-  <div style="display:flex;flex-direction:column;gap:6px;width:150px">${dBox('n', null, 'lockJoinTerms', null, '', 14.5)}${dBox('n', null, 'joinPaid', null, '', 14.5)}</div>${dArr()}
-  ${dBox('biz', 'GroupDeal', 'requireJoinWindow()<br>requireAvailableSeat()<br>requireNewMember()', null, 'flex:1', 14.5)}
- </div>
- <div style="font:400 15px/1.3 Inter;color:#6B655C;margin-top:6px">Each path keeps its own lock and check order</div>
+${walk([{ name: 'logical-layers', W: 2320, H: 1644, view: [620, 368], at: 'left:544px;top:0' }],
+  [['logical-layers', 1160, 0, 'adapter · contract'], ['logical-layers', 1160, 548, 'application'], ['logical-layers', 640, 1096, 'infrastructure realises the domain ports']])}
+<div style="position:absolute;left:0;right:0;top:384px">
+ ${kicker('Decisions that shape it')}
+ <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 18px">${dec9.map(r => `<div style="font:400 18px/1.3 Inter;border-top:1.5px solid #DDD5C8;padding-top:5px">${r[0]}<br><b style="color:#6B655C">${r[1]}</b></div>`).join('')}</div>
 </div>`;
 
-// ---------- slide 10 ----------
-const dCrash = () => {
-  const xs = { w: 64, s: 240, d: 380 };
-  const msg = (x1, x2, y, t, c = '#1B1A18', dash = false) => `<line x1="${x1}" y1="${y}" x2="${x2 + (x2 > x1 ? -2 : 2)}" y2="${y}" stroke="${c}" stroke-width="${c === '#1B1A18' ? 1.4 : 2}"${dash ? ' stroke-dasharray="6 4"' : ''} marker-end="url(#s10${c === '#1B1A18' ? 'a' : 'r'})"/><text x="${(x1 + x2) / 2}" y="${y - 8}" text-anchor="middle" font-size="15" fill="${c}">${t}</text>`;
-  const head = (x, t) => `<rect x="${x - 58}" y="0" width="116" height="36" fill="#fff" stroke="#6B655C" stroke-width="1.4"/><text x="${x}" y="24" text-anchor="middle" font-size="15.5" font-weight="700" fill="#1B1A18">${t}</text><line x1="${x}" y1="36" x2="${x}" y2="300" stroke="#6B655C" stroke-width="1.2" stroke-dasharray="5 4"/>`;
-  return `<svg width="440" height="300" viewBox="0 0 440 300" font-family="Inter, Helvetica, Arial, sans-serif">
-  <defs><marker id="s10a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B1A18"/></marker>
-  <marker id="s10r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8402A"/></marker></defs>
-  ${head(xs.w, 'Worker')}${head(xs.s, 'Stripe')}${head(xs.d, 'Database')}
-  ${msg(xs.w, xs.s, 76, '1 create refund')}${msg(xs.s, xs.w, 116, '2 accepted', '#1B1A18', true)}
-  <path d="M${xs.w - 9},${139} l18,18 M${xs.w + 9},${139} l-18,18" stroke="#8C2414" stroke-width="3"/><text x="${xs.w + 18}" y="${153}" font-size="15" font-weight="700" fill="#8C2414">3 crash, result not saved</text>
-  ${msg(xs.d, xs.w, 200, '4 restart: still pending', '#1B1A18', true)}
-  ${msg(xs.w, xs.s, 246, '5 create refund again', '#E8402A')}
-  <text x="${xs.s + 10}" y="${280}" font-size="15" font-weight="700" fill="#B02E1B">6 a second refund</text></svg>`;
-};
-const dSol = (name, body) => `<div style="display:flex;gap:14px;padding:8px 0;border-top:1px solid #EFE9DF"><div style="width:150px;flex:none;font:700 16.5px/1.3 Inter">${name}</div><div style="font:400 16px/1.4 Inter">${body}</div></div>`;
+// ---------- slide 10 (2.2) ----------
+const strat = [
+  ['Language, framework', 'maintainability', '«control», «entity» · all', 'Spring <span class="mono" style="font-size:18px">@Service</span> by constructor injection; domain stays plain Java', 'D1–D20, ArchUnit · <i>no ADR</i>'],
+  ['Presentation', 'usability', 'GUI «boundary» · UC1–UC9', 'TanStack route + component + Query hook', 'F-ADR 0001, 0009'],
+  ['Distribution', 'interoperability', '«control» behind a boundary · all', '<span class="mono" style="font-size:18px">@RestController</span> returning <span class="mono" style="font-size:18px">Result</span>; generated TS client is the stub', 'D11–D12, F-ADR 0003'],
+  ['Persistence', 'integrity', '«entity» · all', 'aggregate + repository port ◁ RepositoryImpl, MyBatis mapper, DO', 'D1, D9 · <i>no ADR</i>'],
+  ['External interface', 'provider isolation', 'system «boundary» · UC2–UC6', 'gateway port ◁ Stripe / Google adapter; signed webhook', 'ADR 0001, 0004, 0005'],
+  ['Security', 'security', 'every «control» · all', 'login interceptor; <span class="mono" style="font-size:18px">checkRole(ADMIN)</span>; CSRF header; rate limits', 'D6–D7, F-ADR 0002'],
+  ['Scheduling', 'expiry ≤ 1 min', 'Scheduler actor · UC5, UC6', '<span class="mono" style="font-size:18px">@Scheduled</span> job under a database lease, every minute', 'ADR 0002 · <i>job: no ADR</i>'],
+  ['Concurrency', 'no oversell', '«entity» with capacity · UC4', 'row locks in a fixed order + guarded UPDATE + unique indexes', 'ADR 0001 · <i>no ADR</i>'],
+  ['Domain events', 'decoupling', '«control» → other contexts · UC5–UC7', 'event record + transactional listener; outbox across services', 'ADR 0002, 0003, 0007'],
+];
+// Rows appear in three groups of three (rubric V1); the PDF shows all nine.
 const s10 = () => `
-${dBand('UC6 · When a team expires, every paid member is refunded automatically',
-  `refund owed${dTo}${cn('biz_refund')} + ${cn('RefundWork')}<br>payment provider${dTo}${cn('RefundGateway')} port<br>Stripe${dTo}${cn('StripeRefundGateway')} adapter`,
-  'Stripe accepts a refund and the process dies before saving it: a naive retry refunds twice')}
-<div class="card" style="position:absolute;left:0;top:138px;width:476px;height:410px;padding:12px 18px">
- ${dK('The crash window', '#B02E1B')}
- ${dCrash()}
- <div style="font:400 15.5px/1.3 Inter;margin-top:6px">Without a stable request identity, the retry is a new refund</div>
-</div>
-<div class="card" style="position:absolute;left:492px;top:138px;width:672px;height:410px;padding:12px 20px">
- ${dK('Solution')}
- ${dSol('Idempotency Key', `${cn('RefundWork.providerKey()', 15)} = "blocbuy-refund-" + id, sent by ${cn('StripeRefundGateway', 15)}: a retry gets the same refund back`)}
- ${dSol('Lease + version', 'A claim leases the row for 2 min and bumps its version; the result is saved only if the version still matches')}
- ${dSol('Fixed retry', 'A failed call is due again after a fixed 30 s, not exponential backoff')}
- ${dSol('Human review', 'Payment mismatch, permanent provider error, or no result after 23 h: parked for review, never a new refund')}
- ${dSol('Observer', `${cn('TeamExpired', 15)} → order and refund subscribers, before the same commit (ADR 0002)`)}
- <div style="margin-top:6px;border-radius:8px;background:#FFEDC7;padding:8px 14px">${dNote('flask', 'Proven locally with a Stripe substitute (3 Oct); no refund on dev yet (#223)', '#7A5C20')}</div>
-</div>`;
+<table class="t" style="font-size:18px;line-height:1.24"><tr>${th('Strategy · concern', 218)}${th('Object types · use cases', 268)}${th('Become in design')}${th('Record', 200)}</tr>
+${strat.map((r, i) => `<tr${i >= 3 ? ` class="frag" data-frag="${Math.floor(i / 3)}"` : ''}><td style="padding:3px 9px"><b>${r[0]}</b><br><span style="color:var(--muted)">${r[1]}</span></td><td style="padding:3px 9px">${r[2]}</td><td style="padding:3px 9px">${r[3]}</td><td style="padding:3px 9px;color:var(--muted)">${r[4]}</td></tr>`).join('')}</table>
+<div style="position:absolute;right:0;top:-29px;display:flex;gap:16px;align-items:center;font:400 17px/1 Inter;color:var(--muted)">Template: SAD 04a p37 · typical class and sequence changes: slide 11 ${report('Report §3.2 · Yorik, Eric').replace('margin-top:8px', 'margin:0')}</div>`;
 
-// ---------- slide 11 ----------
+// ---------- slide 11 (2.2) ----------
 const s11 = () => `
-${dBand('Receive notifications · A buyer is told when their team succeeds or expires, or a payment succeeds',
-  `notice${dTo}${cn('Notification')} «aggregate»<br>commerce fact${dTo}${cn('TeamExpiredV1')} contract<br>queue message${dTo}${cn('NotificationEventHandler')} port`,
-  'Tell buyers without commerce calling notification, and never lose or repeat a notice')}
-<div class="card" style="position:absolute;left:0;top:138px;width:1164px;height:196px;padding:12px 18px">
- <div style="display:flex;align-items:stretch;gap:6px">
-  <div style="width:160px">${dK('Observer', '#B02E1B')}${dBox('ev', 'domain event', 'TeamExpired', 'published in-process', 'height:112px', 14.5)}</div>${dArr()}
-  <div style="width:240px">${dK('Transactional Outbox', '#B02E1B')}${dBox('biz', 'BEFORE_COMMIT', 'IntegrationOutboxWriter', 'same transaction → sys_outbox', 'height:112px', 14.5)}</div>${dArr()}
-  <div style="width:184px">${dK('Relay')}${dBox('biz', 'every 2 s, leased', 'OutboxRelayJob', 'batches of 100, 10 tries', 'height:112px', 14.5)}</div>${dArr()}
-  <div style="width:170px">${dK('Transport')}${dBox('ev', 'at least once', 'SNS → SQS', 'DLQ after 5 receives', 'height:112px', 14.5)}</div>${dArr()}
-  <div style="flex:1">${dK('Idempotent Receiver', '#B02E1B')}${dBox('plat', 'one transaction', 'markConsumed', 'then biz_notification rows', 'height:112px', 14.5)}</div>
- </div>
- <div style="margin-top:12px">${dNote('shield-halved', 'Commerce never calls notification: the ArchUnit rule <span class="mono" style="font-size:14.5px">nothing_depends_on_notification</span> fails the build', '#3E5CD9')}</div>
+<div style="position:absolute;left:0;top:0;width:580px">
+ ${fact('Typical class-diagram change', '«boundary» → route, hook and generated client · «control» → REST controller and application service · «entity» → aggregate behind a domain repository port, implemented by a MyBatis mapper · external «boundary» → gateway port with an adapter')}
+ ${fact('Typical sequence-diagram change', 'control → entity.update() becomes service → repository.lockDeal() <span class="mono" style="font-size:18px">SELECT … FOR UPDATE</span> → aggregate.joinPaid() → guarded <span class="mono" style="font-size:18px">UPDATE</span>, in one transaction')}
+ ${fact('Rationale', 'the domain names its needs as interfaces; infrastructure supplies them (dependency inversion), so persistence and providers can change without touching the rules')}
+ <div style="font:400 18px/1.3 Inter;color:var(--muted)">Tags on the design side: Pres, Dist, Pers, Ext, Sec, Conc, Sched, Event (slide 10)</div>
+ ${report('Report §3.2 · transition strategies')}
 </div>
-<div class="card" style="position:absolute;left:0;top:350px;width:574px;height:198px;padding:12px 20px">
- ${dK('Idempotent Receiver in SQL')}
- <div style="background:#1B1A18;color:#F6F2EC;border-radius:8px;padding:10px 14px;font:500 15px/1.5 'JetBrains Mono',monospace">INSERT INTO sys_consumed_message<br>&nbsp;&nbsp;(event_id, consumer, …)<br>ON CONFLICT (event_id, consumer) DO NOTHING</div>
- <div style="font:400 16px/1.3 Inter;margin-top:8px">0 rows inserted = a duplicate: nothing written, message deleted</div>
-</div>
-<div class="card" style="position:absolute;left:590px;top:350px;width:574px;height:198px;padding:12px 20px">
- ${dK('Where it runs')}
- ${[['dev · EC2', 'monolith: writer, relay and consumer off; no broker (ADR 0007)'], ['prod · ECS', 'commerce-svc → SNS → SQS → notification-svc'], ['local, CI', 'SQS on ElasticMQ: OutboxRelayElasticMqIT, NotificationConsumerElasticMqIT']].map(([a, b]) => `<div style="display:flex;gap:12px;padding:6px 0;border-top:1px solid #EFE9DF"><div style="width:96px;flex:none;font:700 16px Inter">${a}</div><div style="font:400 15.5px/1.35 Inter">${b}</div></div>`).join('')}
-</div>`;
+${walk([{ name: 'transition-pair', W: 2320, H: 2270, view: [560, 548], at: 'left:604px;top:0' }],
+  [['transition-pair', 0, 0, 'analysis: UC4'], ['transition-pair', 1160, 0, 'strategy key'], ['transition-pair', 580, 1700, 'persistence: port ◁ impl']])}`;
 
-// ---------- slide 12 ----------
-const s12 = () => `
-${dBand('UC8 · A buyer sees their blocs (Active, Completed, Refunded) and orders on /account',
-  `My blocs${dTo}${cn('GET /group-deals/me')}, latest 100<br>My orders${dTo}${cn('GET /orders/me')}, paged<br>view state${dTo}URL ${cn('?blocs=&amp;page=&amp;size=')}`,
-  `A filter and a pager must survive reload, Back and a shared link; the API has no status filter <span style="white-space:nowrap">${mk('CONFIRM', 'Lim picks the problem')}</span>`)}
-<div class="card" style="position:absolute;left:0;top:138px;width:1164px;height:180px;padding:12px 18px">
- ${dPat('URL as the single source of view state', 'router owns URL state, Query owns server state (frontend ADR 0001)')}
- <div style="display:flex;align-items:stretch;gap:6px">
-  ${dBox('n', 'URL', '/account?<br>blocs=completed&amp;page=2', null, 'width:226px', 14.5)}${dArr()}
-  ${dBox('plat', 'validateSearch', 'accountSearchSchema', 'bad value → fallback; defaults stripped', 'flex:1', 14.5)}${dArr()}
-  ${dBox('plat', 'loader', 'orders + blocs', 'prefetched in parallel; past the last page → redirect', 'flex:1', 14.5)}${dArr()}
-  ${dBox('plat', 'chip click', '?blocs=', 'not a loader dependency: filters the cache, no refetch', 'flex:1', 14.5)}
- </div>
-</div>
-<div class="card" style="position:absolute;left:0;top:332px;width:574px;height:216px;padding:12px 20px">
- ${dPat('Adapter at one boundary', 'frontend ADR 0009')}
- <div style="display:flex;align-items:center;gap:6px">${dBox('n', 'generated client', 'Result&lt;T&gt;', null, 'width:150px', 14.5)}${dArr()}${dBox('biz', 'select:', 'unwrapResult', null, 'width:160px', 14.5)}${dArr()}${dBox('plat', 'components', 'T or ApiError', null, 'flex:1', 14.5)}</div>
- <div style="font:400 15.5px/1.35 Inter;margin-top:10px">One function knows the envelope; the client is generated from the contract (ADR 0003)</div>
-</div>
-<div class="card" style="position:absolute;left:590px;top:332px;width:574px;height:216px;padding:12px 20px">
- ${dK('Evidence · account.test.tsx')}
- <ul class="b" style="font:400 15.5px/1.35 Inter"><li>switches chips through ?blocs= without refetching</li><li>falls back to Active for an unknown ?blocs= value</li><li>sends a page past the last one to the last page</li></ul>
- <div style="font:400 14.5px/1.35 Inter;color:#6B655C;margin-top:6px">Limit: only the latest 100 blocs; a closed bloc reads “Closed”, as this endpoint carries no refund data</div>
-</div>`;
+// ---------- slide 12 (2.3) ----------
+const s12 = () => `<div style="position:absolute;left:0;top:520px">${report('Report §3.3 · use case diagram and specifications')}</div>` + walk([{ name: 'use-case', W: 2320, H: 1096, view: [1164, 514], at: 'left:0;top:0' }],
+  [['use-case', 0, 312, 'Buyer and the money path'], ['use-case', 560, 40, 'resolution: Scheduler, Stripe'], ['use-case', 1160, 30, 'out of scope']]);
 
-// ---------- segment 3 helpers (testing; t* names) ----------
-// Pyramid rows: [kind, tone, bar width, count, count unit, tools, runs, example class, behaviour]
-const tRun = t => `<span style="display:inline-block;font:600 14.5px/1 Inter;color:#1B1A18;background:#ECE6DC;border-radius:999px;padding:4px 9px;white-space:nowrap;margin-right:6px">${t}</span>`;
-const tRows = [
-  ['Performance', 'ev', 150, '3', 'load scenarios', 'Node workload · k6', ['by hand'], 'backend/perf/workload.mjs', '100 users each, p95 24–57 ms (local, 30 Sep)'],
-  ['End-to-end', 'plat', 175, '7', 'specs · 18 in code', 'Playwright', ['every PR', 'after deploy'], 'buyer-journey.spec.ts', 'listing → quote → Stripe (stubbed) → Paid in My blocs'],
-  ['Component', 'plat', 200, '76', 'files · 799 tests', 'Vitest · Testing Library · MSW', ['every PR'], 'account.test.tsx', 'a chip switches ?blocs= without refetching'],
-  ['API contract', 'n', 225, '1', 'OpenAPI file', 'export · git diff · openapi-diff', ['every PR'], 'contracts/openapi.json', 'drift or a breaking change fails the build'],
-  ['Architecture', 'biz', 250, '18', 'ArchUnit rules', 'ArchUnit', ['every PR'], 'ArchitectureTest', 'domain_is_framework_free, nothing_depends_on_notification'],
-  ['Integration', 'biz', 275, '49', '*IT classes', 'Spring Boot · Testcontainers', ['every PR'], 'OrderRepositoryIT · StripeRolloutAcceptanceIT', 'PostgreSQL 18 rejects a duplicate payment; paid start to refund'],
-  ['Unit', 'biz', 300, '182', '*Test classes', 'JUnit Jupiter · Mockito', ['every PR'], 'RefundServiceTest · PaidGroupDealTest', 'a lost Stripe response reuses its key; 24 paid-team rules'],
-];
-const tRow = ([k, tone, w, n, unit, tool, runs, cls, why], i) => {
-  const [b, bg, fg] = dTone[tone];
-  return `<div style="display:flex;align-items:center;height:68px;border-top:1px solid #EFE9DF">
-  <div style="width:300px;flex:none;display:flex;justify-content:center"><div style="width:${w}px;height:54px;border-radius:6px;border:1.4px solid ${b};background:${bg};display:flex;align-items:center;justify-content:center;font:700 17px Inter;color:${fg}">${k}</div></div>
-  <div style="width:150px;flex:none;padding-left:18px"><div style="font:700 26px/1 Inter">${n}</div><div style="font:400 14.5px/1.2 Inter;color:#6B655C;margin-top:3px">${unit}</div></div>
-  <div style="width:270px;flex:none"><div style="font:600 16px/1.25 Inter">${tool}</div><div style="margin-top:5px">${runs.map(tRun).join('')}</div></div>
-  <div style="flex:1;min-width:0"><div>${cn(cls, 14.5)}</div><div style="font:400 15.5px/1.3 Inter;margin-top:3px">${why}</div></div></div>`;
-};
-const tHead = t => `<div style="font:700 14.5px Inter;letter-spacing:.05em;text-transform:uppercase;color:#6B655C">${t}</div>`;
-
-// ---------- slide 13 ----------
+// ---------- slide 13 (2.4) ----------
 const s13 = () => `
-<div style="display:flex;align-items:flex-end;height:24px;margin-top:-6px">
- <div style="width:300px;flex:none;text-align:center">${tHead('Kind of test')}</div><div style="width:150px;flex:none;padding-left:18px">${tHead('Count')}</div>
- <div style="width:270px;flex:none">${tHead('Tool · when it runs')}</div><div style="flex:1">${tHead('Example: complex behaviour under test (3b)')}</div></div>
-<div class="frag" data-frag="1">${tRows.slice(0, 3).map(tRow).join('')}</div>
-<div>${tRows.slice(3).map((r, i) => tRow(r, i + 3)).join('')}</div>
-<div style="display:flex;gap:22px;align-items:center;border-top:1px solid #EFE9DF;padding-top:8px;font:400 15px Inter;color:#6B655C">
- <span><i style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#FDEFEC;border:1.4px solid #E8402A;vertical-align:-2px"></i> backend</span>
- <span><i style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#F1F4FD;border:1.4px solid #3E5CD9;vertical-align:-2px"></i> frontend</span>
- <span style="margin-left:auto">Counted in the repository, 19 Oct · security scans (gitleaks, Trivy): Pan’s segment</span></div>`;
+<div style="position:absolute;left:0;top:520px">${report('Report §3.4 · Eric (UC4 analysis model)')}</div>
+${walk([{ name: 'uc4-analysis-class', W: 1160, H: 1070, view: [560, 512], at: 'left:0;top:0' }, { name: 'uc4-analysis-seq', W: 2320, H: 2186, view: [584, 512], at: 'left:580px;top:0' }],
+  [['uc4-analysis-class', 0, 522, 'entities'], ['uc4-analysis-seq', 560, 1150, 'seat available: join', 160], ['uc4-analysis-seq', 1160, 1720, 'else: refund through the gateway', 160]])}`;
 
-// ---------- slide 14 ----------
-const tReq = t => `<div style="display:flex;gap:9px;align-items:center;font:500 16.5px Inter"><span style="color:var(--green);font-size:19px">${icon('circle-check')}</span>${t}</div>`;
-const tCov = (side, nw, all, when) => `<div style="flex:1;border-radius:8px;background:#E3E8FB;padding:10px 14px"><div style="font:700 14.5px Inter;letter-spacing:.05em;text-transform:uppercase;color:#3E5CD9">${side}</div>
-  <div style="margin-top:2px"><span class="serif" style="font-size:32px">${nw}</span> <span style="font:600 15.5px Inter">on new code</span></div><div style="font:400 15px/1.3 Inter;color:#6B655C">${all} overall · ${when}</div></div>`;
-const tCaught = (ic, tone, kind, head, body, src) => {
-  const [b, bg, fg] = dTone[tone];
-  return `<div class="card" style="height:146px;padding:12px 18px;display:flex;gap:14px">
-  <div style="width:46px;height:46px;flex:none;border-radius:50%;background:${bg};border:1.4px solid ${b};color:${fg};font-size:20px;display:flex;align-items:center;justify-content:center">${icon(ic)}</div>
-  <div style="flex:1"><div style="font:700 14.5px Inter;letter-spacing:.05em;text-transform:uppercase;color:${fg}">${kind}</div>
-   <div style="font:700 17px/1.3 Inter;margin-top:2px">${head}</div><div style="font:400 15.5px/1.35 Inter;margin-top:3px">${body}</div>
-   <div style="font:400 14.5px Inter;color:#6B655C;margin-top:4px">${src}</div></div></div>`;
-};
+// ---------- slide 14 (2.4) ----------
+const tagKey = [['Pres', 'presentation'], ['Dist', 'distribution'], ['Pers', 'persistence'], ['Ext', 'external interface'], ['Sec', 'security'], ['Conc', 'concurrency'], ['Sched', 'scheduling'], ['Event', 'domain events']];
 const s14 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:556px;height:196px;padding:12px 20px">
- <div style="display:flex;align-items:baseline;justify-content:space-between"><div class="serif" style="font-size:21px">Required to merge into dev</div>${dTag('ruleset, strict')}</div>
- <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:12px">
-  ${tReq('build-quality: every test')}${tReq('SonarCloud Backend')}${tReq('docker: image boots')}${tReq('SonarCloud Frontend')}${tReq('gitleaks')}${tReq('frontend-check: Vitest')}</div>
- <div style="font:400 15px/1.3 Inter;color:#6B655C;margin-top:12px">Branch up to date · 1 approval · threads resolved · squash only</div>
-</div>
-<div class="card" style="position:absolute;left:0;top:208px;width:556px;height:196px;padding:12px 20px">
- <div style="display:flex;align-items:baseline;justify-content:space-between"><div class="serif" style="font-size:21px">SonarCloud gate on dev, 19 Oct</div>${dTag('NFR-06')}</div>
- <div style="font:400 15.5px Inter;margin:4px 0 10px">Fails under <b>80%</b> coverage or over <b>3%</b> duplication on new code</div>
- <div style="display:flex;gap:12px">${tCov('Backend', '99.2%', '99.4%', 'JaCoCo, 16 Oct')}${tCov('Frontend', '96.2%', '96.1%', 'Vitest V8, 19 Oct')}</div>
-</div>
-<div style="position:absolute;left:0;top:416px;width:556px;height:74px;display:flex;gap:12px">
- <div style="flex:1;border-radius:8px;background:#fff;border:1px solid #DDD5C8;padding:8px 14px"><div><span class="serif" style="font-size:26px">1,931</span> <span style="font:700 15.5px Inter">backend tests</span></div><div style="font:400 14.5px Inter;color:#6B655C">0 failed, 1 opt-in skip · log 16 Oct</div></div>
- <div style="flex:1;border-radius:8px;background:#fff;border:1px solid #DDD5C8;padding:8px 14px"><div><span class="serif" style="font-size:26px">799</span> <span style="font:700 15.5px Inter">frontend tests</span></div><div style="font:400 14.5px Inter;color:#6B655C">e2e run 19 Oct: 17 pass, 5 skip</div></div>
-</div>
-<div class="frag" data-frag="1" style="position:absolute;left:576px;top:0;width:588px">
- ${dK('What tests caught before production', '#B02E1B')}
- <div style="display:flex;flex-direction:column;gap:10px">
- ${tCaught('vial', 'biz', 'Unit · red first', 'A team with no members passed the quote', 'The buyer could pay, then be refunded. Two red tests reproduced it before the fix (slide 9).', 'GroupDealPurchaseSupportImplTest · 7 Oct · #422')}
- ${tCaught('shield-halved', 'plat', 'Architecture', 'A new controller skipped input validation', '<span class="mono" style="font-size:14.5px">controllers_are_validated</span> failed the build until it had <span class="mono" style="font-size:14.5px">@Validated</span>.', 'ArchitectureTest · 13 Oct · #468')}
- ${tCaught('globe', 'ev', 'End-to-end after deploy', 'Dev answered 502 during a deploy', 'The smoke test ran while the single backend host restarted: dev deploys are not zero-downtime.', 'e2e-dev · 3 and 4 Oct · runs 37102432667, 37182996807')}
- </div>
-</div>
-<div style="position:absolute;left:0;right:0;top:502px;font:italic 400 15.5px/1.35 Inter;color:#6B655C"><b style="font-style:normal">Limits:</b> test-first only for selected changes · no automated mutation testing (hand probes only) · load tests by hand, not in CI · CodeQL wired but off (ENABLE_CODEQL=false) · contract, e2e and Trivy run on PRs but are not required</div>`;
+${walk([{ name: 'uc4-design-class', W: 2320, H: 2314, view: [900, 548], at: 'left:0;top:0' }],
+  [['uc4-design-class', 1160, 0, 'payment meets groupbuy through a port'], ['uc4-design-class', 1160, 1096, 'aggregate behind its repository port'], ['uc4-design-class', 1160, 1700, 'MyBatis implementation of the port']])}
+<div style="position:absolute;left:924px;top:0;width:240px">
+ ${kicker('Strategy tags · slide 10')}
+ ${tagKey.map(t => `<div style="font:400 18px/1.45 Inter"><b>${t[0]}</b> ${t[1]}</div>`).join('')}
+ <div style="font:400 18px/1.35 Inter;margin-top:10px">Typed signatures, visibility and multiplicities: SAD 01b p14–16</div>
+ ${report('Report §3.4 · Eric')}
+</div>`;
 
-// ---------- segment 4 helpers (CI/CD; p* names) ----------
-const pChip = (t, k = 'n') => { const [b, bg, fg] = dTone[k]; return `<span style="display:inline-block;font:600 15px/1 Inter;color:${fg};background:${bg};border:1.4px solid ${b};border-radius:999px;padding:5px 11px;white-space:nowrap">${t}</span>`; };
-const pRule = t => `<div style="display:flex;gap:9px;align-items:flex-start;font:400 17px/1.3 Inter;margin-bottom:11px"><span style="color:var(--green);font-size:17px;flex:none;margin-top:1px">${icon('circle-check')}</span><span>${t}</span></div>`;
-const pArt = (ic, head, body) => `<div style="display:flex;gap:14px;padding:10px 0;border-top:1px solid #EFE9DF">
-  <div style="width:42px;height:42px;flex:none;border-radius:50%;background:#E3E8FB;border:1.4px solid #3E5CD9;color:#3E5CD9;font-size:18px;display:flex;align-items:center;justify-content:center">${icon(ic)}</div>
-  <div><div style="font:700 17px/1.3 Inter">${head}</div><div style="font:400 15.5px/1.35 Inter;margin-top:2px">${body}</div></div></div>`;
-
-// ---------- slide 15 ----------
-const pBranch = () => `<svg width="610" height="172" viewBox="0 0 610 172" font-family="Inter, Helvetica, Arial, sans-serif">
- <defs><marker id="s15a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3E5CD9"/></marker>
- <marker id="s15g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6B655C"/></marker>
- <marker id="s15r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8402A"/></marker></defs>
- <text x="0" y="18" font-size="15" fill="#6B655C">feature/*, fix/*, docs/* · one pull request each</text>
- ${[110, 230, 350, 470].map(x => `<path d="M${x - 40},30 Q${x - 6},34 ${x},62" fill="none" stroke="#6B655C" stroke-width="1.6" marker-end="url(#s15g)"/>`).join('')}
- <text x="0" y="74" font-size="20" font-weight="700" fill="#3E5CD9">dev</text>
- <line x1="46" y1="68" x2="596" y2="68" stroke="#3E5CD9" stroke-width="4" marker-end="url(#s15a)"/>
- ${[[150, 'sprint1'], [320, 'sprint2'], [490, 'sprint3']].map(([x, t]) => `<circle cx="${x}" cy="68" r="6" fill="#fff" stroke="#3E5CD9" stroke-width="2"/><text x="${x}" y="96" text-anchor="middle" font-size="14.5" font-family="JetBrains Mono, monospace" fill="#1B1A18">v0.1.0-${t}</text>`).join('')}
- <text x="0" y="146" font-size="20" font-weight="700" fill="#B02E1B">prod</text>
- <line x1="56" y1="140" x2="596" y2="140" stroke="#E8402A" stroke-width="2" stroke-dasharray="7 5"/>
- ${[420, 570].map(x => `<line x1="${x}" y1="73" x2="${x}" y2="132" stroke="#E8402A" stroke-width="1.8" marker-end="url(#s15r)"/>`).join('')}
- <text x="56" y="166" font-size="15" fill="#B02E1B">SWE5001 only: changed by a promotion PR from dev</text>
-</svg>`;
+// ---------- slide 15 (2.4) ----------
 const s15 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:650px;height:548px;padding:14px 20px">
- <div style="display:flex;align-items:baseline;justify-content:space-between"><div class="serif" style="font-size:21px">Source: one trunk, squash only</div>${dTag('ruleset dev-require-review')}</div>
- <div style="margin-top:8px">${pBranch()}</div>
- <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 18px;margin-top:14px">
-  <div>${pRule('Squash merge only: linear history')}${pRule('1 approval by a code owner; stale approvals dismissed')}${pRule('Review threads resolved')}</div>
-  <div>${pRule('6 required checks, branch up to date')}${pRule('No force push, no branch deletion')}${pRule('Conventional Commits; PR template asks for evidence')}</div>
- </div>
- <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px"><span style="font:700 15px Inter;margin-right:2px">CODEOWNERS</span>${pChip('.github/ → Pan', 'n')}${pChip('backend/ → Liu Jin', 'biz')}${pChip('frontend/ → Lim', 'plat')}</div>
- <div style="margin-top:16px">${dNote('robot', '<b>Dependabot</b>: Maven, npm, Docker, Actions · daily, 7-day cooldown · 70 PRs merged', '#6B655C')}</div>
-</div>
-<div class="card" style="position:absolute;left:666px;top:0;width:498px;height:548px;padding:14px 20px">
- <div class="serif" style="font-size:21px;margin-bottom:6px">Artefacts</div>
- ${pArt('cubes', 'Backend image in ECR <span class="mono" style="font-size:15px">dev/blocbuy</span>', 'Immutable tags, scanned on push, newest 30 kept; deployed as <span class="mono" style="font-size:14.5px">repo@sha256:…</span>, never by tag')}
- ${pArt('window-maximize', 'Frontend <span class="mono" style="font-size:15px">dist/</span>', 'One static build, no per-environment settings (ADR 0004); hashed assets immutable, <span class="mono" style="font-size:14.5px">index.html</span> no-cache')}
- ${pArt('file-code', 'API contract', '<span class="mono" style="font-size:14.5px">contracts/openapi.json</span> regenerated from code; drift fails CI; the client is generated, not committed (ADR 0003)')}
- ${pArt('tag', 'Release tags', '<span class="mono" style="font-size:14.5px">v0.1.0-sprint1…3</span>; a tag runs the full gate chain')}
- <div style="margin-top:8px;border-radius:8px;background:#EFE9DF;padding:8px 12px;font:400 15px/1.35 Inter">After merge, the jar, image and <span class="mono" style="font-size:14.5px">dist/</span> are rebuilt from the merged commit, then deployed (slide 16)</div>
+${walk([{ name: 'uc4-design-seq', W: 2320, H: 3306, view: [380, 548], at: 'left:0;top:0' }],
+  [['uc4-design-seq', 700, 760, 'team row locked first', 176], ['uc4-design-seq', 1100, 1914, 'guarded update · last seat', 176], ['uc4-design-seq', 1100, 2500, 'loser: compensation, refund owed', 176]])}
+<div style="position:absolute;left:404px;top:0;width:760px">
+ ${fact('Major flow', 'paid join confirmed by the Stripe webhook: signature checked outside the transaction, then one transaction (READ COMMITTED, 10 s), drawn as <span class="mono" style="font-size:18px">critical</span> because UML has no transaction fragment', 18)}
+ ${fact('Concurrency strategy', 'lock order team row → intent → payment → receipt, each <span class="mono" style="font-size:18px">SELECT … FOR UPDATE</span>; a racing join waits on the team row', 18)}
+ ${fact('Guarded update', '<span class="mono" style="font-size:18px">UPDATE … WHERE current_size = expected AND status = open</span>; the last seat publishes <span class="mono" style="font-size:18px">TeamSucceeded</span>', 18)}
+ ${fact('Alternative', 'DEAL_FULL or DEAL_CLOSED: receipt <span class="mono" style="font-size:18px">compensation_required</span>, a refund obligation, never an extra member', 18)}
+ ${fact('Evidence', '<span class="mono" style="font-size:18px">StripeLocalIntegrationTest</span> <span class="mono" style="font-size:18px">.twentyBuyersRaceForLastSeat…</span>: 20 paid joins, 1 seat, 19 refunds owed (local, PostgreSQL in Testcontainers)', 18)}
+ ${report('Report §3.4 · Eric')}
 </div>`;
 
-// ---------- slide 16 ----------
-const s16 = () => `<div class="dia" style="margin-top:-12px">${svg('cicd-pipeline')}</div>`;
-
-// ---------- slide 17 ----------
-const pCtl = [
-  ['gitleaks', 'secrets in commits', 'PR + dev push', 'req'],
-  ['SonarCloud', 'bugs, hotspots, coverage', 'PR + dev', 'req'],
-  ['SpotBugs, ArchUnit', 'Java bugs, layering', 'every PR', 'req'],
-  ['Trivy image', 'fixable HIGH/CRITICAL', 'PR; ECR on push', 'req'],
-  ['Trivy deps, config', 'Maven, pnpm, IaC', 'on change, weekly', 'opt'],
-  ['actionlint, ShellCheck', 'workflows, scripts', 'on change', 'opt'],
-  ['Pinned actions', 'all 28 on commit SHAs', 'Dependabot daily', 'none'],
-];
-const pGate = k => ({ req: pChip('required', 'plat'), opt: '<span style="color:#6B655C">fails run</span>', none: '<span style="color:#6B655C">review</span>' })[k];
-const pRole = (name, trust, scope) => `<div style="padding:7px 0;border-top:1px solid #EFE9DF"><div>${cn(name, 15)}</div><div style="font:400 15.5px/1.3 Inter;margin-top:2px"><b>trust:</b> ${trust} · ${scope}</div></div>`;
-const s17 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:700px;height:490px;padding:12px 18px">
- <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px"><div class="serif" style="font-size:21px">Shift-left controls</div>${dTag('security.yml · ci-backend.yml')}</div>
- <table class="t" style="font-size:16px;table-layout:fixed;width:100%"><tr><th style="font-size:15px;padding:6px 10px;width:186px">Control</th><th style="font-size:15px;padding:6px 10px">Catches</th><th style="font-size:15px;padding:6px 10px;width:156px">Runs</th><th style="font-size:15px;padding:6px 10px;width:104px">Gate</th></tr>
- ${pCtl.map(([c, w, r, g]) => `<tr><td style="padding:10px 10px;font-weight:600">${c}</td><td style="padding:10px 10px">${w}</td><td style="padding:10px 10px">${r}</td><td style="padding:10px 10px">${pGate(g)}</td></tr>`).join('')}</table>
- <div style="font:400 15px/1.35 Inter;color:#6B655C;margin-top:8px">Trivy writes SARIF reports; path-filtered scans also run on tags and every Monday</div>
-</div>
-<div class="card" style="position:absolute;left:716px;top:0;width:448px;height:262px;padding:12px 18px">
- <div style="display:flex;align-items:baseline;justify-content:space-between"><div class="serif" style="font-size:21px">No AWS keys in GitHub</div>${dTag('OIDC')}</div>
- <div style="margin-top:6px">
- ${pRole('BlocBuyGitHubEcrPush', 'dev branch', 'push to dev/blocbuy')}
- ${pRole('BlocBuyGitHubBackendDeploy', 'backend-dev env', 'one SSM document, one instance')}
- ${pRole('BlocBuyGitHubFrontendDeployDev', 'frontend-dev env', 'one bucket, one distribution')}
- </div>
-</div>
-<div class="card" style="position:absolute;left:716px;top:276px;width:448px;height:214px;padding:12px 18px">
- <div class="serif" style="font-size:21px;margin-bottom:8px">Runtime and account</div>
- ${dNote('box', 'Container: read-only root, <span class="mono" style="font-size:14.5px">cap_drop: ALL</span>, no-new-privileges', '#3E5CD9')}
- <div style="height:8px"></div>${dNote('key', 'App secrets only in a root-only file on the host (0600)', '#3E5CD9')}
- <div style="height:8px"></div>${dNote('building', 'AWS Organization SCPs pin the region and cap costs; Identity Center, 1-hour sessions', '#3E5CD9')}
-</div>
-<div style="position:absolute;left:0;right:0;top:504px;font:italic 400 15.5px/1.35 Inter;color:#6B655C"><b style="font-style:normal">Not yet:</b> CodeQL wired but off (ENABLE_CODEQL=false) · CloudFront → ALB hop is HTTP (NFR-37, accepted on dev to 16 Nov) · dev host: SSH open to the internet, EBS not encrypted, secrets in an env file · full list B14</div>`;
-
-// ---------- slide 18 ----------
-const s18 = () => `<div class="dia" style="margin-top:-12px">${svg('dev-deployment')}</div>`;
-
-// ---------- slide 19 ----------
-const pFind = (ic, tone, scope, head, what, fix, open, src) => {
-  const [b, bg, fg] = dTone[tone];
-  return `<div class="card" style="height:266px;padding:12px 18px;display:flex;flex-direction:column">
-  <div style="display:flex;gap:12px;align-items:center"><div style="width:42px;height:42px;flex:none;border-radius:50%;background:${bg};border:1.4px solid ${b};color:${fg};font-size:18px;display:flex;align-items:center;justify-content:center">${icon(ic)}</div>
-   <div><div style="font:700 14.5px Inter;letter-spacing:.05em;text-transform:uppercase;color:${fg}">${scope}</div><div style="font:700 18px/1.25 Inter">${head}</div></div></div>
-  <div style="font:400 17.5px/1.4 Inter;margin-top:10px">${what}</div>
-  <div style="margin-top:auto;border-radius:8px;background:${open ? '#FDEFEC' : '#E3E8FB'};padding:8px 12px;font:500 16px/1.35 Inter"><b style="color:${open ? '#B02E1B' : '#3E5CD9'}">${open === true ? 'Open' : open || 'Fix'}:</b> ${fix}</div>
-  <div style="font:400 14.5px Inter;color:#6B655C;margin-top:6px">${src}</div></div>`;
-};
-const s19 = () => `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
- ${pFind('credit-card', 'biz', 'dev · pipeline green, feature not', 'Payments never confirm on dev', 'Stripe Checkout opens and returns, but the webhook never moves the payment out of “waiting”. Deploys and health checks stay green.', 'find the endpoint, secret or event mismatch; go/no-go for the payment demo on 23 Oct', true, '#517, #223 · 16 Oct · Yorik')}
- ${pFind('server', 'ev', 'dev · single host', 'A deploy answered 502', 'The e2e-dev smoke hit the API while the only backend container was being replaced.', 'dev deploys are not zero-downtime: one host, container replaced in place', 'Accepted', 'runs 37102432667, 37182996807 · 3–4 Oct')}
- ${pFind('building-shield', 'plat', 'dev · operations', 'Guardrails also block operators', 'Organisation SCPs denied Access Analyzer and bucket-list views; scoped deploys still worked.', 'IAM changes through the CLI; four SCPs consolidated into three (#530)', false, 'day log 23 Sep · log observability guide · 16 Oct')}
- ${pFind('cloud', 'n', 'SWE5001 · real cloud ≠ mocks', 'Tests passed, the real run failed', 'Terraform tests on mocks passed, then AWS refused a tag permission; a read-only root on Fargate left Tomcat no writable /tmp.', 'scoped TagResource grant (#527); <span class="mono" style="font-size:14.5px">VOLUME /tmp</span> in both Dockerfiles', false, 'PR #527 · 16 Oct · day log 6 Oct')}
+// ---------- slide 16 (2.4) ----------
+const s16 = () => `
+${walk([{ name: 'team-statechart', W: 2320, H: 548, view: [1164, 280], at: 'left:0;top:0' }],
+  [['team-statechart', 0, 0, 'OPEN and its joins'], ['team-statechart', 1160, 0, 'succeeded or expired']])}
+<div style="position:absolute;left:0;top:296px;width:1164px;display:grid;grid-template-columns:1fr 1fr;gap:12px 24px">
+ ${fact('Why a statechart (SAD 03c p4, p11)', 'team state gates UC4, UC5, UC6 and UC8')}
+ ${fact('Code it matches', '<span class="mono" style="font-size:18px">DealStatus.canTransitionTo</span>: only OPEN moves, never to itself')}
+ ${fact('Guards', '<span class="mono" style="font-size:18px">GroupDeal.joinPaid</span>: price → new member → window → seat')}
+ ${fact('Time event', '<span class="mono" style="font-size:18px">at(expireTime)</span>, detected by <span class="mono" style="font-size:18px">TeamExpirySweepJob</span> every minute')}
+ ${fact('Greyed', 'FAILED and CANCELED are declared but never written')}
+ <div>${report('Report §3.4 · Eric (team statechart)')}</div>
 </div>`;
 
-// ---------- slide 20 ----------
-const pStep = (n, ic, t, s) => `<div style="flex:1;border-radius:8px;background:#fff;border:1px solid #DDD5C8;padding:16px 12px;text-align:center">
-  <div style="width:44px;height:44px;margin:0 auto;border-radius:50%;background:#E3E8FB;border:1.4px solid #3E5CD9;color:#3E5CD9;font-size:19px;display:flex;align-items:center;justify-content:center">${icon(ic)}</div>
-  <div style="font:700 17px/1.25 Inter;margin-top:8px">${n}. ${t}</div><div style="font:400 15px/1.3 Inter;color:#6B655C;margin-top:3px">${s}</div></div>`;
-const pBig = (big, unit, sub, tone = '#3E5CD9', bg = '#E3E8FB') => `<div style="flex:1;border-radius:8px;background:${bg};padding:16px 20px"><div><span class="serif" style="font-size:52px;color:${tone};white-space:nowrap">${big}</span> <span style="font:700 18px Inter">${unit}</span></div><div style="font:400 16px/1.35 Inter;margin-top:4px">${sub}</div></div>`;
-const s20 = () => `
-<div style="display:flex;gap:6px;align-items:stretch">
- ${pStep(1, 'code-pull-request', 'Open PR', 'a small frontend change')}${dArr()}
- ${pStep(2, 'list-check', 'Checks', 'required checks, e2e-preview')}${dArr()}
- ${pStep(3, 'user-check', 'Approve', 'code owner')}${dArr()}
- ${pStep(4, 'code-merge', 'Squash merge', 'into dev')}${dArr()}
- ${pStep(5, 'cloud-arrow-up', 'Deliver', 'S3, CloudFront, smoke test')}${dArr()}
- ${pStep(6, 'eye', 'See it', 'on the dev site')}
+// ---------- slides 17–20 (2.5): one 20 s slot per member ----------
+// Each slot: the SDP fields (SDP 06 design case study p10) beside the after-diagram; crop 1 = class structure,
+// crop 2 = the collaboration (sequence), both 1:1.
+const mono = t => `<span class="mono" style="font-size:18px">${t}</span>`;
+// Field labels run inline with their text so six SDP fields fit beside the orientation view at 18 px.
+const field = (k, v) => `<div style="font:400 18px/1.32 Inter;margin-bottom:9px"><span style="font:700 15px Inter;letter-spacing:.05em;text-transform:uppercase;color:#6B655C;margin-right:6px">${k}</span>${v}</div>`;
+const pslot = (rows, name, W, H, crops, rep) => `
+<div style="position:absolute;left:0;top:0;width:680px">
+ ${rows.map(r => field(r[0], r[1])).join('')}
+ ${report(rep)}
 </div>
-<div style="display:flex;gap:14px;margin-top:30px">
- ${pBig('≈ 5', 'min', 'frontend PR checks (median 4.8 min, 19 runs, 16–19 Oct)')}
- ${pBig('≈ 2.7', 'min', 'merge → live and smoke-tested (median, 94 runs)')}
- ${pBig('≈ 3.1', 'min', 'backend merge → deployed (median, 88 runs); shown recorded', '#1B1A18', '#ECE6DC')}
-</div>
-<div style="display:flex;gap:14px;margin-top:30px">
- <div style="flex:1;border-radius:8px;background:#FDEFEC;padding:16px 20px"><div style="font:700 19px Inter;color:#B02E1B">${icon('video')} Recorded fallback ready</div><div style="font:400 16px/1.35 Inter;margin-top:4px">If GitHub or AWS is slow, we switch to the recording (item 4e) ${mk('FILL', 'link, recorded by 25 Oct')}</div></div>
- <div style="flex:1;border-radius:8px;background:#fff;border:1px solid #DDD5C8;padding:14px 20px"><div style="font:700 19px Inter">Watch for</div><div style="font:400 16px/1.35 Inter;margin-top:4px">the required checks turning green, the merge, then the new version on <span class="mono" style="font-size:15px">d1b3np88z657cp.cloudfront.net</span> ${mk('CONFIRM', 'the demo change')}</div></div>
-</div>`;
+${walk([{ name, W, H, view: [460, 548], at: 'left:704px;top:0' }], crops)}`;
+const s17 = () => pslot([
+  ['Where it shows (class diagram)', `the «create» of ${mono('GroupDeal')}: start-team rules must stay fixed while how a team is built may vary; until #424 the Client also named ${mono('new StandardPaidGroupDealCreator()')}`],
+  ['Cause for redesign · what varies (SDP 05a p13, p15)', `creating an object by specifying a class explicitly · “subclass of object that is instantiated”: a new ConcreteCreator decides which team class ${mono('initiate')} builds`],
+  ['Candidates', 'Factory Method · static factory (static “forbids subclassing of the base factory class”, SDP 01a p34) · Builder · Abstract Factory'],
+  ['Participants', `Creator ${mono('PaidGroupDealCreator')} (final ${mono('initiate')} validates, then abstract ${mono('createGroupDeal')}) · ConcreteCreator ${mono('StandardPaidGroupDealCreator')} · Product ${mono('GroupDeal')} · Client ${mono('PaidGroupDealService')}`],
+  ['Needed because · liability (SDP 05a p35)', `proposal §6.3: a second team type without editing the service; every creator keeps the start rules (final ${mono('initiate')}) · not exercised yet: one product class (${mono('GroupDeal')} is final) and one ConcreteCreator, chosen in config`],
+  ['Tests', `${mono('PaidGroupDealServiceTest.startUsesTheInjectedCreator')}`],
+], 'fm-start', 1160, 1400, [['fm-start', 0, -24, 'Client · Creator'], ['fm-start', 0, 520, 'ConcreteCreator · Product'], ['fm-start', 0, 852, 'initiate → createGroupDeal']], 'Report §3.5 · Eric (UC3)');
+const s18 = () => pslot([
+  ['Where it shows (sequence)', 'an expiry that called order and refund code inline: groupbuy would change for every new consequence (ADR 0002)'],
+  ['Cause for redesign · what varies', 'tight coupling · “number of objects that depend on another object”'],
+  ['Candidates', 'Observer · Mediator · direct facade calls · a message broker (ADR 0002)'],
+  ['Participants', `Subject (attach, notify): Spring’s ${mono('ApplicationEventPublisher')} and multicaster · Observer ${mono('ApplicationListener')} · ConcreteObserver: Spring’s ${mono('TransactionalApplicationListenerMethodAdapter')}, one per annotated method, invoking ${mono('OrderLifecycleSubscriber')} @Order(10), ${mono('TeamExpiryRefundSubscriber')} @Order(20) before commit · event source ${mono('GroupDealExpiryService')}`],
+  ['Needed because · liability', 'proposal §6.3: new team consequences without editing domain logic · implicit control flow; a wrong phase is a silent bug'],
+  ['Tests', `${mono('TeamExpiryRefundSubscriberTest')} (rolls the expiry back on failure)`],
+], 'observer-expiry', 1160, 1870, [['observer-expiry', 0, 600, 'Observer · ConcreteObserver adapter'], ['observer-expiry', 0, 1316, 'publish → before commit, in order']], 'Report §3.5 · Yorik (UC6)');
+const s19 = () => pslot([
+  ['Where it shows (class diagram)', 'brute force: the SQS and SNS transports each copy the batch loop, lease checks and result mapping'],
+  ['Cause for redesign · what varies', 'algorithmic dependencies · “steps of an algorithm”'],
+  ['Candidates', 'Template Method · Strategy (the whole algorithm does not vary) · Adapter per SDK'],
+  ['Participants', `AbstractClass ${mono('BatchingOutboxEventTransport&lt;E&gt;')}, final ${mono('publish')} · primitive operations ${mono('entry')}, ${mono('send')} · ConcreteClasses ${mono('Sqs…')}, ${mono('SnsOutboxEventTransport')}`],
+  ['Needed because · liability', 'two providers today: ElasticMQ/SQS locally, SNS on ECS (ADR 0007) · a subclass cannot change the loop'],
+  ['Tests', `${mono('OutboxBatchFailureTest')} (6, both providers)`],
+], 'template-method-outbox', 1160, 1724, [['template-method-outbox', 0, 290, 'template method'], ['template-method-outbox', 0, 1176, 'publish calls entry, send']], 'Report §3.5 · Pan (notifications)');
+const s20 = () => pslot([
+  ['Where it shows (class diagram)', `brute force: browse and the team quote each switch on ${mono('pricingMode')} with the arithmetic inline`],
+  ['Cause for redesign · what varies', 'algorithmic dependencies · “an algorithm”'],
+  ['Candidates', 'Strategy · Template Method (no shared skeleton) · Decorator (no stacking rule)'],
+  ['Participants', `Strategy ${mono('PricingStrategy')} · ConcreteStrategy ${mono('DualPricingStrategy')} · Contexts ${mono('ProductAppServiceImpl')}, ${mono('TeamPriceAppServiceImpl')} · registry ${mono('PricingStrategyResolver')}`],
+  ['Needed because · liability (SDP 05a p35)', 'proposal §6.3: new pricing schemes are a design driver · one ConcreteStrategy today'],
+  ['Tests', `${mono('PricingStrategyResolverTest')} (duplicate mode fails startup), ${mono('DualPricingStrategyTest')}`],
+], 'strategy-pricing', 1160, 1770, [['strategy-pricing', 0, 300, 'resolver · Strategy'], ['strategy-pricing', 0, 1222, 'quote → resolve → strategy']], 'Report §3.5 · Lim (UC1)');
 
-// ---------- slide 21 (pattern: SWE5001 slide 23) ----------
-// Steps 1–4 run live on dev (cobalt, platform); step 5 shows labelled evidence (accent soft). Accent fills carry no text.
-const dStep = (n, t, uc, env, qa, tone = 'live') => {
-  const [bg, fg] = tone === 'live' ? ['#E3E8FB', '#3E5CD9'] : ['var(--orange-l)', 'var(--orange-d)'];
-  return `<div class="card" style="flex:1;height:352px;padding:20px 16px;display:flex;flex-direction:column">
- <div class="dot" style="width:56px;height:56px;background:${bg};color:${fg};border:1.4px solid ${fg};font:700 25px Inter">${n}</div>
- <div style="font:700 20.5px/1.25 Inter;margin-top:14px">${t}</div>
- <div style="font:400 15.5px/1.3 Inter;color:var(--muted);margin-top:6px">${uc}</div>
- <div style="flex:1"></div>
- <div style="font:600 13.5px Inter;letter-spacing:.04em;color:${fg};margin-bottom:8px">${env}</div>
- <div style="border-radius:8px;background:var(--default);padding:8px 10px;font:600 16.5px/1.3 Inter">${qa}</div></div>`;
-};
+// ---------- slides 21–22 (2.5): the full-form problem ----------
 const s21 = () => `
-<div style="display:flex;gap:6px;align-items:stretch;margin-top:4px">
- ${dStep(1, 'Start a bloc and share the invite', 'UC2 sign in · UC3 start · UC7 invite · Stripe Sandbox', 'LIVE ON DEV', 'Functionality, security')}${dArr()}
- ${dStep(2, 'A friend joins through the invite and pays', 'UC4 join · UC7 credit to the sharer · Stripe Sandbox', 'LIVE ON DEV', 'Consistency')}${dArr()}
- ${dStep(3, 'My blocs and my orders', 'UC8 · Active, Completed, Refunded', 'LIVE ON DEV', 'Functionality')}${dArr()}
- ${dStep(4, 'The bloc started at 16:05 expires and refunds', 'UC5 resolve · UC6 refund · receipt', 'LIVE ON DEV', 'Reliability, consistency')}${dArr()}
- ${dStep(5, 'Quality attributes', 'one refund per payment · ECS scale-out · load tests · the pipeline', 'LABELLED EVIDENCE', 'Scalability, performance, maintainability', 'evidence')}
+<div style="position:absolute;left:0;top:0;width:560px">
+ ${fact('Problem (UC9)', 'publish, delist, revise and delete are legal in different lifecycle states')}
+ ${fact('Where it shows · brute-force design (RT 3.5)', 'the same <span class="mono" style="font-size:18px">switch (status)</span> in four operations of <span class="mono" style="font-size:18px">Product</span>; in the sequence, <span class="mono" style="font-size:18px">publish()</span> branches on status')}
+ ${fact('Why redesign (SDP 05a p4 wording)', 'hard to maintain: one rule in four places · hard to extend: a new state edits every switch · hard to reuse: the rule cannot be tested apart from Product')}
+ ${fact('What varies (SDP 05a p13)', '“states of an object”')}
+ ${fact('Candidates', '<b>State</b> · Strategy (nobody chooses; the state decides) · transition table, as on the team')}
+ ${report('Report §3.5 · Liu Jin (UC9)')}
 </div>
-<div style="display:flex;justify-content:space-between;margin-top:22px;font:400 17px/1.35 Inter;color:var(--muted)">
- <span><b style="color:#3E5CD9">Live on dev:</b> one EC2 host, Stripe Sandbox test cards, no real money</span>
- <span><b style="color:var(--orange-d)">Labelled:</b> SWE5001 prod on ECS or a local run, named on screen</span>
-</div>
-<div style="margin-top:18px;border-radius:8px;background:#FBDFD9;padding:12px 22px;font:700 19px Inter;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="color:var(--red);font-size:14px">●</span> Live on dev; recorded steps are marked ${mk('CONFIRM', 'go/no-go for the live payment steps on 23 Oct (#223, #517)')}</div>`;
-
-// ---------- slide 22 ----------
+${walk([{ name: 'state-before', W: 1160, H: 1120, view: [586, 548], at: 'left:578px;top:0' }],
+  [['state-before', 0, 0, 'brute force: class'], ['state-before', 0, 570, 'brute force: sequence']])}`;
 const s22 = () => `
+<div style="position:absolute;left:0;top:0;width:690px">
+ ${fact('Participants', 'Context <span class="mono" style="font-size:18px">Product</span> · State <span class="mono" style="font-size:18px">ProductStatus</span> · ConcreteStates <span class="mono" style="font-size:18px">DRAFT</span>, <span class="mono" style="font-size:18px">ON_SALE</span>, <span class="mono" style="font-size:18px">OFF_SALE</span>: enum constants with bodies, each compiled to its own subclass · client <span class="mono" style="font-size:18px">AdminListingAppServiceImpl</span>')}
+ ${fact('Implementation decisions', 'the ConcreteState returns its successor and the Context applies it · default bodies refuse with 409 <span class="mono" style="font-size:18px">PRODUCT_STATE_CONFLICT</span> · stateless, shared states · each transition returns a new revision, version + 1; a stale write gets 412')}
+ ${fact('Liability', 'a new state still needs a constant, its overrides and tests; the app service keeps one switch that picks the command, not its legality')}
+ ${fact('Why the team uses a table instead', 'only OPEN has behaviour; SUCCEEDED and EXPIRED are final, so <span class="mono" style="font-size:18px">DealStatus.canTransitionTo</span> suffices (SDP 05a p35). The proposal promised State there: slide 4')}
+ ${fact('Tests', '<span class="mono" style="font-size:18px">ProductStatusTest.onSalePublishThrowsStateConflict</span>, <span class="mono" style="font-size:18px">ProductLifecycleTest</span>')}
+ ${report('Report §3.5 · Liu Jin (UC9)')}
+</div>
+${walk([{ name: 'state-after', W: 1160, H: 1424, view: [450, 548], at: 'left:714px;top:0' }],
+  [['state-after', 0, 64, 'State · ConcreteStates'], ['state-after', 0, 870, 'after: publish delegates']])}`;
+
+// ---------- slide 23 (2.6) ----------
+const s23 = () => `
+${walk([{ name: 'core-erd', W: 2320, H: 1190, view: [720, 548], at: 'left:0;top:0' }],
+  [['core-erd', 580, 54, 'deal · membership'], ['core-erd', 1160, 600, 'payment · refund']])}
+<div style="position:absolute;left:744px;top:0;width:420px">
+ ${kicker('Mapping decisions · SAD 04a p53–61')}
+ ${fact('Keys', 'UUIDv7 surrogate primary keys from PostgreSQL 18')}
+ ${fact('Associations', 'logical FK columns; integrity is checked by the application. No FK or CHECK constraints is our DDL convention, not a course rule')}
+ ${fact('Aggregates', 'one table per aggregate root; no class hierarchy is persisted, so no inheritance mapping')}
+ ${fact('Race backstops', 'unique (deal, user) membership · one refund per payment · one order per payment')}
+ ${report('Report §3.6 · Liu Jin · all tables: B4')}
+</div>`;
+
+// ---------- slide 26 (4.2) ----------
+const tree = [['backend/', 'Maven COLA modules; SWE5001 services/'], ['frontend/', 'React SPA'], ['contracts/', 'openapi.json, the API contract'], ['deployment/', 'Compose, SSM bundle, deploy.sh'], ['infra/', 'Terraform: dev frontend, SWE5001'], ['perf/ · docs/', 'k6 · ADRs, sprint logs'], ['.github/', 'workflows, CODEOWNERS, Dependabot']];
+const art = [
+  ['Backend image', `${mo('git-&lt;sha&gt;-run-&lt;n&gt;')}, deployed by ${mo('@sha256')} digest`, 'ECR, immutable tags, newest 30 kept'],
+  ['API contract', `${mo('openapi.json')} committed; drift fails CI`, 'repository'],
+  ['TS client', 'generated from the contract, gitignored', 'build only (F-ADR 0003)'],
+  ['Frontend bundle', 'content-hashed files, immutable cache', 'S3 behind CloudFront'],
+  ['DB schema', 'Flyway V1–V28', 'repository'],
+  ['Infrastructure', 'Terraform plan saved, applied by an operator; CI never applies', 'S3 state, DynamoDB lock'],
+  ['SBOM', '<span style="color:#B02E1B">not produced</span>', '—'],
+];
+const s26 = () => `
+<div class="card" style="position:absolute;left:0;top:0;width:610px;height:548px;padding:12px 18px">
+ ${kicker('Source · one monorepo')}
+ ${tree.map(t => `<div style="display:flex;gap:10px;font:400 18px/1.28 Inter;margin-bottom:1px">${mo(t[0])}<span style="color:var(--muted)">${t[1]}</span></div>`).join('')}
+ <div style="margin-top:8px">${kicker('Branching · EPAT 07 CI p41–44')}</div>
+ <div style="font:400 18px/1.3 Inter"><b>Branch by Feature</b>: one short branch per story, a pull request, squash merge onto the trunk <b>dev</b>; linear history since 12 Sep. Instead of merging trunk daily, the branch must be up to date to merge.</div>
+ <div style="margin-top:8px">${kicker('Who may change it')}</div>
+ <div style="font:400 18px/1.3 Inter">GitHub: a <b>code owner</b> approves (backend Liu Jin, frontend Lim, pipelines Pan), six checks green. AWS: IAM Identity Center, one-hour sessions ${mk('VERIFY', 'MFA enforced')}. CI: one OIDC role per job, no AWS keys in GitHub.</div>
+ <div style="font:400 18px/1.3 Inter;color:#B02E1B;margin-top:6px">Exception: two IAM users for SSM port forwarding, one with an access key</div>
+</div>
+<div style="position:absolute;left:626px;top:0;width:538px">
+ ${kicker('Artefacts · each traceable to a commit')}
+ ${tbl(['Artefact', 'Identity', 'Stored in'], art.map(a => [`<b>${a[0]}</b>`, a[1], `<span style="color:var(--muted)">${a[2]}</span>`]), { fs: 18, w: [128, 220], pad: '5px 9px' })}
+</div>`;
+
+// ---------- slide 27 (4.3) ----------
+const s27 = () => zoom('cicd-pr-vs-merge', { W: 2320, H: 1096, view: [1164, 548], crops: [[0, 0, 'PR · backend'], [1160, 0, 'PR · frontend, security'], [0, 548, 'gate · delivery'], [1160, 548, 'deploy · verification']] });
+
+// ---------- slide 28 (4.3, 3.3) ----------
+// Stages as in DSOEA 07 slide 3 (pre-commit, commit, build, test, deploy).
+const sec = [
+  ['Pre-commit', 'Lefthook: format, lint, type-check (frontend)', 'style and type errors', ''],
+  ['Commit · PR', `<b>gitleaks</b> ${req2()} on the PR’s commits, full history weekly; code-owner review; actionlint`, 'secrets, unsafe workflows', ''],
+  ['Build', `SAST: <b>SonarCloud</b> ${req2()}, SpotBugs; SCA: Trivy deps, Dependabot daily`, 'code flaws, vulnerable libraries', 'CodeQL off: code scanning unavailable on this repository'],
+  ['Test', `<b>Trivy image</b> ${req2()} (HIGH, CRITICAL); Trivy config, deployment-bundle rules`, 'image CVEs, IaC and Compose misconfiguration', 'no DAST against the running site'],
+  ['Deploy', 'OIDC role per job; image by digest; read-only container, all capabilities dropped', 'stolen keys, swapped images', 'rebuilt after merge, not rescanned (ECR scans on push)'],
+];
+function req2() { return '<span style="font:700 15px/1 Inter;color:#3E5CD9;border:1.5px solid #3E5CD9;border-radius:999px;padding:2px 6px;vertical-align:2px">required</span>'; }
+const s28 = () => `
+${tbl(['Stage', 'Control', 'Catches', 'Gap'], sec.map(r => [`<b style="white-space:nowrap">${r[0]}</b>`, r[1], r[2], r[3] ? `<span style="color:#B02E1B">${r[3]}</span>` : '—']), { fs: 18, w: [130, 470, 240], pad: '9px 11px' })}
+<div style="position:absolute;left:0;right:0;top:470px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 18px/1.35 Inter"><b style="color:#3E5CD9">Types tested (slide 24, Q4):</b> static analysis, dependency (SCA), image and IaC configuration, secrets. Every third-party action is pinned to a commit SHA. Stages: DSOEA 07 slide 3.</div>`;
+
+// ---------- slide 29 (4.4) ----------
+const cd = [
+  ['Environments', 'one: <b>dev</b>. The SWE5006 prod stack was planned, not applied (#226)'],
+  ['Approver', 'the <b>code owner</b> on the pull request; the merge releases'],
+  ['Practice', 'every merge deploys automatically to <b>dev</b>, not production; no production, so no promotion gate. SWE5001 prod waits for an approved promotion PR: <b>Continuous Delivery</b> (EPAT 07 CI p34–35)'],
+  ['Verified by', 'on-host health check with <b>automatic rollback</b>; public health via CloudFront; Playwright smoke on dev'],
+  ['Trade-off', 'PostgreSQL and Redis on the app host: cheap and always on, one point of failure'],
+];
+const s29 = () => `
+<div style="position:absolute;left:0;top:0;width:392px">
+ ${cd.map(r => `<div style="margin-bottom:12px">${kicker(r[0])}<div style="font:400 18px/1.35 Inter;margin-top:-4px">${r[1]}</div></div>`).join('')}
+</div>
+${zoom('dev-deployment', { W: 2320, H: 1096, view: [756, 548], at: 'left:408px;top:20px', crops: [[0, 20, 'request path'], [940, 300, 'one host'], [1160, 548, 'deploy path']] })}`;
+
+// ---------- slide 30 (4.5) ----------
+const finds = [
+  ['First dev deploys failed (14–17 Sep)', 'Hand-built environment drifted from its design: OIDC trust used the old subject format; the deploy policy kept a placeholder instance ID; port 8589 was opened wide', 'Fixed on dev by hand; the prod stack renders each value in Terraform, so a plan shows it. No deploy failed after 17 Sep (to 19 Oct)'],
+  ['build-quality red for two days (19–20 Oct)', 'Dependabot upgraded the SpotBugs engine without its Maven plugin; the plugin lacked the engine’s BCEL classes', 'Upgrade both together, one Dependabot group, a POM policy test (PR #580)'],
+  ['Weekly full-history gitleaks failing (since 21 Sep)', '20 matches were SHA-256 file digests in a contract baseline, not secrets', 'Each digest re-hashed, then fingerprinted exactly (PR #580); 4 badge-token findings still open'],
+];
+const s30 = () => `
+${tbl(['Finding', 'Root cause', 'Fix'], finds.map(f => [`<b>${f[0]}</b>`, f[1], f[2]]), { fs: 18, w: [250, 470], pad: '11px 12px' })}
+<div style="position:absolute;left:0;right:0;top:440px;border-radius:8px;background:#FDEFEC;padding:10px 16px;font:400 18px/1.35 Inter"><b style="color:#B02E1B">Still open:</b> the Stripe webhook never confirms a payment on dev (#517), so a green pipeline is not yet a working paid flow. Sources: backend-prod-terraform-deployment.md, ci-failure-audit-20261021.md.</div>`;
+
+// ---------- slide 31 (4.1, 4.6) ----------
+const live = [
+  ['P1', 'The pull request: one frontend change, six required checks green', '60 s'],
+  ['P2', 'Lim approves as the frontend code owner', '30 s'],
+  ['P3', 'Squash merge: one commit on dev', '20 s'],
+  ['P4', 'Delivery runs; the backend PR and deploy, triggered beforehand', '90 s'],
+  ['P5', 'Verified: e2e-dev green, the change live on dev', '90 s'],
+  ['P6', 'Merge to live in minutes; hand-over', '40 s'],
+];
+const s31 = () => `
+<div style="position:absolute;left:0;top:0;width:700px">
+ ${tbl(['Step', 'What you see', 'Time'], live.map(l => [`<b>${l[0]}</b>`, l[1], l[2]]), { fs: 18, w: [70, null, 80], pad: '10px 12px' })}
+</div>
+<div style="position:absolute;left:724px;top:0;width:440px">
+ <div class="card" style="padding:16px 20px;margin-bottom:12px">${kicker('Why the backend is pre-run')}<div style="font:400 18px/1.4 Inter">Backend PR checks take about 16 min, longer than the segment, so that run was triggered before the talk and we walk through it finished.</div></div>
+ <div class="card" style="padding:16px 20px">${kicker('Backup video', '#B02E1B')}<div style="font:400 18px/1.4 Inter">Recorded on dev by 24 Oct, one clip per step, in the cloud and on a USB drive. ${mk('FILL', 'link')}</div></div>
+</div>`;
+
+// ---------- slide 32 (5.1, 5.2) ----------
+// Environment per step follows the 23 Oct go/no-go (open item 1); the NO-GO wording is in the run book.
+const env5 = (t, tone = 'ok') => {
+  const k = { ok: ['#E3E8FB', '#3E5CD9'], rec: ['#FFEDC7', '#7A5C20'], loc: ['#ECE6DC', '#1B1A18'], ecs: ['#FBDFD9', '#B02E1B'] }[tone];
+  return `<span style="display:inline-block;font:700 15px/1 Inter;background:${k[0]};color:${k[1]};border-radius:999px;padding:5px 10px;white-space:nowrap">${t}</span>`;
+};
+const plan5 = [
+  ['D1', 'Leader signs in, starts a bloc, pays in Stripe Sandbox, copies the invite', 'UC2 · UC1 · UC3 · UC7', 'security: only a signed webhook confirms a payment', env5('dev, if GO')],
+  ['D2', 'Joiner opens the invite, joins and pays: 2 of 2, the team succeeds', 'UC4 · UC5 · UC7', 'correctness: guards re-checked after payment', env5('dev, if GO')],
+  ['D3', 'My blocs and my orders, filtered by the URL', 'UC8', 'functionality', env5('dev')],
+  ['D4', 'The bloc started at 16:05 expired and refunded itself', 'UC5 · UC6', 'unattended expiry and refund, recorded once; ≤ 1 min measured locally (slide 34)', env5('dev, if GO')],
+  ['D5', 'No session, a buyer on admin, a write without the marker', '—', 'security: 401 · 403 · 400 · HttpOnly', env5('dev')],
+  ['D6', 'Twenty paid buyers race for the last seat', 'UC4', 'correctness under concurrency', env5('local test', 'loc')],
+  ['34', 'Scripted k6 load, pre-run', 'UC1', 'performance: ≤ 2 s at 100 users', env5('SWE5001 ECS', 'ecs')],
+  ['36', 'Back to the §4 pipeline run', '—', 'maintainability', env5('dev')],
+];
+const s32 = () => `
+${tbl(['Step', 'What you see', 'Use cases', 'Quality attribute (slide 3)', 'Runs on'], plan5.map(r => [`<b>${r[0]}</b>`, r[1], `<span style="white-space:nowrap">${r[2]}</span>`, r[3], r[4]]), { fs: 18, w: [60, 400, 150, 300], pad: '8px 10px' })}
+<div style="position:absolute;left:0;right:0;top:486px;font:400 18px/1.35 Inter;color:var(--muted)">“dev, if GO”: live on deployed dev after the 23 Oct go/no-go (#517, #223); otherwise the 24 Oct recording of that step, said as recorded. A local result is never presented as a dev one.</div>`;
+
+// ---------- slide 33 (5.1, 5.2, 5.5) ----------
+const live5 = [
+  ['D1', 'Start a bloc and share the invite', '120 s'],
+  ['D2', 'A friend joins and pays: the team succeeds', '120 s'],
+  ['D3', 'My blocs and my orders', '75 s'],
+  ['D4', 'The 16:05 bloc: expired, order cancelled, refunded', '90 s'],
+  ['D5', 'Security: 401, 403, 400, HttpOnly cookie', '60 s'],
+  ['D6', 'Last-seat race: the test, in the IDE', '45 s'],
+];
+const s33 = () => `
+<div style="position:absolute;left:0;top:0;width:700px">
+ ${tbl(['Step', 'What you see', 'Time'], live5.map(l => [`<b>${l[0]}</b>`, l[1], l[2]]), { fs: 18, w: [70, null, 80], pad: '10px 12px' })}
+</div>
+<div style="position:absolute;left:724px;top:0;width:440px">
+ <div class="card" style="padding:16px 20px;margin-bottom:12px">${kicker('Two buyers, one screen')}<div style="font:400 18px/1.4 Inter">Two Chrome profiles, Leader and Joiner, both signed in with Google. Stripe Sandbox: a test card, no money moves.</div></div>
+ <div class="card" style="padding:16px 20px;margin-bottom:12px">${kicker('Started before the talk')}<div style="font:400 18px/1.4 Inter">A team of two on <span class="mono" style="font-size:18px">US34-04</span> at 16:05: its 40-minute window, the shortest allowed, ends ≈ 16:45.</div></div>
+ <div class="card" style="padding:16px 20px">${kicker('Backup video', '#B02E1B')}<div style="font:400 18px/1.4 Inter">Recorded on dev by 24 Oct, one clip per step, in the cloud and on a USB drive. ${mk('FILL', 'link')}</div></div>
+</div>`;
+
+// ---------- slide 34 (5.3) ----------
+const steps33 = [10, 20, 40, 60, 80, 100, 125, 150, 175, 200];
+const s34 = () => `
+<div style="position:absolute;left:0;top:0;width:600px">
+ ${kicker('k6 pre-run · SWE5001 ECS environment, same code · not the dev host', '#B02E1B')}
+ ${tbl(['Requests/s', 'p95 (ms)', 'Errors', 'Dropped', 'Step'], steps33.map(r => [`<b>${r}</b>${r >= 190 ? ' <span style="color:#B02E1B">●</span>' : ''}`, '—', '—', '—', '—']), { fs: 18, w: [130, 110, 100, 110], pad: '5px 12px' })}
+ <div style="font:400 18px/1.35 Inter;color:var(--muted);margin-top:6px"><span style="color:#B02E1B">●</span> at or above ≈ 190 requests/s, our estimate of the proposal’s 100 users with 0.5 s think time assumed (slide 25) · results ${mk('FILL', 'from the 24 Oct pre-run')}</div>
+</div>
+<div style="position:absolute;left:624px;top:0;width:540px">
+ <div class="card" style="padding:16px 20px;margin-bottom:12px">
+  ${kicker('Target (proposal §6.3)', '#B02E1B')}
+  <div style="font:600 19px/1.35 Inter">≤ 2 s with up to 100 concurrent users</div>
+  <div style="font:400 18px/1.4 Inter;margin-top:8px">Our gate per step: p95 &lt; 500 ms, errors &lt; 1 %, no dropped requests</div>
+  <div style="font:700 18px/1.4 Inter;margin-top:8px">Verdict: ${mk('FILL', 'pass or fail per gate')}</div>
+ </div>
+ <div class="card" style="padding:16px 20px;margin-bottom:12px">
+  ${kicker('Expiry ≤ 1 min')}
+  <div style="font:400 18px/1.4 Inter">Sweep every minute under a lease; worst lag 58.2 s for 30 teams under 100-user load (<b>local</b>, 30 Sep)</div>
+ </div>
+ <div class="card" style="padding:16px 20px">
+  ${kicker('Not claimed')}
+  <div style="font:400 18px/1.4 Inter">Authenticated paths under load on a deployed system; anything about the dev host; scaling (one task)</div>
+ </div>
+</div>`;
+
+// ---------- slide 35 (5.2) ----------
+const s35 = () => `
+<div class="card" style="position:absolute;left:0;top:0;width:560px;height:240px;padding:18px 22px">
+ ${kicker('Dev, the system you saw')}
+ ${kv([
+   ['Compute', 'one EC2 t3.large, no Auto Scaling group'],
+   ['Data', 'PostgreSQL 18 and Redis 8 on the same host'],
+   ['Effect', 'one point of failure; a deploy restarts the API'],
+   ['Read', 'AWS, read-only, 21 Oct'],
+ ])}
+</div>
+<div class="card" style="position:absolute;left:584px;top:0;width:580px;height:240px;padding:18px 22px">
+ ${kicker('Why, deliberately', '#B02E1B')}
+ <ul class="b" style="font:400 18px/1.4 Inter;margin:0">
+  <li style="margin-bottom:8px">one complete system, always on, at low cost</li>
+  <li style="margin-bottom:8px">the proposal lists no scalability target (§6.3)</li>
+  <li>one codebase, two topologies (backend ADR 0008)</li>
+ </ul>
+</div>
+<div style="position:absolute;left:0;right:0;top:264px;border-radius:8px;background:#ECE6DC;padding:14px 18px;font:400 18px/1.4 Inter"><b>Scale path, not claimed here:</b> the same code on ECS in our SWE5001 topology, commerce 2–6 tasks on requests per target, notification 1–4 on queue backlog (backup B10).</div>`;
+
+// ---------- slide 36 (5.4) ----------
+const seams = [
+  ['New pricing mode', 'one more <span class="mono" style="font-size:18px">PricingStrategy</span> and its <span class="mono" style="font-size:18px">PricingMode</span> constant', 'Strategy · slide 20'],
+  ['New consequence of a team’s outcome', 'one more subscriber to <span class="mono" style="font-size:18px">TeamSucceeded</span> / <span class="mono" style="font-size:18px">TeamExpired</span>', 'Observer · slide 18'],
+  ['New payment provider', 'one more adapter behind <span class="mono" style="font-size:18px">CheckoutGateway</span>, <span class="mono" style="font-size:18px">RefundGateway</span>', 'gateway port, external-interface strategy · slide 11'],
+];
+const s36 = () => `
+<div class="card" style="position:absolute;left:0;top:0;width:420px;padding:18px 22px">
+ ${kicker('Shown in §4 (slide 31)')}
+ <div style="font:400 18px/1.45 Inter">One change, live on dev: six required checks, a code-owner review, an automatic deploy and a smoke test. 18 ArchUnit rules hold the module boundaries on every build.</div>
+</div>
+<div style="position:absolute;left:444px;top:0;width:720px">
+ ${kicker('Proposal §6.3: the primary design driver', '#B02E1B')}
+ ${tbl(['Change', 'Added as', 'Pattern'], seams.map(r => [`<b>${r[0]}</b>`, r[1], r[2]]), { fs: 18, w: [230, null, 190], pad: '10px 12px' })}
+ <div style="font:400 18px/1.35 Inter;color:var(--muted);margin-top:10px">Existing rules stay unedited: each change adds classes; a pricing mode also adds one enum constant.</div>
+</div>`;
+
+const out = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s12, 13: s13, 14: s14, 15: s15, 16: s16, 17: s17, 18: s18, 19: s19, 20: s20, 21: s21, 22: s22, 23: s23, 24: s24, 25: s25, 26: s26, 27: s27, 28: s28, 29: s29, 30: s30, 31: s31, 32: s32, 33: s33, 34: s34, 35: s35, 36: s36 };
+for (const s of C.SLIDES) if (!out[s.n]) out[s.n] = s.slot === null ? (() => '') : pending(s.n);
+// Rubric G8: every example slide names the report section holding the full set. §2 slides carry it in their layout;
+// the others get it in the gap under the title. Our section numbers follow #463 and stay FILL until it is final;
+// RT names the report template section the content answers.
+const repSec = {
+  3: 'scope, quality attributes · RT 1.4.1–1.4.3', 4: 'status, promised vs delivered · RT 1.4, 2.2', 5: 'milestones, effort · RT 2.3',
+  6: 'ownership · RT 2.1, 3.4, 3.5', 7: 'sprints, DoD, retrospectives', 8: 'appendix: agile artefacts',
+  24: 'types of testing', 25: 'performance test', 26: 'source control strategy · RT 4.1', 27: 'continuous integration · RT 4.2',
+  28: 'pipeline security · RT 4.2', 29: 'continuous delivery · RT 4.3', 30: 'technical findings',
+};
+for (const [n, t] of Object.entries(repSec)) {
+  const body = out[n];
+  out[n] = () => body() + `<div style="position:absolute;right:0;top:-27px;font:600 18px/1 Inter;color:#3E5CD9;display:flex;gap:6px;align-items:center">${icon('book')} Report ${mk('FILL', '§ (#463)')} · ${t}</div>`;
+}
+// Closing slide (dark, full bleed).
+out[37] = () => `
 <div style="position:absolute;left:76px;top:96px;font:700 120px/1 Inter;color:#fff">Thank you</div>
 <div style="position:absolute;left:80px;top:236px;font:500 32px Inter;color:#fff">Questions?</div>
-<div style="position:absolute;left:80px;top:304px;font:700 16px Inter;letter-spacing:.14em;color:#FFB01F">WHAT WE HOPE YOU REMEMBER</div>
-<div style="position:absolute;left:80px;top:338px;width:1060px;display:grid;grid-template-columns:1fr 1fr;gap:14px 20px">
- ${['Pay first; refunded automatically if the team fails', 'A refund is never paid twice, even after a crash', 'One codebase, two topologies: EC2 and ECS', 'Pull request to dev in minutes, every gate green'].map(t => `<div style="height:52px;border-radius:26px;background:#fff;color:var(--teal-d);font:700 19px/52px Inter;text-align:center">${t}</div>`).join('')}
-</div>
-<div style="position:absolute;left:80px;top:486px;width:1060px;display:flex;gap:20px">
- ${[['99.2%', 'backend coverage on new code (SonarCloud, 19 Oct)'], ['1,931', 'backend tests, 0 failed (16 Oct)'], ['≈ 2.7 min', 'frontend merge → live and smoke-tested (median)']].map(n => `<div style="flex:1;border-radius:8px;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);padding:10px 18px"><div style="font:700 30px/1.2 Inter;color:#fff">${n[0]}</div><div style="font:400 15.5px Inter;color:#E6DFD3">${n[1]}</div></div>`).join('')}
-</div>
-<div style="position:absolute;left:80px;top:604px;font:400 17px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:10px;align-items:center"><span style="font-size:20px">${icon('github')}</span> github.com/PPsyrius/iss-groupbuy-team8 · d1b3np88z657cp.cloudfront.net</div>`;
+<div style="position:absolute;left:80px;top:604px;font:400 18px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:10px;align-items:center"><span style="font-size:20px">${icon('github')}</span> github.com/PPsyrius/iss-groupbuy-team8 · d1b3np88z657cp.cloudfront.net</div>`;
 
-const S = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s12, 13: s13, 14: s14, 15: s15, 16: s16, 17: s17, 18: s18, 19: s19, 20: s20, 21: s21, 22: s22 };
-for (let n = 2; n <= 21; n++) if (!S[n]) S[n] = todo(n);
-module.exports = S;
+// A slide that steps through crops names its 1:1 detail pages under the title, so a reader of the PDF finds them.
+for (const s of C.SLIDES) {
+  if (s.slot === null) continue;
+  const f = out[s.n];
+  CROPS.length = 0;
+  f();
+  const k = CROPS.length;
+  if (k) out[s.n] = () => f() + `<div style="position:absolute;left:0;top:-29px;font:600 18px/1 Inter;color:#6B655C;display:flex;gap:7px;align-items:center">${icon('magnifying-glass')} 1:1 detail pages D${s.n}-1 to D${s.n}-${k} (backups)</div>`;
+}
+
+// Detail pages for the PDF (rubric V3): every 1:1 crop of every slide, in slide order, as a static backup body.
+// Non-enumerable, so the kit, which looks slides up by number, never sees it.
+Object.defineProperty(out, 'details', { value: () => C.SLIDES.filter(s => s.slot !== null).flatMap(s => {
+  CROPS.length = 0;
+  out[s.n]();
+  return CROPS.map(c => ({
+    id: `D${s.n}-${c.i + 1}`, n: s.n, k: c.i + 1, of: c.n, label: c.label, speaker: s.speaker, slideTitle: s.title,
+    body: `<div style="position:absolute;left:0;top:0;width:1164px;height:${CROP_H}px;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 0 0 2px #1B1A18">${cropView(c.name, c.W, c.H, c.x, c.y, c.head)}</div>`,
+  }));
+}) });
+
+module.exports = out;

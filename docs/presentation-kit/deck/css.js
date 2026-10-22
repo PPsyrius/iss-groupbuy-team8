@@ -86,7 +86,11 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
 .dia{display:flex;justify-content:center}
 .dia svg{display:block}
 
-/* presentation runtime */
+/* presentation runtime: key hint (shown 4 s on load) and the "." blank overlay sit on the window, not the slide */
+.hint{position:fixed;z-index:10;right:18px;top:10px;font:400 12px Inter;color:#9a948b;opacity:0;transition:opacity .4s;pointer-events:none}
+.hint.show{opacity:.85}
+.blank{position:fixed;inset:0;background:#000;z-index:20;display:none}
+.blank.on{display:block}
 @media screen{
   body.present{overflow:hidden;height:100vh}
   body.present .slide{display:none;position:absolute;left:50%;top:50%;transform-origin:center center}
@@ -103,5 +107,6 @@ table.t td.id{font:600 15px 'JetBrains Mono',monospace;color:var(--foreground);w
   html,body{background:#fff}
   .slide{page-break-after:always;break-after:page}
   .frag{opacity:1!important}
+  .hint,.blank{display:none!important}
 }
 `;
