@@ -72,9 +72,12 @@ test('the companion follows the deck and drives it', async t => {
   // a reloaded deck picks the companion up again
   await deck.reload();
   await deck.waitForFunction(() => location.hash === '#BX');
-  await notes.waitForTimeout(1500); // one companion heartbeat (1 s): the deck adopts the companion on its hello
-  await notes.keyboard.press('ArrowRight');
-  await deck.waitForFunction(() => location.hash === '#B1');
+  // the deck adopts the companion on its next hello (every 1 s); B1 is the last slide, so repeated presses cannot overshoot
+  for (let attempt = 0; attempt < 10 && (await deck.evaluate(() => location.hash)) !== '#B1'; attempt++) {
+    await notes.keyboard.press('ArrowRight');
+    await deck.waitForFunction(() => location.hash === '#B1', null, { timeout: 500 }).catch(() => {});
+  }
+  assert.equal(await deck.evaluate(() => location.hash), '#B1');
   await notes.waitForFunction(() => document.getElementById('n-label').textContent === 'Backup B1');
   assert.equal(await text('n-status'), '');
 });
