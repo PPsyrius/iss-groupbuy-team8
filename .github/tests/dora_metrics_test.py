@@ -37,6 +37,16 @@ class DoraMetricsTest(unittest.TestCase):
         self.assertEqual([d["sha"] for d in self.deploys], ["c1", "c2", "c3"])
         self.assertEqual([d["ok"] for d in self.deploys], [True, False, True])
 
+    def test_a_window_keeps_only_deployments_finished_inside_it(self):
+        window = module.in_window(self.deploys, at("2026-10-02T00:00:00"), at("2026-10-03T10:00:00"))
+        self.assertEqual([d["sha"] for d in window], ["c2"])
+
+    def test_a_cache_is_reused_only_for_a_window_it_covers(self):
+        cache = {"window": [SINCE.isoformat(), UNTIL.isoformat()]}
+        self.assertTrue(module.covers(cache, at("2026-10-05T00:00:00"), UNTIL))
+        self.assertFalse(module.covers(cache, at("2026-09-30T00:00:00"), UNTIL))
+        self.assertFalse(module.covers({}, SINCE, UNTIL))
+
     def test_frequency_counts_successful_deployments_per_week(self):
         self.assertAlmostEqual(module.frequency_per_week(self.deploys, SINCE, UNTIL), 1.0)
 
@@ -63,7 +73,7 @@ class DoraMetricsTest(unittest.TestCase):
         first = {"c1": at("2026-10-01T06:00:00")}
         table = module.render({"backend": module.metrics(self.deploys, first, SINCE, UNTIL)}, SINCE, UNTIL)
         for label in ["Deployment frequency", "Deployment lead time", "Change success rate",
-                      "Mean time to recover", "2 / 3", "67 %"]:
+                      "Failed deployment recovery time", "2 / 3", "67 %"]:
             self.assertIn(label, table)
 
 

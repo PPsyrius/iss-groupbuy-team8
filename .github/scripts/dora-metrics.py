@@ -11,7 +11,9 @@ Definitions (SWE5006 DevSecOps 16, Business Metrics, p. 3), applied to this repo
   deployment of that part at or after the pull request's own deployment attempt.
 - Change success rate: successful deployments over all deployments; manual `rollback-backend`
   runs count as failed backend changes.
-- Mean time to recover: from a failed deployment to the next successful deployment of that part.
+- Failed deployment recovery time: from a failed deployment to the next successful deployment of
+  that part. The course's mean time to recover is measured from an incident; with no incident
+  record, and an automatic rollback on a failed backend deployment, this is the closest measure.
 
 Reads with `gh api` (needs `gh` signed in, or GH_TOKEN in Actions); the computation is pure and
 covered by .github/tests/dora_metrics_test.py.
@@ -49,6 +51,16 @@ def deployments(runs, job_name):
                 "ok": job["conclusion"] == "success",
             })
     return sorted(found, key=lambda d: d["finished"])
+
+
+def in_window(deploys, since, until):
+    return [d for d in deploys if since <= d["finished"] < until]
+
+
+def covers(cache, since, until):
+    """A cache is reused only for a window inside the one it was fetched for."""
+    window = cache.get("window")
+    return bool(window) and since >= parse_time(window[0]) and until <= parse_time(window[1])
 
 
 def frequency_per_week(deploys, since, until):
@@ -157,7 +169,8 @@ def render(results, since, until):
     rows.append("| Deployment lead time (median) | " + " | ".join(hours(r["lead_time_h"]) for r in results.values()) + " |")
     rows.append("| Change success rate | " + " | ".join(
         "n/a" if r["success_rate"] is None else f"{100 * r['success_rate']:.0f} %" for r in results.values()) + " |")
-    rows.append("| Mean time to recover (median) | " + " | ".join(hours(r["recovery_h"]) for r in results.values()) + " |")
+    rows.append("| Failed deployment recovery time (median) | "
+                + " | ".join(hours(r["recovery_h"]) for r in results.values()) + " |")
     return f"Window: {since:%Y-%m-%d} to {until - timedelta(days=1):%Y-%m-%d} (UTC)\n\n" + "\n".join(rows) + "\n"
 
 
@@ -170,6 +183,8 @@ def main(repo, since_text, until_text):
     # DORA_CACHE=<file> keeps the fetched history, so a re-run does not repeat hundreds of API calls.
     cache_path = os.environ.get("DORA_CACHE")
     cache = json.load(open(cache_path, encoding="utf-8")) if cache_path and os.path.exists(cache_path) else {}
+    if not covers(cache, since, until):
+        cache = {"window": [since.isoformat(), until.isoformat()]}
     results = {}
     for part, (workflow, job) in PARTS.items():
         if part not in cache:
@@ -177,7 +192,7 @@ def main(repo, since_text, until_text):
             deploys = deployments(runs, job)
             first = fetch_first_commits(repo, {d["sha"] for d in deploys})
             cache[part] = {"runs": runs, "first": {sha: t.isoformat() for sha, t in first.items()}}
-        deploys = deployments(cache[part]["runs"], job)
+        deploys = in_window(deployments(cache[part]["runs"], job), since, until)
         first = {sha: parse_time(t) for sha, t in cache[part]["first"].items()}
         results[part] = metrics(deploys, first, since, until, rollbacks if part == "backend" else 0)
     if cache_path:
