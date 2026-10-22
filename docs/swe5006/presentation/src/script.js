@@ -164,7 +164,7 @@ const demoSteps = [
     fb: 'Any check differs: say what came back, one sentence, and move on; the Q&amp;A row “Is 401 vs 403 vs 400 deliberate?” has the mapping.' },
   { n: 'D6', t: 'Twenty buyers, one last seat: the test', time: '17:00:15 – 17:01:00', proves: 'Rubric <b>5.2</b> correctness under concurrency; rubric G10 (IDE on hand) · Eric shows, Yorik speaks',
     op: ['IDE (18 pt) on a local checkout of <code>dev</code>: <code>StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist</code>, already run green before the talk (Docker, PostgreSQL 18 in Testcontainers).', 'Show the assertions: 2 members, 2 orders, 19 refund obligations, <code>current_size</code> 2, stock 98.', 'One click to <code>PaidGroupDealMapper.xml</code>: <code>SELECT … FOR UPDATE</code> and the guarded <code>UPDATE … WHERE current_size = …</code>.'],
-    say: "The last seat we don't race on shared dev. This test does it on every pull request: twenty paid buyers race for the last seat of a team of two, through the production code against a real PostgreSQL. One wins; nineteen get a refund obligation, and capacity is never exceeded. The row lock and the guarded update are why. This is a local test, not a dev result.",
+    say: "The last seat we don't race on shared dev. This test does it on every pull request that changes the backend: twenty paid buyers race for the last seat of a team of two, through the production code against a real PostgreSQL. One wins; nineteen get a refund obligation, and capacity is never exceeded. The row lock and the guarded update are why. This is a local test, not a dev result.",
     exp: 'Green test with its assertions visible; then back to the deck, slide 34.',
     fb: 'IDE not ready: show the test on GitHub (read-only) and its last green CI run.' },
 ];
@@ -187,7 +187,7 @@ ${box('warn', 'Watch out', mh('No payment has been confirmed and no refund prove
 <h2>Preconditions (checked at 15:30 by Eric and Yorik)</h2>
 <ul><li>Health <code>UP</code> (A.1); latest runs on <code>dev</code> green; merge freeze in force; the §4 demo PR is the only change that may land.</li>
 <li>Two Google buyer accounts signed in on Eric’s machine in two Chrome profiles, “Leader” (account A) and “Joiner” (account B); the same two on Yorik’s machine as standby. ${m('{{CONFIRM:which two accounts and the display names shown on screen (open item 15)}}')}</li>
-<li>At <b>≈ 16:05</b> (latest 16:15) Yorik, as account B, starts a bloc on <code>US34-04</code> and pays; nobody joins; receipt bookmarked in the Joiner window, tab 3. It is due ≈ 16:45; the sweep (every minute) expires it and the refund worker (every 30 s) refunds it ≈ 16:46–16:48. Post <code>EXPIRY OK</code> at 16:10 and <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.</li>
+<li>At <b>≈ 16:05</b> (latest 16:07, so the refund lands before the 16:50 check and §5 starts at 16:52) Yorik, as account B, starts a bloc on <code>US34-04</code> and pays; nobody joins; receipt bookmarked in the Joiner window, tab 3. It is due ≈ 16:45; the sweep (every minute) expires it and the refund worker (every 30 s) refunds it ≈ 16:46–16:48. Post <code>EXPIRY OK</code> at 16:10 and <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.</li>
 <li>Listings converged: <code>scripts/seed-dev-demo-listings.sh --check</code> passes for the four <code>US34-*</code> listings (≤ 12:00, Yorik).</li>
 <li>Terminal with font ≥ 18 pt and the curl line ready (D5); Joiner DevTools closed until D5.</li>
 <li>IDE on a local checkout of <code>dev</code>, font ≥ 18 pt, with the D6 test run green after 15:00 and its file open; Docker running (rubric G10).</li>
@@ -244,7 +244,7 @@ const timeline = `<section class="chap"><h1>6 Timeline before, on and after the 
 ${tbl(['Date', 'Do', 'Owner'], [
   ['Wed 21 Oct', 'Deck re-planned from the rubric; §1 drafted.', 'Lim'],
   ['Fri 23 Oct', '<b>Slides due</b> (#464). Each owner reviews their slides, cards and Q&amp;A rows; the Sprint 4 review and retro feed slides 5 and 7. <b>18:00 go/no-go</b> for the live payment steps, posted in #464.', 'All; Yorik decides with Lim'],
-  ['Sat 24 Oct', '<b>Full dry run on dev</b> of D1–D6 in order and timed: a <code>US34-04</code> bloc started ≈ 10:00 by account B expires and refunds (D4), START and JOIN on <code>US34-04</code> with both accounts (D1, D2); payment and refund ids in the day log (no secrets). <b>Backup videos</b> of both demos recorded on whatever is deployed then, 1080p, one clip per step, stored in the cloud and on a USB drive (rubric G6). <b>k6 pre-run</b> on the SWE5001 ECS environment; keep its summary for slide 34.', 'Yorik, Eric (system); Pan (pipeline, k6)'],
+  ['Sat 24 Oct', '<b>Full dry run on dev</b> of D1–D6 in order and timed: a <code>US34-04</code> bloc started ≈ 10:00 by account B expires and refunds (D4), START and JOIN on <code>US34-04</code> with both accounts (D1, D2); payment and refund ids in the day log (no secrets). <b>Backup videos</b> of both demos recorded on the final Sprint 4 build deployed to dev (Sprint 4 ended 23 Oct), 1080p, one clip per step, stored in the cloud and on a USB drive (rubric G6). <b>k6 pre-run</b> on the SWE5001 ECS environment; keep its summary for slide 34.', 'Yorik, Eric (system); Pan (pipeline, k6)'],
   ['Sun 25 Oct', '<b>Timed rehearsal</b> in Zoom at the real clock with injected questions; every diagram slide and its crops checked on a projector or TV from across the room (rubric V7); every rubric checklist box ticked; every marker resolved; rebuild deck and script.', 'All; Lim times'],
 ])}
 <h2>Presentation day (Mon 26 Oct)</h2>
@@ -253,7 +253,7 @@ ${tbl(['Time (SGT)', 'Do', 'Owner'], [
   ['14:30', 'Tech check in a test Zoom: mic, camera, sharing, Do Not Disturb.', 'All'],
   ['15:00', 'Merge freeze on <code>dev</code> until 17:15.', 'Lim'],
   ['15:30', 'Check the §4 and §5 preconditions lists.', 'Pan (§4); Eric, Yorik (§5)'],
-  ['≈ 16:05 (≤ 16:15)', 'Start the expiry bloc on <code>US34-04</code> as account B and pay; bookmark the receipt. <code>EXPIRY OK</code> at 16:10, <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.', 'Yorik'],
+  ['≈ 16:05 (≤ 16:07)', 'Start the expiry bloc on <code>US34-04</code> as account B and pay; bookmark the receipt. <code>EXPIRY OK</code> at 16:10, <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.', 'Yorik'],
   ['16:30', 'Start; follow the run sheet. The scribe logs every remark verbatim (rubric G9).', 'Lim; scribe'],
   ['17:04 / 17:10', 'Slide 37; parked questions; end.', 'Lim'],
 ])}

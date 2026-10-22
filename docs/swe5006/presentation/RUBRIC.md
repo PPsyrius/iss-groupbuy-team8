@@ -18,7 +18,7 @@ The presentation is on 26–27 Oct 2026 and the report is due 1 Nov 2026 (BR sli
 
 Precedence, highest first:
 
-1. CA for order and timing.
+1. CA for order and timing. The one exception is a team ruling: §2 runs 6 min against CA's 5 so that each member presents their own design problem (G4, Time budget), and §1 gives up the minute.
 2. PDF for what to cover.
 3. RT for the detail behind each PDF item.
 4. BR for project-wide deliverables and dates.

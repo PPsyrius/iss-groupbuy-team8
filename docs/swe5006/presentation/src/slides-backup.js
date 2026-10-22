@@ -210,6 +210,23 @@ const bMembers = () => tbl(['Member', 'Use case (report §3.4)', 'Design problem
   ['Liu Jin', 'UC9 listing administration and team terms', 'State: listing lifecycle (full form)', 'patterns 21–22; statechart B13'],
 ], { fs: 16.5, w: [110, 330, 400] }) + `<div style="margin-top:12px;font:400 16px/1.4 Inter">Each member’s analysis class, analysis sequence, design class and design sequence diagrams are in their report section (template RT 3.4.1); the deck shows UC4 only (rubric G8). Owners: #463. ${mk('VERIFY', 'UC9 owner: #32 names Eric, #463 names Liu Jin (open item 12)')}</div>`;
 const b16erd = () => scroll('full-erd', 2320, 5038, 1150);
+// B16 prints only its first viewport, so the PDF also carries the ERD 1:1 (labels 24 px, rubric V3): each context
+// frame of full-erd.svg cut into 1164 × 548 windows, left to right then top to bottom, as pages B16-1 … B16-n.
+const ERD_FRAMES = [['identity', 12, 80, 2296, 844], ['catalog', 12, 974, 2296, 486], ['groupbuy + share', 12, 1510, 2296, 1016],
+  ['payment', 12, 2576, 2296, 1172], ['order', 12, 3798, 1136, 648], ['notification', 1172, 3798, 1136, 418],
+  ['integration · scheduling', 12, 4496, 2296, 482]];
+const steps = (at, len, view, max) => {
+  if (len <= view) return [Math.max(0, Math.min(max - view, Math.round(at - (view - len) / 2)))];
+  const n = Math.ceil(len / view);
+  return Array.from({ length: n }, (_, i) => Math.round(at + i * (len - view) / (n - 1)));
+};
+const erdWin = (x, y) => svg('full-erd').replace(/<svg\b[^>]*>/, t => t.replace(/\s(width|height|viewBox)="[^"]*"/g, '')
+  .replace('<svg', `<svg width="1164" height="548" viewBox="${x} ${y} 1164 548" style="display:block"`));
+const erdPages = () => ERD_FRAMES.flatMap(([ctx, fx, fy, fw, fh]) => {
+  const xs = steps(fx, fw, 1164, 2320), ys = steps(fy, fh, 548, 5038);
+  return ys.flatMap((y, r) => xs.map((x, c) => ({ ctx, part: [xs.length > 1 ? ['left', 'right'][c] : '', ys.length > 1 ? `part ${r + 1}/${ys.length}` : ''].filter(Boolean).join(', '), x, y })));
+}).map((w, i, all) => ({ id: `B16-${i + 1}`, title: `ERD 1:1 · ${w.ctx}${w.part ? ` (${w.part})` : ''} · ${i + 1}/${all.length}`,
+  body: `<div style="position:absolute;left:0;top:0;width:1164px;height:548px;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 0 0 2px #1B1A18">${erdWin(w.x, w.y)}</div>` }));
 
 // Backup slides follow the last main slide; press B in the deck for the index (BX). Rows link with data-go.
 // Each segment adds its backups to BACKUPS (content.js) and a matching entry below, in index order.
@@ -236,7 +253,9 @@ function list() {
   B.push({ id: 'B13', title: 'UC9 listing statechart', speaker: 'Liu Jin', body: bLs() });
   B.push({ id: 'B14', title: 'UC4 design class and sequence diagrams, complete', speaker: 'Eric', body: bUc4() });
   B.push({ id: 'B15', title: 'Every member’s use case and design problem', speaker: 'Eric', body: bMembers() });
-  B.push({ id: 'B16', title: 'Entity-relationship diagram, all 29 tables (scroll)', speaker: 'Liu Jin', body: b16erd() });
+  const erd = erdPages();
+  B.push({ id: 'B16', title: `Entity-relationship diagram, all 29 tables (scroll; 1:1 pages B16-1 to B16-${erd.length} follow)`, speaker: 'Liu Jin', body: b16erd() });
+  for (const e of erd) B.push({ ...e, speaker: 'Liu Jin' });
   // D pages: each 1:1 crop the talk steps through, so the PDF carries readable diagrams (rubric V3).
   for (const d of require('./slides-main').details()) {
     B.push({ id: d.id, title: `Slide ${d.n} · detail ${d.k}/${d.of}: ${d.label}`, speaker: d.speaker, body: d.body });

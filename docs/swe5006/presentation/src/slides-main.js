@@ -145,7 +145,7 @@ const spr = [
   ['1 · 1–12 Sep', 'Walking skeleton: sign-in, browse, admin on dev', '<b>integrated</b>: backend on dev 5 Sep; no frontend, so not releasable'],
   ['2 · 15–26 Sep', 'Pay, join a team, see the order, replay-safe', '<b>integrated</b>: merged, tested, Checkout off on dev; 134 of 150 h'],
   ['3 · 28 Sep–9 Oct', 'Invite → pay → refund on deployed dev', '<b>integrated</b>; goal not met under our “on dev” rule; 117 of 150 h'],
-  ['4 · 12–23 Oct', 'Complete system on dev; three services on ECS (SWE5001)', mk('FILL', 'step as of the 25 Oct rehearsal')],
+  ['4 · 12–23 Oct', 'Complete system on dev; three services on ECS (SWE5001)', mk('FILL', 'step recorded at the 23 Oct review')],
 ];
 const retro = [
   ['1 → 2', 'No burndown, no hours', 'daily board snapshots, dated day logs'],
@@ -376,7 +376,7 @@ ${walk([{ name: 'uc4-design-class', W: 2320, H: 2314, view: [900, 548], at: 'lef
 // ---------- slide 15 (2.4) ----------
 const s15 = () => `
 ${walk([{ name: 'uc4-design-seq', W: 2320, H: 3306, view: [380, 548], at: 'left:0;top:0' }],
-  [['uc4-design-seq', 700, 760, 'team row locked first', 176], ['uc4-design-seq', 1100, 1846, 'guarded update · last seat', 176], ['uc4-design-seq', 1100, 2500, 'loser: compensation, refund owed', 176]])}
+  [['uc4-design-seq', 700, 760, 'team row locked first', 176], ['uc4-design-seq', 1100, 1914, 'guarded update · last seat', 176], ['uc4-design-seq', 1100, 2500, 'loser: compensation, refund owed', 176]])}
 <div style="position:absolute;left:404px;top:0;width:760px">
  ${fact('Major flow', 'paid join confirmed by the Stripe webhook: signature checked outside the transaction, then one transaction (READ COMMITTED, 10 s), drawn as <span class="mono" style="font-size:18px">critical</span> because UML has no transaction fragment', 18)}
  ${fact('Concurrency strategy', 'lock order team row → intent → payment → receipt, each <span class="mono" style="font-size:18px">SELECT … FOR UPDATE</span>; a racing join waits on the team row', 18)}
@@ -418,7 +418,7 @@ const s17 = () => pslot([
   ['Participants', `Creator ${mono('PaidGroupDealCreator')} (final ${mono('initiate')} validates, then abstract ${mono('createGroupDeal')}) · ConcreteCreator ${mono('StandardPaidGroupDealCreator')} · Product ${mono('GroupDeal')} · Client ${mono('PaidGroupDealService')}`],
   ['Needed because · liability (SDP 05a p35)', `proposal §6.3: a second team type without editing the service; every creator keeps the start rules (final ${mono('initiate')}) · not exercised yet: one product class (${mono('GroupDeal')} is final) and one ConcreteCreator, chosen in config`],
   ['Tests', `${mono('PaidGroupDealServiceTest.startUsesTheInjectedCreator')}`],
-], 'fm-start', 1160, 1400, [['fm-start', 0, 0, 'Client · Creator'], ['fm-start', 0, 852, 'initiate → createGroupDeal']], 'Report §3.5 · Eric (UC3)');
+], 'fm-start', 1160, 1400, [['fm-start', 0, -24, 'Client · Creator'], ['fm-start', 0, 520, 'ConcreteCreator · Product'], ['fm-start', 0, 852, 'initiate → createGroupDeal']], 'Report §3.5 · Eric (UC3)');
 const s18 = () => pslot([
   ['Where it shows (sequence)', 'an expiry that called order and refund code inline: groupbuy would change for every new consequence (ADR 0002)'],
   ['Cause for redesign · what varies', 'tight coupling · “number of objects that depend on another object”'],
@@ -610,8 +610,8 @@ const steps33 = [10, 20, 40, 60, 80, 100, 125, 150, 175, 200];
 const s34 = () => `
 <div style="position:absolute;left:0;top:0;width:600px">
  ${kicker('k6 pre-run · SWE5001 ECS environment, same code · not the dev host', '#B02E1B')}
- ${tbl(['Requests/s', 'p95 (ms)', 'Errors', 'Dropped', 'Step'], steps33.map(r => [`<b>${r}</b>${r >= 175 ? ' <span style="color:#B02E1B">●</span>' : ''}`, '—', '—', '—', '—']), { fs: 18, w: [130, 110, 100, 110], pad: '5px 12px' })}
- <div style="font:400 18px/1.35 Inter;color:var(--muted);margin-top:6px"><span style="color:#B02E1B">●</span> at or above ≈ 190 requests/s, the proposal’s 100 users (slide 25) · results ${mk('FILL', 'from the 24 Oct pre-run')}</div>
+ ${tbl(['Requests/s', 'p95 (ms)', 'Errors', 'Dropped', 'Step'], steps33.map(r => [`<b>${r}</b>${r >= 190 ? ' <span style="color:#B02E1B">●</span>' : ''}`, '—', '—', '—', '—']), { fs: 18, w: [130, 110, 100, 110], pad: '5px 12px' })}
+ <div style="font:400 18px/1.35 Inter;color:var(--muted);margin-top:6px"><span style="color:#B02E1B">●</span> at or above ≈ 190 requests/s, our estimate of the proposal’s 100 users with 0.5 s think time assumed (slide 25) · results ${mk('FILL', 'from the 24 Oct pre-run')}</div>
 </div>
 <div style="position:absolute;left:624px;top:0;width:540px">
  <div class="card" style="padding:16px 20px;margin-bottom:12px">
