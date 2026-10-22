@@ -104,9 +104,9 @@ Each entry names the pattern, the slides using it, the element roles, the `data-
 | Card column with header band | 5001 4 | card → `up`; band (+ square patch) → `fade`; band icon → `pop`; name → `up`; list → `up` | card d at 200, +120 per column; band d, icon d+60, name d+80, list d+160 |
 | Side columns | 5001 2, 5, 11, 18, 22, 5006 2, 3, 4 | left column → `left`; right column → `right`; middle column → `up`; heading → `up`; list → `up` | columns 200–300 (right column may come much later, e.g. 600); heading +12…+50; list +59…+65; tick rows inside: pop from 300–500, +80 per row, text +30 |
 | Box then text | 5001 3, 10, 11, 14, B5, B9, B11, B13, B14 | panel background → `fade`, `pop` or `left`; its text → `up` | text at the box's d +2…+12; sibling boxes step 30–90 |
-| Table with rows | 5001 11, B1a, B1b, B2, B5, B7, B8, B9, B12, 5006 3, 5, 6, 7 | heading → `up`; table → `fade`; body rows → `trow` | table 246, rows 368 then +38.4 each (406, 445, 483, …); on slide 11 heading 449, table 485, rows 608 +38 |
+| Table with rows | 5001 11, B1a, B1b, B2, B5, B7, B8, B9, B12, 5006 3, 5, 6, 7, 10 | heading → `up`; table → `fade`; body rows → `trow` | table 246, rows 368 then +38.4 each (406, 445, 483, …); on slide 11 heading 449, table 485, rows 608 +38 |
 | Trailing callout | 5001 B5, B9, 19, 23, 5006 5, 8 | dark panel → `fade` or `up`; bar or `recdot` → `fade`; text → `up` | at the end of what it comments on (after a table: 560–607; on a full slide: 1100); text +4…+50 |
-| Footnote or caption | 5001 3, 4, 6, 9, B6, B12, BX, 5006 6, 7 | closing line → `up` | last on the slide: 649–1500 |
+| Footnote or caption | 5001 3, 4, 6, 9, B6, B12, BX, 5006 6, 7, 15 | closing line → `up` | last on the slide: 649–1500 |
 | Stat strip | 5001 14, 19, 20, 24 | box → `up`; value and caption → `up` | content +40…+50 (caption +46); boxes step 42–120, from 600–1000 |
 | Connector between elements | 5001 2, 3, 7, 10, 18, 20, 22, B10, B13, B14, 5006 2 | arrow → `cn` | after both ends have arrived; chains step +56…+90; pipeline stage arrows at stage +120 |
 | Process chain | 5001 7, 20, B11, 5006 7 | panel → `fade`; heading → `up`; steps → `pop` (stage) or `fade` + text `up`; connectors → `cn` | panel about 280–430, heading +4…+23; steps +29…+170 apart; each connector after its pair |
@@ -117,6 +117,9 @@ Each entry names the pattern, the slides using it, the element roles, the `data-
 | Use case band | — | three band cards (use case, analysis → design, design problem) → `up` | 150, +80 each; the slide's cards follow from about 400 |
 | Line chart | 5001 14, 5006 8 | chart → `fade`; solid series → `cline`; dots → `cdot`; dashed (ideal) series → `fade`; legend → `up` | chart d; dashed series +40…+250; solid line +100…+350; dots after the line, +50…+60 each; two charts side by side start 150 apart; two series on one chart (5006 8): the second line and its dots run 100 behind the first, so both draw together, and the legend follows the first dots |
 | Inline token strip | 5006 6 | short inline tokens in one wrapping flex row (owner per use case) → `up`; a draft chip closing the row → `pop` | kicker 150; tokens 200, +30 each; chip after the last token (520); a table below starts while the strip is still arriving (420) |
+| Walked diagram | 5006 9, 12, 13, 14, 15, 16, 17 | diagram pane (whole drawing, one axis scrolls) → `fade`; numbered crop outlines on it → `fade`; side list → `up`; the 1:1 crop layers and their step badges stay plain `.frag` (0.25 s reveal) | pane 200 (a second pane 110 later: 150 / 260); outlines from 500, +70 each, numbered slide-wide across panes; side kicker about 260, its rows +30…+50; set through the view opts `d`, `od`, `os` of `one()` / `walk()` (`WALK` in `docs/swe5006/presentation/src/slides-main.js`) |
+| Fragment row group | 5006 10 | visible body rows → `trow`; each later group's `<tr>` is itself the fragment, `class="frag a" data-a="up"` | table 200, rows 320 +38; within a revealed group 0 / 40 / 80 ms after the click (a `.frag.a` delay counts from the click) |
+| Mapping rows | 5006 11 | per row: source label → `up`; arrow glyph → `fade`; target → `left` | kicker 180; rows from 240, +80; arrow +60, target +100; the slide's fragments stay plain |
 
 ### One-off patterns
 
@@ -128,7 +131,7 @@ Each entry names the pattern, the slides using it, the element roles, the `data-
 | Service panels with event mapping | 5001 10 | panels `fade` 254 / 535 / 605, header +9, inner card `fade` +42…+51, card text +2; mapping rows: domain pill `pop` 450 +64, integration pill `pop` 690 +64, arrow `cn` 728 +63 |
 | Pill ribbon | 5001 11 | dark band `up` 645, label +4, pills `pop` 1009 then about +90 |
 | Two-series line chart | 5001 14 | chart `fade` 300; line 1 `cline` 500, dots `cdot` 600 +60; line 2 800, dots 900 +60 |
-| Inline state diagram | — | SVG with its nodes `fade` 440; each transition `<line>` `cn` 540, then +60…+80; transition labels `fade` at their line +60 |
+| Inline state diagram | 5006 17 | SVG with its nodes `fade` 440; each transition `<line>` `cn` 540, then +60…+80; transition labels `fade` at their line +60; 5006 17 does it inside a diagram pane (the pane fades as the nodes), transitions 250 / 320 / 390, through the pane's `fx` copy of the SVG only |
 | Sequence draw-on | — | SVG with lifeline heads `fade` 480; solid messages `cn` 600 +100; dashed messages, crash mark and labels `fade` at their message +60; final note last (1100) |
 | Twin burndown charts | — | per column (150 / 300): heading `up`, subtitle +50, chart `fade` +150, dashed ideal +250, actual `cline` +350, dots `cdot` +450 then +50, legend +550, comment card +1000, source +1150 |
 | Stacked cylinders | 5001 15 | cylinder `up` 244 / 318 / 393, name +53, contents +98 |

@@ -322,6 +322,9 @@ body.present .${id}{width:${Math.min(box[0], pw)}px;height:${Math.min(box[1], ph
 const walk = (views, crops) => `<style>body:not(.present) .zcrop{display:none}</style>
 ${views.map(v => pane(v, crops.map(([n, x, y], k) => ({ n, x, y, k: k + 1 })).filter(c => c.n === v.name))).join('')}
 ${crops.map(([name, x, y, label, head, cap], i) => layer(cropInner(name, x, y, head, cap), label, i, crops.length)).join('')}`;
+// Walked diagram (MOTION.md): the pane fades in at 200 ms (a second pane 110 ms later), then each crop outline fades
+// in from 500 ms, 70 ms apart, numbered slide-wide; the crop layers and step badges stay plain fragments.
+const WALK = { d: 200, od: 500, os: 70 };
 const one = (name, W, H, box, crops, opts = {}) => walk([{ name, W, H, box, ...opts }], crops.map(c => [name, ...c]));
 
 // ---------- slide 9 (2.1) ----------
@@ -331,12 +334,12 @@ ${one('logical-layers', 2320, 1644, [764, 568], [
   [1160, 30, 'adapter · contract', 0, [['Adapter', 'REST controllers return one Result envelope against the committed OpenAPI contract']]],
   [1160, 548, 'application', 0, [['Application', 'services run the use cases, one package per bounded context']]],
   [640, 1116, 'infrastructure realises the domain ports', 0, [['Domain', 'depends on nothing; it names its needs as ports'], ['Infrastructure', 'implements those ports; 17 ArchUnit rules keep it that way']]],
-])}
+], WALK)}
 <div style="position:absolute;left:784px;top:0;width:380px"${ref('4+1 logical view · SAD 04a p24–29 · skeleton plan = backend-skeleton-plan.md D1–D20 (30 Aug), locked before numbered ADRs')}>
- ${kicker('Decisions that shape it')}
- ${dec9.map(r => `<div style="border-top:1.5px solid #DDD5C8;padding:5px 0 6px"><div style="font:400 19px/1.25 Inter">${r[0]}</div><div style="font:600 18px/1.25 Inter;color:#6B655C">${r[1]}</div></div>`).join('')}
- <div style="margin-top:8px">${kicker('Platform')}</div>
- <div style="font:400 18px/1.32 Inter">${lines(['Java 21, Spring Boot 4, MyBatis, Sa-Token', 'PostgreSQL 18, Redis 8, Stripe Checkout', 'React 19, TanStack, TypeScript', 'AWS EC2, S3, CloudFront'], 0)}</div>
+ ${gA(kicker('Decisions that shape it'), 'up', 260)}
+ ${dec9.map((r, i) => `<div ${A('up', 300 + 50 * i, 'border-top:1.5px solid #DDD5C8;padding:5px 0 6px;')}><div style="font:400 19px/1.25 Inter">${r[0]}</div><div style="font:600 18px/1.25 Inter;color:#6B655C">${r[1]}</div></div>`).join('')}
+ <div ${A('up', 620, 'margin-top:8px;')}>${kicker('Platform')}</div>
+ <div ${A('up', 660, 'font:400 18px/1.32 Inter;')}>${lines(['Java 21, Spring Boot 4, MyBatis, Sa-Token', 'PostgreSQL 18, Redis 8, Stripe Checkout', 'React 19, TanStack, TypeScript', 'AWS EC2, S3, CloudFront'], 0)}</div>
 </div>
 ${repTop('Report §3.1 · Liu Jin, presented by Eric')}`;
 
@@ -352,17 +355,21 @@ const strat = [
   ['Concurrency', 'no oversell', '«entity» with capacity · UC4', 'Row locks in a fixed order + guarded UPDATE + unique indexes', 'ADR 0001 · no ADR'],
   ['Domain events', 'decoupling', '«control» · UC5–UC7', 'Event record + transactional listener; outbox across services', 'ADR 0002, 0003, 0007'],
 ];
-// Rows appear in three groups of three (rubric V1); the PDF shows all nine.
+// Rows appear in three groups of three (rubric V1); the PDF shows all nine. Table with rows, then Fragment row group
+// (MOTION.md): table 200, visible rows 320 +38; each revealed row is itself a fragment (frag a up), 0 / 40 / 80 ms
+// after the click.
 const s10 = () => `
-<table class="t" style="font-size:20px;line-height:1.17"${ref('Template: SAD 04a p36–37')}><tr>${th('Strategy · concern', 248)}${th('Object types · use cases', 318)}${th('Become in design')}</tr>
-${strat.map((r, i) => `<tr${ref(r[4])}${i >= 3 ? ` class="frag" data-frag="${Math.floor(i / 3)}"` : ''}><td style="padding:3px 10px"><b>${r[0]}</b><br><span style="color:var(--muted)">${r[1]}</span></td><td style="padding:3px 10px">${r[2]}</td><td style="padding:3px 10px">${r[3]}</td></tr>`).join('')}</table>
+<table class="t a" data-a="fade" style="font-size:20px;line-height:1.17;--d:200ms"${ref('Template: SAD 04a p36–37')}><tr>${th('Strategy · concern', 248)}${th('Object types · use cases', 318)}${th('Become in design')}</tr>
+${strat.map((r, i) => `<tr${ref(r[4])}${i >= 3 ? ` class="frag a" data-a="up" data-frag="${Math.floor(i / 3)}" style="--d:${(i % 3) * 40}ms"` : ` class="trow" style="--d:${320 + 38 * i}ms"`}><td style="padding:3px 10px"><b>${r[0]}</b><br><span style="color:var(--muted)">${r[1]}</span></td><td style="padding:3px 10px">${r[2]}</td><td style="padding:3px 10px">${r[3]}</td></tr>`).join('')}</table>
 ${repTop('Report §3.2 · Yorik, Eric')}`;
 
 // ---------- slide 11 (2.2) ----------
 const typ = [['GUI «boundary»', 'Route, component and Query hook'], ['«control»', 'REST controller + application service, called through the generated client'], ['«entity»', 'Aggregate behind a repository port, implemented with MyBatis'], ['External «boundary»', 'Gateway port + adapter']];
+// Mapping rows (MOTION.md): kicker 180; per row from 240, +80: label up, arrow fade +60, target left +100. The
+// fragments stay plain.
 const s11 = () => `
-<div style="height:8px"></div>${kicker('Class diagrams: each analysis type becomes design classes')}
-${typ.map(t => `<div style="display:flex;gap:16px;align-items:baseline;font:400 22px/1.3 Inter;margin-bottom:10px"><b style="width:250px;flex:none">${t[0]}</b><span style="color:#E8402A;font-weight:700">→</span><span>${t[1]}</span></div>`).join('')}
+<div style="height:8px"></div>${gA(kicker('Class diagrams: each analysis type becomes design classes'), 'up', 180)}
+${typ.map((t, i) => `<div style="display:flex;gap:16px;align-items:baseline;font:400 22px/1.3 Inter;margin-bottom:10px"><b ${A('up', 240 + 80 * i, 'width:250px;flex:none;')}>${t[0]}</b><span ${A('fade', 300 + 80 * i, 'color:#E8402A;font-weight:700;')}>→</span><span ${A('left', 340 + 80 * i)}>${t[1]}</span></div>`).join('')}
 <div class="frag" data-frag="1" style="margin-top:22px">
  ${kicker('Sequence diagrams: a plain call becomes a guarded transaction')}
  <div style="display:flex;gap:16px;align-items:baseline;font:400 22px/1.4 Inter;margin-bottom:8px"><b style="width:250px;flex:none">Analysis</b>${mo('control → entity.update()', 21)}</div>
@@ -377,7 +384,7 @@ ${one('transition-pair', 2320, 2270, [1164, 568], [
   [0, 0, 'analysis: UC4', 0, [['Analysis classes', 'boundary, control and entity from slide 14; no platform yet']]],
   [1160, 20, 'strategy key', 0, [['Strategy key', 'each tag names the transition strategy that produced a design class']]],
   [600, 1684, 'design classes · persistence', 0, [['Design classes', 'the Team becomes the GroupDeal aggregate, reached through its repository port'], ['◁ means “realises”', 'MyBatis classes in infrastructure implement that port']]],
-])}
+], WALK)}
 ${repTop('Report §3.2 · transition strategies')}`;
 
 // ---------- slide 13 (2.3) ----------
@@ -388,12 +395,12 @@ ${one('use-case', 2320, 1096, [1164, 568], [
   [560, 290, 'refund, payment: Stripe', 0, [['Stripe', 'a secondary actor of refund and of paying upfront']]],
   [1160, 40, 'out of scope', 0, [['Out of scope, greyed', 'as the proposal excluded']]],
   [1160, 640, 'delivery status', 0, [['Status badges', 'paid start and expiry refund on dev since 23 Oct; a second buyer’s join not yet']]],
-])}
+], WALK)}
 ${repTop('Report §3.3 · use case diagram and specifications')}`;
 
 // ---------- slide 14 (2.4) ----------
 const s14 = () => `
-${walk([{ name: 'uc4-analysis-class', W: 1160, H: 1070, box: [566, 568], at: 'left:0;top:0' }, { name: 'uc4-analysis-seq', W: 2320, H: 2186, box: [582, 568], at: 'left:582px;top:0' }],
+${walk([{ name: 'uc4-analysis-class', W: 1160, H: 1070, box: [566, 568], at: 'left:0;top:0', ...WALK, d: 150 }, { name: 'uc4-analysis-seq', W: 2320, H: 2186, box: [582, 568], at: 'left:582px;top:0', ...WALK, d: 260 }],
   [['uc4-analysis-class', 0, 550, 'entities', 0, [['Entities only', 'attributes sit on entities: the Team holds its size and deadline']]],
    ['uc4-analysis-seq', 560, 1150, 'seat available: join', 160, [['Seat available', 'joining creates a membership while the window is open']]],
    ['uc4-analysis-seq', 1160, 1720, 'else: refund through the gateway', 160, [['Otherwise', 'the payment is refunded through the payment gateway']]]])}
@@ -406,11 +413,11 @@ ${one('uc4-design-class', 2320, 2314, [944, 568], [
   [1160, 0, 'payment meets groupbuy through a port', 0, [['Context seam', 'payment reaches groupbuy only through a port']]],
   [1160, 1110, 'aggregate behind its repository port', 0, [['Persistence strategy', 'the GroupDeal aggregate sits behind its repository port']]],
   [1160, 1650, 'MyBatis implementation of the port', 0, [['Infrastructure', 'the repository implementation and its MyBatis mapper']]],
-])}
+], WALK)}
 <div style="position:absolute;left:964px;top:0;width:200px"${ref('Typed signatures, visibility and multiplicities: SAD 01b p14–16 · tags: slide 10')}>
- ${kicker('Strategy tags')}
- ${tagKey.map(t => `<div style="font:400 19px/1.4 Inter"><b>${t[0]}</b> ${t[1]}</div>`).join('')}
- <div style="font:400 19px/1.35 Inter;margin-top:12px;color:var(--muted)">Typed signatures, visibility and multiplicities</div>
+ ${gA(kicker('Strategy tags'), 'up', 260)}
+ ${tagKey.map((t, i) => `<div ${A('up', 290 + 30 * i, 'font:400 19px/1.4 Inter;')}><b>${t[0]}</b> ${t[1]}</div>`).join('')}
+ <div ${A('up', 600, 'font:400 19px/1.35 Inter;margin-top:12px;color:var(--muted);')}>Typed signatures, visibility and multiplicities</div>
 </div>
 ${repTop('Report §3.4 · Eric')}`;
 
@@ -420,19 +427,31 @@ ${one('uc4-design-seq', 2320, 3306, [1164, 568], [
   [700, 772, 'team row locked first', 176, [['One transaction', 'after the webhook’s signature check; drawn as critical, as UML has no transaction fragment'], ['Lock order', 'team row, intent, then payment; a racing join waits on the team row']]],
   [1100, 1926, 'guarded update · last seat', 176, [['Guarded update', mo('UPDATE … WHERE current_size = expected AND status = open', 19)], ['Last seat', `the opt [teamCompleted] branch publishes ${mo('TeamSucceeded', 19)}`]]],
   [1100, 2500, 'loser: compensation, refund owed', 176, [['Seat gone', 'DEAL_FULL or DEAL_CLOSED: the receipt owes a refund, never an extra member'], ['Evidence', '20 paid buyers race for 1 seat: 19 refunds owed (local integration test)']]],
-])}
+], WALK)}
 <span${ref('StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist (local, PostgreSQL in Testcontainers) · READ COMMITTED, 10 s')}></span>
 ${repTop('Report §3.4 · Eric')}`;
 
 // ---------- slide 17 (2.4) ----------
+// Inline state diagram in the pane's copy only (fx): the three transitions draw on at 250 / 320 / 390 ms, their labels
+// fade in 60 ms later; the build fails if the drawing no longer has these elements.
+const s17fx = g => {
+  const sub = (re, fn, n) => { let k = 0; const r = g.replace(re, (...m) => { k++; return fn(...m); }); if (k !== n) throw new Error(`slide 17 fx: ${re} matched ${k}, expected ${n}`); g = r; };
+  const cn = ms => `class="cn" pathLength="1" style="stroke-linecap:butt;--d:${ms}ms" `, fade = ms => `class="a" data-a="fade" style="--d:${ms}ms" `;
+  sub(/<line (?=x1="57" y1="250")/g, () => `<line ${cn(250)}`, 1);
+  sub(/<line (?=x1="1136" y1="118")/g, () => `<line ${cn(320)}`, 1);
+  sub(/<line (?=x1="1136" y1="470")/g, () => `<line ${cn(390)}`, 1);
+  sub(/<text (?=x="7[04]" )/g, () => `<text ${fade(310)}`, 4);
+  sub(/<text (?=x="1168" y="(\d+)")/g, (m, y) => `<text ${fade(+y < 300 ? 380 : 450)}`, 9);
+  return g;
+};
 const s17 = () => `
 ${one('team-statechart', 2320, 548, [1164, 275], [
   [0, 60, 'OPEN and its joins', 0, [['Guards', `price → new member → window → seat (${mo('GroupDeal.joinPaid', 19)})`], ['Code it matches', `${mo('DealStatus.canTransitionTo', 19)}: only OPEN moves, never to itself`], ['Greyed', 'FAILED and CANCELED are declared but never written']]],
   [1160, 20, 'succeeded or expired', 0, [['Time event', `${mo('at(expireTime)', 19)}, found by the expiry sweep every minute`]]],
-])}
+], { ...WALK, fx: s17fx })}
 <div style="position:absolute;left:0;top:300px;width:1164px"${ref('SAD 03c p4, p11')}>
- ${point('Why a statechart', 'Team state gates four use cases: UC4 join, UC5 resolution, UC6 refund and UC8 my teams.', 24)}
- ${point('In code', `${mo('DealStatus', 22)} and the guards of ${mo('GroupDeal', 22)}`, 24)}
+ ${gA(point('Why a statechart', 'Team state gates four use cases: UC4 join, UC5 resolution, UC6 refund and UC8 my teams.', 24), 'up', 640)}
+ ${gA(point('In code', `${mo('DealStatus', 22)} and the guards of ${mo('GroupDeal', 22)}`, 24), 'up', 700)}
 </div>
 ${repTop('Report §3.4 · Eric (team statechart)')}`;
 
