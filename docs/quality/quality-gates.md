@@ -109,18 +109,31 @@ HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Poli
 - **No hard Maven coverage check** (`jacoco:check`). Coverage judged on *new code* in SonarQube, where ratcheting is possible; a flat repo-wide number punishes the skeleton phase.
 - **No OWASP Dependency-Check**. Trivy fs covers Maven CVEs without NVD API-key friction.
 - **No in-image HEALTHCHECK**. JRE base carries no curl/wget; orchestrator probes use `/actuator/health` (port 8589).
-- **No licence gate (yet)**. `sbom.yml` produces CycloneDX SBOMs and Trivy licence inventories for `backend/` and `frontend/` on release tags, weekly and on dispatch, report-only. Which licence categories should fail a build is a team decision that this inventory informs.
+- **No licence gate (yet)**. `sbom.yml` produces CycloneDX SBOMs and Trivy licence inventories for `backend/` and `frontend/` on release tags, weekly and on dispatch. Licence categories are report-only; the job fails only when an inventory is missing or empty. Which licence categories should fail a build is a team decision that this inventory informs.
 
 ### SBOM and licence inventory — 2026-10-22
 
-First run: [PR #609 run](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39733676148), artifact `sbom` (90 days).
+Data: artifact `sbom` of [run 39771223592](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39771223592) on PR #609.
 
-| Part | Components | Licence entries by category (Trivy) |
-|---|---|---|
-| backend (Maven) | 670 | 593 notice, 28 reciprocal, 28 restricted, 4 unencumbered, 2 unknown |
-| frontend (pnpm) | 97 | 74 notice, 2 unencumbered, 1 unknown |
+**Scope.** The backend SBOM lists the compile and runtime dependencies of `backend/pom.xml` and its ten modules: the seven modules of the monolith deployed to dev and the three SWE5001 services. Trivy leaves out test-scope and `optional` dependencies. The frontend SBOM lists the production dependency closure of `frontend/pnpm-lock.yaml`; Trivy leaves out devDependencies. Trivy lists a Maven library once for every module that uses it (659 library entries for 206 artifacts), so the counts below are distinct packages, without the project's own 11 Maven artifacts.
 
-Every reciprocal and restricted entry comes from four dual-licensed artifacts, counted once per module that depends on them: `logback-classic` and `logback-core` (EPL-2.0 or LGPL-2.1) and `jakarta.annotation-api` and `jakarta.servlet-api` (EPL-2.0 or GPL-2.0 with the Classpath Exception). The unknowns are `reactive-streams` (MIT-0) and the `@fontsource/inter` font (OFL-1.1), both permissive but outside Trivy's classification. No forbidden licence was found.
+**Completeness**, checked once against each package manager:
+
+- Backend: `mvn dependency:list` over the same modules resolves 198 third-party compile and runtime artifacts. The SBOM has 195 of them. The other three are declared `optional`: Lombok, SpotBugs annotations and Spring Boot DevTools. None of them is in the executable `blocbuy-backend-exec.jar`. Every one of the jar's 180 third-party libraries is in the SBOM, except `spring-boot-jarmode-tools`, which the Spring Boot plugin adds at packaging time.
+- Frontend: the production closure computed from the lockfile has 96 package versions of 94 packages, and the SBOM has exactly these. TypeScript is in it only as an optional peer dependency of `valibot`; it is a build tool and is not bundled.
+
+| Part | Third-party packages | With a licence finding | Restricted | Reciprocal | Notice | Unencumbered | Unknown |
+|---|---|---|---|---|---|---|---|
+| backend (Maven) | 195 | 195 | 4 | 4 | 190 | 1 | 1 |
+| frontend (pnpm) | 94 | 75 | 0 | 0 | 72 | 2 | 1 |
+
+A package counts under the category of each of its licences, so the columns add up to more than the packages. No package is in the forbidden category.
+
+- **Restricted and reciprocal**: the same four dual-licensed artifacts, usable under either licence: `logback-classic` and `logback-core` (EPL-2.0 or LGPL-2.1) and `jakarta.annotation-api` and `jakarta.servlet-api` (EPL-2.0 or GPL-2.0 with the Classpath Exception).
+- **Unencumbered**: `HdrHistogram` (CC0-1.0 or BSD-2-Clause), `isbot` (Unlicense) and `tslib` (0BSD).
+- **Unknown**: `reactive-streams` (MIT-0) and the `@fontsource/inter` font (OFL-1.1). Both allow use and redistribution, but Trivy does not classify them.
+- **No licence finding**: 19 frontend packages, all `@typescript/typescript-<os>-<arch>`, TypeScript's native compilers for other platforms. The lockfile lists them, but pnpm installs only the runner's own, so there is no `package.json` to read a licence from.
+- **Own artifacts**: Trivy reports them as Apache-2.0, inherited from the `spring-boot-starter-parent` POM. The project declares no licence, so they are left out of the counts.
 
 ## Exception Process
 

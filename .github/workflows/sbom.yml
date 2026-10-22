@@ -1,6 +1,8 @@
-# Software bill of materials and licence report for the backend (Maven) and frontend (pnpm).
-# Report-only: CycloneDX SBOMs and a licence inventory are uploaded as artifacts and the
-# licence categories are summarised; vulnerability gating stays in security.yml (trivy-deps).
+# Software bill of materials and licence inventory for the backend (Maven) and frontend (pnpm).
+# Scope is what ships: Maven compile and runtime dependencies (Trivy skips test and optional ones)
+# and the frontend's production dependency closure (Trivy suppresses devDependencies).
+# Licence categories are report-only; a missing or empty inventory fails the job.
+# Vulnerability gating stays in security.yml (trivy-deps).
 name: sbom
 
 on:
@@ -9,11 +11,13 @@ on:
   schedule:
     - cron: '53 3 * * 1' # weekly Monday 03:53 UTC
   workflow_dispatch:
-  # Run once when this workflow itself changes, so a PR shows its own output.
+  # Run when the inventory's implementation changes, so a PR shows its own output.
   pull_request:
     branches: [dev]
     paths:
       - '.github/workflows/sbom.yml'
+      - '.github/scripts/sbom-summary.py'
+      - '.github/tests/sbom_summary_test.py'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -28,7 +32,7 @@ env:
 jobs:
   sbom:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10 # a full run takes about 70 s
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -42,6 +46,7 @@ jobs:
 
       # Trivy reads Maven dependencies and their licences from ~/.m2, as in trivy-deps.
       - name: Populate local Maven repository
+        timeout-minutes: 5
         run: ./mvnw -B -q -f pom.xml dependency:go-offline -DskipTests
         working-directory: backend
 
@@ -59,6 +64,7 @@ jobs:
       # Licences of npm packages come from node_modules/*/package.json; the lockfile alone has none.
       # --ignore-scripts skips `prepare` (API client generation), which the inventory does not need.
       - name: Install frontend dependencies (frozen lockfile, no scripts)
+        timeout-minutes: 3
         run: pnpm install --frozen-lockfile --ignore-scripts
         working-directory: frontend
 
@@ -66,6 +72,7 @@ jobs:
         run: mkdir -p sbom
 
       - name: Backend SBOM (CycloneDX)
+        timeout-minutes: 2
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         env:
           TRIVY_OFFLINE_SCAN: 'true'
@@ -77,6 +84,7 @@ jobs:
           output: sbom/backend.cdx.json
 
       - name: Frontend SBOM (CycloneDX)
+        timeout-minutes: 2
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           version: ${{ env.TRIVY_VERSION }}
@@ -86,6 +94,7 @@ jobs:
           output: sbom/frontend.cdx.json
 
       - name: Backend licence inventory
+        timeout-minutes: 2
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         env:
           TRIVY_OFFLINE_SCAN: 'true'
@@ -99,6 +108,7 @@ jobs:
           output: sbom/backend-licences.json
 
       - name: Frontend licence inventory
+        timeout-minutes: 2
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           version: ${{ env.TRIVY_VERSION }}
@@ -109,27 +119,12 @@ jobs:
           exit-code: '0' # report only
           output: sbom/frontend-licences.json
 
-      - name: Summarise components and licence categories
-        run: |
-          set -Eeuo pipefail
-          {
-            echo "## SBOM and licence report"
-            echo
-            echo "| Part | Components in SBOM | forbidden | restricted | reciprocal | notice | permissive | unencumbered | unknown |"
-            echo "|---|---|---|---|---|---|---|---|---|"
-            for part in backend frontend; do
-              components="$(jq '.components | length' "sbom/${part}.cdx.json")"
-              counts="$(jq -r '
-                [.Results[]?.Licenses[]? | .Category // "unknown" | ascii_downcase] as $c
-                | ["forbidden","restricted","reciprocal","notice","permissive","unencumbered","unknown"]
-                | map(. as $k | [$c[] | select(. == $k)] | length)
-                | join(" | ")' "sbom/${part}-licences.json")"
-              echo "| ${part} | ${components} | ${counts} |"
-            done
-            echo
-            echo "Categories follow Trivy's licence classification (Google licence policy)."
-            echo "Full CycloneDX SBOMs and per-package licences are in the \`sbom\` artifact."
-          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Summarise and check the inventory
+        timeout-minutes: 1
+        run: >-
+          python3 .github/scripts/sbom-summary.py --dir sbom
+          --part backend=com.blocbuy: --part frontend
+          --summary "$GITHUB_STEP_SUMMARY"
 
       - name: Upload SBOMs and licence reports
         if: always()
