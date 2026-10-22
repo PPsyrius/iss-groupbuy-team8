@@ -174,7 +174,9 @@ class TeamResolutionListenerOrderTest {
         }
 
         @Override
-        protected void doBegin(Object transaction, TransactionDefinition definition) {}
+        protected void doBegin(Object transaction, TransactionDefinition definition) {
+            // No resource to open: transaction synchronization alone drives the listeners.
+        }
 
         @Override
         protected void doCommit(DefaultTransactionStatus status) {
