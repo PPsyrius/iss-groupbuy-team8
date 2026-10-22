@@ -50,7 +50,7 @@ const s1 = () => `${DECK_CSS}
 <div style="position:absolute;left:80px;top:96px;font:600 18px Inter;letter-spacing:.1em;color:#FFB01F">SWE5006 PRACTICE PROJECT · TEAM 8</div>
 ${lockup()}
 <div style="position:absolute;left:80px;top:300px;font:500 34px Inter;color:#fff">A community group-buying platform with pay-first teams</div>
-<div style="position:absolute;left:80px;top:368px;font:italic 400 26px Inter;color:#E6DFD3;display:flex;gap:16px;align-items:center">Two prices: solo &amp; team <span style="color:#E8402A;font-size:20px">●</span> Pay first to team up <span style="color:#E8402A;font-size:20px">●</span> Full refund if the team size not met</div>
+<div style="position:absolute;left:80px;top:368px;font:italic 400 26px Inter;color:#E6DFD3;display:flex;gap:16px;align-items:center">Two prices: solo &amp; team <span style="color:#E8402A;font-size:20px">●</span> Pay first to team up <span style="color:#E8402A;font-size:20px">●</span> Full refund if the team size is not met</div>
 <div style="position:absolute;left:80px;top:448px;font:500 19px Inter;color:#FFB01F;display:flex;gap:30px">${['1 Introduction', '2 Analysis, design, patterns', '3 Testing', '4 CI/CD demo', '5 System demo'].map(t => `<span>${t}</span>`).join('')}</div>
 <div style="position:absolute;left:80px;top:516px;font:500 19px Inter;color:#fff;display:flex;gap:28px">${['Lim Jiechao', 'Liu Jin', 'Panpakorn Siripanich', 'Wang Ziang', 'Yu Qianshuo'].map(t => `<span>${t}</span>`).join('')}</div>
 <div style="position:absolute;left:80px;top:552px;font:400 18px Inter;color:#B5ADA1">Graduate Certificate in Designing Modern Software Systems, 26 October 2026</div>`;
