@@ -721,13 +721,15 @@ const live = [
   ['P5', 'Verified: e2e-dev green, the change live on dev', '90 s'],
   ['P6', 'Merge to live in minutes; hand-over', '40 s'],
 ];
+// Live demo host (MOTION.md): run-book table 200, rows 320 +38, the cards beside it from 600, +80; nothing loops, so
+// the slide stays calm behind the live demo.
 const s33 = () => `
 <div style="position:absolute;left:0;top:0;width:700px">
- ${tbl(['Step', 'What you see', 'Time'], live.map(l => [`<b>${l[0]}</b>`, l[1], l[2]]), { fs: 22, w: [76, null, 86], pad: '13px 14px' })}
+ ${tbl(['Step', 'What you see', 'Time'], live.map(l => [`<b>${l[0]}</b>`, l[1], l[2]]), { fs: 22, w: [76, null, 86], pad: '13px 14px', m: [200, 320, 38] })}
 </div>
 <div style="position:absolute;left:724px;top:0;width:440px">
- <div class="card" style="padding:18px 22px;margin-bottom:14px">${kicker('Why the backend is pre-run')}<div style="font:400 21px/1.4 Inter">Backend PR checks take about 16 min, longer than the segment, so that run was triggered before the talk and we walk through it finished.</div></div>
- <div class="card" style="padding:18px 22px">${kicker('Backup video', '#B02E1B')}<div style="font:400 21px/1.4 Inter">${lines(['Recorded on dev by 24 Oct, one clip per step', `In the cloud and on a USB drive ${mk('FILL', 'link')}`], 4)}</div></div>
+ <div class="card a" data-a="up" style="padding:18px 22px;margin-bottom:14px;--d:600ms">${kicker('Why the backend is pre-run')}<div style="font:400 21px/1.4 Inter">Backend PR checks take about 16 min, longer than the segment, so that run was triggered before the talk and we walk through it finished.</div></div>
+ <div class="card a" data-a="up" style="padding:18px 22px;--d:680ms">${kicker('Backup video', '#B02E1B')}<div style="font:400 21px/1.4 Inter">${lines(['Recorded on dev by 24 Oct, one clip per step', `In the cloud and on a USB drive ${mk('FILL', 'link')}`], 4)}</div></div>
 </div>`;
 
 // ---------- slide 34 (5.1, 5.2) ----------
@@ -747,9 +749,11 @@ const plan5 = [
   ['36', 'Scripted k6 load, 16 Oct run', ['UC1'], 'Performance: ≤ 2 s at 100 users', env5('SWE5001 ECS', 'ecs')],
   ['38', 'Back to the §4 pipeline run', ['—'], 'Maintainability', env5('dev')],
 ];
+// Table column sweep (MOTION.md): table 200, rows 320 +38, then the "Runs on" chips pop down the column from 650, +35;
+// the footnote closes at 960.
 const s34 = () => `
-${tbl(['Step', 'What you see', '<span style="white-space:nowrap">Use cases</span>', 'Quality attribute (slide 3)', 'Runs on'], plan5.map(r => [`<b>${r[0]}</b>`, r[1], ucList(r[2]), r[3], r[4]]), { fs: 20, w: [60, 400, 118, null, 138], pad: '5px 10px' })}
-<div style="position:absolute;left:0;right:0;top:520px;font:400 18px/1.3 Inter;color:var(--muted)"${ref('#517 · #223')}>“dev, if GO”: live on dev after the 23 Oct go/no-go, otherwise its 24 Oct recording; a local result is never shown as dev</div>`;
+${tbl(['Step', 'What you see', '<span style="white-space:nowrap">Use cases</span>', 'Quality attribute (slide 3)', 'Runs on'], plan5.map((r, i) => [`<b>${r[0]}</b>`, r[1], ucList(r[2]), r[3], hAt(r[4], 'pop', 650 + 35 * i)]), { fs: 20, w: [60, 400, 118, null, 138], pad: '5px 10px', m: [200, 320, 38] })}
+<div ${A('up', 960, 'position:absolute;left:0;right:0;top:520px;font:400 18px/1.3 Inter;color:var(--muted);')}${ref('#517 · #223')}>“dev, if GO”: live on dev after the 23 Oct go/no-go, otherwise its 24 Oct recording; a local result is never shown as dev</div>`;
 
 // ---------- slide 35 (5.1, 5.2, 5.5) ----------
 const live5 = [
@@ -760,58 +764,63 @@ const live5 = [
   ['D5', 'Security: 401, 403, 400, HttpOnly cookie', '60 s'],
   ['D6', 'Last-seat race: the test, in the IDE', '45 s'],
 ];
+// Live demo host, as slide 33.
 const s35 = () => `
 <div style="position:absolute;left:0;top:0;width:700px">
- ${tbl(['Step', 'What you see', 'Time'], live5.map(l => [`<b>${l[0]}</b>`, l[1], l[2]]), { fs: 22, w: [76, null, 86], pad: '13px 14px' })}
+ ${tbl(['Step', 'What you see', 'Time'], live5.map(l => [`<b>${l[0]}</b>`, l[1], l[2]]), { fs: 22, w: [76, null, 86], pad: '13px 14px', m: [200, 320, 38] })}
 </div>
 <div style="position:absolute;left:724px;top:0;width:440px">
- <div class="card" style="padding:16px 22px;margin-bottom:12px">${kicker('Two buyers, one screen')}<div style="font:400 21px/1.38 Inter">${lines(['Two Chrome profiles, Leader and Joiner, both signed in with Google', 'Stripe Sandbox: a test card, no money moves'], 4)}</div></div>
- <div class="card" style="padding:16px 22px;margin-bottom:12px">${kicker('Started before the talk')}<div style="font:400 21px/1.38 Inter">A team of two on ${mo('US34-04', 20)} at 16:05: its 40-minute window, the shortest allowed, ends ≈ 16:45.</div></div>
- <div class="card" style="padding:16px 22px">${kicker('Backup video', '#B02E1B')}<div style="font:400 21px/1.38 Inter">${lines(['Recorded on dev by 24 Oct, one clip per step', `In the cloud and on a USB drive ${mk('FILL', 'link')}`], 4)}</div></div>
+ <div class="card a" data-a="up" style="padding:16px 22px;margin-bottom:12px;--d:600ms">${kicker('Two buyers, one screen')}<div style="font:400 21px/1.38 Inter">${lines(['Two Chrome profiles, Leader and Joiner, both signed in with Google', 'Stripe Sandbox: a test card, no money moves'], 4)}</div></div>
+ <div class="card a" data-a="up" style="padding:16px 22px;margin-bottom:12px;--d:680ms">${kicker('Started before the talk')}<div style="font:400 21px/1.38 Inter">A team of two on ${mo('US34-04', 20)} at 16:05: its 40-minute window, the shortest allowed, ends ≈ 16:45.</div></div>
+ <div class="card a" data-a="up" style="padding:16px 22px;--d:760ms">${kicker('Backup video', '#B02E1B')}<div style="font:400 21px/1.38 Inter">${lines(['Recorded on dev by 24 Oct, one clip per step', `In the cloud and on a USB drive ${mk('FILL', 'link')}`], 4)}</div></div>
 </div>`;
 
 // ---------- slide 36 (5.3) ----------
 // Repeat run 20261016-v2-monolith-repeat (v2-repeat-calibration.json): p95 ms per plateau; 0 errors, 0 dropped on every step.
 const steps36 = [[10, 53], [20, 39], [40, 27], [60, 28], [80, 23], [100, 23], [125, 42], [150, 23], [175, 23], [200, 23]];
+// Table with rows, then Box then text (MOTION.md): kicker 200, table 246, rows 368 +30, the red marker pops 700, its
+// footnote 760, the run line 800; the cards 840 +80.
 const s36 = () => `
 <div style="position:absolute;left:0;top:0;width:690px">
- ${kicker('k6 run · SWE5001 ECS environment · not the dev host', '#B02E1B')}
- ${tbl(['Requests/s', 'p95 (ms)', 'Errors', 'Dropped', 'Step'], steps36.map(([r, p]) => [`<b>${r}</b>${r >= 190 ? ' <span style="color:#B02E1B">●</span>' : ''}`, p, '0 %', '0', 'pass']), { fs: 22, w: [150, 130, 120, 130], pad: '3px 14px' })}
- <div style="font:400 19px/1.35 Inter;color:var(--muted);margin-top:6px"><span style="color:#B02E1B">●</span> at or above ≈ 190 requests/s: the proposal’s 100 users, 0.5 s think time assumed (slide 26)</div>
- <div style="font:400 19px/1.35 Inter;margin-top:4px"${ref('docs/swe5001/evidence/20261016-http-baseline-dashboard/v2-repeat-summary.json')}>Run 20261016-v2-monolith-repeat, 16 Oct: 57,600 requests, 0 failed, 0 dropped</div>
+ ${gA(kicker('k6 run · SWE5001 ECS environment · not the dev host', '#B02E1B'), 'up', 200)}
+ ${tbl(['Requests/s', 'p95 (ms)', 'Errors', 'Dropped', 'Step'], steps36.map(([r, p]) => [`<b>${r}</b>${r >= 190 ? ` <span ${A('pop', 700, 'display:inline-block;color:#B02E1B;')}>●</span>` : ''}`, p, '0 %', '0', 'pass']), { fs: 22, w: [150, 130, 120, 130], pad: '3px 14px', m: [246, 368, 30] })}
+ <div ${A('up', 760, 'font:400 19px/1.35 Inter;color:var(--muted);margin-top:6px;')}><span style="color:#B02E1B">●</span> at or above ≈ 190 requests/s: the proposal’s 100 users, 0.5 s think time assumed (slide 26)</div>
+ <div ${A('up', 800, 'font:400 19px/1.35 Inter;margin-top:4px;')}${ref('docs/swe5001/evidence/20261016-http-baseline-dashboard/v2-repeat-summary.json')}>Run 20261016-v2-monolith-repeat, 16 Oct: 57,600 requests, 0 failed, 0 dropped</div>
 </div>
 <div style="position:absolute;left:714px;top:0;width:450px">
- <div class="card" style="padding:12px 20px;margin-bottom:10px">
+ <div class="card a" data-a="up" style="padding:12px 20px;margin-bottom:10px;--d:840ms">
   ${kicker('Target (proposal §6.3)', '#B02E1B')}
   <div style="font:600 21px/1.35 Inter">≤ 2 s with up to 100 concurrent users</div>
   <div style="font:400 20px/1.4 Inter;margin-top:8px">${lines(['Our gate per step:', 'p95 &lt; 500 ms', 'Errors &lt; 1 %', 'No dropped requests'], 0)}</div>
   <div style="font:700 20px/1.4 Inter;margin-top:8px">Verdict: pass on every step</div><div style="font:400 20px/1.4 Inter">Worst p95 53 ms, 0 % errors, 0 dropped</div>
  </div>
- <div class="card" style="padding:12px 20px;margin-bottom:10px">
+ <div class="card a" data-a="up" style="padding:12px 20px;margin-bottom:10px;--d:920ms">
   ${kicker('Expiry ≤ 1 min')}
   <div style="font:400 20px/1.35 Inter">Worst lag 58.2 s for 30 teams under 100-user load (<b>local</b>, 30 Sep)</div>
  </div>
- <div class="card" style="padding:12px 20px">
+ <div class="card a" data-a="up" style="padding:12px 20px;--d:1000ms">
   ${kicker('Not claimed')}
   <div style="font:400 20px/1.4 Inter">${lines(['A capacity limit: 200/s is the last step', 'Authenticated paths under load', 'Anything about the dev host', 'Scaling (one task)'], 0)}</div>
  </div>
 </div>`;
 
 // ---------- slide 37 (5.2) ----------
+// Side columns with a trailing callout (MOTION.md): left card 200, rows 260 +60; right card 420, its points 480 +60;
+// the scale-path band 760.
 const s37 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:560px;height:300px;padding:20px 24px"${ref('AWS read-only, 21 Oct')}>
- ${kicker('Dev, the system you saw')}
- ${[['Compute', 'One EC2 t3.large, no Auto Scaling group'], ['Data', 'PostgreSQL 18 and Redis 8 on the same host'], ['Effect', 'One point of failure; a deploy restarts the API']].map(r => `<div style="display:flex;gap:14px;font:400 22px/1.35 Inter;margin-bottom:16px"><b style="width:118px;flex:none">${r[0]}</b><span>${r[1]}</span></div>`).join('')}
+<div class="card a" data-a="left" style="position:absolute;left:0;top:0;width:560px;height:300px;padding:20px 24px;--d:200ms"${ref('AWS read-only, 21 Oct')}>
+ ${gA(kicker('Dev, the system you saw'), 'up', 230)}
+ ${[['Compute', 'One EC2 t3.large, no Auto Scaling group'], ['Data', 'PostgreSQL 18 and Redis 8 on the same host'], ['Effect', 'One point of failure; a deploy restarts the API']].map((r, i) => `<div ${A('up', 260 + 60 * i, 'display:flex;gap:14px;font:400 22px/1.35 Inter;margin-bottom:16px;')}><b style="width:118px;flex:none">${r[0]}</b><span>${r[1]}</span></div>`).join('')}
 </div>
-<div class="card" style="position:absolute;left:584px;top:0;width:580px;height:300px;padding:20px 24px"${ref('proposal §6.3 · backend ADR 0008')}>
- ${kicker('Why, deliberately', '#B02E1B')}
+<div class="card a" data-a="right" style="position:absolute;left:584px;top:0;width:580px;height:300px;padding:20px 24px;--d:420ms"${ref('proposal §6.3 · backend ADR 0008')}>
+ ${gA(kicker('Why, deliberately', '#B02E1B'), 'up', 450)}
  <ul class="b" style="font:400 22px/1.4 Inter;margin:0">
-  <li style="margin-bottom:12px">One complete system, always on, at low cost</li>
-  <li style="margin-bottom:12px">The proposal lists no scalability target</li>
-  <li>One codebase, two topologies</li>
+  <li ${A('up', 480, 'margin-bottom:12px;')}>One complete system, always on, at low cost</li>
+  <li ${A('up', 540, 'margin-bottom:12px;')}>The proposal lists no scalability target</li>
+  <li ${A('up', 600)}>One codebase, two topologies</li>
  </ul>
 </div>
-<div style="position:absolute;left:0;right:0;top:324px;border-radius:8px;background:#ECE6DC;padding:16px 20px;font:400 22px/1.4 Inter"${ref('backup B10')}><b>Scale path, not claimed here:</b> the same code on ECS in our SWE5001 topology, commerce 2–6 tasks on requests per target, notification 1–4 on queue backlog.</div>`;
+<div ${A('up', 760, 'position:absolute;left:0;right:0;top:324px;border-radius:8px;background:#ECE6DC;padding:16px 20px;font:400 22px/1.4 Inter;')}${ref('backup B10')}><b>Scale path, not claimed here:</b> the same code on ECS in our SWE5001 topology, commerce 2–6 tasks on requests per target, notification 1–4 on queue backlog.</div>`;
 
 // ---------- slide 38 (5.4) ----------
 const seams = [
@@ -819,15 +828,17 @@ const seams = [
   ['New consequence of a team’s outcome', `One more subscriber to ${mo('TeamSucceeded', 20)} / ${mo('TeamExpired', 20)}`, ['Observer', 'slide 19']],
   ['New payment provider', `One more adapter behind ${mo('CheckoutGateway', 20)}, ${mo('RefundGateway', 20)}`, ['Gateway port (external-interface strategy)', 'slide 12']],
 ];
+// Side columns, Table with rows, Footnote (MOTION.md): left card 200, its lines 260 +60; kicker 400, table [430, 520,
+// 38.4]; footnote 700.
 const s38 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:420px;padding:20px 24px">
- ${kicker('Shown in §4 (slide 33)')}
- <div style="font:400 22px/1.45 Inter">${lines(['One change, live on dev', 'Six required checks, a code-owner review, an automatic deploy and a smoke test', '17 ArchUnit rules hold the module boundaries on every build'], 10)}</div>
+<div class="card a" data-a="left" style="position:absolute;left:0;top:0;width:420px;padding:20px 24px;--d:200ms">
+ ${gA(kicker('Shown in §4 (slide 33)'), 'up', 230)}
+ <div style="font:400 22px/1.45 Inter">${lines(['One change, live on dev', 'Six required checks, a code-owner review, an automatic deploy and a smoke test', '17 ArchUnit rules hold the module boundaries on every build'], 10, 260, 60)}</div>
 </div>
 <div style="position:absolute;left:444px;top:0;width:720px"${ref('proposal §6.3: the primary design driver')}>
- ${kicker('Primary design driver: extensibility', '#B02E1B')}
- ${tbl(['Change', 'Added as', 'Pattern'], seams.map(r => [`<b>${r[0]}</b>`, r[1], lines([r[2][0], `<span style="color:var(--muted)">${r[2][1]}</span>`], 0)]), { fs: 21, w: [230, null, 190], pad: '12px 12px' })}
- <div style="font:400 21px/1.35 Inter;color:var(--muted);margin-top:12px">Existing rules stay unedited: each change adds classes; a pricing mode also adds one enum constant.</div>
+ ${gA(kicker('Primary design driver: extensibility', '#B02E1B'), 'up', 400)}
+ ${tbl(['Change', 'Added as', 'Pattern'], seams.map(r => [`<b>${r[0]}</b>`, r[1], lines([r[2][0], `<span style="color:var(--muted)">${r[2][1]}</span>`], 0)]), { fs: 21, w: [230, null, 190], pad: '12px 12px', m: [430, 520, 38.4] })}
+ <div ${A('up', 700, 'font:400 21px/1.35 Inter;color:var(--muted);margin-top:12px;')}>Existing rules stay unedited: each change adds classes; a pricing mode also adds one enum constant.</div>
 </div>`;
 
 const out = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s12, 13: s13, 14: s14, 15: s15, 16: s16, 17: s17, 18: s18, 19: s19, 20: s20, 21: s21, 22: s22, 23: s23, 24: s24, 25: s25, 26: s26, 27: s27, 28: s28, 29: s29, 30: s30, 31: s31, 32: s32, 33: s33, 34: s34, 35: s35, 36: s36, 37: s37, 38: s38 };
