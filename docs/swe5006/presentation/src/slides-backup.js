@@ -243,19 +243,63 @@ const FULL = [
   ['listing-statechart', 'UC9 listing statechart', 'B13'], ['full-erd', 'Entity-relationship diagram, all tables', 'B16'],
 ];
 const viewBox = name => svg(name).match(/viewBox="[\d.]+ [\d.]+ ([\d.]+) ([\d.]+)"/).slice(1).map(Number);
+const FV_PAD = 24, FV_H = 720 - 108 - 2; // viewport inner height: body top 108, 2 px top border
+const FV_CSS = `<style>.fv{position:absolute;left:-58px;right:-58px;top:0;bottom:-44px;z-index:5;background:#fff;border-top:2px solid #DDD5C8;overflow:hidden}
+.fv>div{box-sizing:content-box;padding:${FV_PAD}px;width:max-content;margin:0 auto}.fv svg{display:block}
+.fvbar{position:absolute;right:0;top:-54px;display:none;gap:8px;align-items:center;z-index:6}
+.fvbar button{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #DDD5C8;border-radius:8px;background:#fff;color:#1B1A18;font:600 15px Inter;cursor:pointer}
+.fvbar [data-pct]{min-width:52px;text-align:right;font:600 15px Inter;color:#6B655C}
+@media screen{body.present .fv{overflow:auto}body.present .fvbar{display:flex}}</style>`;
+const FV_JS = `<script>
+window.fvZoom = function (id, W, H) {
+  var v = document.getElementById(id), w = v.firstElementChild, g = w.querySelector('svg'), P = ${FV_PAD}, s = 1;
+  var bar = document.getElementById(id + '-bar'), pct = bar.querySelector('[data-pct]'), slide = v.closest('.slide');
+  function fit() { return Math.min((v.clientWidth - 2 * P) / W, (v.clientHeight - 2 * P) / H); }
+  // the view centre as a fraction of the padded wrapper (its offset includes the margin that centres it)
+  function centre(pos, view, off, size) { return size > view ? Math.max(0, Math.min(1, (pos + view / 2 - off) / size)) : 0.5; }
+  function set(k, keep) {
+    var cx = centre(v.scrollLeft, v.clientWidth, w.offsetLeft, w.offsetWidth), cy = centre(v.scrollTop, v.clientHeight, w.offsetTop, w.offsetHeight);
+    s = Math.max(0.1, Math.min(4, k));
+    g.style.width = Math.round(W * s) + 'px'; g.style.height = Math.round(H * s) + 'px';
+    pct.textContent = Math.round(s * 100) + '%';
+    v.scrollLeft = keep ? w.offsetLeft + cx * w.offsetWidth - v.clientWidth / 2 : 0;
+    v.scrollTop = keep ? w.offsetTop + cy * w.offsetHeight - v.clientHeight / 2 : 0;
+  }
+  bar.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var a = b.dataset.z;
+    if (a === 'fit') set(fit()); else if (a === '1') set(1, true); else set(a === '+' ? s * 1.25 : s / 1.25, true);
+    b.blur();
+  });
+  if (v.clientWidth) set(fit());
+  // re-fit each time the slide opens or presenting resumes on it (after the overview), so it starts whole
+  var shown = false;
+  new MutationObserver(function () {
+    var on = slide.classList.contains('active') && document.body.classList.contains('present');
+    if (on && !shown) set(fit());
+    shown = on;
+  }).observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true });
+};
+</script>`;
+const fvBtn = (z, ic, label, tip) => `<button data-z="${z}" title="${tip}">${icon(ic)}${label ? `<span>${label}</span>` : ''}</button>`;
+// Each F page opens fitted to its viewport (padded, centred when narrower); the toolbar on the title row switches to
+// actual size or zooms in steps around the view centre. The PDF, screenshots and the overview show the fit without
+// the toolbar. The bar is data-scroll and its controls are buttons, so the runtime never treats a press as a step.
 const fullView = (name, i) => {
-  const [W, H] = viewBox(name), vw = 1280, vh = 720 - 108, k = Math.min(vw / W, vh / H), id = `fv${i}`;
-  return `<style>.${id}{position:absolute;left:-58px;right:-58px;top:0;bottom:-44px;z-index:5;background:#fff;border-top:2px solid #DDD5C8;overflow:hidden}
-.${id}>svg{display:block;width:${Math.round(W * k)}px;height:${Math.round(H * k)}px;margin:0 auto}
-body.present .${id}{overflow:auto}body.present .${id}>svg{width:${W}px;height:${H}px;margin:0}</style>
-<div class="${id}" data-scroll>${svg(name)}</div>`;
+  const [W, H] = viewBox(name), id = `fv${i}`, k = Math.min((1280 - 2 * FV_PAD) / W, (FV_H - 2 * FV_PAD) / H);
+  return `<div id="${id}-bar" class="fvbar" data-scroll>
+ ${fvBtn('fit', 'compress', 'Fit', 'Fit the whole diagram')}${fvBtn('1', 'up-right-and-down-left-from-center', 'Actual size', 'Actual size (1:1)')}${fvBtn('-', 'magnifying-glass-minus', '', 'Zoom out')}${fvBtn('+', 'magnifying-glass-plus', '', 'Zoom in')}
+ <span data-pct>${Math.round(k * 100)}%</span>
+</div>
+<div id="${id}" class="fv" data-scroll><div>${svg(name).replace('<svg ', `<svg style="width:${Math.round(W * k)}px;height:${Math.round(H * k)}px" `)}</div></div>
+<script>if (window.fvZoom) fvZoom('${id}', ${W}, ${H});</script>`;
 };
 const where = n => (typeof n === 'number' ? `slide ${n}` : n);
 const menu = (rows, note) => `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 16px">${rows.join('')}</div><div style="margin-top:10px;font:italic 400 15px Inter;color:var(--muted)">${note}</div>`;
 const menuRow = (go, tag, title, sub) => `<div data-go="${go}" style="min-width:0;cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:5px 14px">
    <span class="tag" style="min-width:44px;text-align:center">${tag}</span><div><div style="font:600 17px Inter">${title}</div><div style="font:400 15px/1.25 Inter;color:var(--muted)">${sub}</div></div></div>`;
 const fx = () => menu(FULL.map(([, t, n], i) => menuRow(`F${i + 1}`, `F${i + 1}`, t, where(n))),
-  'Click a diagram. Presenting, it opens at 1:1: scroll both ways with the trackpad or mouse wheel (arrow keys still change slides). Press B for the backup index.');
+  'Click a diagram. It opens fitted; the toolbar switches to actual size or zooms; scroll with the trackpad or mouse wheel (arrow keys still change slides). Press B for the backup index.');
 // DX: the 1:1 crops, one row per slide, one chip per crop. In the HTML deck they repeat the crops the slides step
 // through; the PDF, which cannot step, carries them only here (rubric V3).
 const dx = details => {
@@ -302,7 +346,7 @@ function list() {
     B.push({ id: d.id, title: `Slide ${d.n} · detail ${d.k}/${d.of}: ${d.label}`, speaker: d.speaker, body: d.body });
   }
   B.push({ id: 'FX', title: 'Diagrams at full size', body: fx() });
-  FULL.forEach(([name, t, n], i) => B.push({ id: `F${i + 1}`, title: `Full size · ${t} (${where(n)})`, body: fullView(name, i + 1) }));
+  FULL.forEach(([name, t], i) => B.push({ id: `F${i + 1}`, title: t, body: (i ? '' : FV_CSS + FV_JS) + fullView(name, i + 1) }));
   return B;
 }
 
