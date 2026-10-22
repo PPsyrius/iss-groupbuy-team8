@@ -1,13 +1,9 @@
 package com.blocbuy.order.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.groupbuy.event.MemberJoined;
@@ -20,16 +16,13 @@ import com.blocbuy.payment.exception.PaymentErrorCode;
 import com.blocbuy.payment.service.TeamExpiryRefundService;
 import com.blocbuy.payment.service.TeamExpiryRefundSubscriber;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InOrder;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -38,18 +31,16 @@ import org.springframework.transaction.support.DefaultTransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * Pins how Spring dispatches the team-resolution observers, which the unit tests of each subscriber
- * cannot show: they call the handlers directly. Here the events go through the real
- * {@code @TransactionalEventListener} machinery, so the tests fail if an {@code @Order} or a
- * transaction phase changes.
+ * Pins ADR 0002's dispatch of the team-resolution events to the order, refund and offer-cache
+ * subscribers: orders ({@code @Order(10)}) before refund obligations ({@code @Order(20)}), both
+ * before commit, and cache eviction after commit. The subscribers' own unit tests call the handlers
+ * directly; here the events go through Spring's {@code @TransactionalEventListener} machinery, and
+ * one journal records the subscribers' calls, the end of the publishing code and the commit or
+ * rollback. A changed {@code @Order} or phase therefore changes the recorded sequence.
  *
- * <ul>
- *   <li>Orders are cancelled before refund obligations are recorded, keeping the global lock order
- *       team, intent, order, payment ({@code @Order(10)} before {@code @Order(20)}).
- *   <li>Both run before commit, inside the expiry transaction: a failure to record the obligations
- *       rolls the expiry back, and nothing runs without a transaction.
- *   <li>The open-deal offer cache is evicted only after a commit, never after a rollback.
- * </ul>
+ * <p>Not covered: {@code IntegrationOutboxWriter} lives in the infrastructure module, and a new
+ * listener added elsewhere is not detected. {@code BestOpenDealCacheIT} checks the cache against
+ * real Redis and PostgreSQL; this test needs neither.
  */
 class TeamResolutionListenerOrderTest {
 
@@ -59,23 +50,37 @@ class TeamResolutionListenerOrderTest {
     private static final UUID PAYMENT = UUID.fromString("a0000000-0000-7000-8000-000000000004");
     private static final Instant AT = Instant.parse("2026-10-22T10:00:00Z");
 
+    private final List<String> journal = new ArrayList<>();
     private final OrderRepository orders = mock(OrderRepository.class);
     private final TeamExpiryRefundService refunds = mock(TeamExpiryRefundService.class);
     private final OpenDealOfferCache cache = mock(OpenDealOfferCache.class);
 
     private AnnotationConfigApplicationContext context;
-    private ApplicationEventPublisher events;
     private TransactionTemplate transaction;
 
     @BeforeEach
     void startContext() {
+        doAnswer(call -> journal.add("cancel orders") ? 1 : 0)
+                .when(orders)
+                .cancelByDealId(DEAL, AT);
+        doAnswer(call -> journal.add("confirm orders") ? 1 : 0).when(orders).confirmByDealId(DEAL);
+        doAnswer(call -> journal.add("record refunds")).when(refunds).recordExpiredTeam(DEAL);
+        doAnswer(call -> journal.add("evict offer")).when(cache).evict(List.of(PRODUCT));
+
         context = new AnnotationConfigApplicationContext();
-        context.registerBean(OrderRepository.class, () -> orders);
-        context.registerBean(TeamExpiryRefundService.class, () -> refunds);
-        context.registerBean(OpenDealOfferCache.class, () -> cache);
-        context.register(Listeners.class);
+        context.register(TransactionalListeners.class);
+        context.registerBean(
+                PlatformTransactionManager.class, () -> new JournalTransactionManager(journal));
+        // Registered against their @Order: with equal or missing @Order values the refund
+        // subscriber
+        // would run first, so only the annotations produce the expected sequence.
+        context.registerBean(
+                OpenDealOfferCacheSubscriber.class, () -> new OpenDealOfferCacheSubscriber(cache));
+        context.registerBean(
+                TeamExpiryRefundSubscriber.class, () -> new TeamExpiryRefundSubscriber(refunds));
+        context.registerBean(
+                OrderLifecycleSubscriber.class, () -> new OrderLifecycleSubscriber(orders));
         context.refresh();
-        events = context;
         transaction = new TransactionTemplate(context.getBean(PlatformTransactionManager.class));
     }
 
@@ -85,99 +90,83 @@ class TeamResolutionListenerOrderTest {
     }
 
     @Test
-    void expiryCancelsOrdersBeforeRecordingRefundObligations() {
-        transaction.executeWithoutResult(status -> events.publishEvent(expired()));
+    void expiryCancelsOrdersThenRecordsRefundsBeforeCommitAndEvictsAfter() {
+        publishAndCommit(new TeamExpired(DEAL, PRODUCT, AT));
 
-        InOrder order = inOrder(orders, refunds);
-        order.verify(orders).cancelByDealId(DEAL, AT);
-        order.verify(refunds).recordExpiredTeam(DEAL);
+        assertThat(journal)
+                .containsExactly(
+                        "published", "cancel orders", "record refunds", "commit", "evict offer");
     }
 
     @Test
-    void aFailedRefundRecordRollsTheExpiryBackAndKeepsTheCacheEntry() {
-        doThrow(new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID))
+    void successConfirmsOrdersBeforeCommitAndEvictsAfter() {
+        publishAndCommit(new TeamSucceeded(DEAL, PRODUCT, 2, AT));
+
+        assertThat(journal).containsExactly("published", "confirm orders", "commit", "evict offer");
+    }
+
+    @Test
+    void aFailureToRecordRefundsRollsTheExpiryBackWithoutEviction() {
+        doAnswer(
+                        call -> {
+                            journal.add("record refunds");
+                            throw new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID);
+                        })
                 .when(refunds)
                 .recordExpiredTeam(DEAL);
 
-        assertThatThrownBy(
-                        () ->
-                                transaction.executeWithoutResult(
-                                        status -> events.publishEvent(expired())))
+        assertThatThrownBy(() -> publishAndCommit(new TeamExpired(DEAL, PRODUCT, AT)))
                 .isInstanceOf(BizException.class);
-        verify(orders).cancelByDealId(DEAL, AT);
-        verify(cache, never()).evict(any());
+        assertThat(journal)
+                .containsExactly("published", "cancel orders", "record refunds", "rollback");
     }
 
     @Test
-    void resolutionListenersDoNotRunWithoutATransaction() {
-        events.publishEvent(expired());
-        events.publishEvent(new TeamSucceeded(DEAL, PRODUCT, 2, AT));
-
-        verifyNoInteractions(orders, refunds, cache);
-    }
-
-    @Test
-    void successConfirmsOrdersBeforeCommitAndThenEvictsTheOffer() {
-        transaction.executeWithoutResult(
-                status -> events.publishEvent(new TeamSucceeded(DEAL, PRODUCT, 2, AT)));
-
-        InOrder order = inOrder(orders, cache);
-        order.verify(orders).confirmByDealId(DEAL);
-        order.verify(cache).evict(List.of(PRODUCT));
-        verifyNoInteractions(refunds);
-    }
-
-    @Test
-    void aJoinEvictsTheOfferOnlyAfterCommit() {
+    void aJoinEvictsTheOfferAfterCommitAndNotAfterRollback() {
         MemberJoined joined = new MemberJoined(DEAL, PRODUCT, MEMBER, PAYMENT, null, AT);
 
         transaction.executeWithoutResult(
                 status -> {
-                    events.publishEvent(joined);
+                    context.publishEvent(joined);
                     status.setRollbackOnly();
                 });
-        verify(cache, never()).evict(any());
+        assertThat(journal).containsExactly("rollback");
 
-        transaction.executeWithoutResult(status -> events.publishEvent(joined));
-        verify(cache).evict(List.of(PRODUCT));
+        journal.clear();
+        publishAndCommit(joined);
+        assertThat(journal).containsExactly("published", "commit", "evict offer");
     }
 
-    private static TeamExpired expired() {
-        return new TeamExpired(DEAL, PRODUCT, AT);
+    @Test
+    void withoutATransactionNoSubscriberRuns() {
+        // A plain @EventListener would run here at once, before the publisher's later writes (ADR
+        // 0002).
+        context.publishEvent(new TeamExpired(DEAL, PRODUCT, AT));
+        context.publishEvent(new TeamSucceeded(DEAL, PRODUCT, 2, AT));
+
+        assertThat(journal).isEmpty();
     }
 
-    /** The three subscribers as the services wire them, behind a transaction manager. */
-    @Configuration(proxyBeanMethods = false)
+    private void publishAndCommit(Object event) {
+        transaction.executeWithoutResult(
+                status -> {
+                    context.publishEvent(event);
+                    journal.add("published");
+                });
+    }
+
     @EnableTransactionManagement
-    static class Listeners {
+    static class TransactionalListeners {}
 
-        @Bean
-        PlatformTransactionManager transactionManager() {
-            return new SynchronizationOnlyTransactionManager();
-        }
-
-        @Bean
-        OrderLifecycleSubscriber orderLifecycleSubscriber(OrderRepository orders) {
-            return new OrderLifecycleSubscriber(orders);
-        }
-
-        @Bean
-        TeamExpiryRefundSubscriber teamExpiryRefundSubscriber(TeamExpiryRefundService refunds) {
-            return new TeamExpiryRefundSubscriber(refunds);
-        }
-
-        @Bean
-        OpenDealOfferCacheSubscriber openDealOfferCacheSubscriber(OpenDealOfferCache cache) {
-            return new OpenDealOfferCacheSubscriber(cache);
-        }
-    }
-
-    /**
-     * Holds no resource: it only drives transaction synchronization, which is all the transactional
-     * event listeners need to see before-commit, after-commit and rollback.
-     */
-    private static final class SynchronizationOnlyTransactionManager
+    /** Holds no resource; records commit and rollback and drives transaction synchronization. */
+    private static final class JournalTransactionManager
             extends AbstractPlatformTransactionManager {
+
+        private final List<String> journal;
+
+        JournalTransactionManager(List<String> journal) {
+            this.journal = journal;
+        }
 
         @Override
         protected Object doGetTransaction() {
@@ -185,18 +174,16 @@ class TeamResolutionListenerOrderTest {
         }
 
         @Override
-        protected void doBegin(Object transaction, TransactionDefinition definition) {
-            // nothing to begin
-        }
+        protected void doBegin(Object transaction, TransactionDefinition definition) {}
 
         @Override
         protected void doCommit(DefaultTransactionStatus status) {
-            // nothing to commit
+            journal.add("commit");
         }
 
         @Override
         protected void doRollback(DefaultTransactionStatus status) {
-            // nothing to roll back
+            journal.add("rollback");
         }
     }
 }
