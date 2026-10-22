@@ -1,0 +1,141 @@
+# Software bill of materials and licence report for the backend (Maven) and frontend (pnpm).
+# Report-only: CycloneDX SBOMs and a licence inventory are uploaded as artifacts and the
+# licence categories are summarised; vulnerability gating stays in security.yml (trivy-deps).
+name: sbom
+
+on:
+  push:
+    tags: ['v*'] # keep one SBOM per release tag
+  schedule:
+    - cron: '53 3 * * 1' # weekly Monday 03:53 UTC
+  workflow_dispatch:
+  # Run once when this workflow itself changes, so a PR shows its own output.
+  pull_request:
+    branches: [dev]
+    paths:
+      - '.github/workflows/sbom.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  TRIVY_VERSION: v0.74.0
+
+jobs:
+  sbom:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Trivy reads Maven dependencies and their licences from ~/.m2, as in trivy-deps.
+      - name: Populate local Maven repository
+        run: ./mvnw -B -q -f pom.xml dependency:go-offline -DskipTests
+        working-directory: backend
+
+      # No `version` input: the action reads `packageManager` from package.json.
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: frontend/package.json
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      # Licences of npm packages come from node_modules/*/package.json; the lockfile alone has none.
+      # --ignore-scripts skips `prepare` (API client generation), which the inventory does not need.
+      - name: Install frontend dependencies (frozen lockfile, no scripts)
+        run: pnpm install --frozen-lockfile --ignore-scripts
+        working-directory: frontend
+
+      - name: Prepare output directory
+        run: mkdir -p sbom
+
+      - name: Backend SBOM (CycloneDX)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_OFFLINE_SCAN: 'true'
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          scan-type: fs
+          scan-ref: backend/
+          format: cyclonedx
+          output: sbom/backend.cdx.json
+
+      - name: Frontend SBOM (CycloneDX)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          scan-type: fs
+          scan-ref: frontend/
+          format: cyclonedx
+          output: sbom/frontend.cdx.json
+
+      - name: Backend licence inventory
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_OFFLINE_SCAN: 'true'
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          scan-type: fs
+          scan-ref: backend/
+          scanners: license
+          format: json
+          exit-code: '0' # report only
+          output: sbom/backend-licences.json
+
+      - name: Frontend licence inventory
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          scan-type: fs
+          scan-ref: frontend/
+          scanners: license
+          format: json
+          exit-code: '0' # report only
+          output: sbom/frontend-licences.json
+
+      - name: Summarise components and licence categories
+        run: |
+          set -Eeuo pipefail
+          {
+            echo "## SBOM and licence report"
+            echo
+            echo "| Part | Components in SBOM | forbidden | restricted | reciprocal | notice | permissive | unencumbered | unknown |"
+            echo "|---|---|---|---|---|---|---|---|---|"
+            for part in backend frontend; do
+              components="$(jq '.components | length' "sbom/${part}.cdx.json")"
+              counts="$(jq -r '
+                [.Results[]?.Licenses[]? | .Category // "unknown" | ascii_downcase] as $c
+                | ["forbidden","restricted","reciprocal","notice","permissive","unencumbered","unknown"]
+                | map(. as $k | [$c[] | select(. == $k)] | length)
+                | join(" | ")' "sbom/${part}-licences.json")"
+              echo "| ${part} | ${components} | ${counts} |"
+            done
+            echo
+            echo "Categories follow Trivy's licence classification (Google licence policy)."
+            echo "Full CycloneDX SBOMs and per-package licences are in the \`sbom\` artifact."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload SBOMs and licence reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sbom
+          path: sbom/
+          retention-days: 90
+          if-no-files-found: warn
