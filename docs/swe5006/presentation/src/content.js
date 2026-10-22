@@ -407,6 +407,7 @@ const OPEN_ITEMS = [
   [19, 'Add the media CloudFront dcsjrkmummxi7 (S3 blocbuy-media-dev-402178232802, WAF) to the deployment view: since #570 the demo listings load their covers from it', 'Pan', '29'],
   [20, 'System demo preconditions for 26 Oct: Checkout and scheduling on for dev (BLOCBUY_SCHEDULING_ENABLED, #223); the 16:05 US34-04 bloc started by the Joiner account; both Google accounts signed in on Eric’s machine; IDE on a local checkout of dev with StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist pre-run green (Docker running); one go/no-go per step D1–D6', 'Yorik, Eric', '32, 33'],
   [21, 'Use case owners for UC1, UC2, UC5 and UC7 (open decision 4): proposed UC1 Lim, UC2 Pan, UC5 Eric, UC7 Lim; agree them, or give Pan an in-scope use case instead of notifications', 'All', '6, B15'],
+  [22, 'Entrance choreography for the 37 re-planned slides and backups from the MOTION.md patterns (#597 choreographed the replaced #566 slides), and the SWE5006 slide numbers in MOTION.md; a follow-up PR after the content settles', 'Lim', 'all'],
 ];
 
 module.exports = { SPEAKERS, SEGMENTS, SLIDES, QA, BACKUPS, OPEN_ITEMS };

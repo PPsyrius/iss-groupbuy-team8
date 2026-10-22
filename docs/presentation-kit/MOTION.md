@@ -85,7 +85,7 @@ Choreography is authored per element, by a human or an AI agent. The engine does
 
 ## Hand-composed patterns
 
-Each entry names the pattern, the slides using it, the element roles, the `data-a` types and the delay rhythm (first `--d` and step). The entries are filled from the v3 deck. Slide references are `<deck> <slide>`, e.g. `5001 12` or `5001 B13`. "d" is the element's own first delay; "+n" is relative to it.
+Each entry names the pattern, the slides using it, the element roles, the `data-a` types and the delay rhythm (first `--d` and step). The entries are filled from the v3 deck. Slide references are `<deck> <slide>`, e.g. `5001 12` or `5001 B13`. "d" is the element's own first delay; "+n" is relative to it. `5006` references point to the 22-slide #566 deck that #597 choreographed; the rubric re-plan (#600) replaced those slides, so the patterns stay valid but the slide numbers no longer match, and the new slides' choreography is pending (SWE5006 open item 22).
 
 ### Overall rhythm
 
