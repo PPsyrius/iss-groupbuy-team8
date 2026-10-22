@@ -6,6 +6,9 @@
   "bin": {
     "presentation-kit": "bin/build.js"
   },
+  "scripts": {
+    "test": "node --test \"test/*.test.js\""
+  },
   "license": "ISC",
   "dependencies": {
     "@fontsource/jetbrains-mono": "^5.3.0",

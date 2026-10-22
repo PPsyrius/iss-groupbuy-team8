@@ -17,6 +17,7 @@ Run every command from the repository root; each is a single command, so it work
 ```sh
 npm --prefix docs/presentation-kit ci   # only when docs/presentation-kit/node_modules is missing: fonts, Font Awesome, Playwright 1.64.0
 npm --prefix docs/presentation-kit exec -- playwright install chromium   # only if a render step reports a missing browser
+npm --prefix docs/presentation-kit test   # presenter runtime regression tests (headless Chromium)
 npm --prefix docs/<course>/presentation run all           # HTML deck, deck PDF, script PDF
 npm --prefix docs/<course>/presentation run build:deck    # HTML deck only (fast loop while editing slides)
 npm --prefix docs/<course>/presentation run render:deck   # deck PDF from the built HTML deck
@@ -40,15 +41,18 @@ Commit the regenerated `dist/` files with the source change. Chromium writes a t
 | `lib/diagrams.js` | `svg(name)`: deck `src/diagrams/` first, then `diagrams/` here |
 | `lib/brand.js` | `lockup()`: BlocBuy bag mark, wordmark and tagline for dark title slides |
 | `deck/css.js` | slide styles and BlocBuy tokens |
+| `deck/motion-css.js` | entrance and crossfade styles, added only when `motion: true` |
 | `deck/build.js`, `deck/runtime.js` | slide chrome (header, speaker chip, footer progress bar), notes data, presenter runtime |
 | `script/css.js`, `script/build.js` | A4 script styles, the helpers a deck's `src/script.js` uses, and the in-memory script document |
 | `render.js` | Playwright printing and screenshots |
+| `test/` | presenter runtime regression tests (`node --test` + Playwright) |
+| `MOTION.md` | motion vocabulary, engine behaviour and the hand-composed choreography patterns |
 | `diagrams/` | shared UML SVGs; conventions in [`diagrams/STYLE.md`](diagrams/STYLE.md) |
 
 ## What a deck folder provides
 
 ```
-deck.config.js     title, brand, darkSlides, fillLabel, guidelineLabel, demoSegment, outputs, scriptTitle, scriptHeader
+deck.config.js     title, brand, darkSlides, fillLabel, guidelineLabel, demoSegment, motion, outputs, scriptTitle, scriptHeader
 package.json       npm scripts only (no dependencies)
 src/content.js     exports { SPEAKERS, SEGMENTS, SLIDES, QA, BACKUPS, OPEN_ITEMS }
 src/slides-main.js exports { <slide n>: () => html } for every SLIDES entry
@@ -57,7 +61,7 @@ src/script.js      exports the script body HTML (see below)
 src/diagrams/      optional per-deck diagram overrides
 ```
 
-`deck.config.js` fields: `title` (HTML title), `brand` (footer text after "BlocBuy"), `darkSlides` (slide numbers drawn full-bleed dark with no header or footer, e.g. title and thank-you), `fillLabel` (text of the FILL chip, e.g. `FILL 19 Oct`), `guidelineLabel` (heading of each segment's requirement box), `demoSegment` (segment number whose Q&A the deck's own demo chapter renders, or `null`), `outputs` (`deck`, `deckPdf`, `scriptPdf` file names), `scriptTitle` (PDF document title), `scriptHeader` (`left`, `right` text of the PDF running header).
+`deck.config.js` fields: `title` (HTML title), `brand` (footer text after "BlocBuy"), `darkSlides` (slide numbers drawn full-bleed dark with no header or footer, e.g. title and thank-you), `fillLabel` (text of the FILL chip, e.g. `FILL 19 Oct`), `guidelineLabel` (heading of each segment's requirement box), `demoSegment` (segment number whose Q&A the deck's own demo chapter renders, or `null`), `motion` (`true` turns on slide crossfades and entrance animations, see [`MOTION.md`](MOTION.md); default `false`), `outputs` (`deck`, `deckPdf`, `scriptPdf` file names), `scriptTitle` (PDF document title), `scriptHeader` (`left`, `right` text of the PDF running header).
 
 `src/content.js` shapes:
 - `SEGMENTS[i] = { n, name, head, short, talk, qa, start: 'HH:MM:SS', owner, items: { '1a': guideline text } }`; minutes in `talk`/`qa`; `short` labels the footer.
@@ -90,11 +94,18 @@ src/diagrams/      optional per-deck diagram overrides
 
 ## Presenter runtime (HTML deck)
 
-Arrows, Space, Enter, PageUp/PageDown step through fragments (`<div class="frag" data-frag="1">`) and slides; Home/End; S opens the notes window (say, cues, hand-over, slot, timer); T starts the timer; O toggles the overview grid; F fullscreen; B jumps to the backup index; `data-go="B6"` on any element links to that slide; `#23` or `#B6` in the URL opens a slide directly.
+Arrows (including Up/Down), Space, Enter, PageUp/PageDown, N/P step through fragments (`<div class="frag" data-frag="1">`) and slides; a slide number then Enter jumps to that main slide; Home/End; S opens the notes window (say, cues, hand-over, slot, timer); T starts the timer; O toggles the overview grid; F fullscreen; B or X jumps to the backup index; `.` blanks the screen to black (O also clears it). A click advances, a click in the left third of the window goes back; clicks on links, buttons and `data-go` elements do not step. `data-go="B6"` on any element links to that slide; `#23` or `#B6` in the URL opens a slide directly, also when the hash changes later. A key hint fades in for 4 s when the deck opens.
+
+## Motion
+
+`motion: true` in `deck.config.js` turns on the v3 crossfade and entrance animations; [`MOTION.md`](MOTION.md) lists the vocabulary (`class="a" data-a="…"` with inline `--d`, connectors, chart lines, table rows, covers), the chrome timings and the patterns in use. PDF, screenshots and the overview always show the final state.
+
+- Choreography is authored per element by a human or an AI agent; the engine staggers nothing beyond the chrome. Reuse a listed pattern by role.
+- A slide that gets a new or unique pattern adds its entry to `MOTION.md` in the same commit.
 
 ## Changing the kit
 
-A kit change affects every deck. After any change here, rebuild every deck and compare its HTML before and after: the deck HTML against the committed `dist/` (`npm --prefix docs/swe5001/presentation run build:deck`, then `git diff --stat -- docs/swe5001/presentation/dist`, and the same for each other deck), and the script HTML by writing it with `SCRIPT_HTML` before and after the change. An HTML change in a deck you did not mean to change is a regression. The SWE5001 extraction was accepted only with byte-identical HTML, so keep that bar for pure refactors.
+A kit change affects every deck. After any change here, rebuild every deck and compare its HTML before and after: the deck HTML against the committed `dist/` (`npm --prefix docs/swe5001/presentation run build:deck`, then `git diff --stat -- docs/swe5001/presentation/dist`, and the same for each other deck), and the script HTML by writing it with `SCRIPT_HTML` before and after the change. An HTML change in a deck you did not mean to change is a regression. A runtime change also runs `npm --prefix docs/presentation-kit test` and adds a test for any presenter-key bug it fixes. The SWE5001 extraction was accepted only with byte-identical HTML, so keep that bar for pure refactors.
 
 Chromium is pinned through `playwright` 1.64.0. A different Chromium version changes PDF anti-aliasing and file size, not content; compare HTML, page count and text rather than PDF bytes.
 
