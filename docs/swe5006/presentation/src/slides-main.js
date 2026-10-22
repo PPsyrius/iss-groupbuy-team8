@@ -458,11 +458,13 @@ ${repTop('Report §3.4 · Eric (team statechart)')}`;
 // ---------- slides 18–21 (2.5): one 20 s slot per member ----------
 // Each slot: the problem, what varies and the pattern beside the after-diagram; the other SDP fields (SDP 06 design
 // case study p10) move into the captions of its crops: crop 1 the class structure, crop 2 the collaboration.
+// GoF problem slide (MOTION.md): the points rise 150 / 230 / 310 and the pattern line lands last at 430; the pane fades
+// in at 250 and its outlines from 650, +70.
 const pslot = (rows, name, W, H, crops, rep, refs) => `
 <div style="position:absolute;left:0;top:0;width:610px"${ref(refs)}>
- ${rows.map(r => point(r[0], r[1], 22, 16)).join('')}
+ ${rows.map((r, i) => gA(point(r[0], r[1], 22, 16), 'up', [150, 230, 310, 430][i])).join('')}
 </div>
-${one(name, W, H, [530, 568], crops, { at: 'left:634px;top:0' })}
+${one(name, W, H, [530, 568], crops, { at: 'left:634px;top:0', d: 250, od: 650, os: 70 })}
 ${repTop(rep)}`;
 const s18 = () => pslot([
   ['Where it shows', 'The «create» of a team: the service once named the concrete creator itself'],
@@ -503,28 +505,32 @@ const s21 = () => pslot([
 ], 'Report §3.5 · Lim (UC1)', 'SDP 05a p35 · proposal §6.3 · team-price-quotes.md L55');
 
 // ---------- slides 22–23 (2.5): the full-form problem ----------
+// Before/after pair (MOTION.md), before: the pane fades in at 200, the points rise 160 +90, the chosen pattern's line
+// pops at 520, the outlines fade from 700, +80.
+const popState = h => { const n = '<div style="margin-bottom:2px"><b>State</b>'; if (!h.includes(n)) throw new Error('slide 22: State line changed'); return h.replace(n, `<div ${A('pop', 520, 'margin-bottom:2px;')}><b>State</b>`); };
 const s22 = () => `
 <div style="position:absolute;left:0;top:0;width:590px"${ref('RT 3.5 brute force · SDP 05a p4, p13 · admin-listings.md L67–68')}>
- ${point('Problem (UC9)', 'Publish, delist, revise and delete are legal in different states of a listing', 22, 14)}
- ${point('Why redesign', lines(['Hard to maintain: one rule in four places', 'Hard to extend: a new state edits every switch', 'Hard to reuse: the rule cannot be tested apart from Product']), 22, 14)}
- ${point('What varies', 'The states of an object', 22, 14)}
- ${point('Candidates', lines(['<b>State</b>', 'Strategy: nobody chooses; the state decides', 'Transition table, as on the team']), 22, 0)}
+ ${gA(point('Problem (UC9)', 'Publish, delist, revise and delete are legal in different states of a listing', 22, 14), 'up', 160)}
+ ${gA(point('Why redesign', lines(['Hard to maintain: one rule in four places', 'Hard to extend: a new state edits every switch', 'Hard to reuse: the rule cannot be tested apart from Product']), 22, 14), 'up', 250)}
+ ${gA(point('What varies', 'The states of an object', 22, 14), 'up', 340)}
+ ${gA(popState(point('Candidates', lines(['<b>State</b>', 'Strategy: nobody chooses; the state decides', 'Transition table, as on the team']), 22, 0)), 'up', 430)}
 </div>
 ${one('state-before', 1160, 1120, [552, 568], [
   [0, 0, 'brute force: class', 0, [['Brute force', `the same ${mo('switch (status)', 19)} in four operations of ${mo('Product', 19)}, in red`]]],
   [0, 570, 'brute force: sequence', 0, [['In the sequence', `${mo('publish()', 19)} branches on the listing’s status`]]],
-], { at: 'left:612px;top:0' })}
+], { at: 'left:612px;top:0', d: 200, od: 700, os: 80 })}
 ${repTop('Report §3.5 · Liu Jin (UC9)')}`;
+// Before/after pair, after: the pane arrives from the right at 160, then the points rise 320 +90; outlines 700 +80.
 const s23 = () => `
 <div style="position:absolute;left:0;top:0;width:600px"${ref('GoF State implementation 2 · SDP 05a p35 · slide 4')}>
- ${point('Pattern', '<b>State</b>: the listing delegates to its state', 22, 16)}
- ${point('Implementation decisions', lines(['The state returns its successor; the listing applies it', 'Moves a state does not allow refuse with 409', 'Each move makes a new revision; a stale write gets 412']), 22, 16)}
- ${point('Why the team uses a table instead', 'Only OPEN has behaviour; SUCCEEDED and EXPIRED are final, so a transition table suffices', 22, 0)}
+ ${gA(point('Pattern', '<b>State</b>: the listing delegates to its state', 22, 16), 'up', 320)}
+ ${gA(point('Implementation decisions', lines(['The state returns its successor; the listing applies it', 'Moves a state does not allow refuse with 409', 'Each move makes a new revision; a stale write gets 412']), 22, 16), 'up', 410)}
+ ${gA(point('Why the team uses a table instead', 'Only OPEN has behaviour; SUCCEEDED and EXPIRED are final, so a transition table suffices', 22, 0), 'up', 500)}
 </div>
 ${one('state-after', 1160, 1424, [540, 568], [
   [0, 64, 'State · ConcreteStates', 0, [['Participants', `Context ${mo('Product', 19)}, State ${mo('ProductStatus', 19)}`], ['ConcreteStates', 'DRAFT, ON_SALE, OFF_SALE: enum constants with bodies, one subclass each']]],
   [0, 876, 'after: publish delegates', 0, [['No switch', 'each state answers publish its own way'], ['Liability', 'a new state still needs a constant, its overrides and tests']]],
-], { at: 'left:624px;top:0' })}
+], { at: 'left:624px;top:0', d: 160, pa: 'right', od: 700, os: 80 })}
 ${repTop('Report §3.5 · Liu Jin (UC9)')}`;
 
 // ---------- slide 24 (2.6) ----------
@@ -532,14 +538,14 @@ const s24 = () => `
 ${one('core-erd', 2320, 1190, [1164, 568], [
   [580, 54, 'deal · membership', 0, [['Keys', 'UUIDv7 surrogate primary keys from PostgreSQL 18'], ['Race backstop', 'one membership per buyer per team, by a unique index']]],
   [1160, 600, 'payment · refund', 0, [['Race backstop', 'one refund per payment, by a unique key'], ['Associations', 'logical FK columns checked by the application: our DDL convention, not a course rule'], ['Aggregates', 'one table per aggregate root; nothing inherited, so no inheritance mapping']]],
-])}
+], { d: 150, od: 500, os: 80 })}
 <span${ref('Mapping decisions: SAD 04a p53–61 · Flyway V1–V28 · all tables: backup B4')}></span>
 ${repTop('Report §3.6 · Liu Jin')}`;
 
 // ---------- slide 25 (3.1, 3.3) ----------
 // Agile Testing Quadrants, laid out as in the course: business-facing on top, supporting the team on the left. The
 // overview names the test types; each click opens one quadrant in full (a detail layer, also a D page in the PDF).
-const lvl = t => `<span style="display:inline-block;font:600 18px/1 Inter;border:1.5px solid #6B655C;color:#1B1A18;border-radius:999px;padding:3px 9px;margin-left:8px;vertical-align:2px">${t}</span>`;
+const lvl = (t, d) => `<span${d === undefined ? '' : ' class="a" data-a="pop"'} style="${d === undefined ? '' : `--d:${d}ms;`}display:inline-block;font:600 18px/1 Inter;border:1.5px solid #6B655C;color:#1B1A18;border-radius:999px;padding:3px 9px;margin-left:8px;vertical-align:2px">${t}</span>`;
 const QUADS = [
   { q: 'Q1', axes: 'technology-facing · supporting the team', how: 'automated', at: 'left:0;top:282px', types: [['Unit, component', 'unit'], ['Integration', 'integration'], ['Contract, ArchUnit', 'integration']],
     detail: [
@@ -572,12 +578,14 @@ const QUADS = [
     runs: `${mo('security.yml', 19)}, ${mo('build-quality', 19)}, ${mo('docker', 19)} gate the pipeline; ${mo('dast-baseline', 19)} runs weekly, advisory (slide 30)`,
     caught: 'full-history gitleaks: 24 matches, 4 badge tokens still open (slide 32); ZAP on dev: 2 Medium, 4 Low CSP and header findings (22 Oct)' },
 ];
-const quadHead = (d, fs) => `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><span style="font:700 ${fs}px Inter">${d.q} <span style="font-weight:500;color:var(--muted)">${d.axes}</span></span><span style="font:600 ${fs - 2}px Inter;color:var(--muted)">${d.how}</span></div>`;
-const quadCard = d => `<div class="card" style="position:absolute;${d.at};width:574px;height:266px;padding:12px 18px">
- ${quadHead(d, 20)}
- ${d.types.map(t => `<div style="font:600 24px/1.3 Inter;margin-bottom:10px">${t[0]}${lvl(t[1])}</div>`).join('')}
- ${d.note ? `<div style="font:400 22px/1.3 Inter;color:#B02E1B">${d.note}</div>` : ''}
-</div>`;
+const quadHead = (d, fs, mo) => `<div${mo === undefined ? '' : ' class="a" data-a="up"'} style="${mo === undefined ? '' : `--d:${mo}ms;`}display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><span style="font:700 ${fs}px Inter">${d.q} <span style="font-weight:500;color:var(--muted)">${d.axes}</span></span><span style="font:600 ${fs - 2}px Inter;color:var(--muted)">${d.how}</span></div>`;
+// Quadrant sweep (MOTION.md): cards in click order Q1 → Q4 from 150, +110; in each card the head rises +40, the rows
+// +90 then +40 each with their level chip popping +60, a note +170.
+const quadCard = (d, i) => { const t0 = 150 + 110 * i; return `<div class="card a" data-a="up" style="position:absolute;${d.at};width:574px;height:266px;padding:12px 18px;--d:${t0}ms">
+ ${quadHead(d, 20, t0 + 40)}
+ ${d.types.map((t, j) => `<div ${A('up', t0 + 90 + 40 * j, 'font:600 24px/1.3 Inter;margin-bottom:10px;')}>${t[0]}${lvl(t[1], t0 + 150 + 40 * j)}</div>`).join('')}
+ ${d.note ? `<div ${A('up', t0 + 170, 'font:400 22px/1.3 Inter;color:#B02E1B;')}>${d.note}</div>` : ''}
+</div>`; };
 const quadDetail = d => `<div style="padding:12px 22px">
  ${quadHead(d, 22)}
  ${d.detail.map(r => `<div style="margin-bottom:8px"><div style="font:600 22px/1.3 Inter">${r[0]}${lvl(r[1])}</div><div style="font:400 20px/1.32 Inter;margin-top:2px">${lines(r[2], 0)}</div></div>`).join('')}
