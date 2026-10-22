@@ -566,7 +566,7 @@ const art = [
   ['Frontend bundle', 'Content-hashed files, immutable cache', 'S3 behind CloudFront'],
   ['Database schema', 'Flyway migrations V1–V28', 'Repository'],
   ['Infrastructure', 'Terraform plan saved, applied by an operator; CI never applies', 'S3 state, DynamoDB lock'],
-  ['SBOM', '<span style="color:#B02E1B">Not produced</span>', '—'],
+  ['SBOM', 'CycloneDX of the source dependencies, weekly and per release tag; not per image', 'Actions artefact, 90 days', 'sbom.yml · #609'],
 ];
 const s28 = () => `
 ${tbl(['Artefact', 'Identity', 'Stored in'], art.map(a => withRef([`<b>${a[0]}</b>`, a[1], `<span style="color:var(--muted)">${a[2]}</span>`], a[3] || '')), { fs: 22, w: [230, 560], pad: '12px 14px' })}`;
