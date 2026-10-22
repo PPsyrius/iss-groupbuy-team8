@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="1424" viewBox="0 0 1160 1424" font-family="Inter, Helvetica, Arial, sans-serif">
+<!-- UC9 listing lifecycle after State: Product (Context) delegates to ProductStatus -->
+<rect x="0" y="0" width="1160" height="1424" fill="#FFFFFF"/>
+<defs><marker id="saFill" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B1A18"/></marker><marker id="saFillRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8402A"/></marker><marker id="saOpen" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#1B1A18" stroke-width="1.6"/></marker><marker id="saTri" viewBox="0 0 16 16" refX="15" refY="8" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1 L15,8 L1,15 z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/></marker></defs>
+<text x="20.0" y="36.0" font-size="26" font-weight="700" fill="#1B1A18">After: State — Product delegates lifecycle rules to its ProductStatus</text>
+<rect x="20.0" y="96.0" width="500.0" height="294.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="270.0" y="132.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">Product</text>
+<line x1="20.0" y1="142.0" x2="520.0" y2="142.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="174.0" font-size="24" fill="#1B1A18">-status: ProductStatus</text>
+<text x="34.0" y="206.0" font-size="24" fill="#1B1A18">-version: int</text>
+<line x1="20.0" y1="218.0" x2="520.0" y2="218.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="250.0" font-size="24" fill="#1B1A18">+publish(): Product</text>
+<text x="34.0" y="282.0" font-size="24" fill="#1B1A18">+delist(): Product</text>
+<text x="34.0" y="314.0" font-size="24" fill="#1B1A18">+revise(details: ListingDetails): Product</text>
+<text x="34.0" y="346.0" font-size="24" fill="#1B1A18">+requireDeletable(): void</text>
+<text x="34.0" y="378.0" font-size="24" fill="#1B1A18">-transition(next: ProductStatus): Product</text>
+<rect x="20.0" y="62.0" width="137.0" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="30.0" y="87.0" font-size="24" fill="#1B1A18">«Context»</text>
+<rect x="620.0" y="96.0" width="520.0" height="248.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="880.0" y="128.0" font-size="24" text-anchor="middle" fill="#1B1A18">«enumeration»</text>
+<text x="880.0" y="162.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">ProductStatus</text>
+<line x1="620.0" y1="172.0" x2="1140.0" y2="172.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="634.0" y="204.0" font-size="24" fill="#1B1A18">~publish(): ProductStatus</text>
+<text x="634.0" y="236.0" font-size="24" fill="#1B1A18">~delist(): ProductStatus</text>
+<text x="634.0" y="268.0" font-size="24" fill="#1B1A18">~deletionError(): CatalogErrorCode</text>
+<text x="634.0" y="300.0" font-size="24" fill="#1B1A18">~requireCommercialEdit(current: Product,</text>
+<text x="634.0" y="332.0" font-size="24" fill="#1B1A18">      next: ListingDetails): void</text>
+<rect x="620.0" y="62.0" width="108.5" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="630.0" y="87.0" font-size="24" fill="#1B1A18">«State»</text>
+<line x1="520.0" y1="190.0" x2="620.0" y2="190.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#saOpen)"/>
+<text x="528.0" y="180.0" font-size="24" fill="#1B1A18">-status</text>
+<text x="528.0" y="220.0" font-size="24" fill="#1B1A18">0..*</text>
+<text x="610.0" y="220.0" font-size="24" text-anchor="end" fill="#1B1A18">1</text>
+<line x1="880.0" y1="370" x2="880.0" y2="344.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#saTri)"/>
+<rect x="20.0" y="425" width="430.0" height="184.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="235.0" y="457" font-size="24" text-anchor="middle" fill="#1B1A18">«enum constant body»</text>
+<text x="235.0" y="491" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">DRAFT</text>
+<line x1="20.0" y1="501" x2="450.0" y2="501" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="533" font-size="24" fill="#1B1A18">~publish(): ProductStatus</text>
+<text x="34.0" y="565" font-size="24" fill="#1B1A18">~deletionError(): CatalogErrorCode</text>
+<text x="34.0" y="597" font-size="24" fill="#1B1A18">~requireCommercialEdit(…): void</text>
+<rect x="20.0" y="391" width="212.7" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="30.0" y="416" font-size="24" fill="#1B1A18">«ConcreteState»</text>
+<rect x="470.0" y="425" width="325.0" height="120.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="632.5" y="457" font-size="24" text-anchor="middle" fill="#1B1A18">«enum constant body»</text>
+<text x="632.5" y="491" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">ON_SALE</text>
+<line x1="470.0" y1="501" x2="795.0" y2="501" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="484.0" y="533" font-size="24" fill="#1B1A18">~delist(): ProductStatus</text>
+<rect x="470.0" y="391" width="212.7" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="480.0" y="416" font-size="24" fill="#1B1A18">«ConcreteState»</text>
+<rect x="815.0" y="425" width="325.0" height="120.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="977.5" y="457" font-size="24" text-anchor="middle" fill="#1B1A18">«enum constant body»</text>
+<text x="977.5" y="491" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">OFF_SALE</text>
+<line x1="815.0" y1="501" x2="1140.0" y2="501" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="829.0" y="533" font-size="24" fill="#1B1A18">~publish(): ProductStatus</text>
+<rect x="815.0" y="391" width="212.7" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="825.0" y="416" font-size="24" fill="#1B1A18">«ConcreteState»</text>
+<line x1="400.0" y1="370" x2="1090.0" y2="370" stroke="#1B1A18" stroke-width="1.6"/>
+<line x1="400.0" y1="370" x2="400.0" y2="425" stroke="#1B1A18" stroke-width="1.6"/>
+<line x1="745.0" y1="370" x2="745.0" y2="425" stroke="#1B1A18" stroke-width="1.6"/>
+<line x1="1090.0" y1="370" x2="1090.0" y2="425" stroke="#1B1A18" stroke-width="1.6"/>
+<path d="M20,662 H1122 L1140,680 V832 H20 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<path d="M1122,662 V680 H1140" fill="none" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="694.0" font-size="24" font-weight="700" fill="#1B1A18">Implementation (ProductStatus.java, Product.java)</text>
+<text x="34.0" y="724.0" font-size="24" fill="#1B1A18">Each constant body compiles to an anonymous final subclass</text>
+<text x="34.0" y="754.0" font-size="24" fill="#1B1A18">(ProductStatus$1, $2, $3) that overrides the State operations.</text>
+<text x="34.0" y="784.0" font-size="24" fill="#1B1A18">Inherited defaults: publish(), delist() throw PRODUCT_STATE_CONFLICT (409).</text>
+<text x="34.0" y="814.0" font-size="24" fill="#1B1A18">Product.publish(): stock &gt; 0 and price &gt; 0, then transition(status.publish()).</text>
+<rect x="10.0" y="870.0" width="1145.0" height="548.0" fill="none" stroke="#1B1A18" stroke-width="1.6"/>
+<path d="M10,908 H231.53719999999998 L245.53719999999998,894 V870" fill="none" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="20.0" y="898.0" font-size="24" font-weight="700" fill="#1B1A18">sd publish (after)</text>
+<rect x="76.3" y="916.0" width="207.5" height="80.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="180.0" y="950.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">:AdminListing</text>
+<text x="180.0" y="984.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">Controller</text>
+<line x1="180.0" y1="996.0" x2="180.0" y2="1412.0" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="7 5"/>
+<rect x="351.3" y="916.0" width="237.4" height="80.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="470.0" y="950.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">:AdminListing</text>
+<text x="470.0" y="984.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">AppServiceImpl</text>
+<line x1="470.0" y1="996.0" x2="470.0" y2="1412.0" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="7 5"/>
+<rect x="770.3" y="916.0" width="139.3" height="46.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="840.0" y="950.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">:Product</text>
+<line x1="840.0" y1="962.0" x2="840.0" y2="1412.0" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="7 5"/>
+<rect x="927.1" y="916.0" width="215.8" height="80.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="1035.0" y="950.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">status:</text>
+<text x="1035.0" y="984.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">ProductStatus</text>
+<line x1="1035.0" y1="996.0" x2="1035.0" y2="1412.0" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="7 5"/>
+<rect x="172.0" y="1026.0" width="16.0" height="382.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<circle cx="10" cy="1026" r="6" fill="#1B1A18"/>
+<line x1="10.0" y1="1026.0" x2="172.0" y2="1026.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#saFill)"/>
+<text x="16.0" y="1017.0" font-size="24" fill="#1B1A18">PUT …/status</text>
+<rect x="462.0" y="1084.0" width="16.0" height="324.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<line x1="188.0" y1="1084.0" x2="462.0" y2="1084.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#saFill)"/>
+<text x="325.0" y="1045.0" font-size="24" text-anchor="middle" fill="#1B1A18">changeStatus(id,</text>
+<text x="325.0" y="1075.0" font-size="24" text-anchor="middle" fill="#1B1A18">ON_SALE, v, actorId)</text>
+<rect x="832.0" y="1120.0" width="16.0" height="276.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<line x1="478.0" y1="1120.0" x2="832.0" y2="1120.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#saFill)"/>
+<text x="655.0" y="1111.0" font-size="24" text-anchor="middle" fill="#1B1A18">publish(): Product</text>
+<path d="M848,1142 H888 V1158 H852" fill="none" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#saFill)"/>
+<text x="822.0" y="1150.0" font-size="24" text-anchor="end" fill="#1B1A18">stock, price &gt; 0</text>
+<rect x="1027.0" y="1186.0" width="16.0" height="154.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<line x1="848.0" y1="1186.0" x2="1027.0" y2="1186.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#saFill)"/>
+<text x="937.5" y="1177.0" font-size="24" text-anchor="middle" fill="#1B1A18">publish()</text>
+<rect x="492.0" y="1200.0" width="658.0" height="212.0" fill="none" stroke="#1B1A18" stroke-width="1.6"/>
+<path d="M492,1236 H535.1456000000001 L547.1456000000001,1224 V1200" fill="none" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="502.0" y="1227.0" font-size="24" font-weight="700" fill="#1B1A18">alt</text>
+<text x="559.1" y="1227.0" font-size="24" fill="#1B1A18">[override]</text><path d="M198 1206 H436 L456 1226 V1366 H198 Z" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.4"/><path d="M436 1206 V1226 H456" fill="none" stroke="#6B655C" stroke-width="1.4"/><text x="208" y="1236" font-size="24" fill="#1B1A18">override: DRAFT,</text><text x="208" y="1266" font-size="24" fill="#1B1A18">  OFF_SALE</text><text x="208" y="1296" font-size="24" fill="#1B1A18">default: ON_SALE</text><text x="208" y="1326" font-size="24" fill="#6B655C">dispatch picks the</text><text x="208" y="1356" font-size="24" fill="#6B655C">operand; no switch</text>
+<line x1="492.0" y1="1294.0" x2="1150.0" y2="1294.0" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="10 6"/>
+<text x="504.0" y="1322.0" font-size="24" fill="#1B1A18">[inherited default]</text>
+<line x1="1027.0" y1="1250.0" x2="848.0" y2="1250.0" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#saOpen)"/>
+<text x="937.5" y="1241.0" font-size="24" text-anchor="middle" fill="#1B1A18">ON_SALE</text>
+<line x1="832.0" y1="1280.0" x2="478.0" y2="1280.0" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#saOpen)"/>
+<text x="655.0" y="1271.0" font-size="24" text-anchor="middle" fill="#1B1A18">Product(ON_SALE, v+1)</text>
+<line x1="1027.0" y1="1340.0" x2="848.0" y2="1340.0" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#saOpen)"/>
+<text x="937.5" y="1331.0" font-size="24" text-anchor="middle" fill="#1B1A18">throw</text>
+<line x1="832.0" y1="1396.0" x2="478.0" y2="1396.0" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#saOpen)"/>
+<text x="655.0" y="1357.0" font-size="24" text-anchor="middle" fill="#1B1A18">BizException(PRODUCT_</text>
+<text x="655.0" y="1387.0" font-size="24" text-anchor="middle" fill="#1B1A18">STATE_CONFLICT)</text>
+<line x1="462.0" y1="1408.0" x2="188.0" y2="1408.0" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#saOpen)"/>
+<text x="325.0" y="1399.0" font-size="24" text-anchor="middle" fill="#1B1A18">409</text>
+</svg>

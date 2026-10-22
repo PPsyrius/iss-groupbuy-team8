@@ -1,0 +1,247 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2320" height="1190" viewBox="0 0 2320 1190" font-family="Inter, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ceOpen" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1 L13,7 L1,13" fill="none" stroke="#1B1A18" stroke-width="1.8"/></marker>
+    <marker id="ceOpenRed" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1 L13,7 L1,13" fill="none" stroke="#E8402A" stroke-width="2"/></marker>
+    <marker id="ceOpenGrey" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1 L13,7 L1,13" fill="none" stroke="#6B655C" stroke-width="1.8"/></marker>
+    <marker id="ceTri" viewBox="0 0 20 20" refX="19" refY="10" markerWidth="20" markerHeight="20" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1 L19,10 L1,19 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/></marker>
+    <marker id="ceCrow" viewBox="0 0 24 24" refX="23" refY="12" markerWidth="24" markerHeight="24" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M23,1 L5,12 L23,23 M5,1 L5,23" fill="none" stroke="#1B1A18" stroke-width="1.8"/></marker>
+    <marker id="ceCrowO" viewBox="0 0 34 24" refX="33" refY="12" markerWidth="34" markerHeight="24" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M33,1 L15,12 L33,23" fill="none" stroke="#1B1A18" stroke-width="1.8"/><circle cx="8" cy="12" r="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/></marker>
+    <marker id="ceOne" viewBox="0 0 24 24" refX="23" refY="12" markerWidth="24" markerHeight="24" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M8,1 L8,23 M16,1 L16,23" fill="none" stroke="#1B1A18" stroke-width="1.8"/></marker>
+    <marker id="ceZeroOne" viewBox="0 0 34 24" refX="33" refY="12" markerWidth="34" markerHeight="24" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M24,1 L24,23" fill="none" stroke="#1B1A18" stroke-width="1.8"/><circle cx="10" cy="12" r="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/></marker>
+  </defs>
+  <rect x="0" y="0" width="2320" height="1190" fill="#FFFFFF"/>
+  <text fill="#1B1A18" x="20" y="44" font-size="27" font-weight="700">erd Core schema (Flyway V1–V28, schema domain)</text>
+  <rect x="20" y="70" width="520" height="410" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <text fill="#1B1A18" x="280" y="105" font-size="27" font-weight="700" text-anchor="middle">biz_product</text>
+  <polyline points="20,120 540,120" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text fill="#1B1A18" x="32" y="149" font-size="24" font-weight="700">PK</text>
+  <text fill="#1B1A18" x="96" y="149" font-size="24" text-decoration="underline">id</text>
+  <text x="528" y="149" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text fill="#1B1A18" x="96" y="183" font-size="24">product_no</text>
+  <text x="528" y="183" font-size="24" text-anchor="end" fill="#6B655C">varchar</text>
+  <text fill="#1B1A18" x="96" y="217" font-size="24">status</text>
+  <text x="528" y="217" font-size="24" text-anchor="end" fill="#6B655C">varchar</text>
+  <text fill="#1B1A18" x="96" y="251" font-size="24">team_target_size</text>
+  <text x="528" y="251" font-size="24" text-anchor="end" fill="#6B655C">int</text>
+  <text fill="#1B1A18" x="96" y="285" font-size="24">team_lifetime_seconds</text>
+  <text x="528" y="285" font-size="24" text-anchor="end" fill="#6B655C">int</text>
+  <text fill="#1B1A18" x="96" y="319" font-size="24">stock</text>
+  <text x="528" y="319" font-size="24" text-anchor="end" fill="#6B655C">int</text>
+  <text fill="#1B1A18" x="96" y="353" font-size="24">version</text>
+  <text x="528" y="353" font-size="24" text-anchor="end" fill="#6B655C">int</text>
+  <polyline points="20,374 540,374" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text x="32" y="400" font-size="24" fill="#6B655C">unique / index</text>
+  <text fill="#1B1A18" x="32" y="432" font-size="24">uq_biz_product_product_no</text>
+  <text fill="#1B1A18" x="50" y="464" font-size="24">(product_no) partial</text>
+  <rect x="600" y="70" width="520" height="444" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <text fill="#1B1A18" x="860" y="105" font-size="27" font-weight="700" text-anchor="middle">biz_group_deal</text>
+  <polyline points="600,120 1120,120" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text fill="#1B1A18" x="612" y="149" font-size="24" font-weight="700">PK</text>
+  <text fill="#1B1A18" x="676" y="149" font-size="24" text-decoration="underline">id</text>
+  <text x="1108" y="149" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="612" y="183" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="676" y="183" font-size="24">product_id</text>
+  <text x="1108" y="183" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="612" y="217" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="676" y="217" font-size="24">leader_user_id</text>
+  <text x="1108" y="217" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text fill="#1B1A18" x="676" y="251" font-size="24">target_size</text>
+  <text x="1108" y="251" font-size="24" text-anchor="end" fill="#6B655C">int</text>
+  <text fill="#1B1A18" x="676" y="285" font-size="24">current_size</text>
+  <text x="1108" y="285" font-size="24" text-anchor="end" fill="#6B655C">int</text>
+  <text fill="#1B1A18" x="676" y="319" font-size="24">status</text>
+  <text x="1108" y="319" font-size="24" text-anchor="end" fill="#6B655C">varchar</text>
+  <text fill="#1B1A18" x="676" y="353" font-size="24">expire_time</text>
+  <text x="1108" y="353" font-size="24" text-anchor="end" fill="#6B655C">timestamptz</text>
+  <text fill="#1B1A18" x="676" y="387" font-size="24">version</text>
+  <text x="1108" y="387" font-size="24" text-anchor="end" fill="#6B655C">int</text>
+  <polyline points="600,408 1120,408" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text x="612" y="434" font-size="24" fill="#6B655C">unique / index</text>
+  <text fill="#1B1A18" x="612" y="466" font-size="24">idx_biz_group_deal_status_expire</text>
+  <text fill="#1B1A18" x="630" y="498" font-size="24">(status, expire_time): sweeper</text>
+  <rect x="1180" y="70" width="520" height="508" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <text fill="#1B1A18" x="1440" y="105" font-size="27" font-weight="700" text-anchor="middle">biz_group_member</text>
+  <polyline points="1180,120 1700,120" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text fill="#1B1A18" x="1192" y="149" font-size="24" font-weight="700">PK</text>
+  <text fill="#1B1A18" x="1256" y="149" font-size="24" text-decoration="underline">id</text>
+  <text x="1688" y="149" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="1192" y="183" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="1256" y="183" font-size="24">deal_id</text>
+  <text x="1688" y="183" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="1192" y="217" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="1256" y="217" font-size="24">user_id</text>
+  <text x="1688" y="217" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="1192" y="251" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="1256" y="251" font-size="24">payment_id</text>
+  <text x="1688" y="251" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="1192" y="285" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="1256" y="285" font-size="24">order_id</text>
+  <text x="1688" y="285" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="1192" y="319" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="1256" y="319" font-size="24">sharer_user_id</text>
+  <text x="1688" y="319" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text fill="#1B1A18" x="1256" y="353" font-size="24">member_role</text>
+  <text x="1688" y="353" font-size="24" text-anchor="end" fill="#6B655C">varchar</text>
+  <text fill="#1B1A18" x="1256" y="387" font-size="24">status</text>
+  <text x="1688" y="387" font-size="24" text-anchor="end" fill="#6B655C">varchar</text>
+  <polyline points="1180,408 1700,408" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text x="1192" y="434" font-size="24" fill="#6B655C">unique / index</text>
+  <text fill="#1B1A18" x="1192" y="466" font-size="24">uq_biz_group_member_deal_user</text>
+  <text fill="#1B1A18" x="1210" y="498" font-size="24">(deal_id, user_id) partial</text>
+  <text fill="#1B1A18" x="1192" y="530" font-size="24">uq_biz_group_member_payment_id</text>
+  <text fill="#1B1A18" x="1210" y="562" font-size="24">(payment_id)</text>
+  <rect x="1760" y="70" width="520" height="474" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <text fill="#1B1A18" x="2020" y="105" font-size="27" font-weight="700" text-anchor="middle">biz_order</text>
+  <polyline points="1760,120 2280,120" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text fill="#1B1A18" x="1772" y="149" font-size="24" font-weight="700">PK</text>
+  <text fill="#1B1A18" x="1836" y="149" font-size="24" text-decoration="underline">id</text>
+  <text x="2268" y="149" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="1772" y="183" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="1836" y="183" font-size="24">payment_id</text>
+  <text x="2268" y="183" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="1772" y="217" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="1836" y="217" font-size="24">deal_id</text>
+  <text x="2268" y="217" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="1772" y="251" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="1836" y="251" font-size="24">user_id</text>
+  <text x="2268" y="251" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="1772" y="285" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="1836" y="285" font-size="24">product_id</text>
+  <text x="2268" y="285" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text fill="#1B1A18" x="1836" y="319" font-size="24">status</text>
+  <text x="2268" y="319" font-size="24" text-anchor="end" fill="#6B655C">varchar</text>
+  <text fill="#1B1A18" x="1836" y="353" font-size="24">version</text>
+  <text x="2268" y="353" font-size="24" text-anchor="end" fill="#6B655C">int</text>
+  <polyline points="1760,374 2280,374" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text x="1772" y="400" font-size="24" fill="#6B655C">unique / index</text>
+  <text fill="#1B1A18" x="1772" y="432" font-size="24">uq_biz_order_payment_id</text>
+  <text fill="#1B1A18" x="1790" y="464" font-size="24">(payment_id), even if deleted</text>
+  <text fill="#1B1A18" x="1772" y="496" font-size="24">uq_biz_order_deal_user</text>
+  <text fill="#1B1A18" x="1790" y="528" font-size="24">(deal_id, user_id) partial</text>
+  <rect x="20" y="620" width="520" height="164" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.8"/>
+  <text fill="#1B1A18" x="280" y="655" font-size="27" font-weight="700" text-anchor="middle">sys_user  (referenced)</text>
+  <polyline points="20,670 540,670" fill="none" stroke="#6B655C" stroke-width="1.4"/>
+  <text fill="#1B1A18" x="32" y="699" font-size="24" font-weight="700">PK</text>
+  <text fill="#1B1A18" x="96" y="699" font-size="24" text-decoration="underline">id</text>
+  <text x="528" y="699" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text fill="#1B1A18" x="96" y="733" font-size="24">nickname</text>
+  <text x="528" y="733" font-size="24" text-anchor="end" fill="#6B655C">varchar</text>
+  <text fill="#1B1A18" x="96" y="767" font-size="24">email</text>
+  <text x="528" y="767" font-size="24" text-anchor="end" fill="#6B655C">varchar</text>
+  <rect x="600" y="620" width="520" height="510" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <text fill="#1B1A18" x="860" y="655" font-size="27" font-weight="700" text-anchor="middle">biz_purchase_intent</text>
+  <polyline points="600,670 1120,670" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text fill="#1B1A18" x="612" y="699" font-size="24" font-weight="700">PK</text>
+  <text fill="#1B1A18" x="676" y="699" font-size="24" text-decoration="underline">id</text>
+  <text x="1108" y="699" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="612" y="733" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="676" y="733" font-size="24">user_id</text>
+  <text x="1108" y="733" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text fill="#1B1A18" x="676" y="767" font-size="24">operation</text>
+  <text x="1108" y="767" font-size="24" text-anchor="end" fill="#6B655C">START | JOIN</text>
+  <text x="612" y="801" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="676" y="801" font-size="24">deal_id</text>
+  <text x="1108" y="801" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="612" y="835" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="676" y="835" font-size="24">product_id</text>
+  <text x="1108" y="835" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text fill="#1B1A18" x="676" y="869" font-size="24">quote_valid_until</text>
+  <text x="1108" y="869" font-size="24" text-anchor="end" fill="#6B655C">timestamptz</text>
+  <text x="612" y="903" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="676" y="903" font-size="24">fulfilled_payment_id</text>
+  <text x="1108" y="903" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text fill="#1B1A18" x="676" y="937" font-size="24">expired_at</text>
+  <text x="1108" y="937" font-size="24" text-anchor="end" fill="#6B655C">timestamptz</text>
+  <text fill="#1B1A18" x="676" y="971" font-size="24">version</text>
+  <text x="1108" y="971" font-size="24" text-anchor="end" fill="#6B655C">int</text>
+  <polyline points="600,992 1120,992" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text x="612" y="1018" font-size="24" fill="#6B655C">unique / index</text>
+  <text fill="#1B1A18" x="612" y="1050" font-size="24">uq_biz_purchase_intent_</text>
+  <text fill="#1B1A18" x="630" y="1082" font-size="24">fulfilled_payment</text>
+  <text fill="#1B1A18" x="630" y="1114" font-size="24">(fulfilled_payment_id) partial</text>
+  <rect x="1180" y="620" width="520" height="508" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <text fill="#1B1A18" x="1440" y="655" font-size="27" font-weight="700" text-anchor="middle">biz_payment</text>
+  <polyline points="1180,670 1700,670" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text fill="#1B1A18" x="1192" y="699" font-size="24" font-weight="700">PK</text>
+  <text fill="#1B1A18" x="1256" y="699" font-size="24" text-decoration="underline">id</text>
+  <text x="1688" y="699" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="1192" y="733" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="1256" y="733" font-size="24">intent_id</text>
+  <text x="1688" y="733" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="1192" y="767" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="1256" y="767" font-size="24">user_id</text>
+  <text x="1688" y="767" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="1192" y="801" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="1256" y="801" font-size="24">business_id</text>
+  <text x="1688" y="801" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text fill="#1B1A18" x="1256" y="835" font-size="24">status</text>
+  <text x="1688" y="835" font-size="24" text-anchor="end" fill="#6B655C">varchar</text>
+  <text fill="#1B1A18" x="1256" y="869" font-size="24">request_key</text>
+  <text x="1688" y="869" font-size="24" text-anchor="end" fill="#6B655C">varchar</text>
+  <text fill="#1B1A18" x="1256" y="903" font-size="24">fulfilment_result</text>
+  <text x="1688" y="903" font-size="24" text-anchor="end" fill="#6B655C">varchar</text>
+  <text fill="#1B1A18" x="1256" y="937" font-size="24">version</text>
+  <text x="1688" y="937" font-size="24" text-anchor="end" fill="#6B655C">int</text>
+  <polyline points="1180,958 1700,958" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text x="1192" y="984" font-size="24" fill="#6B655C">unique / index</text>
+  <text fill="#1B1A18" x="1192" y="1016" font-size="24">uq_biz_payment_request_key</text>
+  <text fill="#1B1A18" x="1210" y="1048" font-size="24">(user_id, request_key) partial</text>
+  <text fill="#1B1A18" x="1192" y="1080" font-size="24">uq_biz_payment_pending_intent</text>
+  <text fill="#1B1A18" x="1210" y="1112" font-size="24">(intent_id) WHERE created</text>
+  <rect x="1760" y="620" width="520" height="474" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <text fill="#1B1A18" x="2020" y="655" font-size="27" font-weight="700" text-anchor="middle">biz_refund</text>
+  <polyline points="1760,670 2280,670" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text fill="#1B1A18" x="1772" y="699" font-size="24" font-weight="700">PK</text>
+  <text fill="#1B1A18" x="1836" y="699" font-size="24" text-decoration="underline">id</text>
+  <text x="2268" y="699" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="1772" y="733" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="1836" y="733" font-size="24">payment_id</text>
+  <text x="2268" y="733" font-size="24" text-anchor="end" fill="#6B655C">uuid  UNIQUE</text>
+  <text x="1772" y="767" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="1836" y="767" font-size="24">intent_id</text>
+  <text x="2268" y="767" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text x="1772" y="801" font-size="24" fill="#B02E1B">FK*</text>
+  <text fill="#1B1A18" x="1836" y="801" font-size="24">deal_id</text>
+  <text x="2268" y="801" font-size="24" text-anchor="end" fill="#6B655C">uuid</text>
+  <text fill="#1B1A18" x="1836" y="835" font-size="24">status</text>
+  <text x="2268" y="835" font-size="24" text-anchor="end" fill="#6B655C">varchar</text>
+  <text fill="#1B1A18" x="1836" y="869" font-size="24">lease_until</text>
+  <text x="2268" y="869" font-size="24" text-anchor="end" fill="#6B655C">timestamptz</text>
+  <text fill="#1B1A18" x="1836" y="903" font-size="24">version</text>
+  <text x="2268" y="903" font-size="24" text-anchor="end" fill="#6B655C">int</text>
+  <polyline points="1760,924 2280,924" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+  <text x="1772" y="950" font-size="24" fill="#6B655C">unique / index</text>
+  <text fill="#1B1A18" x="1772" y="982" font-size="24">biz_refund_payment_id_key</text>
+  <text fill="#1B1A18" x="1790" y="1014" font-size="24">(payment_id): one refund</text>
+  <text fill="#1B1A18" x="1772" y="1046" font-size="24">uq_biz_refund_provider_id</text>
+  <text fill="#1B1A18" x="1790" y="1078" font-size="24">(provider_refund_id) partial</text>
+  <polyline points="540,175 600,175" fill="none" stroke="#1B1A18" stroke-width="1.8" marker-end="url(#ceCrowO)" marker-start="url(#ceOne)"/>
+  <polyline points="1120,175 1180,175" fill="none" stroke="#1B1A18" stroke-width="1.8" marker-end="url(#ceCrow)" marker-start="url(#ceOne)"/>
+  <polyline points="540,725 600,725" fill="none" stroke="#1B1A18" stroke-width="1.8" marker-end="url(#ceCrowO)" marker-start="url(#ceOne)"/>
+  <polyline points="1120,725 1180,725" fill="none" stroke="#1B1A18" stroke-width="1.8" marker-end="url(#ceCrowO)" marker-start="url(#ceOne)"/>
+  <polyline points="1120,895 1180,895" fill="none" stroke="#1B1A18" stroke-width="1.8" marker-end="url(#ceZeroOne)" marker-start="url(#ceZeroOne)"/>
+  <polyline points="1700,725 1760,725" fill="none" stroke="#1B1A18" stroke-width="1.8" marker-end="url(#ceZeroOne)" marker-start="url(#ceOne)"/>
+  <polyline points="900,514 900,620" fill="none" stroke="#1B1A18" stroke-width="1.8" marker-end="url(#ceCrowO)" marker-start="url(#ceOne)"/>
+  <rect x="908" y="532" width="90" height="32" fill="#FFFFFF"/>
+  <text fill="#1B1A18" x="912" y="554" font-size="24">deal_id</text>
+  <polyline points="1440,620 1440,578" fill="none" stroke="#1B1A18" stroke-width="1.8" marker-end="url(#ceZeroOne)" marker-start="url(#ceOne)"/>
+  <rect x="1448" y="580" width="144" height="32" fill="#FFFFFF"/>
+  <text fill="#1B1A18" x="1452" y="602" font-size="24">payment_id</text>
+  <polyline points="1700,691 1730,691 1730,175 1760,175" fill="none" stroke="#1B1A18" stroke-width="1.8" marker-end="url(#ceZeroOne)" marker-start="url(#ceOne)"/>
+  <polyline points="1760,277 1700,277" fill="none" stroke="#1B1A18" stroke-width="1.8" marker-end="url(#ceZeroOne)" marker-start="url(#ceOne)"/>
+  <polyline points="1020,70 1020,56 2180,56 2180,70" fill="none" stroke="#1B1A18" stroke-width="1.8" marker-end="url(#ceCrowO)" marker-start="url(#ceOne)"/>
+  <rect x="1974" y="30" width="90" height="32" fill="#FFFFFF"/>
+  <text fill="#1B1A18" x="2060" y="52" font-size="24" text-anchor="end">deal_id</text>
+  <path d="M20,800 L522,800 L540,818 L540,1142 L20,1142 Z" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.6"/>
+  <path d="M522,800 L522,818 L540,818" fill="none" stroke="#6B655C" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="36" y="834" font-size="24">FK* = logical foreign key; integrity</text>
+  <text fill="#1B1A18" x="36" y="866" font-size="24">is application-managed (team DDL</text>
+  <text fill="#1B1A18" x="36" y="898" font-size="24">convention: no FK / CHECK constraints)</text>
+  <text fill="#1B1A18" x="36" y="930" font-size="24">PK: UUIDv7 surrogate (uuidv7())</text>
+  <text fill="#1B1A18" x="36" y="962" font-size="24">partial = unique WHERE deleted = false</text>
+  <text fill="#1B1A18" x="36" y="994" font-size="24">FK* without a line: other user_id and</text>
+  <text fill="#1B1A18" x="36" y="1026" font-size="24">product_id, payment.business_id → deal,</text>
+  <text fill="#1B1A18" x="36" y="1058" font-size="24">refund.intent_id, refund.deal_id</text>
+  <text fill="#1B1A18" x="36" y="1090" font-size="24">crow's foot: || one  o| zero or one</text>
+  <text fill="#1B1A18" x="36" y="1122" font-size="24">  |&lt; one or many  o&lt; zero or many</text>
+</svg>
