@@ -390,7 +390,8 @@ const BACKUPS = [
   ['B14', 'UC4 design diagrams, complete', 'Can we see every class and message of the join?'],
   ['B15', 'Every member’s use case and design problem', 'Where are the other members’ models?'],
   ['B16', 'Entity-relationship diagram, all tables', 'What does the whole schema look like?'],
-  ['D9-1', 'Diagram details, 1:1 (D slide-step, e.g. D15-2)', 'Every crop the talk steps through, readable in the PDF'],
+  ['DX', 'Diagram details, 1:1 (D slide-step, e.g. D15-2)', 'Every crop the talk steps through, with its caption, readable in the PDF'],
+  ['FX', 'Diagrams at full size', 'Every diagram in the deck at 1:1, scrollable'],
 ];
 
 // Open items: [#, item, owner, blocks slide]

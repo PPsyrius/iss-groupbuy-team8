@@ -228,6 +228,45 @@ const erdPages = () => ERD_FRAMES.flatMap(([ctx, fx, fy, fw, fh]) => {
 }).map((w, i, all) => ({ id: `B16-${i + 1}`, title: `ERD 1:1 · ${w.ctx}${w.part ? ` (${w.part})` : ''} · ${i + 1}/${all.length}`,
   body: `<div style="position:absolute;left:0;top:0;width:1164px;height:548px;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 0 0 2px #1B1A18">${erdWin(w.x, w.y)}</div>` }));
 
+// ---- FX, F1…: every unique diagram at full size (review round 5) ----
+// Presenting, the diagram is 1:1 (labels 24 px, as in the crops) in a viewport that runs to the slide's left, right and
+// bottom edges and scrolls both ways; in the PDF, screenshots and the overview it is scaled to fit that viewport.
+const FULL = [
+  ['logical-layers', 'Logical view: COLA layers and packages', 9], ['transition-pair', 'Transition strategies: the UC4 pair', 12],
+  ['use-case', 'Use case diagram', 13], ['uc4-analysis-class', 'UC4 analysis class diagram', 14], ['uc4-analysis-seq', 'UC4 analysis sequence', 14],
+  ['uc4-design-class', 'UC4 design class diagram', 15], ['uc4-design-seq', 'UC4 design sequence, paid join by webhook', 16],
+  ['team-statechart', 'Team-formation statechart', 17], ['fm-start', 'Factory Method: start a team', 18], ['observer-expiry', 'Observer: team outcome', 19],
+  ['template-method-outbox', 'Template Method: outbox transports', 20], ['strategy-pricing', 'Strategy: pricing', 21],
+  ['state-before', 'Listing lifecycle before State (brute force)', 22], ['state-after', 'Listing lifecycle after State', 23],
+  ['core-erd', 'Core schema', 24], ['cicd-pr-vs-merge', 'CI/CD: pull-request and post-merge jobs', 29], ['dev-deployment', 'Dev deployment', 31],
+  ['expiry-refund-sequence', 'Expiry and refund sequence (ECS)', 'B5'], ['physical-deployment', 'SWE5001 production topology', 'B10'],
+  ['listing-statechart', 'UC9 listing statechart', 'B13'], ['full-erd', 'Entity-relationship diagram, all tables', 'B16'],
+];
+const viewBox = name => svg(name).match(/viewBox="[\d.]+ [\d.]+ ([\d.]+) ([\d.]+)"/).slice(1).map(Number);
+const fullView = (name, i) => {
+  const [W, H] = viewBox(name), vw = 1280, vh = 720 - 108, k = Math.min(vw / W, vh / H), id = `fv${i}`;
+  return `<style>.${id}{position:absolute;left:-58px;right:-58px;top:0;bottom:-44px;z-index:5;background:#fff;border-top:2px solid #DDD5C8;overflow:hidden}
+.${id}>svg{display:block;width:${Math.round(W * k)}px;height:${Math.round(H * k)}px;margin:0 auto}
+body.present .${id}{overflow:auto}body.present .${id}>svg{width:${W}px;height:${H}px;margin:0}</style>
+<div class="${id}" data-scroll>${svg(name)}</div>`;
+};
+const where = n => (typeof n === 'number' ? `slide ${n}` : n);
+const menu = (rows, note) => `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 16px">${rows.join('')}</div><div style="margin-top:10px;font:italic 400 15px Inter;color:var(--muted)">${note}</div>`;
+const menuRow = (go, tag, title, sub) => `<div data-go="${go}" style="min-width:0;cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:5px 14px">
+   <span class="tag" style="min-width:44px;text-align:center">${tag}</span><div><div style="font:600 17px Inter">${title}</div><div style="font:400 15px/1.25 Inter;color:var(--muted)">${sub}</div></div></div>`;
+const fx = () => menu(FULL.map(([, t, n], i) => menuRow(`F${i + 1}`, `F${i + 1}`, t, where(n))),
+  'Click a diagram. Presenting, it opens at full size: scroll both ways. Press B for the backup index.');
+// DX: the 1:1 crops, one row per slide, one chip per crop. In the HTML deck they repeat the crops the slides step
+// through; the PDF, which cannot step, carries them only here (rubric V3).
+const dx = details => {
+  const by = [];
+  for (const d of details) { const g = by.find(x => x.n === d.n); if (g) g.d.push(d); else by.push({ n: d.n, t: d.slideTitle, d: [d] }); }
+  return `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 16px">${by.map(g => `<div style="min-width:0;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:5px 12px">
+   <div style="font:600 15px/1.25 Inter;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Slide ${g.n} · ${g.t}</div>
+   <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${g.d.map(d => `<span data-go="${d.id}" class="tag" style="cursor:pointer">${d.id}</span>`).join('')}</div></div>`).join('')}</div>
+<div style="margin-top:8px;font:italic 400 15px Inter;color:var(--muted)">Each page is one crop at 1:1 with its caption: the same view the slide steps to while presenting.</div>`;
+};
+
 // Backup slides follow the last main slide; press B in the deck for the index (BX). Rows link with data-go.
 // Each segment adds its backups to BACKUPS (content.js) and a matching entry below, in index order.
 function list() {
@@ -257,9 +296,13 @@ function list() {
   B.push({ id: 'B16', title: `Entity-relationship diagram, all 29 tables (scroll; 1:1 pages B16-1 to B16-${erd.length} follow)`, speaker: 'Liu Jin', body: b16erd() });
   for (const e of erd) B.push({ ...e, speaker: 'Liu Jin' });
   // D pages: each 1:1 crop the talk steps through, so the PDF carries readable diagrams (rubric V3).
-  for (const d of require('./slides-main').details()) {
+  const details = require('./slides-main').details();
+  B.push({ id: 'DX', title: 'Diagram details, 1:1: one page per crop', body: dx(details) });
+  for (const d of details) {
     B.push({ id: d.id, title: `Slide ${d.n} · detail ${d.k}/${d.of}: ${d.label}`, speaker: d.speaker, body: d.body });
   }
+  B.push({ id: 'FX', title: 'Diagrams at full size', body: fx() });
+  FULL.forEach(([name, t, n], i) => B.push({ id: `F${i + 1}`, title: `Full size · ${t} (${where(n)})`, body: fullView(name, i + 1) }));
   return B;
 }
 

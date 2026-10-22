@@ -33,13 +33,20 @@ const chip = (t, kind) => {
 };
 const kicker = (t, c = '#6B655C') => `<div style="font:700 16px Inter;letter-spacing:.06em;text-transform:uppercase;color:${c};margin-bottom:8px">${t}</div>`;
 const report = t => `<div style="font:600 20px/1.3 Inter;color:#3E5CD9;margin-top:8px">${icon('book')} ${t}</div>`;
-// The report section a slide's example belongs to (rubric G8), in the gap under the title, right-aligned.
-const repTop = t => `<div style="position:absolute;right:0;top:-29px;font:600 18px/1 Inter;color:#3E5CD9;display:flex;gap:6px;align-items:center">${icon('book')} ${t}</div>`;
+// The report section a slide's example belongs to (rubric G8); the final wrapper moves it into the header strip.
+const repTop = t => `<!--rep${t}-->`;
+// Review round 5: the report line and the detail-page note sit in the header, left of the speaker chip, so this deck
+// raises the body by 20 px (568 px tall instead of 548). The kit draws the chip at right:56px, top:20px, 30 px high and
+// as wide as the name; the strip ends just before it.
+const BODY_TOP = 108, BODY_H = 568;
+const DECK_CSS = `<style>.slide:not(.dark)>.body{top:${BODY_TOP}px}body.present .pdfonly{display:none}</style>`;
+const chipRight = name => 30 + 8 + Math.ceil(name.length * 8.6) - 2 + 18;
+const hdrStrip = (speaker, items) => `<div style="position:absolute;right:${chipRight(speaker)}px;top:${20 - BODY_TOP}px;height:30px;display:flex;gap:18px;align-items:center;white-space:nowrap">${items.join('')}</div>`;
 // A labelled point: small uppercase label above its text.
 const point = (k, v, fs = 22, mb = 16) => `<div style="margin-bottom:${mb}px"><div style="font:700 16px Inter;letter-spacing:.06em;text-transform:uppercase;color:#6B655C;margin-bottom:3px">${k}</div><div style="font:400 ${fs}px/1.32 Inter">${v}</div></div>`;
 
 // ---------- slide 1 ----------
-const s1 = () => `
+const s1 = () => `${DECK_CSS}
 <div style="position:absolute;left:80px;top:96px;font:600 18px Inter;letter-spacing:.1em;color:#FFB01F">SWE5006 PRACTICE PROJECT · TEAM 8</div>
 ${lockup()}
 <div style="position:absolute;left:80px;top:300px;font:500 34px Inter;color:#fff">A community group-buying platform with pay-first teams</div>
@@ -83,7 +90,7 @@ const qas = [
   ['Auditability', ['Every payment, refund and transition traceable', 'Every artefact traceable to a commit'], ['§4']],
 ];
 const s3 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:380px;height:548px;padding:14px 20px">
+<div class="card" style="position:absolute;left:0;top:0;width:380px;height:568px;padding:14px 20px">
  ${kicker('In scope · proposal §6.1')}
  ${ucs.map(u => `<div style="display:flex;gap:10px;font:400 20px/1.2 Inter;margin-bottom:5px"><b style="width:48px;flex:none">${u[0]}</b><span>${u[1]}</span></div>`).join('')}
  <div style="font:italic 400 20px/1.25 Inter;margin:2px 0 12px">+ Receive notifications (Sprint 4, SWE5001; off on dev)</div>
@@ -115,7 +122,7 @@ const changed4 = [
 ];
 const gaps4 = [['Paid flow on dev: go/no-go 23 Oct', '#517 · #223'], ['SSH port 22 open on the dev host', 'AWS read-only, 21 Oct'], ['CodeQL off', 'ENABLE_CODEQL=false'], ['CloudFront → ALB over HTTP until 16 Nov', '#227'], ['Dev volume unencrypted', 'AWS read-only, 19 Oct']];
 const s4 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:420px;height:548px;padding:12px 20px">
+<div class="card" style="position:absolute;left:0;top:0;width:420px;height:568px;padding:12px 20px">
  ${status4.map(r => `<div style="margin-bottom:10px"${ref(r[4])}><div style="font:600 19px/1.25 Inter">${chip(r[0], r[1])}${r[2]}</div><div style="font:400 19px/1.28 Inter;margin-top:2px">${r[3]}</div></div>`).join('')}
  <div style="margin-top:4px">${kicker('Outstanding', '#B02E1B')}</div>
  ${gaps4.map(g => `<div style="font:400 19px/1.28 Inter;margin-bottom:2px"${ref(g[1])}>${g[0]}</div>`).join('')}
@@ -213,7 +220,7 @@ const s8 = () => `
 // Every layer a slide steps through is also recorded here, so slides-backup.js can print each one as a detail page
 // (the PDF cannot step through fragments).
 const CROPS = [];
-const CROP_H = 548;
+const CROP_H = BODY_H;
 // A window onto the diagram at 1:1, cut with the root viewBox so nothing overflows the slide.
 const win = (name, x, y, w, h) => svg(name).replace(/<svg\b[^>]*>/, t => t.replace(/\s(width|height|viewBox)="[^"]*"/g, '')
   .replace('<svg', `<svg width="${w}" height="${h}" viewBox="${x} ${y} ${w} ${h}" style="display:block"`));
@@ -225,12 +232,12 @@ const cropView = (name, x, y, head = 0) => {
 };
 // A crop's caption: one point per line, each [label, text] or plain text. It takes the bottom of the layer, so the crop
 // keeps its top-left anchor and loses only its bottom rows.
-const caption = cap => (cap && cap.length ? `<div style="flex:none;border-top:2px solid #1B1A18;background:#F6F2EC;padding:8px 18px;font:400 20px/1.35 Inter">${cap.map(l => `<div>${Array.isArray(l) ? `<b>${l[0]}:</b> ${l[1]}` : l}</div>`).join('')}</div>` : '');
+const caption = cap => (cap && cap.length ? `<div style="flex:none;border-top:2px solid #3E5CD9;background:#E3E8FB;padding:8px 18px;font:400 20px/1.35 Inter">${cap.map(l => `<div>${Array.isArray(l) ? `<b>${l[0]}:</b> ${l[1]}` : l}</div>`).join('')}</div>` : '');
 const cropInner = (name, x, y, head, cap) => `<div style="flex:1;min-height:0;overflow:hidden">${cropView(name, x, y, head)}</div>${caption(cap)}`;
 const frame = inner => `<div style="position:absolute;left:0;top:0;width:1164px;height:${CROP_H}px;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 0 0 2px #1B1A18;display:flex;flex-direction:column">${inner}</div>`;
 // The step badge sits in the gap between the title and the body, outside the crop, so it never covers the diagram;
 // its cream band also hides the previous step's badge.
-const badge = (t, i) => `<div class="frag zcrop" data-frag="${i + 1}" style="position:absolute;left:420px;right:0;top:-31px;height:27px;background:var(--background);text-align:right;z-index:11"><span style="display:inline-block;font:700 16px/1 Inter;letter-spacing:.03em;background:#1B1A18;color:#fff;border-radius:999px;padding:5px 12px">${t}</span></div>`;
+const badge = (t, i) => `<div class="frag zcrop" data-frag="${i + 1}" style="position:absolute;left:470px;right:__BR__;top:${20 - BODY_TOP}px;height:30px;line-height:30px;background:var(--background);text-align:right;z-index:11"><span style="display:inline-block;vertical-align:middle;font:700 16px/1 Inter;letter-spacing:.03em;background:#1B1A18;color:#fff;border-radius:999px;padding:5px 12px">${t}</span></div>`;
 // A detail layer: step i of n, covering the body while presenting; recorded for its D page.
 const layer = (inner, label, i, n) => {
   CROPS.push({ inner, label, i, n });
@@ -250,7 +257,7 @@ const pane = ({ name, W, H, box, at = 'left:0;top:0', axis = 'y' }, crops) => {
   const id = `pane${++paneN}`, other = axis === 'y' ? 'x' : 'y';
   return `<style>.${id}{width:${fw}px;height:${fh}px;overflow:hidden}.${id}>div{width:${fw}px;height:${fh}px}
 body.present .${id}{width:${Math.min(box[0], pw)}px;height:${Math.min(box[1], ph)}px;overflow-${axis}:auto;overflow-${other}:hidden}body.present .${id}>div{width:${pw}px;height:${ph}px}</style>
-<div class="${id}" style="position:absolute;${at};background:#fff;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8"><div style="position:relative">${svg(name).replace('<svg ', '<svg style="display:block;width:100%;height:100%" ')}${outlines(crops, W, H)}</div></div>`;
+<div class="${id}" data-scroll style="position:absolute;${at};background:#fff;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8"><div style="position:relative">${svg(name).replace('<svg ', '<svg style="display:block;width:100%;height:100%" ')}${outlines(crops, W, H)}</div></div>`;
 };
 // Diagrams on a slide: each view is a pane; crops [name, x, y, label, head, caption] step through any of them 1:1 in
 // the order given.
@@ -262,7 +269,7 @@ const one = (name, W, H, box, crops, opts = {}) => walk([{ name, W, H, box, ...o
 // ---------- slide 9 (2.1) ----------
 const dec9 = [['Modular monolith: COLA layers, six contexts', 'skeleton plan D1, D4'], ['Framework-free domain; 18 ArchUnit rules', 'skeleton plan D1 · no ADR'], ['Consequences run before the commit', 'ADR 0002'], ['Cross-service events through an outbox', 'ADR 0007'], ['One codebase, two topologies', 'ADR 0008'], ['Router owns URL state; generated client', 'frontend ADR 0001, 0003']];
 const s9 = () => `
-${one('logical-layers', 2320, 1644, [764, 548], [
+${one('logical-layers', 2320, 1644, [764, 568], [
   [1160, 30, 'adapter · contract', 0, [['Adapter', 'REST controllers return one Result envelope against the committed OpenAPI contract']]],
   [1160, 548, 'application', 0, [['Application', 'services run the use cases, one package per bounded context']]],
   [640, 1116, 'infrastructure realises the domain ports', 0, [['Domain', 'depends on nothing; it names its needs as ports'], ['Infrastructure', 'implements those ports; 18 ArchUnit rules keep it that way']]],
@@ -308,7 +315,7 @@ ${repTop('Report §3.2 · transition strategies')}`;
 
 // ---------- slide 12 (2.2) ----------
 const s12 = () => `
-${one('transition-pair', 2320, 2270, [1164, 548], [
+${one('transition-pair', 2320, 2270, [1164, 568], [
   [0, 0, 'analysis: UC4', 0, [['Analysis classes', 'boundary, control and entity from slide 14; no platform yet']]],
   [1160, 20, 'strategy key', 0, [['Strategy key', 'each tag names the transition strategy that produced a design class']]],
   [600, 1684, 'design classes · persistence', 0, [['Design classes', 'the Team becomes the GroupDeal aggregate, reached through its repository port'], ['◁ means “realises”', 'MyBatis classes in infrastructure implement that port']]],
@@ -317,7 +324,7 @@ ${repTop('Report §3.2 · transition strategies')}`;
 
 // ---------- slide 13 (2.3) ----------
 const s13 = () => `
-${one('use-case', 2320, 1096, [1164, 548], [
+${one('use-case', 2320, 1096, [1164, 568], [
   [0, 364, 'Buyer and the money path', 0, [['In scope', 'start and join «include» paying upfront; invite attribution «extend»s join']]],
   [560, 40, 'resolution: Scheduler', 0, [['Scheduler', 'a time-driven actor resolves teams'], ['«extend»', 'refund extends resolution when a team expires']]],
   [560, 290, 'refund, payment: Stripe', 0, [['Stripe', 'a secondary actor of refund and of paying upfront']]],
@@ -328,7 +335,7 @@ ${repTop('Report §3.3 · use case diagram and specifications')}`;
 
 // ---------- slide 14 (2.4) ----------
 const s14 = () => `
-${walk([{ name: 'uc4-analysis-class', W: 1160, H: 1070, box: [566, 548], at: 'left:0;top:0' }, { name: 'uc4-analysis-seq', W: 2320, H: 2186, box: [582, 548], at: 'left:582px;top:0' }],
+${walk([{ name: 'uc4-analysis-class', W: 1160, H: 1070, box: [566, 568], at: 'left:0;top:0' }, { name: 'uc4-analysis-seq', W: 2320, H: 2186, box: [582, 568], at: 'left:582px;top:0' }],
   [['uc4-analysis-class', 0, 550, 'entities', 0, [['Entities only', 'attributes sit on entities: the Team holds its size and deadline']]],
    ['uc4-analysis-seq', 560, 1150, 'seat available: join', 160, [['Seat available', 'joining creates a membership while the window is open']]],
    ['uc4-analysis-seq', 1160, 1720, 'else: refund through the gateway', 160, [['Otherwise', 'the payment is refunded through the payment gateway']]]])}
@@ -337,7 +344,7 @@ ${repTop('Report §3.4 · Eric (UC4 analysis model)')}`;
 // ---------- slide 15 (2.4) ----------
 const tagKey = [['Pres', 'presentation'], ['Dist', 'distribution'], ['Pers', 'persistence'], ['Ext', 'external interface'], ['Sec', 'security'], ['Conc', 'concurrency'], ['Sched', 'scheduling'], ['Evt', 'domain events'], ['Lang', 'language, framework']];
 const s15 = () => `
-${one('uc4-design-class', 2320, 2314, [944, 548], [
+${one('uc4-design-class', 2320, 2314, [944, 568], [
   [1160, 0, 'payment meets groupbuy through a port', 0, [['Context seam', 'payment reaches groupbuy only through a port']]],
   [1160, 1110, 'aggregate behind its repository port', 0, [['Persistence strategy', 'the GroupDeal aggregate sits behind its repository port']]],
   [1160, 1650, 'MyBatis implementation of the port', 0, [['Infrastructure', 'the repository implementation and its MyBatis mapper']]],
@@ -351,7 +358,7 @@ ${repTop('Report §3.4 · Eric')}`;
 
 // ---------- slide 16 (2.4) ----------
 const s16 = () => `
-${one('uc4-design-seq', 2320, 3306, [1164, 548], [
+${one('uc4-design-seq', 2320, 3306, [1164, 568], [
   [700, 772, 'team row locked first', 176, [['One transaction', 'after the webhook’s signature check; drawn as critical, as UML has no transaction fragment'], ['Lock order', 'team row, intent, then payment; a racing join waits on the team row']]],
   [1100, 1926, 'guarded update · last seat', 176, [['Guarded update', mo('UPDATE … WHERE current_size = expected AND status = open', 19)], ['Last seat', `the opt [teamCompleted] branch publishes ${mo('TeamSucceeded', 19)}`]]],
   [1100, 2500, 'loser: compensation, refund owed', 176, [['Seat gone', 'DEAL_FULL or DEAL_CLOSED: the receipt owes a refund, never an extra member'], ['Evidence', '20 paid buyers race for 1 seat: 19 refunds owed (local integration test)']]],
@@ -378,7 +385,7 @@ const pslot = (rows, name, W, H, crops, rep, refs) => `
 <div style="position:absolute;left:0;top:0;width:610px"${ref(refs)}>
  ${rows.map(r => point(r[0], r[1], 22, 16)).join('')}
 </div>
-${one(name, W, H, [530, 548], crops, { at: 'left:634px;top:0' })}
+${one(name, W, H, [530, 568], crops, { at: 'left:634px;top:0' })}
 ${repTop(rep)}`;
 const s18 = () => pslot([
   ['Where it shows', 'The «create» of a team: the service once named the concrete creator itself'],
@@ -426,7 +433,7 @@ const s22 = () => `
  ${point('What varies', 'The states of an object', 22, 14)}
  ${point('Candidates', lines(['<b>State</b>', 'Strategy: nobody chooses; the state decides', 'Transition table, as on the team']), 22, 0)}
 </div>
-${one('state-before', 1160, 1120, [552, 548], [
+${one('state-before', 1160, 1120, [552, 568], [
   [0, 0, 'brute force: class', 0, [['Brute force', `the same ${mo('switch (status)', 19)} in four operations of ${mo('Product', 19)}, in red`]]],
   [0, 570, 'brute force: sequence', 0, [['In the sequence', `${mo('publish()', 19)} branches on the listing’s status`]]],
 ], { at: 'left:612px;top:0' })}
@@ -437,7 +444,7 @@ const s23 = () => `
  ${point('Implementation decisions', lines(['The state returns its successor; the listing applies it', 'Moves a state does not allow refuse with 409', 'Each move makes a new revision; a stale write gets 412']), 22, 16)}
  ${point('Why the team uses a table instead', 'Only OPEN has behaviour; SUCCEEDED and EXPIRED are final, so a transition table suffices', 22, 0)}
 </div>
-${one('state-after', 1160, 1424, [540, 548], [
+${one('state-after', 1160, 1424, [540, 568], [
   [0, 64, 'State · ConcreteStates', 0, [['Participants', `Context ${mo('Product', 19)}, State ${mo('ProductStatus', 19)}`], ['ConcreteStates', 'DRAFT, ON_SALE, OFF_SALE: enum constants with bodies, one subclass each']]],
   [0, 876, 'after: publish delegates', 0, [['No switch', 'each state answers publish its own way'], ['Liability', 'a new state still needs a constant, its overrides and tests']]],
 ], { at: 'left:624px;top:0' })}
@@ -445,7 +452,7 @@ ${repTop('Report §3.5 · Liu Jin (UC9)')}`;
 
 // ---------- slide 24 (2.6) ----------
 const s24 = () => `
-${one('core-erd', 2320, 1190, [1164, 548], [
+${one('core-erd', 2320, 1190, [1164, 568], [
   [580, 54, 'deal · membership', 0, [['Keys', 'UUIDv7 surrogate primary keys from PostgreSQL 18'], ['Race backstop', 'one membership per buyer per team, by a unique index']]],
   [1160, 600, 'payment · refund', 0, [['Race backstop', 'one refund per payment, by a unique key'], ['Associations', 'logical FK columns checked by the application: our DDL convention, not a course rule'], ['Aggregates', 'one table per aggregate root; nothing inherited, so no inheritance mapping']]],
 ])}
@@ -509,7 +516,7 @@ ${QUADS.map((d, i) => layer(quadDetail(d), `${d.q} · ${d.axes}`, i, QUADS.lengt
 // ---------- slide 26 (3.2) ----------
 const kv = rows => rows.map(r => `<div style="display:flex;gap:14px;font:400 21px/1.35 Inter;margin-bottom:14px"><b style="width:130px;flex:none">${r[0]}</b><div>${Array.isArray(r[1]) ? lines(r[1], 0) : r[1]}</div></div>`).join('');
 const s26 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:640px;height:548px;padding:18px 22px">
+<div class="card" style="position:absolute;left:0;top:0;width:640px;height:568px;padding:18px 22px">
  ${kicker('The scripted test')}
  ${kv([
    ['Tool', `<span${ref('perf/k6/browse.js · perf/k6/README.md §V2')}>k6 1.6.1, image pinned by digest</span>`],
@@ -538,7 +545,7 @@ const s26 = () => `
 // ---------- slides 27–28 (4.2) ----------
 const tree = [['backend/', 'Maven COLA modules; SWE5001 services/'], ['frontend/', 'React SPA'], ['contracts/', 'openapi.json, the API contract'], ['deployment/', 'Compose, SSM bundle, deploy.sh'], ['infra/', 'Terraform: dev frontend, SWE5001'], ['perf/', 'k6 load tests'], ['docs/', 'ADRs, sprint logs'], ['.github/', 'workflows, CODEOWNERS, Dependabot']];
 const s27 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:520px;height:548px;padding:16px 22px">
+<div class="card" style="position:absolute;left:0;top:0;width:520px;height:568px;padding:16px 22px">
  ${kicker('One monorepo')}
  ${tree.map(t => `<div style="display:flex;gap:12px;font:400 21px/1.3 Inter;margin-bottom:9px"><span style="width:160px;flex:none">${mo(t[0], 21)}</span><span style="color:var(--muted)">${t[1]}</span></div>`).join('')}
 </div>
@@ -565,7 +572,7 @@ const s28 = () => `
 ${tbl(['Artefact', 'Identity', 'Stored in'], art.map(a => withRef([`<b>${a[0]}</b>`, a[1], `<span style="color:var(--muted)">${a[2]}</span>`], a[3] || '')), { fs: 22, w: [230, 560], pad: '12px 14px' })}`;
 
 // ---------- slide 29 (4.3) ----------
-const s29 = () => one('cicd-pr-vs-merge', 2320, 1096, [1164, 548], [
+const s29 = () => one('cicd-pr-vs-merge', 2320, 1096, [1164, 568], [
   [0, 0, 'PR · backend', 0, [['On a backend pull request', 'build-quality runs every unit, architecture and integration test'], ['Also', 'contract-check fails on drift; docker boots the image and Trivy scans it']]],
   [1160, 64, 'PR · frontend, security', 0, [['Frontend', 'its full check and Playwright on its own build'], ['Security', 'gitleaks on every pull request; Trivy on dependencies and configuration'], ['Required', 'the six blue boxes']]],
   [0, 572, 'gate · delivery', 0, [['After the squash merge', 'delivery rebuilds from the merged commit: package and push to ECR'], ['Frontend', 'builds and syncs to S3, with a CloudFront invalidation']]],
@@ -587,7 +594,7 @@ ${tbl(['Stage', 'Control', 'Catches', 'Gap'], sec.map(r => [`<b style="white-spa
 <div style="position:absolute;left:0;right:0;top:474px;border-radius:8px;background:#E3E8FB;padding:8px 16px;font:400 20px/1.32 Inter"${ref('Stages: DSOEA 07 slide 3 · ECR scans on push (operator guide)')}>${lines(['<b style="color:#3E5CD9">Types tested (slide 25, Q4):</b> static analysis, dependencies, image and IaC configuration, secrets', 'Every third-party action is pinned to a commit SHA'])}</div>`;
 
 // ---------- slide 31 (4.4) ----------
-const s31 = () => one('dev-deployment', 2320, 1096, [1164, 548], [
+const s31 = () => one('dev-deployment', 2320, 1096, [1164, 568], [
   [0, 20, 'request path', 0, [['One environment', 'dev; the SWE5006 production stack was planned, never applied'], ['Request path', 'the browser talks only to CloudFront: files from a private bucket, API calls to the load balancer']]],
   [940, 322, 'one host', 0, [['One host', 'the container runs by digest, beside PostgreSQL and Redis on loopback'], ['Trade-off', 'cheap and always on, but one point of failure']]],
   [1160, 636, 'deploy path', 0, [['Approver', 'the code owner on the pull request; the merge releases'], ['Practice', 'every merge deploys automatically to dev, not production; SWE5001 production is Continuous Delivery'], ['Verified by', 'on-host health check with automatic rollback, public health, Playwright smoke']]],
@@ -732,7 +739,7 @@ const repSec = {
 };
 for (const [n, [t, rt]] of Object.entries(repSec)) {
   const body = out[n];
-  out[n] = () => body() + `<div style="position:absolute;right:0;top:-27px;font:600 18px/1 Inter;color:#3E5CD9;display:flex;gap:6px;align-items:center"${rt ? ref(rt) : ''}>${icon('book')} Report ${mk('FILL', '§ (#463)')} · ${t}</div>`;
+  out[n] = () => body() + repTop(`<span${rt ? ref(rt) : ''}>Report ${mk('FILL', '§ (#463)')} · ${t}</span>`);
 }
 // Closing slide (dark, full bleed).
 out[39] = () => `
@@ -740,14 +747,22 @@ out[39] = () => `
 <div style="position:absolute;left:80px;top:236px;font:500 32px Inter;color:#fff">Questions?</div>
 <div style="position:absolute;left:80px;top:604px;font:400 18px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:28px;align-items:center"><span style="display:flex;gap:10px;align-items:center"><span style="font-size:20px">${icon('github')}</span> github.com/PPsyrius/iss-groupbuy-team8</span><span>d1b3np88z657cp.cloudfront.net</span></div>`;
 
-// A slide that steps through detail layers names their pages under the title, so a reader of the PDF finds them.
+// Header strip per slide: the report line, and the detail pages a reader of the PDF needs (hidden while presenting,
+// where the crops themselves step in).
 for (const s of C.SLIDES) {
   if (s.slot === null) continue;
   const f = out[s.n];
   CROPS.length = 0;
   f();
   const k = CROPS.length;
-  if (k) out[s.n] = () => f() + `<div style="position:absolute;left:0;top:-29px;font:600 18px/1 Inter;color:#6B655C;display:flex;gap:7px;align-items:center">${icon('magnifying-glass')} Detail pages D${s.n}-1 to D${s.n}-${k} (backups)</div>`;
+  out[s.n] = () => {
+    let rp = '';
+    const html = f().replace(/<!--rep([\s\S]*?)-->/, (m, r) => { rp = r; return ''; }).replace(/__BR__/g, `${chipRight(s.speaker)}px`);
+    const items = [];
+    if (k) items.push(`<span class="pdfonly" style="font:600 13px Inter;color:#6B655C;display:flex;gap:5px;align-items:center">${icon('magnifying-glass')} Details D${s.n}-1 to D${s.n}-${k} in the backups</span>`);
+    if (rp) items.push(`<span style="font:600 15px Inter;color:#3E5CD9;display:flex;gap:6px;align-items:center">${icon('book')} ${rp}</span>`);
+    return html + (items.length ? hdrStrip(s.speaker, items) : '');
+  };
 }
 
 // Speaker notes number every fragment step as [click k/n] (review round 4); the build fails when a slide's steps and
