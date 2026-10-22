@@ -1778,7 +1778,8 @@ document.addEventListener('keydown',e=>{
   else if(['ArrowLeft','ArrowUp','PageUp','Backspace','p'].includes(k)){e.preventDefault();prev();}
   else if(k==='Home')go(0);else if(k==='End')go(23);
   else if(k==='f'||k==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();}
-  else if(k==='o'||k==='O'){body.classList.remove('present');body.classList.add('overview');slides.forEach(s=>s.style.transform='');slides[i].scrollIntoView({block:'center'});}
+  // the overview clears the blank screen: overview mode swallows '.', so a blank screen would otherwise stick
+  else if(k==='o'||k==='O'){document.querySelector('.blank').classList.remove('on');body.classList.remove('present');body.classList.add('overview');slides.forEach(s=>s.style.transform='');slides[i].scrollIntoView({block:'center'});}
   else if(k==='s'||k==='S')openNotes();
   else if(k==='t'||k==='T')t0=Date.now();
   else if(k==='b'||k==='B'||k==='x'||k==='X')backups();
