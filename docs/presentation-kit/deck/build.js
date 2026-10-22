@@ -1,12 +1,16 @@
 // Builds <deck>/dist/<outputs.deck>: 1280x720 slides from src/content.js (SLIDES, SEGMENTS, SPEAKERS),
-// src/slides-main.js ({ n: () => html }) and optional src/slides-backup.js ({ list() }), plus the presenter runtime.
+// src/slides-main.js ({ n: () => html }) and optional src/slides-backup.js ({ list() }), plus the presenter runtime and
+// the speaker companion (notes-*.js), which is the same file opened with ?notes.
 const fs = require('fs');
 const path = require('path');
 const { deck } = require('../lib/context');
-const { fontCSS, md, esc, words } = require('../lib');
+const { fontCSS, esc } = require('../lib');
 const CSS = require('./css');
 const MOTION_CSS = require('./motion-css');
 const runtime = require('./runtime');
+const notesRuntime = require('./notes-runtime');
+const notesView = require('./notes-view');
+const { buildNotesData, jsonForScript } = require('./notes-data');
 
 // Key hint shown for 4 s when the deck opens (wording from the v3 deck).
 const HINT = '→ / Space next · ← back · S speaker notes · O overview · F fullscreen · B backup index · . blank · number + Enter to jump';
@@ -61,20 +65,21 @@ module.exports = function buildDeck() {
 </section>`;
   }
 
-  const notes = {};
-  for (const s of C.SLIDES) notes[s.n] = { title: s.title, speaker: s.speaker, slot: s.slot, say: md(s.say).replace(/\[click\]/g, '<b class="clk">[click]</b>'), cues: (s.cues || []).map(md), handover: s.handover ? md(s.handover) : '', words: words(s.say) };
-
-  const sections = C.SLIDES.map(mainSlide);
-  if (BACK.list) sections.push(...BACK.list().map(backupSlide));
+  const backups = BACK.list ? BACK.list() : [];
+  const sections = C.SLIDES.map(mainSlide).concat(backups.map(backupSlide));
+  const notes = buildNotesData(C, backups);
 
   const html = `<!doctype html><html lang="en-SG"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${cfg.title}</title>
-<style>${fontCSS()}\n${CSS}${M ? MOTION_CSS : ''}</style></head>
+<style>${fontCSS()}\n${CSS}${M ? MOTION_CSS : ''}${notesView.CSS}</style></head>
 <body><div class="deck">
 ${sections.join('\n')}
 </div>
 <div class="hint">${HINT}</div><div class="blank"></div>
-<script>${runtime({ notes, total: TOTAL })}</script></body></html>`;
+${notesView.markup(notes)}
+<script type="application/json" id="notes-data">${jsonForScript(notes)}</script>
+<script>${runtime({ total: TOTAL })}</script>
+<script>${notesRuntime()}</script></body></html>`;
 
   fs.mkdirSync(path.join(dir, 'dist'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'dist', cfg.outputs.deck), html);

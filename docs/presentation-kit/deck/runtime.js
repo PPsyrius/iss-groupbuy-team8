@@ -1,13 +1,13 @@
 // Presenter runtime inlined into the HTML deck: arrows/space/n/p step through .frag[data-frag] fragments (and
-// .cover[data-frag] covers) and slides; digits + Enter jump to a main slide; S notes window with timer, T start timer,
-// O overview, F fullscreen, B/X backup index (slide id BX), . blank screen, Home/End, #<id> deep links and hashchange;
-// a click advances (left third of the window: back). window.__PRINT__ (set by render.js) skips presenter mode so every
-// slide prints as its own page.
-module.exports = ({ notes, total }) => `
+// .cover[data-frag] covers) and slides; digits + Enter jump to a main slide; S opens the speaker companion (this deck
+// with ?notes, notes-runtime.js), T starts or resets its talk timer, O overview, F fullscreen, B/X backup index (slide
+// id BX), . blank screen, Home/End, #<id> deep links and hashchange; a click advances (left third of the window: back).
+// window.__PRINT__ (set by render.js) skips presenter mode so every slide prints as its own page.
+module.exports = ({ total }) => `
 (function(){
+if(new URLSearchParams(location.search).has('notes'))return;
 const slides=[...document.querySelectorAll('.slide')];
-const NOTES=${JSON.stringify(notes)};
-let i=0, frag=0, t0=null, notesWin=null, jump='', shown=-1;
+let i=0, frag=0, notesWin=null, jump='', shown=-1;
 const body=document.body;
 const byId=id=>slides.findIndex(s=>s.dataset.n===String(id));
 function fit(){const k=Math.min(innerWidth/1280,innerHeight/720);slides.forEach(s=>s.style.transform='translate(-50%,-50%) scale('+k+')');}
@@ -18,19 +18,20 @@ function applyFrags(){steps(slides[i]).forEach(f=>{const n=+f.dataset.frag;if(f.
 // entrance transitions start from the right state; toggling .active then replays every entrance.
 function paint(){applyFrags();if(shown!==i){void slides[i].offsetWidth;shown=i;}
   slides.forEach((s,j)=>s.classList.toggle('active',j===i));
-  history.replaceState(null,'','#'+slides[i].dataset.n); updNotes();}
+  history.replaceState(null,'','#'+slides[i].dataset.n); notify();}
 function go(j,f){i=Math.max(0,Math.min(slides.length-1,j));frag=f===undefined?0:f;paint();}
 function next(){const fs=frags();if(frag<(fs.length?fs[fs.length-1]:0)){frag++;paint();}else go(i+1);}
 function prev(){if(frag>0){frag--;paint();}else if(i>0){i--;const fs=frags();go(i,fs.length?fs[fs.length-1]:0);}}
-function updNotes(){if(!notesWin||notesWin.closed)return;const n=NOTES[slides[i].dataset.n];const d=notesWin.document;
-  d.getElementById('h').textContent=n?('Slide '+slides[i].dataset.n+' · '+n.title):('Backup '+slides[i].dataset.n);
-  d.getElementById('m').textContent=n?(n.speaker+' · slot '+(n.slot?n.slot+' s':'Q&A')+' · ≈ '+Math.round(n.words/130*60)+' s at 130 wpm'):'Q&A only';
-  d.getElementById('say').innerHTML=n?n.say:'';d.getElementById('cues').innerHTML=n?n.cues.map(c=>'<li>'+c+'</li>').join(''):'';
-  d.getElementById('ho').innerHTML=n&&n.handover?'Hand-over: '+n.handover:'';}
-function openNotes(){notesWin=window.open('','blocbuy-notes','width=760,height=720');if(!notesWin)return;
-  notesWin.document.write('<title>Notes</title><style>body{font:17px/1.45 system-ui;margin:20px;background:#1B1A18;color:#EEF1FC}#h{font-weight:700;font-size:20px}#m{color:#A9B7EE;margin:4px 0 12px}#say{font-size:19px}#cues{color:#bcd;font-size:15px}#ho{color:#FFB01F;margin-top:10px}#clock{font:700 28px monospace;color:#FFB01F;float:right}.mk{font:700 13px monospace;border:1px dashed #f9a;border-radius:4px;padding:1px 4px;color:#fbc}.clk{color:#FFB01F}</style><div id="clock">--:--</div><div id="h"></div><div id="m"></div><div id="say"></div><ul id="cues"></ul><div id="ho"></div><p style="color:#789;font-size:13px">T starts/resets the timer (in the deck window).</p>');
-  updNotes();}
-setInterval(()=>{if(notesWin&&!notesWin.closed&&t0){const s=Math.floor((Date.now()-t0)/1000);notesWin.document.getElementById('clock').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}},500);
+// Companion messages: see notes-runtime.js. A file:// page has an opaque origin that postMessage cannot target (Chrome
+// still reports location.origin as 'file://'), so '*' is used there; the companion accepts messages only from this
+// window, and this window only from the companion.
+const ORIGIN=location.protocol==='file:'||location.origin==='null'?'*':location.origin;
+function notify(){if(!notesWin||notesWin.closed)return;const fs=frags();
+  notesWin.postMessage({type:'state',id:slides[i].dataset.n,frag,frags:fs.length?fs[fs.length-1]:0},ORIGIN);}
+function openNotes(){const u=new URL(location.href);u.hash='';u.search='?notes';
+  notesWin=window.open(u.href,'blocbuy-notes','width=1180,height=860');}
+addEventListener('message',e=>{if(!notesWin||e.source!==notesWin)return;const m=e.data||{};
+  if(m.type==='hello')notify();else if(m.type==='go')(m.delta>0?next:prev)();});
 // Entering presenter mode applies the hidden start states under .still (no transitions), so they take effect at
 // once instead of running their delayed hide transitions into the entrance that follows.
 function enter(){body.classList.add('still');body.classList.remove('overview');body.classList.add('present');fit();void body.offsetWidth;body.classList.remove('still');}
@@ -50,7 +51,7 @@ document.addEventListener('keydown',e=>{
   // the overview clears the blank screen: overview mode swallows '.', so a blank screen would otherwise stick
   else if(k==='o'||k==='O'){document.querySelector('.blank').classList.remove('on');body.classList.remove('present');body.classList.add('overview');slides.forEach(s=>s.style.transform='');slides[i].scrollIntoView({block:'center'});}
   else if(k==='s'||k==='S')openNotes();
-  else if(k==='t'||k==='T')t0=Date.now();
+  else if(k==='t'||k==='T'){if(notesWin&&!notesWin.closed)notesWin.postMessage({type:'timer'},ORIGIN);}
   else if(k==='b'||k==='B'||k==='x'||k==='X')backups();
   else if(k==='.')document.querySelector('.blank').classList.toggle('on');
 });

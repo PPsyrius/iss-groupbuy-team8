@@ -1,0 +1,67 @@
+// End-to-end test of the speaker companion: builds the fixture deck into a temp folder, opens it from file:// (as it is
+// presented), presses S and drives the deck from the companion window and back.
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { execFileSync } = require('child_process');
+const { pathToFileURL } = require('url');
+const { chromium } = require('playwright');
+
+const KIT = path.join(__dirname, '..');
+
+test('the companion follows the deck and drives it', async t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kit-companion-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  fs.cpSync(path.join(__dirname, 'fixture'), dir, { recursive: true });
+  execFileSync(process.execPath, [path.join(KIT, 'bin', 'build.js'), dir, 'deck'], { stdio: 'pipe' });
+
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+  const deck = await context.newPage();
+  await deck.goto(pathToFileURL(path.join(dir, 'dist', 'fixture.html')).href);
+  await deck.waitForFunction(() => location.hash === '#1');
+
+  const [notes] = await Promise.all([context.waitForEvent('page'), deck.keyboard.press('s')]);
+  await notes.waitForLoadState();
+  assert.match(notes.url(), /\?notes$/);
+  const text = id => notes.locator('#' + id).innerText();
+  await notes.waitForFunction(() => document.getElementById('n-label').textContent === 'Slide 1 / 3');
+  assert.equal(await notes.locator('.slide').count(), 0, 'the companion shows no slides');
+  assert.equal(await text('n-title'), 'Fixture title');
+  assert.equal(await text('n-script'), 'Hello </script> & welcome.');
+  assert.equal(await text('n-elapsed'), 'press T');
+  assert.equal(await notes.locator('#n-cues-box').isHidden(), true);
+
+  // companion → deck: arrow key and the Next button
+  await notes.keyboard.press('ArrowRight');
+  await deck.waitForFunction(() => location.hash === '#2');
+  await notes.waitForFunction(() => document.getElementById('n-label').textContent === 'Slide 2 / 3');
+  assert.equal(await text('n-frag'), 'Reveal 0 / 1 — next click reveals more');
+  assert.equal(await text('n-slot'), ' · 16:00:20–16:01:00 · 40 s');
+  await notes.locator('#n-nextb').click();
+  await notes.waitForFunction(() => document.getElementById('n-frag').textContent === 'Reveal 1 / 1');
+  assert.equal(await deck.evaluate(() => location.hash), '#2');
+
+  // deck → companion: stepping in the deck, the demo box and the timer
+  await deck.keyboard.press('ArrowRight');
+  await notes.waitForFunction(() => document.getElementById('n-label').textContent === 'Slide 3 / 3');
+  assert.equal(await notes.locator('#n-demo').isVisible(), true);
+  assert.match(await text('n-demo'), /Step 1 · Open the app/);
+  assert.equal(await text('n-next'), 'End of the talk; backups follow');
+  await deck.keyboard.press('t');
+  await notes.waitForFunction(() => document.getElementById('n-elapsed').textContent !== 'press T');
+  assert.match(await text('n-delta'), /^ahead 0[23]:\d\d$/);
+
+  // backups and the Back button
+  await deck.keyboard.press('b');
+  await notes.waitForFunction(() => document.getElementById('n-label').textContent === 'Backup BX');
+  assert.equal(await text('n-delta'), '—');
+  await notes.locator('#n-nextb').click();
+  await notes.waitForFunction(() => document.getElementById('n-label').textContent === 'Backup B1');
+  assert.equal(await text('n-script'), 'Because it is simpler.');
+  await notes.locator('#n-prev').click();
+  await deck.waitForFunction(() => location.hash === '#BX');
+});
