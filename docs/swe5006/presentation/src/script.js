@@ -78,9 +78,9 @@ ${C.SLIDES.filter(s => s.seg === 4).map(slideCard).join('')}
 <h2>Live pipeline demo (16:46:30 – 16:52:00, 330 s)</h2>
 ${tbl(['Step', 'Shows', 'Rubric'], pipeSteps.map(d => [d.n, esc(d.t), d.proves.split(' · ')[0]]))}
 <h3>Preconditions (checked at 15:30 by Pan)</h3>
-<ul><li>Demo branch pushed and up to date with <code>origin/dev</code>; PR body ready; no PR opened yet. ${m('{{CONFIRM:the copy change, its page, its author and the approving code owner (open item 14)}}')}</li>
+<ul><li>Demo branch pushed and up to date with <code>origin/dev</code>; PR body ready; no PR opened yet. The backend merge (by 16:40) moves <code>dev</code>, so at 16:40–16:41 Pan rebases the demo branch onto the new <code>origin/dev</code>, pushes it and only then opens the PR; its checks start at 16:41 on the updated branch. ${m('{{CONFIRM:the copy change, its page, its author and the approving code owner (open item 14)}}')}</li>
 <li>Backend pre-run: a small backend PR opened at ≈ 16:20 by its author, approved by Liu Jin (backend code owner) and squash-merged by 16:40 so its deploy finishes before the segment. ${m('{{CONFIRM:the backend change and its author}}')}</li>
-<li>Merge freeze in the team chat: nobody merges into <code>dev</code> from 15:00 to 17:15 except these two PRs. A moved <code>dev</code> makes the branch out of date and re-runs the checks (strict required checks).</li>
+<li>Merge freeze in the team chat: nobody merges into <code>dev</code> from 15:00 to 17:15 except these two PRs. A moved <code>dev</code> makes the branch out of date and re-runs the checks (strict required checks), which is why the demo branch is updated after the backend merge and before its PR opens, and why nothing else may merge after 16:40.</li>
 <li>Latest <code>ci-frontend</code> and <code>ci-backend</code> runs on <code>dev</code> green (A.1); deploy switches <code>ENABLE_S3_DEPLOY</code> and <code>ENABLE_EC2_DEPLOY</code> unchanged; GitHub Actions budget not exhausted (a budget stop hit run 39442654274 on 20 Oct).</li>
 <li>Lim signed in to GitHub on his own machine with the PR list open; he is not sharing at 16:47.</li>
 <li>Backup video (rubric G6, 4.6): recorded on dev by Sat 24 Oct, 1080p, one clip per step P1–P6, stored in the cloud and on a USB drive, open in a player on Pan’s machine and tested with Zoom “share sound” off. ${m('{{FILL:recording link and USB holder}}')}</li></ul>
@@ -193,6 +193,7 @@ ${tbl(['Time (SGT)', 'Do', 'Owner'], [
   ['15:30', 'Check the §4 and §5 preconditions lists.', 'Pan (§4); Eric, Yorik (§5)'],
   ['≈ 16:05 (≤ 16:07)', 'Start the expiry bloc on <code>US34-04</code> as account B and pay; bookmark the receipt. <code>EXPIRY OK</code> at 16:10, <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.', 'Yorik'],
   ['16:30', 'Start; follow the run sheet. The scribe logs every remark verbatim (rubric G9).', 'Lim; scribe'],
+  ['16:40 – 16:41', 'Backend pre-run PR merged; rebase the demo branch onto the new <code>origin/dev</code>, push it, then open the demo PR at 16:41.', 'Pan'],
   ['17:04 / 17:10', 'Slide 37; parked questions; end.', 'Lim'],
 ])}
 <h2>After the presentation</h2>
