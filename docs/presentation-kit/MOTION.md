@@ -99,23 +99,24 @@ Each entry names the pattern, the slides using it, the element roles, the `data-
 
 | Pattern | Slides | Roles → `data-a` | Delay rhythm |
 |---|---|---|---|
-| Icon + text row | 5001 2, 5, 8, 18, 19, 5006 2 | dot or icon → `pop`; its text → `up` | text at the pop's d +6…+40; rows step 70–120 |
-| Icon card | 5001 8, 12, 15, 17, 21, 23, B10, B11, 5006 4 | card → `up`; icon or number → `pop`; title → `up`; body → `up`; tag chip → `pop`; optional fix panel → `fade` + text `up` | icon +23…+60, title +34…+90, body +91…+125, tag +110…+203; cards step 74–160 from about 200 |
+| Icon + text row | 5001 2, 5, 8, 18, 19, 5006 2, 8 | dot or icon → `pop`; its text → `up` | text at the pop's d +6…+40; rows step 70–120 |
+| Icon card | 5001 8, 12, 15, 17, 21, 23, B10, B11, 5006 4, 8 | card → `up`; icon or number → `pop`; title → `up`; body → `up`; tag chip → `pop`; optional fix panel → `fade` + text `up` | icon +23…+60, title +34…+90, body +91…+125, tag +110…+203; cards step 74–160 from about 200 |
 | Card column with header band | 5001 4 | card → `up`; band (+ square patch) → `fade`; band icon → `pop`; name → `up`; list → `up` | card d at 200, +120 per column; band d, icon d+60, name d+80, list d+160 |
 | Side columns | 5001 2, 5, 11, 18, 22, 5006 2, 3, 4 | left column → `left`; right column → `right`; middle column → `up`; heading → `up`; list → `up` | columns 200–300 (right column may come much later, e.g. 600); heading +12…+50; list +59…+65; tick rows inside: pop from 300–500, +80 per row, text +30 |
 | Box then text | 5001 3, 10, 11, 14, B5, B9, B11, B13, B14 | panel background → `fade`, `pop` or `left`; its text → `up` | text at the box's d +2…+12; sibling boxes step 30–90 |
-| Table with rows | 5001 11, B1a, B1b, B2, B5, B7, B8, B9, B12, 5006 3, 5 | heading → `up`; table → `fade`; body rows → `trow` | table 246, rows 368 then +38.4 each (406, 445, 483, …); on slide 11 heading 449, table 485, rows 608 +38 |
-| Trailing callout | 5001 B5, B9, 19, 23, 5006 5 | dark panel → `fade` or `up`; bar or `recdot` → `fade`; text → `up` | at the end of what it comments on (after a table: 560–607; on a full slide: 1100); text +4…+50 |
-| Footnote or caption | 5001 3, 4, 6, 9, B6, B12, BX | closing line → `up` | last on the slide: 649–1500 |
+| Table with rows | 5001 11, B1a, B1b, B2, B5, B7, B8, B9, B12, 5006 3, 5, 6, 7 | heading → `up`; table → `fade`; body rows → `trow` | table 246, rows 368 then +38.4 each (406, 445, 483, …); on slide 11 heading 449, table 485, rows 608 +38 |
+| Trailing callout | 5001 B5, B9, 19, 23, 5006 5, 8 | dark panel → `fade` or `up`; bar or `recdot` → `fade`; text → `up` | at the end of what it comments on (after a table: 560–607; on a full slide: 1100); text +4…+50 |
+| Footnote or caption | 5001 3, 4, 6, 9, B6, B12, BX, 5006 6, 7 | closing line → `up` | last on the slide: 649–1500 |
 | Stat strip | 5001 14, 19, 20, 24 | box → `up`; value and caption → `up` | content +40…+50 (caption +46); boxes step 42–120, from 600–1000 |
 | Connector between elements | 5001 2, 3, 7, 10, 18, 20, 22, B10, B13, B14, 5006 2 | arrow → `cn` | after both ends have arrived; chains step +56…+90; pipeline stage arrows at stage +120 |
-| Process chain | 5001 7, 20, B11 | panel → `fade`; heading → `up`; steps → `pop` (stage) or `fade` + text `up`; connectors → `cn` | panel about 280–430, heading +4…+23; steps +29…+170 apart; each connector after its pair |
+| Process chain | 5001 7, 20, B11, 5006 7 | panel → `fade`; heading → `up`; steps → `pop` (stage) or `fade` + text `up`; connectors → `cn` | panel about 280–430, heading +4…+23; steps +29…+170 apart; each connector after its pair |
 | Bars and timeline | 5001 6 | rail → `cn`; milestone dot → `pop` + date `up`; label → `up`; bar → `grow`; value → `up` | rail 150; milestones 300 +110, label +40; bar rows 700 +110: name d, bar d+60, description d+100, value d+200 |
 | Band list | 5001 12, 17 | dark band → `up`; check or icon → `pop`; text → `up` | bands 800–900, step 50–150; icon +60, text +80 |
 | Diagram slide | 5001 9, 13, 16, B3, B4, B6 | diagram wrapper → `fade`; caption or side text → `up`; side box background → `fade` + text `up` | diagram 200; side list about 250–350; box 594–670; caption last (672–900) |
 | Index grid | 5001 BX | per row: card background → `up`, tag → `pop`, title → `up` | 100, +30 per row, all three at the same delay |
 | Use case band | — | three band cards (use case, analysis → design, design problem) → `up` | 150, +80 each; the slide's cards follow from about 400 |
-| Line chart | 5001 14 | chart → `fade`; solid series → `cline`; dots → `cdot`; dashed (ideal) series → `fade`; legend → `up` | chart d; dashed series +40…+250; solid line +100…+350; dots after the line, +50…+60 each; two charts side by side start 150 apart |
+| Line chart | 5001 14, 5006 8 | chart → `fade`; solid series → `cline`; dots → `cdot`; dashed (ideal) series → `fade`; legend → `up` | chart d; dashed series +40…+250; solid line +100…+350; dots after the line, +50…+60 each; two charts side by side start 150 apart; two series on one chart (5006 8): the second line and its dots run 100 behind the first, so both draw together, and the legend follows the first dots |
+| Inline token strip | 5006 6 | short inline tokens in one wrapping flex row (owner per use case) → `up`; a draft chip closing the row → `pop` | kicker 150; tokens 200, +30 each; chip after the last token (520); a table below starts while the strip is still arriving (420) |
 
 ### One-off patterns
 

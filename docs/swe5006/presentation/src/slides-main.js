@@ -199,16 +199,19 @@ const own = [
   ['Panpakorn (Pan)', 'Receive notifications', 'Outbox transports → <b>Template Method</b>', 'slide 20 · was UC1 Strategy, UC2'],
   ['Lim Jiechao', 'UC8 my orders and teams', 'Pricing → <b>Strategy</b>', 'slide 21 · was UC7 Observer, UC8'],
 ];
+// Inline token strip (MOTION.md): kicker 150, tokens 200 +30, the CONFIRM chip pops 520; table [420, 540, 38];
+// footnotes 800 / 860.
 const s6 = () => `
-${kicker('Every use case has an owner · * proposed, not yet agreed')}
-<div style="display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;font:400 20px/1.3 Inter;margin-bottom:16px">${[['UC1', 'Lim*'], ['UC2', 'Pan*'], ['UC3', 'Eric'], ['UC4', 'Eric'], ['UC5', 'Eric*'], ['UC6', 'Yorik'], ['UC7', 'Lim*'], ['UC8', 'Lim'], ['UC9', 'Liu Jin'], ['Notifications', 'Pan']].map(u => `<span><b>${u[0]}</b> ${u[1]}</span>`).join('')}${mk('CONFIRM', 'owners marked * (open decision 4)')}</div>
-${tbl(['Member', 'Use case', 'Design problem → GoF pattern'], own.map(o => withRef([`<b>${o[0]}</b>`, o[1], o[2]], `${o[3]} (proposal §6.1)`)), { fs: 20, w: [250, 380], pad: '11px 14px' })}
-<div style="margin-top:14px;font:400 20px/1.4 Inter">Each member presents their own design problem in section 2; the team statechart (UC4–UC6, UC8) goes with Eric’s UC4 design.</div>
-<div style="margin-top:6px;display:flex;gap:14px;align-items:center">${report('Report: use case in §3.4, design problem in §3.5').replace('margin-top:8px', 'margin:0')} ${mk('FILL', 'section numbers (#463)')} ${mk('VERIFY', 'UC9 owner')}</div>`;
+${gA(kicker('Every use case has an owner · * proposed, not yet agreed'), 'up', 150)}
+<div style="display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;font:400 20px/1.3 Inter;margin-bottom:16px">${[['UC1', 'Lim*'], ['UC2', 'Pan*'], ['UC3', 'Eric'], ['UC4', 'Eric'], ['UC5', 'Eric*'], ['UC6', 'Yorik'], ['UC7', 'Lim*'], ['UC8', 'Lim'], ['UC9', 'Liu Jin'], ['Notifications', 'Pan']].map((u, i) => `<span ${A('up', 200 + 30 * i)}><b>${u[0]}</b> ${u[1]}</span>`).join('')}${hAt(mk('CONFIRM', 'owners marked * (open decision 4)'), 'pop', 520)}</div>
+${tbl(['Member', 'Use case', 'Design problem → GoF pattern'], own.map(o => withRef([`<b>${o[0]}</b>`, o[1], o[2]], `${o[3]} (proposal §6.1)`)), { fs: 20, w: [250, 380], pad: '11px 14px', m: [420, 540, 38] })}
+<div ${A('up', 800, 'margin-top:14px;font:400 20px/1.4 Inter;')}>Each member presents their own design problem in section 2; the team statechart (UC4–UC6, UC8) goes with Eric’s UC4 design.</div>
+<div ${A('up', 860, 'margin-top:6px;display:flex;gap:14px;align-items:center;')}>${report('Report: use case in §3.4, design problem in §3.5').replace('margin-top:8px', 'margin:0')} ${mk('FILL', 'section numbers (#463)')} ${mk('VERIFY', 'UC9 owner')}</div>`;
 
 // ---------- slide 7 (1.6, 1.7) ----------
 const steps = ['coded', 'tested', 'integrated', 'releasable', 'released'];
-const ladder = () => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"${ref('EPAT 01 Agile p26')}><span style="font:600 18px Inter;color:var(--muted);margin-right:6px">Definition of Done ladder</span>${steps.map((s, i) => `<span style="font:600 18px/1 Inter;padding:7px 12px;border-radius:999px;background:${[2, 3, 4].includes(i) ? '#E3E8FB' : '#ECE6DC'};color:${[2, 3, 4].includes(i) ? '#3E5CD9' : '#1B1A18'}">${s}</span>${i < 4 ? '<span style="color:#A69E92">→</span>' : ''}`).join('')}</div>`;
+// Process chain (MOTION.md): label 150, pills pop 200 +70, each glyph arrow fades 30 ms after the pill it points to.
+const ladder = () => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"${ref('EPAT 01 Agile p26')}><span ${A('up', 150, 'font:600 18px Inter;color:var(--muted);margin-right:6px;')}>Definition of Done ladder</span>${steps.map((s, i) => `<span ${A('pop', 200 + 70 * i, `font:600 18px/1 Inter;padding:7px 12px;border-radius:999px;background:${[2, 3, 4].includes(i) ? '#E3E8FB' : '#ECE6DC'};color:${[2, 3, 4].includes(i) ? '#3E5CD9' : '#1B1A18'};`)}>${s}</span>${i < 4 ? `<span ${A('fade', 300 + 70 * i, 'color:#A69E92;')}>→</span>` : ''}`).join('')}</div>`;
 const spr = [
   ['1 · 1–12 Sep', 'Walking skeleton: sign-in, browse, admin on dev', '<b>integrated</b>: backend on dev 5 Sep; no frontend, so not releasable'],
   ['2 · 15–26 Sep', 'Pay, join a team, see the order, replay-safe', '<b>integrated</b>: merged, tested, Checkout off on dev; 134 of 150 h'],
@@ -222,8 +225,8 @@ const retro = [
 ];
 const s7 = () => `
 ${ladder()}
-${tbl(['Sprint', 'Goal', 'Definition of Done reached by the goal increment'], spr.map(s => [`<b style="white-space:nowrap">${s[0]}</b>`, s[1], s[2]]), { fs: 18, w: [160, 450], pad: '6px 11px' })}
-<div style="font:400 18px/1.3 Inter;color:var(--muted);margin-top:6px"${ref('docs/agile/definition-of-done.md#done-ladder-per-sprint')}>Same basis every sprint: integrated = merged to dev with every required check green; releasable = shown working on deployed dev, our “on dev” rule; released = promoted to production and verified there</div>
+${tbl(['Sprint', 'Goal', 'Definition of Done reached by the goal increment'], spr.map(s => [`<b style="white-space:nowrap">${s[0]}</b>`, s[1], s[2]]), { fs: 18, w: [160, 450], pad: '6px 11px', m: [560, 640, 38] })}
+<div ${A('up', 860, 'font:400 18px/1.3 Inter;color:var(--muted);margin-top:6px;')}${ref('docs/agile/definition-of-done.md#done-ladder-per-sprint')}>Same basis every sprint: integrated = merged to dev with every required check green; releasable = shown working on deployed dev, our “on dev” rule; released = promoted to production and verified there</div>
 <div class="frag" data-frag="1" style="margin-top:12px;border-radius:8px;background:#FDEFEC;padding:10px 16px">
  <div style="font:700 20px Inter;color:#B02E1B;margin-bottom:6px">Retro improvement → change in the next sprint</div>
  ${retro.map(r => `<div style="display:flex;gap:12px;font:400 20px/1.32 Inter;margin-bottom:4px"><b style="width:58px;flex:none">${r[0]}</b><span style="width:340px;flex:none">${r[1]}</span><span><span style="color:#E8402A;font-weight:700">→</span> ${r[2]}</span></div>`).join('')}
@@ -247,19 +250,22 @@ function burndown(m) {
   <div ${m ? `class="a" data-a="up" ` : ''}style="display:flex;gap:16px;font:400 18px Inter;color:#6B655C;margin:0 0 4px 46px${m ? `;--d:${m[3]}ms` : ''}"><span><b style="color:#E8402A">●</b> Sprint 2</span><span><b style="color:#3E5CD9">●</b> Sprint 3</span><span>– – ideal · day of sprint</span></div>`;
 }
 const ac = ['Admin-only API: 403 for non-admins, 401 anonymous', 'Team size ≥ 2, lifetime in range, team price below individual; 400 with field errors', 'Stale version → 412; every write audited', 'A configured listing can start a team', 'Contract changes additive, merged before the controller', 'Unit, PostgreSQL and authorization tests; ArchUnit green'];
+// Icon card with tick rows, then the burndown as a line chart and a trailing callout (MOTION.md): card 150, header 190,
+// story 230, criteria 290 +60 (tick pop, text +30), field 650; chart kicker 300, chart 330, ideal 380, actual 450,
+// dots 600 +40, comment 900, callout 1000.
 const s8 = () => `
-<div class="card" style="position:absolute;left:0;top:0;width:660px;padding:14px 20px 14px"${ref('#221 (US25) · PR #242 (29 Sep)')}>
- <div style="display:flex;justify-content:space-between;align-items:baseline">${kicker('Story card')}<span style="font:600 20px Inter;color:var(--muted)">Liu Jin</span></div>
- <div style="font:600 20px/1.3 Inter;margin-bottom:8px">As an admin, I can set a listing’s team size, lifetime and team price, so that buyers can start blocs on real listings.</div>
- ${ac.map(a => `<div style="display:flex;gap:8px;font:400 20px/1.28 Inter;margin-bottom:5px"><span style="color:#3E5CD9;flex:none">${icon('square-check')}</span><span>${a}</span></div>`).join('')}
- <div style="font:400 20px Inter;color:var(--muted);margin-top:6px">Design problem field: State, Optimistic Offline Lock</div>
+<div class="card a" data-a="up" style="position:absolute;left:0;top:0;width:660px;padding:14px 20px 14px;--d:150ms"${ref('#221 (US25) · PR #242 (29 Sep)')}>
+ <div ${A('up', 190, 'display:flex;justify-content:space-between;align-items:baseline;')}>${kicker('Story card')}<span style="font:600 20px Inter;color:var(--muted)">Liu Jin</span></div>
+ <div ${A('up', 230, 'font:600 20px/1.3 Inter;margin-bottom:8px;')}>As an admin, I can set a listing’s team size, lifetime and team price, so that buyers can start blocs on real listings.</div>
+ ${ac.map((a, i) => `<div style="display:flex;gap:8px;font:400 20px/1.28 Inter;margin-bottom:5px"><span ${A('pop', 290 + 60 * i, 'color:#3E5CD9;flex:none;')}>${icon('square-check')}</span><span ${A('up', 320 + 60 * i)}>${a}</span></div>`).join('')}
+ <div ${A('up', 650, 'font:400 20px Inter;color:var(--muted);margin-top:6px;')}>Design problem field: State, Optimistic Offline Lock</div>
 </div>
 <div style="position:absolute;left:684px;top:0;width:480px"${ref('S2: docs/sprint2-progress-report.typ, Daily burndown data (story PR merge dates) · S3: docs/agile/sprint-03/review.md planned hours, burned on issue close dates · docs/agile/metrics/*.csv')}>
- ${kicker('Burndown · story hours left')}
- ${burndown()}
- <div style="font:400 20px/1.32 Inter;margin-top:2px">${lines(['Sprint 2: flat until the first story PR on 22 Sep, then a cliff', 'Sprint 3, PRs kept small: burns from day 1, then stalls on Checkout in dev', 'Reconstructed; no hours were logged'], 4)}</div>
+ ${gA(kicker('Burndown · story hours left'), 'up', 300)}
+ ${hAt(burndown([380, [450, 600, 30], [550, 700, 30], 800]), 'fade', 330)}
+ <div ${A('up', 900, 'font:400 20px/1.32 Inter;margin-top:2px;')}>${lines(['Sprint 2: flat until the first story PR on 22 Sep, then a cliff', 'Sprint 3, PRs kept small: burns from day 1, then stalls on Checkout in dev', 'Reconstructed; no hours were logged'], 4)}</div>
 </div>
-<div style="position:absolute;left:0;right:0;top:490px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 20px/1.35 Inter"${ref('EPAT 03 TDD, EPAT 05 refactoring · sprint-03/log/2026-10-07.md · PR #424 · full set: backup B1')}><b style="color:#3E5CD9">Test first, then refactor:</b> two failing tests reproduced a price-quote bug before the fix; then team admission was refactored into shared checks.</div>`;
+<div ${A('up', 1000, 'position:absolute;left:0;right:0;top:490px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 20px/1.35 Inter;')}${ref('EPAT 03 TDD, EPAT 05 refactoring · sprint-03/log/2026-10-07.md · PR #424 · full set: backup B1')}><b style="color:#3E5CD9">Test first, then refactor:</b> two failing tests reproduced a price-quote bug before the fix; then team admission was refactored into shared checks.</div>`;
 
 // ---------- diagram walk-through (rubric V1, V3, V5) ----------
 // The whole diagram sits in a pane for orientation; each crop is then shown 1:1 (labels ≥ 24 px) as an opaque fragment
