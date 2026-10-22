@@ -31,6 +31,22 @@ The [October 14 local audit](../agile/sprint-04/log/2026-10-14.md#2026-10-14---p
 
 2026-10-21 disposition: the twenty file digests were recomputed against baseline commit `211cfb7d` and receive exact historical fingerprints in `.gitleaksignore`, not a path/rule-wide exclusion. Matching CI's full-history/all-ref scan over 458 commits, 8.24.3 reports 24 findings without the fingerprint file and four with it; 8.28.0 also retains the four badge-token findings. Both still exit 2 as configured by CI. No token was reused, rotated or accepted as safe; no history was rewritten. The [audit](../ci/ci-failure-audit-20261021.md) records evidence and the remaining blocker.
 
+## Dynamic application security testing (DAST)
+
+`dast-baseline.yml` runs a passive OWASP ZAP 2.17.0 baseline (`zap-baseline.py`, image pinned by digest) against the dev site at `vars.FRONTEND_URL_DEV`: the SPA (`/`) and the backend behind the same CloudFront origin (`/api/v1/products`). It runs weekly (Monday 03:41 UTC), on dispatch and on PRs that edit the workflow. It is **advisory**: the spider runs for at most 3 minutes, alerts come only from inspecting responses, nothing is attacked, and no result fails a check. Reports (HTML, JSON, Markdown) are kept 30 days as `zap-web` and `zap-api` artifacts and the Markdown report appears in the job summary.
+
+2026-10-22 first run ([PR #607 run](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39733450177)), identical for both surfaces because CloudFront applies one response-headers policy (`infra/terraform/frontend-stack/cloudfront.tf`, `aws_cloudfront_response_headers_policy.security`):
+
+| Risk | Alert (ZAP rule) | Cause |
+|---|---|---|
+| Medium | CSP: Wildcard Directive (10055) | `img-src 'self' https:` allows images from any HTTPS host |
+| Medium | CSP: `style-src 'unsafe-inline'` (10055) | inline styles allowed |
+| Low | Cross-Origin-Embedder/Opener/Resource-Policy missing (90004) | headers not set |
+| Low | Permissions-Policy not set (10063) | header not set |
+| Informational | cache-control and storability notes (10015, 10049, 10050), modern web app (10109) | no action |
+
+HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `frame-ancestors 'none'`, `object-src 'none'` and `upgrade-insecure-requests` are present, so ZAP reports none of the classic header failures. The Medium and Low findings are edge-policy changes tracked in #610; this scan does not change them.
+
 ## Deliberate Non-Gates
 
 - **No hard Maven coverage check** (`jacoco:check`). Coverage judged on *new code* in SonarQube, where ratcheting is possible; a flat repo-wide number punishes the skeleton phase.

@@ -197,6 +197,10 @@ The workflow never provisions or operates PostgreSQL, Redis, EC2 or Terraform st
 
 Production `v*` releases execute the full backend and security validation path and also run the live TypeSafe compatibility smoke. A TypeSafe smoke failure identifies an external integration problem but does not change the application's deterministic search fallback design.
 
+### Dynamic scan of the deployed dev site
+
+After deployment, the running system is checked by `dast-baseline.yml`: a passive OWASP ZAP baseline of the SPA and `/api/v1/products` on dev, weekly and on dispatch. It is advisory and never part of the required checks; scope, first findings and the decision not to run active scans are in the [quality gates](../quality/quality-gates.md#dynamic-application-security-testing-dast).
+
 ## Manual rollback
 
 Use **Actions -> rollback-backend -> Run workflow** from `dev`. Provide a reason, confirm the warning, and normally leave `target_image` blank to use the recorded previous image. An explicit target must be a digest in the configured account, Region and repository.
