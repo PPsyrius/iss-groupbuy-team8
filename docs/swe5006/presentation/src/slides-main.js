@@ -21,8 +21,9 @@ const pending = n => () => {
 const ref = t => ` data-ref="${String(t).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}"`;
 const th = (t, w, fs = 20) => `<th style="font-size:${fs}px;padding:8px 12px${w ? ';width:' + w + 'px' : ''}">${t}</th>`;
 // rows: arrays of cells; a row may carry its record reference as a `ref` property.
-const tbl = (head, rows, { fs = 20, w = [], pad = '7px 12px' } = {}) => `<table class="t" style="font-size:${fs}px"><tr>${head.map((h, i) => th(h, w[i], fs)).join('')}</tr>
-${rows.map(r => `<tr${r.ref ? ref(r.ref) : ''}>${r.map(c => `<td style="padding:${pad}">${c}</td>`).join('')}</tr>`).join('')}</table>`;
+// m (optional): [table, first row, step] in ms (Table with rows): the table fades in, each body row enters as a trow.
+const tbl = (head, rows, { fs = 20, w = [], pad = '7px 12px', m } = {}) => `<table class="t${m ? ' a" data-a="fade' : ''}" style="font-size:${fs}px${m ? `;--d:${m[0]}ms` : ''}"><tr>${head.map((h, i) => th(h, w[i], fs)).join('')}</tr>
+${rows.map((r, j) => `<tr${r.ref ? ref(r.ref) : ''}${m ? ` class="trow" style="--d:${Math.round(m[1] + m[2] * j)}ms"` : ''}>${r.map(c => `<td style="padding:${pad}">${c}</td>`).join('')}</tr>`).join('')}</table>`;
 const withRef = (cells, t) => Object.assign(cells, { ref: t });
 const mo = (t, sz = 18) => `<span class="mono" style="font-size:${sz}px;font-variant-ligatures:none">${t}</span>`;
 // One point per line inside a cell or card.
@@ -41,9 +42,42 @@ const repTop = t => `<!--rep${t}-->`;
 const BODY_TOP = 108, BODY_H = 568;
 const DECK_CSS = `<style>.slide:not(.dark)>.body{top:${BODY_TOP}px}body.present .pdfonly{display:none}</style>`;
 const chipRight = name => 30 + 8 + Math.ceil(name.length * 8.6) - 2 + 18;
-const hdrStrip = (speaker, items) => `<div style="position:absolute;right:${chipRight(speaker)}px;top:${20 - BODY_TOP}px;height:30px;display:flex;gap:18px;align-items:center;white-space:nowrap">${items.join('')}</div>`;
+const hdrStrip = (speaker, items) => `<div class="a" data-a="fade" style="--d:0ms;position:absolute;right:${chipRight(speaker)}px;top:${20 - BODY_TOP}px;height:30px;display:flex;gap:18px;align-items:center;white-space:nowrap">${items.join('')}</div>`;
 // A labelled point: small uppercase label above its text.
 const point = (k, v, fs = 22, mb = 16) => `<div style="margin-bottom:${mb}px"><div style="font:700 16px Inter;letter-spacing:.06em;text-transform:uppercase;color:#6B655C;margin-bottom:3px">${k}</div><div style="font:400 ${fs}px/1.32 Inter">${v}</div></div>`;
+
+// ---------- motion helpers (patterns: docs/presentation-kit/MOTION.md) ----------
+// Every helper above and below takes motion as an opt-in argument; leaving it out gives the static markup unchanged.
+// gA: gives the root element of a shared helper's markup an entrance (class a, data-a, --d), leaving the helper unchanged.
+const gA = (h, t, d) => {
+  const r = h.replace(/^(\s*<\w+)(?: class="([^"]*)")?( style=")/, (m, o, cls, s) => `${o} class="${cls ? cls + ' ' : ''}a" data-a="${t}"${s}--d:${d}ms;`);
+  if (r === h) throw new Error('gA: markup has no root style');
+  return r;
+};
+// gAh: a CSS-border arrowhead (len along the path, h across) as a marker whose base sits on the path end.
+const gAh = (id, c, len, h, refY = h / 2) => `<marker id="${id}" markerUnits="userSpaceOnUse" viewBox="0 0 ${len} ${h}" markerWidth="${len}" markerHeight="${h}" refX="0" refY="${refY}" orient="auto"><path d="M0,0 L${len},${h / 2} L0,${h} z" style="fill:${c}"/></marker>`;
+// gCn: a connector that draws on (cn, pathLength 1, butt caps so the settled line matches the div it replaces).
+const gCn = (d, c, w, ms, head) => `<path class="cn" pathLength="1" d="${d}" style="fill:none;stroke:${c};stroke-width:${w}px;stroke-linecap:butt;stroke-linejoin:miter;--d:${ms}ms"${head ? ` marker-end="url(#${head})"` : ''}/>`;
+const gSvg = (inner, w = 1164, h = 560) => `<svg width="${w}" height="${h}" style="position:absolute;left:0;top:0;overflow:visible;pointer-events:none">${inner}</svg>`;
+// Title lockup (MOTION.md, 5001 1): bag pop and wordmark up 200, tagline 320.
+const lockupA = () => [
+  ['<svg width="102" height="128" viewBox="34 20 132 164" style="display:block">', '<svg class="a" data-a="pop" width="102" height="128" viewBox="34 20 132 164" style="display:block;--d:200ms">'],
+  ['<div style="font:900 104px', '<div class="a" data-a="up" style="--d:200ms;font:900 104px'],
+  ['<div style="font:600 17px', '<div class="a" data-a="up" style="--d:320ms;font:600 17px'],
+].reduce((s, [f, t]) => { if (!s.includes(f)) throw new Error(`lockup markup changed: ${f}`); return s.replace(f, t); }, lockup());
+// hAt adds an entrance (class a, data-a, --d) to the first tag of a helper's markup, so shared helpers stay unchanged.
+const hAt = (h, a, d) => {
+  const i = h.indexOf('>'), r = h.slice(i);
+  let t = h.slice(0, i);
+  t = /class="/.test(t) ? t.replace(/class="([^"]*)"/, 'class="$1 a"') : t.replace(/^(\s*<\w+)/, '$1 class="a"');
+  t = t.replace(/^(\s*<\w+)/, `$1 data-a="${a}"`);
+  t = /style="/.test(t) ? t.replace(/style="([^"]*)"/, (m, s) => `style="${s.replace(/;?\s*$/, '')}${s.trim() ? ';' : ''}--d:${d}ms"`) : t + ` style="--d:${d}ms"`;
+  return t + r;
+};
+// hIn does the same for the tag containing needle.
+const hIn = (h, needle, a, d) => { const s = h.lastIndexOf('<', h.indexOf(needle)); return h.slice(0, s) + hAt(h.slice(s), a, d); };
+// A: entrance attributes for an element without its own class: `<div ${A('up', 300, 'margin-top:8px;')}>`.
+const A = (a, d, st = '') => `class="a" data-a="${a}" style="${st}--d:${d}ms"`;
 
 // ---------- slide 1 ----------
 const s1 = () => `${DECK_CSS}
@@ -56,9 +90,10 @@ ${lockup()}
 <div style="position:absolute;left:80px;top:552px;font:400 18px Inter;color:#B5ADA1">Graduate Certificate in Designing Modern Software Systems, 26 October 2026</div>`;
 
 // ---------- slide 2 (1.1) ----------
-const row = (ic, txt, bg, col = 'var(--ink)', sz = 64, fs = 22, mb = 22) => `<div style="display:flex;align-items:center;gap:22px;margin-bottom:${mb}px">
-  <div class="dot" style="width:${sz}px;height:${sz}px;background:${bg};font-size:${sz / 2}px;flex:none">${icon(ic)}</div>
-  <div style="font:400 ${fs}px/1.3 Inter;color:${col}">${txt}</div></div>`;
+// m (optional): [pop, up] delays for the icon and its text (Icon + text row).
+const row = (ic, txt, bg, col = 'var(--ink)', sz = 64, fs = 22, mb = 22, m) => `<div style="display:flex;align-items:center;gap:22px;margin-bottom:${mb}px">
+  <div class="dot${m ? ' a' : ''}"${m ? ' data-a="pop"' : ''} style="width:${sz}px;height:${sz}px;background:${bg};font-size:${sz / 2}px;flex:none${m ? `;--d:${m[0]}ms` : ''}">${icon(ic)}</div>
+  <div${m ? ' class="a" data-a="up"' : ''} style="font:400 ${fs}px/1.3 Inter;color:${col}${m ? `;--d:${m[1]}ms` : ''}">${txt}</div></div>`;
 const s2 = () => `
 <div style="position:absolute;left:0;top:0;width:1164px;border-left:6px solid #E8402A;padding:6px 0 6px 18px;font:600 25px/1.3 Inter">Small merchants can discount only against committed volume, but no single buyer can reach it: demand exists, but no buyer commits first.</div>
 <div class="card" style="position:absolute;left:0;top:118px;width:520px;height:410px;padding:28px 32px">
@@ -186,19 +221,21 @@ ${tbl(['Sprint', 'Goal', 'Definition of Done reached by the goal increment'], sp
 </div>`;
 
 // ---------- slide 8 (1.8) ----------
-function burndown() {
+function burndown(m) {
   // Both sprints planned 150 h, so one hours axis compares them; x is the sprint's working day (0 = start).
   const xs = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
   const ideal = [150, 135, 120, 105, 90, 75, 60, 45, 30, 15, 0];
   const s2 = [150, 150, 150, 150, 150, 150, 124, 74, 40, 16, 16], s3 = [150, 132, 114, 90, 82, 76, 68, 68, 68, 66, 66];
   const W = 470, H = 230, L = 46, R = W - 10, T = 12, B = H - 32;
   const X = i => L + 12 + i * ((R - L - 20) / (xs.length - 1)), Y = v => B - (v / 150) * (B - T);
-  const pl = (d, c, dash) => `<polyline points="${d.map((v, i) => `${X(i)},${Y(v)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="3"${dash ? ' stroke-dasharray="7 5"' : ''}/>` + (dash ? '' : d.map((v, i) => `<circle cx="${X(i)}" cy="${Y(v)}" r="4.5" fill="${c}" stroke="#fff" stroke-width="1.5"/>`).join(''));
+  // m (optional, Line chart): [ideal, [line, first dot, dot step] per sprint, legend]. pl's m: a dashed series fades in at
+  // m[0]; a solid one draws on as a path (cline needs pathLength) and its dots pop after it.
+  const pl = (d, c, dash, m) => (m && !dash ? `<path class="cline" pathLength="1" style="--d:${m[0]}ms" d="${d.map((v, i) => `${i ? 'L' : 'M'}${X(i)},${Y(v)}`).join(' ')}"` : `<polyline${m ? ` class="a" data-a="fade" style="--d:${m[0]}ms"` : ''} points="${d.map((v, i) => `${X(i)},${Y(v)}`).join(' ')}"`) + ` fill="none" stroke="${c}" stroke-width="3"${dash ? ' stroke-dasharray="7 5"' : ''}/>` + (dash ? '' : d.map((v, i) => `<circle${m ? ` class="cdot" style="--d:${m[1] + m[2] * i}ms"` : ''} cx="${X(i)}" cy="${Y(v)}" r="4.5" fill="${c}" stroke="#fff" stroke-width="1.5"/>`).join(''));
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Inter">
    ${[0, 50, 100, 150].map(v => `<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v ? '#EFE9DF' : '#A69E92'}" stroke-width="1"/><text x="${L - 8}" y="${Y(v) + 6}" font-size="18" fill="#6B655C" text-anchor="end">${v}</text>`).join('')}
    ${xs.map((x, i) => `<text x="${X(i)}" y="${B + 24}" font-size="18" fill="#6B655C" text-anchor="middle">${x}</text>`).join('')}
-   ${pl(ideal, '#A69E92', true)}${pl(s2, '#E8402A')}${pl(s3, '#3E5CD9')}</svg>
-  <div style="display:flex;gap:16px;font:400 18px Inter;color:#6B655C;margin:0 0 4px 46px"><span><b style="color:#E8402A">●</b> Sprint 2</span><span><b style="color:#3E5CD9">●</b> Sprint 3</span><span>– – ideal · day of sprint</span></div>`;
+   ${pl(ideal, '#A69E92', true, m && [m[0]])}${pl(s2, '#E8402A', false, m && m[1])}${pl(s3, '#3E5CD9', false, m && m[2])}</svg>
+  <div ${m ? `class="a" data-a="up" ` : ''}style="display:flex;gap:16px;font:400 18px Inter;color:#6B655C;margin:0 0 4px 46px${m ? `;--d:${m[3]}ms` : ''}"><span><b style="color:#E8402A">●</b> Sprint 2</span><span><b style="color:#3E5CD9">●</b> Sprint 3</span><span>– – ideal · day of sprint</span></div>`;
 }
 const ac = ['Admin-only API: 403 for non-admins, 401 anonymous', 'Team size ≥ 2, lifetime in range, team price below individual; 400 with field errors', 'Stale version → 412; every write audited', 'A configured listing can start a team', 'Contract changes additive, merged before the controller', 'Unit, PostgreSQL and authorization tests; ArchUnit green'];
 const s8 = () => `
@@ -250,17 +287,20 @@ ${badge(`${i + 1}/${n} · ${label}`, i)}`;
 const pc = v => `${(v * 100).toFixed(3)}%`;
 // Numbered dashed outlines for the crops a pane steps through (rubric V1: whole diagram first, then the part under
 // discussion; V5: outline, not a laser pointer). Placed in percent, so they follow the pane at any scale.
-const outlines = (crops, W, H) => crops.map(c => `<div style="position:absolute;left:${pc(c.x / W)};top:${pc(c.y / H)};width:${pc(Math.min(1164, W - c.x) / W)};height:${pc(Math.min(CROP_H, H - c.y) / H)};border:2px dashed #E8402A;border-radius:3px;box-sizing:border-box"><span style="position:absolute;left:-2px;top:-2px;font:700 13px/1 Inter;background:#E8402A;color:#fff;padding:3px 6px;border-radius:3px 0 3px 0">${c.k}</span></div>`).join('');
+// od, os (optional): outline k fades in at od + (k - 1) · os ms (Walked diagram).
+const outlines = (crops, W, H, od, os) => crops.map(c => `<div${od === undefined ? '' : ' class="a" data-a="fade"'} style="${od === undefined ? '' : `--d:${od + (c.k - 1) * os}ms;`}position:absolute;left:${pc(c.x / W)};top:${pc(c.y / H)};width:${pc(Math.min(1164, W - c.x) / W)};height:${pc(Math.min(CROP_H, H - c.y) / H)};border:2px dashed #E8402A;border-radius:3px;box-sizing:border-box"><span style="position:absolute;left:-2px;top:-2px;font:700 13px/1 Inter;background:#E8402A;color:#fff;padding:3px 6px;border-radius:3px 0 3px 0">${c.k}</span></div>`).join('');
 let paneN = 0;
 // pane: the whole diagram in a box of box[0] × box[1] px at `at`. Presenting, axis 'y' fills the box width and scrolls
 // vertically, axis 'x' fills its height and scrolls horizontally; otherwise the diagram is scaled to fit the box.
-const pane = ({ name, W, H, box, at = 'left:0;top:0', axis = 'y' }, crops) => {
+// Motion, all optional (Walked diagram): d = the pane's entrance delay, pa its data-a (default fade); od, os = the
+// outline rhythm (see outlines); fx = a transform of this pane's copy of the SVG markup only (never the crops).
+const pane = ({ name, W, H, box, at = 'left:0;top:0', axis = 'y', d, pa = 'fade', od, os, fx = x => x }, crops) => {
   const s = Math.min(box[0] / W, box[1] / H), fw = Math.round(W * s), fh = Math.round(H * s);
   const pw = axis === 'y' ? box[0] : Math.round(W * box[1] / H), ph = axis === 'y' ? Math.round(H * box[0] / W) : box[1];
   const id = `pane${++paneN}`, other = axis === 'y' ? 'x' : 'y';
   return `<style>.${id}{width:${fw}px;height:${fh}px;overflow:hidden}.${id}>div{width:${fw}px;height:${fh}px}
 body.present .${id}{width:${Math.min(box[0], pw)}px;height:${Math.min(box[1], ph)}px;overflow-${axis}:auto;overflow-${other}:hidden}body.present .${id}>div{width:${pw}px;height:${ph}px}</style>
-<div class="${id}" style="position:absolute;${at};background:#fff;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8"><div style="position:relative">${svg(name).replace('<svg ', '<svg style="display:block;width:100%;height:100%" ')}${outlines(crops, W, H)}</div></div>`;
+<div class="${id}${d === undefined ? '' : ' a'}"${d === undefined ? '' : ` data-a="${pa}"`} style="position:absolute;${at};background:#fff;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8${d === undefined ? '' : `;--d:${d}ms`}"><div style="position:relative">${fx(svg(name)).replace('<svg ', '<svg style="display:block;width:100%;height:100%" ')}${outlines(crops, W, H, od, os)}</div></div>`;
 };
 // Diagrams on a slide: each view is a pane; crops [name, x, y, label, head, caption] step through any of them 1:1 in
 // the order given.

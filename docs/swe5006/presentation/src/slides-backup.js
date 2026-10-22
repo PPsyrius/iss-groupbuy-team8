@@ -6,12 +6,15 @@ const tbl = (head, rows, opts = {}) => `<table class="t" style="font-size:${opts
 ${rows.map(r => `<tr>${r.map((c, i) => `<td class="${i === 0 && opts.id ? 'id' : ''}">${c}</td>`).join('')}</tr>`).join('')}</table>`;
 
 // ---- B11: Sprint 2 and 3 burndowns (segment 1) ----
-function lineChart({ xs, series, max, step, W = 560, H = 250 }) {
+// m (ms, optional): Line chart motion. The chart fades in at m, a dashed series fades at m + 100, a solid series draws on
+// (cline) at m + 200 and its dots pop (cdot) from m + 300, 50 ms apart.
+function lineChart({ xs, series, max, step, W = 560, H = 250, m }) {
   const L = 44, R = W - 12, T = 12, B = H - 30;
   const X = i => L + 14 + i * ((R - L - 24) / (xs.length - 1)), Y = v => B - (v / max) * (B - T);
   const ticks = []; for (let v = 0; v <= max; v += step) ticks.push(v);
-  const pl = (d, c, dash) => `<polyline points="${d.map((v, i) => v == null ? '' : `${X(i)},${Y(v)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="3"${dash ? ' stroke-dasharray="7 5"' : ''}/>` + (dash ? '' : d.map((v, i) => v == null ? '' : `<circle cx="${X(i)}" cy="${Y(v)}" r="4.5" fill="${c}" stroke="#fff" stroke-width="1.5"/>`).join(''));
-  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Inter">
+  const mv = (cls, d) => m === undefined ? '' : cls === 'a' ? ` class="a" data-a="fade" style="--d:${d}ms"` : ` class="${cls}" style="--d:${d}ms"${cls === 'cline' ? ' pathLength="1"' : ''}`;
+  const pl = (d, c, dash) => `<polyline${mv(dash ? 'a' : 'cline', m + (dash ? 100 : 200))} points="${d.map((v, i) => v == null ? '' : `${X(i)},${Y(v)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="3"${dash ? ' stroke-dasharray="7 5"' : ''}/>` + (dash ? '' : d.map((v, i) => v == null ? '' : `<circle${mv('cdot', m + 300 + 50 * i)} cx="${X(i)}" cy="${Y(v)}" r="4.5" fill="${c}" stroke="#fff" stroke-width="1.5"/>`).join(''));
+  return `<svg${mv('a', m)} width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Inter">
    ${ticks.map(v => `<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v ? '#EFE9DF' : '#A69E92'}" stroke-width="1"/><text x="${L - 8}" y="${Y(v) + 5}" font-size="14.5" fill="#6B655C" text-anchor="end">${v}</text>`).join('')}
    ${xs.map((x, i) => `<text x="${X(i)}" y="${B + 22}" font-size="14.5" fill="#6B655C" text-anchor="middle">${x}</text>`).join('')}
    ${series.map(s => pl(s.d, s.c, s.dash)).join('')}</svg>`;
@@ -51,10 +54,17 @@ const b1 = () => dt(['Artefact', 'Where it lives', 'State on 21 Oct'], [
 ], { fs: 15.5, w: [230, 560], pad: '7px 10px' }) + `<div style="margin-top:10px;font:italic 400 15.5px Inter;color:var(--muted)">Source: board and issues read with gh on 21 Oct; docs/agile/README.md. The report appendix holds the full set (#463).</div>`;
 
 // ---- B3–B6: segment 2, analysis and design ----
-const dt = (head, rows, { fs = 15.5, w = [], pad = '8px 12px' } = {}) => `<table class="t" style="font-size:${fs}px"><tr>${head.map((h, i) => `<th style="font-size:15px;padding:${pad}${w[i] ? ';width:' + w[i] + 'px' : ''}">${h}</th>`).join('')}</tr>
-${rows.map(r => `<tr>${r.map(c => `<td style="padding:${pad}">${c}</td>`).join('')}</tr>`).join('')}</table>`;
+// Motion (MOTION.md): `m` turns on the table choreography, true = the v3 rhythm (table fade 246 ms, body rows
+// trow from 368 ms, +38.4 each), or [table, first row, step] for a table that enters later.
+const dt = (head, rows, { fs = 15.5, w = [], pad = '8px 12px', m } = {}) => {
+  const [td, rd, rs] = m === true ? [246, 368, 38.4] : m || [];
+  return `<table class="t${m ? ' a" data-a="fade' : ''}" style="font-size:${fs}px${m ? `;--d:${td}ms` : ''}"><tr>${head.map((h, i) => `<th style="font-size:15px;padding:${pad}${w[i] ? ';width:' + w[i] + 'px' : ''}">${h}</th>`).join('')}</tr>
+${rows.map((r, j) => `<tr${m ? ` class="trow" style="--d:${Math.round(rd + rs * j)}ms"` : ''}>${r.map(c => `<td style="padding:${pad}">${c}</td>`).join('')}</tr>`).join('')}</table>`;
+};
+// entrance attributes for an element without its own class or style: A('up', 300, 'margin-top:8px;')
+const A = (a, d, st = '') => `class="a" data-a="${a}" style="${st}--d:${d}ms"`;
 const mo = (t, sz = 14.5) => `<span class="mono" style="font-size:${sz}px">${t}</span>`;
-const topo = t => `<div class="cap" style="margin-top:6px;font-size:16px">${t}</div>`;
+const topo = (t, d) => `<div class="cap${d ? ' a" data-a="up' : ''}" style="margin-top:6px;font-size:16px${d ? `;--d:${d}ms` : ''}">${t}</div>`;
 const fit = (name, w) => svg(name).replace('<svg ', `<svg style="width:${w}px;height:auto" `);
 const b4 = () => `<div class="dia" style="margin-top:-6px">${fit('expiry-refund-sequence', 1140)}</div>${topo('As built for ECS. The SNS → SQS hop and notification-svc (steps 2–8) are the ECS topology; on dev the monolith runs no broker.')}`;
 const b5 = () => dt(['Context', 'Tables', 'Migrations', 'Keys that make “once” hold'], [
