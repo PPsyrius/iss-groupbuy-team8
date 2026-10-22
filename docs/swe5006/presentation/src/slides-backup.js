@@ -20,26 +20,28 @@ function lineChart({ xs, series, max, step, W = 560, H = 250, m }) {
    ${series.map(s => pl(s.d, s.c, s.dash)).join('')}</svg>`;
 }
 const key = (c, t, dash) => `<span><i style="display:inline-block;width:22px;${dash ? `height:0;border-top:3px dashed ${c}` : `height:3px;background:${c}`};vertical-align:4px"></i> ${t}</span>`;
+// Twin burndown charts (MOTION.md), columns at 150 and 250: heading, subtitle +50, chart +150 (ideal +250, actual
+// +350, dots from +450), legend +550, comment card +1000, source +1150.
 const b11 = () => `
 <div style="position:absolute;left:0;top:0;width:560px">
- <div class="serif" style="font-size:21px">Sprint 2 · remaining hours, 15–26 Sep</div>
- <div style="font:400 15.5px Inter;margin:2px 0 6px">150 h planned · 16 h left · reconstructed from merge dates</div>
- ${lineChart({ xs: ['start', '15', '16', '17', '18', '19', '22', '23', '24', '25', '26'], max: 150, step: 50, series: [
+ <div class="serif a" data-a="up" style="font-size:21px;--d:150ms">Sprint 2 · remaining hours, 15–26 Sep</div>
+ <div ${A('up', 200, 'font:400 15.5px Inter;margin:2px 0 6px;')}>150 h planned · 16 h left · reconstructed from merge dates</div>
+ ${lineChart({ xs: ['start', '15', '16', '17', '18', '19', '22', '23', '24', '25', '26'], m: 300, max: 150, step: 50, series: [
    { d: [150, 135, 120, 105, 90, 75, 60, 45, 30, 15, 0], c: '#A69E92', dash: true },
    { d: [150, 150, 150, 150, 150, 150, 124, 74, 40, 16, 16], c: '#3E5CD9' }] })}
- <div style="display:flex;gap:22px;font:400 15px Inter;margin-left:44px">${key('#A69E92', 'Ideal', true)}${key('#3E5CD9', 'Actual remaining')}</div>
- <div class="card" style="margin-top:14px;padding:12px 16px;font:400 16px/1.35 Inter">Flat for a week, then a cliff: no committed story merged before 22 Sep; week-1 merges were carry-over and enabling work. Retro answer: PRs under 1,500 lines.</div>
- <div style="font:italic 400 15px Inter;margin-top:8px">Source: docs/sprint2-progress-report.typ, “Daily burndown data”</div>
+ <div ${A('up', 700, 'display:flex;gap:22px;font:400 15px Inter;margin-left:44px;')}>${key('#A69E92', 'Ideal', true)}${key('#3E5CD9', 'Actual remaining')}</div>
+ <div class="card a" data-a="up" style="margin-top:14px;padding:12px 16px;font:400 16px/1.35 Inter;--d:1150ms">Flat for a week, then a cliff: no committed story merged before 22 Sep; week-1 merges were carry-over and enabling work. Retro answer: PRs under 1,500 lines.</div>
+ <div ${A('up', 1300, 'font:italic 400 15px Inter;margin-top:8px;')}>Source: docs/sprint2-progress-report.typ, “Daily burndown data”</div>
 </div>
 <div style="position:absolute;left:604px;top:0;width:560px">
- <div class="serif" style="font-size:21px">Sprint 3 · remaining hours, 28 Sep–9 Oct</div>
- <div style="font:400 15.5px Inter;margin:2px 0 6px">150 h planned · 66 h left, whole stories · 33 h with partial credit (review)</div>
- ${lineChart({ xs: ['start', '28', '29', '30', '1', '2', '5', '6', '7', '8', '9'], max: 150, step: 50, series: [
+ <div class="serif a" data-a="up" style="font-size:21px;--d:250ms">Sprint 3 · remaining hours, 28 Sep–9 Oct</div>
+ <div ${A('up', 300, 'font:400 15.5px Inter;margin:2px 0 6px;')}>150 h planned · 66 h left, whole stories · 33 h with partial credit (review)</div>
+ ${lineChart({ xs: ['start', '28', '29', '30', '1', '2', '5', '6', '7', '8', '9'], m: 400, max: 150, step: 50, series: [
    { d: [150, 135, 120, 105, 90, 75, 60, 45, 30, 15, 0], c: '#A69E92', dash: true },
    { d: [150, 132, 114, 90, 82, 76, 68, 68, 68, 66, 66], c: '#3E5CD9' }] })}
- <div style="display:flex;gap:22px;font:400 15px Inter;margin-left:44px">${key('#A69E92', 'Ideal', true)}${key('#3E5CD9', 'Actual remaining')}</div>
- <div class="card" style="margin-top:14px;padding:12px 16px;font:400 16px/1.35 Inter">On the ideal line for the first week, then stuck from 5 Oct: #223 (Checkout on dev) stayed open, #224 had local evidence only, #229 waited on #223 and #222, #226 on the NFR-37 decision. Daily card counts agree: 19, 16, 13, 12, then 7.</div>
- <div style="font:italic 400 15px Inter;margin-top:8px">Source: sprint-03/review.md hours, burned on issue close dates (SGT); docs/agile/metrics/*.csv</div>
+ <div ${A('up', 800, 'display:flex;gap:22px;font:400 15px Inter;margin-left:44px;')}>${key('#A69E92', 'Ideal', true)}${key('#3E5CD9', 'Actual remaining')}</div>
+ <div class="card a" data-a="up" style="margin-top:14px;padding:12px 16px;font:400 16px/1.35 Inter;--d:1250ms">On the ideal line for the first week, then stuck from 5 Oct: #223 (Checkout on dev) stayed open, #224 had local evidence only, #229 waited on #223 and #222, #226 on the NFR-37 decision. Daily card counts agree: 19, 16, 13, 12, then 7.</div>
+ <div ${A('up', 1400, 'font:italic 400 15px Inter;margin-top:8px;')}>Source: sprint-03/review.md hours, burned on issue close dates (SGT); docs/agile/metrics/*.csv</div>
 </div>`;
 
 // ---- B1: agile artefacts appendix (rubric 1.8) ----
@@ -51,7 +53,7 @@ const b1 = () => dt(['Artefact', 'Where it lives', 'State on 21 Oct'], [
   ['<b>Sprint reviews</b>', 'S1, S2 in the progress reports; S3 docs/agile/sprint-03/review.md', `S4 due 23 Oct ${mk('FILL', 'S4 review')}`],
   ['<b>Retrospectives</b>', 'S1 report; S2 report §Sprint Retrospective', `S3 missing (#451) · S4 due 23 Oct ${mk('FILL', 'S3, S4 retros')}`],
   ['<b>Day logs, DoD, practices</b>', 'docs/agile/sprint-0N/log/ (S2–S4); DoD per sprint: docs/agile/definition-of-done.md; EPAT practices: docs/agile/practices.md', 'dated logs per working day'],
-], { fs: 15.5, w: [230, 560], pad: '7px 10px' }) + `<div style="margin-top:10px;font:italic 400 15.5px Inter;color:var(--muted)">Source: board and issues read with gh on 21 Oct; docs/agile/README.md. The report appendix holds the full set (#463).</div>`;
+], { fs: 15.5, w: [230, 560], pad: '7px 10px', m: quick(7) }) + `<div class="a" data-a="up" style="--d:${after(7)}ms;margin-top:10px;font:italic 400 15.5px Inter;color:var(--muted)">Source: board and issues read with gh on 21 Oct; docs/agile/README.md. The report appendix holds the full set (#463).</div>`;
 
 // ---- B3–B6: segment 2, analysis and design ----
 // Motion (MOTION.md): `m` turns on the table choreography, true = the v3 rhythm (table fade 246 ms, body rows
@@ -63,10 +65,15 @@ ${rows.map((r, j) => `<tr${m ? ` class="trow" style="--d:${Math.round(rd + rs * 
 };
 // entrance attributes for an element without its own class or style: A('up', 300, 'margin-top:8px;')
 const A = (a, d, st = '') => `class="a" data-a="${a}" style="${st}--d:${d}ms"`;
+// Table with rows, quick (MOTION.md): a backup settles by about 700 ms, so the table fades in at t, its n rows enter
+// from r, at most 300 ms apart in all (38 ms each at most); after(n) is the delay of a closing line 80 ms after them.
+const quick = (n, t = 150, r = 200) => [t, r, Math.min(38, 300 / (n - 1))];
+const after = (n, r = 200) => Math.round(r + quick(n)[2] * (n - 1) + 80);
 const mo = (t, sz = 14.5) => `<span class="mono" style="font-size:${sz}px">${t}</span>`;
 const topo = (t, d) => `<div class="cap${d ? ' a" data-a="up' : ''}" style="margin-top:6px;font-size:16px${d ? `;--d:${d}ms` : ''}">${t}</div>`;
 const fit = (name, w) => svg(name).replace('<svg ', `<svg style="width:${w}px;height:auto" `);
-const b4 = () => `<div class="dia" style="margin-top:-6px">${fit('expiry-refund-sequence', 1140)}</div>${topo('As built for ECS. The SNS → SQS hop and notification-svc (steps 2–8) are the ECS topology; on dev the monolith runs no broker.')}`;
+// Diagram slide (MOTION.md): the drawing fades in at 150, its caption rises at 450.
+const b4 = () => `<div class="dia a" data-a="fade" style="margin-top:-6px;--d:150ms">${fit('expiry-refund-sequence', 1140)}</div>${topo('As built for ECS. The SNS → SQS hop and notification-svc (steps 2–8) are the ECS topology; on dev the monolith runs no broker.', 450)}`;
 const b5 = () => dt(['Context', 'Tables', 'Migrations', 'Keys that make “once” hold'], [
   ['<b>identity</b>', mo('sys_user, sys_user_oauth, sys_role, sys_permission, rel_user_role, rel_role_permission'), 'V3, V24', 'one binding per Google subject'],
   ['<b>catalog</b>', mo('biz_product, biz_team_price_policy, biz_team_price_quote, log_product_team_terms'), 'V4, V6, V14, V20, V21', 'biz_product.version (Optimistic Offline Lock)'],
@@ -75,7 +82,7 @@ const b5 = () => dt(['Context', 'Tables', 'Migrations', 'Keys that make “once�
   ['<b>payment</b>', mo('biz_payment, log_payment_webhook_event, biz_refund, log_payment_review, biz_payment_review_case, log_refund_attempt'), 'V2, V9–V11, V16', 'webhook event_id; one refund per payment'],
   ['<b>notification</b>', mo('biz_notification, sys_consumed_message'), 'V27, V28', 'PK (event_id, consumer); (event_id, user_id)'],
   ['<b>jobs, outbox</b>', mo('sys_outbox, sys_scheduler_lock, sys_scheduled_item_retry, sys_checkout_expiry_cursor'), 'V13, V17, V25, V26', 'one lease per job; outbox id = eventId'],
-], { fs: 15, w: [130, 520, 120], pad: '6px 10px' }) + `<div style="margin-top:8px;font:400 15.5px/1.4 Inter">28 Flyway files, 29 tables in schema <span class="mono" style="font-size:14.5px">domain</span>; V1 sets the rules: snake_case, timestamptz, numeric money, invariants in the database. On ECS (ADR 0008): one database per service on one RDS instance; identity-svc and notification-svc own their rows above, commerce-svc the rest.</div>`;
+], { fs: 15, w: [130, 520, 120], pad: '6px 10px', m: quick(7) }) + `<div class="a" data-a="up" style="--d:${after(7)}ms;margin-top:8px;font:400 15.5px/1.4 Inter">28 Flyway files, 29 tables in schema <span class="mono" style="font-size:14.5px">domain</span>; V1 sets the rules: snake_case, timestamptz, numeric money, invariants in the database. On ECS (ADR 0008): one database per service on one RDS instance; identity-svc and notification-svc own their rows above, commerce-svc the rest.</div>`;
 const b6 = () => `<div style="display:flex;gap:22px">
  <div style="width:640px;flex:none">${dt(['Candidate', 'Decision', 'Why'], [
   ['Mark refunded, then call Stripe', '<b>Rejected</b>', 'A crash would report money returned that never left'],
@@ -84,17 +91,17 @@ const b6 = () => `<div style="display:flex;gap:22px">
   ['Retry after a delay', '<b style="color:var(--orange-d)">Selected</b>', 'Fixed 30 s in code, not exponential backoff'],
   ['Human-in-the-loop review', '<b style="color:var(--orange-d)">Selected</b>', 'Mismatched or ambiguous work leaves automatic claims'],
   ['Distributed transaction with Stripe', '<b>Rejected</b>', 'No shared protocol across PostgreSQL and the provider'],
- ], { fs: 15.5, w: [230, 92] })}</div>
- <div style="flex:1"><div class="serif" style="font-size:20px;margin-bottom:8px">Implementation decisions</div><ol style="font:400 16px/1.35 Inter;padding-left:22px;margin:0">
-  <li style="margin-bottom:6px">Obligation commits with the expiry, before any I/O</li>
-  <li style="margin-bottom:6px">Key from the obligation ID: ${mo('"blocbuy-refund-" + id')}</li>
-  <li style="margin-bottom:6px">Short claim and finish transactions; lease and version fence workers</li>
-  <li style="margin-bottom:6px">Verify payment facts before, provider snapshot after</li>
-  <li style="margin-bottom:6px">After 23 h: search Stripe by metadata, never create</li>
-  <li>Reconcile only retrieves an existing refund; no admin endpoint exists</li></ol>
-  <div style="margin-top:10px;font:italic 400 15px/1.35 Inter">Source: docs/swe5006/report-drafts/yorick-yu-contribution.md. Evidence is local with a provider substitute.</div></div></div>`;
+ ], { fs: 15.5, w: [230, 92], m: quick(6) })}</div>
+ <div style="flex:1"><div class="serif a" data-a="up" style="font-size:20px;margin-bottom:8px;--d:300ms">Implementation decisions</div><ol style="font:400 16px/1.35 Inter;padding-left:22px;margin:0">
+  <li ${A('up', 330, 'margin-bottom:6px;')}>Obligation commits with the expiry, before any I/O</li>
+  <li ${A('up', 370, 'margin-bottom:6px;')}>Key from the obligation ID: ${mo('"blocbuy-refund-" + id')}</li>
+  <li ${A('up', 410, 'margin-bottom:6px;')}>Short claim and finish transactions; lease and version fence workers</li>
+  <li ${A('up', 450, 'margin-bottom:6px;')}>Verify payment facts before, provider snapshot after</li>
+  <li ${A('up', 490, 'margin-bottom:6px;')}>After 23 h: search Stripe by metadata, never create</li>
+  <li ${A('up', 530)}>Reconcile only retrieves an existing refund; no admin endpoint exists</li></ol>
+  <div ${A('up', 610, 'margin-top:10px;font:italic 400 15px/1.35 Inter;')}>Source: docs/swe5006/report-drafts/yorick-yu-contribution.md. Evidence is local with a provider substitute.</div></div></div>`;
 const b8 = () => `<div style="display:flex;gap:18px">
- <div style="width:520px;flex:none"><div class="serif" style="font-size:19px;margin-bottom:6px">Backend · backend/docs/adr</div>${dt(['#', 'Decision'], [
+ <div style="width:520px;flex:none"><div class="serif a" data-a="up" style="font-size:19px;margin-bottom:6px;--d:120ms">Backend · backend/docs/adr</div>${dt(['#', 'Decision'], [
   ['0001', 'Purchase intent lives in order; group terms on the product'],
   ['0002', 'Team resolution is published; consequences run before commit'],
   ['0003', 'Referral credit is a post-commit subscriber'],
@@ -103,8 +110,8 @@ const b8 = () => `<div style="display:flex;gap:18px">
   ['0006', 'Payment owns the admin attention read model'],
   ['0007', 'Outbox, one SNS topic, one SQS queue per consumer (Proposed)'],
   ['0008', 'One codebase, two topologies: dev monolith, three services on ECS'],
- ], { fs: 15, w: [56], pad: '6px 10px' })}</div>
- <div style="flex:1"><div class="serif" style="font-size:19px;margin-bottom:6px">Frontend · frontend/docs/adr</div>${dt(['#', 'Decision'], [
+ ], { fs: 15, w: [56], pad: '6px 10px', m: quick(8) })}</div>
+ <div style="flex:1"><div class="serif a" data-a="up" style="font-size:19px;margin-bottom:6px;--d:230ms">Frontend · frontend/docs/adr</div>${dt(['#', 'Decision'], [
   ['0001', 'React SPA, pure CSR; Router owns URL state, Query server state'],
   ['0002', 'Same-origin /api with an HttpOnly cookie session'],
   ['0003', 'Generated API client, not committed'],
@@ -120,7 +127,7 @@ const b8 = () => `<div style="display:flex;gap:18px">
   ['0013', 'pnpm and Node pinned, exact versions'],
   ['0014', 'Stripe Hosted Checkout with a server-owned intent'],
   ['0015', 'Admin console shell, roles guard, versioned writes'],
- ], { fs: 14.5, w: [56], pad: '4px 10px' })}</div></div>`;
+ ], { fs: 14.5, w: [56], pad: '4px 10px', m: quick(15, 260, 300) })}</div></div>`;
 
 // ---- B10: test inventory (segment 3), counted in the repository on 22 Oct at a1c6ac6e ----
 const b10 = () => dt(['Kind · level', 'Tools', 'Count by module', 'Example classes', 'Runs'], [
@@ -131,7 +138,7 @@ const b10 = () => dt(['Kind · level', 'Tools', 'Count by module', 'Example clas
   ['<b>Component</b> · unit', 'Vitest, Testing Library, MSW', '77 files: features 58, routes 10, components 4, test 3, api 2', `${mo('account.test.tsx')}, ${mo('admin-listing-edit.test.tsx')}`, 'every PR (frontend-check, required)'],
   ['<b>End-to-end</b> · system', 'Playwright, Chromium', '8 specs, 24 test declarations', `${mo('buyer-journey.spec.ts')}, ${mo('join-refusal.spec.ts')}, ${mo('smoke.spec.ts')}`, 'PR (e2e-preview); after deploy (e2e-dev)'],
   ['<b>Performance</b> · system', 'k6 1.6.1 (SWE5001 ECS); Node workload (local)', 'k6 browse V2/V3; 3 local scenarios', `${mo('perf/k6/browse.js')}, ${mo('backend/perf/workload.mjs')}`, 'by hand (k6 tooling tested in CI)'],
-], { fs: 14.5, w: [112, 190, 300, 330], pad: '5px 10px' }) + `<div style="margin-top:8px;font:400 15px/1.35 Inter">Counted 22 Oct at a1c6ac6e: 186 <span class="mono" style="font-size:14.5px">*Test.java</span> (185 + ArchitectureTest), 49 <span class="mono" style="font-size:14.5px">*IT.java</span> (45 start containers). Latest full runs: backend 2,048 passed, 1 opt-in skip (21 Oct log, local); frontend 799 (19 Oct log).</div>`;
+], { fs: 14.5, w: [112, 190, 300, 330], pad: '5px 10px', m: quick(7) }) + `<div class="a" data-a="up" style="--d:${after(7)}ms;margin-top:8px;font:400 15px/1.35 Inter">Counted 22 Oct at a1c6ac6e: 186 <span class="mono" style="font-size:14.5px">*Test.java</span> (185 + ArchitectureTest), 49 <span class="mono" style="font-size:14.5px">*IT.java</span> (45 start containers). Latest full runs: backend 2,048 passed, 1 opt-in skip (21 Oct log, local); frontend 799 (19 Oct log).</div>`;
 
 // ---- B12–B14: segment 4, CI/CD. gh read-only queries of 19 Oct; medians of successful runs ----
 const req = '<b style="color:#3E5CD9">required</b>';
@@ -145,7 +152,7 @@ const b12 = () => dt(['Workflow · trigger', 'Jobs (required in blue)', 'Median'
   ['<b>sbom</b> · tag, weekly, manual, run-sbom label', 'sbom: CycloneDX source SBOMs and licence inventories; licences advisory, a missing inventory fails it', '—', 'PR runs 22 Oct green on earlier PR heads (added after this read)'],
   ['<b>rollback-backend</b> · manual', 'validate, then SSM rollback to the recorded previous digest or a given one', '—', 'never run'],
   ['<b>SWE5001</b> · prod branch', 'swe5001-release-gate, swe5001-deploy, infra-swe5001 (promotion PR; see the SWE5001 deck)', '—', '—'],
-], { fs: 15, w: [190, 470, 220], pad: '6px 10px' }) + `<div style="margin-top:8px;font:400 15px/1.4 Inter">Last 100 runs per workflow and event, read with <span class="mono" style="font-size:14.5px">gh run list</span> and the jobs API on 19 Oct. PR durations count only runs where the gated jobs ran (docs-only PRs skip them in about 10 s). Push medians run from the push run start, not the merge click.</div>`;
+], { fs: 15, w: [190, 470, 220], pad: '6px 10px', m: quick(7) }) + `<div class="a" data-a="up" style="--d:${after(7)}ms;margin-top:8px;font:400 15px/1.4 Inter">Last 100 runs per workflow and event, read with <span class="mono" style="font-size:14.5px">gh run list</span> and the jobs API on 19 Oct. PR durations count only runs where the gated jobs ran (docs-only PRs skip them in about 10 s). Push medians run from the push run start, not the merge click.</div>`;
 const b13 = () => `<div class="dia" style="margin-top:-8px">${fit('physical-deployment', 1130)}</div>${topo('SWE5001 prod: the same code on ECS, rebuilt from scratch on every release and destroyed after it. SWE5006 dev is slide 31.')}`;
 const b14 = () => dt(['Gap', 'Effect', 'Status'], [
   ['CloudFront → ALB over HTTP', '/api payloads and the origin header cross the AWS network unencrypted', 'NFR-37 TLS still unmet; accepted risk on dev until 16 Nov (#227, NFR register); fix needs an origin hostname and ACM'],
@@ -328,10 +335,10 @@ function list() {
   const B = [];
   B.push({ id: 'BX', title: 'Backup slides: index', body: `
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 22px;margin-top:0">
- ${C.BACKUPS.map(b => `<div data-go="${b[0]}" style="cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:5px 14px">
-   <span class="tag" style="min-width:44px;text-align:center">${b[0]}</span><div><div style="font:600 17px Inter">${b[1]}</div><div style="font:400 15px/1.25 Inter;color:var(--muted)">${b[2]}</div></div>
- </div>`).join('')}
-</div><div style="margin-top:8px;font:italic 400 15px Inter;color:var(--muted)">Click a row (or type #B6 or #D15-2 in the URL). Slide 39 stays up during questions.</div>` });
+ ${C.BACKUPS.map((b, i) => { const d = 100 + 30 * Math.floor(i / 2); return `<div data-go="${b[0]}" ${A('up', d, 'cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:5px 14px;')}>
+   <span class="tag a" data-a="pop" style="min-width:44px;text-align:center;--d:${d}ms">${b[0]}</span><div ${A('up', d)}><div style="font:600 17px Inter">${b[1]}</div><div style="font:400 15px/1.25 Inter;color:var(--muted)">${b[2]}</div></div>
+ </div>`; }).join('')}
+</div><div ${A('up', 100 + 30 * Math.ceil(C.BACKUPS.length / 2) + 50, 'margin-top:8px;font:italic 400 15px Inter;color:var(--muted);')}>Click a row (or type #B6 or #D15-2 in the URL). Slide 39 stays up during questions.</div>` });
   B.push({ id: 'B1', title: 'Agile artefacts appendix', speaker: 'Lim', body: b1() });
   B.push({ id: 'B2', title: 'Sprint 2 and 3 burndowns', speaker: 'Lim', body: b11() });
   B.push({ id: 'B3', title: 'ADR index', speaker: 'Eric', body: b8() });
