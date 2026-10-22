@@ -64,7 +64,7 @@ const SLIDES = [
   // ---------- §1 Lim, 180 s ----------
   { n: 1, seg: 1, item: '1a', rubric: ['1.1'], speaker: 'Lim', slot: 5, title: 'BlocBuy',
     say: "Good afternoon. We're Team 8, and this is BlocBuy.",
-    cues: ['16:30:00 — Lim opens swe5006-presentation.html in Chrome, presses S for the notes window (keep it off the shared screen), clicks back into the deck window and presses T there to start the timer. In Zoom, share only the deck window.', 'Backchannel: the team chat stays open. Lim repeats any question asked during the talk in one line and names who answers; the buffer is 17:04–17:10 (rubric G3).', 'The roadmap line on the slide is the five sections of the lecturer’s sequence; do not read it.'],
+    cues: ['16:30:00 — Lim opens swe5006-presentation.html in Chrome, presses S for the notes window (keep it off the shared screen) and presses T in either window to start the talk timer. In Zoom, share only the deck window.', 'Backchannel: the team chat stays open. Lim repeats any question asked during the talk in one line and names who answers; the buffer is 17:04–17:10 (rubric G3).', 'The roadmap line on the slide is the five sections of the lecturer’s sequence; do not read it.'],
     handover: 'The problem first.' },
   { n: 2, seg: 1, item: '1a', rubric: ['1.1'], speaker: 'Lim', slot: 25, title: 'Group buying fails when buyers cannot commit together',
     say: "Small merchants can only discount against committed volume, and a single buyer never reaches a bulk price. Every listing has two prices. You pay to start a team and share the link; friends join by paying too. If it fills in time, everyone gets the team price; if not, everyone is refunded automatically.",
@@ -410,4 +410,77 @@ const OPEN_ITEMS = [
   [22, 'Entrance choreography for the 37 re-planned slides and backups from the MOTION.md patterns (#597 choreographed the replaced #566 slides), and the SWE5006 slide numbers in MOTION.md; a follow-up PR after the content settles', 'Lim', 'all'],
 ];
 
-module.exports = { SPEAKERS, SEGMENTS, SLIDES, QA, BACKUPS, OPEN_ITEMS };
+// Demo run-book steps, keyed by the slide that hosts each demo. The speaker script prints them as step cards and the
+// deck's speaker companion lists them under that slide. t and say are text ({{…}} markers allowed); time, proves, op[],
+// exp and fb are HTML.
+// The dev site the steps open; script.js reads it too.
+const DEV = 'https://d1b3np88z657cp.cloudfront.net';
+
+const pipeSteps = [
+  { n: 'P1', t: 'The pull request and its required checks', time: '16:46:30 – 16:47:30', proves: 'Rubric <b>4.1</b>, <b>4.2</b> (branch, PR, Conventional Commit, code-owner rule), <b>4.3</b> (PR-time jobs) · Pan',
+    op: ['Tab 1: the demo PR opened at 16:41 → <b>Files changed</b>: the one-line frontend change.', 'Switch to <b>Checks</b>: frontend-check, SonarCloud Frontend, gitleaks green; e2e-preview green; the backend jobs pass after skipping (no backend path changed).', 'Point at the merge box: review required from a code owner.'],
+    say: "This is the pull request I opened at 16:41: one line in the frontend, on a short branch with a Conventional Commit title. These are the required checks from slide 27: the frontend check with every unit test, SonarCloud, the secret scan, and Playwright against this build. The backend jobs see no backend change and pass straight through. The merge button stays locked until a code owner approves.",
+    exp: 'Checks green or finishing (median 4.8 min from 16:41, so ≈ 16:46); merge box asks for a code-owner review.',
+    fb: 'Checks still running: talk through them and move on at 16:47:30 regardless. A check red: say what it caught in one sentence, then <code>CLIP P2</code>; leave the PR open and never merge it on air.' },
+  { n: 'P2', t: 'Code-owner approval', time: '16:47:30 – 16:48:00', proves: 'Rubric <b>4.2</b>, <b>4.4</b> (who approves) · Pan; Lim approves',
+    op: ['Pan posts <code>APPROVE</code> in the backchannel. Lim (not sharing) approves from his own GitHub session: <b>Review changes → Approve</b>, or <code>gh pr review &lt;n&gt; --approve</code>.', 'Tab 1: refresh; the approval from @limjiechao appears; the merge box turns green.'],
+    say: "Frontend files belong to Lim in CODEOWNERS, so his approval is the one that counts; mine would not. If anyone pushes again, the approval is dismissed and the checks run again.",
+    exp: 'One approving review by a code owner; all checks passed; squash merge enabled.',
+    fb: 'Lim cannot approve within 30 s: nobody else is a frontend code owner, so do not ask anyone else. <code>CLIP P2</code>.' },
+  { n: 'P3', t: 'Squash merge', time: '16:48:00 – 16:48:20', proves: 'Rubric <b>4.2</b> (linear history), <b>4.4</b> (the merge is the release) · Pan',
+    op: ['Tab 1: <b>Squash and merge</b>, keep the Conventional Commit title, confirm. Only this PR.', 'Say the merge time aloud.'],
+    say: "Squash merge: one commit on dev with the pull request number, so history stays linear. That push is the release; nothing manual follows.",
+    exp: 'PR merged; leave the branch-delete button alone.',
+    fb: '“Base branch was modified” (dev moved): do not update the branch on air, it would re-run five minutes of checks. <code>CLIP P3</code>; merge after 17:15.' },
+  { n: 'P4', t: 'Delivery runs; the backend PR and deploy, triggered beforehand', time: '16:48:20 – 16:49:50', proves: 'Rubric <b>4.1</b> (pre-triggered long run), <b>4.3</b> (post-merge jobs), <b>4.4</b> (digest, SSM, health check) · Pan',
+    op: ['Tab 2: Actions → <code>ci-frontend</code> → the new run on <code>dev</code>: package-dev → deploy-s3-dev → e2e-dev.', `Tab 3: the backend PR run triggered at ≈ 16:20 ${'{{FILL:run id}}'}: build-quality (test count in the summary), contract-check, docker boot and Trivy, SonarCloud gate.`, `Tab 4: its post-merge deploy run ${'{{FILL:run id}}'}: publish-ecr-dev (tag git-&lt;sha&gt;-run-&lt;n&gt;, digest checked), deploy-existing-ec2 (SSM, on-host health check, public health).`],
+    say: "Delivery rebuilds from the merged commit: the frontend goes to S3, index.html is invalidated, then Playwright smoke-tests the real site. While it runs, here is a backend change that went through earlier: sixteen minutes of checks with every test, the contract check and the image scan; after its merge the image went to ECR, was deployed by digest through SSM to the one host, and was health-checked, with automatic rollback if the check had failed.",
+    exp: 'Frontend run in progress (median 2.7 min from push to e2e-dev green); both backend runs green.',
+    fb: 'Frontend run not started within 60 s: refresh once; then <code>CLIP P4</code>. Backend runs missing: open the B8 timings and say the medians.' },
+  { n: 'P5', t: 'Verified: the change is live on dev', time: '16:49:50 – 16:51:20', proves: 'Rubric <b>4.4</b> (how a deployment is verified) · Pan',
+    op: ['Tab 2: e2e-dev green.', `Tab 5: <code>${DEV}</code> on the changed page → reload → the new text. ${'{{CONFIRM:the page and the copy change (open item 14)}}'}`, 'Read the elapsed time off the run: merge → e2e-dev green.'],
+    say: "Smoke test green, and here is the change on the dev site, about three minutes after the merge. That is the verification: the deploy job checks health, and Playwright checks the real site through CloudFront.",
+    exp: 'New text visible after a reload (index.html is served no-cache and invalidated); run green.',
+    fb: 'e2e-dev red: show the failed step honestly, it is the gate doing its job, then <code>CLIP P5</code>. Text not visible: one more reload, then <code>CLIP P5</code>.' },
+  { n: 'P6', t: 'Wrap up and hand over', time: '16:51:20 – 16:52:00', proves: 'Rubric <b>4.1–4.4</b> summary · Pan',
+    op: ['Stay on tab 5 (the dev site) while speaking.', 'At 16:52:00: stop sharing; Yorik starts sharing (<code>SHARE</code>).'],
+    say: "So one change went from pull request to dev in about ten minutes, past six required checks, a code-owner review and an automatic smoke test, with no AWS keys stored in GitHub. Yorik will now show what that system does for two buyers.",
+    exp: 'Hand-over on time.',
+    fb: 'If behind, say only the last sentence.' },
+];
+
+const demoSteps = [
+  { n: 'D1', t: 'Leader starts a bloc and shares the invite', time: '16:52:30 – 16:54:30', proves: 'Rubric <b>5.1</b> (UC2, UC1, UC3, UC7), <b>5.2</b> security · Eric operates, Yorik speaks',
+    op: ['Leader window (account A, signed in with Google), tab 2: listing <code>US34-04</code> “Universal Travel Adapter” (team of 2, 40 min; 29.00, team price 22.00).', '<b>Start a bloc</b> → the quote sheet shows the team price → <b>Continue to payment</b>.', 'Stripe Checkout with its Sandbox banner: test card 4242 4242 4242 4242, any future expiry, any CVC → Pay.', 'Back on BlocBuy: the receipt turns from “Waiting for payment confirmation” to paid; open the bloc: 1 of 2, countdown running.', 'Copy the invite link (<code>/products/{id}?deal={dealId}&amp;ref={ref}</code>).'],
+    say: "Our leader is signed in with Google. Every listing has two prices; she starts a bloc at the team price and pays first, on Stripe's own page, in Sandbox mode: a test card, no real money. Notice the receipt waits: BlocBuy believes a payment only when Stripe's signed webhook arrives, not when the browser comes back. Now the bloc exists, one of two, and she copies her invite link.",
+    exp: 'Receipt paid within one minute; bloc open at 1 of 2; invite link copied.',
+    fb: 'Checkout does not open within 20 s, or the receipt still waits after 60 s (the #517 symptom): Yorik posts <code>CLIP D1</code> and says “<i>That is the open issue on slide 4; here is the same step recorded on dev on 24 Oct.</i>” No dev recording: Plan C.' },
+  { n: 'D2', t: 'A friend joins through the invite: the team succeeds', time: '16:54:30 – 16:56:30', proves: 'Rubric <b>5.1</b> (UC4, UC5, UC7), <b>5.2</b> correctness under concurrency · Eric operates, Yorik speaks',
+    op: ['Joiner window (account B), tab 1: paste the invite link.', 'Point at the banner that names the sharer (account A’s display name).', '<b>Join</b> → quote → Stripe Checkout → 4242 card → Pay → receipt paid.', 'Product page or the receipt’s bloc link: 2 of 2, <b>succeeded</b>; both orders confirmed.'],
+    say: "A friend opens the link. The banner names who shared it, which is how the join is credited. She joins and pays the same way. The join rules run twice, at the quote and again after payment, inside the team, under a row lock: if the last seat had gone in between, she would get a refund obligation, never a seat that doesn't exist. Two of two: the team succeeded, and both orders are confirmed in the same transaction.",
+    exp: 'Sharer banner; receipt paid; bloc 2 of 2, succeeded.',
+    fb: '<code>CLIP D2</code> with the same sentence as D1. No recording: Plan C.' },
+  { n: 'D3', t: 'My blocs and my orders', time: '16:56:30 – 16:57:45', proves: 'Rubric <b>5.1</b> (UC8) · Eric',
+    op: ['Joiner window, tab 2: <code>/account</code>. My blocs → <b>Completed</b>: the bloc just filled.', 'My orders below: its confirmed order.', 'Click <b>Refunded</b>: the 16:05 bloc (D4); point at the URL (<code>?blocs=…</code>); reload: the chip survives.'],
+    say: "Her account page: My blocs on top, with Active, Completed and Refunded, and her orders below. The chip lives in the URL, so a reload, the Back button or a shared link keeps the view. Under Refunded, a bloc she started before the talk.",
+    exp: 'Completed shows the new bloc; My orders lists the confirmed order; the chip survives a reload.',
+    fb: 'Page empty: reload once; then <code>CLIP D3</code>. With a NO-GO this step runs live on an account that already has orders.' },
+  { n: 'D4', t: 'The 16:05 bloc expired and refunded itself', time: '16:57:45 – 16:59:15', proves: 'Rubric <b>5.1</b> (UC5, UC6), <b>5.2</b> unattended expiry and refund, recorded once (≤ 1 min is measured locally, slide 34) · Eric operates, Yorik speaks',
+    op: ['Joiner window, tab 2, Refunded: the <code>US34-04</code> bloc started at ≈ 16:05, chip “Closed”; its order cancelled.', 'Tab 3: its receipt <code>/payments/{paymentId}</code> (bookmarked at 16:10), reloaded: the refund status.', `Point at the deadline (≈ 16:45). ${'{{VERIFY:whether the bloc row or receipt shows the deadline and the closing time}}'}`, 'Never open the Stripe dashboard on the shared screen.'],
+    say: "At five past four she started this bloc, a team of two with a forty-minute window, and nobody joined. At its deadline the expiry sweep, which runs every minute, closed it; in the same transaction the order was cancelled and exactly one refund obligation was written. A worker sent that refund to Stripe with an idempotency key built from the obligation, so a retry after a crash returns the same refund instead of a second one. We never touched the deadline; the timer did all of it.",
+    exp: 'Bloc under Refunded (“Closed”); order cancelled; the receipt shows the refund.',
+    fb: '<code>REFUND LATE</code> at 16:50 and still none now: Yorik says “the worker retries every 30 seconds; it may still be in flight”, then <code>CLIP D4</code>. No dev recording: open <b>B11</b> and say “<i>verified locally with a real Sandbox refund on 20 September, not yet on dev.</i>”' },
+  { n: 'D5', t: 'Security checks on the deployed API', time: '16:59:15 – 17:00:15', proves: 'Rubric <b>5.2</b> security (slide 3) · Eric operates, Yorik speaks',
+    op: [`Terminal (18 pt): <code>curl -s ${DEV}/api/v1/orders/me</code> → <code>401</code>, <code>COMMON_401_001</code> (Sa-Token interceptor, SaTokenConfig).`, `Joiner window, new tab: <code>${DEV}/api/v1/admin/products</code> → <code>403</code>, <code>COMMON_403_001</code> (a buyer fails <code>StpUtil.checkRole(ADMIN)</code>, AdminListingController).`, 'Joiner DevTools console: <code>document.cookie</code> → no <code>blocbuy-token</code> (HttpOnly). Never open the Application tab: it shows cookie values.', `Console: <code>fetch('/api/v1/payments/intents', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}'}).then(r =&gt; r.status)</code> → <code>400</code> (no <code>X-BlocBuy-Request</code> marker; GlobalExceptionHandler.handleMissingHeader).`],
+    say: "Three checks you can't see in the flow. No session: 401. A signed-in buyer on an admin endpoint: 403, because admin calls check the role and the permission. The session cookie is HttpOnly, so page scripts can't read it. And a money write without our custom header is refused: a cross-site form can't add that header.",
+    exp: '401, 403, no token in document.cookie, 400.',
+    fb: 'Any check differs: say what came back, one sentence, and move on; the Q&amp;A row “Is 401 vs 403 vs 400 deliberate?” has the mapping.' },
+  { n: 'D6', t: 'Twenty buyers, one last seat: the test', time: '17:00:15 – 17:01:00', proves: 'Rubric <b>5.2</b> correctness under concurrency; rubric G10 (IDE on hand) · Eric shows, Yorik speaks',
+    op: ['IDE (18 pt) on a local checkout of <code>dev</code>: <code>StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist</code>, already run green before the talk (Docker, PostgreSQL 18 in Testcontainers).', 'Show the assertions: 2 members, 2 orders, 19 refund obligations, <code>current_size</code> 2, stock 98.', 'One click to <code>PaidGroupDealMapper.xml</code>: <code>SELECT … FOR UPDATE</code> and the guarded <code>UPDATE … WHERE current_size = …</code>.'],
+    say: "The last seat we don't race on shared dev. This test does it on every pull request that changes the backend: twenty paid buyers race for the last seat of a team of two, through the production code against a real PostgreSQL. One wins; nineteen get a refund obligation, and capacity is never exceeded. The row lock and the guarded update are why. This is a local test, not a dev result.",
+    exp: 'Green test with its assertions visible; then back to the deck, slide 34.',
+    fb: 'IDE not ready: show the test on GitHub (read-only) and its last green CI run.' },
+];
+const DEMOS = { 31: pipeSteps, 33: demoSteps };
+
+module.exports = { SPEAKERS, SEGMENTS, SLIDES, QA, BACKUPS, OPEN_ITEMS, DEV, DEMOS };
