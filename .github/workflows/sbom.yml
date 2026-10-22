@@ -1,18 +1,19 @@
 # Software bill of materials and licence inventory for the backend (Maven) and frontend (pnpm).
-# Scope is what ships: Maven compile and runtime dependencies (Trivy skips test and optional ones)
-# and the frontend's production dependency closure (Trivy suppresses devDependencies).
+# Source inventory: Maven compile/runtime dependencies and the pnpm production closure.
+# These analyser selections are not proof of packaged-runtime coverage.
 # Licence categories are report-only; a missing or empty inventory fails the job.
 # Vulnerability gating stays in security.yml (trivy-deps).
 name: sbom
 
 on:
   push:
+    # No branch pushes: ordinary dev merges do not generate SBOMs.
     tags: ['v*'] # keep one SBOM per release tag
   schedule:
     - cron: '53 3 * * 1' # weekly Monday 03:53 UTC
   workflow_dispatch:
-  # On a pull request it runs only on request: add the `run-sbom` label. The label stays on the PR,
-  # so `gh pr list --label run-sbom --state all` lists every PR it ran for.
+  # Opt in by adding/re-adding `run-sbom`; pushes to an already-labelled PR do not rerun it.
+  # The label records a request, not proof that a scan completed or which revision was scanned.
   pull_request:
     branches: [dev]
     types: [labeled]
@@ -31,11 +32,15 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
     runs-on: ubuntu-latest
-    timeout-minutes: 10 # a full run takes about 70 s
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Test inventory validation and reporting
+        timeout-minutes: 1
+        run: python3 -B -m unittest discover -s .github/tests -p 'sbom*_test.py'
 
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
@@ -68,29 +73,9 @@ jobs:
         working-directory: frontend
 
       - name: Prepare output directory
-        run: mkdir -p sbom
-
-      - name: Backend SBOM (CycloneDX)
-        timeout-minutes: 2
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        env:
-          TRIVY_OFFLINE_SCAN: 'true'
-        with:
-          version: ${{ env.TRIVY_VERSION }}
-          scan-type: fs
-          scan-ref: backend/
-          format: cyclonedx
-          output: sbom/backend.cdx.json
-
-      - name: Frontend SBOM (CycloneDX)
-        timeout-minutes: 2
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          version: ${{ env.TRIVY_VERSION }}
-          scan-type: fs
-          scan-ref: frontend/
-          format: cyclonedx
-          output: sbom/frontend.cdx.json
+        timeout-minutes: 1
+        # Fail rather than reusing stale reports/metadata from a previous invocation.
+        run: mkdir "$RUNNER_TEMP/sbom"
 
       - name: Backend licence inventory
         timeout-minutes: 2
@@ -104,25 +89,39 @@ jobs:
           scanners: license
           format: json
           exit-code: '0' # report only
-          output: sbom/backend-licences.json
+          output: ${{ runner.temp }}/sbom/backend-licences.json
 
       - name: Frontend licence inventory
         timeout-minutes: 2
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           version: ${{ env.TRIVY_VERSION }}
+          skip-setup-trivy: true # the successful backend scan installed the same pinned binary
           scan-type: fs
           scan-ref: frontend/
           scanners: license
           format: json
           exit-code: '0' # report only
-          output: sbom/frontend-licences.json
+          output: ${{ runner.temp }}/sbom/frontend-licences.json
 
-      - name: Summarise and check the inventory
+      - name: Convert the same inventories to CycloneDX
+        timeout-minutes: 2
+        run: |
+          set -Eeuo pipefail
+          for part in backend frontend; do
+            trivy convert --format cyclonedx --output "$RUNNER_TEMP/sbom/${part}.cdx.json" \
+              "$RUNNER_TEMP/sbom/${part}-licences.json"
+          done
+
+      - name: Validate reports, summarise coverage and write the evidence manifest
         timeout-minutes: 1
         run: >-
-          python3 .github/scripts/sbom-summary.py --dir sbom
-          --part backend=com.blocbuy: --part frontend
+          python3 .github/scripts/sbom-report.py
+          --directory "$RUNNER_TEMP/sbom"
+          --revision "$GITHUB_SHA"
+          --ref "$GITHUB_REF"
+          --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          --trivy-version "$TRIVY_VERSION"
           --summary "$GITHUB_STEP_SUMMARY"
 
       - name: Upload SBOMs and licence reports
@@ -130,6 +129,13 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: sbom
-          path: sbom/
+          path: |
+            ${{ runner.temp }}/sbom/backend-licences.json
+            ${{ runner.temp }}/sbom/frontend-licences.json
+            ${{ runner.temp }}/sbom/backend.cdx.json
+            ${{ runner.temp }}/sbom/frontend.cdx.json
+            ${{ runner.temp }}/sbom/inventory.json
+            ${{ runner.temp }}/sbom/summary.md
+            ${{ runner.temp }}/sbom/manifest.json
           retention-days: 90
-          if-no-files-found: warn
+          if-no-files-found: error

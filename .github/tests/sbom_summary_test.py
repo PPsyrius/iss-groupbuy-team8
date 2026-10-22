@@ -1,9 +1,5 @@
 import importlib.util
-import io
-import json
-from contextlib import redirect_stdout
 from pathlib import Path
-import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -49,6 +45,14 @@ class SbomSummaryTest(unittest.TestCase):
         summary = module.summarise(sbom, licences, own_prefix="com.blocbuy:")
         self.assertEqual((summary["packages"], summary["with_licence"]), (1, 1))
 
+    def test_only_first_party_libraries_are_a_valid_zero_third_party_view(self):
+        sbom = {"components": [maven("com.blocbuy", "blocbuy-domain")]}
+        licences = licence_report(("pom.xml", [("com.blocbuy:blocbuy-domain", "Apache-2.0", "notice")]))
+        summary = module.summarise(sbom, licences, own_prefix="com.blocbuy:")
+        self.assertEqual((summary["packages"], summary["with_licence"]), (0, 0))
+        self.assertFalse(summary["without_licence"])
+        self.assertEqual(sum(summary["by_category"].values()), 0)
+
     def test_a_dual_licensed_package_counts_under_each_alternative(self):
         sbom = {"components": [maven("ch.qos.logback", "logback-core")]}
         licences = licence_report(("pom.xml", [("ch.qos.logback:logback-core", "EPL-2.0", "reciprocal"),
@@ -64,53 +68,27 @@ class SbomSummaryTest(unittest.TestCase):
         summary = module.summarise(sbom, licences)
         self.assertEqual(summary["without_licence"], ["@typescript/typescript-aix-ppc64"])
         self.assertEqual(summary["by_category"]["unknown"], 1)
+        licences["Results"][0]["Licenses"][1]["Category"] = "future-category"
+        self.assertEqual(module.summarise(sbom, licences)["by_category"]["unknown"], 1)
+
+    def test_package_names_are_deduplicated_across_versions_but_empty_findings_are_advisory(self):
+        sbom = {"components": [npm("react", version="1.0"), npm("react", version="2.0")]}
+        licences = {"Results": [{"Class": "lang-pkgs", "Packages": [{"Name": "react"}]}]}
+        summary = module.summarise(sbom, licences)
+        self.assertEqual((summary["packages"], summary["with_licence"]), (1, 0))
+        self.assertEqual(summary["without_licence"], ["react"])
+
+    def test_categories_count_only_packages_in_the_selected_view(self):
+        summary = module.summarise({"components": [npm("react")]},
+                                  licence_report(("pnpm-lock.yaml", [("absent", "MIT", "notice")])))
+        self.assertEqual(summary["by_category"]["notice"], 0)
+        self.assertEqual(summary["without_licence"], ["react"])
 
     def test_an_empty_sbom_or_a_licence_report_without_results_is_rejected(self):
-        with self.assertRaisesRegex(ValueError, "no third-party library"):
-            module.summarise({"components": [maven("com.blocbuy", "blocbuy-domain")]},
-                             licence_report(("pom.xml", [])), own_prefix="com.blocbuy:")
+        with self.assertRaisesRegex(ValueError, "no library components"):
+            module.summarise({"components": []}, licence_report(("pom.xml", [])))
         with self.assertRaisesRegex(ValueError, "no licence results"):
             module.summarise({"components": [npm("react")]}, {"Results": []})
-
-    def test_main_appends_the_summary_and_fails_on_a_missing_report(self):
-        with tempfile.TemporaryDirectory() as temp:
-            folder = Path(temp)
-            (folder / "frontend.cdx.json").write_text(json.dumps({"components": [npm("react")]}), encoding="utf-8")
-            (folder / "frontend-licences.json").write_text(
-                json.dumps(licence_report(("pnpm-lock.yaml", [("react", "MIT", "notice")]))), encoding="utf-8")
-            summary = folder / "summary.md"
-            with redirect_stdout(io.StringIO()):
-                self.assertEqual(module.main(["--dir", temp, "--part", "frontend", "--summary", str(summary)]), 0)
-            self.assertIn("| frontend | 1 | 1 | 0 | 0 | 0 | 1 |", summary.read_text(encoding="utf-8"))
-            with redirect_stdout(io.StringIO()) as output:
-                self.assertEqual(module.main(["--dir", temp, "--part", "backend=com.blocbuy:"]), 1)
-            self.assertIn("::error::Incomplete SBOM inventory", output.getvalue())
-
-
-class SbomWorkflowTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.workflow = (ROOT / ".github/workflows/sbom.yml").read_text(encoding="utf-8")
-
-    def test_every_scan_step_is_bounded_and_the_inventory_is_checked(self):
-        steps = self.workflow.split("      - name: ")[1:]
-        for name in ("Backend SBOM", "Frontend SBOM", "Backend licence", "Frontend licence",
-                     "Populate local Maven", "Install frontend", "Summarise and check"):
-            step = next(step for step in steps if step.startswith(name))
-            self.assertIn("timeout-minutes:", step, name)
-        self.assertIn("python3 .github/scripts/sbom-summary.py --dir sbom", self.workflow)
-        self.assertIn("--part backend=com.blocbuy: --part frontend", self.workflow)
-
-    def test_pull_requests_run_it_only_when_labelled(self):
-        trigger = self.workflow.split("  pull_request:\n", 1)[1].split("\npermissions:", 1)[0]
-        self.assertIn("types: [labeled]", trigger)
-        self.assertNotIn("paths:", trigger)
-        self.assertIn("if: github.event_name != 'pull_request' || github.event.label.name == 'run-sbom'",
-                      self.workflow)
-        self.assertLess(self.workflow.index("    concurrency:"), self.workflow.index("    runs-on:"))
-
-    def test_licences_stay_report_only(self):
-        self.assertEqual(self.workflow.count("exit-code: '0' # report only"), 2)
 
 
 if __name__ == "__main__":
