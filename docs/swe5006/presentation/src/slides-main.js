@@ -541,7 +541,7 @@ const s26 = () => `
  <div class="card" style="padding:18px 22px">
   ${kicker('Expiry ≤ 1 min after the window', '#B02E1B')}
   <div style="font:400 21px/1.4 Inter"${ref('docs/perf/sprint3-baseline.md')}>Measured <b>locally</b> under 100-user load (30 Sep): 30 teams, worst lag 58.2 s</div>
-  <div style="font:400 20px/1.35 Inter;color:var(--muted);margin-top:6px">On ECS: ${mk('FILL', 'V4 expiry burst, or "local only"')}</div>
+  <div style="font:400 20px/1.35 Inter;color:var(--muted);margin-top:6px">On ECS: not run, so this evidence is local only</div>
  </div>
 </div>`;
 
