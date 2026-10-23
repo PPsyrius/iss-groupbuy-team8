@@ -161,14 +161,14 @@ sequenceDiagram
     PG-)Ctl: paymentConfirmed(ref, amount)
     Ctl-->>Pay: «create» (ref, amount)
     Ctl->>Prod: checkStartable(buyer)
-    alt still startable, terms not lapsed, paid price equals the team price
+    alt still startable, terms not lapsed, paid amount and currency equal the team price and currency
         Ctl-->>Team: «create» (product, buyer, payment)
         Ctl-->>Mem: «create» (buyer, payment) as leader
         Ctl-->>Ord: «create» (buyer, teamPrice)
         Ctl->>Prod: takeOneUnit()
         Ctl->>UI: showStarted(teamStatus)
         UI-->>Buyer: open team with one member shown
-    else terms lapsed, buyer inactive, product unavailable or paid price differs from the team price
+    else terms lapsed, buyer inactive, product unavailable or paid amount or currency differs from the team price
         Ctl-->>Ref: «create» (payment, reason)
         Ctl->>PG: refund(payment)
         PG->>Provider: refund(ref, amount)
