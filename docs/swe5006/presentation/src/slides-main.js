@@ -523,11 +523,11 @@ const s26 = () => `
  ${kicker('The scripted test')}
  ${kv([
    ['Tool', `<span${ref('perf/k6/browse.js · perf/k6/README.md §V2')}>k6 1.6.1, image pinned by digest</span>`],
-   ['Target', ['<b>SWE5001 ECS environment, same code</b>: CloudFront → ALB → Fargate', 'Never the shared SWE5006 dev host, which also runs its database']],
+   ['Target', ['<b>SWE5001 ECS</b>, dev image of 6 Oct: CloudFront → ALB → Fargate', 'Never the shared SWE5006 dev host, which also runs its database']],
    ['Load', ['Open arrival rate 10 → 200 requests/s', 'Ten 60 s steps; 100 VUs preallocated, 400 max']],
    ['Mix', ['7 listing pages : 3 listing details, anonymous', 'No think time; 10 s timeout']],
    ['Pass, per step', ['p95 &lt; 500 ms', 'Errors &lt; 1%', 'Zero dropped requests']],
-   ['Result', `In the system demo (slide 36) ${mk('FILL', '5.3 pre-run label and date')}`],
+   ['Result', `<span${ref('docs/swe5001/evidence/20261016-http-baseline-dashboard/ (#670)')}>Run 20261016-v2-monolith-repeat, 16 Oct; shown on slide 36</span>`],
  ])}
 </div>
 <div style="position:absolute;left:660px;top:0;width:504px">
@@ -656,7 +656,7 @@ const plan5 = [
   ['D4', 'The bloc started at 16:05 expired and refunded itself', ['UC5', 'UC6'], 'Unattended expiry and refund; ≤ 1 min measured locally (slide 36)', env5('dev, if GO')],
   ['D5', 'No session, a buyer on admin, a write without the marker', ['—'], 'Security: 401, 403, 400, HttpOnly', env5('dev')],
   ['D6', 'Twenty paid buyers race for one seat', ['UC4'], 'Correctness under concurrency', env5('local test', 'loc')],
-  ['36', 'Scripted k6 load, pre-run', ['UC1'], 'Performance: ≤ 2 s at 100 users', env5('SWE5001 ECS', 'ecs')],
+  ['36', 'Scripted k6 load, 16 Oct run', ['UC1'], 'Performance: ≤ 2 s at 100 users', env5('SWE5001 ECS', 'ecs')],
   ['38', 'Back to the §4 pipeline run', ['—'], 'Maintainability', env5('dev')],
 ];
 const s34 = () => `
@@ -683,19 +683,21 @@ const s35 = () => `
 </div>`;
 
 // ---------- slide 36 (5.3) ----------
-const steps36 = [10, 20, 40, 60, 80, 100, 125, 150, 175, 200];
+// Repeat run 20261016-v2-monolith-repeat (v2-repeat-calibration.json): p95 ms per plateau; 0 errors, 0 dropped on every step.
+const steps36 = [[10, 53], [20, 39], [40, 27], [60, 28], [80, 23], [100, 23], [125, 42], [150, 23], [175, 23], [200, 23]];
 const s36 = () => `
 <div style="position:absolute;left:0;top:0;width:690px">
- ${kicker('k6 pre-run · SWE5001 ECS environment, same code · not the dev host', '#B02E1B')}
- ${tbl(['Requests/s', 'p95 (ms)', 'Errors', 'Dropped', 'Step'], steps36.map(r => [`<b>${r}</b>${r >= 190 ? ' <span style="color:#B02E1B">●</span>' : ''}`, '—', '—', '—', '—']), { fs: 22, w: [150, 130, 120, 130], pad: '5px 14px' })}
- <div style="font:400 19px/1.35 Inter;color:var(--muted);margin-top:6px"><span style="color:#B02E1B">●</span> at or above ≈ 190 requests/s: the proposal’s 100 users, 0.5 s think time assumed (slide 26) ${mk('FILL', 'results from the 24 Oct pre-run')}</div>
+ ${kicker('k6 run · SWE5001 ECS environment · not the dev host', '#B02E1B')}
+ ${tbl(['Requests/s', 'p95 (ms)', 'Errors', 'Dropped', 'Step'], steps36.map(([r, p]) => [`<b>${r}</b>${r >= 190 ? ' <span style="color:#B02E1B">●</span>' : ''}`, p, '0 %', '0', 'pass']), { fs: 22, w: [150, 130, 120, 130], pad: '3px 14px' })}
+ <div style="font:400 19px/1.35 Inter;color:var(--muted);margin-top:6px"><span style="color:#B02E1B">●</span> at or above ≈ 190 requests/s: the proposal’s 100 users, 0.5 s think time assumed (slide 26)</div>
+ <div style="font:400 19px/1.35 Inter;margin-top:4px"${ref('docs/swe5001/evidence/20261016-http-baseline-dashboard/v2-repeat-summary.json')}>Run 20261016-v2-monolith-repeat, 16 Oct: 57,600 requests, 0 failed, 0 dropped</div>
 </div>
 <div style="position:absolute;left:714px;top:0;width:450px">
  <div class="card" style="padding:12px 20px;margin-bottom:10px">
   ${kicker('Target (proposal §6.3)', '#B02E1B')}
   <div style="font:600 21px/1.35 Inter">≤ 2 s with up to 100 concurrent users</div>
   <div style="font:400 20px/1.4 Inter;margin-top:8px">${lines(['Our gate per step:', 'p95 &lt; 500 ms', 'Errors &lt; 1 %', 'No dropped requests'], 0)}</div>
-  <div style="font:700 20px/1.4 Inter;margin-top:8px">Verdict: ${mk('FILL', 'pass or fail per gate')}</div>
+  <div style="font:700 20px/1.4 Inter;margin-top:8px">Verdict: pass on every step</div><div style="font:400 20px/1.4 Inter">Worst p95 53 ms, 0 % errors, 0 dropped</div>
  </div>
  <div class="card" style="padding:12px 20px;margin-bottom:10px">
   ${kicker('Expiry ≤ 1 min')}
