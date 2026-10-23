@@ -6,7 +6,7 @@ const { chromium } = require('playwright');
 const runtime = require('../deck/runtime');
 
 const page = `<!doctype html><style>.blank{display:none}.blank.on{display:block}</style><body>
-<div class="slide" data-n="1"></div><div class="slide" data-n="2"></div><div class="blank"></div>
+<div class="slide" data-n="1"></div><div data-scroll style="position:fixed;right:0;top:0;width:200px;height:200px;overflow:auto"><div style="height:900px"></div></div><div class="slide" data-n="2"></div><div class="blank"></div>
 <script>${runtime({ total: 2 })}</script></body>`;
 
 let browser;
@@ -41,4 +41,14 @@ test('a malformed hash still starts presenter mode', async () => {
   const { p, errors } = await open('#B6%');
   assert.equal((await state(p)).present, true);
   assert.deepEqual(errors, []);
+});
+
+test('a click inside a scrollable diagram does not step the deck', async () => {
+  const { p } = await open();
+  await p.waitForFunction(() => location.hash === '#1');
+  await p.mouse.click(1100, 100);
+  await p.waitForTimeout(100);
+  assert.equal(await p.evaluate(() => location.hash), '#1');
+  await p.mouse.click(1100, 600);
+  await p.waitForFunction(() => location.hash === '#2');
 });

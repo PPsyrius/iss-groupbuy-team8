@@ -134,7 +134,7 @@ const b12 = () => dt(['Workflow · trigger', 'Jobs (required in blue)', 'Median'
   ['<b>rollback-backend</b> · manual', 'validate, then SSM rollback to the recorded previous digest or a given one', '—', 'never run'],
   ['<b>SWE5001</b> · prod branch', 'swe5001-release-gate, swe5001-deploy, infra-swe5001 (promotion PR; see the SWE5001 deck)', '—', '—'],
 ], { fs: 15, w: [190, 470, 220], pad: '6px 10px' }) + `<div style="margin-top:8px;font:400 15px/1.4 Inter">Last 100 runs per workflow and event, read with <span class="mono" style="font-size:14.5px">gh run list</span> and the jobs API on 19 Oct. PR durations count only runs where the gated jobs ran (docs-only PRs skip them in about 10 s). Push medians run from the push run start, not the merge click.</div>`;
-const b13 = () => `<div class="dia" style="margin-top:-8px">${fit('physical-deployment', 1130)}</div>${topo('SWE5001 prod: the same code on ECS, rebuilt from scratch on every release and destroyed after it. SWE5006 dev is slide 29.')}`;
+const b13 = () => `<div class="dia" style="margin-top:-8px">${fit('physical-deployment', 1130)}</div>${topo('SWE5001 prod: the same code on ECS, rebuilt from scratch on every release and destroyed after it. SWE5006 dev is slide 31.')}`;
 const b14 = () => dt(['Gap', 'Effect', 'Status'], [
   ['CodeQL off', 'no CodeQL SAST; SonarCloud and SpotBugs remain', 'ENABLE_CODEQL=false; code scanning not enabled on the repository'],
   ['CloudFront → ALB over HTTP', '/api payloads and the origin header cross the AWS network unencrypted', 'NFR-37 TLS still unmet; accepted risk on dev until 16 Nov (#227, NFR register); fix needs an origin hostname and ACM'],
@@ -188,30 +188,30 @@ const b16 = () => `<div style="display:flex;gap:14px;align-items:stretch">
   ['Browse (list + detail)', '24 ms', '0'], ['JOIN intent, unpaid', '57 ms', '0'], ['My Orders', '18 ms', '0'],
  ], { fs: 15, pad: '4px 8px' })}<div style="font:400 15px/1.35 Inter;margin-top:8px">30 paid teams expired within 58 s of their deadlines under that load. One laptop with real HTTP, PostgreSQL and Redis; <b>not a deployed result</b>.</div>`, 'var(--orange-d)')}
 </div>
-<div style="margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter"><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out exists only in the SWE5001 topology and is not claimed for SWE5006 (slide 35).</div>
+<div style="margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter"><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out exists only in the SWE5001 topology and is not claimed for SWE5006 (slide 37).</div>
 <div style="margin-top:8px;font:italic 400 14.5px/1.35 Inter;color:var(--muted)">Sources: docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md (V2, scaling policy); docs/swe5001/evidence/20261019-v3-autoscaling/README.md (V3); docs/perf/sprint3-baseline.md (local workload).</div>`;
 
 // ---- §2 full diagrams (rubric G8, V1, V6): vector, so zoom in the browser or the PDF ----
 const sized = (name, w, h) => svg(name).replace('<svg ', `<svg style="display:block;width:${w}px;height:${h}px" `);
-const scroll = (name, W, H, w) => `<div style="position:absolute;left:0;top:0;width:1164px;height:548px;overflow:auto;background:#fff;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8">${sized(name, w, Math.round(H * w / W))}</div>`;
+const scroll = (name, W, H, w) => `<div data-scroll style="position:absolute;left:0;top:0;width:1164px;height:568px;overflow:auto;background:#fff;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8">${sized(name, w, Math.round(H * w / W))}</div>`;
 const bLs = () => `
 <div style="position:absolute;left:0;top:0">${sized('listing-statechart', 1160, 548)}</div>`;
 const bUc4 = () => `
-<div style="position:absolute;left:0;top:0;width:1164px;height:548px;display:flex;gap:16px;align-items:flex-start">
+<div style="position:absolute;left:0;top:0;width:1164px;height:568px;display:flex;gap:16px;align-items:flex-start">
  <div>${sized('uc4-design-class', 500, 499)}<div style="font:400 14.5px Inter;color:var(--muted)">Design class diagram (2320 × 2314)</div></div>
  <div>${sized('uc4-design-seq', 348, 496)}<div style="font:400 14.5px Inter;color:var(--muted)">Design sequence (2320 × 3306)</div></div>
  <div style="width:220px;font:400 16px/1.4 Inter">Both are vector: open <span class="mono" style="font-size:14px">src/diagrams/uc4-design-*.svg</span> in a browser tab and zoom. Every message carries its source line in the diagram spec. Report §3.4 (Eric).</div>
 </div>`;
 const bMembers = () => tbl(['Member', 'Use case (report §3.4)', 'Design problem (report §3.5)', 'On a slide'], [
-  ['Eric', 'UC3, UC4 start and join a team', 'Factory Method: team creation', 'UC4 models 13–16; pattern 17'],
-  ['Yorik', 'UC6 refund on team expiry', 'Observer: team outcome; refund idempotency as a mechanism (B6)', 'pattern 18; sequence B5'],
-  ['Pan', 'Receive notifications', 'Template Method: outbox transports', 'pattern 19'],
-  ['Lim', 'UC8 my orders and my teams (with UC7 frontend)', 'Strategy: UC1 pricing', 'pattern 20'],
-  ['Liu Jin', 'UC9 listing administration and team terms', 'State: listing lifecycle (full form)', 'patterns 21–22; statechart B13'],
+  ['Eric', 'UC3, UC4 start and join a team', 'Factory Method: team creation', 'UC4 models 14–16, statechart 17; pattern 18'],
+  ['Yorik', 'UC6 refund on team expiry', 'Observer: team outcome; refund idempotency as a mechanism (B6)', 'pattern 19; sequence B5'],
+  ['Pan', 'Receive notifications', 'Template Method: outbox transports', 'pattern 20'],
+  ['Lim', 'UC8 my orders and my teams (with UC7 frontend)', 'Strategy: UC1 pricing', 'pattern 21'],
+  ['Liu Jin', 'UC9 listing administration and team terms', 'State: listing lifecycle (full form)', 'patterns 22–23; statechart B13'],
 ], { fs: 16.5, w: [110, 330, 400] }) + `<div style="margin-top:12px;font:400 16px/1.4 Inter">Each member’s analysis class, analysis sequence, design class and design sequence diagrams are in their report section (template RT 3.4.1); the deck shows UC4 only (rubric G8). Owners: #463. ${mk('VERIFY', 'UC9 owner: #32 names Eric, #463 names Liu Jin (open item 12)')}</div>`;
 const b16erd = () => scroll('full-erd', 2320, 5038, 1150);
 // B16 prints only its first viewport, so the PDF also carries the ERD 1:1 (labels 24 px, rubric V3): each context
-// frame of full-erd.svg cut into 1164 × 548 windows, left to right then top to bottom, as pages B16-1 … B16-n.
+// frame of full-erd.svg cut into 1164 × 568 windows, left to right then top to bottom, as pages B16-1 … B16-n.
 const ERD_FRAMES = [['identity', 12, 80, 2296, 844], ['catalog', 12, 974, 2296, 486], ['groupbuy + share', 12, 1510, 2296, 1016],
   ['payment', 12, 2576, 2296, 1172], ['order', 12, 3798, 1136, 648], ['notification', 1172, 3798, 1136, 418],
   ['integration · scheduling', 12, 4496, 2296, 482]];
@@ -221,12 +221,95 @@ const steps = (at, len, view, max) => {
   return Array.from({ length: n }, (_, i) => Math.round(at + i * (len - view) / (n - 1)));
 };
 const erdWin = (x, y) => svg('full-erd').replace(/<svg\b[^>]*>/, t => t.replace(/\s(width|height|viewBox)="[^"]*"/g, '')
-  .replace('<svg', `<svg width="1164" height="548" viewBox="${x} ${y} 1164 548" style="display:block"`));
+  .replace('<svg', `<svg width="1164" height="568" viewBox="${x} ${y} 1164 568" style="display:block"`));
 const erdPages = () => ERD_FRAMES.flatMap(([ctx, fx, fy, fw, fh]) => {
-  const xs = steps(fx, fw, 1164, 2320), ys = steps(fy, fh, 548, 5038);
+  const xs = steps(fx, fw, 1164, 2320), ys = steps(fy, fh, 568, 5038);
   return ys.flatMap((y, r) => xs.map((x, c) => ({ ctx, part: [xs.length > 1 ? ['left', 'right'][c] : '', ys.length > 1 ? `part ${r + 1}/${ys.length}` : ''].filter(Boolean).join(', '), x, y })));
 }).map((w, i, all) => ({ id: `B16-${i + 1}`, title: `ERD 1:1 · ${w.ctx}${w.part ? ` (${w.part})` : ''} · ${i + 1}/${all.length}`,
-  body: `<div style="position:absolute;left:0;top:0;width:1164px;height:548px;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 0 0 2px #1B1A18">${erdWin(w.x, w.y)}</div>` }));
+  body: `<div style="position:absolute;left:0;top:0;width:1164px;height:568px;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 0 0 2px #1B1A18">${erdWin(w.x, w.y)}</div>` }));
+
+// ---- FX, F1…: every unique diagram at full size (review round 5) ----
+// Presenting, the diagram is 1:1 (labels 24 px, as in the crops) in a viewport that runs to the slide's left, right and
+// bottom edges and scrolls both ways; in the PDF, screenshots and the overview it is scaled to fit that viewport.
+const FULL = [
+  ['logical-layers', 'Logical view: COLA layers and packages', 9], ['transition-pair', 'Transition strategies: the UC4 pair', 12],
+  ['use-case', 'Use case diagram', 13], ['uc4-analysis-class', 'UC4 analysis class diagram', 14], ['uc4-analysis-seq', 'UC4 analysis sequence', 14],
+  ['uc4-design-class', 'UC4 design class diagram', 15], ['uc4-design-seq', 'UC4 design sequence, paid join by webhook', 16],
+  ['team-statechart', 'Team-formation statechart', 17], ['fm-start', 'Factory Method: start a team', 18], ['observer-expiry', 'Observer: team outcome', 19],
+  ['template-method-outbox', 'Template Method: outbox transports', 20], ['strategy-pricing', 'Strategy: pricing', 21],
+  ['state-before', 'Listing lifecycle before State (brute force)', 22], ['state-after', 'Listing lifecycle after State', 23],
+  ['core-erd', 'Core schema', 24], ['cicd-pr-vs-merge', 'CI/CD: pull-request and post-merge jobs', 29], ['dev-deployment', 'Dev deployment', 31],
+  ['expiry-refund-sequence', 'Expiry and refund sequence (ECS)', 'B5'], ['physical-deployment', 'SWE5001 production topology', 'B10'],
+  ['listing-statechart', 'UC9 listing statechart', 'B13'], ['full-erd', 'Entity-relationship diagram, all tables', 'B16'],
+];
+const viewBox = name => svg(name).match(/viewBox="[\d.]+ [\d.]+ ([\d.]+) ([\d.]+)"/).slice(1).map(Number);
+const FV_PAD = 24, FV_H = 720 - 108 - 2; // viewport inner height: body top 108, 2 px top border
+const FV_CSS = `<style>.fv{position:absolute;left:-58px;right:-58px;top:0;bottom:-44px;z-index:5;background:#fff;border-top:2px solid #DDD5C8;overflow:hidden}
+.fv>div{box-sizing:content-box;padding:${FV_PAD}px;width:max-content;margin:0 auto}.fv svg{display:block}
+.fvbar{position:absolute;right:0;top:-54px;display:none;gap:8px;align-items:center;z-index:6}
+.fvbar button{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #DDD5C8;border-radius:8px;background:#fff;color:#1B1A18;font:600 15px Inter;cursor:pointer}
+.fvbar [data-pct]{min-width:52px;text-align:right;font:600 15px Inter;color:#6B655C}
+@media screen{body.present .fv{overflow:auto}body.present .fvbar{display:flex}}</style>`;
+const FV_JS = `<script>
+window.fvZoom = function (id, W, H) {
+  var v = document.getElementById(id), w = v.firstElementChild, g = w.querySelector('svg'), P = ${FV_PAD}, s = 1;
+  var bar = document.getElementById(id + '-bar'), pct = bar.querySelector('[data-pct]'), slide = v.closest('.slide');
+  function fit() { return Math.min((v.clientWidth - 2 * P) / W, (v.clientHeight - 2 * P) / H); }
+  // the view centre as a fraction of the padded wrapper (its offset includes the margin that centres it)
+  function centre(pos, view, off, size) { return size > view ? Math.max(0, Math.min(1, (pos + view / 2 - off) / size)) : 0.5; }
+  function set(k, keep) {
+    var cx = centre(v.scrollLeft, v.clientWidth, w.offsetLeft, w.offsetWidth), cy = centre(v.scrollTop, v.clientHeight, w.offsetTop, w.offsetHeight);
+    s = Math.max(0.1, Math.min(4, k));
+    g.style.width = Math.round(W * s) + 'px'; g.style.height = Math.round(H * s) + 'px';
+    pct.textContent = Math.round(s * 100) + '%';
+    v.scrollLeft = keep ? w.offsetLeft + cx * w.offsetWidth - v.clientWidth / 2 : 0;
+    v.scrollTop = keep ? w.offsetTop + cy * w.offsetHeight - v.clientHeight / 2 : 0;
+  }
+  bar.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var a = b.dataset.z;
+    if (a === 'fit') set(fit()); else if (a === '1') set(1, true); else set(a === '+' ? s * 1.25 : s / 1.25, true);
+    b.blur();
+  });
+  if (v.clientWidth) set(fit());
+  // re-fit each time the slide opens or presenting resumes on it (after the overview), so it starts whole
+  var shown = false;
+  new MutationObserver(function () {
+    var on = slide.classList.contains('active') && document.body.classList.contains('present');
+    if (on && !shown) set(fit());
+    shown = on;
+  }).observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true });
+};
+</script>`;
+const fvBtn = (z, ic, label, tip) => `<button data-z="${z}" title="${tip}">${icon(ic)}${label ? `<span>${label}</span>` : ''}</button>`;
+// Each F page opens fitted to its viewport (padded, centred when narrower); the toolbar on the title row switches to
+// actual size or zooms in steps around the view centre. The PDF, screenshots and the overview show the fit without
+// the toolbar. The bar is data-scroll and its controls are buttons, so the runtime never treats a press as a step.
+const fullView = (name, i) => {
+  const [W, H] = viewBox(name), id = `fv${i}`, k = Math.min((1280 - 2 * FV_PAD) / W, (FV_H - 2 * FV_PAD) / H);
+  return `<div id="${id}-bar" class="fvbar" data-scroll>
+ ${fvBtn('fit', 'compress', 'Fit', 'Fit the whole diagram')}${fvBtn('1', 'up-right-and-down-left-from-center', 'Actual size', 'Actual size (1:1)')}${fvBtn('-', 'magnifying-glass-minus', '', 'Zoom out')}${fvBtn('+', 'magnifying-glass-plus', '', 'Zoom in')}
+ <span data-pct>${Math.round(k * 100)}%</span>
+</div>
+<div id="${id}" class="fv" data-scroll><div>${svg(name).replace('<svg ', `<svg style="width:${Math.round(W * k)}px;height:${Math.round(H * k)}px" `)}</div></div>
+<script>if (window.fvZoom) fvZoom('${id}', ${W}, ${H});</script>`;
+};
+const where = n => (typeof n === 'number' ? `slide ${n}` : n);
+const menu = (rows, note) => `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 16px">${rows.join('')}</div><div style="margin-top:10px;font:italic 400 15px Inter;color:var(--muted)">${note}</div>`;
+const menuRow = (go, tag, title, sub) => `<div data-go="${go}" style="min-width:0;cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:5px 14px">
+   <span class="tag" style="min-width:44px;text-align:center">${tag}</span><div><div style="font:600 17px Inter">${title}</div><div style="font:400 15px/1.25 Inter;color:var(--muted)">${sub}</div></div></div>`;
+const fx = () => menu(FULL.map(([, t, n], i) => menuRow(`F${i + 1}`, `F${i + 1}`, t, where(n))),
+  'Click a diagram. It opens fitted; the toolbar switches to actual size or zooms; scroll with the trackpad or mouse wheel (arrow keys still change slides). Press B for the backup index.');
+// DX: the 1:1 crops, one row per slide, one chip per crop. In the HTML deck they repeat the crops the slides step
+// through; the PDF, which cannot step, carries them only here (rubric V3).
+const dx = details => {
+  const by = [];
+  for (const d of details) { const g = by.find(x => x.n === d.n); if (g) g.d.push(d); else by.push({ n: d.n, t: d.slideTitle, d: [d] }); }
+  return `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 16px">${by.map(g => `<div style="min-width:0;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:5px 12px">
+   <div style="font:600 15px/1.25 Inter;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Slide ${g.n} · ${g.t}</div>
+   <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${g.d.map(d => `<span data-go="${d.id}" class="tag" style="cursor:pointer">${d.id}</span>`).join('')}</div></div>`).join('')}</div>
+<div style="margin-top:8px;font:italic 400 15px Inter;color:var(--muted)">Each page is one crop at 1:1 with its caption: the same view the slide steps to while presenting.</div>`;
+};
 
 // Backup slides follow the last main slide; press B in the deck for the index (BX). Rows link with data-go.
 // Each segment adds its backups to BACKUPS (content.js) and a matching entry below, in index order.
@@ -237,7 +320,7 @@ function list() {
  ${C.BACKUPS.map(b => `<div data-go="${b[0]}" style="cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:5px 14px">
    <span class="tag" style="min-width:44px;text-align:center">${b[0]}</span><div><div style="font:600 17px Inter">${b[1]}</div><div style="font:400 15px/1.25 Inter;color:var(--muted)">${b[2]}</div></div>
  </div>`).join('')}
-</div><div style="margin-top:8px;font:italic 400 15px Inter;color:var(--muted)">Click a row (or type #B6 or #D14-2 in the URL). Slide 37 stays up during questions.</div>` });
+</div><div style="margin-top:8px;font:italic 400 15px Inter;color:var(--muted)">Click a row (or type #B6 or #D15-2 in the URL). Slide 39 stays up during questions.</div>` });
   B.push({ id: 'B1', title: 'Agile artefacts appendix', speaker: 'Lim', body: b1() });
   B.push({ id: 'B2', title: 'Sprint 2 and 3 burndowns', speaker: 'Lim', body: b11() });
   B.push({ id: 'B3', title: 'ADR index', speaker: 'Eric', body: b8() });
@@ -257,9 +340,13 @@ function list() {
   B.push({ id: 'B16', title: `Entity-relationship diagram, all 29 tables (scroll; 1:1 pages B16-1 to B16-${erd.length} follow)`, speaker: 'Liu Jin', body: b16erd() });
   for (const e of erd) B.push({ ...e, speaker: 'Liu Jin' });
   // D pages: each 1:1 crop the talk steps through, so the PDF carries readable diagrams (rubric V3).
-  for (const d of require('./slides-main').details()) {
+  const details = require('./slides-main').details();
+  B.push({ id: 'DX', title: 'Diagram details, 1:1: one page per crop', body: dx(details) });
+  for (const d of details) {
     B.push({ id: d.id, title: `Slide ${d.n} · detail ${d.k}/${d.of}: ${d.label}`, speaker: d.speaker, body: d.body });
   }
+  B.push({ id: 'FX', title: 'Diagrams at full size', body: fx() });
+  FULL.forEach(([name, t], i) => B.push({ id: `F${i + 1}`, title: t, body: (i ? '' : FV_CSS + FV_JS) + fullView(name, i + 1) }));
   return B;
 }
 

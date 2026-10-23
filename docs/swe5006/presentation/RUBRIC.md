@@ -89,7 +89,7 @@ Cover the problem, scope and quality attributes, then status against what we pro
 | --- | --- | --- | --- |
 | 1.1 | Context and the business problem the whole solution addresses | PDF 1a; RT 1.1–1.2 | One slide. State the problem in one sentence |
 | 1.2 | Scope: functionality in scope, functionality out of scope, quality attributes | PDF 1b; RT 1.4.1–1.4.3 | Use PROP §6.2 exclusions and §6.3 NFRs as the starting list, with their numeric targets. The quality attributes listed here are the ones §5 demonstrates |
-| 1.3 | Current status, including outstanding issues, and the scope that was designed but not implemented | PDF 2a; RT 1.4, 2.2 | One delta table benchmarked against PROP (team ruling): promised, delivered, changed (cite the ADR), dropped. Known deltas to check: the auth approach (PROP: Google sign-in with JWT; built: Sa-token cookie), Checkstyle, automated burndown, ECS circuit-breaker rollback, e2e suite, UC8 as sacrificial scope. State outstanding issues openly |
+| 1.3 | Current status, including outstanding issues, and the scope that was designed but not implemented | PDF 2a; RT 1.4, 2.2 | One delta table benchmarked against PROP (team ruling): promised, delivered, changed, dropped. Each change's ADR, or the fact that it has none, is cited in the report and in the slide's record reference (`data-ref`, review round 5), not on the slide face; the slide states how many changes still lack an ADR. Known deltas to check: the auth approach (PROP: Google sign-in with JWT; built: Sa-token cookie), Checkstyle, automated burndown, ECS circuit-breaker rollback, e2e suite, UC8 as sacrificial scope. State outstanding issues openly |
 | 1.4 | Actual milestones achieved and total effort spent by each member | PDF 2b; RT 2.3 | One table: milestone, date achieved, effort per member. Effort figures must match the fortnightly progress reports already submitted |
 | 1.5 | Who owns each use case's analysis and design, and each design problem | RT 2.1, 3.4, 3.5 | Ownership matrix. Every member owns at least one use case and one design problem. Start from PROP §6.1's indicative allocation and show what changed |
 | 1.6 | Sprints planned and the Definition of Done achieved | PDF 2c | For each sprint, state which step of the DoD ladder was reached: coded, tested, integrated, releasable or released (EPAT 01 Agile p26). Sprint 4 ends on 23 Oct; state its DoD as recorded at the Sprint 4 review, not as hoped |
@@ -164,7 +164,7 @@ By 25 Oct, every box below should be ticked and every open decision settled. Bac
 
 - [ ] Every requirement row from 1.1 to 5.5 has a slide, a demo step or an appendix slide
 - [ ] Every §2 example slide names the report section that holds the full set
-- [ ] Promised-versus-delivered table (1.3) complete, with an ADR for every change
+- [ ] Promised-versus-delivered table (1.3) complete, each change's ADR (or its absence) cited in the report and the slide's record reference
 - [ ] Transition strategies checked against the current ADRs, with every analysis object type covered and any gaps written up
 - [ ] Team-formation statechart drawn and consistent with the State pattern code
 - [ ] Ownership matrix complete: each member has a use case and a design problem

@@ -68,7 +68,7 @@ src/diagrams/      optional per-deck diagram overrides
 `src/content.js` shapes:
 - `SEGMENTS[i] = { n, name, head, short, talk, qa, start: 'HH:MM:SS', owner, items: { '1a': guideline text } }`; minutes in `talk`/`qa`; `short` labels the footer.
 - `SLIDES[i] = { n, seg, item, speaker, slot, title, say, cues?, handover?, trim? }`; `slot` in seconds (`null` = Q&A); `speaker` is a `SPEAKERS` key `{ full, init }`. Titles over 58 characters render smaller.
-- `say` is the sample wording; `[click]` marks a fragment step. Speaking time is estimated at 130 words a minute, and the script flags slides that run over their slot.
+- `say` is the sample wording; `[click]` marks a fragment step, or `[click 2/3]` to number it (step 2 of the slide's 3). Speaking time is estimated at 130 words a minute, and the script flags slides that run over their slot.
 - `QA[segmentNumber] = { window, rows: [[question, answer, owner]] }`; `BACKUPS` rows `[id, title, question it answers, owner?, what to say?]` (the companion shows the question as a cue and "what to say" as the script); `OPEN_ITEMS` rows `[#, item, owner, blocks slide]`.
 - `DEMOS[slide n] = [{ n, t, time, proves, op: [], say, exp, fb }]` (optional): the demo run-book steps hosted by that slide. The deck's `script.js` prints them as step cards, and the companion lists them under that slide. `t` and `say` are text (markers allowed); `time`, `proves`, `op`, `exp` and `fb` are HTML.
 - The kit's own builders read only the fields above, so a deck may add its own to `SLIDES`; the kit ignores them, but the deck's `src/slides-main.js` and `src/script.js` may read them into the output. The SWE5006 deck adds `rubric` (the rubric rows a slide covers), which its script renders as the rubric coverage table and its placeholder slides print.
@@ -97,7 +97,7 @@ src/diagrams/      optional per-deck diagram overrides
 
 ## Presenter runtime (HTML deck)
 
-Arrows (including Up/Down), Space, Enter, PageUp/PageDown, N/P step through fragments (`<div class="frag" data-frag="1">`) and slides; a slide number then Enter jumps to that main slide; Home/End; S opens the speaker companion (below); T starts the talk timer or restarts it from zero; O toggles the overview grid; F fullscreen; B or X jumps to the backup index; `.` blanks the screen to black (O also clears it). A click advances, a click in the left third of the window goes back; clicks on links, buttons and `data-go` elements do not step. `data-go="B6"` on any element links to that slide; `#23` or `#B6` in the URL opens a slide directly, also when the hash changes later. A key hint fades in for 4 s when the deck opens.
+Arrows (including Up/Down), Space, Enter, PageUp/PageDown, N/P step through fragments (`<div class="frag" data-frag="1">`) and slides; a slide number then Enter jumps to that main slide; Home/End; S opens the speaker companion (below); T starts the talk timer or restarts it from zero; O toggles the overview grid; F fullscreen; B or X jumps to the backup index; `.` blanks the screen to black (O also clears it). A click advances, a click in the left third of the window goes back; clicks on links, buttons, `data-go` elements and anything inside a `data-scroll` element (a full-size diagram that scrolls) do not step. `data-go="B6"` on any element links to that slide; `#23` or `#B6` in the URL opens a slide directly, also when the hash changes later. A key hint fades in for 4 s when the deck opens.
 
 ### Speaker companion
 

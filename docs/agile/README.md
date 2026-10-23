@@ -7,6 +7,7 @@ This directory is the durable record of how the team worked, sprint by sprint. G
 ```
 docs/agile/
 ├── README.md              this file
+├── definition-of-done.md  the current Definition of Done, rule by rule, and the done ladder per sprint
 ├── sprint-01/README.md    pointer to the Sprint 1 container issue and report
 ├── sprint-NN/log/         running log for each sprint from Sprint 2 on, one file per day: one dated entry per PR per author
 ├── sprint-NN/log.md       index of the day files
@@ -18,6 +19,7 @@ docs/agile/
 
 Related homes:
 
+- [`definition-of-done.md`](definition-of-done.md): the current Definition of Done, rule by rule, with the done ladder per sprint.
 - `docs/quality/nfr-register.md`: every non-functional requirement, its scenario, where it is enforced, and the evidence.
 - `frontend/docs/adr/` and `backend/docs/adr/`: architecture decision records, numbered independently; the backend's locked stack decisions remain in the D-table of `backend/docs/design/backend-skeleton-plan.md`, and focused design decisions in `backend/docs/design/*.md`. Cross-cutting decisions (CI, deployment, quality gates, process) are dated paragraphs in the owning doc under `docs/`.
 - `.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md`: the shapes issues and PRs take.
