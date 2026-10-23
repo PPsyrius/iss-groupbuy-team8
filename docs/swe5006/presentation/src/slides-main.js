@@ -120,7 +120,7 @@ const changed4 = [
   ['Secrets Manager, no static keys', 'SSM and a root-only env file; 2 IAM users, 1 key', 'operator guide §7 · no ADR'],
   ['Blocking OWASP and IaC scans', 'Trivy, not required; 3 per-job roles', 'security.yml, ruleset 22734681 · no ADR'],
 ];
-const gaps4 = [['SSH port 22 open on the dev host', 'AWS read-only, 21 Oct'], ['CodeQL off', 'ENABLE_CODEQL=false'], ['CloudFront → ALB over HTTP until 16 Nov', '#227'], ['Dev volume unencrypted', 'AWS read-only, 19 Oct']];
+const gaps4 = [['SSH port 22 open on the dev host', 'AWS read-only, 21 Oct'], ['CloudFront → ALB over HTTP until 16 Nov', '#227'], ['Dev volume unencrypted', 'AWS read-only, 19 Oct']];
 const s4 = () => `
 <div class="card" style="position:absolute;left:0;top:0;width:420px;padding:12px 20px 14px">
  ${status4.map(r => `<div style="margin-bottom:10px"${ref(r[4])}><div style="font:600 19px/1.25 Inter">${chip(r[0], r[1])}${r[2]}</div><div style="font:400 19px/1.28 Inter;margin-top:2px">${r[3]}</div></div>`).join('')}
@@ -587,8 +587,8 @@ const s29 = () => one('cicd-pr-vs-merge', 2320, 1096, [1164, 568], [
 function req2() { return '<span style="font:700 15px/1 Inter;color:#3E5CD9;border:1.5px solid #3E5CD9;border-radius:999px;padding:2px 6px;vertical-align:2px">required</span>'; }
 const sec = [
   ['Pre-commit', ['Lefthook: format, lint, type-check (frontend)'], 'Style and type errors', ''],
-  ['Commit · PR', [`<b>gitleaks</b> ${req2()}: the PR’s commits, full history weekly`, 'Code-owner review', 'actionlint'], 'Secrets, unsafe workflows', ''],
-  ['Build', [`SAST: <b>SonarCloud</b> ${req2()}, SpotBugs`, 'SCA: Trivy deps, Dependabot daily'], 'Code flaws, vulnerable libraries', 'CodeQL off: code scanning unavailable'],
+  ['Commit · PR', [`<b>gitleaks</b> ${req2()}: the PR’s commits, full history weekly`, 'Code-owner review; CodeRabbit review, advisory', 'actionlint'], 'Secrets, unsafe workflows, review findings', ''],
+  ['Build', [`SAST: <b>SonarCloud</b> ${req2()}, SpotBugs`, 'SCA: Trivy deps, Dependabot daily'], 'Code flaws, vulnerable libraries', ''],
   ['Test', [`<b>Trivy image</b> ${req2()} (HIGH, CRITICAL)`, 'Trivy config, deployment-bundle rules'], 'Image CVEs, IaC misconfiguration', ''],
   ['Deploy', ['OIDC role per job', 'Image by digest', 'Read-only container, all capabilities dropped', 'OWASP ZAP passive scan of dev, weekly'], 'Stolen keys, swapped images, missing security headers', 'Rebuilt after merge, not rescanned; ZAP passive and advisory, not a gate'],
 ];

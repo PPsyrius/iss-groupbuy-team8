@@ -136,7 +136,6 @@ const b12 = () => dt(['Workflow · trigger', 'Jobs (required in blue)', 'Median'
 ], { fs: 15, w: [190, 470, 220], pad: '6px 10px' }) + `<div style="margin-top:8px;font:400 15px/1.4 Inter">Last 100 runs per workflow and event, read with <span class="mono" style="font-size:14.5px">gh run list</span> and the jobs API on 19 Oct. PR durations count only runs where the gated jobs ran (docs-only PRs skip them in about 10 s). Push medians run from the push run start, not the merge click.</div>`;
 const b13 = () => `<div class="dia" style="margin-top:-8px">${fit('physical-deployment', 1130)}</div>${topo('SWE5001 prod: the same code on ECS, rebuilt from scratch on every release and destroyed after it. SWE5006 dev is slide 31.')}`;
 const b14 = () => dt(['Gap', 'Effect', 'Status'], [
-  ['CodeQL off', 'no CodeQL SAST; SonarCloud and SpotBugs remain', 'ENABLE_CODEQL=false; code scanning not enabled on the repository'],
   ['CloudFront → ALB over HTTP', '/api payloads and the origin header cross the AWS network unencrypted', 'NFR-37 TLS still unmet; accepted risk on dev until 16 Nov (#227, NFR register); fix needs an origin hostname and ACM'],
   ['SSH open to the internet', 'port 22 from 0.0.0.0/0 on the dev host, which has a public IP; SSM sessions make it unnecessary', 'AWS read-only check, 21 Oct; open item 9'],
   ['Dev EBS volume not encrypted', 'database and host data at rest unencrypted', 'AWS read-only check, 19 Oct; not raised as an issue yet'],
