@@ -179,7 +179,7 @@ const retro = [
 const s7 = () => `
 ${ladder()}
 ${tbl(['Sprint', 'Goal', 'Definition of Done reached by the goal increment'], spr.map(s => [`<b style="white-space:nowrap">${s[0]}</b>`, s[1], s[2]]), { fs: 18, w: [160, 450], pad: '6px 11px' })}
-<div style="font:400 18px/1.3 Inter;color:var(--muted);margin-top:6px">Same basis every sprint: integrated = merged to dev with every check green; releasable = shown working on deployed dev, our “on dev” rule</div>
+<div style="font:400 18px/1.3 Inter;color:var(--muted);margin-top:6px">Same basis every sprint: integrated = merged to dev with every required check green; releasable = shown working on deployed dev, our “on dev” rule</div>
 <div class="frag" data-frag="1" style="margin-top:12px;border-radius:8px;background:#FDEFEC;padding:10px 16px">
  <div style="font:700 20px Inter;color:#B02E1B;margin-bottom:6px">Retro improvement → change in the next sprint</div>
  ${retro.map(r => `<div style="display:flex;gap:12px;font:400 20px/1.32 Inter;margin-bottom:4px"><b style="width:58px;flex:none">${r[0]}</b><span style="width:340px;flex:none">${r[1]}</span><span><span style="color:#E8402A;font-weight:700">→</span> ${r[2]}</span></div>`).join('')}
@@ -267,12 +267,12 @@ ${crops.map(([name, x, y, label, head, cap], i) => layer(cropInner(name, x, y, h
 const one = (name, W, H, box, crops, opts = {}) => walk([{ name, W, H, box, ...opts }], crops.map(c => [name, ...c]));
 
 // ---------- slide 9 (2.1) ----------
-const dec9 = [['Modular monolith: COLA layers, six contexts', 'skeleton plan D1, D4'], ['Framework-free domain; 18 ArchUnit rules', 'skeleton plan D1 · no ADR'], ['Consequences run before the commit', 'ADR 0002'], ['Cross-service events through an outbox', 'ADR 0007'], ['One codebase, two topologies', 'ADR 0008'], ['Router owns URL state; generated client', 'frontend ADR 0001, 0003']];
+const dec9 = [['Modular monolith: COLA layers, six contexts', 'skeleton plan D1, D4'], ['Framework-free domain; 17 ArchUnit rules', 'skeleton plan D1 · no ADR'], ['Consequences run before the commit', 'ADR 0002'], ['Cross-service events through an outbox', 'ADR 0007'], ['One codebase, two topologies', 'ADR 0008'], ['Router owns URL state; generated client', 'frontend ADR 0001, 0003']];
 const s9 = () => `
 ${one('logical-layers', 2320, 1644, [764, 568], [
   [1160, 30, 'adapter · contract', 0, [['Adapter', 'REST controllers return one Result envelope against the committed OpenAPI contract']]],
   [1160, 548, 'application', 0, [['Application', 'services run the use cases, one package per bounded context']]],
-  [640, 1116, 'infrastructure realises the domain ports', 0, [['Domain', 'depends on nothing; it names its needs as ports'], ['Infrastructure', 'implements those ports; 18 ArchUnit rules keep it that way']]],
+  [640, 1116, 'infrastructure realises the domain ports', 0, [['Domain', 'depends on nothing; it names its needs as ports'], ['Infrastructure', 'implements those ports; 17 ArchUnit rules keep it that way']]],
 ])}
 <div style="position:absolute;left:784px;top:0;width:380px"${ref('4+1 logical view · SAD 04a p24–29 · skeleton plan = backend-skeleton-plan.md D1–D20 (30 Aug), locked before numbered ADRs')}>
  ${kicker('Decisions that shape it')}
@@ -285,7 +285,7 @@ ${repTop('Report §3.1 · Liu Jin, presented by Eric')}`;
 // ---------- slide 10 (2.2) ----------
 const strat = [
   ['Language, framework', 'maintainability', '«control», «entity» · all', `Spring ${mo('@Service', 19)} by constructor injection; plain Java domain`, 'D1–D20, ArchUnit · no ADR'],
-  ['Presentation', 'usability', 'GUI «boundary» · UC1–UC9', 'TanStack route + component + Query hook', 'F-ADR 0001, 0009'],
+  ['Presentation', 'usability', 'GUI «boundary» · UC1–UC4, UC7–UC9', 'TanStack route + component + Query hook', 'F-ADR 0001, 0009'],
   ['Distribution', 'interoperability', '«control» · all', `${mo('@RestController', 19)} returning ${mo('Result', 19)}; generated client as stub`, 'D11–D12, F-ADR 0003'],
   ['Persistence', 'integrity', '«entity» · all', 'Aggregate + repository port, implemented with MyBatis', 'D1, D9 · no ADR'],
   ['External interface', 'provider isolation', 'system «boundary» · UC2–UC6', 'Gateway port + Stripe / Google adapter; signed webhook', 'ADR 0001, 0004, 0005'],
@@ -468,7 +468,7 @@ const QUADS = [
     detail: [
       ['Unit, component', 'unit', ['JUnit: 162 of 185 test classes', 'Vitest: 77 files']],
       ['Integration', 'integration', ['Testcontainers: 45 of 49 classes, on real PostgreSQL, Redis and ElasticMQ']],
-      ['Contract, ArchUnit', 'integration', ['openapi-diff on the committed contract', '18 architecture rules']],
+      ['Contract, ArchUnit', 'integration', ['openapi-diff on the committed contract', '17 architecture rules']],
     ],
     runs: `${mo('build-quality', 19)}, ${mo('frontend-check', 19)} (required), ${mo('contract-check', 19)}`,
     caught: 'two red tests reproduced the join-quote defect before its fix',
@@ -718,7 +718,7 @@ const seams = [
 const s38 = () => `
 <div class="card" style="position:absolute;left:0;top:0;width:420px;padding:20px 24px">
  ${kicker('Shown in §4 (slide 33)')}
- <div style="font:400 22px/1.45 Inter">${lines(['One change, live on dev', 'Six required checks, a code-owner review, an automatic deploy and a smoke test', '18 ArchUnit rules hold the module boundaries on every build'], 10)}</div>
+ <div style="font:400 22px/1.45 Inter">${lines(['One change, live on dev', 'Six required checks, a code-owner review, an automatic deploy and a smoke test', '17 ArchUnit rules hold the module boundaries on every build'], 10)}</div>
 </div>
 <div style="position:absolute;left:444px;top:0;width:720px"${ref('proposal §6.3: the primary design driver')}>
  ${kicker('Primary design driver: extensibility', '#B02E1B')}
