@@ -35,7 +35,7 @@ const b11 = () => `
    { d: [150, 135, 120, 105, 90, 75, 60, 45, 30, 15, 0], c: '#A69E92', dash: true },
    { d: [150, 132, 114, 90, 82, 76, 68, 68, 68, 66, 66], c: '#3E5CD9' }] })}
  <div style="display:flex;gap:22px;font:400 15px Inter;margin-left:44px">${key('#A69E92', 'Ideal', true)}${key('#3E5CD9', 'Actual remaining')}</div>
- <div class="card" style="margin-top:14px;padding:12px 16px;font:400 16px/1.35 Inter">On the ideal line for the first week, then stuck from 5 Oct: #223, #224 and #229 waited for Checkout on dev, #226 for the NFR-37 decision. Daily card counts agree: 19, 16, 13, 12, then 7.</div>
+ <div class="card" style="margin-top:14px;padding:12px 16px;font:400 16px/1.35 Inter">On the ideal line for the first week, then stuck from 5 Oct: #223 (Checkout on dev) stayed open, #224 had local evidence only, #229 waited on #223 and #222, #226 on the NFR-37 decision. Daily card counts agree: 19, 16, 13, 12, then 7.</div>
  <div style="font:italic 400 15px Inter;margin-top:8px">Source: sprint-03/review.md hours, burned on issue close dates (SGT); docs/agile/metrics/*.csv</div>
 </div>`;
 

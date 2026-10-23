@@ -616,7 +616,7 @@ const s31 = () => one('dev-deployment', 2320, 1096, [1164, 568], [
 
 // ---------- slide 32 (4.5) ----------
 const finds = [
-  ['Early dev deploys failed (5–17 Sep)', ['The hand-built environment drifted from its design', 'Old OIDC subject format, a placeholder instance ID, port 8589 open wide'], ['Fixed on dev by hand', 'The prod stack renders each value in Terraform, so a plan shows it', 'No deploy job failed from 18 Sep to 22 Oct'], 'docs/deploy/prod/backend-prod-terraform-deployment.md L15–23 · 121a0733 · docs/ci/dora-metrics-20261022.md (delivery proxy, PR #629)'],
+  ['Early dev deploys failed (5–17 Sep)', ['The hand-built environment drifted from its design', 'Old OIDC subject format, a placeholder instance ID, port 8589 open wide'], ['Fixed on dev by hand', 'The prod stack renders each value in Terraform, so a plan shows it', 'No dev deploy job failed from 18 Sep to 22 Oct 13:54 UTC'], 'docs/deploy/prod/backend-prod-terraform-deployment.md L15–23 · 121a0733 · docs/ci/dora-metrics-20261022.md (delivery proxy, PR #629)'],
   ['build-quality red for two days (19–20 Oct)', ['Dependabot upgraded the SpotBugs engine without its Maven plugin'], ['Both now upgrade together', 'A POM policy test guards it'], 'docs/ci/ci-failure-audit-20261021.md · PR #580'],
   ['Weekly full-history gitleaks failing (since 21 Sep)', ['20 matches were file digests in a contract baseline, not secrets'], ['Each digest re-hashed, then fingerprinted exactly', '4 badge-token findings still open'], 'docs/ci/ci-failure-audit-20261021.md · PR #580'],
 ];
