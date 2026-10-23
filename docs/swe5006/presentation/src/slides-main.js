@@ -493,7 +493,7 @@ const QUADS = [
   { q: 'Q4', axes: 'technology-facing · critiquing the product', how: 'tools', at: 'left:590px;top:282px', types: [['Performance, load', 'system'], ['Security scanning', 'types']],
     detail: [
       ['Performance, load', 'system', ['k6 on the SWE5001 ECS environment, by hand (next slide)']],
-      ['Security scanning', 'types', ['Static analysis (SAST)', 'Dependencies (SCA)', 'Image and IaC configuration', 'Secrets', 'Dynamic, passive (DAST): OWASP ZAP on dev, weekly']],
+      ['Security scanning', 'types', ['Static analysis (SAST)', 'Dependencies (SCA)', 'Image and IaC configuration', 'Secrets', 'Dynamic, passive (DAST): OWASP ZAP on anonymous dev pages, advisory']],
     ],
     runs: `${mo('security.yml', 19)}, ${mo('build-quality', 19)}, ${mo('docker', 19)} gate the pipeline; ${mo('dast-baseline', 19)} runs weekly, advisory (slide 30)`,
     caught: 'full-history gitleaks: 24 matches, 4 badge tokens still open (slide 32); ZAP on dev: 2 Medium, 4 Low CSP and header findings (22 Oct)' },
@@ -590,7 +590,7 @@ const sec = [
   ['Commit · PR', [`<b>gitleaks</b> ${req2()}: the PR’s commits, full history weekly`, 'Code-owner review; CodeRabbit review, advisory', 'actionlint'], 'Secrets, unsafe workflows, review findings', ''],
   ['Build', [`SAST: <b>SonarCloud</b> ${req2()}, SpotBugs`, 'SCA: Trivy deps, Dependabot daily'], 'Code flaws, vulnerable libraries', ''],
   ['Test', [`<b>Trivy image</b> ${req2()} (HIGH, CRITICAL)`, 'Trivy config, deployment-bundle rules'], 'Image CVEs, IaC misconfiguration', ''],
-  ['Deploy', ['OIDC role per job', 'Image by digest', 'Read-only container, all capabilities dropped', 'OWASP ZAP passive scan of dev, weekly'], 'Stolen keys, swapped images, missing security headers', 'Rebuilt after merge, not rescanned; ZAP passive and advisory, not a gate'],
+  ['Deploy', ['OIDC role per job', 'Image by digest', 'Read-only container, all capabilities dropped', 'OWASP ZAP: passive, anonymous dev pages, advisory'], 'Stolen keys, swapped images, missing security headers', 'Rebuilt after merge, not rescanned; ZAP: no logins, payments or attacks'],
 ];
 const s30 = () => `
 ${tbl(['Stage', 'Control', 'Catches', 'Gap'], sec.map(r => [`<b style="white-space:nowrap">${r[0]}</b>`, lines(r[1]), r[2], r[3] ? `<span style="color:#B02E1B">${r[3]}</span>` : '—']), { fs: 20, w: [140, 490, 250], pad: '5px 11px' })}
