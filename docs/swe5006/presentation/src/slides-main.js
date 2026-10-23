@@ -133,12 +133,12 @@ const s4 = () => `
 </div>`;
 
 // ---------- slide 5 (1.4) ----------
-const ms = [['27 Aug', 'Proposal submitted'], ['5 Sep', 'Backend pipeline live on dev'], ['14 Sep', 'Sprint 1 tag'], ['20 Sep', 'Stripe Sandbox acceptance (local)'], ['22 Sep', 'Web app live on dev'], ['27 Sep', 'Sprint 2 tag'], ['30 Sep', 'Admin console merged', '#305–#307'], ['11 Oct', 'Sprint 3 tag'], ['20 Oct', 'SWE5001 production release on ECS', 'promotion PR #574 · deploy run 39435280952'], ['23 Oct', 'Paid start and refund on dev', 'PR #664 · stripe-dev-recovery-acceptance-20261023.md']];
+const ms = [['27 Aug', 'Proposal submitted'], ['5 Sep', 'Backend pipeline live on dev'], ['14 Sep', 'Sprint 1 tag'], ['20 Sep', 'Stripe Sandbox acceptance (local)'], ['22 Sep', 'Web app live on dev'], ['27 Sep', 'Sprint 2 tag'], ['30 Sep', 'Admin console merged', '#305–#307'], ['11 Oct', 'Sprint 3 tag'], ['20 Oct', 'SWE5001 production release on ECS', 'promotion PR #574 · deploy run 39435280952 · three services since PR #534 (17 Oct)'], ['23 Oct', 'Paid start and refund on dev', 'PR #664 · stripe-dev-recovery-acceptance-20261023.md']];
 const mem = [['Liu Jin', 51, 12.5], ['Yu Qianshuo', 48, 9], ['Wang Ziang', 46, 8.5], ['Panpakorn', 41.5, 11.5], ['Lim Jiechao', 38, 8.5]];
 const s5 = () => `
 <div style="position:absolute;left:0;top:0;width:480px">
  ${kicker('Milestones achieved')}
- ${tbl(['Date', 'Milestone'], ms.map(m => withRef([`<b style="white-space:nowrap">${m[0]}</b>`, m[1]], m[2] || '')).concat([[`<b>23 Oct</b>`, `Sprint 4 tag ${mk('FILL', 'date')}`]]), { fs: 20, w: [96], pad: '8px 12px' })}
+ ${tbl(['Date', 'Milestone'], ms.map(m => withRef([`<b style="white-space:nowrap">${m[0]}</b>`, m[1]], m[2] || '')).concat([['—', `Sprint 4 tag ${mk('FILL', 'date, once cut (open item 6)')}`]]), { fs: 20, w: [96], pad: '8px 12px' })}
 </div>
 <div style="position:absolute;left:510px;top:0;width:654px">
  <div style="display:flex;align-items:baseline;gap:10px">${kicker('Effort per member')}${mk('VERIFY', 'S4 split, PR #538')}</div>
@@ -164,12 +164,12 @@ ${tbl(['Member', 'Use case', 'Design problem → GoF pattern'], own.map(o => wit
 
 // ---------- slide 7 (1.6, 1.7) ----------
 const steps = ['coded', 'tested', 'integrated', 'releasable', 'released'];
-const ladder = () => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"${ref('EPAT 01 Agile p26')}><span style="font:600 18px Inter;color:var(--muted);margin-right:6px">Definition of Done ladder</span>${steps.map((s, i) => `<span style="font:600 18px/1 Inter;padding:7px 12px;border-radius:999px;background:${i === 2 ? '#E3E8FB' : '#ECE6DC'};color:${i === 2 ? '#3E5CD9' : '#1B1A18'}">${s}</span>${i < 4 ? '<span style="color:#A69E92">→</span>' : ''}`).join('')}</div>`;
+const ladder = () => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"${ref('EPAT 01 Agile p26')}><span style="font:600 18px Inter;color:var(--muted);margin-right:6px">Definition of Done ladder</span>${steps.map((s, i) => `<span style="font:600 18px/1 Inter;padding:7px 12px;border-radius:999px;background:${[2, 3, 4].includes(i) ? '#E3E8FB' : '#ECE6DC'};color:${[2, 3, 4].includes(i) ? '#3E5CD9' : '#1B1A18'}">${s}</span>${i < 4 ? '<span style="color:#A69E92">→</span>' : ''}`).join('')}</div>`;
 const spr = [
   ['1 · 1–12 Sep', 'Walking skeleton: sign-in, browse, admin on dev', '<b>integrated</b>: backend on dev 5 Sep; no frontend, so not releasable'],
   ['2 · 15–26 Sep', 'Pay, join a team, see the order, replay-safe', '<b>integrated</b>: merged, tested, Checkout off on dev; 134 of 150 h'],
   ['3 · 28 Sep–9 Oct', 'Invite → pay → refund on deployed dev', '<b>integrated</b>; goal not met under our “on dev” rule; 117 of 150 h'],
-  ['4 · 12–23 Oct', 'Complete system on dev; three services on ECS (SWE5001)', `<span${ref('PR #574 · run 39435280952 · SSM /blocbuy/swe5001/release/* 20 Oct 22:32 SGT · PR #664')}><b>released</b>: SWE5001 production on ECS, 20 Oct; SWE5006 dev <b>releasable</b>: paid start and refund shown 23 Oct</span>`],
+  ['4 · 12–23 Oct', 'Complete system on dev; three services on ECS (SWE5001)', `<span${ref('PR #534 (17 Oct) · PR #574 · run 39435280952 · SSM /blocbuy/swe5001/release/* 20 Oct 22:32 SGT · PR #664 · #590')}><b>released</b>: SWE5001 production on ECS, 17 and 20 Oct, Stripe test mode, up per session; SWE5006 dev <b>releasable</b> except a second buyer’s join: paid start and refund shown 23 Oct</span>`],
 ];
 const retro = [
   ['1 → 2', 'No burndown, no hours', 'Daily board snapshots, dated day logs'],
@@ -179,7 +179,7 @@ const retro = [
 const s7 = () => `
 ${ladder()}
 ${tbl(['Sprint', 'Goal', 'Definition of Done reached by the goal increment'], spr.map(s => [`<b style="white-space:nowrap">${s[0]}</b>`, s[1], s[2]]), { fs: 18, w: [160, 450], pad: '6px 11px' })}
-<div style="font:400 18px/1.3 Inter;color:var(--muted);margin-top:6px"${ref('docs/agile/definition-of-done.md#done-ladder-per-sprint')}>Same basis every sprint: integrated = merged to dev with every required check green; releasable = shown working on deployed dev, our “on dev” rule</div>
+<div style="font:400 18px/1.3 Inter;color:var(--muted);margin-top:6px"${ref('docs/agile/definition-of-done.md#done-ladder-per-sprint')}>Same basis every sprint: integrated = merged to dev with every required check green; releasable = shown working on deployed dev, our “on dev” rule; released = promoted to production and verified there</div>
 <div class="frag" data-frag="1" style="margin-top:12px;border-radius:8px;background:#FDEFEC;padding:10px 16px">
  <div style="font:700 20px Inter;color:#B02E1B;margin-bottom:6px">Retro improvement → change in the next sprint</div>
  ${retro.map(r => `<div style="display:flex;gap:12px;font:400 20px/1.32 Inter;margin-bottom:4px"><b style="width:58px;flex:none">${r[0]}</b><span style="width:340px;flex:none">${r[1]}</span><span><span style="color:#E8402A;font-weight:700">→</span> ${r[2]}</span></div>`).join('')}
@@ -195,8 +195,8 @@ function burndown() {
   const X = i => L + 12 + i * ((R - L - 20) / (xs.length - 1)), Y = v => B - (v / 150) * (B - T);
   const pl = (d, c, dash) => `<polyline points="${d.map((v, i) => `${X(i)},${Y(v)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="3"${dash ? ' stroke-dasharray="7 5"' : ''}/>` + (dash ? '' : d.map((v, i) => `<circle cx="${X(i)}" cy="${Y(v)}" r="4.5" fill="${c}" stroke="#fff" stroke-width="1.5"/>`).join(''));
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Inter">
-   ${[0, 50, 100, 150].map(v => `<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v ? '#EFE9DF' : '#A69E92'}" stroke-width="1"/><text x="${L - 8}" y="${Y(v) + 6}" font-size="17" fill="#6B655C" text-anchor="end">${v}</text>`).join('')}
-   ${xs.map((x, i) => `<text x="${X(i)}" y="${B + 24}" font-size="17" fill="#6B655C" text-anchor="middle">${x}</text>`).join('')}
+   ${[0, 50, 100, 150].map(v => `<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v ? '#EFE9DF' : '#A69E92'}" stroke-width="1"/><text x="${L - 8}" y="${Y(v) + 6}" font-size="18" fill="#6B655C" text-anchor="end">${v}</text>`).join('')}
+   ${xs.map((x, i) => `<text x="${X(i)}" y="${B + 24}" font-size="18" fill="#6B655C" text-anchor="middle">${x}</text>`).join('')}
    ${pl(ideal, '#A69E92', true)}${pl(s2, '#E8402A')}${pl(s3, '#3E5CD9')}</svg>
   <div style="display:flex;gap:16px;font:400 18px Inter;color:#6B655C;margin:0 0 4px 46px"><span><b style="color:#E8402A">●</b> Sprint 2</span><span><b style="color:#3E5CD9">●</b> Sprint 3</span><span>– – ideal · day of sprint</span></div>`;
 }
@@ -332,7 +332,7 @@ ${one('use-case', 2320, 1096, [1164, 568], [
   [560, 40, 'resolution: Scheduler', 0, [['Scheduler', 'a time-driven actor resolves teams'], ['«extend»', 'refund extends resolution when a team expires']]],
   [560, 290, 'refund, payment: Stripe', 0, [['Stripe', 'a secondary actor of refund and of paying upfront']]],
   [1160, 40, 'out of scope', 0, [['Out of scope, greyed', 'as the proposal excluded']]],
-  [1160, 640, 'delivery status', 0, [['Status badges', 'the money path is coded, not yet working on dev']]],
+  [1160, 640, 'delivery status', 0, [['Status badges', 'paid start and expiry refund on dev since 23 Oct; a second buyer’s join not yet']]],
 ])}
 ${repTop('Report §3.3 · use case diagram and specifications')}`;
 
@@ -557,7 +557,7 @@ const s27 = () => `
   ${kicker('Branching: Branch by Feature')}
   <div style="font:400 21px/1.35 Inter">${lines(['One short branch per story', 'A pull request, then a squash merge onto the trunk, <b>dev</b>', 'Linear history since 12 Sep', 'Up to date with dev before merging, instead of merging the trunk daily'], 4)}</div>
  </div>
- <div class="card" style="padding:16px 22px"${ref('ruleset 22734681 · CODEOWNERS (payment and groupbuy owners: PR #669) · docs/deploy/aws-account-governance/README.md')}>
+ <div class="card" style="padding:16px 22px"${ref('ruleset 22734681 · CODEOWNERS (payment and groupbuy owners: PR #669, merged 23 Oct) · docs/deploy/aws-account-governance/README.md')}>
   ${kicker('Who may change it')}
   <div style="font:400 21px/1.35 Inter">${lines([`GitHub: a <b>code owner</b> approves; six checks green`, 'Owners: backend Liu Jin, frontend Lim, CI/CD Pan', 'Payments, refunds Yorik; group buying Eric', 'AWS: IAM Identity Center, MFA enforced, one-hour sessions', 'CI: one OIDC role per job, no AWS keys in GitHub', '<span style="color:#B02E1B">Exception: two IAM users for SSM port forwarding, one with an access key</span>'], 4)}</div>
  </div>

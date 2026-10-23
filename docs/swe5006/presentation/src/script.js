@@ -162,7 +162,7 @@ ${qaTable(5)}
 const segsHtml = [
   segment(seg(1), {
     tip: 'Lim opens at 16:30:00 sharp, with the deck shared and the notes window off the shared screen. Eight slides in three minutes: the tables carry the facts, the wording carries only the point of each slide.',
-    warn: mh('Never present planned hours as actual effort (slide 5), and never say payments or refunds work on dev unless the 24 Oct dry run proved it (slide 4). {{CONFIRM:slide 4 wording after the 23 Oct go/no-go}}'),
+    warn: mh('Never present planned hours as actual effort (slide 5). Paid start and the expiry refund were shown on dev on 23 Oct (PR #664); never say a second buyer’s paid join works on dev unless the 24 Oct dry run shows it (#590).'),
   }),
   segment(seg(2), {
     tip: 'Eric presents 2.1–2.4 and his own design problem; then Yorik, Pan and Lim each have one 20-second slide on their own problem; Liu Jin closes with the full-form State problem and the schema, and carries straight on into §3. The next speaker unmutes during the previous speaker’s last sentence.',
