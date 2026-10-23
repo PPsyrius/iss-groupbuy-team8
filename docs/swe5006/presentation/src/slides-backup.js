@@ -239,7 +239,7 @@ const FULL = [
   ['team-statechart', 'Team-formation statechart', 17], ['fm-start', 'Factory Method: start a team', 18], ['observer-expiry', 'Observer: team outcome', 19],
   ['template-method-outbox', 'Template Method: outbox transports', 20], ['strategy-pricing', 'Strategy: pricing', 21],
   ['state-before', 'Listing lifecycle before State (brute force)', 22], ['state-after', 'Listing lifecycle after State', 23],
-  ['core-erd', 'Core schema', 24], ['cicd-pr-vs-merge', 'CI/CD: pull-request and post-merge jobs', 29], ['dev-deployment', 'Dev deployment', 31],
+  ['core-erd', 'Core schema', 24], ['cicd-pr-vs-merge', 'CI/CD in detail: every step, trigger and path filter', 29], ['dev-deployment', 'Dev deployment', 31],
   ['expiry-refund-sequence', 'Expiry and refund sequence (ECS)', 'B5'], ['physical-deployment', 'SWE5001 production topology', 'B10'],
   ['listing-statechart', 'UC9 listing statechart', 'B13'], ['full-erd', 'Entity-relationship diagram, all tables', 'B16'],
 ];

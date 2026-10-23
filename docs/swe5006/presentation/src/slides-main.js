@@ -575,12 +575,23 @@ const s28 = () => `
 ${tbl(['Artefact', 'Identity', 'Stored in'], art.map(a => withRef([`<b>${a[0]}</b>`, a[1], `<span style="color:var(--muted)">${a[2]}</span>`], a[3] || '')), { fs: 22, w: [230, 560], pad: '12px 14px' })}`;
 
 // ---------- slide 29 (4.3) ----------
-const s29 = () => one('cicd-pr-vs-merge', 2320, 1096, [1164, 568], [
-  [0, 0, 'PR · backend', 0, [['On a backend pull request', 'build-quality runs every unit, architecture and integration test'], ['Also', 'contract-check fails on drift; docker boots the image and Trivy scans it']]],
-  [1160, 64, 'PR · frontend, security', 0, [['Frontend', 'its full check and Playwright on its own build'], ['Security', 'gitleaks on every pull request; Trivy on dependencies and configuration'], ['Required', 'the six blue boxes']]],
-  [0, 572, 'gate · delivery', 0, [['After the squash merge', 'delivery rebuilds from the merged commit: package and push to ECR'], ['Frontend', 'builds and syncs to S3, with a CloudFront invalidation']]],
-  [1160, 600, 'deploy · verification', 0, [['Backend', 'SSM Run Command pulls by digest, rolls back if on-host health fails; public health via CloudFront'], ['Frontend', 'Playwright smoke test on dev']]],
-]);
+// A GitHub-Actions-style job graph (review of #605: "GitHub CI's own looks cleaner", "too much text"). It fits the body
+// at 1:1, so the steps highlight a part of the whole graph and grey out the rest (rubric V5) instead of cropping it.
+// The earlier step-by-step diagram (cicd-pr-vs-merge) stays as backup F16.
+const CJ_W = 1164, CJ_H = 522;
+const spot = (name, W, H, rects) => `<div style="position:relative;width:${W}px;height:${H}px">${svg(name)}
+<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="position:absolute;left:0;top:0"><path fill-rule="evenodd" fill="#FFFFFF" fill-opacity=".74" d="M0,0 H${W} V${H} H0 Z ${rects.map(([x, y, w, h]) => `M${x},${y} h${w} v${h} h-${w} Z`).join(' ')}"/>
+${rects.map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="none" stroke="#E8402A" stroke-width="2.5" stroke-dasharray="8 5"/>`).join('')}</svg></div>`;
+const cj = [
+  ['PR · backend', [[6, 34, 1152, 100]], ['Backend pull request', 'tests and ArchUnit; contract drift; the image boots and Trivy scans it']],
+  ['PR · frontend, security', [[6, 134, 1152, 154]], ['Frontend and security', 'checks and Playwright; secrets, dependencies and policy as code']],
+  ['merge gate', [[164, 294, 836, 50]], ['Merge gate', 'a code owner approves, the six blue checks are green, squash merge']],
+  ['after merge', [[6, 350, 1152, 162]], ['After the merge', 'rebuild and deploy by digest with a health check; the frontend is smoke-tested']],
+];
+const s29 = () => `<style>body:not(.present) .zcrop{display:none}</style>
+<div style="position:absolute;left:0;top:0;width:${CJ_W}px;height:${CJ_H}px">${svg('cicd-jobs')}</div>
+<div style="position:absolute;left:0;top:${CJ_H + 12}px;font:400 18px Inter;color:var(--muted)"${ref('job names as in .github/workflows/ci-backend.yml, ci-frontend.yml, security.yml · required checks: ruleset dev-require-review')}>Real job names; every step, trigger and path filter: backups B8 and F16</div>
+${cj.map(([label, rects, cap], i) => layer(`<div style="flex:1;min-height:0;overflow:hidden">${spot('cicd-jobs', CJ_W, CJ_H, rects)}</div>${caption([cap])}`, label, i, cj.length)).join('')}`;
 
 // ---------- slide 30 (4.3, 3.3) ----------
 // Stages as in DSOEA 07 slide 3 (pre-commit, commit, build, test, deploy).
