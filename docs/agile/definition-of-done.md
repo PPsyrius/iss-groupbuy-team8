@@ -44,13 +44,13 @@ The course's ladder runs coded → tested → integrated → releasable → rele
 
 - **integrated:** merged to `dev` with every required check green;
 - **releasable:** shown working on the deployed dev environment (rule 8). This is lower than the course's "production ready" (p. 25);
-- **released:** used in production. SWE5006 has no production environment: the `backend-prod` deployment path has never run, and Stripe runs in test mode.
+- **released:** promoted to and running in production. SWE5006 has no production environment: the `backend-prod` deployment path has never run. SWE5001's production on ECS was first released by promotion PR #574 on 20 Oct; Stripe runs in test mode there too.
 
 | Sprint | Dates | Goal issue | Step reached | Evidence |
 |---|---|---|---|---|
 | 1 | 1-12 Sep | #49 | integrated | Backend on dev from 5 Sep; no frontend, so not releasable |
 | 2 | 15-26 Sep | #93 | integrated | 9 of 11 stories merged and tested, 134 of 150 h; Checkout and scheduling off on dev (Sprint 2 report) |
 | 3 | 28 Sep-9 Oct | #232 | integrated | Merged and tested; the goal was not met on dev under rule 8; 117 of 150 h, reconstructed at the freeze ([review](sprint-03/review.md)) |
-| 4 | 12-23 Oct | #465 | to be placed at the Sprint 4 review | |
+| 4 | 12-23 Oct | #465 | released (SWE5001); releasable (SWE5006 dev) | SWE5001 production on ECS promoted by PR #574 on 20 Oct, deploy run 39435280952 with the smoke suite green; paid START and the expiry refund shown on deployed dev on 23 Oct (PR #664); a second buyer's JOIN (#590) not shown. Placed from the evidence; the Sprint 4 review (#619) may amend it |
 
 Dates follow the progress reports where they exist. The placements match the deck's Definition of Done slide; they are the team's reading of the evidence, not a course rating.

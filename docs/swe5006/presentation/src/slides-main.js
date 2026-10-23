@@ -106,7 +106,7 @@ const s3 = () => `
 // Status first, the eight changes on the click (rubric V1). Record references live in data-ref (review round 4).
 const status4 = [
   ['Delivered', 'ok', 'UC1–UC9', 'All nine closed as completed', '#24–#32'],
-  ['Open', 'open', 'Paid start, join, refund on dev', 'Checkout returns; the webhook never confirms', '#517 · #223'],
+  ['Open', 'open', 'Second buyer’s paid join on dev', 'Paid start and expiry refund shown on dev 23 Oct', '#664 · #590 · #517'],
   ['Dropped', 'drop', 'Gated prod, ECS circuit breaker', 'For SWE5006; built for SWE5001', '#226 · ADR 0008'],
   ['Partial', 'part', 'E2E, burndown, saved plans', 'Stubs; daily data, no chart; manual', 'F-ADR 0011 · #229'],
 ];
@@ -120,7 +120,7 @@ const changed4 = [
   ['Secrets Manager, no static keys', 'SSM and a root-only env file; 2 IAM users, 1 key', 'operator guide §7 · no ADR'],
   ['Blocking OWASP and IaC scans', 'Trivy, not required; 3 per-job roles', 'security.yml, ruleset 22734681 · no ADR'],
 ];
-const gaps4 = [['Paid flow on dev: go/no-go 23 Oct', '#517 · #223'], ['SSH port 22 open on the dev host', 'AWS read-only, 21 Oct'], ['CodeQL off', 'ENABLE_CODEQL=false'], ['CloudFront → ALB over HTTP until 16 Nov', '#227'], ['Dev volume unencrypted', 'AWS read-only, 19 Oct']];
+const gaps4 = [['SSH port 22 open on the dev host', 'AWS read-only, 21 Oct'], ['CodeQL off', 'ENABLE_CODEQL=false'], ['CloudFront → ALB over HTTP until 16 Nov', '#227'], ['Dev volume unencrypted', 'AWS read-only, 19 Oct']];
 const s4 = () => `
 <div class="card" style="position:absolute;left:0;top:0;width:420px;padding:12px 20px 14px">
  ${status4.map(r => `<div style="margin-bottom:10px"${ref(r[4])}><div style="font:600 19px/1.25 Inter">${chip(r[0], r[1])}${r[2]}</div><div style="font:400 19px/1.28 Inter;margin-top:2px">${r[3]}</div></div>`).join('')}
@@ -133,12 +133,12 @@ const s4 = () => `
 </div>`;
 
 // ---------- slide 5 (1.4) ----------
-const ms = [['27 Aug', 'Proposal submitted'], ['5 Sep', 'Backend pipeline live on dev'], ['14 Sep', 'Sprint 1 tag'], ['20 Sep', 'Stripe Sandbox acceptance (local)'], ['22 Sep', 'Web app live on dev'], ['27 Sep', 'Sprint 2 tag'], ['30 Sep', 'Admin console merged', '#305–#307'], ['11 Oct', 'Sprint 3 tag']];
+const ms = [['27 Aug', 'Proposal submitted'], ['5 Sep', 'Backend pipeline live on dev'], ['14 Sep', 'Sprint 1 tag'], ['20 Sep', 'Stripe Sandbox acceptance (local)'], ['22 Sep', 'Web app live on dev'], ['27 Sep', 'Sprint 2 tag'], ['30 Sep', 'Admin console merged', '#305–#307'], ['11 Oct', 'Sprint 3 tag'], ['20 Oct', 'SWE5001 production release on ECS', 'promotion PR #574 · deploy run 39435280952'], ['23 Oct', 'Paid start and refund on dev', 'PR #664 · stripe-dev-recovery-acceptance-20261023.md']];
 const mem = [['Liu Jin', 51, 12.5], ['Yu Qianshuo', 48, 9], ['Wang Ziang', 46, 8.5], ['Panpakorn', 41.5, 11.5], ['Lim Jiechao', 38, 8.5]];
 const s5 = () => `
 <div style="position:absolute;left:0;top:0;width:480px">
  ${kicker('Milestones achieved')}
- ${tbl(['Date', 'Milestone'], ms.map(m => withRef([`<b style="white-space:nowrap">${m[0]}</b>`, m[1]], m[2] || '')).concat([[`<b>23 Oct</b>`, `Sprint 4 tag ${mk('FILL', 'date')}`], ['—', `<span style="color:#B02E1B">Paid start, join, refund on dev: not yet</span>`]]), { fs: 20, w: [96], pad: '8px 12px' })}
+ ${tbl(['Date', 'Milestone'], ms.map(m => withRef([`<b style="white-space:nowrap">${m[0]}</b>`, m[1]], m[2] || '')).concat([[`<b>23 Oct</b>`, `Sprint 4 tag ${mk('FILL', 'date')}`]]), { fs: 20, w: [96], pad: '8px 12px' })}
 </div>
 <div style="position:absolute;left:510px;top:0;width:654px">
  <div style="display:flex;align-items:baseline;gap:10px">${kicker('Effort per member')}${mk('VERIFY', 'S4 split, PR #538')}</div>
@@ -169,7 +169,7 @@ const spr = [
   ['1 · 1–12 Sep', 'Walking skeleton: sign-in, browse, admin on dev', '<b>integrated</b>: backend on dev 5 Sep; no frontend, so not releasable'],
   ['2 · 15–26 Sep', 'Pay, join a team, see the order, replay-safe', '<b>integrated</b>: merged, tested, Checkout off on dev; 134 of 150 h'],
   ['3 · 28 Sep–9 Oct', 'Invite → pay → refund on deployed dev', '<b>integrated</b>; goal not met under our “on dev” rule; 117 of 150 h'],
-  ['4 · 12–23 Oct', 'Complete system on dev; three services on ECS (SWE5001)', mk('FILL', 'step recorded at the 23 Oct review')],
+  ['4 · 12–23 Oct', 'Complete system on dev; three services on ECS (SWE5001)', `<span${ref('PR #574 · run 39435280952 · SSM /blocbuy/swe5001/release/* 20 Oct 22:32 SGT · PR #664')}><b>released</b>: SWE5001 production on ECS, 20 Oct; SWE5006 dev <b>releasable</b>: paid start and refund shown 23 Oct</span>`],
 ];
 const retro = [
   ['1 → 2', 'No burndown, no hours', 'Daily board snapshots, dated day logs'],
