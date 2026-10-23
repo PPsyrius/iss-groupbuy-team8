@@ -134,17 +134,17 @@ const s4 = () => `
 
 // ---------- slide 5 (1.4) ----------
 const ms = [['27 Aug', 'Proposal submitted'], ['5 Sep', 'Backend pipeline live on dev'], ['14 Sep', 'Sprint 1 tag'], ['20 Sep', 'Stripe Sandbox acceptance (local)'], ['22 Sep', 'Web app live on dev'], ['27 Sep', 'Sprint 2 tag'], ['30 Sep', 'Admin console merged', '#305–#307'], ['11 Oct', 'Sprint 3 tag']];
-const mem = [['Liu Jin', 51], ['Yu Qianshuo', 48], ['Wang Ziang', 46], ['Panpakorn', 41.5], ['Lim Jiechao', 38]];
+const mem = [['Liu Jin', 51, 12.5], ['Yu Qianshuo', 48, 9], ['Wang Ziang', 46, 8.5], ['Panpakorn', 41.5, 11.5], ['Lim Jiechao', 38, 8.5]];
 const s5 = () => `
 <div style="position:absolute;left:0;top:0;width:480px">
  ${kicker('Milestones achieved')}
  ${tbl(['Date', 'Milestone'], ms.map(m => withRef([`<b style="white-space:nowrap">${m[0]}</b>`, m[1]], m[2] || '')).concat([[`<b>23 Oct</b>`, `Sprint 4 tag ${mk('FILL', 'date')}`], ['—', `<span style="color:#B02E1B">Paid start, join, refund on dev: not yet</span>`]]), { fs: 20, w: [96], pad: '8px 12px' })}
 </div>
 <div style="position:absolute;left:510px;top:0;width:654px">
- <div style="display:flex;align-items:baseline;gap:10px">${kicker('Effort per member · planned hours')}${mk('VERIFY', 'S4 split, PR #538')}</div>
- ${tbl(['Member', 'S1', 'S2', 'S3', 'S4', 'Planned', 'Actual'], mem.map(m => [`<b>${m[0]}</b>`, '—', '30', '30', m[1], `<b>${60 + m[1]}</b>`, mk('CONFIRM', 'agreed')]), { fs: 20, w: [150], pad: '9px 11px' })}
- <div style="font:400 20px/1.4 Inter;margin-top:14px">${lines(['Sprint 1 hours were not recorded', 'Team done: Sprint 2 134 of 150 h; Sprint 3 117 of 150 h', `<span${ref('proposal §7')}>Proposal budget: 10 man-days each</span>`], 4)}</div>
- <div style="margin-top:12px;border-radius:8px;background:#FDEFEC;padding:12px 16px;font:400 20px/1.35 Inter"><b style="color:#B02E1B">Planned, not actual:</b> no member logged actual hours, and the progress reports carry none. ${mk('CONFIRM', 'actual effort agreed by all five')}</div>
+ <div style="display:flex;align-items:baseline;gap:10px">${kicker('Effort per member')}${mk('VERIFY', 'S4 split, PR #538')}</div>
+ ${tbl(['Member', 'S1', 'S2', 'S3', 'S4', 'Planned h', 'Actual days'], mem.map(m => [`<b>${m[0]}</b>`, '—', '30', '30', m[1], `<b>${60 + m[1]}</b>`, `<b style="color:#3E5CD9">${m[2]}</b>`]), { fs: 20, w: [150], pad: '9px 11px' })}
+ <div style="font:400 20px/1.4 Inter;margin-top:14px">${lines(['Sprint 1 hours were not recorded', 'Team done: Sprint 2 134 of 150 h; Sprint 3 117 of 150 h', `<span${ref('proposal §7')}>Proposal budget: 10 person-days each</span>`], 4)}</div>
+ <div style="margin-top:12px;border-radius:8px;background:#E3E8FB;padding:12px 16px;font:400 20px/1.35 Inter"${ref('SWE5001 deck slide 6 (docs/swe5001/presentation/src/slides-main.js eff), presented 21 Oct')}><b style="color:#3E5CD9">Actual, ≈ 50 person-days:</b> the split the team agreed for the joint SWE5001 and SWE5006 project, estimated from the issues each person delivered; no one logged hours.</div>
 </div>`;
 
 // ---------- slide 6 (1.5) ----------
