@@ -1,12 +1,12 @@
 # SWE5006 final report, section 3.2: Transition from Analysis to Design
 
-> Draft for the report editor (#463, #614): Wang Ziang's half of section 3.2, strategies 3.2.1 to 3.2.7. Yu Qianshuo's half (3.2.8 to 3.2.11) is not written here. Diagrams are Mermaid sources in UML notation: a solid arrow is a synchronous call, a dashed arrow a return. The "Where in the code" lines are for reviewers and can be cut from the submitted report. Code was read on `dev` at `14996412`.
+> Draft for the report editor (#463, #614): section 3.2, one subsection per row of the deck's transition-strategy table (slide 10), in the deck's order and with its names. This draft covers 3.2.1 to 3.2.4 and 3.2.8; the other four rows (3.2.5 External interface, 3.2.6 Security, 3.2.7 Scheduling, 3.2.9 Domain events) are still to be written. Diagrams are Mermaid sources in UML notation: a solid arrow is a synchronous call, a dashed arrow a return. The "Where in the code" lines are for reviewers and can be cut from the submitted report. Code was read on `dev` at `22f56584`.
 
 A transition strategy deals with one design concern, usually tied to a non-functional requirement. It names the analysis objects and use cases it affects, then shows the typical change to the static structure (class diagram) and to the dynamic interactions (sequence diagram), with the reason for each (Software Analysis and Design, 04a DM pp. 36-37). The section follows the shape of the course's worked example, the OFS high-level design (04c pp. 5-15).
 
 ## Overview
 
-BlocBuy is a client/server web system. The server is a modular monolith in Java, layered in the COLA style; six bounded contexts live inside it: catalog, groupbuy, order, payment, identity and notification. The client is a single-page web application. The layers are drawn in the deck's logical view (`logical-layers.svg`).
+BlocBuy is a client/server web system. The server is a modular monolith in Java, layered in the COLA style; six bounded contexts live inside it: catalog, groupbuy, order, payment, identity and notification. The client is a single-page web application. The layers are drawn in the logical view (Figure 3.1-x, logical view).
 
 These decisions are taken as given:
 
@@ -16,31 +16,35 @@ These decisions are taken as given:
 - Data is stored in PostgreSQL through MyBatis with hand-written converters (D9) and versioned Flyway migrations.
 - Changes to money and seats are serialised by database locks, and their consequences commit in the same transaction (backend ADRs 0001, 0002).
 
-| Strategy | Concern |
-|---|---|
-| 3.2.1 Language, framework and packaging | maintainability |
-| 3.2.2 Presentation | usability |
-| 3.2.3 Distribution | interoperability |
-| 3.2.4 Persistence | integrity |
-| 3.2.5 Concurrency | no oversold seat, no payment settled twice |
-| 3.2.6 Transaction boundary | consistency of money and seats |
-| 3.2.7 Cross-context seams | modifiability |
+Not every strategy has an architecture decision record. Four have none: the server language and framework, persistence (MyBatis), the design of the scheduling job, and the concurrency approach as such. They rest on the locked decisions D1 to D20 of the skeleton plan and on design notes such as `backend/docs/design/paid-group-participation.md`; backend ADRs 0001 and 0002 record only the locks and unique indexes of the paid path and the expiry transition. Recording the four is an open item.
+
+| Strategy | Concern | In this draft |
+|---|---|---|
+| 3.2.1 Language, framework | maintainability | yes |
+| 3.2.2 Presentation | usability | yes |
+| 3.2.3 Distribution | interoperability | yes, with cross-context seams |
+| 3.2.4 Persistence | integrity | yes |
+| 3.2.5 External interface | provider isolation | to be written |
+| 3.2.6 Security | security | to be written |
+| 3.2.7 Scheduling | expiry ≤ 1 min | to be written |
+| 3.2.8 Concurrency | no oversell | yes, with the transaction boundary |
+| 3.2.9 Domain events | decoupling | to be written |
 
 ### From the UC4 analysis model to design
 
-The deck's UC4 (join a team) analysis model (`uc4-analysis-class.svg`) has one object of every kind. Each lands in the strategies below; the deck's UC4 design model (`uc4-design-class.svg`) shows the result.
+The UC4 (join a team) analysis model (Figure 3.4-x, UC4 analysis class diagram) has one object of every kind. Each lands in the strategies below; the UC4 design class diagram (Figure 3.4-y) shows the result.
 
 | Analysis object | Design elements | Strategy |
 |---|---|---|
-| «boundary» `JoinTeamUI` | route `products.$productId.tsx`, component `DealProgress`, hook `useCheckout`; REST endpoints under `/api/v1/payments` | 3.2.2, 3.2.3 |
-| «boundary» `PaymentGateway` | port `CheckoutGateway`, adapter `StripeCheckoutGateway`, `StripeWebhookController` | external interface (Yu's half) |
-| «control» `JoinTeamControl` | split by step: `PurchaseIntentAppService` (quote), `StripeCheckoutService` (checkout and settlement), `OrderFulfilmentAdapter` (what the money buys), `PaidGroupDealService` (admission) | 3.2.1, 3.2.6, 3.2.7 |
-| «entity» `Team`, `Membership` | aggregate `GroupDeal`; members are rows of `biz_group_member` written with it | 3.2.4, 3.2.5 |
+| «boundary» `JoinTeamUI` | route `products.$productId.tsx` (component `ProductDetailPage`), component `DealProgress`, hook `useCheckout`; REST endpoints under `/api/v1/payments` | 3.2.2, 3.2.3 |
+| «boundary» `PaymentGateway` | port `CheckoutGateway`, adapter `StripeCheckoutGateway`, `StripeWebhookController` | 3.2.5 |
+| «control» `JoinTeamControl` | split by step: `StripeCheckoutController` → `PaymentBrowserService` (the buyer's requests), `PurchaseIntentAppService` (quote), `StripeCheckoutService` (checkout and settlement), `OrderFulfilmentAdapter` (what the money buys), `PaidGroupDealService` (admission) | 3.2.1, 3.2.3, 3.2.8 |
+| «entity» `Team`, `Membership` | aggregate `GroupDeal`; members are rows of `biz_group_member` written with it | 3.2.4, 3.2.8 |
 | «entity» `Order` | aggregate `Order`, repository `OrderRepository` | 3.2.4 |
-| «entity» `Payment` | aggregate `CheckoutPayment` | 3.2.4, 3.2.5 |
+| «entity» `Payment` | aggregate `CheckoutPayment` | 3.2.4, 3.2.8 |
 | «entity» `Refund` | refund obligation, a row of `biz_refund` without a domain class | 3.2.4 |
 
-## 3.2.1 Language, framework and packaging
+## 3.2.1 Language, framework
 
 Java 21 is the implementation language of the server. Spring provides object creation and wiring, transactions and web handling. Code follows google-java-format (AOSP style) with Checkstyle, both enforced in the build.
 
@@ -100,7 +104,7 @@ Rationale: a domain without framework code is tested without Spring, and constru
 **Transition of dynamic interactions.** Services exist before a use case starts, so design sequence diagrams begin at a service object. Entities are not built with a bare constructor:
 
 - static factories validate a new state, for example `PurchaseIntent.issue(...)`, and rebuild a stored one, for example `GroupDeal.reconstitute(...)`;
-- a paid team is created through a Factory Method: the abstract `PaidGroupDealCreator.initiate(...)` calls the subclass's `createGroupDeal`.
+- a paid team is created through a Factory Method: the abstract `PaidGroupDealCreator.initiate(...)` calls the subclass's `createGroupDeal` (the design problem of UC3, section 3.5).
 
 ```mermaid
 sequenceDiagram
@@ -138,7 +142,7 @@ The user interface is a single-page application in React 19, in three parts: rou
 
 ```mermaid
 classDiagram
-    class ProductRoute {
+    class ProductDetailPage {
         <<boundary>>
         products.$productId.tsx
     }
@@ -160,8 +164,8 @@ classDiagram
         <<module>>
         +unwrapResult(result)
     }
-    ProductRoute --> DealProgress
-    ProductRoute --> useCheckout
+    ProductDetailPage --> DealProgress
+    ProductDetailPage --> useCheckout
     useCheckout --> GeneratedClient
     useCheckout ..> envelope : unwraps with
 ```
@@ -174,7 +178,7 @@ Rationale: a generated client keeps the screens in step with the contract, so a 
 sequenceDiagram
     actor Buyer
     participant D as :DealProgress
-    participant R as :ProductRoute
+    participant R as :ProductDetailPage
     participant H as :useCheckout
     participant C as :GeneratedClient
     participant API as :Server
@@ -275,11 +279,83 @@ Rationale: the failure path is the same for every use case, so the sequence diag
 
 **Where in the code:** `Result.java`, `GlobalExceptionHandler.java` (`backend/blocbuy-adapter/.../common/web/`); `OrderController`, `StripeCheckoutController`, `StripeWebhookController`; `contracts/openapi.json`.
 
+### Cross-context seams
+
+The six contexts share one deployable, and code in one context reaches another only through an interface it is allowed to use:
+
+- **Supplier facades**, owned by the context that is called: `CatalogPurchaseSupport` (price, purchasability, one stock unit); `GroupDealPurchaseSupport` (the team check before payment) and `GroupDealSettlementSupport` (locking, linking and reconciliation around admission after payment; admission itself stays in `PaidGroupDealService`).
+- **Ports defined by the caller.** Payment defines `PaymentIntentPort` and `PaymentBusinessPort`; the order context implements them (`PurchaseIntentAppService`, `OrderFulfilmentAdapter`). Settlement therefore depends on the port, not on order code; one payment read service uses the order's `PurchaseOperation` enum.
+- **The identity port** `UserAppService`, the only way the commerce contexts ask about a user (`commerce_reaches_identity_only_through_user_port`).
+
+One-way reactions use domain events instead of calls (3.2.9).
+
+**Impacted analysis objects.** «control» objects whose use case spans contexts. In UC3 and UC4 the checkout control needs the listing (catalog), the team (groupbuy), the order (order) and the payment (payment).
+
+**Impacted use cases.** UC3 and UC4 by calls; UC5 and UC6 cross contexts by domain events.
+
+**Transition of static structure.**
+
+```mermaid
+classDiagram
+    namespace payment {
+        class StripeCheckoutService
+        class PaymentBusinessPort {
+            <<interface>>
+        }
+    }
+    namespace order {
+        class OrderFulfilmentAdapter
+    }
+    namespace groupbuy {
+        class GroupDealSettlementSupport {
+            <<interface>>
+        }
+        class PaidGroupDealService
+    }
+    namespace catalog {
+        class CatalogPurchaseSupport {
+            <<interface>>
+        }
+    }
+    namespace identity {
+        class UserAppService {
+            <<interface>>
+        }
+    }
+    StripeCheckoutService --> PaymentBusinessPort
+    OrderFulfilmentAdapter ..|> PaymentBusinessPort
+    OrderFulfilmentAdapter --> GroupDealSettlementSupport
+    OrderFulfilmentAdapter --> PaidGroupDealService
+    OrderFulfilmentAdapter --> CatalogPurchaseSupport
+    OrderFulfilmentAdapter --> UserAppService
+```
+
+Rationale: each context can change its internals without breaking the others, and the dependency points from the caller to an interface its owner controls.
+
+**Transition of dynamic interactions.** A cross-context call is an ordinary synchronous call on the interface, inside the caller's transaction; the design sequence diagrams of section 3.4 draw the interface as the lifeline.
+
+```mermaid
+sequenceDiagram
+    participant Pay as :StripeCheckoutService
+    participant Port as :PaymentBusinessPort
+    participant Set as :GroupDealSettlementSupport
+    participant Cat as :CatalogPurchaseSupport
+    Pay->>Port: fulfil(PaymentSucceeded)
+    Port->>Set: lockTeam(dealId)
+    Port->>Cat: requirePurchasable(productId)
+    Port->>Cat: consumeOneUnit(productId)
+    Port-->>Pay: Outcome
+```
+
+Rationale: the caller sees only the interface, so the call stays the same when the implementation moves. In the SWE5001 deployment the identity port is answered by a remote client, while catalog, groupbuy, order and payment stay together in one service (backend ADR 0008).
+
+**Where in the code:** the interfaces named above in `blocbuy-application` and `blocbuy-domain`; `ArchitectureTest`; backend ADRs 0001 and 0008.
+
 ## 3.2.4 Persistence
 
-Data is stored in PostgreSQL 18 through MyBatis. A persistent aggregate has a repository interface in the domain module, implemented in the infrastructure module with a MyBatis mapper (SQL in XML) and a data object (DO) that mirrors a table row; a hand-written converter maps DO to aggregate (D9). In the course's DAO strategy (04a), the DAO corresponds to the repository and the DTO to the aggregate itself; the DO is an extra row object. Keys are UUIDv7, references between aggregates are IDs without foreign keys, and Flyway migrations V1 to V28 evolve the schema. The collective behaviour of an entity class (find, page) moves to its repository; locking is added by 3.2.5.
+Data is stored in PostgreSQL 18 through MyBatis. A persistent aggregate has a repository interface in the domain module, implemented in the infrastructure module with a MyBatis mapper (SQL in XML) and a data object (DO) that mirrors a table row; a hand-written converter maps DO to aggregate (D9). In the course's DAO strategy (04a), the mapper is the DAO that runs the SQL, and the DO is the transfer object that carries one row between the mapper and the repository; the repository puts a domain port in front of the DAO and hands out aggregates, never DOs. For a read, the converter turns the DO into the aggregate (`GroupDealConverter.toDomain`); for a write, the repository builds the DO from the aggregate (`PaidGroupDealRepositoryImpl.toRow`). The request and response records of 3.2.3 are the transfer objects between client and server. Keys are UUIDv7, references between aggregates are IDs without foreign keys, and Flyway migrations V1 to V28 evolve the schema. The collective behaviour of an entity class (find, page) moves to its repository; locking is added by 3.2.8.
 
-The team has two repositories: `GroupDealRepository` for reads (find, best open deal, memberships) and `PaidGroupDealRepository` for the paid path (lock, insert member, expire). Reads and locked writes have different callers and SQL, so each gets its own port.
+Each aggregate root has one or more repository ports in the domain module. The team has two: `GroupDealRepository` for reads (find, best open deal, memberships) and `PaidGroupDealRepository` for the locked paid path (lock, insert member, expire). Reads and locked writes have different callers and SQL, so each gets its own port.
 
 **Impacted analysis objects.** Every persistent «entity», and every «control» that reads or writes one.
 
@@ -316,7 +392,7 @@ classDiagram
     GroupDealConverter ..> GroupDeal
 ```
 
-Rationale: the application depends only on the port (`application_uses_ports_not_tech`) and persistence classes stay inside infrastructure (`persistence_is_internal`), so the storage technology can change without touching domain or application code. Integrity rules that must hold under concurrency are also unique indexes: one order per payment, one member per buyer per team.
+Rationale: the application depends only on the port (`application_uses_ports_not_tech`) and persistence classes stay inside infrastructure (`persistence_is_internal`), so the storage technology can change without touching domain or application code. Integrity rules that must hold under concurrency are also unique indexes, listed by name in 3.2.8.
 
 **Transition of dynamic interactions.**
 
@@ -336,14 +412,26 @@ Rationale: a save is a guarded `UPDATE` that names the state it read, so a concu
 
 **Where in the code:** `backend/blocbuy-infrastructure/src/main/java/com/blocbuy/groupbuy/persistence/`; mapper XML under `backend/blocbuy-infrastructure/src/main/resources/mapper/`; migrations under `backend/blocbuy-bootstrap/src/main/resources/db/migration/`.
 
-## 3.2.5 Concurrency
+## 3.2.5 External interface
+
+Concern: provider isolation. Not in this draft; to be written for the report.
+
+## 3.2.6 Security
+
+Concern: security. Not in this draft; to be written for the report.
+
+## 3.2.7 Scheduling
+
+Concern: expiry ≤ 1 min. Not in this draft; to be written for the report.
+
+## 3.2.8 Concurrency
 
 Several buyers can pay for the last seat of a team at once, and the expiry sweep can meet a late payment on the same team. The design serialises these cases in the database:
 
-- **Pessimistic locks in a fixed order.** Settlement locks the team, then the purchase intent, then the payment, each with `SELECT ... FOR UPDATE` (backend ADR 0001); the order is a new row, inserted afterwards. The expiry sweep also locks the team first, so a sweep and a settlement on one team queue behind each other instead of deadlocking (ADR 0002). Inside admission the participation receipt is locked before the team; ADR 0001 explains why this cannot deadlock: a receipt is keyed by payment, so no two transactions contend for it.
-- **Guarded updates.** A state change is written as `UPDATE ... WHERE status = 'open'` (and current size), so it happens once; the loser of a race updates zero rows.
-- **Unique indexes as the last line of defence.** One member per buyer per team, one order per payment, and a payment consumes at most one purchase intent.
-- **Work queues and leases.** Workers claim work with `FOR UPDATE SKIP LOCKED` (refunds, outbox, intent expiry), and each scheduled job holds a lease in `sys_scheduler_lock`, so one instance runs it.
+- **Pessimistic locks in a fixed order.** On the paid path, locks are taken team (group deal) → purchase intent → payment → participation receipt, each `SELECT ... FOR UPDATE`; the order is a new row, inserted afterwards. On expiry, the team-outcome subscribers follow team → purchase intent → order → payment (backend ADR 0002). Inside `PaidGroupDealService` the receipt is locked before the deal; this cannot deadlock because a receipt is keyed by payment ID (backend ADR 0001). Because the expiry sweep also locks the team first, a sweep and a settlement on one team queue behind each other instead of deadlocking. The two ADRs word the lock order differently; tracked in issue #663.
+- **Guarded updates.** `updateDeal` writes only `WHERE current_size = expectedSize AND status = expectedStatus`, so the loser of a race updates zero rows; `version` is incremented, not compared. The expiry update is guarded by `status = 'open'`.
+- **Unique indexes as the last line of defence.** One active member per buyer per team (`uq_biz_group_member_deal_user`), one member per payment (`uq_biz_group_member_payment_id`), one participation receipt per payment (`uq_biz_group_participation_receipt_payment`), one order per payment (`uq_biz_order_payment_id`), one fulfilled purchase intent per payment (`uq_biz_purchase_intent_fulfilled_payment`) and one refund obligation per payment (`biz_refund.payment_id UNIQUE`).
+- **Work queues and leases.** Workers claim work with `FOR UPDATE SKIP LOCKED` (refunds, outbox, intent expiry), and each scheduled job holds a job lease in `sys_scheduler_lock`, so one instance runs it. A refund obligation also carries its own row lease: the worker claims one due `pending` or `processing` obligation, sets a 2-minute `lease_until` and `version + 1`; `finish` is fenced by `id` and `version` and schedules the next attempt 30 s later (fixed delay, not exponential).
 
 Administrator edits of a listing use an optimistic `version` instead; a stale version is refused with `412 Precondition Failed`.
 
@@ -396,15 +484,15 @@ sequenceDiagram
 
 Rationale: a group-buy must never sell more seats than its target or settle one payment twice. Database locks hold across application instances, which in-memory locks would not.
 
-**Where in the code and evidence:** `OrderFulfilmentAdapter` (lock order in its Javadoc), `PaidGroupDealMapper.xml`, `PaymentMapper.xml`; the race test `StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist` (20 buyers, 1 seat left, 19 refund obligations); backend ADRs 0001 and 0002.
+**Where in the code and evidence:** `OrderFulfilmentAdapter` (lock order in its Javadoc), `PaidGroupDealMapper.xml`, `PaymentMapper.xml`, `RefundMapper.xml` (`finish`); migrations V5, V7, V9, V12 and V15 (unique indexes); the race test `StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist` (20 buyers, 1 seat left, 19 refund obligations); backend ADRs 0001 and 0002.
 
-## 3.2.6 Transaction boundary
+### Transaction boundary
 
 **Decision.** Each step of a use case that changes data is one database transaction, owned by the application service: `@Transactional`, with a timeout where the step takes locks (`PaidGroupDealService`: 10 s), or a `TransactionTemplate` when the step must start only after an external provider has answered (`StripeCheckoutService` verifies the webhook and re-reads the Checkout session first, then settles).
 
 - A collaborator that must run inside its caller's transaction declares `Propagation.MANDATORY` (`OrderFulfilmentAdapter`), so calling it without one fails.
 - Calls to an external provider never run inside a transaction.
-- Consequences that belong to the same business fact run as `BEFORE_COMMIT` listeners; derived side effects run `AFTER_COMMIT`.
+- Consequences that belong to the same business fact run as `BEFORE_COMMIT` listeners; derived side effects run `AFTER_COMMIT`. The event side of this rule (event records and the listeners themselves) belongs to 3.2.9 Domain events and to Yorik's Observer design (section 3.5).
 
 **Impacted analysis objects.** «control» objects that change more than one entity: settlement, expiry and refund.
 
@@ -472,74 +560,6 @@ Rationale: the seat, the order and the stock unit change together with the payme
 
 **Where in the code:** `StripeCheckoutService` (`handleWebhook`, `settle`), `OrderFulfilmentAdapter`, `PaidGroupDealService`; `OrderLifecycleSubscriber`, `TeamExpiryRefundSubscriber` (before commit), `ShareCreditSubscriber`, `OpenDealOfferCacheSubscriber` (after commit); backend ADRs 0001 to 0003.
 
-## 3.2.7 Cross-context seams
+## 3.2.9 Domain events
 
-The six contexts share one deployable, and code in one context reaches another only through an interface it is allowed to use:
-
-- **Supplier facades**, owned by the context that is called: `CatalogPurchaseSupport` (price, purchasability, one stock unit); `GroupDealPurchaseSupport` (the team check before payment) and `GroupDealSettlementSupport` (locking, linking and reconciliation around admission after payment; admission itself stays in `PaidGroupDealService`).
-- **Ports defined by the caller.** Payment defines `PaymentIntentPort` and `PaymentBusinessPort`; the order context implements them (`PurchaseIntentAppService`, `OrderFulfilmentAdapter`). Settlement therefore depends on the port, not on order code; one payment read service uses the order's `PurchaseOperation` enum.
-- **The identity port** `UserAppService`, the only way the commerce contexts ask about a user (`commerce_reaches_identity_only_through_user_port`).
-
-One-way reactions use domain events instead of calls.
-
-**Impacted analysis objects.** «control» objects whose use case spans contexts. In UC3 and UC4 the checkout control needs the listing (catalog), the team (groupbuy), the order (order) and the payment (payment).
-
-**Impacted use cases.** UC3 and UC4 by calls; UC5 and UC6 cross contexts by domain events.
-
-**Transition of static structure.**
-
-```mermaid
-classDiagram
-    namespace payment {
-        class StripeCheckoutService
-        class PaymentBusinessPort {
-            <<interface>>
-        }
-    }
-    namespace order {
-        class OrderFulfilmentAdapter
-    }
-    namespace groupbuy {
-        class GroupDealSettlementSupport {
-            <<interface>>
-        }
-        class PaidGroupDealService
-    }
-    namespace catalog {
-        class CatalogPurchaseSupport {
-            <<interface>>
-        }
-    }
-    namespace identity {
-        class UserAppService {
-            <<interface>>
-        }
-    }
-    StripeCheckoutService --> PaymentBusinessPort
-    OrderFulfilmentAdapter ..|> PaymentBusinessPort
-    OrderFulfilmentAdapter --> GroupDealSettlementSupport
-    OrderFulfilmentAdapter --> PaidGroupDealService
-    OrderFulfilmentAdapter --> CatalogPurchaseSupport
-    OrderFulfilmentAdapter --> UserAppService
-```
-
-Rationale: each context can change its internals without breaking the others, and the dependency points from the caller to an interface its owner controls.
-
-**Transition of dynamic interactions.** A cross-context call is an ordinary synchronous call on the interface, inside the caller's transaction; the design sequence diagrams of section 3.4 draw the interface as the lifeline.
-
-```mermaid
-sequenceDiagram
-    participant Pay as :StripeCheckoutService
-    participant Port as :PaymentBusinessPort
-    participant Set as :GroupDealSettlementSupport
-    participant Cat as :CatalogPurchaseSupport
-    Pay->>Port: fulfil(PaymentSucceeded)
-    Port->>Set: lockTeam(dealId)
-    Port->>Cat: requirePurchasable(productId)
-    Port->>Cat: consumeOneUnit(productId)
-    Port-->>Pay: Outcome
-```
-
-Rationale: the caller sees only the interface, so the call stays the same when the implementation moves. In the SWE5001 deployment the identity port is answered by a remote client, while catalog, groupbuy, order and payment stay together in one service (backend ADR 0008).
-
-**Where in the code:** the interfaces named above in `blocbuy-application` and `blocbuy-domain`; `ArchitectureTest`; backend ADRs 0001 and 0008.
+Concern: decoupling. Not in this draft; to be written for the report.
