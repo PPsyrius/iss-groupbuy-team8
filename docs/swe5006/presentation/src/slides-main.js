@@ -590,7 +590,7 @@ const sec = [
   ['Commit · PR', [`<b>gitleaks</b> ${req2()}: the PR’s commits, full history weekly`, 'Code-owner review; CodeRabbit review, advisory', 'actionlint'], 'Secrets, unsafe workflows, review findings', ''],
   ['Build', [`SAST: <b>SonarCloud</b> ${req2()}, SpotBugs`, 'SCA: Trivy deps, Dependabot daily'], 'Code flaws, vulnerable libraries', ''],
   ['Test', [`<b>Trivy image</b> ${req2()} (HIGH, CRITICAL)`, 'Trivy config, deployment-bundle rules'], 'Image CVEs, IaC misconfiguration', ''],
-  ['Deploy', ['OIDC role per job', 'Image by digest', 'Read-only container, all capabilities dropped', 'OWASP ZAP: passive, anonymous dev pages, advisory'], 'Stolen keys, swapped images, missing security headers', 'Rebuilt after merge, not rescanned; ZAP: no logins, payments or attacks'],
+  ['Deploy', ['OIDC role per job', 'Image by digest', 'Read-only container, all capabilities dropped', 'OWASP ZAP: passive, anonymous dev pages, advisory'], 'Stolen keys, swapped images, missing security headers', 'Dev delivery rebuilds the image without repeating the Trivy image gate; ZAP: no logins, payments or attacks'],
 ];
 const s30 = () => `
 ${tbl(['Stage', 'Control', 'Catches', 'Gap'], sec.map(r => [`<b style="white-space:nowrap">${r[0]}</b>`, lines(r[1]), r[2], r[3] ? `<span style="color:#B02E1B">${r[3]}</span>` : '—']), { fs: 20, w: [140, 490, 250], pad: '5px 11px' })}

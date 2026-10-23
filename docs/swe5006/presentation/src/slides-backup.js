@@ -144,7 +144,7 @@ const b14 = () => dt(['Gap', 'Effect', 'Status'], [
   ['No dev alarms', 'failures are noticed by e2e-dev or by people', 'all six CloudWatch alarms belong to SWE5001'],
   ['Dev not zero-downtime', 'a deploy restarts the only API container (502 on 3–4 Oct)', 'accepted for dev'],
   ['Secrets in a host file', 'manual creation and rotation, root-only 0600', 'accepted for dev; prod uses Parameter Store'],
-  ['Rebuilt after merge', 'the deployed image and dist/ are not the PR-scanned artefacts; Trivy not re-run', 'strict up-to-date checks; ECR scans on push; ADR 0004 text to reconcile'],
+  ['Delivery image rebuilt', 'dev delivery rebuilds the backend JAR and image without repeating the Trivy image gate, so the deployed image is not the PR-scanned one; SonarCloud, deploy health checks and the frontend smoke still run', 'artifact-assurance limit; ECR scans on push (not a gate); ADR 0004 text to reconcile (open item 18)'],
   ['Weekly full-history gitleaks red', '20 digest false positives fingerprinted; 4 badge-token findings still fail the scan', 'PR #580, ci-failure-audit-20261021.md'],
   ['Passive DAST; SBOM not per image', 'OWASP ZAP of dev is anonymous and passive: no logins, payments or active attacks; advisory, 2 Medium, 4 Low CSP and header findings (22 Oct), fixes in #610; the CycloneDX SBOM covers source dependencies, not each built image', '#607, #610, #609'],
 ], { fs: 15, w: [250, 450], pad: '5px 10px' });
