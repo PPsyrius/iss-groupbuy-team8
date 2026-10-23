@@ -77,17 +77,22 @@ Recorded on 23 October 2026 after an adversarial review of the first version of 
 
 | Study ID (02 §11) | Study decision | Report ID | Status as built |
 |---|---|---|---|
-| AD-01 | Modular-monolith core plus extracted services | AD-02 | Built: split only where no transaction crosses |
-| AD-02 | groupbuy + order one service, payment separate | AD-02 | Superseded: payment stays in commerce-svc |
-| AD-03 | Transactional outbox + SNS/SQS | AD-04 | Built |
+| AD-01 | Modular-monolith core plus extracted services | AD-02 (consolidated) | Folded into report AD-02 |
+| AD-02 | groupbuy + order one service, payment separate | AD-02 (consolidated) | Folded into report AD-02; the separate payment service was not built |
+| AD-03 | Transactional outbox + SNS/SQS | AD-04 (consolidated) | Folded into report AD-04 |
 | AD-04 | Stock reservation via synchronous REST | none | Not built |
 | AD-05 | ALB path routing as the API gateway, CloudFront + WAF | AD-09 (edge part) | Partly built: no WAF |
 | AD-06 | Shared Sa-Token session store | AD-05 | Built |
 | AD-07 | One RDS instance, schema per service | AD-03, AD-11 | Built differently: one database (not schema) and role per service |
 | AD-08 | ECS Fargate | AD-07 | Built |
-| AD-09 | Idempotent consumers with an inbox table | AD-04 | Built (consumed-message table) |
+| AD-09 | Idempotent consumers with an inbox table | AD-04 (consolidated) | Folded into report AD-04 |
 | AD-10 | Jobs leased in the owning service | AD-15 (new) | Built |
 | AD-11 | ADOT/X-Ray observability | none | Not built; CloudWatch only |
+
+Consolidation records, each with one report-level status:
+
+- **Report AD-02** consolidates study AD-01 and AD-02. Decision: split into services only where no transaction crosses, so catalog, groupbuy, order and payment stay together in commerce-svc. Status: built. Consequence: no sagas; payment extraction is roadmap work (AISS-02).
+- **Report AD-04** consolidates study AD-03 and AD-09. Decision: transactional outbox to SNS and SQS with dead-letter queues, and consumers that record each event ID to skip duplicates. Status: built.
 
 The deck has no AD-01; Eric decides whether AD-01 becomes the overall style decision or stays unused.
 
@@ -102,7 +107,7 @@ The deck has no AD-01; Eric decides whether AD-01 becomes the overall style deci
 | AISS-05 | Events eventually consistent | AISS-08 (new) |
 | AISS-06 | Reservations hold stock until TTL | dropped (reservation not built) |
 
-New AISS candidates found in the review, numbered from AISS-09 by the 3.4 owners: no WAF, GuardDuty or CloudTrail in `infra/swe5001`; every service database carries the full migration stream; the capacity ceiling is unproven because the 19 October generator saturated first; no backups, so the recovery point is the last seed.
+New AISS candidates found in the review, numbered from AISS-09 by the 3.4 owners: no WAF, GuardDuty or CloudTrail in `infra/swe5001`; every service database carries the full migration stream; the capacity ceiling is unproven because the 19 October generator saturated first; no automated backups and no final snapshot, so post-seed database state has no recovery point; the demo seed is a rebuild baseline, not a recovery point (`db-init` recreates roles, databases and schemas only).
 
 ## Focus areas
 
@@ -173,7 +178,7 @@ Template headings are fixed, including subsections such as 1.4.1 and 1.4.2. "Mus
 | 3.1.1 Key Architectural Decisions | AD table with context, options, choice, trade-off, consequence; F5's traceability table links here | Deck backup B1a, [AD mapping](#ad-mapping-proposed-eric-confirms-in-311), ADRs 0007, 0008 |
 | 3.1.2 Tiers and Layers | Tiers, the COLA layers inside each service, the development view (D16) and the 18 architecture rules that enforce the layers | [`02-proposed-architecture.md`](../architecture-options-study/02-proposed-architecture.md) §2.1 (proposal; check against the code), [`ArchitectureTest.java`](../../../backend/blocbuy-bootstrap/src/test/java/com/blocbuy/architecture/ArchitectureTest.java) |
 | 3.1.3 Nodes and Subsystems | F13: the redrawn logical detail deployment diagram (D3) as the primary view, plus the UC4 runtime view (D17) for the dynamic relationships the template asks for | `logical-view.svg` content, redrawn |
-| 3.1.4 Platform Design | Focus area A; then **API access for producers and consumers**: the OpenAPI contract and its CI check, Sa-Token RBAC, write rate limits, the `Result`/`ErrorCode` envelope, idempotency, event versioning, and the API-gateway decision with what is not built | [`06-eventstorming-ddd.md`](../architecture-options-study/06-eventstorming-ddd.md), [`contracts/openapi.json`](../../../contracts/openapi.json), [`write-rate-limits.md`](../../../backend/docs/design/write-rate-limits.md), deck backup B10 |
+| 3.1.4 Platform Design | Focus area A; then **API access for producers and consumers**: the OpenAPI contract and its CI check, Sa-Token RBAC, write rate limits, the standard success and error response envelope with stable error codes, idempotency, event versioning, and the API-gateway decision with what is not built | [`06-eventstorming-ddd.md`](../architecture-options-study/06-eventstorming-ddd.md), [`contracts/openapi.json`](../../../contracts/openapi.json), [`write-rate-limits.md`](../../../backend/docs/design/write-rate-limits.md), deck backup B10 |
 
 **3.2 Physical Architecture & Design (Liu Jin; 3.2.4 Yorik)**
 
