@@ -32,7 +32,7 @@ Still open, all needing the team rather than the repository (see `OPEN_ITEMS` in
 
 - Owners of UC1, UC2, UC5 and UC7 (1.5, open decision 4) and the Sprint 3 and Sprint 4 retrospectives (1.6, 1.7).
 - The paid flow on dev: PR #664 merging and a second buyer's JOIN (#590), the k6 pre-run on the SWE5001 ECS environment (5.3), and both backup videos by 24 Oct (G6, 4.6, 5.5).
-- Report section numbers (#463), ADRs for the six changes on slide 4 that have none (listed in its `data-ref`), the scribe (G9), the demo change and its approver (4.1), Identity Center MFA (4.2).
+- Report section numbers (#463), ADRs for the six changes on slide 4 that have none (listed in its `data-ref`), the scribe (G9), the demo change and its approver (4.1).
 
 ## Working on the deck
 
