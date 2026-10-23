@@ -127,7 +127,7 @@ const b10 = () => dt(['Kind · level', 'Tools', 'Count by module', 'Example clas
 const req = '<b style="color:#3E5CD9">required</b>';
 const b12 = () => dt(['Workflow · trigger', 'Jobs (required in blue)', 'Median', 'Green'], [
   ['<b>ci-backend</b> · PR', `${req}: build-quality (13.1 min), docker (2.8 min), SonarCloud Backend; contract-check (12 s)`, '16.1 min to docker end (18 runs, 16–19 Oct)', '18 of 20 finished runs; 16 cancelled by a newer push'],
-  ['<b>ci-backend</b> · push to dev', 'package-dev 46 s → publish-ecr-dev 73 s → deploy-existing-ec2 40 s; SonarCloud Backend refreshes the dashboard', '3.1 min to deployed (88 runs)', 'deploy 88 of 97; all 9 failures 14–17 Sep (SSM: instance not in a valid state)'],
+  ['<b>ci-backend</b> · push to dev', 'package-dev 46 s → publish-ecr-dev 73 s → deploy-existing-ec2 40 s; SonarCloud Backend refreshes the dashboard', '3.1 min to deployed (88 runs)', 'deploy 88 of 97 in this sample; its 9 failures 14–17 Sep (SSM: instance not in a valid state)'],
   ['<b>ci-frontend</b> · PR', `${req}: frontend-check (3.4 min), SonarCloud Frontend; e2e-preview (69 s), intent-stale`, '4.8 min to e2e-preview end (19 runs)', '19 of 20 finished runs'],
   ['<b>ci-frontend</b> · push to dev', 'package-dev 35 s → deploy-s3-dev 21 s → e2e-dev 82 s; SonarCloud Frontend', '2.7 min to e2e-dev green (94 runs)', 'deploy 97 of 97; e2e-dev 94 of 97 (3–4 Oct)'],
   ['<b>security</b> · PR, dev, weekly', `${req}: gitleaks (10 s); trivy-deps (72 s), trivy-config, workflow-lint, deployment-bundle when their paths change`, '12 s on most PRs', 'PR 97 of 98 finished; dev push 100 of 100'],
