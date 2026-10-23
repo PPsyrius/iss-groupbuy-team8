@@ -69,6 +69,9 @@ updates:
         patterns: ['@tanstack/*']
       heroui:
         patterns: ['@heroui/*', 'react-aria-components']
+      # React refuses to run when react and react-dom differ (PR #634).
+      react:
+        patterns: ['react', 'react-dom']
     ignore:
       - dependency-name: 'react'
         update-types: ['version-update:semver-major']
