@@ -611,7 +611,7 @@ const finds = [
 ];
 const s32 = () => `
 ${tbl(['Finding', 'Root cause', 'Fix'], finds.map(f => withRef([`<b>${f[0]}</b>`, lines(f[1], 4), lines(f[2], 4)], f[3])), { fs: 20, w: [250, 440], pad: '11px 12px' })}
-<div style="position:absolute;left:0;right:0;top:472px;border-radius:8px;background:#FDEFEC;padding:12px 16px;font:400 20px/1.35 Inter"${ref('#517')}><b style="color:#B02E1B">Still open:</b> the Stripe webhook never confirms a payment on dev, so a green pipeline is not yet a working paid flow.</div>`;
+<div style="position:absolute;left:0;right:0;top:472px;border-radius:8px;background:#FDEFEC;padding:12px 16px;font:400 20px/1.35 Inter"${ref('#664 · #590 · #517 · backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md')}><b style="color:#B02E1B">Still open:</b> a second buyer’s paid join on dev. Paid start and the expiry refund were shown on dev on 23 Oct, after a webhook configuration repair.</div>`;
 
 // ---------- slide 33 (4.1, 4.6) ----------
 const live = [
