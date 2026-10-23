@@ -25,18 +25,18 @@ const b11 = () => `
    { d: [150, 135, 120, 105, 90, 75, 60, 45, 30, 15, 0], c: '#A69E92', dash: true },
    { d: [150, 150, 150, 150, 150, 150, 124, 74, 40, 16, 16], c: '#3E5CD9' }] })}
  <div style="display:flex;gap:22px;font:400 15px Inter;margin-left:44px">${key('#A69E92', 'Ideal', true)}${key('#3E5CD9', 'Actual remaining')}</div>
- <div class="card" style="margin-top:14px;padding:12px 16px;font:400 16px/1.35 Inter">Flat for a week, then a cliff: work merged late in very large pull requests. Retro answer: PRs under 1,500 lines and hours on the board daily.</div>
+ <div class="card" style="margin-top:14px;padding:12px 16px;font:400 16px/1.35 Inter">Flat for a week, then a cliff: no committed story merged before 22 Sep; week-1 merges were carry-over and enabling work. Retro answer: PRs under 1,500 lines.</div>
  <div style="font:italic 400 15px Inter;margin-top:8px">Source: docs/sprint2-progress-report.typ, “Daily burndown data”</div>
 </div>
 <div style="position:absolute;left:604px;top:0;width:560px">
- <div class="serif" style="font-size:21px">Sprint 3 · open sprint cards, 29 Sep–9 Oct</div>
- <div style="font:400 15.5px Inter;margin:2px 0 6px">21 cards · 150 h planned · 33 h left at freeze (review)</div>
- ${lineChart({ xs: ['29', '30', '1', '2', '5', '6', '7', '8', '9'], max: 21, step: 7, series: [
-   { d: [21, 18.4, 15.8, 13.1, 10.5, 7.9, 5.3, 2.6, 0], c: '#A69E92', dash: true },
-   { d: [19, 16, 13, 12, 7, 7, 7, 7, 8], c: '#3E5CD9' }] })}
- <div style="display:flex;gap:22px;font:400 15px Inter;margin-left:44px">${key('#A69E92', 'Ideal', true)}${key('#3E5CD9', 'Cards not Done (daily snapshot)')}</div>
- <div class="card" style="margin-top:14px;padding:12px 16px;font:400 16px/1.35 Inter">Steadier burn, then stuck at 7 from 5 Oct: #223, #224 and #229 waited for Checkout on dev, #226 for the NFR-37 decision. Hours come from the review.</div>
- <div style="font:italic 400 15px Inter;margin-top:8px">Source: docs/agile/metrics/*.csv, sprint-03/review.md</div>
+ <div class="serif" style="font-size:21px">Sprint 3 · remaining hours, 28 Sep–9 Oct</div>
+ <div style="font:400 15.5px Inter;margin:2px 0 6px">150 h planned · 66 h left, whole stories · 33 h with partial credit (review)</div>
+ ${lineChart({ xs: ['start', '28', '29', '30', '1', '2', '5', '6', '7', '8', '9'], max: 150, step: 50, series: [
+   { d: [150, 135, 120, 105, 90, 75, 60, 45, 30, 15, 0], c: '#A69E92', dash: true },
+   { d: [150, 132, 114, 90, 82, 76, 68, 68, 68, 66, 66], c: '#3E5CD9' }] })}
+ <div style="display:flex;gap:22px;font:400 15px Inter;margin-left:44px">${key('#A69E92', 'Ideal', true)}${key('#3E5CD9', 'Actual remaining')}</div>
+ <div class="card" style="margin-top:14px;padding:12px 16px;font:400 16px/1.35 Inter">On the ideal line for the first week, then stuck from 5 Oct: #223, #224 and #229 waited for Checkout on dev, #226 for the NFR-37 decision. Daily card counts agree: 19, 16, 13, 12, then 7.</div>
+ <div style="font:italic 400 15px Inter;margin-top:8px">Source: sprint-03/review.md hours, burned on issue close dates (SGT); docs/agile/metrics/*.csv</div>
 </div>`;
 
 // ---- B1: agile artefacts appendix (rubric 1.8) ----

@@ -187,15 +187,18 @@ ${tbl(['Sprint', 'Goal', 'Definition of Done reached by the goal increment'], sp
 
 // ---------- slide 8 (1.8) ----------
 function burndown() {
-  const xs = ['start', '15', '16', '17', '18', '19', '22', '23', '24', '25', '26'];
-  const ideal = [150, 135, 120, 105, 90, 75, 60, 45, 30, 15, 0], act = [150, 150, 150, 150, 150, 150, 124, 74, 40, 16, 16];
-  const W = 470, H = 250, L = 46, R = W - 10, T = 12, B = H - 32;
+  // Both sprints planned 150 h, so one hours axis compares them; x is the sprint's working day (0 = start).
+  const xs = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+  const ideal = [150, 135, 120, 105, 90, 75, 60, 45, 30, 15, 0];
+  const s2 = [150, 150, 150, 150, 150, 150, 124, 74, 40, 16, 16], s3 = [150, 132, 114, 90, 82, 76, 68, 68, 68, 66, 66];
+  const W = 470, H = 230, L = 46, R = W - 10, T = 12, B = H - 32;
   const X = i => L + 12 + i * ((R - L - 20) / (xs.length - 1)), Y = v => B - (v / 150) * (B - T);
   const pl = (d, c, dash) => `<polyline points="${d.map((v, i) => `${X(i)},${Y(v)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="3"${dash ? ' stroke-dasharray="7 5"' : ''}/>` + (dash ? '' : d.map((v, i) => `<circle cx="${X(i)}" cy="${Y(v)}" r="4.5" fill="${c}" stroke="#fff" stroke-width="1.5"/>`).join(''));
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Inter">
    ${[0, 50, 100, 150].map(v => `<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v ? '#EFE9DF' : '#A69E92'}" stroke-width="1"/><text x="${L - 8}" y="${Y(v) + 6}" font-size="17" fill="#6B655C" text-anchor="end">${v}</text>`).join('')}
-   ${xs.map((x, i) => `<text x="${X(i)}" y="${B + 24}" font-size="${i ? 17 : 15}" fill="#6B655C" text-anchor="middle">${x}</text>`).join('')}
-   ${pl(ideal, '#A69E92', true)}${pl(act, '#3E5CD9')}</svg>`;
+   ${xs.map((x, i) => `<text x="${X(i)}" y="${B + 24}" font-size="17" fill="#6B655C" text-anchor="middle">${x}</text>`).join('')}
+   ${pl(ideal, '#A69E92', true)}${pl(s2, '#E8402A')}${pl(s3, '#3E5CD9')}</svg>
+  <div style="display:flex;gap:16px;font:400 18px Inter;color:#6B655C;margin:0 0 4px 46px"><span><b style="color:#E8402A">●</b> Sprint 2</span><span><b style="color:#3E5CD9">●</b> Sprint 3</span><span>– – ideal · day of sprint</span></div>`;
 }
 const ac = ['Admin-only API: 403 for non-admins, 401 anonymous', 'Team size ≥ 2, lifetime in range, team price below individual; 400 with field errors', 'Stale version → 412; every write audited', 'A configured listing can start a team', 'Contract changes additive, merged before the controller', 'Unit, PostgreSQL and authorization tests; ArchUnit green'];
 const s8 = () => `
@@ -205,10 +208,10 @@ const s8 = () => `
  ${ac.map(a => `<div style="display:flex;gap:8px;font:400 20px/1.28 Inter;margin-bottom:5px"><span style="color:#3E5CD9;flex:none">${icon('square-check')}</span><span>${a}</span></div>`).join('')}
  <div style="font:400 20px Inter;color:var(--muted);margin-top:6px">Design problem field: State, Optimistic Offline Lock</div>
 </div>
-<div style="position:absolute;left:684px;top:0;width:480px"${ref('docs/sprint2-progress-report.typ, Sprint Burndown Chart')}>
- ${kicker('Sprint 2 burndown · hours left')}
+<div style="position:absolute;left:684px;top:0;width:480px"${ref('S2: docs/sprint2-progress-report.typ, Daily burndown data (story PR merge dates) · S3: docs/agile/sprint-03/review.md planned hours, burned on issue close dates · docs/agile/metrics/*.csv')}>
+ ${kicker('Burndown · story hours left')}
  ${burndown()}
- <div style="font:400 20px/1.35 Inter;margin-top:2px">${lines(['Flat for a week, then a cliff: work merged late in large PRs', 'Reconstructed from merge dates'], 4)}</div>
+ <div style="font:400 20px/1.32 Inter;margin-top:2px">${lines(['Sprint 2: flat until the first story PR on 22 Sep, then a cliff', 'Sprint 3, PRs kept small: burns from day 1, then stalls on Checkout in dev', 'Reconstructed; no hours were logged'], 4)}</div>
 </div>
 <div style="position:absolute;left:0;right:0;top:490px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 20px/1.35 Inter"${ref('EPAT 03 TDD, EPAT 05 refactoring · sprint-03/log/2026-10-07.md · PR #424 · full set: backup B1')}><b style="color:#3E5CD9">Test first, then refactor:</b> two failing tests reproduced a price-quote bug before the fix; then team admission was refactored into shared checks.</div>`;
 
