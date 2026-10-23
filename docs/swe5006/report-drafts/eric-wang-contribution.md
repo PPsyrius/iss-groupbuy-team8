@@ -161,14 +161,14 @@ sequenceDiagram
     PG-)Ctl: paymentConfirmed(ref, amount)
     Ctl-->>Pay: «create» (ref, amount)
     Ctl->>Prod: checkStartable(buyer)
-    alt still startable, terms not lapsed, price matches the frozen terms
+    alt still startable, terms not lapsed, paid amount and currency equal the team price and currency
         Ctl-->>Team: «create» (product, buyer, payment)
         Ctl-->>Mem: «create» (buyer, payment) as leader
         Ctl-->>Ord: «create» (buyer, teamPrice)
         Ctl->>Prod: takeOneUnit()
         Ctl->>UI: showStarted(teamStatus)
         UI-->>Buyer: open team with one member shown
-    else terms lapsed, buyer inactive, product unavailable or price differs
+    else terms lapsed, buyer inactive, product unavailable or paid amount or currency differs from the team price
         Ctl-->>Ref: «create» (payment, reason)
         Ctl->>PG: refund(payment)
         PG->>Provider: refund(ref, amount)
@@ -314,11 +314,12 @@ The design follows the transition strategies of report section 3.2 (PR #624), wh
 | Analysis class | Design elements | Strategy |
 |---|---|---|
 | «boundary» `StartTeamUI`, `JoinTeamUI` | route component `ProductDetailPage` with the hook `useCheckout` (`begin("START" or "JOIN", …)`); REST endpoints under `/api/v1/payments` called through the generated client | Presentation, Distribution |
-| «boundary» `PaymentGateway` | port `CheckoutGateway`, adapter `StripeCheckoutGateway`, `StripeWebhookController` | External interface, Security |
-| «control» `StartTeamControl`, `JoinTeamControl` | split by step: `PurchaseIntentAppService` (terms before payment), `StripeCheckoutService` (checkout and settlement), `OrderFulfilmentAdapter` (what the money buys), `PaidGroupDealService` (creation and admission) | Distribution, Concurrency |
+| «boundary» `PaymentGateway` | port `CheckoutGateway`, adapter `StripeCheckoutGateway`, `StripeWebhookController` | External interface |
+| «control» `StartTeamControl`, `JoinTeamControl` | split by step: `StripeCheckoutController` → `PaymentBrowserService` (the buyer's requests), `PurchaseIntentAppService` (terms before payment), `StripeCheckoutService` (checkout and settlement), `OrderFulfilmentAdapter` (what the money buys), `PaidGroupDealService` (creation and admission) | Language, framework; Distribution; Concurrency |
 | «entity» `Team`, `Membership` | aggregate `GroupDeal` behind the ports `GroupDealRepository` (reads) and `PaidGroupDealRepository` (paid path); members are rows written with it | Persistence, Concurrency |
 | «entity» `Product` | catalog facade `CatalogPurchaseSupport` (`lockStartQuote`, `lockQuotedStart`, `consumeOneUnit`) | Distribution |
-| «entity» `Payment`, `Refund` | aggregate `CheckoutPayment`; refund obligation row written by `requireRefund` | Persistence, External interface |
+| «entity» `Payment` | aggregate `CheckoutPayment` | Persistence, Concurrency |
+| «entity» `Refund` | refund obligation row written by `requireRefund` | Persistence |
 | «entity» `Order` | aggregate `Order`; the frozen terms become the design class `PurchaseIntent` | Persistence |
 
 ### Design
@@ -491,7 +492,8 @@ classDiagram
 | `GroupDeal`, `PurchaseIntent` | Persistence (aggregates) |
 | `PaidGroupDealRepository`, `PaidGroupDealRepositoryImpl`, `PaidGroupDealMapper`, `ParticipationFingerprint` | Persistence, Concurrency (row locks, guarded update, receipt replay) |
 | `PaidGroupDealService` | Concurrency, Domain events |
-| `PaidAdmission`, `MemberJoined`, `TeamSucceeded` | Domain events |
+| `PaidAdmission` | none of its own: the value `GroupDeal.joinPaid` returns (the admitted team and whether it completed), from which `PaidGroupDealService` decides to publish `TeamSucceeded` |
+| `MemberJoined`, `TeamSucceeded` | Domain events |
 
 ### Design sequence diagram — start a team (UC3)
 
@@ -739,7 +741,7 @@ sequenceDiagram
 1. **Inject the Creator through the constructor (#421, PR #424).** `PaidGroupDealService` declares `private final PaidGroupDealCreator creator` and Lombok's `@RequiredArgsConstructor` generates the constructor. `GroupDealCreationConfig` (`@Configuration(proxyBeanMethods = false)`) registers `StandardPaidGroupDealCreator` as the single `PaidGroupDealCreator` bean. The configuration lives in the application module, so the domain module, which holds the Creator hierarchy, stays free of Spring.
 2. **Keep construction inside the domain package.** `GroupDeal.startPaid` stays package-private and static, so only code in `com.blocbuy.groupbuy.model`, such as the creator, can build a paid start; `createGroupDeal` performs no persistence, and the service writes the team and the receipt in its own transaction (`insertStartedDeal`, then `complete`).
 3. **Choose the ConcreteCreator at build time.** There is one ConcreteCreator, and choosing another means changing the wiring; run-time selection of creators is not claimed.
-4. **Two refactorings in the same PR, which are not the pattern.** PR #424 also moved the join admission rules that quoting and paid admission both need into shared `GroupDeal` guards (`requireJoinWindow`, `requireAvailableSeat`, `requireNewMember`; #422), so a quote now rejects a stored team with fewer than one paid member before payment instead of after it. It also replaced one generic receipt-fingerprint helper with typed START and JOIN encoders in `ParticipationFingerprint` (#423), pinned by golden hashes so that every stored fingerprint stays byte-for-byte the same. Both are refactorings that keep behaviour; neither is a design pattern.
+4. **Two refactorings in the same PR, which are not the pattern.** PR #424 also moved the join admission rules that quoting and paid admission both need into shared `GroupDeal` guards (`requireJoinWindow`, `requireAvailableSeat`, `requireNewMember`; #422), so a quote now rejects a stored team with fewer than one paid member before payment instead of after it. It also replaced one generic receipt-fingerprint helper with typed START and JOIN encoders in `ParticipationFingerprint` (#423), pinned by golden hashes so that every stored fingerprint stays byte-for-byte the same. Both are refactorings; #422 also fixes the below-one-count quote defect (quotes now reject a team with fewer than one paid member before payment). Neither is a design pattern.
 5. **Evidence.** `PaidGroupDealServiceTest.startUsesTheInjectedCreator` gives the service a mocked Creator and shows that it decides initiation without editing the service. `PaidGroupDealTest.createsOpenDealWithExactlyOnePaidLeader` checks the Product (OPEN, count 1, payer as leader), and `PaidGroupDealTest.initiationRejectsExpiredTermsInvalidSizeAndMissingClock` checks the rules in `initiate`. For the refactorings, `GroupDealPurchaseSupportImplTest.aTeamWithoutItsPaidLeaderCannotBeQuoted`, `GroupDealPurchaseSupportImplTest.closedAndFullTeamsAreRejectedBeforeDuplicateMembership`, `PaidGroupDealTest.admissionGuardsRejectMissingFactsAndPreservePaidRejectionPriority` and `PaidGroupDealServiceTest.historicalStartAndJoinFingerprintsRemainByteCompatible` pin the guard orders and the stored hashes. Two red tests reproduced the below-one-count quote defect before the fix. The local verification of the change ran 1,615 test cases with no failures or errors, and the five touched production files had no missed lines or branches (194 lines, 92 branches), as recorded in the sprint log of 7 October (`docs/agile/sprint-03/log/2026-10-07.md`). This is local and CI evidence; it does not cover a deployment or a Stripe end-to-end run.
 
 ### Liability, and why the flexibility is still needed

@@ -5,7 +5,7 @@ Draft contributions and supporting evidence for the report editor; these are not
 ## Contribution drafts
 
 - [Lim Jiechao](lim-jiechao-contribution.md): platform foundation and AWS account governance; use-case section pending.
-- [Yu Qianshuo](yorick-yu-contribution.md): expiry refunds, recovery design and contribution evidence.
+- [Yu Qianshuo (Yorik)](yorick-yu-contribution.md): expiry refunds, recovery design and contribution evidence.
 - [Wang Ziang (Eric)](eric-wang-contribution.md): UC3 and UC4 analysis and design (section 3.4) and the Factory Method design problem (section 3.5).
 
 ## Section drafts

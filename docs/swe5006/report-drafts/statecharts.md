@@ -25,7 +25,7 @@ stateDiagram-v2
 |---|---|---|
 | create OPEN | `PaidGroupDealService.startConfirmed` → `PaidGroupDealCreator.initiate` (Factory Method, 3.5) → `GroupDeal.startPaid`, with the payer as sole leader | UC3 |
 | OPEN → OPEN, OPEN → SUCCEEDED | `GroupDeal.joinPaid` checks price, membership, window and seat in that order, then `PaidGroupDealRepositoryImpl` writes through `PaidGroupDealMapper.updateDeal`, guarded by `current_size = expectedSize AND status = expectedStatus`, so a race loser changes zero rows; `PaidGroupDealService` publishes `MemberJoined`, and `TeamSucceeded` on the last seat | UC4, UC5 |
-| not admissible | `joinPaid` throws; the receipt records a business rejection and the payment owner records a refund obligation after commit (see the refund obligation) | UC4 |
+| not admissible | `joinPaid` throws; the receipt records a business rejection and the payment owner records a refund obligation in the same settlement transaction (see the refund obligation) | UC4 |
 | OPEN → EXPIRED | `TeamExpirySweepJob` (every minute) → `GroupDealExpiryService` → `GroupDeal.expire` (`canTransitionTo(EXPIRED)`, not before `expireTime`) → `PaidGroupDealMapper.expireDeal`, guarded by `status = 'open'`; publishes `TeamExpired` | UC5, UC6 |
 | entry actions | `OrderLifecycleSubscriber` (see Order); `TeamExpiryRefundSubscriber` records the refunds (see the refund obligation). Both run before the team's transaction commits | UC5, UC6 |
 
@@ -82,7 +82,7 @@ A *provider fact* is a Checkout session state that `StripeCheckoutService.settle
 
 ## Refund obligation
 
-A refund obligation is one row of `biz_refund`: a promise to refund one succeeded payment. It is created when a team expires (UC6) or when a paid settlement is rejected because a check in the order table above failed (UC3, UC4). The refund worker runs every 30 s when scheduling is enabled (`RefundWorkerJob`, `blocbuy.scheduling.enabled`), outside any business transaction. A buyer's receipt shows the status (`frontend/src/features/payment/refund-status.ts`). The lease and `SKIP LOCKED` claim are also the refund part of the concurrency strategy (3.2); the retry and review mechanisms are Yorik's UC6 design.
+A refund obligation is one row of `biz_refund`: a promise to refund one succeeded payment. It is created when a team expires (UC6) or when a paid settlement is rejected because a check in the order table above failed (UC3, UC4). The refund worker runs every 30 s when scheduling is enabled (`RefundWorkerJob`, `blocbuy.scheduling.enabled`), outside any business transaction. A buyer's receipt shows the status (`frontend/src/features/payment/refund-status.ts`). The lease and `SKIP LOCKED` claim are also the refund part of the concurrency strategy (3.2.8 Concurrency); the retry and review mechanisms are Yorik's UC6 design.
 
 ```mermaid
 stateDiagram-v2
