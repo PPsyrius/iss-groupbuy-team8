@@ -146,7 +146,7 @@ const b14 = () => dt(['Gap', 'Effect', 'Status'], [
   ['Secrets in a host file', 'manual creation and rotation, root-only 0600', 'accepted for dev; prod uses Parameter Store'],
   ['Rebuilt after merge', 'the deployed image and dist/ are not the PR-scanned artefacts; Trivy not re-run', 'strict up-to-date checks; ECR scans on push; ADR 0004 text to reconcile'],
   ['Weekly full-history gitleaks red', '20 digest false positives fingerprinted; 4 badge-token findings still fail the scan', 'PR #580, ci-failure-audit-20261021.md'],
-  ['No DAST, no SBOM', 'no scan of the running site; no component inventory per image', 'not planned before 26 Oct'],
+  ['Passive DAST; SBOM not per image', 'weekly passive OWASP ZAP of dev, advisory: 2 Medium, 4 Low CSP and header findings (22 Oct); the CycloneDX SBOM covers source dependencies, not each built image', '#607, #610, #609'],
 ], { fs: 15, w: [250, 450], pad: '5px 10px' });
 
 // ---- B15–B16: segment 5, system demo ----
