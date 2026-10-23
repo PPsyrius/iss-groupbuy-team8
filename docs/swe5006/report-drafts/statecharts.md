@@ -1,6 +1,33 @@
-# SWE5006 final report: statecharts for Order, checkout payment and refund obligation
+# SWE5006 final report: statecharts for the team, Order, checkout payment and refund obligation
 
-> Draft for the report editor (#463, #618), for section 3.4. The deck already has statecharts for the team (`team-statechart.svg`, `DealStatus`) and the listing (`listing-statechart.svg`, `ProductStatus`). This file adds three objects with significant, dynamic states (Software Analysis and Design, 03c "Design With Statechart" p. 11). Diagrams are Mermaid sources in UML 2.5 notation: a transition reads *trigger [guard] / effect* (03c p. 3 shows trigger, guard and action), an initial transition carries only its effect, as in the deck's team statechart, and a diamond is a choice on the result of the effect. Code was read on `dev` at `22f56584`. Names follow the code: the order and the payment use their enum constants in upper case (the order's `CANCELLED` and the payment's `CANCELED` are both spelled as in the code), and the refund obligation uses the lower-case status strings stored in `biz_refund.status`.
+> Draft for the report editor (#463, #618), for section 3.4. The team, the Order and the checkout payment belong with Eric's UC3/UC4 analysis and design (3.4); the refund obligation belongs with Yorik's UC6 (3.4). The team statechart is the one rubric row 2.4 requires (deck slide 17); the listing statechart (`ProductStatus`) belongs with the State pattern in 3.5. This file covers four objects with significant, dynamic states (Software Analysis and Design, 03c "Design With Statechart" p. 11). Diagrams are Mermaid sources in UML 2.5 notation: a transition reads *trigger [guard] / effect* (03c p. 3 shows trigger, guard and action), an initial transition carries only its effect, as in the deck's team statechart, and a diamond is a choice on the result of the effect. Code was read on `dev` at `22f56584`. Names follow the code: the order and the payment use their enum constants in upper case (the order's `CANCELLED` and the payment's `CANCELED` are both spelled as in the code), and the refund obligation uses the lower-case status strings stored in `biz_refund.status`.
+
+## Team
+
+A team (`GroupDeal`) is one group-buy of one product at a fixed team price. A confirmed paid start creates it (UC3), confirmed paid joins fill it (UC4), and it resolves once (UC5): it succeeds when the last seat is taken, or expires when its window closes first, which owes refunds (UC6). This is the chart the deck shows on slide 17.
+
+```mermaid
+stateDiagram-v2
+    [*] --> OPEN : / currentSize = 1, leader = payer, startTime = now
+    OPEN --> OPEN : paidJoinConfirmed [admissible, currentSize + 1 below targetSize] / currentSize + 1, publish MemberJoined
+    OPEN --> OPEN : paidJoinConfirmed [not admissible] / compensation required
+    OPEN --> SUCCEEDED : paidJoinConfirmed [admissible, currentSize + 1 = targetSize] / successTime = now, publish MemberJoined and TeamSucceeded
+    OPEN --> EXPIRED : at(expireTime) / status-guarded update, publish TeamExpired
+    SUCCEEDED --> SUCCEEDED : paidJoinConfirmed / compensation required
+    EXPIRED --> EXPIRED : paidJoinConfirmed / compensation required
+    SUCCEEDED : entry / confirm the team's orders
+    EXPIRED : entry / cancel the team's orders, refunds owed
+```
+
+*admissible* means: the paid amount equals the team price, the buyer is neither the leader nor a member, `startTime ≤ now < expireTime`, and a seat is free. `DealStatus` also declares FAILED and CANCELED, and `canTransitionTo` allows them, but no production code writes either, so they are not drawn. No final state is drawn: a resolved team still absorbs late paid joins.
+
+| Transition | Enforced by | Use cases |
+|---|---|---|
+| create OPEN | `PaidGroupDealService.startConfirmed` → `PaidGroupDealCreator.initiate` (Factory Method, 3.5) → `GroupDeal.startPaid`, with the payer as sole leader | UC3 |
+| OPEN → OPEN, OPEN → SUCCEEDED | `GroupDeal.joinPaid` checks price, membership, window and seat in that order, then `PaidGroupDealRepositoryImpl` writes through `PaidGroupDealMapper.updateDeal`, guarded by `current_size = expectedSize AND status = expectedStatus`, so a race loser changes zero rows; `PaidGroupDealService` publishes `MemberJoined`, and `TeamSucceeded` on the last seat | UC4, UC5 |
+| not admissible | `joinPaid` throws; the receipt records a business rejection and the payment owner records a refund obligation after commit (see the refund obligation) | UC4 |
+| OPEN → EXPIRED | `TeamExpirySweepJob` (every minute) → `GroupDealExpiryService` → `GroupDeal.expire` (`canTransitionTo(EXPIRED)`, not before `expireTime`) → `PaidGroupDealMapper.expireDeal`, guarded by `status = 'open'`; publishes `TeamExpired` | UC5, UC6 |
+| entry actions | `OrderLifecycleSubscriber` (see Order); `TeamExpiryRefundSubscriber` records the refunds (see the refund obligation). Both run before the team's transaction commits | UC5, UC6 |
 
 ## Order
 
@@ -55,7 +82,7 @@ A *provider fact* is a Checkout session state that `StripeCheckoutService.settle
 
 ## Refund obligation
 
-A refund obligation is one row of `biz_refund`: a promise to refund one succeeded payment. It is created when a team expires (UC6) or when a paid settlement is rejected because a check in the order table above failed (UC3, UC4). The refund worker runs every 30 s when scheduling is enabled (`RefundWorkerJob`, `blocbuy.scheduling.enabled`), outside any business transaction. A buyer's receipt shows the status (`frontend/src/features/payment/refund-status.ts`).
+A refund obligation is one row of `biz_refund`: a promise to refund one succeeded payment. It is created when a team expires (UC6) or when a paid settlement is rejected because a check in the order table above failed (UC3, UC4). The refund worker runs every 30 s when scheduling is enabled (`RefundWorkerJob`, `blocbuy.scheduling.enabled`), outside any business transaction. A buyer's receipt shows the status (`frontend/src/features/payment/refund-status.ts`). The lease and `SKIP LOCKED` claim are also the refund part of the concurrency strategy (3.2); the retry and review mechanisms are Yorik's UC6 design.
 
 ```mermaid
 stateDiagram-v2
@@ -80,4 +107,4 @@ stateDiagram-v2
 | 23 hours | `processNext`: when no provider refund ID is stored and 23 hours have passed since the first claim, the worker only searches (`findRefund`) and never creates; nothing found → `review` | UC6 |
 | operator reconcile | `RefundMapper.claimReview` (status `review` or `failed`) and `RefundService.reconcile`, which only retrieves an existing provider refund and maps it with the same `apply`; a provider error goes to `review`. No command or endpoint calls `reconcile`: it needs a separately reviewed invocation | operator |
 
-**Design observation.** None of the three objects enforces its transitions in the domain on its production path: the order and the refund obligation are moved by status-guarded SQL, and the payment's rules sit in `StripeCheckoutService.settle`. The refund states are plain strings (`RefundService` constants; values listed in migration V9), with no transition rule at all. Only the team (`GroupDeal`) checks its transition table on every move. A `RefundStatus` enum with a transition table, used by `finish`, would put the refund statechart into code.
+**Design observation.** None of the Order, the payment and the refund obligation enforces its transitions in the domain on its production path: the order and the refund obligation are moved by status-guarded SQL, and the payment's rules sit in `StripeCheckoutService.settle`. The refund states are plain strings (`RefundService` constants; values listed in migration V9), with no transition rule at all. Of the objects with a status, only the team (`GroupDeal`, `DealStatus.canTransitionTo`) and the listing (`ProductStatus`, the State pattern in 3.5) check their transition rules on every move. A `RefundStatus` enum with a transition table, used by `finish`, would put the refund statechart into code.
