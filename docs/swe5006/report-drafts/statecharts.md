@@ -1,6 +1,6 @@
 # SWE5006 final report: statecharts for Order, checkout payment and refund obligation
 
-> Draft for the report editor (#463, #618), for section 3.4. The deck already has statecharts for the team (`team-statechart.svg`, `DealStatus`) and the listing (`listing-statechart.svg`, `ProductStatus`). This file adds three objects with significant, dynamic states (Software Analysis and Design, 03c "Design With Statechart" p. 11). Diagrams are Mermaid sources in UML 2.5 notation: a transition reads *trigger [guard] / effect* (03c p. 3 shows trigger, guard and action), an initial transition carries only its effect, as in the deck's team statechart, and a diamond is a choice on the result of the effect. Code was read on `dev` at `14996412`.
+> Draft for the report editor (#463, #618), for section 3.4. The deck already has statecharts for the team (`team-statechart.svg`, `DealStatus`) and the listing (`listing-statechart.svg`, `ProductStatus`). This file adds three objects with significant, dynamic states (Software Analysis and Design, 03c "Design With Statechart" p. 11). Diagrams are Mermaid sources in UML 2.5 notation: a transition reads *trigger [guard] / effect* (03c p. 3 shows trigger, guard and action), an initial transition carries only its effect, as in the deck's team statechart, and a diamond is a choice on the result of the effect. Code was read on `dev` at `22f56584`. Names follow the code: the order and the payment use their enum constants in upper case (the order's `CANCELLED` and the payment's `CANCELED` are both spelled as in the code), and the refund obligation uses the lower-case status strings stored in `biz_refund.status`.
 
 ## Order
 
@@ -37,15 +37,18 @@ stateDiagram-v2
     CANCELED --> SUCCEEDED : operator recovery [session paid] / succeed(), publish PaymentSucceeded, fulfil or record a refund obligation
     FAILED --> FAILED : provider fact [session paid] / open review case LATE_PAID_REQUIRES_RECOVERY
     CANCELED --> CANCELED : provider fact [session paid] / open review case LATE_PAID_REQUIRES_RECOVERY
+    CANCELED --> FAILED : provider fact [session expired unpaid, PaymentIntent canceled] / failTerminalUnpaid()
+    FAILED --> CANCELED : provider fact [session expired unpaid, no PaymentIntent] / cancelUnpaid()
 ```
 
-A *provider fact* is a Checkout session state that `StripeCheckoutService.settle` re-reads from Stripe. It arrives by webhook (`checkout.session.completed`, `async_payment_succeeded`, `async_payment_failed`, `expired`), by the operator command `stripe-ops expire-open-sessions` (`expireDueSessions`, not scheduled), or by `stripe-ops recover`. No final state is drawn: a SUCCEEDED payment still absorbs duplicate and unpaid facts.
+A *provider fact* is a Checkout session state that `StripeCheckoutService.settle` re-reads from Stripe. It arrives by webhook (`checkout.session.completed`, `async_payment_succeeded`, `async_payment_failed`, `expired`), by the operator command `stripe-ops expire-open-sessions` (`expireDueSessions`, not scheduled), or by `stripe-ops recover`. No final state is drawn: a SUCCEEDED payment still absorbs duplicate and unpaid facts. Not drawn because it applies in every state: a provider fact whose session does not match the saved payment opens the review case `PROVIDER_MISMATCH` and changes no state (`settle` → `recordMismatch`).
 
 | Transition | Enforced by | Use cases |
 |---|---|---|
 | create CREATED | `StripeCheckoutService.prepare` (`POST /api/v1/payments/checkout-sessions`) | UC3, UC4 |
 | CREATED → SUCCEEDED | `settle`: `payment.succeed()` when the re-read session is paid, then `fulfilOrCompensate`; the event-ID claim makes a redelivered event a no-op | UC3, UC4 |
 | CREATED → FAILED or CANCELED | `settle` → `applyUnpaidFact`. FAILED: the session expired unpaid and Stripe canceled its PaymentIntent (`Session.terminalUnpaidFailure`). CANCELED: the session expired unpaid before any PaymentIntent existed. Neither is the buyer pressing Cancel, which changes no state | UC3, UC4 |
+| CANCELED → FAILED, FAILED → CANCELED | `settle` → `applyUnpaidFact` on a later unpaid fact: `failTerminalUnpaid()` and `cancelUnpaid()` refuse only a SUCCEEDED payment, so the code allows both moves. Whether Stripe sends such a sequence for one session was not checked | UC3, UC4 |
 | FAILED or CANCELED → SUCCEEDED | `settle` with type `manual.recovery`, reached only through `stripe-ops recover`. Any other paid fact on a FAILED or CANCELED payment opens the review case instead (`settle`, the `isTerminalUnpaid` check) | operator |
 
 `CheckoutPayment.succeed()` itself has no guard; the rules above live in `settle`. `cancelUnpaid()` and `failTerminalUnpaid()` leave a SUCCEEDED payment unchanged.
@@ -63,9 +66,9 @@ stateDiagram-v2
     review --> outcome : operator reconcile / retrieve the provider refund
     failed --> outcome : operator reconcile / retrieve the provider refund
     outcome --> succeeded : [provider SUCCEEDED]
-    outcome --> processing : [provider PENDING, or a retryable error] / retry in 30 s
+    outcome --> processing : [provider PENDING, or a retryable error on a tick] / retry in 30 s
     outcome --> failed : [provider FAILED or CANCELED]
-    outcome --> review : [mismatch, permanent refusal, unknown status, or no refund found after 23 h]
+    outcome --> review : [mismatch, permanent refusal, unknown status, no refund found after 23 h, or any provider error on a reconcile]
     succeeded --> [*]
 ```
 
