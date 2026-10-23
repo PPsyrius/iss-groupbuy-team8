@@ -47,7 +47,7 @@ const b1 = () => dt(['Artefact', 'Where it lives', 'State on 21 Oct'], [
   ['<b>Burndown charts</b>', 'S2 chart in docs/sprint2-progress-report.typ; daily data docs/agile/metrics/*.csv (board-snapshot.yml, since 17 Sep)', 'S2, S3 reconstructed (B2); S4 from snapshots'],
   ['<b>Sprint reviews</b>', 'S1, S2 in the progress reports; S3 docs/agile/sprint-03/review.md', `S4 due 23 Oct ${mk('FILL', 'S4 review')}`],
   ['<b>Retrospectives</b>', 'S1 report; S2 report §Sprint Retrospective', `S3 missing (#451) · S4 due 23 Oct ${mk('FILL', 'S3, S4 retros')}`],
-  ['<b>Day logs, DoD</b>', 'docs/agile/sprint-0N/log/ (S2–S4); DoD in the S2 report, sprint-03/plan.md §8, sprint-04/plan.md §8', 'dated logs per working day'],
+  ['<b>Day logs, DoD, practices</b>', 'docs/agile/sprint-0N/log/ (S2–S4); DoD per sprint: docs/agile/definition-of-done.md; EPAT practices: docs/agile/practices.md', 'dated logs per working day'],
 ], { fs: 15.5, w: [230, 560], pad: '7px 10px' }) + `<div style="margin-top:10px;font:italic 400 15.5px Inter;color:var(--muted)">Source: board and issues read with gh on 21 Oct; docs/agile/README.md. The report appendix holds the full set (#463).</div>`;
 
 // ---- B3–B6: segment 2, analysis and design ----
@@ -116,7 +116,7 @@ const b8 = () => `<div style="display:flex;gap:18px">
 const b10 = () => dt(['Kind · level', 'Tools', 'Count by module', 'Example classes', 'Runs'], [
   ['<b>Unit</b> · unit', 'JUnit Jupiter, Mockito', '185 *Test classes (162 unit; 23 Spring/Testcontainers), 1,329 annotations: domain 42, application 41, infrastructure 47, bootstrap 46, adapter 4, platform 2, commerce-svc 2, client 1 (some, like StripeCheckoutFlowTest, use real PostgreSQL)', `${mo('RefundServiceTest')}, ${mo('PaidGroupDealTest')}, ${mo('DealStatusTest')}, ${mo('ProductStatusTest')}`, 'every PR (build-quality, required)'],
   ['<b>Integration</b> · integration', 'Testcontainers: PostgreSQL 18, Redis 8.10, ElasticMQ', '49 *IT classes (45 start containers), 242 annotations: bootstrap 24, infrastructure 15, services 9, platform 1', `${mo('OrderRepositoryIT')}, ${mo('TeamExpirySchedulingIT')}, ${mo('StripeRolloutAcceptanceIT')} (acceptance)`, 'every PR (build-quality, required)'],
-  ['<b>Architecture</b> · unit', 'ArchUnit', '18 rules in 1 class', `${mo('ArchitectureTest')}`, 'every PR (build-quality, required)'],
+  ['<b>Architecture</b> · unit', 'ArchUnit', '17 rules in 1 class', `${mo('ArchitectureTest')}`, 'every PR (build-quality, required)'],
   ['<b>API contract</b> · integration', 'springdoc export, diff of contracts/, openapi-diff', '1 contract file', `${mo('contracts/openapi.json')}`, 'backend PRs (contract-check, not required)'],
   ['<b>Component</b> · unit', 'Vitest, Testing Library, MSW', '77 files: features 58, routes 10, components 4, test 3, api 2', `${mo('account.test.tsx')}, ${mo('admin-listing-edit.test.tsx')}`, 'every PR (frontend-check, required)'],
   ['<b>End-to-end</b> · system', 'Playwright, Chromium', '8 specs, 24 test declarations', `${mo('buyer-journey.spec.ts')}, ${mo('join-refusal.spec.ts')}, ${mo('smoke.spec.ts')}`, 'PR (e2e-preview); after deploy (e2e-dev)'],
