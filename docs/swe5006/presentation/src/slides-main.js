@@ -179,7 +179,7 @@ const retro = [
 const s7 = () => `
 ${ladder()}
 ${tbl(['Sprint', 'Goal', 'Definition of Done reached by the goal increment'], spr.map(s => [`<b style="white-space:nowrap">${s[0]}</b>`, s[1], s[2]]), { fs: 18, w: [160, 450], pad: '6px 11px' })}
-<div style="font:400 18px/1.3 Inter;color:var(--muted);margin-top:6px">Same basis every sprint: integrated = merged to dev with every required check green; releasable = shown working on deployed dev, our “on dev” rule</div>
+<div style="font:400 18px/1.3 Inter;color:var(--muted);margin-top:6px"${ref('docs/agile/definition-of-done.md#done-ladder-per-sprint')}>Same basis every sprint: integrated = merged to dev with every required check green; releasable = shown working on deployed dev, our “on dev” rule</div>
 <div class="frag" data-frag="1" style="margin-top:12px;border-radius:8px;background:#FDEFEC;padding:10px 16px">
  <div style="font:700 20px Inter;color:#B02E1B;margin-bottom:6px">Retro improvement → change in the next sprint</div>
  ${retro.map(r => `<div style="display:flex;gap:12px;font:400 20px/1.32 Inter;margin-bottom:4px"><b style="width:58px;flex:none">${r[0]}</b><span style="width:340px;flex:none">${r[1]}</span><span><span style="color:#E8402A;font-weight:700">→</span> ${r[2]}</span></div>`).join('')}

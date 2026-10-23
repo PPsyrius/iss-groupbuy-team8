@@ -47,7 +47,7 @@ const b1 = () => dt(['Artefact', 'Where it lives', 'State on 21 Oct'], [
   ['<b>Burndown charts</b>', 'S2 chart in docs/sprint2-progress-report.typ; daily data docs/agile/metrics/*.csv (board-snapshot.yml, since 17 Sep)', 'S2, S3 reconstructed (B2); S4 from snapshots'],
   ['<b>Sprint reviews</b>', 'S1, S2 in the progress reports; S3 docs/agile/sprint-03/review.md', `S4 due 23 Oct ${mk('FILL', 'S4 review')}`],
   ['<b>Retrospectives</b>', 'S1 report; S2 report §Sprint Retrospective', `S3 missing (#451) · S4 due 23 Oct ${mk('FILL', 'S3, S4 retros')}`],
-  ['<b>Day logs, DoD</b>', 'docs/agile/sprint-0N/log/ (S2–S4); DoD in the S2 report, sprint-03/plan.md §8, sprint-04/plan.md §8', 'dated logs per working day'],
+  ['<b>Day logs, DoD, practices</b>', 'docs/agile/sprint-0N/log/ (S2–S4); DoD per sprint: docs/agile/definition-of-done.md; EPAT practices: docs/agile/practices.md', 'dated logs per working day'],
 ], { fs: 15.5, w: [230, 560], pad: '7px 10px' }) + `<div style="margin-top:10px;font:italic 400 15.5px Inter;color:var(--muted)">Source: board and issues read with gh on 21 Oct; docs/agile/README.md. The report appendix holds the full set (#463).</div>`;
 
 // ---- B3–B6: segment 2, analysis and design ----
