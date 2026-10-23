@@ -557,9 +557,9 @@ const s27 = () => `
   ${kicker('Branching: Branch by Feature')}
   <div style="font:400 21px/1.35 Inter">${lines(['One short branch per story', 'A pull request, then a squash merge onto the trunk, <b>dev</b>', 'Linear history since 12 Sep', 'Up to date with dev before merging, instead of merging the trunk daily'], 4)}</div>
  </div>
- <div class="card" style="padding:16px 22px"${ref('ruleset 22734681 · CODEOWNERS · docs/deploy/aws-account-governance/README.md')}>
+ <div class="card" style="padding:16px 22px"${ref('ruleset 22734681 · CODEOWNERS (payment and groupbuy owners: PR #669) · docs/deploy/aws-account-governance/README.md')}>
   ${kicker('Who may change it')}
-  <div style="font:400 21px/1.35 Inter">${lines([`GitHub: a <b>code owner</b> approves; six checks green`, 'Owners: backend Liu Jin, frontend Lim, pipelines Pan', 'AWS: IAM Identity Center, MFA enforced, one-hour sessions', 'CI: one OIDC role per job, no AWS keys in GitHub', '<span style="color:#B02E1B">Exception: two IAM users for SSM port forwarding, one with an access key</span>'], 4)}</div>
+  <div style="font:400 21px/1.35 Inter">${lines([`GitHub: a <b>code owner</b> approves; six checks green`, 'Owners: backend Liu Jin, frontend Lim, CI/CD Pan', 'Payments, refunds Yorik; group buying Eric', 'AWS: IAM Identity Center, MFA enforced, one-hour sessions', 'CI: one OIDC role per job, no AWS keys in GitHub', '<span style="color:#B02E1B">Exception: two IAM users for SSM port forwarding, one with an access key</span>'], 4)}</div>
  </div>
 </div>`;
 const art = [
