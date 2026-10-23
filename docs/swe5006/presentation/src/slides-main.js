@@ -490,10 +490,10 @@ const QUADS = [
   { q: 'Q4', axes: 'technology-facing · critiquing the product', how: 'tools', at: 'left:590px;top:282px', types: [['Performance, load', 'system'], ['Security scanning', 'types']],
     detail: [
       ['Performance, load', 'system', ['k6 on the SWE5001 ECS environment, by hand (next slide)']],
-      ['Security scanning', 'types', ['Static analysis (SAST)', 'Dependencies (SCA)', 'Image and IaC configuration', 'Secrets']],
+      ['Security scanning', 'types', ['Static analysis (SAST)', 'Dependencies (SCA)', 'Image and IaC configuration', 'Secrets', 'Dynamic, passive (DAST): OWASP ZAP on dev, weekly']],
     ],
-    runs: `${mo('security.yml', 19)}, ${mo('build-quality', 19)}, ${mo('docker', 19)}: the scans gate the pipeline (slide 30)`,
-    caught: 'full-history gitleaks: 24 matches; 4 badge tokens still open (slide 32)' },
+    runs: `${mo('security.yml', 19)}, ${mo('build-quality', 19)}, ${mo('docker', 19)} gate the pipeline; ${mo('dast-baseline', 19)} runs weekly, advisory (slide 30)`,
+    caught: 'full-history gitleaks: 24 matches, 4 badge tokens still open (slide 32); ZAP on dev: 2 Medium, 4 Low CSP and header findings (22 Oct)' },
 ];
 const quadHead = (d, fs) => `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><span style="font:700 ${fs}px Inter">${d.q} <span style="font-weight:500;color:var(--muted)">${d.axes}</span></span><span style="font:600 ${fs - 2}px Inter;color:var(--muted)">${d.how}</span></div>`;
 const quadCard = d => `<div class="card" style="position:absolute;${d.at};width:574px;height:266px;padding:12px 18px">
@@ -566,7 +566,7 @@ const art = [
   ['Frontend bundle', 'Content-hashed files, immutable cache', 'S3 behind CloudFront'],
   ['Database schema', 'Flyway migrations V1–V28', 'Repository'],
   ['Infrastructure', 'Terraform plan saved, applied by an operator; CI never applies', 'S3 state, DynamoDB lock'],
-  ['SBOM', '<span style="color:#B02E1B">Not produced</span>', '—'],
+  ['SBOM', 'CycloneDX of the source dependencies, weekly and per release tag; not per image', 'Actions artefact, 90 days', 'sbom.yml · #609'],
 ];
 const s28 = () => `
 ${tbl(['Artefact', 'Identity', 'Stored in'], art.map(a => withRef([`<b>${a[0]}</b>`, a[1], `<span style="color:var(--muted)">${a[2]}</span>`], a[3] || '')), { fs: 22, w: [230, 560], pad: '12px 14px' })}`;
@@ -586,12 +586,12 @@ const sec = [
   ['Pre-commit', ['Lefthook: format, lint, type-check (frontend)'], 'Style and type errors', ''],
   ['Commit · PR', [`<b>gitleaks</b> ${req2()}: the PR’s commits, full history weekly`, 'Code-owner review', 'actionlint'], 'Secrets, unsafe workflows', ''],
   ['Build', [`SAST: <b>SonarCloud</b> ${req2()}, SpotBugs`, 'SCA: Trivy deps, Dependabot daily'], 'Code flaws, vulnerable libraries', 'CodeQL off: code scanning unavailable'],
-  ['Test', [`<b>Trivy image</b> ${req2()} (HIGH, CRITICAL)`, 'Trivy config, deployment-bundle rules'], 'Image CVEs, IaC misconfiguration', 'No DAST against the running site'],
-  ['Deploy', ['OIDC role per job', 'Image by digest', 'Read-only container, all capabilities dropped'], 'Stolen keys, swapped images', 'Rebuilt after merge, not rescanned'],
+  ['Test', [`<b>Trivy image</b> ${req2()} (HIGH, CRITICAL)`, 'Trivy config, deployment-bundle rules'], 'Image CVEs, IaC misconfiguration', ''],
+  ['Deploy', ['OIDC role per job', 'Image by digest', 'Read-only container, all capabilities dropped', 'OWASP ZAP passive scan of dev, weekly'], 'Stolen keys, swapped images, missing security headers', 'Rebuilt after merge, not rescanned; ZAP passive and advisory, not a gate'],
 ];
 const s30 = () => `
 ${tbl(['Stage', 'Control', 'Catches', 'Gap'], sec.map(r => [`<b style="white-space:nowrap">${r[0]}</b>`, lines(r[1]), r[2], r[3] ? `<span style="color:#B02E1B">${r[3]}</span>` : '—']), { fs: 20, w: [140, 490, 250], pad: '5px 11px' })}
-<div style="position:absolute;left:0;right:0;top:494px;border-radius:8px;background:#E3E8FB;padding:8px 16px;font:400 20px/1.32 Inter"${ref('Stages: DSOEA 07 slide 3 · ECR scans on push (operator guide)')}>${lines(['<b style="color:#3E5CD9">Types tested (slide 25, Q4):</b> static analysis, dependencies, image and IaC configuration, secrets', 'Every third-party action is pinned to a commit SHA'])}</div>`;
+<div style="position:absolute;left:0;right:0;top:494px;border-radius:8px;background:#E3E8FB;padding:8px 16px;font:400 20px/1.32 Inter"${ref('Stages: DSOEA 07 slide 3 · ECR scans on push (operator guide)')}>${lines(['<b style="color:#3E5CD9">Types tested (slide 25, Q4):</b> static analysis, dependencies, image and IaC configuration, secrets, passive DAST', 'Every third-party action is pinned to a commit SHA'])}</div>`;
 
 // ---------- slide 31 (4.4) ----------
 const s31 = () => one('dev-deployment', 2320, 1096, [1164, 568], [
