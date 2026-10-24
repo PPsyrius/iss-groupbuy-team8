@@ -193,8 +193,8 @@ function NoOpenBloc() {
       <div className="border-border bg-surface flex flex-col gap-2 rounded-lg border p-4 xl:p-5">
         <h3 className="text-base font-semibold">Be the first to start a bloc</h3>
         <p className="text-muted text-sm">
-          You pay the bloc price now and get an invite link to share. If four neighbours join before
-          the deadline, everyone keeps the lower price. If not, you are refunded in full.
+          You pay the bloc price now and get an invite link to share. If enough neighbours join
+          before the deadline, everyone keeps the lower price. If not, you are refunded in full.
         </p>
       </div>
     </div>

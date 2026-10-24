@@ -5,6 +5,15 @@ SET LOCAL TIME ZONE 'UTC';
 SELECT json_build_object(
     'observed_at', transaction_timestamp(),
     'database', current_database(),
+    'pending_checkout_payments', (
+        SELECT count(*) FROM domain.biz_payment
+        WHERE NOT deleted AND status = 'created' AND checkout_session_id IS NOT NULL
+    ),
+    'pending_checkout_past_deadline', (
+        SELECT count(*) FROM domain.biz_payment
+        WHERE NOT deleted AND status = 'created' AND checkout_session_id IS NOT NULL
+          AND business_deadline <= transaction_timestamp()
+    ),
     'overdue_open_teams', (
         SELECT count(*) FROM domain.biz_group_deal
         WHERE NOT deleted AND status = 'open' AND expire_time <= transaction_timestamp()
