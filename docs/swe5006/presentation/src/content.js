@@ -407,7 +407,7 @@ const OPEN_ITEMS = [
   [9, 'Dev host security group allows SSH (22) from 0.0.0.0/0 although SSM sessions work (AWS read-only, 21 and 24 Oct: sg-04358da6b0bc71343 still allows tcp 22 from 0.0.0.0/0): decided 24 Oct: close it now (nothing uses it; deploys and shells go through SSM)', 'Pan', '4, 31'],
   [11, 'Re-check slide 4 status on 25 Oct (dev health, #517, #223, gaps)', 'Lim', '4'],
   [14, 'Live demo change decided 24 Oct: home page heading “Buy better together” → “Buy better, together”, author Pan, approver Lim; Pan prepares the branch and opens the PR at 16:41', 'Pan, Lim', '33'],
-  [15, 'Two Google buyer accounts (leader, joiner), their display names on screen, and the admin grant for the listings check', 'Yorik', '35'],
+  [15, 'Accounts set 24 Oct: Leader wood kik, Joiner los gai. Open: which of the two holds the admin grant for the listings check', 'Yorik', '35'],
   [17, 'Recount the test numbers for slide 25 on 25 Oct', 'Liu Jin', '25'],
   [18, 'Reconcile frontend ADR 0004 and the EC2 operator guide with the post-merge rebuild in ci-frontend.yml and ci-backend.yml', 'Pan, Lim', '28, 29'],
   [20, 'System demo preconditions for 26 Oct: Checkout and scheduling on for dev (BLOCBUY_SCHEDULING_ENABLED, #223); the 16:05 US34-04 bloc started by the Joiner account; both Google accounts signed in on Eric’s machine; IDE on a local checkout of dev with StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist pre-run green (Docker running); one go/no-go per step D1–D6', 'Yorik, Eric', '34, 35'],
