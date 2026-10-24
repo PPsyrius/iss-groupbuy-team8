@@ -174,7 +174,7 @@ const mem = [['Liu Jin', 51, 12.5], ['Yu Qianshuo', 48, 9], ['Wang Ziang', 46, 8
 const s5 = () => `
 <div style="position:absolute;left:0;top:0;width:480px">
  ${gA(kicker('Milestones achieved'), 'up', 200)}
- ${tbl(['Date', 'Milestone'], ms.map(m => withRef([`<b style="white-space:nowrap">${m[0]}</b>`, m[1]], m[2] || '')).concat([['—', `Sprint 4 tag ${mk('FILL', 'date, once cut (open item 6)')}`]]), { fs: 20, w: [96], pad: '8px 12px', m: [240, 340, 30] })}
+ ${tbl(['Date', 'Milestone'], ms.map(m => withRef([`<b style="white-space:nowrap">${m[0]}</b>`, m[1]], m[2] || '')).concat([[`<b style="white-space:nowrap">24 Oct</b>`, `<span${ref('v0.1.0-sprint4 on fba3cfbd, cut by Pan 24 Oct')}>Sprint 4 tag</span>`]]), { fs: 20, w: [96], pad: '8px 12px', m: [240, 340, 30] })}
 </div>
 <div style="position:absolute;left:510px;top:0;width:654px">
  <div ${A('up', 400, 'display:flex;align-items:baseline;gap:10px;')}><span${ref('S4 hours as planned on 12 Oct (docs/agile/sprint-04/plan.md §7); PR #538 not applied, decided 24 Oct')}>${kicker('Effort per member')}</span></div>
