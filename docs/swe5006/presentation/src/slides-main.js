@@ -705,7 +705,7 @@ const s36 = () => `
  </div>
  <div class="card" style="padding:12px 20px">
   ${kicker('Not claimed')}
-  <div style="font:400 20px/1.4 Inter">${lines(['Authenticated paths under load', 'Anything about the dev host', 'Scaling (one task)'], 0)}</div>
+  <div style="font:400 20px/1.4 Inter">${lines(['A capacity limit: 200/s is the last step', 'Authenticated paths under load', 'Anything about the dev host', 'Scaling (one task)'], 0)}</div>
  </div>
 </div>`;
 
