@@ -28,4 +28,4 @@ No retrospective meeting was recorded for Sprint 3: this file was reconstructed 
 | Close blocked carry-overs instead of carrying them again | Sprint 4 Planning (all five) | Grade-driven cuts: #226 and #229 closed as not planned ([sprint-04/plan.md:62](../sprint-04/plan.md)) |
 | Hold the mid-sprint owner check and record its outcome | Sprint 4 SM @EricWang1358 | Planned for 10-15 ([sprint-04/plan.md:16,184](../sprint-04/plan.md)); the Sprint 3 check of 10-02 ([plan.md:12](plan.md)) and the Sprint 4 one both have no day-log entry |
 | Record each Daily Scrum as a comment on the container issue | Scrum Master | Proposed, not adopted: #465 has no comments on 10-24 |
-| Never paste a token or secret into a chat; rotate or sign out at once if it happens | all five | Proposed, not adopted: no Sprint 4 rule or check |
+| Never paste a token or secret into a chat; if it happens, revoke or rotate the exposed credential at once, and invalidate active sessions when it is a session token | all five | Proposed, not adopted: no Sprint 4 rule or check |
