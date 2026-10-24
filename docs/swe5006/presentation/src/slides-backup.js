@@ -199,7 +199,7 @@ const b16 = () => `<div style="display:flex;gap:14px;align-items:stretch">
   ${li('commerce 2–6 tasks in two AZs, notification 1–4 (read back 16 Oct)')}
   ${li('V3, 19 Oct: commerce <b>1 → 3 tasks</b> in about four minutes, no manual scaling; at 3 tasks ≈ 455 req/s, server p95 13–50 ms, 2 errors in 570,445')}
   ${li('Not V3 acceptance: the workstation generator dropped iterations, so the analyzer rejects the run')}
-  ${li(`V4 queue drain: ${mk('FILL', 'backlog peak, notification tasks, drain time (19 Oct)')}`)}</ul>`, undefined, 150)}
+  ${li('V4 queue drain: not run on AWS; still open in #458')}</ul>`, undefined, 150)}
  ${rCard('Load, one task', 'SWE5001 V2 · ECS, 16 OCT', `<ul class="b" style="font:400 15.5px/1.35 Inter;margin:0">
   ${li('k6, ten one-minute plateaus from 10 to 200 requests a second, through CloudFront')}
   ${li('57,600 requests, <b>0 errors</b>, run twice')}

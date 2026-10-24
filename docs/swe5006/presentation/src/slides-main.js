@@ -219,7 +219,7 @@ const spr = [
 const retro = [
   ['1 → 2', 'No burndown, no hours', 'Daily board snapshots, dated day logs'],
   ['2 → 3', 'A 10,000-line PR; cliff burndown', 'PRs under 1,500 lines, mid-sprint check, “on dev” rule in the DoD'],
-  ['3 → 4', mk('FILL', 'retro #451'), 'Owners keep board estimates current, checked mid-sprint'],
+  ['3 → 4', `<span${ref('sprint-04/plan.md §7 L141: Sprint 3 left the estimate field empty and the review had to reconstruct it; full Sprint 3 retro not written (#451)')}>Board estimates left empty</span>`, 'Owners keep board estimates current, checked mid-sprint'],
 ];
 const s7 = () => `
 ${ladder()}
