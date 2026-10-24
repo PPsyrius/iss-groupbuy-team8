@@ -177,7 +177,7 @@ const s5 = () => `
  ${tbl(['Date', 'Milestone'], ms.map(m => withRef([`<b style="white-space:nowrap">${m[0]}</b>`, m[1]], m[2] || '')).concat([['—', `Sprint 4 tag ${mk('FILL', 'date, once cut (open item 6)')}`]]), { fs: 20, w: [96], pad: '8px 12px', m: [240, 340, 30] })}
 </div>
 <div style="position:absolute;left:510px;top:0;width:654px">
- <div ${A('up', 400, 'display:flex;align-items:baseline;gap:10px;')}>${kicker('Effort per member')}${mk('VERIFY', 'S4 split, PR #538')}</div>
+ <div ${A('up', 400, 'display:flex;align-items:baseline;gap:10px;')}><span${ref('S4 hours as planned on 12 Oct (docs/agile/sprint-04/plan.md §7); PR #538 not applied, decided 24 Oct')}>${kicker('Effort per member')}</span></div>
  ${tbl(['Member', 'S1', 'S2', 'S3', 'S4', 'Planned h', 'Actual days'], mem.map(m => [`<b>${m[0]}</b>`, '—', '30', '30', m[1], `<b>${60 + m[1]}</b>`, `<b style="color:#3E5CD9">${m[2]}</b>`]), { fs: 20, w: [150], pad: '9px 11px', m: [430, 520, 38.4] })}
  <div ${A('up', 760, 'font:400 20px/1.4 Inter;margin-top:14px;')}>${lines(['Sprint 1 hours were not recorded', 'Team done: Sprint 2 134 of 150 h; Sprint 3 117 of 150 h', `<span${ref('proposal §7')}>Proposal budget: 10 person-days each</span>`], 4)}</div>
  <div ${A('up', 860, 'margin-top:12px;border-radius:8px;background:#E3E8FB;padding:12px 16px;font:400 20px/1.35 Inter;')}${ref('SWE5001 deck slide 6 (docs/swe5001/presentation/src/slides-main.js eff), presented 21 Oct')}><b style="color:#3E5CD9">Actual, ≈ 50 person-days:</b> the split the team agreed for the joint SWE5001 and SWE5006 project, estimated from the issues each person delivered; no one logged hours.</div>

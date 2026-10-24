@@ -78,12 +78,12 @@ ${C.SLIDES.filter(s => s.seg === 4).map(slideCard).join('')}
 <h2>Live pipeline demo (16:46:30 – 16:52:00, 330 s)</h2>
 ${tbl(['Step', 'Shows', 'Rubric'], pipeSteps.map(d => [d.n, esc(d.t), d.proves.split(' · ')[0]]))}
 <h3>Preconditions (checked at 15:30 by Pan)</h3>
-<ul><li>Demo branch pushed and up to date with <code>origin/dev</code>; PR body ready; no PR opened yet. The backend merge (by 16:40) moves <code>dev</code>, so at 16:40–16:41 Pan rebases the demo branch onto the new <code>origin/dev</code>, pushes it and only then opens the PR; its checks start at 16:41 on the updated branch. ${m('{{CONFIRM:the copy change, its page, its author and the approving code owner (open item 14)}}')}</li>
-<li>Backend pre-run: a small backend PR opened at ≈ 16:20 by its author, approved by Liu Jin (backend code owner) and squash-merged by 16:40 so its deploy finishes before the segment. ${m('{{CONFIRM:the backend change and its author}}')}</li>
+<ul><li>Demo branch pushed and up to date with <code>origin/dev</code>; PR body ready; no PR opened yet. The backend merge (by 16:40) moves <code>dev</code>, so at 16:40–16:41 Pan rebases the demo branch onto the new <code>origin/dev</code>, pushes it and only then opens the PR; its checks start at 16:41 on the updated branch. Demo change (decided 24 Oct): the home page heading “Buy better together” → “Buy better, together” (one line, frontend/src/routes/index.tsx:114; no test asserts it), author Pan, approver Lim (frontend code owner).</li>
+<li>Backend pre-run: a small backend PR opened at ≈ 16:20 by its author, approved by Liu Jin (backend code owner) and squash-merged by 16:40 so its deploy finishes before the segment. Decided 24 Oct: Pan writes the #684 fix (the GroupDealRepository Javadoc, comments only), so the change is real and safe to merge; Liu Jin approves, with Eric as backup (groupbuy code owner since #669).</li>
 <li>Merge freeze in the team chat: nobody merges into <code>dev</code> from 15:00 to 17:15 except these two PRs. A moved <code>dev</code> makes the branch out of date and re-runs the checks (strict required checks), which is why the demo branch is updated after the backend merge and before its PR opens, and why nothing else may merge after 16:40.</li>
 <li>Latest <code>ci-frontend</code> and <code>ci-backend</code> runs on <code>dev</code> green (A.1); deploy switches <code>ENABLE_S3_DEPLOY</code> and <code>ENABLE_EC2_DEPLOY</code> unchanged; GitHub Actions budget not exhausted (a budget stop hit run 39442654274 on 20 Oct).</li>
 <li>Lim signed in to GitHub on his own machine with the PR list open; he is not sharing at 16:47.</li>
-<li>Backup video (rubric G6, 4.6): recorded on dev by Sat 24 Oct, 1080p, one clip per step P1–P6, stored in the cloud and on a USB drive, open in a player on Pan’s machine and tested with Zoom “share sound” off. ${m('{{FILL:recording link and USB holder}}')}</li></ul>
+<li>Backup video (rubric G6, 4.6): recorded on dev by Sun 25 Oct at the latest (decided 24 Oct), 1080p, one clip per step P1–P6, stored in the cloud and on a USB drive, open in a player on Pan’s machine and tested with Zoom “share sound” off. ${m('{{FILL:recording link and USB holder}}')}</li></ul>
 <h3>Screen layout (Pan’s browser window, shared from 16:46:30; browser zoom 125–150 %, rubric V7)</h3>
 ${tbl(['Tab', 'Content', 'Prepared state'], [
   ['1', 'GitHub: the demo pull request', 'Opened at 16:41; Files changed tab ready'],
@@ -151,8 +151,8 @@ ${box('warn', 'Never live', 'Editing any deadline, price or listing on shared de
 ${box('tip', 'Plan C', 'A step fails live and has no recording: show its local evidence (B11 for payment and refund, the D6 test for the race, B12 for load) and say: <i>“verified locally, not yet on dev.”</i> Never present a local result as a dev one.')}
 <h2>After the demo (17:01:00 – 17:04:00)</h2>
 <h3>k6 pre-run for slide 36 (rubric 5.3)</h3>
-<ul><li><b>Sat 24 Oct</b>, Pan: bring up the SWE5001 environment (applied per session, torn down nightly; optional), run <code>perf/k6/browse.js</code> (k6 1.6.1 by digest; ten 60 s plateaus, 10 → 200 requests/s) against the SWE5001 CloudFront, keep the k6 summary and the dashboard export, write the run into the day log, tear the environment down. If it runs and passes, record its date, label and summary path there; if it is skipped or fails, nothing changes.</li>
-<li>Slide 36’s table shows the 16 Oct run (#670), the default; only a passing pre-run replaces it, before the 25 Oct rehearsal. On the day the report file is opened from Eric’s machine if asked. Never point k6 at the SWE5006 dev host.</li></ul>
+<ul><li>No pre-run (decided 24 Oct): slides 26 and 36 keep the 16 Oct ECS run (run 20261016-v2-monolith-repeat, #670); it is complete and evidenced, and a new run would need an ECS session for little gain.</li>
+<li>Slide 36’s table shows the 16 Oct run (#670). On the day the report file is opened from Eric’s machine if asked. Never point k6 at the SWE5006 dev host.</li></ul>
 ${C.SLIDES.filter(s => s.n >= 36).map(slideCard).join('')}
 ${qaTable(5)}
 </section>`;
