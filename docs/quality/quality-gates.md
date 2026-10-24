@@ -104,9 +104,11 @@ Focused verification: [real-curl tests](../../.github/tests/dast_addon_http_test
 
 Observed failure: [PR #685 run 40103959227](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40103959227) on `b226ae36` passed download/checksum verification and fixture coverage (10/10 requests, 67/67 rules), but an errno-specific permission assertion blocked the live scan. Local Docker Desktop tests missed the Linux file-ownership difference. The unnecessary fixture gate and permission-test framework are removed rather than maintained.
 
-2026-10-24 simplification: remove the offline Docker gate, permission-probe framework and duplicate mocked-download tests rather than maintain tests of Docker's filesystem behavior. Retain the actual fix: preflight, bounded pinned/checksummed download, one passive ZAP session, strict verification and report upload. The dependency failure is addressed by preparation; a genuinely missing add-on must still fail rather than produce a false clean scan. The failed PR run above remains the current hosted evidence until the simplified revision is published and scanned.
+2026-10-24 simplification: remove the offline Docker gate, permission-probe framework and duplicate mocked-download tests rather than maintain tests of Docker's filesystem behavior. Retain the actual fix: preflight, bounded pinned/checksummed download, one passive ZAP session, strict verification and report upload. The dependency failure is addressed by preparation; a genuinely missing add-on must still fail rather than produce a false clean scan.
 
-Acceptance pending: publish the correction, require a green PR scan, then dispatch on dev after merge and record 10/10 coverage plus verified passive processing. Notify #652 if this misses 26 October 03:41 UTC. CSP/header remediation remains #610; no live scan coverage or verification requirement is removed.
+Hosted verification: [run 40106789415](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40106789415) passed on PR head `998bbde8`: pinned add-on checksum verified, 10/10 required responses covered, 67/67 passive rules executed and queue drained with no verification errors. Findings: 0 High, 2 Medium, 4 Low and 6 Informational; the CSP and missing-header findings remain #610. This verifies the PR scanner against dev, not a vulnerability-free application or the post-merge dev workflow.
+
+Acceptance remaining: dispatch on dev after merge and record 10/10 coverage plus verified passive processing. Notify #652 if this misses 26 October 03:41 UTC. No live scan coverage or verification requirement was removed.
 
 ### Initial edge-policy findings — 2026-10-22
 
