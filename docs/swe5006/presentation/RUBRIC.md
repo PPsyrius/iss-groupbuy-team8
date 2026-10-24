@@ -43,7 +43,7 @@ Forty minutes is a hard stop, interruptions included. The talk shows one example
 | G6 | Demo backups | CA: record a video in advance for each demo | Record backups for §4 and §5 by 24 Oct, on the final Sprint 4 build deployed to `dev`. Sprint 4 ends on 23 Oct (Sprint 4 plan §1), so the recordings can show the final sprint build |
 | G7 | Slide and diagram legibility | BR slide 6: "crisp and readable presentation slides with good flow" | Every diagram and schema must pass V1–V7 |
 | G8 | Talk versus report | RT asks for per-use-case, per-member detail that cannot fit in 40 min | Each item gets one example on a slide, and the slide names its report section. The report holds the full set |
-| G9 | Capture lecturer remarks | BR slide 7: the report incorporates remarks gathered during the presentation | A named scribe on each day logs every question and remark verbatim. Turn the log into report tasks by 27 Oct |
+| G9 | Capture lecturer remarks | BR slide 7: the report incorporates remarks gathered during the presentation | All five members take notes during the Q&A and log every question and remark verbatim; after the talk they collate the notes into one GitHub issue. Turn that issue into report tasks by 27 Oct (team decision, 24 Oct) |
 | G10 | Code on hand | BR slide 6: well structured source code with unit tests for complex classes. RT 3.5: the implementation follows the design after the pattern is applied | Not a presentation item, but a likely question. Keep the IDE open on the classes implementing each pattern and on their unit tests |
 
 ## Time budget
@@ -176,8 +176,8 @@ By 25 Oct, every box below should be ticked and every open decision settled. Bac
 - [ ] Both backup videos recorded by 24 Oct and stored in the cloud and on a USB drive
 - [ ] Every diagram and schema checked against V1–V7 on a projector or TV
 - [ ] A speaker assigned to each section, with the handovers rehearsed
-- [ ] A scribe named for each presentation day (G9)
-- [ ] Questions sent to Chandra: is Q&A inside or outside the 40 min, and is there a marking rubric for the presentation?
+- [x] Note-takers for each presentation day (G9): all five members, notes collated into one GitHub issue after the talk (decided 24 Oct)
+- [x] Questions to Chandra (is Q&A inside or outside the 40 min, and is there a marking rubric for the presentation?): decided 24 Oct not to send them. The deck works to the stricter reading: Q&A inside the 40 min (G1) and no published marking rubric (Sources). The report due date is settled: 1 Nov (BR slide 7)
 
 Open decisions:
 
@@ -189,4 +189,4 @@ Open decisions:
 6. Whether the auth change from PROP was recorded in an ADR.
 7. Which performance test tool is used, whether a script exists, and whether it has met the target.
 8. Whether auto-scaling is configured, which decides whether scalability is demonstrated or stated as a trade-off.
-9. Whether the presentation is also graded individually. If so, each speaker's section should show their own use case or design problem.
+9. Whether the presentation is also graded individually. **Settled 24 Oct (team decision):** the presentation is graded as a team, so speaking is not compulsory for every member. The individual portion is in the report: 80% including 5% peer assessment (BR slide 13), plus each member's own §3.4.N and §3.5.N. The §2 split stays (G4): each member shows their own report work.
