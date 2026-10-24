@@ -192,12 +192,12 @@ ${tbl(['Time (SGT)', 'Do', 'Owner'], [
   ['15:00', 'Merge freeze on <code>dev</code> until 17:15.', 'Lim'],
   ['15:30', 'Check the §4 and §5 preconditions lists.', 'Pan (§4); Eric, Yorik (§5)'],
   ['≈ 16:05 (≤ 16:07)', 'Start the expiry bloc on <code>US34-04</code> as account B and pay; bookmark the receipt. <code>EXPIRY OK</code> at 16:10, <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.', 'Yorik'],
-  ['16:30', 'Start; follow the run sheet. The scribe logs every remark verbatim (rubric G9).', 'Lim; scribe'],
+  ['16:30', 'Start; follow the run sheet. All five note every lecturer question and remark verbatim (rubric G9).', 'Lim; all take notes'],
   ['16:40 – 16:41', 'Backend pre-run PR merged; rebase the demo branch onto the new <code>origin/dev</code>, push it, then open the demo PR at 16:41.', 'Pan'],
   ['17:04 / 17:10', 'Slide 39; parked questions; end.', 'Lim'],
 ])}
 <h2>After the presentation</h2>
-<ul><li>The same evening: every lecturer remark goes into #463 as a report task (by 27 Oct, rubric G9).</li><li>Day log under <code>docs/agile/sprint-04/log/</code>: the demo PR, run links and any payment or refund ids shown (no secrets).</li></ul>
+<ul><li>After the talk: the five members collate their notes into one GitHub issue; every lecturer remark in it becomes a #463 report task by 27 Oct (rubric G9).</li><li>Day log under <code>docs/agile/sprint-04/log/</code>: the demo PR, run links and any payment or refund ids shown (no secrets).</li></ul>
 </section>`;
 
 // ---------- open items (rendered after every counted chapter) ----------
