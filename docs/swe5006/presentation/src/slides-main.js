@@ -204,7 +204,7 @@ ${gA(kicker('Every use case has an owner · * proposed, not yet agreed'), 'up', 
 <div style="display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;font:400 20px/1.3 Inter;margin-bottom:16px">${[['UC1', 'Lim*'], ['UC2', 'Pan*'], ['UC3', 'Eric'], ['UC4', 'Eric'], ['UC5', 'Eric*'], ['UC6', 'Yorik'], ['UC7', 'Lim*'], ['UC8', 'Lim'], ['UC9', 'Liu Jin'], ['Notifications', 'Pan']].map((u, i) => `<span ${A('up', 200 + 30 * i)}><b>${u[0]}</b> ${u[1]}</span>`).join('')}${hAt(mk('CONFIRM', 'owners marked * (open decision 4)'), 'pop', 520)}</div>
 ${tbl(['Member', 'Use case', 'Design problem → GoF pattern'], own.map(o => withRef([`<b>${o[0]}</b>`, o[1], o[2]], `${o[3]} (proposal §6.1)`)), { fs: 20, w: [250, 380], pad: '11px 14px', m: [420, 540, 38] })}
 <div ${A('up', 800, 'margin-top:14px;font:400 20px/1.4 Inter;')}>Each member presents their own design problem in section 2; the team statechart (UC4–UC6, UC8) goes with Eric’s UC4 design.</div>
-<div ${A('up', 860, 'margin-top:6px;display:flex;gap:14px;align-items:center;')}>${report('Report: use case in §3.4, design problem in §3.5').replace('margin-top:8px', 'margin:0')} ${mk('FILL', 'section numbers (#463)')} ${mk('VERIFY', 'UC9 owner')}</div>`;
+<div ${A('up', 860, 'margin-top:6px;display:flex;gap:14px;align-items:center;')}>${report(`<span${ref('Eric 3.4.1 and 3.5.1; Yorik 3.4.2 and 3.5.2; Pan 3.4.3 and 3.5.3; Lim 3.4.4 and 3.5.4; Liu Jin 3.4.5 and 3.5.5 (#463 report plan, 24 Oct; #678, #679)')}>Report: use cases §3.4.1–§3.4.5, design problems §3.5.1–§3.5.5, in section 2 order</span>`).replace('margin-top:8px', 'margin:0')} ${mk('VERIFY', 'UC9 owner')}</div>`;
 
 // ---------- slide 7 (1.6, 1.7) ----------
 const steps = ['coded', 'tested', 'integrated', 'releasable', 'released'];
@@ -374,7 +374,7 @@ ${typ.map((t, i) => `<div style="display:flex;gap:16px;align-items:baseline;font
  <div style="display:flex;gap:16px;align-items:baseline;font:400 22px/1.4 Inter"><b style="width:250px;flex:none">Design</b><div>${lines([mo('service → repository.lockDeal()', 21) + ' <span style="color:var(--muted)">(SELECT … FOR UPDATE)</span>', mo('→ aggregate.joinPaid() → guarded UPDATE', 21), 'all in one transaction'], 2)}</div></div>
 </div>
 <div class="frag" data-frag="2" style="position:absolute;left:0;right:0;top:470px;border-radius:8px;background:#E3E8FB;padding:12px 18px;font:400 22px/1.35 Inter"><b style="color:#3E5CD9">Why:</b> the domain names its needs as interfaces and infrastructure supplies them, so persistence and providers can change without touching the rules.</div>
-${repTop('Report §3.2 · transition strategies')}`;
+${repTop('Report §3.2, §3.2.4, §3.2.8 · transition strategies')}`;
 
 // ---------- slide 12 (2.2) ----------
 const s12 = () => `
@@ -394,7 +394,7 @@ ${one('use-case', 2320, 1096, [1164, 568], [
   [1160, 40, 'out of scope', 0, [['Out of scope, greyed', 'as the proposal excluded']]],
   [1160, 640, 'delivery status', 0, [['Status badges', 'paid start and expiry refund on dev since 23 Oct; a second buyer’s join not yet']]],
 ], WALK)}
-${repTop('Report §3.3 · use case diagram and specifications')}`;
+${repTop('Report §3.3.1–§3.3.12 · use case model')}`;
 
 // ---------- slide 14 (2.4) ----------
 const s14 = () => `
@@ -402,7 +402,7 @@ ${walk([{ name: 'uc4-analysis-class', W: 1160, H: 1070, box: [566, 568], at: 'le
   [['uc4-analysis-class', 0, 550, 'entities', 0, [['Entities only', 'attributes sit on entities: the Team holds its size and deadline']]],
    ['uc4-analysis-seq', 560, 1150, 'seat available: join', 160, [['Seat available', 'joining creates a membership while the window is open']]],
    ['uc4-analysis-seq', 1160, 1720, 'else: refund through the gateway', 160, [['Otherwise', 'the payment is refunded through the payment gateway']]]])}
-${repTop('Report §3.4 · Eric (UC4 analysis model)')}`;
+${repTop('Report §3.4.1 · Eric (UC4 analysis model)')}`;
 
 // ---------- slide 15 (2.4) ----------
 const tagKey = [['Pres', 'presentation'], ['Dist', 'distribution'], ['Pers', 'persistence'], ['Ext', 'external interface'], ['Sec', 'security'], ['Conc', 'concurrency'], ['Sched', 'scheduling'], ['Evt', 'domain events'], ['Lang', 'language, framework']];
@@ -417,7 +417,7 @@ ${one('uc4-design-class', 2320, 2314, [944, 568], [
  ${tagKey.map((t, i) => `<div ${A('up', 290 + 30 * i, 'font:400 19px/1.4 Inter;')}><b>${t[0]}</b> ${t[1]}</div>`).join('')}
  <div ${A('up', 600, 'font:400 19px/1.35 Inter;margin-top:12px;color:var(--muted);')}>Typed signatures, visibility and multiplicities</div>
 </div>
-${repTop('Report §3.4 · Eric')}`;
+${repTop('Report §3.4.1 · Eric')}`;
 
 // ---------- slide 16 (2.4) ----------
 const s16 = () => `
@@ -427,7 +427,7 @@ ${one('uc4-design-seq', 2320, 3306, [1164, 568], [
   [1100, 2500, 'loser: compensation, refund owed', 176, [['Seat gone', 'DEAL_FULL or DEAL_CLOSED: the receipt owes a refund, never an extra member'], ['Evidence', '20 paid buyers race for 1 seat: 19 refunds owed (local integration test)']]],
 ], WALK)}
 <span${ref('StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist (local, PostgreSQL in Testcontainers) · READ COMMITTED, 10 s')}></span>
-${repTop('Report §3.4 · Eric')}`;
+${repTop('Report §3.4.1 · Eric')}`;
 
 // ---------- slide 17 (2.4) ----------
 // Inline state diagram in the pane's copy only (fx): the three transitions draw on at 250 / 320 / 390 ms, their labels
@@ -451,7 +451,7 @@ ${one('team-statechart', 2320, 548, [1164, 275], [
  ${gA(point('Why a statechart', 'Team state gates four use cases: UC4 join, UC5 resolution, UC6 refund and UC8 my teams.', 24), 'up', 640)}
  ${gA(point('In code', `${mo('DealStatus', 22)} and the guards of ${mo('GroupDeal', 22)}`, 24), 'up', 700)}
 </div>
-${repTop('Report §3.4 · Eric (team statechart)')}`;
+${repTop('Report §3.4.1 · Eric (team statechart)')}`;
 
 // ---------- slides 18–21 (2.5): one 20 s slot per member ----------
 // Each slot: the problem, what varies and the pattern beside the after-diagram; the other SDP fields (SDP 06 design
@@ -473,7 +473,7 @@ const s18 = () => pslot([
   [0, -24, 'Client · Creator', 0, [['Client', 'the service depends only on the abstract creator'], ['Needed because', 'the proposal makes new kinds of team, without editing the service, a design driver']]],
   [0, 520, 'ConcreteCreator · Product', 0, [['Participants', `Creator ${mo('PaidGroupDealCreator', 19)}, ConcreteCreator ${mo('StandardPaidGroupDealCreator', 19)}, Product ${mo('GroupDeal', 19)}`], ['Candidates', 'Factory Method, static factory, Builder, Abstract Factory']]],
   [0, 990, 'initiate → createGroupDeal', 0, [['Why', `the final ${mo('initiate', 19)} validates, then calls ${mo('createGroupDeal', 19)}: every creator keeps the rules`], ['Liability', 'one creator and one team class today'], ['Tested by', mo('PaidGroupDealServiceTest.startUsesTheInjectedCreator', 19)]]],
-], 'Report §3.5 · Eric (UC3)', 'SDP 05a p13, p15, p35 · SDP 01a p34 · PR #424 · proposal §6.3');
+], 'Report §3.5.1 · Eric (UC3)', 'SDP 05a p13, p15, p35 · SDP 01a p34 · PR #424 · proposal §6.3');
 const s19 = () => pslot([
   ['Where it shows', 'In the expiry sequence: it called the order and refund code inline'],
   ['Cause for redesign', 'Tight coupling: more and more objects depend on a team’s outcome'],
@@ -482,7 +482,7 @@ const s19 = () => pslot([
 ], 'observer-expiry', 1160, 1870, [
   [0, 340, 'Subject · Observer · ConcreteObserver adapter', 0, [['Subject', `Spring’s ${mo('ApplicationEventPublisher', 19)} and its multicaster`], ['ConcreteObserver', 'Spring’s adapter, one per subscriber method'], ['Candidates', 'Observer, Mediator, direct calls, a message broker']]],
   [0, 1364, 'publish → before commit, in order', 0, [['Before commit, in order', `${mo('OrderLifecycleSubscriber', 19)} (10), then ${mo('TeamExpiryRefundSubscriber', 19)} (20)`], ['Liability', 'implicit control flow; a wrong phase is a silent bug'], ['Tested by', `${mo('TeamExpiryRefundSubscriberTest', 19)}: a failure rolls the expiry back`]]],
-], 'Report §3.5 · Yorik (UC6)', 'ADR 0002 · SDP 05a p15 · proposal §6.3');
+], 'Report §3.5.2 · Yorik (UC6)', 'ADR 0002 · SDP 05a p15 · proposal §6.3');
 const s20 = () => pslot([
   ['Where it shows', 'In the class diagram: the SQS and SNS transports would each copy the batch loop'],
   ['Cause for redesign', 'Algorithmic dependencies: the same steps, two providers'],
@@ -491,7 +491,7 @@ const s20 = () => pslot([
 ], 'template-method-outbox', 1160, 1724, [
   [0, 290, 'template method', 0, [['AbstractClass', `${mo('BatchingOutboxEventTransport&lt;E&gt;', 19)}: the final ${mo('publish', 19)} runs the loop`], ['Candidates', 'Template Method; Strategy (the whole algorithm does not vary); an adapter per SDK']]],
   [0, 1176, 'publish calls entry, send', 0, [['Primitive operations', `${mo('entry', 19)} and ${mo('send', 19)}: each transport implements only these`], ['Liability', 'a subclass cannot change the loop'], ['Tested by', `${mo('OutboxBatchFailureTest', 19)}, both providers`]]],
-], 'Report §3.5 · Pan (notifications)', 'ADR 0007 · SDP 05a p12–14');
+], 'Report §3.5.3 · Pan (notifications)', 'ADR 0007 · SDP 05a p12–14');
 const s21 = () => pslot([
   ['Where it shows', 'In the class diagram: browse and the team quote each switch on the pricing mode'],
   ['Cause for redesign', 'Algorithmic dependencies: the arithmetic sits inline in both'],
@@ -500,7 +500,7 @@ const s21 = () => pslot([
 ], 'strategy-pricing', 1160, 1770, [
   [0, 330, 'resolver · Strategy', 0, [['Participants', `Strategy ${mo('PricingStrategy', 19)}, picked by a resolver`], ['Contexts', 'the product and team-price services'], ['Candidates', 'Strategy, Template Method (no shared skeleton), Decorator']]],
   [0, 1298, 'quote → resolve → strategy', 0, [['Delegation', `each context hands the arithmetic to the ConcreteStrategy ${mo('DualPricingStrategy', 19)}`], ['Liability', 'one strategy today; new pricing schemes are a design driver'], ['Tested by', `${mo('PricingStrategyResolverTest', 19)}, ${mo('DualPricingStrategyTest', 19)}`]]],
-], 'Report §3.5 · Lim (UC1)', 'SDP 05a p35 · proposal §6.3 · team-price-quotes.md L55');
+], 'Report §3.5.4 · Lim (UC1)', 'SDP 05a p35 · proposal §6.3 · team-price-quotes.md L55');
 
 // ---------- slides 22–23 (2.5): the full-form problem ----------
 // Before/after pair (MOTION.md), before: the pane fades in at 200, the points rise 160 +90, the chosen pattern's line
@@ -517,7 +517,7 @@ ${one('state-before', 1160, 1120, [552, 568], [
   [0, 0, 'brute force: class', 0, [['Brute force', `the same ${mo('switch (status)', 19)} in four operations of ${mo('Product', 19)}, in red`]]],
   [0, 570, 'brute force: sequence', 0, [['In the sequence', `${mo('publish()', 19)} branches on the listing’s status`]]],
 ], { at: 'left:612px;top:0', d: 200, od: 700, os: 80 })}
-${repTop('Report §3.5 · Liu Jin (UC9)')}`;
+${repTop('Report §3.5.5 · Liu Jin (UC9)')}`;
 // Before/after pair, after: the pane arrives from the right at 160, then the points rise 320 +90; outlines 700 +80.
 const s23 = () => `
 <div style="position:absolute;left:0;top:0;width:600px"${ref('GoF State implementation 2 · SDP 05a p35 · slide 4')}>
@@ -529,7 +529,7 @@ ${one('state-after', 1160, 1424, [540, 568], [
   [0, 64, 'State · ConcreteStates', 0, [['Participants', `Context ${mo('Product', 19)}, State ${mo('ProductStatus', 19)}`], ['ConcreteStates', 'DRAFT, ON_SALE, OFF_SALE: enum constants with bodies, one subclass each']]],
   [0, 876, 'after: publish delegates', 0, [['No switch', 'each state answers publish its own way'], ['Liability', 'a new state still needs a constant, its overrides and tests']]],
 ], { at: 'left:624px;top:0', d: 160, pa: 'right', od: 700, os: 80 })}
-${repTop('Report §3.5 · Liu Jin (UC9)')}`;
+${repTop('Report §3.5.5 · Liu Jin (UC9)')}`;
 
 // ---------- slide 24 (2.6) ----------
 const s24 = () => `
@@ -842,17 +842,19 @@ const s38 = () => `
 const out = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s12, 13: s13, 14: s14, 15: s15, 16: s16, 17: s17, 18: s18, 19: s19, 20: s20, 21: s21, 22: s22, 23: s23, 24: s24, 25: s25, 26: s26, 27: s27, 28: s28, 29: s29, 30: s30, 31: s31, 32: s32, 33: s33, 34: s34, 35: s35, 36: s36, 37: s37, 38: s38 };
 for (const s of C.SLIDES) if (!out[s.n]) out[s.n] = s.slot === null ? (() => '') : pending(s.n);
 // Rubric G8: every example slide names the report section holding the full set. §2 slides carry it with repTop; the
-// others get it here. Our section numbers follow #463 and stay FILL until it is final; the report template section
-// (RT) each slide answers is kept as metadata.
+// others get it here. Section numbers follow the #463 report plan of 24 Oct (index comment, sub-issues #675–#681);
+// the report template section (RT) each slide answers is kept as metadata.
 const repSec = {
-  3: ['scope, quality attributes', 'RT 1.4.1–1.4.3'], 4: ['status, promised vs delivered', 'RT 1.4, 2.2'], 5: ['milestones, effort', 'RT 2.3'],
-  6: ['ownership', 'RT 2.1, 3.4, 3.5'], 7: ['sprints, DoD, retrospectives', ''], 8: ['appendix: agile artefacts', ''],
-  25: ['types of testing', ''], 26: ['performance test', ''], 27: ['source control strategy', 'RT 4.1'], 28: ['artefacts', 'RT 4.1'],
-  29: ['continuous integration', 'RT 4.2'], 30: ['pipeline security', 'RT 4.2'], 31: ['continuous delivery', 'RT 4.3'], 32: ['technical findings', ''],
+  3: ['§1.4', 'scope, quality attributes', 'RT 1.4.1–1.4.3'], 4: ['§1.4, §2.2', 'status, promised vs delivered', 'RT 1.4, 2.2'],
+  5: ['§2.3', 'milestones, effort', 'RT 2.3'], 6: ['§2.1, §3.4, §3.5', 'ownership', 'RT 2.1, 3.4, 3.5'],
+  7: ['§2.1, §2.3', 'sprints, DoD, retrospectives', ''], 8: ['Appendix A', 'agile artefacts', ''],
+  25: ['§4.2', 'types of testing', ''], 26: ['§4.2', 'performance test', ''], 27: ['§4.1', 'source control strategy', 'RT 4.1'],
+  28: ['§4.1', 'artefacts', 'RT 4.1'], 29: ['§4.2', 'continuous integration', 'RT 4.2'], 30: ['§4.2', 'pipeline security', 'RT 4.2'],
+  31: ['§4.3', 'continuous delivery', 'RT 4.3'], 32: ['§4.2, §4.3', 'technical findings', ''],
 };
-for (const [n, [t, rt]] of Object.entries(repSec)) {
+for (const [n, [sec, t, rt]] of Object.entries(repSec)) {
   const body = out[n];
-  out[n] = () => body() + repTop(`<span${rt ? ref(rt) : ''}>Report ${mk('FILL', '§ (#463)')} · ${t}</span>`);
+  out[n] = () => body() + repTop(`<span${rt ? ref(rt) : ''}>Report ${sec} · ${t}</span>`);
 }
 // Closing slide (dark, full bleed; MOTION.md, shortened): headline 150, sub 300, footer up and its icon pop 520.
 out[39] = () => `

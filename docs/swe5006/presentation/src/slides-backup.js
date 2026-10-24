@@ -54,7 +54,7 @@ const b1 = () => dt(['Artefact', 'Where it lives', 'State on 21 Oct'], [
   ['<b>Sprint reviews</b>', 'S1, S2 in the progress reports; S3 docs/agile/sprint-03/review.md', `S4 due 23 Oct ${mk('FILL', 'S4 review')}`],
   ['<b>Retrospectives</b>', 'S1 report; S2 report §Sprint Retrospective', `S3 missing (#451) · S4 due 23 Oct ${mk('FILL', 'S3, S4 retros')}`],
   ['<b>Day logs, DoD, practices</b>', 'docs/agile/sprint-0N/log/ (S2–S4); DoD per sprint: docs/agile/definition-of-done.md; EPAT practices: docs/agile/practices.md', 'dated logs per working day'],
-], { fs: 15.5, w: [230, 560], pad: '7px 10px', m: quick(7) }) + `<div class="a" data-a="up" style="--d:${after(7)}ms;margin-top:10px;font:italic 400 15.5px Inter;color:var(--muted)">Source: board and issues read with gh on 21 Oct; docs/agile/README.md. The report appendix holds the full set (#463).</div>`;
+], { fs: 15.5, w: [230, 560], pad: '7px 10px', m: quick(7) }) + `<div class="a" data-a="up" style="--d:${after(7)}ms;margin-top:10px;font:italic 400 15.5px Inter;color:var(--muted)">Source: board and issues read with gh on 21 Oct; docs/agile/README.md. Report Appendix A holds the full set (#463 plan, #681).</div>`;
 
 // ---- B3–B6: segment 2, analysis and design ----
 // Motion (MOTION.md): `m` turns on the table choreography, true = the v3 rhythm (table fade 246 ms, body rows
@@ -221,15 +221,15 @@ const bUc4 = () => `
 <div style="position:absolute;left:0;top:0;width:1164px;height:568px;display:flex;gap:16px;align-items:flex-start">
  <div ${A('fade', 150)}>${sized('uc4-design-class', 500, 499)}<div style="font:400 14.5px Inter;color:var(--muted)">Design class diagram (2320 × 2314)</div></div>
  <div ${A('fade', 260)}>${sized('uc4-design-seq', 348, 496)}<div style="font:400 14.5px Inter;color:var(--muted)">Design sequence (2320 × 3306)</div></div>
- <div ${A('up', 450, 'width:220px;font:400 16px/1.4 Inter;')}>Both are vector: open <span class="mono" style="font-size:14px">src/diagrams/uc4-design-*.svg</span> in a browser tab and zoom. Every message carries its source line in the diagram spec. Report §3.4 (Eric).</div>
+ <div ${A('up', 450, 'width:220px;font:400 16px/1.4 Inter;')}>Both are vector: open <span class="mono" style="font-size:14px">src/diagrams/uc4-design-*.svg</span> in a browser tab and zoom. Every message carries its source line in the diagram spec. Report §3.4.1 (Eric).</div>
 </div>`;
-const bMembers = () => tbl(['Member', 'Use case (report §3.4)', 'Design problem (report §3.5)', 'On a slide'], [
-  ['Eric', 'UC3, UC4 start and join a team', 'Factory Method: team creation', 'UC4 models 14–16, statechart 17; pattern 18'],
-  ['Yorik', 'UC6 refund on team expiry', 'Observer: team outcome; refund idempotency as a mechanism (B6)', 'pattern 19; sequence B5'],
-  ['Pan', 'Receive notifications', 'Template Method: outbox transports', 'pattern 20'],
-  ['Lim', 'UC8 my orders and my teams (with UC7 frontend)', 'Strategy: UC1 pricing', 'pattern 21'],
-  ['Liu Jin', 'UC9 listing administration and team terms', 'State: listing lifecycle (full form)', 'patterns 22–23; statechart B13'],
-], { fs: 16.5, w: [110, 330, 400], m: quick(5) }) + `<div class="a" data-a="up" style="--d:${after(5)}ms;margin-top:12px;font:400 16px/1.4 Inter">Each member’s analysis class, analysis sequence, design class and design sequence diagrams are in their report section (template RT 3.4.1); the deck shows UC4 only (rubric G8). Owners: #463. ${mk('VERIFY', 'UC9 owner: #32 names Eric, #463 names Liu Jin (open item 12)')}</div>`;
+const bMembers = () => tbl(['Member', 'Use case (report section)', 'Design problem (report section)', 'On a slide'], [
+  ['Eric', '§3.4.1 UC3, UC4 start and join a team', '§3.5.1 Factory Method: team creation', 'UC4 models 14–16, statechart 17; pattern 18'],
+  ['Yorik', '§3.4.2 UC6 refund on team expiry', '§3.5.2 Observer: team outcome; refund idempotency as a mechanism (B6)', 'pattern 19; sequence B5'],
+  ['Pan', '§3.4.3 Receive notifications', '§3.5.3 Template Method: outbox transports', 'pattern 20'],
+  ['Lim', '§3.4.4 UC8 my orders and my teams (with UC7 frontend)', '§3.5.4 Strategy: UC1 pricing', 'pattern 21'],
+  ['Liu Jin', '§3.4.5 UC9 listing administration and team terms', '§3.5.5 State: listing lifecycle (full form)', 'patterns 22–23; statechart B13'],
+], { fs: 16.5, w: [110, 330, 400], m: quick(5) }) + `<div class="a" data-a="up" style="--d:${after(5)}ms;margin-top:12px;font:400 16px/1.4 Inter">Each member’s analysis class, analysis sequence, design class and design sequence diagrams are in report §3.4.1–§3.4.5 (template RT 3.4); the deck shows UC4 only (rubric G8). Owners: #463. ${mk('VERIFY', 'UC9 owner: #32 names Eric, #463 names Liu Jin (open item 12)')}</div>`;
 const b16erd = () => scroll('full-erd', 2320, 5038, 1150);
 // B16 prints only its first viewport, so the PDF also carries the ERD 1:1 (labels 24 px, rubric V3): each context
 // frame of full-erd.svg cut into 1164 × 568 windows, left to right then top to bottom, as pages B16-1 … B16-n.
