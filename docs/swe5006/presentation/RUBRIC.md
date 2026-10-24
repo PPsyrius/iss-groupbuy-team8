@@ -179,7 +179,7 @@ By 25 Oct, every box below should be ticked and every open decision settled. Bac
 - [x] Note-takers for each presentation day (G9): all five members, notes collated into one GitHub issue after the talk (decided 24 Oct)
 - [x] Questions to Chandra (is Q&A inside or outside the 40 min, and is there a marking rubric for the presentation?): decided 24 Oct not to send them. The deck works to the stricter reading: Q&A inside the 40 min (G1) and no published marking rubric (Sources). The report due date is settled: 1 Nov (BR slide 7)
 
-Open decisions:
+Decisions (open unless marked **Settled**; the numbers stay fixed because AGENTS.md, the deck and #463 cite them):
 
 1. What PDF page 2 says, and which of its items do not conflict with page 1 and therefore still apply.
 2. What is deployed now against UC1–UC9: done, partial or dropped.
