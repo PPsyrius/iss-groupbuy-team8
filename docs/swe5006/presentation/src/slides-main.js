@@ -8,12 +8,6 @@ const C = require('./content');
 // Density (review round 4): one point per line, never "A · B · C" runs; sparse slides over dense ones; detail moves into
 // the captions of the 1:1 crops, the speaker notes or the backups.
 
-// Placeholder for slides whose content a later drafting pass fills in.
-const pending = n => () => {
-  const s = C.SLIDES.find(x => x.n === n);
-  return `<div style="margin-top:40px;font:400 20px/1.4 Inter">Rubric rows: <b>${s.rubric.join(', ')}</b></div><div style="margin-top:16px">${mk('FILL', 'slide ' + n + ' draft pending')}</div>`;
-};
-
 // ---------- shared helpers ----------
 // Records that help the report but not the talk (issue, PR and ADR numbers, file names, course page references) stay
 // off the slide face as data-ref attributes on the element they support. List them with
@@ -731,7 +725,7 @@ const s33 = () => `
 </div>`;
 
 // ---------- slide 34 (5.1, 5.2) ----------
-// Environment per step follows the 23 Oct go/no-go (open item 1); the NO-GO wording is in the run book.
+// Environment per step follows the go/no-go after the Sat 24 Oct dry run (open item 1); the NO-GO wording is in the run book.
 const env5 = (t, tone = 'ok') => {
   const k = { ok: ['#E3E8FB', '#3E5CD9'], rec: ['#FFEDC7', '#7A5C20'], loc: ['#ECE6DC', '#1B1A18'], ecs: ['#FBDFD9', '#B02E1B'] }[tone];
   return `<span style="display:inline-block;font:700 15px/1.15 Inter;background:${k[0]};color:${k[1]};border-radius:999px;padding:5px 10px;white-space:nowrap">${t}</span>`;
@@ -751,7 +745,7 @@ const plan5 = [
 // the footnote closes at 960.
 const s34 = () => `
 ${tbl(['Step', 'What you see', '<span style="white-space:nowrap">Use cases</span>', 'Quality attribute (slide 3)', 'Runs on'], plan5.map((r, i) => [`<b>${r[0]}</b>`, r[1], ucList(r[2]), r[3], hAt(r[4], 'pop', 650 + 35 * i)]), { fs: 20, w: [60, 400, 118, null, 138], pad: '5px 10px', m: [200, 320, 38] })}
-<div ${A('up', 960, 'position:absolute;left:0;right:0;top:520px;font:400 18px/1.3 Inter;color:var(--muted);')}${ref('#517 · #223')}>“dev, if GO”: live on dev after the 23 Oct go/no-go, otherwise its 24 Oct recording; a local result is never shown as dev</div>`;
+<div ${A('up', 960, 'position:absolute;left:0;right:0;top:520px;font:400 18px/1.3 Inter;color:var(--muted);')}${ref('#517 · #223')}>“dev, if GO”: live on dev after the 24 Oct go/no-go, otherwise its 24 Oct recording; a local result is never shown as dev</div>`;
 
 // ---------- slide 35 (5.1, 5.2, 5.5) ----------
 const live5 = [
@@ -840,7 +834,12 @@ const s38 = () => `
 </div>`;
 
 const out = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s12, 13: s13, 14: s14, 15: s15, 16: s16, 17: s17, 18: s18, 19: s19, 20: s20, 21: s21, 22: s22, 23: s23, 24: s24, 25: s25, 26: s26, 27: s27, 28: s28, 29: s29, 30: s30, 31: s31, 32: s32, 33: s33, 34: s34, 35: s35, 36: s36, 37: s37, 38: s38 };
-for (const s of C.SLIDES) if (!out[s.n]) out[s.n] = s.slot === null ? (() => '') : pending(s.n);
+// Every timed slide has a body; the Q&A slot (slot null) is filled below.
+for (const s of C.SLIDES) {
+  if (out[s.n]) continue;
+  if (s.slot !== null) throw new Error(`slide ${s.n} has no body in slides-main.js`);
+  out[s.n] = () => '';
+}
 // Rubric G8: every example slide names the report section holding the full set. §2 slides carry it with repTop; the
 // others get it here. Section numbers follow the #463 report plan of 24 Oct (index comment, sub-issues #675–#681);
 // the report template section (RT) each slide answers is kept as metadata.

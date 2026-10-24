@@ -114,14 +114,14 @@ const seg5Html = () => {
 ${reqBox(s5)}
 ${box('tip', 'Tip', 'Eric shares one screen at 16:52:00 (<code>SHARE</code> from Pan) with the deck in the Leader window, tab 1, and operates every window; Yorik speaks throughout. The expiry bloc is started at 16:05 so that D4 shows a refund that no one triggered by hand.')}
 ${slideCard(C.SLIDES.find(s => s.n === 34))}
-<h2>Decision: live or recorded payment steps (go/no-go, Fri 23 Oct, 18:00)</h2>
+<h2>Decision: live or recorded payment steps (go/no-go after the Sat 24 Oct dry run)</h2>
 ${tbl(['Condition (Yorik decides with Lim; posted in #464)', 'GO: live on dev', 'NO-GO: recorded or local, said as such'], [
   ['#517 fixed: a new START on dev reaches paid within one minute and shows under My blocs', 'D1, D2 live; fallback = the 24 Oct clips', 'D1, D2 from the 24 Oct clips if they exist, else from local evidence (B11), said as “verified locally, not yet on dev”'],
   ['#223 done: Checkout and scheduling on for dev (<code>BLOCBUY_SCHEDULING_ENABLED</code>; default false in application-ec2.yml); a <code>US34-04</code> bloc started on 24 Oct expired within one sweep and refunded', 'D4 live with the 16:05 bloc', 'D4 from B11 (local); slide 34 rows read “recorded” or “local”'],
   ['Full dry run on dev on Sat 24 Oct passes in order, timed, and is recorded', 'Rehearse at the real clock on 25 Oct', 'Only the NO-GO path is rehearsed'],
   ['D3, D5, D6 do not depend on payments', 'live', 'live (D3 on an account that already has orders)'],
 ])}
-${box('warn', 'Watch out', mh('On dev on 23 Oct, a paid START settled and a natural expiry refunded once (PR #664, merged 24 Oct, bef39b72); a second buyer’s paid JOIN on dev is not yet shown (#590), and #517 and #223 stay open. Every dev payment step here is conditional on the 24 Oct dry run. {{CONFIRM:go/no-go result of 23 Oct, per step D1, D2, D4 (open item 1)}}'))}
+${box('warn', 'Watch out', mh('On dev on 23 Oct, a paid START settled and a natural expiry refunded once (PR #664, merged 24 Oct, bef39b72); a second buyer’s paid JOIN on dev is not yet shown (#590), and #517 and #223 stay open. Every dev payment step here is conditional on the 24 Oct dry run. {{CONFIRM:go/no-go result after the Sat 24 Oct dry run, per step D1, D2, D4 (open item 1)}}'))}
 <h2>Preconditions (checked at 15:30 by Eric and Yorik)</h2>
 <ul><li>Health <code>UP</code> (A.1); latest runs on <code>dev</code> green; merge freeze in force; the §4 demo PR is the only change that may land.</li>
 <li>Two Google buyer accounts signed in on Eric’s machine in two Chrome profiles, “Leader” (account A) and “Joiner” (account B); the same two on Yorik’s machine as standby. ${m('{{CONFIRM:which two accounts and the display names shown on screen (open item 15)}}')}</li>
@@ -151,8 +151,8 @@ ${box('warn', 'Never live', 'Editing any deadline, price or listing on shared de
 ${box('tip', 'Plan C', 'A step fails live and has no recording: show its local evidence (B11 for payment and refund, the D6 test for the race, B12 for load) and say: <i>“verified locally, not yet on dev.”</i> Never present a local result as a dev one.')}
 <h2>After the demo (17:01:00 – 17:04:00)</h2>
 <h3>k6 pre-run for slide 36 (rubric 5.3)</h3>
-<ul><li><b>Sat 24 Oct</b>, Pan: bring up the SWE5001 environment (applied per session, torn down nightly; open item 16), run <code>perf/k6/browse.js</code> (k6 1.6.1 by digest; ten 60 s plateaus, 10 → 200 requests/s) against the SWE5001 CloudFront, keep the k6 summary and the dashboard export, write the run into the day log, tear the environment down. ${m('{{FILL:pre-run date, label and summary path}}')}</li>
-<li>Slide 36’s table is filled from that summary before the 25 Oct rehearsal; on the day the report file is opened from Eric’s machine if asked. Never point k6 at the SWE5006 dev host.</li></ul>
+<ul><li><b>Sat 24 Oct</b>, Pan: bring up the SWE5001 environment (applied per session, torn down nightly; optional), run <code>perf/k6/browse.js</code> (k6 1.6.1 by digest; ten 60 s plateaus, 10 → 200 requests/s) against the SWE5001 CloudFront, keep the k6 summary and the dashboard export, write the run into the day log, tear the environment down. ${m('{{FILL:pre-run date, label and summary path}}')}</li>
+<li>Slide 36’s table already shows the 16 Oct run (#670); a passing pre-run replaces it before the 25 Oct rehearsal. On the day the report file is opened from Eric’s machine if asked. Never point k6 at the SWE5006 dev host.</li></ul>
 ${C.SLIDES.filter(s => s.n >= 36).map(slideCard).join('')}
 ${qaTable(5)}
 </section>`;
@@ -181,8 +181,8 @@ const timeline = `<section class="chap"><h1>6 Timeline before, on and after the 
 <h2>Before the day</h2>
 ${tbl(['Date', 'Do', 'Owner'], [
   ['Wed 21 Oct', 'Deck re-planned from the rubric; §1 drafted.', 'Lim'],
-  ['Fri 23 Oct', '<b>Slides due</b> (#464). Each owner reviews their slides, cards and Q&amp;A rows; the Sprint 4 review and retro feed slides 5 and 7. <b>18:00 go/no-go</b> for the live payment steps, posted in #464.', 'All; Yorik decides with Lim'],
-  ['Sat 24 Oct', '<b>Full dry run on dev</b> of D1–D6 in order and timed: a <code>US34-04</code> bloc started ≈ 10:00 by account B expires and refunds (D4), START and JOIN on <code>US34-04</code> with both accounts (D1, D2); payment and refund ids in the day log (no secrets). <b>Backup videos</b> of both demos recorded on the final Sprint 4 build deployed to dev (Sprint 4 ended 23 Oct), 1080p, one clip per step, stored in the cloud and on a USB drive (rubric G6). <b>k6 pre-run</b> on the SWE5001 ECS environment; keep its summary for slide 36.', 'Yorik, Eric (system); Pan (pipeline, k6)'],
+  ['Fri 23 Oct', '<b>Slides due</b> (#464). Each owner reviews their slides, cards and Q&amp;A rows; the Sprint 4 review and retro feed slides 5 and 7.', 'All'],
+  ['Sat 24 Oct', '<b>Full dry run on dev</b> of D1–D6 in order and timed: a <code>US34-04</code> bloc started ≈ 10:00 by account B expires and refunds (D4), START and JOIN on <code>US34-04</code> with both accounts (D1, D2); payment and refund ids in the day log (no secrets). <b>Backup videos</b> of both demos recorded on the final Sprint 4 build deployed to dev (Sprint 4 ended 23 Oct), 1080p, one clip per step, stored in the cloud and on a USB drive (rubric G6). Optional <b>k6 pre-run</b> on the SWE5001 ECS environment (slide 36 already shows the 16 Oct run, #670). <b>Go/no-go</b> for the live payment steps after the dry run, posted in #464.', 'Yorik, Eric (system); Pan (pipeline, k6); Yorik decides the go/no-go with Lim'],
   ['Sun 25 Oct', '<b>Timed rehearsal</b> in Zoom at the real clock with injected questions; every diagram slide and its crops checked on a projector or TV from across the room (rubric V7); every rubric checklist box ticked; every marker resolved; rebuild deck and script.', 'All; Lim times'],
 ])}
 <h2>Presentation day (Mon 26 Oct)</h2>
@@ -230,7 +230,7 @@ const coverHtml = cover({
     ['Companion files', '<code>swe5006-presentation.html</code> — the deck (39 slides + backups BX, B1–B16, the 1:1 diagram detail pages D9-1 … D31-3 (index DX) and the full-size diagrams F1–F21 (index FX); Chrome or Edge; <b>S</b> notes, <b>T</b> timer, <b>O</b> overview, <b>F</b> fullscreen, <b>B</b> backup index) · <code>swe5006-presentation.pdf</code> — the same deck for submission.'],
     ['Facts as of', '23 Oct 2026. Dev health <code>UP</code>; a paid START and a natural expiry refund shown on dev (PR #664, merged 24 Oct, bef39b72); a second buyer’s paid JOIN on dev not yet shown (#590), so #223 and #517 stay open.'],
   ],
-  after: `${box('', 'Markers', `${md('{{FILL:}}')} value that does not exist yet; never present a guess · ${md('{{VERIFY:}}')} claim to check against the repository, report or run logs · ${md('{{CONFIRM:}}')} needs team agreement. They must all be gone after the 25 Oct rehearsal.`)}`,
+  after: `${box('', 'Markers', `${md('{{FILL:}}')} value that does not exist yet; never present a guess · ${md('{{VERIFY:}}')} claim to check against the repository, report or run logs · ${md('{{CONFIRM:}}')} needs team agreement. All must be gone by the 25 Oct rehearsal, except the slide 30 re-check of the Mon 26 Oct scheduled DAST run.`)}`,
 });
 
 // Segment chapters render before openItems(), so its counts include their markers.

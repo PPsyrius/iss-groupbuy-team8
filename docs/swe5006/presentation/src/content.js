@@ -57,8 +57,6 @@ const SEGMENTS = [
     } },
 ];
 
-const PENDING = '{{FILL:draft pending}}';
-
 // slot in seconds; null = Q&A. rubric = rubric rows covered (RUBRIC.md). alsoItems = further guideline items the slide covers (read only by src/script.js).
 const SLIDES = [
   // ---------- §1 Lim, 180 s ----------
@@ -260,7 +258,7 @@ const SLIDES = [
     say: "Now live: the pull request I opened before this segment. Its checks ran during the last slides, so let's approve it, merge it and watch it reach dev. The backend run takes sixteen minutes, so it was triggered beforehand and we walk through it finished.",
     cues: [
       'Opens the live pipeline demo: steps P1–P6 in the script, §4 (16:46:30–16:52:00). Pan opens the demo PR at 16:41, during slide 26, so its checks (median 4.8 min) are green by 16:46:30. {{CONFIRM:the demo change, its author and the approving code owner (frontend → Lim)}}',
-      'Rubric 4.1: a full backend run exceeds 8 min (PR checks median 16.1 min), so it is triggered beforehand and walked through finished: {{FILL:backend PR run and its post-merge deploy run of 26 Oct}}.',
+      'Rubric 4.1: a full backend run exceeds 8 min (PR checks median 16.1 min), so it is triggered beforehand and walked through finished: the backend PR run (≈ 16:20) and its post-merge deploy run, both pinned in tabs 3 and 4 (screen layout, script §4).',
       'Rubric 4.6: {{FILL:backup video link, recorded on dev by 24 Oct, in the cloud and on a USB drive}}',
     ],
     handover: '(demo) "Here is the pull request."' },
@@ -271,7 +269,7 @@ const SLIDES = [
     cues: [
       '16:52:00. Eric is sharing one screen with two Chrome profiles, “Leader” (account A) and “Joiner” (account B), and operates both; Yorik narrates (two users: SWE5001 feedback #590). Deck in the Leader window, tab 1, on slide 34.',
       'Storyline from #464: invite → START/JOIN with Stripe Sandbox → /account orders and blocs → expiry refund. Use cases: UC1 browse, UC2 Google sign-in, UC3 start, UC7 invite, UC4 join (team of two succeeds, UC5), UC5 expiry, UC6 refund, UC8 My blocs. Quality attributes are slide 3’s: correctness under concurrency, refund idempotency, expiry ≤ 1 min, security, performance (slide 36), maintainability (§4, slide 38).',
-      'Environment column on the slide follows the 23 Oct go/no-go (open item 1): {{CONFIRM:GO or NO-GO for steps D1, D2 and D4; with NO-GO those rows read "recorded" or "local" and the say changes to "the payment steps are recorded"}}.',
+      'Environment column on the slide follows the go/no-go after the Sat 24 Oct dry run (open item 1): {{CONFIRM:GO or NO-GO for steps D1, D2 and D4; with NO-GO those rows read "recorded" or "local" and the say changes to "the payment steps are recorded"}}.',
     ],
     trim: 'If over time, drop "Every step says where it runs." (it is the slide’s right column).',
     handover: 'Our leader is already signed in with Google.' },
@@ -286,9 +284,9 @@ const SLIDES = [
   { n: 36, seg: 5, item: '5b', rubric: ['5.3'], speaker: 'Yorik', slot: 120, title: 'Performance against the target: the scripted k6 run',
     say: "Performance, with the scripted test from slide 26. A full run is ten one-minute steps, so we ran it on 16 October and show its report; this is the SWE5001 ECS environment running dev as of 6 October, not the dev host. Each row is one step of the arrival rate, from ten to two hundred requests a second, with its p95 latency, its error rate and dropped requests. The proposal's target is two seconds at a hundred concurrent users. By slide 26's conversion, a hundred users thinking half a second offer about a hundred and ninety requests a second, so the rows at and above that rate are the target load. Our gate is stricter: p95 under half a second on every step. For expiry within a minute we have one local measurement, 58 seconds at worst; the sweep runs a minute after the last one ends, so it is not a guarantee. What we don't claim: a capacity limit, because two hundred a second is the last step we ran; authenticated paths such as join under load on a deployed environment; and anything about the dev host.",
     cues: [
-      'Pre-run (rubric 5.3: a live run over ≈ 2 min is pre-run): k6 1.6.1 perf/k6/browse.js against the SWE5001 CloudFront d3lvq02o2e7tcn.cloudfront.net, ten 60 s plateaus 10 → 200 iterations/s (≈ 10 min plus setup). Shown: run 20261016-v2-monolith-repeat, Fri 16 Oct 04:59:44–05:09:45 UTC, one monolith task, image 6c7a99ab (dev on 6 Oct), test sha 767d980b; perf/k6/browse.js, lib.mjs and calibrate.mjs unchanged since (git log 767d980b..origin/dev, 23 Oct). Summary docs/swe5001/evidence/20261016-http-baseline-dashboard/v2-repeat-summary.json and v2-repeat-calibration.json (#670). If Pan’s 24 Oct pre-run (open item 16) passes, swap in its numbers.',
+      'Pre-run (rubric 5.3: a live run over ≈ 2 min is pre-run): k6 1.6.1 perf/k6/browse.js against the SWE5001 CloudFront d3lvq02o2e7tcn.cloudfront.net, ten 60 s plateaus 10 → 200 iterations/s (≈ 10 min plus setup). Shown: run 20261016-v2-monolith-repeat, Fri 16 Oct 04:59:44–05:09:45 UTC, one monolith task, image 6c7a99ab (dev on 6 Oct), test sha 767d980b; perf/k6/browse.js, lib.mjs and calibrate.mjs unchanged since (git log 767d980b..origin/dev, 23 Oct). Summary docs/swe5001/evidence/20261016-http-baseline-dashboard/v2-repeat-summary.json and v2-repeat-calibration.json (#670). If an optional pre-run passes before the 25 Oct rehearsal, swap in its numbers.',
       'Results: p95 per plateau 53, 39, 27, 28, 23, 23, 42, 23, 23, 23 ms (10 → 200 requests/s); 57,600 workload requests plus one setup request, http_req_failed 0 of 57,601, dropped_iterations 0; VUs used at 200/s: 100 of 400; pass on every gate (p95 < 500 ms, errors < 1 %, zero dropped). Saturation not observed, so 200 requests/s is a tested lower bound, not a limit. Show the k6 summary or the dashboard tab if asked.',
-      'Environment prerequisite: the SWE5001 environment is applied per session and torn down nightly (research-aws.md; infra/swe5001 env-up.sh). Pan brings it up on 24 Oct for the pre-run (open item 16); it does not need to be up during the talk, because slide 36 shows the saved report. Never point k6 at the SWE5006 dev host (perf/k6/README.md: "Do not load-test shared SWE5006 dev").',
+      'Environment prerequisite: the SWE5001 environment is applied per session and torn down nightly (research-aws.md; infra/swe5001 env-up.sh). Pan brings it up only for an optional pre-run; it does not need to be up during the talk, because slide 36 shows the saved report. Never point k6 at the SWE5006 dev host (perf/k6/README.md: "Do not load-test shared SWE5006 dev").',
       'Mapping (slide 26): Little’s law N = X(R + Z), N = 100, Z = 0.5 s (our assumption), R ≈ 0.03 s → X ≈ 189 requests/s. History, labelled: the first 16 Oct V2 run (same day, every plateau p95 ≤ 57 ms, 0 errors in 57,600 requests; README.md in the same folder); local Node workload 30 Sep, 100 closed-loop users, p95 browse 24 ms, JOIN intent 57 ms, My Orders 18 ms, 30 expiries with worst lag 58.18 s (docs/perf/sprint3-baseline.md).',
       'Limits to say if asked: anonymous browse only (authenticated load needs 100 real Google sessions); one monolith task, so this is not a scaling result; the ECS environment is not the SWE5006 dev host.',
     ],
@@ -401,20 +399,19 @@ const BACKUPS = [
 
 // Open items: [#, item, owner, blocks slide]
 const OPEN_ITEMS = [
-  [1, 'Paid flow on dev: PR #664 (merged 24 Oct, bef39b72) repaired the dev webhook and turned scheduling on; START and expiry refund shown 23 Oct. Still to do: show a second buyer’s paid JOIN on dev (#590); go/no-go per live payment step', 'Yorik', '4, 5, 7, 35'],
+  [1, 'Paid flow on dev: PR #664 (merged 24 Oct, bef39b72) repaired the dev webhook and turned scheduling on; START and expiry refund shown on dev 23 Oct (backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md). Open: a second buyer’s paid JOIN (#590); go/no-go for D1, D2 and D4 after the Sat 24 Oct dry run, posted in #464', 'Yorik', '4, 5, 7, 35'],
   [2, 'Backup videos of both demos recorded by Sat 24 Oct on the final Sprint 4 build deployed to dev (Sprint 4 ends 23 Oct), stored in the cloud and on a USB drive (rubric G6, 4.6, 5.5)', 'Pan (pipeline), Yorik and Eric (system)', '33, 35'],
   [4, 'Sprint 4 planned hours per member once PR #538 merges (Liu Jin 66, Eric 26, Pan 46.5)', 'Eric', '5'],
   [5, 'Sprint 3 retrospective (#451) not written; slide 7’s 3 → 4 row shows its one recorded finding (sprint-04/plan.md §7). Write the retro for Appendix A, or keep only that finding', 'Lim', '7'],
   [6, 'Sprint 4 retrospective and the v0.1.0-sprint4 tag date, as recorded at the Sprint 4 review (#619)', 'Eric', '5, 7'],
-  [7, 'No numbered backend ADR for: the auth change from JWT to the Sa-Token session (open decision 6); MyBatis instead of the proposal’s JPA; the scheduling design; the concurrency approach (open decision 3); the team lifecycle as a transition table instead of the proposal’s State; the DevSecOps changes from proposal §5.2 (OWASP Dependency-Check replaced by Trivy deps, Trivy IaC and deps not required checks, three OIDC roles split per job instead of plan/deploy/apply, two IAM users with one access key against “no static credentials”). Write them up, or cite the D-table and design docs and state the gap', 'Liu Jin, Eric, Pan', '4, 10'],
+  [7, 'No numbered backend ADR for: the auth change from JWT to the Sa-Token session (open decision 6); MyBatis instead of the proposal’s JPA; the scheduling design; the concurrency approach (open decision 3); the team lifecycle as a transition table instead of the proposal’s State; the DevSecOps changes from proposal §5.2 (OWASP Dependency-Check replaced by Trivy deps, Trivy IaC and deps not required checks, three OIDC roles split per job instead of plan/deploy/apply, two IAM users with one access key against “no static credentials”). Not writable before 26 Oct: state the gap in report Appendix B (ADR index and the decisions without an ADR, #681), and write ADRs only if the team chooses', 'Liu Jin, Eric, Pan', '4, 10'],
   [8, 'Name a scribe for 26 Oct who logs every lecturer question and remark verbatim; turn the log into #463 tasks by 27 Oct (rubric G9)', 'Lim', '—'],
-  [9, 'Dev host security group allows SSH (22) from 0.0.0.0/0 although SSM sessions work (AWS read-only, 21 Oct): close it or record why it stays open', 'Pan', '4, 31'],
-  [10, 'Questions to Chandra: is Q&A inside the 40 min; is there a marking rubric; is the presentation graded individually (open decision 9); report due 1 Nov (briefing) or 10 Nov (#463)', 'Lim', '—'],
+  [9, 'Dev host security group allows SSH (22) from 0.0.0.0/0 although SSM sessions work (AWS read-only, 21 and 24 Oct: sg-04358da6b0bc71343 still allows tcp 22 from 0.0.0.0/0): close it or record why it stays open', 'Pan', '4, 31'],
+  [10, 'Questions to Chandra: is Q&A inside the 40 min; is there a marking rubric; is the presentation graded individually (open decision 9). Record whether they were sent and answered. The report due date is settled: 1 Nov (briefing slide 7; #463 schedule correction of 22 Oct)', 'Lim', '—'],
   [11, 'Re-check slide 4 status on 25 Oct (dev health, #517, #223, gaps)', 'Lim', '4'],
   [12, 'UC9 attribution: #32 and the backend design docs name Eric as implementer (PR #72); #463 gives UC9 to Liu Jin. Agree and update the matrix', 'Eric, Liu Jin', '6'],
   [14, 'Choose the live demo change, its author and the approving code owner; open the PR before 16:42', 'Pan, Lim', '33'],
   [15, 'Two Google buyer accounts (leader, joiner), their display names on screen, and the admin grant for the listings check', 'Yorik', '35'],
-  [16, 'Optional: a k6 pre-run on Sat 24 Oct on the current image (the environment is torn down nightly); if it passes, replace the 16 Oct numbers on slides 26 and 36 (#670); it need not be up during the talk', 'Pan, Eric', '26, 36'],
   [17, 'Recount the test numbers for slide 25 on 25 Oct', 'Liu Jin', '25'],
   [18, 'Reconcile frontend ADR 0004 and the EC2 operator guide with the post-merge rebuild in ci-frontend.yml and ci-backend.yml', 'Pan, Lim', '28, 29'],
   [19, 'Add the media CloudFront dcsjrkmummxi7 (S3 blocbuy-media-dev-402178232802, WAF) to the deployment view: since #570 the demo listings load their covers from it', 'Pan', '31'],
@@ -446,7 +443,7 @@ const pipeSteps = [
     exp: 'PR merged; leave the branch-delete button alone.',
     fb: '“Base branch was modified” (dev moved): do not update the branch on air, it would re-run five minutes of checks. <code>CLIP P3</code>; merge after 17:15.' },
   { n: 'P4', t: 'Delivery runs; the backend PR and deploy, triggered beforehand', time: '16:48:20 – 16:49:50', proves: 'Rubric <b>4.1</b> (pre-triggered long run), <b>4.3</b> (post-merge jobs), <b>4.4</b> (digest, SSM, health check) · Pan',
-    op: ['Tab 2: Actions → <code>ci-frontend</code> → the new run on <code>dev</code>: package-dev → deploy-s3-dev → e2e-dev.', `Tab 3: the backend PR run triggered at ≈ 16:20 ${'{{FILL:run id}}'}: build-quality (test count in the summary), contract-check, docker boot and Trivy, SonarCloud gate.`, `Tab 4: its post-merge deploy run ${'{{FILL:run id}}'}: publish-ecr-dev (tag git-&lt;sha&gt;-run-&lt;n&gt;, digest checked), deploy-existing-ec2 (SSM, on-host health check, public health).`],
+    op: ['Tab 2: Actions → <code>ci-frontend</code> → the new run on <code>dev</code>: package-dev → deploy-s3-dev → e2e-dev.', `Tab 3 (pinned): the backend PR run triggered at ≈ 16:20: build-quality (test count in the summary), contract-check, docker boot and Trivy, SonarCloud gate.`, `Tab 4 (pinned): its post-merge deploy run: publish-ecr-dev (tag git-&lt;sha&gt;-run-&lt;n&gt;, digest checked), deploy-existing-ec2 (SSM, on-host health check, public health).`],
     say: "Delivery rebuilds from the merged commit: the frontend goes to S3, index.html is invalidated, then Playwright smoke-tests the real site. While it runs, here is a backend change that went through earlier: sixteen minutes of checks with every test, the contract check and the image scan; after its merge the image went to ECR, was deployed by digest through SSM to the one host, and was health-checked, with automatic rollback if the check had failed.",
     exp: 'Frontend run in progress (median 2.7 min from push to e2e-dev green); both backend runs green.',
     fb: 'Frontend run not started within 60 s: refresh once; then <code>CLIP P4</code>. Backend runs missing: open the B8 timings and say the medians.' },
