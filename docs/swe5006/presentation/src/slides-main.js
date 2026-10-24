@@ -745,7 +745,7 @@ const plan5 = [
 // the footnote closes at 960.
 const s34 = () => `
 ${tbl(['Step', 'What you see', '<span style="white-space:nowrap">Use cases</span>', 'Quality attribute (slide 3)', 'Runs on'], plan5.map((r, i) => [`<b>${r[0]}</b>`, r[1], ucList(r[2]), r[3], hAt(r[4], 'pop', 650 + 35 * i)]), { fs: 20, w: [60, 400, 118, null, 138], pad: '5px 10px', m: [200, 320, 38] })}
-<div ${A('up', 960, 'position:absolute;left:0;right:0;top:520px;font:400 18px/1.3 Inter;color:var(--muted);')}${ref('#517 · #223')}>“dev, if GO”: live on dev after the 24 Oct go/no-go, otherwise its 24 Oct recording; a local result is never shown as dev</div>`;
+<div ${A('up', 960, 'position:absolute;left:0;right:0;top:520px;font:400 18px/1.3 Inter;color:var(--muted);')}${ref('#517 · #223')}>“dev, if GO”: live on dev after the 24 Oct go/no-go; else its 24 Oct recording if one exists, else local evidence labelled local, never dev</div>`;
 
 // ---------- slide 35 (5.1, 5.2, 5.5) ----------
 const live5 = [

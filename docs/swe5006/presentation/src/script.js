@@ -151,8 +151,8 @@ ${box('warn', 'Never live', 'Editing any deadline, price or listing on shared de
 ${box('tip', 'Plan C', 'A step fails live and has no recording: show its local evidence (B11 for payment and refund, the D6 test for the race, B12 for load) and say: <i>“verified locally, not yet on dev.”</i> Never present a local result as a dev one.')}
 <h2>After the demo (17:01:00 – 17:04:00)</h2>
 <h3>k6 pre-run for slide 36 (rubric 5.3)</h3>
-<ul><li><b>Sat 24 Oct</b>, Pan: bring up the SWE5001 environment (applied per session, torn down nightly; optional), run <code>perf/k6/browse.js</code> (k6 1.6.1 by digest; ten 60 s plateaus, 10 → 200 requests/s) against the SWE5001 CloudFront, keep the k6 summary and the dashboard export, write the run into the day log, tear the environment down. ${m('{{FILL:pre-run date, label and summary path}}')}</li>
-<li>Slide 36’s table already shows the 16 Oct run (#670); a passing pre-run replaces it before the 25 Oct rehearsal. On the day the report file is opened from Eric’s machine if asked. Never point k6 at the SWE5006 dev host.</li></ul>
+<ul><li><b>Sat 24 Oct</b>, Pan: bring up the SWE5001 environment (applied per session, torn down nightly; optional), run <code>perf/k6/browse.js</code> (k6 1.6.1 by digest; ten 60 s plateaus, 10 → 200 requests/s) against the SWE5001 CloudFront, keep the k6 summary and the dashboard export, write the run into the day log, tear the environment down. If it runs and passes, record its date, label and summary path there; if it is skipped or fails, nothing changes.</li>
+<li>Slide 36’s table shows the 16 Oct run (#670), the default; only a passing pre-run replaces it, before the 25 Oct rehearsal. On the day the report file is opened from Eric’s machine if asked. Never point k6 at the SWE5006 dev host.</li></ul>
 ${C.SLIDES.filter(s => s.n >= 36).map(slideCard).join('')}
 ${qaTable(5)}
 </section>`;
@@ -187,7 +187,7 @@ ${tbl(['Date', 'Do', 'Owner'], [
 ])}
 <h2>Presentation day (Mon 26 Oct)</h2>
 ${tbl(['Time (SGT)', 'Do', 'Owner'], [
-  ['≤ 12:00', 'Health and recent runs (A.1); listings check; §5 preconditions list started.', 'Yorik, Pan'],
+  ['≤ 12:00', 'Health and recent runs (A.1); listings check; §5 preconditions list started. After 11:41, the scheduled <code>dast-baseline</code> run checked for slide 30 (open item 24).', 'Yorik, Pan'],
   ['14:30', 'Tech check in a test Zoom: mic, camera, sharing, Do Not Disturb.', 'All'],
   ['15:00', 'Merge freeze on <code>dev</code> until 17:15.', 'Lim'],
   ['15:30', 'Check the §4 and §5 preconditions lists.', 'Pan (§4); Eric, Yorik (§5)'],
@@ -230,7 +230,7 @@ const coverHtml = cover({
     ['Companion files', '<code>swe5006-presentation.html</code> — the deck (39 slides + backups BX, B1–B16, the 1:1 diagram detail pages D9-1 … D31-3 (index DX) and the full-size diagrams F1–F21 (index FX); Chrome or Edge; <b>S</b> notes, <b>T</b> timer, <b>O</b> overview, <b>F</b> fullscreen, <b>B</b> backup index) · <code>swe5006-presentation.pdf</code> — the same deck for submission.'],
     ['Facts as of', '23 Oct 2026. Dev health <code>UP</code>; a paid START and a natural expiry refund shown on dev (PR #664, merged 24 Oct, bef39b72); a second buyer’s paid JOIN on dev not yet shown (#590), so #223 and #517 stay open.'],
   ],
-  after: `${box('', 'Markers', `${md('{{FILL:}}')} value that does not exist yet; never present a guess · ${md('{{VERIFY:}}')} claim to check against the repository, report or run logs · ${md('{{CONFIRM:}}')} needs team agreement. All must be gone by the 25 Oct rehearsal, except the slide 30 re-check of the Mon 26 Oct scheduled DAST run.`)}`,
+  after: `${box('', 'Markers', `${md('{{FILL:}}')} value that does not exist yet; never present a guess · ${md('{{VERIFY:}}')} claim to check against the repository, report or run logs · ${md('{{CONFIRM:}}')} needs team agreement. All must be gone by the 25 Oct rehearsal.`)}`,
 });
 
 // Segment chapters render before openItems(), so its counts include their markers.
