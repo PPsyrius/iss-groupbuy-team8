@@ -149,7 +149,7 @@ const b12 = () => dt(['Workflow · trigger', 'Jobs (required in blue)', 'Median'
   ['<b>ci-frontend</b> · PR', `${req}: frontend-check (3.4 min), SonarCloud Frontend; e2e-preview (69 s), intent-stale`, '4.8 min to e2e-preview end (19 runs)', '19 of 20 finished runs'],
   ['<b>ci-frontend</b> · push to dev', 'package-dev 35 s → deploy-s3-dev 21 s → e2e-dev 82 s; SonarCloud Frontend', '2.7 min to e2e-dev green (94 runs)', 'deploy 97 of 97; e2e-dev 94 of 97 (3–4 Oct)'],
   ['<b>security</b> · PR, dev, weekly', `${req}: gitleaks (10 s); trivy-deps (72 s), trivy-config, workflow-lint, deployment-bundle when their paths change`, '12 s on most PRs', 'PR 97 of 98 finished; dev push 100 of 100'],
-  ['<b>dast-baseline</b> · weekly, manual, scan PRs', 'zap-baseline: passive OWASP ZAP of anonymous dev pages; findings advisory, coverage or scanner errors fail it', '—', 'PR runs 22 Oct green (added after this read)'],
+  ['<b>dast-baseline</b> · weekly, manual, scan PRs', 'zap-baseline: passive OWASP ZAP of anonymous dev pages; findings advisory, coverage or scanner errors fail it', '—', 'PR runs 22 Oct green; dev dispatch 24 Oct green (added after this read)'],
   ['<b>sbom</b> · tag, weekly, manual, run-sbom label', 'sbom: CycloneDX source SBOMs and licence inventories; licences advisory, a missing inventory fails it', '—', 'PR runs 22 Oct green on earlier PR heads (added after this read)'],
   ['<b>rollback-backend</b> · manual', 'validate, then SSM rollback to the recorded previous digest or a given one', '—', 'never run'],
   ['<b>SWE5001</b> · prod branch', 'swe5001-release-gate, swe5001-deploy, infra-swe5001 (promotion PR; see the SWE5001 deck)', '—', '—'],

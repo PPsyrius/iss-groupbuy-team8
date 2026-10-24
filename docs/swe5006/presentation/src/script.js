@@ -187,7 +187,7 @@ ${tbl(['Date', 'Do', 'Owner'], [
 ])}
 <h2>Presentation day (Mon 26 Oct)</h2>
 ${tbl(['Time (SGT)', 'Do', 'Owner'], [
-  ['≤ 12:00', 'Health and recent runs (A.1); listings check; §5 preconditions list started. After 11:41, the scheduled <code>dast-baseline</code> run checked for slide 30 (open item 24).', 'Yorik, Pan'],
+  ['≤ 12:00', 'Health and recent runs (A.1); listings check; §5 preconditions list started. After 11:41, the scheduled <code>dast-baseline</code> run checked for slide 30 (24 Oct dispatch 40107924516 green).', 'Yorik, Pan'],
   ['14:30', 'Tech check in a test Zoom: mic, camera, sharing, Do Not Disturb.', 'All'],
   ['15:00', 'Merge freeze on <code>dev</code> until 17:15.', 'Lim'],
   ['15:30', 'Check the §4 and §5 preconditions lists.', 'Pan (§4); Eric, Yorik (§5)'],
