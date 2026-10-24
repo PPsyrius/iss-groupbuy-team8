@@ -121,7 +121,7 @@ ${tbl(['Condition (Yorik decides with Lim; posted in #464)', 'GO: live on dev', 
   ['Full dry run on dev on Sat 24 Oct passes in order, timed, and is recorded', 'Rehearse at the real clock on 25 Oct', 'Only the NO-GO path is rehearsed'],
   ['D3, D5, D6 do not depend on payments', 'live', 'live (D3 on an account that already has orders)'],
 ])}
-${box('warn', 'Watch out', mh('On dev on 23 Oct, a paid START settled and a natural expiry refunded once (PR #664, which must merge before the talk); a second buyer’s paid JOIN on dev is not yet shown (#590), and #517 and #223 stay open. Every dev payment step here is conditional on the 24 Oct dry run. {{CONFIRM:go/no-go result of 23 Oct, per step D1, D2, D4 (open item 1)}}'))}
+${box('warn', 'Watch out', mh('On dev on 23 Oct, a paid START settled and a natural expiry refunded once (PR #664, merged 24 Oct, bef39b72); a second buyer’s paid JOIN on dev is not yet shown (#590), and #517 and #223 stay open. Every dev payment step here is conditional on the 24 Oct dry run. {{CONFIRM:go/no-go result of 23 Oct, per step D1, D2, D4 (open item 1)}}'))}
 <h2>Preconditions (checked at 15:30 by Eric and Yorik)</h2>
 <ul><li>Health <code>UP</code> (A.1); latest runs on <code>dev</code> green; merge freeze in force; the §4 demo PR is the only change that may land.</li>
 <li>Two Google buyer accounts signed in on Eric’s machine in two Chrome profiles, “Leader” (account A) and “Joiner” (account B); the same two on Yorik’s machine as standby. ${m('{{CONFIRM:which two accounts and the display names shown on screen (open item 15)}}')}</li>
@@ -228,7 +228,7 @@ const coverHtml = cover({
     ['Responsible', 'Yu Qianshuo (Yorik), presentation lead and storyline (#464); Lim Jiechao, slide master.'],
     ['Specification', '<code>docs/swe5006/presentation/RUBRIC.md</code>: every slide records the rubric rows it covers; the coverage tables in the run sheet are derived from them.'],
     ['Companion files', '<code>swe5006-presentation.html</code> — the deck (39 slides + backups BX, B1–B16, the 1:1 diagram detail pages D9-1 … D31-3 (index DX) and the full-size diagrams F1–F21 (index FX); Chrome or Edge; <b>S</b> notes, <b>T</b> timer, <b>O</b> overview, <b>F</b> fullscreen, <b>B</b> backup index) · <code>swe5006-presentation.pdf</code> — the same deck for submission.'],
-    ['Facts as of', '23 Oct 2026. Dev health <code>UP</code>; a paid START and a natural expiry refund shown on dev (PR #664, to merge before the talk); a second buyer’s paid JOIN on dev not yet shown (#590), so #223 and #517 stay open.'],
+    ['Facts as of', '23 Oct 2026. Dev health <code>UP</code>; a paid START and a natural expiry refund shown on dev (PR #664, merged 24 Oct, bef39b72); a second buyer’s paid JOIN on dev not yet shown (#590), so #223 and #517 stay open.'],
   ],
   after: `${box('', 'Markers', `${md('{{FILL:}}')} value that does not exist yet; never present a guess · ${md('{{VERIFY:}}')} claim to check against the repository, report or run logs · ${md('{{CONFIRM:}}')} needs team agreement. They must all be gone after the 25 Oct rehearsal.`)}`,
 });
