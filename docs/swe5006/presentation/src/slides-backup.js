@@ -25,18 +25,18 @@ const b11 = () => `
    { d: [150, 135, 120, 105, 90, 75, 60, 45, 30, 15, 0], c: '#A69E92', dash: true },
    { d: [150, 150, 150, 150, 150, 150, 124, 74, 40, 16, 16], c: '#3E5CD9' }] })}
  <div style="display:flex;gap:22px;font:400 15px Inter;margin-left:44px">${key('#A69E92', 'Ideal', true)}${key('#3E5CD9', 'Actual remaining')}</div>
- <div class="card" style="margin-top:14px;padding:12px 16px;font:400 16px/1.35 Inter">Flat for a week, then a cliff: work merged late in very large pull requests. Retro answer: PRs under 1,500 lines and hours on the board daily.</div>
+ <div class="card" style="margin-top:14px;padding:12px 16px;font:400 16px/1.35 Inter">Flat for a week, then a cliff: no committed story merged before 22 Sep; week-1 merges were carry-over and enabling work. Retro answer: PRs under 1,500 lines.</div>
  <div style="font:italic 400 15px Inter;margin-top:8px">Source: docs/sprint2-progress-report.typ, “Daily burndown data”</div>
 </div>
 <div style="position:absolute;left:604px;top:0;width:560px">
- <div class="serif" style="font-size:21px">Sprint 3 · open sprint cards, 29 Sep–9 Oct</div>
- <div style="font:400 15.5px Inter;margin:2px 0 6px">21 cards · 150 h planned · 33 h left at freeze (review)</div>
- ${lineChart({ xs: ['29', '30', '1', '2', '5', '6', '7', '8', '9'], max: 21, step: 7, series: [
-   { d: [21, 18.4, 15.8, 13.1, 10.5, 7.9, 5.3, 2.6, 0], c: '#A69E92', dash: true },
-   { d: [19, 16, 13, 12, 7, 7, 7, 7, 8], c: '#3E5CD9' }] })}
- <div style="display:flex;gap:22px;font:400 15px Inter;margin-left:44px">${key('#A69E92', 'Ideal', true)}${key('#3E5CD9', 'Cards not Done (daily snapshot)')}</div>
- <div class="card" style="margin-top:14px;padding:12px 16px;font:400 16px/1.35 Inter">Steadier burn, then stuck at 7 from 5 Oct: #223, #224 and #229 waited for Checkout on dev, #226 for the NFR-37 decision. Hours come from the review.</div>
- <div style="font:italic 400 15px Inter;margin-top:8px">Source: docs/agile/metrics/*.csv, sprint-03/review.md</div>
+ <div class="serif" style="font-size:21px">Sprint 3 · remaining hours, 28 Sep–9 Oct</div>
+ <div style="font:400 15.5px Inter;margin:2px 0 6px">150 h planned · 66 h left, whole stories · 33 h with partial credit (review)</div>
+ ${lineChart({ xs: ['start', '28', '29', '30', '1', '2', '5', '6', '7', '8', '9'], max: 150, step: 50, series: [
+   { d: [150, 135, 120, 105, 90, 75, 60, 45, 30, 15, 0], c: '#A69E92', dash: true },
+   { d: [150, 132, 114, 90, 82, 76, 68, 68, 68, 66, 66], c: '#3E5CD9' }] })}
+ <div style="display:flex;gap:22px;font:400 15px Inter;margin-left:44px">${key('#A69E92', 'Ideal', true)}${key('#3E5CD9', 'Actual remaining')}</div>
+ <div class="card" style="margin-top:14px;padding:12px 16px;font:400 16px/1.35 Inter">On the ideal line for the first week, then stuck from 5 Oct: #223 (Checkout on dev) stayed open, #224 had local evidence only, #229 waited on #223 and #222, #226 on the NFR-37 decision. Daily card counts agree: 19, 16, 13, 12, then 7.</div>
+ <div style="font:italic 400 15px Inter;margin-top:8px">Source: sprint-03/review.md hours, burned on issue close dates (SGT); docs/agile/metrics/*.csv</div>
 </div>`;
 
 // ---- B1: agile artefacts appendix (rubric 1.8) ----
@@ -127,16 +127,17 @@ const b10 = () => dt(['Kind · level', 'Tools', 'Count by module', 'Example clas
 const req = '<b style="color:#3E5CD9">required</b>';
 const b12 = () => dt(['Workflow · trigger', 'Jobs (required in blue)', 'Median', 'Green'], [
   ['<b>ci-backend</b> · PR', `${req}: build-quality (13.1 min), docker (2.8 min), SonarCloud Backend; contract-check (12 s)`, '16.1 min to docker end (18 runs, 16–19 Oct)', '18 of 20 finished runs; 16 cancelled by a newer push'],
-  ['<b>ci-backend</b> · push to dev', 'package-dev 46 s → publish-ecr-dev 73 s → deploy-existing-ec2 40 s; SonarCloud Backend refreshes the dashboard', '3.1 min to deployed (88 runs)', 'deploy 88 of 97; all 9 failures 14–17 Sep (SSM: instance not in a valid state)'],
+  ['<b>ci-backend</b> · push to dev', 'package-dev 46 s → publish-ecr-dev 73 s → deploy-existing-ec2 40 s; SonarCloud Backend refreshes the dashboard', '3.1 min to deployed (88 runs)', 'deploy 88 of 97 in this sample; its 9 failures 14–17 Sep (SSM: instance not in a valid state)'],
   ['<b>ci-frontend</b> · PR', `${req}: frontend-check (3.4 min), SonarCloud Frontend; e2e-preview (69 s), intent-stale`, '4.8 min to e2e-preview end (19 runs)', '19 of 20 finished runs'],
   ['<b>ci-frontend</b> · push to dev', 'package-dev 35 s → deploy-s3-dev 21 s → e2e-dev 82 s; SonarCloud Frontend', '2.7 min to e2e-dev green (94 runs)', 'deploy 97 of 97; e2e-dev 94 of 97 (3–4 Oct)'],
   ['<b>security</b> · PR, dev, weekly', `${req}: gitleaks (10 s); trivy-deps (72 s), trivy-config, workflow-lint, deployment-bundle when their paths change`, '12 s on most PRs', 'PR 97 of 98 finished; dev push 100 of 100'],
+  ['<b>dast-baseline</b> · weekly, manual, scan PRs', 'zap-baseline: passive OWASP ZAP of anonymous dev pages; findings advisory, coverage or scanner errors fail it', '—', 'PR runs 22 Oct green (added after this read)'],
+  ['<b>sbom</b> · tag, weekly, manual, run-sbom label', 'sbom: CycloneDX source SBOMs and licence inventories; licences advisory, a missing inventory fails it', '—', 'PR runs 22 Oct green on earlier PR heads (added after this read)'],
   ['<b>rollback-backend</b> · manual', 'validate, then SSM rollback to the recorded previous digest or a given one', '—', 'never run'],
   ['<b>SWE5001</b> · prod branch', 'swe5001-release-gate, swe5001-deploy, infra-swe5001 (promotion PR; see the SWE5001 deck)', '—', '—'],
 ], { fs: 15, w: [190, 470, 220], pad: '6px 10px' }) + `<div style="margin-top:8px;font:400 15px/1.4 Inter">Last 100 runs per workflow and event, read with <span class="mono" style="font-size:14.5px">gh run list</span> and the jobs API on 19 Oct. PR durations count only runs where the gated jobs ran (docs-only PRs skip them in about 10 s). Push medians run from the push run start, not the merge click.</div>`;
 const b13 = () => `<div class="dia" style="margin-top:-8px">${fit('physical-deployment', 1130)}</div>${topo('SWE5001 prod: the same code on ECS, rebuilt from scratch on every release and destroyed after it. SWE5006 dev is slide 31.')}`;
 const b14 = () => dt(['Gap', 'Effect', 'Status'], [
-  ['CodeQL off', 'no CodeQL SAST; SonarCloud and SpotBugs remain', 'ENABLE_CODEQL=false; code scanning not enabled on the repository'],
   ['CloudFront → ALB over HTTP', '/api payloads and the origin header cross the AWS network unencrypted', 'NFR-37 TLS still unmet; accepted risk on dev until 16 Nov (#227, NFR register); fix needs an origin hostname and ACM'],
   ['SSH open to the internet', 'port 22 from 0.0.0.0/0 on the dev host, which has a public IP; SSM sessions make it unnecessary', 'AWS read-only check, 21 Oct; open item 9'],
   ['Dev EBS volume not encrypted', 'database and host data at rest unencrypted', 'AWS read-only check, 19 Oct; not raised as an issue yet'],
@@ -144,9 +145,9 @@ const b14 = () => dt(['Gap', 'Effect', 'Status'], [
   ['No dev alarms', 'failures are noticed by e2e-dev or by people', 'all six CloudWatch alarms belong to SWE5001'],
   ['Dev not zero-downtime', 'a deploy restarts the only API container (502 on 3–4 Oct)', 'accepted for dev'],
   ['Secrets in a host file', 'manual creation and rotation, root-only 0600', 'accepted for dev; prod uses Parameter Store'],
-  ['Rebuilt after merge', 'the deployed image and dist/ are not the PR-scanned artefacts; Trivy not re-run', 'strict up-to-date checks; ECR scans on push; ADR 0004 text to reconcile'],
+  ['Delivery image rebuilt', 'dev delivery rebuilds the backend JAR and image without repeating the Trivy image gate, so the deployed image is not the PR-scanned one; SonarCloud, deploy health checks and the frontend smoke still run', 'artifact-assurance limit; ECR scans on push (not a gate); ADR 0004 text to reconcile (open item 18)'],
   ['Weekly full-history gitleaks red', '20 digest false positives fingerprinted; 4 badge-token findings still fail the scan', 'PR #580, ci-failure-audit-20261021.md'],
-  ['Passive DAST; SBOM not per image', 'weekly passive OWASP ZAP of dev, advisory: 2 Medium, 4 Low CSP and header findings (22 Oct); the CycloneDX SBOM covers source dependencies, not each built image', '#607, #610, #609'],
+  ['Passive DAST; SBOM not per image', 'OWASP ZAP of dev is anonymous and passive: no logins, payments or active attacks; advisory, 2 Medium, 4 Low CSP and header findings (22 Oct), fixes in #610; the CycloneDX SBOMs list the backend Maven and frontend pnpm source dependencies, not the exact deployed JAR, image or bundle; licence findings advisory', '#607, #610, #609'],
 ], { fs: 15, w: [250, 450], pad: '5px 10px' });
 
 // ---- B15–B16: segment 5, system demo ----
@@ -238,7 +239,7 @@ const FULL = [
   ['team-statechart', 'Team-formation statechart', 17], ['fm-start', 'Factory Method: start a team', 18], ['observer-expiry', 'Observer: team outcome', 19],
   ['template-method-outbox', 'Template Method: outbox transports', 20], ['strategy-pricing', 'Strategy: pricing', 21],
   ['state-before', 'Listing lifecycle before State (brute force)', 22], ['state-after', 'Listing lifecycle after State', 23],
-  ['core-erd', 'Core schema', 24], ['cicd-pr-vs-merge', 'CI/CD: pull-request and post-merge jobs', 29], ['dev-deployment', 'Dev deployment', 31],
+  ['core-erd', 'Core schema', 24], ['cicd-pr-vs-merge', 'CI/CD in detail: every step, trigger and path filter', 29], ['dev-deployment', 'Dev deployment', 31],
   ['expiry-refund-sequence', 'Expiry and refund sequence (ECS)', 'B5'], ['physical-deployment', 'SWE5001 production topology', 'B10'],
   ['listing-statechart', 'UC9 listing statechart', 'B13'], ['full-erd', 'Entity-relationship diagram, all tables', 'B16'],
 ];
