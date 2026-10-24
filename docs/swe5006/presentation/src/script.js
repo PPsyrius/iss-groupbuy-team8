@@ -116,12 +116,12 @@ ${box('tip', 'Tip', 'Eric shares one screen at 16:52:00 (<code>SHARE</code> from
 ${slideCard(C.SLIDES.find(s => s.n === 34))}
 <h2>Decision: live or recorded payment steps (go/no-go after the Sat 24 Oct dry run)</h2>
 ${tbl(['Condition (Yorik decides with Lim; posted in #464)', 'GO: live on dev', 'NO-GO: recorded or local, said as such'], [
-  ['#517 fixed: a new START on dev reaches paid within one minute and shows under My blocs', 'D1, D2 live; fallback = the 24 Oct clips', 'D1, D2 from the 24 Oct clips if they exist, else from local evidence (B11), said as “verified locally, not yet on dev”'],
-  ['#223 done: Checkout and scheduling on for dev (<code>BLOCBUY_SCHEDULING_ENABLED</code>; default false in application-ec2.yml); a <code>US34-04</code> bloc started on 24 Oct expired within one sweep and refunded', 'D4 live with the 16:05 bloc', 'D4 from B11 (local); slide 34 rows read “recorded” or “local”'],
+  ['#517 fixed: a new START on dev reaches paid within one minute and shows under My blocs', 'D1, D2 live; fallback = the 24 Oct clips', 'D1, D2 from the 24 Oct recording (#657), said as “recorded on dev on 24 Oct”'],
+  ['#223 done: Checkout and scheduling on for dev (<code>BLOCBUY_SCHEDULING_ENABLED</code>; default false in application-ec2.yml); a <code>US34-04</code> bloc started on 24 Oct expired within one sweep and refunded', 'D4 live with the 16:05 bloc', 'D4 from the 24 Oct recording (#657); slide 34 rows read “recorded”'],
   ['Full dry run on dev on Sat 24 Oct passes in order, timed, and is recorded', 'Rehearse at the real clock on 25 Oct', 'Only the NO-GO path is rehearsed'],
   ['D3, D5, D6 do not depend on payments', 'live', 'live (D3 on an account that already has orders)'],
 ])}
-${box('warn', 'Watch out', mh('On dev on 23 Oct, a paid START settled and a natural expiry refunded once (PR #664, merged 24 Oct, bef39b72); a second buyer’s paid JOIN on dev is not yet shown (#590), and #517 and #223 stay open. Every dev payment step here is conditional on the 24 Oct dry run. {{CONFIRM:go/no-go result after the Sat 24 Oct dry run, per step D1, D2, D4 (open item 1)}}'))}
+${box('warn', 'Watch out', mh('D1, D2 and D4 all have dev evidence: on 23 Oct a paid START settled and a natural expiry refunded once (PR #664, merged 24 Oct, bef39b72); on 24 Oct a second buyer’s paid JOIN filled the bloc, shown on dev in the system demo backup recording (#657). #590, #517 and #223 are not yet closed on GitHub, and crash recovery under replay (#224) is not shown. Running the payment steps live still follows the go/no-go. {{CONFIRM:Yorik’s go/no-go on the day, per step D1, D2, D4 (open item 1)}}'))}
 <h2>Preconditions (checked at 15:30 by Eric and Yorik)</h2>
 <ul><li>Health <code>UP</code> (A.1); latest runs on <code>dev</code> green; merge freeze in force; the §4 demo PR is the only change that may land.</li>
 <li>Two Google buyer accounts signed in on Eric’s machine in two Chrome profiles, “Leader”, shown as <b>wood kik</b>, and “Joiner”, shown as <b>los gai</b> (as in the 24 Oct backup recording); the same two on Yorik’s machine as standby. ${m('{{CONFIRM:which of the two holds the admin grant for the listings check (open item 15)}}')}</li>
@@ -162,7 +162,7 @@ ${qaTable(5)}
 const segsHtml = [
   segment(seg(1), {
     tip: 'Lim opens at 16:30:00 sharp, with the deck shared and the notes window off the shared screen. Eight slides in three minutes: the tables carry the facts, the wording carries only the point of each slide.',
-    warn: mh('Never present planned hours as actual effort (slide 5). Paid start and the expiry refund were shown on dev on 23 Oct (PR #664); never say a second buyer’s paid join works on dev unless the 24 Oct dry run shows it (#590).'),
+    warn: mh('Never present planned hours as actual effort (slide 5). Paid start and the expiry refund were shown on dev on 23 Oct (PR #664), a second buyer’s paid join on 24 Oct (system demo backup recording, #657); never claim crash recovery on dev (#224).'),
   }),
   segment(seg(2), {
     tip: 'Eric presents 2.1–2.4 and his own design problem; then Yorik, Pan and Lim each have one 20-second slide on their own problem; Liu Jin closes with the full-form State problem and the schema, and carries straight on into §3. The next speaker unmutes during the previous speaker’s last sentence.',
@@ -228,7 +228,7 @@ const coverHtml = cover({
     ['Responsible', 'Yu Qianshuo (Yorik), presentation lead and storyline (#464); Lim Jiechao, slide master.'],
     ['Specification', '<code>docs/swe5006/presentation/RUBRIC.md</code>: every slide records the rubric rows it covers; the coverage tables in the run sheet are derived from them.'],
     ['Companion files', '<code>swe5006-presentation.html</code> — the deck (39 slides + backups BX, B1–B16, the 1:1 diagram detail pages D9-1 … D31-3 (index DX) and the full-size diagrams F1–F21 (index FX); Chrome or Edge; <b>S</b> notes, <b>T</b> timer, <b>O</b> overview, <b>F</b> fullscreen, <b>B</b> backup index) · <code>swe5006-presentation.pdf</code> — the same deck for submission.'],
-    ['Facts as of', '23 Oct 2026. Dev health <code>UP</code>; a paid START and a natural expiry refund shown on dev (PR #664, merged 24 Oct, bef39b72); a second buyer’s paid JOIN on dev not yet shown (#590), so #223 and #517 stay open.'],
+    ['Facts as of', '24 Oct 2026. Dev health <code>UP</code> (23 Oct); a paid START and a natural expiry refund shown on dev on 23 Oct (PR #664, merged 24 Oct, bef39b72); a second buyer’s paid JOIN shown on dev on 24 Oct (system demo backup recording, #657); #590, #517 and #223 not yet closed.'],
   ],
   after: `${box('', 'Markers', `${md('{{FILL:}}')} value that does not exist yet; never present a guess · ${md('{{VERIFY:}}')} claim to check against the repository, report or run logs · ${md('{{CONFIRM:}}')} needs team agreement. All must be gone by the 25 Oct rehearsal.`)}`,
 });

@@ -138,7 +138,7 @@ const s3 = () => `
 // Status first, the eight changes on the click (rubric V1). Record references live in data-ref (review round 4).
 const status4 = [
   ['Delivered', 'ok', 'UC1–UC9', 'All nine closed as completed', '#24–#32'],
-  ['Open', 'open', 'Second buyer’s paid join on dev', 'Paid start and expiry refund shown on dev 23 Oct', '#664 · #590 · #517'],
+  ['Open', 'open', 'Crash recovery on dev not shown', 'Paid start, join and refund shown on dev 23–24 Oct', '#664 · #657 · #224 · #590 · #517'],
   ['Dropped', 'drop', 'Gated prod, ECS circuit breaker', 'For SWE5006; built for SWE5001', '#226 · ADR 0008'],
   ['Partial', 'part', 'E2E, burndown, saved plans', 'Stubs; daily data, no chart; manual', 'F-ADR 0011 · #229'],
 ];
@@ -208,7 +208,7 @@ const spr = [
   ['1 · 1–12 Sep', 'Walking skeleton: sign-in, browse, admin on dev', '<b>integrated</b>: backend on dev 5 Sep; no frontend, so not releasable'],
   ['2 · 15–26 Sep', 'Pay, join a team, see the order, replay-safe', '<b>integrated</b>: merged, tested, Checkout off on dev; 134 of 150 h'],
   ['3 · 28 Sep–9 Oct', 'Invite → pay → refund on deployed dev', '<b>integrated</b>; goal not met under our “on dev” rule; 117 of 150 h'],
-  ['4 · 12–23 Oct', 'Complete system on dev; three services on ECS (SWE5001)', `<span${ref('PR #534 (17 Oct) · PR #574 · run 39435280952 · SSM /blocbuy/swe5001/release/* 20 Oct 22:32 SGT · PR #664 · #590')}><b>released</b>: SWE5001 production on ECS, 17 and 20 Oct, Stripe test mode, up per session; SWE5006 dev <b>releasable</b> except a second buyer’s join: paid start and refund shown 23 Oct</span>`],
+  ['4 · 12–23 Oct', 'Complete system on dev; three services on ECS (SWE5001)', `<span${ref('PR #534 (17 Oct) · PR #574 · run 39435280952 · SSM /blocbuy/swe5001/release/* 20 Oct 22:32 SGT · PR #664 · #657 · #590')}><b>released</b>: SWE5001 production on ECS, 17 and 20 Oct, Stripe test mode, up per session; SWE5006 dev <b>releasable</b>: paid start, a second buyer’s join and the refund shown on dev, <span style="white-space:nowrap">23–24 Oct</span></span>`],
 ];
 const retro = [
   ['1 → 2', 'No burndown, no hours', 'Daily board snapshots, dated day logs'],
@@ -386,7 +386,7 @@ ${one('use-case', 2320, 1096, [1164, 568], [
   [560, 40, 'resolution: Scheduler', 0, [['Scheduler', 'a time-driven actor resolves teams'], ['«extend»', 'refund extends resolution when a team expires']]],
   [560, 290, 'refund, payment: Stripe', 0, [['Stripe', 'a secondary actor of refund and of paying upfront']]],
   [1160, 40, 'out of scope', 0, [['Out of scope, greyed', 'as the proposal excluded']]],
-  [1160, 640, 'delivery status', 0, [['Status badges', 'paid start and expiry refund on dev since 23 Oct; a second buyer’s join not yet']]],
+  [1160, 640, 'delivery status', 0, [['Status badges', 'paid start and expiry refund on dev since 23 Oct; join and team resolution since 24 Oct']]],
 ], WALK)}
 ${repTop('Report §3.3.1–§3.3.12 · use case model')}`;
 
@@ -702,7 +702,7 @@ const finds = [
 ];
 const s32 = () => `
 ${tbl(['Finding', 'Root cause', 'Fix'], finds.map(f => withRef([`<b>${f[0]}</b>`, lines(f[1], 4), lines(f[2], 4)], f[3])), { fs: 20, w: [250, 440], pad: '11px 12px', m: [246, 368, 38.4] })}
-<div ${A('up', 560, 'position:absolute;left:0;right:0;top:472px;border-radius:8px;background:#FDEFEC;padding:12px 16px;font:400 20px/1.35 Inter;')}${ref('#664 · #590 · #517 · backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md')}><b style="color:#B02E1B">Still open:</b> a second buyer’s paid join on dev. Paid start and the expiry refund were shown on dev on 23 Oct, after a webhook configuration repair.</div>`;
+<div ${A('up', 560, 'position:absolute;left:0;right:0;top:472px;border-radius:8px;background:#FDEFEC;padding:12px 16px;font:400 20px/1.35 Inter;')}${ref('#664 · #657 · #224 · #590 · #517 · backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md')}><b style="color:#B02E1B">Still not shown:</b> crash recovery under replay on dev. Paid start, a second buyer’s join and the expiry refund were shown on dev on 23–24 Oct, after a webhook configuration repair.</div>`;
 
 // ---------- slide 33 (4.1, 4.6) ----------
 const live = [
