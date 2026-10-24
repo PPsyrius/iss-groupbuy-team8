@@ -5,21 +5,13 @@ const fs = require('fs');
 const path = require('path');
 const { deck } = require('../lib/context');
 const { fontCSS, md, esc, words } = require('../lib');
+const { clicks } = require('../lib/text');
+const { hms, toS, est, slideClock } = require('../lib/schedule');
 const CSS = require('./css');
 
 function helpers(C, cfg) {
-  const hms = s => { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}`; };
-  const toS = t => { const [h, m, s] = t.split(':').map(Number); return h * 3600 + m * 60 + s; };
   const short = t => t.replace(/:00$/, '');
-
-  // clock per slide
-  const clock = {};
-  for (const seg of C.SEGMENTS) {
-    let t = toS(seg.start);
-    for (const s of C.SLIDES.filter(x => x.seg === seg.n)) { if (!s.slot) { clock[s.n] = [toS(seg.start) + seg.talk * 60, null]; continue; } clock[s.n] = [t, t + s.slot]; t += s.slot; }
-    seg.talkEnd = t;
-  }
-  const est = s => Math.round(words(s.say) / 130 * 60);
+  const clock = slideClock(C.SEGMENTS, C.SLIDES);
   const markers = { FILL: 0, VERIFY: 0, CONFIRM: 0 };
   const countM = str => { for (const m of String(str).matchAll(/\{\{(FILL|VERIFY|CONFIRM):/g)) markers[m[1]]++; };
 
@@ -33,7 +25,7 @@ function helpers(C, cfg) {
     const [a, b] = clock[s.n];
     const time = s.slot ? `${hms(a)}–${hms(b)} · ${s.slot} s` : `${short(hms(a))} · Q&amp;A`;
     const w = words(s.say), e = est(s), over = s.slot && e > s.slot;
-    const say = md(s.say).replace(/\[click\]/g, '<b class="clk">[click]</b>');
+    const say = clicks(md(s.say));
     return `<div class="card"><div class="hd"><span>Slide ${s.n} &nbsp; ${esc(s.title)}</span><small>${time}</small></div><div class="bd">
   <div class="row"><span class="lab">Speaker</span><span>${esc(s.speaker)} · covers guideline item <b>${s.item}</b></span></div>
   <div class="row"><span class="lab say">Say</span><span class="say">${say}</span></div>

@@ -1,0 +1,141 @@
+# Software bill of materials and licence inventory for the backend (Maven) and frontend (pnpm).
+# Source inventory: Maven compile/runtime dependencies and the pnpm production closure.
+# These analyser selections are not proof of packaged-runtime coverage.
+# Licence categories are report-only; a missing or empty inventory fails the job.
+# Vulnerability gating stays in security.yml (trivy-deps).
+name: sbom
+
+on:
+  push:
+    # No branch pushes: ordinary dev merges do not generate SBOMs.
+    tags: ['v*'] # keep one SBOM per release tag
+  schedule:
+    - cron: '53 3 * * 1' # weekly Monday 03:53 UTC
+  workflow_dispatch:
+  # Opt in by adding/re-adding `run-sbom`; pushes to an already-labelled PR do not rerun it.
+  # The label records a request, not proof that a scan completed or which revision was scanned.
+  pull_request:
+    branches: [dev]
+    types: [labeled]
+
+permissions:
+  contents: read
+
+env:
+  TRIVY_VERSION: v0.74.0
+
+jobs:
+  sbom:
+    if: github.event_name != 'pull_request' || github.event.label.name == 'run-sbom'
+    # Job-level, so that adding some other label (a skipped run) cannot cancel a running inventory.
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Test inventory validation and reporting
+        timeout-minutes: 1
+        run: python3 -B -m unittest discover -s .github/tests -p 'sbom*_test.py'
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Trivy reads Maven dependencies and their licences from ~/.m2, as in trivy-deps.
+      - name: Populate local Maven repository
+        timeout-minutes: 5
+        run: ./mvnw -B -q -f pom.xml dependency:go-offline -DskipTests
+        working-directory: backend
+
+      # No `version` input: the action reads `packageManager` from package.json.
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: frontend/package.json
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      # Licences of npm packages come from node_modules/*/package.json; the lockfile alone has none.
+      # --ignore-scripts skips `prepare` (API client generation), which the inventory does not need.
+      - name: Install frontend dependencies (frozen lockfile, no scripts)
+        timeout-minutes: 3
+        run: pnpm install --frozen-lockfile --ignore-scripts
+        working-directory: frontend
+
+      - name: Prepare output directory
+        timeout-minutes: 1
+        # Fail rather than reusing stale reports/metadata from a previous invocation.
+        run: mkdir "$RUNNER_TEMP/sbom"
+
+      - name: Backend licence inventory
+        timeout-minutes: 2
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_OFFLINE_SCAN: 'true'
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          scan-type: fs
+          scan-ref: backend/
+          scanners: license
+          format: json
+          exit-code: '0' # report only
+          output: ${{ runner.temp }}/sbom/backend-licences.json
+
+      - name: Frontend licence inventory
+        timeout-minutes: 2
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          skip-setup-trivy: true # the successful backend scan installed the same pinned binary
+          scan-type: fs
+          scan-ref: frontend/
+          scanners: license
+          format: json
+          exit-code: '0' # report only
+          output: ${{ runner.temp }}/sbom/frontend-licences.json
+
+      - name: Convert the same inventories to CycloneDX
+        timeout-minutes: 2
+        run: |
+          set -Eeuo pipefail
+          for part in backend frontend; do
+            trivy convert --format cyclonedx --output "$RUNNER_TEMP/sbom/${part}.cdx.json" \
+              "$RUNNER_TEMP/sbom/${part}-licences.json"
+          done
+
+      - name: Validate reports, summarise coverage and write the evidence manifest
+        timeout-minutes: 1
+        run: >-
+          python3 .github/scripts/sbom-report.py
+          --directory "$RUNNER_TEMP/sbom"
+          --revision "$GITHUB_SHA"
+          --ref "$GITHUB_REF"
+          --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          --trivy-version "$TRIVY_VERSION"
+          --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload SBOMs and licence reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sbom
+          path: |
+            ${{ runner.temp }}/sbom/backend-licences.json
+            ${{ runner.temp }}/sbom/frontend-licences.json
+            ${{ runner.temp }}/sbom/backend.cdx.json
+            ${{ runner.temp }}/sbom/frontend.cdx.json
+            ${{ runner.temp }}/sbom/inventory.json
+            ${{ runner.temp }}/sbom/summary.md
+            ${{ runner.temp }}/sbom/manifest.json
+          retention-days: 90
+          if-no-files-found: error

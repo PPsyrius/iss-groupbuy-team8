@@ -98,6 +98,8 @@ describe("DealProgress", () => {
     render(<DealProgress deal={undefined} />);
     expect(screen.getByText("Buying alone. No bloc is open yet.")).toBeInTheDocument();
     expect(screen.getByText("Be the first to start a bloc")).toBeInTheDocument();
+    expect(screen.getByText(/If enough neighbours join before the deadline/)).toBeInTheDocument();
+    expect(screen.queryByText(/four neighbours/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
 

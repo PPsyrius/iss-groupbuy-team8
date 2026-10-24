@@ -51,7 +51,10 @@ jobs:
               - '.github/workflows/**'
               - '.github/tests/**'
               - '.github/scripts/**'
-              - '.github/actions/trivy-image-db/**'
+              - '.github/actions/**'
+              - '.github/dependabot.yml'
+              - '.gitleaks.toml'
+              - '.gitleaksignore'
             deployment:
               - 'deployment/**'
             dependencies:
@@ -81,7 +84,7 @@ jobs:
       - name: Test closed-PR cache cleanup safety
         run: node --test .github/tests/cleanup-pr-caches.test.cjs
 
-      - name: Test Trivy database publication validation
+      - name: Test CI tooling policies
         run: python3 -m unittest discover -s .github/tests -p '*_test.py'
 
       - name: Lint GitHub Actions and embedded shell
@@ -185,7 +188,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: '21'
@@ -291,17 +294,17 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: '21'
           cache: maven
 
-      - uses: github/codeql-action/init@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+      - uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         with:
           languages: java-kotlin
           build-mode: none # CodeQL traces compiled code itself; no Maven build needed
 
-      - uses: github/codeql-action/analyze@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+      - uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         with:
           category: /language:java-kotlin

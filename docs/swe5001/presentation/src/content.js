@@ -253,4 +253,37 @@ const OPEN_ITEMS = [
   ['—', 'Alarm e-mail confirmation before the final release (#515)', 'Liu Jin', '5'],
 ];
 
-module.exports = { SPEAKERS, SEGMENTS, SLIDES, QA, QA_EXTENDED, BACKUPS, CHECKED_ITEMS, OPEN_ITEMS };
+// Demo run-book steps, keyed by the slide that hosts each demo. The speaker script prints them as step cards and the
+// deck's speaker companion lists them under that slide. t and say are text ({{…}} markers allowed); time, proves, op[],
+// exp and fb are HTML.
+const demoSteps = [
+  { n: 1, t: 'Buy as a customer, across three services', time: '16:45:15 – 16:46:45', proves: 'Functionality · guideline <b>6a</b> · Eric',
+    op: ['Tab 2: product list with team prices and countdowns (commerce).', 'Point at the signed-in user in the header (identity, Google sign-in).', 'Tab 3: admin product list (commerce reads the role from the shared session).', "Tab 4: refresh the buyer's notifications (notification service)."],
+    say: "This is what a buyer sees: team prices and live countdowns, served by commerce. Up here, I'm signed in with Google, through the identity service. And because of that one login, this admin page works too: commerce reads my role from the shared login session, without calling identity. That's the one login session from slide 8. Last, these notifications. Remember, nothing needs to call notifications: the notification service created these from events it received. So that's three services, not five, behind one login. Now, those product pages come from commerce, and browsing them is the traffic commerce has to scale for. Let's see how it copes.",
+    exp: 'All four views load; at least one notification is listed.',
+    fb: 'Screenshots taken before the talk (fallback/1-use-cases).',
+    fbSay: "This one's not loading in time, so here's the same step from our recording instead. What you're seeing now is recorded, not live.",
+    ifs: [['No notifications for the demo account (tab 4)', 'Say: “This account has no notifications yet, so here’s the same view from our recording.” Then post CLIP 1.'],
+      ['Product images missing (striped tiles on tab 2)', 'Say: “The product images aren’t loading on this environment, so you’ll see placeholder tiles, but the team prices and live countdowns are what commerce serves, and that’s the part to look at.”'],
+      ['Running late', 'Show only the product list (tab 2) and the notifications (tab 4).']] },
+  { n: 2, t: 'Auto-scaling, on the dashboard', time: '16:46:45 – 16:49:15', proves: 'Scalability, performance · guideline <b>6b</b> · Eric',
+    op: ["Tab 5: live CloudWatch dashboard. Services row: commerce at 2 running tasks, its normal floor; Edge row: today's traffic.", 'Tab 6: the 19 October run on AWS (evidence page): commerce task count 1 → 2 → 3, then load balancer traffic and response time.'],
+    say: "This is the live dashboard for the environment you've just used. It's quiet right now, so commerce is sitting at its usual two tasks. Rather than run a load test in the middle of our talk, here's the one we ran on AWS on 19 October. These graphs are saved from that run, not live. As the traffic ramped up, commerce went from one task to two, then to three, all on its own. And it stayed fast: even at about 455 requests a second, 95 percent of responses came back in under 50 milliseconds. That was the limit of the laptop sending the load, not of the service. So this is what Liu Jin showed on slide 14: commerce adds tasks as requests per task rise, by itself. But how did that commerce code get onto AWS in the first place? That's the pipeline. Pan?",
+    exp: 'Live dashboard loads with commerce at 2 running tasks; the 19 Oct graphs show the task count going 1 → 2 → 3 and server p95 under 50 ms.',
+    fb: 'The same 19 Oct graphs as local files (fallback/2-v3).', clip: false,
+    fbSay: "The live dashboard isn't loading in time, so let's go straight to the saved graphs from our 19 October run. These are recorded, not live." },
+  { n: 3, t: 'The pipeline that deployed it', time: '16:49:15 – 16:50:45', proves: 'Maintainability · guideline <b>6b</b> · Pan narrates; Eric clicks',
+    op: ['Tab 7: promotion pull request #564 (19 Oct): required checks and approval.', 'Open its deploy run: build → create → release → destroy → evidence, with durations.', 'Open the evidence artifact list. Never click Merge.'],
+    say: "Pan: Thanks, Eric. Remember, the only thing that deploys to production is merging a promotion pull request. This is the promotion that put today's code on AWS. It had to pass its required checks and get an approval before it could merge. Eric, could you open the deploy run? (Eric opens it.) So this is what that merge started. The run built the images, created the environment from scratch, tested it, released it and tore it down again. End to end, it took (read the total run time off the screen). And the evidence, please. (Eric opens the artifact list.) Here's the evidence it kept. So today's environment, the one you've just used, was built from exactly these images. Eric, back to you.",
+    exp: 'Checks green; run green including destroy; artifact present.',
+    fb: 'Screenshots of the pull request and run (fallback/3-pipeline); Pan carries on with the same narration over them.', planC: false,
+    fbSay: "GitHub isn't cooperating, so here are the same pages from our recording. This part is recorded, not live." },
+  { n: 4, t: 'Close the demo', time: '16:50:45 – 16:51:30', proves: 'Reliability (tested locally) · guideline <b>6b</b> · Eric, then Lim',
+    op: ['Tab 1: back to the deck; open backup B12 if asked about failures.', 'Thank-you slide (slide 24) at 16:53.'],
+    say: "What we didn't show live is failure handling. The identity outage from slide 8 and a bad message going to the dead-letter queue were tested locally, and the results are in our backup slides; stopping a server is still to run on AWS. So: the buying journey, auto-scaling and the pipeline. That's our demo.",
+    exp: 'Nothing to operate. 16:51:30–16:53 is spare: questions on the demo.',
+    fb: '' },
+];
+const DEMOS = { 23: demoSteps };
+
+module.exports = { SPEAKERS, SEGMENTS, SLIDES, QA, QA_EXTENDED, BACKUPS, CHECKED_ITEMS, OPEN_ITEMS, DEMOS };

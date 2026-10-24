@@ -4,7 +4,7 @@ Shared engine for the BlocBuy course presentations. Each deck folder (`docs/swe5
 
 | Output | Use |
 |---|---|
-| `dist/<deck>.html` | live presentation in Chrome or Edge (presenter notes, timer, fragments, backup index) |
+| `dist/<deck>.html` | live presentation in Chrome or Edge (speaker companion with timers and pace, fragments, backup index) |
 | `dist/<deck>.pdf` | slide deck for submission, one 1280 × 720 page per slide, backups last |
 | `dist/<deck>-script.pdf` | A4 speaker script and demo run book with running header and page numbers; built in memory and printed straight to PDF, so there is no script HTML file |
 
@@ -17,6 +17,7 @@ Run every command from the repository root; each is a single command, so it work
 ```sh
 npm --prefix docs/presentation-kit ci   # only when docs/presentation-kit/node_modules is missing: fonts, Font Awesome, Playwright 1.64.0
 npm --prefix docs/presentation-kit exec -- playwright install chromium   # only if a render step reports a missing browser
+npm --prefix docs/presentation-kit test   # presenter runtime, speaker companion and notes data tests (headless Chromium)
 npm --prefix docs/<course>/presentation run all           # HTML deck, deck PDF, script PDF
 npm --prefix docs/<course>/presentation run build:deck    # HTML deck only (fast loop while editing slides)
 npm --prefix docs/<course>/presentation run render:deck   # deck PDF from the built HTML deck
@@ -39,31 +40,38 @@ Commit the regenerated `dist/` files with the source change. Chromium writes a t
 | `lib/text.js` | HTML escaping, draft markers, word counts |
 | `lib/diagrams.js` | `svg(name)`: deck `src/diagrams/` first, then `diagrams/` here |
 | `lib/brand.js` | `lockup()`: BlocBuy bag mark, wordmark and tagline for dark title slides |
+| `lib/schedule.js` | planned clock per slide (`slideClock`), `hms`/`toS`, the 130 wpm estimate; shared by the script and the companion |
 | `deck/css.js` | slide styles and BlocBuy tokens |
-| `deck/build.js`, `deck/runtime.js` | slide chrome (header, speaker chip, footer progress bar), notes data, presenter runtime |
+| `deck/motion-css.js` | entrance and crossfade styles, added only when `motion: true` |
+| `deck/build.js`, `deck/runtime.js` | slide chrome (header, speaker chip, footer progress bar), presenter runtime |
+| `deck/notes-data.js`, `deck/notes-view.js`, `deck/notes-runtime.js` | speaker companion: per-slide data built at deck build time, its markup and styles, its runtime |
 | `script/css.js`, `script/build.js` | A4 script styles, the helpers a deck's `src/script.js` uses, and the in-memory script document |
 | `render.js` | Playwright printing and screenshots |
+| `MOTION.md` | motion vocabulary, engine behaviour and the hand-composed choreography patterns |
 | `diagrams/` | shared UML SVGs; conventions in [`diagrams/STYLE.md`](diagrams/STYLE.md) |
+| `test/` | `node --test` + Playwright: presenter runtime regressions, the speaker companion end to end, notes data; `test/fixture/` is a three-slide deck the companion test builds into a temp folder |
 
 ## What a deck folder provides
 
 ```
-deck.config.js     title, brand, darkSlides, fillLabel, guidelineLabel, demoSegment, outputs, scriptTitle, scriptHeader
+deck.config.js     title, brand, darkSlides, fillLabel, guidelineLabel, demoSegment, motion, outputs, scriptTitle, scriptHeader
 package.json       npm scripts only (no dependencies)
-src/content.js     exports { SPEAKERS, SEGMENTS, SLIDES, QA, BACKUPS, OPEN_ITEMS }
+src/content.js     exports { SPEAKERS, SEGMENTS, SLIDES, QA, BACKUPS, OPEN_ITEMS, DEMOS? }
 src/slides-main.js exports { <slide n>: () => html } for every SLIDES entry
 src/slides-backup.js (optional) exports { list() } → [{ id, title, speaker?, body }]; id 'BX' is the index the B key opens
 src/script.js      exports the script body HTML (see below)
 src/diagrams/      optional per-deck diagram overrides
 ```
 
-`deck.config.js` fields: `title` (HTML title), `brand` (footer text after "BlocBuy"), `darkSlides` (slide numbers drawn full-bleed dark with no header or footer, e.g. title and thank-you), `fillLabel` (text of the FILL chip, e.g. `FILL 19 Oct`), `guidelineLabel` (heading of each segment's requirement box), `demoSegment` (segment number whose Q&A the deck's own demo chapter renders, or `null`), `outputs` (`deck`, `deckPdf`, `scriptPdf` file names), `scriptTitle` (PDF document title), `scriptHeader` (`left`, `right` text of the PDF running header).
+`deck.config.js` fields: `title` (HTML title), `brand` (footer text after "BlocBuy"), `darkSlides` (slide numbers drawn full-bleed dark with no header or footer, e.g. title and thank-you), `fillLabel` (text of the FILL chip, e.g. `FILL 19 Oct`), `guidelineLabel` (heading of each segment's requirement box), `demoSegment` (segment number whose Q&A the deck's own demo chapter renders, or `null`), `motion` (`true` turns on slide crossfades and entrance animations, see [`MOTION.md`](MOTION.md); default `false`), `outputs` (`deck`, `deckPdf`, `scriptPdf` file names), `scriptTitle` (PDF document title), `scriptHeader` (`left`, `right` text of the PDF running header).
 
 `src/content.js` shapes:
 - `SEGMENTS[i] = { n, name, head, short, talk, qa, start: 'HH:MM:SS', owner, items: { '1a': guideline text } }`; minutes in `talk`/`qa`; `short` labels the footer.
 - `SLIDES[i] = { n, seg, item, speaker, slot, title, say, cues?, handover?, trim? }`; `slot` in seconds (`null` = Q&A); `speaker` is a `SPEAKERS` key `{ full, init }`. Titles over 58 characters render smaller.
-- `say` is the sample wording; `[click]` marks a fragment step. Speaking time is estimated at 130 words a minute, and the script flags slides that run over their slot.
-- `QA[segmentNumber] = { window, rows: [[question, answer, owner]] }`; `BACKUPS` rows `[id, title, answers]`; `OPEN_ITEMS` rows `[#, item, owner, blocks slide]`.
+- `say` is the sample wording; `[click]` marks a fragment step, or `[click 2/3]` to number it (step 2 of the slide's 3). Speaking time is estimated at 130 words a minute, and the script flags slides that run over their slot.
+- `QA[segmentNumber] = { window, rows: [[question, answer, owner]] }`; `BACKUPS` rows `[id, title, question it answers, owner?, what to say?]` (the companion shows the question as a cue and "what to say" as the script); `OPEN_ITEMS` rows `[#, item, owner, blocks slide]`.
+- `DEMOS[slide n] = [{ n, t, time, proves, op: [], say, exp, fb }]` (optional): the demo run-book steps hosted by that slide. The deck's `script.js` prints them as step cards, and the companion lists them under that slide. `t` and `say` are text (markers allowed); `time`, `proves`, `op`, `exp` and `fb` are HTML.
+- The kit's own builders read only the fields above, so a deck may add its own to `SLIDES`; the kit ignores them, but the deck's `src/slides-main.js` and `src/script.js` may read them into the output. The SWE5006 deck adds `rubric` (the rubric rows a slide covers), which its script renders as the rubric coverage table and its placeholder slides print.
 
 ### Adding, removing or moving a slide
 
@@ -89,11 +97,29 @@ src/diagrams/      optional per-deck diagram overrides
 
 ## Presenter runtime (HTML deck)
 
-Arrows, Space, Enter, PageUp/PageDown step through fragments (`<div class="frag" data-frag="1">`) and slides; Home/End; S opens the notes window (say, cues, hand-over, slot, timer); T starts the timer; O toggles the overview grid; F fullscreen; B jumps to the backup index; `data-go="B6"` on any element links to that slide; `#23` or `#B6` in the URL opens a slide directly.
+Arrows (including Up/Down), Space, Enter, PageUp/PageDown, N/P step through fragments (`<div class="frag" data-frag="1">`) and slides; a slide number then Enter jumps to that main slide; Home/End; S opens the speaker companion (below); T starts the talk timer or restarts it from zero; O toggles the overview grid; F fullscreen; B or X jumps to the backup index; `.` blanks the screen to black (O also clears it). A click advances, a click in the left third of the window goes back; clicks on links, buttons, `data-go` elements and anything inside a `data-scroll` element (a full-size diagram that scrolls) do not step. `data-go="B6"` on any element links to that slide; `#23` or `#B6` in the URL opens a slide directly, also when the hash changes later. A key hint fades in for 4 s when the deck opens.
+
+### Speaker companion
+
+S opens the same HTML file with `?notes` in a second window, the companion; keep it off the shared screen. It shows no slides; it follows the deck and can drive it:
+
+- Header: `Slide n / total` (or `Backup B2`), the title, `segment · name · item · speaker`, and the planned start–end and slot from the shared slide clock.
+- Timers: clock, time on the slide (red once past its slot), talk elapsed (from T), and pace: talk elapsed against the slide's planned start, counted from the first segment's `start`, shown as ahead or behind and coloured beyond ±20 s.
+- Body: `say` with `[click]` marks, the reveal count, cues, the hand-over line (quoted unless it starts with a parenthesis), the next slide, and `DEMOS` steps on a slide that hosts a demo. A backup shows its `BACKUPS` row.
+- Keys in the companion: →/←, Space, N/P and the Back/Next buttons move the deck; Home/End and B/X jump the deck as they do there (a backup's hand-over names them); T starts the talk timer or restarts it from zero, never stops it; the deck window keeps the timer, so T works before the companion opens and it survives a reload of either window; + / − change the text size.
+
+The windows talk over `postMessage` and accept messages only from each other. The companion says hello every second, so a reloaded deck picks it up again; after 3 s without an answer it warns that the deck is not listening. A `file://` page has an opaque origin that cannot be targeted, so `'*'` is used there. Every field is built at deck build time by `deck/notes-data.js` from escaped content and inlined as JSON (`jsonForScript`); the runtime only places it.
+
+## Motion
+
+`motion: true` in `deck.config.js` turns on the v3 crossfade and entrance animations; [`MOTION.md`](MOTION.md) lists the vocabulary (`class="a" data-a="…"` with inline `--d`, connectors, chart lines, table rows, covers), the chrome timings and the patterns in use. PDF, screenshots and the overview always show the final state.
+
+- Choreography is authored per element by a human or an AI agent; the engine staggers nothing beyond the chrome. Reuse a listed pattern by role.
+- A slide that gets a new or unique pattern adds its entry to `MOTION.md` in the same commit.
 
 ## Changing the kit
 
-A kit change affects every deck. After any change here, rebuild every deck and compare its HTML before and after: the deck HTML against the committed `dist/` (`npm --prefix docs/swe5001/presentation run build:deck`, then `git diff --stat -- docs/swe5001/presentation/dist`, and the same for each other deck), and the script HTML by writing it with `SCRIPT_HTML` before and after the change. An HTML change in a deck you did not mean to change is a regression. The SWE5001 extraction was accepted only with byte-identical HTML, so keep that bar for pure refactors.
+A kit change affects every deck. After any change here, rebuild every deck and compare its HTML before and after: the deck HTML against the committed `dist/` (`npm --prefix docs/swe5001/presentation run build:deck`, then `git diff --stat -- docs/swe5001/presentation/dist`, and the same for each other deck), and the script HTML by writing it with `SCRIPT_HTML` before and after the change. An HTML change in a deck you did not mean to change is a regression. A runtime change also runs `npm --prefix docs/presentation-kit test` and adds a test for any presenter-key bug it fixes. The SWE5001 extraction was accepted only with byte-identical HTML, so keep that bar for pure refactors.
 
 Chromium is pinned through `playwright` 1.64.0. A different Chromium version changes PDF anti-aliasing and file size, not content; compare HTML, page count and text rather than PDF bytes.
 

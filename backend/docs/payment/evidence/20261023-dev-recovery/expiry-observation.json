@@ -1,0 +1,13 @@
+{
+  "command_id": "91555868-8b88-4bf0-b81b-a827b8f296df",
+  "environment": "dev Sandbox",
+  "status": "Success",
+  "output": [
+    "{\"observed_at\" : \"2026-10-23T10:00:06.330093+00:00\", \"deadline\" : \"2026-10-23T10:24:15.355419+00:00\", \"team_status\" : \"open\", \"team_updated\" : \"2026-10-23T09:46:49.980152+00:00\", \"order_status\" : \"pending\", \"order_updated\" : \"2026-10-23T09:46:49.944433+00:00\", \"refund_id\" : null, \"refund_status\" : null, \"provider_refund_id\" : null, \"refund_updated\" : null}",
+    "{\"observed_at\" : \"2026-10-23T10:24:43.141071+00:00\", \"deadline\" : \"2026-10-23T10:24:15.355419+00:00\", \"team_status\" : \"expired\", \"team_updated\" : \"2026-10-23T10:24:34.271813+00:00\", \"order_status\" : \"cancelled\", \"order_updated\" : \"2026-10-23T10:24:34.283475+00:00\", \"refund_id\" : \"01a1684a-7bf4-70b2-a689-aee0421c7778\", \"refund_status\" : \"pending\", \"provider_refund_id\" : null, \"refund_updated\" : \"2026-10-23T10:24:34.269405+00:00\"}",
+    "{\"observed_at\" : \"2026-10-23T10:25:13.262692+00:00\", \"deadline\" : \"2026-10-23T10:24:15.355419+00:00\", \"team_status\" : \"expired\", \"team_updated\" : \"2026-10-23T10:24:34.271813+00:00\", \"order_status\" : \"cancelled\", \"order_updated\" : \"2026-10-23T10:24:34.283475+00:00\", \"refund_id\" : \"01a1684a-7bf4-70b2-a689-aee0421c7778\", \"refund_status\" : \"succeeded\", \"provider_refund_id\" : \"re_3UTf3i5iEVLN2uQJ1xbGulcM\", \"refund_updated\" : \"2026-10-23T10:24:55.940855+00:00\"}",
+    "{\"observed_at\" : \"2026-10-23T10:26:43.632608+00:00\", \"deadline\" : \"2026-10-23T10:24:15.355419+00:00\", \"team_status\" : \"expired\", \"team_updated\" : \"2026-10-23T10:24:34.271813+00:00\", \"order_status\" : \"cancelled\", \"order_updated\" : \"2026-10-23T10:24:34.283475+00:00\", \"refund_id\" : \"01a1684a-7bf4-70b2-a689-aee0421c7778\", \"refund_status\" : \"succeeded\", \"provider_refund_id\" : \"re_3UTf3i5iEVLN2uQJ1xbGulcM\", \"refund_updated\" : \"2026-10-23T10:24:55.940855+00:00\"}",
+    "Natural expiry/refund persisted through 90 seconds of further observation",
+    ""
+  ]
+}
