@@ -11,6 +11,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.common.exception.BizException;
+import com.blocbuy.payment.exception.PaymentErrorCode;
 import com.blocbuy.payment.model.CheckoutPayment;
 import com.blocbuy.payment.model.CheckoutQuote;
 import com.stripe.Stripe;
@@ -113,12 +114,18 @@ class StripeCheckoutGatewayTest {
                 .isInstanceOf(BizException.class);
     }
 
-    @Test
-    void versionMismatchDoesNotSilentlyAcknowledgeSupportedEvent() throws Exception {
-        String body = event("checkout.session.completed").replace(Stripe.API_VERSION, "2010-01-01");
+    @ParameterizedTest
+    @ValueSource(strings = {"2010-01-01", "2026-08-26.dahlia"})
+    void versionMismatchDoesNotSilentlyAcknowledgeSupportedEvent(String apiVersion)
+            throws Exception {
+        String body = event("checkout.session.completed").replace(Stripe.API_VERSION, apiVersion);
         String signature = sign(body, Instant.now().getEpochSecond());
         assertThatThrownBy(() -> gateway.verifyCheckoutWebhook(body, signature))
-                .isInstanceOf(BizException.class);
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        error ->
+                                assertThat(error.errorCode())
+                                        .isEqualTo(PaymentErrorCode.PAYMENT_PROVIDER_ERROR));
     }
 
     @Test
