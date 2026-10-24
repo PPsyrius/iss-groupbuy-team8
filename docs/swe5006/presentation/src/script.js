@@ -83,7 +83,7 @@ ${tbl(['Step', 'Shows', 'Rubric'], pipeSteps.map(d => [d.n, esc(d.t), d.proves.s
 <li>Merge freeze in the team chat: nobody merges into <code>dev</code> from 15:00 to 17:15 except these two PRs. A moved <code>dev</code> makes the branch out of date and re-runs the checks (strict required checks), which is why the demo branch is updated after the backend merge and before its PR opens, and why nothing else may merge after 16:40.</li>
 <li>Latest <code>ci-frontend</code> and <code>ci-backend</code> runs on <code>dev</code> green (A.1); deploy switches <code>ENABLE_S3_DEPLOY</code> and <code>ENABLE_EC2_DEPLOY</code> unchanged; GitHub Actions budget not exhausted (a budget stop hit run 39442654274 on 20 Oct).</li>
 <li>Lim signed in to GitHub on his own machine with the PR list open; he is not sharing at 16:47.</li>
-<li>Backup video (rubric G6, 4.6): recorded on dev by Sun 25 Oct at the latest (decided 24 Oct), 1080p, one clip per step P1–P6, stored in the cloud and on a USB drive, open in a player on Pan’s machine and tested with Zoom “share sound” off. ${m('{{FILL:recording link and USB holder}}')}</li></ul>
+<li>Backup video (rubric G6, 4.6): <code>swe5006-ci-cd.mp4</code>, recorded on dev on Sat 24 Oct (4 min 18 s): finished <code>ci-frontend</code> and <code>ci-backend</code> runs with their job graphs, a merged PR, the <code>e2e-dev</code> smoke log and the dev site. It shows typical finished runs, not the live heading change, so say so if it is played. Shared in the team chat; open in a player on Pan’s machine and tested with Zoom “share sound” off. Higher-resolution originals are being collected (the shared copies are 832 × 480).</li></ul>
 <h3>Screen layout (Pan’s browser window, shared from 16:46:30; browser zoom 125–150 %, rubric V7)</h3>
 ${tbl(['Tab', 'Content', 'Prepared state'], [
   ['1', 'GitHub: the demo pull request', 'Opened at 16:41; Files changed tab ready'],
@@ -129,7 +129,7 @@ ${box('warn', 'Watch out', mh('On dev on 23 Oct, a paid START settled and a natu
 <li>Listings converged: <code>scripts/seed-dev-demo-listings.sh --check</code> passes for the four <code>US34-*</code> listings (≤ 12:00, Yorik).</li>
 <li>Terminal with font ≥ 18 pt and the curl line ready (D5); Joiner DevTools closed until D5.</li>
 <li>IDE on a local checkout of <code>dev</code>, font ≥ 18 pt, with the D6 test run green after 15:00 and its file open; Docker running (rubric G10).</li>
-<li>Backup clips D1–D6 recorded on dev on Sat 24 Oct at 1080p, stored in the cloud and on a USB drive, open in a player on Eric’s machine (copy on Yorik’s), tested with Zoom “share sound” off (rubric G6, 5.5). ${m('{{FILL:clip folder link and USB holder}}')}</li>
+<li>Backup video (rubric G6, 5.5): <code>swe5006-system.mp4</code>, recorded on dev on Sat 24 Oct (8 min 27 s, #657): paid start, a second buyer’s paid join (“2 of 2 joined · Filled 24 Oct, 7:17 pm”), My orders and My blocs, the expiry refund (“Refund sent”), the admin API denial, then the code, a CI run and the k6 table. Shared in the team chat; open in a player on Eric’s machine (copy on Yorik’s), tested with Zoom “share sound” off. Higher-resolution originals are being collected (the shared copies are 832 × 480).</li>
 <li>Browser zoom 125–150 % (rubric V7); Do Not Disturb on; no password manager, email or bookmarks bar visible.</li></ul>
 <h2>Screen layout (Eric’s shared screen)</h2>
 ${tbl(['Window · tab', 'Content', 'Prepared state'], [

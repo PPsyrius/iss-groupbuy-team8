@@ -721,7 +721,7 @@ const s33 = () => `
 </div>
 <div style="position:absolute;left:724px;top:0;width:440px">
  <div class="card a" data-a="up" style="padding:18px 22px;margin-bottom:14px;--d:600ms">${kicker('Why the backend is pre-run')}<div style="font:400 21px/1.4 Inter">Backend PR checks take about 16 min, longer than the segment, so that run was triggered before the talk and we walk through it finished.</div></div>
- <div class="card a" data-a="up" style="padding:18px 22px;--d:680ms">${kicker('Backup video', '#B02E1B')}<div style="font:400 21px/1.4 Inter">${lines(['Recorded on dev by 24 Oct, one clip per step', `In the cloud and on a USB drive ${mk('FILL', 'link')}`], 4)}</div></div>
+ <div class="card a" data-a="up" style="padding:18px 22px;--d:680ms">${kicker('Backup video', '#B02E1B')}<div style="font:400 21px/1.4 Inter">${lines(['Recorded on dev on 24 Oct: finished runs, checks to smoke test', 'Shared in the team chat; ready on the presenter’s laptop'], 4)}</div></div>
 </div>`;
 
 // ---------- slide 34 (5.1, 5.2) ----------
@@ -764,7 +764,7 @@ const s35 = () => `
 <div style="position:absolute;left:724px;top:0;width:440px">
  <div class="card a" data-a="up" style="padding:16px 22px;margin-bottom:12px;--d:600ms">${kicker('Two buyers, one screen')}<div style="font:400 21px/1.38 Inter">${lines(['Two Chrome profiles, Leader and Joiner, both signed in with Google', 'Stripe Sandbox: a test card, no money moves'], 4)}</div></div>
  <div class="card a" data-a="up" style="padding:16px 22px;margin-bottom:12px;--d:680ms">${kicker('Started before the talk')}<div style="font:400 21px/1.38 Inter">A team of two on ${mo('US34-04', 20)} at 16:05: its 40-minute window, the shortest allowed, ends ≈ 16:45.</div></div>
- <div class="card a" data-a="up" style="padding:16px 22px;--d:760ms">${kicker('Backup video', '#B02E1B')}<div style="font:400 21px/1.38 Inter">${lines(['Recorded on dev by 24 Oct, one clip per step', `In the cloud and on a USB drive ${mk('FILL', 'link')}`], 4)}</div></div>
+ <div class="card a" data-a="up" style="padding:16px 22px;--d:760ms">${kicker('Backup video', '#B02E1B')}<div style="font:400 21px/1.38 Inter">${lines(['Recorded on dev on 24 Oct: start, join, refund', 'Shared in the team chat; ready on the presenter’s laptop'], 4)}</div></div>
 </div>`;
 
 // ---------- slide 36 (5.3) ----------

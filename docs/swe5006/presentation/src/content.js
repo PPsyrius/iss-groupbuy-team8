@@ -259,7 +259,7 @@ const SLIDES = [
     cues: [
       'Opens the live pipeline demo: steps P1–P6 in the script, §4 (16:46:30–16:52:00). Pan opens the demo PR at 16:41, during slide 26, so its checks (median 4.8 min) are green by 16:46:30. Demo change (decided 24 Oct): the home page heading “Buy better together” → “Buy better, together” (one line, frontend/src/routes/index.tsx:114; no test asserts it), author Pan, approver Lim (frontend code owner).',
       'Rubric 4.1: a full backend run exceeds 8 min (PR checks median 16.1 min), so it is triggered beforehand and walked through finished: the backend PR run (≈ 16:20) and its post-merge deploy run, both pinned in tabs 3 and 4 (screen layout, script §4).',
-      'Rubric 4.6: {{FILL:backup video link, recorded on dev by 24 Oct, in the cloud and on a USB drive}}',
+      'Rubric 4.6: backup video swe5006-ci-cd.mp4, recorded on dev 24 Oct (4:18), shared in the team chat: finished ci-frontend and ci-backend runs, a merged PR, the e2e-dev smoke log and the dev site; it shows typical runs, not the live heading change.',
     ],
     handover: '(demo) "Here is the pull request."' },
 
@@ -278,7 +278,7 @@ const SLIDES = [
     cues: [
       'Opens the live system demo: steps D1–D6 in the script, §5 (16:52:30–17:01:00). Eric shares and operates both profiles; Yorik speaks. Go/no-go table and NO-GO path in the script.',
       'D1 start (UC2, UC1, UC3, UC7) 120 s · D2 join, team succeeds (UC4, UC5, UC7) 120 s · D3 My blocs and orders (UC8) 75 s · D4 the 16:05 bloc expired and refunded (UC5, UC6; unattended expiry and one refund record; the ≤ 1 min bound is measured locally, slide 36) 90 s · D5 security checks (401, 403, 400, HttpOnly) 60 s · D6 last-seat race, local test in the IDE (correctness under concurrency) 45 s.',
-      'Rubric 5.5: {{FILL:backup video link; clips D1–D6 recorded on dev by Sat 24 Oct, stored in the cloud and on a USB drive}}.',
+      'Rubric 5.5: backup video swe5006-system.mp4, recorded on dev 24 Oct (8:27, #657), shared in the team chat: paid start, a second buyer’s paid join (2 of 2 joined, filled 24 Oct 7:17 pm), My orders and My blocs, the expiry refund, the admin API denial..',
     ],
     handover: '(demo) "Here is the listing our leader starts from."' },
   { n: 36, seg: 5, item: '5b', rubric: ['5.3'], speaker: 'Yorik', slot: 120, title: 'Performance against the target: the scripted k6 run',
@@ -400,7 +400,7 @@ const BACKUPS = [
 // Open items: [#, item, owner, blocks slide]
 const OPEN_ITEMS = [
   [1, 'Paid flow on dev: PR #664 (merged 24 Oct, bef39b72) repaired the dev webhook and turned scheduling on; START and expiry refund shown on dev 23 Oct (backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md). Open: a second buyer’s paid JOIN (#590); go/no-go for D1, D2 and D4 after the Sat 24 Oct dry run, posted in #464', 'Yorik', '4, 5, 7, 35'],
-  [2, 'Backup videos of both demos recorded by Sun 25 Oct at the latest (system clips: #657, due 24 Oct 24:00) on the final Sprint 4 build deployed to dev (Sprint 4 ends 23 Oct), stored in the cloud and on a USB drive (rubric G6, 4.6, 5.5)', 'Pan (pipeline), Yorik and Eric (system)', '33, 35'],
+  [2, 'Backup videos: both recorded on dev on 24 Oct and shared in the team chat (swe5006-ci-cd.mp4, swe5006-system.mp4). Open: collect the higher-resolution originals (shared copies are 832 × 480, rubric V7 asks for 1080p); rubric 4.6’s USB copy is replaced by a copy on each presenter’s laptop', 'Pan (pipeline), Yorik and Eric (system)', '33, 35'],
   [5, 'Sprint 3 retrospective: closed for Sprint 3. docs/agile/sprint-03/retro.md (24 Oct, #451), reconstructed from the review and day logs, is cited by slide 7’s 3 → 4 row and B1; the Sprint 4 retrospective stays open in item 6 (#619)', 'Lim', '—'],
   [6, 'Cut the v0.1.0-sprint4 tag on dev now and put its date on slide 5; the Sprint 4 review and retro follow after the talk (#619, decided 24 Oct)', 'Eric', '5, 7'],
   [7, 'No numbered backend ADR for: the auth change from JWT to the Sa-Token session (open decision 6); MyBatis instead of the proposal’s JPA; the scheduling design; the concurrency approach (open decision 3); the team lifecycle as a transition table instead of the proposal’s State; the DevSecOps changes from proposal §5.2 (OWASP Dependency-Check replaced by Trivy deps, Trivy IaC and deps not required checks, three OIDC roles split per job instead of plan/deploy/apply, two IAM users with one access key against “no static credentials”). Not writable before 26 Oct: state the gap in report Appendix B (ADR index and the decisions without an ADR, #681), and write ADRs only if the team chooses', 'Liu Jin, Eric, Pan', '4, 10'],
