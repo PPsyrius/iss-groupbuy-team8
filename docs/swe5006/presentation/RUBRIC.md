@@ -184,7 +184,7 @@ Open decisions:
 1. What PDF page 2 says, and which of its items do not conflict with page 1 and therefore still apply.
 2. What is deployed now against UC1–UC9: done, partial or dropped.
 3. Which transition strategies the ADRs already cover, and which of the 2.2 candidates are missing.
-4. Who owns which use case and which design problem.
+4. Who owns which use case and which design problem. **Settled 24 Oct (report editor, #463):** Eric UC3, UC4, pay upfront; Yorik UC6; Pan UC1, UC2; Lim UC7, UC8; Liu Jin UC5, UC9 (first UC9 version by Eric, PR #72); notifications are SWE5001 scope. Design problems as on slides 18–23. Who presents a use case is unchanged.
 5. Which GoF patterns are in the code, in which classes, and whether brute-force "before" diagrams exist. Specifically: is State one class per state, and is the UC3 factory static?
 6. Whether the auth change from PROP was recorded in an ADR.
 7. Which performance test tool is used, whether a script exists, and whether it has met the target.

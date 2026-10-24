@@ -185,20 +185,20 @@ const s5 = () => `
 
 // ---------- slide 6 (1.5) ----------
 const own = [
-  ['Liu Jin', 'UC9 admin listings and team terms', 'Listing lifecycle → <b>State</b> (full form)', 'slides 22–23 · was UC5 State, UC9'],
-  ['Wang Ziang (Eric)', 'UC3 start, UC4 join', 'Team creation → <b>Factory Method</b>', 'slide 18 · unchanged; UC4 race is a transition strategy'],
+  ['Liu Jin', 'UC9 admin listings, UC5 team lifecycle', 'Listing lifecycle → <b>State</b> (full form)', 'slides 22–23 · was UC5 State, UC9; UC9 first version by Eric, PR #72'],
+  ['Wang Ziang (Eric)', 'UC3 start, UC4 join, pay upfront', 'Team creation → <b>Factory Method</b>', 'slide 18 · unchanged; UC4 race is a transition strategy'],
   ['Yu Qianshuo (Yorik)', 'UC6 refund on expiry', 'Team outcome consequences → <b>Observer</b>', 'slide 19 · was Adapter'],
-  ['Panpakorn (Pan)', 'Receive notifications', 'Outbox transports → <b>Template Method</b>', 'slide 20 · was UC1 Strategy, UC2'],
-  ['Lim Jiechao', 'UC8 my orders and teams', 'Pricing → <b>Strategy</b>', 'slide 21 · was UC7 Observer, UC8'],
+  ['Panpakorn (Pan)', 'UC1 browse, UC2 sign in', 'Outbox transports → <b>Template Method</b>', 'slide 20 · was UC1 Strategy, UC2; notifications are SWE5001 scope'],
+  ['Lim Jiechao', 'UC8 my orders and teams, UC7 sharing', 'Pricing → <b>Strategy</b>', 'slide 21 · was UC7 Observer, UC8'],
 ];
-// Inline token strip (MOTION.md): kicker 150, tokens 200 +30, the CONFIRM chip pops 520; table [420, 540, 38];
+// Inline token strip (MOTION.md): kicker 150, tokens 200 +30; table [420, 540, 38];
 // footnotes 800 / 860.
 const s6 = () => `
-${gA(kicker('Every use case has an owner · * proposed, not yet agreed'), 'up', 150)}
-<div style="display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;font:400 20px/1.3 Inter;margin-bottom:16px">${[['UC1', 'Lim*'], ['UC2', 'Pan*'], ['UC3', 'Eric'], ['UC4', 'Eric'], ['UC5', 'Eric*'], ['UC6', 'Yorik'], ['UC7', 'Lim*'], ['UC8', 'Lim'], ['UC9', 'Liu Jin'], ['Notifications', 'Pan']].map((u, i) => `<span ${A('up', 200 + 30 * i)}><b>${u[0]}</b> ${u[1]}</span>`).join('')}${hAt(mk('CONFIRM', 'owners marked * (open decision 4)'), 'pop', 520)}</div>
+${gA(kicker('Every use case has a report owner'), 'up', 150)}
+<div style="display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;font:400 20px/1.3 Inter;margin-bottom:16px">${[['UC1', 'Pan'], ['UC2', 'Pan'], ['UC3', 'Eric'], ['UC4', 'Eric'], ['UC5', 'Liu Jin'], ['UC6', 'Yorik'], ['UC7', 'Lim'], ['UC8', 'Lim'], ['UC9', 'Liu Jin']].map((u, i) => `<span ${A('up', 200 + 30 * i)}><b>${u[0]}</b> ${u[1]}</span>`).join('')}</div>
 ${tbl(['Member', 'Use case', 'Design problem → GoF pattern'], own.map(o => withRef([`<b>${o[0]}</b>`, o[1], o[2]], `${o[3]} (proposal §6.1)`)), { fs: 20, w: [250, 380], pad: '11px 14px', m: [420, 540, 38] })}
-<div ${A('up', 800, 'margin-top:14px;font:400 20px/1.4 Inter;')}>Each member presents their own design problem in section 2; the team statechart (UC4–UC6, UC8) goes with Eric’s UC4 design.</div>
-<div ${A('up', 860, 'margin-top:6px;display:flex;gap:14px;align-items:center;')}>${report(`<span${ref('Eric 3.4.1 and 3.5.1; Yorik 3.4.2 and 3.5.2; Pan 3.4.3 and 3.5.3; Lim 3.4.4 and 3.5.4; Liu Jin 3.4.5 and 3.5.5 (#463 report plan, 24 Oct; #678, #679)')}>Report: use cases §3.4.1–§3.4.5, design problems §3.5.1–§3.5.5, in section 2 order</span>`).replace('margin-top:8px', 'margin:0')} ${mk('VERIFY', 'UC9 owner')}</div>`;
+<div ${A('up', 800, 'margin-top:14px;font:400 20px/1.4 Inter;')}>Each member presents their own design problem in section 2; Eric presents the team statechart, which the report places in Liu Jin’s UC5.</div>
+<div ${A('up', 860, 'margin-top:6px;display:flex;gap:14px;align-items:center;')}>${report(`<span${ref('Eric 3.4.1 and 3.5.1; Yorik 3.4.2 and 3.5.2; Pan 3.4.3 and 3.5.3; Lim 3.4.4 and 3.5.4; Liu Jin 3.4.5 and 3.5.5 (#463 report plan, 24 Oct; #678, #679)')}>Report: use cases §3.4.1–§3.4.5, design problems §3.5.1–§3.5.5, in section 2 order</span>`).replace('margin-top:8px', 'margin:0')}</div>`;
 
 // ---------- slide 7 (1.6, 1.7) ----------
 const steps = ['coded', 'tested', 'integrated', 'releasable', 'released'];

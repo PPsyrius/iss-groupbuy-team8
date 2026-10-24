@@ -53,7 +53,7 @@
 - #rich((("t", "Diagram: src/diagrams/state-before.​svg. It is the brute-force alternative that backend/docs/design/admin-listings.​md L67–68 rejects (\"repeated status switches in every caller\"), drawn as RT 3.5 allows (\"using brute force design if necessary\"). It never existed as code; the rules inside the switches are the real ones (ProductStatus.​java L12–74)."),), size: 8.8pt)
 - #rich((("t", "Real operation names: Product.​publish(), delist(), revise(details), requireDeletable(); client AdminListingAppServiceImpl; endpoint PUT /api/v1/admin/products/{productId}/status (AdminListingController)."),), size: 8.8pt)
 - #rich((("t", "Cause for redesign: GoF State applicability, \"operations have large, multipart conditional statements that depend on the object’s state\". None of the causes on SDP 05a p15 names State, so we do not claim one. What varies: SDP 05a p13, \"States of an object\"."),), size: 8.8pt)
-- #rich((("t", "Authorship, if asked: admin-listings.​md names Eric as implementer and Liu Jin as reviewer (open item 12). Answer: \"I own this design and its report section; the first version was built with Eric in PR #72.\""),), size: 8.8pt)
+- #rich((("t", "Authorship, if asked: admin-listings.​md names Eric as implementer and Liu Jin as reviewer; the report owner is Liu Jin, decided 24 Oct (#463). Answer: \"I own this design and its report section; the first version was built with Eric in PR #72.\""),), size: 8.8pt)
 ]
 ]
 
@@ -169,7 +169,6 @@
 #table(columns: (auto, 1fr, auto, auto), stroke: 0.4pt + luma(200), inset: 5pt,
   table.header([*\#*], [*Item*], [*Owner*], [*Slide*]),
   [7], [#rich((("t", "No numbered backend ADR for: the auth change from JWT to the Sa-Token session (open decision 6); MyBatis instead of the proposal’s JPA; the scheduling design; the concurrency approach (open decision 3); the team lifecycle as a transition table instead of the proposal’s State; the DevSecOps changes from proposal §5.2 (OWASP Dependency-Check replaced by Trivy deps, Trivy IaC and deps not required checks, three OIDC roles split per job instead of plan/deploy/apply, two IAM users with one access key against “no static credentials”). Not writable before 26 Oct: state the gap in report Appendix B (ADR index and the decisions without an ADR, #681), and write ADRs only if the team chooses"),), size: 9pt)], [#text(9pt, "Liu Jin, Eric, Pan")], [4, 10],
-  [12], [#rich((("t", "UC9 attribution: #32 and the backend design docs name Eric as implementer (PR #72); #463 gives UC9 to Liu Jin. Agree and update the matrix"),), size: 9pt)], [#text(9pt, "Eric, Liu Jin")], [6],
   [17], [#rich((("t", "Recount the test numbers for slide 25 on 25 Oct"),), size: 9pt)], [#text(9pt, "Liu Jin")], [25],
 )
 
