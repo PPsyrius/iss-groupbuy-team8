@@ -219,7 +219,7 @@ Two owner changes were made after Sprint Planning on 2026-10-12, both recorded o
 
 | Date | Item | Change | Hours effect | Source |
 |---|---|---|---|---|
-| 2026-10-13 | P11 remote identity check (#468) | Owner @EricWang1358 to @l0sgAi, to rebalance Sprint 4 load; scope, dates and reviewer (@Yorick-Yu) unchanged. Delivered by PR #479 (`afec4e83`, merged 2026-10-13); issue closed 2026-10-14. | @EricWang1358 -15 h, @l0sgAi +15 h | [#468 comment](https://github.com/PPsyrius/iss-groupbuy-team8/issues/468#issuecomment-6137411205); [#479](https://github.com/PPsyrius/iss-groupbuy-team8/pull/479); [day log 2026-10-13](log/2026-10-13.md); [handoff B3 row](../../swe5001/HANDOFF.md) |
+| 2026-10-13 | P11 remote identity check (#468) | Owner @EricWang1358 to @l0sgAi, to rebalance Sprint 4 load; scope and due date unchanged. Delivered by PR #479 (`afec4e83`, merged 2026-10-13), approved by @PPsyrius rather than the planned reviewer @Yorick-Yu; issue closed 2026-10-14. | @EricWang1358 -15 h, @l0sgAi +15 h | [#468 comment](https://github.com/PPsyrius/iss-groupbuy-team8/issues/468#issuecomment-6137411205); [#479](https://github.com/PPsyrius/iss-groupbuy-team8/pull/479); [day log 2026-10-13](log/2026-10-13.md); [handoff B3 row](../../swe5001/HANDOFF.md) |
 | 2026-10-15 | P5 k6 scripts and V2/V3/V4 runs (#458) | Owner @EricWang1358 to @PPsyrius, who commented "I'm taking this over since I need this for #457". He delivered the first tooling slice in PR #506 (`767d980b`, merged 2026-10-16); PR #518 (`552a6d08`, merged 2026-10-16) recorded the V2 baseline and dashboard session. Issue #458 is still open and lists both as assignees. | @EricWang1358 -5 h, @PPsyrius +5 h | [#458 comment](https://github.com/PPsyrius/iss-groupbuy-team8/issues/458#issuecomment-6195951428); [#506](https://github.com/PPsyrius/iss-groupbuy-team8/pull/506); [#518](https://github.com/PPsyrius/iss-groupbuy-team8/pull/518); [day log 2026-10-16](log/2026-10-16.md) |
 
 Hours per member (total 224.5 h):
@@ -235,9 +235,20 @@ Hours per member (total 224.5 h):
 
 Sources: issues #458, #465 and #468; PRs #479, #506 and #518; the day logs linked in the table. The #458 reassignment is recorded only in the issue comment; nothing else in the repository mentions it.
 
-### To confirm (TODO, @EricWang1358 settles)
+### Open points, settled on 2026-10-25
 
-- [ ] Whether the reviewers and due dates of P5 (#458, reviewer @Yorick-Yu, V2 10-15 and V3/V4 10-19) and P11 (#468, reviewer @Yorick-Yu, 10-16) stand after the owner changes.
-- [ ] That the board cards and the container issue #465 show the same owners and hours as this file; #458 still lists both @PPsyrius and @EricWang1358 as assignees.
-- [ ] How the 6 h of P12 (#469) are split between @Yorick-Yu and @l0sgAi, who paired on it and merged it in PR #490; the figures above leave all 6 h with @Yorick-Yu.
-- [ ] The outcome of the 2026-10-15 mid-sprint check and the identity go/no-go (§6 item 5), and what Sprint Planning changed relative to the draft in §5 to §9.
+1. **Reviewers and due dates of P5 and P11.** §5 keeps the planned reviewers and dates; what happened is recorded here.
+   - P11 (#468) merged on 2026-10-13 (PR #479), three days before its 10-16 due date, approved by @PPsyrius.
+   - P5 (#458): the tooling merged on 2026-10-16 (PR #506, approved by @limjiechao). The V2 baseline was recorded the same day (PR #518, approved by @l0sgAi), one day after its 10-15 due date. The V3 run of 2026-10-19 is recorded in PR #555 but was not accepted, and V4 was not run, so #458 is carry-over.
+2. **Board and #465 in sync.** They are not.
+   - #465 was last edited on 2026-10-11, before Planning, and still shows the §5 draft.
+   - #458 lists both @PPsyrius and @EricWang1358; it should list @PPsyrius only.
+   - The board's Estimate field was never updated. None of the 47 cards that carry an estimate changed between the 2026-10-12 and 2026-10-24 snapshots in [`docs/agile/metrics/`](../metrics/).
+   - The Sprint 4 review (#619) therefore reconstructs remaining work from merge dates, not from the board.
+3. **P12's 6 h.** They stay with the planned owner, @Yorick-Yu.
+   - @l0sgAi paired on the work and opened PR #490, which carries commits from both.
+   - Card hours are planned, not actual, so the pairing is recorded here rather than split.
+4. **The 2026-10-15 mid-sprint check, the identity go/no-go, and what Planning changed.** None of these has a record.
+   - The 2026-10-15 day log and #465 (no comments) do not mention the check, and no Planning minutes exist.
+   - The go/no-go had nothing left to gate: #467, #468 and #469 had merged by 2026-10-14 (PRs #474, #479, #490).
+   - The §5 table is therefore the plan of record, changed only by the two amendments above.
