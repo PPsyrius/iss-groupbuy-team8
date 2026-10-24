@@ -1,9 +1,11 @@
 """Opt-in ZAP 2.17 smoke tests against a disposable loopback app, never the deployed site."""
 
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import socket
 import subprocess
 import tempfile
@@ -11,11 +13,25 @@ import threading
 import unittest
 from urllib.parse import parse_qs, urlsplit
 
+from dast_baseline_test import BETA_ADDON, BETA_SHA256
 from dast_traffic_test import HTML, PRODUCT, module, page
 
 
-@unittest.skipUnless(os.environ.get("DAST_ZAP_HOME"), "Set DAST_ZAP_HOME to a local ZAP 2.17.0 bundle")
+@unittest.skipUnless(os.environ.get("DAST_ZAP_HOME"), "Set DAST_ZAP_HOME to request native runtime checks")
 class DastRuntimeTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        if not os.environ.get("DAST_ZAP_ADDON"):
+            raise RuntimeError("DAST_ZAP_ADDON is required when DAST_ZAP_HOME is set")
+        cls.addon = Path(os.environ["DAST_ZAP_ADDON"]).expanduser().resolve()
+        if not cls.addon.is_file():
+            raise RuntimeError("DAST_ZAP_ADDON must name an existing file")
+        if hashlib.sha256(cls.addon.read_bytes()).hexdigest() != BETA_SHA256:
+            raise RuntimeError("DAST_ZAP_ADDON does not match the pinned SHA-256")
+        cls.zap = Path(os.environ["DAST_ZAP_HOME"]).expanduser().resolve()
+        if not (cls.zap / "zap-2.17.0.jar").is_file():
+            raise RuntimeError("DAST_ZAP_HOME must contain zap-2.17.0.jar")
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="dast-runtime-", dir=os.environ.get("DAST_TEST_TMP"))
         self.addCleanup(self.temp.cleanup)
@@ -99,14 +115,15 @@ class DastRuntimeTest(unittest.TestCase):
             sock.bind(("127.0.0.1", 0))
             port = sock.getsockname()[1]
         home = self.directory / "zap-state"
-        home.mkdir()
-        zap = Path(os.environ["DAST_ZAP_HOME"]).expanduser().resolve()
-        command = ["java", "-Xmx512m", "-Djava.awt.headless=true", "-jar", str(zap / "zap-2.17.0.jar"),
-                   "-cmd", "-dir", str(home), "-host", "127.0.0.1", "-port", str(port),
-                   "-addoninstall", "pscanrulesBeta", "-autorun", str(plan_path)]
+        plugins = home / "plugin"
+        plugins.mkdir(parents=True)
+        shutil.copyfile(self.addon, plugins / BETA_ADDON)
+        command = ["java", "-Xmx512m", "-Djava.awt.headless=true", "-jar", str(self.zap / "zap-2.17.0.jar"),
+                   "-cmd", "-silent", "-dir", str(home), "-host", "127.0.0.1", "-port", str(port),
+                   "-autorun", str(plan_path)]
         log_path = self.directory / "zap-console.log"
         with log_path.open("w", encoding="utf-8") as log:
-            completed = subprocess.run(command, cwd=zap, stdout=log, stderr=subprocess.STDOUT, timeout=180)
+            completed = subprocess.run(command, cwd=self.zap, stdout=log, stderr=subprocess.STDOUT, timeout=180)
         self.assertEqual(completed.returncode, 0, log_path.read_text(encoding="utf-8")[-10000:])
         result = module.verify(self.output, "success")
         self.assertTrue(all(method == "GET" and not path.startswith("/api/v1/auth/")

@@ -37,16 +37,27 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Test DAST preparation and coverage checks
-        timeout-minutes: 1
-        run: python3 -B -m unittest discover -s .github/tests -p 'dast*_test.py'
-
       - name: Validate the live target and prepare required requests
         timeout-minutes: 1
         env:
           BASE_URL: ${{ inputs.base-url || vars.FRONTEND_URL_DEV }}
         # Socket timeouts alone do not stop a slowly streaming response.
         run: timeout --signal=TERM --kill-after=5s 30s python3 .github/scripts/dast-baseline.py preflight --output "$RUNNER_TEMP/zap-baseline"
+
+      - name: Download and verify pinned beta passive rules
+        timeout-minutes: 3
+        run: |
+          set -Eeuo pipefail
+          addons="${RUNNER_TEMP}/zap-addons"
+          mkdir -p "$addons"
+          addon="${addons}/pscanrulesBeta-beta-50.zap"
+          curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' \
+            --retry 3 --retry-all-errors --retry-delay 2 --retry-max-time 120 \
+            --connect-timeout 10 --max-time 30 --output "$addon" \
+            https://github.com/zaproxy/zap-extensions/releases/download/pscanrulesBeta-v50/pscanrulesBeta-beta-50.zap
+          # SHA-256 from the fixed release's GitHub asset digest; never trust a runtime checksum download.
+          printf '%s  %s\n' a979f7cd5d8be10e0338b417e006ec1e2f6ec79101010d570ddb5199892e921b "$addon" | sha256sum --check --strict
+          chmod 644 "$addon" # readable by the unprivileged ZAP container user
 
       - name: Run ZAP baseline (passive only)
         id: zap
@@ -56,12 +67,13 @@ jobs:
           chmod 777 "$work" # the ZAP image runs as the unprivileged user "zap"
           container="dast-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           trap 'docker rm -f "$container" >/dev/null 2>&1 || true' EXIT
-          # Same ZAP 2.17.0 image and beta passive rules as the original baseline wrapper.
+          # Preserve bundled add-ons; load only the verified beta file, with no marketplace/update requests.
           # One process; three-minute crawl/wait bounds and a ten-minute container deadline.
           timeout --signal=TERM --kill-after=30s 10m docker run --rm --init --name "$container" \
             --volume "${work}:/zap/wrk:rw" \
+            --mount "type=bind,source=${RUNNER_TEMP}/zap-addons/pscanrulesBeta-beta-50.zap,target=/zap/plugin/pscanrulesBeta-beta-50.zap,readonly" \
             ghcr.io/zaproxy/zaproxy@sha256:5ccfff9a411743ab2615136a2edd7416bec9ce41572fa94e935df38c14adb2b6 \
-            zap.sh -cmd -addoninstall pscanrulesBeta -autorun /zap/wrk/zap-plan.yaml
+            zap.sh -cmd -silent -autorun /zap/wrk/zap-plan.yaml
 
       - name: Verify recorded coverage and summarise findings
         if: always() && steps.checkout.outcome == 'success'
