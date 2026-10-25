@@ -1,5 +1,6 @@
 package com.blocbuy.bootstrap.identity;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.startsWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -103,6 +104,11 @@ class InternalUserControllerTest {
 
     private static final UUID OTHER = UUID.fromString("a0000000-0000-7000-8000-000000000002");
     private static final String BATCH = "/internal/users/public-nicknames";
+
+    @Test
+    void nicknameReplyPreservesMissingMapForRemoteValidation() {
+        assertThat(new InternalUserController.PublicNicknamesView(null).nicknames()).isNull();
+    }
 
     @Test
     void theBatchLookupAnswersOnlyShowableNicknames() throws Exception {
