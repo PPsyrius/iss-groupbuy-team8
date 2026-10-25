@@ -139,7 +139,7 @@ const s3 = () => `
 const status4 = [
   ['Delivered', 'ok', 'UC1–UC9', 'All nine closed as completed', '#24–#32'],
   ['Open', 'open', 'Crash recovery on dev not shown', 'Paid start, join and refund shown on dev 23–24 Oct', '#664 · #657 · #224 · #590 · #517'],
-  ['Dropped', 'drop', 'Gated prod, ECS circuit breaker', 'For SWE5006; built for SWE5001', '#226 · ADR 0008'],
+  ['Dropped', 'drop', 'Separate SWE5006 prod stack', 'Prod is the shared SWE5001 release', '#226 · #534 · #574'],
   ['Partial', 'part', 'E2E, burndown, saved plans', 'Stubs; daily data, no chart; manual', 'F-ADR 0011 · #229'],
 ];
 const changed4 = [
@@ -208,7 +208,7 @@ const spr = [
   ['1 · 1–12 Sep', 'Walking skeleton: sign-in, browse, admin on dev', '<b>integrated</b>: backend on dev 5 Sep; no frontend, so not releasable'],
   ['2 · 15–26 Sep', 'Pay, join a team, see the order, replay-safe', '<b>integrated</b>: merged, tested, Checkout off on dev; 134 of 150 h'],
   ['3 · 28 Sep–9 Oct', 'Invite → pay → refund on deployed dev', '<b>integrated</b>; goal not met under our “on dev” rule; 117 of 150 h'],
-  ['4 · 12–23 Oct', 'Complete system on dev; three services on ECS (SWE5001)', `<span${ref('PR #534 (17 Oct) · PR #574 · run 39435280952 · SSM /blocbuy/swe5001/release/* 20 Oct 22:32 SGT · PR #664 · #657 · #590')}><b>released</b>: SWE5001 production on ECS, 17 and 20 Oct, Stripe test mode, up per session; SWE5006 dev <b>releasable</b>: paid start, a second buyer’s join and the refund shown on dev, <span style="white-space:nowrap">23–24 Oct</span></span>`],
+  ['4 · 12–23 Oct', 'Complete system on dev; three services on ECS (SWE5001)', `<span${ref('PR #534 (17 Oct) · PR #574 · run 39435280952 · SSM /blocbuy/swe5001/release/* 20 Oct 22:32 SGT · PR #664 · #657 · #590')}><b>released</b>: production on ECS (shared SWE5001 release), 17 and 20 Oct, Stripe test mode, up per session; dev shows it working: paid start, a second buyer’s join and the refund shown on dev, <span style="white-space:nowrap">23–24 Oct</span></span>`],
 ];
 const retro = [
   ['1 → 2', 'No burndown, no hours', 'Daily board snapshots, dated day logs'],
@@ -683,14 +683,14 @@ ${tbl(['Stage', 'Control', 'Catches', 'Gap'], sec.map(r => [`<b style="white-spa
 
 // ---------- slide 26 (4.4) ----------
 const s31 = () => one('dev-deployment', 2320, 1096, [1164, 568], [
-  [0, 20, 'request path', 0, [['One environment', 'dev; the SWE5006 production stack was planned, never applied'], ['Request path', 'the browser talks only to CloudFront: files from a private bucket, API calls to the load balancer']]],
+  [0, 20, 'request path', 0, [['Two environments', 'dev, always on; prod is the SWE5001 release, per session'], ['Request path', 'the browser talks only to CloudFront: files from a private bucket, API calls to the load balancer']]],
   [940, 322, 'one host', 0, [['One host', 'the container runs by digest, beside PostgreSQL and Redis on loopback'], ['Trade-off', 'cheap and always on, but one point of failure']]],
-  [1160, 636, 'deploy path', 0, [['Approver', 'the code owner on the pull request; the merge releases'], ['Practice', 'every merge deploys automatically to dev, not production; SWE5001 production is Continuous Delivery'], ['Verified by', 'on-host health check with automatic rollback, public health, Playwright smoke']]],
-], { axis: 'x', ...WALK }) + `<span${ref('#226 · EPAT 07 CI p34–35 · deploy.sh:101-141')}></span>`;
+  [1160, 636, 'deploy path', 0, [['Approver', 'the code owner, on each PR to dev and on the promotion PR'], ['Practice', 'every merge deploys to dev; promotion to prod needs that approval (Continuous Delivery)'], ['Verified by', 'on-host health check with automatic rollback, public health, Playwright smoke']]],
+], { axis: 'x', ...WALK }) + `<span${ref('#226 · ruleset prod-release · EPAT 07 CI p34–35 · deploy.sh:101-141')}></span>`;
 
 // ---------- slide 27 (4.5) ----------
 const finds = [
-  ['Early dev deploys failed (5–17 Sep)', ['The hand-built environment drifted from its design', 'Old OIDC subject format, a placeholder instance ID, port 8589 open wide'], ['Fixed on dev by hand', 'The prod stack renders each value in Terraform, so a plan shows it', 'No dev deploy job failed from 18 Sep to 22 Oct 13:54 UTC'], 'docs/deploy/prod/backend-prod-terraform-deployment.md L15–23 · 121a0733 · docs/ci/dora-metrics-20261022.md (delivery proxy, PR #629)'],
+  ['Early dev deploys failed (5–17 Sep)', ['The hand-built environment drifted from its design', 'Old OIDC subject format, a placeholder instance ID, port 8589 open wide'], ['Fixed on dev by hand', 'The Terraform stack renders each value, so a plan shows it', 'No dev deploy job failed from 18 Sep to 22 Oct 13:54 UTC'], 'docs/deploy/prod/backend-prod-terraform-deployment.md L15–23 · 121a0733 · docs/ci/dora-metrics-20261022.md (delivery proxy, PR #629)'],
   ['build-quality red for two days (19–20 Oct)', ['Dependabot upgraded the SpotBugs engine without its Maven plugin'], ['Both now upgrade together', 'A POM policy test guards it', 'Resolved'], 'docs/ci/ci-failure-audit-20261021.md · PR #580'],
   ['Weekly full-history gitleaks failing (since 21 Sep)', ['20 matches were file digests in a contract baseline, not secrets'], ['Each digest re-hashed, then fingerprinted exactly', '4 badge-token findings still open'], 'docs/ci/ci-failure-audit-20261021.md · PR #580'],
 ];

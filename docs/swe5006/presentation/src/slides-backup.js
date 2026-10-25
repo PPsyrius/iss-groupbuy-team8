@@ -154,7 +154,7 @@ const b12 = () => dt(['Workflow · trigger', 'Jobs (required in blue)', 'Median'
   ['<b>rollback-backend</b> · manual', 'validate, then SSM rollback to the recorded previous digest or a given one', '—', 'never run'],
   ['<b>SWE5001</b> · prod branch', 'swe5001-release-gate, swe5001-deploy, infra-swe5001 (promotion PR; see the SWE5001 deck)', '—', '—'],
 ], { fs: 15, w: [190, 470, 220], pad: '6px 10px', m: quick(7) }) + `<div class="a" data-a="up" style="--d:${after(7)}ms;margin-top:8px;font:400 15px/1.4 Inter">Last 100 runs per workflow and event, read with <span class="mono" style="font-size:14.5px">gh run list</span> and the jobs API on 19 Oct. PR durations count only runs where the gated jobs ran (docs-only PRs skip them in about 10 s). Push medians run from the push run start, not the merge click.</div>`;
-const b13 = () => `<div class="dia a" data-a="fade" style="margin-top:-8px;--d:150ms">${fit('physical-deployment', 1130)}</div>${topo('SWE5001 prod: the same code on ECS, rebuilt from scratch on every release and destroyed after it. SWE5006 dev is slide 26.', 450)}`;
+const b13 = () => `<div class="dia a" data-a="fade" style="margin-top:-8px;--d:150ms">${fit('physical-deployment', 1130)}</div>${topo('Production: the same code on ECS, rebuilt on every release and destroyed after it. Dev is slide 26.', 450)}`;
 const b14 = () => dt(['Gap', 'Effect', 'Status'], [
   ['CloudFront → ALB over HTTP', '/api payloads and the origin header cross the AWS network unencrypted', 'NFR-37 TLS still unmet; accepted risk on dev until 16 Nov (#227, NFR register); fix needs an origin hostname and ACM'],
   ['SSH open to the internet', 'port 22 from 0.0.0.0/0 on the dev host, which has a public IP; SSM sessions make it unnecessary', 'AWS read-only check, 21 Oct; open item 9'],
@@ -209,7 +209,7 @@ const b16 = () => `<div style="display:flex;gap:14px;align-items:stretch">
   ['Browse (list + detail)', '24 ms', '0'], ['JOIN intent, unpaid', '57 ms', '0'], ['My Orders', '18 ms', '0'],
  ], { fs: 15, pad: '4px 8px' })}<div style="font:400 15px/1.35 Inter;margin-top:8px">30 paid teams expired within 58 s of their deadlines under that load. One laptop with real HTTP, PostgreSQL and Redis; <b>not a deployed result</b>.</div>`, 'var(--orange-d)', 310)}
 </div>
-<div ${A('up', 560, 'margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter;')}><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out exists only in the SWE5001 topology and is not claimed for SWE5006.</div>
+<div ${A('up', 560, 'margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter;')}><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out exists only in the production topology on ECS and is not claimed as tested.</div>
 <div ${A('up', 680, 'margin-top:8px;font:italic 400 14.5px/1.35 Inter;color:var(--muted);')}>Sources: docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md (V2, scaling policy); docs/swe5001/evidence/20261019-v3-autoscaling/README.md (V3); docs/perf/sprint3-baseline.md (local workload).</div>`;
 
 // ---- §2 full diagrams (rubric G8, V1, V6): vector, so zoom in the browser or the PDF ----
@@ -260,7 +260,7 @@ const FULL = [
   ['template-method-outbox', 'Template Method: outbox transports', 'B19'], ['strategy-pricing', 'Strategy: pricing', 'B20'],
   ['state-before', 'Listing lifecycle before State (brute force)', 17], ['state-after', 'Listing lifecycle after State', 18],
   ['core-erd', 'Core schema', 19], ['cicd-pr-vs-merge', 'CI/CD in detail: every step, trigger and path filter', 24], ['dev-deployment', 'Dev deployment', 26],
-  ['expiry-refund-sequence', 'Expiry and refund sequence (ECS)', 'B5'], ['physical-deployment', 'SWE5001 production topology', 'B10'],
+  ['expiry-refund-sequence', 'Expiry and refund sequence (ECS)', 'B5'], ['physical-deployment', 'Production topology (SWE5001 release)', 'B10'],
   ['listing-statechart', 'UC9 listing statechart', 'B13'], ['full-erd', 'Entity-relationship diagram, all tables', 'B16'],
 ];
 const viewBox = name => svg(name).match(/viewBox="[\d.]+ [\d.]+ ([\d.]+) ([\d.]+)"/).slice(1).map(Number);
@@ -353,7 +353,7 @@ function list() {
   B.push({ id: 'B7', title: 'Test inventory', speaker: 'Liu Jin', body: b10() });
   B.push({ id: 'B8', title: 'Workflows, required checks and timings', speaker: 'Pan', body: b12() });
   B.push({ id: 'B9', title: 'Known gaps and limitations', speaker: 'Pan', body: b14() });
-  B.push({ id: 'B10', title: 'SWE5001 production topology', speaker: 'Pan', body: b13() });
+  B.push({ id: 'B10', title: 'Production topology (SWE5001 release)', speaker: 'Pan', body: b13() });
   B.push({ id: 'B11', title: 'Stripe Sandbox refund, local evidence (20 Sep)', speaker: 'Yorik', body: b15() });
   B.push({ id: 'B12', title: 'Scale-out and load results (SWE5001 ECS + local baseline)', speaker: 'Yorik', body: b16() });
   B.push({ id: 'B13', title: 'UC9 listing statechart', speaker: 'Liu Jin', body: bLs() });
