@@ -393,7 +393,6 @@ const OPEN_ITEMS = [
   [14, 'Live demo change decided 24 Oct: home page heading “Buy better together” → “Buy better, together”, author Pan, approver Lim; frontend only; Pan rebases the branch onto the final dev after the 15:00 freeze and opens the PR at ≈ 15:30, so its checks finish before the talk', 'Pan, Lim', '28'],
   [17, 'Recount the test numbers for slide 20 on 25 Oct', 'Liu Jin', '20'],
   [18, 'Reconcile frontend ADR 0004 and the EC2 operator guide with the post-merge rebuild in ci-frontend.yml and ci-backend.yml', 'Pan, Lim', '23, 24'],
-  [21, 'Sprint 4 placement wording changed on 25 Oct (released: the shared SWE5001 production release; shown on dev): needs a dated re-agreement comment on #619 before merge', 'Lim', '7'],
   [20, 'System demo preconditions for 26 Oct: Checkout and scheduling on for dev (BLOCBUY_SCHEDULING_ENABLED, #223); the 16:05 US34-04 bloc started by the Joiner account; both Google accounts signed in on Eric’s machine; the 24 Oct receipts and the Filled bloc still on dev; the 24 Oct recording cued at D1’s Checkout form and at clip D2; the saved CI run of the D6 test pinned', 'Yorik, Eric', '29, 30'],
 ];
 
