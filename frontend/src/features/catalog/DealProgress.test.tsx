@@ -9,6 +9,14 @@ import { resetPageClockForTests } from "./page-clock";
 const now = Date.parse("2026-09-17T11:00:00+08:00");
 
 describe("DealProgress", () => {
+  it("uses only the progress bar rather than seat dots for a large bloc", () => {
+    const { container } = render(
+      <DealProgress deal={{ dealId: "large", currentSize: 30, targetSize: 100 }} />,
+    );
+    expect(screen.getByText("30 of 100 joined")).toBeVisible();
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuemax", "100");
+    expect(container.querySelector('ul[aria-hidden="true"]')).not.toBeInTheDocument();
+  });
   beforeEach(() => {
     resetPageClockForTests();
     vi.useFakeTimers();

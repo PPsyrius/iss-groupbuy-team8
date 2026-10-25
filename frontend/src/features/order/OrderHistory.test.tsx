@@ -40,8 +40,19 @@ const both = [rice, milk];
 const riceOnly = [rice];
 const milkOnly = [milk];
 const unpaidOnly = [unpaid];
+const archivedOnly = [
+  { orderId: "missing", productTitle: "Archived listing", totalAmount: "invalid" },
+];
 
 describe("OrderHistory", () => {
+  it("omits unavailable links, status, amount and order number", async () => {
+    await renderWithRouter(<OrderHistory orders={archivedOnly} />);
+    expect(screen.getByRole("heading", { name: "Archived listing" })).toBeVisible();
+    expect(screen.getByText("1 seat")).toBeVisible();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.queryByText(/S\$|Order |Paid/)).not.toBeInTheDocument();
+  });
+
   it("lists one row per order with the product linked to its listing", async () => {
     await renderWithRouter(<OrderHistory orders={both} />);
     const rows = within(screen.getByRole("list", { name: "My orders" })).getAllByRole("listitem");

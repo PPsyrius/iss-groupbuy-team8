@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, renderHook, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -9,6 +9,7 @@ import { OK_CODE } from "@/api/envelope";
 import { server } from "@/test/msw";
 
 import { ShareBlock } from "./ShareBlock";
+import { useShareActions } from "./use-share-invite";
 
 // Non-2xx envelopes reach the component as `ApiError` only through the production interceptor.
 installAuthInterceptor(new QueryClient());
@@ -74,11 +75,24 @@ afterEach(() => {
 });
 
 describe("ShareBlock", () => {
+  it("ignores copy and share requests before an invite URL is available", async () => {
+    const select = vi.fn<() => void>();
+    const { result } = renderHook(() => useShareActions(undefined, select));
+    await act(async () => {
+      await result.current.copy();
+      await result.current.share({ title: "Rice", text: "Join my bloc" });
+    });
+    expect(result.current.copyState).toBe("idle");
+    expect(select).not.toHaveBeenCalled();
+  });
   it("mints the invite once with the invite marker and shows the link and message", async () => {
     serveInvite();
     renderBlock();
-    const field = await screen.findByRole("textbox", { name: "Invite link" });
+    const field = await screen.findByRole<HTMLInputElement>("textbox", { name: "Invite link" });
     expect(field).toHaveValue(link.replace(/^https?:\/\//, ""));
+    const select = vi.spyOn(field, "select");
+    await userEvent.click(field);
+    expect(select).toHaveBeenCalled();
     expect(marker).toBe("invite");
     expect(mints).toBe(1);
     expect(screen.getByRole("heading", { name: "Share your bloc" })).toBeInTheDocument();

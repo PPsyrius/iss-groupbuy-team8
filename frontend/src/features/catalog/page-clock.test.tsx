@@ -16,6 +16,16 @@ const advance = (ms: number) => {
 };
 
 describe("page clock", () => {
+  it("can reset a running clock and tolerate the old subscriber's later cleanup", () => {
+    const row = render(<Probe />);
+    expect(vi.getTimerCount()).toBe(1);
+    resetPageClockForTests();
+    expect(vi.getTimerCount()).toBe(0);
+    row.unmount();
+    expect(vi.getTimerCount()).toBe(0);
+    render(<Probe />);
+    expect(vi.getTimerCount()).toBe(1);
+  });
   beforeEach(() => {
     resetPageClockForTests();
     vi.useFakeTimers();

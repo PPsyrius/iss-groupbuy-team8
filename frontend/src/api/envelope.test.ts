@@ -3,6 +3,11 @@ import { describe, expect, it } from "vitest";
 import { ApiError, conflictVersion, fieldViolations, unwrapResult } from "./envelope";
 
 describe("unwrapResult", () => {
+  it("supplies safe diagnostics when an error envelope omits code and message", () => {
+    expect(() => unwrapResult({})).toThrowError(
+      expect.objectContaining({ code: "UNKNOWN", message: "Request failed" }),
+    );
+  });
   it("returns data when code is OK", () => {
     expect(
       unwrapResult({ code: "COMMON_200_000", data: { loginId: "u1" }, message: "ok" }),

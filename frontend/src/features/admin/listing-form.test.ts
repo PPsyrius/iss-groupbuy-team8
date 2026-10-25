@@ -50,6 +50,9 @@ describe("toListingContent", () => {
 });
 
 describe("fromListing", () => {
+  it("uses empty form values when listing content is missing", () => {
+    expect(fromListing({})).toEqual({ ...emptyListingForm, images: [] });
+  });
   const dto: AdminListingResponse = {
     id: "p1",
     productNo: "BB-100481",

@@ -121,6 +121,32 @@ describe("BlocRow", () => {
     );
     expect(container.querySelector("img")).toHaveAttribute("src", "https://example.test/rice.jpg");
   });
+
+  it.each(["open", "expired"])(
+    "handles missing sizes and invalid price and paid time for %s blocs",
+    async (status) => {
+      await renderWithRouter(
+        <BlocRow
+          team={{
+            status,
+            productTitle: "Partial listing",
+            dealPrice: "invalid",
+            joinTime: "invalid",
+          }}
+        />,
+      );
+      expect(
+        screen.getByText(status === "open" ? "0 of 1 joined" : "0 of 1 joined when it closed"),
+      ).toBeVisible();
+      expect(screen.queryByText(/S\$|Paid/)).not.toBeInTheDocument();
+      expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuemax", "1");
+    },
+  );
+
+  it("defaults a missing currency to SGD", async () => {
+    await renderWithRouter(<BlocRow team={{ dealPrice: "12.50" }} />);
+    expect(screen.getByText("S$12.50")).toBeVisible();
+  });
 });
 
 // UC7 (#30): an open row shares its bloc; the invite is minted only once the buyer asks.
@@ -192,6 +218,14 @@ describe("BlocRow share", () => {
       ),
     );
     expect(await screen.findByText("Invite link copied")).toBeInTheDocument();
+  });
+
+  it("shares a bloc without a currency using SGD", async () => {
+    const { currency: _currency, ...team } = rice;
+    await renderWithRouter(<BlocRow team={team} userId="u1" />);
+    await userEvent.click(screen.getByRole("button", { name: "Share invite link" }));
+    expect(await screen.findByRole("textbox", { name: "Invite link" })).toBeVisible();
+    expect(screen.getByText("S$71.00")).toBeVisible();
   });
 
   it.each([
