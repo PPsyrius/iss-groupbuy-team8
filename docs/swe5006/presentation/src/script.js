@@ -25,7 +25,7 @@ const rubricRows = ['1.1', '1.2', '1.3', '1.4', '1.5', '1.6', '1.7', '1.8', '2.1
 // Tips: the four "Presentation Tips" on page 2 of the guidelines (verbatim); none conflicts with page 1 (rubric open decision 1).
 const tips = [
   ['Summarize and highlight the significant achievements. Talk more about the significant and interesting parts of the solution and implementation. Your audience should remember the unique aspects of the solution and not similarities to other solutions.', 'Depth goes to what is unique: pay-first teams that refund themselves, money safety under concurrency and failure (UC4 design, statechart, design problems), and a pipeline from pull request to dev in minutes.'],
-  ['Manage your time well. Do not present too many slides. Remember that the audience can read the text in the slide so refrain from reading them.', '39 main slides in 34 minutes, two of them live demos; slots checked at 130 wpm in the table above; sample wording adds to the slide instead of reading it; details sit in backups B1–B16.'],
+  ['Manage your time well. Do not present too many slides. Remember that the audience can read the text in the slide so refrain from reading them.', '39 main slides in 33 minutes, two of them live demos; slots checked at 130 wpm in the table above; sample wording adds to the slide instead of reading it; details sit in backups B1–B16.'],
   ['Explain your design in top-down manner. Make sure that your audience understands the requirements, the high-level design and the high-level decisions that you make before drilling into some details.', 'Problem, scope and quality attributes first (slides 2–3); then architecture (9), transition strategies (10–12), use cases (13), one use case from analysis to design with its statechart (14–17), design problems (18–23), schema (24).'],
   ['Ensure that the contents on the slides are readable from the distance at which your audience is sitting. This is particular true for face-to-face presentation.', 'Rubric V1–V7: one idea per slide, diagrams cropped to the part discussed, labels checked on a projector or TV before 26 Oct.'],
 ];
@@ -33,7 +33,7 @@ const tips = [
 const cueWords = [
   ['1 MIN', 'One minute of talk left in this segment', 'Lim'],
   ['TIME', 'Stop; finish the sentence and hand over', 'Lim'],
-  ['Q: &lt;text&gt; → name', 'A question was parked; the named owner answers it in the buffer (17:04–17:10)', 'Lim'],
+  ['Q: &lt;text&gt; → name', 'A question was parked; the named owner answers it in the buffer (17:03–17:10)', 'Lim'],
   ['BEHIND n / AHEAD n', 'The talk is n seconds behind or ahead of the run sheet; the next speaker applies the trims', 'Lim'],
   ['SHARE', 'Next person: start screen sharing now', 'Lim'],
   ['CLIP n', 'Live step n failed; play the recording of step n', 'Pan or Yorik'],
@@ -43,8 +43,8 @@ const cueWords = [
 const handovers = C.SLIDES.filter((s, i) => i > 0 && s.speaker !== C.SLIDES[i - 1].speaker && s.slot !== null)
   .map(s => [String(s.n), `${C.SPEAKERS[C.SLIDES[s.n - 2].speaker].full} → ${C.SPEAKERS[s.speaker].full}`]);
 
-const runSheetHtml = runSheet(`<p>34 minutes scripted, 16:30–17:04; the 6 minutes to 17:10 are the buffer for questions asked during the talk (rubric G1–G3). §1 runs 3 minutes and §2 6 minutes so that each member presents their own design problem (rubric G4, time budget).</p>
-${box('warn', 'Interruption policy', `<ul style="margin:0;padding-left:12pt"><li>A lecturer may ask at any moment. The current speaker answers in <b>one or two sentences</b> (decision → reason → evidence or limitation), says “back to …” and continues from the same slide.</li><li>If the owner is someone else, the speaker says so and Lim posts <code>Q: &lt;question&gt; → owner</code> in the backchannel; parked questions are answered first in the buffer.</li><li>Hard checkpoints: 16:33 Eric, 16:39 Liu Jin, 16:42 Pan, 16:52 Yorik.</li></ul>`)}
+const runSheetHtml = runSheet(`<p>33 minutes scripted, 16:30–17:03, at the lower end of every course range (ruling of 25 Oct, after the rehearsal ran 47 minutes); a 2-minute buffer to 17:05, then questions to the 17:10 hard stop (rubric G1–G3). Time each section separately at the next rehearsal.</p>
+${box('warn', 'Interruption policy', `<ul style="margin:0;padding-left:12pt"><li>A lecturer may ask at any moment. The current speaker answers in <b>one or two sentences</b> (decision → reason → evidence or limitation), says “back to …” and continues from the same slide.</li><li>If the owner is someone else, the speaker says so and Lim posts <code>Q: &lt;question&gt; → owner</code> in the backchannel; parked questions are answered first in the buffer.</li><li>Hard checkpoints: 16:33 Eric, 16:38 Liu Jin, 16:41 Pan, 16:51 Yorik.</li></ul>`)}
 <h2>Handovers (rubric G4: rehearse each one)</h2>
 ${tbl(['From slide', 'Speakers'], handovers)}
 <h2>Every guideline item has slides and a speaker</h2>
@@ -65,26 +65,26 @@ const demoCard = d => `<div class="card demo"><div class="hd"><span>Step ${d.n} 
  <div class="row"><span class="lab fb">Fallback</span><span>${mh(d.fb)}</span></div></div></div>`;
 
 // ---------- segment 4: CI/CD pipeline demo (rubric 4.1–4.6) ----------
-// Slides 27–32 run 16:42:00–16:46:30; the live part (slide 33) runs 16:46:30–16:52:00 (330 s).
+// Slides 27–32 run 16:41:00–16:45:30; the live part (slide 33) runs 16:45:30–16:51:00 (330 s).
 const pipeSteps = C.DEMOS[33];
 
 const seg4Html = () => {
   const s4 = seg(4);
   return `<section class="chap"><h1>4 ${esc(s4.name)} (${s4.talk} minutes)</h1>
-<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:42:00 – 16:52:00 (slides 27–32 until 16:46:30, then the live pipeline demo on slide 33 until 16:52:00)</td></tr><tr><td>Owner</td><td>${esc(s4.owner)}; Lim approves as the frontend code owner</td></tr><tr><td>Slides</td><td>${C.SLIDES.filter(s => s.seg === 4).map(s => s.n).join(', ')}</td></tr></table></div>
+<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:41:00 – 16:51:00 (slides 27–32 until 16:45:30, then the live pipeline demo on slide 33 until 16:51:00)</td></tr><tr><td>Owner</td><td>${esc(s4.owner)}; Lim approves as the frontend code owner</td></tr><tr><td>Slides</td><td>${C.SLIDES.filter(s => s.seg === 4).map(s => s.n).join(', ')}</td></tr></table></div>
 ${reqBox(s4)}
 ${box('tip', 'Tip', 'Slides 27–32 take 270 s, each slide one topic, each concept explained once. The live demo is frontend only: Pan opens the demo pull request at ≈ 15:30 on the final dev, so its checks (median 4.8 min) finish before the talk. A backend change cannot finish its 16-minute PR checks inside the segment, so the demo shows a backend PR run and its deploy run that finished earlier, said as earlier runs (rubric 4.1).')}
 ${C.SLIDES.filter(s => s.seg === 4).map(slideCard).join('')}
-<h2>Live pipeline demo (16:46:30 – 16:52:00, 330 s)</h2>
+<h2>Live pipeline demo (16:45:30 – 16:51:00, 330 s)</h2>
 ${tbl(['Step', 'Shows', 'Rubric'], pipeSteps.map(d => [d.n, esc(d.t), d.proves.split(' · ')[0]]))}
 <h3>Preconditions (checked at 15:30 by Pan)</h3>
 <ul><li>Demo branch (frontend only): the home page heading “Buy better together” → “Buy better, together” (one line, frontend/src/routes/index.tsx:114; no test asserts it; decided 24 Oct), author Pan, approver Lim (frontend code owner). After the 15:00 merge freeze, Pan rebases it onto the final <code>origin/dev</code>, pushes it and opens the PR at ≈ 15:30; its checks finish by ≈ 15:40. Lim does not approve before P2.</li>
 <li>Merge freeze in the team chat: nobody merges into <code>dev</code> from 15:00 to 17:15 except the demo PR, on air. A moved <code>dev</code> makes the demo branch out of date and re-runs its checks (strict required checks); if that happens before 16:00, rebase and re-push, after 16:00 leave it and use <code>CLIP P3</code>.</li>
 <li>Backend evidence, pinned in tabs 3 and 4: the latest green <code>ci-backend</code> pull-request run and the <code>ci-backend</code> push run on <code>dev</code> that deployed that change, both finished before the talk; they are said as earlier runs, never as this change.</li>
 <li>Latest <code>ci-frontend</code> and <code>ci-backend</code> runs on <code>dev</code> green (A.1); deploy switches <code>ENABLE_S3_DEPLOY</code> and <code>ENABLE_EC2_DEPLOY</code> unchanged; GitHub Actions budget not exhausted (a budget stop hit run 39442654274 on 20 Oct).</li>
-<li>Lim signed in to GitHub on his own machine with the PR list open; he is not sharing at 16:47.</li>
+<li>Lim signed in to GitHub on his own machine with the PR list open; he is not sharing at 16:46.</li>
 <li>Backup video (rubric G6, 4.6): <code>swe5006-ci-cd.mp4</code>, recorded on dev on Sat 24 Oct (4 min 18 s): finished <code>ci-frontend</code> and <code>ci-backend</code> runs with their job graphs, a merged PR, the <code>e2e-dev</code> smoke log and the dev site. It shows typical finished runs, not the live heading change, so say so if it is played. Shared in the team chat; open in a player on Pan’s machine and tested with Zoom “share sound” off. Never present it as the current live result.</li></ul>
-<h3>Screen layout (Pan’s browser window, shared from 16:46:30; browser zoom 125–150 %, rubric V7)</h3>
+<h3>Screen layout (Pan’s browser window, shared from 16:45:30; browser zoom 125–150 %, rubric V7)</h3>
 ${tbl(['Tab', 'Content', 'Prepared state'], [
   ['1', 'GitHub: the demo pull request', 'Opened ≈ 15:30, checks finished; Files changed tab ready'],
   ['2', 'GitHub Actions: <code>ci-frontend</code> filtered to branch <code>dev</code>', 'Refresh after the merge to see the new run'],
@@ -95,14 +95,14 @@ ${tbl(['Tab', 'Content', 'Prepared state'], [
 ])}
 <h3>Step by step</h3>
 ${pipeSteps.map(demoCard).join('')}
-${box('warn', 'Never live', 'Clicking Merge on anything other than the demo PR; “Update branch” on the demo PR; re-running a failed job; running <code>rollback-backend.yml</code> or any <code>workflow_dispatch</code>; opening Settings → Secrets and variables or the ruleset editor; pushing to <code>dev</code>; any AWS console or SSM session on the shared screen. If the PR is not merged by 16:49, leave it open and merge after 17:15, so a deploy never lands during the system demo.')}
+${box('warn', 'Never live', 'Clicking Merge on anything other than the demo PR; “Update branch” on the demo PR; re-running a failed job; running <code>rollback-backend.yml</code> or any <code>workflow_dispatch</code>; opening Settings → Secrets and variables or the ruleset editor; pushing to <code>dev</code>; any AWS console or SSM session on the shared screen. If the PR is not merged by 16:48, leave it open and merge after 17:15, so a deploy never lands during the system demo.')}
 ${box('tip', 'Tip', 'Narrate results, not clicks: “checks green in four minutes fifty”, not “now I click the checks tab”. No troubleshooting on air.')}
 ${qaTable(4)}
 </section>`;
 };
 
 // ---------- segment 5: system demo (rubric 5.1–5.5) ----------
-// Slide 34 16:52:00–16:52:30; live demo (slide 35) 16:52:30–17:01:00 (510 s); slides 36–38 17:01:00–17:04:00.
+// Slide 34 16:51:00–16:51:30; live demo (slide 35) 16:51:30–17:00:00 (510 s); slides 36–38 17:00:00–17:03:00.
 // Eric shares one screen with two Chrome profiles and operates; Yorik speaks. US34-04 is a team of two with the
 // shortest allowed window (2,400 s = PurchaseQuoteWindow.SECONDS; scripts/dev-demo-listings.json).
 const demoSteps = C.DEMOS[35];
@@ -110,9 +110,9 @@ const demoSteps = C.DEMOS[35];
 const seg5Html = () => {
   const s5 = seg(5);
   return `<section class="chap"><h1>5 ${esc(s5.name)} (${s5.talk} minutes, then ${s5.qa} minutes of buffer)</h1>
-<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:52:00 – 17:04:00 (slide 34 to 16:52:30; live demo on slide 35 to 17:01:00; slides 36–38 to 17:04:00) · 17:04–17:10 buffer for parked questions</td></tr><tr><td>Owner</td><td>${esc(s5.owner)}; Lim chairs the buffer</td></tr><tr><td>Slides</td><td>${C.SLIDES.filter(s => s.seg === 5).map(s => s.n).join(', ')}</td></tr></table></div>
+<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:51:00 – 17:03:00 (slide 34 to 16:51:30; live demo on slide 35 to 17:00:00; slides 36–38 to 17:03:00) · 17:03–17:10 buffer for parked questions</td></tr><tr><td>Owner</td><td>${esc(s5.owner)}; Lim chairs the buffer</td></tr><tr><td>Slides</td><td>${C.SLIDES.filter(s => s.seg === 5).map(s => s.n).join(', ')}</td></tr></table></div>
 ${reqBox(s5)}
-${box('tip', 'Tip', 'Eric shares one screen at 16:52:00 (<code>SHARE</code> from Pan) with the deck in the Leader window, tab 1, and operates every window; Yorik speaks throughout. The expiry bloc is started at 16:05 so that D4 shows a refund that no one triggered by hand.')}
+${box('tip', 'Tip', 'Eric shares one screen at 16:51:00 (<code>SHARE</code> from Pan) with the deck in the Leader window, tab 1, and operates every window; Yorik speaks throughout. The expiry bloc is started at 16:05 so that D4 shows a refund that no one triggered by hand.')}
 ${slideCard(C.SLIDES.find(s => s.n === 34))}
 <h2>How each step is shown (25 Oct rehearsal; no payment on air)</h2>
 ${tbl(['Step', 'Shown from', 'If it fails'], [
@@ -127,7 +127,7 @@ ${box('warn', 'Watch out', 'Yorik’s GO of 25 Oct (#605) covered a live START a
 <h2>Preconditions (checked at 15:30 by Eric and Yorik)</h2>
 <ul><li>Health <code>UP</code> (A.1); latest runs on <code>dev</code> green; merge freeze in force; the §4 demo PR is the only change that may land.</li>
 <li>Two Google buyer accounts signed in on Eric’s machine in two Chrome profiles, “Leader”, shown as <b>wood kik</b>, and “Joiner”, shown as <b>los gai</b> (as in the 24 Oct backup recording); the same two on Yorik’s machine as standby. Neither needs admin: the listings check uses the public catalogue, and the Joiner must <b>not</b> hold the admin role, or D5’s 403 fails; Lim checks it at the 25 Oct rehearsal.</li>
-<li>At <b>≈ 16:05</b> (latest 16:07, so the refund lands before the 16:50 check and §5 starts at 16:52) Yorik, as account B, starts a bloc on <code>US34-04</code> and pays; nobody joins; receipt bookmarked in the Joiner window, tab 3. It is due ≈ 16:45; the sweep (every minute) expires it and the refund worker (every 30 s) refunds it ≈ 16:46–16:48. Post <code>EXPIRY OK</code> at 16:10 and <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.</li>
+<li>At <b>≈ 16:05</b> (latest 16:07, so the refund lands before the 16:50 check and §5 starts at 16:51) Yorik, as account B, starts a bloc on <code>US34-04</code> and pays; nobody joins; receipt bookmarked in the Joiner window, tab 3. It is due ≈ 16:45; the sweep (every minute) expires it and the refund worker (every 30 s) refunds it ≈ 16:46–16:48. Post <code>EXPIRY OK</code> at 16:10 and <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.</li>
 <li>Listings converged: <code>scripts/seed-dev-demo-listings.sh --check</code> passes for the four <code>US34-*</code> listings (≤ 12:00, Yorik).</li>
 <li>D5: the admin URL ready to paste; Joiner DevTools closed.</li>
 <li>D1–D3 sources: the Leader’s 24 Oct receipt open in Leader tab 3; the Joiner’s <code>/account</code> showing the 24 Oct bloc Filled and its order Confirmed in Joiner tab 2; the player cued at D1’s Checkout form and at clip D2.</li>
@@ -144,14 +144,14 @@ ${tbl(['Window · tab', 'Content', 'Prepared state'], [
   ['Joiner · 5', 'Receipt of the 16:05 payment', 'Bookmarked at 16:10; reload before D4'],
   ['Player', 'The 24 Oct recording', 'Cued at D1’s Checkout form, then clip D2'],
 ])}
-<h2>Live system demo (16:52:30 – 17:01:00, 510 s)</h2>
+<h2>Live system demo (16:51:30 – 17:00:00, 510 s)</h2>
 ${tbl(['Step', 'Shows', 'Rubric'], demoSteps.map(d => [d.n, esc(d.t), d.proves.split(' · ')[0]]))}
 ${slideCard(C.SLIDES.find(s => s.n === 35))}
 <h3>Step by step</h3>
 ${demoSteps.map(demoCard).join('')}
 ${box('warn', 'Never live', 'Editing any deadline, price or listing on shared dev; any SSM command, database client or AWS console on the shared screen; the Stripe dashboard (keys and webhook secrets live there); the DevTools Application or Network tab with cookies or headers visible; racing two buyers or replaying a webhook on dev; a second payment to “try again”; pointing k6 at dev.')}
 ${box('tip', 'Plan C', 'A step fails live and has no recording: show its local evidence (B11 for payment and refund, the D6 test for the race, B12 for load) and say: <i>“verified locally, not yet on dev.”</i> Never present a local result as a dev one.')}
-<h2>After the demo (17:01:00 – 17:04:00)</h2>
+<h2>After the demo (17:00:00 – 17:03:00)</h2>
 <h3>k6 pre-run for slide 36 (rubric 5.3)</h3>
 <ul><li>No pre-run (decided 24 Oct): slides 26 and 36 keep the 16 Oct ECS run (run 20261016-v2-monolith-repeat, #670); it is complete and evidenced, and a new run would need an ECS session for little gain.</li>
 <li>Slide 36’s table shows the 16 Oct run (#670). On the day the report file is opened from Eric’s machine if asked. Never point k6 at the SWE5006 dev host.</li></ul>
@@ -195,7 +195,7 @@ ${tbl(['Time (SGT)', 'Do', 'Owner'], [
   ['15:30', 'Demo branch rebased onto the final <code>origin/dev</code> and its PR opened (checks done by ≈ 15:40; no approval yet); pin the backend PR and deploy runs in tabs 3 and 4. Check the §4 and §5 preconditions lists.', 'Pan (§4); Eric, Yorik (§5)'],
   ['≈ 16:05 (≤ 16:07)', 'Start the expiry bloc on <code>US34-04</code> as account B and pay; bookmark the receipt. <code>EXPIRY OK</code> at 16:10, <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.', 'Yorik'],
   ['16:30', 'Start; follow the run sheet. All five note every lecturer question and remark verbatim (rubric G9).', 'Lim; all take notes'],
-  ['17:04 / 17:10', 'Slide 39; parked questions; end.', 'Lim'],
+  ['17:03 / 17:10', 'Slide 39; parked questions; end.', 'Lim'],
 ])}
 <h2>After the presentation</h2>
 <ul><li>After the talk: the five members collate their notes into one GitHub issue; every lecturer remark in it becomes a #463 report task by 27 Oct (rubric G9).</li><li>Day log under <code>docs/agile/sprint-04/log/</code>: the demo PR, run links and any payment or refund ids shown (no secrets).</li></ul>
