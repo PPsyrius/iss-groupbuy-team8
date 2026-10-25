@@ -7,6 +7,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import tools.jackson.databind.json.JsonMapper;
 
 class IntegrationEventContractTest {
@@ -143,8 +146,10 @@ class IntegrationEventContractTest {
                                         Instant.parse("2026-10-12T00:00:00Z")));
     }
 
-    @Test
-    void envelopeRejectsBlankEventTypeProducerAndTrace() {
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = " ")
+    void envelopeRejectsMissingOrBlankEventTypeProducerAndTrace(String invalid) {
         UUID id = id("1");
         var payload = new TeamSucceededV1(id, id, 2, List.of());
         Instant occurredAt = Instant.parse("2026-10-12T00:00:00Z");
@@ -153,7 +158,7 @@ class IntegrationEventContractTest {
                         () ->
                                 new IntegrationEventEnvelope<>(
                                         id,
-                                        " ",
+                                        invalid,
                                         1,
                                         occurredAt,
                                         "commerce-svc",
@@ -168,7 +173,7 @@ class IntegrationEventContractTest {
                                         "TeamSucceeded",
                                         1,
                                         occurredAt,
-                                        " ",
+                                        invalid,
                                         "trace",
                                         id,
                                         payload));
@@ -181,7 +186,7 @@ class IntegrationEventContractTest {
                                         1,
                                         occurredAt,
                                         "commerce-svc",
-                                        " ",
+                                        invalid,
                                         id,
                                         payload));
     }

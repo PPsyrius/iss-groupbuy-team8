@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 import com.blocbuy.groupbuy.model.ShareInvite;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -120,6 +121,9 @@ class RedisCachedShareInviteRepositoryTest {
                         INVITE.sharerUserId());
         String[] unusable = {
             "not-json",
+            "null",
+            json.writeValueAsString(new RedisCachedShareInviteRepository.Entry(1, null, future)),
+            json.writeValueAsString(new RedisCachedShareInviteRepository.Entry(1, INVITE, null)),
             json.writeValueAsString(new RedisCachedShareInviteRepository.Entry(2, INVITE, future)),
             json.writeValueAsString(new RedisCachedShareInviteRepository.Entry(1, foreign, future)),
             json.writeValueAsString(
@@ -130,7 +134,8 @@ class RedisCachedShareInviteRepositoryTest {
                 .thenReturn(
                         Optional.of(
                                 new ShareInviteRepositoryImpl.InviteWithDeadline(INVITE, future)));
-        when(values.get(KEY)).thenReturn(unusable[0], unusable[1], unusable[2], unusable[3]);
+        when(values.get(KEY))
+                .thenReturn(unusable[0], Arrays.copyOfRange(unusable, 1, unusable.length));
         for (String ignored : unusable) {
             assertThat(cache.findByRef(REF)).contains(INVITE);
         }

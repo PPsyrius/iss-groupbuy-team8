@@ -2,9 +2,15 @@ package com.blocbuy.notification.messaging;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -23,6 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,7 +41,11 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.stubbing.Answer;
 import org.slf4j.MDC;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -44,6 +58,7 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import tools.jackson.databind.json.JsonMapper;
 
+@Timeout(15)
 class SqsNotificationEventConsumerTest {
     private static final String QUEUE = "http://sqs.local/000000000000/notification-events";
     private static final JsonMapper JSON = JsonMapper.builder().build();
@@ -327,6 +342,287 @@ class SqsNotificationEventConsumerTest {
     }
 
     @Test
+    void unexpectedPollFailureBacksOffThenResumesConsumption() throws Exception {
+        consumer = spy(consumer);
+        doThrow(new IllegalStateException("unexpected poll failure"))
+                .doCallRealMethod()
+                .when(consumer)
+                .pollOnce();
+        when(handler.handle(any(), any())).thenReturn(ConsumeOutcome.APPLIED);
+        when(sqs.receiveMessage(any(ReceiveMessageRequest.class)))
+                .thenReturn(response(message("retry", "retry-handle", valid(), "t")))
+                .thenAnswer(call -> emptyLongPoll());
+        try {
+            consumer.start();
+            verify(sqs, timeout(5000)).deleteMessage(any(DeleteMessageRequest.class));
+            assertThat(consumer.isRunning()).isTrue();
+        } finally {
+            consumer.destroy();
+        }
+        verify(sqs).close();
+    }
+
+    @Test
+    void interruptingErrorBackoffExitsThePollerWithoutAnotherReceive() throws Exception {
+        consumer = consumer(1, Duration.ofSeconds(1), Duration.ofSeconds(30));
+        CountDownLatch receiving = new CountDownLatch(1);
+        AtomicReference<Thread> pollingThread = new AtomicReference<>();
+        when(sqs.receiveMessage(any(ReceiveMessageRequest.class)))
+                .thenAnswer(
+                        call -> {
+                            pollingThread.set(Thread.currentThread());
+                            receiving.countDown();
+                            throw SdkClientException.create("receive failed");
+                        });
+        try {
+            consumer.start();
+            assertThat(receiving.await(5, TimeUnit.SECONDS)).isTrue();
+            pollingThread.get().interrupt();
+            pollingThread.get().join(5000);
+            assertThat(pollingThread.get().isAlive()).isFalse();
+            verify(sqs).receiveMessage(any(ReceiveMessageRequest.class));
+            verifyNoInteractions(handler);
+        } finally {
+            consumer.destroy();
+        }
+        verify(sqs).close();
+    }
+
+    @Test
+    void rejectedDispatchReleasesTheMessageAndRestoresWorkerCapacity() throws Exception {
+        ExecutorService rejected = mock(ExecutorService.class);
+        doThrow(new RejectedExecutionException("pool stopped"))
+                .when(rejected)
+                .execute(any(Runnable.class));
+        when(rejected.awaitTermination(anyLong(), any(TimeUnit.class))).thenReturn(true);
+        when(sqs.receiveMessage(any(ReceiveMessageRequest.class)))
+                .thenReturn(response(message("rejected", "rejected-handle", valid(), "t")))
+                .thenAnswer(call -> emptyLongPoll());
+        try (var pools = mockStatic(Executors.class)) {
+            pools.when(() -> Executors.newFixedThreadPool(anyInt(), any(ThreadFactory.class)))
+                    .thenReturn(rejected);
+            try {
+                consumer.start();
+                ArgumentCaptor<ChangeMessageVisibilityBatchRequest> release =
+                        ArgumentCaptor.forClass(ChangeMessageVisibilityBatchRequest.class);
+                verify(sqs, timeout(5000)).changeMessageVisibilityBatch(release.capture());
+                assertThat(release.getValue().entries())
+                        .singleElement()
+                        .satisfies(
+                                entry -> {
+                                    assertThat(entry.receiptHandle()).isEqualTo("rejected-handle");
+                                    assertThat(entry.visibilityTimeout()).isZero();
+                                });
+                ArgumentCaptor<ReceiveMessageRequest> requests =
+                        ArgumentCaptor.forClass(ReceiveMessageRequest.class);
+                verify(sqs, timeout(5000).atLeast(2)).receiveMessage(requests.capture());
+                assertThat(requests.getAllValues())
+                        .allSatisfy(
+                                request -> assertThat(request.maxNumberOfMessages()).isEqualTo(2));
+                verifyNoInteractions(handler);
+            } finally {
+                consumer.destroy();
+            }
+        }
+    }
+
+    @Test
+    void shutdownReleasesAWorkerThatDoesNotExitOnInterruption() throws Exception {
+        consumer = consumer(1, Duration.ZERO);
+        CountDownLatch handling = new CountDownLatch(1);
+        CountDownLatch finish = new CountDownLatch(1);
+        CountDownLatch exited = new CountDownLatch(1);
+        when(handler.handle(any(), any()))
+                .thenAnswer(
+                        call -> {
+                            handling.countDown();
+                            try {
+                                awaitDespiteInterrupt(finish);
+                                throw new IllegalStateException("unfinished transaction");
+                            } finally {
+                                exited.countDown();
+                            }
+                        });
+        when(sqs.receiveMessage(any(ReceiveMessageRequest.class)))
+                .thenReturn(response(message("stuck", "stuck-handle", valid(), "t")))
+                .thenAnswer(call -> emptyLongPoll());
+        try {
+            consumer.start();
+            assertThat(handling.await(5, TimeUnit.SECONDS)).isTrue();
+            consumer.stop();
+            assertThat(consumer.isRunning()).isFalse();
+            assertThat(exited.getCount()).isOne();
+            verify(sqs)
+                    .changeMessageVisibilityBatch(any(ChangeMessageVisibilityBatchRequest.class));
+            verify(sqs, never()).deleteMessage(any(DeleteMessageRequest.class));
+        } finally {
+            finish.countDown();
+            consumer.destroy();
+            assertThat(exited.await(5, TimeUnit.SECONDS)).isTrue();
+        }
+    }
+
+    @Test
+    void interruptedDestroyPreservesTheInterruptAndClosesTheClient() throws Exception {
+        CountDownLatch handling = new CountDownLatch(1);
+        CountDownLatch finish = new CountDownLatch(1);
+        CountDownLatch polling = new CountDownLatch(1);
+        CountDownLatch returnPoll = new CountDownLatch(1);
+        AtomicBoolean pollReleased = new AtomicBoolean();
+        AtomicInteger receives = new AtomicInteger();
+        when(handler.handle(any(), any()))
+                .thenAnswer(
+                        call -> {
+                            handling.countDown();
+                            try {
+                                if (!finish.await(5, TimeUnit.SECONDS)) {
+                                    throw new IllegalStateException("test did not release worker");
+                                }
+                            } catch (InterruptedException exception) {
+                                Thread.currentThread().interrupt();
+                                throw new IllegalStateException(
+                                        "interrupted transaction", exception);
+                            }
+                            return ConsumeOutcome.APPLIED;
+                        });
+        when(sqs.receiveMessage(any(ReceiveMessageRequest.class)))
+                .thenAnswer(
+                        call -> {
+                            if (receives.incrementAndGet() == 1) {
+                                return response(message("closing", "closing-handle", valid(), "t"));
+                            }
+                            polling.countDown();
+                            pollReleased.set(returnPoll.await(5, TimeUnit.SECONDS));
+                            return response();
+                        });
+        AtomicBoolean interrupted = new AtomicBoolean();
+        Thread closer =
+                new Thread(
+                        () -> {
+                            Thread.currentThread().interrupt();
+                            consumer.destroy();
+                            interrupted.set(Thread.currentThread().isInterrupted());
+                        });
+        try {
+            consumer.start();
+            assertThat(handling.await(5, TimeUnit.SECONDS)).isTrue();
+            assertThat(polling.await(5, TimeUnit.SECONDS)).isTrue();
+            closer.start();
+            closer.join(5000);
+            assertThat(closer.isAlive()).isFalse();
+            assertThat(interrupted.get()).isTrue();
+            verify(sqs).close();
+            verify(sqs)
+                    .changeMessageVisibilityBatch(any(ChangeMessageVisibilityBatchRequest.class));
+        } finally {
+            finish.countDown();
+            returnPoll.countDown();
+            closer.join(5000);
+            consumer.destroy();
+        }
+        assertThat(pollReleased.get()).isTrue();
+    }
+
+    private static void awaitDespiteInterrupt(CountDownLatch latch) {
+        boolean interrupted = false;
+        try {
+            while (true) {
+                try {
+                    if (!latch.await(10, TimeUnit.SECONDS)) {
+                        throw new IllegalStateException("test worker was not released");
+                    }
+                    return;
+                } catch (InterruptedException expected) {
+                    interrupted = true;
+                }
+            }
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void stopDuringAnOutstandingPollFailureDoesNotRetry(boolean unexpected) throws Exception {
+        CountDownLatch polling = new CountDownLatch(1);
+        CountDownLatch failPoll = new CountDownLatch(1);
+        Answer<Object> failure =
+                call -> {
+                    polling.countDown();
+                    if (!failPoll.await(5, TimeUnit.SECONDS)) {
+                        throw new IllegalStateException("test did not release poll");
+                    }
+                    if (unexpected) {
+                        throw new IllegalStateException("unexpected poll failure");
+                    }
+                    throw SdkClientException.create("receive failed after stop");
+                };
+        if (unexpected) {
+            consumer = spy(consumer);
+            doAnswer(failure).when(consumer).pollOnce();
+        } else {
+            when(sqs.receiveMessage(any(ReceiveMessageRequest.class))).thenAnswer(failure);
+        }
+        try {
+            consumer.start();
+            assertThat(polling.await(5, TimeUnit.SECONDS)).isTrue();
+            consumer.stop();
+            failPoll.countDown();
+        } finally {
+            failPoll.countDown();
+            consumer.destroy();
+        }
+        if (unexpected) {
+            verify(consumer).pollOnce();
+        } else {
+            verify(sqs).receiveMessage(any(ReceiveMessageRequest.class));
+        }
+        verifyNoInteractions(handler);
+        verify(sqs).close();
+    }
+
+    @Test
+    void busyWorkersPreventAnotherReceiveUntilCapacityIsReturned() throws Exception {
+        consumer = consumer(1, Duration.ofSeconds(1));
+        CountDownLatch handling = new CountDownLatch(1);
+        CountDownLatch finish = new CountDownLatch(1);
+        CountDownLatch nextReceive = new CountDownLatch(1);
+        AtomicInteger receives = new AtomicInteger();
+        when(handler.handle(any(), any()))
+                .thenAnswer(
+                        call -> {
+                            handling.countDown();
+                            if (!finish.await(5, TimeUnit.SECONDS)) {
+                                throw new IllegalStateException("test did not release worker");
+                            }
+                            return ConsumeOutcome.APPLIED;
+                        });
+        when(sqs.receiveMessage(any(ReceiveMessageRequest.class)))
+                .thenAnswer(
+                        call -> {
+                            if (receives.incrementAndGet() == 1) {
+                                return response(message("busy", "busy-handle", valid(), "t"));
+                            }
+                            nextReceive.countDown();
+                            return emptyLongPoll();
+                        });
+        try {
+            consumer.start();
+            assertThat(handling.await(5, TimeUnit.SECONDS)).isTrue();
+            // Exceeds the 200 ms permit retry: a busy worker must not allow prefetch.
+            assertThat(nextReceive.await(350, TimeUnit.MILLISECONDS)).isFalse();
+            finish.countDown();
+            assertThat(nextReceive.await(5, TimeUnit.SECONDS)).isTrue();
+            verify(sqs, timeout(5000)).deleteMessage(any(DeleteMessageRequest.class));
+        } finally {
+            finish.countDown();
+            consumer.destroy();
+        }
+    }
+
+    @Test
     void traceIdsFollowTheHttpFilterRule() {
         assertThat(SqsNotificationEventConsumer.sanitize("Abc-1_2.z")).isEqualTo("Abc-1_2.z");
         assertThat(SqsNotificationEventConsumer.sanitize(null)).isNull();
@@ -343,6 +639,11 @@ class SqsNotificationEventConsumerTest {
     }
 
     private SqsNotificationEventConsumer consumer(int concurrency, Duration shutdownTimeout) {
+        return consumer(concurrency, shutdownTimeout, Duration.ofMillis(10));
+    }
+
+    private SqsNotificationEventConsumer consumer(
+            int concurrency, Duration shutdownTimeout, Duration errorBackoff) {
         return new SqsNotificationEventConsumer(
                 sqs,
                 QUEUE,
@@ -356,7 +657,7 @@ class SqsNotificationEventConsumerTest {
                         Duration.ofSeconds(1),
                         Duration.ofSeconds(30),
                         shutdownTimeout,
-                        Duration.ofMillis(10)));
+                        errorBackoff));
     }
 
     private List<String> deletedHandles() {
