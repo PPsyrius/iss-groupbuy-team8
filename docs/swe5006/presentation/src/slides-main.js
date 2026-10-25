@@ -297,7 +297,8 @@ const pc = v => `${(v * 100).toFixed(3)}%`;
 const outlines = (crops, W, H, od, os) => crops.map(c => `<div${od === undefined ? '' : ' class="a" data-a="fade"'} style="${od === undefined ? '' : `--d:${od + (c.k - 1) * os}ms;`}position:absolute;left:${pc(c.x / W)};top:${pc(c.y / H)};width:${pc(Math.min(1164, W - c.x) / W)};height:${pc(Math.min(CROP_H, H - c.y) / H)};border:2px dashed #E8402A;border-radius:3px;box-sizing:border-box"><span style="position:absolute;left:-2px;top:-2px;font:700 13px/1 Inter;background:#E8402A;color:#fff;padding:3px 6px;border-radius:3px 0 3px 0">${c.k}</span></div>`).join('');
 let paneN = 0;
 // pane: the whole diagram in a box of box[0] × box[1] px at `at`. Presenting, axis 'y' fills the box width and scrolls
-// vertically, axis 'x' fills its height and scrolls horizontally; otherwise the diagram is scaled to fit the box.
+// vertically, axis 'x' fills its height and scrolls horizontally, and axis 'fit' keeps the whole diagram in view;
+// otherwise (and always for 'fit') the diagram is scaled to fit the box.
 // Motion, all optional (Walked diagram): d = the pane's entrance delay, pa its data-a (default fade); od, os = the
 // outline rhythm (see outlines); fx = a transform of this pane's copy of the SVG markup only (never the crops).
 const pane = ({ name, W, H, box, at = 'left:0;top:0', axis = 'y', d, pa = 'fade', od, os, fx = x => x }, crops) => {
@@ -305,7 +306,7 @@ const pane = ({ name, W, H, box, at = 'left:0;top:0', axis = 'y', d, pa = 'fade'
   const pw = axis === 'y' ? box[0] : Math.round(W * box[1] / H), ph = axis === 'y' ? Math.round(H * box[0] / W) : box[1];
   const id = `pane${++paneN}`, other = axis === 'y' ? 'x' : 'y';
   return `<style>.${id}{width:${fw}px;height:${fh}px;overflow:hidden}.${id}>div{width:${fw}px;height:${fh}px}
-body.present .${id}{width:${Math.min(box[0], pw)}px;height:${Math.min(box[1], ph)}px;overflow-${axis}:auto;overflow-${other}:hidden}body.present .${id}>div{width:${pw}px;height:${ph}px}</style>
+${axis === 'fit' ? '' : `body.present .${id}{width:${Math.min(box[0], pw)}px;height:${Math.min(box[1], ph)}px;overflow-${axis}:auto;overflow-${other}:hidden}body.present .${id}>div{width:${pw}px;height:${ph}px}`}</style>
 <div class="${id}${d === undefined ? '' : ' a'}"${d === undefined ? '' : ` data-a="${pa}"`} style="position:absolute;${at};background:#fff;border-radius:6px;box-shadow:0 0 0 1.5px #DDD5C8${d === undefined ? '' : `;--d:${d}ms`}"><div style="position:relative">${fx(svg(name)).replace('<svg ', '<svg style="display:block;width:100%;height:100%" ')}${outlines(crops, W, H, od, os)}</div></div>`;
 };
 // Diagrams on a slide: each view is a pane; crops [name, x, y, label, head, caption] step through any of them 1:1 in
@@ -444,12 +445,14 @@ ${repTop('Report §3.4.1 · Eric (team statechart)')}`;
 // Each slot: the problem, what varies and the pattern beside the after-diagram; the other SDP fields (SDP 06 design
 // case study p10) move into the captions of its crops: crop 1 the class structure, crop 2 the collaboration.
 // GoF problem slide (MOTION.md): the points rise 150 / 230 / 310 and the pattern line lands last at 430; the pane fades
-// in at 250 and its outlines from 650, +70.
+// in at 250 and its outlines from 650, +70. The pane keeps the whole drawing in view while presenting too (axis 'fit'):
+// filling its width cut off the lower half of every one of these tall diagrams, and the crops and the F pages carry
+// the 1:1 detail.
 const pslot = (rows, name, W, H, crops, rep, refs) => `
 <div style="position:absolute;left:0;top:0;width:610px"${ref(refs)}>
  ${rows.map((r, i) => gA(point(r[0], r[1], 22, 16), 'up', [150, 230, 310, 430][i])).join('')}
 </div>
-${one(name, W, H, [530, 568], crops, { at: 'left:634px;top:0', d: 250, od: 650, os: 70 })}
+${one(name, W, H, [530, 568], crops, { at: 'left:634px;top:0', axis: 'fit', d: 250, od: 650, os: 70 })}
 ${repTop(rep)}`;
 const s18 = () => pslot([
   ['Where it shows', 'The «create» of a team: the service once named the concrete creator itself'],
