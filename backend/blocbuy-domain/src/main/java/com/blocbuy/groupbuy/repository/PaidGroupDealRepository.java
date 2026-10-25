@@ -14,6 +14,7 @@ import java.util.UUID;
 /**
  * Groupbuy write protocol. Every operation requires the same application transaction; lock order is
  * receipt then deal. All other writers/deleters must also lock the deal before member changes.
+ * General aggregate reads use {@link GroupDealRepository}.
  */
 public interface PaidGroupDealRepository {
     /**
