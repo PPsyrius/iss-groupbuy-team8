@@ -28,9 +28,9 @@
 
 #table(columns: (auto, auto, auto, auto, 1fr, auto), stroke: 0.4pt + luma(200), inset: 5pt,
   table.header([*Slide*], [*Clock*], [*Slot*], [*Est.*], [*Title*], [*Rubric*]),
-  [22], [16:37:50], [30 s], [30 s], [Design problem: listing rules that depend on its state], [2.5, G4],
-  [23], [16:38:20], [25 s], [25 s], [After: the State pattern, and why the team uses a table], [2.5, 2.4, G10],
-  [24], [16:38:45], [15 s], [14 s], [Database schema: core entities and mapping decisions], [2.6, V6],
+  [22], [16:38:05], [30 s], [30 s], [Design problem: listing rules that depend on its state], [2.5, G4],
+  [23], [16:38:35], [25 s], [25 s], [After: the State pattern, and why the team uses a table], [2.5, 2.4, G10],
+  [24], [16:39:00], [15 s], [14 s], [Database schema: core entities and mapping decisions], [2.6, V6],
   [25], [16:39:00], [110 s], [86 s], [Testing on the Agile Testing Quadrants], [3.1, 3.3],
   [26], [16:40:50], [70 s], [69 s], [Scripted performance test: tool, scenario, target], [3.2],
 )
@@ -39,9 +39,9 @@
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 22 · Design problem: listing rules that depend on its state
-#text(9pt, fill: luma(90))[16:37:50–16:38:20 · slot 30 s · estimate 30 s (66 words) · rubric 2.5, G4]
+#text(9pt, fill: luma(90))[16:38:05–16:38:35 · slot 30 s · estimate 30 s (66 words) · rubric 2.5, G4]
 
-#lbl("Cue in") #h(4pt) #rich((("t", "Liu Jin, one problem in full."),), size: 9.5pt)
+#lbl("Cue in") #h(4pt) #rich((), size: 9.5pt)
 
 #lbl("Say")
 #block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "I'm Liu Jin, with one design problem in full. An admin can publish, delist, revise or delete a listing, but each action is allowed only in some states. "), ("c", "click 1/2"), ("t", " A brute-force design, which we rejected, checks the status inside all four operations. "), ("c", "click 2/2"), ("t", " In the sequence, publish branches on the status. What varies is the state of the listing, so we compared State, Strategy and a transition table.")), size: 12pt)]
@@ -60,7 +60,7 @@
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 23 · After: the State pattern, and why the team uses a table
-#text(9pt, fill: luma(90))[16:38:20–16:38:45 · slot 25 s · estimate 25 s (54 words) · rubric 2.5, 2.4, G10]
+#text(9pt, fill: luma(90))[16:38:35–16:39:00 · slot 25 s · estimate 25 s (54 words) · rubric 2.5, 2.4, G10]
 
 #lbl("Say")
 #block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "We chose State, because each state changes how all four operations behave. "), ("c", "click 1/2"), ("t", " Product delegates to ProductStatus. Each state overrides only the moves it allows; the rest return 409. "), ("c", "click 2/2"), ("t", " Each state answers publish itself, with no switch. A new state costs a constant, overrides and tests. Teams have one move, so they keep a table.")), size: 12pt)]
@@ -80,7 +80,7 @@
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 24 · Database schema: core entities and mapping decisions
-#text(9pt, fill: luma(90))[16:38:45–16:39:00 · slot 15 s · estimate 14 s (31 words) · rubric 2.6, V6]
+#text(9pt, fill: luma(90))[16:39:00–16:39:15 · slot 15 s · estimate 14 s (31 words) · rubric 2.6, V6]
 
 #lbl("Say")
 #block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "The core schema. "), ("c", "click 1/2"), ("t", " Keys are UUIDv7, and unique indexes stop races: one membership per buyer per team, "), ("c", "click 2/2"), ("t", " one refund per payment. The application checks the links; we use no foreign keys.")), size: 12pt)]

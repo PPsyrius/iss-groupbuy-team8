@@ -250,14 +250,13 @@ const s8 = () => `
  <div ${A('up', 190, 'display:flex;justify-content:space-between;align-items:baseline;')}>${kicker('Story card')}<span style="font:600 20px Inter;color:var(--muted)">Liu Jin</span></div>
  <div ${A('up', 230, 'font:600 20px/1.3 Inter;margin-bottom:8px;')}>As an admin, I can set a listing’s team size, lifetime and team price, so that buyers can start blocs on real listings.</div>
  ${ac.map((a, i) => `<div style="display:flex;gap:8px;font:400 20px/1.28 Inter;margin-bottom:5px"><span ${A('pop', 290 + 60 * i, 'color:#3E5CD9;flex:none;')}>${icon('square-check')}</span><span ${A('up', 320 + 60 * i)}>${a}</span></div>`).join('')}
- <div ${A('up', 650, 'font:400 20px Inter;color:var(--muted);margin-top:6px;')}>Design problem field: State, Optimistic Offline Lock</div>
 </div>
 <div style="position:absolute;left:684px;top:0;width:480px"${ref('S2: docs/sprint2-progress-report.typ, Daily burndown data (story PR merge dates) · S3: docs/agile/sprint-03/review.md planned hours, burned on issue close dates · docs/agile/metrics/*.csv')}>
  ${gA(kicker('Burndown · story hours left'), 'up', 300)}
  ${hAt(burndown([380, [450, 600, 30], [550, 700, 30], 800]), 'fade', 330)}
- <div ${A('up', 900, 'font:400 20px/1.32 Inter;margin-top:2px;')}>${lines(['Sprint 2: flat until the first story PR on 22 Sep, then a cliff', 'Sprint 3, PRs kept small: burns from day 1, then stalls on Checkout in dev', 'Reconstructed; no hours were logged'], 4)}</div>
+ <div ${A('up', 900, 'font:400 20px/1.32 Inter;margin-top:2px;')}>${lines(['Sprint 2: flat until the first story PR on 22 Sep, then a cliff', 'Sprint 3, PRs kept small: burns from day 1, then stalls on Checkout in dev', 'Reconstructed from merge and close dates; no hours were logged'], 4)}</div>
 </div>
-<div ${A('up', 1000, 'position:absolute;left:0;right:0;top:490px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 20px/1.35 Inter;')}${ref('EPAT 03 TDD, EPAT 05 refactoring · sprint-03/log/2026-10-07.md · PR #424 · full set: backup B1')}><b style="color:#3E5CD9">Test first, then refactor:</b> two failing tests reproduced a price-quote bug before the fix; then team admission was refactored into shared checks.</div>`;
+<div ${A('up', 1000, 'position:absolute;left:0;right:0;top:490px;border-radius:8px;background:#E3E8FB;padding:10px 16px;font:400 20px/1.35 Inter;')}${ref('EPAT 03 TDD, EPAT 05 refactoring · sprint-03/log/2026-10-07.md · PR #424 · full set: backup B1')}><b style="color:#3E5CD9">Test first, then refactor:</b> two failing tests reproduced a join-quote bug before the fix; then team admission was refactored into shared checks.<span style="color:var(--muted)"> Full set: appendix B1; both burndowns: B2.</span></div>`;
 
 // ---------- diagram walk-through (rubric V1, V3, V5) ----------
 // The whole diagram sits in a pane for orientation; each crop is then shown 1:1 (labels ≥ 24 px) as an opaque fragment
@@ -487,13 +486,13 @@ const s20 = () => pslot([
   [0, 1176, 'publish calls entry, send', 0, [['Primitive operations', `${mo('entry', 19)} and ${mo('send', 19)}: each transport implements only these`], ['Liability', 'a subclass cannot change the loop'], ['Tested by', `${mo('OutboxBatchFailureTest', 19)}, both providers`]]],
 ], 'Report §3.5.3 · Pan (notifications)', 'ADR 0007 · SDP 05a p12–14');
 const s21 = () => pslot([
-  ['Where it shows', 'In the class diagram: browse and the team quote each switch on the pricing mode'],
-  ['Cause for redesign', 'Algorithmic dependencies: the arithmetic sits inline in both'],
-  ['What varies', 'An algorithm: how a price is computed'],
+  ['Where it shows', 'In the class diagram: the product listing and the team quote both price by the pricing mode'],
+  ['Cause for redesign', 'Algorithmic dependencies: without it, both services would hard-code pricing'],
+  ['What varies', 'An algorithm: how the pricing mode decides a price'],
   ['Pattern', '<b>Strategy</b>'],
 ], 'strategy-pricing', 1160, 1770, [
-  [0, 330, 'resolver · Strategy', 0, [['Participants', `Strategy ${mo('PricingStrategy', 19)}, picked by a resolver`], ['Contexts', 'the product and team-price services'], ['Candidates', 'Strategy, Template Method (no shared skeleton), Decorator']]],
-  [0, 1298, 'quote → resolve → strategy', 0, [['Delegation', `each context hands the arithmetic to the ConcreteStrategy ${mo('DualPricingStrategy', 19)}`], ['Liability', 'one strategy today; new pricing schemes are a design driver'], ['Tested by', `${mo('PricingStrategyResolverTest', 19)}, ${mo('DualPricingStrategyTest', 19)}`]]],
+  [0, 330, 'resolver · Strategy', 0, [['Participants', `Strategy ${mo('PricingStrategy', 19)}, one per pricing mode, picked by a resolver`], ['Contexts', 'the product listing and team-quote services'], ['Candidates', 'Strategy, Template Method (no shared skeleton), Decorator']]],
+  [0, 1298, 'quote → resolve → strategy', 0, [['Delegation', `each service hands the pricing decision to the ConcreteStrategy ${mo('DualPricingStrategy', 19)}`], ['Liability', 'one strategy today; new pricing schemes, as the proposal promised, leave existing pricing logic untouched'], ['Tested by', `${mo('PricingStrategyResolverTest', 19)}, ${mo('DualPricingStrategyTest', 19)}`]]],
 ], 'Report §3.5.4 · Lim (UC1)', 'SDP 05a p35 · proposal §6.3 · team-price-quotes.md L55');
 
 // ---------- slides 22–23 (2.5): the full-form problem ----------
