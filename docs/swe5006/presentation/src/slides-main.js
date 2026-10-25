@@ -501,10 +501,10 @@ const s21 = () => pslot([
 const popState = h => { const n = '<div style="margin-bottom:2px"><b>State</b>'; if (!h.includes(n)) throw new Error('slide 22: State line changed'); return h.replace(n, `<div ${A('pop', 520, 'margin-bottom:2px;')}><b>State</b>`); };
 const s22 = () => `
 <div style="position:absolute;left:0;top:0;width:590px"${ref('RT 3.5 brute force · SDP 05a p4, p13 · admin-listings.md L67–68')}>
- ${gA(point('Problem (UC9)', 'Publish, delist, revise and delete are legal in different states of a listing', 22, 14), 'up', 160)}
- ${gA(point('Why redesign', lines(['Hard to maintain: one rule in four places', 'Hard to extend: a new state edits every switch', 'Hard to reuse: the rule cannot be tested apart from Product']), 22, 14), 'up', 250)}
- ${gA(point('What varies', 'The states of an object', 22, 14), 'up', 340)}
- ${gA(popState(point('Candidates', lines(['<b>State</b>', 'Strategy: nobody chooses; the state decides', 'Transition table, as on the team']), 22, 0)), 'up', 430)}
+ ${gA(point('Problem (UC9)', 'Publish, delist, revise and delete work only in some states', 22, 14), 'up', 160)}
+ ${gA(point('Why redesign', lines(['One rule in four places', 'A new state edits every switch']), 22, 14), 'up', 250)}
+ ${gA(point('What varies', 'The state of the listing', 22, 14), 'up', 340)}
+ ${gA(popState(point('Candidates', lines(['<b>State</b>', 'Strategy: nobody chooses; the state decides', 'Transition table']), 22, 0)), 'up', 430)}
 </div>
 ${one('state-before', 1160, 1120, [552, 568], [
   [0, 0, 'brute force: class', 0, [['Brute force', `the same ${mo('switch (status)', 19)} in four operations of ${mo('Product', 19)}, in red`]]],
@@ -515,20 +515,19 @@ ${repTop('Report §3.5.5 · Liu Jin (UC9)')}`;
 const s23 = () => `
 <div style="position:absolute;left:0;top:0;width:600px"${ref('GoF State implementation 2 · SDP 05a p35 · slide 4')}>
  ${gA(point('Pattern', '<b>State</b>: the listing delegates to its state', 22, 16), 'up', 320)}
- ${gA(point('Implementation decisions', lines(['The state returns its successor; the listing applies it', 'Moves a state does not allow refuse with 409', 'Each move makes a new revision; a stale write gets 412']), 22, 16), 'up', 410)}
- ${gA(point('Why the team uses a table instead', 'Only OPEN has behaviour; SUCCEEDED and EXPIRED are final, so a transition table suffices', 22, 0), 'up', 500)}
+ ${gA(point('Implementation decisions', lines(['The state returns the next state; the listing applies it', 'A move the state does not allow gets 409', 'A stale write gets 412']), 22, 0), 'up', 410)}
 </div>
 ${one('state-after', 1160, 1424, [540, 568], [
   [0, 64, 'State · ConcreteStates', 0, [['Participants', `Context ${mo('Product', 19)}, State ${mo('ProductStatus', 19)}`], ['ConcreteStates', 'DRAFT, ON_SALE, OFF_SALE: enum constants with bodies, one subclass each']]],
-  [0, 876, 'after: publish delegates', 0, [['No switch', 'each state answers publish its own way'], ['Liability', 'a new state still needs a constant, its overrides and tests']]],
+  [0, 876, 'after: publish delegates', 0, [['No switch', 'each state answers publish its own way'], ['Cost', 'each new state needs new code and tests']]],
 ], { at: 'left:624px;top:0', d: 160, pa: 'right', od: 700, os: 80 })}
 ${repTop('Report §3.5.5 · Liu Jin (UC9)')}`;
 
 // ---------- slide 24 (2.6) ----------
 const s24 = () => `
 ${one('core-erd', 2320, 1190, [1164, 568], [
-  [580, 54, 'deal · membership', 0, [['Keys', 'UUIDv7 surrogate primary keys from PostgreSQL 18'], ['Race backstop', 'one membership per buyer per team, by a unique index']]],
-  [1160, 600, 'payment · refund', 0, [['Race backstop', 'one refund per payment, by a unique key'], ['Associations', 'logical FK columns checked by the application: our DDL convention, not a course rule'], ['Aggregates', 'one table per aggregate root; nothing inherited, so no inheritance mapping']]],
+  [580, 54, 'deal · membership', 0, [['Keys', 'UUIDv7 primary keys'], ['Unique index', 'one membership per buyer per team']]],
+  [1160, 600, 'payment · refund', 0, [['Unique key', 'one refund per payment'], ['No foreign keys', 'the application checks the links'], ['Inheritance', 'none, one table per aggregate root']]],
 ], { d: 150, od: 500, os: 80 })}
 <span${ref('Mapping decisions: SAD 04a p53–61 · Flyway V1–V28 · all tables: backup B4')}></span>
 ${repTop('Report §3.6 · Liu Jin')}`;
@@ -547,7 +546,7 @@ const QUADS = [
     runs: `${mo('build-quality', 19)}, ${mo('frontend-check', 19)} (required), ${mo('contract-check', 19)}`,
     caught: 'two red tests reproduced the join-quote defect before its fix',
     extra: `<div style="margin-top:12px;border-radius:8px;background:#E3E8FB;padding:8px 16px"><div style="font:700 20px Inter;color:#3E5CD9;margin-bottom:2px">Complex classes under test</div>
-      ${[['Team state machine', `${mo('DealStatusTest', 19)}, ${mo('PaidGroupDealTest', 19)}`], ['Last-seat capacity', `${mo('StripeLocalIntegrationTest.twentyBuyersRaceForLastSeat…', 19)} (integration)`], ['Refund idempotency', mo('RefundServiceTest.lostResponseRetriesSameDurableKey', 19)]]
+      ${[['Team state machine', `${mo('DealStatusTest', 19)}, ${mo('PaidGroupDealTest', 19)}`], ['Last-seat race', `${mo('StripeLocalIntegrationTest.twentyBuyersRaceForLastSeat…', 19)} (integration)`], ['Refund retry', mo('RefundServiceTest.lostResponseRetriesSameDurableKey', 19)]]
         .map(r => `<div style="display:flex;gap:12px;font:400 20px/1.32 Inter"><b style="width:224px;flex:none">${r[0]}</b><span>${r[1]}</span></div>`).join('')}</div>` },
   { q: 'Q2', axes: 'business-facing · supporting the team', how: 'automated', at: 'left:0;top:0', types: [['Story acceptance', 'system'], ['End-to-end', 'system']],
     detail: [
@@ -563,7 +562,7 @@ const QUADS = [
     caught: 'no defect logged from these runs', gap: 'Not done: acceptance testing with outside users' },
   { q: 'Q4', axes: 'technology-facing · critiquing the product', how: 'tools', at: 'left:590px;top:282px', types: [['Performance, load', 'system'], ['Security scanning', 'types']],
     detail: [
-      ['Performance, load', 'system', ['k6 on the SWE5001 ECS environment, by hand (next slide)']],
+      ['Performance, load', 'system', ['k6 load test (next slide)']],
       ['Security scanning', 'types', ['Static analysis (SAST)', 'Dependencies (SCA)', 'Image and IaC configuration', 'Secrets', 'Dynamic, passive (DAST): OWASP ZAP on anonymous dev pages, advisory']],
     ],
     runs: `${mo('security.yml', 19)}, ${mo('build-quality', 19)}, ${mo('docker', 19)} gate the pipeline; ${mo('dast-baseline', 19)} runs weekly, advisory (slide 30)`,
@@ -599,11 +598,11 @@ const s26 = () => `
  ${gA(kicker('The scripted test'), 'up', 230)}
  ${kv([
    ['Tool', `<span${ref('perf/k6/browse.js · perf/k6/README.md §V2')}>k6 1.6.1, image pinned by digest</span>`],
-   ['Target', ['<b>SWE5001 ECS</b>, dev image of 6 Oct: CloudFront → ALB → Fargate', 'Never the shared SWE5006 dev host, which also runs its database']],
-   ['Load', ['Open arrival rate 10 → 200 requests/s', 'Ten 60 s steps; 100 VUs preallocated, 400 max']],
-   ['Mix', ['7 listing pages : 3 listing details, anonymous', 'No think time; 10 s timeout']],
+   ['Where', ['<b>Cloud test copy on ECS</b>, built from dev on 6 Oct', 'Never the dev host']],
+   ['Load', ['10 → 200 requests/s', 'Ten one-minute steps']],
+   ['Mix', ['Anonymous browsing', '7 listing pages : 3 listing details']],
    ['Pass, per step', ['p95 &lt; 500 ms', 'Errors &lt; 1%', 'Zero dropped requests']],
-   ['Result', `<span${ref('docs/swe5001/evidence/20261016-http-baseline-dashboard/ (#670)')}>Run 20261016-v2-monolith-repeat, 16 Oct; shown on slide 36</span>`],
+   ['Result', `<span${ref('docs/swe5001/evidence/20261016-http-baseline-dashboard/ (#670)')}>Shown in the system demo</span>`],
  ], 270, 60)}
 </div>
 <div style="position:absolute;left:660px;top:0;width:504px">
@@ -611,13 +610,12 @@ const s26 = () => `
   ${gA(kicker('Proposal target (§6.3)', '#B02E1B'), 'up', 440)}
   <div ${A('up', 470, 'font:600 22px/1.35 Inter;')}>Interactive operations ≤ 2 s with up to 100 concurrent users</div>
   <div ${A('up', 500, 'font:400 21px/1.4 Inter;margin-top:10px;')}>Little’s law ${mo('N = X · (R + Z)', 20)}: 100 users, 0.5 s think, ~30 ms response → <b>X ≈ 190 requests/s</b></div>
-  <div ${A('up', 530, 'font:400 21px/1.4 Inter;margin-top:6px;')}>Inside the 200 driven, with a p95 gate four times stricter than 2 s</div>
+  <div ${A('up', 530, 'font:400 21px/1.4 Inter;margin-top:6px;')}>Our top step, 200 requests/s, covers it</div>
   <div ${A('up', 560, 'font:400 20px/1.35 Inter;color:var(--muted);margin-top:6px;')}>The 0.5 s think time is our assumption</div>
  </div>
  <div class="card a" data-a="right" style="padding:18px 22px;--d:620ms">
   ${gA(kicker('Expiry ≤ 1 min after the window', '#B02E1B'), 'up', 640)}
-  <div ${A('up', 670, 'font:400 21px/1.4 Inter;')}${ref('docs/perf/sprint3-baseline.md')}>Measured <b>locally</b> under 100-user load (30 Sep): 30 teams, worst lag 58.2 s</div>
-  <div ${A('up', 700, 'font:400 20px/1.35 Inter;color:var(--muted);margin-top:6px;')}>On ECS: not run, so this evidence is local only</div>
+  <div ${A('up', 670, 'font:400 21px/1.4 Inter;')}${ref('docs/perf/sprint3-baseline.md')}>Shown in the system demo</div>
  </div>
 </div>`;
 
@@ -773,9 +771,9 @@ const steps36 = [[10, 53], [20, 39], [40, 27], [60, 28], [80, 23], [100, 23], [1
 // footnote 760, the run line 800; the cards 840 +80.
 const s36 = () => `
 <div style="position:absolute;left:0;top:0;width:690px">
- ${gA(kicker('k6 run · SWE5001 ECS environment · not the dev host', '#B02E1B'), 'up', 200)}
+ ${gA(kicker('k6 run · cloud test copy on ECS · not the dev host', '#B02E1B'), 'up', 200)}
  ${tbl(['Requests/s', 'p95 (ms)', 'Errors', 'Dropped', 'Step'], steps36.map(([r, p]) => [`<b>${r}</b>${r >= 190 ? ` <span ${A('pop', 700, 'display:inline-block;color:#B02E1B;')}>●</span>` : ''}`, p, '0 %', '0', 'pass']), { fs: 22, w: [150, 130, 120, 130], pad: '3px 14px', m: [246, 368, 30] })}
- <div ${A('up', 760, 'font:400 19px/1.35 Inter;color:var(--muted);margin-top:6px;')}><span style="color:#B02E1B">●</span> at or above ≈ 190 requests/s: the proposal’s 100 users, 0.5 s think time assumed (slide 26)</div>
+ <div ${A('up', 760, 'font:400 19px/1.35 Inter;color:var(--muted);margin-top:6px;')}><span style="color:#B02E1B">●</span> at or above ≈ 190 requests/s: the proposal’s 100 users, 0.5 s think time assumed (the testing section)</div>
  <div ${A('up', 800, 'font:400 19px/1.35 Inter;margin-top:4px;')}${ref('docs/swe5001/evidence/20261016-http-baseline-dashboard/v2-repeat-summary.json')}>Run 20261016-v2-monolith-repeat, 16 Oct: 57,600 requests, 0 failed, 0 dropped</div>
 </div>
 <div style="position:absolute;left:714px;top:0;width:450px">

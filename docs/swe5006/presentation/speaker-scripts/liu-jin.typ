@@ -28,25 +28,25 @@
 
 #table(columns: (auto, auto, auto, auto, 1fr, auto), stroke: 0.4pt + luma(200), inset: 5pt,
   table.header([*Slide*], [*Clock*], [*Slot*], [*Est.*], [*Title*], [*Rubric*]),
-  [22], [16:39:36], [30 s], [30 s], [Design problem: listing rules that depend on its state], [2.5, G4],
-  [23], [16:40:06], [25 s], [25 s], [After: the State pattern, and why the team uses a table], [2.5, 2.4, G10],
-  [24], [16:40:31], [15 s], [14 s], [Database schema: core entities and mapping decisions], [2.6, V6],
-  [25], [16:39:00], [110 s], [86 s], [Testing on the Agile Testing Quadrants], [3.1, 3.3],
-  [26], [16:40:50], [70 s], [69 s], [Scripted performance test: tool, scenario, target], [3.2],
+  [22], [16:39:36], [22 s], [20 s], [Design problem: listing rules that depend on its state], [2.5, G4],
+  [23], [16:39:58], [19 s], [17 s], [After: the State pattern], [2.5, 2.4, G10],
+  [24], [16:40:17], [15 s], [13 s], [Database schema: core entities and mapping decisions], [2.6, V6],
+  [25], [16:38:00], [38 s], [34 s], [Testing on the Agile Testing Quadrants], [3.1, 3.3],
+  [26], [16:38:38], [30 s], [30 s], [Scripted performance test: tool, scenario, target], [3.2],
 )
-#text(9pt)[Total slots 250 s; estimated speech 224 s. I come in after Lim (slide 21) and hand over to Pan (slide 27).]
+#text(9pt)[Total slots 124 s; estimated speech 114 s. I come in after Lim (slide 21) and hand over to Pan (slide 27).]
 
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 22 · Design problem: listing rules that depend on its state
-#text(9pt, fill: luma(90))[16:39:36–16:40:06 · slot 30 s · estimate 30 s (66 words) · rubric 2.5, G4]
+#text(9pt, fill: luma(90))[16:39:36–16:39:58 · slot 22 s · estimate 20 s (43 words) · rubric 2.5, G4]
 
 #lbl("Cue in") #h(4pt) #rich((), size: 9.5pt)
 
 #lbl("Say")
-#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "I'm Liu Jin, with one design problem in full. An admin can publish, delist, revise or delete a listing, but each action is allowed only in some states. "), ("c", "click 1/2"), ("t", " A brute-force design, which we rejected, checks the status inside all four operations. "), ("c", "click 2/2"), ("t", " In the sequence, publish branches on the status. What varies is the state of the listing, so we compared State, Strategy and a transition table.")), size: 12pt)]
+#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "I'm Liu Jin. An admin can publish, delist, revise or delete a listing, but only in some states. "), ("c", "click 1/2"), ("t", " First zoom. Brute force repeats a status switch in all four actions. "), ("c", "click 2/2"), ("t", " Last zoom. The sequence has the same switch. What varies is the state.")), size: 12pt)]
+#lbl("If over time") #h(4pt) #rich((("t", "Drop \"The sequence has the same switch.\""),), size: 9.5pt)
 
-#lbl("Hand over") #h(4pt) #rich((("t", "(Liu Jin continues) The design with State."),), size: 9.5pt) #h(1fr) #text(8.5pt, fill: luma(110))[next: slide 23, Liu Jin]
 
 #lbl("Cues")
 #text(8.8pt)[
@@ -59,13 +59,12 @@
 
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
-== Slide 23 · After: the State pattern, and why the team uses a table
-#text(9pt, fill: luma(90))[16:40:06–16:40:31 · slot 25 s · estimate 25 s (54 words) · rubric 2.5, 2.4, G10]
+== Slide 23 · After: the State pattern
+#text(9pt, fill: luma(90))[16:39:58–16:40:17 · slot 19 s · estimate 17 s (36 words) · rubric 2.5, 2.4, G10]
 
 #lbl("Say")
-#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "We chose State, because each state changes how all four operations behave. "), ("c", "click 1/2"), ("t", " Product delegates to ProductStatus. Each state overrides only the moves it allows; the rest return 409. "), ("c", "click 2/2"), ("t", " Each state answers publish itself, with no switch. A new state costs a constant, overrides and tests. Teams have one move, so they keep a table.")), size: 12pt)]
+#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "We chose State, because the state decides, not a caller. "), ("c", "click 1/2"), ("t", " First zoom. Product hands each action to ProductStatus. A state allows its own moves and refuses the rest with 409. "), ("c", "click 2/2"), ("t", " Last zoom. No switch is left.")), size: 12pt)]
 
-#lbl("Hand over") #h(4pt) #rich((("t", "(Liu Jin continues) Where the data lives."),), size: 9.5pt) #h(1fr) #text(8.5pt, fill: luma(110))[next: slide 24, Liu Jin]
 
 #lbl("Cues")
 #text(8.8pt)[
@@ -80,12 +79,11 @@
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 24 · Database schema: core entities and mapping decisions
-#text(9pt, fill: luma(90))[16:40:31–16:40:46 · slot 15 s · estimate 14 s (31 words) · rubric 2.6, V6]
+#text(9pt, fill: luma(90))[16:40:17–16:40:32 · slot 15 s · estimate 13 s (29 words) · rubric 2.6, V6]
 
 #lbl("Say")
-#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "The core schema. "), ("c", "click 1/2"), ("t", " Keys are UUIDv7, and unique indexes stop races: one membership per buyer per team, "), ("c", "click 2/2"), ("t", " one refund per payment. The application checks the links; we use no foreign keys.")), size: 12pt)]
+#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "Now the schema. "), ("c", "click 1/2"), ("t", " First zoom. A unique index stops a buyer from joining one team twice. "), ("c", "click 2/2"), ("t", " Last zoom. Another one stops a second refund. We use no foreign keys.")), size: 12pt)]
 
-#lbl("Hand over") #h(4pt) #rich((("t", "Next, how we test it."),), size: 9.5pt) #h(1fr) #text(8.5pt, fill: luma(110))[next: slide 25, Liu Jin]
 
 #lbl("Cues")
 #text(8.8pt)[
@@ -98,13 +96,12 @@
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 25 · Testing on the Agile Testing Quadrants
-#text(9pt, fill: luma(90))[16:39:00–16:40:50 · slot 110 s · estimate 86 s (186 words) · rubric 3.1, 3.3]
+#text(9pt, fill: luma(90))[16:38:00–16:38:38 · slot 38 s · estimate 34 s (73 words) · rubric 3.1, 3.3]
 
 #lbl("Say")
-#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "We sort our tests into the Agile Testing Quadrants. "), ("c", "click 1/4"), ("t", " In quadrant one, most tests are unit tests in JUnit and Vitest. Integration tests run on real PostgreSQL, Redis and ElasticMQ in Testcontainers, and ArchUnit checks our architecture rules. These tests cover the complex classes the proposal named: the team state machine; the last seat, where twenty paid buyers race and only one gets it; and refunds, where a retry after a lost Stripe response reuses the same key. Two failing tests reproduced a join-quote bug before we fixed it. "), ("c", "click 2/4"), ("t", " Quadrant two tests the user stories: acceptance tests through real HTTP and signed webhooks, and eight Playwright specs on the preview build and on dev. The dev run caught a 502 while the host restarted. "), ("c", "click 3/4"), ("t", " Quadrant three is manual: a Stripe Sandbox run and cookie checks on dev. They found no defects, and no outside users tested the system. "), ("c", "click 4/4"), ("t", " Quadrant four uses tools: the load test on the next slide, and scans of code, dependencies, images, infrastructure and secrets. Since this week, a passive ZAP scan also checks dev. Pan shows where the scans gate the pipeline.")), size: 12pt)]
-#lbl("If over time") #h(4pt) #rich((("t", "If over time, drop \"Two failing tests reproduced a join-quote bug before we fixed it.\" (it stays on the slide)."),), size: 9.5pt)
+#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "How do we test it? We use the Agile Testing Quadrants. "), ("c", "click 1/4"), ("t", " Quadrant one is unit and integration tests. They cover the team state machine, the last-seat race and refund retries. "), ("c", "click 2/4"), ("t", " Quadrant two is story tests through the real API, and end-to-end tests on dev. "), ("c", "click 3/4"), ("t", " Quadrant three is manual checks. We did not test with outside users. "), ("c", "click 4/4"), ("t", " Quadrant four is security scans, which gate the pipeline, and the load test on the next slide.")), size: 12pt)]
+#lbl("If over time") #h(4pt) #rich((("t", "Drop \"We did not test with outside users.\" (the Q3 card says it)"),), size: 9.5pt)
 
-#lbl("Hand over") #h(4pt) #rich((("t", "Next, the test for the performance target."),), size: 9.5pt) #h(1fr) #text(8.5pt, fill: luma(110))[next: slide 26, Liu Jin]
 
 #lbl("Cues")
 #text(8.8pt)[
@@ -121,13 +118,13 @@
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 26 · Scripted performance test: tool, scenario, target
-#text(9pt, fill: luma(90))[16:40:50–16:42:00 · slot 70 s · estimate 69 s (150 words) · rubric 3.2]
+#text(9pt, fill: luma(90))[16:38:38–16:39:08 · slot 30 s · estimate 30 s (66 words) · rubric 3.2]
 
 #lbl("Say")
-#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "Our performance test is a k6 script. It runs on the SWE5001 ECS environment, with an image built from dev on 6 October. We never load the shared dev host, because its database runs on the same machine. The load rises from 10 to 200 requests a second, one minute per step. Each step must keep p95 under 500 milliseconds and errors under 1 percent, and must not drop requests. The proposal asks for 2 seconds at 100 concurrent users. By Little's law, 100 users who wait half a second between clicks send about 190 requests a second. Our top step covers that load, and our limit is four times stricter. For team expiry, the sweep starts a minute after the previous run ends, so a team closes at most a minute plus the sweep time after its deadline. Locally, the worst case was 58 seconds. Yorik shows the result."),), size: 12pt)]
-#lbl("If over time") #h(4pt) #rich((("t", "If over time, drop \"We never load the shared dev host, because its database runs on the same machine.\" (Q&A covers it)."),), size: 9.5pt)
+#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "That load test is a k6 script. It runs on a cloud test copy, never on the dev host. The load rises from 10 to 200 requests a second. The proposal asks for 2 seconds with 100 users, about 190 requests a second, so our top step covers it. Teams must also close within a minute of their deadline. Yorik shows both results in the demo."),), size: 12pt)]
+#lbl("If over time") #h(4pt) #rich((("t", "Drop \"Teams must also close within a minute of their deadline.\" (the expiry card says it)"),), size: 9.5pt)
 
-#lbl("Hand over") #h(4pt) #rich((("t", "Over to Pan, who shows where these tests run in the pipeline."),), size: 9.5pt) #h(1fr) #text(8.5pt, fill: luma(110))[next: slide 27, Pan]
+#lbl("Hand over") #h(4pt) #rich((("t", "Pan, where do all these tests run?"),), size: 9.5pt) #h(1fr) #text(8.5pt, fill: luma(110))[next: slide 27, Pan]
 
 #lbl("Cues")
 #text(8.8pt)[

@@ -18,7 +18,7 @@ The presentation is on 26–27 Oct 2026 and the report is due 1 Nov 2026 (BR sli
 
 Precedence, highest first:
 
-1. CA for order and timing. The one exception is a team ruling: §2 runs 6 min against CA's 5 so that each member presents their own design problem (G4, Time budget), and §1 gives up the minute.
+1. CA for order and timing. Since the 25 Oct rehearsal, every section runs at the lower end of its CA range (team ruling, Time budget).
 2. PDF for what to cover.
 3. RT for the detail behind each PDF item.
 4. BR for project-wide deliverables and dates.
@@ -36,7 +36,7 @@ Forty minutes is a hard stop, interruptions included. The talk shows one example
 | # | Rule | Source | Ruling |
 | --- | --- | --- | --- |
 | G1 | Time box | CA: 40 min, then 5 min Q&A. PDF: 40 min including Q&A | 40 min hard stop, interruptions included. Treat CA's 5 min Q&A as a bonus |
-| G2 | Scripted content | CA ranges sum to 33–39 min. PDF content sums to 30 min | Script 34 min and keep 6 min as buffer |
+| G2 | Scripted content | CA ranges sum to 33–39 min. PDF content sums to 30 min | Script 33 min (the lower end of every CA range) and keep 2 min as buffer, to finish in 35 min; the 5 min left to the 40 min hard stop take questions (ruling of 25 Oct, after the rehearsal ran 47 min) |
 | G3 | Interruptions | CA: lecturers may ask questions during the presentation | Answer in a sentence or two, then continue. The time comes out of the buffer |
 | G4 | Speakers | CA: the team may divide topics | One speaker per section, except §2, where each member presents their own design problem (2.5). Order §2 so that 2.1–2.4 lead into their speaker's own problem, and the full-form problem's owner closes §2 and opens §3: seven handovers in all. Rehearse each handover; each costs 10–30 s |
 | G5 | Sequence | CA and PDF use the same order. CA merges Overview with Conduct and adds Testing between design and DevSecOps | Follow CA §1 → §5. Inside §2, follow the PDF and RT order (2.1 → 2.6) |
@@ -48,16 +48,17 @@ Forty minutes is a hard stop, interruptions included. The talk shows one example
 
 ## Time budget
 
-The script runs 34 min with a 6 min buffer. §1 sits at the bottom of its CA range so that §2 can run 1 min over CA's 5 min to give each member a slot for their design problem (G4); every other section sits at or above the bottom of its CA range.
+The script runs 33 min with a 2 min buffer, so the talk finishes in 35 min (ruling of 25 Oct: the rehearsal ran 47 min for 34 min of slots). Every section sits at the lower end of its CA range.
 
 | Section | CA (min) | PDF content + Q&A (min) | Ruling (min) |
 | --- | --- | --- | --- |
 | §1 Introduction and project management | 3–4 | 2+1 and 2+1 | 3 |
-| §2 Analysis, design and patterns | 5 | 7+2 | 6 |
+| §2 Analysis, design and patterns | 5 | 7+2 | 5 |
 | §3 Testing | 3 | none | 3 |
 | §4 CI/CD pipeline demo | 10–12 | 6+2 | 10 |
 | §5 System demo | 12–15 | 13+4 | 12 |
-| Buffer for interruptions | none | none | 6 |
+| Buffer for interruptions | none | none | 2 |
+| Questions to the hard stop | none | none | 5 |
 | **Total** | **33–39** | **40** | **40** |
 
 Inside §1 and §2 the time is split by team ruling. Both are tight, so rehearse them against a timer.
@@ -74,12 +75,12 @@ Inside §1 and §2 the time is split by team ruling. Both are tight, so rehearse
 | 1.8 Agile artefacts | 0.25 |
 | **§1 total** | **3** |
 | 2.1 Software architecture | 0.75 |
-| 2.2 Transition strategies | 1.25 |
+| 2.2 Transition strategies | 1 |
 | 2.3 Use case diagram | 0.5 |
-| 2.4 Analysis and design models | 1 |
-| 2.5 Design problems and patterns: one full-form problem (1 min) and one 20 s slot for each other member | 2.25 |
+| 2.4 Analysis and design models | 0.75 |
+| 2.5 Design problems and patterns: one full-form problem (1 min) and one 20 s slot for each other member | 1.75 |
 | 2.6 Database schema | 0.25 |
-| **§2 total** | **6** |
+| **§2 total** | **5** |
 
 ## §1 Project Introduction & Project Management Summary (3 min)
 
@@ -96,7 +97,7 @@ Cover the problem, scope and quality attributes, then status against what we pro
 | 1.7 | Sprint retrospective and how it shaped the next sprint | PDF 2d | For each sprint, one improvement and the change it made in the following sprint (EPAT SCRUM_Process_Team01.xlsx, Sprint Retrospective sheet: focus on one or two improvements) |
 | 1.8 | Agile process artefacts and practices | BR slide 6: product backlog, user stories, sprint plans, burndown charts, sprint reviews and retrospectives are project deliverables | Not a PDF item; the full set goes in a report appendix. On the slide: one story card with acceptance criteria and one burndown. One line on an EPAT practice we used, with evidence (TDD on the state machine, pairing, or refactoring to a pattern, which 2.5's "before" diagram already shows) |
 
-## §2 Analysis & Design and Design Patterns (6 min)
+## §2 Analysis & Design and Design Patterns (5 min)
 
 Present in the PDF and RT order, 2.1 to 2.6. That order works because transition strategies are system-wide rules, and the per-use-case models then show they follow them.
 
@@ -172,7 +173,7 @@ By 25 Oct, every box below should be ticked and every open decision settled. Bac
 - [ ] Effort figures in 1.4 reconciled with the submitted progress reports
 - [ ] One story card, one burndown and the agile artefacts appendix ready (1.8)
 - [ ] Performance script runs and its result is recorded against 2 s at 100 concurrent users
-- [ ] Full rehearsal finishes in 34 min or less, with §1 inside 3 min and §2 inside 6 min
+- [ ] Full rehearsal finishes in 35 min or less, each section timed separately, with §1 inside 3 min and §2 inside 5 min
 - [ ] Both backup videos recorded by 24 Oct and stored in the cloud and on a USB drive
 - [ ] Every diagram and schema checked against V1–V7 on a projector or TV
 - [ ] A speaker assigned to each section, with the handovers rehearsed
