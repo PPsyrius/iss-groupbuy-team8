@@ -25,15 +25,15 @@ const rubricRows = ['1.1', '1.2', '1.3', '1.4', '1.5', '1.6', '1.7', '1.8', '2.1
 // Tips: the four "Presentation Tips" on page 2 of the guidelines (verbatim); none conflicts with page 1 (rubric open decision 1).
 const tips = [
   ['Summarize and highlight the significant achievements. Talk more about the significant and interesting parts of the solution and implementation. Your audience should remember the unique aspects of the solution and not similarities to other solutions.', 'Depth goes to what is unique: pay-first teams that refund themselves, money safety under concurrency and failure (UC4 design, statechart, design problems), and a pipeline from pull request to dev in minutes.'],
-  ['Manage your time well. Do not present too many slides. Remember that the audience can read the text in the slide so refrain from reading them.', '35 main slides in 33 minutes, two of them live demos; slots checked at 130 wpm in the table above; sample wording adds to the slide instead of reading it; details sit in backups B1–B16.'],
-  ['Explain your design in top-down manner. Make sure that your audience understands the requirements, the high-level design and the high-level decisions that you make before drilling into some details.', 'Problem, scope and quality attributes first (slides 2–3); then architecture (9), transition strategies (10–12), use cases (13), one use case from analysis to design with its statechart (14–17), design problems (18–23), schema (24).'],
+  ['Manage your time well. Do not present too many slides. Remember that the audience can read the text in the slide so refrain from reading them.', '35 main slides in 33 minutes, two of them live demos; slots checked at 130 wpm in the table above; sample wording adds to the slide instead of reading it; details sit in backups B1–B20.'],
+  ['Explain your design in top-down manner. Make sure that your audience understands the requirements, the high-level design and the high-level decisions that you make before drilling into some details.', 'Problem, scope and quality attributes first (slides 2–3); then architecture (9), transition strategies (10–11), use cases (12), one use case from analysis to design (13–15; statechart B18), design problems (16–19), schema (20).'],
   ['Ensure that the contents on the slides are readable from the distance at which your audience is sitting. This is particular true for face-to-face presentation.', 'Rubric V1–V7: one idea per slide, diagrams cropped to the part discussed, labels checked on a projector or TV before 26 Oct.'],
 ];
 
 const cueWords = [
   ['1 MIN', 'One minute of talk left in this segment', 'Lim'],
   ['TIME', 'Stop; finish the sentence and hand over', 'Lim'],
-  ['Q: &lt;text&gt; → name', 'A question was parked; the named owner answers it in the buffer (17:03–17:10)', 'Lim'],
+  ['Q: &lt;text&gt; → name', 'A question was parked; the named owner answers it in the buffer (17:03–17:05) or in questions to 17:10', 'Lim'],
   ['BEHIND n / AHEAD n', 'The talk is n seconds behind or ahead of the run sheet; the next speaker applies the trims', 'Lim'],
   ['SHARE', 'Next person: start screen sharing now', 'Lim'],
   ['CLIP n', 'Live step n failed; play the recording of step n', 'Pan or Yorik'],
@@ -110,7 +110,7 @@ const demoSteps = C.DEMOS[31];
 const seg5Html = () => {
   const s5 = seg(5);
   return `<section class="chap"><h1>5 ${esc(s5.name)} (${s5.talk} minutes, then ${s5.qa} minutes of buffer)</h1>
-<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:51:00 – 17:03:00 (slide 30 to 16:51:30; live demo on slide 31 to 17:00:00; slides 32–34 to 17:03:00) · 17:03–17:10 buffer for parked questions</td></tr><tr><td>Owner</td><td>${esc(s5.owner)}; Lim chairs the buffer</td></tr><tr><td>Slides</td><td>${C.SLIDES.filter(s => s.seg === 5).map(s => s.n).join(', ')}</td></tr></table></div>
+<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:51:00 – 17:03:00 (slide 30 to 16:51:30; live demo on slide 31 to 17:00:00; slides 32–34 to 17:03:00) · 17:03–17:05 buffer for parked questions, questions to 17:10</td></tr><tr><td>Owner</td><td>${esc(s5.owner)}; Lim chairs the buffer</td></tr><tr><td>Slides</td><td>${C.SLIDES.filter(s => s.seg === 5).map(s => s.n).join(', ')}</td></tr></table></div>
 ${reqBox(s5)}
 ${box('tip', 'Tip', 'Eric shares one screen at 16:51:00 (<code>SHARE</code> from Pan) with the deck in the Leader window, tab 1, and operates every window; Yorik speaks throughout. The expiry bloc is started at 16:05 so that D4 shows a refund that no one triggered by hand.')}
 ${slideCard(C.SLIDES.find(s => s.n === 30))}
@@ -127,7 +127,7 @@ ${box('warn', 'Watch out', 'Yorik’s GO of 25 Oct (#605) covered a live START a
 <h2>Preconditions (checked at 15:30 by Eric and Yorik)</h2>
 <ul><li>Health <code>UP</code> (A.1); latest runs on <code>dev</code> green; merge freeze in force; the §4 demo PR is the only change that may land.</li>
 <li>Two Google buyer accounts signed in on Eric’s machine in two Chrome profiles, “Leader”, shown as <b>wood kik</b>, and “Joiner”, shown as <b>los gai</b> (as in the 24 Oct backup recording); the same two on Yorik’s machine as standby. Neither needs admin: the listings check uses the public catalogue, and the Joiner must <b>not</b> hold the admin role, or D5’s 403 fails; Lim checks it at the 25 Oct rehearsal.</li>
-<li>At <b>≈ 16:05</b> (latest 16:07, so the refund lands before the 16:50 check and §5 starts at 16:51) Yorik, as account B, starts a bloc on <code>US34-04</code> and pays; nobody joins; receipt bookmarked in the Joiner window, tab 3. It is due ≈ 16:45; the sweep (every minute) expires it and the refund worker (every 30 s) refunds it ≈ 16:46–16:48. Post <code>EXPIRY OK</code> at 16:10 and <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.</li>
+<li>At <b>≈ 16:05</b> (latest 16:07, so the refund lands before the 16:50 check and §5 starts at 16:51) Yorik, as account B, starts a bloc on <code>US34-04</code> and pays; nobody joins; receipt bookmarked in the Joiner window, tab 5. It is due ≈ 16:45; the sweep (every minute) expires it and the refund worker (every 30 s) refunds it ≈ 16:46–16:48. Post <code>EXPIRY OK</code> at 16:10 and <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.</li>
 <li>Listings converged: <code>scripts/seed-dev-demo-listings.sh --check</code> passes for the four <code>US34-*</code> listings (≤ 12:00, Yorik).</li>
 <li>D5: the admin URL ready to paste; Joiner DevTools closed.</li>
 <li>D1–D3 sources: the Leader’s 24 Oct receipt open in Leader tab 3; the Joiner’s <code>/account</code> showing the 24 Oct bloc Filled and its order Confirmed in Joiner tab 2; the player cued at D1’s Checkout form and at clip D2.</li>
@@ -184,7 +184,7 @@ const timeline = `<section class="chap"><h1>6 Timeline before, on and after the 
 ${tbl(['Date', 'Do', 'Owner'], [
   ['Wed 21 Oct', 'Deck re-planned from the rubric; §1 drafted.', 'Lim'],
   ['Fri 23 Oct', '<b>Slides due</b> (#464). Each owner reviews their slides, cards and Q&amp;A rows; the Sprint 4 review and retro feed slides 5 and 7.', 'All'],
-  ['Sat 24 Oct', '<b>Full dry run on dev</b> of D1–D6 in order and timed: a <code>US34-04</code> bloc started ≈ 10:00 by account B expires and refunds (D4), START and JOIN on <code>US34-04</code> with both accounts (D1, D2); payment and refund ids in the day log (no secrets). <b>Backup videos</b> of both demos recorded on the final Sprint 4 build deployed to dev (Sprint 4 ended 23 Oct), 1080p, one clip per step, stored in the cloud and on a USB drive (rubric G6). Optional <b>k6 pre-run</b> on the SWE5001 ECS environment (slide 32 already shows the 16 Oct run, #670). <b>Go/no-go</b> for the live payment steps after the dry run, posted in #464.', 'Yorik, Eric (system); Pan (pipeline, k6); Yorik decides the go/no-go with Lim'],
+  ['Sat 24 Oct', '<b>Full dry run on dev</b> of D1–D6 in order and timed: a <code>US34-04</code> bloc started ≈ 10:00 by account B expires and refunds (D4), START and JOIN on <code>US34-04</code> with both accounts (D1, D2); payment and refund ids in the day log (no secrets). <b>Backup videos</b> of both demos recorded on the final Sprint 4 build deployed to dev (Sprint 4 ended 23 Oct), 1080p, one clip per step, stored in the cloud and on a USB drive (rubric G6). Optional <b>k6 pre-run</b> on the SWE5001 ECS environment (slide 32 already shows the 16 Oct run, #670). <b>Go/no-go</b> for the live payment steps after the dry run, posted in #464 (superseded by the 25 Oct rehearsal: no payment on air).', 'Yorik, Eric (system); Pan (pipeline, k6); Yorik decides the go/no-go with Lim'],
   ['Sun 25 Oct', '<b>Timed rehearsal</b> in Zoom at the real clock with injected questions; every diagram slide and its crops checked on a projector or TV from across the room (rubric V7); every rubric checklist box ticked; every marker resolved; rebuild deck and script.', 'All; Lim times'],
 ])}
 <h2>Presentation day (Mon 26 Oct)</h2>
@@ -202,7 +202,7 @@ ${tbl(['Time (SGT)', 'Do', 'Owner'], [
 </section>`;
 
 // ---------- open items (rendered after every counted chapter) ----------
-const openItems = () => `<section class="chap"><h1>7 Open items before the 25 Oct rehearsal</h1>
+const openItems = () => `<section class="chap"><h1>7 Open items before the talk (26 Oct)</h1>
 <p>There are ${markers.FILL} <span class="mk mk-fill">[FILL]</span>, ${markers.VERIFY} <span class="mk mk-verify">[VERIFY]</span> and ${markers.CONFIRM} <span class="mk mk-confirm">[CONFIRM]</span> markers in this script. <b>FILL</b> is a value that does not exist yet, so never present a guess; <b>VERIFY</b> is a claim to check against the repository, the report or run logs; <b>CONFIRM</b> needs team agreement. All must be gone after the 25 Oct rehearsal.</p>
 ${tbl(['#', 'Item', 'Owner', 'Blocks slide'], C.OPEN_ITEMS.map(r => r.map(esc)))}
 </section>`;

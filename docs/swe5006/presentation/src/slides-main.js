@@ -197,7 +197,7 @@ const s6 = () => `
 ${gA(kicker('Every use case has a report owner'), 'up', 150)}
 <div style="display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;font:400 20px/1.3 Inter;margin-bottom:16px">${[['UC1', 'Pan'], ['UC2', 'Pan'], ['UC3', 'Eric'], ['UC4', 'Eric'], ['UC5', 'Liu Jin'], ['UC6', 'Yorik'], ['UC7', 'Lim'], ['UC8', 'Lim'], ['UC9', 'Liu Jin']].map((u, i) => `<span ${A('up', 200 + 30 * i)}><b>${u[0]}</b> ${u[1]}</span>`).join('')}</div>
 ${tbl(['Member', 'Use case', 'Design problem → GoF pattern'], own.map(o => withRef([`<b>${o[0]}</b>`, o[1], o[2]], `${o[3]} (proposal §6.1)`)), { fs: 20, w: [250, 380], pad: '11px 14px', m: [420, 540, 38] })}
-<div ${A('up', 800, 'margin-top:14px;font:400 20px/1.4 Inter;')}>Each member presents their own design problem in section 2; Eric presents the team statechart, which the report places in Liu Jin’s UC5.</div>
+<div ${A('up', 800, 'margin-top:14px;font:400 20px/1.4 Inter;')}>Eric, Yorik and Liu Jin present their design problems in section 2; Pan’s and Lim’s are backups B19 and B20.</div>
 <div ${A('up', 860, 'margin-top:6px;display:flex;gap:14px;align-items:center;')}>${report(`<span${ref('Eric 3.4.1 and 3.5.1; Yorik 3.4.2 and 3.5.2; Pan 3.4.3 and 3.5.3; Lim 3.4.4 and 3.5.4; Liu Jin 3.4.5 and 3.5.5 (#463 report plan, 24 Oct; #678, #679)')}>Report: use cases §3.4.1–§3.4.5, design problems §3.5.1–§3.5.5, in section 2 order</span>`).replace('margin-top:8px', 'margin:0')}</div>`;
 
 // ---------- slide 7 (1.6, 1.7) ----------
@@ -714,7 +714,7 @@ const s33 = () => `
  ${tbl(['Step', 'What you see', 'Time'], live.map(l => [`<b>${l[0]}</b>`, l[1], l[2]]), { fs: 22, w: [76, null, 86], pad: '13px 14px', m: [200, 320, 38] })}
 </div>
 <div style="position:absolute;left:724px;top:0;width:440px">
- <div class="card a" data-a="up" style="padding:18px 22px;margin-bottom:14px;--d:600ms">${kicker('Why the backend is pre-run')}<div style="font:400 21px/1.4 Inter">Backend PR checks take about 16 min, longer than the segment, so we show a backend run that finished before the talk.</div></div>
+ <div class="card a" data-a="up" style="padding:18px 22px;margin-bottom:14px;--d:600ms">${kicker('Why the backend run is an earlier one')}<div style="font:400 21px/1.4 Inter">Backend PR checks take about 16 min, longer than the segment, so we show a backend run that finished before the talk.</div></div>
  <div class="card a" data-a="up" style="padding:18px 22px;--d:680ms">${kicker('Backup video', '#B02E1B')}<div style="font:400 21px/1.4 Inter">${lines(['Recorded on dev on 24 Oct: finished runs, checks to smoke test', 'Shared in the team chat; ready on the presenter’s laptop'], 4)}</div></div>
 </div>`;
 
@@ -732,8 +732,8 @@ const plan5 = [
   ['D4', 'A separate bloc that expired: order cancelled, refund sent', ['UC5', 'UC6'], 'Unattended expiry and refund; ≤ 1 min measured locally (slide 32)', env5('dev')],
   ['D5', 'A buyer on an admin-only API', ['—'], 'Security: 403, checked on the server', env5('dev')],
   ['D6', 'Twenty paid buyers race for one seat', ['UC4'], 'Correctness under concurrency', env5('saved CI run', 'loc')],
-  ['36', 'Scripted k6 load, 16 Oct run', ['UC1'], 'Performance: ≤ 2 s at 100 users', env5('SWE5001 ECS', 'ecs')],
-  ['38', 'Back to the §4 pipeline run', ['—'], 'Maintainability', env5('dev')],
+  ['32', 'Scripted k6 load, 16 Oct run', ['UC1'], 'Performance: ≤ 2 s at 100 users', env5('SWE5001 ECS', 'ecs')],
+  ['34', 'Back to the §4 pipeline run', ['—'], 'Maintainability', env5('dev')],
 ];
 // Table column sweep (MOTION.md): table 200, rows 320 +38, then the "Runs on" chips pop down the column from 650, +35;
 // the footnote closes at 960.
