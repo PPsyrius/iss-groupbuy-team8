@@ -43,6 +43,12 @@ rollback-backend.yml  manual, confirmed, reasoned, environment-controlled SSM ro
 
 The security workflow also scans weekly on Monday at 02:17 UTC for newly disclosed issues in unchanged dependencies.
 
+## SWE5006 Terraform static checks (2026-10-25, #622)
+
+`infra-swe5006.yml` adds independent `static (frontend-stack)` and `static (backend-app-stack)` jobs for PRs into `dev` that change the SWE5006 Terraform source, its referenced deployment files or the checking tools. Manual dispatch is also available. Terraform 1.16.4 formatting, backend-disabled initialization (read-only provider lockfile) and validation block on failure; Checkov 3.3.22 policy findings are advisory and listed in the job log/summary. Installation/execution errors, parsing errors, invalid reports and empty scans fail rather than appearing as clean scans. The [Terraform guide and dated finding inventory](../../infra/terraform/README.md#static-ci-and-policy-findings-2026-10-25-622) record all initial open findings and the deliberate soft-fail adoption decision.
+
+This workflow has only `contents: read`, no persisted checkout credentials, no AWS/OIDC credentials or environment, and no plan/apply/state read. It validates the unapplied production backend design as source, not the hand-managed running dev backend. It neither changes the existing Trivy scans nor becomes a required ruleset check (path-filtered workflows must not be required). Report §4.2 can cite these configured checks and the dated local results; cite the PR's completed matrix jobs and tested revision for hosted evidence.
+
 ## Backend verification concurrency (2026-10-20)
 
 Decision: PR/tag `build-quality` and dev Sonar coverage use the Maven `ci` profile to suppress application SQL DEBUG output and run bootstrap integration-test classes in two reusable, isolated JVMs. Reverse-alphabetical class order starts `V4ExpiryPipelineIT` early, overlapping its real 60-second expiry deadline and 2,000-event pipeline with the remaining ITs instead of leaving it as a serial tail. Tests within a class remain sequential; each class retains its existing isolated PostgreSQL/Redis/ElasticMQ fixtures and Spring context lifecycle. We do not share mutable fixture databases, parallelize tests inside one JVM (Sa-Token and AWS credentials use JVM-global state), shorten the rehearsal, omit modules, or add a new runner/check/artifact handoff.
