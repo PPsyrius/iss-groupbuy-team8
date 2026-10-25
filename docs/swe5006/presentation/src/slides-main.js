@@ -441,7 +441,7 @@ ${one('team-statechart', 2320, 548, [1164, 275], [
  ${gA(point('Why a statechart', 'Team state gates four use cases: UC4 join, UC5 resolution, UC6 refund and UC8 my teams.', 24), 'up', 640)}
  ${gA(point('In code', `${mo('DealStatus', 22)} and the guards of ${mo('GroupDeal', 22)}`, 24), 'up', 700)}
 </div>
-${repTop('Report §3.4.1 · Eric (team statechart)')}`;
+${repTop('Report §3.4.5 · Liu Jin (team statechart)')}`;
 
 // ---------- backup B21, slide 16 and backups B19–B20 (2.5): one short slot per member ----------
 // Each slot: the problem, what varies and the pattern beside the after-diagram; the other SDP fields (SDP 06 design
@@ -553,7 +553,7 @@ const QUADS = [
       ['End-to-end', 'system', ['Playwright: 8 specs, on the preview build and on dev after each deploy']],
     ],
     runs: `${mo('build-quality', 19)}, ${mo('e2e-preview', 19)}, ${mo('e2e-dev', 19)}`,
-    caught: 'a 502 on e2e-dev during a deploy (3–4 Oct): one host' },
+    caught: 'none counted: the 3–4 Oct e2e-dev 502 came during its own deploy' },
   { q: 'Q3', axes: 'business-facing · critiquing the product', how: 'manual', at: 'left:590px;top:0', types: [['Exploratory, acceptance', 'system']], note: 'Not done: outside users',
     detail: [
       ['Exploratory, acceptance', 'system', ['By hand, logged', 'Stripe Sandbox START and JOIN in a browser (20 Sep, local)', 'Sign-in cookie Secure and HttpOnly on dev (8 Oct)']],

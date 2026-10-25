@@ -224,11 +224,11 @@ const bUc4 = () => `
  <div ${A('up', 450, 'width:220px;font:400 16px/1.4 Inter;')}>Both are vector: open <span class="mono" style="font-size:14px">src/diagrams/uc4-design-*.svg</span> in a browser tab and zoom. Every message carries its source line in the diagram spec. Report §3.4.1 (Eric).</div>
 </div>`;
 const bMembers = () => tbl(['Member', 'Use case (report section)', 'Design problem (report section)', 'On a slide'], [
-  ['Eric', '§3.4.1 UC3, UC4 start and join a team, pay upfront', '§3.5.1 Factory Method: team creation', 'UC4 models 13–15, statechart B18; pattern B21'],
+  ['Eric', '§3.4.1 UC3, UC4 start and join a team, pay upfront', '§3.5.1 Factory Method: team creation', 'UC4 models 13–15; pattern B21'],
   ['Yorik', '§3.4.2 UC6 refund on team expiry', '§3.5.2 Observer: team outcome; refund idempotency as a mechanism (B6)', 'pattern 16; sequence B5'],
   ['Pan', '§3.4.3 UC1 browse listings, UC2 register and sign in', '§3.5.3 Template Method: outbox transports', 'backup B19'],
   ['Lim', '§3.4.4 UC8 my orders and my teams, UC7 share attribution', '§3.5.4 Strategy: UC1 pricing', 'backup B20'],
-  ['Liu Jin', '§3.4.5 UC9 listing administration (first version by Eric, PR #72), UC5 team lifecycle with the team statechart', '§3.5.5 State: listing lifecycle (full form)', 'patterns 17–18; statechart B13'],
+  ['Liu Jin', '§3.4.5 UC9 listing administration (first version by Eric, PR #72), UC5 team lifecycle with the team statechart', '§3.5.5 State: listing lifecycle (full form)', 'patterns 17–18; statecharts B13, B18'],
 ], { fs: 16.5, w: [110, 330, 400], m: quick(5) }) + `<div class="a" data-a="up" style="--d:${after(5)}ms;margin-top:12px;font:400 16px/1.4 Inter">Each member’s analysis class, analysis sequence, design class and design sequence diagrams are in report §3.4.1–§3.4.5 (template RT 3.4); the deck shows UC4 only (rubric G8). Owners: #463, decided 24 Oct; notifications are SWE5001 scope.</div>`;
 const b16erd = () => scroll('full-erd', 2320, 5038, 1150);
 // B16 prints only its first viewport, so the PDF also carries the ERD 1:1 (labels 24 px, rubric V3): each context
