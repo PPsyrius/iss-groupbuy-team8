@@ -154,7 +154,7 @@ const b12 = () => dt(['Workflow · trigger', 'Jobs (required in blue)', 'Median'
   ['<b>rollback-backend</b> · manual', 'validate, then SSM rollback to the recorded previous digest or a given one', '—', 'never run'],
   ['<b>SWE5001</b> · prod branch', 'swe5001-release-gate, swe5001-deploy, infra-swe5001 (promotion PR; see the SWE5001 deck)', '—', '—'],
 ], { fs: 15, w: [190, 470, 220], pad: '6px 10px', m: quick(7) }) + `<div class="a" data-a="up" style="--d:${after(7)}ms;margin-top:8px;font:400 15px/1.4 Inter">Last 100 runs per workflow and event, read with <span class="mono" style="font-size:14.5px">gh run list</span> and the jobs API on 19 Oct. PR durations count only runs where the gated jobs ran (docs-only PRs skip them in about 10 s). Push medians run from the push run start, not the merge click.</div>`;
-const b13 = () => `<div class="dia a" data-a="fade" style="margin-top:-8px;--d:150ms">${fit('physical-deployment', 1130)}</div>${topo('SWE5001 prod: the same code on ECS, rebuilt from scratch on every release and destroyed after it. SWE5006 dev is slide 31.', 450)}`;
+const b13 = () => `<div class="dia a" data-a="fade" style="margin-top:-8px;--d:150ms">${fit('physical-deployment', 1130)}</div>${topo('SWE5001 prod: the same code on ECS, rebuilt from scratch on every release and destroyed after it. SWE5006 dev is slide 27.', 450)}`;
 const b14 = () => dt(['Gap', 'Effect', 'Status'], [
   ['CloudFront → ALB over HTTP', '/api payloads and the origin header cross the AWS network unencrypted', 'NFR-37 TLS still unmet; accepted risk on dev until 16 Nov (#227, NFR register); fix needs an origin hostname and ACM'],
   ['SSH open to the internet', 'port 22 from 0.0.0.0/0 on the dev host, which has a public IP; SSM sessions make it unnecessary', 'AWS read-only check, 21 Oct; open item 9'],
@@ -209,7 +209,7 @@ const b16 = () => `<div style="display:flex;gap:14px;align-items:stretch">
   ['Browse (list + detail)', '24 ms', '0'], ['JOIN intent, unpaid', '57 ms', '0'], ['My Orders', '18 ms', '0'],
  ], { fs: 15, pad: '4px 8px' })}<div style="font:400 15px/1.35 Inter;margin-top:8px">30 paid teams expired within 58 s of their deadlines under that load. One laptop with real HTTP, PostgreSQL and Redis; <b>not a deployed result</b>.</div>`, 'var(--orange-d)', 310)}
 </div>
-<div ${A('up', 560, 'margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter;')}><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out exists only in the SWE5001 topology and is not claimed for SWE5006 (slide 37).</div>
+<div ${A('up', 560, 'margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter;')}><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out exists only in the SWE5001 topology and is not claimed for SWE5006 (slide 33).</div>
 <div ${A('up', 680, 'margin-top:8px;font:italic 400 14.5px/1.35 Inter;color:var(--muted);')}>Sources: docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md (V2, scaling policy); docs/swe5001/evidence/20261019-v3-autoscaling/README.md (V3); docs/perf/sprint3-baseline.md (local workload).</div>`;
 
 // ---- §2 full diagrams (rubric G8, V1, V6): vector, so zoom in the browser or the PDF ----
@@ -253,13 +253,13 @@ const erdPages = () => ERD_FRAMES.flatMap(([ctx, fx, fy, fw, fh]) => {
 // Presenting, the diagram is 1:1 (labels 24 px, as in the crops) in a viewport that runs to the slide's left, right and
 // bottom edges and scrolls both ways; in the PDF, screenshots and the overview it is scaled to fit that viewport.
 const FULL = [
-  ['logical-layers', 'Logical view: COLA layers and packages', 9], ['transition-pair', 'Transition strategies: the UC4 pair', 12],
-  ['use-case', 'Use case diagram', 13], ['uc4-analysis-class', 'UC4 analysis class diagram', 14], ['uc4-analysis-seq', 'UC4 analysis sequence', 14],
-  ['uc4-design-class', 'UC4 design class diagram', 15], ['uc4-design-seq', 'UC4 design sequence, paid join by webhook', 16],
-  ['team-statechart', 'Team-formation statechart', 17], ['fm-start', 'Factory Method: start a team', 18], ['observer-expiry', 'Observer: team outcome', 19],
-  ['template-method-outbox', 'Template Method: outbox transports', 20], ['strategy-pricing', 'Strategy: pricing', 21],
-  ['state-before', 'Listing lifecycle before State (brute force)', 22], ['state-after', 'Listing lifecycle after State', 23],
-  ['core-erd', 'Core schema', 24], ['cicd-pr-vs-merge', 'CI/CD in detail: every step, trigger and path filter', 29], ['dev-deployment', 'Dev deployment', 31],
+  ['logical-layers', 'Logical view: COLA layers and packages', 9], ['transition-pair', 'Transition strategies: the UC4 pair', 'B17'],
+  ['use-case', 'Use case diagram', 12], ['uc4-analysis-class', 'UC4 analysis class diagram', 13], ['uc4-analysis-seq', 'UC4 analysis sequence', 13],
+  ['uc4-design-class', 'UC4 design class diagram', 14], ['uc4-design-seq', 'UC4 design sequence, paid join by webhook', 15],
+  ['team-statechart', 'Team-formation statechart', 'B18'], ['fm-start', 'Factory Method: start a team', 16], ['observer-expiry', 'Observer: team outcome', 17],
+  ['template-method-outbox', 'Template Method: outbox transports', 'B19'], ['strategy-pricing', 'Strategy: pricing', 'B20'],
+  ['state-before', 'Listing lifecycle before State (brute force)', 18], ['state-after', 'Listing lifecycle after State', 19],
+  ['core-erd', 'Core schema', 20], ['cicd-pr-vs-merge', 'CI/CD in detail: every step, trigger and path filter', 25], ['dev-deployment', 'Dev deployment', 27],
   ['expiry-refund-sequence', 'Expiry and refund sequence (ECS)', 'B5'], ['physical-deployment', 'SWE5001 production topology', 'B10'],
   ['listing-statechart', 'UC9 listing statechart', 'B13'], ['full-erd', 'Entity-relationship diagram, all tables', 'B16'],
 ];
@@ -339,11 +339,11 @@ const dx = details => {
 function list() {
   const B = [];
   B.push({ id: 'BX', title: 'Backup slides: index', body: `
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 22px;margin-top:0">
- ${C.BACKUPS.map((b, i) => { const d = 100 + 30 * Math.floor(i / 2); return `<div data-go="${b[0]}" ${A('up', d, 'cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:5px 14px;')}>
-   <span class="tag a" data-a="pop" style="min-width:44px;text-align:center;--d:${d}ms">${b[0]}</span><div ${A('up', d)}><div style="font:600 17px Inter">${b[1]}</div><div style="font:400 15px/1.25 Inter;color:var(--muted)">${b[2]}</div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 22px;margin-top:0">
+ ${C.BACKUPS.map((b, i) => { const d = 100 + 30 * Math.floor(i / 2); return `<div data-go="${b[0]}" ${A('up', d, 'cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:3px 14px;')}>
+   <span class="tag a" data-a="pop" style="min-width:44px;text-align:center;--d:${d}ms">${b[0]}</span><div ${A('up', d)}><div style="font:600 16px/1.2 Inter">${b[1]}</div><div style="font:400 14px/1.2 Inter;color:var(--muted)">${b[2]}</div></div>
  </div>`; }).join('')}
-</div><div ${A('up', 100 + 30 * Math.ceil(C.BACKUPS.length / 2) + 50, 'margin-top:8px;font:italic 400 15px Inter;color:var(--muted);')}>Click a row (or type #B6 or #D15-2 in the URL). Slide 39 stays up during questions.</div>` });
+</div><div ${A('up', 100 + 30 * Math.ceil(C.BACKUPS.length / 2) + 50, 'margin-top:8px;font:italic 400 15px Inter;color:var(--muted);')}>Click a row (or type #B6 or #D14-2 in the URL). Slide 35 stays up during questions.</div>` });
   B.push({ id: 'B1', title: 'Agile artefacts appendix', speaker: 'Lim', body: b1() });
   B.push({ id: 'B2', title: 'Sprint 2 and 3 burndowns', speaker: 'Lim', body: b11() });
   B.push({ id: 'B3', title: 'ADR index', speaker: 'Eric', body: b8() });
@@ -362,6 +362,11 @@ function list() {
   const erd = erdPages();
   B.push({ id: 'B16', title: `Entity-relationship diagram, all 29 tables (scroll; 1:1 pages B16-1 to B16-${erd.length} follow)`, speaker: 'Liu Jin', body: b16erd() });
   for (const e of erd) B.push({ ...e, speaker: 'Liu Jin' });
+  const moved = require('./slides-main').moved;
+  B.push({ id: 'B17', title: 'One strategy pair: UC4 analysis objects become design classes', speaker: 'Eric', body: moved.B17() });
+  B.push({ id: 'B18', title: 'Team-formation statechart', speaker: 'Eric', body: moved.B18() });
+  B.push({ id: 'B19', title: 'Notifications: Template Method', speaker: 'Pan', body: moved.B19() });
+  B.push({ id: 'B20', title: 'UC1 pricing: Strategy', speaker: 'Lim', body: moved.B20() });
   // D pages: each 1:1 crop the talk steps through, so the PDF carries readable diagrams (rubric V3).
   const details = require('./slides-main').details();
   B.push({ id: 'DX', title: 'Diagram details, 1:1: one page per crop', body: dx(details) });

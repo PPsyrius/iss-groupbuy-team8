@@ -28,18 +28,18 @@
 
 #table(columns: (auto, auto, auto, auto, 1fr, auto), stroke: 0.4pt + luma(200), inset: 5pt,
   table.header([*Slide*], [*Clock*], [*Slot*], [*Est.*], [*Title*], [*Rubric*]),
-  [22], [16:39:35], [22 s], [20 s], [Design problem: listing rules that depend on its state], [2.5, G4],
-  [23], [16:39:57], [19 s], [17 s], [After: the State pattern], [2.5, 2.4, G10],
-  [24], [16:40:16], [15 s], [13 s], [Database schema: core entities and mapping decisions], [2.6, V6],
-  [25], [16:38:00], [38 s], [34 s], [Testing on the Agile Testing Quadrants], [3.1, 3.3],
-  [26], [16:38:38], [30 s], [30 s], [Scripted performance test: tool, scenario, target], [3.2],
+  [18], [16:38:10], [22 s], [20 s], [Design problem: listing rules that depend on its state], [2.5, G4],
+  [19], [16:38:32], [19 s], [17 s], [After: the State pattern], [2.5, 2.4, G10],
+  [20], [16:38:51], [15 s], [13 s], [Database schema: core entities and mapping decisions], [2.6, V6],
+  [21], [16:38:00], [38 s], [34 s], [Testing on the Agile Testing Quadrants], [3.1, 3.3],
+  [22], [16:38:38], [30 s], [30 s], [Scripted performance test: tool, scenario, target], [3.2],
 )
-#text(9pt)[Total slots 124 s; estimated speech 114 s. I come in after Lim (slide 21) and hand over to Pan (slide 27).]
+#text(9pt)[Total slots 124 s; estimated speech 114 s. I come in after Yorik (slide 17) and hand over to Pan (slide 23).]
 
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
-== Slide 22 · Design problem: listing rules that depend on its state
-#text(9pt, fill: luma(90))[16:39:35–16:39:57 · slot 22 s · estimate 20 s (43 words) · rubric 2.5, G4]
+== Slide 18 · Design problem: listing rules that depend on its state
+#text(9pt, fill: luma(90))[16:38:10–16:38:32 · slot 22 s · estimate 20 s (43 words) · rubric 2.5, G4]
 
 #lbl("Cue in") #h(4pt) #rich((), size: 9.5pt)
 
@@ -59,8 +59,8 @@
 
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
-== Slide 23 · After: the State pattern
-#text(9pt, fill: luma(90))[16:39:57–16:40:16 · slot 19 s · estimate 17 s (36 words) · rubric 2.5, 2.4, G10]
+== Slide 19 · After: the State pattern
+#text(9pt, fill: luma(90))[16:38:32–16:38:51 · slot 19 s · estimate 17 s (36 words) · rubric 2.5, 2.4, G10]
 
 #lbl("Say")
 #block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "We chose State, because the state decides, not a caller. "), ("c", "click 1/2"), ("t", " First zoom. Product hands each action to ProductStatus. A state allows its own moves and refuses the rest with 409. "), ("c", "click 2/2"), ("t", " Last zoom. No switch is left.")), size: 12pt)]
@@ -71,15 +71,15 @@
 - #rich((("t", "Diagram: src/diagrams/state-after.​svg (crops A2, B); the after-sequence alt has one operand per kind of ConcreteState (override: DRAFT, OFF_SALE; inherited default: ON_SALE), chosen by dynamic dispatch, not by a switch; listing statechart DRAFT -publish-> ON_SALE -delist-> OFF_SALE -publish-> ON_SALE, delete only in DRAFT: backup B13."),), size: 8.8pt)
 - #rich((("t", "Enum constant bodies: ProductStatus DRAFT, ON_SALE and OFF_SALE all have bodies; javac compiles each to an anonymous subclass (ProductStatus$1 … $3), so it is one class per state, shared and stateless (GoF State implementation 2). Defaults throw BizException(PRODUCT_STATE_CONFLICT), HTTP 409."),), size: 8.8pt)
 - #rich((("t", "Why State here: each state changes four operations, not only which moves are legal. DRAFT allows price, currency and stock edits and deletion; ON_SALE and OFF_SALE lock them; publish and delist differ per state. Implementation decisions: Product is immutable, so a transition returns a new revision with version + 1, and updateListing(…, expectedVersion) returns 412 on a stale version (Optimistic Offline Lock, a persistence mechanism, not GoF). Liability beyond the classes per state: AdminListingAppServiceImpl.​changeStatus still switches on the target to pick publish or delist, and Product.​isOnSale() compares the status for the browse filter."),), size: 8.8pt)
-- #rich((("t", "Why not State for the team: DealStatus has one move (OPEN → terminal) and its effects are events (slide 19), so a transition table is enough; State would add three classes with no behaviour (SDP 05a p35). Slide 4 records this change: the proposal promised State for the team lifecycle."),), size: 8.8pt)
+- #rich((("t", "Why not State for the team: DealStatus has one move (OPEN → terminal) and its effects are events (slide 17), so a transition table is enough; State would add three classes with no behaviour (SDP 05a p35). Slide 4 records this change: the proposal promised State for the team lifecycle."),), size: 8.8pt)
 - #rich((("t", "Tests (G10): ProductStatusTest.​on​Sale​Publish​Throws​State​Conflict, off​Sale​Delist​Throws​State​Conflict, currency​Only​Change​Is​Rejected​After​Publication; ProductLifecycleTest (7). Report §3.5.5 (Liu Jin)."),), size: 8.8pt)
 ]
 ]
 
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
-== Slide 24 · Database schema: core entities and mapping decisions
-#text(9pt, fill: luma(90))[16:40:16–16:40:31 · slot 15 s · estimate 13 s (29 words) · rubric 2.6, V6]
+== Slide 20 · Database schema: core entities and mapping decisions
+#text(9pt, fill: luma(90))[16:38:51–16:39:06 · slot 15 s · estimate 13 s (29 words) · rubric 2.6, V6]
 
 #lbl("Say")
 #block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "Now the schema. "), ("c", "click 1/2"), ("t", " First zoom. A unique index stops a buyer from joining one team twice. "), ("c", "click 2/2"), ("t", " Last zoom. Another one stops a second refund. We use no foreign keys.")), size: 12pt)]
@@ -95,7 +95,7 @@
 
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
-== Slide 25 · Testing on the Agile Testing Quadrants
+== Slide 21 · Testing on the Agile Testing Quadrants
 #text(9pt, fill: luma(90))[16:38:00–16:38:38 · slot 38 s · estimate 34 s (73 words) · rubric 3.1, 3.3]
 
 #lbl("Say")
@@ -108,23 +108,23 @@
 - #rich((("t", "Model: EPAT 03 Test Driven Development v2.1 p7 (Agile Testing Quadrants: Q1 unit and component, automated; Q2 functional and story tests, automated and manual; Q3 exploratory, usability, UAT, manual; Q4 performance, load, security, tools) and p5 (levels: unit, integration, system). The level tag on each row is our classification. Placement: repository, SQL and contract integration tests are technology-facing, so Q1 at integration level; Q2 holds only story-level tests that exercise a user story end to end: StripeRolloutAcceptanceIT (8 tests: real HTTP endpoints, scheduler, Flyway schema, webhook signatures; only OAuth and Stripe network calls substituted) and the Playwright e2e specs."),), size: 8.8pt)
 - #rich((("t", "Counted in the repository on 22 Oct at a1c6ac6e: find backend -name \"*Test.​java\" = 186 (185 + ArchitectureTest), 1,329 @Test/@ParameterizedTest; of the 185, 23 boot @SpringBootTest or Testcontainers (grep -l \"@SpringBootTest|Testcontainers|@Container|PostgreSQLContainer\", 22 Oct at 68325744), so 162 are unit level; \"*IT.​java\" = 49, 45 of them start Testcontainers (postgres:18, redis:8.10, ElasticMQ), 242 annotations; ArchitectureTest.​java = 17 rules (grep -c @ArchTest prints 18 because a comment matches); frontend/src \"*.​test.​ts*\" = 77; frontend/e2e = 8 specs, 24 test() declarations. Per module: backup B7."),), size: 8.8pt)
 - #rich((("t", "Complex classes (proposal §6.3 \"unit tests concentrated on classes with complex behaviour\"): state machine DealStatusTest, PaidGroupDealTest (terminalStatesRejectJoins, last​Paid​Member​Succeeds​Without​Mutating​Original​Snapshot); capacity StripeLocalIntegrationTest.​twenty​Buyers​Race​For​Last​Seat​And​Nineteen​Refund​Obligations​Persist (Spring Boot with production ports, PostgreSQL in Testcontainers; twenty paid JOINs released together; asserts 2 members, the leader and one joiner, and 19 refund obligations; a *Test by name, integration by level). StripeCheckoutFlowTest.​concurrent​Paid​Buyers​Cannot​Both​Take​Last​Seat is not cited: it races through a test fake of the join path; refund idempotency RefundServiceTest.​lost​Response​Retries​Same​Durable​Key."),), size: 8.8pt)
-- #rich((("t", "Caught: (Q1) sprint-03/log/2026-10-07.​md, two zero/negative-count red tests reproduced the quote defect (Group​Deal​Purchase​Support​Impl​Test.​a​Team​Without​Its​Paid​Leader​Cannot​Be​Quoted; #422, fixed in #424; guard-order and golden-hash tests pin the refactoring: closed​And​Full​Teams​Are​Rejected​Before​Duplicate​Membership, admission​Guards​Reject​Missing​Facts​And​Preserve​Paid​Rejection​Priority, historical​Start​And​Join​Fingerprints​Remain​Byte​Compatible); ArchUnit controllers_are_validated required @Validated on InternalUserController (sprint-04/log/2026-10-13.​md, #468). (Q2) ci-frontend runs 37102432667 (3 Oct) and 37182996807 (4 Oct): e2e-dev got 502 from /api/actuator/health inside deploy-existing-ec2 of the same commit. (Q3) none logged from the 20 Sep Sandbox run or the 8 Oct cookie check. (Q4) security.​yml weekly full-history gitleaks: 24 matches, 20 SHA-256 digests in a contract baseline re-hashed and fingerprinted (PR #580), 4 badge-token findings still open (slide 32; docs/quality/quality-gates.​md)."),), size: 8.8pt)
+- #rich((("t", "Caught: (Q1) sprint-03/log/2026-10-07.​md, two zero/negative-count red tests reproduced the quote defect (Group​Deal​Purchase​Support​Impl​Test.​a​Team​Without​Its​Paid​Leader​Cannot​Be​Quoted; #422, fixed in #424; guard-order and golden-hash tests pin the refactoring: closed​And​Full​Teams​Are​Rejected​Before​Duplicate​Membership, admission​Guards​Reject​Missing​Facts​And​Preserve​Paid​Rejection​Priority, historical​Start​And​Join​Fingerprints​Remain​Byte​Compatible); ArchUnit controllers_are_validated required @Validated on InternalUserController (sprint-04/log/2026-10-13.​md, #468). (Q2) ci-frontend runs 37102432667 (3 Oct) and 37182996807 (4 Oct): e2e-dev got 502 from /api/actuator/health inside deploy-existing-ec2 of the same commit. (Q3) none logged from the 20 Sep Sandbox run or the 8 Oct cookie check. (Q4) security.​yml weekly full-history gitleaks: 24 matches, 20 SHA-256 digests in a contract baseline re-hashed and fingerprinted (PR #580), 4 badge-token findings still open (slide 28; docs/quality/quality-gates.​md)."),), size: 8.8pt)
 - #rich((("t", "Where it runs: ci-backend.​yml build-quality (mvnw verify: unit, ArchUnit, ITs; required), contract-check (export, git diff --exit-code contracts/, openapi-diff, not required); ci-frontend.​yml frontend-check (Vitest; required), e2e-preview (PRs), e2e-dev (after deploy-s3-dev). Latest local full backend verify: 2,048 passed, 1 opt-in performance skip (sprint-04/log/2026-10-21.​md, base 30b75aaa)."),), size: 8.8pt)
 - #rich((("t", "Q3 evidence: backend/docs/payment/stripe-sandbox-acceptance-20260920.​md (browser START and JOIN through Hosted Checkout, local, 20 Sep); sprint-03 8 Oct log: Google sign-in on dev, Chrome DevTools shows blocbuy-token Secure and HttpOnly; hand mutation probes 12–13 Oct logs. No user acceptance testing with outside users; say so if asked."),), size: 8.8pt)
-- #rich((("t", "Q4 security: types only here (rubric 3.3). Tools and gates are on slide 30: SAST SonarCloud + SpotBugs, dependencies Trivy fs + Dependabot, image Trivy, IaC configuration Trivy config, secrets gitleaks. DAST: dast-baseline.​yml (#607, merged 22 Oct), a passive OWASP ZAP baseline of selected anonymous dev responses, weekly on Monday, on demand and on PRs that change the scan itself (not on ordinary application PRs); findings advisory, scanner or coverage failures fail that job; no login, payment or active testing. Slide 25’s Q4 detail and slide 30 list it, with its findings (0 High, 2 Medium, 4 Low; #610). Last complete run: dev dispatch 40107924516 on 24 Oct (bf5f3072, after the #682 fix in PR #685), green."),), size: 8.8pt)
+- #rich((("t", "Q4 security: types only here (rubric 3.3). Tools and gates are on slide 26: SAST SonarCloud + SpotBugs, dependencies Trivy fs + Dependabot, image Trivy, IaC configuration Trivy config, secrets gitleaks. DAST: dast-baseline.​yml (#607, merged 22 Oct), a passive OWASP ZAP baseline of selected anonymous dev responses, weekly on Monday, on demand and on PRs that change the scan itself (not on ordinary application PRs); findings advisory, scanner or coverage failures fail that job; no login, payment or active testing. Slide 21’s Q4 detail and slide 26 list it, with its findings (0 High, 2 Medium, 4 Low; #610). Last complete run: dev dispatch 40107924516 on 24 Oct (bf5f3072, after the #682 fix in PR #685), green."),), size: 8.8pt)
 ]
 ]
 
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
-== Slide 26 · Scripted performance test: tool, scenario, target
+== Slide 22 · Scripted performance test: tool, scenario, target
 #text(9pt, fill: luma(90))[16:38:38–16:39:08 · slot 30 s · estimate 30 s (66 words) · rubric 3.2]
 
 #lbl("Say")
 #block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "That load test is a k6 script. It runs on a cloud test copy, never on the dev host. The load rises from 10 to 200 requests a second. The proposal asks for 2 seconds with 100 users, about 190 requests a second, so our top step covers it. Teams must also close within a minute of their deadline. Yorik shows both results in the demo."),), size: 12pt)]
 #lbl("If over time") #h(4pt) #rich((("t", "Drop \"Teams must also close within a minute of their deadline.\" (the expiry card says it)"),), size: 9.5pt)
 
-#lbl("Hand over") #h(4pt) #rich((("t", "Pan, where do all these tests run?"),), size: 9.5pt) #h(1fr) #text(8.5pt, fill: luma(110))[next: slide 27, Pan]
+#lbl("Hand over") #h(4pt) #rich((("t", "Pan, where do all these tests run?"),), size: 9.5pt) #h(1fr) #text(8.5pt, fill: luma(110))[next: slide 23, Pan]
 
 #lbl("Cues")
 #text(8.8pt)[
@@ -145,7 +145,7 @@
   table.header([*Question*], [*Answer*], [*Who*]),
   [#rich((("t", "The proposal promised JWT. Where is that change recorded?"),), size: 9pt)], [#rich((("t", "In the backend skeleton plan of 30 Aug (decisions D6 and D7: a Sa-Token session in Redis, roles from SQL tables) and in frontend ADR 0002 (same-origin /api, HttpOnly cookie). We chose a server session because we can revoke it and the token never reaches JavaScript. There is no numbered backend ADR for it yet (open item 7)."),), size: 9pt)], [#text(9pt, "Lim → Liu Jin")],
   [#rich((("t", "Is ProductStatus really the State pattern, or an enum switch?"),), size: 9pt)], [#rich((("t", "It is State. Each enum constant with a body compiles to its own subclass, overrides only the moves it allows and returns the next state; the default methods refuse with 409. Product calls its state and does not branch on it. Evidence: ProductStatus.​java, ProductStatusTest. One switch remains: AdminListingAppServiceImpl.​changeStatus picks publish or delist from the requested target. The team uses a transition table (DealStatus.​canTransitionTo), which we do not call State."),), size: 9pt)], [#text(9pt, "Liu Jin")],
-  [#rich((("t", "Why not the State pattern for the team, as the proposal said?"),), size: 9pt)], [#rich((("t", "Only OPEN has behaviour. SUCCEEDED and EXPIRED are final and refuse every move with the same error. A transition table (DealStatus.​canTransitionTo) and the guards in GroupDeal cover that; State would add three classes with no behaviour. Listings differ: each state changes how four operations behave (slide 23). Slide 4 records the change."),), size: 9pt)], [#text(9pt, "Liu Jin → Eric")],
+  [#rich((("t", "Why not the State pattern for the team, as the proposal said?"),), size: 9pt)], [#rich((("t", "Only OPEN has behaviour. SUCCEEDED and EXPIRED are final and refuse every move with the same error. A transition table (DealStatus.​canTransitionTo) and the guards in GroupDeal cover that; State would add three classes with no behaviour. Listings differ: each state changes how four operations behave (slide 19). Slide 4 records the change."),), size: 9pt)], [#text(9pt, "Liu Jin → Eric")],
   [#rich((("t", "Is there a database per service?"),), size: 9pt)], [#rich((("t", "On dev, no: one PostgreSQL database holds every table in schema domain. On ECS, yes: one RDS instance with one database per service. Each database applies the full Flyway history, and each service role is granted only the tables it owns (ADR 0008). Full list: B4."),), size: 9pt)], [#text(9pt, "Liu Jin")],
   [#rich((("t", "Without foreign keys, what stops orphan rows?"),), size: 9pt)], [#rich((("t", "The application. Our DDL rule bans foreign keys and CHECK constraints; that is a team rule, not a course rule. Business tables carry a deleted flag, so a delete hides a row instead of breaking its links. Before a listing is deleted, the use case checks every reference: only a draft with no deals, quotes or price policies can go (AdminListingAppServiceImpl.​delete, PRODUCT_REFERENCED). Unique indexes stop duplicate rows under races."),), size: 9pt)], [#text(9pt, "Liu Jin")],
   [#rich((("t", "How do you test payments without calling Stripe?"),), size: 9pt)], [#rich((("t", "Stripe sits behind two ports, the Checkout gateway and the Refund gateway. Unit tests replace the port. StripeRolloutAcceptanceIT (8 tests) runs the real HTTP endpoints, the scheduler, the Flyway schema and the webhook signature checks; only OAuth and the calls to Stripe are replaced. On dev on 23 Oct, a paid Sandbox START settled and a natural expiry refunded once (PR #664, merged 24 Oct, bef39b72); a second buyer’s paid JOIN was shown on dev on 24 Oct (system demo backup recording, #657)."),), size: 9pt)], [#text(9pt, "Liu Jin → Yorik")],
@@ -153,7 +153,7 @@
   [#rich((("t", "Do you do TDD?"),), size: 9pt)], [#rich((("t", "For some changes. Four day logs record the red step: new PostgreSQL tests for the offer query failed first (27 Sep, #205); four admin-console changes started from failing tests (1 Oct, PRs #326–#329); the rate-limit tests failed first, 429 expected, 200 returned (3 Oct); two failing tests reproduced the join-quote bug before the fix (7 Oct). Commits are squashed, so the red step lives in the day logs (docs/agile/practices.​md). Other changes add their tests in the same pull request, and the 80% new-code gate requires them."),), size: 9pt)], [#text(9pt, "Liu Jin")],
   [#rich((("t", "What is your test coverage?"),), size: 9pt)], [#rich((("t", "SonarCloud on dev, read 24 Oct (analyses of bef39b72, the last code change on dev): backend 99.4% and frontend 96.1% overall, both gates passed; on new code 99.3% and 96.2%. The gate needs at least 80% on new code (NFR-06). The frontend figure excludes the generated API client, the route tree and the app entry files (ci-frontend.​yml, sonar.​coverage.​exclusions). Coverage does not measure assertion quality, and we run no mutation testing."),), size: 9pt)], [#text(9pt, "Liu Jin")],
   [#rich((("t", "How do you test the frontend against the API?"),), size: 9pt)], [#rich((("t", "Contract first. The backend regenerates contracts/openapi.​json, and CI fails if the committed file is out of date; openapi-diff fails a breaking change unless it is labelled. The frontend generates its client and its MSW handlers from that file (frontend ADRs 0003, 0011), and an unhandled request fails a test. The stubs prove only the frontend side."),), size: 9pt)], [#text(9pt, "Liu Jin → Lim")],
-  [#rich((("t", "Why is the performance test not on dev?"),), size: 9pt)], [#rich((("t", "Dev is one host, and its database runs on the same machine, so a load test would slow down the demo system and its database; the k6 README forbids it. The test runs on the SWE5001 ECS environment, with an image built from dev on 6 October (slide 26; the 16 Oct run is on slide 36). The local Node workload ran on 30 Sep (docs/perf/sprint3-baseline.​md). Neither result is from dev, and each is labelled."),), size: 9pt)], [#text(9pt, "Liu Jin")],
+  [#rich((("t", "Why is the performance test not on dev?"),), size: 9pt)], [#rich((("t", "Dev is one host, and its database runs on the same machine, so a load test would slow down the demo system and its database; the k6 README forbids it. The test runs on the SWE5001 ECS environment, with an image built from dev on 6 October (slide 22; the 16 Oct run is on slide 32). The local Node workload ran on 30 Sep (docs/perf/sprint3-baseline.​md). Neither result is from dev, and each is labelled."),), size: 9pt)], [#text(9pt, "Liu Jin")],
   [#rich((("t", "Does CloudFront cache the API, so k6 measures the cache?"),), size: 9pt)], [#rich((("t", "No. The /api/* behaviour is uncached, and the k6 preflight checks that before a run (perf/k6/README.​md). Every request reaches the ALB and the ECS service."),), size: 9pt)], [#text(9pt, "Liu Jin")],
   [#rich((("t", "Is 200 requests a second the same as 100 concurrent users?"),), size: 9pt)], [#rich((("t", "Not directly, so we convert. k6 sends requests at a set rate; the proposal counts users. By Little's law, N = X(R + Z): 100 users who wait 0.5 s and get answers in about 30 ms send about 190 requests a second, below our 200. Our limit is p95 under 500 ms, four times stricter than 2 s. The 0.5 s wait is our assumption. The local run on 30 Sep used exactly 100 users with 200 ms waits, and every p95 was 57 ms or less."),), size: 9pt)], [#text(9pt, "Liu Jin")],
   [#rich((("t", "Is the last-seat race test a unit test?"),), size: 9pt)], [#rich((("t", "No, it is an integration test. StripeLocalIntegrationTest.​twenty​Buyers​Race​For​Last​Seat​And​Nineteen​Refund​Obligations​Persist sends twenty paid buyers through the production intent and fulfilment ports against PostgreSQL 18 in Testcontainers. StripeCheckoutFlowTest.​concurrent​Paid​Buyers​Cannot​Both​Take​Last​Seat also uses real PostgreSQL, but its provider, group and order parts are test doubles (class javadoc), so we do not cite it. The unit tests of the same rule are PaidGroupDealTest (the aggregate guards) and DealStatusTest (the transition table)."),), size: 9pt)], [#text(9pt, "Liu Jin")],
@@ -166,10 +166,10 @@
 #table(columns: (auto, 1fr, auto, auto), stroke: 0.4pt + luma(200), inset: 5pt,
   table.header([*\#*], [*Item*], [*Owner*], [*Slide*]),
   [7], [#rich((("t", "No numbered backend ADR for: the auth change from JWT to the Sa-Token session (open decision 6); MyBatis instead of the proposal’s JPA; the scheduling design; the concurrency approach (open decision 3); the team lifecycle as a transition table instead of the proposal’s State; the DevSecOps changes from proposal §5.2 (OWASP Dependency-Check replaced by Trivy deps, Trivy IaC and deps not required checks, three OIDC roles split per job instead of plan/deploy/apply, two IAM users with one access key against “no static credentials”). Not writable before 26 Oct: state the gap in report Appendix B (ADR index and the decisions without an ADR, #681), and write ADRs only if the team chooses"),), size: 9pt)], [#text(9pt, "Liu Jin, Eric, Pan")], [4, 10],
-  [17], [#rich((("t", "Recount the test numbers for slide 25 on 25 Oct"),), size: 9pt)], [#text(9pt, "Liu Jin")], [25],
+  [17], [#rich((("t", "Recount the test numbers for slide 21 on 25 Oct"),), size: 9pt)], [#text(9pt, "Liu Jin")], [21],
 )
 
 == On the day
 
 - IDE open on ProductStatus, Product, ProductStatusTest and ProductLifecycleTest (rubric G10).
-- Zoomable full ERD (src/diagrams/full-erd.svg) open in a browser tab for slide 24.
+- Zoomable full ERD (src/diagrams/full-erd.svg) open in a browser tab for slide 20.
