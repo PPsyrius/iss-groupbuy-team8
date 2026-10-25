@@ -722,19 +722,19 @@ const s33 = () => `
 </div>`;
 
 // ---------- slide 34 (5.1, 5.2) ----------
-// Environment per step: GO for D1, D2 and D4 confirmed by Yorik on 25 Oct (#605); a failed 26 Oct check switches a step to its recording (run book).
+// Environment per step (25 Oct rehearsal, Yorik's script): D1, D3 the 24 Oct purchase on dev; D2 its recording; D4 the 16:05 bloc; no payment on air.
 const env5 = (t, tone = 'ok') => {
   const k = { ok: ['#E3E8FB', '#3E5CD9'], rec: ['#FFEDC7', '#7A5C20'], loc: ['#ECE6DC', '#1B1A18'], ecs: ['#FBDFD9', '#B02E1B'] }[tone];
   return `<span style="display:inline-block;font:700 15px/1.15 Inter;background:${k[0]};color:${k[1]};border-radius:999px;padding:5px 10px;white-space:nowrap">${t}</span>`;
 };
 const ucList = a => `<div style="display:flex;flex-wrap:wrap;gap:0 8px">${a.map(u => `<span style="white-space:nowrap">${u}</span>`).join('')}</div>`;
 const plan5 = [
-  ['D1', 'Leader signs in, starts a bloc, pays in Stripe Sandbox, copies the invite', ['UC2', 'UC1', 'UC3', 'UC7'], 'Security: only a signed webhook confirms payment', env5('dev')],
-  ['D2', 'Joiner opens the invite, joins and pays: 2 of 2, the team succeeds', ['UC4', 'UC5', 'UC7'], 'Correctness: guards re-checked after payment', env5('dev')],
-  ['D3', 'My blocs and orders, filtered by the URL', ['UC8'], 'Functionality', env5('dev')],
-  ['D4', 'The bloc started at 16:05 expired and refunded itself', ['UC5', 'UC6'], 'Unattended expiry and refund; ≤ 1 min measured locally (slide 36)', env5('dev')],
-  ['D5', 'No session, a buyer on admin, a write without the marker', ['—'], 'Security: 401, 403, 400, HttpOnly', env5('dev')],
-  ['D6', 'Twenty paid buyers race for one seat', ['UC4'], 'Correctness under concurrency', env5('local test', 'loc')],
+  ['D1', 'A completed start: the listing, Stripe Checkout, the first buyer’s receipt', ['UC2', 'UC1', 'UC3', 'UC7'], 'Security: only a signed webhook confirms payment', env5('dev')],
+  ['D2', 'The second buyer’s invite, Checkout and “Payment received”', ['UC4', 'UC5', 'UC7'], 'Correctness: guards re-checked after payment', env5('recorded, 24 Oct', 'rec')],
+  ['D3', 'The bloc Filled, 2 of 2; its orders Confirmed', ['UC8'], 'Functionality', env5('dev')],
+  ['D4', 'A separate bloc that expired: order cancelled, refund sent', ['UC5', 'UC6'], 'Unattended expiry and refund; ≤ 1 min measured locally (slide 36)', env5('dev')],
+  ['D5', 'A buyer on an admin-only API', ['—'], 'Security: 403, checked on the server', env5('dev')],
+  ['D6', 'Twenty paid buyers race for one seat', ['UC4'], 'Correctness under concurrency', env5('saved CI run', 'loc')],
   ['36', 'Scripted k6 load, 16 Oct run', ['UC1'], 'Performance: ≤ 2 s at 100 users', env5('SWE5001 ECS', 'ecs')],
   ['38', 'Back to the §4 pipeline run', ['—'], 'Maintainability', env5('dev')],
 ];
@@ -742,16 +742,16 @@ const plan5 = [
 // the footnote closes at 960.
 const s34 = () => `
 ${tbl(['Step', 'What you see', '<span style="white-space:nowrap">Use cases</span>', 'Quality attribute (slide 3)', 'Runs on'], plan5.map((r, i) => [`<b>${r[0]}</b>`, r[1], ucList(r[2]), r[3], hAt(r[4], 'pop', 650 + 35 * i)]), { fs: 20, w: [60, 400, 118, null, 138], pad: '5px 10px', m: [200, 320, 38] })}
-<div ${A('up', 960, 'position:absolute;left:0;right:0;top:520px;font:400 18px/1.3 Inter;color:var(--muted);')}${ref('#605 · #657 · #517 · #223')}>“dev”: live on dev (GO, 25 Oct); if a morning check fails, that step plays its 24 Oct recording, said as recorded</div>`;
+<div ${A('up', 960, 'position:absolute;left:0;right:0;top:520px;font:400 18px/1.3 Inter;color:var(--muted);')}${ref('#605 · #657 · #517 · #223 · #590')}>“dev”: D1 and D3 show the purchase both buyers completed on dev on 24 Oct, D4 a bloc that expired there; no payment on air; a page that fails plays its 24 Oct recording</div>`;
 
 // ---------- slide 35 (5.1, 5.2, 5.5) ----------
 const live5 = [
-  ['D1', 'Start a bloc and share the invite', '120 s'],
-  ['D2', 'A friend joins and pays: the team succeeds', '120 s'],
-  ['D3', 'My blocs and my orders', '75 s'],
-  ['D4', 'The 16:05 bloc: expired, order cancelled, refunded', '90 s'],
-  ['D5', 'Security: 401, 403, 400, HttpOnly cookie', '60 s'],
-  ['D6', 'Last-seat race: the test, in the IDE', '45 s'],
+  ['D1', 'A completed start: listing, Checkout, receipt', '120 s'],
+  ['D2', 'The second buyer joins and pays (recorded)', '120 s'],
+  ['D3', 'The bloc Filled, its orders Confirmed', '75 s'],
+  ['D4', 'A separate bloc: expired, cancelled, refunded', '90 s'],
+  ['D5', 'Access control: a buyer gets 403 on admin', '60 s'],
+  ['D6', 'Last-seat race: the saved CI run', '45 s'],
 ];
 // Live demo host, as slide 33.
 const s35 = () => `
