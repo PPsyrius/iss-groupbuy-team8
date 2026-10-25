@@ -31,7 +31,7 @@ The deck was re-planned from `RUBRIC.md` on 21–22 Oct 2026 (#464) and replaces
 Still open, all needing the team rather than the repository (see `OPEN_ITEMS` in `src/content.js` and the rubric's checklist):
 
 - The Sprint 4 retrospective (1.6, 1.7; Sprint 3's is `docs/agile/sprint-03/retro.md`). Use-case owners were settled on 24 Oct (open decision 4).
-- The paid flow on dev: the day-of go/no-go and closing #590, #517 and #223 (paid START and the expiry refund were shown by PR #664, merged 24 Oct, bef39b72; a second buyer's paid JOIN on 24 Oct in the system demo backup recording, #657), and the pipeline backup video by 25 Oct (G6, 4.6).
+- The paid flow on dev: the day-of go/no-go (#590, #517 and #223 closed by Yorik on 25 Oct; paid START and the expiry refund were shown by PR #664, merged 24 Oct, bef39b72; a second buyer's paid JOIN on 24 Oct in the system demo backup recording, #657), and the pipeline backup video by 25 Oct (G6, 4.6).
 - ADRs for the six changes on slide 4 that have none (listed in its `data-ref`), the demo change and its approver (4.1).
 
 ## Working on the deck
