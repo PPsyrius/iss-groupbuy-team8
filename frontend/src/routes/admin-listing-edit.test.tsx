@@ -31,6 +31,20 @@ function rowOf(store: Store, productNo: string) {
 // The editor for an existing listing (admin plan A1-06, artboards 4b.2 and 4b.3) over the
 // stateful admin store.
 describe("/admin/listings/$productId", () => {
+  it("renders safe defaults when optional listing details are absent", async () => {
+    serveAdmin();
+    server.use(
+      http.get("*/api/v1/admin/products/:productId", () =>
+        HttpResponse.json({ code: OK_CODE, data: { id: "p1", status: "on_sale" } }),
+      ),
+    );
+    renderRoute("/admin/listings/p1");
+    expect(await screen.findByRole("button", { name: "Save changes" })).toBeVisible();
+    expect(document.title).toBe("Edit listing · BlocBuy");
+    expect(screen.getByRole("textbox", { name: "Sold" })).toHaveValue("0");
+    expect(screen.getByRole("textbox", { name: "Solo price" })).toHaveValue("");
+    expect(screen.getByRole("textbox", { name: "Stock" })).toHaveValue("0");
+  });
   it("edits a draft with every field open", async () => {
     const store = serveAdmin();
     const milk = rowOf(store, "BB-100472");
@@ -339,6 +353,65 @@ describe("/admin/listings/$productId", () => {
         name: "Put back on sale",
       }),
     ).toBeVisible();
+  });
+
+  it("puts an off-sale listing back on sale from its sidebar", async () => {
+    const store = serveAdmin();
+    const row = rowOf(store, "BB-100476");
+    renderRoute(`/admin/listings/${row.id}`);
+    await userEvent.click(await screen.findByRole("button", { name: "Put back on sale" }));
+    const dialog = await screen.findByRole("alertdialog", {
+      name: "Put this listing back on sale?",
+    });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Put back on sale" }));
+    await waitFor(() => expect(row.status).toBe("on_sale"));
+    expect(
+      screen.queryByRole("alertdialog", { name: "Put this listing back on sale?" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("hands a revoked role during publish to the route boundary", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const store = serveAdmin();
+    const row = rowOf(store, "BB-100472");
+    server.use(
+      http.put("*/api/v1/admin/products/:productId/status", () =>
+        HttpResponse.json({ code: "COMMON_403_001" }, { status: 403 }),
+      ),
+    );
+    renderRoute(`/admin/listings/${row.id}`);
+    await userEvent.click(await screen.findByRole("button", { name: "Publish" }));
+    await userEvent.click(
+      within(await screen.findByRole("alertdialog", { name: "Publish this listing?" })).getByRole(
+        "button",
+        { name: "Publish listing" },
+      ),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "You don’t have access to the admin console" }),
+    ).toBeVisible();
+    expect(row.status).toBe("draft");
+  });
+
+  it("shows a failed listing read inside the admin shell", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    serveAdmin();
+    server.use(
+      http.get("*/api/v1/admin/products/:productId", () =>
+        HttpResponse.json({ code: "COMMON_400_001" }, { status: 400 }),
+      ),
+    );
+    const defaults = queryClient.getDefaultOptions();
+    queryClient.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, retryDelay: 0 } });
+    try {
+      renderRoute("/admin/listings/unavailable");
+      expect(
+        await screen.findByRole("heading", { name: "Something went wrong on our side" }),
+      ).toBeVisible();
+      expect(screen.getByRole("navigation", { name: "Admin" })).toBeVisible();
+    } finally {
+      queryClient.setDefaultOptions(defaults);
+    }
   });
 });
 

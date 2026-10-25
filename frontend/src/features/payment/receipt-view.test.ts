@@ -89,4 +89,33 @@ describe("receiptView", () => {
     expect(view.chip).toEqual({ label: "SOMETHING_NEW", color: "default" });
     expect(view.moneyLead).toBe("Do not pay again to check the result.");
   });
+
+  it("makes no payment claim while the receipt is loading or has no status", () => {
+    expect(receiptView({ receipt: undefined, isError: false })).toMatchObject({
+      chip: { label: "Checking", color: "default" },
+      moneyLead: "Do not pay again to check the result.",
+    });
+    expect(receiptView({ receipt: {}, isError: false }).chip.label).toBe("Unknown");
+  });
+
+  it.each([undefined, "not-a-number"])("does not invent an amount for %s", (amount) => {
+    const receipt = {
+      status: "SUCCEEDED",
+      currency: "sgd",
+      ...(amount === undefined ? {} : { amount }),
+    };
+    expect(receiptView({ receipt, isError: false }).moneyLead).toBe("Payment recorded.");
+    expect(
+      receiptView({ receipt: { ...receipt, refundPending: true }, isError: false }).moneyLead,
+    ).toBe("Refund pending.");
+    expect(
+      receiptView({ receipt: { ...receipt, refundStatus: "SUCCEEDED" }, isError: false }).moneyLead,
+    ).toBe("Refund sent.");
+  });
+
+  it("defaults a missing currency to SGD", () => {
+    expect(
+      receiptView({ receipt: { status: "SUCCEEDED", amount: "17.89" }, isError: false }).moneyLead,
+    ).toBe("S$17.89 paid.");
+  });
 });

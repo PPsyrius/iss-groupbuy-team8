@@ -56,4 +56,11 @@ describe("/login", () => {
     await waitFor(() => expect(router.state.location.pathname).toBe("/account"));
     expect(await screen.findByRole("heading", { name: "My blocs" })).toBeVisible();
   });
+
+  it("returns to the parked listing when its back link is clicked", async () => {
+    serveAnonymous();
+    const { router } = renderRoute("/login?returnTo=/products/abc");
+    await userEvent.click(await screen.findByRole("link", { name: "Back to the listing" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/products/abc"));
+  });
 });

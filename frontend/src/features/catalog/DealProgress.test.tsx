@@ -20,6 +20,15 @@ describe("DealProgress", () => {
     vi.useRealTimers();
   });
 
+  it("uses only the progress bar rather than seat dots for a large bloc", () => {
+    const { container } = render(
+      <DealProgress deal={{ dealId: "large", currentSize: 30, targetSize: 100 }} />,
+    );
+    expect(screen.getByText("30 of 100 joined")).toBeVisible();
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuemax", "100");
+    expect(container.querySelector('ul[aria-hidden="true"]')).not.toBeInTheDocument();
+  });
+
   it("renders the joined count, a 60 % progress bar and the seats left", () => {
     const { container } = render(
       <DealProgress

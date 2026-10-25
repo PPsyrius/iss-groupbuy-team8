@@ -158,4 +158,81 @@ describe("LifecycleDialog", () => {
     expect(onClose).toHaveBeenCalled();
     expect(row).toMatchObject({ status: "draft", version: 0 });
   });
+
+  it.each([
+    [
+      401,
+      { code: "AUTH_401_001", message: "Expired" },
+      "Your session ended. Sign in again to change this listing.",
+    ],
+    [
+      400,
+      {
+        code: "COMMON_400_002",
+        message: "Invalid",
+        errors: [{ field: "status", message: "Invalid status" }],
+      },
+      "The server refused this change. Reload the listing and try again.",
+    ],
+  ])("keeps a refused change open for HTTP %s", async (status, body, message) => {
+    const user = userEvent.setup();
+    const { row, onClose, dialog } = await open("publish", "BB-100472");
+    server.use(
+      http.put(`*/api/v1/admin/products/${row.id}/status`, () =>
+        HttpResponse.json(body, { status }),
+      ),
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Publish listing" }));
+    expect(await within(dialog).findByText(message)).toBeVisible();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(row.status).toBe("draft");
+  });
+
+  it("requires an explicit decision rather than dismissing with Escape", async () => {
+    const user = userEvent.setup();
+    const { row, onClose, dialog } = await open("publish", "BB-100472");
+    await user.keyboard("{Escape}");
+    expect(dialog).toBeVisible();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(row).toMatchObject({ status: "draft", version: 0 });
+  });
+
+  it("shows unavailable saved values without inventing a price or stock", async () => {
+    await renderWithRouter(<LifecycleDialog kind="publish" listing={{}} onClose={() => {}} />);
+    const group = await screen.findByRole("group", { name: "These three fields freeze for good" });
+    expect(within(group).getAllByText("—")).toHaveLength(2);
+    expect(within(group).getByText("SGD")).toBeVisible();
+  });
+
+  it("does not open a dialog without a selected action", async () => {
+    await renderWithRouter(<LifecycleDialog kind={null} listing={{}} onClose={() => {}} />);
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  it("disables both decisions while the lifecycle write is pending", async () => {
+    const user = userEvent.setup();
+    const { row, onClose, dialog } = await open("publish", "BB-100472");
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    server.use(
+      http.put(`*/api/v1/admin/products/${row.id}/status`, async () => {
+        await held;
+      }),
+    );
+    try {
+      await user.click(within(dialog).getByRole("button", { name: "Publish listing" }));
+      await waitFor(() =>
+        expect(within(dialog).getByRole("button", { name: "Publish listing" })).toBeDisabled(),
+      );
+      expect(within(dialog).getByRole("button", { name: "Cancel" })).toBeDisabled();
+      await user.keyboard("{Escape}");
+      expect(onClose).not.toHaveBeenCalled();
+    } finally {
+      release();
+    }
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(row.status).toBe("on_sale");
+  });
 });

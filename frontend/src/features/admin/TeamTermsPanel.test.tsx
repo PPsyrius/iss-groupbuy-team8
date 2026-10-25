@@ -5,7 +5,10 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { createAdminStore } from "@/test/admin-msw";
 import { server } from "@/test/msw";
+import { renderWithRouter } from "@/test/render";
 import { renderRoute, serveAdmin } from "@/test/render-route";
+
+import { TeamTermsPanel } from "./TeamTermsPanel";
 
 type Store = ReturnType<typeof createAdminStore>;
 
@@ -29,6 +32,25 @@ const field = (panel: HTMLElement, name: string) => within(panel).getByRole("tex
 // The group terms panel on the editor page (admin plan A3-04, §11 D6): a card under the bloc price
 // rule panel with its own save through `configureTeamTerms`.
 describe("TeamTermsPanel", () => {
+  it("can save terms even when the listing is not in the query cache", async () => {
+    serveAdmin();
+    server.use(http.put(termsPath, () => HttpResponse.json({ code: "COMMON_200_000", data: {} })));
+    const onConflict = vi.fn<(version: number | null) => void>();
+    await renderWithRouter(
+      <TeamTermsPanel
+        productId="p1"
+        version={0}
+        terms={{ configured: true, targetSize: 5, lifetimeSeconds: 7200 }}
+        reloads={0}
+        isDisabled={false}
+        listingDirty={false}
+        onConflict={onConflict}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Save terms" }));
+    expect(await screen.findByText("Terms saved.")).toBeVisible();
+    expect(screen.getByRole("textbox", { name: "Seats per bloc" })).toHaveValue("5");
+  });
   it("shows configured terms as ready", async () => {
     const store = serveAdmin();
     const { panel } = await openPanel(store, "BB-100481");
@@ -125,6 +147,55 @@ describe("TeamTermsPanel", () => {
     await user.click(within(panel).getByRole("button", { name: "Save terms" }));
     expect(await within(panel).findByText("must be greater than or equal to 2")).toBeVisible();
     expect(within(panel).getByText("Ready to start blocs")).toBeVisible();
+    await user.type(field(panel, "Seats per bloc"), "0");
+    await user.tab();
+    await waitFor(() =>
+      expect(
+        within(panel).queryByText("must be greater than or equal to 2"),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it("shows an unknown server field in the form alert", async () => {
+    const user = userEvent.setup();
+    const store = serveAdmin();
+    server.use(
+      http.put(termsPath, () =>
+        HttpResponse.json(
+          {
+            code: "COMMON_400_002",
+            errors: [{ field: "futureField", message: "Reload the terms" }],
+          },
+          { status: 400 },
+        ),
+      ),
+    );
+    const { panel } = await openPanel(store, "BB-100481");
+    await user.click(within(panel).getByRole("button", { name: "Save terms" }));
+    expect(await within(panel).findByRole("alert")).toHaveTextContent("Reload the terms");
+  });
+
+  it("retains cached version and terms when the save response omits them", async () => {
+    const store = serveAdmin();
+    server.use(http.put(termsPath, () => HttpResponse.json({ code: "COMMON_200_000", data: {} })));
+    const { panel } = await openPanel(store, "BB-100481");
+    await userEvent.click(within(panel).getByRole("button", { name: "Save terms" }));
+    expect(await within(panel).findByText("Terms saved.")).toBeVisible();
+    expect(screen.getByText("BB-100481 · on sale · v4 · 142 sold")).toBeVisible();
+    expect(field(panel, "Seats per bloc")).toHaveValue("5");
+  });
+
+  it("hands a revoked admin role to the route boundary", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const store = serveAdmin();
+    server.use(
+      http.put(termsPath, () => HttpResponse.json({ code: "COMMON_403_001" }, { status: 403 })),
+    );
+    const { panel } = await openPanel(store, "BB-100481");
+    await userEvent.click(within(panel).getByRole("button", { name: "Save terms" }));
+    expect(
+      await screen.findByRole("heading", { name: "You don’t have access to the admin console" }),
+    ).toBeVisible();
   });
 
   it("turns a stale version into the editor's conflict banner and closes every write", async () => {

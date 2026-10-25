@@ -116,6 +116,33 @@ describe("/ (products list) loader", () => {
     );
   });
 
+  it("offers all listings when a category is empty", async () => {
+    serveListings([]);
+    await renderAt("/?category=groceries&size=12");
+    expect(await screen.findByText("Nothing in Groceries yet")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Browse all listings" })).toHaveAttribute(
+      "href",
+      "/?page=1&size=12",
+    );
+  });
+
+  it("clears a keyword without adding a category", async () => {
+    serveListings([]);
+    await renderAt("/?keyword=rice");
+    expect(await screen.findByRole("link", { name: "Clear search" })).toHaveAttribute(
+      "href",
+      "/?page=1&size=20",
+    );
+  });
+
+  it("renders an empty envelope page without inventing listings", async () => {
+    serveAnonymous();
+    server.use(http.get("*/api/v1/products", () => HttpResponse.json({ code: OK_CODE, data: {} })));
+    await renderAt("/");
+    expect(await screen.findByText("Nothing on sale yet")).toBeVisible();
+    expect(screen.getByText(/Page 1 of 1/)).toBeVisible();
+  });
+
   it("keeps a page that is within range", async () => {
     serveListings([listing(1), listing(2), listing(3)]);
     const router = await renderAt("/?page=2&size=2");

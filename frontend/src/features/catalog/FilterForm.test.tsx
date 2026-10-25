@@ -63,6 +63,16 @@ describe("FilterForm", () => {
     expect(router.state.location.search).toEqual({});
   });
 
+  it("clears an unsubmitted keyword without navigating", async () => {
+    const user = userEvent.setup();
+    const { router } = await renderWithRouter(<FilterForm search={search} />);
+    const input = screen.getByRole("searchbox", { name: "Search listings" });
+    await user.type(input, "rice");
+    await user.click(screen.getByRole("button", { name: /clear/i }));
+    expect(input).toHaveValue("");
+    expect(router.state.location.search).toEqual({});
+  });
+
   it("rejects a keyword over 64 characters without navigating", async () => {
     const user = userEvent.setup();
     const { router } = await renderWithRouter(<FilterForm search={search} />);
