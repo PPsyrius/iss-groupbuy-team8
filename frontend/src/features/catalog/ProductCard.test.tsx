@@ -32,6 +32,21 @@ const invalidDeals = [
 ];
 
 describe("ProductCard", () => {
+  it.each([
+    [{}, []],
+    [{ groupPrice: 8 }, ["S$8.00"]],
+  ] as const)(
+    "renders an incomplete summary without broken links or invented solo prices: %j",
+    async (prices, expectedPrices) => {
+      await renderWithRouter(<ProductCard product={{ title: "Unavailable listing", ...prices }} />);
+      expect(screen.getByRole("heading", { name: "Unavailable listing" })).toBeVisible();
+      expect(screen.queryByRole("link")).not.toBeInTheDocument();
+      expect(screen.queryAllByText(/^S\$/).map((price) => price.textContent)).toEqual(
+        expectedPrices,
+      );
+    },
+  );
+
   it("shows the title and links to the listing detail", async () => {
     await renderWithRouter(<ProductCard product={product} />);
     expect(screen.getByRole("heading", { name: "Thai jasmine rice 10 kg" })).toBeInTheDocument();

@@ -13,12 +13,7 @@ export function UnsavedChangesDialog({
   onDiscard: () => void;
 }>) {
   return (
-    <AlertDialog.Backdrop
-      isOpen={isOpen}
-      onOpenChange={(open) => {
-        if (!open) onKeepEditing();
-      }}
-    >
+    <AlertDialog.Backdrop isOpen={isOpen}>
       <AlertDialog.Container size="sm">
         <AlertDialog.Dialog>
           <AlertDialog.Header>

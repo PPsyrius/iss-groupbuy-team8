@@ -122,8 +122,9 @@ function Thrower(): never {
 }
 
 describe("AppErrorBoundary", () => {
-  it("shows the 500 card when a child throws while rendering", () => {
+  it("shows the 500 card when a child throws while rendering", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
+    const reload = vi.spyOn(window.location, "reload").mockImplementation(() => {});
     render(
       <AppErrorBoundary>
         <Thrower />
@@ -132,5 +133,7 @@ describe("AppErrorBoundary", () => {
     expect(screen.getByRole("heading", { name: "Something went wrong on our side" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "BlocBuy" }).closest("a")).toHaveAttribute("href", "/");
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(reload).toHaveBeenCalledOnce();
   });
 });

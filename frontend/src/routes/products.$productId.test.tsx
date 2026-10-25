@@ -339,6 +339,30 @@ function serveQuote(
 }
 
 describe("/products/$productId quote step", () => {
+  it.each([
+    ["an empty success envelope", () => HttpResponse.json({ code: OK_CODE })],
+    ["a malformed quote", () => HttpResponse.json({ code: OK_CODE, data: {} })],
+  ])("retries after %s without starting a payment", async (_name, fail) => {
+    sessionStorage.clear();
+    serveSignedIn();
+    serveListing(listing());
+    servePayments();
+    serveQuote(fail);
+    renderRoute(`/products/${knownId}`);
+    const [start] = await screen.findAllByRole("button", { name: /Start a bloc/ });
+    await waitFor(() => expect(start).toBeEnabled());
+    await userEvent.click(start!);
+    const dialog = await screen.findByRole("dialog", { name: "Your bloc price" });
+    await within(dialog).findByRole("button", { name: "Try again" });
+    expect(
+      within(dialog).queryByRole("button", { name: "Continue to payment" }),
+    ).not.toBeInTheDocument();
+    serveQuote();
+    await userEvent.click(within(dialog).getByRole("button", { name: "Try again" }));
+    expect(
+      await within(dialog).findByRole("button", { name: "Continue to payment" }),
+    ).toBeEnabled();
+  });
   it("quotes the bloc price, then starts checkout for this listing", async () => {
     sessionStorage.clear();
     serveSignedIn();
@@ -943,6 +967,16 @@ const resolved = (data: Record<string, unknown>) => () =>
 // FB-19 (#230): the invite banner names the sharer from `GET /api/v1/invites/{ref}` (#201).
 describe("/products/$productId invite sharer (FB-19)", () => {
   const ref = "Qm9vbS1pbnZpdGUtcmVm_-";
+
+  it("offers to join an invited bloc even when its displayed price is absent", async () => {
+    sessionStorage.clear();
+    serveAnonymous();
+    serveListing(without(listing(), "groupPrice"));
+    serveInvite(resolved({ sharerNickname: "Sarah" }));
+    renderRoute(`/products/${knownId}?deal=deal-1&ref=${ref}`);
+    const invite = await screen.findByRole("region", { name: "Invite" });
+    expect(within(invite).getByRole("button", { name: "Join this bloc" })).toBeVisible();
+  });
 
   it("leads with the sharer's nickname for the parked ref", async () => {
     sessionStorage.clear();

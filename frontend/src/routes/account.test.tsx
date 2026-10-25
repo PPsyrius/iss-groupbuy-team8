@@ -91,6 +91,17 @@ const mixed = [
 ];
 
 describe("/account behind the _authenticated guard", () => {
+  it("treats omitted page totals as empty rather than displaying undefined counts", async () => {
+    serveSignedIn();
+    server.use(
+      http.get("*/api/v1/orders/me", () => HttpResponse.json({ code: OK_CODE, data: {} })),
+      http.get("*/api/v1/group-deals/me", () => HttpResponse.json({ code: OK_CODE, data: {} })),
+    );
+    renderRoute("/account");
+    expect(
+      await screen.findByRole("heading", { name: "You haven’t joined a bloc yet" }),
+    ).toBeVisible();
+  });
   it("sends anonymous visitors to /login with the wanted path", async () => {
     serveAnonymous();
     const { router } = renderRoute("/account");

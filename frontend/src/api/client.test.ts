@@ -22,6 +22,18 @@ describe("installAuthInterceptor", () => {
     qc.clear();
   });
 
+  it.each([null, "invalid", { code: 403, message: false }])(
+    "uses HTTP diagnostics for a malformed JSON error: %j",
+    async (body) => {
+      server.use(http.get("*/api/v1/auth/me", () => HttpResponse.json(body, { status: 403 })));
+      await expect(qc.fetchQuery(meOptions())).rejects.toMatchObject({
+        status: 403,
+        code: "HTTP_403",
+      });
+      expect(qc.getQueryData(meQueryKey())).toBeUndefined();
+    },
+  );
+
   it("rejects with an ApiError on 401 and settles the me query on an anonymous envelope", async () => {
     server.use(
       http.get("*/api/v1/auth/me", () =>
