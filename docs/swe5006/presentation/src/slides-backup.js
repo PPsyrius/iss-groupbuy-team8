@@ -154,7 +154,7 @@ const b12 = () => dt(['Workflow · trigger', 'Jobs (required in blue)', 'Median'
   ['<b>rollback-backend</b> · manual', 'validate, then SSM rollback to the recorded previous digest or a given one', '—', 'never run'],
   ['<b>SWE5001</b> · prod branch', 'swe5001-release-gate, swe5001-deploy, infra-swe5001 (promotion PR; see the SWE5001 deck)', '—', '—'],
 ], { fs: 15, w: [190, 470, 220], pad: '6px 10px', m: quick(7) }) + `<div class="a" data-a="up" style="--d:${after(7)}ms;margin-top:8px;font:400 15px/1.4 Inter">Last 100 runs per workflow and event, read with <span class="mono" style="font-size:14.5px">gh run list</span> and the jobs API on 19 Oct. PR durations count only runs where the gated jobs ran (docs-only PRs skip them in about 10 s). Push medians run from the push run start, not the merge click.</div>`;
-const b13 = () => `<div class="dia a" data-a="fade" style="margin-top:-8px;--d:150ms">${fit('physical-deployment', 1130)}</div>${topo('SWE5001 prod: the same code on ECS, rebuilt from scratch on every release and destroyed after it. SWE5006 dev is slide 27.', 450)}`;
+const b13 = () => `<div class="dia a" data-a="fade" style="margin-top:-8px;--d:150ms">${fit('physical-deployment', 1130)}</div>${topo('SWE5001 prod: the same code on ECS, rebuilt from scratch on every release and destroyed after it. SWE5006 dev is slide 26.', 450)}`;
 const b14 = () => dt(['Gap', 'Effect', 'Status'], [
   ['CloudFront → ALB over HTTP', '/api payloads and the origin header cross the AWS network unencrypted', 'NFR-37 TLS still unmet; accepted risk on dev until 16 Nov (#227, NFR register); fix needs an origin hostname and ACM'],
   ['SSH open to the internet', 'port 22 from 0.0.0.0/0 on the dev host, which has a public IP; SSM sessions make it unnecessary', 'AWS read-only check, 21 Oct; open item 9'],
@@ -209,7 +209,7 @@ const b16 = () => `<div style="display:flex;gap:14px;align-items:stretch">
   ['Browse (list + detail)', '24 ms', '0'], ['JOIN intent, unpaid', '57 ms', '0'], ['My Orders', '18 ms', '0'],
  ], { fs: 15, pad: '4px 8px' })}<div style="font:400 15px/1.35 Inter;margin-top:8px">30 paid teams expired within 58 s of their deadlines under that load. One laptop with real HTTP, PostgreSQL and Redis; <b>not a deployed result</b>.</div>`, 'var(--orange-d)', 310)}
 </div>
-<div ${A('up', 560, 'margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter;')}><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out exists only in the SWE5001 topology and is not claimed for SWE5006 (slide 33).</div>
+<div ${A('up', 560, 'margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter;')}><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out exists only in the SWE5001 topology and is not claimed for SWE5006 (slide 32).</div>
 <div ${A('up', 680, 'margin-top:8px;font:italic 400 14.5px/1.35 Inter;color:var(--muted);')}>Sources: docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md (V2, scaling policy); docs/swe5001/evidence/20261019-v3-autoscaling/README.md (V3); docs/perf/sprint3-baseline.md (local workload).</div>`;
 
 // ---- §2 full diagrams (rubric G8, V1, V6): vector, so zoom in the browser or the PDF ----
@@ -224,11 +224,11 @@ const bUc4 = () => `
  <div ${A('up', 450, 'width:220px;font:400 16px/1.4 Inter;')}>Both are vector: open <span class="mono" style="font-size:14px">src/diagrams/uc4-design-*.svg</span> in a browser tab and zoom. Every message carries its source line in the diagram spec. Report §3.4.1 (Eric).</div>
 </div>`;
 const bMembers = () => tbl(['Member', 'Use case (report section)', 'Design problem (report section)', 'On a slide'], [
-  ['Eric', '§3.4.1 UC3, UC4 start and join a team, pay upfront', '§3.5.1 Factory Method: team creation', 'UC4 models 13–15, statechart B18; pattern 16'],
-  ['Yorik', '§3.4.2 UC6 refund on team expiry', '§3.5.2 Observer: team outcome; refund idempotency as a mechanism (B6)', 'pattern 17; sequence B5'],
+  ['Eric', '§3.4.1 UC3, UC4 start and join a team, pay upfront', '§3.5.1 Factory Method: team creation', 'UC4 models 13–15, statechart B18; pattern B21'],
+  ['Yorik', '§3.4.2 UC6 refund on team expiry', '§3.5.2 Observer: team outcome; refund idempotency as a mechanism (B6)', 'pattern 16; sequence B5'],
   ['Pan', '§3.4.3 UC1 browse listings, UC2 register and sign in', '§3.5.3 Template Method: outbox transports', 'backup B19'],
   ['Lim', '§3.4.4 UC8 my orders and my teams, UC7 share attribution', '§3.5.4 Strategy: UC1 pricing', 'backup B20'],
-  ['Liu Jin', '§3.4.5 UC9 listing administration (first version by Eric, PR #72), UC5 team lifecycle with the team statechart', '§3.5.5 State: listing lifecycle (full form)', 'patterns 18–19; statechart B13'],
+  ['Liu Jin', '§3.4.5 UC9 listing administration (first version by Eric, PR #72), UC5 team lifecycle with the team statechart', '§3.5.5 State: listing lifecycle (full form)', 'patterns 17–18; statechart B13'],
 ], { fs: 16.5, w: [110, 330, 400], m: quick(5) }) + `<div class="a" data-a="up" style="--d:${after(5)}ms;margin-top:12px;font:400 16px/1.4 Inter">Each member’s analysis class, analysis sequence, design class and design sequence diagrams are in report §3.4.1–§3.4.5 (template RT 3.4); the deck shows UC4 only (rubric G8). Owners: #463, decided 24 Oct; notifications are SWE5001 scope.</div>`;
 const b16erd = () => scroll('full-erd', 2320, 5038, 1150);
 // B16 prints only its first viewport, so the PDF also carries the ERD 1:1 (labels 24 px, rubric V3): each context
@@ -256,10 +256,10 @@ const FULL = [
   ['logical-layers', 'Logical view: COLA layers and packages', 9], ['transition-pair', 'Transition strategies: the UC4 pair', 'B17'],
   ['use-case', 'Use case diagram', 12], ['uc4-analysis-class', 'UC4 analysis class diagram', 13], ['uc4-analysis-seq', 'UC4 analysis sequence', 13],
   ['uc4-design-class', 'UC4 design class diagram', 14], ['uc4-design-seq', 'UC4 design sequence, paid join by webhook', 15],
-  ['team-statechart', 'Team-formation statechart', 'B18'], ['fm-start', 'Factory Method: start a team', 16], ['observer-expiry', 'Observer: team outcome', 17],
+  ['team-statechart', 'Team-formation statechart', 'B18'], ['fm-start', 'Factory Method: start a team', 'B21'], ['observer-expiry', 'Observer: team outcome', 16],
   ['template-method-outbox', 'Template Method: outbox transports', 'B19'], ['strategy-pricing', 'Strategy: pricing', 'B20'],
-  ['state-before', 'Listing lifecycle before State (brute force)', 18], ['state-after', 'Listing lifecycle after State', 19],
-  ['core-erd', 'Core schema', 20], ['cicd-pr-vs-merge', 'CI/CD in detail: every step, trigger and path filter', 25], ['dev-deployment', 'Dev deployment', 27],
+  ['state-before', 'Listing lifecycle before State (brute force)', 17], ['state-after', 'Listing lifecycle after State', 18],
+  ['core-erd', 'Core schema', 19], ['cicd-pr-vs-merge', 'CI/CD in detail: every step, trigger and path filter', 24], ['dev-deployment', 'Dev deployment', 26],
   ['expiry-refund-sequence', 'Expiry and refund sequence (ECS)', 'B5'], ['physical-deployment', 'SWE5001 production topology', 'B10'],
   ['listing-statechart', 'UC9 listing statechart', 'B13'], ['full-erd', 'Entity-relationship diagram, all tables', 'B16'],
 ];
@@ -339,11 +339,11 @@ const dx = details => {
 function list() {
   const B = [];
   B.push({ id: 'BX', title: 'Backup slides: index', body: `
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 22px;margin-top:0">
- ${C.BACKUPS.map((b, i) => { const d = 100 + 30 * Math.floor(i / 2); return `<div data-go="${b[0]}" ${A('up', d, 'cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:3px 14px;')}>
-   <span class="tag a" data-a="pop" style="min-width:44px;text-align:center;--d:${d}ms">${b[0]}</span><div ${A('up', d)}><div style="font:600 16px/1.2 Inter">${b[1]}</div><div style="font:400 14px/1.2 Inter;color:var(--muted)">${b[2]}</div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 22px;margin-top:0">
+ ${C.BACKUPS.map((b, i) => { const d = 100 + 30 * Math.floor(i / 2); return `<div data-go="${b[0]}" ${A('up', d, 'cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:2px 14px;')}>
+   <span class="tag a" data-a="pop" style="min-width:44px;text-align:center;--d:${d}ms">${b[0]}</span><div ${A('up', d)}><div style="font:600 16px/1.15 Inter">${b[1]}</div><div style="font:400 14px/1.15 Inter;color:var(--muted)">${b[2]}</div></div>
  </div>`; }).join('')}
-</div><div ${A('up', 100 + 30 * Math.ceil(C.BACKUPS.length / 2) + 50, 'margin-top:8px;font:italic 400 15px Inter;color:var(--muted);')}>Click a row (or type #B6 or #D14-2 in the URL). Slide 35 stays up during questions.</div>` });
+</div><div ${A('up', 100 + 30 * Math.ceil(C.BACKUPS.length / 2) + 50, 'margin-top:8px;font:italic 400 15px Inter;color:var(--muted);')}>Click a row (or type #B6 or #D14-2 in the URL). Slide 34 stays up during questions.</div>` });
   B.push({ id: 'B1', title: 'Agile artefacts appendix', speaker: 'Lim', body: b1() });
   B.push({ id: 'B2', title: 'Sprint 2 and 3 burndowns', speaker: 'Lim', body: b11() });
   B.push({ id: 'B3', title: 'ADR index', speaker: 'Eric', body: b8() });
@@ -367,6 +367,7 @@ function list() {
   B.push({ id: 'B18', title: 'Team-formation statechart', speaker: 'Eric', body: moved.B18() });
   B.push({ id: 'B19', title: 'Notifications: Template Method', speaker: 'Pan', body: moved.B19() });
   B.push({ id: 'B20', title: 'UC1 pricing: Strategy', speaker: 'Lim', body: moved.B20() });
+  B.push({ id: 'B21', title: 'UC3 start a team: Factory Method', speaker: 'Eric', body: moved.B21() });
   // D pages: each 1:1 crop the talk steps through, so the PDF carries readable diagrams (rubric V3).
   const details = require('./slides-main').details();
   B.push({ id: 'DX', title: 'Diagram details, 1:1: one page per crop', body: dx(details) });
