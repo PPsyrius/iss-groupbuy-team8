@@ -30,9 +30,9 @@ The deck was re-planned from `RUBRIC.md` on 21–22 Oct 2026 (#464) and replaces
 
 Still open, all needing the team rather than the repository (see `OPEN_ITEMS` in `src/content.js` and the rubric's checklist):
 
-- Actual effort per member (1.4), owners of UC1, UC2, UC5 and UC7 (1.5, open decision 4), the Sprint 3 and Sprint 4 retrospectives and the Sprint 4 DoD step (1.6, 1.7).
-- The 23 Oct go/no-go for the paid flow on dev (#517, #223), the k6 pre-run on the SWE5001 ECS environment (5.3), and both backup videos by 24 Oct (G6, 4.6, 5.5).
-- Report section numbers (#463), ADRs for the six changes on slide 4 that have none (listed in its `data-ref`), the scribe (G9), the demo change and its approver (4.1), Identity Center MFA (4.2).
+- Owners of UC1, UC2, UC5 and UC7 (1.5, open decision 4) and the Sprint 3 and Sprint 4 retrospectives (1.6, 1.7).
+- The paid flow on dev: a second buyer's JOIN (#590; paid START and the expiry refund were shown by PR #664, merged 24 Oct, bef39b72), the k6 pre-run on the SWE5001 ECS environment (5.3), and both backup videos by 24 Oct (G6, 4.6, 5.5).
+- Report section numbers (#463), ADRs for the six changes on slide 4 that have none (listed in its `data-ref`), the scribe (G9), the demo change and its approver (4.1).
 
 ## Working on the deck
 
@@ -46,7 +46,7 @@ Still open, all needing the team rather than the repository (see `OPEN_ITEMS` in
 
 - Facts on slides come from the report drafts, merged code, GitHub issues and the project board, AWS (read-only) or recorded evidence; never present a local result as one from a deployed environment.
 - Speaking time is estimated at 130 words a minute; keep each section inside the rubric's budget (the run sheet compares them).
-- Motion is on (`motion: true`): slides crossfade, but the 39 re-planned slides and their backups carry no per-element entrances yet; that choreography is a follow-up PR once the content settles (open item 22). From then on, give new or changed elements an entrance from the patterns in [`docs/presentation-kit/MOTION.md`](../../presentation-kit/MOTION.md), and add any new or unique pattern there in the same commit.
+- Motion is on (`motion: true`): slides crossfade, and every main slide, backup, index and full-size page has entrances from the patterns in [`docs/presentation-kit/MOTION.md`](../../presentation-kit/MOTION.md); the paged 1:1 windows (B16-n, the D pages) have none on purpose. Give new or changed elements an entrance from those patterns, and add any new or unique pattern there in the same commit. The helpers in `src/` take motion as an optional argument (`tbl(m)`, `dt(m)`, `row`, `lines`, `kv`, the pane view opts `d`, `od`, `os`, `pa`, `fx`), so leaving it out keeps the markup unchanged; never put `.a` on a crop layer, badge, caption or anything in `CROPS`, because the D pages reuse that markup. Check a change with a settled-frame pixel diff of `run screenshots` before and after (it must match) plus frames at 300 and 900 ms in presenter mode.
 - Density (review round 4): one point per line, never "A · B · C" runs; prefer sparse slides at 20 px or more over dense ones; detail goes into crop captions, the speaker notes or the backups, not text blocks beside a diagram.
 - Record references that help the report but not the talk (issue, PR and ADR numbers, file names, course page references) stay off the slide face: put them in a `data-ref` attribute on the element they support (`ref()` and `withRef()` in `src/slides-main.js`), or in the slide's cues. List them with `grep -o 'data-ref="[^"]*"' dist/swe5006-presentation.html`.
 - Number every fragment step in `say` as `[click k/n]`; the deck build fails when a slide's steps and its notes disagree.

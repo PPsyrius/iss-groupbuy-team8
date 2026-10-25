@@ -21,7 +21,7 @@ A story or task is done when all of the following hold.
 | 4 | Tests cover the main path, validation failures, and the replay and concurrency cases of the story. | Sprint 2 | Review; SonarCloud requires 80 % coverage on new code |
 | 5 | Every cross-domain reaction states its transaction phase (inside or after the publisher's transaction), and a test proves it. | Sprint 2 | Review |
 | 6 | Maven verify, Spotless, Checkstyle, SpotBugs, ArchUnit, Gitleaks, Trivy, both SonarCloud gates and `pnpm check` pass. | Sprint 2; both SonarCloud gates and `pnpm check` from Sprint 3 | The [required checks](../ci/backend-pipeline.md#required-pr-checks) plus the applicable `security.yml` jobs; gate thresholds in [quality gates](../quality/quality-gates.md) |
-| 7 | The change is reviewed, and contains no secret, no unresolved blocking defect and no unapproved API break. | Sprint 2 | CODEOWNERS review (CONTRIBUTING); the `dev` ruleset requires one approval and every review thread resolved, and merges by squash only; Gitleaks; `openapi-diff --fail-on-incompatible` |
+| 7 | The change is reviewed, and contains no secret, no unresolved blocking defect and no unapproved API break. | Sprint 2 | CODEOWNERS review (CONTRIBUTING); the `dev` ruleset requires one approval, every review thread resolved and a branch up to date with `dev` (strict required checks), and merges by squash only; Gitleaks; `openapi-diff --fail-on-incompatible` |
 | 8 | Where the story says "on dev", it is demonstrated on the deployed dev environment, with the evidence in the day log. A local run does not count. | Sprint 3 | Day-log entry with the dev evidence; sprint review |
 | 9 | The PR has fewer than about 1,500 changed lines, or is one layer of a stacked series. | Sprint 3 | Review |
 | 10 | Remaining hours are in the board's estimate field on the day the card moves. | Sprint 3 | Daily board snapshot in `docs/agile/metrics/` |
@@ -44,13 +44,13 @@ The course's ladder runs coded → tested → integrated → releasable → rele
 
 - **integrated:** merged to `dev` with every required check green;
 - **releasable:** shown working on the deployed dev environment (rule 8). This is lower than the course's "production ready" (p. 25);
-- **released:** used in production. SWE5006 has no production environment: the `backend-prod` deployment path has never run, and Stripe runs in test mode.
+- **released:** promoted to production through the gated release path and verified there by the smoke suite. The ladder's wording asks for a release, not for adoption by outside users, so the earlier gloss "used by real users" is dropped. SWE5006 has no production environment: the `backend-prod` deployment path has never run. SWE5001 production on ECS is brought up per session from released digests; its three-service release was first promoted on 17 Oct (PR #534) and last on 20 Oct (PR #574). Stripe runs in test mode there, and no outside users use it. The team agreed this reading on 24 Oct (#619).
 
 | Sprint | Dates | Goal issue | Step reached | Evidence |
 |---|---|---|---|---|
 | 1 | 1-12 Sep | #49 | integrated | Backend on dev from 5 Sep; no frontend, so not releasable |
 | 2 | 15-26 Sep | #93 | integrated | 9 of 11 stories merged and tested, 134 of 150 h; Checkout and scheduling off on dev (Sprint 2 report) |
 | 3 | 28 Sep-9 Oct | #232 | integrated | Merged and tested; the goal was not met on dev under rule 8; 117 of 150 h, reconstructed at the freeze ([review](sprint-03/review.md)) |
-| 4 | 12-23 Oct | #465 | to be placed at the Sprint 4 review | |
+| 4 | 12-23 Oct | #465 | released (SWE5001); releasable except a second buyer's join (SWE5006 dev) | SWE5001 three-service production on ECS promoted by PR #534 (17 Oct) and, last, PR #574 (20 Oct, run 39435280952, smoke suite green); paid START and the expiry refund shown on deployed dev on 23 Oct (PR #664, merged 24 Oct, bef39b72); a second buyer's JOIN (#590) not shown. Placed from the evidence; the team agreed the placement on 24 Oct (#619) |
 
 Dates follow the progress reports where they exist. The placements match the deck's Definition of Done slide; they are the team's reading of the evidence, not a course rating.

@@ -246,6 +246,19 @@ class DastTrafficTest(unittest.TestCase):
         module.write_json(path, evidence)
         self.assertFalse(self.verify()["complete"])
 
+    def test_missing_beta_rules_fail_even_with_ten_valid_responses(self):
+        self.prepare()
+        for phase in ("start", "finish"):
+            path = self.output / f"passive-{phase}.json"
+            evidence = json.loads(path.read_text())
+            evidence["rules"] = [rule for rule in evidence["rules"] if rule["id"] not in (10063, 90004)]
+            module.write_json(path, evidence)
+        result = self.verify()
+        self.assertEqual(result["covered"], 10)
+        self.assertFalse(result["complete"])
+        self.assertIn("Required passive rules are missing or disabled: 10063, 90004", result["errors"])
+        self.assertIn("Passive processing NOT VERIFIED", module.markdown(result))
+
     def test_missing_required_rule_and_unexecuted_extra_enabled_rule_fail(self):
         self.prepare()
         path = self.output / "passive-start.json"
