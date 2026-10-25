@@ -10,9 +10,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Read port for the GroupDeal aggregate. Paid-path writes use {@link PaidGroupDealRepository}
- * under its transaction and lock-order contract. Implemented in the infrastructure layer; DOs and
- * MyBatis mappers never cross this boundary.
+ * Read port for the GroupDeal aggregate. Paid-path writes use {@link PaidGroupDealRepository} under
+ * its transaction and lock-order contract. Implemented in the infrastructure layer; DOs and MyBatis
+ * mappers never cross this boundary.
  */
 public interface GroupDealRepository {
 
