@@ -35,7 +35,10 @@ const repTop = t => `<!--rep${t}-->`;
 // raises the body by 20 px (568 px tall instead of 548). The kit draws the chip at right:56px, top:20px, 30 px high and
 // as wide as the name; the strip ends just before it.
 const BODY_TOP = 108, BODY_H = 568;
-const DECK_CSS = `<style>.slide:not(.dark)>.body{top:${BODY_TOP}px}body.present .pdfonly{display:none}</style>`;
+// A crop layer not yet reached is only transparent (the kit's .frag.hidden sets opacity 0), and it covers the whole
+// body above the pane, so it would take the wheel and trackpad events and a tall pane would never scroll: let the
+// pointer through every unrevealed crop layer and step badge.
+const DECK_CSS = `<style>.slide:not(.dark)>.body{top:${BODY_TOP}px}body.present .pdfonly{display:none}body.present .zcrop.hidden{pointer-events:none}</style>`;
 const chipRight = name => 30 + 8 + Math.ceil(name.length * 8.6) - 2 + 18;
 const hdrStrip = (speaker, items) => `<div class="a" data-a="fade" style="--d:0ms;position:absolute;right:${chipRight(speaker)}px;top:${20 - BODY_TOP}px;height:30px;display:flex;gap:18px;align-items:center;white-space:nowrap">${items.join('')}</div>`;
 // A labelled point: small uppercase label above its text.
