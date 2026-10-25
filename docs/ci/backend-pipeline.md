@@ -1,6 +1,6 @@
 # CI/CD Pipeline Runbook
 
-This runbook covers PR validation, `dev` analysis and delivery, releases, and rollback. See the [EC2 operator guide](../deploy/backend-ec2-pipeline-operator-guide.md) for AWS setup and the [pipeline plan](devsecops-pipeline-plan.md) and [quality gates](../quality/quality-gates.md) for rationale and thresholds.
+This runbook covers PR validation, `dev` analysis and delivery, releases, and rollback. See the [EC2 operator guide](../deploy/backend-ec2-pipeline-operator-guide.md) for AWS setup and the [pipeline plan](devsecops-pipeline-plan.md) and [quality gates](../quality/quality-gates.md) for rationale and thresholds. Where the pipeline stands on the DevSecOps Maturity Model is in the [maturity self-assessment](devsecops-maturity-assessment.md).
 
 ## Pipeline shape
 
@@ -197,6 +197,10 @@ The workflow never provisions or operates PostgreSQL, Redis, EC2 or Terraform st
 
 Production `v*` releases execute the full backend and security validation path and also run the live TypeSafe compatibility smoke. A TypeSafe smoke failure identifies an external integration problem but does not change the application's deterministic search fallback design.
 
+### Dynamic scan of the deployed dev site
+
+The running system is checked by `dast-baseline.yml`: one passive OWASP ZAP session on dev, weekly and on dispatch (also when the workflow/helper/DAST tests change in a PR). Preflight validates the SPA and catalog before starting the scanner, with a 30-second wall-clock deadline and one-minute step backstop. A generated automation plan covers ten required read-only checks; an empty catalog still scans eight available probes while marking both existing-product checks unavailable and overall coverage incomplete. No fixture is created by the scanner. Post-scan verification requires recorded responses, the minimum passive-rule policy, fresh execution counters for enabled rules and a drained/error-free passive queue. One `zap-baseline` artifact holds findings, sanitized coverage, runtime rule snapshots and the generated plan; there is no duplicate web/API crawl. Findings are advisory and never a required check, but broken targets, incomplete coverage, unverified passive processing and scanner errors fail the job. Scope, time bounds, first findings and remaining active/authenticated gaps are in the [quality gates](../quality/quality-gates.md#dynamic-application-security-testing-dast).
+
 ## Manual rollback
 
 Use **Actions -> rollback-backend -> Run workflow** from `dev`. Provide a reason, confirm the warning, and normally leave `target_image` blank to use the recorded previous image. An explicit target must be a digest in the configured account, Region and repository.
@@ -231,3 +235,19 @@ Deployment and rollback share one non-cancellable concurrency group. A rollback 
 - Do not deploy mutable image tags.
 - Do not add PostgreSQL/Redis services or volumes to the backend deployment bundle.
 - Record any approved exception, deploy approval and rollback reason in durable project evidence.
+
+## Delivery metrics (DORA)
+
+The manual [delivery-metrics tool](../../.github/scripts/dora-metrics.py) reports **dev delivery proxies**, not production health or incident MTTR. The [22 October snapshot](dora-metrics-20261022.md) holds the definitions, frozen input hash, results and limits. It does not add an Actions schedule or a gate.
+
+Replay the retained inputs offline from the repository root (Python 3.10+; no `gh` or token required):
+
+```bash
+python -B .github/scripts/dora-metrics.py PPsyrius/iss-groupbuy-team8 2026-09-01 2026-10-23 --snapshot docs/ci/evidence/dora-metrics-20261022-inputs.json
+```
+
+Use a contained sub-window with the same file, or add `--json` for exact values and lead-sample identities. `DORA_CACHE` is an alternative to `--snapshot`. Replays never write: wrong repositories, unsupported schemas/history scopes, uncovered windows and mismatched explicit `--as-of` cutoffs fail without GitHub access. Collection validates and formats the report before writing, and rechecks the original file bytes before publication; detected file changes abort without publishing a report or overwriting them. Use one writer per file: this recheck is not a filesystem lock.
+
+To collect a new snapshot, sign in to `gh` with repository/Actions read access and choose a **new** filename; the same command collects when the file does not exist. `--refresh` explicitly replaces an existing snapshot after validation. Optional `--as-of` takes an aware UTC timestamp, otherwise collection-start time is frozen. Do not overwrite dated evidence merely to update a report. All retained workflow runs created before the cutoff are inspected, including old runs rerun inside the window; incomplete pagination, the 1,000-run search cap and API errors stop collection rather than producing estimates. Missing/deleted GitHub history cannot be reconstructed.
+
+Deploy-job completions define frequency and the success/failure denominator; retries count separately, while cancelled, timed-out, skipped and unfinished jobs stay visible outside the rate. Success/failure job records must include start timestamps. Lead time deduplicates changes and requires SHA equality or retained ancestry proof; missing PR metadata and censored samples remain explicit. Frontend post-deploy smoke matches the same run and attempt; unpaired smoke-only reruns include `incomplete_at_end` records. Manual **dev** rollback jobs stay separate without an invented incident/change association. Windows end at the earlier of the requested exclusive end and the observation cutoff, including that clipped duration in the frequency denominator. See the snapshot for cohort and recovery-episode boundaries; delivery targets remain undefined.

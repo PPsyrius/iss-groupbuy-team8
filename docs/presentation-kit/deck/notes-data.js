@@ -1,13 +1,12 @@
 // Data for the speaker companion (the deck opened with ?notes, see notes-runtime.js): one render-ready entry per slide,
 // in deck order, built at deck build time so the runtime only places text. Every HTML field comes from md() or chips(),
 // which escape the content text. Pure apart from md() reading the deck's fillLabel.
-const { md } = require('../lib/text');
+const { md, clicks } = require('../lib/text');
 const { hms, toS, slideClock } = require('../lib/schedule');
 
 const MARKER = /\{\{(?:FILL|VERIFY|CONFIRM):[^}]*\}\}/g;
 // Marker chips inside a field that is already HTML (demo steps): only the markers are rendered.
 const chips = html => String(html ?? '').replace(MARKER, m => md(m));
-const clicks = html => html.replace(/\[click\]/g, '<b class="clk">[click]</b>');
 // A hand-over in parentheses is a stage direction; anything else is a line to say, so it is quoted (as in the script).
 const handover = h => (h ? (/^\(/.test(h) ? md(h) : `"${md(h)}"`) : '');
 

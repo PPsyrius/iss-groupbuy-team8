@@ -89,7 +89,7 @@
   <text fill="#1B1A18" x="1480" y="364" font-size="24">«derive» springdoc</text>
   <path d="M1810,352 L2272,352 L2290,370 L2290,502 L1810,502 Z" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.6"/>
   <path d="M2272,352 L2272,370 L2290,370" fill="none" stroke="#6B655C" stroke-width="1.6"/>
-  <text fill="#1B1A18" x="1826" y="386" font-size="24" font-weight="700">ArchitectureTest: 18 ArchUnit rules</text>
+  <text fill="#1B1A18" x="1826" y="386" font-size="24" font-weight="700">ArchitectureTest: 17 ArchUnit rules</text>
   <text fill="#1B1A18" x="1826" y="418" font-size="24">domain_is_framework_free</text>
   <text fill="#1B1A18" x="1826" y="450" font-size="24">persistence_is_internal</text>
   <text fill="#1B1A18" x="1826" y="482" font-size="24">controllers_never_touch_persistence</text>

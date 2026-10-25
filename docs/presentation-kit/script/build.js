@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { deck } = require('../lib/context');
 const { fontCSS, md, esc, words } = require('../lib');
+const { clicks } = require('../lib/text');
 const { hms, toS, est, slideClock } = require('../lib/schedule');
 const CSS = require('./css');
 
@@ -24,7 +25,7 @@ function helpers(C, cfg) {
     const [a, b] = clock[s.n];
     const time = s.slot ? `${hms(a)}–${hms(b)} · ${s.slot} s` : `${short(hms(a))} · Q&amp;A`;
     const w = words(s.say), e = est(s), over = s.slot && e > s.slot;
-    const say = md(s.say).replace(/\[click\]/g, '<b class="clk">[click]</b>');
+    const say = clicks(md(s.say));
     return `<div class="card"><div class="hd"><span>Slide ${s.n} &nbsp; ${esc(s.title)}</span><small>${time}</small></div><div class="bd">
   <div class="row"><span class="lab">Speaker</span><span>${esc(s.speaker)} · covers guideline item <b>${s.item}</b></span></div>
   <div class="row"><span class="lab say">Say</span><span class="say">${say}</span></div>

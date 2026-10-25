@@ -8,8 +8,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Repository port for the PurchaseIntent aggregate (one repository per aggregate root). Implemented
- * in the infrastructure layer; DOs and MyBatis mappers never cross this boundary.
+ * Repository port for the PurchaseIntent aggregate. Implemented in the infrastructure layer; DOs
+ * and MyBatis mappers never cross this boundary.
  *
  * <p>Concurrency contract: the checkout and settlement paths take locks in one fixed order — group
  * deal, then intent, then payment. {@link #lockById(UUID)} is the middle step and every caller that
