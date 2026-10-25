@@ -28,23 +28,23 @@
 
 #table(columns: (auto, auto, auto, auto, 1fr, auto), stroke: 0.4pt + luma(200), inset: 5pt,
   table.header([*Slide*], [*Clock*], [*Slot*], [*Est.*], [*Title*], [*Rubric*]),
-  [17], [16:37:22], [22 s], [20 s], [Design problem: listing rules that depend on its state], [2.5, G4],
-  [18], [16:37:44], [19 s], [17 s], [After: the State pattern], [2.5, 2.4, G10],
-  [19], [16:38:03], [15 s], [13 s], [Database schema: core entities and mapping decisions], [2.6, V6],
-  [20], [16:38:00], [38 s], [34 s], [Testing on the Agile Testing Quadrants], [3.1, 3.3],
-  [21], [16:38:38], [30 s], [30 s], [Scripted performance test: tool, scenario, target], [3.2],
+  [17], [16:37:22], [30 s], [28 s], [Design problem: listing rules that depend on its state], [2.5, G4],
+  [18], [16:37:52], [33 s], [32 s], [After: the State pattern], [2.5, 2.4, G10],
+  [19], [16:38:25], [22 s], [21 s], [Database schema: core entities and mapping decisions], [2.6, V6],
+  [20], [16:38:00], [52 s], [52 s], [Testing on the Agile Testing Quadrants], [3.1, 3.3],
+  [21], [16:38:52], [33 s], [32 s], [Scripted performance test: tool, scenario, target], [3.2],
 )
-#text(9pt)[Total slots 124 s; estimated speech 114 s. I come in after Yorik (slide 16) and hand over to Pan (slide 22).]
+#text(9pt)[Total slots 170 s; estimated speech 165 s. I come in after Yorik (slide 16) and hand over to Pan (slide 22).]
 
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 17 · Design problem: listing rules that depend on its state
-#text(9pt, fill: luma(90))[16:37:22–16:37:44 · slot 22 s · estimate 20 s (43 words) · rubric 2.5, G4]
+#text(9pt, fill: luma(90))[16:37:22–16:37:52 · slot 30 s · estimate 28 s (60 words) · rubric 2.5, G4]
 
 #lbl("Cue in") #h(4pt) #rich((), size: 9.5pt)
 
 #lbl("Say")
-#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "I'm Liu Jin. An admin can publish, delist, revise or delete a listing, but only in some states. "), ("c", "click 1/2"), ("t", " First zoom. Brute force repeats a status switch in all four actions. "), ("c", "click 2/2"), ("t", " Last zoom. The sequence has the same switch. What varies is the state.")), size: 12pt)]
+#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "I'm Liu Jin. An admin can publish, delist, revise or delete a listing, but only in some states. "), ("c", "click 1/2"), ("t", " First zoom. Brute force repeats a status switch in all four actions. So every new state means editing four places, and one missed case lets a forbidden move through. "), ("c", "click 2/2"), ("t", " Last zoom. The sequence has the same switch. What varies is the state.")), size: 12pt)]
 #lbl("If over time") #h(4pt) #rich((("t", "Drop \"The sequence has the same switch.\""),), size: 9.5pt)
 
 
@@ -60,10 +60,11 @@
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 18 · After: the State pattern
-#text(9pt, fill: luma(90))[16:37:44–16:38:03 · slot 19 s · estimate 17 s (36 words) · rubric 2.5, 2.4, G10]
+#text(9pt, fill: luma(90))[16:37:52–16:38:25 · slot 33 s · estimate 32 s (69 words) · rubric 2.5, 2.4, G10]
 
 #lbl("Say")
-#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "We chose State, because the state decides, not a caller. "), ("c", "click 1/2"), ("t", " First zoom. Product hands each action to ProductStatus. A state allows its own moves and refuses the rest with 409. "), ("c", "click 2/2"), ("t", " Last zoom. No switch is left.")), size: 12pt)]
+#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "We chose State, not a transition table, because each state changes how the actions behave, not only which moves are legal. "), ("c", "click 1/2"), ("t", " First zoom. Product hands each action to ProductStatus. A state allows its own moves and refuses the rest with 409. "), ("c", "click 2/2"), ("t", " Last zoom. No switch is left. Each state's rules live in one place, and a new state does not change Product. The cost is one class per state.")), size: 12pt)]
+#lbl("If over time") #h(4pt) #rich((("t", "Drop \", not only which moves are legal\""),), size: 9.5pt)
 
 
 #lbl("Cues")
@@ -79,16 +80,18 @@
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 19 · Database schema: core entities and mapping decisions
-#text(9pt, fill: luma(90))[16:38:03–16:38:18 · slot 15 s · estimate 13 s (29 words) · rubric 2.6, V6]
+#text(9pt, fill: luma(90))[16:38:25–16:38:47 · slot 22 s · estimate 21 s (45 words) · rubric 2.6, V6]
 
 #lbl("Say")
-#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "Now the schema. "), ("c", "click 1/2"), ("t", " First zoom. A unique index stops a buyer from joining one team twice. "), ("c", "click 2/2"), ("t", " Last zoom. Another one stops a second refund. We use no foreign keys.")), size: 12pt)]
+#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "Now the schema. "), ("c", "click 1/2"), ("t", " First zoom. A unique index stops a buyer from joining one team twice. "), ("c", "click 2/2"), ("t", " Last zoom. Another one stops a second refund. We use no foreign keys: in the cloud, each service owns its own database, so the application checks the links instead.")), size: 12pt)]
+#lbl("If over time") #h(4pt) #rich((("t", "Drop \"so the application checks the links instead\" (the crop caption says it)"),), size: 9.5pt)
 
 
 #lbl("Cues")
 #text(8.8pt)[
 - #rich((("t", "Diagram: src/diagrams/core-erd.​svg: biz_product, biz_group_deal, biz_group_member, biz_purchase_intent, biz_payment, biz_order, biz_refund and sys_user, from Flyway V1–V28 (backend/blocbuy-bootstrap/src/main/resources/db/migration). Crops 2 (deal, membership: uq_biz_group_member_deal_user) and 6 (payment, refund: biz_refund_payment_id_key, an inline UNIQUE on payment_id)."),), size: 8.8pt)
 - #rich((("t", "No FK or CHECK constraints is the team’s DDL rule (.​claude/skills/pgsql-ddl, V5 header), not a course rule; the application keeps integrity (QA: orphan rows). SAD 04a p55 maps associations to FK columns; we keep those columns without the constraint."),), size: 8.8pt)
+- #rich((("t", "Why no foreign keys (do not frame it as performance; nothing records that reason): on the SWE5001 ECS environment each service has its own database on the shared RDS instance, and every database applies the full Flyway history (backend ADR 0008, Data). sys_user lives in identity-svc’s database, so a link such as biz_group_deal.​leader_user_id → sys_user could never be a foreign key in commerce-svc’s database. ADR 0001 also relies on it: a START reserves its deal_id before the team row exists. On dev (one database) foreign keys would work; we keep one schema for both. The trade-off: consistency moves into the application (reference checks before a delete, soft delete, unique indexes)."),), size: 8.8pt)
 - #rich((("t", "Other details if asked: biz_purchase_intent has no status column (state from fulfilled_payment_id and expired_at); biz_group_deal.​version is incremented, not compared; uq_biz_payment_request_key carries the Checkout idempotency key. All 29 tables: backup B4; zoomable copy: open src/diagrams/full-erd.​svg in a browser tab."),), size: 8.8pt)
 ]
 ]
@@ -96,10 +99,10 @@
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 20 · Testing on the Agile Testing Quadrants
-#text(9pt, fill: luma(90))[16:38:00–16:38:38 · slot 38 s · estimate 34 s (73 words) · rubric 3.1, 3.3]
+#text(9pt, fill: luma(90))[16:38:00–16:38:52 · slot 52 s · estimate 52 s (112 words) · rubric 3.1, 3.3]
 
 #lbl("Say")
-#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "How do we test it? We use the Agile Testing Quadrants. "), ("c", "click 1/4"), ("t", " Quadrant one is unit and integration tests. They cover the team state machine, the last-seat race and refund retries. "), ("c", "click 2/4"), ("t", " Quadrant two is story tests through the real API, and end-to-end tests on dev. "), ("c", "click 3/4"), ("t", " Quadrant three is manual checks. We did not test with outside users. "), ("c", "click 4/4"), ("t", " Quadrant four is security scans, which gate the pipeline, and the load test on the next slide.")), size: 12pt)]
+#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "How do we test it? We use the Agile Testing Quadrants. "), ("c", "click 1/4"), ("t", " Quadrant one is unit and integration tests, in JUnit, Vitest and Testcontainers, on every pull request. They cover the team state machine, the last-seat race and refund retries, and two failing tests reproduced the join-quote bug before we fixed it. "), ("c", "click 2/4"), ("t", " Quadrant two is story tests through the real API, and Playwright end-to-end tests on the preview build and on dev after each deploy. "), ("c", "click 3/4"), ("t", " Quadrant three is manual checks, such as a Stripe Sandbox checkout in a browser. We did not test with outside users. "), ("c", "click 4/4"), ("t", " Quadrant four is security scans, which gate the pipeline, and the load test on the next slide.")), size: 12pt)]
 #lbl("If over time") #h(4pt) #rich((("t", "Drop \"We did not test with outside users.\" (the Q3 card says it)"),), size: 9.5pt)
 
 
@@ -118,10 +121,10 @@
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 21 · Scripted performance test: tool, scenario, target
-#text(9pt, fill: luma(90))[16:38:38–16:39:08 · slot 30 s · estimate 30 s (66 words) · rubric 3.2]
+#text(9pt, fill: luma(90))[16:38:52–16:39:25 · slot 33 s · estimate 32 s (70 words) · rubric 3.2]
 
 #lbl("Say")
-#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "That load test is a k6 script. It runs on a cloud test copy, never on the dev host. The load rises from 10 to 200 requests a second. The proposal asks for 2 seconds with 100 users, about 190 requests a second, so our top step covers it. Teams must also close within a minute of their deadline. Yorik shows both results in the demo."),), size: 12pt)]
+#block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "That load test is a k6 script. It runs on a cloud test copy, our SWE5001 environment, never on the dev host. The load rises from 10 to 200 requests a second. The proposal asks for 2 seconds with 100 users, about 190 requests a second, so our top step covers it. Teams must also close within a minute of their deadline. We show both results in the system demo."),), size: 12pt)]
 #lbl("If over time") #h(4pt) #rich((("t", "Drop \"Teams must also close within a minute of their deadline.\" (the expiry card says it)"),), size: 9.5pt)
 
 #lbl("Hand over") #h(4pt) #rich((("t", "Pan, where do all these tests run?"),), size: 9.5pt) #h(1fr) #text(8.5pt, fill: luma(110))[next: slide 22, Pan]
@@ -147,7 +150,7 @@
   [#rich((("t", "Is ProductStatus really the State pattern, or an enum switch?"),), size: 9pt)], [#rich((("t", "It is State. Each enum constant with a body compiles to its own subclass, overrides only the moves it allows and returns the next state; the default methods refuse with 409. Product calls its state and does not branch on it. Evidence: ProductStatus.​java, ProductStatusTest. One switch remains: AdminListingAppServiceImpl.​changeStatus picks publish or delist from the requested target. The team uses a transition table (DealStatus.​canTransitionTo), which we do not call State."),), size: 9pt)], [#text(9pt, "Liu Jin")],
   [#rich((("t", "Why not the State pattern for the team, as the proposal said?"),), size: 9pt)], [#rich((("t", "Only OPEN has behaviour. SUCCEEDED and EXPIRED are final and refuse every move with the same error. A transition table (DealStatus.​canTransitionTo) and the guards in GroupDeal cover that; State would add three classes with no behaviour. Listings differ: each state changes how four operations behave (slide 18). Slide 4 records the change."),), size: 9pt)], [#text(9pt, "Liu Jin → Eric")],
   [#rich((("t", "Is there a database per service?"),), size: 9pt)], [#rich((("t", "On dev, no: one PostgreSQL database holds every table in schema domain. On ECS, yes: one RDS instance with one database per service. Each database applies the full Flyway history, and each service role is granted only the tables it owns (ADR 0008). Full list: B4."),), size: 9pt)], [#text(9pt, "Liu Jin")],
-  [#rich((("t", "Without foreign keys, what stops orphan rows?"),), size: 9pt)], [#rich((("t", "The application. Our DDL rule bans foreign keys and CHECK constraints; that is a team rule, not a course rule. Business tables carry a deleted flag, so a delete hides a row instead of breaking its links. Before a listing is deleted, the use case checks every reference: only a draft with no deals, quotes or price policies can go (AdminListingAppServiceImpl.​delete, PRODUCT_REFERENCED). Unique indexes stop duplicate rows under races."),), size: 9pt)], [#text(9pt, "Liu Jin")],
+  [#rich((("t", "Without foreign keys, what stops orphan rows?"),), size: 9pt)], [#rich((("t", "The application. Our DDL rule bans foreign keys and CHECK constraints; that is a team rule, not a course rule. The reason: in the cloud each service has its own database (ADR 0008), so a link to another service’s table cannot be a foreign key anyway, and we keep one schema for both environments. Business tables carry a deleted flag, so a delete hides a row instead of breaking its links. Before a listing is deleted, the use case checks every reference: only a draft with no deals, quotes or price policies can go (AdminListingAppServiceImpl.​delete, PRODUCT_REFERENCED). Unique indexes stop duplicate rows under races."),), size: 9pt)], [#text(9pt, "Liu Jin")],
   [#rich((("t", "How do you test payments without calling Stripe?"),), size: 9pt)], [#rich((("t", "Stripe sits behind two ports, the Checkout gateway and the Refund gateway. Unit tests replace the port. StripeRolloutAcceptanceIT (8 tests) runs the real HTTP endpoints, the scheduler, the Flyway schema and the webhook signature checks; only OAuth and the calls to Stripe are replaced. On dev on 23 Oct, a paid Sandbox START settled and a natural expiry refunded once (PR #664, merged 24 Oct, bef39b72); a second buyer’s paid JOIN was shown on dev on 24 Oct (system demo backup recording, #657)."),), size: 9pt)], [#text(9pt, "Liu Jin → Yorik")],
   [#rich((("t", "Why Testcontainers rather than H2?"),), size: 9pt)], [#rich((("t", "Our rules live in the database: unique keys, ON CONFLICT DO NOTHING, guarded updates and role grants. H2 accepts different SQL, so we test on real PostgreSQL 18, Redis 8.10 and ElasticMQ in containers. Example: OrderRepositoryIT.​duplicate​Payment​Is​Rejected​At​The​Database. The cost is Docker and time: the build-quality job takes about 13 minutes (B8)."),), size: 9pt)], [#text(9pt, "Liu Jin")],
   [#rich((("t", "Do you do TDD?"),), size: 9pt)], [#rich((("t", "For some changes. Four day logs record the red step: new PostgreSQL tests for the offer query failed first (27 Sep, #205); four admin-console changes started from failing tests (1 Oct, PRs #326–#329); the rate-limit tests failed first, 429 expected, 200 returned (3 Oct); two failing tests reproduced the join-quote bug before the fix (7 Oct). Commits are squashed, so the red step lives in the day logs (docs/agile/practices.​md). Other changes add their tests in the same pull request, and the 80% new-code gate requires them."),), size: 9pt)], [#text(9pt, "Liu Jin")],
