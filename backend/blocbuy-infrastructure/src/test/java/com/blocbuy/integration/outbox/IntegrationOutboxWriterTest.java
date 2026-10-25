@@ -122,7 +122,7 @@ class IntegrationOutboxWriterTest {
         ArgumentCaptor<OutboxInsert> row = ArgumentCaptor.forClass(OutboxInsert.class);
         verify(outbox).insert(row.capture());
         String generated = row.getValue().traceId();
-        assertThat(UUID.fromString(generated).toString()).isEqualTo(generated);
+        assertThat(UUID.fromString(generated)).hasToString(generated);
     }
 
     @Test
