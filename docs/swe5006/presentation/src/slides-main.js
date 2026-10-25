@@ -166,7 +166,6 @@ const s4 = () => `
 </div>
 <div class="frag" data-frag="1" style="position:absolute;left:438px;top:0;width:726px">
  ${tbl(['Changed: promised', 'Built'], changed4.map(r => withRef([`<b>${r[0]}</b>`, r[1]], r[2])), { fs: 20, w: [312], pad: '6px 12px' })}
- <div style="font:400 20px/1.3 Inter;color:#B02E1B;margin-top:10px">Six of these eight changes have no ADR yet.</div>
 </div>`;
 
 // ---------- slide 5 (1.4) ----------
