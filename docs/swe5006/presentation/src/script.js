@@ -43,7 +43,7 @@ const cueWords = [
 const handovers = C.SLIDES.filter((s, i) => i > 0 && s.speaker !== C.SLIDES[i - 1].speaker && s.slot !== null)
   .map(s => [String(s.n), `${C.SPEAKERS[C.SLIDES[s.n - 2].speaker].full} → ${C.SPEAKERS[s.speaker].full}`]);
 
-const runSheetHtml = runSheet(`<p>33 minutes scripted, 16:30–17:03, at the lower end of every course range (ruling of 25 Oct, after the rehearsal ran 47 minutes); a 2-minute buffer to 17:05, then questions to the 17:10 hard stop (rubric G1–G3). Time each section separately at the next rehearsal.</p>
+const runSheetHtml = runSheet(`<p>33 minutes scripted, 16:30–17:03, at the lower end of the course ranges, with §3’s third minute moved to §2 (rulings of 25 Oct, after the rehearsal ran 47 minutes); a 2-minute buffer to 17:05, then questions to the 17:10 hard stop (rubric G1–G3). Time each section separately at the next rehearsal.</p>
 ${box('warn', 'Interruption policy', `<ul style="margin:0;padding-left:12pt"><li>A lecturer may ask at any moment. The current speaker answers in <b>one or two sentences</b> (decision → reason → evidence or limitation), says “back to …” and continues from the same slide.</li><li>If the owner is someone else, the speaker says so and Lim posts <code>Q: &lt;question&gt; → owner</code> in the backchannel; parked questions are answered first in the buffer.</li><li>Hard checkpoints: 16:33 Eric, 16:38 Liu Jin, 16:41 Pan, 16:51 Yorik.</li></ul>`)}
 <h2>Handovers (rubric G4: rehearse each one)</h2>
 ${tbl(['From slide', 'Speakers'], handovers)}

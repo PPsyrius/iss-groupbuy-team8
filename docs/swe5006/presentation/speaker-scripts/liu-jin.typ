@@ -31,8 +31,8 @@
   [17], [16:37:22], [30 s], [28 s], [Design problem: listing rules that depend on its state], [2.5, G4],
   [18], [16:37:52], [33 s], [32 s], [After: the State pattern], [2.5, 2.4, G10],
   [19], [16:38:25], [22 s], [21 s], [Database schema: core entities and mapping decisions], [2.6, V6],
-  [20], [16:38:00], [52 s], [52 s], [Testing on the Agile Testing Quadrants], [3.1, 3.3],
-  [21], [16:38:52], [33 s], [32 s], [Scripted performance test: tool, scenario, target], [3.2],
+  [20], [16:39:00], [52 s], [52 s], [Testing on the Agile Testing Quadrants], [3.1, 3.3],
+  [21], [16:39:52], [33 s], [32 s], [Scripted performance test: tool, scenario, target], [3.2],
 )
 #text(9pt)[Total slots 170 s; estimated speech 165 s. I come in after Yorik (slide 16) and hand over to Pan (slide 22).]
 
@@ -99,7 +99,7 @@
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 20 · Testing on the Agile Testing Quadrants
-#text(9pt, fill: luma(90))[16:38:00–16:38:52 · slot 52 s · estimate 52 s (112 words) · rubric 3.1, 3.3]
+#text(9pt, fill: luma(90))[16:39:00–16:39:52 · slot 52 s · estimate 52 s (112 words) · rubric 3.1, 3.3]
 
 #lbl("Say")
 #block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "How do we test it? We use the Agile Testing Quadrants. "), ("c", "click 1/4"), ("t", " Quadrant one is unit and integration tests, in JUnit, Vitest and Testcontainers, on every pull request. They cover the team state machine, the last-seat race and refund retries, and two failing tests reproduced the join-quote bug before we fixed it. "), ("c", "click 2/4"), ("t", " Quadrant two is story tests through the real API, and Playwright end-to-end tests on the preview build and on dev after each deploy. "), ("c", "click 3/4"), ("t", " Quadrant three is manual checks, such as a Stripe Sandbox checkout in a browser. We did not test with outside users. "), ("c", "click 4/4"), ("t", " Quadrant four is security scans, which gate the pipeline, and the load test on the next slide.")), size: 12pt)]
@@ -121,7 +121,7 @@
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 21 · Scripted performance test: tool, scenario, target
-#text(9pt, fill: luma(90))[16:38:52–16:39:25 · slot 33 s · estimate 32 s (70 words) · rubric 3.2]
+#text(9pt, fill: luma(90))[16:39:52–16:40:25 · slot 33 s · estimate 32 s (70 words) · rubric 3.2]
 
 #lbl("Say")
 #block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "That load test is a k6 script. It runs on a cloud test copy, our SWE5001 environment, never on the dev host. The load rises from 10 to 200 requests a second. The proposal asks for 2 seconds with 100 users, about 190 requests a second, so our top step covers it. Teams must also close within a minute of their deadline. We show both results in the system demo."),), size: 12pt)]

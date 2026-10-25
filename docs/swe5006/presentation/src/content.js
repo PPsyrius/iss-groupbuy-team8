@@ -3,7 +3,7 @@
 // `rubric` (the kit ignores the field). Segment names follow the lecturer's presentation sequence (Chandra, SWE5006);
 // `items` are copied verbatim from "SWE5006 - Practice Project Presentation Guidelines" and the briefing deck V1.0 slide 6.
 // Timing (rubric G1, G2, time budget): 40 min hard stop including interruptions; 33 min scripted
-// (§1 3, §2 5, §3 3, §4 10, §5 12), 16:30–17:03, a 2 min buffer to 17:05, then questions to 17:10.
+// (§1 3, §2 6, §3 2, §4 10, §5 12), 16:30–17:03, a 2 min buffer to 17:05, then questions to 17:10.
 // Markers: {{FILL:text}} {{VERIFY:text}} {{CONFIRM:text}} render as visible chips in deck and script.
 
 const SPEAKERS = {
@@ -14,7 +14,7 @@ const SPEAKERS = {
   Pan: { full: 'Panpakorn Siripanich (Pan)', init: 'PS' },
 };
 
-// talk/qa in minutes; start is the segment's clock time (SGT). 3 + 5 + 3 + 10 + 12 = 33 minutes of talk;
+// talk/qa in minutes; start is the segment's clock time (SGT). 3 + 6 + 2 + 10 + 12 = 33 minutes of talk;
 // segment 5's qa of 7 is the 2 min buffer to 17:05 plus questions to the 17:10 hard stop (rubric G1–G3).
 const SEGMENTS = [
   { n: 1, name: 'Project Introduction & Project Management Summary', head: 'Project introduction & project management', short: 'Intro & PM', talk: 3, qa: 0, start: '16:30:00', owner: 'Lim Jiechao',
@@ -27,7 +27,7 @@ const SEGMENTS = [
       '1f': 'Sprint retrospective & reflection in the next sprint',
       '1g': 'Agile process artifacts like product backlog, user stories, sprint plans, burndown charts, sprint reviews and sprint retrospectives.',
     } },
-  { n: 2, name: 'Analysis & Design and Design Patterns', head: 'Analysis & design and design patterns', short: 'Design', talk: 5, qa: 0, start: '16:33:00', owner: 'Wang Ziang (Eric) for 2.1–2.4; then Yu Qianshuo (Yorik) on his design problem; Liu Jin for the full-form problem and 2.6 (Eric’s, Pan’s and Lim’s design problems are backups B21, B19 and B20 since the 25 Oct rehearsal)',
+  { n: 2, name: 'Analysis & Design and Design Patterns', head: 'Analysis & design and design patterns', short: 'Design', talk: 6, qa: 0, start: '16:33:00', owner: 'Wang Ziang (Eric) for 2.1–2.4; then Yu Qianshuo (Yorik) on his design problem; Liu Jin for the full-form problem and 2.6 (Eric’s, Pan’s and Lim’s design problems are backups B21, B19 and B20 since the 25 Oct rehearsal)',
     items: {
       '2a': 'Software architectural decisions that influence the logical architecture.',
       '2b': 'Transition from analysis to design',
@@ -36,7 +36,7 @@ const SEGMENTS = [
       '2e': 'Design problems and patterns',
       '2f': 'Database schemas',
     } },
-  { n: 3, name: 'Types of Testing Conducted', head: 'Types of testing conducted', short: 'Testing', talk: 3, qa: 0, start: '16:38:00', owner: 'Liu Jin',
+  { n: 3, name: 'Types of Testing Conducted', head: 'Types of testing conducted', short: 'Testing', talk: 2, qa: 0, start: '16:39:00', owner: 'Liu Jin',
     items: {
       '3a': 'Types of Testing Conducted',
       '3b': 'Well structured source code with unit test cases for classes with more complex behaviours.',
