@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
 
@@ -96,6 +97,7 @@ class IntegrationEventDecoderTest {
         assertMalformed("not json", null);
         assertMalformed("[1,2]", null);
         assertMalformed("\"text\"", null);
+        assertMalformed("null", null);
         assertMalformed("{\"version\":1}", null);
         assertMalformed("{\"eventType\":\" \",\"version\":1}", null);
         assertMalformed("{\"eventId\":\"nope\",\"eventType\":\"TeamSucceeded\"}", null);
@@ -149,8 +151,28 @@ class IntegrationEventDecoderTest {
                 "{\"eventId\":\"" + EVENT + "\",\"eventType\":\"TeamSucceeded\",\"version\":0}",
                 EVENT);
         assertMalformed("{\"eventType\":\"PaymentSucceeded\",\"version\":-1}", null);
+        assertMalformed("{\"eventType\":\"TeamExpired\",\"version\":0}", null);
         assertThat(decoder.decode("{\"eventType\":\"OrderShipped\",\"version\":0}").supported())
                 .isFalse();
+    }
+
+    @Test
+    void diagnosticPathsHandleRootErrorsAndIndexesWithoutLeakingValues() {
+        assertThatThrownBy(() -> JSON.readTree("not json"))
+                .isInstanceOfSatisfying(
+                        JacksonException.class,
+                        failure ->
+                                assertThat(IntegrationEventDecoder.fieldPath(failure))
+                                        .isEqualTo("(no field path)"));
+        var indexed =
+                JacksonException.wrapWithPath(
+                        new IllegalArgumentException("SECRET-VALUE"), new Object[0], 0);
+        assertThat(IntegrationEventDecoder.fieldPath(indexed)).isEqualTo("[0]");
+        var rootOnly =
+                JacksonException.wrapWithPath(
+                        new IllegalArgumentException("SECRET-VALUE"),
+                        new JacksonException.Reference(new Object()));
+        assertThat(IntegrationEventDecoder.fieldPath(rootOnly)).isEqualTo("(no field path)");
     }
 
     @Test

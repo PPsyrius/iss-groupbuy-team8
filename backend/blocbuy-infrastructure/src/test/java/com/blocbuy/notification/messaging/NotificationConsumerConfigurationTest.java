@@ -8,6 +8,8 @@ import com.blocbuy.notification.event.NotificationEventHandler;
 import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 import software.amazon.awssdk.regions.Region;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -78,6 +80,25 @@ class NotificationConsumerConfigurationTest {
                                 .isInstanceOf(IllegalArgumentException.class)
                                 .hasMessageStartingWith("blocbuy.events.consumer: "));
         assertThat(properties("n", 64, 10, s, s, Duration.ZERO, s).concurrency()).isEqualTo(64);
+    }
+
+    @Test
+    @ResourceLock(Resources.SYSTEM_PROPERTIES)
+    void blankRegionUsesTheSdkDefaultRegionChainWithoutContactingAws() {
+        String previous = System.getProperty("aws.region");
+        System.setProperty("aws.region", "ap-southeast-1");
+        try (var client =
+                NotificationConsumerConfiguration.sqsClient(Duration.ofSeconds(1), "", "")) {
+            assertThat(client.serviceClientConfiguration().region())
+                    .isEqualTo(Region.AP_SOUTHEAST_1);
+            assertThat(client.serviceClientConfiguration().endpointOverride()).isEmpty();
+        } finally {
+            if (previous == null) {
+                System.clearProperty("aws.region");
+            } else {
+                System.setProperty("aws.region", previous);
+            }
+        }
     }
 
     private static NotificationConsumerProperties defaults() {

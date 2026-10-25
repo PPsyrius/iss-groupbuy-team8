@@ -23,8 +23,8 @@ public final class User {
     private final String email;
     private final RegisterSource registerSource;
     private UserStatus status;
-    private String nickname;
-    private String avatarUrl;
+    private final String nickname;
+    private final String avatarUrl;
     private Instant lastLoginTime;
 
     private User(

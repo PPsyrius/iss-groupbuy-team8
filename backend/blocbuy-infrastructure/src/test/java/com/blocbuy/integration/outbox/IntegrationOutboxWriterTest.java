@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.MDC;
 import tools.jackson.core.JacksonException;
@@ -104,8 +107,13 @@ class IntegrationOutboxWriterTest {
                 .doesNotContain("9.99", "sk_test_", "email", "token");
     }
 
-    @Test
-    void missingTraceUsesBoundedFallbackId() {
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "\t"})
+    void missingOrBlankTraceUsesFallbackUuid(String trace) {
+        if (trace != null) {
+            MDC.put(ApiConstants.TRACE_ID_MDC_KEY, trace);
+        }
         UUID dealId = UUID.randomUUID();
         when(recipients.findActiveMemberIdsByDealId(dealId)).thenReturn(List.of());
 
@@ -113,7 +121,8 @@ class IntegrationOutboxWriterTest {
 
         ArgumentCaptor<OutboxInsert> row = ArgumentCaptor.forClass(OutboxInsert.class);
         verify(outbox).insert(row.capture());
-        assertThat(row.getValue().traceId()).hasSize(36);
+        String generated = row.getValue().traceId();
+        assertThat(UUID.fromString(generated)).hasToString(generated);
     }
 
     @Test
