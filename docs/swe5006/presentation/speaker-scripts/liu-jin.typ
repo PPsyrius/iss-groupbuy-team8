@@ -28,9 +28,9 @@
 
 #table(columns: (auto, auto, auto, auto, 1fr, auto), stroke: 0.4pt + luma(200), inset: 5pt,
   table.header([*Slide*], [*Clock*], [*Slot*], [*Est.*], [*Title*], [*Rubric*]),
-  [22], [16:39:46], [22 s], [20 s], [Design problem: listing rules that depend on its state], [2.5, G4],
-  [23], [16:40:08], [19 s], [17 s], [After: the State pattern], [2.5, 2.4, G10],
-  [24], [16:40:27], [15 s], [13 s], [Database schema: core entities and mapping decisions], [2.6, V6],
+  [22], [16:39:35], [22 s], [20 s], [Design problem: listing rules that depend on its state], [2.5, G4],
+  [23], [16:39:57], [19 s], [17 s], [After: the State pattern], [2.5, 2.4, G10],
+  [24], [16:40:16], [15 s], [13 s], [Database schema: core entities and mapping decisions], [2.6, V6],
   [25], [16:38:00], [38 s], [34 s], [Testing on the Agile Testing Quadrants], [3.1, 3.3],
   [26], [16:38:38], [30 s], [30 s], [Scripted performance test: tool, scenario, target], [3.2],
 )
@@ -39,7 +39,7 @@
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 22 · Design problem: listing rules that depend on its state
-#text(9pt, fill: luma(90))[16:39:46–16:40:08 · slot 22 s · estimate 20 s (43 words) · rubric 2.5, G4]
+#text(9pt, fill: luma(90))[16:39:35–16:39:57 · slot 22 s · estimate 20 s (43 words) · rubric 2.5, G4]
 
 #lbl("Cue in") #h(4pt) #rich((), size: 9.5pt)
 
@@ -60,7 +60,7 @@
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 23 · After: the State pattern
-#text(9pt, fill: luma(90))[16:40:08–16:40:27 · slot 19 s · estimate 17 s (36 words) · rubric 2.5, 2.4, G10]
+#text(9pt, fill: luma(90))[16:39:57–16:40:16 · slot 19 s · estimate 17 s (36 words) · rubric 2.5, 2.4, G10]
 
 #lbl("Say")
 #block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "We chose State, because the state decides, not a caller. "), ("c", "click 1/2"), ("t", " First zoom. Product hands each action to ProductStatus. A state allows its own moves and refuses the rest with 409. "), ("c", "click 2/2"), ("t", " Last zoom. No switch is left.")), size: 12pt)]
@@ -79,7 +79,7 @@
 #v(6pt)
 #block(breakable: true, width: 100%, stroke: (left: 2pt + accent), inset: (left: 9pt, y: 4pt))[
 == Slide 24 · Database schema: core entities and mapping decisions
-#text(9pt, fill: luma(90))[16:40:27–16:40:42 · slot 15 s · estimate 13 s (29 words) · rubric 2.6, V6]
+#text(9pt, fill: luma(90))[16:40:16–16:40:31 · slot 15 s · estimate 13 s (29 words) · rubric 2.6, V6]
 
 #lbl("Say")
 #block(inset: (y: 3pt))[#set par(leading: 0.75em); #rich((("t", "Now the schema. "), ("c", "click 1/2"), ("t", " First zoom. A unique index stops a buyer from joining one team twice. "), ("c", "click 2/2"), ("t", " Last zoom. Another one stops a second refund. We use no foreign keys.")), size: 12pt)]

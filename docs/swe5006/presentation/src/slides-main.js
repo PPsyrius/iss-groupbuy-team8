@@ -383,9 +383,6 @@ const s13 = () => `
 ${one('use-case', 2320, 1096, [1164, 568], [
   [0, 364, 'Buyer and the money path', 0, [['In scope', 'start and join «include» paying upfront; invite attribution «extend»s join']]],
   [560, 40, 'resolution: Scheduler', 0, [['Scheduler', 'a time-driven actor resolves teams'], ['«extend»', 'refund extends resolution when a team expires']]],
-  [560, 290, 'refund, payment: Stripe', 0, [['Stripe', 'a secondary actor of refund and of paying upfront']]],
-  [1160, 40, 'out of scope', 0, [['Out of scope, greyed', 'as the proposal excluded']]],
-  [1160, 640, 'delivery status', 0, [['Status badges', 'paid start and expiry refund on dev since 23 Oct; join and team resolution since 24 Oct']]],
 ], WALK)}
 ${repTop('Report §3.3.1–§3.3.12 · use case model')}`;
 
