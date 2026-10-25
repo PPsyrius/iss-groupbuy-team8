@@ -146,7 +146,7 @@ const changed4 = [
   ['UC9 admin API only, no GUI', 'Admin console, built in Sprint 3', 'F-ADR 0015 · #305–#307'],
   ['Adapter (UC6), Observer (UC7)', 'Gateway ports; Observer on UC5 → UC6', 'slides 10, 16 · no ADR'],
   ['State for the team lifecycle', 'Transition table; State on listings', 'design doc · no ADR (open item 7)'],
-  ['Google sign-in with JWT', 'Sa-Token session, HttpOnly cookie', 'D6/D7, F-ADR 0002 · no backend ADR'],
+  ['Local storage JWT after Google sign-in', 'Server session in an HttpOnly cookie', 'D6/D7, F-ADR 0002 · no backend ADR'],
   ['Spring Data JPA', 'MyBatis behind repository ports', 'D1/D9 · no ADR (open item 7)'],
   ['Dev on ECS Fargate and RDS', 'One EC2 host, Compose, database on the host', 'ADR 0008'],
   ['Secrets Manager, no static keys', 'SSM and a root-only env file; 2 IAM users, 1 key', 'operator guide §7 · no ADR'],
