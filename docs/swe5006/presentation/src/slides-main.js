@@ -694,21 +694,21 @@ const s31 = () => one('dev-deployment', 2320, 1096, [1164, 568], [
 // ---------- slide 32 (4.5) ----------
 const finds = [
   ['Early dev deploys failed (5–17 Sep)', ['The hand-built environment drifted from its design', 'Old OIDC subject format, a placeholder instance ID, port 8589 open wide'], ['Fixed on dev by hand', 'The prod stack renders each value in Terraform, so a plan shows it', 'No dev deploy job failed from 18 Sep to 22 Oct 13:54 UTC'], 'docs/deploy/prod/backend-prod-terraform-deployment.md L15–23 · 121a0733 · docs/ci/dora-metrics-20261022.md (delivery proxy, PR #629)'],
-  ['build-quality red for two days (19–20 Oct)', ['Dependabot upgraded the SpotBugs engine without its Maven plugin'], ['Both now upgrade together', 'A POM policy test guards it'], 'docs/ci/ci-failure-audit-20261021.md · PR #580'],
+  ['build-quality red for two days (19–20 Oct)', ['Dependabot upgraded the SpotBugs engine without its Maven plugin'], ['Both now upgrade together', 'A POM policy test guards it', 'Resolved'], 'docs/ci/ci-failure-audit-20261021.md · PR #580'],
   ['Weekly full-history gitleaks failing (since 21 Sep)', ['20 matches were file digests in a contract baseline, not secrets'], ['Each digest re-hashed, then fingerprinted exactly', '4 badge-token findings still open'], 'docs/ci/ci-failure-audit-20261021.md · PR #580'],
 ];
 const s32 = () => `
-${tbl(['Finding', 'Root cause', 'Fix'], finds.map(f => withRef([`<b>${f[0]}</b>`, lines(f[1], 4), lines(f[2], 4)], f[3])), { fs: 20, w: [250, 440], pad: '11px 12px', m: [246, 368, 38.4] })}
+${tbl(['Finding', 'Root cause', 'Response and status'], finds.map(f => withRef([`<b>${f[0]}</b>`, lines(f[1], 4), lines(f[2], 4)], f[3])), { fs: 20, w: [250, 440], pad: '11px 12px', m: [246, 368, 38.4] })}
 <div ${A('up', 560, 'position:absolute;left:0;right:0;top:472px;border-radius:8px;background:#FDEFEC;padding:12px 16px;font:400 20px/1.35 Inter;')}${ref('#664 · #657 · #224 · #590 · #517 · backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md')}><b style="color:#B02E1B">Still not shown:</b> crash recovery under replay on dev. Paid start, a second buyer’s join and the expiry refund were shown on dev on 23–24 Oct, after a webhook configuration repair.</div>`;
 
 // ---------- slide 33 (4.1, 4.6) ----------
 const live = [
-  ['P1', 'The pull request: one frontend change, six required checks green', '60 s'],
+  ['P1', 'The pull request: the heading diff and its check results', '60 s'],
   ['P2', 'Lim approves as the frontend code owner', '30 s'],
   ['P3', 'Squash merge: one commit on dev', '20 s'],
-  ['P4', 'Delivery runs; the backend PR and deploy, triggered beforehand', '90 s'],
+  ['P4', 'Frontend delivery runs; a backend run that finished earlier', '90 s'],
   ['P5', 'Verified: e2e-dev green, the change live on dev', '90 s'],
-  ['P6', 'Merge to live in minutes; hand-over', '40 s'],
+  ['P6', 'What we saw; hand-over', '40 s'],
 ];
 // Live demo host (MOTION.md): run-book table 200, rows 320 +38, the cards beside it from 600, +80; nothing loops, so
 // the slide stays calm behind the live demo.
@@ -717,7 +717,7 @@ const s33 = () => `
  ${tbl(['Step', 'What you see', 'Time'], live.map(l => [`<b>${l[0]}</b>`, l[1], l[2]]), { fs: 22, w: [76, null, 86], pad: '13px 14px', m: [200, 320, 38] })}
 </div>
 <div style="position:absolute;left:724px;top:0;width:440px">
- <div class="card a" data-a="up" style="padding:18px 22px;margin-bottom:14px;--d:600ms">${kicker('Why the backend is pre-run')}<div style="font:400 21px/1.4 Inter">Backend PR checks take about 16 min, longer than the segment, so that run was triggered before the talk and we walk through it finished.</div></div>
+ <div class="card a" data-a="up" style="padding:18px 22px;margin-bottom:14px;--d:600ms">${kicker('Why the backend is pre-run')}<div style="font:400 21px/1.4 Inter">Backend PR checks take about 16 min, longer than the segment, so we show a backend run that finished before the talk.</div></div>
  <div class="card a" data-a="up" style="padding:18px 22px;--d:680ms">${kicker('Backup video', '#B02E1B')}<div style="font:400 21px/1.4 Inter">${lines(['Recorded on dev on 24 Oct: finished runs, checks to smoke test', 'Shared in the team chat; ready on the presenter’s laptop'], 4)}</div></div>
 </div>`;
 

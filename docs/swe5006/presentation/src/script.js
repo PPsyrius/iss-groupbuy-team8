@@ -73,23 +73,23 @@ const seg4Html = () => {
   return `<section class="chap"><h1>4 ${esc(s4.name)} (${s4.talk} minutes)</h1>
 <div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:42:00 – 16:52:00 (slides 27–32 until 16:46:30, then the live pipeline demo on slide 33 until 16:52:00)</td></tr><tr><td>Owner</td><td>${esc(s4.owner)}; Lim approves as the frontend code owner</td></tr><tr><td>Slides</td><td>${C.SLIDES.filter(s => s.seg === 4).map(s => s.n).join(', ')}</td></tr></table></div>
 ${reqBox(s4)}
-${box('tip', 'Tip', 'Slides 27–32 take 270 s. Pan opens the demo pull request at 16:41, during slide 26, so its checks (median 4.8 min) are green when the live part starts at 16:46:30. A backend change cannot finish its 16-minute PR checks inside the segment, so a backend PR is opened at ≈ 16:20 and merged before 16:40; the demo walks through both of its finished runs (rubric 4.1).')}
+${box('tip', 'Tip', 'Slides 27–32 take 270 s, each slide one topic, each concept explained once. The live demo is frontend only: Pan opens the demo pull request at ≈ 15:30 on the final dev, so its checks (median 4.8 min) finish before the talk. A backend change cannot finish its 16-minute PR checks inside the segment, so the demo shows a backend PR run and its deploy run that finished earlier, said as earlier runs (rubric 4.1).')}
 ${C.SLIDES.filter(s => s.seg === 4).map(slideCard).join('')}
 <h2>Live pipeline demo (16:46:30 – 16:52:00, 330 s)</h2>
 ${tbl(['Step', 'Shows', 'Rubric'], pipeSteps.map(d => [d.n, esc(d.t), d.proves.split(' · ')[0]]))}
 <h3>Preconditions (checked at 15:30 by Pan)</h3>
-<ul><li>Demo branch pushed and up to date with <code>origin/dev</code>; PR body ready; no PR opened yet. The backend merge (by 16:40) moves <code>dev</code>, so at 16:40–16:41 Pan rebases the demo branch onto the new <code>origin/dev</code>, pushes it and only then opens the PR; its checks start at 16:41 on the updated branch. Demo change (decided 24 Oct): the home page heading “Buy better together” → “Buy better, together” (one line, frontend/src/routes/index.tsx:114; no test asserts it), author Pan, approver Lim (frontend code owner).</li>
-<li>Backend pre-run: a small backend PR opened at ≈ 16:20 by its author, approved by Liu Jin (backend code owner) and squash-merged by 16:40 so its deploy finishes before the segment. Decided 24 Oct: Pan writes the #684 fix (the GroupDealRepository Javadoc, comments only), so the change is real and safe to merge; Liu Jin approves, with Eric as backup (groupbuy code owner since #669).</li>
-<li>Merge freeze in the team chat: nobody merges into <code>dev</code> from 15:00 to 17:15 except these two PRs. A moved <code>dev</code> makes the branch out of date and re-runs the checks (strict required checks), which is why the demo branch is updated after the backend merge and before its PR opens, and why nothing else may merge after 16:40.</li>
+<ul><li>Demo branch (frontend only): the home page heading “Buy better together” → “Buy better, together” (one line, frontend/src/routes/index.tsx:114; no test asserts it; decided 24 Oct), author Pan, approver Lim (frontend code owner). After the 15:00 merge freeze, Pan rebases it onto the final <code>origin/dev</code>, pushes it and opens the PR at ≈ 15:30; its checks finish by ≈ 15:40. Lim does not approve before P2.</li>
+<li>Merge freeze in the team chat: nobody merges into <code>dev</code> from 15:00 to 17:15 except the demo PR, on air. A moved <code>dev</code> makes the demo branch out of date and re-runs its checks (strict required checks); if that happens before 16:00, rebase and re-push, after 16:00 leave it and use <code>CLIP P3</code>.</li>
+<li>Backend evidence, pinned in tabs 3 and 4: the latest green <code>ci-backend</code> pull-request run and the <code>ci-backend</code> push run on <code>dev</code> that deployed that change, both finished before the talk; they are said as earlier runs, never as this change.</li>
 <li>Latest <code>ci-frontend</code> and <code>ci-backend</code> runs on <code>dev</code> green (A.1); deploy switches <code>ENABLE_S3_DEPLOY</code> and <code>ENABLE_EC2_DEPLOY</code> unchanged; GitHub Actions budget not exhausted (a budget stop hit run 39442654274 on 20 Oct).</li>
 <li>Lim signed in to GitHub on his own machine with the PR list open; he is not sharing at 16:47.</li>
-<li>Backup video (rubric G6, 4.6): <code>swe5006-ci-cd.mp4</code>, recorded on dev on Sat 24 Oct (4 min 18 s): finished <code>ci-frontend</code> and <code>ci-backend</code> runs with their job graphs, a merged PR, the <code>e2e-dev</code> smoke log and the dev site. It shows typical finished runs, not the live heading change, so say so if it is played. Shared in the team chat; open in a player on Pan’s machine and tested with Zoom “share sound” off. Higher-resolution originals are being collected (the shared copies are 832 × 480).</li></ul>
+<li>Backup video (rubric G6, 4.6): <code>swe5006-ci-cd.mp4</code>, recorded on dev on Sat 24 Oct (4 min 18 s): finished <code>ci-frontend</code> and <code>ci-backend</code> runs with their job graphs, a merged PR, the <code>e2e-dev</code> smoke log and the dev site. It shows typical finished runs, not the live heading change, so say so if it is played. Shared in the team chat; open in a player on Pan’s machine and tested with Zoom “share sound” off. Never present it as the current live result.</li></ul>
 <h3>Screen layout (Pan’s browser window, shared from 16:46:30; browser zoom 125–150 %, rubric V7)</h3>
 ${tbl(['Tab', 'Content', 'Prepared state'], [
-  ['1', 'GitHub: the demo pull request', 'Opened at 16:41; Files changed tab ready'],
+  ['1', 'GitHub: the demo pull request', 'Opened ≈ 15:30, checks finished; Files changed tab ready'],
   ['2', 'GitHub Actions: <code>ci-frontend</code> filtered to branch <code>dev</code>', 'Refresh after the merge to see the new run'],
-  ['3', 'GitHub Actions: the backend PR run (pre-triggered)', 'Run summary open; build-quality one click away'],
-  ['4', 'GitHub Actions: the backend push run on <code>dev</code> (deploy)', 'Run graph open; deploy job one click away'],
+  ['3', 'GitHub Actions: a backend PR run that finished earlier', 'Run summary open; build-quality one click away'],
+  ['4', 'GitHub Actions: that change’s push run on <code>dev</code> (deploy)', 'Run graph open; deploy job one click away'],
   ['5', `Dev site <code>${DEV}</code>`, 'On the page the change touches; DevTools closed'],
   ['Player', 'Clips P1–P6 (24 Oct)', 'Paused at the start of clip P1'],
 ])}
@@ -129,7 +129,7 @@ ${box('warn', 'Watch out', mh('D1, D2 and D4 all have dev evidence: on 23 Oct a 
 <li>Listings converged: <code>scripts/seed-dev-demo-listings.sh --check</code> passes for the four <code>US34-*</code> listings (≤ 12:00, Yorik).</li>
 <li>Terminal with font ≥ 18 pt and the curl line ready (D5); Joiner DevTools closed until D5.</li>
 <li>IDE on a local checkout of <code>dev</code>, font ≥ 18 pt, with the D6 test run green after 15:00 and its file open; Docker running (rubric G10).</li>
-<li>Backup video (rubric G6, 5.5): <code>swe5006-system.mp4</code>, recorded on dev on Sat 24 Oct (8 min 27 s, #657): paid start, a second buyer’s paid join (“2 of 2 joined · Filled 24 Oct, 7:17 pm”), My orders and My blocs, the expiry refund (“Refund sent”), the admin API denial, then the code, a CI run and the k6 table. Shared in the team chat; open in a player on Eric’s machine (copy on Yorik’s), tested with Zoom “share sound” off. Higher-resolution originals are being collected (the shared copies are 832 × 480).</li>
+<li>Backup video (rubric G6, 5.5): <code>swe5006-system.mp4</code>, recorded on dev on Sat 24 Oct (8 min 27 s, #657): paid start, a second buyer’s paid join (“2 of 2 joined · Filled 24 Oct, 7:17 pm”), My orders and My blocs, the expiry refund (“Refund sent”), the admin API denial, then the code, a CI run and the k6 table. Shared in the team chat; open in a player on Eric’s machine (copy on Yorik’s), tested with Zoom “share sound” off. Never present it as the current live result.</li>
 <li>Browser zoom 125–150 % (rubric V7); Do Not Disturb on; no password manager, email or bookmarks bar visible.</li></ul>
 <h2>Screen layout (Eric’s shared screen)</h2>
 ${tbl(['Window · tab', 'Content', 'Prepared state'], [
@@ -190,10 +190,9 @@ ${tbl(['Time (SGT)', 'Do', 'Owner'], [
   ['≤ 12:00', 'Health and recent runs (A.1); listings check; §5 preconditions list started. After 11:41, the scheduled <code>dast-baseline</code> run checked for slide 30 (24 Oct dispatch 40107924516 green).', 'Yorik, Pan'],
   ['14:30', 'Tech check in a test Zoom: mic, camera, sharing, Do Not Disturb.', 'All'],
   ['15:00', 'Merge freeze on <code>dev</code> until 17:15.', 'Lim'],
-  ['15:30', 'Check the §4 and §5 preconditions lists.', 'Pan (§4); Eric, Yorik (§5)'],
+  ['15:30', 'Demo branch rebased onto the final <code>origin/dev</code> and its PR opened (checks done by ≈ 15:40; no approval yet); pin the backend PR and deploy runs in tabs 3 and 4. Check the §4 and §5 preconditions lists.', 'Pan (§4); Eric, Yorik (§5)'],
   ['≈ 16:05 (≤ 16:07)', 'Start the expiry bloc on <code>US34-04</code> as account B and pay; bookmark the receipt. <code>EXPIRY OK</code> at 16:10, <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.', 'Yorik'],
   ['16:30', 'Start; follow the run sheet. All five note every lecturer question and remark verbatim (rubric G9).', 'Lim; all take notes'],
-  ['16:40 – 16:41', 'Backend pre-run PR merged; rebase the demo branch onto the new <code>origin/dev</code>, push it, then open the demo PR at 16:41.', 'Pan'],
   ['17:04 / 17:10', 'Slide 39; parked questions; end.', 'Lim'],
 ])}
 <h2>After the presentation</h2>
