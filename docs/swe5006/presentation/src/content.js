@@ -269,7 +269,7 @@ const SLIDES = [
     cues: [
       '16:52:00. Eric is sharing one screen with two Chrome profiles, “Leader” (account A) and “Joiner” (account B), and operates both; Yorik narrates (two users: SWE5001 feedback #590). Deck in the Leader window, tab 1, on slide 34.',
       'Storyline from #464: invite → START/JOIN with Stripe Sandbox → /account orders and blocs → expiry refund. Use cases: UC1 browse, UC2 Google sign-in, UC3 start, UC7 invite, UC4 join (team of two succeeds, UC5), UC5 expiry, UC6 refund, UC8 My blocs. Quality attributes are slide 3’s: correctness under concurrency, refund idempotency, expiry ≤ 1 min, security, performance (slide 36), maintainability (§4, slide 38).',
-      'Environment column on the slide follows the go/no-go after the Sat 24 Oct dry run (open item 1): {{CONFIRM:GO or NO-GO for steps D1, D2 and D4; with NO-GO those rows read "recorded" or "local" and the say changes to "the payment steps are recorded"}}.',
+      'Environment column: Yorik confirmed GO for D1, D2 and D4 on dev on 25 Oct (#605, issuecomment-6392411283), subject to the 26 Oct checks in the run book, including the 16:05 bloc setup. If a check fails, that step plays the matching part of the backup recording and the say changes to "the payment steps are recorded".',
     ],
     trim: 'If over time, drop "Every step says where it runs." (it is the slide’s right column).',
     handover: 'Our leader is already signed in with Google.' },
@@ -399,7 +399,7 @@ const BACKUPS = [
 
 // Open items: [#, item, owner, blocks slide]
 const OPEN_ITEMS = [
-  [1, 'Paid flow on dev: START and expiry refund shown on dev 23 Oct (PR #664, merged 24 Oct, bef39b72; backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md), a second buyer’s paid JOIN shown on dev 24 Oct (system demo backup recording, #657). #590, #517 and #223 closed by Yorik 25 Oct. Open: Yorik’s go/no-go for D1, D2 and D4 on the day, posted in #464', 'Yorik', '4, 5, 7, 35'],
+  [1, 'Paid flow on dev: START and expiry refund shown on dev 23 Oct (PR #664, merged 24 Oct, bef39b72; backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md), a second buyer’s paid JOIN shown on dev 24 Oct (system demo backup recording, #657). #590, #517 and #223 closed by Yorik 25 Oct; GO for D1, D2 and D4 confirmed by Yorik 25 Oct (#605). Open: the 26 Oct morning checks in the run book', 'Yorik', '4, 5, 7, 35'],
   [2, 'Backup videos: both recorded on dev on 24 Oct and shared in the team chat (swe5006-ci-cd.mp4, swe5006-system.mp4). Open: collect the higher-resolution originals (shared copies are 832 × 480, rubric V7 asks for 1080p); rubric 4.6’s USB copy is replaced by a copy on each presenter’s laptop', 'Pan (pipeline), Yorik and Eric (system)', '33, 35'],
   [5, 'Sprint 3 retrospective: closed for Sprint 3. docs/agile/sprint-03/retro.md (24 Oct, #451), reconstructed from the review and day logs, is cited by slide 7’s 3 → 4 row and B1; the Sprint 4 retrospective stays open in item 6 (#619)', 'Lim', '—'],
   [6, 'Sprint 4 review and retro after the talk, with its remarks (#619, decided 24 Oct); the v0.1.0-sprint4 tag was cut on 24 Oct at fba3cfbd and is on slide 5', 'Eric', '5, 7'],

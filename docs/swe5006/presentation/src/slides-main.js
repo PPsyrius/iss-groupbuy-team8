@@ -725,17 +725,17 @@ const s33 = () => `
 </div>`;
 
 // ---------- slide 34 (5.1, 5.2) ----------
-// Environment per step follows the go/no-go after the Sat 24 Oct dry run (open item 1); the NO-GO wording is in the run book.
+// Environment per step: GO for D1, D2 and D4 confirmed by Yorik on 25 Oct (#605); a failed 26 Oct check switches a step to its recording (run book).
 const env5 = (t, tone = 'ok') => {
   const k = { ok: ['#E3E8FB', '#3E5CD9'], rec: ['#FFEDC7', '#7A5C20'], loc: ['#ECE6DC', '#1B1A18'], ecs: ['#FBDFD9', '#B02E1B'] }[tone];
   return `<span style="display:inline-block;font:700 15px/1.15 Inter;background:${k[0]};color:${k[1]};border-radius:999px;padding:5px 10px;white-space:nowrap">${t}</span>`;
 };
 const ucList = a => `<div style="display:flex;flex-wrap:wrap;gap:0 8px">${a.map(u => `<span style="white-space:nowrap">${u}</span>`).join('')}</div>`;
 const plan5 = [
-  ['D1', 'Leader signs in, starts a bloc, pays in Stripe Sandbox, copies the invite', ['UC2', 'UC1', 'UC3', 'UC7'], 'Security: only a signed webhook confirms payment', env5('dev, if GO')],
-  ['D2', 'Joiner opens the invite, joins and pays: 2 of 2, the team succeeds', ['UC4', 'UC5', 'UC7'], 'Correctness: guards re-checked after payment', env5('dev, if GO')],
+  ['D1', 'Leader signs in, starts a bloc, pays in Stripe Sandbox, copies the invite', ['UC2', 'UC1', 'UC3', 'UC7'], 'Security: only a signed webhook confirms payment', env5('dev')],
+  ['D2', 'Joiner opens the invite, joins and pays: 2 of 2, the team succeeds', ['UC4', 'UC5', 'UC7'], 'Correctness: guards re-checked after payment', env5('dev')],
   ['D3', 'My blocs and orders, filtered by the URL', ['UC8'], 'Functionality', env5('dev')],
-  ['D4', 'The bloc started at 16:05 expired and refunded itself', ['UC5', 'UC6'], 'Unattended expiry and refund; ≤ 1 min measured locally (slide 36)', env5('dev, if GO')],
+  ['D4', 'The bloc started at 16:05 expired and refunded itself', ['UC5', 'UC6'], 'Unattended expiry and refund; ≤ 1 min measured locally (slide 36)', env5('dev')],
   ['D5', 'No session, a buyer on admin, a write without the marker', ['—'], 'Security: 401, 403, 400, HttpOnly', env5('dev')],
   ['D6', 'Twenty paid buyers race for one seat', ['UC4'], 'Correctness under concurrency', env5('local test', 'loc')],
   ['36', 'Scripted k6 load, 16 Oct run', ['UC1'], 'Performance: ≤ 2 s at 100 users', env5('SWE5001 ECS', 'ecs')],
@@ -745,7 +745,7 @@ const plan5 = [
 // the footnote closes at 960.
 const s34 = () => `
 ${tbl(['Step', 'What you see', '<span style="white-space:nowrap">Use cases</span>', 'Quality attribute (slide 3)', 'Runs on'], plan5.map((r, i) => [`<b>${r[0]}</b>`, r[1], ucList(r[2]), r[3], hAt(r[4], 'pop', 650 + 35 * i)]), { fs: 20, w: [60, 400, 118, null, 138], pad: '5px 10px', m: [200, 320, 38] })}
-<div ${A('up', 960, 'position:absolute;left:0;right:0;top:520px;font:400 18px/1.3 Inter;color:var(--muted);')}${ref('#517 · #223')}>“dev, if GO”: live on dev after the 24 Oct go/no-go; else its 24 Oct recording if one exists, else local evidence labelled local, never dev</div>`;
+<div ${A('up', 960, 'position:absolute;left:0;right:0;top:520px;font:400 18px/1.3 Inter;color:var(--muted);')}${ref('#605 · #657 · #517 · #223')}>“dev”: live on dev (GO, 25 Oct); if a morning check fails, that step plays its 24 Oct recording, said as recorded</div>`;
 
 // ---------- slide 35 (5.1, 5.2, 5.5) ----------
 const live5 = [

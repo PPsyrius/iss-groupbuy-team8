@@ -114,14 +114,14 @@ const seg5Html = () => {
 ${reqBox(s5)}
 ${box('tip', 'Tip', 'Eric shares one screen at 16:52:00 (<code>SHARE</code> from Pan) with the deck in the Leader window, tab 1, and operates every window; Yorik speaks throughout. The expiry bloc is started at 16:05 so that D4 shows a refund that no one triggered by hand.')}
 ${slideCard(C.SLIDES.find(s => s.n === 34))}
-<h2>Decision: live or recorded payment steps (go/no-go after the Sat 24 Oct dry run)</h2>
-${tbl(['Condition (Yorik decides with Lim; posted in #464)', 'GO: live on dev', 'NO-GO: recorded or local, said as such'], [
+<h2>Decision: live or recorded payment steps (GO, confirmed by Yorik on 25 Oct, #605)</h2>
+${tbl(['Condition (checked on 26 Oct morning)', 'GO: live on dev', 'NO-GO: recorded or local, said as such'], [
   ['#517 fixed: a new START on dev reaches paid within one minute and shows under My blocs', 'D1, D2 live; fallback = the 24 Oct clips', 'D1, D2 from the 24 Oct recording (#657), said as “recorded on dev on 24 Oct”'],
   ['#223 done: Checkout and scheduling on for dev (<code>BLOCBUY_SCHEDULING_ENABLED</code>; default false in application-ec2.yml); a <code>US34-04</code> bloc started on 24 Oct expired within one sweep and refunded', 'D4 live with the 16:05 bloc', 'D4 from the 24 Oct recording (#657); slide 34 rows read “recorded”'],
   ['Full dry run on dev on Sat 24 Oct passes in order, timed, and is recorded', 'Rehearse at the real clock on 25 Oct', 'Only the NO-GO path is rehearsed'],
   ['D3, D5, D6 do not depend on payments', 'live', 'live (D3 on an account that already has orders)'],
 ])}
-${box('warn', 'Watch out', mh('D1, D2 and D4 all have dev evidence: on 23 Oct a paid START settled and a natural expiry refunded once (PR #664, merged 24 Oct, bef39b72); on 24 Oct a second buyer’s paid JOIN filled the bloc, shown on dev in the system demo backup recording (#657). Yorik closed #590, #517 and #223 on 25 Oct on this evidence; crash recovery under replay (#224) is not shown. Running the payment steps live still follows the go/no-go. {{CONFIRM:Yorik’s go/no-go on the day, per step D1, D2, D4 (open item 1)}}'))}
+${box('warn', 'Watch out', mh('D1, D2 and D4 all have dev evidence: on 23 Oct a paid START settled and a natural expiry refunded once (PR #664, merged 24 Oct, bef39b72); on 24 Oct a second buyer’s paid JOIN filled the bloc, shown on dev in the system demo backup recording (#657). Yorik closed #590, #517 and #223 on 25 Oct on this evidence; crash recovery under replay (#224) is not shown. Yorik confirmed GO for D1, D2 and D4 on dev on 25 Oct (#605), subject to the 26 Oct checks in this run book, including the 16:05 bloc setup. If a check fails, that step uses its backup recording and is said as “the payment steps are recorded”.'))}
 <h2>Preconditions (checked at 15:30 by Eric and Yorik)</h2>
 <ul><li>Health <code>UP</code> (A.1); latest runs on <code>dev</code> green; merge freeze in force; the §4 demo PR is the only change that may land.</li>
 <li>Two Google buyer accounts signed in on Eric’s machine in two Chrome profiles, “Leader”, shown as <b>wood kik</b>, and “Joiner”, shown as <b>los gai</b> (as in the 24 Oct backup recording); the same two on Yorik’s machine as standby. Neither needs admin: the listings check uses the public catalogue, and the Joiner must <b>not</b> hold the admin role, or D5’s 403 fails; Lim checks it at the 25 Oct rehearsal.</li>
