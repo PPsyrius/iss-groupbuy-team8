@@ -7,9 +7,8 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Repository port for the User aggregate (one repository per aggregate root). Implemented in the
- * infrastructure layer; DOs and MyBatis mappers never cross this boundary. All queries filter
- * soft-deleted rows.
+ * Repository port for the User aggregate. Implemented in the infrastructure layer; DOs and MyBatis
+ * mappers never cross this boundary. All queries filter soft-deleted rows.
  */
 public interface UserRepository {
 

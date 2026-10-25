@@ -8,9 +8,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Repository port for the Order aggregate (one repository per aggregate root). Implemented in the
- * infrastructure layer; DOs and MyBatis mappers never cross this boundary. No provider SDK types in
- * signatures; monetary amounts are BigDecimal major units.
+ * Repository port for the Order aggregate. Implemented in the infrastructure layer; DOs and MyBatis
+ * mappers never cross this boundary. No provider SDK types in signatures; monetary amounts are
+ * BigDecimal major units.
  *
  * <p>Concurrency contract: one order per payment is enforced by {@code uq_biz_order_payment_id} and
  * one active order per user per deal by {@code uq_biz_order_deal_user} — replayed confirmations
