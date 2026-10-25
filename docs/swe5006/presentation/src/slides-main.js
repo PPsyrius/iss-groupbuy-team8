@@ -732,8 +732,8 @@ const plan5 = [
   ['D4', 'A separate bloc that expired: order cancelled, refund sent', ['UC5', 'UC6'], 'Unattended expiry and refund; ≤ 1 min measured locally (slide 31)', env5('dev')],
   ['D5', 'A buyer on an admin-only API', ['—'], 'Security: 403, checked on the server', env5('dev')],
   ['D6', 'Twenty paid buyers race for one seat', ['UC4'], 'Correctness under concurrency', env5('saved CI run', 'loc')],
-  ['32', 'Scripted k6 load, 16 Oct run', ['UC1'], 'Performance: ≤ 2 s at 100 users', env5('SWE5001 ECS', 'ecs')],
-  ['34', 'Back to the §4 pipeline run', ['—'], 'Maintainability', env5('dev')],
+  ['31', 'Scripted k6 load, 16 Oct run', ['UC1'], 'Performance: ≤ 2 s at 100 users', env5('SWE5001 ECS', 'ecs')],
+  ['32', 'Back to the §4 pipeline run', ['—'], 'Maintainability', env5('dev')],
 ];
 // Table column sweep (MOTION.md): table 200, rows 320 +38, then the "Runs on" chips pop down the column from 650, +35;
 // the footnote closes at 960.
@@ -790,25 +790,7 @@ const s36 = () => `
  </div>
 </div>`;
 
-// ---------- slide 32 (5.2) ----------
-// Side columns with a trailing callout (MOTION.md): left card 200, rows 260 +60; right card 420, its points 480 +60;
-// the scale-path band 760.
-const s37 = () => `
-<div class="card a" data-a="left" style="position:absolute;left:0;top:0;width:560px;height:300px;padding:20px 24px;--d:200ms"${ref('AWS read-only, 21 Oct')}>
- ${gA(kicker('Dev, the system you saw'), 'up', 230)}
- ${[['Compute', 'One EC2 t3.large, no Auto Scaling group'], ['Data', 'PostgreSQL 18 and Redis 8 on the same host'], ['Effect', 'One point of failure; a deploy restarts the API']].map((r, i) => `<div ${A('up', 260 + 60 * i, 'display:flex;gap:14px;font:400 22px/1.35 Inter;margin-bottom:16px;')}><b style="width:118px;flex:none">${r[0]}</b><span>${r[1]}</span></div>`).join('')}
-</div>
-<div class="card a" data-a="right" style="position:absolute;left:584px;top:0;width:580px;height:300px;padding:20px 24px;--d:420ms"${ref('proposal §6.3 · backend ADR 0008')}>
- ${gA(kicker('Why, deliberately', '#B02E1B'), 'up', 450)}
- <ul class="b" style="font:400 22px/1.4 Inter;margin:0">
-  <li ${A('up', 480, 'margin-bottom:12px;')}>One complete system, always on, at low cost</li>
-  <li ${A('up', 540, 'margin-bottom:12px;')}>The proposal lists no scalability target</li>
-  <li ${A('up', 600)}>One codebase, two topologies</li>
- </ul>
-</div>
-<div ${A('up', 760, 'position:absolute;left:0;right:0;top:324px;border-radius:8px;background:#ECE6DC;padding:16px 20px;font:400 22px/1.4 Inter;')}${ref('backup B10')}><b>Scale path, not claimed here:</b> the same code on ECS in our SWE5001 topology, commerce 2–6 tasks on requests per target, notification 1–4 on queue backlog.</div>`;
-
-// ---------- slide 33 (5.4) ----------
+// ---------- slide 32 (5.4) ----------
 const seams = [
   ['New pricing mode', `One more ${mo('PricingStrategy', 20)} and its ${mo('PricingMode', 20)} constant`, ['Strategy', 'backup B20']],
   ['New consequence of a team’s outcome', `One more subscriber to ${mo('TeamSucceeded', 20)} / ${mo('TeamExpired', 20)}`, ['Observer', 'slide 16']],
@@ -827,7 +809,7 @@ const s38 = () => `
  <div ${A('up', 700, 'font:400 21px/1.35 Inter;color:var(--muted);margin-top:12px;')}>Existing rules stay unedited: each change adds classes; a pricing mode also adds one enum constant.</div>
 </div>`;
 
-const out = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s13, 13: s14, 14: s15, 15: s16, 16: s19, 17: s22, 18: s23, 19: s24, 20: s25, 21: s26, 22: s27, 23: s28, 24: s29, 25: s30, 26: s31, 27: s32, 28: s33, 29: s34, 30: s35, 31: s36, 32: s37, 33: s38 };
+const out = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7, 8: s8, 9: s9, 10: s10, 11: s11, 12: s13, 13: s14, 14: s15, 15: s16, 16: s19, 17: s22, 18: s23, 19: s24, 20: s25, 21: s26, 22: s27, 23: s28, 24: s29, 25: s30, 26: s31, 27: s32, 28: s33, 29: s34, 30: s35, 31: s36, 32: s38 };
 // Every timed slide has a body; the Q&A slot (slot null) is filled below.
 for (const s of C.SLIDES) {
   if (out[s.n]) continue;
@@ -850,7 +832,7 @@ for (const [n, [sec, t, rt]] of Object.entries(repSec)) {
   out[n] = () => body() + repTop(`<span${rt ? ref(rt) : ''}>Report ${sec} · ${t}</span>`);
 }
 // Closing slide (dark, full bleed; MOTION.md, shortened): headline 150, sub 300, footer up and its icon pop 520.
-out[34] = () => `
+out[33] = () => `
 <div ${A('up', 150, 'position:absolute;left:76px;top:96px;font:700 120px/1 Inter;color:#fff;')}>Thank you</div>
 <div ${A('up', 300, 'position:absolute;left:80px;top:236px;font:500 32px Inter;color:#fff;')}>Questions?</div>
 <div ${A('up', 520, "position:absolute;left:80px;top:604px;font:400 18px 'JetBrains Mono',monospace;color:#E6DFD3;display:flex;gap:28px;align-items:center;")}><span style="display:flex;gap:10px;align-items:center"><span ${A('pop', 520, 'font-size:20px;')}>${icon('github')}</span> github.com/PPsyrius/iss-groupbuy-team8</span><span>d1b3np88z657cp.cloudfront.net</span></div>`;

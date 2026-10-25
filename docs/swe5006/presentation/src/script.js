@@ -25,7 +25,7 @@ const rubricRows = ['1.1', '1.2', '1.3', '1.4', '1.5', '1.6', '1.7', '1.8', '2.1
 // Tips: the four "Presentation Tips" on page 2 of the guidelines (verbatim); none conflicts with page 1 (rubric open decision 1).
 const tips = [
   ['Summarize and highlight the significant achievements. Talk more about the significant and interesting parts of the solution and implementation. Your audience should remember the unique aspects of the solution and not similarities to other solutions.', 'Depth goes to what is unique: pay-first teams that refund themselves, money safety under concurrency and failure (UC4 design, statechart, design problems), and a pipeline from pull request to dev in minutes.'],
-  ['Manage your time well. Do not present too many slides. Remember that the audience can read the text in the slide so refrain from reading them.', '34 main slides in 33 minutes, two of them live demos; slots checked at 130 wpm in the table above; sample wording adds to the slide instead of reading it; details sit in backups B1–B21.'],
+  ['Manage your time well. Do not present too many slides. Remember that the audience can read the text in the slide so refrain from reading them.', '33 main slides in 33 minutes, two of them live demos; slots checked at 130 wpm in the table above; sample wording adds to the slide instead of reading it; details sit in backups B1–B21.'],
   ['Explain your design in top-down manner. Make sure that your audience understands the requirements, the high-level design and the high-level decisions that you make before drilling into some details.', 'Problem, scope and quality attributes first (slides 2–3); then architecture (9), transition strategies (10–11), use cases (12), one use case from analysis to design (13–15; statechart B18), design problems (16–18; Factory Method B21), schema (19).'],
   ['Ensure that the contents on the slides are readable from the distance at which your audience is sitting. This is particular true for face-to-face presentation.', 'Rubric V1–V7: one idea per slide, diagrams cropped to the part discussed, labels checked on a projector or TV before 26 Oct.'],
 ];
@@ -102,7 +102,7 @@ ${qaTable(4)}
 };
 
 // ---------- segment 5: system demo (rubric 5.1–5.5) ----------
-// Slide 29 16:51:00–16:51:30; live demo (slide 30) 16:51:30–17:00:00 (510 s); slides 31–33 17:00:00–17:03:00.
+// Slide 29 16:51:00–16:51:30; live demo (slide 30) 16:51:30–17:00:00 (510 s); slides 31–32 17:00:00–17:03:00.
 // Eric shares one screen with two Chrome profiles and operates; Yorik speaks. US34-04 is a team of two with the
 // shortest allowed window (2,400 s = PurchaseQuoteWindow.SECONDS; scripts/dev-demo-listings.json).
 const demoSteps = C.DEMOS[30];
@@ -110,7 +110,7 @@ const demoSteps = C.DEMOS[30];
 const seg5Html = () => {
   const s5 = seg(5);
   return `<section class="chap"><h1>5 ${esc(s5.name)} (${s5.talk} minutes, then ${s5.qa} minutes of buffer)</h1>
-<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:51:00 – 17:03:00 (slide 29 to 16:51:30; live demo on slide 30 to 17:00:00; slides 31–33 to 17:03:00) · 17:03–17:05 buffer for parked questions, questions to 17:10</td></tr><tr><td>Owner</td><td>${esc(s5.owner)}; Lim chairs the buffer</td></tr><tr><td>Slides</td><td>${C.SLIDES.filter(s => s.seg === 5).map(s => s.n).join(', ')}</td></tr></table></div>
+<div class="seghead"><table class="meta"><tr><td>Clock</td><td>16:51:00 – 17:03:00 (slide 29 to 16:51:30; live demo on slide 30 to 17:00:00; slides 31–32 to 17:03:00) · 17:03–17:05 buffer for parked questions, questions to 17:10</td></tr><tr><td>Owner</td><td>${esc(s5.owner)}; Lim chairs the buffer</td></tr><tr><td>Slides</td><td>${C.SLIDES.filter(s => s.seg === 5).map(s => s.n).join(', ')}</td></tr></table></div>
 ${reqBox(s5)}
 ${box('tip', 'Tip', 'Eric shares one screen at 16:51:00 (<code>SHARE</code> from Pan) with the deck in the Leader window, tab 1, and operates every window; Yorik speaks throughout. The expiry bloc is started at 16:05 so that D4 shows a refund that no one triggered by hand.')}
 ${slideCard(C.SLIDES.find(s => s.n === 29))}
@@ -136,7 +136,7 @@ ${box('warn', 'Watch out', 'Yorik’s GO of 25 Oct (#605) covered a live START a
 <li>Browser zoom 125–150 % (rubric V7); Do Not Disturb on; no password manager, email or bookmarks bar visible.</li></ul>
 <h2>Screen layout (Eric’s shared screen)</h2>
 ${tbl(['Window · tab', 'Content', 'Prepared state'], [
-  ['Leader · 1', 'Deck <code>swe5006-presentation.html#29</code>', 'Slide 29; slides 31–34 follow'],
+  ['Leader · 1', 'Deck <code>swe5006-presentation.html#29</code>', 'Slide 29; slides 31–33 follow'],
   ['Leader · 2', `Listing <code>US34-04</code> on <code>${DEV}</code>`, 'Signed in as account A'],
   ['Leader · 3', 'The Leader’s 24 Oct receipt', '“Payment received”'],
   ['Leader · 5', 'Saved CI run of the D6 test', 'Log at the test; test file one click away'],
@@ -195,7 +195,7 @@ ${tbl(['Time (SGT)', 'Do', 'Owner'], [
   ['15:30', 'Demo branch rebased onto the final <code>origin/dev</code> and its PR opened (checks done by ≈ 15:40; no approval yet); pin the backend PR and deploy runs in tabs 3 and 4. Check the §4 and §5 preconditions lists.', 'Pan (§4); Eric, Yorik (§5)'],
   ['≈ 16:05 (≤ 16:07)', 'Start the expiry bloc on <code>US34-04</code> as account B and pay; bookmark the receipt. <code>EXPIRY OK</code> at 16:10, <code>REFUND OK</code> / <code>REFUND LATE</code> at 16:50.', 'Yorik'],
   ['16:30', 'Start; follow the run sheet. All five note every lecturer question and remark verbatim (rubric G9).', 'Lim; all take notes'],
-  ['17:03 / 17:10', 'Slide 34; parked questions; end.', 'Lim'],
+  ['17:03 / 17:10', 'Slide 33; parked questions; end.', 'Lim'],
 ])}
 <h2>After the presentation</h2>
 <ul><li>After the talk: the five members collate their notes into one GitHub issue; every lecturer remark in it becomes a #463 report task by 27 Oct (rubric G9).</li><li>Day log under <code>docs/agile/sprint-04/log/</code>: the demo PR, run links and any payment or refund ids shown (no secrets).</li></ul>
@@ -216,7 +216,7 @@ gh run list --repo ${REPO} --workflow ci-backend.yml --branch dev --limit 3
 gh pr list --repo ${REPO} --base dev --state open      # what could still merge before the freeze`)}
 </section>
 <section class="chap"><h1>B Appendix — backup slides (questions only)</h1>
-<p>Backups follow slide 34 in the HTML deck and the PDF. In the deck press <b>B</b> for the index (BX) and click a row, or open <code>#B6</code> directly.</p>
+<p>Backups follow slide 33 in the HTML deck and the PDF. In the deck press <b>B</b> for the index (BX) and click a row, or open <code>#B6</code> directly.</p>
 ${tbl(['ID', 'Slide', 'Answers'], C.BACKUPS.map(b => b.map(esc)))}
 </section>`;
 
@@ -228,7 +228,7 @@ const coverHtml = cover({
   meta: [
     ['Responsible', 'Yu Qianshuo (Yorik), presentation lead and storyline (#464); Lim Jiechao, slide master.'],
     ['Specification', '<code>docs/swe5006/presentation/RUBRIC.md</code>: every slide records the rubric rows it covers; the coverage tables in the run sheet are derived from them.'],
-    ['Companion files', '<code>swe5006-presentation.html</code> — the deck (34 slides + backups BX, B1–B21, the 1:1 diagram detail pages D9-1 … D26-3 (index DX) and the full-size diagrams F1–F21 (index FX); Chrome or Edge; <b>S</b> notes, <b>T</b> timer, <b>O</b> overview, <b>F</b> fullscreen, <b>B</b> backup index) · <code>swe5006-presentation.pdf</code> — the same deck for submission.'],
+    ['Companion files', '<code>swe5006-presentation.html</code> — the deck (33 slides + backups BX, B1–B21, the 1:1 diagram detail pages D9-1 … D26-3 (index DX) and the full-size diagrams F1–F21 (index FX); Chrome or Edge; <b>S</b> notes, <b>T</b> timer, <b>O</b> overview, <b>F</b> fullscreen, <b>B</b> backup index) · <code>swe5006-presentation.pdf</code> — the same deck for submission.'],
     ['Facts as of', '25 Oct 2026. Dev health <code>UP</code> (23 Oct); a paid START and a natural expiry refund shown on dev on 23 Oct (PR #664, merged 24 Oct, bef39b72); a second buyer’s paid JOIN shown on dev on 24 Oct (system demo backup recording, #657); #590, #517 and #223 closed by Yorik on 25 Oct; #224 open.'],
   ],
   after: `${box('', 'Markers', `${md('{{FILL:}}')} value that does not exist yet; never present a guess · ${md('{{VERIFY:}}')} claim to check against the repository, report or run logs · ${md('{{CONFIRM:}}')} needs team agreement. All must be gone by the 25 Oct rehearsal.`)}`,

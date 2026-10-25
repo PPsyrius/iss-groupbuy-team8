@@ -209,7 +209,7 @@ const b16 = () => `<div style="display:flex;gap:14px;align-items:stretch">
   ['Browse (list + detail)', '24 ms', '0'], ['JOIN intent, unpaid', '57 ms', '0'], ['My Orders', '18 ms', '0'],
  ], { fs: 15, pad: '4px 8px' })}<div style="font:400 15px/1.35 Inter;margin-top:8px">30 paid teams expired within 58 s of their deadlines under that load. One laptop with real HTTP, PostgreSQL and Redis; <b>not a deployed result</b>.</div>`, 'var(--orange-d)', 310)}
 </div>
-<div ${A('up', 560, 'margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter;')}><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out exists only in the SWE5001 topology and is not claimed for SWE5006 (slide 32).</div>
+<div ${A('up', 560, 'margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter;')}><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out exists only in the SWE5001 topology and is not claimed for SWE5006.</div>
 <div ${A('up', 680, 'margin-top:8px;font:italic 400 14.5px/1.35 Inter;color:var(--muted);')}>Sources: docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md (V2, scaling policy); docs/swe5001/evidence/20261019-v3-autoscaling/README.md (V3); docs/perf/sprint3-baseline.md (local workload).</div>`;
 
 // ---- §2 full diagrams (rubric G8, V1, V6): vector, so zoom in the browser or the PDF ----
@@ -343,7 +343,7 @@ function list() {
  ${C.BACKUPS.map((b, i) => { const d = 100 + 30 * Math.floor(i / 2); return `<div data-go="${b[0]}" ${A('up', d, 'cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:2px 14px;')}>
    <span class="tag a" data-a="pop" style="min-width:44px;text-align:center;--d:${d}ms">${b[0]}</span><div ${A('up', d)}><div style="font:600 16px/1.15 Inter">${b[1]}</div><div style="font:400 14px/1.15 Inter;color:var(--muted)">${b[2]}</div></div>
  </div>`; }).join('')}
-</div><div ${A('up', 100 + 30 * Math.ceil(C.BACKUPS.length / 2) + 50, 'margin-top:8px;font:italic 400 15px Inter;color:var(--muted);')}>Click a row (or type #B6 or #D14-2 in the URL). Slide 34 stays up during questions.</div>` });
+</div><div ${A('up', 100 + 30 * Math.ceil(C.BACKUPS.length / 2) + 50, 'margin-top:8px;font:italic 400 15px Inter;color:var(--muted);')}>Click a row (or type #B6 or #D14-2 in the URL). Slide 33 stays up during questions.</div>` });
   B.push({ id: 'B1', title: 'Agile artefacts appendix', speaker: 'Lim', body: b1() });
   B.push({ id: 'B2', title: 'Sprint 2 and 3 burndowns', speaker: 'Lim', body: b11() });
   B.push({ id: 'B3', title: 'ADR index', speaker: 'Eric', body: b8() });
