@@ -1,6 +1,6 @@
 # SWE5006 report drafts and evidence
 
-Draft contributions and supporting evidence for the report editor; these are not the final submitted report.
+Draft contributions and supporting evidence for the report editor; these are not the final submitted report. The report itself is assembled in [`../report/`](../report/AGENTS.md) against [`../report/RUBRIC.md`](../report/RUBRIC.md); carry ready drafts over into its section files.
 
 ## Contribution drafts
 

@@ -1,0 +1,13 @@
+{
+  "name": "@blocbuy/swe5006-report",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SWE5006 Team 8 BlocBuy final report: Markdown sections checked against RUBRIC.md and assembled into the course .docx template.",
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/check.mjs",
+    "check:strict": "node scripts/check.mjs --strict",
+    "build": "node scripts/check.mjs && node scripts/build.mjs"
+  },
+  "license": "ISC"
+}
