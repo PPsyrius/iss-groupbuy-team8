@@ -51,10 +51,10 @@ const b1 = () => dt(['Artefact', 'Where it lives', 'State on 21 Oct'], [
   ['<b>User stories with acceptance criteria</b>', 'UC issues #24–#32; story issues (e.g. #221, #223, #180); AC per story in docs/agile/sprint-03/plan.md §5', 'template: complexity, accountable members, design problem, AC'],
   ['<b>Sprint plans</b>', 'S1 #49; S2 Sprint 2 plan (docx) and #93; S3 docs/agile/sprint-03/plan.md and #232; S4 docs/agile/sprint-04/plan.md and #465', 'all four sprints'],
   ['<b>Burndown charts</b>', 'S2 chart in docs/sprint2-progress-report.typ; daily data docs/agile/metrics/*.csv (board-snapshot.yml, since 17 Sep)', 'S2, S3 reconstructed (B2); S4 from snapshots'],
-  ['<b>Sprint reviews</b>', 'S1, S2 in the progress reports; S3 docs/agile/sprint-03/review.md', `S4 due 23 Oct ${mk('FILL', 'S4 review')}`],
-  ['<b>Retrospectives</b>', 'S1 report; S2 report §Sprint Retrospective', `S3 missing (#451) · S4 due 23 Oct ${mk('FILL', 'S3, S4 retros')}`],
+  ['<b>Sprint reviews</b>', 'S1, S2 in the progress reports; S3 docs/agile/sprint-03/review.md', 'S4 after the talk, with its remarks (#619)'],
+  ['<b>Retrospectives</b>', 'S1 report; S2 report §Sprint Retrospective; S3 docs/agile/sprint-03/retro.md', 'S3 reconstructed 24 Oct · S4 after the talk (#619)'],
   ['<b>Day logs, DoD, practices</b>', 'docs/agile/sprint-0N/log/ (S2–S4); DoD per sprint: docs/agile/definition-of-done.md; EPAT practices: docs/agile/practices.md', 'dated logs per working day'],
-], { fs: 15.5, w: [230, 560], pad: '7px 10px', m: quick(7) }) + `<div class="a" data-a="up" style="--d:${after(7)}ms;margin-top:10px;font:italic 400 15.5px Inter;color:var(--muted)">Source: board and issues read with gh on 21 Oct; docs/agile/README.md. The report appendix holds the full set (#463).</div>`;
+], { fs: 15.5, w: [230, 560], pad: '7px 10px', m: quick(7) }) + `<div class="a" data-a="up" style="--d:${after(7)}ms;margin-top:10px;font:italic 400 15.5px Inter;color:var(--muted)">Source: board and issues read with gh on 21 Oct; docs/agile/README.md. Report Appendix A holds the full set (#463 plan, #681).</div>`;
 
 // ---- B3–B6: segment 2, analysis and design ----
 // Motion (MOTION.md): `m` turns on the table choreography, true = the v3 rhythm (table fade 246 ms, body rows
@@ -149,12 +149,12 @@ const b12 = () => dt(['Workflow · trigger', 'Jobs (required in blue)', 'Median'
   ['<b>ci-frontend</b> · PR', `${req}: frontend-check (3.4 min), SonarCloud Frontend; e2e-preview (69 s), intent-stale`, '4.8 min to e2e-preview end (19 runs)', '19 of 20 finished runs'],
   ['<b>ci-frontend</b> · push to dev', 'package-dev 35 s → deploy-s3-dev 21 s → e2e-dev 82 s; SonarCloud Frontend', '2.7 min to e2e-dev green (94 runs)', 'deploy 97 of 97; e2e-dev 94 of 97 (3–4 Oct)'],
   ['<b>security</b> · PR, dev, weekly', `${req}: gitleaks (10 s); trivy-deps (72 s), trivy-config, workflow-lint, deployment-bundle when their paths change`, '12 s on most PRs', 'PR 97 of 98 finished; dev push 100 of 100'],
-  ['<b>dast-baseline</b> · weekly, manual, scan PRs', 'zap-baseline: passive OWASP ZAP of anonymous dev pages; findings advisory, coverage or scanner errors fail it', '—', 'PR runs 22 Oct green (added after this read)'],
+  ['<b>dast-baseline</b> · weekly, manual, scan PRs', 'zap-baseline: passive OWASP ZAP of anonymous dev pages; findings advisory, coverage or scanner errors fail it', '—', 'PR runs 22 Oct green; dev dispatch 24 Oct green (added after this read)'],
   ['<b>sbom</b> · tag, weekly, manual, run-sbom label', 'sbom: CycloneDX source SBOMs and licence inventories; licences advisory, a missing inventory fails it', '—', 'PR runs 22 Oct green on earlier PR heads (added after this read)'],
   ['<b>rollback-backend</b> · manual', 'validate, then SSM rollback to the recorded previous digest or a given one', '—', 'never run'],
   ['<b>SWE5001</b> · prod branch', 'swe5001-release-gate, swe5001-deploy, infra-swe5001 (promotion PR; see the SWE5001 deck)', '—', '—'],
 ], { fs: 15, w: [190, 470, 220], pad: '6px 10px', m: quick(7) }) + `<div class="a" data-a="up" style="--d:${after(7)}ms;margin-top:8px;font:400 15px/1.4 Inter">Last 100 runs per workflow and event, read with <span class="mono" style="font-size:14.5px">gh run list</span> and the jobs API on 19 Oct. PR durations count only runs where the gated jobs ran (docs-only PRs skip them in about 10 s). Push medians run from the push run start, not the merge click.</div>`;
-const b13 = () => `<div class="dia a" data-a="fade" style="margin-top:-8px;--d:150ms">${fit('physical-deployment', 1130)}</div>${topo('SWE5001 prod: the same code on ECS, rebuilt from scratch on every release and destroyed after it. SWE5006 dev is slide 31.', 450)}`;
+const b13 = () => `<div class="dia a" data-a="fade" style="margin-top:-8px;--d:150ms">${fit('physical-deployment', 1130)}</div>${topo('Production: the same code on ECS, rebuilt on every release and destroyed after it. Dev is slide 26.', 450)}`;
 const b14 = () => dt(['Gap', 'Effect', 'Status'], [
   ['CloudFront → ALB over HTTP', '/api payloads and the origin header cross the AWS network unencrypted', 'NFR-37 TLS still unmet; accepted risk on dev until 16 Nov (#227, NFR register); fix needs an origin hostname and ACM'],
   ['SSH open to the internet', 'port 22 from 0.0.0.0/0 on the dev host, which has a public IP; SSM sessions make it unnecessary', 'AWS read-only check, 21 Oct; open item 9'],
@@ -199,7 +199,7 @@ const b16 = () => `<div style="display:flex;gap:14px;align-items:stretch">
   ${li('commerce 2–6 tasks in two AZs, notification 1–4 (read back 16 Oct)')}
   ${li('V3, 19 Oct: commerce <b>1 → 3 tasks</b> in about four minutes, no manual scaling; at 3 tasks ≈ 455 req/s, server p95 13–50 ms, 2 errors in 570,445')}
   ${li('Not V3 acceptance: the workstation generator dropped iterations, so the analyzer rejects the run')}
-  ${li(`V4 queue drain: ${mk('FILL', 'backlog peak, notification tasks, drain time (19 Oct)')}`)}</ul>`, undefined, 150)}
+  ${li('V4 queue drain: not run on AWS; still open in #458')}</ul>`, undefined, 150)}
  ${rCard('Load, one task', 'SWE5001 V2 · ECS, 16 OCT', `<ul class="b" style="font:400 15.5px/1.35 Inter;margin:0">
   ${li('k6, ten one-minute plateaus from 10 to 200 requests a second, through CloudFront')}
   ${li('57,600 requests, <b>0 errors</b>, run twice')}
@@ -209,7 +209,7 @@ const b16 = () => `<div style="display:flex;gap:14px;align-items:stretch">
   ['Browse (list + detail)', '24 ms', '0'], ['JOIN intent, unpaid', '57 ms', '0'], ['My Orders', '18 ms', '0'],
  ], { fs: 15, pad: '4px 8px' })}<div style="font:400 15px/1.35 Inter;margin-top:8px">30 paid teams expired within 58 s of their deadlines under that load. One laptop with real HTTP, PostgreSQL and Redis; <b>not a deployed result</b>.</div>`, 'var(--orange-d)', 310)}
 </div>
-<div ${A('up', 560, 'margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter;')}><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out exists only in the SWE5001 topology and is not claimed for SWE5006 (slide 37).</div>
+<div ${A('up', 560, 'margin-top:14px;border-radius:8px;background:var(--inverse);color:#fff;padding:11px 18px;font:400 16px/1.35 Inter;')}><b style="color:#FFB01F">Dev, where the demo runs:</b> one EC2 host by design (backend ADR 0008), so no auto-scaling there. Same code, two topologies: scale-out exists only in the production topology on ECS and is not claimed as tested.</div>
 <div ${A('up', 680, 'margin-top:8px;font:italic 400 14.5px/1.35 Inter;color:var(--muted);')}>Sources: docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md (V2, scaling policy); docs/swe5001/evidence/20261019-v3-autoscaling/README.md (V3); docs/perf/sprint3-baseline.md (local workload).</div>`;
 
 // ---- §2 full diagrams (rubric G8, V1, V6): vector, so zoom in the browser or the PDF ----
@@ -221,15 +221,15 @@ const bUc4 = () => `
 <div style="position:absolute;left:0;top:0;width:1164px;height:568px;display:flex;gap:16px;align-items:flex-start">
  <div ${A('fade', 150)}>${sized('uc4-design-class', 500, 499)}<div style="font:400 14.5px Inter;color:var(--muted)">Design class diagram (2320 × 2314)</div></div>
  <div ${A('fade', 260)}>${sized('uc4-design-seq', 348, 496)}<div style="font:400 14.5px Inter;color:var(--muted)">Design sequence (2320 × 3306)</div></div>
- <div ${A('up', 450, 'width:220px;font:400 16px/1.4 Inter;')}>Both are vector: open <span class="mono" style="font-size:14px">src/diagrams/uc4-design-*.svg</span> in a browser tab and zoom. Every message carries its source line in the diagram spec. Report §3.4 (Eric).</div>
+ <div ${A('up', 450, 'width:220px;font:400 16px/1.4 Inter;')}>Both are vector: open <span class="mono" style="font-size:14px">src/diagrams/uc4-design-*.svg</span> in a browser tab and zoom. Every message carries its source line in the diagram spec. Report §3.4.1 (Eric).</div>
 </div>`;
-const bMembers = () => tbl(['Member', 'Use case (report §3.4)', 'Design problem (report §3.5)', 'On a slide'], [
-  ['Eric', 'UC3, UC4 start and join a team', 'Factory Method: team creation', 'UC4 models 14–16, statechart 17; pattern 18'],
-  ['Yorik', 'UC6 refund on team expiry', 'Observer: team outcome; refund idempotency as a mechanism (B6)', 'pattern 19; sequence B5'],
-  ['Pan', 'Receive notifications', 'Template Method: outbox transports', 'pattern 20'],
-  ['Lim', 'UC8 my orders and my teams (with UC7 frontend)', 'Strategy: UC1 pricing', 'pattern 21'],
-  ['Liu Jin', 'UC9 listing administration and team terms', 'State: listing lifecycle (full form)', 'patterns 22–23; statechart B13'],
-], { fs: 16.5, w: [110, 330, 400], m: quick(5) }) + `<div class="a" data-a="up" style="--d:${after(5)}ms;margin-top:12px;font:400 16px/1.4 Inter">Each member’s analysis class, analysis sequence, design class and design sequence diagrams are in their report section (template RT 3.4.1); the deck shows UC4 only (rubric G8). Owners: #463. ${mk('VERIFY', 'UC9 owner: #32 names Eric, #463 names Liu Jin (open item 12)')}</div>`;
+const bMembers = () => tbl(['Member', 'Use case (report section)', 'Design problem (report section)', 'On a slide'], [
+  ['Eric', '§3.4.1 UC3, UC4 start and join a team, pay upfront', '§3.5.1 Factory Method: team creation', 'UC4 models 13–15; pattern B21'],
+  ['Yorik', '§3.4.2 UC6 refund on team expiry', '§3.5.2 Observer: team outcome; refund idempotency as a mechanism (B6)', 'pattern 16; sequence B5'],
+  ['Pan', '§3.4.3 UC1 browse listings, UC2 register and sign in', '§3.5.3 Template Method: outbox transports', 'backup B19'],
+  ['Lim', '§3.4.4 UC8 my orders and my teams, UC7 share attribution', '§3.5.4 Strategy: UC1 pricing', 'backup B20'],
+  ['Liu Jin', '§3.4.5 UC9 listing administration (first version by Eric, PR #72), UC5 team lifecycle with the team statechart', '§3.5.5 State: listing lifecycle (full form)', 'patterns 17–18; statecharts B13, B18'],
+], { fs: 16.5, w: [110, 330, 400], m: quick(5) }) + `<div class="a" data-a="up" style="--d:${after(5)}ms;margin-top:12px;font:400 16px/1.4 Inter">Each member’s analysis class, analysis sequence, design class and design sequence diagrams are in report §3.4.1–§3.4.5 (template RT 3.4); the deck shows UC4 only (rubric G8). Owners: #463, decided 24 Oct; notifications are SWE5001 scope.</div>`;
 const b16erd = () => scroll('full-erd', 2320, 5038, 1150);
 // B16 prints only its first viewport, so the PDF also carries the ERD 1:1 (labels 24 px, rubric V3): each context
 // frame of full-erd.svg cut into 1164 × 568 windows, left to right then top to bottom, as pages B16-1 … B16-n.
@@ -253,14 +253,14 @@ const erdPages = () => ERD_FRAMES.flatMap(([ctx, fx, fy, fw, fh]) => {
 // Presenting, the diagram is 1:1 (labels 24 px, as in the crops) in a viewport that runs to the slide's left, right and
 // bottom edges and scrolls both ways; in the PDF, screenshots and the overview it is scaled to fit that viewport.
 const FULL = [
-  ['logical-layers', 'Logical view: COLA layers and packages', 9], ['transition-pair', 'Transition strategies: the UC4 pair', 12],
-  ['use-case', 'Use case diagram', 13], ['uc4-analysis-class', 'UC4 analysis class diagram', 14], ['uc4-analysis-seq', 'UC4 analysis sequence', 14],
-  ['uc4-design-class', 'UC4 design class diagram', 15], ['uc4-design-seq', 'UC4 design sequence, paid join by webhook', 16],
-  ['team-statechart', 'Team-formation statechart', 17], ['fm-start', 'Factory Method: start a team', 18], ['observer-expiry', 'Observer: team outcome', 19],
-  ['template-method-outbox', 'Template Method: outbox transports', 20], ['strategy-pricing', 'Strategy: pricing', 21],
-  ['state-before', 'Listing lifecycle before State (brute force)', 22], ['state-after', 'Listing lifecycle after State', 23],
-  ['core-erd', 'Core schema', 24], ['cicd-pr-vs-merge', 'CI/CD in detail: every step, trigger and path filter', 29], ['dev-deployment', 'Dev deployment', 31],
-  ['expiry-refund-sequence', 'Expiry and refund sequence (ECS)', 'B5'], ['physical-deployment', 'SWE5001 production topology', 'B10'],
+  ['logical-layers', 'Logical view: COLA layers and packages', 9], ['transition-pair', 'Transition strategies: the UC4 pair', 'B17'],
+  ['use-case', 'Use case diagram', 12], ['uc4-analysis-class', 'UC4 analysis class diagram', 13], ['uc4-analysis-seq', 'UC4 analysis sequence', 13],
+  ['uc4-design-class', 'UC4 design class diagram', 14], ['uc4-design-seq', 'UC4 design sequence, paid join by webhook', 15],
+  ['team-statechart', 'Team-formation statechart', 'B18'], ['fm-start', 'Factory Method: start a team', 'B21'], ['observer-expiry', 'Observer: team outcome', 16],
+  ['template-method-outbox', 'Template Method: outbox transports', 'B19'], ['strategy-pricing', 'Strategy: pricing', 'B20'],
+  ['state-before', 'Listing lifecycle before State (brute force)', 17], ['state-after', 'Listing lifecycle after State', 18],
+  ['core-erd', 'Core schema', 19], ['cicd-pr-vs-merge', 'CI/CD in detail: every step, trigger and path filter', 24], ['dev-deployment', 'Dev deployment', 26],
+  ['expiry-refund-sequence', 'Expiry and refund sequence (ECS)', 'B5'], ['physical-deployment', 'Production topology (SWE5001 release)', 'B10'],
   ['listing-statechart', 'UC9 listing statechart', 'B13'], ['full-erd', 'Entity-relationship diagram, all tables', 'B16'],
 ];
 const viewBox = name => svg(name).match(/viewBox="[\d.]+ [\d.]+ ([\d.]+) ([\d.]+)"/).slice(1).map(Number);
@@ -339,11 +339,11 @@ const dx = details => {
 function list() {
   const B = [];
   B.push({ id: 'BX', title: 'Backup slides: index', body: `
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 22px;margin-top:0">
- ${C.BACKUPS.map((b, i) => { const d = 100 + 30 * Math.floor(i / 2); return `<div data-go="${b[0]}" ${A('up', d, 'cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:5px 14px;')}>
-   <span class="tag a" data-a="pop" style="min-width:44px;text-align:center;--d:${d}ms">${b[0]}</span><div ${A('up', d)}><div style="font:600 17px Inter">${b[1]}</div><div style="font:400 15px/1.25 Inter;color:var(--muted)">${b[2]}</div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 22px;margin-top:0">
+ ${C.BACKUPS.map((b, i) => { const d = 100 + 30 * Math.floor(i / 2); return `<div data-go="${b[0]}" ${A('up', d, 'cursor:pointer;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DDD5C8;border-radius:8px;padding:2px 14px;')}>
+   <span class="tag a" data-a="pop" style="min-width:44px;text-align:center;--d:${d}ms">${b[0]}</span><div ${A('up', d)}><div style="font:600 16px/1.15 Inter">${b[1]}</div><div style="font:400 14px/1.15 Inter;color:var(--muted)">${b[2]}</div></div>
  </div>`; }).join('')}
-</div><div ${A('up', 100 + 30 * Math.ceil(C.BACKUPS.length / 2) + 50, 'margin-top:8px;font:italic 400 15px Inter;color:var(--muted);')}>Click a row (or type #B6 or #D15-2 in the URL). Slide 39 stays up during questions.</div>` });
+</div><div ${A('up', 100 + 30 * Math.ceil(C.BACKUPS.length / 2) + 50, 'margin-top:8px;font:italic 400 15px Inter;color:var(--muted);')}>Click a row (or type #B6 or #D14-2 in the URL). Slide 33 stays up during questions.</div>` });
   B.push({ id: 'B1', title: 'Agile artefacts appendix', speaker: 'Lim', body: b1() });
   B.push({ id: 'B2', title: 'Sprint 2 and 3 burndowns', speaker: 'Lim', body: b11() });
   B.push({ id: 'B3', title: 'ADR index', speaker: 'Eric', body: b8() });
@@ -353,7 +353,7 @@ function list() {
   B.push({ id: 'B7', title: 'Test inventory', speaker: 'Liu Jin', body: b10() });
   B.push({ id: 'B8', title: 'Workflows, required checks and timings', speaker: 'Pan', body: b12() });
   B.push({ id: 'B9', title: 'Known gaps and limitations', speaker: 'Pan', body: b14() });
-  B.push({ id: 'B10', title: 'SWE5001 production topology', speaker: 'Pan', body: b13() });
+  B.push({ id: 'B10', title: 'Production topology (SWE5001 release)', speaker: 'Pan', body: b13() });
   B.push({ id: 'B11', title: 'Stripe Sandbox refund, local evidence (20 Sep)', speaker: 'Yorik', body: b15() });
   B.push({ id: 'B12', title: 'Scale-out and load results (SWE5001 ECS + local baseline)', speaker: 'Yorik', body: b16() });
   B.push({ id: 'B13', title: 'UC9 listing statechart', speaker: 'Liu Jin', body: bLs() });
@@ -362,6 +362,12 @@ function list() {
   const erd = erdPages();
   B.push({ id: 'B16', title: `Entity-relationship diagram, all 29 tables (scroll; 1:1 pages B16-1 to B16-${erd.length} follow)`, speaker: 'Liu Jin', body: b16erd() });
   for (const e of erd) B.push({ ...e, speaker: 'Liu Jin' });
+  const moved = require('./slides-main').moved;
+  B.push({ id: 'B17', title: 'One strategy pair: UC4 analysis objects become design classes', speaker: 'Eric', body: moved.B17() });
+  B.push({ id: 'B18', title: 'Team-formation statechart', speaker: 'Eric', body: moved.B18() });
+  B.push({ id: 'B19', title: 'Notifications: Template Method', speaker: 'Pan', body: moved.B19() });
+  B.push({ id: 'B20', title: 'UC1 pricing: Strategy', speaker: 'Lim', body: moved.B20() });
+  B.push({ id: 'B21', title: 'UC3 start a team: Factory Method', speaker: 'Eric', body: moved.B21() });
   // D pages: each 1:1 crop the talk steps through, so the PDF carries readable diagrams (rubric V3).
   const details = require('./slides-main').details();
   B.push({ id: 'DX', title: 'Diagram details, 1:1: one page per crop', body: dx(details) });

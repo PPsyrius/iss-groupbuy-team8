@@ -18,7 +18,7 @@ The presentation is on 26–27 Oct 2026 and the report is due 1 Nov 2026 (BR sli
 
 Precedence, highest first:
 
-1. CA for order and timing. The one exception is a team ruling: §2 runs 6 min against CA's 5 so that each member presents their own design problem (G4, Time budget), and §1 gives up the minute.
+1. CA for order and timing. Since the 25 Oct rehearsal, every section runs at the lower end of its CA range, except that §3 gives one minute to §2 (team ruling, Time budget).
 2. PDF for what to cover.
 3. RT for the detail behind each PDF item.
 4. BR for project-wide deliverables and dates.
@@ -36,28 +36,29 @@ Forty minutes is a hard stop, interruptions included. The talk shows one example
 | # | Rule | Source | Ruling |
 | --- | --- | --- | --- |
 | G1 | Time box | CA: 40 min, then 5 min Q&A. PDF: 40 min including Q&A | 40 min hard stop, interruptions included. Treat CA's 5 min Q&A as a bonus |
-| G2 | Scripted content | CA ranges sum to 33–39 min. PDF content sums to 30 min | Script 34 min and keep 6 min as buffer |
+| G2 | Scripted content | CA ranges sum to 33–39 min. PDF content sums to 30 min | Script 33 min (the lower end of the CA ranges, with §3’s third minute moved to §2) and keep 2 min as buffer, to finish in 35 min; the 5 min left to the 40 min hard stop take questions (ruling of 25 Oct, after the rehearsal ran 47 min) |
 | G3 | Interruptions | CA: lecturers may ask questions during the presentation | Answer in a sentence or two, then continue. The time comes out of the buffer |
-| G4 | Speakers | CA: the team may divide topics | One speaker per section, except §2, where each member presents their own design problem (2.5). Order §2 so that 2.1–2.4 lead into their speaker's own problem, and the full-form problem's owner closes §2 and opens §3: seven handovers in all. Rehearse each handover; each costs 10–30 s |
+| G4 | Speakers | CA: the team may divide topics | One speaker per section, except §2, where Eric presents 2.1–2.4, and Yorik and Liu Jin each present their own design problem (2.5); since the 25 Oct rehearsal Pan's and Lim's problems are backups B19 and B20, and Eric's is backup B21 (team rulings). Order §2 so that 2.1–2.4 lead into the design problems, and the full-form problem's owner closes §2 and opens §3: five handovers in all (Lim → Eric, Eric → Yorik, Yorik → Liu Jin, Liu Jin → Pan, Pan → Yorik). Rehearse each handover; each costs 10–30 s |
 | G5 | Sequence | CA and PDF use the same order. CA merges Overview with Conduct and adds Testing between design and DevSecOps | Follow CA §1 → §5. Inside §2, follow the PDF and RT order (2.1 → 2.6) |
 | G6 | Demo backups | CA: record a video in advance for each demo | Record backups for §4 and §5 by 24 Oct, on the final Sprint 4 build deployed to `dev`. Sprint 4 ends on 23 Oct (Sprint 4 plan §1), so the recordings can show the final sprint build |
 | G7 | Slide and diagram legibility | BR slide 6: "crisp and readable presentation slides with good flow" | Every diagram and schema must pass V1–V7 |
 | G8 | Talk versus report | RT asks for per-use-case, per-member detail that cannot fit in 40 min | Each item gets one example on a slide, and the slide names its report section. The report holds the full set |
-| G9 | Capture lecturer remarks | BR slide 7: the report incorporates remarks gathered during the presentation | A named scribe on each day logs every question and remark verbatim. Turn the log into report tasks by 27 Oct |
+| G9 | Capture lecturer remarks | BR slide 7: the report incorporates remarks gathered during the presentation | All five members take notes throughout the presentation, interruptions (G3) and the Q&A alike, and log every question and remark verbatim; after the talk they collate the notes into one GitHub issue. Turn that issue into report tasks by 27 Oct (team decision, 24 Oct) |
 | G10 | Code on hand | BR slide 6: well structured source code with unit tests for complex classes. RT 3.5: the implementation follows the design after the pattern is applied | Not a presentation item, but a likely question. Keep the IDE open on the classes implementing each pattern and on their unit tests |
 
 ## Time budget
 
-The script runs 34 min with a 6 min buffer. §1 sits at the bottom of its CA range so that §2 can run 1 min over CA's 5 min to give each member a slot for their design problem (G4); every other section sits at or above the bottom of its CA range.
+The script runs 33 min with a 2 min buffer, so the talk finishes in 35 min (ruling of 25 Oct: the rehearsal ran 47 min for 34 min of slots). Every section sits at the lower end of its CA range, except that §3 runs 2 min against CA’s 3 and §2 6 min against CA’s 5: §2 carries the members’ own design-problem slots and the schema, and §3 needs about 85 s (ruling of 25 Oct, Lim).
 
 | Section | CA (min) | PDF content + Q&A (min) | Ruling (min) |
 | --- | --- | --- | --- |
 | §1 Introduction and project management | 3–4 | 2+1 and 2+1 | 3 |
 | §2 Analysis, design and patterns | 5 | 7+2 | 6 |
-| §3 Testing | 3 | none | 3 |
+| §3 Testing | 3 | none | 2 |
 | §4 CI/CD pipeline demo | 10–12 | 6+2 | 10 |
 | §5 System demo | 12–15 | 13+4 | 12 |
-| Buffer for interruptions | none | none | 6 |
+| Buffer for interruptions | none | none | 2 |
+| Questions to the hard stop | none | none | 5 |
 | **Total** | **33–39** | **40** | **40** |
 
 Inside §1 and §2 the time is split by team ruling. Both are tight, so rehearse them against a timer.
@@ -74,11 +75,11 @@ Inside §1 and §2 the time is split by team ruling. Both are tight, so rehearse
 | 1.8 Agile artefacts | 0.25 |
 | **§1 total** | **3** |
 | 2.1 Software architecture | 0.75 |
-| 2.2 Transition strategies | 1.25 |
+| 2.2 Transition strategies | 1 |
 | 2.3 Use case diagram | 0.5 |
-| 2.4 Analysis and design models | 1 |
-| 2.5 Design problems and patterns: one full-form problem (1 min) and one 20 s slot for each other member | 2.25 |
-| 2.6 Database schema | 0.25 |
+| 2.4 Analysis and design models | 0.75 |
+| 2.5 Design problems and patterns: one full-form problem and one short slot (Observer) | 2.5 |
+| 2.6 Database schema | 0.5 |
 | **§2 total** | **6** |
 
 ## §1 Project Introduction & Project Management Summary (3 min)
@@ -103,13 +104,13 @@ Present in the PDF and RT order, 2.1 to 2.6. That order works because transition
 | # | Requirement | Source | Ruling |
 | --- | --- | --- | --- |
 | 2.1 | Software architecture: logical layers and packages, components if distributed, and the target platform (stack, languages, frameworks, database). Show the architectural decisions behind the logical architecture | PDF 3a; RT 3.1 | One logical layer and package diagram (the 4+1 logical view, SAD 04a) plus a one-line stack. Cite each decision by ADR number |
-| 2.2 | Transition strategies, enough to cover the design end to end. For each strategy: the **types** of analysis objects affected, the **types** of use cases affected, typical class-diagram changes with rationale, typical sequence-diagram changes with rationale | PDF 3b; RT 3.2; SAD 04a | Coverage is per design concern, not per object, but every analysis object type must land in some strategy. Slide: a strategy table (strategy, the quality attribute or concern it serves, object types affected, what they become) plus one before/after pair. Candidates, to check against the ADRs: **language and framework** (Java and Spring dependency injection, SAD 04a activity 1); **presentation** (GUI boundary becomes a React route, component and TanStack Query hook); **distribution** (control becomes a REST controller; the generated TypeScript client plays the stub); **persistence** (entity becomes a domain aggregate behind a repository port in the domain layer, one per aggregate root, implemented in the infrastructure layer by an adapter over MyBatis mappers); **external interface** (the Stripe boundary becomes an adapter plus a webhook endpoint); **security** (authentication and role checks applied across controllers); **scheduling** (the Scheduler actor becomes a scheduled job driving expiry); **concurrency** (the join race). Concurrency belongs here because PROP claims no GoF pattern for UC4 |
+| 2.2 | Transition strategies, enough to cover the design end to end. For each strategy: the **types** of analysis objects affected, the **types** of use cases affected, typical class-diagram changes with rationale, typical sequence-diagram changes with rationale | PDF 3b; RT 3.2; SAD 04a | Coverage is per design concern, not per object, but every analysis object type must land in some strategy. Slide: a strategy table (strategy, the quality attribute or concern it serves, object types affected, what they become) plus one before/after pair (backup B17 since the 25 Oct rehearsal; slide 11 states the typical changes). Candidates, to check against the ADRs: **language and framework** (Java and Spring dependency injection, SAD 04a activity 1); **presentation** (GUI boundary becomes a React route, component and TanStack Query hook); **distribution** (control becomes a REST controller; the generated TypeScript client plays the stub); **persistence** (entity becomes a domain aggregate behind repository ports in the domain layer, implemented in the infrastructure layer by an adapter over MyBatis mappers: a read port per aggregate root, plus a separate write-protocol port where one transaction must lock across aggregates, as the paid group-deal path does (team decision, 24 Oct)); **external interface** (the Stripe boundary becomes an adapter plus a webhook endpoint); **security** (authentication and role checks applied across controllers); **scheduling** (the Scheduler actor becomes a scheduled job driving expiry); **concurrency** (the join race). Concurrency belongs here because PROP claims no GoF pattern for UC4 |
 | 2.3 | Use case diagram covering use cases in scope **and** out of scope, with actors and include, extend and generalisation where they apply | PDF 3c; RT 3.3 | Mark out-of-scope use cases visibly (PROP §6.2). Show Stripe as a secondary actor and the Scheduler as an actor, consistently with 2.4. Showing delivery status per use case is a team ruling |
-| 2.4 | Analysis and design models for each in-scope use case: analysis class diagram, analysis sequence diagram per major flow, design class diagram, design sequence diagram per major flow. Designs follow the transition strategies; every member owns at least one use case | PDF 3d; RT 3.4 | Slide: one use case (UC4, join) taken from analysis to design. The analysis version uses boundary, control and entity stereotypes and no platform; the design version applies 2.2. **The team-formation statechart is required** (team ruling): SAD 03c p4 and p11 call for one when an object's state affects more than one use case, and Team state gates UC4, UC5, UC6 and UC8. PROP §5.1 also calls it the heart of the domain. RT does not list it, so it goes on this slide or on the State pattern slide in 2.5 |
-| 2.5 | Design problems and patterns. For each problem: the problem shown with class and sequence diagrams (as brute force if needed), candidate patterns, why one was chosen, class and sequence diagrams after applying it, implementation decisions. Every member owns at least one | PDF 3e; RT 3.5; SDP 06 design case study p10 | Slides: one problem in the full before/after form, and each other problem in a 20 s slot presented by its owner (G4). Each problem states, in order: where it shows in a diagram, the cause for redesign, and **what varies** (SDP 06 design case study p10; SDP 05a p4 and p12–14), then the pattern. Name the implementing classes (G10). State the liability and why the flexibility is needed (SDP 05a p35). Be ready to defend Strategy for two fixed prices, and if the UC3 factory is a static `create(type)`, call it a simple factory, not GoF Factory Method (SDP 01a p32–35). GoF class-level patterns only (SDP 00a p5); a DAO or repository belongs in 2.2 |
+| 2.4 | Analysis and design models for each in-scope use case: analysis class diagram, analysis sequence diagram per major flow, design class diagram, design sequence diagram per major flow. Designs follow the transition strategies; every member owns at least one use case | PDF 3d; RT 3.4 | Slide: one use case (UC4, join) taken from analysis to design. The analysis version uses boundary, control and entity stereotypes and no platform; the design version applies 2.2. **The team-formation statechart is required** (team ruling): SAD 03c p4 and p11 call for one when an object's state affects more than one use case, and Team state gates UC4, UC5, UC6 and UC8. PROP §5.1 also calls it the heart of the domain. RT does not list it; since the 25 Oct rehearsal it is backup B18, cited from slide 15's notes and report §3.4.5 |
+| 2.5 | Design problems and patterns. For each problem: the problem shown with class and sequence diagrams (as brute force if needed), candidate patterns, why one was chosen, class and sequence diagrams after applying it, implementation decisions. Every member owns at least one | PDF 3e; RT 3.5; SDP 06 design case study p10 | Slides: one problem in the full before/after form, and the Observer problem in a short slot presented by its owner (G4); Template Method (Pan) and Strategy (Lim) are backups B19 and B20 since the 25 Oct rehearsal, and Factory Method (Eric) is backup B21. Each problem states, in order: where it shows in a diagram, the cause for redesign, and **what varies** (SDP 06 design case study p10; SDP 05a p4 and p12–14), then the pattern. Name the implementing classes (G10). State the liability and why the flexibility is needed (SDP 05a p35). Be ready to defend Strategy for two fixed prices, and if the UC3 factory is a static `create(type)`, call it a simple factory, not GoF Factory Method (SDP 01a p32–35). GoF class-level patterns only (SDP 00a p5); a DAO or repository belongs in 2.2 |
 | 2.6 | Database schemas | PDF 3f; RT 3.6 | Core entities on the slide (V6) plus the key mapping decisions (keys, any inheritance strategy, SAD 04a). Full ERD in the appendix |
 
-## §3 Types of Testing Conducted (3 min)
+## §3 Types of Testing Conducted (2 min)
 
 Show testing as one map in the course's vocabulary, then introduce the performance test that §5 runs.
 
@@ -128,9 +129,9 @@ Demo the pipeline live, structured around PDF 4a–4c and RT 4.1–4.3. Those se
 | 4.1 | Live demonstration of the pipeline | CA | If a full run takes more than about 8 min, trigger it beforehand and walk through the finished run (team ruling) |
 | 4.2 | Strategy to manage the source code **and artifacts**: project structure, repository strategy, branching strategy, how developers authenticate | PDF 4a; RT 4.1 | Source: show the monorepo layout, name the branching pattern in EPAT terms (EPAT 07 CI p41–44), explain how developers sign in to GitHub and AWS, and show that CI authenticates to AWS through GitHub OIDC with no stored keys. Do not claim the project has no static credentials: disclose the one accepted IAM user access key recorded in the AWS account governance README. Artifacts: git-SHA-tagged container images with digest pinning, the SBOM, saved-plan Terraform promotion, content-hashed frontend assets, and the committed OpenAPI contract versus the gitignored generated client |
 | 4.3 | Continuous integration: what triggers each job, the jobs, the tests | PDF 4b; RT 4.2 | Show PR-time jobs and post-merge jobs separately, including the security scanners, the contract drift check and the policy-as-code checks |
-| 4.4 | Continuous delivery: how many environments, who approves promotion between them, how a deployment is verified | PDF 4b; RT 4.3 | Show the environment gate and the approver. Show the verification: the health check or smoke test, and the circuit-breaker rollback if configured. Use the correct term: a manual production approval is Continuous **Delivery**, not Continuous Deployment (EPAT 07 CI p34–35) |
+| 4.4 | Continuous delivery: how many environments, who approves promotion between them, how a deployment is verified | PDF 4b; RT 4.3 | Show the environment gate and the approver. Show the verification: the health check or smoke test, and the circuit-breaker rollback if configured. Use the correct term: a manual production approval is Continuous **Delivery**, not Continuous Deployment (EPAT 07 CI p34–35). Team ruling 25 Oct (report editor): production is the shared SWE5001 release (ruleset prod-release); dev is the always-on demo environment |
 | 4.5 | Technical findings and issues encountered | PDF 4c | Two or three real issues, each with its root cause and fix |
-| 4.6 | Recorded backup video | CA | Store it in the cloud and on a USB drive |
+| 4.6 | Recorded backup video | CA | Store it in the cloud and on each presenter's laptop (team ruling, 24 Oct, open item 2) |
 
 ## §5 System Demo (12 min, live with recorded backup)
 
@@ -139,10 +140,10 @@ Demonstrate the significant use cases through the quality attributes we listed i
 | # | Requirement | Source | Ruling |
 | --- | --- | --- | --- |
 | 5.1 | Some of the significant use cases | PDF 5a | Choose use cases that also show a quality attribute, such as UC4 join. Walk the complete group-buy loop if time allows: initiate, join, succeed or expire, confirm or refund |
-| 5.2 | How the solution handles some of its important quality attributes | PDF 5b; RT 1.4.3 | "Important" means our own listed attributes. Demonstrate two or three, for example correctness under concurrency (the last-slot race), refund idempotency, team expiry within 1 min (run with a short window), and security. Claim scalability only if auto-scaling is configured and can be triggered on stage; otherwise state it as a deliberate trade-off (PROP does not list scalability as an NFR) |
+| 5.2 | How the solution handles some of its important quality attributes | PDF 5b; RT 1.4.3 | "Important" means our own listed attributes. Demonstrate two or three, for example correctness under concurrency (the last-slot race), refund idempotency, team expiry within 1 min (run with a short window), and security. Scalability is not a PROP NFR and is not presented (team decision, 25 Oct): dev has no auto-scaling, and claiming scalability would over-claim. Questions about it go to the §5 Q&A row (no auto-scaling on dev) and backup B12. 5.2 stays covered by the demo overview and the live demo (slides 29 and 30) |
 | 5.3 | Performance, shown by running the scripted performance test | PDF 5b | Run the test introduced in 3.2 and show the result against PROP's 2 s at 100 concurrent users. Pre-run it and show the report if a live run would exceed about 2 min |
 | 5.4 | Maintainability, by showing or running the DevOps pipeline | PDF 5b | Point back to the §4 run rather than repeating it (team ruling). Optionally push a small change through the pipeline |
-| 5.5 | Recorded backup video | CA | Store it in the cloud and on a USB drive |
+| 5.5 | Recorded backup video | CA | Store it in the cloud and on each presenter's laptop (team ruling, 24 Oct, open item 2) |
 
 ## Visibility requirements
 
@@ -172,21 +173,21 @@ By 25 Oct, every box below should be ticked and every open decision settled. Bac
 - [ ] Effort figures in 1.4 reconciled with the submitted progress reports
 - [ ] One story card, one burndown and the agile artefacts appendix ready (1.8)
 - [ ] Performance script runs and its result is recorded against 2 s at 100 concurrent users
-- [ ] Full rehearsal finishes in 34 min or less, with §1 inside 3 min and §2 inside 6 min
-- [ ] Both backup videos recorded by 24 Oct and stored in the cloud and on a USB drive
+- [ ] Full rehearsal finishes in 35 min or less, each section timed separately, with §1 inside 3 min, §2 inside 6 min and §3 inside 2 min
+- [ ] Both backup videos recorded by 24 Oct and stored in the cloud and on each presenter's laptop
 - [ ] Every diagram and schema checked against V1–V7 on a projector or TV
 - [ ] A speaker assigned to each section, with the handovers rehearsed
-- [ ] A scribe named for each presentation day (G9)
-- [ ] Questions sent to Chandra: is Q&A inside or outside the 40 min, and is there a marking rubric for the presentation?
+- [x] Note-takers for each presentation day (G9): all five members, notes collated into one GitHub issue after the talk (decided 24 Oct)
+- [x] Questions to Chandra (is Q&A inside or outside the 40 min, and is there a marking rubric for the presentation?): decided 24 Oct not to send them. The deck works to the stricter reading: Q&A inside the 40 min (G1) and no published marking rubric (Sources). The report due date is settled: 1 Nov (BR slide 7)
 
-Open decisions:
+Decisions (open unless marked **Settled**; the numbers stay fixed because AGENTS.md, the deck and #463 cite them):
 
 1. What PDF page 2 says, and which of its items do not conflict with page 1 and therefore still apply.
 2. What is deployed now against UC1–UC9: done, partial or dropped.
 3. Which transition strategies the ADRs already cover, and which of the 2.2 candidates are missing.
-4. Who owns which use case and which design problem.
+4. Who owns which use case and which design problem. **Settled 24 Oct (report editor, #463):** Eric UC3, UC4, pay upfront; Yorik UC6; Pan UC1, UC2; Lim UC7, UC8; Liu Jin UC5, UC9 (first UC9 version by Eric, PR #72); notifications are SWE5001 scope. Design problems as on slides 16–18 and backups B19–B21. Who presents a use case is unchanged.
 5. Which GoF patterns are in the code, in which classes, and whether brute-force "before" diagrams exist. Specifically: is State one class per state, and is the UC3 factory static?
 6. Whether the auth change from PROP was recorded in an ADR.
 7. Which performance test tool is used, whether a script exists, and whether it has met the target.
-8. Whether auto-scaling is configured, which decides whether scalability is demonstrated or stated as a trade-off.
-9. Whether the presentation is also graded individually. If so, each speaker's section should show their own use case or design problem.
+8. Whether auto-scaling is configured, which decides whether scalability is demonstrated or stated as a trade-off. **Settled 25 Oct (team decision):** not presented. Dev has no auto-scaling and PROP sets no scalability target, so the deck makes no scalability claim; the §5 Q&A row and backup B12 answer questions.
+9. Whether the presentation is also graded individually. **Settled 24 Oct (team decision):** the presentation is graded as a team, and the course does not require every member to speak. The individual portion is in the report: 80% including 5% peer assessment (BR slide 13), plus each member's own §3.4.N and §3.5.N. The §2 split (G4) is the team's choice, not a course rule; since the 25 Oct rehearsal Yorik and Liu Jin present their design problems, and Eric's, Pan's and Lim's are backups B21, B19 and B20.
