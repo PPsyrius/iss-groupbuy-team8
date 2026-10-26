@@ -1,0 +1,294 @@
+{
+  "env": {
+    "contexts": [
+      {
+        "name": "target",
+        "urls": [
+          "https://d1b3np88z657cp.cloudfront.net/"
+        ],
+        "includePaths": [
+          "^https://d1b3np88z657cp\\.cloudfront\\.net/.*$"
+        ]
+      },
+      {
+        "name": "public-crawl",
+        "urls": [
+          "https://d1b3np88z657cp.cloudfront.net/"
+        ],
+        "includePaths": [
+          "^https://d1b3np88z657cp\\.cloudfront\\.net/(?:\\?.*)?$",
+          "^https://d1b3np88z657cp\\.cloudfront\\.net/assets/.*$",
+          "^https://d1b3np88z657cp\\.cloudfront\\.net/products/[a-f0-9-]+(?:\\?.*)?$",
+          "^https://d1b3np88z657cp\\.cloudfront\\.net/(?:favicon\\.(?:ico|svg)|apple-touch-icon\\.png|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml)$"
+        ],
+        "excludePaths": [
+          "^(?!(?:^https://d1b3np88z657cp\\.cloudfront\\.net/(?:\\?.*)?$|^https://d1b3np88z657cp\\.cloudfront\\.net/assets/.*$|^https://d1b3np88z657cp\\.cloudfront\\.net/products/[a-f0-9-]+(?:\\?.*)?$|^https://d1b3np88z657cp\\.cloudfront\\.net/(?:favicon\\.(?:ico|svg)|apple-touch-icon\\.png|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml)$)).*"
+        ]
+      }
+    ],
+    "parameters": {
+      "failOnError": true,
+      "failOnWarning": false,
+      "continueOnFailure": false,
+      "progressToStdout": true
+    }
+  },
+  "jobs": [
+    {
+      "type": "passiveScan-config",
+      "parameters": {
+        "enableTags": false,
+        "maxAlertsPerRule": 0,
+        "disableAllRules": false
+      },
+      "rules": [
+        {
+          "id": 10010,
+          "threshold": "Medium"
+        },
+        {
+          "id": 10011,
+          "threshold": "Medium"
+        },
+        {
+          "id": 10015,
+          "threshold": "Medium"
+        },
+        {
+          "id": 10020,
+          "threshold": "Medium"
+        },
+        {
+          "id": 10021,
+          "threshold": "Medium"
+        },
+        {
+          "id": 10035,
+          "threshold": "Medium"
+        },
+        {
+          "id": 10036,
+          "threshold": "Medium"
+        },
+        {
+          "id": 10038,
+          "threshold": "Medium"
+        },
+        {
+          "id": 10054,
+          "threshold": "Medium"
+        },
+        {
+          "id": 10055,
+          "threshold": "Medium"
+        },
+        {
+          "id": 10063,
+          "threshold": "Medium"
+        },
+        {
+          "id": 90004,
+          "threshold": "Medium"
+        }
+      ]
+    },
+    {
+      "type": "script",
+      "name": "Load passive-start.json",
+      "alwaysRun": true,
+      "parameters": {
+        "action": "add",
+        "type": "standalone",
+        "engine": "ECMAScript : Graal.js",
+        "name": "passive-start.json",
+        "inline": "\nvar loader = Java.type('org.parosproxy.paros.control.Control').getSingleton().getExtensionLoader();\nvar pscan = loader.getExtension('ExtensionPassiveScan2');\nvar stats = loader.getExtension('ExtensionStats').getInMemoryStats();\nif (pscan === null || stats === null) throw new Error('Passive scanner/statistics unavailable');\nfunction stat(key) {\n    var value = stats.getStat(key);\n    return value === null ? null : Number(value);\n}\nvar rules = [], installed = pscan.getPassiveScannersManager().getScanRules();\nfor (var i = 0; i < installed.size(); i++) {\n    var rule = installed.get(i);\n    rules.push({id: rule.getPluginId(), name: String(rule.getName()), enabled: rule.isEnabled(),\n        threshold: String(rule.getAlertThreshold()), time_ms: stat('stats.pscan.' + rule.getPluginId() + '.time')});\n}\nvar errors = 0, counters = stats.getStats('stats.log.error.org.zaproxy.addon.pscan').values().iterator();\nwhile (counters.hasNext()) errors += Number(counters.next());\nvar data = {schema: 1, queued: pscan.getRecordsToScan(), rules: rules, scanner_errors: errors,\n    request_bodies_skipped: stat('stats.pscan.reqBodyTooBig') || 0,\n    response_bodies_skipped: stat('stats.pscan.respBodyTooBig') || 0};\nJava.type('java.nio.file.Files').writeString(Java.type('java.nio.file.Paths').get(\"/zap/wrk/passive-start.json\"), JSON.stringify(data));\n"
+      }
+    },
+    {
+      "type": "script",
+      "name": "Record passive-start.json",
+      "alwaysRun": true,
+      "parameters": {
+        "action": "run",
+        "type": "standalone",
+        "name": "passive-start.json"
+      }
+    },
+    {
+      "type": "requestor",
+      "requests": [
+        {
+          "name": "SPA root",
+          "url": "https://d1b3np88z657cp.cloudfront.net/",
+          "method": "GET",
+          "responseCode": 200,
+          "headers": [
+            "Accept: text/html"
+          ]
+        },
+        {
+          "name": "Catalog",
+          "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products",
+          "method": "GET",
+          "responseCode": 200,
+          "headers": [
+            "Accept: application/json"
+          ]
+        },
+        {
+          "name": "Pagination",
+          "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products?page=2&size=1",
+          "method": "GET",
+          "responseCode": 200,
+          "headers": [
+            "Accept: application/json"
+          ]
+        },
+        {
+          "name": "Category filter",
+          "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products?category=electronics",
+          "method": "GET",
+          "responseCode": 200,
+          "headers": [
+            "Accept: application/json"
+          ]
+        },
+        {
+          "name": "Keyword search",
+          "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products?keyword=Universal&ai=false",
+          "method": "GET",
+          "responseCode": 200,
+          "headers": [
+            "Accept: application/json"
+          ]
+        },
+        {
+          "name": "Product detail",
+          "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products/01a11acc-b84a-7134-90bd-a80c8c719739",
+          "method": "GET",
+          "responseCode": 200,
+          "headers": [
+            "Accept: application/json"
+          ]
+        },
+        {
+          "name": "SPA product deep link",
+          "url": "https://d1b3np88z657cp.cloudfront.net/products/01a11acc-b84a-7134-90bd-a80c8c719739",
+          "method": "GET",
+          "responseCode": 200,
+          "headers": [
+            "Accept: text/html"
+          ]
+        },
+        {
+          "name": "Invalid pagination",
+          "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products?page=0",
+          "method": "GET",
+          "responseCode": 400,
+          "headers": [
+            "Accept: application/json"
+          ]
+        },
+        {
+          "name": "Anonymous orders denial",
+          "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/orders/me",
+          "method": "GET",
+          "responseCode": 401,
+          "headers": [
+            "Accept: application/json"
+          ]
+        },
+        {
+          "name": "Anonymous admin denial",
+          "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/admin/products",
+          "method": "GET",
+          "responseCode": 401,
+          "headers": [
+            "Accept: application/json"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "spider",
+      "parameters": {
+        "context": "public-crawl",
+        "url": "https://d1b3np88z657cp.cloudfront.net/",
+        "maxDuration": 3,
+        "maxDepth": 3,
+        "threadCount": 2,
+        "processForm": false,
+        "postForm": false
+      }
+    },
+    {
+      "type": "passiveScan-wait",
+      "parameters": {
+        "maxDuration": 3
+      },
+      "alwaysRun": true
+    },
+    {
+      "type": "script",
+      "name": "Load passive-finish.json",
+      "alwaysRun": true,
+      "parameters": {
+        "action": "add",
+        "type": "standalone",
+        "engine": "ECMAScript : Graal.js",
+        "name": "passive-finish.json",
+        "inline": "\nvar loader = Java.type('org.parosproxy.paros.control.Control').getSingleton().getExtensionLoader();\nvar pscan = loader.getExtension('ExtensionPassiveScan2');\nvar stats = loader.getExtension('ExtensionStats').getInMemoryStats();\nif (pscan === null || stats === null) throw new Error('Passive scanner/statistics unavailable');\nfunction stat(key) {\n    var value = stats.getStat(key);\n    return value === null ? null : Number(value);\n}\nvar rules = [], installed = pscan.getPassiveScannersManager().getScanRules();\nfor (var i = 0; i < installed.size(); i++) {\n    var rule = installed.get(i);\n    rules.push({id: rule.getPluginId(), name: String(rule.getName()), enabled: rule.isEnabled(),\n        threshold: String(rule.getAlertThreshold()), time_ms: stat('stats.pscan.' + rule.getPluginId() + '.time')});\n}\nvar errors = 0, counters = stats.getStats('stats.log.error.org.zaproxy.addon.pscan').values().iterator();\nwhile (counters.hasNext()) errors += Number(counters.next());\nvar data = {schema: 1, queued: pscan.getRecordsToScan(), rules: rules, scanner_errors: errors,\n    request_bodies_skipped: stat('stats.pscan.reqBodyTooBig') || 0,\n    response_bodies_skipped: stat('stats.pscan.respBodyTooBig') || 0};\nJava.type('java.nio.file.Files').writeString(Java.type('java.nio.file.Paths').get(\"/zap/wrk/passive-finish.json\"), JSON.stringify(data));\n"
+      }
+    },
+    {
+      "type": "script",
+      "name": "Record passive-finish.json",
+      "alwaysRun": true,
+      "parameters": {
+        "action": "run",
+        "type": "standalone",
+        "name": "passive-finish.json"
+      }
+    },
+    {
+      "type": "export",
+      "parameters": {
+        "context": "target",
+        "type": "har",
+        "source": "all",
+        "fileName": "/zap/wrk/traffic.har"
+      },
+      "alwaysRun": true
+    },
+    {
+      "type": "report",
+      "parameters": {
+        "template": "traditional-html",
+        "reportDir": "/zap/wrk",
+        "reportFile": "report.html",
+        "reportTitle": "BlocBuy passive DAST"
+      },
+      "alwaysRun": true
+    },
+    {
+      "type": "report",
+      "parameters": {
+        "template": "traditional-json",
+        "reportDir": "/zap/wrk",
+        "reportFile": "report.json",
+        "reportTitle": "BlocBuy passive DAST"
+      },
+      "alwaysRun": true
+    },
+    {
+      "type": "report",
+      "parameters": {
+        "template": "traditional-md",
+        "reportDir": "/zap/wrk",
+        "reportFile": "report.md",
+        "reportTitle": "BlocBuy passive DAST"
+      },
+      "alwaysRun": true
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"conclusion":"success","createdAt":"2026-10-22T06:21:40Z","databaseId":39733450177,"event":"pull_request","headBranch":"ci/dast-zap-baseline","headSha":"10dfa189a32a0204a0ea7bf53b300353693ec11d","updatedAt":"2026-10-22T06:23:29Z","url":"https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39733450177","workflowName":"dast-baseline"}
