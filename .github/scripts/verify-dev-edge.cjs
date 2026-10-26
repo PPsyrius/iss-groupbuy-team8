@@ -54,10 +54,12 @@ async function main() {
   const [policyPath, outputDirectory] = process.argv.slice(2);
   assert.ok(policyPath && outputDirectory, 'Pass canonical policy path and output directory');
   const target = process.env.EDGE_BASE_URL;
-  assert.equal(target, 'https://d1b3np88z657cp.cloudfront.net', 'Only the reviewed dev origin is supported');
   const policy = JSON.parse(fs.readFileSync(policyPath, 'utf8'));
   const report = { target, checkedAtUtc: new Date().toISOString(), scope: 'Read-only anonymous post-apply check; no real account or transaction coverage', checks: [], status: 'failed' };
-  await withBrowserEvidence(() => chromium.launch(), async browser => {
+  await withBrowserEvidence(async () => {
+    assert.equal(target, 'https://d1b3np88z657cp.cloudfront.net', 'Only the reviewed dev origin is supported');
+    return chromium.launch();
+  }, async browser => {
     const context = await browser.newContext({ serviceWorkers: 'block' });
     await context.route('**/*', route => ['GET', 'HEAD', 'OPTIONS'].includes(route.request().method()) ? route.continue() : route.abort());
     for (const resource of ['/', '/api/v1/products?size=1']) {

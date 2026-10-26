@@ -70,6 +70,32 @@ test('post-apply verifier accepts all exact values and rejects drift or missing 
   }
 });
 
+for (const target of [undefined, 'https://unreviewed.example']) {
+  test(`invalid edge target is recorded before browser launch: ${target ?? 'missing'}`, () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'blocbuy-edge-target-'));
+    try {
+      const moduleDirectory = path.join(directory, 'node_modules/@playwright/test');
+      fs.mkdirSync(moduleDirectory, { recursive: true });
+      fs.writeFileSync(path.join(moduleDirectory, 'index.js'), "exports.chromium = { launch() { throw new Error('Browser must not launch'); } };\n");
+      const env = { ...process.env };
+      if (target === undefined) delete env.EDGE_BASE_URL;
+      else env.EDGE_BASE_URL = target;
+      const result = spawnSync(process.execPath, [
+        path.join(root, '.github/scripts/verify-dev-edge.cjs'),
+        path.join(root, 'deployment/frontend/cloudfront/response-headers-policy.json'),
+        path.join(directory, 'evidence'),
+      ], { cwd: directory, env, encoding: 'utf8' });
+      assert.equal(result.status, 1);
+      const report = JSON.parse(fs.readFileSync(path.join(directory, 'evidence/verification.json'), 'utf8'));
+      assert.equal(report.status, 'failed');
+      assert.match(report.failure, /Only the reviewed dev origin is supported/);
+      assert.doesNotMatch(result.stderr, /Browser must not launch/);
+    } finally {
+      fs.rmSync(directory, { recursive: true, force: true });
+    }
+  });
+}
+
 for (const scenario of [
   { name: 'success' },
   { name: 'launch failure', launchError: true },
