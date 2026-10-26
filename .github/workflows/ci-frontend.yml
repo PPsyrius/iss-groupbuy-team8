@@ -72,6 +72,7 @@ jobs:
               - '!frontend/CLAUDE.md'
               - 'contracts/**'
               - 'lefthook.yml'
+              - 'deployment/frontend/cloudfront/response-headers-policy.json'
               - '.github/workflows/ci-frontend.yml'
             intent:
               - 'frontend/package.json'

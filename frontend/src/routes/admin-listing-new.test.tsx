@@ -110,12 +110,12 @@ describe("/admin/listings/new", () => {
     await user.click(screen.getByRole("button", { name: "Add another URL" }));
     await user.type(
       screen.getByRole("textbox", { name: "Image URL 2" }),
-      "https://cdn.example.com/unused.jpg",
+      "https://dcsjrkmummxi7.cloudfront.net/unused.jpg",
     );
     await user.click(screen.getByRole("button", { name: "Remove image URL 2" }));
     await user.type(
       screen.getByRole("textbox", { name: "Image URL 1" }),
-      "https://cdn.example.com/milk.jpg",
+      "https://dcsjrkmummxi7.cloudfront.net/milk.jpg",
     );
     await user.click(screen.getByRole("button", { name: "Save draft" }));
     await waitFor(() =>
@@ -136,7 +136,7 @@ describe("/admin/listings/new", () => {
         currency: "sgd",
         category: "groceries",
         stock: 45,
-        images: ["https://cdn.example.com/milk.jpg"],
+        images: ["https://dcsjrkmummxi7.cloudfront.net/milk.jpg"],
       },
     });
     expect(store.rows[0]?.listing).not.toHaveProperty("subtitle");
