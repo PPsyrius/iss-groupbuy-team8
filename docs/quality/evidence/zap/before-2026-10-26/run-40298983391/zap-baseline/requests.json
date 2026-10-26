@@ -1,0 +1,93 @@
+{
+  "origin": "https://d1b3np88z657cp.cloudfront.net",
+  "requests": [
+    {
+      "name": "SPA root",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/",
+      "kind": "html",
+      "status": 200,
+      "code": "COMMON_200_000"
+    },
+    {
+      "name": "Catalog",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products",
+      "kind": "page",
+      "status": 200,
+      "code": "COMMON_200_000",
+      "page": 1
+    },
+    {
+      "name": "Pagination",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products?page=2&size=1",
+      "kind": "page",
+      "status": 200,
+      "code": "COMMON_200_000",
+      "page": 2,
+      "size": 1
+    },
+    {
+      "name": "Category filter",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products?category=electronics",
+      "kind": "page",
+      "status": 200,
+      "code": "COMMON_200_000",
+      "page": 1
+    },
+    {
+      "name": "Keyword search",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products?keyword=Universal&ai=false",
+      "kind": "page",
+      "status": 200,
+      "code": "COMMON_200_000",
+      "page": 1
+    },
+    {
+      "name": "Product detail",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products/01a11acc-b84a-7134-90bd-a80c8c719739",
+      "kind": "detail",
+      "status": 200,
+      "code": "COMMON_200_000",
+      "id": "01a11acc-b84a-7134-90bd-a80c8c719739"
+    },
+    {
+      "name": "SPA product deep link",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/products/01a11acc-b84a-7134-90bd-a80c8c719739",
+      "kind": "html",
+      "status": 200,
+      "code": "COMMON_200_000"
+    },
+    {
+      "name": "Invalid pagination",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products?page=0",
+      "kind": "error",
+      "status": 400,
+      "code": "COMMON_400_002"
+    },
+    {
+      "name": "Anonymous orders denial",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/orders/me",
+      "kind": "error",
+      "status": 401,
+      "code": "COMMON_401_001"
+    },
+    {
+      "name": "Anonymous admin denial",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/admin/products",
+      "kind": "error",
+      "status": 401,
+      "code": "COMMON_401_001"
+    }
+  ],
+  "workflow_sha": "9135ad8bdca9a5084b4ea2d11d619e13b8ba9f1d",
+  "created_at": "2026-10-26T09:22:09.795307+00:00"
+}
