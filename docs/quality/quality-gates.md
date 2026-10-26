@@ -142,6 +142,8 @@ The real account has zero orders/blocs and admin listing access returns 403. An 
 
 2026-10-27 cleanup: browser launch/check/shutdown now share an evidence-writing lifecycle so launch or shutdown errors retain `verification.json`, shutdown-only failures cannot report success, and a shutdown error cannot mask the original verification error. Five executable lifecycle scenarios passed in Docker, bringing the Node suite to 10 tests. Six frontend cases now cover exact HTTPS `'self'` acceptance and rejection of another scheme, host, port, subdomain and embedded credentials; the protocol helper comment points to the separate canonical host validator. The full Docker `pnpm check` gate passed after cleanup (79 files, 891 tests), superseding the earlier frontend count; no new browser run was needed for these test/comment and tooling-lifecycle changes.
 
+Focused coverage measurement in Docker: `pnpm exec vitest run src/features/admin/image-policy.test.ts --coverage --coverage.include=src/features/admin/image-policy.ts --coverage.reportsDirectory=/tmp/image-policy-coverage` passed all 18 tests. V8 reported `image-policy.ts` at 93.75% statements, 85.71% branches, 100% functions and 100% lines; remaining partial branches are configuration paths around lines 11–16 (missing `img-src` and omission of `'self'`), not additional tested policy configurations. This is focused local coverage, not a full-suite coverage or SonarCloud result.
+
 ## Deliberate Non-Gates
 
 - **No hard Maven coverage check** (`jacoco:check`). Coverage judged on *new code* in SonarQube, where ratcheting is possible; a flat repo-wide number punishes the skeleton phase.
