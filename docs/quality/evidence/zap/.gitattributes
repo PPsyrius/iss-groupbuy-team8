@@ -1,2 +1,3 @@
 # Preserve the byte-hashed snapshot, including original downloaded reports.
 before-2026-10-26/** -text
+encoding-correction-2026-10-26/** -text
