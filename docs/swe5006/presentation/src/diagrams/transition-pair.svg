@@ -57,7 +57,7 @@
   <polyline points="520,263 520,290 300,290 300,313" fill="none" stroke="#1B1A18" stroke-width="1.8" marker-end="url(#tpOpen)"/>
   <polyline points="680,263 680,313" fill="none" stroke="#1B1A18" stroke-width="1.8" marker-end="url(#tpOpen)"/>
   <text fill="#1B1A18" x="692" y="304" font-size="24">0..1</text>
-  <text fill="#6B655C" x="810" y="475" font-size="24">part of slide 14’s model</text>
+  <text fill="#6B655C" x="810" y="475" font-size="24">part of slide 13’s model</text>
   <rect x="1175" y="15" width="1130" height="525" fill="none" stroke="#6B655C" stroke-width="1.6"/>
   <path d="M1175,15 L1848.0532,15 L1848.0532,45 L1834.0532,59 L1175,59 Z" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.6"/>
   <text fill="#1B1A18" x="1189" y="47" font-size="26" font-weight="700">Transition strategies applied (tag = strategy)</text>

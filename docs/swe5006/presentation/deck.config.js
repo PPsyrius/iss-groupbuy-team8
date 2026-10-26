@@ -2,7 +2,7 @@
 module.exports = {
   title: 'BlocBuy · SWE5006 Team 8',
   brand: 'Team 8 · SWE5006',
-  darkSlides: [1, 39],
+  darkSlides: [1, 33],
   fillLabel: 'FILL',
   guidelineLabel: 'Lecturer’s presentation sequence · Presentation Guidelines · Briefing deliverables (V1.0)',
   demoSegment: null,
