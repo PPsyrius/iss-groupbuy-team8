@@ -157,11 +157,11 @@ BRF slide 6 asks for crisp, readable diagrams; the thresholds below are team rul
 | --- | --- |
 | F1 | UML or a named notation (crow's foot for ERDs), named in the caption |
 | F2 | Caption: "Figure N.M: <viewpoint>. <what to notice>." Every figure is referenced from the text |
-| F3 | Vector (SVG, or PDF/EMF in Word) or PNG at 2–3×; no screenshots of diagrams |
+| F3 | Vector (Mermaid drawn by the build, or SVG) or PNG at 2–3×; no screenshots of diagrams |
 | F4 | Labels at least 8 pt at printed size on A4; split a diagram rather than shrink it |
 | F5 | Dark lines on white; colours follow `docs/presentation-kit/diagrams/STYLE.md` so report and deck match |
 | F6 | Every class, method, table and event name on a design diagram exists in the code at the freeze SHA |
-| F7 | Editable source committed next to the export under `figures/`, or the deck path it is reused from |
+| F7 | Editable source in the repository: a Mermaid fence in the section, an SVG/PNG under `figures/` with its source beside it, or the deck path it is reused from |
 | F8 | Sequence diagrams: lifelines `object : Class`, synchronous and asynchronous messages distinct, `alt`/`opt`/`loop` fragments, transaction boundary marked where it matters |
 
 ## Remarks register
@@ -196,6 +196,6 @@ Decisions (numbers follow PLAN part 3; settled ones are folded into the rows abo
 - **D9** Team statechart: 3.4.1 (PLAN) or 3.4.5 (deck s6 cue). Owner Lim with Eric and Liu Jin.
 - **D11** Who acted as Product Owner. Owner Lim.
 - **D13** Lecturers' code access: read access or `git archive`. Owner Lim (#693).
-- **D14** Authoring pipeline: Markdown in `sections/` assembled into the template (this harness) or direct editing in Word. Owner Lim, by 27 Oct.
+- **D14** Authoring pipeline: Markdown in `sections/` compiled with Typst in the template's layout (first draft built this way on 26 Oct at Liu Jin's request), or a final pass in Word. Owner Lim, by 27 Oct.
 - **D15** REM issue created and its remarks mapped to sections. Owner Lim, 27 Oct.
 - **D16** Confirm G8 (issue and PR numbers only in tables and appendices; ADR numbers allowed) and F4 (8 pt minimum); both were proposed with this harness on 26 Oct. Owner Lim.

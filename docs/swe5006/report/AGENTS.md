@@ -17,7 +17,7 @@ The per-bullet content and its sources are in the report plan: the index comment
 | Owners | Eric 3.2 (half), 3.4.1, 3.5.1 · Yorik 3.2 (half), 3.4.2, 3.5.2 · Pan 3.4.3, 3.5.3, chapter 4, Appendix A · Lim 3.4.4, 3.5.4, chapters 1, 2, 3.3, 5 · Liu Jin 3.1, 3.4.5, 3.5.5, 3.6 |
 | Inputs | Report drafts in [`../report-drafts/`](../report-drafts/README.md); deck figures in [`../presentation/src/diagrams/`](../presentation/src/diagrams/); deck text in `../presentation/src/content.js`; evidence registers listed in the drafts README |
 | Course documents | The template, briefing deck and proposal are kept out of the repository; ask the editor for them. The template's text is summarised in the rubric's Source column |
-| Output | `dist/swe5006-report.docx` (gitignored), built from `sections/` into the template; the submitted PDF is exported from it in Word |
+| Output | `dist/swe5006-report.pdf` (gitignored), compiled with Typst from `sections/` in the template's layout (A4, 2.54 cm margins, Arial, numbered headings, "Page X of Y"). Typst was chosen on 26 Oct for the first draft (D14; the editor confirms) |
 
 ## Where things go
 
@@ -26,10 +26,13 @@ docs/swe5006/report/
   RUBRIC.md                 specification
   AGENTS.md                 this file
   sections/NN-*.md          one file per template section or member subsection, in report order
-  figures/                  figures made for the report: editable source next to its export
-  scripts/check.mjs         structure, marker, figure and language checks
-  scripts/build.mjs         assembles sections/ into the .docx template with pandoc
-  scripts/strip-numbers.lua pandoc filter: the template numbers headings itself
+  figures/                  image figures made for the report (SVG or PNG), editable source beside each
+  typst/template.typ        page layout, title page, contents, tables, figure frames
+  typst/uml.typ             UML drawing kit: class, state and sequence diagrams
+  scripts/typst.mjs         Markdown and Mermaid to Typst translator (no dependencies)
+  scripts/check.mjs         structure, marker, figure, Mermaid and language checks
+  scripts/build.mjs         compiles all sections to dist/swe5006-report.pdf
+  scripts/figure.mjs        renders one section to PNG pages to check figures by eye
 ```
 
 Each member's 3.4.N and 3.5.N is its own file, so five people can work in parallel without editing the same file. File names sort into report order; the build concatenates them in that order.
@@ -48,9 +51,12 @@ status: missing | draft | ready
 -->
 ```
 
-- Headings carry the template number and title verbatim (`### 3.4.1 UC3 and UC4 by Wang Ziang (Eric)`); the build strips the numbers because the template's heading styles number themselves. Never renumber a template section.
+- Headings carry the template number and title verbatim (`### 3.4.1 UC3 and UC4 by Wang Ziang (Eric)`); Typst renumbers them itself, and the check script uses the written numbers. Never renumber a template section.
 - Below a template section, add `####` subheadings only. The 3.4 and 3.5 files keep the fixed part headings from the skeleton (`#### A Analysis class diagram`, `#### 1 Problem`, …) because the check script looks for them.
-- Figures: `![Figure 3.4: Analysis class diagram of UC4. Boundaries face the buyer; the control owns the join rule.](../figures/uc4-analysis-class.svg)`. Reuse a deck figure by its path (`../../presentation/src/diagrams/...`) rather than copying it; copy it into `figures/` only to change it for the report.
+- UML figures are Mermaid fences in the section itself, so GitHub previews them and the build draws them with `typst/uml.typ`. Supported: `classDiagram` (classes with `<<stereotype>>`, members, all relation arrows, multiplicities, labels), `sequenceDiagram` (`actor`/`participant X as Name (boundary)`, `->>` sync, `-)` async, `-->>` return, `alt`/`else`/`opt`/`loop`/`par`/`critical`/`break`/`rect`/`end`, `Note over`), `stateDiagram-v2` (`[*]`, `state "Name" as X`, `X : entry / …`, `<<choice>>`; a self-transition is drawn as an internal transition). Class and state layouts are automatic; pin a node with a Mermaid comment `%% at ClassName col,row` when the automatic layout crosses lines. Keep message and transition labels short.
+- Every figure has a caption paragraph: right after a Mermaid fence, or as the image's alt text: `Figure 3.4: Analysis class diagram of UC4. The control owns the join rule.` Number figures per chapter (`Figure 3.N`, `Figure A.N` in appendices), unique across the report.
+- Image figures: `![Figure 3.1: Logical view. …](../../presentation/src/diagrams/logical-layers.svg)`. Reuse a deck figure by its path rather than copying it; copy it into `figures/` only to change it for the report.
+- Tables are GitHub pipe tables; a paragraph `Table 2.1: …` just before a table is styled as its caption. Lists nest by two spaces.
 - Mark anything unknown, unverified or awaiting a decision with `{{FILL: …}}`, `{{VERIFY: …}}` or `{{CONFIRM: D# …}}`. All must be gone at the freeze; the strict check fails while any remain.
 - Keep the template's guidance out of the text; the rubric already holds it.
 
@@ -73,13 +79,14 @@ status: missing | draft | ready
 
 ## Commands
 
-From the repository root (Node 20+; the build also needs `pandoc`, and `rsvg-convert` from librsvg for SVG figures):
+From the repository root (Node 20+, Typst 0.15 with the `fletcher` 0.5.8 package; nothing else):
 
 ```sh
-npm --prefix docs/swe5006/report run check            # structure and markers, warnings only for markers
-npm --prefix docs/swe5006/report run check:strict     # freeze gate: markers are errors
+npm --prefix docs/swe5006/report run check                         # structure, figures, Mermaid; lists open markers
+npm --prefix docs/swe5006/report run check:strict                  # freeze gate: markers are errors
+npm --prefix docs/swe5006/report run figure -- sections/03-4-1-eric.md   # PNG pages in dist/preview/
 REPORT_TEMPLATE="/path/to/SWE5006 - Project Report Template for Practice Module.docx" \
-  npm --prefix docs/swe5006/report run build          # dist/swe5006-report.docx
+  npm --prefix docs/swe5006/report run build -- --out "/path/to/shared/folder"
 ```
 
-After building, open the .docx in Word, update the contents table and fields, remove the automatic chapter number from the appendix headings (the template's Heading 1 numbers itself), check page breaks and figure sizes, then export the PDF for submission. The front matter is pandoc metadata (title, subtitle, author lines, date line) so it lands before the contents table, as in the template.
+`REPORT_TEMPLATE` is optional: it supplies the NUS-ISS logo for the header, which stays out of the repository with the template. Open markers render as red boxes in the PDF so reviewers see every gap. The front matter in `00-front-matter.md` is a YAML block (title, subtitle, author lines, date line) that becomes the title page.

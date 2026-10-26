@@ -6,6 +6,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { mermaid } from './typst.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const sectionsDir = resolve(process.env.REPORT_SECTIONS || join(root, 'sections'));
@@ -80,6 +81,7 @@ function escape(s) {
 }
 
 const errors = [];
+const figures = []; // { num, at, chapter }
 const markers = [];
 const words = new Map();
 const headings = [];
@@ -104,11 +106,33 @@ for (const file of files) {
   }
 
   let inFence = false;
+  let fence = null;
   let current = null;
+  const chapterOf = () => (file.startsWith('06-') ? file[3].toUpperCase() : current ? current.split('.')[0] : (file.match(/^0(\d)/) || [])[1]);
   lines.forEach((line, i) => {
     const at = `${file}:${i + 1}`;
-    if (/^```/.test(line)) inFence = !inFence;
-    if (inFence) return;
+    if (/^```/.test(line)) {
+      inFence = !inFence;
+      if (inFence) fence = { lang: line.slice(3).trim(), start: at, body: [] };
+      else if (fence.lang === 'mermaid') {
+        try {
+          mermaid(fence.body.join('\n'));
+        } catch (e) {
+          errors.push(`${fence.start} Mermaid: ${e.message}`);
+        }
+        let j = i + 1;
+        while (j < lines.length && !lines[j].trim()) j++;
+        const cap = (lines[j] || '').trim();
+        const m = cap.match(/^Figure ((?:\d+|[A-E])(?:\.\d+)*): .+\. .+/);
+        if (!m) errors.push(`${fence.start} Mermaid figure needs a caption paragraph right after the fence: "Figure N.M: <viewpoint>. <what to notice>." (rubric F2)`);
+        else figures.push({ num: m[1], at: `${file}:${j + 1}`, chapter: chapterOf() });
+      }
+      return;
+    }
+    if (inFence) {
+      fence.body.push(line);
+      return;
+    }
 
     const h = line.match(/^(#{1,4}) (.+?)\s*(\{[^}]*\})?$/);
     if (h) {
@@ -133,7 +157,9 @@ for (const file of files) {
 
     for (const m of line.matchAll(/!\[([^\]]*)\]\(([^)\s]+)[^)]*\)/g)) {
       const [, alt, src] = m;
-      if (!/^Figure \d+(\.\d+)*: .+\. .+/.test(alt)) errors.push(`${at} figure caption must read "Figure N.M: <viewpoint>. <what to notice>." (rubric F2)`);
+      const fm = alt.match(/^Figure ((?:\d+|[A-E])(?:\.\d+)*): .+\. .+/);
+      if (!fm) errors.push(`${at} figure caption must read "Figure N.M: <viewpoint>. <what to notice>." (rubric F2)`);
+      else figures.push({ num: fm[1], at, chapter: chapterOf() });
       if (!/^https?:/.test(src) && !existsSync(resolve(sectionsDir, src))) errors.push(`${at} figure file not found: ${src}`);
     }
 
@@ -183,6 +209,14 @@ for (const file of files) {
   }
 }
 
+// Figure numbers: unique, and in the chapter they sit in (Figure 3.N in chapter 3).
+const figSeen = new Map();
+for (const f of figures) {
+  if (figSeen.has(f.num)) errors.push(`${f.at} Figure ${f.num} is also used at ${figSeen.get(f.num)}`);
+  else figSeen.set(f.num, f.at);
+  if (f.chapter && f.num.split('.')[0] !== f.chapter) errors.push(`${f.at} Figure ${f.num} sits in chapter ${f.chapter}; number it ${f.chapter}.N`);
+}
+
 // Report.
 const byKind = markers.reduce((acc, m) => ((acc[m.kind] = (acc[m.kind] || 0) + 1), acc), {});
 const byFile = markers.reduce((acc, m) => {
@@ -191,7 +225,7 @@ const byFile = markers.reduce((acc, m) => {
   return acc;
 }, {});
 
-console.log(`Sections: ${files.length} files, ${numbered.length} template headings.`);
+console.log(`Sections: ${files.length} files, ${numbered.length} template headings, ${figures.length} figures.`);
 console.log(`Open markers: ${markers.length} (${Object.entries(byKind).map(([k, v]) => `${k} ${v}`).join(', ') || 'none'}).`);
 if (markers.length) {
   for (const [f, n] of Object.entries(byFile)) console.log(`  ${String(n).padStart(3)}  ${f}`);

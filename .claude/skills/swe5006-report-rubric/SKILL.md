@@ -22,7 +22,7 @@ description: Draft, edit or review BlocBuy's SWE5006 final report against docs/s
 4. Check every fact at its source before writing it, and every claim against the rubric's "easy to get wrong" table. State the evidence kind. A fact you cannot verify becomes `{{VERIFY: …}}`; a missing one `{{FILL: …}}`; one waiting on an open decision `{{CONFIRM: D# …}}`. Never fill a row with a guess to make it look covered.
 5. Never settle an open decision (rubric D#) yourself; leave the marker and name the owner.
 6. Class, method, table and event names: confirm each in the code (`rg`), at the freeze SHA once it exists.
-7. Figures: reuse deck diagrams by path; new ones follow F1–F8 with the editable source committed in `figures/`.
+7. Figures: reuse deck diagrams by path; draw new UML as Mermaid fences (AGENTS.md lists the supported subset), each followed by its caption, and look at them with `npm --prefix docs/swe5006/report run figure -- <section file>`. They follow F1–F8.
 8. Run `npm --prefix docs/swe5006/report run check`, then the review procedure below on the section; fix every Missing and Conflict.
 9. Set the header `status:` to `draft` or `ready`; `ready` means no marker left in the file and a clean review.
 
@@ -78,6 +78,6 @@ Order findings by grading impact: Missing and Conflict on 3.2–3.5 (the per-mem
 
 1. 30 Oct: record the freeze SHA in #695. Re-read every count, version, coverage figure and status at it; replace each with its dated value.
 2. `npm --prefix docs/swe5006/report run check:strict` passes (no markers).
-3. Build the .docx, update the contents table and fields in Word, remove the automatic number from appendix headings, check figure sizes and page breaks, export the PDF.
+3. Build the PDF (`npm --prefix docs/swe5006/report run build`), then read every page: figure legibility, page breaks, contents, no red marker boxes.
 4. Run the review procedure on the whole report; zero Missing and Conflict.
 5. Post the submitter and time on #695.
