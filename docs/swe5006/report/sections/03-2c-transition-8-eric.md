@@ -207,7 +207,7 @@ sequenceDiagram
         S->>L: before commit: onTeamSucceeded
         L->>L: confirm the team's orders
     end
-    S-)E: after commit: onTeamSucceeded
+    S->>E: onTeamSucceeded, AFTER_COMMIT listener
 ```
 
 Figure 3.32: Design sequence of settling the last seat, with the transaction boundary drawn as a critical region (UML has no transaction fragment). Provider calls stay outside the transaction, the confirmation of the team's orders commits with the payment, and the cache eviction runs only after the commit.

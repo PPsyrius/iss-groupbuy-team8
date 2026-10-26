@@ -12,15 +12,15 @@ When a team expires before it fills, BlocBuy returns every paid member's money t
 
 **Actors:** Scheduler (primary; time starts the refund worker). Stripe (secondary; executes the refund). Buyer (beneficiary; does not act). An operator who reviews uncertain cases takes part only in the exceptional flows and is not drawn in Figure 3.36.
 
-**Preconditions:** A buyer's payment has succeeded, the buyer is a paid member of an open team, the team's deadline has passed, and scheduled processing is enabled in the environment.
+**Preconditions:** UC5's expiry flow is expiring an open team whose deadline has passed (UC5, expiry flow, step 3); at least one paid member's payment has succeeded; scheduled processing is enabled in the environment.
 
-**Trigger:** The expiry sweep of UC5 expires the team (UC5, expiry flow, step 3).
+**Trigger:** UC5 marks the team *expired*. UC6 extends that step: its first part runs inside UC5's expiry transaction, and the rest runs later in the refund worker.
 
 **Normal flow:**
 
-1. The system confirms that the team is still open and its deadline has passed (UC5).
-2. It marks the team *expired* and cancels its pending orders (UC5).
-3. For each succeeded payment of a paid member, it records one refund obligation in the same database transaction as the expiry.
+1. UC6 starts inside UC5's expiry transaction, after UC5 has confirmed that the team is still open and past its deadline, marked it *expired* and cancelled its pending orders.
+2. The system finds the succeeded payment of each paid member of the team.
+3. For each of those payments, the system records one refund obligation in the same transaction.
 4. The transaction commits; from now on the team's closure and the money owed for it exist together or not at all.
 5. The refund worker starts (by default every 30 seconds) and claims one due obligation under a renewable lease.
 6. The worker checks that the payment and the obligation agree on the original Stripe payment, the amount, the currency and the obligation's identity.
@@ -30,7 +30,7 @@ When a team expires before it fills, BlocBuy returns every paid member's money t
 
 **Exceptional flows:**
 
-- 1a. Another transaction has already filled or expired the team: the status check makes the repeated expiry harmless, and no obligation is recorded twice (UC5, expiry 3a).
+- 1a. Another transaction has already filled or expired the team: UC5's status check stops the expiry, so UC6 never starts and no obligation is recorded twice (UC5, expiry 3a).
 - 6a. The payment facts do not match the obligation: the worker stops automatic processing and parks the obligation for operator review. No refund is sent.
 - 7a. Stripe is temporarily unavailable or answers with a retryable error: the obligation stays recorded and is retried after a delay with the same idempotency key, so a retry can never create a second refund.
 - 7b. Stripe permanently refuses the refund: the obligation is parked for operator review.

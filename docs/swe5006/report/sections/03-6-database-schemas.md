@@ -60,7 +60,8 @@ The cost is that orphan rows are possible if application code is wrong. Soft del
 **Version column.** Ten tables carry an integer `version`, and it does not mean the same thing in all of them:
 
 - an optimistic lock on `biz_product`, `biz_order`, `biz_purchase_intent` and `biz_payment`: the update adds `AND version = …` with the version read earlier and treats zero affected rows as a conflict (for example in `BizProductMapper.xml` and `PaymentMapper.xml`);
-- a fencing token on `biz_refund`: a refund worker claims a row with a lease, and only the holder of the latest version may write the Stripe result (`RefundMapper.xml`); `log_refund_attempt` records the version each attempt ran under;
+- a fencing token on `biz_refund`: a refund worker claims a row with a lease, and only the holder of the latest version may write the Stripe result (`RefundMapper.xml`);
+- a recorded value on `log_refund_attempt`, an append-only table whose `version` column stores the refund's fencing version that each attempt ran under, so an audit can tell which lease made which call;
 - a revision number on `biz_team_price_policy`, where each price change is a new row and the highest version is the current price;
 - a change counter on `biz_group_deal`, `sys_scheduler_lock` and `sys_scheduled_item_retry`, incremented on every update but never compared. The team row is changed only under a pessimistic `SELECT … FOR UPDATE` lock (`lockDeal` in `PaidGroupDealMapper.xml`), and its update is guarded by the expected `current_size` and `status` instead, so the version adds no protection there.
 

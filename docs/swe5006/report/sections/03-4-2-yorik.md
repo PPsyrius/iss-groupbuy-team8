@@ -432,9 +432,9 @@ sequenceDiagram
             break already resolved, DEAL_CLOSED
                 Expiry-->>Sweeper: false
             end
-            Expiry-)Orders: TeamExpired, BEFORE_COMMIT
+            Expiry->>Orders: TeamExpired, BEFORE_COMMIT listener
             Orders->>Orders: cancelByDealId, pending only
-            Expiry-)Refunds: TeamExpired via subscriber
+            Expiry->>Refunds: TeamExpired, BEFORE_COMMIT listener
             Refunds->>Refunds: lockExpiredTeam(dealId)
             Refunds->>Refunds: requireRefundsForExpiredTeam
         end

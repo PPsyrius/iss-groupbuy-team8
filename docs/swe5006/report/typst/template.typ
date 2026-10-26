@@ -32,7 +32,7 @@
 
 #let figure-frame(body) = block(width: 100%, breakable: false, inset: 6pt, stroke: 0.4pt + rgb("#D8D2C8"), body)
 
-#let table-caption(body) = block(below: 0.4em, text(size: 9pt, body))
+#let table-caption(body) = block(below: 0.4em, sticky: true, text(size: 9pt, body))
 
 #let report-table(n, ..cells) = {
   set text(size: 9pt)

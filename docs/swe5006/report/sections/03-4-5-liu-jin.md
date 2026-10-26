@@ -821,7 +821,7 @@ sequenceDiagram
 
 Figure 3.113: Design sequence diagram of UC9 flow D4, set team terms (UML). The price joins the terms' transaction, so a rejected price rolls the terms back; each accepted write appends a `log_product_team_terms` row.
 
-**D5 The last seat fills the team.** This flow runs inside the payment settlement transaction of UC4 (3.4.1, part D), which also locks the payment and the purchase intent. Only the part that resolves the team is shown. `TeamSucceeded` is drawn as an asynchronous message because Spring delivers it later, just before the transaction commits, and still inside it.
+**D5 The last seat fills the team.** This flow runs inside the payment settlement transaction of UC4 (3.4.1, part D), which also locks the payment and the purchase intent. Only the part that resolves the team is shown. `TeamSucceeded` is a published event: Spring runs its `BEFORE_COMMIT` listener synchronously, on the same thread and inside the same transaction, just before the commit, so it is drawn as an ordinary call. The settlement path has already locked the team row in `lockForSettlement` (3.4.1, part D), so the `lockDeal` here re-reads the row under a lock the transaction already holds and the documented order (team, then purchase intent, then payment, then receipt) is kept.
 
 ```mermaid
 sequenceDiagram
@@ -832,9 +832,10 @@ sequenceDiagram
     participant O as :OrderLifecycleSubscriber
     participant Y as :OrderRepository
     critical settlement transaction of UC4
+        Note over F,R: team row already locked by lockForSettlement (3.4.1)
         F->>S: joinConfirmed(dealId, paid, sharerUserId)
         S->>R: reserveAndLock(paymentId, fingerprint, actorId)
-        S->>R: lockDeal(dealId)
+        S->>R: lockDeal(dealId), lock already held
         S->>R: currentTime()
         S->>R: hasActiveMember(dealId, userId)
         S->>G: joinPaid(paid, member, now)
@@ -842,7 +843,7 @@ sequenceDiagram
             G-->>S: PaidAdmission(SUCCEEDED snapshot, teamCompleted)
             S->>R: insertJoinedMember(before, after, paid, sharer, now)
             Note over R,G: updateDeal WHERE current_size and status are as read
-            S-)O: TeamSucceeded, delivered at BEFORE_COMMIT
+            S->>O: TeamSucceeded, BEFORE_COMMIT listener
             O->>Y: confirmByDealId(dealId)
         else admissible, seats remain
             G-->>S: PaidAdmission(OPEN snapshot)
@@ -884,7 +885,7 @@ sequenceDiagram
                     G-->>X: EXPIRED snapshot
                     X->>R: expire(before, after, now)
                     Note over R,G: expireDeal WHERE status = open
-                    X-)X: TeamExpired, delivered at BEFORE_COMMIT
+                    X->>X: publishEvent(TeamExpired), BEFORE_COMMIT listeners
                     Note over X,R: orders cancelled (order 10), then refunds recorded (order 20)
                     X-->>W: true
                 else resolved first by a join or another sweep

@@ -139,7 +139,7 @@ The performance and expiry targets need the wording of section 1.4.3: response t
 
 ## 2.3 Project Metrics
 
-The project met every planned milestone except a separate SWE5006 production release, which was dropped. Its last milestone was the paid journey on dev on 23 and 24 October. No member logged hours. The only actual effort figures are the person-day split the five members agreed on 19 October: about 50 person-days in total, as the proposal planned.
+The project met every planned milestone except a separate SWE5006 production release, which was dropped. Its last delivery milestone was the paid journey on dev on 23 and 24 October; the presentation on 26 October followed it (Table 2.7). No member logged hours. The only actual effort figures are the person-day split the five members agreed on 19 October: about 50 person-days in total, as the proposal planned.
 
 #### Milestones achieved
 
@@ -207,11 +207,11 @@ Table 2.10: Effort per member: agreed estimate beside planned hours.
 | Wang Ziang (Eric) | 106 | 8.5 |
 | **Team** | **524.5** | **50** |
 
-Done hours were reconstructed at each sprint's freeze, not logged: 134 of 150 planned hours in Sprint 2, and 117 of 150 in Sprint 3, where the review credits partly done work (33 h remaining at the freeze; 66 h if only whole stories count). {{FILL: Sprint 4 done hours and the method used to reconstruct them — Eric (#619)}} This report gives no pull request, commit or line counts per member: card sizes vary widely, so such counts do not measure effort.
+Done hours were not logged; for Sprints 2 and 3 they were reconstructed at the sprint's freeze: 134 of 150 planned hours in Sprint 2, and 117 of 150 in Sprint 3, where the review credits partly done work (33 h remaining at the freeze; 66 h if only whole stories count). {{FILL: Sprint 4 done hours and the method used to reconstruct them — Eric (#619)}} This report gives no pull request, commit or line counts per member: card sizes vary widely, so such counts do not measure effort.
 
 #### Delivery and flow
 
-- **Backlog:** the daily board snapshot of 25 October holds 219 items: 158 Done, 41 Backlog, 14 Ready and 5 In progress.
+- **Backlog:** the daily board snapshot of 25 October holds 219 items: 158 Done, 41 Backlog, 14 Ready, 5 In progress and 1 with no status set.
 - **Throughput:** 425 pull requests were merged into `dev` between the start of the project and 26 October.
 - **Burndowns:** the Sprint 2 and Sprint 3 burndowns were reconstructed from pull request merge dates and issue close dates, because no hours were logged. Appendix A shows both and states the method.
 - **Delivery metrics:** the dev delivery proxies for the four DORA metrics (snapshot of 22 October) and the CI timings are in Appendix D.

@@ -6,6 +6,7 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { fenceCloses, fenceOpen } from './typst.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const sectionsDir = join(root, 'sections');
@@ -18,14 +19,14 @@ const maps = { Figure: new Map(), Table: new Map() };
 const counters = { Figure: {}, Table: {} };
 for (const f of files) {
   const lines = readFileSync(join(sectionsDir, f), 'utf8').split('\n');
-  let inFence = false;
-  let lang = '';
+  let fence = null;
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i];
-    if (/^```/.test(l)) {
-      inFence = !inFence;
-      if (inFence) lang = l.slice(3).trim();
-      else if (lang === 'mermaid') {
+    const opener = !fence && fenceOpen(l);
+    if (opener || (fence && fenceCloses(l, fence))) {
+      const closing = fence;
+      fence = opener || null;
+      if (closing && closing.lang === 'mermaid') {
         let j = i + 1;
         while (j < lines.length && !lines[j].trim()) j++;
         const m = (lines[j] || '').match(new RegExp(`^Figure (${NUM}):`));
@@ -33,7 +34,7 @@ for (const f of files) {
       }
       continue;
     }
-    if (inFence) continue;
+    if (fence) continue;
     for (const m of l.matchAll(new RegExp(`!\\[Figure (${NUM}):`, 'g'))) assign('Figure', m[1], f);
     const t = l.match(new RegExp(`^Table (${NUM}):`));
     if (t) assign('Table', t[1], f);

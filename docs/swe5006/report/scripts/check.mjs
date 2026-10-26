@@ -6,7 +6,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { mermaid } from './typst.mjs';
+import { fenceCloses, fenceOpen, mermaid } from './typst.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const sectionsDir = resolve(process.env.REPORT_SECTIONS || join(root, 'sections'));
@@ -111,9 +111,10 @@ for (const file of files) {
   const chapterOf = () => (file.startsWith('06-') ? file[3].toUpperCase() : current ? current.split('.')[0] : (file.match(/^0(\d)/) || [])[1]);
   lines.forEach((line, i) => {
     const at = `${file}:${i + 1}`;
-    if (/^```/.test(line)) {
-      inFence = !inFence;
-      if (inFence) fence = { lang: line.slice(3).trim(), start: at, body: [] };
+    const opener = !inFence && fenceOpen(line);
+    if (opener || (inFence && fenceCloses(line, fence))) {
+      inFence = Boolean(opener);
+      if (opener) fence = { ...opener, start: at, body: [] };
       else if (fence.lang === 'mermaid') {
         try {
           mermaid(fence.body.join('\n'));

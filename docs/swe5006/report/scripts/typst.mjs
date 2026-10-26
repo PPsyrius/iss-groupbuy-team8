@@ -3,6 +3,18 @@
 
 const MARKER = /\{\{(FILL|VERIFY|CONFIRM)(?::\s*([^}]*))?\}\}/;
 
+// CommonMark code fences: a run of three or more backticks or tildes opens a fence, and only
+// a run of the same character, at least as long and with nothing after it, closes it.
+export function fenceOpen(line) {
+  const m = line.match(/^ {0,3}(`{3,}|~{3,})\s*([^`\s]*)/);
+  return m ? { ch: m[1][0], len: m[1].length, lang: m[2] } : null;
+}
+
+export function fenceCloses(line, fence) {
+  const m = line.match(/^ {0,3}(`{3,}|~{3,})\s*$/);
+  return Boolean(m && m[1][0] === fence.ch && m[1].length >= fence.len);
+}
+
 export function str(s) {
   return `"${String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\t/g, '  ')}"`;
 }
@@ -354,12 +366,13 @@ export function markdown(src, { sectionDir, root, resolvePath }) {
       i++;
       continue;
     }
-    if ((m = line.match(/^```\s*(\w*)/))) {
+    const open = fenceOpen(line);
+    if (open) {
       flushPara();
-      const lang = m[1];
+      const lang = open.lang;
       const buf = [];
       i++;
-      while (i < lines.length && !/^```\s*$/.test(lines[i])) buf.push(lines[i++]);
+      while (i < lines.length && !fenceCloses(lines[i], open)) buf.push(lines[i++]);
       i++;
       if (lang === 'mermaid') {
         const cap = nextCaption(i);

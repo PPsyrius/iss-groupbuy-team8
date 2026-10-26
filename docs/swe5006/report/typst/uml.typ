@@ -1,6 +1,7 @@
 // UML drawing kit for the report: class, state and sequence diagrams.
 // scripts/typst.mjs translates the Mermaid fences in sections/*.md into calls to these functions.
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
+#import "@preview/cetz:0.3.4"
 
 #let ink = rgb("#1B1A18")
 #let muted = rgb("#6B655C")
@@ -61,16 +62,25 @@
   ))
 }
 
-// Relationship kinds -> fletcher marks (Mermaid classDiagram arrows).
-#let rel-marks = (
-  "assoc": "-",
-  "nav": "->",
-  "dep": "-->",
-  "inherit": "-|>",
-  "realize": "--|>",
-  "compose": "<>-",
-  "aggregate": "<>-",
-  "dashed": "--",
+// Relationship kinds -> line style and end marks, following UML notation:
+// generalisation and realisation end in a hollow triangle (solid and dashed line),
+// composition starts with a filled diamond, aggregation with a hollow one,
+// navigable association and dependency end in an open arrowhead (dependency dashed).
+// Fletcher's "|>" is always filled and a white fill has no outline, so the UML hollow
+// triangle is drawn here; the line stops at its base.
+#let hollow-triangle = (
+  size: 11, tip-origin: 0, tail-origin: -11,
+  draw: mark => cetz.draw.line((0, 0), (-mark.size, mark.size * 0.5), (-mark.size, -mark.size * 0.5), close: true, fill: white, stroke: 0.6pt),
+)
+#let rel-style = (
+  "assoc": (dash: none, marks: (none, none)),
+  "nav": (dash: none, marks: (none, ">")),
+  "dep": (dash: "dashed", marks: (none, ">")),
+  "dashed": (dash: "dashed", marks: (none, none)),
+  "inherit": (dash: none, marks: (none, hollow-triangle)),
+  "realize": (dash: "dashed", marks: (none, hollow-triangle)),
+  "compose": (dash: none, marks: ((inherit: "<>", fill: ink, scale: 160%), none)),
+  "aggregate": (dash: none, marks: ((inherit: "<>", fill: white, stroke: 0.6pt + ink, scale: 160%), none)),
 )
 
 // classes: array of (id, name, stereo, attrs, ops, abstract, pos: (x, y))
@@ -82,15 +92,14 @@
     node-stroke: none,
     node-inset: 0pt,
     edge-stroke: 0.6pt + ink,
-    mark-scale: 70%,
+    mark-scale: 100%,
     ..classes.map(c => node(c.pos, class-box(c.name, stereo: c.stereo, attrs: c.attrs, ops: c.ops, abstract: c.abstract), name: label(c.id))),
     ..rels.map(r => {
-      let marks = rel-marks.at(r.kind, default: "-")
-      let filled = r.kind == "compose"
-      let args = (label(r.from), label(r.to), marks)
+      let style = rel-style.at(r.kind, default: rel-style.assoc)
+      let args = (label(r.from), label(r.to))
       let bend = r.at("bend", default: 0deg)
       let out = ()
-      out.push(edge(..args, bend: bend, label: if r.label != none { wrap-label(r.label) }, label-side: center, label-fill: white))
+      out.push(edge(..args, marks: style.marks, stroke: (paint: ink, thickness: 0.6pt, dash: style.dash), bend: bend, label: if r.label != none { wrap-label(r.label) }, label-side: center, label-fill: white))
       // Multiplicities sit beside the line near each end; the edge is cropped at the node
       // boundaries, so 0.1 and 0.9 of its length stay clear of the boxes.
       if r.at("mfrom", default: none) != none {
@@ -127,7 +136,7 @@
         }, shape: fletcher.shapes.rect, corner-radius: 5pt, width: auto, stroke: 0.6pt + ink, fill: rgb("#F1F4FD"), inset: 5pt, name: label(s.id))
       }
     }),
-    ..trans.map(t => edge(label(t.from), label(t.to), "-|>", label: if t.label != none { wrap-label(t.label) }, label-fill: white, bend: t.at("bend", default: 0deg))),
+    ..trans.map(t => edge(label(t.from), label(t.to), "->", label: if t.label != none { wrap-label(t.label) }, label-fill: white, bend: t.at("bend", default: 0deg))),
   )
 })
 

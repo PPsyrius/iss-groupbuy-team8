@@ -8,7 +8,7 @@ status: draft
 
 # 4 DevSecOps and Development Lifecycle
 
-BlocBuy is built, checked and delivered from one GitHub repository by GitHub Actions. Every change reaches the shared `dev` branch through a reviewed pull request that must pass six required checks, and every merge then deploys automatically to the SWE5006 dev environment, which checks its own health after each deploy. Production is the shared SWE5001 release on Amazon ECS, which only a code-owner-approved promotion pull request can change. Section 4.1 covers the repository, branching, authentication and artefacts; section 4.2 the continuous integration jobs, security controls and tests; section 4.3 the environments, approvals and deployment verification. Unless a sentence says otherwise, facts were read from the repository, GitHub and SonarCloud on 26 October 2026 at `dev` commit `61486f0e`; every count is re-read at the freeze commit before submission.
+BlocBuy is built, checked and delivered from one GitHub repository by GitHub Actions. Every change reaches the shared `dev` branch through a reviewed pull request that must pass six required checks, and a merge that changes the backend or the frontend then deploys that side automatically to the SWE5006 dev environment, which checks its own health after each deploy. Both workflows are path-filtered, and each delivery job also depends on a repository switch that turns automatic deployment on; both have been on since September (repository variables read on 26 October; last changed on 5 and 23 September). Production is the shared SWE5001 release on Amazon ECS, which only a code-owner-approved promotion pull request can change. Section 4.1 covers the repository, branching, authentication and artefacts; section 4.2 the continuous integration jobs, security controls and tests; section 4.3 the environments, approvals and deployment verification. Unless a sentence says otherwise, facts were read from the repository, GitHub and SonarCloud on 26 October 2026 at `dev` commit `61486f0e`; every count is re-read at the freeze commit before submission.
 
 ## 4.1 Source Control Strategy
 
@@ -119,7 +119,7 @@ Table 4.6: Artefacts, how each is identified, and where it is kept.
 
 ## 4.2 Continuous Integration
 
-CI runs in two phases. On every pull request into `dev`, the jobs relevant to the changed paths build the code, run every automated test, check the API contract, scan for secrets, vulnerable dependencies and misconfiguration, boot the container image and run end-to-end tests; six of these jobs are required. After the merge, the push to `dev` refreshes the SonarCloud baselines, scans for secrets and delivers the merged commit to dev (section 4.3). Security scans of the running system, the SBOM and the full-history secret scan run on a weekly schedule.
+CI runs in two phases. On every pull request into `dev`, the jobs relevant to the changed paths build the code, run the automated tests of the changed side (backend, frontend or both), check the API contract when the backend or the contract changes, scan for secrets, vulnerable dependencies and misconfiguration, boot the container image and run end-to-end tests; six of these jobs are required. After the merge, the push to `dev` refreshes the SonarCloud baselines, scans for secrets and delivers the changed side of the merged commit to dev (section 4.3). Security scans of the running system, the SBOM and the full-history secret scan run on a weekly schedule.
 
 #### Workflows and triggers
 
@@ -168,7 +168,7 @@ Policy as code on SWE5006 consists of `trivy-config` and `deployment-bundle` on 
 
 #### Post-merge jobs
 
-The lower band of Figure 4.1 shows the jobs that run after the merge. After a merge, `sonar-backend` and `sonar-frontend` re-analyse the merged commit to refresh the SonarCloud dashboards, `security.yml` runs `gitleaks`, and the delivery jobs run. Backend delivery rebuilds the JAR with `-DskipTests` and builds a new image from it; it does not promote the image that the pull request booted and scanned, and it does not repeat the Trivy image scan. The source tree is the same, because the branch was up to date and squashed, but the deployed image is not byte-for-byte the scanned one. This is a recorded provenance limit (Appendix E); the on-host and public health checks and the frontend smoke still run after each deploy. Frontend ADR 0004 and the EC2 operator guide still describe promotion of the tested artefact; they are to be corrected to match the workflow.
+The lower band of Figure 4.1 shows the jobs that run after the merge. After a merge, `sonar-backend` and `sonar-frontend` re-analyse the merged commit to refresh the SonarCloud dashboards, `security.yml` runs `gitleaks`, and the delivery jobs of the changed side run. Backend delivery rebuilds the JAR with `-DskipTests` and builds a new image from it; it does not promote the image that the pull request booted and scanned, and it does not repeat the Trivy image scan. The source tree is the same, because the branch was up to date and squashed, but the deployed image is not byte-for-byte the scanned one. This is a recorded provenance limit (Appendix E); the on-host and public health checks and the frontend smoke still run after each deploy. Frontend ADR 0004 and the EC2 operator guide still describe promotion of the tested artefact; they are to be corrected to match the workflow.
 
 #### Security controls by pipeline stage
 
@@ -216,18 +216,18 @@ Table 4.10: OWASP ZAP findings on dev, before and after. Before: run 39733450177
 
 #### Tests by level and quadrant
 
-The tests are organised by the Agile Testing Quadrants (EPAT 03 Test-Driven Development, p. 7) and tagged with the level (unit, integration, system; p. 5); the level tags are the team's classification. Quadrant 1 tests run on every pull request in `build-quality` and `frontend-check`; quadrant 2 story tests run on every pull request and, for Playwright, again on dev after every frontend deploy; quadrant 3 checks were manual; quadrant 4 security scans gate the pipeline, and the load test runs by hand (Table 4.11).
+The tests are organised by the Agile Testing Quadrants (EPAT 03 Test-Driven Development, p. 7) and tagged with the level (unit, integration, system; p. 5); the level tags are the team's classification. Quadrant 1 tests run in `build-quality` on every pull request that changes the backend and in `frontend-check` on every pull request that changes the frontend (on other pull requests these required checks report "not applicable" and pass); quadrant 2 story tests run the same way and, for Playwright, again on dev after every frontend deploy; quadrant 3 checks were manual; quadrant 4 security scans gate the pipeline, and the load test runs by hand (Table 4.11).
 
 Table 4.11: Tests by quadrant and level. Static counts from `git ls-tree` of `dev` at `61486f0e` on 26 October 2026.
 
 | Quadrant | Kind and level | Tools | Count | Where it runs |
 |---|---|---|---|---|
-| Q1 technology-facing, supports the team | Unit (backend) | JUnit 5, Mockito | 186 `*Test.java` classes, including `ArchitectureTest` | `build-quality`, every PR |
-| Q1 | Integration | Testcontainers: PostgreSQL 18, Redis 8.10, ElasticMQ | 49 `*IT.java` classes | `build-quality`, every PR |
-| Q1 | Architecture (unit) | ArchUnit | 17 rules in `ArchitectureTest` | `build-quality`, every PR |
+| Q1 technology-facing, supports the team | Unit (backend) | JUnit 5, Mockito | 186 `*Test.java` classes, including `ArchitectureTest` | `build-quality`, every PR changing the backend |
+| Q1 | Integration | Testcontainers: PostgreSQL 18, Redis 8.10, ElasticMQ | 49 `*IT.java` classes | `build-quality`, every PR changing the backend |
+| Q1 | Architecture (unit) | ArchUnit | 17 rules in `ArchitectureTest` | `build-quality`, every PR changing the backend |
 | Q1 | API contract (integration) | springdoc export, `git diff`, openapi-diff | 1 contract file | `contract-check` |
-| Q1 | Component (frontend unit) | Vitest, Testing Library, MSW | 78 test files | `frontend-check`, every PR |
-| Q2 business-facing, supports the team | Story acceptance (system) | Spring Boot with real HTTP endpoints, scheduler, Flyway schema and webhook signatures; only Google and Stripe network calls substituted | `StripeRolloutAcceptanceIT`, 8 test methods | `build-quality`, every PR |
+| Q1 | Component (frontend unit) | Vitest, Testing Library, MSW | 78 test files | `frontend-check`, every PR changing the frontend |
+| Q2 business-facing, supports the team | Story acceptance (system) | Spring Boot with real HTTP endpoints, scheduler, Flyway schema and webhook signatures; only Google and Stripe network calls substituted | `StripeRolloutAcceptanceIT`, 8 test methods | `build-quality`, every PR changing the backend |
 | Q2 | End-to-end (system) | Playwright, Chromium | 8 specs | `e2e-preview` on PRs; `e2e-dev` after each frontend deploy |
 | Q3 business-facing, critiques the product | Manual exploratory checks | Browser | Stripe Sandbox START and JOIN through Hosted Checkout (local, 20 Sep); Secure and HttpOnly session cookie inspected on dev (8 Oct); paid START, expiry and refund on dev (23 Oct) | By hand; no testing with outside users |
 | Q4 technology-facing, critiques the product | Performance and security | k6; SonarCloud, SpotBugs, Trivy, gitleaks, OWASP ZAP | One k6 browse scenario; the scans of Table 4.9 | Scans in CI; k6 by hand |
@@ -279,7 +279,7 @@ Table 4.14: CI technical findings, their root causes and fixes.
 
 ## 4.3 Continuous Delivery
 
-BlocBuy has two environments. Dev is always on, and every merge to `dev` deploys to it automatically with no environment approval; the pull-request approval is the human gate. Production is the shared SWE5001 release on ECS, which changes only when a code owner approves a promotion pull request into `prod`. Because the step to production needs that approval, the pipeline practises Continuous Delivery, not Continuous Deployment (EPAT 07 Continuous Integration, pp. 34–35). Every dev deploy verifies itself with an on-host health check, a public health check through CloudFront and, for the frontend, a Playwright smoke test.
+BlocBuy has two environments. Dev is always on, and every merge to `dev` that changes the backend or the frontend deploys that side to it automatically, with no environment approval; the pull-request approval is the human gate. Production is the shared SWE5001 release on ECS, which changes only when a code owner approves a promotion pull request into `prod`. Because the step to production needs that approval, the pipeline practises Continuous Delivery, not Continuous Deployment (EPAT 07 Continuous Integration, pp. 34–35). Every dev deploy verifies itself with an on-host health check, a public health check through CloudFront and, for the frontend, a Playwright smoke test.
 
 #### Environments and approvals
 
