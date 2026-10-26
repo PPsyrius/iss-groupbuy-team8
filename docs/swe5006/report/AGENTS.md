@@ -33,6 +33,7 @@ docs/swe5006/report/
   scripts/check.mjs         structure, marker, figure, Mermaid and language checks
   scripts/build.mjs         compiles all sections to dist/swe5006-report.pdf
   scripts/figure.mjs        renders one section to PNG pages to check figures by eye
+  scripts/renumber.mjs      renumbers figures and tables per chapter and rewrites their references
 ```
 
 Each member's 3.4.N and 3.5.N is its own file, so five people can work in parallel without editing the same file. File names sort into report order; the build concatenates them in that order.
@@ -54,7 +55,8 @@ status: missing | draft | ready
 - Headings carry the template number and title verbatim (`### 3.4.1 UC3 and UC4 by Wang Ziang (Eric)`); Typst renumbers them itself, and the check script uses the written numbers. Never renumber a template section.
 - Below a template section, add `####` subheadings only. The 3.4 and 3.5 files keep the fixed part headings from the skeleton (`#### A Analysis class diagram`, `#### 1 Problem`, …) because the check script looks for them.
 - UML figures are Mermaid fences in the section itself, so GitHub previews them and the build draws them with `typst/uml.typ`. Supported: `classDiagram` (classes with `<<stereotype>>`, members, all relation arrows, multiplicities, labels), `sequenceDiagram` (`actor`/`participant X as Name (boundary)`, `->>` sync, `-)` async, `-->>` return, `alt`/`else`/`opt`/`loop`/`par`/`critical`/`break`/`rect`/`end`, `Note over`), `stateDiagram-v2` (`[*]`, `state "Name" as X`, `X : entry / …`, `<<choice>>`; a self-transition is drawn as an internal transition). Class and state layouts are automatic; pin a node with a Mermaid comment `%% at ClassName col,row` when the automatic layout crosses lines. Keep message and transition labels short.
-- Every figure has a caption paragraph: right after a Mermaid fence, or as the image's alt text: `Figure 3.4: Analysis class diagram of UC4. The control owns the join rule.` Number figures per chapter (`Figure 3.N`, `Figure A.N` in appendices), unique across the report.
+- Every figure has a caption paragraph: right after a Mermaid fence, or as the image's alt text: `Figure 3.4: Analysis class diagram of UC4. The control owns the join rule.` Number figures per chapter (`Figure 3.N`, `Figure A.N` in appendices), unique across the report. When several people draft at once, each may number by their own section (`Figure 3.4.3.2`, `Table 3.4.3.1`); the editor then runs `node docs/swe5006/report/scripts/renumber.mjs` once to number everything per chapter and rewrite the references.
+- A wide image whose labels would print below 8 pt gets `{.landscape}` after the link: it is drawn rotated on its own page, about 1.6 times larger. Figures float to the top or bottom of a page; refer to them by number, never as "below".
 - Image figures: `![Figure 3.1: Logical view. …](../../presentation/src/diagrams/logical-layers.svg)`. Reuse a deck figure by its path rather than copying it; copy it into `figures/` only to change it for the report.
 - Tables are GitHub pipe tables; a paragraph `Table 2.1: …` just before a table is styled as its caption. Lists nest by two spaces.
 - Mark anything unknown, unverified or awaiting a decision with `{{FILL: …}}`, `{{VERIFY: …}}` or `{{CONFIRM: D# …}}`. All must be gone at the freeze; the strict check fails while any remain.

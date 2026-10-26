@@ -119,7 +119,7 @@ function layout(ids, edges, hints, dir) {
 function hintsFrom(lines) {
   const hints = {};
   for (const l of lines) {
-    const m = l.match(/^%%\s*at\s+(\S+)\s+(-?[\d.]+)\s*,\s*(-?[\d.]+)/);
+    const m = l.trim().match(/^%%\s*at\s+(\S+)\s+(-?[\d.]+)\s*,\s*(-?[\d.]+)/);
     if (m) hints[m[1]] = [Number(m[2]), Number(m[3])];
   }
   return hints;
@@ -185,8 +185,11 @@ function classDiagram(lines) {
     (c) => `(id: ${str(c.id)}, name: ${str(c.name)}, stereo: ${c.stereo ? str(c.stereo) : 'none'}, attrs: ${typstArray(c.attrs.map(str))}, ops: ${typstArray(c.ops.map(str))}, abstract: ${c.abstract}, pos: (${pos[c.id][0]}, ${pos[c.id][1]}))`,
   );
   const rs = rels.map((r) => {
-    const kind = r.kind === 'dashed' ? 'dep' : r.kind;
-    return `(from: ${str(r.a)}, to: ${str(r.b)}, kind: ${str(r.kind === 'dashed' ? 'dashed' : kind)}, label: ${r.label ? str(r.label) : 'none'}, mfrom: ${r.ma ? str(r.ma) : 'none'}, mto: ${r.mb ? str(r.mb) : 'none'})`;
+    const [ax, ay] = pos[r.a];
+    const [bx, by] = pos[r.b];
+    // An edge that skips a layer in the same column (or row) would run through the box between: bend it.
+    const skips = (ax === bx && Math.abs(ay - by) > 1) || (ay === by && Math.abs(ax - bx) > 1);
+    return `(from: ${str(r.a)}, to: ${str(r.b)}, kind: ${str(r.kind)}, label: ${r.label ? str(r.label) : 'none'}, mfrom: ${r.ma ? str(r.ma) : 'none'}, mto: ${r.mb ? str(r.mb) : 'none'}, bend: ${skips ? '60deg' : '0deg'})`;
   });
   return `#class-diagram(${typstArray(cls)}, ${typstArray(rs)})`;
 }
@@ -310,7 +313,12 @@ function table(rows) {
   const body = rows.slice(2).map(split);
   const n = head.length;
   const cells = [...head.map((c) => `[*${inline(c)}*]`), ...body.flatMap((r) => Array.from({ length: n }, (_, i) => `[${inline(r[i] ?? '')}]`))];
-  return `#report-table(${n}, ${cells.join(', ')})`;
+  // Column widths in proportion to content: the longest cell's length, damped by a square root
+  // so one long column cannot squeeze the others below a readable width.
+  const plain = (c) => c.replace(/[`*_]|\{\{[^}]*\}\}/g, '').length;
+  const weights = Array.from({ length: n }, (_, i) => Math.max(...[head[i] ?? '', ...body.map((r) => r[i] ?? '')].map(plain)));
+  const cols = weights.map((w) => `${Math.max(1, Math.round(Math.sqrt(Math.max(w, 4)) * 10) / 10)}fr`);
+  return `#report-table((${cols.join(', ')},), ${cells.join(', ')})`;
 }
 
 // sectionPath: absolute path of the section file; root: repository root (Typst --root).
@@ -322,7 +330,7 @@ export function markdown(src, { sectionDir, root, resolvePath }) {
   const flushPara = () => {
     if (!para.length) return;
     const text = para.join(' ');
-    if (/^Table \d+(\.\d+)*:/.test(text)) out.push(`#table-caption[${inline(text)}]`);
+    if (/^Table (?:\d+|[A-E])(\.\d+)*:/.test(text)) out.push(`#table-caption[${inline(text)}]`);
     else out.push(inline(text));
     out.push('');
     para = [];
@@ -383,10 +391,12 @@ export function markdown(src, { sectionDir, root, resolvePath }) {
       out.push('');
       continue;
     }
-    if ((m = line.match(/^!\[([^\]]*)\]\(([^)\s]+)[^)]*\)\s*$/))) {
+    if ((m = line.match(/^!\[([^\]]*)\]\(([^)\s]+)[^)]*\)\s*(\{\.landscape\})?\s*$/))) {
       flushPara();
       const path = resolvePath(sectionDir, m[2]);
-      out.push(figure(`#image(${str(path)}, width: 100%)`, m[1]));
+      // {.landscape}: a wide drawing gets a landscape page of its own, about 1.6 times larger.
+      if (m[3]) out.push(figure(`#image(${str(path)}, width: 100%, height: 13cm, fit: "contain")`, m[1]).replace('#report-figure(', '#landscape-figure('));
+      else out.push(figure(`#image(${str(path)}, width: 100%)`, m[1]));
       out.push('');
       i++;
       continue;

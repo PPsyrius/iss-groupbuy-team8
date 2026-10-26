@@ -7,13 +7,28 @@
   text(size: 0.85em, fill: rgb("#B02E1B"), weight: "bold", kind + if note != "" { ": " + note } else { "" }),
 )
 
-#let report-figure(num, body, caption) = block(width: 100%, breakable: false, above: 1em, below: 1.2em, {
-  align(center, block(width: 100%, stroke: 0.4pt + rgb("#D8D2C8"), inset: 6pt, body))
-  v(0.3em)
-  set text(size: 9pt)
-  set par(justify: false)
-  [*Figure #num:* #caption]
-})
+// Figures float to the top or bottom of a page so they leave no half-empty pages behind,
+// and a drawing taller than the page is scaled down to fit it.
+#let report-figure(num, body, caption, float: true) = {
+  let content = layout(size => {
+    let framed = block(width: 100%, stroke: 0.4pt + rgb("#D8D2C8"), inset: 6pt, body)
+    let h = measure(framed, width: size.width).height
+    let max = 20cm
+    let shown = if h > max { block(width: 100%, stroke: 0.4pt + rgb("#D8D2C8"), inset: 6pt, align(center, scale(max / h * 100%, reflow: true, body))) } else { framed }
+    block(width: 100%, breakable: false, {
+      align(center, shown)
+      v(0.3em)
+      set text(size: 9pt)
+      set par(justify: false)
+      [*Figure #num:* #caption]
+    })
+  })
+  if float { place(auto, float: true, clearance: 1.4em, content) } else { block(above: 1em, below: 1.2em, content) }
+}
+
+// A figure on its own landscape page (images marked {.landscape} in the Markdown).
+#let landscape-figure(num, body, caption) = place(auto, float: true, clearance: 1.4em,
+  align(center, rotate(-90deg, reflow: true, block(width: 23cm, report-figure(num, body, caption, float: false)))))
 
 #let figure-frame(body) = block(width: 100%, breakable: false, inset: 6pt, stroke: 0.4pt + rgb("#D8D2C8"), body)
 
@@ -47,6 +62,8 @@
   set par(justify: true, leading: 0.6em, spacing: 0.9em)
   set list(indent: 0.6em, spacing: 0.5em)
   set enum(indent: 0.6em, spacing: 0.5em)
+  show list: set par(justify: false)
+  show enum: set par(justify: false)
   set heading(numbering: (..n) => {
     let v = n.pos()
     if v.len() == 1 { str(v.first()) + "." } else { v.map(str).join(".") }

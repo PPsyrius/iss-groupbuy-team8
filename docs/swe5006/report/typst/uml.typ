@@ -22,7 +22,11 @@
   fills.default
 }
 
-#let uml-size = 7.5pt
+// 9 pt keeps edge and fragment labels (set up to 1 pt smaller) at the 8 pt minimum of rubric F4.
+#let uml-size = 9pt
+
+// Allow long CamelCase and ":Type" names to wrap at word boundaries instead of shrinking.
+#let breakable(name) = name.replace(regex("([a-z0-9])([A-Z])"), m => m.captures.at(0) + "\u{200B}" + m.captures.at(1)).replace(":", ":\u{200B}")
 
 // Scale a drawing down to the text width when it is wider; never scale up.
 #let fit(body) = layout(size => {
@@ -71,7 +75,7 @@
 
 // classes: array of (id, name, stereo, attrs, ops, abstract, pos: (x, y))
 // rels: array of (from, to, kind, label, m-from, m-to)
-#let class-diagram(classes, rels, spacing: (14mm, 9mm)) = fit({
+#let class-diagram(classes, rels, spacing: (14mm, 15mm)) = fit({
   set text(size: uml-size)
   diagram(
     spacing: spacing,
@@ -84,13 +88,16 @@
       let marks = rel-marks.at(r.kind, default: "-")
       let filled = r.kind == "compose"
       let args = (label(r.from), label(r.to), marks)
+      let bend = r.at("bend", default: 0deg)
       let out = ()
-      out.push(edge(..args, label: if r.label != none { wrap-label(r.label) }, label-side: center, label-fill: white))
+      out.push(edge(..args, bend: bend, label: if r.label != none { wrap-label(r.label) }, label-side: center, label-fill: white))
+      // Multiplicities sit beside the line near each end; the edge is cropped at the node
+      // boundaries, so 0.1 and 0.9 of its length stay clear of the boxes.
       if r.at("mfrom", default: none) != none {
-        out.push(edge(label(r.from), label(r.to), "-", stroke: none, label: text(size: uml-size - 1pt, r.mfrom), label-pos: 0.12, label-side: left))
+        out.push(edge(label(r.from), label(r.to), "-", bend: bend, stroke: none, label: text(size: uml-size - 1pt, r.mfrom), label-pos: 0.1, label-side: right, label-sep: 2pt))
       }
       if r.at("mto", default: none) != none {
-        out.push(edge(label(r.from), label(r.to), "-", stroke: none, label: text(size: uml-size - 1pt, r.mto), label-pos: 0.88, label-side: left))
+        out.push(edge(label(r.from), label(r.to), "-", bend: bend, stroke: none, label: text(size: uml-size - 1pt, r.mto), label-pos: 0.9, label-side: right, label-sep: 2pt))
       }
       out
     }).flatten(),
@@ -161,7 +168,12 @@
   let idx = (:)
   for (i, p) in parts.enumerate() { idx.insert(p.id, i) }
   let px(id) = cw * (idx.at(id) + 0.5)
-  let head-h = 30pt
+  let head(p) = {
+    let stereo = if p.kind != "participant" and p.kind != "actor" { "«" + p.kind + "»" } else { none }
+    let nm = text(weight: "bold", size: uml-size - 0.5pt, breakable(p.name))
+    align(center + horizon, { if stereo != none { text(size: uml-size - 1pt, stereo); linebreak() }; nm })
+  }
+  let head-h = calc.max(30pt, ..parts.filter(p => p.kind != "actor").map(p => measure(box(width: cw - 10pt, head(p))).height + 8pt))
   let prims = ()
   let frames = ()
   let y = head-h + 10pt
@@ -190,10 +202,10 @@
         let b = calc.min(a + lw, W)
         let lb = box(width: b - a, align(center, lab))
         let lh = measure(lb).height
-        y += lh + 2pt
+        y += lh + 4pt
         prims.push(place(top + left, line(start: (x1, y), end: (x2, y), stroke: st)))
         prims.push(arrow-head(x2, y, dir, open: s.style != "sync"))
-        prims.push(place(top + left, dx: a, dy: y - lh - 1.5pt, lb))
+        prims.push(place(top + left, dx: a, dy: y - lh - 3pt, lb))
         y += 7pt
       }
     } else if s.t == "frag" {
@@ -231,8 +243,8 @@
       let b = calc.max(..xs) + cw * 0.4
       let body = box(width: b - a, inset: 3pt, fill: rgb("#FFF6E2"), stroke: 0.5pt + muted, text(size: uml-size - 0.5pt, s.text))
       let h = measure(body).height
-      prims.push(place(top + left, dx: a, dy: y - 6pt, body))
-      y += h + 6pt
+      prims.push(place(top + left, dx: a, dy: y, body))
+      y += h + 10pt
     }
   }
   let H = y + 4pt
@@ -242,15 +254,9 @@
       place(top + left, line(start: (x, head-h), end: (x, H), stroke: (paint: muted, thickness: 0.5pt, dash: "dashed")))
       if p.kind == "actor" {
         stick(x, 0pt)
-        place(top + left, dx: x - cw / 2, dy: 20pt, box(width: cw, align(center, text(size: uml-size - 1pt, weight: "bold", p.name))))
+        place(top + left, dx: x - cw / 2, dy: 20pt, box(width: cw, align(center, text(size: uml-size - 1pt, weight: "bold", breakable(p.name)))))
       } else {
-        let stereo = if p.kind != "participant" { "«" + p.kind + "»" } else { none }
-        let nm = text(weight: "bold", size: uml-size - 0.5pt, p.name)
-        let nw = measure(nm).width
-        let room = cw - 10pt
-        let nm2 = if nw > room { text(weight: "bold", size: calc.max((uml-size - 0.5pt) * (room / nw), 4.5pt), p.name) } else { nm }
-        let b = box(width: cw - 6pt, height: head-h - 4pt, stroke: 0.6pt + ink, fill: fill-for(if p.kind == "participant" { none } else { p.kind }), inset: 2pt,
-          align(center + horizon, { if stereo != none { text(size: uml-size - 1.5pt, stereo); linebreak() }; nm2 }))
+        let b = box(width: cw - 6pt, height: head-h - 4pt, stroke: 0.6pt + ink, fill: fill-for(if p.kind == "participant" { none } else { p.kind }), inset: 2pt, head(p))
         place(top + left, dx: x - cw / 2 + 3pt, dy: 0pt, b)
       }
     }

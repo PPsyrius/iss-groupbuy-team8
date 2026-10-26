@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { frontMatter, markdown, str } from './typst.mjs';
+import { frontMatter, inline, markdown, str } from './typst.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repo = resolve(root, '../../..');
@@ -53,7 +53,7 @@ for (const f of files) {
   }
 }
 
-const metaTyp = `(title: ${str(meta.title || '')}, subtitle: ${str(meta.subtitle || '')}, author: (${(meta.author || []).map(str).join(', ')},), date: ${str(meta.date || '')})`;
+const metaTyp = `(title: ${str(meta.title || '')}, subtitle: ${str(meta.subtitle || '')}, author: (${(meta.author || []).map(str).join(', ')},), date: [${inline(meta.date || '')}])`;
 const typ = join(dist, 'report.typ');
 writeFileSync(
   typ,
