@@ -247,11 +247,13 @@
   })
   v(1fr)
   pagebreak()
-  // Contents: "CONTENTS" in the template's notHelp style (bold, sz 28 = 14 pt, after 180 = 9 pt);
+  // Contents: titled like a chapter (Heading 1's face, 16 pt bold navy, 12 pt above, 18 pt below)
+  // so it reads as part of the report's heading system, in sentence case like "1. Introduction".
+  // A plain block, not a heading, so it gets no number, no contents entry and no running head.
   // toc 1 in capitals, toc 2 indented 284 twips, toc 3 567 twips, all with dot leaders, single
-  // line and 9 pt after.
+  // line and 9 pt after; the first entry's 9 pt collapses into the title's 18 pt.
   {
-    block(below: 9pt, text(size: 14pt, weight: "bold")[CONTENTS])
+    block(above: 12pt, below: 18pt, text(size: 16pt, weight: "bold", fill: heading-ink)[Contents])
     show outline.entry: set block(spacing: 9pt)
     show outline.entry.where(level: 1): it => upper(it)
     outline(title: none, depth: 3, indent: n => n * 0.5cm)
