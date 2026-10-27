@@ -213,6 +213,6 @@ Done hours were not logged; for Sprints 2 and 3 they were reconstructed at the s
 #### Delivery and flow
 
 - **Backlog:** the daily board snapshot of 25 October holds 219 items: 158 Done, 41 Backlog, 14 Ready, 5 In progress and 1 with no status set.
-- **Throughput:** 425 pull requests were merged into `dev` between the start of the project and 26 October.
+- **Throughput:** 426 pull requests were merged into `dev` between the start of the project and the end of 26 October.
 - **Burndowns:** the Sprint 2 and Sprint 3 burndowns were reconstructed from pull request merge dates and issue close dates, because no hours were logged. Appendix A shows both and states the method.
 - **Delivery metrics:** the dev delivery proxies for the four DORA metrics (snapshot of 22 October) and the CI timings are in Appendix D.
