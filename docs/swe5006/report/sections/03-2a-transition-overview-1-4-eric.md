@@ -478,7 +478,7 @@ Rationale (dynamic): the caller sees only the interface, so the call stays the s
 
 ### 3.2.4 Persistence
 
-Data is stored in PostgreSQL 18 through MyBatis. A persistent aggregate has a repository interface in the domain module. The infrastructure module implements it with a MyBatis mapper (SQL in XML) and a data object (DO) that mirrors one table row, and a hand-written converter maps the DO to the aggregate (reasons in Table B.4).
+Data is stored in PostgreSQL 18 through MyBatis. A persistent aggregate has a repository interface in the domain module. The infrastructure module implements it with a MyBatis mapper (SQL in XML) and a data object (DO) that mirrors one table row, and a hand-written converter maps the DO to the aggregate (skeleton plan decision D9).
 
 In the course's DAO strategy, the mapper is the DAO that runs the SQL, and the DO is the transfer object that carries one row between the mapper and the repository. The repository puts a domain port in front of the DAO and hands out aggregates, never DOs. For a read, the converter turns the DO into the aggregate (`GroupDealConverter.toDomain`). For a write, the repository builds the DO from the aggregate (`PaidGroupDealRepositoryImpl.toRow`). The request and response records of 3.2.3 are the transfer objects between client and server.
 
