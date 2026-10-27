@@ -259,13 +259,13 @@ The top plateau covers the proposal's load. Calculated with Little's law, N = X 
 
 The pipelines run often and mostly green. Table 4.13 gives the run totals since the repository began; cancelled runs are mostly runs superseded by a newer push to the same pull request. On 19 October the median successful backend pull-request run took 16.1 minutes to the end of `docker`, and the frontend 4.8 minutes to the end of `e2e-preview`; Appendix D has the per-job timings.
 
-Table 4.13: Workflow run totals since 24 August 2026, read from the GitHub API on 26 October 2026.
+Table 4.13: Workflow run totals since 24 August 2026, read on 27 October 2026 at 05:23 UTC as `total_count` of `gh api repos/PPsyrius/iss-groupbuy-team8/actions/workflows/<file>/runs?status=<conclusion>`.
 
 | Workflow | Success | Failure | Cancelled |
 |---|---|---|---|
-| `ci-backend.yml` | 1,453 | 111 | 547 |
-| `ci-frontend.yml` | 1,427 | 63 | 76 |
-| `security.yml` | 1,822 | 55 | 45 |
+| `ci-backend.yml` | 1,473 | 111 | 548 |
+| `ci-frontend.yml` | 1,449 | 64 | 76 |
+| `security.yml` | 1,847 | 56 | 45 |
 
 Building the pipeline produced two CI findings worth recording (Table 4.14); the deployment finding is in section 4.3.
 
