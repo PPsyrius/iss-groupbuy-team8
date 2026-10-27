@@ -557,11 +557,12 @@ export function mermaid(src, caption = '') {
 
 const FIGURE_CAPTION = /^Figure ((?:\d+|[A-E])(?:\.\d+)*):\s*(.+)$/;
 
-function figure(body, caption) {
+// opts: extra report-figure arguments (see the intro() helper in markdown()).
+function figure(body, caption, opts = '') {
   const m = caption.match(FIGURE_CAPTION);
   const num = m ? m[1] : '';
   const text = m ? m[2] : caption;
-  return `#report-figure(${str(num)}, [${body}], [${inline(text)}])`;
+  return `#report-figure(${str(num)}, [${body}], [${inline(text)}]${opts})`;
 }
 
 function table(rows) {
@@ -596,6 +597,21 @@ export function markdown(src, { sectionDir, root, resolvePath }) {
     out.push('');
     para = [];
   };
+  // A figure right under a heading or a lead label is what that heading or label introduces. A
+  // float would leave it behind at the foot of a page (a sticky block cannot keep with a float,
+  // which is out of the flow). Under a heading, the figure is set in the flow instead, where the
+  // sticky heading keeps with it. A lead label moves into the floating figure as its title, so the
+  // text around it still fills the pages the float leaves.
+  const intro = () => {
+    let k = out.length - 1;
+    while (k >= 0 && !out[k].trim()) k--;
+    if (k < 0) return '';
+    if (/^#heading\(/.test(out[k])) return ', float: false';
+    const lm = out[k].match(/^#lead-label\[(.*)\]$/);
+    if (!lm) return '';
+    out.length = k;
+    return `, lead: [${lm[1]}]`;
+  };
   const nextCaption = (j) => {
     while (j < lines.length && !lines[j].trim()) j++;
     if (j < lines.length && FIGURE_CAPTION.test(lines[j].trim())) {
@@ -627,7 +643,7 @@ export function markdown(src, { sectionDir, root, resolvePath }) {
         const cap = nextCaption(i);
         const body = mermaid(buf.join('\n'), cap ? cap.caption : '');
         if (cap) {
-          out.push(figure(body, cap.caption));
+          out.push(figure(body, cap.caption, intro()));
           i = cap.next;
         } else out.push(`#figure-frame[${body}]`);
       } else out.push(`#raw(block: true, lang: ${str(lang || 'text')}, ${str(buf.join('\n'))})`);
@@ -660,7 +676,7 @@ export function markdown(src, { sectionDir, root, resolvePath }) {
       if (m[4] === 'logo') out.push(`#align(left, image(${str(path)}, width: 7cm, alt: ${str(m[1])}))`);
       // {.landscape}: a wide drawing gets a landscape page of its own, about 1.6 times larger.
       else if (m[3]) out.push(figure(`#image(${str(path)}, width: 100%, height: 13cm, fit: "contain")`, m[1]).replace('#report-figure(', '#landscape-figure('));
-      else out.push(figure(`#image(${str(path)}, width: 100%)`, m[1]));
+      else out.push(figure(`#image(${str(path)}, width: 100%)`, m[1], intro()));
       out.push('');
       i++;
       continue;

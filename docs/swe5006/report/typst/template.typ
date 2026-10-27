@@ -32,13 +32,16 @@
 // content centred, leaving less than a line for body text.
 #let full-page(size, content) = block(width: 100%, height: size.height - 1.4em - 1pt, align(center + horizon, content))
 
-#let report-figure(num, body, caption, float: true) = {
+// lead: a bold label that introduces the figure in the text ("D1 Publish a listing."); it rides
+// above the drawing, so it lands wherever the float does.
+#let report-figure(num, body, caption, float: true, lead: none) = {
   let content = layout(size => {
     let framed = block(width: 100%, stroke: 0.4pt + rgb("#D8D2C8"), inset: 6pt, body)
     let h = measure(framed, width: size.width).height
     let max = 20cm
     let shown = if h > max { block(width: 100%, stroke: 0.4pt + rgb("#D8D2C8"), inset: 6pt, align(center, scale(max / h * 100%, reflow: true, body))) } else { framed }
     let fig = block(width: 100%, breakable: false, {
+      if lead != none { block(width: 100%, below: 0.52em + 8pt, align(left, lead)) }
       align(center, shown)
       v(0.3em)
       set text(size: 9pt)
