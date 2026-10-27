@@ -541,7 +541,9 @@ function table(rows) {
   // so one long column cannot squeeze the others below a readable width.
   const plain = (c) => c.replace(/[`*_]|\{\{[^}]*\}\}/g, '').length;
   const weights = Array.from({ length: n }, (_, i) => Math.max(...[head[i] ?? '', ...body.map((r) => r[i] ?? '')].map(plain)));
-  const cols = weights.map((w) => `${Math.max(1, Math.round(Math.sqrt(Math.max(w, 4)) * 10) / 10)}fr`);
+  // A column of short values (a sprint number, "#", a status) is sized to its content, so its bold
+  // header word never runs into the next column.
+  const cols = weights.map((w) => (w <= 10 ? 'auto' : `${Math.max(1, Math.round(Math.sqrt(Math.max(w, 4)) * 10) / 10)}fr`));
   return `#report-table((${cols.join(', ')},), ${cells.join(', ')})`;
 }
 
