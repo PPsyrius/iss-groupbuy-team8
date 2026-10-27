@@ -131,10 +131,13 @@
   show heading: set block(below: 6.2pt, sticky: true)
   // Heading 1: bold, sz 32 (16 pt), spacing before 240 (12 pt); every chapter starts on a new page
   // (document.xml has a page break before each heading 1).
+  // Adjacent block spacing collapses to the larger value, so the 18 pt below a chapter title only
+  // widens the gap to a paragraph, table or figure that opens the chapter; a Heading 2 straight
+  // after the title keeps its own larger space before.
   show heading.where(level: 1): it => {
     pagebreak(weak: true)
     set text(size: 16pt, weight: "bold", fill: heading-ink)
-    block(above: 12pt, below: 6.2pt, it)
+    block(above: 12pt, below: 18pt, it)
   }
   // Heading 2: sz 26 (13 pt); Heading 3: Normal size (12 pt); both regular in the docx; spacing before 40 (2 pt)
   // after the preceding paragraph's 8 pt. Level 4 has no template style.
