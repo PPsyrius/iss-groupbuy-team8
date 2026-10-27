@@ -654,7 +654,11 @@ export function markdown(src, { sectionDir, root, resolvePath }) {
       flushPara();
       const level = m[1].length;
       const attrs = m[3] || '';
-      const title = m[2].replace(/^\d+(?:\.\d+)*\s+/, '');
+      // The fixed 3.4.N and 3.5.N part headings ("#### A Analysis class diagram", "#### 1 Design
+      // problem"; check.mjs requires these exact source titles) print as "A. Analysis class
+      // diagram" and "1. Design problem", so the part letter or number reads as a label.
+      const part = level === 4 && m[2].match(/^([A-E]|[1-6]) ([A-Z].*)$/);
+      const title = part ? `${part[1]}. ${part[2]}` : m[2].replace(/^\d+(?:\.\d+)*\s+/, '');
       const numbered = !/\.(unnumbered|appendix)/.test(attrs) && /^\d/.test(m[2]);
       out.push(`#heading(level: ${level}, ${numbered && level <= 3 ? '' : 'numbering: none, '}outlined: ${level <= 3 || /\.appendix/.test(attrs)})[${inline(title)}]`);
       out.push('');
