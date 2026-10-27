@@ -121,7 +121,7 @@ The flexibility is needed because the rules protect money. A published listing's
 - Extension is not change-free. A new state still needs a stored code, an entry in the application's target switch and new tests; the design note warns against claiming zero-change extension.
 - Two status tests remain outside the states (section 6).
 
-We did not use State for the team lifecycle, although the proposal and our initial backend design of 11 September named it there. A team has one move, from OPEN to a final state, and its consequences are events (section 3.5.2), so State would add five classes, one per `DealStatus` constant, and four of them (SUCCEEDED, FAILED, EXPIRED, CANCELED) would only refuse every move, a cost the module notes warn about (SDP 05a p35). `DealStatus.canTransitionTo`, a transition table, is enough there.
+We did not use State for the team lifecycle, although the proposal and our backend design of 11 September named it there. A team has one move, from OPEN to a final state, and its consequences are events (section 3.5.2), so State would add five classes, one per `DealStatus` constant, and four of them (SUCCEEDED, FAILED, EXPIRED, CANCELED) would only refuse every move, a cost the module notes warn about (SDP 05a p35). `DealStatus.canTransitionTo`, a transition table, is enough there.
 
 We chose Optimistic Offline Lock because the business transaction, read then write, spans two requests, and a database lock cannot be held between them. Its liability is that the losing administrator must reload and enter the change again; there is no merge. The admin console turns a 412 into a conflict banner that names the server's current version and disables every write until the administrator reloads.
 
