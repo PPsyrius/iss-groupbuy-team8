@@ -30,7 +30,7 @@ Table 3.19: Who built the parts of UC9 and UC5.
 
 The analysis models use only the stereotypes «boundary», «control» and «entity». Actors talk only to boundaries, and the models name no framework, table or lock.
 
-**UC9.** One control, `ManageListingControl`, carries every administrator command (Figure 3.99). The `Listing` entity holds a `version`, so the model can state the rule that a command made on an old copy of the listing is refused. A listing that has any team, price policy or quote in its history keeps that history. For this reason the control reads `Team` and `PriceQuote` before it deletes anything. `AdminAccount` is the administrator's own account: signing in with Google is not enough, the account must also hold the admin role and be active.
+**UC9.** One control, `ManageListingControl`, carries every administrator command (Figure 3.98). The `Listing` entity holds a `version`, so the model can state the rule that a command made on an old copy of the listing is refused. A listing that has any team, price policy or quote in its history keeps that history. For this reason the control reads `Team` and `PriceQuote` before it deletes anything. `AdminAccount` is the administrator's own account: signing in with Google is not enough, the account must also hold the admin role and be active.
 
 ```mermaid
 classDiagram
@@ -116,9 +116,9 @@ classDiagram
     Listing "1" -- "0..*" Team
 ```
 
-Figure 3.99: Analysis class diagram of UC9 Admin listing management (UML). One control serves every command; the version on `Listing` carries the stale-copy rule, and teams, policies and quotes are the history that blocks deletion.
+Figure 3.98: Analysis class diagram of UC9 Admin listing management (UML). One control serves every command; the version on `Listing` carries the stale-copy rule, and teams, policies and quotes are the history that blocks deletion.
 
-**UC5.** The team resolves itself on one of two triggers (Figure 3.100). The time-driven Scheduler actor reaches the system through the `ExpiryTimer` boundary. The last seat arrives through UC4's `PaymentGateway` and `JoinTeamControl` (3.4.1), shown here only as the entry point. `ResolveTeamControl` applies the outcome: it confirms the team's orders on success; on expiry it cancels them and creates one refund obligation per paid member, which UC6 then pays out (3.4.2). The `Team` entity owns the transition rule `canMoveTo`, so no control decides alone whether a team may change state.
+**UC5.** The team resolves itself on one of two triggers (Figure 3.99). The time-driven Scheduler actor reaches the system through the `ExpiryTimer` boundary. The last seat arrives through UC4's `PaymentGateway` and `JoinTeamControl` (3.4.1), shown here only as the entry point. `ResolveTeamControl` applies the outcome: it confirms the team's orders on success; on expiry it cancels them and creates one refund obligation per paid member, which UC6 then pays out (3.4.2). The `Team` entity owns the transition rule `canMoveTo`, so no control decides alone whether a team may change state.
 
 ```mermaid
 classDiagram
@@ -187,7 +187,7 @@ classDiagram
     Membership "1" -- "0..1" Refund
 ```
 
-Figure 3.100: Analysis class diagram of UC5 Team lifecycle resolution (UML). Two boundaries feed one resolution control, and `Team` alone decides whether it may move; `PaymentGateway` and `JoinTeamControl` come from UC4.
+Figure 3.99: Analysis class diagram of UC5 Team lifecycle resolution (UML). Two boundaries feed one resolution control, and `Team` alone decides whether it may move; `PaymentGateway` and `JoinTeamControl` come from UC4.
 
 #### B Analysis sequence diagrams
 
@@ -195,12 +195,12 @@ There are six major flows: four for UC9 and two for UC5. Exceptional flows are `
 
 | Flow | Use case | Analysis | Design |
 | --- | --- | --- | --- |
-| B1/D1 Publish a listing | UC9 | Figure 3.101 | Figure 3.110 |
-| B2/D2 Revise with a stale version, reload and retry | UC9 | Figure 3.102 | Figure 3.111 |
-| B3/D3 Delete a draft | UC9 | Figure 3.103 | Figure 3.112 |
-| B4/D4 Set team terms and an optional team price | UC9 | Figure 3.104 | Figure 3.113 |
-| B5/D5 The last seat fills the team: OPEN to SUCCEEDED | UC5 | Figure 3.105 | Figure 3.114 |
-| B6/D6 The deadline passes: OPEN to EXPIRED | UC5 | Figure 3.106 | Figure 3.115 |
+| B1/D1 Publish a listing | UC9 | Figure 3.100 | Figure 3.109 |
+| B2/D2 Revise with a stale version, reload and retry | UC9 | Figure 3.101 | Figure 3.110 |
+| B3/D3 Delete a draft | UC9 | Figure 3.102 | Figure 3.111 |
+| B4/D4 Set team terms and an optional team price | UC9 | Figure 3.103 | Figure 3.112 |
+| B5/D5 The last seat fills the team: OPEN to SUCCEEDED | UC5 | Figure 3.104 | Figure 3.113 |
+| B6/D6 The deadline passes: OPEN to EXPIRED | UC5 | Figure 3.105 | Figure 3.114 |
 
 **B1 Publish a listing.** Publishing a draft or an off-sale listing puts it on sale. The listing itself refuses the move when it is already on sale or has no stock or price.
 
@@ -227,7 +227,7 @@ sequenceDiagram
     end
 ```
 
-Figure 3.101: Analysis sequence diagram of UC9 flow B1, publish a listing (UML). The listing decides whether it may go on sale; the control only checks the account and the version first.
+Figure 3.100: Analysis sequence diagram of UC9 flow B1, publish a listing (UML). The listing decides whether it may go on sale; the control only checks the account and the version first.
 
 **B2 Revise with a stale version, then reload and retry.** Two administrators can open the same listing. The one who saves second holds an old version, and the listing refuses the save without changing anything. Nothing merges or retries on its own: the administrator reloads the listing, which drops the unsaved edits, and saves again at the new version.
 
@@ -260,7 +260,7 @@ sequenceDiagram
     end
 ```
 
-Figure 3.102: Analysis sequence diagram of UC9 flow B2, revise with a stale version (UML). The stale save changes nothing; recovery is the administrator's own reload and second save. The account check of Figure 3.101 is omitted.
+Figure 3.101: Analysis sequence diagram of UC9 flow B2, revise with a stale version (UML). The stale save changes nothing; recovery is the administrator's own reload and second save. The account check of Figure 3.100 is omitted.
 
 **B3 Delete a draft.** Only a draft that was never published and has no history may be deleted, and even then the record is only marked deleted, so the audit trail stays.
 
@@ -292,7 +292,7 @@ sequenceDiagram
     UI-->>Admin: result
 ```
 
-Figure 3.103: Analysis sequence diagram of UC9 flow B3, delete a draft (UML). The listing checks its own state, and the control checks the other entities' history; a price policy is checked the same way as a quote (omitted).
+Figure 3.102: Analysis sequence diagram of UC9 flow B3, delete a draft (UML). The listing checks its own state, and the control checks the other entities' history; a price policy is checked the same way as a quote (omitted).
 
 **B4 Set team terms and an optional team price.** The administrator sets how many paid members a team needs and how long it stays open, and may add a team price in the same command. A rejected price leaves the terms unchanged. Every accepted change is recorded.
 
@@ -325,7 +325,7 @@ sequenceDiagram
     end
 ```
 
-Figure 3.104: Analysis sequence diagram of UC9 flow B4, set team terms (UML). Terms and price succeed or fail together, and every accepted change leaves an audit record.
+Figure 3.103: Analysis sequence diagram of UC9 flow B4, set team terms (UML). Terms and price succeed or fail together, and every accepted change leaves an audit record.
 
 **B5 The last seat fills the team.** The paid join that takes the last seat moves the team from OPEN to SUCCEEDED. The join itself is UC4 (3.4.1); UC5 begins where `Team` reports that it is full.
 
@@ -355,7 +355,7 @@ sequenceDiagram
     end
 ```
 
-Figure 3.105: Analysis sequence diagram of UC5 flow B5, the last seat fills the team (UML). Only the admission that reaches the target size resolves the team, and only then are its orders confirmed.
+Figure 3.104: Analysis sequence diagram of UC5 flow B5, the last seat fills the team (UML). Only the admission that reaches the target size resolves the team, and only then are its orders confirmed.
 
 **B6 The deadline passes.** The Scheduler ticks every minute. Each open team whose deadline has passed is expired once: its orders are cancelled and one refund obligation is created per paid member. A team that a last-seat join resolved first is skipped.
 
@@ -382,11 +382,11 @@ sequenceDiagram
     end
 ```
 
-Figure 3.106: Analysis sequence diagram of UC5 flow B6, the deadline passes (UML). Expiry and its consequences happen together, and a team that is already resolved is skipped, not treated as an error.
+Figure 3.105: Analysis sequence diagram of UC5 flow B6, the deadline passes (UML). Expiry and its consequences happen together, and a team that is already resolved is skipped, not treated as an error.
 
 #### C Design class diagram
 
-The design classes are the real classes in the repository at this draft's commit (Figures 3.107 to 3.109). They follow the four COLA layers of 3.1: adapter (web), application, domain and infrastructure. UC9 is split into two figures, so that each stays legible on A4. A parameter list with more than one parameter is shown as `(…)`; part D gives the full calls.
+The design classes are the real classes in the repository at this draft's commit (Figures 3.106 to 3.108). They follow the four COLA layers of 3.1: adapter (web), application, domain and infrastructure. UC9 is split into two figures, so that each stays legible on A4. A parameter list with more than one parameter is shown as `(…)`; part D gives the full calls.
 
 **UC9, web and application layers.** The analysis boundary becomes React components that call the REST API under `/api/v1/admin/products` through the generated client (3.2.2, 3.2.3). The control becomes `AdminListingController`, which checks the session, role and permission, and two application services: `AdminListingAppServiceImpl` for revise, status change and delete, and `TeamTermsAppServiceImpl` for team terms. Each service method is one bounded transaction. History owned by another bounded context is read only through that context's facade, `GroupDealQueryService`, never through its tables.
 
@@ -479,7 +479,7 @@ classDiagram
     TeamTermsAppServiceImpl --> TeamPriceAppService
 ```
 
-Figure 3.107: Design class diagram of UC9, web and application layers (UML). The analysis control is split into a controller that checks the role and two transactional services; another context's history is reached only through its facade, `GroupDealQueryService`.
+Figure 3.106: Design class diagram of UC9, web and application layers (UML). The analysis control is split into a controller that checks the role and two transactional services; another context's history is reached only through its facade, `GroupDealQueryService`.
 
 **UC9, domain and infrastructure layers.** The `Listing` entity becomes the `Product` aggregate. Its lifecycle rules sit in the per-state behaviour of the `ProductStatus` enum, which is the State pattern of 3.5.5. `Product` has no public status setter: every change returns a new revision with `version + 1`. `ProductRepository` is the domain port. Its implementation, `ProductRepositoryImpl`, runs MyBatis statements whose `WHERE version = expectedVersion` condition makes a stale write change zero rows, and it then raises `PRODUCT_VERSION_CONFLICT` (HTTP 412, code `CATALOG_412_002`).
 
@@ -567,9 +567,9 @@ classDiagram
     ProductRepositoryImpl --> BizProductMapper
 ```
 
-Figure 3.108: Design class diagram of UC9, domain and infrastructure layers (UML). `Product` delegates its rules to its current `ProductStatus`; the version guard lives in the mapper's SQL, and a zero-row update becomes the 412.
+Figure 3.107: Design class diagram of UC9, domain and infrastructure layers (UML). `Product` delegates its rules to its current `ProductStatus`; the version guard lives in the mapper's SQL, and a zero-row update becomes the 412.
 
-**UC5.** The two analysis triggers become two entry points, which meet at the same row of `biz_group_deal` (Figure 3.109). The timer becomes `TeamExpirySweepJob`, a Spring `@Scheduled` job. It runs at a fixed delay of one minute (`blocbuy.scheduling.team-expiry.interval`, default `PT1M`) under a database lease (`LeasedJobRunner`), so only one instance sweeps at a time. The job is off unless `blocbuy.scheduling.enabled` is set (3.2.7). `ResolveTeamControl` is split into three classes. `GroupDealExpirySweeper` selects the due teams in one bounded query. `GroupDealExpiryService.expireOne` resolves one team in its own short transaction. `PaidGroupDealService.joinConfirmed`, shared with UC4, publishes `TeamSucceeded` when an admission completes the team. The consequences are domain-event subscribers that run before the transaction commits (3.2.9): `OrderLifecycleSubscriber` confirms or cancels the orders, and `TeamExpiryRefundSubscriber` records the refunds.
+**UC5.** The two analysis triggers become two entry points, which meet at the same row of `biz_group_deal` (Figure 3.108). The timer becomes `TeamExpirySweepJob`, a Spring `@Scheduled` job. It runs at a fixed delay of one minute (`blocbuy.scheduling.team-expiry.interval`, default `PT1M`) under a database lease (`LeasedJobRunner`), so only one instance sweeps at a time. The job is off unless `blocbuy.scheduling.enabled` is set (3.2.7). `ResolveTeamControl` is split into three classes. `GroupDealExpirySweeper` selects the due teams in one bounded query. `GroupDealExpiryService.expireOne` resolves one team in its own short transaction. `PaidGroupDealService.joinConfirmed`, shared with UC4, publishes `TeamSucceeded` when an admission completes the team. The consequences are domain-event subscribers that run before the transaction commits (3.2.9): `OrderLifecycleSubscriber` confirms or cancels the orders, and `TeamExpiryRefundSubscriber` records the refunds.
 
 The analysis rule `canMoveTo` becomes `DealStatus.canTransitionTo`: only OPEN may move, and never to itself. `GroupDeal.joinPaid` and `GroupDeal.expire` check it on every move. `DealStatus` is a transition table on a plain enum, not the State pattern; the proposal named State for the team, and the team adopted State for listings only (3.5.5, 2.2). `DealStatus` also declares FAILED and CANCELED, but no production code writes either value.
 
@@ -661,7 +661,7 @@ classDiagram
     OrderLifecycleSubscriber ..> TeamSucceeded : listens
 ```
 
-Figure 3.109: Design class diagram of UC5 Team lifecycle resolution (UML). Two entry points (the sweep and the paid join) reach one aggregate whose `DealStatus` table decides every move; the consequences are event subscribers, not calls.
+Figure 3.108: Design class diagram of UC5 Team lifecycle resolution (UML). Two entry points (the sweep and the paid join) reach one aggregate whose `DealStatus` table decides every move; the consequences are event subscribers, not calls.
 
 #### D Design sequence diagrams
 
@@ -709,7 +709,7 @@ sequenceDiagram
     end
 ```
 
-Figure 3.110: Design sequence diagram of UC9 flow D1, publish a listing (UML). `Product` refuses a listing without stock or price; for the rest, the current `ProductStatus` decides the move inside one locked transaction; a refused move rolls back and returns 409.
+Figure 3.109: Design sequence diagram of UC9 flow D1, publish a listing (UML). `Product` refuses a listing without stock or price; for the rest, the current `ProductStatus` decides the move inside one locked transaction; a refused move rolls back and returns 409.
 
 **D2 Revise with a stale version, then reload and retry.** The 412 response carries the server's current version, which the conflict banner shows. While the banner is up, every write on the page is disabled.
 
@@ -752,7 +752,7 @@ sequenceDiagram
     W-->>P: 200, version v + 2
 ```
 
-Figure 3.111: Design sequence diagram of UC9 flow D2, stale revise and retry (UML). A stale version fails twice over, at `requireVersion` under the row lock and again in the SQL condition; the retry is the administrator's Reload, never automatic.
+Figure 3.110: Design sequence diagram of UC9 flow D2, stale revise and retry (UML). A stale version fails twice over, at `requireVersion` under the row lock and again in the SQL condition; the retry is the administrator's Reload, never automatic.
 
 **D3 Delete a draft.** The flow starts when the administrator confirms Delete in the lifecycle dialog.
 
@@ -788,7 +788,7 @@ sequenceDiagram
     W-->>P: 200, or 409 with the reason
 ```
 
-Figure 3.112: Design sequence diagram of UC9 flow D3, delete a draft (UML). Policies and quotes are checked in the catalog's own repository and teams through the group-buy facade, all under the product lock; deletion is soft. The account check of Figure 3.110 is omitted.
+Figure 3.111: Design sequence diagram of UC9 flow D3, delete a draft (UML). Policies and quotes are checked in the catalog's own repository and teams through the group-buy facade, all under the product lock; deletion is soft. The account check of Figure 3.109 is omitted.
 
 **D4 Set team terms and an optional team price.** The product version and the policy version are two separate concurrency tokens: a stale product version returns `CATALOG_412_002`, a stale policy version `CATALOG_412_001`.
 
@@ -825,7 +825,7 @@ sequenceDiagram
     W-->>P: 200, new version and terms
 ```
 
-Figure 3.113: Design sequence diagram of UC9 flow D4, set team terms (UML). The price joins the terms' transaction, so a rejected price rolls the terms back; each accepted write appends a `log_product_team_terms` row.
+Figure 3.112: Design sequence diagram of UC9 flow D4, set team terms (UML). The price joins the terms' transaction, so a rejected price rolls the terms back; each accepted write appends a `log_product_team_terms` row.
 
 **D5 The last seat fills the team.** This flow runs inside the payment settlement transaction of UC4 (3.4.1, part D), which also locks the payment and the purchase intent. Only the part that resolves the team is shown. `TeamSucceeded` is a published event: Spring runs its `BEFORE_COMMIT` listener synchronously, on the same thread and inside the same transaction, just before the commit, so it is drawn as an ordinary call. The settlement path has already locked the team row in `lockForSettlement` (3.4.1, part D), so the `lockDeal` here re-reads the row under a lock the transaction already holds and the documented order (team, then purchase intent, then payment, then receipt) is kept.
 
@@ -861,7 +861,7 @@ sequenceDiagram
     end
 ```
 
-Figure 3.114: Design sequence diagram of UC5 flow D5, the last seat (UML). `joinPaid` checks `canTransitionTo(SUCCEEDED)` and the seat under the deal lock, and the guarded update makes a race loser change zero rows; the orders are confirmed before the same transaction commits. `MemberJoined`, published for every accepted join, is omitted.
+Figure 3.113: Design sequence diagram of UC5 flow D5, the last seat (UML). `joinPaid` checks `canTransitionTo(SUCCEEDED)` and the seat under the deal lock, and the guarded update makes a race loser change zero rows; the orders are confirmed before the same transaction commits. `MemberJoined`, published for every accepted join, is omitted.
 
 **D6 The deadline passes.** The sweep itself is not transactional: each team is resolved in its own transaction. A failing team therefore cannot roll back the others, and each row lock stays short, because webhook settlement locks the same rows. A team whose expiry throws is counted as failed and deferred for five minutes (`deferExpiryRetry`).
 
@@ -904,7 +904,7 @@ sequenceDiagram
     end
 ```
 
-Figure 3.115: Design sequence diagram of UC5 flow D6, the deadline passes (UML). Each team gets its own locked transaction, the status-guarded update settles a race with a last-seat join, and the `TeamExpired` subscribers commit with the expiry.
+Figure 3.114: Design sequence diagram of UC5 flow D6, the deadline passes (UML). Each team gets its own locked transaction, the status-guarded update settles a race with a last-seat join, and the `TeamExpired` subscribers commit with the expiry.
 
 #### Statechart of the team
 
@@ -912,7 +912,7 @@ The team has significant, dynamic states, so it has a statechart. A transition r
 
 The team (`GroupDeal`) is created OPEN by a confirmed paid start (UC3) and filled by confirmed paid joins (UC4). It resolves once (UC5): it succeeds when the last seat is taken, or expires when its window closes first, which owes refunds (UC6).
 
-![Figure 3.49: UML statechart of the team (`GroupDeal`). The `paidJoinConfirmed` events have disjoint guards; those that leave the status unchanged are internal transitions, listed inside the state box. No final state is drawn because a resolved team still absorbs late paid joins as refunds.](../figures/team-statechart.svg)
+![Figure 3.115: UML statechart of the team (`GroupDeal`). The `paidJoinConfirmed` events have disjoint guards; those that leave the status unchanged are internal transitions, listed inside the state box. No final state is drawn because a resolved team still absorbs late paid joins as refunds.](../figures/team-statechart.svg)
 
 *Admissible* means that the paid amount equals the team price, the buyer is neither the leader nor a member, `startTime ≤ now < expireTime`, and a seat is free. The chart matches `DealStatus.canTransitionTo`: only OPEN may move, and never to itself. The figure draws the events that keep the status (a join that leaves seats, a refused join, a late join after resolution) as internal transitions inside the state, because they run an action without changing the status. `DealStatus` also declares FAILED and CANCELED, and the transition table allows them, but no production code writes either, so the figure draws them dashed and unconnected. `GroupDeal.joinPaid` enforces the OPEN transitions; `TeamExpirySweepJob`, every minute, reaches `GroupDealExpiryService`, which calls `GroupDeal.expire` and writes through a status-guarded update (section 3.4.2).
 
