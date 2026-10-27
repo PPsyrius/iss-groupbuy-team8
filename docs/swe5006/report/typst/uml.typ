@@ -29,7 +29,9 @@
 #let role-of(stereo) = {
   if stereo == none { return "neutral" }
   let words = lower(stereo).split(regex("[^a-z]+"))
-  if "boundary" in words { "boundary" } else if "control" in words { "control" } else if words.any(w => w in ("event", "topic", "queue", "message", "messaging")) { "messaging" } else { "neutral" }
+  // «event source», «event listener» and the like are classes that handle events, not messages.
+  let event = "event" in words and not words.any(w => w in ("source", "listener", "publisher", "subscriber", "handler"))
+  if "boundary" in words { "boundary" } else if "control" in words { "control" } else if event or words.any(w => w in ("topic", "queue", "message", "messaging")) { "messaging" } else { "neutral" }
 }
 #let role-fill(stereo) = gradient.linear(..tints.at(role-of(stereo)), dir: ttb)
 
@@ -195,22 +197,33 @@
 // classes: array of (id, name, stereo, attrs, ops, abstract, pos: (x, y))
 // rels: array of (from, to, kind, label, mfrom, mto, bend)
 // A wide or tall diagram first closes up its gaps, then wraps its members at narrower widths.
-#let class-diagram(classes, rels, frame: none) = {
+#let class-diagram(classes, rels, frame: none, min-gap: (0pt, 0pt)) = {
   let boxes(max) = classes.map(c => node(c.pos, class-box(c.name, stereo: c.stereo, attrs: c.attrs, ops: c.ops, abstract: c.abstract, max: max), name: label(c.id)))
   let edges = rels.map(r => {
     let style = rel-style.at(r.kind, default: rel-style.assoc)
     let args = (label(r.from), label(r.to))
     let bend = r.at("bend", default: 0deg)
+    let mfrom = r.at("mfrom", default: none)
+    let mto = r.at("mto", default: none)
     let out = ()
-    out.push(edge(..args, marks: style.marks, stroke: (paint: ink, thickness: w-line, dash: style.dash), bend: bend, label: if r.label != none { wrap-label(r.label) }, label-side: center, label-fill: none))
+    out.push(edge(..args, marks: style.marks, stroke: (paint: ink, thickness: w-line, dash: style.dash), bend: bend))
+    // Labels are drawn as separate invisible edges on layer 1, above the boxes, so a label on a
+    // short or crowded edge can never be hidden under a box. A role or name label sits on the
+    // line when the edge has no multiplicities, otherwise on its left, away from them.
+    if r.label != none {
+      out.push(edge(..args, "-", bend: bend, stroke: none, layer: 1, label: wrap-label(r.label), label-side: if mfrom == none and mto == none { center } else { left }, label-sep: 3pt, label-fill: none))
+    }
     // Multiplicities sit beside the line near each end, on the right-hand side walking from
-    // the source; the edge is cropped at the node boundaries, so the ends stay clear of boxes.
-    let mult(t, pos) = edge(..args, "-", bend: bend, stroke: none, label: text(size: uml-size, t), label-pos: pos, label-side: right, label-sep: 3pt, label-fill: none)
-    // Each sits its own (estimated) half width plus 3 pt from its end, so it never reaches into
-    // the box, however short the edge.
-    let off(t) = t.clusters().len() * 0.3 * uml-size + 3pt
-    if r.at("mfrom", default: none) != none { out.push(mult(r.mfrom, 0% + off(r.mfrom))) }
-    if r.at("mto", default: none) != none { out.push(mult(r.mto, 100% - off(r.mto))) }
+    // the source, on a white ground. Each sits its own (estimated) half width plus 3 pt from its
+    // end, plus the length of the end's mark (diamond, triangle, arrowhead), so it never
+    // reaches into the box or onto the mark, however short the edge.
+    let mult(t, pos) = edge(..args, "-", bend: bend, stroke: none, layer: 1, label: box(fill: white, inset: 0.5pt, text(size: uml-size, t)), label-pos: pos, label-side: right, label-sep: 3pt, label-fill: none)
+    // (On a vertical edge a multiplicity sits beside the line, so its half height counts.)
+    let off(t) = if r.at("vert", default: false) { 0.6 * uml-size + 3pt } else { t.clusters().len() * 0.3 * uml-size + 3pt }
+    let mark-from = if r.kind in ("compose", "aggregate") { 13pt } else { 0pt }
+    let mark-to = if r.kind in ("inherit", "realize") { 11pt } else if r.kind in ("nav", "dep") { 5pt } else { 0pt }
+    if mfrom != none { out.push(mult(mfrom, 0% + off(mfrom) + mark-from)) }
+    if mto != none { out.push(mult(mto, 100% - off(mto) - mark-to)) }
     out
   }).flatten()
   uml-frame("class", frame, sp => {
@@ -226,7 +239,8 @@
       ..boxes(sp.max),
       ..edges,
     )
-  }, (
+  }, {
+  let base = (
     // Starts below the two loosest spacings: they added height without legibility.
     (gap: (11mm, 9mm), max: 46mm),
     (gap: (11mm, 6mm), max: 46mm),
@@ -239,7 +253,15 @@
     (gap: (7mm, 6mm), max: 32mm),
     (gap: (6mm, 4mm), max: 32mm),
     // Edge labels and multiplicities need 9 to 11 mm between columns to stay legible.
-  ).filter(c => c.gap.at(0) >= 9mm or rels.all(r => r.label == none and r.at("mfrom", default: none) == none and r.at("mto", default: none) == none)))
+  ).filter(c => c.gap.at(0) >= 9mm or rels.all(r => r.label == none and r.at("mfrom", default: none) == none and r.at("mto", default: none) == none))
+  // First try every spacing widened to what the labels between neighbours need (min-gap,
+  // from typst.mjs); only a drawing that cannot fit that way falls back to the plain spacings,
+  // where its labels still print on top of the boxes.
+  // Rows are widened alone next, since height is usually the cheaper direction.
+  let roomy = base.map(c => (gap: (calc.max(c.gap.at(0), min-gap.at(0)), calc.max(c.gap.at(1), min-gap.at(1))), max: c.max))
+  let tall = base.map(c => (gap: (c.gap.at(0), calc.max(c.gap.at(1), min-gap.at(1))), max: c.max))
+  roomy + tall + base
+  })
 }
 
 // ---- State diagrams ----------------------------------------------------------
