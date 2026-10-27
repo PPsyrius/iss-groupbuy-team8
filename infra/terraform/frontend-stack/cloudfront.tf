@@ -59,6 +59,18 @@ resource "aws_cloudfront_response_headers_policy" "security" {
     }
   }
 
+  # Keep headers outside AWS SecurityHeadersConfig in the same versioned policy as CSP.
+  custom_headers_config {
+    dynamic "items" {
+      for_each = local.headers_policy.CustomHeadersConfig.Items
+      content {
+        header   = items.value.Header
+        value    = items.value.Value
+        override = items.value.Override
+      }
+    }
+  }
+
   remove_headers_config {
     items {
       header = local.headers_policy.RemoveHeadersConfig.Items[0].Header

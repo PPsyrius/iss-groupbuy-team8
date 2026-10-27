@@ -151,7 +151,7 @@ The mandatory [SPA function](../../deployment/frontend/cloudfront/spa-fallback.j
 
 ## 15. Security response headers
 
-The versioned [policy](../../deployment/frontend/cloudfront/response-headers-policy.json) attaches to both behaviors and defines CSP, HSTS, content-type, frame and referrer headers. On 2026-09-30 live HEAD responses for `/` and `/api/actuator/health` returned 200 with all five values matching the policy (NFR-16). Use reviewed Terraform changes for future edits.
+The versioned [policy](../../deployment/frontend/cloudfront/response-headers-policy.json) attaches to both behaviors and defines CSP, HSTS, content-type, frame, referrer and custom headers. On 2026-09-30 live HEAD responses for `/` and `/api/actuator/health` returned 200 with the original five values matching that revision of the policy (NFR-16). The image allowlist and Permissions-Policy candidate below has not yet been applied; use reviewed Terraform changes for future edits.
 
 After a policy or deploy change, run this stronger GET/value check from the repository root with `DIST_DOMAIN` set in §2; require 2xx from both behaviors, not merely present header names.
 
@@ -186,6 +186,10 @@ expected = {
     'x-frame-options': security['FrameOptions']['FrameOption'],
     'referrer-policy': security['ReferrerPolicy']['ReferrerPolicy'],
 }
+expected.update({
+    item['Header'].lower(): item['Value']
+    for item in policy.get('CustomHeadersConfig', {}).get('Items', [])
+})
 for path in map(Path, sys.argv[1:]):
     actual = {}
     for line in path.read_text().splitlines():
@@ -198,7 +202,21 @@ for path in map(Path, sys.argv[1:]):
 PY
 ```
 
-`style-src 'unsafe-inline'` supports React Aria's injected styles; `img-src https:` permits product images. Use Terraform, not manual policy updates.
+`style-src 'unsafe-inline'` currently supports React Aria's injected styles; removing it is separate work under #637. Use Terraform, not manual policy updates.
+
+### Image allowlist and Permissions-Policy candidate — 2026-10-26
+
+Refs #636 and #641. Decision: restrict image loading to `'self'`, `https://dcsjrkmummxi7.cloudfront.net` (catalog CDN) and `https://lh3.googleusercontent.com` (Google profile images); no scheme-wide, wildcard, `data:` or `blob:` source is allowed. The public inventory covered 14 on-sale listings and 42 image URLs on the catalog CDN. The [27 October continuation](../quality/evidence/zap/compatibility-inventory-2026-10-27/README.md) verifies one real signed-in avatar at the approved Google origin, but the account has no order/bloc history and cannot read admin listings (403). Before applying, an authorized data owner must run the [read-only aggregate inventory](queries/image-origin-inventory.sql), review all stored catalog/history/avatar origins, and retain privacy-reviewed aggregate evidence. Stop on any unreviewed legitimate origin; do not infer global compatibility from this one account.
+
+2026-10-27 review decision: admin cover/gallery validation derives allowed HTTPS origins from the canonical CSP JSON. Unsupported legacy URLs remain visible with an immediate warning and block saving until replaced/removed; they are not silently dropped. Only approved URLs are previewed. [Frontend ADR 0015](../../frontend/docs/adr/0015-admin-console-shell-and-guard.md) records this compatibility guard. Direct API clients retain the existing backend HTTPS rule, so API acceptance is not proof of browser display compatibility. No stored history/profile is rewritten. Deploy the rebuilt frontend through its normal reviewed delivery path for the editor guard; Terraform apply alone changes only edge headers. Later allowlist changes require both an app rebuild and policy publication.
+
+Decision: deny the unused camera, microphone, geolocation, Payment Request and USB capabilities with `camera=(), microphone=(), geolocation=(), payment=(), usb=()`. Leave clipboard, Web Share and fullscreen at their default policies. Source uses clipboard/Web Share for invitations, Google login and Stripe Hosted Checkout are full-page navigations, and no use of the denied APIs was found. Top-level Stripe navigation is not an embedded Payment Request integration. The JSON's custom-header entries are consumed by Terraform, Vite preview and the localhost Caddy generator; both edge behaviors receive the same versioned policy after apply.
+
+Local validation is not deployment evidence. Review a private saved plan using the [frontend stack procedure](../../infra/terraform/frontend-stack/README.md), with current account/region/distribution confirmed and the existing origin secret supplied privately. Expect an in-place update of `aws_cloudfront_response_headers_policy.security` only; stop on unrelated changes, replacement, deletion or secret rotation. An authorized operator applies the exact reviewed plan after merge to `dev`; no `prod` promotion, EC2 restart or normal S3 app deployment is required to publish the header policy. Do not attach raw plans/state or print the origin secret.
+
+After propagation, dispatch the separate read-only [`verify-dev-edge`](../../.github/workflows/verify-dev-edge.yml) workflow from merged `dev` (`gh workflow run verify-dev-edge.yml --ref dev` after authorization). It requires `FRONTEND_URL_DEV` to equal the reviewed dev origin, checks exact SPA/API headers, loads real anonymous catalog/detail images, retains image-load failures even when fallbacks remove the image, and verifies CSP blocks an unapproved image before a request. It uploads aggregate JSON and public-page screenshots as `dev-edge-policy`; it uses no AWS role and cannot deploy. Ordinary application delivery does not depend on this candidate before its authorized Terraform apply. The workflow has not yet run on GitHub; local header-verifier tests are not live acceptance.
+
+Also run the exact GET/header comparison above on both behaviors, check real signed-in avatars and inventoried historical images, exercise invitation copy/share and sandbox navigation as appropriate, then dispatch `dast-baseline` on `dev`. Preserve the new run separately from the before snapshot and compare alert references `10055-4` and `10063-1`. Keep #636/#641 open until authorized deployment and follow-up scan evidence exist; #637–#640 are not changed or accepted by this candidate. Local results and limitations are recorded in [quality gates](../quality/quality-gates.md#image-csp-and-permissions-policy-candidate--2026-10-26).
 
 ## 16. Frontend deploy role (GitHub OIDC)
 

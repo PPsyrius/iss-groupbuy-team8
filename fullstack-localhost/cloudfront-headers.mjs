@@ -5,9 +5,11 @@
 import { readFileSync } from "node:fs";
 
 const [policyPath] = process.argv.slice(2);
-const { SecurityHeadersConfig: security, RemoveHeadersConfig: removed } = JSON.parse(
-  readFileSync(policyPath, "utf8"),
-);
+const {
+  SecurityHeadersConfig: security,
+  CustomHeadersConfig: custom,
+  RemoveHeadersConfig: removed,
+} = JSON.parse(readFileSync(policyPath, "utf8"));
 
 const contentSecurityPolicy = security.ContentSecurityPolicy.ContentSecurityPolicy.split(";")
   .map((directive) => directive.trim())
@@ -15,6 +17,7 @@ const contentSecurityPolicy = security.ContentSecurityPolicy.ContentSecurityPoli
   .join("; ");
 
 const headers = {
+  ...Object.fromEntries(custom.Items.map(({ Header, Value }) => [Header, Value])),
   "Content-Security-Policy": contentSecurityPolicy,
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": security.FrameOptions.FrameOption,

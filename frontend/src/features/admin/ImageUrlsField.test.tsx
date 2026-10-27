@@ -26,10 +26,10 @@ function Harness({
   );
 }
 
-const url = "https://cdn.example.com/a.jpg";
+const url = "https://dcsjrkmummxi7.cloudfront.net/a.jpg";
 const oneBlank = [""];
 const twenty = Array<string>(20).fill(url);
-const mixed = [url, "http://cdn.example.com/b.jpg", ""];
+const mixed = [url, "https://unapproved.example/b.jpg", ""];
 const threeUrls = [
   "https://cdn.example.com/1.jpg",
   "https://cdn.example.com/2.jpg",
@@ -67,7 +67,7 @@ describe("ImageUrlsField", () => {
     expect(screen.getByRole("button", { name: "Add another URL" })).toBeDisabled();
   });
 
-  it("previews only https URLs, over the striped fallback tile", () => {
+  it("previews only approved HTTPS URLs, over the striped fallback tile", () => {
     const { container } = render(<Harness initial={mixed} />);
     const images = container.querySelectorAll("img");
     expect(images).toHaveLength(1);

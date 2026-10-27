@@ -19,6 +19,7 @@ import { CATEGORIES, categoryLabel } from "@/features/catalog/categories";
 import { type FormAlertState, messageOf, placeProblem } from "./field-message";
 import { FormAlert } from "./FormAlert";
 import { FrozenLabel, frozenInput } from "./FrozenField";
+import { imageHostError, imageHostHelp, isApprovedImageUrl } from "./image-policy";
 import { ImageUrlsField } from "./ImageUrlsField";
 import type { ListingFormValues } from "./listing-form";
 import { listingFormSchema } from "./listing-form.schema";
@@ -328,6 +329,19 @@ export function ListingForm({
         </div>
       )}
 
+      <form.Subscribe selector={(state) => state.values}>
+        {(values) =>
+          [values.coverImage, ...values.images].some(
+            (url) => url.trim() !== "" && !isApprovedImageUrl(url.trim()),
+          ) ? (
+            <p role="alert" className="text-danger-soft-foreground text-sm">
+              {imageHostError} Existing URLs are kept in the form for correction, not silently
+              removed.
+            </p>
+          ) : null
+        }
+      </form.Subscribe>
+
       <form.Field name="coverImage">
         {(field) => (
           <TextField
@@ -338,7 +352,9 @@ export function ListingForm({
           >
             <Label>Cover image URL</Label>
             <Input inputMode="url" placeholder="https://…" />
-            <Description>Used on cards and as the gallery’s first image.</Description>
+            <Description>
+              Used on cards and as the gallery’s first image. {imageHostHelp}
+            </Description>
             <FieldError>{messageOf(field.state.meta.errors)}</FieldError>
           </TextField>
         )}

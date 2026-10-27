@@ -27,8 +27,8 @@ export const emptyListingForm: ListingFormValues = {
   images: [""],
 };
 
-// The CSP allows `img-src 'self' https:` with `upgrade-insecure-requests`, so an image URL is
-// accepted only over https (Global Constraints).
+// Match the API's HTTPS URL requirement. Canonical CSP host approval is checked separately
+// by isApprovedImageUrl in image-policy.ts; this helper validates only the protocol.
 export function isHttpsUrl(value: string): boolean {
   if (!URL.canParse(value)) return false;
   const url = new URL(value);

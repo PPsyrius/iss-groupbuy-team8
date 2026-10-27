@@ -1,0 +1,45 @@
+# Explicit read-only post-Terraform check; never publishes or changes AWS resources.
+name: verify-dev-edge
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Require merged dev policy
+        env:
+          REF: ${{ github.ref }}
+        run: test "$REF" = refs/heads/dev
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build the repository frontend tooling image
+        run: docker build -f fullstack-localhost/frontend.Dockerfile --target build -t blocbuy-edge-check:local .
+
+      - name: Verify deployed headers, images and CSP rejection
+        env:
+          EDGE_BASE_URL: ${{ vars.FRONTEND_URL_DEV }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/edge-policy"
+          docker run --rm --ipc=host --env EDGE_BASE_URL --env COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
+            --mount "type=bind,source=$GITHUB_WORKSPACE/.github/scripts/verify-dev-edge.cjs,target=/repo/verify-dev-edge.cjs,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP/edge-policy,target=/evidence" \
+            blocbuy-edge-check:local sh -c \
+            'pnpm exec playwright install --with-deps --only-shell chromium && node /repo/verify-dev-edge.cjs /repo/deployment/frontend/cloudfront/response-headers-policy.json /evidence'
+
+      - name: Preserve post-apply verification
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dev-edge-policy
+          path: ${{ runner.temp }}/edge-policy/
+          retention-days: 30
+          if-no-files-found: warn

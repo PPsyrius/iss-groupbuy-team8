@@ -36,4 +36,8 @@ The issue-list PNG was captured directly from the authenticated browser at `http
 
 ## After remediation
 
+The [2026-10-26 header-feasibility investigation](header-feasibility-2026-10-26/README.md) records local browser experiments for #636–#641. These are candidate-policy checks, not post-remediation deployment or scan evidence.
+
+The [2026-10-27 compatibility continuation](compatibility-inventory-2026-10-27/README.md) adds privacy-safe real-avatar evidence, explicit inventory gaps, the aggregate SQL prerequisite and a separately labeled stubbed-preview admin screenshot. [Review verification](../../quality-gates.md#security-header-review-follow-up--2026-10-27) records Docker checks and the new read-only post-apply workflow; none is a post-fix ZAP scan or deployed-remediation claim.
+
 After #610 is merged and deployed, run the same passive scan against the same target, preserve the results under a new `after-YYYY-MM-DD/` directory, and repeat the issue export and images. Record the scan run and deployed revision separately. Add `comparison.md` keyed by ZAP alert reference and issue number, with before/after severity and instance counts, disposition (fixed, accepted with reason, or pending), and evidence links. Explain changes to scanner rules or coverage rather than interpreting all count changes as application fixes. No post-fix run or remediation outcome is established by this snapshot.

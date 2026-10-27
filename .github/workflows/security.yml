@@ -55,6 +55,9 @@ jobs:
               - '.github/dependabot.yml'
               - '.gitleaks.toml'
               - '.gitleaksignore'
+              - 'deployment/frontend/cloudfront/response-headers-policy.json'
+              - 'infra/terraform/frontend-stack/cloudfront.tf'
+              - 'fullstack-localhost/cloudfront-headers.mjs'
             deployment:
               - 'deployment/**'
             dependencies:
@@ -86,6 +89,9 @@ jobs:
 
       - name: Test CI tooling policies
         run: python3 -m unittest discover -s .github/tests -p '*_test.py'
+
+      - name: Test generated CloudFront-compatible headers
+        run: node --test .github/tests/security-headers.test.cjs
 
       - name: Lint GitHub Actions and embedded shell
         run: >-
