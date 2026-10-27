@@ -1,0 +1,17 @@
+{
+  "origin": "https://d1b3np88z657cp.cloudfront.net",
+  "requests": [
+    {
+      "url": "https://d1b3np88z657cp.cloudfront.net/",
+      "method": "GET",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products",
+      "method": "GET",
+      "status": 200,
+      "content_type": "application/json"
+    }
+  ]
+}

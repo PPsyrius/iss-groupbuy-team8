@@ -37,6 +37,7 @@ jobs:
       pull-requests: read
     outputs:
       workflow: ${{ steps.filter.outputs.workflow }}
+      poc_images: ${{ steps.filter.outputs.poc_images }}
       deployment: ${{ steps.filter.outputs.deployment }}
       dependencies: ${{ steps.filter.outputs.dependencies }}
       config: ${{ steps.filter.outputs.config }}
@@ -48,6 +49,7 @@ jobs:
         with:
           filters: |
             workflow:
+              - '.gitattributes'
               - '.github/workflows/**'
               - '.github/tests/**'
               - '.github/scripts/**'
@@ -56,12 +58,24 @@ jobs:
               - '.gitleaks.toml'
               - '.gitleaksignore'
               - 'deployment/frontend/cloudfront/response-headers-policy.json'
+              - 'deployment/frontend/cloudfront/spa-fallback.js'
               - 'infra/terraform/frontend-stack/cloudfront.tf'
               - 'fullstack-localhost/cloudfront-headers.mjs'
               - 'frontend/scripts/verify-csp-styles.mjs'
               - 'frontend/scripts/clean-api-output.mjs'
               - 'frontend/openapi-ts.config.ts'
               - 'frontend/tooling/**'
+              - 'docs/deploy/queries/*legacy-poc-images*'
+              - 'docs/deploy/queries/image-origin-inventory.sql'
+            poc_images:
+              - '.github/workflows/security.yml'
+              - '.github/tests/legacy_poc_images_integration.py'
+              - 'docs/deploy/queries/*legacy-poc-images*'
+              - 'docs/deploy/queries/image-origin-inventory.sql'
+              - 'backend/blocbuy-bootstrap/src/main/resources/db/migration/V3__identity.sql'
+              - 'backend/blocbuy-bootstrap/src/main/resources/db/migration/V4__catalog.sql'
+              - 'backend/blocbuy-bootstrap/src/main/resources/db/migration/V12__order.sql'
+              - 'backend/blocbuy-bootstrap/src/main/resources/db/migration/V15__purchase_intent.sql'
             deployment:
               - 'deployment/**'
             dependencies:
@@ -105,6 +119,38 @@ jobs:
           --workdir /repo
           rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
           -color
+
+  poc-image-migration:
+    needs: detect-changes
+    if: >-
+      (github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
+      needs.detect-changes.outputs.poc_images == 'true' ||
+      (github.event_name != 'pull_request' && github.event_name != 'merge_group')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container: python:3.13.8-slim
+    services:
+      postgres:
+        image: postgres:18@sha256:edb0c08dc33befd0262ab3b5cf1c4f3f8cfd8b09e88c05b45adee29d6761ddb6
+        env:
+          POSTGRES_DB: poc_image_migration_test
+          # Disposable isolated CI service, no host ports or real credentials.
+          POSTGRES_HOST_AUTH_METHOD: trust
+        options: >-
+          --health-cmd "pg_isready -U postgres -d poc_image_migration_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      POC_IMAGE_TEST_DATABASE: '1'
+      PGDATABASE: poc_image_migration_test
+      PGUSER: postgres
+      PGHOST: postgres
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install PostgreSQL client
+        run: apt-get update -qq && apt-get install -y --no-install-recommends postgresql-client
+      - name: Exercise repair, dry run, backup and guarded rollback
+        run: python .github/tests/legacy_poc_images_integration.py -v
 
   deployment-bundle:
     needs: detect-changes

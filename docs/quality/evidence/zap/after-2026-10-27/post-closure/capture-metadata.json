@@ -1,0 +1,25 @@
+{
+  "scope": "Actual GitHub state after owner-authorized closure of six remediated header/CSP findings; not completion of every functional acceptance item",
+  "issueList": {
+    "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues?q=is%3Aissue%20%22%5BOWASP%20ZAP%5D%22%20in%3Atitle",
+    "observedAtUtc": "2026-10-27T07:52:59.697Z",
+    "screenshotFileTimeUtc": "2026-10-27T07:53:04.3910578Z",
+    "file": "issue-list.png",
+    "method": "Full-page screenshot of the real authenticated GitHub issue list; no DOM edits or synthetic rendering",
+    "searchResults": 14,
+    "closedFindingIssues": [636, 637, 638, 639, 640, 641],
+    "openInformationalIssues": [642, 643, 644, 645, 646, 647],
+    "otherSearchResults": "#694 report evidence remains OPEN; #606 scanner implementation remains CLOSED"
+  },
+  "exports": {
+    "captureStartedAtUtc": "2026-10-27T07:53:38.8509342+00:00",
+    "capturedAtUtc": "2026-10-27T07:53:41.4946173+00:00",
+    "detailedRecords": 15,
+    "openRepositorySummaries": 51,
+    "method": "Read-only GitHub CLI JSON, explicit UTF-8 decoding and UTF-8/LF serialization",
+    "atomicSnapshot": false,
+    "files": ["issues.json", "open-issues.json"]
+  },
+  "remainingAcceptance": "Unperformed sign-in/avatar, approved sandbox returns, authenticated history, invitation/touch/mobile checks retained in open tracker #610; original unperformed checkboxes not marked passed",
+  "trackerComment": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/610#issuecomment-6436587056"
+}
