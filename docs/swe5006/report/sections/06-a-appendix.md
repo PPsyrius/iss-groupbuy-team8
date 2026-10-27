@@ -6,7 +6,7 @@ sources: docs/agile/; docs/agile/metrics/
 status: draft
 -->
 
-# Appendix A Agile Artefacts {.appendix}
+# Appendix A: Agile Artefacts {.appendix}
 
 This appendix collects the agile artefacts of Sprints 1 to 4: the product backlog, user stories with acceptance criteria, sprint plans, burndown charts, sprint reviews, retrospectives and the Definition of Done. The briefing lists these as project deliverables; placing them in an appendix, rather than in chapter 2, is a team choice. GitHub Issues and the Project board are the live tools. The durable record is `docs/agile/` in the repository: one plan, review and retrospective per sprint where they were written, one day-log file per working day from Sprint 2 on, and one board snapshot per day from 17 September 2026 (`docs/agile/metrics/YYYY-MM-DD.csv`). The board itself is not in the git archive, so the snapshots are the only record of card movement. Sprint dates follow `docs/agile/definition-of-done.md`.
 

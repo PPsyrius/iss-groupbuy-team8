@@ -6,7 +6,7 @@ sources: docs/ci/; build-quality CI run at the freeze SHA
 status: draft
 -->
 
-# Appendix D Test Inventory, CI Timings and Green Rates {.appendix}
+# Appendix D: Test Inventory, CI Timings and Green Rates {.appendix}
 
 This appendix holds the detail behind section 4.2 and section 4.3: the test inventory per module and level, the executed test totals, coverage, the workflow timings and green rates, and the dev delivery metrics. Every figure carries its date and source. Static counts were taken with `git ls-tree` on `dev` at `61486f0e` on 26 October 2026; the final figures are recounted at the freeze commit. The test files are unchanged between `61486f0e` and the freeze commit `6d14e449` (`git diff 61486f0e 6d14e449 -- backend frontend` is empty), so the static counts hold at the freeze.
 

@@ -6,7 +6,7 @@ sources: backend/docs/adr/README.md; frontend/docs/adr/README.md; backend/docs/d
 status: draft
 -->
 
-# Appendix B ADR Index and Decisions Without an ADR {.appendix}
+# Appendix B: ADR Index and Decisions Without an ADR {.appendix}
 
 The team records decisions in three places: 8 backend architecture decision records (ADRs) in `backend/docs/adr/`, 15 frontend ADRs in `frontend/docs/adr/`, and the 20 locked decisions of the backend skeleton plan (`backend/docs/design/backend-skeleton-plan.md`), agreed on 30 August before the first ADR existed. All ADRs use the Nygard format. Backend and frontend numbers are independent, so the report always says "backend ADR 0001" or "frontend ADR 0001". Section B.4 lists the significant decisions that have no ADR. Statuses and dates below were read on 26 October 2026.
 

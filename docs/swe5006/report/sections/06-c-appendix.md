@@ -6,7 +6,7 @@ sources: ../presentation/src/diagrams/full-erd.svg
 status: draft
 -->
 
-# Appendix C Full ERD and Table List {.appendix}
+# Appendix C: Full ERD and Table List {.appendix}
 
 This appendix completes section 3.6. Figures C.1 to C.5 show all 29 tables of the SWE5006 monolith, one figure per owning context or pair of contexts, and Table C.1 lists each table with its purpose, its owning context, the SWE5001 service that owns it, and the migration that created it. The conventions behind the schema (UUIDv7 keys, table prefixes, no foreign keys or CHECK constraints, soft delete, version columns) are explained in section 3.6 and are not repeated here.
 
