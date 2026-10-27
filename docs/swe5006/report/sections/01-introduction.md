@@ -10,6 +10,8 @@ status: draft
 
 ## 1.1 Background
 
+![BlocBuy logo: a striped shopping bag beside the wordmark BLOCBUY and the tagline ONE FOR ALL • ALL FOR ONE](../../../../frontend/src/assets/brand/blocbuy-logo.svg){.logo}
+
 BlocBuy is a group-buying web application for Singapore that makes it safe for a buyer to commit first. Small merchants can offer a discount only against committed volume, and no single buyer can reach that volume on their own: demand exists, but no buyer commits first.
 
 Today such groups form in chat apps and spreadsheets. Buyers cannot see how close a deal is to its target, an organiser collects the money and refunds it by hand, and small sellers have nowhere to post a team price. BlocBuy replaces the organiser with a pay-first mechanism, modelled on the early Pinduoduo playbook (project proposal, section 4, 27 August 2026):
