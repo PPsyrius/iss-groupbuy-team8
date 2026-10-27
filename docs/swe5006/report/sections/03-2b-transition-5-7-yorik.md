@@ -433,23 +433,23 @@ The Scheduler actor becomes a timer class per job. A timer class has one `@Sched
 
 ```mermaid
 classDiagram
-    class Scheduler {
+    class SchedulerTrigger {
         <<boundary>>
     }
-    class ExpireTeamsControl {
+    class ResolveTeamControl {
         <<control>>
     }
     class Team {
         <<entity>>
     }
-    Scheduler --> ExpireTeamsControl : each minute
-    ExpireTeamsControl --> Team : expire
-    %% at Scheduler 0,0
-    %% at ExpireTeamsControl 0,1
+    SchedulerTrigger --> ResolveTeamControl : each minute
+    ResolveTeamControl --> Team : expire
+    %% at SchedulerTrigger 0,0
+    %% at ResolveTeamControl 0,1
     %% at Team 0,2
 ```
 
-Figure 3.25: Analysis class diagram, before the strategy. The Scheduler starts the expiry «control», which changes every overdue team; the model says nothing about several instances or failures.
+Figure 3.25: Analysis class diagram, before the strategy. The Scheduler, through the SchedulerTrigger «boundary», starts the expiry «control» ResolveTeamControl, which changes every overdue team; the model says nothing about several instances or failures.
 
 ```mermaid
 classDiagram
