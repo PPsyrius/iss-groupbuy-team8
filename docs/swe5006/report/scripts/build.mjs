@@ -2,7 +2,8 @@
 // Assembles sections/*.md, in file-name order, into one Typst document and compiles the PDF.
 // Usage: node scripts/build.mjs [--out <dir>]
 //   REPORT_TEMPLATE=<course template .docx> (optional) supplies the NUS-ISS header logo,
-//   which stays out of the repository like the template itself.
+//   which stays out of the repository like the template itself; the template clips its blank
+//   margins. REPORT_LOGO=<PNG already cropped to the artwork> (optional) replaces it.
 // Output: dist/report.typ (generated) and dist/swe5006-report.pdf; --out also copies the PDF there.
 import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -30,10 +31,14 @@ const resolvePath = (dir, rel) => rootPath(resolve(dir, rel));
 mkdirSync(dist, { recursive: true });
 let logo = 'none';
 const template = process.env.REPORT_TEMPLATE;
-if (template && existsSync(template)) {
+const croppedLogo = process.env.REPORT_LOGO;
+if (croppedLogo && existsSync(croppedLogo)) {
+  copyFileSync(croppedLogo, join(dist, 'logo.png'));
+  logo = `(path: ${str(rootPath(join(dist, 'logo.png')))}, cropped: true)`;
+} else if (template && existsSync(template)) {
   const png = execFileSync('unzip', ['-p', template, 'word/media/image1.png']);
   writeFileSync(join(dist, 'logo.png'), png);
-  logo = str(rootPath(join(dist, 'logo.png')));
+  logo = `(path: ${str(rootPath(join(dist, 'logo.png')))}, cropped: false)`;
 }
 
 const files = readdirSync(sectionsDir).filter((f) => f.endsWith('.md')).sort();
