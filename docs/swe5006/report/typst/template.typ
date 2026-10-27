@@ -179,7 +179,9 @@
   show heading.where(level: 1): it => {
     pagebreak(weak: true)
     set text(size: 16pt, weight: "bold", fill: heading-ink)
-    block(above: 12pt, below: 18pt, it)
+    // The wrapper takes the heading's place in the flow, so it must be sticky itself: the
+    // heading's own sticky block only keeps with the next block inside this wrapper.
+    block(above: 12pt, below: 18pt, sticky: true, it)
   }
   // Heading 2: sz 26 (13 pt); Heading 3: Normal size (12 pt); both regular in the docx; spacing before 40 (2 pt)
   // after the preceding paragraph's 8 pt. Level 4 has no template style.
