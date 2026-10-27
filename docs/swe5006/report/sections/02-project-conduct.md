@@ -15,7 +15,7 @@ The team planned at two levels. The proposal set a project-level work breakdown 
 
 #### Work breakdown and baseline
 
-The proposal (section 7.1) breaks the project into nine tasks, each with a lead and an estimate in person-days: (1) project setup, Pan, 2; (2) analysis and design, Eric, 6; (3) infrastructure, Pan, 7; (4) DevSecOps pipelines, Pan, 5; (5) backend domain, Liu Jin, 14; (6) frontend single-page application, Lim, 8; (7) end-to-end tests, Lim, 2; (8) agile process, Lim, 3; (9) documentation, Yorik, 3. The leads own their tracks; the effort is spread across all five members. The baseline is 50 person-days, about 10 per member.
+The proposal (section 7.1) breaks the project into nine tasks, each with a lead and an estimate in person-days: (1) project setup, Pan, 2; (2) analysis and design, Eric, 6; (3) infrastructure, Pan, 7; (4) DevSecOps pipelines, Pan, 5; (5) backend domain, Liu Jin, 14; (6) frontend single-page application, Lim, 8; (7) end-to-end tests, Lim, 2; (8) agile process, Lim, 3; (9) documentation, Yorik, 3. The leads own their tracks; the effort is spread across all five members.
 
 #### Sprints
 
@@ -23,12 +23,12 @@ Table 2.1 lists the four sprints with their goals and planned capacity. The date
 
 Table 2.1: Sprints, goals and planned capacity.
 
-| Sprint | Dates | Goal | Planned capacity | Container issue |
-| --- | --- | --- | --- | --- |
-| 1 | 1–12 Sep | A minimal end-to-end slice: sign in with Google, browse the listing list and detail; every member claims at least one use case | Not recorded | #49 |
-| 2 | 15–26 Sep | Pay, join a team, see the order, all replay-safe | 150 h, 30 h per member | #93 |
-| 3 | 28 Sep–9 Oct | Invite, pay and refund on the deployed dev environment | 150 h, 30 h per member | #232 |
-| 4 | 12–23 Oct | The complete system on dev; the same code as three services on ECS for SWE5001 | 224.5 h | #465 |
+| Sprint | Dates | Goal | Planned capacity |
+| --- | --- | --- | --- |
+| 1 | 1–12 Sep | A minimal end-to-end slice: sign in with Google, browse the listing list and detail; every member claims at least one use case | Not recorded |
+| 2 | 15–26 Sep | Pay, join a team, see the order, all replay-safe | 150 h, 30 h per member |
+| 3 | 28 Sep–9 Oct | Invite, pay and refund on the deployed dev environment | 150 h, 30 h per member |
+| 4 | 12–23 Oct | The complete system on dev; the same code as three services on ECS for SWE5001 | 224.5 h |
 
 Sprint 1 had no sprint-level estimates: its hours were never recorded, and its progress report left the contribution table unfinished. From Sprint 2 every committed story carries an hour estimate and an owner; Sprint 3 and Sprint 4 also add rows for Scrum Master duties and evidence work. Sprint 4 serves both courses, so its 224.5 h include SWE5001 platform work, 41 h of SWE5006 report drafts and 4 h for the SWE5006 slides. Its hours stayed as planned on 12 October; a later proposal to rebalance them was not applied (decided 24 October).
 
@@ -47,7 +47,7 @@ Section 2.3 sets the agreed estimate of effort actually spent beside these plann
 
 #### Ownership of use cases and design problems
 
-Each member owns the analysis and design of their use cases in section 3.4 and one design problem in section 3.5. The section numbers follow the order in which the team planned its design presentation; they do not rank the work. Owning a section means writing its analysis, design and pattern; where a teammate wrote some of the code behind it, chapter 5 credits them.
+Each member owns the analysis and design of their use cases in section 3.4 and one design problem in section 3.5. The section numbers follow the order in which the team planned its design presentation; they do not rank the work. Owning a section means writing its analysis, design and pattern (code credits: chapter 5).
 
 Table 2.3: Ownership of use cases, design problems and report sections.
 
@@ -65,20 +65,20 @@ The proposal (section 6.1) gave an indicative allocation: UC1 with Strategy and 
 
 Table 2.4: Scrum roles per sprint.
 
-| Sprint | Scrum Master | Sprint goal drafted by | Record |
-| --- | --- | --- | --- |
-| 1 | Lim Jiechao, recorded after the sprint, on 28 September | Liu Jin | #49 |
-| 2 | Wang Ziang (Eric), recorded after the sprint, on 28 September | Lim Jiechao | Sprint 2 plan, #93 |
-| 3 | Lim Jiechao, 10 h planned | Liu Jin | #232 |
-| 4 | Wang Ziang (Eric), 4 h planned; proposed in the sprint plan, confirmation not recorded | Liu Jin | #465 |
+| Sprint | Scrum Master | Sprint goal drafted by |
+| --- | --- | --- |
+| 1 | Lim Jiechao, recorded after the sprint, on 28 September | Liu Jin |
+| 2 | Wang Ziang (Eric), recorded after the sprint, on 28 September | Lim Jiechao |
+| 3 | Lim Jiechao, 10 h planned | Liu Jin |
+| 4 | Wang Ziang (Eric), 4 h planned; proposed in the sprint plan, confirmation not recorded | Liu Jin |
 
-No Product Owner was appointed. The team prioritised the backlog together at each Sprint Planning, from a sprint goal that one member drafted in the sprint's container issue. All five members acted as developers in every sprint. Code owners review each area: Pan for the CI workflows, Liu Jin for the backend, Lim for the frontend, with Yorik and Eric also requested on the payment and group-buy packages.
+The backlog was prioritised without a Product Owner (no Product Owner, section 1.3), from a sprint goal that one member drafted in the sprint's container issue. All five members acted as developers in every sprint, and code owners review each area (Table 4.4).
 
 #### Definition of Done
 
 The Definition of Done grew sprint by sprint, each time as changes to the previous list, and reached 15 rules in Sprint 4. They cover acceptance criteria, the API contract before the controller, architecture boundaries, tests for replay and concurrency, the required checks, review, the rule that "on dev" means shown on the deployed dev environment (from Sprint 3), pull requests under about 1,500 changed lines, remaining hours on the board, and four rules for the two-course Sprint 4. Appendix A lists all 15 with the sprint each started.
 
-The course gives a ladder of done steps: coded, tested, integrated, releasable, released (EPAT 01 Agile, p. 26). The team reads the upper three steps as follows. This reading is a team ruling, agreed on 24 October, not a course rating:
+The course gives a ladder of done steps: coded, tested, integrated, releasable, released (EPAT 01 Agile, p. 26). On 24 October the team agreed how it reads the upper three steps:
 
 - **integrated:** merged to `dev` with every required check green;
 - **releasable:** shown working on the deployed dev environment, which is lower than the course's "production ready";
@@ -88,30 +88,30 @@ Section 2.3 places each sprint on this ladder.
 
 ## 2.2 Project Status
 
-BlocBuy delivers everything the proposal promised in function, and more: all nine use cases plus an admin console. Seven design or platform choices changed during the project, and one deliverable, a separate SWE5006 production stack, was dropped. On dev, paid start, a second buyer's paid join and the expiry refund have all been shown, by 24 October. The open issues are crash recovery of refunds not yet shown on dev, an unreconciled lock order between two decision records, and a set of security and operations gaps on the dev host. This snapshot is dated 26 October 2026. {{VERIFY: re-read every row of Tables 2.5 and 2.6 at the freeze SHA on 30 Oct — Lim}}
+BlocBuy delivers everything the proposal promised in function, and more: all nine use cases plus an admin console. All nine are shown on dev (Table 1.3). Seven design or platform choices changed during the project, and one deliverable was dropped (no SWE5006 production stack, section 1.4). Table 2.6 lists the open issues. This snapshot is dated 26 October 2026. {{VERIFY: re-read every row of Tables 2.5 and 2.6 at the freeze SHA on 30 Oct — Lim}}
 
 #### Promised against delivered
 
-Benchmarking the status against the proposal is a team ruling; the proposal is not a marking document. Table 2.5 compares the proposal with what was built. A change cites its decision record where one exists. Four of the seven changes have no ADR at all, and the session change has only a frontend ADR; their reasoning is in design documents and plans, and Appendix B lists them as decisions without an ADR.
+Table 2.5 compares the proposal with what was built. A change cites its decision record where one exists. Four of the seven changes have no ADR, and the session change has only a frontend ADR; their reasoning is in design documents and plans, and Appendix B lists them as decisions without an ADR.
 
 Table 2.5: Promised against delivered, 26 October 2026.
 
 | Item | Promised (proposal) | Status | What was built, and the decision record |
 | --- | --- | --- | --- |
-| Use cases UC1–UC9 | Nine use cases (section 6.1) | Delivered | All nine built, tested and shown on dev by 24 October (Table 1.3). UC4's paid join on dev is shown in a recording only |
-| Crash recovery of refunds | Refunds safe under replay and crash | Open | Proven locally (Testcontainers and a local rehearsal on 3 October); not shown on dev (#224) |
+| Use cases UC1–UC9 | Nine use cases (section 6.1) | Delivered | All nine built, tested and shown on dev (Table 1.3) |
+| Crash recovery of refunds | Refunds safe under replay and crash | Open | Tested locally only (not shown on dev; Table 1.3) |
 | UC9 administration | API-only listing CRUD plus database seeding | Changed | An admin console for administrators, built in Sprint 3 (frontend ADR 0015) |
-| Sign-in session | Google sign-in, with a token (JWT) kept in browser local storage | Changed | Google sign-in unchanged; the server keeps a Sa-Token session in Redis and the browser holds only an HttpOnly cookie (frontend ADR 0002; backend skeleton plan decisions D6, D7 of 30 August, before the first sprint; no backend ADR). Reasons: Table B.4 |
+| Sign-in session | Google sign-in, with a token (JWT) kept in browser local storage | Changed | Google sign-in unchanged; the server keeps a Sa-Token session in Redis and the browser holds only an HttpOnly cookie (frontend ADR 0002; decided on 30 August, before the first sprint; no backend ADR). Reasons: Table B.4 |
 | Payment abstraction and team resolution | Adapter for Stripe (UC6); Observer for team resolution (UC5, UC7) | Delivered | Payment providers sit behind the domain's `CheckoutGateway` and `RefundGateway` ports, implemented by Stripe adapters (section 3.2.5); a team's resolution is published as events to ordered subscribers (backend ADRs 0002, 0003). Observer, not Adapter, is UC6's design problem (section 3.5.2) |
-| Team lifecycle | State pattern for the team | Changed | A transition table, `DealStatus.canTransitionTo`, for the team; State applied to listings instead (section 3.5.5). No ADR |
-| Persistence | Spring Data JPA | Changed | MyBatis behind repository ports (backend skeleton plan decisions D1, D9 of 30 August, before the first sprint). No ADR. Reasons: Table B.4 |
+| Team lifecycle | State pattern for the team | Changed | A transition table for the team; State applied to listings instead (reasoning in section 3.5.5). No ADR |
+| Persistence | Spring Data JPA | Changed | MyBatis behind repository ports, decided on 30 August, before the first sprint. No ADR. Reasons: Table B.4 |
 | Dev environment | Amazon ECS Fargate and RDS | Changed | One EC2 host with Docker Compose and PostgreSQL on the host (backend ADR 0008) |
-| Secrets | AWS Secrets Manager; no static credentials anywhere | Changed | SSM SecureString parameters and a root-only environment file on the host. CI uses short-lived OIDC credentials, but the project account has two IAM users for port forwarding, one with an active access key. No ADR |
+| Secrets | AWS Secrets Manager; no static credentials anywhere | Changed | SSM SecureString parameters and a root-only environment file on the host (CI authentication, section 4.1); one IAM access key remains (open issues in Table 2.6). No ADR |
 | Pipeline security | Blocking OWASP Dependency-Check and infrastructure-as-code scans; three plan, deploy and apply roles | Changed | Trivy dependency and configuration scans run on pull requests but are not required checks; three per-job OIDC roles (image push, backend deploy, frontend deploy). No ADR |
-| Production release | A first production release with a rehearsed rollback | Dropped | No separate SWE5006 production stack (#226, closed 11 October). Production is the shared SWE5001 release on ECS: first deployed on 6 October as the monolith in one service, and promoted as three services on 17, 19 and 20 October (backend ADR 0008 records the two topologies) |
-| Test and delivery evidence | End-to-end tests on dev; a burndown; saved-plan infrastructure promotion | Partial | Playwright end-to-end tests run against API stubs (frontend ADR 0011); the proposal's burndown charts generated by a scheduled pipeline were not built: the board is snapshotted daily, and the burndowns in Appendix A were drawn afterwards from merge dates, issue close dates and those snapshots; saved-plan Terraform promotion is a manual operator step |
-| Quality gates | SonarCloud quality gate | Delivered beyond | Both SonarCloud gates (backend and frontend) and Checkstyle (inside `build-quality`) are required checks on every pull request |
-| Notifications | Not in section 6.1 | Added (SWE5001) | In-app notifications through a transactional outbox, SNS and SQS, coded and running on SWE5001 ECS, switched off on SWE5006 dev (backend ADR 0007) |
+| Production release | A first production release with a rehearsed rollback | Dropped | No separate SWE5006 production stack (section 1.4); production is the shared SWE5001 release on ECS (promoted to production, section 2.3). Backend ADR 0008 records the two topologies |
+| Test and delivery evidence | End-to-end tests on dev; a burndown; saved-plan infrastructure promotion | Partial | Playwright end-to-end tests run against API stubs (frontend ADR 0011); the proposal's burndown charts generated by a scheduled pipeline were not built, and Appendix A reconstructs them afterwards; saved-plan Terraform promotion is a manual operator step |
+| Quality gates | SonarCloud quality gate | Delivered beyond | Both SonarCloud gates (backend and frontend) and Checkstyle (inside `build-quality`) are required checks on every pull request (the six required checks, Table 4.2) |
+| Notifications | Not in section 6.1 | Added (SWE5001) | In-app notifications for SWE5001 (off on dev, section 1.4) |
 
 #### Outstanding issues
 
@@ -119,40 +119,40 @@ Table 2.6 lists the issues still open on 26 October. Appendix E lists every know
 
 Table 2.6: Outstanding issues, 26 October 2026.
 
-| Issue | Owner | State | Record |
-| --- | --- | --- | --- |
-| Refund idempotency under replay and crash shown only locally, not on dev | Yorik | Open; rescoped on 11 October to a record from local evidence | #224 |
-| ADR 0001 orders locks as deal, intent, payment; ADR 0002 as team, intent, order, payment. One combined order is not yet stated | Unassigned | Open | #663 |
-| CloudFront reaches the dev load balancer over HTTP (NFR-37) | Pan | Accepted risk on dev until 16 November | #227 |
-| SSH port 22 open to any address on the dev host's security group, although deploys and port forwarding use SSM and need no SSH | Pan | Open in the AWS read-only checks of 21 and 24 October; the team decided on 24 October to close it. Closed: the read-only check of 27 October (05:19 UTC, `aws ec2 describe-security-groups`) found no rule admitting port 22 | — |
-| Dev EBS volume not encrypted | Pan | Seen in the AWS read-only check of 19 October and still unencrypted on 27 October (`vol-08df685248a8b1aea`; EBS encryption by default is off); not raised as an issue | — |
-| Two IAM users in the project account, one with an active access key, for port forwarding to the dev host | Lim | Disclosed and accepted in the AWS account governance record (`docs/deploy/aws-account-governance/README.md`); the key is limited by the `BlocBuySsmPortForwarding` policy and by every service control policy of the organisation; no removal planned. Neither user has an MFA device (read-only check of 27 October, `aws iam list-mfa-devices`) | — |
-| Backend rollback never exercised on dev: the rollback workflow has never run | Unassigned | Open | #623 |
-| The weekly full-history secret scan fails on four historical badge-token findings (NFR-02) | Unassigned | Open | — |
-| Passive OWASP ZAP scan of dev: the 2 Medium and 4 Low header findings of the runs of 22 and 26 October were fixed on 27 October (#700, #703); the run after the fixes found 0 High, 0 Medium, 0 Low and 6 Informational (section 4.2) | Pan | Medium and Low fixed; 6 Informational under review | #610, #636–#647 |
-| Exposure of the actuator, springdoc and error paths outside the Sa-Token interceptor not decided | Eric | Open | #549 |
-| After a merge, delivery rebuilds the backend image without repeating the pull request's Trivy image scan, so the deployed image is not the scanned one | Unassigned | Known limit | — |
-| Database and application servers share subnets in the SWE5001 infrastructure code (NFR-70) | Pan | Open; SWE5001 scope | #589 |
-| Sprint 3 retrospective was reconstructed on 24 October, and the Sprint 3 review is still a draft | Lim | Open | #451 |
-| Sprint 4 review, retrospective and burndown are not in the repository, although their tracking issue was closed on 26 October | Eric | Open | #619 |
+| Issue | Owner | State |
+| --- | --- | --- |
+| Crash recovery of refunds under replay (not shown on dev; Table 1.3) | Yorik | Open; rescoped on 11 October to a record from local evidence |
+| One combined lock order for ADR 0001 and ADR 0002 is not yet written (locks in the order of Table 3.12, section 3.2.8) | Unassigned | Open |
+| CloudFront reaches the dev load balancer over HTTP (NFR-37) | Pan | Accepted risk on dev until 16 November |
+| SSH port 22 open to any address on the dev host's security group, although deploys and port forwarding use SSM and need no SSH | Pan | Closed on 27 October. Open in the AWS read-only checks of 21 and 24 October; the check of 27 October found no rule admitting port 22 |
+| Dev EBS volume not encrypted | Pan | Seen in the AWS read-only check of 19 October and still unencrypted on 27 October; EBS encryption by default is off; not raised as an issue |
+| Two IAM users in the project account, one with an active access key, for port forwarding to the dev host | Lim | Disclosed and accepted in the AWS account governance record; the key is limited by its port-forwarding policy and by every service control policy of the organisation; no removal planned. Neither user has an MFA device (read-only check of 27 October) |
+| Backend rollback never exercised on dev: the rollback workflow has never run | Unassigned | Open |
+| The weekly full-history secret scan fails on four historical badge-token findings (NFR-02) | Unassigned | Open |
+| Passive OWASP ZAP scan of dev: Medium and Low header findings (fixed; Table 4.10) | Pan | Medium and Low fixed; Informational findings under review |
+| Exposure of the actuator, springdoc and error paths outside the Sa-Token interceptor not decided | Eric | Open |
+| After a merge, delivery rebuilds the backend image without repeating the pull request's Trivy image scan, so the deployed image is not the scanned one | Unassigned | Known limit |
+| Database and application servers share subnets in the SWE5001 infrastructure code (NFR-70) | Pan | Open; SWE5001 scope |
+| Sprint 3 retrospective was reconstructed on 24 October, and the Sprint 3 review is still a draft | Lim | Open |
+| Sprint 4 review, retrospective and burndown are not in the repository, although their tracking issue was closed on 26 October | Eric | Open |
 
-The performance and expiry targets need the wording of section 1.4.3: response time is met locally and on the SWE5001 ECS environment but was never measured on dev, and one-minute expiry is a design bound, not a result shown on dev.
+Two proposal targets are not shown on dev: response time (performance status, section 1.4.3; results in Table E.4) and one-minute expiry (the expiry design bound, section 1.4.3).
 
 #### Remarks from the presentation
 
-The lecturer gave three remarks at the presentation on 26 October; the team recorded them under the report's tracking issue (#463). Table 2.7 lists each remark, its issue and how this report answers it, as read on 27 October.
+The lecturer gave three remarks at the presentation on 26 October; the team recorded each as an issue. Table 2.7 lists each remark, its state and how the report answers it, as read on 27 October.
 
 Table 2.7: Remarks from the presentation of 26 October and how the report answers them.
 
-| Remark | Issue and state | How the report answers it |
+| Remark | State | How the report answers it |
 | --- | --- | --- |
-| Send the repository link to the lecturer | #693, open. The repository is private, so the lecturer needs Read access before the link is useful | {{FILL: date Read access was granted and the link sent (#693) — Lim}} |
-| Show the OWASP ZAP results before and after remediation | #694 | Before: run 39733450177 of 22 October, the first baseline, and the scheduled run 40298983391 of 26 October, the latest before any fix; both found 0 High, 2 Medium, 4 Low and 6 Informational findings, one issue each (#636 to #647). The header fixes #700 and #703 merged on 27 October; after them, run 40459212995 of 27 October found 0 High, 0 Medium, 0 Low and 6 Informational. Table 4.10 gives the outcome per finding |
-| Submit the report by 31 October 2026, 23:59 | #695, closed on 27 October when the first draft merged (#698); the deadline supersedes 1 November (#463) | The schedule of #695 meets it: first draft on 27 October, team vetting on 28 and 29 October, content freeze on 30 October |
+| Send the repository link to the lecturer | Open. The repository is private, so the lecturer needs Read access before the link is useful | {{FILL: date Read access was granted and the link sent (#693) — Lim}} |
+| Show the OWASP ZAP results before and after remediation | Open | Section 4.2 compares the scans before and after the header fixes, finding by finding (fixed; Table 4.10) |
+| Submit the report by 31 October 2026, 23:59 | Closed on 27 October, when the first draft merged; this deadline replaced 1 November | The schedule meets it: first draft on 27 October, team vetting on 28 and 29 October, content freeze on 30 October |
 
 ## 2.3 Project Metrics
 
-The project met every planned milestone except a separate SWE5006 production release, which was dropped. Its last delivery milestone was the paid journey on dev on 23 and 24 October; the presentation on 26 October followed it (Table 2.8). No member logged hours. The only actual effort figures are the person-day split the five members agreed on 19 October for the joint SWE5001 and SWE5006 project, about 50 person-days in total. It covers both courses, so it is not compared with the proposal's SWE5006 baseline.
+The project met every planned milestone except a separate SWE5006 production release (no SWE5006 production stack, section 1.4). Its last delivery milestone was the paid journey on dev, followed by the presentation (Table 2.8). No member logged hours, so effort is an agreed estimate (Table 2.11).
 
 #### Milestones achieved
 
@@ -166,18 +166,18 @@ Table 2.8: Milestones achieved.
 | 5 Sep | Backend delivery pipeline live on dev, with health check and rollback | Sprint 1 progress report |
 | 14 Sep | Sprint 1 tag `v0.1.0-sprint1` | Git tag |
 | 20 Sep | Stripe Sandbox acceptance, tested locally | Sandbox acceptance record of 20 September |
-| 22 Sep | Web application live on dev | #93 |
+| 22 Sep | Web application live on dev | Sprint 2 container issue |
 | 27 Sep | Sprint 2 tag `v0.1.0-sprint2` | Git tag |
-| 30 Sep | Admin console merged | PRs #305–#307 |
-| 6 Oct | First successful production deployment on ECS (shared SWE5001 release), the monolith as one service | PR #418, workflow run 37470479078 |
+| 30 Sep | Admin console merged | Admin console pull requests |
+| 6 Oct | First successful production deployment on ECS (shared SWE5001 release), the monolith as one service | Deployment pull request and workflow run |
 | 11 Oct | Sprint 3 tag `v0.1.0-sprint3` | Git tag |
-| 17 Oct | First promotion of the three-service release to production on ECS (shared SWE5001 release) | PR #534, workflow run 39008208244 |
-| 19 Oct | Second promotion of the three-service release to production on ECS | PR #564, workflow run 39259845179 |
-| 20 Oct | Last production promotion before the presentations, smoke suite green | PR #574, workflow run 39435280952 |
-| 23 Oct | Paid start and the automatic expiry refund shown on dev | Dev recovery acceptance record of 23 October; PR #664 |
-| 24 Oct | A second buyer's paid join shown on dev, in a recording | #657 |
+| 17 Oct | First promotion of the three-service release to production on ECS (shared SWE5001 release) | Promotion pull request and workflow run |
+| 19 Oct | Second promotion of the three-service release to production on ECS | Promotion pull request and workflow run |
+| 20 Oct | Last production promotion before the presentations, smoke suite green | Promotion pull request and workflow run |
+| 23 Oct | Paid start and the automatic expiry refund shown on dev | Dev recovery acceptance record (Table E.3) |
+| 24 Oct | A second buyer's paid join shown on dev, in a recording | Recording (Appendix E) |
 | 24 Oct | Sprint 4 tag `v0.1.0-sprint4` | Git tag |
-| 26 Oct | SWE5006 presentation, with the system demo on dev {{VERIFY: the demo ran on dev as planned — Lim}} | #464 |
+| 26 Oct | SWE5006 presentation, with the system demo on dev {{VERIFY: the demo ran on dev as planned — Lim}} | Presentation tracking issue |
 
 Tag dates are the tagger dates. The repository has no GitHub milestones or releases.
 
@@ -189,12 +189,12 @@ Table 2.9: Done step reached per sprint.
 
 | Sprint | Step reached | Basis |
 | --- | --- | --- |
-| 1 | Integrated | Backend on dev from 5 September; no frontend yet, so not releasable |
+| 1 | Integrated | Backend on dev; no frontend yet, so not releasable |
 | 2 | Integrated | 9 of 11 stories merged and tested, 134 of 150 h; Checkout and scheduling off on dev |
 | 3 | Integrated | Merged and tested; the goal was not met on dev under the "on dev" rule; 117 of 150 h {{CONFIRM: D22 What is the Sprint 3 placement rule called here: the "on dev" rule, or rule 8 of the Definition of Done as Table A.10 says? — Lim}} |
-| 4 | Released (shared SWE5001 production), and shown on dev | Production on ECS promoted as three services on 17, 19 and 20 October with the smoke suite green; on dev, paid start and the refund on 23 October and a second buyer's paid join on 24 October |
+| 4 | Released (shared SWE5001 production), and shown on dev | Promoted to production on ECS as three services with the smoke suite green; on dev, paid start, the expiry refund and a second buyer's paid join shown (Table 1.3) |
 
-The team agreed the Sprint 4 placement on 24 October and re-agreed its wording on 25 October. In Sprints 2 and 3 the money path worked locally, but the strict "on dev" rule does not count local runs.
+In Sprints 2 and 3 the money path worked locally, but local runs do not count as on dev.
 
 #### Retrospective improvements
 
@@ -211,7 +211,7 @@ Table 2.10: Retrospective improvements and their effect.
 
 #### Effort per member
 
-No member logged time, so the effort figures are an agreed estimate, not a measurement. On 19 October all five members agreed a split of the effort spent: they added up the planned hours of the issues each person actually delivered and agreed the final figures. One project serves both courses, so there is one split. Table 2.11 shows it beside the planned hours of section 2.1.
+No member logged time, so the effort figures are an agreed estimate, not a measurement. On 19 October all five members agreed a split of the effort spent: they added up the planned hours of the issues each person actually delivered and agreed the final figures. One project serves both courses, so there is one split, about 50 person-days in total, and it is not compared with the proposal's SWE5006 baseline. Table 2.11 shows it beside the planned hours of section 2.1.
 
 Table 2.11: Effort per member: agreed estimate beside planned hours.
 
@@ -224,11 +224,11 @@ Table 2.11: Effort per member: agreed estimate beside planned hours.
 | Wang Ziang (Eric) | 106 | 8.5 |
 | **Team** | **524.5** | **50** |
 
-Done hours were not logged; for Sprints 2 and 3 they were reconstructed at the sprint's freeze: 134 of 150 planned hours in Sprint 2, and 117 of 150 in Sprint 3, where the review credits partly done work (33 h remaining at the freeze; 66 h if only whole stories count). {{FILL: Sprint 4 done hours and the method used to reconstruct them — Eric (#619)}} This report gives no pull request, commit or line counts per member: card sizes vary widely, so such counts do not measure effort.
+Done hours were not logged; for Sprints 2 and 3 they were reconstructed at the sprint's freeze: 134 of 150 planned hours in Sprint 2, and 117 of 150 in Sprint 3, where the review credits partly done work (33 h remaining at the freeze; 66 h if only whole stories count). {{FILL: Sprint 4 done hours and the method used to reconstruct them — Eric (#619)}} We give no pull request, commit or line counts per member: card sizes vary widely, so such counts do not measure effort.
 
 #### Delivery and flow
 
-- **Backlog:** the daily board snapshot of 26 October holds 219 items: 159 Done, 38 Backlog, 14 Ready, 7 In progress and 1 with no status set.
+- **Backlog:** the board is snapshotted daily (board snapshot, Appendix A.1).
 - **Throughput:** 426 pull requests were merged into `dev` between the start of the project and the end of 26 October.
 - **Burndowns:** the Sprint 2 and Sprint 3 burndowns were reconstructed from pull request merge dates and issue close dates, because no hours were logged. Appendix A shows both and states the method.
 - **Delivery metrics:** the dev delivery proxies for the four DORA metrics (snapshot of 22 October) and the CI timings are in Appendix D.
