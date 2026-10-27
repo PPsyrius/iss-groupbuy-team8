@@ -1,0 +1,102 @@
+{
+  "scope": "PR 703 non-root tooling correction; local actual Dockerfile scan and UID 1000 runtime checks, not a hosted rerun or deployment",
+  "sourceBase": "d4a502e154fe76ecf061fe10f55dc107eddbc5ea",
+  "sourceState": "Uncommitted non-root follow-up",
+  "sourceSha256": {
+    "frontend/tooling/security-browsers.Dockerfile": "e5486d356bf5a083afa96a2532b615f48e750e3410ea655ec531aae656644a21",
+    ".github/workflows/security-browsers.yml": "d5a0b255a6430a329451e15e88a55f03242343a8f17ec55acfb215cf7a96f2df",
+    ".github/tests/security_browsers_workflow_test.py": "90771dc12cb4c93b83218c1c0da83c35750f7eb496d0108694b750a6057df039"
+  },
+  "hostedFailure": {
+    "jobUrl": "https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40446300704/job/121998342097",
+    "sha": "d4a502e154fe76ecf061fe10f55dc107eddbc5ea",
+    "rule": "DS-0002",
+    "severity": "HIGH",
+    "artifactID": "12708426766",
+    "artifactDigest": "sha256:c9f5c41878414e09dc89df5b0b8e75e870f401ca74642367cdcf6c409752cb21"
+  },
+  "focusedTrivy": {
+    "command": "trivy config --severity HIGH,CRITICAL --exit-code 1 --format json frontend/tooling",
+    "exitCode": 0,
+    "version": "0.74.0",
+    "createdAt": "2026-10-27T03:57:11.645726312Z",
+    "results": [
+      {
+        "Target": "security-browsers.Dockerfile",
+        "Class": "config",
+        "Type": "dockerfile",
+        "MisconfSummary": {
+          "Successes": 20,
+          "Failures": 0
+        }
+      }
+    ],
+    "reportSha256": "c1e28613430a4c35bfdbfbda7e23d658b6331ee25cba9aa676241d480bc0978a"
+  },
+  "imageID": "sha256:111060d800bbb250fbd344bf51e5e1e67cd599249afb53988aae858cebde8b33",
+  "configuredUser": "node",
+  "observedRuntimeUid": 1000,
+  "observedRuntimeGid": 1000,
+  "frontendCheck": {
+    "status": "passed",
+    "files": 79,
+    "tests": 891,
+    "note": "Initial Windows-built image failed formatting on nine CRLF files. Rerun mounted the LF-normalized current versions of those nine files read-only; every normalized Git blob matches HEAD. No formatting rule was skipped.",
+    "normalizedInputGitBlobs": {
+      "frontend/e2e/admin.spec.ts": "9a28b5a0420aba6ea6d7b260f600b6685d524e92",
+      "frontend/e2e/buyer-journey.spec.ts": "704ef0535297587563e447ddce316cbae6b2a760",
+      "frontend/e2e/fixtures/api.ts": "6d571ce089362bab21704f15beb45b4ff03d6264",
+      "frontend/e2e/security-headers.spec.ts": "fcac65796809b9c3bfbc06556b52c3834acbe5a7",
+      "frontend/knip.json": "e4deff0914b7031e002e4bc0d2deb780bb22355b",
+      "frontend/package.json": "01f0e827b66c6f5b1606bd83dd13a52782fb8a08",
+      "frontend/playwright.config.ts": "3e005377d2bde5129fd71cd87fe2dfa880b3470e",
+      "frontend/scripts/verify-csp-styles.mjs": "88790c5fadef5e4d192751376c5f37ee481fba39",
+      "frontend/vite.config.ts": "a74f34dd09eb002f336f10f6ea3f049541320464"
+    }
+  },
+  "browserStats": {
+    "startTime": "2026-10-27T04:01:15.268Z",
+    "duration": 84639.691,
+    "expected": 69,
+    "skipped": 16,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "browserProjects": [
+    {
+      "project": "chromium",
+      "passed": 27,
+      "skipped": 6,
+      "failed": 0
+    },
+    {
+      "project": "firefox",
+      "passed": 15,
+      "skipped": 4,
+      "failed": 0
+    },
+    {
+      "project": "webkit",
+      "passed": 15,
+      "skipped": 4,
+      "failed": 0
+    },
+    {
+      "project": "webkit-touch",
+      "passed": 12,
+      "skipped": 2,
+      "failed": 0
+    }
+  ],
+  "browserTotal": 85,
+  "browserReportSha256": "9be450f99bf8bcfe399f654d983a98d28f0a4c33df01af0ee12dec676f7b7333",
+  "outputBinding": "Windows Docker Desktop bind; reports written as the default non-root user",
+  "pythonTooling": {
+    "tests": 236,
+    "skipped": 4,
+    "failures": 0
+  },
+  "actionlint": "passed changed supplemental workflow",
+  "fullRepositoryTrivy": "Separate Windows-bind scan pending at this capture; focused result does not imply full-repository success",
+  "hostedRerunVerified": false
+}

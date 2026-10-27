@@ -31,6 +31,8 @@ jobs:
           EVIDENCE_DIR: ${{ runner.temp }}/browser-security-evidence
         run: |
           mkdir -p "$EVIDENCE_DIR"
+          # The image runs as node (UID 1000), not the hosted runner's UID.
+          sudo chown 1000:1000 "$EVIDENCE_DIR"
           docker run --rm --ipc=host --cpus=2 --memory=6g \
             --mount "type=bind,source=$EVIDENCE_DIR,target=/evidence" \
             blocbuy-security-browsers:ci

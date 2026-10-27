@@ -11,6 +11,7 @@ COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml 
 COPY frontend/scripts/ts-nocheck-generated.mjs scripts/ts-nocheck-generated.mjs
 RUN pnpm install --frozen-lockfile
 # WebKit uses the system trust store for real HTTPS subresources.
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
 RUN apt-get update -qq \
     && apt-get install -y --no-install-recommends ca-certificates \
     && pnpm exec playwright install --with-deps chromium firefox webkit \
@@ -22,6 +23,10 @@ COPY .gitignore .gitignore
 COPY docs/quality/evidence/zap/remaining-policy-2026-10-27/audit.cjs audit.cjs
 WORKDIR /repo/frontend
 RUN pnpm build
+# Runtime checks regenerate the client and write caches; only these app/output
+# paths need node ownership. Browser binaries remain root-owned and read-only.
+RUN mkdir -p /evidence && chown -R node:node /repo /evidence
+USER node
 ENV E2E_SECURITY_BROWSERS=all \
     PLAYWRIGHT_HTML_OPEN=never \
     PLAYWRIGHT_HTML_OUTPUT_DIR=/evidence/playwright-report \

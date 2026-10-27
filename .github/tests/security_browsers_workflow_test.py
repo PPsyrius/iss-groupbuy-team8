@@ -50,6 +50,15 @@ class SecurityBrowsersWorkflowTest(unittest.TestCase):
         self.assertNotIn(":local", self.recipe)
         self.assertNotIn("ignoreHTTPSErrors", self.recipe)
 
+    def test_browser_runtime_is_non_root_with_accessible_binaries_and_outputs(self):
+        self.assertIn("ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers", self.recipe)
+        self.assertLess(self.recipe.index("ENV PLAYWRIGHT_BROWSERS_PATH="), self.recipe.index("playwright install --with-deps"))
+        self.assertIn("chown -R node:node /repo /evidence", self.recipe)
+        self.assertEqual([line for line in self.recipe.splitlines() if line.startswith("USER ")], ["USER node"])
+        self.assertIn('sudo chown 1000:1000 "$EVIDENCE_DIR"', self.workflow)
+        self.assertNotIn("--user root", self.workflow)
+        self.assertNotIn("chmod 777", self.workflow)
+
 
 if __name__ == "__main__":
     unittest.main()
