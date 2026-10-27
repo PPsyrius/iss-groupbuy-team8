@@ -3,7 +3,7 @@ rubric: 1.1, 1.2, 1.3, 1.4, 1.4.1, 1.4.2, 1.4.3
 owner: Lim Jiechao
 plan: #675
 sources: PROP §4, §6.1–6.3; deck s2–s4, s12; docs/quality/nfr-register.md
-owns: R01, R02, R03, R04, R05, R06, R08, R09, R19, R34, R40, R49, R50
+owns: R01, R02, R03, R04, R05, R06, R08, R09, R19, R34, R40, R49, R50, R51
 status: draft
 -->
 
