@@ -188,7 +188,7 @@ sequenceDiagram
 
 Figure 3.20: Design sequence diagram of the webhook's provider boundary, after the strategy. Signature verification and the re-read of the session with BlocBuy's own key happen before any transaction opens; the full settlement, from the event claim onward, is Figure 3.44.
 
-The refund call adds the recovery mechanisms; one refund attempt is drawn in Figure 3.56. These are mechanisms, not GoF patterns: Idempotency Key, Retry with a fixed delay, and operator review. Table 3.10 records the candidates the team weighed.
+The refund call adds the recovery mechanisms; one refund attempt is drawn in Figure 3.55. These are mechanisms, not GoF patterns: Idempotency Key, Retry with a fixed delay, and operator review. Table 3.10 records the candidates the team weighed.
 
 Table 3.10: Candidate mechanisms for a refund that must not be lost or sent twice.
 
@@ -411,7 +411,7 @@ classDiagram
     %% at Team 0,2
 ```
 
-Figure 3.24: Analysis class diagram, before the strategy. The Scheduler, through the SchedulerTrigger «boundary», starts the expiry «control» ResolveTeamControl, which changes every overdue team; the model says nothing about several instances or failures. The analysis sequence of the expiry is Figure 3.103.
+Figure 3.24: Analysis class diagram, before the strategy. The Scheduler, through the SchedulerTrigger «boundary», starts the expiry «control» ResolveTeamControl, which changes every overdue team; the model says nothing about several instances or failures. The analysis sequence of the expiry is Figure 3.102.
 
 ```mermaid
 classDiagram
@@ -495,7 +495,7 @@ sequenceDiagram
     end
 ```
 
-Figure 3.26: Design sequence diagram of one team-expiry run, after the strategy. The lease, taken through `SchedulerLeaseRepository`, makes the run single-flight across instances, and each team in the batch commits or rolls back on its own; the full expiry of one team is Figure 3.112.
+Figure 3.26: Design sequence diagram of one team-expiry run, after the strategy. The lease, taken through `SchedulerLeaseRepository`, makes the run single-flight across instances, and each team in the batch commits or rolls back on its own; the full expiry of one team is Figure 3.111.
 
 Rationale: one transaction per team keeps each row lock short, which matters because webhook settlement locks the same team row first (3.2.8), and it isolates failures, so one team that cannot expire does not roll back the others. Deciding "overdue" on the database clock under the row lock gives every instance the same answer, and no decision rests on a clock reading taken before a long lock wait.
 

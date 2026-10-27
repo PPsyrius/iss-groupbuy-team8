@@ -41,7 +41,7 @@ Table 3.13: Subscribers to the domain events in the monolith.
 
 #### Static structure changes
 
-In analysis, the «control» that resolves a team reaches the order and the refund «entity» objects of other contexts directly; Figure 3.118 draws the same direct dependencies in the brute-force design. In design (Figure 3.32):
+In analysis, the «control» that resolves a team reaches the order and the refund «entity» objects of other contexts directly; Figure 3.117 draws the same direct dependencies in the brute-force design. In design (Figure 3.32):
 
 - **The event is a record in the publisher's domain package**, for example `com.blocbuy.groupbuy.event.TeamExpired(dealId, productId, at)`. It is a plain JDK record with no annotations, carries IDs and facts only, and rejects impossible values in its constructor. It is the publisher's published contract.
 - **The publisher is an application service** that calls Spring's `ApplicationEventPublisher.publishEvent(...)` inside its own `@Transactional` method. It names no subscriber.
@@ -92,7 +92,7 @@ classDiagram
     %% at IntegrationOutboxWriter 2,2
 ```
 
-Figure 3.32: Design class diagram for `TeamExpired`, after the strategy. The publisher depends only on the event record and Spring's publisher; each subscriber depends on the record, and the relation label gives its phase (before or after the commit) and its order. The subscribers of all events after Observer are Figure 3.121.
+Figure 3.32: Design class diagram for `TeamExpired`, after the strategy. The publisher depends only on the event record and Spring's publisher; each subscriber depends on the record, and the relation label gives its phase (before or after the commit) and its order. The subscribers of all events after Observer are Figure 3.120.
 
 Rationale: the publisher knows nothing about its consumers, so a new consequence is a new subscriber class in the consuming context and the publisher does not change; this is how share credit (ADR 0003) and the outbox (ADR 0007) were added after the team lifecycle (ADR 0002). The event record is the only shared type, which keeps each context's aggregates and persistence private.
 
@@ -123,7 +123,7 @@ sequenceDiagram
     E->>C: onTeamExpired(event)
 ```
 
-Figure 3.33: Design sequence diagram of the listener phases of a team expiry, after the strategy. Orders, refund obligations and the outbox row commit with the expiry or not at all; the cache eviction follows the commit and cannot undo it. The full expiry is Figure 3.112, and the Observer collaboration is Figure 3.122.
+Figure 3.33: Design sequence diagram of the listener phases of a team expiry, after the strategy. Orders, refund obligations and the outbox row commit with the expiry or not at all; the cache eviction follows the commit and cannot undo it. The full expiry is Figure 3.111, and the Observer collaboration is Figure 3.121.
 
 Across services, the outbox removes the dual write of "commit, then send": an integration event exists only if its transaction committed, and the relay delivers it at least once. `IntegrationOutboxWriter` inserts the row into `sys_outbox` (migration V26) in the business transaction. Every 2 seconds, `OutboxRelayJob` has `OutboxRelayService` read up to 100 unpublished rows, send them and mark each one published. A failed send is retried after a delay that doubles from 1 second up to 5 minutes; after ten failed attempts the row is marked failed and logged as an error for an operator (`OutboxRelayService`, `OutboxMapper.xml`). Published rows are deleted after 7 days (Table 3.11). In the SWE5001 deployment the relay publishes to one SNS topic; each consumer reads its own SQS queue with a dead-letter queue after five receives, and records each `eventId` in `sys_consumed_message` so that a duplicate has no effect (ADR 0007). Locally and in CI the relay sends to ElasticMQ, an SQS emulator (`backend/elasticmq.conf`). None of this runs on the SWE5006 dev host (off on dev, section 1.4).
 
