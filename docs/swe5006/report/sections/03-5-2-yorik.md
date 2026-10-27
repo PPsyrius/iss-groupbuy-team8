@@ -15,7 +15,7 @@ When a team expires (UC5), its pending orders must be cancelled and every buyer 
 
 **Where it shows.** In the UC5 expiry design sequence (section 3.4.5) and the UC6 refund design sequence (section 3.4.2), one decision of the group-buy context, "this team has expired", must change state in two other contexts: the order context (cancel the team's pending orders) and the payment context (record a refund obligation for each paid member).
 
-**The design before the pattern is a brute-force design (never committed).** No committed version of the expiry code called the order or refund code inline. `GroupDealExpiryService` published `TeamExpired` from its first commit, on 23 September 2026. Before that commit nothing expired a team at all: `OrderRepository.confirmByDealId` and `cancelByDealId` and the refund-obligation method had been implemented with no callers (ADR 0002, Context). When we planned this change, we rejected the inline call. Figures 3.117 and 3.118 therefore draw the design we would have written by calling each consequence directly.
+**The design before the pattern is a brute-force design (never committed).** No committed version of the expiry code called the order or refund code inline. `GroupDealExpiryService` published `TeamExpired` from its first commit, on 23 September 2026. Before that commit nothing expired a team at all: `OrderRepository.confirmByDealId` and `cancelByDealId` and the refund-obligation method had been implemented with no callers (ADR 0002, Context). When we planned this change, we rejected the inline call. Figures 3.118 and 3.119 therefore draw the design we would have written by calling each consequence directly.
 
 ```mermaid
 classDiagram
@@ -53,7 +53,7 @@ classDiagram
     PaidGroupDealService --> ShareCreditRepository : credit sharer
 ```
 
-Figure 3.117: UML class diagram of the team-outcome consequences, brute-force design (never committed). The group-buy services depend directly on order and payment classes; every new consequence adds another arrow out of them.
+Figure 3.118: UML class diagram of the team-outcome consequences, brute-force design (never committed). The group-buy services depend directly on order and payment classes; every new consequence adds another arrow out of them.
 
 ```mermaid
 sequenceDiagram
@@ -70,7 +70,7 @@ sequenceDiagram
     Note over Exp,Refunds: commit
 ```
 
-Figure 3.118: UML sequence diagram of one team's expiry, brute-force design (never committed). The expiry service knows every consequence and their order; adding one more means editing `expireOne`. The expiry as built is Figure 3.111.
+Figure 3.119: UML sequence diagram of one team's expiry, brute-force design (never committed). The expiry service knows every consequence and their order; adding one more means editing `expireOne`. The expiry as built is Figure 3.112.
 
 **Cause for redesign.** Tight coupling (SDP 05a p15). In the brute-force design the group-buy context depends on the order and payment contexts, against the team's backend rule that one context reaches another only through a published interface (ADR 0002 calls the inline call "a boundary violation"). The number of objects that depend on a team's outcome also grew during the project, as Table 3.22 shows; each one would have been another edit to the group-buy services.
 
@@ -113,7 +113,7 @@ Spring's implementation lets each subscriber, not the publisher, choose when it 
 
 #### 4 Solution class diagram
 
-Figures 3.119 and 3.120 map the code to the GoF participants. Spring plays the Subject: `ApplicationEventPublisher` notifies, and the `ApplicationEventMulticaster` behind it holds the observer list (like GoF's ChangeManager). The Observer is Spring's `ApplicationListener`. The ConcreteObserver is Spring's `TransactionalApplicationListenerMethodAdapter` (spring-tx 7.0.9), which Spring creates for each method annotated with `@TransactionalEventListener` and which invokes that method. Our subscriber classes implement no interface. `GroupDealExpiryService` and `PaidGroupDealService` are event sources: clients of the Subject, not ConcreteSubjects, because they hold no observer list.
+Figures 3.120 and 3.121 map the code to the GoF participants. Spring plays the Subject: `ApplicationEventPublisher` notifies, and the `ApplicationEventMulticaster` behind it holds the observer list (like GoF's ChangeManager). The Observer is Spring's `ApplicationListener`. The ConcreteObserver is Spring's `TransactionalApplicationListenerMethodAdapter` (spring-tx 7.0.9), which Spring creates for each method annotated with `@TransactionalEventListener` and which invokes that method. Our subscriber classes implement no interface. `GroupDealExpiryService` and `PaidGroupDealService` are event sources: clients of the Subject, not ConcreteSubjects, because they hold no observer list.
 
 ```mermaid
 classDiagram
@@ -155,9 +155,9 @@ classDiagram
     ApplicationListener <|.. TransactionalApplicationListenerMethodAdapter
 ```
 
-Figure 3.119: UML class diagram of the Observer participants after applying the pattern. The event sources depend only on Spring's publisher (the Subject); the multicaster holds the list of observers, and Spring's adapter is the ConcreteObserver. `PaidGroupDealService` also publishes `MemberJoined`.
+Figure 3.120: UML class diagram of the Observer participants after applying the pattern. The event sources depend only on Spring's publisher (the Subject); the multicaster holds the list of observers, and Spring's adapter is the ConcreteObserver. `PaidGroupDealService` also publishes `MemberJoined`.
 
-Figure 3.120 continues the structure: one adapter instance exists per annotated subscriber method, and it invokes that method.
+Figure 3.121 continues the structure: one adapter instance exists per annotated subscriber method, and it invokes that method.
 
 ```mermaid
 classDiagram
@@ -187,13 +187,13 @@ classDiagram
     TransactionalApplicationListenerMethodAdapter ..> ShareCreditSubscriber : invokes
 ```
 
-Figure 3.120: UML class diagram of the subscribers after applying Observer. No arrow leads from the event sources to order or payment code; the stereotype on each subscriber shows its transaction phase and its `@Order` value.
+Figure 3.121: UML class diagram of the subscribers after applying Observer. No arrow leads from the event sources to order or payment code; the stereotype on each subscriber shows its transaction phase and its `@Order` value.
 
 The events are immutable JDK records in the domain package `com.blocbuy.groupbuy.event`, free of framework annotations: `TeamExpired(dealId, productId, at)`, `TeamSucceeded(dealId, productId, size, at)` and `MemberJoined`. Two further observers, `OpenDealOfferCacheSubscriber` and `IntegrationOutboxWriter` (Table 3.22), follow the same structure and are left out of the figure.
 
 #### 5 Solution sequence diagrams
 
-Figure 3.121 shows the Observer collaboration in the main flow, UC5 expiry leading to the UC6 refund obligation. Spring holds the published event until the transaction is about to commit, then calls the two subscribers in `@Order` sequence inside that transaction.
+Figure 3.122 shows the Observer collaboration in the main flow, UC5 expiry leading to the UC6 refund obligation. Spring holds the published event until the transaction is about to commit, then calls the two subscribers in `@Order` sequence inside that transaction.
 
 ```mermaid
 sequenceDiagram
@@ -208,11 +208,11 @@ sequenceDiagram
     Tx->>Ref: onTeamExpired(e)
 ```
 
-Figure 3.121: UML sequence diagram of the Observer collaboration in a team's expiry. The expiry service only publishes `TeamExpired`, and Spring notifies the order subscriber (10) before the refund subscriber (20); the full expiry is Figure 3.111.
+Figure 3.122: UML sequence diagram of the Observer collaboration in a team's expiry. The expiry service only publishes `TeamExpired`, and Spring notifies the order subscriber (10) before the refund subscriber (20); the full expiry is Figure 3.112.
 
 The before-commit callbacks run when Spring's transactional proxy around `expireOne` commits, after the method body has returned and before the sweeper receives the result. `cancelByDealId` is a method of the order context's `OrderRepository` and `recordExpiredTeam` of the payment context's `TeamExpiryRefundService`, each called by its own subscriber. The refund itself is sent later by a separate refund worker, outside this transaction (section 3.4.2).
 
-Figure 3.122 shows why each subscriber has its own phase, using the join that fills a team (UC4). The buyer's own order is saved by `OrderFulfilmentAdapter` only after `joinConfirmed` returns, which is why order confirmation must wait for the commit point.
+Figure 3.123 shows why each subscriber has its own phase, using the join that fills a team (UC4). The buyer's own order is saved by `OrderFulfilmentAdapter` only after `joinConfirmed` returns, which is why order confirmation must wait for the commit point.
 
 ```mermaid
 sequenceDiagram
@@ -236,7 +236,7 @@ sequenceDiagram
     Credit->>Credit: recordIfAbsent(...)
 ```
 
-Figure 3.122: UML sequence diagram of a join that fills a team after applying Observer. Order confirmation runs before the commit, after the last buyer's order is saved; the sharer's credit runs after the commit, so its failure cannot undo a paid admission.
+Figure 3.123: UML sequence diagram of a join that fills a team after applying Observer. Order confirmation runs before the commit, after the last buyer's order is saved; the sharer's credit runs after the commit, so its failure cannot undo a paid admission.
 
 #### 6 Implementation decisions
 
