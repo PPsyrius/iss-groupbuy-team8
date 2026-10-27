@@ -10,7 +10,7 @@ status: draft
 
 This section models two use cases. In UC9 Admin listing management, an administrator prepares, publishes, revises, withdraws and deletes catalog listings and sets their team terms. In UC5 Team lifecycle resolution, an open team (shown to buyers as a "bloc") is resolved exactly once: it succeeds when its last seat is paid for, or it expires when its deadline passes first. Both use cases have the full set of models, parts A to E; no model is left out. Their flows of events are in 3.3.10 (UC9) and 3.3.6 (UC5).
 
-A *listing* is one product offered in the catalog (the `Product` aggregate, table `biz_product`). Its *team terms* are the team size and the team lifetime that every team started on the listing copies. A *team* is one group-buy of one listing at a fixed team price (the `GroupDeal` aggregate, table `biz_group_deal`). The listing statechart belongs with the State pattern in 3.5.5. The team statechart (OPEN, SUCCEEDED, EXPIRED) is drawn once, in 3.4.1, and is not repeated here {{CONFIRM: D9 team statechart placement, 3.4.1 (brief and rubric) or 3.4.5 (deck slide 6 cue and the 24 Oct ownership note) — Lim with Eric and Liu Jin}}.
+A *listing* is one product offered in the catalog (the `Product` aggregate, table `biz_product`). Its *team terms* are the team size and the team lifetime that every team started on the listing copies. A *team* is one group-buy of one listing at a fixed team price (the `GroupDeal` aggregate, table `biz_group_deal`). The listing statechart belongs with the State pattern in 3.5.5. The team statechart (OPEN, SUCCEEDED, EXPIRED) is drawn in this section, after part D.
 
 Several members wrote the code these models describe. Table 3.19 credits each part.
 
@@ -899,6 +899,29 @@ sequenceDiagram
 ```
 
 Figure 3.115: Design sequence diagram of UC5 flow D6, the deadline passes (UML). Each team gets its own locked transaction, the status-guarded update settles a race with a last-seat join, and the `TeamExpired` subscribers commit with the expiry.
+
+#### Statechart of the team
+
+The team has significant, dynamic states, so it has a statechart. A transition reads *trigger [guard] / effect*, and a self-transition is drawn as an internal transition inside its state.
+
+The team (`GroupDeal`) is created OPEN by a confirmed paid start (UC3) and filled by confirmed paid joins (UC4). It resolves once (UC5): it succeeds when the last seat is taken, or expires when its window closes first, which owes refunds (UC6).
+
+```mermaid
+stateDiagram-v2
+    [*] --> OPEN : / currentSize = 1, leader = payer
+    OPEN --> OPEN : paidJoinConfirmed [admissible, seats left] / currentSize + 1, MemberJoined
+    OPEN --> OPEN : paidJoinConfirmed [not admissible] / compensation required
+    OPEN --> SUCCEEDED : paidJoinConfirmed [admissible, last seat] / successTime = now, TeamSucceeded
+    OPEN --> EXPIRED : at(expireTime) / status-guarded update, TeamExpired
+    SUCCEEDED --> SUCCEEDED : paidJoinConfirmed / compensation required
+    EXPIRED --> EXPIRED : paidJoinConfirmed / compensation required
+    SUCCEEDED : entry / confirm the team's orders
+    EXPIRED : entry / cancel the team's orders, refunds owed
+```
+
+Figure 3.49: UML statechart of the team (`GroupDeal`). The `paidJoinConfirmed` events have disjoint guards; those that leave the status unchanged are internal transitions, listed inside the state box. No final state is drawn because a resolved team still absorbs late paid joins as refunds.
+
+*Admissible* means that the paid amount equals the team price, the buyer is neither the leader nor a member, `startTime ≤ now < expireTime`, and a seat is free. The chart matches `DealStatus.canTransitionTo`: only OPEN may move, and never to itself. The Mermaid source writes the events that keep the status (a join that leaves seats, a refused join, a late join after resolution) as self-transitions, and the figure draws them as internal transitions inside the state, because they run an action without changing the status. `DealStatus` also declares FAILED and CANCELED, and the transition table allows them, but no production code writes either, so they are not drawn. `GroupDeal.joinPaid` enforces the OPEN transitions; `TeamExpirySweepJob`, every minute, reaches `GroupDealExpiryService`, which calls `GroupDeal.expire` and writes through a status-guarded update (section 3.4.2).
 
 #### E Compliance with the transition strategies
 
