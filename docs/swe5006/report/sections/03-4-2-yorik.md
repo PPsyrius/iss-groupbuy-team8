@@ -377,7 +377,7 @@ sequenceDiagram
 
 Figure 3.55: UML design sequence diagram of UC6 flow 2, pay one refund. The provider call runs between two short transactions, never inside one; a crash after Stripe accepts the refund leaves the row claimable once its lease lapses, and the next attempt sends the same idempotency key.
 
-The `alt` fragments are the exceptional flows of section 3.3.7 (retry rules in section 3.2.5). A retryable provider error (transport, rate limit, availability) keeps the obligation in `processing`, due again later. A permanent refusal (`PAYMENT_STATE_INVALID` or `PAYMENT_PROVIDER_REJECTED`) or a snapshot that does not match the obligation moves it to `review`, which the worker never claims again.
+The `alt` fragments are the exceptional flows of section 3.3.7 (retry rules in section 3.2.5). A retryable provider error (transport, rate limit, availability) moves the obligation to `processing`, due again later. A permanent refusal (`PAYMENT_STATE_INVALID` or `PAYMENT_PROVIDER_REJECTED`) or a snapshot that does not match the obligation moves it to `review`, which the worker never claims again.
 
 ```mermaid
 sequenceDiagram
