@@ -197,28 +197,26 @@ The team assessed the pipeline against the DevSecOps Maturity Model on 23 Octobe
 
 The running dev site is scanned by a passive, anonymous OWASP ZAP session. It requests ten fixed read-only URLs (the SPA, catalogue pages, a product detail page, one invalid request and two anonymous denials) and crawls the SPA with form submission disabled; it does not log in, pay or attack. A run counts as complete only when all ten responses were observed and all 67 enabled passive rules ran; an incomplete run fails. Findings are advisory and never block a merge.
 
-On 22 October 2026 the first baseline scan of dev, made before the scanner verified its own coverage, found 0 High, 2 Medium, 4 Low and 6 Informational findings, all caused by the CloudFront response-headers policy. HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy` and a CSP with `frame-ancestors 'none'` and `object-src 'none'` were already present. The first dispatch on dev on 24 October failed as incomplete because a ZAP add-on download failed; the add-on is now pinned and checksum-verified, and the dispatch that evening (run 40107924516, the first dispatch on dev with verified coverage; pull-request scans of 22 and 24 October had already verified theirs) and the scheduled run of 26 October both completed with the same findings (Table 4.10). No remediation has been made yet: the header changes are open, so the "after" column records the latest complete run, not a fixed state.
+On 22 October 2026 the first baseline scan of dev, made before the scanner verified its own coverage, found 0 High, 2 Medium, 4 Low and 6 Informational findings, all caused by the CloudFront response-headers policy. HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy` and a CSP with `frame-ancestors 'none'` and `object-src 'none'` were already present. The first dispatch on dev on 24 October failed as incomplete because a ZAP add-on download failed; the add-on is now pinned and checksum-verified, and the dispatch that evening (run 40107924516, the first dispatch on dev with verified coverage; pull-request scans of 22 and 24 October had already verified theirs) and the scheduled run of 26 October both completed with the same findings. The header fixes (#700, #703) merged on 27 October, and the dispatch that morning (run 40459212995 on `2f23d923`, 10/10 responses, 67/67 rules) found 0 High, 0 Medium, 0 Low and 6 Informational findings: the six Medium and Low findings are fixed and their issues closed, and the six Informational ones remain under review (Table 4.10).
 
 <!-- table: split -->
 
-Table 4.10: OWASP ZAP findings on dev, before and after. Before: run 39733450177 (22 Oct). Latest complete run: 40298983391 (scheduled, 26 Oct; 10/10 responses, 67/67 rules).
+Table 4.10: OWASP ZAP findings on dev, before and after. Before: run 39733450177 (22 Oct). After: run 40459212995 (dispatch, 27 Oct; 10/10 responses, 67/67 rules).
 
-| ZAP rule | Risk | Finding | Issue | Before | Latest | Outcome |
+| ZAP rule | Risk | Finding | Issue | Before | After | Outcome |
 |---|---|---|---|---|---|---|
-| 10055 | Medium | CSP `img-src` allows any HTTPS host | #636 | Present | Present | Pending (#610) |
-| 10055 | Medium | CSP allows `style-src 'unsafe-inline'` | #637 | Present | Present | Pending (#610) |
-| 90004 | Low | Cross-Origin-Embedder-Policy missing | #638 | Present | Present | Pending (#610) |
-| 90004 | Low | Cross-Origin-Opener-Policy missing | #639 | Present | Present | Pending (#610) |
-| 90004 | Low | Cross-Origin-Resource-Policy missing | #640 | Present | Present | Pending (#610) |
-| 10063 | Low | Permissions-Policy not set | #641 | Present | Present | Pending (#610) |
+| 10055 | Medium | CSP `img-src` allows any HTTPS host | #636 | Present | Absent | Fixed (#700) |
+| 10055 | Medium | CSP allows `style-src 'unsafe-inline'` | #637 | Present | Absent | Fixed (#703) |
+| 90004 | Low | Cross-Origin-Embedder-Policy missing | #638 | Present | Absent | Fixed (#703) |
+| 90004 | Low | Cross-Origin-Opener-Policy missing | #639 | Present | Absent | Fixed (#703) |
+| 90004 | Low | Cross-Origin-Resource-Policy missing | #640 | Present | Absent | Fixed (#703) |
+| 10063 | Low | Permissions-Policy not set | #641 | Present | Absent | Fixed (#700) |
 | 10109 | Informational | Modern web application (crawl coverage) | #642 | Present | Present | Pending review |
 | 10049 | Informational | Non-storable `robots.txt` and sitemap responses | #643 | Present | Present | Pending review |
 | 10015 | Informational | Cache-Control directives | #644 | Present | Present | Pending review |
 | 10050 | Informational | Shared-cache hits | #645 | Present | Present | Pending review |
 | 10049 | Informational | Cacheable assets and unversioned files | #646 | Present | Present | Pending review |
 | 10049 | Informational | SPA HTML revalidation policy | #647 | Present | Present | Pending review |
-
-{{FILL: after-remediation ZAP run on dev once the response-headers fix (#610) merges, with run ID, date and the outcome column as fixed or accepted with a reason; if it is not done by 29 Oct, replace this marker with the accepted-risk reasons per finding (#694 fallback) — Pan}}
 
 #### Tests by level and quadrant
 
