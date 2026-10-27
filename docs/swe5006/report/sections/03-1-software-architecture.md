@@ -28,7 +28,7 @@ Table 3.1: Backend Maven modules of the monolith, their layer and their allowed 
 | `blocbuy-client` | Shared contract | Constants (`ApiConstants`, `SessionRbac`, `Topology`) and versioned integration-event contracts (`IntegrationEventEnvelope`, `TeamSucceededV1`) | none |
 | `blocbuy-bootstrap` | Assembly | `BlocBuyApplication`, configuration, scheduled jobs (`LeasedJobRunner`, `TeamExpirySweepJob`, `RefundWorkerJob`), Flyway migrations | all five modules above |
 
-The reactor also contains `blocbuy-platform` and `services/identity-svc`, `services/commerce-svc` and `services/notification-svc`. They assemble the SWE5001 services from the same modules; the monolith never depends on them and they are not deployed on `dev`.
+The reactor also contains `blocbuy-platform` (topology guard, trace propagation) and `services/identity-svc`, `services/commerce-svc` and `services/notification-svc`. They assemble the SWE5001 services from the same modules; the monolith never depends on them and they are not deployed on `dev`.
 
 Dependencies point inward: adapter → application → domain, and infrastructure → domain. Infrastructure realises the domain's ports, so the domain never sees a framework type. This is the "dependency inversion" form of layering; the reasons and the effect on every analysis object are in section 3.2.1.
 
