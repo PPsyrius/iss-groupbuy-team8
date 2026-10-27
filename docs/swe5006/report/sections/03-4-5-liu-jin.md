@@ -3,7 +3,7 @@ rubric: 3.4.5, 3.4-A..E, G4
 owner: Liu Jin
 plan: #678
 sources: backend/docs/design/admin-listings.md
-owns: R17, FG01, FG02, FG03, FG07
+owns: R17, R54, FG01, FG02, FG03, FG07
 status: draft
 -->
 
@@ -468,7 +468,7 @@ classDiagram
 
 Figure 3.104: Design class diagram of UC9, web and application layers (UML). The analysis control is split into a controller that checks the role and two transactional services; another context's history is reached only through its facade, `GroupDealQueryService`.
 
-**UC9, domain and infrastructure layers.** The `Listing` entity becomes the `Product` aggregate. Its lifecycle rules sit in the per-state behaviour of the `ProductStatus` enum, which is the State pattern of 3.5.5. `Product` has no public status setter: every change returns a new revision with `version + 1`. `ProductRepository` is the domain port, implemented by `ProductRepositoryImpl` over `BizProductMapper`; a save made on an old version is refused (Optimistic Offline Lock, section 3.5.5).
+**UC9, domain and infrastructure layers.** The `Listing` entity becomes the `Product` aggregate. Its lifecycle rules sit in the per-state behaviour of the `ProductStatus` enum, which is the State pattern of 3.5.5. `Product` has no public status setter: every change returns a new revision with `version + 1`. `ProductRepository` is the domain port, implemented by `ProductRepositoryImpl` over `BizProductMapper`; a save made on an old version is refused (Optimistic Offline Lock, section 3.5.5). A listing number already used by another listing is refused with HTTP 409 (`PRODUCT_NUMBER_CONFLICT`); nothing is stored.
 
 ```mermaid
 classDiagram
