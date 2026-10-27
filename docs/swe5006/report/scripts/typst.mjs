@@ -321,7 +321,7 @@ function stateDiagram(lines, frame) {
   );
   const tr = trans.map((t) => {
     const back = trans.some((u) => u.a === t.b && u.b === t.a);
-    const bend = t.a === t.b ? '150deg' : back ? '25deg' : '0deg';
+    const bend = t.a === t.b ? '150deg' : back ? '35deg' : '0deg';
     return `(from: ${str(t.a)}, to: ${str(t.b)}, label: ${t.label ? str(t.label) : 'none'}, bend: ${bend})`;
   });
   return `#state-diagram(${typstArray(st)}, ${typstArray(tr)}, frame: ${str(frame)})`;
