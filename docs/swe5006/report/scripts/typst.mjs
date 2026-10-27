@@ -569,7 +569,7 @@ function figure(body, caption, opts = '') {
   return `#report-figure(${str(num)}, ${arg}, [${inline(text)}]${opts})`;
 }
 
-function table(rows) {
+function table(rows, breakRows = false) {
   const split = (r) => r.trim().replace(/^\|/, '').replace(/\|$/, '').split(/(?<!\\)\|/).map((c) => c.trim().replace(/\\\|/g, '|'));
   const head = split(rows[0]);
   const body = rows.slice(2).map(split);
@@ -582,7 +582,7 @@ function table(rows) {
   // A column of short values (a sprint number, "#", a status) is sized to its content, so its bold
   // header word never runs into the next column.
   const cols = weights.map((w) => (w <= 10 ? 'auto' : `${Math.max(1, Math.round(Math.sqrt(Math.max(w, 4)) * 10) / 10)}fr`));
-  return `#report-table((${cols.join(', ')},), ${cells.join(', ')})`;
+  return `#report-table((${cols.join(', ')},), ${breakRows ? 'split: true, ' : ''}${cells.join(', ')})`;
 }
 
 // sectionPath: absolute path of the section file; root: repository root (Typst --root).
@@ -591,6 +591,7 @@ export function markdown(src, { sectionDir, root, resolvePath }) {
   const out = [];
   let para = [];
   let i = 0;
+  let splitTable = false;
   const flushPara = () => {
     if (!para.length) return;
     const text = para.join(' ');
@@ -633,6 +634,8 @@ export function markdown(src, { sectionDir, root, resolvePath }) {
     let m;
     if (/^<!--/.test(line.trim())) {
       flushPara();
+      // `<!-- table: split -->` lets the next table break between rows (report-table in template.typ).
+      if (/^<!--\s*table:\s*split\s*-->$/.test(line.trim())) splitTable = true;
       while (i < lines.length && !lines[i].includes('-->')) i++;
       i++;
       continue;
@@ -675,7 +678,8 @@ export function markdown(src, { sectionDir, root, resolvePath }) {
       flushPara();
       const rows = [];
       while (i < lines.length && /^\|/.test(lines[i].trim())) rows.push(lines[i++]);
-      out.push(table(rows));
+      out.push(table(rows, splitTable));
+      splitTable = false;
       out.push('');
       continue;
     }

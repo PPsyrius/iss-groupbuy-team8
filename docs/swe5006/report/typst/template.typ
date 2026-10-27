@@ -107,7 +107,7 @@
 // Its spacing is a paragraph's (par spacing in setup).
 #let lead-label(body) = block(above: 0.52em + 8pt, below: 0.52em + 8pt, sticky: true, body)
 
-#let report-table(n, ..cells) = {
+#let report-table(n, split: false, ..cells) = {
   set text(size: 9pt)
   set par(justify: false, leading: 0.5em)
   // A row never splits across pages, so a cell's text stays beside its key.
@@ -130,9 +130,11 @@
   // A table up to half a page tall stays on one page. Otherwise a float waiting for the next
   // page (a landscape figure, a tall diagram) leaves slivers that the table's rows fill a few
   // at a time, scattering a short table over several pages between full-page figures.
+  // `split: true` (a `<!-- table: split -->` comment above the caption) lets one shorter table
+  // break between rows where moving it whole would leave a large blank foot on the page before.
   context {
     let h = measure(t, width: text-area.width).height
-    block(width: 100%, above: 0.6em, below: 1em, breakable: h > text-area.height / 2, t)
+    block(width: 100%, above: 0.6em, below: 1em, breakable: split or h > text-area.height / 2, t)
   }
 }
 
