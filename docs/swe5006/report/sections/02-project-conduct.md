@@ -14,7 +14,7 @@ The team planned at two levels. The proposal set a project-level work breakdown 
 
 #### Work breakdown and baseline
 
-The proposal (section 7.1) breaks the project into nine tasks, each with an estimate and a lead: (1) project setup; (2) analysis and design; (3) infrastructure; (4) DevSecOps pipelines; (5) backend domain; (6) frontend single-page application; (7) end-to-end tests; (8) agile process; (9) documentation. The baseline is 50 person-days, about 10 per member. {{FILL: estimate and lead per WBS task from PROP §7.1, which is not in the repository — Lim}}
+The proposal (section 7.1) breaks the project into nine tasks, each with a lead and an estimate in person-days: (1) project setup, Pan, 2; (2) analysis and design, Eric, 6; (3) infrastructure, Pan, 7; (4) DevSecOps pipelines, Pan, 5; (5) backend domain, Liu Jin, 14; (6) frontend single-page application, Lim, 8; (7) end-to-end tests, Lim, 2; (8) agile process, Lim, 3; (9) documentation, Yorik, 3. The leads own their tracks; the effort is spread across all five members. The baseline is 50 person-days, about 10 per member.
 
 #### Sprints
 
