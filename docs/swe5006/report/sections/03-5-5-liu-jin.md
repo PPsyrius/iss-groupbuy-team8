@@ -82,7 +82,7 @@ sequenceDiagram
 
 Figure 3.134: Design sequence diagram of publishing a listing, brute-force design (never committed). The listing itself tests its status, and the same test is repeated inside `delist()`, `revise()` and `requireDeletable()`.
 
-**Cause for redesign.** The brute-force design matches the applicability of the GoF State pattern: "operations have large, multipart conditional statements that depend on the object's state". None of the causes of redesign listed in the module's design-pattern notes (SDP 05a p15) names State. The design is hard to *maintain*, because one rule lives in four places; hard to *extend*, because a new state means editing every switch, and one missed case lets a forbidden move through; and hard to *reuse*, because the rules of one state cannot be read or tested apart from the others.
+**Cause for redesign.** The brute-force design matches the applicability of the GoF State pattern: "operations have large, multipart conditional statements that depend on the object's state". None of the causes of redesign listed in the module's design-pattern notes (SDP 05a p15) names State, so we do not claim one of them. The design is hard to *maintain*, because one rule lives in four places; hard to *extend*, because a new state means editing every switch, and one missed case lets a forbidden move through; and hard to *reuse*, because the rules of one state cannot be read or tested apart from the others.
 
 **What varies.** The state of an object (SDP 05a p13): what a listing allows, and how, changes with its lifecycle state.
 
