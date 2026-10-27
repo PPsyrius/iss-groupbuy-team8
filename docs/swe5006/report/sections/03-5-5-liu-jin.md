@@ -15,9 +15,9 @@ Only an on-sale listing is visible to buyers and can be bought by a team. The ad
 
 #### 1 Design problem
 
-**Where the problem shows.** Table 3.28 lists the real lifecycle rules, taken from `ProductStatus` and `Product` in the code. Four operations of `Product` (`publish()`, `delist()`, `revise(details)` and `requireDeletable()`) each depend on the state. Written directly, each operation needs the same `switch (status)`. Figure 3.136 shows that design and Figure 3.137 its publish sequence: the switch appears in all four operations of the class, and the `publish()` message in the sequence branches on the listing's status.
+**Where the problem shows.** Table 3.27 lists the real lifecycle rules, taken from `ProductStatus` and `Product` in the code. Four operations of `Product` (`publish()`, `delist()`, `revise(details)` and `requireDeletable()`) each depend on the state. Written directly, each operation needs the same `switch (status)`. Figure 3.133 shows that design and Figure 3.134 its publish sequence: the switch appears in all four operations of the class, and the `publish()` message in the sequence branches on the listing's status.
 
-Table 3.28: Listing lifecycle rules per state (from `ProductStatus.java` and `Product.java`). 409 means `PRODUCT_STATE_CONFLICT` (`CATALOG_409_002`).
+Table 3.27: Listing lifecycle rules per state (from `ProductStatus.java` and `Product.java`). 409 means `PRODUCT_STATE_CONFLICT` (`CATALOG_409_002`).
 
 | Operation | DRAFT | ON_SALE | OFF_SALE |
 |---|---|---|---|
@@ -27,7 +27,7 @@ Table 3.28: Listing lifecycle rules per state (from `ProductStatus.java` and `Pr
 | `requireDeletable()` (the use case also checks references) | allowed if nothing was sold | 409 | 409 |
 | `configureTeamTerms(…)` | allowed | allowed | allowed |
 
-The design in Figures 3.136 and 3.137 is a **brute-force design (never committed)**. The first version of the listing code, committed on 11 September, already used State; the backend design note for UC9 (`backend/docs/design/admin-listings.md`) records that "repeated status switches in every caller" were considered and rejected. The rules inside the switches are the real ones.
+The design in Figures 3.133 and 3.134 is a **brute-force design (never committed)**. The first version of the listing code, committed on 11 September, already used State; the backend design note for UC9 (`backend/docs/design/admin-listings.md`) records that "repeated status switches in every caller" were considered and rejected. The rules inside the switches are the real ones.
 
 ```mermaid
 classDiagram
@@ -57,7 +57,7 @@ classDiagram
   Product "0..*" --> "1" ProductStatus : status
 ```
 
-Figure 3.136: Design class diagram, brute-force design (never committed). `ProductStatus` is a plain enumeration with no behaviour, so each of the four lifecycle operations of `Product` repeats the same switch on the status.
+Figure 3.133: Design class diagram, brute-force design (never committed). `ProductStatus` is a plain enumeration with no behaviour, so each of the four lifecycle operations of `Product` repeats the same switch on the status.
 
 ```mermaid
 sequenceDiagram
@@ -80,7 +80,7 @@ sequenceDiagram
   end
 ```
 
-Figure 3.137: Design sequence diagram of publishing a listing, brute-force design (never committed). The listing itself tests its status, and the same test is repeated inside `delist()`, `revise()` and `requireDeletable()`.
+Figure 3.134: Design sequence diagram of publishing a listing, brute-force design (never committed). The listing itself tests its status, and the same test is repeated inside `delist()`, `revise()` and `requireDeletable()`.
 
 **Cause for redesign.** The brute-force design matches the applicability of the GoF State pattern: "operations have large, multipart conditional statements that depend on the object's state". None of the causes of redesign listed in the module's design-pattern notes (SDP 05a p15) names State. The design is hard to *maintain*, because one rule lives in four places; hard to *extend*, because a new state means editing every switch, and one missed case lets a forbidden move through; and hard to *reuse*, because the rules of one state cannot be read or tested apart from the others.
 
@@ -90,9 +90,9 @@ Figure 3.137: Design sequence diagram of publishing a listing, brute-force desig
 
 #### 2 Candidate design patterns
 
-Table 3.29 lists the candidates we considered for the lifecycle rules, and Table 3.30 the candidates for the concurrent edits. The first table holds GoF patterns plus one plain alternative; the second holds Fowler's offline concurrency patterns, which are persistence mechanisms, not GoF patterns.
+Table 3.28 lists the candidates we considered for the lifecycle rules, and Table 3.29 the candidates for the concurrent edits. The first table holds GoF patterns plus one plain alternative; the second holds Fowler's offline concurrency patterns, which are persistence mechanisms, not GoF patterns.
 
-Table 3.29: Candidates for the lifecycle rules.
+Table 3.28: Candidates for the lifecycle rules.
 
 | Candidate | Fit or misfit | Decision |
 |---|---|---|
@@ -101,7 +101,7 @@ Table 3.29: Candidates for the lifecycle rules.
 | Transition table (not a pattern), as the team lifecycle uses in `DealStatus.canTransitionTo` | Fits when only the legality of a move varies. For listings the behaviour varies too: `revise` freezes price, currency and stock after publication, and only a draft can be deleted | Rejected |
 | Command (GoF, behavioural) | Packages each request as an object, but the state rules would still have to live somewhere | Rejected |
 
-Table 3.30: Candidates for concurrent edits of one listing.
+Table 3.29: Candidates for concurrent edits of one listing.
 
 | Candidate | Fit or misfit | Decision |
 |---|---|---|
@@ -117,7 +117,7 @@ The flexibility is needed because the rules protect money. A published listing's
 
 **Liabilities.**
 
-- One class per state. Three states give three constant bodies, and the lifecycle as a whole is no longer visible in one place; the statechart in Figure 3.139 restores that overview.
+- One class per state. Three states give three constant bodies, and the lifecycle as a whole is no longer visible in one place; the statechart in Figure 3.136 restores that overview.
 - Extension is not change-free. A new state still needs a stored code, an entry in the application's target switch and new tests; the design note warns against claiming zero-change extension.
 - Two status tests remain outside the states (section 6).
 
@@ -127,7 +127,7 @@ We chose Optimistic Offline Lock because the business transaction, read then wri
 
 #### 4 Solution class diagram
 
-Figure 3.138 shows the solution. `Product` is the GoF Context, `ProductStatus` the State and its three enum constants the ConcreteStates. Each constant has a body, which the Java compiler turns into its own anonymous subclass (`ProductStatus$1` to `$3`). The states are shared and stateless, the GoF "state objects can be shared" implementation choice, so many listings refer to the same state object. Table 3.31 maps the pattern's roles to the code.
+Figure 3.135 shows the solution. `Product` is the GoF Context, `ProductStatus` the State and its three enum constants the ConcreteStates. Each constant has a body, which the Java compiler turns into its own anonymous subclass (`ProductStatus$1` to `$3`). The states are shared and stateless, the GoF "state objects can be shared" implementation choice, so many listings refer to the same state object. Table 3.30 maps the pattern's roles to the code.
 
 ```mermaid
 classDiagram
@@ -183,9 +183,9 @@ classDiagram
   ProductStatus <|-- OFF_SALE
 ```
 
-Figure 3.138: Design class diagram of the State solution. `Product` keeps no switch in its four lifecycle operations; each ConcreteState overrides only the moves it allows, and the defaults in `ProductStatus` refuse the rest.
+Figure 3.135: Design class diagram of the State solution. `Product` keeps no switch in its four lifecycle operations; each ConcreteState overrides only the moves it allows, and the defaults in `ProductStatus` refuse the rest.
 
-Table 3.31: GoF State roles in the code.
+Table 3.30: GoF State roles in the code.
 
 | GoF role | BlocBuy element | Responsibility |
 |---|---|---|
@@ -194,7 +194,7 @@ Table 3.31: GoF State roles in the code.
 | ConcreteState | `DRAFT`, `ON_SALE`, `OFF_SALE` constant bodies | Override only what the state allows; each returns its successor state |
 | Client | `AdminListingAppServiceImpl` | Opens the transaction, locks the row, checks the version, calls the Context and persists the new revision |
 
-Figure 3.139 is the listing statechart that these classes implement. It is the only statechart for the listing in this report.
+Figure 3.136 is the listing statechart that these classes implement. It is the only statechart for the listing in this report.
 
 ```mermaid
 stateDiagram-v2
@@ -211,11 +211,11 @@ stateDiagram-v2
   OFF_SALE : configureTeamTerms
 ```
 
-Figure 3.139: UML state machine of a listing (`Product.status`). Nothing returns to DRAFT, only a draft can be deleted, any other event is refused with 409 and leaves the state unchanged, and every accepted event raises the version by one.
+Figure 3.136: UML state machine of a listing (`Product.status`). Nothing returns to DRAFT, only a draft can be deleted, any other event is refused with 409 and leaves the state unchanged, and every accepted event raises the version by one.
 
 #### 5 Solution sequence diagrams
 
-Figure 3.140 shows the state dispatch when an administrator publishes a listing. Inside `changeStatus`, after the row lock and the version check, the application service calls `publish()`; `Product` checks stock and price, then asks its state. The `alt` fragment has one operand per kind of ConcreteState, chosen by dynamic dispatch rather than by a switch: DRAFT and OFF_SALE override `publish()`, while ON_SALE inherits the refusing default. The full publish flow, with its transaction, lock and version check, is Figure 3.109.
+Figure 3.137 shows the state dispatch when an administrator publishes a listing. Inside `changeStatus`, after the row lock and the version check, the application service calls `publish()`; `Product` checks stock and price, then asks its state. The `alt` fragment has one operand per kind of ConcreteState, chosen by dynamic dispatch rather than by a switch: DRAFT and OFF_SALE override `publish()`, while ON_SALE inherits the refusing default. The full publish flow, with its transaction, lock and version check, is Figure 3.106.
 
 ```mermaid
 sequenceDiagram
@@ -233,9 +233,9 @@ sequenceDiagram
   end
 ```
 
-Figure 3.140: Design sequence diagram of the State dispatch in publishing a listing. The status is asked, not tested: the state object answers with the next state or refuses; the full publish flow is Figure 3.109.
+Figure 3.137: Design sequence diagram of the State dispatch in publishing a listing. The status is asked, not tested: the state object answers with the next state or refuses; the full publish flow is Figure 3.106.
 
-Figure 3.141 shows the Optimistic Offline Lock. Two administrators read the same listing at version 3. The first save commits version 4. The second save carries version 3: its `lockById` waits for the first transaction's row lock, then reads version 4, so `requireVersion(3)` refuses it with 412 and nothing is written. The controller is left out of this figure to keep it legible; it passes each request on as in Figure 3.109.
+Figure 3.138 shows the Optimistic Offline Lock. Two administrators read the same listing at version 3. The first save commits version 4. The second save carries version 3: its `lockById` waits for the first transaction's row lock, then reads version 4, so `requireVersion(3)` refuses it with 412 and nothing is written. The controller is left out of this figure to keep it legible; it passes each request on as in Figure 3.106.
 
 ```mermaid
 sequenceDiagram
@@ -267,11 +267,11 @@ sequenceDiagram
   A-->>A2: 412 CATALOG_412_002, currentVersion 4
 ```
 
-Figure 3.141: Design sequence diagram of a stale save (Optimistic Offline Lock). The version check refuses the second save before any change; the guarded UPDATE is the backstop for any writer that skips the check.
+Figure 3.138: Design sequence diagram of a stale save (Optimistic Offline Lock). The version check refuses the second save before any change; the guarded UPDATE is the backstop for any writer that skips the check.
 
 #### 6 Implementation decisions
 
-The implementation follows Figures 3.138 to 3.141. The decisions are:
+The implementation follows Figures 3.135 to 3.138. The decisions are:
 
 1. **Enum constant bodies as ConcreteStates.** The three states are constants of `ProductStatus` with bodies, not three named classes. They are shared and stateless, and the stored code (`draft`, `on_sale`, `off_sale` in `biz_product.status`) maps back through `ProductStatus.fromCode`, which fails on an unknown code.
 2. **The state returns its successor; `Product` applies it.** `ProductStatus.publish()` and `delist()` return the next state, and `Product.transition(next)` builds the next revision. There is no public status setter.
@@ -283,9 +283,9 @@ The implementation follows Figures 3.138 to 3.141. The decisions are:
 
 Two status tests remain outside the states, and we accept both. `AdminListingAppServiceImpl.changeStatus` still switches on the *requested* target to choose `publish()` or `delist()`; the current state still decides whether that move is legal. `Product.isOnSale()` compares the status for the purchase and team-price checks (`CatalogPurchaseSupportImpl`, `TeamPricePolicy`).
 
-Table 3.32 lists the implementing classes and the tests that pin them. Unit tests run in the backend CI build (`build-quality`) on every pull request that changes the backend; `AdminListingFlowIT` runs the real HTTP chain against PostgreSQL 18 in Testcontainers, locally and in the same CI build. The 409 and 412 paths are verified by these automated tests; they were not separately exercised on dev.
+Table 3.31 lists the implementing classes and the tests that pin them. Unit tests run in the backend CI build (`build-quality`) on every pull request that changes the backend; `AdminListingFlowIT` runs the real HTTP chain against PostgreSQL 18 in Testcontainers, locally and in the same CI build. The 409 and 412 paths are verified by these automated tests; they were not separately exercised on dev.
 
-Table 3.32: Implementing classes and their tests.
+Table 3.31: Implementing classes and their tests.
 
 | Class (module) and role | Tests |
 |---|---|

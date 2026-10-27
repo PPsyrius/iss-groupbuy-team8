@@ -51,7 +51,7 @@ UC3 and UC4 (the last seat and the last stock unit), UC5 (expiry against a late 
 
 #### Static structure changes
 
-Repositories gain lock methods, so the locking is visible in the design instead of hidden in SQL. An entity that is edited concurrently gains a `version`. Jobs gain a lease port. Figure 3.28 shows the analysis «entity» `Team` and the design elements that make it safe under concurrency.
+Repositories gain lock methods, so the locking is visible in the design instead of hidden in SQL. An entity that is edited concurrently gains a `version`. Jobs gain a lease port. Figure 3.27 shows the analysis «entity» `Team` and the design elements that make it safe under concurrency.
 
 ```mermaid
 classDiagram
@@ -101,13 +101,13 @@ classDiagram
     PaidGroupDealRepository ..> GroupDeal : locks
 ```
 
-Figure 3.28: Class diagram, before (the analysis «entity» Team, top) and after the concurrency strategy. Lock methods appear on the repository ports, a concurrently edited listing carries a version, and scheduled jobs get a lease port.
+Figure 3.27: Class diagram, before (the analysis «entity» Team, top) and after the concurrency strategy. Lock methods appear on the repository ports, a concurrently edited listing carries a version, and scheduled jobs get a lease port.
 
 Rationale: a lock method in the port makes the locking part of the design contract, so a reviewer can check the lock order from the interfaces, and a lease port lets several application instances share one schedule.
 
 #### Dynamic behaviour changes
 
-The analysis model says nothing about two buyers at once (Figure 3.29). In design, both settlements ask the database for the team's row lock; the second waits until the first commits, then reads the team, which the first admission has already set to SUCCEEDED, and is refused with `DEAL_CLOSED` because the team is no longer open (Figure 3.30).
+The analysis model says nothing about two buyers at once (Figure 3.28). In design, both settlements ask the database for the team's row lock; the second waits until the first commits, then reads the team, which the first admission has already set to SUCCEEDED, and is refused with `DEAL_CLOSED` because the team is no longer open (Figure 3.29).
 
 ```mermaid
 sequenceDiagram
@@ -122,7 +122,7 @@ sequenceDiagram
     Note over A,T: who gets the last seat is not defined
 ```
 
-Figure 3.29: Analysis sequence of two joins for the last seat, before the concurrency strategy. Both controls call the same entity in parallel, and the model does not say which one wins.
+Figure 3.28: Analysis sequence of two joins for the last seat, before the concurrency strategy. Both controls call the same entity in parallel, and the model does not say which one wins.
 
 ```mermaid
 sequenceDiagram
@@ -142,7 +142,7 @@ sequenceDiagram
     B->>DB: commit: payment SUCCEEDED, refund owed
 ```
 
-Figure 3.30: Design sequence of the same race, after the concurrency strategy. The team row lock queues the second settlement behind the first; the loser's money is not lost but committed with a refund obligation.
+Figure 3.29: Design sequence of the same race, after the concurrency strategy. The team row lock queues the second settlement behind the first; the loser's money is not lost but committed with a refund obligation.
 
 Rationale: a group-buy must never sell more seats than its target or settle one payment twice. Database locks hold across application instances, which in-memory locks would not. Because the expiry sweep also locks the team first, a sweep and a late payment on the same team queue behind each other in the same way.
 
@@ -156,7 +156,7 @@ Each step of a use case that changes data is one database transaction, owned by 
 - No call to an external provider runs inside a transaction. `StripeCheckoutService.handleWebhook` refuses to start if a transaction is already open.
 - Each event listener runs in the phase its work needs (listener phases, section 3.2.9).
 
-Figure 3.31 shows the transaction boundary in the classes, with one listener of each phase: `OrderLifecycleSubscriber` (`BEFORE_COMMIT`) and `OpenDealOfferCacheSubscriber` (`AFTER_COMMIT`); the other listeners follow the same pattern and are not drawn. Figure 3.32 shows the transaction boundary on the settlement of the last seat. Before this strategy the step was the analysis interaction of Figure 3.29, with no transaction at all.
+Figure 3.30 shows the transaction boundary in the classes, with one listener of each phase: `OrderLifecycleSubscriber` (`BEFORE_COMMIT`) and `OpenDealOfferCacheSubscriber` (`AFTER_COMMIT`); the other listeners follow the same pattern and are not drawn. Figure 3.31 shows the transaction boundary on the settlement of the last seat. Before this strategy the step was the analysis interaction of Figure 3.28, with no transaction at all.
 
 ```mermaid
 classDiagram
@@ -190,7 +190,7 @@ classDiagram
     OrderFulfilmentAdapter ..|> PaymentBusinessPort
 ```
 
-Figure 3.31: Class diagram of the transaction boundary, after the concurrency strategy. The payment service owns the transaction, the business port refuses to run outside it, and each subscriber's phase says whether its work is part of the fact or follows it.
+Figure 3.30: Class diagram of the transaction boundary, after the concurrency strategy. The payment service owns the transaction, the business port refuses to run outside it, and each subscriber's phase says whether its work is part of the fact or follows it.
 
 Rationale: the payment slice owns the transaction and calls the business through a port that refuses to run outside it, and a subscriber's phase states in one place whether its work is part of the fact or follows it.
 
@@ -210,7 +210,7 @@ sequenceDiagram
     S->>E: after commit: onTeamSucceeded
 ```
 
-Figure 3.32: Design sequence of the last-seat settlement, transaction boundary and listener phases only. Provider calls stay outside the transaction (transaction drawn as a critical region, section 3.4.0), the confirmation of the team's orders commits with the payment, and the cache eviction runs only after the commit; the full settlement is Figure 3.46.
+Figure 3.31: Design sequence of the last-seat settlement, transaction boundary and listener phases only. Provider calls stay outside the transaction (transaction drawn as a critical region, section 3.4.0), the confirmation of the team's orders commits with the payment, and the cache eviction runs only after the commit; the full settlement is Figure 3.44.
 
 Rationale: the seat, the order and the stock unit change together with the payment's SUCCEEDED state, or not at all. A payment whose admission is rejected commits with a refund obligation instead. If the transaction fails, everything rolls back and Stripe delivers the webhook again. A slow provider never holds a database lock.
 

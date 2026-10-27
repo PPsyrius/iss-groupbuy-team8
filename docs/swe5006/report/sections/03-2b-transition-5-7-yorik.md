@@ -186,9 +186,9 @@ sequenceDiagram
     W-->>S: 200 Result
 ```
 
-Figure 3.20: Design sequence diagram of the webhook's provider boundary, after the strategy. Signature verification and the re-read of the session with BlocBuy's own key happen before any transaction opens; the full settlement, from the event claim onward, is Figure 3.46.
+Figure 3.20: Design sequence diagram of the webhook's provider boundary, after the strategy. Signature verification and the re-read of the session with BlocBuy's own key happen before any transaction opens; the full settlement, from the event claim onward, is Figure 3.44.
 
-The refund call adds the recovery mechanisms; one refund attempt is drawn in Figure 3.58. These are mechanisms, not GoF patterns: Idempotency Key, Retry with a fixed delay, and operator review. Table 3.10 records the candidates the team weighed.
+The refund call adds the recovery mechanisms; one refund attempt is drawn in Figure 3.55. These are mechanisms, not GoF patterns: Idempotency Key, Retry with a fixed delay, and operator review. Table 3.10 records the candidates the team weighed.
 
 Table 3.10: Candidate mechanisms for a refund that must not be lost or sent twice.
 
@@ -266,7 +266,7 @@ classDiagram
     %% at User 2,0
 ```
 
-Figure 3.22: Analysis class diagram, before the strategy. The model says who acts, but not how the actor is identified or what the actor may do.
+Figure 3.21: Analysis class diagram, before the strategy. The model says who acts, but not how the actor is identified or what the actor may do.
 
 ```mermaid
 classDiagram
@@ -312,13 +312,13 @@ classDiagram
     %% at RoleRepository 2,4
 ```
 
-Figure 3.23: Design class diagram, after the strategy. The interceptor guards every path; the controller adds the role check; roles come from the database through a domain port; one handler turns each refusal into its status code.
+Figure 3.22: Design class diagram, after the strategy. The interceptor guards every path; the controller adds the role check; roles come from the database through a domain port; one handler turns each refusal into its status code.
 
 Rationale: authentication sits in one interceptor with an explicit allow-list, so forgetting a check on a new endpoint fails safe. Roles live in database tables behind a port, so the domain stays free of Sa-Token (ArchUnit rule `domain_is_framework_free` bans `cn.dev33..` in the domain). Ownership stays in the application service, where the object is loaded, which closes insecure direct object references that a role check cannot see.
 
 #### Dynamic behaviour changes
 
-In analysis, a «boundary» calls its «control» directly. In design, a request passes a fixed series of checks, cheapest first, and is refused before any business read or provider call (Figure 3.24):
+In analysis, a «boundary» calls its «control» directly. In design, a request passes a fixed series of checks, cheapest first, and is refused before any business read or provider call (Figure 3.23):
 
 1. the interceptor checks the session: no session gives 401, and the client sends the user to sign in;
 2. the controller checks the role (admin APIs) or the request header (money writes): a missing header gives 400, a wrong header or a missing role gives 403;
@@ -352,7 +352,7 @@ sequenceDiagram
     end
 ```
 
-Figure 3.24: Design sequence diagram of a protected money write, after the strategy. Each check refuses with its own status before the next, more expensive step runs; every refusal is an exception that `GlobalExceptionHandler` turns into the status shown. An admin request follows the same path with `StpUtil.checkRole(RoleCode.ADMIN)` in place of the header check, and a missing role gives 403.
+Figure 3.23: Design sequence diagram of a protected money write, after the strategy. Each check refuses with its own status before the next, more expensive step runs; every refusal is an exception that `GlobalExceptionHandler` turns into the status shown. An admin request follows the same path with `StpUtil.checkRole(RoleCode.ADMIN)` in place of the header check, and a missing role gives 403.
 
 Evidence: automated tests that run in CI, not measurements on dev. `EndpointAuthSurfaceTest` checks that anonymous requests to protected monolith routes return 401 without calling any service (NFR-68 in `docs/quality/nfr-register.md`, enforced for monolith controllers). `PaymentBrowserControllerTest.requiresCsrfHeaderBeforeCreatingIntent` checks 400 for a missing header and 403 for a wrong one. `AdminPaymentFlowIT` checks 403 for a buyer on an admin API. `WriteRateLimitIT` checks the 429 boundaries and the fail-open behaviour.
 
@@ -411,7 +411,7 @@ classDiagram
     %% at Team 0,2
 ```
 
-Figure 3.25: Analysis class diagram, before the strategy. The Scheduler, through the SchedulerTrigger «boundary», starts the expiry «control» ResolveTeamControl, which changes every overdue team; the model says nothing about several instances or failures. The analysis sequence of the expiry is Figure 3.105.
+Figure 3.24: Analysis class diagram, before the strategy. The Scheduler, through the SchedulerTrigger «boundary», starts the expiry «control» ResolveTeamControl, which changes every overdue team; the model says nothing about several instances or failures. The analysis sequence of the expiry is Figure 3.102.
 
 ```mermaid
 classDiagram
@@ -457,13 +457,13 @@ classDiagram
     %% at PaidGroupDealRepository 2,3
 ```
 
-Figure 3.26: Design class diagram of the team-expiry sweep, after the strategy. The timer class holds no business logic; the lease is a port in the domain; the sweeper and the per-team service are ordinary application services, testable without a scheduler.
+Figure 3.25: Design class diagram of the team-expiry sweep, after the strategy. The timer class holds no business logic; the lease is a port in the domain; the sweeper and the per-team service are ordinary application services, testable without a scheduler.
 
 Rationale: keeping the work in application services lets unit tests call `sweep` and `expireOne` directly. The lease lives in PostgreSQL, which BlocBuy already runs, so no scheduler product or distributed lock service is added, and two containers on one host during a redeploy cannot both run a job: the lease owner is the host name plus a per-JVM UUID. The master switch lets a deployment start the jobs only after its backlog has been checked.
 
 #### Dynamic behaviour changes
 
-In analysis, the Scheduler sends one message and every overdue team expires. In design, one run is a bounded loop of independent transactions (Figure 3.27):
+In analysis, the Scheduler sends one message and every overdue team expires. In design, one run is a bounded loop of independent transactions (Figure 3.26):
 
 1. take the lease, or skip the run if another instance holds it; a lease left by an instance that stopped lapses after at most two minutes, and another instance takes it;
 2. read up to 100 due team IDs in one query on the database clock, oldest deadline first;
@@ -495,7 +495,7 @@ sequenceDiagram
     end
 ```
 
-Figure 3.27: Design sequence diagram of one team-expiry run, after the strategy. The lease, taken through `SchedulerLeaseRepository`, makes the run single-flight across instances, and each team in the batch commits or rolls back on its own; the full expiry of one team is Figure 3.114.
+Figure 3.26: Design sequence diagram of one team-expiry run, after the strategy. The lease, taken through `SchedulerLeaseRepository`, makes the run single-flight across instances, and each team in the batch commits or rolls back on its own; the full expiry of one team is Figure 3.111.
 
 Rationale: one transaction per team keeps each row lock short, which matters because webhook settlement locks the same team row first (3.2.8), and it isolates failures, so one team that cannot expire does not roll back the others. Deciding "overdue" on the database clock under the row lock gives every instance the same answer, and no decision rests on a clock reading taken before a long lock wait.
 
