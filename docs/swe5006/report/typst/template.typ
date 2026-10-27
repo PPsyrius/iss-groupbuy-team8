@@ -54,10 +54,39 @@
 // twips (1.25 cm) from the edge, one section with no titlePg, so header and footer are on every
 // page, the title page included.
 #let header-dist = 1.25cm
-// header1.xml: the logo, right-aligned, wp:extent 1479550 x 544959 EMU (4.11 x 1.51 cm). It is
-// taller than the space above the margin, so Word pushes the text down below it; the top margin
-// grows to match when a logo is supplied.
-#let logo-height = 1.51cm
+// header1.xml: the logo, right-aligned, wp:extent 1479550 x 544959 EMU (4.11 x 1.51 cm). The
+// template's image (word/media/image1.png, 2344 x 866 px) carries blank margins around the
+// artwork: 12.5 % left and right, 25.6 % above and 25.9 % below. The header clips them off and
+// prints the artwork at the template's scale, 3.08 x 0.73 cm, so the logo sits on the same line
+// as the running head and the top margin stays the template's 2.54 cm.
+#let logo-extent = (4.11cm, 1.51cm)
+#let logo-crop = (left: 0.1254, top: 0.2564, right: 0.1246, bottom: 0.2587)
+// `logo` is (path: str, cropped: bool); a cropped logo (REPORT_LOGO) is drawn at the artwork's height.
+#let logo-mark(logo) = {
+  let (w, h) = logo-extent
+  if logo.cropped { return image(logo.path, height: h * (1 - logo-crop.top - logo-crop.bottom)) }
+  box(clip: true,
+    width: w * (1 - logo-crop.left - logo-crop.right),
+    height: h * (1 - logo-crop.top - logo-crop.bottom),
+    place(top + left, dx: -w * logo-crop.left, dy: -h * logo-crop.top, image(logo.path, width: w, height: h)))
+}
+
+// Running head (not in the template): the chapter or appendix current on the page, small and muted
+// at the left of the header. A chapter that opens on the page wins; otherwise the last one before
+// it. The title and contents pages come before any chapter, so they get none.
+#let running-head() = context {
+  let pg = here().page()
+  let sel = selector(heading.where(level: 1))
+  let opening = query(sel).filter(h => h.location().page() == pg)
+  let chapter = if opening.len() > 0 { opening.first() } else { query(sel.before(here())).at(-1, default: none) }
+  if chapter != none {
+    // The baseline is the text's bottom edge, so it sits on the same line as the logo's foot.
+    set text(size: 9pt, fill: rgb("#6B655C"), bottom-edge: "baseline")
+    if chapter.numbering == none { chapter.body } else {
+      counter(heading).at(chapter.location()).map(str).join(".") + " " + chapter.body
+    }
+  }
+}
 
 // Dark navy close to Word's Heading 1-3 theme colour (accent 1, darker 50%).
 #let heading-ink = rgb("#1F3864")
@@ -65,9 +94,11 @@
 #let setup(logo: none, body) = {
   set page(
     paper: "a4",
-    margin: (x: 2.54cm, bottom: 2.54cm, top: if logo != none { header-dist + logo-height + 0.3cm } else { 2.54cm }),
-    header-ascent: 0.3cm,
-    header: if logo != none { align(right + bottom, image(logo, height: logo-height)) },
+    margin: 2.54cm,
+    header-ascent: 0.45cm,
+    // One invisible line seats both: the running head's baseline and the logo artwork's foot.
+    header: align(bottom, grid(columns: (1fr, auto), align: bottom, column-gutter: 1em,
+      running-head(), if logo != none { logo-mark(logo) })),
     // footer1.xml: right-aligned "Page {PAGE} of {NUMPAGES}" in the Footer style (Normal, Arial 12 pt).
     footer: context align(right)[Page #counter(page).display() of #counter(page).final().first()],
   )
