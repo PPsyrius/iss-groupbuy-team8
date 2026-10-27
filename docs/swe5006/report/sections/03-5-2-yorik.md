@@ -75,7 +75,7 @@ Figure 3.121: UML sequence diagram of one team's expiry, brute-force design (nev
 
 **What varies.** The objects that depend on a team's outcome, and how many of them there are (SDP 05a p13). The outcome itself, and the rule for when a team expires, do not vary.
 
-Table 3.23: Observers added to the team-outcome events over time (git history; first commit of each class).
+Table 3.23: Observers added to the team-outcome events over time (git history; first commit of each class). `IntegrationOutboxWriter` also writes the `PaymentSucceeded` event, which is not a team outcome.
 
 | Date | Observer | Event | Phase |
 |---|---|---|---|
