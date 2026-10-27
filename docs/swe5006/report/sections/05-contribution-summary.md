@@ -36,7 +36,7 @@ Each line names the teammates who wrote code behind a section that another membe
 
 - **UC1 and UC2 (3.4.3, Pan):** the browse backend and the Google sign-in backend by Liu Jin; the frontend pages by Lim; Eric extended the shared pricing seam for team quotes.
 - **UC3 and UC4 (3.4.1, Eric):** the purchase-intent and settlement ports by Liu Jin.
-- **UC6 and Observer (3.4.2 and 3.5.2, Yorik):** the team-lifecycle events, including the team-expired event, and the expiry refund subscriber by Liu Jin; the team-succeeded event by Yorik.
+- **UC6 and Observer (3.4.2 and 3.5.2, Yorik):** the domain events `TeamSucceeded` and `TeamExpired` and the expiry refund subscriber by Liu Jin; their integration contracts `TeamSucceededV1` and `TeamExpiredV1` by Yorik.
 - **UC7 and UC8 (3.4.4, Lim):** the My Teams endpoint and the share-attribution backend by Liu Jin; the frontend pages by Lim.
 - **UC9 and State (3.4.5 and 3.5.5, Liu Jin):** the first version, including the listing State, by Eric (11 September), with Liu Jin reviewing; Pan changed the states on 1 October to expose deletion eligibility; admin team terms by Liu Jin.
 - **Template Method (3.5.3, Pan):** `BatchingOutboxEventTransport` by Pan; the original SQS and SNS transports by Yorik; Liu Jin opened the pull request that integrated them and Pan merged it.
