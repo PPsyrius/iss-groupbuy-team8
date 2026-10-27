@@ -27,7 +27,7 @@ Table B.1: Backend ADRs.
 
 Backend ADR 0007 still reads "Proposed". Its text says it becomes Accepted after team agreement at a stand-up, and no such agreement has been recorded in the file. Its implementation is nevertheless merged: the outbox writer, relay and consumer are in the code and are switched on only in the SWE5001 topology; on the SWE5006 `dev` host all three are off. The status is therefore out of date rather than a sign that the design is unbuilt.
 
-Backend ADR 0002's addendum of 23 September records the scheduling design. Background jobs run as Spring scheduled jobs in `blocbuy-bootstrap`; each run goes through `LeasedJobRunner`, which takes and renews a lease row in `sys_scheduler_lock` in PostgreSQL, so only one instance runs a job at a time. A failed item backs off through `sys_scheduled_item_retry` (V17), and one property per environment switches the jobs on. Section 3.2.7 describes it.
+Backend ADR 0002's addendum of 23 September records the scheduling design for the team-expiry sweep, and its later notes add the refund worker on the same runner. In the code all five background jobs (team expiry, purchase-intent expiry, refund worker, outbox relay and outbox retention) are Spring scheduled jobs in `blocbuy-bootstrap`, and each run goes through `LeasedJobRunner`, which takes and renews a lease row in `sys_scheduler_lock` in PostgreSQL, so only one instance runs a job at a time. A failed item backs off through `sys_scheduled_item_retry` (V17), and one property per environment switches the jobs on. Section 3.2.7 describes it.
 
 #### B.2 Frontend ADRs
 
