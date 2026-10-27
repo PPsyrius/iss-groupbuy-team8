@@ -3,6 +3,7 @@ rubric: B
 owner: Liu Jin, Lim Jiechao
 plan: #681
 sources: backend/docs/adr/README.md; frontend/docs/adr/README.md; backend/docs/design/backend-skeleton-plan.md
+owns: R26
 status: draft
 -->
 
@@ -88,8 +89,8 @@ Table B.4: Significant decisions that have no ADR.
 
 | Decision, choice and reason | Alternative it replaced | Where it is recorded |
 | --- | --- | --- |
-| **Authentication.** A server-side Sa-Token session in Redis, sent as an HttpOnly cookie. A session can be revoked at once, and the token never reaches JavaScript | JWT in browser local storage after Google sign-in (proposal) | Skeleton plan D6, D7; frontend ADR 0002 covers only the cookie and same-origin side |
-| **Persistence framework.** MyBatis with hand-written XML SQL. The design depends on explicit `SELECT … FOR UPDATE`, guarded updates and partial unique indexes, which are easier to see and test in plain SQL | JPA (proposal) | Skeleton plan §1 and §3; section 3.2.4 |
+| **Authentication.** A server-side Sa-Token session in Redis, sent as an HttpOnly cookie. A session can be revoked at once, and the token never reaches JavaScript | JWT in browser local storage after Google sign-in (proposal); Google sign-in itself is unchanged | Skeleton plan D6, D7 (30 August, before the first sprint); frontend ADR 0002 covers only the cookie and same-origin side |
+| **Persistence framework.** MyBatis with hand-written XML SQL. The design depends on explicit `SELECT … FOR UPDATE`, guarded updates and partial unique indexes, which are easier to see and test in plain SQL | Spring Data JPA (proposal); MyBatis sits behind the domain's repository ports | Skeleton plan §1 and §3 (30 August, before the first sprint); section 3.2.4 |
 | **Framework-free domain.** The domain module uses only the JDK and Lombok, enforced by ArchUnit, so domain rules are unit-tested without Spring | Annotated entities in the domain | Skeleton plan §4 and §8; Table 3.2 |
 | **Database conventions.** UUIDv7 keys, table prefixes, soft delete, no foreign keys or CHECK constraints (section 3.6) | Database-enforced references | The team's `pgsql-ddl` skill and the migration headers; backend ADR 0008 states the reason that applies on SWE5001 |
 | **Concurrency approach.** Pessimistic row locks taken in a fixed order, guarded updates, unique indexes as a backstop, and optimistic version checks on admin writes (section 3.6) | Optimistic locking everywhere | Backend ADRs 0001 and 0002 each state a lock order (deal → intent → payment, and team → intent → order → payment). The two are not yet combined into one stated order; this is an open backend issue (#663) |

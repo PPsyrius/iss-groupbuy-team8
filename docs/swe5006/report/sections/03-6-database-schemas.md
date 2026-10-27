@@ -3,6 +3,7 @@ rubric: 3.6
 owner: Liu Jin
 plan: #679
 sources: ../presentation/src/diagrams/core-erd.svg, full-erd.svg; backend Flyway V1–V28; .claude/skills/pgsql-ddl/SKILL.md
+owns: R30, R44
 status: draft
 -->
 
@@ -12,7 +13,7 @@ BlocBuy keeps all persistent state in one PostgreSQL 18 database, in the schema 
 
 #### Core schema
 
-The migrations live in `backend/blocbuy-bootstrap/src/main/resources/db/migration`: 28 SQL files, plus one `.conf` file that lets V23 build its indexes with `CREATE INDEX CONCURRENTLY` outside a transaction. A repeatable seed script, `R__demo_catalog_seed.sql`, loads demonstration products. For each context, the reviewed source DDL is kept in `backend/docs/db/` (`catalog.sql`, `groupbuy.sql`, `order.sql`, `payment.sql` and others), and the migrations are derived from it.
+The migrations live in `backend/blocbuy-bootstrap/src/main/resources/db/migration`: 28 SQL files, plus one `.conf` file that lets V23 build its indexes with `CREATE INDEX CONCURRENTLY` outside a transaction. The migrations are forward-only: there are no undo scripts. A repeatable seed script, `R__demo_catalog_seed.sql`, loads demonstration products. For each context, the reviewed source DDL is kept in `backend/docs/db/` (`catalog.sql`, `groupbuy.sql`, `order.sql`, `payment.sql` and others), and the migrations are derived from it.
 
 Figure 3.142 draws the eight core tables in crow's foot notation. Each line is a logical foreign key, and its ends give the cardinality; Table 3.33 repeats the keys and cardinalities in print size.
 
@@ -55,7 +56,7 @@ The object-to-table mapping follows the team's PostgreSQL conventions (the `pgsq
 
 The cost is that orphan rows are possible if application code is wrong. Soft delete, below, removes the most common cause, and the unique indexes stop the most damaging duplicates. The first migration's header comment (V1) still says that foreign keys and CHECK constraints are "pushed down to the database"; every later migration states the opposite rule, and none creates either.
 
-**Unique indexes as race backstops.** Where two requests can race, a unique index is the last line of defence after the row locks: `uq_biz_group_member_deal_user` (one membership per buyer and team), `uq_biz_payment_request_key` (one Checkout session per client idempotency key), `uq_log_payment_webhook_event_event_id` (each Stripe webhook event processed once; the event row is inserted before processing) and `biz_refund_payment_id_key` (one refund per payment). Most of them are partial (`WHERE deleted = false`), so a soft-deleted row does not block a new one.
+**Unique indexes as race backstops.** Where two requests can race, a unique index is the last line of defence after the row locks: `uq_biz_group_member_deal_user` (one active membership per buyer and team, V5), `uq_biz_group_member_payment_id` and `uq_biz_group_participation_receipt_payment` (one membership and one participation receipt per payment, V7), `uq_biz_payment_request_key` (one Checkout session per client idempotency key, V9), `uq_log_payment_webhook_event_event_id` (each Stripe webhook event processed once; the event row is inserted before processing, V2), `biz_refund_payment_id_key` (one refund obligation per payment, V9), `uq_biz_refund_provider_id` (one obligation per provider refund, V11), `uq_biz_order_payment_id` (one order per payment, V12) and `uq_biz_purchase_intent_fulfilled_payment` (one fulfilled purchase intent per payment, V15). Three of them, `uq_biz_group_member_deal_user`, `uq_biz_payment_request_key` and `uq_biz_purchase_intent_fulfilled_payment`, are partial (`WHERE deleted = false`), so a soft-deleted row does not block a new one.
 
 **Soft delete and audit columns.** 22 of the 29 tables carry `deleted boolean NOT NULL DEFAULT false`, and the ordinary business tables carry `create_time`, `update_time`, `create_by` and `update_by`. A delete sets the flag, so a row that other rows still reference never disappears. The seven tables without the flag are append-only records and queues: the four `log_` tables, `biz_payment_review_case`, `sys_outbox` and `sys_consumed_message`.
 

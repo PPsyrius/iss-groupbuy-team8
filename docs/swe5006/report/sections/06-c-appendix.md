@@ -3,6 +3,7 @@ rubric: C
 owner: Liu Jin
 plan: #681
 sources: ../presentation/src/diagrams/full-erd.svg
+owns: none
 status: draft
 -->
 

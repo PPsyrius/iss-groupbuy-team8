@@ -3,6 +3,7 @@ rubric: 3.1
 owner: Liu Jin
 plan: #677
 sources: ../presentation/src/diagrams/logical-layers.svg, dev-deployment.svg; backend/docs/adr/; frontend/docs/adr/
+owns: R33, R43
 status: draft
 -->
 
@@ -127,7 +128,7 @@ BlocBuy has no separately deployed components on `dev`: the backend is one deplo
 
 ![Figure 3.3: Deployment view of the SWE5006 dev system, UML deployment diagram with «device», «node» and «executionEnvironment». One CloudFront distribution splits the SPA from the API, and the whole backend with its database and cache runs on one EC2 host.](../figures/dev-deployment.svg){.landscape}
 
-A request flows as follows. The buyer's browser reaches one CloudFront distribution over HTTPS. CloudFront serves `/*` from a private S3 bucket through origin access control, and forwards `/api/*` to an Application Load Balancer (ALB). The ALB accepts traffic only from CloudFront's address range and only when CloudFront's secret origin header is present. It forwards to port 8589 on the EC2 host `BlocBuy-dev` (t3.large, Ubuntu 24.04). There the backend container runs read-only, without Linux capabilities, on the host network, and reaches PostgreSQL 18 and Redis 8 on the loopback interface. PostgreSQL holds every table and is the source of truth for teams, orders and payments; Redis holds only short-lived data: Sa-Token sessions, sign-in state, rate-limit counters and a cache of open teams. The backend calls Stripe and Google over HTTPS, and Stripe calls the backend back with signed webhooks through the same CloudFront path. Container logs go to CloudWatch Logs.
+A request flows as follows. The buyer's browser reaches one CloudFront distribution over HTTPS. CloudFront serves `/*` from a private S3 bucket through origin access control, and forwards `/api/*` to an Application Load Balancer (ALB). The ALB accepts traffic only from CloudFront's address range and only when CloudFront's secret origin header is present. It forwards to port 8589 on the EC2 host `BlocBuy-dev` (t3.large, Ubuntu 24.04), whose security group admits that port only from the load balancer (`docs/deploy/dev-cloudfront-deployment.md`). There the backend container runs read-only, without Linux capabilities, on the host network, and reaches PostgreSQL 18 and Redis 8 on the loopback interface. PostgreSQL holds every table and is the source of truth for teams, orders and payments; Redis holds only short-lived data: Sa-Token sessions, sign-in state, rate-limit counters and a cache of open teams. The backend calls Stripe and Google over HTTPS, and Stripe calls the backend back with signed webhooks through the same CloudFront path. Container logs go to CloudWatch Logs.
 
 Delivery follows the same picture. CI on GitHub-hosted runners authenticates to AWS with one OpenID Connect (OIDC) role per job, pushes the backend image to ECR with an immutable tag, and asks Systems Manager Run Command to pull it on the host by digest; the frontend bundle is synchronised to S3 and CloudFront is invalidated. Section 4.3 describes the pipeline and its gates.
 
