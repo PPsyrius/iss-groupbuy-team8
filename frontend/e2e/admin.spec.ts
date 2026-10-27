@@ -209,6 +209,53 @@ test.describe("signed-in buyer", () => {
 });
 
 test.describe("admin, stubbed", () => {
+  test("preserves unsupported legacy image URLs and refuses saving until corrected", async ({
+    page,
+    api,
+  }, testInfo) => {
+    api.state.me = { ...ADA, roles: ["admin"] };
+    const store = adminStore();
+    const id = "0e2e0000-0000-4000-8000-000000000099";
+    store.rows.push({
+      id,
+      productNo: "LEGACY-IMAGE",
+      status: "draft",
+      version: 0,
+      listing: {
+        title: "Legacy image listing",
+        originalPrice: "12.50",
+        currency: "sgd",
+        stock: 5,
+        coverImage: "https://legacy.example/cover.jpg",
+        images: ["https://legacy.example/shot.jpg"],
+      },
+    });
+    for (const [method, path, answer] of store.routes) {
+      api.override(method, path, (route, call) => answer(route, path.exec(call.path)?.[1] ?? ""));
+    }
+    await page.goto(`/admin/listings/${id}`);
+    const warning = page.getByRole("alert").filter({ hasText: "Existing URLs are kept" });
+    await expect(warning).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Cover image URL" })).toHaveValue(
+      "https://legacy.example/cover.jpg",
+    );
+    await page.getByRole("button", { name: "Save draft" }).click();
+    expect(api.calls("PUT", /^admin\/products\/[^/]+$/u)).toHaveLength(0);
+    await page.screenshot({
+      path: testInfo.outputPath("legacy-image-warning.png"),
+      fullPage: true,
+    });
+    await page
+      .getByRole("textbox", { name: "Cover image URL" })
+      .fill("https://dcsjrkmummxi7.cloudfront.net/cover.jpg");
+    await page
+      .getByRole("textbox", { name: "Image URL 1", exact: true })
+      .fill("https://dcsjrkmummxi7.cloudfront.net/shot.jpg");
+    await expect(warning).toHaveCount(0);
+    await page.getByRole("button", { name: "Save draft" }).click();
+    await expect.poll(() => api.calls("PUT", /^admin\/products\/[^/]+$/u).length).toBe(1);
+  });
+
   test("creates a draft, publishes it, and reloads after another admin's save", async ({
     page,
     api,

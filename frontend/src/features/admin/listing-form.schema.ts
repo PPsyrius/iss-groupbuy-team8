@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { CATEGORIES } from "@/features/catalog/categories";
 
+import { imageHostError, isApprovedImageUrl } from "./image-policy";
 import { isHttpsUrl } from "./listing-form";
 import { toCents } from "./money";
 
@@ -19,6 +20,7 @@ const imageUrl = v.pipe(
   v.string(),
   v.trim(),
   v.check((url) => url === "" || isHttpsUrl(url), HTTPS),
+  v.check((url) => url === "" || !isHttpsUrl(url) || isApprovedImageUrl(url), imageHostError),
   v.maxLength(URL_MAX, `Keep the URL under ${URL_MAX} characters.`),
 );
 
