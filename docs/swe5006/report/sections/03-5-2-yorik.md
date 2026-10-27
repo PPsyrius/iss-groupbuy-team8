@@ -3,6 +3,7 @@ rubric: 3.5.2, 3.5-1..6, G4
 owner: Yu Qianshuo (Yorik)
 plan: #679
 sources: deck s16, observer-expiry.svg; backend ADR 0002, ADR 0003; docs/agile/sprint-02/lifecycle-completion-plan-20260922.md
+owns: R31, FG11
 status: draft
 -->
 
@@ -252,7 +253,7 @@ Figure 3.125: UML sequence diagram of a join that fills a team after applying Ob
 
 The implementation follows the solution design. The decisions are:
 
-1. **One phase per subscriber, chosen by what the consequence is.** Consequences that are part of the same business fact use `@TransactionalEventListener(phase = BEFORE_COMMIT)`: `OrderLifecycleSubscriber` and `TeamExpiryRefundSubscriber` (ADR 0002). Derived side effects use `AFTER_COMMIT`: `ShareCreditSubscriber` writes in its own `REQUIRES_NEW` transaction and catches its own failures (ADR 0003).
+1. **One phase per subscriber, chosen by what the consequence is.** Consequences that are part of the same business fact use `@TransactionalEventListener(phase = BEFORE_COMMIT)`: `OrderLifecycleSubscriber` and `TeamExpiryRefundSubscriber` (ADR 0002). Derived side effects use `AFTER_COMMIT`: `ShareCreditSubscriber` credits only an attributed join, writes in its own `REQUIRES_NEW` transaction, opened as an explicit `TransactionTemplate` inside a `try`, and catches every failure, a failed commit included, logging it as a warning. A credit problem therefore never undoes a paid admission, and an exception thrown after the commit cannot turn a settled payment into an error. The unique index `uq_biz_share_credit_payment` (migration V18) absorbs a duplicate event (ADR 0003).
 2. **Order the subscribers by the global lock order.** `@Order(10)` on the order subscriber and `@Order(20)` on the refund subscriber follow the lock order team → intent → order → payment, so the two cannot take locks in opposite directions. Section 3.2.8 discusses the lock order and the open question of reconciling it with ADR 0001.
 3. **Let a failure escape.** `TeamExpiryRefundSubscriber` does not catch exceptions, so a failure to record the obligations rolls the expiry back with it rather than leaving a closed team that owes nobody.
 4. **Subscribers see only the immutable fact.** A subscriber receives the event record, never the `GroupDeal` aggregate, a mapper or a repository of another context; it touches only its own repository port. Both order handlers are status-guarded SQL updates, so a replayed event affects zero rows.

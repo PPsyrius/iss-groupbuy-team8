@@ -3,6 +3,7 @@ rubric: 3.4.2, 3.4-A..E, G4
 owner: Yu Qianshuo (Yorik)
 plan: #678
 sources: ../report-drafts/yorick-yu-contribution.md (YY:5–212); ../report-drafts/statecharts.md (SC:83–110)
+owns: R09, R28, FG04
 status: draft
 -->
 
@@ -515,7 +516,7 @@ sequenceDiagram
 
 Figure 3.59: UML design sequence diagram of UC6 flow 3, reconcile a parked refund. `reconcile` only retrieves a refund the operator names and maps it with the same checks as the worker; it has no path that creates a refund.
 
-`RefundService.reconcile` exists and is unit-tested, but no endpoint, command or job calls it: the operator command runner `stripe-ops` does not expose it, and the rollout runbook (`backend/docs/payment/stripe-rollout-runbook.md`) requires a separately reviewed invocation. Flow 3 is therefore designed and unit-tested but has never been run on dev.
+`RefundService.reconcile` exists and is unit-tested, but no endpoint, command or job calls it: it has no HTTP endpoint, the operator command runner `stripe-ops` (`StripeOperationsConfiguration`) does not expose it, and the rollout runbook (`backend/docs/payment/stripe-rollout-runbook.md`) requires a separately reviewed invocation. Flow 3 is therefore designed and unit-tested but has never been run on dev.
 
 #### Statechart of the refund obligation
 
@@ -550,7 +551,7 @@ A tick takes an obligation only when it is *due*: its next attempt time has pass
 
 **Evidence.** On 23 October on dev, with scheduling enabled, a two-seat team started with a real Stripe Sandbox payment and was left to expire. It closed 18.9 seconds after its unedited deadline, its order was cancelled, and its one S$22 refund succeeded 40.6 seconds after the deadline; Stripe listed exactly one refund for the payment, and the buyer's receipt showed "Refund sent" (`backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md`). These times describe that run, not a guarantee: the design bound for expiry is one sweep interval plus the sweep's own time, and the run does not show that bound is met on dev in general. The same day, an operator recovered three paid payments that had been stranded by a webhook fault; each was recorded as refund required, because its purchase had expired, and the worker refunded each exactly once.
 
-Tested locally (PostgreSQL, Stripe replaced by a test substitute), not on dev, on 3 October (`backend/docs/payment/stripe-refund-recovery-acceptance-20261003.md`): a refund whose result was lost before `finish` was retried with the same key and produced one refund, and a permanent refusal was parked in `review` with no second provider call. A deliberate crash, a replay and a permanent failure with operator review have not been exercised on dev. The unit tests `RefundServiceTest`, `TeamExpiryRefundSubscriberTest`, `TeamExpiryRefundServiceTest` and `GroupDealExpiryServiceTest` cover the worker's branches and the expiry service. The integration tests `StripeRolloutAcceptanceIT`, `TeamExpirySchedulingIT` and `V4ExpiryPipelineIT` run the real expiry, claim and persistence code against PostgreSQL; the last seeds two thousand teams and checks that each expires with exactly one effect.
+Tested locally (PostgreSQL 18, Stripe replaced by a test substitute), not on dev, on 3 October (`backend/docs/payment/stripe-refund-recovery-acceptance-20261003.md`). The rehearsal ran the eight `StripeRolloutAcceptanceIT` tests and the full Testcontainers integration suite. A refund whose result was lost before `finish` was reclaimed after its lease, retried with the same key and produced one refund; a signed refund notification delivered twice changed no payment, refund or audit row; and a permanent refusal was parked in `review` with no second provider call. {{CONFIRM: D18 Which evidence kind states crash recovery: tested locally, proven locally (Testcontainers and the 3 October rehearsal), or tested in CI (StripeRolloutAcceptanceIT)? — Yorik}} A deliberate crash, a replay and a permanent failure with operator review have not been exercised on dev. The unit tests `RefundServiceTest`, `TeamExpiryRefundSubscriberTest`, `TeamExpiryRefundServiceTest` and `GroupDealExpiryServiceTest` cover the worker's branches and the expiry service. The integration tests `StripeRolloutAcceptanceIT`, `TeamExpirySchedulingIT` and `V4ExpiryPipelineIT` run the real expiry, claim and persistence code against PostgreSQL; the last seeds two thousand teams and checks that each expires with exactly one effect.
 
 #### E Compliance with the transition strategies
 

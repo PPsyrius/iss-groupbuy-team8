@@ -3,6 +3,7 @@ rubric: 3.2.5, 3.2.6, 3.2.7
 owner: Yu Qianshuo (Yorik)
 plan: #677
 sources: ../report-drafts/transition-strategies.md; ../report-drafts/yorick-yu-contribution.md
+owns: R05, R22, R29
 status: draft
 -->
 
@@ -239,7 +240,7 @@ sequenceDiagram
 
 Figure 3.21: Design sequence diagram of one refund attempt, after the strategy. The claim and each finish are separate short transactions; the same key on every retry is what prevents a second refund.
 
-Two further rules bound the retry. After 23 hours from the first attempt, the worker stops creating refunds, because Stripe may discard an idempotency key after 24 hours; it searches Stripe by the obligation's metadata (`findRefund`) and sends a missing or ambiguous match to review. A `finish` is fenced by the claim's `version`, so a worker whose lease expired cannot overwrite a newer result. Recovery from review uses `RefundService.reconcile`, which only retrieves an existing Stripe refund and never creates one; it has no HTTP endpoint and is not wired into the operator command runner (`StripeOperationsConfiguration`), so designed but not exposed: a reconciliation must be arranged and reviewed separately.
+Three further rules bound the retry. First, the delay is fixed, not an exponential back-off: every `finish` sets the next attempt 30 seconds later. Second, once 23 hours have passed since the first attempt and no Stripe refund ID is stored, the worker stops creating refunds, because Stripe may discard an idempotency key after 24 hours; it searches Stripe by the obligation's metadata (`findRefund`) and sends a missing or ambiguous match to review. Third, a claim sets a two-minute row lease and increments the obligation's `version`, and `finish` is fenced by `id` and `version`, so a worker whose lease expired cannot overwrite a newer result (`RefundService`, `RefundMapper.xml`). Recovery from review uses `RefundService.reconcile`, which only retrieves an existing Stripe refund and never creates one; it has no HTTP endpoint and is not wired into the operator command runner (`StripeOperationsConfiguration`), so designed but not exposed: a reconciliation must be arranged and reviewed separately.
 
 Evidence, by kind:
 
@@ -503,7 +504,7 @@ Rationale: keeping the work in application services lets unit tests call `sweep`
 
 In analysis, the Scheduler sends one message and every overdue team expires. In design, one run is a bounded loop of independent transactions (Figure 3.27):
 
-1. take the lease, or skip the run if another instance holds it;
+1. take the lease, or skip the run if another instance holds it; a lease left by an instance that stopped lapses after at most two minutes, and another instance takes it;
 2. read up to 100 due team IDs in one query on the database clock, oldest deadline first;
 3. for each team, open one transaction: lock the team (`SELECT … FOR UPDATE`), read the database clock under the lock, expire it with a status-guarded update, and publish `TeamExpired`, whose subscribers cancel the orders and record the refund obligations before the commit (3.2.9);
 4. stop early if the lease could not be renewed, then release it.
@@ -537,10 +538,10 @@ sequenceDiagram
 
 Figure 3.27: Design sequence diagram of one team-expiry run, after the strategy. The lease, taken through `SchedulerLeaseRepository`, makes the run single-flight across instances, and each team commits or rolls back on its own.
 
-Rationale: one transaction per team keeps each row lock short, which matters because webhook settlement locks the same team row first (3.2.8), and it isolates failures, so one team that cannot expire does not roll back the others. Deciding "overdue" on the database clock under the row lock gives every instance the same answer.
+Rationale: one transaction per team keeps each row lock short, which matters because webhook settlement locks the same team row first (3.2.8), and it isolates failures, so one team that cannot expire does not roll back the others. Deciding "overdue" on the database clock under the row lock gives every instance the same answer, and no decision rests on a clock reading taken before a long lock wait.
 
 What the design promises, and what was observed:
 
-- Design bound: a team expires within one sweep interval plus the time the sweep takes after its deadline. It is not a one-minute guarantee.
+- Design bound: a team expires within one sweep interval plus the time the sweep takes after its deadline. The bound follows from the sweep's shape. The timer waits a fixed delay of one minute after a run ends (`blocbuy.scheduling.team-expiry.interval`, default `PT1M`), and each run selects the due teams on the database clock when it starts, so a deadline that passes just after that read is picked up by the next run. It is not a one-minute guarantee: a slow run delays the next one, more than 100 due teams wait for later runs, a team whose expiry failed waits five minutes, and no team expires while the scheduling switch is off.
 - Verified locally (not on dev): over 30 teams with deadlines inside a load window, the worst observed lag from deadline to committed expiry was 58.18 s, an upper bound that includes the observer's polling delay (`docs/perf/sprint3-baseline.md`).
 - On 23 October on dev: one bloc expired 18.9 s after its deadline and its refund succeeded 40.6 s after the deadline. That is one run, not a bound, and the target is not claimed as met on dev.
