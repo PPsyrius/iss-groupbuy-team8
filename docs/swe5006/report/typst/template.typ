@@ -68,6 +68,12 @@
   set par(justify: false, leading: 0.5em)
   // A row never splits across pages, so a cell's text stays beside its key.
   set table.cell(breakable: false)
+  // A long code name (`internal_controllers_are_hidden_and_distributed_only`) may break after
+  // an underscore, dot or slash, so it wraps inside its column instead of running into the next.
+  show raw.where(block: false): it => {
+    show regex("[_./]"): m => m + sym.zws
+    it
+  }
   let t = table(
     columns: n,
     inset: (x: 4pt, y: 3.5pt),
