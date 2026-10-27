@@ -118,11 +118,11 @@ classDiagram
 
 Figure 3.98: Analysis class diagram of UC9 Admin listing management (UML). One control serves every command; the version on `Listing` carries the stale-copy rule, and teams, policies and quotes are the history that blocks deletion.
 
-**UC5.** The team resolves itself on one of two triggers (Figure 3.99). The time-driven Scheduler actor reaches the system through the `ExpiryTimer` boundary. The last seat arrives through UC4's `PaymentGateway` and `JoinTeamControl` (3.4.1), shown here only as the entry point. `ResolveTeamControl` applies the outcome: it confirms the team's orders on success; on expiry it cancels them and creates one refund obligation per paid member, which UC6 then pays out (3.4.2). The `Team` entity owns the transition rule `canMoveTo`, so no control decides alone whether a team may change state.
+**UC5.** The team resolves itself on one of two triggers (Figure 3.99). The time-driven Scheduler actor reaches the system through the `SchedulerTrigger` boundary. The last seat arrives through UC4's `PaymentGateway` and `JoinTeamControl` (3.4.1), shown here only as the entry point. `ResolveTeamControl` applies the outcome: it confirms the team's orders on success; on expiry it cancels them and creates one refund obligation per paid member, which UC6 then pays out (3.4.2). The `Team` entity owns the transition rule `canMoveTo`, so no control decides alone whether a team may change state.
 
 ```mermaid
 classDiagram
-    class ExpiryTimer {
+    class SchedulerTrigger {
         <<boundary>>
         +tick(now)
     }
@@ -168,7 +168,7 @@ classDiagram
         -status: RefundStatus
     }
     %% at PaymentGateway 0,0
-    %% at ExpiryTimer 2,0
+    %% at SchedulerTrigger 2,0
     %% at JoinTeamControl 0,1
     %% at ResolveTeamControl 2,1
     %% at Team 1,2
@@ -176,7 +176,7 @@ classDiagram
     %% at Membership 1,3
     %% at Refund 2,3
     PaymentGateway "1" -- "1" JoinTeamControl
-    ExpiryTimer "1" -- "1" ResolveTeamControl
+    SchedulerTrigger "1" -- "1" ResolveTeamControl
     JoinTeamControl --> Team
     JoinTeamControl --> ResolveTeamControl : last seat
     ResolveTeamControl --> Team
@@ -362,7 +362,7 @@ Figure 3.104: Analysis sequence diagram of UC5 flow B5, the last seat fills the 
 ```mermaid
 sequenceDiagram
     actor Scheduler
-    participant X as ExpiryTimer (boundary)
+    participant X as SchedulerTrigger (boundary)
     participant R as ResolveTeamControl (control)
     participant T as Team (entity)
     participant O as Order (entity)
@@ -569,7 +569,7 @@ classDiagram
 
 Figure 3.107: Design class diagram of UC9, domain and infrastructure layers (UML). `Product` delegates its rules to its current `ProductStatus`; the version guard lives in the mapper's SQL, and a zero-row update becomes the 412.
 
-**UC5.** The two analysis triggers become two entry points, which meet at the same row of `biz_group_deal` (Figure 3.108). The timer becomes `TeamExpirySweepJob`, a Spring `@Scheduled` job. It runs at a fixed delay of one minute (`blocbuy.scheduling.team-expiry.interval`, default `PT1M`) under a database lease (`LeasedJobRunner`), so only one instance sweeps at a time. The job is off unless `blocbuy.scheduling.enabled` is set (3.2.7). `ResolveTeamControl` is split into three classes. `GroupDealExpirySweeper` selects the due teams in one bounded query. `GroupDealExpiryService.expireOne` resolves one team in its own short transaction. `PaidGroupDealService.joinConfirmed`, shared with UC4, publishes `TeamSucceeded` when an admission completes the team. The consequences are domain-event subscribers that run before the transaction commits (3.2.9): `OrderLifecycleSubscriber` confirms or cancels the orders, and `TeamExpiryRefundSubscriber` records the refunds.
+**UC5.** The two analysis triggers become two entry points, which meet at the same row of `biz_group_deal` (Figure 3.108). `SchedulerTrigger` becomes `TeamExpirySweepJob`, a Spring `@Scheduled` job. It runs at a fixed delay of one minute (`blocbuy.scheduling.team-expiry.interval`, default `PT1M`) under a database lease (`LeasedJobRunner`), so only one instance sweeps at a time. The job is off unless `blocbuy.scheduling.enabled` is set (3.2.7). `ResolveTeamControl` is split into three classes. `GroupDealExpirySweeper` selects the due teams in one bounded query. `GroupDealExpiryService.expireOne` resolves one team in its own short transaction. `PaidGroupDealService.joinConfirmed`, shared with UC4, publishes `TeamSucceeded` when an admission completes the team. The consequences are domain-event subscribers that run before the transaction commits (3.2.9): `OrderLifecycleSubscriber` confirms or cancels the orders, and `TeamExpiryRefundSubscriber` records the refunds.
 
 The analysis rule `canMoveTo` becomes `DealStatus.canTransitionTo`: only OPEN may move, and never to itself. `GroupDeal.joinPaid` and `GroupDeal.expire` check it on every move. `DealStatus` is a transition table on a plain enum, not the State pattern; the proposal named State for the team, and the team adopted State for listings only (3.5.5, 2.2). `DealStatus` also declares FAILED and CANCELED, but no production code writes either value.
 
@@ -931,7 +931,7 @@ Table 3.20: Transition strategies applied to UC9 and UC5.
 | 3.2.4 Persistence | «entity» `Listing`, `TeamPricePolicy`, `TeamTermsChange` (UC9) | aggregate `Product` with `ProductStatus` and `ProductTeamTerms`; port `ProductRepository`, adapter `ProductRepositoryImpl`, `BizProductMapper`; tables `biz_product`, `log_product_team_terms`; soft delete via `deleted` |
 | 3.2.4 Persistence | «entity» `Team`, `Membership` (UC5) | aggregate `GroupDeal` with `DealStatus`; port `PaidGroupDealRepository`, adapter `PaidGroupDealRepositoryImpl`, `PaidGroupDealMapper`; tables `biz_group_deal`, `biz_group_member` |
 | 3.2.6 Security | «entity» `AdminAccount` (UC9) | `administrator()` in `AdminListingController`: Sa-Token `checkLogin`, `checkRole` for the admin role and `checkPermission` for `catalog:product:write`; actor taken from the session; `requireActive` in `UserAppService` rechecks the account inside the transaction |
-| 3.2.7 Scheduling | «boundary» `ExpiryTimer` (UC5) | `TeamExpirySweepJob` (`@Scheduled`, fixed delay `PT1M`, switch `blocbuy.scheduling.enabled`), `LeasedJobRunner` (database lease, one sweeper at a time), retry backoff in `sys_scheduled_item_retry` |
+| 3.2.7 Scheduling | «boundary» `SchedulerTrigger` (UC5) | `TeamExpirySweepJob` (`@Scheduled`, fixed delay `PT1M`, switch `blocbuy.scheduling.enabled`), `LeasedJobRunner` (database lease, one sweeper at a time), retry backoff in `sys_scheduled_item_retry` |
 | 3.2.8 Concurrency | `version` of «entity» `Listing` (UC9) | `selectActiveByIdForUpdate` row lock first, `Product.requireVersion`, `WHERE version = expectedVersion` in `updateListing`, `updateTeamTerms` and `deleteDraft`; zero rows → `PRODUCT_VERSION_CONFLICT`, HTTP 412 |
 | 3.2.8 Concurrency | `status` and `currentSize` of «entity» `Team` (UC5) | `lockDeal` row lock, database clock read under the lock (`currentTime`), guarded updates `updateDeal` (`current_size` and `status` as read) and `expireDeal` (`status = 'open'`) |
 | 3.2.9 Domain Events | links from «control» `ResolveTeamControl` to «entity» `Order` and `Refund` (UC5) | events `TeamSucceeded` and `TeamExpired`; `@TransactionalEventListener` subscribers in phase `BEFORE_COMMIT`: `OrderLifecycleSubscriber` (`@Order(10)`) and `TeamExpiryRefundSubscriber` (`@Order(20)`) |
