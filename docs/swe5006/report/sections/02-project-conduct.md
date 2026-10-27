@@ -66,10 +66,10 @@ Table 2.4: Scrum roles per sprint.
 
 | Sprint | Scrum Master | Product Owner | Record |
 | --- | --- | --- | --- |
-| 1 | None named | {{CONFIRM: D11 who acted as Product Owner — Lim}} | #49 |
-| 2 | None named | (as above) | Sprint 2 plan, #93 |
+| 1 | Lim Jiechao, recorded after the sprint, on 28 September | {{CONFIRM: D11 who acted as Product Owner — Lim}} | #49 |
+| 2 | Wang Ziang (Eric), recorded after the sprint, on 28 September | (as above) | Sprint 2 plan, #93 |
 | 3 | Lim Jiechao, 10 h planned | (as above) | #232 |
-| 4 | Wang Ziang (Eric), 4 h planned {{VERIFY: Eric confirmed as Scrum Master at Sprint 4 Planning on 12 Oct; the plan names him "proposed" — Eric}} | (as above) | #465 |
+| 4 | Wang Ziang (Eric), 4 h planned; proposed in the sprint plan, confirmation not recorded | (as above) | #465 |
 
 All five members acted as developers in every sprint. Code owners review each area: Pan for the CI workflows, Liu Jin for the backend, Lim for the frontend, with Yorik and Eric also requested on the payment and group-buy packages.
 
