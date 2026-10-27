@@ -3,6 +3,7 @@ rubric: 4.1, 4.2, 4.3
 owner: Panpakorn Siripanich (Pan); testing from Liu Jin
 plan: #680
 sources: docs/ci/; docs/quality/quality-gates.md; docs/ci/devsecops-maturity-assessment.md; deck s20–s27; #694
+owns: R04, R06, R07, R14, R16, R27, R37, R41, R42, R45, R47
 status: draft
 -->
 
@@ -54,7 +55,7 @@ Table 4.2: Rules of the `dev` ruleset `dev-require-review`, read from the GitHub
 
 Commits and pull requests follow `CONTRIBUTING.md`: Conventional Commits with an imperative summary of at most 72 characters; formatting-only changes as their own `style:` commit; every pull request links its issue and adds a dated entry to the sprint day log in the same pull request; all committed text in English.
 
-Each sprint ends with an annotated release tag on `dev` (Table 4.3). The tags mark sprint increments; no tag has been released to an environment by the tag-triggered production path, because that SWE5006 production stack was never built (section 4.3).
+Each sprint ends with an annotated release tag on `dev` (Table 4.3). The tags mark sprint increments; no GitHub release was published for any of them, and no tag has been released to an environment by the tag-triggered production path, because that SWE5006 production stack was never built (section 4.3).
 
 Table 4.3: Sprint release tags, by tagger date (Singapore time).
 
@@ -86,7 +87,7 @@ Table 4.4: Code owners by area (`.github/CODEOWNERS`).
 
 People sign in to AWS through IAM Identity Center. Lim created the AWS Organization and its Identity Center instance on 25 August 2026; the project account sits in a Sandbox organisational unit. Members sign in at the access portal or with `aws sso login` and receive one-hour sessions from a permission set: Lim, Pan and Liu Jin in group `team8-admin` (AdministratorAccess), Yorik and Eric in `team8-developers` (PowerUserAccess). Three service control policies bind every session in the project account, administrators included: `Org-Baseline` (the account cannot leave the organisation or tamper with Identity Center), `Region-Pin` (ap-southeast-1 plus listed global services) and `Sandbox-Guardrails` (costly services denied, small instance classes only). MFA is enforced on Identity Center sign-in according to Pan, who stated it on 23 October; the setting cannot be read back through the AWS API, so this is the owner's statement, not an audited fact.
 
-One exception is disclosed in the account governance record. Two IAM users exist in the project account for SSM port forwarding to the dev host: `blocbuy-dev-losgai` with one active access key, and `blocbuy-dev-ppsyrius` with a console password and no key. The key is limited by the `BlocBuySsmPortForwarding` policy and by every service control policy above. The statement "no long-lived AWS keys" is therefore true for CI and the management account, not for the project account. The second user also carries an unexplained `AmazonEKSFargatePodExecutionRolePolicy`.
+One exception is disclosed and accepted in the account governance record (`docs/deploy/aws-account-governance/README.md`). Two IAM users, created on 8 and 9 September 2026, exist in the project account for SSM port forwarding to the dev host: `blocbuy-dev-losgai` with one active access key (created 8 September), and `blocbuy-dev-ppsyrius` with a console password and no key. No removal is planned. The key is limited by the `BlocBuySsmPortForwarding` policy and by every service control policy above. The statement "no long-lived AWS keys" is therefore true for CI and the management account, not for the project account. The second user also carries an unexplained `AmazonEKSFargatePodExecutionRolePolicy`.
 
 On GitHub, the repository belongs to a personal account (Pan's), with the other four members as collaborators with write access. A personal account cannot enforce two-factor sign-in on collaborators, and whether each member uses it is not recorded.
 
@@ -197,11 +198,11 @@ The team assessed the pipeline against the DevSecOps Maturity Model on 23 Octobe
 
 The running dev site is scanned by a passive, anonymous OWASP ZAP session. It requests ten fixed read-only URLs (the SPA, catalogue pages, a product detail page, one invalid request and two anonymous denials) and crawls the SPA with form submission disabled; it does not log in, pay or attack. A run counts as complete only when all ten responses were observed and all 67 enabled passive rules ran; an incomplete run fails. Findings are advisory and never block a merge.
 
-On 22 October 2026 the first baseline scan of dev, made before the scanner verified its own coverage, found 0 High, 2 Medium, 4 Low and 6 Informational findings, all caused by the CloudFront response-headers policy. HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy` and a CSP with `frame-ancestors 'none'` and `object-src 'none'` were already present. The first dispatch on dev on 24 October failed as incomplete because a ZAP add-on download failed; the add-on is now pinned and checksum-verified, and the dispatch that evening (run 40107924516, the first dispatch on dev with verified coverage; pull-request scans of 22 and 24 October had already verified theirs) and the scheduled run of 26 October both completed with the same findings. The header fixes (#700, #703) merged on 27 October, and the dispatch that morning (run 40459212995 on `2f23d923`, 10/10 responses, 67/67 rules) found 0 High, 0 Medium, 0 Low and 6 Informational findings: the six Medium and Low findings are fixed and their issues closed, and the six Informational ones remain under review (Table 4.10).
+On 22 October 2026 the first baseline scan of dev, made before the scanner verified its own coverage, found 0 High, 2 Medium, 4 Low and 6 Informational findings, all caused by the CloudFront response-headers policy. HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy` and a CSP with `frame-ancestors 'none'` and `object-src 'none'` were already present. The first dispatch on dev on 24 October failed as incomplete because a ZAP add-on download failed; the add-on is now pinned and checksum-verified, and the dispatch that evening (run 40107924516, the first dispatch on dev with verified coverage; pull-request scans of 22 and 24 October had already verified theirs) and the scheduled run of 26 October both completed with the same findings. The header fixes (#700, #703) merged on 27 October, and the dispatch that morning (run 40459212995 on `2f23d923`, 10/10 responses, 67/67 rules) found 0 High, 0 Medium, 0 Low and 6 Informational findings: the six Medium and Low findings are fixed and their issues closed, and the six Informational ones remain under review (Table 4.10). The reports and run metadata of the two runs before the fixes are kept in `docs/quality/evidence/zap/`.
 
 <!-- table: split -->
 
-Table 4.10: OWASP ZAP findings on dev, before and after. Before: run 39733450177 (22 Oct). After: run 40459212995 (dispatch, 27 Oct; 10/10 responses, 67/67 rules).
+Table 4.10: OWASP ZAP findings on dev, before and after. Before: run 39733450177 (22 Oct, the first baseline) and scheduled run 40298983391 (26 Oct, the latest before any fix), with the same findings. After: run 40459212995 (dispatch, 27 Oct; 10/10 responses, 67/67 rules).
 
 | ZAP rule | Risk | Finding | Issue | Before | After | Outcome |
 |---|---|---|---|---|---|---|
@@ -245,7 +246,7 @@ Table 4.12: Unit and integration tests of the complex classes.
 | Behaviour | Test | What it proves |
 |---|---|---|
 | Team state machine | `DealStatusTest`, `PaidGroupDealTest` (for example `terminalStatesRejectJoins`) | Every allowed and forbidden status transition; a closed team refuses joins |
-| Last-seat capacity under concurrency | `StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist` | Twenty paid JOINs released together against PostgreSQL in Testcontainers: exactly one joiner wins and nineteen refund obligations persist. A `*Test` by name, an integration test by level |
+| Last-seat capacity under concurrency | `StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist` | Twenty paid JOINs for the last seat of a two-seat team, released together against PostgreSQL in Testcontainers: exactly one joiner wins, so the team ends with 2 members, 2 orders and current size 2, nineteen refund obligations persist, and stock falls by exactly two (100 to 98). Tested locally and in CI (for example the `SonarCloud Backend` job of run 40200028697), not shown on dev. A `*Test` by name, an integration test by level |
 | Refund idempotency | `RefundServiceTest.lostResponseRetriesSameDurableKey` | A refund whose provider response was lost is retried with the same durable idempotency key, so Stripe never refunds twice |
 | Quote correctness | `GroupDealPurchaseSupportImplTest.aTeamWithoutItsPaidLeaderCannotBeQuoted` | Written red first: two failing tests reproduced the quote defect before the fix |
 
@@ -371,10 +372,10 @@ At the presentation on 26 October the team planned to show one small frontend ch
 
 #### Rollback
 
-Rollback is configured at two levels, and neither has ever run on dev:
+Rollback has been configured at two levels since 4 September 2026 (`ab640878`), and neither has ever run on dev:
 
 - Automatic: `deploy.sh` restarts the previous image when the on-host health check fails, and the deploy action rolls back through SSM when the public health check fails after a successful host step. No automatic rollback has been recorded; the DORA collection to 22 October found none.
-- Manual: `rollback-backend.yml`, dispatched with a target (dev or prod), an optional digest, a mandatory reason and a confirmation checkbox. It shares the deploy concurrency group, so it cannot overlap a deploy. It has never been dispatched (0 runs on 26 October); the planned rollback drill on dev is still open.
+- Manual: `rollback-backend.yml`, dispatched with a target (dev or prod), an optional digest, a mandatory reason and a confirmation checkbox. It shares the deploy concurrency group, so it cannot overlap a deploy. It has never been dispatched (0 runs on 26 October); the planned rollback drill on dev (#623) is still open.
 
 Rollback restores the application image only. Flyway migrations are forward-only, so every migration must stay backward-compatible with the previous image. During a release freeze, setting `ENABLE_EC2_DEPLOY=false` stops backend delivery without touching the running host.
 
