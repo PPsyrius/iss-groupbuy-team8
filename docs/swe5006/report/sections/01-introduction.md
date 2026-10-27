@@ -107,7 +107,7 @@ The order system of record is a backend story, not a use case; it is described i
 
 ### 1.4.2 Functionality out of Scope
 
-The proposal (section 6.2) excluded seven capabilities, listed here in its words and in the order of the out-of-scope package on the use case diagram:
+The proposal (section 6.2) excluded seven capabilities, listed here close to its words and in the order of the out-of-scope package on the use case diagram:
 
 1. Merchant self-service GUI (listing administration is API-only CRUD plus database seeding, see UC9).
 2. Analytics and reporting dashboards.
