@@ -688,14 +688,20 @@ sequenceDiagram
         Note over S,R: UserAppService checks the account is active
         S->>D: requireVersion(expectedVersion)
         S->>D: publish()
+        break no stock or no price
+            D-->>S: BizException CATALOG_409_002
+            S-->>W: rollback
+            W-->>P: 409 via GlobalExceptionHandler
+        end
         D->>T: publish()
-        alt DRAFT or OFF_SALE, stock and price positive
+        alt DRAFT or OFF_SALE
             T-->>D: ON_SALE
             D-->>S: next revision, version + 1
             S->>R: updateListing(changed, expectedVersion, actorId)
             S-->>W: ManagedListing
             W-->>P: 200 Result, new version
-        else ON_SALE, or no stock or price
+        else ON_SALE
+            T-->>D: BizException CATALOG_409_002
             D-->>S: BizException CATALOG_409_002
             S-->>W: rollback
             W-->>P: 409 via GlobalExceptionHandler
@@ -703,7 +709,7 @@ sequenceDiagram
     end
 ```
 
-Figure 3.110: Design sequence diagram of UC9 flow D1, publish a listing (UML). The current `ProductStatus` decides the move inside one locked transaction; a refused move rolls back and returns 409.
+Figure 3.110: Design sequence diagram of UC9 flow D1, publish a listing (UML). `Product` refuses a listing without stock or price; for the rest, the current `ProductStatus` decides the move inside one locked transaction; a refused move rolls back and returns 409.
 
 **D2 Revise with a stale version, then reload and retry.** The 412 response carries the server's current version, which the conflict banner shows. While the banner is up, every write on the page is disabled.
 
