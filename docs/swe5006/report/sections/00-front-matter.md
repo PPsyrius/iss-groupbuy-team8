@@ -3,6 +3,7 @@ rubric: F, G11
 owner: Lim Jiechao
 plan: #675
 sources: ../presentation/src/content.js (names); #693
+owns: R48
 status: draft
 -->
 

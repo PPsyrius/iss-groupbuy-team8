@@ -3,6 +3,7 @@ rubric: 2.1, 2.2, 2.3
 owner: Lim Jiechao (Eric: Sprint 4 data; Pan: artefacts)
 plan: #676
 sources: docs/agile/sprint-0N/; docs/agile/definition-of-done.md; deck s4–s7
+owns: R07, R12, R26, R32, R45, R46
 status: draft
 -->
 
@@ -18,7 +19,7 @@ The proposal (section 7.1) breaks the project into nine tasks, each with a lead 
 
 #### Sprints
 
-Table 2.1 lists the four sprints with their goals and planned capacity. The dates follow the progress reports and the team's Definition of Done page; the sprint container issues carry slightly different dates.
+Table 2.1 lists the four sprints with their goals and planned capacity. The dates follow the progress reports and the team's Definition of Done page (`docs/agile/definition-of-done.md`); the sprint container issues and the sprint calendar in `docs/agile/README.md` carry slightly different dates (for Sprint 1, 2 to 12 September; for Sprint 2, 14 to 25 September). Table 4.3 dates the sprint tags.
 
 Table 2.1: Sprints, goals and planned capacity.
 
@@ -77,7 +78,7 @@ No Product Owner was appointed. The team prioritised the backlog together at eac
 
 The Definition of Done grew sprint by sprint, each time as changes to the previous list, and reached 15 rules in Sprint 4. They cover acceptance criteria, the API contract before the controller, architecture boundaries, tests for replay and concurrency, the required checks, review, the rule that "on dev" means shown on the deployed dev environment (from Sprint 3), pull requests under about 1,500 changed lines, remaining hours on the board, and four rules for the two-course Sprint 4. Appendix A lists all 15 with the sprint each started.
 
-The course gives a ladder of done steps: coded, tested, integrated, releasable, released (EPAT 01 Agile, p. 26). The team reads the upper three steps as follows. This reading is a team ruling, not a course rating:
+The course gives a ladder of done steps: coded, tested, integrated, releasable, released (EPAT 01 Agile, p. 26). The team reads the upper three steps as follows. This reading is a team ruling, agreed on 24 October, not a course rating:
 
 - **integrated:** merged to `dev` with every required check green;
 - **releasable:** shown working on the deployed dev environment, which is lower than the course's "production ready";
@@ -100,10 +101,10 @@ Table 2.5: Promised against delivered, 26 October 2026.
 | Use cases UC1–UC9 | Nine use cases (section 6.1) | Delivered | All nine built, tested and shown on dev by 24 October (Table 1.3). UC4's paid join on dev is shown in a recording only |
 | Crash recovery of refunds | Refunds safe under replay and crash | Open | Proven locally (Testcontainers and a local rehearsal on 3 October); not shown on dev (#224) |
 | UC9 administration | API-only listing CRUD plus database seeding | Changed | An admin console for administrators, built in Sprint 3 (frontend ADR 0015) |
-| Sign-in session | Google sign-in, with a token (JWT) kept in browser local storage | Changed | Google sign-in unchanged; the server keeps a Sa-Token session in Redis and the browser holds only an HttpOnly cookie (frontend ADR 0002; backend skeleton plan decisions D6, D7; no backend ADR) |
+| Sign-in session | Google sign-in, with a token (JWT) kept in browser local storage | Changed | Google sign-in unchanged; the server keeps a Sa-Token session in Redis and the browser holds only an HttpOnly cookie (frontend ADR 0002; backend skeleton plan decisions D6, D7 of 30 August, before the first sprint; no backend ADR). Reasons: Table B.4 |
 | Payment abstraction and team resolution | Adapter for Stripe (UC6); Observer for team resolution (UC5, UC7) | Delivered | Payment providers sit behind the domain's `CheckoutGateway` and `RefundGateway` ports, implemented by Stripe adapters (section 3.2.5); a team's resolution is published as events to ordered subscribers (backend ADRs 0002, 0003). Observer, not Adapter, is UC6's design problem (section 3.5.2) |
 | Team lifecycle | State pattern for the team | Changed | A transition table, `DealStatus.canTransitionTo`, for the team; State applied to listings instead (section 3.5.5). No ADR |
-| Persistence | Spring Data JPA | Changed | MyBatis behind repository ports (backend skeleton plan decisions D1, D9). No ADR |
+| Persistence | Spring Data JPA | Changed | MyBatis behind repository ports (backend skeleton plan decisions D1, D9 of 30 August, before the first sprint). No ADR. Reasons: Table B.4 |
 | Dev environment | Amazon ECS Fargate and RDS | Changed | One EC2 host with Docker Compose and PostgreSQL on the host (backend ADR 0008) |
 | Secrets | AWS Secrets Manager; no static credentials anywhere | Changed | SSM SecureString parameters and a root-only environment file on the host. CI uses short-lived OIDC credentials, but the project account has two IAM users for port forwarding, one with an active access key. No ADR |
 | Pipeline security | Blocking OWASP Dependency-Check and infrastructure-as-code scans; three plan, deploy and apply roles | Changed | Trivy dependency and configuration scans run on pull requests but are not required checks; three per-job OIDC roles (image push, backend deploy, frontend deploy). No ADR |
@@ -123,9 +124,9 @@ Table 2.6: Outstanding issues, 26 October 2026.
 | Refund idempotency under replay and crash shown only locally, not on dev | Yorik | Open; rescoped on 11 October to a record from local evidence | #224 |
 | ADR 0001 orders locks as deal, intent, payment; ADR 0002 as team, intent, order, payment. One combined order is not yet stated | Unassigned | Open | #663 |
 | CloudFront reaches the dev load balancer over HTTP (NFR-37) | Pan | Accepted risk on dev until 16 November | #227 |
-| SSH port 22 open to any address on the dev host's security group | Pan | Open in the AWS read-only checks of 21 and 24 October; the team decided on 24 October to close it. Closed: the read-only check of 27 October (05:19 UTC, `aws ec2 describe-security-groups`) found no rule admitting port 22 | — |
+| SSH port 22 open to any address on the dev host's security group, although deploys and port forwarding use SSM and need no SSH | Pan | Open in the AWS read-only checks of 21 and 24 October; the team decided on 24 October to close it. Closed: the read-only check of 27 October (05:19 UTC, `aws ec2 describe-security-groups`) found no rule admitting port 22 | — |
 | Dev EBS volume not encrypted | Pan | Seen in the AWS read-only check of 19 October and still unencrypted on 27 October (`vol-08df685248a8b1aea`; EBS encryption by default is off); not raised as an issue | — |
-| Two IAM users in the project account, one with an active access key, for port forwarding to the dev host | Lim | Disclosed and accepted in the AWS account governance record; no removal planned. Neither user has an MFA device (read-only check of 27 October, `aws iam list-mfa-devices`) | — |
+| Two IAM users in the project account, one with an active access key, for port forwarding to the dev host | Lim | Disclosed and accepted in the AWS account governance record (`docs/deploy/aws-account-governance/README.md`); the key is limited by the `BlocBuySsmPortForwarding` policy and by every service control policy of the organisation; no removal planned. Neither user has an MFA device (read-only check of 27 October, `aws iam list-mfa-devices`) | — |
 | Backend rollback never exercised on dev: the rollback workflow has never run | Unassigned | Open | #623 |
 | The weekly full-history secret scan fails on four historical badge-token findings (NFR-02) | Unassigned | Open | — |
 | Passive OWASP ZAP scan of dev: the 2 Medium and 4 Low header findings of the runs of 22 and 26 October were fixed on 27 October (#700, #703); the run after the fixes found 0 High, 0 Medium, 0 Low and 6 Informational (section 4.2) | Pan | Medium and Low fixed; 6 Informational under review | #610, #636–#647 |
@@ -171,6 +172,7 @@ Table 2.8: Milestones achieved.
 | 6 Oct | First successful production deployment on ECS (shared SWE5001 release), the monolith as one service | PR #418, workflow run 37470479078 |
 | 11 Oct | Sprint 3 tag `v0.1.0-sprint3` | Git tag |
 | 17 Oct | First promotion of the three-service release to production on ECS (shared SWE5001 release) | PR #534, workflow run 39008208244 |
+| 19 Oct | Second promotion of the three-service release to production on ECS | PR #564, workflow run 39259845179 |
 | 20 Oct | Last production promotion before the presentations, smoke suite green | PR #574, workflow run 39435280952 |
 | 23 Oct | Paid start and the automatic expiry refund shown on dev | Dev recovery acceptance record of 23 October; PR #664 |
 | 24 Oct | A second buyer's paid join shown on dev, in a recording | #657 |
@@ -189,7 +191,7 @@ Table 2.9: Done step reached per sprint.
 | --- | --- | --- |
 | 1 | Integrated | Backend on dev from 5 September; no frontend yet, so not releasable |
 | 2 | Integrated | 9 of 11 stories merged and tested, 134 of 150 h; Checkout and scheduling off on dev |
-| 3 | Integrated | Merged and tested; the goal was not met on dev under the "on dev" rule; 117 of 150 h |
+| 3 | Integrated | Merged and tested; the goal was not met on dev under the "on dev" rule; 117 of 150 h {{CONFIRM: D22 What is the Sprint 3 placement rule called here: the "on dev" rule, or rule 8 of the Definition of Done as Table A.10 says? — Lim}} |
 | 4 | Released (shared SWE5001 production), and shown on dev | Production on ECS promoted as three services on 17, 19 and 20 October with the smoke suite green; on dev, paid start and the refund on 23 October and a second buyer's paid join on 24 October |
 
 The team agreed the Sprint 4 placement on 24 October and re-agreed its wording on 25 October. In Sprints 2 and 3 the money path worked locally, but the strict "on dev" rule does not count local runs.

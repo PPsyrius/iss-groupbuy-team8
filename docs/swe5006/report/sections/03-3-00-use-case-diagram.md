@@ -3,6 +3,7 @@ rubric: 3.3, 3.3.1
 owner: Lim Jiechao
 plan: #677
 sources: ../presentation/src/diagrams/use-case.svg
+owns: R35
 status: draft
 -->
 
@@ -18,7 +19,7 @@ Figure 3.36 is the use case diagram. It is the deck's diagram, reused unchanged.
 
 ![Figure 3.36: UML use case diagram of BlocBuy, with the system boundary, five actors, the «include» and «extend» relations and the out-of-scope package. Each in-scope use case carries its delivery status on dev as of 24 October (a team ruling, not UML notation).](../../presentation/src/diagrams/use-case.svg){.landscape}
 
-**Actors.** Two actors are human. The *Buyer* browses, signs in, starts and joins teams, shares invite links and views their own orders and teams. The *Admin* manages listings and their team terms. Three actors are not people. The *Scheduler* is time: it triggers UC5 and, through it, UC6 when a team's deadline passes. *Stripe* is a secondary actor: it hosts the payment page, reports payment results and executes refunds. *Google* is a secondary actor for sign-in only (UC2). No merchant actor exists, because the proposal excludes a merchant self-service interface; the Admin prepares listings instead.
+**Actors.** Two actors are human. The *Buyer* browses, signs in, starts and joins teams, shares invite links and views their own orders and teams. The *Admin* manages listings and their team terms. A buyer who has not signed in yet is called a *visitor* in sections 3.3.3 and 3.4.3: a visitor can browse listings (UC1) and open an invite link, and must sign in (UC2) before starting or joining a team. Three actors are not people. The *Scheduler* is time: it triggers UC5 and, through it, UC6 when a team's deadline passes. *Stripe* is a secondary actor: it hosts the payment page, reports payment results and executes refunds. *Google* is a secondary actor for sign-in only (UC2). No merchant actor exists, because the proposal excludes a merchant self-service interface; the Admin prepares listings instead.
 
 **Relations.** UC3 "Initiate a team" and UC4 "Join a team" both «include» "Pay upfront via Stripe Checkout": neither can complete without a verified payment, and the payment steps are the same for both, so they are written once (Section 3.3.11). UC7 "Share attribution" «extends» UC4 at the extension point *admission*, under the condition {via invite link}: a join that arrives through a member's invite link records who shared it, and a join without a link is unchanged. UC6 "Refund on team expiry" «extends» UC5 "Team lifecycle resolution" at the extension point *resolved*, under the condition {team expired}: a team that succeeds needs no refund. "Receive notifications" is drawn inside the boundary but marked "coded, off on dev": it belongs to the SWE5001 course scope (Section 3.3.12).
 
