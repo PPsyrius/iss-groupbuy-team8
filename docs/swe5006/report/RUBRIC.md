@@ -279,6 +279,11 @@ By the 30 Oct freeze every box is ticked and every decision settled.
 - [ ] Every figure passes F1–F9
 - [ ] Each member vetted their own sections and reviewed the rest (#695)
 - [ ] Assembled into the template; contents, figure numbers and cross-references updated; page count checked
+- [ ] Every Canonical homes row's full statement exists only at its home (G13)
+- [ ] Every other mention uses the row's reference form or is removed
+- [ ] Every Canonical figures row (FG01–FG12) is applied
+- [ ] F9 passes: no flow drawn in full twice, no image path used by two figures
+- [ ] G13 and the G8 voice rule checked by one whole-report read of the compiled PDF (AGENTS.md workflow)
 - [ ] Submitted by 31 Oct 23:59; submitter and time posted on #695
 
 Decisions (numbers follow PLAN part 3; settled ones are folded into the rows above):
