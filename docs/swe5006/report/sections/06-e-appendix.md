@@ -22,7 +22,7 @@ Table E.1: Known limits of the dev system and its pipeline.
 | Dev EBS volume not encrypted | Database and host data unencrypted at rest | Open (open issues in Table 2.6) |
 | Rollback never exercised | The recovery path is untested on the real host | Never run on dev (section 4.3; open issues in Table 2.6) |
 | No dev alarms or dashboards | Failures are noticed by the post-deploy smoke or by people | All CloudWatch alarms belong to SWE5001; DSOMM Monitoring level 0 |
-| Dev is not zero-downtime | A deploy restarts the only API container; the database shares the host | The post-deploy smoke's API health check got HTTP 502 through CloudFront in three frontend delivery runs, each while the same commit's `deploy-existing-ec2` was recreating the container: 37102432667 and 37122348459 (3 Oct) and 37182996807 (4 Oct); accepted for a low-cost dev |
+| Dev is not zero-downtime | A deploy restarts the only API container; the database shares the host | The post-deploy smoke's API health check got HTTP 502 through CloudFront in four frontend delivery runs, each while the same commit's `deploy-existing-ec2` was recreating the container: 36215889478 (26 Sep), 37102432667 and 37122348459 (3 Oct) and 37182996807 (4 Oct); accepted for a low-cost dev |
 | Secrets in a host file | Created and rotated by hand (`/etc/blocbuy/backend.env`, root 0600) | Accepted for dev; the unapplied production design uses Parameter Store |
 | Delivery image rebuilt | Dev delivery rebuilds the JAR and image without repeating the Trivy image scan, so the deployed image is not the one the pull request scanned | Provenance limit; ECR scans on push but does not gate; frontend ADR 0004 and the operator guide to be reconciled |
 | Weekly full-history secret scan red | Four historical SonarCloud badge-token findings remain | NFR-02 partially met; scheduled run 40287812848 failed on 26 Oct |
@@ -206,7 +206,7 @@ Table E.5: Evidence references by section.
 | 4.2 (Table 4.14) | Weekly full-history secret scan failures; digest fix | runs 37287243039, 38228025996, 39217910471, 40287812848; #580 |
 | 4.2 (Table 4.14) | SWE5001 environment run stopped by spending budget | run 39442654274 |
 | 4.3 (Table 4.16) | Latest backend and frontend dev deliveries | run 40200028697 (`ad2a73e6`); run 40294726775 (`9135ad8b`) |
-| 4.3 | Smoke failures; three were the 3–4 Oct 502s | runs 37102432667, 37122348459, 37182996807; `docs/ci/dora-metrics-20261022.md` |
+| 4.3 | Smoke failures; all four were 502s (26 Sep, 3–4 Oct) | runs 36215889478, 37102432667, 37122348459, 37182996807; `docs/ci/dora-metrics-20261022.md` |
 | 4.3 | Rollback configured, 4 Sep | `ab640878` |
 | 4.3 | Rollback drill on dev, open | #623 |
 | 4.3 | Dev CloudFront distribution | `E3U5W7UWDL8LRV` |
