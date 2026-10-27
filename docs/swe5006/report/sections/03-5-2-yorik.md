@@ -91,6 +91,8 @@ Table 3.23: Observers added to the team-outcome events over time (git history; f
 
 We considered four options. Observer is the only one that removes the group-buy context's knowledge of its dependents and still lets the money-carrying consequences commit with the expiry.
 
+<!-- table: split -->
+
 Table 3.24: Candidates for carrying a team's outcome to the contexts that depend on it.
 
 | Candidate | Decision | Why it fits or does not |
