@@ -60,9 +60,9 @@ The cost is that orphan rows are possible if application code is wrong. Soft del
 
 **Soft delete and audit columns.** 22 of the 29 tables carry `deleted boolean NOT NULL DEFAULT false`, and the ordinary business tables carry `create_time`, `update_time`, `create_by` and `update_by`. A delete sets the flag, so a row that other rows still reference never disappears. The seven tables without the flag are append-only records and queues: the four `log_` tables, `biz_payment_review_case`, `sys_outbox` and `sys_consumed_message`.
 
-**Version column.** Ten tables carry an integer `version`, and it does not mean the same thing in all of them, for example:
+**Version column.** Ten tables carry an integer `version`, and it does not mean the same thing in all of them:
 
-- the listing version on `biz_product`, which an administrator's write must match (Optimistic Offline Lock, section 3.5.5);
+- an optimistic lock on `biz_product`, `biz_order`, `biz_purchase_intent` and `biz_payment`: the update adds `AND version = …` with the version read earlier and treats zero affected rows as a conflict (for example in `BizProductMapper.xml` and `PaymentMapper.xml`);
 - a fencing token on `biz_refund`: a refund worker claims a row with a lease, and only the holder of the latest version may write the Stripe result (`RefundMapper.xml`);
 - a recorded value on `log_refund_attempt`, an append-only table whose `version` column stores the refund's fencing version that each attempt ran under, so an audit can tell which lease made which call;
 - a revision number on `biz_team_price_policy`, where each price change is a new row and the highest version is the current price;
