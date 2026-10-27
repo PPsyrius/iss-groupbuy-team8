@@ -26,7 +26,7 @@ In the code, a listing is the `Product` aggregate (table `biz_product`) and a te
 
 The same repository serves two NUS-ISS courses. This report describes the SWE5006 system: the `dev` environment, which runs BlocBuy as one modular monolith on a single Amazon EC2 host behind CloudFront. The SWE5001 course runs the same code on Amazon ECS, and that deployment is the project's shared production release (SWE5001 topology, section 1.4).
 
-At the time of writing (26 October 2026) all four planned sprints are complete (sprint dates, Table 2.1), and all nine use cases of the proposal are built and shown on dev; Table 1.3 gives the status of each. Section 2.2 gives the full status against the proposal and the outstanding issues. {{VERIFY: re-read this status paragraph at the freeze SHA on 30 Oct (rubric G7) — Lim}}
+The freeze commit is `6d14e449` (26 October), the commit of `dev` that this report describes; figures that a table does not date are those at the time of writing. At the time of writing (26 October 2026) all four planned sprints are complete (sprint dates, Table 2.1), and all nine use cases of the proposal are built and shown on dev; Table 1.3 gives the status of each. Section 2.2 gives the full status against the proposal and the outstanding issues. {{VERIFY: re-read this status paragraph at the freeze SHA on 30 Oct (rubric G7) — Lim}}
 
 ## 1.2 Business Needs
 
