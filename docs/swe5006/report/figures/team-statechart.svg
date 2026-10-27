@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="1030" viewBox="0 0 1160 1030" font-family="Inter, Helvetica, Arial, sans-serif">
+<title>stm GroupDeal (team) lifecycle</title>
+<desc>UML state machine of a team (GroupDeal): created OPEN by a confirmed paid start (UC3), so the initial transition carries only its effect; paid joins are internal transitions (UC4); the last-seat join moves to SUCCEEDED (UC4 to UC5); the time event at(expireTime), detected by the expiry sweep, moves to EXPIRED (UC5 to UC6); FAILED and CANCELED are declared but never written. SUCCEEDED and EXPIRED are terminal for status but still answer late paid joins with compensation, so no final state is drawn.</desc>
+<!--
+Redrawn for the report from docs/swe5006/presentation/src/diagrams/team-statechart.svg@29b61cec
+(same content, re-flowed into three rows at 1160 px wide; smallest text 22 px).
+Mapping of every node and edge to code at 6d14e449 (backend/):
+- States OPEN, SUCCEEDED, FAILED, EXPIRED, CANCELED: DealStatus enum, blocbuy-domain .../groupbuy/model/DealStatus.java:8-12;
+  only OPEN may move, never to itself: DealStatus.canTransitionTo, DealStatus.java:24-25.
+- Initial transition and effect (currentSize 1, leader = payer, startTime = now): GroupDeal.startPaid, GroupDeal.java:121-135.
+- OPEN internal transitions and the last-seat transition to SUCCEEDED (successTime := now):
+  GroupDeal.joinPaid, GroupDeal.java:142-167; guards requireJoinWindow / requireNewMember / requireAvailableSeat,
+  GroupDeal.java:170-196 and PaidParticipation.requirePrice (GroupDeal.java:146); events MemberJoined and TeamSucceeded published in
+  PaidGroupDealService.java:117,128; refused or late joins become compensation_required via
+  ParticipationResult.compensation, PaidGroupDealService.java:149.
+- FOR UPDATE row lock: PaidGroupDealMapper.xml:25,33; DEAL_CLOSED: GroupDeal.java:177,215.
+- OPEN to EXPIRED on at(expireTime): GroupDeal.expire, GroupDeal.java:210-233; status-guarded UPDATE
+  (status = 'open'), PaidGroupDealMapper.xml:136; TeamExpired published, GroupDealExpiryService.java:64;
+  TeamExpirySweepJob fixed delay PT1M, TeamExpirySweepJob.java:30.
+- Entry actions: OrderLifecycleSubscriber confirmByDealId / cancelByDealId, OrderLifecycleSubscriber.java:40,48;
+  refunds owed via TeamExpiryRefundSubscriber.
+-->
+<defs>
+<marker id="tsOpen" viewBox="0 0 14 12" refX="13" refY="6" markerWidth="14" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1 L13,6 L1,11" fill="none" stroke="#1B1A18" stroke-width="1.6"/></marker>
+<marker id="tsOpenR" viewBox="0 0 14 12" refX="13" refY="6" markerWidth="14" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1 L13,6 L1,11" fill="none" stroke="#E8402A" stroke-width="1.8"/></marker>
+</defs>
+<rect x="0" y="0" width="1160" height="1030" fill="#FFFFFF" stroke="none"/>
+<rect x="4" y="4" width="1152" height="1022" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.4"/>
+<path d="M4 4 H404 V30 L392 44 H4 Z" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.4"/>
+<text x="14" y="32" font-size="24" font-weight="bold" fill="#1B1A18">stm GroupDeal (team) lifecycle</text>
+
+<!-- Row 1: initial pseudostate, its effect and note; FAILED and CANCELED -->
+<circle cx="60" cy="90" r="13" fill="#1B1A18"/>
+<line x1="60" y1="103" x2="60" y2="300" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#tsOpen)"/>
+<text x="84" y="98" font-size="22" fill="#1B1A18">/ currentSize := 1; leader := payer;</text>
+<text x="100" y="128" font-size="22" fill="#1B1A18">startTime := now</text>
+<path d="M84 146 H514 L532 164 V224 H84 Z" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.4"/>
+<path d="M514 146 V164 H532" fill="none" stroke="#6B655C" stroke-width="1.4"/>
+<text x="98" y="176" font-size="22" fill="#6B655C">created by a confirmed paid START</text>
+<text x="98" y="208" font-size="22" fill="#6B655C">(UC3); no trigger or guard here</text>
+<rect x="84" y="240" width="64" height="32" rx="4" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+<text x="116" y="263" font-size="22" text-anchor="middle" font-weight="bold" fill="#3E5CD9">UC3</text>
+
+<rect x="640" y="70" width="200" height="58" rx="22" fill="#FFFFFF" stroke="#9A938A" stroke-width="1.6" stroke-dasharray="8 6" data-box="FAILED"/>
+<text x="740" y="107" font-size="24" text-anchor="middle" font-weight="bold" fill="#9A938A">FAILED</text>
+<rect x="870" y="70" width="230" height="58" rx="22" fill="#FFFFFF" stroke="#9A938A" stroke-width="1.6" stroke-dasharray="8 6" data-box="CANCELED"/>
+<text x="985" y="107" font-size="24" text-anchor="middle" font-weight="bold" fill="#9A938A">CANCELED</text>
+<text x="640" y="170" font-size="22" fill="#6B655C">declared in DealStatus and allowed by</text>
+<text x="640" y="200" font-size="22" fill="#6B655C">canTransitionTo, but never written</text>
+
+<!-- Row 2: OPEN with its internal transitions and the admissibility note -->
+<rect x="30" y="300" width="1100" height="310" rx="22" fill="#FFFFFF" stroke="#1B1A18" stroke-width="2" data-box="OPEN"/>
+<text x="580" y="333" font-size="24" text-anchor="middle" font-weight="bold" fill="#1B1A18">OPEN</text>
+<line x1="30" y1="346" x2="1130" y2="346" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="46" y="380" font-size="22" fill="#1B1A18">paidJoinConfirmed(paid)</text>
+<rect x="320" y="358" width="64" height="32" rx="4" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+<text x="352" y="381" font-size="22" text-anchor="middle" font-weight="bold" fill="#3E5CD9">UC4</text>
+<text x="66" y="410" font-size="22" fill="#1B1A18">[admissible ∧ currentSize + 1 &lt; targetSize]</text>
+<text x="66" y="440" font-size="22" fill="#1B1A18">/ currentSize := currentSize + 1;</text>
+<text x="86" y="470" font-size="22" fill="#1B1A18">publish MemberJoined</text>
+<text x="46" y="510" font-size="22" fill="#1B1A18">paidJoinConfirmed(paid) [¬admissible]</text>
+<text x="66" y="540" font-size="22" fill="#1B1A18">/ compensation_required → refund owed (UC6)</text>
+
+<path d="M640 362 H1096 L1114 380 V590 H640 Z" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.4"/>
+<path d="M1096 362 V380 H1114" fill="none" stroke="#6B655C" stroke-width="1.4"/>
+<text x="654" y="392" font-size="22" fill="#1B1A18">admissible ≡</text>
+<text x="674" y="420" font-size="22" fill="#1B1A18">startTime ≤ now &lt; expireTime</text>
+<text x="654" y="448" font-size="22" fill="#1B1A18">∧ buyer not leader or member</text>
+<text x="654" y="476" font-size="22" fill="#1B1A18">∧ amount = price</text>
+<text x="654" y="512" font-size="22" fill="#1B1A18">(now read after the FOR UPDATE row lock)</text>
+<text x="654" y="546" font-size="22" fill="#1B1A18">last join vs expiry: first lock wins,</text>
+<text x="654" y="574" font-size="22" fill="#1B1A18">the other sees DEAL_CLOSED</text>
+
+<!-- Row 3: resolving transitions and the two resolved states -->
+<g transform="translate(0,30)">
+<line x1="90" y1="580" x2="90" y2="820" stroke="#E8402A" stroke-width="2.2" marker-end="url(#tsOpenR)"/>
+<rect x="110" y="598" width="140" height="32" rx="4" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+<text x="180" y="621" font-size="22" text-anchor="middle" font-weight="bold" fill="#3E5CD9">UC4 → UC5</text>
+<text x="110" y="660" font-size="22" fill="#B02E1B">paidJoinConfirmed(paid)</text>
+<text x="110" y="690" font-size="22" fill="#B02E1B">[admissible ∧</text>
+<text x="120" y="720" font-size="22" fill="#B02E1B">currentSize + 1 = targetSize]</text>
+<text x="110" y="750" font-size="22" fill="#B02E1B">/ successTime := now; publish</text>
+<text x="120" y="780" font-size="22" fill="#B02E1B">MemberJoined, TeamSucceeded</text>
+
+<line x1="660" y1="580" x2="660" y2="820" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#tsOpen)"/>
+<text x="680" y="626" font-size="22" fill="#1B1A18">at(expireTime)</text>
+<text x="680" y="656" font-size="22" fill="#1B1A18">/ status-guarded UPDATE;</text>
+<text x="690" y="686" font-size="22" fill="#1B1A18">publish TeamExpired</text>
+<text x="680" y="716" font-size="22" fill="#6B655C">detected by TeamExpirySweepJob (PT1M)</text>
+<rect x="680" y="740" width="140" height="32" rx="4" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+<text x="750" y="763" font-size="22" text-anchor="middle" font-weight="bold" fill="#3E5CD9">UC5 → UC6</text>
+
+<rect x="30" y="820" width="530" height="156" rx="22" fill="#FFFFFF" stroke="#1B1A18" stroke-width="2" data-box="SUCCEEDED"/>
+<text x="295" y="853" font-size="24" text-anchor="middle" font-weight="bold" fill="#1B1A18">SUCCEEDED</text>
+<line x1="30" y1="866" x2="560" y2="866" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="46" y="898" font-size="22" fill="#1B1A18">entry / confirm orders (UC5)</text>
+<text x="46" y="928" font-size="22" fill="#1B1A18">paidJoinConfirmed(paid)</text>
+<text x="66" y="958" font-size="22" fill="#1B1A18">/ compensation_required</text>
+
+<rect x="600" y="820" width="530" height="156" rx="22" fill="#FFFFFF" stroke="#1B1A18" stroke-width="2" data-box="EXPIRED"/>
+<text x="865" y="853" font-size="24" text-anchor="middle" font-weight="bold" fill="#1B1A18">EXPIRED</text>
+<line x1="600" y1="866" x2="1130" y2="866" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="616" y="898" font-size="22" fill="#1B1A18">entry / cancel orders; refunds owed</text>
+<text x="616" y="928" font-size="22" fill="#1B1A18">paidJoinConfirmed(paid)</text>
+<text x="636" y="958" font-size="22" fill="#1B1A18">/ compensation_required</text>
+</g>
+</svg>
