@@ -289,8 +289,8 @@ Table 4.15: GitHub environments, read from the GitHub API on 26 October 2026.
 
 | Environment | Allowed refs | Required reviewers | Used by |
 |---|---|---|---|
-| `backend-dev` | branch `dev` | None | `deploy-existing-ec2` |
-| `frontend-dev` | branch `dev` | None | `deploy-s3-dev`, `e2e-dev` |
+| `backend-dev` | branch `dev` | None | `deploy-existing-ec2`; `rollback-existing-ec2` in `rollback-backend.yml` |
+| `frontend-dev` | branch `dev` | None | `deploy-s3-dev` (`e2e-dev` runs without an environment) |
 | `backend-prod-publish`, `backend-prod` | tags `v*` | None | SWE5006 production design; never run |
 | `swe5001-demo` | branch `prod` | None | SWE5001 deploy and environment workflows |
 | `swe5001-plan` | any | None | SWE5001 Terraform plan |
