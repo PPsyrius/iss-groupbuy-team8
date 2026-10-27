@@ -104,7 +104,7 @@ Rationale: a lock method in the port makes the locking part of the design contra
 
 #### Dynamic behaviour changes
 
-The analysis model says nothing about two buyers at once (Figure 3.29). In design, both settlements ask the database for the team's row lock; the second waits until the first commits, then reads the full team and is refused (Figure 3.30).
+The analysis model says nothing about two buyers at once (Figure 3.29). In design, both settlements ask the database for the team's row lock; the second waits until the first commits, then reads the team, which the first admission has already set to SUCCEEDED, and is refused with `DEAL_CLOSED` because the team is no longer open (Figure 3.30).
 
 ```mermaid
 sequenceDiagram
@@ -134,7 +134,7 @@ sequenceDiagram
     A->>DB: commit: team SUCCEEDED
     DB-->>B: team row lock granted
     B->>DB: lock intent, payment, receipt
-    B->>DB: read team: no seat left
+    B->>DB: read team: not OPEN (DEAL_CLOSED)
     B->>DB: insert biz_refund (refund obligation)
     B->>DB: commit: payment SUCCEEDED, refund owed
 ```
