@@ -654,8 +654,8 @@ export function markdown(src, { sectionDir, root, resolvePath }) {
     if ((m = line.match(/^!\[([^\]]*)\]\(([^)\s]+)[^)]*\)\s*(\{\.(landscape|logo)\})?\s*$/))) {
       flushPara();
       const path = resolvePath(sectionDir, m[2]);
-      // {.logo}: a brand mark, 7 cm wide and centred in the text, with no frame, caption or number.
-      if (m[4] === 'logo') out.push(`#align(center, image(${str(path)}, width: 7cm, alt: ${str(m[1])}))`);
+      // {.logo}: a brand mark, 7 cm wide and flush with the left margin of the text, with no frame, caption or number.
+      if (m[4] === 'logo') out.push(`#align(left, image(${str(path)}, width: 7cm, alt: ${str(m[1])}))`);
       // {.landscape}: a wide drawing gets a landscape page of its own, about 1.6 times larger.
       else if (m[3]) out.push(figure(`#image(${str(path)}, width: 100%, height: 13cm, fit: "contain")`, m[1]).replace('#report-figure(', '#landscape-figure('));
       else out.push(figure(`#image(${str(path)}, width: 100%)`, m[1]));
