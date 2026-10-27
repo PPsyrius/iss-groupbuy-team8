@@ -9,7 +9,7 @@ status: draft
 
 # 4 DevSecOps and Development Lifecycle
 
-BlocBuy is built, checked and delivered from one GitHub repository by GitHub Actions. Every change reaches the shared `dev` branch through a reviewed pull request that must pass six required checks, and a merge that changes the backend or the frontend then deploys that side automatically to the SWE5006 dev environment, which checks its own health after each deploy. Both workflows are path-filtered, and each delivery job also depends on a repository switch that turns automatic deployment on; both have been on since September (repository variables read on 26 October; last changed on 5 and 23 September). Production is the shared SWE5001 release on Amazon ECS, which only a code-owner-approved promotion pull request can change. Section 4.1 covers the repository, branching, authentication and artefacts; section 4.2 the continuous integration jobs, security controls and tests; section 4.3 the environments, approvals and deployment verification. Unless a sentence says otherwise, facts were read from the repository, GitHub and SonarCloud on 26 October 2026 at `dev` commit `61486f0e`; every count is re-read at the freeze commit before submission.
+BlocBuy is built, checked and delivered from one GitHub repository by GitHub Actions. Every change reaches the shared `dev` branch through a reviewed pull request that must pass six required checks, and a merge that changes the backend or the frontend then deploys that side automatically to the SWE5006 dev environment, which checks its own health after each deploy. Both workflows are path-filtered, and each delivery job also depends on a repository switch that turns automatic deployment on; both have been on since September (repository variables read on 26 October; last changed on 5 and 23 September). Production is the shared SWE5001 release on Amazon ECS, which only a code-owner-approved promotion pull request can change. Section 4.1 covers the repository, branching, authentication and artefacts; section 4.2 the continuous integration jobs, security controls and tests; section 4.3 the environments, approvals and deployment verification. Unless a sentence says otherwise, facts were read from the repository, GitHub and SonarCloud on 26 October 2026.
 
 ## 4.1 Source Control Strategy
 
@@ -17,7 +17,7 @@ All code, the API contract, the deployment scripts and the infrastructure code l
 
 #### Project structure and repository strategy
 
-One repository keeps a backend change, the contract it changes and the frontend that consumes it in the same pull request, so a single set of checks sees all three. At the freeze commit `6d14e449` (26 October) `dev` held 516 commits since 24 August 2026 (`git rev-list --count 6d14e449`), and 426 pull requests had been merged into it, 92 of them opened by bots (91 by Dependabot). Table 4.1 lists the top-level layout.
+One repository keeps a backend change, the contract it changes and the frontend that consumes it in the same pull request, so a single set of checks sees all three. At the freeze commit (section 1.1) `dev` held 516 commits since 24 August 2026 (`git rev-list --count`), and 426 pull requests had been merged into it, 92 of them opened by bots (91 by Dependabot). Table 4.1 lists the top-level layout.
 
 <!-- table: split -->
 
@@ -59,12 +59,12 @@ Each sprint ends with an annotated release tag on `dev` (Table 4.3). The tags ma
 
 Table 4.3: Sprint release tags, by tagger date (Singapore time).
 
-| Tag | Commit | Tagger date | Signed |
-|---|---|---|---|
-| `v0.1.0-sprint1` | `61c8806c` | 14 Sep 2026 | SSH signature |
-| `v0.1.0-sprint2` | `c30ed5a1` | 27 Sep 2026 | SSH signature |
-| `v0.1.0-sprint3` | `414ee79a` | 11 Oct 2026 | Not signed |
-| `v0.1.0-sprint4` | `fba3cfbd` | 24 Oct 2026 | SSH signature |
+| Tag | Tagger date | Signed |
+|---|---|---|
+| `v0.1.0-sprint1` | 14 Sep 2026 | SSH signature |
+| `v0.1.0-sprint2` | 27 Sep 2026 | SSH signature |
+| `v0.1.0-sprint3` | 11 Oct 2026 | Not signed |
+| `v0.1.0-sprint4` | 24 Oct 2026 | SSH signature |
 
 SWE5001 adds one long-lived branch: `prod`, which only promotion pull requests from `dev` change. Its ruleset `prod-release` allows merge commits only, requires one code-owner approval and three checks (`promotion-source`, `service-images`, `infra-plan`), and forbids force pushes and deletion. Ten promotion pull requests were merged between 6 and 20 October 2026. Section 4.3 explains why this branch is also the production gate of the SWE5006 system.
 
@@ -87,7 +87,7 @@ Table 4.4: Code owners by area (`.github/CODEOWNERS`).
 
 People sign in to AWS through IAM Identity Center. Lim created the AWS Organization and its Identity Center instance on 25 August 2026; the project account sits in a Sandbox organisational unit. Members sign in at the access portal or with `aws sso login` and receive one-hour sessions from a permission set: Lim, Pan and Liu Jin in group `team8-admin` (AdministratorAccess), Yorik and Eric in `team8-developers` (PowerUserAccess). Three service control policies bind every session in the project account, administrators included: `Org-Baseline` (the account cannot leave the organisation or tamper with Identity Center), `Region-Pin` (ap-southeast-1 plus listed global services) and `Sandbox-Guardrails` (costly services denied, small instance classes only). MFA is enforced on Identity Center sign-in according to Pan, who stated it on 23 October; the setting cannot be read back through the AWS API, so this is the owner's statement, not an audited fact.
 
-One exception is disclosed and accepted in the account governance record (`docs/deploy/aws-account-governance/README.md`). Two IAM users, created on 8 and 9 September 2026, exist in the project account for SSM port forwarding to the dev host: `blocbuy-dev-losgai` with one active access key (created 8 September), and `blocbuy-dev-ppsyrius` with a console password and no key. No removal is planned. The key is limited by the `BlocBuySsmPortForwarding` policy and by every service control policy above. The statement "no long-lived AWS keys" is therefore true for CI and the management account, not for the project account. The second user also carries an unexplained `AmazonEKSFargatePodExecutionRolePolicy`.
+One exception is disclosed and accepted in the account governance record. Two IAM users, created on 8 and 9 September 2026, exist in the project account for SSM port forwarding to the dev host: `blocbuy-dev-losgai` with one active access key (created 8 September), and `blocbuy-dev-ppsyrius` with a console password and no key. No removal is planned. The key is limited by the `BlocBuySsmPortForwarding` policy and by every service control policy above. The statement "no long-lived AWS keys" is therefore true for CI and the management account, not for the project account. The second user also carries an unexplained `AmazonEKSFargatePodExecutionRolePolicy`.
 
 On GitHub, the repository belongs to a personal account (Pan's), with the other four members as collaborators with write access. A personal account cannot enforce two-factor sign-in on collaborators, and whether each member uses it is not recorded.
 
@@ -116,7 +116,7 @@ Table 4.6: Artefacts, how each is identified, and where it is kept.
 | Runtime base image | `eclipse-temurin:21-jre-noble` pinned by digest | Both Dockerfiles; Dependabot proposes digest updates |
 | Frontend bundle | Content-hashed file names | S3 with `max-age=31536000, immutable`; `index.html` with `no-cache`, invalidated in CloudFront on each deploy |
 | Database schema | Flyway migrations V1–V28, forward-only | `blocbuy-bootstrap` resources (section 3.6) |
-| Infrastructure | Terraform stacks `frontend-stack`, `backend-app-stack`, `infra/swe5001/*` | State in S3 bucket `blocbuy-tfstate-402178232802` (encrypted) with a DynamoDB lock; account holders apply it, CI never does. `frontend-stack` imported the existing dev edge (9 imports, no changes); the dev EC2 host and load balancer are outside Terraform |
+| Infrastructure | Terraform stacks `frontend-stack`, `backend-app-stack`, `infra/swe5001/*` | State in an encrypted S3 bucket with a DynamoDB lock; account holders apply it, CI never does. `frontend-stack` imported the existing dev edge (9 imports, no changes); the dev EC2 host and load balancer are outside Terraform |
 | SBOM and licence inventory | CycloneDX 1.7 from pinned Trivy 0.74.0, with a hash manifest naming the tested revision | Actions artefact, kept 90 days; produced on `v*` tags, weekly and on demand; it lists source dependencies, not the exact deployed image |
 | Dependencies | Lockfiles; Dependabot daily for Maven, npm, Actions and Docker, 7-day cooldown, grouped updates, major versions of Spring, React, TypeScript and Temurin ignored | Git |
 
@@ -192,38 +192,38 @@ Table 4.9: Security controls by pipeline stage.
 
 Some checks are deliberate non-gates, recorded with their reasons in `docs/quality/quality-gates.md`: no Maven `jacoco:check` (coverage is gated on new code in SonarCloud), no OWASP Dependency-Check (Trivy covers Maven vulnerabilities without an NVD key), no `HEALTHCHECK` in the image (the JRE base has no curl; probes use the actuator) and no licence gate (no licence policy is agreed). A false positive gets the narrowest exclusion with a written reason; an unfixable vulnerability gets a documented acceptance with a revisit date.
 
-The team assessed the pipeline against the DevSecOps Maturity Model on 23 October. This is a self-assessment, not a course grade: Application tests reach level 3, Consolidation level 2, eight sub-dimensions level 1, and Design, Education and guidance, Process, Infrastructure hardening, Logging and Monitoring level 0. The spread is the finding: automated tests, gates and scans are strong; threat modelling, security training, backup and restore, and dev monitoring are not evidenced.
+The team assessed the pipeline against the DevSecOps Maturity Model on 23 October. This is a self-assessment: Application tests reach level 3, Consolidation level 2, eight sub-dimensions level 1, and Design, Education and guidance, Process, Infrastructure hardening, Logging and Monitoring level 0. The spread is the finding: automated tests, gates and scans are strong; threat modelling, security training, backup and restore, and dev monitoring are not evidenced.
 
 #### Dynamic scan of dev: OWASP ZAP before and after
 
 The running dev site is scanned by a passive, anonymous OWASP ZAP session. It requests ten fixed read-only URLs (the SPA, catalogue pages, a product detail page, one invalid request and two anonymous denials) and crawls the SPA with form submission disabled; it does not log in, pay or attack. A run counts as complete only when all ten responses were observed and all 67 enabled passive rules ran; an incomplete run fails. Findings are advisory and never block a merge.
 
-On 22 October 2026 the first baseline scan of dev, made before the scanner verified its own coverage, found 0 High, 2 Medium, 4 Low and 6 Informational findings, all caused by the CloudFront response-headers policy. HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy` and a CSP with `frame-ancestors 'none'` and `object-src 'none'` were already present. The first dispatch on dev on 24 October failed as incomplete because a ZAP add-on download failed; the add-on is now pinned and checksum-verified, and the dispatch that evening (run 40107924516, the first dispatch on dev with verified coverage; pull-request scans of 22 and 24 October had already verified theirs) and the scheduled run of 26 October both completed with the same findings. The header fixes (#700, #703) merged on 27 October, and the dispatch that morning (run 40459212995 on `2f23d923`, 10/10 responses, 67/67 rules) found 0 High, 0 Medium, 0 Low and 6 Informational findings: the six Medium and Low findings are fixed and their issues closed, and the six Informational ones remain under review (Table 4.10). The reports and run metadata of the two runs before the fixes are kept in `docs/quality/evidence/zap/`.
+On 22 October 2026 the first baseline scan of dev, made before the scanner verified its own coverage, found 0 High, 2 Medium, 4 Low and 6 Informational findings, all caused by the CloudFront response-headers policy. HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy` and a CSP with `frame-ancestors 'none'` and `object-src 'none'` were already present. The first dispatch on dev on 24 October failed as incomplete because a ZAP add-on download failed; the add-on is now pinned and checksum-verified, and the dispatch that evening (the first dispatch on dev with verified coverage; pull-request scans of 22 and 24 October had already verified theirs) and the scheduled run of 26 October both completed with the same findings. The two header fixes merged on 27 October, and the dispatch that morning (10/10 responses, 67/67 rules) found 0 High, 0 Medium, 0 Low and 6 Informational findings: the six Medium and Low findings are fixed and their issues closed, and the six Informational ones remain under review (Table 4.10). The reports and run metadata of the two runs before the fixes are kept in the repository.
 
 <!-- table: split -->
 
-Table 4.10: OWASP ZAP findings on dev, before and after. Before: run 39733450177 (22 Oct, the first baseline) and scheduled run 40298983391 (26 Oct, the latest before any fix), with the same findings. After: run 40459212995 (dispatch, 27 Oct; 10/10 responses, 67/67 rules).
+Table 4.10: OWASP ZAP findings on dev, before and after. Before: the first baseline of 22 Oct and the scheduled run of 26 Oct (the latest before any fix), with the same findings. After: the dispatch of 27 Oct (10/10 responses, 67/67 rules).
 
-| ZAP rule | Risk | Finding | Issue | Before | After | Outcome |
-|---|---|---|---|---|---|---|
-| 10055 | Medium | CSP `img-src` allows any HTTPS host | #636 | Present | Absent | Fixed (#700) |
-| 10055 | Medium | CSP allows `style-src 'unsafe-inline'` | #637 | Present | Absent | Fixed (#703) |
-| 90004 | Low | Cross-Origin-Embedder-Policy missing | #638 | Present | Absent | Fixed (#703) |
-| 90004 | Low | Cross-Origin-Opener-Policy missing | #639 | Present | Absent | Fixed (#703) |
-| 90004 | Low | Cross-Origin-Resource-Policy missing | #640 | Present | Absent | Fixed (#703) |
-| 10063 | Low | Permissions-Policy not set | #641 | Present | Absent | Fixed (#700) |
-| 10109 | Informational | Modern web application (crawl coverage) | #642 | Present | Present | Pending review |
-| 10049 | Informational | Non-storable `robots.txt` and sitemap responses | #643 | Present | Present | Pending review |
-| 10015 | Informational | Cache-Control directives | #644 | Present | Present | Pending review |
-| 10050 | Informational | Shared-cache hits | #645 | Present | Present | Pending review |
-| 10049 | Informational | Cacheable assets and unversioned files | #646 | Present | Present | Pending review |
-| 10049 | Informational | SPA HTML revalidation policy | #647 | Present | Present | Pending review |
+| ZAP rule | Risk | Finding | Before | After | Outcome |
+|---|---|---|---|---|---|
+| 10055 | Medium | CSP `img-src` allows any HTTPS host | Present | Absent | Fixed |
+| 10055 | Medium | CSP allows `style-src 'unsafe-inline'` | Present | Absent | Fixed |
+| 90004 | Low | Cross-Origin-Embedder-Policy missing | Present | Absent | Fixed |
+| 90004 | Low | Cross-Origin-Opener-Policy missing | Present | Absent | Fixed |
+| 90004 | Low | Cross-Origin-Resource-Policy missing | Present | Absent | Fixed |
+| 10063 | Low | Permissions-Policy not set | Present | Absent | Fixed |
+| 10109 | Informational | Modern web application (crawl coverage) | Present | Present | Pending review |
+| 10049 | Informational | Non-storable `robots.txt` and sitemap responses | Present | Present | Pending review |
+| 10015 | Informational | Cache-Control directives | Present | Present | Pending review |
+| 10050 | Informational | Shared-cache hits | Present | Present | Pending review |
+| 10049 | Informational | Cacheable assets and unversioned files | Present | Present | Pending review |
+| 10049 | Informational | SPA HTML revalidation policy | Present | Present | Pending review |
 
 #### Tests by level and quadrant
 
 The tests are organised by the Agile Testing Quadrants (EPAT 03 Test-Driven Development, p. 7) and tagged with the level (unit, integration, system; p. 5); the level tags are the team's classification. Quadrant 1 tests run in `build-quality` on every pull request that changes the backend and in `frontend-check` on every pull request that changes the frontend (on other pull requests these required checks report "not applicable" and pass); quadrant 2 story tests run the same way and, for Playwright, again on dev after every frontend deploy; quadrant 3 checks were manual; in quadrant 4, SonarCloud, SpotBugs (inside `build-quality`), gitleaks and the Trivy image scan (inside `docker`) are required checks, `trivy-deps` and `trivy-config` run on pull requests but are not required, the OWASP ZAP scan of dev is advisory and runs weekly or on demand, and the load test runs by hand (Table 4.11).
 
-Table 4.11: Tests by quadrant and level. Static counts from `git ls-tree` of `dev` at `61486f0e` on 26 October 2026.
+Table 4.11: Tests by quadrant and level. Static counts from `git ls-tree` of `dev` on 26 October 2026, unchanged at the freeze commit (section 1.1).
 
 | Quadrant | Kind and level | Tools | Count | Where it runs |
 |---|---|---|---|---|
@@ -234,10 +234,10 @@ Table 4.11: Tests by quadrant and level. Static counts from `git ls-tree` of `de
 | Q1 | Component (frontend unit) | Vitest, Testing Library, MSW | 78 test files | `frontend-check`, every PR changing the frontend |
 | Q2 business-facing, supports the team | Story acceptance (system) | Spring Boot with real HTTP endpoints, scheduler, Flyway schema and webhook signatures; only Google and Stripe network calls substituted | `StripeRolloutAcceptanceIT`, 8 test methods | `build-quality`, every PR changing the backend |
 | Q2 | End-to-end (system) | Playwright, Chromium | 8 specs | `e2e-preview` on PRs; `e2e-dev` after each frontend deploy |
-| Q3 business-facing, critiques the product | Manual exploratory checks | Browser | Stripe Sandbox START and JOIN through Hosted Checkout (local, 20 Sep); Secure and HttpOnly session cookie inspected on dev (8 Oct); paid START, expiry and refund on dev (23 Oct) | By hand; no testing with outside users |
+| Q3 business-facing, critiques the product | Manual exploratory checks | Browser | Stripe Sandbox START and JOIN through Hosted Checkout (local, 20 Sep); Secure and HttpOnly session cookie inspected on dev (8 Oct); paid START, expiry and refund shown on dev on 23 October (Table E.3) | By hand; no testing with outside users |
 | Q4 technology-facing, critiques the product | Performance and security | k6; SonarCloud, SpotBugs, Trivy, gitleaks, OWASP ZAP | One k6 browse scenario; the scans of Table 4.9 | SonarCloud, SpotBugs, gitleaks and the Trivy image scan required on PRs; `trivy-deps`, `trivy-config` on PRs, not required; ZAP weekly on dev, advisory; k6 by hand |
 
-Executed counts come from CI logs. Two runs have the freeze commit's code (`6d14e449`): `git diff ad2a73e6 6d14e449 -- backend` and `git diff 9135ad8b 6d14e449 -- frontend` are empty, and the static counts of Table 4.11 are unchanged at the freeze. Pull-request run 40206547524 ran one dependency bump (#691, `happy-dom`) before the freeze, with the same test files. The backend suite, in the `SonarCloud Backend` job of push run 40200028697 (25 October, `ad2a73e6`), ran 2,066 tests with 0 failures, 0 errors and 1 skipped opt-in performance test (`PerformanceBaselineIT`). Vitest passed 872 tests in 78 files, in `frontend-check` of pull-request run 40206547524 (25 October) and again in push run 40294726775 (26 October, `9135ad8b`). Of the 24 Playwright tests, the preview job of run 40206547524 passed 19 with 5 skipped, and `e2e-dev` of run 40294726775 passed 21 with 3 skipped. SonarCloud's own `tests` figure is not used.
+Executed counts come from the CI logs of the last backend and frontend runs whose code equals the freeze commit's (Table D.2): the backend suite ran with no failures or errors and one opt-in performance test skipped, and every Vitest test passed. SonarCloud's own `tests` figure is not used.
 
 The classes with complex behaviour have their own unit tests, as the proposal promised (Table 4.12).
 
@@ -246,19 +246,20 @@ Table 4.12: Unit and integration tests of the complex classes.
 | Behaviour | Test | What it proves |
 |---|---|---|
 | Team state machine | `DealStatusTest`, `PaidGroupDealTest` (for example `terminalStatesRejectJoins`) | Every allowed and forbidden status transition; a closed team refuses joins |
-| Last-seat capacity under concurrency | `StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist` | Twenty paid JOINs for the last seat of a two-seat team, released together against PostgreSQL in Testcontainers: exactly one joiner wins, so the team ends with 2 members, 2 orders and current size 2, nineteen refund obligations persist, and stock falls by exactly two (100 to 98). Tested locally and in CI (for example the `SonarCloud Backend` job of run 40200028697), not shown on dev. A `*Test` by name, an integration test by level |
+| Last-seat capacity under concurrency | `StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist` | Twenty paid JOINs for the last seat of a two-seat team, released together against PostgreSQL in Testcontainers: exactly one joiner wins, so the team ends with 2 members, 2 orders and current size 2, nineteen refund obligations persist, and stock falls by exactly two (100 to 98). Tested locally and in CI, not shown on dev. A `*Test` by name, an integration test by level |
 | Refund idempotency | `RefundServiceTest.lostResponseRetriesSameDurableKey` | A refund whose provider response was lost is retried with the same durable idempotency key, so Stripe never refunds twice |
 | Quote correctness | `GroupDealPurchaseSupportImplTest.aTeamWithoutItsPaidLeaderCannotBeQuoted` | Written red first: two failing tests reproduced the quote defect before the fix |
+| Notification delivery (receive notifications) | `NotificationConsumerElasticMqIT` | Against a local SQS emulator (ElasticMQ in Testcontainers), an event delivered three times creates one notification per recipient, and a malformed event is received five times and then found in the dead-letter queue while other messages are processed. Tested locally, not on dev (off on dev, section 1.4) |
 
-The tests caught real defects. Two red quote tests reproduced a defect in the join quote before it was fixed (7 October); the ArchUnit rule `controllers_are_validated` failed the build on a controller that lacked `@Validated` (13 October); and the full-history secret scan found 24 matches (see Table 4.14). One failure is deliberately not counted as a catch: the end-to-end smoke on dev returned HTTP 502 on 3 and 4 October while the same commit's backend deploy was restarting the only API container, so the test may have raced its own deploy. Test-first development is recorded in the day logs: for example, on 3 October the rate-limit tests failed with 200 instead of 429 before the limits were implemented. The CI tooling itself has 193 Python tests (189 passed, 4 opt-in ZAP tests skipped) and 22 Node tests, recorded on 22 October.
+The tests caught real defects. Two red quote tests reproduced a defect in the join quote before it was fixed (7 October); the ArchUnit rule `controllers_are_validated` failed the build on a controller that lacked `@Validated` (13 October); and the full-history secret scan found 24 matches (see Table 4.14). Smoke failures on dev that raced a backend restart are deliberately not counted as catches (single host, section 4.3). Test-first development is recorded in the day logs: for example, on 3 October the rate-limit tests failed with 200 instead of 429 before the limits were implemented. The CI tooling itself has 193 Python tests (189 passed, 4 opt-in ZAP tests skipped) and 22 Node tests, recorded on 22 October.
 
-Coverage, as SonarCloud measures it on 26 October 2026: backend 100.0 % overall and 99.97 % on new code (analysis of `ad2a73e6`, 25 Oct); frontend 99.3 % overall and 99.25 % on new code (analysis of `9135ad8b`, 26 Oct). Both projects have 0 bugs, 0 vulnerabilities and 0 open security hotspots, with A ratings. No file is excluded from the backend analysis: `backend/pom.xml` sets only the project key and the JaCoCo report paths, and the SonarCloud settings API holds no exclusions for either project (read 27 October). The frontend analysis excludes test files, `src/test/**`, the generated API client and the generated route tree, and its coverage also excludes the entry files `src/main.tsx` and `src/router.tsx` and the development-only `src/dev/**` (`ci-frontend.yml`).
+Both SonarCloud quality gates, backend and frontend, passed on 26 October 2026 (coverage: Table D.3).
 
 #### Scripted performance test
 
-The performance test is a k6 script, and it ran on the SWE5001 ECS environment and on a local stack, never on the SWE5006 dev host. The tool is k6 1.6.1 (`grafana/k6` pinned by digest) running `perf/k6/browse.js`: a ramping-arrival executor steps from 10 to 200 iterations a second in ten one-minute plateaus (10, 20, 40, 60, 80, 100, 125, 150, 175, 200), each iteration one anonymous request, seven catalogue list requests to three detail requests, with no think time, 100 preallocated and 400 maximum virtual users and a 10 s request timeout. Each plateau must meet three gates: p95 below 500 ms, error rate below 1 % and zero dropped iterations. Authenticated load is not covered, because it would need real Google sessions.
+The performance test is a k6 script (performance status, section 1.4.3; results in Table E.4). The tool is k6 1.6.1 (`grafana/k6` pinned by digest) running `perf/k6/browse.js`: a ramping-arrival executor steps from 10 to 200 iterations a second in ten one-minute plateaus (10, 20, 40, 60, 80, 100, 125, 150, 175, 200), each iteration one anonymous request, seven catalogue list requests to three detail requests, with no think time, 100 preallocated and 400 maximum virtual users and a 10 s request timeout. Each plateau must meet three gates: p95 below 500 ms, error rate below 1 % and zero dropped iterations. Authenticated load is not covered, because it would need real Google sessions.
 
-The top plateau covers the proposal's load. Calculated with Little's law, N = X (R + Z): with N = 100 concurrent users, an assumed think time Z = 0.5 s and a response time R of about 0.03 s, the offered load X is about 189 requests a second, below the 200 a second tested. The proposal's target (2 s at 100 users) is in section 1.4.3; the results are in Table E.4 of Appendix E. In short, on the SWE5001 ECS environment on 16 October 2026 (one monolith task, an image built from `dev` commit `6c7a99ab`) every plateau passed with p95 of 23 to 53 ms, 0 errors and 0 dropped iterations, and saturation was not reached. Performance has never been measured on SWE5006 dev (NFR-15).
+The top plateau covers the proposal's load. Calculated with Little's law, N = X (R + Z): with N = 100 concurrent users, an assumed think time Z = 0.5 s and a response time R of about 0.03 s, the offered load X is about 189 requests a second, below the 200 a second tested.
 
 #### CI health and technical findings
 
@@ -276,11 +277,11 @@ Building the pipeline produced two CI findings worth recording (Table 4.14); the
 
 Table 4.14: CI technical findings, their root causes and fixes.
 
-| Finding | Root cause | Fix and status | Evidence |
-|---|---|---|---|
-| `build-quality` red for two days, 19–20 October | Dependabot upgraded the SpotBugs engine to 4.10.5, which needs BCEL 6.13.0, while the Maven plugin 4.10.4.1 supplied BCEL 6.12.0 (`NoClassDefFoundError: PermittedSubclasses`) | Plugin 4.10.5.0 and engine 4.10.5 pinned together, Dependabot groups the SpotBugs artefacts, and a POM policy test (`.github/tests/backend_quality_test.py`) keeps them aligned. Resolved | Run 39463373272; PR #580 (`0baf2052`) |
-| Weekly full-history secret scan red every week since 21 September | 24 `generic-api-key` matches: 20 were SHA-256 file digests in a contract baseline; 4 are old SonarCloud badge tokens in a README | The 20 digests were re-hashed from their source files and listed by exact fingerprint in `.gitleaksignore`; the 4 badge tokens are neither ignored nor declared safe, so the weekly scan still fails (NFR-02 partially met). Open | Runs 37287243039, 38228025996, 39217910471, 40287812848 (26 Oct); PR #580 |
-| A SWE5001 environment run did not start on 20 October | An Actions spending budget stopped the job before a runner started | No YAML change; spending is an owner decision. SWE5001 workflow, recorded for completeness | Run 39442654274 |
+| Finding | Root cause | Fix and status |
+|---|---|---|
+| `build-quality` red for two days, 19–20 October | Dependabot upgraded the SpotBugs engine to 4.10.5, which needs BCEL 6.13.0, while the Maven plugin 4.10.4.1 supplied BCEL 6.12.0 (`NoClassDefFoundError: PermittedSubclasses`) | Plugin 4.10.5.0 and engine 4.10.5 pinned together, Dependabot groups the SpotBugs artefacts, and a POM policy test (`.github/tests/backend_quality_test.py`) keeps them aligned. Resolved |
+| Weekly full-history secret scan red every week since 21 September | 24 `generic-api-key` matches: 20 were SHA-256 file digests in a contract baseline; 4 are old SonarCloud badge tokens in a README | The 20 digests were re-hashed from their source files and listed by exact fingerprint in `.gitleaksignore`; the 4 badge tokens are neither ignored nor declared safe, so the weekly scan still fails (NFR-02 partially met). Open |
+| A SWE5001 environment run did not start on 20 October | An Actions spending budget stopped the job before a runner started | No YAML change; spending is an owner decision. SWE5001 workflow, recorded for completeness |
 
 ## 4.3 Continuous Delivery
 
@@ -305,7 +306,7 @@ Who approves each promotion:
 - To dev: the code owner of every changed area approves the pull request, the six required checks pass on an up-to-date branch, and the squash merge triggers delivery. No one approves the deploy itself.
 - To production: a code owner approves the promotion pull request from `dev` into `prod`, which must pass `promotion-source`, `service-images` and `infra-plan`. The merge deploys the three SWE5001 services to ECS.
 
-A separate SWE5006 production stack on EC2 was designed (`backend-app-stack`: a reviewed plan of 21 resources to create) but never applied: its story was closed as not planned on 11 October, when the Sprint 4 plan cut work neither course grades, and on 25 October the team ruled that the shared SWE5001 release is the production environment of both courses. Its tag-triggered jobs and environments exist but have never run, and no OIDC role exists for them.
+The shared SWE5001 release is the production environment of both courses (no SWE5006 production stack, section 1.4). The tag-triggered jobs and environments designed for a separate SWE5006 stack on EC2 (`backend-app-stack`) exist but have never run, and no OIDC role exists for them.
 
 #### Delivery flows
 
@@ -357,36 +358,36 @@ Figure 4.2: UML sequence diagram of one backend deploy to dev. The deploy is ver
 
 #### Deployment verification evidence
 
-On dev, all 103 backend deploy jobs from 18 September to 22 October 2026 succeeded, and every backend delivery run after that, to 26 October, was green. The latest deliveries before this draft verified themselves end to end (Table 4.16). Measured on 19 October, the median time from a push to `dev` to a deployed backend was 3.1 minutes, and to a green frontend smoke 2.7 minutes. The dev delivery proxies of the DORA metrics, observed to 22 October, were 16.96 successful backend and 21.85 frontend deploy jobs a week, a median lead time from first commit to dev of 7.63 h and 6.23 h, and a deploy-job success rate of 83.33 % and 100 %; Appendix D gives the full table and section 2.3 discusses them. They describe dev deploy jobs, not production incidents.
+On dev, all 103 backend deploy jobs from 18 September to 22 October 2026 succeeded, and every backend delivery run after that, to 26 October, was green. The latest deliveries before the freeze verified themselves end to end (Table 4.16). Measured on 19 October, the median time from a push to `dev` to a deployed backend was 3.1 minutes, and to a green frontend smoke 2.7 minutes. The dev delivery proxies of the DORA metrics, observed to 22 October, were 16.96 successful backend and 21.85 frontend deploy jobs a week, a median lead time from first commit to dev of 7.63 h and 6.23 h, and a deploy-job success rate of 83.33 % and 100 %; Appendix D gives the full table and section 2.3 discusses them. They describe dev deploy jobs, not production incidents.
 
 Table 4.16: Latest dev deliveries, read from GitHub on 26 October 2026 (times UTC).
 
-| Run | Commit | Jobs and times | Result |
-|---|---|---|---|
-| Backend 40200028697, 25 Oct | `ad2a73e6` | `publish-ecr-dev` 13:59:17–14:00:25; `deploy-existing-ec2` 14:00:29–14:01:16 | Success, health UP on host and through CloudFront |
-| Frontend 40294726775, 26 Oct | `9135ad8b` | `deploy-s3-dev` 08:48:27–08:48:49; `e2e-dev` 08:48:52–08:50:22 | Success, smoke suite green |
+| Run | Jobs and times | Result |
+|---|---|---|
+| Backend, 25 Oct | `publish-ecr-dev` 13:59:17–14:00:25; `deploy-existing-ec2` 14:00:29–14:01:16 | Success, health UP on host and through CloudFront |
+| Frontend, 26 Oct | `deploy-s3-dev` 08:48:27–08:48:49; `e2e-dev` 08:48:52–08:50:22 | Success, smoke suite green |
 
-Over the DORA window the frontend smoke after each deploy passed 157 times and failed 4 times; two of the failures are the 3–4 October 502 responses during a concurrent backend restart (section 4.2).
+Over the DORA window the frontend smoke after each deploy passed 157 times and failed 4 times; three of the four failures were HTTP 502 responses while the same commit's backend deploy restarted the only API container (Table E.1).
 
 At the presentation on 26 October the team planned to show one small frontend change (the home page heading) going from pull request through review and deployment to dev. {{FILL: the live demo pull request, its ci-frontend run ID and the dev check, or a statement that it was not run; the heading still reads "Buy better together" on dev at 61486f0e — Pan}}
 
 #### Rollback
 
-Rollback has been configured at two levels since 4 September 2026 (`ab640878`), and neither has ever run on dev:
+Rollback has been configured at two levels since 4 September 2026, and neither has ever run on dev:
 
 - Automatic: `deploy.sh` restarts the previous image when the on-host health check fails, and the deploy action rolls back through SSM when the public health check fails after a successful host step. No automatic rollback has been recorded; the DORA collection to 22 October found none.
-- Manual: `rollback-backend.yml`, dispatched with a target (dev or prod), an optional digest, a mandatory reason and a confirmation checkbox. It shares the deploy concurrency group, so it cannot overlap a deploy. It has never been dispatched (0 runs on 26 October); the planned rollback drill on dev (#623) is still open.
+- Manual: `rollback-backend.yml`, dispatched with a target (dev or prod), an optional digest, a mandatory reason and a confirmation checkbox. It shares the deploy concurrency group, so it cannot overlap a deploy. It has never been dispatched (0 runs on 26 October); the planned rollback drill on dev is still open.
 
 Rollback restores the application image only. Flyway migrations are forward-only, so every migration must stay backward-compatible with the previous image. During a release freeze, setting `ENABLE_EC2_DEPLOY=false` stops backend delivery without touching the running host.
 
 #### Dev topology
 
-Figure 3.3 in section 3.1 is the UML deployment diagram of dev. The browser reaches only CloudFront distribution `E3U5W7UWDL8LRV`: static files come from a private S3 bucket through origin access control, and `/api` goes to an Application Load Balancer that accepts only CloudFront's address range and forwards only requests carrying the origin secret header. One EC2 host (`t3.large`, IMDSv2 required, instance role `BlocBuyEc2Runtime`) runs the backend container beside PostgreSQL 18 and Redis 8 on its loopback interface; its security group admits port 8589 only from the load balancer. SSH port 22 was open to 0.0.0.0/0 on 21 and 24 October, and the team decided on 24 October to close it; a read-only check on 27 October 2026 at 05:19 UTC (`aws ec2 describe-security-groups`) found no rule admitting port 22 on the host's security group. The host's 40 GB root volume `vol-08df685248a8b1aea` is not encrypted, and EBS encryption by default is off in the account (`aws ec2 describe-volumes`, `aws ec2 get-ebs-encryption-by-default`, same read). Application secrets live in `/etc/blocbuy/backend.env` on the host (root, mode 0600), not in GitHub or SSM Parameter Store. Container logs go to CloudWatch group `/blocbuy/backend/dev`, kept 14 days. A second CloudFront distribution with AWS WAF serves product images from S3 bucket `blocbuy-media-dev-402178232802`; it is not drawn in Figure 3.3.
+Figure 3.3 in section 3.1 is the UML deployment diagram of dev (request path in section 3.1). Three facts of the host matter to delivery. The one EC2 host (`t3.large`, IMDSv2 required) runs with the instance role `BlocBuyEc2Runtime`. Application secrets live in `/etc/blocbuy/backend.env` on the host (root, mode 0600), not in GitHub or SSM Parameter Store. Container logs go to CloudWatch group `/blocbuy/backend/dev`, kept 14 days. The host's security gaps are tracked with owners (open issues in Table 2.6). A second CloudFront distribution with AWS WAF serves product images from S3; it is not drawn in Figure 3.3.
 
-The design trades availability for cost. The database shares the application host and there is one API container, so a deploy briefly takes the API down: the 502 responses of 3–4 October came from such a restart. The CloudFront-to-load-balancer leg still uses HTTP (NFR-37), an accepted risk on dev until 16 November 2026. Appendix E lists these limits.
+The design trades availability for cost. The database shares the application host and there is one API container, so a deploy briefly takes the API down; Table E.1 records the smoke failures this caused. The CloudFront-to-load-balancer leg still uses HTTP (open issues in Table 2.6). Appendix E lists these limits.
 
-Production, the shared SWE5001 release, is described here for contrast only (section 3.1 notes its topology). The same code runs on ECS Fargate as three services behind CloudFront and a load balancer, with RDS PostgreSQL, ElastiCache and SNS and SQS messaging in private subnets. Each promotion creates the runtime from the released image digests and destroys it after the session. The ECS deployment circuit breaker is configured with rollback, but because each promotion builds the runtime from zero there is no earlier deployment to roll back to: the breaker stops a failing deploy, and the smoke suite gates the release.
+Production, the shared SWE5001 release, runs the same code on ECS (SWE5001 topology, section 1.4). Each promotion creates the runtime from the released image digests and destroys it after the session. The ECS deployment circuit breaker is configured with rollback, but because each promotion builds the runtime from zero there is no earlier deployment to roll back to: the breaker stops a failing deploy, and the smoke suite gates the release.
 
 #### CD findings
 
-Early dev deployments failed until the hand-built environment was brought in line with its design. From 5 to 17 September 2026, 22 of 47 backend deploy jobs succeeded. The causes were an outdated OIDC subject format in the role trust, a placeholder instance ID (`i-0123456789abcdef0`) in the SSM policy, a host without the AWS CLI, port 8589 open to the internet, and repository variables edited by hand. The first fix, the OIDC subject format, landed on 5 September (`121a0733`), but failures continued until 17 September while the other causes were removed; from 18 September to 22 October, 103 of 103 deploy jobs succeeded. The same lesson shaped the production design, which is written in Terraform rather than built by hand. A second finding came late: the Stripe webhook on dev never confirmed a payment until 23 October, because the dev webhook endpoint used an older Stripe API version than the deployed SDK expected. Replacing the endpoint and its signing secret, and turning scheduling on, fixed it on the unchanged image (section 2.2, Appendix E).
+Early dev deployments failed until the hand-built environment was brought in line with its design. From 5 to 17 September 2026, 22 of 47 backend deploy jobs succeeded. The causes were an outdated OIDC subject format in the role trust, a placeholder instance ID in the SSM policy, a host without the AWS CLI, port 8589 open to the internet, and repository variables edited by hand. The first fix, the OIDC subject format, landed on 5 September, but failures continued until 17 September while the other causes were removed; from 18 September to 22 October, 103 of 103 deploy jobs succeeded. The same lesson shaped the production design, which is written in Terraform rather than built by hand. A second finding came late: the Stripe webhook on dev never confirmed a payment until its endpoint was replaced on the unchanged image (the 23 Oct webhook fault, Appendix E).
