@@ -356,11 +356,6 @@
   let W = size.width
   let n = parts.len()
   let cw = W / n
-  // A guard "[cond]" as wide as its text, wrapping only beyond max.
-  let guard(cond, max) = {
-    let t = text(weight: "bold", "[" + cond + "]")
-    box(width: calc.min(measure(t).width, max), t)
-  }
   let idx = (:)
   for (i, p) in parts.enumerate() { idx.insert(p.id, i) }
   let px(id) = cw * (idx.at(id) + 0.5)
@@ -392,6 +387,7 @@
   let frames = ()
   let y = top-h + 6pt + 6pt * gap
   let last-y = y
+  let last-act = false
   let label-box(c) = box(fill: white, inset: (x: 1.5pt, y: 1pt), c)
   // Widen the open fragments (outermost first) so a label from l to r stays inside each of
   // them, keeping 5 pt between nested outlines.
@@ -401,6 +397,43 @@
     f.x0 = calc.max(1pt + i * 5pt, calc.min(f.x0, l - 4pt - k * 5pt))
     f
   })
+  // A bar shorter than this is a stub; the row after a call that opens one starts below it,
+  // so the next label never sits on the stub.
+  let stub = 6pt
+  // Place a guard between l and r where no open activation bar runs: the leftmost free stretch
+  // wide enough for it on one line, else the widest free stretch (wrapping there), else the
+  // whole width. open-now: the activation stacks at that moment. Returns (x, content).
+  let place-guard(cond, l, r, open-now) = {
+    let t = text(weight: "bold", "[" + cond + "]")
+    let need = measure(t).width
+    let blocked = parts.filter(p => open-now.at(p.id).len() > 0).map(p => {
+      let k = open-now.at(p.id).len()
+      (px(p.id) - bar-w / 2 - 2pt, level-x(p.id, k - 1) + bar-w / 2 + 2pt)
+    }).sorted(key: b => b.at(0))
+    let free = ()
+    let at = l
+    for (b0, b1) in blocked {
+      if b0 > at { free.push((at, calc.min(b0, r))) }
+      at = calc.max(at, b1)
+    }
+    if at < r { free.push((at, r)) }
+    free = free.filter(f => f.at(1) > f.at(0))
+    let fits = free.filter(f => f.at(1) - f.at(0) >= need + 4pt)
+    if fits.len() > 0 { return (fits.first().at(0), box(width: need, t), true) }
+    let widest = free.sorted(key: f => f.at(1) - f.at(0)).at(-1, default: none)
+    if widest != none and widest.at(1) - widest.at(0) >= 60pt { return (widest.at(0), box(width: widest.at(1) - widest.at(0) - 3pt, t), false) }
+    (l, box(width: calc.min(need, r - l), t), need <= r - l)
+  }
+  // A guard inside the fragment (l to r) when it fits there on one line, else up to rmax,
+  // where the fragment then widens to hold it. Returns (x, content).
+  let guard-in(cond, l, r, rmax, open-now) = {
+    let (x, g, one) = place-guard(cond, l, r, open-now)
+    if not one and rmax > r {
+      let (x2, g2, one2) = place-guard(cond, l, rmax, open-now)
+      if one2 { return (x2, g2) }
+    }
+    (x, g)
+  }
   for s in steps {
     if s.t == "msg" {
       let from = s.from
@@ -413,8 +446,16 @@
         let x0 = edge-x(from, k, 1)
         let w = 16pt
         let drop = 10pt
-        let lb = box(width: calc.min(calc.max(cw * 1.9, 70pt), W - x0 - w - 4pt), align(left, label-box(lab)))
+        // The label goes right of the loop; when the frame's right edge leaves too little room,
+        // it goes left of the lifeline instead, so it never runs out of the frame.
+        let natural = measure(label-box(lab)).width
+        let room = W - x0 - w - 4pt
+        let xl = px(from) - bar-w / 2 - 3pt
+        let on-right = natural <= room or room >= calc.min(80pt, xl)
+        let lw = if on-right { calc.min(calc.max(cw * 1.9, 70pt), room) } else { calc.min(natural, calc.max(cw * 1.9, 70pt), xl) }
+        let lb = box(width: lw, align(if on-right { left } else { right }, label-box(lab)))
         let lh = measure(lb).height
+        let lx = if on-right { x0 + w + 3pt } else { xl - lw }
         y += calc.max(0pt, lh - drop - 2pt) + 2pt
         // Nested activation for the self call, at the next level.
         let xin = level-x(from, k) + bar-w / 2
@@ -422,10 +463,11 @@
         mid.push(place(top + left, line(start: (x0 + w, y), end: (x0 + w, y + drop), stroke: st)))
         mid.push(place(top + left, line(start: (x0 + w, y + drop), end: (xin + 0.5pt, y + drop), stroke: st)))
         mid.push(arrow-head(xin, y + drop, -1, open: s.style != "sync"))
-        bars.push((x: level-x(from, k), y0: y + drop - 3pt, y1: y + drop + 7pt))
-        front.push(place(top + left, dx: x0 + w + 3pt, dy: y - 2pt, lb))
-        frames = widen(frames, x0 - 8pt, x0 + w + 3pt + calc.min(measure(label-box(lab)).width, measure(lb).width))
+        bars.push((x: level-x(from, k), y0: y + drop - 3pt, y1: y + drop + 4pt))
+        front.push(place(top + left, dx: lx, dy: y - 2pt, lb))
+        frames = if on-right { widen(frames, x0 - 8pt, lx + calc.min(natural, lw)) } else { widen(frames, xl - calc.min(natural, lw), x0 + w + 2pt) }
         last-y = y + drop
+        last-act = true
         y += calc.max(lh, drop) + 4pt + 5pt * gap
       } else {
         let dir = if px(to) > px(from) { 1 } else { -1 }
@@ -458,13 +500,13 @@
         if s.at("act", default: false) { open.at(to).push(y) }
         if s.at("deact", default: false) and open.at(from).len() > 0 {
           let y0 = open.at(from).pop()
-          bars.push((x: level-x(from, open.at(from).len()), y0: y0, y1: calc.max(y, y0 + 8pt)))
+          bars.push((x: level-x(from, open.at(from).len()), y0: y0, y1: calc.max(y, y0 + stub)))
         }
         if s.at("destroy", default: none) != none {
           let d = s.destroy
           while open.at(d).len() > 0 {
             let y0 = open.at(d).pop()
-            bars.push((x: level-x(d, open.at(d).len()), y0: y0, y1: calc.max(y, y0 + 8pt)))
+            bars.push((x: level-x(d, open.at(d).len()), y0: y0, y1: calc.max(y, y0 + stub)))
           }
           ends.insert(d, y)
           let c = 5pt
@@ -472,14 +514,17 @@
           front.push(place(top + left, line(start: (px(d) - c, y + c), end: (px(d) + c, y - c), stroke: 1.2pt + ink)))
         }
         y += (if s.at("create", default: false) { (head-h - 4pt) / 2 } else { 0pt }) + 2.5pt + 3.5pt * gap
+        // A call that opens an activation leaves room for its stub before the next label.
+        last-act = s.at("act", default: false)
+        if last-act { y = calc.max(y, last-y + stub + 2pt) }
       }
     } else if s.t == "act" {
       open.at(s.id).push(if s.at("here", default: false) { y - 4pt } else { last-y })
     } else if s.t == "deact" {
       if open.at(s.id).len() > 0 {
         let y0 = open.at(s.id).pop()
-        let y1 = if s.at("implicit", default: false) { last-y + 5pt } else { last-y }
-        bars.push((x: level-x(s.id, open.at(s.id).len()), y0: y0, y1: calc.max(y1, y0 + 8pt)))
+        let y1 = if s.at("implicit", default: false) { last-y + 4pt } else { last-y }
+        bars.push((x: level-x(s.id, open.at(s.id).len()), y0: y0, y1: calc.max(y1, y0 + stub)))
       }
     } else if s.t == "frag" {
       let d = s.at("depth", default: 0) * 5pt
@@ -490,33 +535,46 @@
       let tag = if s.kind == "rect" { none } else { frag-tag(s.kind) }
       let tw = if tag != none { measure(tag).width } else { 0pt }
       let th = if tag != none { measure(tag).height } else { 0pt }
-      let g = if s.cond != none and s.cond != "" { guard(s.cond, x1 - x0 - tw - 10pt) } else { none }
+      // The guard keeps clear of the activation bars running through the header row, and the
+      // first message starts 4 pt below it.
+      let (gx, g) = if s.cond != none and s.cond != "" { guard-in(s.cond, x0 + tw + 6pt, x1 - 4pt, W - 5pt - d, open) } else { (0pt, none) }
       let gh = if g != none { measure(g).height } else { 0pt }
-      frames.push((y: y, kind: s.kind, x0: x0, x1: x1, tag: tag, g: g, tw: tw, elses: ()))
-      y += calc.max(th, gh + 3pt) + 3pt + 3pt * gap
+      // A guard that needed more room widens this fragment and the ones around it.
+      let gr = if g != none { gx + measure(g).width + 3pt } else { x1 }
+      frames = widen(frames, gx, gr)
+      frames.push((y: y, kind: s.kind, x0: x0, x1: calc.max(x1, gr + 4pt), tag: tag, g: g, gx: gx, tw: tw, elses: ()))
+      y += calc.max(th, gh + 5pt) + 4pt + 3pt * gap
     } else if s.t == "else" {
       let f = frames.pop()
-      let g = if s.cond != none and s.cond != "" { guard(s.cond, f.x1 - f.x0 - 10pt) } else { none }
+      let (gx, g) = if s.cond != none and s.cond != "" { guard-in(s.cond, f.x0 + 5pt, f.x1 - 4pt, W - 5pt - frames.len() * 5pt, open) } else { (0pt, none) }
       let gh = if g != none { measure(g).height } else { 0pt }
+      if g != none {
+        let gr = gx + measure(g).width + 3pt
+        frames = widen(frames, gx, gr)
+        f.x1 = calc.max(f.x1, gr + 4pt)
+      }
       y += 2pt
-      f.elses.push((y: y, g: g))
+      f.elses.push((y: y, g: g, gx: gx))
       frames.push(f)
-      y += gh + 6pt + 3pt * gap
+      y += gh + 9pt + 3pt * gap
     } else if s.t == "end" {
       let f = frames.pop()
+      // The bottom edge clears the stub of the last call inside.
+      if last-act { y = calc.max(y, last-y + stub + 4pt) }
       let y1 = y - 2pt
       if f.kind == "rect" {
         back.insert(0, place(top + left, dx: f.x0, dy: f.y, rect(width: f.x1 - f.x0, height: y1 - f.y, stroke: none, fill: rgb("#F1F4FD"))))
       } else {
         back.push(place(top + left, dx: f.x0, dy: f.y, rect(width: f.x1 - f.x0, height: y1 - f.y, stroke: w-thin + muted)))
         front.push(place(top + left, dx: f.x0, dy: f.y, f.tag))
-        if f.g != none { front.push(place(top + left, dx: f.x0 + f.tw + 6pt, dy: f.y + 3pt, label-box(f.g))) }
+        if f.g != none { front.push(place(top + left, dx: f.gx, dy: f.y + 3pt, label-box(f.g))) }
       }
       for e in f.elses {
         back.push(place(top + left, line(start: (f.x0, e.y), end: (f.x1, e.y), stroke: (paint: muted, thickness: w-thin, dash: (4pt, 3pt)))))
-        if e.g != none { front.push(place(top + left, dx: f.x0 + 5pt, dy: e.y + 3pt, label-box(e.g))) }
+        if e.g != none { front.push(place(top + left, dx: e.gx, dy: e.y + 3pt, label-box(e.g))) }
       }
-      y += 4pt + 4pt * gap
+      // Nested fragments that end together keep their bottoms 5 pt apart.
+      y += 5pt + 3pt * gap
     } else if s.t == "note" {
       let xs = s.over.map(px)
       let a = calc.max(calc.min(..xs) - cw * 0.42, 0pt)
@@ -531,7 +589,7 @@
   for p in parts {
     while open.at(p.id).len() > 0 {
       let y0 = open.at(p.id).pop()
-      bars.push((x: level-x(p.id, open.at(p.id).len()), y0: y0, y1: calc.max(last-y + 5pt, y0 + 8pt)))
+      bars.push((x: level-x(p.id, open.at(p.id).len()), y0: y0, y1: calc.max(last-y + 4pt, y0 + stub)))
     }
   }
   let H = y + 2pt

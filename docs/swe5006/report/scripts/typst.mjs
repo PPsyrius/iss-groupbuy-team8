@@ -344,7 +344,31 @@ function inferActivations(steps, parts) {
   const snaps = [];
   const frags = [];
   let first = true;
-  for (const s of steps) {
+  // Participants that send or receive a message from step i on, up to the end of the current
+  // branch (branch: stop at the next else/end of this fragment) or of the enclosing fragment.
+  const usedAhead = (i, branch) => {
+    const used = new Set();
+    let depth = 0;
+    for (let j = i + 1; j < steps.length; j++) {
+      const t = steps[j];
+      if (t.t === 'frag') depth++;
+      else if (t.t === 'end' && depth-- === 0) break;
+      else if (t.t === 'else' && depth === 0 && branch) break;
+      else if (t.t === 'msg') used.add(t.from).add(t.to);
+    }
+    return used;
+  };
+  // Bring back the activations of snap above the first k entries, but only up to the innermost
+  // one whose participant still takes part in what follows, so no bar is left as a stray stub.
+  const reopen = (snap, k, used) => {
+    const rest = snap.slice(k);
+    const last = rest.findLastIndex((e) => used.has(e.callee));
+    for (const e of rest.slice(0, last + 1)) {
+      stack.push(e);
+      out.push({ t: 'act', id: e.callee, here: true });
+    }
+  };
+  for (const [i, s] of steps.entries()) {
     if (s.t === 'msg') {
       const { from: a, to: b } = s;
       if (first && s.style !== 'return' && a !== b && !isActor(a)) {
@@ -387,10 +411,7 @@ function inferActivations(steps, parts) {
       while (k < stack.length && k < snap.length && stack[k] === snap[k]) k++;
       closeTo(k);
       out.push(s);
-      for (const e of snap.slice(k)) {
-        stack.push(e);
-        out.push({ t: 'act', id: e.callee, here: true });
-      }
+      reopen(snap, k, usedAhead(i, true));
     } else if (s.t === 'end') {
       // After a break the interaction goes on from where the fragment began.
       const snap = snaps.pop();
@@ -400,10 +421,7 @@ function inferActivations(steps, parts) {
         let k = 0;
         while (k < stack.length && k < snap.length && stack[k] === snap[k]) k++;
         closeTo(k);
-        for (const e of snap.slice(k)) {
-          stack.push(e);
-          out.push({ t: 'act', id: e.callee, here: true });
-        }
+        reopen(snap, k, usedAhead(i, false));
       }
     } else out.push(s);
     if (s.t === 'frag') frags.push(s);
