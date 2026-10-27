@@ -71,8 +71,8 @@ Table 1.2: Phases of the project and their delivered increments.
 | --- | --- | --- |
 | Sprint 1 | 1–12 Sep | Backend skeleton and delivery pipeline on dev from 5 September; Google sign-in, listing browse and admin listing APIs |
 | Sprint 2 | 15–26 Sep | Stripe Checkout, paid start and join, orders, team expiry and refunds, all replay-safe and tested locally; the web application on dev from 22 September |
-| Sprint 3 | 28 Sep–9 Oct | Invite links that name the sharer, admin team terms, the admin console, a local performance baseline; Checkout still off on dev |
-| Sprint 4 | 12–23 Oct | Checkout, scheduling and refunds switched on for dev; three services on ECS for SWE5001, promoted to production on 17 and 20 October |
+| Sprint 3 | 28 Sep–9 Oct | Invite links that name the sharer, admin team terms, the admin console, a local performance baseline; Checkout still off on dev; for SWE5001, the monolith deployed to production on ECS from 6 October |
+| Sprint 4 | 12–23 Oct | Checkout, scheduling and refunds switched on for dev; three services on ECS for SWE5001, promoted to production on 17, 19 and 20 October |
 
 The scope is documented in three places: the proposal (sections 6.1 to 6.3), the backend and frontend architecture decision records (indexed in Appendix B), and the out-of-scope decisions in the Sprint 4 plan.
 
@@ -127,7 +127,7 @@ Table 1.4: Items dropped during the project.
 
 | Item dropped | Reason | Issue |
 | --- | --- | --- |
-| A separate SWE5006 production release on EC2, with a rollback drill | Production is the shared SWE5001 release on ECS, whose gated promotion and deployment circuit breaker shipped on 17 and 20 October | #226 |
+| A separate SWE5006 production release on EC2, with a rollback drill | Production is the shared SWE5001 release on ECS, with gated promotion and a deployment circuit breaker, deployed from 6 October and as three services from 17 October | #226 |
 | Signed-in end-to-end journey on dev | Waited on Checkout in dev; end-to-end tests run against API stubs instead (frontend ADR 0011) | #229 |
 | Notification bell in the header | Notifications serve SWE5001 only; one list endpoint is enough there | #449 |
 | Invite credits view for the sharer | Attribution is recorded (UC7); its reporting page is not graded | #452 |
