@@ -66,7 +66,7 @@ Settled in PLAN; re-check at the freeze SHA.
 | Performance | Met locally (30 Sep) and on SWE5001 ECS (16 Oct); never measured on SWE5006 dev (NFR-15) | `docs/quality/nfr-register.md` |
 | Scalability | Not a PROP target; not claimed | presentation decision 8 |
 | Notifications | Coded, off on SWE5006 dev (ADR 0007); SWE5001 scope, no §3.4 models | PLAN D4 |
-| Test counts | One recount at the freeze SHA: static counts from `git ls-tree`, executed counts from the build-quality CI log of the same SHA. Never Sonar's `tests` figure | PLAN D6 |
+| Test counts | One recount at the freeze SHA: static counts from `git ls-tree`, executed counts from the `SonarCloud Backend` CI log of the push to `dev` (`build-quality` runs on a push only for `v*` tags). Never Sonar's `tests` figure | PLAN D6 |
 | Required checks | The live ruleset's 6: `build-quality`, `SonarCloud Backend`, `docker`, `gitleaks`, `frontend-check`, `SonarCloud Frontend`; `contract-check` is required by policy only | PLAN D7; `CONTRIBUTING.md` |
 | Counts | 17 ArchUnit rules; Flyway V1–V28 (28 SQL files plus one `.conf`); sprint dates from `docs/agile/definition-of-done.md`; sprint tags by tagger date | PLAN part 3 data conflicts |
 | Effort | No hours were logged. The only actuals are the person-day split agreed on 19 Oct (Liu Jin 12.5, Pan 11.5, Yorik 9, Lim 8.5, Eric 8.5), shown as an agreed estimate beside planned hours. No PR or commit counts per member | PLAN D12 |
