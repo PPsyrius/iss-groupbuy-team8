@@ -601,12 +601,14 @@ export function markdown(src, { sectionDir, root, resolvePath }) {
   // float would leave it behind at the foot of a page (a sticky block cannot keep with a float,
   // which is out of the flow). Under a heading, the figure is set in the flow instead, where the
   // sticky heading keeps with it. A lead label moves into the floating figure as its title, so the
-  // text around it still fills the pages the float leaves.
-  const intro = () => {
+  // text around it still fills the pages the float leaves. A landscape figure always has a page of
+  // its own, so it cannot sit in the flow: a heading above it keeps with the text that follows the
+  // figure, and a lead label rides onto the landscape page above the drawing.
+  const intro = ({ landscape = false } = {}) => {
     let k = out.length - 1;
     while (k >= 0 && !out[k].trim()) k--;
     if (k < 0) return '';
-    if (/^#heading\(/.test(out[k])) return ', float: false';
+    if (/^#heading\(/.test(out[k])) return landscape ? '' : ', float: false';
     const lm = out[k].match(/^#lead-label\[(.*)\]$/);
     if (!lm) return '';
     out.length = k;
@@ -679,7 +681,7 @@ export function markdown(src, { sectionDir, root, resolvePath }) {
       // {.logo}: a brand mark, 7 cm wide and flush with the left margin of the text, with no frame, caption or number.
       if (m[4] === 'logo') out.push(`#align(left, image(${str(path)}, width: 7cm, alt: ${str(m[1])}))`);
       // {.landscape}: a wide drawing gets a landscape page of its own, about 1.6 times larger.
-      else if (m[3]) out.push(figure(`#image(${str(path)}, width: 100%, height: 13cm, fit: "contain")`, m[1]).replace('#report-figure(', '#landscape-figure('));
+      else if (m[3]) out.push(figure(`#image(${str(path)}, width: 100%, height: 13cm, fit: "contain")`, m[1], intro({ landscape: true })).replace('#report-figure(', '#landscape-figure('));
       else out.push(figure(`#image(${str(path)}, width: 100%)`, m[1], intro()));
       out.push('');
       i++;

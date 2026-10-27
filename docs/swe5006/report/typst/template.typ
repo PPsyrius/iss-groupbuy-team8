@@ -55,9 +55,10 @@
 }
 
 // A figure on its own landscape page (images marked {.landscape} in the Markdown): always a
-// full page, so no body text shares it; placed like any other float (page-float).
-#let landscape-figure(num, body, caption) = page-float(num, layout(size => full-page(size,
-  rotate(-90deg, reflow: true, block(width: 23cm, report-figure(num, body, caption, float: false))))))
+// full page, so no body text shares it; placed like any other float (page-float). A lead label
+// turns with the drawing and prints above it, so it lands on the figure's page.
+#let landscape-figure(num, body, caption, lead: none) = page-float(num, layout(size => full-page(size,
+  rotate(-90deg, reflow: true, block(width: 23cm, report-figure(num, body, caption, float: false, lead: lead))))))
 
 #let figure-frame(body) = block(width: 100%, breakable: false, inset: 6pt, stroke: 0.4pt + rgb("#D8D2C8"), body)
 
