@@ -42,6 +42,7 @@ In every table, **Source** cites what a document requires and **Ruling** records
 | G10 | Incorporate presentation remarks | BRF slide 7; REM | Every remark in the REM issue is turned into a report task tagged with a section number and either answered in the report or recorded as not adopted, with a reason, in the Remarks register below |
 | G11 | Code base deliverable | BRF slide 5 | Repository URL on the title page; lecturers get read access or a `git archive` of the freeze SHA (PLAN D13, #693) |
 | G12 | Figures legible in print | BRF slide 6 | Every figure passes F1–F9 |
+| G13 | One voice, one memory | Team | Each argument, fact, figure and table has one canonical home, listed in the Canonical homes and Canonical figures registries. The full statement appears only at its home. Elsewhere, cite the home in at most one clause, or say nothing. Never repeat the measured figures (for example 18.9 s, 40.6 s, 58.18 s) outside their home. References may point forward. A limitation is stated once, plainly, at its home, without commentary about grading or rulings |
 
 ## Evidence kinds
 
@@ -57,23 +58,94 @@ Each claim is one of these. Say which in the sentence.
 
 ## Claims that are easy to get wrong
 
-Settled in PLAN; re-check at the freeze SHA.
+Settled in PLAN; re-check at the freeze SHA. The correct statement governs wherever a topic is mentioned; the full statement appears only at its home, the Canonical homes row named in the last column.
 
-| Topic | Correct statement | Source |
-| --- | --- | --- |
-| Systems | SWE5006 system = `dev`, a modular monolith on one EC2 host behind CloudFront. Production is the shared SWE5001 release (ruleset prod-release, code-owner-approved promotion PR); no separate SWE5006 prod stack was built (#226) | backend ADR 0008; presentation R 4.4 |
-| Expiry | The design bound is one sweep interval plus sweep time, not a one-minute guarantee. Local worst lag 58.18 s over 30 teams; one dev bloc closed 18.9 s after its deadline and was refunded 40.6 s after (23 Oct). Do not claim the target met on dev | PR #671; `docs/perf/sprint3-baseline.md`; PR #664 |
-| Performance | Met locally (30 Sep) and on SWE5001 ECS (16 Oct); never measured on SWE5006 dev (NFR-15) | `docs/quality/nfr-register.md` |
-| Scalability | Not a PROP target; not claimed | presentation decision 8 |
-| Notifications | Coded, off on SWE5006 dev (ADR 0007); SWE5001 scope, no §3.4 models | PLAN D4 |
-| Test counts | One recount at the freeze SHA: static counts from `git ls-tree`, executed counts from the `SonarCloud Backend` CI log of the push to `dev` (`build-quality` runs on a push only for `v*` tags). Never Sonar's `tests` figure | PLAN D6 |
-| Required checks | The live ruleset's 6: `build-quality`, `SonarCloud Backend`, `docker`, `gitleaks`, `frontend-check`, `SonarCloud Frontend`; `contract-check` is required by policy only | PLAN D7; `CONTRIBUTING.md` |
-| Counts | 17 ArchUnit rules; Flyway V1–V28 (28 SQL files plus one `.conf`); sprint dates from `docs/agile/definition-of-done.md`; sprint tags by tagger date | PLAN part 3 data conflicts |
-| Effort | No hours were logged. The only actuals are the person-day split agreed on 19 Oct (Liu Jin 12.5, Pan 11.5, Yorik 9, Lim 8.5, Eric 8.5), shown as an agreed estimate beside planned hours. No PR or commit counts per member | PLAN D12 |
-| Static credentials | CI authenticates to AWS through GitHub OIDC; disclose the one accepted IAM user access key in the AWS account governance README | presentation R 4.2 |
-| Lock order | ADR 0001 (deal → intent → payment) and ADR 0002 (team → intent → order → payment) are not yet reconciled; state the reconciled order or the open issue (#663) | PLAN #677 3.2.8 |
-| Programme name | "Practice Module for Certificate in Designing Modern Software Systems" (template line), not the deck's "Graduate Certificate…" | PLAN part 3 |
-| Proposal exclusions | PROP §6.2 excludes notifications "beyond in-app status"; do not write that it excluded in-app notifications | PLAN D4 |
+| Topic | Correct statement | Source | Home |
+| --- | --- | --- | --- |
+| Systems | SWE5006 system = `dev`, a modular monolith on one EC2 host behind CloudFront. Production is the shared SWE5001 release (ruleset prod-release, code-owner-approved promotion PR); no separate SWE5006 prod stack was built (#226) | backend ADR 0008; presentation R 4.4 | R49, R04, R19 |
+| Expiry | The design bound is one sweep interval plus sweep time, not a one-minute guarantee. Local worst lag 58.18 s over 30 teams; one dev bloc closed 18.9 s after its deadline and was refunded 40.6 s after (23 Oct). Do not claim the target met on dev | PR #671; `docs/perf/sprint3-baseline.md`; PR #664 | R05, R01 |
+| Performance | Met locally (30 Sep) and on SWE5001 ECS (16 Oct); never measured on SWE5006 dev (NFR-15) | `docs/quality/nfr-register.md` | R06 |
+| Scalability | Not a PROP target; not claimed | presentation decision 8 | R40 |
+| Notifications | Coded, off on SWE5006 dev (ADR 0007); SWE5001 scope, no §3.4 models | PLAN D4 | R03 |
+| Test counts | One recount at the freeze SHA: static counts from `git ls-tree`, executed counts from the `SonarCloud Backend` CI log of the push to `dev` (`build-quality` runs on a push only for `v*` tags). Never Sonar's `tests` figure | PLAN D6 | R41 |
+| Required checks | The live ruleset's 6: `build-quality`, `SonarCloud Backend`, `docker`, `gitleaks`, `frontend-check`, `SonarCloud Frontend`; `contract-check` is required by policy only | PLAN D7; `CONTRIBUTING.md` | R42 |
+| Counts | 17 ArchUnit rules; Flyway V1–V28 (28 SQL files plus one `.conf`); sprint dates from `docs/agile/definition-of-done.md`; sprint tags by tagger date | PLAN part 3 data conflicts | R43, R44, R45 |
+| Effort | No hours were logged. The only actuals are the person-day split agreed on 19 Oct (Liu Jin 12.5, Pan 11.5, Yorik 9, Lim 8.5, Eric 8.5), shown as an agreed estimate beside planned hours. No PR or commit counts per member | PLAN D12 | R46 |
+| Static credentials | CI authenticates to AWS through GitHub OIDC; disclose the one accepted IAM user access key in the AWS account governance README | presentation R 4.2 | R47 |
+| Lock order | ADR 0001 (deal → intent → payment) and ADR 0002 (team → intent → order → payment) are not yet reconciled; state the reconciled order or the open issue (#663) | PLAN #677 3.2.8 | R11 |
+| Programme name | "Practice Module for Certificate in Designing Modern Software Systems" (template line), not the deck's "Graduate Certificate…" | PLAN part 3 | R48 |
+| Proposal exclusions | PROP §6.2 excludes notifications "beyond in-app status"; do not write that it excluded in-app notifications | PLAN D4 | R34 |
+
+## Canonical homes
+
+Source: Team (G13). This registry is the report's memory. Before writing, find your topic here. If your section is the home, state it in full. If not, use the reference form, or say nothing. If the topic has no row, add one in the same pull request before writing about it. Each section file declares the rows it is home to in its `owns:` header line (AGENTS.md).
+
+### How to choose a home
+
+A fact's home is the section whose template or rubric row requires it. When a topic has both a claim and its evidence, it gets two homes: one holds the claim or status, the other the evidence. Neither repeats the other, and the row names both. These homes are fixed:
+
+- **BlocBuy glossary** (team and bloc, listing, pay first, Sandbox): 1.1. Every other definition is deleted.
+- **Shared modelling conventions** (analysis models use «boundary», «control» and «entity» only; a `critical` fragment marks the transaction boundary; the strategy tag legend; how provider and actor lifelines are drawn): 3.4.0. No 3.4.N restates them.
+- **Delivery status per use case**: Table 1.3. **Evidence of dev runs, timings and incidents**: Appendix E.
+- **Authorship and code credits**: chapter 5. A 3.4.N or 3.5.N states what its owner identified, analysed and decided, then "(code credits: chapter 5)".
+- **Design detail** (HTTP codes, error constants, locks, transactions, batch sizes, rate limits, storage keys): 3.2.N or 3.4.N. A 3.3.N use case describes behaviour in the actors' terms and carries no dev evidence or authorship.
+- **SWE5001 topology**: 1.4, as one paragraph. Everywhere else, one clause plus a reference.
+
+### Registry
+
+IDs R01–R39 come from a whole-report read of the 27 Oct draft that found each of these told 2 to 18 times; R40–R49 add the "easy to get wrong" facts that had no row. Section, table and figure numbers are those of that draft; when renumbering moves them, update this table in the same change. "Allowed extra mentions" are the only places besides the home where the topic may appear, each in the reference form unless the row says otherwise.
+
+| ID | Argument or fact | Home | Home owner | Reference form used elsewhere | Allowed extra mentions |
+| --- | --- | --- | --- | --- | --- |
+| R01 | On 23 Oct on dev a paid START expired 18.9 s after its deadline and was refunded 40.6 s after it; one run, not a bound | Status: Table 1.3 (UC5 and UC6 rows). Times and evidence: Table E.3 | Lim (Table 1.3); Pan, Yorik (Table E.3) | "shown on dev on 23 October (Table E.3)" | Table 1.3 status cell, without seconds (1.4.1 asks for status on dev); Table 2.8 milestone row, date only (2.3 asks for achieved dates) |
+| R02 | On 24 Oct a second buyer's paid JOIN filled a two-seat team on dev, shown in a recording, not a database or log read | Status: Table 1.3 (UC4 row). Evidence: Appendix E | Lim (Table 1.3); Pan, Yorik (Appendix E) | "shown on dev on 24 October in a recording (Appendix E)" | Table 1.3 status cell; Table 2.5 delivered cell (2.2 asks promised against delivered); Table 2.8 milestone row, date only |
+| R03 | Notifications (outbox writer, relay, SNS and SQS transports) are coded but switched off on SWE5006 dev (ADR 0007), so they are SWE5001 scope | 1.4 | Lim | "(off on dev, section 1.4)" | Table 1.3 status cell; Table 2.5 row; 3.3.12 and 3.5.3 one sentence each, because their content depends on it; Table C.1 SWE5001-owner column |
+| R04 | No separate SWE5006 production stack was built: the reviewed plan of 21 resources was never applied and the story closed on 11 Oct; production is the shared SWE5001 release | Fact: 1.4. Pipeline consequence (environments): 4.3 | Lim (1.4); Pan (4.3) | "(no SWE5006 production stack, section 1.4)" | Table 1.4 dropped-item row (1.4.2 asks for it); Table 2.5 dropped row (2.2 asks for it) |
+| R05 | Expiry within one minute is a design bound (one sweep interval plus sweep time), not a guarantee; local worst lag 58.18 s over 30 teams | Claim, status and the 58.18 s figure: 1.4.3 (Table 1.5). Why the bound follows from the sweep: 3.2.7 | Lim (1.4.3); Yorik (3.2.7) | "the expiry design bound (section 1.4.3)" | Table 3.5 strategy row, the concern only, no figures; Table E.1 row cites 1.4.3 |
+| R06 | Performance was never measured on SWE5006 dev; p95 met locally (30 Sep) and on SWE5001 ECS (16 Oct, k6, p95 23–53 ms) | Status: 1.4.3 (Table 1.5). Method (tool, scenario, gates): 4.2. Numbers: Table E.4 | Lim (1.4.3); Pan (4.2); Pan, Yorik (Table E.4) | "(performance status, section 1.4.3; results in Table E.4)" | Table 2.6 outstanding-issue row (2.2 asks for outstanding issues), reference form |
+| R07 | Dev host gaps: SSH port 22 open on 21 and 24 Oct and closed on 27 Oct, root EBS volume unencrypted, one IAM access key, rollback never run | Open issues with owners: Table 2.6. Rollback as configured and as exercised: 4.3 | Lim (Table 2.6); Pan (4.3) | "(open issues in Table 2.6)" | Table 1.5 security status cell; Table E.1 rows cite Table 2.6; 3.1 and 4.3 keep the one-host design limit without the SSH and EBS dates |
+| R08 | Glossary: a team is shown to buyers as a bloc; listing; pay first; Stripe Sandbox is test mode with no real money | 1.1 | Lim | none, or "(team, section 1.1)" at first use in a chapter | none |
+| R09 | Crash recovery of refunds under replay is proven locally (Testcontainers and a local rehearsal on 3 Oct) but not shown on dev | Status: Table 1.3 (UC6 row). Local evidence: 3.4.2 D | Lim (Table 1.3); Yorik (3.4.2) | "(not shown on dev; Table 1.3)" | Table 2.5 delivered cell. One wording for the evidence level: D18 |
+| R10 | Listener phases: consequences of the same fact run BEFORE_COMMIT and roll back together; derived effects run AFTER_COMMIT and cannot undo the fact | 3.2.9 | Yorik | "(listener phases, section 3.2.9)" | 3.5.2 motivation, one sentence on who chooses the phase (the Observer angle) |
+| R11 | Lock order: one combined order per path; ADR 0001 (deal → intent → payment) and ADR 0002 (team → intent → order → payment) are not yet reconciled into one written order | 3.2.8 (Table 3.12) | Eric | "locks in the order of Table 3.12 (section 3.2.8)" | Table 2.6 open-issue row. The product row's position: D17 |
+| R12 | Production on ECS was first deployed on 6 Oct as one service and promoted as three services on 17, 19 and 20 Oct | 2.3 (Table 2.8) | Lim | "(promoted to production, section 2.3)" | Table 2.9 step cell, without dates |
+| R13 | Optimistic Offline Lock on listings: the version is checked after a short row lock, plus a guarded `WHERE version =` update; a stale save gets 412 | 3.5.5 | Liu Jin | "(Optimistic Offline Lock, section 3.5.5)" | 3.6, the column's meaning only. Which tables compare a version: D19 |
+| R14 | Twenty buyers race for one last seat in a Testcontainers test: one wins, nineteen refund obligations persist; not shown on dev | Mechanism: 3.2.8. Test: Table 4.12 | Eric (3.2.8); Pan (Table 4.12) | "(tested locally: Table 4.12)" | Table 1.5 status cell |
+| R15 | Guarded update: the team row is written only `WHERE current_size AND status` match, so a race loser changes zero rows; the team `version` is incremented but never compared | 3.2.8 | Eric | "(guarded update, section 3.2.8)" | 3.6, the column's meaning only |
+| R16 | Single dev host: a deploy restarts the only API container and the database shares the host | Design consequence (CD finding): 4.3. The 502s of 3–4 Oct: Table E.1 | Pan (4.3); Pan, Yorik (Table E.1) | "(single host, section 4.3)" | 3.1 "one host", without the incident |
+| R17 | `DealStatus` declares FAILED and CANCELED but no code writes them; a team ends only SUCCEEDED or EXPIRED | 3.4.5, team statechart (Figure 3.115) | Liu Jin | "(declared but never written, Figure 3.115)" | 1.4, one line under "architected but not implemented" (1.4 asks for that list) |
+| R18 | Why not State for the team: one move from OPEN, so the transition table `DealStatus.canTransitionTo` suffices; State is used for listings instead | 3.5.5 motivation | Liu Jin | "(reasoning in section 3.5.5)" | Table 2.5 and Table B.4 rows, reference form only; 3.4.5 C "a transition table, not State (section 3.5.5)" |
+| R19 | SWE5001 topology: the same code runs on ECS as identity-svc, commerce-svc and notification-svc, split by transactional consistency | 1.4, one paragraph | Lim | "(SWE5001 topology, section 1.4)" | 1.1 one clause, "two courses, one repository" (1.1 asks which system the report describes) |
+| R20 | The dev webhook endpoint used an older Stripe API version, so three paid sessions were stranded; the operator recovered each with one refund | Appendix E | Pan, Yorik | "(the 23 Oct webhook fault, Appendix E)" | 3.3.11 flow 6b keeps the generic exceptional flow, without the incident |
+| R21 | A `critical` fragment marks a database transaction, because UML has no transaction fragment | 3.4.0 | Lim | "(transaction drawn as a critical region, section 3.4.0)" | none |
+| R22 | Refund retry rules: 23 h idempotency cut-off, then search only; `finish` fenced by version after an expired lease; fixed 30 s delay | 3.2.5 | Yorik | "(retry rules in section 3.2.5)" | 3.3.7, the exceptional flow in buyer terms; 3.2.8, the lease only |
+| R23 | Who wrote each member's pattern and use-case code | Chapter 5 (Table 5.1) | Lim | "(code credits: chapter 5)" | none |
+| R24 | Analysis models use only «boundary», «control» and «entity»; actors talk only to boundaries; no platform types | 3.4.0 | Lim | none | none |
+| R25 | Transactional outbox: the event row is written in the business commit and a scheduled relay publishes it later, at least once | 3.2.9 | Yorik | "through a transactional outbox (section 3.2.9)" | 3.3.12, the flow in actor terms |
+| R26 | The proposal's JWT and JPA were replaced by a Sa-Token server session and MyBatis, without an ADR | Change: Table 2.5. Reasons: Table B.4 | Lim (Table 2.5); Liu Jin, Lim (Table B.4) | "(changes from the proposal: Table 2.5)" | 3.2.6 keeps the cookie design, without the history |
+| R27 | OWASP ZAP before and after: the 2 Medium and 4 Low header findings of 22 and 26 Oct were fixed on 27 Oct; 6 Informational remain | 4.2 (Table 4.10) | Pan | "(fixed; Table 4.10)" | Table 2.6 row and Table 2.7 remark row, without run IDs; Table E.1 row points to 4.2 |
+| R28 | `RefundService.reconcile` exists and is unit-tested, but no endpoint, command or job exposes it | 3.4.2 D | Yorik | "(not exposed; section 3.4.2)" | Table 3.15 row, "not exposed (see D)" |
+| R29 | Expiry sweep: lease, up to 100 due teams oldest first, one transaction per team, database clock read under the lock, failure deferred 5 min | 3.2.7 | Yorik | "(sweep design in section 3.2.7)" | 3.3.6, the flow in business terms without lease, batch size or clock |
+| R30 | Unique indexes are the last line of defence behind the row locks | 3.6 (index list) | Liu Jin | "(index list in section 3.6)" | 3.2.8, one sentence |
+| R31 | ShareCreditSubscriber runs after commit in its own REQUIRES_NEW transaction and swallows failures, so a credit problem never undoes a paid admission | 3.5.2 | Yorik | "an after-commit Observer (section 3.5.2)" | Table 3.18 row, reference form |
+| R32 | Done-ladder reading: integrated is merged with checks green; releasable is shown on dev; released is promoted to the shared SWE5001 production | 2.1 | Lim | "(the team's reading, section 2.1)" | none |
+| R33 | Dev request path: CloudFront → private S3, or ALB (CloudFront range and origin header only) → EC2 with PostgreSQL and Redis on loopback | 3.1 (Figure 3.3) | Liu Jin | "(request path in section 3.1)" | 4.3 keeps only CD-specific facts (instance role, secrets file, logs) |
+| R34 | The proposal's seven out-of-scope capabilities, verbatim; §6.2 excludes notifications "beyond in-app status", not in-app notifications | 1.4.2 | Lim | "the seven exclusions of section 1.4.2" | 3.3.1, the out-of-scope package of the diagram (3.3.1 asks for it) |
+| R35 | Actors: buyer, admin, the Scheduler (time), Stripe and Google as secondary actors; no merchant actor | 3.3.1 | Lim | "(actors, section 3.3.1)" | Table 1.1, the stakeholder interest column only |
+| R36 | Board snapshot of 26 Oct: 219 items, 159 Done, 38 Backlog, 14 Ready, 7 In progress, 1 more | A.1 | Pan | "(board snapshot, Appendix A.1)" | none. What the one remaining item is: D21 |
+| R37 | Code ownership: Pan for CI, Liu Jin for the backend, Lim for the frontend, Yorik and Eric on the payment and group-buy packages | 4.1 (Table 4.4) | Pan | "code owners review each area (Table 4.4)" | none |
+| R38 | SonarCloud coverage: backend 100.0 % overall and 99.97 % on new code; frontend 99.3 % and 99.25 % | Table D.3 | Liu Jin, Pan | "(coverage: Table D.3)" | 4.2 states the gate result without the percentages |
+| R39 | The strategy tag legend for design class diagrams (Lang 3.2.1, Pres 3.2.2, …) | 3.4.0 | Lim | none | none |
+| R40 | Scalability is not a proposal target and is not claimed | 1.4.3 | Lim | none; say nothing | none |
+| R41 | Test counts: one recount at the freeze SHA; static counts from `git ls-tree`, executed counts from the `SonarCloud Backend` CI log of the push to `dev`; never Sonar's `tests` figure | Static, by quadrant and level: Table 4.11. Executed: Table D.2 | Pan, testing from Liu Jin (Table 4.11); Liu Jin, Pan (Table D.2) | "(test counts: Table 4.11)" | Table D.1, the per-module breakdown, whose totals equal Table 4.11 |
+| R42 | Required checks: the live ruleset's six; `contract-check` is required by policy only | 4.1 (Table 4.2) | Pan | "(the six required checks, Table 4.2)" | Table 4.8 "Required" column |
+| R43 | 17 ArchUnit rules | 3.1 (Table 3.2) | Liu Jin | "(Table 3.2)" | none |
+| R44 | Flyway V1–V28: 28 SQL files plus one `.conf` | 3.6 | Liu Jin | "(migrations, section 3.6)" | Table 4.6 artefact row (4.1 asks for artefacts) |
+| R45 | Sprint dates come from `docs/agile/definition-of-done.md`; sprint tags are dated by tagger date | Sprint dates: Table 2.1. Tags: Table 4.3 | Lim (Table 2.1); Pan (Table 4.3) | "(sprint dates, Table 2.1)" | Table 1.2 phase names; Table A.4 (Appendix A artefact) |
+| R46 | Effort: no hours were logged; the only actuals are the person-day split agreed on 19 Oct, shown as an agreed estimate beside planned hours | 2.3 (Table 2.11) | Lim | "(effort, Table 2.11)" | none |
+| R47 | CI authenticates to AWS through GitHub OIDC; the one accepted IAM user access key is disclosed | 4.1 (Table 4.5) | Pan | "(CI authentication, section 4.1)" | Table 2.6 open-issue row for the key (R07) |
+| R48 | Programme name: "Practice Module for Certificate in Designing Modern Software Systems" | Title page (front matter) | Lim | the name verbatim | none |
+| R49 | The report describes the SWE5006 system: `dev`, a modular monolith on one EC2 host behind CloudFront | 1.1 | Lim | "(the SWE5006 system, section 1.1)" | 3.1, its opening clause |
 
 ## Section requirements
 
