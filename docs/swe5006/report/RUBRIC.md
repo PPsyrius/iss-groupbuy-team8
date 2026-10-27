@@ -37,7 +37,7 @@ In every table, **Source** cites what a document requires and **Ruling** records
 | G5 | English only | `CONTRIBUTING.md` | All committed and submitted text is English |
 | G6 | Evidence | Team | Every factual claim is traceable to merged code, a GitHub issue or PR, the board, a CI run, AWS (read-only) or a recorded artefact, and states its kind (see Evidence kinds). Never upgrade a result |
 | G7 | One freeze SHA | Team (PLAN D6, part 4) | On 30 Oct pick one `dev` commit. Every count, version, coverage figure and status in the report is re-read at that SHA or dated explicitly |
-| G8 | Readable without GitHub | BRF slide 6; team | The marker reads the PDF. Name work by what it does; explain BlocBuy terms (bloc, team, Sandbox) at first use. Issue and PR numbers may appear only in tables and appendices, never as the only explanation. ADR numbers are allowed because Appendix B lists them |
+| G8 | Readable without GitHub, in the team's voice | BRF slide 6; team | The marker reads the PDF. Name work by what it does; BlocBuy terms (bloc, team, Sandbox) are defined once, in the 1.1 glossary (G13). Issue and PR numbers are never the only explanation of a piece of work. ADR numbers are allowed because Appendix B lists them. Voice (Source: Team): report text never contains internal process language: rubric codes (G4, G7, "Evidence kinds"), PLAN decision numbers, "team ruling", "this draft", "re-read at the freeze commit", "checked by a code search", plan file names, day-log paths. Commit hashes, workflow run IDs, AWS identifiers and issue or PR numbers appear only in appendix tables. The freeze SHA is stated once, at its home (R50) |
 | G9 | Course vocabulary | Module material | Analysis objects as «boundary», «control», «entity» (SAD); EPAT DoD ladder (coded, tested, integrated, releasable, released); Agile Testing Quadrants; Continuous **Delivery** for a manually approved promotion (EPAT 07 CI p34–35); GoF class-level pattern names; a simple static factory is not GoF Factory Method (SDP 01a p32–35) |
 | G10 | Incorporate presentation remarks | BRF slide 7; REM | Every remark in the REM issue is turned into a report task tagged with a section number and either answered in the report or recorded as not adopted, with a reason, in the Remarks register below |
 | G11 | Code base deliverable | BRF slide 5 | Repository URL on the title page; lecturers get read access or a `git archive` of the freeze SHA (PLAN D13, #693) |
@@ -93,7 +93,7 @@ A fact's home is the section whose template or rubric row requires it. When a to
 
 ### Registry
 
-IDs R01–R39 come from a whole-report read of the 27 Oct draft that found each of these told 2 to 18 times; R40–R49 add the "easy to get wrong" facts that had no row. Section, table and figure numbers are those of that draft; when renumbering moves them, update this table in the same change. "Allowed extra mentions" are the only places besides the home where the topic may appear, each in the reference form unless the row says otherwise.
+IDs R01–R39 come from a whole-report read of the 27 Oct draft that found each of these told 2 to 18 times; R40–R49 add the "easy to get wrong" facts that had no row, and R50 is the home of the freeze SHA (G8). Section, table and figure numbers are those of that draft; when renumbering moves them, update this table in the same change. "Allowed extra mentions" are the only places besides the home where the topic may appear, each in the reference form unless the row says otherwise.
 
 | ID | Argument or fact | Home | Home owner | Reference form used elsewhere | Allowed extra mentions |
 | --- | --- | --- | --- | --- | --- |
@@ -146,6 +146,7 @@ IDs R01–R39 come from a whole-report read of the 27 Oct draft that found each 
 | R47 | CI authenticates to AWS through GitHub OIDC; the one accepted IAM user access key is disclosed | 4.1 (Table 4.5) | Pan | "(CI authentication, section 4.1)" | Table 2.6 open-issue row for the key (R07) |
 | R48 | Programme name: "Practice Module for Certificate in Designing Modern Software Systems" | Title page (front matter) | Lim | the name verbatim | none |
 | R49 | The report describes the SWE5006 system: `dev`, a modular monolith on one EC2 host behind CloudFront | 1.1 | Lim | "(the SWE5006 system, section 1.1)" | 3.1, its opening clause |
+| R50 | Every count, version, coverage figure and status is read at one freeze commit of `dev` (G7), named once | 1.1, the status paragraph | Lim | "at the freeze commit (section 1.1)", or nothing | Appendix tables that list a run or commit read at it |
 
 ## Section requirements
 
