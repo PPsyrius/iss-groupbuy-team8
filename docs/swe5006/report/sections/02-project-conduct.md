@@ -128,7 +128,7 @@ Table 2.6: Outstanding issues, 26 October 2026.
 | Two IAM users in the project account, one with an active access key, for port forwarding to the dev host | Lim | Disclosed and accepted in the AWS account governance record; no removal planned. Neither user has an MFA device (read-only check of 27 October, `aws iam list-mfa-devices`) | — |
 | Backend rollback never exercised on dev: the rollback workflow has never run | Unassigned | Open | #623 |
 | The weekly full-history secret scan fails on four historical badge-token findings (NFR-02) | Unassigned | Open | — |
-| Passive OWASP ZAP scan of dev: 0 High, 2 Medium, 4 Low findings, all content-security-policy and header issues (run of 24 October) | Pan | Open | #610, #636–#641 |
+| Passive OWASP ZAP scan of dev: 0 High, 2 Medium, 4 Low findings, all content-security-policy and header issues (baseline run of 22 October and scheduled run of 26 October; section 4.2) | Pan | Open | #610, #636–#641 |
 | Exposure of the actuator, springdoc and error paths outside the Sa-Token interceptor not decided | Eric | Open | #549 |
 | After a merge, delivery rebuilds the backend image without repeating the pull request's Trivy image scan, so the deployed image is not the scanned one | Unassigned | Known limit | — |
 | Database and application servers share subnets in the SWE5001 infrastructure code (NFR-70) | Pan | Open; SWE5001 scope | #589 |
