@@ -107,7 +107,7 @@ Table 2.5: Promised against delivered, 26 October 2026.
 | Dev environment | Amazon ECS Fargate and RDS | Changed | One EC2 host with Docker Compose and PostgreSQL on the host (backend ADR 0008) |
 | Secrets | AWS Secrets Manager; no static credentials anywhere | Changed | SSM SecureString parameters and a root-only environment file on the host. CI uses short-lived OIDC credentials, but the project account has two IAM users for port forwarding, one with an active access key. No ADR |
 | Pipeline security | Blocking OWASP Dependency-Check and infrastructure-as-code scans; three plan, deploy and apply roles | Changed | Trivy dependency and configuration scans run on pull requests but are not required checks; three per-job OIDC roles (image push, backend deploy, frontend deploy). No ADR |
-| Production release | A first production release with a rehearsed rollback | Dropped | No separate SWE5006 production stack (#226, closed 11 October). Production is the shared SWE5001 release on ECS, promoted on 17 and 20 October (backend ADR 0008 records the two topologies) |
+| Production release | A first production release with a rehearsed rollback | Dropped | No separate SWE5006 production stack (#226, closed 11 October). Production is the shared SWE5001 release on ECS: first deployed on 6 October as the monolith in one service, and promoted as three services on 17, 19 and 20 October (backend ADR 0008 records the two topologies) |
 | Test and delivery evidence | End-to-end tests on dev; a burndown; saved-plan infrastructure promotion | Partial | Playwright end-to-end tests run against API stubs (frontend ADR 0011); the board is snapshotted daily, but no burndown chart is generated from it; saved-plan Terraform promotion is a manual operator step |
 | Quality gates | SonarCloud quality gate | Delivered beyond | Both SonarCloud gates (backend and frontend) and Checkstyle (inside `build-quality`) are required checks on every pull request |
 | Notifications | Not in section 6.1 | Added (SWE5001) | In-app notifications through a transactional outbox, SNS and SQS, coded and running on SWE5001 ECS, switched off on SWE5006 dev (backend ADR 0007) |
@@ -154,8 +154,9 @@ Table 2.7: Milestones achieved.
 | 22 Sep | Web application live on dev | #93 |
 | 27 Sep | Sprint 2 tag `v0.1.0-sprint2` | Git tag |
 | 30 Sep | Admin console merged | PRs #305–#307 |
+| 6 Oct | First successful production deployment on ECS (shared SWE5001 release), the monolith as one service | PR #418, workflow run 37470479078 |
 | 11 Oct | Sprint 3 tag `v0.1.0-sprint3` | Git tag |
-| 17 Oct | First promotion of the three-service release to production on ECS (shared SWE5001 release) | PR #534 |
+| 17 Oct | First promotion of the three-service release to production on ECS (shared SWE5001 release) | PR #534, workflow run 39008208244 |
 | 20 Oct | Last production promotion before the presentations, smoke suite green | PR #574, workflow run 39435280952 |
 | 23 Oct | Paid start and the automatic expiry refund shown on dev | Dev recovery acceptance record of 23 October; PR #664 |
 | 24 Oct | A second buyer's paid join shown on dev, in a recording | #657 |
@@ -175,7 +176,7 @@ Table 2.8: Done step reached per sprint.
 | 1 | Integrated | Backend on dev from 5 September; no frontend yet, so not releasable |
 | 2 | Integrated | 9 of 11 stories merged and tested, 134 of 150 h; Checkout and scheduling off on dev |
 | 3 | Integrated | Merged and tested; the goal was not met on dev under the "on dev" rule; 117 of 150 h |
-| 4 | Released (shared SWE5001 production), and shown on dev | Production on ECS promoted on 17 and 20 October with the smoke suite green; on dev, paid start and the refund on 23 October and a second buyer's paid join on 24 October |
+| 4 | Released (shared SWE5001 production), and shown on dev | Production on ECS promoted as three services on 17, 19 and 20 October with the smoke suite green; on dev, paid start and the refund on 23 October and a second buyer's paid join on 24 October |
 
 The team agreed the Sprint 4 placement on 24 October and re-agreed its wording on 25 October. In Sprints 2 and 3 the money path worked locally, but the strict "on dev" rule does not count local runs.
 
