@@ -912,22 +912,9 @@ The team has significant, dynamic states, so it has a statechart. A transition r
 
 The team (`GroupDeal`) is created OPEN by a confirmed paid start (UC3) and filled by confirmed paid joins (UC4). It resolves once (UC5): it succeeds when the last seat is taken, or expires when its window closes first, which owes refunds (UC6).
 
-```mermaid
-stateDiagram-v2
-    [*] --> OPEN : / currentSize = 1, leader = payer
-    OPEN --> OPEN : paidJoinConfirmed [admissible, seats left] / currentSize + 1, MemberJoined
-    OPEN --> OPEN : paidJoinConfirmed [not admissible] / compensation required
-    OPEN --> SUCCEEDED : paidJoinConfirmed [admissible, last seat] / successTime = now, TeamSucceeded
-    OPEN --> EXPIRED : at(expireTime) / status-guarded update, TeamExpired
-    SUCCEEDED --> SUCCEEDED : paidJoinConfirmed / compensation required
-    EXPIRED --> EXPIRED : paidJoinConfirmed / compensation required
-    SUCCEEDED : entry / confirm the team's orders
-    EXPIRED : entry / cancel the team's orders, refunds owed
-```
+![Figure 3.49: UML statechart of the team (`GroupDeal`). The `paidJoinConfirmed` events have disjoint guards; those that leave the status unchanged are internal transitions, listed inside the state box. No final state is drawn because a resolved team still absorbs late paid joins as refunds.](../../presentation/src/diagrams/team-statechart.svg){.landscape}
 
-Figure 3.49: UML statechart of the team (`GroupDeal`). The `paidJoinConfirmed` events have disjoint guards; those that leave the status unchanged are internal transitions, listed inside the state box. No final state is drawn because a resolved team still absorbs late paid joins as refunds.
-
-*Admissible* means that the paid amount equals the team price, the buyer is neither the leader nor a member, `startTime ≤ now < expireTime`, and a seat is free. The chart matches `DealStatus.canTransitionTo`: only OPEN may move, and never to itself. The Mermaid source writes the events that keep the status (a join that leaves seats, a refused join, a late join after resolution) as self-transitions, and the figure draws them as internal transitions inside the state, because they run an action without changing the status. `DealStatus` also declares FAILED and CANCELED, and the transition table allows them, but no production code writes either, so they are not drawn. `GroupDeal.joinPaid` enforces the OPEN transitions; `TeamExpirySweepJob`, every minute, reaches `GroupDealExpiryService`, which calls `GroupDeal.expire` and writes through a status-guarded update (section 3.4.2).
+*Admissible* means that the paid amount equals the team price, the buyer is neither the leader nor a member, `startTime ≤ now < expireTime`, and a seat is free. The chart matches `DealStatus.canTransitionTo`: only OPEN may move, and never to itself. The figure draws the events that keep the status (a join that leaves seats, a refused join, a late join after resolution) as internal transitions inside the state, because they run an action without changing the status. `DealStatus` also declares FAILED and CANCELED, and the transition table allows them, but no production code writes either, so the figure draws them dashed and unconnected. `GroupDeal.joinPaid` enforces the OPEN transitions; `TeamExpirySweepJob`, every minute, reaches `GroupDealExpiryService`, which calls `GroupDeal.expire` and writes through a status-guarded update (section 3.4.2).
 
 #### E Compliance with the transition strategies
 
