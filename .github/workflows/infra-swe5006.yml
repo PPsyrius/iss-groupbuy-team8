@@ -1,4 +1,5 @@
-# Static checks only (#622): no AWS credentials, remote state, plan or apply.
+# Offline checks only (#622): static checks and mocked plans; no AWS credentials,
+# remote state, real-provider plan or apply.
 name: infra-swe5006
 
 on:
@@ -57,6 +58,10 @@ jobs:
         run: |
           terraform -chdir="infra/terraform/${STACK}" init -backend=false -input=false -lockfile=readonly
           terraform -chdir="infra/terraform/${STACK}" validate
+
+      - name: Test planned frontend headers with a mocked provider
+        if: matrix.stack == 'frontend-stack'
+        run: terraform -chdir=infra/terraform/frontend-stack test -filter=tests/security_headers.tftest.hcl
 
       # Only policy findings are advisory. Installation, execution, malformed
       # reports, parsing errors and empty scans still fail the job.

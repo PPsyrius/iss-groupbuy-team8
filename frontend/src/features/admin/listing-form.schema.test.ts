@@ -1,6 +1,7 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
+import { imageHostError } from "./image-policy";
 import { emptyListingForm, type ListingFormValues } from "./listing-form";
 import { listingFormSchema } from "./listing-form.schema";
 
@@ -70,19 +71,38 @@ describe("listingFormSchema", () => {
       coverImage: "Use an https:// URL.",
     });
     expect(
-      problems(create, { ...valid, images: ["https://cdn.example.com/a.jpg", "", "ftp://x"] }),
+      problems(create, {
+        ...valid,
+        images: ["https://dcsjrkmummxi7.cloudfront.net/a.jpg", "", "ftp://x"],
+      }),
     ).toEqual({ "images.2": "Use an https:// URL." });
     expect(
-      problems(create, { ...valid, images: ["https://cdn.example.com/a.jpg", " ", ""] }),
+      problems(create, {
+        ...valid,
+        images: ["https://dcsjrkmummxi7.cloudfront.net/a.jpg", " ", ""],
+      }),
     ).toEqual({});
   });
 
   it("caps the gallery at 20 URLs", () => {
-    const url = "https://cdn.example.com/a.jpg";
+    const url = "https://dcsjrkmummxi7.cloudfront.net/a.jpg";
     expect(problems(create, { ...valid, images: [...Array(20).fill(url), ""] })).toEqual({});
     expect(problems(create, { ...valid, images: Array(21).fill(url) })).toEqual({
       images: "Add at most 20 image URLs.",
     });
+  });
+
+  it("rejects unsupported existing URLs as well as new ones without changing the input", () => {
+    const legacy = {
+      ...valid,
+      coverImage: "https://legacy.example/cover.jpg",
+      images: ["https://legacy.example/shot.jpg"],
+    };
+    expect(problems(create, legacy)).toEqual({
+      coverImage: imageHostError,
+      "images.0": imageHostError,
+    });
+    expect(legacy.coverImage).toBe("https://legacy.example/cover.jpg");
   });
 
   it("has no product number: the server assigns it on save (#288)", () => {

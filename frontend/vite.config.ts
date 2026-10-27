@@ -111,7 +111,7 @@ const headersPolicy: unknown = JSON.parse(
     "utf8",
   ),
 );
-function policyString(...path: string[]): string {
+function policyNode(...path: string[]): unknown {
   let node: unknown = headersPolicy;
   for (const key of path) {
     if (typeof node !== "object" || node === null || !(key in node)) {
@@ -119,12 +119,27 @@ function policyString(...path: string[]): string {
     }
     node = Reflect.get(node, key);
   }
+  return node;
+}
+function policyString(...path: string[]): string {
+  const node = policyNode(...path);
   if (typeof node !== "string") {
     throw new Error(`response-headers-policy.json: ${path.join(".")} is not a string`);
   }
   return node;
 }
+const customHeaderItems = policyNode("CustomHeadersConfig", "Items");
+if (!Array.isArray(customHeaderItems)) {
+  throw new Error("response-headers-policy.json: CustomHeadersConfig.Items is not an array");
+}
+const previewCustomHeaders = Object.fromEntries(
+  customHeaderItems.map((_, index) => [
+    policyString("CustomHeadersConfig", "Items", String(index), "Header"),
+    policyString("CustomHeadersConfig", "Items", String(index), "Value"),
+  ]),
+);
 const previewHeaders = {
+  ...previewCustomHeaders,
   "Content-Security-Policy": policyString(
     "SecurityHeadersConfig",
     "ContentSecurityPolicy",
@@ -163,7 +178,7 @@ export default defineConfig(({ command }) => ({
     // No maps in the delivery artifact: they were synced to the public bucket with the code
     // (#155). Nothing consumes them (no error tracker); `vite dev` serves maps regardless.
     sourcemap: false,
-    // The CSP's `img-src 'self' https:` has no `data:`, so the brand SVGs (under the 4 KiB
+    // The CSP's image-source allowlist has no `data:`, so the brand SVGs (under the 4 KiB
     // default) must ship as files, not inlined URIs the browser would refuse to load.
     assetsInlineLimit: (file) => (file.endsWith(".svg") ? false : undefined),
   },

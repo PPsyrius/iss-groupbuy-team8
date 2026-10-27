@@ -1,6 +1,7 @@
 import { expect, test } from "./fixtures/api";
 
-const brokenCover = "https://images.example.test/missing-order-cover.jpg";
+// Use an allowed host so this remains a real HTTP 404 test, not a CSP rejection.
+const brokenCover = "https://dcsjrkmummxi7.cloudfront.net/missing-order-cover.jpg";
 
 // #514: use an actual failed image request in Chromium, not a synthetic DOM error, and keep
 // screenshots in the Playwright report. The account data is stubbed; no live orders are read.

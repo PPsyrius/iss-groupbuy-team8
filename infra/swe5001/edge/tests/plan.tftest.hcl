@@ -33,6 +33,15 @@ run "runtime_absent" {
   command = plan
 
   assert {
+    condition = toset([
+      for header in aws_cloudfront_response_headers_policy.security.custom_headers_config[0].items : {
+        Header = header.header, Value = header.value, Override = header.override
+      }
+    ]) == toset(local.headers_policy.CustomHeadersConfig.Items)
+    error_message = "SWE5001 must render every canonical custom header, including Permissions-Policy."
+  }
+
+  assert {
     condition     = local.api_origin_domain == var.absent_alb_domain
     error_message = "Without runtime, /api/* must point at the unresolvable placeholder."
   }

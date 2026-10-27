@@ -18,4 +18,4 @@ Nygard format, numbered from 0001. New decisions get the next number; superseded
 | 0012 | [Agent configuration](0012-agent-configuration.md) | Accepted (2026-09-17, T1-10) |
 | 0013 | [Package manager and runtime pinning](0013-package-manager-and-runtime-pinning.md) | Accepted (2026-09-17, T1-15) |
 | 0014 | [Payments through Stripe Hosted Checkout with a server-owned intent](0014-stripe-hosted-checkout-server-owned-intent.md) | Accepted (2026-09-23, #160; T3-06 addendum 2026-09-24) |
-| 0015 | [Admin console: second shell, roles guard, pessimistic versioned writes](0015-admin-console-shell-and-guard.md) | Accepted (2026-10-01, admin plan A2-04) |
+| 0015 | [Admin console: second shell, roles guard, pessimistic versioned writes](0015-admin-console-shell-and-guard.md) | Accepted (2026-10-01, admin plan A2-04; image-policy addendum 2026-10-27, #636/#641) |

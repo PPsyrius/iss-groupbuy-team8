@@ -1,0 +1,274 @@
+{
+  "capturedAtUtc": "2026-10-26T14:53:52.343572+00:00",
+  "scope": "Public on-sale catalog and anonymous image HEAD requests with Origin set to the dev SPA. Does not cover drafts, historical order images or signed-in avatars.",
+  "liveDocument": {
+    "url": "https://d1b3np88z657cp.cloudfront.net/",
+    "status": 200,
+    "headers": {
+      "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests",
+      "permissions-policy": null,
+      "cross-origin-opener-policy": null,
+      "cross-origin-embedder-policy": null,
+      "cross-origin-resource-policy": null
+    }
+  },
+  "totalListings": 14,
+  "listedCount": 14,
+  "imageHosts": [
+    "dcsjrkmummxi7.cloudfront.net"
+  ],
+  "images": [
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0001/1.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0001/2.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0001/cover.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0002/1.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0002/2.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0002/cover.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0003/1.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0003/2.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0003/cover.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0004/1.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0004/2.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0004/cover.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0005/1.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0005/2.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0005/cover.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0006/1.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0006/2.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0006/cover.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0007/1.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0007/2.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0007/cover.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0008/1.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0008/2.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0008/cover.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0009/1.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0009/2.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0009/cover.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0010/1.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0010/2.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0010/cover.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-01/1.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-01/2.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-01/cover.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-02/1.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-02/2.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-02/cover.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-03/1.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-03/2.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-03/cover.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/1.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/2.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    },
+    {
+      "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/cover.jpg",
+      "status": 200,
+      "accessControlAllowOrigin": null,
+      "crossOriginResourcePolicy": null
+    }
+  ]
+}
