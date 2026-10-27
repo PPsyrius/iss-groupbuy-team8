@@ -207,7 +207,7 @@ Table 2.10: Retrospective improvements and their effect.
 | Sprint 1 | No burndown and no hours were kept | Dated day logs and a scheduled daily board snapshot from 17 September | Every later sprint has a day log and daily board data |
 | Sprint 2 | One pull request of about 10,000 lines; a flat burndown followed by a cliff | Pull requests under about 1,500 changed lines, remaining hours in the board daily, a mid-sprint owner check and verification in the first half; the Sprint 3 Definition of Done added the 1,500-line, hours and "on dev" rules | The Sprint 3 burndown falls from day one (Appendix A) |
 | Sprint 3 (reconstructed) | The board's estimate field stayed empty, so the review had to rebuild the remaining hours | Each owner keeps the board estimate current; the mid-sprint check verifies it | Adopted but not kept: 47 cards carried an estimate on 12 October and none changed by 23 October |
-| Sprint 4 | {{FILL: Sprint 4 retrospective finding and action — Eric (#619)}} | | |
+| Sprint 4 (reconstructed) | Cards were not closed when their work was done: fifteen issues were still open on 23 October and the burndown stayed at 96.5 h from 19 October, although the SWE5001 presentation had run on 21 October. The Sprint 3 action on estimates was not kept either: none of the 47 estimates changed | Close a card, or split off what remains, on the day its evidence is committed, and write the review and retrospective before the next planning | Not tested: Sprint 4 was the last sprint, so there was no later sprint in which to apply it |
 
 #### Effort per member
 
@@ -224,7 +224,7 @@ Table 2.11: Effort per member: agreed estimate beside planned hours.
 | Wang Ziang (Eric) | 106 | 8.5 |
 | **Team** | **524.5** | **50** |
 
-Done hours were not logged; for Sprints 2 and 3 they were reconstructed at the sprint's freeze: 134 of 150 planned hours in Sprint 2, and 117 of 150 in Sprint 3, where the review credits partly done work (33 h remaining at the freeze; 66 h if only whole stories count). {{FILL: Sprint 4 done hours and the method used to reconstruct them — Eric (#619)}} We give no pull request, commit or line counts per member: card sizes vary widely, so such counts do not measure effort.
+Done hours were not logged; for Sprints 2 and 3 they were reconstructed at the sprint's freeze: 134 of 150 planned hours in Sprint 2, and 117 of 150 in Sprint 3, where the review credits partly done work (33 h remaining at the freeze; 66 h if only whole stories count). Sprint 4 was reconstructed from the daily board snapshots by the Sprint 3 method: the planned hours of each backlog item with an issue (214.5 of the 224.5 h) count as done on the snapshot where its issue is first closed, and the 10 h of evidence work, which has no issue, is left out. On 23 October 118 h were done on that count. The SWE5001 presentation (#461, 13 h) was delivered on 21 October but its issue stayed open, so it is added by hand: 131 of 214.5 h (61 %). By 27 October the count was 138 h, which includes the dev payment rollout (#223, 7 h), closed on 25 October. The SWE5001 evidence issues #458, #459 and #448 are not counted: their day logs say live evidence was still outstanding. We give no pull request, commit or line counts per member: card sizes vary widely, so such counts do not measure effort.
 
 #### Delivery and flow
 
