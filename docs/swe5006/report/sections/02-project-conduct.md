@@ -14,7 +14,7 @@ The team planned at two levels. The proposal set a project-level work breakdown 
 
 #### Work breakdown and baseline
 
-The proposal (section 7.1) breaks the project into nine tasks, each with an estimate and a lead: (1) project setup; (2) analysis and design; (3) infrastructure; (4) DevSecOps pipelines; (5) backend domain; (6) frontend single-page application; (7) end-to-end tests; (8) agile process; (9) documentation. The baseline is 50 person-days, about 10 per member, which matches the briefing's expectation of about ten person-days per participant. {{FILL: estimate and lead per WBS task from PROP §7.1, which is not in the repository — Lim}}
+The proposal (section 7.1) breaks the project into nine tasks, each with an estimate and a lead: (1) project setup; (2) analysis and design; (3) infrastructure; (4) DevSecOps pipelines; (5) backend domain; (6) frontend single-page application; (7) end-to-end tests; (8) agile process; (9) documentation. The baseline is 50 person-days, about 10 per member. {{FILL: estimate and lead per WBS task from PROP §7.1, which is not in the repository — Lim}}
 
 #### Sprints
 
@@ -139,7 +139,7 @@ The performance and expiry targets need the wording of section 1.4.3: response t
 
 ## 2.3 Project Metrics
 
-The project met every planned milestone except a separate SWE5006 production release, which was dropped. Its last delivery milestone was the paid journey on dev on 23 and 24 October; the presentation on 26 October followed it (Table 2.7). No member logged hours. The only actual effort figures are the person-day split the five members agreed on 19 October: about 50 person-days in total, as the proposal planned.
+The project met every planned milestone except a separate SWE5006 production release, which was dropped. Its last delivery milestone was the paid journey on dev on 23 and 24 October; the presentation on 26 October followed it (Table 2.7). No member logged hours. The only actual effort figures are the person-day split the five members agreed on 19 October for the joint SWE5001 and SWE5006 project, about 50 person-days in total. It covers both courses, so it is not compared with the proposal's SWE5006 baseline.
 
 #### Milestones achieved
 
