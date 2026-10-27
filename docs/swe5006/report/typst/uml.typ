@@ -357,6 +357,11 @@
   let W = size.width
   let n = parts.len()
   let cw = W / n
+  // A guard "[cond]" as wide as its text, wrapping only beyond max.
+  let guard(cond, max) = {
+    let t = text(weight: "bold", "[" + cond + "]")
+    box(width: calc.min(measure(t).width, max), t)
+  }
   let idx = (:)
   for (i, p) in parts.enumerate() { idx.insert(p.id, i) }
   let px(id) = cw * (idx.at(id) + 0.5)
@@ -486,13 +491,13 @@
       let tag = if s.kind == "rect" { none } else { frag-tag(s.kind) }
       let tw = if tag != none { measure(tag).width } else { 0pt }
       let th = if tag != none { measure(tag).height } else { 0pt }
-      let g = if s.cond != none and s.cond != "" { box(width: x1 - x0 - tw - 10pt, text(weight: "bold", "[" + s.cond + "]")) } else { none }
+      let g = if s.cond != none and s.cond != "" { guard(s.cond, x1 - x0 - tw - 10pt) } else { none }
       let gh = if g != none { measure(g).height } else { 0pt }
       frames.push((y: y, kind: s.kind, x0: x0, x1: x1, tag: tag, g: g, tw: tw, elses: ()))
       y += calc.max(th, gh + 3pt) + 3pt + 3pt * gap
     } else if s.t == "else" {
       let f = frames.pop()
-      let g = if s.cond != none and s.cond != "" { box(width: f.x1 - f.x0 - 10pt, text(weight: "bold", "[" + s.cond + "]")) } else { none }
+      let g = if s.cond != none and s.cond != "" { guard(s.cond, f.x1 - f.x0 - 10pt) } else { none }
       let gh = if g != none { measure(g).height } else { 0pt }
       y += 2pt
       f.elses.push((y: y, g: g))
