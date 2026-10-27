@@ -3,6 +3,7 @@ rubric: A
 owner: Panpakorn Siripanich (Pan)
 plan: #681
 sources: docs/agile/; docs/agile/metrics/
+owns: R36
 status: draft
 -->
 
@@ -23,7 +24,7 @@ Table A.1: Where each artefact lives, per sprint.
 
 #### A.1 Product backlog
 
-The product backlog is GitHub Project board 2, "GroupBuy Kanban Board", fed by GitHub Issues created from templates in `.github/ISSUE_TEMPLATE/` (use case, task, NFR, slide feedback). On 26 October 2026 the board held 219 items: 159 Done, 38 Backlog, 14 Ready, 7 In progress and 1 issue without a card. The most used labels were `backend` (81 items), `frontend` (58), `devsecops` (47), `swe5006` (47) and `documentation` (41). The board has Status, Priority, Size and Estimate fields; Priority and Size are blank on every item, and Estimate was set on 23 items by 8 October and on 47 by Sprint 4 planning on 12 October, and none changed afterwards. Ordering was therefore kept in the sprint plans, not on the board. The full item list at any date is the snapshot CSV of that day.
+The product backlog is GitHub Project board 2, "GroupBuy Kanban Board", fed by GitHub Issues created from templates in `.github/ISSUE_TEMPLATE/` (use case, task, NFR, slide feedback). On 26 October 2026 the board held 219 items: 159 Done, 38 Backlog, 14 Ready, 7 In progress and 1 issue without a card. {{CONFIRM: D21 is the remaining item an issue without a card, or a card with no status set? — Pan}} The most used labels were `backend` (81 items), `frontend` (58), `devsecops` (47), `swe5006` (47) and `documentation` (41). The board has Status, Priority, Size and Estimate fields; Priority and Size are blank on every item, and Estimate was set on 23 items by 8 October and on 47 by Sprint 4 planning on 12 October, and none changed afterwards. Ordering was therefore kept in the sprint plans, not on the board. The full item list at any date is the snapshot CSV of that day.
 
 The top of the backlog is the nine use cases of the proposal, one issue each, all closed (Table A.2).
 

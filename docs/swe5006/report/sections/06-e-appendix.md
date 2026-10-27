@@ -3,6 +3,7 @@ rubric: E
 owner: Panpakorn Siripanich (Pan), Yu Qianshuo (Yorik)
 plan: #681
 sources: deck B9, B11, B12; docs/quality/nfr-register.md
+owns: R01, R02, R06, R16, R20
 status: draft
 -->
 
@@ -21,7 +22,7 @@ Table E.1: Known limits of the dev system and its pipeline.
 | Dev EBS volume not encrypted | Database and host data unencrypted at rest | Seen in the read-only AWS check of 19 Oct; still unencrypted in the read-only check of 27 Oct (05:19 UTC, `aws ec2 describe-volumes`, `aws ec2 get-ebs-encryption-by-default`): `vol-08df685248a8b1aea`, and EBS encryption by default is off (section 4.3); no issue raised |
 | Rollback never exercised | The recovery path is untested on the real host | `rollback-backend.yml` 0 runs; no automatic rollback recorded; rollback drill #623 open |
 | No dev alarms or dashboards | Failures are noticed by the post-deploy smoke or by people | All CloudWatch alarms belong to SWE5001; DSOMM Monitoring level 0 |
-| Dev is not zero-downtime | A deploy restarts the only API container; the database shares the host | HTTP 502 during the 3–4 Oct deploys; accepted for a low-cost dev |
+| Dev is not zero-downtime | A deploy restarts the only API container; the database shares the host | The post-deploy smoke's API health check got HTTP 502 through CloudFront in three frontend delivery runs, each while the same commit's `deploy-existing-ec2` was recreating the container: 37102432667 and 37122348459 (3 Oct) and 37182996807 (4 Oct); accepted for a low-cost dev |
 | Secrets in a host file | Created and rotated by hand (`/etc/blocbuy/backend.env`, root 0600) | Accepted for dev; the unapplied production design uses Parameter Store |
 | Delivery image rebuilt | Dev delivery rebuilds the JAR and image without repeating the Trivy image scan, so the deployed image is not the one the pull request scanned | Provenance limit; ECR scans on push but does not gate; frontend ADR 0004 and the operator guide to be reconciled |
 | Weekly full-history secret scan red | Four historical SonarCloud badge-token findings remain | NFR-02 partially met; scheduled run 40287812848 failed on 26 Oct |
@@ -51,7 +52,9 @@ Screenshots of the open bloc, the START and JOIN receipts, the refunded order, t
 
 #### Paid flow and expiry refund on dev (23–24 October 2026)
 
-On 23 October 2026 on dev, a buyer started a bloc on listing `US34-04` and paid S$22 through Stripe Sandbox Checkout; nobody joined, and the bloc expired and was refunded with no manual step (`backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md`). Before this, the dev webhook endpoint had used an older Stripe API version than the deployed SDK expected, so no payment had been confirmed on dev; the operator replaced the endpoint and its signing secret, turned scheduling on, and compensated three earlier stuck payments with one refund each. The backend image was unchanged.
+On 23 October 2026 on dev, a buyer started a bloc on listing `US34-04` (two seats, S$22 team price, 40-minute lifetime) and paid S$22 through Stripe Sandbox Checkout; nobody joined, and the bloc expired and was refunded with no manual step (`backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md`; PR #664).
+
+Before this, no payment had been confirmed on dev. The dev webhook endpoint used Stripe API version `2026-08-26.dahlia`, while the deployed SDK 34.0.0 expected `2026-09-30.endive`, so the backend rejected the events: a real event at 07:50:59 UTC got HTTP 502. Three paid Checkout sessions were stranded in the created state, for S$49, S$29 and S$22. At about 09:41 UTC the operator replaced the endpoint and its signing secret and turned scheduling on; the backend image was unchanged. The operator then ran the deployed recovery command on each stranded payment, with no SQL update. Because each purchase had expired, each was recorded as refund required and compensated, not admitted to a team, and by 09:51:20 UTC Stripe listed exactly one succeeded refund for each.
 
 Table E.3: The paid START and natural expiry on dev, 23 October 2026 (times UTC).
 
@@ -59,11 +62,11 @@ Table E.3: The paid START and natural expiry on dev, 23 October 2026 (times UTC)
 |---|---|---|
 | Payment confirmed by webhook | 09:46:50 | HTTP 200; settlement `succeeded` and `FULFILLED` |
 | Bloc deadline | 10:24:15.36 | 40-minute lifetime, no deadline edit or manual job run |
-| Bloc expired, order cancelled | 10:24:34.27 | 18.9 s after the deadline |
+| Bloc expired, order cancelled | 10:24:34.27 | 18.9 s after the deadline; the order was cancelled 12 ms after the bloc |
 | Refund succeeded in Stripe | 10:24:55.94 | 40.6 s after the deadline; exactly one refund for the PaymentIntent |
 | Final audit | 10:25:40 | One succeeded refund per payment; no pending Checkout, overdue team, unfinished refund or open payment case |
 
-These times describe one run, not a latency bound. A second buyer's paid JOIN was shown on dev on 24 October in the system-demonstration backup recording; it is a recorded user-interface observation, not a log audit. Crash recovery of refunds under replay is tested in CI (`StripeRolloutAcceptanceIT`) but was not shown on dev.
+These times describe one run, not a latency bound. A second buyer's paid JOIN was shown on dev on 24 October in the system-demonstration backup recording (#657): a second account opened a member's invite link, paid S$22.00 in Stripe Checkout, and My blocs then read "2 of 2 joined · Filled 24 Oct, 7:17 pm" (sprint day log of 24 October). It is a recorded user-interface observation, not a database read or log audit. Crash recovery of refunds under replay is tested in CI (`StripeRolloutAcceptanceIT`) but was not shown on dev.
 
 Screenshots of the payment, the active and expired bloc, the webhook delivery and the "Refund sent" receipt are kept with the record in `backend/docs/payment/evidence/20261023-dev-recovery/`.
 
@@ -71,7 +74,7 @@ Screenshots of the payment, the active and expired bloc, the webhook delivery an
 
 Neither run was on SWE5006 dev. The k6 test and its gates are in section 4.2; the proposal's target is in section 1.4.3.
 
-Table E.4: Performance runs by environment.
+Table E.4: Performance runs by environment. Records: `docs/perf/sprint3-baseline.md` (local) and `docs/swe5001/evidence/20261016-http-baseline-dashboard/v2-repeat-summary.json` (SWE5001 ECS).
 
 | Run | Environment | Load | Result |
 |---|---|---|---|
