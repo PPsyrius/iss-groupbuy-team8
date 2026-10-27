@@ -154,9 +154,6 @@ Table E.5: Evidence references by section.
 | 3.2.6 | Server session design | backend design decisions D6, D7 (Table B.3) |
 | 3.2.8 (Table 3.12) | Combined lock order not yet in one record, open backend task | #663 |
 | 3.2.8 | Transaction settings and listener phases read in the code | `46faacd7` |
-| 3.4.1 | Transactional outbox writer | #473 |
-| 3.4.1 | Outbox relay merged to dev, Template Method base class | #485; `44fb9bed` |
-| 3.4.1 | Idempotent Receiver of the notification consumer | #505, #513 |
 | 3.4.1 | 23 Oct paid start settled on dev | `backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md` |
 | 3.4.1 | 24 Oct recorded join | sprint log, 24 Oct |
 | 3.4.2 | 23 Oct paid START expired and refunded on dev | `backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md` |
@@ -212,3 +209,6 @@ Table E.5: Evidence references by section.
 | 4.3 | SSH port 22 closed; EBS unencrypted | `aws ec2 describe-security-groups`; `vol-08df685248a8b1aea` |
 | 4.3 | Product image bucket | `blocbuy-media-dev-402178232802` |
 | 4.3 | First OIDC subject fix, 5 Sep; placeholder instance ID | `121a0733`; `i-0123456789abcdef0` |
+| 5 | Transactional outbox writer | #473 |
+| 5 | Outbox relay merged to dev, Template Method base class | #485; `44fb9bed` |
+| 5 | Idempotent Receiver of the notification consumer | #505, #513 |
