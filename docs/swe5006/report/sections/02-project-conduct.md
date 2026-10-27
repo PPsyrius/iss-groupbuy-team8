@@ -123,9 +123,9 @@ Table 2.6: Outstanding issues, 26 October 2026.
 | Refund idempotency under replay and crash shown only locally, not on dev | Yorik | Open; rescoped on 11 October to a record from local evidence | #224 |
 | ADR 0001 orders locks as deal, intent, payment; ADR 0002 as team, intent, order, payment. One combined order is not yet stated | Unassigned | Open | #663 |
 | CloudFront reaches the dev load balancer over HTTP (NFR-37) | Pan | Accepted risk on dev until 16 November | #227 |
-| SSH port 22 open to any address on the dev host's security group | Pan | Open in the AWS read-only check of 21 October; the team decided on 24 October to close it {{VERIFY: closed or still open at the freeze date — Pan}} | — |
-| Dev EBS volume not encrypted | Pan | Seen in the AWS read-only check of 19 October; not raised as an issue {{VERIFY: re-read at the freeze date — Pan}} | — |
-| Two IAM users in the project account, one with an active access key, for port forwarding to the dev host | Lim | Disclosed and accepted in the AWS account governance record; no removal planned | — |
+| SSH port 22 open to any address on the dev host's security group | Pan | Open in the AWS read-only checks of 21 and 24 October; the team decided on 24 October to close it. Closed: the read-only check of 27 October (05:19 UTC, `aws ec2 describe-security-groups`) found no rule admitting port 22 | — |
+| Dev EBS volume not encrypted | Pan | Seen in the AWS read-only check of 19 October and still unencrypted on 27 October (`vol-08df685248a8b1aea`; EBS encryption by default is off); not raised as an issue | — |
+| Two IAM users in the project account, one with an active access key, for port forwarding to the dev host | Lim | Disclosed and accepted in the AWS account governance record; no removal planned. Neither user has an MFA device (read-only check of 27 October, `aws iam list-mfa-devices`) | — |
 | Backend rollback never exercised on dev: the rollback workflow has never run | Unassigned | Open | #623 |
 | The weekly full-history secret scan fails on four historical badge-token findings (NFR-02) | Unassigned | Open | — |
 | Passive OWASP ZAP scan of dev: 0 High, 2 Medium, 4 Low findings, all content-security-policy and header issues (run of 24 October) | Pan | Open | #610, #636–#641 |
