@@ -3,6 +3,7 @@ rubric: 3.5.5, 3.5-1..6, G4
 owner: Liu Jin
 plan: #679
 sources: deck s17–s18, state-before.svg, state-after.svg, listing-statechart.svg; backend/docs/design/admin-listings.md
+owns: R13, R18, FG08, FG12
 status: draft
 -->
 
@@ -120,7 +121,7 @@ The liabilities are real, and we state them:
 - Extension is not change-free. A new state still needs a stored code, an entry in the application's target switch and new tests; the design note warns against claiming zero-change extension.
 - Two status tests remain outside the states (section 6).
 
-We did not use State for the team lifecycle, although the proposal named it there. A team has one move, from OPEN to a final state, and its consequences are events (3.5.2), so State would add five classes, one per `DealStatus` constant, and four of them (SUCCEEDED, FAILED, EXPIRED, CANCELED) would only refuse every move, a cost the module notes warn about (SDP 05a p35). `DealStatus.canTransitionTo`, a transition table, is enough there.
+We did not use State for the team lifecycle, although the proposal and our initial backend design of 30 August named it there. A team has one move, from OPEN to a final state, and its consequences are events (3.5.2), so State would add five classes, one per `DealStatus` constant, and four of them (SUCCEEDED, FAILED, EXPIRED, CANCELED) would only refuse every move, a cost the module notes warn about (SDP 05a p35). `DealStatus.canTransitionTo`, a transition table, is enough there.
 
 We chose Optimistic Offline Lock because the business transaction, read then write, spans two requests, and a database lock cannot be held between them. Its liability is that the losing administrator must reload and enter the change again; there is no merge. The admin console turns a 412 into a conflict banner that names the server's current version and disables every write until the administrator reloads.
 
@@ -288,7 +289,7 @@ The implementation follows Figures 3.138 to 3.141. Names were checked in the cod
 3. **`Product` is immutable.** Every accepted change returns a new revision with version + 1, so the version used by the lock is also the revision number of the listing.
 4. **One default answer.** The State defaults throw `BizException(PRODUCT_STATE_CONFLICT)`, which the global exception handler returns as HTTP 409 with code `CATALOG_409_002`.
 5. **Optimistic Offline Lock on every write.** `revise`, `changeStatus` and `delete` in `AdminListingAppServiceImpl` take an `expectedVersion`. The endpoints are `PUT /api/v1/admin/products/{productId}`, `PUT /api/v1/admin/products/{productId}/status` and `DELETE /api/v1/admin/products/{productId}?expectedVersion=N` in `AdminListingController`. `Product.requireVersion` refuses a stale version with `PRODUCT_VERSION_CONFLICT`, HTTP 412, code `CATALOG_412_002`, and returns the current version in the error body.
-6. **Version check under a short row lock, plus a guarded UPDATE.** The service first locks the row (`lockById`, `SELECT … FOR UPDATE` in `BizProductMapper.xml`), in the same product-first order that the team-price quotation writers use, and only then checks the version. The UPDATE statements `updateListing` and `deleteDraft` also compare `version = #{expectedVersion}`, and `ProductRepositoryImpl` turns an affected-row count other than one into the same 412. The row lock lasts only the 10-second system transaction; the offline lock across the two requests is the version alone.
+6. **Version check under a short row lock, plus a guarded UPDATE.** The service first locks the row (`lockById`, `selectActiveByIdForUpdate`, a `SELECT … FOR UPDATE` in `BizProductMapper.xml`), in the same product-first order that the team-price quotation writers use, and only then checks the version. The UPDATE statements `updateListing`, `updateTeamTerms` and `deleteDraft` also compare `version = #{expectedVersion}`, and `ProductRepositoryImpl` turns an affected-row count other than one into the same 412. The row lock lasts only the 10-second system transaction; the offline lock across the two requests is the version alone. Setting team terms with a team price carries two separate tokens: a stale product version gets `CATALOG_412_002`, a stale price-policy version `CATALOG_412_001`. {{CONFIRM: D19 Which tables compare a version on write: `biz_product` only, or also `biz_order`, `biz_purchase_intent` and `biz_payment` (section 3.6), and on admin writes only (Table B.4)? — Liu Jin}}
 7. **References are a use-case concern.** The state decides only whether a draft may be deleted; `AdminListingAppServiceImpl.delete` then checks price, quote and team history and refuses with `PRODUCT_REFERENCED` (409, `CATALOG_409_004`). Deletion is a soft delete.
 
 Two status tests remain outside the states, and we accept both. `AdminListingAppServiceImpl.changeStatus` still switches on the *requested* target to choose `publish()` or `delist()`; the current state still decides whether that move is legal. `Product.isOnSale()` compares the status for the purchase and team-price checks (`CatalogPurchaseSupportImpl`, `TeamPricePolicy`).

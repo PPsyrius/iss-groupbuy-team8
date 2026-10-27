@@ -3,6 +3,7 @@ rubric: D
 owner: Liu Jin, Panpakorn Siripanich (Pan)
 plan: #681
 sources: docs/ci/; build-quality CI run at the freeze SHA
+owns: R38, R41
 status: draft
 -->
 
@@ -25,7 +26,7 @@ Table D.1: Test inventory by kind, level and module (26 October 2026, `61486f0e`
 | Performance (system) | k6 1.6.1 (SWE5001 ECS); Node closed-loop workload (local) | One k6 browse scenario; three local scenarios | `perf/k6/browse.js`, `backend/perf/` | By hand; the k6 tooling itself is tested in `perf-tooling.yml` |
 | CI tooling | Python `unittest`, Node test runner | 13 test files in `.github/tests/`: 193 Python tests (189 passed, 4 opt-in ZAP tests skipped) and 22 Node tests, run on 22 Oct | `backend_quality_test.py`, `gitleaks_allowlist_test.py`, `dora_metrics_test.py` | `workflow-lint` in `security.yml` when tooling changes; the backend policy tests also in `build-quality` |
 
-Table D.2: Executed test totals from CI logs. Runs 40200028697 and 40294726775 have the freeze commit's code `6d14e449` (`git diff ad2a73e6 6d14e449 -- backend` and `git diff 9135ad8b 6d14e449 -- frontend` are empty); pull-request run 40206547524 predates one frontend dependency bump (#691) and has the same test files.
+Table D.2: Executed test totals from CI logs. Runs 40200028697 and 40294726775 have the freeze commit's code `6d14e449` (`git diff ad2a73e6 6d14e449 -- backend` and `git diff 9135ad8b 6d14e449 -- frontend` are empty); pull-request run 40206547524 predates one frontend dependency bump (#691, `happy-dom`) and has the same test files.
 
 | Suite | Run and commit | Date | Result |
 |---|---|---|---|
@@ -46,7 +47,7 @@ Table D.3: SonarCloud coverage and quality gate, read from the SonarCloud API on
 | BlocBuy Backend | `ad2a73e6` (25 Oct) | 100.0 % | 99.97 % | 0, 0, 0 | A, A, A | Passed |
 | BlocBuy Frontend | `9135ad8b` (26 Oct) | 99.3 % | 99.25 % | 0, 0, 0 | A, A, A | Passed |
 
-The gate conditions on new code are: coverage at least 80 %, reliability, security and maintainability ratings A, duplicated lines at most 3 % and all security hotspots reviewed. The frontend excludes test files, the generated API client, the generated route tree and the entry files from coverage. The deck's figures of 24 October (backend 99.4 %, frontend 96.1 %) predate two test pull requests merged on 25 October.
+The gate conditions on new code are: coverage at least 80 %, reliability, security and maintainability ratings A, duplicated lines at most 3 % and all security hotspots reviewed. No file is excluded from the backend analysis: `backend/pom.xml` sets only the project key and the JaCoCo report paths, and the SonarCloud settings API holds no exclusions for either project (read 27 October). The frontend analysis excludes test files, `src/test/**`, the generated API client and the generated route tree, and its coverage also excludes the entry files `src/main.tsx` and `src/router.tsx` and the development-only `src/dev/**` (`ci-frontend.yml`). The deck's figures of 24 October (backend 99.4 %, frontend 96.1 %) predate two test pull requests merged on 25 October.
 
 #### Workflow timings and green rates
 
