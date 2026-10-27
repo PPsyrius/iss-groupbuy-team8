@@ -13,27 +13,27 @@ Nine transition strategies take every BlocBuy analysis object from the platform-
 
 BlocBuy is a client/server web system. The server is a modular monolith in Java, layered in the COLA style (adapter, application, domain and infrastructure layers), with six bounded contexts inside it: catalog, groupbuy, order, payment, identity and notification. The client is a single-page web application. Section 3.1 draws the layers. The strategies take these decisions as given:
 
-- The server runs on Java 21 and Spring Boot 4.1.1 (`backend/pom.xml`), in the COLA module layout of decision D1 of the backend skeleton plan. That plan started on Spring Boot 3.5; the upgrade supersedes it.
+- The server runs on Java 21 and Spring Boot 4.1.1, in the COLA module layout of section 3.1.
 - The client is React 19 with TanStack Router and TanStack Query (frontend ADR 0001). It calls the server only through a client generated from the OpenAPI contract (frontend ADR 0003).
 - Client and server exchange JSON over HTTPS under `/api/v1`. Every JSON response is one result envelope, `Result<T>` (frontend ADR 0009). The OAuth redirects are the only documented exception.
-- Data is stored in PostgreSQL through MyBatis, with hand-written converters (skeleton plan decision D9) and versioned Flyway migrations.
+- Data is stored in PostgreSQL through MyBatis, with hand-written converters and versioned Flyway migrations.
 - Database locks serialise changes to money and seats, and their consequences commit in the same transaction (backend ADRs 0001 and 0002).
 
 Table 3.5: The nine transition strategies, the concern each handles, and the decision record behind it.
 
 | Strategy | Concern | Decision record |
 |---|---|---|
-| 3.2.1 Language and framework | maintainability | no ADR; skeleton plan D1 (Appendix B) |
+| 3.2.1 Language and framework | maintainability | no ADR (Appendix B) |
 | 3.2.2 Presentation | usability | frontend ADRs 0001, 0003, 0009, 0014 |
 | 3.2.3 Distribution | interoperability between client and server, and between contexts | frontend ADR 0009; backend ADRs 0001, 0008 |
-| 3.2.4 Persistence | data integrity | no ADR; skeleton plan D9 (Appendix B) |
+| 3.2.4 Persistence | data integrity | no ADR (Appendix B) |
 | 3.2.5 External interface | isolation from payment and identity providers | backend ADRs 0001, 0004, 0005 |
 | 3.2.6 Security | authentication, authorisation, abuse limits | frontend ADR 0002; no backend ADR |
-| 3.2.7 Scheduling | timely team expiry (design bound: one sweep interval plus sweep time) | backend ADR 0002 for the expiry transition, and its addendum of 23 September for the sweep job and its lease |
+| 3.2.7 Scheduling | timely team expiry | backend ADR 0002 for the expiry transition, and its addendum of 23 September for the sweep job and its lease |
 | 3.2.8 Concurrency | no oversold seat, no payment settled twice | backend ADRs 0001, 0002 for the locks; no ADR for the approach as a whole |
 | 3.2.9 Domain events | decoupling of consequences across contexts | backend ADRs 0002, 0003, 0007 |
 
-Three strategies have no architecture decision record of their own: language and framework, persistence, and the concurrency approach as a whole. They rest on the locked decisions D1 to D20 of the backend skeleton plan and on design notes. Backend ADRs 0001 and 0002 record only the locks and unique indexes of the paid path and the expiry transition. The design of the scheduled jobs is recorded in the addendum of 23 September to backend ADR 0002 (`TeamExpirySweepJob`, `LeasedJobRunner` and the database lease). Appendix B lists the decisions without an ADR.
+Three strategies have no architecture decision record of their own: language and framework, persistence, and the concurrency approach as a whole. They rest on decisions locked before the first sprint (Table B.3) and on design notes. Backend ADRs 0001 and 0002 record only the locks and unique indexes of the paid path and the expiry transition. The design of the scheduled jobs is recorded in the addendum of 23 September to backend ADR 0002 (`TeamExpirySweepJob`, `LeasedJobRunner` and the database lease). Appendix B lists the decisions without an ADR.
 
 #### Every analysis object type has a strategy
 
@@ -68,9 +68,9 @@ Table 3.7: Where each UC4 analysis object lands in the design.
 
 #### The typical change in one paragraph
 
-Across all strategies, the class diagram changes in the same way. A screen «boundary» becomes a route, a component, a Query hook and the generated client. A «control» becomes a `@RestController` in front of an application service. An «entity» becomes an aggregate behind a domain repository port, implemented in infrastructure by a MyBatis mapper. A «boundary» to an external system becomes a gateway port with a provider adapter. The sequence diagram changes in the same way too. In analysis, a control simply tells an entity to update itself. In design, the application service opens one transaction, asks the repository for a locked aggregate (`PaidGroupDealRepository.lockDeal`, a `SELECT … FOR UPDATE`), lets the aggregate decide (`GroupDeal.joinPaid`), and saves the result with a guarded `UPDATE` (`PaidGroupDealMapper.xml`, `updateDeal`).
+Across all strategies, the class diagram changes in the same way. A screen «boundary» becomes a route, a component, a Query hook and the generated client. A «control» becomes a `@RestController` in front of an application service. An «entity» becomes an aggregate behind a domain repository port, implemented in infrastructure by a MyBatis mapper. A «boundary» to an external system becomes a gateway port with a provider adapter. The sequence diagram changes in the same way too. In analysis, a control simply tells an entity to update itself. In design, the application service opens one transaction, asks the repository for a locked aggregate (`PaidGroupDealRepository.lockDeal`, a `SELECT … FOR UPDATE`), lets the aggregate decide (`GroupDeal.joinPaid`), and saves the result with a guarded `UPDATE` (guarded update, section 3.2.8).
 
-Rationale: dependency inversion. The domain names what it needs as interfaces (repository and gateway ports), and the outer layers implement them, so business rules do not depend on Spring, MyBatis or Stripe. Seventeen ArchUnit rules in `ArchitectureTest` enforce the layering in every build.
+Rationale: dependency inversion. The domain names what it needs as interfaces (repository and gateway ports), and the outer layers implement them, so business rules do not depend on Spring, MyBatis or Stripe. ArchUnit rules enforce the layering in every build (Table 3.2).
 
 Some of the mechanisms below are named by the course but are not GoF patterns: Repository and DAO, the transactional outbox, idempotency keys and Optimistic Offline Lock. They are named as mechanisms here. The GoF patterns are in section 3.5.
 
@@ -78,19 +78,19 @@ Some of the mechanisms below are named by the course but are not GoF patterns: R
 
 Java 21 is the server language and Spring Boot 4.1.1 is the framework. Spring creates and wires objects, runs transactions and handles web requests. Code follows google-java-format in the AOSP style with Checkstyle, and the build enforces both.
 
-Each layer is a Maven module, and each bounded context is a package inside it, under the prefix `com.blocbuy` (Table 3.8).
+Each layer is a Maven module (modules, Table 3.1), and each bounded context is a package inside it, under the prefix `com.blocbuy` (Table 3.8).
 
-Table 3.8: Maven modules and what each holds.
+Table 3.8: Package pattern of each Maven module.
 
-| Module | Package pattern | Holds |
-|---|---|---|
-| `blocbuy-client` | `.common`, `.events.contract` | shared types and the contracts of integration events |
-| `blocbuy-adapter` | `.<context>.web` | REST controllers, request and response records, exception handlers |
-| `blocbuy-application` | `.<context>.service`, `.query`, `.command` | application services, event subscribers, read views |
-| `blocbuy-domain` | `.<context>.model`, `.event`, `.repository`, `.gateway`, `.exception` | aggregates, value objects, domain events, ports, error codes |
-| `blocbuy-infrastructure` | `.<context>.persistence`, `.gateway` | repository implementations, MyBatis mappers, data objects, provider adapters |
-| `blocbuy-platform` | `.platform` | the SWE5001 service assembly (topology guard, trace propagation); the monolith does not use it |
-| `blocbuy-bootstrap` | `.bootstrap` | start-up, configuration, scheduled jobs |
+| Module | Package pattern |
+|---|---|
+| `blocbuy-client` | `.common`, `.events.contract` |
+| `blocbuy-adapter` | `.<context>.web` |
+| `blocbuy-application` | `.<context>.service`, `.query`, `.command` |
+| `blocbuy-domain` | `.<context>.model`, `.event`, `.repository`, `.gateway`, `.exception` |
+| `blocbuy-infrastructure` | `.<context>.persistence`, `.gateway` |
+| `blocbuy-platform` | `.platform` |
+| `blocbuy-bootstrap` | `.bootstrap` |
 
 #### Analysis objects affected
 
@@ -199,11 +199,11 @@ sequenceDiagram
 
 Figure 3.6: Design sequence of the same step, after the strategy. The service already exists and gets the aggregate from a port; the aggregate either returns a new immutable state or throws a coded business error.
 
-Rationale: a state change happens in one place, the aggregate, so every use case that changes a team enforces the same invariants. Because `joinPaid` returns a new `GroupDeal` instead of changing the old one, the service holds both the state it read and the state it will write, which the guarded update of 3.2.4 needs.
+Rationale: a state change happens in one place, the aggregate, so every use case that changes a team enforces the same invariants. Because `joinPaid` returns a new `GroupDeal` instead of changing the old one, the service holds both the state it read and the state it will write, which a guarded update needs (guarded update, section 3.2.8).
 
 ### 3.2.2 Presentation
 
-The user interface is a single-page application in React 19, in three parts: routes in `frontend/src/routes` (TanStack Router owns the URL), feature components and hooks in `frontend/src/features/<area>`, and server state held by TanStack Query. The design names each screen down to its route and feature component, plus the control that starts the use case, such as the *Join this bloc* button. (A bloc is BlocBuy's name, on screen, for a team of buyers.)
+The user interface is a single-page application in React 19, in three parts: routes in `frontend/src/routes` (TanStack Router owns the URL), feature components and hooks in `frontend/src/features/<area>`, and server state held by TanStack Query. The design names each screen down to its route and feature component, plus the control that starts the use case, such as the *Join this bloc* button.
 
 #### Analysis objects affected
 
@@ -474,17 +474,17 @@ sequenceDiagram
 
 Figure 3.13: Design sequence of a cross-context call during settlement. The payment service sees only its own port, and the implementation reaches the other contexts through their interfaces in one transaction. To keep the figure legible, the calls to GroupDealSettlementSupport (lock the team) and UserAppService (is the buyer active) are folded into one self-call.
 
-Rationale (dynamic): the caller sees only the interface, so the call stays the same when the implementation moves. In the SWE5001 deployment the identity port is answered by a remote client, while catalog, groupbuy, order and payment stay together in one service (backend ADR 0008). That deployment is context only; this report describes the SWE5006 monolith.
+Rationale (dynamic): the caller sees only the interface, so the call stays the same when the implementation moves, as the identity port does in the SWE5001 topology (section 1.4).
 
 ### 3.2.4 Persistence
 
-Data is stored in PostgreSQL 18 through MyBatis. A persistent aggregate has a repository interface in the domain module. The infrastructure module implements it with a MyBatis mapper (SQL in XML) and a data object (DO) that mirrors one table row, and a hand-written converter maps the DO to the aggregate (skeleton plan decision D9).
+Data is stored in PostgreSQL 18 through MyBatis. A persistent aggregate has a repository interface in the domain module. The infrastructure module implements it with a MyBatis mapper (SQL in XML) and a data object (DO) that mirrors one table row, and a hand-written converter maps the DO to the aggregate (reasons in Table B.4).
 
 In the course's DAO strategy, the mapper is the DAO that runs the SQL, and the DO is the transfer object that carries one row between the mapper and the repository. The repository puts a domain port in front of the DAO and hands out aggregates, never DOs. For a read, the converter turns the DO into the aggregate (`GroupDealConverter.toDomain`). For a write, the repository builds the DO from the aggregate (`PaidGroupDealRepositoryImpl.toRow`). The request and response records of 3.2.3 are the transfer objects between client and server.
 
-Keys are UUIDv7. References between aggregates are IDs without foreign keys, by team convention. Flyway migrations V1 to V28 evolve the schema (section 3.6). The collective behaviour of an entity class (find, page) moves to its repository; 3.2.8 adds locking.
+Keys are UUIDv7. References between aggregates are IDs without foreign keys, by team convention. Flyway migrations evolve the schema (migrations, section 3.6). The collective behaviour of an entity class (find, page) moves to its repository; 3.2.8 adds locking.
 
-Each aggregate root has one or more repository ports. The team aggregate has two. `GroupDealRepository` is the read port (find, best open deal, memberships). `PaidGroupDealRepository` is the write protocol of the paid path: it reserves the payment's participation receipt, locks the team, inserts a member and expires a team, all in the caller's transaction. Reads and locked writes have different callers and different SQL, so each has its own port. This is a team ruling: one read port per aggregate root, plus a separate write-protocol port where one transaction must lock across aggregates. The write protocol knowingly spans the team and its receipt in one transaction, for payment idempotency; it behaves as a unit-of-work contract even though its name says repository.
+Each aggregate root has one or more repository ports. The team aggregate has two. `GroupDealRepository` is the read port (find, best open deal, memberships). `PaidGroupDealRepository` is the write protocol of the paid path: it reserves the payment's participation receipt, locks the team, inserts a member and expires a team, all in the caller's transaction. Reads and locked writes have different callers and different SQL, so each has its own port. The rule is one read port per aggregate root, plus a separate write-protocol port where one transaction must lock across aggregates. The write protocol knowingly spans the team and its receipt in one transaction, for payment idempotency; it behaves as a unit-of-work contract even though its name says repository.
 
 #### Analysis objects affected
 
@@ -496,7 +496,7 @@ All use cases that read or change stored data, which is every use case in scope.
 
 #### Static structure changes
 
-Rationale: the application depends only on the port (ArchUnit rule `application_uses_ports_not_tech`), and persistence classes stay inside infrastructure (`persistence_is_internal`), so the storage technology can change without touching domain or application code. Integrity rules that must hold under concurrency are also unique indexes, listed by name in 3.2.8.
+Rationale: the application depends only on the port (ArchUnit rule `application_uses_ports_not_tech`), and persistence classes stay inside infrastructure (`persistence_is_internal`), so the storage technology can change without touching domain or application code. Integrity rules that must hold under concurrency are also unique indexes (index list in section 3.6).
 
 ```mermaid
 classDiagram
@@ -586,4 +586,4 @@ sequenceDiagram
 
 Figure 3.16: Design sequence of loading and saving a team, after the persistence strategy. The service sees only aggregates; the data object and the SQL stay behind the port, and the save names the state it read.
 
-Rationale: a save is a guarded `UPDATE` that names the state it read, so a concurrent change updates zero rows and is refused. The team's row changes only if its size and status are still the ones read (`PaidGroupDealMapper.updateDeal`), and a listing's only if its `version` matches (`BizProductMapper`). The repository refuses any affected-row count other than one (`requireOne`), which rolls the transaction back.
+Rationale: a save names the state it read, so a concurrent change is refused (guarded update, section 3.2.8); an administrator's listing save also checks a version (Optimistic Offline Lock, section 3.5.5). The repository refuses any affected-row count other than one (`requireOne`), which rolls the transaction back.
