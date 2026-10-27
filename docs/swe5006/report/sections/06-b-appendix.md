@@ -47,7 +47,7 @@ Table B.2: Frontend ADRs. All 15 are Accepted; the date is the acceptance date, 
 | 0012 | Configuration for coding agents | 17 Sep 2026 |
 | 0013 | Package manager and runtime pinning (pnpm, Node) | 17 Sep 2026 |
 | 0014 | Payments through Stripe Hosted Checkout with a server-owned purchase intent | 23 Sep 2026; addendum 24 Sep |
-| 0015 | Admin console: a second shell, a roles guard and versioned writes | 1 Oct 2026 |
+| 0015 | Admin console: second shell, roles guard, pessimistic versioned writes | 1 Oct 2026 |
 
 #### B.3 Locked decisions of the backend skeleton plan
 
