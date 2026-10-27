@@ -20,7 +20,7 @@ Table A.1: Where each artefact lives, per sprint.
 | Sprint review | Sprint 1 progress report | Sprint 2 progress report | `docs/agile/sprint-03/review.md` (draft written at freeze) | Not yet written (see A.5) |
 | Retrospective | Sprint 1 progress report | Sprint 2 progress report | `docs/agile/sprint-03/retro.md` (reconstructed 24 Oct) | Not yet written (see A.6) |
 | Day logs | None | `docs/agile/sprint-02/log/` | `docs/agile/sprint-03/log/` | `docs/agile/sprint-04/log/` |
-| Definition of Done | Backend skeleton plan | Sprint 2 progress report | Sprint 3 plan §8 | Sprint 4 plan §8; current list in `definition-of-done.md` |
+| Definition of Done | Backend skeleton plan §11 | Sprint 2 progress report | Sprint 3 plan §8 | Sprint 4 plan §8; current list in `definition-of-done.md` |
 
 #### A.1 Product backlog
 
