@@ -19,14 +19,14 @@ Administrator edits of a listing add an optimistic `version` check to a row lock
 
 #### Lock order
 
-Table 3.12 states the lock order that the code takes on each path, read from the code on 26 October 2026. On existing rows, every path takes a subset of one combined order, **team → purchase intent → order → payment → participation receipt → product**, and no path holds a later lock while it waits for an earlier one. The paths therefore cannot deadlock against each other.
+Table 3.12 states the lock order that the code takes on each path, read from the code on 26 October 2026. On existing rows, every path takes a subset of one combined order, **team → purchase intent → order → payment → participation receipt → product**, and no path holds a later lock while it waits for an earlier one. The paths therefore cannot deadlock against each other. The webhook path does one thing before its first row lock: `StripeCheckoutService.settle` claims the Stripe event with a unique insert into `log_payment_webhook_event` (`claimEvent`, `ON CONFLICT (event_id) DO NOTHING`), and only then locks the team and purchase intent (`lockForSettlement`) and the payment (`repository.lock`). A second delivery of the same event waits on that unique entry, holding no row lock, and stops at the claim once the first commits.
 
 Table 3.12: Lock order per path, as implemented, and where each part is recorded.
 
 | Path | Locks, in the order taken | Recorded in |
 |---|---|---|
 | Checkout preparation (UC3, UC4), in `OrderFulfilmentAdapter` and `StripeCheckoutService` | team (JOIN only) → purchase intent → payment | ADR 0001 |
-| Paid settlement by webhook (UC3, UC4), in `StripeCheckoutService`, `OrderFulfilmentAdapter` and `PaidGroupDealService` | team → purchase intent → payment → participation receipt → product stock | ADR 0001 (team → intent → payment); `PaidGroupDealRepository` Javadoc (receipt, then team) |
+| Paid settlement by webhook (UC3, UC4), in `StripeCheckoutService`, `OrderFulfilmentAdapter` and `PaidGroupDealService` | webhook event claim (unique insert) → team → purchase intent → payment → participation receipt → product stock | ADR 0001 (team → intent → payment); `PaidGroupDealRepository` Javadoc (receipt, then team) |
 | Team expiry (UC5, UC6), in `GroupDealExpiryService`, then its two subscribers | team → orders of the team → payments of the team | ADR 0002 (team → intent → order → payment) |
 | Purchase-intent expiry, in `PurchaseIntentExpiryService` | team → purchase intent (`SKIP LOCKED`) | `PurchaseIntentRepository` Javadoc |
 | Refund worker (UC6), in `RefundMapper.xml` | one refund obligation (`SKIP LOCKED`), and no other lock | none |
