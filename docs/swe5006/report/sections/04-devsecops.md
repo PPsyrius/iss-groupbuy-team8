@@ -88,7 +88,7 @@ One exception is disclosed in the account governance record. Two IAM users exist
 
 On GitHub, the repository belongs to a personal account (Pan's), with the other four members as collaborators with write access. A personal account cannot enforce two-factor sign-in on collaborators, and whether each member uses it is not recorded.
 
-Machines hold no AWS keys. GitHub Actions trusts one OIDC provider in the account and assumes one role per job, each trusting an exact subject claim (Table 4.5). The three Actions secrets in the repository are a SonarCloud token, the TypeSafe API key and the board-snapshot token; none is an AWS credential. All 160 `uses:` references to third-party actions are pinned to 40-character commit SHAs.
+Machines hold no AWS keys. GitHub Actions trusts one OIDC provider in the account and assumes one role per job, each trusting an exact subject claim (Table 4.5). The three Actions secrets in the repository are a SonarCloud token, the TypeSafe API key and the board-snapshot token; none is an AWS credential. All 145 `uses:` references to actions outside the repository are pinned to 40-character commit SHAs.
 
 Table 4.5: GitHub OIDC roles in the project account.
 
