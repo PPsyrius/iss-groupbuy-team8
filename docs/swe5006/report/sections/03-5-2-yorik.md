@@ -83,7 +83,7 @@ Table 3.23: Observers added to the team-outcome events over time (git history; f
 | 23 Sep 2026 | `TeamExpiryRefundSubscriber` | `TeamExpired` | before commit |
 | 26 Sep 2026 | `ShareCreditSubscriber` | `MemberJoined` | after commit |
 | 3 Oct 2026 | `OpenDealOfferCacheSubscriber` (evicts the cached best offer of the product) | `MemberJoined`, `TeamSucceeded`, `TeamExpired` | after commit |
-| 13 Oct 2026 | `IntegrationOutboxWriter` (writes cross-service events; off on SWE5006 dev, ADR 0007) | `TeamSucceeded`, `TeamExpired` | before commit |
+| 13 Oct 2026 | `IntegrationOutboxWriter` (writes cross-service events; off on SWE5006 dev, ADR 0007) | `TeamSucceeded`, `TeamExpired`, `PaymentSucceeded` | before commit |
 
 `GroupDealExpiryService` has not changed since its first commit, although two more observers of `TeamExpired` were added after it (Table 3.23).
 
