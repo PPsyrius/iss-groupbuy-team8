@@ -129,12 +129,12 @@ Table 4.7: Workflows, their triggers and jobs, from the `on:` blocks of `.github
 
 | Workflow | Triggers | Jobs |
 |---|---|---|
-| `ci-backend.yml` | Pull request into `dev` (also on label change); push to `dev` (backend, contract and deployment paths); `v*` tag | `detect-changes`, `build-quality`, `contract-check`, `sonar-backend`, `docker`; on push `package-dev`, `publish-ecr-dev`, `deploy-existing-ec2`; on tag the unused `-prod` variants |
-| `ci-frontend.yml` | Pull request into `dev`; push to `dev` (frontend, contract paths) | `detect-changes`, `frontend-check`, `sonar-frontend`, `intent-stale`, `e2e-preview`; on push `package-dev`, `deploy-s3-dev`, `e2e-dev` |
-| `security.yml` | Pull request; push to `dev`; `v*` tag; weekly, Monday 02:17 UTC; on demand | `gitleaks`, `trivy-deps`, `trivy-config`, `workflow-lint`, `deployment-bundle`, `codeql` (disabled) |
+| `ci-backend.yml` | Pull request into `dev` (also on label change); push to `dev` (backend, contract and deployment paths); `v*` tag; `merge_group` (dormant) | `detect-changes`, `build-quality`, `contract-check`, `sonar-backend`, `docker`; on push `package-dev`, `publish-ecr-dev`, `deploy-existing-ec2`; on tag the unused `-prod` variants |
+| `ci-frontend.yml` | Pull request into `dev`; push to `dev` (frontend, contract paths); `merge_group` (dormant) | `detect-changes`, `frontend-check`, `sonar-frontend`, `intent-stale`, `e2e-preview`; on push `package-dev`, `deploy-s3-dev`, `e2e-dev` |
+| `security.yml` | Pull request; push to `dev`; `v*` tag; weekly, Monday 02:17 UTC; on demand; `merge_group` (dormant) | `gitleaks`, `trivy-deps`, `trivy-config`, `workflow-lint`, `deployment-bundle`, `codeql` (disabled) |
 | `dast-baseline.yml` | Weekly, Monday 03:41 UTC; on demand; pull requests that change the scan itself | `zap-baseline` (passive OWASP ZAP of dev) |
 | `sbom.yml` | `v*` tag; weekly, Monday 03:53 UTC; on demand; `run-sbom` label | `sbom` |
-| `typesafe-smoke.yml` | Backend pull requests; `v*` tag; on demand | `live-api` (contract smoke of the optional AI search re-ranker) |
+| `typesafe-smoke.yml` | Backend pull requests; `v*` tag; on demand; `merge_group` (dormant) | `live-api` (contract smoke of the optional AI search re-ranker) |
 | `perf-tooling.yml` | Pull requests that change k6 scripts or load seeds | `generator-contract` |
 | `infra-swe5006.yml` | Pull requests that change `infra/terraform/**`; on demand (added 25 Oct) | `static` per stack: `terraform fmt`, `validate`, advisory Checkov |
 | `rollback-backend.yml` | Manual only | `rollback-existing-ec2` |
