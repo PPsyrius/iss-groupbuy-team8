@@ -657,7 +657,7 @@ export function markdown(src, { sectionDir, root, resolvePath }) {
 
 export function frontMatter(src) {
   const m = src.match(/^---\n([\s\S]*?)\n---/m);
-  const meta = { title: '', subtitle: '', author: [], date: '' };
+  const meta = { title: '', subtitle: '' };
   if (!m) return meta;
   let key = null;
   for (const line of m[1].split('\n')) {
