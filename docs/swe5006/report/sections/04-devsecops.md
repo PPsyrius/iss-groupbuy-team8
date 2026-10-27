@@ -16,7 +16,7 @@ All code, the API contract, the deployment scripts and the infrastructure code l
 
 #### Project structure and repository strategy
 
-One repository keeps a backend change, the contract it changes and the frontend that consumes it in the same pull request, so a single set of checks sees all three. On 26 October `dev` held 515 commits since 24 August 2026, and 425 pull requests had been merged into it, 92 of them opened by bots (91 by Dependabot). Table 4.1 lists the top-level layout.
+One repository keeps a backend change, the contract it changes and the frontend that consumes it in the same pull request, so a single set of checks sees all three. At the freeze commit `6d14e449` (26 October) `dev` held 516 commits since 24 August 2026 (`git rev-list --count 6d14e449`), and 426 pull requests had been merged into it, 92 of them opened by bots (91 by Dependabot). Table 4.1 lists the top-level layout.
 
 Table 4.1: Top-level layout of the monorepo on `dev`.
 
