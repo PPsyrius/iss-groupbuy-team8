@@ -332,7 +332,14 @@ sequenceDiagram
         Check-->>Host: UP
         Host-->>Ssm: exit 0, record image
         Job->>Edge: GET /api/actuator/health
-        Edge-->>Job: UP, job green
+        alt UP through CloudFront
+            Edge-->>Job: UP, job green
+        else not UP
+            Edge-->>Job: failed
+            Job->>Ssm: send rollback
+            Ssm->>Host: rollback.sh: deploy previous image
+            Ssm-->>Job: rollback status, job red
+        end
     else unhealthy on host
         Check-->>Host: failed
         Host->>Host: restart previous image
@@ -341,7 +348,7 @@ sequenceDiagram
     end
 ```
 
-Figure 4.2: UML sequence diagram of one backend deploy to dev. The deploy is verified on the host before it is verified through CloudFront, and a failed host check restores the previous image while the job still fails.
+Figure 4.2: UML sequence diagram of one backend deploy to dev. The deploy is verified on the host before it is verified through CloudFront, and either failed check restores the previous image while the job still fails.
 
 #### Deployment verification evidence
 
