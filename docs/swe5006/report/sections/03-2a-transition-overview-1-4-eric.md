@@ -28,11 +28,11 @@ Table 3.5: The nine transition strategies, the concern each handles, and the dec
 | 3.2.4 Persistence | data integrity | no ADR; skeleton plan D9 (Appendix B) |
 | 3.2.5 External interface | isolation from payment and identity providers | backend ADRs 0001, 0004, 0005 |
 | 3.2.6 Security | authentication, authorisation, abuse limits | frontend ADR 0002; no backend ADR |
-| 3.2.7 Scheduling | timely team expiry (design bound: one sweep interval plus sweep time) | backend ADR 0002 for the expiry transition; no ADR for the job design |
+| 3.2.7 Scheduling | timely team expiry (design bound: one sweep interval plus sweep time) | backend ADR 0002 for the expiry transition, and its addendum of 23 September for the sweep job and its lease |
 | 3.2.8 Concurrency | no oversold seat, no payment settled twice | backend ADRs 0001, 0002 for the locks; no ADR for the approach as a whole |
 | 3.2.9 Domain events | decoupling of consequences across contexts | backend ADRs 0002, 0003, 0007 |
 
-Four strategies have no architecture decision record of their own: language and framework, persistence, the design of the scheduled jobs, and the concurrency approach as a whole. They rest on the locked decisions D1 to D20 of the backend skeleton plan and on design notes. Backend ADRs 0001 and 0002 record only the locks and unique indexes of the paid path and the expiry transition. Appendix B lists the decisions without an ADR.
+Three strategies have no architecture decision record of their own: language and framework, persistence, and the concurrency approach as a whole. They rest on the locked decisions D1 to D20 of the backend skeleton plan and on design notes. Backend ADRs 0001 and 0002 record only the locks and unique indexes of the paid path and the expiry transition. The design of the scheduled jobs is recorded in the addendum of 23 September to backend ADR 0002 (`TeamExpirySweepJob`, `LeasedJobRunner` and the database lease). Appendix B lists the decisions without an ADR.
 
 #### Every analysis object type has a strategy
 

@@ -192,4 +192,4 @@ Table 3.4: Architectural decisions behind section 3.1 and where each is recorded
 | Transactional outbox to SNS and SQS for cross-service events | Backend ADR 0007 (status still "Proposed") | 11 Oct 2026 |
 | One codebase, two deployment topologies | Backend ADR 0008 | 12 Oct 2026 |
 
-Decisions without an ADR, such as MyBatis instead of JPA, the scheduling design and the concurrency approach, are listed with their reasons in Appendix B.
+Decisions without an ADR, such as MyBatis instead of JPA and the concurrency approach, are listed with their reasons in Appendix B.
