@@ -64,14 +64,14 @@ The proposal (section 6.1) gave an indicative allocation: UC1 with Strategy and 
 
 Table 2.4: Scrum roles per sprint.
 
-| Sprint | Scrum Master | Product Owner | Record |
+| Sprint | Scrum Master | Sprint goal drafted by | Record |
 | --- | --- | --- | --- |
-| 1 | Lim Jiechao, recorded after the sprint, on 28 September | {{CONFIRM: D11 who acted as Product Owner — Lim}} | #49 |
-| 2 | Wang Ziang (Eric), recorded after the sprint, on 28 September | (as above) | Sprint 2 plan, #93 |
-| 3 | Lim Jiechao, 10 h planned | (as above) | #232 |
-| 4 | Wang Ziang (Eric), 4 h planned; proposed in the sprint plan, confirmation not recorded | (as above) | #465 |
+| 1 | Lim Jiechao, recorded after the sprint, on 28 September | Liu Jin | #49 |
+| 2 | Wang Ziang (Eric), recorded after the sprint, on 28 September | Lim Jiechao | Sprint 2 plan, #93 |
+| 3 | Lim Jiechao, 10 h planned | Liu Jin | #232 |
+| 4 | Wang Ziang (Eric), 4 h planned; proposed in the sprint plan, confirmation not recorded | Liu Jin | #465 |
 
-All five members acted as developers in every sprint. Code owners review each area: Pan for the CI workflows, Liu Jin for the backend, Lim for the frontend, with Yorik and Eric also requested on the payment and group-buy packages.
+No Product Owner was appointed. The team prioritised the backlog together at each Sprint Planning, from a sprint goal that one member drafted in the sprint's container issue. All five members acted as developers in every sprint. Code owners review each area: Pan for the CI workflows, Liu Jin for the backend, Lim for the frontend, with Yorik and Eric also requested on the payment and group-buy packages.
 
 #### Definition of Done
 
