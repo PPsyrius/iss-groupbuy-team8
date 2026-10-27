@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "prepare": "pnpm gen:api",
-    "gen:api": "openapi-ts && node scripts/ts-nocheck-generated.mjs",
+    "gen:api": "node scripts/clean-api-output.mjs && openapi-ts && node scripts/ts-nocheck-generated.mjs",
     "dev": "pnpm gen:api && vite",
     "build": "pnpm gen:api && node scripts/verify-csp-styles.mjs && vite build",
     "preview": "vite preview",

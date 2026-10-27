@@ -23,6 +23,9 @@ jobs:
       - name: Build reproducible browser tooling and current SPA
         run: docker build --file frontend/tooling/security-browsers.Dockerfile --tag blocbuy-security-browsers:ci .
 
+      - name: Verify runtime write boundary
+        run: docker run --rm blocbuy-security-browsers:ci node tooling/verify-write-boundary.mjs
+
       - name: Check frontend
         run: docker run --rm --cpus=2 --memory=6g blocbuy-security-browsers:ci pnpm check
 

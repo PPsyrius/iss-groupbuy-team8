@@ -9,6 +9,7 @@ WORKDIR /repo/frontend
 # Keep prepare/gen:api enabled with its real inputs, rather than ignoring scripts.
 COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml frontend/.npmrc frontend/openapi-ts.config.ts ./
 COPY frontend/scripts/ts-nocheck-generated.mjs scripts/ts-nocheck-generated.mjs
+COPY frontend/scripts/clean-api-output.mjs scripts/clean-api-output.mjs
 RUN pnpm install --frozen-lockfile
 # WebKit uses the system trust store for real HTTPS subresources.
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
@@ -23,10 +24,13 @@ COPY .gitignore .gitignore
 COPY docs/quality/evidence/zap/remaining-policy-2026-10-27/audit.cjs audit.cjs
 WORKDIR /repo/frontend
 RUN pnpm build
-# Runtime checks regenerate the client and write caches; only these app/output
-# paths need node ownership. Browser binaries remain root-owned and read-only.
-RUN mkdir -p /evidence && chown -R node:node /repo /evidence
+# Keep reviewed source, policy, dependencies and dist root-owned. Only generated
+# client output, Vite/Vitest caches and reports may be changed by runtime checks.
+RUN mkdir -p node_modules/.vite node_modules/.vite-temp /evidence \
+    && chown -R node:node src/api/generated node_modules/.vite node_modules/.vite-temp /evidence \
+    && chmod a+r node_modules/.pnpm-workspace-state-v1.json
 USER node
+RUN node tooling/verify-write-boundary.mjs
 ENV E2E_SECURITY_BROWSERS=all \
     PLAYWRIGHT_HTML_OPEN=never \
     PLAYWRIGHT_HTML_OUTPUT_DIR=/evidence/playwright-report \

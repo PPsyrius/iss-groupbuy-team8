@@ -53,11 +53,25 @@ class SecurityBrowsersWorkflowTest(unittest.TestCase):
     def test_browser_runtime_is_non_root_with_accessible_binaries_and_outputs(self):
         self.assertIn("ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers", self.recipe)
         self.assertLess(self.recipe.index("ENV PLAYWRIGHT_BROWSERS_PATH="), self.recipe.index("playwright install --with-deps"))
-        self.assertIn("chown -R node:node /repo /evidence", self.recipe)
+        self.assertIn("chown -R node:node src/api/generated node_modules/.vite node_modules/.vite-temp /evidence", self.recipe)
+        self.assertNotIn("chown -R node:node /repo", self.recipe)
+        self.assertIn("chmod a+r node_modules/.pnpm-workspace-state-v1.json", self.recipe)
         self.assertEqual([line for line in self.recipe.splitlines() if line.startswith("USER ")], ["USER node"])
         self.assertIn('sudo chown 1000:1000 "$EVIDENCE_DIR"', self.workflow)
         self.assertNotIn("--user root", self.workflow)
         self.assertNotIn("chmod 777", self.workflow)
+
+    def test_write_boundary_is_executed_during_build_and_runtime(self):
+        self.assertIn("RUN node tooling/verify-write-boundary.mjs", self.recipe)
+        self.assertGreater(self.recipe.index("RUN node tooling/verify-write-boundary.mjs"), self.recipe.index("USER node"))
+        self.assertIn("blocbuy-security-browsers:ci node tooling/verify-write-boundary.mjs", self.workflow)
+
+    def test_regeneration_cleans_contents_without_removing_the_output_directory(self):
+        package = json.loads((ROOT / "frontend/package.json").read_text(encoding="utf-8"))
+        config = (ROOT / "frontend/openapi-ts.config.ts").read_text(encoding="utf-8")
+        self.assertEqual(package["scripts"]["gen:api"], "node scripts/clean-api-output.mjs && openapi-ts && node scripts/ts-nocheck-generated.mjs")
+        self.assertIn('output: { path: "src/api/generated", clean: false }', config)
+        self.assertIn("COPY frontend/scripts/clean-api-output.mjs scripts/clean-api-output.mjs", self.recipe)
 
 
 if __name__ == "__main__":

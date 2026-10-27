@@ -59,6 +59,8 @@ jobs:
               - 'infra/terraform/frontend-stack/cloudfront.tf'
               - 'fullstack-localhost/cloudfront-headers.mjs'
               - 'frontend/scripts/verify-csp-styles.mjs'
+              - 'frontend/scripts/clean-api-output.mjs'
+              - 'frontend/openapi-ts.config.ts'
               - 'frontend/tooling/**'
             deployment:
               - 'deployment/**'
@@ -94,7 +96,7 @@ jobs:
         run: python3 -m unittest discover -s .github/tests -p '*_test.py'
 
       - name: Test generated CloudFront-compatible headers
-        run: node --test .github/tests/security-headers.test.cjs .github/tests/style-policy.test.cjs
+        run: node --test .github/tests/security-headers.test.cjs .github/tests/style-policy.test.cjs .github/tests/api-output-clean.test.cjs
 
       - name: Lint GitHub Actions and embedded shell
         run: >-
