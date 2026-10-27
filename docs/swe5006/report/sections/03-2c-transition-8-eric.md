@@ -13,14 +13,14 @@ Several buyers can pay for the last seat of a team at the same moment, and the e
 
 - **Pessimistic row locks in a fixed order.** Every path that changes a team's seats, orders or payments first locks the team's row with `SELECT … FOR UPDATE`, so two such paths on one team run one after the other. Table 3.12 gives the order each path takes after that.
 - **Guarded updates.** A paid join writes the team row only through `PaidGroupDealMapper.updateDeal` (called by `PaidGroupDealRepositoryImpl.insertJoinedMember`), which writes only `WHERE current_size = expectedSize AND status = expectedStatus`. A writer that read a stale team therefore updates zero rows, `requireOne` throws, and the transaction rolls back. The same statement increments `biz_group_deal.version`, but no statement compares it, so the version is not the guard on this path. The expiry update `expireDeal` is guarded by `status = 'open'`; when it changes zero rows, `PaidGroupDealRepository.expire` refuses with `DEAL_CLOSED`.
-- **Unique indexes as the last line of defence.** One active member per buyer per team (`uq_biz_group_member_deal_user`), one member per payment (`uq_biz_group_member_payment_id`), one participation receipt per payment (`uq_biz_group_participation_receipt_payment`), one order per payment (`uq_biz_order_payment_id`), one fulfilled purchase intent per payment (`uq_biz_purchase_intent_fulfilled_payment`), one refund obligation per payment (`biz_refund.payment_id UNIQUE`) and one obligation per provider refund (`uq_biz_refund_provider_id`, a partial index). They are created in migrations V5, V7, V9, V11, V12 and V15.
-- **Work queues and leases.** Workers claim work with `FOR UPDATE SKIP LOCKED` (refund obligations, purchase-intent expiry, and the retention job that deletes old published outbox rows). The outbox relay reads its due rows without a row lock (`OutboxMapper.findDue`) and relies on the job lease alone. Each scheduled job holds a lease in `sys_scheduler_lock` through `SchedulerLeaseRepository.tryAcquire`, so only one application instance runs it at a time (3.2.7). A refund obligation also carries its own row lease: the worker claims one due obligation, sets `lease_until` two minutes ahead and increments `version`; `finish` is fenced by `id` and `version` and schedules the next attempt 30 seconds later (a fixed delay, not exponential back-off).
+- **Unique indexes as the last line of defence.** Unique indexes on members, receipts, orders, fulfilled purchase intents and refund obligations reject any duplicate that gets past the row locks (index list in section 3.6).
+- **Work queues and leases.** Workers claim work with `FOR UPDATE SKIP LOCKED` (refund obligations, purchase-intent expiry, and the retention job that deletes old published outbox rows). The outbox relay reads its due rows without a row lock (`OutboxMapper.findDue`) and relies on the job lease alone. Each scheduled job holds a lease in `sys_scheduler_lock` through `SchedulerLeaseRepository.tryAcquire`, so only one application instance runs it at a time (section 3.2.7). A refund obligation also carries its own two-minute row lease, `lease_until` (retry rules in section 3.2.5).
 
-Administrator edits of a listing add an optimistic `version` check to a row lock (the Optimistic Offline Lock of section 3.5.5). `AdminListingAppServiceImpl.lockForChange` first locks the product row (`ProductRepository.lockById`, `SELECT … FOR UPDATE`), then compares the version the administrator last read (`Product.requireVersion`); `BizProductMapper` also updates only `WHERE version = expectedVersion`. A stale version is refused with `412 Precondition Failed` (`PRODUCT_VERSION_CONFLICT`).
+Administrator edits of a listing add an optimistic version check (section 3.5.5).
 
 #### Lock order
 
-Table 3.12 states the lock order that the code takes on each path, read from the code on 26 October 2026. On existing rows, every path takes a subset of one combined order, **team → purchase intent → order → payment → participation receipt → product**, and no path holds a later lock while it waits for an earlier one. The paths therefore cannot deadlock against each other. The webhook path does one thing before its first row lock: `StripeCheckoutService.settle` claims the Stripe event with a unique insert into `log_payment_webhook_event` (`claimEvent`, `ON CONFLICT (event_id) DO NOTHING`), and only then locks the team and purchase intent (`lockForSettlement`) and the payment (`repository.lock`). A second delivery of the same event waits on that unique entry, holding no row lock, and stops at the claim once the first commits.
+Table 3.12 states the lock order that the code takes on each path. On existing rows, every path takes a subset of one combined order, **team → purchase intent → order → payment → participation receipt → product**, and no path holds a later lock while it waits for an earlier one. The paths therefore cannot deadlock against each other. The webhook path does one thing before its first row lock: `StripeCheckoutService.settle` claims the Stripe event with a unique insert into `log_payment_webhook_event` (`claimEvent`, `ON CONFLICT (event_id) DO NOTHING`), and only then locks the team and purchase intent (`lockForSettlement`) and the payment (`repository.lock`). A second delivery of the same event waits on that unique entry, holding no row lock, and stops at the claim once the first commits.
 
 Table 3.12: Lock order per path, as implemented, and where each part is recorded.
 
@@ -33,7 +33,7 @@ Table 3.12: Lock order per path, as implemented, and where each part is recorded
 | Team expiry (UC5, UC6), in `GroupDealExpiryService`, then its two subscribers | team → orders of the team → payments of the team | ADR 0002 (team → intent → order → payment) |
 | Purchase-intent expiry, in `PurchaseIntentExpiryService` | team → purchase intent (`SKIP LOCKED`) | `PurchaseIntentRepository` Javadoc |
 | Refund worker (UC6), in `RefundMapper.xml` | one refund obligation (`SKIP LOCKED`), and no other lock | none |
-| All paths combined | team → purchase intent → order → payment → participation receipt → product | not yet in one record; open backend task, issue #663 |
+| All paths combined | team → purchase intent → order → payment → participation receipt → product | not yet in one record; an open backend task |
 
 Three details make the paid settlement path fit this order. First, `PaidGroupDealService.joinConfirmed` locks the team again after the receipt, but the transaction already holds that lock from the start of settlement, so it does not wait. Second, the order is a new row, inserted after the receipt; until the commit no other transaction can see it, so no other path can wait on it. Third, the product row is touched last, by the stock decrement `CatalogPurchaseSupport.consumeOneUnit`; the earlier purchasability check is a plain read. On team expiry, `OrderLifecycleSubscriber` runs at `@Order(10)` and `TeamExpiryRefundSubscriber` at `@Order(20)`, so orders are locked before payments.
 
@@ -146,7 +146,7 @@ Figure 3.30: Design sequence of the same race, after the concurrency strategy. T
 
 Rationale: a group-buy must never sell more seats than its target or settle one payment twice. Database locks hold across application instances, which in-memory locks would not. Because the expiry sweep also locks the team first, a sweep and a late payment on the same team queue behind each other in the same way.
 
-Evidence: the integration test `StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist` starts 20 concurrent paid joins for the last seat of a team of two, through the production purchase-intent and fulfilment ports. Each payment settles through `StripeCheckoutService.recover`, the operator recovery entry, which runs the same settlement as a webhook under a fresh event ID. The test asserts that the team ends with two members, two orders and current size two, that 19 refund obligations are stored, and that stock fell by exactly two, from 100 to 98. Tested locally and in CI (PostgreSQL in Testcontainers), not on dev. This race was not reproduced on the SWE5006 dev system.
+Evidence: the integration test `StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist` starts 20 concurrent paid joins for the last seat of a team of two, through the production purchase-intent and fulfilment ports. Each payment settles through `StripeCheckoutService.recover`, the operator recovery entry, which runs the same settlement as a webhook under a fresh event ID. The test asserts that the team ends with two members, two orders and current size two, that 19 refund obligations are stored, and that stock fell by exactly two, from 100 to 98. Tested locally and in CI (PostgreSQL in Testcontainers), not on dev.
 
 #### Transaction boundary
 
@@ -154,9 +154,9 @@ Each step of a use case that changes data is one database transaction, owned by 
 
 - A collaborator that must run inside its caller's transaction declares `Propagation.MANDATORY` (`OrderFulfilmentAdapter`), so calling it without one fails.
 - No call to an external provider runs inside a transaction. `StripeCheckoutService.handleWebhook` refuses to start if a transaction is already open.
-- Consequences that belong to the same business fact run as `BEFORE_COMMIT` listeners (`OrderLifecycleSubscriber`, `TeamExpiryRefundSubscriber`, and the outbox writer `IntegrationOutboxWriter`). Derived side effects run `AFTER_COMMIT` (`ShareCreditSubscriber`, `OpenDealOfferCacheSubscriber`). The event records and the listeners themselves belong to 3.2.9 Domain events and to the Observer design in section 3.5.2.
+- Each event listener runs in the phase its work needs (listener phases, section 3.2.9).
 
-Figure 3.31 shows the transaction boundary in the classes, with one listener of each phase: `OrderLifecycleSubscriber` (`BEFORE_COMMIT`) and `OpenDealOfferCacheSubscriber` (`AFTER_COMMIT`); the other three listeners follow the same pattern and are not drawn. Figure 3.32 shows the transaction boundary on the settlement of the last seat. Before this strategy the step was the analysis interaction of Figure 3.29, with no transaction at all.
+Figure 3.31 shows the transaction boundary in the classes, with one listener of each phase: `OrderLifecycleSubscriber` (`BEFORE_COMMIT`) and `OpenDealOfferCacheSubscriber` (`AFTER_COMMIT`); the other listeners follow the same pattern and are not drawn. Figure 3.32 shows the transaction boundary on the settlement of the last seat. Before this strategy the step was the analysis interaction of Figure 3.29, with no transaction at all.
 
 ```mermaid
 classDiagram
@@ -200,21 +200,18 @@ sequenceDiagram
     participant F as :PaymentBusinessPort (interface)
     participant L as :OrderLifecycleSubscriber (control)
     participant E as :OpenDealOfferCacheSubscriber (control)
-    S->>S: verify signature; re-read session
-    Note over S: provider calls via CheckoutGateway, no transaction open
+    Note over S: provider calls done, no transaction open
     critical one transaction: READ COMMITTED, 10 s
-        S->>S: claimEvent; lock team, intent, payment
         S->>F: fulfil(PaymentSucceeded)
-        F->>F: admit buyer; team full: TeamSucceeded
-        F-->>S: Outcome
+        F-->>S: Outcome, team full: TeamSucceeded
         S->>L: before commit: onTeamSucceeded
         L->>L: confirm the team's orders
     end
-    S->>E: onTeamSucceeded, AFTER_COMMIT listener; HTTP 2xx follows
+    S->>E: after commit: onTeamSucceeded
 ```
 
-Figure 3.32: Design sequence of settling the last seat, with the transaction boundary drawn as a critical region (UML has no transaction fragment). Provider calls stay outside the transaction, the confirmation of the team's orders commits with the payment, and the cache eviction runs only after the commit.
+Figure 3.32: Design sequence of the last-seat settlement, transaction boundary and listener phases only. Provider calls stay outside the transaction (transaction drawn as a critical region, section 3.4.0), the confirmation of the team's orders commits with the payment, and the cache eviction runs only after the commit; the full settlement is Figure 3.46.
 
 Rationale: the seat, the order and the stock unit change together with the payment's SUCCEEDED state, or not at all. A payment whose admission is rejected commits with a refund obligation instead. If the transaction fails, everything rolls back and Stripe delivers the webhook again. A slow provider never holds a database lock.
 
-Evidence, by kind. The transaction settings and listener phases above were read in the code at `46faacd7`: `@Transactional(timeout = 10)` on `PaidGroupDealService` and `GroupDealExpiryService`, the READ COMMITTED, 10-second `TransactionTemplate` in `StripeCheckoutService`, `Propagation.MANDATORY` on `OrderFulfilmentAdapter`, the check in `StripeCheckoutService.handleWebhook` that throws when a transaction is already active, and the `@TransactionalEventListener` phase of each listener (none is `@Async`). `StripeWebhookController` answers only after settlement returns, so the `AFTER_COMMIT` cache eviction also runs before the 2xx. Rollback and redelivery are covered by automated tests on PostgreSQL 18 (Testcontainers) that run in `build-quality`, not on dev: `StripeCheckoutFlowTest.signedHttpFailureRollsBackAndProviderRetryCanRecover` makes fulfilment fail inside the transaction, receives HTTP 500 with no webhook receipt, order or payment change stored, and then settles the same event on redelivery; `PaidGroupDealServiceIT.surroundingPaymentTransactionRollbackLeavesNoGroupOrMember` shows that a rolled-back payment transaction leaves no team or member.
+Evidence. No listener is `@Async`, and `StripeWebhookController` answers only after settlement returns, so the `AFTER_COMMIT` cache eviction also runs before the 2xx. Rollback and redelivery are covered by automated tests on PostgreSQL 18 (Testcontainers) that run in `build-quality`, not on dev: `StripeCheckoutFlowTest.signedHttpFailureRollsBackAndProviderRetryCanRecover` makes fulfilment fail inside the transaction, receives HTTP 500 with no webhook receipt, order or payment change stored, and then settles the same event on redelivery; `PaidGroupDealServiceIT.surroundingPaymentTransactionRollbackLeavesNoGroupOrMember` shows that a rolled-back payment transaction leaves no team or member.
