@@ -86,7 +86,7 @@ What was architected and what was implemented differ in four places:
 - **Implemented and deployed for SWE5006:** the modular monolith on the EC2 dev host (backend ADR 0008).
 - **Also implemented, outside SWE5006 dev:** the three-service topology on Amazon ECS. It is the SWE5001 deployment and the shared production release.
 - **Designed but not implemented:** a separate SWE5006 production stack on EC2. Its Terraform stack (`infra/terraform/backend-app-stack`) exists, and a read-only plan of 25 September showed 21 resources to create, but it was never applied; its story was closed as not planned on 11 October (Table 1.4), and on 25 October the team ruled that the shared SWE5001 release is the production environment of both courses.
-- **Declared but never written:** the team states `FAILED` and `CANCELED` (Figure 3.113).
+- **Declared but never written:** the team states `FAILED` and `CANCELED` (Figure 3.112).
 
 The SWE5001 topology runs the same code on Amazon ECS as three services: `identity-svc` (the identity context), `commerce-svc` (catalog, group-buy, order and payment) and `notification-svc` (notification). The split follows transactional consistency: contexts that share a transaction stay in one service, so the four commerce contexts stay together. Commerce reaches identity through one internal HTTP call and reaches notification only through integration events (backend ADRs 0007 and 0008). Each service has its own database on one shared RDS instance and is granted only its own tables. The services run on ECS Fargate behind CloudFront and a load balancer, with RDS PostgreSQL, ElastiCache and SNS and SQS messaging in private subnets.
 
