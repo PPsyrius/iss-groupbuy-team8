@@ -1,0 +1,35 @@
+{
+  "target": "https://d1b3np88z657cp.cloudfront.net",
+  "checkedAtUtc": "2026-10-27T06:06:33.593Z",
+  "scope": "Read-only anonymous post-apply check; no real account or transaction coverage",
+  "checks": [
+    {
+      "resource": "/",
+      "exactHeaders": true
+    },
+    {
+      "resource": "/api/v1/products?size=1",
+      "exactHeaders": true
+    },
+    {
+      "surface": "catalog",
+      "loadedImageCount": 15,
+      "imageOrigins": [
+        "https://d1b3np88z657cp.cloudfront.net",
+        "https://dcsjrkmummxi7.cloudfront.net"
+      ]
+    },
+    {
+      "surface": "detail",
+      "loadedImageCount": 4,
+      "imageOrigins": [
+        "https://d1b3np88z657cp.cloudfront.net",
+        "https://dcsjrkmummxi7.cloudfront.net"
+      ]
+    },
+    {
+      "unapprovedImageBlockedBeforeRequest": true
+    }
+  ],
+  "status": "passed"
+}

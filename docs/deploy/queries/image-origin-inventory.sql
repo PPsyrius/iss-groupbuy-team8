@@ -2,6 +2,7 @@
 -- Aggregate origins only: no user IDs, emails, order IDs, URL paths or query strings.
 BEGIN TRANSACTION READ ONLY;
 SET LOCAL statement_timeout = '30s';
+SET LOCAL search_path = domain, pg_catalog;
 
 WITH image_urls(source, url) AS (
     SELECT 'catalog_cover', cover_image FROM biz_product
