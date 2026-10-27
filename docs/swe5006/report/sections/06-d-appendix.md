@@ -62,13 +62,13 @@ Table D.4: Workflow timings, medians of successful runs (last 100 runs per workf
 
 Pull-request durations count only runs in which the gated jobs ran; a documentation-only pull request skips them in about 10 s. Push medians run from the start of the push run, not from the merge click.
 
-Table D.5: All-time run conclusions per workflow, read from the GitHub API on 26 October 2026 (since 24 August 2026).
+Table D.5: All-time run conclusions per workflow, read from the GitHub API on 27 October 2026 at 05:23 UTC (since 24 August 2026; same read as Table 4.13).
 
 | Workflow | Success | Failure | Cancelled | Success among finished (success + failure) |
 |---|---|---|---|---|
-| `ci-backend.yml` | 1,453 | 111 | 547 | 92.9 % |
-| `ci-frontend.yml` | 1,427 | 63 | 76 | 95.8 % |
-| `security.yml` | 1,822 | 55 | 45 | 97.1 % |
+| `ci-backend.yml` | 1,473 | 111 | 548 | 93.0 % |
+| `ci-frontend.yml` | 1,449 | 64 | 76 | 95.8 % |
+| `security.yml` | 1,847 | 56 | 45 | 97.1 % |
 
 Calculated: success among finished = success / (success + failure). Cancelled runs are mostly runs superseded by a newer push to the same branch, which the workflows' concurrency groups cancel on purpose. The scheduled weekly `security.yml` run fails every week on the four historical secret-scan findings (section 4.2).
 
