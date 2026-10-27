@@ -149,6 +149,7 @@ IDs R01–R39 come from a whole-report read of the 27 Oct draft that found each 
 | R50 | Every count, version, coverage figure and status is read at one freeze commit of `dev` (G7), named once | 1.1, the status paragraph | Lim | "at the freeze commit (section 1.1)", or nothing | Appendix tables that list a run or commit read at it |
 | R51 | No Product Owner was appointed; the team prioritised the backlog together at each Sprint Planning | 1.3 | Lim | "(no Product Owner, section 1.3)" | none |
 | R52 | Backend Maven modules: each module's layer, what it holds and its allowed dependencies | 3.1 (Table 3.1) | Liu Jin | "(modules, Table 3.1)" | Table 3.8 in 3.2.1, the package pattern per module only |
+| R53 | The Checkout payment page expires after 31 minutes and never later than the intent or the team's deadline | 3.4.1 D | Eric | "(Checkout page lifetime, section 3.4.1)" | none |
 
 ## Section requirements
 
