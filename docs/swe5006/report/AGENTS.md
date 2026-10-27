@@ -4,7 +4,7 @@ Team 8's BlocBuy final report for SWE5006 (umbrella #463, schedule and submissio
 
 ## The rubric governs the content
 
-[`RUBRIC.md`](RUBRIC.md) is the specification for this report: what each template section must contain, the team rulings, the claims that are easy to get wrong, the figure rules and the open decisions. The report is graded against it by separate agents. Read it before drafting, editing or reviewing anything here, and follow the [`swe5006-report-rubric`](../../../.claude/skills/swe5006-report-rubric/SKILL.md) skill for the procedure.
+[`RUBRIC.md`](RUBRIC.md) is the specification for this report: what each template section must contain, the team rulings, the claims that are easy to get wrong, the canonical home of every argument, fact and figure, the figure rules and the open decisions. The report is graded against it by separate agents. Read it before drafting, editing or reviewing anything here, and follow the [`swe5006-report-rubric`](../../../.claude/skills/swe5006-report-rubric/SKILL.md) skill for the procedure.
 
 The per-bullet content and its sources are in the report plan: the index comment on #463 and the chapter plans #675 (front matter, 1), #676 (2), #677 (3.1–3.3), #678 (3.4), #679 (3.5, 3.6), #680 (4) and #681 (5, appendices). The rubric says what a section must achieve; the plan says what to put in it and where each fact comes from. When the rubric and anything else in this folder disagree, the rubric wins; fix the other file in the same change.
 
@@ -48,9 +48,12 @@ rubric: 3.4.1, 3.4-A..E, G4
 owner: Wang Ziang (Eric)
 plan: #678
 sources: ../report-drafts/eric-wang-contribution.md
+owns: FG05, FG06
 status: missing | draft | ready
 -->
 ```
+
+- `owns:` lists the rubric's Canonical homes (`R…`) and Canonical figures (`FG…`) rows whose home is this file. It is how a file declares what it is the memory for: a file states in full only what it owns, and cites every other row by its reference form. Leave it empty (`owns: none`) when the file is home to nothing. When a row's home moves, change both files' `owns:` lines and the registry in the same change.
 
 - Headings carry the template number and title verbatim (`### 3.4.1 UC3 and UC4 by Wang Ziang (Eric)`); Typst renumbers them itself, and the check script uses the written numbers. Never renumber a template section.
 - Below a template section, add `####` subheadings only. The 3.4 and 3.5 files keep the fixed part headings from the skeleton, with these exact titles, because the check script looks for them: 3.4.N `#### A Analysis class diagram`, `#### B Analysis sequence diagrams`, `#### C Design class diagram`, `#### D Design sequence diagrams`, `#### E Compliance with the transition strategies`; 3.5.N `#### 1 Design problem`, `#### 2 Candidate design patterns`, `#### 3 Motivation`, `#### 4 Solution class diagram`, `#### 5 Solution sequence diagrams`, `#### 6 Implementation decisions`.
@@ -66,19 +69,25 @@ status: missing | draft | ready
 ## Writing rules
 
 1. **Answer first.** Each section opens with one or two sentences that answer the template's question; detail follows.
-2. **Write for the marker.** They read the PDF and do not open GitHub (rubric G8). Name work by what it does; define BlocBuy terms at first use.
+2. **Write for the marker.** They read the PDF and do not open GitHub (rubric G8). Name work by what it does. BlocBuy terms are defined once, in the 1.1 glossary; other sections use them without defining them again.
 3. **State the evidence kind** of every claim (rubric Evidence kinds) and never upgrade a result. Check each claim against the rubric's "easy to get wrong" table.
 4. **Real names.** Every class, method, table and event in text or a design diagram exists at the freeze SHA (`rg -n "class GroupDealExpiryService" backend`).
-5. **One fact, one place.** Other sections cite it by section number.
+5. **One fact, one home** (rubric G13). Read the rubric's Canonical homes and Canonical figures registries before writing. If your file owns the row, state it in full; otherwise use the row's reference form, in at most one clause, or say nothing. Never retell a fact, repeat its numbers or redraw its figure. A fact with no row is registered (one new row, in the same pull request) before it is used.
 6. **Plain language.** Short sentences, active voice, the team's ubiquitous language.
+7. **One voice.** The report speaks as "we" (the team), in the past tense for what was done. One reference style throughout: "section 3.2.8", "Figure 3.46", "Table 2.5". State a gap once, plainly, at its home; don't hedge, and don't address the marker or mention grading. No internal process language (rubric G8).
 
 ## Workflow
 
+0. Read the rubric's Canonical homes and Canonical figures registries, and note the rows your file owns and the rows it touches.
 1. Pick the section file, read its rubric rows and its plan issue.
 2. Hydrate from the plan bullets and their sources; carry over ready drafts from `../report-drafts/` rather than rewriting them.
 3. `npm --prefix docs/swe5006/report run check` and fix every error it prints.
 4. Run the skill's review on your section and fix every Missing and Conflict row.
 5. Open a pull request into `dev` titled `docs(report): …` referencing #463; another owner reviews it against the rubric. Add the day's entry under `docs/agile/sprint-04/log/` (see `.claude/skills/agile-evidence-capture/SKILL.md`).
+
+Parallel drafting, by people or agents, is allowed only against a registry that already covers the section's topics: register first, then draft. After any parallel drafting, one agent does an integration pass on the full report, in reading order, applying both registries: it states each row in full at its home, turns every other mention into the reference form, applies the FG rows and settles the wording a decision has fixed. This pass is the report's single mind; it changes wording, not facts, and returns any fact it cannot place to the row's home owner.
+
+Before the freeze, one reviewer reads the compiled PDF front to back against G13, F9 and the G8 voice rule, and returns a change list grouped by owner (the skill's whole-report review). Per-section reviewers must not mark a section down for citing a home instead of restating it.
 
 ## Commands
 
