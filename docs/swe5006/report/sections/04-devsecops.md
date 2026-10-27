@@ -199,6 +199,8 @@ The running dev site is scanned by a passive, anonymous OWASP ZAP session. It re
 
 On 22 October 2026 the first baseline scan of dev, made before the scanner verified its own coverage, found 0 High, 2 Medium, 4 Low and 6 Informational findings, all caused by the CloudFront response-headers policy. HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy` and a CSP with `frame-ancestors 'none'` and `object-src 'none'` were already present. The first dispatch on dev on 24 October failed as incomplete because a ZAP add-on download failed; the add-on is now pinned and checksum-verified, and the dispatch that evening (run 40107924516, the first dispatch on dev with verified coverage; pull-request scans of 22 and 24 October had already verified theirs) and the scheduled run of 26 October both completed with the same findings (Table 4.10). No remediation has been made yet: the header changes are open, so the "after" column records the latest complete run, not a fixed state.
 
+<!-- table: split -->
+
 Table 4.10: OWASP ZAP findings on dev, before and after. Before: run 39733450177 (22 Oct). Latest complete run: 40298983391 (scheduled, 26 Oct; 10/10 responses, 67/67 rules).
 
 | ZAP rule | Risk | Finding | Issue | Before | Latest | Outcome |
