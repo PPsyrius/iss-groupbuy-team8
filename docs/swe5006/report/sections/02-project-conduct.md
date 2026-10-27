@@ -203,7 +203,7 @@ Table 2.10: Retrospective improvements and their effect.
 | Retrospective | Finding | Change in the next sprint | Effect |
 | --- | --- | --- | --- |
 | Sprint 1 | No burndown and no hours were kept | Dated day logs and a scheduled daily board snapshot from 17 September | Every later sprint has a day log and daily board data |
-| Sprint 2 | One pull request of about 10,000 lines; a flat burndown followed by a cliff | Pull requests under about 1,500 changed lines, a mid-sprint check, and the "on dev" rule in the Definition of Done | The Sprint 3 burndown falls from day one (Appendix A) |
+| Sprint 2 | One pull request of about 10,000 lines; a flat burndown followed by a cliff | Pull requests under about 1,500 changed lines, remaining hours in the board daily, a mid-sprint owner check and verification in the first half; the Sprint 3 Definition of Done added the 1,500-line, hours and "on dev" rules | The Sprint 3 burndown falls from day one (Appendix A) |
 | Sprint 3 (reconstructed) | The board's estimate field stayed empty, so the review had to rebuild the remaining hours | Each owner keeps the board estimate current; the mid-sprint check verifies it | Adopted but not kept: 47 cards carried an estimate on 12 October and none changed by 23 October |
 | Sprint 4 | {{FILL: Sprint 4 retrospective finding and action — Eric (#619)}} | | |
 
