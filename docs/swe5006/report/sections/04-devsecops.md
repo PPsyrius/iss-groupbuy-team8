@@ -48,7 +48,7 @@ Table 4.2: Rules of the `dev` ruleset `dev-require-review`, read from the GitHub
 | Status checks | Six required checks (above), strict: the branch must be up to date with `dev` |
 | History protection | No force push, no branch deletion |
 | Automated review | GitHub Copilot code review on every push; GitHub code-quality findings of severity "error" block |
-| Bypass | No bypass actors |
+| Bypass | Not readable without admin rights: read on 27 October with a collaborator's write-access token, the API returned no bypass list (`bypass_actors: null`) and reported that this collaborator can never bypass |
 
 Commits and pull requests follow `CONTRIBUTING.md`: Conventional Commits with an imperative summary of at most 72 characters; formatting-only changes as their own `style:` commit; every pull request links its issue and adds a dated entry to the sprint day log in the same pull request; all committed text in English.
 
