@@ -373,7 +373,7 @@ Figure 3.3 in section 3.1 is the UML deployment diagram of dev. The browser reac
 
 The design trades availability for cost. The database shares the application host and there is one API container, so a deploy briefly takes the API down: the 502 responses of 3–4 October came from such a restart. The CloudFront-to-load-balancer leg still uses HTTP (NFR-37), an accepted risk on dev until 16 November 2026. Appendix E lists these limits.
 
-Production, the shared SWE5001 release, is described here for contrast only (section 3.1 notes its topology). The same code runs on ECS Fargate as three services behind CloudFront and a load balancer, with RDS PostgreSQL, ElastiCache and SNS and SQS messaging in private subnets. Each promotion creates the runtime from the released image digests and destroys it after the session, and the ECS deployment circuit breaker rolls back a failed service deploy.
+Production, the shared SWE5001 release, is described here for contrast only (section 3.1 notes its topology). The same code runs on ECS Fargate as three services behind CloudFront and a load balancer, with RDS PostgreSQL, ElastiCache and SNS and SQS messaging in private subnets. Each promotion creates the runtime from the released image digests and destroys it after the session, The ECS deployment circuit breaker is configured with rollback, but because each promotion builds the runtime from zero there is no earlier deployment to roll back to: the breaker stops a failing deploy, and the smoke suite gates the release.
 
 #### CD findings
 
