@@ -300,9 +300,17 @@
         }, shape: fletcher.shapes.rect, corner-radius: 6pt, width: auto, stroke: w-box + ink, fill: role-fill(none), inset: 5pt, name: label(s.id))
       }
     }),
-    ..trans.map(t => edge(label(t.from), label(t.to), "-|>", label: if t.label != none { wrap-label(t.label) }, label-fill: none, bend: t.at("bend", default: 0deg))),
+    ..trans.map(t => edge(label(t.from), label(t.to), "-|>", bend: t.at("bend", default: 0deg))),
+    // Transition labels sit on their line (white ground) on layer 1, above the states, so none
+    // is hidden under a box or pushed off the curve onto a neighbour.
+    ..trans.filter(t => t.label != none).map(t => edge(label(t.from), label(t.to), "-", stroke: none, layer: 1, label: wrap-label(t.label, max: 34mm), label-side: center, label-fill: none, bend: t.at("bend", default: 0deg),
+      // The two arcs of a there-and-back pair carry their labels before their midpoints, so
+      // the labels sit at different heights instead of side by side.
+      label-pos: if t.at("bend", default: 0deg) != 0deg { 0.38 } else { 0.5 })),
   )
 }, (
+  // A choice gathers many labelled transitions around one point: give it more room first.
+  ..if states.any(s => s.kind == "choice") { ((gap: (24mm, 32mm), max: 90mm),) } else { () },
   (gap: (24mm, 20mm), max: 90mm),
   (gap: (24mm, 20mm), max: 62mm),
   (gap: (16mm, 20mm), max: 62mm),
