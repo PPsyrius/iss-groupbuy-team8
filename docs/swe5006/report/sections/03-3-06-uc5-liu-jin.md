@@ -10,7 +10,7 @@ status: draft
 
 An open team ends in exactly one of two ways: it *succeeds* when an admission fills its last seat, or it *expires* when its deadline passes first. Either way BlocBuy settles the team's orders in the same transaction, and an expiry also records the refunds owed to its paid members (UC6 extends this use case). A resolved team never changes state again.
 
-**Actors:** Scheduler (primary for expiry; time). Buyer (primary for success; the joining buyer of UC4 whose admission fills the last seat).
+**Actors:** Scheduler (primary; time), the only actor associated with UC5 in Figure 3.36. The success outcome has no actor of its own: UC4's admission of the buyer who fills the last seat triggers it inside UC4's transaction.
 
 **Preconditions:** An open team exists. For expiry, scheduled processing is enabled in the environment; it is off by default and an operator enables it per deployment after checking the backlog (on dev since 23 October).
 
