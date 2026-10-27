@@ -24,7 +24,7 @@ Table 2.1: Sprints, goals and planned capacity.
 
 | Sprint | Dates | Goal | Planned capacity | Container issue |
 | --- | --- | --- | --- | --- |
-| 1 | 1–12 Sep | Walking skeleton: sign-in, browse and admin listings on dev | Not recorded | #49 |
+| 1 | 1–12 Sep | A minimal end-to-end slice: sign in with Google, browse the listing list and detail; every member claims at least one use case | Not recorded | #49 |
 | 2 | 15–26 Sep | Pay, join a team, see the order, all replay-safe | 150 h, 30 h per member | #93 |
 | 3 | 28 Sep–9 Oct | Invite, pay and refund on the deployed dev environment | 150 h, 30 h per member | #232 |
 | 4 | 12–23 Oct | The complete system on dev; the same code as three services on ECS for SWE5001 | 224.5 h | #465 |
