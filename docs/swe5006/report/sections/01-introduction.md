@@ -107,17 +107,15 @@ The order system of record is a backend story, not a use case; it is described i
 
 ### 1.4.2 Functionality out of Scope
 
-The proposal (section 6.2) excluded seven capabilities, listed here in the order of the out-of-scope package on the use case diagram:
+The proposal (section 6.2) excluded seven capabilities, listed here in its words and in the order of the out-of-scope package on the use case diagram:
 
-1. Merchant self-service interface.
-2. Analytics dashboards.
-3. Recommendations.
-4. Automatic team matching.
-5. E-mail, SMS and push notifications (the proposal excludes notifications "beyond in-app status").
-6. Native mobile apps.
-7. Live payment processing.
-
-{{VERIFY: wording of the seven items against the PROP §6.2 text, which is not in the repository — Lim}}
+1. Merchant self-service GUI (listing administration is API-only CRUD plus database seeding, see UC9).
+2. Analytics and reporting dashboards.
+3. Recommendation and personalisation.
+4. Automatic team matching and virtual team completion.
+5. Notifications beyond in-app status (no e-mail, SMS or push).
+6. Mobile applications (the single-page application is mobile-responsive; no native apps).
+7. Live payment processing (Stripe test mode only).
 
 The admin console does not breach the first exclusion: only platform administrators use it, not merchants.
 
