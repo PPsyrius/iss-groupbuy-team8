@@ -41,7 +41,7 @@ In every table, **Source** cites what a document requires and **Ruling** records
 | G9 | Course vocabulary | Module material | Analysis objects as «boundary», «control», «entity» (SAD); EPAT DoD ladder (coded, tested, integrated, releasable, released); Agile Testing Quadrants; Continuous **Delivery** for a manually approved promotion (EPAT 07 CI p34–35); GoF class-level pattern names; a simple static factory is not GoF Factory Method (SDP 01a p32–35) |
 | G10 | Incorporate presentation remarks | BRF slide 7; REM | Every remark in the REM issue is turned into a report task tagged with a section number and either answered in the report or recorded as not adopted, with a reason, in the Remarks register below |
 | G11 | Code base deliverable | BRF slide 5 | Repository URL on the title page; lecturers get read access or a `git archive` of the freeze SHA (PLAN D13, #693) |
-| G12 | Figures legible in print | BRF slide 6 | Every figure passes F1–F8 |
+| G12 | Figures legible in print | BRF slide 6 | Every figure passes F1–F9 |
 
 ## Evidence kinds
 
@@ -163,6 +163,26 @@ BRF slide 6 asks for crisp, readable diagrams; the thresholds below are team rul
 | F6 | Every class, method, table and event name on a design diagram exists in the code at the freeze SHA |
 | F7 | Editable source in the repository: a Mermaid fence in the section, an SVG/PNG under `figures/` with its source beside it, or the deck path it is reused from |
 | F8 | Sequence diagrams: lifelines `object : Class`, synchronous and asynchronous messages distinct, `alt`/`opt`/`loop` fragments, transaction boundary marked where it matters |
+| F9 | A diagram is drawn once (Source: Team). A second figure over the same participants or classes is allowed only if it shows a different viewpoint or only what changed, and its caption names the figure it extends ("…; the expiry itself is Figure 3.114"). A strategy figure in 3.2.N shows the transformation on a minimal excerpt, not a full use case. A 3.5.N solution figure shows only the pattern's collaboration. An image path is used by one figure only. The Canonical figures registry below says which figure is kept for each flow drawn more than once |
+
+## Canonical figures
+
+Source: Team. One row per flow that the 27 Oct draft drew more than once. The kept figure is the flow's only full drawing; every other figure in the row takes the role given, or is deleted and its place in the text cites the kept figure. Figure numbers are those of the 27 Oct draft; when renumbering moves them, update this table in the same change. Roles: **cite only** (delete the figure, keep a sentence that cites the kept one), **delta** (redraw it to show only what it adds, caption names the kept figure), **excerpt** (a minimal pattern or strategy fragment, caption names the kept figure), **keep** (a different viewpoint, unchanged).
+
+| ID | Flow | Kept figure and its section | Other figures and their allowed role | Owners involved |
+| --- | --- | --- | --- | --- |
+| FG01 | Team expiry, design sequence | Figure 3.114, UC5 D6 deadline passes (3.4.5) | 3.57 (3.4.2): delta, from the refund-obligation write onward. 3.27 (3.2.7): excerpt, the lease and batch mechanics only. 3.35 (3.2.9): excerpt, the listener phases only. 3.121 (3.5.2): keep as the brute-force before design, caption cites 3.114. 3.124 (3.5.2): excerpt, the Observer collaboration only; 3.35 and 3.124 draw the same subscriber calls, so one cites the other | Liu Jin, Yorik |
+| FG02 | Team expiry, analysis sequence | Figure 3.105, UC5 B6 deadline passes (3.4.5) | 3.52 (3.4.2): cite only; the per-order and per-payment loops are stated in the text. 3.25 (3.2.7): keep as the three-box before fragment | Liu Jin, Yorik |
+| FG03 | Expiry objects, analysis and design class | Figures 3.99, UC5 analysis class, and 3.108, UC5 design class (3.4.5) | 3.51 and 3.55 (3.4.2): delta, the refund side only (RefundControl, the refund worker), with ResolveTeamControl or GroupDealExpiryService as one reference box | Liu Jin, Yorik |
+| FG04 | Refund attempt | Figure 3.58, design sequence (3.4.2) | 3.21 (3.2.5): cite only, or excerpt of the idempotency key, the retry `alt` and operator review | Yorik |
+| FG05 | Webhook settlement | Figure 3.46, settlement shared by UC3 and UC4 (3.4.1) | 3.20 (3.2.5): excerpt, the provider boundary only (verify and re-read outside the transaction). 3.32 (3.2.8): excerpt, the transaction boundary and listener phases only, caption cites 3.46 | Eric, Yorik |
+| FG06 | Paid join admission (last seat) | Figure 3.48 (3.4.1) | 3.113 (3.4.5): delta, starting at `TeamSucceeded`, caption cites 3.48 | Eric, Liu Jin |
+| FG07 | Publish a listing | Figure 3.109, UC9 D1 publish (3.4.5) | 3.140 (3.5.5): excerpt, the state dispatch only (`changeStatus` → `Product.publish` → `ProductStatus.publish`), caption cites 3.109 | Liu Jin |
+| FG08 | Stale-version save | Figure 3.141, version check (3.5.5) | 3.110 (3.4.5): delta, the banner, reload and retry steps, caption cites 3.141 for the version check | Liu Jin |
+| FG09 | Pricing browse | Figure 3.73, UC1 design sequence (3.4.3) | 3.134 (3.5.4): excerpt, the Strategy collaboration only (the resolver and its strategy), caption cites 3.73 | Pan, Lim |
+| FG10 | Cross-module ports | Figure 3.12, settlement seams (3.2.3) | 3.2 (3.1): keep, the architecture-wide port sample. 3.43 (3.4.1): delta, the purchase-intent side only | Eric, Liu Jin |
+| FG11 | Observer participants | Figures 3.120 to 3.123 (3.5.2) | 3.33 (3.2.9): cite only, it is the analysis view of 3.120's expiry half. 3.34 (3.2.9): keep as the strategy excerpt that adds the `TeamExpired` record, the outbox writer and the cache subscriber, or fold those three into 3.123 and cite it | Yorik |
+| FG12 | State classes of a listing | Figure 3.138, State solution class (3.5.5) | 3.107 (3.4.5): delta, ProductStatus as one box without its operations, caption cites 3.138 | Liu Jin |
 
 ## Remarks register
 
@@ -183,7 +203,7 @@ By the 30 Oct freeze every box is ticked and every decision settled.
 - [ ] Every analysis object type is covered by some 3.2.N
 - [ ] Every REM row resolved (G10)
 - [ ] Freeze SHA recorded and every number re-read at it (G7)
-- [ ] Every figure passes F1–F8
+- [ ] Every figure passes F1–F9
 - [ ] Each member vetted their own sections and reviewed the rest (#695)
 - [ ] Assembled into the template; contents, figure numbers and cross-references updated; page count checked
 - [ ] Submitted by 31 Oct 23:59; submitter and time posted on #695
