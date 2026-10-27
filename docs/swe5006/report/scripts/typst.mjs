@@ -256,9 +256,24 @@ function classDiagram(lines, frame) {
   const bends = routes(rels, pos);
   const rs = rels.map(
     (r, i) =>
-      `(from: ${str(r.a)}, to: ${str(r.b)}, kind: ${str(r.kind)}, label: ${r.label ? str(r.label) : 'none'}, mfrom: ${r.ma ? str(r.ma) : 'none'}, mto: ${r.mb ? str(r.mb) : 'none'}, bend: ${bends[i]}deg)`,
+      `(from: ${str(r.a)}, to: ${str(r.b)}, kind: ${str(r.kind)}, label: ${r.label ? str(r.label) : 'none'}, mfrom: ${r.ma ? str(r.ma) : 'none'}, mto: ${r.mb ? str(r.mb) : 'none'}, bend: ${bends[i]}deg, vert: ${pos[r.a][0] === pos[r.b][0] && bends[i] === 0})`,
   );
-  return `#class-diagram(${typstArray(cls)}, ${typstArray(rs)}, frame: ${str(frame)})`;
+  // The least gap between columns (rows) that leaves room for the labels and multiplicities of
+  // the edges joining neighbours in one row (column): about 4.3 pt per character at 8.5 pt,
+  // a label wrapping at 40 mm, the end marks, and air on both sides.
+  const chars = (s) => (s ? [...s].length : 0);
+  let gx = 0;
+  let gy = 0;
+  rels.forEach((r) => {
+    const [ax, ay] = pos[r.a];
+    const [bx, by] = pos[r.b];
+    const marks = ['compose', 'aggregate'].includes(r.kind) ? 13 : ['inherit', 'realize'].includes(r.kind) ? 11 : 5;
+    const ends = (chars(r.ma) + chars(r.mb)) * 4.3 + (r.ma || r.mb ? 14 : 0) + marks;
+    if (ay === by && Math.abs(ax - bx) === 1) gx = Math.max(gx, Math.min(chars(r.label) * 4.3, 113) + 12, ends);
+    if (ax === bx && Math.abs(ay - by) === 1 && (r.label || r.ma || r.mb)) gy = Math.max(gy, (r.label ? 14 : 0) + (r.ma ? 15 : 0) + (r.mb ? 15 : 0) + marks + 6);
+  });
+  const minGap = `(${Math.min(Math.round(gx), 100)}pt, ${Math.min(Math.round(gy), 60)}pt)`;
+  return `#class-diagram(${typstArray(cls)}, ${typstArray(rs)}, frame: ${str(frame)}, min-gap: ${minGap})`;
 }
 
 function stateDiagram(lines, frame) {
