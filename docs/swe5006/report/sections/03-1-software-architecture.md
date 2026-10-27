@@ -122,7 +122,7 @@ The last three groups exist so that the SWE5001 split stays possible; in the mon
 
 #### Component and deployment view of the SWE5006 system
 
-BlocBuy has no separately deployed components on `dev`: the backend is one deployable unit. The meaningful component boundaries are therefore physical, and Figure 3.3 serves as both the component and the deployment view. It is a UML deployment diagram drawn from the deployed resources on 24 October.
+BlocBuy has no separately deployed components on `dev`: the backend is one deployable unit. The meaningful component boundaries are therefore physical, and Figure 3.3 serves as both the component and the deployment view. It is a UML deployment diagram drawn from the AWS account, read-only, on 24 October.
 
 ![Figure 3.3: Deployment view of the SWE5006 dev system, UML deployment diagram with «device», «node» and «executionEnvironment». One CloudFront distribution splits the SPA from the API, and the whole backend with its database and cache runs on one EC2 host.](../figures/dev-deployment.svg){.landscape}
 
