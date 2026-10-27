@@ -137,7 +137,7 @@ The view also shows the system's limits, which this report does not hide: one ho
 
 #### Target implementation platform
 
-Table 3.3 lists the platform. Versions were read from `backend/pom.xml`, `frontend/package.json` and the Docker files on 26 October 2026 at commit `46faacd7`. {{VERIFY: re-read every version in Table 3.3 at the freeze SHA, because Dependabot updates them almost daily (G7) — Liu Jin}}
+Table 3.3 lists the platform. Versions were read from `backend/pom.xml`, `frontend/package.json` and the Docker files on 26 October 2026 at commit `46faacd7`, and every one was re-read unchanged on 27 October at commit `6d14e449`.
 
 Table 3.3: Target implementation platform of the SWE5006 system.
 
