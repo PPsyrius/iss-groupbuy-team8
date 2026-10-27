@@ -349,7 +349,8 @@ jobs:
       needs.frontend-check.result == 'success' &&
       needs.detect-changes.outputs.frontend == 'true' &&
       (github.event_name == 'pull_request' || github.event_name == 'merge_group')
-    runs-on: ubuntu-latest
+    # Use the runner's preinstalled Chromium libraries; do not apt-install them on every run.
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
 
     steps:
@@ -381,9 +382,19 @@ jobs:
       - name: Verify build artifact
         run: test -f dist/index.html
 
-      # Both suites run headless; avoid downloading the unused full Chromium browser.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-${{ runner.arch }}-ubuntu24-playwright-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+
+      # Native libraries are already on ubuntu-24.04. --with-deps redundantly invokes apt;
+      # a slow Ubuntu mirror exhausted this job's budget in run 40366511054.
       - name: Install Chromium headless shell
-        run: pnpm exec playwright install --with-deps --only-shell chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 2
+        run: pnpm exec playwright install --only-shell chromium
 
       - name: Playwright smoke (vite preview)
         run: pnpm e2e
@@ -524,7 +535,7 @@ jobs:
     # Smoke the deployed site through CloudFront (home, deep link, /api/actuator/health).
     needs: deploy-s3-dev
     if: needs.deploy-s3-dev.result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
 
     steps:
@@ -545,8 +556,18 @@ jobs:
       - name: Install (frozen lockfile)
         run: pnpm install --frozen-lockfile
 
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-${{ runner.arch }}-ubuntu24-playwright-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+
+      # Match preview: reuse the pinned runner's native libraries and cache only browser binaries.
       - name: Install Chromium headless shell
-        run: pnpm exec playwright install --with-deps --only-shell chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 2
+        run: pnpm exec playwright install --only-shell chromium
 
       # With E2E_BASE_URL set, playwright.config.ts starts no local server.
       - name: Playwright smoke (dev CloudFront)
