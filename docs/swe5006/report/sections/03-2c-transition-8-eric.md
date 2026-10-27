@@ -22,7 +22,7 @@ Administrator edits of a listing add an optimistic version check (section 3.5.5)
 
 Table 3.12 states the lock order that the code takes on each path. On existing rows, every path takes a subset of one combined order, **team → purchase intent → order → payment → participation receipt → product**, and no path holds a later lock while it waits for an earlier one. The paths therefore cannot deadlock against each other. The webhook path does one thing before its first row lock: `StripeCheckoutService.settle` claims the Stripe event with a unique insert into `log_payment_webhook_event` (`claimEvent`, `ON CONFLICT (event_id) DO NOTHING`), and only then locks the team and purchase intent (`lockForSettlement`) and the payment (`repository.lock`). A second delivery of the same event waits on that unique entry, holding no row lock, and stops at the claim once the first commits.
 
-{{CONFIRM: D17 Where does the product row come in the lock order of each path: last after the receipt, or first, as on the admin and team-price quotation paths? — Eric}}
+On the settlement paths the product row comes last: the purchasability check reads it without a lock, and the row lock is taken only when `consumeOneUnit` runs its guarded `UPDATE`, after the receipt. The admin and team-price quotation paths lock the product row first (section 3.5.5).
 
 Table 3.12: Lock order per path, as implemented, and where each part is recorded.
 
@@ -146,7 +146,7 @@ Figure 3.29: Design sequence of the same race, after the concurrency strategy. T
 
 Rationale: a group-buy must never sell more seats than its target or settle one payment twice. Database locks hold across application instances, which in-memory locks would not. Because the expiry sweep also locks the team first, a sweep and a late payment on the same team queue behind each other in the same way.
 
-Evidence: the integration test `StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist` starts 20 concurrent paid joins for the last seat of a team of two, through the production purchase-intent and fulfilment ports. Each payment settles through `StripeCheckoutService.recover`, the operator recovery entry, which runs the same settlement as a webhook under a fresh event ID. The test asserts that the team ends with two members, two orders and current size two, that 19 refund obligations are stored, and that stock fell by exactly two, from 100 to 98. Tested locally (PostgreSQL in Testcontainers), not on dev. {{CONFIRM: D23 — variant A (03-2c-transition-8-eric.md:146@0e500c04): "Tested locally (Testcontainers), not on dev."; variant B (03-4-1-eric.md:610@0e500c04): "run locally and in CI, not on dev" — Eric}}
+Evidence: the integration test `StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist` starts 20 concurrent paid joins for the last seat of a team of two, through the production purchase-intent and fulfilment ports. Each payment settles through `StripeCheckoutService.recover`, the operator recovery entry, which runs the same settlement as a webhook under a fresh event ID. The test asserts that the team ends with two members, two orders and current size two, that 19 refund obligations are stored, and that stock fell by exactly two, from 100 to 98. Run locally (PostgreSQL in Testcontainers) and in CI (run 40200028697), not on dev.
 
 #### Transaction boundary
 
