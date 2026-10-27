@@ -3,7 +3,7 @@ rubric: 3.1
 owner: Liu Jin
 plan: #677
 sources: ../presentation/src/diagrams/logical-layers.svg, dev-deployment.svg; backend/docs/adr/; frontend/docs/adr/
-owns: R33, R43
+owns: R33, R43, R52
 status: draft
 -->
 
