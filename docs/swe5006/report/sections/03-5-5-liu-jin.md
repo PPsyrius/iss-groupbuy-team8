@@ -281,7 +281,7 @@ Figure 3.141: Design sequence diagram of a stale save (Optimistic Offline Lock).
 
 #### 6 Implementation decisions
 
-The implementation follows Figures 3.138 to 3.141. Names were checked in the code on 26 October at commit `46faacd7`; the decisions are:
+The implementation follows Figures 3.138 to 3.141. Names were checked in the code on 26 October at commit `6d14e449`; the decisions are:
 
 1. **Enum constant bodies as ConcreteStates.** The three states are constants of `ProductStatus` with bodies, not three named classes. They are shared and stateless, and the stored code (`draft`, `on_sale`, `off_sale` in `biz_product.status`) maps back through `ProductStatus.fromCode`, which fails on an unknown code.
 2. **The state returns its successor; `Product` applies it.** `ProductStatus.publish()` and `delist()` return the next state, and `Product.transition(next)` builds the next revision. There is no public status setter.
@@ -295,7 +295,7 @@ Two status tests remain outside the states, and we accept both. `AdminListingApp
 
 Table 3.32 lists the implementing classes and the tests that pin them. Unit tests run in the backend CI build (`build-quality`) on every pull request that changes the backend; `AdminListingFlowIT` runs the real HTTP chain against PostgreSQL 18 in Testcontainers, locally and in the same CI build. The 409 and 412 paths are verified by these automated tests; they were not separately exercised on dev.
 
-Table 3.32: Implementing classes and their tests (read at commit `46faacd7`, 26 October).
+Table 3.32: Implementing classes and their tests (read at commit `6d14e449`, 26 October).
 
 | Class (module) and role | Tests |
 |---|---|
