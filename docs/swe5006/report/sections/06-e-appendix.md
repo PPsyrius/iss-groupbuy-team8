@@ -9,7 +9,7 @@ status: draft
 
 # Appendix E: Known Limits and Evidence {.appendix}
 
-This appendix states the known limits of the SWE5006 system and its pipeline, and gives the evidence behind the main runtime claims: the Stripe Sandbox refund, the paid flow on dev, the performance runs and the system demonstration. Each item names its environment, because a local result, a dev result and a SWE5001 ECS result are different evidence. Statuses are as read on 26 October 2026 unless dated otherwise; each is re-checked at the freeze.
+This appendix states the known limits of the SWE5006 system and its pipeline, and gives the evidence behind the main runtime claims: the Stripe Sandbox refund, the paid flow on dev, the performance runs and the system demonstration. Each item names its environment, because a local result, a dev result and a SWE5001 ECS result are different evidence. Statuses are as read on 26 October 2026 unless dated otherwise.
 
 #### Known limits
 
@@ -17,23 +17,23 @@ Table E.1: Known limits of the dev system and its pipeline.
 
 | Limit | Effect | Status and evidence |
 |---|---|---|
-| CloudFront to load balancer over HTTP (NFR-37) | API payloads and the origin-secret header cross the AWS network unencrypted | Accepted risk on dev until 16 Nov 2026 (#227); the fix needs an origin hostname and certificate |
-| SSH port 22 on the dev host | Open to 0.0.0.0/0 on 21 and 24 Oct although SSM makes it unnecessary | The team decided on 24 Oct to close it; closed: the read-only check of 27 Oct (05:19 UTC, `aws ec2 describe-security-groups`) found no rule admitting port 22 (section 4.3) |
-| Dev EBS volume not encrypted | Database and host data unencrypted at rest | Seen in the read-only AWS check of 19 Oct; still unencrypted in the read-only check of 27 Oct (05:19 UTC, `aws ec2 describe-volumes`, `aws ec2 get-ebs-encryption-by-default`): `vol-08df685248a8b1aea`, and EBS encryption by default is off (section 4.3); no issue raised |
-| Rollback never exercised | The recovery path is untested on the real host | `rollback-backend.yml` 0 runs; no automatic rollback recorded; rollback drill #623 open |
+| CloudFront to load balancer over HTTP (NFR-37) | API payloads and the origin-secret header cross the AWS network unencrypted | Accepted risk on dev (open issues in Table 2.6); the fix needs an origin hostname and certificate |
+| SSH port 22 on the dev host | Open to any address although SSM makes it unnecessary | Closed (open issues in Table 2.6) |
+| Dev EBS volume not encrypted | Database and host data unencrypted at rest | Open (open issues in Table 2.6) |
+| Rollback never exercised | The recovery path is untested on the real host | Never run on dev (section 4.3; open issues in Table 2.6) |
 | No dev alarms or dashboards | Failures are noticed by the post-deploy smoke or by people | All CloudWatch alarms belong to SWE5001; DSOMM Monitoring level 0 |
 | Dev is not zero-downtime | A deploy restarts the only API container; the database shares the host | The post-deploy smoke's API health check got HTTP 502 through CloudFront in three frontend delivery runs, each while the same commit's `deploy-existing-ec2` was recreating the container: 37102432667 and 37122348459 (3 Oct) and 37182996807 (4 Oct); accepted for a low-cost dev |
 | Secrets in a host file | Created and rotated by hand (`/etc/blocbuy/backend.env`, root 0600) | Accepted for dev; the unapplied production design uses Parameter Store |
 | Delivery image rebuilt | Dev delivery rebuilds the JAR and image without repeating the Trivy image scan, so the deployed image is not the one the pull request scanned | Provenance limit; ECR scans on push but does not gate; frontend ADR 0004 and the operator guide to be reconciled |
 | Weekly full-history secret scan red | Four historical SonarCloud badge-token findings remain | NFR-02 partially met; scheduled run 40287812848 failed on 26 Oct |
-| Passive DAST only | ZAP scans anonymous pages passively; no login, payment or active testing; findings advisory | The 2 Medium and 4 Low header findings were fixed on 27 October (#700, #703); 6 Informational findings remain under review (Table 4.10) |
+| Passive DAST only | ZAP scans anonymous pages passively; no login, payment or active testing; findings advisory | Header findings fixed; Informational findings under review (section 4.2, Table 4.10) |
 | SBOM is a source inventory | Lists Maven and pnpm source dependencies, not the exact deployed JAR, image or bundle; licence findings advisory | NFR-72; no signing or attestation |
 | CodeQL unavailable | No GitHub Code Scanning SAST; SonarCloud and SpotBugs remain | Code Scanning API returns 403; `ENABLE_CODEQL=false` |
-| One IAM user access key | A long-lived key exists in the project account | Disclosed and accepted; limited to SSM port forwarding and the organisation's guardrails (section 4.1) |
+| One IAM user access key | A long-lived key exists in the project account | Disclosed and accepted (CI authentication, section 4.1; open issues in Table 2.6) |
 | GitHub two-factor sign-in | Not enforceable on a personal-account repository | Not recorded per member (section 4.1) |
-| Performance on dev | Never measured on SWE5006 dev | NFR-15 "measured locally; deployed performance remains unverified" |
-| Expiry bound | The design bound is one sweep interval (60 s, fixed delay) plus the sweep time, not a one-minute guarantee | Local worst observation lag 58.18 s over 30 teams; one dev bloc expired 18.9 s and was refunded 40.6 s after its deadline (Table E.3) |
-| Separate SWE5006 production stack | Designed (`backend-app-stack`, 21 resources) but never applied | Closed as not planned (#226); production is the shared SWE5001 release |
+| Performance on dev | Deployed performance on SWE5006 dev is unverified | Performance status, section 1.4.3; runs in Table E.4 |
+| Expiry bound | Expiry within one minute is not guaranteed | The expiry design bound (section 1.4.3); the one dev run is in Table E.3 |
+| Separate SWE5006 production stack | Not built; production is the shared SWE5001 release | No SWE5006 production stack, section 1.4 (#226) |
 
 #### Stripe Sandbox refund, tested locally (20 September 2026)
 
@@ -66,7 +66,7 @@ Table E.3: The paid START and natural expiry on dev, 23 October 2026 (times UTC)
 | Refund succeeded in Stripe | 10:24:55.94 | 40.6 s after the deadline; exactly one refund for the PaymentIntent |
 | Final audit | 10:25:40 | One succeeded refund per payment; no pending Checkout, overdue team, unfinished refund or open payment case |
 
-These times describe one run, not a latency bound. A second buyer's paid JOIN was shown on dev on 24 October in the system-demonstration backup recording (#657): a second account opened a member's invite link, paid S$22.00 in Stripe Checkout, and My blocs then read "2 of 2 joined · Filled 24 Oct, 7:17 pm" (sprint day log of 24 October). It is a recorded user-interface observation, not a database read or log audit. Crash recovery of refunds under replay is tested in CI (`StripeRolloutAcceptanceIT`) but was not shown on dev.
+These times describe one run, not a latency bound. A second buyer's paid JOIN was shown on dev on 24 October in the system-demonstration backup recording (#657): a second account opened a member's invite link, paid S$22.00 in Stripe Checkout, and My blocs then read "2 of 2 joined · Filled 24 Oct, 7:17 pm" (sprint day log of 24 October). It is a recorded user-interface observation, not a database read or log audit. Crash recovery of refunds under replay was not part of these runs (not shown on dev; Table 1.3).
 
 Screenshots of the payment, the active and expired bloc, the webhook delivery and the "Refund sent" receipt are kept with the record in `backend/docs/payment/evidence/20261023-dev-recovery/`.
 
