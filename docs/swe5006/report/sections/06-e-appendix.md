@@ -17,7 +17,7 @@ Table E.1: Known limits of the dev system and its pipeline.
 | Limit | Effect | Status and evidence |
 |---|---|---|
 | CloudFront to load balancer over HTTP (NFR-37) | API payloads and the origin-secret header cross the AWS network unencrypted | Accepted risk on dev until 16 Nov 2026 (#227); the fix needs an origin hostname and certificate |
-| SSH port 22 on the dev host | Open to 0.0.0.0/0 on 21 and 24 Oct although SSM makes it unnecessary | The team decided on 24 Oct to close it; current state to be re-read (section 4.3) |
+| SSH port 22 on the dev host | Open to 0.0.0.0/0 on 21 and 24 Oct although SSM makes it unnecessary | The team decided on 24 Oct to close it; closed: the read-only check of 27 Oct (05:19 UTC, `aws ec2 describe-security-groups`) found no rule admitting port 22 (section 4.3) |
 | Dev EBS volume not encrypted | Database and host data unencrypted at rest | Read-only AWS check, 19 Oct; no issue raised |
 | Rollback never exercised | The recovery path is untested on the real host | `rollback-backend.yml` 0 runs; no automatic rollback recorded; rollback drill #623 open |
 | No dev alarms or dashboards | Failures are noticed by the post-deploy smoke or by people | All CloudWatch alarms belong to SWE5001; DSOMM Monitoring level 0 |
