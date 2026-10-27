@@ -102,7 +102,7 @@ All use cases, UC1 to UC9 and the included Pay upfront.
 #### Static structure changes
 
 - A «control» becomes an application service in `blocbuy-application`, created and wired by Spring. It is annotated `@Service` (for example `PaidGroupDealService`). A service that configuration switches on is declared instead as a bean in a bootstrap configuration class: `StripeCheckoutService` in `StripeCheckoutConfiguration`, `OrderFulfilmentAdapter` in `PaymentIntegrationConfiguration`. Collaborators arrive through the constructor into `final` fields. The ArchUnit rule `no_field_injection` rejects field injection.
-- An «entity» becomes a final class in `blocbuy-domain` with no framework annotations. The rule `domain_is_framework_free` checks the model, repository, event and exception packages. Its state changes only through behavioural methods, for example `GroupDeal.joinPaid`, `Order.confirm` and `Product.publish`.
+- An «entity» becomes a final class in `blocbuy-domain` with no framework annotations. The rule `domain_is_framework_free` checks the model, repository, pricing, event and exception packages and `common.exception`, against Spring, MyBatis, Sa-Token, Jakarta and Jackson types; the `gateway`, `query` and `util` packages are not in its scope. Its state changes only through behavioural methods, for example `GroupDeal.joinPaid`, `Order.confirm` and `Product.publish`.
 - A broken business rule becomes a `BizException` that carries an `ErrorCode` constant of its context, for example `GroupbuyErrorCode.DEAL_FULL`.
 
 Figure 3.4 shows the change on the UC4 admission step. The analysis classes are in the top row. The «trace» dependencies lead to the design classes that realise them.
