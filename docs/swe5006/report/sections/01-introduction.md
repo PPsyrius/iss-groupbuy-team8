@@ -45,6 +45,8 @@ The project has no market sizing or business success metric. The proposal states
 
 The stakeholders are the people and systems that use BlocBuy or decide its scope. Development tools such as the automated reviewers and Dependabot are not stakeholders; section 4.1 describes them.
 
+<!-- table: split -->
+
 Table 1.1: Stakeholders and how the project serves them.
 
 | Stakeholder | Kind | Interest | How the project serves it |
