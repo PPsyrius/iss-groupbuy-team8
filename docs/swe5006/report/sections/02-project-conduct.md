@@ -137,6 +137,18 @@ Table 2.6: Outstanding issues, 26 October 2026.
 
 The performance and expiry targets need the wording of section 1.4.3: response time is met locally and on the SWE5001 ECS environment but was never measured on dev, and one-minute expiry is a design bound, not a result shown on dev.
 
+#### Remarks from the presentation
+
+The lecturer gave three remarks at the presentation on 26 October; the team recorded them under the report's tracking issue (#463). Table 2.11 lists each remark, its issue and how this report answers it, as read on 27 October.
+
+Table 2.11: Remarks from the presentation of 26 October and how the report answers them.
+
+| Remark | Issue and state | How the report answers it |
+| --- | --- | --- |
+| Send the repository link to the lecturer | #693, open. The repository is private, so the lecturer needs Read access before the link is useful | {{FILL: date Read access was granted and the link sent (#693) — Lim}} |
+| Show the OWASP ZAP results before and after remediation | #694, open, blocked by the response-headers fix #610 (open) | Before: the scheduled run 40298983391 of 26 October, 0 High, 2 Medium, 4 Low and 6 Informational findings, one issue each (#636 to #647); section 4.2 gives the table. No after-remediation run existed at the freeze. {{FILL: after-remediation run, date and outcome per finding (#694) — Pan}} |
+| Submit the report by 31 October 2026, 23:59 | #695, closed on 27 October when the first draft merged (#698); the deadline supersedes 1 November (#463) | The schedule of #695 meets it: first draft on 27 October, team vetting on 28 and 29 October, content freeze on 30 October |
+
 ## 2.3 Project Metrics
 
 The project met every planned milestone except a separate SWE5006 production release, which was dropped. Its last delivery milestone was the paid journey on dev on 23 and 24 October; the presentation on 26 October followed it (Table 2.7). No member logged hours. The only actual effort figures are the person-day split the five members agreed on 19 October for the joint SWE5001 and SWE5006 project, about 50 person-days in total. It covers both courses, so it is not compared with the proposal's SWE5006 baseline.
