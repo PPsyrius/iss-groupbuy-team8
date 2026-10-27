@@ -67,16 +67,16 @@ classDiagram
     class StripeRefundGateway
     class GoogleOAuthGateway
     %% at StripeCheckoutService 0,0
-    %% at RefundService 2,0
-    %% at OAuthLoginAppServiceImpl 3,0
-    %% at CheckoutGateway 0,1
+    %% at RefundService 0,2
+    %% at OAuthLoginAppServiceImpl 0,3
+    %% at CheckoutGateway 1,0
     %% at PaymentBusinessPort 1,1
-    %% at RefundGateway 2,1
-    %% at OAuthIdentityGateway 3,1
-    %% at StripeCheckoutGateway 0,2
-    %% at OrderFulfilmentAdapter 1,2
+    %% at RefundGateway 1,2
+    %% at OAuthIdentityGateway 1,3
+    %% at StripeCheckoutGateway 2,0
+    %% at OrderFulfilmentAdapter 2,1
     %% at StripeRefundGateway 2,2
-    %% at GoogleOAuthGateway 3,2
+    %% at GoogleOAuthGateway 2,3
     StripeCheckoutService --> CheckoutGateway
     StripeCheckoutService --> PaymentBusinessPort
     RefundService --> RefundGateway
@@ -87,7 +87,7 @@ classDiagram
     GoogleOAuthGateway ..|> OAuthIdentityGateway
 ```
 
-Figure 3.2: Ports and adapters, UML class diagram (top row application services, middle row domain ports, bottom row realisations). Every external call goes through a domain interface; `OrderFulfilmentAdapter` is the one realisation drawn here that lives in the application layer. The figure shows 4 of the 12 gateway ports.
+Figure 3.2: Ports and adapters, UML class diagram (left column application services, middle column domain ports, right column realisations). Every external call goes through a domain interface; `OrderFulfilmentAdapter` is the one realisation drawn here that lives in the application layer. The figure shows 4 of the 12 gateway ports.
 
 The figure leaves out eight ports that follow the same pattern. `PaymentIntentPort` is realised by `PurchaseIntentAppService` and `ListingDisplayGateway` by `GroupbuyListingDisplayAdapter`, as above. `OutboxEventTransport`, used by `OutboxRelayService`, is realised by `SqsOutboxEventTransport` and `SnsOutboxEventTransport`, both subclasses of `BatchingOutboxEventTransport`; neither runs on `dev`, where the outbox writer, relay and consumer are switched off (`application-ec2.yml`; backend ADR 0007). Four ports are realised on Redis: `RateLimitGateway` by `RedisRateLimitGateway`, `OpenDealOfferCache` by `RedisOpenDealOfferCache`, `OAuthStateStore` by `RedisOAuthStateStore` and `LoginSnapshotGateway` by `RedisLoginSnapshotGateway`. `ListingSearchReranker` is realised by `TypeSafeJevListingSearchReranker`.
 
