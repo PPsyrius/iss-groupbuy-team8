@@ -40,7 +40,7 @@ All eight tables have a UUIDv7 primary key `id`.
 
 #### Mapping decisions
 
-The object-to-table mapping follows the team's PostgreSQL conventions (the `pgsql-ddl` skill in the repository). They are team rules, not course requirements. Each is listed with its reason.
+The object-to-table mapping follows the team's PostgreSQL conventions. Each is listed with its reason.
 
 **One table per aggregate root, no inheritance mapping.** Each aggregate in the domain model (for example `GroupDeal`, `PurchaseIntent`, `CheckoutPayment`, `Order`, `Product`) maps to one table, and its child entities to tables of their own (`biz_group_member` for team members). The domain has no class hierarchy that needs a single-table or joined-table inheritance mapping. The mapping is written by hand: MyBatis XML mappers read rows into data objects, and hand-written converters turn them into domain objects (section 3.2.4 describes this persistence strategy).
 
@@ -60,13 +60,13 @@ The cost is that orphan rows are possible if application code is wrong. Soft del
 
 **Soft delete and audit columns.** 22 of the 29 tables carry `deleted boolean NOT NULL DEFAULT false`, and the ordinary business tables carry `create_time`, `update_time`, `create_by` and `update_by`. A delete sets the flag, so a row that other rows still reference never disappears. The seven tables without the flag are append-only records and queues: the four `log_` tables, `biz_payment_review_case`, `sys_outbox` and `sys_consumed_message`.
 
-**Version column.** Ten tables carry an integer `version`, and it does not mean the same thing in all of them:
+**Version column.** Ten tables carry an integer `version`, and it does not mean the same thing in all of them, for example:
 
-- an optimistic lock on `biz_product`, `biz_order`, `biz_purchase_intent` and `biz_payment`: the update adds `AND version = …` with the version read earlier and treats zero affected rows as a conflict (for example in `BizProductMapper.xml` and `PaymentMapper.xml`);
+- the listing version on `biz_product`, which an administrator's write must match (Optimistic Offline Lock, section 3.5.5);
 - a fencing token on `biz_refund`: a refund worker claims a row with a lease, and only the holder of the latest version may write the Stripe result (`RefundMapper.xml`);
 - a recorded value on `log_refund_attempt`, an append-only table whose `version` column stores the refund's fencing version that each attempt ran under, so an audit can tell which lease made which call;
 - a revision number on `biz_team_price_policy`, where each price change is a new row and the highest version is the current price;
-- a change counter on `biz_group_deal`, `sys_scheduler_lock` and `sys_scheduled_item_retry`, incremented on every update but never compared. The team row is changed only under a pessimistic `SELECT … FOR UPDATE` lock (`lockDeal` in `PaidGroupDealMapper.xml`), and its update is guarded by the expected `current_size` and `status` instead, so the version adds no protection there.
+- a change counter on `biz_group_deal`, `sys_scheduler_lock` and `sys_scheduled_item_retry`, incremented on every update but never compared; the team row relies on its guarded update instead (guarded update, section 3.2.8).
 
 `biz_purchase_intent` has no status column: whether an intent is open, fulfilled or expired follows from `fulfilled_payment_id` and `expired_at`.
 
