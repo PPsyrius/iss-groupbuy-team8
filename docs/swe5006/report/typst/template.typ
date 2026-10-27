@@ -60,10 +60,15 @@
 
 #let table-caption(body) = block(above: 14pt, below: 0.4em, sticky: true, text(size: 9pt, body))
 
+// Text area of the A4 page with 2.54 cm margins (set in `setup`).
+#let text-area = (width: 21cm - 2 * 2.54cm, height: 29.7cm - 2 * 2.54cm)
+
 #let report-table(n, ..cells) = {
   set text(size: 9pt)
   set par(justify: false, leading: 0.5em)
-  block(width: 100%, above: 0.6em, below: 1em, table(
+  // A row never splits across pages, so a cell's text stays beside its key.
+  set table.cell(breakable: false)
+  let t = table(
     columns: n,
     inset: (x: 4pt, y: 3.5pt),
     stroke: 0.4pt + rgb("#8A8378"),
@@ -71,7 +76,14 @@
     // The first row is a real header: it repeats on each page and never ends a page alone.
     table.header(..cells.pos().slice(0, n.len())),
     ..cells.pos().slice(n.len()),
-  ))
+  )
+  // A table up to half a page tall stays on one page. Otherwise a float waiting for the next
+  // page (a landscape figure, a tall diagram) leaves slivers that the table's rows fill a few
+  // at a time, scattering a short table over several pages between full-page figures.
+  context {
+    let h = measure(t, width: text-area.width).height
+    block(width: 100%, above: 0.6em, below: 1em, breakable: h > text-area.height / 2, t)
+  }
 }
 
 // sectPr: pgSz 11906 x 16838 twips (A4), pgMar 1440 (2.54 cm) all round, header and footer 708
