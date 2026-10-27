@@ -9,7 +9,7 @@ status: draft
 
 # Appendix D: Test Inventory, CI Timings and Green Rates {.appendix}
 
-This appendix holds the detail behind section 4.2 and section 4.3: the test inventory per module and level, the executed test totals, coverage, the workflow timings and green rates, and the dev delivery metrics. Every figure carries its date and source. Static counts were taken with `git ls-tree` on `dev` at `61486f0e` on 26 October 2026; the final figures are recounted at the freeze commit. The test files are unchanged between `61486f0e` and the freeze commit `6d14e449` (`git diff 61486f0e 6d14e449 -- backend frontend` is empty), so the static counts hold at the freeze.
+This appendix holds the detail behind section 4.2 and section 4.3: the test inventory per module and level, the executed test totals, coverage, the workflow timings and green rates, and the dev delivery metrics. Every figure carries its date and source. Static counts were taken with `git ls-tree` on `dev` at `61486f0e` on 26 October 2026. The backend and frontend trees are unchanged between `61486f0e` and the freeze commit (section 1.1), so the static counts hold at the freeze.
 
 #### Test inventory
 
@@ -36,7 +36,7 @@ Table D.2: Executed test totals from CI logs. Runs 40200028697 and 40294726775 h
 | Frontend `e2e-preview` (Playwright, preview build) | 40206547524, pull request | 25 Oct 2026 | 19 passed, 5 skipped |
 | Frontend `e2e-dev` (Playwright, through CloudFront) | 40294726775, push `9135ad8b` | 26 Oct 2026 | 21 passed, 3 skipped |
 
-Earlier totals differ because tests were added between them: 1,958 backend tests (local benchmark, 20 Oct), 1,980 (local verify in the CI failure audit, 21 Oct) and 2,048 (local verify, 21 Oct). By team rule, SonarCloud's `tests` measure is never used as a test count.
+Earlier totals differ because tests were added between them: 1,958 backend tests (local benchmark, 20 Oct), 1,980 (local verify in the CI failure audit, 21 Oct) and 2,048 (local verify, 21 Oct). SonarCloud's `tests` measure is never used as a test count.
 
 #### Coverage
 
