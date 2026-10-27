@@ -495,6 +495,8 @@ All use cases that read or change stored data, which is every use case in scope.
 
 #### Static structure changes
 
+Rationale: the application depends only on the port (ArchUnit rule `application_uses_ports_not_tech`), and persistence classes stay inside infrastructure (`persistence_is_internal`), so the storage technology can change without touching domain or application code. Integrity rules that must hold under concurrency are also unique indexes, listed by name in 3.2.8.
+
 ```mermaid
 classDiagram
     class Team {
@@ -547,8 +549,6 @@ classDiagram
 ```
 
 Figure 3.14: Class diagram, before (the analysis «entity» Team) and after the persistence strategy. The entity becomes an aggregate behind two domain ports; the infrastructure implements them with a MyBatis mapper, a row-shaped data object and a converter, none of which leave the infrastructure module.
-
-Rationale: the application depends only on the port (ArchUnit rule `application_uses_ports_not_tech`), and persistence classes stay inside infrastructure (`persistence_is_internal`), so the storage technology can change without touching domain or application code. Integrity rules that must hold under concurrency are also unique indexes, listed by name in 3.2.8.
 
 #### Dynamic behaviour changes
 
