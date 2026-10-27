@@ -20,6 +20,8 @@ Figure 3.142 draws the eight core tables in crow's foot notation. Each line is a
 
 The cardinalities carry the business rules. A product has any number of teams over time (`biz_group_deal.product_id`). A team has at least one member, its leader, and at most one active membership per buyer, enforced by the partial unique index `uq_biz_group_member_deal_user` on `(deal_id, user_id)`. A purchase intent is the server's priced offer for one START (open a new team) or JOIN (enter an existing team); a buyer may retry Checkout, so one intent can have several payment rows, but `uq_biz_payment_pending_intent` allows only one pending payment per intent. One successful payment produces at most one membership, one order and one refund obligation: `uq_biz_group_member_payment_id`, `uq_biz_order_payment_id` and the unique `payment_id` column of `biz_refund` (index `biz_refund_payment_id_key`) make a replayed Stripe webhook collide at the database instead of creating a second row. Table 3.33 lists the keys.
 
+<!-- table: split -->
+
 Table 3.33: Keys and cardinalities of the core tables. "Logical FK" columns reference another table's `id` without a database constraint; partial unique keys exclude soft-deleted rows.
 
 | Table | Logical FK columns | Unique keys | Cardinality |
