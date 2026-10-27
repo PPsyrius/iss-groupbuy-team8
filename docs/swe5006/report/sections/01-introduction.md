@@ -95,7 +95,7 @@ Table 1.3: Use cases in scope and their status on dev.
 | UC2 Register / authenticate | On dev | Google sign-in only; the server keeps the session and the browser holds only an HttpOnly cookie (changed from the proposal, section 2.2) | #25, 23 Sep |
 | UC3 Initiate a team (pay first) | On dev since 23 Oct | A real Sandbox payment started a team and created its order | #26, 24 Sep |
 | UC4 Join a team | On dev since 24 Oct | Shown in a recording: a second buyer's paid join filled a team of two. A recorded user-interface observation, with no database or log audit | #27, 24 Sep |
-| UC5 Team lifecycle resolution | On dev since 24 Oct | The 24 October recording shows the team filled with two of two members (a user-interface observation, with no database or log audit); one team expired naturally on 23 October | #28, 24 Sep |
+| UC5 Team lifecycle resolution | On dev since 24 Oct; expiry since 23 Oct | The expiry path ran on 23 October: a paid team expired 18.9 s after its deadline. The success path was first shown in the 24 October recording, a team filled with two of two members (a user-interface observation, with no database or log audit). The diagram badge carries 24 October, when both outcomes had been shown | #28, 24 Sep |
 | UC6 Refund on team expiry | On dev since 23 Oct | One expired team was refunded once, 40.6 s after its deadline. Crash recovery under replay is tested locally only | #29, 25 Sep |
 | UC7 Share attribution | On dev | The 24 October recording shows the invite banner naming the sharer | #30, 28 Sep |
 | UC8 View my orders and teams | On dev | | #31, 27 Sep |
