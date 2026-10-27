@@ -62,7 +62,7 @@ Table 1.1: Stakeholders and how the project serves them.
 | Development team | IT | Deliver the system and its evidence for two courses | Five members, each owning use cases, a design problem and report sections (section 2.1); one member per sprint acts as Scrum Master |
 | Lecturer and project advisor (Chandrasekaran) | Academic | Agreed the scope in the proposal; grades the presentation and this report | The proposal as the scope benchmark (section 2.2) and this report |
 
-The project has no company sponsor; the proposal lists none. No Product Owner was appointed: the team prioritised the backlog together at each Sprint Planning (section 2.1).
+The project has no company sponsor; the proposal lists none. No Product Owner was appointed: the team prioritised the backlog together at each Sprint Planning.
 
 ## 1.4 Project Scope
 
