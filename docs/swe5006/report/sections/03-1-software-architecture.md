@@ -25,7 +25,7 @@ Table 3.1: Backend Maven modules of the monolith, their layer and their allowed 
 | `blocbuy-adapter` | Adapter (presentation) | REST controllers, request and response DTOs, the `Result<T>` envelope, `GlobalExceptionHandler` | application, client |
 | `blocbuy-application` | Application | Use-case services that own the transaction boundary (`@Transactional`), commands, queries, assemblers, event subscribers | domain, client |
 | `blocbuy-domain` | Domain | Aggregates, value objects, domain events, repository and gateway ports (interfaces), error codes | JDK and Lombok only |
-| `blocbuy-infrastructure` | Infrastructure | MyBatis mappers, data objects, repository implementations, hand-written converters, Redis, Stripe, Google and AWS SDK adapters, Sa-Token configuration | domain |
+| `blocbuy-infrastructure` | Infrastructure | MyBatis mappers, data objects, repository implementations, hand-written converters, Redis, Stripe, Google and AWS SDK adapters, Sa-Token configuration | domain, client |
 | `blocbuy-client` | Shared contract | Constants (`ApiConstants`, `SessionRbac`, `Topology`) and versioned integration-event contracts (`IntegrationEventEnvelope`, `TeamSucceededV1`) | none |
 | `blocbuy-bootstrap` | Assembly | `BlocBuyApplication`, configuration, scheduled jobs (`LeasedJobRunner`, `TeamExpirySweepJob`, `RefundWorkerJob`), Flyway migrations | all five modules above |
 
