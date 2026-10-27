@@ -91,4 +91,4 @@ REPORT_TEMPLATE="/path/to/SWE5006 - Project Report Template for Practice Module.
   npm --prefix docs/swe5006/report run build -- --out "/path/to/shared/folder"
 ```
 
-`REPORT_TEMPLATE` is optional: it supplies the NUS-ISS logo for the header, which stays out of the repository with the template. Open markers render as red boxes in the PDF so reviewers see every gap. The front matter in `00-front-matter.md` is a YAML block (title, subtitle, author lines, date line) that becomes the title page.
+`REPORT_TEMPLATE` is optional: it supplies the NUS-ISS logo for the header, which stays out of the repository with the template. Open markers render as red boxes in the PDF so reviewers see every gap. The front matter in `00-front-matter.md` is a YAML block (`title`, `kind`, `subtitle`, `team`, a `members` list, `repository`, `environment`) that becomes the title page; every key reaches the template as `meta`.

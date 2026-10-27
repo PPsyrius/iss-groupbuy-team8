@@ -53,7 +53,12 @@ for (const f of files) {
   }
 }
 
-const metaTyp = `(title: ${str(meta.title || '')}, subtitle: ${str(meta.subtitle || '')}, author: (${(meta.author || []).map(str).join(', ')},), date: [${inline(meta.date || '')}])`;
+// Every front-matter key reaches the template: plain values as strings, values with markers or
+// Markdown as content, lists as arrays.
+const metaValue = (v) => (/\{\{|[*_`[]/.test(v) ? `[${inline(v)}]` : str(v));
+const metaTyp = `(${Object.entries(meta)
+  .map(([k, v]) => `${k}: ${Array.isArray(v) ? `(${v.map(metaValue).join(', ')},)` : metaValue(v)}`)
+  .join(', ')})`;
 const typ = join(dist, 'report.typ');
 writeFileSync(
   typ,

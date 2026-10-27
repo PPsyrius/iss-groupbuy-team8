@@ -103,20 +103,39 @@
 #let preview(body) = setup(body)
 
 #let report(meta: (:), logo: none, body) = setup(logo: logo, {
-  set document(title: meta.at("title", default: "Project Report"))
-  // Title page (document.xml, first page): centred Normal paragraphs after an empty one, the title
-  // in the Title style (theme major font Calibri Light, sz 56 = 28 pt, spacing -10 = -0.5 pt, after
-  // 0, single line), then the module, team and members, one per line. The logo comes from the header.
-  align(center, {
-    v(1.15em)
-    text(font: ("Calibri Light", "Helvetica Neue", "Arial"), weight: "light", size: 28pt, tracking: -0.5pt, meta.at("title", default: ""))
-    parbreak()
-    meta.at("subtitle", default: "")
-    for a in meta.at("author", default: ()) { parbreak(); a }
-    parbreak()
-    v(1.15em)
-    meta.at("date", default: "")
+  set document(title: meta.at("kind", default: "Project Report") + " for " + meta.at("title", default: ""))
+  // Title page: one left-aligned block, centred vertically on the page, set as a label column and
+  // a value column. The course template centres every line; the cover keeps its content (project,
+  // module, team, members) and adds the repository and dev environment links as the last rows.
+  let ink = rgb("#1B1A18")
+  let muted = rgb("#6B665E")
+  let accent = rgb("#E8402A")
+  let label(body) = pad(top: 2.5pt, text(size: 8.5pt, weight: "bold", tracking: 0.8pt, fill: muted, upper(body)))
+  let person(s) = {
+    let m = if type(s) == str { s.match(regex("^(.*?)\s*\((.*)\)$")) }
+    if m != none [#m.captures.at(0) #text(fill: muted)[(#m.captures.at(1))]] else { s }
+  }
+  v(1fr)
+  block(width: 100%, {
+    set par(spacing: 0pt, leading: 0.55em)
+    block(width: 2.2cm, height: 4pt, fill: accent)
+    v(22pt)
+    text(size: 13pt, weight: "bold", tracking: 1.5pt, fill: accent, upper(meta.at("kind", default: "")))
+    v(10pt)
+    text(size: 52pt, weight: "bold", tracking: -1.5pt, fill: ink, meta.at("title", default: ""))
+    v(14pt)
+    text(size: 14pt, fill: ink, meta.at("subtitle", default: ""))
+    v(44pt)
+    line(length: 100%, stroke: 0.5pt + rgb("#D8D2C8"))
+    v(14pt)
+    grid(columns: (3.6cm, 1fr), row-gutter: 16pt,
+      label[Team], text(weight: "bold", meta.at("team", default: "")),
+      label[Members], stack(spacing: 7pt, ..meta.at("members", default: ()).map(person)),
+      label[Repository], text(size: 10pt, meta.at("repository", default: "")),
+      label[Dev environment], text(size: 10pt, meta.at("environment", default: "")),
+    )
   })
+  v(1fr)
   pagebreak()
   // Contents: "CONTENTS" in the template's notHelp style (bold, sz 28 = 14 pt, after 180 = 9 pt);
   // toc 1 in capitals, toc 2 indented 284 twips, toc 3 567 twips, all with dot leaders, single
