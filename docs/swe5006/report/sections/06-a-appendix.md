@@ -63,7 +63,7 @@ Table A.4: Sprint goals and planned capacity.
 
 | Sprint | Goal (abridged) | Planned capacity | Plan |
 |---|---|---|---|
-| 1 (1–12 Sep) | A minimal end-to-end slice: sign in with Google, browse the listing list and detail; every member claims one use case | Not estimated in hours | Issue #49 |
+| 1 (1–12 Sep) | A minimal end-to-end slice: sign in with Google, browse the listing list and detail; every member claims at least one use case | Not estimated in hours | Issue #49 |
 | 2 (15–26 Sep) | A buyer pays through Stripe, becomes the leader of a new team or joins one, sees the order and team, and the team resolves automatically; every step safe to replay | 150 h (5 × 30 h) | Issue #93; Sprint 2 progress report |
 | 3 (28 Sep–9 Oct) | On deployed dev: invite link naming the sharer, START or JOIN on an admin-configured listing, pay the quoted price, see order and bloc, automatic refund on expiry; p95 measured at 100 users | 150 h, 17 work items | `sprint-03/plan.md`, issue #232 |
 | 4 (12–23 Oct) | Deployed dev runs the complete buyer and admin system with paid START, JOIN and refund; the same code runs as three services on SWE5001 ECS; every member's use case and design problem drafted | 224.5 h across both courses, 29 work items | `sprint-04/plan.md`, issue #465 |
