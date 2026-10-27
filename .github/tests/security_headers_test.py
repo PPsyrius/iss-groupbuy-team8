@@ -41,8 +41,25 @@ class SecurityHeadersTest(unittest.TestCase):
         for name in ("object-src", "frame-ancestors"):
             self.assertEqual(self.directives[name], ["'none'"])
         self.assertEqual(self.directives["upgrade-insecure-requests"], [])
-        # #637 is separate work, not silently resolved by this image policy change.
-        self.assertEqual(self.directives["style-src"], ["'self'", "'unsafe-inline'"])
+        self.assertEqual(self.directives["style-src-attr"], ["'none'"])
+
+    def test_only_reviewed_static_style_hashes_are_allowed(self):
+        self.assertEqual(self.directives["style-src"], [
+            "'self'",
+            "'report-sample'",
+            "'sha256-38RhXrc7EdReTKsOm23ZPOCUgniTUUcjky8QOOrQx6o='",
+            "'sha256-gYiS/BvZvRcK27JIXTuwhZ3hs2+VJ1X+2gUlE+farlg='",
+        ])
+
+    def test_cross_origin_policies_match_the_reviewed_resource_matrix(self):
+        headers = {item["Header"]: item for item in self.policy["CustomHeadersConfig"]["Items"]}
+        for name, value in {
+            "Cross-Origin-Embedder-Policy": "credentialless",
+            "Cross-Origin-Opener-Policy": "same-origin",
+            "Cross-Origin-Resource-Policy": "same-origin",
+        }.items():
+            self.assertEqual(headers[name]["Value"], value)
+            self.assertIs(headers[name]["Override"], True)
 
     def test_security_headers_still_override_origin_values(self):
         for config in self.policy["SecurityHeadersConfig"].values():
@@ -52,8 +69,8 @@ class SecurityHeadersTest(unittest.TestCase):
     def test_permissions_policy_denies_only_reviewed_unused_features(self):
         custom = self.policy["CustomHeadersConfig"]
         self.assertEqual(custom["Quantity"], len(custom["Items"]))
-        self.assertEqual(len(custom["Items"]), 1)
-        header = custom["Items"][0]
+        self.assertEqual(len(custom["Items"]), 4)
+        header = next(item for item in custom["Items"] if item["Header"] == "Permissions-Policy")
         self.assertEqual(header["Header"], "Permissions-Policy")
         self.assertIs(header["Override"], True)
         self.assertEqual(
@@ -71,8 +88,10 @@ class SecurityHeadersTest(unittest.TestCase):
         workflow = (ROOT / ".github/workflows/security.yml").read_text(encoding="utf-8")
         workflow_filter = workflow.split("            workflow:\n", 1)[1].split("            deployment:", 1)[0]
         for path in ("deployment/frontend/cloudfront/response-headers-policy.json",
-                     "infra/terraform/frontend-stack/cloudfront.tf",
-                     "fullstack-localhost/cloudfront-headers.mjs"):
+                      "infra/terraform/frontend-stack/cloudfront.tf",
+                      "fullstack-localhost/cloudfront-headers.mjs",
+                      "frontend/scripts/verify-csp-styles.mjs",
+                      "frontend/tooling/**"):
             self.assertIn(path, workflow_filter)
 
 

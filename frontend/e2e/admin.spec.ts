@@ -241,10 +241,14 @@ test.describe("admin, stubbed", () => {
     );
     await page.getByRole("button", { name: "Save draft" }).click();
     expect(api.calls("PUT", /^admin\/products\/[^/]+$/u)).toHaveLength(0);
-    await page.screenshot({
-      path: testInfo.outputPath("legacy-image-warning.png"),
-      fullPage: true,
-    });
+    // Keep one Chromium UI artifact. WebKit's screenshot instrumentation injects
+    // an unapproved style block; that is not an application styling regression.
+    if (testInfo.project.name === "chromium") {
+      await page.screenshot({
+        path: testInfo.outputPath("legacy-image-warning.png"),
+        fullPage: true,
+      });
+    }
     await page
       .getByRole("textbox", { name: "Cover image URL" })
       .fill("https://dcsjrkmummxi7.cloudfront.net/cover.jpg");

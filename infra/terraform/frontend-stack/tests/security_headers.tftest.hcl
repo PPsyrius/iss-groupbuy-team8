@@ -62,6 +62,15 @@ run "rendered_security_headers" {
   command = plan
 
   assert {
+    condition = toset([
+      for header in aws_cloudfront_response_headers_policy.security.custom_headers_config[0].items : {
+        Header = header.header, Value = header.value, Override = header.override
+      }
+    ]) == toset(local.headers_policy.CustomHeadersConfig.Items)
+    error_message = "Every planned custom header must match the canonical cross-origin and capability policies."
+  }
+
+  assert {
     condition     = aws_cloudfront_response_headers_policy.security.security_headers_config[0].content_security_policy[0].content_security_policy == jsondecode(file("../../../deployment/frontend/cloudfront/response-headers-policy.json")).SecurityHeadersConfig.ContentSecurityPolicy.ContentSecurityPolicy
     error_message = "The planned CSP must match the canonical JSON, including the image allowlist."
   }

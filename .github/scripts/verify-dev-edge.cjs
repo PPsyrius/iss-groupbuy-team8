@@ -73,6 +73,10 @@ async function main() {
     // Retain their origins independently without retaining URL paths or query strings.
     await page.addInitScript(() => {
       window.__edgeImageFailures = [];
+      window.__edgeStyleViolations = [];
+      document.addEventListener('securitypolicyviolation', event => {
+        if (event.effectiveDirective.startsWith('style-src')) window.__edgeStyleViolations.push(event.effectiveDirective);
+      });
       document.addEventListener('error', event => {
         if (event.target instanceof HTMLImageElement) {
           window.__edgeImageFailures.push(new URL(event.target.currentSrc || event.target.src, location.href).origin);
@@ -94,6 +98,8 @@ async function main() {
       });
       const failedOrigins = await page.evaluate(() => window.__edgeImageFailures);
       assert.deepEqual(failedOrigins, [], `${surface}: an image failed, even if its fallback removed it`);
+      assert.deepEqual(await page.evaluate(() => window.__edgeStyleViolations), [], `${surface}: UI stylesheet rejected by CSP`);
+      assert.equal(await page.evaluate(() => crossOriginIsolated), true, `${surface}: cross-origin document isolation not active`);
       assert.ok(images.some(i => i.origin === 'https://dcsjrkmummxi7.cloudfront.net'), `${surface}: no product images covered`);
       assert.ok(images.every(i => i.loaded), `${surface}: image failed to load`);
       report.checks.push({ surface, loadedImageCount: images.length, imageOrigins: [...new Set(images.map(i => i.origin))] });

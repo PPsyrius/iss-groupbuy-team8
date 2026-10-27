@@ -9,7 +9,32 @@ export default defineConfig({
   retries: isDev ? 1 : 0,
   reporter: [["list"], ["html", { open: "never" }]],
   use: { baseURL, trace: "on-first-retry", screenshot: "only-on-failure" },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    ...(process.env.E2E_SECURITY_BROWSERS === "all"
+      ? [
+          {
+            name: "firefox",
+            use: { ...devices["Desktop Firefox"] },
+            testMatch: /(?:security-headers|login|buyer-journey|admin)\.spec\.ts/,
+          },
+          {
+            name: "webkit",
+            use: { ...devices["Desktop Safari"] },
+            testMatch: /(?:security-headers|login|buyer-journey|admin)\.spec\.ts/,
+          },
+          {
+            name: "webkit-touch",
+            use: {
+              ...devices["iPhone 13"],
+              userAgent:
+                "Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1",
+            },
+            testMatch: /(?:security-headers|login|buyer-journey)\.spec\.ts/,
+          },
+        ]
+      : []),
+  ],
   ...(process.env.E2E_BASE_URL
     ? {}
     : {

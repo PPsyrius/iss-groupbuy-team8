@@ -44,7 +44,7 @@ Read this before editing anything under `frontend/`. The plan is `docs/plan.md`;
 
 - `pnpm install` (runs `prepare` → generates `src/api/generated/`). Never commit that directory.
 - `pnpm dev` (runs `gen:api`, then Vite on :5173, `/api` proxied to `http://localhost:8589`; start the backend with `docker compose up` from `backend/`).
-- `pnpm check` is the only gate: gen:api → typecheck → oxlint → oxfmt --check → vitest → knip. Run it before every commit and paste the result in the PR.
+- `pnpm check` is the only gate: gen:api → reviewed CSP stylesheet-hash guard → typecheck → oxlint → oxfmt --check → vitest → knip. The same stylesheet guard runs before `pnpm build` (ADR 0016); dependency changes require reviewing injected styles, not automatically allowing new hashes. Run the gate before every commit and paste the result in the PR.
 - `pnpm e2e` runs Playwright against a `vite preview` of `dist/` and runs `pnpm build` itself when `dist/index.html` is missing (an existing `dist/` is served as is, so rebuild after source changes); `E2E_TARGET=dev E2E_BASE_URL=https://d1b3np88z657cp.cloudfront.net pnpm e2e` runs against dev.
 - Git hooks: `pnpm hooks:install` (runs `lefthook install`) once per clone. Keep that script: `lefthook.yml` lives at the repo root, so it is the only reference knip can see for the `lefthook` devDependency.
 

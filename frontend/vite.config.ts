@@ -144,7 +144,13 @@ const previewHeaders = {
     "SecurityHeadersConfig",
     "ContentSecurityPolicy",
     "ContentSecurityPolicy",
-  ),
+  )
+    // Like localhost Caddy, preview is HTTP. Safari otherwise upgrades localhost
+    // subresources to HTTPS; production keeps the canonical upgrade directive.
+    .split(";")
+    .map((directive) => directive.trim())
+    .filter((directive) => directive !== "" && directive !== "upgrade-insecure-requests")
+    .join("; "),
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": policyString("SecurityHeadersConfig", "FrameOptions", "FrameOption"),
   "Referrer-Policy": policyString("SecurityHeadersConfig", "ReferrerPolicy", "ReferrerPolicy"),

@@ -58,6 +58,8 @@ jobs:
               - 'deployment/frontend/cloudfront/response-headers-policy.json'
               - 'infra/terraform/frontend-stack/cloudfront.tf'
               - 'fullstack-localhost/cloudfront-headers.mjs'
+              - 'frontend/scripts/verify-csp-styles.mjs'
+              - 'frontend/tooling/**'
             deployment:
               - 'deployment/**'
             dependencies:
@@ -73,6 +75,7 @@ jobs:
               - 'Dockerfile*'
               - 'docker-compose*.yml'
               - 'backend/docker-compose.yaml'
+              - 'frontend/tooling/**'
 
   workflow-lint:
     needs: detect-changes
@@ -91,7 +94,7 @@ jobs:
         run: python3 -m unittest discover -s .github/tests -p '*_test.py'
 
       - name: Test generated CloudFront-compatible headers
-        run: node --test .github/tests/security-headers.test.cjs
+        run: node --test .github/tests/security-headers.test.cjs .github/tests/style-policy.test.cjs
 
       - name: Lint GitHub Actions and embedded shell
         run: >-

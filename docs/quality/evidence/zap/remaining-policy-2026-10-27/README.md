@@ -1,0 +1,54 @@
+# Remaining browser-policy candidate — 2026-10-27
+
+Refs #637–#640; branch `fix/remaining-browser-security-headers`, based on merged `dev` revision `c5595525`. This directory records local candidate verification, not an applied CloudFront policy, deployed-remediation outcome or post-fix ZAP scan. [ADR 0016](../../../../../frontend/docs/adr/0016-hashed-styles-and-cross-origin-policies.md) and the [resource matrix/runbook](../../../../deploy/dev-cloudfront-deployment.md#remaining-browser-policy-candidate--2026-10-27) own the decision and rollout.
+
+## Progressive behavior and scope
+
+The user approved COEP `credentialless` as progressive protection after testing. Chromium and Firefox must enforce cross-origin isolation/cookie omission for cross-origin no-CORS images; WebKit is tested for compatibility with an explicitly absent isolation/cookie-omission guarantee. COOP/CORP remain restrictive, and inline style blocks/attributes outside the reviewed hashes remain rejected in all tested engines. Real OAuth and Stripe integration acceptance and physical iOS testing are not claimed.
+
+`E2E_SECURITY_BROWSERS=all pnpm exec playwright test --workers=2` in the Docker image with all engines exercises the built SPA's default Chromium suite plus selected Firefox, WebKit and touch-emulated WebKit journeys. Authenticated real-backend cases and the dev-only smoke probes skip when not applicable; the overscroll-hash touch probe runs only in the touch project. The overscroll probe deliberately injects the exact source-reviewed static string to test CSP acceptance; native iOS-only library injection itself was not observed in emulation.
+
+WebKit's native SELECT renderer produces a blocked internal `text-overflow:inherit` attribute diagnostic even on a bare SELECT with no app code; that exact native sample is annotated in test results without changing the CSP. Other unexpected style violations still fail. The first-party cookie check uses a real loopback HTTP response because WebKit's intercepted request metadata does not reliably expose Cookie. The provider navigation stub is explicitly synthetic and does not execute a transaction.
+
+## Anonymous public-image audit
+
+The [successful capture](with-ca-certificates/public-browser-audit.json), started at `2026-10-27T02:42:05.601Z`, passed all nine checks: catalog/detail/login in Chromium 156.0.8078.4, Firefox 157.0 and WebKit 27.2. Each engine loaded all 15 catalog, 4 detail and 4 login images with HTTP 200 documents, zero image failures and zero style violations. Chromium/Firefox reported isolation; WebKit reported no isolation. The [Chromium catalog screenshot](with-ca-certificates/catalog-local-candidate.png) shows all 14 public listing cards with images and intact layout under local candidate overrides.
+
+The initial [partial audit](public-browser-audit.json) passed six Chromium/Firefox surfaces but failed to render WebKit. The independent [WebKit baseline](webkit-baseline/public-browser-audit.json) failed with `Unacceptable TLS certificate`; the [candidate diagnostic](webkit-diagnostic/public-browser-audit.json) identified the same failure on script/style subresources. The local Debian tooling image lacked `/etc/ssl/certs/ca-certificates.crt`. Installing standard `ca-certificates` and rerunning all engines produced the successful capture above; no `ignoreHTTPSErrors` or TLS-verification bypass was used. Earlier failed captures are retained, not represented as passing evidence.
+
+[audit.cjs](audit.cjs) loads the real dev catalog, one public detail and login in Chromium, Firefox and WebKit, applying the local canonical candidate to navigation responses only. It permits only GET/HEAD/OPTIONS, records aggregate image origins/load outcomes and style/isolation observations, and retains no account identifiers, image URL paths, cookies, raw account rows or HAR. Any screenshot is the public catalog under locally overridden candidate headers, not proof of deployed headers. The script writes a separate `public-browser-audit.json` and `catalog-local-candidate.png`; it must never overwrite frozen before evidence.
+
+The original capture used a temporary local tooling image. For future runs, use the [versioned Docker recipe and optional public-audit command](../../../../../frontend/tooling/README.md#optional-anonymous-public-audit); no unpublished local base image is required.
+
+Reproduce later audits into a new dated output directory instead of overwriting this capture. Public browsing cannot establish compatibility of unpublished listings, other users' avatars or historical/private image snapshots; the existing authorized aggregate SQL inventory is still required before any apply.
+
+## Initial candidate verification
+
+All execution used Docker, not host NodeJS. These results apply to the uncommitted candidate based on `c5595525`, not a hosted CI run or deployed release.
+
+| Check | Result |
+|---|---|
+| `pnpm check` (generation, stylesheet guard, typecheck, lint, format, Vitest, Knip) | Passed: 79 files, 891 tests |
+| `pnpm build` | Passed with reviewed stylesheet guard |
+| All-engine Playwright suite | 69 passed, 16 expected skips, 85 total; [machine-readable summary and policy SHA-256](browser-suite-summary.json) |
+| Per-project Playwright outcomes | Chromium 27 passed/6 skipped; Firefox 15/4; WebKit 15/4; touch-WebKit 12/2; no failures |
+| `node --test .github/tests/security-headers.test.cjs .github/tests/style-policy.test.cjs` | 18 passed, including six stylesheet-guard scenarios |
+| `python -m unittest discover -s .github/tests -p "*_test.py"` | 231 tests, 4 skipped, no failures |
+| actionlint | Passed for security, frontend CI, post-apply verifier and SWE5006 infra workflows |
+| Terraform mocked plans, no AWS access | Dev 1 run/5 assertions; SWE5001 2 runs/6 assertions passed |
+
+Before deployment acceptance: authorized global image-origin inventory, real OAuth/Stripe return checks, physical iOS checks, private plan review, authorized policy apply, live verification and a fresh passive ZAP scan remain pending. No finding was closed and no AWS resource was changed.
+
+## Self-review hardening
+
+The preceding captures and counts describe the initial candidate, before review hardening. In particular, the old intercepted cross-origin image test had no credentialed baseline; absent Cookie metadata did not by itself prove credentialless enforcement. It is replaced by two real HTTP servers with different loopback ports (cross-origin, same-site), a server-set HttpOnly `SameSite=Strict` cookie, and an otherwise identical pair of baseline/candidate documents. The image server must observe the cookie in the baseline before the candidate checks omission; same-origin session fetches must retain credentials in both modes. This controls for SameSite/third-party-cookie restrictions and avoids intercepted metadata. It establishes local browser semantics, not CDN/private-image or production-session acceptance.
+
+The stylesheet guard now enforces exactly the reviewed sources/hashes and attribute denial, including rejection of extra hashes/origins, `unsafe-hashes`, duplicate directives and element overrides with case-insensitive directive names. Fifteen executable success/mutation scenarios cover these rules and the two known vendor injection patterns; this is not a comprehensive dependency-source scanner. WebKit may report isolation in future without failing compatibility solely for gaining support; whenever isolation is active, cookie omission is required. The earlier real-public captures truthfully retain WebKit's observed non-isolated state.
+
+The [versioned Docker recipe and reproduction instructions](../../../../../frontend/tooling/README.md) use the checked-out source, a digest-pinned Node base, exact pnpm, the frozen lockfile, all three engines and standard CA certificates. They do not rely on unpublished local images, host NodeJS or a pre-existing host build/dependency tree. OS packages are installed from their repositories, so byte-identical image reproduction is not claimed. The new manual [browser-security workflow](../../../../../.github/workflows/security-browsers.yml) builds that recipe, checks the frontend, runs all four browser projects against local fixtures and retains reports/failure artifacts for 14 days. No real-public audit, deployment or provider transaction runs automatically; hosted execution remains unverified until an authorized dispatch. Physical iOS and real provider acceptance remain pending.
+
+Follow-up static/focused verification in Docker: Node renderer/verifier/style tooling passed 27 tests (15 style-guard scenarios); the full Python tooling suite ran 235 tests with 4 skips and no failures, including four new workflow/tooling assertions; actionlint passed five affected workflows. The focused all-engine security suite passed 29 tests with 3 expected touch-project skips. Policy/guard/tooling paths now trigger their static security checks. These results are separate from the earlier 18-Node/231-Python capture above.
+
+Final clean-image verification: `docker build --file frontend/tooling/security-browsers.Dockerfile --tag blocbuy-security-browsers:review .` passed, including the current SPA build and exact stylesheet guard. `docker run --rm --cpus=2 --memory=6g blocbuy-security-browsers:review pnpm check` passed all stages (79 files/891 tests). The image's default all-engine Playwright command passed 69 tests with 16 expected skips (85 total), no failures or flaky tests; [summary, source/image hashes and server-observed probe attachments](review-hardening-summary.json). Chromium passed 27/6 skipped, Firefox 15/4, WebKit 15/4 and touch-WebKit 12/2. The first clean full gate caught event-handler/await-in-loop lint issues in the new probe; these were fixed with one-shot listeners and explicit sequential baseline/candidate helper calls, not rule suppression or parallelization.
+
+All four projects observed image cookies in their baseline. Chromium/Firefox isolated and omitted image cookies under the candidate; WebKit/touch-WebKit remained non-isolated and retained image cookies. Same-origin session cookies reached the server in both modes for every project. Only booleans are retained in the summary. The full local HTML/JSON reports remain outside the repository in `$env:LOCALAPPDATA/Temp/opencode/browser-security-review-final-2026-10-27/`; the manual workflow will upload equivalent reports when explicitly dispatched. Frozen before evidence passed all 28 manifest SHA-256 checks. No public audit was rerun during hardening, and no hosted workflow, AWS apply, provider transaction, scan or finding closure was performed.

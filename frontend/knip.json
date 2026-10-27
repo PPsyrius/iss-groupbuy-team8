@@ -1,5 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreDependencies": ["react-aria"],
   "entry": [
     "src/api/hey-api.ts",
     "src/routes/**/*.tsx",
