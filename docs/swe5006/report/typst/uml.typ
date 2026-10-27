@@ -89,19 +89,29 @@
 // before its text shrinks. A drawing that would still have to be scaled below the 8 pt minimum
 // turns a quarter (landscape) when that scales it less. fill: the drawing takes the full width
 // (sequence diagrams); otherwise it is measured at its natural width.
+// host: set by report-figure in template.typ (the translator passes it to the diagram call).
+// Inside a report figure the frame fits the figure's portrait width, and its landscape room is
+// the rotated page less the figure's caption: a frame that turns turns the whole figure, caption
+// included. report-figure first lays the body out as a probe (probe: true), where the frame
+// returns only its decision, a block 1 pt tall if it turns and 0 pt if not; a turned figure is
+// then set on a landscape page (rotated: true), where the frame is drawn upright at its
+// landscape scale. Without a host (a diagram outside a figure) only the drawing turns.
 // Each frame records its kind, name and final scale as <uml-scale> metadata, so a build can
 // list the figures whose labels print below 8 pt (typst query ... "<uml-scale>").
-#let uml-frame(kind, name, build, candidates, landscape: true, fill: false) = layout(size => context {
+#let uml-frame(kind, name, build, candidates, landscape: true, fill: false, host: none) = layout(size => context {
+  let fig = host
   let th = measure(frame-title(kind, name)).height + 7pt
   let px = 2 * frame-pad.x + 2 * w-line
   let py = th + frame-pad.top + frame-pad.bottom + 2 * w-line
-  let W = size.width - px
+  let W = (if fig != none { fig.width } else { size.width }) - px
   let H = max-figure - py
+  // Landscape: the drawing's width runs along the page height, its height across the page.
+  let LW = if fig != none { fig.land.width - px } else { H }
+  let LH = if fig != none { fig.land.height - py } else { size.width - py }
   let fits = ()
   for sp in candidates {
     let m = if fill { measure(build(sp), width: W) } else { measure(build(sp)) }
-    // Landscape: the drawing's width runs along the page height, its height across the page.
-    fits.push((m: m, portrait: calc.min(1.0, W / m.width, H / m.height), land: calc.min(1.0, H / m.width, (size.width - py) / m.height)))
+    fits.push((m: m, portrait: calc.min(1.0, W / m.width, H / m.height), land: calc.min(1.0, LW / m.width, LH / m.height)))
     if fits.last().portrait >= 1.0 { break }
   }
   let pick(key) = {
@@ -113,13 +123,19 @@
   let turn = landscape and fits.at(i).portrait < min-scale and fits.at(j).land > fits.at(i).portrait + 0.03
   let k = if turn { j } else { i }
   let s = if turn { fits.at(k).land } else { fits.at(k).portrait }
-  let drawing = build(candidates.at(k))
-  let shown = if s < 1.0 { scale(s * 100%, reflow: true, drawing) } else { drawing }
-  [#metadata((kind: kind, name: name, scale: s, landscape: turn)) <uml-scale>]
-  if turn {
-    align(center, rotate(-90deg, reflow: true, draw-frame(kind, name, fits.at(k).m.width * s + px, shown)))
+  if fig != none and fig.probe {
+    block(width: 0pt, height: if turn { 1pt } else { 0pt })
   } else {
-    draw-frame(kind, name, size.width, shown)
+    let drawing = build(candidates.at(k))
+    let shown = if s < 1.0 { scale(s * 100%, reflow: true, drawing) } else { drawing }
+    [#metadata((kind: kind, name: name, scale: s, landscape: turn)) <uml-scale>]
+    if turn and fig != none and fig.rotated {
+      align(center, draw-frame(kind, name, fits.at(k).m.width * s + px, shown))
+    } else if turn {
+      align(center, rotate(-90deg, reflow: true, draw-frame(kind, name, fits.at(k).m.width * s + px, shown)))
+    } else {
+      draw-frame(kind, name, size.width, shown)
+    }
   }
 })
 
@@ -197,7 +213,7 @@
 // classes: array of (id, name, stereo, attrs, ops, abstract, pos: (x, y))
 // rels: array of (from, to, kind, label, mfrom, mto, bend)
 // A wide or tall diagram first closes up its gaps, then wraps its members at narrower widths.
-#let class-diagram(classes, rels, frame: none, min-gap: (0pt, 0pt)) = {
+#let class-diagram(classes, rels, frame: none, min-gap: (0pt, 0pt), host: none) = {
   let boxes(max) = classes.map(c => node(c.pos, class-box(c.name, stereo: c.stereo, attrs: c.attrs, ops: c.ops, abstract: c.abstract, max: max), name: label(c.id)))
   let edges = rels.map(r => {
     let style = rel-style.at(r.kind, default: rel-style.assoc)
@@ -226,7 +242,7 @@
     if mto != none { out.push(mult(mto, 100% - off(mto) - mark-to)) }
     out
   }).flatten()
-  uml-frame("class", frame, sp => {
+  uml-frame("class", frame, host: host, sp => {
     set text(size: uml-size, fill: ink)
     diagram(
       spacing: sp.gap,
@@ -269,7 +285,7 @@
 // states: array of (id, name, kind: "state" | "start" | "end" | "choice", pos, body)
 // trans: array of (from, to, label, bend)
 // A wide diagram closes up its gaps, then wraps the internal transitions at narrower widths.
-#let state-diagram(states, trans, frame: none) = uml-frame("stm", frame, sp => {
+#let state-diagram(states, trans, frame: none, host: none) = uml-frame("stm", frame, host: host, sp => {
   set text(size: uml-size, fill: ink)
   diagram(
     spacing: sp.gap,
@@ -379,7 +395,7 @@
 //   (t: "frag", kind: "alt" | "opt" | "loop" | "par" | "critical" | "break" | "rect", cond, lo, hi, depth)
 //   (t: "else", cond)   (t: "end")   (t: "note", over: (ids), text)
 // A long interaction closes up its vertical gaps (gap from 1 down to 0) before its text shrinks.
-#let sequence-diagram(parts, steps, frame: none) = uml-frame("sd", frame, landscape: false, fill: true, gap => {
+#let sequence-diagram(parts, steps, frame: none, host: none) = uml-frame("sd", frame, landscape: false, fill: true, host: host, gap => {
   set text(size: uml-size, fill: ink)
   set par(leading: 0.3em, justify: false)
   layout(size => {
