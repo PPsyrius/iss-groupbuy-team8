@@ -227,8 +227,7 @@
       ..edges,
     )
   }, (
-    (gap: (11mm, 13mm), max: member-max),
-    (gap: (11mm, 9mm), max: member-max),
+    // Starts below the two loosest spacings: they added height without legibility.
     (gap: (11mm, 9mm), max: 46mm),
     (gap: (11mm, 6mm), max: 46mm),
     (gap: (11mm, 6mm), max: 38mm),
@@ -562,4 +561,4 @@
     for f in front { f }
   })
   })
-}, (1.0, 0.5, 0.0))
+}, (0.0,)) // tightest row spacing only: labels stay 8.5 pt, the drawing is about 12 % shorter
