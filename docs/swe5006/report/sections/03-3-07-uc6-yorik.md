@@ -42,4 +42,4 @@ When a team expires before it fills, BlocBuy returns every paid member's money t
 
 On 23 October on dev, with scheduling enabled, a team started on a test listing expired 18.9 s after its deadline, and its member's S$22 Sandbox payment was refunded automatically 40.6 s after the deadline; Stripe showed exactly one succeeded refund for that payment. On the same day the operator recovery path settled three earlier paid sessions that a webhook misconfiguration had left unsettled: each was recorded as *refund required* and refunded once.
 
-**Analysis objects:** refund worker timer and the payment provider (Stripe) «boundary»; expiry refund control and refund execution control «control»; team, paid membership, payment, refund obligation and refund attempt «entity».
+**Analysis objects:** `SchedulerTrigger` (the Scheduler's expiry and refund ticks) and the payment provider (Stripe) «boundary»; `ResolveTeamControl` (records the refunds owed) and `RefundControl` (pays them) «control»; team, paid membership, payment, refund obligation and refund attempt «entity».
