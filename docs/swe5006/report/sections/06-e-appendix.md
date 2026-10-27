@@ -52,7 +52,7 @@ Screenshots of the open bloc, the START and JOIN receipts, the refunded order, t
 
 #### Paid flow and expiry refund on dev (23–24 October 2026)
 
-On 23 October 2026 on dev, a buyer started a bloc on listing `US34-04` (two seats, S$22 team price, 40-minute lifetime) and paid S$22 through Stripe Sandbox Checkout; nobody joined, and the bloc expired and was refunded with no manual step (`backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md`; PR #664).
+On 23 October 2026 on dev, a buyer started a bloc on listing `US34-04` (two seats, S$22 team price, 40-minute lifetime) and paid S$22 through Stripe Sandbox Checkout; nobody joined, and the bloc expired and was refunded with no manual step (`backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md`).
 
 Before this, no payment had been confirmed on dev. The dev webhook endpoint used Stripe API version `2026-08-26.dahlia`, while the deployed SDK 34.0.0 expected `2026-09-30.endive`, so the backend rejected the events: a real event at 07:50:59 UTC got HTTP 502. Three paid Checkout sessions were stranded in the created state, for S$49, S$29 and S$22. At about 09:41 UTC the operator replaced the endpoint and its signing secret and turned scheduling on; the backend image was unchanged. The operator then ran the deployed recovery command on each stranded payment, with no SQL update. Because each purchase had expired, each was recorded as refund required and compensated, not admitted to a team, and by 09:51:20 UTC Stripe listed exactly one succeeded refund for each.
 
@@ -66,7 +66,7 @@ Table E.3: The paid START and natural expiry on dev, 23 October 2026 (times UTC)
 | Refund succeeded in Stripe | 10:24:55.94 | 40.6 s after the deadline; exactly one refund for the PaymentIntent |
 | Final audit | 10:25:40 | One succeeded refund per payment; no pending Checkout, overdue team, unfinished refund or open payment case |
 
-These times describe one run, not a latency bound. A second buyer's paid JOIN was shown on dev on 24 October in the system-demonstration backup recording (#657): a second account opened a member's invite link, paid S$22.00 in Stripe Checkout, and My blocs then read "2 of 2 joined · Filled 24 Oct, 7:17 pm" (sprint day log of 24 October). It is a recorded user-interface observation, not a database read or log audit. Crash recovery of refunds under replay was not part of these runs (not shown on dev; Table 1.3).
+These times describe one run, not a latency bound. A second buyer's paid JOIN was shown on dev on 24 October in the system-demonstration backup recording: a second account opened a member's invite link, paid S$22.00 in Stripe Checkout, and My blocs then read "2 of 2 joined · Filled 24 Oct, 7:17 pm" (sprint day log of 24 October). It is a recorded user-interface observation, not a database read or log audit. Crash recovery of refunds under replay was not part of these runs (not shown on dev; Table 1.3).
 
 Screenshots of the payment, the active and expired bloc, the webhook delivery and the "Refund sent" receipt are kept with the record in `backend/docs/payment/evidence/20261023-dev-recovery/`.
 
