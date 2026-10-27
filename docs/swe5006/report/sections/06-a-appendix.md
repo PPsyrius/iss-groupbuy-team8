@@ -9,7 +9,7 @@ status: draft
 
 # Appendix A: Agile Artefacts {.appendix}
 
-This appendix collects the agile artefacts of Sprints 1 to 4: the product backlog, user stories with acceptance criteria, sprint plans, burndown charts, sprint reviews, retrospectives and the Definition of Done. The briefing lists these as project deliverables; placing them in an appendix, rather than in chapter 2, is a team choice. GitHub Issues and the Project board are the live tools. The durable record is `docs/agile/` in the repository: one plan, review and retrospective per sprint where they were written, one day-log file per working day from Sprint 2 on, and one board snapshot per day from 17 September 2026 (`docs/agile/metrics/YYYY-MM-DD.csv`). The board itself is not in the git archive, so the snapshots are the only record of card movement. Sprint dates follow `docs/agile/definition-of-done.md`.
+This appendix collects the agile artefacts of Sprints 1 to 4: the product backlog, user stories with acceptance criteria, sprint plans, burndown charts, sprint reviews, retrospectives and the Definition of Done. The briefing lists these as project deliverables. GitHub Issues and the Project board are the live tools. The durable record is `docs/agile/` in the repository: one plan, review and retrospective per sprint where they were written, one day-log file per working day from Sprint 2 on, and one board snapshot per day from 17 September 2026 (`docs/agile/metrics/YYYY-MM-DD.csv`). The board itself is not in the git archive, so the snapshots are the only record of card movement. Sprint dates follow `docs/agile/definition-of-done.md`.
 
 Table A.1: Where each artefact lives, per sprint.
 
@@ -20,7 +20,7 @@ Table A.1: Where each artefact lives, per sprint.
 | Sprint review | Sprint 1 progress report | Sprint 2 progress report | `docs/agile/sprint-03/review.md` (draft written at freeze) | Not yet written (see A.5) |
 | Retrospective | Sprint 1 progress report | Sprint 2 progress report | `docs/agile/sprint-03/retro.md` (reconstructed 24 Oct) | Not yet written (see A.6) |
 | Day logs | None | `docs/agile/sprint-02/log/` | `docs/agile/sprint-03/log/` | `docs/agile/sprint-04/log/` |
-| Definition of Done | Backend skeleton plan §11 | Sprint 2 progress report | Sprint 3 plan §8 | Sprint 4 plan §8; current list in `definition-of-done.md` |
+| Definition of Done | Backend skeleton plan | Sprint 2 progress report | Sprint 3 plan §8 | Sprint 4 plan §8; current list in `definition-of-done.md` |
 
 #### A.1 Product backlog
 
@@ -108,7 +108,7 @@ The SWE5001 split burned fast up to the 16 October SWE5001 code freeze. The line
 - **Sprint 1** (Sprint 1 progress report, 12 Sep): the dev pipeline (build, scan, ECR, SSM deploy with rollback) and the CloudFront and load-balancer entry were completed; Google sign-in, browse and admin listing management were in progress; the frontend had not started.
 - **Sprint 2** (Sprint 2 progress report, 26 Sep): goal substantially met. The payment-to-team-to-order chain and automatic team resolution were complete and tested, and orders were visible in the web application; teams were visible through the API only. 9 of 11 stories done, 134 of 150 h.
 - **Sprint 3** (`docs/agile/sprint-03/review.md`, written at the 8 October freeze): goal not met on dev. Every code path of the goal was merged into `dev` and tested, but Checkout, refunds and refund recovery were verified only locally, because Checkout and scheduling were still off on dev. 11 of 17 items done; 117 of 150 h; the p95 target was met on a local stack. Its demo notes section was never filled in.
-- **Sprint 4**: the review was planned for after the presentation, with the presentation remarks. Its Definition of Done placement was agreed on 24 October and re-agreed on 25 October: released (the shared SWE5001 production) and shown on dev (paid START and expiry refund on 23 October; a second buyer's paid JOIN on 24 October).
+- **Sprint 4**: the review was planned for after the presentation, with the presentation remarks. Its Definition of Done placement was agreed on 24 October and re-agreed on 25 October: released (the shared SWE5001 production) and shown on dev (Table A.10).
 
 {{FILL: Sprint 4 review (committed vs delivered per item with evidence, demo notes, carried-over items) and Sprint 4 retrospective; issue #619 was closed on 26 Oct but no docs/agile/sprint-04/review.md or retro.md exists on dev at 61486f0e — Eric}}
 
@@ -121,7 +121,7 @@ Table A.8: Retrospective outcomes per sprint.
 | Sprint | Went well | Could be better | Action for the next sprint | Effect |
 |---|---|---|---|---|
 | 1 | The pipeline was operational early; dev live on 5 Sep with gates, scans and rollback | No burndown or story tracking; features slower than planned because infrastructure came first | Kanban with story templates; daily burndown data; focus on features | Board snapshots automated from 17 Sep; Sprint 2 shipped the payment chain and the frontend |
-| 2 | The payment, team and order chain proved by tests on real PostgreSQL, including replays and a twenty-buyer race; frontend deployed with automated delivery | Late, very large merges (one slice of about 10,000 lines); effort not recorded in hours; work drifted from the assignment table | Pull requests below about 1,500 lines; hours in the board daily; a mid-sprint owner check; verification in the first half | The 1,500-line and hours actions became DoD rules 9 and 10, and the Sprint 3 DoD added the "on dev" rule 8; the performance baseline ran on 30 Sep, in the first half; the hours were again not kept |
+| 2 | The payment, team and order chain proved by tests on real PostgreSQL, including replays and the last-seat race (tested locally: Table 4.12); frontend deployed with automated delivery | Late, very large merges (one slice of about 10,000 lines); effort not recorded in hours; work drifted from the assignment table | Pull requests below about 1,500 lines; hours in the board daily; a mid-sprint owner check; verification in the first half | The 1,500-line and hours actions became DoD rules 9 and 10, and the Sprint 3 DoD added the "on dev" rule 8; the performance baseline ran on 30 Sep, in the first half; the hours were again not kept |
 | 3 | 11 of 17 items done; the critical path started early; gate findings fixed, not waived; CI green at close | Goal not met on dev; dependent items blocked each other; estimates still empty; unplanned work competed; a session token was pasted into a chat | Hours in the Estimate field daily; Checkout on dev first; close blocked carry-overs instead of carrying them | Estimates set on 47 cards by Sprint 4 planning but never updated; Checkout reached dev on 23 Oct, nine days late; blocked items closed as not planned on 11 Oct |
 | 4 | See A.5 | See A.5 | See A.5 | See A.5 |
 
@@ -129,7 +129,7 @@ The Sprint 1 and Sprint 2 retrospectives are in their progress reports; `docs/ag
 
 #### A.7 Definition of Done
 
-The Definition of Done grew sprint by sprint, each list amending the one before; Table A.9 is the Sprint 4 list. The course's done ladder (coded, tested, integrated, releasable, released; EPAT 01 Agile, p. 26) is read by the team as: integrated means merged to `dev` with every required check green; releasable means shown working on deployed dev; released means promoted to production through the gated release path and verified there by the smoke suite. Production is the shared SWE5001 release. Table A.10 gives the step each sprint reached.
+The Definition of Done grew sprint by sprint, each list amending the one before; Table A.9 is the Sprint 4 list. The course's done ladder (coded, tested, integrated, releasable, released; EPAT 01 Agile, p. 26) has one reading in this project (the team's reading, section 2.1). Table A.10 gives the step each sprint reached.
 
 Table A.9: Definition of Done, Sprint 4 (`docs/agile/definition-of-done.md`).
 
@@ -151,14 +151,14 @@ Table A.9: Definition of Done, Sprint 4 (`docs/agile/definition-of-done.md`).
 | 14 | Every ECS session ends with `env-down.sh` and a clean `env-status.sh`, recorded in the day log | Sprint 4 |
 | 15 | A design choice made while building is drafted into the owner's report section in the same week | Sprint 4 |
 
-Table A.10: Done-ladder step reached per sprint (team reading of the evidence, not a course rating).
+Table A.10: Done-ladder step reached per sprint.
 
 | Sprint | Step reached | Evidence |
 |---|---|---|
 | 1 | Integrated | Backend on dev from 5 Sep; no frontend yet, so not releasable |
 | 2 | Integrated | 9 of 11 stories merged and tested; Checkout and scheduling off on dev |
-| 3 | Integrated | Merged and tested; the goal was not met on dev under rule 8 |
-| 4 | Released (shared SWE5001 production); shown on dev | Three-service production on ECS promoted on 17 Oct (PR #534) and last on 20 Oct (PR #574, smoke suite green); paid START and expiry refund on dev on 23 Oct; a second buyer's paid JOIN on dev on 24 Oct |
+| 3 | Integrated | Merged and tested; the goal was not met on dev (Table 2.9) |
+| 4 | Released (shared SWE5001 production); shown on dev | Three-service production on ECS (promoted to production, section 2.3); paid START and expiry refund shown on dev on 23 October (Table E.3); a second buyer's paid JOIN shown on dev on 24 October in a recording (Appendix E) |
 
 Recorded adherence: in Sprint 2, contracts were regenerated in the controller's pull request rather than a day ahead, and remaining effort was kept as a work log rather than in hours. Rule 10 was not kept in Sprints 3 and 4 (A.4).
 
@@ -169,7 +169,7 @@ Recorded adherence: in Sprint 2, contracts were regenerated in the controller's 
 - **Test-driven development**: red-first tests recorded in the day logs of 27 September (#205), 1 October (#326–#329), 3 October (#274) and 7 October (#421–#423). The red step is in the logs, not the history, because commits are squashed.
 - **Pair programming**: one recorded pairing, Yorik and Liu Jin on the admin attention query (#469, PR #490, 14 October); how the pair worked is not recorded.
 - **Refactoring**: the product page split into hooks and pure rules (#296, 30 September); admission refactored onto the existing Factory Method (#421–#423, PR #424); the attention query moved to the identity port (#469).
-- **Agile architecture**: decisions written as ADRs as they were made (backend 0001–0008, frontend 0001–0015) and enforced by 17 ArchUnit rules.
+- **Agile architecture**: decisions written as ADRs as they were made (backend 0001–0008, frontend 0001–0015) and enforced by the ArchUnit rules (Table 3.2).
 - **Continuous integration**: one mainline with reviewed, checked merges (chapter 4); a daily trunk check-in is not shown, because the team uses Branch by Feature.
 
 The day logs (`docs/agile/sprint-0N/log/`, one file per working day, one entry per pull request per author from 22 September) are the running record behind every artefact above; they are not reproduced here.
