@@ -17,7 +17,7 @@ Table B.1: Backend ADRs.
 | # | Decision | Status | Date |
 | --- | --- | --- | --- |
 | 0001 | Purchase intent lives in the order context; team terms live on the product | Accepted | 22 Sep 2026 |
-| 0002 | A team's resolution is published as an event, and its consequences run before the commit | Accepted | 22 Sep 2026 |
+| 0002 | A team's resolution is published as an event, and its consequences run before the commit | Accepted | 22 Sep 2026; addendum 23 Sep |
 | 0003 | Referral credit is a subscriber that runs after the commit | Accepted | 25 Sep 2026 |
 | 0004 | Retire the unused legacy PaymentIntent path | Accepted | 28 Sep 2026 |
 | 0005 | Gate Stripe Checkout with a deployment property | Accepted | 30 Sep 2026 |
@@ -26,6 +26,8 @@ Table B.1: Backend ADRs.
 | 0008 | One codebase, two deployment topologies: the monolith on `dev` and three services on ECS | Accepted | 12 Oct 2026 |
 
 Backend ADR 0007 still reads "Proposed". Its text says it becomes Accepted after team agreement at a stand-up, and no such agreement has been recorded in the file. Its implementation is nevertheless merged: the outbox writer, relay and consumer are in the code and are switched on only in the SWE5001 topology; on the SWE5006 `dev` host all three are off. The status is therefore out of date rather than a sign that the design is unbuilt.
+
+Backend ADR 0002's addendum of 23 September records the scheduling design. Background jobs run as Spring scheduled jobs in `blocbuy-bootstrap`; each run goes through `LeasedJobRunner`, which takes and renews a lease row in `sys_scheduler_lock` in PostgreSQL, so only one instance runs a job at a time. A failed item backs off through `sys_scheduled_item_retry` (V17), and one property per environment switches the jobs on. Section 3.2.7 describes it.
 
 #### B.2 Frontend ADRs
 
@@ -90,7 +92,6 @@ Table B.4: Significant decisions that have no ADR.
 | **Persistence framework.** MyBatis with hand-written XML SQL. The design depends on explicit `SELECT … FOR UPDATE`, guarded updates and partial unique indexes, which are easier to see and test in plain SQL | JPA (proposal) | Skeleton plan §1 and §3; section 3.2.4 |
 | **Framework-free domain.** The domain module uses only the JDK and Lombok, enforced by ArchUnit, so domain rules are unit-tested without Spring | Annotated entities in the domain | Skeleton plan §4 and §8; Table 3.2 |
 | **Database conventions.** UUIDv7 keys, table prefixes, soft delete, no foreign keys or CHECK constraints (section 3.6) | Database-enforced references | The team's `pgsql-ddl` skill and the migration headers; backend ADR 0008 states the reason that applies on SWE5001 |
-| **Scheduling design.** Background work (team expiry, refunds, purchase-intent expiry, outbox relay and retention) runs as Spring scheduled jobs in `blocbuy-bootstrap`. Each run goes through `LeasedJobRunner`, which takes a lease row in `sys_scheduler_lock` in PostgreSQL, so only one instance runs a job at a time; failed items back off through `sys_scheduled_item_retry`. Jobs are switched on by a property per environment | A message queue or an external scheduler | Code and migration comments (V13, V17); section 3.2.7 |
 | **Concurrency approach.** Pessimistic row locks taken in a fixed order, guarded updates, unique indexes as a backstop, and optimistic version checks on admin writes (section 3.6) | Optimistic locking everywhere | Backend ADRs 0001 and 0002 each state a lock order (deal → intent → payment, and team → intent → order → payment). The two are not yet combined into one stated order; this is an open backend issue (#663) |
 | **Team lifecycle.** The team's states are an enum with one transition rule (`DealStatus.canTransitionTo`): only an open team may move, and terminal states never change. The lifecycle has one source state, so a transition table is simpler than one class per state | GoF State, as planned in the proposal and the skeleton plan's §16 | Code; section 3.4.5 (the State pattern is applied to the listing lifecycle in section 3.5.5 instead) |
 | **Dependency scanning.** Trivy scans Maven and npm dependencies; OWASP Dependency-Check is not used, because Trivy covers the same CVEs without an NVD API key | OWASP Dependency-Check (proposal §5.2) | `docs/quality/quality-gates.md` (deliberate non-gates) |
