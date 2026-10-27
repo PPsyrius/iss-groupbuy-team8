@@ -9,6 +9,17 @@
   text(size: 0.85em, fill: rgb("#B02E1B"), weight: "bold", kind + if note != "" { ": " + note } else { "" }),
 )
 
+// A top float sits above all of its page's flow content, so on a page where a chapter or appendix
+// opens it would print above the level-1 heading; such a page takes figures at the bottom only.
+// The page is the one the figure lands on, found through a label inside the float: a context
+// that yields only a float is located at the next in-flow content, not at the float.
+#let page-float(num, content) = context {
+  let mark = label("report-float-" + num)
+  let landed = query(mark)
+  let opens = landed.len() > 0 and query(heading.where(level: 1)).any(h => h.location().page() == landed.first().location().page())
+  place(if opens { bottom + center } else { auto }, float: true, clearance: 1.4em, [#metadata(none)#mark#content])
+}
+
 // Figures float to the top or bottom of a page so they leave no half-empty pages behind,
 // and a drawing taller than the page is scaled down to fit it.
 // A floating figure that takes at least `full-page-share` of the text area (caption included)
@@ -37,12 +48,12 @@
     let full = float and measure(fig, width: size.width).height >= full-page-share * size.height
     if full { full-page(size, fig) } else { fig }
   })
-  if float { place(auto, float: true, clearance: 1.4em, content) } else { block(above: 1em, below: 1.2em, content) }
+  if float { page-float(num, content) } else { block(above: 1em, below: 1.2em, content) }
 }
 
 // A figure on its own landscape page (images marked {.landscape} in the Markdown): always a
-// full page, so no body text shares it.
-#let landscape-figure(num, body, caption) = place(auto, float: true, clearance: 1.4em, layout(size => full-page(size,
+// full page, so no body text shares it; placed like any other float (page-float).
+#let landscape-figure(num, body, caption) = page-float(num, layout(size => full-page(size,
   rotate(-90deg, reflow: true, block(width: 23cm, report-figure(num, body, caption, float: false))))))
 
 #let figure-frame(body) = block(width: 100%, breakable: false, inset: 6pt, stroke: 0.4pt + rgb("#D8D2C8"), body)
