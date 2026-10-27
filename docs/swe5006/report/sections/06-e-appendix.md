@@ -170,8 +170,8 @@ Table E.5: Evidence references by section.
 | 3.4.5 | UC5 expiry sweep and scheduler job, 24 Sep | #162, #173 |
 | 3.4.5 | 8 Oct demo-listing seed on dev, 12 admin writes in 4.0 s | sprint log, 8 Oct; `scripts/seed-dev-demo-listings.sh`; #222 |
 | 3.5.1 | Factory Method refactoring merged, 13 Oct; before-design captions and candidates table | `081047f5` (before: `081047f5^`); #424 |
-| 3.5.1 (Table 3.21) | Issue that scoped the change excluded creator registries | #421 |
-| 3.5.1 (Table 3.22) | Refactoring evidence change | #421, #422, #423, #424 |
+| 3.5.1 (Table 3.20) | Issue that scoped the change excluded creator registries | #421 |
+| 3.5.1 (Table 3.21) | Refactoring evidence change | #421, #422, #423, #424 |
 | 3.5.1 | Local full build of 7 Oct: 1,615 cases, 194 lines, 92 branches | sprint log, 7 Oct |
 | 3.5.2 | First expiry commit published TeamExpired, 23 Sep | `fbb71a9e` (#148) |
 | 3.5.2 | Inline call rejected when the change was planned | `docs/agile/sprint-02/lifecycle-completion-plan-20260922.md` |

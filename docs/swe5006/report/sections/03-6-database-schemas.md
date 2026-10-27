@@ -9,21 +9,21 @@ status: draft
 
 ## 3.6 Database Schemas
 
-BlocBuy keeps all persistent state in one PostgreSQL 18 database, in the schema `domain`: 29 tables created by the Flyway migrations V1 to V28. Each aggregate root has its own table, every key is a UUIDv7, and relationships between tables are logical only, kept by the application and by unique indexes rather than by foreign keys. Figure 3.142 shows the eight tables at the centre of the money path; Appendix C has the full diagram and a list of all 29 tables with their purpose and owning context.
+BlocBuy keeps all persistent state in one PostgreSQL 18 database, in the schema `domain`: 29 tables created by the Flyway migrations V1 to V28. Each aggregate root has its own table, every key is a UUIDv7, and relationships between tables are logical only, kept by the application and by unique indexes rather than by foreign keys. Figure 3.139 shows the eight tables at the centre of the money path; Appendix C has the full diagram and a list of all 29 tables with their purpose and owning context.
 
 #### Core schema
 
 The migrations live in `backend/blocbuy-bootstrap/src/main/resources/db/migration`: 28 SQL files, plus one `.conf` file that lets V23 build its indexes with `CREATE INDEX CONCURRENTLY` outside a transaction. The migrations are forward-only: there are no undo scripts. A repeatable seed script, `R__demo_catalog_seed.sql`, loads demonstration products. For each context, the reviewed source DDL is kept in `backend/docs/db/` (`catalog.sql`, `groupbuy.sql`, `order.sql`, `payment.sql` and others), and the migrations are derived from it.
 
-Figure 3.142 draws the eight core tables in crow's foot notation. Each line is a logical foreign key, and its ends give the cardinality; Table 3.33 repeats the keys and cardinalities in print size.
+Figure 3.139 draws the eight core tables in crow's foot notation. Each line is a logical foreign key, and its ends give the cardinality; Table 3.32 repeats the keys and cardinalities in print size.
 
-![Figure 3.142: Core schema of the money path, entity-relationship diagram in crow's foot notation (FK* marks a logical foreign key with no database constraint). Each paid payment yields at most one membership, one order and one refund, and unique indexes enforce each of those limits.](../../presentation/src/diagrams/core-erd.svg){.landscape}
+![Figure 3.139: Core schema of the money path, entity-relationship diagram in crow's foot notation (FK* marks a logical foreign key with no database constraint). Each paid payment yields at most one membership, one order and one refund, and unique indexes enforce each of those limits.](../../presentation/src/diagrams/core-erd.svg){.landscape}
 
-The cardinalities carry the business rules. A product has any number of teams over time (`biz_group_deal.product_id`). A team has at least one member, its leader, and at most one active membership per buyer, enforced by the partial unique index `uq_biz_group_member_deal_user` on `(deal_id, user_id)`. A purchase intent is the server's priced offer for one START (open a new team) or JOIN (enter an existing team); a buyer may retry Checkout, so one intent can have several payment rows, but `uq_biz_payment_pending_intent` allows only one pending payment per intent. One successful payment produces at most one membership, one order and one refund obligation: `uq_biz_group_member_payment_id`, `uq_biz_order_payment_id` and the unique `payment_id` column of `biz_refund` (index `biz_refund_payment_id_key`) make a replayed Stripe webhook collide at the database instead of creating a second row. Table 3.33 lists the keys.
+The cardinalities carry the business rules. A product has any number of teams over time (`biz_group_deal.product_id`). A team has at least one member, its leader, and at most one active membership per buyer, enforced by the partial unique index `uq_biz_group_member_deal_user` on `(deal_id, user_id)`. A purchase intent is the server's priced offer for one START (open a new team) or JOIN (enter an existing team); a buyer may retry Checkout, so one intent can have several payment rows, but `uq_biz_payment_pending_intent` allows only one pending payment per intent. One successful payment produces at most one membership, one order and one refund obligation: `uq_biz_group_member_payment_id`, `uq_biz_order_payment_id` and the unique `payment_id` column of `biz_refund` (index `biz_refund_payment_id_key`) make a replayed Stripe webhook collide at the database instead of creating a second row. Table 3.32 lists the keys.
 
 <!-- table: split -->
 
-Table 3.33: Keys and cardinalities of the core tables. "Logical FK" columns reference another table's `id` without a database constraint; partial unique keys exclude soft-deleted rows.
+Table 3.32: Keys and cardinalities of the core tables. "Logical FK" columns reference another table's `id` without a database constraint; partial unique keys exclude soft-deleted rows.
 
 | Table | Logical FK columns | Unique keys | Cardinality |
 | --- | --- | --- | --- |

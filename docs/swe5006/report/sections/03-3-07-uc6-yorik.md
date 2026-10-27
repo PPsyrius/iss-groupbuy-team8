@@ -11,7 +11,7 @@ status: draft
 
 When a team expires before it fills, BlocBuy returns every paid member's money to the original payment method: the expiry records one refund obligation per paid member, and the system then sends each refund to Stripe, retries safely and records every attempt for audit. The same refund steps also return the money that UC3 and UC4 owe when they refuse a payment that has already succeeded.
 
-**Actors:** Stripe (secondary; executes the refund), the only actor associated with UC6 in Figure 3.36. UC6 «extend»s UC5, so the Scheduler reaches it through UC5's expiry flow. Buyer (beneficiary; does not act). An operator who reviews uncertain cases takes part only in the exceptional flows and is not drawn in Figure 3.36.
+**Actors:** Stripe (secondary; executes the refund), the only actor associated with UC6 in Figure 3.34. UC6 «extend»s UC5, so the Scheduler reaches it through UC5's expiry flow. Buyer (beneficiary; does not act). An operator who reviews uncertain cases takes part only in the exceptional flows and is not drawn in Figure 3.34.
 
 **Preconditions:** UC5's expiry flow is expiring an open team whose deadline has passed (UC5, expiry flow, step 3); at least one paid member's payment has succeeded; scheduled processing is switched on.
 
