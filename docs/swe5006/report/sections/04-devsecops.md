@@ -55,7 +55,7 @@ Table 4.2: Rules of the `dev` ruleset `dev-require-review`, read from the GitHub
 
 Commits and pull requests follow `CONTRIBUTING.md`: Conventional Commits with an imperative summary of at most 72 characters; formatting-only changes as their own `style:` commit; every pull request links its issue and adds a dated entry to the sprint day log in the same pull request; all committed text in English.
 
-Each sprint ends with an annotated release tag on `dev` (Table 4.3). The tags mark sprint increments; no GitHub release was published for any of them, and no tag has been released to an environment by the tag-triggered production path, because that SWE5006 production stack was never built (section 4.3).
+Each sprint ends with an annotated release tag on `dev` (Table 4.3). The tags mark sprint increments; no tag has been released to an environment by the tag-triggered production path, because that SWE5006 production stack was never built (section 4.3).
 
 Table 4.3: Sprint release tags, by tagger date (Singapore time).
 
@@ -87,7 +87,7 @@ Table 4.4: Code owners by area (`.github/CODEOWNERS`).
 
 People sign in to AWS through IAM Identity Center. Lim created the AWS Organization and its Identity Center instance on 25 August 2026; the project account sits in a Sandbox organisational unit. Members sign in at the access portal or with `aws sso login` and receive one-hour sessions from a permission set: Lim, Pan and Liu Jin in group `team8-admin` (AdministratorAccess), Yorik and Eric in `team8-developers` (PowerUserAccess). Three service control policies bind every session in the project account, administrators included: `Org-Baseline` (the account cannot leave the organisation or tamper with Identity Center), `Region-Pin` (ap-southeast-1 plus listed global services) and `Sandbox-Guardrails` (costly services denied, small instance classes only). MFA is enforced on Identity Center sign-in according to Pan, who stated it on 23 October; the setting cannot be read back through the AWS API, so this is the owner's statement, not an audited fact.
 
-One exception is disclosed and accepted in the account governance record. Two IAM users, created on 8 and 9 September 2026, exist in the project account for SSM port forwarding to the dev host: `blocbuy-dev-losgai` with one active access key (created 8 September), and `blocbuy-dev-ppsyrius` with a console password and no key. No removal is planned. The key is limited by the `BlocBuySsmPortForwarding` policy and by every service control policy above. The statement "no long-lived AWS keys" is therefore true for CI and the management account, not for the project account. The second user also carries an unexplained `AmazonEKSFargatePodExecutionRolePolicy`.
+One exception is disclosed in the account governance record. Two IAM users exist in the project account for SSM port forwarding to the dev host: `blocbuy-dev-losgai` with one active access key, and `blocbuy-dev-ppsyrius` with a console password and no key. The key is limited by the `BlocBuySsmPortForwarding` policy and by every service control policy above. The statement "no long-lived AWS keys" is therefore true for CI and the management account, not for the project account. The second user also carries an unexplained `AmazonEKSFargatePodExecutionRolePolicy`.
 
 On GitHub, the repository belongs to a personal account (Pan's), with the other four members as collaborators with write access. A personal account cannot enforce two-factor sign-in on collaborators, and whether each member uses it is not recorded.
 
@@ -373,7 +373,7 @@ At the presentation on 26 October the team planned to show one small frontend ch
 
 #### Rollback
 
-Rollback has been configured at two levels since 4 September 2026, and neither has ever run on dev:
+Rollback is configured at two levels, and neither has ever run on dev:
 
 - Automatic: `deploy.sh` restarts the previous image when the on-host health check fails, and the deploy action rolls back through SSM when the public health check fails after a successful host step. No automatic rollback has been recorded; the DORA collection to 22 October found none.
 - Manual: `rollback-backend.yml`, dispatched with a target (dev or prod), an optional digest, a mandatory reason and a confirmation checkbox. It shares the deploy concurrency group, so it cannot overlap a deploy. It has never been dispatched (0 runs on 26 October); the planned rollback drill on dev is still open.
