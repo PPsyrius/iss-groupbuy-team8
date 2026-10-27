@@ -78,7 +78,7 @@ Table E.4: Performance runs by environment. Records: `docs/perf/sprint3-baseline
 
 | Run | Environment | Load | Result |
 |---|---|---|---|
-| Sprint 3 baseline, 30 Sep 2026 | Local stack, test-only sessions in real Redis | Node closed-loop workload, 100 virtual users per scenario, 200 ms think time, 60 s measured | p95 browse 24.18 ms, JOIN intent 56.56 ms, My Orders 18.38 ms; 0 errors. Expiry under load: 30 teams, worst observation lag 58.18 s |
+| Sprint 3 baseline, 30 Sep 2026 | Local stack, test-only sessions in real Redis | Node closed-loop workload, 100 virtual users per scenario, 200 ms think time, 60 s measured | p95 browse 24.18 ms, JOIN intent 56.56 ms, My Orders 18.38 ms; 0 errors. Expiry under load: 30 teams (the expiry design bound, section 1.4.3) |
 | V2 baseline, repeat run `20261016-v2-monolith-repeat`, 16 Oct 2026 | SWE5001 ECS, one monolith task, image from `dev` commit `6c7a99ab` | k6 1.6.1, 10 to 200 requests a second in ten one-minute plateaus, anonymous browse | p95 per plateau 53, 39, 27, 28, 23, 23, 42, 23, 23, 23 ms; 57,600 workload requests, 0 errors, 0 dropped iterations; every gate passed; saturation not reached, so 200 requests a second is a tested lower bound |
 
 The V2 run issued 57,600 workload requests plus one catalogue setup request, which is why the presentation quoted 57,601. It is an anonymous browse result, not a scaling result.
