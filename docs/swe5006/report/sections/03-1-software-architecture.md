@@ -88,7 +88,7 @@ classDiagram
 
 Figure 3.2: Ports and adapters, UML class diagram (left column application services, middle column domain ports, right column realisations). Every external call goes through a domain interface; `OrderFulfilmentAdapter` is the one realisation drawn here that lives in the application layer. The figure shows 4 of the 12 gateway ports; the settlement seams between payment, order, groupbuy and catalog are Figure 3.12.
 
-The figure leaves out eight ports that follow the same pattern: the two cross-context ports named above, the outbox event transport with its SNS and SQS realisations (off on dev, section 1.4), four ports realised on Redis (rate limits, the open-team cache, sign-in state and login snapshots) and the listing search reranker.
+The figure leaves out eight ports that follow the same pattern: the two cross-context ports named above, the outbox event transport with its SNS and SQS realisations (off on dev, section 1.4), four ports realised on Redis (rate limits, the open-team cache, sign-in state and login snapshots, the last by `RedisLoginSnapshotGateway`) and the listing search reranker, realised by `TypeSafeJevListingSearchReranker`.
 
 **Enforcement.** The rules above are tested, not only documented. `ArchitectureTest` in `blocbuy-bootstrap` holds 17 ArchUnit rules that run in every build:
 
