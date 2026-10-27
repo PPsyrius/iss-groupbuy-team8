@@ -11,26 +11,39 @@
 
 // Figures float to the top or bottom of a page so they leave no half-empty pages behind,
 // and a drawing taller than the page is scaled down to fit it.
+// A floating figure that takes at least `full-page-share` of the text area (caption included)
+// gets the page to itself: it is set in a block as tall as the text area less the float
+// clearance, drawing centred, so the body text continues on the next page instead of
+// squeezing a few stray lines into the gap. Below 75 % the gap holds 8 or more lines, enough
+// to read as a paragraph.
+#let full-page-share = 0.75
+// Holds a float the full height of the page area (size.height inside a float), with its
+// content centred, leaving less than a line for body text.
+#let full-page(size, content) = block(width: 100%, height: size.height - 1.4em - 1pt, align(center + horizon, content))
+
 #let report-figure(num, body, caption, float: true) = {
   let content = layout(size => {
     let framed = block(width: 100%, stroke: 0.4pt + rgb("#D8D2C8"), inset: 6pt, body)
     let h = measure(framed, width: size.width).height
     let max = 20cm
     let shown = if h > max { block(width: 100%, stroke: 0.4pt + rgb("#D8D2C8"), inset: 6pt, align(center, scale(max / h * 100%, reflow: true, body))) } else { framed }
-    block(width: 100%, breakable: false, {
+    let fig = block(width: 100%, breakable: false, {
       align(center, shown)
       v(0.3em)
       set text(size: 9pt)
       set par(justify: false)
       [*Figure #num:* #caption]
     })
+    let full = float and measure(fig, width: size.width).height >= full-page-share * size.height
+    if full { full-page(size, fig) } else { fig }
   })
   if float { place(auto, float: true, clearance: 1.4em, content) } else { block(above: 1em, below: 1.2em, content) }
 }
 
-// A figure on its own landscape page (images marked {.landscape} in the Markdown).
-#let landscape-figure(num, body, caption) = place(auto, float: true, clearance: 1.4em,
-  align(center, rotate(-90deg, reflow: true, block(width: 23cm, report-figure(num, body, caption, float: false)))))
+// A figure on its own landscape page (images marked {.landscape} in the Markdown): always a
+// full page, so no body text shares it.
+#let landscape-figure(num, body, caption) = place(auto, float: true, clearance: 1.4em, layout(size => full-page(size,
+  rotate(-90deg, reflow: true, block(width: 23cm, report-figure(num, body, caption, float: false))))))
 
 #let figure-frame(body) = block(width: 100%, breakable: false, inset: 6pt, stroke: 0.4pt + rgb("#D8D2C8"), body)
 
