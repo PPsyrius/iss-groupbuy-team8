@@ -116,7 +116,7 @@ Table E.5: Evidence references by section.
 | 2.1 (Table 2.1, Table 2.4) | Sprint container issues, Sprints 1–4 (Sprint 2 plan in #93) | #49, #93, #232, #465 |
 | 2.2 (Table 2.5) | Crash recovery of refunds, open | #224 |
 | 2.2 (Table 2.5) | Sign-in session decided before the first sprint, 30 Aug | backend design decisions D6, D7 (Table B.3) |
-| 2.2 (Table 2.5) | MyBatis decided before the first sprint, 30 Aug | backend design decisions D1, D9 (Table B.3) |
+| 2.2 (Table 2.5) | MyBatis decided before the first sprint, 30 Aug | Skeleton plan §1 and §3 |
 | 2.2 (Table 2.5) | Separate SWE5006 production stack dropped, closed 11 Oct | #226 |
 | 2.2 (Table 2.6) | Crash recovery shown only locally | #224 |
 | 2.2 (Table 2.6) | Lock order of ADR 0001 and ADR 0002 not reconciled | #663 |
