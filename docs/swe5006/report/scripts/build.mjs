@@ -60,7 +60,8 @@ writeFileSync(
   `#import "${rootPath(join(root, 'typst', 'template.typ'))}": *\n#show: report.with(meta: ${metaTyp}, logo: ${logo})\n\n${parts.join('\n\n')}\n`,
 );
 const pdf = join(dist, 'swe5006-report.pdf');
-execFileSync('typst', ['compile', '--root', repo, typ, pdf], { stdio: 'inherit' });
+// --no-pdf-tags: Typst 0.15 aborts with "internal error: parent group" while tagging some floating figures.
+execFileSync('typst', ['compile', '--no-pdf-tags', '--root', repo, typ, pdf], { stdio: 'inherit' });
 console.log(`Built ${relative(process.cwd(), pdf)} from ${files.length} sections.`);
 if (outDir) {
   mkdirSync(outDir, { recursive: true });
