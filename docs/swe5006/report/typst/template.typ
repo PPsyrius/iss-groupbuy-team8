@@ -57,8 +57,8 @@
 // header1.xml: the logo, right-aligned, wp:extent 1479550 x 544959 EMU (4.11 x 1.51 cm). The
 // template's image (word/media/image1.png, 2344 x 866 px) carries blank margins around the
 // artwork: 12.5 % left and right, 25.6 % above and 25.9 % below. The header clips them off and
-// prints the artwork at the template's scale, 3.08 x 0.73 cm, so the logo sits on the same line
-// as the running head and the top margin stays the template's 2.54 cm.
+// prints the artwork at the template's scale, 3.08 x 0.73 cm, so the top margin stays the
+// template's 2.54 cm.
 #let logo-extent = (4.11cm, 1.51cm)
 #let logo-crop = (left: 0.1254, top: 0.2564, right: 0.1246, bottom: 0.2587)
 // `logo` is (path: str, cropped: bool); a cropped logo (REPORT_LOGO) is drawn at the artwork's height.
@@ -71,19 +71,24 @@
     place(top + left, dx: -w * logo-crop.left, dy: -h * logo-crop.top, image(logo.path, width: w, height: h)))
 }
 
-// Running head (not in the template): the chapter or appendix current on the page, small and muted
-// at the left of the header. A chapter that opens on the page wins; otherwise the last one before
+// Running head (not in the template): the chapter or appendix current on the page, at the left of
+// the footer. A chapter that opens on the page wins; otherwise the last one before
 // it. The title and contents pages come before any chapter, so they get none.
+// Shown as "2 | Project Conduct" or "Appendix B | ADR Index ...".
 #let running-head() = context {
   let pg = here().page()
   let sel = selector(heading.where(level: 1))
   let opening = query(sel).filter(h => h.location().page() == pg)
   let chapter = if opening.len() > 0 { opening.first() } else { query(sel.before(here())).at(-1, default: none) }
   if chapter != none {
-    // The baseline is the text's bottom edge, so it sits on the same line as the logo's foot.
-    set text(size: 9pt, fill: rgb("#6B655C"), bottom-edge: "baseline")
-    if chapter.numbering == none { chapter.body } else {
-      counter(heading).at(chapter.location()).map(str).join(".") + " " + chapter.body
+    let bar = [#h(0.4em)|#h(0.4em)]
+    if chapter.numbering != none {
+      [#counter(heading).at(chapter.location()).first()#bar#chapter.body]
+    } else {
+      // Appendix headings arrive unnumbered as "Appendix X Title".
+      let t = if chapter.body.has("text") { chapter.body.text } else { "" }
+      let m = t.match(regex("^(Appendix [A-Z])\s+(.*)$"))
+      if m != none [#m.captures.at(0)#bar#m.captures.at(1)] else { chapter.body }
     }
   }
 }
@@ -96,11 +101,14 @@
     paper: "a4",
     margin: 2.54cm,
     header-ascent: 0.45cm,
-    // One invisible line seats both: the running head's baseline and the logo artwork's foot.
-    header: align(bottom, grid(columns: (1fr, auto), align: bottom, column-gutter: 1em,
-      running-head(), if logo != none { logo-mark(logo) })),
-    // footer1.xml: right-aligned "Page {PAGE} of {NUMPAGES}" in the Footer style (Normal, Arial 12 pt).
-    footer: context align(right)[Page #counter(page).display() of #counter(page).final().first()],
+    header: if logo != none { align(right + bottom, logo-mark(logo)) },
+    // footer1.xml: right-aligned "Page {PAGE} of {NUMPAGES}" (Footer style, Arial 12 pt). The footer
+    // also carries the running head at left; both are set at 9 pt in body ink.
+    footer: context {
+      set text(size: 9pt)
+      grid(columns: (1fr, auto), column-gutter: 1em, running-head(),
+        [Page #counter(page).display() of #counter(page).final().first()])
+    },
   )
   // Normal: Arial, sz 24 (12 pt), left-aligned; docDefaults spacing after 160 (8 pt), line 259 auto.
   set text(font: ("Arial", "Helvetica"), size: 12pt, lang: "en", region: "gb")
