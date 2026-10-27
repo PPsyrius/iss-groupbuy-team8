@@ -8,7 +8,7 @@ status: draft
 
 # Appendix D Test Inventory, CI Timings and Green Rates {.appendix}
 
-This appendix holds the detail behind section 4.2 and section 4.3: the test inventory per module and level, the executed test totals, coverage, the workflow timings and green rates, and the dev delivery metrics. Every figure carries its date and source. Static counts were taken with `git ls-tree` on `dev` at `61486f0e` on 26 October 2026; the final figures are recounted at the freeze commit. {{CONFIRM: D6 recount every count in this appendix at the freeze SHA (static counts from git ls-tree, executed counts from that commit's build-quality and frontend-check logs) — Liu Jin}}
+This appendix holds the detail behind section 4.2 and section 4.3: the test inventory per module and level, the executed test totals, coverage, the workflow timings and green rates, and the dev delivery metrics. Every figure carries its date and source. Static counts were taken with `git ls-tree` on `dev` at `61486f0e` on 26 October 2026; the final figures are recounted at the freeze commit. The test files are unchanged between `61486f0e` and the freeze commit `6d14e449` (`git diff 61486f0e 6d14e449 -- backend frontend` is empty), so the static counts hold at the freeze.
 
 #### Test inventory
 
@@ -25,13 +25,15 @@ Table D.1: Test inventory by kind, level and module (26 October 2026, `61486f0e`
 | Performance (system) | k6 1.6.1 (SWE5001 ECS); Node closed-loop workload (local) | One k6 browse scenario; three local scenarios | `perf/k6/browse.js`, `backend/perf/` | By hand; the k6 tooling itself is tested in `perf-tooling.yml` |
 | CI tooling | Python `unittest`, Node test runner | 13 test files in `.github/tests/`: 193 Python tests (189 passed, 4 opt-in ZAP tests skipped) and 22 Node tests, run on 22 Oct | `backend_quality_test.py`, `gitleaks_allowlist_test.py`, `dora_metrics_test.py` | `workflow-lint` in `security.yml` when tooling changes; the backend policy tests also in `build-quality` |
 
-Table D.2: Executed test totals from CI logs (dated; not yet at the freeze commit).
+Table D.2: Executed test totals from CI logs of runs whose code equals the freeze commit `6d14e449` (`git diff ad2a73e6 6d14e449 -- backend` and `git diff 9135ad8b 6d14e449 -- frontend` are empty).
 
 | Suite | Run and commit | Date | Result |
 |---|---|---|---|
-| Backend `build-quality` (`./mvnw verify -Pci`, Surefire and Failsafe totals of 14 module executions) | 40198946732, PR head `67f1c474` | 25 Oct 2026 | 2,066 tests run, 0 failures, 0 errors, 1 skipped (opt-in performance test) |
-| Frontend `frontend-check` (Vitest) | 40206547524, PR head `1cb12249` | 25 Oct 2026 | 78 files, 872 tests passed |
-| Frontend `e2e-preview` (Playwright) | 40206547524 | 25 Oct 2026 | 19 passed, 5 skipped |
+| Backend `SonarCloud Backend` (`./mvnw verify -Pci`, Surefire and Failsafe totals of 14 module executions) | 40200028697, push `ad2a73e6` | 25 Oct 2026 | 2,066 tests run, 0 failures, 0 errors, 1 skipped (opt-in `PerformanceBaselineIT`) |
+| Frontend `frontend-check` (Vitest) | 40206547524, pull request | 25 Oct 2026 | 78 files, 872 tests passed |
+| Frontend `SonarCloud Frontend` (Vitest) | 40294726775, push `9135ad8b` | 26 Oct 2026 | 78 files, 872 tests passed |
+| Frontend `e2e-preview` (Playwright, preview build) | 40206547524, pull request | 25 Oct 2026 | 19 passed, 5 skipped |
+| Frontend `e2e-dev` (Playwright, through CloudFront) | 40294726775, push `9135ad8b` | 26 Oct 2026 | 21 passed, 3 skipped |
 
 Earlier totals differ because tests were added between them: 1,958 backend tests (local benchmark, 20 Oct), 1,980 (local verify in the CI failure audit, 21 Oct) and 2,048 (local verify, 21 Oct). By team rule, SonarCloud's `tests` measure is never used as a test count.
 
