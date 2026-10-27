@@ -25,7 +25,7 @@ Table E.1: Known limits of the dev system and its pipeline.
 | Secrets in a host file | Created and rotated by hand (`/etc/blocbuy/backend.env`, root 0600) | Accepted for dev; the unapplied production design uses Parameter Store |
 | Delivery image rebuilt | Dev delivery rebuilds the JAR and image without repeating the Trivy image scan, so the deployed image is not the one the pull request scanned | Provenance limit; ECR scans on push but does not gate; frontend ADR 0004 and the operator guide to be reconciled |
 | Weekly full-history secret scan red | Four historical SonarCloud badge-token findings remain | NFR-02 partially met; scheduled run 40287812848 failed on 26 Oct |
-| Passive DAST only | ZAP scans anonymous pages passively; no login, payment or active testing; findings advisory | 2 Medium and 4 Low header findings open (#610, Table 4.10) |
+| Passive DAST only | ZAP scans anonymous pages passively; no login, payment or active testing; findings advisory | The 2 Medium and 4 Low header findings were fixed on 27 October (#700, #703); 6 Informational findings remain under review (Table 4.10) |
 | SBOM is a source inventory | Lists Maven and pnpm source dependencies, not the exact deployed JAR, image or bundle; licence findings advisory | NFR-72; no signing or attestation |
 | CodeQL unavailable | No GitHub Code Scanning SAST; SonarCloud and SpotBugs remain | Code Scanning API returns 403; `ENABLE_CODEQL=false` |
 | One IAM user access key | A long-lived key exists in the project account | Disclosed and accepted; limited to SSM port forwarding and the organisation's guardrails (section 4.1) |

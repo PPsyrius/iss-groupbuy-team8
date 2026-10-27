@@ -128,7 +128,7 @@ Table 2.6: Outstanding issues, 26 October 2026.
 | Two IAM users in the project account, one with an active access key, for port forwarding to the dev host | Lim | Disclosed and accepted in the AWS account governance record; no removal planned. Neither user has an MFA device (read-only check of 27 October, `aws iam list-mfa-devices`) | — |
 | Backend rollback never exercised on dev: the rollback workflow has never run | Unassigned | Open | #623 |
 | The weekly full-history secret scan fails on four historical badge-token findings (NFR-02) | Unassigned | Open | — |
-| Passive OWASP ZAP scan of dev: 0 High, 2 Medium, 4 Low findings, all content-security-policy and header issues (baseline run of 22 October and scheduled run of 26 October; section 4.2) | Pan | Open | #610, #636–#641 |
+| Passive OWASP ZAP scan of dev: the 2 Medium and 4 Low header findings of the runs of 22 and 26 October were fixed on 27 October (#700, #703); the run after the fixes found 0 High, 0 Medium, 0 Low and 6 Informational (section 4.2) | Pan | Medium and Low fixed; 6 Informational under review | #610, #636–#647 |
 | Exposure of the actuator, springdoc and error paths outside the Sa-Token interceptor not decided | Eric | Open | #549 |
 | After a merge, delivery rebuilds the backend image without repeating the pull request's Trivy image scan, so the deployed image is not the scanned one | Unassigned | Known limit | — |
 | Database and application servers share subnets in the SWE5001 infrastructure code (NFR-70) | Pan | Open; SWE5001 scope | #589 |
@@ -146,7 +146,7 @@ Table 2.7: Remarks from the presentation of 26 October and how the report answer
 | Remark | Issue and state | How the report answers it |
 | --- | --- | --- |
 | Send the repository link to the lecturer | #693, open. The repository is private, so the lecturer needs Read access before the link is useful | {{FILL: date Read access was granted and the link sent (#693) — Lim}} |
-| Show the OWASP ZAP results before and after remediation | #694, open, blocked by the response-headers fix #610 (open) | Before: run 39733450177 of 22 October, the first baseline (#694), and the scheduled run 40298983391 of 26 October, the latest before any fix; both found 0 High, 2 Medium, 4 Low and 6 Informational findings, one issue each (#636 to #647); section 4.2 gives the table. No after-remediation run existed at the freeze. {{FILL: after-remediation run, date and outcome per finding (#694) — Pan}} |
+| Show the OWASP ZAP results before and after remediation | #694 | Before: run 39733450177 of 22 October, the first baseline, and the scheduled run 40298983391 of 26 October, the latest before any fix; both found 0 High, 2 Medium, 4 Low and 6 Informational findings, one issue each (#636 to #647). The header fixes #700 and #703 merged on 27 October; after them, run 40459212995 of 27 October found 0 High, 0 Medium, 0 Low and 6 Informational. Table 4.10 gives the outcome per finding |
 | Submit the report by 31 October 2026, 23:59 | #695, closed on 27 October when the first draft merged (#698); the deadline supersedes 1 November (#463) | The schedule of #695 meets it: first draft on 27 October, team vetting on 28 and 29 October, content freeze on 30 October |
 
 ## 2.3 Project Metrics
