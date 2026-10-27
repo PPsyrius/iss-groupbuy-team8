@@ -155,6 +155,8 @@ The project met every planned milestone except a separate SWE5006 production rel
 
 #### Milestones achieved
 
+<!-- table: split -->
+
 Table 2.8: Milestones achieved.
 
 | Date | Milestone | Evidence |
