@@ -77,7 +77,7 @@ Some of the mechanisms below are named by the course but are not GoF patterns: R
 
 Java 21 is the server language and Spring Boot 4.1.1 is the framework. Spring creates and wires objects, runs transactions and handles web requests. Code follows google-java-format in the AOSP style with Checkstyle, and the build enforces both.
 
-Each layer is a Maven module, and each bounded context is a package inside it, under the prefix `com.blocbuy` (Table 3.8). Section 3.1 cites this table rather than repeating it.
+Each layer is a Maven module, and each bounded context is a package inside it, under the prefix `com.blocbuy` (Table 3.8).
 
 Table 3.8: Maven modules and what each holds.
 
