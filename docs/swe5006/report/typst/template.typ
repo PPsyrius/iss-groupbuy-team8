@@ -63,6 +63,11 @@
 // Text area of the A4 page with 2.54 cm margins (set in `setup`).
 #let text-area = (width: 21cm - 2 * 2.54cm, height: 29.7cm - 2 * 2.54cm)
 
+// A paragraph that is only a bold label ("Normal flow:", "D1 Publish a listing.") introduces the
+// list or text below it like a run-in heading, so it is sticky and never ends a page alone.
+// Its spacing is a paragraph's (par spacing in setup).
+#let lead-label(body) = block(above: 0.52em + 8pt, below: 0.52em + 8pt, sticky: true, body)
+
 #let report-table(n, ..cells) = {
   set text(size: 9pt)
   set par(justify: false, leading: 0.5em)
