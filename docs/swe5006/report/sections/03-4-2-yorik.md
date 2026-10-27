@@ -120,13 +120,13 @@ classDiagram
     Refund "1" *-- "0..*" RefundAttempt
 ```
 
-Figure 3.52: UML analysis class diagram of UC6 Refund on team expiry. Two controls split the use case at the point where money moves: ExpireTeamControl only records what is owed, and RefundControl alone talks to the payment provider; each Payment owes at most one Refund.
+Figure 3.51: UML analysis class diagram of UC6 Refund on team expiry. Two controls split the use case at the point where money moves: ExpireTeamControl only records what is owed, and RefundControl alone talks to the payment provider; each Payment owes at most one Refund.
 
 #### B Analysis sequence diagrams
 
 The payment provider talks only to the PaymentGateway boundary, so the sequence diagrams leave its lifeline out and show its part as a note.
 
-Figure 3.53 is flow 1. Expiring the team, cancelling its orders and recording the refunds form one unit of work: either all of them happen or none does, so an expired team is never left without a record of the money it owes.
+Figure 3.52 is flow 1. Expiring the team, cancelling its orders and recording the refunds form one unit of work: either all of them happen or none does, so an expired team is never left without a record of the money it owes.
 
 ```mermaid
 sequenceDiagram
@@ -156,9 +156,9 @@ sequenceDiagram
     end
 ```
 
-Figure 3.53: UML analysis sequence diagram of UC6 flow 1, expire a team and record its refunds. The `alt` fragment makes a repeated or late expiry harmless, and every paid member gets exactly one Refund in the same unit of work as the expiry.
+Figure 3.52: UML analysis sequence diagram of UC6 flow 1, expire a team and record its refunds. The `alt` fragment makes a repeated or late expiry harmless, and every paid member gets exactly one Refund in the same unit of work as the expiry.
 
-Figure 3.54 is flow 2. The worker takes one due Refund at a time. It checks the payment's facts before it asks for money back and checks the provider's answer before it believes it.
+Figure 3.53 is flow 2. The worker takes one due Refund at a time. It checks the payment's facts before it asks for money back and checks the provider's answer before it believes it.
 
 ```mermaid
 sequenceDiagram
@@ -194,9 +194,9 @@ sequenceDiagram
     Note over Ctl,Ref: if the worker stops before record, the claim lapses and a later tick repeats the request with the same requestId
 ```
 
-Figure 3.54: UML analysis sequence diagram of UC6 flow 2, pay one refund. The `alt` fragment holds the exceptional flows: a temporary failure keeps the Refund due, and an unsafe answer parks it; the same request identity makes a repeat harmless.
+Figure 3.53: UML analysis sequence diagram of UC6 flow 2, pay one refund. The `alt` fragment holds the exceptional flows: a temporary failure keeps the Refund due, and an unsafe answer parks it; the same request identity makes a repeat harmless.
 
-Figure 3.55 is flow 3. It only looks up a refund that already exists at the provider; it never asks for a new one, so it cannot pay a buyer twice.
+Figure 3.54 is flow 3. It only looks up a refund that already exists at the provider; it never asks for a new one, so it cannot pay a buyer twice.
 
 ```mermaid
 sequenceDiagram
@@ -223,13 +223,13 @@ sequenceDiagram
     Ctl-->>RUI: outcome
 ```
 
-Figure 3.55: UML analysis sequence diagram of UC6 flow 3, reconcile a parked refund. The reviewer can only confirm an existing provider refund; any doubt leaves the Refund in review.
+Figure 3.54: UML analysis sequence diagram of UC6 flow 3, reconcile a parked refund. The reviewer can only confirm an existing provider refund; any doubt leaves the Refund in review.
 
 The buyer's last step, reading the refund status on the payment receipt, is a single query (`ReceiptUI` asks `RefundControl.refundStatus`) and is not drawn as a flow.
 
 #### C Design class diagram
 
-Expiry is a group-buy decision, while the obligation and the provider interaction belong to the payment module. The design class diagram is therefore drawn in two parts: the expiry side (Figure 3.56) and the refund worker (Figure 3.57). Each class carries the tag of the transition strategy of section 3.2 that produced it: Pres 3.2.2 presentation, Dist 3.2.3 distribution, Pers 3.2.4 persistence, Ext 3.2.5 external interface, Sec 3.2.6 security, Sched 3.2.7 scheduling, Conc 3.2.8 concurrency, Evt 3.2.9 domain events. `…` stands for parameters left out to keep a box narrow.
+Expiry is a group-buy decision, while the obligation and the provider interaction belong to the payment module. The design class diagram is therefore drawn in two parts: the expiry side (Figure 3.55) and the refund worker (Figure 3.56). Each class carries the tag of the transition strategy of section 3.2 that produced it: Pres 3.2.2 presentation, Dist 3.2.3 distribution, Pers 3.2.4 persistence, Ext 3.2.5 external interface, Sec 3.2.6 security, Sched 3.2.7 scheduling, Conc 3.2.8 concurrency, Evt 3.2.9 domain events. `…` stands for parameters left out to keep a box narrow.
 
 ```mermaid
 classDiagram
@@ -326,7 +326,7 @@ classDiagram
     CheckoutPaymentRepositoryImpl --> PaymentMapper
 ```
 
-Figure 3.56: UML design class diagram of UC6, part 1, expiry. The group-buy module publishes the immutable `TeamExpired` event and never touches orders or payments; the order and payment subscribers react before the transaction commits, in the fixed order 10 then 20.
+Figure 3.55: UML design class diagram of UC6, part 1, expiry. The group-buy module publishes the immutable `TeamExpired` event and never touches orders or payments; the order and payment subscribers react before the transaction commits, in the fixed order 10 then 20.
 
 `GroupDealExpiryService.expireOne` resolves exactly one team per call, under its own 10-second transaction; the batch loop lives in `GroupDealExpirySweeper`, so the row lock covers one team at a time. A team whose expiry fails is retried five minutes later (`deferExpiryRetry`) and does not stop the others. `TeamExpiryRefundService` reaches the group-buy module only through `PaymentBusinessPort.lockExpiredTeam`, which takes the same team row lock that joins use and checks that the team really is EXPIRED. `CheckoutPaymentRepositoryImpl` then locks the team's refundable payments in a fixed order (`PaymentMapper.lockRefundableMemberIds`) and inserts one `biz_refund` row per payment with `PaymentMapper.refundExpiredTeam`, an upsert on `ON CONFLICT (payment_id)`. If the number of rows written differs from the number of payments locked, it throws, and the whole expiry rolls back.
 
@@ -401,7 +401,7 @@ classDiagram
     RefundRepositoryImpl --> RefundMapper
 ```
 
-Figure 3.57: UML design class diagram of UC6, part 2, the refund worker. `RefundService` holds no transaction across the provider call: it claims and finishes in two short transactions, and the stable `RefundWork.providerKey()` is the idempotency key sent to Stripe.
+Figure 3.56: UML design class diagram of UC6, part 2, the refund worker. `RefundService` holds no transaction across the provider call: it claims and finishes in two short transactions, and the stable `RefundWork.providerKey()` is the idempotency key sent to Stripe.
 
 `RefundWork` is the immutable snapshot that a claim returns: the obligation joined with its payment's status, amount, currency and Stripe PaymentIntent. Its `valid()` checks that the payment succeeded and that amount and currency agree. Its `providerKey()` is `blocbuy-refund-` plus the obligation's identifier, so every attempt for one obligation sends Stripe the same idempotency key. `StripeRefundGateway.createRefund` re-reads the original PaymentIntent and refunds it, and tags the refund with the obligation's identifier as metadata; `findRefund` lists the PaymentIntent's refunds and accepts only a single one with that tag. The buyer's receipt reads the refund status through `PaymentBrowserService.receipt`, which serves only the payment's owner.
 
@@ -409,7 +409,7 @@ The analysis classes map onto these design classes as follows. SchedulerTrigger 
 
 #### D Design sequence diagrams
 
-Each design sequence refines the analysis sequence of the same flow: Figure 3.58 refines Figure 3.53, Figure 3.59 refines Figure 3.54, and Figure 3.60 refines Figure 3.55. A `critical` fragment marks a database transaction, because UML has no transaction fragment.
+Each design sequence refines the analysis sequence of the same flow: Figure 3.57 refines Figure 3.52, Figure 3.58 refines Figure 3.53, and Figure 3.59 refines Figure 3.54. A `critical` fragment marks a database transaction, because UML has no transaction fragment.
 
 ```mermaid
 sequenceDiagram
@@ -442,7 +442,7 @@ sequenceDiagram
     end
 ```
 
-Figure 3.58: UML design sequence diagram of UC6 flow 1, expire a team and record its refunds. The status-guarded update decides a race with a last-seat join, and both subscribers write inside the expiry transaction, so expiry, order cancellation and refund obligations commit together or not at all.
+Figure 3.57: UML design sequence diagram of UC6 flow 1, expire a team and record its refunds. The status-guarded update decides a race with a last-seat join, and both subscribers write inside the expiry transaction, so expiry, order cancellation and refund obligations commit together or not at all.
 
 The lock order matches the paid join of section 3.4.1: both lock the team row first, so a sweep and a settling webhook cannot deadlock (backend ADR 0002). If the sweep wins, a payment that settles afterwards finds the team expired and is owed a refund in its own transaction. If the join wins, the guarded update changes zero rows, `PaidGroupDealRepository.expire` reports `DEAL_CLOSED`, and `expireOne` returns false.
 
@@ -483,7 +483,7 @@ sequenceDiagram
     Note over Svc,Repo: each finish is its own 5 s transaction, fenced by id and version, next attempt 30 s later
 ```
 
-Figure 3.59: UML design sequence diagram of UC6 flow 2, pay one refund. The provider call runs between two short transactions, never inside one; a crash after Stripe accepts the refund leaves the row claimable once its lease lapses, and the next attempt sends the same idempotency key.
+Figure 3.58: UML design sequence diagram of UC6 flow 2, pay one refund. The provider call runs between two short transactions, never inside one; a crash after Stripe accepts the refund leaves the row claimable once its lease lapses, and the next attempt sends the same idempotency key.
 
 The `alt` fragments are the exceptional flows of section 3.3.7. A retryable provider error (transport, rate limit, availability) moves the obligation to `processing`, due again 30 seconds later; the delay is fixed, not exponential. A permanent refusal (`PAYMENT_STATE_INVALID` or `PAYMENT_PROVIDER_REJECTED`) or a snapshot that does not match the obligation moves it to `review`, which the worker never claims again. Stripe may forget an idempotency key after about a day, so after 23 hours without a stored refund identifier the worker stops creating and only searches; if it finds nothing, the obligation goes to `review`. A worker that stops after Stripe accepted the refund but before `finish` leaves the row with an expired lease; the next claim increments the version, so a late `finish` from the old worker changes nothing, and the repeat request with the same key returns the same Stripe refund.
 
@@ -513,7 +513,7 @@ sequenceDiagram
     Svc-->>Op: true
 ```
 
-Figure 3.60: UML design sequence diagram of UC6 flow 3, reconcile a parked refund. `reconcile` only retrieves a refund the operator names and maps it with the same checks as the worker; it has no path that creates a refund.
+Figure 3.59: UML design sequence diagram of UC6 flow 3, reconcile a parked refund. `reconcile` only retrieves a refund the operator names and maps it with the same checks as the worker; it has no path that creates a refund.
 
 `RefundService.reconcile` exists and is unit-tested, but no endpoint, command or job calls it: the operator command runner `stripe-ops` does not expose it, and the rollout runbook (`backend/docs/payment/stripe-rollout-runbook.md`) requires a separately reviewed invocation. Flow 3 is therefore designed and unit-tested but has never been run on dev.
 
@@ -544,7 +544,7 @@ stateDiagram-v2
 %% at __end0 0,4
 ```
 
-Figure 3.61: UML statechart of the refund obligation (`biz_refund.status`). Every attempt passes through one choice on the provider's answer; only `pending` and `processing` are claimed by the worker, while `review` and `failed` wait for an operator's reconcile.
+Figure 3.60: UML statechart of the refund obligation (`biz_refund.status`). Every attempt passes through one choice on the provider's answer; only `pending` and `processing` are claimed by the worker, while `review` and `failed` wait for an operator's reconcile.
 
 A tick takes an obligation only when it is *due*: its next attempt time has passed and no live lease holds it. The choice reads the provider's answer: an unknown status also goes to `review`, and *23 h* is the search after 23 hours that finds no refund. Every transition out of the choice stamps the next attempt time 30 seconds later (one `finish` statement for all outcomes), but only a `processing` obligation is claimed again by the worker: `succeeded` and `failed` are never retried automatically, and `review` waits for an operator. A provider error during a reconcile leaves the obligation in `review`, so a case in an operator's hands never returns to the automatic worker. The states are plain strings, the constants of `RefundService`, with no transition table in code: the statechart is enforced by the claim and finish SQL in `RefundMapper.xml`. Of the objects in this use case, only the team checks its own transitions (`DealStatus.canTransitionTo`, section 3.4.1).
 

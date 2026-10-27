@@ -139,9 +139,9 @@ The performance and expiry targets need the wording of section 1.4.3: response t
 
 #### Remarks from the presentation
 
-The lecturer gave three remarks at the presentation on 26 October; the team recorded them under the report's tracking issue (#463). Table 2.11 lists each remark, its issue and how this report answers it, as read on 27 October.
+The lecturer gave three remarks at the presentation on 26 October; the team recorded them under the report's tracking issue (#463). Table 2.7 lists each remark, its issue and how this report answers it, as read on 27 October.
 
-Table 2.11: Remarks from the presentation of 26 October and how the report answers them.
+Table 2.7: Remarks from the presentation of 26 October and how the report answers them.
 
 | Remark | Issue and state | How the report answers it |
 | --- | --- | --- |
@@ -151,11 +151,11 @@ Table 2.11: Remarks from the presentation of 26 October and how the report answe
 
 ## 2.3 Project Metrics
 
-The project met every planned milestone except a separate SWE5006 production release, which was dropped. Its last delivery milestone was the paid journey on dev on 23 and 24 October; the presentation on 26 October followed it (Table 2.7). No member logged hours. The only actual effort figures are the person-day split the five members agreed on 19 October for the joint SWE5001 and SWE5006 project, about 50 person-days in total. It covers both courses, so it is not compared with the proposal's SWE5006 baseline.
+The project met every planned milestone except a separate SWE5006 production release, which was dropped. Its last delivery milestone was the paid journey on dev on 23 and 24 October; the presentation on 26 October followed it (Table 2.8). No member logged hours. The only actual effort figures are the person-day split the five members agreed on 19 October for the joint SWE5001 and SWE5006 project, about 50 person-days in total. It covers both courses, so it is not compared with the proposal's SWE5006 baseline.
 
 #### Milestones achieved
 
-Table 2.7: Milestones achieved.
+Table 2.8: Milestones achieved.
 
 | Date | Milestone | Evidence |
 | --- | --- | --- |
@@ -179,9 +179,9 @@ Tag dates are the tagger dates. The repository has no GitHub milestones or relea
 
 #### Definition of Done reached per sprint
 
-Table 2.8 places each sprint's goal increment on the done ladder of section 2.1, using the team's reading of its upper steps.
+Table 2.9 places each sprint's goal increment on the done ladder of section 2.1, using the team's reading of its upper steps.
 
-Table 2.8: Done step reached per sprint.
+Table 2.9: Done step reached per sprint.
 
 | Sprint | Step reached | Basis |
 | --- | --- | --- |
@@ -194,9 +194,9 @@ The team agreed the Sprint 4 placement on 24 October and re-agreed its wording o
 
 #### Retrospective improvements
 
-Each retrospective chose an improvement that changed the next sprint. Table 2.9 shows one per sprint and what it changed.
+Each retrospective chose an improvement that changed the next sprint. Table 2.10 shows one per sprint and what it changed.
 
-Table 2.9: Retrospective improvements and their effect.
+Table 2.10: Retrospective improvements and their effect.
 
 | Retrospective | Finding | Change in the next sprint | Effect |
 | --- | --- | --- | --- |
@@ -207,9 +207,9 @@ Table 2.9: Retrospective improvements and their effect.
 
 #### Effort per member
 
-No member logged time, so the effort figures are an agreed estimate, not a measurement. On 19 October all five members agreed a split of the effort spent: they added up the planned hours of the issues each person actually delivered and agreed the final figures. One project serves both courses, so there is one split. Table 2.10 shows it beside the planned hours of section 2.1.
+No member logged time, so the effort figures are an agreed estimate, not a measurement. On 19 October all five members agreed a split of the effort spent: they added up the planned hours of the issues each person actually delivered and agreed the final figures. One project serves both courses, so there is one split. Table 2.11 shows it beside the planned hours of section 2.1.
 
-Table 2.10: Effort per member: agreed estimate beside planned hours.
+Table 2.11: Effort per member: agreed estimate beside planned hours.
 
 | Member | Planned hours, Sprints 2–4 | Agreed estimate of effort spent, person-days |
 | --- | --- | --- |
