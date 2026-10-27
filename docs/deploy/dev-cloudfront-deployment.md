@@ -151,7 +151,7 @@ The mandatory [SPA function](../../deployment/frontend/cloudfront/spa-fallback.j
 
 ## 15. Security response headers
 
-The versioned [policy](../../deployment/frontend/cloudfront/response-headers-policy.json) attaches to both behaviors and defines CSP, HSTS, content-type, frame, referrer and custom headers. On 2026-09-30 live HEAD responses for `/` and `/api/actuator/health` returned 200 with the original five values matching that revision of the policy (NFR-16). The image allowlist and Permissions-Policy candidate below has not yet been applied; use reviewed Terraform changes for future edits.
+The versioned [policy](../../deployment/frontend/cloudfront/response-headers-policy.json) attaches to both behaviors and defines CSP, HSTS, content-type, frame, referrer and custom headers. On 2026-09-30 live HEAD responses for `/` and `/api/actuator/health` returned 200 with the original five values matching that revision of the policy (NFR-16). The image allowlist and Permissions-Policy candidate status below is superseded by the [2026-10-27 operator continuation](#remaining-browser-policy-candidate--2026-10-27), which records the applied dev policy. Use reviewed Terraform changes for future edits.
 
 After a policy or deploy change, run this stronger GET/value check from the repository root with `DIST_DOMAIN` set in §2; require 2xx from both behaviors, not merely present header names.
 
@@ -202,9 +202,11 @@ for path in map(Path, sys.argv[1:]):
 PY
 ```
 
-`style-src 'unsafe-inline'` currently supports React Aria's injected styles; removing it is separate work under #637. Use Terraform, not manual policy updates.
+Historical context: the earlier policy used `style-src 'unsafe-inline'` for React Aria's injected styles. The [2026-10-27 operator continuation](#remaining-browser-policy-candidate--2026-10-27) supersedes that status: the deployed dev policy uses reviewed stylesheet hashes and denies inline style attributes. Use Terraform, not manual policy updates.
 
 ### Image allowlist and Permissions-Policy candidate — 2026-10-26
+
+Status notice: the [2026-10-27 operator continuation](#remaining-browser-policy-candidate--2026-10-27) and [post-closure evidence](../quality/evidence/zap/after-2026-10-27/post-closure/README.md) record the applied dev policy and owner-directed closure of #636–#641. Pending-publication and keep-open statements in this section describe the historical candidate stage, not current operator instructions; remaining functional acceptance is tracked in #610.
 
 Refs #636 and #641. Decision: restrict image loading to `'self'`, `https://dcsjrkmummxi7.cloudfront.net` (catalog CDN) and `https://lh3.googleusercontent.com` (Google profile images); no scheme-wide, wildcard, `data:` or `blob:` source is allowed. The public inventory covered 14 on-sale listings and 42 image URLs on the catalog CDN. The [27 October continuation](../quality/evidence/zap/compatibility-inventory-2026-10-27/README.md) verifies one real signed-in avatar at the approved Google origin, but the account has no order/bloc history and cannot read admin listings (403). Before applying, an authorized data owner must run the [read-only aggregate inventory](queries/image-origin-inventory.sql), review all stored catalog/history/avatar origins, and retain privacy-reviewed aggregate evidence. Stop on any unreviewed legitimate origin; do not infer global compatibility from this one account.
 
