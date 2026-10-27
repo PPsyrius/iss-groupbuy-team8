@@ -68,7 +68,7 @@ Table B.3: Locked decisions D1–D20 of the backend skeleton plan and their stat
 | D7 | One token domain; RBAC roles and permissions loaded from SQL tables | In force; amended for the SWE5001 topology by backend ADR 0008 |
 | D8 | Database `Blocbuy`, schema `domain` | In force |
 | D9 | Hand-written converters, no MapStruct | In force |
-| D10 | Errors as RFC 9457 ProblemDetail; success as a bare DTO | Superseded by the `Result<T>` envelope (frontend ADR 0009) |
+| D10 | Errors as RFC 9457 ProblemDetail; success as a bare DTO | Superseded by the `Result<T>` envelope (skeleton plan historical note, 11 Sep 2026); the client side is frontend ADR 0009 |
 | D11 | API base path `/api/v1` | In force |
 | D12 | springdoc generates `contracts/openapi.json` | In force |
 | D13 | Checkstyle with Google checks, 120-column lines | In force |
