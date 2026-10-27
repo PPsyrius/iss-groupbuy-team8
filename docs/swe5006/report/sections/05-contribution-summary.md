@@ -3,6 +3,7 @@ rubric: 5, G4
 owner: Lim Jiechao (each member checks their row)
 plan: #681
 sources: docs/agile/sprint-0N/log/; ../report-drafts/*-contribution.md
+owns: R23
 status: draft
 -->
 
@@ -34,11 +35,12 @@ The work below is merged into `dev`; "SWE5001" marks work that runs only on the 
 
 Each line names the teammates who wrote code behind a section that another member owns. The section owner wrote its analysis, design and pattern text.
 
-- **UC1 and UC2 (3.4.3, Pan):** the browse backend and the Google sign-in backend by Liu Jin; the frontend pages by Lim; Eric extended the shared pricing seam for team quotes.
-- **UC3 and UC4 (3.4.1, Eric):** the purchase-intent and settlement ports by Liu Jin.
+- **UC1 and UC2 (3.4.3, Pan):** the browse backend and the Google sign-in backend by Liu Jin; the frontend pages by Lim; Eric extended the shared pricing seam for team quotes. Pan himself later added the role list to the current-user response (30 September) and wrote `LoginSessionPublisher`, which stores the session's roles before the browser gets its cookie (13 October).
+- **UC3 and UC4 (3.4.1, Eric):** the purchase-intent and settlement ports by Liu Jin. Patterns that touch these use cases belong to others: the Observer to Yorik (3.5.2), Template Method to Pan (3.5.3) and Strategy to Lim (3.5.4); the transactional outbox writer and relay are Yorik's. The Idempotent Receiver of the notification consumer is Eric's own, outside UC3 and UC4.
 - **UC6 and Observer (3.4.2 and 3.5.2, Yorik):** the domain events `TeamSucceeded` and `TeamExpired` and the expiry refund subscriber by Liu Jin; their integration contracts `TeamSucceededV1` and `TeamExpiredV1` by Yorik.
-- **UC7 and UC8 (3.4.4, Lim):** the My Teams endpoint and the share-attribution backend by Liu Jin; the frontend pages by Lim.
-- **UC9 and State (3.4.5 and 3.5.5, Liu Jin):** the first version, including the listing State, by Eric (11 September), with Liu Jin reviewing; Pan changed the states on 1 October to expose deletion eligibility; admin team terms by Liu Jin.
-- **Template Method (3.5.3, Pan):** `BatchingOutboxEventTransport` by Pan; the original SQS and SNS transports by Yorik; Liu Jin opened the pull request that integrated them and Pan merged it.
-- **Strategy (3.5.4, Lim):** the backend pricing code (`PricingStrategy`, `PricingStrategyResolver`) by Liu Jin and Eric.
+- **UC7 and UC8 (3.4.4, Lim):** the backend by Liu Jin: the two owner-scoped list endpoints (My Orders and My Teams), invite minting and resolving, and the share-credit subscriber; the Redis cache in front of invite lookups by Yorik (5 October); the rate limit on invite minting by Eric (3 October); the frontend pages by Lim.
+- **UC9 and State (3.4.5 and 3.5.5, Liu Jin):** the first version, including the listing State, its versioned writes and the 412 stale-version rule, by Eric (11 September), with Liu Jin reviewing; Pan changed the states on 1 October to expose deletion eligibility, replacing `requireDeletable` with `deletionError`; admin team terms and the first-team price in one command by Liu Jin (29 September); the admin console screens by Lim (from 30 September).
+- **UC5 (3.4.5, Liu Jin):** the expiry sweep and its scheduler job by Liu Jin (24 September), hardened by Pan; the last-seat admission (`GroupDeal.joinPaid`, `PaidGroupDealService.joinConfirmed`), shared with UC4, by Eric (9 September), with the `TeamSucceeded` publication added by Liu Jin (23 September).
+- **Template Method (3.5.3, Pan):** `BatchingOutboxEventTransport` and the review fix by Pan (13 October); the outbox relay and the original SQS and SNS transports by Yorik; Liu Jin opened the pull request that brought the relay onto `dev` (13 October) and Pan merged it.
+- **Strategy (3.5.4, Lim):** the backend pricing code by Liu Jin, with UC1 browsing (8 September: `PricingStrategy`, `DualPricingStrategy`, `PricingStrategyResolver`, `PricingMode`), and by Eric, who added the first-team quote `quoteTeamPrice` and its client `TeamPriceAppServiceImpl` (9 September).
 - **Pairing:** Yorik and Liu Jin paired on one branch and one pull request to read admin attention nicknames through the identity port (14 October).

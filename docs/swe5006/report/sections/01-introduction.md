@@ -3,6 +3,7 @@ rubric: 1.1, 1.2, 1.3, 1.4, 1.4.1, 1.4.2, 1.4.3
 owner: Lim Jiechao
 plan: #675
 sources: PROP §4, §6.1–6.3; deck s2–s4, s12; docs/quality/nfr-register.md
+owns: R01, R02, R03, R04, R05, R06, R08, R09, R19, R34, R40, R49, R50
 status: draft
 -->
 
@@ -16,16 +17,16 @@ BlocBuy is a group-buying web application for Singapore that makes it safe for a
 
 Today such groups form in chat apps and spreadsheets. Buyers cannot see how close a deal is to its target, an organiser collects the money and refunds it by hand, and small sellers have nowhere to post a team price. BlocBuy replaces the organiser with a pay-first mechanism, modelled on the early Pinduoduo playbook (project proposal, section 4, 27 August 2026):
 
-- Every listing (a product on sale) shows two prices: the individual price and a lower team price.
-- A buyer starts a **team** (shown to buyers as a *bloc*) by paying upfront, and then shares an invite link.
-- Other buyers join the team by paying upfront too.
-- If the team fills before its deadline, every member gets the team price. If it expires, every member is refunded automatically.
+- Every **listing** (a product on sale; buyers see only listings that are on sale) shows two prices: the individual price and a lower team price. Its **team terms**, a team size and a team lifetime, are copied by every team started on it.
+- A buyer starts a **team** (shown to buyers as a *bloc*): one group purchase of one listing at a fixed team price, with a target size and a deadline. The buyer pays upfront and then shares an invite link.
+- Other buyers join the team by paying upfront too. This is **pay first**: every buyer pays the team price on starting or joining, before the team is known to succeed.
+- A team **succeeds** if it fills before its deadline, and every member gets the team price. Otherwise it **expires**, and every member is refunded automatically.
 
-All payments run through Stripe in test mode (the Stripe *Sandbox*); no real money moves. Because money is committed before the team is known to succeed, most of the design is about money safety under concurrency and failure: no team takes more members than it has seats, and no payment is charged or refunded twice.
+In the code, a listing is the `Product` aggregate (table `biz_product`) and a team the `GroupDeal` aggregate (table `biz_group_deal`). All payments run through Stripe in test mode (the Stripe *Sandbox*); no real money moves. Because money is committed before the team is known to succeed, most of the design is about money safety under concurrency and failure: no team takes more members than it has seats, and no payment is charged or refunded twice.
 
 The same repository serves two NUS-ISS courses. This report describes the SWE5006 system: the `dev` environment, which runs BlocBuy as one modular monolith on a single Amazon EC2 host behind CloudFront. The SWE5001 course deploys the same code as three services on Amazon ECS. That deployment is also the project's production release: code reaches it only through a promotion pull request that a code owner approves. No separate SWE5006 production stack was built (backend ADR 0008; section 1.4).
 
-At the time of writing (26 October 2026) all four planned sprints are complete; Sprint 4 ended on 23 October and was tagged on 24 October. All nine use cases of the proposal are built and their issues were closed as completed between 19 and 28 September. On dev, a buyer's paid start of a team and the automatic refund on expiry were shown on 23 October, and a second buyer's paid join was shown in a recording on 24 October. Crash recovery of refunds under message replay is tested locally but has not been shown on dev. Production on ECS was last promoted on 20 October. Section 2.2 gives the full status against the proposal and the outstanding issues. {{VERIFY: re-read this status paragraph at the freeze SHA on 30 Oct (rubric G7) — Lim}}
+Every count, version, coverage figure and status in this report is read at one commit of `dev`, the freeze commit `6d14e449` of 26 October 2026, unless a table dates it otherwise. At that date all four planned sprints are complete; Sprint 4 ended on 23 October and was tagged on 24 October. All nine use cases of the proposal are built and their issues were closed as completed between 19 and 28 September. On dev, a buyer's paid start of a team and the automatic refund on expiry were shown on 23 October, and a second buyer's paid join was shown in a recording on 24 October. Crash recovery of refunds under message replay is tested locally but has not been shown on dev. Production on ECS was last promoted on 20 October. Section 2.2 gives the full status against the proposal and the outstanding issues. {{VERIFY: re-read this status paragraph at the freeze SHA on 30 Oct (rubric G7) — Lim}}
 
 ## 1.2 Business Needs
 
@@ -65,7 +66,7 @@ The project has no company sponsor; the proposal lists none. No Product Owner wa
 
 ## 1.4 Project Scope
 
-The scope is the nine use cases of the proposal (section 6.1), with two later additions. An admin console goes beyond the proposal's "API-only" listing administration for UC9. In-app notifications were added in Sprint 4 for SWE5001; they are coded but switched off on SWE5006 dev (backend ADR 0007), so this report treats them as SWE5001 scope. Section 1.4.1 lists the functionality in scope with its status, section 1.4.2 what is out of scope, and section 1.4.3 the quality attributes. The use case diagram in section 3.3.1 shows both.
+The scope is the nine use cases of the proposal (section 6.1), with two later additions. An admin console goes beyond the proposal's "API-only" listing administration for UC9. In-app notifications were added in Sprint 4 for SWE5001. They are coded but switched off on SWE5006 dev (backend ADR 0007): the dev profile turns off the outbox writer, the relay and the notification consumer by default (`blocbuy.events.enabled`, `blocbuy.events.relay.enabled` and `blocbuy.events.consumer.enabled` in `application-ec2.yml`), and no message broker runs there, so the SNS and SQS transports never run on dev. Notifications are therefore SWE5001 scope. Section 1.4.1 lists the functionality in scope with its status, section 1.4.2 what is out of scope, and section 1.4.3 the quality attributes. The use case diagram in section 3.3.1 shows both.
 
 The project ran in four two-week sprints, which serve as its phases. Table 1.2 lists what each sprint delivered; section 2.1 gives the sprint goals and planned effort, and section 2.3 the Definition of Done step each sprint reached.
 
@@ -83,9 +84,11 @@ The scope is documented in three places: the proposal (sections 6.1 to 6.3), the
 What was architected and what was implemented differ in four places:
 
 - **Implemented and deployed for SWE5006:** the modular monolith on the EC2 dev host (backend ADR 0008).
-- **Also implemented, outside SWE5006 dev:** the three-service topology (identity, commerce and notification services) on Amazon ECS. It is the SWE5001 deployment and the shared production release.
-- **Designed but not implemented:** a separate SWE5006 production stack on EC2. Its Terraform stack exists, and a read-only plan of 25 September showed 21 resources to create, but it was never applied; the production release was closed as not planned on 11 October in favour of the shared SWE5001 release.
+- **Also implemented, outside SWE5006 dev:** the three-service topology on Amazon ECS. It is the SWE5001 deployment and the shared production release.
+- **Designed but not implemented:** a separate SWE5006 production stack on EC2. Its Terraform stack (`infra/terraform/backend-app-stack`) exists, and a read-only plan of 25 September showed 21 resources to create, but it was never applied; its story was closed as not planned on 11 October, when the Sprint 4 plan cut work that neither course grades. Production is the shared SWE5001 release.
 - **Declared but never written:** the team states `FAILED` and `CANCELED`. The `DealStatus` enum declares them, but no code moves a team into either state; a team ends only as `SUCCEEDED` or `EXPIRED`.
+
+The SWE5001 topology runs the same code on Amazon ECS as three services: `identity-svc` (the identity context), `commerce-svc` (catalog, group-buy, order and payment) and `notification-svc` (notification). The split follows transactional consistency: contexts that share a transaction stay in one service, so the four commerce contexts stay together. Commerce reaches identity through one internal HTTP call and reaches notification only through integration events (backend ADRs 0007 and 0008). Each service has its own database on one shared RDS instance and is granted only its own tables.
 
 ### 1.4.1 Functionality in Scope
 
@@ -98,9 +101,9 @@ Table 1.3: Use cases in scope and their status on dev.
 | UC1 Browse and view listings, with dual price | On dev | Includes keyword search | #24, 19 Sep |
 | UC2 Register / authenticate | On dev | Google sign-in only; the server keeps the session and the browser holds only an HttpOnly cookie (changed from the proposal, section 2.2) | #25, 23 Sep |
 | UC3 Initiate a team (pay first) | On dev since 23 Oct | A real Sandbox payment started a team and created its order | #26, 24 Sep |
-| UC4 Join a team | On dev since 24 Oct | Shown in a recording: a second buyer's paid join filled a team of two. A recorded user-interface observation, with no database or log audit | #27, 24 Sep |
-| UC5 Team lifecycle resolution | On dev since 24 Oct; expiry since 23 Oct | The expiry path ran on 23 October: a paid team expired 18.9 s after its deadline. The success path was first shown in the 24 October recording, a team filled with two of two members (a user-interface observation, with no database or log audit). The diagram badge carries 24 October, when both outcomes had been shown | #28, 24 Sep |
-| UC6 Refund on team expiry | On dev since 23 Oct | One expired team was refunded once, 40.6 s after its deadline. Crash recovery under replay is tested locally only | #29, 25 Sep |
+| UC4 Join a team | On dev since 24 Oct | Shown on dev on 24 October in a recording (Appendix E): a second buyer's paid join filled a team of two. A recorded user-interface observation, with no database or log audit | #27, 24 Sep |
+| UC5 Team lifecycle resolution | On dev since 24 Oct; expiry since 23 Oct | The expiry path was shown on dev on 23 October (Table E.3): a paid team expired after its deadline. The success path was first shown in the 24 October recording, a team filled with two of two members (a user-interface observation, with no database or log audit). The diagram badge carries 24 October, when both outcomes had been shown | #28, 24 Sep |
+| UC6 Refund on team expiry | On dev since 23 Oct | Shown on dev on 23 October (Table E.3): one expired team was refunded once. Crash recovery under replay is tested locally only and not shown on dev | #29, 25 Sep |
 | UC7 Share attribution | On dev | The 24 October recording shows the invite banner naming the sharer | #30, 28 Sep |
 | UC8 View my orders and teams | On dev | | #31, 27 Sep |
 | UC9 Admin listing management | On dev | Extended beyond the proposal with team terms and an admin console | #32, 19 Sep; #221 |
@@ -121,7 +124,7 @@ The proposal (section 6.2) excluded seven capabilities, listed here close to its
 6. Mobile applications (the single-page application is mobile-responsive; no native apps).
 7. Live payment processing (Stripe test mode only).
 
-The admin console does not breach the first exclusion: only platform administrators use it, not merchants.
+The admin console does not breach the first exclusion: only platform administrators use it, not merchants. The fifth exclusion removes notifications beyond in-app status, not in-app notifications, so the in-app notifications added for SWE5001 do not breach it either.
 
 Table 1.4 lists the items the team dropped during the project. All were closed as not planned on 11 October 2026, when the Sprint 4 plan cut work that neither course grades so that its time went to the SWE5006 report and the SWE5001 platform.
 
@@ -147,15 +150,15 @@ Table 1.5: Quality attributes, targets and status.
 | Attribute | Proposal target | Verified in | Status, 26 Oct |
 | --- | --- | --- | --- |
 | Correctness under concurrency | Team capacity never exceeded; no payment double-charged or double-refunded | 3.2.8, 3.4.1, 4.2 | Tested locally (Testcontainers): twenty buyers race for one last seat, one wins and nineteen refund obligations are recorded. Not load-tested on dev |
-| Performance | Interactive operations within 2 s at 100 concurrent users; expiry resolved within 1 minute of the deadline | 4.2 (test), 2.2 (result) | Response time met locally on 30 September and on the SWE5001 ECS environment on 16 October; never measured on SWE5006 dev (NFR-15). Expiry: see below |
-| Security | Google sign-in; role-based admin; signed Stripe webhooks; no credentials in code | 3.2.6, 4.1, 4.2 | Implemented; open gaps such as the HTTP origin and one IAM access key are listed in section 2.2 |
+| Performance | Interactive operations within 2 s at 100 concurrent users; expiry resolved within 1 minute of the deadline | 4.2 (test), 2.2 (result) {{CONFIRM: D20 Should Table 1.5 point straight to Table E.4 for the performance results and drop the 2.2 pointer, since 2.2 only points back here and the numbers are in 4.2 and Table E.4? — Lim}} | Response time met locally on 30 September and on the SWE5001 ECS environment on 16 October; never measured on SWE5006 dev (NFR-15). Expiry: see below |
+| Security | Google sign-in; role-based admin; signed Stripe webhooks; no credentials in code | 3.2.6, 4.1, 4.2 | Implemented; open gaps such as the HTTP origin and one IAM access key are listed in Table 2.6 |
 | Maintainability and extensibility | A new pricing scheme, payment provider or team consequence without editing existing domain logic | 3.5 | Seams in place (section 3.5); no second implementation has exercised them yet |
 | Code quality | SonarCloud quality gate on every pull request; unit tests on the complex classes | 4.2 | Enforced: both SonarCloud gates are required checks (NFR-06) |
 | Auditability | Every payment, refund and transition traceable; every artefact traceable to a commit | 3.6, 4.1 | Implemented; see sections 3.6 and 4.1 |
 
 Two of these statuses need careful wording:
 
-- **Expiry within one minute is a design bound, not a guarantee.** The expiry sweep runs once a minute by default, so a team can wait up to one sweep interval plus the sweep's own run time after its deadline. Tested locally on 30 September, the worst lag over 30 teams was 58.18 s, in one run. On dev, one team on 23 October was closed 18.9 s after its deadline and refunded 40.6 s after it. One dev run does not show that the target is met on dev, and this report does not claim it.
-- **Performance was never measured on SWE5006 dev.** The local run of 30 September met p95 below 2 s for browse, join and My Orders at 100 users. The k6 run of 16 October ran on the SWE5001 ECS environment, not on the SWE5006 dev host.
+- **Expiry within one minute is a design bound, not a guarantee.** The expiry sweep runs at a fixed delay of one minute by default (`blocbuy.scheduling.team-expiry.interval`, `PT1M`), so a team can wait up to one sweep interval plus the sweep's own run time after its deadline; section 3.2.7 explains why. Tested locally on 30 September, in one run with 30 team deadlines inside a load window, the worst lag from deadline to committed expiry was 58.18 s; this is an upper bound that includes the observer's polling delay (`docs/perf/sprint3-baseline.md`). On dev, expiry and refund were shown in one run on 23 October (Table E.3). One run is not a bound, and the target is not claimed as met on dev.
+- **Performance was never measured on SWE5006 dev.** The local run of 30 September met p95 below 2 s for browse, join and My Orders at 100 users. The k6 run of 16 October ran on the SWE5001 ECS environment, as one monolith task under anonymous browse load only, not on the SWE5006 dev host.
 
-Scalability is not a proposal target, and this report does not claim it; the SWE5001 scaling work is outside its scope.
+Scalability is not a proposal target and is not claimed; the SWE5001 scaling work is outside the scope of SWE5006.
