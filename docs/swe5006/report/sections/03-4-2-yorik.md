@@ -31,7 +31,7 @@ classDiagram
         +teamsDue()
         +refundsDue()
     }
-    class ExpireTeamControl {
+    class ResolveTeamControl {
         <<control>>
         +expireOverdueTeams()
     }
@@ -92,7 +92,7 @@ classDiagram
 %% at SchedulerTrigger 1,0
 %% at ReviewUI 2,0
 %% at ReceiptUI 3,0
-%% at ExpireTeamControl 0,1
+%% at ResolveTeamControl 0,1
 %% at RefundControl 2,1
 %% at PaymentGateway 3,1
 %% at Team 0,2
@@ -102,14 +102,14 @@ classDiagram
 %% at Membership 0,3
 %% at Payment 1,3
 
-    SchedulerTrigger "1" -- "1" ExpireTeamControl
+    SchedulerTrigger "1" -- "1" ResolveTeamControl
     SchedulerTrigger "1" -- "1" RefundControl
     ReviewUI "1" -- "1" RefundControl
     ReceiptUI "1" -- "1" RefundControl
     RefundControl "1" -- "1" PaymentGateway
-    ExpireTeamControl --> Team
-    ExpireTeamControl --> Order : cancels
-    ExpireTeamControl ..> Refund : «create»
+    ResolveTeamControl --> Team
+    ResolveTeamControl --> Order : cancels
+    ResolveTeamControl ..> Refund : «create»
     RefundControl --> Refund
     RefundControl --> Payment : verifies
     RefundControl ..> RefundAttempt : «create»
@@ -120,7 +120,7 @@ classDiagram
     Refund "1" *-- "0..*" RefundAttempt
 ```
 
-Figure 3.51: UML analysis class diagram of UC6 Refund on team expiry. Two controls split the use case at the point where money moves: ExpireTeamControl only records what is owed, and RefundControl alone talks to the payment provider; each Payment owes at most one Refund.
+Figure 3.51: UML analysis class diagram of UC6 Refund on team expiry. Two controls split the use case at the point where money moves: ResolveTeamControl only records what is owed, and RefundControl alone talks to the payment provider; each Payment owes at most one Refund.
 
 #### B Analysis sequence diagrams
 
@@ -132,7 +132,7 @@ Figure 3.52 is flow 1. Expiring the team, cancelling its orders and recording th
 sequenceDiagram
     actor Clock as Scheduler
     participant Trig as SchedulerTrigger (boundary)
-    participant Ctl as ExpireTeamControl (control)
+    participant Ctl as ResolveTeamControl (control)
     participant Team as Team (entity)
     participant Ord as Order (entity)
     participant Ref as Refund (entity)
@@ -405,7 +405,7 @@ Figure 3.56: UML design class diagram of UC6, part 2, the refund worker. `Refund
 
 `RefundWork` is the immutable snapshot that a claim returns: the obligation joined with its payment's status, amount, currency and Stripe PaymentIntent. Its `valid()` checks that the payment succeeded and that amount and currency agree. Its `providerKey()` is `blocbuy-refund-` plus the obligation's identifier, so every attempt for one obligation sends Stripe the same idempotency key. `StripeRefundGateway.createRefund` re-reads the original PaymentIntent and refunds it, and tags the refund with the obligation's identifier as metadata; `findRefund` lists the PaymentIntent's refunds and accepts only a single one with that tag. The buyer's receipt reads the refund status through `PaymentBrowserService.receipt`, which serves only the payment's owner.
 
-The analysis classes map onto these design classes as follows. SchedulerTrigger becomes the two Spring jobs `TeamExpirySweepJob` and `RefundWorkerJob`, each run under a database job lease by `LeasedJobRunner`. ExpireTeamControl is split across three modules: `GroupDealExpirySweeper` and `GroupDealExpiryService` in group-buy, `OrderLifecycleSubscriber` in order, and `TeamExpiryRefundSubscriber` with `TeamExpiryRefundService` in payment. RefundControl becomes `RefundService`. PaymentGateway becomes the port `RefundGateway` with the adapter `StripeRefundGateway`. Refund becomes a `biz_refund` row behind `RefundRepository`, and RefundAttempt a `log_refund_attempt` row written by `RefundMapper.audit`. ReceiptUI becomes the receipt page described in Table 3.15. ReviewUI has no design element yet: no endpoint or command calls `RefundService.reconcile` (part D).
+The analysis classes map onto these design classes as follows. SchedulerTrigger becomes the two Spring jobs `TeamExpirySweepJob` and `RefundWorkerJob`, each run under a database job lease by `LeasedJobRunner`. ResolveTeamControl is split across three modules: `GroupDealExpirySweeper` and `GroupDealExpiryService` in group-buy, `OrderLifecycleSubscriber` in order, and `TeamExpiryRefundSubscriber` with `TeamExpiryRefundService` in payment. RefundControl becomes `RefundService`. PaymentGateway becomes the port `RefundGateway` with the adapter `StripeRefundGateway`. Refund becomes a `biz_refund` row behind `RefundRepository`, and RefundAttempt a `log_refund_attempt` row written by `RefundMapper.audit`. ReceiptUI becomes the receipt page described in Table 3.15. ReviewUI has no design element yet: no endpoint or command calls `RefundService.reconcile` (part D).
 
 #### D Design sequence diagrams
 
@@ -561,10 +561,10 @@ Table 3.15: Transition strategies applied to UC6.
 | Strategy | Analysis object | Design element |
 | --- | --- | --- |
 | 3.2.2 Presentation | «boundary» ReceiptUI | Receipt route `payments.$paymentId.tsx` with `receipt-view.ts` and `refund-status.ts`; the page polls while a refund is pending |
-| 3.2.3 Distribution | «control» ExpireTeamControl; «boundary» ReceiptUI | Expiry split across the group-buy, order and payment modules, joined only by the `TeamExpired` event and the port `PaymentBusinessPort.lockExpiredTeam`; receipt served by `GET /api/v1/payments/{id}` on `StripeCheckoutController` |
+| 3.2.3 Distribution | «control» ResolveTeamControl; «boundary» ReceiptUI | Expiry split across the group-buy, order and payment modules, joined only by the `TeamExpired` event and the port `PaymentBusinessPort.lockExpiredTeam`; receipt served by `GET /api/v1/payments/{id}` on `StripeCheckoutController` |
 | 3.2.4 Persistence | «entity» Refund, RefundAttempt, Team, Order | `biz_refund` behind `RefundRepository`, `RefundRepositoryImpl` and `RefundMapper`, created by `CheckoutPaymentRepository.requireRefundsForExpiredTeam` and `PaymentMapper.refundExpiredTeam`; `log_refund_attempt` written by `RefundMapper.audit`; team expiry by `GroupDeal.expire` and `PaidGroupDealRepository.expire` |
 | 3.2.5 External interface | «boundary» PaymentGateway | Port `RefundGateway` with adapter `StripeRefundGateway`; idempotency key `RefundWork.providerKey()`; fixed 30-second retry of provider errors; `review` state for unsafe answers; search-only after 23 hours |
 | 3.2.6 Security | «boundary» ReviewUI, ReceiptUI | No endpoint or command exposes `RefundService.reconcile`; `PaymentBrowserService.receipt` returns a receipt only to the payment's owner |
 | 3.2.7 Scheduling | «boundary» SchedulerTrigger | `TeamExpirySweepJob` (fixed delay one minute) and `RefundWorkerJob` (fixed delay 30 seconds) under `LeasedJobRunner` job leases, active only when `blocbuy.scheduling.enabled` is true |
-| 3.2.8 Concurrency | «control» ExpireTeamControl, RefundControl; «entity» Team, Refund | Team row lock and status-guarded `expireDeal`; refundable payments locked in a fixed order; `UNIQUE (payment_id)` with `ON CONFLICT`; claim with `FOR UPDATE SKIP LOCKED`, a 2-minute row lease and a version fence on `finish`; provider I/O outside transactions |
-| 3.2.9 Domain events | «control» ExpireTeamControl (cancel orders, record refunds) | `GroupDealExpiryService` publishes `TeamExpired`; `OrderLifecycleSubscriber` (`@Order(10)`) and `TeamExpiryRefundSubscriber` (`@Order(20)`) react at `BEFORE_COMMIT` |
+| 3.2.8 Concurrency | «control» ResolveTeamControl, RefundControl; «entity» Team, Refund | Team row lock and status-guarded `expireDeal`; refundable payments locked in a fixed order; `UNIQUE (payment_id)` with `ON CONFLICT`; claim with `FOR UPDATE SKIP LOCKED`, a 2-minute row lease and a version fence on `finish`; provider I/O outside transactions |
+| 3.2.9 Domain events | «control» ResolveTeamControl (cancel orders, record refunds) | `GroupDealExpiryService` publishes `TeamExpired`; `OrderLifecycleSubscriber` (`@Order(10)`) and `TeamExpiryRefundSubscriber` (`@Order(20)`) react at `BEFORE_COMMIT` |
