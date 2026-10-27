@@ -153,7 +153,7 @@ Each step of a use case that changes data is one database transaction, owned by 
 - No call to an external provider runs inside a transaction. `StripeCheckoutService.handleWebhook` refuses to start if a transaction is already open.
 - Consequences that belong to the same business fact run as `BEFORE_COMMIT` listeners (`OrderLifecycleSubscriber`, `TeamExpiryRefundSubscriber`, and the outbox writer `IntegrationOutboxWriter`). Derived side effects run `AFTER_COMMIT` (`ShareCreditSubscriber`, `OpenDealOfferCacheSubscriber`). The event records and the listeners themselves belong to 3.2.9 Domain events and to the Observer design in section 3.5.2.
 
-Figure 3.31 shows where these rules sit in the classes; Figure 3.32 shows the transaction boundary on the settlement of the last seat. Before this strategy the step was the analysis interaction of Figure 3.29, with no transaction at all.
+Figure 3.31 shows the transaction boundary in the classes, with one listener of each phase: `OrderLifecycleSubscriber` (`BEFORE_COMMIT`) and `OpenDealOfferCacheSubscriber` (`AFTER_COMMIT`); the other three listeners follow the same pattern and are not drawn. Figure 3.32 shows the transaction boundary on the settlement of the last seat. Before this strategy the step was the analysis interaction of Figure 3.29, with no transaction at all.
 
 ```mermaid
 classDiagram
@@ -207,9 +207,11 @@ sequenceDiagram
         S->>L: before commit: onTeamSucceeded
         L->>L: confirm the team's orders
     end
-    S->>E: onTeamSucceeded, AFTER_COMMIT listener
+    S->>E: onTeamSucceeded, AFTER_COMMIT listener; HTTP 2xx follows
 ```
 
 Figure 3.32: Design sequence of settling the last seat, with the transaction boundary drawn as a critical region (UML has no transaction fragment). Provider calls stay outside the transaction, the confirmation of the team's orders commits with the payment, and the cache eviction runs only after the commit.
 
 Rationale: the seat, the order and the stock unit change together with the payment's SUCCEEDED state, or not at all. A payment whose admission is rejected commits with a refund obligation instead. If the transaction fails, everything rolls back and Stripe delivers the webhook again. A slow provider never holds a database lock.
+
+Evidence, by kind. The transaction settings and listener phases above were read in the code at `46faacd7`: `@Transactional(timeout = 10)` on `PaidGroupDealService` and `GroupDealExpiryService`, the READ COMMITTED, 10-second `TransactionTemplate` in `StripeCheckoutService`, `Propagation.MANDATORY` on `OrderFulfilmentAdapter`, the check in `StripeCheckoutService.handleWebhook` that throws when a transaction is already active, and the `@TransactionalEventListener` phase of each listener (none is `@Async`). `StripeWebhookController` answers only after settlement returns, so the `AFTER_COMMIT` cache eviction also runs before the 2xx. Rollback and redelivery are covered by automated tests on PostgreSQL 18 (Testcontainers) that run in `build-quality`, not on dev: `StripeCheckoutFlowTest.signedHttpFailureRollsBackAndProviderRetryCanRecover` makes fulfilment fail inside the transaction, receives HTTP 500 with no webhook receipt, order or payment change stored, and then settles the same event on redelivery; `PaidGroupDealServiceIT.surroundingPaymentTransactionRollbackLeavesNoGroupOrMember` shows that a rolled-back payment transaction leaves no team or member.

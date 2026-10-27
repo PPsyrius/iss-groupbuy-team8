@@ -10,7 +10,7 @@ status: draft
 
 ## 2.1 Project Plan
 
-The team planned at two levels. The proposal set a project-level work breakdown of about 50 person-days, roughly ten per member, over four two-week sprints. Each sprint plan then estimated its stories in hours and named one owner per story, the person who writes the code. Every member owns the analysis and design of at least one use case and one design problem (Table 2.4).
+The team planned at two levels. The proposal set a project-level work breakdown of about 50 person-days, roughly ten per member, over four two-week sprints. Each sprint plan then estimated its stories in hours and named one owner per story, the person who writes the code. Every member owns the analysis and design of at least one use case and one design problem (Table 2.3).
 
 #### Work breakdown and baseline
 
