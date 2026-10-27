@@ -87,11 +87,11 @@ Section 2.3 places each sprint on this ladder.
 
 ## 2.2 Project Status
 
-BlocBuy delivers everything the proposal promised in function, and more: all nine use cases plus an admin console. Eight design or platform choices changed during the project, and one deliverable, a separate SWE5006 production stack, was dropped. On dev, paid start, a second buyer's paid join and the expiry refund have all been shown, by 24 October. The open issues are crash recovery of refunds not yet shown on dev, an unreconciled lock order between two decision records, and a set of security and operations gaps on the dev host. This snapshot is dated 26 October 2026. {{VERIFY: re-read every row of Tables 2.5 and 2.6 at the freeze SHA on 30 Oct — Lim}}
+BlocBuy delivers everything the proposal promised in function, and more: all nine use cases plus an admin console. Seven design or platform choices changed during the project, and one deliverable, a separate SWE5006 production stack, was dropped. On dev, paid start, a second buyer's paid join and the expiry refund have all been shown, by 24 October. The open issues are crash recovery of refunds not yet shown on dev, an unreconciled lock order between two decision records, and a set of security and operations gaps on the dev host. This snapshot is dated 26 October 2026. {{VERIFY: re-read every row of Tables 2.5 and 2.6 at the freeze SHA on 30 Oct — Lim}}
 
 #### Promised against delivered
 
-Benchmarking the status against the proposal is a team ruling; the proposal is not a marking document. Table 2.5 compares the proposal with what was built. A change cites its decision record where one exists. Five of the eight changes have no ADR at all, and the session change has only a frontend ADR; their reasoning is in design documents and plans, and Appendix B lists them as decisions without an ADR.
+Benchmarking the status against the proposal is a team ruling; the proposal is not a marking document. Table 2.5 compares the proposal with what was built. A change cites its decision record where one exists. Four of the seven changes have no ADR at all, and the session change has only a frontend ADR; their reasoning is in design documents and plans, and Appendix B lists them as decisions without an ADR.
 
 Table 2.5: Promised against delivered, 26 October 2026.
 
@@ -101,7 +101,7 @@ Table 2.5: Promised against delivered, 26 October 2026.
 | Crash recovery of refunds | Refunds safe under replay and crash | Open | Proven locally (Testcontainers and a local rehearsal on 3 October); not shown on dev (#224) |
 | UC9 administration | API-only listing CRUD plus database seeding | Changed | An admin console for administrators, built in Sprint 3 (frontend ADR 0015) |
 | Sign-in session | Google sign-in, with a token (JWT) kept in browser local storage | Changed | Google sign-in unchanged; the server keeps a Sa-Token session in Redis and the browser holds only an HttpOnly cookie (frontend ADR 0002; backend skeleton plan decisions D6, D7; no backend ADR) |
-| Payment abstraction and team resolution | Adapter for Stripe (UC6); Observer for team resolution (UC7) | Changed | Payment providers sit behind the `CheckoutGateway` and `RefundGateway` ports (section 3.2.5); Observer applied to the consequences of a team's outcome, UC5 to UC6 (section 3.5.2). No ADR |
+| Payment abstraction and team resolution | Adapter for Stripe (UC6); Observer for team resolution (UC5, UC7) | Delivered | Payment providers sit behind the domain's `CheckoutGateway` and `RefundGateway` ports, implemented by Stripe adapters (section 3.2.5); a team's resolution is published as events to ordered subscribers (backend ADRs 0002, 0003). Observer, not Adapter, is UC6's design problem (section 3.5.2) |
 | Team lifecycle | State pattern for the team | Changed | A transition table, `DealStatus.canTransitionTo`, for the team; State applied to listings instead (section 3.5.5). No ADR |
 | Persistence | Spring Data JPA | Changed | MyBatis behind repository ports (backend skeleton plan decisions D1, D9). No ADR |
 | Dev environment | Amazon ECS Fargate and RDS | Changed | One EC2 host with Docker Compose and PostgreSQL on the host (backend ADR 0008) |
