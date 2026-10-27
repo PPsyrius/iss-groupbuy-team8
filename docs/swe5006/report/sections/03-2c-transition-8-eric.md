@@ -3,6 +3,7 @@ rubric: 3.2.8
 owner: Wang Ziang (Eric)
 plan: #677
 sources: ../report-drafts/transition-strategies.md
+owns: R11, R14, R15
 status: draft
 -->
 
@@ -11,7 +12,7 @@ status: draft
 Several buyers can pay for the last seat of a team at the same moment, and the expiry sweep can meet a late payment on the same team. The design serialises these cases in PostgreSQL, not in application memory, with four mechanisms:
 
 - **Pessimistic row locks in a fixed order.** Every path that changes a team's seats, orders or payments first locks the team's row with `SELECT … FOR UPDATE`, so two such paths on one team run one after the other. Table 3.12 gives the order each path takes after that.
-- **Guarded updates.** `PaidGroupDealMapper.updateDeal` writes only `WHERE current_size = expectedSize AND status = expectedStatus`, so the loser of a race updates zero rows and the transaction rolls back. The team's `version` is incremented, not compared. The expiry update is guarded by `status = 'open'`.
+- **Guarded updates.** A paid join writes the team row only through `PaidGroupDealMapper.updateDeal` (called by `PaidGroupDealRepositoryImpl.insertJoinedMember`), which writes only `WHERE current_size = expectedSize AND status = expectedStatus`. A writer that read a stale team therefore updates zero rows, `requireOne` throws, and the transaction rolls back. The same statement increments `biz_group_deal.version`, but no statement compares it, so the version is not the guard on this path. The expiry update `expireDeal` is guarded by `status = 'open'`; when it changes zero rows, `PaidGroupDealRepository.expire` refuses with `DEAL_CLOSED`.
 - **Unique indexes as the last line of defence.** One active member per buyer per team (`uq_biz_group_member_deal_user`), one member per payment (`uq_biz_group_member_payment_id`), one participation receipt per payment (`uq_biz_group_participation_receipt_payment`), one order per payment (`uq_biz_order_payment_id`), one fulfilled purchase intent per payment (`uq_biz_purchase_intent_fulfilled_payment`), one refund obligation per payment (`biz_refund.payment_id UNIQUE`) and one obligation per provider refund (`uq_biz_refund_provider_id`, a partial index). They are created in migrations V5, V7, V9, V11, V12 and V15.
 - **Work queues and leases.** Workers claim work with `FOR UPDATE SKIP LOCKED` (refund obligations, purchase-intent expiry, and the retention job that deletes old published outbox rows). The outbox relay reads its due rows without a row lock (`OutboxMapper.findDue`) and relies on the job lease alone. Each scheduled job holds a lease in `sys_scheduler_lock` through `SchedulerLeaseRepository.tryAcquire`, so only one application instance runs it at a time (3.2.7). A refund obligation also carries its own row lease: the worker claims one due obligation, sets `lease_until` two minutes ahead and increments `version`; `finish` is fenced by `id` and `version` and schedules the next attempt 30 seconds later (a fixed delay, not exponential back-off).
 
@@ -22,6 +23,8 @@ Administrator edits of a listing add an optimistic `version` check to a row lock
 Table 3.12 states the lock order that the code takes on each path, read from the code on 26 October 2026. On existing rows, every path takes a subset of one combined order, **team → purchase intent → order → payment → participation receipt → product**, and no path holds a later lock while it waits for an earlier one. The paths therefore cannot deadlock against each other. The webhook path does one thing before its first row lock: `StripeCheckoutService.settle` claims the Stripe event with a unique insert into `log_payment_webhook_event` (`claimEvent`, `ON CONFLICT (event_id) DO NOTHING`), and only then locks the team and purchase intent (`lockForSettlement`) and the payment (`repository.lock`). A second delivery of the same event waits on that unique entry, holding no row lock, and stops at the claim once the first commits.
 
 Table 3.12: Lock order per path, as implemented, and where each part is recorded.
+
+{{CONFIRM: D17 Where does the product row come in the lock order of each path: last after the receipt, or first, as on the admin and team-price quotation paths? — Eric}}
 
 | Path | Locks, in the order taken | Recorded in |
 |---|---|---|
@@ -143,7 +146,7 @@ Figure 3.30: Design sequence of the same race, after the concurrency strategy. T
 
 Rationale: a group-buy must never sell more seats than its target or settle one payment twice. Database locks hold across application instances, which in-memory locks would not. Because the expiry sweep also locks the team first, a sweep and a late payment on the same team queue behind each other in the same way.
 
-Evidence: the integration test `StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist` starts 20 concurrent payments for the last seat of a team of two. It asserts that the team ends with two members, two orders and current size two, that 19 refund obligations are stored, and that stock fell by exactly two. Tested locally (Testcontainers), not on dev. This race was not reproduced on the SWE5006 dev system.
+Evidence: the integration test `StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist` starts 20 concurrent paid joins for the last seat of a team of two, through the production purchase-intent and fulfilment ports. Each payment settles through `StripeCheckoutService.recover`, the operator recovery entry, which runs the same settlement as a webhook under a fresh event ID. The test asserts that the team ends with two members, two orders and current size two, that 19 refund obligations are stored, and that stock fell by exactly two, from 100 to 98. Tested locally and in CI (PostgreSQL in Testcontainers), not on dev. This race was not reproduced on the SWE5006 dev system.
 
 #### Transaction boundary
 

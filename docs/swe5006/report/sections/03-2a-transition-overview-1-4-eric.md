@@ -3,6 +3,7 @@ rubric: 3.2, 3.2.1, 3.2.2, 3.2.3, 3.2.4
 owner: Wang Ziang (Eric)
 plan: #677
 sources: ../report-drafts/transition-strategies.md
+owns: FG10
 status: draft
 -->
 
