@@ -34,7 +34,7 @@
 
 #let figure-frame(body) = block(width: 100%, breakable: false, inset: 6pt, stroke: 0.4pt + rgb("#D8D2C8"), body)
 
-#let table-caption(body) = block(below: 0.4em, sticky: true, text(size: 9pt, body))
+#let table-caption(body) = block(above: 14pt, below: 0.4em, sticky: true, text(size: 9pt, body))
 
 #let report-table(n, ..cells) = {
   set text(size: 9pt)
@@ -44,7 +44,9 @@
     inset: (x: 4pt, y: 3.5pt),
     stroke: 0.4pt + rgb("#8A8378"),
     fill: (_, y) => if y == 0 { rgb("#ECE6DC") },
-    ..cells.pos(),
+    // The first row is a real header: it repeats on each page and never ends a page alone.
+    table.header(..cells.pos().slice(0, n.len())),
+    ..cells.pos().slice(n.len()),
   ))
 }
 
@@ -57,6 +59,9 @@
 // grows to match when a logo is supplied.
 #let logo-height = 1.51cm
 
+// Dark navy close to Word's Heading 1-3 theme colour (accent 1, darker 50%).
+#let heading-ink = rgb("#1F3864")
+
 #let setup(logo: none, body) = {
   set page(
     paper: "a4",
@@ -68,31 +73,42 @@
   )
   // Normal: Arial, sz 24 (12 pt), left-aligned; docDefaults spacing after 160 (8 pt), line 259 auto.
   set text(font: ("Arial", "Helvetica"), size: 12pt, lang: "en", region: "gb")
-  set par(justify: false, leading: 0.72em, spacing: 8pt)
-  set list(indent: 0.6em, spacing: 0.6em)
-  set enum(indent: 0.6em, spacing: 0.6em)
+  // Word's line 259 auto on Arial (ascent+descent+gap 1.149 em) gives 14.9 pt from baseline to
+  // baseline, so Typst's leading (cap-height to baseline) is 0.52 em; Word adds the 8 pt after a
+  // paragraph on top of that line gap, so the gap between paragraphs is leading + 8 pt.
+  set par(justify: false, leading: 0.52em, spacing: 0.52em + 8pt)
+  // List items are tight (Word's List Paragraph uses contextual spacing); the list as a whole keeps
+  // the paragraph gap above and below.
+  set list(indent: 0.6em, spacing: 0.52em + 3pt)
+  set enum(indent: 0.6em, spacing: 0.52em + 3pt)
   // numbering.xml abstractNum of numId 1: lvlText "%1." then "%1.%2", "%1.%2.%3", "%1.%2.%3.%4".
   set heading(numbering: (..n) => {
     let v = n.pos()
     if v.len() == 1 { str(v.first()) + "." } else { v.map(str).join(".") }
   })
   // Headings are keepNext/keepLines with spacing after 0; Normal's 8 pt follows each one.
-  show heading: set block(below: 8pt, sticky: true)
+  // Word: spacing after 0, so the heading sits one line gap above its text; the space before is the
+  // previous paragraph's 8 pt plus the heading's own (2 pt for Heading 2 and 3), plus the line gap.
+  show heading: set block(below: 6.2pt, sticky: true)
   // Heading 1: bold, sz 32 (16 pt), spacing before 240 (12 pt); every chapter starts on a new page
   // (document.xml has a page break before each heading 1).
   show heading.where(level: 1): it => {
     pagebreak(weak: true)
-    set text(size: 16pt, weight: "bold")
-    block(above: 12pt, below: 8pt, it)
+    set text(size: 16pt, weight: "bold", fill: heading-ink)
+    block(above: 12pt, below: 6.2pt, it)
   }
-  // Heading 2: sz 26 (13 pt), regular; Heading 3: Normal size (12 pt), regular; spacing before 40 (2 pt)
-  // after the preceding paragraph's 8 pt. Level 4 has no template style: 12 pt italic.
-  show heading.where(level: 2): set text(size: 13pt, weight: "regular")
-  show heading.where(level: 2): set block(above: 10pt)
-  show heading.where(level: 3): set text(size: 12pt, weight: "regular")
-  show heading.where(level: 3): set block(above: 10pt)
-  show heading.where(level: 4): set text(size: 12pt, weight: "regular", style: "italic")
-  show heading.where(level: 4): set block(above: 10pt)
+  // Heading 2: sz 26 (13 pt); Heading 3: Normal size (12 pt); both regular in the docx; spacing before 40 (2 pt)
+  // after the preceding paragraph's 8 pt. Level 4 has no template style.
+  // Sizes as the template; weight and colour added so the levels read apart from body text (the
+  // docx styles set no colour; Word's built-in heading theme uses a dark accent like this one).
+  // No heading is italic. Extra space before H2 and H3 so a section break is wider than a
+  // paragraph break; H4 is bold in body ink, set apart from H3 by colour.
+  show heading.where(level: 2): set text(size: 13pt, weight: "bold", fill: heading-ink)
+  show heading.where(level: 2): set block(above: 8pt + 2pt + 6.2pt + 8pt)
+  show heading.where(level: 3): set text(size: 12pt, weight: "bold", fill: heading-ink)
+  show heading.where(level: 3): set block(above: 8pt + 2pt + 6.2pt + 4pt)
+  show heading.where(level: 4): set text(size: 12pt, weight: "bold", style: "normal")
+  show heading.where(level: 4): set block(above: 8pt + 2pt + 6.2pt)
   show raw.where(block: false): set text(size: 0.92em)
   show raw.where(block: true): it => block(width: 100%, fill: rgb("#F4F2EE"), inset: 6pt, text(size: 8pt, it))
   show link: set text(fill: rgb("#3E5CD9"))
