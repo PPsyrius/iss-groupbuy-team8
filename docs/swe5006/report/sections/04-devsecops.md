@@ -251,7 +251,7 @@ Table 4.12: Unit and integration tests of the complex classes.
 | Quote correctness | `GroupDealPurchaseSupportImplTest.aTeamWithoutItsPaidLeaderCannotBeQuoted` | Written red first: two failing tests reproduced the quote defect before the fix |
 | Notification delivery (receive notifications) | `NotificationConsumerElasticMqIT` | Against a local SQS emulator (ElasticMQ in Testcontainers), an event delivered three times creates one notification per recipient, and a malformed event is received five times and then found in the dead-letter queue while other messages are processed. Tested locally, not on dev (off on dev, section 1.4) |
 
-The tests caught real defects. Two red quote tests reproduced a defect in the join quote before it was fixed (7 October); the ArchUnit rule `controllers_are_validated` failed the build on a controller that lacked `@Validated` (13 October); and the full-history secret scan found 24 matches (see Table 4.14). Smoke failures on dev that raced a backend restart are deliberately not counted as catches (single host, section 4.3). Test-first development is recorded in the day logs: for example, on 3 October the rate-limit tests failed with 200 instead of 429 before the limits were implemented. The CI tooling itself has 193 Python tests (189 passed, 4 opt-in ZAP tests skipped) and 22 Node tests, recorded on 22 October.
+The tests caught real defects. Two red quote tests reproduced a defect in the join quote before it was fixed (7 October); the ArchUnit rule `controllers_are_validated` failed the build on a controller that lacked `@Validated` (13 October); and the full-history secret scan found 24 matches (see Table 4.14). Smoke failures on dev that may have raced a backend restart are deliberately not counted as catches (single host, section 4.3). Test-first development is recorded in the day logs: for example, on 3 October the rate-limit tests failed with 200 instead of 429 before the limits were implemented. The CI tooling itself has 193 Python tests (189 passed, 4 opt-in ZAP tests skipped) and 22 Node tests, recorded on 22 October.
 
 Both SonarCloud quality gates, backend and frontend, passed on 26 October 2026 (coverage: Table D.3).
 
@@ -367,7 +367,7 @@ Table 4.16: Latest dev deliveries, read from GitHub on 26 October 2026 (times UT
 | Backend, 25 Oct | `publish-ecr-dev` 13:59:17–14:00:25; `deploy-existing-ec2` 14:00:29–14:01:16 | Success, health UP on host and through CloudFront |
 | Frontend, 26 Oct | `deploy-s3-dev` 08:48:27–08:48:49; `e2e-dev` 08:48:52–08:50:22 | Success, smoke suite green |
 
-Over the DORA window the frontend smoke after each deploy passed 157 times and failed 4 times; three of the four failures were HTTP 502 responses while the same commit's backend deploy restarted the only API container (Table E.1).
+Over the DORA window the frontend smoke after each deploy passed 157 times and failed 4 times; all four failures (26 September, 3 October twice and 4 October) were HTTP 502 responses while the same commit's backend deploy restarted the only API container (Table E.1).
 
 At the presentation on 26 October the team planned to show one small frontend change (the home page heading) going from pull request through review and deployment to dev. {{FILL: the live demo pull request, its ci-frontend run ID and the dev check, or a statement that it was not run; the heading still reads "Buy better together" on dev at 61486f0e — Pan}}
 
