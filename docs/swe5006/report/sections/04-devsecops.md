@@ -151,6 +151,8 @@ Figure 4.1 shows the jobs that run for one change, from pull request to dev, and
 
 ![Figure 4.1: CI and CD job graph for one change, drawn in the style of the GitHub Actions run graph (not UML). The six required checks gate the merge; after the merge, delivery rebuilds from the merged commit, deploys to dev and verifies the deploy.](../../presentation/src/diagrams/cicd-jobs.svg)
 
+<!-- table: split -->
+
 Table 4.8: Pull-request jobs and what each verifies.
 
 | Job | Required | What it verifies |
