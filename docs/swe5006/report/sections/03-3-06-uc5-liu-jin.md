@@ -45,4 +45,4 @@ An open team ends in exactly one of two ways: it *succeeds* when an admission fi
 
 The expiry bound is one sweep interval plus the sweep's own time, not a one-minute guarantee. Tested locally, not on dev: over 30 teams the worst observed lag between deadline and expiry was 58.18 s. On 23 October on dev, one team expired 18.9 s after its deadline and its member's payment was refunded 40.6 s after it; these figures describe that one run, not a general bound.
 
-**Analysis objects:** expiry timer (the Scheduler reaching the system through a «boundary»); team resolution control «control»; team, membership, order and refund obligation «entity».
+**Analysis objects:** `SchedulerTrigger` (the Scheduler reaching the system through a «boundary»); `ResolveTeamControl` (team resolution) «control»; team, membership, order and refund obligation «entity».
