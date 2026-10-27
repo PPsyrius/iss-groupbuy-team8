@@ -41,7 +41,7 @@ Table 3.13: Subscribers to the domain events in the monolith.
 
 #### Static structure changes
 
-In analysis, the «control» that resolves a team reaches the order and the refund «entity» objects of other contexts directly; Figure 3.118 draws those direct dependencies. In design (Figure 3.32):
+In analysis, the «control» that resolves a team reaches the order and the refund «entity» objects of other contexts directly; Figure 3.118 draws the same direct dependencies in the brute-force design. In design (Figure 3.32):
 
 - **The event is a record in the publisher's domain package**, for example `com.blocbuy.groupbuy.event.TeamExpired(dealId, productId, at)`. It is a plain JDK record with no annotations, carries IDs and facts only, and rejects impossible values in its constructor. It is the publisher's published contract.
 - **The publisher is an application service** that calls Spring's `ApplicationEventPublisher.publishEvent(...)` inside its own `@Transactional` method. It names no subscriber.
