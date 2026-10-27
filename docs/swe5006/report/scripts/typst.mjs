@@ -590,6 +590,8 @@ export function markdown(src, { sectionDir, root, resolvePath }) {
     if (!para.length) return;
     const text = para.join(' ');
     if (/^Table (?:\d+|[A-E])(\.\d+)*:/.test(text)) out.push(`#table-caption[${inline(text)}]`);
+    // A paragraph of bold text alone is a label for what follows (see lead-label in template.typ).
+    else if (/^\*\*[^*]+\*\*$/.test(text)) out.push(`#lead-label[${inline(text)}]`);
     else out.push(inline(text));
     out.push('');
     para = [];
