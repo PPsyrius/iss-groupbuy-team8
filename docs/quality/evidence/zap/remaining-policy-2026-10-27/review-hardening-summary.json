@@ -1,0 +1,127 @@
+{
+  "scope": "Self-review hardening: clean versioned Docker tooling, local built SPA and real loopback credentialed-baseline probe; no deployed or real-provider acceptance",
+  "sourceBase": "c5595525700fe42d37d0f57a381cd7a208602f8e",
+  "sourceState": "Uncommitted fix/remaining-browser-security-headers working tree",
+  "dockerImageID": "sha256:7d6fb551d2fee2be8cf7f603814080dcbf7966c3de2caf37fdea4c461a17d475",
+  "candidatePolicySha256": "bb34fac9bfcc42af31da7fd0aa51ea92cbf7ea361718fbc1f52a7403b43ddf35",
+  "sourceSha256": {
+    "frontend/e2e/security-headers.spec.ts": "371b0531cc2b8beb2fd5566d7a20fd79d51f1f736f2636b9e658a3d08953b920",
+    "frontend/scripts/verify-csp-styles.mjs": "4b3cdb90f081986108dca9367a6c86cd28683336e1bd56b8cc676e5fc1a6200a",
+    "frontend/tooling/security-browsers.Dockerfile": "876b6fac765b2008bc691168692c13e10e07b4e3d3529024badcd83e68157fd5",
+    "frontend/tooling/security-browsers.Dockerfile.dockerignore": "8d637b4d33d4d8ae7e94384ce4390b9fd1aaf65d00e21104cace56d01cdd684e",
+    ".github/workflows/security-browsers.yml": "645cbcbeded6795ba0fb3a4600a24d094ab5f6c5648a813ba95925b9e248b790",
+    ".github/tests/style-policy.test.cjs": "7707c4983e9bf9e500a5e6f2bbb067e968e74d9442c4567b394b400b5e763e4e"
+  },
+  "command": "docker run --rm --ipc=host --cpus=2 --memory=6g --mount type=bind,source=<fresh-evidence-directory>,target=/evidence blocbuy-security-browsers:review",
+  "total": 85,
+  "stats": {
+    "startTime": "2026-10-27T03:37:07.514Z",
+    "duration": 90908.289,
+    "expected": 69,
+    "skipped": 16,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "projects": [
+    {
+      "project": "chromium",
+      "passed": 27,
+      "skipped": 6,
+      "failed": 0
+    },
+    {
+      "project": "firefox",
+      "passed": 15,
+      "skipped": 4,
+      "failed": 0
+    },
+    {
+      "project": "webkit",
+      "passed": 15,
+      "skipped": 4,
+      "failed": 0
+    },
+    {
+      "project": "webkit-touch",
+      "passed": 12,
+      "skipped": 2,
+      "failed": 0
+    }
+  ],
+  "credentialProbes": [
+    {
+      "project": "chromium",
+      "browser": "chromium",
+      "observations": [
+        {
+          "mode": "baseline",
+          "isolated": false,
+          "imageCookieReceived": true,
+          "firstPartyCookieReceived": true
+        },
+        {
+          "mode": "candidate",
+          "isolated": true,
+          "imageCookieReceived": false,
+          "firstPartyCookieReceived": true
+        }
+      ]
+    },
+    {
+      "project": "firefox",
+      "browser": "firefox",
+      "observations": [
+        {
+          "mode": "baseline",
+          "isolated": false,
+          "imageCookieReceived": true,
+          "firstPartyCookieReceived": true
+        },
+        {
+          "mode": "candidate",
+          "isolated": true,
+          "imageCookieReceived": false,
+          "firstPartyCookieReceived": true
+        }
+      ]
+    },
+    {
+      "project": "webkit",
+      "browser": "webkit",
+      "observations": [
+        {
+          "mode": "baseline",
+          "isolated": false,
+          "imageCookieReceived": true,
+          "firstPartyCookieReceived": true
+        },
+        {
+          "mode": "candidate",
+          "isolated": false,
+          "imageCookieReceived": true,
+          "firstPartyCookieReceived": true
+        }
+      ]
+    },
+    {
+      "project": "webkit-touch",
+      "browser": "webkit",
+      "observations": [
+        {
+          "mode": "baseline",
+          "isolated": false,
+          "imageCookieReceived": true,
+          "firstPartyCookieReceived": true
+        },
+        {
+          "mode": "candidate",
+          "isolated": false,
+          "imageCookieReceived": true,
+          "firstPartyCookieReceived": true
+        }
+      ]
+    }
+  ],
+  "fullReportSha256": "ef21132e72c134b09d5f0a349333aacbd10c4cd3f0c6a032cb2b0f78f497184e",
+  "hostedWorkflowDispatched": false
+}

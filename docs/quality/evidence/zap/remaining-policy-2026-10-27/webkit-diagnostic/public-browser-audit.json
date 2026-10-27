@@ -1,0 +1,380 @@
+{
+  "checkedAtUtc": "2026-10-27T02:40:42.222Z",
+  "target": "https://d1b3np88z657cp.cloudfront.net",
+  "scope": "Anonymous real public images under local candidate document-header overrides; no AWS changes, account, transaction or deployed-remediation claim",
+  "results": [
+    {
+      "browser": "webkit",
+      "version": "27.2",
+      "surface": "catalog",
+      "status": 200,
+      "title": "BlocBuy",
+      "bodyTextLength": 10,
+      "pageErrors": [],
+      "failedRequests": [
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "script",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "stylesheet",
+          "error": "Unacceptable TLS certificate"
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "type": "other",
+          "error": "Unacceptable TLS certificate"
+        }
+      ]
+    }
+  ],
+  "status": "failed",
+  "failure": "locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n  - waiting for locator('h1').first() to be visible\n"
+}

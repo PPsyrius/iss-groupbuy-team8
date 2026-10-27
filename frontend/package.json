@@ -4,9 +4,9 @@
   "type": "module",
   "scripts": {
     "prepare": "pnpm gen:api",
-    "gen:api": "openapi-ts && node scripts/ts-nocheck-generated.mjs",
+    "gen:api": "node scripts/clean-api-output.mjs && openapi-ts && node scripts/ts-nocheck-generated.mjs",
     "dev": "pnpm gen:api && vite",
-    "build": "pnpm gen:api && vite build",
+    "build": "pnpm gen:api && node scripts/verify-csp-styles.mjs && vite build",
     "preview": "vite preview",
     "stack:dev": "docker compose -f ../fullstack-localhost/compose.yaml stop frontend && docker compose -f ../fullstack-localhost/compose.yaml up --build -d frontend-dev && pnpm gen:api && vite --mode stack --port 5173 --strictPort",
     "stack:prod": "docker compose -f ../fullstack-localhost/compose.yaml stop frontend-dev && docker compose -f ../fullstack-localhost/compose.yaml up --build",
@@ -19,7 +19,7 @@
     "test:watch": "vitest",
     "knip": "knip",
     "hooks:install": "lefthook install",
-    "check": "pnpm gen:api && pnpm typecheck && pnpm lint && pnpm fmt:check && pnpm test && pnpm knip",
+    "check": "pnpm gen:api && node scripts/verify-csp-styles.mjs && pnpm typecheck && pnpm lint && pnpm fmt:check && pnpm test && pnpm knip",
     "e2e": "playwright test"
   },
   "dependencies": {

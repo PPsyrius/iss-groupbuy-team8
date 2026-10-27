@@ -1,4 +1,4 @@
-import { test as base, type Route } from "@playwright/test";
+import { expect, test as base, type Route } from "@playwright/test";
 
 import type {
   MeResponse,
@@ -241,7 +241,68 @@ function matches(pattern: RegExp, path: string): boolean {
   return pattern.test(path);
 }
 
-export const test = base.extend<{ api: Api }>({
+export const test = base.extend<{ api: Api; stylePolicy: void }>({
+  stylePolicy: [
+    async ({ context, browserName }, use, testInfo) => {
+      const violations: { directive: string; target: unknown }[] = [];
+      await context.exposeBinding(
+        "recordUnexpectedStyleViolation",
+        (_source, directive: unknown, target: unknown) => {
+          if (typeof directive === "string" && directive.startsWith("style-src"))
+            violations.push({ directive, target });
+        },
+      );
+      await context.addInitScript(() => {
+        document.addEventListener("securitypolicyviolation", (event) => {
+          const record: unknown = Reflect.get(window, "recordUnexpectedStyleViolation");
+          if (typeof record === "function")
+            void record(
+              event.effectiveDirective,
+              event.target instanceof Element
+                ? {
+                    tag: event.target.tagName,
+                    style: event.target.getAttribute("style"),
+                    sample: event.sample,
+                  }
+                : null,
+            );
+        });
+      });
+      await use();
+      if (
+        process.env.E2E_TARGET !== "dev" &&
+        !testInfo.annotations.some((annotation) => annotation.type === "intentional-style-probe")
+      ) {
+        // A bare native SELECT reproduces WebKit's blocked internal text-overflow
+        // style without app scripts. Do not authorize it in CSP or hide app styles.
+        const unexpected = violations.filter(
+          ({ directive, target }) =>
+            !(
+              browserName === "webkit" &&
+              directive === "style-src-attr" &&
+              typeof target === "object" &&
+              target !== null &&
+              "tag" in target &&
+              target.tag === "SELECT" &&
+              "style" in target &&
+              target.style === null &&
+              "sample" in target &&
+              target.sample === "text-overflow:inherit"
+            ),
+        );
+        if (unexpected.length !== violations.length) {
+          testInfo.annotations.push({
+            type: "webkit-native-select",
+            description: "Blocked browser-internal SELECT style; no CSP allowance added",
+          });
+        }
+        expect(unexpected, "Unexpected CSP style violations during the built-app journey").toEqual(
+          [],
+        );
+      }
+    },
+    { auto: true },
+  ],
   // `provide` is Playwright's `use`, renamed so the React hooks lint does not mistake it for one.
   api: async ({ page }, provide) => {
     const state: ApiState = {
@@ -286,4 +347,4 @@ export const test = base.extend<{ api: Api }>({
   },
 });
 
-export { expect } from "@playwright/test";
+export { expect };

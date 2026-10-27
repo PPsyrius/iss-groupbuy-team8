@@ -1,0 +1,8 @@
+{
+  "checkedAtUtc": "2026-10-27T02:40:42.210Z",
+  "target": "https://d1b3np88z657cp.cloudfront.net",
+  "scope": "Anonymous deployed-header baseline, no overrides or authenticated coverage",
+  "results": [],
+  "status": "failed",
+  "failure": "page.goto: Unacceptable TLS certificate\nCall log:\n  - navigating to \"https://d1b3np88z657cp.cloudfront.net/\", waiting until \"networkidle\"\n"
+}

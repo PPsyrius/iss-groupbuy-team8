@@ -1,6 +1,6 @@
 {
   "Name": "blocbuy-dev-security-headers",
-  "Comment": "BlocBuy dev: security headers, explicit image sources and unused browser capabilities denied",
+  "Comment": "BlocBuy dev: hashed UI styles, explicit image sources and cross-origin resource isolation",
   "SecurityHeadersConfig": {
     "StrictTransportSecurity": {
       "Override": true,
@@ -10,18 +10,33 @@
     },
     "ContentSecurityPolicy": {
       "Override": true,
-      "ContentSecurityPolicy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://dcsjrkmummxi7.cloudfront.net https://lh3.googleusercontent.com; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+      "ContentSecurityPolicy": "default-src 'self'; script-src 'self'; style-src 'self' 'report-sample' 'sha256-38RhXrc7EdReTKsOm23ZPOCUgniTUUcjky8QOOrQx6o=' 'sha256-gYiS/BvZvRcK27JIXTuwhZ3hs2+VJ1X+2gUlE+farlg='; style-src-attr 'none'; img-src 'self' https://dcsjrkmummxi7.cloudfront.net https://lh3.googleusercontent.com; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
     },
     "ContentTypeOptions": { "Override": true },
     "FrameOptions": { "Override": true, "FrameOption": "DENY" },
     "ReferrerPolicy": { "Override": true, "ReferrerPolicy": "strict-origin-when-cross-origin" }
   },
   "CustomHeadersConfig": {
-    "Quantity": 1,
+    "Quantity": 4,
     "Items": [
       {
         "Header": "Permissions-Policy",
         "Value": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "Override": true
+      },
+      {
+        "Header": "Cross-Origin-Embedder-Policy",
+        "Value": "credentialless",
+        "Override": true
+      },
+      {
+        "Header": "Cross-Origin-Opener-Policy",
+        "Value": "same-origin",
+        "Override": true
+      },
+      {
+        "Header": "Cross-Origin-Resource-Policy",
+        "Value": "same-origin",
         "Override": true
       }
     ]

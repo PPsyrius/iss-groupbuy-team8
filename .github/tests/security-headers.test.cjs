@@ -37,7 +37,7 @@ test('canonical policy produces the actual Caddy header values', () => {
 test('multiple custom headers are rendered, not just the first entry', () => {
   const policy = structuredClone(source);
   policy.CustomHeadersConfig.Items.push({ Header: 'X-Policy-Test', Value: 'second value', Override: true });
-  policy.CustomHeadersConfig.Quantity = 2;
+  policy.CustomHeadersConfig.Quantity = policy.CustomHeadersConfig.Items.length;
   const result = render(policy);
   assert.equal(result.status, 0, result.stderr);
   assert.ok(result.stdout.includes('\tX-Policy-Test "second value"\n'));
