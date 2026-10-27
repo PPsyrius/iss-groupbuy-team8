@@ -24,7 +24,7 @@ This included use case takes the buyer's money for a frozen purchase intent thro
 4. The browser goes to Stripe's page, and the buyer pays with a test card.
 5. Stripe sends the browser back to BlocBuy's payment return page, which opens the receipt page. The return address only names the payment; it is never taken as proof of payment.
 6. Stripe sends a signed notification (a webhook). Outside any transaction, the system verifies the signature, rejects live-mode events and events from other Stripe accounts, and reads the session again from Stripe instead of trusting the notification's content.
-7. In one transaction, the system records the event's identity so that it is applied only once, locks the payment, checks that the amount, currency and session match what was frozen, and marks the payment *succeeded*.
+7. In one transaction, the system records the event's identity so that it is applied only once, locks the team (for a join; a team being started does not exist yet), then the purchase intent, then the payment, checks that the amount, currency and session match what was frozen, and marks the payment *succeeded*.
 8. In the same transaction, the system hands the succeeded payment to the base use case (UC3, step 5, or UC4, step 5) and records its outcome, *fulfilled* or *refund required*, exactly once.
 9. The receipt page, which re-reads the payment until it is settled, shows "Payment received" with the order and team.
 
