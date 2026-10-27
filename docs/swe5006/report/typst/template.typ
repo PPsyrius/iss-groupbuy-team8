@@ -32,40 +32,75 @@
 // content centred, leaving less than a line for body text.
 #let full-page(size, content) = block(width: 100%, height: size.height - 1.4em - 1pt, align(center + horizon, content))
 
+// Text area of the A4 page with 2.54 cm margins (set in `setup`).
+#let text-area = (width: 21cm - 2 * 2.54cm, height: 29.7cm - 2 * 2.54cm)
+
+// Width of a landscape figure: the rotated block runs along the page height, inside the
+// full-page block (text-area height less the float clearance).
+#let landscape-width = 23cm
+// A figure set rotated on a page of its own, read with the page turned a quarter clockwise:
+// the drawing, its caption below it and any lead label above it all turn together, and the
+// running header and footer stay upright. Placed like any other float (page-float).
+#let landscape-page(num, fig) = page-float(num, layout(size => full-page(size,
+  rotate(-90deg, reflow: true, block(width: landscape-width, fig)))))
+
 // lead: a bold label that introduces the figure in the text ("D1 Publish a listing."); it rides
 // above the drawing, so it lands wherever the float does.
-#let report-figure(num, body, caption, float: true, lead: none) = {
-  let content = layout(size => {
-    let framed = block(width: 100%, stroke: 0.4pt + rgb("#D8D2C8"), inset: 6pt, body)
-    let h = measure(framed, width: size.width).height
-    let max = 20cm
-    let shown = if h > max { block(width: 100%, stroke: 0.4pt + rgb("#D8D2C8"), inset: 6pt, align(center, scale(max / h * 100%, reflow: true, body))) } else { framed }
-    let fig = block(width: 100%, breakable: false, {
-      if lead != none { block(width: 100%, below: 0.52em + 8pt, align(left, lead)) }
-      align(center, shown)
-      v(0.3em)
-      set text(size: 9pt)
-      set par(justify: false)
-      [*Figure #num:* #caption]
+// A UML frame in the body that has to turn landscape to keep its labels at 8 pt (uml-frame in
+// uml.typ) turns the whole figure: the figure then takes a landscape page (landscape-page) with
+// the caption under the drawing in the rotated frame. A diagram body comes as a function of the
+// host it tells its frame: the frame's portrait width and the room a landscape page leaves it
+// below the caption; a first layout of the body as a probe returns the frame's decision as its
+// height (1 pt: turn). Any other body (an image) comes as content.
+// rotated: the figure is being set inside its landscape page.
+#let report-figure(num, body, caption, float: true, lead: none, rotated: false) = context {
+  let cap = {
+    set text(size: 9pt)
+    set par(justify: false)
+    [*Figure #num:* #caption]
+  }
+  let lead-block = if lead != none { block(width: 100%, below: 0.52em + 8pt, align(left, lead)) }
+  // The framed drawing's inset (6 pt a side) and the gap above the caption.
+  let inset = 6pt
+  let gap = 0.3em
+  // Height the drawing frame may take on a landscape page: the text width (the rotated block's
+  // height) less the caption, the lead label, the inset and a little slack.
+  let lead-h = if lead != none { measure(block(width: landscape-width, lead-block)).height + (0.52em + 8pt).to-absolute() } else { 0pt }
+  let land-room = text-area.width - 2 * inset - gap.to-absolute() - 4pt - measure(block(width: landscape-width, cap)).height - lead-h
+  let host(probe) = if type(body) == function {
+    body((probe: probe, rotated: rotated, width: text-area.width - 2 * inset, land: (width: landscape-width - 2 * inset, height: land-room)))
+  } else { body }
+  let turned = not rotated and type(body) == function and measure(block(width: text-area.width - 2 * inset, host(true))).height == 1pt
+  if turned {
+    landscape-page(num, report-figure(num, body, caption, float: false, lead: lead, rotated: true))
+  } else {
+    let hosted = host(false)
+    let content = layout(size => {
+      let framed = block(width: 100%, stroke: 0.4pt + rgb("#D8D2C8"), inset: inset, hosted)
+      let h = measure(framed, width: size.width).height
+      let max = 20cm
+      let shown = if h > max { block(width: 100%, stroke: 0.4pt + rgb("#D8D2C8"), inset: inset, align(center, scale(max / h * 100%, reflow: true, hosted))) } else { framed }
+      let fig = block(width: 100%, breakable: false, {
+        lead-block
+        align(center, shown)
+        v(gap)
+        cap
+      })
+      let full = float and measure(fig, width: size.width).height >= full-page-share * size.height
+      if full { full-page(size, fig) } else { fig }
     })
-    let full = float and measure(fig, width: size.width).height >= full-page-share * size.height
-    if full { full-page(size, fig) } else { fig }
-  })
-  if float { page-float(num, content) } else { block(above: 1em, below: 1.2em, content) }
+    if float { page-float(num, content) } else if rotated { content } else { block(above: 1em, below: 1.2em, content) }
+  }
 }
 
 // A figure on its own landscape page (images marked {.landscape} in the Markdown): always a
-// full page, so no body text shares it; placed like any other float (page-float). A lead label
-// turns with the drawing and prints above it, so it lands on the figure's page.
-#let landscape-figure(num, body, caption, lead: none) = page-float(num, layout(size => full-page(size,
-  rotate(-90deg, reflow: true, block(width: 23cm, report-figure(num, body, caption, float: false, lead: lead))))))
+// full page, so no body text shares it. A lead label turns with the drawing and prints above it,
+// so it lands on the figure's page.
+#let landscape-figure(num, body, caption, lead: none) = landscape-page(num, report-figure(num, body, caption, float: false, lead: lead, rotated: true))
 
 #let figure-frame(body) = block(width: 100%, breakable: false, inset: 6pt, stroke: 0.4pt + rgb("#D8D2C8"), body)
 
 #let table-caption(body) = block(above: 14pt, below: 0.4em, sticky: true, text(size: 9pt, body))
-
-// Text area of the A4 page with 2.54 cm margins (set in `setup`).
-#let text-area = (width: 21cm - 2 * 2.54cm, height: 29.7cm - 2 * 2.54cm)
 
 // A paragraph that is only a bold label ("Normal flow:", "D1 Publish a listing.") introduces the
 // list or text below it like a run-in heading, so it is sticky and never ends a page alone.

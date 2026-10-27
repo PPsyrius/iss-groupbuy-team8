@@ -562,7 +562,11 @@ function figure(body, caption, opts = '') {
   const m = caption.match(FIGURE_CAPTION);
   const num = m ? m[1] : '';
   const text = m ? m[2] : caption;
-  return `#report-figure(${str(num)}, [${body}], [${inline(text)}]${opts})`;
+  // A UML diagram goes in as a function of the figure's host, so its frame can turn the whole
+  // figure, caption included (report-figure in template.typ).
+  const uml = body.match(/^#((?:class|state|sequence)-diagram\(.*)\)$/s);
+  const arg = uml ? `(host => ${uml[1]}, host: host))` : `[${body}]`;
+  return `#report-figure(${str(num)}, ${arg}, [${inline(text)}]${opts})`;
 }
 
 function table(rows) {
