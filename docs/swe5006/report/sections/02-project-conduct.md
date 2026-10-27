@@ -124,7 +124,7 @@ Table 2.6: Outstanding issues, 26 October 2026.
 | Crash recovery of refunds under replay (not shown on dev; Table 1.3) | Yorik | Open; rescoped on 11 October to a record from local evidence |
 | One combined lock order for ADR 0001 and ADR 0002 is not yet written (locks in the order of Table 3.12, section 3.2.8) | Unassigned | Open |
 | CloudFront reaches the dev load balancer over HTTP (NFR-37) | Pan | Accepted risk on dev until 16 November |
-| SSH port 22 open to any address on the dev host's security group, although deploys and port forwarding use SSM and need no SSH | Pan | Closed on 27 October. Open in the AWS read-only checks of 21 and 24 October; the check of 27 October found no rule admitting port 22 |
+| SSH port 22 open to any address on the dev host's security group, although deploys and port forwarding use SSM and need no SSH | Pan | Closed on 27 October. Open in the AWS read-only checks of 21 and 24 October; the team decided on 24 October to close it; the check of 27 October found no rule admitting port 22 |
 | Dev EBS volume not encrypted | Pan | Seen in the AWS read-only check of 19 October and still unencrypted on 27 October; EBS encryption by default is off; not raised as an issue |
 | Two IAM users in the project account, one with an active access key, for port forwarding to the dev host | Lim | Disclosed and accepted in the AWS account governance record; the key is limited by its port-forwarding policy and by every service control policy of the organisation; no removal planned. Neither user has an MFA device (read-only check of 27 October) |
 | Backend rollback never exercised on dev: the rollback workflow has never run | Unassigned | Open |
