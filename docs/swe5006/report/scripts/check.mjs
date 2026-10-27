@@ -147,6 +147,8 @@ for (const file of files) {
         words.set(current, 0);
       } else if (level <= 3 && !/\.(unnumbered|appendix)/.test(attrs)) {
         errors.push(`${at} heading "${title}" has no template number (use {.unnumbered} or {.appendix} if intended)`);
+      } else if (/\.appendix/.test(attrs) && !/^Appendix [A-E]: \S/.test(title)) {
+        errors.push(`${at} appendix heading "${title}" must read "Appendix X: Title"`);
       } else if (level === 4 && current) {
         headings.push({ level, number: null, title, at, file, parent: current });
       }

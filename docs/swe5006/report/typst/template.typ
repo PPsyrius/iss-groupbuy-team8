@@ -109,9 +109,9 @@
     if chapter.numbering != none {
       [#counter(heading).at(chapter.location()).first()#bar#chapter.body]
     } else {
-      // Appendix headings arrive unnumbered as "Appendix X Title".
+      // Appendix headings arrive unnumbered as "Appendix X: Title"; the bar replaces the colon.
       let t = if chapter.body.has("text") { chapter.body.text } else { "" }
-      let m = t.match(regex("^(Appendix [A-Z])\s+(.*)$"))
+      let m = t.match(regex("^(Appendix [A-Z]):?\s+(.*)$"))
       if m != none [#m.captures.at(0)#bar#m.captures.at(1)] else { chapter.body }
     }
   }
