@@ -310,10 +310,10 @@ Table C.1: All 29 tables, by owning context. "SWE5001 owner" is the service whos
 | `log_payment_review` | Audit of operator decisions on payments under review | payment | commerce-svc | V9 |
 | `biz_payment_review_case` | Work queue of payments that need human inspection | payment | commerce-svc | V10 |
 | `sys_checkout_expiry_cursor` | Saved position of the operator-run sweep that expires stale Checkout sessions | payment | commerce-svc | V25 |
-| `biz_notification` | Immutable in-app notifications (off on `dev`) | notification | notification-svc | V27 |
+| `biz_notification` | Immutable in-app notifications (off on dev, section 1.4) | notification | notification-svc | V27 |
 | `sys_consumed_message` | Integration events already applied by a consumer, so a duplicate is ignored | notification | notification-svc | V28 |
 | `sys_scheduler_lock` | Lease rows that let only one instance run each scheduled job | common (jobs) | commerce-svc | V13 |
 | `sys_scheduled_item_retry` | Back-off state for items that failed inside a scheduled job | common (jobs) | commerce-svc | V17 |
-| `sys_outbox` | Transactional queue of integration events waiting for the relay (off on `dev`) | common (integration) | commerce-svc | V26 |
+| `sys_outbox` | Transactional queue of integration events waiting for the relay (off on dev, section 1.4) | common (integration) | commerce-svc | V26 |
 
 The remaining migrations create no table: V1 is a placeholder that states the naming rules, V8, V16 and V23 add or narrow indexes, V14, V19 and V22 add columns (product team terms, the purchase intent's sharer and its expiry), V21 adds the product-number sequence, and V24 grants the admin payment-read permission.
