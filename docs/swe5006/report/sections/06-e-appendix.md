@@ -217,3 +217,21 @@ Table E.5: Evidence references by section.
 | 5 | Yorik's local identity-outage and poison-message rehearsal; AWS acceptance remains open | `docs/swe5001/evidence/20261015-local-failure-rehearsal/README.md`; #459 |
 | 5 | Outbox relay merged to dev, Template Method base class | #485; `44fb9bed` |
 | 5 | Idempotent Receiver of the notification consumer | #505, #513 |
+| 5 | Frontend toolchain, `pnpm check` gate, CI and delivery jobs, 17–18 Sep | #106, #113; `ce65abe8` |
+| 5 | Browse, filter and sign-in pages, 18–20 Sep | #114, #115, #119, #120, #121 |
+| 5 | First frontend deploy to dev with SPA fallback and security headers, 22 Sep | #145; #99, #100, #101, #102; #168 |
+| 5 | Quote sheet, My Orders, My Teams, sharing and invite pages, 25–28 Sep | #189, #181, #210, #219 |
+| 5 | Admin console, 30 Sep – 5 Oct | #294 to #399; frontend ADR 0015 (#338) |
+| 5 | Playwright end-to-end journeys, 21 Sep – 5 Oct | #122, #273, #279, #280, #281, #335, #385 |
+| 5 | One-command full-stack local stack, 29 Sep | #257 |
+| 5 | Frontend ADRs 0001–0015 by Lim; 0016 by Pan | `frontend/docs/adr/`; #106, #170, #338 |
+| 5 | Team statechart, 22 Oct; added to the statecharts draft, 23 Oct | #600; #628 |
+| 5 | AWS Organization and Identity Center, 25 Aug; SCP consolidation, 16 Oct | `docs/deploy/aws-account-governance/README.md`; #530, #533 |
+| 5 | Sprint 2 goal, 16 Sep; Sprint 1 Scrum Master recorded 28 Sep | #93; #49 |
+| 5 | Sprint 3 Scrum Master; retrospective reconstructed 24 Oct | #232; `docs/agile/sprint-03/retro.md` (#683) |
+| 5 | Report plan, rubric, reconciliation and revision, 23–28 Oct | #665; #675–#681, #695; PR #704 |
+| 5 | SWE5001 architecture options study and AWS proof of concept, 25 Sep – 1 Oct | #532, #535; `docs/swe5001/architecture-options-study/poc.md` |
+| 5 | SWE5001 production promotion, 19 Oct | #564 |
+| 5 | Shared presentation kit, 19 Oct | #554, #597, #602 |
+| 5 | SWE5001 presentation lead, segments 1 and 2 | #461; `docs/swe5001/presentation/AGENTS.md` |
+| 5 | SWE5006 deck, speaker script and run book, 20–26 Oct; project management slides presented | #566, #598, #600, #604, #671, #683; `docs/swe5006/presentation/src/content.js` |
