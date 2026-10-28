@@ -153,6 +153,7 @@ IDs R01–R39 come from a whole-report read of the 27 Oct draft that found each 
 | R53 | The Checkout payment page expires after 31 minutes and never later than the intent or the team's deadline | 3.4.1 D | Eric | "(Checkout page lifetime, section 3.4.1)" | none |
 | R54 | The error constants of the use cases' refusals: `PRODUCT_NOT_STARTABLE`, `TEAM_PRICE_UNAVAILABLE`, `TEAM_PRICE_QUOTE_EXPIRED`, `ALREADY_MEMBER`, `PAYMENT_WEBHOOK_SIGNATURE_INVALID` (UC3, UC4, Pay upfront); `OAUTH_PROVIDER_ERROR`, `OAUTH_TOKEN_INVALID`, `UNAUTHENTICATED`, `FORBIDDEN` (UC2); `ORDER_NOT_FOUND` (UC8); `PRODUCT_NUMBER_CONFLICT` (UC9) | The design text of the matching 3.4.N: 3.4.1 D, 3.4.3 D, 3.4.4 D, 3.4.5 C | Eric (3.4.1); Pan (3.4.3); Lim (3.4.4); Liu Jin (3.4.5) | none; a 3.3.N use case describes the refusal in the actors' terms | none |
 | R55 | UC1 search bounds: the wildcard characters `%`, `_` and `\` in a keyword are matched literally; a page size above 100 or an out-of-range page is rejected with a validation error | 3.4.3 D (UC1-1) | Pan | none | none |
+| R56 | Statechart notation: a transition reads trigger [guard] / effect; a transition that leaves the state unchanged is an internal transition inside the state box | 3.4.0 | Lim | "(notation of section 3.4.0)" | none |
 
 ## Section requirements
 
