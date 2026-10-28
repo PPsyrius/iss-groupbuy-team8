@@ -52,13 +52,13 @@ Table 1.1: Stakeholders and how the project serves them.
 
 | Stakeholder | Kind | Interest | How the project serves it |
 | --- | --- | --- | --- |
-| Buyer as team leader | Business, primary actor | Start a team at the team price without risking money | Pay upfront to start (UC3), share an invite link (UC7), automatic refund on expiry (UC6) |
-| Buyer as joiner | Business, primary actor | Join a team safely, including through a friend's invite | Pay to join (UC4); the last seat goes to exactly one buyer; refund on expiry (UC6) |
+| Buyer as team leader | Business | Start a team at the team price without risking money | Pay upfront to start (UC3), share an invite link (UC7), automatic refund on expiry (UC6) |
+| Buyer as joiner | Business | Join a team safely, including through a friend's invite | Pay to join (UC4); the last seat goes to exactly one buyer; refund on expiry (UC6) |
 | Small merchant | Business, indirect | Sell at a discount only against committed volume | Teams fill only with paid members. There is no merchant interface: merchant self-service is out of scope (section 1.4.2), and an administrator sets up the listings |
-| Platform administrator | Business and IT, primary actor | Manage listings and team terms | Admin listing management (UC9) through an admin console, guarded by role-based access |
-| Stripe | External system, secondary actor | Hosted Checkout, refunds and signed webhooks | The pay upfront use case and the refunds of UC6, in test mode only |
-| Google | External system, secondary actor | Sign-in identity | Google sign-in for UC2 |
-| Scheduler (time) | System actor | Resolve teams whose deadline has passed | A scheduled sweep that expires overdue teams and starts their refunds (UC5, UC6) |
+| Platform administrator | Business and IT | Manage listings and team terms | Admin listing management (UC9) through an admin console, guarded by role-based access |
+| Stripe | External system | Hosted Checkout, refunds and signed webhooks | The pay upfront use case and the refunds of UC6, in test mode only |
+| Google | External system | Sign-in identity | Google sign-in for UC2 |
+| Scheduler (time) | System (time) | Resolve teams whose deadline has passed | A scheduled sweep that expires overdue teams and starts their refunds (UC5, UC6) |
 | Development team | IT | Deliver the system and its evidence for two courses | Five members, each owning use cases, a design problem and report sections (section 2.1); one member per sprint acts as Scrum Master |
 | Lecturer and project advisor (Chandrasekaran) | Academic | Agreed the scope in the proposal; grades the presentation and this report | The proposal as the scope benchmark (section 2.2) and this report |
 
