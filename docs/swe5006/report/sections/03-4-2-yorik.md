@@ -76,22 +76,22 @@ classDiagram
 %% at SchedulerTrigger 0,0
 %% at ReviewUI 1,0
 %% at ReceiptUI 2,0
-%% at ResolveTeamControl 0,1
+%% at ResolveTeamControl 0,2
 %% at RefundControl 1,1
 %% at PaymentGateway 2,1
-%% at Payment 0,2
+%% at Payment 0,1
 %% at Refund 1,2
 %% at RefundAttempt 2,2
 
     SchedulerTrigger "1" -- "1" RefundControl
     ReviewUI "1" -- "1" RefundControl
-    ReceiptUI "1" -- "1" RefundControl
+    RefundControl "1" -- "1" ReceiptUI
     RefundControl "1" -- "1" PaymentGateway
     ResolveTeamControl ..> Refund : «create»
     RefundControl --> Refund
     RefundControl --> Payment : verifies
     RefundControl ..> RefundAttempt : «create»
-    Refund "0..1" -- "1" Payment
+    Payment "1" -- "0..1" Refund
     Refund "1" *-- "0..*" RefundAttempt
 ```
 
@@ -345,11 +345,11 @@ sequenceDiagram
     participant Repo as :RefundRepository
     participant GW as :RefundGateway
 
-    Note over Job,Svc: every 30 s, under the refund-worker lease
+    Note over Job,Svc: scheduled tick under the refund-worker lease
     Job->>Svc: processNext()
     critical claim transaction, 5 s
         Svc->>Repo: claimNext()
-        Note over Repo,GW: due pending or processing row, FOR UPDATE SKIP LOCKED, 2-minute row lease, version + 1, audit CLAIMED
+        Note over Repo,GW: due pending or processing row; FOR UPDATE SKIP LOCKED; row lease, version + 1, audit CLAIMED
     end
     Repo-->>Svc: RefundWork
     break work.valid() is false
@@ -372,7 +372,7 @@ sequenceDiagram
         GW-->>Svc: refusal or mismatching snapshot
         Svc->>Repo: finish(work, review, reason)
     end
-    Note over Svc,Repo: each finish is its own 5 s transaction, fenced by id and version, next attempt 30 s later
+    Note over Svc,Repo: each finish has its own transaction; fenced by id and version; schedules the next attempt
 ```
 
 Figure 3.55: UML design sequence diagram of UC6 flow 2, pay one refund. The provider call runs between two short transactions, never inside one; a crash after Stripe accepts the refund leaves the row claimable once its lease lapses, and the next attempt sends the same idempotency key.
@@ -442,7 +442,11 @@ A tick takes an obligation only when it is *due*: its next attempt time has pass
 
 **Evidence.** Flows 1 and 2 were shown on dev on 23 October (Table E.3); that one run does not show the expiry design bound (section 1.4.3) is met. The worker also refunded, once each, the payments an operator recovered that day (the 23 Oct webhook fault, Appendix E).
 
-Tested locally (PostgreSQL 18, Stripe replaced by a test substitute), not on dev, on 3 October (`backend/docs/payment/stripe-refund-recovery-acceptance-20261003.md`). The rehearsal ran the eight `StripeRolloutAcceptanceIT` tests and the full Testcontainers integration suite. A refund whose result was lost before `finish` was reclaimed after its lease, retried with the same key and produced one refund; a signed refund notification delivered twice left the payment, refund and audit row counts unchanged, but the Checkout webhook ignores `refund.*` events, so this was a no-op and not a test of replay protection; and a permanent refusal was parked in `review` with no second provider call. {{CONFIRM: D18 Which evidence kind states crash recovery: tested locally, proven locally (Testcontainers and the 3 October rehearsal), or tested in CI (StripeRolloutAcceptanceIT)? — Yorik}} A deliberate crash, a replay and a permanent failure with operator review have not been exercised on dev. The unit tests `RefundServiceTest`, `TeamExpiryRefundSubscriberTest`, `TeamExpiryRefundServiceTest` and `GroupDealExpiryServiceTest` cover the worker's branches and the expiry service. The integration tests `StripeRolloutAcceptanceIT`, `TeamExpirySchedulingIT` and `V4ExpiryPipelineIT` run the real expiry, claim and persistence code against PostgreSQL; the last seeds two thousand teams and checks that each expires with exactly one effect.
+Refund recovery was tested locally on 3 October and in CI on 25 October, with PostgreSQL and a substitute for Stripe network calls (Table E.5). The local rehearsal ran `StripeRolloutAcceptanceIT` and the full Testcontainers integration suite. The CI run also executed `providerSucceededBeforeWorkerLossRetriesWithOneDurableRefundKey`: the provider substitute stored a refund under the durable key, then threw before the database finish. After the lease was made due, a second worker call reused the key and completed the one refund obligation without creating another provider refund. This simulates loss after provider acceptance; it does not stop a real worker process or test Stripe's live idempotency retention.
+
+The local rehearsal also delivered a signed `refund.updated` notification twice without changing the payment, refund or audit row counts. The Checkout webhook ignores `refund.*` events, so this was a no-op rather than evidence of refund-webhook replay protection. A permanent provider-state refusal was parked in `review` with no second provider call. A deliberate process crash, a replay and a permanent failure with operator review have not been exercised on dev.
+
+The unit tests `RefundServiceTest`, `TeamExpiryRefundSubscriberTest`, `TeamExpiryRefundServiceTest` and `GroupDealExpiryServiceTest` cover the worker's branches and the expiry service. The integration tests `StripeRolloutAcceptanceIT`, `TeamExpirySchedulingIT` and `V4ExpiryPipelineIT` run the real expiry, claim and persistence code against PostgreSQL; the last seeds two thousand teams and checks that each expires with exactly one effect.
 
 #### E Compliance with the transition strategies
 

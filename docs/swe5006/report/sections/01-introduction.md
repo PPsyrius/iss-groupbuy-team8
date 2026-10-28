@@ -103,7 +103,7 @@ Table 1.3: Use cases in scope and their status on dev.
 | UC3 Initiate a team (pay first) | On dev since 23 Oct | A real Sandbox payment started a team and created its order | 24 Sep |
 | UC4 Join a team | On dev since 24 Oct | Shown on dev on 24 October in a recording (Appendix E): a second buyer's paid join filled a team of two. The recording shows the screens; the database and logs were not read | 24 Sep |
 | UC5 Team lifecycle resolution | On dev since 24 Oct; expiry since 23 Oct | Expiry: a paid team expired after its deadline, shown on dev on 23 October (Table E.3). Success: the team of two in the UC4 recording. The diagram badge carries 24 October, when both outcomes had been shown | 24 Sep |
-| UC6 Refund on team expiry | On dev since 23 Oct | Shown on dev on 23 October (Table E.3): one expired team was refunded once. Crash recovery under replay is tested locally only and not shown on dev | 25 Sep |
+| UC6 Refund on team expiry | On dev since 23 Oct | Shown on dev on 23 October (Table E.3): one expired team was refunded once. Simulated refund-worker recovery was tested locally and in CI; no process-crash drill was run on dev (section 3.4.2) | 25 Sep |
 | UC7 Share attribution | On dev | The UC4 recording shows the invite banner naming the sharer | 28 Sep |
 | UC8 View my orders and teams | On dev | | 27 Sep |
 | UC9 Admin listing management | On dev | Extended beyond the proposal with team terms and an admin console | 19 Sep |

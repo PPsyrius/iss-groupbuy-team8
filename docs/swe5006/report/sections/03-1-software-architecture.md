@@ -153,7 +153,7 @@ Table 3.3: Target implementation platform of the SWE5006 system.
 | Architecture tests | ArchUnit | 1.5.1 | 17 rules (Table 3.2) |
 | Integration tests | Testcontainers | Spring Boot BOM | `postgres:18` and `redis:8.10` images |
 | Database | PostgreSQL | 18 | One database, schema `domain`; native `uuidv7()` |
-| Cache and session store | Redis | 8 | Sessions and rate limits only |
+| Cache and session store | Redis | 8 | Sessions, OAuth state, rate limits and invite lookup cache |
 | Frontend language | TypeScript | 7.0.2 | Node 24, pnpm 12.4.2 |
 | UI library | React | 19.3.1 | React Compiler through the Babel preset (frontend ADR 0010) |
 | Routing, server state, forms | TanStack Router, Query, Form | 1.170.44, 5.104.3, 1.33.5 | |
