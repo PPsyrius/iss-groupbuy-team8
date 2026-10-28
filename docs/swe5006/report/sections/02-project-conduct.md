@@ -148,7 +148,7 @@ Table 2.7: Remarks from the presentation of 26 October and how the report answer
 | --- | --- | --- |
 | Send the repository link to the lecturer | Open. The repository is private, so the lecturer needs Read access before the link is useful | {{FILL: date Read access was granted and the link sent (#693) — Lim}} |
 | Show the OWASP ZAP results before and after remediation | Open | Section 4.2 compares the scans before and after the header fixes, finding by finding (fixed; Table 4.10) |
-| Submit the report by 31 October 2026, 23:59 | Closed on 27 October, when the first draft merged; this deadline replaced 1 November | The schedule meets it: first draft on 27 October, team vetting on 28 and 29 October, content freeze on 30 October |
+| Submit the report by 31 October 2026, 23:59 | Open until submission; this deadline replaced 1 November | The schedule meets it: first draft on 27 October, team vetting on 28 and 29 October, content freeze on 30 October |
 
 ## 2.3 Project Metrics
 
