@@ -852,7 +852,7 @@ Figure 3.111: Design sequence diagram of UC5 flow D6, the deadline passes (UML).
 
 #### Statechart of the team
 
-The team has significant, dynamic states, so it has a statechart, in the notation of section 3.4.1.
+The team has significant, dynamic states, so it has a statechart, in the notation of section 3.4.0.
 
 The team (`GroupDeal`) is created OPEN by a confirmed paid start (UC3) and filled by confirmed paid joins (UC4). It resolves once (UC5): it succeeds when the last seat is taken, or expires when its window closes first, which owes refunds (UC6).
 
