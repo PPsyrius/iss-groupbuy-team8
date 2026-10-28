@@ -133,7 +133,7 @@ Table E.5: Evidence references by section.
 | 2.2 | Presentation remarks recorded under the report tracking issue | #463 |
 | 2.2 (Table 2.7) | Repository link remark | #693 |
 | 2.2 (Table 2.7) | ZAP before/after remark; before runs 22 and 26 Oct; after run 27 Oct | #694; runs 39733450177, 40298983391, 40459212995 |
-| 2.2 (Table 2.7) | Submission deadline remark, closed when the first draft merged | #695; #698; #463 |
+| 2.2 (Table 2.7) | Submission deadline remark, open until submission | #695; #463 |
 | 2.3 (Table 2.8) | Web application live on dev, 22 Sep | #93 |
 | 2.3 (Table 2.8) | Admin console merged, 30 Sep | #305–#307 |
 | 2.3 (Table 2.8) | First production deployment on ECS, 6 Oct | #418; run 37470479078 |
