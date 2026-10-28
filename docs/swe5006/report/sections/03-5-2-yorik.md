@@ -259,6 +259,6 @@ Table 3.24: Implementing classes and their tests for Observer (UC5 and UC6).
 | Adapted subscriber (after commit) | `ShareCreditSubscriber` | `ShareCreditSubscriberTest.anAttributedJoinCreditsItsSharerInItsOwnTransaction`, `aFailedWriteIsSwallowedAfterTheJoinCommitted` |
 | Whole chain | Spring context with PostgreSQL | `TeamExpirySchedulingIT.oneRunExpiresOverdueTeamsWithTheirConsequencesAndASecondRunChangesNothing`, `aTeamWhoseExpiryFailsRollsBackAloneAndIsRetriedByTheNextRun` (Testcontainers) |
 
-The unit tests call the subscriber methods directly with mocked ports; the integration tests run the real Spring event dispatch against PostgreSQL in Testcontainers, locally and in the `build-quality` CI job. No test yet asserts the 10 → 20 dispatch order or the phase directly.
+The unit tests call the subscriber methods directly with mocked ports; the integration tests run the real Spring event dispatch against PostgreSQL in Testcontainers, locally and in CI (`build-quality` on pull requests, `SonarCloud Backend` on a push to `dev`). No test yet asserts the 10 → 20 dispatch order or the phase directly.
 
 The whole chain, from a paid team's expiry to its refund, was shown on dev on 23 October (Table E.3); the expiry design bound (section 1.4.3) governs its timing.
