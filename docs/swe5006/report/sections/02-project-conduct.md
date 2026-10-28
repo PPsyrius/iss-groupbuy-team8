@@ -177,7 +177,7 @@ Table 2.8: Milestones achieved.
 | 23 Oct | Paid start and the automatic expiry refund shown on dev | Dev recovery acceptance record (Table E.3) |
 | 24 Oct | A second buyer's paid join shown on dev, in a recording | Recording (Appendix E) |
 | 24 Oct | Sprint 4 tag `v0.1.0-sprint4` | Git tag |
-| 26 Oct | SWE5006 presentation, with the system demo on dev {{VERIFY: the demo ran on dev as planned — Lim}} | Presentation tracking issue |
+| 26 Oct | SWE5006 presentation, with the system demo run live on dev | Presentation tracking issue |
 
 Tag dates are the tagger dates. The repository has no GitHub milestones or releases.
 
