@@ -78,8 +78,15 @@
     let content = layout(size => {
       let framed = block(width: 100%, stroke: 0.4pt + rgb("#D8D2C8"), inset: inset, hosted)
       let h = measure(framed, width: size.width).height
-      let max = 20cm
-      let shown = if h > max { block(width: 100%, stroke: 0.4pt + rgb("#D8D2C8"), inset: inset, align(center, scale(max / h * 100%, reflow: true, hosted))) } else { framed }
+      // A tall drawing may fill the page: the region's height less the caption, the lead label,
+      // the float clearance and a little slack.
+      let lead-here = if lead != none { measure(block(width: size.width, lead-block)).height + (0.52em + 8pt).to-absolute() } else { 0pt }
+      let max = calc.min(size.height, text-area.height) - measure(block(width: size.width, cap)).height - gap.to-absolute() - lead-here - 1.4em.to-absolute() - 12pt
+      // A UML drawing is scaled down. An image set at `width: 100%` would only be laid out again
+      // at full width inside a scale, so it is set in a narrower block instead, which shrinks its
+      // height by the same ratio.
+      let shrunk = if type(body) == function { scale(max / h * 100%, reflow: true, hosted) } else { block(width: max / h * 100%, hosted) }
+      let shown = if h > max { block(width: 100%, stroke: 0.4pt + rgb("#D8D2C8"), inset: inset, align(center, shrunk)) } else { framed }
       let fig = block(width: 100%, breakable: false, {
         lead-block
         align(center, shown)
@@ -108,14 +115,18 @@
 #let lead-label(body) = block(above: 0.52em + 8pt, below: 0.52em + 8pt, sticky: true, body)
 
 #let report-table(n, split: false, ..cells) = {
-  set text(size: 9pt)
+  // A long plain word ("Performance" in a narrow column) is hyphenated rather than run into the
+  // next column.
+  set text(size: 9pt, hyphenate: true)
   set par(justify: false, leading: 0.5em)
   // A row never splits across pages, so a cell's text stays beside its key.
   set table.cell(breakable: false)
-  // A long code name (`internal_controllers_are_hidden_and_distributed_only`) may break after
-  // an underscore, dot or slash, so it wraps inside its column instead of running into the next.
+  // A long code name (`internal_controllers_are_hidden_and_distributed_only`,
+  // `TeamExpiryRefundSubscriberTest`) may break after an underscore, dot or slash and between the
+  // words of a camelCase name, so it wraps inside its column instead of running into the next.
   show raw.where(block: false): it => {
     show regex("[_./]"): m => m + sym.zws
+    show regex("[a-z][A-Z]"): m => m.text.at(0) + "\u{200B}" + m.text.at(1)
     it
   }
   let t = table(

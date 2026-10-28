@@ -2,7 +2,7 @@
 rubric: 3.1
 owner: Liu Jin
 plan: #677
-sources: ../presentation/src/diagrams/logical-layers.svg, dev-deployment.svg; backend/docs/adr/; frontend/docs/adr/
+sources: figures/logical-layers.svg (portrait copy of ../presentation/src/diagrams/logical-layers.svg), figures/dev-deployment.svg; backend/docs/adr/; frontend/docs/adr/
 owns: R33, R43, R52
 status: draft
 -->
@@ -11,7 +11,7 @@ status: draft
 
 ## 3.1 Software Architecture
 
-The system this report describes is the SWE5006 system: BlocBuy's `dev` environment, a modular monolith. One Spring Boot application, split into the four COLA layers and, inside each layer, one package per bounded context, serves a React single-page application (SPA). On `dev` the backend runs as one Docker container on one EC2 host behind CloudFront, with PostgreSQL 18 and Redis 8 on the same host. Stripe (test mode) and Google sign-in are the only external systems. The same code can also be assembled as three services for the SWE5001 course, and nothing in the design sections depends on that (SWE5001 topology, section 1.4).
+The SWE5006 system is BlocBuy's `dev` environment, a modular monolith. One Spring Boot application, split into the four COLA layers and, inside each layer, one package per bounded context, serves a React single-page application (SPA). On `dev` the backend runs as one Docker container on one EC2 host behind CloudFront, with PostgreSQL 18 and Redis 8 on the same host. Stripe (test mode) and Google sign-in are the only external systems. The same code can also be assembled as three services for the SWE5001 course, and nothing in the design sections depends on that (SWE5001 topology, section 1.4).
 
 #### Logical view: layers and bounded contexts
 
@@ -34,9 +34,9 @@ Dependencies point inward: adapter → application → domain, and infrastructur
 
 Every layer is cut by the same seven packages: six bounded contexts and a shared kernel. `catalog` holds products and team terms; `groupbuy` holds teams and their members, including share invites and referral credits; `order` holds purchase intents and orders; `payment` holds Stripe Checkout payments, refunds and the admin review queue; `identity` holds users, Google sign-in and role-based access control (RBAC); `notification` holds in-app notifications; `common` holds the error-code system, paging and the scheduler lease. Infrastructure adds one more package, `integration`, for the transactional outbox. Inside the domain module every bounded context has `model/`, `repository/`, `event/` and `exception/`. Only catalog, groupbuy, identity, payment and the shared kernel have `gateway/`, and a few add their own: `pricing/` in catalog, `query/` in groupbuy and `util/` in common. Figure 3.1 shows the result as a UML package diagram, with the frontend on top.
 
-![Figure 3.1: Logical view of the SWE5006 system as a UML package diagram, frontend and the five backend modules by bounded context. Dependencies point down toward the domain, and infrastructure realises the domain's ports.](../../presentation/src/diagrams/logical-layers.svg){.landscape}
+![Figure 3.1: Logical view of the SWE5006 system as a UML package diagram, frontend and the five backend modules by bounded context. Dependencies point down toward the domain, and infrastructure realises the domain's ports.](../figures/logical-layers.svg)
 
-**Ports and adapters.** The domain declares 20 repository ports, one per aggregate root or read model (for example `GroupDealRepository` and `RefundRepository`), and 12 gateway ports for everything a context needs from outside itself. Figure 3.2 shows four of them, who calls them and who realises them. Three ports are realised in the application layer rather than in infrastructure, because they connect two contexts rather than an external system: the payment context asks `PaymentIntentPort` for the server-owned price and `PaymentBusinessPort` to fulfil a paid purchase, and the order context answers through `PurchaseIntentAppService` and `OrderFulfilmentAdapter`; the groupbuy context reads product titles and cover images through `ListingDisplayGateway`, which catalog answers with `GroupbuyListingDisplayAdapter`. Payment therefore never imports a groupbuy or order class, and groupbuy never imports catalog.
+**Ports and adapters.** The domain declares 20 repository ports, one per aggregate root or read model (for example `GroupDealRepository` and `RefundRepository`), and 12 gateway ports for everything a context needs from outside itself. Figure 3.2 shows four of them, who calls them and who realises them. Three ports are realised in the application layer, because they connect two of our own contexts and no external system: the payment context asks `PaymentIntentPort` for the server-owned price and `PaymentBusinessPort` to fulfil a paid purchase, and the order context answers through `PurchaseIntentAppService` and `OrderFulfilmentAdapter`; the groupbuy context reads product titles and cover images through `ListingDisplayGateway`, which catalog answers with `GroupbuyListingDisplayAdapter`. Payment therefore never imports a groupbuy or order class, and groupbuy never imports catalog.
 
 ```mermaid
 classDiagram
@@ -90,8 +90,9 @@ Figure 3.2: Ports and adapters, UML class diagram (left column application servi
 
 The figure leaves out eight ports that follow the same pattern: the two cross-context ports named above, the outbox event transport with its SNS and SQS realisations (off on dev, section 1.4), four ports realised on Redis (rate limits, the open-team cache, sign-in state and login snapshots, the last by `RedisLoginSnapshotGateway`) and the listing search reranker, realised by `TypeSafeJevListingSearchReranker`.
 
-**Enforcement.** The rules above are tested, not only documented. `ArchitectureTest` in `blocbuy-bootstrap` holds 17 ArchUnit rules that run in every build:
+**Enforcement.** `ArchitectureTest` in `blocbuy-bootstrap` checks these rules in every build with 17 ArchUnit rules:
 
+<!-- table: split -->
 Table 3.2: The 17 ArchUnit rules in `ArchitectureTest`, in five groups: layering, coding rules, context boundaries, data ownership and internal API.
 
 | Rule | What it stops |
@@ -114,7 +115,7 @@ Table 3.2: The 17 ArchUnit rules in `ArchitectureTest`, in five groups: layering
 | `internal_controllers_are_hidden_and_distributed_only` | Internal API: a service-to-service controller active in the monolith or published in the contract |
 | `internal_paths_live_in_internal_controllers` | Internal API: an `/internal/**` path outside the internal controllers |
 
-The last three groups exist so that the SWE5001 split stays possible; in the monolith they keep the contexts loosely coupled.
+The last three groups keep the SWE5001 split possible. In the monolith they keep the contexts loosely coupled.
 
 **API surface.** The adapter layer has 14 `@RestController` classes and two exception advice classes (`GlobalExceptionHandler`, `StripeRequestExceptionHandler`). Thirteen controllers serve the monolith; `InternalUserController` is active only in the distributed topology. The contract is OpenAPI 3.1, generated by springdoc and committed as `contracts/openapi.json`: 27 paths and 31 operations under `/api/v1`. CI fails a pull request whose committed contract differs from the code. Every response, success or error, is one `Result<T>` envelope with a stable code; success is `COMMON_200_000` (`CommonErrorCode`). This replaced, on 11 September, an earlier choice of bare DTOs for success and ProblemDetail for errors (Table B.3), and the frontend handles it through a single `unwrapResult` function (frontend ADR 0009).
 
@@ -122,15 +123,15 @@ The last three groups exist so that the SWE5001 split stays possible; in the mon
 
 #### Component and deployment view of the SWE5006 system
 
-BlocBuy has no separately deployed components on `dev`: the backend is one deployable unit. The meaningful component boundaries are therefore physical, and Figure 3.3 serves as both the component and the deployment view. It is a UML deployment diagram drawn from the AWS account, read-only, on 24 October.
+On `dev` the backend is one deployable unit, so its component boundaries are physical, and Figure 3.3 is both the component and the deployment view. It is a UML deployment diagram drawn from the AWS account, read-only, on 24 October; the resource identifiers are in Table E.5.
 
-![Figure 3.3: Deployment view of the SWE5006 dev system, UML deployment diagram with «device», «node» and «executionEnvironment». One CloudFront distribution splits the SPA from the API, and the whole backend with its database and cache runs on one EC2 host.](../figures/dev-deployment.svg){.landscape}
+![Figure 3.3: Deployment view of the SWE5006 dev system, UML deployment diagram with «device», «node» and «executionEnvironment». One CloudFront distribution splits the SPA from the API, and the whole backend with its database and cache runs on one EC2 host.](../figures/dev-deployment.svg)
 
-A request flows as follows. The buyer's browser reaches one CloudFront distribution over HTTPS. CloudFront serves `/*` from a private S3 bucket through origin access control, and forwards `/api/*` to an Application Load Balancer (ALB). The ALB accepts traffic only from CloudFront's address range and only when CloudFront's secret origin header is present. It forwards to port 8589 on the EC2 host (t3.large, Ubuntu 24.04), whose security group admits that port only from the load balancer. There the backend container runs read-only, without Linux capabilities, on the host network, and reaches PostgreSQL 18 and Redis 8 on the loopback interface. PostgreSQL holds every table and is the source of truth for teams, orders and payments; Redis holds only short-lived data: Sa-Token sessions, sign-in state, rate-limit counters and a cache of open teams. The backend calls Stripe and Google over HTTPS, and Stripe calls the backend back with signed webhooks through the same CloudFront path. Container logs go to CloudWatch Logs.
+The buyer's browser reaches one CloudFront distribution over HTTPS. CloudFront serves `/*` from a private S3 bucket through origin access control, and forwards `/api/*` to an Application Load Balancer (ALB). The ALB accepts traffic only from CloudFront's address range and only when CloudFront's secret origin header is present. It forwards to port 8589 on the EC2 host (t3.large, Ubuntu 24.04), whose security group admits that port only from the load balancer. There the backend container runs read-only, without Linux capabilities, on the host network, and reaches PostgreSQL 18 and Redis 8 on the loopback interface. PostgreSQL holds every table and is the source of truth for teams, orders and payments; Redis holds only short-lived data: Sa-Token sessions, sign-in state, rate-limit counters and a cache of open teams. The backend calls Stripe and Google over HTTPS, and Stripe calls the backend back with signed webhooks through the same CloudFront path. Container logs go to CloudWatch Logs.
 
-Delivery follows the same picture. CI on GitHub-hosted runners authenticates to AWS with one OpenID Connect (OIDC) role per job, pushes the backend image to ECR with an immutable tag, and asks Systems Manager Run Command to pull it on the host by digest; the frontend bundle is synchronised to S3 and CloudFront is invalidated. Section 4.3 describes the pipeline and its gates.
+Delivery uses the same resources. CI on GitHub-hosted runners authenticates to AWS with one OpenID Connect (OIDC) role per job, pushes the backend image to ECR with an immutable tag, and asks Systems Manager Run Command to pull it on the host by digest; the frontend bundle is synchronised to S3 and CloudFront is invalidated. Section 4.3 describes the pipeline and its gates.
 
-The view also shows the system's limits. It has one host and no auto-scaling group (single host, section 4.3), and PostgreSQL, Redis, the host and the ALB are configured by hand, not by the pipeline. The host's other gaps are open issues (open issues in Table 2.6). No message broker runs on `dev`, so in-app notifications do not run there (off on dev, section 1.4).
+The system has one host and no auto-scaling group (single host, section 4.3). We configured PostgreSQL, Redis, the host and the ALB by hand; the pipeline does not manage them. The host's other gaps are open issues (open issues in Table 2.6). No message broker runs on `dev`, so in-app notifications do not run there (off on dev, section 1.4).
 
 #### Target implementation platform
 

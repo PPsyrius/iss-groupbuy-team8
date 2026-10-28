@@ -146,6 +146,7 @@ Table E.5: Evidence references by section.
 | 3.1 | COLA layering locked on 30 Aug | backend design decision D1 (Table B.3) |
 | 3.1 | `Result<T>` envelope superseded the bare DTO and ProblemDetail choice, 11 Sep | backend design decision D10 and its historical note (Table B.3) |
 | 3.1 | Dev request path and security group rules | `docs/deploy/dev-cloudfront-deployment.md`; EC2 Name tag `BlocBuy-dev` |
+| 3.1 (Figure 3.3) | AWS resources of the deployment view, read on 24 Oct | account `402178232802`, region `ap-southeast-1`; EC2 instance `i-0852b6c3475b19f05`; CloudFront distribution `E3U5W7UWDL8LRV` |
 | 3.1 (Table 3.3) | Platform versions read on 26 Oct, re-read unchanged on 27 Oct | `46faacd7`; `6d14e449` |
 | 3.1 (Table 3.4) | Decisions behind the architecture | backend design decisions D1, D4, D5, D6, D7, D12, D19, plan sections 4 and 8, and the historical note superseding D10 (Table B.3) |
 | 3.2 | COLA module layout and the Spring Boot 3.5 starting point | backend design decision D1 (Table B.3); `backend/pom.xml` |

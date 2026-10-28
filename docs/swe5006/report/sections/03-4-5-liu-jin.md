@@ -17,7 +17,7 @@ Liu Jin identified the six major flows of the two use cases and analysed them. I
 
 #### A Analysis class diagram
 
-**UC9.** One control, `ManageListingControl`, carries every administrator command (Figure 3.95). The `Listing` entity holds a `version`, so the model can state the rule that a command made on an old copy of the listing is refused. A listing that has any team, price policy or quote in its history keeps that history. For this reason the control reads `Team` and `PriceQuote` before it deletes anything. `AdminAccount` is the administrator's own account: signing in with Google is not enough, the account must also hold the admin role and be active.
+**UC9.** One control, `ManageListingControl`, carries every administrator command (Figure 3.95). The `Listing` entity holds a `version`, so the model can state the rule that a command made on an old copy of the listing is refused. A listing that has any team, price policy or quote in its history keeps that history. For this reason the control reads `Team` and `PriceQuote` before it deletes anything. `AdminAccount` is the administrator's own account. Besides a Google sign-in, it must hold the admin role and be active.
 
 ```mermaid
 classDiagram
@@ -216,7 +216,7 @@ sequenceDiagram
 
 Figure 3.97: Analysis sequence diagram of UC9 flow B1, publish a listing (UML). The listing decides whether it may go on sale; the control only checks the account and the version first.
 
-**B2 Revise with a stale version, then reload and retry.** Two administrators can open the same listing. The one who saves second holds an old version, and the listing refuses the save without changing anything. Nothing merges or retries on its own: the administrator reloads the listing, which drops the unsaved edits, and saves again at the new version.
+**B2 Revise with a stale version, then reload and retry.** Two administrators can open the same listing. The one who saves second holds an old version, and the listing refuses the save without changing anything. The system neither merges nor retries. The administrator reloads the listing, which drops the unsaved edits, and saves again at the new version.
 
 ```mermaid
 sequenceDiagram
@@ -369,13 +369,13 @@ sequenceDiagram
     end
 ```
 
-Figure 3.102: Analysis sequence diagram of UC5 flow B6, the deadline passes (UML). Expiry and its consequences happen together, and a team that is already resolved is skipped, not treated as an error.
+Figure 3.102: Analysis sequence diagram of UC5 flow B6, the deadline passes (UML). Expiry and its consequences happen together, and a team that is already resolved is skipped without an error.
 
 #### C Design class diagram
 
 The design classes are the real classes in the repository (Figures 3.103 to 3.105). They follow the four COLA layers of 3.1: adapter (web), application, domain and infrastructure. UC9 is split into two figures, so that each stays legible on A4. A parameter list with more than one parameter is shown as `(…)`; part D gives the full calls.
 
-**UC9, web and application layers.** The analysis boundary becomes React components that call the REST API under `/api/v1/admin/products` through the generated client (3.2.2, 3.2.3). The control becomes `AdminListingController`, which checks the session, role and permission, and two application services: `AdminListingAppServiceImpl` for revise, status change and delete, and `TeamTermsAppServiceImpl` for team terms. Each service method is one bounded transaction. History owned by another bounded context is read only through that context's facade, `GroupDealQueryService`, never through its tables.
+**UC9, web and application layers.** The analysis boundary becomes React components that call the REST API under `/api/v1/admin/products` through the generated client (3.2.2, 3.2.3). The control becomes `AdminListingController`, which checks the session, role and permission, and two application services: `AdminListingAppServiceImpl` for revise, status change and delete, and `TeamTermsAppServiceImpl` for team terms. Each service method is one bounded transaction. History owned by another bounded context is read only through that context's facade, `GroupDealQueryService`.
 
 ```mermaid
 classDiagram
@@ -644,7 +644,7 @@ classDiagram
     OrderLifecycleSubscriber ..> TeamSucceeded : listens
 ```
 
-Figure 3.105: Design class diagram of UC5 Team lifecycle resolution (UML). Two entry points (the sweep and the paid join) reach one aggregate whose `DealStatus` table decides every move; the consequences are event subscribers, not calls.
+Figure 3.105: Design class diagram of UC5 Team lifecycle resolution (UML). Two entry points (the sweep and the paid join) reach one aggregate whose `DealStatus` table decides every move; event subscribers carry out the consequences.
 
 #### D Design sequence diagrams
 
@@ -715,7 +715,7 @@ sequenceDiagram
     W-->>P: 200, version v + 2
 ```
 
-Figure 3.107: Design sequence diagram of UC9 flow D2, stale revise and retry, seen from the page (UML). The banner shows both versions and the retry is the administrator's Reload, never automatic; the version check behind the 412 is Figure 3.138.
+Figure 3.107: Design sequence diagram of UC9 flow D2, stale revise and retry, seen from the page (UML). The banner shows both versions, and the administrator starts the retry with Reload; the version check behind the 412 is Figure 3.138.
 
 **D3 Delete a draft.** The flow starts when the administrator confirms Delete in the lifecycle dialog.
 
