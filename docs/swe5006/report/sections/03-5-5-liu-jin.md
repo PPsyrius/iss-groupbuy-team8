@@ -9,7 +9,7 @@ status: draft
 
 ### 3.5.5 Listing Rules by State: State with Optimistic Offline Lock by Liu Jin
 
-An administrator can publish, delist, revise and delete a listing, but each of these actions is allowed, and behaves differently, only in some lifecycle states of the listing. We solved this with the GoF State pattern: the `Product` aggregate hands every lifecycle action to its current `ProductStatus`, and each of the three states (`DRAFT`, `ON_SALE`, `OFF_SALE`) answers in its own way or refuses with one default. State does not solve a second problem in the same use case, two administrators editing the same listing at once. For that we use a complementary concurrency mechanism, Fowler's Optimistic Offline Lock (Patterns of Enterprise Application Architecture), which is not a GoF pattern: every write carries the version the administrator read, and a stale version is refused with HTTP 412 Precondition Failed.
+An administrator can publish, delist, revise and delete a listing, but each of these actions is allowed, and behaves differently, only in some lifecycle states of the listing. We solved this with the GoF State pattern: the `Product` aggregate hands every lifecycle action to its current `ProductStatus`, and each of the three states (`DRAFT`, `ON_SALE`, `OFF_SALE`) answers in its own way or refuses with one default. The same use case has a second problem that State does not cover: two administrators editing one listing at once. For that we used Fowler's Optimistic Offline Lock (Patterns of Enterprise Application Architecture), a concurrency pattern from outside the GoF catalogue. Every write carries the version the administrator read, and a stale version is refused with HTTP 412 Precondition Failed.
 
 Only an on-sale listing is visible to buyers and can be bought by a team. The administrator manages listings in the admin console (UC9, section 3.3.10).
 
@@ -90,7 +90,7 @@ Figure 3.134: Design sequence diagram of publishing a listing, brute-force desig
 
 #### 2 Candidate design patterns
 
-Table 3.28 lists the candidates we considered for the lifecycle rules, and Table 3.29 the candidates for the concurrent edits. The first table holds GoF patterns plus one plain alternative; the second holds Fowler's offline concurrency patterns, which are persistence mechanisms, not GoF patterns.
+Table 3.28 lists the candidates we considered for the lifecycle rules, and Table 3.29 the candidates for the concurrent edits. The first table holds GoF patterns plus one plain alternative; the second holds Fowler's offline concurrency patterns, which work at the persistence level.
 
 Table 3.28: Candidates for the lifecycle rules.
 
@@ -111,9 +111,9 @@ Table 3.29: Candidates for concurrent edits of one listing.
 
 #### 3 Motivation
 
-We chose State because each state changes *how* the actions behave, not only *which* moves are legal. A draft allows price, currency and stock edits and deletion; an on-sale or off-sale listing locks them; publish and delist differ per state. With State, each state's rules sit in one place, every move a state does not allow is refused by one inherited default with HTTP 409, and `Product` no longer tests its own status in those four operations.
+We chose State because each state changes *how* the actions behave as well as *which* moves are legal. A draft allows price, currency and stock edits and deletion; an on-sale or off-sale listing locks them; publish and delist differ per state. With State, each state's rules sit in one place, every move a state does not allow is refused by one inherited default with HTTP 409, and `Product` no longer tests its own status in those four operations.
 
-The flexibility is needed because the rules protect money. A published listing's price is the basis of quotes that buyers accept and teams that buyers pay into, so "after publication, price, currency and stock stay fixed" must hold on every path. Keeping that rule in the states, rather than in callers, means a new caller cannot forget it. The UC9 design note also expects new lifecycle states and requires each one to define its allowed operations and tests.
+These rules protect money. A published listing's price is the basis of quotes that buyers accept and of teams that buyers pay into, so "after publication, price, currency and stock stay fixed" must hold on every path. Because the rule lives in the states, a new caller cannot forget it. The UC9 design note also expects new lifecycle states and requires each one to define its allowed operations and tests.
 
 **Liabilities.**
 
@@ -121,7 +121,7 @@ The flexibility is needed because the rules protect money. A published listing's
 - Extension is not change-free. A new state still needs a stored code, an entry in the application's target switch and new tests; the design note warns against claiming zero-change extension.
 - Two status tests remain outside the states (section 6).
 
-We did not use State for the team lifecycle, although the proposal and our backend design of 11 September named it there. A team has one move, from OPEN to a final state, and its consequences are events (section 3.5.2), so State would add five classes, one per `DealStatus` constant, and four of them (SUCCEEDED, FAILED, EXPIRED, CANCELED) would only refuse every move, a cost the module notes warn about (SDP 05a p35). `DealStatus.canTransitionTo`, a transition table, is enough there.
+We did not use State for the team lifecycle, although the proposal and our backend design as extended on 11 September named it there. A team has one move, from OPEN to a final state, and its consequences are events (section 3.5.2), so State would add five classes, one per `DealStatus` constant, and four of them (SUCCEEDED, FAILED, EXPIRED, CANCELED) would only refuse every move, a cost the module notes warn about (SDP 05a p35). `DealStatus.canTransitionTo`, a transition table, is enough there.
 
 We chose Optimistic Offline Lock because the business transaction, read then write, spans two requests, and a database lock cannot be held between them. Its liability is that the losing administrator must reload and enter the change again; there is no merge. The admin console turns a 412 into a conflict banner that names the server's current version and disables every write until the administrator reloads.
 
@@ -194,7 +194,7 @@ Table 3.30: GoF State roles in the code.
 | ConcreteState | `DRAFT`, `ON_SALE`, `OFF_SALE` constant bodies | Override only what the state allows; each returns its successor state |
 | Client | `AdminListingAppServiceImpl` | Opens the transaction, locks the row, checks the version, calls the Context and persists the new revision |
 
-Figure 3.136 is the listing statechart that these classes implement. It is the only statechart for the listing in this report.
+Figure 3.136 is the listing statechart that these classes implement.
 
 ```mermaid
 stateDiagram-v2
@@ -215,7 +215,7 @@ Figure 3.136: UML state machine of a listing (`Product.status`). Nothing returns
 
 #### 5 Solution sequence diagrams
 
-Figure 3.137 shows the state dispatch when an administrator publishes a listing. Inside `changeStatus`, after the row lock and the version check, the application service calls `publish()`; `Product` checks stock and price, then asks its state. The `alt` fragment has one operand per kind of ConcreteState, chosen by dynamic dispatch rather than by a switch: DRAFT and OFF_SALE override `publish()`, while ON_SALE inherits the refusing default. The full publish flow, with its transaction, lock and version check, is Figure 3.106.
+Figure 3.137 shows the state dispatch when an administrator publishes a listing. Inside `changeStatus`, after the row lock and the version check, the application service calls `publish()`; `Product` checks stock and price, then asks its state. The `alt` fragment has one operand per kind of ConcreteState, chosen by dynamic dispatch with no switch: DRAFT and OFF_SALE override `publish()`, while ON_SALE inherits the refusing default. The full publish flow, with its transaction, lock and version check, is Figure 3.106.
 
 ```mermaid
 sequenceDiagram
@@ -233,7 +233,7 @@ sequenceDiagram
   end
 ```
 
-Figure 3.137: Design sequence diagram of the State dispatch in publishing a listing. The status is asked, not tested: the state object answers with the next state or refuses; the full publish flow is Figure 3.106.
+Figure 3.137: Design sequence diagram of the State dispatch in publishing a listing. `Product` asks its state object, which answers with the next state or refuses; the full publish flow is Figure 3.106.
 
 Figure 3.138 shows the Optimistic Offline Lock. Two administrators read the same listing at version 3. The first save commits version 4. The second save carries version 3: its `lockById` waits for the first transaction's row lock, then reads version 4, so `requireVersion(3)` refuses it with 412 and nothing is written. The controller is left out of this figure to keep it legible; it passes each request on as in Figure 3.106.
 
@@ -278,7 +278,7 @@ The implementation follows Figures 3.135 to 3.138. The decisions are:
 3. **`Product` is immutable.** Every accepted change returns a new revision with version + 1, so the version used by the lock is also the revision number of the listing.
 4. **One default answer.** The State defaults throw `BizException(PRODUCT_STATE_CONFLICT)`, which the global exception handler returns as HTTP 409 with code `CATALOG_409_002`.
 5. **Optimistic Offline Lock on every write.** `revise`, `changeStatus` and `delete` in `AdminListingAppServiceImpl` take an `expectedVersion`. The endpoints are `PUT /api/v1/admin/products/{productId}`, `PUT /api/v1/admin/products/{productId}/status` and `DELETE /api/v1/admin/products/{productId}?expectedVersion=N` in `AdminListingController`. `Product.requireVersion` refuses a stale version with `PRODUCT_VERSION_CONFLICT`, HTTP 412, code `CATALOG_412_002`, and returns the current version in the error body.
-6. **Version check under a short row lock, plus a guarded UPDATE.** The service first locks the row (`lockById`, `selectActiveByIdForUpdate`, a `SELECT … FOR UPDATE` in `BizProductMapper.xml`), and only then checks the version. The UPDATE statements `updateListing`, `updateTeamTerms` and `deleteDraft` also compare `version = #{expectedVersion}`, and `ProductRepositoryImpl` turns an affected-row count other than one into the same 412. The row lock lasts only the 10-second system transaction; the offline lock across the two requests is the version alone. Setting team terms with a team price carries two separate tokens: a stale product version gets `CATALOG_412_002`, a stale price-policy version `CATALOG_412_001`. {{CONFIRM: D19 Which tables compare a version on write: `biz_product` only, or also `biz_order`, `biz_purchase_intent` and `biz_payment` (section 3.6), and on admin writes only (Table B.4)? — Liu Jin}}
+6. **Version check under a short row lock, plus a guarded UPDATE.** The service first locks the row (`lockById`, `selectActiveByIdForUpdate`, a `SELECT … FOR UPDATE` in `BizProductMapper.xml`), and only then checks the version. The UPDATE statements `updateListing`, `updateTeamTerms` and `deleteDraft` also compare `version = #{expectedVersion}`, and `ProductRepositoryImpl` turns an affected-row count other than one into the same 412. The row lock lasts only the 10-second system transaction; the offline lock across the two requests is the version alone. Setting team terms with a team price carries two separate tokens: a stale product version gets `CATALOG_412_002`, a stale price-policy version `CATALOG_412_001`. Only the listing carries its version across an administrator's two requests, so the Optimistic Offline Lock is on `biz_product` alone. Two more tables compare a version on writes the system makes itself: `biz_purchase_intent` when an intent is claimed or expires, and `biz_payment` when a Checkout session or payment status is saved; `biz_refund` compares its fencing version. `biz_order` has a version-checked update that no production code calls: orders change state by team, in updates guarded by their pending status (the column's meaning per table: section 3.6).
 7. **References are a use-case concern.** The state decides only whether a draft may be deleted; `AdminListingAppServiceImpl.delete` then checks price, quote and team history and refuses with `PRODUCT_REFERENCED` (409, `CATALOG_409_004`). Deletion is a soft delete.
 
 Two status tests remain outside the states, and we accept both. `AdminListingAppServiceImpl.changeStatus` still switches on the *requested* target to choose `publish()` or `delist()`; the current state still decides whether that move is legal. `Product.isOnSale()` compares the status for the purchase and team-price checks (`CatalogPurchaseSupportImpl`, `TeamPricePolicy`).
