@@ -295,22 +295,22 @@ By the 30 Oct freeze every box is ticked and every decision settled.
 
 Decisions (numbers follow PLAN part 3; settled ones are folded into the rows above):
 
-- **D6** Test recount at the freeze SHA. Owner Liu Jin.
+- **D6 — settled 27 Oct.** Test totals come from the CI runs equal to the freeze commit, 40200028697 (backend) and 40294726775 (frontend); Appendix D holds them.
 - **D7** Fix the 11-check and "four checks" statements in the operator guide and pipeline plan. Owner Pan.
 - **D8** Before class and sequence diagrams for 3.5.2, 3.5.3, 3.5.4 by 28 Oct. Owners Yorik, Pan, Lim.
-- **D9** Team statechart: 3.4.1 (PLAN) or 3.4.5 (deck s6 cue). Owner Lim with Eric and Liu Jin.
-- **D11** Who acted as Product Owner. Owner Lim.
+- **D9 — settled 27 Oct by Lim.** The team statechart sits in 3.4.5, as #678 and the deck backup slide place it.
+- **D11 — settled 27 Oct by Lim.** No Product Owner was appointed (R51, home 1.3).
 - **D13 — settled 28 Oct by Lim.** Lecturers get Read access to the repository, added by Pan as the only admin (#693); no `git archive` is submitted. The title page shows the URL; its VERIFY marker stays until access is granted.
-- **D14** Authoring pipeline: Markdown in `sections/` compiled with Typst in the template's layout (first draft built this way on 26 Oct at Liu Jin's request), or a final pass in Word. Owner Lim, by 27 Oct.
-- **D15** REM issue created and its remarks mapped to sections. Owner Lim, 27 Oct.
-- **D16** Confirm G8 (issue and PR numbers only in tables and appendices; ADR numbers allowed) and F4 (8 pt minimum); both were proposed with this harness on 26 Oct. Owner Lim.
+- **D14 — settled 28 Oct by Lim.** Markdown in `sections/` compiled with Typst in the template's layout; no Word pass.
+- **D15 — settled 27 Oct by Lim.** The presentation remarks are recorded under #463 and answered in 2.2 (Table 2.7).
+- **D16 — settled 28 Oct by Lim.** G8 (issue and PR numbers only in tables and appendices; ADR numbers allowed) and F4 (8 pt minimum) are rules; figures that still print below 8 pt are listed for their owners.
 
 Conflicting versions of one fact (G13). Two versions cannot both be true, so no section keeps its own variant: the home owner settles each one, the home holds the only wording, and every other section takes the reference form of its Canonical homes row.
 
-- **D17** Lock order, position of the product row (R11). Table 3.12 in 3.2.8 ends the combined order with the product row (team → intent → order → payment → receipt → product); 3.5.5 calls the admin path "the same product-first order that the team-price quotation writers use" and 3.5.4 says the quote locks the product first; 3.4.5 D calls "team, then purchase intent, then payment, then receipt" the documented order. State per path where the product row comes, in Table 3.12 only. Owner Eric.
+- **D17 — settled 28 Oct by Eric.** On the settlement paths the product row comes last, after the receipt; the admin and team-price quotation paths lock it first. Table 3.12 states this per path, and 3.5.4 and 3.5.5 follow it.
 - **D18 — settled 28 Oct by Yorik.** Refund-worker loss after provider acceptance was simulated locally and in CI against PostgreSQL with substitute Stripe calls. CI run 40200028697, `SonarCloud Backend`, on `ad2a73e6` ran all 9 `StripeRolloutAcceptanceIT` tests without failures, errors or skips, including `providerSucceededBeforeWorkerLossRetriesWithOneDurableRefundKey`. No process-crash drill was run on dev; ignored `refund.*` notifications are not proof of refund-webhook replay protection. R09, 3.4.2 D, Table 1.3, Table 2.5 and Table E.5 carry the same evidence boundary.
-- **D19** Scope of optimistic version checks (R13, R15). 3.6 says `biz_product`, `biz_order`, `biz_purchase_intent` and `biz_payment` all compare a version; Table B.4 says optimistic checks apply on admin writes only; 3.2.4 names only the listing, and R15 says the team `version` is never compared. State which tables compare a version, in 3.5.5, and the column's meaning per table in 3.6. Owner Liu Jin.
+- **D19 — settled 28 Oct by Liu Jin.** The Optimistic Offline Lock is on `biz_product` alone. `biz_purchase_intent` and `biz_payment` compare a version on system writes, and `biz_refund` compares its fencing version; `biz_order` has no production caller of its version update and is a change counter. 3.5.5 states the scope, and 3.6 the column's meaning per table.
 - **D20 — settled 28 Oct by Lim.** Table 1.5 holds the performance status and points to 4.2 (test), Table E.4 (results) and 3.2.7 (expiry bound); the 2.2 pointer is dropped.
 - **D21** Board snapshot remainder (R36). 2.3 says "1 with no status set"; A.1 says "1 issue without a card". State which, in A.1. Owner Pan.
 - **D22 — settled 28 Oct by Lim.** Table 2.9 names rule 8 of the Definition of Done (Table A.9), which does not count a local run; Table A.10 cites Table 2.9.
-- **D23** Evidence kind of the last-seat race test (R14). 3.2.8 said "Tested locally (Testcontainers), not on dev"; 3.4.1 said "run locally and in CI, not on dev". Choose one evidence kind at 3.2.8, citing a `build-quality` log if CI is kept; Table 4.12, Table 1.5 and R14's reference form follow. Owner Eric.
+- **D23 — settled 28 Oct by Eric.** The last-seat race test ran locally and in CI (run 40200028697, `SonarCloud Backend`), not on dev; 3.2.8, 3.4.1 and Table E.5 state it.
