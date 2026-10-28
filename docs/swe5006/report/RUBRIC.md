@@ -42,7 +42,7 @@ In every table, **Source** cites what a document requires and **Ruling** records
 | G10 | Incorporate presentation remarks | BRF slide 7; REM | Every remark in the REM issue is turned into a report task tagged with a section number and either answered in the report or recorded as not adopted, with a reason, in the Remarks register below |
 | G11 | Code base deliverable | BRF slide 5 | Repository URL on the title page; lecturers get read access or a `git archive` of the freeze SHA (PLAN D13, #693) |
 | G12 | Figures legible in print | BRF slide 6 | Every figure passes F1–F9 |
-| G13 | One voice, one memory | Team | Each argument, fact, figure and table has one canonical home, listed in the Canonical homes and Canonical figures registries. The full statement appears only at its home. Elsewhere, cite the home in at most one clause, or say nothing. Never repeat the measured figures (for example 18.9 s, 40.6 s, 58.18 s) outside their home. References may point forward. A limitation is stated once, plainly, at its home, without commentary about grading or rulings |
+| G13 | One voice, one memory | Team | Each argument, fact, figure and table has one canonical home, listed in the Canonical homes and Canonical figures registries. The full statement appears only at its home. Elsewhere, cite the home in at most one clause, or say nothing. Never repeat the measured figures (for example 18.9 s, 40.6 s, 58.18 s) outside their home. References may point forward. A limitation is stated once, plainly, at its home, without commentary about grading or rulings. A row whose home names several sections (for example status in 1.4.3, method in 4.2) appears in the `owns:` line of each of those files and of no other |
 
 ## Evidence kinds
 
