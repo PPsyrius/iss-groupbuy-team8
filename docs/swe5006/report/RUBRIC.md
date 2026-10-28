@@ -299,7 +299,7 @@ Decisions (numbers follow PLAN part 3; settled ones are folded into the rows abo
 - **D8** Before class and sequence diagrams for 3.5.2, 3.5.3, 3.5.4 by 28 Oct. Owners Yorik, Pan, Lim.
 - **D9** Team statechart: 3.4.1 (PLAN) or 3.4.5 (deck s6 cue). Owner Lim with Eric and Liu Jin.
 - **D11** Who acted as Product Owner. Owner Lim.
-- **D13** Lecturers' code access: read access or `git archive`. Owner Lim (#693).
+- **D13 — settled 28 Oct by Lim.** Lecturers get Read access to the repository, added by Pan as the only admin (#693); no `git archive` is submitted. The title page shows the URL; its VERIFY marker stays until access is granted.
 - **D14** Authoring pipeline: Markdown in `sections/` compiled with Typst in the template's layout (first draft built this way on 26 Oct at Liu Jin's request), or a final pass in Word. Owner Lim, by 27 Oct.
 - **D15** REM issue created and its remarks mapped to sections. Owner Lim, 27 Oct.
 - **D16** Confirm G8 (issue and PR numbers only in tables and appendices; ADR numbers allowed) and F4 (8 pt minimum); both were proposed with this harness on 26 Oct. Owner Lim.
