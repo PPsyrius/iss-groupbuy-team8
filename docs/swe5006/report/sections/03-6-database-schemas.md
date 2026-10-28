@@ -9,7 +9,7 @@ status: draft
 
 ## 3.6 Database Schemas
 
-BlocBuy keeps all persistent state in one PostgreSQL 18 database, in the schema `domain`: 29 tables created by the Flyway migrations V1 to V28. Each aggregate root has its own table, every key is a UUIDv7, and relationships between tables are logical only: there are no foreign keys, and the application and unique indexes keep the references consistent. Figure 3.139 shows the eight tables at the centre of the money path; Appendix C has the full diagram and a list of all 29 tables with their purpose and owning context.
+BlocBuy keeps all persistent state in one PostgreSQL 18 database, in the schema `domain`: 29 tables created by the Flyway migrations V1 to V28. Each aggregate root has its own table, and relationships between tables are logical only: there are no foreign keys, and the application and unique indexes keep the references consistent. Figure 3.139 shows the eight tables at the centre of the money path; Appendix C has the full diagram and a list of all 29 tables with their purpose and owning context.
 
 #### Core schema
 

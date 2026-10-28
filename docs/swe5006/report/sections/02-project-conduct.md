@@ -99,7 +99,7 @@ Table 2.5: Promised against delivered, 26 October 2026.
 | Item | Promised (proposal) | Status | What was built, and the decision record |
 | --- | --- | --- | --- |
 | Use cases UC1–UC9 | Nine use cases (section 6.1) | Delivered | All nine built, tested and shown on dev (Table 1.3) |
-| Crash recovery of refunds | Refunds safe under replay and crash | Open | Tested locally only (not shown on dev; Table 1.3) |
+| Crash recovery of refunds | Refunds safe under replay and crash | Open | Simulated recovery tested locally and in CI (not shown on dev; Table 1.3) |
 | UC9 administration | API-only listing CRUD plus database seeding | Changed | An admin console for administrators, built in Sprint 3 (frontend ADR 0015) |
 | Sign-in session | Google sign-in, with a token (JWT) kept in browser local storage | Changed | Google sign-in unchanged; the server keeps a Sa-Token session in Redis and the browser holds only an HttpOnly cookie (frontend ADR 0002; decided on 30 August, before the first sprint; no backend ADR). Reasons: Table B.4 |
 | Payment abstraction and team resolution | Adapter for Stripe (UC6); Observer for team resolution (UC5, UC7) | Delivered | Payment providers sit behind the domain's `CheckoutGateway` and `RefundGateway` ports, implemented by Stripe adapters (section 3.2.5); a team's resolution is published as events to ordered subscribers (backend ADRs 0002, 0003). Observer, not Adapter, is UC6's design problem (section 3.5.2) |
