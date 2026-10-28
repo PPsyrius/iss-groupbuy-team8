@@ -35,10 +35,10 @@ An open team ends in exactly one of two ways: it *succeeds* when an admission fi
 
 **Exceptional flows:**
 
-- Success 1a. A join payment arrives after the team has already succeeded or expired: the admission is refused as closed and the payment is refunded (UC4, 6a). A late payment never reopens a team.
+- Success 1a. A join payment arrives after the team has already succeeded or expired: the admission is refused as closed, the team stays resolved, and the payment is refunded (UC4, 6a).
 - Expiry 1a. Scheduled expiry is switched off: teams past their deadline stay *open* in the records. They accept no new member, because admission checks the deadline (UC4, step 6), and the account page labels them "Ended". They expire at the first run after expiry is switched on.
-- Expiry 1b. The instance holding the lease stops: another instance takes the lease at its first run after the lease lapses, within a few minutes.
-- Expiry 3a. Between steps 2 and 3, an admission filled the team or another run expired it: the team is skipped as already resolved, and nothing changes. A join and an expiry of the same team are decided one after the other, never both.
+- Expiry 1b. The instance doing the expiry run stops part way: another instance takes over the run within a few minutes.
+- Expiry 3a. Between steps 2 and 3, an admission filled the team or another run expired it: the team is skipped as already resolved, and nothing changes. The system decides a join and an expiry of the same team one after the other, so only the first takes effect.
 - Expiry 3b. The expiry of one team fails for a technical reason: none of its expiry, order cancellations and refund obligations is kept; that team is tried again later, and the run continues with the other teams.
 - A1. Any attempt to resolve a resolved team again, or to move it back to *open*, is rejected: only an open team may change state, and the terminal states *succeeded* and *expired* never change.
 

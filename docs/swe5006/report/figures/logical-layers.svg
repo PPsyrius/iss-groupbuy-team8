@@ -1,0 +1,267 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1720" height="2450" viewBox="0 0 1720 2450" font-family="Inter, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="llOpen" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1 L13,7 L1,13" fill="none" stroke="#1B1A18" stroke-width="1.8"/></marker>
+    <marker id="llOpenRed" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1 L13,7 L1,13" fill="none" stroke="#E8402A" stroke-width="2"/></marker>
+    <marker id="llOpenGrey" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1 L13,7 L1,13" fill="none" stroke="#6B655C" stroke-width="1.8"/></marker>
+    <marker id="llTri" viewBox="0 0 20 20" refX="19" refY="10" markerWidth="20" markerHeight="20" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1 L19,10 L1,19 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/></marker>
+    <marker id="llCrow" viewBox="0 0 24 24" refX="23" refY="12" markerWidth="24" markerHeight="24" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M23,1 L5,12 L23,23 M5,1 L5,23" fill="none" stroke="#1B1A18" stroke-width="1.8"/></marker>
+    <marker id="llCrowO" viewBox="0 0 34 24" refX="33" refY="12" markerWidth="34" markerHeight="24" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M33,1 L15,12 L33,23" fill="none" stroke="#1B1A18" stroke-width="1.8"/><circle cx="8" cy="12" r="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/></marker>
+    <marker id="llOne" viewBox="0 0 24 24" refX="23" refY="12" markerWidth="24" markerHeight="24" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M8,1 L8,23 M16,1 L16,23" fill="none" stroke="#1B1A18" stroke-width="1.8"/></marker>
+    <marker id="llZeroOne" viewBox="0 0 34 24" refX="33" refY="12" markerWidth="34" markerHeight="24" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M24,1 L24,23" fill="none" stroke="#1B1A18" stroke-width="1.8"/><circle cx="10" cy="12" r="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1720" height="2450" fill="#FFFFFF"/>
+  <rect x="30" y="24" width="256" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <rect x="30" y="66" width="980" height="458" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <text fill="#1B1A18" x="46" y="55" font-size="27" font-weight="700">frontend  (SPA)</text>
+  <text fill="#1B1A18" x="50" y="102" font-size="24">React 19 · Vite · TanStack Router / Query / Form · HeroUI</text>
+  <rect x="55" y="120" width="127" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <rect x="55" y="162" width="330" height="114" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="71" y="151" font-size="26" font-weight="700">routes</text>
+  <text fill="#1B1A18" x="69" y="196" font-size="24">TanStack file routes</text>
+  <text fill="#1B1A18" x="69" y="228" font-size="24">products.$productId</text>
+  <text fill="#1B1A18" x="69" y="260" font-size="24">_authenticated/*</text>
+  <rect x="420" y="120" width="305" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <rect x="420" y="162" width="565" height="114" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="436" y="151" font-size="26" font-weight="700">features/&lt;feature&gt;</text>
+  <text fill="#1B1A18" x="434" y="196" font-size="24">catalog · session · payment · share</text>
+  <text fill="#1B1A18" x="434" y="228" font-size="24">blocs · order · admin</text>
+  <text fill="#1B1A18" x="434" y="260" font-size="24">components + Query hooks</text>
+  <rect x="55" y="316" width="75" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <rect x="55" y="358" width="930" height="154" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <text fill="#1B1A18" x="71" y="347" font-size="27" font-weight="700">api</text>
+  <text fill="#1B1A18" x="70" y="396" font-size="24">client.ts: 401 interceptor</text>
+  <text fill="#1B1A18" x="70" y="428" font-size="24">envelope.ts: unwrapResult()</text>
+  <text fill="#1B1A18" x="70" y="460" font-size="24">hey-api.ts: same-origin config</text>
+  <rect x="560" y="368" width="379" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <rect x="560" y="410" width="410" height="90" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="576" y="399" font-size="26" font-weight="700">generated  «gitignored»</text>
+  <text fill="#1B1A18" x="574" y="444" font-size="24">fetch SDK · valibot schemas</text>
+  <text fill="#1B1A18" x="574" y="476" font-size="24">Query options · MSW mocks</text>
+  <polyline points="385,200 418,200" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llOpen)"/>
+  <polyline points="760,288 760,366" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llOpen)"/>
+  <rect x="768" y="318" width="90" height="32" fill="#FFFFFF"/>
+  <text fill="#1B1A18" x="772" y="340" font-size="24">«use»</text>
+  <polyline points="220,288 220,314" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llOpen)"/>
+  <rect x="30" y="584" width="267" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <rect x="30" y="626" width="1100" height="248" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <text fill="#1B1A18" x="46" y="615" font-size="27" font-weight="700">blocbuy-adapter</text>
+  <text fill="#1B1A18" x="50" y="662" font-size="24">REST /api/v1 · @Valid request DTOs · Result&lt;T&gt; envelope · Sa-Token checks</text>
+  <rect x="50" y="680" width="34" height="9" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+  <rect x="50" y="689" width="124" height="44" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="112" y="719" font-size="24" text-anchor="middle">identity</text>
+  <rect x="186" y="680" width="34" height="9" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <rect x="186" y="689" width="116" height="44" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="244" y="719" font-size="24" text-anchor="middle">catalog</text>
+  <rect x="314" y="680" width="34" height="9" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <rect x="314" y="689" width="136" height="44" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="382" y="719" font-size="24" text-anchor="middle">groupbuy</text>
+  <rect x="462" y="680" width="34" height="9" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <rect x="462" y="689" width="95" height="44" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="509" y="719" font-size="24" text-anchor="middle">order</text>
+  <rect x="569" y="680" width="34" height="9" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <rect x="569" y="689" width="129" height="44" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="634" y="719" font-size="24" text-anchor="middle">payment</text>
+  <rect x="710" y="680" width="34" height="9" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+  <rect x="710" y="689" width="172" height="44" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="796" y="719" font-size="24" text-anchor="middle">notification</text>
+  <rect x="894" y="680" width="34" height="9" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.6"/>
+  <rect x="894" y="689" width="123" height="44" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="956" y="719" font-size="24" text-anchor="middle">common</text>
+  <text fill="#1B1A18" x="50" y="786" font-size="24">*/web/*Controller: 13 public + 1 internal (distributed only)</text>
+  <text fill="#1B1A18" x="50" y="818" font-size="24">common/web: Result&lt;T&gt;, GlobalExceptionHandler</text>
+  <rect x="1210" y="400" width="430" height="136" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.8"/>
+  <path d="M1596,412 L1618,412 L1626,420 L1626,444 L1596,444 Z" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="1230" y="438" font-size="24">«artifact»</text>
+  <text fill="#1B1A18" x="1230" y="472" font-size="27" font-weight="700">contracts/openapi.json</text>
+  <text fill="#1B1A18" x="1230" y="510" font-size="24">OpenAPI 3.1 · committed · CI check</text>
+  <polyline points="977,455 1208,455" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llOpen)"/>
+  <rect x="1028" y="421" width="124" height="32" fill="#FFFFFF"/>
+  <text fill="#1B1A18" x="1090" y="443" font-size="24" text-anchor="middle">«derive»</text>
+  <rect x="1022" y="465" width="136" height="32" fill="#FFFFFF"/>
+  <text fill="#1B1A18" x="1090" y="487" font-size="24" text-anchor="middle">openapi-ts</text>
+  <path d="M1190,760 L1652,760 L1670,778 L1670,910 L1190,910 Z" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.6"/>
+  <path d="M1652,760 L1652,778 L1670,778" fill="none" stroke="#6B655C" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="1206" y="794" font-size="24" font-weight="700">ArchitectureTest: 17 ArchUnit rules</text>
+  <text fill="#1B1A18" x="1206" y="826" font-size="24">domain_is_framework_free</text>
+  <text fill="#1B1A18" x="1206" y="858" font-size="24">persistence_is_internal</text>
+  <text fill="#1B1A18" x="1206" y="890" font-size="24">controllers_never_touch_persistence</text>
+  <rect x="30" y="934" width="311" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <rect x="30" y="976" width="1100" height="288" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <text fill="#1B1A18" x="46" y="965" font-size="27" font-weight="700">blocbuy-application</text>
+  <text fill="#1B1A18" x="50" y="1012" font-size="24">use-case orchestration · @Service · @Transactional · publishes events</text>
+  <rect x="50" y="1030" width="34" height="9" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+  <rect x="50" y="1039" width="124" height="44" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="112" y="1069" font-size="24" text-anchor="middle">identity</text>
+  <rect x="186" y="1030" width="34" height="9" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <rect x="186" y="1039" width="116" height="44" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="244" y="1069" font-size="24" text-anchor="middle">catalog</text>
+  <rect x="314" y="1030" width="34" height="9" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <rect x="314" y="1039" width="136" height="44" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="382" y="1069" font-size="24" text-anchor="middle">groupbuy</text>
+  <rect x="462" y="1030" width="34" height="9" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <rect x="462" y="1039" width="95" height="44" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="509" y="1069" font-size="24" text-anchor="middle">order</text>
+  <rect x="569" y="1030" width="34" height="9" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <rect x="569" y="1039" width="129" height="44" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="634" y="1069" font-size="24" text-anchor="middle">payment</text>
+  <rect x="710" y="1030" width="34" height="9" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+  <rect x="710" y="1039" width="172" height="44" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="796" y="1069" font-size="24" text-anchor="middle">notification</text>
+  <rect x="894" y="1030" width="34" height="9" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.6"/>
+  <rect x="894" y="1039" width="123" height="44" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="956" y="1069" font-size="24" text-anchor="middle">common</text>
+  <text fill="#1B1A18" x="50" y="1136" font-size="24">service: *AppService(Impl), PaidGroupDealService, StripeCheckoutService,</text>
+  <text fill="#1B1A18" x="50" y="1168" font-size="24">OrderFulfilmentAdapter, event subscribers (OrderLifecycleSubscriber …)</text>
+  <text fill="#1B1A18" x="50" y="1200" font-size="24">command · query · assembler</text>
+  <rect x="1180" y="1330" width="289" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <rect x="1180" y="1372" width="500" height="178" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="1196" y="1361" font-size="26" font-weight="700">blocbuy-bootstrap</text>
+  <text fill="#1B1A18" x="1194" y="1406" font-size="24">«assembly» BlocBuyApplication</text>
+  <text fill="#1B1A18" x="1194" y="1438" font-size="24">config/*: Stripe, payment wiring</text>
+  <text fill="#1B1A18" x="1194" y="1470" font-size="24">scheduling/*Job, LeasedJobRunner</text>
+  <text fill="#1B1A18" x="1194" y="1502" font-size="24">db/migration V1–V28 (Flyway)</text>
+  <text fill="#1B1A18" x="1194" y="1534" font-size="24">depends on all five modules</text>
+  <rect x="1180" y="980" width="230" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <rect x="1180" y="1022" width="500" height="178" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="1196" y="1011" font-size="26" font-weight="700">blocbuy-client</text>
+  <text fill="#1B1A18" x="1194" y="1056" font-size="24">common/constant:</text>
+  <text fill="#1B1A18" x="1194" y="1088" font-size="24">ApiConstants, SessionRbac, Topology</text>
+  <text fill="#1B1A18" x="1194" y="1120" font-size="24">events/contract:</text>
+  <text fill="#1B1A18" x="1194" y="1152" font-size="24">IntegrationEventEnvelope,</text>
+  <text fill="#1B1A18" x="1194" y="1184" font-size="24">TeamSucceededV1 …</text>
+  <path d="M1180,1620 L1682,1620 L1700,1638 L1700,1874 L1180,1874 Z" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.6"/>
+  <path d="M1682,1620 L1682,1638 L1700,1638" fill="none" stroke="#6B655C" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="1196" y="1654" font-size="24">Tab colour = ADR 0008 service grouping:</text>
+  <text fill="#1B1A18" x="1196" y="1686" font-size="24">red commerce</text>
+  <text fill="#1B1A18" x="1196" y="1718" font-size="24">cobalt identity, notification</text>
+  <text fill="#1B1A18" x="1196" y="1750" font-size="24">share (invites, credits) is inside</text>
+  <text fill="#1B1A18" x="1196" y="1782" font-size="24">groupbuy</text>
+  <text fill="#1B1A18" x="1196" y="1814" font-size="24">Not on SWE5006 dev: blocbuy-platform,</text>
+  <text fill="#1B1A18" x="1196" y="1846" font-size="24">services/*-svc (SWE5001 ECS only)</text>
+  <rect x="30" y="1324" width="253" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <rect x="30" y="1366" width="1100" height="490" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <text fill="#1B1A18" x="46" y="1355" font-size="27" font-weight="700">blocbuy-domain</text>
+  <text fill="#1B1A18" x="50" y="1402" font-size="24">aggregates · ports · domain events · JDK + Lombok only</text>
+  <rect x="50" y="1420" width="34" height="9" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+  <rect x="50" y="1429" width="124" height="44" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="112" y="1459" font-size="24" text-anchor="middle">identity</text>
+  <rect x="186" y="1420" width="34" height="9" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <rect x="186" y="1429" width="116" height="44" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="244" y="1459" font-size="24" text-anchor="middle">catalog</text>
+  <rect x="314" y="1420" width="34" height="9" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <rect x="314" y="1429" width="136" height="44" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="382" y="1459" font-size="24" text-anchor="middle">groupbuy</text>
+  <rect x="462" y="1420" width="34" height="9" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <rect x="462" y="1429" width="95" height="44" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="509" y="1459" font-size="24" text-anchor="middle">order</text>
+  <rect x="569" y="1420" width="34" height="9" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <rect x="569" y="1429" width="129" height="44" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="634" y="1459" font-size="24" text-anchor="middle">payment</text>
+  <rect x="710" y="1420" width="34" height="9" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+  <rect x="710" y="1429" width="172" height="44" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="796" y="1459" font-size="24" text-anchor="middle">notification</text>
+  <rect x="894" y="1420" width="34" height="9" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.6"/>
+  <rect x="894" y="1429" width="123" height="44" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="956" y="1459" font-size="24" text-anchor="middle">common</text>
+  <rect x="60" y="1712" width="182" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <rect x="60" y="1754" width="470" height="82" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="76" y="1743" font-size="26" font-weight="700">repository</text>
+  <text fill="#1B1A18" x="74" y="1788" font-size="24">«interface» ×20, e.g.</text>
+  <text fill="#1B1A18" x="74" y="1820" font-size="24">PaidGroupDealRepository</text>
+  <rect x="580" y="1712" width="150" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <rect x="580" y="1754" width="470" height="82" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="596" y="1743" font-size="26" font-weight="700">gateway</text>
+  <text fill="#1B1A18" x="594" y="1788" font-size="24">«interface» CheckoutGateway,</text>
+  <text fill="#1B1A18" x="594" y="1820" font-size="24">RefundGateway, OAuthIdentityGateway</text>
+  <rect x="60" y="1504" width="113" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <rect x="60" y="1546" width="280" height="146" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="76" y="1535" font-size="26" font-weight="700">model</text>
+  <text fill="#1B1A18" x="74" y="1580" font-size="24">GroupDeal, Product</text>
+  <text fill="#1B1A18" x="74" y="1612" font-size="24">Order, PurchaseIntent</text>
+  <text fill="#1B1A18" x="74" y="1644" font-size="24">CheckoutPayment</text>
+  <text fill="#1B1A18" x="74" y="1676" font-size="24">RefundWork, User</text>
+  <rect x="360" y="1504" width="111" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <rect x="360" y="1546" width="260" height="114" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="376" y="1535" font-size="26" font-weight="700">event</text>
+  <text fill="#1B1A18" x="374" y="1580" font-size="24">MemberJoined</text>
+  <text fill="#1B1A18" x="374" y="1612" font-size="24">TeamSucceeded</text>
+  <text fill="#1B1A18" x="374" y="1644" font-size="24">TeamExpired</text>
+  <rect x="640" y="1504" width="129" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <rect x="640" y="1546" width="280" height="50" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="656" y="1535" font-size="26" font-weight="700">pricing</text>
+  <text fill="#1B1A18" x="654" y="1580" font-size="24">PricingStrategy</text>
+  <rect x="30" y="1916" width="373" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <rect x="30" y="1958" width="1100" height="467" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.8"/>
+  <text fill="#1B1A18" x="46" y="1947" font-size="27" font-weight="700">blocbuy-infrastructure</text>
+  <text fill="#1B1A18" x="50" y="2334" font-size="24">MyBatis XML mappers · Redis · stripe-java · Google OAuth · AWS SDK</text>
+  <rect x="46" y="2352" width="34" height="9" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+  <rect x="46" y="2361" width="114" height="44" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="103" y="2391" font-size="24" text-anchor="middle">identity</text>
+  <rect x="167" y="2352" width="34" height="9" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <rect x="167" y="2361" width="106" height="44" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="220" y="2391" font-size="24" text-anchor="middle">catalog</text>
+  <rect x="280" y="2352" width="34" height="9" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <rect x="280" y="2361" width="126" height="44" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="343" y="2391" font-size="24" text-anchor="middle">groupbuy</text>
+  <rect x="413" y="2352" width="34" height="9" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <rect x="413" y="2361" width="85" height="44" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="455" y="2391" font-size="24" text-anchor="middle">order</text>
+  <rect x="505" y="2352" width="34" height="9" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <rect x="505" y="2361" width="119" height="44" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="565" y="2391" font-size="24" text-anchor="middle">payment</text>
+  <rect x="631" y="2352" width="34" height="9" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+  <rect x="631" y="2361" width="162" height="44" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="712" y="2391" font-size="24" text-anchor="middle">notification</text>
+  <rect x="800" y="2352" width="34" height="9" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.6"/>
+  <rect x="800" y="2361" width="113" height="44" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="857" y="2391" font-size="24" text-anchor="middle">common</text>
+  <rect x="920" y="2352" width="34" height="9" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.6"/>
+  <rect x="920" y="2361" width="154" height="44" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="998" y="2391" font-size="24" text-anchor="middle">integration</text>
+  <text fill="#1B1A18" x="75" y="1988" font-size="24">in blocbuy-infrastructure:</text>
+  <rect x="75" y="1998" width="197" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <rect x="75" y="2040" width="440" height="114" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="91" y="2029" font-size="26" font-weight="700">persistence</text>
+  <text fill="#1B1A18" x="89" y="2074" font-size="24">*RepositoryImpl</text>
+  <text fill="#1B1A18" x="89" y="2106" font-size="24">*Mapper + XML · *DO</text>
+  <text fill="#1B1A18" x="89" y="2138" font-size="24">*Converter (hand-written)</text>
+  <rect x="595" y="1998" width="150" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <rect x="595" y="2040" width="440" height="82" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="611" y="2029" font-size="26" font-weight="700">gateway</text>
+  <text fill="#1B1A18" x="609" y="2074" font-size="24">StripeCheckoutGateway</text>
+  <text fill="#1B1A18" x="609" y="2106" font-size="24">GoogleOAuthGateway, Redis*</text>
+  <rect x="60" y="2174" width="292" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <rect x="60" y="2216" width="500" height="82" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="76" y="2205" font-size="26" font-weight="700">integration/outbox</text>
+  <text fill="#1B1A18" x="74" y="2250" font-size="24">IntegrationOutboxWriter</text>
+  <text fill="#1B1A18" x="74" y="2282" font-size="24">SNS / SQS transports (off on dev)</text>
+  <rect x="580" y="2174" width="238" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <rect x="580" y="2216" width="500" height="82" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+  <text fill="#1B1A18" x="596" y="2205" font-size="26" font-weight="700">common/config</text>
+  <text fill="#1B1A18" x="594" y="2250" font-size="24">SaTokenConfig, StpInterfaceImpl</text>
+  <text fill="#1B1A18" x="594" y="2282" font-size="24">session cookie, RBAC from SQL</text>
+  <polyline points="500,524 500,624" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llOpen)"/>
+  <rect x="508" y="540" width="133" height="32" fill="#FFFFFF"/>
+  <text fill="#1B1A18" x="512" y="562" font-size="24" text-anchor="start">«use» HTTP</text>
+  <rect x="508" y="572" width="158" height="32" fill="#FFFFFF"/>
+  <text fill="#1B1A18" x="512" y="594" font-size="24" text-anchor="start">/api/v1 JSON</text>
+  <polyline points="1420,536 1420,700 1132,700" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llOpen)"/>
+  <rect x="1428" y="608" width="233" height="32" fill="#FFFFFF"/>
+  <text fill="#1B1A18" x="1432" y="630" font-size="24" text-anchor="start">«derive» springdoc</text>
+  <polyline points="580,874 580,974" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llOpen)"/>
+  <rect x="588" y="908" width="70" height="32" fill="#FFFFFF"/>
+  <text fill="#1B1A18" x="592" y="930" font-size="24" text-anchor="start">«use»</text>
+  <polyline points="580,1264 580,1364" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llOpen)"/>
+  <rect x="588" y="1298" width="145" height="32" fill="#FFFFFF"/>
+  <text fill="#1B1A18" x="592" y="1320" font-size="24" text-anchor="start">«use» ports</text>
+  <polyline points="1130,840 1155,840 1155,1080 1178,1080" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llOpen)"/>
+  <polyline points="1130,2100 1155,2100 1155,1150 1178,1150" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llOpen)"/>
+  <rect x="1162" y="1240" width="70" height="32" fill="#FFFFFF"/>
+  <text fill="#1B1A18" x="1166" y="1262" font-size="24" text-anchor="start">«use»</text>
+  <polyline points="460,2040 460,1838" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llTri)"/>
+  <rect x="468" y="1878" width="120" height="32" fill="#FFFFFF"/>
+  <text fill="#1B1A18" x="472" y="1900" font-size="24" text-anchor="start">«realize»</text>
+  <polyline points="815,2040 815,1838" fill="none" stroke="#1B1A18" stroke-width="1.8" stroke-dasharray="9 6" marker-end="url(#llTri)"/>
+  <rect x="823" y="1878" width="120" height="32" fill="#FFFFFF"/>
+  <text fill="#1B1A18" x="827" y="1900" font-size="24" text-anchor="start">«realize»</text>
+</svg>
