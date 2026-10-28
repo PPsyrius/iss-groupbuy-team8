@@ -11,7 +11,7 @@ status: draft
 
 ## 3.1 Software Architecture
 
-The SWE5006 system is BlocBuy's `dev` environment, a modular monolith. One Spring Boot application, split into the four COLA layers and, inside each layer, one package per bounded context, serves a React single-page application (SPA). On `dev` the backend runs as one Docker container on one EC2 host behind CloudFront, with PostgreSQL 18 and Redis 8 on the same host. Stripe (test mode) and Google sign-in are the only external systems. The same code can also be assembled as three services for the SWE5001 course, and nothing in the design sections depends on that (SWE5001 topology, section 1.4).
+The SWE5006 system (section 1.1) is BlocBuy's `dev` environment, a modular monolith. One Spring Boot application, split into the four COLA layers and, inside each layer, one package per bounded context, serves a React single-page application (SPA). On `dev` the backend runs as one Docker container on one EC2 host behind CloudFront, with PostgreSQL 18 and Redis 8 on the same host. Stripe (test mode) and Google sign-in are the only external systems. The same code can also be assembled as three services for the SWE5001 course, and nothing in the design sections depends on that (SWE5001 topology, section 1.4).
 
 #### Logical view: layers and bounded contexts
 
