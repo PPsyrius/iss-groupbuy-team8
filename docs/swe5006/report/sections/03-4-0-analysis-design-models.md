@@ -3,7 +3,7 @@ rubric: 3.4, G4
 owner: Lim Jiechao
 plan: #678
 sources: RUBRIC.md 3.4 checklist; #463 ownership decisions (24 Oct)
-owns: R21, R24, R39
+owns: R21, R24, R39, R56
 status: draft
 -->
 
@@ -21,3 +21,4 @@ All five subsections draw their models with these conventions.
 - **Actor and provider lifelines.** In analysis sequences an actor is drawn as a UML actor that talks to one boundary. An external provider that is an actor, such as Stripe or Google, talks to the system only through its gateway boundary (PaymentGateway for Stripe, IdentityProvider for Google); where its lifeline would crowd the figure, it is left out and its part is shown as a note. In design sequences the provider is reached through the port that stands for it, such as `:RefundGateway` or `:OAuthIdentityGateway`, and each lifeline is an anonymous object of the named class (`:Class`).
 - **Transactions.** UML has no transaction fragment, so a `critical` fragment marks a database transaction. Its label names the transaction's settings where they matter: isolation level, timeout and propagation, for example "critical settlement transaction, READ COMMITTED, 10 s".
 - **Strategy tags.** In a design class diagram each class carries, after any UML stereotype, a tag for the transition strategy of section 3.2 that produced it: Lang 3.2.1 language and framework, Pres 3.2.2 presentation, Dist 3.2.3 distribution, Pers 3.2.4 persistence, Ext 3.2.5 external interface, Sec 3.2.6 security, Sched 3.2.7 scheduling, Conc 3.2.8 concurrency, Evt 3.2.9 domain events. A class shaped by two strategies carries both tags, for example «interface, Pers, Conc». In member lists `#` is protected, `~` is package visibility, and `…` stands for parameters left out to keep a box narrow.
+- **Statecharts.** A transition reads *trigger [guard] / effect*. A transition that leaves the state unchanged is drawn as an internal transition, listed inside its state box. Each statechart sits with the use case that drives it, as listed above.
