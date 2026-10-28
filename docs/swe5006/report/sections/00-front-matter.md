@@ -18,7 +18,7 @@ members:
   - Liu Jin
   - Yu Qianshuo (Yorik)
   - Panpakorn Siripanich (Pan)
-repository: "github.com/PPsyrius/iss-groupbuy-team8 {{CONFIRM: D13 read access or git archive of the freeze SHA}}"
+repository: "github.com/PPsyrius/iss-groupbuy-team8 {{VERIFY: the lecturer has Read access to the repository (Pan adds the lecturer; #693) — Pan, Lim}}"
 environment: "d1b3np88z657cp.cloudfront.net {{VERIFY: still serving at the freeze date}}"
 toc-title: CONTENTS
 ---
