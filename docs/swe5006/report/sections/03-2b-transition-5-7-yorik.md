@@ -206,7 +206,6 @@ Three further rules bound the retry. First, the delay is fixed, not an exponenti
 Evidence:
 
 - Automated unit tests: `RefundServiceTest.lostResponseRetriesSameDurableKey` (a lost response retries with the same key) and `oldUnknownSearchesWithoutCreatingAgain` (the 23-hour cutoff).
-- Crash recovery under replay is tested locally (not shown on dev; Table 1.3).
 - With a real Stripe Sandbox, a natural expiry with exactly one refund was shown on dev on 23 October (Table E.3), and the operator recovered earlier stranded payments (the 23 Oct webhook fault, Appendix E). Refund review was not exercised on dev.
 
 Rationale: provider I/O outside transactions means a slow or failing provider never holds database locks, and the three-step shape makes every unknown outcome recoverable by asking again with the same key. Re-reading the session turns an unauthenticated payload into a fact fetched with BlocBuy's own credentials, and recording event IDs makes Stripe's at-least-once delivery safe.

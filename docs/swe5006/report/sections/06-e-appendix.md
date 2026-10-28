@@ -118,7 +118,7 @@ Table E.5: Evidence references by section.
 | 2.2 (Table 2.5) | Sign-in session decided before the first sprint, 30 Aug | backend design decisions D6, D7 (Table B.3) |
 | 2.2 (Table 2.5) | MyBatis decided before the first sprint, 30 Aug | Skeleton plan §1 and §3 |
 | 2.2 (Table 2.5) | Separate SWE5006 production stack dropped, closed 11 Oct | #226 |
-| 2.2 (Table 2.6) | Crash recovery shown only locally | #224 |
+| 2.2 (Table 2.6) | Simulated refund recovery tested locally and in CI; dev drill still open | #224; evidence in section 3.4.2 |
 | 2.2 (Table 2.6) | Lock order of ADR 0001 and ADR 0002 not reconciled | #663 |
 | 2.2 (Table 2.6) | CloudFront to dev load balancer over HTTP | #227 |
 | 2.2 (Table 2.6) | SSH port 22 closed, read-only check 27 Oct 05:19 UTC | `aws ec2 describe-security-groups` |
@@ -158,6 +158,8 @@ Table E.5: Evidence references by section.
 | 3.4.1 | 23 Oct paid start settled on dev | `backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md` |
 | 3.4.1 | 24 Oct recorded join | sprint log, 24 Oct |
 | 3.4.2 | 23 Oct paid START expired and refunded on dev | `backend/docs/payment/stripe-dev-recovery-acceptance-20261023.md` |
+| 3.4.2 | Local simulated refund recovery, 3 Oct: 8 `StripeRolloutAcceptanceIT` tests, 0 failures; real PostgreSQL, substitute Stripe network calls | `backend/docs/payment/stripe-refund-recovery-acceptance-20261003.md` |
+| 3.4.2 | CI simulated refund recovery, 25 Oct: 9 `StripeRolloutAcceptanceIT` tests, 0 failures, errors or skips; includes `providerSucceededBeforeWorkerLossRetriesWithOneDurableRefundKey` | run 40200028697, `SonarCloud Backend`, commit `ad2a73e6`; counts are for the whole test class |
 | 3.4.3 | Class, method and table names checked in code, 26 Oct | `46faacd7` |
 | 3.4.4 | Design diagrams show the code, 26 Oct; credits written but not shown | `46faacd7` |
 | 3.4.5 | UC9 first version, versioned drafts and 412 rule, 11 Sep | #72; #32 |
@@ -211,5 +213,6 @@ Table E.5: Evidence references by section.
 | 4.3 | Product image bucket | `blocbuy-media-dev-402178232802` |
 | 4.3 | First OIDC subject fix, 5 Sep; placeholder instance ID | `121a0733`; `i-0123456789abcdef0` |
 | 5 | Transactional outbox writer | #473 |
+| 5 | Yorik's local identity-outage and poison-message rehearsal; AWS acceptance remains open | `docs/swe5001/evidence/20261015-local-failure-rehearsal/README.md`; #459 |
 | 5 | Outbox relay merged to dev, Template Method base class | #485; `44fb9bed` |
 | 5 | Idempotent Receiver of the notification consumer | #505, #513 |
