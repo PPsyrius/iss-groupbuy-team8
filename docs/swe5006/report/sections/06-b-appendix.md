@@ -52,11 +52,11 @@ Table B.2: Frontend ADRs. All 15 are Accepted; the date is the acceptance date, 
 | 0014 | Payments through Stripe Hosted Checkout with a server-owned purchase intent | 23 Sep 2026; addendum 24 Sep |
 | 0015 | Admin console: second shell, roles guard, pessimistic versioned writes | 1 Oct 2026 |
 
-#### B.3 Locked decisions of the backend skeleton plan
+#### B.3 Backend design decisions of 30 August
 
-The skeleton plan fixed the backend's stack and structure on 30 August, before any ADR was written. Three of its decisions were later superseded in code; the plan itself records this in a note of 11 September.
+The backend design plan (`backend/docs/design/backend-skeleton-plan.md`) fixed the backend's stack and structure on 30 August, before any ADR was written. Three of its decisions were later superseded in code; the plan itself records this in a note of 11 September.
 
-Table B.3: Locked decisions D1–D20 of the backend skeleton plan and their state on 26 October.
+Table B.3: Backend design decisions D1–D20, locked on 30 August, and their state on 26 October.
 
 | # | Decision | State |
 | --- | --- | --- |
