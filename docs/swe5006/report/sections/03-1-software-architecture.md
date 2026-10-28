@@ -169,7 +169,7 @@ Sa-Token and MyBatis differ from the proposal (changes from the proposal: Table 
 
 #### Architectural decisions
 
-Each architectural decision is recorded either as a numbered ADR or as one of the decisions locked on 30 August, before the first sprint (Table B.3). Table 3.4 lists the decisions that shape the architecture above; Appendix B indexes all 23 ADRs (8 backend, 15 frontend) and lists the decisions that have no ADR.
+Each architectural decision is recorded either as a numbered ADR or as one of the decisions locked on 30 August, before the first sprint (Table B.3). Table 3.4 lists the decisions that shape the architecture above; Appendix B indexes all 24 ADRs (8 backend, 16 frontend) and lists the decisions that have no ADR.
 
 Table 3.4: Architectural decisions behind section 3.1 and where each is recorded.
 
