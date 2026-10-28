@@ -105,7 +105,7 @@ Table 3.23: Candidates for carrying a team's outcome to the contexts that depend
 
 #### 3 Motivation
 
-We chose Observer because what varies is exactly what Observer isolates: the set of dependents of one object's change. It also meets the project proposal's extensibility driver (section 6.3), that a new consequence of a team's resolution can be added without editing existing domain logic: adding one is one new subscriber class. Table 3.22 shows the flexibility was needed in practice, not only in theory.
+We chose Observer because what varies is exactly what Observer isolates: the set of dependents of one object's change. It also meets the project proposal's extensibility driver (proposal section 6.3; see section 1.2), that a new consequence of a team's resolution can be added without editing existing domain logic: adding one is one new subscriber class. Table 3.22 shows the flexibility was needed in practice, not only in theory.
 
 Spring's implementation lets each subscriber, not the publisher, choose when it runs relative to the commit, so the group-buy code never decides which consequences commit with the outcome (listener phases, section 3.2.9).
 
