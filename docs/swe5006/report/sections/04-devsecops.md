@@ -223,7 +223,7 @@ Table 4.10: OWASP ZAP findings on dev, before and after. Before: the first basel
 
 The tests are organised by the Agile Testing Quadrants (EPAT 03 Test-Driven Development, p. 7) and tagged with the level (unit, integration, system; p. 5); the level tags are the team's classification. Quadrant 1 tests run in `build-quality` on every pull request that changes the backend and in `frontend-check` on every pull request that changes the frontend (on other pull requests these required checks report "not applicable" and pass); quadrant 2 story tests run the same way and, for Playwright, again on dev after every frontend deploy; quadrant 3 checks were manual; in quadrant 4, SonarCloud, SpotBugs (inside `build-quality`), gitleaks and the Trivy image scan (inside `docker`) are required checks, `trivy-deps` and `trivy-config` run on pull requests but are not required, the OWASP ZAP scan of dev is advisory and runs weekly or on demand, and the load test runs by hand (Table 4.11).
 
-Table 4.11: Tests by quadrant and level. Static counts from `git ls-tree` of `dev` on 26 October 2026, unchanged at the freeze commit (section 1.1).
+Table 4.11: Tests by quadrant and level. Static counts from `git ls-tree` at the freeze commit (section 1.1), read on 29 October 2026.
 
 | Quadrant | Kind and level | Tools | Count | Where it runs |
 |---|---|---|---|---|
@@ -231,9 +231,9 @@ Table 4.11: Tests by quadrant and level. Static counts from `git ls-tree` of `de
 | Q1 | Integration | Testcontainers: PostgreSQL 18, Redis 8.10, ElasticMQ | 49 `*IT.java` classes | `build-quality`, every PR changing the backend |
 | Q1 | Architecture (unit) | ArchUnit | 17 rules in `ArchitectureTest` | `build-quality`, every PR changing the backend |
 | Q1 | API contract (integration) | springdoc export, `git diff`, openapi-diff | 1 contract file | `contract-check` |
-| Q1 | Component (frontend unit) | Vitest, Testing Library, MSW | 78 test files | `frontend-check`, every PR changing the frontend |
+| Q1 | Component (frontend unit) | Vitest, Testing Library, MSW | 79 test files | `frontend-check`, every PR changing the frontend |
 | Q2 business-facing, supports the team | Story acceptance (system) | Spring Boot with real HTTP endpoints, scheduler, Flyway schema and webhook signatures; only Google and Stripe network calls substituted | `StripeRolloutAcceptanceIT`, 8 test methods | `build-quality`, every PR changing the backend |
-| Q2 | End-to-end (system) | Playwright, Chromium | 8 specs | `e2e-preview` on PRs; `e2e-dev` after each frontend deploy |
+| Q2 | End-to-end (system) | Playwright, Chromium | 9 specs | `e2e-preview` on PRs; `e2e-dev` after each frontend deploy |
 | Q3 business-facing, critiques the product | Manual exploratory checks | Browser | Stripe Sandbox START and JOIN through Hosted Checkout (local, 20 Sep); Secure and HttpOnly session cookie inspected on dev (8 Oct); paid START, expiry and refund shown on dev on 23 October (Table E.3) | By hand; no testing with outside users |
 | Q4 technology-facing, critiques the product | Performance and security | k6; SonarCloud, SpotBugs, Trivy, gitleaks, OWASP ZAP | One k6 browse scenario; the scans of Table 4.9 | SonarCloud, SpotBugs, gitleaks and the Trivy image scan required on PRs; `trivy-deps`, `trivy-config` on PRs, not required; ZAP weekly on dev, advisory; k6 by hand |
 
@@ -253,7 +253,7 @@ Table 4.12: Unit and integration tests of the complex classes.
 
 The tests caught real defects. Two red quote tests reproduced a defect in the join quote before it was fixed (7 October); the ArchUnit rule `controllers_are_validated` failed the build on a controller that lacked `@Validated` (13 October); and the full-history secret scan found 24 matches (see Table 4.14). Smoke failures on dev that may have raced a backend restart are deliberately not counted as catches (single host, section 4.3). Test-first development is recorded in the day logs: for example, on 3 October the rate-limit tests failed with 200 instead of 429 before the limits were implemented. The CI tooling itself has 193 Python tests (189 passed, 4 opt-in ZAP tests skipped) and 22 Node tests, recorded on 22 October.
 
-Both SonarCloud quality gates, backend and frontend, passed on 26 October 2026 (coverage: Table D.3).
+Both SonarCloud quality gates, backend and frontend, passed on 29 October 2026 (coverage: Table D.3).
 
 #### Scripted performance test
 
