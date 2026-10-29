@@ -229,11 +229,11 @@ sequenceDiagram
     Adapter->>Adapter: save buyer order
     Note over Tx,Ord: BEFORE_COMMIT
     Tx->>Ord: onTeamSucceeded(e)
-    Ord->>Ord: confirmByDealId(dealId)
+    Ord->>Ord: orders.confirmByDealId(...)
     Tx->>Tx: commit
     Note over Tx,Credit: AFTER_COMMIT, own REQUIRES_NEW transaction
     Tx->>Credit: onMemberJoined(e)
-    Credit->>Credit: recordIfAbsent(...)
+    Credit->>Credit: credits.recordIfAbsent(...)
 ```
 
 Figure 3.122: UML sequence diagram of a join that fills a team after applying Observer. Order confirmation runs before the commit, after the last buyer's order is saved; the sharer's credit runs after the commit, so its failure cannot undo a paid admission.
