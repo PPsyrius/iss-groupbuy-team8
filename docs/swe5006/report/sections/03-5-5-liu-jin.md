@@ -229,7 +229,8 @@ sequenceDiagram
     S-->>P: ON_SALE
     P-->>A: Product(ON_SALE, v+1)
   else inherited default (ON_SALE)
-    S-->>A: throw BizException(PRODUCT_STATE_CONFLICT)
+    S-->>P: throw BizException(PRODUCT_STATE_CONFLICT)
+    P-->>A: BizException
   end
 ```
 
