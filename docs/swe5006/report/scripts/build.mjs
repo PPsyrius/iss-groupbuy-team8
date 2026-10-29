@@ -61,8 +61,10 @@ for (const f of files) {
 // Every front-matter key reaches the template: plain values as strings, values with markers or
 // Markdown as content, lists as arrays.
 const metaValue = (v) => (/\{\{|[*_`[]/.test(v) ? `[${inline(v)}]` : str(v));
+// Typst writes an empty array as () and a one-element array as (x,).
+const metaArray = (v) => (v.length ? `(${v.map(metaValue).join(', ')},)` : '()');
 const metaTyp = `(${Object.entries(meta)
-  .map(([k, v]) => `${k}: ${Array.isArray(v) ? `(${v.map(metaValue).join(', ')},)` : metaValue(v)}`)
+  .map(([k, v]) => `${k}: ${Array.isArray(v) ? metaArray(v) : metaValue(v)}`)
   .join(', ')})`;
 const typ = join(dist, 'report.typ');
 writeFileSync(
