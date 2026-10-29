@@ -108,13 +108,13 @@ The SWE5001 split burned fast up to the 16 October SWE5001 code freeze. The line
 - **Sprint 1** (Sprint 1 progress report, 12 Sep): the dev pipeline (build, scan, ECR, SSM deploy with rollback) and the CloudFront and load-balancer entry were completed; Google sign-in, browse and admin listing management were in progress; the frontend had not started.
 - **Sprint 2** (Sprint 2 progress report, 26 Sep): goal substantially met. The payment-to-team-to-order chain and automatic team resolution were complete and tested, and orders were visible in the web application; teams were visible through the API only. 9 of 11 stories done, 134 of 150 h.
 - **Sprint 3** (`docs/agile/sprint-03/review.md`, written at the 8 October freeze): goal not met on dev. Every code path of the goal was merged into `dev` and tested, but Checkout, refunds and refund recovery were verified only locally, because Checkout and scheduling were still off on dev. 11 of 17 items done; 117 of 150 h; the p95 target was met on a local stack. Its demo notes section was never filled in.
-- **Sprint 4** (reconstructed on 30 October, below): goal partly met. The paid journey was shown on dev, the join one day after the sprint, and the three-service release reached production, but most of the SWE5001 evidence and two of the five report drafts were not finished in the sprint. Its Definition of Done placement was agreed on 24 October and re-agreed on 25 October: released (the shared SWE5001 production) and shown on dev (Table A.10).
+- **Sprint 4** (reconstructed on 30 October, below): goal partly met. The paid journey was shown on dev, the join one day after the sprint, and the three-service release reached production, but most of the SWE5001 evidence and two of the five report drafts were not finished in the sprint. Its Definition of Done placement was agreed on 24 October and re-agreed on 25 October: released (the shared SWE5001 production) and shown on dev (Table A.11).
 
 **Sprint 4 review, reconstructed.** On 24 October the team decided to hold the Sprint 4 review and retrospective after the presentation, with its remarks. No record of either exists, and their tracking issue was closed on 26 October without them. We reconstructed both on 30 October from the sprint plan, the board snapshots of 12 to 27 October and the day logs, as the Sprint 4 row of Table 2.10 was. Who would have attended, and any discussion, are not recorded, so none is given.
 
-The goal (Table A.4) had three parts. On dev, the paid start and the automatic expiry refund were shown on 23 October (Table E.3), the last day of the sprint, and a second buyer's paid join on 24 October in a recording (Appendix E). On production, the three-service release was promoted on 17, 19 and 20 October (Table 2.8), but of the evidence the goal named, only an HTTP scaling run was made on AWS, and it failed its own acceptance check; queue-driven scaling, self-healing, the identity outage and the DLQ drill were not captured on AWS, and the last two were rehearsed locally only. Of the five members' use-case and design-problem drafts, three were in the repository by 23 October and two were not. Table A.5.1 sets each committed item against what was delivered by 23 October; the remaining hours are in Table A.7 and the done hours in section 2.3.
+The goal (Table A.4) had three parts. On dev, the paid start and the automatic expiry refund were shown on 23 October (Table E.3), the last day of the sprint, and a second buyer's paid join on 24 October in a recording (Appendix E). On production, the three-service release was promoted on 17, 19 and 20 October (Table 2.8), but of the evidence the goal named, only an HTTP scaling run was made on AWS, and it failed its own acceptance check; queue-driven scaling, self-healing, the identity outage and the DLQ drill were not captured on AWS, and the last two were rehearsed locally only. Of the five members' use-case and design-problem drafts, three were in the repository by 23 October and two were not. Table A.8 sets each committed item against what was delivered by 23 October; the remaining hours are in Table A.7 and the done hours in section 2.3.
 
-Table A.5.1: Sprint 4 backlog, committed against delivered by 23 October (plan of 12 October; board snapshots, Singapore dates; day logs).
+Table A.8: Sprint 4 backlog, committed against delivered by 23 October (plan of 12 October; board snapshots, Singapore dates; day logs).
 
 | Item | Planned owner | h | State on 23 October | Evidence |
 |---|---|---|---|---|
@@ -150,13 +150,13 @@ Table A.5.1: Sprint 4 backlog, committed against delivered by 23 October (plan o
 
 Thirteen of the 28 issue-backed items were closed by the SWE5001 code freeze of 16 October, and none between then and 23 October. They include the whole microservice split and the code of the event chain, the work the plan ranked first. Demo notes: the increment was shown at the SWE5001 presentation on 21 October, and at the SWE5006 presentation on 26 October, where the system demo ran live on dev (Table 2.8; what it showed, Appendix E) and the pipeline demo is described in section 4.3; the lecturer's remarks are in Table 2.7. Sprint 4 was the last sprint, so nothing was carried into a next sprint. Carried past its end were the dev payment rollout (closed 25 October), the refund idempotency record, the SWE5001 evidence captures and progress report, the NFR register records and the ADR 0007 status, the Sprint 3 review, and the report and presentation, which ran to 31 and 26 October by design.
 
-**Sprint 4 retrospective, reconstructed.** Went well: the plan's priority order held, so the three-service release reached production before the SWE5001 presentation (Table A.10); the paid journey that Sprint 3 could show only locally was shown on dev; and the cuts of 11 October moved the report drafts into the sprint. Could be better: cards were not closed when their work was done, and the estimates were not kept (Table 2.10); Checkout reached dev nine days late (Table A.8, Sprint 3 row); most of the SWE5001 evidence planned for the 19 October session was not captured on AWS; and neither the mid-sprint check nor the review and retrospective is recorded. Action: the Sprint 4 action of Table 2.10, which was not tested because no sprint followed.
+**Sprint 4 retrospective, reconstructed.** Went well: the plan's priority order held, so the three-service release reached production before the SWE5001 presentation (Table A.11); the paid journey that Sprint 3 could show only locally was shown on dev; and the cuts of 11 October moved the report drafts into the sprint. Could be better: cards were not closed when their work was done, and the estimates were not kept (Table 2.10); Checkout reached dev nine days late (Table A.9, Sprint 3 row); most of the SWE5001 evidence planned for the 19 October session was not captured on AWS; and neither the mid-sprint check nor the review and retrospective is recorded. Action: the Sprint 4 action of Table 2.10, which was not tested because no sprint followed.
 
 #### A.6 Sprint retrospectives
 
-Each retrospective's main action, and what it changed in the next sprint, are summarised in Table A.8. The Sprint 3 retrospective was not held as a meeting; it was reconstructed on 24 October from the review and the day logs and says so.
+Each retrospective's main action, and what it changed in the next sprint, are summarised in Table A.9. The Sprint 3 retrospective was not held as a meeting; it was reconstructed on 24 October from the review and the day logs and says so.
 
-Table A.8: Retrospective outcomes per sprint.
+Table A.9: Retrospective outcomes per sprint.
 
 | Sprint | Went well | Could be better | Action for the next sprint | Effect |
 |---|---|---|---|---|
@@ -169,9 +169,9 @@ The Sprint 1 and Sprint 2 retrospectives are in their progress reports; `docs/ag
 
 #### A.7 Definition of Done
 
-The Definition of Done grew sprint by sprint, each list amending the one before; Table A.9 is the Sprint 4 list. The course's done ladder (coded, tested, integrated, releasable, released; EPAT 01 Agile, p. 26) has one reading in this project (the team's reading, section 2.1). Table A.10 gives the step each sprint reached.
+The Definition of Done grew sprint by sprint, each list amending the one before; Table A.10 is the Sprint 4 list. The course's done ladder (coded, tested, integrated, releasable, released; EPAT 01 Agile, p. 26) has one reading in this project (the team's reading, section 2.1). Table A.11 gives the step each sprint reached.
 
-Table A.9: Definition of Done, Sprint 4 (`docs/agile/definition-of-done.md`).
+Table A.10: Definition of Done, Sprint 4 (`docs/agile/definition-of-done.md`).
 
 | # | Rule | Since |
 |---|---|---|
@@ -191,7 +191,7 @@ Table A.9: Definition of Done, Sprint 4 (`docs/agile/definition-of-done.md`).
 | 14 | Every ECS session ends with `env-down.sh` and a clean `env-status.sh`, recorded in the day log | Sprint 4 |
 | 15 | A design choice made while building is drafted into the owner's report section in the same week | Sprint 4 |
 
-Table A.10: Done-ladder step reached per sprint.
+Table A.11: Done-ladder step reached per sprint.
 
 | Sprint | Step reached | Evidence |
 |---|---|---|

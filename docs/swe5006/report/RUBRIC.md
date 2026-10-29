@@ -317,5 +317,5 @@ Conflicting versions of one fact (G13). Two versions cannot both be true, so no 
 - **D19 — settled 28 Oct by Liu Jin.** The Optimistic Offline Lock is on `biz_product` alone. `biz_purchase_intent` and `biz_payment` compare a version on system writes, and `biz_refund` compares its fencing version; `biz_order` has no production caller of its version update and is a change counter. 3.5.5 states the scope, and 3.6 the column's meaning per table.
 - **D20 — settled 28 Oct by Lim.** Table 1.5 holds the performance status and points to 4.2 (test), Table E.4 (results) and 3.2.7 (expiry bound); the 2.2 pointer is dropped.
 - **D21 — settled 29 Oct by Pan.** The remaining item of the 26 Oct snapshot is issue #22, which has no board card (`docs/agile/metrics/README.md`; its project items read empty on 29 Oct), not a card with no status set. A.1 states it; Table E.5 holds the record.
-- **D22 — settled 28 Oct by Lim.** Table 2.9 names rule 8 of the Definition of Done (Table A.9), which does not count a local run; Table A.10 cites Table 2.9.
+- **D22 — settled 28 Oct by Lim.** Table 2.9 names rule 8 of the Definition of Done (Table A.10), which does not count a local run; Table A.11 cites Table 2.9.
 - **D23 — settled 28 Oct by Eric.** The last-seat race test ran locally and in CI (run 40200028697, `SonarCloud Backend`), not on dev; 3.2.8, 3.4.1 and Table E.5 state it.

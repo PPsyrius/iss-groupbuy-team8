@@ -191,7 +191,7 @@ Table 2.9: Done step reached per sprint.
 | --- | --- | --- |
 | 1 | Integrated | Backend on dev; no frontend yet, so not releasable |
 | 2 | Integrated | 9 of 11 stories merged and tested, 134 of 150 h; Checkout and scheduling off on dev |
-| 3 | Integrated | Merged and tested; the goal was not met on dev under rule 8 of the Definition of Done (Table A.9), which does not count a local run; 117 of 150 h |
+| 3 | Integrated | Merged and tested; the goal was not met on dev under rule 8 of the Definition of Done (Table A.10), which does not count a local run; 117 of 150 h |
 | 4 | Released (shared SWE5001 production), and shown on dev | Promoted to production on ECS as three services with the smoke suite green; on dev, paid start, the expiry refund and a second buyer's paid join shown (Table 1.3) |
 
 In Sprints 2 and 3 the money path worked locally, but local runs do not count as on dev.
