@@ -273,7 +273,7 @@ Filled from the three remark issues recorded under #463 (D15): #693, #694 and #6
 
 | # | Remark (as recorded) | Section | Action | Status |
 | --- | --- | --- | --- | --- |
-| REM-01 | Send the URL of the team's GitHub repository (#693) | Title page; 2.2 (Table 2.7) | Pan grants the lecturer Read access (D13) and emails the URL with all members in CC; the title page shows the URL | Open until Read access is granted; then Lim dates Table 2.7 |
+| REM-01 | Send the URL of the team's GitHub repository (#693) | Title page; 2.2 (Table 2.7) | Pan grants the lecturer Read access (D13) and emails the URL with all members in CC; the title page shows the URL | Closed by 30 October (Table 2.7) |
 | REM-02 | Show the OWASP ZAP scan results before and after remediation (#694) | 4.2 (Table 4.10); 2.2 (Table 2.7) | The before scans (22 and 26 Oct) and the after scan (27 Oct) are set side by side, finding by finding | Answered in 4.2; #694 stays open until its boxes are ticked |
 | REM-03 | Submit the report by 31 October 2026, 23:59 (#695) | 2.2 (Table 2.7) | Schedule: first draft 27 Oct, vetting 28–29 Oct, content freeze 30 Oct, submission by 31 Oct | Open until submission |
 
