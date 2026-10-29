@@ -63,7 +63,7 @@ Table E.3: The paid START and natural expiry on dev, 23 October 2026 (times UTC)
 | Payment confirmed by webhook | 09:46:50 | HTTP 200; settlement `succeeded` and `FULFILLED` |
 | Bloc deadline | 10:24:15.36 | 40-minute lifetime, no deadline edit or manual job run |
 | Bloc expired, order cancelled | 10:24:34.27 | 18.9 s after the deadline; the order was cancelled 12 ms after the bloc |
-| Refund succeeded in Stripe | 10:24:55.94 | 40.6 s after the deadline; exactly one refund for the PaymentIntent |
+| Refund obligation marked succeeded | 10:24:55.94 | 40.6 s after the deadline; exactly one Stripe refund for the PaymentIntent |
 | Final audit | 10:25:40 | One succeeded refund per payment; no pending Checkout, overdue team, unfinished refund or open payment case |
 
 These times describe one run, not a latency bound. A second buyer's paid JOIN was shown on dev on 24 October in the system-demonstration backup recording: a second account opened a member's invite link, paid S$22.00 in Stripe Checkout, and My blocs then read "2 of 2 joined · Filled 24 Oct, 7:17 pm" (sprint day log of 24 October). It is a recorded user-interface observation, not a database read or log audit. Crash recovery of refunds under replay was not part of these runs (not shown on dev; Table 1.3).
