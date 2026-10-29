@@ -44,7 +44,7 @@ Table B.2: Frontend ADRs. All 16 are Accepted; the date is the acceptance date, 
 | 0006 | Lint and format toolchain (oxlint, oxfmt) | 17 Sep 2026 |
 | 0007 | Hand-managed `dev` CloudFront first, Terraform import in Sprint 2 | 17 Sep 2026; import merged 25 Sep |
 | 0008 | Documentation and evidence conventions | 16 Sep 2026; addendum 27 Sep |
-| 0009 | `Result<T>` envelope handling through one `unwrapResult` function | 16 Sep 2026 |
+| 0009 | `Result<T>` envelope handling through one `unwrapResult` function | 17 Sep 2026 |
 | 0010 | React Compiler through the Babel preset now, the native path as a spike | 17 Sep 2026; addendum 23 Sep |
 | 0011 | Testing strategy: Vitest, MSW and a Playwright smoke test | 17 Sep 2026 |
 | 0012 | Configuration for coding agents | 17 Sep 2026 |
