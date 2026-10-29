@@ -224,7 +224,7 @@ Table E.5: Evidence references by section.
 | 5 | Admin console, 30 Sep – 5 Oct | #294 to #399; frontend ADR 0015 (#338) |
 | 5 | Playwright end-to-end journeys, 21 Sep – 5 Oct | #122, #273, #279, #280, #281, #335, #385 |
 | 5 | One-command full-stack local stack, 29 Sep | #257 |
-| 5 | Frontend ADRs 0001–0015 by Lim; 0016 by Pan | `frontend/docs/adr/`; #106, #170, #338 |
+| 5 | Frontend ADRs 0001–0015 by Lim; 0016 by Pan | `frontend/docs/adr/`; #106, #170, #338; #703 (0016) |
 | 5 | Team statechart, 22 Oct; added to the statecharts draft, 23 Oct | #600; #628 |
 | 5 | AWS Organization and Identity Center, 25 Aug; SCP consolidation, 16 Oct | `docs/deploy/aws-account-governance/README.md`; #530, #533 |
 | 5 | Sprint 2 goal, 16 Sep; Sprint 1 Scrum Master recorded 28 Sep | #93; #49 |
