@@ -9,7 +9,7 @@ status: draft
 
 # Appendix D: Test Inventory, CI Timings and Green Rates {.appendix}
 
-This appendix holds the detail behind section 4.2 and section 4.3: the test inventory per module and level, the executed test totals, coverage, the workflow timings and green rates, and the dev delivery metrics. Every figure carries its date and source. Static counts were taken with `git ls-tree` on `dev` at `61486f0e` on 26 October 2026. The backend and frontend trees are unchanged between `61486f0e` and the freeze commit (section 1.1), so the static counts hold at the freeze.
+This appendix holds the detail behind section 4.2 and section 4.3: the test inventory per module and level, the executed test totals, coverage, the workflow timings and green rates, and the dev delivery metrics. Every figure carries its date and source. Static counts were taken with `git ls-tree` on `dev` on 26 October 2026 (commit in Table D.1). The backend and frontend trees are unchanged between that commit and the freeze commit (section 1.1), so the static counts hold at the freeze.
 
 #### Test inventory
 
