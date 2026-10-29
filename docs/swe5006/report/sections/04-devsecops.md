@@ -358,14 +358,15 @@ Figure 4.2: UML sequence diagram of one backend deploy to dev. The deploy is ver
 
 #### Deployment verification evidence
 
-On dev, every backend deploy job from 18 September to 22 October 2026 succeeded (Table D.7), and every backend delivery run after that, to 26 October, was green. The latest deliveries before the freeze verified themselves end to end (Table 4.16). Measured on 19 October, the median time from a push to `dev` to a deployed backend was 3.1 minutes, and to a green frontend smoke 2.7 minutes. The dev delivery proxies of the DORA metrics, observed to 22 October, were 16.96 successful backend and 21.85 frontend deploy jobs a week, a median lead time from first commit to dev of 7.63 h and 6.23 h, and a deploy-job success rate of 83.33 % and 100 %; Appendix D gives the full table and section 2.3 discusses them. They describe dev deploy jobs, not production incidents.
+On dev, every backend deploy job from 18 September to 22 October 2026 succeeded (Table D.7), and every backend delivery run after that, to the freeze, was green. The latest deliveries up to the freeze verified themselves end to end (Table 4.16). Measured on 19 October, the median time from a push to `dev` to a deployed backend was 3.1 minutes, and to a green frontend smoke 2.7 minutes. The dev delivery proxies of the DORA metrics, observed to 22 October, were 16.96 successful backend and 21.85 frontend deploy jobs a week, a median lead time from first commit to dev of 7.63 h and 6.23 h, and a deploy-job success rate of 83.33 % and 100 %; Appendix D gives the full table and section 2.3 discusses them. They describe dev deploy jobs, not production incidents.
 
-Table 4.16: Latest dev deliveries, read from GitHub on 26 October 2026 (times UTC).
+Table 4.16: Latest dev deliveries, read from GitHub on 29 October 2026 (times UTC).
 
 | Run | Jobs and times | Result |
 |---|---|---|
 | Backend, 25 Oct | `publish-ecr-dev` 13:59:17–14:00:25; `deploy-existing-ec2` 14:00:29–14:01:16 | Success, health UP on host and through CloudFront |
 | Frontend, 26 Oct | `deploy-s3-dev` 08:48:27–08:48:49; `e2e-dev` 08:48:52–08:50:22 | Success, smoke suite green |
+| Frontend, 29 Oct (freeze commit) | `deploy-s3-dev` 14:15:34–14:15:54; `e2e-dev` 14:15:56–14:17:21 | Success, smoke suite green |
 
 Over the DORA window the frontend smoke after each deploy passed 157 times and failed 4 times; all four failures (26 September, 3 October twice and 4 October) were HTTP 502 responses while the same commit's backend deploy restarted the only API container (Table E.1).
 
