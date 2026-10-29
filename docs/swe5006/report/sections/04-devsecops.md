@@ -369,7 +369,7 @@ Table 4.16: Latest dev deliveries, read from GitHub on 26 October 2026 (times UT
 
 Over the DORA window the frontend smoke after each deploy passed 157 times and failed 4 times; all four failures (26 September, 3 October twice and 4 October) were HTTP 502 responses while the same commit's backend deploy restarted the only API container (Table E.1).
 
-At the presentation on 26 October the team planned to show one small frontend change (the home page heading) going from pull request through review and deployment to dev. {{FILL: the live demo pull request, its ci-frontend run ID and the dev check, or a statement that it was not run; the heading still reads "Buy better together" on dev at 61486f0e — Pan}}
+At the presentation on 26 October the team planned to show one small frontend change (the home page heading) going from pull request through review and deployment to dev. That change was not made. During the presentation a frontend dependency update was approved and merged at 08:47 UTC (16:47 Singapore time), and its delivery to dev and post-deploy smoke test succeeded (Table 4.16).
 
 #### Rollback
 

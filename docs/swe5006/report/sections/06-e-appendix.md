@@ -208,6 +208,7 @@ Table E.5: Evidence references by section.
 | 4.2 (Table 4.14) | SWE5001 environment run stopped by spending budget | run 39442654274 |
 | 4.3 (Table 4.16) | Latest backend and frontend dev deliveries | run 40200028697 (`ad2a73e6`); run 40294726775 (`9135ad8b`) |
 | 4.3 | Smoke failures; all four were 502s (26 Sep, 3–4 Oct) | runs 36215889478, 37102432667, 37122348459, 37182996807; `docs/ci/dora-metrics-20261022.md` |
+| 4.3 | Dependency update approved and merged during the presentation, 26 Oct 08:47 UTC; its delivery to dev and smoke test | #691 (`9135ad8b`); run 40294726775 |
 | 4.3 | Rollback drill on dev, open | #623 |
 | 4.3 | Dev CloudFront distribution | `E3U5W7UWDL8LRV` |
 | 4.3 | SSH port 22 closed; EBS unencrypted | `aws ec2 describe-security-groups`; `vol-08df685248a8b1aea` |
