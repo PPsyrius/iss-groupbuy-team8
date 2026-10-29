@@ -9,7 +9,7 @@ status: draft
 
 # 5 Individual members activity contribution summary
 
-Every member owns the analysis and design of at least one use case and one design problem solved with a design pattern, and each wrote other report sections and system work besides. Table 5.1 summarises each member's activity; the cross-credit lines after it name the teammates whose code lies behind each owned section. The Remarks column names whose code lies behind the member's sections; agreed effort is in section 2.3 (effort, Table 2.11). The table gives no pull request, commit or line counts. {{VERIFY: each member checks and confirms their own row — all five}}
+Every member owns the analysis and design of at least one use case and one design problem solved with a design pattern, and each wrote other report sections and system work besides. Table 5.1 summarises each member's activity; the cross-credit lines after it name the teammates whose code lies behind each owned section. The Remarks column names whose code lies behind the member's sections; agreed effort is in section 2.3 (effort, Table 2.11). The table gives no pull request, commit or line counts.
 
 Table 5.1: Individual members' activity contribution summary.
 
