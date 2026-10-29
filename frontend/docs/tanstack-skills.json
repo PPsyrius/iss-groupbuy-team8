@@ -4,7 +4,7 @@
       "use": "@tanstack/router-plugin#router-plugin",
       "packageName": "@tanstack/router-plugin",
       "packageRoot": "node_modules/@tanstack/router-plugin",
-      "packageVersion": "1.168.46",
+      "packageVersion": "1.168.47",
       "packageSource": "local",
       "skillName": "router-plugin",
       "description": "TanStack Router bundler plugin for route generation and automatic code splitting. Supports Vite, Webpack, Rspack, and esbuild. Configures autoCodeSplitting, routesDirectory, target framework, and code split groupings.",
@@ -13,8 +13,8 @@
     {
       "use": "@tanstack/router-core#router-core",
       "packageName": "@tanstack/router-core",
-      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.37/node_modules/@tanstack/router-core",
-      "packageVersion": "1.171.37",
+      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.38/node_modules/@tanstack/router-core",
+      "packageVersion": "1.171.38",
       "packageSource": "local",
       "skillName": "router-core",
       "description": "Framework-agnostic core concepts for TanStack Router: route trees, createRouter, createRoute, createRootRoute, createRootRouteWithContext, addChildren, Register type declaration, route matching, route sorting, file naming conventions. Entry point for all router skills.",
@@ -23,8 +23,8 @@
     {
       "use": "@tanstack/router-core#router-core/auth-and-guards",
       "packageName": "@tanstack/router-core",
-      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.37/node_modules/@tanstack/router-core",
-      "packageVersion": "1.171.37",
+      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.38/node_modules/@tanstack/router-core",
+      "packageVersion": "1.171.38",
       "packageSource": "local",
       "skillName": "router-core/auth-and-guards",
       "description": "Route protection with beforeLoad, redirect()/throw redirect(), isRedirect helper, authenticated layout routes (_authenticated), non-redirect auth (inline login), RBAC with roles and permissions, auth provider integration (Auth0, Clerk, Supabase), router context for auth state.",
@@ -33,8 +33,8 @@
     {
       "use": "@tanstack/router-core#router-core/code-splitting",
       "packageName": "@tanstack/router-core",
-      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.37/node_modules/@tanstack/router-core",
-      "packageVersion": "1.171.37",
+      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.38/node_modules/@tanstack/router-core",
+      "packageVersion": "1.171.38",
       "packageSource": "local",
       "skillName": "router-core/code-splitting",
       "description": "Automatic code splitting (autoCodeSplitting), .lazy.tsx convention, createLazyFileRoute, createLazyRoute, lazyRouteComponent, getRouteApi for typed hooks in split files, codeSplitGroupings per-route override, splitBehavior programmatic config, critical vs non-critical properties.",
@@ -43,8 +43,8 @@
     {
       "use": "@tanstack/router-core#router-core/data-loading",
       "packageName": "@tanstack/router-core",
-      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.37/node_modules/@tanstack/router-core",
-      "packageVersion": "1.171.37",
+      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.38/node_modules/@tanstack/router-core",
+      "packageVersion": "1.171.38",
       "packageSource": "local",
       "skillName": "router-core/data-loading",
       "description": "Route loader option, loaderDeps for cache keys, staleTime/gcTime/ defaultPreloadStaleTime SWR caching, pendingComponent/pendingMs/ pendingMinMs, errorComponent/onError/onCatch, beforeLoad, router context and createRootRouteWithContext DI pattern, router.invalidate, Await component, deferred data loading with unawaited promises.",
@@ -53,8 +53,8 @@
     {
       "use": "@tanstack/router-core#router-core/navigation",
       "packageName": "@tanstack/router-core",
-      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.37/node_modules/@tanstack/router-core",
-      "packageVersion": "1.171.37",
+      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.38/node_modules/@tanstack/router-core",
+      "packageVersion": "1.171.38",
       "packageSource": "local",
       "skillName": "router-core/navigation",
       "description": "Link component, useNavigate, Navigate component, router.navigate, ToOptions/NavigateOptions/LinkOptions, from/to relative navigation, activeOptions/activeProps, preloading (intent/viewport/render), preloadDelay, navigation blocking (useBlocker, Block), createLink, linkOptions helper, scroll restoration, MatchRoute.",
@@ -63,8 +63,8 @@
     {
       "use": "@tanstack/router-core#router-core/not-found-and-errors",
       "packageName": "@tanstack/router-core",
-      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.37/node_modules/@tanstack/router-core",
-      "packageVersion": "1.171.37",
+      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.38/node_modules/@tanstack/router-core",
+      "packageVersion": "1.171.38",
       "packageSource": "local",
       "skillName": "router-core/not-found-and-errors",
       "description": "notFound() function, notFoundComponent, defaultNotFoundComponent, notFoundMode (fuzzy/root), errorComponent, CatchBoundary, CatchNotFound, isNotFound, NotFoundRoute (deprecated), route masking (mask option, createRouteMask, unmaskOnReload).",
@@ -73,8 +73,8 @@
     {
       "use": "@tanstack/router-core#router-core/path-params",
       "packageName": "@tanstack/router-core",
-      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.37/node_modules/@tanstack/router-core",
-      "packageVersion": "1.171.37",
+      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.38/node_modules/@tanstack/router-core",
+      "packageVersion": "1.171.38",
       "packageSource": "local",
       "skillName": "router-core/path-params",
       "description": "Dynamic path segments ($paramName), splat routes ($ / _splat), optional params ({-$paramName}), prefix/suffix patterns ({$param}.ext), useParams, params.parse/stringify, pathParamsAllowedCharacters, i18n locale patterns.",
@@ -83,8 +83,8 @@
     {
       "use": "@tanstack/router-core#router-core/search-params",
       "packageName": "@tanstack/router-core",
-      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.37/node_modules/@tanstack/router-core",
-      "packageVersion": "1.171.37",
+      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.38/node_modules/@tanstack/router-core",
+      "packageVersion": "1.171.38",
       "packageSource": "local",
       "skillName": "router-core/search-params",
       "description": "validateSearch, search param validation with Zod/Valibot/ArkType adapters, fallback(), search middlewares (retainSearchParams, stripSearchParams), custom serialization (parseSearch, stringifySearch), search param inheritance, loaderDeps for cache keys, reading and writing search params.",
@@ -93,8 +93,8 @@
     {
       "use": "@tanstack/router-core#router-core/type-safety",
       "packageName": "@tanstack/router-core",
-      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.37/node_modules/@tanstack/router-core",
-      "packageVersion": "1.171.37",
+      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.38/node_modules/@tanstack/router-core",
+      "packageVersion": "1.171.38",
       "packageSource": "local",
       "skillName": "router-core/type-safety",
       "description": "Full type inference philosophy (never cast, never annotate inferred values), Register module declaration, from narrowing on hooks and Link, strict:false for shared components, getRouteApi for code-split typed access, addChildren with object syntax for TS perf, LinkProps and ValidateLinkOptions type utilities, as const satisfies pattern.",
@@ -124,16 +124,16 @@
   "packages": [
     {
       "name": "@tanstack/router-plugin",
-      "version": "1.168.46",
+      "version": "1.168.47",
       "source": "local",
       "packageRoot": "node_modules/@tanstack/router-plugin",
       "skillCount": 1
     },
     {
       "name": "@tanstack/router-core",
-      "version": "1.171.37",
+      "version": "1.171.38",
       "source": "local",
-      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.37/node_modules/@tanstack/router-core",
+      "packageRoot": "node_modules/.pnpm/@tanstack+router-core@1.171.38/node_modules/@tanstack/router-core",
       "skillCount": 9
     },
     {
