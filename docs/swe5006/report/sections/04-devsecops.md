@@ -150,7 +150,7 @@ Every application workflow starts with a `detect-changes` job. A job whose paths
 
 Figure 4.1 shows the jobs that run for one change, from pull request to dev, and Table 4.8 what each pull-request job verifies.
 
-![Figure 4.1: CI and CD job graph for one change, drawn in the style of the GitHub Actions run graph (not UML). The six required checks gate the merge; after the merge, delivery rebuilds from the merged commit, deploys to dev and verifies the deploy.](../../presentation/src/diagrams/cicd-jobs.svg)
+![Figure 4.1: CI and CD job graph for one change, drawn in the style of the GitHub Actions run graph (not UML). The six required checks gate the merge; after the merge, delivery rebuilds from the merged commit, deploys to dev and verifies the deploy.](../../presentation/src/diagrams/cicd-jobs.svg){.landscape}
 
 <!-- table: split -->
 
