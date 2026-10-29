@@ -88,13 +88,13 @@ Section 2.3 places each sprint on this ladder.
 
 ## 2.2 Project Status
 
-BlocBuy delivers everything the proposal promised in function, and more: all nine use cases plus an admin console. All nine are shown on dev (Table 1.3). Seven design or platform choices changed during the project, and one deliverable was dropped (no SWE5006 production stack, section 1.4). Table 2.6 lists the open issues. This snapshot is dated 26 October 2026. {{VERIFY: re-read every row of Tables 2.5 and 2.6 at the freeze SHA on 30 Oct — Lim}}
+BlocBuy delivers everything the proposal promised in function, and more: all nine use cases plus an admin console. All nine are shown on dev (Table 1.3). Seven design or platform choices changed during the project, and one deliverable was dropped (no SWE5006 production stack, section 1.4). Table 2.6 lists the open issues. This snapshot was read on 29 October 2026, at the freeze commit (section 1.1).
 
 #### Promised against delivered
 
 Table 2.5 compares the proposal with what was built. A change cites its decision record where one exists. Four of the seven changes have no ADR, and the session change has only a frontend ADR; their reasoning is in design documents and plans, and Appendix B lists them as decisions without an ADR.
 
-Table 2.5: Promised against delivered, 26 October 2026.
+Table 2.5: Promised against delivered, 29 October 2026.
 
 | Item | Promised (proposal) | Status | What was built, and the decision record |
 | --- | --- | --- | --- |
@@ -115,9 +115,9 @@ Table 2.5: Promised against delivered, 26 October 2026.
 
 #### Outstanding issues
 
-Table 2.6 lists the issues still open on 26 October. Appendix E lists every known limit of the dev environment with its evidence.
+Table 2.6 lists the issues still open on 29 October. Appendix E lists every known limit of the dev environment with its evidence.
 
-Table 2.6: Outstanding issues, 26 October 2026.
+Table 2.6: Outstanding issues, 29 October 2026.
 
 | Issue | Owner | State |
 | --- | --- | --- |
@@ -140,7 +140,7 @@ Two proposal targets are not shown on dev: response time (performance status, se
 
 #### Remarks from the presentation
 
-The lecturer gave three remarks at the presentation on 26 October; the team recorded each as an issue. Table 2.7 lists each remark, its state and how the report answers it, as read on 27 October.
+The lecturer gave three remarks at the presentation on 26 October; the team recorded each as an issue. Table 2.7 lists each remark, its state and how the report answers it, as read on 29 October.
 
 Table 2.7: Remarks from the presentation of 26 October and how the report answers them.
 
@@ -148,7 +148,7 @@ Table 2.7: Remarks from the presentation of 26 October and how the report answer
 | --- | --- | --- |
 | Send the repository link to the lecturer | Closed by 30 October | Read access to the private repository was granted to the lecturer and the link sent; the title page gives the URL |
 | Show the OWASP ZAP results before and after remediation | Open | Section 4.2 compares the scans before and after the header fixes, finding by finding (fixed; Table 4.10) |
-| Submit the report by 31 October 2026, 23:59 | Open until submission; this deadline replaced 1 November | The schedule meets it: first draft on 27 October, team vetting on 28 and 29 October, content freeze on 30 October |
+| Submit the report by 31 October 2026, 23:59 | Open until submission; this deadline replaced 1 November | The schedule meets it: first draft on 27 October, team vetting on 28 and 29 October, content freeze on 29 October |
 
 ## 2.3 Project Metrics
 
