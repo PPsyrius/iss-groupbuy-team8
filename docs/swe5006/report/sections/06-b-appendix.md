@@ -57,7 +57,7 @@ Table B.2: Frontend ADRs. All 16 are Accepted; the date is the acceptance date, 
 
 The backend design plan (`backend/docs/design/backend-skeleton-plan.md`) fixed the backend's stack and structure on 30 August, before any ADR was written. Three of its decisions were later superseded in code; the plan itself records this in a note of 11 September.
 
-Table B.3: Backend design decisions D1–D20, locked on 30 August, and their state on 30 October.
+Table B.3: Backend design decisions D1–D20, locked on 30 August, and their state on 29 October.
 
 | # | Decision | State |
 | --- | --- | --- |
