@@ -242,6 +242,7 @@ classDiagram
 Figure C.4: Order (purchase intents and orders) and payment tables (SWE5001 owner commerce-svc), UML class diagram used as a data model. Every payment-side table points back to `biz_payment`, and UQ marks the columns that allow at most one row per payment.
 
 ```mermaid
+%% frame: Notification, job and outbox tables
 classDiagram
     class biz_notification {
         <<table>>
