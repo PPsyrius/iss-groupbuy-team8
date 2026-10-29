@@ -9,7 +9,7 @@ status: draft
 
 # Appendix B: ADR Index and Decisions Without an ADR {.appendix}
 
-The team records decisions in three places: 8 backend architecture decision records (ADRs) in `backend/docs/adr/`, 16 frontend ADRs in `frontend/docs/adr/`, and the 20 locked decisions of the backend skeleton plan (`backend/docs/design/backend-skeleton-plan.md`), agreed on 30 August before the first ADR existed. All ADRs use the Nygard format. Backend and frontend numbers are independent, so the report always says "backend ADR 0001" or "frontend ADR 0001". Section B.4 lists the significant decisions that have no ADR. Statuses and dates below were read on 26 October 2026.
+The team records decisions in three places: 8 backend architecture decision records (ADRs) in `backend/docs/adr/`, 16 frontend ADRs in `frontend/docs/adr/`, and the 20 locked decisions of the backend skeleton plan (`backend/docs/design/backend-skeleton-plan.md`), agreed on 30 August before the first ADR existed. All ADRs use the Nygard format. Backend and frontend numbers are independent, so the report always says "backend ADR 0001" or "frontend ADR 0001". Section B.4 lists the significant decisions that have no ADR. Statuses and dates below were read on 28 October 2026.
 
 #### B.1 Backend ADRs
 
@@ -50,7 +50,7 @@ Table B.2: Frontend ADRs. All 16 are Accepted; the date is the acceptance date, 
 | 0012 | Configuration for coding agents | 17 Sep 2026 |
 | 0013 | Package manager and runtime pinning (pnpm, Node) | 17 Sep 2026 |
 | 0014 | Payments through Stripe Hosted Checkout with a server-owned purchase intent | 23 Sep 2026; addendum 24 Sep |
-| 0015 | Admin console: second shell, roles guard, pessimistic versioned writes | 1 Oct 2026 |
+| 0015 | Admin console: second shell, roles guard, pessimistic versioned writes | 1 Oct 2026; addendum 27 Oct |
 | 0016 | Hashed UI styles and progressive cross-origin policies | 27 Oct 2026 |
 
 #### B.3 Backend design decisions of 30 August
