@@ -149,7 +149,7 @@ Table 1.5: Quality attributes, targets and status.
 
 | Attribute | Proposal target | Verified in | Status, 26 Oct |
 | --- | --- | --- | --- |
-| Correctness under concurrency | Team capacity never exceeded; no payment double-charged or double-refunded | 3.2.8, 3.4.1, 4.2 | Tested locally, not on dev (Table 4.12) |
+| Correctness under concurrency | Team capacity never exceeded; no payment double-charged or double-refunded | 3.2.8, 3.4.1, 4.2 | Run locally and in CI, not on dev (Table 4.12) |
 | Performance | Interactive operations within 2 s at 100 concurrent users; expiry resolved within 1 minute of the deadline | 4.2 (test), Table E.4 (results); 3.2.7 (expiry bound) | Response time never measured on SWE5006 dev (NFR-15); met locally and on the SWE5001 ECS environment. Expiry: a design bound. Both are explained below the table |
 | Security | Google sign-in; role-based admin; signed Stripe webhooks; no credentials in code | 3.2.6, 4.1, 4.2 | Implemented (open issues in Table 2.6) |
 | Maintainability and extensibility | A new pricing scheme, payment provider or team consequence without editing existing domain logic | 3.5 | Seams in place (section 3.5); no second implementation has exercised them yet |

@@ -200,7 +200,7 @@ Table E.5: Evidence references by section.
 | 4.2 | ZAP reports and run metadata before the fixes | `docs/quality/evidence/zap/` |
 | 4.2 (Table 4.11) | Static test counts read at this dev commit | `61486f0e` |
 | 4.2 | Executed counts: runs on the final code (backend push; frontend push; frontend pull request with the `happy-dom` bump #691) | runs 40200028697 (`ad2a73e6`), 40294726775 (`9135ad8b`), 40206547524 |
-| 4.2 (Table 4.12) | Last-seat race test in CI | run 40200028697, `SonarCloud Backend` job |
+| 4.2 (Table 4.12) | Last-seat race test in CI; class totals 25 tests, 0 failures, errors or skips | run 40200028697, `SonarCloud Backend` job, commit `ad2a73e6` |
 | 4.2 | SonarCloud analyses behind the gate result | backend `ad2a73e6`; frontend `9135ad8b` |
 | 4.2 | k6 run on SWE5001 ECS, 16 Oct, image built from this dev commit | `6c7a99ab` |
 | 4.2 (Table 4.14) | SpotBugs and BCEL mismatch, fix | run 39463373272; #580 (`0baf2052`) |
