@@ -235,3 +235,4 @@ Table E.5: Evidence references by section.
 | 5 | Shared presentation kit, 19 Oct | #554, #597, #602 |
 | 5 | SWE5001 presentation lead, segments 1 and 2 | #461; `docs/swe5001/presentation/AGENTS.md` |
 | 5 | SWE5006 deck, speaker script and run book, 20–26 Oct; project management slides presented | #566, #598, #600, #604, #671, #683; `docs/swe5006/presentation/src/content.js` |
+| A.1 | Board snapshot of 26 Oct: the one issue without a board card, read 29 Oct | #22; `docs/agile/metrics/2026-10-26.csv`; `docs/agile/metrics/README.md` |
