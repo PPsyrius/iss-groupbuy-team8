@@ -19,6 +19,6 @@ members:
   - Yu Qianshuo (Yorik)
   - Panpakorn Siripanich (Pan)
 repository: "github.com/PPsyrius/iss-groupbuy-team8"
-environment: "d1b3np88z657cp.cloudfront.net {{VERIFY: still serving at the freeze date}}"
+environment: "d1b3np88z657cp.cloudfront.net"
 toc-title: CONTENTS
 ---
