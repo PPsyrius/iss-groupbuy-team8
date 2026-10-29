@@ -446,7 +446,7 @@ Simulated refund-worker recovery was tested locally on 3 October and in CI on 25
 
 The local rehearsal also delivered a signed `refund.updated` notification twice without changing the payment, refund or audit row counts. The Checkout webhook ignores `refund.*` events, so this was a no-op rather than evidence of refund-webhook replay protection. A permanent provider-state refusal was parked in `review` with no second provider call. A deliberate process crash, a replay and a permanent failure with operator review have not been exercised on dev.
 
-The unit tests `RefundServiceTest`, `TeamExpiryRefundSubscriberTest`, `TeamExpiryRefundServiceTest` and `GroupDealExpiryServiceTest` cover the worker's branches and the expiry service. The integration tests `StripeRolloutAcceptanceIT`, `TeamExpirySchedulingIT` and `V4ExpiryPipelineIT` run the real expiry, claim and persistence code against PostgreSQL; the last seeds two thousand teams and checks that each expires with exactly one effect.
+The unit tests `RefundServiceTest`, `TeamExpiryRefundSubscriberTest`, `TeamExpiryRefundServiceTest` and `GroupDealExpiryServiceTest` cover the worker's branches and the expiry service. The integration tests `StripeRolloutAcceptanceIT` and `TeamExpirySchedulingIT` run the real expiry, claim and persistence code against PostgreSQL.
 
 #### E Compliance with the transition strategies
 
