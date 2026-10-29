@@ -148,7 +148,7 @@ Table E.5: Evidence references by section.
 | 3.1 | `Result<T>` envelope superseded the bare DTO and ProblemDetail choice, 11 Sep | backend design decision D10 and its historical note (Table B.3) |
 | 3.1 | Dev request path and security group rules | `docs/deploy/dev-cloudfront-deployment.md`; EC2 Name tag `BlocBuy-dev` |
 | 3.1 (Figure 3.3) | AWS resources of the deployment view, read on 24 Oct | account `402178232802`, region `ap-southeast-1`; EC2 instance `i-0852b6c3475b19f05`; CloudFront distribution `E3U5W7UWDL8LRV` |
-| 3.1 (Table 3.3) | Platform versions read on 26 Oct, re-read unchanged on 27 Oct | `46faacd7`; `6d14e449` |
+| 3.1 (Table 3.3) | Platform versions read on 26 Oct and again on 29 Oct at the freeze commit | `46faacd7`; `9f3a9cfe` |
 | 3.1 (Table 3.4) | Decisions behind the architecture | backend design decisions D1, D4, D5, D6, D7, D12, D19, plan sections 4 and 8, and the historical note superseding D10 (Table B.3) |
 | 3.2 | COLA module layout and the Spring Boot 3.5 starting point | backend design decision D1 (Table B.3); `backend/pom.xml` |
 | 3.2 (Table 3.5) | Strategies without an ADR rest on earlier decisions | backend design decisions D1, D9; D1–D20 (Table B.3) |
@@ -188,8 +188,8 @@ Table E.5: Evidence references by section.
 | 3.5.4 | Pricing code by Liu Jin and first-team quote by Eric, 9 Sep | `2c6ea4f3`; `cb02ad55` |
 | 3.5.5 | Names and tests read in the code, 26 Oct | `6d14e449` |
 | 3.5.5 | First listing State by Eric, 11 Sep; deletion eligibility by Pan, 1 Oct | #72; #300 |
-| 4 | Facts read on 26 October at this dev commit | `61486f0e` |
-| 4.1 | Commit count at the final commit | `git rev-list --count 6d14e449` |
+| 4 | Facts read on 29 October at this dev commit | `9f3a9cfe` |
+| 4.1 | Commit count at the final commit | `git rev-list --count 9f3a9cfe` |
 | 4.1 (Table 4.3) | Sprint tag commits, sprints 1–4 | `61c8806c`; `c30ed5a1`; `414ee79a`; `fba3cfbd` |
 | 4.1 | Account governance record of the IAM user exception | `docs/deploy/aws-account-governance/README.md` |
 | 4.1 (Table 4.6) | Terraform state bucket | `blocbuy-tfstate-402178232802` |
@@ -199,16 +199,16 @@ Table E.5: Evidence references by section.
 | 4.2 (Table 4.10) | ZAP finding issues: Medium and Low fixed; Informational pending | #636–#641 fixed; #642–#647 pending |
 | 4.2 (Table 4.10) | Header fixes: img-src and Permissions-Policy; style-src and COEP/COOP/CORP | #700 (#636, #641); #703 (#637–#640) |
 | 4.2 | ZAP reports and run metadata before the fixes | `docs/quality/evidence/zap/` |
-| 4.2 (Table 4.11) | Static test counts read at this dev commit | `61486f0e` |
-| 4.2 | Executed counts: runs on the final code (backend push; frontend push; frontend pull request with the `happy-dom` bump #691) | runs 40200028697 (`ad2a73e6`), 40294726775 (`9135ad8b`), 40206547524 |
+| 4.2 (Table 4.11) | Static test counts read at this dev commit | `9f3a9cfe` |
+| 4.2 | Executed counts: runs on the final code (backend push; frontend push; frontend pull request merged as the freeze commit, #696) | runs 40200028697 (`ad2a73e6`), 40889522574 (`9f3a9cfe`), 40888144578 |
 | 4.2 (Table 4.12) | Last-seat race test in CI; class totals 25 tests, 0 failures, errors or skips | run 40200028697, `SonarCloud Backend` job, commit `ad2a73e6` |
 | 4.2 (Table 4.12) | Notification consumer test in CI; class totals 3 tests, 0 failures, errors or skips | run 40200028697, `SonarCloud Backend` job, commit `ad2a73e6` |
-| 4.2 | SonarCloud analyses behind the gate result | backend `ad2a73e6`; frontend `9135ad8b` |
+| 4.2 | SonarCloud analyses behind the gate result | backend `ad2a73e6`; frontend `9f3a9cfe` |
 | 4.2 | k6 run on SWE5001 ECS, 16 Oct, image built from this dev commit | `6c7a99ab` |
 | 4.2 (Table 4.14) | SpotBugs and BCEL mismatch, fix | run 39463373272; #580 (`0baf2052`) |
 | 4.2 (Table 4.14) | Weekly full-history secret scan failures; digest fix | runs 37287243039, 38228025996, 39217910471, 40287812848; #580 |
 | 4.2 (Table 4.14) | SWE5001 environment run stopped by spending budget | run 39442654274 |
-| 4.3 (Table 4.16) | Latest backend and frontend dev deliveries | run 40200028697 (`ad2a73e6`); run 40294726775 (`9135ad8b`) |
+| 4.3 (Table 4.16) | Latest backend and frontend dev deliveries | run 40200028697 (`ad2a73e6`); runs 40294726775 (`9135ad8b`) and 40889522574 (`9f3a9cfe`) |
 | 4.3 | Smoke failures; all four were 502s (26 Sep, 3–4 Oct) | runs 36215889478, 37102432667, 37122348459, 37182996807; `docs/ci/dora-metrics-20261022.md` |
 | 4.3 | Dependency update approved and merged during the presentation, 26 Oct 08:47 UTC; its delivery to dev and smoke test | #691 (`9135ad8b`); run 40294726775 |
 | 4.3 | Rollback drill on dev, open | #623 |
