@@ -70,7 +70,7 @@ SWE5001 adds one long-lived branch: `prod`, which only promotion pull requests f
 
 #### Code ownership
 
-`.github/CODEOWNERS` routes every review to the member who owns the area, and the ruleset makes that member's approval mandatory. Since 23 October the payment and group-buying packages also need their use-case owner, beside the backend owner (Table 4.4).
+`.github/CODEOWNERS` routes every review to the member who owns the area, and the ruleset makes a code owner's approval mandatory. Since 23 October the payment and group-buying packages list their use-case owner beside the backend owner, and an approval from either of the two satisfies the rule (Table 4.4).
 
 Table 4.4: Code owners by area (`.github/CODEOWNERS`).
 
