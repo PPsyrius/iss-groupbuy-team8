@@ -299,7 +299,7 @@ Decisions (numbers follow PLAN part 3; settled ones are folded into the rows abo
 
 - **D6 — settled 27 Oct.** Test totals come from the CI runs equal to the freeze commit, 40200028697 (backend) and 40294726775 (frontend); Appendix D holds them.
 - **D7** Fix the 11-check and "four checks" statements in the operator guide and pipeline plan. Owner Pan.
-- **D8** Before class and sequence diagrams for 3.5.2, 3.5.3, 3.5.4 by 28 Oct. Owners Yorik, Pan, Lim.
+- **D8 — settled 29 Oct by Lim.** 3.5.2, 3.5.3 and 3.5.4 each open part 1 with a before class diagram and a before sequence diagram (Figures 3.117–3.118, 3.123–3.124, 3.128–3.129), in the report since the first draft of 27 Oct. 3.5.2 and 3.5.4 show a brute-force design (never committed); 3.5.3 shows the relay as committed on 13 Oct.
 - **D9 — settled 27 Oct by Lim.** The team statechart sits in 3.4.5, as #678 and the deck backup slide place it.
 - **D11 — settled 27 Oct by Lim.** No Product Owner was appointed (R51, home 1.3).
 - **D13 — settled 28 Oct by Lim.** Lecturers get Read access to the repository, added by Pan as the only admin (#693); no `git archive` is submitted. The title page shows the URL; its VERIFY marker stays until access is granted.
