@@ -15,7 +15,7 @@ BlocBuy has nine use cases from the proposal plus one included use case, "Pay up
 
 Figure 3.34 is the use case diagram.
 
-![Figure 3.34: UML use case diagram of BlocBuy, with the system boundary, five actors, the «include» and «extend» relations and the out-of-scope package. The badges on the in-scope use cases mark delivery on dev and are not UML notation; Table 1.3 gives the status.](../figures/use-case.svg){.landscape}
+![Figure 3.34: UML use case diagram of BlocBuy, with the system boundary, five actors, the «include» and «extend» relations and the out-of-scope package. The badges on the in-scope use cases mark delivery on dev and are not UML notation; Table 1.3 gives the status. Badges as on 29 October.](../figures/use-case.svg){.landscape}
 
 **Actors.** Two actors are human. The *Buyer* browses, signs in, starts and joins teams (team, section 1.1), shares invite links and views their own orders and teams. The *Admin* manages listings and their team terms. A buyer who has not signed in yet is called a *visitor* in sections 3.3.3 and 3.4.3: a visitor can browse listings (UC1) and open an invite link, and must sign in (UC2) before starting or joining a team. Three actors are not people. The *Scheduler* is time: it triggers UC5 and, through it, UC6 when a team's deadline passes. *Stripe* is a secondary actor: it hosts the payment page, reports payment results and executes refunds. *Google* is a secondary actor for sign-in only (UC2). No merchant actor exists, because the proposal excludes a merchant self-service interface; the Admin prepares listings instead.
 
@@ -23,4 +23,4 @@ Figure 3.34 is the use case diagram.
 
 **Out of scope.** The package on the right holds the seven exclusions of section 1.4.2.
 
-**Delivery status.** The badges mark which use cases are delivered on dev; Table 1.3 gives the status of each. {{VERIFY: re-check every badge at the freeze SHA and date the caption (rubric G7) — Lim}}
+**Delivery status.** The badges mark which use cases are delivered on dev on 29 October; a badge with a date gives the day since which the use case has been on dev. Table 1.3 gives the status of each.
