@@ -3,7 +3,7 @@ rubric: 4.1, 4.2, 4.3
 owner: Panpakorn Siripanich (Pan); testing from Liu Jin
 plan: #680
 sources: docs/ci/; docs/quality/quality-gates.md; docs/ci/devsecops-maturity-assessment.md; deck s20–s27; #694
-owns: R04, R06, R07, R14, R16, R27, R37, R41, R42, R45, R47, R57
+owns: R04, R06, R07, R14, R16, R27, R37, R41, R42, R45, R47, R57, R59
 status: draft
 -->
 
@@ -249,7 +249,7 @@ Table 4.12: Unit and integration tests of the complex classes.
 | Last-seat capacity under concurrency | `StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist` | Twenty paid JOINs for the last seat of a two-seat team, released together against PostgreSQL in Testcontainers: exactly one joiner wins, so the team ends with 2 members, 2 orders and current size 2, nineteen refund obligations persist, and stock falls by exactly two (100 to 98). Run locally and in CI, not shown on dev. A `*Test` by name, an integration test by level |
 | Refund idempotency | `RefundServiceTest.lostResponseRetriesSameDurableKey` | A refund whose provider response was lost is retried with the same durable idempotency key, so Stripe never refunds twice |
 | Quote correctness | `GroupDealPurchaseSupportImplTest.aTeamWithoutItsPaidLeaderCannotBeQuoted` | Written red first: two failing tests reproduced the quote defect before the fix |
-| Notification delivery (receive notifications) | `NotificationConsumerElasticMqIT` | Against a local SQS emulator (ElasticMQ in Testcontainers), an event delivered three times creates one notification per recipient, and a malformed event is received five times and then found in the dead-letter queue while other messages are processed. Tested locally, not on dev (off on dev, section 1.4) |
+| Notification delivery (receive notifications) | `NotificationConsumerElasticMqIT` | Against a local SQS emulator (ElasticMQ in Testcontainers), an event delivered three times creates one notification per recipient, and a malformed event is received five times and then found in the dead-letter queue while other messages are processed. Run locally and in CI, not on dev (off on dev, section 1.4) |
 
 The tests caught real defects. Two red quote tests reproduced a defect in the join quote before it was fixed (7 October); the ArchUnit rule `controllers_are_validated` failed the build on a controller that lacked `@Validated` (13 October); and the full-history secret scan found 24 matches (see Table 4.14). Smoke failures on dev that may have raced a backend restart are deliberately not counted as catches (single host, section 4.3). Test-first development is recorded in the day logs: for example, on 3 October the rate-limit tests failed with 200 instead of 429 before the limits were implemented. The CI tooling itself has 193 Python tests (189 passed, 4 opt-in ZAP tests skipped) and 22 Node tests, recorded on 22 October.
 

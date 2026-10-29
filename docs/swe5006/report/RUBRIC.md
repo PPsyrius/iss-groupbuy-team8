@@ -156,6 +156,7 @@ IDs R01–R39 come from a whole-report read of the 27 Oct draft that found each 
 | R56 | Statechart notation: a transition reads trigger [guard] / effect; a transition that leaves the state unchanged is an internal transition inside the state box | 3.4.0 | Lim | "(notation of section 3.4.0)" | none |
 | R57 | Workflow run totals since 24 August 2026 (success, failure, cancelled per workflow), read on 27 October 2026 at 05:23 UTC | 4.2 (Table 4.13) | Pan | "(run totals: Table 4.13)" | Table D.5, the calculated success rate only, without the counts |
 | R58 | Backend deploy jobs on dev before and after the hand-built environment was corrected: 22 of 47 succeeded from 5 to 17 September 2026, 103 of 103 from 18 September to 22 October | Appendix D (Table D.7) | Liu Jin, Pan | "(Table D.7)" | 4.3 deployment verification evidence and CD findings, without the counts |
+| R59 | Notification delivery test `NotificationConsumerElasticMqIT`: an event delivered three times creates one notification per recipient; a malformed event reaches the dead-letter queue after five receives; run locally and in CI against ElasticMQ, not on dev | 4.2 (Table 4.12) | Pan | "(Table 4.12)" | none |
 
 ## Section requirements
 
