@@ -18,7 +18,7 @@ Table E.1: Known limits of the dev system and its pipeline.
 | Limit | Effect | Status and evidence |
 |---|---|---|
 | CloudFront to load balancer over HTTP (NFR-37) | API payloads and the origin-secret header cross the AWS network unencrypted | Accepted risk on dev (open issues in Table 2.6); the fix needs an origin hostname and certificate |
-| SSH port 22 on the dev host | Previously open to any address although SSM makes it unnecessary | Closed (open issues in Table 2.6) |
+| SSH port 22 on the dev host | Previously open to any address although SSM made it unnecessary | Closed (open issues in Table 2.6) |
 | Dev EBS volume not encrypted | Database and host data unencrypted at rest | Open (open issues in Table 2.6) |
 | Rollback never exercised | The recovery path is untested on the real host | Never run on dev (section 4.3; open issues in Table 2.6) |
 | No dev alarms or dashboards | Failures are noticed by the post-deploy smoke or by people | All CloudWatch alarms belong to SWE5001; DSOMM Monitoring level 0 |
