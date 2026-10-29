@@ -3,7 +3,7 @@ rubric: D
 owner: Liu Jin, Panpakorn Siripanich (Pan)
 plan: #681
 sources: docs/ci/; build-quality CI run at the freeze SHA
-owns: R38, R41
+owns: R38, R41, R58
 status: draft
 -->
 
@@ -63,13 +63,13 @@ Table D.4: Workflow timings, medians of successful runs (last 100 runs per workf
 
 Pull-request durations count only runs in which the gated jobs ran; a documentation-only pull request skips them in about 10 s. Push medians run from the start of the push run, not from the merge click.
 
-Table D.5: All-time run conclusions per workflow, read from the GitHub API on 27 October 2026 at 05:23 UTC (since 24 August 2026; same read as Table 4.13).
+Table D.5: Success among finished runs per workflow since 24 August 2026, calculated from the run totals read from the GitHub API on 27 October 2026 at 05:23 UTC (run totals: Table 4.13).
 
-| Workflow | Success | Failure | Cancelled | Success among finished (success + failure) |
-|---|---|---|---|---|
-| `ci-backend.yml` | 1,473 | 111 | 548 | 93.0 % |
-| `ci-frontend.yml` | 1,449 | 64 | 76 | 95.8 % |
-| `security.yml` | 1,847 | 56 | 45 | 97.1 % |
+| Workflow | Success among finished (success + failure) |
+|---|---|
+| `ci-backend.yml` | 93.0 % |
+| `ci-frontend.yml` | 95.8 % |
+| `security.yml` | 97.1 % |
 
 Calculated: success among finished = success / (success + failure). Cancelled runs are mostly runs superseded by a newer push to the same branch, which the workflows' concurrency groups cancel on purpose. The scheduled weekly `security.yml` run fails every week on the four historical secret-scan findings (section 4.2).
 

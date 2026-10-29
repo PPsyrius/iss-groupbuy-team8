@@ -154,6 +154,8 @@ IDs R01–R39 come from a whole-report read of the 27 Oct draft that found each 
 | R54 | The error constants of the use cases' refusals: `PRODUCT_NOT_STARTABLE`, `TEAM_PRICE_UNAVAILABLE`, `TEAM_PRICE_QUOTE_EXPIRED`, `ALREADY_MEMBER`, `PAYMENT_WEBHOOK_SIGNATURE_INVALID` (UC3, UC4, Pay upfront); `OAUTH_PROVIDER_ERROR`, `OAUTH_TOKEN_INVALID`, `UNAUTHENTICATED`, `FORBIDDEN` (UC2); `ORDER_NOT_FOUND` (UC8); `PRODUCT_NUMBER_CONFLICT` (UC9) | The design text of the matching 3.4.N: 3.4.1 D, 3.4.3 D, 3.4.4 D, 3.4.5 C | Eric (3.4.1); Pan (3.4.3); Lim (3.4.4); Liu Jin (3.4.5) | none; a 3.3.N use case describes the refusal in the actors' terms | none |
 | R55 | UC1 search bounds: the wildcard characters `%`, `_` and `\` in a keyword are matched literally; a page size above 100 or an out-of-range page is rejected with a validation error | 3.4.3 D (UC1-1) | Pan | none | none |
 | R56 | Statechart notation: a transition reads trigger [guard] / effect; a transition that leaves the state unchanged is an internal transition inside the state box | 3.4.0 | Lim | "(notation of section 3.4.0)" | none |
+| R57 | Workflow run totals since 24 August 2026 (success, failure, cancelled per workflow), read on 27 October 2026 at 05:23 UTC | 4.2 (Table 4.13) | Pan | "(run totals: Table 4.13)" | Table D.5, the calculated success rate only, without the counts |
+| R58 | Backend deploy jobs on dev before and after the hand-built environment was corrected: 22 of 47 succeeded from 5 to 17 September 2026, 103 of 103 from 18 September to 22 October | Appendix D (Table D.7) | Liu Jin, Pan | "(Table D.7)" | 4.3 deployment verification evidence and CD findings, without the counts |
 
 ## Section requirements
 
