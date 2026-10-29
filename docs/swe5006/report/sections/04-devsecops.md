@@ -169,7 +169,7 @@ Table 4.8: Pull-request jobs and what each verifies.
 | `trivy-deps`, `trivy-config` | No | Vulnerable Maven and pnpm dependencies (HIGH, CRITICAL); misconfiguration in Dockerfiles, Compose, Terraform and workflows |
 | `workflow-lint`, `deployment-bundle` | No | actionlint and ShellCheck on workflows; the SSM bundle holds exactly the Compose file and four scripts, and Compose holds only the backend service |
 
-Policy as code on SWE5006 consists of `trivy-config` and `deployment-bundle` on every relevant pull request and, since 25 October, `infra-swe5006.yml`, which formats, validates and runs Checkov on both SWE5006 Terraform stacks. Checkov findings are advisory while the policy is adopted, and the workflow holds no AWS credentials. CodeQL is configured but disabled: GitHub Code Scanning is not available on this repository and its API returns HTTP 403.
+Policy as code on SWE5006 consists of `trivy-config` and `deployment-bundle` on every relevant pull request and, since 25 October, `infra-swe5006.yml`, which formats, validates and runs Checkov on both SWE5006 Terraform stacks. Checkov findings are advisory while the policy is adopted, and the workflow holds no AWS credentials. CodeQL is configured but disabled: GitHub Code Scanning is not available for this private repository, and its API returns HTTP 403. We keep the configuration so that it can be enabled if access becomes available; SonarCloud and SpotBugs provide static analysis meanwhile.
 
 #### Post-merge jobs
 
