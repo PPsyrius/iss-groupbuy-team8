@@ -146,7 +146,7 @@ Figure 3.29: Design sequence of the same race, after the concurrency strategy. T
 
 Rationale: a group-buy must never sell more seats than its target or settle one payment twice. Database locks hold across application instances, which in-memory locks would not. Because the expiry sweep also locks the team first, a sweep and a late payment on the same team queue behind each other in the same way.
 
-Evidence: the integration test `StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist` starts 20 concurrent paid joins for the last seat of a team of two, through the production purchase-intent and fulfilment ports. Each payment settles through `StripeCheckoutService.recover`, the operator recovery entry, which runs the same settlement as a webhook under a fresh event ID. The test asserts that the team ends with two members, two orders and current size two, that 19 refund obligations are stored, and that stock fell by exactly two, from 100 to 98. Run locally (PostgreSQL in Testcontainers) and in CI (run 40200028697), not on dev.
+Evidence: the integration test `StripeLocalIntegrationTest.twentyBuyersRaceForLastSeatAndNineteenRefundObligationsPersist` starts 20 concurrent paid joins for the last seat of a team of two, through the production purchase-intent and fulfilment ports. Each payment settles through `StripeCheckoutService.recover`, the operator recovery entry, which runs the same settlement as a webhook under a fresh event ID. The test asserts that the team ends with two members, two orders and current size two, that 19 refund obligations are stored, and that stock fell by exactly two, from 100 to 98. Run locally (PostgreSQL in Testcontainers) and in CI (Table E.5), not on dev.
 
 #### Transaction boundary
 
