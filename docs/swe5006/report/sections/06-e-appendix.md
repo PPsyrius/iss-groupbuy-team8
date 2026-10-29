@@ -9,7 +9,7 @@ status: draft
 
 # Appendix E: Known Limits and Evidence {.appendix}
 
-This appendix states the known limits of the SWE5006 system and its pipeline, and gives the evidence behind the main runtime claims: the Stripe Sandbox refund, the paid flow on dev, the performance runs and the system demonstration. Each item names its environment, because a local result, a dev result and a SWE5001 ECS result are different evidence. Statuses are as read on 26 October 2026 unless dated otherwise.
+This appendix states the known limits of the SWE5006 system and its pipeline, and gives the evidence behind the main runtime claims: the Stripe Sandbox refund, the paid flow on dev, the performance runs and the system demonstration. Each item names its environment, because a local result, a dev result and a SWE5001 ECS result are different evidence. Statuses are as read on 29 October 2026 unless dated otherwise.
 
 #### Known limits
 
