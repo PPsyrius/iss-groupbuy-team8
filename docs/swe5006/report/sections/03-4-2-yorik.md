@@ -403,7 +403,7 @@ sequenceDiagram
     else provider error or mismatch
         Svc->>Repo: finish(work, review, reason)
     end
-    Svc-->>Op: true
+    Svc-->>Op: true (false if no review or failed row was claimed)
 ```
 
 Figure 3.56: UML design sequence diagram of UC6 flow 3, reconcile a parked refund. `reconcile` only retrieves a refund the operator names and maps it with the same checks as the worker; it has no path that creates a refund.
