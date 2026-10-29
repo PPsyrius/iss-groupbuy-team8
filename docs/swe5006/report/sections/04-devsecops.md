@@ -3,7 +3,7 @@ rubric: 4.1, 4.2, 4.3
 owner: Panpakorn Siripanich (Pan); testing from Liu Jin
 plan: #680
 sources: docs/ci/; docs/quality/quality-gates.md; docs/ci/devsecops-maturity-assessment.md; deck s20–s27; #694
-owns: R04, R06, R07, R14, R16, R27, R37, R41, R42, R45, R47
+owns: R04, R06, R07, R14, R16, R27, R37, R41, R42, R45, R47, R57
 status: draft
 -->
 
@@ -358,7 +358,7 @@ Figure 4.2: UML sequence diagram of one backend deploy to dev. The deploy is ver
 
 #### Deployment verification evidence
 
-On dev, all 103 backend deploy jobs from 18 September to 22 October 2026 succeeded, and every backend delivery run after that, to 26 October, was green. The latest deliveries before the freeze verified themselves end to end (Table 4.16). Measured on 19 October, the median time from a push to `dev` to a deployed backend was 3.1 minutes, and to a green frontend smoke 2.7 minutes. The dev delivery proxies of the DORA metrics, observed to 22 October, were 16.96 successful backend and 21.85 frontend deploy jobs a week, a median lead time from first commit to dev of 7.63 h and 6.23 h, and a deploy-job success rate of 83.33 % and 100 %; Appendix D gives the full table and section 2.3 discusses them. They describe dev deploy jobs, not production incidents.
+On dev, every backend deploy job from 18 September to 22 October 2026 succeeded (Table D.7), and every backend delivery run after that, to 26 October, was green. The latest deliveries before the freeze verified themselves end to end (Table 4.16). Measured on 19 October, the median time from a push to `dev` to a deployed backend was 3.1 minutes, and to a green frontend smoke 2.7 minutes. The dev delivery proxies of the DORA metrics, observed to 22 October, were 16.96 successful backend and 21.85 frontend deploy jobs a week, a median lead time from first commit to dev of 7.63 h and 6.23 h, and a deploy-job success rate of 83.33 % and 100 %; Appendix D gives the full table and section 2.3 discusses them. They describe dev deploy jobs, not production incidents.
 
 Table 4.16: Latest dev deliveries, read from GitHub on 26 October 2026 (times UTC).
 
@@ -390,4 +390,4 @@ Production, the shared SWE5001 release, runs the same code on ECS (SWE5001 topol
 
 #### CD findings
 
-Early dev deployments failed until the hand-built environment was brought in line with its design. From 5 to 17 September 2026, 22 of 47 backend deploy jobs succeeded. The causes were an outdated OIDC subject format in the role trust, a placeholder instance ID in the SSM policy, a host without the AWS CLI, port 8589 open to the internet, and repository variables edited by hand. The first fix, the OIDC subject format, landed on 5 September, but failures continued until 17 September while the other causes were removed; from 18 September to 22 October, 103 of 103 deploy jobs succeeded. The same lesson shaped the production design, which is written in Terraform rather than built by hand. A second finding came late: the Stripe webhook on dev never confirmed a payment until its endpoint was replaced on the unchanged image (the 23 Oct webhook fault, Appendix E).
+Early dev deployments failed until the hand-built environment was brought in line with its design. From 5 to 17 September 2026, fewer than half of the backend deploy jobs succeeded (Table D.7). The causes were an outdated OIDC subject format in the role trust, a placeholder instance ID in the SSM policy, a host without the AWS CLI, port 8589 open to the internet, and repository variables edited by hand. The first fix, the OIDC subject format, landed on 5 September, but failures continued until 17 September while the other causes were removed; from 18 September to 22 October, every deploy job succeeded. The same lesson shaped the production design, which is written in Terraform rather than built by hand. A second finding came late: the Stripe webhook on dev never confirmed a payment until its endpoint was replaced on the unchanged image (the 23 Oct webhook fault, Appendix E).
