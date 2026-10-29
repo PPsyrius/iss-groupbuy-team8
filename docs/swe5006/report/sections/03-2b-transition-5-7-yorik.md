@@ -17,7 +17,7 @@ Table 3.9: External «boundary» objects and their design elements.
 |---|---|---|---|
 | Payment gateway (Checkout) | `CheckoutGateway` | `StripeCheckoutGateway` | `StripeWebhookController` (signed webhook) |
 | Payment gateway (refund) | `RefundGateway` | `StripeRefundGateway` | none; the refund worker asks Stripe (3.2.7) |
-| Identity provider | `OAuthIdentityGateway`, `OAuthStateStore` | `GoogleOAuthGateway`, `RedisOAuthStateStore` | `AuthController` (`/auth/oauth2/google/callback`) |
+| Identity provider | `OAuthIdentityGateway`, `OAuthStateStore` | `GoogleOAuthGateway`, `RedisOAuthStateStore` | `AuthController` (`/api/v1/auth/oauth2/google/callback`) |
 
 #### Analysis objects affected
 
