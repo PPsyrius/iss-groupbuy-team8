@@ -303,10 +303,11 @@ sequenceDiagram
         L-->>C: revision, version + 1
         opt team price given
             C->>P: create revision(price, valid from, valid until)
-            alt price not below original, or listing not on sale
+            break price not below original, or listing not on sale
                 P-->>C: refused
                 C-->>UI: refused, terms not saved
             end
+            P-->>C: price revision
         end
         C->>H: create(old terms, new terms, admin)
         C-->>UI: saved terms
