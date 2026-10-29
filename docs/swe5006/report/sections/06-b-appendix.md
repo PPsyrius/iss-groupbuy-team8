@@ -9,7 +9,7 @@ status: draft
 
 # Appendix B: ADR Index and Decisions Without an ADR {.appendix}
 
-The team records decisions in three places: 8 backend architecture decision records (ADRs) in `backend/docs/adr/`, 16 frontend ADRs in `frontend/docs/adr/`, and the 20 locked decisions of the backend skeleton plan (`backend/docs/design/backend-skeleton-plan.md`), agreed on 30 August before the first ADR existed. All ADRs use the Nygard format. Backend and frontend numbers are independent, so the report always says "backend ADR 0001" or "frontend ADR 0001". Section B.4 lists the significant decisions that have no ADR. Statuses and dates below were read on 28 October 2026.
+The team records decisions in three places: 8 backend architecture decision records (ADRs) in `backend/docs/adr/`, 16 frontend ADRs in `frontend/docs/adr/`, and the 20 locked decisions of the backend skeleton plan (`backend/docs/design/backend-skeleton-plan.md`), agreed on 30 August before the first ADR existed. All ADRs use the Nygard format. Backend and frontend numbers are independent, so the report always says "backend ADR 0001" or "frontend ADR 0001". Section B.4 lists the significant decisions that have no ADR. Statuses and dates below were read on 30 October 2026.
 
 #### B.1 Backend ADRs
 
@@ -57,7 +57,7 @@ Table B.2: Frontend ADRs. All 16 are Accepted; the date is the acceptance date, 
 
 The backend design plan (`backend/docs/design/backend-skeleton-plan.md`) fixed the backend's stack and structure on 30 August, before any ADR was written. Three of its decisions were later superseded in code; the plan itself records this in a note of 11 September.
 
-Table B.3: Backend design decisions D1–D20, locked on 30 August, and their state on 26 October.
+Table B.3: Backend design decisions D1–D20, locked on 30 August, and their state on 30 October.
 
 | # | Decision | State |
 | --- | --- | --- |
