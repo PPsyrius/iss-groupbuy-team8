@@ -166,12 +166,12 @@ classDiagram
         +onApplicationEvent(event) void
     }
     class OrderLifecycleSubscriber {
-        <<BEFORE_COMMIT, Order 10>>
+        <<BEFORE_COMMIT, 10>>
         +onTeamSucceeded(e) void
         +onTeamExpired(e) void
     }
     class TeamExpiryRefundSubscriber {
-        <<BEFORE_COMMIT, Order 20>>
+        <<BEFORE_COMMIT, 20>>
         +onTeamExpired(e) void
     }
     class ShareCreditSubscriber {
