@@ -452,6 +452,8 @@ The unit tests `RefundServiceTest`, `TeamExpiryRefundSubscriberTest`, `TeamExpir
 
 UC6 applies eight of the nine transition strategies of section 3.2. Language and framework (3.2.1) adds nothing specific to UC6 beyond the Spring scheduling and event annotations listed under 3.2.7 and 3.2.9.
 
+<!-- table: split -->
+
 Table 3.15: Transition strategies applied to UC6.
 
 | Strategy | Analysis object | Design element |
