@@ -162,7 +162,7 @@ Table 4.8: Pull-request jobs and what each verifies.
 | `contract-check` | By policy only | Regenerates the contract and fails on `git diff`; `openapi-diff 2.1.7 --fail-on-incompatible` against the base branch unless the pull request carries the `contract-change-approved` label |
 | `SonarCloud Backend` | Yes | Quality gate on new code: coverage at least 80 %, reliability, security and maintainability rating A, duplication at most 3 %, every security hotspot reviewed |
 | `docker` | Yes | Builds the image from the verified JAR, boots it against PostgreSQL 18 and Redis 8.10, requires `/api/actuator/health` UP within 60 s, then Trivy image scan failing on fixable HIGH or CRITICAL vulnerabilities |
-| `frontend-check` | Yes | Frozen install; ban on direct `import.meta.env` use; `pnpm check` (client generation, `tsc`, oxlint, oxfmt, Vitest with coverage, knip); production build |
+| `frontend-check` | Yes | Frozen install; ban on direct `import.meta.env` use; `pnpm check` (client generation, a check that inline styles fit the CSP, `tsc`, oxlint, oxfmt, Vitest with coverage, knip); production build |
 | `SonarCloud Frontend` | Yes | The same quality gate on the frontend, reusing the pull request's coverage report |
 | `e2e-preview`, `intent-stale` | No | Playwright end-to-end tests on the preview build; drift of the TanStack agent-skill manifest |
 | `gitleaks` | Yes | Secrets in the pull request's commits |
