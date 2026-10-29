@@ -110,7 +110,7 @@ The SWE5001 split burned fast up to the 16 October SWE5001 code freeze. The line
 - **Sprint 3** (`docs/agile/sprint-03/review.md`, written at the 8 October freeze): goal not met on dev. Every code path of the goal was merged into `dev` and tested, but Checkout, refunds and refund recovery were verified only locally, because Checkout and scheduling were still off on dev. 11 of 17 items done; 117 of 150 h; the p95 target was met on a local stack. Its demo notes section was never filled in.
 - **Sprint 4**: the review was planned for after the presentation, with the presentation remarks. Its Definition of Done placement was agreed on 24 October and re-agreed on 25 October: released (the shared SWE5001 production) and shown on dev (Table A.10).
 
-{{FILL: Sprint 4 review (committed vs delivered per item with evidence, demo notes, carried-over items) and Sprint 4 retrospective; issue #619 was closed on 26 Oct but no docs/agile/sprint-04/review.md or retro.md exists on dev at 61486f0e — Eric}}
+{{FILL: Sprint 4 review (goal, committed against delivered per item with evidence, demo notes, carried-over items) and Sprint 4 retrospective (went well, could be better, action), reconstructed from the board snapshots and day logs as the Sprint 4 row of Table 2.10 is, and saying so; no docs/agile/sprint-04/review.md or retro.md exists on dev (#619 closed 26 Oct). Lim fills it from Table 2.10 and Table A.7 if it is still open at noon on 30 Oct — Eric}}
 
 #### A.6 Sprint retrospectives
 
