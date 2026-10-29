@@ -163,6 +163,7 @@ Table E.5: Evidence references by section.
 | 3.4.2 | CI simulated refund recovery, 25 Oct: 9 `StripeRolloutAcceptanceIT` tests, 0 failures, errors or skips; includes `providerSucceededBeforeWorkerLossRetriesWithOneDurableRefundKey` | run 40200028697, `SonarCloud Backend`, commit `ad2a73e6`; counts are for the whole test class |
 | 3.4.3 | Class, method and table names checked in code, 26 Oct | `46faacd7` |
 | 3.4.4 | Design diagrams show the code, 26 Oct; credits written but not shown | `46faacd7` |
+| 3.4.4 | Invited paid join test in CI: `StripeLocalIntegrationTest` class totals 25 tests, 0 failures, errors or skips; includes `anInvitedJoinIsTracedAndCreditsItsSharerAfterCommit` | run 40200028697, `SonarCloud Backend` job, commit `ad2a73e6` |
 | 3.4.5 | UC9 first version, versioned drafts and 412 rule, 11 Sep | #72; #32 |
 | 3.4.5 | UC9 team terms and first-team price in one command, 29 Sep | #242; #221 |
 | 3.4.5 | Deletion eligibility and history counts on the admin read, 1 Oct | #300 |
