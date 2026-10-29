@@ -267,6 +267,7 @@ sequenceDiagram
         L-->>C: refused
         C-->>UI: state conflict
     else never-published draft
+        L-->>C: deletable
         C->>P: any for listing, including expired?
         C->>T: any for listing, including closed?
         alt any history found
