@@ -156,11 +156,11 @@ Table 3.3: Target implementation platform of the SWE5006 system.
 | Cache and session store | Redis | 8 | Sessions, OAuth state, rate limits and invite lookup cache |
 | Frontend language | TypeScript | 7.0.2 | Node 24, pnpm 12.4.2 |
 | UI library | React | 19.3.1 | React Compiler through the Babel preset (frontend ADR 0010) |
-| Routing, server state, forms | TanStack Router, Query, Form | 1.170.44, 5.104.3, 1.33.5 | |
+| Routing, server state, forms | TanStack Router, Query, Form | 1.170.45, 5.104.5, 1.33.5 | |
 | Components and styling | HeroUI, Tailwind CSS | 3.2.6, 4.3.3 | |
 | Validation | Valibot | 1.5.0 | Schemas generated with the client |
 | API client generator | hey-api `openapi-ts` | pre-release build `0.0.0-next-20260824173136` | Output gitignored (frontend ADR 0003) |
-| Build tool | Vite | 8.3.4 | |
+| Build tool | Vite | 8.3.5 | |
 | Frontend tests | Vitest, Playwright | 5.0.1, 1.64.1 | MSW for API mocks |
 | Cloud (SWE5006 `dev`) | AWS CloudFront, S3, ALB, EC2, ECR, Systems Manager, CloudWatch Logs | n/a | Region ap-southeast-1 |
 | External services | Stripe Checkout (test mode), Google OAuth 2.0 | n/a | |
