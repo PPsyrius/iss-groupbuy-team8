@@ -9,11 +9,11 @@ status: draft
 
 # Appendix D: Test Inventory, CI Timings and Green Rates {.appendix}
 
-This appendix holds the detail behind section 4.2 and section 4.3: the test inventory per module and level, the executed test totals, coverage, the workflow timings and green rates, and the dev delivery metrics. Every figure carries its date and source. Static counts were taken with `git ls-tree` on `dev` on 26 October 2026 (commit in Table D.1). The backend and frontend trees are unchanged between that commit and the freeze commit (section 1.1), so the static counts hold at the freeze.
+This appendix holds the detail behind section 4.2 and section 4.3: the test inventory per module and level, the executed test totals, coverage, the workflow timings and green rates, and the dev delivery metrics. Every figure carries its date and source. Static counts were taken with `git ls-tree` at the freeze commit (section 1.1) on 29 October 2026 (commit in Table D.1).
 
 #### Test inventory
 
-Table D.1: Test inventory by kind, level and module (26 October 2026, `61486f0e`).
+Table D.1: Test inventory by kind, level and module (29 October 2026, `9f3a9cfe`).
 
 | Kind and level | Tools | Count by module | Example classes | Runs in |
 |---|---|---|---|---|
@@ -21,31 +21,31 @@ Table D.1: Test inventory by kind, level and module (26 October 2026, `61486f0e`
 | Integration | Testcontainers: PostgreSQL 18, Redis 8.10, ElasticMQ | 49 `*IT.java` classes with 242 annotations: bootstrap 24, infrastructure 15, `commerce-svc` 5, `notification-svc` 3, `identity-svc` 1, platform 1. 45 start containers | `TeamExpirySchedulingIT`, `WriteRateLimitIT`, `StripeRolloutAcceptanceIT` (story acceptance, 8 test methods) | `build-quality`, every PR (required) |
 | Architecture (unit) | ArchUnit 1.5.1 | 17 rules in `ArchitectureTest` | `domain_is_framework_free`, `controllers_are_validated` | `build-quality`, every PR (required) |
 | API contract (integration) | springdoc export, `git diff`, openapi-diff 2.1.7 | 1 contract file | `contracts/openapi.json` | `contract-check`, backend PRs (required by policy only) |
-| Component (frontend unit) | Vitest, Testing Library, MSW | 78 test files: features 59, routes 10, components 4, test helpers 3, api 2 | `account.test.tsx` | `frontend-check`, every PR (required) |
-| End-to-end (system) | Playwright, Chromium | 8 specs with 24 test declarations, 5 of them skipped by default (signed-in cases) | `buyer-journey.spec.ts`, `join-refusal.spec.ts`, `smoke.spec.ts` | `e2e-preview` on PRs; `e2e-dev` after each frontend deploy |
+| Component (frontend unit) | Vitest, Testing Library, MSW | 79 test files: features 60, routes 10, components 4, test helpers 3, api 2 | `account.test.tsx` | `frontend-check`, every PR (required) |
+| End-to-end (system) | Playwright, Chromium | 9 specs, run as 33 tests in each Playwright job; cases that need a signed-in session or another target are skipped (6 in `e2e-preview`, 11 in `e2e-dev`; Table D.2) | `buyer-journey.spec.ts`, `join-refusal.spec.ts`, `security-headers.spec.ts`, `smoke.spec.ts` | `e2e-preview` on PRs; `e2e-dev` after each frontend deploy |
 | Performance (system) | k6 1.6.1 (SWE5001 ECS); Node closed-loop workload (local) | One k6 browse scenario; three local scenarios | `perf/k6/browse.js`, `backend/perf/` | By hand; the k6 tooling itself is tested in `perf-tooling.yml` |
 | CI tooling | Python `unittest`, Node test runner | 13 test files in `.github/tests/`: 193 Python tests (189 passed, 4 opt-in ZAP tests skipped) and 22 Node tests, run on 22 Oct | `backend_quality_test.py`, `gitleaks_allowlist_test.py`, `dora_metrics_test.py` | `workflow-lint` in `security.yml` when tooling changes; the backend policy tests also in `build-quality` |
 
-Table D.2: Executed test totals from CI logs. Runs 40200028697 and 40294726775 have the freeze commit's code `6d14e449` (`git diff ad2a73e6 6d14e449 -- backend` and `git diff 9135ad8b 6d14e449 -- frontend` are empty); pull-request run 40206547524 predates one frontend dependency bump (#691, `happy-dom`) and has the same test files.
+Table D.2: Executed test totals from CI logs. Backend run 40200028697 has the freeze commit's backend code (`git diff ad2a73e6 9f3a9cfe -- backend` is empty); frontend push run 40889522574 ran on the freeze commit `9f3a9cfe`; pull-request run 40888144578 is the pull request merged as the freeze commit, and its frontend tree equals the freeze commit's.
 
 | Suite | Run and commit | Date | Result |
 |---|---|---|---|
 | Backend `SonarCloud Backend` (`./mvnw verify -Pci`, Surefire and Failsafe totals of 14 module executions) | 40200028697, push `ad2a73e6` | 25 Oct 2026 | 2,066 tests run, 0 failures, 0 errors, 1 skipped (opt-in `PerformanceBaselineIT`) |
-| Frontend `frontend-check` (Vitest) | 40206547524, pull request | 25 Oct 2026 | 78 files, 872 tests passed |
-| Frontend `SonarCloud Frontend` (Vitest) | 40294726775, push `9135ad8b` | 26 Oct 2026 | 78 files, 872 tests passed |
-| Frontend `e2e-preview` (Playwright, preview build) | 40206547524, pull request | 25 Oct 2026 | 19 passed, 5 skipped |
-| Frontend `e2e-dev` (Playwright, through CloudFront) | 40294726775, push `9135ad8b` | 26 Oct 2026 | 21 passed, 3 skipped |
+| Frontend `frontend-check` (Vitest) | 40888144578, pull request | 29 Oct 2026 | 79 files, 891 tests passed |
+| Frontend `SonarCloud Frontend` (Vitest) | 40889522574, push `9f3a9cfe` | 29 Oct 2026 | 79 files, 891 tests passed |
+| Frontend `e2e-preview` (Playwright, preview build) | 40888144578, pull request | 29 Oct 2026 | 27 passed, 6 skipped |
+| Frontend `e2e-dev` (Playwright, through CloudFront) | 40889522574, push `9f3a9cfe` | 29 Oct 2026 | 22 passed, 11 skipped |
 
 Earlier totals differ because tests were added between them: 1,958 backend tests (local benchmark, 20 Oct), 1,980 (local verify in the CI failure audit, 21 Oct) and 2,048 (local verify, 21 Oct). SonarCloud's `tests` measure is never used as a test count.
 
 #### Coverage
 
-Table D.3: SonarCloud coverage and quality gate, read from the SonarCloud API on 26 October 2026.
+Table D.3: SonarCloud coverage and quality gate, read from the SonarCloud API on 29 October 2026.
 
 | Project | Analysed commit | Overall coverage | New-code coverage | Bugs, vulnerabilities, hotspots | Ratings | Gate |
 |---|---|---|---|---|---|---|
 | BlocBuy Backend | `ad2a73e6` (25 Oct) | 100.0 % | 99.97 % | 0, 0, 0 | A, A, A | Passed |
-| BlocBuy Frontend | `9135ad8b` (26 Oct) | 99.3 % | 99.25 % | 0, 0, 0 | A, A, A | Passed |
+| BlocBuy Frontend | `9f3a9cfe` (29 Oct) | 99.3 % | 99.20 % | 0, 0, 0 | A, A, A | Passed |
 
 The gate conditions on new code are: coverage at least 80 %, reliability, security and maintainability ratings A, duplicated lines at most 3 % and all security hotspots reviewed. No file is excluded from the backend analysis: `backend/pom.xml` sets only the project key and the JaCoCo report paths, and the SonarCloud settings API holds no exclusions for either project (read 27 October). The frontend analysis excludes test files, `src/test/**`, the generated API client and the generated route tree, and its coverage also excludes the entry files `src/main.tsx` and `src/router.tsx` and the development-only `src/dev/**` (`ci-frontend.yml`). The deck's figures of 24 October (backend 99.4 %, frontend 96.1 %) predate two test pull requests merged on 25 October.
 
