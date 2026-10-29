@@ -92,11 +92,11 @@ The SWE5001 topology runs the same code on Amazon ECS as three services: `identi
 
 ### 1.4.1 Functionality in Scope
 
-All nine use cases of the proposal and the included use case Pay upfront via Stripe Checkout are delivered and shown on dev. Table 1.3 gives their status on 26 October, which matches the delivery badges of the use case diagram (section 3.3.1). {{VERIFY: re-read each status at the freeze SHA on 30 Oct — Lim}}
+All nine use cases of the proposal and the included use case Pay upfront via Stripe Checkout are delivered and shown on dev. Table 1.3 gives their status on 29 October, which matches the delivery badges of the use case diagram (section 3.3.1).
 
 Table 1.3: Use cases in scope and their status on dev.
 
-| Use case | Status on dev, 26 Oct | Notes | Issue closed |
+| Use case | Status on dev, 29 Oct | Notes | Issue closed |
 | --- | --- | --- | --- |
 | UC1 Browse and view listings, with dual price | On dev | Includes keyword search | 19 Sep |
 | UC2 Register / authenticate | On dev | Google sign-in only, with a server-side session (changes from the proposal: Table 2.5) | 23 Sep |
@@ -147,7 +147,7 @@ The proposal (section 6.3) commits to six quality attributes, each with a target
 
 Table 1.5: Quality attributes, targets and status.
 
-| Attribute | Proposal target | Verified in | Status, 26 Oct |
+| Attribute | Proposal target | Verified in | Status, 29 Oct |
 | --- | --- | --- | --- |
 | Correctness under concurrency | Team capacity never exceeded; no payment double-charged or double-refunded | 3.2.8, 3.4.1, 4.2 | Run locally and in CI, not on dev (Table 4.12) |
 | Performance | Interactive operations within 2 s at 100 concurrent users; expiry resolved within 1 minute of the deadline | 4.2 (test), Table E.4 (results); 3.2.7 (expiry bound) | Response time never measured on SWE5006 dev (NFR-15); met locally and on the SWE5001 ECS environment. Expiry: a design bound. Both are explained below the table |
