@@ -392,6 +392,7 @@ sequenceDiagram
         Svc->>Repo: claimReview(paymentId)
         Note over Repo,GW: review or failed row only, audit OPERATOR_RECONCILE
     end
+    Repo-->>Svc: RefundWork
     break work.valid() is false
         Svc->>Repo: finish(work, review, PAYMENT_MISMATCH)
     end
