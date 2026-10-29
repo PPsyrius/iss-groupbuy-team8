@@ -104,7 +104,7 @@ Table 4.5: GitHub OIDC roles in the project account.
 
 #### Artefacts under configuration management
 
-Every artefact traces to a commit (Table 4.6). The API contract is the one artefact committed in two forms: `contracts/openapi.json` is generated from the code and committed, and CI fails if the committed file differs from a fresh export; the TypeScript client is generated from it at build time and never committed (frontend ADR 0003).
+Every artefact traces to a commit (Table 4.6). The API contract has two generated forms: `contracts/openapi.json` is generated from the code and committed, and CI fails if the committed file differs from a fresh export; the TypeScript client is generated from it at build time and never committed (frontend ADR 0003).
 
 Table 4.6: Artefacts, how each is identified, and where it is kept.
 
