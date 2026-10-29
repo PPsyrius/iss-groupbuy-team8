@@ -134,7 +134,7 @@ Table 2.6: Outstanding issues, 26 October 2026.
 | After a merge, delivery rebuilds the backend image without repeating the pull request's Trivy image scan, so the deployed image is not the scanned one | Unassigned | Known limit |
 | Database and application servers share subnets in the SWE5001 infrastructure code (NFR-70) | Pan | Open; SWE5001 scope |
 | Sprint 3 retrospective was reconstructed on 24 October, and the Sprint 3 review is still a draft | Lim | Open |
-| Sprint 4 review, retrospective and burndown were not recorded in the sprint, although their tracking issue was closed on 26 October | Eric | Reconstructed on 30 October in Appendix A (review and retrospective in A.5, burndown in Table A.7); not held as meetings and not reviewed by the team |
+| Sprint 4 review, retrospective and burndown were not recorded in the sprint, although their tracking issue was closed on 26 October | Eric | Reconstructed as at 30 October in Appendix A (review and retrospective in A.5, burndown in Table A.7); no meeting recorded and not reviewed by the team |
 
 Two proposal targets are not shown on dev: response time (performance status, section 1.4.3; results in Table E.4) and one-minute expiry (the expiry design bound, section 1.4.3).
 
