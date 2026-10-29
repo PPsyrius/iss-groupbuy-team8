@@ -240,7 +240,7 @@ Figure 3.122: UML sequence diagram of a join that fills a team after applying Ob
 
 #### 6 Implementation decisions
 
-The implementation follows the solution design. The decisions are:
+The implementation follows the solution design.
 
 1. **One phase per subscriber, chosen by what the consequence is** (listener phases, section 3.2.9). `OrderLifecycleSubscriber` and `TeamExpiryRefundSubscriber` use `@TransactionalEventListener(phase = BEFORE_COMMIT)` (ADR 0002). `ShareCreditSubscriber` uses `AFTER_COMMIT`: it credits only an attributed join, writes in its own `REQUIRES_NEW` transaction, opened as an explicit `TransactionTemplate` inside a `try`, and catches every failure, a failed commit included, logging it as a warning. A credit problem therefore never undoes a paid admission, and an exception thrown after the commit cannot turn a settled payment into an error. The unique index `uq_biz_share_credit_payment` (migration V18) absorbs a duplicate event (ADR 0003).
 2. **Order the subscribers by the global lock order.** `@Order(10)` on the order subscriber and `@Order(20)` on the refund subscriber make the two take their locks in the order of Table 3.12 (section 3.2.8), never in opposite directions.
