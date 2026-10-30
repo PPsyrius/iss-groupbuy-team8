@@ -64,9 +64,15 @@
   let inset = 6pt
   let gap = 0.3em
   // Height the drawing frame may take on a landscape page: the text width (the rotated block's
-  // height) less the caption, the lead label, the inset and a little slack.
-  let lead-h = if lead != none { measure(block(width: landscape-width, lead-block)).height + (0.52em + 8pt).to-absolute() } else { 0pt }
-  let land-room = text-area.width - 2 * inset - gap.to-absolute() - 4pt - measure(block(width: landscape-width, cap)).height - lead-h
+  // height) less everything the figure stacks around the frame (lead label, the spacing between
+  // blocks, gap and caption, measured on an empty frame), the inset and a little slack.
+  let land-rest = measure(block(width: landscape-width, {
+    lead-block
+    align(center, block(width: 100%, height: 0pt))
+    v(gap)
+    cap
+  })).height
+  let land-room = text-area.width - land-rest - 2 * inset - 4pt
   // Height the drawing frame may take on a portrait page: the most a framed figure may take on
   // a page of its own (`max` below, on the full text area) less the inset.
   let lead-p = if lead != none { measure(block(width: text-area.width, lead-block)).height + (0.52em + 8pt).to-absolute() } else { 0pt }
@@ -85,7 +91,10 @@
       // A tall drawing may fill the page: the region's height less the caption, the lead label,
       // the float clearance and a little slack.
       let lead-here = if lead != none { measure(block(width: size.width, lead-block)).height + (0.52em + 8pt).to-absolute() } else { 0pt }
-      let max = calc.min(size.height, text-area.height) - measure(block(width: size.width, cap)).height - gap.to-absolute() - lead-here - 1.4em.to-absolute() - 12pt
+      // On a landscape page the rotated block runs across the text width, which bounds it.
+      // size.height is no measure there: rotate (reflow) lays the figure out again in a region
+      // exactly as tall as its first layout, so a limit taken from it would always shrink it.
+      let max = if rotated { text-area.width - land-rest - 4pt } else { calc.min(size.height, text-area.height) - measure(block(width: size.width, cap)).height - gap.to-absolute() - lead-here - 1.4em.to-absolute() - 12pt }
       // A UML drawing is scaled down. An image set at `width: 100%` would only be laid out again
       // at full width inside a scale, so it is set in a narrower block instead, which shrinks its
       // height by the same ratio.
