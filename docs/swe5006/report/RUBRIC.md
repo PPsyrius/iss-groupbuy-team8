@@ -37,11 +37,12 @@ In every table, **Source** cites what a document requires and **Ruling** records
 | G5 | English only | `CONTRIBUTING.md` | All committed and submitted text is English |
 | G6 | Evidence | Team | Every factual claim is traceable to merged code, a GitHub issue or PR, the board, a CI run, AWS (read-only) or a recorded artefact, and states its kind (see Evidence kinds). Never upgrade a result |
 | G7 | One freeze SHA | Team (PLAN D6, part 4) | On 30 Oct pick one `dev` commit. Every count, version, coverage figure and status in the report is re-read at that SHA or dated explicitly |
-| G8 | Readable without GitHub | BRF slide 6; team | The marker reads the PDF. Name work by what it does; explain BlocBuy terms (bloc, team, Sandbox) at first use. Issue and PR numbers may appear only in tables and appendices, never as the only explanation. ADR numbers are allowed because Appendix B lists them |
+| G8 | Readable without GitHub, in the team's voice | BRF slide 6; team | The marker reads the PDF. Name work by what it does; BlocBuy terms (bloc, team, Sandbox) are defined once, in the 1.1 glossary (G13). Issue and PR numbers are never the only explanation of a piece of work. ADR numbers are allowed because Appendix B lists them. Voice (Source: Team): report text never contains internal process language: rubric codes (G4, G7, "Evidence kinds"), PLAN decision numbers, "team ruling", "this draft", "re-read at the freeze commit", "checked by a code search", plan file names, day-log paths. Commit hashes, workflow run IDs, AWS identifiers and issue or PR numbers appear only in appendix tables. The freeze SHA is stated once, at its home (R50) |
 | G9 | Course vocabulary | Module material | Analysis objects as «boundary», «control», «entity» (SAD); EPAT DoD ladder (coded, tested, integrated, releasable, released); Agile Testing Quadrants; Continuous **Delivery** for a manually approved promotion (EPAT 07 CI p34–35); GoF class-level pattern names; a simple static factory is not GoF Factory Method (SDP 01a p32–35) |
 | G10 | Incorporate presentation remarks | BRF slide 7; REM | Every remark in the REM issue is turned into a report task tagged with a section number and either answered in the report or recorded as not adopted, with a reason, in the Remarks register below |
 | G11 | Code base deliverable | BRF slide 5 | Repository URL on the title page; lecturers get read access or a `git archive` of the freeze SHA (PLAN D13, #693) |
-| G12 | Figures legible in print | BRF slide 6 | Every figure passes F1–F8 |
+| G12 | Figures legible in print | BRF slide 6 | Every figure passes F1–F9 |
+| G13 | One voice, one memory | Team | Each argument, fact, figure and table has one canonical home, listed in the Canonical homes and Canonical figures registries. The full statement appears only at its home. Elsewhere, cite the home in at most one clause, or say nothing. Never repeat the measured figures (for example 18.9 s, 40.6 s, 58.18 s) outside their home. References may point forward. A limitation is stated once, plainly, at its home, without commentary about grading or rulings. A row whose home names several sections (for example status in 1.4.3, method in 4.2) appears in the `owns:` line of each of those files and of no other |
 
 ## Evidence kinds
 
@@ -52,28 +53,110 @@ Each claim is one of these. Say which in the sentence.
 | Verified on dev | "On 23 October on dev, …" | Link to the record (day log, PR body, recording, acceptance doc) |
 | Verified on the SWE5001 environment | "On the SWE5001 ECS environment (not the SWE5006 dev host), …" | Only as context; never as a SWE5006 result |
 | Verified locally | "Tested locally (Testcontainers), not on dev: …" | Link to the local record |
+| Verified in CI | "Tested in CI against PostgreSQL, with substitute provider calls: …" | Name the run, job and tested commit in the appendix; state whether a fault was simulated rather than exercised on a deployed process |
 | Calculated or estimated | "Calculated: …", "Agreed estimate: …" | Show the formula or the source |
 | Designed, not built | "Designed but not implemented: …" | Point to the design artefact |
 
 ## Claims that are easy to get wrong
 
-Settled in PLAN; re-check at the freeze SHA.
+Settled in PLAN; re-check at the freeze SHA. The correct statement governs wherever a topic is mentioned; the full statement appears only at its home, the Canonical homes row named in the last column.
 
-| Topic | Correct statement | Source |
-| --- | --- | --- |
-| Systems | SWE5006 system = `dev`, a modular monolith on one EC2 host behind CloudFront. Production is the shared SWE5001 release (ruleset prod-release, code-owner-approved promotion PR); no separate SWE5006 prod stack was built (#226) | backend ADR 0008; presentation R 4.4 |
-| Expiry | The design bound is one sweep interval plus sweep time, not a one-minute guarantee. Local worst lag 58.18 s over 30 teams; one dev bloc closed 18.9 s after its deadline and was refunded 40.6 s after (23 Oct). Do not claim the target met on dev | PR #671; `docs/perf/sprint3-baseline.md`; PR #664 |
-| Performance | Met locally (30 Sep) and on SWE5001 ECS (16 Oct); never measured on SWE5006 dev (NFR-15) | `docs/quality/nfr-register.md` |
-| Scalability | Not a PROP target; not claimed | presentation decision 8 |
-| Notifications | Coded, off on SWE5006 dev (ADR 0007); SWE5001 scope, no §3.4 models | PLAN D4 |
-| Test counts | One recount at the freeze SHA: static counts from `git ls-tree`, executed counts from the build-quality CI log of the same SHA. Never Sonar's `tests` figure | PLAN D6 |
-| Required checks | The live ruleset's 6: `build-quality`, `SonarCloud Backend`, `docker`, `gitleaks`, `frontend-check`, `SonarCloud Frontend`; `contract-check` is required by policy only | PLAN D7; `CONTRIBUTING.md` |
-| Counts | 17 ArchUnit rules; Flyway V1–V28 (28 SQL files plus one `.conf`); sprint dates from `docs/agile/definition-of-done.md`; sprint tags by tagger date | PLAN part 3 data conflicts |
-| Effort | No hours were logged. The only actuals are the person-day split agreed on 19 Oct (Liu Jin 12.5, Pan 11.5, Yorik 9, Lim 8.5, Eric 8.5), shown as an agreed estimate beside planned hours. No PR or commit counts per member | PLAN D12 |
-| Static credentials | CI authenticates to AWS through GitHub OIDC; disclose the one accepted IAM user access key in the AWS account governance README | presentation R 4.2 |
-| Lock order | ADR 0001 (deal → intent → payment) and ADR 0002 (team → intent → order → payment) are not yet reconciled; state the reconciled order or the open issue (#663) | PLAN #677 3.2.8 |
-| Programme name | "Practice Module for Certificate in Designing Modern Software Systems" (template line), not the deck's "Graduate Certificate…" | PLAN part 3 |
-| Proposal exclusions | PROP §6.2 excludes notifications "beyond in-app status"; do not write that it excluded in-app notifications | PLAN D4 |
+| Topic | Correct statement | Source | Home |
+| --- | --- | --- | --- |
+| Systems | SWE5006 system = `dev`, a modular monolith on one EC2 host behind CloudFront. Production is the shared SWE5001 release (ruleset prod-release, code-owner-approved promotion PR); no separate SWE5006 prod stack was built (#226) | backend ADR 0008; presentation R 4.4 | R49, R04, R19 |
+| Expiry | The design bound is one sweep interval plus sweep time, not a one-minute guarantee. Local worst lag 58.18 s over 30 teams; one dev bloc closed 18.9 s after its deadline and was refunded 40.6 s after (23 Oct). Do not claim the target met on dev | PR #671; `docs/perf/sprint3-baseline.md`; PR #664 | R05, R01 |
+| Performance | Met locally (30 Sep) and on SWE5001 ECS (16 Oct); never measured on SWE5006 dev (NFR-15) | `docs/quality/nfr-register.md` | R06 |
+| Scalability | Not a PROP target; not claimed | presentation decision 8 | R40 |
+| Notifications | Coded, off on SWE5006 dev (ADR 0007); SWE5001 scope, no §3.4 models | PLAN D4 | R03 |
+| Test counts | One recount at the freeze SHA: static counts from `git ls-tree`, executed counts from the `SonarCloud Backend` CI log of the push to `dev` (`build-quality` runs on a push only for `v*` tags). Never Sonar's `tests` figure | PLAN D6 | R41 |
+| Required checks | The live ruleset's 6: `build-quality`, `SonarCloud Backend`, `docker`, `gitleaks`, `frontend-check`, `SonarCloud Frontend`; `contract-check` is required by policy only | PLAN D7; `CONTRIBUTING.md` | R42 |
+| Counts | 17 ArchUnit rules; Flyway V1–V28 (28 SQL files plus one `.conf`); sprint dates from `docs/agile/definition-of-done.md`; sprint tags by tagger date | PLAN part 3 data conflicts | R43, R44, R45 |
+| Effort | No hours were logged. The only actuals are the person-day split agreed on 19 Oct (Liu Jin 12.5, Pan 11.5, Yorik 9, Lim 8.5, Eric 8.5), shown as an agreed estimate beside planned hours. No PR or commit counts per member | PLAN D12 | R46 |
+| Static credentials | CI authenticates to AWS through GitHub OIDC; disclose the one accepted IAM user access key in the AWS account governance README | presentation R 4.2 | R47 |
+| Lock order | ADR 0001 (deal → intent → payment) and ADR 0002 (team → intent → order → payment) are not yet reconciled; state the reconciled order or the open issue (#663) | PLAN #677 3.2.8 | R11 |
+| Programme name | "Practice Module for Certificate in Designing Modern Software Systems" (template line), not the deck's "Graduate Certificate…" | PLAN part 3 | R48 |
+| Proposal exclusions | PROP §6.2 excludes notifications "beyond in-app status"; do not write that it excluded in-app notifications | PLAN D4 | R34 |
+
+## Canonical homes
+
+Source: Team (G13). This registry is the report's memory. Before writing, find your topic here. If your section is the home, state it in full. If not, use the reference form, or say nothing. If the topic has no row, add one in the same pull request before writing about it. Each section file declares the rows it is home to in its `owns:` header line (AGENTS.md).
+
+### How to choose a home
+
+A fact's home is the section whose template or rubric row requires it. When a topic has both a claim and its evidence, it gets two homes: one holds the claim or status, the other the evidence. Neither repeats the other, and the row names both. These homes are fixed:
+
+- **BlocBuy glossary** (team and bloc, listing, pay first, Sandbox): 1.1. Every other definition is deleted.
+- **Shared modelling conventions** (analysis models use «boundary», «control» and «entity» only; a `critical` fragment marks the transaction boundary; the strategy tag legend; how provider and actor lifelines are drawn): 3.4.0. No 3.4.N restates them.
+- **Delivery status per use case**: Table 1.3. **Evidence of dev runs, timings and incidents**: Appendix E.
+- **Authorship and code credits**: chapter 5. A 3.4.N or 3.5.N states what its owner identified, analysed and decided, then "(code credits: chapter 5)".
+- **Design detail** (HTTP codes, error constants, locks, transactions, batch sizes, rate limits, storage keys): 3.2.N or 3.4.N. A 3.3.N use case describes behaviour in the actors' terms and carries no dev evidence or authorship.
+- **SWE5001 topology**: 1.4, as one paragraph. Everywhere else, one clause plus a reference.
+
+### Registry
+
+IDs R01–R39 come from a whole-report read of the 27 Oct draft that found each of these told 2 to 18 times; R40–R49 add the "easy to get wrong" facts that had no row, and R50 is the home of the freeze SHA (G8). Section, table and figure numbers are those of the report after the integration pass of 28 Oct; when renumbering moves them, update this table in the same change. "Allowed extra mentions" are the only places besides the home where the topic may appear, each in the reference form unless the row says otherwise.
+
+| ID | Argument or fact | Home | Home owner | Reference form used elsewhere | Allowed extra mentions |
+| --- | --- | --- | --- | --- | --- |
+| R01 | On 23 Oct on dev a paid START expired 18.9 s after its deadline and was refunded 40.6 s after it; one run, not a bound | Status: Table 1.3 (UC5 and UC6 rows). Times and evidence: Table E.3 | Lim (Table 1.3); Pan, Yorik (Table E.3) | "shown on dev on 23 October (Table E.3)" | Table 1.3 status cell, without seconds (1.4.1 asks for status on dev); Table 2.8 milestone row, date only (2.3 asks for achieved dates) |
+| R02 | On 24 Oct a second buyer's paid JOIN filled a two-seat team on dev, shown in a recording, not a database or log read | Status: Table 1.3 (UC4 row). Evidence: Appendix E | Lim (Table 1.3); Pan, Yorik (Appendix E) | "shown on dev on 24 October in a recording (Appendix E)" | Table 1.3 status cell; Table 2.5 delivered cell (2.2 asks promised against delivered); Table 2.8 milestone row, date only |
+| R03 | Notifications (outbox writer, relay, SNS and SQS transports) are coded but switched off on SWE5006 dev (ADR 0007), so they are SWE5001 scope | 1.4 | Lim | "(off on dev, section 1.4)" | Table 1.3 status cell; Table 2.5 row; 3.3.12 and 3.5.3 one sentence each, because their content depends on it; Table C.1 SWE5001-owner column; Table 3.22 outbox-writer row in 3.5.2; Appendix B.1, the ADR 0007 note |
+| R04 | No separate SWE5006 production stack was built: the reviewed plan of 21 resources was never applied and the story closed on 11 Oct; production is the shared SWE5001 release | Fact: 1.4. Pipeline consequence (environments): 4.3 | Lim (1.4); Pan (4.3) | "(no SWE5006 production stack, section 1.4)" | Table 1.4 dropped-item row (1.4.2 asks for it); Table 2.5 dropped row (2.2 asks for it); Table E.1 known-limit row |
+| R05 | Expiry within one minute is a design bound (one sweep interval plus sweep time), not a guarantee; local worst lag 58.18 s over 30 teams | Claim, status and the 58.18 s figure: 1.4.3 (Table 1.5). Why the bound follows from the sweep: 3.2.7 | Lim (1.4.3); Yorik (3.2.7) | "the expiry design bound (section 1.4.3)" | Table 3.5 strategy row, the concern only, no figures; Table E.1 row cites 1.4.3 |
+| R06 | Performance was never measured on SWE5006 dev; p95 met locally (30 Sep) and on SWE5001 ECS (16 Oct, k6, p95 23–53 ms) | Status: 1.4.3 (Table 1.5). Method (tool, scenario, gates): 4.2. Numbers: Table E.4 | Lim (1.4.3); Pan (4.2); Pan, Yorik (Table E.4) | "(performance status, section 1.4.3; results in Table E.4)" | Table 2.6 outstanding-issue row (2.2 asks for outstanding issues), reference form |
+| R07 | Dev host gaps: SSH port 22 open on 21 and 24 Oct and closed on 27 Oct, root EBS volume unencrypted, one IAM access key, rollback never run | Open issues with owners: Table 2.6. Rollback as configured and as exercised: 4.3 | Lim (Table 2.6); Pan (4.3) | "(open issues in Table 2.6)" | Table 1.5 security status cell; Table E.1 rows cite Table 2.6; Table 2.5 secrets row and Table B.4 static-credentials row, for the key only; 3.1 and 4.3 keep the one-host design limit without the SSH and EBS dates |
+| R08 | Glossary: a team is shown to buyers as a bloc; listing; pay first; Stripe Sandbox is test mode with no real money | 1.1 | Lim | none, or "(team, section 1.1)" at first use in a chapter | none |
+| R09 | Simulated refund-worker recovery was tested locally on 3 Oct and in CI on 25 Oct against PostgreSQL with substitute Stripe calls; no process-crash drill was run on dev. Ignored `refund.*` events do not prove refund-webhook replay protection | Status: Table 1.3 (UC6 row). Evidence and its limits: 3.4.2 D; source records in Table E.5 | Lim (Table 1.3); Yorik (3.4.2) | "(not shown on dev; Table 1.3)" | Table 2.5 delivered cell. D18 settled on 28 Oct |
+| R10 | Listener phases: consequences of the same fact run BEFORE_COMMIT and roll back together; derived effects run AFTER_COMMIT and cannot undo the fact | 3.2.9 | Yorik | "(listener phases, section 3.2.9)" | 3.5.2 motivation, one sentence on who chooses the phase (the Observer angle) |
+| R11 | Lock order: one combined order per path; ADR 0001 (deal → intent → payment) and ADR 0002 (team → intent → order → payment) are not yet reconciled into one written order | 3.2.8 (Table 3.12) | Eric | "locks in the order of Table 3.12 (section 3.2.8)" | Table 2.6 open-issue row. The product row's position: D17 |
+| R12 | Production on ECS was first deployed on 6 Oct as one service and promoted as three services on 17, 19 and 20 Oct | 2.3 (Table 2.8) | Lim | "(promoted to production, section 2.3)" | Table 2.9 step cell, without dates |
+| R13 | Optimistic Offline Lock on listings: the version is checked after a short row lock, plus a guarded `WHERE version =` update; a stale save gets 412 | 3.5.5 | Liu Jin | "(Optimistic Offline Lock, section 3.5.5)" | 3.6, the column's meaning only. Which tables compare a version: D19 |
+| R14 | Twenty buyers race for one last seat in a Testcontainers test: one wins, nineteen refund obligations persist; run locally and in CI, not shown on dev | Mechanism: 3.2.8. Test: Table 4.12 | Eric (3.2.8); Pan (Table 4.12) | "(run locally and in CI: Table 4.12)" | Table 1.5 status cell |
+| R15 | Guarded update: the team row is written only `WHERE current_size AND status` match, so a race loser changes zero rows; the team `version` is incremented but never compared | 3.2.8 | Eric | "(guarded update, section 3.2.8)" | 3.6, the column's meaning only |
+| R16 | Single dev host: a deploy restarts the only API container and the database shares the host | Design consequence (CD finding): 4.3. The 502s of 26 Sep and 3–4 Oct: Table E.1 | Pan (4.3); Pan, Yorik (Table E.1) | "(single host, section 4.3)" | 3.1 "one host", without the incident |
+| R17 | `DealStatus` declares FAILED and CANCELED but no code writes them; a team ends only SUCCEEDED or EXPIRED | 3.4.5, team statechart (Figure 3.112) | Liu Jin | "(declared but never written, Figure 3.112)" | 1.4, one line under "architected but not implemented" (1.4 asks for that list) |
+| R18 | Why not State for the team: one move from OPEN, so the transition table `DealStatus.canTransitionTo` suffices; State is used for listings instead | 3.5.5 motivation | Liu Jin | "(reasoning in section 3.5.5)" | Table 2.5 and Table B.4 rows, reference form only; 3.4.5 C "a transition table, not State (section 3.5.5)" |
+| R19 | SWE5001 topology: the same code runs on ECS as identity-svc, commerce-svc and notification-svc, split by transactional consistency | 1.4, one paragraph | Lim | "(SWE5001 topology, section 1.4)" | 1.1 one clause, "two courses, one repository" (1.1 asks which system the report describes) |
+| R20 | The dev webhook endpoint used an older Stripe API version, so three paid sessions were stranded; the operator recovered each with one refund | Appendix E | Pan, Yorik | "(the 23 Oct webhook fault, Appendix E)" | 3.3.11 flow 6b keeps the generic exceptional flow, without the incident |
+| R21 | A `critical` fragment marks a database transaction, because UML has no transaction fragment | 3.4.0 | Lim | "(transaction drawn as a critical region, section 3.4.0)" | none |
+| R22 | Refund retry rules: 23 h idempotency cut-off, then search only; `finish` fenced by version after an expired lease; fixed 30 s delay | 3.2.5 | Yorik | "(retry rules in section 3.2.5)" | 3.3.7, the exceptional flow in buyer terms; 3.2.8, the lease only |
+| R23 | Who wrote each member's pattern and use-case code | Chapter 5 (Table 5.1) | Lim | "(code credits: chapter 5)" | none |
+| R24 | Analysis models use only «boundary», «control» and «entity»; actors talk only to boundaries; no platform types | 3.4.0 | Lim | none | none |
+| R25 | Transactional outbox: the event row is written in the business commit and a scheduled relay publishes it later, at least once | 3.2.9 | Yorik | "through a transactional outbox (section 3.2.9)" | 3.3.12, the flow in actor terms |
+| R26 | The proposal's JWT and JPA were replaced by a Sa-Token server session and MyBatis, without an ADR | Change: Table 2.5. Reasons: Table B.4 | Lim (Table 2.5); Liu Jin, Lim (Table B.4) | "(changes from the proposal: Table 2.5)" | 3.2.6 keeps the cookie design, without the history |
+| R27 | OWASP ZAP before and after: the 2 Medium and 4 Low header findings of 22 and 26 Oct were fixed on 27 Oct; 6 Informational remain | 4.2 (Table 4.10) | Pan | "(fixed; Table 4.10)" | Table 2.6 row and Table 2.7 remark row, without run IDs; Table E.1 row points to 4.2 |
+| R28 | `RefundService.reconcile` exists and is unit-tested, but no endpoint, command or job exposes it | 3.4.2 D | Yorik | "(not exposed; section 3.4.2)" | Table 3.15 row, "not exposed (see D)" |
+| R29 | Expiry sweep: lease, up to 100 due teams oldest first, one transaction per team, database clock read under the lock, failure deferred 5 min | 3.2.7 | Yorik | "(sweep design in section 3.2.7)" | 3.3.6, the flow in business terms without lease, batch size or clock |
+| R30 | Unique indexes are the last line of defence behind the row locks | 3.6 (index list) | Liu Jin | "(index list in section 3.6)" | 3.2.8, one sentence |
+| R31 | ShareCreditSubscriber runs after commit in its own REQUIRES_NEW transaction and swallows failures, so a credit problem never undoes a paid admission | 3.5.2 | Yorik | "an after-commit Observer (section 3.5.2)" | Table 3.18 row, reference form |
+| R32 | Done-ladder reading: integrated is merged with checks green; releasable is shown on dev; released is promoted to the shared SWE5001 production | 2.1 | Lim | "(the team's reading, section 2.1)" | none |
+| R33 | Dev request path: CloudFront → private S3, or ALB (CloudFront range and origin header only) → EC2 with PostgreSQL and Redis on loopback | 3.1 (Figure 3.3) | Liu Jin | "(request path in section 3.1)" | 4.3 keeps only CD-specific facts (instance role, secrets file, logs) |
+| R34 | The proposal's seven out-of-scope capabilities, verbatim; §6.2 excludes notifications "beyond in-app status", not in-app notifications | 1.4.2 | Lim | "the seven exclusions of section 1.4.2" | 3.3.1, the out-of-scope package of the diagram (3.3.1 asks for it) |
+| R35 | Actors: buyer, admin, the Scheduler (time), Stripe and Google as secondary actors; no merchant actor | 3.3.1 | Lim | "(actors, section 3.3.1)" | Table 1.1, the stakeholder interest column only |
+| R36 | Board snapshot of 26 Oct: 219 repository issues, 218 board items (159 Done, 38 Backlog, 14 Ready, 7 In progress) and one issue without a board card | A.1 | Pan | "(board snapshot, Appendix A.1)" | none. D21 settled on 29 Oct |
+| R37 | Code ownership: Pan for CI, Liu Jin for the backend, Lim for the frontend, Yorik and Eric on the payment and group-buy packages | 4.1 (Table 4.4) | Pan | "code owners review each area (Table 4.4)" | none |
+| R38 | SonarCloud coverage: backend 100.0 % overall and 99.97 % on new code; frontend 99.3 % and 99.20 % | Table D.3 | Liu Jin, Pan | "(coverage: Table D.3)" | 4.2 states the gate result without the percentages |
+| R39 | The strategy tag legend for design class diagrams (Lang 3.2.1, Pres 3.2.2, …) | 3.4.0 | Lim | none | none |
+| R40 | Scalability is not a proposal target and is not claimed | 1.4.3 | Lim | none; say nothing | none |
+| R41 | Test counts: one recount at the freeze SHA; static counts from `git ls-tree`, executed counts from the `SonarCloud Backend` CI log of the push to `dev`; never Sonar's `tests` figure | Static, by quadrant and level: Table 4.11. Executed: Table D.2 | Pan, testing from Liu Jin (Table 4.11); Liu Jin, Pan (Table D.2) | "(test counts: Table 4.11)" | Table D.1, the per-module breakdown, whose totals equal Table 4.11 |
+| R42 | Required checks: the live ruleset's six; `contract-check` is required by policy only | 4.1 (Table 4.2) | Pan | "(the six required checks, Table 4.2)" | Table 4.8 "Required" column; Table B.4 required-checks row |
+| R43 | 17 ArchUnit rules | 3.1 (Table 3.2) | Liu Jin | "(Table 3.2)" | none |
+| R44 | Flyway V1–V28: 28 SQL files plus one `.conf` | 3.6 | Liu Jin | "(migrations, section 3.6)" | Table 4.6 artefact row (4.1 asks for artefacts) |
+| R45 | Sprint dates come from `docs/agile/definition-of-done.md`; sprint tags are dated by tagger date | Sprint dates: Table 2.1. Tags: Table 4.3 | Lim (Table 2.1); Pan (Table 4.3) | "(sprint dates, Table 2.1)" | Table 1.2 phase names; Table A.4 (Appendix A artefact) |
+| R46 | Effort: no hours were logged; the only actuals are the person-day split agreed on 19 Oct, shown as an agreed estimate beside planned hours | 2.3 (Table 2.11) | Lim | "(effort, Table 2.11)" | none |
+| R47 | CI authenticates to AWS through GitHub OIDC; the one accepted IAM user access key is disclosed | 4.1 (Table 4.5) | Pan | "(CI authentication, section 4.1)" | Table 2.6 open-issue row for the key (R07); Table 2.5 secrets row; Table B.4 static-credentials row; Table E.1 access-key row |
+| R48 | Programme name: "Practice Module for Certificate in Designing Modern Software Systems" | Title page (front matter) | Lim | the name verbatim | none |
+| R49 | The report describes the SWE5006 system: `dev`, a modular monolith on one EC2 host behind CloudFront | 1.1 | Lim | "(the SWE5006 system, section 1.1)" | 3.1, its opening clause |
+| R50 | Every count, version, coverage figure and status is read at one freeze commit of `dev` (G7), named once | 1.1, the status paragraph | Lim | "at the freeze commit (section 1.1)", or nothing | Appendix tables that list a run or commit read at it |
+| R51 | No Product Owner was appointed; the team prioritised the backlog together at each Sprint Planning | 1.3 | Lim | "(no Product Owner, section 1.3)" | none |
+| R52 | Backend Maven modules: each module's layer, what it holds and its allowed dependencies | 3.1 (Table 3.1) | Liu Jin | "(modules, Table 3.1)" | Table 3.8 in 3.2.1, the package pattern per module only |
+| R53 | The Checkout payment page expires after 31 minutes and never later than the intent or the team's deadline | 3.4.1 D | Eric | "(Checkout page lifetime, section 3.4.1)" | none |
+| R54 | The error constants of the use cases' refusals: `PRODUCT_NOT_STARTABLE`, `TEAM_PRICE_UNAVAILABLE`, `TEAM_PRICE_QUOTE_EXPIRED`, `ALREADY_MEMBER`, `PAYMENT_WEBHOOK_SIGNATURE_INVALID` (UC3, UC4, Pay upfront); `OAUTH_PROVIDER_ERROR`, `OAUTH_TOKEN_INVALID`, `UNAUTHENTICATED`, `FORBIDDEN` (UC2); `ORDER_NOT_FOUND` (UC8); `PRODUCT_NUMBER_CONFLICT` (UC9) | The design text of the matching 3.4.N: 3.4.1 D, 3.4.3 D, 3.4.4 D, 3.4.5 C | Eric (3.4.1); Pan (3.4.3); Lim (3.4.4); Liu Jin (3.4.5) | none; a 3.3.N use case describes the refusal in the actors' terms | none |
+| R55 | UC1 search bounds: the wildcard characters `%`, `_` and `\` in a keyword are matched literally; a page size above 100 or an out-of-range page is rejected with a validation error | 3.4.3 D (UC1-1) | Pan | none | none |
+| R56 | Statechart notation: a transition reads trigger [guard] / effect; a transition that leaves the state unchanged is an internal transition inside the state box | 3.4.0 | Lim | "(notation of section 3.4.0)" | none |
+| R57 | Workflow run totals since 24 August 2026 (success, failure, cancelled per workflow), read on 27 October 2026 at 05:23 UTC | 4.2 (Table 4.13) | Pan | "(run totals: Table 4.13)" | Table D.5, the calculated success rate only, without the counts |
+| R58 | Backend deploy jobs on dev before and after the hand-built environment was corrected: 22 of 47 succeeded from 5 to 17 September 2026, 103 of 103 from 18 September to 22 October | Appendix D (Table D.7) | Liu Jin, Pan | "(Table D.7)" | 4.3 deployment verification evidence and CD findings, without the counts |
+| R59 | Notification delivery test `NotificationConsumerElasticMqIT`: an event delivered three times creates one notification per recipient; a malformed event reaches the dead-letter queue after five receives; run locally and in CI against ElasticMQ, not on dev | 4.2 (Table 4.12) | Pan | "(Table 4.12)" | none |
 
 ## Section requirements
 
@@ -109,7 +192,7 @@ Owner and plan issue per row; the plan issue holds the bullets and sources to hy
 | 3.2.N | Per strategy: analysis object types affected, use case types affected, typical class-diagram changes with rationale, typical sequence-diagram changes with rationale; enough for a newly joined designer | TPL 3.2.1 | Nine strategies: 1 language and framework, 2 presentation, 3 distribution, 4 persistence, 5 external interface, 6 security, 7 scheduling, 8 concurrency, 9 domain events. Each has the four parts, a separate "Rationale:" line for static and for dynamic, and a before/after class and sequence figure. Yorik's refund-recovery mechanisms (Idempotency Key, Retry, operator review) live in 3.2.5 (PLAN D1) |
 | 3.3.1 | Use case diagram with in-scope **and** out-of-scope use cases | TPL 3.3.1 | Owner Lim. `use-case.svg`: actors including Stripe, Google and the Scheduler, «include»/«extend» where they apply, out-of-scope package visible, delivery badges re-checked at freeze |
 | 3.3.N | Per in-scope use case: flow of events with normal and relevant exceptional flows, detailed enough to identify analysis objects | TPL 3.3.2 | 3.3.2 UC1 Pan · 3.3.3 UC2 Pan · 3.3.4 UC3 Eric · 3.3.5 UC4 Eric · 3.3.6 UC5 Liu Jin · 3.3.7 UC6 Yorik · 3.3.8 UC7 Lim · 3.3.9 UC8 Lim · 3.3.10 UC9 Liu Jin · 3.3.11 Pay upfront («include», Eric, Yorik reviews) · 3.3.12 Receive notifications (Pan, SWE5001 scope). One shape for all: actors, preconditions, trigger, normal flow (numbered), exceptional flows (numbered against the normal step), postconditions |
-| 3.4.N | Per member: analysis class diagram; analysis sequence diagram per major flow; design class diagram; design sequence diagram per major flow; design complies with the transition strategies | TPL 3.4.1 | Owners per G3 (#678). Each 3.4.N has the five parts A–E in the 3.4 checklist below. "For each use case in the scope" (TPL): either the full set for every in-scope use case the member owns, or the primary set plus a stated gap; record which (PLAN D3 risk). Statecharts: team, Order and checkout payment in 3.4.1; refund obligation in 3.4.2; listing in 3.5.5 (PLAN D9; resolve the deck's 3.4.5 note before freeze) |
+| 3.4.N | Per member: analysis class diagram; analysis sequence diagram per major flow; design class diagram; design sequence diagram per major flow; design complies with the transition strategies | TPL 3.4.1 | Owners per G3 (#678). Each 3.4.N has the five parts A–E in the 3.4 checklist below. "For each use case in the scope" (TPL): either the full set for every in-scope use case the member owns, or the primary set plus a stated gap; record which (PLAN D3 risk). Statecharts: Order and checkout payment in 3.4.1; refund obligation in 3.4.2; the team statechart sits in 3.4.5 (D9); listing in 3.5.5 |
 | 3.5.N | Per member: design problem with class and sequence diagrams (brute force if needed); candidate patterns; motivation for the choice; solution class diagram; solution sequence diagram(s); implementation decisions; implementation follows the solution | TPL 3.5.1 | Owners and patterns: 3.5.1 Factory Method (Eric), 3.5.2 Observer (Yorik), 3.5.3 Template Method (Pan), 3.5.4 Strategy (Lim), 3.5.5 State with Optimistic Offline Lock (Liu Jin) (PLAN D1, #679). Each has the parts in the 3.5 checklist below |
 | 3.6 | Diagrams of the database schema(s) | TPL 3.6 | Owner Liu Jin. Core ERD in the text (`core-erd.svg`) with keys, cardinality and mapping decisions (UUIDv7 keys, table prefixes, no foreign keys or CHECK constraints by team convention, soft delete, optimistic version column); full ERD and table list in Appendix C |
 
@@ -163,14 +246,36 @@ BRF slide 6 asks for crisp, readable diagrams; the thresholds below are team rul
 | F6 | Every class, method, table and event name on a design diagram exists in the code at the freeze SHA |
 | F7 | Editable source in the repository: a Mermaid fence in the section, an SVG/PNG under `figures/` with its source beside it, or the deck path it is reused from |
 | F8 | Sequence diagrams: lifelines `object : Class`, synchronous and asynchronous messages distinct, `alt`/`opt`/`loop` fragments, transaction boundary marked where it matters |
+| F9 | A diagram is drawn once (Source: Team). A second figure over the same participants or classes is allowed only if it shows a different viewpoint or only what changed, and its caption names the figure it extends ("…; the expiry itself is Figure 3.111"). A strategy figure in 3.2.N shows the transformation on a minimal excerpt, not a full use case. A 3.5.N solution figure shows only the pattern's collaboration. An image path is used by one figure only. The Canonical figures registry below says which figure is kept for each flow drawn more than once |
+
+## Canonical figures
+
+Source: Team. One row per flow that the 27 Oct draft drew more than once. The kept figure is the flow's only full drawing; every other figure in the row takes the role given, or is deleted and its place in the text cites the kept figure. Figure numbers are those of the report after the integration pass of 28 Oct; a figure deleted in that pass is named by its content and its number before the pass, "(former N), deleted"; when renumbering moves them, update this table in the same change. Roles: **cite only** (delete the figure, keep a sentence that cites the kept one), **delta** (redraw it to show only what it adds, caption names the kept figure), **excerpt** (a minimal pattern or strategy fragment, caption names the kept figure), **keep** (a different viewpoint, unchanged).
+
+| ID | Flow | Kept figure and its section | Other figures and their allowed role | Owners involved |
+| --- | --- | --- | --- | --- |
+| FG01 | Team expiry, design sequence | Figure 3.111, UC5 D6 deadline passes (3.4.5) | 3.54 (3.4.2): delta, from the refund-obligation write onward. 3.26 (3.2.7): excerpt, the lease and batch mechanics only. 3.33 (3.2.9): excerpt, the listener phases only. 3.118 (3.5.2): keep as the brute-force before design, caption cites 3.111. 3.121 (3.5.2): excerpt, the Observer collaboration only; 3.33 and 3.121 draw the same subscriber calls, so one cites the other | Liu Jin, Yorik |
+| FG02 | Team expiry, analysis sequence | Figure 3.102, UC5 B6 deadline passes (3.4.5) | the UC6 flow 1 analysis sequence of 3.4.2 (former 3.52), deleted: cite only; the per-order and per-payment loops are stated in the text. 3.24 (3.2.7): keep as the three-box before fragment | Liu Jin, Yorik |
+| FG03 | Expiry objects, analysis and design class | Figures 3.96, UC5 analysis class, and 3.105, UC5 design class (3.4.5) | 3.49 and 3.52 (3.4.2): delta, the refund side only (RefundControl, the refund worker), with ResolveTeamControl or GroupDealExpiryService as one reference box | Liu Jin, Yorik |
+| FG04 | Refund attempt | Figure 3.55, design sequence (3.4.2) | the refund-attempt design sequence of 3.2.5 (former 3.21), deleted: cite only, or excerpt of the idempotency key, the retry `alt` and operator review | Yorik |
+| FG05 | Webhook settlement | Figure 3.44, settlement shared by UC3 and UC4 (3.4.1) | 3.20 (3.2.5): excerpt, the provider boundary only (verify and re-read outside the transaction). 3.31 (3.2.8): excerpt, the transaction boundary and listener phases only, caption cites 3.44 | Eric, Yorik |
+| FG06 | Paid join admission (last seat) | Figure 3.46 (3.4.1) | 3.110 (3.4.5): delta, starting at `TeamSucceeded`, caption cites 3.46 | Eric, Liu Jin |
+| FG07 | Publish a listing | Figure 3.106, UC9 D1 publish (3.4.5) | 3.137 (3.5.5): excerpt, the state dispatch only (`changeStatus` → `Product.publish` → `ProductStatus.publish`), caption cites 3.106 | Liu Jin |
+| FG08 | Stale-version save | Figure 3.138, version check (3.5.5) | 3.107 (3.4.5): delta, the banner, reload and retry steps, caption cites 3.138 for the version check | Liu Jin |
+| FG09 | Pricing browse | Figure 3.70, UC1 design sequence (3.4.3) | 3.131 (3.5.4): excerpt, the Strategy collaboration only (the resolver and its strategy), caption cites 3.70 | Pan, Lim |
+| FG10 | Cross-module ports | Figure 3.12, settlement seams (3.2.3) | 3.2 (3.1): keep, the architecture-wide port sample. 3.41 (3.4.1): delta, the purchase-intent side only | Eric, Liu Jin |
+| FG11 | Observer participants | Figures 3.117 to 3.120 (3.5.2) | the 3.2.9 analysis class diagram before the strategy (former 3.33), deleted: cite only, it is the analysis view of 3.117's expiry half. 3.32 (3.2.9): keep as the strategy excerpt that adds the `TeamExpired` record, the outbox writer and the cache subscriber, or fold those three into 3.120 and cite it | Yorik |
+| FG12 | State classes of a listing | Figure 3.135, State solution class (3.5.5) | 3.104 (3.4.5): delta, ProductStatus as one box without its operations, caption cites 3.135 | Liu Jin |
 
 ## Remarks register
 
-Filled from the REM issue (G10). One row per lecturer remark.
+Filled from the three remark issues recorded under #463 (D15): #693, #694 and #695. The remarks were given orally on 26 Oct and no transcript is kept, so each row quotes the issue's record of the remark.
 
-| # | Remark (verbatim) | Section | Action | Status |
+| # | Remark (as recorded) | Section | Action | Status |
 | --- | --- | --- | --- | --- |
-| REM-01 | {{FILL: remarks issue not yet created (presentation G9)}} | | | |
+| REM-01 | Send the URL of the team's GitHub repository (#693) | Title page; 2.2 (Table 2.7) | Pan grants the lecturer Read access (D13) and emails the URL with all members in CC; the title page shows the URL | Closed by 30 October (Table 2.7) |
+| REM-02 | Show the OWASP ZAP scan results before and after remediation (#694) | 4.2 (Table 4.10); 2.2 (Table 2.7) | The before scans (22 and 26 Oct) and the after scan (27 Oct) are set side by side, finding by finding | Answered in 4.2; #694 stays open until its boxes are ticked |
+| REM-03 | Submit the report by 31 October 2026, 23:59 (#695) | 2.2 (Table 2.7) | Schedule: first draft 27 Oct, vetting 28–29 Oct, content freeze 30 Oct, submission by 31 Oct | Open until submission |
 
 ## Checklist and open decisions
 
@@ -183,19 +288,34 @@ By the 30 Oct freeze every box is ticked and every decision settled.
 - [ ] Every analysis object type is covered by some 3.2.N
 - [ ] Every REM row resolved (G10)
 - [ ] Freeze SHA recorded and every number re-read at it (G7)
-- [ ] Every figure passes F1–F8
+- [ ] Every figure passes F1–F9
 - [ ] Each member vetted their own sections and reviewed the rest (#695)
 - [ ] Assembled into the template; contents, figure numbers and cross-references updated; page count checked
+- [ ] Every Canonical homes row's full statement exists only at its home (G13)
+- [ ] Every other mention uses the row's reference form or is removed
+- [ ] Every Canonical figures row (FG01–FG12) is applied
+- [ ] F9 passes: no flow drawn in full twice, no image path used by two figures
+- [ ] G13 and the G8 voice rule checked by one whole-report read of the compiled PDF (AGENTS.md workflow)
 - [ ] Submitted by 31 Oct 23:59; submitter and time posted on #695
 
 Decisions (numbers follow PLAN part 3; settled ones are folded into the rows above):
 
-- **D6** Test recount at the freeze SHA. Owner Liu Jin.
+- **D6 — settled 27 Oct.** Test totals come from the CI runs equal to the freeze commit, 40200028697 (backend) and 40294726775 (frontend); Appendix D holds them. At the freeze of 29 Oct (`9f3a9cfe`) the frontend runs became push run 40889522574 and pull-request run 40888144578.
 - **D7** Fix the 11-check and "four checks" statements in the operator guide and pipeline plan. Owner Pan.
-- **D8** Before class and sequence diagrams for 3.5.2, 3.5.3, 3.5.4 by 28 Oct. Owners Yorik, Pan, Lim.
-- **D9** Team statechart: 3.4.1 (PLAN) or 3.4.5 (deck s6 cue). Owner Lim with Eric and Liu Jin.
-- **D11** Who acted as Product Owner. Owner Lim.
-- **D13** Lecturers' code access: read access or `git archive`. Owner Lim (#693).
-- **D14** Authoring pipeline: Markdown in `sections/` compiled with Typst in the template's layout (first draft built this way on 26 Oct at Liu Jin's request), or a final pass in Word. Owner Lim, by 27 Oct.
-- **D15** REM issue created and its remarks mapped to sections. Owner Lim, 27 Oct.
-- **D16** Confirm G8 (issue and PR numbers only in tables and appendices; ADR numbers allowed) and F4 (8 pt minimum); both were proposed with this harness on 26 Oct. Owner Lim.
+- **D8 — settled 29 Oct by Lim.** 3.5.2, 3.5.3 and 3.5.4 each open part 1 with a before class diagram and a before sequence diagram (Figures 3.117–3.118, 3.123–3.124, 3.128–3.129), in the report since the first draft of 27 Oct. 3.5.2 and 3.5.4 show a brute-force design (never committed); 3.5.3 shows the relay as committed on 13 Oct.
+- **D9 — settled 27 Oct by Lim.** The team statechart sits in 3.4.5, as #678 and the deck backup slide place it.
+- **D11 — settled 27 Oct by Lim.** No Product Owner was appointed (R51, home 1.3).
+- **D13 — settled 28 Oct by Lim.** Lecturers get Read access to the repository, added by Pan as the only admin (#693); no `git archive` is submitted. The title page shows the URL; its VERIFY marker stays until access is granted.
+- **D14 — settled 28 Oct by Lim.** Markdown in `sections/` compiled with Typst in the template's layout; no Word pass.
+- **D15 — settled 27 Oct by Lim.** The presentation remarks are recorded under #463 and answered in 2.2 (Table 2.7).
+- **D16 — settled 28 Oct by Lim.** G8 (issue and PR numbers only in tables and appendices; ADR numbers allowed) and F4 (8 pt minimum) are rules; figures that still print below 8 pt are listed for their owners. Read on 30 Oct at `bc4205f5`, counting each frame's own scale and the page's: every UML frame drawn by the build prints at 8 pt or more (137 frames; smallest 8.25 pt, Figure 3.77). Five SVG figures print below it and stay as they are unless split: Figure 3.1 (about 6.0 pt) and Figure 3.3 (about 7.1 pt), Liu Jin; Figure 3.139 (about 6.2 pt), Liu Jin; Figure 3.34 (about 6.9–8.0 pt, landscape, estimated), Lim. Figure 4.1 prints landscape since 29 Oct, at about 9.9–10.4 pt (Pan's measurement of 29 Oct; both landscape figures print 4 % larger since `bc4205f5`).
+
+Conflicting versions of one fact (G13). Two versions cannot both be true, so no section keeps its own variant: the home owner settles each one, the home holds the only wording, and every other section takes the reference form of its Canonical homes row.
+
+- **D17 — settled 28 Oct by Eric.** On the settlement paths the product row comes last, after the receipt; the admin and team-price quotation paths lock it first. Table 3.12 states this per path, and 3.5.4 and 3.5.5 follow it.
+- **D18 — settled 28 Oct by Yorik.** Refund-worker loss after provider acceptance was simulated locally and in CI against PostgreSQL with substitute Stripe calls. CI run 40200028697, `SonarCloud Backend`, on `ad2a73e6` ran all 9 `StripeRolloutAcceptanceIT` tests without failures, errors or skips, including `providerSucceededBeforeWorkerLossRetriesWithOneDurableRefundKey`. No process-crash drill was run on dev; ignored `refund.*` notifications are not proof of refund-webhook replay protection. R09, 3.4.2 D, Table 1.3, Table 2.5 and Table E.5 carry the same evidence boundary.
+- **D19 — settled 28 Oct by Liu Jin.** The Optimistic Offline Lock is on `biz_product` alone. `biz_purchase_intent` and `biz_payment` compare a version on system writes, and `biz_refund` compares its fencing version; `biz_order` has no production caller of its version update and is a change counter. 3.5.5 states the scope, and 3.6 the column's meaning per table.
+- **D20 — settled 28 Oct by Lim.** Table 1.5 holds the performance status and points to 4.2 (test), Table E.4 (results) and 3.2.7 (expiry bound); the 2.2 pointer is dropped.
+- **D21 — settled 29 Oct by Pan.** The remaining item of the 26 Oct snapshot is issue #22, which has no board card (`docs/agile/metrics/README.md`; its project items read empty on 29 Oct), not a card with no status set. A.1 states it; Table E.5 holds the record.
+- **D22 — settled 28 Oct by Lim.** Table 2.9 names rule 8 of the Definition of Done (Table A.10), which does not count a local run; Table A.11 cites Table 2.9.
+- **D23 — settled 28 Oct by Eric.** The last-seat race test ran locally and in CI (run 40200028697, `SonarCloud Backend`), not on dev; 3.2.8, 3.4.1 and Table E.5 state it.

@@ -147,6 +147,8 @@ for (const file of files) {
         words.set(current, 0);
       } else if (level <= 3 && !/\.(unnumbered|appendix)/.test(attrs)) {
         errors.push(`${at} heading "${title}" has no template number (use {.unnumbered} or {.appendix} if intended)`);
+      } else if (/\.appendix/.test(attrs) && !/^Appendix [A-E]: \S/.test(title)) {
+        errors.push(`${at} appendix heading "${title}" must read "Appendix X: Title"`);
       } else if (level === 4 && current) {
         headings.push({ level, number: null, title, at, file, parent: current });
       }
@@ -156,10 +158,13 @@ for (const file of files) {
     for (const m of line.matchAll(MARKER)) markers.push({ at, kind: m[1], note: (m[2] || '').trim() });
     if (CJK.test(line)) errors.push(`${at} non-English text (rubric G5)`);
 
-    for (const m of line.matchAll(/!\[([^\]]*)\]\(([^)\s]+)[^)]*\)/g)) {
-      const [, alt, src] = m;
+    for (const m of line.matchAll(/!\[([^\]]*)\]\(([^)\s]+)[^)]*\)\s*(\{\.logo\})?/g)) {
+      const [, alt, src, logo] = m;
       const fm = alt.match(/^Figure ((?:\d+|[A-E])(?:\.\d+)*): .+\. .+/);
-      if (!fm) errors.push(`${at} figure caption must read "Figure N.M: <viewpoint>. <what to notice>." (rubric F2)`);
+      // {.logo} marks a brand mark, not a figure: it needs alt text but no caption or number.
+      if (logo) {
+        if (!alt.trim()) errors.push(`${at} logo image needs alt text`);
+      } else if (!fm) errors.push(`${at} figure caption must read "Figure N.M: <viewpoint>. <what to notice>." (rubric F2)`);
       else figures.push({ num: fm[1], at, chapter: chapterOf() });
       if (!/^https?:/.test(src) && !existsSync(resolve(sectionsDir, src))) errors.push(`${at} figure file not found: ${src}`);
     }

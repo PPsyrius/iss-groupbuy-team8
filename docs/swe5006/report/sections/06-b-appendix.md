@@ -3,12 +3,13 @@ rubric: B
 owner: Liu Jin, Lim Jiechao
 plan: #681
 sources: backend/docs/adr/README.md; frontend/docs/adr/README.md; backend/docs/design/backend-skeleton-plan.md
+owns: R26
 status: draft
 -->
 
-# Appendix B ADR Index and Decisions Without an ADR {.appendix}
+# Appendix B: ADR Index and Decisions Without an ADR {.appendix}
 
-The team records decisions in three places: 8 backend architecture decision records (ADRs) in `backend/docs/adr/`, 15 frontend ADRs in `frontend/docs/adr/`, and the 20 locked decisions of the backend skeleton plan (`backend/docs/design/backend-skeleton-plan.md`), agreed on 30 August before the first ADR existed. All ADRs use the Nygard format. Backend and frontend numbers are independent, so the report always says "backend ADR 0001" or "frontend ADR 0001". Section B.4 lists the significant decisions that have no ADR. Statuses and dates below were read on 26 October 2026.
+The team records decisions in three places: 8 backend architecture decision records (ADRs) in `backend/docs/adr/`, 16 frontend ADRs in `frontend/docs/adr/`, and the 20 locked decisions of the backend skeleton plan (`backend/docs/design/backend-skeleton-plan.md`), agreed on 30 August before the first ADR existed. All ADRs use the Nygard format. Backend and frontend numbers are independent, so the report always says "backend ADR 0001" or "frontend ADR 0001". Section B.4 lists the significant decisions that have no ADR. Statuses and dates below were read on 29 October 2026.
 
 #### B.1 Backend ADRs
 
@@ -17,7 +18,7 @@ Table B.1: Backend ADRs.
 | # | Decision | Status | Date |
 | --- | --- | --- | --- |
 | 0001 | Purchase intent lives in the order context; team terms live on the product | Accepted | 22 Sep 2026 |
-| 0002 | A team's resolution is published as an event, and its consequences run before the commit | Accepted | 22 Sep 2026 |
+| 0002 | A team's resolution is published as an event, and its consequences run before the commit | Accepted | 22 Sep 2026; addendum 23 Sep |
 | 0003 | Referral credit is a subscriber that runs after the commit | Accepted | 25 Sep 2026 |
 | 0004 | Retire the unused legacy PaymentIntent path | Accepted | 28 Sep 2026 |
 | 0005 | Gate Stripe Checkout with a deployment property | Accepted | 30 Sep 2026 |
@@ -25,11 +26,13 @@ Table B.1: Backend ADRs.
 | 0007 | Cross-service events go through a transactional outbox, one SNS topic and one SQS queue per consumer | Proposed | 11 Oct 2026 |
 | 0008 | One codebase, two deployment topologies: the monolith on `dev` and three services on ECS | Accepted | 12 Oct 2026 |
 
-Backend ADR 0007 still reads "Proposed". Its text says it becomes Accepted after team agreement at a stand-up, and no such agreement has been recorded in the file. Its implementation is nevertheless merged: the outbox writer, relay and consumer are in the code and are switched on only in the SWE5001 topology; on the SWE5006 `dev` host all three are off. The status is therefore out of date rather than a sign that the design is unbuilt.
+Backend ADR 0007 still reads "Proposed". Its text says it becomes Accepted after team agreement at a stand-up, and no such agreement has been recorded in the file. Its implementation is nevertheless merged: the outbox writer, relay and consumer are in the code (off on dev, section 1.4). The status is therefore out of date rather than a sign that the design is unbuilt.
+
+Backend ADR 0002's addendum of 23 September records the scheduling design for the team-expiry sweep, and its later notes add the refund worker on the same runner. Section 3.2.7 describes the jobs as built (Table 3.11).
 
 #### B.2 Frontend ADRs
 
-Table B.2: Frontend ADRs. All 15 are Accepted; the date is the acceptance date, and later addenda are noted.
+Table B.2: Frontend ADRs. All 16 are Accepted; the date is the acceptance date, and later addenda are noted.
 
 | # | Decision | Date |
 | --- | --- | --- |
@@ -47,13 +50,14 @@ Table B.2: Frontend ADRs. All 15 are Accepted; the date is the acceptance date, 
 | 0012 | Configuration for coding agents | 17 Sep 2026 |
 | 0013 | Package manager and runtime pinning (pnpm, Node) | 17 Sep 2026 |
 | 0014 | Payments through Stripe Hosted Checkout with a server-owned purchase intent | 23 Sep 2026; addendum 24 Sep |
-| 0015 | Admin console: a second shell, a roles guard and versioned writes | 1 Oct 2026 |
+| 0015 | Admin console: second shell, roles guard, pessimistic versioned writes | 1 Oct 2026; addendum 27 Oct |
+| 0016 | Hashed UI styles and progressive cross-origin policies | 27 Oct 2026 |
 
-#### B.3 Locked decisions of the backend skeleton plan
+#### B.3 Backend design decisions of 30 August
 
-The skeleton plan fixed the backend's stack and structure on 30 August, before any ADR was written. Three of its decisions were later superseded in code; the plan itself records this in a note of 11 September.
+The backend design plan (`backend/docs/design/backend-skeleton-plan.md`) fixed the backend's stack and structure on 30 August, before any ADR was written. Three of its decisions were later superseded in code; the plan itself records this in a note of 11 September.
 
-Table B.3: Locked decisions D1–D20 of the backend skeleton plan and their state on 26 October.
+Table B.3: Backend design decisions D1–D20, locked on 30 August, and their state on 29 October.
 
 | # | Decision | State |
 | --- | --- | --- |
@@ -66,7 +70,7 @@ Table B.3: Locked decisions D1–D20 of the backend skeleton plan and their stat
 | D7 | One token domain; RBAC roles and permissions loaded from SQL tables | In force; amended for the SWE5001 topology by backend ADR 0008 |
 | D8 | Database `Blocbuy`, schema `domain` | In force |
 | D9 | Hand-written converters, no MapStruct | In force |
-| D10 | Errors as RFC 9457 ProblemDetail; success as a bare DTO | Superseded by the `Result<T>` envelope (frontend ADR 0009) |
+| D10 | Errors as RFC 9457 ProblemDetail; success as a bare DTO | Superseded by the `Result<T>` envelope (skeleton plan historical note, 11 Sep 2026); the client side is frontend ADR 0009 |
 | D11 | API base path `/api/v1` | In force |
 | D12 | springdoc generates `contracts/openapi.json` | In force |
 | D13 | Checkstyle with Google checks, 120-column lines | In force |
@@ -86,14 +90,14 @@ Table B.4: Significant decisions that have no ADR.
 
 | Decision, choice and reason | Alternative it replaced | Where it is recorded |
 | --- | --- | --- |
-| **Authentication.** A server-side Sa-Token session in Redis, sent as an HttpOnly cookie. A session can be revoked at once, and the token never reaches JavaScript | JWT in browser local storage after Google sign-in (proposal) | Skeleton plan D6, D7; frontend ADR 0002 covers only the cookie and same-origin side |
-| **Persistence framework.** MyBatis with hand-written XML SQL. The design depends on explicit `SELECT … FOR UPDATE`, guarded updates and partial unique indexes, which are easier to see and test in plain SQL | JPA (proposal) | Skeleton plan §1 and §3; section 3.2.4 |
+| **Authentication.** A server-side Sa-Token session in Redis, sent as an HttpOnly cookie. A session can be revoked at once, and the token never reaches JavaScript | JWT in browser local storage after Google sign-in (proposal); Google sign-in itself is unchanged | Skeleton plan D6, D7 (30 August, before the first sprint); frontend ADR 0002 covers only the cookie and same-origin side |
+| **Persistence framework.** MyBatis with hand-written XML SQL. The design depends on explicit `SELECT … FOR UPDATE`, guarded updates and partial unique indexes, which are easier to see and test in plain SQL | Spring Data JPA (proposal); MyBatis sits behind the domain's repository ports | Skeleton plan §1 and §3 (30 August, before the first sprint); section 3.2.4 |
 | **Framework-free domain.** The domain module uses only the JDK and Lombok, enforced by ArchUnit, so domain rules are unit-tested without Spring | Annotated entities in the domain | Skeleton plan §4 and §8; Table 3.2 |
 | **Database conventions.** UUIDv7 keys, table prefixes, soft delete, no foreign keys or CHECK constraints (section 3.6) | Database-enforced references | The team's `pgsql-ddl` skill and the migration headers; backend ADR 0008 states the reason that applies on SWE5001 |
-| **Scheduling design.** Background work (team expiry, refunds, purchase-intent expiry, outbox relay and retention) runs as Spring scheduled jobs in `blocbuy-bootstrap`. Each run goes through `LeasedJobRunner`, which takes a lease row in `sys_scheduler_lock` in PostgreSQL, so only one instance runs a job at a time; failed items back off through `sys_scheduled_item_retry`. Jobs are switched on by a property per environment | A message queue or an external scheduler | Code and migration comments (V13, V17); section 3.2.7 |
-| **Concurrency approach.** Pessimistic row locks taken in a fixed order, guarded updates, unique indexes as a backstop, and optimistic version checks on admin writes (section 3.6) | Optimistic locking everywhere | Backend ADRs 0001 and 0002 each state a lock order (deal → intent → payment, and team → intent → order → payment). The two are not yet combined into one stated order; this is an open backend issue (#663) |
-| **Team lifecycle.** The team's states are an enum with one transition rule (`DealStatus.canTransitionTo`): only an open team may move, and terminal states never change. The lifecycle has one source state, so a transition table is simpler than one class per state | GoF State, as planned in the proposal and the skeleton plan's §16 | Code; section 3.4.5 (the State pattern is applied to the listing lifecycle in section 3.5.5 instead) |
+| **Concurrency approach.** Pessimistic row locks in the order of Table 3.12 (section 3.2.8), guarded updates, unique indexes as a backstop (index list in section 3.6) and optimistic version checks (Optimistic Offline Lock, section 3.5.5) | Optimistic locking everywhere | Backend ADRs 0001 and 0002; issue #663 (open issues in Table 2.6) |
+| **Team lifecycle.** The team's states are an enum with one transition rule (`DealStatus.canTransitionTo`), not GoF State (reasoning in section 3.5.5) | GoF State, as planned in the proposal and the skeleton plan | Code; section 3.4.5 |
 | **Dependency scanning.** Trivy scans Maven and npm dependencies; OWASP Dependency-Check is not used, because Trivy covers the same CVEs without an NVD API key | OWASP Dependency-Check (proposal §5.2) | `docs/quality/quality-gates.md` (deliberate non-gates) |
-| **Required checks.** Trivy's dependency and infrastructure-as-code scans run but are not among the six required pull-request checks | All scans blocking | Repository ruleset; section 4.2 |
+| **Required checks.** Trivy's dependency and infrastructure-as-code scans run but are not among the six required checks (Table 4.2) | All scans blocking | Repository ruleset; section 4.2 |
 | **CI cloud access.** GitHub OIDC with one role per job on `dev`: ECR push, EC2 deploy and frontend deploy | Plan, deploy and apply roles (proposal §5.2) | Workflows `ci-backend.yml`, `ci-frontend.yml`; section 4.1 |
-| **Static credentials.** The project account has two IAM users; one has an active access key, limited to SSM port forwarding to the `dev` host. Disclosed and accepted | "No static credentials" (proposal §5.2) | `docs/deploy/aws-account-governance/README.md` |
+| **Secret storage.** SSM Parameter Store SecureString parameters hold the secrets of the SWE5001 stack and of the unapplied production design; dev keeps its secrets in a root-only environment file on the host. Parameter Store is free at the standard tier, while Secrets Manager adds cost and a seven-day deletion window | AWS Secrets Manager (proposal §5.2, §6.3) | SWE5001 microservice refactoring plan (secrets row); `deployment/backend/bin/fetch-env.sh` |
+| **Static credentials.** One IAM user access key in the project account, disclosed and accepted (CI authentication, section 4.1; open issues in Table 2.6) | "No static credentials" (proposal §5.2) | `docs/deploy/aws-account-governance/README.md` |

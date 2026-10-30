@@ -2,25 +2,28 @@
 rubric: 3.6
 owner: Liu Jin
 plan: #679
-sources: ../presentation/src/diagrams/core-erd.svg, full-erd.svg; backend Flyway V1–V28; .claude/skills/pgsql-ddl/SKILL.md
+sources: figures/core-erd.svg (portrait copy of ../presentation/src/diagrams/core-erd.svg), ../presentation/src/diagrams/full-erd.svg; backend Flyway V1–V28; .claude/skills/pgsql-ddl/SKILL.md
+owns: R30, R44
 status: draft
 -->
 
 ## 3.6 Database Schemas
 
-BlocBuy keeps all persistent state in one PostgreSQL 18 database, in the schema `domain`: 29 tables created by the Flyway migrations V1 to V28. Each aggregate root has its own table, every key is a UUIDv7, and relationships between tables are logical only, kept by the application and by unique indexes rather than by foreign keys. Figure 3.142 shows the eight tables at the centre of the money path; Appendix C has the full diagram and a list of all 29 tables with their purpose and owning context.
+BlocBuy keeps all persistent state in one PostgreSQL 18 database, in the schema `domain`: 29 tables created by the Flyway migrations V1 to V28. Each aggregate root has its own table, and relationships between tables are logical only: there are no foreign keys, and the application and unique indexes keep the references consistent. Figure 3.139 shows the eight tables at the centre of the money path; Appendix C has the full diagram and a list of all 29 tables with their purpose and owning context.
 
 #### Core schema
 
-The migrations live in `backend/blocbuy-bootstrap/src/main/resources/db/migration`: 28 SQL files, plus one `.conf` file that lets V23 build its indexes with `CREATE INDEX CONCURRENTLY` outside a transaction. A repeatable seed script, `R__demo_catalog_seed.sql`, loads demonstration products. For each context, the reviewed source DDL is kept in `backend/docs/db/` (`catalog.sql`, `groupbuy.sql`, `order.sql`, `payment.sql` and others), and the migrations are derived from it.
+The migrations live in `backend/blocbuy-bootstrap/src/main/resources/db/migration`: 28 SQL files, plus one `.conf` file that lets V23 build its indexes with `CREATE INDEX CONCURRENTLY` outside a transaction. The migrations are forward-only: there are no undo scripts. A repeatable seed script, `R__demo_catalog_seed.sql`, loads demonstration products. For each context, the reviewed source DDL is kept in `backend/docs/db/` (`catalog.sql`, `groupbuy.sql`, `order.sql`, `payment.sql` and others), and the migrations are derived from it.
 
-Figure 3.142 draws the eight core tables in crow's foot notation. Each line is a logical foreign key, and its ends give the cardinality; Table 3.33 repeats the keys and cardinalities in print size.
+Figure 3.139 draws the eight core tables in crow's foot notation. Each line is a logical foreign key, and its ends give the cardinality; Table 3.32 repeats the keys and cardinalities in print size.
 
-![Figure 3.142: Core schema of the money path, entity-relationship diagram in crow's foot notation (FK* marks a logical foreign key with no database constraint). Each paid payment yields at most one membership, one order and one refund, and unique indexes enforce each of those limits.](../../presentation/src/diagrams/core-erd.svg){.landscape}
+![Figure 3.139: Core schema of the money path, entity-relationship diagram in crow's foot notation (FK* marks a logical foreign key with no database constraint). Each paid payment yields at most one membership, one order and one refund, and unique indexes enforce each of those limits.](../figures/core-erd.svg)
 
-The cardinalities carry the business rules. A product has any number of teams over time (`biz_group_deal.product_id`). A team has at least one member, its leader, and at most one active membership per buyer, enforced by the partial unique index `uq_biz_group_member_deal_user` on `(deal_id, user_id)`. A purchase intent is the server's priced offer for one START (open a new team) or JOIN (enter an existing team); a buyer may retry Checkout, so one intent can have several payment rows, but `uq_biz_payment_pending_intent` allows only one pending payment per intent. One successful payment produces at most one membership, one order and one refund obligation: `uq_biz_group_member_payment_id`, `uq_biz_order_payment_id` and the unique `payment_id` column of `biz_refund` (index `biz_refund_payment_id_key`) make a replayed Stripe webhook collide at the database instead of creating a second row. Table 3.33 lists the keys.
+Each cardinality follows from a business rule. A product has any number of teams over time (`biz_group_deal.product_id`). A team has at least one member, its leader, and at most one active membership per buyer, enforced by the partial unique index `uq_biz_group_member_deal_user` on `(deal_id, user_id)`. A purchase intent is the server's priced offer for one START (open a new team) or JOIN (enter an existing team); a buyer may retry Checkout, so one intent can have several payment rows, but `uq_biz_payment_pending_intent` allows only one pending payment per intent. One successful payment produces at most one membership, one order and one refund obligation: `uq_biz_group_member_payment_id`, `uq_biz_order_payment_id` and the unique `payment_id` column of `biz_refund` (index `biz_refund_payment_id_key`) make a replayed Stripe webhook collide at the database instead of creating a second row. Table 3.32 lists the keys.
 
-Table 3.33: Keys and cardinalities of the core tables. "Logical FK" columns reference another table's `id` without a database constraint; partial unique keys exclude soft-deleted rows.
+<!-- table: split -->
+
+Table 3.32: Keys and cardinalities of the core tables. "Logical FK" columns reference another table's `id` without a database constraint; partial unique keys exclude soft-deleted rows.
 
 | Table | Logical FK columns | Unique keys | Cardinality |
 | --- | --- | --- | --- |
@@ -37,7 +40,7 @@ All eight tables have a UUIDv7 primary key `id`.
 
 #### Mapping decisions
 
-The object-to-table mapping follows the team's PostgreSQL conventions (the `pgsql-ddl` skill in the repository). They are team rules, not course requirements. Each is listed with its reason.
+The object-to-table mapping follows the team's PostgreSQL conventions, with these reasons.
 
 **One table per aggregate root, no inheritance mapping.** Each aggregate in the domain model (for example `GroupDeal`, `PurchaseIntent`, `CheckoutPayment`, `Order`, `Product`) maps to one table, and its child entities to tables of their own (`biz_group_member` for team members). The domain has no class hierarchy that needs a single-table or joined-table inheritance mapping. The mapping is written by hand: MyBatis XML mappers read rows into data objects, and hand-written converters turn them into domain objects (section 3.2.4 describes this persistence strategy).
 
@@ -53,17 +56,17 @@ The object-to-table mapping follows the team's PostgreSQL conventions (the `pgsq
 
 The cost is that orphan rows are possible if application code is wrong. Soft delete, below, removes the most common cause, and the unique indexes stop the most damaging duplicates. The first migration's header comment (V1) still says that foreign keys and CHECK constraints are "pushed down to the database"; every later migration states the opposite rule, and none creates either.
 
-**Unique indexes as race backstops.** Where two requests can race, a unique index is the last line of defence after the row locks: `uq_biz_group_member_deal_user` (one membership per buyer and team), `uq_biz_payment_request_key` (one Checkout session per client idempotency key), `uq_log_payment_webhook_event_event_id` (each Stripe webhook event processed once; the event row is inserted before processing) and `biz_refund_payment_id_key` (one refund per payment). Most of them are partial (`WHERE deleted = false`), so a soft-deleted row does not block a new one.
+**Unique indexes as race backstops.** Where two requests can race, a unique index catches any duplicate that gets past the row locks: `uq_biz_group_member_deal_user` (one active membership per buyer and team, V5), `uq_biz_group_member_payment_id` and `uq_biz_group_participation_receipt_payment` (one membership and one participation receipt per payment, V7), `uq_biz_payment_request_key` (one Checkout session per client idempotency key, V9), `uq_log_payment_webhook_event_event_id` (each Stripe webhook event processed once; the event row is inserted before processing, V2), `biz_refund_payment_id_key` (one refund obligation per payment, V9), `uq_biz_refund_provider_id` (one obligation per provider refund, V11), `uq_biz_order_payment_id` (one order per payment, V12) and `uq_biz_purchase_intent_fulfilled_payment` (one fulfilled purchase intent per payment, V15). Three of them, `uq_biz_group_member_deal_user`, `uq_biz_payment_request_key` and `uq_biz_purchase_intent_fulfilled_payment`, are partial (`WHERE deleted = false`), so a soft-deleted row does not block a new one.
 
 **Soft delete and audit columns.** 22 of the 29 tables carry `deleted boolean NOT NULL DEFAULT false`, and the ordinary business tables carry `create_time`, `update_time`, `create_by` and `update_by`. A delete sets the flag, so a row that other rows still reference never disappears. The seven tables without the flag are append-only records and queues: the four `log_` tables, `biz_payment_review_case`, `sys_outbox` and `sys_consumed_message`.
 
-**Version column.** Ten tables carry an integer `version`, and it does not mean the same thing in all of them:
+**Version column.** Ten tables carry an integer `version`, with five different meanings:
 
-- an optimistic lock on `biz_product`, `biz_order`, `biz_purchase_intent` and `biz_payment`: the update adds `AND version = …` with the version read earlier and treats zero affected rows as a conflict (for example in `BizProductMapper.xml` and `PaymentMapper.xml`);
+- an optimistic lock on `biz_product`, `biz_purchase_intent` and `biz_payment`: the update adds `AND version = …` with the version read earlier and treats zero affected rows as a conflict (for example in `BizProductMapper.xml` and `PaymentMapper.xml`);
 - a fencing token on `biz_refund`: a refund worker claims a row with a lease, and only the holder of the latest version may write the Stripe result (`RefundMapper.xml`);
 - a recorded value on `log_refund_attempt`, an append-only table whose `version` column stores the refund's fencing version that each attempt ran under, so an audit can tell which lease made which call;
 - a revision number on `biz_team_price_policy`, where each price change is a new row and the highest version is the current price;
-- a change counter on `biz_group_deal`, `sys_scheduler_lock` and `sys_scheduled_item_retry`, incremented on every update but never compared. The team row is changed only under a pessimistic `SELECT … FOR UPDATE` lock (`lockDeal` in `PaidGroupDealMapper.xml`), and its update is guarded by the expected `current_size` and `status` instead, so the version adds no protection there.
+- a change counter on `biz_order`, `biz_group_deal`, `sys_scheduler_lock` and `sys_scheduled_item_retry`, incremented on every update but never compared by production code; orders change state by team in updates guarded by their pending status (`BizOrderMapper.xml` also holds a version-checked `updateIfVersion` with no production caller), and the team row relies on its guarded update (guarded update, section 3.2.8).
 
 `biz_purchase_intent` has no status column: whether an intent is open, fulfilled or expired follows from `fulfilled_payment_id` and `expired_at`.
 

@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="990" viewBox="0 0 1160 990" font-family="Inter, Helvetica, Arial, sans-serif">
+<!-- UC3 start: Factory Method PaidGroupDealCreator (class part of the deck figure fm-start.svg at 29b61cec) -->
+<rect x="0" y="0" width="1160" height="990" fill="#FFFFFF"/>
+<defs><marker id="fmFill" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B1A18"/></marker><marker id="fmFillRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8402A"/></marker><marker id="fmOpen" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#1B1A18" stroke-width="1.6"/></marker><marker id="fmTri" viewBox="0 0 16 16" refX="15" refY="8" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1 L15,8 L1,15 z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/></marker></defs>
+<text x="20.0" y="36.0" font-size="26" font-weight="700" fill="#1B1A18">Factory Method: UC3 start creates the team (GroupDeal)</text>
+<rect x="20.0" y="96.0" width="540.0" height="198.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="290.0" y="132.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">PaidGroupDealService</text>
+<line x1="20.0" y1="142.0" x2="560.0" y2="142.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="174.0" font-size="24" fill="#1B1A18">-creator: PaidGroupDealCreator</text>
+<line x1="20.0" y1="186.0" x2="560.0" y2="186.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="218.0" font-size="24" fill="#1B1A18">+startConfirmed(terms: NewDealTerms,</text>
+<text x="74.2" y="250.0" font-size="24" fill="#1B1A18">paid: PaidParticipation)</text>
+<text x="74.2" y="282.0" font-size="24" fill="#1B1A18">: ParticipationResult</text>
+<rect x="20.0" y="62.0" width="114.2" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="30.0" y="87.0" font-size="24" fill="#1B1A18">«Client»</text>
+<rect x="620.0" y="96.0" width="520.0" height="250.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="880.0" y="132.0" font-size="26" font-weight="700" font-style="italic" text-anchor="middle" fill="#1B1A18">PaidGroupDealCreator</text>
+<line x1="620.0" y1="142.0" x2="1140.0" y2="142.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="634.0" y="174.0" font-size="24" fill="#1B1A18">+initiate(terms: NewDealTerms,</text>
+<text x="674.2" y="206.0" font-size="24" fill="#1B1A18">payment: PaidParticipation,</text>
+<text x="674.2" y="238.0" font-size="24" fill="#1B1A18">now: Instant): GroupDeal {leaf}</text>
+<text x="634.0" y="270.0" font-size="24" font-style="italic" fill="#1B1A18">#createGroupDeal(terms: NewDealTerms,</text>
+<text x="674.2" y="302.0" font-size="24" font-style="italic" fill="#1B1A18">payment: PaidParticipation,</text>
+<text x="674.2" y="334.0" font-size="24" font-style="italic" fill="#1B1A18">now: Instant): GroupDeal</text>
+<rect x="620.0" y="62.0" width="134.2" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="630.0" y="87.0" font-size="24" fill="#1B1A18">«Creator»</text>
+<line x1="560.0" y1="200.0" x2="620.0" y2="200.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#fmOpen)"/>
+<text x="612.0" y="190.0" font-size="24" text-anchor="end" fill="#1B1A18">1</text>
+<rect x="620.0" y="560.0" width="520.0" height="184.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="880.0" y="592.0" font-size="24" text-anchor="middle" fill="#1B1A18">{leaf}</text>
+<text x="880.0" y="626.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">StandardPaidGroupDealCreator</text>
+<line x1="620.0" y1="636.0" x2="1140.0" y2="636.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="634.0" y="668.0" font-size="24" fill="#1B1A18">#createGroupDeal(terms: NewDealTerms,</text>
+<text x="674.2" y="700.0" font-size="24" fill="#1B1A18">payment: PaidParticipation,</text>
+<text x="674.2" y="732.0" font-size="24" fill="#1B1A18">now: Instant): GroupDeal</text>
+<rect x="620.0" y="526.0" width="238.4" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="630.0" y="551.0" font-size="24" fill="#1B1A18">«ConcreteCreator»</text>
+<line x1="880.0" y1="526.0" x2="880.0" y2="346.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#fmTri)"/>
+<rect x="20.0" y="560.0" width="470.0" height="292.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="255.0" y="592.0" font-size="24" text-anchor="middle" fill="#1B1A18">{leaf}</text>
+<text x="255.0" y="626.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">GroupDeal</text>
+<line x1="20.0" y1="636.0" x2="490.0" y2="636.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="668.0" font-size="24" fill="#1B1A18">-status: DealStatus</text>
+<text x="34.0" y="700.0" font-size="24" fill="#1B1A18">-currentSize: int</text>
+<text x="34.0" y="732.0" font-size="24" fill="#1B1A18">-targetSize: int</text>
+<line x1="20.0" y1="744.0" x2="490.0" y2="744.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="776.0" font-size="24" text-decoration="underline" fill="#1B1A18">~startPaid(terms: NewDealTerms,</text>
+<text x="74.2" y="808.0" font-size="24" text-decoration="underline" fill="#1B1A18">payment: PaidParticipation,</text>
+<text x="74.2" y="840.0" font-size="24" text-decoration="underline" fill="#1B1A18">now: Instant): GroupDeal</text>
+<rect x="20.0" y="526.0" width="137.0" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="30.0" y="551.0" font-size="24" fill="#1B1A18">«Product»</text>
+<line x1="620.0" y1="690.0" x2="490.0" y2="690.0" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#fmOpen)"/>
+<text x="555.0" y="680.0" font-size="24" text-anchor="middle" fill="#1B1A18">«create»</text>
+<rect x="620.0" y="820.0" width="520.0" height="152.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="880.0" y="852.0" font-size="24" text-anchor="middle" fill="#1B1A18">«@Configuration»</text>
+<text x="880.0" y="886.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">GroupDealCreationConfig</text>
+<line x1="620.0" y1="896.0" x2="1140.0" y2="896.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="634.0" y="928.0" font-size="24" fill="#1B1A18">+paidGroupDealCreator()</text>
+<text x="674.2" y="960.0" font-size="24" fill="#1B1A18">: PaidGroupDealCreator  «@Bean»</text>
+<line x1="880.0" y1="820.0" x2="880.0" y2="744.0" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#fmOpen)"/>
+<text x="892.0" y="790.0" font-size="24" fill="#1B1A18">«instantiate»</text>
+<path d="M20,316 H542 L560,334 V486 H20 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<path d="M542,316 V334 H560" fill="none" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="348.0" font-size="24" fill="#1B1A18">initiate() is final: it rejects null input</text>
+<text x="34.0" y="378.0" font-size="24" fill="#1B1A18">or now ≥ terms.expireTime(), calls</text>
+<text x="34.0" y="408.0" font-size="24" fill="#1B1A18">payment.requirePrice(price, currency),</text>
+<text x="34.0" y="438.0" font-size="24" fill="#1B1A18">then returns createGroupDeal(terms,</text>
+<text x="34.0" y="468.0" font-size="24" fill="#1B1A18">payment, now): the factory method.</text>
+<line x1="560.0" y1="340.0" x2="620.0" y2="340.0" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="6 4"/>
+</svg>

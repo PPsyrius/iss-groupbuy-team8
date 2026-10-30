@@ -2,7 +2,8 @@
 // Assembles sections/*.md, in file-name order, into one Typst document and compiles the PDF.
 // Usage: node scripts/build.mjs [--out <dir>]
 //   REPORT_TEMPLATE=<course template .docx> (optional) supplies the NUS-ISS header logo,
-//   which stays out of the repository like the template itself.
+//   which stays out of the repository like the template itself; the template clips its blank
+//   margins. REPORT_LOGO=<PNG already cropped to the artwork> (optional) replaces it.
 // Output: dist/report.typ (generated) and dist/swe5006-report.pdf; --out also copies the PDF there.
 import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -30,10 +31,14 @@ const resolvePath = (dir, rel) => rootPath(resolve(dir, rel));
 mkdirSync(dist, { recursive: true });
 let logo = 'none';
 const template = process.env.REPORT_TEMPLATE;
-if (template && existsSync(template)) {
+const croppedLogo = process.env.REPORT_LOGO;
+if (croppedLogo && existsSync(croppedLogo)) {
+  copyFileSync(croppedLogo, join(dist, 'logo.png'));
+  logo = `(path: ${str(rootPath(join(dist, 'logo.png')))}, cropped: true)`;
+} else if (template && existsSync(template)) {
   const png = execFileSync('unzip', ['-p', template, 'word/media/image1.png']);
   writeFileSync(join(dist, 'logo.png'), png);
-  logo = str(rootPath(join(dist, 'logo.png')));
+  logo = `(path: ${str(rootPath(join(dist, 'logo.png')))}, cropped: false)`;
 }
 
 const files = readdirSync(sectionsDir).filter((f) => f.endsWith('.md')).sort();
@@ -53,14 +58,22 @@ for (const f of files) {
   }
 }
 
-const metaTyp = `(title: ${str(meta.title || '')}, subtitle: ${str(meta.subtitle || '')}, author: (${(meta.author || []).map(str).join(', ')},), date: [${inline(meta.date || '')}])`;
+// Every front-matter key reaches the template: plain values as strings, values with markers or
+// Markdown as content, lists as arrays.
+const metaValue = (v) => (/\{\{|[*_`[]/.test(v) ? `[${inline(v)}]` : str(v));
+// Typst writes an empty array as () and a one-element array as (x,).
+const metaArray = (v) => (v.length ? `(${v.map(metaValue).join(', ')},)` : '()');
+const metaTyp = `(${Object.entries(meta)
+  .map(([k, v]) => `${k}: ${Array.isArray(v) ? metaArray(v) : metaValue(v)}`)
+  .join(', ')})`;
 const typ = join(dist, 'report.typ');
 writeFileSync(
   typ,
   `#import "${rootPath(join(root, 'typst', 'template.typ'))}": *\n#show: report.with(meta: ${metaTyp}, logo: ${logo})\n\n${parts.join('\n\n')}\n`,
 );
 const pdf = join(dist, 'swe5006-report.pdf');
-execFileSync('typst', ['compile', '--root', repo, typ, pdf], { stdio: 'inherit' });
+// --no-pdf-tags: Typst 0.15 aborts with "internal error: parent group" while tagging some floating figures.
+execFileSync('typst', ['compile', '--no-pdf-tags', '--root', repo, typ, pdf], { stdio: 'inherit' });
 console.log(`Built ${relative(process.cwd(), pdf)} from ${files.length} sections.`);
 if (outDir) {
   mkdirSync(outDir, { recursive: true });
