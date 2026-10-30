@@ -59,7 +59,7 @@
 
 // Height of the frame for a diagram without a report-figure host; inside a report figure the
 // frame takes the portrait height the figure allows it (host.height, set in template.typ), and
-// this height only sets the floor of its scale (uml-frame).
+// this height only chooses its spacing (uml-frame).
 #let frame-pad = (x: 5pt, top: 5pt, bottom: 4pt)
 #let max-figure = 20cm - 2 * 6pt - 2pt
 
@@ -87,7 +87,8 @@
 // build(spacing) returns the drawing for one of the candidate spacings, in order of preference
 // (loosest first); the first that fits unscaled wins, otherwise the first that scales the
 // drawing (almost) as little as the best one, so a tall or wide drawing closes up its gaps
-// before its text shrinks, and never less than the same choice under max-figure would. A drawing that would still have to be scaled below the 8 pt minimum
+// before its text shrinks; the portrait choice is made at max-figure and then scaled to the
+// figure's own height (uml-frame). A drawing that would still have to be scaled below the 8 pt minimum
 // turns a quarter (landscape) when that scales it less. fill: the drawing takes the full width
 // (sequence diagrams); otherwise it is measured at its natural width.
 // host: set by report-figure in template.typ (the translator passes it to the diagram call).
@@ -109,26 +110,21 @@
   // Landscape: the drawing's width runs along the page height, its height across the page.
   let LW = if fig != none { fig.land.width - px } else { H }
   let LH = if fig != none { fig.land.height - py } else { size.width - py }
-  // cap: the candidate's scale under the fixed max-figure height, the height every frame had
-  // before a report figure passed its own; the portrait pick never prints smaller than the pick
-  // under that height would.
-  let Hc = max-figure - py
-  let all = ()
-  let n = none
+  // cap: the candidate's scale under the fixed max-figure height. The portrait spacing is
+  // chosen by it, so a frame keeps the spacing it has under max-figure; the figure's own
+  // portrait height (H) then only sets the scale, which is never smaller than under max-figure.
+  let Hc = calc.min(H, max-figure - py)
+  let fits = ()
   for sp in candidates {
     let m = if fill { measure(build(sp), width: W) } else { measure(build(sp)) }
-    all.push((m: m, portrait: calc.min(1.0, W / m.width, H / m.height), land: calc.min(1.0, LW / m.width, LH / m.height), cap: calc.min(1.0, W / m.width, Hc / m.height)))
-    if n == none and all.last().portrait >= 1.0 { n = all.len() }
-    if n != none and all.last().cap >= 1.0 { break }
+    fits.push((m: m, portrait: calc.min(1.0, W / m.width, H / m.height), land: calc.min(1.0, LW / m.width, LH / m.height), cap: calc.min(1.0, W / m.width, Hc / m.height)))
+    if fits.last().cap >= 1.0 { break }
   }
-  let fits = all.slice(0, if n == none { all.len() } else { n })
-  let pick(key, list: fits, floor: 0.0) = {
-    let target = calc.max(floor, calc.min(1.0, calc.max(..list.map(f => f.at(key)))) - 0.02)
-    list.position(f => f.at(key) >= target)
+  let pick(key) = {
+    let target = calc.min(1.0, calc.max(..fits.map(f => f.at(key)))) - 0.02
+    fits.position(f => f.at(key) >= target)
   }
-  let c = all.position(f => f.cap >= 1.0)
-  let capped = all.slice(0, if c == none { all.len() } else { c + 1 })
-  let i = pick("portrait", floor: capped.at(pick("cap", list: capped)).cap)
+  let i = pick("cap")
   let j = pick("land")
   let turn = landscape and fits.at(i).portrait < min-scale and fits.at(j).land > fits.at(i).portrait + 0.03
   let k = if turn { j } else { i }
@@ -484,8 +480,9 @@
   }
   // A guard inside the fragment (l to r) when it fits there on one line, else up to rmax,
   // where the fragment then widens to hold it. A guard that has to wrap wraps in a free stretch
-  // (inside the fragment if one is wide enough, else up to rmax), so its white ground never
-  // hides an activation bar; only when no stretch is wide enough does it run over the bars.
+  // (inside the fragment if one is wide enough, else up to rmax), so a wrapped guard's white
+  // ground never hides an activation bar; only when no stretch is wide enough does it run over
+  // the bars.
   // Returns (x, content).
   let guard-in(cond, l, r, rmax, open-now) = {
     let (x, g, how) = place-guard(cond, l, r, open-now)
