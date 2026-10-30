@@ -57,8 +57,8 @@
 // UML diagram frame: a rectangle with the heading in a pentagon tab at the top left,
 // "sd <name>", "class <name>" or "stm <name>".
 
-// Height left for the drawing inside the report figure: template.typ scales a framed figure
-// taller than 20 cm (inset 6 pt) down, so the drawing and its frame stay within that.
+// Height of the frame for a diagram without a report-figure host; inside a report figure the
+// frame takes the portrait height the figure allows it (host.height, set in template.typ).
 #let frame-pad = (x: 5pt, top: 5pt, bottom: 4pt)
 #let max-figure = 20cm - 2 * 6pt - 2pt
 
@@ -104,7 +104,7 @@
   let px = 2 * frame-pad.x + 2 * w-line
   let py = th + frame-pad.top + frame-pad.bottom + 2 * w-line
   let W = (if fig != none { fig.width } else { size.width }) - px
-  let H = max-figure - py
+  let H = (if fig != none { fig.height } else { max-figure }) - py
   // Landscape: the drawing's width runs along the page height, its height across the page.
   let LW = if fig != none { fig.land.width - px } else { H }
   let LH = if fig != none { fig.land.height - py } else { size.width - py }

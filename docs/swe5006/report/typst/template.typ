@@ -67,8 +67,12 @@
   // height) less the caption, the lead label, the inset and a little slack.
   let lead-h = if lead != none { measure(block(width: landscape-width, lead-block)).height + (0.52em + 8pt).to-absolute() } else { 0pt }
   let land-room = text-area.width - 2 * inset - gap.to-absolute() - 4pt - measure(block(width: landscape-width, cap)).height - lead-h
+  // Height the drawing frame may take on a portrait page: the most a framed figure may take on
+  // a page of its own (`max` below, on the full text area) less the inset.
+  let lead-p = if lead != none { measure(block(width: text-area.width, lead-block)).height + (0.52em + 8pt).to-absolute() } else { 0pt }
+  let portrait-room = text-area.height - measure(block(width: text-area.width, cap)).height - gap.to-absolute() - lead-p - 1.4em.to-absolute() - 12pt - 2 * inset
   let host(probe) = if type(body) == function {
-    body((probe: probe, rotated: rotated, width: text-area.width - 2 * inset, land: (width: landscape-width - 2 * inset, height: land-room)))
+    body((probe: probe, rotated: rotated, width: text-area.width - 2 * inset, height: portrait-room, land: (width: landscape-width - 2 * inset, height: land-room)))
   } else { body }
   let turned = not rotated and type(body) == function and measure(block(width: text-area.width - 2 * inset, host(true))).height == 1pt
   if turned {
