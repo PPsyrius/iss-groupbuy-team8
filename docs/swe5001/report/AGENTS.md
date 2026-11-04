@@ -6,13 +6,23 @@ Rules for anyone, human or agent, writing or reviewing Team 8's SWE5001 project 
 
 ```
 docs/swe5001/report/
-  README.md            framework: outline, feedback map, diagram list, briefing coverage
-  AGENTS.md            this file
-  sections/NN-name.md  one Markdown file per template chapter (01-introduction.md … 06-highlights.md)
-  diagrams/            diagram sources (PlantUML, Mermaid or draw.io) and their exported SVG/PNG
+  README.md             framework: outline, feedback map, diagram list, briefing coverage
+  AGENTS.md             this file
+  registers.md          the one AD and AISS numbering
+  main.typ              cover, contents and the chapter includes
+  lib.typ               shared styles and scaffold helpers (prompt, owner, todo, diagram-slot)
+  sections/NN-name.typ  one Typst file per template chapter (01-introduction.typ … 06-highlights.typ)
+  diagrams/             diagram sources (PlantUML, Mermaid or draw.io) and their exported SVG/PNG
+  build/                compiled PDF (git-ignored)
 ```
 
-Write chapters in Markdown under `sections/`, one file per template chapter, using the template's heading numbers. Assemble into the `.docx` template only at the end (for example `pandoc --reference-doc=<template>.docx`), so review happens on diffs, not on Word files.
+Write chapters in Typst under `sections/`, one file per template chapter. Typst numbers the headings, so keep the template's heading order and titles. Review happens on diffs of the `.typ` files. Build from the repository root:
+
+```bash
+typst compile --root . docs/swe5001/report/main.typ docs/swe5001/report/build/report.pdf
+```
+
+The scaffold helpers mark unfinished work: `#prompt[…]` is the template's own guidance text, `#todo(…)` lists what the section must still contain, `#owner(…)` names the owner, and `#diagram-slot(…)` reserves a figure. Delete them as the section is written; a finished section contains none. Use `\#123` for issue numbers in text, because a bare `#` starts Typst code.
 
 ## Writing rules
 
@@ -89,8 +99,8 @@ The assessors found the presentation's logical diagram non-standard (F12). It mi
 
 | Prefix | Meaning | Register |
 |---|---|---|
-| `AD-nn` | Architectural decision | Report 3.1.1, 3.2.1, 3.3, numbered once in sequence |
-| `AISS-nn` | Architectural limitation | Report 3.4 only; renumbered once (see README, Decisions before writing) |
+| `AD-nn` | Architectural decision | Report 3.1.1, 3.2.1, 3.3, numbered in [`registers.md`](registers.md) |
+| `AISS-nn` | Architectural limitation | Report 3.4 only; numbered in [`registers.md`](registers.md) |
 | `F-nn` | Assessor remark from 21 October | README feedback table |
 | `D-nn` | Diagram | README diagram list |
 | `NFR-nn` | Quality requirement | [`docs/quality/nfr-register.md`](../../quality/nfr-register.md) |
@@ -127,5 +137,5 @@ Link ADs to their ADR in [`backend/docs/adr/`](../../../backend/docs/adr/README.
 - [ ] One AD register and one AISS register, with no conflicting IDs.
 - [ ] All D1–D14 present and referenced from the text.
 - [ ] Effort per member and milestones match section 2.3 and the agreed split.
-- [ ] Assembled into the `.docx` template; table of contents, figure numbers and cross-references updated.
+- [ ] No `#prompt`, `#todo`, `#owner` or `#diagram-slot` left; the PDF builds without warnings; contents, figure numbers and cross-references checked in the PDF.
 - [ ] Submitted before 16 November 2026.

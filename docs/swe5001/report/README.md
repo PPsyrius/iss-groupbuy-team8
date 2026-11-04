@@ -6,7 +6,7 @@ Team 8's BlocBuy project report for the SWE5001 practice module (Graduate Certif
 |---|---|
 | Due | Monday 16 November 2026 (briefing V2.6, slide 6) |
 | Weight | 30% of the certificate, including 5% peer assessment (not company sponsored) |
-| Template | "02 Project Report Template for Practice Project" (`.docx`, kept outside the repository). Keep its chapter and section numbering exactly. |
+| Template | "02 Project Report Template for Practice Project" (`.docx`, kept outside the repository). The report is written in Typst ([`main.typ`](main.typ)) with the template's cover, chapter and section structure; keep its numbering and titles exactly. |
 | Must incorporate | Every remark from the 21 October presentation (briefing: "incorporating remarks gathered during their project presentations"). The list is in [Assessor feedback](#assessor-feedback-21-october) below. |
 | Briefing questions | Q1–Q8 ("Questions to Consider", briefing slide 9) must each have an answer the reader can find; see [Briefing coverage](#briefing-coverage). |
 
@@ -68,17 +68,30 @@ Two critical use cases: **UC4 join a team by paying** and **team expiry with ref
 
 ## Decisions before writing
 
-Settle these first; they change what several sections say.
+Settled on 4 November 2026 (Phase 0). Sections are written against these; change them only by editing this list in a pull request.
 
-1. **F6, data subnets.** Recommended: implement two private data subnets (one per zone) with no route to the NAT instance, and move the RDS and Valkey subnet groups there. It costs nothing at runtime and turns the remark into a closed item. If the team does not implement it, record the decision, the reason and the roadmap date as an AISS item.
-2. **One AISS register.** The deck's backup B2 and [`02-proposed-architecture.md` §13](../architecture-options-study/02-proposed-architecture.md) use the same IDs for different issues. Section 3.4 of the report becomes the only register; renumber once and use those IDs everywhere in the report.
-3. **One AD register.** Number decisions once across 3.1.1, 3.2.1 and 3.3 (the template continues the numbering; its example repeats AD-03, which is a template typo). Map each AD to its ADR under [`backend/docs/adr/`](../../../backend/docs/adr/README.md) where one exists.
-4. **Critical use cases for 3.2.4.** Default: UC4 join a team by paying (synchronous, Stripe webhook, lock order) and team expiry with refund (scheduled job, outbox, SNS and SQS, notification). Both are already drawn at component level in [`docs/presentation-kit/diagrams/`](../../presentation-kit/diagrams/); the report needs them at class level.
-5. **Section owners.** Confirm the default owners in the [outline](#chapter-outline) at the first report meeting.
+1. **F6, data subnets: implemented.** Two data subnets (`10.50.20.0/24`, `10.50.21.0/24`, one per zone) hold RDS and Valkey; their route table has only the local VPC route, so there is no NAT, internet or S3-endpoint path. ECS tasks stay in the private application subnets. `terraform test` (`data_tier_has_its_own_subnets`) asserts the two sets are disjoint. Configured and tested offline, not yet applied on AWS: the next runtime session creates it (the runtime is rebuilt from zero each session, so there is no migration). Recorded as AD-15 and AISS-07 (#589). Write it in 3.2 as "configured" until an AWS session proves it.
+2. **One AISS register** and 3. **one AD register**: [`registers.md`](registers.md). The deck backup slides B1–B2 are the base; the study's and the main slides' IDs are not used. The register maps old IDs to new ones and each AD to its ADR.
+4. **Critical use cases for 3.2.4.** UC4 join a team by paying, and team expiry with refund (both confirmed). Both are already drawn at component level in [`docs/presentation-kit/diagrams/`](../../presentation-kit/diagrams/); the report needs them at class level.
+5. **Section owners.** Confirmed below.
+
+### Section owners
+
+Derived from three sources: the presenter of each deck section on 21 October (v3 deck), the report section named in each feedback issue (#585–#592, #595, tracked in #596) and merged PR authorship. Where the sources disagree, the work was moved to balance load; the issue's original owner reviews.
+
+| Member (GitHub) | Sections | Diagrams | Feedback closed | Basis |
+|---|---|---|---|---|
+| Lim Jiechao (`limjiechao`) | 1, 2, 3.3, 4.4, 6; final PDF build | D1, D2 | Q1, Q3, Q8, success criteria | Presented intro, conduct, analytics; owns #675, #676, #681. Takes 3.3 and 4.4 from Eric to balance load |
+| Wang Ziang, Eric (`EricWang1358`) | 3.1 (3.1.1–3.1.4) | D3, D4, D7, D8 | F3, F4, F8 (logical), F9, F12 | Presented logical design and DDD; assigned #586, #587, #595 |
+| Liu Jin (`l0sgAi`) | 3.2 (3.2.1–3.2.3), 3.4 | D5, D6, D9 | F6, F8 (physical), F11 | Presented physical design; built the SWE5001 infrastructure; assigned #586, #588, #589 |
+| Yu Qianshuo (`Yorick-Yu`) | 3.2.4, 4.2 | D11, D12, D13, D14 | F5, F7, F10 | Assigned #585, #590; wrote the outbox and the failure drills (#459). Did not present, so takes a full design section |
+| Panpakorn Siripanich, Pan (`PPsyrius`) | 4.1, 4.3, 5 | D10 | F1, F2 | Presented DevOps and security; wrote the k6 tooling and the V2/V3 runs (#458); assigned #592. 4.1 moves from #591's owners (Liu Jin, Eric), who review it |
+
+Reviewer pairs (second owner per [`AGENTS.md`](AGENTS.md#workflow-per-section)): Eric ↔ Yu Qianshuo (DDD and class diagrams must use the same names), Liu Jin ↔ Pan (physical, security and performance share the network and scaling facts), Lim reviews Liu Jin's 3.4 and Eric reviews Lim's 3.3.
 
 ## Chapter outline
 
-Template headings are fixed. "Must contain" lists what an assessor will look for; "Sources" lists where the facts already are. Default owners follow the presentation split; confirm them.
+Template headings are fixed. "Must contain" lists what an assessor will look for; "Sources" lists where the facts already are. Owners are confirmed in [Section owners](#section-owners).
 
 ### 1. Introduction (owner: Lim)
 
@@ -108,7 +121,7 @@ Template headings are fixed. "Must contain" lists what an assessor will look for
 | 3.1.3 Nodes and Subsystems | F12: redrawn logical view (D3); element catalogue: element, responsibility, provider | `logical-view.svg` |
 | 3.1.4 Platform Design | F3, F4, F9: EventStorming method, subdomains, context map with patterns, aggregates and how they were derived, domain event catalogue (internal vs published), how producers and consumers use the platform (API contract, versioned events) | [`06-eventstorming-ddd.md`](../architecture-options-study/06-eventstorming-ddd.md) §1–§6, `context-map.svg`, `aggregates.svg`, [`contracts/openapi.json`](../../../contracts/openapi.json) |
 
-**3.2 Physical Architecture & Design (owner: Liu Jin; 3.2.4 Yorik)**
+**3.2 Physical Architecture & Design (owner: Liu Jin; 3.2.4 Yu Qianshuo)**
 
 | Section | Must contain | Sources |
 |---|---|---|
@@ -118,7 +131,7 @@ Template headings are fixed. "Must contain" lists what an assessor will look for
 | 3.2.3 Persistence Design | F11: data groups in the template format (format, storage, security, trade-off); ER diagram per database (D9); Valkey key model; event envelope and queue schema; transactions, lock order, scheduler lease, outbox; retention per data group | Flyway migrations in [`backend/blocbuy-bootstrap/src/main/resources/db/migration/`](../../../backend/blocbuy-bootstrap/src/main/resources/db/migration/), ADRs 0001, 0002, 0007, [`infra/swe5001/db-init/init.sh`](../../../infra/swe5001/db-init/init.sh) |
 | 3.2.4 Detailed Design | F5, F7, F10: per critical use case, a class diagram and a sequence diagram with real class and method names; the two-user group-buy flow; design patterns used and why | [`backend/docs/design/paid-group-participation.md`](../../../backend/docs/design/paid-group-participation.md), `uc4-join-sequence.svg`, `expiry-refund-sequence.svg` |
 
-**3.3 Other Architectural Decisions (owner: Eric)** — decisions not covered above; reference the quality-attribute sections instead of repeating them.
+**3.3 Other Architectural Decisions (owner: Lim)** — decisions not covered above; reference the quality-attribute sections instead of repeating them.
 
 **3.4 Architectural Limitation (owner: Liu Jin)** — the single AISS register in the template's table format (issue and impact, description, resolution, owner, status), each open item with a roadmap date.
 
@@ -127,9 +140,9 @@ Template headings are fixed. "Must contain" lists what an assessor will look for
 | Section | Owner | Must contain | Sources |
 |---|---|---|---|
 | 4.1 Performance | Pan | F1: workload model, metric definitions and thresholds, results per run, what each run does and does not prove; caching and load balancing; scaling policy; capacity statement (measured, projected, next limit) | [`perf/k6/`](../../../perf/k6/README.md), evidence `20261016-http-baseline-dashboard`, `20261019-v3-autoscaling` |
-| 4.2 Availability | Liu Jin | Two zones, single-zone data tier, self-healing, rollback, failure drills with "AWS" or "local only" stated per result | Evidence `20261015-local-failure-rehearsal`, deck backup B12 |
-| 4.3 Security | Lim | Layered controls: Organization guardrails, Identity Center, OIDC, network isolation, encryption, secrets, pipeline scans; known gaps | Deck slide 22, [`infra/swe5001/github/`](../../../infra/swe5001/github/) |
-| 4.4 Extensibility and Maintainability | Eric | Measured reuse (audit queue), service template, architecture rules, API contract checks | Deck slide 11 |
+| 4.2 Availability | Yu Qianshuo | Two zones, single-zone data tier, self-healing, rollback, failure drills with "AWS" or "local only" stated per result | Evidence `20261015-local-failure-rehearsal`, deck backup B12 |
+| 4.3 Security | Pan | Layered controls: Organization guardrails, Identity Center, OIDC, network isolation, encryption, secrets, pipeline scans; known gaps | Deck slide 22, [`infra/swe5001/github/`](../../../infra/swe5001/github/) |
+| 4.4 Extensibility and Maintainability | Lim | Measured reuse (audit queue), service template, architecture rules, API contract checks | Deck slide 11 |
 
 ### 5. DevOps and Development Lifecycle (owner: Pan)
 

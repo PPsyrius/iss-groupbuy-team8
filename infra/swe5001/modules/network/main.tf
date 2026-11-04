@@ -1,5 +1,8 @@
-# VPC with two public and two private subnets, an S3 gateway endpoint, and fck-nat as the
-# single egress path for the private subnets (AWS plan, section 6.1).
+# VPC with two public, two private (application) and two data subnets, an S3 gateway
+# endpoint, and fck-nat as the single egress path for the private subnets (AWS plan,
+# section 6.1). The data subnets hold only RDS and ElastiCache: their route table has no
+# default route, so the data tier cannot reach or be reached from the internet even
+# through the NAT, and application tasks cannot be placed there.
 
 terraform {
   required_providers {
@@ -94,6 +97,30 @@ resource "aws_route_table_association" "private" {
 
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private[count.index].id
+}
+
+resource "aws_subnet" "data" {
+  count = 2
+
+  vpc_id            = aws_vpc.this.id
+  cidr_block        = var.data_subnet_cidrs[count.index]
+  availability_zone = var.availability_zones[count.index]
+
+  tags = { Name = "${var.name_prefix}-data-${var.availability_zones[count.index]}" }
+}
+
+# Local VPC route only: no NAT, no internet gateway, no S3 endpoint.
+resource "aws_route_table" "data" {
+  vpc_id = aws_vpc.this.id
+
+  tags = { Name = "${var.name_prefix}-data" }
+}
+
+resource "aws_route_table_association" "data" {
+  count = 2
+
+  subnet_id      = aws_subnet.data[count.index].id
+  route_table_id = aws_route_table.data.id
 }
 
 # Free; keeps ECR layer pulls (served from S3) off the NAT instance.
