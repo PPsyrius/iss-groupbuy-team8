@@ -94,6 +94,15 @@ run "topology_none" {
   }
 }
 
+run "data_tier_has_its_own_subnets" {
+  command = plan
+
+  assert {
+    condition     = length(setintersection(toset(module.network.data_subnet_cidrs), toset(module.network.private_subnet_cidrs))) == 0 && length(module.network.data_subnet_cidrs) == 2
+    error_message = "RDS and ElastiCache must use two data subnets disjoint from the application subnets (#589)."
+  }
+}
+
 run "monolith_topology" {
   command = plan
 

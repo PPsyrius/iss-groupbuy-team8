@@ -48,6 +48,7 @@ module "network" {
   availability_zones       = ["${var.aws_region}a", "${var.aws_region}b"]
   public_subnet_cidrs      = ["10.50.0.0/24", "10.50.1.0/24"]
   private_subnet_cidrs     = ["10.50.10.0/24", "10.50.11.0/24"]
+  data_subnet_cidrs        = ["10.50.20.0/24", "10.50.21.0/24"]
   role_path                = local.iam_role_path
   permissions_boundary_arn = local.workload_boundary_arn
   instance_tags            = local.tags

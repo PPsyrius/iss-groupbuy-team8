@@ -26,3 +26,4 @@ Entries live in one file per day under `log/`. The first entry of a day creates 
 - [2026-10-28](log/2026-10-28.md)
 - [2026-10-29](log/2026-10-29.md)
 - [2026-10-30](log/2026-10-30.md)
+- [2026-11-04](log/2026-11-04.md)
