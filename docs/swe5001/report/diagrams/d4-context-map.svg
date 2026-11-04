@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 660" width="1160" height="660" font-family="Inter, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="cmExt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#ECE6DC"/></linearGradient>
+    <linearGradient id="cmCore" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FFF0D6"/></linearGradient>
+    <linearGradient id="cmSupp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EBF2FC"/></linearGradient>
+    <linearGradient id="cmGen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F0F0F0"/></linearGradient>
+    <marker id="cmArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B1A18"/></marker>
+    <marker id="cmArrRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8402A"/></marker>
+    <marker id="cmOpen" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#1B1A18" stroke-width="1.6"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1160" height="660" fill="#FFFFFF"/>
+
+  <!-- ===== 1. identity-svc Boundary ===== -->
+  <rect x="20" y="16" width="760" height="114" fill="#F1F4FD" stroke="#3E5CD9" stroke-width="1.6" stroke-dasharray="6 4"/>
+  <text x="34" y="36" font-size="14" font-weight="700" fill="#3E5CD9">«service» identity-svc (Reusable Platform Service)</text>
+
+  <!-- Identity Bounded Context -->
+  <rect x="36" y="46" width="440" height="72" rx="4" fill="url(#cmGen)" stroke="#555555" stroke-width="1.5"/>
+  <text x="50" y="66" font-size="14.5" font-weight="700" fill="#1B1A18">Identity &amp; Access Context</text>
+  <text x="248" y="66" font-size="12.5" fill="#6B655C">(Generic Subdomain)</text>
+  <text x="50" y="86" font-size="13" fill="#1B1A18">Aggregates &amp; Entities: User (Root), OAuthIdentity · Value Objects: UserStatus, RoleCode</text>
+  <text x="50" y="104" font-size="12.5" fill="#6B655C">Provides Open Host Service: UserAppService (/internal/users/**) + Shared Valkey RBAC Snapshot</text>
+
+  <!-- Shared Kernel box next to Identity -->
+  <rect x="500" y="46" width="264" height="72" rx="4" fill="#FAF8F5" stroke="#888888" stroke-width="1.3" stroke-dasharray="4 3"/>
+  <text x="514" y="66" font-size="14" font-weight="700" fill="#1B1A18">Shared Kernel (common)</text>
+  <text x="514" y="86" font-size="12.5" fill="#1B1A18">ErrorCode, BizException, Result, UuidV7,</text>
+  <text x="514" y="104" font-size="12.5" fill="#1B1A18">PageQuery, RoleCode, LeasedJobRunner</text>
+
+  <!-- External: Google OAuth 2.0 -->
+  <rect x="920" y="30" width="218" height="86" fill="url(#cmExt)" stroke="#6B655C" stroke-width="1.5"/>
+  <text x="1029" y="54" font-size="13" fill="#6B655C" text-anchor="middle">«external system»</text>
+  <text x="1029" y="76" font-size="15.5" font-weight="700" fill="#1B1A18" text-anchor="middle">Google OAuth 2.0</text>
+  <text x="1029" y="98" font-size="12.5" fill="#6B655C" text-anchor="middle">Identity Provider (UC2)</text>
+
+  <!-- Edge: Google (U) -> Identity (D) ACL -->
+  <line x1="920" y1="74" x2="780" y2="74" stroke="#1B1A18" stroke-width="1.5" marker-end="url(#cmArr)"/>
+  <text x="908" y="66" font-size="13" font-weight="700" fill="#1B1A18" text-anchor="end">U</text>
+  <text x="792" y="66" font-size="13" font-weight="700" fill="#1B1A18">D (ACL)</text>
+  <text x="850" y="92" font-size="12" fill="#6B655C" text-anchor="middle">OAuthIdentityGateway</text>
+
+  <!-- ===== 2. commerce-svc Boundary ===== -->
+  <rect x="20" y="176" width="760" height="332" fill="#FDEFEC" stroke="#E8402A" stroke-width="1.6" stroke-dasharray="6 4"/>
+  <text x="34" y="196" font-size="14" font-weight="700" fill="#B02E1B">«service» commerce-svc (Core Transactional Service — Co-locates 4 Contexts Sharing Settlement ACID Txn)</text>
+
+  <!-- Catalog & Pricing Context -->
+  <rect x="36" y="210" width="320" height="114" rx="4" fill="url(#cmSupp)" stroke="#1565C0" stroke-width="1.5"/>
+  <text x="50" y="230" font-size="14.5" font-weight="700" fill="#1B1A18">Catalog &amp; Pricing Context</text>
+  <text x="242" y="230" font-size="12" fill="#1565C0">(Supporting)</text>
+  <text x="50" y="250" font-size="12.5" fill="#1B1A18">Roots: Product, TeamPricePolicy</text>
+  <text x="50" y="268" font-size="12.5" fill="#1B1A18">VOs: ProductTeamTerms, TeamPriceQuote</text>
+  <text x="50" y="286" font-size="12.5" fill="#1B1A18">Service: DualPricingStrategy (Strategy)</text>
+  <text x="50" y="304" font-size="12" fill="#6B655C">Support: CatalogPurchaseSupport (consumeOneUnit)</text>
+
+  <!-- GroupBuy Context -->
+  <rect x="444" y="210" width="320" height="114" rx="4" fill="url(#cmCore)" stroke="#B85C00" stroke-width="2"/>
+  <text x="458" y="230" font-size="14.5" font-weight="700" fill="#1B1A18">GroupBuy Context</text>
+  <text x="596" y="230" font-size="12" font-weight="700" fill="#B85C00">(CORE Subdomain)</text>
+  <text x="458" y="250" font-size="12.5" fill="#1B1A18">Root: GroupDeal (DealStatus state machine)</text>
+  <text x="458" y="268" font-size="12.5" fill="#1B1A18">Entities/VOs: PaidMember, ParticipationReceipt,</text>
+  <text x="458" y="286" font-size="12.5" fill="#1B1A18">ShareInvite, ShareCredit · Factory: PaidGroupDealCreator</text>
+  <text x="458" y="304" font-size="12" fill="#B85C00">Events: TeamSucceeded, TeamExpired, MemberJoined</text>
+
+  <!-- Ordering Context -->
+  <rect x="36" y="378" width="320" height="114" rx="4" fill="url(#cmCore)" stroke="#B85C00" stroke-width="2"/>
+  <text x="50" y="398" font-size="14.5" font-weight="700" fill="#1B1A18">Ordering Context</text>
+  <text x="182" y="398" font-size="12" font-weight="700" fill="#B85C00">(CORE Subdomain)</text>
+  <text x="50" y="418" font-size="12.5" fill="#1B1A18">Roots: PurchaseIntent, Order (OrderStatus)</text>
+  <text x="50" y="436" font-size="12.5" fill="#1B1A18">Adapter: OrderFulfilmentAdapter (implements</text>
+  <text x="50" y="454" font-size="12.5" fill="#1B1A18">PaymentIntentPort &amp; PaymentBusinessPort)</text>
+  <text x="50" y="472" font-size="12" fill="#6B655C">Subscriber: OrderLifecycleSubscriber (@Order 10)</text>
+
+  <!-- Payment & Refund Context -->
+  <rect x="444" y="378" width="320" height="114" rx="4" fill="url(#cmSupp)" stroke="#1565C0" stroke-width="1.5"/>
+  <text x="458" y="398" font-size="14.5" font-weight="700" fill="#1B1A18">Payment &amp; Refund Context</text>
+  <text x="652" y="398" font-size="12" fill="#1565C0">(Supporting)</text>
+  <text x="458" y="418" font-size="12.5" fill="#1B1A18">Roots: CheckoutPayment, RefundWork, ReviewCase</text>
+  <text x="458" y="436" font-size="12.5" fill="#1B1A18">VO: CheckoutQuote · Event: PaymentSucceeded</text>
+  <text x="458" y="454" font-size="12.5" fill="#1B1A18">Ports: PaymentIntentPort, PaymentBusinessPort</text>
+  <text x="458" y="472" font-size="12" fill="#6B655C">Subscriber: TeamExpiryRefundSubscriber (@Order 20)</text>
+
+  <!-- Intra-Commerce Context Mapping Edges -->
+  <!-- GroupBuy (U) -> Catalog (D): Customer-Supplier -->
+  <line x1="444" y1="262" x2="356" y2="262" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#cmArr)"/>
+  <text x="434" y="255" font-size="11.5" font-weight="700" fill="#1B1A18" text-anchor="end">U</text>
+  <text x="364" y="255" font-size="11.5" font-weight="700" fill="#1B1A18">D</text>
+  <text x="400" y="242" font-size="11" font-weight="700" fill="#1B1A18" text-anchor="middle">Customer/Supplier</text>
+  <text x="400" y="278" font-size="11" fill="#6B655C" text-anchor="middle">GroupDealOffer</text>
+
+  <!-- Catalog (U) -> Ordering (D): Customer-Supplier -->
+  <line x1="160" y1="324" x2="160" y2="378" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#cmArr)"/>
+  <text x="150" y="338" font-size="11.5" font-weight="700" fill="#1B1A18" text-anchor="end">U</text>
+  <text x="150" y="372" font-size="11.5" font-weight="700" fill="#1B1A18" text-anchor="end">D</text>
+  <text x="168" y="348" font-size="11.5" font-weight="700" fill="#1B1A18">Customer/Supplier</text>
+  <text x="168" y="363" font-size="11" fill="#6B655C">CatalogPurchaseSupport</text>
+
+  <!-- GroupBuy <-> Ordering: Partnership (1 Local Txn) -->
+  <line x1="444" y1="324" x2="356" y2="378" stroke="#B85C00" stroke-width="1.8" marker-start="url(#cmArr)" marker-end="url(#cmArr)"/>
+  <rect x="336" y="336" width="132" height="30" rx="3" fill="#FFF6E2" stroke="#B85C00" stroke-width="1"/>
+  <text x="402" y="349" font-size="11" font-weight="700" fill="#B85C00" text-anchor="middle">Partnership (1 ACID Txn)</text>
+  <text x="402" y="362" font-size="10.5" fill="#1B1A18" text-anchor="middle">Settlement &amp; BEFORE_COMMIT</text>
+
+  <!-- Payment (U) -> Ordering (D): Conformist -->
+  <line x1="444" y1="436" x2="356" y2="436" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#cmArr)"/>
+  <text x="434" y="429" font-size="11.5" font-weight="700" fill="#1B1A18" text-anchor="end">U</text>
+  <text x="364" y="429" font-size="11.5" font-weight="700" fill="#1B1A18">D</text>
+  <text x="400" y="422" font-size="11" font-weight="700" fill="#1B1A18" text-anchor="middle">Conformist (Ports)</text>
+  <text x="400" y="452" font-size="10.5" fill="#6B655C" text-anchor="middle">PaymentBusinessPort</text>
+
+  <!-- GroupBuy (U) -> Payment (D): Published Language (In-Process) -->
+  <line x1="604" y1="324" x2="604" y2="378" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#cmArr)"/>
+  <text x="594" y="338" font-size="11.5" font-weight="700" fill="#1B1A18" text-anchor="end">U</text>
+  <text x="594" y="372" font-size="11.5" font-weight="700" fill="#1B1A18" text-anchor="end">D</text>
+  <text x="612" y="348" font-size="11.5" font-weight="700" fill="#1B1A18">Published Language</text>
+  <text x="612" y="363" font-size="11" fill="#6B655C">TeamExpired (BEFORE_COMMIT)</text>
+
+  <!-- Cross-Service Edge: Identity (U) -> Commerce (D) -->
+  <line x1="220" y1="130" x2="220" y2="176" stroke="#E8402A" stroke-width="2" marker-end="url(#cmArrRed)"/>
+  <text x="208" y="145" font-size="12" font-weight="700" fill="#B02E1B" text-anchor="end">U</text>
+  <text x="208" y="170" font-size="12" font-weight="700" fill="#B02E1B" text-anchor="end">D</text>
+  <text x="232" y="150" font-size="12" font-weight="700" fill="#B02E1B">Customer/Supplier + Open Host Service (OHS)</text>
+  <text x="232" y="166" font-size="11.5" fill="#1B1A18">Sync HTTP UserAppService (/internal/users/**) + Shared Valkey Session</text>
+
+  <!-- External: TypeSafe Reranker -->
+  <rect x="920" y="218" width="218" height="86" fill="url(#cmExt)" stroke="#6B655C" stroke-width="1.5"/>
+  <text x="1029" y="242" font-size="13" fill="#6B655C" text-anchor="middle">«external system»</text>
+  <text x="1029" y="264" font-size="15.5" font-weight="700" fill="#1B1A18" text-anchor="middle">TypeSafe Reranker</text>
+  <text x="1029" y="286" font-size="12.5" fill="#6B655C" text-anchor="middle">Optional Semantic Search</text>
+
+  <line x1="920" y1="262" x2="780" y2="262" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="5 3" marker-end="url(#cmArr)"/>
+  <text x="908" y="254" font-size="12.5" font-weight="700" fill="#1B1A18" text-anchor="end">U</text>
+  <text x="792" y="254" font-size="12.5" font-weight="700" fill="#1B1A18">D (ACL, fail-open)</text>
+  <text x="850" y="278" font-size="11.5" fill="#6B655C" text-anchor="middle">ListingSearchReranker</text>
+
+  <!-- External: Stripe -->
+  <rect x="920" y="388" width="218" height="96" fill="url(#cmExt)" stroke="#6B655C" stroke-width="1.5"/>
+  <text x="1029" y="412" font-size="13" fill="#6B655C" text-anchor="middle">«external system»</text>
+  <text x="1029" y="434" font-size="15.5" font-weight="700" fill="#1B1A18" text-anchor="middle">Stripe</text>
+  <text x="1029" y="454" font-size="12.5" fill="#1B1A18" text-anchor="middle">Hosted Checkout, Signed</text>
+  <text x="1029" y="472" font-size="12.5" fill="#1B1A18" text-anchor="middle">Webhooks &amp; Refunds API</text>
+
+  <line x1="920" y1="436" x2="764" y2="436" stroke="#1B1A18" stroke-width="1.5" marker-end="url(#cmArr)"/>
+  <text x="908" y="428" font-size="12.5" font-weight="700" fill="#1B1A18" text-anchor="end">U</text>
+  <text x="792" y="428" font-size="12.5" font-weight="700" fill="#1B1A18">D (ACL)</text>
+  <text x="848" y="454" font-size="11.5" fill="#6B655C" text-anchor="middle">Checkout / Payment / RefundGateways</text>
+
+  <!-- ===== 3. notification-svc Boundary & Audit Queue ===== -->
+  <rect x="20" y="554" width="500" height="92" fill="#F1F4FD" stroke="#3E5CD9" stroke-width="1.6" stroke-dasharray="6 4"/>
+  <text x="34" y="574" font-size="14" font-weight="700" fill="#3E5CD9">«service» notification-svc (Reusable Platform Service)</text>
+
+  <rect x="36" y="582" width="468" height="54" rx="4" fill="url(#cmGen)" stroke="#555555" stroke-width="1.5"/>
+  <text x="50" y="602" font-size="14.5" font-weight="700" fill="#1B1A18">Notification Context</text>
+  <text x="204" y="602" font-size="12.5" fill="#6B655C">(Generic Subdomain)</text>
+  <text x="50" y="622" font-size="12.5" fill="#1B1A18">Root: Notification · Inbox Dedup: sys_consumed_message · SqsNotificationEventConsumer</text>
+
+  <!-- Future / Extension Subscriber: Audit & Analytics -->
+  <rect x="550" y="554" width="230" height="92" rx="4" fill="#FFFBF2" stroke="#7A5C20" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="564" y="576" font-size="14" font-weight="700" fill="#7A5C20">Audit &amp; Analytics Subscriber</text>
+  <text x="564" y="596" font-size="12.5" fill="#1B1A18">audit-events SQS Queue (+ DLQ)</text>
+  <text x="564" y="614" font-size="12" fill="#6B655C">Subscribed with 0 producer changes</text>
+  <text x="564" y="630" font-size="12" fill="#6B655C">(Future reporting / batch jobs)</text>
+
+  <!-- Cross-Service Edge: Commerce (U) -> Notification & Audit (D): Published Language -->
+  <line x1="260" y1="508" x2="260" y2="554" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#cmOpen)"/>
+  <line x1="650" y1="508" x2="650" y2="554" stroke="#7A5C20" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#cmOpen)"/>
+  <text x="248" y="523" font-size="12" font-weight="700" fill="#1B1A18" text-anchor="end">U</text>
+  <text x="248" y="548" font-size="12" font-weight="700" fill="#1B1A18" text-anchor="end">D</text>
+  <text x="272" y="526" font-size="12" font-weight="700" fill="#1B1A18">Published Language (PL) over Outbox → SNS → SQS</text>
+  <text x="272" y="542" font-size="11.5" fill="#6B655C">IntegrationEventEnvelope&lt;T&gt;: TeamSucceededV1, TeamExpiredV1, PaymentSucceededV1</text>
+</svg>

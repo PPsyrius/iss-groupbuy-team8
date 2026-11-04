@@ -1,0 +1,244 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 640" width="1160" height="640" font-family="Inter, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="d3Plat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E3E8FB"/></linearGradient>
+    <linearGradient id="d3Biz" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FBDFD9"/></linearGradient>
+    <linearGradient id="d3Msg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF6E2"/><stop offset="1" stop-color="#FFEDC7"/></linearGradient>
+    <linearGradient id="d3Grey" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#ECE6DC"/></linearGradient>
+    <linearGradient id="d3Slate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EFE9DF"/></linearGradient>
+    <marker id="d3Fill" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B1A18"/></marker>
+    <marker id="d3FillRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8402A"/></marker>
+    <marker id="d3Open" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#1B1A18" stroke-width="1.6"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1160" height="640" fill="#FFFFFF"/>
+
+  <!-- ===== Tier Backgrounds ===== -->
+  <!-- Presentation Tier -->
+  <rect x="115" y="14" width="255" height="612" fill="#FAF8F5" stroke="#6B655C" stroke-width="1.2" stroke-dasharray="6 4"/>
+  <text x="242" y="34" font-size="14.5" font-weight="700" fill="#6B655C" text-anchor="middle">«tier» Presentation &amp; Edge Tier</text>
+
+  <!-- Application Tier -->
+  <rect x="386" y="14" width="380" height="440" fill="#FAF8F5" stroke="#6B655C" stroke-width="1.2" stroke-dasharray="6 4"/>
+  <text x="576" y="34" font-size="14.5" font-weight="700" fill="#6B655C" text-anchor="middle">«tier» Application Tier (Services)</text>
+
+  <!-- Integration Tier -->
+  <rect x="386" y="466" width="380" height="160" fill="#FFFBF2" stroke="#7A5C20" stroke-width="1.2" stroke-dasharray="6 4"/>
+  <text x="576" y="486" font-size="14.5" font-weight="700" fill="#7A5C20" text-anchor="middle">«tier» Integration Tier (Event-Driven Broker)</text>
+
+  <!-- Data Tier -->
+  <rect x="782" y="14" width="196" height="612" fill="#FAF8F5" stroke="#6B655C" stroke-width="1.2" stroke-dasharray="6 4"/>
+  <text x="880" y="34" font-size="14.5" font-weight="700" fill="#6B655C" text-anchor="middle">«tier» Data Tier</text>
+
+  <!-- External Tier -->
+  <rect x="992" y="14" width="154" height="612" fill="#FAF8F5" stroke="#6B655C" stroke-width="1.2" stroke-dasharray="6 4"/>
+  <text x="1069" y="34" font-size="14.5" font-weight="700" fill="#6B655C" text-anchor="middle">External Systems</text>
+
+  <!-- ===== Actors (Producers & Consumers) ===== -->
+  <g stroke="#6B655C" stroke-width="1.6" fill="none">
+    <circle cx="52" cy="145" r="11" fill="url(#d3Grey)"/>
+    <line x1="52" y1="156" x2="52" y2="188"/><line x1="34" y1="167" x2="70" y2="167"/>
+    <line x1="52" y1="188" x2="38" y2="210"/><line x1="52" y1="188" x2="66" y2="210"/>
+
+    <circle cx="52" cy="365" r="11" fill="url(#d3Grey)"/>
+    <line x1="52" y1="376" x2="52" y2="408"/><line x1="34" y1="387" x2="70" y2="387"/>
+    <line x1="52" y1="408" x2="38" y2="430"/><line x1="52" y1="408" x2="66" y2="430"/>
+  </g>
+  <text x="52" y="230" font-size="16" font-weight="700" fill="#1B1A18" text-anchor="middle">Producer</text>
+  <text x="52" y="248" font-size="14" fill="#6B655C" text-anchor="middle">Seller · Admin</text>
+  <text x="52" y="264" font-size="13.5" fill="#6B655C" text-anchor="middle">Team Leader</text>
+
+  <text x="52" y="450" font-size="16" font-weight="700" fill="#1B1A18" text-anchor="middle">Consumer</text>
+  <text x="52" y="468" font-size="14" fill="#6B655C" text-anchor="middle">Buyer · Joiner</text>
+
+  <!-- ===== Presentation & Edge Tier Components ===== -->
+  <!-- Web SPA -->
+  <rect x="128" y="240" width="106" height="94" fill="url(#d3Slate)" stroke="#6B655C" stroke-width="1.5"/>
+  <g fill="#FFFFFF" stroke="#6B655C" stroke-width="1"><rect x="217" y="246" width="10" height="13"/><rect x="214" y="248" width="6" height="3"/><rect x="214" y="254" width="6" height="3"/></g>
+  <text x="181" y="264" font-size="13.5" fill="#6B655C" text-anchor="middle">«component»</text>
+  <text x="181" y="286" font-size="16" font-weight="700" fill="#1B1A18" text-anchor="middle">Web SPA</text>
+  <text x="181" y="305" font-size="13.5" fill="#1B1A18" text-anchor="middle">OpenAPI Client</text>
+  <text x="181" y="322" font-size="13.5" fill="#6B655C" text-anchor="middle">(Browser UI)</text>
+
+  <!-- CDN & Edge Gateway -->
+  <rect x="256" y="106" width="102" height="360" fill="url(#d3Slate)" stroke="#6B655C" stroke-width="1.5"/>
+  <g fill="#FFFFFF" stroke="#6B655C" stroke-width="1"><rect x="341" y="112" width="10" height="13"/><rect x="338" y="114" width="6" height="3"/><rect x="338" y="120" width="6" height="3"/></g>
+  <text x="307" y="232" font-size="13.5" fill="#6B655C" text-anchor="middle">«component»</text>
+  <text x="307" y="254" font-size="16" font-weight="700" fill="#1B1A18" text-anchor="middle">CDN &amp; Edge</text>
+  <text x="307" y="274" font-size="16" font-weight="700" fill="#1B1A18" text-anchor="middle">Gateway</text>
+  <text x="307" y="298" font-size="13.5" fill="#1B1A18" text-anchor="middle">Static Delivery</text>
+  <text x="307" y="316" font-size="13.5" fill="#1B1A18" text-anchor="middle">+ API Router</text>
+  <text x="307" y="336" font-size="13" fill="#6B655C" text-anchor="middle">(Blocks /internal)</text>
+
+  <!-- ===== Application Tier Subsystems & Components ===== -->
+  <!-- Subsystem: Platform Services -->
+  <rect x="400" y="46" width="352" height="186" fill="#F1F4FD" stroke="#3E5CD9" stroke-width="1.4"/>
+  <text x="412" y="65" font-size="14.5" font-weight="700" fill="#3E5CD9">«subsystem» Reusable Platform Services</text>
+
+  <!-- Identity Service -->
+  <rect x="414" y="76" width="156" height="142" fill="url(#d3Plat)" stroke="#3E5CD9" stroke-width="1.6"/>
+  <g fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1"><rect x="553" y="82" width="10" height="13"/><rect x="550" y="84" width="6" height="3"/><rect x="550" y="90" width="6" height="3"/></g>
+  <text x="492" y="96" font-size="13.5" fill="#6B655C" text-anchor="middle">«component»</text>
+  <text x="492" y="116" font-size="16" font-weight="700" fill="#3E5CD9" text-anchor="middle">Identity Service</text>
+  <text x="492" y="138" font-size="13.5" fill="#1B1A18" text-anchor="middle">OAuth Sign-In · RBAC</text>
+  <text x="492" y="156" font-size="13.5" fill="#1B1A18" text-anchor="middle">User Lifecycle</text>
+  <text x="492" y="176" font-size="13" fill="#6B655C" text-anchor="middle">Provides: AuthAPI,</text>
+  <text x="492" y="192" font-size="13" fill="#B02E1B" text-anchor="middle">UserStatusPort (Internal)</text>
+
+  <!-- Notification Service -->
+  <rect x="584" y="76" width="156" height="142" fill="url(#d3Plat)" stroke="#3E5CD9" stroke-width="1.6"/>
+  <g fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1"><rect x="723" y="82" width="10" height="13"/><rect x="720" y="84" width="6" height="3"/><rect x="720" y="90" width="6" height="3"/></g>
+  <text x="662" y="96" font-size="13.5" fill="#6B655C" text-anchor="middle">«component»</text>
+  <text x="662" y="116" font-size="16" font-weight="700" fill="#3E5CD9" text-anchor="middle">Notification Svc</text>
+  <text x="662" y="138" font-size="13.5" fill="#1B1A18" text-anchor="middle">In-App Notices</text>
+  <text x="662" y="156" font-size="13.5" fill="#1B1A18" text-anchor="middle">Idempotent Inbox</text>
+  <text x="662" y="176" font-size="13" fill="#6B655C" text-anchor="middle">Provides: NotificationAPI</text>
+  <text x="662" y="192" font-size="13" fill="#6B655C" text-anchor="middle">Consumes: EventsV1</text>
+
+  <!-- Subsystem: Business Application -->
+  <rect x="400" y="256" width="352" height="186" fill="#FDEFEC" stroke="#E8402A" stroke-width="1.4"/>
+  <text x="412" y="275" font-size="14.5" font-weight="700" fill="#B02E1B">«subsystem» Core Business Application</text>
+
+  <!-- Commerce Service -->
+  <rect x="414" y="286" width="326" height="144" fill="url(#d3Biz)" stroke="#E8402A" stroke-width="1.6"/>
+  <g fill="#FFFFFF" stroke="#E8402A" stroke-width="1"><rect x="723" y="292" width="10" height="13"/><rect x="720" y="294" width="6" height="3"/><rect x="720" y="300" width="6" height="3"/></g>
+  <text x="577" y="306" font-size="13.5" fill="#6B655C" text-anchor="middle">«component»</text>
+  <text x="577" y="326" font-size="16.5" font-weight="700" fill="#B02E1B" text-anchor="middle">Commerce Service</text>
+  <text x="577" y="347" font-size="13.5" fill="#1B1A18" text-anchor="middle">Modules: Catalog · GroupBuy · Order · Payment</text>
+  <text x="577" y="366" font-size="13.5" fill="#1B1A18" text-anchor="middle">+ Transactional Outbox Writer &amp; Leased Relay</text>
+  <text x="577" y="386" font-size="13" fill="#6B655C" text-anchor="middle">Provides: CatalogAPI (Producer/Consumer),</text>
+  <text x="577" y="402" font-size="13" fill="#6B655C" text-anchor="middle">TeamOrderPaymentAPI, PaymentWebhookAPI</text>
+  <text x="577" y="418" font-size="13" fill="#B02E1B" text-anchor="middle">Requires: UserStatusPort · Publishes: EventsV1</text>
+
+  <!-- ===== Integration Tier Components ===== -->
+  <!-- Message Broker -->
+  <rect x="414" y="498" width="142" height="114" fill="url(#d3Msg)" stroke="#7A5C20" stroke-width="1.5"/>
+  <g fill="#FFFFFF" stroke="#7A5C20" stroke-width="1"><rect x="539" y="504" width="10" height="13"/><rect x="536" y="506" width="6" height="3"/><rect x="536" y="512" width="6" height="3"/></g>
+  <text x="485" y="520" font-size="13.5" fill="#6B655C" text-anchor="middle">«component»</text>
+  <text x="485" y="540" font-size="15.5" font-weight="700" fill="#1B1A18" text-anchor="middle">Message Broker</text>
+  <text x="485" y="560" font-size="13.5" fill="#1B1A18" text-anchor="middle">Pub/Sub Topic</text>
+  <text x="485" y="578" font-size="13" fill="#6B655C" text-anchor="middle">Event-Type Filter</text>
+  <text x="485" y="596" font-size="13" fill="#6B655C" text-anchor="middle">Contract: V1 JSON</text>
+
+  <!-- Notification Queue + DLQ -->
+  <rect x="584" y="498" width="156" height="52" fill="#FFFFFF" stroke="#7A5C20" stroke-width="1.4"/>
+  <text x="662" y="518" font-size="13" fill="#6B655C" text-anchor="middle">«component»</text>
+  <text x="662" y="538" font-size="14" font-weight="700" fill="#1B1A18" text-anchor="middle">Notification Queue + DLQ</text>
+
+  <!-- Audit Queue + DLQ -->
+  <rect x="584" y="560" width="156" height="52" fill="#FFFFFF" stroke="#7A5C20" stroke-width="1.4"/>
+  <text x="662" y="580" font-size="13" fill="#6B655C" text-anchor="middle">«component»</text>
+  <text x="662" y="600" font-size="14" font-weight="700" fill="#1B1A18" text-anchor="middle">Audit Queue + DLQ</text>
+
+  <!-- ===== Data Tier Stores ===== -->
+  <!-- Identity DB -->
+  <path d="M806,72 A68,10 0 0 1 954,72 V134 A68,10 0 0 1 806,134 Z" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.5"/>
+  <path d="M806,72 A68,10 0 0 0 954,72" fill="none" stroke="#3E5CD9" stroke-width="1.5"/>
+  <text x="880" y="98" font-size="13" fill="#6B655C" text-anchor="middle">«database»</text>
+  <text x="880" y="116" font-size="14.5" font-weight="700" fill="#1B1A18" text-anchor="middle">Identity DB</text>
+
+  <!-- Notification DB -->
+  <path d="M806,164 A68,10 0 0 1 954,164 V226 A68,10 0 0 1 806,226 Z" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="1.5"/>
+  <path d="M806,164 A68,10 0 0 0 954,164" fill="none" stroke="#3E5CD9" stroke-width="1.5"/>
+  <text x="880" y="190" font-size="13" fill="#6B655C" text-anchor="middle">«database»</text>
+  <text x="880" y="208" font-size="14.5" font-weight="700" fill="#1B1A18" text-anchor="middle">Notification DB</text>
+
+  <!-- Shared Session Store -->
+  <path d="M806,258 A68,10 0 0 1 954,258 V328 A68,10 0 0 1 806,328 Z" fill="url(#d3Slate)" stroke="#6B655C" stroke-width="1.5"/>
+  <path d="M806,258 A68,10 0 0 0 954,258" fill="none" stroke="#6B655C" stroke-width="1.5"/>
+  <text x="880" y="284" font-size="13" fill="#6B655C" text-anchor="middle">«database»</text>
+  <text x="880" y="302" font-size="14.5" font-weight="700" fill="#1B1A18" text-anchor="middle">Session Store</text>
+  <text x="880" y="319" font-size="12.5" fill="#6B655C" text-anchor="middle">(Login &amp; RBAC Snapshot)</text>
+
+  <!-- Commerce DB -->
+  <path d="M806,360 A68,10 0 0 1 954,360 V430 A68,10 0 0 1 806,430 Z" fill="#FFFFFF" stroke="#E8402A" stroke-width="1.5"/>
+  <path d="M806,360 A68,10 0 0 0 954,360" fill="none" stroke="#E8402A" stroke-width="1.5"/>
+  <text x="880" y="386" font-size="13" fill="#6B655C" text-anchor="middle">«database»</text>
+  <text x="880" y="404" font-size="14.5" font-weight="700" fill="#1B1A18" text-anchor="middle">Commerce DB</text>
+  <text x="880" y="421" font-size="12.5" fill="#6B655C" text-anchor="middle">(+ Outbox &amp; Lease)</text>
+
+  <!-- ===== External Systems ===== -->
+  <rect x="1004" y="84" width="130" height="84" fill="url(#d3Grey)" stroke="#6B655C" stroke-width="1.5"/>
+  <text x="1069" y="108" font-size="13" fill="#6B655C" text-anchor="middle">«external system»</text>
+  <text x="1069" y="130" font-size="15" font-weight="700" fill="#1B1A18" text-anchor="middle">OAuth Identity</text>
+  <text x="1069" y="149" font-size="14" fill="#1B1A18" text-anchor="middle">Provider</text>
+
+  <rect x="1004" y="330" width="130" height="96" fill="url(#d3Grey)" stroke="#6B655C" stroke-width="1.5"/>
+  <text x="1069" y="354" font-size="13" fill="#6B655C" text-anchor="middle">«external system»</text>
+  <text x="1069" y="376" font-size="15" font-weight="700" fill="#1B1A18" text-anchor="middle">Payment Gateway</text>
+  <text x="1069" y="395" font-size="13.5" fill="#1B1A18" text-anchor="middle">Hosted Checkout</text>
+  <text x="1069" y="413" font-size="13.5" fill="#1B1A18" text-anchor="middle">&amp; Webhooks</text>
+
+  <!-- ===== UML Lollipop / Socket Interfaces & Connectors ===== -->
+  <!-- Actors to SPA -->
+  <g stroke="#1B1A18" stroke-width="1.5" fill="none">
+    <line x1="76" y1="185" x2="128" y2="262" marker-end="url(#d3Fill)"/>
+    <line x1="76" y1="385" x2="128" y2="310" marker-end="url(#d3Fill)"/>
+    <line x1="234" y1="286" x2="256" y2="286" marker-end="url(#d3Fill)"/>
+  </g>
+  <text x="102" y="212" font-size="12.5" fill="#1B1A18" text-anchor="middle">HTTPS</text>
+  <text x="102" y="366" font-size="12.5" fill="#1B1A18" text-anchor="middle">HTTPS</text>
+
+  <!-- Edge Gateway to Application Services (Sync REST via Lollipop/Socket) -->
+  <g stroke="#1B1A18" stroke-width="1.5" fill="none">
+    <!-- To Identity -->
+    <line x1="358" y1="138" x2="376" y2="138"/>
+    <path d="M382,131 A7,7 0 0 0 382,145"/>
+    <circle cx="384" cy="138" r="4.5" fill="#FFFFFF"/>
+    <line x1="389" y1="138" x2="414" y2="138"/>
+    <!-- To Notification -->
+    <polyline points="358,112 372,112 372,69 662,69 662,76" marker-end="url(#d3Fill)"/>
+    <!-- To Commerce -->
+    <line x1="358" y1="356" x2="376" y2="356"/>
+    <path d="M382,349 A7,7 0 0 0 382,363"/>
+    <circle cx="384" cy="356" r="4.5" fill="#FFFFFF"/>
+    <line x1="389" y1="356" x2="414" y2="356"/>
+  </g>
+  <text x="385" y="126" font-size="12" fill="#1B1A18" text-anchor="middle">AuthAPI</text>
+  <text x="530" y="64" font-size="12" fill="#1B1A18" text-anchor="middle">NotificationAPI (Sync REST)</text>
+  <text x="385" y="344" font-size="12" fill="#1B1A18" text-anchor="middle">CommerceAPI</text>
+
+  <!-- ONE Synchronous Inter-Service Call: Commerce -> Identity (UserStatusPort) -->
+  <line x1="492" y1="286" x2="492" y2="252" stroke="#E8402A" stroke-width="2.2" fill="none"/>
+  <path d="M485,246 A7,7 0 0 0 499,246" stroke="#E8402A" stroke-width="2" fill="none"/>
+  <circle cx="492" cy="244" r="4.5" fill="#FFFFFF" stroke="#E8402A" stroke-width="2"/>
+  <line x1="492" y1="239" x2="492" y2="218" stroke="#E8402A" stroke-width="2.2" marker-end="url(#d3FillRed)"/>
+  <text x="502" y="246" font-size="13" font-weight="700" fill="#B02E1B">UserStatusPort (Sync REST)</text>
+  <text x="502" y="262" font-size="12.5" fill="#1B1A18">Only direct inter-service call</text>
+
+  <!-- Asynchronous Event Flow: Commerce -> Broker -> Queues -> Notification -->
+  <g stroke="#1B1A18" stroke-width="1.5" fill="none" stroke-dasharray="6 4">
+    <line x1="485" y1="430" x2="485" y2="498" marker-end="url(#d3Open)"/>
+    <line x1="556" y1="524" x2="584" y2="524" marker-end="url(#d3Open)"/>
+    <line x1="556" y1="586" x2="584" y2="586" marker-end="url(#d3Open)"/>
+    <polyline points="662,498 662,448 756,448 756,146 740,146" marker-end="url(#d3Open)"/>
+  </g>
+  <text x="478" y="458" font-size="12.5" fill="#1B1A18" text-anchor="end">Async Publish (Outbox)</text>
+  <text x="752" y="252" font-size="12.5" fill="#1B1A18" text-anchor="end">Async Poll (EventsV1)</text>
+
+  <!-- Data Tier Connections -->
+  <g stroke="#1B1A18" stroke-width="1.4" fill="none">
+    <!-- Identity -> Identity DB -->
+    <polyline points="570,104 578,104 578,38 880,38 880,62" marker-end="url(#d3Fill)"/>
+    <!-- Notification -> Notification DB -->
+    <line x1="740" y1="194" x2="806" y2="194" marker-end="url(#d3Fill)"/>
+    <!-- Commerce -> Commerce DB -->
+    <line x1="740" y1="396" x2="806" y2="396" marker-end="url(#d3Fill)"/>
+  </g>
+  <!-- Shared Session Store Dependencies (dashed) -->
+  <g stroke="#6B655C" stroke-width="1.3" fill="none" stroke-dasharray="5 4">
+    <polyline points="552,218 552,240 790,240 790,282 806,282" marker-end="url(#d3Open)"/>
+    <polyline points="712,218 712,292 806,292" marker-end="url(#d3Open)"/>
+    <polyline points="740,312 806,304" marker-end="url(#d3Open)"/>
+  </g>
+
+  <!-- External System Connections -->
+  <g stroke="#1B1A18" stroke-width="1.4" fill="none">
+    <!-- Identity -> OAuth Provider -->
+    <polyline points="540,76 540,52 1069,52 1069,84" marker-end="url(#d3Fill)"/>
+    <!-- Commerce -> Payment Provider -->
+    <polyline points="740,362 772,362 772,450 1045,450 1045,426" marker-end="url(#d3Fill)"/>
+    <!-- Payment Provider -> Edge Gateway (Signed Webhook) -->
+    <polyline points="1095,426 1095,620 307,620 307,466" marker-end="url(#d3Fill)"/>
+  </g>
+  <text x="900" y="444" font-size="12.5" fill="#1B1A18" text-anchor="middle">Checkout &amp; Refund API (ACL)</text>
+  <text x="680" y="614" font-size="12.5" fill="#1B1A18" text-anchor="middle">Signed PaymentWebhookAPI (Sync HTTPS → Edge Gateway → Commerce Service)</text>
+</svg>

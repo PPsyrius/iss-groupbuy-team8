@@ -1,0 +1,223 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 680" width="1160" height="680" font-family="Inter, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="agCore" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FBDFD9"/></linearGradient>
+    <linearGradient id="agPlat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E3E8FB"/></linearGradient>
+    <linearGradient id="agVo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FFF6E2"/></linearGradient>
+    <marker id="agOpen" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#1B1A18" stroke-width="1.5"/></marker>
+    <marker id="agDiamond" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="11" markerHeight="8" orient="auto-start-reverse"><polygon points="1,5 7,1 13,5 7,9" fill="#1B1A18" stroke="#1B1A18" stroke-width="1"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1160" height="680" fill="#FFFFFF"/>
+
+  <!-- ================= LEFT HALF: TACTICAL AGGREGATE CLASS VIEW ================= -->
+  <rect x="12" y="12" width="644" height="656" fill="#FAF8F5" stroke="#6B655C" stroke-width="1.2"/>
+  <text x="24" y="32" font-size="14" font-weight="700" fill="#1B1A18">a) Tactical Aggregate Boundaries (Aggregates Reference Other Aggregates by ID Only)</text>
+
+  <!-- GroupDeal Aggregate Box -->
+  <rect x="24" y="44" width="302" height="248" fill="#FDEFEC" stroke="#E8402A" stroke-width="1.4" stroke-dasharray="5 3"/>
+  <text x="34" y="62" font-size="12.5" font-weight="700" fill="#B02E1B">GroupBuy Context — GroupDeal Aggregate</text>
+
+  <rect x="34" y="70" width="282" height="106" fill="url(#agCore)" stroke="#E8402A" stroke-width="1.5"/>
+  <line x1="34" y1="104" x2="316" y2="104" stroke="#E8402A" stroke-width="1"/>
+  <line x1="34" y1="146" x2="316" y2="146" stroke="#E8402A" stroke-width="1"/>
+  <text x="175" y="84" font-size="11.5" fill="#6B655C" text-anchor="middle">«aggregate root»</text>
+  <text x="175" y="99" font-size="13.5" font-weight="700" fill="#1B1A18" text-anchor="middle">GroupDeal</text>
+  <text x="42" y="118" font-size="11.5" fill="#1B1A18">+ id, productId, leaderUserId : UUID</text>
+  <text x="42" y="132" font-size="11.5" fill="#1B1A18">+ dealPrice : BigDecimal · targetSize, currentSize : int</text>
+  <text x="42" y="143" font-size="11.5" fill="#1B1A18">+ status : DealStatus · startTime, expireTime : Instant</text>
+  <text x="42" y="159" font-size="11.5" fill="#B02E1B">+ joinPaid(payment, alreadyMember, now) : PaidAdmission</text>
+  <text x="42" y="172" font-size="11.5" fill="#B02E1B">+ expire(now : Instant) : TeamExpired</text>
+
+  <!-- PaidMember & ParticipationReceipt & ShareInvite -->
+  <rect x="34" y="192" width="136" height="88" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.2"/>
+  <text x="102" y="206" font-size="11" fill="#6B655C" text-anchor="middle">«entity»</text>
+  <text x="102" y="220" font-size="12.5" font-weight="700" fill="#1B1A18" text-anchor="middle">PaidMember</text>
+  <text x="40" y="236" font-size="11" fill="#1B1A18">+ userId, paymentId : UUID</text>
+  <text x="40" y="250" font-size="11" fill="#1B1A18">+ orderId, sharerUserId : UUID</text>
+  <text x="40" y="264" font-size="11" fill="#1B1A18">+ role : MemberRole</text>
+
+  <rect x="180" y="192" width="136" height="88" fill="url(#agVo)" stroke="#7A5C20" stroke-width="1.2"/>
+  <text x="248" y="206" font-size="11" fill="#6B655C" text-anchor="middle">«entity / value object»</text>
+  <text x="248" y="220" font-size="12" font-weight="700" fill="#1B1A18" text-anchor="middle">ParticipationReceipt</text>
+  <text x="186" y="236" font-size="11" fill="#1B1A18">+ fingerprint : String</text>
+  <text x="186" y="250" font-size="11" fill="#7A5C20">«VO» ShareInvite (ref)</text>
+  <text x="186" y="264" font-size="11" fill="#7A5C20">«VO» ShareCredit</text>
+
+  <line x1="102" y1="176" x2="102" y2="192" stroke="#1B1A18" stroke-width="1.3" marker-start="url(#agDiamond)"/>
+  <line x1="248" y1="176" x2="248" y2="192" stroke="#1B1A18" stroke-width="1.3" marker-start="url(#agDiamond)"/>
+
+  <!-- Ordering Context Aggregates: PurchaseIntent & Order -->
+  <rect x="338" y="44" width="306" height="248" fill="#FDEFEC" stroke="#E8402A" stroke-width="1.4" stroke-dasharray="5 3"/>
+  <text x="348" y="62" font-size="12.5" font-weight="700" fill="#B02E1B">Ordering Context — Intent &amp; Order Aggregates</text>
+
+  <rect x="348" y="70" width="286" height="98" fill="url(#agCore)" stroke="#E8402A" stroke-width="1.5"/>
+  <line x1="348" y1="102" x2="634" y2="102" stroke="#E8402A" stroke-width="1"/>
+  <text x="491" y="84" font-size="11.5" fill="#6B655C" text-anchor="middle">«aggregate root»</text>
+  <text x="491" y="98" font-size="13.5" font-weight="700" fill="#1B1A18" text-anchor="middle">PurchaseIntent</text>
+  <text x="356" y="116" font-size="11.5" fill="#1B1A18">+ id, userId, dealId, productId, sharerUserId : UUID</text>
+  <text x="356" y="130" font-size="11.5" fill="#1B1A18">+ operation : PurchaseOperation (START | JOIN)</text>
+  <text x="356" y="144" font-size="11.5" fill="#1B1A18">+ amount : BigDecimal · quoteValidUntil, businessDeadline</text>
+  <text x="356" y="159" font-size="11.5" fill="#B02E1B">+ fulfilBy(paymentId : UUID) · expiredAt(now : Instant)</text>
+
+  <rect x="348" y="180" width="286" height="100" fill="url(#agCore)" stroke="#E8402A" stroke-width="1.5"/>
+  <line x1="348" y1="212" x2="634" y2="212" stroke="#E8402A" stroke-width="1"/>
+  <text x="491" y="194" font-size="11.5" fill="#6B655C" text-anchor="middle">«aggregate root»</text>
+  <text x="491" y="208" font-size="13.5" font-weight="700" fill="#1B1A18" text-anchor="middle">Order</text>
+  <text x="356" y="226" font-size="11.5" fill="#1B1A18">+ id, paymentId (UNIQUE), dealId, userId : UUID</text>
+  <text x="356" y="240" font-size="11.5" fill="#1B1A18">+ productTitle : String · unitPrice, totalAmount : BigDecimal</text>
+  <text x="356" y="254" font-size="11.5" fill="#1B1A18">+ status : OrderStatus (PENDING | CONFIRMED | CANCELLED)</text>
+  <text x="356" y="270" font-size="11.5" fill="#B02E1B">+ create(terms, paidAt) · confirm() · cancel(at)</text>
+
+  <!-- Catalog & Payment Aggregates -->
+  <rect x="24" y="306" width="302" height="196" fill="#FAF8F5" stroke="#1565C0" stroke-width="1.4" stroke-dasharray="5 3"/>
+  <text x="34" y="324" font-size="12.5" font-weight="700" fill="#1565C0">Catalog Context — Product &amp; TeamPricePolicy</text>
+
+  <rect x="34" y="332" width="282" height="94" fill="#FFFFFF" stroke="#1565C0" stroke-width="1.4"/>
+  <line x1="34" y1="364" x2="316" y2="364" stroke="#1565C0" stroke-width="1"/>
+  <text x="175" y="346" font-size="11.5" fill="#6B655C" text-anchor="middle">«aggregate root»</text>
+  <text x="175" y="360" font-size="13.5" font-weight="700" fill="#1B1A18" text-anchor="middle">Product</text>
+  <text x="42" y="378" font-size="11.5" fill="#1B1A18">+ id : UUID · originalPrice : BigDecimal · stock : int</text>
+  <text x="42" y="392" font-size="11.5" fill="#1B1A18">+ status : ProductStatus (DRAFT → ON_SALE ⇄ OFF_SALE)</text>
+  <text x="42" y="406" font-size="11.5" fill="#1B1A18">+ teamTerms : ProductTeamTerms «VO» (size ≥ 2, window)</text>
+  <text x="42" y="420" font-size="11.5" fill="#1565C0">+ draft() · revise() · publish() · delist() · requireDeletable()</text>
+
+  <rect x="34" y="434" width="282" height="58" fill="url(#agVo)" stroke="#1565C0" stroke-width="1.2"/>
+  <text x="175" y="448" font-size="11" fill="#6B655C" text-anchor="middle">«aggregate root» TeamPricePolicy &amp; «domain service» DualPricingStrategy</text>
+  <text x="42" y="464" font-size="11" fill="#1B1A18">+ amount : BigDecimal · validFrom, validUntil : Instant</text>
+  <text x="42" y="480" font-size="11" fill="#1565C0">+ requireQuotable(product, now) → TeamPriceQuote «VO»</text>
+
+  <!-- Payment Context -->
+  <rect x="338" y="306" width="306" height="196" fill="#FAF8F5" stroke="#1565C0" stroke-width="1.4" stroke-dasharray="5 3"/>
+  <text x="348" y="324" font-size="12.5" font-weight="700" fill="#1565C0">Payment Context — CheckoutPayment &amp; RefundWork</text>
+
+  <rect x="348" y="332" width="286" height="94" fill="#FFFFFF" stroke="#1565C0" stroke-width="1.4"/>
+  <line x1="348" y1="364" x2="634" y2="364" stroke="#1565C0" stroke-width="1"/>
+  <text x="491" y="346" font-size="11.5" fill="#6B655C" text-anchor="middle">«aggregate root»</text>
+  <text x="491" y="360" font-size="13.5" font-weight="700" fill="#1B1A18" text-anchor="middle">CheckoutPayment</text>
+  <text x="356" y="378" font-size="11.5" fill="#1B1A18">+ id : UUID · status : Status (CREATED→SUCCEEDED|FAILED|CANCELED)</text>
+  <text x="356" y="392" font-size="11.5" fill="#1B1A18">+ quote : CheckoutQuote «VO» (intentId, businessId, amount)</text>
+  <text x="356" y="406" font-size="11.5" fill="#1B1A18">+ providerSessionId, providerPaymentIntentId : String</text>
+  <text x="356" y="420" font-size="11.5" fill="#1565C0">+ bind() · succeed() → PaymentSucceeded · cancelUnpaid()</text>
+
+  <rect x="348" y="434" width="286" height="58" fill="url(#agVo)" stroke="#1565C0" stroke-width="1.2"/>
+  <text x="491" y="448" font-size="11" fill="#6B655C" text-anchor="middle">«aggregate root» RefundWork &amp; PaymentReviewCase</text>
+  <text x="356" y="464" font-size="11" fill="#1B1A18">+ paymentId (UNIQUE) : UUID · status (pending→processing→succeeded)</text>
+  <text x="356" y="480" font-size="11" fill="#1565C0">+ version : int (fencing token) · 23h Stripe idempotency guard</text>
+
+  <!-- Identity & Notification Contexts -->
+  <rect x="24" y="514" width="620" height="142" fill="#F1F4FD" stroke="#3E5CD9" stroke-width="1.4" stroke-dasharray="5 3"/>
+  <text x="34" y="532" font-size="12.5" font-weight="700" fill="#3E5CD9">Platform Services — Identity (User) &amp; Notification (Notification) Aggregates</text>
+
+  <rect x="34" y="540" width="292" height="104" fill="url(#agPlat)" stroke="#3E5CD9" stroke-width="1.4"/>
+  <line x1="34" y1="570" x2="326" y2="570" stroke="#3E5CD9" stroke-width="1"/>
+  <text x="180" y="553" font-size="11" fill="#6B655C" text-anchor="middle">«aggregate root»</text>
+  <text x="180" y="566" font-size="13" font-weight="700" fill="#1B1A18" text-anchor="middle">User (owns OAuthIdentity «entity»)</text>
+  <text x="42" y="585" font-size="11.5" fill="#1B1A18">+ id : UUID · email (UNIQUE) : String</text>
+  <text x="42" y="600" font-size="11.5" fill="#1B1A18">+ status : UserStatus (ACTIVE | DISABLED)</text>
+  <text x="42" y="615" font-size="11.5" fill="#1B1A18">+ oauthIdentities : List&lt;OAuthIdentity&gt; (provider, sub)</text>
+  <text x="42" y="632" font-size="11.5" fill="#3E5CD9">+ registerViaOAuth() · ensureActive() · disable()</text>
+
+  <rect x="348" y="540" width="286" height="104" fill="url(#agPlat)" stroke="#3E5CD9" stroke-width="1.4"/>
+  <line x1="348" y1="570" x2="634" y2="570" stroke="#3E5CD9" stroke-width="1"/>
+  <text x="491" y="553" font-size="11" fill="#6B655C" text-anchor="middle">«aggregate root»</text>
+  <text x="491" y="566" font-size="13" font-weight="700" fill="#1B1A18" text-anchor="middle">Notification (Immutable Effect Record)</text>
+  <text x="356" y="585" font-size="11.5" fill="#1B1A18">+ id, eventId, userId, referenceId : UUID</text>
+  <text x="356" y="600" font-size="11.5" fill="#1B1A18">+ type : NotificationType · title, content : String</text>
+  <text x="356" y="615" font-size="11.5" fill="#1B1A18">+ Guarded by sys_consumed_message (event_id, consumer)</text>
+  <text x="356" y="632" font-size="11.5" fill="#3E5CD9">+ One effect per (eventId, userId); no read-state mutation</text>
+
+  <!-- ================= RIGHT HALF: STATE MACHINES ================= -->
+  <rect x="668" y="12" width="480" height="656" fill="#FAF8F5" stroke="#6B655C" stroke-width="1.2"/>
+  <text x="680" y="32" font-size="14" font-weight="700" fill="#1B1A18">b) Aggregate Lifecycle State Machines</text>
+
+  <!-- 1. stm GroupDeal (DealStatus) -->
+  <rect x="680" y="44" width="456" height="278" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.2"/>
+  <polygon points="680,44 826,44 826,60 816,68 680,68" fill="#FAF8F5" stroke="#6B655C" stroke-width="1"/>
+  <text x="688" y="61" font-size="13" font-weight="700" fill="#1B1A18">stm GroupDeal (DealStatus)</text>
+
+  <circle cx="716" cy="96" r="8" fill="#1B1A18"/>
+  <line x1="716" y1="104" x2="716" y2="144" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#agOpen)"/>
+  <text x="726" y="122" font-size="11.5" fill="#1B1A18">Leader PaymentSucceeded</text>
+  <text x="726" y="136" font-size="11" fill="#6B655C">PaidGroupDealCreator.initiate</text>
+
+  <!-- OPEN -->
+  <rect x="692" y="144" width="110" height="86" rx="10" fill="url(#agCore)" stroke="#E8402A" stroke-width="1.5"/>
+  <text x="747" y="182" font-size="15" font-weight="700" fill="#1B1A18" text-anchor="middle">OPEN</text>
+  <text x="747" y="200" font-size="11" fill="#6B655C" text-anchor="middle">1 ≤ current &lt; target</text>
+
+  <!-- Self loop on OPEN -->
+  <polyline points="712,230 712,258 776,258 776,230" fill="none" stroke="#1B1A18" stroke-width="1.3" marker-end="url(#agOpen)"/>
+  <text x="744" y="274" font-size="11.5" fill="#1B1A18" text-anchor="middle">joinPaid [current + 1 &lt; target]</text>
+  <text x="744" y="288" font-size="11" fill="#B02E1B" text-anchor="middle">/ emit MemberJoined</text>
+
+  <!-- OPEN -> SUCCEEDED -->
+  <polyline points="802,162 842,162 842,96 968,96" fill="none" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#agOpen)"/>
+  <text x="850" y="76" font-size="11.5" fill="#1B1A18">joinPaid [current + 1 == target]</text>
+  <text x="850" y="90" font-size="11" fill="#B02E1B">/ emit MemberJoined, TeamSucceeded</text>
+
+  <rect x="968" y="74" width="118" height="42" rx="10" fill="url(#agCore)" stroke="#E8402A" stroke-width="1.5"/>
+  <text x="1027" y="100" font-size="13.5" font-weight="700" fill="#1B1A18" text-anchor="middle">SUCCEEDED</text>
+  <circle cx="1110" cy="95" r="8" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.3"/><circle cx="1110" cy="95" r="4.5" fill="#1B1A18"/>
+  <line x1="1086" y1="95" x2="1102" y2="95" stroke="#1B1A18" stroke-width="1.3"/>
+
+  <!-- OPEN -> EXPIRED -->
+  <line x1="802" y1="186" x2="968" y2="186" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#agOpen)"/>
+  <text x="850" y="166" font-size="11.5" fill="#1B1A18">expire(now) [now ≥ expireTime]</text>
+  <text x="850" y="180" font-size="11" fill="#B02E1B">/ emit TeamExpired</text>
+
+  <rect x="968" y="165" width="118" height="42" rx="10" fill="url(#agCore)" stroke="#E8402A" stroke-width="1.5"/>
+  <text x="1027" y="191" font-size="13.5" font-weight="700" fill="#1B1A18" text-anchor="middle">EXPIRED</text>
+  <circle cx="1110" cy="186" r="8" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.3"/><circle cx="1110" cy="186" r="4.5" fill="#1B1A18"/>
+  <line x1="1086" y1="186" x2="1102" y2="186" stroke="#1B1A18" stroke-width="1.3"/>
+
+  <!-- OPEN -> FAILED / CANCELED (dashed: allowed by DealStatus matrix, no trigger in code) -->
+  <polyline points="802,212 842,212 842,262 968,262" fill="none" stroke="#6B655C" stroke-width="1.3" stroke-dasharray="5 3" marker-end="url(#agOpen)"/>
+  <text x="848" y="238" font-size="11" fill="#6B655C">Allowed by DealStatus matrix;</text>
+  <text x="848" y="252" font-size="11" fill="#6B655C">no code path triggers today</text>
+  <rect x="968" y="236" width="118" height="68" rx="10" fill="#FAF8F5" stroke="#6B655C" stroke-width="1.3" stroke-dasharray="5 3"/>
+  <text x="1027" y="264" font-size="13" font-weight="700" fill="#6B655C" text-anchor="middle">FAILED /</text>
+  <text x="1027" y="284" font-size="13" font-weight="700" fill="#6B655C" text-anchor="middle">CANCELED</text>
+
+  <!-- 2. stm PurchaseIntent -->
+  <rect x="680" y="334" width="456" height="154" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.2"/>
+  <polygon points="680,334 838,334 838,350 828,358 680,358" fill="#FAF8F5" stroke="#6B655C" stroke-width="1"/>
+  <text x="688" y="351" font-size="13" font-weight="700" fill="#1B1A18">stm PurchaseIntent</text>
+
+  <circle cx="708" cy="412" r="8" fill="#1B1A18"/>
+  <line x1="716" y1="412" x2="746" y2="412" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#agOpen)"/>
+
+  <rect x="746" y="388" width="112" height="48" rx="10" fill="url(#agVo)" stroke="#7A5C20" stroke-width="1.5"/>
+  <text x="802" y="410" font-size="13" font-weight="700" fill="#1B1A18" text-anchor="middle">ISSUED</text>
+  <text x="802" y="426" font-size="10.5" fill="#6B655C" text-anchor="middle">(fulfilledPaymentId=null)</text>
+
+  <polyline points="858,400 894,400 894,376 968,376" fill="none" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#agOpen)"/>
+  <text x="898" y="368" font-size="11" fill="#1B1A18">fulfilBy(paymentId) [≤ deadline]</text>
+  <rect x="968" y="356" width="124" height="42" rx="10" fill="url(#agCore)" stroke="#E8402A" stroke-width="1.5"/>
+  <text x="1030" y="382" font-size="13" font-weight="700" fill="#1B1A18" text-anchor="middle">FULFILLED</text>
+
+  <polyline points="858,424 894,424 894,452 968,452" fill="none" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#agOpen)"/>
+  <text x="898" y="444" font-size="11" fill="#1B1A18">expiredAt(now) [now &gt; deadline]</text>
+  <rect x="968" y="432" width="124" height="42" rx="10" fill="#FAF8F5" stroke="#6B655C" stroke-width="1.4"/>
+  <text x="1030" y="458" font-size="13" font-weight="700" fill="#6B655C" text-anchor="middle">EXPIRED</text>
+
+  <!-- 3. stm Order (OrderStatus) -->
+  <rect x="680" y="500" width="456" height="156" fill="#FFFFFF" stroke="#6B655C" stroke-width="1.2"/>
+  <polygon points="680,500 838,500 838,516 828,524 680,524" fill="#FAF8F5" stroke="#6B655C" stroke-width="1"/>
+  <text x="688" y="517" font-size="13" font-weight="700" fill="#1B1A18">stm Order (OrderStatus)</text>
+
+  <circle cx="708" cy="582" r="8" fill="#1B1A18"/>
+  <line x1="716" y1="582" x2="746" y2="582" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#agOpen)"/>
+
+  <rect x="746" y="558" width="112" height="48" rx="10" fill="url(#agCore)" stroke="#E8402A" stroke-width="1.5"/>
+  <text x="802" y="580" font-size="13.5" font-weight="700" fill="#1B1A18" text-anchor="middle">PENDING</text>
+  <text x="802" y="596" font-size="10.5" fill="#6B655C" text-anchor="middle">Order.create</text>
+
+  <polyline points="858,570 894,570 894,544 968,544" fill="none" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#agOpen)"/>
+  <text x="898" y="536" font-size="11" fill="#1B1A18">onTeamSucceeded (@Order 10)</text>
+  <rect x="968" y="524" width="124" height="42" rx="10" fill="url(#agCore)" stroke="#E8402A" stroke-width="1.5"/>
+  <text x="1030" y="550" font-size="13" font-weight="700" fill="#1B1A18" text-anchor="middle">CONFIRMED</text>
+
+  <polyline points="858,594 894,594 894,622 968,622" fill="none" stroke="#1B1A18" stroke-width="1.4" marker-end="url(#agOpen)"/>
+  <text x="898" y="614" font-size="11" fill="#1B1A18">onTeamExpired (@Order 10)</text>
+  <rect x="968" y="602" width="124" height="42" rx="10" fill="url(#agCore)" stroke="#E8402A" stroke-width="1.5"/>
+  <text x="1030" y="628" font-size="13" font-weight="700" fill="#1B1A18" text-anchor="middle">CANCELLED</text>
+</svg>
