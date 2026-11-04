@@ -19,6 +19,7 @@ docs/swe5001/report/
 Write chapters in Typst under `sections/`, one file per template chapter. Typst numbers the headings, so keep the template's heading order and titles. Review happens on diffs of the `.typ` files. Build from the repository root:
 
 ```bash
+mkdir -p docs/swe5001/report/build
 typst compile --root . docs/swe5001/report/main.typ docs/swe5001/report/build/report.pdf
 ```
 

@@ -1,6 +1,7 @@
 // SWE5001 Team 8 — Final Project Report
 // Structure follows "02 Project Report Template for Practice Project" exactly.
 // Build (from the repository root):
+//   mkdir -p docs/swe5001/report/build
 //   typst compile --root . docs/swe5001/report/main.typ docs/swe5001/report/build/report.pdf
 
 #import "lib.typ": *

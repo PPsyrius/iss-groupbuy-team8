@@ -156,7 +156,7 @@ The key outstanding architectural issues in the solution are as follows:
   [AISS-03], [Checkout stops while identity is down], [], [By design; later cache or circuit breaker], [Yu Qianshuo], [Open],
   [AISS-04], [Internal endpoints rely on network rules only], [], [Service token or mutual TLS], [Pan], [Open],
   [AISS-05], [One shared database server], [], [Move a database to its own server], [Liu Jin], [Open],
-  [AISS-06], [Environment build takes about 32 min], [], [Start early; edge stays permanent], [Pan], [Mitigated],
+  [AISS-06], [Environment build takes about 32 min (create, deploy and smoke, #link("https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39008208244")[run 39008208244], 17 Oct 2026); about 15 min of it is the 900 s SNS filter-policy wait (16 Oct 2026 startup record)], [], [Start early; edge stays permanent], [Pan], [Mitigated],
   [AISS-07], [Database and application shared subnets], [], [Data subnets (AD-15)], [Liu Jin], [Configured; AWS pending],
   [AISS-08], [CloudFront → ALB is plain HTTP], [], [HTTPS listener with ACM], [Pan], [Open],
   [AISS-09], [Valkey token and origin secret in Terraform state], [], [Rotate per session; write-only when possible], [Pan], [Accepted],
