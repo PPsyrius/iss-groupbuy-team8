@@ -7,7 +7,7 @@ Individual part of the SWE5001 final report (#462), tracked in #742. It is writt
 | Owner | Liu Jin (`l0sgAi`) |
 | Sections | 3.2 Physical Architecture & Design; 3.2.1 Key Architectural Decisions; 3.2.2 Technology and Services; 3.2.3 Persistence Design; 3.4 Architectural Limitation |
 | Not in this part | 3.2.4 Detailed Design (Yu Qianshuo) |
-| Assessor remarks closed | F6 (database in its own subnet), F8 (physical perspective), F11 (data schemas for every data store) |
+| Assessor remarks addressed | F6 (database in its own subnet), F8 (physical perspective), F11 (data schemas for every data store); closure is confirmed at the reconcile review |
 | Diagrams | D5 physical deployment, D6 network and security groups, D9 data model per database |
 | IDs used | AD-07 to AD-15, AISS-01 to AISS-15 ([`../../registers.md`](../../registers.md)) |
 | Reviewers | Pan (reviewer pair), Lim (3.4) |

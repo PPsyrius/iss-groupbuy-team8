@@ -40,9 +40,11 @@ BlocBuy runs on AWS in Singapore (`ap-southeast-1`) as three containers on ECS F
 @fig-d5 shows where each artefact runs and how the nodes talk:
 
 - *Browser traffic* reaches CloudFront over HTTPS. CloudFront serves the single-page application from S3 and forwards `/api/*` to the ALB. Stripe's webhook enters the same way.
-- *The ALB* picks the service by path. Identity takes `/api/v1/auth/*` and `/api/v1/users/*`, notification takes `/api/v1/notifications*`, and commerce takes the rest of `/api/*`. A rule with the lowest priority blocks `/internal/*` at the ALB, so internal endpoints are only reachable inside the VPC.
+- *The ALB* picks the service by path. Identity takes `/api/v1/auth/*` and `/api/v1/users/*`, notification takes `/api/v1/notifications*`, and commerce takes the rest of `/api/*`. A high-priority rule (priority 5; the ALB evaluates lower numbers first) returns 404 for `/internal/*` and `/api/internal/*` before any routing rule matches, so internal endpoints are only reachable inside the VPC.
 - *Services* talk to each other only once, commerce → identity through Service Connect (AD-06). Everything else between services goes through events: commerce writes them to its outbox, a relay publishes them to SNS, and SNS delivers copies to the SQS queues that the notification service and the audit consumer read (AD-04).
 - *Every task* reads its database and session settings from SSM Parameter Store when it starts. Database passwords never pass through Terraform state (3.2.2).
+- *All three services* read the shared login session from Valkey over TLS with an AUTH token (AD-05).
+- *Outbound calls* leave through fck-nat: identity exchanges the Google OAuth code, and commerce calls the Stripe API. The same path carries the tasks' calls to AWS APIs; S3 traffic uses the gateway endpoint instead.
 
 #heading(level: 3, numbering: none, outlined: false)[Network and security groups]
 
@@ -156,7 +158,7 @@ The schema follows the team's PostgreSQL conventions (`pgsql-ddl` skill):
 
 #figure(kind: image, d9-notification, caption: [Notification database, logical data model (UML class notation for tables). A notification and the consumed-message record are written in one transaction, keyed by the same event ID.]) <fig-d9-notification>
 
-#figure(kind: image, scale(90%, reflow: true, d9-commerce), caption: [Commerce database, logical data model (UML class notation for tables; key columns only). Dashed lines are logical relationships with multiplicities; there are no foreign keys.]) <fig-d9-commerce>
+#figure(kind: image, scale(90%, reflow: true, d9-commerce), caption: [Commerce database, logical data model (UML class notation for tables; key columns only). Dashed lines are logical relationships with multiplicities; there are no foreign keys. A START intent reserves its `deal_id` before the team row exists, so the team end is 0..1.]) <fig-d9-commerce>
 
 ==== Indexes that protect invariants
 
@@ -168,7 +170,7 @@ Several business rules are guaranteed by unique indexes, so that a race between 
     [Index], [Rule it protects],
     [`uq_biz_group_member_deal_user` (`deal_id, user_id`)], [A buyer joins a team at most once],
     [`uq_biz_group_member_payment_id`], [One payment admits at most one member],
-    [`uq_biz_purchase_intent_fulfilled_payment`], [A purchase intent is fulfilled by at most one payment (ADR 0001)],
+    [`uq_biz_purchase_intent_fulfilled_payment`], [One payment fulfils at most one purchase intent, and so produces at most one order (ADR 0001)],
     [`uq_biz_payment_pending_intent` (`WHERE status = 'created'`)], [At most one open payment per purchase intent],
     [`uq_biz_payment_request_key` (`user_id, request_key`)], [A retried checkout request does not create a second payment],
     [`uq_biz_order_payment_id`, `uq_biz_order_deal_user`], [One order per payment, and one order per buyer per team],

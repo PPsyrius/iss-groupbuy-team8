@@ -47,7 +47,7 @@
       [`svc`], [TCP 8589 from `alb` and from `svc` (Service Connect)], [all (via fck-nat, VPC)],
       [`rds`], [TCP 5432 from `svc` and `dbinit`], [none],
       [`cache`], [TCP 6379 from `svc`], [none],
-      [`dbinit`], [none], [TCP 5432 to `rds`],
+      [`dbinit`], [none], [TCP 5432 to `rds`; TCP 443 to AWS APIs and ECR Public],
       [`nat`], [all from the private application CIDRs], [all to the internet],
     )
   ])
