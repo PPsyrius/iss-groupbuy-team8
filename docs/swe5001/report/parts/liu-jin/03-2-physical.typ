@@ -72,8 +72,6 @@ Configured and tested offline, not yet on AWS: module validation rejects data CI
 
 === Key Architectural Decisions
 
-#prompt[Provide a summary of the significant decisions made in arriving at the architecture of the solution that are related and/or reflected in the physical view. Documented decisions should focus on trade-off choices and rationale. You should continue the numbering from the previous architectural decisions table.]
-
 The key architectural decisions taken are as follows. Prices are on-demand list prices for `ap-southeast-1`, from the team's cost estimate of 25 September 2026 (`04-aws-cost-estimate.md`), unless the row says otherwise.
 
 #figure(
@@ -120,7 +118,7 @@ The solution uses managed AWS services wherever one exists, so the team runs no 
 
 *Encryption and secrets.* Data is encrypted at rest everywhere it is stored: RDS storage, the Valkey node, SNS (AWS-managed key), SQS (SQS-managed keys), ECR and the Terraform state bucket. In transit, browsers use HTTPS to CloudFront, the services use TLS to RDS (`rds.force_ssl = 1`, `sslmode=require`) and to Valkey (with an AUTH token). The CloudFront → ALB hop is plain HTTP (AISS-08). Database passwords are generated as ephemeral values and written with write-only arguments, so they never reach Terraform state; the Valkey AUTH token and the origin secret do reach it (AISS-09). Each service connects with its own app role, and only `db-init` uses the master password.
 
-*Cost.* Calculated from the AD rows: while it is up, the runtime costs about US\$0.12 to US\$0.20 an hour (AD-12), and nothing for the rest of the week except the permanent edge. A measured figure from the AWS bill is not cited here, because the repository holds no record of it yet; chapter 6 reports the measured cost once that record is added.
+*Cost.* Calculated from the AD rows: while it is up, the runtime costs about US\$0.12 to US\$0.20 an hour (AD-12), and nothing for the rest of the week except the permanent edge. A measured figure from the AWS bill is not cited here, because the repository holds no record of it yet; #pending[chapter 6 reports the measured cost once that record is added (check with chapter 6 at the reconcile)].
 
 === Persistence Design
 
@@ -184,24 +182,24 @@ Several business rules are guaranteed by unique indexes, so that a race between 
 
 ==== Aggregates and their tables
 
-Each persisted aggregate maps to the tables below. The aggregate names are the domain class names in `blocbuy-domain`; rows marked † are to be aligned with the aggregate names in 3.1.4 at the final review.
+Each persisted aggregate maps to the tables below. The aggregate names are the domain class names in `blocbuy-domain`; #pending[the names in red are to be aligned with the aggregate names in 3.1.4 at the final review].
 
 #figure(
   table(
     columns: (auto, auto, 1fr),
     [Aggregate (domain class)], [Service], [Tables],
-    [Team (`GroupDeal`, with `TeamMembership`) †], [commerce], [`biz_group_deal`, `biz_group_member`, `biz_group_participation_receipt`],
-    [Purchase intent (`PurchaseIntent`) †], [commerce], [`biz_purchase_intent`],
-    [Payment (`CheckoutPayment`) †], [commerce], [`biz_payment`, `log_payment_webhook_event`],
-    [Payment review (`PaymentReviewCase`) †], [commerce], [`biz_payment_review_case`, `log_payment_review`],
-    [Refund (`RefundWork`) †], [commerce], [`biz_refund`, `log_refund_attempt`],
-    [Order (`Order`) †], [commerce], [`biz_order`],
-    [Product (`Product`, `TeamPricePolicy`) †], [commerce], [`biz_product`, `biz_team_price_policy`, `biz_team_price_quote`, `log_product_team_terms`],
-    [Share (`ShareInvite`, `ShareCredit`) †], [commerce], [`biz_share_invite`, `biz_share_credit`],
-    [User (`User`) †], [identity], [`sys_user`, `sys_user_oauth`, `rel_user_role`],
-    [Notification (`Notification`) †], [notification], [`biz_notification`],
+    [#pending[Team (`GroupDeal`, with `TeamMembership`)]], [commerce], [`biz_group_deal`, `biz_group_member`, `biz_group_participation_receipt`],
+    [#pending[Purchase intent (`PurchaseIntent`)]], [commerce], [`biz_purchase_intent`],
+    [#pending[Payment (`CheckoutPayment`)]], [commerce], [`biz_payment`, `log_payment_webhook_event`],
+    [#pending[Payment review (`PaymentReviewCase`)]], [commerce], [`biz_payment_review_case`, `log_payment_review`],
+    [#pending[Refund (`RefundWork`)]], [commerce], [`biz_refund`, `log_refund_attempt`],
+    [#pending[Order (`Order`)]], [commerce], [`biz_order`],
+    [#pending[Product (`Product`, `TeamPricePolicy`)]], [commerce], [`biz_product`, `biz_team_price_policy`, `biz_team_price_quote`, `log_product_team_terms`],
+    [#pending[Share (`ShareInvite`, `ShareCredit`)]], [commerce], [`biz_share_invite`, `biz_share_credit`],
+    [#pending[User (`User`)]], [identity], [`sys_user`, `sys_user_oauth`, `rel_user_role`],
+    [#pending[Notification (`Notification`)]], [notification], [`biz_notification`],
   ),
-  caption: [Aggregate-to-table mapping. Class names are in `blocbuy-domain`. † Name pending alignment with 3.1.4 (final review).],
+  caption: [Aggregate-to-table mapping. Class names are in `blocbuy-domain`. #pending[Names pending alignment with 3.1.4 (final review).]],
 ) <tab-aggregate-tables>
 
 ==== Transactions and concurrency
@@ -269,8 +267,6 @@ The design rule is that Valkey is never the lock of record or the only copy of a
 *Queues.* SNS delivers raw messages to SQS, and each subscription filters on the `eventType` attribute. The notification queue receives `TeamSucceeded`, `TeamExpired` and `PaymentSucceeded`; the audit queue receives every event whose type starts with `Team`. Each queue has a 60-second visibility timeout, 20-second long polling and 4-day retention; after 5 failed receives a message moves to the queue's DLQ, which keeps it for 14 days. Topic and queues are encrypted (AWS-managed SNS key, SQS-managed encryption).
 
 ==== Data classification
-
-#prompt[For each data group: data format; proposed storage technology; security requirements and controls; trade-off consideration.]
 
 #figure(
   table(

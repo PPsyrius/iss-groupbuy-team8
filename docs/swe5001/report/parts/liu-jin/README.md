@@ -39,10 +39,13 @@ typst compile --root . docs/swe5001/report/parts/liu-jin/part.typ "<output>.pdf"
 | 3.2.3 | Drafted: ownership, conventions, D9, invariant indexes, aggregate tables, transactions, technical tables, Valkey key model, event envelope, queues, data classification |
 | 3.4 | Drafted: AISS-01 to AISS-15 in the template's columns, roadmap R0–R2 |
 
-No `#todo` box is left. Items still marked in the text:
+No `#todo` box is left. Everything still pending is marked with `#pending[…]`, which renders as red text on a light-red highlight (`grep -n "#pending" *.typ` lists them):
 
-- **Aggregate names (3.2.3, marked †).** The rows use the domain class names (`GroupDeal`, `PurchaseIntent`, `CheckoutPayment`, …). Align them with Eric's aggregate table in 3.1.4.
-- **Roadmap dates (3.4, marked "pending review").** R0: promotion by Thu 12 Nov, evidence session Fri 13 Nov 2026. R1: 31 Mar 2027. R2: 30 Jun 2027 or a load trigger. R1 and R2 assume the platform continues after the course.
+- **Aggregate names (3.2.3, aggregate-to-table mapping).** The ten rows use the domain class names (`GroupDeal`, `PurchaseIntent`, `CheckoutPayment`, …). Align them with Eric's aggregate table in 3.1.4.
+- **Roadmap dates (3.4).** The four phase targets, the fifteen AISS target dates, the go-live assumption behind R1 and R2, and the move of AISS-12 from R0 to R1. R0: promotion by Thu 12 Nov, evidence session Fri 13 Nov 2026. R1: 31 Mar 2027. R2: 30 Jun 2027 or a load trigger.
+- **Measured cost (3.2.2).** The sentence that defers the measured cost to chapter 6, until a cost record is committed.
+
+Not marked, because they are verified statements rather than open questions: AD-08 (Fargate Spot on ARM64 is configured, but the evidence does not show task placement) and AISS-01 (the single NAT in zone a). Reviewers may still challenge them.
 
 ## For the reconcile PR
 
@@ -59,4 +62,4 @@ No `#todo` box is left. Items still marked in the text:
    | AISS-04, -08, -09, -15 security gaps | 4.3 (Pan) |
    | Measured cost is not cited; chapter 6 reports it once a record exists | 6 (Lim) |
 
-3. Reviewers should look at three judgement calls: AD-08 (Fargate Spot on ARM64 is configured but its placement is not shown by the evidence), AISS-01 (the single NAT in zone a leaves zone b without egress if zone a fails) and the move of AISS-12 from R0 to R1.
+3. Resolve every `#pending[…]` (red) item, then remove the marker. The full report must contain none at submission.

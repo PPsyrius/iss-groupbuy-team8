@@ -27,6 +27,8 @@
     Practice Module for Graduate Certificate in Architecting Scalable Systems · Team 8 \
     Draft for the reconcile review — not the submitted report. Section numbers follow the template.
   ]
+  #v(0.4cm)
+  #text(10pt)[#pending[Text like this] is pending team review or a cross-part check at the reconcile PR.]
   #v(1fr)
 ]
 

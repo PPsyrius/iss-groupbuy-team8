@@ -26,7 +26,7 @@ typst compile --root . docs/swe5001/report/main.typ docs/swe5001/report/build/re
 
 **Individual parts.** Until every section is drafted, each member writes in `parts/<member>/` and does not edit the shared chapter files under `sections/`. A part keeps its section files at the template heading level (`==` for a section such as 3.2), imports the shared `lib.typ`, `diagrams/style.typ` and the numbers in `registers.md`, and has a `README.md` listing its sections, status, cross-part facts and the exact include lines for the reconcile. A `part.typ` builds the part alone with the template's section numbers. One reconcile PR then wires every part into `sections/`, checks the cross-part facts, and runs the whole-report review. See [`parts/liu-jin/`](parts/liu-jin/README.md) for an example.
 
-The scaffold helpers mark unfinished work: `#prompt[…]` is the template's own guidance text, `#todo(…)` lists what the section must still contain, `#owner(…)` names the owner, and `#diagram-slot(…)` reserves a figure. Delete them as the section is written; a finished section contains none. Use `\#123` for issue numbers in text, because a bare `#` starts Typst code.
+The scaffold helpers mark unfinished work: `#prompt[…]` is the template's own guidance text, `#todo(…)` lists what the section must still contain, `#owner(…)` names the owner, `#diagram-slot(…)` reserves a figure, and `#pending[…]` shows written text that still needs team review or a cross-part check (red on a light-red highlight). Delete them as the section is written and reviewed; a finished section contains none. Use `\#123` for issue numbers in text, because a bare `#` starts Typst code.
 
 ## Writing rules
 
@@ -141,5 +141,5 @@ Link ADs to their ADR in [`backend/docs/adr/`](../../../backend/docs/adr/README.
 - [ ] One AD register and one AISS register, with no conflicting IDs.
 - [ ] All D1–D14 present and referenced from the text.
 - [ ] Effort per member and milestones match section 2.3 and the agreed split.
-- [ ] No `#prompt`, `#todo`, `#owner` or `#diagram-slot` left; the PDF builds without warnings; contents, figure numbers and cross-references checked in the PDF.
+- [ ] No `#prompt`, `#todo`, `#owner`, `#diagram-slot` or `#pending` left; the PDF builds without warnings; contents, figure numbers and cross-references checked in the PDF.
 - [ ] Submitted before 16 November 2026.

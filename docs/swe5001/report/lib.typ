@@ -79,6 +79,11 @@
   ],
 )
 
+// Text pending team review or a cross-part check at the reconcile PR. Red on a light-red
+// highlight, so it is not confused with red diagram labels. None may remain at submission.
+#let pending-red = rgb("#C62828")
+#let pending(body) = highlight(fill: rgb("#FDECEA"), text(fill: pending-red, body))
+
 // Placeholder for a diagram that is not drawn yet.
 #let diagram-slot(id, caption) = figure(
   rect(
