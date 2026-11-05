@@ -1,0 +1,53 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam ArrowColor #6B655C
+skinparam DefaultFontColor #1B1A18
+skinparam NoteBackgroundColor #FFF6E2
+skinparam NoteBorderColor #7A5C20
+skinparam classAttributeIconSize 0
+skinparam ClassBackgroundColor #FDEFEC
+skinparam ClassBorderColor #B02E1B
+skinparam InterfaceBackgroundColor #F1F4FD
+skinparam InterfaceBorderColor #3E5CD9
+skinparam ParticipantBackgroundColor #FDEFEC
+skinparam ParticipantBorderColor #B02E1B
+skinparam SequenceGroupBackgroundColor #EFE9DF
+skinparam SequenceGroupBodyBackgroundColor white
+!pragma layout smetana
+hide empty members
+class StripeCheckoutService {
+  -business : PaymentBusinessPort
+  +handleWebhook(rawBody : String, signature : String) : void
+}
+interface PaymentBusinessPort <<interface>> {
+  +lockForSettlement(quote : CheckoutQuote) : void
+  +fulfil(event : PaymentSucceeded) : Outcome
+}
+class OrderFulfilmentAdapter {
+  -groups : PaidGroupDealService
+  +fulfil(event : PaymentSucceeded) : Outcome
+}
+class PaidGroupDealService {
+  -repository : PaidGroupDealRepository
+  +joinConfirmed(dealId : UUID, paid : PaidParticipation,\n  sharerUserId : UUID) : ParticipationResult
+}
+class GroupDeal <<aggregate root>> {
+  -currentSize : int
+  -targetSize : int
+  -status : DealStatus
+  +joinPaid(payment : PaidParticipation,\n  alreadyMember : boolean, now : Instant) : PaidAdmission
+}
+interface PaidGroupDealRepository <<interface>> {
+  +lockDeal(dealId : UUID) : Optional<GroupDeal>
+}
+class PaidGroupDealRepositoryImpl <<MyBatis adapter>>
+StripeCheckoutService --> "1" PaymentBusinessPort : business
+OrderFulfilmentAdapter .up.|> PaymentBusinessPort
+OrderFulfilmentAdapter --> "1" PaidGroupDealService : groups
+PaidGroupDealService ..> GroupDeal : admits buyer
+PaidGroupDealService --> "1" PaidGroupDealRepository : repository
+PaidGroupDealRepositoryImpl .up.|> PaidGroupDealRepository
+@enduml

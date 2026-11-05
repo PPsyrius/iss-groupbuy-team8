@@ -116,6 +116,16 @@ The [operator preparation guide](../../perf/k6/SCALING.md) documents local prepa
 - No separate cycle runs: every promotion run, the rehearsal and the presentation session are full creates from zero followed by a destroy.
 - Record create, smoke and destroy durations from at least three of them; target full up in under 30 minutes and no resource left after `env-status.sh`.
 
+**Measured on AWS:** the three runs below started with a clean runtime. The first Terraform apply added every runtime resource, with zero changes and zero destroys. The timings in seconds are the step timers in the linked up/down job logs. Full up is the wall time between GitHub's job start and completion, which includes provisioning, service readiness and smoke checks. Runtime destroy excludes the subsequent absence check.
+
+| Run (UTC, 2026) | Initial runtime apply | Smoke suite | Runtime destroy | Full up |
+|---|---:|---:|---:|---:|
+| 6 Oct, monolith promotion: [up](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37470479078/job/112294177568), [down](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37470479078/job/112300467712) | 506 s (71 added) | 67 s | 505 s (71 destroyed) | 12 min 46 s |
+| 17 Oct, three-service promotion: [up](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39008208244/job/117325956899), [down](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39008208244/job/117332083420) | 520 s (115 added) | 5 s | 709 s (115 destroyed) | 31 min 37 s |
+| 17 Oct, second three-service session: [up](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39014054529/job/117342374522), [down](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39016642278/job/117350012132) | 493 s (115 added) | 4 s | 761 s (115 destroyed) | 32 min 17 s |
+
+All three down jobs completed successfully. Only the monolith met the full-up target of under 30 minutes. The [19 October promotion](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39259845179) and [20 October promotion](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39435280952) each began by adding 3, changing 6 and destroying 3 resources. They are excluded from the clean-rebuild sample. These timings concern environment recreation and do not measure recovery of lost database contents.
+
 ---
 
 ## 5. Observability
