@@ -10,7 +10,7 @@
 
 BlocBuy runs on AWS in Singapore (`ap-southeast-1`) as three containers on ECS Fargate behind CloudFront and one Application Load Balancer (ALB), with one PostgreSQL server, one Valkey node and one SNS topic with SQS queues. Only the ALB and the NAT instance sit in public subnets. The services run in private application subnets, and the data stores sit in separate data subnets that have no route out of the virtual private cloud (VPC). Everything except the edge (CloudFront and the website bucket) is created from nothing for each session or release and destroyed afterwards (AD-12).
 
-Table 3.2a maps each element of the logical view (3.1.3) to the product that implements it.
+@tab-logical-physical maps each element of the logical view (3.1.3) to the product that implements it.
 
 #figure(
   table(
@@ -95,12 +95,32 @@ The key architectural decisions taken are as follows. Prices are on-demand list 
 
 === Technology and Services
 
-#todo(
-  [Versions and sizes table with one rationale per service (deck backup B7); keep the numbers identical to @tab-logical-physical.],
-  [Secrets: database passwords are generated ephemerally and written with write-only arguments, so they never reach Terraform state; the Valkey AUTH token and the origin secret do (AISS-09).],
-  [Encryption: RDS storage encrypted, `rds.force_ssl = 1`; Valkey at rest and in transit; SNS with the AWS-managed key; SQS with SSE.],
-  [Measured cost: US\$0.49 for runtime services over 15–17 October (seven sessions), from Cost Explorer. No evidence file is in the repository yet — add a screenshot before citing it.],
-)
+The solution uses managed AWS services wherever one exists, so the team runs no servers of its own apart from one NAT instance. Every choice favours the lowest cost that still shows the architecture, because the runtime exists only for a few hours a week (AD-12). @tab-tech lists the versions and sizes; the rationale for the main choices is in the AD rows of 3.2.1 and is not repeated here.
+
+#figure(
+  table(
+    columns: (0.8fr, 1.4fr, 2.2fr),
+    [Layer], [Technology and version], [Why this one, and what it costs us],
+    [Application runtime], [Java 21, Spring Boot 4.1.1, MyBatis; image `eclipse-temurin:21-jre-noble`, built for `linux/arm64`], [The SWE5006 code base, reused unchanged by the strangler migration (AD-01). One base image for all three services keeps patching in one place],
+    [Container platform], [ECS on Fargate, ARM64; 0.5 vCPU and 1 GiB per task], [No hosts to manage (AD-07). The task size was kept small on purpose: one 0.5 vCPU commerce task saturated at about 280 req/s on AWS on 19 Oct 2026 (evidence `20261019-v3-autoscaling`, 4.1), so the service scales out instead of up],
+    [Image registry], [Amazon ECR, one repository per service; immutable tags, scan on push, lifecycle policy], [Immutable tags make a release digest refer to exactly one image; Trivy in the pipeline is the blocking scan (5.2) and ECR's scan is a second record],
+    [Edge], [Amazon CloudFront (`PriceClass_200`, HTTP/2) and a private S3 bucket], [HTTPS without a custom domain or certificate; the website and the API share one origin, so the browser needs no cross-origin settings (AD-09). The price class excludes the most expensive edge locations],
+    [Load balancing], [Application Load Balancer, HTTP :80, path rules], [Path-based routing to three services without a separate API gateway product; rejected API Gateway because it adds a hop and a per-request charge],
+    [Service discovery], [ECS Service Connect], [Commerce calls identity by name inside the VPC with no load balancer or DNS records to manage],
+    [Relational database], [Amazon RDS for PostgreSQL 18, `db.t4g.micro`, 20 GiB gp3], [PostgreSQL 18 generates UUIDv7 keys natively (3.2.3). The smallest Graviton class is enough for demo load; the single database server is the next scaling limit (AISS-05)],
+    [Session store], [Amazon ElastiCache for Valkey 8.0, `cache.t4g.micro`, one node], [Redis-compatible, so Sa-Token and Spring Data Redis work unchanged; Valkey costs less than Redis OSS on ElastiCache. One node is a cost choice (AISS-01, AISS-10)],
+    [Messaging], [Amazon SNS (one topic) and SQS (standard queues with DLQs)], [Fan-out to several consumers with no broker to run (AD-04); standard queues give at-least-once delivery, which the consumers handle with `sys_consumed_message`],
+    [Outbound network], [fck-nat on `t4g.nano`], [About a tenth of a NAT Gateway's cost (AD-10)],
+    [Configuration and secrets], [SSM Parameter Store, SecureString with the AWS-managed key], [Free at this volume; tasks read values at start-up through their execution role. Secrets Manager was not needed, because rotation happens by rebuilding the runtime],
+    [Monitoring], [CloudWatch Logs (7-day retention), one dashboard, alarms to an SNS alert topic], [Managed and cheap at demo volume; logs are kept only as long as a sprint review needs them],
+    [Infrastructure as code], [Terraform 1.16, AWS provider 5.100; three stacks: `foundation`, `edge` and `runtime`], [The SWE5006 environment already used Terraform; `terraform test` runs offline in CI (5.2). Stack split by lifetime: `foundation` and `edge` are permanent, `runtime` is disposable],
+  ),
+  caption: [Technology and services, with versions and sizes from `backend/pom.xml`, `backend/Dockerfile` and `infra/swe5001` (checked on 5 November 2026).],
+) <tab-tech>
+
+*Encryption and secrets.* Data is encrypted at rest everywhere it is stored: RDS storage, the Valkey node, SNS (AWS-managed key), SQS (SQS-managed keys), ECR and the Terraform state bucket. In transit, browsers use HTTPS to CloudFront, the services use TLS to RDS (`rds.force_ssl = 1`, `sslmode=require`) and to Valkey (with an AUTH token). The CloudFront → ALB hop is plain HTTP (AISS-08). Database passwords are generated as ephemeral values and written with write-only arguments, so they never reach Terraform state; the Valkey AUTH token and the origin secret do reach it (AISS-09). Each service connects with its own app role, and only `db-init` uses the master password.
+
+*Cost.* Calculated from the AD rows: while it is up, the runtime costs about US\$0.12 to US\$0.20 an hour (AD-12), and nothing for the rest of the week except the permanent edge. A measured figure from the AWS bill is not cited here, because the repository holds no record of it yet; chapter 6 reports the measured cost once that record is added.
 
 === Persistence Design
 
@@ -206,9 +226,27 @@ Calculated: the relay publishes about 50 events per second, and only one copy ru
 
 ==== Non-relational stores and messages
 
-*Session store (Valkey).* Sa-Token keeps one session per login under the token name `blocbuy-token`, a random UUID sent as an HTTP-only cookie. Sessions expire after 86,400 seconds (24 hours); a user may hold several sessions at once (`is-concurrent: true`, `is-share: false`). Every service reads the same session, including the user's roles, so no service calls identity to authorise a request (AD-05). If the single node fails, every user is signed out but no business data is lost (AISS-10).
+*Session and cache store (Valkey).* Valkey holds only data that can be lost: login sessions, the role snapshot that lets any service authorise a request, one-time sign-in state, two read caches and rate-limit counters. Every key has a time to live (TTL), so nothing grows without bound. @tab-valkey lists the key model, taken from the code and configuration (Sa-Token 1.46.0, `application.yml`, `RedisKeys`); it has not been read from a running node.
 
-#todo([Add the Valkey key patterns observed in a running session (`blocbuy-token:login:*`), with TTL, once checked against Sa-Token's actual key names.])
+Sa-Token is configured with the token name `blocbuy-token`, a random UUID token sent as an HTTP-only cookie, a 24-hour timeout (`timeout: 86400`) and several concurrent sessions per user (`is-concurrent: true`, `is-share: false`). The application's own keys follow `blocbuy:{profile}:{domain}:{type}:{id}`, where `{profile}` is the active Spring profile list; on ECS that is `ec2,<service>,aws`, so each service's cache keys are separate from the others'.
+
+#figure(
+  table(
+    columns: (1.6fr, 0.7fr, 0.9fr, 1.8fr),
+    [Key pattern], [Written by], [TTL], [Content and what is lost if the node fails],
+    [`blocbuy-token:login:token:<token>`], [identity], [24 h], [Maps a token to the user ID. Lost: the user is signed out],
+    [`blocbuy-token:login:session:<userId>`], [identity], [24 h], [The user's account session and the list of that user's tokens. Lost: all of the user's devices are signed out],
+    [`blocbuy-token:rbac:login:{<userId>}`], [identity], [Same as the session], [`RedisLoginSnapshotGateway`. The user's roles and permissions; every service reads it to authorise a request without calling identity (AD-05). Lost: requests are refused until the user signs in again],
+    [`…:rbac:login:{<userId>}:refresh`], [identity], [2 min], [A fence so that only the latest role refresh is published. Lost: harmless],
+    [`blocbuy:{profile}:identity:oauth-state:<state>`], [identity], [Short (configured, default 5 min); deleted on first read], [`RedisOAuthStateStore`. One-time Google sign-in state that binds the callback to the browser that started it. Lost: a sign-in in progress must restart],
+    [`blocbuy:{profile}:groupbuy:best-open-deal:<productId>`], [commerce], [15–25 s (5–10 s for "none"), with jitter], [`RedisOpenDealOfferCache`. Cached best open team for a product page. Lost: the next read goes to PostgreSQL],
+    [`blocbuy:{profile}:groupbuy:invite-ref:<ref>`], [commerce], [20–30 s with jitter, never past the team's expiry], [`RedisCachedShareInviteRepository`. Cached share-invite lookup. Lost: the next read goes to PostgreSQL],
+    [`blocbuy:{profile}:common:rate-limit:<scope>:<digest>`], [commerce], [One rate-limit window], [`RedisRateLimitGateway`. Request counter per scope and hashed subject. If Valkey is unreachable the limiter fails open and counts the event in a metric],
+  ),
+  caption: [Valkey key model (from code and configuration, 5 November 2026). PostgreSQL remains the system of record; no business fact lives only in Valkey.],
+) <tab-valkey>
+
+The design rule is that Valkey is never the lock of record or the only copy of a business fact: the scheduler lease is in PostgreSQL (`sys_scheduler_lock`), and caches are read-through with short, jittered TTLs so that a lost node costs latency, not correctness. The cost of a lost node is that every user is signed out (AISS-10).
 
 *Event envelope.* Every integration event is published to SNS as JSON with this envelope (`IntegrationEventEnvelope`):
 
