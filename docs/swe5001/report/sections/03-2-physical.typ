@@ -184,24 +184,24 @@ Several business rules are guaranteed by unique indexes, so that a race between 
 
 ==== Aggregates and their tables
 
-#todo([Align the aggregate names with Eric's aggregate table in 3.1.4 before review.])
+Each persisted aggregate maps to the tables below. The aggregate names are the domain class names in `blocbuy-domain`; rows marked † are to be aligned with the aggregate names in 3.1.4 at the final review.
 
 #figure(
   table(
     columns: (auto, auto, 1fr),
     [Aggregate (domain class)], [Service], [Tables],
-    [Team (`GroupDeal`, with `TeamMembership`)], [commerce], [`biz_group_deal`, `biz_group_member`, `biz_group_participation_receipt`],
-    [Purchase intent (`PurchaseIntent`)], [commerce], [`biz_purchase_intent`],
-    [Payment (`CheckoutPayment`)], [commerce], [`biz_payment`, `log_payment_webhook_event`],
-    [Payment review (`PaymentReviewCase`)], [commerce], [`biz_payment_review_case`, `log_payment_review`],
-    [Refund (`RefundWork`)], [commerce], [`biz_refund`, `log_refund_attempt`],
-    [Order (`Order`)], [commerce], [`biz_order`],
-    [Product (`Product`, `TeamPricePolicy`)], [commerce], [`biz_product`, `biz_team_price_policy`, `biz_team_price_quote`, `log_product_team_terms`],
-    [Share (`ShareInvite`, `ShareCredit`)], [commerce], [`biz_share_invite`, `biz_share_credit`],
-    [User (`User`)], [identity], [`sys_user`, `sys_user_oauth`, `rel_user_role`],
-    [Notification (`Notification`)], [notification], [`biz_notification`],
+    [Team (`GroupDeal`, with `TeamMembership`) †], [commerce], [`biz_group_deal`, `biz_group_member`, `biz_group_participation_receipt`],
+    [Purchase intent (`PurchaseIntent`) †], [commerce], [`biz_purchase_intent`],
+    [Payment (`CheckoutPayment`) †], [commerce], [`biz_payment`, `log_payment_webhook_event`],
+    [Payment review (`PaymentReviewCase`) †], [commerce], [`biz_payment_review_case`, `log_payment_review`],
+    [Refund (`RefundWork`) †], [commerce], [`biz_refund`, `log_refund_attempt`],
+    [Order (`Order`) †], [commerce], [`biz_order`],
+    [Product (`Product`, `TeamPricePolicy`) †], [commerce], [`biz_product`, `biz_team_price_policy`, `biz_team_price_quote`, `log_product_team_terms`],
+    [Share (`ShareInvite`, `ShareCredit`) †], [commerce], [`biz_share_invite`, `biz_share_credit`],
+    [User (`User`) †], [identity], [`sys_user`, `sys_user_oauth`, `rel_user_role`],
+    [Notification (`Notification`) †], [notification], [`biz_notification`],
   ),
-  caption: [Aggregate-to-table mapping. Class names are in `blocbuy-domain`.],
+  caption: [Aggregate-to-table mapping. Class names are in `blocbuy-domain`. † Name pending alignment with 3.1.4 (final review).],
 ) <tab-aggregate-tables>
 
 ==== Transactions and concurrency
