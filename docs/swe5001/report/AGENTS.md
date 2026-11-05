@@ -13,6 +13,7 @@ docs/swe5001/report/
   lib.typ               shared styles and scaffold helpers (prompt, owner, todo, diagram-slot)
   sections/NN-name.typ  one Typst file per template chapter (01-introduction.typ … 06-highlights.typ)
   diagrams/             diagram sources (PlantUML, Mermaid or draw.io) and their exported SVG/PNG
+  parts/<member>/       one member's sections, diagrams, README.md and standalone part.typ, until the reconcile PR
   build/                compiled PDF (git-ignored)
 ```
 
@@ -22,6 +23,8 @@ Write chapters in Typst under `sections/`, one file per template chapter. Typst 
 mkdir -p docs/swe5001/report/build
 typst compile --root . docs/swe5001/report/main.typ docs/swe5001/report/build/report.pdf
 ```
+
+**Individual parts.** Until every section is drafted, each member writes in `parts/<member>/` and does not edit the shared chapter files under `sections/`. A part keeps its section files at the template heading level (`==` for a section such as 3.2), imports the shared `lib.typ`, `diagrams/style.typ` and the numbers in `registers.md`, and has a `README.md` listing its sections, status, cross-part facts and the exact include lines for the reconcile. A `part.typ` builds the part alone with the template's section numbers. One reconcile PR then wires every part into `sections/`, checks the cross-part facts, and runs the whole-report review. See [`parts/liu-jin/`](parts/liu-jin/README.md) for an example.
 
 The scaffold helpers mark unfinished work: `#prompt[…]` is the template's own guidance text, `#todo(…)` lists what the section must still contain, `#owner(…)` names the owner, and `#diagram-slot(…)` reserves a figure. Delete them as the section is written; a finished section contains none. Use `\#123` for issue numbers in text, because a bare `#` starts Typst code.
 

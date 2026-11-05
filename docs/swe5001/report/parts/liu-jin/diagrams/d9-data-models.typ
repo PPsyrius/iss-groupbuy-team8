@@ -2,7 +2,7 @@
 // multiplicities). Relationships are dashed: they are logical only, because the team's
 // convention forbids foreign keys (pgsql-ddl skill). Source of the 3.2.3 figures.
 // Column lists show keys and the columns the text refers to, not every column.
-#import "style.typ": *
+#import "../../../diagrams/style.typ": *
 
 #let tbl(name, ..cols, colour: grey) = align(left, {
   set text(size: 6.8pt)

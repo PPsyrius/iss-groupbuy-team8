@@ -1,5 +1,5 @@
 // 3.4 Architectural Limitation. Owner: Liu Jin (#742). Numbering fixed in ../registers.md.
-#import "../lib.typ": *
+#import "../../lib.typ": *
 
 == Architectural Limitation
 

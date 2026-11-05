@@ -1,9 +1,9 @@
 // 3.2 Physical Architecture & Design, 3.2.1–3.2.3. Owner: Liu Jin (#742).
-// 3.2.4 Detailed Design (Yu Qianshuo) stays in 03-solution-overview.typ.
-#import "../lib.typ": *
-#import "../diagrams/d5-physical-deployment.typ": d5
-#import "../diagrams/d6-network.typ": d6
-#import "../diagrams/d9-data-models.typ": d9-identity, d9-notification, d9-commerce
+// Individual part; wired into sections/03-solution-overview.typ by the reconcile PR.
+#import "../../lib.typ": *
+#import "diagrams/d5-physical-deployment.typ": d5
+#import "diagrams/d6-network.typ": d6
+#import "diagrams/d9-data-models.typ": d9-identity, d9-notification, d9-commerce
 
 
 == Physical Architecture & Design
