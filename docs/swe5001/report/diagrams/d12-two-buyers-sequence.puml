@@ -1,0 +1,54 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam ArrowColor #6B655C
+skinparam DefaultFontColor #1B1A18
+skinparam NoteBackgroundColor #FFF6E2
+skinparam NoteBorderColor #7A5C20
+skinparam classAttributeIconSize 0
+skinparam ClassBackgroundColor #FDEFEC
+skinparam ClassBorderColor #B02E1B
+skinparam InterfaceBackgroundColor #F1F4FD
+skinparam InterfaceBorderColor #3E5CD9
+skinparam ParticipantBackgroundColor #FDEFEC
+skinparam ParticipantBorderColor #B02E1B
+skinparam SequenceGroupBackgroundColor #EFE9DF
+skinparam SequenceGroupBodyBackgroundColor white
+hide footbox
+skinparam ParticipantPadding 5
+actor "A\nleader" as A
+actor "B\njoiner" as B
+participant "Stripe\nCheckout" as S #EFE9DF
+participant "checkout :\nStripeCheckoutService" as C
+participant "orders :\nOrderFulfilmentAdapter" as O
+participant "groups :\nPaidGroupDealService" as G
+A -> S : Pay for START
+S ->> C : signed START callback (via controller)
+group Leader settlement transaction
+  C -> O : lockForSettlement, then fulfil
+  O -> G : startConfirmed
+  G --> O : OPEN team, leader admitted
+  note over O,G : Save pending order and link it to the paid member.
+end
+A -> B : Share the same team's invitation
+B -> S : Pay for JOIN
+S ->> C : signed webhook (via controller)
+C -> S : retrieveCheckoutSession
+S --> C : paid session
+group Joiner settlement transaction
+  C -> O : lockForSettlement
+  note over C,O : Lock team, then intent, then payment.
+  C -> O : fulfil
+  O -> G : joinConfirmed
+  alt final seat available
+    G --> O : applied, team SUCCEEDED
+    note over O,G : Save joiner's order. Before commit,\nconfirm both pending orders.
+  else another buyer already took it
+    G --> O : rejected
+    O --> C : GROUP_REJECTED
+    note over C,O : Record refund obligation. No new order or seat.
+  end
+end
+@enduml
