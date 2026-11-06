@@ -8,9 +8,21 @@
 # (e.g. ec2).
 
 # Explicit OS line and multi-architecture digest; keep in sync with Dockerfile.ci.
-FROM eclipse-temurin:21-jre-noble@sha256:22138efd69393501fccd8176ae16b01791ed71ff801b28f0359415389b17c766
+FROM eclipse-temurin:21-jre-noble@sha256:0eda5830ed7b669abc246a8dc520ea8a23cab06f9a8d4b6964109e2f2394e46f
 
 WORKDIR /app
+
+# Temporary CVE-2026-109518 / CVE-2026-111497 repair; keep in sync with Dockerfile.ci.
+# Use HTTPS and disable retries while upgrading the vulnerable APT client.
+# Remove when the pinned upstream image meets all three minimum versions.
+RUN sed -i 's|http://|https://|g' /etc/apt/sources.list.d/ubuntu.sources \
+ && apt-get -o Acquire::Retries=0 update \
+ && apt-get -o Acquire::Retries=0 install -y --no-install-recommends --only-upgrade \
+      apt libapt-pkg6.0t64 libbrotli1 \
+ && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' apt)" ge '2.8.4ubuntu0.1' \
+ && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libapt-pkg6.0t64)" ge '2.8.4ubuntu0.1' \
+ && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libbrotli1)" ge '1.1.0-2ubuntu0.1' \
+ && rm -rf /var/lib/apt/lists/*
 
 # Remove the unused pebble test server; its Go runtime is outside our dependency updates.
 RUN rm -f /usr/bin/pebble \

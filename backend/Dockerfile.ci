@@ -4,8 +4,20 @@
 # Local builds use Dockerfile with the same prebuilt JAR (backend/docker-compose.yaml).
 
 # Explicit OS line and multi-architecture digest; keep in sync with Dockerfile.
-FROM eclipse-temurin:21-jre-noble@sha256:22138efd69393501fccd8176ae16b01791ed71ff801b28f0359415389b17c766
+FROM eclipse-temurin:21-jre-noble@sha256:0eda5830ed7b669abc246a8dc520ea8a23cab06f9a8d4b6964109e2f2394e46f
 WORKDIR /app
+
+# Temporary CVE-2026-109518 / CVE-2026-111497 repair; keep in sync with Dockerfile.
+# Use HTTPS and disable retries while upgrading the vulnerable APT client.
+# Remove when the pinned upstream image meets all three minimum versions.
+RUN sed -i 's|http://|https://|g' /etc/apt/sources.list.d/ubuntu.sources \
+ && apt-get -o Acquire::Retries=0 update \
+ && apt-get -o Acquire::Retries=0 install -y --no-install-recommends --only-upgrade \
+      apt libapt-pkg6.0t64 libbrotli1 \
+ && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' apt)" ge '2.8.4ubuntu0.1' \
+ && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libapt-pkg6.0t64)" ge '2.8.4ubuntu0.1' \
+ && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libbrotli1)" ge '1.1.0-2ubuntu0.1' \
+ && rm -rf /var/lib/apt/lists/*
 
 # Keep the runtime user and unused pebble removal in sync with Dockerfile.
 RUN rm -f /usr/bin/pebble \
