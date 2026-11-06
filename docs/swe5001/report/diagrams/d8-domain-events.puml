@@ -1,0 +1,50 @@
+@startuml d8-domain-events
+skinparam componentStyle uml2
+skinparam Shadowing false
+
+package "«service» commerce-svc (Producer Assembly)" #FDEFEC {
+  package "1. Producer Aggregates & Domain Events (In-Process)" {
+    [GroupDeal «AggregateRoot»\nRaises: MemberJoined,\nTeamSucceeded, TeamExpired] <<component>> as GroupDeal
+    [CheckoutPayment «AggregateRoot»\nRaises: PaymentSucceeded] <<component>> as Payment
+  }
+
+  package "2. In-Process Subscribers (Spring TransactionalEventListener)" {
+    [OrderLifecycleSubscriber\nBEFORE_COMMIT @Order(10)\nConfirms / Cancels Orders] <<component>> as OrderSub
+    [TeamExpiryRefundSubscriber\nBEFORE_COMMIT @Order(20)\nRecords biz_refund] <<component>> as RefundSub
+    [ShareCreditSubscriber\nAFTER_COMMIT (REQUIRES_NEW)\nWrites biz_share_credit] <<component>> as ShareSub
+    [IntegrationOutboxWriter\nBEFORE_COMMIT @Order(LOWEST)\nEnriches recipientUserIds via\nIntegrationRecipientRepository] <<component>> as OutboxWriter
+  }
+
+  database "sys_outbox\n(Same Local ACID Txn)" <<database>> as OutboxDB
+  [OutboxRelayJob + OutboxRelayService\n(LeasedJobRunner · Batches of 10\n5s attempt / 15s total timeout)] <<component>> as Relay
+}
+
+package "Broker Topology (Choreography)" #FFF6E2 {
+  [Message Broker Topic (SNS)\nPublished Language: IntegrationEventEnvelope<T>\nTeamSucceededV1 · TeamExpiredV1 · PaymentSucceededV1] <<component>> as Topic
+  [notification-events Queue\n+ DLQ (maxReceiveCount = 5)] <<component>> as NotifQ
+  [audit-events Queue\n+ DLQ (Filter: TeamSucceeded, TeamExpired)] <<component>> as AuditQ
+}
+
+package "«service» notification-svc (Consumer Assembly)" #F1F4FD {
+  [SqsNotificationEventConsumer\n+ IntegrationEventDecoder] <<component>> as Consumer
+  [NotificationEventAppService] <<component>> as NotifApp
+  database "sys_consumed_message (Dedup)\n+ biz_notification (1 ACID Txn)" <<database>> as NotifDB
+}
+
+GroupDeal --> OrderSub : TeamSucceeded / TeamExpired
+GroupDeal --> RefundSub : TeamExpired
+GroupDeal --> ShareSub : MemberJoined
+GroupDeal --> OutboxWriter : TeamSucceeded / TeamExpired
+Payment --> OutboxWriter : PaymentSucceeded
+
+OutboxWriter --> OutboxDB : INSERT OutboxInsert (UUIDv7)
+Relay --> OutboxDB : Claim due rows & mark published
+Relay ..> Topic : PublishBatch (SNS / ElasticMQ)
+
+Topic ..> NotifQ : Raw Message Delivery (All V1 Events)
+Topic ..> AuditQ : Filtered Fan-out (Zero Producer Change)
+
+NotifQ ..> Consumer : Long-Poll Receive
+Consumer --> NotifApp : Validated Envelope
+NotifApp --> NotifDB : Claim (event_id, consumer)\n+ Insert Notification
+@enduml

@@ -1,0 +1,87 @@
+@startuml d3-logical-view
+skinparam componentStyle uml2
+skinparam linetype ortho
+skinparam Shadowing false
+
+actor "Producer\n(Seller / Admin)" as Producer
+actor "Consumer\n(Buyer / Team Leader)" as Consumer
+
+package "Presentation Tier" {
+  [Web SPA] <<component>> as SPA
+  [CDN & Edge Gateway] <<component>> as Edge
+}
+
+package "Application Tier" {
+  package "«subsystem» Platform Services" #F1F4FD {
+    [Identity Service] <<component>> as IdentitySvc
+    [Notification Service] <<component>> as NotificationSvc
+  }
+  package "«subsystem» Business Application" #FDEFEC {
+    [Commerce Service\n(Catalog · GroupBuy · Order · Payment\n+ Transactional Outbox Relay)] <<component>> as CommerceSvc
+  }
+}
+
+package "Integration Tier" #FFF6E2 {
+  [Message Broker\n(Topic Fan-out)] <<component>> as Broker
+  [Notification Event Queue (+ DLQ)] <<component>> as NotifQueue
+  [Audit Event Queue (+ DLQ)] <<component>> as AuditQueue
+}
+
+package "Data Tier" {
+  database "Session Store\n(Shared Auth & RBAC Snapshot)" <<database>> as SessionStore
+  database "Identity Database" <<database>> as IdentityDB
+  database "Commerce Database" <<database>> as CommerceDB
+  database "Notification Database" <<database>> as NotifDB
+}
+
+package "External Systems" {
+  [External OAuth Provider] <<external system>> as OAuthExt
+  [External Payment Provider] <<external system>> as PaymentExt
+}
+
+interface "ProducerAPI\n(Sync HTTPS)" as IProducer
+interface "ConsumerAPI\n(Sync HTTPS)" as IConsumer
+interface "AuthAPI\n(Sync REST)" as IAuth
+interface "NotificationAPI\n(Sync REST)" as INotif
+interface "CommerceAPI\n(Sync REST)" as ICommerce
+interface "UserStatusPort\n(Sync REST)" as IUserPort #E8402A
+interface "PaymentWebhookAPI\n(Sync HTTPS)" as IWebhook
+interface "PublishedEventsV1\n(Async Event Contract)" as IEvents
+
+Producer --> IProducer
+Consumer --> IConsumer
+SPA -up- IProducer
+SPA -up- IConsumer
+SPA --> Edge : Sync HTTPS
+
+Edge --> IAuth
+IAuth - IdentitySvc
+
+Edge --> INotif
+INotif - NotificationSvc
+
+Edge --> ICommerce
+ICommerce - CommerceSvc
+
+CommerceSvc -[#E8402A,bold]-> IUserPort : 유일 Sync Inter-Service Call\n(UserAppService)
+IUserPort - IdentitySvc
+
+CommerceSvc ..> IEvents : Async Publish (Outbox Relay)
+IEvents - Broker
+Broker ..> NotifQueue : Async Fan-out
+Broker ..> AuditQueue : Async Fan-out (Extension Point)
+NotificationSvc ..> NotifQueue : Async Poll (Idempotent Consumer)
+
+IdentitySvc ..> SessionStore : Write Auth & RBAC Session
+CommerceSvc ..> SessionStore : Read Session
+NotificationSvc ..> SessionStore : Read Session
+
+IdentitySvc --> IdentityDB : SQL (Owner/App Role)
+CommerceSvc --> CommerceDB : SQL (Owner/App Role)
+NotificationSvc --> NotifDB : SQL (Owner/App Role)
+
+IdentitySvc --> OAuthExt : OAuth 2.0 (ACL)
+CommerceSvc --> PaymentExt : Checkout & Refund API (ACL)
+PaymentExt --> IWebhook : Signed Webhook
+IWebhook - Edge
+@enduml
