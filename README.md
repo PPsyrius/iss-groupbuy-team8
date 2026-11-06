@@ -89,7 +89,7 @@
     <td><strong>Backend</strong></td>
     <td>
       <img src="https://img.shields.io/badge/Java-21-41B5BE?style=flat" alt="Java 21">&nbsp;
-      <img src="https://img.shields.io/badge/Spring%20Boot-4.1.1-41B5BE?style=flat" alt="Spring Boot 4.1.1">&nbsp;
+      <img src="https://img.shields.io/badge/Spring%20Boot-4.1.2-41B5BE?style=flat" alt="Spring Boot 4.1.2">&nbsp;
       <img src="https://img.shields.io/badge/PostgreSQL-18-41B5BE?style=flat" alt="PostgreSQL 18">&nbsp;
       <img src="https://img.shields.io/badge/Redis-8.10-41B5BE?style=flat" alt="Redis 8.10">
     </td>
