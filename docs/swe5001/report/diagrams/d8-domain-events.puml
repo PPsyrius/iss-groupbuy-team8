@@ -21,8 +21,8 @@ package "«service» commerce-svc (Producer Assembly)" #FDEFEC {
 
 package "Broker Topology (Choreography)" #FFF6E2 {
   [Message Broker Topic (SNS)\nPublished Language: IntegrationEventEnvelope<T>\nTeamSucceededV1 · TeamExpiredV1 · PaymentSucceededV1] <<component>> as Topic
-  [notification-events Queue\n+ DLQ (maxReceiveCount = 5)] <<component>> as NotifQ
-  [audit-events Queue\n+ DLQ (Filter: TeamSucceeded, TeamExpired)] <<component>> as AuditQ
+  [notification Queue\n+ DLQ (maxReceiveCount = 5)] <<component>> as NotifQ
+  [audit Queue\n+ DLQ (Filter: TeamSucceeded, TeamExpired)] <<component>> as AuditQ
 }
 
 package "«service» notification-svc (Consumer Assembly)" #F1F4FD {

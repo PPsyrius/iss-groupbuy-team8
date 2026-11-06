@@ -1,5 +1,5 @@
 // Shared styles and scaffold helpers for the SWE5001 final report.
-// Remove `prompt`, `todo` and `owner` calls from a section once it is written.
+// Remove `prompt`, `todo`, `owner`, `diagram-slot` and `pending` calls once a section is written and reviewed.
 
 #let accent = rgb("#0a6fa8")
 #let muted = rgb("#5f6b78")
@@ -78,6 +78,11 @@
     #list(..items.pos())
   ],
 )
+
+// Text pending team review or a cross-part check at the reconcile PR. Red on a light-red
+// highlight, so it is not confused with red diagram labels. None may remain at submission.
+#let pending-red = rgb("#C62828")
+#let pending(body) = highlight(fill: rgb("#FDECEA"), text(fill: pending-red, body))
 
 // Placeholder for a diagram that is not drawn yet.
 #let diagram-slot(id, caption) = figure(

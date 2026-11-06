@@ -89,6 +89,20 @@ Derived from three sources: the presenter of each deck section on 21 October (v3
 
 Reviewer pairs (second owner per [`AGENTS.md`](AGENTS.md#workflow-per-section)): Eric ↔ Yu Qianshuo (DDD and class diagrams must use the same names), Liu Jin ↔ Pan (physical, security and performance share the network and scaling facts), Lim reviews Liu Jin's 3.4 and Eric reviews Lim's 3.3.
 
+## Cross-section facts
+
+Facts that one section states and another depends on. The owner of the second section checks them before the final review; the reconcile of 3.1 with 3.2–3.4 on 6 November 2026 aligned the aggregate names and AD-01 to AD-06, except the placement of `ShareInvite` and `ShareCredit`, which stays open until Eric confirms it (first row).
+
+| Stated in | Fact | Must match |
+|---|---|---|
+| 3.1.4 (Eric) | `ShareInvite` and `ShareCredit` are value objects inside `GroupDeal`; the code stores them through their own repositories (red marker in 3.1.4) | 3.2.3 aggregate-to-table mapping, D4, D7 |
+| 3.2.2 (Liu Jin) | One 0.5 vCPU commerce task saturated at about 280 req/s; three tasks about 455 req/s, the generator's limit (19 Oct 2026) | 4.1 (Pan) |
+| 3.4 AISS-13 (Liu Jin) | V4, V5, V7 and the identity outage have local results only | 4.2 (Yu Qianshuo) |
+| 3.2.3 (Liu Jin) | Settlement lock order team → purchase intent → payment | 3.2.4 UC4 sequence (Yu Qianshuo) |
+| 3.4 AISS-04, -08, -09, -15 (Liu Jin) | Security gaps and their R1 targets | 4.3 (Pan) |
+| 3.2.2 (Liu Jin) | Measured cost not cited until a record is committed (red marker) | 6 (Lim) |
+| 3.1 (Eric), 3.2 (Liu Jin) | Queues are `blocbuy-swe5001-notification` and `blocbuy-swe5001-audit` on AWS; `notification-events` is the local ElasticMQ name only | 4.x, 5.x |
+
 ## Chapter outline
 
 Template headings are fixed. "Must contain" lists what an assessor will look for; "Sources" lists where the facts already are. Owners are confirmed in [Section owners](#section-owners).
