@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 500" width="100%" height="100%">
+<rect width="1320" height="500" fill="#FFFFFF"/>
+
+  <defs>
+    <style>
+      text { font-family: Arial, Helvetica, sans-serif; fill: #1F2328; }
+      .title { font-size: 13px; font-weight: bold; }
+      .h1 { font-size: 12.5px; font-weight: bold; }
+      .h2 { font-size: 11.5px; font-weight: bold; }
+      .stereo { font-size: 10px; fill: #57606A; }
+      .body { font-size: 10.5px; fill: #1F2328; }
+      .small { font-size: 9.8px; fill: #57606A; }
+      .code { font-family: Consolas, 'Courier New', monospace; font-size: 9.8px; fill: #1F2328; }
+    </style>
+    <marker id="arrow-solid" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#2F363D"/>
+    </marker>
+    <marker id="arrow-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 9 5 L 1 8.5" fill="none" stroke="#2F363D" stroke-width="1.5"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#C93B2B"/>
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 9 5 L 1 8.5" fill="none" stroke="#6E3CBC" stroke-width="1.5"/>
+    </marker>
+    <marker id="diamond-black" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="8" markerHeight="8" orient="auto">
+      <polygon points="1,6 6,2 11,6 6,10" fill="#1F2328" stroke="#1F2328" stroke-width="1"/>
+    </marker>
+  </defs>
+
+<rect x="20" y="15" width="1280" height="36" fill="#FAF9F6" stroke="#D0D7DE" stroke-width="1.1" rx="4"/>
+<text x="35" y="38" class="h2">EventStorming Legend:</text>
+<rect x="195" y="24" width="18" height="18" fill="#B6E3FF" stroke="#0969DA" stroke-width="1.3" rx="3"/>
+<text x="219" y="37" class="body" style="font-weight:normal">Command</text>
+<rect x="295" y="24" width="18" height="18" fill="#FFF8C5" stroke="#9A6700" stroke-width="1.3" rx="3"/>
+<text x="319" y="37" class="body" style="font-weight:normal">Aggregate</text>
+<rect x="395" y="24" width="18" height="18" fill="#FFD8B5" stroke="#BC4C00" stroke-width="1.3" rx="3"/>
+<text x="419" y="37" class="body" style="font-weight:normal">Domain Event</text>
+<rect x="515" y="24" width="18" height="18" fill="#FFB77C" stroke="#7A2E00" stroke-width="2.4" rx="3"/>
+<text x="539" y="37" class="body" style="font-weight:bold">Pivotal Event (Java Record)</text>
+<rect x="725" y="24" width="18" height="18" fill="#E2D5F8" stroke="#6E3CBC" stroke-width="1.3" rx="3"/>
+<text x="749" y="37" class="body" style="font-weight:normal">Policy / Subscriber</text>
+<rect x="880" y="24" width="18" height="18" fill="#FFDCE5" stroke="#BF3989" stroke-width="1.3" rx="3"/>
+<text x="904" y="37" class="body" style="font-weight:normal">External System</text>
+<rect x="1020" y="24" width="18" height="18" fill="#FFCCD7" stroke="#A40E26" stroke-width="1.3" rx="3"/>
+<text x="1044" y="37" class="body" style="font-weight:normal">Hot Spot (Risk)</text>
+<rect x="20" y="65" width="500" height="415" fill="#FAFAFA" stroke="#6E6A64" stroke-width="1.2" stroke-dasharray="6,4" rx="5"/>
+<text x="35" y="88" class="h1">Act 1 鈥?UC3 Initiate &amp; UC4 Join: Pay-First Settlement</text>
+<rect x="545" y="65" width="400" height="415" fill="#FAFAFA" stroke="#6E6A64" stroke-width="1.2" stroke-dasharray="6,4" rx="5"/>
+<text x="560" y="88" class="h1">Act 2 鈥?UC5 Team Resolution (In-Txn + Outbox)</text>
+<rect x="970" y="65" width="330" height="415" fill="#FAFAFA" stroke="#6E6A64" stroke-width="1.2" stroke-dasharray="6,4" rx="5"/>
+<text x="985" y="88" class="h1">Act 3 鈥?UC6 Refund &amp; Async Fan-out</text>
+<rect x="35" y="102" width="145" height="66" fill="#B6E3FF" stroke="#0969DA" stroke-width="1.4" rx="4"/>
+<text x="107.5" y="121" text-anchor="middle" class="h2" style="fill:#1F2328">POST /intents &amp;</text>
+<text x="107.5" y="138" text-anchor="middle" class="small" style="fill:#1F2328">/checkout-sessions</text>
+<text x="107.5" y="153" text-anchor="middle" class="small" style="fill:#0969DA">(START or JOIN)</text>
+<rect x="195" y="102" width="150" height="66" fill="#FFF8C5" stroke="#9A6700" stroke-width="1.4" rx="4"/>
+<text x="270.0" y="121" text-anchor="middle" class="h2" style="fill:#1F2328">PurchaseIntent &amp;</text>
+<text x="270.0" y="138" text-anchor="middle" class="small" style="fill:#1F2328">CheckoutPayment</text>
+<text x="270.0" y="153" text-anchor="middle" class="small" style="fill:#7A5200">Freeze quote &amp; terms</text>
+<rect x="360" y="102" width="145" height="66" fill="#FFDCE5" stroke="#BF3989" stroke-width="1.4" rx="4"/>
+<text x="432.5" y="121" text-anchor="middle" class="h2" style="fill:#1F2328">Stripe Checkout</text>
+<text x="432.5" y="138" text-anchor="middle" class="small" style="fill:#1F2328">POST /webhooks/stripe</text>
+<text x="432.5" y="153" text-anchor="middle" class="small" style="fill:#9E2A6B">(Signed + Event Dedup)</text>
+<line x1="180" y1="135" x2="195" y2="135" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<line x1="345" y1="135" x2="360" y2="135" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<rect x="35" y="190" width="145" height="66" fill="#FFB77C" stroke="#7A2E00" stroke-width="2.4" rx="4"/>
+<text x="107.5" y="209" text-anchor="middle" class="h2" style="fill:#1F2328">PaymentSucceeded</text>
+<text x="107.5" y="226" text-anchor="middle" class="small" style="fill:#1F2328">Pivotal Event Record</text>
+<text x="107.5" y="241" text-anchor="middle" class="small" style="fill:#5E2200">(Money committed)</text>
+<rect x="195" y="190" width="150" height="66" fill="#E2D5F8" stroke="#6E3CBC" stroke-width="1.4" rx="4"/>
+<text x="270.0" y="209" text-anchor="middle" class="h2" style="fill:#1F2328">Policy: Fulfil Intent</text>
+<text x="270.0" y="226" text-anchor="middle" class="small" style="fill:#1F2328">1 Local ACID Txn</text>
+<text x="270.0" y="241" text-anchor="middle" class="small" style="fill:#5628A0">Lock: Team鈫扞ntent鈫扨ay</text>
+<rect x="360" y="190" width="145" height="66" fill="#FFF8C5" stroke="#9A6700" stroke-width="1.4" rx="4"/>
+<text x="432.5" y="209" text-anchor="middle" class="h2" style="fill:#1F2328">GroupDeal 路 Order</text>
+<text x="432.5" y="226" text-anchor="middle" class="small" style="fill:#1F2328">Product Stock</text>
+<text x="432.5" y="241" text-anchor="middle" class="small" style="fill:#7A5200">joinPaid + Order.create</text>
+<polyline points="432,168 432,179 107,179 107,190" fill="none" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<line x1="180" y1="223" x2="195" y2="223" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<line x1="345" y1="223" x2="360" y2="223" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<rect x="35" y="280" width="225" height="68" fill="#FFB77C" stroke="#7A2E00" stroke-width="2.4" rx="4"/>
+<text x="147.5" y="299" text-anchor="middle" class="h2" style="fill:#1F2328">MemberJoined (Record)</text>
+<text x="147.5" y="316" text-anchor="middle" class="small" style="fill:#1F2328">+ TeamStarted + OrderPlaced</text>
+<text x="147.5" y="331" text-anchor="middle" class="small" style="fill:#5E2200">(AFTER_COMMIT 鈫?ShareCredit)</text>
+<rect x="275" y="280" width="230" height="68" fill="#FFD8B5" stroke="#BC4C00" stroke-width="1.4" rx="4"/>
+<text x="390.0" y="299" text-anchor="middle" class="h2" style="fill:#1F2328">Alt: FulfilmentRejected</text>
+<text x="390.0" y="316" text-anchor="middle" class="small" style="fill:#1F2328">GROUP_REJECTED / BUSINESS_EXPIRED</text>
+<text x="390.0" y="331" text-anchor="middle" class="small" style="fill:#8A3600">鈫?Refund Obligation in Same Txn</text>
+<polyline points="432,256 432,268 147,268 147,280" fill="none" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<polyline points="432,256 432,268 390,268 390,280" fill="none" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<rect x="35" y="368" width="225" height="96" fill="#FFCCD7" stroke="#A40E26" stroke-width="1.6" rx="4"/>
+<text x="147.5" y="387" text-anchor="middle" class="h2" style="fill:#860B30">HS-1 Last-Slot &amp; HS-2 Replay</text>
+<text x="147.5" y="404" text-anchor="middle" class="small" style="fill:#1F2328">Row lock on GroupDeal + webhook</text>
+<text x="147.5" y="419" text-anchor="middle" class="small" style="fill:#1F2328">event claim &amp; unique payment index</text>
+<text x="147.5" y="434" text-anchor="middle" class="small" style="fill:#860B30">prevent over-admission &amp; replay</text>
+<rect x="275" y="368" width="230" height="96" fill="#FFCCD7" stroke="#A40E26" stroke-width="1.6" rx="4"/>
+<text x="390.0" y="387" text-anchor="middle" class="h2" style="fill:#860B30">HS-8 Shared Settlement Txn</text>
+<text x="390.0" y="404" text-anchor="middle" class="small" style="fill:#1F2328">Payment, Order, Stock &amp; Team</text>
+<text x="390.0" y="419" text-anchor="middle" class="small" style="fill:#1F2328">must commit or roll back together</text>
+<text x="390.0" y="434" text-anchor="middle" class="small" style="fill:#860B30">inside commerce-svc PostgreSQL</text>
+<rect x="560" y="102" width="180" height="66" fill="#FFB77C" stroke="#7A2E00" stroke-width="2.4" rx="4"/>
+<text x="650.0" y="121" text-anchor="middle" class="h2" style="fill:#1F2328">TeamSucceeded</text>
+<text x="650.0" y="138" text-anchor="middle" class="small" style="fill:#1F2328">Quota filled (current == target)</text>
+<text x="650.0" y="153" text-anchor="middle" class="small" style="fill:#5E2200">Status: OPEN 鈫?SUCCEEDED</text>
+<rect x="755" y="102" width="175" height="66" fill="#E2D5F8" stroke="#6E3CBC" stroke-width="1.4" rx="4"/>
+<text x="842.5" y="121" text-anchor="middle" class="h2" style="fill:#1F2328">BEFORE_COMMIT (@Order)</text>
+<text x="842.5" y="138" text-anchor="middle" class="small" style="fill:#1F2328">10: Confirm Team Orders</text>
+<text x="842.5" y="153" text-anchor="middle" class="small" style="fill:#5628A0">LOWEST: Outbox V1 Row</text>
+<line x1="740" y1="135" x2="755" y2="135" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<polyline points="505,223 532,223 532,135 560,135" fill="none" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<rect x="560" y="190" width="180" height="66" fill="#FFB77C" stroke="#7A2E00" stroke-width="2.4" rx="4"/>
+<text x="650.0" y="209" text-anchor="middle" class="h2" style="fill:#1F2328">TeamExpired</text>
+<text x="650.0" y="226" text-anchor="middle" class="small" style="fill:#1F2328">TeamExpirySweepJob (60s)</text>
+<text x="650.0" y="241" text-anchor="middle" class="small" style="fill:#5E2200">Status: OPEN 鈫?EXPIRED</text>
+<rect x="755" y="190" width="175" height="66" fill="#E2D5F8" stroke="#6E3CBC" stroke-width="1.4" rx="4"/>
+<text x="842.5" y="209" text-anchor="middle" class="h2" style="fill:#1F2328">BEFORE_COMMIT (@Order)</text>
+<text x="842.5" y="226" text-anchor="middle" class="small" style="fill:#1F2328">10: Cancel 路 20: Record Refund</text>
+<text x="842.5" y="241" text-anchor="middle" class="small" style="fill:#5628A0">LOWEST: Outbox V1 Row</text>
+<line x1="740" y1="223" x2="755" y2="223" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<rect x="560" y="280" width="370" height="68" fill="#FFD8B5" stroke="#BC4C00" stroke-width="1.4" rx="4"/>
+<text x="745.0" y="299" text-anchor="middle" class="h2" style="fill:#1F2328">OrdersConfirmed / Cancelled + RefundObligation</text>
+<text x="745.0" y="316" text-anchor="middle" class="small" style="fill:#1F2328">+ sys_outbox: TeamSucceededV1 / TeamExpiredV1 / PaymentSucceededV1</text>
+<text x="745.0" y="331" text-anchor="middle" class="small" style="fill:#8A3600">(Enriched with recipientUserIds inside the same transaction)</text>
+<line x1="842" y1="256" x2="842" y2="280" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<polyline points="930,135 938,135 938,268 842,268" fill="none" stroke="#2F363D" stroke-width="1.3"/>
+<rect x="560" y="368" width="370" height="96" fill="#FFCCD7" stroke="#A40E26" stroke-width="1.6" rx="4"/>
+<text x="745.0" y="387" text-anchor="middle" class="h2" style="fill:#860B30">HS-4 Sweeper vs Webhook Race on Expiring Team</text>
+<text x="745.0" y="404" text-anchor="middle" class="small" style="fill:#1F2328">Both acquire SELECT ... FOR UPDATE on GroupDeal first;</text>
+<text x="745.0" y="419" text-anchor="middle" class="small" style="fill:#1F2328">status-guarded transition makes the second caller a safe no-op</text>
+<text x="745.0" y="434" text-anchor="middle" class="small" style="fill:#860B30">preventing double-settlement or orphan refunds</text>
+<rect x="985" y="102" width="300" height="66" fill="#FFF8C5" stroke="#9A6700" stroke-width="1.4" rx="4"/>
+<text x="1135.0" y="121" text-anchor="middle" class="h2" style="fill:#1F2328">RefundWorkerJob 鈫?RefundWork</text>
+<text x="1135.0" y="138" text-anchor="middle" class="small" style="fill:#1F2328">Claims pending biz_refund outside DB txn</text>
+<text x="1135.0" y="153" text-anchor="middle" class="small" style="fill:#9E2A6B">Calls Stripe Refunds API (idempotency key)</text>
+<polyline points="930,305 958,305 958,135 985,135" fill="none" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<rect x="985" y="190" width="300" height="66" fill="#FFD8B5" stroke="#BC4C00" stroke-width="1.4" rx="4"/>
+<text x="1135.0" y="209" text-anchor="middle" class="h2" style="fill:#1F2328">RefundSucceeded / RetryDue / Review</text>
+<text x="1135.0" y="226" text-anchor="middle" class="small" style="fill:#1F2328">Exponential backoff up to 5 attempts;</text>
+<text x="1135.0" y="241" text-anchor="middle" class="small" style="fill:#8A3600">23h Stripe idempotency window guard (HS-6)</text>
+<line x1="1135" y1="168" x2="1135" y2="190" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<rect x="985" y="280" width="300" height="184" fill="#E2D5F8" stroke="#6E3CBC" stroke-width="1.4" rx="4"/>
+<text x="1135.0" y="299" text-anchor="middle" class="h2" style="fill:#1F2328">Async Cross-Service Choreography</text>
+<text x="1135.0" y="316" text-anchor="middle" class="small" style="fill:#1F2328">1. OutboxRelayJob (leased, batches of 10)</text>
+<text x="1135.0" y="331" text-anchor="middle" class="small" style="fill:#1F2328">2. SNS Topic fan-out by eventType filter</text>
+<text x="1135.0" y="346" text-anchor="middle" class="small" style="fill:#1F2328">3. SQS notification-events &amp; audit-events</text>
+<text x="1135.0" y="361" text-anchor="middle" class="small" style="fill:#1F2328">4. notification-svc: sys_consumed_message</text>
+<text x="1135.0" y="376" text-anchor="middle" class="small" style="fill:#1F2328">   dedup + insert biz_notification in 1 txn</text>
+<text x="1135.0" y="391" text-anchor="middle" class="small" style="fill:#5628A0">5. Zero callbacks to commerce-svc / identity-svc</text>
+<line x1="930" y1="325" x2="985" y2="325" stroke="#6E3CBC" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-purple)"/>
+</svg>
