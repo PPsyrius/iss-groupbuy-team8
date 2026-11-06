@@ -1,5 +1,5 @@
 // D5: physical deployment view (UML deployment diagram). Source of Figure 3.x in 3.2.
-#import "../../../diagrams/style.typ": *
+#import "style.typ": *
 
 #let d5 = {
   set text(font: ("Arial", "Helvetica"), size: 8pt, fill: ink)

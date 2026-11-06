@@ -1,6 +1,6 @@
 // D6: network and security-group view (AWS architecture diagram style: VPC, zones,
 // subnets and security groups as nested boxes; no icons). Source of the 3.2 figure.
-#import "../../../diagrams/style.typ": *
+#import "style.typ": *
 
 #let subnet(title, cidr, route, body, fill: white, stroke: grey) = block(
   width: 100%, inset: 5pt, radius: 2pt, fill: fill, stroke: 0.6pt + stroke,

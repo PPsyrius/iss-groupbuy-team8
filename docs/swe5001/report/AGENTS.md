@@ -10,10 +10,10 @@ docs/swe5001/report/
   AGENTS.md             this file
   registers.md          the one AD and AISS numbering
   main.typ              cover, contents and the chapter includes
-  lib.typ               shared styles and scaffold helpers (prompt, owner, todo, diagram-slot)
+  lib.typ               shared styles and scaffold helpers (prompt, owner, todo, diagram-slot, pending)
   sections/NN-name.typ  one Typst file per template chapter (01-introduction.typ … 06-highlights.typ)
-  diagrams/             diagram sources (PlantUML, Mermaid or draw.io) and their exported SVG/PNG
-  parts/<member>/       one member's sections, diagrams, README.md and standalone part.typ, until the reconcile PR
+  diagrams/             diagram sources: PlantUML, Mermaid or draw.io with their exported SVG/PNG,
+                        or Typst (fletcher) files that the chapter imports and renders directly
   build/                compiled PDF (git-ignored)
 ```
 
@@ -24,9 +24,9 @@ mkdir -p docs/swe5001/report/build
 typst compile --root . docs/swe5001/report/main.typ docs/swe5001/report/build/report.pdf
 ```
 
-**Individual parts.** Until every section is drafted, each member writes in `parts/<member>/` and does not edit the shared chapter files under `sections/`. A part keeps its section files at the template heading level (`==` for a section such as 3.2), imports the shared `lib.typ`, `diagrams/style.typ` and the numbers in `registers.md`, and has a `README.md` listing its sections, status, cross-part facts and the exact include lines for the reconcile. A `part.typ` builds the part alone with the template's section numbers. One reconcile PR then wires every part into `sections/`, checks the cross-part facts, and runs the whole-report review. See [`parts/liu-jin/`](parts/liu-jin/README.md) for an example.
+**One layout for every owner.** Each owner writes their sections directly in the chapter file under `sections/`, inside their own template headings, and does not edit another owner's headings without telling them. Diagram sources go in `diagrams/`, named `dNN-short-name`; figure and table labels follow `fig-dNN-…` and `tbl-…`. Because one chapter file holds several owners' sections, keep each pull request to your own headings, so that parallel PRs merge without conflicts. A question for another owner goes in a `#pending[…]` marker at the place it concerns, naming that owner.
 
-The scaffold helpers mark unfinished work: `#prompt[…]` is the template's own guidance text, `#todo(…)` lists what the section must still contain, `#owner(…)` names the owner, `#diagram-slot(…)` reserves a figure, and `#pending[…]` shows written text that still needs team review or a cross-part check (red on a light-red highlight). Delete them as the section is written and reviewed; a finished section contains none. Use `\#123` for issue numbers in text, because a bare `#` starts Typst code.
+The scaffold helpers mark unfinished work: `#prompt[…]` is the template's own guidance text, `#todo(…)` lists what the section must still contain, `#owner(…)` names the owner, `#diagram-slot(…)` reserves a figure, and `#pending[…]` shows written text that still needs team review or a cross-section check (red on a light-red highlight). Delete them as the section is written and reviewed; a finished section contains none. Use `\#123` for issue numbers in text, because a bare `#` starts Typst code.
 
 ## Writing rules
 
@@ -77,7 +77,7 @@ Initially checked against the repository on 21 October 2026; the lock-order clar
 
 - Use UML or a named notation (C4, DDD context map, crow's foot) and say which in the caption.
 - Each caption names the viewpoint and what the reader should notice: "Figure 3.5: Physical deployment view. Only the ALB and NAT sit in public subnets."
-- Commit the editable source next to the export in `diagrams/`; never commit an image without its source.
+- Commit the editable source next to the export in `diagrams/`; never commit an image without its source. A Typst diagram is its own source and needs no export.
 - Reuse [`docs/presentation-kit/diagrams/STYLE.md`](../../presentation-kit/diagrams/STYLE.md) colours so report and deck match.
 - One diagram, one purpose. Split a diagram that needs more than one sentence to explain what it shows.
 - Class and sequence diagrams for 3.2.4 show real classes, methods and transaction boundaries, not boxes named after services.

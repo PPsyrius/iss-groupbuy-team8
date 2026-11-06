@@ -1,5 +1,5 @@
 // Shared styles and scaffold helpers for the SWE5001 final report.
-// Remove `prompt`, `todo` and `owner` calls from a section once it is written.
+// Remove `prompt`, `todo`, `owner`, `diagram-slot` and `pending` calls once a section is written and reviewed.
 
 #let accent = rgb("#0a6fa8")
 #let muted = rgb("#5f6b78")
