@@ -23,7 +23,7 @@
       subnet([Public], pub, [0.0.0.0/0 → internet gateway],
         [#res[ALB node] #extra-pub], fill: infra-fill),
       subnet([Private application], app, [0.0.0.0/0 → fck-nat ENI; S3 gateway endpoint],
-        [#res[`identity-svc`] #res[`commerce-svc`] #res[`notification-svc`] #res[db-init (one-off)]],
+        [#res[ECS tasks] #text(size: 6.5pt, fill: grey)[placed by ECS in either application subnet]],
         fill: platform-fill, stroke: platform),
       subnet([Data], data, [local VPC route only — no NAT, no internet, no endpoint],
         [#res[RDS subnet group] #res[Valkey subnet group] \ #text(size: 6.5pt, fill: grey)[one RDS instance and one Valkey node, each in a zone AWS chooses]],
@@ -37,6 +37,8 @@
       zone("a", "10.50.0.0/24", "10.50.10.0/24", "10.50.20.0/24", res[fck-nat (EIP)]),
       zone("b", "10.50.1.0/24", "10.50.11.0/24", "10.50.21.0/24", []),
     )
+    #v(4pt)
+    #text(size: 7pt)[*ECS tasks across both application subnets:* #res[`identity-svc` ×1] #res[`commerce-svc` ×2–6 (×1–6 baseline)] #res[`notification-svc` ×1–4] #res[db-init, one-off]. A single task runs in one zone only, so a service at one task has no zone redundancy.]
     #v(5pt)
     #set text(size: 7pt)
     #table(

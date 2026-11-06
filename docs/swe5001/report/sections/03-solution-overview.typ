@@ -1,7 +1,7 @@
 #import "../lib.typ": *
 #import "../diagrams/d5-physical-deployment.typ": d5
 #import "../diagrams/d6-network.typ": d6
-#import "../diagrams/d9-data-models.typ": d9-identity, d9-notification, d9-commerce
+#import "../diagrams/d9-data-models.typ": d9-identity, d9-notification, d9-commerce-team, d9-commerce-payment
 
 // AD and AISS numbers come from ../registers.md. Replace each short description with
 // context, options, choice, trade-off and consequence (AGENTS.md writing rule 3).
@@ -547,7 +547,7 @@ BlocBuy's platform architecture serves two external participant sides and an exp
 - *Consumers (Buyers & Event Subscribers):* Joining buyers (`UC1`, `UC4`, `UC8`) browse dual-priced listings, join open teams with automatic refund protection, and read in-app notifications. On the technical plane, downstream services (`notification-svc` and the `audit` queue's reader) act as *event consumers* that derive new user-facing or analytical value from `commerce-svc` facts.
 
 *Demonstrated platform extensibility (measured reuse):*
-- *Zero-code event subscriber onboarding:* Adding the `audit` queue and its dead-letter queue to capture all `TeamSucceeded` and `TeamExpired` facts required *2 lines of Terraform configuration* in `infra/swe5001/modules/messaging/main.tf` (PR `\#487`) and *zero code or configuration changes* in `commerce-svc` (verified on AWS on 17 October 2026; detailed in Section 4.4).
+- *Zero-code event subscriber onboarding:* Adding the `audit` queue and its dead-letter queue to capture all `TeamSucceeded` and `TeamExpired` facts required *2 lines of Terraform configuration* in `infra/swe5001/modules/messaging/main.tf` (PR `#487`) and *zero code or configuration changes* in `commerce-svc` (verified on AWS on 17 October 2026; detailed in Section 4.4).
 - *Workload-isolated path for future high-compute and batch consumers (`#741`):* Because every team and payment fact is fanned out through SNS to independent SQS queues, future *compute-intensive or long-running batch workloads*—such as end-of-day financial settlement reconciliation, seller payout aggregation, or machine-learning deal-recommendation retraining that would exceed serverless FaaS 15-minute execution limits—can read the `audit` queue and run as isolated *ECS Scheduled Tasks or AWS Batch jobs* (`AD-07`, `AD-16`). This guarantees that heavy analytical or batch compute never contends with `commerce-svc` checkout tasks for CPU or PostgreSQL connection-pool capacity.
 
 *API contract and perimeter governance boundary:*
@@ -829,7 +829,11 @@ The schema follows the team's PostgreSQL conventions (`pgsql-ddl` skill):
 
 #figure(kind: image, d9-notification, caption: [Notification database, logical data model (UML class notation for tables). A notification and the consumed-message record are written in one transaction, keyed by the same event ID.]) <fig-d9-notification>
 
-#figure(kind: image, scale(90%, reflow: true, d9-commerce), caption: [Commerce database, logical data model (UML class notation for tables; key columns only). Dashed lines are logical relationships with multiplicities; there are no foreign keys. A START intent reserves its `deal_id` before the team row exists, so the team end is 0..1.]) <fig-d9-commerce>
+The commerce database owns 21 tables, so its model is split in two: catalogue and team purchase (@fig-d9-commerce-team), and purchase intent, payment, order, refund and the technical tables (@fig-d9-commerce-payment).
+
+#figure(kind: image, scale(90%, reflow: true, d9-commerce-team), caption: [Commerce database (1 of 2): catalogue and team purchase, logical data model (UML class notation for tables; key columns only). Dashed lines are logical relationships, with a multiplicity at each end; there are no foreign keys. The `payment_id` columns refer to `biz_payment` in @fig-d9-commerce-payment.]) <fig-d9-commerce-team>
+
+#figure(kind: image, scale(90%, reflow: true, d9-commerce-payment), caption: [Commerce database (2 of 2): purchase intent, payment, order, refund and technical tables, logical data model (UML class notation for tables; key columns only). `deal_id` and `product_id` refer to @fig-d9-commerce-team; a START intent reserves its `deal_id` before the team row exists, so the referenced team may not exist yet (0..1). The four technical tables are described in @tbl-technical.]) <fig-d9-commerce-payment>
 
 ==== Indexes that protect invariants
 

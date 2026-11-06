@@ -18,7 +18,7 @@
     node((2, 2), box-label("node", [Application Load Balancer], extra: [public subnets · HTTP :80]), fill: infra-fill, name: <alb>),
     node((0.2, 2), box-label("node", [fck-nat], extra: [t4g.nano · public subnet]), fill: infra-fill, name: <nat>),
     node((0.8, 3.3), box-label("execution environment", [`identity-svc`], extra: [Fargate · 1 task]), fill: platform-fill, stroke: platform, name: <id>),
-    node((2, 3.3), box-label("execution environment", [`commerce-svc`], extra: [Fargate · 2–6 tasks]), fill: business-fill, stroke: business, name: <com>),
+    node((2, 3.3), box-label("execution environment", [`commerce-svc`], extra: [Fargate · 2–6 tasks (1–6 baseline)]), fill: business-fill, stroke: business, name: <com>),
     node((3.2, 3.3), box-label("execution environment", [`notification-svc`], extra: [Fargate · 1–4 tasks]), fill: platform-fill, stroke: platform, name: <ntf>),
     node((3.0, 4.6), box-label("database", [RDS PostgreSQL 18], extra: [db.t4g.micro · 3 databases]), fill: white, name: <rds>),
     node((1.0, 4.6), box-label("database", [ElastiCache Valkey 8.0], extra: [cache.t4g.micro · sessions]), fill: white, name: <cache>),

@@ -91,7 +91,7 @@ Reviewer pairs (second owner per [`AGENTS.md`](AGENTS.md#workflow-per-section)):
 
 ## Cross-section facts
 
-Facts that one section states and another depends on. The owner of the second section checks them before the final review; the reconcile of 3.1 with 3.2–3.4 on 6 November 2026 closed the aggregate names and AD-01 to AD-06.
+Facts that one section states and another depends on. The owner of the second section checks them before the final review; the reconcile of 3.1 with 3.2–3.4 on 6 November 2026 aligned the aggregate names and AD-01 to AD-06, except the placement of `ShareInvite` and `ShareCredit`, which stays open until Eric confirms it (first row).
 
 | Stated in | Fact | Must match |
 |---|---|---|
