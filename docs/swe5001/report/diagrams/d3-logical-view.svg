@@ -1,0 +1,226 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 765" width="100%" height="100%">
+<rect width="1280" height="765" fill="#FFFFFF"/>
+
+  <defs>
+    <style>
+      text { font-family: Arial, Helvetica, sans-serif; fill: #1F2328; }
+      .title { font-size: 13px; font-weight: bold; }
+      .h1 { font-size: 12.5px; font-weight: bold; }
+      .h2 { font-size: 11.5px; font-weight: bold; }
+      .stereo { font-size: 10px; fill: #57606A; }
+      .body { font-size: 10.5px; fill: #1F2328; }
+      .small { font-size: 9.8px; fill: #57606A; }
+      .code { font-family: Consolas, 'Courier New', monospace; font-size: 9.8px; fill: #1F2328; }
+    </style>
+    <marker id="arrow-solid" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#2F363D"/>
+    </marker>
+    <marker id="arrow-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 9 5 L 1 8.5" fill="none" stroke="#2F363D" stroke-width="1.5"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#C93B2B"/>
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 9 5 L 1 8.5" fill="none" stroke="#6E3CBC" stroke-width="1.5"/>
+    </marker>
+    <marker id="diamond-black" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="8" markerHeight="8" orient="auto">
+      <polygon points="1,6 6,2 11,6 6,10" fill="#1F2328" stroke="#1F2328" stroke-width="1"/>
+    </marker>
+  </defs>
+
+<rect x="135" y="18" width="280" height="697" fill="#FAFAFA" stroke="#6E6A64" stroke-width="1.2" stroke-dasharray="6,4" rx="4"/>
+<text x="275" y="38" text-anchor="middle" class="h2" style="fill:#4A4A4A">«tier» Presentation &amp; Edge Tier</text>
+<rect x="455" y="18" width="420" height="697" fill="#FAFAFA" stroke="#6E6A64" stroke-width="1.2" stroke-dasharray="6,4" rx="4"/>
+<text x="665" y="38" text-anchor="middle" class="h2" style="fill:#4A4A4A">«tier» Application &amp; Integration Tier</text>
+<rect x="905" y="18" width="190" height="697" fill="#FAFAFA" stroke="#6E6A64" stroke-width="1.2" stroke-dasharray="6,4" rx="4"/>
+<text x="1000" y="38" text-anchor="middle" class="h2" style="fill:#4A4A4A">«tier» Data Tier</text>
+<rect x="1115" y="18" width="150" height="697" fill="#FAFAFA" stroke="#6E6A64" stroke-width="1.2" stroke-dasharray="6,4" rx="4"/>
+<text x="1190" y="38" text-anchor="middle" class="h2" style="fill:#4A4A4A">External Systems</text>
+
+    <g stroke="#4A4A4A" stroke-width="1.5" fill="none">
+      <circle cx="65" cy="195" r="12" fill="#F8F6F2"/>
+      <line x1="65" y1="207" x2="65" y2="240"/>
+      <line x1="45" y1="218" x2="85" y2="218"/>
+      <line x1="65" y1="240" x2="48" y2="262"/>
+      <line x1="65" y1="240" x2="82" y2="262"/>
+    </g>
+    <text x="65" y="280" text-anchor="middle" class="h2">Producer</text>
+    <text x="65" y="296" text-anchor="middle" class="small">Seller · Admin</text>
+    <text x="65" y="310" text-anchor="middle" class="small">Team Leader</text>
+
+    <g stroke="#4A4A4A" stroke-width="1.5" fill="none">
+      <circle cx="65" cy="425" r="12" fill="#F8F6F2"/>
+      <line x1="65" y1="437" x2="65" y2="470"/>
+      <line x1="45" y1="448" x2="85" y2="448"/>
+      <line x1="65" y1="470" x2="48" y2="492"/>
+      <line x1="65" y1="470" x2="82" y2="492"/>
+    </g>
+    <text x="65" y="510" text-anchor="middle" class="h2">Consumer</text>
+    <text x="65" y="526" text-anchor="middle" class="small">Buyer · Joiner</text>
+    
+<rect x="150" y="295" width="115" height="110" fill="#FFFFFF" stroke="#57606A" stroke-width="1.3" rx="3"/>
+
+    <g stroke="#57606A" stroke-width="1.1" fill="#FFFFFF">
+      <rect x="248" y="301" width="11" height="13" rx="1"/>
+      <rect x="245" y="303" width="6" height="3" rx="0.5"/>
+      <rect x="245" y="309" width="6" height="3" rx="0.5"/>
+    </g>
+<text x="202" y="322" text-anchor="middle" class="stereo">«component»</text>
+<text x="207" y="342" text-anchor="middle" class="h1">Web SPA</text>
+<text x="207" y="362" text-anchor="middle" class="body">OpenAPI Client</text>
+<text x="207" y="378" text-anchor="middle" class="small">(Browser UI)</text>
+<line x1="95" y1="235" x2="150" y2="325" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<text x="108" y="268" class="small">HTTPS</text>
+<line x1="95" y1="455" x2="150" y2="375" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<text x="108" y="438" class="small">HTTPS</text>
+<rect x="290" y="150" width="110" height="380" fill="#F6F8FA" stroke="#57606A" stroke-width="1.3" rx="3"/>
+
+    <g stroke="#57606A" stroke-width="1.1" fill="#FFFFFF">
+      <rect x="383" y="156" width="11" height="13" rx="1"/>
+      <rect x="380" y="158" width="6" height="3" rx="0.5"/>
+      <rect x="380" y="164" width="6" height="3" rx="0.5"/>
+    </g>
+<text x="342" y="285" text-anchor="middle" class="stereo">«component»</text>
+<text x="345" y="305" text-anchor="middle" class="h1">CDN &amp; Edge</text>
+<text x="345" y="322" text-anchor="middle" class="h1">Gateway</text>
+<text x="345" y="345" text-anchor="middle" class="body">Static Delivery</text>
+<text x="345" y="362" text-anchor="middle" class="body">+ API Router</text>
+<text x="345" y="382" text-anchor="middle" class="small">(Blocks /internal/*)</text>
+<line x1="265" y1="350" x2="290" y2="350" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<rect x="475" y="102" width="380" height="190" fill="#F4F7FB" stroke="#2B5B84" stroke-width="1.4" rx="4"/>
+<text x="487" y="121" class="small" style="fill:#2B5B84;font-weight:bold">«subsystem» Platform Services</text>
+<rect x="490" y="130" width="168" height="148" fill="#FFFFFF" stroke="#2B5B84" stroke-width="1.3" rx="3"/>
+
+    <g stroke="#2B5B84" stroke-width="1.1" fill="#FFFFFF">
+      <rect x="641" y="136" width="11" height="13" rx="1"/>
+      <rect x="638" y="138" width="6" height="3" rx="0.5"/>
+      <rect x="638" y="144" width="6" height="3" rx="0.5"/>
+    </g>
+<text x="568" y="148" text-anchor="middle" class="stereo">«component»</text>
+<text x="574" y="166" text-anchor="middle" class="h1" style="fill:#2B5B84">Identity Service</text>
+<text x="574" y="186" text-anchor="middle" class="body">OAuth Sign-In · RBAC</text>
+<text x="574" y="202" text-anchor="middle" class="body">User Lifecycle</text>
+<text x="574" y="224" text-anchor="middle" class="small">Provides: AuthAPI,</text>
+<text x="574" y="240" text-anchor="middle" class="small" style="fill:#C93B2B">UserStatusPort (Internal)</text>
+<rect x="672" y="130" width="168" height="148" fill="#FFFFFF" stroke="#2B5B84" stroke-width="1.3" rx="3"/>
+
+    <g stroke="#2B5B84" stroke-width="1.1" fill="#FFFFFF">
+      <rect x="823" y="136" width="11" height="13" rx="1"/>
+      <rect x="820" y="138" width="6" height="3" rx="0.5"/>
+      <rect x="820" y="144" width="6" height="3" rx="0.5"/>
+    </g>
+<text x="750" y="148" text-anchor="middle" class="stereo">«component»</text>
+<text x="756" y="166" text-anchor="middle" class="h1" style="fill:#2B5B84">Notification Svc</text>
+<text x="756" y="186" text-anchor="middle" class="body">In-App Notices</text>
+<text x="756" y="202" text-anchor="middle" class="body">Idempotent Inbox</text>
+<text x="756" y="224" text-anchor="middle" class="small">Provides: NotificationAPI</text>
+<text x="756" y="240" text-anchor="middle" class="small">Consumes: EventsV1</text>
+<line x1="540" y1="278" x2="540" y2="306" stroke="#C93B2B" stroke-width="1.6"/>
+<circle cx="540" cy="311" r="4.5" fill="#FFFFFF" stroke="#C93B2B" stroke-width="1.6"/>
+<path d="M 533,316 A 7,7 0 0 0 547,316" fill="none" stroke="#C93B2B" stroke-width="1.6"/>
+<line x1="540" y1="323" x2="540" y2="372" stroke="#C93B2B" stroke-width="1.6"/>
+<text x="552" y="311" class="small" style="fill:#C93B2B;font-weight:bold">UserStatusPort (Sync REST)</text>
+<text x="552" y="325" class="small">Only direct inter-service call</text>
+<rect x="475" y="345" width="380" height="190" fill="#FDF6F5" stroke="#C93B2B" stroke-width="1.4" rx="4"/>
+<text x="487" y="364" class="h2" style="fill:#C93B2B">«subsystem» Core Business Application</text>
+<rect x="490" y="372" width="350" height="150" fill="#FFFFFF" stroke="#C93B2B" stroke-width="1.3" rx="3"/>
+
+    <g stroke="#C93B2B" stroke-width="1.1" fill="#FFFFFF">
+      <rect x="823" y="378" width="11" height="13" rx="1"/>
+      <rect x="820" y="380" width="6" height="3" rx="0.5"/>
+      <rect x="820" y="386" width="6" height="3" rx="0.5"/>
+    </g>
+<text x="665" y="390" text-anchor="middle" class="stereo">«component»</text>
+<text x="665" y="410" text-anchor="middle" class="h1" style="fill:#C93B2B">Commerce Service</text>
+<text x="665" y="430" text-anchor="middle" class="body">Modules: Catalog · GroupBuy · Order · Payment · Merchant</text>
+<text x="665" y="447" text-anchor="middle" class="body">+ Transactional Outbox Writer &amp; Leased Relay</text>
+<text x="665" y="468" text-anchor="middle" class="small">Provides: CatalogAPI, TeamOrderPaymentAPI, WebhookAPI</text>
+<text x="665" y="485" text-anchor="middle" class="small" style="fill:#C93B2B">Requires: UserStatusPort · Publishes: EventsV1</text>
+<rect x="475" y="565" width="380" height="135" fill="#FBF8F1" stroke="#8C6D3F" stroke-width="1.3" stroke-dasharray="5,3" rx="4"/>
+<text x="715" y="584" text-anchor="middle" class="h2" style="fill:#8C6D3F">«tier» Integration Tier (Event-Driven Broker)</text>
+<rect x="490" y="595" width="150" height="93" fill="#FFFFFF" stroke="#8C6D3F" stroke-width="1.3" rx="3"/>
+
+    <g stroke="#8C6D3F" stroke-width="1.1" fill="#FFFFFF">
+      <rect x="623" y="601" width="11" height="13" rx="1"/>
+      <rect x="620" y="603" width="6" height="3" rx="0.5"/>
+      <rect x="620" y="609" width="6" height="3" rx="0.5"/>
+    </g>
+<text x="562" y="613" text-anchor="middle" class="stereo">«component»</text>
+<text x="565" y="631" text-anchor="middle" class="h2">Message Broker</text>
+<text x="565" y="648" text-anchor="middle" class="body">Pub/Sub Topic</text>
+<text x="565" y="664" text-anchor="middle" class="small">Event-Type Filter</text>
+<text x="565" y="679" text-anchor="middle" class="small">Contract: V1 JSON</text>
+<rect x="662" y="595" width="178" height="43" fill="#FFFFFF" stroke="#8C6D3F" stroke-width="1.3" rx="3"/>
+<text x="751" y="612" text-anchor="middle" class="stereo">«component»</text>
+<text x="751" y="628" text-anchor="middle" class="h2">Notification Queue + DLQ</text>
+<rect x="662" y="645" width="178" height="43" fill="#FFFFFF" stroke="#8C6D3F" stroke-width="1.3" rx="3"/>
+<text x="751" y="662" text-anchor="middle" class="stereo">«component»</text>
+<text x="751" y="678" text-anchor="middle" class="h2">Audit Queue + DLQ</text>
+<line x1="640" y1="616" x2="662" y2="616" stroke="#2F363D" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrow-open)"/>
+<line x1="640" y1="666" x2="662" y2="666" stroke="#2F363D" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrow-open)"/>
+<line x1="565" y1="522" x2="565" y2="595" stroke="#2F363D" stroke-width="1.3" stroke-dasharray="4,3" marker-end="url(#arrow-open)"/>
+<text x="558" y="552" text-anchor="end" class="small">Async Publish (Outbox)</text>
+<polyline points="840,616 865,616 865,232 840,232" fill="none" stroke="#2F363D" stroke-width="1.3" stroke-dasharray="4,3" marker-end="url(#arrow-open)"/>
+<text x="858" y="552" text-anchor="end" class="small">Async Poll (EventsV1)</text>
+<line x1="400" y1="205" x2="432" y2="205" stroke="#2F363D" stroke-width="1.3"/>
+<path d="M 437,199 A 6,6 0 0 0 437,211" fill="none" stroke="#2F363D" stroke-width="1.3"/>
+<circle cx="439" cy="205" r="4" fill="#FFFFFF" stroke="#2F363D" stroke-width="1.3"/>
+<line x1="443" y1="205" x2="490" y2="205" stroke="#2F363D" stroke-width="1.3"/>
+<text x="437" y="192" text-anchor="middle" class="small">AuthAPI</text>
+<line x1="400" y1="445" x2="432" y2="445" stroke="#2F363D" stroke-width="1.3"/>
+<path d="M 437,439 A 6,6 0 0 0 437,451" fill="none" stroke="#2F363D" stroke-width="1.3"/>
+<circle cx="439" cy="445" r="4" fill="#FFFFFF" stroke="#2F363D" stroke-width="1.3"/>
+<line x1="443" y1="445" x2="490" y2="445" stroke="#2F363D" stroke-width="1.3"/>
+<text x="437" y="432" text-anchor="middle" class="small">CommerceAPI</text>
+<polyline points="365,150 365,90 756,90 756,130" fill="none" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<text x="530" y="84" text-anchor="middle" class="small">NotificationAPI (Sync REST)</text>
+
+    <g>
+      <path d="M 920,123 L 920,195 A 80.0,8 0 0 0 1080,195 L 1080,123 Z" fill="#FFFFFF" stroke="#2B5B84" stroke-width="1.3"/>
+      <ellipse cx="1000.0" cy="123" rx="80.0" ry="8" fill="#FFFFFF" stroke="#2B5B84" stroke-width="1.3"/>
+      <text x="1000.0" y="143" text-anchor="middle" class="stereo">«database»</text>
+      <text x="1000.0" y="158" text-anchor="middle" class="h2">Identity DB</text>
+    <text x="1000.0" y="173" text-anchor="middle" class="small">(sys_user, sys_audit_log)</text></g>
+
+    <g>
+      <path d="M 920,228 L 920,300 A 80.0,8 0 0 0 1080,300 L 1080,228 Z" fill="#FFFFFF" stroke="#2B5B84" stroke-width="1.3"/>
+      <ellipse cx="1000.0" cy="228" rx="80.0" ry="8" fill="#FFFFFF" stroke="#2B5B84" stroke-width="1.3"/>
+      <text x="1000.0" y="248" text-anchor="middle" class="stereo">«database»</text>
+      <text x="1000.0" y="263" text-anchor="middle" class="h2">Notification DB</text>
+    <text x="1000.0" y="278" text-anchor="middle" class="small">(biz_notification, inbox)</text></g>
+
+    <g>
+      <path d="M 920,338 L 920,414 A 80.0,8 0 0 0 1080,414 L 1080,338 Z" fill="#F8F6F2" stroke="#6E6A64" stroke-width="1.3"/>
+      <ellipse cx="1000.0" cy="338" rx="80.0" ry="8" fill="#F8F6F2" stroke="#6E6A64" stroke-width="1.3"/>
+      <text x="1000.0" y="358" text-anchor="middle" class="stereo">«database»</text>
+      <text x="1000.0" y="373" text-anchor="middle" class="h2">Session Store</text>
+    <text x="1000.0" y="388" text-anchor="middle" class="small">(Valkey Login &amp; RBAC)</text></g>
+
+    <g>
+      <path d="M 920,453 L 920,529 A 80.0,8 0 0 0 1080,529 L 1080,453 Z" fill="#FFFFFF" stroke="#C93B2B" stroke-width="1.3"/>
+      <ellipse cx="1000.0" cy="453" rx="80.0" ry="8" fill="#FFFFFF" stroke="#C93B2B" stroke-width="1.3"/>
+      <text x="1000.0" y="473" text-anchor="middle" class="stereo">«database»</text>
+      <text x="1000.0" y="488" text-anchor="middle" class="h2">Commerce DB</text>
+    <text x="1000.0" y="503" text-anchor="middle" class="small">(biz_* + sys_outbox)</text></g>
+<polyline points="658,150 663,150 663,72 1000,72 1000,115" fill="none" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<line x1="840" y1="260" x2="920" y2="260" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<polyline points="658,265 666,265 666,284 890,284 890,365 920,365" fill="none" stroke="#57606A" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrow-open)"/>
+<line x1="840" y1="392" x2="920" y2="392" stroke="#57606A" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrow-open)"/>
+<line x1="840" y1="490" x2="920" y2="490" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<rect x="1125" y="130" width="130" height="95" fill="#F8F6F2" stroke="#6E6A64" stroke-width="1.3" rx="3"/>
+<text x="1190" y="152" text-anchor="middle" class="stereo">«external system»</text>
+<text x="1190" y="172" text-anchor="middle" class="h2">OAuth Identity</text>
+<text x="1190" y="188" text-anchor="middle" class="body">Provider</text>
+<text x="1190" y="205" text-anchor="middle" class="small">(Google / JWKS)</text>
+<rect x="1125" y="405" width="130" height="105" fill="#F8F6F2" stroke="#6E6A64" stroke-width="1.3" rx="3"/>
+<text x="1190" y="427" text-anchor="middle" class="stereo">«external system»</text>
+<text x="1190" y="447" text-anchor="middle" class="h2">Payment Gateway</text>
+<text x="1190" y="465" text-anchor="middle" class="body">Hosted Checkout</text>
+<text x="1190" y="481" text-anchor="middle" class="body">&amp; Webhooks</text>
+<polyline points="658,165 667,165 667,56 1190,56 1190,130" fill="none" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<polyline points="840,510 885,510 885,552 1165,552 1165,510" fill="none" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<text x="1025" y="545" text-anchor="middle" class="small">Checkout &amp; Refund API (ACL)</text>
+<polyline points="1215,510 1215,746 345,746 345,530" fill="none" stroke="#2F363D" stroke-width="1.3" marker-end="url(#arrow-solid)"/>
+<text x="780" y="738" text-anchor="middle" class="small">Signed PaymentWebhookAPI (Sync HTTPS → Edge Gateway → Commerce Service)</text>
+</svg>
