@@ -144,7 +144,7 @@
 <text x="1135.0" y="299" text-anchor="middle" class="h2" style="fill:#1F2328">Async Cross-Service Choreography</text>
 <text x="1135.0" y="316" text-anchor="middle" class="small" style="fill:#1F2328">1. OutboxRelayJob (leased, batches of 10)</text>
 <text x="1135.0" y="331" text-anchor="middle" class="small" style="fill:#1F2328">2. SNS Topic fan-out by eventType filter</text>
-<text x="1135.0" y="346" text-anchor="middle" class="small" style="fill:#1F2328">3. SQS notification-events &amp; audit-events</text>
+<text x="1135.0" y="346" text-anchor="middle" class="small" style="fill:#1F2328">3. SQS notification &amp; audit</text>
 <text x="1135.0" y="361" text-anchor="middle" class="small" style="fill:#1F2328">4. notification-svc: sys_consumed_message</text>
 <text x="1135.0" y="376" text-anchor="middle" class="small" style="fill:#1F2328">   dedup + insert biz_notification in 1 txn</text>
 <text x="1135.0" y="391" text-anchor="middle" class="small" style="fill:#5628A0">5. Zero callbacks to commerce-svc / identity-svc</text>
