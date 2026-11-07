@@ -69,9 +69,12 @@ class SecurityBrowsersWorkflowTest(unittest.TestCase):
     def test_regeneration_cleans_contents_without_removing_the_output_directory(self):
         package = json.loads((ROOT / "frontend/package.json").read_text(encoding="utf-8"))
         config = (ROOT / "frontend/openapi-ts.config.ts").read_text(encoding="utf-8")
-        self.assertEqual(package["scripts"]["gen:api"], "node scripts/clean-api-output.mjs && openapi-ts && node scripts/ts-nocheck-generated.mjs")
+        self.assertEqual(package["scripts"]["gen:api"], "node scripts/verify-generator-params.mjs && node scripts/clean-api-output.mjs && openapi-ts && node scripts/ts-nocheck-generated.mjs")
         self.assertIn('output: { path: "src/api/generated", clean: false }', config)
         self.assertIn("COPY frontend/scripts/clean-api-output.mjs scripts/clean-api-output.mjs", self.recipe)
+        verifier_copy = "COPY frontend/scripts/verify-generator-params.mjs scripts/verify-generator-params.mjs"
+        self.assertIn(verifier_copy, self.recipe)
+        self.assertLess(self.recipe.index(verifier_copy), self.recipe.index("RUN pnpm install --frozen-lockfile"))
 
 
 if __name__ == "__main__":

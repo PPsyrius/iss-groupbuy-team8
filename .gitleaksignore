@@ -22,3 +22,7 @@
 983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:175
 983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:177
 983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:178
+# Owner-confirmed false positives: four historical Sonar badge URL matches share
+# this exact commit/path/rule/line fingerprint; no README or rule-wide exception.
+# Disposition: docs/quality/nfr-sweep-2026-11-07.md
+ba1df47adbf1472fa31229050d6171bf32e36664:backend/README.md:generic-api-key:13

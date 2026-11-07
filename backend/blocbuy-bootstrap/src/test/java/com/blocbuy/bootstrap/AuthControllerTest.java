@@ -109,6 +109,9 @@ class AuthControllerTest {
 
         Cookie session = callback.getResponse().getCookie("blocbuy-token");
         assertThat(session).as("Sa-Token session cookie issued on login").isNotNull();
+        assertThat(session.isHttpOnly()).isTrue();
+        assertThat(session.getSecure()).isFalse();
+        assertThat(session.getAttribute("SameSite")).isEqualTo("Lax");
         assertThat(authorizationSession(USER).get(SessionRbac.SNAPSHOT))
                 .isEqualTo(Map.of("roles", List.of("buyer"), "permissions", List.of("order:read")));
 
