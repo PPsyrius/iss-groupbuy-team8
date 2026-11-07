@@ -28,6 +28,7 @@ from decimal import ROUND_HALF_UP, Decimal
 
 
 def read_items(path):
+    """Read the backlog items file; `issues` is a |-separated list of issue numbers."""
     items = []
     with open(path, newline="", encoding="utf-8") as fh:
         for row in csv.DictReader(fh):
@@ -37,16 +38,19 @@ def read_items(path):
 
 
 def read_snapshot(metrics, day):
+    """Read one daily board snapshot, keyed by issue number."""
     path = os.path.join(metrics, f"{day}.csv")
     with open(path, newline="", encoding="utf-8") as fh:
         return {int(r["number"]): r for r in csv.DictReader(fh)}
 
 
 def fmt(value):
+    """Format hours without a trailing .0, otherwise to one decimal place."""
     return f"{value:g}" if value == int(value) else f"{value:.1f}"
 
 
 def compute(items, metrics, days):
+    """Return the tracked total and one row per day (plus the start row)."""
     tracked = [i for i in items if i["issues"]]
     total = sum(i["hours"] for i in tracked)
     rows = [{"date": "start", "ideal_h": total, "remaining_h": total, "open_items": len(tracked), "board_estimate_h": "", "burned": ""}]
@@ -60,7 +64,7 @@ def compute(items, metrics, days):
         open_ids = {i["id"] for i in open_items}
         burned_today = [i["id"] for i in tracked if i["id"] not in open_ids and i["id"] not in burned_before]
         burned_before |= set(burned_today)
-        estimate = sum(float(snap[n]["estimate"] or 0) for n in sorted({n for i in items for n in i["issues"]}))
+        estimate = sum(float(snap[n]["estimate"] or 0) for n in sorted({n for i in tracked for n in i["issues"]}))
         rows.append(
             {
                 "date": day,
@@ -75,6 +79,7 @@ def compute(items, metrics, days):
 
 
 def write_csv(path, rows):
+    """Write the burndown rows as CSV."""
     with open(path, "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh, lineterminator="\n")
         w.writerow(["date", "ideal_h", "remaining_h", "open_items", "board_estimate_h", "burned_items"])
@@ -84,6 +89,7 @@ def write_csv(path, rows):
 
 
 def label(day):
+    """Turn a YYYY-MM-DD date into a short axis label such as "12 Oct"."""
     if day == "start":
         return "Start"
     months = {"01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr", "05": "May", "06": "Jun", "07": "Jul", "08": "Aug", "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dec"}
@@ -91,6 +97,7 @@ def label(day):
 
 
 def write_svg(path, rows, title, subtitle):
+    """Draw the ideal and actual remaining lines as an SVG chart; needs at least two rows."""
     width, height = 720, 420
     left, right, top, bottom = 64, 24, 92, 56
     pw, ph = width - left - right, height - top - bottom
@@ -139,6 +146,7 @@ def write_svg(path, rows, title, subtitle):
 
 
 def main():
+    """Parse the arguments, compute the burndown and write the outputs."""
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--items", required=True)
     p.add_argument("--metrics", required=True)
@@ -150,6 +158,8 @@ def main():
     a = p.parse_args()
     items = read_items(a.items)
     days = [d.strip() for d in a.days.split(",") if d.strip()]
+    if not days:
+        sys.exit("--days must list at least one date")
     total, rows = compute(items, a.metrics, days)
     write_csv(a.csv, rows)
     if a.svg:
