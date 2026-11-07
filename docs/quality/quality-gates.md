@@ -9,12 +9,12 @@ The numbers the pipeline enforces. Change to any row = team decision, recorded h
 | Static bugs | SpotBugs 4.10.5 (Maven plugin 4.10.5.0) | 0 findings, threshold Medium, effort Max | `verify` phase |
 | Architecture | ArchUnit 1.5.1 | all current rules green | unit tests (`ArchitectureTest`) |
 | Build gates | Maven Enforcer | Java [21,22), Maven ≥3.9, dependency convergence | `validate` phase |
-| Coverage | JaCoCo 0.8.15 → SonarCloud Backend | ≥ 80% on new code (server quality gate) | `ci-backend.yml` `sonar-backend` |
+| Coverage | JaCoCo 0.8.16 → SonarCloud Backend | ≥ 80% on new code (server quality gate) | `ci-backend.yml` `sonar-backend` |
 | Code quality | SonarCloud Backend | quality gate green: no new blocker/critical, A ratings on new code | `ci-backend.yml` `sonar-backend` |
 | Frontend coverage | Vitest V8 LCOV → SonarCloud Frontend | ≥ 80% on new code (server quality gate) | `ci-frontend.yml` `sonar-frontend` |
 | Frontend code quality | SonarCloud Frontend TypeScript analysis | quality gate green | `ci-frontend.yml` `sonar-frontend` |
-| Dependency CVEs | Trivy fs | 0 unfixed HIGH/CRITICAL (`exit-code: 1`, `ignore-unfixed`) | `security.yml` + weekly cron |
-| Image CVEs | Trivy image | 0 unfixed HIGH/CRITICAL (`exit-code: 1`, `ignore-unfixed`) | `ci-backend.yml` `docker` job |
+| Dependency CVEs | Trivy fs | 0 fixable HIGH/CRITICAL (`exit-code: 1`, `ignore-unfixed`) | `security.yml` + weekly cron |
+| Image CVEs | Trivy image | 0 fixable HIGH/CRITICAL (`exit-code: 1`, `ignore-unfixed`) | `ci-backend.yml` `docker` job |
 | Secrets | Gitleaks | Target: 0 leaks in full git history (unchanged) | `security.yml` event-selected scans; full-history gap below |
 | SAST | CodeQL (java-kotlin, build-mode none) | 0 alerts; opt-in via `ENABLE_CODEQL` repo variable | `security.yml` `codeql` job; currently disabled/unavailable, see [October 21 audit](../ci/ci-failure-audit-20261021.md) |
 | API contract | springdoc export | committed `contracts/openapi.json` identical to generated | `contract-check` job |
@@ -22,6 +22,8 @@ The numbers the pipeline enforces. Change to any row = team decision, recorded h
 | Boot smoke | container boot vs PG 18 + Redis 8 | `/actuator/health` = UP within 60s | `ci-backend.yml` `docker` job |
 
 2026-10-21: the [observed-failure repair](../ci/backend-pipeline.md#observed-ci-failures-and-scoped-repairs-2026-10-21) aligns the SpotBugs plugin/engine runtime; the table's existing Checkstyle and ArchUnit versions are synchronized with the parent POM. No required check, concurrency policy, test selection or coverage threshold changed. CodeQL remains disabled: its previous ingestion failure and current Code Scanning API 403 are recorded in the [audit](../ci/ci-failure-audit-20261021.md); it is not an available enforced gate.
+
+2026-11-07: reconciled JaCoCo 0.8.16 and **fixable** HIGH/CRITICAL wording with existing configuration; thresholds unchanged. [NFR audit](nfr-sweep-2026-11-07.md).
 
 ## Frontend dependency-alert remediation — 2026-11-06
 
@@ -31,6 +33,8 @@ Vitest and its coverage provider move together to 5.0.5; the Solid/Seroval tree 
 
 GHSA-hhx9-57xq-r5rw matches the API generator snapshot's `0.0.0-next-20260824173136` version ordering even though its installed `buildClientParams` template already uses null-prototype slot dictionaries. Retain the snapshot while the latest stable generator remains incompatible with TypeScript 7 ([upstream #4235](https://github.com/hey-api/hey-api/issues/4235)); do not downgrade TypeScript or suppress the advisory to obtain a clean scan. `frontend/scripts/verify-generator-params.mjs` runs before every API generation and exercises the advisory's `__proto__` substitution against all four slots in the installed template. This regression establishes disposition for that advisory only, not a general generator audit. GitHub alert dismissal requires separate owner review; a local mitigation or regression does not close an alert.
 
+2026-11-07: [#753](https://github.com/PPsyrius/iss-groupbuy-team8/pull/753) merged; owner dismissed [alert #3](https://github.com/PPsyrius/iss-groupbuy-team8/security/dependabot/3) as a false positive (API reason `fix_started`, explanatory comment). Zero open alerts observed. MEDIUM scanner finding remains; no Trivy suppression.
+
 ## Secret-scan scope checkpoint — 2026-10-14
 
 The full-history target above is unchanged, but `fetch-depth: 0` makes history available without selecting it for scanning. The pinned Gitleaks action chooses revisions by event; [observed dev run 38503702085](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/38503702085) used version 8.24.3 and `--log-opts=-1` (one commit). A green event-selected scan is not proof of a clean full history.
@@ -38,6 +42,8 @@ The full-history target above is unchanged, but `fetch-depth: 0` makes history a
 The [October 14 local audit](../agile/sprint-04/log/2026-10-14.md#2026-10-14---ppsyrius---http-scaling-and-demo-dashboard-457) scanned 375 commits with 8.24.3 and 8.28.0 and found 24 pre-existing matches: 20 confirmed SHA-256 entries and four old Sonar badge-token matches still needing disposition. Working changes passed separately. No new exclusion, history rewrite or acceptance decision was made; NFR-02 remains only partially verified against its full-history target.
 
 2026-10-21 disposition: the twenty file digests were recomputed against baseline commit `211cfb7d` and receive exact historical fingerprints in `.gitleaksignore`, not a path/rule-wide exclusion. Matching CI's full-history/all-ref scan over 458 commits, 8.24.3 reports 24 findings without the fingerprint file and four with it; 8.28.0 also retains the four badge-token findings. Both still exit 2 as configured by CI. No token was reused, rotated or accepted as safe; no history was rewritten. The [audit](../ci/ci-failure-audit-20261021.md) records evidence and the remaining blocker.
+
+2026-11-07: owner-confirmed Sonar badge false positives receive one exact fingerprint, not a path/rule exclusion. [Verification](nfr-sweep-2026-11-07.md#owner-confirmed-historical-false-positives): four → zero findings across 838 local commits; two new synthetic secrets still detected. Hosted full-history verification pending.
 
 ## Dynamic application security testing (DAST)
 

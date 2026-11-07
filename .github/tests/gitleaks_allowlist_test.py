@@ -6,13 +6,15 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class GitleaksAllowlistTest(unittest.TestCase):
-    def test_only_reviewed_historical_digest_fingerprints_are_ignored(self):
+    def test_only_reviewed_historical_fingerprints_are_ignored(self):
         lines = (ROOT / ".gitleaksignore").read_text(encoding="utf-8").splitlines()
         fingerprints = [line for line in lines if line and not line.startswith("#")]
         expected_lines = {11, 12, 44, 46, 67, 79, 117, 118, 119, 120, 126, 155, 156, 167, 168, 169, 174, 175, 177, 178}
         prefix = "983b401a62619f7d9b2087e92f8367bb88eeadba:scripts/stripe-dev-contract-baseline.json:generic-api-key:"
-        self.assertEqual(set(fingerprints), {f"{prefix}{line}" for line in expected_lines})
-        self.assertEqual(len(fingerprints), len(expected_lines))
+        expected = {f"{prefix}{line}" for line in expected_lines}
+        expected.add("ba1df47adbf1472fa31229050d6171bf32e36664:backend/README.md:generic-api-key:13")
+        self.assertEqual(set(fingerprints), expected)
+        self.assertEqual(len(fingerprints), len(expected))
         for fingerprint in fingerprints:
             self.assertRegex(fingerprint, r"^[a-f0-9]{40}:[^:]+:generic-api-key:[0-9]+$")
 
