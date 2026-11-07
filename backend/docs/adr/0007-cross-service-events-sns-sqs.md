@@ -4,7 +4,11 @@ Date: 2026-10-11
 
 ## Status
 
-Proposed (#443, parent #450). Becomes Accepted after team agreement at stand-up. Amends the "no message broker" rule of 2026-08-30 for messaging only; RabbitMQ and Elasticsearch stay out of the stack.
+Accepted (#443, parent #450) on 2026-11-06 by the review of the pull request that closes #443; that review stands in for the stand-up agreement the proposal asked for. Implemented by #473 (outbox), #485 (relay), #513 (SQS consumer) and #507 (DLQ runbook).
+
+Scope: the SWE5001 ECS topology (`infra/swe5001`). There the relay and consumer are on only when `services_enabled` and `messaging_verified` are both true, and `env-up.sh` sets the latter only after its routing gate; the repository records no ECS session that ran with the relay on. The SWE5006 EC2 `dev` stack keeps relay and consumer off and runs no broker (Sprint 4 decision, 2026-10-11). Local runs and CI use ElasticMQ.
+
+Amends the "no message broker" rule of 2026-08-30 for messaging only; RabbitMQ and Elasticsearch stay out of the stack.
 
 ## Context
 
@@ -44,7 +48,7 @@ Review amendment 2026-10-16 (#446, consumer): Spring Cloud AWS has no Spring Boo
 
 Business commits and event publication can no longer diverge: an event exists only if its transaction committed, and it is delivered at least once. Notifications lag commits by the relay interval, about 2 s.
 
-The full path except the SNS hop is exercised by ElasticMQ integration tests in CI and by every dev deployment, at no AWS cost. The SNS hop, filter policies, IAM and alarms are verified only in a SWE5001 ECS session, so that session must include a fan-out check and a DLQ drill. DLQ inspection and redrive (`start-message-move-task`) follow the [notification DLQ runbook](../operations/notification-dlq-redrive.md).
+The full path except the SNS hop is exercised by ElasticMQ integration tests in CI and by the local Docker Compose stack, at no AWS cost; the SWE5006 EC2 `dev` deployment keeps it disabled. The SNS hop, filter policies, IAM and alarms are verified only in a SWE5001 ECS session, so that session must include a fan-out check and a DLQ drill. DLQ inspection and redrive (`start-message-move-task`) follow the [notification DLQ runbook](../operations/notification-dlq-redrive.md).
 
 Adding a consumer means adding a queue and a subscription; the producer does not change. Consumers scale on queue backlog per task. The relay is a single active instance under its lease; its throughput (about 50 events per second at 100 rows per 2 s tick) exceeds expected load, and the evolution path is lease sharding by `aggregate_id` or change data capture.
 
