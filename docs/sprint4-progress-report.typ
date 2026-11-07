@@ -202,7 +202,7 @@ Sprint 4
 
 The sprint planned 224.5 hours over ten working days. No member logged hours, and the board's estimate field never decreased: the 47 cards that carried an estimate on 12 October kept the same value in every daily snapshot. The actual line is therefore reconstructed by the same method as Sprint 3: each backlog item keeps its planned hours while its issue is open in that day's board snapshot and burns in full on the snapshot where it is closed. The 10 hours of evidence work had no issue and are left out, so the chart starts at 214.5 hours.
 
-The line runs below the ideal on 15 October, when the service split closed ahead of the SWE5001 freeze, then stays at 96.5 hours from 19 October. Fifteen items were still open on 23 October: the report and presentation work, which ran past the sprint by design, and several items whose work was done or presented (the SWE5001 presentation, the production smoke run, though not its manual checks, the accepted risk, the architecture decision record) but whose cards were not closed. The flat tail therefore understates delivery.
+The line runs below the ideal on 15 October, when the service split closed ahead of the SWE5001 freeze, then stays at 96.5 hours from 19 October. Fifteen items were still open on 23 October: the report and presentation work, which ran past the sprint by design, and several items whose work was done or presented (the SWE5001 presentation, the production smoke run, though not its manual checks, the accepted risk, the architecture decision record, merged but still Proposed) but whose cards were not closed. The flat tail therefore understates delivery.
 
 #figure(
   table(

@@ -47,7 +47,7 @@ Sprint 4 was the last sprint, so no later sprint can test these actions.
 
 | Action | Owner | Basis |
 |---|---|---|
-| Close each open Sprint 4 issue whose work is delivered, or split off what remains: #227, #443, #454 (work done), #461, #464 (delivered); for #460 (smoke suite done), record the manual sign-in and notification checks or close them as not done | The planned card owner (plan §5); to be confirmed by the team | [review.md](review.md) "Carried over" |
+| Close each open Sprint 4 issue whose work is delivered, or split off what remains: #227, #454 (work done), #461, #464 (delivered); #443 once PR #750 marks ADR 0007 Accepted; for #460 (smoke suite done), record the manual sign-in and notification checks or close them as not done | The planned card owner (plan §5); to be confirmed by the team | [review.md](review.md) "Carried over" |
 | Decide whether #224, #448, #458 and #459 get their AWS or record evidence before the SWE5001 submission on 16 November, or are closed as known limitations | Planned owners @Yorick-Yu (#224, #459), @l0sgAi (#448), @EricWang1358 (#458); to be confirmed by the team | [log/2026-11-05.md](log/2026-11-05.md) says the R0 evidence session needs an owner in the 11–16 November window |
 | Close a card, or split off what remains, on the day its evidence is committed | To be confirmed by the team | Final report Table 2.10, Sprint 4 row |
 | Write closing keywords (`Closes`, `Closed`) in PR bodies only for issues the PR finishes | To be confirmed by the team | PR #683 closed #619 by accident |

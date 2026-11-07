@@ -40,7 +40,7 @@ Planned hours are the plan's (§5). "Remaining at 23 Oct" follows the burndown m
 | US28b NFR-37 accepted risk | @PPsyrius | 0.5 | 0.5 | Accepted risk decided at planning (plan §4 item 6); issue open | #227 |
 | US17 NFR register sweep | @PPsyrius | 1 | 1 | Register cleaned up 20–21 Oct; issue open | #454, PRs #568, #584 |
 | RF Admission and receipt refactor | @EricWang1358 | 2 | 0 | Done 13 Oct | #421–#423, PR #424 |
-| DEC Backend ADR 0007 | @l0sgAi | 3 | 3 | Merged 11 Oct, before the sprint; issue open | #443, PR #466 |
+| DEC Backend ADR 0007 | @l0sgAi | 3 | 3 | Merged 11 Oct as Proposed, before the sprint; acceptance is in PR #750; issue open | #443, PR #466 |
 | US38 Notification persistence and list endpoint | @PPsyrius | 8 | 0 | Done 13 Oct | #215, PR #478 |
 | US39 Transactional outbox | @Yorick-Yu | 12 | 0 | Done 13 Oct | #444, PR #473 |
 | US40 Outbox relay | @Yorick-Yu | 10 | 0 | Done 13 Oct | #445, PR #485 |
@@ -93,7 +93,8 @@ Sprint 4 was the last sprint, so nothing was carried into a next sprint. Open pa
 
 - #223 dev payment rollout: closed 25 Oct after PR #664.
 - #224 refund idempotency record; #448 and #459 SWE5001 evidence on AWS; #458 V3/V4 acceptance: open on 6 Nov.
-- #227, #443, #454: the work is done (accepted risk, ADR merged, register swept) but the issues are open.
+- #227, #454: the work is done (accepted risk, register swept) but the issues are open.
+- #443: ADR 0007 merged as Proposed; acceptance is in PR #750; the issue is open.
 - #461, #464: delivered (both presentations) with the issues open.
 - #460: partly delivered; the smoke suite passed at the 20 Oct promotion, but the manual sign-in and notification checks its acceptance criteria require were not recorded.
 - #462 SWE5001 progress report 2 and final report: no progress report 2 in the repository; final report in progress (due 16 Nov).
