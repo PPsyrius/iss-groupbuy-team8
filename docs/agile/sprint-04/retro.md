@@ -8,7 +8,7 @@ It does not meet #619's criterion of a retrospective held with the team's input 
 
 ## What went well
 
-- The plan's priority order held. The tier-1 microservice split (#455, #456, #467, #468, #469) closed on 13–14 October, before the 16 October SWE5001 freeze ([plan.md §6 item 6](plan.md); [review.md](review.md)), and the burndown was below the ideal line on 15 October (113.5 h against 128.7 h, [burndown.csv](burndown.csv)).
+- The split and the notification work ran in parallel, not in the planned order (plan §4 item 0 put the split first), and neither needed the priority-tier cuts: the tier-1 microservice split (#455, #456, #467, #468, #469) closed on 13–14 October, before the 16 October SWE5001 freeze, and the tier-2 outbox, relay and notification endpoint (#444, #445, #215) on 13 October ([plan.md §6 item 6](plan.md); [review.md](review.md)); and the burndown was below the ideal line on 15 October (113.5 h against 128.7 h, [burndown.csv](burndown.csv)).
 - The three-service release reached `prod` before the SWE5001 presentation: promotions on 17, 19 and 20 October, the last with the smoke suite green (PRs #534, #564, #574).
 - The paid journey that Sprint 3 could show only locally was shown on deployed dev: paid START and the expiry refund on 23 October, a second buyer's paid JOIN on 24 October (PR #664; #657; [log/2026-10-23.md](log/2026-10-23.md)).
 - Backend and frontend CI on `dev` stayed green through the sprint: ci-backend 34 of 34 runs, ci-frontend 32 of 32 (`gh run list --branch dev --created 2026-10-12..2026-10-23 --limit 1000`). The security workflow failed 2 of 123 runs, both the scheduled full-history scan ([review.md](review.md) "Environment and CI").
@@ -17,7 +17,7 @@ It does not meet #619's criterion of a retrospective held with the team's input 
 
 ## What could have gone better
 
-- Cards were not closed when their work was done. Fifteen of 28 issue-backed items were open on 23 October and the burndown stayed at 96.5 h from 19 October, although the SWE5001 presentation (#461) ran on 21 October and the smoke suite (#460) passed on 20 October ([burndown.csv](burndown.csv); [review.md](review.md)).
+- Cards were not closed when their work was done. Fifteen of 28 issue-backed items were open on 23 October and the burndown stayed at 96.5 h from 19 October, although the SWE5001 presentation (#461) ran on 21 October and the smoke suite part of #460 passed on 20 October ([burndown.csv](burndown.csv); [review.md](review.md)).
 - #619, which tracked this review and retrospective, was closed by accident on 26 October because the body of PR #683 said "Open item 21 closed: #619", and nobody noticed until 6 November ([#619 comment](https://github.com/PPsyrius/iss-groupbuy-team8/issues/619)).
 - Checkout, scheduling and refunds reached dev on 23 October, nine days after the 14 October target ([plan.md §6 item 2](plan.md); [log/2026-10-23.md](log/2026-10-23.md)).
 - The 19 October AWS evidence session captured one HTTP scaling run, which did not meet its acceptance check; queue-driven scaling, self-healing, the identity outage and the DLQ drill were not captured on AWS, and the presentation demo was cut to three steps ([log/2026-10-19.md](log/2026-10-19.md); #458, #459, #448 open on 6 November).
@@ -47,7 +47,7 @@ Sprint 4 was the last sprint, so no later sprint can test these actions.
 
 | Action | Owner | Basis |
 |---|---|---|
-| Close each open Sprint 4 issue whose work is delivered, or split off what remains: #227, #443, #454 (work done), #460, #461, #464 (delivered) | The planned card owner (plan §5); to be confirmed by the team | [review.md](review.md) "Carried over" |
+| Close each open Sprint 4 issue whose work is delivered, or split off what remains: #227, #443, #454 (work done), #461, #464 (delivered); for #460 (smoke suite done), record the manual sign-in and notification checks or close them as not done | The planned card owner (plan §5); to be confirmed by the team | [review.md](review.md) "Carried over" |
 | Decide whether #224, #448, #458 and #459 get their AWS or record evidence before the SWE5001 submission on 16 November, or are closed as known limitations | Planned owners @Yorick-Yu (#224, #459), @l0sgAi (#448), @EricWang1358 (#458); to be confirmed by the team | [log/2026-11-05.md](log/2026-11-05.md) says the R0 evidence session needs an owner in the 11–16 November window |
 | Close a card, or split off what remains, on the day its evidence is committed | To be confirmed by the team | Final report Table 2.10, Sprint 4 row |
 | Write closing keywords (`Closes`, `Closed`) in PR bodies only for issues the PR finishes | To be confirmed by the team | PR #683 closed #619 by accident |

@@ -94,7 +94,8 @@ Sprint 4 was the last sprint, so nothing was carried into a next sprint. Open pa
 - #223 dev payment rollout: closed 25 Oct after PR #664.
 - #224 refund idempotency record; #448 and #459 SWE5001 evidence on AWS; #458 V3/V4 acceptance: open on 6 Nov.
 - #227, #443, #454: the work is done (accepted risk, ADR merged, register swept) but the issues are open.
-- #460, #461, #464: delivered (smoke suite at promotion, both presentations) with the issues open.
+- #461, #464: delivered (both presentations) with the issues open.
+- #460: partly delivered; the smoke suite passed at the 20 Oct promotion, but the manual sign-in and notification checks its acceptance criteria require were not recorded.
 - #462 SWE5001 progress report 2 and final report: no progress report 2 in the repository; final report in progress (due 16 Nov).
 - #463 SWE5006 report: drafts completed after the sprint; frozen 29 Oct; the issue is open.
 - #451 Sprint 3 closure and #619 (this record): reconstructed after the sprint.
