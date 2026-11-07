@@ -72,6 +72,9 @@ class SecurityBrowsersWorkflowTest(unittest.TestCase):
         self.assertEqual(package["scripts"]["gen:api"], "node scripts/verify-generator-params.mjs && node scripts/clean-api-output.mjs && openapi-ts && node scripts/ts-nocheck-generated.mjs")
         self.assertIn('output: { path: "src/api/generated", clean: false }', config)
         self.assertIn("COPY frontend/scripts/clean-api-output.mjs scripts/clean-api-output.mjs", self.recipe)
+        verifier_copy = "COPY frontend/scripts/verify-generator-params.mjs scripts/verify-generator-params.mjs"
+        self.assertIn(verifier_copy, self.recipe)
+        self.assertLess(self.recipe.index(verifier_copy), self.recipe.index("RUN pnpm install --frozen-lockfile"))
 
 
 if __name__ == "__main__":

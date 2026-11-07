@@ -10,6 +10,7 @@ WORKDIR /repo/frontend
 COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml frontend/.npmrc frontend/openapi-ts.config.ts ./
 COPY frontend/scripts/ts-nocheck-generated.mjs scripts/ts-nocheck-generated.mjs
 COPY frontend/scripts/clean-api-output.mjs scripts/clean-api-output.mjs
+COPY frontend/scripts/verify-generator-params.mjs scripts/verify-generator-params.mjs
 RUN pnpm install --frozen-lockfile
 # WebKit uses the system trust store for real HTTPS subresources.
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
