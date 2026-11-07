@@ -1,3 +1,10 @@
 allowBuilds:
   lefthook: true
   msw: true
+
+# Temporary security repairs; remove when these parents request patched versions.
+overrides:
+  # The TypeScript-7-compatible generator's parser pins vulnerable js-yaml exactly.
+  "@hey-api/json-schema-ref-parser@0.0.0-next-20260824173136>js-yaml": 5.4.1
+  # GHSA-g3hv-75wg-m249 affects all minimatch 7-10 releases; 11 supports Node 24.
+  "minimatch@>=7.0.0 <11.0.1": 11.0.4

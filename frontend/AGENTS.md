@@ -1,6 +1,18 @@
 <!-- intent-skills:start -->
 # TanStack Intent - before editing files, run the matching guidance command.
 tanstackIntent:
+  - id: "@tanstack/match-sorter-utils#fuzzy-ranking"
+    run: "pnpm dlx @tanstack/intent@latest load @tanstack/match-sorter-utils#fuzzy-ranking"
+    for: "Rank fuzzy matches with rankItem, filter with RankingInfo.passed, compare saved ranking metadata with compareItems, and configure rankings, thresholds, accessors, min/max bounds, or diacritics. Load for @tanstack/match-sorter-utils itself or fuzzy Table filterMeta wiring."
+  - id: "@tanstack/react-router#compositions/router-query"
+    run: "pnpm dlx @tanstack/intent@latest load @tanstack/react-router#compositions/router-query"
+    for: "Integrating TanStack Router with TanStack Query: queryClient in router context, static queries and fire-and-forget queries in loaders, useSuspenseQuery in components, defaultPreloadStaleTime: 0, setupRouterSsrQueryIntegration for SSR dehydration/hydration and streaming, per-request QueryClient isolation."
+  - id: "@tanstack/react-router#lifecycle/migrate-from-react-router"
+    run: "pnpm dlx @tanstack/intent@latest load @tanstack/react-router#lifecycle/migrate-from-react-router"
+    for: "Step-by-step migration from React Router v7 to TanStack Router: route definition conversion, Link/useNavigate API differences, useSearchParams to validateSearch + useSearch, useParams with from, Outlet replacement, loader conversion, code splitting differences."
+  - id: "@tanstack/react-router#react-router"
+    run: "pnpm dlx @tanstack/intent@latest load @tanstack/react-router#react-router"
+    for: "React bindings for TanStack Router: RouterProvider, useRouter, useRouterState, useMatch, useMatches, useLocation, useSearch, useParams, useNavigate, useLoaderData, useLoaderDeps, useRouteContext, useBlocker, useCanGoBack, Link, Navigate, Outlet, CatchBoundary, ErrorComponent. React-specific patterns for hooks, providers, SSR hydration, and createLink with forwardRef."
   - id: "@tanstack/router-core#router-core"
     run: "pnpm dlx @tanstack/intent@latest load @tanstack/router-core#router-core"
     for: "Framework-agnostic core concepts for TanStack Router: route trees, createRouter, createRoute, createRootRoute, createRootRouteWithContext, addChildren, Register type declaration, route matching, route sorting, file naming conventions. Entry point for all router skills."
