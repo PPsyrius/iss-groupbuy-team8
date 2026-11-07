@@ -38,7 +38,7 @@ Planned hours are the plan's (§5). "Remaining at 23 Oct" follows the burndown m
 | US14 Refund idempotency record from local evidence | @Yorick-Yu | 1 | 1 | Not done; open | #224 |
 | US34 Paid START and JOIN on dev (Phase B) | @l0sgAi | 2 | 0 | Issue closed 13 Oct; paid START shown 23 Oct, JOIN 24 Oct | #222, PR #664, #657 |
 | US28b NFR-37 accepted risk | @PPsyrius | 0.5 | 0.5 | Accepted risk decided at planning (plan §4 item 6); issue open | #227 |
-| US17 NFR register sweep | @PPsyrius | 1 | 1 | Register cleaned up 20–21 Oct; issue open | #454, PRs #568, #584 |
+| US17 NFR register sweep | @PPsyrius | 1 | 1 | Register cleaned up 20–21 Oct; not every row is `enforced`, `verified` or `accepted-risk` (NFR-02 is partly enforced with no risk acceptance), and the register itself says not to close #454 from that checkpoint; open | #454, PRs #568, #584 |
 | RF Admission and receipt refactor | @EricWang1358 | 2 | 0 | Done 13 Oct | #421–#423, PR #424 |
 | DEC Backend ADR 0007 | @l0sgAi | 3 | 3 | Merged 11 Oct as Proposed, before the sprint; acceptance is in PR #750; issue open | #443, PR #466 |
 | US38 Notification persistence and list endpoint | @PPsyrius | 8 | 0 | Done 13 Oct | #215, PR #478 |
@@ -53,14 +53,14 @@ Planned hours are the plan's (§5). "Remaining at 23 Oct" follows the burndown m
 | P5 k6 scripts and runs | @EricWang1358 | 5 | 5 | V2 baseline on ECS 16 Oct; V3 session 19 Oct below its acceptance check; V4 local only; open | #458, PRs #506, #518, #519, #555 |
 | P6 Drills | @Yorick-Yu | 4 | 4 | Rehearsed locally 15 Oct; AWS drills not run; open | #459, PR #500 |
 | P7 Smoke suite and manual checks on ECS | @limjiechao | 3 | 3 | Smoke suite green at the 20 Oct promotion; manual checks not recorded; open | #460, PR #574 |
-| P8 SWE5001 presentation | @limjiechao | 13 | 13 | Presented 21 Oct; issue open | #461, PRs #554, #556, #567, #569, #571 |
+| P8 SWE5001 presentation | @limjiechao | 13 | 13 | Presented 21 Oct; slide links, the post-talk `env-down.sh`/`env-status.sh` record and Q&A remarks not recorded; open | #461, PRs #554, #556, #567, #569, #571 |
 | P9 SWE5001 progress report 2 | @l0sgAi | 2 | 2 | No record in the repository; open | #462 |
 | P10 Session roles outside identity | @PPsyrius | 6 | 0 | Done 13 Oct | #467, PR #474 |
 | P11 Remote identity check | @EricWang1358 | 15 | 0 | Done 14 Oct | #468, PR #479 |
 | P12 Attention nicknames through the identity port | @Yorick-Yu | 6 | 0 | Done 14 Oct | #469, PR #490 |
 | S3C Sprint 3 review, retrospective, progress report | @limjiechao | 4 | 4 | Not done in the sprint; Sprint 3 retro reconstructed 24 Oct (merged 26 Oct, PR #683) | #451 |
 | RPT SWE5006 report drafts and agile artefacts | all, editor @limjiechao | 41 | 41 | Yorik's and Eric's drafts merged; others after the sprint | #463, PRs #486, #542, #624, #665 |
-| PRS SWE5006 slide master | @limjiechao | 4 | 4 | Deck scaffolded 19 Oct, drafted 20 Oct, presented 26 Oct | #464, PRs #554, #566, #604, #667 |
+| PRS SWE5006 slide master | @limjiechao | 4 | 4 | Deck scaffolded 19 Oct, drafted 20 Oct, backup recording 24 Oct (#657), rehearsed 25 Oct, presented 26 Oct; slide links on #464 and remarks in #463 not recorded; open | #464, PRs #554, #566, #604, #667 |
 | SM Scrum Master duties | @EricWang1358 | 4 | 4 | No mid-sprint check, review or retro recorded | #465 |
 | EV Evidence | all | 10 | not counted | Day logs kept every working day; no issue | [log.md](log.md) |
 | **Total** | | **224.5** | **96.5 of 214.5** | 13 of 28 issue-backed items closed | |
@@ -93,9 +93,11 @@ Sprint 4 was the last sprint, so nothing was carried into a next sprint. Open pa
 
 - #223 dev payment rollout: closed 25 Oct after PR #664.
 - #224 refund idempotency record; #448 and #459 SWE5001 evidence on AWS; #458 V3/V4 acceptance: open on 6 Nov.
-- #227, #454: the work is done (accepted risk, register swept) but the issues are open.
+- #227: the work is done (NFR-37 accepted risk to 16 Nov, register row updated) but the issue is open.
+- #454: partly delivered; the register was swept, but NFR-02 is still partly enforced with no risk acceptance, other rows use statuses outside `enforced`/`verified`/`accepted-risk`, and no five-run green `security.yml` record or TODO/FIXME and Sonar disposition was found.
 - #443: ADR 0007 merged as Proposed; acceptance is in PR #750; the issue is open.
-- #461, #464: delivered (both presentations) with the issues open.
+- #461: partly delivered; presented 21 Oct, but the slide links, the post-talk `env-down.sh` and clean `env-status.sh` record and the Q&A remarks were not recorded.
+- #464: partly delivered; backup recording 24 Oct, rehearsal 25 Oct and talk 26 Oct done, but the slide and script links on #464 and the remarks in #463 were not recorded.
 - #460: partly delivered; the smoke suite passed at the 20 Oct promotion, but the manual sign-in and notification checks its acceptance criteria require were not recorded.
 - #462 SWE5001 progress report 2 and final report: no progress report 2 in the repository; final report in progress (due 16 Nov).
 - #463 SWE5006 report: drafts completed after the sprint; frozen 29 Oct; the issue is open.
