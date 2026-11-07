@@ -71,7 +71,7 @@ Unplanned work that landed in the sprint, by merged PR: the presentation kit and
 
 | Check | Command | Result |
 |---|---|---|
-| dev CI, 12–23 Oct | `gh run list --branch dev --created 2026-10-12..2026-10-23` | ci-backend 34 of 34 success; ci-frontend 32 of 32; security 121 of 123 (both failures are the scheduled weekly full-history scan, the known NFR-02 limit); swe5001-release-gate 10 of 10 |
+| dev CI, 12–23 Oct | `gh run list --branch dev --created 2026-10-12..2026-10-23 --limit 1000` | ci-backend 34 of 34 success; ci-frontend 32 of 32; security 121 of 123 (both failures are the scheduled weekly full-history scan, the known NFR-02 limit); swe5001-release-gate 10 of 10 |
 | prod promotions | `gh pr list --base prod --state merged` | PRs #520 (16 Oct), #528 (16 Oct), #534 (17 Oct), #564 (19 Oct), #574 (20 Oct) |
 | dev health | `curl -s https://d1b3np88z657cp.cloudfront.net/api/actuator/health` | Not checked on 23 Oct; `{"status":"UP"}` on 6 Nov |
 | dev page | `curl -s -o /dev/null -w '%{http_code}' https://d1b3np88z657cp.cloudfront.net/` | Not checked on 23 Oct; 200 on 6 Nov |

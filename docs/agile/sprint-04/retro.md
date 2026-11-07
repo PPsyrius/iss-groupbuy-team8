@@ -4,12 +4,14 @@
 
 This file was written from the [review](review.md), the [burndown data](burndown.csv), the [plan](plan.md), the [day logs](log.md), the daily board snapshots and GitHub PR, issue and Actions history. It is not minutes of a meeting and records no quotes, votes, attendance or opinions. Every point cites its evidence. Actions without a recorded owner are marked "to be confirmed by the team".
 
+It does not meet #619's criterion of a retrospective held with the team's input on or after 23 October. No team member has reviewed it yet; the last action below asks the team to confirm or correct it, and until then it is input for that retrospective, not its outcome.
+
 ## What went well
 
 - The plan's priority order held. The tier-1 microservice split (#455, #456, #467, #468, #469) closed on 13–14 October, before the 16 October SWE5001 freeze ([plan.md §6 item 6](plan.md); [review.md](review.md)), and the burndown was below the ideal line on 15 October (113.5 h against 128.7 h, [burndown.csv](burndown.csv)).
 - The three-service release reached `prod` before the SWE5001 presentation: promotions on 17, 19 and 20 October, the last with the smoke suite green (PRs #534, #564, #574).
 - The paid journey that Sprint 3 could show only locally was shown on deployed dev: paid START and the expiry refund on 23 October, a second buyer's paid JOIN on 24 October (PR #664; #657; [log/2026-10-23.md](log/2026-10-23.md)).
-- `dev` CI stayed green through the sprint: ci-backend 34 of 34 runs, ci-frontend 32 of 32 (`gh run list --branch dev --created 2026-10-12..2026-10-23`).
+- Backend and frontend CI on `dev` stayed green through the sprint: ci-backend 34 of 34 runs, ci-frontend 32 of 32 (`gh run list --branch dev --created 2026-10-12..2026-10-23 --limit 1000`). The security workflow failed 2 of 123 runs, both the scheduled full-history scan ([review.md](review.md) "Environment and CI").
 - The Sprint 3 action "close blocked carry-overs" was kept: #226 and #229 were closed as not planned before planning ([plan.md §4 item 8](plan.md)).
 - Deck feedback ran through issues: ten sub-issues of #605 were filed and closed before the 25 October rehearsal (nine by PR #671).
 
@@ -26,7 +28,7 @@ This file was written from the [review](review.md), the [burndown data](burndown
 
 ## After the sprint
 
-- 29–30 October: 17 Actions runs failed, 16 of them on Dependabot pull-request branches (8 on the two TanStack group branches) and one on the `v0.1.0-swe5001_report` tag push; none on `dev` (`gh run list --created 2026-10-28..2026-10-31`). This is outside the sprint window and is recorded here only as input for the team.
+- 29–30 October: 17 Actions runs failed, 16 of them on Dependabot pull-request branches (8 on the two TanStack group branches) and one on the `v0.1.0-swe5001_report` tag push; none on `dev` (`gh run list --created 2026-10-29..2026-10-30 --limit 1000`). This is outside the sprint window and is recorded here only as input for the team.
 
 ## Follow-up of the Sprint 3 actions
 
