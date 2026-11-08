@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" font-family="Inter, Helvetica, Arial, sans-serif">
+<defs>
+<marker id="d1Fill" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0,0 L12,6 L0,12 Z" fill="#1B1A18"/></marker>
+<marker id="d1FillRed" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0,0 L12,6 L0,12 Z" fill="#E8402A"/></marker>
+<marker id="d1Open" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0,0 L12,6 L0,12" fill="none" stroke="#6B655C" stroke-width="1.8"/></marker>
+<linearGradient id="d1Blue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E3E8FB"/></linearGradient>
+<linearGradient id="d1Person" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF6E2"/><stop offset="1" stop-color="#FFEDC7"/></linearGradient>
+<linearGradient id="d1Ext" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#ECE6DC"/></linearGradient>
+</defs>
+<rect x="0" y="0" width="1600" height="1000" fill="#FFFFFF"/>
+
+<!-- title tab -->
+<rect x="20" y="12" width="560" height="42" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="36" y="41" font-size="24" font-weight="700" fill="#1B1A18">System Context — BlocBuy (C4 level 1)</text>
+
+<!-- group frames -->
+<rect x="30" y="64" width="430" height="302" fill="none" stroke="#6B655C" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="44" y="92" font-size="22" font-weight="700" fill="#6B655C">Consumers</text>
+<rect x="500" y="64" width="810" height="302" fill="none" stroke="#6B655C" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="514" y="92" font-size="22" font-weight="700" fill="#6B655C">Producers</text>
+<rect x="30" y="756" width="416" height="236" fill="none" stroke="#6B655C" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="44" y="784" font-size="22" font-weight="700" fill="#6B655C">IT / operations</text>
+
+<!-- person: buyer (joiner) -->
+<rect x="50" y="150" width="390" height="202" rx="24" fill="url(#d1Person)" stroke="#7A5C20" stroke-width="1.6"/>
+<circle cx="245" cy="128" r="26" fill="#FFF6E2" stroke="#7A5C20" stroke-width="1.6"/>
+<text x="245" y="186" font-size="22" text-anchor="middle" fill="#6B655C">«person»</text>
+<text x="245" y="216" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">Buyer (joiner)</text>
+<text x="245" y="250" font-size="22" text-anchor="middle" fill="#1B1A18"><tspan x="245">Browses, pays to join a team,</tspan><tspan x="245" dy="27">tracks orders, receives</tspan><tspan x="245" dy="27">notifications</tspan></text>
+
+<!-- person: team leader -->
+<rect x="520" y="150" width="350" height="202" rx="24" fill="url(#d1Person)" stroke="#7A5C20" stroke-width="1.6"/>
+<circle cx="695" cy="128" r="26" fill="#FFF6E2" stroke="#7A5C20" stroke-width="1.6"/>
+<text x="695" y="186" font-size="22" text-anchor="middle" fill="#6B655C">«person»</text>
+<text x="695" y="216" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18"><tspan x="695">Buyer</tspan><tspan x="695" dy="30">(team leader / sharer)</tspan></text>
+<text x="695" y="280" font-size="22" text-anchor="middle" fill="#1B1A18"><tspan x="695">Starts a team by paying,</tspan><tspan x="695" dy="27">shares invite links</tspan></text>
+
+<!-- person: seller / admin -->
+<rect x="930" y="150" width="360" height="202" rx="24" fill="url(#d1Person)" stroke="#7A5C20" stroke-width="1.6"/>
+<circle cx="1110" cy="128" r="26" fill="#FFF6E2" stroke="#7A5C20" stroke-width="1.6"/>
+<text x="1110" y="186" font-size="22" text-anchor="middle" fill="#6B655C">«person»</text>
+<text x="1110" y="216" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18"><tspan x="1110">Seller / Platform</tspan><tspan x="1110" dy="30">administrator</tspan></text>
+<text x="1110" y="280" font-size="22" text-anchor="middle" fill="#1B1A18"><tspan x="1110">Publishes listings and</tspan><tspan x="1110" dy="27">team price rules (UC9)</tspan></text>
+
+<!-- seed note -->
+<path d="M1336,96 L1556,96 L1580,120 L1580,262 L1336,262 Z" fill="url(#d1Ext)" stroke="#6B655C" stroke-width="1.4"/>
+<path d="M1556,96 L1556,120 L1580,120" fill="none" stroke="#6B655C" stroke-width="1.4"/>
+<text x="1352" y="132" font-size="22" fill="#1B1A18"><tspan x="1352" font-weight="700">Seed:</tspan><tspan x="1352" dy="28">curated team-priced</tspan><tspan x="1352" dy="28">offers published by</tspan><tspan x="1352" dy="28">the operator</tspan></text>
+<line x1="1290" y1="180" x2="1336" y2="180" stroke="#6B655C" stroke-width="1.4" stroke-dasharray="6 4"/>
+
+<!-- software system -->
+<rect x="100" y="470" width="940" height="230" fill="url(#d1Blue)" stroke="#3E5CD9" stroke-width="2.2"/>
+<text x="570" y="524" font-size="22" text-anchor="middle" fill="#6B655C">«software system»</text>
+<text x="570" y="570" font-size="32" font-weight="700" text-anchor="middle" fill="#3E5CD9">BlocBuy community group-buying platform</text>
+<text x="570" y="618" font-size="22" text-anchor="middle" fill="#1B1A18"><tspan x="570">Team-priced group buying: start or join a team by paying;</tspan><tspan x="570" dy="30">team succeeds at target size or expires with automatic refunds</tspan></text>
+
+<!-- external: Google -->
+<rect x="1260" y="380" width="320" height="160" fill="url(#d1Ext)" stroke="#6B655C" stroke-width="1.6"/>
+<text x="1420" y="414" font-size="22" text-anchor="middle" fill="#6B655C">«external system»</text>
+<text x="1420" y="446" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18"><tspan x="1420">Google Sign-In</tspan><tspan x="1420" dy="30">(OAuth 2.0 / OIDC)</tspan></text>
+<text x="1420" y="514" font-size="22" text-anchor="middle" fill="#1B1A18">Authenticates users</text>
+
+<!-- external: Stripe -->
+<rect x="1260" y="590" width="320" height="160" fill="url(#d1Ext)" stroke="#6B655C" stroke-width="1.6"/>
+<text x="1420" y="624" font-size="22" text-anchor="middle" fill="#6B655C">«external system»</text>
+<text x="1420" y="656" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">Stripe (test mode)</text>
+<text x="1420" y="692" font-size="22" text-anchor="middle" fill="#1B1A18"><tspan x="1420">Checkout payments,</tspan><tspan x="1420" dy="27">webhooks, refunds</tspan></text>
+
+<!-- person: operator -->
+<rect x="44" y="830" width="388" height="152" rx="24" fill="url(#d1Person)" stroke="#7A5C20" stroke-width="1.6"/>
+<circle cx="235" cy="808" r="24" fill="#FFF6E2" stroke="#7A5C20" stroke-width="1.6"/>
+<text x="235" y="862" font-size="22" text-anchor="middle" fill="#6B655C">«person»</text>
+<text x="235" y="892" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">Operator / platform engineer</text>
+<text x="235" y="926" font-size="22" text-anchor="middle" fill="#1B1A18"><tspan x="235">Promotes releases,</tspan><tspan x="235" dy="27">runs AWS sessions</tspan></text>
+
+<!-- external: GitHub -->
+<rect x="660" y="822" width="280" height="164" fill="url(#d1Ext)" stroke="#6B655C" stroke-width="1.6"/>
+<text x="800" y="854" font-size="22" text-anchor="middle" fill="#6B655C">«external system»</text>
+<text x="800" y="886" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18"><tspan x="800">GitHub</tspan><tspan x="800" dy="30">(Actions + OIDC)</tspan></text>
+<text x="800" y="948" font-size="22" text-anchor="middle" fill="#1B1A18"><tspan x="800">Builds, scans,</tspan><tspan x="800" dy="27">promotes, deploys</tspan></text>
+
+<!-- external: AWS -->
+<rect x="1180" y="822" width="400" height="164" fill="url(#d1Ext)" stroke="#6B655C" stroke-width="1.6"/>
+<text x="1380" y="854" font-size="22" text-anchor="middle" fill="#6B655C">«external system»</text>
+<text x="1380" y="886" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18"><tspan x="1380">Amazon Web Services</tspan><tspan x="1380" dy="30">(ap-southeast-1)</tspan></text>
+<text x="1380" y="954" font-size="22" text-anchor="middle" fill="#1B1A18">Hosts the runtime</text>
+
+<!-- relationships: people -> system -->
+<line x1="300" y1="352" x2="300" y2="470" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#d1Fill)"/>
+<text x="288" y="398" font-size="22" text-anchor="end" fill="#1B1A18"><tspan x="288">Browses deals, pays,</tspan><tspan x="288" dy="26">tracks teams</tspan><tspan x="288" dy="26" fill="#6B655C">[HTTPS, web SPA]</tspan></text>
+<line x1="410" y1="470" x2="410" y2="352" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#d1Fill)"/>
+<text x="422" y="410" font-size="22" fill="#1B1A18"><tspan x="422">In-app</tspan><tspan x="422" dy="26">notifications</tspan></text>
+<line x1="640" y1="352" x2="640" y2="470" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#d1Fill)"/>
+<text x="652" y="398" font-size="22" fill="#1B1A18"><tspan x="652">Starts teams,</tspan><tspan x="652" dy="26">shares invite links</tspan><tspan x="652" dy="26" fill="#6B655C">[HTTPS, web SPA]</tspan></text>
+<line x1="1010" y1="352" x2="1010" y2="470" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#d1Fill)"/>
+<text x="1022" y="398" font-size="22" fill="#1B1A18"><tspan x="1022">Publishes listings,</tspan><tspan x="1022" dy="26">team price rules</tspan><tspan x="1022" dy="26" fill="#6B655C">[HTTPS, web SPA]</tspan></text>
+
+<!-- system <-> Google / Stripe -->
+<line x1="1040" y1="484" x2="1260" y2="484" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#d1Fill)"/>
+<text x="1052" y="512" font-size="22" fill="#1B1A18"><tspan x="1052">Delegates sign-in</tspan><tspan x="1052" dy="26" fill="#6B655C">[OIDC]</tspan></text>
+<line x1="1040" y1="632" x2="1260" y2="632" stroke="#E8402A" stroke-width="2.2" marker-end="url(#d1FillRed)"/>
+<text x="1052" y="568" font-size="22" fill="#1B1A18"><tspan x="1052">Creates Checkout</tspan><tspan x="1052" dy="26">sessions, refunds</tspan><tspan x="1052" dy="26" fill="#6B655C">[HTTPS API]</tspan></text>
+<line x1="1260" y1="676" x2="1040" y2="676" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#d1Fill)"/>
+<text x="1052" y="704" font-size="22" fill="#1B1A18"><tspan x="1052">Payment webhooks</tspan><tspan x="1052" dy="26" fill="#6B655C">[HTTPS, signed]</tspan></text>
+
+<!-- runs on -->
+<polyline points="960,700 960,782 1300,782 1300,822" fill="none" stroke="#6B655C" stroke-width="1.6" stroke-dasharray="8 5" marker-end="url(#d1Open)"/>
+<text x="972" y="770" font-size="22" fill="#6B655C">Runs on</text>
+
+<!-- operator -> GitHub -> AWS -->
+<line x1="432" y1="910" x2="660" y2="910" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#d1Fill)"/>
+<text x="444" y="852" font-size="22" fill="#1B1A18"><tspan x="444">Merges dev→prod</tspan><tspan x="444" dy="26">promotion PR</tspan></text>
+<line x1="940" y1="910" x2="1180" y2="910" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#d1Fill)"/>
+<text x="950" y="842" font-size="22" fill="#1B1A18"><tspan x="950">Builds, deploys,</tspan><tspan x="950" dy="26">smoke-tests, destroys</tspan><tspan x="950" dy="26" fill="#6B655C">[OIDC role]</tspan></text>
+</svg>
