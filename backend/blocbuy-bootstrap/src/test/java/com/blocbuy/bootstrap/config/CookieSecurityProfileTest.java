@@ -16,13 +16,19 @@ class CookieSecurityProfileTest {
 
     @ParameterizedTest
     @CsvSource({"ec2, true", "local, false", "docker, false"})
-    void cookieSecureFlagsFollowTheProfileTransport(String profile, boolean expected) {
+    void cookieFlagsFollowTheProfileTransport(String profile, boolean expected) {
         new ApplicationContextRunner()
                 .withInitializer(new ConfigDataApplicationContextInitializer())
                 .withPropertyValues("spring.profiles.active=" + profile)
                 .run(
                         context -> {
                             var environment = context.getEnvironment();
+                            assertThat(
+                                            environment.getProperty(
+                                                    "sa-token.cookie.http-only", Boolean.class))
+                                    .isTrue();
+                            assertThat(environment.getProperty("sa-token.cookie.same-site"))
+                                    .isEqualTo("Lax");
                             assertThat(
                                             environment.getProperty(
                                                     "sa-token.cookie.secure", Boolean.class))
