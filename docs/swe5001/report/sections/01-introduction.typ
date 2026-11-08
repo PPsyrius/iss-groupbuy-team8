@@ -24,15 +24,15 @@ Group buying works only if enough people join before the deadline. Today that co
   table(
     columns: (1fr, 2.2fr, 2.2fr),
     table.header([Who], [Pain point (briefing Q1)], [What BlocBuy does instead]),
-    [Buyers], [Cannot see a deal's deadline, minimum team size or progress; joining means messaging an organiser], [Team-priced listings show the team's size, price tier and deadline; a buyer starts or joins a team by paying (UC3, UC4)],
+    [Buyers], [Cannot see a deal's deadline, minimum team size or progress; joining means messaging an organiser], [Team-priced listings show the team price, the target team size and the deadline; a buyer starts or joins a team by paying (UC3, UC4)],
     [Organisers], [Collect payments, chase participants and refund by hand when a deal falls through], [The platform admits members on payment, completes the team at its target size and refunds every member automatically on expiry (UC5, UC6)],
-    [Sellers], [Have no channel for offers whose price falls as more buyers join], [Listings carry team price rules (UC9), and members who share invitation links bring in more buyers (UC7)],
+    [Sellers], [Have no channel for offers priced for a group of buyers], [Listings carry team price rules (UC9), and members who share invitation links bring in more buyers (UC7)],
   ),
   kind: table,
   caption: [Pain points and BlocBuy's answer. Sources: #src("docs/swe5001/project-proposal.typ")[proposal, §4.1], #src("docs/swe5001/presentation/src/slides-main.js")[presentation slide 2].],
 ) <tbl-pain-points>
 
-The case for a _platform_ rather than one application rests on three properties. First, each new member lowers the price for the others, so demand arrives in bursts as deadlines approach. Second, consumers also produce: the buyer who starts a team, or shares an invitation, brings in the next buyers. Third, identity, payment settlement and notification are needed by any future group-buying vertical, not only by this one.
+The case for a _platform_ rather than one application rests on three properties. First, the team price, which is lower than the solo price, holds only if the team reaches its target size before the deadline, so every member wants others to join and demand arrives in bursts as deadlines approach. Second, consumers also produce: the buyer who starts a team, or shares an invitation, brings in the next buyers. Third, identity, payment settlement and notification are needed by any future group-buying vertical, not only by this one.
 
 These properties give the architecture its drivers. @tbl-drivers only names each driver and points to the section that answers it.
 

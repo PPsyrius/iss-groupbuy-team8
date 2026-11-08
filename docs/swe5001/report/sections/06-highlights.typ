@@ -63,7 +63,7 @@ The briefing gives five success criteria for the platform. @tbl-success shows ho
 
 == What the Cloud Cost
 
-Calculated: the SWE5001 runtime cost about US\$10 for the whole course. That is the value of the disposable design (briefing Q6): the environment exists only while it is used, and the permanent layer costs under US\$1 a month. The figures below were read from AWS Cost Explorer on 8 November 2026 and are recorded in #dev-src("docs/swe5001/evidence/20261108-cost-explorer/README.md")[the cost record].
+Calculated: the SWE5001 runtime cost about US\$10 from its first session to 8 November 2026. That is the value of the disposable design (briefing Q6): the environment exists only while it is used, and the permanent layer costs under US\$1 a month. The figures below were read from AWS Cost Explorer on 8 November 2026 and are recorded in #dev-src("docs/swe5001/evidence/20261108-cost-explorer/README.md")[the cost record].
 
 #figure(
   table(
