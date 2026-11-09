@@ -1,0 +1,35 @@
+%% frame: UC4 basic flow, part 2: after payment (analysis)
+sequenceDiagram
+    actor Stripe
+    participant PG as PaymentGateway (boundary)
+    participant Ctl as JoinTeamControl (control)
+    participant Pay as Payment (entity)
+    participant Intent as PurchaseIntent (entity)
+    participant Acc as Account (entity)
+    participant Prod as Product (entity)
+    participant Team as Team (entity)
+    create participant Ord as Order (entity)
+    participant UI as JoinTeamUI (boundary)
+    create participant Mem as Membership (entity)
+
+    Stripe->>PG: B5: paid(paymentRef)
+    PG->>Ctl: B5: paymentConfirmed(paymentRef)
+    Ctl->>Intent: B6: isPayable()
+    Intent-->>Ctl: payable
+    Ctl->>Acc: B6: isActive()
+    Acc-->>Ctl: active
+    Ctl->>Prod: B6: isPurchasable()
+    Prod-->>Ctl: purchasable
+    Ctl->>Team: B7: admit(buyer, payment)
+    Team->>Mem: B7: «create» (buyer, sharer)
+    Team-->>Ctl: admitted, team complete or not
+    Ctl->>Ord: B8: «create» (buyer, team price)
+    Ctl->>Intent: B8: markFulfilled(payment)
+    Ctl->>Prod: B8: takeOneUnit()
+    Ctl->>Pay: B9: recordOutcome(fulfilled)
+    opt team now complete (B10)
+        loop each order of the team
+            Ctl->>Ord: B10: confirm()
+        end
+    end
+    Ctl->>UI: B11: showJoined(teamStatus)

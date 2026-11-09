@@ -1,0 +1,30 @@
+%% frame: UC4 basic flow, part 1: before payment (analysis)
+sequenceDiagram
+    actor Buyer
+    participant UI as JoinTeamUI (boundary)
+    participant Ctl as JoinTeamControl (control)
+    participant Acc as Account (entity)
+    participant Team as Team (entity)
+    participant Inv as Invitation (entity)
+    create participant Intent as PurchaseIntent (entity)
+    participant PG as PaymentGateway (boundary)
+
+    Buyer->>UI: B1: join(team, invitation)
+    UI->>Ctl: B1: requestJoin(buyer, team, invitation)
+    Ctl->>Acc: B2: isActive()
+    Acc-->>Ctl: active
+    opt invitation given (A1)
+        Ctl->>Team: A1: resolveSharer(invitation, buyer)
+        Team->>Inv: A1: attributes(team, buyer)
+        Inv-->>Team: yes or no
+        Team-->>Ctl: sharer, or none
+    end
+    Ctl->>Team: B3: checkAdmission(buyer)
+    Team-->>Ctl: admissible
+    break team closed, full or already joined (A3)
+        Ctl->>UI: A3: showRejected(reason)
+        UI-->>Buyer: refused, nothing paid
+    end
+    Ctl->>Intent: B4: «create» (team price, deadline, sharer)
+    Ctl->>PG: B5: requestPayment(intent)
+    Note over Ctl,PG: B5: «include» Pay upfront (@sec-a-pay-upfront)

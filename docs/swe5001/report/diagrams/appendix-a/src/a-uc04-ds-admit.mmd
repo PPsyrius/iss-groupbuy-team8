@@ -1,0 +1,44 @@
+%% frame: UC4 B7: admission under the team lock (design)
+sequenceDiagram
+    participant OFA as :OrderFulfilmentAdapter
+    participant Svc as :PaidGroupDealService
+    participant Repo as :PaidGroupDealRepository
+    participant Map as :PaidGroupDealMapper
+    participant Deal as :GroupDeal
+    participant Paid as :PaidParticipation
+    create participant Res as result : ParticipationResult
+    participant Pub as :ApplicationEventPublisher
+
+    Note over OFA,Repo: B7: inside the settlement transaction; lock 4, the receipt
+    OFA->>Svc: joinConfirmed(dealId, paid, sharerUserId)
+    Svc->>Repo: reserveAndLock(paymentId, fingerprint, userId)
+    Repo-->>Svc: ParticipationReceipt
+    break receipt already holds a result (A8)
+        Svc-->>OFA: stored ParticipationResult, replayed
+    end
+    Svc->>Repo: lockDeal(dealId): lock 1, held
+    Svc->>Repo: currentTime()
+    Svc->>Repo: hasActiveMember(dealId, userId)
+    Svc->>Deal: joinPaid(paid, alreadyMember, now)
+    Deal->>Paid: requirePrice(dealPrice, currency)
+    Deal->>Deal: requireNewMember(buyerId, alreadyMember)
+    Deal->>Deal: requireJoinWindow(now)
+    Deal->>Deal: requireAvailableSeat()
+    alt eligible (B7)
+        Deal-->>Svc: PaidAdmission(after, teamCompleted)
+        Svc->>Repo: insertJoinedMember(before, after, paid, sharer, now)
+        Repo->>Map: updateDeal(row, expectedSize, expectedStatus)
+        Repo->>Map: insertMember(dealId, paymentId, userId, "member", sharer, now)
+        Svc->>Res: «create» applied(after)
+        Svc->>Repo: complete(paymentId, result, userId, now)
+        Svc->>Pub: publishEvent(MemberJoined)
+        opt teamCompleted (B10)
+            Svc->>Pub: publishEvent(TeamSucceeded)
+        end
+        Svc-->>OFA: result: applied
+    else refused: no team, DEAL_CLOSED, DEAL_FULL, ALREADY_MEMBER or PAYMENT_MISMATCH (A6, A7)
+        Deal-->>Svc: BizException
+        Svc->>Res: «create» compensation(dealId, code)
+        Svc->>Repo: complete(paymentId, result, userId, now)
+        Svc-->>OFA: result: compensation_required
+    end

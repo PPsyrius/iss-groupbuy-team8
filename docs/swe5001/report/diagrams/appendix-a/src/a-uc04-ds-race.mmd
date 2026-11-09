@@ -1,0 +1,34 @@
+%% frame: UC4 A7: two payments race for the last seat (design)
+sequenceDiagram
+    participant App as :StripePaymentAppService
+    participant A as txA : StripeCheckoutService
+    participant B as txB : StripeCheckoutService
+    participant OFA as :OrderFulfilmentAdapter
+    participant Groups as :PaidGroupDealService
+    participant Repo as :CheckoutPaymentRepository
+
+    Note over App,B: A7, at B7: two verified webhooks from StripeWebhookController (@sec-a-pay-upfront), one thread each
+    par buyer X's webhook
+        App->>A: handleWebhook(rawX, sigX)
+    and buyer Y's webhook
+        App->>B: handleWebhook(rawY, sigY)
+    end
+    A->>OFA: lockForSettlement(quoteX)
+    Note over A,OFA: txA holds the team row lock (lock 1)
+    B->>OFA: lockForSettlement(quoteY)
+    Note over B,OFA: txB waits on the same team row
+    A->>OFA: fulfil(eventX)
+    OFA->>Groups: joinConfirmed(dealId, paidX, sharer)
+    Groups-->>OFA: applied, team SUCCEEDED
+    OFA-->>A: Outcome(dealId, orderX, null)
+    Note over A: txA commits; lock released
+    A-->>App: void
+    OFA-->>B: void: lock granted
+    B->>OFA: fulfil(eventY)
+    OFA->>Groups: joinConfirmed(dealId, paidY, sharer)
+    Groups-->>OFA: compensation_required, DEAL_CLOSED
+    OFA-->>B: Outcome(dealId, null, "GROUP_REJECTED")
+    B->>Repo: requireRefund(paymentY, "GROUP_REJECTED", eventY)
+    B->>Repo: recordOutcome(paymentY, dealId, null, "REFUND_REQUIRED")
+    Note over B: txB commits
+    B-->>App: void

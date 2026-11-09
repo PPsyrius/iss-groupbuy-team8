@@ -1,0 +1,79 @@
+%% frame: UC4 design, slice 3: admission, group-buy module (commerce-svc)
+classDiagram
+    class PaidGroupDealService {
+        <<application service, Conc, Evt>>
+        +joinConfirmed(dealId: UUID, paid: PaidParticipation, sharerUserId: UUID): ParticipationResult
+    }
+    class PaidGroupDealRepository {
+        <<interface, repository, Pers, Conc>>
+        +reserveAndLock(paymentId: UUID, fingerprint: String, actorId: UUID): ParticipationReceipt
+        +lockDeal(dealId: UUID): Optional~GroupDeal~
+        +currentTime(): Instant
+        +hasActiveMember(dealId: UUID, userId: UUID): boolean
+        +insertJoinedMember(before: GroupDeal, after: GroupDeal, paid: PaidParticipation, sharerUserId: UUID, now: Instant): void
+        +complete(paymentId: UUID, result: ParticipationResult, actorId: UUID, now: Instant): void
+    }
+    class GroupDeal {
+        <<aggregate root>>
+        -leaderUserId: UUID
+        -dealPrice: BigDecimal
+        -targetSize: int
+        -currentSize: int
+        -status: DealStatus
+        -expireTime: Instant
+        +joinPaid(payment: PaidParticipation, alreadyMember: boolean, now: Instant): PaidAdmission
+        +requireJoinWindow(now: Instant): void
+        +requireAvailableSeat(): void
+        +requireNewMember(buyerId: UUID, alreadyMember: boolean): void
+    }
+    class PaidGroupDealRepositoryImpl {
+        <<adapter, Pers>>
+    }
+    class PaidAdmission {
+        <<value object, record>>
+        +deal: GroupDeal
+        +teamCompleted: boolean
+    }
+    class DealStatus {
+        <<enumeration>>
+        OPEN
+        SUCCEEDED
+        FAILED
+        EXPIRED
+        CANCELED
+        +canTransitionTo(target: DealStatus): boolean
+    }
+    class PaidGroupDealMapper {
+        <<interface, mapper, Pers, Conc>>
+        +updateDeal(deal: BizGroupDealDO, expectedSize: int, expectedStatus: String): int
+        +insertMember(dealId: UUID, paymentId: UUID, userId: UUID, role: String, sharerUserId: UUID, now: Instant): int
+    }
+    class ParticipationResult {
+        <<value object, record>>
+        +outcome: String
+        +reasonCode: String
+        +applied(): boolean
+        +applied(deal: GroupDeal): ParticipationResult «static»
+        +compensation(dealId: UUID, reasonCode: String): ParticipationResult «static»
+    }
+    class PaidParticipation {
+        <<value object, record>>
+        ~requirePrice(expectedAmount: BigDecimal, expectedCurrency: String): void
+    }
+%% at ParticipationResult 0,0
+%% at PaidGroupDealService 1,0
+%% at PaidParticipation 2,0
+%% at PaidGroupDealMapper 0,1
+%% at PaidGroupDealRepository 1,1
+%% at GroupDeal 2,1
+%% at PaidGroupDealRepositoryImpl 0,2
+%% at PaidAdmission 1,2
+%% at DealStatus 2,2
+    PaidGroupDealService "1" --> "1" PaidGroupDealRepository
+    PaidGroupDealService ..> GroupDeal
+    PaidGroupDealService ..> ParticipationResult
+    PaidGroupDealRepository ..> GroupDeal
+    PaidGroupDealRepositoryImpl ..|> PaidGroupDealRepository
+    PaidGroupDealRepositoryImpl "1" --> "1" PaidGroupDealMapper
+    GroupDeal ..> PaidAdmission : «create»
+    GroupDeal ..> PaidParticipation

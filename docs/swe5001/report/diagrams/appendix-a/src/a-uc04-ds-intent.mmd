@@ -1,0 +1,41 @@
+%% frame: UC4 B1 to B4: create the purchase intent (design)
+sequenceDiagram
+    actor Buyer
+    participant Ctl as :StripeCheckoutController
+    participant Svc as :PaymentBrowserService
+    participant RL as :RateLimitGateway
+    participant App as :PurchaseIntentAppService
+    participant Users as :UserAppService
+    participant Repo as :PurchaseIntentRepository
+
+    Note over Buyer,Ctl: B1
+    Buyer->>Ctl: intent(csrf, request {JOIN, dealId, ref})
+    Ctl->>Ctl: checkCsrf(csrf)
+    Ctl->>Svc: createIntent(user, op, dealId, ref, quoteId)
+    Svc->>RL: tryAcquire(JOIN_LIMIT, subject)
+    RL-->>Svc: boolean
+    break over 60 requests a minute (A2)
+        Svc-->>Ctl: BizException RATE_LIMITED
+        Ctl-->>Buyer: HTTP 429 (COMMON_429_001)
+    end
+    critical intent transaction, REQUIRED, 10 s
+        Svc->>App: createIntent(user, op, dealId, ref, quoteId)
+        Note over App,Repo: B2: a remote call to identity-svc
+        App->>Users: requireActive(user)
+        break identity-svc down (E2)
+            Users-->>App: IdentityUnavailableException
+            App-->>Svc: exception: transaction rolled back
+            Svc-->>Ctl: exception
+            Ctl-->>Buyer: HTTP 500, no intent
+        end
+        App->>Repo: currentTime()
+        Repo-->>App: now
+        Note over App,Repo: B3, B4, A1, A3: @fig-a-uc04-ds-terms
+        App->>App: join(user, dealId, inviteRef, now)
+        App->>Repo: save(intent)
+        Repo-->>App: PurchaseIntent
+        App-->>Svc: intentId
+    end
+    Svc-->>Ctl: intentId
+    Ctl-->>Buyer: Result(IntentResponse)
+    Note over Buyer,Svc: B5: Pay upfront, @sec-a-pay-upfront
