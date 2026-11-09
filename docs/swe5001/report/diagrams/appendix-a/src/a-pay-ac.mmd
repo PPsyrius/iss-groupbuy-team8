@@ -1,0 +1,80 @@
+%% frame: Pay upfront via Stripe Checkout (analysis)
+classDiagram
+    class PaymentUI {
+        <<boundary>>
+        +pay(intent)
+        +openReceipt(payment)
+        +showCheckout(paymentPage)
+        +showReceipt(receipt)
+        +showRefused(reason)
+    }
+    class PaymentGateway {
+        <<boundary>>
+        +requestPayment(payment)
+        +paid(report)
+        +verify(report)
+        +readPayment(paymentPage)
+    }
+    class PayUpfrontControl {
+        <<control>>
+        +preparePayment(buyer, intent, attempt)
+        +paymentReported(report)
+        +readReceipt(buyer, payment)
+    }
+    class BaseUseCaseControl {
+        <<control>>
+        +fulfil(payment)
+    }
+    class PurchaseIntent {
+        <<entity>>
+        -price: Money
+        -payableUntil: Date-time
+        -deadline: Date-time
+        -fulfilled: Boolean
+        +isPayable()
+    }
+    class Payment {
+        <<entity>>
+        -amount: Money
+        -currency: Text
+        -attemptKey: Identifier
+        -pageClosesAt: Date-time
+        -status: PaymentStatus
+        -outcome: PaymentOutcome
+        +attachPage(paymentPage)
+        +recordReport(report)
+        +matches(paymentPage)
+        +succeed()
+        +close(paymentPage)
+        +requireRefund(reason)
+        +recordOutcome(outcome)
+        +finishReport(result)
+        +receipt()
+    }
+    class ReviewCase {
+        <<entity>>
+        -reason: Text
+        -status: Text
+    }
+    class Refund {
+        <<entity>>
+        -amount: Money
+        -reason: Text
+        -status: RefundStatus
+    }
+%% at PaymentUI 0,0
+%% at BaseUseCaseControl 1,0
+%% at PaymentGateway 2,0
+%% at PurchaseIntent 0,1
+%% at PayUpfrontControl 1,1
+%% at ReviewCase 0,2
+%% at Payment 1,2
+%% at Refund 2,2
+    PaymentUI "1" -- "1" PayUpfrontControl
+    PayUpfrontControl "1" -- "1" PaymentGateway
+    PayUpfrontControl "1" --> "1" PurchaseIntent
+    PayUpfrontControl "1" --> "1" Payment
+    PayUpfrontControl "1" --> "1" BaseUseCaseControl
+    Payment "*" -- "1" PurchaseIntent : pays
+    Payment "1" *-- "0..1" Refund
+    Payment "1" -- "0..1" ReviewCase : held by

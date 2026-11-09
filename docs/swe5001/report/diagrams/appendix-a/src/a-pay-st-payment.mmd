@@ -1,0 +1,18 @@
+%% frame: CheckoutPayment
+stateDiagram-v2
+    [*] --> CREATED : prepare [quote valid] / insert
+    CREATED --> CREATED : session created / bind()
+    CREATED --> SUCCEEDED : fact [paid, matches] / succeed()
+    CREATED --> FAILED : fact [expired, intent canceled] / failTerminalUnpaid()
+    CREATED --> CANCELED : fact [expired, no intent] / cancelUnpaid()
+    FAILED --> SUCCEEDED : recovery [paid, matches] / succeed()
+    CANCELED --> SUCCEEDED : recovery [paid, matches] / succeed()
+    FAILED --> FAILED : fact [paid] / open review case
+    CANCELED --> CANCELED : fact [paid] / open review case
+    SUCCEEDED --> SUCCEEDED : fact [repeat or unpaid] / no change
+    SUCCEEDED : entry / fulfil or require refund; record outcome
+%% at __start0 1,0
+%% at CREATED 1,1
+%% at FAILED 0,2
+%% at CANCELED 2,2
+%% at SUCCEEDED 1,3

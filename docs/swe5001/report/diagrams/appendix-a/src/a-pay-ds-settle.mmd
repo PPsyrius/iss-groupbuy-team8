@@ -1,0 +1,49 @@
+%% frame: Pay upfront B6 to B7: the settlement transaction (design)
+sequenceDiagram
+    participant Svc as :StripeCheckoutService
+    participant Repo as :CheckoutPaymentRepository
+    participant Port as :PaymentBusinessPort
+    participant Pay as payment : CheckoutPayment
+    participant S as session : CheckoutGateway.Session
+
+    critical settlement tx: REQUIRED, READ COMMITTED, 10 s
+        Note over Svc,Repo: B6: claim the event first (Idempotent Receiver)
+        Svc->>Repo: claimEvent(eventId, type)
+        break event already claimed (A11)
+            Repo-->>Svc: false: return, nothing changes
+        end
+        Svc->>Repo: findById(id)
+        Repo-->>Svc: Optional of CheckoutPayment
+        break payment unknown here (A10)
+            Svc->>Repo: finishEvent(eventId, null, "UNKNOWN_PAYMENT")
+        end
+        Svc->>Port: lockForSettlement(quote): lock 1 team, lock 2 intent
+        Svc->>Repo: lock(id): lock 3, the payment row
+        Svc->>Svc: matches(payment, session)
+        break session differs from the frozen payment (A12)
+            Svc->>Repo: review(id, "PROVIDER_MISMATCH", operator)
+            Svc->>Repo: finishEvent(eventId, id, "REVIEW")
+        end
+        Svc->>Pay: bind(session.id, null, session.paymentIntentId)
+        Svc->>S: paid()
+        S-->>Svc: boolean
+        break paid, but the payment is FAILED or CANCELED (A13)
+            Svc->>Repo: review(id, "LATE_PAID_REQUIRES_RECOVERY", operator)
+            Svc->>Repo: finishEvent(eventId, id, "REVIEW")
+        end
+        alt paid (B7)
+            Svc->>Pay: succeed(): SUCCEEDED
+            Svc->>Repo: save(payment)
+            Note over Svc,Repo: B8 and B9: @fig-a-pay-ds-outcome
+            Svc->>Svc: fulfilOrCompensate(payment, eventId)
+        else closed unpaid (A7)
+            Svc->>S: terminalUnpaidFailure()
+            alt PaymentIntent canceled by Stripe
+                Svc->>Pay: failTerminalUnpaid(): FAILED
+            else expired with no PaymentIntent
+                Svc->>Pay: cancelUnpaid(): CANCELED
+            end
+            Svc->>Repo: save(payment)
+        end
+        Svc->>Repo: finishEvent(eventId, id, result)
+    end

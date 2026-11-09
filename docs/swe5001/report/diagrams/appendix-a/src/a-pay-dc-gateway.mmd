@@ -1,0 +1,97 @@
+%% frame: Pay upfront design, slice 3: webhook entry and Stripe behind the gateway port (commerce-svc)
+classDiagram
+    class StripeWebhookController {
+        <<controller, Ext, Sec>>
+        +handleStripeEvent(payload: String, signatureHeader: String): Result~Void~
+    }
+    class PaymentAppService {
+        <<interface>>
+        +handleStripeWebhook(payload: String, signatureHeader: String): void
+    }
+    class StripePaymentAppService {
+        <<application service, Ext>>
+        +handleStripeWebhook(payload: String, signatureHeader: String): void
+    }
+    class StripeCheckoutService {
+        <<application service, Ext, Conc>>
+        +handleWebhook(rawBody: String, signature: String): void
+    }
+    class StripeClientProvider {
+        <<adapter, Ext>>
+
+    }
+    class StripeCheckoutGateway {
+        <<adapter, Ext>>
+        +createCheckoutSession(payment: CheckoutPayment): CheckoutGateway.Session
+        +retrieveCheckoutSession(sessionId: String): CheckoutGateway.Session
+        +verifyCheckoutWebhook(rawBody: String, signature: String): Optional~CheckoutGateway.Event~
+    }
+    class Event["CheckoutGateway.Event"] {
+        <<record>>
+        +id: String
+        +type: String
+        +sessionId: String
+        +liveMode: boolean
+        +account: String
+    }
+    class CheckoutGateway {
+        <<interface, gateway, Ext>>
+        +createCheckoutSession(payment: CheckoutPayment): CheckoutGateway.Session
+        +retrieveCheckoutSession(sessionId: String): CheckoutGateway.Session
+        +verifyCheckoutWebhook(rawBody: String, signature: String): Optional~CheckoutGateway.Event~
+    }
+    class Session["CheckoutGateway.Session"] {
+        <<record>>
+        +id: String
+        +paymentId: String
+        +intentId: String
+        +paymentIntentId: String
+        +amountMinor: long
+        +currency: String
+        +status: String
+        +paymentStatus: String
+        +liveMode: boolean
+        +url: String
+        +expiresAt: Instant
+        +paid(): boolean
+        +terminalUnpaidFailure(): boolean
+    }
+    class CheckoutPayment {
+        <<aggregate root, record>>
+        +id: UUID
+        +quote: CheckoutQuote
+        +sessionExpiresAt: Instant
+        +sessionId: String
+        +providerPaymentIntentId: String
+        +status: CheckoutPayment.Status
+        +providerKey(): String
+    }
+    class Status["CheckoutPayment.Status"] {
+        <<enumeration>>
+        CREATED
+        SUCCEEDED
+        FAILED
+        CANCELED
+    }
+%% at StripeWebhookController 0,0
+%% at PaymentAppService 1,0
+%% at StripePaymentAppService 2,0
+%% at Event 0,1
+%% at CheckoutGateway 1,1
+%% at StripeCheckoutService 2,1
+%% at StripeClientProvider 0,2
+%% at StripeCheckoutGateway 1,2
+%% at Session 2,2
+%% at Status 0,3
+%% at CheckoutPayment 1,3
+    StripeWebhookController "1" --> "1" PaymentAppService
+    StripePaymentAppService ..|> PaymentAppService
+    StripePaymentAppService "1" --> "0..1" StripeCheckoutService
+    StripeCheckoutService "1" --> "1" CheckoutGateway
+    StripeCheckoutGateway ..> CheckoutPayment
+    StripeCheckoutGateway "1" --> "1" StripeClientProvider
+    StripeCheckoutGateway ..|> CheckoutGateway
+    StripeCheckoutGateway ..> Event : «create»
+    StripeCheckoutGateway ..> Session : «create»
+    CheckoutGateway ..> Session
+    CheckoutGateway ..> Event

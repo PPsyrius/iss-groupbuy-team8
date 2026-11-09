@@ -1,0 +1,46 @@
+%% frame: Pay upfront B1 to B2: prepare the payment, transaction 1 (design)
+sequenceDiagram
+    actor Buyer
+    participant Ctl as :StripeCheckoutController
+    participant PBS as :PaymentBrowserService
+    participant RL as :RateLimitGateway
+    participant Svc as :StripeCheckoutService
+    participant Port as :PaymentBusinessPort
+    participant Repo as :CheckoutPaymentRepository
+    create participant Pay as :CheckoutPayment
+
+    Note over Buyer,RL: B1: POST /api/v1/payments/checkout-sessions
+    Buyer->>Ctl: checkout(csrf, key, request)
+    Note over Ctl,RL: header check and requireEnabled() (A1), @fig-a-pay-ds-receipt
+    Ctl->>PBS: prepare(user, intent, requestKey)
+    PBS->>RL: tryAcquire(CHECKOUT_LIMIT, user)
+    RL-->>PBS: boolean
+    break more than 60 a minute (A2)
+        PBS-->>Ctl: RATE_LIMITED
+        Ctl-->>Buyer: HTTP 429
+    end
+    PBS->>Svc: prepare(actor, intentId, requestKey)
+    Note over Svc,Repo: B2: outsideTransaction() checked first
+    critical tx 1: REQUIRED, READ COMMITTED, 10 s
+        Svc->>Port: lockQuote(actor, intentId): lock 1 team (JOIN only), lock 2 intent
+        Port-->>Svc: CheckoutQuote
+        Svc->>Repo: now()
+        Repo-->>Svc: Instant
+        break quote not the actor's, or quote.expiredAt(now) (A4)
+            Svc-->>PBS: PAYMENT_STATE_INVALID
+        end
+        Svc->>Repo: findRequest(actor, requestKey)
+        Repo-->>Svc: Optional of CheckoutPayment
+        alt same Idempotency-Key (A3)
+            Note over Svc,Repo: A3: reuse the earlier CREATED payment if its quote is equal
+        else new attempt (B2)
+            Svc->>Repo: findBlockingAttempt(intentId)
+            Repo-->>Svc: Optional of CheckoutPayment
+            break attempt open, or now + 1860 s outlives the quote (A4)
+                Svc-->>PBS: PAYMENT_STATE_INVALID
+            end
+            Svc->>Pay: new(paymentId, quote, requestKey, now, expires, CREATED)
+            Svc->>Repo: insert(payment)
+        end
+    end
+    Note over Svc,Pay: B3: @fig-a-pay-ds-bind

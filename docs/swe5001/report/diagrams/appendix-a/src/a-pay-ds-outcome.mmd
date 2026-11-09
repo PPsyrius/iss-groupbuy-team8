@@ -1,0 +1,40 @@
+%% frame: Pay upfront B8 to B9: fulfil or owe a refund (design)
+sequenceDiagram
+    participant Svc as :StripeCheckoutService
+    participant Repo as :CheckoutPaymentRepository
+    participant Pub as :ApplicationEventPublisher
+    participant Q as quote : CheckoutQuote
+    participant Port as :PaymentBusinessPort
+    create participant Evt as succeeded : PaymentSucceeded
+    create participant Out as value : PaymentBusinessPort.Outcome
+
+    critical settlement tx continued: REQUIRED, READ COMMITTED, 10 s
+        Note over Svc,Repo: B8: inside the transaction of @fig-a-pay-ds-settle
+        Svc->>Repo: outcome(paymentId)
+        Repo-->>Svc: String
+        break outcome already recorded (A11)
+            Note over Svc,Repo: A11: the stored outcome is the result
+        end
+        Svc->>Repo: now()
+        Repo-->>Svc: Instant
+        Svc->>Evt: new(paymentId, quote, now)
+        Svc->>Pub: publishEvent(succeeded)
+        Note over Pub,Port: BEFORE_COMMIT: the outbox writes PaymentSucceededV1, @sec-a-notifications
+        Svc->>Q: expiredAt(now)
+        Q-->>Svc: boolean
+        alt terms lapsed (A14)
+            Svc->>Out: new(null, null, "BUSINESS_EXPIRED")
+        else terms valid (B8)
+            Note over Svc,Port: commerce side: @sec-a-uc03; UC4 in @fig-a-uc04-ds-fulfil
+            Svc->>Port: fulfil(succeeded)
+            Port-->>Svc: PaymentBusinessPort.Outcome
+        end
+        Svc->>Out: accepted()
+        Out-->>Svc: boolean
+        alt rejected (A14, A15)
+            Svc->>Repo: requireRefund(payment, rejection, eventId)
+            Svc->>Repo: recordOutcome(paymentId, dealId, orderId, "REFUND_REQUIRED")
+        else accepted (B9)
+            Svc->>Repo: recordOutcome(paymentId, dealId, orderId, "FULFILLED")
+        end
+    end
