@@ -9,6 +9,8 @@
 #import "appendix-a/lib-a.typ": appendix-a
 
 #show: appendix-a
+// A floating figure never drifts past the next subsection's heading: pending floats print first.
+#show heading: it => if it.level in (2, 3) { place.flush(); it } else { it }
 
 #let only = sys.inputs.at("apart", default: none)
 #show ref: it => if only == none { it } else if query(it.target).len() == 0 { text(fill: red)[?#str(it.target)] } else { it }
