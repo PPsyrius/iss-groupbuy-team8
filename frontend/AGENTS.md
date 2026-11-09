@@ -62,7 +62,7 @@ Read this before editing anything under `frontend/`. The plan is `docs/plan.md`;
 
 ## Stack (exact pins in package.json; do not add caret ranges)
 
-React 19.3 CSR, Vite 8, TanStack Router (file-based via `@tanstack/router-plugin`), TanStack Query 5, TanStack Form 1, valibot, Tailwind CSS 4, HeroUI 3, TypeScript 7, oxlint + oxfmt, Vitest + Testing Library + happy-dom, MSW 2, Playwright.
+React 19.3 CSR, Vite 8, TanStack Router (file-based via `@tanstack/router-plugin`), TanStack Query 5, TanStack Form 1, valibot, Tailwind CSS 4, HeroUI 3, TypeScript 7, oxlint + oxfmt, Vitest + Testing Library + happy-dom, MSW 3, Playwright.
 
 ## Layout
 

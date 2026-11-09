@@ -23,7 +23,7 @@
 - `Result<T>` envelope types kept as generated; `data` unwrapped in one shared `select`; throw on non-2xx or non-OK `code`. No generator transform.
 - Generated client is NOT committed. `pnpm gen:api` runs in `prepare`, first in `pnpm check`, first in `pnpm build`. Output dir gitignored and excluded from oxlint, oxfmt, knip.
 - valibot only at `validateSearch` and forms. Never hand-write API response schemas.
-- TanStack Form 1.x. MSW 2 handlers generated, loaded in Vitest `setupFiles` and behind a dev flag.
+- TanStack Form 1.x. MSW 3 handlers generated, loaded in Vitest `setupFiles` and behind a dev flag.
 - Same origin: SPA at `/`, backend at `/api/*`. Backend has no context path; `/api/v1` comes from controller mappings. CloudFront does not rewrite paths.
 - Auth: Google OAuth only. Login = full-page navigation to `GET /api/v1/auth/oauth2/google`. Probe `GET /api/v1/auth/me` → `{userId, nickname, avatarUrl}` (B4 landed in PR #89; it was `{loginId}` at planning time). Logout `POST /api/v1/auth/logout`. Unauthenticated → JSON 401 envelope. `GET /api/v1/products/**` anonymous.
 - Auth state: `useSession` query; the 401 interceptor settles `me` to an anonymous success envelope and never redirects. Route `beforeLoad` guards own redirects.
