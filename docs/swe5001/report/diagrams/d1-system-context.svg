@@ -31,12 +31,12 @@
 <text x="700" y="236" font-size="30" font-weight="700" text-anchor="middle" fill="#1B1A18"><tspan x="700">Buyer</tspan><tspan x="700" dy="34">(team leader / sharer)</tspan></text>
 <text x="700" y="314" font-size="26" text-anchor="middle" fill="#1B1A18"><tspan x="700">Starts a team by paying,</tspan><tspan x="700" dy="31">shares invite links</tspan></text>
 
-<!-- person: seller / admin -->
+<!-- person: platform administrator (publishes on sellers' behalf) -->
 <rect x="940" y="160" width="420" height="225" rx="24" fill="url(#d1Person)" stroke="#7A5C20" stroke-width="1.8"/>
 <circle cx="1150" cy="138" r="24" fill="#FFF6E2" stroke="#7A5C20" stroke-width="1.8"/>
 <text x="1150" y="198" font-size="26" text-anchor="middle" fill="#6B655C">«person»</text>
-<text x="1150" y="236" font-size="30" font-weight="700" text-anchor="middle" fill="#1B1A18"><tspan x="1150">Seller / Platform</tspan><tspan x="1150" dy="34">administrator</tspan></text>
-<text x="1150" y="314" font-size="26" text-anchor="middle" fill="#1B1A18"><tspan x="1150">Publishes listings and</tspan><tspan x="1150" dy="31">team price rules (UC9)</tspan></text>
+<text x="1150" y="236" font-size="30" font-weight="700" text-anchor="middle" fill="#1B1A18">Platform administrator</text>
+<text x="1150" y="282" font-size="26" text-anchor="middle" fill="#1B1A18"><tspan x="1150">Publishes listings and</tspan><tspan x="1150" dy="31">team price rules on</tspan><tspan x="1150" dy="31">sellers' behalf (UC9)</tspan></text>
 
 <!-- software system in scope -->
 <rect x="40" y="530" width="1320" height="220" fill="url(#d1Blue)" stroke="#3E5CD9" stroke-width="2.4"/>
@@ -93,5 +93,5 @@
 <!-- seed note -->
 <path d="M870,1120 L1352,1120 L1380,1148 L1380,1296 L870,1296 Z" fill="url(#d1Ext)" stroke="#6B655C" stroke-width="1.6"/>
 <path d="M1352,1120 L1352,1148 L1380,1148" fill="none" stroke="#6B655C" stroke-width="1.6"/>
-<text x="890" y="1160" font-size="26" fill="#1B1A18"><tspan x="890" font-weight="700">Seed:</tspan><tspan x="890" dy="32">curated team-priced offers</tspan><tspan x="890" dy="32">published by the operator</tspan><tspan x="890" dy="32">through UC9</tspan></text>
+<text x="890" y="1160" font-size="26" fill="#1B1A18"><tspan x="890" font-weight="700">Seed:</tspan><tspan x="890" dy="32">curated team-priced offers</tspan><tspan x="890" dy="32">published by the platform</tspan><tspan x="890" dy="32">administrator through UC9</tspan></text>
 </svg>

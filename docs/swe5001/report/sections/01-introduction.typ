@@ -28,7 +28,7 @@ Group buying works only if enough people join before the deadline. Today that co
     table.header([Who], [Pain point (briefing Q1)], [What BlocBuy does instead]),
     [Buyers], [Cannot see a deal's deadline, minimum team size or progress; joining means messaging an organiser], [Team-priced listings show the team price, the target team size and the deadline; a buyer starts or joins a team by paying (UC3, UC4)],
     [Organisers], [Collect payments, chase participants and refund by hand when a deal falls through], [The platform admits members on payment, completes the team at its target size and refunds every member automatically on expiry (UC5, UC6)],
-    [Sellers], [Have no channel for offers priced for a group of buyers], [Listings carry team price rules (UC9), and members who share invitation links bring in more buyers (UC7)],
+    [Sellers], [Have no channel for offers priced for a group of buyers], [The platform administrator publishes their offers as listings with team price rules (UC9), and members who share invitation links bring in more buyers (UC7). Sellers do not use BlocBuy themselves (§1.4.2)],
   ),
   kind: table,
   caption: [Pain points and BlocBuy's answer. Sources: #src("docs/swe5001/project-proposal.typ")[proposal, §4.1], #src("docs/swe5001/presentation/src/slides-main.js")[presentation slide 2].],
@@ -61,9 +61,10 @@ The project was self-initiated and has no company sponsor. Its stakeholders are 
   table(
     columns: (0.8fr, 1.4fr, 2.6fr),
     table.header([Group], [Stakeholder], [Interest in the platform]),
-    table.cell(rowspan: 4)[Business], [Buyer as team leader], [Starts a team by paying and shares it; wants the team to fill before the deadline],
+    table.cell(rowspan: 5)[Business], [Buyer as team leader], [Starts a team by paying and shares it; wants the team to fill before the deadline],
     [Buyer as joiner], [Joins by paying; wants a fair price, a clear deadline and an automatic refund if the team fails],
-    [Seller or platform administrator], [Publishes listings and team price rules; wants teams to fill, and a channel that grows with demand],
+    [Platform administrator], [Publishes listings and team price rules on sellers' behalf (UC9), the only role besides buyer that the code defines; wants teams to fill],
+    [Seller (indirect)], [Wants a channel for team-priced offers that grows with demand; has no account or console in BlocBuy and reaches buyers through the administrator],
     [Future vertical owner], [Wants to launch another group-buying offer (event tickets, bulk subscriptions, neighbourhood produce) without rebuilding sign-in, payment or notification],
     table.cell(rowspan: 5)[IT], [Team 8 as platform engineers], [Build and operate the services, the pipeline and the AWS stacks; each member's area is in §2.3],
     [AWS organisation administrator (Lim Jiechao)], [Owns the AWS Organization, its service control policies (SCPs) and IAM Identity Center; teammates work only in the member account. #src("docs/deploy/aws-account-governance/README.md")[Governance record]],
@@ -81,15 +82,15 @@ The briefing's first success criterion asks for the seed, the producers and the 
   table(
     columns: (1fr, 3fr),
     table.header([Platform role], [In BlocBuy]),
-    [Seed], [Curated, team-priced product offers published by the platform operator to attract the first buyers before independent sellers join],
-    [Producers], [Sellers and administrators who publish and manage listings (UC9); buyers who start a team (UC3); sharers whose invitation links bring new members (UC7)],
+    [Seed], [Curated, team-priced product offers published by the platform administrator to attract the first buyers],
+    [Producers], [The platform administrator, who publishes and manages listings on sellers' behalf (UC9); buyers who start a team (UC3); sharers whose invitation links bring new members (UC7). Sellers do not use BlocBuy directly: seller self-service is out of scope (§1.4.2)],
     [Consumers], [Buyers who browse offers (UC1), pay to join teams (UC4), track their orders and teams (UC8) and receive notifications],
     [Core interaction], [Forming a team at a team price: payment, admission, then automatic success or expiry with refunds (UC5, UC6)],
     [Common services], [Sign-in and roles (`identity-svc`), notification (`notification-svc`), payment settlement, and the shared platform modules (§4.4)],
     [Future seeds], [Other group-buying verticals that reuse identity, notification and settlement (§6.2)],
   ),
   kind: table,
-  caption: [Seed, producers and consumers. Source: #src("docs/swe5001/project-proposal.typ")[proposal, Table 5].],
+  caption: [Seed, producers and consumers. Source: #src("docs/swe5001/project-proposal.typ")[proposal, Table 5], which named sellers as producers; this table names who publishes offers in the built system.],
 ) <tbl-platform-roles>
 
 #figure(
@@ -131,7 +132,7 @@ Every use case keeps its SWE5006 behaviour in the monolith and has one owning se
     [UC6], [Refund members of an expired team], [commerce], [Same transaction; refund notice through events],
     [UC7], [Share an invitation], [commerce], [Unchanged],
     [UC8], [View my orders and my teams], [commerce], [Unchanged],
-    [UC9], [Administer product listings], [commerce], [Remote active-user check],
+    [UC9], [Administer product listings (platform administrator)], [commerce], [Remote active-user check],
     [UC10], [Pay for a membership upfront (included by UC3 and UC4)], [commerce], [Unchanged],
     [UC11], [Receive notifications of team and payment events], [notification], [New event consumer with idempotent processing],
     [UC12], [Credit the sharer of a referred join (extends UC4)], [commerce], [Unchanged; stays an in-process subscriber after the join commits],
@@ -162,6 +163,8 @@ The proposal excluded six items (#src("docs/swe5001/project-proposal.typ")[propo
 - A production launch with real payments; Stripe runs in test mode throughout.
 
 During the project the team also left out email and push notifications; notifications are in-app only.
+
+Seller self-service is out of scope as well. SWE5006 excluded a merchant self-service interface (#src("docs/swe5006/report/sections/01-introduction.md")[SWE5006 report, §1.4.2]), and SWE5001 kept that exclusion. The code defines only the `buyer` and `admin` roles (#src("backend/blocbuy-bootstrap/src/main/resources/db/migration/V3__identity.sql")[`V3__identity.sql`]), so the platform administrator publishes every listing on sellers' behalf (UC9). No seller role or merchant console was designed for SWE5001; the architecture options study only notes the gap (#src("docs/swe5001/architecture-options-study/06-eventstorming-ddd.md")[study, hotspot HS-9]).
 
 *Architected but not built.* Some designs exist only on paper. @tbl-not-built lists them, so that no later section is read as a claim that they run.
 
